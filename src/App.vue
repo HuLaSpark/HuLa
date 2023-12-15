@@ -1,11 +1,6 @@
-<script setup lang="ts">
-// This starter template is using Vue 3 <script setup> SFCs
-// Check out https://vuejs.org/api/sfc-script-setup.html#script-setup
-import Greet from "./components/Greet.vue";
-</script>
-
 <template>
-  <div class="container">
+  <n-message-provider :max="3">
+    <div class="container">
     <h1>Welcome to Tauri!</h1>
 
     <div class="row">
@@ -39,7 +34,10 @@ import Greet from "./components/Greet.vue";
 
     <Greet />
   </div>
+  </n-message-provider>
 </template>
+<script setup lang="ts">
+</script>
 
 <style scoped>
 .logo.vite:hover {
