@@ -1,0 +1,30 @@
+{
+  "name": "hula-im",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "tauri:dev": "tauri dev"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^1.5.2",
+    "axios": "^1.6.2",
+    "lodash-es": "^4.17.21",
+    "mitt": "^3.0.1",
+    "naive-ui": "^2.35.0",
+    "pinia": "^2.1.7",
+    "pinia-plugin-persistedstate": "^3.2.0",
+    "vue": "^3.3.11",
+    "vue-router": "^4.2.5"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^1.5.7",
+    "@vitejs/plugin-vue": "^4.2.3",
+    "typescript": "^5.0.2",
+    "vite": "^5.0.7",
+    "vue-tsc": "^1.8.5"
+  }
+}
