@@ -5,6 +5,10 @@ module.exports = {
       name: '✨  feat:     新功能/更新'
     },
     {
+      value: ':sunflower: update',
+      name: '🌻 update:   更新'
+    },
+    {
       value: ':bug: fix',
       name: '🐛 fix:      修复bug'
     },
@@ -21,8 +25,8 @@ module.exports = {
       name: '🎉 release:  发布正式版'
     },
     {
-      value: ':new: version',
-      name:'🎖️version:  发布新版本'
+      value: ':medal: version',
+      name: '🎖️version:  发布新版本'
     },
     {
       value: ':lipstick: style',
