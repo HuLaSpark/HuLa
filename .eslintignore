@@ -1,0 +1,11 @@
+node_modules
+*.md
+*.scss
+.vscode
+.idea
+dist
+public
+index.html
+src/assets
+.eslintrc.cjs
+**/config

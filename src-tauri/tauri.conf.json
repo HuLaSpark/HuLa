@@ -36,6 +36,7 @@
       {
         "fullscreen": false,
         "resizable": true,
+        "center": true,
         "title": "hula-im",
         "width": 800,
         "height": 600
