@@ -10,5 +10,5 @@
     "arrowParens": "always",
     "bracketSameLine": true,
     "jsxBracketSameLine": true,
-    "endOfLine": "crlf"
+    "endOfLine": "lf"
 }
