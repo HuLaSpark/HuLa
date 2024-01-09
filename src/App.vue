@@ -1,10 +1,8 @@
 <template>
-  <n-message-provider :max="3">
-    <div class="container">
-      <Greet />
-    </div>
-  </n-message-provider>
+  <NaiveProvider :message-max="3" :notific-max="3">
+    <Home />
+  </NaiveProvider>
 </template>
-<script setup lang="ts"></script>
-
-<style scoped></style>
+<script setup lang="ts">
+import Home from '@/views/page/Home.vue'
+</script>

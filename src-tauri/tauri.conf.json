@@ -6,7 +6,7 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "HuLa-IM",
+    "productName": "HuLa-IM-Tauri",
     "version": "0.0.0"
   },
   "tauri": {
@@ -37,7 +37,7 @@
         "fullscreen": false,
         "resizable": true,
         "center": true,
-        "title": "hula-im",
+        "title": "hula-im-tauri",
         "width": 800,
         "height": 600
       }

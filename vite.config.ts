@@ -5,6 +5,7 @@ import Components from 'unplugin-vue-components/vite' //组件注册
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import { getRootPath, getSrcPath } from './build/config/getPath'
 import vueJsx from '@vitejs/plugin-vue-jsx'
+import unocss from '@unocss/vite'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }: ConfigEnv) => {
@@ -28,13 +29,14 @@ export default defineConfig(({ mode }: ConfigEnv) => {
        * */
       vue({ script: { propsDestructure: true, defineModel: true } }),
       vueJsx(), // 开启jsx功能
+      unocss(), // 开启unocss
       AutoImport({
         imports: ['vue', { 'naive-ui': ['useDialog', 'useMessage', 'useNotification', 'useLoadingBar'] }],
         dts: 'src/typings/auto-imports.d.ts'
       }),
       /*自动导入组件，但是不会自动导入jsx和tsx*/
       Components({
-        dirs: ['src/components'], // 设置需要扫描的目录
+        dirs: ['src/components/**'], // 设置需要扫描的目录
         resolvers: [NaiveUiResolver()],
         dts: 'src/typings/components.d.ts'
       })
