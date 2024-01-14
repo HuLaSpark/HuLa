@@ -5,7 +5,7 @@ pub fn menu() -> SystemTray {
     let quit = CustomMenuItem::new("quit".to_string(), "退出");
     let show = CustomMenuItem::new("show".to_string(), "打开主板");
     let hide = CustomMenuItem::new("hide".to_string(), "隐藏");
-    let change_ico = CustomMenuItem::new("change_ico".to_string(), "更改图标");
+    let change_ico = CustomMenuItem::new("change_ico".to_string(), "更改图标").disabled();
     let tray_menu = SystemTrayMenu::new()
         .add_submenu(SystemTraySubmenu::new(
             "Language", // 语言菜单

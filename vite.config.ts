@@ -21,6 +21,10 @@ export default defineConfig(({ mode }: ConfigEnv) => {
         '~': getRootPath()
       }
     },
+    define: {
+      // enable hydration mismatch details in production build 3.4新增水化不匹配的警告
+      __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'true'
+    },
     plugins: [
       /**
        * !实验性功能

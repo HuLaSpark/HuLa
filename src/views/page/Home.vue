@@ -1,14 +1,12 @@
 <template>
-  <form class="row">
-    <input id="greet-input" v-model="name" placeholder="Enter a name..." />
-    <n-button @click="dj" class="w-20% bg-#ccc" secondary type="primary">Primary</n-button>
-  </form>
-
-  <p>{{ greetMsg }}</p>
+  <n-space :size="10">
+    <n-input v-model:value="name" placeholder="Enter a name..." />
+    <n-button @click="dj" secondary type="primary">Primary</n-button>
+    <GlobalTheme />
+  </n-space>
 </template>
 <script setup lang="ts">
 // import { invoke } from "@tauri-apps/api/tauri";
-const greetMsg = ref('')
 const name = ref('')
 
 const dj = () => {

@@ -1,5 +1,9 @@
 <template>
-  <n-config-provider :locale="NLanguage" :date-locale="NDataLanguage">
+  <n-config-provider
+    :theme-overrides="themeOverrides"
+    :theme="globalTheme"
+    :locale="NLanguage"
+    :date-locale="NDataLanguage">
     <n-loading-bar-provider>
       <n-dialog-provider>
         <n-notification-provider :max="notificMax">
@@ -14,11 +18,35 @@
 </template>
 
 <script setup lang="ts">
-import { dateZhCN, zhCN } from 'naive-ui'
+import { theme } from '@/stores/theme.ts'
+import { storeToRefs } from 'pinia'
+import { dateZhCN, darkTheme, GlobalThemeOverrides, zhCN } from 'naive-ui'
 
+const themeStore = theme()
+const { EYE_THEME } = storeToRefs(themeStore)
 /*调整naive ui的国际化*/
 const NLanguage = ref(zhCN)
 const NDataLanguage = ref(dateZhCN)
+provide('NLanguage', NLanguage)
+provide('NDataLanguage', NDataLanguage)
+/*监听深色主题颜色变化*/
+const globalTheme = ref<any>(EYE_THEME.value)
+watchEffect(() => {
+  globalTheme.value = EYE_THEME.value ? darkTheme : null
+})
+
+/*调整naive ui的primary的主题颜色和样式*/
+const themeOverrides: GlobalThemeOverrides = {
+  Input: {
+    borderRadius: '6px'
+  },
+  Tag: {
+    borderRadius: '4px'
+  },
+  Button: {
+    borderRadiusMedium: '6px'
+  }
+}
 
 const { notificMax, messageMax } = defineProps<{
   notificMax?: number
