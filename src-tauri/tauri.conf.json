@@ -15,6 +15,16 @@
       "shell": {
         "all": false,
         "open": true
+      },
+      "http": {
+        "scope": ["http://**", "https://**"]
+      },
+      "fs": {
+        "all": true,
+        "scope": ["*", "$DOWNLOAD/*"]
+      },
+      "window": {
+        "all": true
       }
     },
     "bundle": {
