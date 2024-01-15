@@ -8,14 +8,9 @@
   </n-space>
 </template>
 <script setup lang="ts">
-// import { invoke } from "@tauri-apps/api/tauri";
 const name = ref('')
 
 const dj = () => {
   window.$message.success(name.value)
 }
-
-// async function greet() {
-//   greetMsg.value = await invoke("greet", { name: name.value });
-// }
 </script>

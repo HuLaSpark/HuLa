@@ -1,38 +1,37 @@
 <template>
   <NaiveProvider :message-max="3" :notific-max="3">
     <div id="app">
-      <Home />
-      <div class="container" style="transform: scale(1.1)">
-        <ContextMenu
-          class="block"
-          :menu="[{ label: '添加' }, { label: '编辑' }, { label: '删除' }, { label: '查看' }, { label: '复制' }]"
-          @select="choose1 = $event.label">
-          <h2>{{ choose1 }}</h2>
-        </ContextMenu>
-        <ContextMenu
-          class="block"
-          :menu="[{ label: '员工' }, { label: '部门' }, { label: '角色' }, { label: '权限' }, { label: '菜单' }]"
-          @select="choose2 = $event.label">
-          <h2>{{ choose2 }}</h2>
-          <ContextMenu
-            class="block"
-            :menu="[{ label: '菜单1' }, { label: '菜单2' }, { label: '菜单3' }, { label: '菜单4' }]"
-            @select="choose3 = $event.label">
-            <h2>{{ choose3 }}</h2>
-          </ContextMenu>
-        </ContextMenu>
-      </div>
+      <router-view />
+      <!--      <div class="container" style="transform: scale(1.1)">-->
+      <!--        <ContextMenu-->
+      <!--          class="block"-->
+      <!--          :menu="[{ label: '添加' }, { label: '编辑' }, { label: '删除' }, { label: '查看' }, { label: '复制' }]"-->
+      <!--          @select="choose1 = $event.label">-->
+      <!--          <h2>{{ choose1 }}</h2>-->
+      <!--        </ContextMenu>-->
+      <!--        <ContextMenu-->
+      <!--          class="block"-->
+      <!--          :menu="[{ label: '员工' }, { label: '部门' }, { label: '角色' }, { label: '权限' }, { label: '菜单' }]"-->
+      <!--          @select="choose2 = $event.label">-->
+      <!--          <h2>{{ choose2 }}</h2>-->
+      <!--          <ContextMenu-->
+      <!--            class="block"-->
+      <!--            :menu="[{ label: '菜单1' }, { label: '菜单2' }, { label: '菜单3' }, { label: '菜单4' }]"-->
+      <!--            @select="choose3 = $event.label">-->
+      <!--            <h2>{{ choose3 }}</h2>-->
+      <!--          </ContextMenu>-->
+      <!--        </ContextMenu>-->
+      <!--      </div>-->
     </div>
   </NaiveProvider>
 </template>
 <script setup lang="ts">
 import { theme } from '@/stores/theme.ts'
 import { storeToRefs } from 'pinia'
-import Home from '@/views/page/Home.vue'
 
-const choose1 = ref('')
-const choose2 = ref('')
-const choose3 = ref('')
+// const choose1 = ref('')
+// const choose2 = ref('')
+// const choose3 = ref('')
 const themeStore = theme()
 const { BGC } = storeToRefs(themeStore)
 </script>
@@ -48,6 +47,7 @@ const { BGC } = storeToRefs(themeStore)
   left: 0;
   transition: all 0.9s ease;
   background-color: v-bind(BGC);
+  border-radius: 10px;
 }
 .container {
   display: grid;

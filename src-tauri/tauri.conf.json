@@ -44,15 +44,16 @@
     },
     "windows": [
       {
-        "label": "home",
+        "label": "login",
+        "url": "/login",
         "fullscreen": false,
         "resizable": true,
         "center": true,
-        "title": "hula-im-tauri",
-        "width": 800,
-        "height": 600,
+        "width": 320,
+        "height": 448,
         "skipTaskbar": false,
-        "decorations": false
+        "decorations": false,
+        "transparent":true
       }
     ],
     "systemTray": {
