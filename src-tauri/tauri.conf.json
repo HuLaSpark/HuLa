@@ -47,7 +47,7 @@
         "label": "login",
         "url": "/login",
         "fullscreen": false,
-        "resizable": true,
+        "resizable": false,
         "center": true,
         "width": 320,
         "height": 448,

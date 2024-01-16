@@ -38,13 +38,13 @@ watchEffect(() => {
 /*调整naive ui的primary的主题颜色和样式*/
 const themeOverrides: GlobalThemeOverrides = {
   Input: {
-    borderRadius: '6px'
+    borderRadius: '10px'
   },
   Tag: {
     borderRadius: '4px'
   },
   Button: {
-    borderRadiusMedium: '6px'
+    borderRadiusMedium: '10px'
   }
 }
 

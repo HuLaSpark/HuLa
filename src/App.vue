@@ -34,6 +34,14 @@ import { storeToRefs } from 'pinia'
 // const choose3 = ref('')
 const themeStore = theme()
 const { BGC } = storeToRefs(themeStore)
+
+onMounted(() => {
+  // window.addEventListener('contextmenu', (e) => e.preventDefault(), false)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('contextmenu', (e) => e.preventDefault(), false)
+})
 </script>
 <style scoped>
 #app {
