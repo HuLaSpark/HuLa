@@ -1,16 +1,19 @@
 <template>
   <div data-tauri-drag-region class="flex justify-end">
     <!-- 最小化 -->
-    <div @click="minimizeWindow" class="w-28px h24px flex-center hover:bg-#e7e7e7">
+    <div v-if="minW" @click="minimizeWindow" class="w-28px h24px flex-center hover:bg-#e7e7e7">
       <img src="@/assets/svg/minimize.svg" class="w-38px h-34px" alt="" />
     </div>
     <!-- 最大化 -->
-    <div @click="restoreWindow" class="w-28px h24px flex-center hover:bg-#e7e7e7">
+    <div v-if="maxW" @click="restoreWindow" class="w-28px h24px flex-center hover:bg-#e7e7e7">
       <img v-show="!windowMaximized" src="@/assets/svg/maximize.svg" class="w-14px h-14px" alt="" />
       <img v-show="windowMaximized" src="@/assets/svg/normal.svg" class="w-14px h-14px" alt="" />
     </div>
     <!-- 关闭窗口 -->
-    <div @click="closeWindow" class="close-box w-28px h24px flex-center cursor-pointer hover:bg-#c22b1c rounded-tr-6px">
+    <div
+      v-if="closeW"
+      @click="closeWindow"
+      class="close-box w-28px h24px flex-center cursor-pointer hover:bg-#c22b1c rounded-tr-6px">
       <img src="@/assets/svg/close.svg" class="default-img w-10px h-10px" alt="" />
       <img src="@/assets/svg/close-hover.svg" class="hover-img w-10px h-10px" alt="" />
     </div>
@@ -21,6 +24,23 @@
 import { closeWindow, maximizeWindow, minimizeWindow, unmaximize } from '@/common/WindowEvent.ts'
 import { appWindow } from '@tauri-apps/api/window'
 
+/**
+ * 新版defineProps可以直接结构 { minW, maxW, closeW }
+ * 如果需要使用默认值withDefaults的时候使用新版解构方式会报错
+ * */
+const props = withDefaults(
+  defineProps<{
+    minW?: boolean
+    maxW?: boolean
+    closeW?: boolean
+  }>(),
+  {
+    minW: true,
+    maxW: true,
+    closeW: true
+  }
+)
+const { minW, maxW, closeW } = toRefs(props)
 const windowMaximized = ref(false)
 
 // // 定义一个可能保存unlisten函数的变量

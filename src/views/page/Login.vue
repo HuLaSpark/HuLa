@@ -1,19 +1,7 @@
 <template>
-  <div class="bg-#f1f1f1 wh-full rounded-8px">
+  <div class="login-box bg-#f1f1f1 wh-full rounded-8px" @click="handleClickOutside">
     <!--顶部操作栏-->
-    <div data-tauri-drag-region class="w-full flex justify-end">
-      <!-- 最小化 -->
-      <div @click="minimizeWindow" class="w-28px h24px flex-center hover:bg-#e7e7e7">
-        <img src="@/assets/svg/minimize.svg" class="w-38px h-34px" alt="" />
-      </div>
-      <!-- 关闭窗口 -->
-      <div
-        @click="closeWindow"
-        class="close-box w-28px h24px flex-center cursor-pointer hover:bg-#c22b1c rounded-tr-6px">
-        <img src="@/assets/svg/close.svg" class="default-img w-10px h-10px" alt="" />
-        <img src="@/assets/svg/close-hover.svg" class="hover-img w-10px h-10px" alt="" />
-      </div>
-    </div>
+    <ActionBar :max-w="false" />
 
     <!-- 头像 -->
     <div class="w-full flex-x-center mt-35px mb-25px">
@@ -34,10 +22,34 @@
         @blur="accountPH = '输入HuLa账号'"
         clearable>
         <template #suffix>
-          <!--todo 可以参考yao3的关于下拉框-->
-          <svg class="w-18px h-18px color-#505050 cursor-pointer"><use href="#down-bojg611f"></use></svg>
+          <n-flex @click="arrowStatus = !arrowStatus">
+            <svg v-if="!arrowStatus" class="w-18px h-18px color-#505050 cursor-pointer"><use href="#down"></use></svg>
+            <svg v-else class="w-18px h-18px color-#505050 cursor-pointer"><use href="#up"></use></svg>
+          </n-flex>
         </template>
       </n-input>
+
+      <!-- 账号选择框 -->
+      <div
+        style="border: 1px solid rgba(70, 70, 70, 0.1)"
+        v-if="accountOption.length > 0 && arrowStatus"
+        class="absolute w-260px max-h-140px bg-#fdfdfd mt-45px z-99 rounded-8px p-8px box-border">
+        <n-scrollbar style="max-height: 120px" trigger="none">
+          <n-flex
+            vertical
+            v-for="(item, index) in accountOption"
+            :key="index"
+            @click="giveAccount(item.account, item.password)"
+            class="p-8px cursor-pointer hover:bg-#f3f3f3 hover: rounded-6px">
+            <div class="flex-between-center">
+              <div class="w-28px h-28px bg-#ccc rounded-50%"></div>
+              <p class="font-size-14px color-#505050">{{ item.account }}</p>
+              <img @click.stop="delAccount(index)" src="@/assets/svg/close.svg" class="w-10px h-10px" alt="" />
+            </div>
+          </n-flex>
+        </n-scrollbar>
+      </div>
+
       <n-input
         maxlength="16"
         minlength="6"
@@ -71,7 +83,7 @@
 
       <!-- 顶部操作栏 -->
       <n-flex justify="center" class="font-size-14px">
-        <div class="color-#189f57 cursor-pointer">扫码登录</div>
+        <div class="color-#189f57 cursor-pointer" @click="toQRCode">扫码登录</div>
         <div class="w-1px h-14px bg-#ccc"></div>
         <n-popover style="padding: 6px; border-radius: 8px" trigger="click" :show-checkmark="false" :show-arrow="false">
           <template #trigger>
@@ -92,13 +104,39 @@
 </template>
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/window'
-import { closeWindow, autoCloseWindow, minimizeWindow } from '@/common/WindowEvent.ts'
+import { autoCloseWindow } from '@/common/WindowEvent.ts'
+import router from '@/router'
+
+type Account = {
+  account: string
+  password: string
+  avatar?: string
+}[]
 
 const account = ref()
 const password = ref()
 const protocol = ref()
 const loginDisabled = ref(false)
 const loading = ref(false)
+const arrowStatus = ref(false)
+const accountOption = ref<Account>([
+  {
+    account: 'hula',
+    password: '123456'
+  },
+  {
+    account: 'hula1',
+    password: '123456'
+  },
+  {
+    account: 'hula2',
+    password: '123456'
+  },
+  {
+    account: 'hula3',
+    password: '123456'
+  }
+])
 const accountPH = ref('输入HuLa账号')
 const passwordPH = ref('输入HuLa密码')
 
@@ -106,6 +144,48 @@ watchEffect(() => {
   loginDisabled.value = !(account.value && password.value && protocol.value)
 })
 
+/*监听是否点击了除了下拉框外的其他地方*/
+const handleClickOutside = (event: MouseEvent) => {
+  if (arrowStatus.value) {
+    const accountInput = document.querySelector('.login-box')?.contains(event.target as HTMLElement)
+    if (accountInput) {
+      arrowStatus.value = false
+    }
+  }
+}
+
+/* 删除账号列表内容 */
+const delAccount = (index: number) => {
+  // 检查索引有效性
+  if (index < 0 || index >= accountOption.value.length) return
+  // 获取删除前账户列表的长度
+  const lengthBeforeDelete = accountOption.value.length
+  accountOption.value.splice(index, 1)
+  // 判断是否删除了最后一个条目，并据此更新arrowStatus
+  if (lengthBeforeDelete === 1 && accountOption.value.length === 0) {
+    arrowStatus.value = false
+  }
+  account.value = null
+  password.value = null
+}
+
+/**
+ * 给账号赋值
+ * @param au 账号
+ * @param paw 密码
+ * */
+const giveAccount = (au: string, paw: string) => {
+  account.value = au
+  password.value = paw
+  arrowStatus.value = false
+}
+
+/*跳转到二维码页面*/
+const toQRCode = () => {
+  router.push('/QRCode')
+}
+
+/*登录后创建主页窗口*/
 const loginWin = async () => {
   loading.value = true
   const webview = new WebviewWindow('home', {
@@ -132,22 +212,6 @@ const loginWin = async () => {
 </script>
 
 <style scoped lang="scss">
-/* 当鼠标悬停在按钮上时，切换显示状态 */
-.close-box {
-  /* 默认不显示 */
-  .hover-img {
-    display: none;
-  }
-  &:hover {
-    .default-img {
-      display: none;
-    }
-    .hover-img {
-      display: block;
-    }
-  }
-}
-
 /* 改变输入框中的位置 */
 :deep(.n-input .n-input__input, .n-input .n-input__textarea) {
   margin-left: 22px;
@@ -158,5 +222,13 @@ const loginWin = async () => {
   border-radius: 50%;
   width: 16px;
   height: 16px;
+}
+
+/* 隐藏naive UI的滚动条 */
+:deep(
+    .n-scrollbar > .n-scrollbar-rail.n-scrollbar-rail--vertical > .n-scrollbar-rail__scrollbar,
+    .n-scrollbar + .n-scrollbar-rail.n-scrollbar-rail--vertical > .n-scrollbar-rail__scrollbar
+  ) {
+  display: none;
 }
 </style>
