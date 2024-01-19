@@ -1,17 +1,33 @@
 <template>
-  <div class="resizable" :style="{ width: width + 'px', backgroundColor: '#4db652' }">
+  <div data-tauri-drag-region class="resizable" :style="{ width: width + 'px' }">
+    <ActionBar v-if="shrinkStatus" :shrink-status="!shrinkStatus" :max-w="false" />
     中间区域
     <div class="resize-handle" @mousedown="initDrag"></div>
   </div>
 </template>
 
 <script setup lang="ts">
-const minWidth = 160 // 设置最小宽度
+import Mitt from '@/utils/Bus.ts'
+
+const minWidth = 250 // 设置最小宽度
 const maxWidth = 320 // 设置最大宽度
-const width = ref(240) // 初始化宽度
+const width = ref(250) // 初始化宽度
 
 const startX = ref()
 const startWidth = ref()
+const shrinkStatus = ref(false)
+
+// todo 1.了解这里是怎么实现的 2.修改拖拽放大缩小的事件
+Mitt.on('shrinkWindow', (event) => {
+  shrinkStatus.value = event as boolean
+  width.value = 250
+})
+
+// watchEffect(() => {
+//   if (width.value === maxWidth) {
+//     Mitt.emit('shrinkWindow', false)
+//   }
+// })
 
 const initDrag = (e: MouseEvent) => {
   startX.value = e.clientX
@@ -50,7 +66,7 @@ const stopDrag = () => {
   right: 0;
   top: 0;
   bottom: 0;
-  width: 1px;
+  width: 2px;
   cursor: ew-resize;
   background-color: #ccc; /* 可以根据需要更改颜色 */
 }

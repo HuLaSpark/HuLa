@@ -1,7 +1,7 @@
 <template>
-  <div class="bg-#f1f1f1 wh-full rounded-8px">
+  <div data-tauri-drag-region class="bg-#f1f1f1 wh-full rounded-8px select-none">
     <!--顶部操作栏-->
-    <ActionBar :max-w="false" />
+    <ActionBar :max-w="false" :shrink="false" />
 
     <n-flex justify="center" class="font-size-28px color-#189f57 mt-25px">HuLA</n-flex>
 

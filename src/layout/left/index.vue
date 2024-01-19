@@ -1,5 +1,6 @@
 <template>
   <div
+    data-tauri-drag-region
     class="w-60px bg-#AA5757FF h-full pt-10px pl-8px pr-8px pb-10px box-border flex-x-center rounded-tl-8px rounded-bl-8px">
     <img
       @click="toLogin"

@@ -1,7 +1,8 @@
 <template>
-  <div class="login-box bg-#f1f1f1 wh-full rounded-8px" @click="handleClickOutside">
+  <!-- todo 这里设置了 data-tauri-drag-region但是有部分区域不可以拖动 -->
+  <div data-tauri-drag-region class="login-box bg-#f1f1f1 wh-full rounded-8px select-none" @click="handleClickOutside">
     <!--顶部操作栏-->
-    <ActionBar :max-w="false" />
+    <ActionBar :max-w="false" :shrink="false" />
 
     <!-- 头像 -->
     <div class="w-full flex-x-center mt-35px mb-25px">
@@ -103,8 +104,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { WebviewWindow } from '@tauri-apps/api/window'
-import { autoCloseWindow } from '@/common/WindowEvent.ts'
+import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
 
 type Account = {
@@ -139,6 +139,7 @@ const accountOption = ref<Account>([
 ])
 const accountPH = ref('输入HuLa账号')
 const passwordPH = ref('输入HuLa密码')
+const { createWebviewWindow } = useWindow()
 
 watchEffect(() => {
   loginDisabled.value = !(account.value && password.value && protocol.value)
@@ -186,28 +187,9 @@ const toQRCode = () => {
 }
 
 /*登录后创建主页窗口*/
-const loginWin = async () => {
+const loginWin = () => {
   loading.value = true
-  const webview = new WebviewWindow('home', {
-    url: '/',
-    fullscreen: false,
-    resizable: true,
-    center: true,
-    width: 1050,
-    height: 720,
-    skipTaskbar: false,
-    decorations: false,
-    transparent: true
-  })
-  await webview.once('tauri://created', function () {
-    console.log('创建成功')
-    autoCloseWindow('login')
-    loading.value = false
-  })
-  await webview.once('tauri://error', function (e) {
-    console.log(e)
-    loading.value = false
-  })
+  createWebviewWindow('home', 1050, 720, 'login')
 }
 </script>
 
