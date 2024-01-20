@@ -1,6 +1,6 @@
 use tauri::{AppHandle, CustomMenuItem, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem, SystemTraySubmenu};
 
-// 托盘菜单
+/// 托盘菜单
 pub fn menu() -> SystemTray {
     let quit = CustomMenuItem::new("quit".to_string(), "退出");
     let show = CustomMenuItem::new("show".to_string(), "打开主板");
@@ -25,14 +25,14 @@ pub fn menu() -> SystemTray {
     SystemTray::new().with_menu(tray_menu)
 }
 
-// 托盘事件
+/// 托盘事件
 pub fn handler(app: &AppHandle, event: SystemTrayEvent) {
     match event {
         SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
             "change_ico" => { // 更新托盘图标
                 app.tray_handle()
                     .set_icon(tauri::Icon::Raw(
-                        include_bytes!("../icons/128x128.png").to_vec(),
+                        include_bytes!("../../icons/128x128.png").to_vec(),
                     ))
                     .unwrap();
             }

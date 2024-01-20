@@ -26,6 +26,15 @@ export const hideWindow = async () => {
 }
 
 /**
+ * 根据label隐藏窗口
+ * @param label 窗口标签
+ * */
+export const hideByLabel = async (label: string) => {
+  const win = WebviewWindow.getByLabel(label)
+  await win?.hide()
+}
+
+/**
  * 自动关闭窗口
  * @param label 窗口标签
  * */

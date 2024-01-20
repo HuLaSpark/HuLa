@@ -1,6 +1,10 @@
 <template>
   <!-- todo 这里设置了 data-tauri-drag-region但是有部分区域不可以拖动 -->
-  <div data-tauri-drag-region class="login-box bg-#f1f1f1 wh-full rounded-8px select-none" @click="handleClickOutside">
+  <div
+    data-tauri-drag-region
+    style="background-color: rgba(24, 159, 87, 0.3)"
+    class="login-box wh-full rounded-8px select-none"
+    @click="handleClickOutside">
     <!--顶部操作栏-->
     <ActionBar :max-w="false" :shrink="false" />
 
@@ -104,8 +108,9 @@
   </div>
 </template>
 <script setup lang="ts">
-import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
+import { useWindow } from '@/hooks/useWindow'
+import { delay } from 'lodash-es'
 
 type Account = {
   account: string
@@ -119,6 +124,7 @@ const protocol = ref()
 const loginDisabled = ref(false)
 const loading = ref(false)
 const arrowStatus = ref(false)
+/* todo 模拟账号列表 */
 const accountOption = ref<Account>([
   {
     account: 'hula',
@@ -189,7 +195,10 @@ const toQRCode = () => {
 /*登录后创建主页窗口*/
 const loginWin = () => {
   loading.value = true
-  createWebviewWindow('home', 1050, 720, 'login')
+  delay(async () => {
+    await createWebviewWindow('home', 1050, 720, 'login')
+    loading.value = false
+  }, 800)
 }
 </script>
 

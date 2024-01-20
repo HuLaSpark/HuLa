@@ -26,14 +26,9 @@
   </NaiveProvider>
 </template>
 <script setup lang="ts">
-import { theme } from '@/stores/theme.ts'
-import { storeToRefs } from 'pinia'
-
 // const choose1 = ref('')
 // const choose2 = ref('')
 // const choose3 = ref('')
-const themeStore = theme()
-const { BGC } = storeToRefs(themeStore)
 
 onMounted(() => {
   // window.addEventListener('contextmenu', (e) => e.preventDefault(), false)
@@ -54,7 +49,6 @@ onUnmounted(() => {
   top: 0;
   left: 0;
   transition: all 0.9s ease;
-  background-color: v-bind(BGC);
   border-radius: 10px;
 }
 .container {

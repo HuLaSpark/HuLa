@@ -14,7 +14,7 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/page/QRCode.vue')
   },
   {
-    path: '/',
+    path: '/home',
     name: 'page',
     component: () => import('@/layout/index.vue')
   }

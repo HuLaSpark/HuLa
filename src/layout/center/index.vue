@@ -1,5 +1,5 @@
 <template>
-  <div data-tauri-drag-region class="resizable" :style="{ width: width + 'px' }">
+  <div class="resizable bg-#fdfdfd select-none" :style="{ width: width + 'px' }">
     <ActionBar v-if="shrinkStatus" :shrink-status="!shrinkStatus" :max-w="false" />
     中间区域
     <div class="resize-handle" @mousedown="initDrag"></div>

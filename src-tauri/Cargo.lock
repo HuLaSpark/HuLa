@@ -1263,6 +1263,7 @@ dependencies = [
  "tauri",
  "tauri-build",
  "window-shadows",
+ "window-vibrancy",
 ]
 
 [[package]]
@@ -3528,6 +3529,19 @@ dependencies = [
  "objc",
  "raw-window-handle",
  "windows-sys 0.48.0",
+]
+
+[[package]]
+name = "window-vibrancy"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "af6abc2b9c56bd95887825a1ce56cde49a2a97c07e28db465d541f5098a2656c"
+dependencies = [
+ "cocoa 0.25.0",
+ "objc",
+ "raw-window-handle",
+ "windows-sys 0.52.0",
+ "windows-version",
 ]
 
 [[package]]

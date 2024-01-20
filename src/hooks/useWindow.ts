@@ -1,5 +1,6 @@
 import { WebviewWindow, LogicalSize } from '@tauri-apps/api/window'
 import { autoCloseWindow } from '@/common/WindowEvent.ts'
+import { invoke } from '@tauri-apps/api/tauri'
 
 export const useWindow = () => {
   /**
@@ -11,7 +12,7 @@ export const useWindow = () => {
    * */
   const createWebviewWindow = async (label: string, width: number, height: number, wantCloseWindow?: string) => {
     const webview = new WebviewWindow(label, {
-      url: '/',
+      url: `/${label}`,
       fullscreen: false,
       resizable: true,
       center: true,
@@ -22,10 +23,13 @@ export const useWindow = () => {
       transparent: true
     })
 
-    await webview.once('tauri://created', () => {
+    await webview.once('tauri://created', async () => {
       console.log('创建成功')
+      await invoke('reset_set_window', { label }).catch((error) => {
+        console.error('设置窗口阴影失败:', error)
+      })
       if (wantCloseWindow) {
-        autoCloseWindow(wantCloseWindow)
+        await autoCloseWindow(wantCloseWindow)
       }
     })
 
