@@ -5,7 +5,7 @@
     <div class="resize-handle" @mousedown="initDrag"></div>
 
     <!-- 顶部搜索栏 -->
-    <div class="mt-30px w-full h-50px flex flex-col items-center">
+    <div class="mt-30px w-full h-40px flex flex-col items-center">
       <div class="flex-center gap-5px w-full pr-16px pl-16px box-border">
         <n-input
           :on-focus="() => router.push('/searchDetails')"
@@ -27,7 +27,7 @@
     </div>
 
     <!-- 消息列表 -->
-    <div class="wh-full">
+    <div class="h-full flex-1 pr-8px pl-6px">
       <router-view />
     </div>
   </div>
