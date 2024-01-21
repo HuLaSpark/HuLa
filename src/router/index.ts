@@ -6,17 +6,39 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/login',
     name: 'login',
-    component: () => import('@/views/page/Login.vue')
+    component: () => import('@/views/page/login-window/Login.vue')
   },
   {
     path: '/QRCode',
     name: 'QRCode',
-    component: () => import('@/views/page/QRCode.vue')
+    component: () => import('@/views/page/login-window/QRCode.vue')
   },
   {
     path: '/home',
-    name: 'page',
-    component: () => import('@/layout/index.vue')
+    name: 'home',
+    component: () => import('@/layout/index.vue'),
+    children: [
+      {
+        path: '/message',
+        name: 'message',
+        component: () => import('@/views/page/home-window/Message.vue')
+      },
+      {
+        path: '/friendsList',
+        name: 'friendsList',
+        component: () => import('@/views/page/home-window/FriendsList.vue')
+      },
+      {
+        path: '/space',
+        name: 'space',
+        component: () => import('@/views/page/home-window/Space.vue')
+      },
+      {
+        path: '/more',
+        name: 'more',
+        component: () => import('@/views/page/home-window/More.vue')
+      }
+    ]
   }
 ]
 

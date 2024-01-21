@@ -1,0 +1,45 @@
+/*!项目提供scss全局变量*/
+$border-radius: 8px;
+// 横部滚动条宽，纵向滚动条高
+$webkit-scrollbar-width: 8px;
+$webkit-scrollbar-height: 6px;
+// 滚动条颜色
+$webkit-scrollbar-color: #bfbfbf;
+// 滚动条的轨道颜色
+$webkit-scrollbar-track-color: #efefef;
+// 滚动条的悬停选中滑块颜色
+$webkit-scrollbar-hover: #999;
+// 线性动画
+@keyframes linearAnimation {
+  0% {
+    stroke-dasharray: 800;
+    stroke-dashoffset: 800;
+  }
+  100% {
+    stroke-dasharray: 800;
+    stroke-dashoffset: 0;
+  }
+}
+// 懒加载默认动画
+@keyframes come-in {
+  100% {
+    transform: translateX(0);
+  }
+}
+/*!修改naive-ui的遮罩层样式*/
+@mixin mask-style($blur: 4px) {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur($blur);
+}
+.n-modal-mask {
+  @include mask-style;
+}
+.n-drawer-mask {
+  @include mask-style(2px);
+}
+/*!end*/

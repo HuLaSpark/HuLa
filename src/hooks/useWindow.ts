@@ -9,8 +9,17 @@ export const useWindow = () => {
    * @param wantCloseWindow 创建后需要关闭的窗口
    * @param width 窗口宽度
    * @param height 窗口高度
+   * @param minW 窗口最小宽度
+   * @param minH 窗口最小高度
    * */
-  const createWebviewWindow = async (label: string, width: number, height: number, wantCloseWindow?: string) => {
+  const createWebviewWindow = async (
+    label: string,
+    width: number,
+    height: number,
+    wantCloseWindow?: string,
+    minW?: 310,
+    minH?: 540
+  ) => {
     const webview = new WebviewWindow(label, {
       url: `/${label}`,
       fullscreen: false,
@@ -18,6 +27,8 @@ export const useWindow = () => {
       center: true,
       width: width,
       height: height,
+      minHeight: minH,
+      minWidth: minW,
       skipTaskbar: false,
       decorations: false,
       transparent: true

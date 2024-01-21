@@ -3,7 +3,7 @@
   <div data-tauri-drag-region class="flex justify-end select-none">
     <!-- 收缩页面 -->
     <div v-if="shrink" @click="shrinkWindow" class="w-28px h24px flex-center hover:bg-#e7e7e7">
-      <svg class="w-16px h-16px color-#707070 cursor-pointer"><use href="#left-bar"></use></svg>
+      <svg class="w-16px h-16px color-#404040 cursor-pointer"><use href="#left-bar"></use></svg>
     </div>
     <!-- 最小化 -->
     <div v-if="minW" @click="minimizeWindow" class="w-28px h24px flex-center hover:bg-#e7e7e7">

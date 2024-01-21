@@ -1,15 +1,32 @@
 <template>
   <div class="resizable bg-#fdfdfd select-none" :style="{ width: width + 'px' }">
-    <ActionBar v-if="shrinkStatus" :shrink-status="!shrinkStatus" :max-w="false" />
-    中间区域
+    <ActionBar class="absolute right-0" v-if="shrinkStatus" :shrink-status="!shrinkStatus" :max-w="false" />
+
     <div class="resize-handle" @mousedown="initDrag"></div>
+
+    <!-- 顶部搜索栏 -->
+    <div class="mt-30px w-full h-50px flex flex-col items-center">
+      <div class="flex-center gap-5px w-full pr-16px pl-16px box-border">
+        <n-input class="rounded-4px w-full" style="background-color: #f3f3f3" size="small" placeholder="搜索" />
+        <n-button size="small" style="padding: 0 5px; background-color: #f3f3f3">
+          <template #icon>
+            <svg class="w-24px h-24px"><use href="#plus"></use></svg>
+          </template>
+        </n-button>
+      </div>
+    </div>
+
+    <!-- 消息列表 -->
+    <div class="wh-full">
+      <router-view />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import Mitt from '@/utils/Bus.ts'
 
-const minWidth = 250 // 设置最小宽度
+const minWidth = 160 // 设置最小宽度
 const maxWidth = 320 // 设置最大宽度
 const width = ref(250) // 初始化宽度
 

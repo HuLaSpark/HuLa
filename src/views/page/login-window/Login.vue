@@ -49,7 +49,7 @@
             <div class="flex-between-center">
               <div class="w-28px h-28px bg-#ccc rounded-50%"></div>
               <p class="font-size-14px color-#505050">{{ item.account }}</p>
-              <img @click.stop="delAccount(index)" src="@/assets/svg/close.svg" class="w-10px h-10px" alt="" />
+              <img @click.stop="delAccount(index)" src="../../../assets/svg/close.svg" class="w-10px h-10px" alt="" />
             </div>
           </n-flex>
         </n-scrollbar>
@@ -109,7 +109,7 @@
 </template>
 <script setup lang="ts">
 import router from '@/router'
-import { useWindow } from '@/hooks/useWindow'
+import { useWindow } from '@/hooks/useWindow.ts'
 import { delay } from 'lodash-es'
 
 type Account = {

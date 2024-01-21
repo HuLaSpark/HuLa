@@ -1,5 +1,5 @@
 <template>
-  <div class="flex wh-full">
+  <div class="flex wh-full min-h-540px min-w-310px" style="background: rgba(255, 255, 255, 0.6)">
     <Left />
     <Center />
     <Right v-if="!shrinkStatus" />

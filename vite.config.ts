@@ -21,6 +21,13 @@ export default defineConfig(({ mode }: ConfigEnv) => {
         '~': getRootPath()
       }
     },
+    css: {
+      preprocessorOptions: {
+        scss: {
+          additionalData: '@import "./src/styles/scss/global/variable.scss";' // 加载全局样式，使用scss特性
+        }
+      }
+    },
     define: {
       // enable hydration mismatch details in production build 3.4新增水化不匹配的警告
       __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'true'
