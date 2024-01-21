@@ -2,7 +2,7 @@
   <!-- todo 这里设置了 data-tauri-drag-region但是有部分区域不可以拖动 -->
   <div
     data-tauri-drag-region
-    style="background-color: rgba(24, 159, 87, 0.3)"
+    style="background: rgba(255, 255, 255, 0.6)"
     class="login-box wh-full rounded-8px select-none"
     @click="handleClickOutside">
     <!--顶部操作栏-->

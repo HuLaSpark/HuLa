@@ -2,25 +2,30 @@
   <div class="w-60px h-full pt-30px pl-6px pr-6px pb-15px box-border flex-col-center select-none">
     <img @click="toLogin" class="border-rounded-50% w-36px h-36px bg-#fff cursor-pointer" src="/logo.png" alt="" />
 
-    <div class="wh-full mt-20px flex-col-x-center justify-between">
+    <div data-tauri-drag-region class="wh-full mt-20px flex-col-x-center justify-between">
       <!-- 上部分操作栏 -->
       <div class="flex-col-x-center gap-10px">
         <div
-          v-for="(item, index) in items"
+          v-for="(item, index) in itemsTop"
           :key="index"
           @click="pageJumps(item.url)"
           class="top-action"
           :class="{ active: activeItem === item.url }">
-          <svg class="w-22px h-22px"><use :href="`#${item.icon}`"></use></svg>
+          <svg class="w-22px h-22px">
+            <use :href="`#${activeItem === item.url && item.iconAction ? item.iconAction : item.icon}`"></use>
+          </svg>
         </div>
       </div>
 
       <!-- 下部分操作栏 -->
-      <div class="bottom-action flex-col-x-center gap-18px">
-        <svg><use href="#mail"></use></svg>
-        <svg><use href="#folder-close"></use></svg>
-        <svg><use href="#collection-files"></use></svg>
-        <svg><use href="#hamburger-button"></use></svg>
+      <div class="flex-col-x-center gap-10px">
+        <div v-for="(item, index) in itemsBottom" :key="index" @click="openContent(item.label)" class="bottom-action">
+          <svg class="w-22px h-22px">
+            <use :href="`#${activeItem === item.url && item.iconAction ? item.iconAction : item.icon}`"></use>
+          </svg>
+        </div>
+
+        <svg class="more w-22px h-22px"><use href="#hamburger-button"></use></svg>
       </div>
     </div>
   </div>
@@ -30,27 +35,63 @@ import { delay } from 'lodash-es'
 import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
 
-const items = [
+type TopActive = {
+  url: string
+  icon: string
+  iconAction?: string
+}[]
+
+type BottomActive = {
+  url: string
+  label: string
+  icon: string
+  iconAction?: string
+}[]
+
+const itemsTop: TopActive = [
   {
     url: 'message',
-    icon: 'message'
+    icon: 'message',
+    iconAction: 'message-action'
   },
   {
     url: 'friendsList',
-    icon: 'avatar'
+    icon: 'avatar',
+    iconAction: 'avatar-action'
   },
   {
     url: 'space',
-    icon: 'star-one'
+    icon: 'friends-circle',
+    iconAction: 'friends-circle-action'
   },
   {
     url: 'more',
     icon: 'application-menu'
   }
 ]
+const itemsBottom: BottomActive = [
+  {
+    url: '/mail',
+    label: 'mail',
+    icon: 'mail',
+    iconAction: 'mail-unpacking'
+  },
+  {
+    url: '/folder',
+    label: 'mail',
+    icon: 'folder-close',
+    iconAction: 'folder-open'
+  },
+  {
+    url: '/collection',
+    label: 'mail',
+    icon: 'collection-files',
+    iconAction: 'collection-files-action'
+  }
+]
 
-/*当前选中的元素 默认选中items的第一项*/
-const activeItem = ref<string>(items[0].url)
+/*当前选中的元素 默认选中itemsTop的第一项*/
+const activeItem = ref<string>(itemsTop[0].url)
 const { createWebviewWindow } = useWindow()
 
 /**
@@ -60,6 +101,16 @@ const { createWebviewWindow } = useWindow()
 const pageJumps = (url: string) => {
   activeItem.value = url
   router.push(`/${url}`)
+}
+
+/**
+ * 打开内容对应窗口
+ * @param label 窗口的标识
+ * */
+const openContent = (label: string) => {
+  delay(async () => {
+    await createWebviewWindow(label, 840, 600)
+  }, 300)
 }
 
 const toLogin = () => {
@@ -76,29 +127,21 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-@mixin wh($w: 22px, $h: 22px) {
-  width: $w;
-  height: $h;
-}
-.top-action {
+@mixin action() {
   padding: 6px 8px 6px 8px;
   &:not(.active):hover {
     background: rgba(193, 193, 193, 0.4);
     border-radius: 8px;
     color: #189f57;
     cursor: pointer;
-    animation: linearAnimation 5s linear forwards;
+    animation: linearAnimation 3s linear forwards;
   }
 }
 
-.bottom-action {
-  svg {
-    @include wh;
-    &:hover {
-      color: #189f57;
-      cursor: pointer;
-    }
-  }
+.top-action,
+.bottom-action,
+.more {
+  @include action;
 }
 
 .active {

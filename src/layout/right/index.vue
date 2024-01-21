@@ -3,7 +3,7 @@
     <ActionBar />
 
     <!-- 聊天界面背景图标 -->
-    <div class="flex-center wh-full">
+    <div class="flex-center wh-full select-none">
       <img class="w-130px h-100px" src="@/assets/img/hula_bg.png" alt="" />
     </div>
   </div>

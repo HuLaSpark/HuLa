@@ -37,8 +37,18 @@ const routes: Array<RouteRecordRaw> = [
         path: '/more',
         name: 'more',
         component: () => import('@/views/page/home-window/More.vue')
+      },
+      {
+        path: '/searchDetails',
+        name: 'searchDetails',
+        component: () => import('@/views/page/home-window/SearchDetails.vue')
       }
     ]
+  },
+  {
+    path: '/mail',
+    name: 'mail',
+    component: () => import('@/views/page/home-window/Mail.vue')
   }
 ]
 

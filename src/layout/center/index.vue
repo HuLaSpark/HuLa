@@ -1,5 +1,5 @@
 <template>
-  <div class="resizable bg-#fdfdfd select-none" :style="{ width: width + 'px' }">
+  <div data-tauri-drag-region class="resizable bg-#fdfdfd select-none" :style="{ width: width + 'px' }">
     <ActionBar class="absolute right-0" v-if="shrinkStatus" :shrink-status="!shrinkStatus" :max-w="false" />
 
     <div class="resize-handle" @mousedown="initDrag"></div>
@@ -7,8 +7,18 @@
     <!-- 顶部搜索栏 -->
     <div class="mt-30px w-full h-50px flex flex-col items-center">
       <div class="flex-center gap-5px w-full pr-16px pl-16px box-border">
-        <n-input class="rounded-4px w-full" style="background-color: #f3f3f3" size="small" placeholder="搜索" />
-        <n-button size="small" style="padding: 0 5px; background-color: #f3f3f3">
+        <n-input
+          :on-focus="() => router.push('/searchDetails')"
+          class="rounded-4px w-full"
+          style="background-color: #f3f3f3"
+          :maxlength="20"
+          size="small"
+          placeholder="搜索">
+          <template #prefix>
+            <svg class="w-12px h-12px"><use href="#search"></use></svg>
+          </template>
+        </n-input>
+        <n-button size="small" secondary style="padding: 0 5px">
           <template #icon>
             <svg class="w-24px h-24px"><use href="#plus"></use></svg>
           </template>
@@ -25,6 +35,7 @@
 
 <script setup lang="ts">
 import Mitt from '@/utils/Bus.ts'
+import router from '@/router'
 
 const minWidth = 160 // 设置最小宽度
 const maxWidth = 320 // 设置最大宽度
