@@ -2,7 +2,7 @@
   <div data-tauri-drag-region class="resizable bg-#fdfdfd select-none" :style="{ width: width + 'px' }">
     <ActionBar class="absolute right-0" v-if="shrinkStatus" :shrink-status="!shrinkStatus" :max-w="false" />
 
-    <div class="resize-handle" @mousedown="initDrag"></div>
+    <!--    <div class="resize-handle" @mousedown="initDrag"></div>-->
 
     <!-- 顶部搜索栏 -->
     <div class="mt-30px w-full h-40px flex flex-col items-center">
@@ -27,9 +27,11 @@
     </div>
 
     <!-- 消息列表 -->
-    <div class="h-full flex-1 pr-8px pl-6px">
-      <router-view />
-    </div>
+    <n-scrollbar style="max-height: calc(100vh - 70px)">
+      <div class="h-full flex-1 pr-8px pl-6px">
+        <router-view />
+      </div>
+    </n-scrollbar>
   </div>
 </template>
 
@@ -37,12 +39,12 @@
 import Mitt from '@/utils/Bus.ts'
 import router from '@/router'
 
-const minWidth = 160 // 设置最小宽度
-const maxWidth = 320 // 设置最大宽度
+// const minWidth = 160 // 设置最小宽度
+// const maxWidth = 320 // 设置最大宽度
 const width = ref(250) // 初始化宽度
 
-const startX = ref()
-const startWidth = ref()
+// const startX = ref()
+// const startWidth = ref()
 const shrinkStatus = ref(false)
 
 // todo 1.了解这里是怎么实现的 2.修改拖拽放大缩小的事件
@@ -57,29 +59,29 @@ Mitt.on('shrinkWindow', (event) => {
 //   }
 // })
 
-const initDrag = (e: MouseEvent) => {
-  startX.value = e.clientX
-  startWidth.value = width.value
-
-  document.addEventListener('mousemove', doDrag, false)
-  document.addEventListener('mouseup', stopDrag, false)
-}
-
-const doDrag = (e: MouseEvent) => {
-  const newWidth = startWidth.value + e.clientX - startX.value
-  if (newWidth <= maxWidth && newWidth >= minWidth) {
-    width.value = newWidth
-  } else if (newWidth > maxWidth) {
-    width.value = maxWidth
-  } else if (newWidth < minWidth) {
-    width.value = minWidth
-  }
-}
-
-const stopDrag = () => {
-  document.removeEventListener('mousemove', doDrag, false)
-  document.removeEventListener('mouseup', stopDrag, false)
-}
+// const initDrag = (e: MouseEvent) => {
+//   startX.value = e.clientX
+//   startWidth.value = width.value
+//
+//   document.addEventListener('mousemove', doDrag, false)
+//   document.addEventListener('mouseup', stopDrag, false)
+// }
+//
+// const doDrag = (e: MouseEvent) => {
+//   const newWidth = startWidth.value + e.clientX - startX.value
+//   if (newWidth <= maxWidth && newWidth >= minWidth) {
+//     width.value = newWidth
+//   } else if (newWidth > maxWidth) {
+//     width.value = maxWidth
+//   } else if (newWidth < minWidth) {
+//     width.value = minWidth
+//   }
+// }
+//
+// const stopDrag = () => {
+//   document.removeEventListener('mousemove', doDrag, false)
+//   document.removeEventListener('mouseup', stopDrag, false)
+// }
 </script>
 
 <style scoped>

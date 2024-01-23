@@ -11,9 +11,11 @@
           @click="pageJumps(item.url)"
           class="top-action"
           :class="{ active: activeItem === item.url }">
-          <svg class="w-22px h-22px">
-            <use :href="`#${activeItem === item.url && item.iconAction ? item.iconAction : item.icon}`"></use>
-          </svg>
+          <n-badge :value="item.badge" :max="99">
+            <svg class="w-22px h-22px">
+              <use :href="`#${activeItem === item.url && item.iconAction ? item.iconAction : item.icon}`"></use>
+            </svg>
+          </n-badge>
         </div>
       </div>
 
@@ -34,11 +36,13 @@
 import { delay } from 'lodash-es'
 import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
+import Mitt from '@/utils/Bus.ts'
 
 type TopActive = {
   url: string
   icon: string
   iconAction?: string
+  badge?: number
 }[]
 
 type BottomActive = {
@@ -48,7 +52,7 @@ type BottomActive = {
   iconAction?: string
 }[]
 
-const itemsTop: TopActive = [
+const itemsTop = ref<TopActive>([
   {
     url: 'message',
     icon: 'message',
@@ -68,7 +72,7 @@ const itemsTop: TopActive = [
     url: 'more',
     icon: 'application-menu'
   }
-]
+])
 const itemsBottom: BottomActive = [
   {
     url: '/mail',
@@ -91,8 +95,18 @@ const itemsBottom: BottomActive = [
 ]
 
 /*当前选中的元素 默认选中itemsTop的第一项*/
-const activeItem = ref<string>(itemsTop[0].url)
+const activeItem = ref<string>(itemsTop.value[0].url)
 const { createWebviewWindow } = useWindow()
+
+watchEffect(() => {
+  Mitt.on('updateMsgTotal', (event) => {
+    itemsTop.value.find((item) => {
+      if (item.url === 'message') {
+        item.badge = event as number
+      }
+    })
+  })
+})
 
 /**
  * 统一跳转路由方法
@@ -148,5 +162,14 @@ onMounted(() => {
   background: rgba(193, 193, 193, 0.4);
   border-radius: 8px;
   color: #189f57;
+}
+
+:deep(.n-badge .n-badge-sup) {
+  font-weight: bold;
+  font-size: 10px;
+}
+
+:deep(.n-badge) {
+  color: inherit;
 }
 </style>

@@ -47,6 +47,12 @@ const themeOverrides: GlobalThemeOverrides = {
   },
   Button: {
     borderRadiusMedium: '10px'
+  },
+  Tabs: {
+    tabTextColorSegment: '#707070',
+    tabTextColorActiveSegment: '#189f57',
+    tabTextColorHoverSegment: '#189f57',
+    tabPaddingMediumSegment: '4px'
   }
 }
 
