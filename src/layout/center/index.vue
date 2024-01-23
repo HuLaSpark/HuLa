@@ -26,7 +26,7 @@
       </div>
     </div>
 
-    <!-- 消息列表 -->
+    <!-- 列表 -->
     <n-scrollbar style="max-height: calc(100vh - 70px)">
       <div class="h-full flex-1 pr-8px pl-6px">
         <router-view />

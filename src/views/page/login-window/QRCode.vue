@@ -1,5 +1,5 @@
 <template>
-  <div data-tauri-drag-region class="wh-full rounded-8px select-none" style="background: rgba(255, 255, 255, 0.6)">
+  <div data-tauri-drag-region class="login-box wh-full rounded-8px select-none">
     <!--顶部操作栏-->
     <ActionBar :max-w="false" :shrink="false" />
 
@@ -47,4 +47,6 @@ onMounted(() => {
 })
 </script>
 
-<style scoped></style>
+<style scoped lang="scss">
+@import '@/styles/scss/global/login-bg';
+</style>

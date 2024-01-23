@@ -9,6 +9,7 @@ export const useWindow = () => {
    * @param wantCloseWindow 创建后需要关闭的窗口
    * @param width 窗口宽度
    * @param height 窗口高度
+   * @param resizable 调整窗口大小
    * @param minW 窗口最小宽度
    * @param minH 窗口最小高度
    * */
@@ -17,13 +18,14 @@ export const useWindow = () => {
     width: number,
     height: number,
     wantCloseWindow?: string,
-    minW?: 310,
-    minH?: 540
+    resizable = true,
+    minW = 310,
+    minH = 540
   ) => {
     const webview = new WebviewWindow(label, {
       url: `/${label}`,
       fullscreen: false,
-      resizable: true,
+      resizable: resizable,
       center: true,
       width: width,
       height: height,

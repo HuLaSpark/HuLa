@@ -1,16 +1,12 @@
 <template>
   <!-- todo 这里设置了 data-tauri-drag-region但是有部分区域不可以拖动 -->
-  <div
-    data-tauri-drag-region
-    style="background: rgba(255, 255, 255, 0.6)"
-    class="login-box wh-full rounded-8px select-none"
-    @click="handleClickOutside">
+  <div data-tauri-drag-region class="login-box wh-full rounded-8px select-none" @click="handleClickOutside">
     <!--顶部操作栏-->
     <ActionBar :max-w="false" :shrink="false" />
 
     <!-- 头像 -->
     <div class="w-full flex-x-center mt-35px mb-25px">
-      <img style="border: 2px solid #fff" class="w-80px h-80px rounded-50%" src="/logo.png" alt="" />
+      <img style="border: 2px solid #fff" class="w-80px h-80px rounded-50% bg-#fff" src="/logo.png" alt="" />
     </div>
 
     <!-- 登录菜单 -->
@@ -49,7 +45,7 @@
             <div class="flex-between-center">
               <div class="w-28px h-28px bg-#ccc rounded-50%"></div>
               <p class="font-size-14px color-#505050">{{ item.account }}</p>
-              <img @click.stop="delAccount(index)" src="../../../assets/svg/close.svg" class="w-10px h-10px" alt="" />
+              <img @click.stop="delAccount(index)" src="@/assets/svg/close.svg" class="w-10px h-10px" alt="" />
             </div>
           </n-flex>
         </n-scrollbar>
@@ -203,6 +199,7 @@ const loginWin = () => {
 </script>
 
 <style scoped lang="scss">
+@import '@/styles/scss/global/login-bg';
 /* 改变输入框中的位置 */
 :deep(.n-input .n-input__input, .n-input .n-input__textarea) {
   margin-left: 22px;

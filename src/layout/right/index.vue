@@ -4,7 +4,7 @@
     <!-- 需要判断当前路由是否是信息详情界面 -->
     <ChatMain v-if="msgBoxShow && router.currentRoute.value.path.includes('/message')" />
 
-    <Details v-else-if="detailsShow" />
+    <Details v-else-if="detailsShow && router.currentRoute.value.path.includes('/friendsList')" />
 
     <!-- 聊天界面背景图标 -->
     <div v-else class="flex-center wh-full select-none">
@@ -21,5 +21,9 @@ const detailsShow = ref(false)
 
 Mitt.on('msgBoxShow', (event) => {
   msgBoxShow.value = event as boolean
+})
+
+Mitt.on('detailsShow', (event) => {
+  detailsShow.value = event as boolean
 })
 </script>

@@ -130,7 +130,7 @@ const openContent = (label: string) => {
 const toLogin = () => {
   // todo 暂时使用创建新窗口来跳转到登录页面，生产环境一般不会跳转到登录页面
   delay(async () => {
-    await createWebviewWindow('login', 320, 448, 'home')
+    await createWebviewWindow('login', 320, 448, 'home', false, 320, 448)
   }, 800)
 }
 

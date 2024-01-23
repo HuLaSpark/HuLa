@@ -1,0 +1,17 @@
+.login-box {
+  background: linear-gradient(-65deg, rgba(24, 159, 87, 0.8), #cbe2d6, #d8eee2, rgba(24, 159, 87, 0.8));
+  animation: gradient 12s ease infinite;
+  background-size: 400% 400%;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
