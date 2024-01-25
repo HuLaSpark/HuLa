@@ -1,7 +1,10 @@
 <template>
   <!-- 消息框 -->
-  <div
+  <ContextMenu
+    @contextmenu="showMenu(n)"
+    @select="handleSelect($event.label)"
     @click="handleMsgClick(n)"
+    :menu="[{ label: '添加' }, { label: '编辑' }, { label: '删除' }, { label: '查看' }, { label: '复制' }]"
     :class="{ active: activeItem === n }"
     class="msg-box w-full h-75px mb-5px"
     v-for="n in 20"
@@ -24,7 +27,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </ContextMenu>
 </template>
 <script setup lang="ts">
 import Mitt from '@/utils/Bus.ts'
@@ -37,6 +40,14 @@ const activeItem = ref(1)
 watchEffect(() => {
   Mitt.emit('updateMsgTotal', msgTotal.value)
 })
+
+const showMenu = (index: number) => {
+  console.log(index)
+}
+
+const handleSelect = (event: MouseEvent) => {
+  console.log(event)
+}
 
 const handleMsgClick = (index: number) => {
   msgBoxShow.value = true
