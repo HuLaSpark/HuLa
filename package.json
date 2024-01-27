@@ -15,7 +15,7 @@
   },
   "lint-staged": {
     "*.{js,jsx,vue,ts,tsx}": [
-      "oxlint --fix",
+      "oxlint src",
       "prettier --config .prettierrc --write",
       "eslint src"
     ]
