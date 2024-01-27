@@ -14,15 +14,10 @@
     "url": "https://xxxx/xxx"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
+    "*.{js,jsx,vue,ts,tsx}": [
       "oxlint --fix",
       "prettier --config .prettierrc --write",
       "eslint src"
-    ],
-    "*.vue": [
-      "oxlint --fix",
-      "prettier --write",
-      "eslint --fix"
     ]
   },
   "scripts": {
