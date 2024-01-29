@@ -79,7 +79,7 @@ onMounted(() => {
 }
 
 .active {
-  background: rgba(24, 159, 87, 0.6);
+  background: rgba(5, 150, 105, 0.8);
   border-radius: 8px;
   color: #fff;
   .text {

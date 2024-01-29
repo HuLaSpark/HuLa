@@ -23,7 +23,7 @@
       <div class="flex-col-x-center gap-10px">
         <div v-for="(item, index) in itemsBottom" :key="index" @click="openContent(item.label)" class="bottom-action">
           <svg class="w-22px h-22px">
-            <use :href="`#${activeItem === item.url && item.iconAction ? item.iconAction : item.icon}`"></use>
+            <use :href="`#${item.icon}`"></use>
           </svg>
         </div>
 
@@ -65,12 +65,8 @@ const itemsTop = ref<TopActive>([
   },
   {
     url: 'space',
-    icon: 'friends-circle',
-    iconAction: 'friends-circle-action'
-  },
-  {
-    url: 'more',
-    icon: 'application-menu'
+    icon: 'fire',
+    iconAction: 'fire-action'
   }
 ])
 const itemsBottom: BottomActive = [
@@ -78,19 +74,19 @@ const itemsBottom: BottomActive = [
     url: '/mail',
     label: 'mail',
     icon: 'mail',
-    iconAction: 'mail-unpacking'
+    iconAction: 'mail-action'
   },
   {
     url: '/folder',
     label: 'mail',
-    icon: 'folder-close',
-    iconAction: 'folder-open'
+    icon: 'file',
+    iconAction: 'file-action'
   },
   {
     url: '/collection',
     label: 'mail',
-    icon: 'collection-files',
-    iconAction: 'collection-files-action'
+    icon: 'collect',
+    iconAction: 'collect-action'
   }
 ]
 
@@ -146,7 +142,7 @@ onMounted(() => {
   &:not(.active):hover {
     background: rgba(193, 193, 193, 0.4);
     border-radius: 8px;
-    color: #189f57;
+    color: #059669;
     cursor: pointer;
     animation: linearAnimation 3s linear forwards;
   }
@@ -161,7 +157,7 @@ onMounted(() => {
 .active {
   background: rgba(193, 193, 193, 0.4);
   border-radius: 8px;
-  color: #189f57;
+  color: #059669;
 }
 
 :deep(.n-badge .n-badge-sup) {

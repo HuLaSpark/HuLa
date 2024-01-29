@@ -50,8 +50,8 @@ const themeOverrides: GlobalThemeOverrides = {
   },
   Tabs: {
     tabTextColorSegment: '#707070',
-    tabTextColorActiveSegment: '#189f57',
-    tabTextColorHoverSegment: '#189f57',
+    tabTextColorActiveSegment: '#059669',
+    tabTextColorHoverSegment: '#059669',
     tabPaddingMediumSegment: '4px'
   }
 }

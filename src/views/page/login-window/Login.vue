@@ -67,9 +67,9 @@
         <n-checkbox v-model:checked="protocol" />
         <div class="font-size-12px color-#909090 cursor-default lh-14px">
           <span>已阅读并同意</span>
-          <span class="color-#189f57 cursor-pointer">服务协议</span>
+          <span class="color-#059669 cursor-pointer">服务协议</span>
           <span>和</span>
-          <span class="color-#189f57 cursor-pointer">HuLa隐私保护指引</span>
+          <span class="color-#059669 cursor-pointer">HuLa隐私保护指引</span>
         </div>
       </n-flex>
 
@@ -84,11 +84,11 @@
 
       <!-- 顶部操作栏 -->
       <n-flex justify="center" class="font-size-14px">
-        <div class="color-#189f57 cursor-pointer" @click="toQRCode">扫码登录</div>
+        <div class="color-#059669 cursor-pointer" @click="toQRCode">扫码登录</div>
         <div class="w-1px h-14px bg-#ccc"></div>
         <n-popover style="padding: 6px; border-radius: 8px" trigger="click" :show-checkmark="false" :show-arrow="false">
           <template #trigger>
-            <div class="color-#189f57 cursor-pointer">更多选项</div>
+            <div class="color-#059669 cursor-pointer">更多选项</div>
           </template>
           <n-flex vertical :size="2">
             <div class="font-size-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px font-size-12px">

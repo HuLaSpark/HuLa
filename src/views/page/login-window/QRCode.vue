@@ -3,7 +3,7 @@
     <!--顶部操作栏-->
     <ActionBar :max-w="false" :shrink="false" />
 
-    <n-flex justify="center" class="font-size-28px color-#189f57 mt-25px">HuLA</n-flex>
+    <n-flex justify="center" class="font-size-28px color-#059669 mt-25px">HuLA</n-flex>
 
     <!-- 二维码 -->
     <n-flex justify="center" class="mt-35px">
@@ -21,9 +21,9 @@
 
     <!-- 顶部操作栏 -->
     <n-flex justify="center" class="font-size-14px mt-60px">
-      <div class="color-#189f57 cursor-pointer" @click="toLogin">账密登录</div>
+      <div class="color-#059669 cursor-pointer" @click="toLogin">账密登录</div>
       <div class="w-1px h-14px bg-#ccc"></div>
-      <div class="color-#189f57 cursor-pointer">注册账号</div>
+      <div class="color-#059669 cursor-pointer">注册账号</div>
     </n-flex>
   </div>
 </template>
