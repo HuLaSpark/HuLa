@@ -10,7 +10,7 @@
     v-for="n in 20"
     :key="n">
     <div class="flex items-center h-full pl-6px pr-8px gap-10px">
-      <img class="w-44px h-44px rounded-50% bg-#fff" style="border: 1px solid #f1f1f1" src="/logo.png" alt="" />
+      <img class="w-44px h-44px rounded-50% bg-#fff border-[1px_solid_#f1f1f1]" src="/logo.png" alt="" />
 
       <div class="w-full h-38px flex flex-col justify-between">
         <div class="flex-between-center">

@@ -5,7 +5,7 @@
     <!--    <div class="resize-handle" @mousedown="initDrag"></div>-->
 
     <!-- 顶部搜索栏 -->
-    <div class="mt-30px w-full h-40px flex flex-col items-center">
+    <div class="mt-30px w-full h-38px flex flex-col items-center shadow-[0_2px_4px_rgba(0,0,0,0.08)]">
       <div class="flex-center gap-5px w-full pr-16px pl-16px box-border">
         <n-input
           :on-focus="() => router.push('/searchDetails')"
@@ -28,7 +28,7 @@
 
     <!-- 列表 -->
     <n-scrollbar style="max-height: calc(100vh - 70px)">
-      <div class="h-full flex-1 pr-8px pl-6px">
+      <div class="h-full flex-1 p-[4px_10px_0px_8px]">
         <router-view />
       </div>
     </n-scrollbar>

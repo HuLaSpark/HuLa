@@ -1,7 +1,7 @@
 <template>
-  <n-tabs type="segment" animated>
+  <n-tabs type="segment" animated class="mt-4px">
     <n-tab-pane name="1" tab="好友">
-      <n-scrollbar style="max-height: calc(100vh - 120px)">
+      <n-scrollbar style="max-height: calc(100vh - 126px)">
         <n-collapse :display-directive="'show'">
           <ContextMenu
             @contextmenu="showMenu($event)"

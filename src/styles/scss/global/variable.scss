@@ -20,6 +20,18 @@ $webkit-scrollbar-hover: #999;
     stroke-dashoffset: 0;
   }
 }
+// 闪烁动画
+@keyframes twinkle {
+  0% {
+    transform: scale(0);
+  }
+  80% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
 // 懒加载默认动画
 @keyframes come-in {
   100% {

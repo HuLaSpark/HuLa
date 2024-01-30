@@ -39,8 +39,11 @@ watchEffect(() => {
 const themeOverrides: GlobalThemeOverrides = {
   Input: {
     borderRadius: '10px',
-    borderHover: '1px solid transparent',
-    border: '1px solid transparent'
+    borderHover: '0',
+    border: '0',
+    borderDisabled: '0',
+    borderFocus: '0',
+    boxShadowFocus: '0'
   },
   Tag: {
     borderRadius: '4px'
