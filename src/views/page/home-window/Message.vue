@@ -4,13 +4,14 @@
     @contextmenu="showMenu(n)"
     @select="handleSelect($event.label)"
     @click="handleMsgClick(n)"
-    :menu="[{ label: '添加' }, { label: '编辑' }, { label: '删除' }, { label: '查看' }, { label: '复制' }]"
+    :menu="menuList"
+    :special-menu="specialMenuList"
     :class="{ active: activeItem === n }"
     class="msg-box w-full h-75px mb-5px"
     v-for="n in 20"
     :key="n">
     <div class="flex items-center h-full pl-6px pr-8px gap-10px">
-      <img class="w-44px h-44px rounded-50% bg-#fff border-[1px_solid_#f1f1f1]" src="/logo.png" alt="" />
+      <img class="w-44px h-44px rounded-50% bg-#fff" style="border: 1px solid #f1f1f1" src="/logo.png" alt="" />
 
       <div class="w-full h-38px flex flex-col justify-between">
         <div class="flex-between-center">
@@ -32,6 +33,17 @@
 <script setup lang="ts">
 import Mitt from '@/utils/Bus.ts'
 
+const menuList = ref([
+  { label: '置顶', icon: 'topping' },
+  { label: '复制账号', icon: 'copy' },
+  { label: '标记未读', icon: 'message-unread' },
+  { label: '打开独立聊天窗口', icon: 'freezing-line-column' },
+  { label: '设置免打扰', icon: 'close-remind' }
+])
+const specialMenuList = ref([
+  { label: '从消息列表中移除', icon: 'delete' },
+  { label: '屏蔽此人消息', icon: 'forbid' }
+])
 const msgTotal = ref(0)
 const msgBoxShow = ref(false)
 /* 建议把此状态存入localStorage中 */

@@ -1,7 +1,7 @@
 <template>
   <!-- 顶部操作栏和显示用户名 -->
   <div
-    class="flex-y-center justify-between pl-20px pr-20px pt-8px pb-12px select-none shadow-[0_2px_4px_rgba(0,0,0,0.08)]">
+    class="flex-y-center justify-between pl-20px pr-20px pt-8px pb-12px select-none shadow-[0_4px_4px_rgba(0,0,0,0.08)]">
     <div>宝贝🐶 ⛅</div>
     <div class="options flex-y-center gap-20px">
       <div class="options-box">
@@ -89,7 +89,7 @@
   <n-scrollbar style="max-height: calc(100vh - 260px)">
     <div class="user-box w-full h-75px mb-5px" v-for="n in 20" :key="n">
       <div class="flex items-center h-full pl-6px pr-8px gap-10px">
-        <img class="w-44px h-44px rounded-50% bg-#fff border-[1px_solid_#f1f1f1]" src="/logo.png" alt="" />
+        <img class="w-44px h-44px rounded-50% bg-#fff" sytle="border: 1px solid #f1f1f1" src="/logo.png" alt="" />
 
         <div class="w-full h-38px flex flex-col justify-between">
           <div class="font-size-14px flex-y-center gap-4px">
@@ -112,29 +112,40 @@
   <div class="wh-full bg-#f1f1f1" style="box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.08)">
     <!-- 输入框顶部选项栏 -->
     <div class="flex-between-center p-[10px_22px]">
-      <div class="input-options flex-y-center gap-20px">
-        <svg><use href="#smiling-face"></use></svg>
-        <svg><use href="#screenshot"></use></svg>
-        <svg><use href="#file2"></use></svg>
-        <svg><use href="#photo"></use></svg>
-        <svg><use href="#red-packet"></use></svg>
-        <svg><use href="#voice"></use></svg>
+      <div class="input-options flex-y-center">
+        <svg class="mr-18px"><use href="#smiling-face"></use></svg>
+        <div class="flex-center gap-2px mr-12px">
+          <svg><use href="#screenshot"></use></svg>
+          <svg style="width: 14px; height: 14px"><use href="#down"></use></svg>
+        </div>
+        <div class="flex-center gap-2px mr-12px">
+          <svg><use href="#file2"></use></svg>
+          <svg style="width: 14px; height: 14px"><use href="#down"></use></svg>
+        </div>
+        <svg class="mr-18px"><use href="#photo"></use></svg>
+        <svg class="mr-18px"><use href="#red-packet"></use></svg>
+        <svg class="mr-18px"><use href="#voice"></use></svg>
       </div>
 
       <span>记录</span>
     </div>
 
+    <!-- 输入框及其发送按钮 -->
     <div class="pl-20px flex flex-col items-end gap-6px">
-      <n-input
-        autofocus
-        style="border: 0; background: #f1f1f1"
-        type="textarea"
-        size="small"
-        v-model:value="contactInput"
-        :autosize="{
-          minRows: 4,
-          maxRows: 4
-        }" />
+      <ContextMenu class="relative w-full h-100px" @select="handleSelect($event.label)" :menu="menuList">
+        <n-input
+          class="absolute"
+          :placeholder="null as any"
+          autofocus
+          style="border: 0; background: #f1f1f1"
+          type="textarea"
+          size="small"
+          v-model:value="contactInput"
+          :autosize="{
+            minRows: 4,
+            maxRows: 4
+          }" />
+      </ContextMenu>
 
       <n-button-group size="small" class="pr-20px">
         <n-button color="#059669" :disabled="contactInput.length === 0" class="w-65px">发送</n-button>
@@ -148,10 +159,21 @@
   </div>
 </template>
 <script setup lang="ts">
+const menuList = ref([
+  { label: '置顶', icon: 'topping' },
+  { label: '复制账号', icon: 'copy' },
+  { label: '标记未读', icon: 'message-unread' },
+  { label: '打开独立聊天窗口', icon: 'freezing-line-column' },
+  { label: '设置免打扰', icon: 'close-remind' }
+])
 const contactInput = ref('')
 
 const handleClick = () => {
   console.log(111)
+}
+
+const handleSelect = (event: MouseEvent) => {
+  console.log(event)
 }
 </script>
 
@@ -175,6 +197,9 @@ const handleClick = () => {
     width: 22px;
     height: 22px;
     cursor: pointer;
+    &:hover {
+      color: #059669;
+    }
   }
 }
 
