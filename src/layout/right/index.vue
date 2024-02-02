@@ -2,7 +2,7 @@
   <div class="flex-1 bg-#f1f1f1 h-full w-100vw">
     <ActionBar />
     <!-- 需要判断当前路由是否是信息详情界面 -->
-    <ChatMain v-if="msgBoxShow && router.currentRoute.value.path.includes('/message')" />
+    <ChatMain :active-item="activeItem" v-if="msgBoxShow && router.currentRoute.value.path.includes('/message')" />
 
     <Details v-else-if="detailsShow && router.currentRoute.value.path.includes('/friendsList')" />
 
@@ -18,9 +18,11 @@ import router from '@/router'
 
 const msgBoxShow = ref(false)
 const detailsShow = ref(false)
+const activeItem = ref()
 
-Mitt.on('msgBoxShow', (event) => {
-  msgBoxShow.value = event as boolean
+Mitt.on('msgBoxShow', (event: any) => {
+  msgBoxShow.value = event.msgBoxShow
+  activeItem.value = event.activeItem
 })
 
 Mitt.on('detailsShow', (event) => {

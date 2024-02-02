@@ -5,16 +5,21 @@ export const useContextMenu = (containerRef: Ref) => {
   const x = ref(0)
   const y = ref(0)
 
+  // 禁止滚动的默认行为
+  const preventDefault = (e: Event) => e.preventDefault()
+
   const handleContextMenu = (e: MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     showMenu.value = true
     x.value = e.clientX
     y.value = e.clientY
+    window.addEventListener('wheel', preventDefault, { passive: false }) // 禁止使用滚轮滚动页面
   }
 
-  function closeMenu() {
+  const closeMenu = () => {
     showMenu.value = false
+    window.removeEventListener('wheel', preventDefault) // 移除禁止滚轮滚动
   }
 
   onMounted(() => {

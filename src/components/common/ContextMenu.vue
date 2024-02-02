@@ -7,10 +7,10 @@
           v-if="showMenu"
           class="context-menu"
           :style="{
-            left: `${x}px`,
-            top: `${y}px`
+            left: `${pos.posX}px`,
+            top: `${pos.posY}px`
           }">
-          <div class="menu-list">
+          <div v-resize="handleSize" class="menu-list">
             <div @click="handleClick(item)" class="menu-item" v-for="item in menu as any[]" :key="item.label">
               <svg><use :href="`#${item.icon}`"></use></svg>
               {{ item.label }}
@@ -32,6 +32,7 @@
 
 <script setup lang="ts">
 import { useContextMenu } from '@/hooks/useContextMenu.ts'
+import { useViewport } from '@/hooks/useViewport.ts'
 
 const { menu } = defineProps({
   menu: {
@@ -45,7 +46,35 @@ const { menu } = defineProps({
 })
 const containerRef = ref(null)
 const emit = defineEmits(['select'])
+/* 获取鼠标位置和是否显示右键菜单 */
 const { x, y, showMenu } = useContextMenu(containerRef)
+/* 获取视口的宽高 */
+const { vw, vh } = useViewport()
+/* 定义右键菜单尺寸 */
+const w = ref(0)
+const h = ref(0)
+/* 计算右键菜单的位置 */
+const pos = computed(() => {
+  let posX = x.value
+  let posY = y.value
+  // x坐标
+  if (x.value > vw.value - w.value) {
+    posX -= w.value
+  }
+  // y坐标
+  if (y.value > vh.value - h.value) {
+    posY -= y.value - vh.value + h.value
+  }
+  return {
+    posX,
+    posY
+  }
+})
+
+const handleSize = ({ width, height }: any) => {
+  w.value = width
+  h.value = height
+}
 
 const handleClick = (item: string) => {
   showMenu.value = false
@@ -112,6 +141,9 @@ const handleAfterEnter = (el: any) => {
       }
       &:hover {
         background-color: rgba(10, 20, 28, 0.1);
+        svg {
+          animation: twinkle 0.3s ease-in-out;
+        }
       }
     }
   }

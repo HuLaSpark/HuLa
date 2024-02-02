@@ -15,7 +15,7 @@
 
       <div class="w-full h-38px flex flex-col justify-between">
         <div class="flex-between-center">
-          <span class="font-size-14px">宝贝🍓</span>
+          <span class="font-size-14px">宝贝{{ n }}🍓</span>
           <span class="text font-size-10px">昨天</span>
         </div>
 
@@ -64,7 +64,8 @@ const handleSelect = (event: MouseEvent) => {
 const handleMsgClick = (index: number) => {
   msgBoxShow.value = true
   activeItem.value = index
-  Mitt.emit('msgBoxShow', msgBoxShow.value)
+  const data = { msgBoxShow, activeItem }
+  Mitt.emit('msgBoxShow', data)
 }
 
 onMounted(() => {

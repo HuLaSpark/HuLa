@@ -2,7 +2,7 @@
   <!-- 顶部操作栏和显示用户名 -->
   <div
     class="flex-y-center justify-between pl-20px pr-20px pt-8px pb-12px select-none shadow-[0_4px_4px_rgba(0,0,0,0.08)]">
-    <div>宝贝🐶 ⛅</div>
+    <div>宝贝🐶{{ activeItem }} ⛅</div>
     <div class="options flex-y-center gap-20px">
       <div class="options-box">
         <n-popover
@@ -136,10 +136,10 @@
         <n-input
           class="absolute"
           :placeholder="null as any"
-          autofocus
           style="border: 0; background: #f1f1f1"
           type="textarea"
           size="small"
+          autofocus
           v-model:value="contactInput"
           :autosize="{
             minRows: 4,
@@ -160,13 +160,17 @@
 </template>
 <script setup lang="ts">
 const menuList = ref([
-  { label: '置顶', icon: 'topping' },
-  { label: '复制账号', icon: 'copy' },
-  { label: '标记未读', icon: 'message-unread' },
-  { label: '打开独立聊天窗口', icon: 'freezing-line-column' },
-  { label: '设置免打扰', icon: 'close-remind' }
+  { label: '剪切', icon: 'topping' },
+  { label: '复制', icon: 'copy' },
+  { label: '粘贴', icon: 'message-unread' },
+  { label: '另存为', icon: 'freezing-line-column' },
+  { label: '全部选择', icon: 'close-remind' }
 ])
 const contactInput = ref('')
+
+const { activeItem } = defineProps<{
+  activeItem: any
+}>()
 
 const handleClick = () => {
   console.log(111)
