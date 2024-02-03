@@ -14,7 +14,7 @@ onUnmounted(() => {
   window.removeEventListener('contextmenu', (e) => e.preventDefault(), false)
 })
 </script>
-<style scoped>
+<style lang="scss">
 #app {
   min-height: 100vh;
   background-repeat: no-repeat;

@@ -78,7 +78,7 @@
         :disabled="loginDisabled"
         class="w-full mt-10px mb-35px"
         @click="loginWin"
-        type="primary">
+        color="#059669">
         登录
       </n-button>
 
@@ -203,13 +203,6 @@ const loginWin = () => {
 /* 改变输入框中的位置 */
 :deep(.n-input .n-input__input, .n-input .n-input__textarea) {
   margin-left: 22px;
-}
-
-/* 修改复选框的样式 */
-:deep(.n-checkbox .n-checkbox-box) {
-  border-radius: 50%;
-  width: 16px;
-  height: 16px;
 }
 
 /* 隐藏naive UI的滚动条 */

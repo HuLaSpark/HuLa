@@ -3,10 +3,7 @@
     <n-tab-pane name="1" tab="好友">
       <n-scrollbar style="max-height: calc(100vh - 126px)">
         <n-collapse :display-directive="'show'">
-          <ContextMenu
-            @contextmenu="showMenu($event)"
-            @select="handleSelect($event.label)"
-            :menu="[{ label: '添加分组' }, { label: '重命名该组' }, { label: '删除分组' }]">
+          <ContextMenu @contextmenu="showMenu($event)" @select="handleSelect($event.label)" :menu="menuList">
             <n-collapse-item title="我的设备" name="1">
               <template #header-extra>
                 <p class="font-size-10px color-#707070">1/1</p>
@@ -79,6 +76,11 @@
 <script setup lang="ts">
 import Mitt from '@/utils/Bus.ts'
 
+const menuList = ref([
+  { label: '添加分组', icon: 'plus' },
+  { label: '重命名该组', icon: 'edit' },
+  { label: '删除分组', icon: 'delete' }
+])
 /* 建议把此状态存入localStorage中 */
 const activeItem = ref(0)
 const detailsShow = ref(false)

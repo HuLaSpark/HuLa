@@ -55,3 +55,10 @@ $webkit-scrollbar-hover: #999;
   @include mask-style(2px);
 }
 /*!end*/
+
+/*! 修改复选框的样式 */
+:deep(.n-checkbox .n-checkbox-box) {
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+}

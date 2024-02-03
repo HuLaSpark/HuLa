@@ -17,8 +17,11 @@ export const useContextMenu = (containerRef: Ref) => {
     window.addEventListener('wheel', preventDefault, { passive: false }) // 禁止使用滚轮滚动页面
   }
 
-  const closeMenu = () => {
-    showMenu.value = false
+  const closeMenu = (event: any) => {
+    /* 需要判断点击如果不是.context-menu类的元素的时候，menu才会关闭 */
+    if (!event.target.matches('.context-menu, .context-menu *')) {
+      showMenu.value = false
+    }
     window.removeEventListener('wheel', preventDefault) // 移除禁止滚轮滚动
   }
 

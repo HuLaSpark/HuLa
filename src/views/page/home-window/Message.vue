@@ -47,7 +47,7 @@ const specialMenuList = ref([
 const msgTotal = ref(0)
 const msgBoxShow = ref(false)
 /* 建议把此状态存入localStorage中 */
-const activeItem = ref(1)
+const activeItem = ref(0)
 
 watchEffect(() => {
   Mitt.emit('updateMsgTotal', msgTotal.value)

@@ -45,6 +45,12 @@ const themeOverrides: GlobalThemeOverrides = {
     borderFocus: '0',
     boxShadowFocus: '0'
   },
+  Checkbox: {
+    colorChecked: '#059669',
+    borderChecked: '1px solid #059669',
+    borderFocus: '1px solid #059669',
+    boxShadowFocus: '0 0 0 2px rgba(5, 150, 105, 0.3)'
+  },
   Tag: {
     borderRadius: '4px'
   },

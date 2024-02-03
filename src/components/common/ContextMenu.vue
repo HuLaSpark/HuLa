@@ -11,9 +11,16 @@
             top: `${pos.posY}px`
           }">
           <div v-resize="handleSize" class="menu-list">
-            <div @click="handleClick(item)" class="menu-item" v-for="item in menu as any[]" :key="item.label">
-              <svg><use :href="`#${item.icon}`"></use></svg>
-              {{ item.label }}
+            <div v-for="item in menu as any[]" :key="item.label">
+              <!-- 禁止的菜单选项需要禁止点击事件  -->
+              <div class="menu-item-disabled" v-if="item.disabled" @click.prevent="$event.preventDefault()">
+                <svg><use :href="`#${item.icon}`"></use></svg>
+                {{ item.label }}
+              </div>
+              <div class="menu-item" v-else @click="handleClick(item)">
+                <svg><use :href="`#${item.icon}`"></use></svg>
+                {{ item.label }}
+              </div>
             </div>
             <!-- 判断是否有特别的菜单项才需要分割线 -->
             <div v-if="specialMenu.length > 0" class="flex-col-y-center gap-6px">
@@ -34,7 +41,7 @@
 import { useContextMenu } from '@/hooks/useContextMenu.ts'
 import { useViewport } from '@/hooks/useViewport.ts'
 
-const { menu } = defineProps({
+const { menu, specialMenu } = defineProps({
   menu: {
     type: Array,
     default: () => []
@@ -76,6 +83,7 @@ const handleSize = ({ width, height }: any) => {
   h.value = height
 }
 
+/* 处理右键菜单点击事件 */
 const handleClick = (item: string) => {
   showMenu.value = false
   emit('select', item)
@@ -103,6 +111,19 @@ const handleAfterEnter = (el: any) => {
 </script>
 
 <style scoped lang="scss">
+@mixin menu-item {
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
 .context-menu {
   position: fixed;
   background: linear-gradient(45deg, rgba(255, 255, 255, 0.65) 80%, rgba(255, 255, 255, 0.95) 100%);
@@ -128,22 +149,20 @@ const handleAfterEnter = (el: any) => {
     flex-direction: column;
     gap: 6px;
     .menu-item {
-      padding: 2px 8px;
-      border-radius: 4px;
-      cursor: pointer;
-      user-select: none;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      svg {
-        width: 16px;
-        height: 16px;
-      }
+      @include menu-item();
       &:hover {
         background-color: rgba(10, 20, 28, 0.1);
         svg {
           animation: twinkle 0.3s ease-in-out;
         }
+      }
+    }
+    .menu-item-disabled {
+      --disabled-color: #c1c1c1;
+      @include menu-item();
+      color: var(--disabled-color);
+      svg {
+        color: var(--disabled-color);
       }
     }
   }
