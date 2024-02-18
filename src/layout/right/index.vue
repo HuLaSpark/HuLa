@@ -1,5 +1,5 @@
 <template>
-  <div class="flex-1 bg-#f1f1f1 h-full w-100vw">
+  <div class="flex-1 bg-[--right-bg-color] h-full w-100vw">
     <ActionBar />
     <!-- 需要判断当前路由是否是信息详情界面 -->
     <ChatMain :active-item="activeItem" v-if="msgBoxShow && router.currentRoute.value.path.includes('/message')" />
@@ -8,17 +8,51 @@
 
     <!-- 聊天界面背景图标 -->
     <div v-else class="flex-center wh-full select-none">
-      <img class="w-130px h-100px" src="@/assets/img/hula_bg.png" alt="" />
+      <img v-if="imgTheme === 'dark'" class="w-130px h-100px" src="@/assets/img/hula_bg_dark.png" alt="" />
+      <img v-else class="w-130px h-100px" src="@/assets/img/hula_bg_light.png" alt="" />
     </div>
   </div>
 </template>
 <script setup lang="ts">
 import Mitt from '@/utils/Bus.ts'
 import router from '@/router'
+import { listenMsg } from '@/common/CrossTabMsg.ts'
+import { theme } from '@/stores/theme.ts'
+import { storeToRefs } from 'pinia'
 
+const themeStore = theme()
+const { THEME, PATTERN } = storeToRefs(themeStore)
 const msgBoxShow = ref(false)
 const detailsShow = ref(false)
 const activeItem = ref()
+const imgTheme = ref(THEME.value)
+const prefers = matchMedia('(prefers-color-scheme: dark)')
+
+/* 跟随系统主题模式切换主题 */
+const followOS = () => {
+  imgTheme.value = prefers.matches ? 'dark' : 'light'
+}
+
+/* 监听其他标签页的变化 */
+listenMsg((msgInfo: any) => {
+  if (msgInfo.content === 'os') {
+    followOS()
+    prefers.addEventListener('change', followOS)
+  } else {
+    imgTheme.value = msgInfo.content === 'dark' ? 'dark' : 'light'
+    prefers.removeEventListener('change', followOS)
+  }
+})
+
+watchEffect(() => {
+  if (PATTERN.value === 'os') {
+    followOS()
+    prefers.addEventListener('change', followOS)
+  } else {
+    imgTheme.value = THEME.value === 'dark' ? 'dark' : 'light'
+    prefers.removeEventListener('change', followOS)
+  }
+})
 
 Mitt.on('msgBoxShow', (event: any) => {
   msgBoxShow.value = event.msgBoxShow

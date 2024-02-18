@@ -18,6 +18,7 @@
               <!-- 用户框 多套一层div来移除默认的右键事件然后覆盖掉因为margin空隙而导致右键可用 -->
               <div @contextmenu.stop="$event.preventDefault()">
                 <div
+                  v-slide
                   @click="handleClick(n)"
                   :class="{ active: activeItem === n }"
                   class="user-box w-full h-75px mb-5px"
@@ -107,18 +108,19 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .user-box {
+  color: var(--text-color);
   .text {
     color: #808080;
   }
   &:not(.active):hover {
-    background: #f3f3f3;
+    background: var(--bg-msg-hover);
     border-radius: 6px;
     cursor: pointer;
   }
 }
 
 .active {
-  background: rgba(5, 150, 105, 0.8);
+  background: var(--bg-active-msg);
   border-radius: 8px;
   color: #fff;
   .text {

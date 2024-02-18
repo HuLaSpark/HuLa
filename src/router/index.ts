@@ -6,12 +6,12 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/login',
     name: 'login',
-    component: () => import('@/views/page/login-window/Login.vue')
+    component: () => import('@/views/login-window/Login.vue')
   },
   {
     path: '/QRCode',
     name: 'QRCode',
-    component: () => import('@/views/page/login-window/QRCode.vue')
+    component: () => import('@/views/login-window/QRCode.vue')
   },
   {
     path: '/home',
@@ -21,34 +21,51 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: '/message',
         name: 'message',
-        component: () => import('@/views/page/home-window/Message.vue')
+        component: () => import('@/views/home-window/Message.vue')
       },
       {
         path: '/friendsList',
         name: 'friendsList',
-        component: () => import('@/views/page/home-window/FriendsList.vue')
+        component: () => import('@/views/home-window/FriendsList.vue')
       },
       {
         path: '/space',
         name: 'space',
-        component: () => import('@/views/page/home-window/Space.vue')
-      },
-      {
-        path: '/more',
-        name: 'more',
-        component: () => import('@/views/page/home-window/More.vue')
+        component: () => import('@/views/home-window/Space.vue')
       },
       {
         path: '/searchDetails',
         name: 'searchDetails',
-        component: () => import('@/views/page/home-window/SearchDetails.vue')
+        component: () => import('@/views/home-window/SearchDetails.vue')
       }
     ]
   },
   {
     path: '/mail',
     name: 'mail',
-    component: () => import('@/views/page/home-window/Mail.vue')
+    component: () => import('@/views/home-window/Mail.vue')
+  },
+  {
+    path: '/about',
+    name: 'about',
+    component: () => import('@/views/home-window/more/About.vue')
+  },
+  {
+    path: '/settings',
+    name: 'settings',
+    component: () => import('@/views/home-window/more/settings/index.vue'),
+    children: [
+      {
+        path: '/general',
+        name: 'general',
+        component: () => import('@/views/home-window/more/settings/general.vue')
+      },
+      {
+        path: '/remind',
+        name: 'remind',
+        component: () => import('@/views/home-window/more/settings/remind.vue')
+      }
+    ]
   }
 ]
 

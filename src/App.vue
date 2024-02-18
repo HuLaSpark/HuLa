@@ -6,7 +6,21 @@
   </NaiveProvider>
 </template>
 <script setup lang="ts">
+import { theme } from '@/stores/theme.ts'
+import { storeToRefs } from 'pinia'
+
+const themeStore = theme()
+const { THEME } = storeToRefs(themeStore)
+
 onMounted(() => {
+  document.documentElement.dataset.theme = THEME.value
+  // /* 禁用浏览器默认的快捷键 */
+  // window.addEventListener('keydown', (e) => {
+  //   if (e.ctrlKey || e.metaKey || e.altKey) {
+  //     e.preventDefault()
+  //   }
+  // })
+  // /* 禁止右键菜单 */
   // window.addEventListener('contextmenu', (e) => e.preventDefault(), false)
 })
 

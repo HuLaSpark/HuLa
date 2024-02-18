@@ -1,14 +1,82 @@
-/*!项目提供scss全局变量*/
-$border-radius: 8px;
-// 横部滚动条宽，纵向滚动条高
-$webkit-scrollbar-width: 8px;
-$webkit-scrollbar-height: 6px;
-// 滚动条颜色
-$webkit-scrollbar-color: #bfbfbf;
-// 滚动条的轨道颜色
-$webkit-scrollbar-track-color: #efefef;
-// 滚动条的悬停选中滑块颜色
-$webkit-scrollbar-hover: #999;
+/*! 主题变量 */
+:root {
+  // 整体布局背景
+  --left-bg-color: rgba(255, 255, 255, 0.6);
+  --left-active-color: rgba(193, 193, 193, 0.6);
+  --center-bg-color: #fff;
+  --right-bg-color: #f1f1f1;
+  // 阴影样式的颜色
+  --box-shadow-color: rgba(0,0,0,0.08);
+  // 文字颜色
+  --text-color: #18181c;
+  // 整体图标颜色
+  --icon-color: #000;
+  --action-bar-icon-color: #404040;
+  --action-bar-icon-hover: #e7e7e7;
+  // 搜索框背景颜色
+  --search-bg-color: #f3f3f3;
+  // 消息列表样式
+  --bg-msg-first-child: #eeeeee;
+  --bg-msg-hover: #f3f3f3;
+  --bg-active-msg: rgba(5, 150, 105, 0.8);
+  // 聊天框整体样式
+  --bg-chat-drawer: #f0f0f0;
+  --bg-setting-item: #fdfdfd;
+  --setting-item-line: #f1f1f1;
+  // 弹出框背景样式
+  --bg-popover: #fdfdfd;
+  // 右键菜单样式或者需要透明的菜单的样式
+  --bg-menu: linear-gradient(45deg, rgba(255, 255, 255, 0.65) 80%, rgba(255, 255, 255, 0.95) 100%);
+  --bg-menu-hover: rgba(10, 20, 28, 0.1);
+  // 通用左边菜单栏的hover样式
+  --bg-left-menu: rgba(255, 255, 255, 0.1);
+  --bg-left-menu-hover: rgba(90, 90, 90, 0.1);
+  --bg-left-active: rgba(90, 90, 90, 0.2);
+  // 通用禁用时的样式
+  --disabled-color: #c1c1c1;
+  // 选中选项时的边框的样式
+  --active-border-color: rgba(5, 150, 105, 0.8);
+}
+
+html[data-theme='dark'] {
+  // 整体布局背景
+  --left-bg-color: rgba(0, 0, 0, 0.7);
+  --left-active-color: rgba(193, 193, 193, 0.1);
+  --center-bg-color: #1b1b1b;
+  --right-bg-color: #111111;
+  // 阴影样式的颜色
+  --box-shadow-color: rgba(90,90,90,0.1);
+  // 文字颜色
+  --text-color: #fff;
+  // 整体图标颜色
+  --icon-color: #c1c1c1;
+  --action-bar-icon-color: #c1c1c1;
+  --action-bar-icon-hover: #242424;
+  // 搜索框背景颜色
+  --search-bg-color: #282828;
+  // 消息列表样式
+  --bg-msg-first-child: #282828;
+  --bg-msg-hover: #2d2d2d;
+  --bg-active-msg: rgba(5, 150, 105, 0.8);
+  // 聊天框整体样式
+  --bg-chat-drawer: #1b1b1b;
+  --bg-setting-item: #262626;
+  --setting-item-line: #333333;
+  // 弹出框背景样式
+  --bg-popover: #303030;
+  // 右键菜单样式或者需要透明的菜单的样式
+  --bg-menu: linear-gradient(45deg, rgba(33, 33, 33, 0.85) 80%, rgba(33, 33, 33, 0.95) 100%);
+  --bg-menu-hover: #323232;
+  // 通用左边菜单栏的hover样式
+  --bg-left-menu: rgba(0, 0, 0, 0.8);
+  --bg-left-menu-hover: #3b3b3b;
+  --bg-left-active: #444444;
+  // 通用禁用时的样式
+  --disabled-color: #575757;
+  // 选中选项时的边框的样式
+  --active-border-color: rgba(5, 150, 105, 0.8);
+}
+/*! end */
 // 线性动画
 @keyframes linearAnimation {
   0% {
@@ -61,4 +129,54 @@ $webkit-scrollbar-hover: #999;
   border-radius: 50%;
   width: 16px;
   height: 16px;
+}
+
+/*! 通用菜单项目样式 */
+@mixin menu-item-style($position: fixed) {
+  position: $position;
+  background: var(--bg-menu);
+  color: var(--text-color);
+  border-radius: 6px;
+  backdrop-filter: blur(10px);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 2px 2px rgb(0 0 0 / 3%),
+    0 4px 4px rgb(0 0 0 / 4%),
+    0 10px 8px rgb(0 0 0 / 5%),
+    0 15px 15px rgb(0 0 0 / 6%),
+    0 30px 30px rgb(0 0 0 / 7%),
+    0 70px 65px rgb(0 0 0 / 9%);
+  z-index: 999;
+  min-width: 100px;
+  font-size: 14px;
+  line-height: 1.8;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/*! 通用菜单项样式 */
+@mixin menu-list() {
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  .menu-item {
+    padding: 2px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+    &:hover {
+      background-color: var(--bg-menu-hover);
+      svg {
+        animation: twinkle 0.3s ease-in-out;
+      }
+    }
+  }
 }

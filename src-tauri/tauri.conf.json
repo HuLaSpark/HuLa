@@ -45,6 +45,7 @@
     "macOSPrivateApi": true,
     "windows": [
       {
+        "title": "登录",
         "label": "login",
         "url": "/login",
         "fullscreen": false,

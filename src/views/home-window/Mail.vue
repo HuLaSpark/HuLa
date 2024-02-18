@@ -1,5 +1,5 @@
 <template>
-  <div class="wh-full" style="background: rgba(255, 255, 255, 0.6)">
+  <div class="wh-full bg-[--right-bg-color]">
     <ActionBar :shrink="false" />
 
     <p>邮箱</p>

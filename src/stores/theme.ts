@@ -3,16 +3,24 @@ import { defineStore } from 'pinia'
 export const theme = defineStore('theme', {
   state: () => {
     return {
-      /*背景颜色*/
-      BGC: '#FFF',
-      /*是否切换护眼主题*/
-      EYE_THEME: false
+      /* 主题 */
+      THEME: 'light',
+      /* 选中的主题模式 */
+      PATTERN: 'light'
     }
   },
   actions: {
-    toggleTheme() {
-      this.EYE_THEME = !!this.EYE_THEME
-      this.BGC = this.BGC === '#FFF' ? '#18181c' : '#FFF'
+    toggleTheme(theme: string) {
+      if (theme === 'os') {
+        this.PATTERN = theme
+        const os = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        document.documentElement.dataset.theme = os
+        this.THEME = os
+      } else {
+        this.THEME = theme
+        document.documentElement.dataset.theme = theme
+        this.PATTERN = theme
+      }
     }
   },
   //开启数据持久化

@@ -1,6 +1,7 @@
 <template>
   <!-- todo 这里设置了 data-tauri-drag-region但是有部分区域不可以拖动 -->
-  <div data-tauri-drag-region class="login-box wh-full rounded-8px select-none" @click="handleClickOutside">
+  <!-- 单独使用n-config-provider来包裹不需要主题切换的界面 -->
+  <n-config-provider :theme="lightTheme" data-tauri-drag-region class="login-box wh-full rounded-8px select-none">
     <!--顶部操作栏-->
     <ActionBar :max-w="false" :shrink="false" />
 
@@ -24,8 +25,10 @@
         clearable>
         <template #suffix>
           <n-flex @click="arrowStatus = !arrowStatus">
-            <svg v-if="!arrowStatus" class="w-18px h-18px color-#505050 cursor-pointer"><use href="#down"></use></svg>
-            <svg v-else class="w-18px h-18px color-#505050 cursor-pointer"><use href="#up"></use></svg>
+            <svg v-if="!arrowStatus" class="down w-18px h-18px color-#505050 cursor-pointer">
+              <use href="#down"></use>
+            </svg>
+            <svg v-else class="down w-18px h-18px color-#505050 cursor-pointer"><use href="#up"></use></svg>
           </n-flex>
         </template>
       </n-input>
@@ -34,7 +37,7 @@
       <div
         style="border: 1px solid rgba(70, 70, 70, 0.1)"
         v-if="accountOption.length > 0 && arrowStatus"
-        class="absolute w-260px max-h-140px bg-#fdfdfd mt-45px z-99 rounded-8px p-8px box-border">
+        class="account-box absolute w-260px max-h-140px bg-#fdfdfd mt-45px z-99 rounded-8px p-8px box-border">
         <n-scrollbar style="max-height: 120px" trigger="none">
           <n-flex
             vertical
@@ -45,7 +48,9 @@
             <div class="flex-between-center">
               <div class="w-28px h-28px bg-#ccc rounded-50%"></div>
               <p class="font-size-14px color-#505050">{{ item.account }}</p>
-              <img @click.stop="delAccount(index)" src="@/assets/svg/close.svg" class="w-10px h-10px" alt="" />
+              <svg @click.stop="delAccount(index)" class="w-12px h-12px">
+                <use href="#close"></use>
+              </svg>
             </div>
           </n-flex>
         </n-scrollbar>
@@ -101,12 +106,13 @@
         </n-popover>
       </n-flex>
     </n-flex>
-  </div>
+  </n-config-provider>
 </template>
 <script setup lang="ts">
 import router from '@/router'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { delay } from 'lodash-es'
+import { lightTheme } from 'naive-ui'
 
 type Account = {
   account: string
@@ -147,16 +153,6 @@ watchEffect(() => {
   loginDisabled.value = !(account.value && password.value && protocol.value)
 })
 
-/*监听是否点击了除了下拉框外的其他地方*/
-const handleClickOutside = (event: MouseEvent) => {
-  if (arrowStatus.value) {
-    const accountInput = document.querySelector('.login-box')?.contains(event.target as HTMLElement)
-    if (accountInput) {
-      arrowStatus.value = false
-    }
-  }
-}
-
 /* 删除账号列表内容 */
 const delAccount = (index: number) => {
   // 检查索引有效性
@@ -192,14 +188,41 @@ const toQRCode = () => {
 const loginWin = () => {
   loading.value = true
   delay(async () => {
-    await createWebviewWindow('home', 1050, 720, 'login')
+    await createWebviewWindow('HuLa', 'home', 1050, 720, 'login')
     loading.value = false
   }, 800)
 }
+
+/*监听是否点击了除了下拉框外的其他地方*/
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as Element
+  if (!target.matches('.account-box, .account-box *, .down')) {
+    arrowStatus.value = false
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('click', handleClickOutside, true)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('click', handleClickOutside, true)
+})
 </script>
 
 <style scoped lang="scss">
 @import '@/styles/scss/global/login-bg';
+:deep(.hover-box) {
+  @apply w-28px h24px flex-center hover:bg-#e7e7e7;
+  svg {
+    color: #404040;
+  }
+}
+:deep(.action-close) {
+  svg {
+    color: #404040;
+  }
+}
 /* 改变输入框中的位置 */
 :deep(.n-input .n-input__input, .n-input .n-input__textarea) {
   margin-left: 22px;

@@ -5,6 +5,7 @@ import { invoke } from '@tauri-apps/api/tauri'
 export const useWindow = () => {
   /**
    * 创建窗口
+   * @param title 窗口标题
    * @param label 窗口名称
    * @param wantCloseWindow 创建后需要关闭的窗口
    * @param width 窗口宽度
@@ -14,6 +15,7 @@ export const useWindow = () => {
    * @param minH 窗口最小高度
    * */
   const createWebviewWindow = async (
+    title: string,
     label: string,
     width: number,
     height: number,
@@ -23,6 +25,7 @@ export const useWindow = () => {
     minH = 540
   ) => {
     const webview = new WebviewWindow(label, {
+      title: title,
       url: `/${label}`,
       fullscreen: false,
       resizable: resizable,

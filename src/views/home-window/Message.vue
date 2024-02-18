@@ -77,22 +77,23 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .msg-box {
+  color: var(--text-color);
   .text {
     color: #808080;
   }
   &:not(.active):first-child {
-    background: #eeeeee;
+    background: var(--bg-msg-first-child);
     border-radius: 6px;
   }
   &:not(.active):hover {
-    background: #f3f3f3;
+    background: var(--bg-msg-hover);
     border-radius: 6px;
     cursor: pointer;
   }
 }
 
 .active {
-  background: rgba(5, 150, 105, 0.8);
+  background: var(--bg-active-msg);
   border-radius: 8px;
   color: #fff;
   .text {

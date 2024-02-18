@@ -2,25 +2,29 @@
   <!--  user-select: none让元素不可以选中 -->
   <div data-tauri-drag-region class="flex justify-end select-none">
     <!-- 收缩页面 -->
-    <div v-if="shrink" @click="shrinkWindow" class="w-28px h24px flex-center hover:bg-#e7e7e7">
-      <svg class="w-16px h-16px color-#404040 cursor-pointer"><use href="#left-bar"></use></svg>
+    <div v-if="shrink" @click="shrinkWindow" class="hover-box">
+      <svg class="w-16px h-16px color-[--action-bar-icon-color] cursor-pointer"><use href="#left-bar"></use></svg>
     </div>
     <!-- 最小化 -->
-    <div v-if="minW" @click="minimizeWindow" class="w-28px h24px flex-center hover:bg-#e7e7e7">
-      <img src="@/assets/svg/minimize.svg" class="w-38px h-34px" alt="" />
+    <div v-if="minW" @click="minimizeWindow" class="hover-box">
+      <svg class="w-24px h-24px color-[--action-bar-icon-color] opacity-66 cursor-pointer">
+        <use href="#maximize"></use>
+      </svg>
     </div>
     <!-- 最大化 -->
-    <div v-if="maxW" @click="restoreWindow" class="w-28px h24px flex-center hover:bg-#e7e7e7">
-      <img v-show="!windowMaximized" src="@/assets/svg/maximize.svg" class="w-14px h-14px" alt="" />
-      <img v-show="windowMaximized" src="@/assets/svg/normal.svg" class="w-14px h-14px" alt="" />
+    <div v-if="maxW" @click="restoreWindow" class="hover-box">
+      <svg v-show="!windowMaximized" class="w-18px h-18px color-[--action-bar-icon-color] cursor-pointer">
+        <use href="#rectangle-small"></use>
+      </svg>
+      <svg v-show="windowMaximized" class="w-16px h-16px color-[--action-bar-icon-color] cursor-pointer">
+        <use href="#internal-reduction"></use>
+      </svg>
     </div>
     <!-- 关闭窗口 -->
-    <div
-      v-if="closeW"
-      @click="closeWindow"
-      class="close-box w-28px h24px flex-center cursor-pointer hover:bg-#c22b1c rounded-tr-6px">
-      <img src="@/assets/svg/close.svg" class="default-img w-10px h-10px" alt="" />
-      <img src="@/assets/svg/close-hover.svg" class="hover-img w-10px h-10px" alt="" />
+    <div v-if="closeW" @click="closeWindow" class="action-close">
+      <svg class="w-14px h-14px color-[--action-bar-icon-color] cursor-pointer">
+        <use href="#close"></use>
+      </svg>
     </div>
   </div>
 </template>
@@ -97,19 +101,10 @@ const shrinkWindow = async () => {
 </script>
 
 <style scoped lang="scss">
-/* 当鼠标悬停在按钮上时，切换显示状态 */
-.close-box {
-  /* 默认不显示 */
-  .hover-img {
-    display: none;
-  }
-  &:hover {
-    .default-img {
-      display: none;
-    }
-    .hover-img {
-      display: block;
-    }
-  }
+.hover-box {
+  @apply w-28px h24px flex-center hover:bg-[--action-bar-icon-hover];
+}
+.action-close {
+  @apply w-28px h24px flex-center cursor-pointer hover:bg-#c22b1c svg:hover:color-[#fff] rounded-tr-6px;
 }
 </style>

@@ -1,9 +1,5 @@
 <template>
-  <n-config-provider
-    :theme-overrides="themeOverrides"
-    :theme="globalTheme"
-    :locale="NLanguage"
-    :date-locale="NDataLanguage">
+  <n-config-provider :theme-overrides="themeOverrides" :theme="globalTheme" :locale="zhCN" :date-locale="dateZhCN">
     <n-loading-bar-provider>
       <n-dialog-provider>
         <n-notification-provider :max="notificMax">
@@ -20,19 +16,46 @@
 <script setup lang="ts">
 import { theme } from '@/stores/theme.ts'
 import { storeToRefs } from 'pinia'
-import { dateZhCN, darkTheme, GlobalThemeOverrides, zhCN } from 'naive-ui'
+import { dateZhCN, darkTheme, lightTheme, GlobalThemeOverrides, zhCN } from 'naive-ui'
+import { listenMsg } from '@/common/CrossTabMsg.ts'
 
 const themeStore = theme()
-const { EYE_THEME } = storeToRefs(themeStore)
-/*调整naive ui的国际化*/
-const NLanguage = ref(zhCN)
-const NDataLanguage = ref(dateZhCN)
-provide('NLanguage', NLanguage)
-provide('NDataLanguage', NDataLanguage)
+const { THEME, PATTERN } = storeToRefs(themeStore)
 /*监听深色主题颜色变化*/
-const globalTheme = ref<any>(EYE_THEME.value)
+const globalTheme = ref<any>(THEME.value)
+const prefers = matchMedia('(prefers-color-scheme: dark)')
+
+/* 跟随系统主题模式切换主题 */
+const followOS = () => {
+  globalTheme.value = prefers.matches ? darkTheme : lightTheme
+  document.documentElement.dataset.theme = prefers.matches ? 'dark' : 'light'
+  THEME.value = prefers.matches ? 'dark' : 'light'
+}
+// TODO 这里待优化 (nyh -> 2024-02-16 22:06:40)
+const listenOS = () => {
+  followOS()
+}
+
+/* 监听其他标签页的变化 */
+listenMsg((msgInfo: any) => {
+  if (msgInfo.content === 'os') {
+    listenOS()
+    prefers.addEventListener('change', listenOS)
+  } else {
+    globalTheme.value = msgInfo.content === 'dark' ? darkTheme : lightTheme
+    document.documentElement.dataset.theme = msgInfo.content === 'dark' ? 'dark' : 'light'
+    prefers.removeEventListener('change', listenOS)
+  }
+})
+
 watchEffect(() => {
-  globalTheme.value = EYE_THEME.value ? darkTheme : null
+  if (PATTERN.value === 'os') {
+    followOS()
+    prefers.addEventListener('change', followOS)
+  } else {
+    globalTheme.value = THEME.value === 'dark' ? darkTheme : lightTheme
+    prefers.removeEventListener('change', followOS)
+  }
 })
 
 /*调整naive ui的primary的主题颜色和样式*/

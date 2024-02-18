@@ -1,5 +1,5 @@
 <template>
-  <div data-tauri-drag-region class="login-box wh-full rounded-8px select-none">
+  <n-config-provider :theme="lightTheme" data-tauri-drag-region class="login-box wh-full rounded-8px select-none">
     <!--顶部操作栏-->
     <ActionBar :max-w="false" :shrink="false" />
 
@@ -25,11 +25,12 @@
       <div class="w-1px h-14px bg-#ccc"></div>
       <div class="color-#059669 cursor-pointer">注册账号</div>
     </n-flex>
-  </div>
+  </n-config-provider>
 </template>
 <script setup lang="ts">
 import router from '@/router'
 import { delay } from 'lodash-es'
+import { lightTheme } from 'naive-ui'
 
 const loading = ref(true)
 const loadText = ref('加载中...')
@@ -49,4 +50,15 @@ onMounted(() => {
 
 <style scoped lang="scss">
 @import '@/styles/scss/global/login-bg';
+:deep(.hover-box) {
+  @apply w-28px h24px flex-center hover:bg-#e7e7e7;
+  svg {
+    color: #404040;
+  }
+}
+:deep(.action-close) {
+  svg {
+    color: #404040;
+  }
+}
 </style>

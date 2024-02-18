@@ -1,10 +1,11 @@
 <template>
   <!-- 顶部操作栏和显示用户名 -->
   <div
-    class="relative flex-y-center justify-between pl-20px pr-20px pt-8px pb-12px select-none shadow-[0_4px_4px_rgba(0,0,0,0.08)]">
-    <div>宝贝🐶{{ activeItem }} ⛅</div>
+    style="box-shadow: 0 4px 4px var(--box-shadow-color)"
+    class="relative flex-y-center justify-between pl-20px pr-20px pt-8px pb-12px select-none">
+    <div class="color-[--text-color]">宝贝🐶{{ activeItem }} ⛅</div>
     <!-- 顶部右边选项栏 -->
-    <div class="options flex-y-center gap-20px">
+    <div class="options flex-y-center gap-20px color-[--icon-color]">
       <div class="options-box">
         <n-popover
           trigger="hover"
@@ -87,16 +88,13 @@
 
     <!-- 侧边选项栏 -->
     <transition name="sidebar">
-      <div
-        v-if="sidebarShow"
-        style="border: 1px solid rgba(90, 90, 90, 0.1)"
-        class="flex flex-col absolute top-44px right-0 z-999 bg-#f0f0f0 p-22px box-border w-320px h-100vh shadow-[0_14px_14px_rgba(0,0,0,0.35)]">
+      <div v-if="sidebarShow" style="border: 1px solid rgba(90, 90, 90, 0.1)" class="sidebar">
         <div class="setting-item flex-col-y-center">
           <div class="flex-between-center">
             <p>设为置顶</p>
             <n-switch size="small" />
           </div>
-          <div class="h-1px bg-#f1f1f1 m-[10px_0]"></div>
+          <div class="h-1px bg-[--setting-item-line] m-[10px_0]"></div>
           <div class="flex-between-center">
             <p>消息免打扰</p>
             <n-switch size="small" />
@@ -147,7 +145,9 @@
   </n-scrollbar>
 
   <!-- 底部栏 -->
-  <div class="wh-full bg-#f1f1f1" style="box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.08)">
+  <div
+    class="wh-full bg-[--right-bg-color] color-[--icon-color]"
+    style="box-shadow: 0 -2px 4px var(--box-shadow-color)">
     <!-- 输入框顶部选项栏 -->
     <div class="flex-between-center p-[10px_22px] select-none">
       <div class="input-options flex-y-center">
@@ -259,7 +259,7 @@
         <n-input
           class="absolute"
           :placeholder="null as any"
-          style="border: 0; background: #f1f1f1"
+          style="border: 0; background: var(--right-bg-color)"
           type="textarea"
           size="small"
           autofocus
@@ -270,20 +270,24 @@
           }" />
       </ContextMenu>
 
-      <n-button-group size="small" class="pr-20px">
-        <n-button color="#059669" :disabled="contactInput.length === 0" class="w-65px">发送</n-button>
-        <n-button color="#059669" class="p-[0_6px]">
-          <template #icon>
-            <svg class="w-22px h-22px"><use href="#down"></use></svg>
-          </template>
-        </n-button>
-      </n-button-group>
+      <n-config-provider :theme="lightTheme">
+        <n-button-group size="small" class="pr-20px">
+          <n-button color="#059669" :disabled="contactInput.length === 0" class="w-65px">发送</n-button>
+          <n-button color="#059669" class="p-[0_6px]">
+            <template #icon>
+              <svg class="w-22px h-22px"><use href="#down"></use></svg>
+            </template>
+          </n-button>
+        </n-button-group>
+      </n-config-provider>
     </div>
 
     <!-- 弹出框 -->
     <n-modal v-model:show="modalShow" class="w-350px border-rd-8px">
-      <div class="bg-#fdfdfd w-360px h-full p-6px box-border flex flex-col">
-        <img @click="modalShow = false" src="@/assets/svg/close.svg" class="w-10px h-10px ml-a cursor-pointer" alt="" />
+      <div class="bg-[--bg-popover] w-360px h-full p-6px box-border flex flex-col">
+        <svg @click="modalShow = false" class="w-12px h-12px ml-a cursor-pointer select-none">
+          <use href="#close"></use>
+        </svg>
         <div class="flex flex-col gap-30px p-[22px_10px_10px_22px] select-none">
           <p>{{ tips }}</p>
           <label v-if="tipsOptions" class="font-size-14px flex gap-6px lh-16px">
@@ -301,6 +305,8 @@
   </div>
 </template>
 <script setup lang="ts">
+import { lightTheme } from 'naive-ui'
+
 const menuList = ref([
   { label: '剪切', icon: 'screenshot', disabled: true },
   { label: '复制', icon: 'copy', disabled: true },
@@ -357,6 +363,21 @@ const handleConfirm = () => {}
 const handleSelect = (event: MouseEvent) => {
   console.log(event)
 }
+
+const closeMenu = (event: any) => {
+  /* 点击非侧边栏元素时，关闭侧边栏，但点击弹出框元素、侧边栏图标、还有侧边栏里面的元素时不关闭 */
+  if (!event.target.matches('.sidebar, .sidebar *, .options-box *, .n-modal *')) {
+    sidebarShow.value = false
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('click', closeMenu, true)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('click', closeMenu, true)
+})
 </script>
 
 <style scoped lang="scss">
@@ -389,8 +410,9 @@ const handleSelect = (event: MouseEvent) => {
   &:first-child {
     margin-top: 0;
   }
+  color: var(--text-color);
   margin-top: 20px;
-  background: #fdfdfd;
+  background: var(--bg-setting-item);
   width: 100%;
   padding: 12px;
   border-radius: 12px;
@@ -418,6 +440,10 @@ const handleSelect = (event: MouseEvent) => {
     transform: translateX(100%);
     opacity: 0;
   }
+}
+
+.sidebar {
+  @apply flex flex-col absolute top-44px right-0 z-999 bg-[--bg-chat-drawer] p-22px box-border w-320px h-100vh shadow-[0_14px_14px_rgba(0,0,0,0.35)];
 }
 
 /*! 使用vue内置transition做过渡效果 */
