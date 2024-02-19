@@ -188,7 +188,7 @@ const toQRCode = () => {
 const loginWin = () => {
   loading.value = true
   delay(async () => {
-    await createWebviewWindow('HuLa', 'home', 1050, 720, 'login')
+    await createWebviewWindow('HuLa', 'home', 1050, 720, 'login', false, true)
     loading.value = false
   }, 800)
 }

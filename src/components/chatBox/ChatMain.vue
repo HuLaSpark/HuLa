@@ -366,7 +366,7 @@ const handleSelect = (event: MouseEvent) => {
 
 const closeMenu = (event: any) => {
   /* 点击非侧边栏元素时，关闭侧边栏，但点击弹出框元素、侧边栏图标、还有侧边栏里面的元素时不关闭 */
-  if (!event.target.matches('.sidebar, .sidebar *, .options-box *, .n-modal *')) {
+  if (!event.target.matches('.sidebar, .sidebar *, .n-modal-mask, .options-box *, .n-modal *') && !modalShow.value) {
     sidebarShow.value = false
   }
 }

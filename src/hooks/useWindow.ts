@@ -10,6 +10,7 @@ export const useWindow = () => {
    * @param wantCloseWindow 创建后需要关闭的窗口
    * @param width 窗口宽度
    * @param height 窗口高度
+   * @param isDrag 是否禁止拖动元素
    * @param resizable 调整窗口大小
    * @param minW 窗口最小宽度
    * @param minH 窗口最小高度
@@ -20,7 +21,8 @@ export const useWindow = () => {
     width: number,
     height: number,
     wantCloseWindow?: string,
-    resizable = true,
+    isDrag = true,
+    resizable = false,
     minW = 310,
     minH = 540
   ) => {
@@ -36,7 +38,8 @@ export const useWindow = () => {
       minWidth: minW,
       skipTaskbar: false,
       decorations: false,
-      transparent: true
+      transparent: true,
+      fileDropEnabled: isDrag
     })
 
     await webview.once('tauri://created', async () => {

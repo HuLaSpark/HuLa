@@ -132,7 +132,7 @@ const menuList = ref<MenuList>([
     icon: 'settings',
     click: async () => {
       // todo 设置
-      await createWebviewWindow('设置', 'settings', 840, 840, '', false)
+      await createWebviewWindow('设置', 'settings', 840, 840)
     }
   },
   {
@@ -140,7 +140,7 @@ const menuList = ref<MenuList>([
     icon: 'info',
     click: async () => {
       // todo 关于
-      await createWebviewWindow('关于', 'about', 360, 480, '', false, 360, 480)
+      await createWebviewWindow('关于', 'about', 360, 480)
     }
   },
   {
@@ -149,7 +149,7 @@ const menuList = ref<MenuList>([
     click: async () => {
       // todo 退出账号 需要关闭其他的全部窗口
       // 1.需要退出账号
-      await createWebviewWindow('登录', 'login', 320, 448, 'home', false, 320, 448)
+      await createWebviewWindow('登录', 'login', 320, 448, 'home')
     }
   }
 ])

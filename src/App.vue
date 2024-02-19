@@ -12,8 +12,17 @@ import { storeToRefs } from 'pinia'
 const themeStore = theme()
 const { THEME } = storeToRefs(themeStore)
 
+const preventDrag = (e: MouseEvent) => {
+  const event = e.target as HTMLElement
+  // 检查目标元素是否是<img>元素
+  if (event.nodeName.toLowerCase() === 'img' || event.nodeName.toLowerCase() === 'input') {
+    e.preventDefault()
+  }
+}
+
 onMounted(() => {
   document.documentElement.dataset.theme = THEME.value
+  window.addEventListener('dragstart', preventDrag)
   // /* 禁用浏览器默认的快捷键 */
   // window.addEventListener('keydown', (e) => {
   //   if (e.ctrlKey || e.metaKey || e.altKey) {
@@ -26,6 +35,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('contextmenu', (e) => e.preventDefault(), false)
+  window.removeEventListener('dragstart', preventDrag)
 })
 </script>
 <style lang="scss">
