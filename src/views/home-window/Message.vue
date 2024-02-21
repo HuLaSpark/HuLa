@@ -74,7 +74,19 @@ const menuList = ref<Menu>([
     label: '置顶',
     icon: 'topping',
     click: (key: number) => {
-      console.log(key)
+      let index = items.value.findIndex((item) => item.key === key)
+      // 实现置顶功能
+      if (index !== 0) {
+        // 交换元素位置
+        const temp = items.value[index]
+        items.value[index] = items.value[0]
+        items.value[0] = temp
+        // 找到已经置顶的元素的下标把对应的menuList的top设置为true
+        const topIndex = items.value.findIndex((item) => item.key === items.value[0].key)
+        menuList.value[topIndex].top = true
+        menuList.value[topIndex].label = '取消置顶'
+        menuList.value[topIndex].icon = 'close'
+      }
     }
   },
   {

@@ -35,3 +35,11 @@ export enum GlobalStatusEnum {
   'warning',
   'error'
 }
+
+/**
+ * 消息类型
+ */
+export enum MsgEnum {
+  /** 文本 */
+  TEXT
+}

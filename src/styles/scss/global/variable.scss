@@ -36,6 +36,8 @@
   --disabled-color: #c1c1c1;
   // 选中选项时的边框的样式
   --active-border-color: rgba(5, 150, 105, 0.8);
+  // 气泡背景颜色
+  --bg-bubble: rgb(253, 253, 253);
 }
 
 html[data-theme='dark'] {
@@ -75,6 +77,8 @@ html[data-theme='dark'] {
   --disabled-color: #575757;
   // 选中选项时的边框的样式
   --active-border-color: rgba(5, 150, 105, 0.8);
+  // 气泡背景颜色
+  --bg-bubble: rgb(38, 38, 38);
 }
 /*! end */
 // 线性动画
