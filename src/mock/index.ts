@@ -1,6 +1,6 @@
 import { MockItem } from '@/services/types.ts'
 
-const avatars = 'https://picsum.photos/60'
+const avatars = 'https://picsum.photos/140'
 
 // TODO 生成随机英文字符串的函数（只用于测试） (nyh -> 2024-02-24 23:26:04)
 // type为1为群聊，2为好友
@@ -19,7 +19,7 @@ const generateRandomString = (length: number, type: number) => {
 }
 
 export const MockList = ref<MockItem[]>(
-  Array.from({ length: 5 }, (_, i) => {
+  Array.from({ length: 50 }, (_, i) => {
     const type = Math.round(Math.random()) + 1
     return {
       key: i,

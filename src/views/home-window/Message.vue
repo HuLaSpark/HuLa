@@ -18,14 +18,12 @@
 
         <div class="h-38px flex flex-1 flex-col justify-between">
           <div class="flex-between-center">
-            <span class="font-size-14px">{{ item.accountName }}</span>
-            <span class="text font-size-10px">昨天</span>
+            <span class="text-14px">{{ item.accountName }}</span>
+            <span class="text text-10px">昨天</span>
           </div>
 
           <div class="flex-between-center">
-            <p
-              class="text w-135px font-size-12px"
-              style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
+            <p class="text w-135px text-12px" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
               说的很经典哈萨克的哈萨克看到贺卡上
             </p>
 

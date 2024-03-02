@@ -6,20 +6,20 @@
           <ContextMenu @contextmenu="showMenu($event)" @select="handleSelect($event.label)" :menu="menuList">
             <n-collapse-item title="我的设备" name="1">
               <template #header-extra>
-                <p class="font-size-10px color-#707070">1/1</p>
+                <p class="text-10px color-#707070">1/1</p>
               </template>
               <div>可以</div>
             </n-collapse-item>
             <n-collapse-item title="特别关心" name="2">
               <template #header-extra>
-                <p class="font-size-10px color-#707070">1/1</p>
+                <p class="text-10px color-#707070">1/1</p>
               </template>
 
               <!-- 用户框 多套一层div来移除默认的右键事件然后覆盖掉因为margin空隙而导致右键可用 -->
               <div @contextmenu.stop="$event.preventDefault()">
                 <div
                   v-slide
-                  @click="handleClick(item.key)"
+                  @click="handleClick(item.key, 2)"
                   :class="{ active: activeItem === item.key }"
                   class="user-box w-full h-75px mb-5px"
                   v-for="item in friendsList"
@@ -32,7 +32,7 @@
                       alt="" />
 
                     <div class="h-38px flex flex-1 flex-col justify-between">
-                      <div class="font-size-14px flex-y-center gap-4px">
+                      <div class="text-14px flex-y-center gap-4px">
                         {{ item.accountName }}
                       </div>
 
@@ -59,9 +59,8 @@
       </n-scrollbar>
     </n-tab-pane>
     <n-tab-pane name="2" tab="群聊">
-      <!--  右键菜单组件  -->
       <div
-        @click="handleClick(item.key)"
+        @click="handleClick(item.key, 1)"
         :class="{ active: activeItem === item.key }"
         class="w-full h-75px mb-5px cursor-pointer"
         v-for="item in groupChatList"
@@ -96,10 +95,18 @@ const detailsShow = ref(false)
 const friendsList = ref(MockList.value.filter((item) => item.type === 2))
 const groupChatList = ref(MockList.value.filter((item) => item.type === 1))
 
-const handleClick = (index: number) => {
+const handleClick = (index: number, type: number) => {
   detailsShow.value = true
   activeItem.value = index
-  Mitt.emit('detailsShow', detailsShow.value)
+  const data = {
+    type: type,
+    data:
+      type === 1
+        ? groupChatList.value.filter((item) => item.key === index)
+        : friendsList.value.filter((item) => item.key === index),
+    detailsShow: detailsShow.value
+  }
+  Mitt.emit('detailsShow', data)
 }
 // todo 需要循环数组来展示分组
 const showMenu = (event: MouseEvent) => {

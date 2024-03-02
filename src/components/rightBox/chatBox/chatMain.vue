@@ -27,7 +27,7 @@
             <div
               class="flex flex-col gap-8px color-[--text-color]"
               :class="item.accountId === userId ? 'items-end mr-10px' : ''">
-              <span class="font-size-13px select-none" v-if="activeItem.type === RoomTypeEnum.Group">
+              <span class="text-13px select-none" v-if="activeItem.type === RoomTypeEnum.Group">
                 {{ item.accountId === userId ? item.value : activeItem.accountName }}
               </span>
               <!--  右键菜单及其气泡样式  -->
@@ -226,7 +226,7 @@ onUnmounted(() => {
 <style scoped lang="scss">
 /* 气泡样式 */
 @mixin bubble {
-  @apply w-fit max-w-55vw min-h-1em p-[8px_12px] font-size-15px line-height-22px bg-[--bg-bubble] rounded-[2px_18px_18px];
+  @apply w-fit max-w-55vw min-h-1em p-[8px_12px] text-15px line-height-22px bg-[--bg-bubble] rounded-[2px_18px_18px];
   word-break: break-all; /* 强制连续文本换行 */
   &.active {
     background-color: var(--bg-bubble-active);

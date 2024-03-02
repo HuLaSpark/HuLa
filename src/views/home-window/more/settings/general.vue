@@ -1,7 +1,7 @@
 <template>
   <!-- 通用设置 -->
   <main>
-    <span class="pl-10px font-size-14px color-[--text-color]">外观设置</span>
+    <span class="pl-10px text-14px color-[--text-color]">外观设置</span>
     <section class="bg-[--bg-setting-item] rounded-12px wh-full mt-12px p-12px box-border flex-y-center gap-20px">
       <div
         class="flex-col-x-center w-120px h-100px"
@@ -14,7 +14,7 @@
           :style="activeItem === item.code ? 'border: 2px solid #059669' : 'border: 2px solid transparent'">
           <component :is="item.model" />
         </div>
-        <span class="font-size-12px pt-8px color-[--text-color]">{{ item.title }}</span>
+        <span class="text-12px pt-8px color-[--text-color]">{{ item.title }}</span>
       </div>
     </section>
   </main>

@@ -47,7 +47,7 @@
             class="p-8px cursor-pointer hover:bg-#f3f3f3 hover: rounded-6px">
             <div class="flex-between-center">
               <div class="w-28px h-28px bg-#ccc rounded-50%"></div>
-              <p class="font-size-14px color-#505050">{{ item.account }}</p>
+              <p class="text-14px color-#505050">{{ item.account }}</p>
               <svg @click.stop="delAccount(index)" class="w-12px h-12px">
                 <use href="#close"></use>
               </svg>
@@ -70,7 +70,7 @@
       <!-- 协议 -->
       <n-flex justify="center" :size="6">
         <n-checkbox v-model:checked="protocol" />
-        <div class="font-size-12px color-#909090 cursor-default lh-14px">
+        <div class="text-12px color-#909090 cursor-default lh-14px">
           <span>已阅读并同意</span>
           <span class="color-#059669 cursor-pointer">服务协议</span>
           <span>和</span>
@@ -88,7 +88,7 @@
       </n-button>
 
       <!-- 顶部操作栏 -->
-      <n-flex justify="center" class="font-size-14px">
+      <n-flex justify="center" class="text-14px">
         <div class="color-#059669 cursor-pointer" @click="toQRCode">扫码登录</div>
         <div class="w-1px h-14px bg-#ccc"></div>
         <n-popover style="padding: 6px; border-radius: 8px" trigger="click" :show-checkmark="false" :show-arrow="false">
@@ -96,12 +96,8 @@
             <div class="color-#059669 cursor-pointer">更多选项</div>
           </template>
           <n-flex vertical :size="2">
-            <div class="font-size-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px font-size-12px">
-              注册账号
-            </div>
-            <div class="font-size-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px font-size-12px">
-              忘记密码
-            </div>
+            <div class="text-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px">注册账号</div>
+            <div class="text-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px">忘记密码</div>
           </n-flex>
         </n-popover>
       </n-flex>

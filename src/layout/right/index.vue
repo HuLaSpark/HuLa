@@ -2,9 +2,9 @@
   <main class="flex-1 bg-[--right-bg-color] h-full w-100vw">
     <ActionBar />
     <!-- 需要判断当前路由是否是信息详情界面 -->
-    <ChatBox :active-item="activeItem" v-if="msgBoxShow && router.currentRoute.value.path.includes('/message')" />
+    <ChatBox :active-item="activeItem" v-if="msgBoxShow && isChat" />
 
-    <Details v-else-if="detailsShow && router.currentRoute.value.path.includes('/friendsList')" />
+    <Details :content="DetailsContent" v-else-if="detailsShow && isDetails" />
 
     <!-- 聊天界面背景图标 -->
     <div v-else class="flex-center wh-full select-none">
@@ -25,8 +25,17 @@ const { THEME, PATTERN } = storeToRefs(themeStore)
 const msgBoxShow = ref(false)
 const detailsShow = ref(false)
 const activeItem = ref()
+const DetailsContent = ref()
 const imgTheme = ref(THEME.value)
 const prefers = matchMedia('(prefers-color-scheme: dark)')
+// 判断当前路由是否是聊天界面
+const isChat = computed(() => {
+  return router.currentRoute.value.path.includes('/message')
+})
+// 判断当前路由是否是信息详情界面
+const isDetails = computed(() => {
+  return router.currentRoute.value.path.includes('/friendsList')
+})
 
 /* 跟随系统主题模式切换主题 */
 const followOS = () => {
@@ -54,12 +63,19 @@ watchEffect(() => {
   }
 })
 
-Mitt.on('msgBoxShow', (event: any) => {
-  msgBoxShow.value = event.msgBoxShow
-  activeItem.value = event.item
-})
+onMounted(() => {
+  if (isChat) {
+    Mitt.on('msgBoxShow', (event: any) => {
+      msgBoxShow.value = event.msgBoxShow
+      activeItem.value = event.item
+    })
+  }
 
-Mitt.on('detailsShow', (event) => {
-  detailsShow.value = event as boolean
+  if (isDetails) {
+    Mitt.on('detailsShow', (event: any) => {
+      DetailsContent.value = event.data
+      detailsShow.value = event.detailsShow as boolean
+    })
+  }
 })
 </script>

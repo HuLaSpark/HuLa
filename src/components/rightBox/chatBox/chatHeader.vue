@@ -116,7 +116,7 @@
           <p class="color-#d03553">删除好友</p>
         </div>
 
-        <p class="m-[0_auto] text-#059669 font-size-12px mt-20px cursor-pointer">被骚扰了?&nbsp;&nbsp;举报该用户</p>
+        <p class="m-[0_auto] text-#059669 text-12px mt-20px cursor-pointer">被骚扰了?&nbsp;&nbsp;举报该用户</p>
       </div>
     </transition>
   </main>
@@ -129,7 +129,7 @@
       </svg>
       <div class="flex flex-col gap-30px p-[22px_10px_10px_22px] select-none">
         <p>{{ tips }}</p>
-        <label v-if="tipsOptions" class="font-size-14px flex gap-6px lh-16px">
+        <label v-if="tipsOptions" class="text-14px flex gap-6px lh-16px">
           <n-checkbox v-model:checked="masking" />
           <span>同时屏蔽，不再接收此人消息</span>
         </label>

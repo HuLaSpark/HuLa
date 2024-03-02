@@ -106,6 +106,6 @@ onMounted(() => {
 }
 
 .header {
-  @apply w-full h-42px flex items-center pl-40px select-none font-size-18px color-[--text-color];
+  @apply w-full h-42px flex items-center pl-40px select-none text-18px color-[--text-color];
 }
 </style>
