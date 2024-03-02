@@ -19,22 +19,21 @@
               <div @contextmenu.stop="$event.preventDefault()">
                 <div
                   v-slide
-                  @click="handleClick(n)"
-                  :class="{ active: activeItem === n }"
+                  @click="handleClick(item.key)"
+                  :class="{ active: activeItem === item.key }"
                   class="user-box w-full h-75px mb-5px"
-                  v-for="n in 20"
-                  :key="n">
+                  v-for="item in friendsList"
+                  :key="item.key">
                   <div class="flex items-center h-full pl-6px pr-8px gap-10px">
                     <img
                       class="w-44px h-44px rounded-50% bg-#fff"
                       style="border: 1px solid #f1f1f1"
-                      src="/logo.png"
+                      :src="item.avatar"
                       alt="" />
 
-                    <div class="w-full h-38px flex flex-col justify-between">
+                    <div class="h-38px flex flex-1 flex-col justify-between">
                       <div class="font-size-14px flex-y-center gap-4px">
-                        <p>宝贝🍓</p>
-                        <p>(快乐羊多多)</p>
+                        {{ item.accountName }}
                       </div>
 
                       <div
@@ -60,22 +59,30 @@
       </n-scrollbar>
     </n-tab-pane>
     <n-tab-pane name="2" tab="群聊">
-      <n-collapse>
-        <n-collapse-item title="青铜" name="1">
-          <div>可以</div>
-        </n-collapse-item>
-        <n-collapse-item title="白银" name="2">
-          <div>很好</div>
-        </n-collapse-item>
-        <n-collapse-item title="黄金" name="3">
-          <div>真棒</div>
-        </n-collapse-item>
-      </n-collapse>
+      <!--  右键菜单组件  -->
+      <div
+        @click="handleClick(item.key)"
+        :class="{ active: activeItem === item.key }"
+        class="w-full h-75px mb-5px cursor-pointer"
+        v-for="item in groupChatList"
+        :key="item.key">
+        <!-- 消息框，使用v-slide自定义指令来自动抉择右键菜单位置 -->
+        <div v-slide class="flex items-center h-full pl-6px pr-8px gap-10px">
+          <img class="w-44px h-44px rounded-50% bg-#fff" style="border: 1px solid #f1f1f1" :src="item.avatar" alt="" />
+
+          <div class="h-38px flex flex-1 flex-col justify-center">
+            <div class="flex-between-center">
+              <span class="font-size-14px">{{ item.accountName }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </n-tab-pane>
   </n-tabs>
 </template>
 <script setup lang="ts">
 import Mitt from '@/utils/Bus.ts'
+import { MockList } from '@/mock/index.ts'
 
 const menuList = ref([
   { label: '添加分组', icon: 'plus' },
@@ -85,6 +92,9 @@ const menuList = ref([
 /* 建议把此状态存入localStorage中 */
 const activeItem = ref(0)
 const detailsShow = ref(false)
+
+const friendsList = ref(MockList.value.filter((item) => item.type === 2))
+const groupChatList = ref(MockList.value.filter((item) => item.type === 1))
 
 const handleClick = (index: number) => {
   detailsShow.value = true

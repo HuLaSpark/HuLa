@@ -2,8 +2,8 @@
   <!-- 顶部操作栏和显示用户名 -->
   <main
     style="box-shadow: 0 4px 4px var(--box-shadow-color)"
-    class="relative flex-y-center justify-between p-[8px_20px_12px] select-none">
-    <div class="color-[--text-color]">宝贝🐶{{ activeItem }} ⛅</div>
+    class="relative z-20 flex-y-center justify-between p-[8px_20px_12px] select-none">
+    <div class="color-[--text-color]">{{ activeItem.accountName }}</div>
     <!-- 顶部右边选项栏 -->
     <nav class="options flex-y-center gap-20px color-[--icon-color]">
       <div class="options-box">
@@ -144,6 +144,8 @@
 </template>
 
 <script setup lang="ts">
+import { MockItem } from '@/services/types.ts'
+
 /* 提醒框标题 */
 const tips = ref()
 /* 提醒框的选项 */
@@ -152,7 +154,7 @@ const modalShow = ref(false)
 const sidebarShow = ref(false)
 const masking = ref(false)
 const { activeItem } = defineProps<{
-  activeItem: any
+  activeItem: MockItem
 }>()
 
 /* 删除操作二次提醒 */

@@ -21,6 +21,10 @@ const preventDrag = (e: MouseEvent) => {
 }
 
 onMounted(() => {
+  // 判断localStorage中是否有设置主题
+  if (!localStorage.getItem('theme')) {
+    themeStore.initTheme('light')
+  }
   document.documentElement.dataset.theme = THEME.value
   window.addEventListener('dragstart', preventDrag)
   // /* 禁用浏览器默认的快捷键 */

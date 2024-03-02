@@ -1,5 +1,5 @@
 <template>
-  <main class="left w-60px h-full pt-30px pl-6px pr-6px pb-15px box-border flex-col-center select-none">
+  <main class="left w-60px h-full p-[30px_6px_15px] box-border flex-col-center select-none">
     <img class="border-rounded-50% w-36px h-36px bg-#fff cursor-pointer" src="/logo.png" alt="" />
 
     <div data-tauri-drag-region class="wh-full mt-20px flex-col-x-center justify-between">
@@ -149,7 +149,7 @@ const menuList = ref<MenuList>([
     click: async () => {
       // todo 退出账号 需要关闭其他的全部窗口
       // 1.需要退出账号
-      await createWebviewWindow('登录', 'login', 320, 448, 'home')
+      await createWebviewWindow('登录', 'login', 320, 448, 'home', true, false, 320, 448)
     }
   }
 ])
@@ -237,7 +237,6 @@ onUnmounted(() => {
   @include menu-item-style(absolute);
   left: 58px;
   bottom: 10px;
-  width: 160px;
   @include menu-list();
 }
 

@@ -31,20 +31,17 @@ const followOS = () => {
   document.documentElement.dataset.theme = prefers.matches ? 'dark' : 'light'
   THEME.value = prefers.matches ? 'dark' : 'light'
 }
-// TODO 这里待优化 (nyh -> 2024-02-16 22:06:40)
-const listenOS = () => {
-  followOS()
-}
 
 /* 监听其他标签页的变化 */
 listenMsg((msgInfo: any) => {
   if (msgInfo.content === 'os') {
-    listenOS()
-    prefers.addEventListener('change', listenOS)
+    globalTheme.value = prefers.matches ? darkTheme : lightTheme
+    document.documentElement.dataset.theme = prefers.matches ? 'dark' : 'light'
+    THEME.value = prefers.matches ? 'dark' : 'light'
+    PATTERN.value = 'os'
   } else {
     globalTheme.value = msgInfo.content === 'dark' ? darkTheme : lightTheme
     document.documentElement.dataset.theme = msgInfo.content === 'dark' ? 'dark' : 'light'
-    prefers.removeEventListener('change', listenOS)
   }
 })
 

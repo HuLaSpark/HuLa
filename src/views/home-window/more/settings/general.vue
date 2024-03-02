@@ -1,4 +1,5 @@
 <template>
+  <!-- 通用设置 -->
   <main>
     <span class="pl-10px font-size-14px color-[--text-color]">外观设置</span>
     <section class="bg-[--bg-setting-item] rounded-12px wh-full mt-12px p-12px box-border flex-y-center gap-20px">
@@ -25,7 +26,7 @@ import { sendMsg } from '@/common/CrossTabMsg.ts'
 
 const themeStore = theme()
 const { PATTERN } = storeToRefs(themeStore)
-const activeItem = ref<string>(PATTERN.value || 'light')
+const activeItem = ref<string>(PATTERN.value)
 
 const titleList = [
   {

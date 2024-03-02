@@ -38,6 +38,7 @@
   --active-border-color: rgba(5, 150, 105, 0.8);
   // 气泡背景颜色
   --bg-bubble: rgb(253, 253, 253);
+  --bg-bubble-active: #dedede;
 }
 
 html[data-theme='dark'] {
@@ -79,6 +80,7 @@ html[data-theme='dark'] {
   --active-border-color: rgba(5, 150, 105, 0.8);
   // 气泡背景颜色
   --bg-bubble: rgb(38, 38, 38);
+  --bg-bubble-active: #202020;
 }
 /*! end */
 // 线性动画
@@ -151,7 +153,7 @@ html[data-theme='dark'] {
     0 30px 30px rgb(0 0 0 / 7%),
     0 70px 65px rgb(0 0 0 / 9%);
   z-index: 999;
-  min-width: 100px;
+  width: fit-content;
   font-size: 14px;
   line-height: 1.8;
   white-space: nowrap;

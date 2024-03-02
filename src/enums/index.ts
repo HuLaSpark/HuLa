@@ -25,21 +25,30 @@ export enum URLEnum {
   ARTICLE = '/article'
 }
 
-/*全局状态类型*/
-export enum GlobalStatusEnum {
-  'default',
-  'tertiary',
-  'primary',
-  'success',
-  'info',
-  'warning',
-  'error'
-}
-
 /**
  * 消息类型
  */
 export enum MsgEnum {
   /** 文本 */
-  TEXT
+  TEXT,
+  /** 图片 */
+  IMAGE,
+  /** 混合 */
+  MIXED,
+  /** 语音 */
+  VOICE,
+  /** 视频 */
+  VIDEO,
+  /** 文件 */
+  FILE,
+  /** 表情 */
+  EMOTICON
+}
+
+/** 房间类型 1群聊 2单聊 */
+export enum RoomTypeEnum {
+  /** 1群聊 */
+  Group = 1,
+  /** 2单聊 */
+  Single
 }

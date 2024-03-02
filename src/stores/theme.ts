@@ -10,6 +10,12 @@ export const theme = defineStore('theme', {
     }
   },
   actions: {
+    initTheme(theme: string) {
+      this.THEME = theme
+      document.documentElement.dataset.theme = theme
+      this.PATTERN = theme
+      localStorage.setItem('theme', JSON.stringify({ THEME: theme, PATTERN: theme }))
+    },
     toggleTheme(theme: string) {
       if (theme === 'os') {
         this.PATTERN = theme

@@ -1,11 +1,13 @@
 <template>
-  <div data-tauri-drag-region class="resizable select-none" :style="{ width: width + 'px' }">
+  <main data-tauri-drag-region class="resizable select-none" :style="{ width: width + 'px' }">
     <ActionBar class="absolute right-0" v-if="shrinkStatus" :shrink-status="!shrinkStatus" :max-w="false" />
 
     <!--    <div class="resize-handle" @mousedown="initDrag"></div>-->
 
     <!-- 顶部搜索栏 -->
-    <div style="box-shadow: 0 2px 4px var(--box-shadow-color)" class="mt-30px w-full h-38px flex flex-col items-center">
+    <header
+      style="box-shadow: 0 2px 4px var(--box-shadow-color)"
+      class="mt-30px w-full h-38px flex flex-col items-center">
       <div class="flex-center gap-5px w-full pr-16px pl-16px box-border">
         <n-input
           :on-focus="() => router.push('/searchDetails')"
@@ -24,7 +26,7 @@
           </template>
         </n-button>
       </div>
-    </div>
+    </header>
 
     <!-- 列表 -->
     <n-scrollbar style="max-height: calc(100vh - 70px)">
@@ -32,7 +34,7 @@
         <router-view />
       </div>
     </n-scrollbar>
-  </div>
+  </main>
 </template>
 
 <script setup lang="ts">

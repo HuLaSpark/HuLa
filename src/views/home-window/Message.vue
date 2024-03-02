@@ -1,16 +1,16 @@
 <template>
-  <!-- 消息框 -->
+  <!-- 消息列表 -->
   <!-- 可拖拽排序组件  -->
-  <VueDraggable v-if="items.length > 0" ref="el" :animation="150" v-model="items">
+  <VueDraggable v-if="MockList.length > 0" ref="el" :animation="150" v-model="MockList">
     <!--  右键菜单组件  -->
     <ContextMenu
       @select="handleSelect($event.click(item.key))"
-      @click="handleMsgClick(item.key)"
+      @click="handleMsgClick(item)"
       :menu="menuList"
       :special-menu="specialMenuList"
       :class="{ active: activeItem === item.key }"
       class="msg-box w-full h-75px mb-5px"
-      v-for="item in items"
+      v-for="item in MockList"
       :key="item.key">
       <!-- 消息框，使用v-slide自定义指令来自动抉择右键菜单位置 -->
       <div v-slide class="flex items-center h-full pl-6px pr-8px gap-10px">
@@ -18,7 +18,7 @@
 
         <div class="h-38px flex flex-1 flex-col justify-between">
           <div class="flex-between-center">
-            <span class="font-size-14px">宝贝{{ item.value }}🍓</span>
+            <span class="font-size-14px">{{ item.accountName }}</span>
             <span class="text font-size-10px">昨天</span>
           </div>
 
@@ -43,49 +43,21 @@
 <script setup lang="ts">
 import Mitt from '@/utils/Bus.ts'
 import { VueDraggable } from 'vue-draggable-plus'
+import { Menu } from '@/services/types.ts'
+import { MockList } from '@/mock/index.ts'
 
-// const avatars = [
-//   'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg',
-//   'https://avatars.githubusercontent.com/u/20943608?s=60&v=4',
-//   'https://avatars.githubusercontent.com/u/46394163?s=60&v=4',
-//   'https://avatars.githubusercontent.com/u/39197136?s=60&v=4',
-//   'https://avatars.githubusercontent.com/u/19239641?s=60&v=4'
-// ]
-
-const avatars = 'https://picsum.photos/60'
-
-// TODO 消息列表还是需要虚拟列表或者懒加载的 (nyh -> 2024-02-19 04:23:40)
-const items = ref(
-  Array.from({ length: 20 }, (_, i) => ({
-    value: `${i}`,
-    key: i,
-    avatar: `${avatars}?${i}`
-  }))
-)
-
-type Menu = {
-  label: string
-  icon: string
-  top?: boolean
-  click?: (...args: any[]) => void
-}[]
 const menuList = ref<Menu>([
   {
     label: '置顶',
     icon: 'topping',
     click: (key: number) => {
-      let index = items.value.findIndex((item) => item.key === key)
+      let index = MockList.value.findIndex((item) => item.key === key)
       // 实现置顶功能
       if (index !== 0) {
         // 交换元素位置
-        const temp = items.value[index]
-        items.value[index] = items.value[0]
-        items.value[0] = temp
-        // 找到已经置顶的元素的下标把对应的menuList的top设置为true
-        const topIndex = items.value.findIndex((item) => item.key === items.value[0].key)
-        menuList.value[topIndex].top = true
-        menuList.value[topIndex].label = '取消置顶'
-        menuList.value[topIndex].icon = 'close'
+        const temp = MockList.value[index]
+        MockList.value[index] = MockList.value[0]
+        MockList.value[0] = temp
       }
     }
   },
@@ -106,17 +78,19 @@ const specialMenuList = ref<Menu>([
     icon: 'delete',
     click: (key: number) => {
       // 根据key找到items中对应的下标
-      let index = items.value.findIndex((item) => item.key === key)
+      let index = MockList.value.findIndex((item) => item.key === key)
       // 如果找到了对应的元素，则移除
       if (index !== -1) {
-        const removeItem = items.value.splice(index, 1)[0]
+        const removeItem = MockList.value.splice(index, 1)[0]
         if (activeItem.value === removeItem.key) {
-          if (index < items.value.length) {
+          if (index < MockList.value.length) {
             // 需要使用新的索引位置找到key更新activeItem.value
-            activeItem.value = items.value[index].key
+            activeItem.value = MockList.value[index].key
+            handleMsgClick(MockList.value[index])
           } else {
             // 如果我们删除的是最后一个元素，则需要选中前一个元素
-            activeItem.value = items.value[items.value.length - 1].key
+            activeItem.value = MockList.value[MockList.value.length - 1].key
+            handleMsgClick(MockList.value[MockList.value.length - 1])
           }
         }
       }
@@ -138,10 +112,10 @@ const handleSelect = (event: any) => {
   event?.click?.()
 }
 
-const handleMsgClick = (index: number) => {
+const handleMsgClick = (item: any) => {
   msgBoxShow.value = true
-  activeItem.value = index
-  const data = { msgBoxShow, activeItem }
+  activeItem.value = item.key
+  const data = { msgBoxShow, item }
   Mitt.emit('msgBoxShow', data)
 }
 

@@ -41,8 +41,8 @@
         <n-scrollbar style="max-height: 120px" trigger="none">
           <n-flex
             vertical
-            v-for="(item, index) in accountOption"
-            :key="index"
+            v-for="item in accountOption"
+            :key="item.account"
             @click="giveAccount(item.account, item.password)"
             class="p-8px cursor-pointer hover:bg-#f3f3f3 hover: rounded-6px">
             <div class="flex-between-center">
@@ -188,7 +188,7 @@ const toQRCode = () => {
 const loginWin = () => {
   loading.value = true
   delay(async () => {
-    await createWebviewWindow('HuLa', 'home', 1050, 720, 'login', false, true)
+    await createWebviewWindow('HuLa', 'home', 960, 720, 'login', false, true)
     loading.value = false
   }, 800)
 }

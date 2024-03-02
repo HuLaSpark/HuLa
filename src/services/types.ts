@@ -3,7 +3,7 @@
  * 注意：请使用TSDoc规范进行注释，以便在使用时能够获得良好提示。
  * @see TSDoc规范https://tsdoc.org/
  **/
-import { MsgEnum, RCodeEnum } from '@/enums'
+import { MsgEnum, RCodeEnum, RoomTypeEnum } from '@/enums'
 
 /*响应请求体*/
 export type Response = {
@@ -28,41 +28,15 @@ export type login = {
   username: string
   password: string
 }
-/*记住我*/
-export type Renew = {
-  userName: string
-  password: string
-}
-/*文章类型*/
-export type article = {
-  agree: number
-  content: string
-  coverUrl: string
-  describes: string
-  id: number
-  name: string
-  pbId: number
-  score: number
-  time: string
-  user: string
-  userIp: string
-  userUrl: string
-}
-/*全局设置类型*/
-export type globalSetting = {
-  theme: {
-    [key: string]: {
-      status: boolean
-    }
-  }
-  tags: {
-    [key: string]: {
-      item: string[]
-      double: boolean
-    }
-  }
-}
 
+export type Menu = {
+  label: string
+  icon: string
+  click?: (...args: any[]) => void
+}[]
+
+/* ===================================================== */
+/** 回复类型 */
 export type ReplyType = {
   id: number
   username: string
@@ -78,9 +52,7 @@ export type ReplyType = {
   gapCount: number
 }
 
-/**
- * 消息互动信息
- */
+/** 消息互动信息 */
 export type MessageMarkType = {
   /** 点赞 */
   userLike: number
@@ -143,9 +115,7 @@ export type EmojiBody = {
   url: string
 }
 
-/**
- * 消息内容
- */
+/** 消息内容 */
 export type MsgType = {
   /** 消息ID */
   id: number
@@ -159,4 +129,34 @@ export type MsgType = {
   sendTime: number
   /** 消息互动信息 */
   messageMark: MessageMarkType
+}
+
+/** 缓存用户项 */
+export type CacheUserItem = {
+  /** 是否需要更新数据源。 */
+  needRefresh?: boolean
+  /** 最后更新时间 更新超过 10 分钟异步去更新。 */
+  lastModifyTime: number
+  /** 获得的徽章 */
+  itemIds: number[]
+  /** 佩戴的徽章 */
+  wearingItemId: number
+  /** 归属地 */
+  locPlace: string
+  /** 头像 */
+  avatar: string
+  /** 最后一次上下线时间 */
+  lastOptTime: number
+  /** 用户名称 */
+  name: string
+  /** uid */
+  uid: number
+}
+/*! 模拟信息数据的类型 */
+export type MockItem = {
+  key: number
+  type: RoomTypeEnum
+  avatar: string
+  accountId: number
+  accountName: string
 }

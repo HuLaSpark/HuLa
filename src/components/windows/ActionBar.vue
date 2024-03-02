@@ -93,9 +93,9 @@ const shrinkWindow = async () => {
   /*使用mitt给兄弟组件更新*/
   Mitt.emit('shrinkWindow', shrinkStatus.value)
   if (shrinkStatus.value) {
-    await resizeWindow('home', 310, 720)
+    await resizeWindow('home', 310, 700)
   } else {
-    await resizeWindow('home', 1050, 720)
+    await resizeWindow('home', 960, 700)
   }
 }
 </script>

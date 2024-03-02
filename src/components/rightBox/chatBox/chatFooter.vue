@@ -1,7 +1,7 @@
 <template>
   <!-- 底部栏 -->
   <main
-    class="wh-full bg-[--right-bg-color] color-[--icon-color] mt-6px"
+    class="wh-full relative z-10 bg-[--right-bg-color] color-[--icon-color]"
     style="box-shadow: 0 -4px 4px var(--box-shadow-color)">
     <!-- 输入框顶部选项栏 -->
     <nav class="flex-between-center p-[10px_22px] select-none">
@@ -110,51 +110,12 @@
 
     <!-- 输入框及其发送按钮 -->
     <div class="pl-20px flex flex-col items-end gap-6px">
-      <ContextMenu class="relative w-full h-100px" @select="handleSelect($event.label)" :menu="menuList">
-        <n-input
-          class="absolute"
-          :placeholder="null as any"
-          style="border: 0; background: var(--right-bg-color)"
-          type="textarea"
-          size="small"
-          autofocus
-          v-model:value="contactInput"
-          :autosize="{
-            minRows: 4,
-            maxRows: 4
-          }" />
-      </ContextMenu>
-
-      <n-config-provider :theme="lightTheme">
-        <n-button-group size="small" class="pr-20px">
-          <n-button color="#059669" :disabled="contactInput.length === 0" class="w-65px">发送</n-button>
-          <n-button color="#059669" class="p-[0_6px]">
-            <template #icon>
-              <svg class="w-22px h-22px"><use href="#down"></use></svg>
-            </template>
-          </n-button>
-        </n-button-group>
-      </n-config-provider>
+      <MsgInput />
     </div>
   </main>
 </template>
 
-<script setup lang="ts">
-import { lightTheme } from 'naive-ui'
-
-const menuList = ref([
-  { label: '剪切', icon: 'screenshot', disabled: true },
-  { label: '复制', icon: 'copy', disabled: true },
-  { label: '粘贴', icon: 'intersection' },
-  { label: '另存为', icon: 'download', disabled: true },
-  { label: '全部选择', icon: 'check-one' }
-])
-const contactInput = ref('')
-
-const handleSelect = (event: MouseEvent) => {
-  console.log(event)
-}
-</script>
+<script setup lang="ts"></script>
 
 <style scoped lang="scss">
 .input-options {

@@ -1,8 +1,8 @@
 <template>
-  <div class="flex-1 bg-[--right-bg-color] h-full w-100vw">
+  <main class="flex-1 bg-[--right-bg-color] h-full w-100vw">
     <ActionBar />
     <!-- 需要判断当前路由是否是信息详情界面 -->
-    <ChatMain :active-item="activeItem" v-if="msgBoxShow && router.currentRoute.value.path.includes('/message')" />
+    <ChatBox :active-item="activeItem" v-if="msgBoxShow && router.currentRoute.value.path.includes('/message')" />
 
     <Details v-else-if="detailsShow && router.currentRoute.value.path.includes('/friendsList')" />
 
@@ -11,7 +11,7 @@
       <img v-if="imgTheme === 'dark'" class="w-130px h-100px" src="@/assets/img/hula_bg_dark.png" alt="" />
       <img v-else class="w-130px h-100px" src="@/assets/img/hula_bg_light.png" alt="" />
     </div>
-  </div>
+  </main>
 </template>
 <script setup lang="ts">
 import Mitt from '@/utils/Bus.ts'
@@ -56,7 +56,7 @@ watchEffect(() => {
 
 Mitt.on('msgBoxShow', (event: any) => {
   msgBoxShow.value = event.msgBoxShow
-  activeItem.value = event.activeItem
+  activeItem.value = event.item
 })
 
 Mitt.on('detailsShow', (event) => {
