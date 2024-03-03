@@ -29,11 +29,6 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/home-window/FriendsList.vue')
       },
       {
-        path: '/space',
-        name: 'space',
-        component: () => import('@/views/home-window/Space.vue')
-      },
-      {
         path: '/searchDetails',
         name: 'searchDetails',
         component: () => import('@/views/home-window/SearchDetails.vue')
@@ -44,6 +39,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/mail',
     name: 'mail',
     component: () => import('@/views/home-window/Mail.vue')
+  },
+  {
+    path: '/dynamic',
+    name: 'dynamic',
+    component: () => import('@/views/home-window/Dynamic.vue')
   },
   {
     path: '/about',

@@ -38,7 +38,7 @@
     "dayjs": "^1.11.10",
     "lodash-es": "^4.17.21",
     "mitt": "^3.0.1",
-    "naive-ui": "^2.38.0",
+    "naive-ui": "^2.38.1",
     "pinia": "^2.1.7",
     "pinia-plugin-persistedstate": "^3.2.1",
     "vue": "^3.4.19",

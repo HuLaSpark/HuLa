@@ -41,7 +41,7 @@
         <n-scrollbar style="max-height: 120px" trigger="none">
           <n-flex
             vertical
-            v-for="item in accountOption"
+            v-for="(item, index) in accountOption"
             :key="item.account"
             @click="giveAccount(item.account, item.password)"
             class="p-8px cursor-pointer hover:bg-#f3f3f3 hover: rounded-6px">

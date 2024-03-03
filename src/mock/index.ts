@@ -30,3 +30,19 @@ export const MockList = ref<MockItem[]>(
     }
   })
 )
+
+/* 模拟照片墙 */
+const imgList = Array.from({ length: 10 }, (_, i) => {
+  return {
+    url: `${avatars}?${i}`
+  }
+})
+/* 模拟动态内容 */
+export const dynamicList = Array.from({ length: 10 }, (_, i) => {
+  return {
+    id: i,
+    avatar: `${avatars}?${i}`,
+    user: `泰勒斯威夫特 ${i}`,
+    img: imgList
+  }
+})

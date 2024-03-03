@@ -1,5 +1,5 @@
+// 跨标签页处理
 const channel = new BroadcastChannel('cross-tab-msg')
-
 /**
  * 发送消息
  * @param type 类型

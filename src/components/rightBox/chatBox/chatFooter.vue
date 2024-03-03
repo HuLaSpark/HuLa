@@ -4,17 +4,15 @@
     class="wh-full relative z-10 bg-[--right-bg-color] color-[--icon-color]"
     style="box-shadow: 0 -4px 4px var(--box-shadow-color)">
     <!-- 输入框顶部选项栏 -->
-    <nav class="flex-between-center p-[10px_22px] select-none">
+    <nav class="flex-between-center p-[10px_22px_5px] select-none">
       <nav class="input-options flex-y-center">
         <n-popover
           trigger="hover"
           :show-arrow="false"
           placement="bottom"
-          style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3); margin-right: 16px">
+          style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3)">
           <template #trigger>
-            <div class="flex-center">
-              <svg class="mr-18px"><use href="#smiling-face"></use></svg>
-            </div>
+            <svg class="mr-18px"><use href="#smiling-face"></use></svg>
           </template>
           <span>表情</span>
         </n-popover>
@@ -22,7 +20,7 @@
           trigger="hover"
           :show-arrow="false"
           placement="bottom"
-          style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3); margin-right: 16px">
+          style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3)">
           <template #trigger>
             <div class="flex-center gap-2px mr-12px">
               <svg><use href="#screenshot"></use></svg>
@@ -35,7 +33,7 @@
           trigger="hover"
           :show-arrow="false"
           placement="bottom"
-          style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3); margin-right: 16px">
+          style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3)">
           <template #trigger>
             <div class="flex-center gap-2px mr-12px">
               <svg><use href="#file2"></use></svg>
@@ -48,11 +46,9 @@
           trigger="hover"
           :show-arrow="false"
           placement="bottom"
-          style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3); margin-right: 16px">
+          style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3)">
           <template #trigger>
-            <div class="flex-center">
-              <svg class="mr-18px"><use href="#photo"></use></svg>
-            </div>
+            <svg class="mr-18px"><use href="#photo"></use></svg>
           </template>
           <span>图片</span>
         </n-popover>
@@ -60,11 +56,9 @@
           trigger="hover"
           :show-arrow="false"
           placement="bottom"
-          style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3); margin-right: 16px">
+          style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3)">
           <template #trigger>
-            <div class="flex-center">
-              <svg class="mr-18px"><use href="#shake"></use></svg>
-            </div>
+            <svg class="mr-18px"><use href="#shake"></use></svg>
           </template>
           <span>窗口抖动</span>
         </n-popover>
@@ -72,11 +66,9 @@
           trigger="hover"
           :show-arrow="false"
           placement="bottom"
-          style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3); margin-right: 16px">
+          style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3)">
           <template #trigger>
-            <div class="flex-center">
-              <svg class="mr-18px"><use href="#red-packet"></use></svg>
-            </div>
+            <svg class="mr-18px"><use href="#red-packet"></use></svg>
           </template>
           <span>红包</span>
         </n-popover>
@@ -84,11 +76,9 @@
           trigger="hover"
           :show-arrow="false"
           placement="bottom"
-          style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3); margin-right: 16px">
+          style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3)">
           <template #trigger>
-            <div class="flex-center">
-              <svg class="mr-18px"><use href="#voice"></use></svg>
-            </div>
+            <svg class="mr-18px"><use href="#voice"></use></svg>
           </template>
           <span>语音信息</span>
         </n-popover>
@@ -100,9 +90,7 @@
         placement="bottom"
         style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3)">
         <template #trigger>
-          <div>
-            <svg class="w-22px h-22px cursor-pointer"><use href="#history"></use></svg>
-          </div>
+          <svg class="w-22px h-22px cursor-pointer outline-none"><use href="#history"></use></svg>
         </template>
         <span>聊天记录</span>
       </n-popover>
@@ -123,6 +111,7 @@
     width: 22px;
     height: 22px;
     cursor: pointer;
+    outline: none;
     &:hover {
       color: #059669;
     }

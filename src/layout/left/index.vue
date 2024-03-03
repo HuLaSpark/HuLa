@@ -24,7 +24,7 @@
         <div
           v-for="(item, index) in itemsBottom"
           :key="index"
-          @click="openContent(item.label, item.title)"
+          @click="openContent(item.title, item.label)"
           class="bottom-action">
           <svg class="w-22px h-22px">
             <use :href="`#${item.icon}`"></use>
@@ -89,7 +89,7 @@ const itemsTop = ref<TopActive>([
     iconAction: 'avatar-action'
   },
   {
-    url: 'space',
+    url: 'dynamic',
     icon: 'fire',
     iconAction: 'fire-action'
   }
@@ -174,15 +174,22 @@ watchEffect(() => {
  * */
 const pageJumps = (url: string) => {
   activeItem.value = url
-  router.push(`/${url}`)
+  // 判断是否是动态页面
+  if (url === 'dynamic') {
+    delay(async () => {
+      await createWebviewWindow('动态', 'dynamic', 840, 800)
+    }, 300)
+  } else {
+    router.push(`/${url}`)
+  }
 }
 
 /**
  * 打开内容对应窗口
- * @param label 窗口的标识
  * @param title 窗口的标题
+ * @param label 窗口的标识
  * */
-const openContent = (label: string, title: string) => {
+const openContent = (title: string, label: string) => {
   delay(async () => {
     await createWebviewWindow(title, label, 840, 600)
   }, 300)

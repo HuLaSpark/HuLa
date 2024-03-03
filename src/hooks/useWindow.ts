@@ -42,21 +42,22 @@ export const useWindow = () => {
       fileDropEnabled: isDrag
     })
 
-    await webview.once('tauri://created', async () => {
-      console.log('创建成功')
-      await invoke('reset_set_window', { label }).catch((error) => {
-        console.error('设置窗口阴影失败:', error)
+    // 首先检查是否已经存在同名窗口
+    const isExistsWinds = WebviewWindow.getByLabel(label)
+    if (isExistsWinds) {
+      // 如果窗口已存在，则给它焦点，使其置顶
+      await webview.setFocus()
+    } else {
+      await webview.once('tauri://created', async () => {
+        await invoke('reset_set_window', { label }).catch((error) => {
+          console.error('设置窗口阴影失败:', error)
+        })
+        if (wantCloseWindow) {
+          await autoCloseWindow(wantCloseWindow)
+        }
       })
-      if (wantCloseWindow) {
-        await autoCloseWindow(wantCloseWindow)
-      }
-    })
-
-    await webview.once('tauri://error', (e) => {
-      console.error(e)
-    })
-
-    return webview
+      return webview
+    }
   }
 
   /**

@@ -13,9 +13,7 @@
           placement="bottom"
           style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3)">
           <template #trigger>
-            <div>
-              <svg @click="handleClick"><use href="#phone-telephone"></use></svg>
-            </div>
+            <svg @click="handleClick"><use href="#phone-telephone"></use></svg>
           </template>
           <span>语言通话</span>
         </n-popover>
@@ -28,9 +26,7 @@
           placement="bottom"
           style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3)">
           <template #trigger>
-            <div>
-              <svg><use href="#video-one"></use></svg>
-            </div>
+            <svg><use href="#video-one"></use></svg>
           </template>
           <span>视频通话</span>
         </n-popover>
@@ -43,9 +39,7 @@
           placement="bottom"
           style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3)">
           <template #trigger>
-            <div>
-              <svg><use href="#screen-sharing"></use></svg>
-            </div>
+            <svg><use href="#screen-sharing"></use></svg>
           </template>
           <span>屏幕共享</span>
         </n-popover>
@@ -58,9 +52,7 @@
           placement="bottom"
           style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3)">
           <template #trigger>
-            <div>
-              <svg><use href="#remote-control"></use></svg>
-            </div>
+            <svg><use href="#remote-control"></use></svg>
           </template>
           <span>远程协助</span>
         </n-popover>
@@ -73,9 +65,7 @@
           placement="bottom"
           style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3)">
           <template #trigger>
-            <div>
-              <svg><use href="#launch"></use></svg>
-            </div>
+            <svg><use href="#launch"></use></svg>
           </template>
           <span>发起群聊</span>
         </n-popover>
@@ -198,6 +188,7 @@ onUnmounted(() => {
     svg {
       width: 22px;
       height: 22px;
+      outline: none;
     }
     &:hover svg {
       color: #059669;
