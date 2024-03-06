@@ -2,7 +2,7 @@
   <!-- 中间聊天内容(使用虚拟列表) -->
   <n-virtual-list
     ref="virtualListInst"
-    style="max-height: calc(100vh - 260px)"
+    style="max-height: calc(100vh - 260px); position: relative"
     item-resizable
     padding-bottom="10px"
     :item-size="42"
@@ -77,6 +77,30 @@
       </main>
     </template>
   </n-virtual-list>
+
+  <!--  悬浮按钮提示(头部悬浮) // TODO 要结合已读未读功能来判断之前的信息有多少没有读，当现在的距离没有到最底部并且又有新消息来未读的时候显示下标的更多信息 (nyh -> 2024-03-07 01:27:22)-->
+  <header class="float-header">
+    <div class="float-box">
+      <n-flex justify="space-between" align="center">
+        <n-icon :color="'rgba(5,150,105,0.5)'">
+          <svg><use href="#double-up"></use></svg>
+        </n-icon>
+        <span class="text-12px">xx条新信息</span>
+      </n-flex>
+    </div>
+  </header>
+
+  <!-- 悬浮按钮提示(底部悬浮) -->
+  <footer class="float-footer">
+    <div class="float-box">
+      <n-flex justify="space-between" align="center">
+        <n-icon :color="'rgba(5,150,105,0.5)'">
+          <svg><use href="#double-down"></use></svg>
+        </n-icon>
+        <span class="text-12px">xx条新信息</span>
+      </n-flex>
+    </div>
+  </footer>
 </template>
 <script setup lang="ts">
 import { MsgEnum, RoomTypeEnum } from '@/enums'
@@ -233,6 +257,13 @@ onUnmounted(() => {
     color: var(--text-color);
   }
 }
+@mixin float($position: top) {
+  @if $position == bottom {
+    @apply fixed z-10 bottom-210px right-50px w-fit select-none text-#059669 cursor-pointer;
+  } @else {
+    @apply fixed z-10 top-80px right-50px w-fit select-none text-#059669 cursor-pointer;
+  }
+}
 .chat-single:first-child {
   padding-top: 16px;
 }
@@ -247,5 +278,21 @@ onUnmounted(() => {
 .photo-wall {
   @extend .bubble-oneself;
   @apply flex flex-col items-start gap-6px max-w-380px;
+}
+.float-header {
+  @include float;
+}
+.float-footer {
+  @include float(bottom);
+}
+.float-box {
+  background-color: #fff;
+  border-radius: 50px;
+  padding: 6px 8px;
+  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.16);
+  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  &:hover {
+    background-color: rgb(215, 229, 219);
+  }
 }
 </style>

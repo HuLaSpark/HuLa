@@ -12,6 +12,7 @@ import { storeToRefs } from 'pinia'
 const themeStore = theme()
 const { THEME } = storeToRefs(themeStore)
 
+/* 禁止图片以及输入框的拖拽 */
 const preventDrag = (e: MouseEvent) => {
   const event = e.target as HTMLElement
   // 检查目标元素是否是<img>元素
@@ -27,14 +28,16 @@ onMounted(() => {
   }
   document.documentElement.dataset.theme = THEME.value
   window.addEventListener('dragstart', preventDrag)
-  /* 禁用浏览器默认的快捷键 */
-  window.addEventListener('keydown', (e) => {
-    if (e.ctrlKey || e.metaKey || e.altKey) {
-      e.preventDefault()
-    }
-  })
-  /* 禁止右键菜单 */
-  window.addEventListener('contextmenu', (e) => e.preventDefault(), false)
+  // /* 禁用浏览器默认的快捷键 */
+  // window.addEventListener('keydown', (e) => {
+  //   // 排除ctrl+c ctrl+v
+  //   if (e.ctrlKey && (e.key === 'c' || e.key === 'v')) return
+  //   if (e.ctrlKey || e.metaKey || e.altKey) {
+  //     e.preventDefault()
+  //   }
+  // })
+  // /* 禁止右键菜单 */
+  // window.addEventListener('contextmenu', (e) => e.preventDefault(), false)
 })
 
 onUnmounted(() => {

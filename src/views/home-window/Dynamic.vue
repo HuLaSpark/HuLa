@@ -2,7 +2,7 @@
   <!-- TODO 项目初次启动然后初次打开窗口时候这个页面的样式没有渲染出来 (nyh -> 2024-03-04 05:30:15) -->
   <!-- TODO 我需要点击最左边侧边栏时候的选中样式（如果是淡出弹出窗口就把图标点亮但是不用设置背景颜色，然后如果关闭了对应窗口就把图标恢复原来的样式） (nyh -> 2024-03-04 05:32:03) -->
   <main class="wh-full bg-[--right-bg-color]">
-    <ActionBar :shrink="false" :max-w="false" :top-win-label="currentWindowLabel" :current-label="currentWindowLabel" />
+    <ActionBar :shrink="false" :max-w="false" :top-win-label="appWindow.label" :current-label="appWindow.label" />
     <article class="flex flex-col items-center text-[--text-color] wh-full bg-[--right-bg-color]">
       <n-scrollbar
         style="max-height: calc(100vh - 20px)"
@@ -65,26 +65,8 @@
 </template>
 <script setup lang="ts">
 import { dynamicList } from '@/mock'
-import { appWindow, WebviewWindow } from '@tauri-apps/api/window'
-import { sendMsg } from '@/common/CrossTabMsg.ts'
+import { appWindow } from '@tauri-apps/api/window'
+import { useWindowState } from '@/hooks/useWindowState.ts'
 
-// 获取当前窗口的标签
-const currentWindowLabel = computed(() => {
-  return appWindow.label
-})
-const win = WebviewWindow.getByLabel(currentWindowLabel.value)
-
-// TODO 可以尝试使用win.emit来取代自定义封装的跨标签页通信 (nyh -> 2024-03-05 07:15:42)
-watchEffect(() => {
-  win?.listen('windowsClose', (e) => {
-    sendMsg('windowsShow', e)
-  })
-})
-
-onMounted(async () => {
-  const isShow = await win?.isVisible()
-  if (isShow) {
-    sendMsg('windowsShow', currentWindowLabel.value)
-  }
-})
+useWindowState(appWindow.label)
 </script>

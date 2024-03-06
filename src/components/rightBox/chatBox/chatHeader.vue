@@ -214,7 +214,7 @@ onUnmounted(() => {
 }
 
 .sidebar {
-  @apply flex flex-col absolute top-44px right-0 z-999 bg-[--bg-chat-drawer] p-22px box-border w-320px h-100vh shadow-[0_14px_14px_rgba(0,0,0,0.35)];
+  @apply flex flex-col absolute top-44px right-0 bg-[--bg-chat-drawer] p-22px box-border w-320px h-100vh shadow-[0_14px_14px_rgba(0,0,0,0.35)];
 }
 
 /*! 使用vue内置transition做过渡效果 */
