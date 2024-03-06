@@ -1,5 +1,5 @@
 <template>
-  <component :is="componentMap[message.type]" :body="message.body" :data-message-id="message.id" />
+  <component :is="componentMap" :body="message.body" :data-message-id="message.id" />
 </template>
 <script setup lang="ts">
 import { MsgEnum } from '@/enums'

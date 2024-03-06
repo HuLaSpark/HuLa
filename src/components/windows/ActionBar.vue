@@ -1,6 +1,23 @@
 <template>
   <!--  user-select: none让元素不可以选中 -->
   <div data-tauri-drag-region class="flex justify-end select-none">
+    <!--  固定在最顶层  -->
+    <div v-if="topWinLabel !== void 0" @click="handleAlwaysOnTop" class="hover-box">
+      <n-popover trigger="hover">
+        <template #trigger>
+          <svg
+            v-if="alwaysOnTopStatus"
+            class="w-14px h-14px color-[--action-bar-icon-color] outline-none cursor-pointer">
+            <use href="#onTop"></use>
+          </svg>
+          <svg v-else class="w-16px h-16px color-[--action-bar-icon-color] outline-none cursor-pointer">
+            <use href="#notOnTop"></use>
+          </svg>
+        </template>
+        <span v-if="alwaysOnTopStatus">取消置顶</span>
+        <span v-else>置顶</span>
+      </n-popover>
+    </div>
     <!-- 收缩页面 -->
     <div v-if="shrink" @click="shrinkWindow" class="hover-box">
       <svg class="w-16px h-16px color-[--action-bar-icon-color] cursor-pointer"><use href="#left-bar"></use></svg>
@@ -21,7 +38,7 @@
       </svg>
     </div>
     <!-- 关闭窗口 -->
-    <div v-if="closeW" @click="closeWindow" class="action-close">
+    <div v-if="closeW" @click="closeWindow(currentLabel as string)" class="action-close">
       <svg class="w-14px h-14px color-[--action-bar-icon-color] cursor-pointer">
         <use href="#close"></use>
       </svg>
@@ -34,6 +51,7 @@ import { closeWindow, maximizeWindow, minimizeWindow, unmaximize } from '@/commo
 import { appWindow } from '@tauri-apps/api/window'
 import Mitt from '@/utils/Bus'
 import { useWindow } from '@/hooks/useWindow.ts'
+import { alwaysOnTop } from '@/stores/alwaysOnTop.ts'
 
 /**
  * 新版defineProps可以直接结构 { minW, maxW, closeW } 如果需要使用默认值withDefaults的时候使用新版解构方式会报错
@@ -45,6 +63,8 @@ const props = withDefaults(
     maxW?: boolean
     closeW?: boolean
     shrink?: boolean
+    topWinLabel?: string
+    currentLabel?: string
     shrinkStatus?: boolean
   }>(),
   {
@@ -55,9 +75,22 @@ const props = withDefaults(
     shrinkStatus: true
   }
 )
-const { minW, maxW, closeW, shrinkStatus } = toRefs(props)
-const windowMaximized = ref(false)
+const { minW, maxW, closeW, topWinLabel, shrinkStatus } = toRefs(props)
+const alwaysOnTopStore = alwaysOnTop()
 const { resizeWindow } = useWindow()
+// 窗口是否最大化状态
+const windowMaximized = ref(false)
+// 窗口是否置顶状态
+const alwaysOnTopStatus = computed(() => {
+  if (topWinLabel.value === void 0) return false
+  return alwaysOnTopStore.getWindowTop(topWinLabel.value)
+})
+
+watchEffect(() => {
+  if (alwaysOnTopStatus.value) {
+    appWindow.setAlwaysOnTop(alwaysOnTopStatus.value as boolean)
+  }
+})
 
 // todo 放大的时候图个拖动了窗口，窗口会变回原来的大小，但是图标的状态没有改变
 // // 定义一个可能保存unlisten函数的变量
@@ -98,6 +131,15 @@ const shrinkWindow = async () => {
     await resizeWindow('home', 960, 700)
   }
 }
+
+/* 设置窗口置顶 */
+const handleAlwaysOnTop = async () => {
+  if (topWinLabel.value !== void 0) {
+    const isTop = !alwaysOnTopStatus.value
+    alwaysOnTopStore.setWindowTop(topWinLabel.value, isTop)
+    await appWindow.setAlwaysOnTop(isTop)
+  }
+}
 </script>
 
 <style scoped lang="scss">
@@ -105,6 +147,6 @@ const shrinkWindow = async () => {
   @apply w-28px h24px flex-center hover:bg-[--action-bar-icon-hover];
 }
 .action-close {
-  @apply w-28px h24px flex-center cursor-pointer hover:bg-#c22b1c svg:hover:color-[#fff] rounded-tr-6px;
+  @apply w-28px h24px flex-center cursor-pointer hover:bg-#c22b1c svg:hover:color-[#fff];
 }
 </style>

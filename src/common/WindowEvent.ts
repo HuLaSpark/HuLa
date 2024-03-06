@@ -10,8 +10,18 @@ export const maximizeWindow = async () => {
   await appWindow.maximize()
 }
 
-/** 关闭 */
-export const closeWindow = async () => {
+/**
+ * 关闭窗口
+ * @param label 窗口标签
+ * @example
+ * 传入窗口标签后开启窗口关闭的监听事件，使用appWindow.emit事件
+ * 事件名称: windowsClose
+ */
+export const closeWindow = async (label: string) => {
+  if (label !== void 0) {
+    const win = WebviewWindow.getByLabel(label)
+    win?.emit('windowsClose', label)
+  }
   await appWindow.close()
 }
 

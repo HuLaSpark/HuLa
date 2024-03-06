@@ -7,11 +7,7 @@
     <!-- 顶部右边选项栏 -->
     <nav class="options flex-y-center gap-20px color-[--icon-color]">
       <div class="options-box">
-        <n-popover
-          trigger="hover"
-          :show-arrow="false"
-          placement="bottom"
-          style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3)">
+        <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
             <svg @click="handleClick"><use href="#phone-telephone"></use></svg>
           </template>
@@ -20,11 +16,7 @@
       </div>
 
       <div class="options-box">
-        <n-popover
-          trigger="hover"
-          :show-arrow="false"
-          placement="bottom"
-          style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3)">
+        <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
             <svg><use href="#video-one"></use></svg>
           </template>
@@ -33,11 +25,7 @@
       </div>
 
       <div class="options-box">
-        <n-popover
-          trigger="hover"
-          :show-arrow="false"
-          placement="bottom"
-          style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3)">
+        <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
             <svg><use href="#screen-sharing"></use></svg>
           </template>
@@ -46,11 +34,7 @@
       </div>
 
       <div class="options-box">
-        <n-popover
-          trigger="hover"
-          :show-arrow="false"
-          placement="bottom"
-          style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3)">
+        <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
             <svg><use href="#remote-control"></use></svg>
           </template>
@@ -59,11 +43,7 @@
       </div>
 
       <div class="options-box">
-        <n-popover
-          trigger="hover"
-          :show-arrow="false"
-          placement="bottom"
-          style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3)">
+        <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
             <svg><use href="#launch"></use></svg>
           </template>

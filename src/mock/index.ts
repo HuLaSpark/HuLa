@@ -19,7 +19,7 @@ const generateRandomString = (length: number, type: number) => {
 }
 
 export const MockList = ref<MockItem[]>(
-  Array.from({ length: 50 }, (_, i) => {
+  Array.from({ length: 20 }, (_, i) => {
     const type = Math.round(Math.random()) + 1
     return {
       key: i,
@@ -43,6 +43,7 @@ export const dynamicList = Array.from({ length: 10 }, (_, i) => {
     id: i,
     avatar: `${avatars}?${i}`,
     user: `泰勒斯威夫特 ${i}`,
-    img: imgList
+    img: imgList,
+    isAuth: i % 2 === 0
   }
 })

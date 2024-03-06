@@ -27,14 +27,14 @@ onMounted(() => {
   }
   document.documentElement.dataset.theme = THEME.value
   window.addEventListener('dragstart', preventDrag)
-  // /* 禁用浏览器默认的快捷键 */
-  // window.addEventListener('keydown', (e) => {
-  //   if (e.ctrlKey || e.metaKey || e.altKey) {
-  //     e.preventDefault()
-  //   }
-  // })
-  // /* 禁止右键菜单 */
-  // window.addEventListener('contextmenu', (e) => e.preventDefault(), false)
+  /* 禁用浏览器默认的快捷键 */
+  window.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) {
+      e.preventDefault()
+    }
+  })
+  /* 禁止右键菜单 */
+  window.addEventListener('contextmenu', (e) => e.preventDefault(), false)
 })
 
 onUnmounted(() => {

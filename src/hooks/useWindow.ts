@@ -42,10 +42,17 @@ export const useWindow = () => {
       fileDropEnabled: isDrag
     })
 
-    // 首先检查是否已经存在同名窗口
+    // TODO 这里如果主页刷新页面这样传递过来的label就没有了从而导致isExistsWinds为空的问题 (nyh -> 2024-03-06 06:33:38)
     const isExistsWinds = WebviewWindow.getByLabel(label)
+    // TODO 页面刷新后很多状态会丢失，虽然上线打包后可以禁用刷新但难免会有些人会触发刷新，需要解决这个刷新后状态丢失问题 (nyh -> 2024-03-06 06:32:03)
     if (isExistsWinds) {
-      // 如果窗口已存在，则给它焦点，使其置顶
+      // 如果窗口已存在，首先检查是否最小化了
+      const minimized = await webview.isMinimized()
+      if (minimized) {
+        // 如果已最小化，恢复窗口
+        await webview.unminimize()
+      }
+      // 如果窗口已存在，则给它焦点，使其在最前面显示
       await webview.setFocus()
     } else {
       await webview.once('tauri://created', async () => {

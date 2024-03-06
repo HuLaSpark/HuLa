@@ -6,6 +6,7 @@ import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import { getRootPath, getSrcPath } from './build/config/getPath'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import unocss from '@unocss/vite'
+import terser from '@rollup/plugin-terser'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }: ConfigEnv) => {
@@ -50,8 +51,38 @@ export default defineConfig(({ mode }: ConfigEnv) => {
         dirs: ['src/components/**'], // 设置需要扫描的目录
         resolvers: [NaiveUiResolver()],
         dts: 'src/typings/components.d.ts'
+      }),
+      /* 压缩代码 */
+      terser({
+        format: {
+          comments: false // 移除所有注释
+        },
+        compress: {
+          drop_console: true, // 移除 console.log
+          drop_debugger: true // 移除 debugger
+        }
       })
     ],
+    build: {
+      cssCodeSplit: true, // 启用 CSS 代码拆分
+      minify: 'terser', // 指定使用哪种混淆器
+      // chunk 大小警告的限制(kb)
+      chunkSizeWarningLimit: 1200,
+      // 分包配置
+      rollupOptions: {
+        output: {
+          chunkFileNames: 'static/js/[name]-[hash].js', // 引入文件名的名称
+          entryFileNames: 'static/js/[name]-[hash].js', // 包的入口文件名称
+          assetFileNames: 'static/[ext]/[name]-[hash].[ext]', // 资源文件像 字体，图片等
+          // 最小化拆分包
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              return id.toString().split('node_modules/')[1].split('/')[0].toString()
+            }
+          }
+        }
+      }
+    },
 
     // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
     //

@@ -6,21 +6,13 @@
     <!-- 输入框顶部选项栏 -->
     <nav class="flex-between-center p-[10px_22px_5px] select-none">
       <nav class="input-options flex-y-center">
-        <n-popover
-          trigger="hover"
-          :show-arrow="false"
-          placement="bottom"
-          style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3)">
+        <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
             <svg class="mr-18px"><use href="#smiling-face"></use></svg>
           </template>
           <span>表情</span>
         </n-popover>
-        <n-popover
-          trigger="hover"
-          :show-arrow="false"
-          placement="bottom"
-          style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3)">
+        <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
             <div class="flex-center gap-2px mr-12px">
               <svg><use href="#screenshot"></use></svg>
@@ -29,11 +21,7 @@
           </template>
           <span>截图</span>
         </n-popover>
-        <n-popover
-          trigger="hover"
-          :show-arrow="false"
-          placement="bottom"
-          style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3)">
+        <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
             <div class="flex-center gap-2px mr-12px">
               <svg><use href="#file2"></use></svg>
@@ -42,41 +30,25 @@
           </template>
           <span>文件</span>
         </n-popover>
-        <n-popover
-          trigger="hover"
-          :show-arrow="false"
-          placement="bottom"
-          style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3)">
+        <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
             <svg class="mr-18px"><use href="#photo"></use></svg>
           </template>
           <span>图片</span>
         </n-popover>
-        <n-popover
-          trigger="hover"
-          :show-arrow="false"
-          placement="bottom"
-          style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3)">
+        <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
             <svg class="mr-18px"><use href="#shake"></use></svg>
           </template>
           <span>窗口抖动</span>
         </n-popover>
-        <n-popover
-          trigger="hover"
-          :show-arrow="false"
-          placement="bottom"
-          style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3)">
+        <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
             <svg class="mr-18px"><use href="#red-packet"></use></svg>
           </template>
           <span>红包</span>
         </n-popover>
-        <n-popover
-          trigger="hover"
-          :show-arrow="false"
-          placement="bottom"
-          style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3)">
+        <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
             <svg class="mr-18px"><use href="#voice"></use></svg>
           </template>
@@ -84,11 +56,7 @@
         </n-popover>
       </nav>
 
-      <n-popover
-        trigger="hover"
-        :show-arrow="false"
-        placement="bottom"
-        style="padding: 5px; border: 1px solid rgba(90, 90, 90, 0.3)">
+      <n-popover trigger="hover" :show-arrow="false" placement="bottom">
         <template #trigger>
           <svg class="w-22px h-22px cursor-pointer outline-none"><use href="#history"></use></svg>
         </template>

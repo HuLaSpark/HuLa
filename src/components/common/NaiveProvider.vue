@@ -82,6 +82,9 @@ const themeOverrides: GlobalThemeOverrides = {
     tabTextColorActiveSegment: '#059669',
     tabTextColorHoverSegment: '#059669',
     tabPaddingMediumSegment: '4px'
+  },
+  Popover: {
+    padding: '5px'
   }
 }
 

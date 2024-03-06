@@ -7,7 +7,7 @@
   },
   "package": {
     "productName": "HuLa-IM-Tauri",
-    "version": "0.0.0"
+    "version": "v1.2.8-alpha"
   },
   "tauri": {
     "allowlist": {

@@ -1,38 +1,40 @@
 <template>
   <!-- 消息列表 -->
   <!-- 可拖拽排序组件  -->
-  <VueDraggable v-if="MockList.length > 0" ref="el" :animation="150" v-model="MockList">
+  <VueDraggable v-if="MockList.length > 0" ref="el" target=".sort-target" :animation="150" v-model="MockList">
     <!--  右键菜单组件  -->
-    <ContextMenu
-      @select="handleSelect($event.click(item.key))"
-      @click="handleMsgClick(item)"
-      :menu="menuList"
-      :special-menu="specialMenuList"
-      :class="{ active: activeItem === item.key }"
-      class="msg-box w-full h-75px mb-5px"
-      v-for="item in MockList"
-      :key="item.key">
-      <!-- 消息框，使用v-slide自定义指令来自动抉择右键菜单位置 -->
-      <div v-slide class="flex items-center h-full pl-6px pr-8px gap-10px">
-        <img class="w-44px h-44px rounded-50% bg-#fff" style="border: 1px solid #f1f1f1" :src="item.avatar" alt="" />
+    <TransitionGroup type="transition" tag="div" name="fade" class="sort-target">
+      <ContextMenu
+        @select="handleSelect($event.click(item.key))"
+        @click="handleMsgClick(item)"
+        :menu="menuList"
+        :special-menu="specialMenuList"
+        :class="{ active: activeItem === item.key }"
+        class="msg-box w-full h-75px mb-5px"
+        v-for="item in MockList"
+        :key="item.key">
+        <!-- 消息框，使用v-slide自定义指令来自动抉择右键菜单位置 -->
+        <div v-slide class="flex items-center h-full pl-6px pr-8px gap-10px">
+          <img class="w-44px h-44px rounded-50% bg-#fff" style="border: 1px solid #f1f1f1" :src="item.avatar" alt="" />
 
-        <div class="h-38px flex flex-1 flex-col justify-between">
-          <div class="flex-between-center">
-            <span class="text-14px">{{ item.accountName }}</span>
-            <span class="text text-10px">昨天</span>
-          </div>
+          <div class="h-38px flex flex-1 flex-col justify-between">
+            <div class="flex-between-center">
+              <span class="text-14px">{{ item.accountName }}</span>
+              <span class="text text-10px">昨天</span>
+            </div>
 
-          <div class="flex-between-center">
-            <p class="text w-135px text-12px" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
-              说的很经典哈萨克的哈萨克看到贺卡上
-            </p>
+            <div class="flex-between-center">
+              <p class="text w-135px text-12px" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
+                说的很经典哈萨克的哈萨克看到贺卡上
+              </p>
 
-            <!-- 消息提示 -->
-            <n-badge :value="msgTotal" :max="99" />
+              <!-- 消息提示 -->
+              <n-badge :value="msgTotal" :max="99" />
+            </div>
           </div>
         </div>
-      </div>
-    </ContextMenu>
+      </ContextMenu>
+    </TransitionGroup>
   </VueDraggable>
 
   <!-- 暂无消息 -->
@@ -126,6 +128,9 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .msg-box {
+  transition:
+    background-color 0.3s ease,
+    border-radius 0.3s ease;
   color: var(--text-color);
   .text {
     color: #808080;
@@ -149,6 +154,24 @@ onMounted(() => {
     color: #fff;
   }
 }
+
+/*! TransitionGroup过渡样式 */
+.fade-move,
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.5s cubic-bezier(0.55, 0, 0.1, 1);
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: scaleY(0.01) translate(30px, 0);
+}
+
+.fade-leave-active {
+  position: absolute;
+}
+/*! end */
 
 :deep(.n-badge .n-badge-sup) {
   font-weight: bold;

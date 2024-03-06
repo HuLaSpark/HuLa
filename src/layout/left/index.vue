@@ -9,11 +9,14 @@
           v-for="(item, index) in itemsTop"
           :key="index"
           @click="pageJumps(item.url)"
-          class="top-action"
-          :class="{ active: activeItem === item.url }">
+          :class="[
+            { active: activeItem === item.url && item.url !== 'dynamic' },
+            openWindowsList.has(item.url) ? 'p-[6px_8px] color-#059669' : 'top-action'
+          ]">
           <n-badge :value="item.badge" :max="99">
             <svg class="w-22px h-22px">
-              <use :href="`#${activeItem === item.url && item.iconAction ? item.iconAction : item.icon}`"></use>
+              <use
+                :href="`#${activeItem === item.url || openWindowsList.has(item.url) ? item.iconAction : item.icon}`"></use>
             </svg>
           </n-badge>
         </div>
@@ -25,9 +28,9 @@
           v-for="(item, index) in itemsBottom"
           :key="index"
           @click="openContent(item.title, item.label)"
-          class="bottom-action">
+          :class="openWindowsList.has(item.url.substring(1)) ? 'p-[6px_8px] color-#059669' : 'bottom-action'">
           <svg class="w-22px h-22px">
-            <use :href="`#${item.icon}`"></use>
+            <use :href="`#${openWindowsList.has(item.url.substring(1)) ? item.iconAction : item.icon}`"></use>
           </svg>
         </div>
 
@@ -55,6 +58,7 @@ import { delay } from 'lodash-es'
 import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
 import Mitt from '@/utils/Bus.ts'
+import { listenMsg } from '@/common/CrossTabMsg.ts'
 
 type TopActive = {
   url: string
@@ -156,6 +160,8 @@ const menuList = ref<MenuList>([
 /*当前选中的元素 默认选中itemsTop的第一项*/
 const activeItem = ref<string>(itemsTop.value[0].url)
 const settingShow = ref(false)
+/* 已打开窗口的列表 */
+const openWindowsList = ref(new Set())
 const { createWebviewWindow } = useWindow()
 
 watchEffect(() => {
@@ -166,6 +172,13 @@ watchEffect(() => {
       }
     })
   })
+  listenMsg((msgInfo: any) => {
+    if (msgInfo.content.payload !== void 0) {
+      openWindowsList.value.delete(msgInfo.content.payload)
+    } else if (!openWindowsList.value.has(msgInfo.content)) {
+      openWindowsList.value.add(msgInfo.content)
+    }
+  })
 })
 
 /**
@@ -173,13 +186,13 @@ watchEffect(() => {
  * @param url 跳转的路由
  * */
 const pageJumps = (url: string) => {
-  activeItem.value = url
   // 判断是否是动态页面
   if (url === 'dynamic') {
     delay(async () => {
       await createWebviewWindow('动态', 'dynamic', 840, 800)
     }, 300)
   } else {
+    activeItem.value = url
     router.push(`/${url}`)
   }
 }
