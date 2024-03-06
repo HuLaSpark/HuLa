@@ -112,6 +112,18 @@ html[data-theme='dark'] {
     transform: translateX(0);
   }
 }
+// 气泡闪烁动画
+@keyframes bubble-twinkle {
+  0% {
+    transform: scale(0.4);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
 /*!修改naive-ui的遮罩层样式*/
 @mixin mask-style($blur: 4px) {
   position: fixed;

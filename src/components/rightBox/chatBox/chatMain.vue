@@ -25,6 +25,7 @@
               :src="item.accountId === userId ? item.avatar : activeItem.avatar"
               alt="" />
             <div
+              :data-key="item.key"
               class="flex flex-col gap-8px color-[--text-color]"
               :class="item.accountId === userId ? 'items-end mr-10px' : ''">
               <span class="text-13px select-none" v-if="activeItem.type === RoomTypeEnum.Group">
@@ -50,14 +51,16 @@
 
                 <!--  消息为为图片类型(不固定宽度和高度), 多张图片时渲染  -->
                 <n-image-group v-if="Array.isArray(item.content) && item.type === MsgEnum.IMAGE">
-                  <n-space class="photo-wall" vertical>
+                  <n-space
+                    class="photo-wall"
+                    vertical
+                    :class="activeItem.type === RoomTypeEnum.Group ? '' : 'm-[10px_0]'">
                     <n-image
                       v-for="(src, index) in item.content"
                       :key="index"
                       :img-props="{ style: { maxWidth: '325px', maxHeight: '165px' } }"
                       show-toolbar-tooltip
                       style="border-radius: 8px"
-                      :class="activeItem.type === RoomTypeEnum.Group ? '' : 'm-[10px_0]'"
                       :src="src"></n-image>
                   </n-space>
                 </n-image-group>
@@ -202,8 +205,6 @@ const handleMsgClick = (item: any) => {
 const handleSendMessage = (msg: any) => {
   // 检查是否为图片消息
   if (msg.type === MsgEnum.IMAGE) {
-    // 移除 span 标签(在输入框的时候多个img标签会生成span标签提供padding效果)
-    msg.content = msg.content.replace(/<\/?span[^>]*>/g, '')
     // 查找所有的img标签并存入数组
     const imgSrcArray = [...msg.content.matchAll(/<img.*?src="(.*?)"/g)].map((match) => match[1])
     if (imgSrcArray.length > 1) {
@@ -223,9 +224,26 @@ const handleSendMessage = (msg: any) => {
     content: msg.content,
     type: msg.type
   })
+  addToDomUpdateQueue(index)
+}
+
+/* 给气泡添加动画 */
+const addToDomUpdateQueue = (index: number) => {
   // 使用 nextTick 确保虚拟列表渲染完最新的项目后进行滚动
   nextTick(() => {
     virtualListInst.value?.scrollTo({ position: 'bottom' })
+    // data-key标识的气泡
+    const lastMessageElement = document.querySelector(`[data-key="${index + 1}"]`)
+    if (lastMessageElement) {
+      // 添加动画类
+      lastMessageElement.classList.add('bubble-animation')
+      // 监听动画结束事件
+      const handleAnimationEnd = () => {
+        lastMessageElement.classList.remove('bubble-animation')
+        lastMessageElement.removeEventListener('animationend', handleAnimationEnd)
+      }
+      lastMessageElement.addEventListener('animationend', handleAnimationEnd)
+    }
   })
 }
 
@@ -240,6 +258,21 @@ onMounted(() => {
     handleSendMessage(event)
   })
   window.addEventListener('click', closeMenu, true)
+  // let index = items.value.length > 0 ? items.value[items.value.length - 1].key : 0
+  //
+  // setInterval(() => {
+  //   index++
+  //   const message = {
+  //     value: '按你说的就撒了大家',
+  //     key: index,
+  //     accountId: activeItem.accountId,
+  //     avatar: 'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg',
+  //     content: '123',
+  //     type: MsgEnum.TEXT
+  //   }
+  //   items.value.push(message)
+  //   addToDomUpdateQueue(index - 1)
+  // }, 1000)
 })
 
 onUnmounted(() => {
@@ -274,6 +307,10 @@ onUnmounted(() => {
   @include bubble;
   @apply rounded-[18px_2px_18px_18px] color-#fff;
   background-color: rgba(5, 150, 105, 0.8);
+}
+/*! 气泡动画 */
+.bubble-animation {
+  animation: bubble-twinkle 0.4s ease-out forwards;
 }
 .photo-wall {
   @extend .bubble-oneself;
