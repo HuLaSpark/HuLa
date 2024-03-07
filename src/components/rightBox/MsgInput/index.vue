@@ -240,7 +240,7 @@ const inputKeyDown = (e: KeyboardEvent) => {
 
 <style scoped lang="scss">
 .message-input {
-  padding: 4px; /* 输入框内填充 */
+  padding: 4px 24px 4px 4px; /* 输入框内填充 */
   font-size: 14px; /* 字体大小 */
   color: inherit; /* 继承颜色 */
   cursor: text; /* 文本输入光标 */
@@ -252,7 +252,9 @@ const inputKeyDown = (e: KeyboardEvent) => {
   min-height: 90px; /* 最小高度 */
   line-height: 20px; /* 行高 */
   overflow: auto; /* 内容过多时允许滚动 */
-  max-width: 610px; /* 最大宽度 */
+  flex: 1; /* 弹性盒自适应填充可用空间 */
   caret-color: #059669; /* 光标颜色，可根据需求调整 */
+  white-space: pre-wrap; /* 保留空白符号并正常换行 */
+  word-break: break-word; /* 在长单词或URL地址内部进行换行 */
 }
 </style>

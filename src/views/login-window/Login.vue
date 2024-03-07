@@ -7,7 +7,11 @@
 
     <!-- 头像 -->
     <div class="w-full flex-x-center mt-35px mb-25px">
-      <img style="border: 2px solid #fff" class="w-80px h-80px rounded-50% bg-#fff" src="/logo.png" alt="" />
+      <img
+        style="border: 2px solid #fff"
+        class="w-80px h-80px rounded-50% bg-#fff"
+        :src="avatarRef || '/logo.png'"
+        alt="" />
     </div>
 
     <!-- 登录菜单 -->
@@ -17,7 +21,7 @@
         size="large"
         maxlength="16"
         minlength="6"
-        v-model:value="account"
+        v-model:value="accountRef"
         type="text"
         :placeholder="accountPH"
         @focus="accountPH = ''"
@@ -43,10 +47,10 @@
             vertical
             v-for="(item, index) in accountOption"
             :key="item.account"
-            @click="giveAccount(item.account, item.password)"
+            @click="giveAccount(item)"
             class="p-8px cursor-pointer hover:bg-#f3f3f3 hover: rounded-6px">
             <div class="flex-between-center">
-              <div class="w-28px h-28px bg-#ccc rounded-50%"></div>
+              <img :src="item.avatar" class="w-28px h-28px bg-#ccc rounded-50%" alt="" />
               <p class="text-14px color-#505050">{{ item.account }}</p>
               <svg @click.stop="delAccount(index)" class="w-12px h-12px">
                 <use href="#close"></use>
@@ -60,7 +64,7 @@
         maxlength="16"
         minlength="6"
         size="large"
-        v-model:value="password"
+        v-model:value="passwordRef"
         type="password"
         :placeholder="passwordPH"
         @focus="passwordPH = ''"
@@ -81,7 +85,7 @@
       <n-button
         :loading="loading"
         :disabled="loginDisabled"
-        class="w-full mt-10px mb-35px"
+        class="w-full mt-8px mb-35px"
         @click="loginWin"
         color="#059669">
         登录
@@ -114,31 +118,36 @@ type Account = {
   account: string
   password: string
   avatar?: string
-}[]
+}
 
-const account = ref()
-const password = ref()
+const accountRef = ref()
+const passwordRef = ref()
+const avatarRef = ref()
 const protocol = ref()
 const loginDisabled = ref(false)
 const loading = ref(false)
 const arrowStatus = ref(false)
 /* todo 模拟账号列表 */
-const accountOption = ref<Account>([
+const accountOption = ref<Account[]>([
   {
     account: 'hula',
-    password: '123456'
+    password: '123456',
+    avatar: 'https://picsum.photos/140?1'
   },
   {
     account: 'hula1',
-    password: '123456'
+    password: '123456',
+    avatar: 'https://picsum.photos/140?2'
   },
   {
     account: 'hula2',
-    password: '123456'
+    password: '123456',
+    avatar: 'https://picsum.photos/140?3'
   },
   {
     account: 'hula3',
-    password: '123456'
+    password: '123456',
+    avatar: 'https://picsum.photos/140?4'
   }
 ])
 const accountPH = ref('输入HuLa账号')
@@ -146,7 +155,11 @@ const passwordPH = ref('输入HuLa密码')
 const { createWebviewWindow } = useWindow()
 
 watchEffect(() => {
-  loginDisabled.value = !(account.value && password.value && protocol.value)
+  loginDisabled.value = !(accountRef.value && passwordRef.value && protocol.value)
+  // 情况账号的时候设置默认头像
+  if (!accountRef.value) {
+    avatarRef.value = '/logo.png'
+  }
 })
 
 /* 删除账号列表内容 */
@@ -160,18 +173,20 @@ const delAccount = (index: number) => {
   if (lengthBeforeDelete === 1 && accountOption.value.length === 0) {
     arrowStatus.value = false
   }
-  account.value = null
-  password.value = null
+  accountRef.value = null
+  passwordRef.value = null
+  avatarRef.value = '/logo.png'
 }
 
 /**
  * 给账号赋值
- * @param au 账号
- * @param paw 密码
+ * @param { Account } item 账户信息
  * */
-const giveAccount = (au: string, paw: string) => {
-  account.value = au
-  password.value = paw
+const giveAccount = (item: Account) => {
+  const { account, password, avatar } = item
+  accountRef.value = account
+  passwordRef.value = password
+  avatarRef.value = avatar
   arrowStatus.value = false
 }
 

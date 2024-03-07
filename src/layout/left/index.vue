@@ -1,8 +1,9 @@
 <template>
   <main class="left w-60px h-full p-[30px_6px_15px] box-border flex-col-center select-none">
-    <img class="border-rounded-50% w-36px h-36px bg-#fff cursor-pointer" src="/logo.png" alt="" />
+    <!-- 头像 -->
+    <img class="border-rounded-50% w-36px h-36px bg-#fff cursor-pointer" :src="'https://picsum.photos/140'" alt="" />
 
-    <div data-tauri-drag-region class="wh-full mt-20px flex-col-x-center justify-between">
+    <div data-tauri-drag-region class="flex-1 mt-20px flex-col-x-center justify-between">
       <!-- 上部分操作栏 -->
       <header class="flex-col-x-center gap-10px color-[--icon-color]">
         <div

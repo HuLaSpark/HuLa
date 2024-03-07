@@ -3,7 +3,7 @@
     <!--顶部操作栏-->
     <ActionBar :max-w="false" :shrink="false" />
 
-    <n-flex justify="center" class="text-28px color-#059669 mt-25px">HuLA</n-flex>
+    <n-flex justify="center" class="text-28px color-#059669 mt-25px font-1000">HuLA</n-flex>
 
     <!-- 二维码 -->
     <n-flex justify="center" class="mt-35px">

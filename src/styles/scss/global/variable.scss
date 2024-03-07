@@ -86,11 +86,11 @@ html[data-theme='dark'] {
 // 线性动画
 @keyframes linearAnimation {
   0% {
-    stroke-dasharray: 800;
-    stroke-dashoffset: 800;
+    stroke-dasharray: 600;
+    stroke-dashoffset: 600;
   }
   100% {
-    stroke-dasharray: 800;
+    stroke-dasharray: 600;
     stroke-dashoffset: 0;
   }
 }
