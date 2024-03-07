@@ -1,5 +1,5 @@
 <template>
-  <main class="wh-full">
+  <main class="wh-full bg-[--right-bg-color]">
     <ActionBar :shrink="false" :max-w="false" />
 
     <div>123</div>

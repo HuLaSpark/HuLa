@@ -11,7 +11,7 @@
       <main
         :key="item.key"
         class="flex-y-center min-h-58px"
-        :class="activeItem.type === RoomTypeEnum.Group ? 'p-[18px_20px]' : 'chat-single p-[2px_20px]'">
+        :class="activeItem.type === RoomTypeEnum.GROUP ? 'p-[18px_20px]' : 'chat-single p-[2px_20px]'">
         <!-- 好友或者群聊的信息 -->
         <article class="flex flex-col w-full gap-18px" :class="item.accountId === userId ? 'items-end' : ''">
           <div
@@ -28,7 +28,7 @@
               :data-key="item.key"
               class="flex flex-col gap-8px color-[--text-color]"
               :class="item.accountId === userId ? 'items-end mr-10px' : ''">
-              <span class="text-13px select-none" v-if="activeItem.type === RoomTypeEnum.Group">
+              <span class="text-13px select-none" v-if="activeItem.type === RoomTypeEnum.GROUP">
                 {{ item.accountId === userId ? item.value : activeItem.accountName }}
               </span>
               <!--  右键菜单及其气泡样式  -->
@@ -44,7 +44,7 @@
                   v-if="item.type === MsgEnum.TEXT"
                   :class="[
                     { active: activeBubble === item.key },
-                    activeItem.type === RoomTypeEnum.Group ? '' : 'm-[10px_0]',
+                    activeItem.type === RoomTypeEnum.GROUP ? '' : 'm-[10px_0]',
                     item.accountId === userId ? 'bubble-oneself' : 'bubble'
                   ]"
                   v-html="item.content"></div>
@@ -54,7 +54,7 @@
                   <n-space
                     class="photo-wall"
                     vertical
-                    :class="activeItem.type === RoomTypeEnum.Group ? '' : 'm-[10px_0]'">
+                    :class="activeItem.type === RoomTypeEnum.GROUP ? '' : 'm-[10px_0]'">
                     <n-image
                       v-for="(src, index) in item.content"
                       :key="index"
@@ -71,7 +71,7 @@
                   :img-props="{ style: { maxWidth: '325px', maxHeight: '165px' } }"
                   show-toolbar-tooltip
                   style="border-radius: 8px"
-                  :class="activeItem.type === RoomTypeEnum.Group ? '' : 'm-[10px_0]'"
+                  :class="activeItem.type === RoomTypeEnum.GROUP ? '' : 'm-[10px_0]'"
                   :src="item.content"></n-image>
               </ContextMenu>
             </div>

@@ -23,6 +23,7 @@
 import { theme } from '@/stores/theme.ts'
 import { storeToRefs } from 'pinia'
 import { sendMsg } from '@/common/CrossTabMsg.ts'
+import { CrossTabTypeEnum, ThemeEnum } from '@/enums'
 
 const themeStore = theme()
 const { PATTERN } = storeToRefs(themeStore)
@@ -31,7 +32,7 @@ const activeItem = ref<string>(PATTERN.value)
 const titleList = [
   {
     title: '白天模式',
-    code: 'light',
+    code: ThemeEnum.LIGHT,
     model: (() => (
       <div class="wh-full flex">
         <div class="bg-#f1f1f1 flex-[1] rounded-[6px_0_0_6px]"></div>
@@ -70,7 +71,7 @@ const titleList = [
   },
   {
     title: '夜间模式',
-    code: 'dark',
+    code: ThemeEnum.DARK,
     model: (() => (
       <div class="wh-full flex">
         <div class="bg-#454545 flex-[1] rounded-[6px_0_0_6px]"></div>
@@ -109,7 +110,7 @@ const titleList = [
   },
   {
     title: '跟随系统',
-    code: 'os',
+    code: ThemeEnum.OS,
     model: (() => (
       <div class="wh-full flex">
         <div class="bg-#f1f1f1 flex-[1] rounded-[6px_0_0_6px]"></div>
@@ -166,11 +167,11 @@ const handleTheme = (event: MouseEvent, code: string) => {
   let isDark: boolean
 
   themeStore.toggleTheme(code)
-  sendMsg('theme', code)
+  sendMsg(CrossTabTypeEnum.THEME, code)
   /*判断当前浏览器是否支持startViewTransition API*/
   if (document.startViewTransition) {
     const transition = document.startViewTransition(() => {
-      isDark = code.includes('dark')
+      isDark = code.includes(ThemeEnum.DARK)
     })
     // TODO 从亮色主题切换到暗色主题的时候没有动画效果 (nyh -> 2024-02-12 23:07:54)
     transition.ready.then(() => {

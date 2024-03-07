@@ -8,7 +8,7 @@
 
     <!-- 聊天界面背景图标 -->
     <div v-else class="flex-center wh-full select-none">
-      <img v-if="imgTheme === 'dark'" class="w-130px h-100px" src="@/assets/img/hula_bg_dark.png" alt="" />
+      <img v-if="imgTheme === ThemeEnum.DARK" class="w-130px h-100px" src="@/assets/img/hula_bg_dark.png" alt="" />
       <img v-else class="w-130px h-100px" src="@/assets/img/hula_bg_light.png" alt="" />
     </div>
   </main>
@@ -19,6 +19,7 @@ import router from '@/router'
 import { listenMsg } from '@/common/CrossTabMsg.ts'
 import { theme } from '@/stores/theme.ts'
 import { storeToRefs } from 'pinia'
+import { CrossTabTypeEnum, ThemeEnum } from '@/enums'
 
 const themeStore = theme()
 const { THEME, PATTERN } = storeToRefs(themeStore)
@@ -39,26 +40,28 @@ const isDetails = computed(() => {
 
 /* 跟随系统主题模式切换主题 */
 const followOS = () => {
-  imgTheme.value = prefers.matches ? 'dark' : 'light'
+  imgTheme.value = prefers.matches ? ThemeEnum.DARK : ThemeEnum.LIGHT
 }
 
 /* 监听其他标签页的变化 */
 listenMsg((msgInfo: any) => {
-  if (msgInfo.content === 'os') {
-    followOS()
-    prefers.addEventListener('change', followOS)
-  } else {
-    imgTheme.value = msgInfo.content === 'dark' ? 'dark' : 'light'
-    prefers.removeEventListener('change', followOS)
+  if (msgInfo.type === CrossTabTypeEnum.THEME) {
+    if (msgInfo.content === ThemeEnum.OS) {
+      followOS()
+      prefers.addEventListener('change', followOS)
+    } else {
+      imgTheme.value = msgInfo.content || ThemeEnum.LIGHT
+      prefers.removeEventListener('change', followOS)
+    }
   }
 })
 
 watchEffect(() => {
-  if (PATTERN.value === 'os') {
+  if (PATTERN.value === ThemeEnum.OS) {
     followOS()
     prefers.addEventListener('change', followOS)
   } else {
-    imgTheme.value = THEME.value === 'dark' ? 'dark' : 'light'
+    imgTheme.value = THEME.value || ThemeEnum.LIGHT
     prefers.removeEventListener('change', followOS)
   }
 })

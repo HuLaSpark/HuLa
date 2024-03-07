@@ -59,6 +59,7 @@ import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
 import Mitt from '@/utils/Bus.ts'
 import { listenMsg } from '@/common/CrossTabMsg.ts'
+import { CrossTabTypeEnum } from '@/enums'
 
 type TopActive = {
   url: string
@@ -173,10 +174,12 @@ watchEffect(() => {
     })
   })
   listenMsg((msgInfo: any) => {
-    if (msgInfo.content.payload !== void 0) {
-      openWindowsList.value.delete(msgInfo.content.payload)
-    } else if (!openWindowsList.value.has(msgInfo.content)) {
-      openWindowsList.value.add(msgInfo.content)
+    if (msgInfo.type === CrossTabTypeEnum.WINDOWSSHOW) {
+      if (msgInfo.content.payload !== void 0) {
+        openWindowsList.value.delete(msgInfo.content.payload)
+      } else if (!openWindowsList.value.has(msgInfo.content)) {
+        openWindowsList.value.add(msgInfo.content)
+      }
     }
   })
 })

@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { ThemeEnum } from '@/enums'
 
 export const theme = defineStore('theme', {
   state: () => {
@@ -17,9 +18,9 @@ export const theme = defineStore('theme', {
       localStorage.setItem('theme', JSON.stringify({ THEME: theme, PATTERN: theme }))
     },
     toggleTheme(theme: string) {
-      if (theme === 'os') {
+      if (theme === ThemeEnum.OS) {
         this.PATTERN = theme
-        const os = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        const os = matchMedia('(prefers-color-scheme: dark)').matches ? ThemeEnum.DARK : ThemeEnum.LIGHT
         document.documentElement.dataset.theme = os
         this.THEME = os
       } else {

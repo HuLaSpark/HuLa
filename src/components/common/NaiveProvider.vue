@@ -18,6 +18,7 @@ import { theme } from '@/stores/theme.ts'
 import { storeToRefs } from 'pinia'
 import { dateZhCN, darkTheme, lightTheme, GlobalThemeOverrides, zhCN } from 'naive-ui'
 import { listenMsg } from '@/common/CrossTabMsg.ts'
+import { CrossTabTypeEnum, ThemeEnum } from '@/enums'
 
 const themeStore = theme()
 const { THEME, PATTERN } = storeToRefs(themeStore)
@@ -28,29 +29,35 @@ const prefers = matchMedia('(prefers-color-scheme: dark)')
 /* 跟随系统主题模式切换主题 */
 const followOS = () => {
   globalTheme.value = prefers.matches ? darkTheme : lightTheme
-  document.documentElement.dataset.theme = prefers.matches ? 'dark' : 'light'
-  THEME.value = prefers.matches ? 'dark' : 'light'
+  document.documentElement.dataset.theme = prefers.matches ? ThemeEnum.DARK : ThemeEnum.LIGHT
+  THEME.value = prefers.matches ? ThemeEnum.DARK : ThemeEnum.LIGHT
 }
 
 /* 监听其他标签页的变化 */
 listenMsg((msgInfo: any) => {
-  if (msgInfo.content === 'os') {
-    globalTheme.value = prefers.matches ? darkTheme : lightTheme
-    document.documentElement.dataset.theme = prefers.matches ? 'dark' : 'light'
-    THEME.value = prefers.matches ? 'dark' : 'light'
-    PATTERN.value = 'os'
-  } else {
-    globalTheme.value = msgInfo.content === 'dark' ? darkTheme : lightTheme
-    document.documentElement.dataset.theme = msgInfo.content === 'dark' ? 'dark' : 'light'
+  if (msgInfo.type === CrossTabTypeEnum.THEME) {
+    if (msgInfo.content === ThemeEnum.OS) {
+      // 赋值给ui组件库的主题
+      globalTheme.value = prefers.matches ? darkTheme : lightTheme
+      // 给全局的dataset.theme赋值主题
+      document.documentElement.dataset.theme = prefers.matches ? ThemeEnum.DARK : ThemeEnum.LIGHT
+      // 修改localStorage中的THEME和设置中选择(PATTERN)
+      THEME.value = prefers.matches ? ThemeEnum.DARK : ThemeEnum.LIGHT
+      PATTERN.value = ThemeEnum.OS
+    } else {
+      globalTheme.value = msgInfo.content === ThemeEnum.DARK ? darkTheme : lightTheme
+      // 判断msgInfo.content是否是深色还是浅色
+      document.documentElement.dataset.theme = msgInfo.content || ThemeEnum.LIGHT
+    }
   }
 })
 
 watchEffect(() => {
-  if (PATTERN.value === 'os') {
+  if (PATTERN.value === ThemeEnum.OS) {
     followOS()
     prefers.addEventListener('change', followOS)
   } else {
-    globalTheme.value = THEME.value === 'dark' ? darkTheme : lightTheme
+    globalTheme.value = THEME.value === ThemeEnum.DARK ? darkTheme : lightTheme
     prefers.removeEventListener('change', followOS)
   }
 })
