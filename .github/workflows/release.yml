@@ -1,0 +1,96 @@
+# 可选，将显示在 GitHub 存储库的“操作”选项卡中的工作流名称
+name: Release CI
+
+# 指定此工作流的触发器
+on:
+  push:
+    # 匹配特定标签 (refs/tags)
+    tags:
+      - 'v*' # 推送事件匹配 v*, 例如 v1.0，v20.15.10 等来触发工作流
+
+# 需要运行的作业组合
+jobs:
+  # 任务：创建 release 版本
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      RELEASE_UPLOAD_ID: ${{ steps.create_release.outputs.id }}
+
+    steps:
+      - uses: actions/checkout@v2
+      # 查询版本号（tag）
+      - name: Query version number
+        id: get_version
+        shell: bash
+        run: |
+          echo "using version tag ${GITHUB_REF:10}"
+          echo ::set-output name=version::"${GITHUB_REF:10}"
+
+      # 根据查询到的版本号创建 release
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: '${{ steps.get_version.outputs.VERSION }}'
+          release_name: 'app ${{ steps.get_version.outputs.VERSION }}'
+          body: 'See the assets to download this version and install.'
+
+  # 编译 Tauri
+  build-tauri:
+    needs: create-release
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [macos-latest, ubuntu-latest, windows-latest]
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v2
+
+      # 安装 Node.js
+      - name: Setup node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      # 安装 Rust
+      - name: Install Rust stable
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      # 使用 Rust 缓存，加快安装速度
+      - uses: Swatinem/rust-cache@v1
+
+      - name: install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev webkit2gtk-4.0 libappindicator3-dev librsvg2-dev patchelf
+
+#      # 可选，如果需要将 Rust 编译为 wasm，则安装 wasm-pack
+#      - uses: jetli/wasm-pack-action@v0.3.0
+#        with:
+#          # Optional version of wasm-pack to install(eg. 'v0.9.1', 'latest')
+#          version: v0.9.1
+
+#      # 可选，如果需要使用 rsw 构建 wasm，则安装 rsw
+#      - name: Install rsw
+#        run: cargo install rsw
+
+      - name: Build Vite + Tauri
+        run: pnpm build
+
+      - name: Create release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: v__VERSION__ # 这个操作会自动将\_\_VERSION\_\_替换为app version
+          releaseName: 'v__VERSION__'
+          releaseBody: 'See the assets to download and install this version.'
+          releaseDraft: true
+          prerelease: false

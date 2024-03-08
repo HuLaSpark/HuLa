@@ -30,7 +30,5 @@ export const userStore = defineStore('localUserInfo', {
       //删除localStorage中的用户信息
       localStorage.removeItem('localUserInfo')
     }
-  },
-  //开启数据持久化
-  persist: true
+  }
 })

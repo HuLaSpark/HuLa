@@ -92,6 +92,12 @@ const themeOverrides: GlobalThemeOverrides = {
   },
   Popover: {
     padding: '5px'
+  },
+  Dropdown: {
+    borderRadius: '8px'
+  },
+  Avatar: {
+    border: '1px solid #fff'
   }
 }
 

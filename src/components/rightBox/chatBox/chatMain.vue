@@ -28,7 +28,7 @@
             <div
               class="flex flex-col gap-8px color-[--text-color]"
               :class="item.accountId === userId ? 'items-end mr-10px' : ''">
-              <span class="text-13px select-none" v-if="activeItem.type === RoomTypeEnum.GROUP">
+              <span class="text-12px select-none color-#909090" v-if="activeItem.type === RoomTypeEnum.GROUP">
                 {{ item.accountId === userId ? item.value : activeItem.accountName }}
               </span>
               <!--  右键菜单及其气泡样式  -->
@@ -137,6 +137,14 @@ import { VirtualListInst } from 'naive-ui'
 const activeBubble = ref(-1)
 const userId = ref(10086)
 const copyright = ref('-HuLa©-版权所有')
+const copyrightComputed = computed(() => {
+  const copy = (index: number) => {
+    items.value[index].content.endsWith(copyright.value)
+      ? navigator.clipboard.writeText(items.value[index].content)
+      : navigator.clipboard.writeText(items.value[index].content + copyright.value)
+  }
+  return { copy }
+})
 /* 提醒框标题 */
 const tips = ref()
 const modalShow = ref(false)
@@ -188,7 +196,7 @@ const menuList = ref<Menu>([
     icon: 'copy',
     click: (index: number) => {
       // 复制内容到剪贴板
-      navigator.clipboard.writeText(items.value[index].content + copyright.value)
+      copyrightComputed.value.copy(index)
     }
   },
   {
@@ -265,7 +273,7 @@ const handleMsgClick = (item: any) => {
   // 启用键盘监听
   const handleKeyPress = (e: KeyboardEvent) => {
     if (e.ctrlKey && e.key === 'c') {
-      navigator.clipboard.writeText(items.value[item.key].content + copyright.value)
+      copyrightComputed.value.copy(item.key)
       // 取消监听键盘事件，以免多次绑定
       document.removeEventListener('keydown', handleKeyPress)
     }
@@ -308,7 +316,7 @@ const handleSendMessage = (msg: any) => {
 const addToDomUpdateQueue = (index: number, id: number) => {
   // 使用 nextTick 确保虚拟列表渲染完最新的项目后进行滚动
   nextTick(() => {
-    if (!floatFooter.value) {
+    if (!floatFooter.value || id === userId.value) {
       virtualListInst.value?.scrollTo({ position: 'bottom' })
     }
     /* data-key标识的气泡,添加前缀用于区分用户消息，不然气泡动画会被覆盖 */

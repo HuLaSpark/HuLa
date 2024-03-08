@@ -35,8 +35,11 @@
           </svg>
         </div>
 
-        <svg @click="settingShow = !settingShow" class="more w-22px h-22px relative">
-          <use href="#hamburger-button"></use>
+        <svg
+          @click="settingShow = !settingShow"
+          class="more w-22px h-22px relative"
+          :class="{ 'color-#059669': settingShow }">
+          <use :href="settingShow ? '#hamburger-button-action' : '#hamburger-button'"></use>
         </svg>
 
         <!--  更多选项面板  -->
@@ -211,7 +214,7 @@ const openContent = (title: string, label: string) => {
 }
 
 const closeMenu = (event: any) => {
-  if (!event.target.matches('.setting-item, .more')) {
+  if (!event.target.matches('.setting-item, .more, .more *')) {
     settingShow.value = false
   }
 }

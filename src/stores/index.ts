@@ -1,5 +1,10 @@
 import { createPinia } from 'pinia'
-import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
+import { createPersistedState } from 'pinia-plugin-persistedstate'
 
 export const pinia = createPinia()
-pinia.use(piniaPluginPersistedstate)
+// 默认开启持久化存储
+pinia.use(
+  createPersistedState({
+    auto: true
+  })
+)

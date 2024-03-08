@@ -17,6 +17,5 @@ export const alwaysOnTop = defineStore('alwaysOnTop', {
     getWindowTop(key: string) {
       return this.$state[key]
     }
-  },
-  persist: true
+  }
 })
