@@ -7,7 +7,7 @@
   },
   "package": {
     "productName": "HuLa-IM-Tauri",
-    "version": "1.2.9-alpha"
+    "version": "1.2.9"
   },
   "tauri": {
     "allowlist": {
@@ -31,6 +31,11 @@
       "active": true,
       "targets": "all",
       "identifier": "com.tauri.build",
+      "windows": {
+        "wix": {
+          "language": "zh-CN"
+        }
+      },
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",

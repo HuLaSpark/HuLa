@@ -1,7 +1,7 @@
 {
   "name": "hula-im-tauri",
   "private": true,
-  "version": "v1.2.9-alpha",
+  "version": "v1.2.9",
   "packageManager": "pnpm@8.15.4",
   "engines": {
     "node": ">=18.12.0",
