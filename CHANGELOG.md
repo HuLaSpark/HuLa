@@ -1,3 +1,15 @@
+## <small>1.2.9-alpha (2024-03-08)</small>
+
+* :bug: fix(custom): 修复跨标签页没有判断类型的问题 ([e4acbd5](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/e4acbd5))
+* :sparkles: feat(custom): 新增聊天页面页脚显示功能 ([ebd7a41](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/ebd7a41))
+* :sunflower: update(custom): 更新登录界面样式 ([2394aa2](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/2394aa2))
+* :sunflower: update(custom): 更新好友和群聊详情页面 ([16007a2](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/16007a2))
+* :sunflower: update(custom): 更新气泡动画 ([e8dc441](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/e8dc441))
+* :sunflower: update(custom): 更新项目主要依赖版本 ([2a609ff](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/2a609ff))
+* :sunflower: update(custom): 更新悬浮按钮样式，修复已知的部分问题 ([1f01b7b](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/1f01b7b))
+
+
+
 ## <small>1.2.8-alpha (2024-03-06)</small>
 
 * :bug: fix(custom): 回退vite版本5.0.12导致启动不了端口服务的问题 ([ba99bb2](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/ba99bb2))
