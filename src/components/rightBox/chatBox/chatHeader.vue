@@ -98,7 +98,7 @@
         <use href="#close"></use>
       </svg>
       <div class="flex flex-col gap-30px p-[22px_10px_10px_22px] select-none">
-        <p>{{ tips }}</p>
+        <span class="text-14px">{{ tips }}</span>
         <label v-if="tipsOptions" class="text-14px flex gap-6px lh-16px">
           <n-checkbox v-model:checked="masking" />
           <span>同时屏蔽，不再接收此人消息</span>

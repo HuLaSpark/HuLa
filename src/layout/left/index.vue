@@ -175,12 +175,10 @@ watchEffect(() => {
     })
   })
   listenMsg((msgInfo: any) => {
-    if (msgInfo.type === CrossTabTypeEnum.WINDOWSSHOW) {
-      if (msgInfo.content.payload !== void 0) {
-        openWindowsList.value.delete(msgInfo.content.payload)
-      } else if (!openWindowsList.value.has(msgInfo.content)) {
-        openWindowsList.value.add(msgInfo.content)
-      }
+    if (msgInfo.type === CrossTabTypeEnum.WINDOW_SHOW && !openWindowsList.value.has(msgInfo.content)) {
+      openWindowsList.value.add(msgInfo.content)
+    } else if (msgInfo.type === CrossTabTypeEnum.WINDOW_CLOSE) {
+      openWindowsList.value.delete(msgInfo.content)
     }
   })
 })

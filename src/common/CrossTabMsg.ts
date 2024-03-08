@@ -11,8 +11,10 @@ export const sendMsg = (type: any, content: any) => {
 }
 
 /**
- * 监听消息
+ * 监听消息(需要根据type来判断需要监听哪个消息)
  * @param callback 回调函数
+ * @example listenMsg((msgInfo) => { if (msgInfo.type === 'xxx') { ... } }
+ * @see sendMsg
  */
 export const listenMsg = (callback: any) => {
   channel.addEventListener('message', (event) => {

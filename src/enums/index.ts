@@ -30,13 +30,15 @@ export enum CrossTabTypeEnum {
   /** 主题 */
   THEME = 'theme',
   /** 窗口显示 */
-  WINDOWSSHOW = 'windowsShow'
+  WINDOW_SHOW = 'windowShow',
+  /** 窗口关闭 */
+  WINDOW_CLOSE = 'windowClose'
 }
 
 /** tauri原生跨窗口通信时传输的类型 */
 export enum NativeListenEnum {
   /** 窗口关闭事件 */
-  CLOSE = 'windowsClose'
+  NATIVE_CLOSE = 'nativeWinClose'
 }
 
 /** 主题类型 */
