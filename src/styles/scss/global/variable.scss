@@ -1,0 +1,200 @@
+/*! 主题变量 */
+:root {
+  // 整体布局背景
+  --left-bg-color: rgba(255, 255, 255, 0.6);
+  --left-active-color: rgba(193, 193, 193, 0.6);
+  --center-bg-color: #fff;
+  --right-bg-color: #f1f1f1;
+  // 阴影样式的颜色
+  --box-shadow-color: rgba(0,0,0,0.08);
+  // 文字颜色
+  --text-color: #18181c;
+  // 整体图标颜色
+  --icon-color: #000;
+  --action-bar-icon-color: #404040;
+  --action-bar-icon-hover: #e7e7e7;
+  // 搜索框背景颜色
+  --search-bg-color: #f3f3f3;
+  // 消息列表样式
+  --bg-msg-first-child: #eeeeee;
+  --bg-msg-hover: #f3f3f3;
+  --bg-active-msg: rgba(5, 150, 105, 0.8);
+  // 聊天框整体样式
+  --bg-chat-drawer: #f0f0f0;
+  --bg-setting-item: #fdfdfd;
+  --setting-item-line: #f1f1f1;
+  // 弹出框背景样式
+  --bg-popover: #fdfdfd;
+  // 右键菜单样式或者需要透明的菜单的样式
+  --bg-menu: linear-gradient(45deg, rgba(255, 255, 255, 0.65) 80%, rgba(255, 255, 255, 0.95) 100%);
+  --bg-menu-hover: rgba(10, 20, 28, 0.1);
+  // 通用左边菜单栏的hover样式
+  --bg-left-menu: rgba(255, 255, 255, 0.1);
+  --bg-left-menu-hover: rgba(90, 90, 90, 0.1);
+  --bg-left-active: rgba(90, 90, 90, 0.2);
+  // 通用禁用时的样式
+  --disabled-color: #c1c1c1;
+  // 选中选项时的边框的样式
+  --active-border-color: rgba(5, 150, 105, 0.8);
+  // 气泡背景颜色
+  --bg-bubble: rgb(253, 253, 253);
+  --bg-bubble-active: #dedede;
+}
+
+html[data-theme='dark'] {
+  // 整体布局背景
+  --left-bg-color: rgba(0, 0, 0, 0.7);
+  --left-active-color: rgba(193, 193, 193, 0.1);
+  --center-bg-color: #1b1b1b;
+  --right-bg-color: #111111;
+  // 阴影样式的颜色
+  --box-shadow-color: rgba(90,90,90,0.1);
+  // 文字颜色
+  --text-color: #fff;
+  // 整体图标颜色
+  --icon-color: #c1c1c1;
+  --action-bar-icon-color: #c1c1c1;
+  --action-bar-icon-hover: #242424;
+  // 搜索框背景颜色
+  --search-bg-color: #282828;
+  // 消息列表样式
+  --bg-msg-first-child: #282828;
+  --bg-msg-hover: #2d2d2d;
+  --bg-active-msg: rgba(5, 150, 105, 0.8);
+  // 聊天框整体样式
+  --bg-chat-drawer: #1b1b1b;
+  --bg-setting-item: #262626;
+  --setting-item-line: #333333;
+  // 弹出框背景样式
+  --bg-popover: #303030;
+  // 右键菜单样式或者需要透明的菜单的样式
+  --bg-menu: linear-gradient(45deg, rgba(33, 33, 33, 0.85) 80%, rgba(33, 33, 33, 0.95) 100%);
+  --bg-menu-hover: #323232;
+  // 通用左边菜单栏的hover样式
+  --bg-left-menu: rgba(0, 0, 0, 0.8);
+  --bg-left-menu-hover: #3b3b3b;
+  --bg-left-active: #444444;
+  // 通用禁用时的样式
+  --disabled-color: #575757;
+  // 选中选项时的边框的样式
+  --active-border-color: rgba(5, 150, 105, 0.8);
+  // 气泡背景颜色
+  --bg-bubble: rgb(38, 38, 38);
+  --bg-bubble-active: #202020;
+}
+/*! end */
+// 线性动画
+@keyframes linearAnimation {
+  0% {
+    stroke-dasharray: 600;
+    stroke-dashoffset: 600;
+  }
+  100% {
+    stroke-dasharray: 600;
+    stroke-dashoffset: 0;
+  }
+}
+// 闪烁动画
+@keyframes twinkle {
+  0% {
+    transform: scale(0);
+  }
+  80% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+// 懒加载默认动画
+@keyframes come-in {
+  100% {
+    transform: translateX(0);
+  }
+}
+// 气泡闪烁动画
+@keyframes bubble-twinkle {
+  0% {
+    transform: scale(0.4);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+/*!修改naive-ui的遮罩层样式*/
+@mixin mask-style($blur: 4px) {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur($blur);
+}
+.n-modal-mask {
+  @include mask-style;
+}
+.n-drawer-mask {
+  @include mask-style(2px);
+}
+/*!end*/
+
+/*! 修改复选框的样式 */
+:deep(.n-checkbox .n-checkbox-box) {
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+}
+
+/*! 通用菜单项目样式 */
+@mixin menu-item-style($position: fixed) {
+  position: $position;
+  background: var(--bg-menu);
+  color: var(--text-color);
+  border-radius: 6px;
+  backdrop-filter: blur(10px);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 2px 2px rgb(0 0 0 / 3%),
+    0 4px 4px rgb(0 0 0 / 4%),
+    0 10px 8px rgb(0 0 0 / 5%),
+    0 15px 15px rgb(0 0 0 / 6%),
+    0 30px 30px rgb(0 0 0 / 7%),
+    0 70px 65px rgb(0 0 0 / 9%);
+  z-index: 999;
+  width: fit-content;
+  font-size: 14px;
+  line-height: 1.8;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/*! 通用菜单项样式 */
+@mixin menu-list() {
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  .menu-item {
+    padding: 2px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+    &:hover {
+      background-color: var(--bg-menu-hover);
+      svg {
+        animation: twinkle 0.3s ease-in-out;
+      }
+    }
+  }
+}

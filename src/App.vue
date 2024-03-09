@@ -1,52 +1,61 @@
-<script setup lang="ts">
-// This starter template is using Vue 3 <script setup> SFCs
-// Check out https://vuejs.org/api/sfc-script-setup.html#script-setup
-import Greet from "./components/Greet.vue";
-</script>
-
 <template>
-  <div class="container">
-    <h1>Welcome to Tauri!</h1>
-
-    <div class="row">
-      <a href="https://vitejs.dev" target="_blank">
-        <img src="/vite.svg" class="logo vite" alt="Vite logo" />
-      </a>
-      <a href="https://tauri.app" target="_blank">
-        <img src="/tauri.svg" class="logo tauri" alt="Tauri logo" />
-      </a>
-      <a href="https://vuejs.org/" target="_blank">
-        <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-      </a>
+  <NaiveProvider :message-max="3" :notific-max="3">
+    <div id="app">
+      <router-view />
     </div>
-
-    <p>Click on the Tauri, Vite, and Vue logos to learn more.</p>
-
-    <p>
-      Recommended IDE setup:
-      <a href="https://code.visualstudio.com/" target="_blank">VS Code</a>
-      +
-      <a href="https://github.com/johnsoncodehk/volar" target="_blank">Volar</a>
-      +
-      <a href="https://github.com/tauri-apps/tauri-vscode" target="_blank"
-        >Tauri</a
-      >
-      +
-      <a href="https://github.com/rust-lang/rust-analyzer" target="_blank"
-        >rust-analyzer</a
-      >
-    </p>
-
-    <Greet />
-  </div>
+  </NaiveProvider>
 </template>
+<script setup lang="ts">
+import { theme } from '@/stores/theme.ts'
+import { storeToRefs } from 'pinia'
 
-<style scoped>
-.logo.vite:hover {
-  filter: drop-shadow(0 0 2em #747bff);
+const themeStore = theme()
+const { THEME } = storeToRefs(themeStore)
+
+/* 禁止图片以及输入框的拖拽 */
+const preventDrag = (e: MouseEvent) => {
+  const event = e.target as HTMLElement
+  // 检查目标元素是否是<img>元素
+  if (event.nodeName.toLowerCase() === 'img' || event.nodeName.toLowerCase() === 'input') {
+    e.preventDefault()
+  }
 }
 
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #249b73);
+onMounted(() => {
+  // 判断localStorage中是否有设置主题
+  if (!localStorage.getItem('theme')) {
+    themeStore.initTheme('light')
+  }
+  document.documentElement.dataset.theme = THEME.value
+  window.addEventListener('dragstart', preventDrag)
+  // /* 禁用浏览器默认的快捷键 */
+  // window.addEventListener('keydown', (e) => {
+  //   // 排除ctrl+c ctrl+v
+  //   if (e.ctrlKey && (e.key === 'c' || e.key === 'v')) return
+  //   if (e.ctrlKey || e.metaKey || e.altKey) {
+  //     e.preventDefault()
+  //   }
+  // })
+  // /* 禁止右键菜单 */
+  // window.addEventListener('contextmenu', (e) => e.preventDefault(), false)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('contextmenu', (e) => e.preventDefault(), false)
+  window.removeEventListener('dragstart', preventDrag)
+})
+</script>
+<style lang="scss">
+#app {
+  min-height: 100vh;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  position: fixed;
+  height: 100%;
+  width: 100%;
+  top: 0;
+  left: 0;
+  transition: all 0.9s ease;
+  border-radius: 10px;
 }
 </style>

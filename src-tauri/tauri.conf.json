@@ -2,12 +2,12 @@
   "build": {
     "beforeDevCommand": "pnpm dev",
     "beforeBuildCommand": "pnpm build",
-    "devPath": "http://localhost:1420",
+    "devPath": "http://localhost:6130",
     "distDir": "../dist"
   },
   "package": {
-    "productName": "HuLa-IM",
-    "version": "0.0.0"
+    "productName": "HuLa-IM-Tauri",
+    "version": "1.2.9"
   },
   "tauri": {
     "allowlist": {
@@ -15,12 +15,27 @@
       "shell": {
         "all": false,
         "open": true
+      },
+      "http": {
+        "scope": ["http://**", "https://**"]
+      },
+      "fs": {
+        "all": true,
+        "scope": ["*", "$DOWNLOAD/*"]
+      },
+      "window": {
+        "all": true
       }
     },
     "bundle": {
       "active": true,
       "targets": "all",
-      "identifier": "com.tauri.dev",
+      "identifier": "com.tauri.build",
+      "windows": {
+        "wix": {
+          "language": "zh-CN"
+        }
+      },
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
@@ -32,14 +47,25 @@
     "security": {
       "csp": null
     },
+    "macOSPrivateApi": true,
     "windows": [
       {
+        "title": "登录",
+        "label": "login",
+        "url": "/login",
         "fullscreen": false,
-        "resizable": true,
-        "title": "hula-im",
-        "width": 800,
-        "height": 600
+        "resizable": false,
+        "center": true,
+        "width": 320,
+        "height": 448,
+        "skipTaskbar": false,
+        "decorations": false,
+        "transparent":true
       }
-    ]
+    ],
+    "systemTray": {
+      "iconPath": "icons/icon.png",
+      "iconAsTemplate": true
+    }
   }
 }
