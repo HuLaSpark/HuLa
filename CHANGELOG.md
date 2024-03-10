@@ -1,4 +1,4 @@
-## <small>1.2.9 (2024-03-08)</small>
+## <small>1.2.9-alpha (2024-03-08)</small>
 
 * :bug: fix(custom): 修复因为版本号书写问题导致打包失败 ([cd3a078](https://github.com/nongyehong/HuLa-IM-Tauri/commit/cd3a078))
 * :construction_worker: ci(custom): 修改ci配置文件 ([d09acb2](https://github.com/nongyehong/HuLa-IM-Tauri/commit/d09acb2))
@@ -6,11 +6,6 @@
 * :construction_worker: ci(custom): 修改tauri.conf.json配置 ([a3002c8](https://github.com/nongyehong/HuLa-IM-Tauri/commit/a3002c8))
 * :package: build(custom): 提交autoimport组件的文件 ([36bf9d6](https://github.com/nongyehong/HuLa-IM-Tauri/commit/36bf9d6))
 * :sunflower: update(custom): 更新mac配置 ([8f8babd](https://github.com/nongyehong/HuLa-IM-Tauri/commit/8f8babd))
-
-
-
-## <small>1.2.9-alpha (2024-03-08)</small>
-
 * :bug: fix(custom): 修复跨标签页没有判断类型的问题 ([e4acbd5](https://github.com/nongyehong/HuLa-IM-Tauri/commit/e4acbd5))
 * :sparkles: feat(custom): 新增聊天页面页脚显示功能 ([ebd7a41](https://github.com/nongyehong/HuLa-IM-Tauri/commit/ebd7a41))
 * :sunflower: update(custom): 更新登录界面样式 ([2394aa2](https://github.com/nongyehong/HuLa-IM-Tauri/commit/2394aa2))
@@ -18,11 +13,6 @@
 * :sunflower: update(custom): 更新气泡动画 ([e8dc441](https://github.com/nongyehong/HuLa-IM-Tauri/commit/e8dc441))
 * :sunflower: update(custom): 更新项目主要依赖版本 ([2a609ff](https://github.com/nongyehong/HuLa-IM-Tauri/commit/2a609ff))
 * :sunflower: update(custom): 更新悬浮按钮样式，修复已知的部分问题 ([1f01b7b](https://github.com/nongyehong/HuLa-IM-Tauri/commit/1f01b7b))
-
-
-
-## <small>1.2.8-alpha (2024-03-06)</small>
-
 * :bug: fix(custom): 回退vite版本5.0.12导致启动不了端口服务的问题 ([ba99bb2](https://github.com/nongyehong/HuLa-IM-Tauri/commit/ba99bb2))
 * :bug: fix(custom): 修复新建窗口的问题，修复窗口背景的问题 ([f1010e4](https://github.com/nongyehong/HuLa-IM-Tauri/commit/f1010e4))
 * :bug: fix(custom): 修复已知的问题 ([600e224](https://github.com/nongyehong/HuLa-IM-Tauri/commit/600e224))
@@ -58,11 +48,6 @@
 * :sunflower: update(custom): 更新主页的样式 ([6a39060](https://github.com/nongyehong/HuLa-IM-Tauri/commit/6a39060))
 * :sunflower: update(custom): 更新主页消息列表样式 ([910a6c4](https://github.com/nongyehong/HuLa-IM-Tauri/commit/910a6c4))
 * :sunflower: update(custom): 升级vue、vue-tsc、TS、vite版本 ([27e7bd0](https://github.com/nongyehong/HuLa-IM-Tauri/commit/27e7bd0))
-
-
-
-## 1.0.0-alpha (2023-12-16)
-
 * :new: version(custom): 发布v1.0.0-alpha版本 ([d2ac653](https://github.com/nongyehong/HuLa-IM-Tauri/commit/d2ac653))
 * :sunflower: update(custom): 更新cz-customizable配置 ([43145e0](https://github.com/nongyehong/HuLa-IM-Tauri/commit/43145e0))
 * init 初始化仓库 ([85a59e8](https://github.com/nongyehong/HuLa-IM-Tauri/commit/85a59e8))

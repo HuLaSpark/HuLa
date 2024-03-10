@@ -25,12 +25,14 @@ jobs:
           version: 8
           run_install: true
 
+      # 安装 Node.js
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'pnpm'
 
+      # 安装 Rust
       - name: install Rust stable
         uses: actions-rs/toolchain@v1
         with:
@@ -44,7 +46,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version
+          tagName: v__VERSION__ #这个动作会自动将\_\_VERSION\_\_替换为app version
           releaseName: 'v__VERSION__'
           releaseBody: 'See the assets to download and install this version.'
           releaseDraft: true

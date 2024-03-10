@@ -3,7 +3,8 @@
     "beforeDevCommand": "pnpm dev",
     "beforeBuildCommand": "pnpm build",
     "devPath": "http://localhost:6130",
-    "distDir": "../dist"
+    "distDir": "../dist",
+    "withGlobalTauri": true
   },
   "package": {
     "productName": "HuLa-IM-Tauri",
@@ -21,7 +22,7 @@
       },
       "fs": {
         "all": true,
-        "scope": ["*", "$DOWNLOAD/*"]
+        "scope": ["*/**"]
       },
       "window": {
         "all": true
