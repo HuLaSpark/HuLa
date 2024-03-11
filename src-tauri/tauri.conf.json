@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "HuLa",
-    "version": "1.2.9"
+    "version": "1.3.0"
   },
   "tauri": {
     "updater": {
@@ -66,8 +66,7 @@
         "height": 448,
         "skipTaskbar": false,
         "decorations": false,
-        "transparent":true,
-        "defaultWindow": true
+        "transparent":true
       }
     ],
     "systemTray": {

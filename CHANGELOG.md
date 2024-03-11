@@ -1,9 +1,3 @@
-## <small>1.2.9 (2024-03-11)</small>
-
-* :bug: fix(custom): 修改页面样式没有加载问题，修复打包后静态文件路径问题 ([63ce821](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/63ce821))
-
-
-
 ## <small>1.2.9-alpha (2024-03-08)</small>
 
 * :bug: fix(custom): 回退vite版本5.0.12导致启动不了端口服务的问题 ([ba99bb2](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/ba99bb2))
