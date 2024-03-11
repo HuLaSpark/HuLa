@@ -16,10 +16,10 @@
 <script setup lang="ts">
 import Mitt from '@/utils/Bus.ts'
 import router from '@/router'
-import { listenMsg } from '@/common/CrossTabMsg.ts'
 import { theme } from '@/stores/theme.ts'
 import { storeToRefs } from 'pinia'
-import { CrossTabTypeEnum, ThemeEnum } from '@/enums'
+import { EventEnum, ThemeEnum } from '@/enums'
+import { listen } from '@tauri-apps/api/event'
 
 const themeStore = theme()
 const { THEME, PATTERN } = storeToRefs(themeStore)
@@ -44,15 +44,13 @@ const followOS = () => {
 }
 
 /* 监听其他标签页的变化 */
-listenMsg((msgInfo: any) => {
-  if (msgInfo.type === CrossTabTypeEnum.THEME) {
-    if (msgInfo.content === ThemeEnum.OS) {
-      followOS()
-      prefers.addEventListener('change', followOS)
-    } else {
-      imgTheme.value = msgInfo.content || ThemeEnum.LIGHT
-      prefers.removeEventListener('change', followOS)
-    }
+listen(EventEnum.THEME, (e) => {
+  if (e.payload === ThemeEnum.OS) {
+    followOS()
+    prefers.addEventListener('change', followOS)
+  } else {
+    imgTheme.value = (e.payload || ThemeEnum.LIGHT) as string
+    prefers.removeEventListener('change', followOS)
   }
 })
 

@@ -26,8 +26,9 @@
   // 弹出框背景样式
   --bg-popover: #fdfdfd;
   // 右键菜单样式或者需要透明的菜单的样式
-  --bg-menu: linear-gradient(45deg, rgba(255, 255, 255, 0.65) 80%, rgba(255, 255, 255, 0.95) 100%);
+  --bg-menu: linear-gradient(45deg, rgba(255, 255, 255, 0.45) 40%, rgba(255, 255, 255, 0.65) 60%);
   --bg-menu-hover: rgba(10, 20, 28, 0.1);
+  --line-color: #e3e3e3;
   // 通用左边菜单栏的hover样式
   --bg-left-menu: rgba(255, 255, 255, 0.1);
   --bg-left-menu-hover: rgba(90, 90, 90, 0.1);
@@ -39,6 +40,8 @@
   // 气泡背景颜色
   --bg-bubble: rgb(253, 253, 253);
   --bg-bubble-active: #dedede;
+  // 头像状态的背景颜色
+  --bg-avatar: #ccc;
 }
 
 html[data-theme='dark'] {
@@ -68,8 +71,9 @@ html[data-theme='dark'] {
   // 弹出框背景样式
   --bg-popover: #303030;
   // 右键菜单样式或者需要透明的菜单的样式
-  --bg-menu: linear-gradient(45deg, rgba(33, 33, 33, 0.85) 80%, rgba(33, 33, 33, 0.95) 100%);
+  --bg-menu: linear-gradient(45deg, rgba(33, 33, 33, 0.65) 60%, rgba(33, 33, 33, 0.95) 90%);
   --bg-menu-hover: #323232;
+  --line-color: #404040;
   // 通用左边菜单栏的hover样式
   --bg-left-menu: rgba(0, 0, 0, 0.8);
   --bg-left-menu-hover: #3b3b3b;
@@ -81,6 +85,8 @@ html[data-theme='dark'] {
   // 气泡背景颜色
   --bg-bubble: rgb(38, 38, 38);
   --bg-bubble-active: #202020;
+  // 头像状态的背景颜色
+  --bg-avatar: #3f3f3f;
 }
 /*! end */
 // 线性动画

@@ -50,6 +50,20 @@
                   ]"
                   v-html="item.content"></div>
 
+                <!-- 消息为超链接时 -->
+                <div
+                  v-if="item.type === MsgEnum.HYPERLINK"
+                  :class="[
+                    { active: activeBubble === item.key },
+                    activeItem.type === RoomTypeEnum.GROUP ? '' : 'm-[10px_0]',
+                    item.accountId === userId ? 'bubble-oneself' : 'bubble'
+                  ]">
+                  <!-- rel="noopener noreferrer" 让网站安全跳转，防止钓鱼网站 -->
+                  <a class="color-inherit" target="_blank" rel="noopener noreferrer" :href="item.content">
+                    {{ item.content }}
+                  </a>
+                </div>
+
                 <!--  消息为为图片类型(不固定宽度和高度), 多张图片时渲染  -->
                 <n-image-group v-if="Array.isArray(item.content) && item.type === MsgEnum.IMAGE">
                   <n-space

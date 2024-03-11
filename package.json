@@ -28,8 +28,8 @@
     "tauri:build": "tauri build",
     "tauri:icon": "tauri icon logo.png",
     "preinstall": "npx only-allow pnpm",
-    "commit": "git add . && lint-staged && git-cz && conventional-changelog -p cz-config.js -i CHANGELOG.md -s -r 0",
-    "changelog": "conventional-changelog -p cz-config.js -i CHANGELOG.md -s -r 0",
+    "commit": "git add . && lint-staged && git-cz && conventional-changelog -p cz-config.cjs -i CHANGELOG.md -s -r 0",
+    "changelog": "conventional-changelog -p cz-config.cjs -i CHANGELOG.md -s -r 0",
     "lint:staged": "lint-staged"
   },
   "dependencies": {

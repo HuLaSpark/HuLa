@@ -25,20 +25,14 @@ export enum URLEnum {
   ARTICLE = '/article'
 }
 
-/** 跨标签页通信时传输的类型 */
-export enum CrossTabTypeEnum {
+/** tauri原生跨窗口通信时传输的类型 */
+export enum EventEnum {
   /** 主题 */
   THEME = 'theme',
-  /** 窗口显示 */
-  WINDOW_SHOW = 'windowShow',
   /** 窗口关闭 */
-  WINDOW_CLOSE = 'windowClose'
-}
-
-/** tauri原生跨窗口通信时传输的类型 */
-export enum NativeListenEnum {
-  /** 窗口关闭事件 */
-  NATIVE_CLOSE = 'nativeWinClose'
+  WIN_CLOSE = 'winClose',
+  /** 窗口显示 */
+  WIN_SHOW = 'winShow'
 }
 
 /** 主题类型 */
@@ -68,7 +62,9 @@ export enum MsgEnum {
   /** 文件 */
   FILE,
   /** 表情 */
-  EMOTICON
+  EMOTICON,
+  /** 超链接 */
+  HYPERLINK
 }
 
 /** 房间类型 1群聊 2单聊 */

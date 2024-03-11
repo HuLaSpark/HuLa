@@ -1,5 +1,6 @@
 import { appWindow, WebviewWindow } from '@tauri-apps/api/window'
-import { NativeListenEnum } from '@/enums'
+import { EventEnum } from '@/enums'
+import { emit } from '@tauri-apps/api/event'
 
 /** 最小化 */
 export const minimizeWindow = async () => {
@@ -16,12 +17,11 @@ export const maximizeWindow = async () => {
  * @param label 窗口标签
  * @example
  * 传入窗口标签后开启窗口关闭的监听事件，使用appWindow.emit事件
- * @see NativeListenEnum.NATIVE_CLOSE
+ * @see EventEnum.WIN_CLOSE
  */
 export const closeWindow = async (label: string) => {
   if (label !== void 0) {
-    const win = WebviewWindow.getByLabel(label)
-    await win?.emit(NativeListenEnum.NATIVE_CLOSE, label)
+    await emit(EventEnum.WIN_CLOSE, label)
   }
   await appWindow.close()
 }

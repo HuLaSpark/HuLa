@@ -29,4 +29,13 @@ export class RegExp {
     const standardRegex = /^[a-zA-Z0-9]+$/
     return standardRegex.test(val)
   }
+
+  /**
+   * 判断是否是超链接
+   * @param val 文本内容
+   */
+  public static isHyperlink(val: string): boolean {
+    const hyperlinkRegex = /^http(s)?:\/\/([\w-]+\.)+[\w-]+(\/[\w- ./?%&=]*)?$/
+    return hyperlinkRegex.test(val)
+  }
 }

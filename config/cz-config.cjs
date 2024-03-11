@@ -57,17 +57,23 @@ module.exports = {
       name: '👷 ci:       CI相关的变化'
     }
   ],
+  // 每一步的提示信息
   messages: {
-    type: '请选择提交类型(必填)',
-    customScope: '请输入文件修改范围(可选)',
-    subject: '请简要描述提交(必填)',
-    body: '请输入详细描述(可选)',
-    breaking: '列出任何BREAKING CHANGES(可选)',
-    footer: '请输入要关闭的issue(可选)',
-    confirmCommit: '确定提交此说明吗？'
+    type: '请选择提交类型',
+    scope: '请选择文件修改范围',
+    subject: '请输入commit标题(必填)',
+    body: '请输入commit描述, 可通过&换行(选填)',
+    // breaking: '列出任何BREAKING CHANGES(破坏性修改)(可选)',
+    // footer: '请输入要关闭的issue(可选)',
+    confirmCommit: '确定提交此 commit 吗？'
   },
-  allowCustomScopes: true,
-  // 跳过问题
-  skipQuestions: ['body', 'footer'],
-  subjectLimit: 72
+  // 配置scope可选项，mono项目可按子项目维度划分，非mono项目可按功能or业务模块划分
+  scopes: ['custom', 'system', 'style', 'setting'],
+  // commit描述的换行符
+  breaklineChar: '&',
+  skipQuestions: ['breaking', 'footer'],
+  // 标题首字母大写
+  upperCaseSubject: true,
+  // 标题必填
+  requiredSubject: true
 }

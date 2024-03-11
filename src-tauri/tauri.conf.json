@@ -7,10 +7,15 @@
     "withGlobalTauri": true
   },
   "package": {
-    "productName": "HuLa-IM-Tauri",
+    "productName": "HuLa",
     "version": "1.2.9"
   },
   "tauri": {
+    "updater": {
+      "windows": {
+        "installMode": "basicUi"
+      }
+    },
     "allowlist": {
       "all": false,
       "shell": {
@@ -61,7 +66,8 @@
         "height": 448,
         "skipTaskbar": false,
         "decorations": false,
-        "transparent":true
+        "transparent":true,
+        "defaultWindow": true
       }
     ],
     "systemTray": {

@@ -24,7 +24,8 @@
             </div>
             <!-- 判断是否有特别的菜单项才需要分割线 -->
             <div v-if="specialMenu.length > 0" class="flex-col-y-center gap-6px">
-              <div class="h-1px bg-[--setting-item-line] m-[2px_8px]"></div>
+              <!-- 分割线 -->
+              <div class="h-1px bg-[--line-color] m-[2px_8px]"></div>
               <div @click="handleClick(item)" class="menu-item" v-for="item in specialMenu as any[]" :key="item.label">
                 <svg><use :href="`#${item.icon}`"></use></svg>
                 {{ item.label }}

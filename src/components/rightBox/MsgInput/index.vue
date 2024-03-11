@@ -36,6 +36,7 @@ import { lightTheme } from 'naive-ui'
 import { MsgEnum } from '@/enums'
 import Mitt from '@/utils/Bus.ts'
 import { createFileOrVideoDom } from '@/utils/CreateDom.ts'
+import { RegExp } from '@/utils/RegExp.ts'
 
 const menuList = ref([
   { label: '剪切', icon: 'screenshot', disabled: true },
@@ -167,11 +168,16 @@ const getMessageContentType = () => {
   let hasText = false
   let hasImage = false
   let hasVideo = false
+  let hasHyperlink = false
 
   const elements = messageInputDom.value.childNodes
   for (let element of elements) {
     if (element.nodeType === Node.TEXT_NODE && element.nodeValue.trim() !== '') {
-      hasText = true
+      if (RegExp.isHyperlink(element.nodeValue)) {
+        hasHyperlink = true
+      } else {
+        hasText = true
+      }
     } else if (element.tagName === 'IMG') {
       hasImage = true
     } else if (element.tagName === 'VI  DEO' || (element.tagName === 'A' && element.href.match(/\.(mp4|webm)$/i))) {
@@ -185,6 +191,8 @@ const getMessageContentType = () => {
     return MsgEnum.MIXED
   } else if (hasImage) {
     return MsgEnum.IMAGE
+  } else if (hasHyperlink) {
+    return MsgEnum.HYPERLINK
   } else {
     return MsgEnum.TEXT
   }
