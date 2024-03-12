@@ -18,7 +18,7 @@ export const createFileOrVideoDom = (file: File) => {
     canvas.width = 225
     canvas.height = 85
     // 加载SVG文件并绘制到canvas,根据文件类型，设置SVG图标
-    loadSVG(`src/assets/file/${file.name.split('.').pop()}.svg`)
+    loadSVG(`/file/${file.name.split('.').pop()}.svg`)
       .then((svgImage: any) => {
         // 圆角矩形的背景和边框，您可以根据需要调整样式
         ctx.fillStyle = '#fdfdfd' // 背景颜色
@@ -147,8 +147,8 @@ export const createFileOrVideoDom = (file: File) => {
  * 加载本地的SVG文件，并在加载完成后回调
  * @param {string} path SVG文件的路径
  * @example
- * loadSVG('src/assets/file/file.svg').then((svgImage) => {}
- * 使用时，将SVG文件放在src/assets/file文件夹下，并且使用文件类型做svg名
+ * loadSVG('public/file/file.svg').then((svgImage) => {}
+ * 使用时，将SVG文件放在public/file文件夹下，并且使用文件类型做svg名
  */
 const loadSVG = (path: string) => {
   return new Promise((resolve, reject) => {

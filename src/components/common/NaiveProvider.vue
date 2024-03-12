@@ -17,8 +17,8 @@
 import { theme } from '@/stores/theme.ts'
 import { storeToRefs } from 'pinia'
 import { dateZhCN, darkTheme, lightTheme, GlobalThemeOverrides, zhCN } from 'naive-ui'
-import { listenMsg } from '@/common/CrossTabMsg.ts'
-import { CrossTabTypeEnum, ThemeEnum } from '@/enums'
+import { EventEnum, ThemeEnum } from '@/enums'
+import { listen } from '@tauri-apps/api/event'
 
 const themeStore = theme()
 const { THEME, PATTERN } = storeToRefs(themeStore)
@@ -34,21 +34,19 @@ const followOS = () => {
 }
 
 /* 监听其他标签页的变化 */
-listenMsg((msgInfo: any) => {
-  if (msgInfo.type === CrossTabTypeEnum.THEME) {
-    if (msgInfo.content === ThemeEnum.OS) {
-      // 赋值给ui组件库的主题
-      globalTheme.value = prefers.matches ? darkTheme : lightTheme
-      // 给全局的dataset.theme赋值主题
-      document.documentElement.dataset.theme = prefers.matches ? ThemeEnum.DARK : ThemeEnum.LIGHT
-      // 修改localStorage中的THEME和设置中选择(PATTERN)
-      THEME.value = prefers.matches ? ThemeEnum.DARK : ThemeEnum.LIGHT
-      PATTERN.value = ThemeEnum.OS
-    } else {
-      globalTheme.value = msgInfo.content === ThemeEnum.DARK ? darkTheme : lightTheme
-      // 判断msgInfo.content是否是深色还是浅色
-      document.documentElement.dataset.theme = msgInfo.content || ThemeEnum.LIGHT
-    }
+listen(EventEnum.THEME, (e) => {
+  if (e.payload === ThemeEnum.OS) {
+    // 赋值给ui组件库的主题
+    globalTheme.value = prefers.matches ? darkTheme : lightTheme
+    // 给全局的dataset.theme赋值主题
+    document.documentElement.dataset.theme = prefers.matches ? ThemeEnum.DARK : ThemeEnum.LIGHT
+    // 修改localStorage中的THEME和设置中选择(PATTERN)
+    THEME.value = prefers.matches ? ThemeEnum.DARK : ThemeEnum.LIGHT
+    PATTERN.value = ThemeEnum.OS
+  } else {
+    globalTheme.value = e.payload === ThemeEnum.DARK ? darkTheme : lightTheme
+    // 判断msgInfo.content是否是深色还是浅色
+    document.documentElement.dataset.theme = (e.payload || ThemeEnum.LIGHT) as string
   }
 })
 
