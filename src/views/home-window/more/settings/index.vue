@@ -3,7 +3,7 @@
     <!-- 侧边栏选项 -->
     <section class="left-bar" data-tauri-drag-region>
       <div class="menu-list">
-        <div v-for="(item, index) in itemsBottom" :key="index">
+        <div v-for="(item, index) in sideOptions" :key="index">
           <div class="menu-item" :class="{ active: activeItem === item.url }" @click="pageJumps(item.url, item.label)">
             <svg><use :href="`#${item.icon}`"></use></svg>
             {{ item.label }}
@@ -24,38 +24,11 @@
 </template>
 <script setup lang="ts">
 import router from '@/router'
-
-type BottomActive = {
-  url: string
-  label: string
-  icon: string
-}[]
-const itemsBottom = ref<BottomActive>([
-  {
-    url: '/general',
-    label: '通用',
-    icon: 'setting-config'
-  },
-  {
-    url: '/remind',
-    label: '消息通知',
-    icon: 'remind'
-  },
-  {
-    url: '/collection',
-    label: '存储管理',
-    icon: 'mini-sd-card'
-  },
-  {
-    url: '/collection',
-    label: '登录设置',
-    icon: 'settings'
-  }
-])
+import { sideOptions } from './configure.ts'
 
 /*当前选中的元素 默认选中itemsTop的第一项*/
-const activeItem = ref<string>(itemsBottom.value[0].url)
-const title = ref<string>(itemsBottom.value[0].label)
+const activeItem = ref<string>(sideOptions.value[0].url)
+const title = ref<string>(sideOptions.value[0].label)
 
 /**
  * 统一跳转路由方法

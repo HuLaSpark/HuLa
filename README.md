@@ -5,6 +5,25 @@
 <h1 align="center">HuLa</h1>
 <p align="center">An Instant Messaging System Built with Tauri, Vite 5, Vue 3, and TypeScript</p>
 
+<div align="center">
+  <img src="https://img.shields.io/badge/TypeScript-blue?logo=Typescript&style=flat&logoColor=fff">
+  <img src="https://img.shields.io/badge/Vue3-35495E?logo=vue.js&logoColor=4FC08D">
+  <img src="https://img.shields.io/badge/Tauri-24C8DB?logo=tauri&logoColor=FFC131">
+  <img src="https://img.shields.io/badge/Rust-c57c54?logo=rust&logoColor=E34F26">
+  <img src="https://img.shields.io/badge/Vite5-35495E?logo=vite&logoColor=41D1FF">
+  <img src="https://img.shields.io/badge/UnoCss-efefef?logo=UnoCss&logoColor=606060">
+  <img src="https://img.shields.io/badge/pnpm-909090?logo=pnpm&logoColor=FFC131">
+  <img src="https://img.shields.io/badge/Sass-CC6699?logo=sass&logoColor=fff">
+</div>
+
+<p align="center">
+  gitee：<a target="_blank" href="https://gitee.com/nongyehong/HuLa-IM-Tauri" title="HuLa"><img src="https://img.shields.io/badge/-Gitee-A80025?logo=gitee&logoColor=F16061"></a>
+  github：<a target="_blank" href="https://github.com/nongyehong/HuLa-IM-Tauri" title="HuLa"><img src="https://img.shields.io/badge/-GitHub-181717?style=plastic&logo=github"></a>
+</p>
+<p align="center">
+  WeChat: <img src="https://img.shields.io/badge/cy2439646234-07C160?logo=wechat&logoColor=fff">
+</p>
+
 <p align="center"><a href="README.zh-CN.md">中文</a> | English</p>
 
 ## Project Introduction
@@ -41,3 +60,7 @@ pnpm run tauri:dev
 
 # Build for production
 pnpm run tauri:build
+```
+
+## SubmissionSpecification
+use **pnpm run commit** to invoke the _git commit_ interaction and follow the prompts to complete the input and selection of information

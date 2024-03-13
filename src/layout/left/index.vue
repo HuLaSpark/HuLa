@@ -1,13 +1,13 @@
 <template>
   <main class="left w-60px h-full p-[30px_6px_15px] box-border flex-col-center select-none">
     <!-- 头像 -->
-    <div class="relative w-36px h-36px rounded-50%">
-      <img class="rounded-50% wh-full bg-#fff cursor-pointer" :src="'https://picsum.photos/140'" alt="" />
+    <div class="relative w-36px h-36px rounded-50% cursor-pointer">
+      <img class="rounded-50% wh-full bg-#fff" :src="'https://picsum.photos/140'" alt="" />
 
       <div
         class="bg-[--bg-avatar] text-10px rounded-50% w-10px h-10px absolute bottom-0 right-0"
         style="border: 2px solid var(--bg-avatar)">
-        <span>⛅</span>
+        <div class="rounded-50% bg-#059669 wh-full"></div>
       </div>
     </div>
 
@@ -53,7 +53,7 @@
         <!--  更多选项面板  -->
         <div v-if="settingShow" class="setting-item">
           <div class="menu-list">
-            <div v-for="(item, index) in menuList" :key="index">
+            <div v-for="(item, index) in moreList" :key="index">
               <div class="menu-item" @click="() => item.click()">
                 <svg><use :href="`#${item.icon}`"></use></svg>
                 {{ item.label }}
@@ -72,7 +72,7 @@ import router from '@/router'
 import Mitt from '@/utils/Bus.ts'
 import { EventEnum } from '@/enums'
 import { listen } from '@tauri-apps/api/event'
-import { itemsTop, itemsBottom, menuList } from './configure.ts'
+import { itemsTop, itemsBottom, moreList } from './configure.ts'
 
 /*当前选中的元素 默认选中itemsTop的第一项*/
 const activeItem = ref<string>(itemsTop.value[0].url)

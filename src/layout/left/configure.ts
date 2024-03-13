@@ -1,27 +1,7 @@
 import { useWindow } from '@/hooks/useWindow.ts'
 
-type TopActive = {
-  url: string
-  icon: string
-  iconAction?: string
-  badge?: number
-}[]
-
-type BottomActive = {
-  title: string
-  url: string
-  label: string
-  icon: string
-  iconAction?: string
-}[]
-
-type MenuList = {
-  label: string
-  icon: string
-  click: () => void
-}[]
 const { createWebviewWindow } = useWindow()
-const itemsTop = ref<TopActive>([
+const itemsTop = ref<LO.Top[]>([
   {
     url: 'message',
     icon: 'message',
@@ -38,7 +18,7 @@ const itemsTop = ref<TopActive>([
     iconAction: 'fire-action'
   }
 ])
-const itemsBottom: BottomActive = [
+const itemsBottom: LO.Bottom[] = [
   {
     title: '邮件',
     url: '/mail',
@@ -62,7 +42,7 @@ const itemsBottom: BottomActive = [
   }
 ]
 /* 设置列表菜单项 */
-const menuList = ref<MenuList>([
+const moreList = ref<LO.MoreList[]>([
   {
     label: '检查更新',
     icon: 'arrow-circle-up',
@@ -98,4 +78,4 @@ const menuList = ref<MenuList>([
   }
 ])
 
-export { itemsTop, itemsBottom, menuList }
+export { itemsTop, itemsBottom, moreList }
