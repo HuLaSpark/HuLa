@@ -86,21 +86,6 @@ Mitt.on('shrinkWindow', (event) => {
 // }
 </script>
 
-<style scoped>
-.resizable {
-  height: 100%;
-  position: relative;
-  overflow: hidden;
-  background: var(--center-bg-color);
-}
-
-.resize-handle {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  cursor: ew-resize;
-  background-color: #ccc; /* 可以根据需要更改颜色 */
-}
+<style scoped lang="scss">
+@import 'style';
 </style>

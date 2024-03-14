@@ -1,10 +1,5 @@
-type SideOptions = {
-  url: string
-  label: string
-  icon: string
-}[]
 /* 侧边栏选项 */
-const sideOptions = ref<SideOptions>([
+const sideOptions = ref<LO.SettingSide[]>([
   {
     url: '/general',
     label: '通用',

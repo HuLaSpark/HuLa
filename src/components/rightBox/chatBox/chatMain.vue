@@ -127,10 +127,7 @@
 
   <!-- 悬浮按钮提示(底部悬浮) -->
   <footer class="float-footer" v-if="floatFooter && newMsgNum > 0">
-    <div
-      class="float-box"
-      :class="{ max: newMsgNum > 99 }"
-      @click="() => virtualListInst?.scrollTo({ position: 'bottom' })">
+    <div class="float-box" :class="{ max: newMsgNum > 99 }" @click="scrollBottom">
       <n-flex justify="space-between" align="center">
         <n-icon :color="newMsgNum > 99 ? '#ce304f' : 'rgba(5,150,105,0.5)'">
           <svg><use href="#double-down"></use></svg>
@@ -349,6 +346,13 @@ const addToDomUpdateQueue = (index: number, id: number) => {
   })
 }
 
+/* 点击后滚动到底部 */
+const scrollBottom = () => {
+  nextTick(() => {
+    virtualListInst.value?.scrollTo({ position: 'bottom' })
+  })
+}
+
 const closeMenu = (event: any) => {
   if (!event.target.matches('.bubble', 'bubble-oneself')) {
     activeBubble.value = -1
@@ -383,58 +387,5 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-/* 气泡样式 */
-@mixin bubble {
-  @apply w-fit max-w-55vw min-h-1em p-[8px_12px] text-15px line-height-22px bg-[--bg-bubble] rounded-[2px_18px_18px];
-  word-break: break-all; /* 强制连续文本换行 */
-  &.active {
-    background-color: var(--bg-bubble-active);
-    color: var(--text-color);
-  }
-}
-@mixin float($position: top) {
-  @if $position == bottom {
-    @apply fixed z-10 bottom-210px right-50px w-fit select-none text-#059669 cursor-pointer;
-  } @else {
-    @apply fixed z-10 top-80px right-50px w-fit select-none text-#059669 cursor-pointer;
-  }
-}
-.chat-single:first-child {
-  padding-top: 16px;
-}
-.bubble {
-  @include bubble;
-}
-.bubble-oneself {
-  @include bubble;
-  @apply rounded-[18px_2px_18px_18px] color-#fff;
-  background-color: rgba(5, 150, 105, 0.8);
-}
-/*! 气泡动画 */
-.bubble-animation {
-  animation: bubble-twinkle 0.4s ease-out forwards;
-}
-.photo-wall {
-  @extend .bubble-oneself;
-  @apply flex flex-col items-start gap-6px max-w-380px;
-}
-.float-header {
-  @include float;
-}
-.float-footer {
-  @include float(bottom);
-}
-.float-box {
-  background-color: #fff;
-  border-radius: 50px;
-  padding: 6px 8px;
-  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.16);
-  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  &:hover {
-    background-color: rgb(215, 229, 219);
-  }
-}
-.max:hover {
-  background-color: #f5dce1;
-}
+@import '@/styles/scss/chat-main';
 </style>

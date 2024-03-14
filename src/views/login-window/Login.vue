@@ -10,7 +10,7 @@
       <img
         style="border: 2px solid #fff"
         class="w-80px h-80px rounded-50% bg-#fff"
-        :src="avatarRef || '/logo.png'"
+        :src="avatarRef || 'public/logo.png'"
         alt="" />
     </div>
 
@@ -95,7 +95,7 @@
       <n-flex justify="center" class="text-14px">
         <div class="color-#059669 cursor-pointer" @click="toQRCode">扫码登录</div>
         <div class="w-1px h-14px bg-#ccc"></div>
-        <n-popover style="padding: 6px; border-radius: 8px" trigger="click" :show-checkmark="false" :show-arrow="false">
+        <n-popover trigger="click" :show-checkmark="false" :show-arrow="false">
           <template #trigger>
             <div class="color-#059669 cursor-pointer">更多选项</div>
           </template>

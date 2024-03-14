@@ -1,7 +1,7 @@
-## 1.3.0-beta (2024-03-11)
+## 1.3.0-beta (2024-03-12)
 
 * :bug: fix(custom): 修改页面样式没有加载问题，修复打包后静态文件路径问题 ([63ce821](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/63ce821))
-* :pencil2: docs(style): 更新README文档 ([fdbb12e](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/fdbb12e))
+* :pencil2: docs(style): 更新README文档 ([a4c1712](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/a4c1712))
 * :zap: perf(system): 使用原生event进行窗口通信 ([8adefce](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/8adefce))
 
 

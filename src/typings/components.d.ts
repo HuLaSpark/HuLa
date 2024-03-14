@@ -17,6 +17,7 @@ declare module 'vue' {
     Image: typeof import('./../components/rightBox/renderMessage/image.vue')['default']
     MsgInput: typeof import('./../components/rightBox/MsgInput/index.vue')['default']
     NaiveProvider: typeof import('./../components/common/NaiveProvider.vue')['default']
+    NAlert: typeof import('naive-ui')['NAlert']
     NAvatar: typeof import('naive-ui')['NAvatar']
     NAvatarGroup: typeof import('naive-ui')['NAvatarGroup']
     NBadge: typeof import('naive-ui')['NBadge']

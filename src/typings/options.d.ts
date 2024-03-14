@@ -1,4 +1,4 @@
-/* 左侧选项 */
+/* 主页左侧选项 */
 declare namespace LO {
   /* 顶部的选项 */
   type Top = {
@@ -22,5 +22,12 @@ declare namespace LO {
     label: string
     icon: string
     click: () => void
+  }
+
+  /* 设置页面的侧边栏选项 */
+  type SettingSide = {
+    url: string
+    label: string
+    icon: string
   }
 }

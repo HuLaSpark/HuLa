@@ -1,15 +1,73 @@
 <template>
   <main class="left w-60px h-full p-[30px_6px_15px] box-border flex-col-center select-none">
-    <!-- 头像 -->
-    <div class="relative w-36px h-36px rounded-50% cursor-pointer">
-      <img class="rounded-50% wh-full bg-#fff" :src="'https://picsum.photos/140'" alt="" />
+    <!-- 点击时头像内容框 -->
+    <n-popover v-model:show="infoShow" trigger="click" :show-arrow="false" placement="right-start" style="padding: 0">
+      <template #trigger>
+        <!-- 头像 -->
+        <div class="relative w-36px h-36px rounded-50% cursor-pointer">
+          <img class="rounded-50% wh-full bg-#fff" :src="'https://picsum.photos/140'" alt="" />
 
-      <div
-        class="bg-[--bg-avatar] text-10px rounded-50% w-10px h-10px absolute bottom-0 right-0"
-        style="border: 2px solid var(--bg-avatar)">
-        <div class="rounded-50% bg-#059669 wh-full"></div>
-      </div>
-    </div>
+          <div
+            class="bg-[--bg-avatar] text-10px rounded-50% w-10px h-10px absolute bottom-0 right-0"
+            style="border: 2px solid var(--bg-avatar)">
+            <div class="rounded-50% bg-#059669 wh-full"></div>
+          </div>
+        </div>
+      </template>
+      <!-- 用户个人信息框 -->
+      <n-space vertical :size="26" class="wh-full p-15px box-border rounded-8px" style="background: var(--bg-info)">
+        <!-- 头像以及信息区域 -->
+        <n-flex justify="space-between" align="center" :size="50">
+          <n-space>
+            <img class="w-68px h-68px rounded-50% select-none" :src="'https://picsum.photos/140'" alt="" />
+
+            <n-flex vertical justify="center" :size="10" class="text-[--text-color]">
+              <span class="text-18px">用户名</span>
+              <span class="text-12px text-#909090">账号 763868126381</span>
+              <n-flex
+                @click="openContent('在线状态', 'onlineStatus', 360, 480)"
+                :size="5"
+                align="center"
+                style="margin-left: -4px"
+                class="item-hover">
+                <div class="rounded-50% bg-#059669 w-12px h-12px"></div>
+                <span>在线</span>
+              </n-flex>
+            </n-flex>
+          </n-space>
+
+          <n-flex vertical align="center" :size="5" class="item-hover">
+            <svg class="w-20px h-20px"><use href="#thumbs-up"></use></svg>
+            <span class="text-12px">9999+</span>
+          </n-flex>
+        </n-flex>
+        <!-- 地址 -->
+        <n-flex :size="26">
+          <span class="text-#707070">所在地</span>
+          <span>中国</span>
+        </n-flex>
+        <!-- 动态 -->
+        <n-flex :size="40">
+          <span class="text-#707070">动态</span>
+          <n-image-group>
+            <n-space :size="6">
+              <n-image
+                v-for="n in 4"
+                :key="n"
+                preview-disabled
+                class="rounded-8px"
+                width="50"
+                src="https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg" />
+            </n-space>
+          </n-image-group>
+        </n-flex>
+
+        <n-flex justify="center" align="center" :size="40">
+          <n-button secondary> 编辑资料 </n-button>
+          <n-button secondary type="primary"> 发送信息 </n-button>
+        </n-flex>
+      </n-space>
+    </n-popover>
 
     <div data-tauri-drag-region class="flex-1 mt-20px flex-col-x-center justify-between">
       <!-- 上部分操作栏 -->
@@ -72,11 +130,12 @@ import router from '@/router'
 import Mitt from '@/utils/Bus.ts'
 import { EventEnum } from '@/enums'
 import { listen } from '@tauri-apps/api/event'
-import { itemsTop, itemsBottom, moreList } from './configure.ts'
+import { itemsTop, itemsBottom, moreList } from './config.ts'
 
 /*当前选中的元素 默认选中itemsTop的第一项*/
 const activeItem = ref<string>(itemsTop.value[0].url)
 const settingShow = ref(false)
+const infoShow = ref(false)
 /* 已打开窗口的列表 */
 const openWindowsList = ref(new Set())
 const { createWebviewWindow } = useWindow()
@@ -119,11 +178,14 @@ const pageJumps = (url: string) => {
  * 打开内容对应窗口
  * @param title 窗口的标题
  * @param label 窗口的标识
+ * @param w 窗口的宽度
+ * @param h 窗口的高度
  * */
-const openContent = (title: string, label: string) => {
+const openContent = (title: string, label: string, w = 840, h = 600) => {
   delay(async () => {
-    await createWebviewWindow(title, label, 840, 600)
+    await createWebviewWindow(title, label, w, h)
   }, 300)
+  infoShow.value = false
 }
 
 const closeMenu = (event: any) => {
@@ -144,46 +206,5 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-@mixin action() {
-  padding: 6px 8px 6px 8px;
-  &:not(.active):hover {
-    background: rgba(193, 193, 193, 0.4);
-    border-radius: 8px;
-    color: #059669;
-    cursor: pointer;
-    animation: linearAnimation 3s linear forwards;
-  }
-}
-
-.left {
-  background: var(--left-bg-color);
-}
-
-.top-action,
-.bottom-action,
-.more {
-  @include action;
-}
-
-.active {
-  background: var(--left-active-color);
-  border-radius: 8px;
-  color: #059669;
-}
-
-.setting-item {
-  @include menu-item-style(absolute);
-  left: 58px;
-  bottom: 10px;
-  @include menu-list();
-}
-
-:deep(.n-badge .n-badge-sup) {
-  font-weight: bold;
-  font-size: 10px;
-}
-
-:deep(.n-badge) {
-  color: inherit;
-}
+@import 'style';
 </style>

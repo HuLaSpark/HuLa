@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="144px" src="logo.png" />
+  <img width="144px" src="public/logo.png" />
 </p>
 
 <h1 align="center">HuLa</h1>

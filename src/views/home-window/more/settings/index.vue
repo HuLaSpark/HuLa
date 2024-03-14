@@ -24,7 +24,7 @@
 </template>
 <script setup lang="ts">
 import router from '@/router'
-import { sideOptions } from './configure.ts'
+import { sideOptions } from './config.ts'
 
 /*当前选中的元素 默认选中itemsTop的第一项*/
 const activeItem = ref<string>(sideOptions.value[0].url)

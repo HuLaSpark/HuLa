@@ -89,7 +89,8 @@ const themeOverrides: GlobalThemeOverrides = {
     tabPaddingMediumSegment: '4px'
   },
   Popover: {
-    padding: '5px'
+    padding: '5px',
+    borderRadius: '8px'
   },
   Dropdown: {
     borderRadius: '8px'

@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
-import { Dynamic, About, Mail } from './noLazyRouter.ts'
+import { Dynamic, About, Mail, OnlineStatus } from './noLazyRouter.ts'
 
 /*! 创建窗口后再跳转页面就会导致样式没有生效所以不能使用懒加载路由的方式 */
 const { BASE_URL } = import.meta.env
@@ -45,6 +45,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/dynamic',
     name: 'dynamic',
     component: Dynamic
+  },
+  {
+    path: '/onlineStatus',
+    name: 'onlineStatus',
+    component: OnlineStatus
   },
   {
     path: '/about',
