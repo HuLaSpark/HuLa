@@ -16,7 +16,7 @@ const sideOptions = ref<LO.SettingSide[]>([
     icon: 'mini-sd-card'
   },
   {
-    url: '/collection',
+    url: '/loginSetting',
     label: '登录设置',
     icon: 'settings'
   }

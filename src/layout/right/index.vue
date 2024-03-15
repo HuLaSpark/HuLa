@@ -16,18 +16,18 @@
 <script setup lang="ts">
 import Mitt from '@/utils/Bus.ts'
 import router from '@/router'
-import { theme } from '@/stores/theme.ts'
+import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
 import { EventEnum, ThemeEnum } from '@/enums'
 import { listen } from '@tauri-apps/api/event'
 
-const themeStore = theme()
-const { THEME, PATTERN } = storeToRefs(themeStore)
+const settingStore = setting()
+const { themes } = storeToRefs(settingStore)
 const msgBoxShow = ref(false)
 const detailsShow = ref(false)
 const activeItem = ref()
 const DetailsContent = ref()
-const imgTheme = ref(THEME.value)
+const imgTheme = ref(themes.value.content)
 const prefers = matchMedia('(prefers-color-scheme: dark)')
 // 判断当前路由是否是聊天界面
 const isChat = computed(() => {
@@ -55,11 +55,11 @@ listen(EventEnum.THEME, (e) => {
 })
 
 watchEffect(() => {
-  if (PATTERN.value === ThemeEnum.OS) {
+  if (themes.value.pattern === ThemeEnum.OS) {
     followOS()
     prefers.addEventListener('change', followOS)
   } else {
-    imgTheme.value = THEME.value || ThemeEnum.LIGHT
+    imgTheme.value = themes.value.content || ThemeEnum.LIGHT
     prefers.removeEventListener('change', followOS)
   }
 })

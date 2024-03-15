@@ -64,7 +64,6 @@
 
         <n-flex justify="center" align="center" :size="40">
           <n-button secondary> 编辑资料 </n-button>
-          <n-button secondary type="primary"> 发送信息 </n-button>
         </n-flex>
       </n-space>
     </n-popover>

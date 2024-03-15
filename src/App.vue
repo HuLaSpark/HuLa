@@ -6,11 +6,12 @@
   </NaiveProvider>
 </template>
 <script setup lang="ts">
-import { theme } from '@/stores/theme.ts'
+import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
+import { StoresEnum, ThemeEnum } from '@/enums'
 
-const themeStore = theme()
-const { THEME } = storeToRefs(themeStore)
+const settingStore = setting()
+const { themes } = storeToRefs(settingStore)
 
 /* 禁止图片以及输入框的拖拽 */
 const preventDrag = (e: MouseEvent) => {
@@ -23,10 +24,10 @@ const preventDrag = (e: MouseEvent) => {
 
 onMounted(() => {
   // 判断localStorage中是否有设置主题
-  if (!localStorage.getItem('theme')) {
-    themeStore.initTheme('light')
+  if (!localStorage.getItem(StoresEnum.SETTING)) {
+    settingStore.init(ThemeEnum.LIGHT)
   }
-  document.documentElement.dataset.theme = THEME.value
+  document.documentElement.dataset.theme = themes.value.content
   window.addEventListener('dragstart', preventDrag)
   // /* 禁用浏览器默认的快捷键 */
   // window.addEventListener('keydown', (e) => {

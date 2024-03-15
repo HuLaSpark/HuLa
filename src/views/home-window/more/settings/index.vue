@@ -55,12 +55,13 @@ onMounted(() => {
   box-sizing: border-box;
   color: var(--text-color);
   .menu-item {
-    padding: 10px 12px;
+    padding: 8px 10px;
     border-radius: 10px;
     margin-top: 6px;
+    font-size: 14px;
     svg {
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
     }
     &:not(.active):hover {
       background-color: var(--bg-left-menu-hover);

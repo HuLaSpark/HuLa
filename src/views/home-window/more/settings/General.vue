@@ -20,14 +20,14 @@
   </main>
 </template>
 <script setup lang="tsx">
-import { theme } from '@/stores/theme.ts'
+import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
 import { EventEnum, ThemeEnum } from '@/enums'
 import { emit } from '@tauri-apps/api/event'
 
-const themeStore = theme()
-const { PATTERN } = storeToRefs(themeStore)
-const activeItem = ref<string>(PATTERN.value)
+const settingStore = setting()
+const { themes } = storeToRefs(settingStore)
+const activeItem = ref<string>(themes.value.pattern)
 
 const titleList = [
   {
@@ -159,14 +159,14 @@ const titleList = [
 
 /* 切换主题 */
 const handleTheme = async (event: MouseEvent, code: string) => {
-  if (code === PATTERN.value) return
+  if (code === themes.value.pattern) return
   const x = event.clientX
   const y = event.clientY
   const endRadius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y))
 
   let isDark: boolean
 
-  themeStore.toggleTheme(code)
+  settingStore.toggleTheme(code)
   await emit(EventEnum.THEME, code)
   /*判断当前浏览器是否支持startViewTransition API*/
   if (document.startViewTransition) {

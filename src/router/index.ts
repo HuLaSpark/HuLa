@@ -10,8 +10,8 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/login-window/Login.vue')
   },
   {
-    path: '/QRCode',
-    name: 'QRCode',
+    path: '/qrCode',
+    name: 'qrCode',
     component: () => import('@/views/login-window/QRCode.vue')
   },
   {
@@ -64,12 +64,17 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: '/general',
         name: 'general',
-        component: () => import('@/views/home-window/more/settings/general.vue')
+        component: () => import('@/views/home-window/more/settings/General.vue')
       },
       {
         path: '/remind',
         name: 'remind',
-        component: () => import('@/views/home-window/more/settings/remind.vue')
+        component: () => import('@/views/home-window/more/settings/Remind.vue')
+      },
+      {
+        path: '/loginSetting',
+        name: 'loginSetting',
+        component: () => import('@/views/home-window/more/settings/LoginSetting.vue')
       }
     ]
   }

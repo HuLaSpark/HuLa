@@ -45,6 +45,14 @@ export enum ThemeEnum {
   OS = 'os'
 }
 
+/* pinia存储的名称 */
+export enum StoresEnum {
+  /* 置顶 */
+  ALWAYS_ON_TOP = 'alwaysOnTop',
+  /* 设置 */
+  SETTING = 'setting'
+}
+
 /**
  * 消息类型
  */
