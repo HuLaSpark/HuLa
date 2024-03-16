@@ -8,9 +8,9 @@
           <img class="rounded-50% wh-full bg-#fff" :src="'https://picsum.photos/140'" alt="" />
 
           <div
-            class="bg-[--bg-avatar] text-10px rounded-50% w-10px h-10px absolute bottom-0 right-0"
+            class="bg-[--bg-avatar] text-10px rounded-50% w-12px h-12px absolute bottom--2px right--2px"
             style="border: 2px solid var(--bg-avatar)">
-            <div class="rounded-50% bg-#059669 wh-full"></div>
+            <img class="rounded-50% wh-full" :src="url" alt="" />
           </div>
         </div>
       </template>
@@ -25,13 +25,13 @@
               <span class="text-18px">用户名</span>
               <span class="text-12px text-#909090">账号 763868126381</span>
               <n-flex
-                @click="openContent('在线状态', 'onlineStatus', 360, 480)"
+                @click="openContent('在线状态', 'onlineStatus', 320, 480)"
                 :size="5"
                 align="center"
                 style="margin-left: -4px"
                 class="item-hover">
-                <div class="rounded-50% bg-#059669 w-12px h-12px"></div>
-                <span>在线</span>
+                <img class="rounded-50% w-18px h-18px" :src="url" alt="" />
+                <span>{{ title }}</span>
               </n-flex>
             </n-flex>
           </n-space>
@@ -42,12 +42,12 @@
           </n-flex>
         </n-flex>
         <!-- 地址 -->
-        <n-flex :size="26">
+        <n-flex :size="26" class="select-none">
           <span class="text-#707070">所在地</span>
           <span>中国</span>
         </n-flex>
         <!-- 动态 -->
-        <n-flex :size="40">
+        <n-flex :size="40" class="select-none">
           <span class="text-#707070">动态</span>
           <n-image-group>
             <n-space :size="6">
@@ -130,6 +130,8 @@ import Mitt from '@/utils/Bus.ts'
 import { EventEnum } from '@/enums'
 import { listen } from '@tauri-apps/api/event'
 import { itemsTop, itemsBottom, moreList } from './config.ts'
+import { onlineStatus } from '@/stores/onlineStatus.ts'
+import { storeToRefs } from 'pinia'
 
 /*当前选中的元素 默认选中itemsTop的第一项*/
 const activeItem = ref<string>(itemsTop.value[0].url)
@@ -138,6 +140,8 @@ const infoShow = ref(false)
 /* 已打开窗口的列表 */
 const openWindowsList = ref(new Set())
 const { createWebviewWindow } = useWindow()
+const OLStatusStore = onlineStatus()
+const { url, title } = storeToRefs(OLStatusStore)
 
 watchEffect(async () => {
   Mitt.on('updateMsgTotal', (event) => {

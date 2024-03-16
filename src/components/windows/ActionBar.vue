@@ -52,6 +52,8 @@ import { appWindow } from '@tauri-apps/api/window'
 import Mitt from '@/utils/Bus'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { alwaysOnTop } from '@/stores/alwaysOnTop.ts'
+import { listen } from '@tauri-apps/api/event'
+import { EventEnum } from '@/enums'
 
 /**
  * 新版defineProps可以直接结构 { minW, maxW, closeW } 如果需要使用默认值withDefaults的时候使用新版解构方式会报错
@@ -90,6 +92,12 @@ watchEffect(() => {
   if (alwaysOnTopStatus.value) {
     appWindow.setAlwaysOnTop(alwaysOnTopStatus.value as boolean)
   }
+  listen(EventEnum.LOGOUT, async () => {
+    /* 退出账号前把窗口全部关闭 */
+    if (appWindow.label !== 'login') {
+      await appWindow.close()
+    }
+  })
 })
 
 // todo 放大的时候图个拖动了窗口，窗口会变回原来的大小，但是图标的状态没有改变

@@ -32,7 +32,9 @@ export enum EventEnum {
   /** 窗口关闭 */
   WIN_CLOSE = 'winClose',
   /** 窗口显示 */
-  WIN_SHOW = 'winShow'
+  WIN_SHOW = 'winShow',
+  /** 退出账号 */
+  LOGOUT = 'logout'
 }
 
 /** 主题类型 */
@@ -50,7 +52,9 @@ export enum StoresEnum {
   /* 置顶 */
   ALWAYS_ON_TOP = 'alwaysOnTop',
   /* 设置 */
-  SETTING = 'setting'
+  SETTING = 'setting',
+  /* 在线状态 */
+  ONLINE_STATUS = 'onlineStatus'
 }
 
 /**

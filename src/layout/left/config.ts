@@ -1,7 +1,10 @@
 import { useWindow } from '@/hooks/useWindow.ts'
+import { emit } from '@tauri-apps/api/event'
+import { EventEnum } from '@/enums'
+import { delay } from 'lodash-es'
 
 const { createWebviewWindow } = useWindow()
-const itemsTop = ref<LO.Top[]>([
+const itemsTop = ref<OPT.L.Top[]>([
   {
     url: 'message',
     icon: 'message',
@@ -18,7 +21,7 @@ const itemsTop = ref<LO.Top[]>([
     iconAction: 'fire-action'
   }
 ])
-const itemsBottom: LO.Bottom[] = [
+const itemsBottom: OPT.L.Bottom[] = [
   {
     title: '邮件',
     url: '/mail',
@@ -42,7 +45,7 @@ const itemsBottom: LO.Bottom[] = [
   }
 ]
 /* 设置列表菜单项 */
-const moreList = ref<LO.MoreList[]>([
+const moreList = ref<OPT.L.MoreList[]>([
   {
     label: '检查更新',
     icon: 'arrow-circle-up',
@@ -72,8 +75,13 @@ const moreList = ref<LO.MoreList[]>([
     icon: 'power',
     click: async () => {
       // todo 退出账号 需要关闭其他的全部窗口
-      // 1.需要退出账号
-      await createWebviewWindow('登录', 'login', 320, 448, 'home', true, false, 320, 448)
+      await createWebviewWindow('登录', 'login', 320, 448, 'home', true, false, 320, 448).then(() => {
+        /* 给一点延迟，不然创建登录窗口后还没有来得及设置阴影和圆角效果 */
+        delay(async () => {
+          /* 通知全部打开的窗口然后关闭 */
+          await emit(EventEnum.LOGOUT)
+        }, 300)
+      })
     }
   }
 ])

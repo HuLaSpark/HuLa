@@ -43,25 +43,13 @@
                 <!--  消息为文本类型  -->
                 <div
                   v-if="item.type === MsgEnum.TEXT"
-                  :class="[
-                    { active: activeBubble === item.key },
-                    activeItem.type === RoomTypeEnum.GROUP ? '' : 'm-[10px_0]',
-                    item.accountId === userId ? 'bubble-oneself' : 'bubble'
-                  ]"
-                  v-html="item.content"></div>
-
-                <!-- 消息为超链接时 -->
-                <div
-                  v-if="item.type === MsgEnum.HYPERLINK"
+                  style="white-space: pre-wrap"
                   :class="[
                     { active: activeBubble === item.key },
                     activeItem.type === RoomTypeEnum.GROUP ? '' : 'm-[10px_0]',
                     item.accountId === userId ? 'bubble-oneself' : 'bubble'
                   ]">
-                  <!-- rel="noopener noreferrer" 让网站安全跳转，防止钓鱼网站 -->
-                  <a class="color-inherit" target="_blank" rel="noopener noreferrer" :href="item.content">
-                    {{ item.content }}
-                  </a>
+                  <span v-html="item.content"></span>
                 </div>
 
                 <!--  消息为为图片类型(不固定宽度和高度), 多张图片时渲染  -->

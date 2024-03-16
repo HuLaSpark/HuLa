@@ -12,7 +12,7 @@
         <img
           style="border: 2px solid #fff"
           class="w-80px h-80px rounded-50% bg-#fff"
-          :src="avatarRef || 'public/logo.png'"
+          :src="avatarRef || '/logo.png'"
           alt="" />
       </n-flex>
 
@@ -105,10 +105,13 @@
           <img
             style="border: 2px solid #fff"
             class="w-110px h-110px rounded-50% bg-#fff"
-            :src="login.accountInfo.avatar || 'public/logo.png'"
+            :src="login.accountInfo.avatar || '/logo.png'"
             alt="" />
         </n-flex>
-        <n-flex justify="center" class="text-18px">{{ login.accountInfo.account }}</n-flex>
+
+        <n-flex justify="center">
+          <n-ellipsis style="max-width: 200px" class="text-18px">{{ login.accountInfo.name }}</n-ellipsis>
+        </n-flex>
       </n-space>
 
       <n-flex justify="center">
@@ -147,42 +150,41 @@ import { lightTheme } from 'naive-ui'
 import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
 
-type Account = {
-  account: string
-  password: string
-  avatar?: string
-}
-
 const settingStore = setting()
 const { login } = storeToRefs(settingStore)
 const accountRef = ref()
 const passwordRef = ref()
 const avatarRef = ref()
+const nameRef = ref()
 const protocol = ref()
 const loginDisabled = ref(false)
 const loading = ref(false)
 const arrowStatus = ref(false)
 const isAutoLogin = ref(false)
 /* todo 模拟账号列表 */
-const accountOption = ref<Account[]>([
+const accountOption = ref<STO.Setting['login']['accountInfo'][]>([
   {
     account: 'hula',
     password: '123456',
+    name: '超级GG帮',
     avatar: 'https://picsum.photos/140?1'
   },
   {
     account: 'hula1',
     password: '123456',
+    name: '二狗子',
     avatar: 'https://picsum.photos/140?2'
   },
   {
     account: 'hula2',
     password: '123456',
+    name: '李山离',
     avatar: 'https://picsum.photos/140?3'
   },
   {
     account: 'hula3',
     password: '123456',
+    name: '牛什么呢',
     avatar: 'https://picsum.photos/140?4'
   }
 ])
@@ -196,7 +198,7 @@ watchEffect(() => {
   loginDisabled.value = !(accountRef.value && passwordRef.value && protocol.value)
   // 情况账号的时候设置默认头像
   if (!accountRef.value) {
-    avatarRef.value = 'public/logo.png'
+    avatarRef.value = '/logo.png'
   }
 })
 
@@ -213,31 +215,35 @@ const delAccount = (index: number) => {
   }
   accountRef.value = null
   passwordRef.value = null
-  avatarRef.value = 'public/logo.png'
+  avatarRef.value = '/logo.png'
 }
 
 /**
  * 给账号赋值
- * @param { Account } item 账户信息
+ * @param item 账户信息
  * */
-const giveAccount = (item: Account) => {
-  const { account, password, avatar } = item
+const giveAccount = (item: STO.Setting['login']['accountInfo']) => {
+  const { account, password, avatar, name } = item
   accountRef.value = account
   passwordRef.value = password
   avatarRef.value = avatar
+  nameRef.value = name
   arrowStatus.value = false
 }
 
 /*登录后创建主页窗口*/
 const loginWin = () => {
   loading.value = true
-  loginText.value = '网络连接中'
   delay(async () => {
     await createWebviewWindow('HuLa', 'home', 960, 720, 'login', false, true)
     loading.value = false
-    loginText.value = '登录'
     if (!login.value.autoLogin || login.value.accountInfo.password === '') {
-      settingStore.setAccountInfo({ account: accountRef.value, password: passwordRef.value, avatar: avatarRef.value })
+      settingStore.setAccountInfo({
+        account: accountRef.value,
+        password: passwordRef.value,
+        avatar: avatarRef.value,
+        name: nameRef.value
+      })
     }
   }, 1000)
 }
@@ -253,7 +259,12 @@ const handleClickOutside = (event: MouseEvent) => {
 onMounted(() => {
   if (login.value.autoLogin && login.value.accountInfo.password !== '') {
     isAutoLogin.value = true
-    loginWin()
+    // TODO 检查用户网络是否连接 (nyh -> 2024-03-16 12:06:59)
+    loginText.value = '网络连接中'
+    delay(() => {
+      loginWin()
+      loginText.value = '登录'
+    }, 1000)
   }
   window.addEventListener('click', handleClickOutside, true)
 })

@@ -16,6 +16,7 @@ export const setting = defineStore(StoresEnum.SETTING, {
       accountInfo: {
         account: '',
         password: '',
+        name: '',
         avatar: ''
       }
     }
@@ -46,18 +47,12 @@ export const setting = defineStore(StoresEnum.SETTING, {
       this.login.autoStartup = autoStartup
     },
     /* 设置用户保存的登录信息 */
-    // TODO 用户登录时候保存登录信息到sessionStorage中然后判断用户是否开启自动登录或者记住登录 (nyh -> 2024-03-15 09:33:30)
     setAccountInfo(accountInfo: STO.Setting['login']['accountInfo']) {
-      const { account, password, avatar } = accountInfo
-      this.login.accountInfo.account = account
-      this.login.accountInfo.password = password
-      this.login.accountInfo.avatar = avatar
+      this.login.accountInfo = accountInfo
     },
     /* 清空账号信息 */
     clearAccount() {
-      this.login.accountInfo.account = ''
-      this.login.accountInfo.password = ''
-      this.login.accountInfo.avatar = ''
+      this.login.accountInfo = { account: '', avatar: '', name: '', password: '' }
     }
   }
 })

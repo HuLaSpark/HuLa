@@ -1,13 +1,13 @@
 {
   "name": "hula-im-tauri",
   "private": true,
+  "type": "module",
   "version": "v1.3.0-beta",
   "packageManager": "pnpm@8.15.4",
   "engines": {
     "node": ">=18.12.0",
     "pnpm": ">=8.10.0"
   },
-  "type": "module",
   "author": {
     "name": "nongyehong",
     "email": "2439646234@qq.com",
@@ -26,7 +26,7 @@
     "preview": "vite preview",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
-    "tauri:icon": "tauri icon public/logo.png",
+    "tauri:icon": "tauri icon /logo.png",
     "preinstall": "npx only-allow pnpm",
     "commit": "git add . && lint-staged && git-cz && conventional-changelog -p cz-config.cjs -i CHANGELOG.md -s -r 0",
     "changelog": "conventional-changelog -p cz-config.cjs -i CHANGELOG.md -s -r 0",

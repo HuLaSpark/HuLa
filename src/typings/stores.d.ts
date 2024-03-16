@@ -15,6 +15,7 @@ declare namespace STO {
       accountInfo: {
         account: string
         password: string
+        name: string
         avatar: string
       }
     }

@@ -1,5 +1,5 @@
 /* 侧边栏选项 */
-const sideOptions = ref<LO.SettingSide[]>([
+const sideOptions = ref<OPT.L.SettingSide[]>([
   {
     url: '/general',
     label: '通用',

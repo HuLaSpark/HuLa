@@ -1,3 +1,4 @@
+/* 修改自定义的关闭和最小化图标的样式 */
 :deep(.hover-box) {
   @apply w-28px h24px flex-center hover:bg-#e7e7e7;
   svg {

@@ -1,0 +1,95 @@
+<template>
+  <main class="wh-full bg-#fff select-none">
+    <ActionBar class="absolute right-0 w-full" :shrink="false" :max-w="false" :min-w="false" />
+
+    <n-space
+      vertical
+      :size="130"
+      style="background: linear-gradient(to bottom, rgba(82, 174, 163, 0.4) 0%, #f1f1f1 100%)"
+      class="wh-full p-20px box-border">
+      <!-- 当前选中的状态 -->
+      <n-flex justify="center" align="center" class="pt-80px">
+        <img class="w-34px h-34px" :src="activeItem.url" alt="" />
+        <span class="text-22px">{{ activeItem.title }}</span>
+      </n-flex>
+
+      <!-- 状态 -->
+      <n-space vertical class="w-full h-100vh bg-#f1f1f1 rounded-6px box-border p-12px">
+        <n-scrollbar style="max-height: 255px">
+          <n-flex align="center" justify="space-between" :size="10">
+            <n-space
+              @click="handleActive(item, index)"
+              :class="{ active: activeItem.index === index }"
+              v-for="(item, index) in statusItem"
+              :key="item.title"
+              vertical
+              justify="center"
+              align="center"
+              :size="2"
+              class="status-item">
+              <img class="w-24px h-24px" :src="item.url" alt="" />
+              <span class="text-11px">{{ item.title }}</span>
+            </n-space>
+          </n-flex>
+        </n-scrollbar>
+      </n-space>
+    </n-space>
+  </main>
+</template>
+<script setup lang="ts">
+import { statusItem } from './config.ts'
+import { onlineStatus } from '@/stores/onlineStatus.ts'
+
+const OLStatusStore = onlineStatus()
+/* 选中的状态 */
+const activeItem = reactive({
+  index: -1,
+  title: '',
+  url: ''
+})
+
+/**
+ * 处理选中的状态
+ * @param { OPT.Online } item 状态
+ * @param index 选中的下标
+ */
+const handleActive = (item: OPT.Online, index: number) => {
+  activeItem.index = index
+  activeItem.title = item.title
+  activeItem.url = item.url
+  OLStatusStore.setOnlineStatus(item.url, item.title)
+}
+</script>
+<style scoped lang="scss">
+.status-item {
+  width: 56px;
+  height: 56px;
+  &:not(.active):hover {
+    background: #ccc;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+}
+
+.active {
+  background: var(--bg-active-msg);
+  border-radius: 8px;
+  cursor: pointer;
+  span {
+    color: #fff;
+  }
+}
+
+:deep(.action-close) {
+  svg {
+    color: #404040;
+  }
+}
+/* 隐藏naive UI的滚动条 */
+:deep(
+    .n-scrollbar > .n-scrollbar-rail.n-scrollbar-rail--vertical > .n-scrollbar-rail__scrollbar,
+    .n-scrollbar + .n-scrollbar-rail.n-scrollbar-rail--vertical > .n-scrollbar-rail__scrollbar
+  ) {
+  display: none;
+}
+</style>
