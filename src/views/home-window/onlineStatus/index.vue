@@ -5,7 +5,7 @@
     <n-space
       vertical
       :size="130"
-      style="background: linear-gradient(to bottom, rgba(82, 174, 163, 0.4) 0%, #f1f1f1 100%)"
+      :style="`background: linear-gradient(to bottom, ${RGBA} 0%, #f1f1f1 100%)`"
       class="wh-full p-20px box-border">
       <!-- 当前选中的状态 -->
       <n-flex justify="center" align="center" class="pt-80px">
@@ -14,9 +14,9 @@
       </n-flex>
 
       <!-- 状态 -->
-      <n-space vertical class="w-full h-100vh bg-#f1f1f1 rounded-6px box-border p-12px">
+      <n-space vertical class="w-full h-100vh bg-#f1f1f1 rounded-6px box-border p-13px">
         <n-scrollbar style="max-height: 255px">
-          <n-flex align="center" justify="space-between" :size="10">
+          <n-flex align="center" :size="10">
             <n-space
               @click="handleActive(item, index)"
               :class="{ active: activeItem.index === index }"
@@ -39,8 +39,15 @@
 <script setup lang="ts">
 import { statusItem } from './config.ts'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
+import { storeToRefs } from 'pinia'
+import { EventEnum } from '@/enums'
+import { emit } from '@tauri-apps/api/event'
+import ColorThief from 'colorthief'
 
+const colorthief = new ColorThief()
 const OLStatusStore = onlineStatus()
+const RGBA = ref()
+const { url, title } = storeToRefs(OLStatusStore)
 /* 选中的状态 */
 const activeItem = reactive({
   index: -1,
@@ -53,12 +60,33 @@ const activeItem = reactive({
  * @param { OPT.Online } item 状态
  * @param index 选中的下标
  */
-const handleActive = (item: OPT.Online, index: number) => {
+const handleActive = async (item: OPT.Online, index: number) => {
   activeItem.index = index
   activeItem.title = item.title
   activeItem.url = item.url
   OLStatusStore.setOnlineStatus(item.url, item.title)
+  await getBGColor(item.url, item.title)
 }
+
+/* 获取图片的背景颜色 */
+const getBGColor = async (url: string, title: string) => {
+  const img = new Image()
+  img.src = url
+  img.onload = async () => {
+    const colors = await colorthief.getColor(img, 3)
+    RGBA.value = `rgba(${colors.join(',')}, 0.4)`
+    OLStatusStore.setColor(`rgba(${colors.join(',')}, 0.4)`)
+    await emit(EventEnum.SET_OL_STS, { url: url, title: title, bgColor: RGBA.value })
+  }
+}
+
+onMounted(async () => {
+  /* 第一次没有选状态的时候随机选中一个状态 */
+  activeItem.title = title.value
+  activeItem.url = url.value
+  activeItem.index = statusItem.findIndex((item) => item.title === activeItem.title)
+  await getBGColor(activeItem.url, activeItem.title)
+})
 </script>
 <style scoped lang="scss">
 .status-item {

@@ -34,7 +34,9 @@ export enum EventEnum {
   /** 窗口显示 */
   WIN_SHOW = 'winShow',
   /** 退出账号 */
-  LOGOUT = 'logout'
+  LOGOUT = 'logout',
+  /** 设置在线状态 */
+  SET_OL_STS = 'setOnlineStatus'
 }
 
 /** 主题类型 */

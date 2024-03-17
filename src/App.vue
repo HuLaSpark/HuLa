@@ -9,8 +9,10 @@
 import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
 import { StoresEnum, ThemeEnum } from '@/enums'
+import { onlineStatus } from '@/stores/onlineStatus.ts'
 
 const settingStore = setting()
+const OLStatusStore = onlineStatus()
 const { themes } = storeToRefs(settingStore)
 
 /* 禁止图片以及输入框的拖拽 */
@@ -26,6 +28,10 @@ onMounted(() => {
   // 判断localStorage中是否有设置主题
   if (!localStorage.getItem(StoresEnum.SETTING)) {
     settingStore.init(ThemeEnum.LIGHT)
+  }
+  /* 第一次没有选状态的时候随机选中一个状态 */
+  if (!localStorage.getItem(StoresEnum.ONLINE_STATUS)) {
+    OLStatusStore.init()
   }
   document.documentElement.dataset.theme = themes.value.content
   window.addEventListener('dragstart', preventDrag)

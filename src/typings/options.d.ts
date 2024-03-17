@@ -38,5 +38,6 @@ declare namespace OPT {
   type Online = {
     url: string
     title: string
+    bgColor: string
   }
 }

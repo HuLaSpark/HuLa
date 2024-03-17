@@ -82,6 +82,30 @@ const statusItem: OPT.Online[] = [
   {
     url: '/status/tv_3x.png',
     title: '追剧中'
+  },
+  {
+    url: '/status/meizizi@3x.png',
+    title: '美滋滋'
+  },
+  {
+    url: '/status/fish@2x.png',
+    title: '摸鱼中'
+  },
+  {
+    url: '/status/boring@3x.png',
+    title: '无聊中'
+  },
+  {
+    url: '/status/youzaizai@3x.png',
+    title: '悠哉哉'
+  },
+  {
+    url: '/status/gototravel.png',
+    title: '去旅行'
+  },
+  {
+    url: '/status/game_3x.png',
+    title: '游戏中'
   }
 ]
 

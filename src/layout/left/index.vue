@@ -1,7 +1,7 @@
 <template>
   <main class="left w-60px h-full p-[30px_6px_15px] box-border flex-col-center select-none">
     <!-- 点击时头像内容框 -->
-    <n-popover v-model:show="infoShow" trigger="click" :show-arrow="false" placement="right-start" style="padding: 0">
+    <n-popover v-model:show="info.show" trigger="click" :show-arrow="false" placement="right-start" style="padding: 0">
       <template #trigger>
         <!-- 头像 -->
         <div class="relative w-36px h-36px rounded-50% cursor-pointer">
@@ -15,7 +15,11 @@
         </div>
       </template>
       <!-- 用户个人信息框 -->
-      <n-space vertical :size="26" class="wh-full p-15px box-border rounded-8px" style="background: var(--bg-info)">
+      <n-space
+        vertical
+        :size="26"
+        class="wh-full p-15px box-border rounded-8px"
+        :style="`background: linear-gradient(to bottom, ${info.bgColor} 0%, ${info.themeColor} 100%)`">
         <!-- 头像以及信息区域 -->
         <n-flex justify="space-between" align="center" :size="50">
           <n-space>
@@ -30,8 +34,8 @@
                 align="center"
                 style="margin-left: -4px"
                 class="item-hover">
-                <img class="rounded-50% w-18px h-18px" :src="url" alt="" />
-                <span>{{ title }}</span>
+                <img class="rounded-50% w-18px h-18px" :src="info.url" alt="" />
+                <span>{{ info.title }}</span>
               </n-flex>
             </n-flex>
           </n-space>
@@ -127,23 +131,38 @@ import { delay } from 'lodash-es'
 import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
 import Mitt from '@/utils/Bus.ts'
-import { EventEnum } from '@/enums'
+import { EventEnum, ThemeEnum } from '@/enums'
 import { listen } from '@tauri-apps/api/event'
 import { itemsTop, itemsBottom, moreList } from './config.ts'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
 import { storeToRefs } from 'pinia'
+import { setting } from '@/stores/setting.ts'
 
 /*当前选中的元素 默认选中itemsTop的第一项*/
 const activeItem = ref<string>(itemsTop.value[0].url)
 const settingShow = ref(false)
-const infoShow = ref(false)
 /* 已打开窗口的列表 */
 const openWindowsList = ref(new Set())
+const prefers = matchMedia('(prefers-color-scheme: dark)')
 const { createWebviewWindow } = useWindow()
+const settingStore = setting()
+const { themes } = storeToRefs(settingStore)
 const OLStatusStore = onlineStatus()
-const { url, title } = storeToRefs(OLStatusStore)
+const { url, title, bgColor } = storeToRefs(OLStatusStore)
+const info = reactive({
+  url: url,
+  title: title,
+  bgColor: bgColor,
+  themeColor: '#f1f1f1',
+  show: false
+})
 
-watchEffect(async () => {
+/* 跟随系统主题模式切换主题 */
+const followOS = () => {
+  info.themeColor = prefers.matches ? '#3f3f3f' : '#f1f1f1'
+}
+
+watchEffect(() => {
   Mitt.on('updateMsgTotal', (event) => {
     itemsTop.value.find((item) => {
       if (item.url === 'message') {
@@ -151,14 +170,12 @@ watchEffect(async () => {
       }
     })
   })
-  await listen(EventEnum.WIN_SHOW, (e) => {
-    // 如果已经存在就不添加
-    if (openWindowsList.value.has(e.payload)) return
-    openWindowsList.value.add(e.payload)
-  })
-  await listen(EventEnum.WIN_CLOSE, (e) => {
-    openWindowsList.value.delete(e.payload)
-  })
+  if (themes.value.pattern === ThemeEnum.OS) {
+    followOS()
+    prefers.addEventListener('change', followOS)
+  } else {
+    prefers.removeEventListener('change', followOS)
+  }
 })
 
 /**
@@ -188,7 +205,7 @@ const openContent = (title: string, label: string, w = 840, h = 600) => {
   delay(async () => {
     await createWebviewWindow(title, label, w, h)
   }, 300)
-  infoShow.value = false
+  info.show = false
 }
 
 const closeMenu = (event: any) => {
@@ -197,10 +214,32 @@ const closeMenu = (event: any) => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   /* 页面加载的时候默认显示消息列表 */
   pageJumps(activeItem.value)
   window.addEventListener('click', closeMenu, true)
+
+  await listen(EventEnum.WIN_SHOW, (e) => {
+    // 如果已经存在就不添加
+    if (openWindowsList.value.has(e.payload)) return
+    openWindowsList.value.add(e.payload)
+  })
+  await listen(EventEnum.WIN_CLOSE, (e) => {
+    openWindowsList.value.delete(e.payload)
+  })
+  await listen(EventEnum.SET_OL_STS, (e) => {
+    const val = e.payload as OPT.Online
+    info.url = val.url
+    info.title = val.title
+    info.bgColor = val.bgColor
+  })
+  await listen(EventEnum.THEME, (e) => {
+    if (e.payload === ThemeEnum.OS) {
+      followOS()
+    } else {
+      info.themeColor = e.payload === ThemeEnum.DARK ? '#3f3f3f' : '#f1f1f1'
+    }
+  })
 })
 
 onUnmounted(() => {
