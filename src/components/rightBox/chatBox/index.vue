@@ -1,8 +1,8 @@
 <template>
   <!-- 头部 -->
-  <ChatHeader :active-item="activeItem" />
+  <ChatHeader :active-item="activeItemRef" />
   <!-- 中间聊天框内容  -->
-  <ChatMain :active-item="activeItem" />
+  <ChatMain :active-item="activeItemRef" />
   <!-- 输入框和操作列表 -->
   <ChatFooter />
 </template>
@@ -11,10 +11,19 @@ import ChatFooter from './chatFooter.vue'
 import ChatHeader from './chatHeader.vue'
 import ChatMain from './chatMain.vue'
 import { MockItem } from '@/services/types.ts'
+import { listen } from '@tauri-apps/api/event'
+import { appWindow } from '@tauri-apps/api/window'
 
 const { activeItem } = defineProps<{
-  activeItem: MockItem
+  activeItem?: MockItem
 }>()
-</script>
+const activeItemRef = ref({ ...activeItem! })
 
-<style scoped lang="scss"></style>
+watchEffect(() => {
+  activeItemRef.value = { ...activeItem! }
+})
+
+listen(appWindow.label, (e) => {
+  activeItemRef.value = e.payload as any
+})
+</script>

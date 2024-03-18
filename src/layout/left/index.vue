@@ -1,13 +1,19 @@
 <template>
   <main class="left w-60px h-full p-[30px_6px_15px] box-border flex-col-center select-none">
     <!-- 点击时头像内容框 -->
-    <n-popover v-model:show="info.show" trigger="click" :show-arrow="false" placement="right-start" style="padding: 0">
+    <n-popover
+      v-model:show="info.show"
+      trigger="click"
+      :show-arrow="false"
+      placement="right-start"
+      style="padding: 0; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px)">
       <template #trigger>
         <!-- 头像 -->
         <div class="relative w-36px h-36px rounded-50% cursor-pointer">
           <img class="rounded-50% wh-full bg-#fff" :src="'https://picsum.photos/140'" alt="" />
 
           <div
+            @click.stop="openContent('在线状态', 'onlineStatus', 320, 480)"
             class="bg-[--bg-avatar] text-10px rounded-50% w-12px h-12px absolute bottom--2px right--2px"
             style="border: 2px solid var(--bg-avatar)">
             <img class="rounded-50% wh-full" :src="url" alt="" />
@@ -27,7 +33,7 @@
 
             <n-flex vertical justify="center" :size="10" class="text-[--text-color]">
               <span class="text-18px">用户名</span>
-              <span class="text-12px text-#909090">账号 763868126381</span>
+              <span class="text-12px text-[--info-text-color]">账号 763868126381</span>
               <n-flex
                 @click="openContent('在线状态', 'onlineStatus', 320, 480)"
                 :size="5"
@@ -47,12 +53,12 @@
         </n-flex>
         <!-- 地址 -->
         <n-flex :size="26" class="select-none">
-          <span class="text-#707070">所在地</span>
+          <span class="text-[--info-text-color]">所在地</span>
           <span>中国</span>
         </n-flex>
         <!-- 动态 -->
         <n-flex :size="40" class="select-none">
-          <span class="text-#707070">动态</span>
+          <span class="text-[--info-text-color]">动态</span>
           <n-image-group>
             <n-space :size="6">
               <n-image
@@ -159,7 +165,7 @@ const info = reactive({
 
 /* 跟随系统主题模式切换主题 */
 const followOS = () => {
-  info.themeColor = prefers.matches ? '#3f3f3f' : '#f1f1f1'
+  info.themeColor = prefers.matches ? 'rgba(63,63,63, 0.2)' : 'rgba(241,241,241, 0.2)'
 }
 
 watchEffect(() => {
@@ -237,7 +243,7 @@ onMounted(async () => {
     if (e.payload === ThemeEnum.OS) {
       followOS()
     } else {
-      info.themeColor = e.payload === ThemeEnum.DARK ? '#3f3f3f' : '#f1f1f1'
+      info.themeColor = e.payload === ThemeEnum.DARK ? 'rgba(63,63,63, 0.2)' : 'rgba(241,241,241, 0.2)'
     }
   })
 })

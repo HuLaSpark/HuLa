@@ -43,8 +43,8 @@
   // 头像状态的背景颜色
   --bg-avatar: #ccc;
   // 个人信息框背景颜色
-  --bg-info: linear-gradient(to bottom, rgba(82, 174, 163, 0.4) 0%, #f1f1f1 100%);
   --info-hover: #eee;
+  --info-text-color: #707070;
 }
 
 html[data-theme='dark'] {
@@ -91,8 +91,8 @@ html[data-theme='dark'] {
   // 头像状态的背景颜色
   --bg-avatar: #3f3f3f;
   // 个人信息框背景颜色
-  --bg-info: linear-gradient(to bottom, rgba(82, 174, 163, 0.2) 0%, #3f3f3f 100%);
   --info-hover: #3b3b3b;
+  --info-text-color: #ccc;
 }
 /*! end */
 // 线性动画

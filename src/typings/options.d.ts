@@ -34,6 +34,13 @@ declare namespace OPT {
     }
   }
 
+  /* 右键菜单选项 */
+  type RightMenu = {
+    label: string
+    icon: string
+    click?: (...args: any[]) => void
+  }
+
   /* 在线状态 */
   type Online = {
     url: string

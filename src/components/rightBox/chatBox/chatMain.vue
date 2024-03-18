@@ -129,7 +129,7 @@
 </template>
 <script setup lang="ts">
 import { MsgEnum, RoomTypeEnum } from '@/enums'
-import { Menu, MockItem } from '@/services/types.ts'
+import { MockItem } from '@/services/types.ts'
 import Mitt from '@/utils/Bus.ts'
 import { VirtualListInst } from 'naive-ui'
 
@@ -189,7 +189,7 @@ const { activeItem } = defineProps<{
 // const message = computed(() => msg.value)
 
 /* 右键菜单列表 */
-const menuList = ref<Menu>([
+const menuList = ref<OPT.RightMenu[]>([
   {
     label: '复制',
     icon: 'copy',
@@ -207,7 +207,7 @@ const menuList = ref<Menu>([
   { label: '回复', icon: 'reply' }
 ])
 /* 右键菜单下划线后的列表 */
-const specialMenuList = ref<Menu>([
+const specialMenuList = ref<OPT.RightMenu[]>([
   {
     label: '删除',
     icon: 'delete',

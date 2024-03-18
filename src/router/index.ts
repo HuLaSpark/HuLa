@@ -22,7 +22,7 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: '/message',
         name: 'message',
-        component: () => import('@/views/home-window/Message.vue')
+        component: () => import('@/views/home-window/message/index.vue')
       },
       {
         path: '/friendsList',
@@ -55,6 +55,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/about',
     name: 'about',
     component: About
+  },
+  {
+    path: '/alone',
+    name: 'alone',
+    component: () => import('@/views/home-window/message/Alone.vue')
   },
   {
     path: '/settings',

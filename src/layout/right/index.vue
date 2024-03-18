@@ -2,7 +2,7 @@
   <main class="flex-1 bg-[--right-bg-color] h-full w-100vw">
     <ActionBar />
     <!-- 需要判断当前路由是否是信息详情界面 -->
-    <ChatBox :active-item="activeItem" v-if="msgBoxShow && isChat" />
+    <ChatBox :active-item="activeItem" v-if="msgBoxShow && isChat && activeItem !== -1" />
 
     <Details :content="DetailsContent" v-else-if="detailsShow && isDetails" />
 
