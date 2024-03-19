@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { StoresEnum, ThemeEnum } from '@/enums'
+import { CloseBxEnum, StoresEnum, ThemeEnum } from '@/enums'
 
 export const setting = defineStore(StoresEnum.SETTING, {
   state: (): STO.Setting => ({
@@ -7,6 +7,12 @@ export const setting = defineStore(StoresEnum.SETTING, {
     themes: {
       content: '',
       pattern: ''
+    },
+    /* 系统托盘 */
+    tray: {
+      type: CloseBxEnum.HIDE,
+      tips: true,
+      notTips: false
     },
     /* 登录设置 */
     login: {

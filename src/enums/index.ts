@@ -33,8 +33,8 @@ export enum EventEnum {
   WIN_CLOSE = 'winClose',
   /** 窗口显示 */
   WIN_SHOW = 'winShow',
-  /** 退出账号 */
-  LOGOUT = 'logout',
+  /** 退出程序 */
+  EXIT = 'exit',
   /** 设置在线状态 */
   SET_OL_STS = 'setOnlineStatus'
 }
@@ -87,4 +87,12 @@ export enum RoomTypeEnum {
   GROUP = 1,
   /** 2单聊 */
   SINGLE
+}
+
+/** 关闭窗口的行为 */
+export enum CloseBxEnum {
+  /** 隐藏 */
+  HIDE = 'hide',
+  /** 关闭 */
+  CLOSE = 'close'
 }

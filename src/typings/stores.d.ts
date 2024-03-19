@@ -7,6 +7,13 @@ declare namespace STO {
       content: string
       pattern: string
     }
+    /* 系统托盘 */
+    tray: {
+      type: string
+      tips: boolean
+      /* 不再显示提示 */
+      notTips: boolean
+    }
     /* 登录设置 */
     login: {
       autoLogin: boolean

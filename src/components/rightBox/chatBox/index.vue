@@ -7,9 +7,9 @@
   <ChatFooter />
 </template>
 <script setup lang="ts">
-import ChatFooter from './chatFooter.vue'
-import ChatHeader from './chatHeader.vue'
-import ChatMain from './chatMain.vue'
+import ChatFooter from './ChatFooter.vue'
+import ChatHeader from './ChatHeader.vue'
+import ChatMain from './ChatMain.vue'
 import { MockItem } from '@/services/types.ts'
 import { listen } from '@tauri-apps/api/event'
 import { appWindow } from '@tauri-apps/api/window'

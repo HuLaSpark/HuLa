@@ -1,11 +1,10 @@
-use tauri::{AppHandle, CustomMenuItem, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem, SystemTraySubmenu};
+use tauri::{AppHandle, CustomMenuItem, Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem, SystemTraySubmenu};
 
 /// 托盘菜单
 pub fn menu() -> SystemTray {
     let quit = CustomMenuItem::new("quit".to_string(), "退出");
-    let show = CustomMenuItem::new("show".to_string(), "打开主板");
-    let hide = CustomMenuItem::new("hide".to_string(), "隐藏");
-    let change_ico = CustomMenuItem::new("change_ico".to_string(), "更改图标").disabled();
+    let show = CustomMenuItem::new("show".to_string(), "打开主面板");
+    let change_ico = CustomMenuItem::new("change_ico".to_string(), "更改图标");
     let tray_menu = SystemTrayMenu::new()
         .add_submenu(SystemTraySubmenu::new(
             "Language", // 语言菜单
@@ -15,26 +14,48 @@ pub fn menu() -> SystemTray {
                 .add_item(CustomMenuItem::new("lang_zh_HK".to_string(), "繁体中文")),
         ))
         .add_native_item(SystemTrayMenuItem::Separator) // 分割线
+        .add_item(show)
         .add_item(change_ico)
         .add_native_item(SystemTrayMenuItem::Separator)
-        .add_item(hide)
-        .add_item(show)
-        .add_native_item(SystemTrayMenuItem::Separator)
         .add_item(quit);
-
     SystemTray::new().with_menu(tray_menu)
+}
+
+/// 打开主页
+pub fn open_home(app: &AppHandle) {
+    let window = app.get_window("home").unwrap();
+    let hide = window.is_visible().unwrap();
+    let min = window.is_minimized().unwrap();
+    if !hide {
+        window.show().unwrap();
+    }
+    if min {
+        window.unminimize().unwrap();
+    }
+    window.set_focus().unwrap();
 }
 
 /// 托盘事件
 pub fn handler(app: &AppHandle, event: SystemTrayEvent) {
     match event {
+        SystemTrayEvent::LeftClick { .. } => {
+            open_home(app);
+        },
         SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
             "change_ico" => { // 更新托盘图标
                 app.tray_handle()
                     .set_icon(tauri::Icon::Raw(
-                        include_bytes!("../../icons/128x128.png").to_vec(),
+                        include_bytes!("../../../public/status/weather_3x.png").to_vec(),
                     ))
                     .unwrap();
+            }
+            "show" => {
+                open_home(app);
+            }
+            "quit" => {
+                let window = app.get_window("home").unwrap();
+                window.close().unwrap();
+                window.emit("exit", ()).unwrap()
             }
             lang if lang.contains("lang_") => { // 选择语言，匹配 id 前缀包含 `lang_` 的事件
                 Lang::new(

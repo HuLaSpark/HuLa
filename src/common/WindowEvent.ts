@@ -1,6 +1,8 @@
 import { appWindow, WebviewWindow } from '@tauri-apps/api/window'
 import { EventEnum } from '@/enums'
 import { emit } from '@tauri-apps/api/event'
+import { setting } from '@/stores/setting.ts'
+import { storeToRefs } from 'pinia'
 
 /** 最小化 */
 export const minimizeWindow = async () => {
@@ -20,10 +22,16 @@ export const maximizeWindow = async () => {
  * @see EventEnum.WIN_CLOSE
  */
 export const closeWindow = async (label: string) => {
-  if (label !== void 0) {
+  if (label !== void 0 && label !== 'home') {
     await emit(EventEnum.WIN_CLOSE, label)
   }
-  await appWindow.close()
+  if (label === 'home') {
+    const settingStore = setting()
+    const { tray } = storeToRefs(settingStore)
+    tray.value.tips = true
+  } else {
+    await appWindow.close()
+  }
 }
 
 /** 取消最大化 */

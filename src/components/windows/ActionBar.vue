@@ -43,6 +43,41 @@
         <use href="#close"></use>
       </svg>
     </div>
+
+    <!-- 是否退到托盘提示框 -->
+    <n-modal v-model:show="tray.tips" class="w-350px border-rd-8px">
+      <div class="bg-[--bg-popover] w-360px h-full p-6px box-border flex flex-col">
+        <svg @click="tray.tips = false" class="w-12px h-12px ml-a cursor-pointer select-none">
+          <use href="#close"></use>
+        </svg>
+        <n-space vertical :size="20" class="p-[22px_10px_10px_22px] select-none">
+          <span class="text-16px">最小化还是直接退出程序?</span>
+          <label class="text-14px text-#707070 flex gap-6px lh-16px items-center">
+            <n-radio
+              :checked="trayRef.type === CloseBxEnum.HIDE"
+              :value="CloseBxEnum.HIDE"
+              @change="trayRef.type = CloseBxEnum.HIDE" />
+            <span>最小化到系统托盘</span>
+          </label>
+          <label class="text-14px text-#707070 flex gap-6px lh-16px items-center">
+            <n-radio
+              :checked="trayRef.type === CloseBxEnum.CLOSE"
+              :value="CloseBxEnum.CLOSE"
+              @change="trayRef.type = CloseBxEnum.CLOSE" />
+            <span>直接退出程序</span>
+          </label>
+          <label class="text-12px text-#909090 flex gap-6px justify-end items-center">
+            <n-checkbox size="small" v-model:checked="trayRef.notTips" />
+            <span>下次不出现此提示</span>
+          </label>
+
+          <n-flex justify="end">
+            <n-button @click="handleConfirm" class="w-78px" color="#059669">确定</n-button>
+            <n-button @click="tray.tips = false" class="w-78px" secondary>取消</n-button>
+          </n-flex>
+        </n-space>
+      </div>
+    </n-modal>
   </div>
 </template>
 
@@ -52,8 +87,10 @@ import { appWindow } from '@tauri-apps/api/window'
 import Mitt from '@/utils/Bus'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { alwaysOnTop } from '@/stores/alwaysOnTop.ts'
-import { listen } from '@tauri-apps/api/event'
-import { EventEnum } from '@/enums'
+import { setting } from '@/stores/setting.ts'
+import { emit, listen } from '@tauri-apps/api/event'
+import { CloseBxEnum, EventEnum } from '@/enums'
+import { storeToRefs } from 'pinia'
 
 /**
  * 新版defineProps可以直接结构 { minW, maxW, closeW } 如果需要使用默认值withDefaults的时候使用新版解构方式会报错
@@ -79,7 +116,13 @@ const props = withDefaults(
 )
 const { minW, maxW, closeW, topWinLabel, shrinkStatus } = toRefs(props)
 const alwaysOnTopStore = alwaysOnTop()
+const settingStore = setting()
+const { tray } = storeToRefs(settingStore)
 const { resizeWindow } = useWindow()
+const trayRef = reactive({
+  type: tray.value.type,
+  notTips: tray.value.notTips
+})
 // 窗口是否最大化状态
 const windowMaximized = ref(false)
 // 窗口是否置顶状态
@@ -92,7 +135,7 @@ watchEffect(() => {
   if (alwaysOnTopStatus.value) {
     appWindow.setAlwaysOnTop(alwaysOnTopStatus.value as boolean)
   }
-  listen(EventEnum.LOGOUT, async () => {
+  listen(EventEnum.EXIT, async () => {
     /* 退出账号前把窗口全部关闭 */
     if (appWindow.label !== 'login') {
       await appWindow.close()
@@ -148,6 +191,21 @@ const handleAlwaysOnTop = async () => {
     await appWindow.setAlwaysOnTop(isTop)
   }
 }
+
+/* 点击确定时 */
+const handleConfirm = async () => {
+  tray.value.type = trayRef.type
+  tray.value.notTips = trayRef.notTips
+  tray.value.tips = false
+  if (tray.value.type === CloseBxEnum.CLOSE) {
+    await emit(EventEnum.EXIT)
+    await appWindow.close()
+  } else {
+    await nextTick(() => {
+      appWindow.hide()
+    })
+  }
+}
 </script>
 
 <style scoped lang="scss">
@@ -156,5 +214,9 @@ const handleAlwaysOnTop = async () => {
 }
 .action-close {
   @apply w-28px h24px flex-center cursor-pointer hover:bg-#c22b1c svg:hover:color-[#fff];
+}
+.n-modal {
+  align-self: start;
+  margin: 60px auto;
 }
 </style>

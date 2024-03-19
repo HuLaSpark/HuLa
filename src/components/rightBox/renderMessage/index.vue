@@ -4,8 +4,8 @@
 <script setup lang="ts">
 import { MsgEnum } from '@/enums'
 import type { MsgType } from '@/services/types'
-import Text from './text.vue'
-import Image from './image.vue'
+import Text from './Text.vue'
+import Image from './Image.vue'
 
 const componentMap = {
   [MsgEnum.TEXT]: Text,

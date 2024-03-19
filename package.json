@@ -34,7 +34,7 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^1.5.3",
-    "axios": "^1.6.7",
+    "axios": "^1.6.8",
     "colorthief": "^2.4.0",
     "dayjs": "^1.11.10",
     "lodash-es": "^4.17.21",

@@ -20,18 +20,22 @@
             :class="item.accountId === userId ? 'flex-row-reverse' : ''"
             style="max-width: calc(100% - 54px)">
             <!-- 头像  -->
-            <img
-              :class="item.accountId === userId ? '' : 'mr-10px'"
-              class="w-34px rounded-50% select-none"
-              :src="item.accountId === userId ? item.avatar : activeItem.avatar"
-              alt="" />
+            <ContextMenu :menu="optionsList" :special-menu="report">
+              <img
+                :class="item.accountId === userId ? '' : 'mr-10px'"
+                class="w-34px rounded-50% select-none"
+                :src="item.accountId === userId ? item.avatar : activeItem.avatar"
+                alt="" />
+            </ContextMenu>
             <div
               class="flex flex-col gap-8px color-[--text-color]"
               :class="item.accountId === userId ? 'items-end mr-10px' : ''">
-              <span class="text-12px select-none color-#909090" v-if="activeItem.type === RoomTypeEnum.GROUP">
-                {{ item.accountId === userId ? item.value : activeItem.accountName }}
-              </span>
-              <!--  右键菜单及其气泡样式  -->
+              <ContextMenu :menu="optionsList" :special-menu="report">
+                <span class="text-12px select-none color-#909090" v-if="activeItem.type === RoomTypeEnum.GROUP">
+                  {{ item.accountId === userId ? item.value : activeItem.accountName }}
+                </span>
+              </ContextMenu>
+              <!--  气泡样式  -->
               <ContextMenu
                 :data-key="item.accountId === userId ? `U${item.key}` : `Q${item.key}`"
                 @select="$event.click(item.key)"
@@ -46,7 +50,6 @@
                   style="white-space: pre-wrap"
                   :class="[
                     { active: activeBubble === item.key },
-                    activeItem.type === RoomTypeEnum.GROUP ? '' : 'm-[10px_0]',
                     item.accountId === userId ? 'bubble-oneself' : 'bubble'
                   ]">
                   <span v-html="item.content"></span>
@@ -54,10 +57,7 @@
 
                 <!--  消息为为图片类型(不固定宽度和高度), 多张图片时渲染  -->
                 <n-image-group v-if="Array.isArray(item.content) && item.type === MsgEnum.IMAGE">
-                  <n-space
-                    class="photo-wall"
-                    vertical
-                    :class="activeItem.type === RoomTypeEnum.GROUP ? '' : 'm-[10px_0]'">
+                  <n-space class="photo-wall" vertical>
                     <n-image
                       v-for="(src, index) in item.content"
                       :key="index"
@@ -74,7 +74,6 @@
                   :img-props="{ style: { maxWidth: '325px', maxHeight: '165px' } }"
                   show-toolbar-tooltip
                   style="border-radius: 8px"
-                  :class="activeItem.type === RoomTypeEnum.GROUP ? '' : 'm-[10px_0]'"
                   :src="item.content"></n-image>
               </ContextMenu>
             </div>
@@ -188,7 +187,46 @@ const { activeItem } = defineProps<{
 // })
 // const message = computed(() => msg.value)
 
-/* 右键菜单列表 */
+/* 右键用户信息菜单(单聊的时候显示) */
+const optionsList = computed(() => {
+  if (activeItem.type === RoomTypeEnum.GROUP) {
+    return [
+      {
+        label: '发送信息',
+        icon: 'message-action',
+        click: () => {}
+      },
+      {
+        label: 'TA',
+        icon: 'aite',
+        click: () => {}
+      },
+      {
+        label: '查看资料',
+        icon: 'notes',
+        click: () => {}
+      },
+      {
+        label: '添加好友',
+        icon: 'people-plus',
+        click: () => {}
+      }
+    ]
+  }
+})
+/* 举报选项 */
+const report = computed(() => {
+  if (activeItem.type === RoomTypeEnum.GROUP) {
+    return [
+      {
+        label: '举报',
+        icon: 'caution',
+        click: () => {}
+      }
+    ]
+  }
+})
+/* 右键消息菜单列表 */
 const menuList = ref<OPT.RightMenu[]>([
   {
     label: '复制',

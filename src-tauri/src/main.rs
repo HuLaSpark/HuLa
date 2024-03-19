@@ -11,10 +11,11 @@ mod common;
 #[tauri::command]
 fn reset_set_window<R: Runtime>(app: tauri::AppHandle<R>, label: String) {
     let window = app.get_window(&label).unwrap();
-    set_shadow(&window, true).expect("Unsupported platform!");
+    #[cfg(any(windows, target_os = "macos"))]
+    set_shadow(&window, true).unwrap();
 
     #[cfg(target_os = "macos")]
-    window_vibrancy::apply_acrylic(&window, Some((255, 255, 255, 1)))
+    window_vibrancy::apply_vibrancy(&window, NSVisualEffectMaterial::Sidebar)
         .expect("Unsupported platform! 'apply_vibrancy' is only supported on macOS");
 
     #[cfg(target_os = "windows")]

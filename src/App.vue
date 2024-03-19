@@ -13,7 +13,7 @@ import { onlineStatus } from '@/stores/onlineStatus.ts'
 
 const settingStore = setting()
 const OLStatusStore = onlineStatus()
-const { themes } = storeToRefs(settingStore)
+const { themes, tray } = storeToRefs(settingStore)
 
 /* 禁止图片以及输入框的拖拽 */
 const preventDrag = (e: MouseEvent) => {
@@ -25,6 +25,9 @@ const preventDrag = (e: MouseEvent) => {
 }
 
 onMounted(() => {
+  if (!tray.value.notTips) {
+    tray.value.tips = false
+  }
   // 判断localStorage中是否有设置主题
   if (!localStorage.getItem(StoresEnum.SETTING)) {
     settingStore.init(ThemeEnum.LIGHT)

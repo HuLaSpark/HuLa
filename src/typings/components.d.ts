@@ -9,12 +9,12 @@ declare module 'vue' {
   export interface GlobalComponents {
     ActionBar: typeof import('./../components/windows/ActionBar.vue')['default']
     ChatBox: typeof import('./../components/rightBox/chatBox/index.vue')['default']
-    ChatFooter: typeof import('./../components/rightBox/chatBox/chatFooter.vue')['default']
-    ChatHeader: typeof import('./../components/rightBox/chatBox/chatHeader.vue')['default']
-    ChatMain: typeof import('./../components/rightBox/chatBox/chatMain.vue')['default']
+    ChatFooter: typeof import('./../components/rightBox/chatBox/ChatFooter.vue')['default']
+    ChatHeader: typeof import('./../components/rightBox/chatBox/ChatHeader.vue')['default']
+    ChatMain: typeof import('./../components/rightBox/chatBox/ChatMain.vue')['default']
     ContextMenu: typeof import('./../components/common/ContextMenu.vue')['default']
     Details: typeof import('./../components/rightBox/Details.vue')['default']
-    Image: typeof import('./../components/rightBox/renderMessage/image.vue')['default']
+    Image: typeof import('./../components/rightBox/renderMessage/Image.vue')['default']
     MsgInput: typeof import('./../components/rightBox/MsgInput/index.vue')['default']
     NaiveProvider: typeof import('./../components/common/NaiveProvider.vue')['default']
     NAlert: typeof import('naive-ui')['NAlert']
@@ -42,6 +42,7 @@ declare module 'vue' {
     NNotificationProvider: typeof import('naive-ui')['NNotificationProvider']
     NPopover: typeof import('naive-ui')['NPopover']
     NQrCode: typeof import('naive-ui')['NQrCode']
+    NRadio: typeof import('naive-ui')['NRadio']
     NScrollbar: typeof import('naive-ui')['NScrollbar']
     NSkeleton: typeof import('naive-ui')['NSkeleton']
     NSpace: typeof import('naive-ui')['NSpace']
@@ -53,6 +54,6 @@ declare module 'vue' {
     RenderMessage: typeof import('./../components/rightBox/renderMessage/index.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
-    Text: typeof import('./../components/rightBox/renderMessage/text.vue')['default']
+    Text: typeof import('./../components/rightBox/renderMessage/Text.vue')['default']
   }
 }
