@@ -93,6 +93,11 @@ export const useWindow = () => {
     if (isExistsWinds) {
       // 如果窗口已存在，首先检查是否最小化了
       const minimized = await isExistsWinds.isMinimized()
+      // 检查是否是隐藏
+      const hidden = await isExistsWinds.isVisible()
+      if (!hidden) {
+        await isExistsWinds.show()
+      }
       if (minimized) {
         // 如果已最小化，恢复窗口
         await isExistsWinds.unminimize()

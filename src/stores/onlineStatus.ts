@@ -29,9 +29,13 @@ export const onlineStatus = defineStore(StoresEnum.ONLINE_STATUS, {
     setOnlineStatus(url: string, title: string) {
       this.url = url
       this.title = title
-    },
-    setColor(color: string) {
-      this.bgColor = color
+      const img = new Image()
+      img.src = url
+      img.onload = async () => {
+        const colors = await colorthief.getColor(img, 3)
+        this.bgColor = `rgba(${colors.join(',')}, 0.4)`
+        await emit(EventEnum.SET_OL_STS, { url: this.url, title: this.title, bgColor: this.bgColor })
+      }
     }
   }
 })

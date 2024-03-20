@@ -66,7 +66,19 @@
         "height": 448,
         "skipTaskbar": false,
         "decorations": false,
-        "transparent":true
+        "transparent": true
+      },
+      {
+        "label": "tray",
+        "url": "/tray",
+        "resizable": false,
+        "center": false,
+        "visible": false,
+        "width": 130,
+        "height": 356,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "decorations": false
       }
     ],
     "systemTray": {

@@ -16,6 +16,6 @@ appWindow.onCloseRequested(async (e) => {
 })
 
 onMounted(async () => {
-  await emit('window-ready')
+  await emit(EventEnum.ALONE)
 })
 </script>

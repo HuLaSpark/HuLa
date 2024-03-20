@@ -91,6 +91,8 @@ import { setting } from '@/stores/setting.ts'
 import { emit, listen } from '@tauri-apps/api/event'
 import { CloseBxEnum, EventEnum } from '@/enums'
 import { storeToRefs } from 'pinia'
+import { delay } from 'lodash-es'
+import { PersistedStateOptions } from 'pinia-plugin-persistedstate'
 
 /**
  * 新版defineProps可以直接结构 { minW, maxW, closeW } 如果需要使用默认值withDefaults的时候使用新版解构方式会报错
@@ -114,7 +116,7 @@ const props = withDefaults(
     shrinkStatus: true
   }
 )
-const { minW, maxW, closeW, topWinLabel, shrinkStatus } = toRefs(props)
+const { minW, maxW, closeW, topWinLabel, shrinkStatus, currentLabel } = toRefs(props)
 const alwaysOnTopStore = alwaysOnTop()
 const settingStore = setting()
 const { tray } = storeToRefs(settingStore)
@@ -206,6 +208,25 @@ const handleConfirm = async () => {
     })
   }
 }
+
+// TODO 这里写入设置中让用户决定是否按下esc来关闭窗口 (nyh -> 2024-03-20 23:41:43)
+/* 监听是否按下esc */
+const isEsc = (e: PersistedStateOptions) => {
+  // 判断按下的是否是esc
+  if (e.key === 'Escape') {
+    delay(() => {
+      closeWindow(currentLabel.value!)
+    }, 300)
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', (e) => isEsc(e))
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', (e) => isEsc(e))
+})
 </script>
 
 <style scoped lang="scss">

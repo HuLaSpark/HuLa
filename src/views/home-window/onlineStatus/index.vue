@@ -5,7 +5,7 @@
     <n-space
       vertical
       :size="130"
-      :style="`background: linear-gradient(to bottom, ${RGBA} 0%, #f1f1f1 100%)`"
+      :style="`background: linear-gradient(to bottom, ${activeItem.bgColor} 0%, #f1f1f1 100%)`"
       class="wh-full p-20px box-border">
       <!-- 当前选中的状态 -->
       <n-flex justify="center" align="center" class="pt-80px">
@@ -40,19 +40,17 @@
 import { statusItem } from './config.ts'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
 import { storeToRefs } from 'pinia'
+import { listen } from '@tauri-apps/api/event'
 import { EventEnum } from '@/enums'
-import { emit } from '@tauri-apps/api/event'
-import ColorThief from 'colorthief'
 
-const colorthief = new ColorThief()
 const OLStatusStore = onlineStatus()
-const RGBA = ref()
-const { url, title } = storeToRefs(OLStatusStore)
+const { url, title, bgColor } = storeToRefs(OLStatusStore)
 /* 选中的状态 */
 const activeItem = reactive({
   index: -1,
-  title: '',
-  url: ''
+  title: title.value,
+  url: url.value,
+  bgColor: bgColor?.value
 })
 
 /**
@@ -61,31 +59,18 @@ const activeItem = reactive({
  * @param index 选中的下标
  */
 const handleActive = async (item: OPT.Online, index: number) => {
+  OLStatusStore.setOnlineStatus(item.url, item.title)
   activeItem.index = index
   activeItem.title = item.title
   activeItem.url = item.url
-  OLStatusStore.setOnlineStatus(item.url, item.title)
-  await getBGColor(item.url, item.title)
-}
-
-/* 获取图片的背景颜色 */
-const getBGColor = async (url: string, title: string) => {
-  const img = new Image()
-  img.src = url
-  img.onload = async () => {
-    const colors = await colorthief.getColor(img, 3)
-    RGBA.value = `rgba(${colors.join(',')}, 0.4)`
-    OLStatusStore.setColor(`rgba(${colors.join(',')}, 0.4)`)
-    await emit(EventEnum.SET_OL_STS, { url: url, title: title, bgColor: RGBA.value })
-  }
+  await listen(EventEnum.SET_OL_STS, (e) => {
+    const val = e.payload as OPT.Online
+    activeItem.bgColor = val.bgColor
+  })
 }
 
 onMounted(async () => {
-  /* 第一次没有选状态的时候随机选中一个状态 */
-  activeItem.title = title.value
-  activeItem.url = url.value
   activeItem.index = statusItem.findIndex((item) => item.title === activeItem.title)
-  await getBGColor(activeItem.url, activeItem.title)
 })
 </script>
 <style scoped lang="scss">

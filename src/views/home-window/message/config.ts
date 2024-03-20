@@ -32,8 +32,8 @@ const handleMsgClick = (item: MockItem) => {
   const data = { msgBoxShow, item }
   Mitt.emit('msgBoxShow', data)
   // 判断是否打开了独立的窗口
-  if (aloneWin.value.has(`alone${item.key}`)) {
-    checkWinExist(`alone${item.key}`).then()
+  if (aloneWin.value.has(EventEnum.ALONE + item.key)) {
+    checkWinExist(EventEnum.ALONE + item.key).then()
     activeItem.value = -1
     Mitt.emit('msgBoxShow', { item: -1 })
   }
@@ -57,10 +57,10 @@ const openAloneWin = async (item: MockItem) => {
     Mitt.emit('msgBoxShow', { item: -1 })
   }
   // TODO 传递用户信息(这里的label最好使用用户唯一的id来代替) (nyh -> 2024-03-18 12:18:10)
-  await createWebviewWindow(item.accountName, `alone${item.key}`, 720, 800)
-  await listen('window-ready', () => {
-    emit(`alone${item.key}`, item)
-    aloneWin.value.add(`alone${item.key}`)
+  await createWebviewWindow(item.accountName, EventEnum.ALONE + item.key, 720, 800)
+  await listen(EventEnum.ALONE, () => {
+    emit(EventEnum.ALONE + item.key, item)
+    aloneWin.value.add(EventEnum.ALONE + item.key)
   })
 }
 

@@ -1,25 +1,6 @@
-use tauri::{AppHandle, CustomMenuItem, Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem, SystemTraySubmenu};
+use std::sync::Arc;
+use tauri::{AppHandle, Manager, PhysicalPosition, SystemTrayEvent, WindowEvent};
 
-/// 托盘菜单
-pub fn menu() -> SystemTray {
-    let quit = CustomMenuItem::new("quit".to_string(), "退出");
-    let show = CustomMenuItem::new("show".to_string(), "打开主面板");
-    let change_ico = CustomMenuItem::new("change_ico".to_string(), "更改图标");
-    let tray_menu = SystemTrayMenu::new()
-        .add_submenu(SystemTraySubmenu::new(
-            "Language", // 语言菜单
-            SystemTrayMenu::new()
-                .add_item(CustomMenuItem::new("lang_english".to_string(), "English"))
-                .add_item(CustomMenuItem::new("lang_zh_CN".to_string(), "简体中文"))
-                .add_item(CustomMenuItem::new("lang_zh_HK".to_string(), "繁体中文")),
-        ))
-        .add_native_item(SystemTrayMenuItem::Separator) // 分割线
-        .add_item(show)
-        .add_item(change_ico)
-        .add_native_item(SystemTrayMenuItem::Separator)
-        .add_item(quit);
-    SystemTray::new().with_menu(tray_menu)
-}
 
 /// 打开主页
 pub fn open_home(app: &AppHandle) {
@@ -35,11 +16,43 @@ pub fn open_home(app: &AppHandle) {
     window.set_focus().unwrap();
 }
 
+/// 还原图标
+pub fn red_icon(app: &AppHandle) {
+    app.tray_handle()
+        .set_icon(tauri::Icon::Raw(
+            include_bytes!("../../icons/icon.ico").to_vec(),
+        ))
+        .unwrap();
+}
+
 /// 托盘事件
 pub fn handler(app: &AppHandle, event: SystemTrayEvent) {
     match event {
         SystemTrayEvent::LeftClick { .. } => {
             open_home(app);
+            red_icon(app);
+        },
+        SystemTrayEvent::RightClick { position: p, size: _, .. } => {
+            // TODO 这里需要根据鼠标位置来确定窗口的位置 (nyh -> 2024-03-20 13:51:01)
+            let tray_window = Arc::new(app.get_window("tray").expect("没有该窗口"));
+            let size = tray_window.outer_size().unwrap();
+            let position_y = p.y - size.height as f64;
+            let position_x = p.x + 10.0;
+            tray_window.set_position(PhysicalPosition::new(position_x,position_y)).unwrap();
+            tray_window.show().unwrap();
+            tray_window.set_always_on_top(true).unwrap();//不置顶这个窗口会被挡住
+            tray_window.set_focus().unwrap();
+            let arc_tray = tray_window.clone();
+            tray_window.on_window_event(move |event|match event{
+                WindowEvent::CloseRequested { .. } => {}
+                WindowEvent::Destroyed => {}
+                WindowEvent::Focused(b) => {
+                    if !b {
+                        arc_tray.hide().unwrap();
+                    }
+                }
+                _ => {}
+            })
         },
         SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
             "change_ico" => { // 更新托盘图标
@@ -57,52 +70,8 @@ pub fn handler(app: &AppHandle, event: SystemTrayEvent) {
                 window.close().unwrap();
                 window.emit("exit", ()).unwrap()
             }
-            lang if lang.contains("lang_") => { // 选择语言，匹配 id 前缀包含 `lang_` 的事件
-                Lang::new(
-                    app,
-                    id, // 点击菜单的 id
-                    vec![
-                        Lang {
-                            name: "English",
-                            id: "lang_english",
-                        },
-                        Lang {
-                            name: "繁体中文",
-                            id: "lang_zh_HK",
-                        },
-                        Lang {
-                            name: "简体中文",
-                            id: "lang_zh_CN",
-                        },
-                    ],
-                );
-            }
             _ => {}
         },
         _ => {}
-    }
-}
-
-struct Lang<'a> {
-    name: &'a str,
-    id: &'a str,
-}
-
-impl Lang<'static> {
-    fn new(app: &AppHandle, id: String, langs: Vec<Lang>) {
-        // 获取点击的菜单项的句柄
-        // 注意 `tray_handle` 可以在任何地方调用，只需在 setup 钩子上使用 `app.handle()` 获取 `AppHandle` 实例，将其移动到另一个函数或线程
-        langs.iter().for_each(|lang| {
-            let handle = app.tray_handle().get_item(lang.id);
-            if lang.id.to_string() == id.as_str() {
-                // 设置菜单名称
-                handle.set_title(format!("  {}", lang.name)).unwrap();
-                // 还可以使用 `set_selected`、`set_enabled` 和 `set_native_image`（仅限 macOS）
-                handle.set_selected(true).unwrap();
-            } else {
-                handle.set_title(lang.name).unwrap();
-                handle.set_selected(false).unwrap();
-            }
-        });
     }
 }

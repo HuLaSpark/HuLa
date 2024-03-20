@@ -1,5 +1,29 @@
 const statusItem: OPT.Online[] = [
   {
+    url: '/status/online.png',
+    title: '在线'
+  },
+  {
+    url: '/status/leave.png',
+    title: '离开'
+  },
+  {
+    url: '/status/busy.png',
+    title: '忙碌'
+  },
+  {
+    url: '/status/IonBan.png',
+    title: '请勿打扰'
+  },
+  {
+    url: '/status/cloaking.png',
+    title: '隐身'
+  },
+  {
+    url: '/status/offline.png',
+    title: '离线'
+  },
+  {
     url: '/status/weather_3x.png',
     title: '今日天气'
   },

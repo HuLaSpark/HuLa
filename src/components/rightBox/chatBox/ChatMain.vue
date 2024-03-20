@@ -131,6 +131,7 @@ import { MsgEnum, RoomTypeEnum } from '@/enums'
 import { MockItem } from '@/services/types.ts'
 import Mitt from '@/utils/Bus.ts'
 import { VirtualListInst } from 'naive-ui'
+import { invoke } from '@tauri-apps/api/tauri'
 
 const activeBubble = ref(-1)
 const userId = ref(10086)
@@ -386,6 +387,9 @@ const closeMenu = (event: any) => {
 }
 
 onMounted(() => {
+  invoke('set_tray_icon').catch((error) => {
+    console.error('设置图标失败:', error)
+  })
   Mitt.on('handleSendMessage', (event) => {
     handleSendMessage(event)
   })

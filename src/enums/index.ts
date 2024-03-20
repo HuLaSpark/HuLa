@@ -36,7 +36,9 @@ export enum EventEnum {
   /** 退出程序 */
   EXIT = 'exit',
   /** 设置在线状态 */
-  SET_OL_STS = 'setOnlineStatus'
+  SET_OL_STS = 'setOnlineStatus',
+  /** 独立窗口 */
+  ALONE = 'alone'
 }
 
 /** 主题类型 */
