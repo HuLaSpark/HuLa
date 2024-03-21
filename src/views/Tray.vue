@@ -1,13 +1,13 @@
 <template>
-  <n-space vertical :size="6" class="tray">
-    <n-space vertical :size="6">
+  <n-flex vertical :size="6" class="tray">
+    <n-flex vertical :size="6">
       <n-flex
         v-for="(item, index) in statusItem.slice(0, 6)"
         :key="index"
         align="center"
         :size="10"
         @click="toggleStatus(item.url, item.title)"
-        class="p-6px rounded-4px hover:bg-#eee">
+        class="p-6px rounded-4px hover:bg-[--tray-hover]">
         <img class="size-14px" :src="item.url" alt="" />
         <span>{{ item.title }}</span>
       </n-flex>
@@ -15,32 +15,36 @@
         @click="createWebviewWindow('在线状态', 'onlineStatus', 320, 480)"
         align="center"
         :size="10"
-        class="p-6px rounded-4px hover:bg-#eee">
+        class="p-6px rounded-4px hover:bg-[--tray-hover]">
         <svg class="size-14px"><use href="#more"></use></svg>
         <span>更多状态</span>
       </n-flex>
 
       <component :is="division" />
-      <n-flex align="center" :size="10" class="p-[8px_6px] rounded-4px hover:bg-#eee">
+      <n-flex align="center" :size="10" class="p-[8px_6px] rounded-4px hover:bg-[--tray-hover]">
         <span>打开所有声音</span>
       </n-flex>
 
       <component :is="division" />
-      <n-flex @click="checkWinExist('home')" align="center" :size="10" class="p-[8px_6px] rounded-4px hover:bg-#eee">
+      <n-flex
+        @click="checkWinExist('home')"
+        align="center"
+        :size="10"
+        class="p-[8px_6px] rounded-4px hover:bg-[--tray-hover]">
         <span>打开主面板</span>
       </n-flex>
 
       <component :is="division" />
-      <n-flex @click="exit" align="center" :size="10" class="p-[8px_6px] rounded-4px hover:bg-#f5dce1">
+      <n-flex @click="exit" align="center" :size="10" class="p-[8px_6px] rounded-4px hover:bg-[--tray-hover-e]">
         <span>退出</span>
       </n-flex>
-    </n-space>
-  </n-space>
+    </n-flex>
+  </n-flex>
 </template>
 <script setup lang="tsx">
 import { useWindow } from '@/hooks/useWindow.ts'
 import { invoke } from '@tauri-apps/api/tauri'
-import { statusItem } from '../home-window/onlineStatus/config.ts'
+import { statusItem } from './home-window/onlineStatus/config.ts'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
 import { appWindow } from '@tauri-apps/api/window'
 

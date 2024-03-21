@@ -45,25 +45,19 @@
     </div>
 
     <!-- 是否退到托盘提示框 -->
-    <n-modal v-model:show="tray.tips" class="w-350px border-rd-8px">
+    <n-modal v-if="!tray.notTips" v-model:show="tray.tips" class="w-350px border-rd-8px">
       <div class="bg-[--bg-popover] w-360px h-full p-6px box-border flex flex-col">
         <svg @click="tray.tips = false" class="w-12px h-12px ml-a cursor-pointer select-none">
           <use href="#close"></use>
         </svg>
-        <n-space vertical :size="20" class="p-[22px_10px_10px_22px] select-none">
+        <n-flex vertical :size="20" class="p-[22px_10px_10px_22px] select-none">
           <span class="text-16px">最小化还是直接退出程序?</span>
           <label class="text-14px text-#707070 flex gap-6px lh-16px items-center">
-            <n-radio
-              :checked="trayRef.type === CloseBxEnum.HIDE"
-              :value="CloseBxEnum.HIDE"
-              @change="trayRef.type = CloseBxEnum.HIDE" />
+            <n-radio :checked="trayRef.type === CloseBxEnum.HIDE" @change="trayRef.type = CloseBxEnum.HIDE" />
             <span>最小化到系统托盘</span>
           </label>
           <label class="text-14px text-#707070 flex gap-6px lh-16px items-center">
-            <n-radio
-              :checked="trayRef.type === CloseBxEnum.CLOSE"
-              :value="CloseBxEnum.CLOSE"
-              @change="trayRef.type = CloseBxEnum.CLOSE" />
+            <n-radio :checked="trayRef.type === CloseBxEnum.CLOSE" @change="trayRef.type = CloseBxEnum.CLOSE" />
             <span>直接退出程序</span>
           </label>
           <label class="text-12px text-#909090 flex gap-6px justify-end items-center">
@@ -75,7 +69,7 @@
             <n-button @click="handleConfirm" class="w-78px" color="#059669">确定</n-button>
             <n-button @click="tray.tips = false" class="w-78px" secondary>取消</n-button>
           </n-flex>
-        </n-space>
+        </n-flex>
       </div>
     </n-modal>
   </div>
@@ -91,8 +85,8 @@ import { setting } from '@/stores/setting.ts'
 import { emit, listen } from '@tauri-apps/api/event'
 import { CloseBxEnum, EventEnum } from '@/enums'
 import { storeToRefs } from 'pinia'
-import { delay } from 'lodash-es'
 import { PersistedStateOptions } from 'pinia-plugin-persistedstate'
+import { invoke } from '@tauri-apps/api/tauri'
 
 /**
  * 新版defineProps可以直接结构 { minW, maxW, closeW } 如果需要使用默认值withDefaults的时候使用新版解构方式会报错
@@ -119,12 +113,13 @@ const props = withDefaults(
 const { minW, maxW, closeW, topWinLabel, shrinkStatus, currentLabel } = toRefs(props)
 const alwaysOnTopStore = alwaysOnTop()
 const settingStore = setting()
-const { tray } = storeToRefs(settingStore)
+const { tray, escClose } = storeToRefs(settingStore)
 const { resizeWindow } = useWindow()
 const trayRef = reactive({
   type: tray.value.type,
   notTips: tray.value.notTips
 })
+const ESC = ref(escClose.value)
 // 窗口是否最大化状态
 const windowMaximized = ref(false)
 // 窗口是否置顶状态
@@ -140,9 +135,23 @@ watchEffect(() => {
   listen(EventEnum.EXIT, async () => {
     /* 退出账号前把窗口全部关闭 */
     if (appWindow.label !== 'login') {
-      await appWindow.close()
+      await invoke('exit').catch((error) => {
+        console.error('退出失败:', error)
+      })
     }
   })
+  listen(EventEnum.CLOSE_HOME, (e) => {
+    trayRef.type = (e.payload as STO.Setting['tray']).type
+    trayRef.notTips = (e.payload as STO.Setting['tray']).notTips
+    ESC.value = (e.payload as STO.Setting).escClose
+    tray.value.tips = false
+  })
+
+  if (ESC.value) {
+    window.addEventListener('keydown', (e) => isEsc(e))
+  } else {
+    window.removeEventListener('keydown', (e) => isEsc(e))
+  }
 })
 
 // todo 放大的时候图个拖动了窗口，窗口会变回原来的大小，但是图标的状态没有改变
@@ -201,7 +210,6 @@ const handleConfirm = async () => {
   tray.value.tips = false
   if (tray.value.type === CloseBxEnum.CLOSE) {
     await emit(EventEnum.EXIT)
-    await appWindow.close()
   } else {
     await nextTick(() => {
       appWindow.hide()
@@ -209,20 +217,13 @@ const handleConfirm = async () => {
   }
 }
 
-// TODO 这里写入设置中让用户决定是否按下esc来关闭窗口 (nyh -> 2024-03-20 23:41:43)
 /* 监听是否按下esc */
 const isEsc = (e: PersistedStateOptions) => {
   // 判断按下的是否是esc
-  if (e.key === 'Escape') {
-    delay(() => {
-      closeWindow(currentLabel.value!)
-    }, 300)
+  if (e.key === 'Escape' && ESC.value) {
+    closeWindow(currentLabel.value!)
   }
 }
-
-onMounted(() => {
-  window.addEventListener('keydown', (e) => isEsc(e))
-})
 
 onUnmounted(() => {
   window.removeEventListener('keydown', (e) => isEsc(e))

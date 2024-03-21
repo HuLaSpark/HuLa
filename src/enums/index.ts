@@ -38,7 +38,9 @@ export enum EventEnum {
   /** 设置在线状态 */
   SET_OL_STS = 'setOnlineStatus',
   /** 独立窗口 */
-  ALONE = 'alone'
+  ALONE = 'alone',
+  /** 修改关闭主面板的行为 */
+  CLOSE_HOME = 'closeHome'
 }
 
 /** 主题类型 */

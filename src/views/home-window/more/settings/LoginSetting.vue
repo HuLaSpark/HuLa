@@ -1,7 +1,7 @@
 <template>
   <!-- 登录设置 -->
-  <n-space vertical :size="20">
-    <n-space :size="14" vertical class="item-box">
+  <n-flex vertical :size="20">
+    <n-flex :size="14" vertical class="item-box">
       <n-flex align="center" justify="space-between">
         <span>启动HuLa程序后自动登录账号</span>
         <n-switch size="small" v-model:value="autoLogin" />
@@ -13,16 +13,16 @@
         <span>电脑开机后自动启动HuLa程序</span>
         <n-switch size="small" v-model:value="autoStartup" />
       </n-flex>
-    </n-space>
+    </n-flex>
 
     <n-flex align="center" justify="space-between" class="item-box">
-      <n-space vertical>
+      <n-flex vertical>
         <span>清空密码</span>
         <span class="text-12px text-#909090">清空后，下次需要使用扫码或者账密进行登录</span>
-      </n-space>
+      </n-flex>
       <n-button secondary type="primary" @click="clearInfo"> 清空密码 </n-button>
     </n-flex>
-  </n-space>
+  </n-flex>
 </template>
 
 <script setup lang="ts">

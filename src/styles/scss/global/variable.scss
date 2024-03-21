@@ -45,6 +45,9 @@
   // 个人信息框背景颜色
   --info-hover: #eee;
   --info-text-color: #707070;
+  // 系统托盘hover样式
+  --tray-hover: #eee;
+  --tray-hover-e: #f5dce1;
 }
 
 html[data-theme='dark'] {
@@ -93,6 +96,9 @@ html[data-theme='dark'] {
   // 个人信息框背景颜色
   --info-hover: #3b3b3b;
   --info-text-color: #ccc;
+  // 系统托盘hover样式
+  --tray-hover: #3b3b3b;
+  --tray-hover-e: #bb8188;
 }
 /*! end */
 // 线性动画

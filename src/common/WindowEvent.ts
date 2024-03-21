@@ -1,6 +1,6 @@
 import { appWindow, WebviewWindow } from '@tauri-apps/api/window'
-import { EventEnum } from '@/enums'
-import { emit } from '@tauri-apps/api/event'
+import { CloseBxEnum, EventEnum } from '@/enums'
+import { emit, listen } from '@tauri-apps/api/event'
 import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
 
@@ -28,7 +28,21 @@ export const closeWindow = async (label: string) => {
   if (label === 'home') {
     const settingStore = setting()
     const { tray } = storeToRefs(settingStore)
-    tray.value.tips = true
+    await listen(EventEnum.CLOSE_HOME, (e) => {
+      tray.value.type = (e.payload as STO.Setting['tray']).type
+      tray.value.notTips = (e.payload as STO.Setting['tray']).notTips
+    })
+    if (!tray.value.notTips) {
+      tray.value.tips = true
+    } else {
+      if (tray.value.type === CloseBxEnum.CLOSE) {
+        await emit(EventEnum.EXIT)
+      } else {
+        await nextTick(() => {
+          appWindow.hide()
+        })
+      }
+    }
   } else {
     await appWindow.close()
   }

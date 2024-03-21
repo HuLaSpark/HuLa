@@ -6,7 +6,7 @@
     <ActionBar :max-w="false" :shrink="false" />
 
     <!--  手动登录样式  -->
-    <n-space vertical :size="25" v-if="!isAutoLogin">
+    <n-flex vertical :size="25" v-if="!isAutoLogin">
       <!-- 头像 -->
       <n-flex justify="center" class="w-full mt-35px">
         <img
@@ -93,13 +93,13 @@
           {{ loginText }}
         </n-button>
       </n-flex>
-    </n-space>
+    </n-flex>
 
     <!-- 自动登录样式 -->
-    <n-space vertical :size="40" v-else>
+    <n-flex vertical :size="40" v-else>
       <n-flex justify="center" class="text-28px color-#059669 mt-25px font-1000">HuLA</n-flex>
 
-      <n-space :size="30" vertical>
+      <n-flex :size="30" vertical>
         <!-- 头像 -->
         <n-flex justify="center">
           <img
@@ -112,7 +112,7 @@
         <n-flex justify="center">
           <n-ellipsis style="max-width: 200px" class="text-18px">{{ login.accountInfo.name }}</n-ellipsis>
         </n-flex>
-      </n-space>
+      </n-flex>
 
       <n-flex justify="center">
         <n-button
@@ -124,7 +124,7 @@
           {{ loginText }}
         </n-button>
       </n-flex>
-    </n-space>
+    </n-flex>
 
     <!-- 顶部操作栏 -->
     <n-flex justify="center" class="text-14px">

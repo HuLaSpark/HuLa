@@ -8,6 +8,8 @@ export const setting = defineStore(StoresEnum.SETTING, {
       content: '',
       pattern: ''
     },
+    /* 是否启用ESC关闭窗口 */
+    escClose: true,
     /* 系统托盘 */
     tray: {
       type: CloseBxEnum.HIDE,

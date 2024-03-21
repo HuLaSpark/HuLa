@@ -57,7 +57,7 @@
 
                 <!--  消息为为图片类型(不固定宽度和高度), 多张图片时渲染  -->
                 <n-image-group v-if="Array.isArray(item.content) && item.type === MsgEnum.IMAGE">
-                  <n-space class="photo-wall" vertical>
+                  <n-flex class="photo-wall" vertical>
                     <n-image
                       v-for="(src, index) in item.content"
                       :key="index"
@@ -65,7 +65,7 @@
                       show-toolbar-tooltip
                       style="border-radius: 8px"
                       :src="src"></n-image>
-                  </n-space>
+                  </n-flex>
                 </n-image-group>
 
                 <!-- 单张图片时渲染 -->

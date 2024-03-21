@@ -7,7 +7,7 @@
         class="w-650px bg-[--center-bg-color] h-full p-[10px_0] box-border rounded-4px">
         <n-flex justify="center">
           <!--  动态内容框   -->
-          <n-space
+          <n-flex
             vertical
             v-for="item in dynamicList"
             :key="item.id"
@@ -15,7 +15,7 @@
             <n-flex align="center">
               <!--  用户的头像和用户名以及个签    -->
               <img class="w-45px h-45px bg-#ccc rounded-50% select-none" :src="item.avatar" alt="" />
-              <n-space vertical style="flex: 1">
+              <n-flex vertical style="flex: 1">
                 <n-flex justify="space-between" align="center">
                   <label class="text-14px flex items-center gap-5px">
                     <span :class="item.isAuth ? 'text-#059669' : ''">{{ item.user }}</span>
@@ -33,10 +33,10 @@
                 </n-flex>
 
                 <span class="text-12px color-#707070">个性签名</span>
-              </n-space>
+              </n-flex>
 
               <!--  个签照片墙  -->
-              <n-space vertical>
+              <n-flex vertical>
                 <n-scrollbar style="max-height: 240px; user-select: none">
                   <n-image-group>
                     <n-flex>
@@ -53,9 +53,9 @@
                 </n-scrollbar>
 
                 <n-input />
-              </n-space>
+              </n-flex>
             </n-flex>
-          </n-space>
+          </n-flex>
         </n-flex>
       </n-scrollbar>
     </article>

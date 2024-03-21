@@ -49,7 +49,7 @@
       </n-icon-wrapper>
     </n-flex>
 
-    <n-space vertical :size="20">
+    <n-flex vertical :size="20">
       <span>群成员：({{ options.length }}人)</span>
 
       <n-avatar-group :options="options" :size="40" :max="4">
@@ -67,7 +67,7 @@
           </n-dropdown>
         </template>
       </n-avatar-group>
-    </n-space>
+    </n-flex>
   </div>
 </template>
 <script setup lang="ts">

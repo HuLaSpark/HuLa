@@ -2,18 +2,18 @@
   <main class="login-box wh-full select-none">
     <ActionBar :shrink="false" :max-w="false" />
 
-    <n-space vertical align="center" :size="30" class="pt-60px">
+    <n-flex vertical align="center" :size="30" class="pt-80px">
       <img class="w-120px h-120px rounded-50%" src="/logo.png" alt="" />
 
-      <n-space vertical align="center" :size="20">
+      <n-flex vertical align="center" :size="20">
         <n-flex justify="center" class="text-28px color-#059669 mt-25px font-1000">HuLA</n-flex>
         <span class="text-15px">版本: &nbsp; {{ _pkg.version }}(64位)</span>
-        <n-space vertical class="text-13px text-#909090" :size="8" align="center">
+        <n-flex vertical class="text-12px text-#909090" :size="8" align="center">
           <span>Copyright © 2023-2024 nongyehong</span>
           <span>All Rights Reserved.</span>
-        </n-space>
-      </n-space>
-    </n-space>
+        </n-flex>
+      </n-flex>
+    </n-flex>
   </main>
 </template>
 <script setup lang="ts">

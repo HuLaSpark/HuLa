@@ -2,10 +2,10 @@
   <main class="wh-full bg-#fff select-none">
     <ActionBar class="absolute right-0 w-full" :shrink="false" :max-w="false" :min-w="false" />
 
-    <n-space
+    <n-flex
       vertical
       :size="130"
-      :style="`background: linear-gradient(to bottom, ${activeItem.bgColor} 0%, #f1f1f1 100%)`"
+      :style="`background: linear-gradient(to bottom, ${RGBA} 0%, #f1f1f1 100%)`"
       class="wh-full p-20px box-border">
       <!-- 当前选中的状态 -->
       <n-flex justify="center" align="center" class="pt-80px">
@@ -14,10 +14,10 @@
       </n-flex>
 
       <!-- 状态 -->
-      <n-space vertical class="w-full h-100vh bg-#f1f1f1 rounded-6px box-border p-13px">
+      <n-flex vertical class="w-full h-100vh bg-#f1f1f1 rounded-6px box-border p-13px">
         <n-scrollbar style="max-height: 255px">
           <n-flex align="center" :size="10">
-            <n-space
+            <n-flex
               @click="handleActive(item, index)"
               :class="{ active: activeItem.index === index }"
               v-for="(item, index) in statusItem"
@@ -25,15 +25,15 @@
               vertical
               justify="center"
               align="center"
-              :size="2"
+              :size="8"
               class="status-item">
               <img class="w-24px h-24px" :src="item.url" alt="" />
               <span class="text-11px">{{ item.title }}</span>
-            </n-space>
+            </n-flex>
           </n-flex>
         </n-scrollbar>
-      </n-space>
-    </n-space>
+      </n-flex>
+    </n-flex>
   </main>
 </template>
 <script setup lang="ts">
@@ -49,8 +49,13 @@ const { url, title, bgColor } = storeToRefs(OLStatusStore)
 const activeItem = reactive({
   index: -1,
   title: title.value,
-  url: url.value,
-  bgColor: bgColor?.value
+  url: url.value
+})
+/* 这里不写入activeItem中是因为v-bind要绑定的值是响应式的 */
+const RGBA = ref(bgColor?.value)
+
+watchEffect(() => {
+  activeItem.index = statusItem.findIndex((item) => item.title === activeItem.title)
 })
 
 /**
@@ -63,29 +68,32 @@ const handleActive = async (item: OPT.Online, index: number) => {
   activeItem.index = index
   activeItem.title = item.title
   activeItem.url = item.url
-  await listen(EventEnum.SET_OL_STS, (e) => {
-    const val = e.payload as OPT.Online
-    activeItem.bgColor = val.bgColor
-  })
 }
 
 onMounted(async () => {
   activeItem.index = statusItem.findIndex((item) => item.title === activeItem.title)
+  await listen(EventEnum.SET_OL_STS, (e) => {
+    const val = e.payload as OPT.Online
+    activeItem.url = val.url
+    activeItem.title = val.title
+    RGBA.value = val.bgColor
+  })
 })
 </script>
 <style scoped lang="scss">
 .status-item {
   width: 56px;
   height: 56px;
+  border-radius: 8px;
+  transition: all 0.4s ease-in-out;
   &:not(.active):hover {
     background: #ccc;
-    border-radius: 8px;
     cursor: pointer;
   }
 }
 
 .active {
-  background: var(--bg-active-msg);
+  background: v-bind(RGBA);
   border-radius: 8px;
   cursor: pointer;
   span {

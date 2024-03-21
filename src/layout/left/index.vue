@@ -5,7 +5,7 @@
       v-model:show="info.show"
       trigger="click"
       :show-arrow="false"
-      placement="right-start"
+      :placement="shrinkStatus ? 'bottom-start' : 'right-start'"
       style="padding: 0; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px)">
       <template #trigger>
         <!-- 头像 -->
@@ -16,19 +16,19 @@
             @click.stop="openContent('在线状态', 'onlineStatus', 320, 480)"
             class="bg-[--bg-avatar] text-10px rounded-50% w-12px h-12px absolute bottom--2px right--2px"
             style="border: 2px solid var(--bg-avatar)">
-            <img class="rounded-50% wh-full" :src="url" alt="" />
+            <img class="rounded-50% wh-full" :src="info.url" alt="" />
           </div>
         </div>
       </template>
       <!-- 用户个人信息框 -->
-      <n-space
+      <n-flex
         vertical
         :size="26"
         class="wh-full p-15px box-border rounded-8px"
         :style="`background: linear-gradient(to bottom, ${info.bgColor} 0%, ${info.themeColor} 100%)`">
         <!-- 头像以及信息区域 -->
-        <n-flex justify="space-between" align="center" :size="50">
-          <n-space>
+        <n-flex justify="space-between" align="center" :size="25">
+          <n-flex>
             <img class="w-68px h-68px rounded-50% select-none" :src="'https://picsum.photos/140'" alt="" />
 
             <n-flex vertical justify="center" :size="10" class="text-[--text-color]">
@@ -44,7 +44,7 @@
                 <span>{{ info.title }}</span>
               </n-flex>
             </n-flex>
-          </n-space>
+          </n-flex>
 
           <n-flex vertical align="center" :size="5" class="item-hover">
             <svg class="w-20px h-20px"><use href="#thumbs-up"></use></svg>
@@ -60,7 +60,7 @@
         <n-flex :size="40" class="select-none">
           <span class="text-[--info-text-color]">动态</span>
           <n-image-group>
-            <n-space :size="6">
+            <n-flex :size="6" :class="shrinkStatus ? 'overflow-hidden w-180px' : ''" :wrap="false">
               <n-image
                 v-for="n in 4"
                 :key="n"
@@ -68,14 +68,14 @@
                 class="rounded-8px"
                 width="50"
                 src="https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg" />
-            </n-space>
+            </n-flex>
           </n-image-group>
         </n-flex>
 
         <n-flex justify="center" align="center" :size="40">
           <n-button secondary> 编辑资料 </n-button>
         </n-flex>
-      </n-space>
+      </n-flex>
     </n-popover>
 
     <div data-tauri-drag-region class="flex-1 mt-20px flex-col-x-center justify-between">
@@ -147,6 +147,7 @@ import { setting } from '@/stores/setting.ts'
 /*当前选中的元素 默认选中itemsTop的第一项*/
 const activeItem = ref<string>(itemsTop.value[0].url)
 const settingShow = ref(false)
+const shrinkStatus = ref(false)
 /* 已打开窗口的列表 */
 const openWindowsList = ref(new Set())
 const prefers = matchMedia('(prefers-color-scheme: dark)')
@@ -156,9 +157,9 @@ const { themes } = storeToRefs(settingStore)
 const OLStatusStore = onlineStatus()
 const { url, title, bgColor } = storeToRefs(OLStatusStore)
 const info = reactive({
-  url: url,
-  title: title,
-  bgColor: bgColor,
+  url: url.value,
+  title: title.value,
+  bgColor: bgColor?.value,
   themeColor: '#f1f1f1',
   show: false
 })
@@ -225,6 +226,9 @@ onMounted(async () => {
   pageJumps(activeItem.value)
   window.addEventListener('click', closeMenu, true)
 
+  Mitt.on('shrinkWindow', (event) => {
+    shrinkStatus.value = event as boolean
+  })
   await listen(EventEnum.WIN_SHOW, (e) => {
     // 如果已经存在就不添加
     if (openWindowsList.value.has(e.payload)) return
