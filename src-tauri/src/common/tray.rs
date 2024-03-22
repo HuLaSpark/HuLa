@@ -3,7 +3,7 @@ use tauri::{AppHandle, Manager, PhysicalPosition, SystemTrayEvent, WindowEvent};
 
 
 /// 打开主页
-pub fn open_home(app: &AppHandle) {
+fn open_home(app: &AppHandle) {
     let window = app.get_window("home").unwrap();
     let hide = window.is_visible().unwrap();
     let min = window.is_minimized().unwrap();
@@ -17,7 +17,7 @@ pub fn open_home(app: &AppHandle) {
 }
 
 /// 还原图标
-pub fn red_icon(app: &AppHandle) {
+fn red_icon(app: &AppHandle) {
     app.tray_handle()
         .set_icon(tauri::Icon::Raw(
             include_bytes!("../../icons/icon.ico").to_vec(),

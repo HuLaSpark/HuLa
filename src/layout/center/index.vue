@@ -40,6 +40,7 @@
 <script setup lang="ts">
 import Mitt from '@/utils/Bus.ts'
 import router from '@/router'
+import { MittEnum } from '@/enums'
 
 // const minWidth = 160 // 设置最小宽度
 // const maxWidth = 320 // 设置最大宽度
@@ -50,7 +51,7 @@ const width = ref(250) // 初始化宽度
 const shrinkStatus = ref(false)
 
 // todo 1.了解这里是怎么实现的 2.修改拖拽放大缩小的事件
-Mitt.on('shrinkWindow', (event) => {
+Mitt.on(MittEnum.SHRINK_WINDOW, (event) => {
   shrinkStatus.value = event as boolean
   width.value = 250
 })

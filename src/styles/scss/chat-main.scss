@@ -9,9 +9,9 @@
 }
 @mixin float($position: top) {
   @if $position == bottom {
-    @apply fixed z-10 bottom-210px right-50px w-fit select-none text-#059669 cursor-pointer;
+    @apply fixed z-10 bottom-210px w-fit select-none text-#059669 cursor-pointer;
   } @else {
-    @apply fixed z-10 top-80px right-50px w-fit select-none text-#059669 cursor-pointer;
+    @apply fixed z-10 top-80px w-fit select-none text-#059669 cursor-pointer;
   }
 }
 .chat-single:first-child {

@@ -46,11 +46,16 @@ import Mitt from '@/utils/Bus.ts'
 import { VueDraggable } from 'vue-draggable-plus'
 import { MockList } from '@/mock'
 import { activeItem, handleMsgClick, menuList, specialMenuList, handleMsgDblclick } from './config.ts'
+import { MittEnum } from '@/enums'
 
 const msgTotal = ref(0)
 
 watchEffect(() => {
-  Mitt.emit('updateMsgTotal', msgTotal.value)
+  Mitt.emit(MittEnum.UPDATE_MSG_TOTAL, msgTotal.value)
+  Mitt.on(MittEnum.TO_SEND_MSG, (event: any) => {
+    // TODO 如果当前信息栏中没有该信息就创建一条 (nyh -> 2024-03-22 01:05:22)
+    activeItem.value = event.id
+  })
 })
 
 onMounted(() => {

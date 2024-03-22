@@ -41,6 +41,12 @@ declare namespace OPT {
     click?: (...args: any[]) => void
   }
 
+  /* 详情页选项 */
+  type Details = {
+    url: string
+    click: (...args: any[]) => void
+  }
+
   /* 在线状态 */
   type Online = {
     url: string

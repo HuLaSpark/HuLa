@@ -137,7 +137,7 @@ import { delay } from 'lodash-es'
 import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
 import Mitt from '@/utils/Bus.ts'
-import { EventEnum, ThemeEnum } from '@/enums'
+import { EventEnum, MittEnum, ThemeEnum } from '@/enums'
 import { listen } from '@tauri-apps/api/event'
 import { itemsTop, itemsBottom, moreList } from './config.ts'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
@@ -170,12 +170,15 @@ const followOS = () => {
 }
 
 watchEffect(() => {
-  Mitt.on('updateMsgTotal', (event) => {
+  Mitt.on(MittEnum.UPDATE_MSG_TOTAL, (event) => {
     itemsTop.value.find((item) => {
       if (item.url === 'message') {
         item.badge = event as number
       }
     })
+  })
+  Mitt.on(MittEnum.TO_SEND_MSG, (event: any) => {
+    activeItem.value = event.url
   })
   if (themes.value.pattern === ThemeEnum.OS) {
     followOS()
@@ -226,7 +229,7 @@ onMounted(async () => {
   pageJumps(activeItem.value)
   window.addEventListener('click', closeMenu, true)
 
-  Mitt.on('shrinkWindow', (event) => {
+  Mitt.on(MittEnum.SHRINK_WINDOW, (event) => {
     shrinkStatus.value = event as boolean
   })
   await listen(EventEnum.WIN_SHOW, (e) => {

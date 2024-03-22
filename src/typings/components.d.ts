@@ -12,6 +12,7 @@ declare module 'vue' {
     ChatFooter: typeof import('./../components/rightBox/chatBox/ChatFooter.vue')['default']
     ChatHeader: typeof import('./../components/rightBox/chatBox/ChatHeader.vue')['default']
     ChatMain: typeof import('./../components/rightBox/chatBox/ChatMain.vue')['default']
+    ChatSidebar: typeof import('./../components/rightBox/chatBox/ChatSidebar.vue')['default']
     ContextMenu: typeof import('./../components/common/ContextMenu.vue')['default']
     Details: typeof import('./../components/rightBox/Details.vue')['default']
     Image: typeof import('./../components/rightBox/renderMessage/Image.vue')['default']
@@ -55,5 +56,6 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Text: typeof import('./../components/rightBox/renderMessage/Text.vue')['default']
+    UserSidebar: typeof import('./../components/rightBox/chatBox/UserSidebar.vue')['default']
   }
 }

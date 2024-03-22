@@ -2,7 +2,7 @@
   <!-- 顶部操作栏和显示用户名 -->
   <main
     style="box-shadow: 0 4px 4px var(--box-shadow-color)"
-    class="relative z-20 flex-y-center justify-between p-[8px_20px_12px] select-none">
+    class="relative z-30 flex-y-center justify-between p-[8px_20px_12px] select-none">
     <div class="color-[--text-color]">{{ activeItem.accountName }}</div>
     <!-- 顶部右边选项栏 -->
     <nav class="options flex-y-center gap-20px color-[--icon-color]">

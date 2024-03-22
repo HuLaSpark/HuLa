@@ -83,7 +83,7 @@ import { useWindow } from '@/hooks/useWindow.ts'
 import { alwaysOnTop } from '@/stores/alwaysOnTop.ts'
 import { setting } from '@/stores/setting.ts'
 import { emit, listen } from '@tauri-apps/api/event'
-import { CloseBxEnum, EventEnum } from '@/enums'
+import { CloseBxEnum, EventEnum, MittEnum } from '@/enums'
 import { storeToRefs } from 'pinia'
 import { PersistedStateOptions } from 'pinia-plugin-persistedstate'
 import { invoke } from '@tauri-apps/api/tauri'
@@ -132,13 +132,16 @@ watchEffect(() => {
   if (alwaysOnTopStatus.value) {
     appWindow.setAlwaysOnTop(alwaysOnTopStatus.value as boolean)
   }
-  listen(EventEnum.EXIT, async () => {
+  listen(EventEnum.LOGOUT, async () => {
     /* 退出账号前把窗口全部关闭 */
     if (appWindow.label !== 'login') {
-      await invoke('exit').catch((error) => {
-        console.error('退出失败:', error)
-      })
+      await appWindow.close()
     }
+  })
+  listen(EventEnum.EXIT, async () => {
+    await invoke('exit').catch((error) => {
+      console.error('退出失败:', error)
+    })
   })
   listen(EventEnum.CLOSE_HOME, (e) => {
     trayRef.type = (e.payload as STO.Setting['tray']).type
@@ -186,7 +189,7 @@ const restoreWindow = async () => {
 /* 收缩窗口 */
 const shrinkWindow = async () => {
   /*使用mitt给兄弟组件更新*/
-  Mitt.emit('shrinkWindow', shrinkStatus.value)
+  Mitt.emit(MittEnum.SHRINK_WINDOW, shrinkStatus.value)
   if (shrinkStatus.value) {
     await resizeWindow('home', 310, 700)
   } else {

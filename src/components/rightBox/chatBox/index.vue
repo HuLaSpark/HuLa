@@ -1,15 +1,17 @@
 <template>
   <!-- 头部 -->
   <ChatHeader :active-item="activeItemRef" />
-  <!-- 中间聊天框内容  -->
-  <ChatMain :active-item="activeItemRef" />
-  <!-- 输入框和操作列表 -->
-  <ChatFooter />
+  <n-flex :size="0" class="h-full">
+    <n-flex vertical :size="0" class="flex-1">
+      <!-- 中间聊天框内容  -->
+      <ChatMain :active-item="activeItemRef" />
+      <!-- 输入框和操作列表 -->
+      <ChatFooter class="flex-1" />
+    </n-flex>
+    <ChatSidebar :active-item="activeItemRef" />
+  </n-flex>
 </template>
 <script setup lang="ts">
-import ChatFooter from './ChatFooter.vue'
-import ChatHeader from './ChatHeader.vue'
-import ChatMain from './ChatMain.vue'
 import { MockItem } from '@/services/types.ts'
 import { listen } from '@tauri-apps/api/event'
 import { appWindow } from '@tauri-apps/api/window'
@@ -27,3 +29,12 @@ listen(appWindow.label, (e) => {
   activeItemRef.value = e.payload as any
 })
 </script>
+<style scoped lang="scss">
+/*! 修改naive-ui虚拟列表滚动条的间距 */
+:deep(
+    .n-scrollbar > .n-scrollbar-rail.n-scrollbar-rail--vertical,
+    .n-scrollbar + .n-scrollbar-rail.n-scrollbar-rail--vertical
+  ) {
+  right: 0;
+}
+</style>

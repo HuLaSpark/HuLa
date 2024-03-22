@@ -37,7 +37,7 @@
 </template>
 <script setup lang="ts">
 import { lightTheme } from 'naive-ui'
-import { MsgEnum } from '@/enums'
+import { MittEnum, MsgEnum } from '@/enums'
 import Mitt from '@/utils/Bus.ts'
 import { createFileOrVideoDom } from '@/utils/CreateDom.ts'
 
@@ -221,7 +221,7 @@ const send = () => {
     window.$message.error('暂不支持混合类型消息发送')
     return
   }
-  Mitt.emit('handleSendMessage', msg)
+  Mitt.emit(MittEnum.SEND_MESSAGE, msg)
   msgInput.value = ''
   messageInputDom.value.innerHTML = ''
 }

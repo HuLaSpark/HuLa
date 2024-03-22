@@ -3,7 +3,7 @@ import Mitt from '@/utils/Bus.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { MockItem } from '@/services/types.ts'
 import { emit, listen } from '@tauri-apps/api/event'
-import { EventEnum } from '@/enums'
+import { EventEnum, MittEnum } from '@/enums'
 import { WebviewWindow } from '@tauri-apps/api/window'
 import { delay } from 'lodash-es'
 
@@ -20,7 +20,7 @@ watchEffect(async () => {
   await listen(EventEnum.WIN_CLOSE, (e) => {
     aloneWin.value.delete(e.payload)
   })
-  Mitt.on('shrinkWindow', async (event) => {
+  Mitt.on(MittEnum.SHRINK_WINDOW, async (event) => {
     shrinkStatus.value = event as boolean
   })
 })
@@ -30,12 +30,12 @@ const handleMsgClick = (item: MockItem) => {
   msgBoxShow.value = true
   activeItem.value = item.key
   const data = { msgBoxShow, item }
-  Mitt.emit('msgBoxShow', data)
+  Mitt.emit(MittEnum.MSG_BOX_SHOW, data)
   // 判断是否打开了独立的窗口
   if (aloneWin.value.has(EventEnum.ALONE + item.key)) {
     checkWinExist(EventEnum.ALONE + item.key).then()
     activeItem.value = -1
-    Mitt.emit('msgBoxShow', { item: -1 })
+    Mitt.emit(MittEnum.MSG_BOX_SHOW, { item: -1 })
   }
   // 如果是收缩页面状态点击消息框就直接变成独立窗口
   if (shrinkStatus.value) {
@@ -54,7 +54,7 @@ const handleMsgDblclick = (item: MockItem) => {
 const openAloneWin = async (item: MockItem) => {
   if (activeItem.value === item.key) {
     activeItem.value = -1
-    Mitt.emit('msgBoxShow', { item: -1 })
+    Mitt.emit(MittEnum.MSG_BOX_SHOW, { item: -1 })
   }
   // TODO 传递用户信息(这里的label最好使用用户唯一的id来代替) (nyh -> 2024-03-18 12:18:10)
   await createWebviewWindow(item.accountName, EventEnum.ALONE + item.key, 720, 800)

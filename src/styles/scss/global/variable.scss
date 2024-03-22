@@ -48,6 +48,8 @@
   // 系统托盘hover样式
   --tray-hover: #eee;
   --tray-hover-e: #f5dce1;
+  // 群聊列表hover颜色
+  --bg-group-hover: #e3e3e3;
 }
 
 html[data-theme='dark'] {
@@ -99,6 +101,8 @@ html[data-theme='dark'] {
   // 系统托盘hover样式
   --tray-hover: #3b3b3b;
   --tray-hover-e: #bb8188;
+  // 群聊列表hover颜色
+  --bg-group-hover: #3f3f3f;
 }
 /*! end */
 // 线性动画
@@ -160,11 +164,16 @@ html[data-theme='dark'] {
 }
 /*!end*/
 
-/*! 修改复选框的样式 */
+/*! 修改naive-ui复选框的样式 */
 :deep(.n-checkbox .n-checkbox-box) {
   border-radius: 50%;
   width: 16px;
   height: 16px;
+}
+
+/*! 修改naive-ui滚动条的间距 */
+:deep(.n-scrollbar > .n-scrollbar-rail.n-scrollbar-rail--vertical, .n-scrollbar + .n-scrollbar-rail.n-scrollbar-rail--vertical) {
+  right: 0;
 }
 
 /*! 通用菜单项目样式 */

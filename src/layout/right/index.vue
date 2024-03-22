@@ -18,7 +18,7 @@ import Mitt from '@/utils/Bus.ts'
 import router from '@/router'
 import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
-import { EventEnum, ThemeEnum } from '@/enums'
+import { EventEnum, MittEnum, ThemeEnum } from '@/enums'
 import { listen } from '@tauri-apps/api/event'
 import { appWindow } from '@tauri-apps/api/window'
 
@@ -67,14 +67,14 @@ watchEffect(() => {
 
 onMounted(() => {
   if (isChat) {
-    Mitt.on('msgBoxShow', (event: any) => {
+    Mitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
       msgBoxShow.value = event.msgBoxShow
       activeItem.value = event.item
     })
   }
 
   if (isDetails) {
-    Mitt.on('detailsShow', (event: any) => {
+    Mitt.on(MittEnum.DETAILS_SHOW, (event: any) => {
       DetailsContent.value = event.data
       detailsShow.value = event.detailsShow as boolean
     })

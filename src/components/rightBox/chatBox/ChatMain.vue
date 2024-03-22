@@ -2,7 +2,8 @@
   <!-- 中间聊天内容(使用虚拟列表) -->
   <n-virtual-list
     ref="virtualListInst"
-    style="max-height: calc(100vh - 260px); position: relative"
+    class="relative h-100vh"
+    style="max-height: calc(100vh - 260px)"
     item-resizable
     padding-bottom="10px"
     :item-size="42"
@@ -101,7 +102,7 @@
   </n-modal>
 
   <!--  悬浮按钮提示(头部悬浮) // TODO 要结合已读未读功能来判断之前的信息有多少没有读，当现在的距离没有到最底部并且又有新消息来未读的时候显示下标的更多信息 (nyh -> 2024-03-07 01:27:22)-->
-  <header class="float-header">
+  <header class="float-header" :class="activeItem.type === RoomTypeEnum.GROUP ? 'right-220px' : 'right-50px'">
     <div class="float-box">
       <n-flex justify="space-between" align="center">
         <n-icon :color="'rgba(5,150,105,0.5)'">
@@ -113,7 +114,10 @@
   </header>
 
   <!-- 悬浮按钮提示(底部悬浮) -->
-  <footer class="float-footer" v-if="floatFooter && newMsgNum > 0">
+  <footer
+    class="float-footer"
+    v-if="floatFooter && newMsgNum > 0"
+    :class="activeItem.type === RoomTypeEnum.GROUP ? 'right-220px' : 'right-50px'">
     <div class="float-box" :class="{ max: newMsgNum > 99 }" @click="scrollBottom">
       <n-flex justify="space-between" align="center">
         <n-icon :color="newMsgNum > 99 ? '#ce304f' : 'rgba(5,150,105,0.5)'">
@@ -127,7 +131,7 @@
   </footer>
 </template>
 <script setup lang="ts">
-import { MsgEnum, RoomTypeEnum } from '@/enums'
+import { MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import { MockItem } from '@/services/types.ts'
 import Mitt from '@/utils/Bus.ts'
 import { VirtualListInst } from 'naive-ui'
@@ -159,7 +163,7 @@ const newMsgNum = ref(0)
 const itemComputed = computed(() => {
   return items.value.filter((item) => item.accountId !== userId.value).length
 })
-/* 虚拟列表的距离 */
+/* 虚拟列表 */
 const virtualListInst = ref<VirtualListInst>()
 const { activeItem } = defineProps<{
   activeItem: MockItem
@@ -390,7 +394,7 @@ onMounted(() => {
   invoke('set_tray_icon').catch((error) => {
     console.error('设置图标失败:', error)
   })
-  Mitt.on('handleSendMessage', (event) => {
+  Mitt.on(MittEnum.SEND_MESSAGE, (event) => {
     handleSendMessage(event)
   })
   window.addEventListener('click', closeMenu, true)

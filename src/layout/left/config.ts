@@ -79,7 +79,7 @@ const moreList = ref<OPT.L.MoreList[]>([
         /* 给一点延迟，不然创建登录窗口后还没有来得及设置阴影和圆角效果 */
         delay(async () => {
           /* 通知全部打开的窗口然后关闭 */
-          await emit(EventEnum.EXIT)
+          await emit(EventEnum.LOGOUT)
         }, 300)
       })
     }
