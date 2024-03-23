@@ -47,6 +47,7 @@ import { invoke } from '@tauri-apps/api/tauri'
 import { statusItem } from './home-window/onlineStatus/config.ts'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
 import { appWindow } from '@tauri-apps/api/window'
+import { listen } from '@tauri-apps/api/event'
 
 const { checkWinExist, createWebviewWindow } = useWindow()
 const OLStatusStore = onlineStatus()
@@ -65,6 +66,15 @@ const exit = async () => {
     console.error('退出失败:', error)
   })
 }
+
+onMounted(() => {
+  // 暂停图标闪烁
+  listen('stop', async () => {
+    await invoke('tray_blink', { isRun: false }).catch((error) => {
+      console.error('暂停闪烁失败:', error)
+    })
+  })
+})
 </script>
 
 <style scoped lang="scss">

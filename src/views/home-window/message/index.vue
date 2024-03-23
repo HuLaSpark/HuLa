@@ -45,10 +45,11 @@
 import Mitt from '@/utils/Bus.ts'
 import { VueDraggable } from 'vue-draggable-plus'
 import { MockList } from '@/mock'
-import { activeItem, handleMsgClick, menuList, specialMenuList, handleMsgDblclick } from './config.ts'
+import { useMessage } from '@/hooks/useMessage.ts'
 import { MittEnum } from '@/enums'
 
 const msgTotal = ref(0)
+const { activeItem, handleMsgClick, menuList, specialMenuList, handleMsgDblclick } = useMessage()
 
 watchEffect(() => {
   Mitt.emit(MittEnum.UPDATE_MSG_TOTAL, msgTotal.value)

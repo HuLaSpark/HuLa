@@ -21,7 +21,10 @@
             :class="item.accountId === userId ? 'flex-row-reverse' : ''"
             style="max-width: calc(100% - 54px)">
             <!-- 头像  -->
-            <ContextMenu :menu="optionsList" :special-menu="report">
+            <ContextMenu
+              @select="$event.click(item)"
+              :menu="activeItem.type === RoomTypeEnum.GROUP ? optionsList : []"
+              :special-menu="report">
               <img
                 :class="item.accountId === userId ? '' : 'mr-10px'"
                 class="w-34px rounded-50% select-none"
@@ -31,7 +34,10 @@
             <div
               class="flex flex-col gap-8px color-[--text-color]"
               :class="item.accountId === userId ? 'items-end mr-10px' : ''">
-              <ContextMenu :menu="optionsList" :special-menu="report">
+              <ContextMenu
+                @select="$event.click(item)"
+                :menu="activeItem.type === RoomTypeEnum.GROUP ? optionsList : []"
+                :special-menu="report">
                 <span class="text-12px select-none color-#909090" v-if="activeItem.type === RoomTypeEnum.GROUP">
                   {{ item.accountId === userId ? item.value : activeItem.accountName }}
                 </span>
@@ -39,7 +45,7 @@
               <!--  气泡样式  -->
               <ContextMenu
                 :data-key="item.accountId === userId ? `U${item.key}` : `Q${item.key}`"
-                @select="$event.click(item.key)"
+                @select="$event.click(item)"
                 :menu="menuList"
                 :special-menu="specialMenuList"
                 @click="handleMsgClick(item)">
@@ -136,6 +142,7 @@ import { MockItem } from '@/services/types.ts'
 import Mitt from '@/utils/Bus.ts'
 import { VirtualListInst } from 'naive-ui'
 import { invoke } from '@tauri-apps/api/tauri'
+import { optionsList, report } from './config.ts'
 
 const activeBubble = ref(-1)
 const userId = ref(10086)
@@ -191,54 +198,14 @@ const { activeItem } = defineProps<{
 //   }
 // })
 // const message = computed(() => msg.value)
-
-/* 右键用户信息菜单(单聊的时候显示) */
-const optionsList = computed(() => {
-  if (activeItem.type === RoomTypeEnum.GROUP) {
-    return [
-      {
-        label: '发送信息',
-        icon: 'message-action',
-        click: () => {}
-      },
-      {
-        label: 'TA',
-        icon: 'aite',
-        click: () => {}
-      },
-      {
-        label: '查看资料',
-        icon: 'notes',
-        click: () => {}
-      },
-      {
-        label: '添加好友',
-        icon: 'people-plus',
-        click: () => {}
-      }
-    ]
-  }
-})
-/* 举报选项 */
-const report = computed(() => {
-  if (activeItem.type === RoomTypeEnum.GROUP) {
-    return [
-      {
-        label: '举报',
-        icon: 'caution',
-        click: () => {}
-      }
-    ]
-  }
-})
 /* 右键消息菜单列表 */
 const menuList = ref<OPT.RightMenu[]>([
   {
     label: '复制',
     icon: 'copy',
-    click: (index: number) => {
+    click: (item: any) => {
       // 复制内容到剪贴板
-      copyrightComputed.value.copy(index)
+      copyrightComputed.value.copy(item.key)
     }
   },
   {
@@ -391,7 +358,13 @@ const closeMenu = (event: any) => {
 }
 
 onMounted(() => {
-  invoke('set_tray_icon').catch((error) => {
+  // 启动图标闪烁
+  invoke('tray_blink', {
+    isRun: true,
+    ms: 500,
+    iconPath1: 'tray/msg.png',
+    iconPath2: 'tray/msg-sub.png'
+  }).catch((error) => {
     console.error('设置图标失败:', error)
   })
   Mitt.on(MittEnum.SEND_MESSAGE, (event) => {

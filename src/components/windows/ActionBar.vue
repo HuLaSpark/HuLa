@@ -45,8 +45,8 @@
     </div>
 
     <!-- 是否退到托盘提示框 -->
-    <n-modal v-if="!tray.notTips" v-model:show="tray.tips" class="w-350px border-rd-8px">
-      <div class="bg-[--bg-popover] w-360px h-full p-6px box-border flex flex-col">
+    <n-modal v-if="!tray.notTips" v-model:show="tray.tips" class="border-rd-8px">
+      <div class="bg-[--bg-popover] w-290px h-full p-6px box-border flex flex-col">
         <svg @click="tray.tips = false" class="w-12px h-12px ml-a cursor-pointer select-none">
           <use href="#close"></use>
         </svg>

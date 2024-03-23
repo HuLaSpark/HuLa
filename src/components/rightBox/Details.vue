@@ -73,7 +73,7 @@
     <n-flex vertical :size="20">
       <span class="text-[--text-color]">群成员：({{ options.length }}人)</span>
 
-      <n-avatar-group :options="options" :size="40" :max="4">
+      <n-avatar-group :options="options" :size="40" :max="4" expand-on-hover>
         <template #avatar="{ option: { name, src } }">
           <n-tooltip>
             <template #trigger>

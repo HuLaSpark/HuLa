@@ -29,6 +29,9 @@ fn red_icon(app: &AppHandle) {
 pub fn handler(app: &AppHandle, event: SystemTrayEvent) {
     match event {
         SystemTrayEvent::LeftClick { .. } => {
+            // 当我点击闪烁的图标的时候就停止闪烁
+            let window = app.get_window("tray").unwrap();
+            window.emit("stop", false).unwrap();
             open_home(app);
             red_icon(app);
         },

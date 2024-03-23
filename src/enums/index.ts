@@ -18,6 +18,14 @@ export enum RCodeEnum {
   BUSINESS_EXCEPTION = '600'
 }
 
+/**URL*/
+export enum URLEnum {
+  /**用户*/
+  USER = '/user',
+  /**文章*/
+  ARTICLE = '/article'
+}
+
 /** tauri原生跨窗口通信时传输的类型 */
 export enum EventEnum {
   /** 主题 */

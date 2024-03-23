@@ -1,6 +1,11 @@
 <template>
   <main data-tauri-drag-region class="resizable select-none" :style="{ width: width + 'px' }">
-    <ActionBar class="absolute right-0" v-if="shrinkStatus" :shrink-status="!shrinkStatus" :max-w="false" />
+    <ActionBar
+      class="absolute right-0"
+      v-if="shrinkStatus"
+      :shrink-status="!shrinkStatus"
+      :max-w="false"
+      :current-label="appWindow.label" />
 
     <!--    <div class="resize-handle" @mousedown="initDrag"></div>-->
 
@@ -10,10 +15,12 @@
       class="mt-30px w-full h-38px flex flex-col items-center">
       <div class="flex-center gap-5px w-full pr-16px pl-16px box-border">
         <n-input
-          :on-focus="() => router.push('/searchDetails')"
+          id="search"
+          @focus="() => router.push('/searchDetails')"
           class="rounded-4px w-full"
           style="background: var(--search-bg-color)"
           :maxlength="20"
+          clearable
           size="small"
           placeholder="搜索">
           <template #prefix>
@@ -29,7 +36,7 @@
     </header>
 
     <!-- 列表 -->
-    <n-scrollbar style="max-height: calc(100vh - 70px)">
+    <n-scrollbar style="max-height: calc(100vh - 70px)" id="scrollbar">
       <div class="h-full flex-1 p-[4px_10px_0px_8px]">
         <router-view />
       </div>
@@ -41,6 +48,7 @@
 import Mitt from '@/utils/Bus.ts'
 import router from '@/router'
 import { MittEnum } from '@/enums'
+import { appWindow } from '@tauri-apps/api/window'
 
 // const minWidth = 160 // 设置最小宽度
 // const maxWidth = 320 // 设置最大宽度
@@ -56,6 +64,21 @@ Mitt.on(MittEnum.SHRINK_WINDOW, (event) => {
   width.value = 250
 })
 
+const closeMenu = (event: Event) => {
+  const e = event.target as HTMLInputElement
+  /* 判断如果点击的不是滚动条和搜索框，就关闭消息列表 */
+  if (!e.matches('#scrollbar, #scrollbar *, #search *, #search')) {
+    router.push('/message')
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('click', closeMenu, true)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('click', closeMenu, true)
+})
 // watchEffect(() => {
 //   if (width.value === maxWidth) {
 //     Mitt.emit('shrinkWindow', false)
