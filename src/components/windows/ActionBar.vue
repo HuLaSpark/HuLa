@@ -157,25 +157,6 @@ watchEffect(() => {
   }
 })
 
-// todo 放大的时候图个拖动了窗口，窗口会变回原来的大小，但是图标的状态没有改变
-// // 定义一个可能保存unlisten函数的变量
-// let unlistenMoveEvent = null as any
-//
-// watchEffect(async () => {
-//   if (windowMaximized.value) {
-//     unlistenMoveEvent = await appWindow.listen('tauri://move', () => {
-//       windowMaximized.value = false
-//       unlistenMoveEvent()
-//       unlistenMoveEvent = null
-//     })
-//   }
-// })
-
-/* 判断当前是否是最大化窗口 */
-const checkMaximizedStatus = async () => {
-  windowMaximized.value = await appWindow.isMaximized()
-}
-
 /* 恢复窗口大小 */
 const restoreWindow = async () => {
   if (windowMaximized.value) {
@@ -183,7 +164,6 @@ const restoreWindow = async () => {
   } else {
     await maximizeWindow()
   }
-  await checkMaximizedStatus()
 }
 
 /* 收缩窗口 */
@@ -228,7 +208,20 @@ const isEsc = (e: PersistedStateOptions) => {
   }
 }
 
+// 判断当前是否是最大化
+const handleResize = () => {
+  appWindow.isMaximized().then((res) => {
+    windowMaximized.value = res
+  })
+}
+
+// 添加和移除resize事件监听器
+onMounted(() => {
+  window.addEventListener('resize', handleResize)
+})
+
 onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
   window.removeEventListener('keydown', (e) => isEsc(e))
 })
 </script>

@@ -97,7 +97,9 @@ import { MittEnum, RoomTypeEnum } from '@/enums'
 import { lightTheme } from 'naive-ui'
 import router from '@/router'
 import Mitt from '@/utils/Bus.ts'
+import { useMessage } from '@/hooks/useMessage.ts'
 
+const { handleMsgClick } = useMessage()
 const props = defineProps<{
   content: any[]
 }>()
@@ -110,8 +112,10 @@ const footerOptions = ref<OPT.Details[]>([
   {
     url: 'message',
     click: () => {
+      // TODO 需要增加独立窗口功能 (nyh -> 2024-03-25 16:01:23)
       router.push('/message')
-      Mitt.emit(MittEnum.TO_SEND_MSG, { url: 'message', id: item.value.accountId })
+      handleMsgClick(item.value)
+      Mitt.emit(MittEnum.TO_SEND_MSG, { url: 'message' })
     }
   },
   {

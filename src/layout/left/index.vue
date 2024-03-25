@@ -160,7 +160,7 @@ const info = reactive({
   url: url.value,
   title: title.value,
   bgColor: bgColor?.value,
-  themeColor: '#f1f1f1',
+  themeColor: themes.value.content === ThemeEnum.DARK ? 'rgba(63,63,63, 0.2)' : 'rgba(241,241,241, 0.2)',
   show: false
 })
 

@@ -4,7 +4,7 @@
 use std::sync::Mutex;
 use tauri::{SystemTray};
 use crate::common::window::set_window_attribute;
-use crate::common::plugins::{ exit, reset_set_window, set_tray_icon, tray_blink, TrayState };
+use crate::common::plugins::{ exit, reset_set_window, tray_blink, TrayState };
 
 mod common;
 
@@ -26,7 +26,7 @@ async fn main() {
         .menu(tauri::Menu::new())// 使用空菜单来替换默认的操作系统菜单
         .system_tray(system_tray)// 将 `tauri.conf.json` 上配置的图标添加到系统托盘
         .on_system_tray_event(common::tray::handler) // 注册系统托盘事件处理程序
-        .invoke_handler(tauri::generate_handler![reset_set_window, set_tray_icon, exit, tray_blink]) // 使用定义的插件
+        .invoke_handler(tauri::generate_handler![reset_set_window, exit, tray_blink]) // 使用定义的插件
         .on_window_event(|event| match event.event() {
             tauri::WindowEvent::CloseRequested { api, .. } => {
                 event.window().hide().unwrap();

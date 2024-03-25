@@ -1,94 +1,111 @@
 <template>
   <!-- 中间聊天内容(使用虚拟列表) -->
-  <n-virtual-list
+  <n-scrollbar
+    id="image-chat-main"
     ref="virtualListInst"
-    class="relative h-100vh"
     style="max-height: calc(100vh - 260px)"
-    item-resizable
-    padding-bottom="10px"
-    :item-size="42"
-    :items="items"
-    @scroll="handleScroll($event)">
-    <template #default="{ item }">
-      <main
-        :key="item.key"
-        class="flex-y-center min-h-58px"
-        :class="activeItem.type === RoomTypeEnum.GROUP ? 'p-[18px_20px]' : 'chat-single p-[2px_20px]'">
-        <!-- 好友或者群聊的信息 -->
-        <article class="flex flex-col w-full gap-18px" :class="item.accountId === userId ? 'items-end' : ''">
-          <div
-            class="flex items-start"
-            :class="item.accountId === userId ? 'flex-row-reverse' : ''"
-            style="max-width: calc(100% - 54px)">
-            <!-- 头像  -->
-            <ContextMenu
-              @select="$event.click(item)"
-              :menu="activeItem.type === RoomTypeEnum.GROUP ? optionsList : []"
-              :special-menu="report">
-              <img
-                :class="item.accountId === userId ? '' : 'mr-10px'"
-                class="w-34px rounded-50% select-none"
-                :src="item.accountId === userId ? item.avatar : activeItem.avatar"
-                alt="" />
-            </ContextMenu>
+    class="relative h-100vh">
+    <n-virtual-list item-resizable padding-bottom="10px" :item-size="42" :items="items" @scroll="handleScroll($event)">
+      <template #default="{ item }">
+        <main
+          :key="item.key"
+          class="flex-y-center min-h-58px"
+          :class="activeItem.type === RoomTypeEnum.GROUP ? 'p-[18px_20px]' : 'chat-single p-[2px_20px]'">
+          <!-- 好友或者群聊的信息 -->
+          <article class="flex flex-col w-full gap-18px" :class="item.accountId === userId ? 'items-end' : ''">
             <div
-              class="flex flex-col gap-8px color-[--text-color]"
-              :class="item.accountId === userId ? 'items-end mr-10px' : ''">
-              <ContextMenu
-                @select="$event.click(item)"
-                :menu="activeItem.type === RoomTypeEnum.GROUP ? optionsList : []"
-                :special-menu="report">
-                <span class="text-12px select-none color-#909090" v-if="activeItem.type === RoomTypeEnum.GROUP">
-                  {{ item.accountId === userId ? item.value : activeItem.accountName }}
-                </span>
-              </ContextMenu>
-              <!--  气泡样式  -->
-              <ContextMenu
-                :data-key="item.accountId === userId ? `U${item.key}` : `Q${item.key}`"
-                @select="$event.click(item)"
-                :menu="menuList"
-                :special-menu="specialMenuList"
-                @click="handleMsgClick(item)">
-                <!--                &lt;!&ndash; 渲染消息内容体 &ndash;&gt;-->
-                <!--                <RenderMessage :message="message" />-->
-                <!--  消息为文本类型  -->
-                <div
-                  v-if="item.type === MsgEnum.TEXT"
-                  style="white-space: pre-wrap"
-                  :class="[
-                    { active: activeBubble === item.key },
-                    item.accountId === userId ? 'bubble-oneself' : 'bubble'
-                  ]">
-                  <span v-html="item.content"></span>
-                </div>
+              class="flex items-start"
+              :class="item.accountId === userId ? 'flex-row-reverse' : ''"
+              style="max-width: calc(100% - 54px)">
+              <!-- 头像  -->
+              <n-popover
+                @update:show="handlePopoverUpdate(item.key)"
+                trigger="click"
+                placement="right-start"
+                :show-arrow="false"
+                style="padding: 0; background: var(--bg-info); backdrop-filter: blur(10px)">
+                <template #trigger>
+                  <ContextMenu
+                    @select="$event.click(item)"
+                    :menu="activeItem.type === RoomTypeEnum.GROUP ? optionsList : []"
+                    :special-menu="report">
+                    <n-avatar
+                      lazy
+                      round
+                      :color="'#fff'"
+                      :size="34"
+                      @click="selectKey = item.key"
+                      :src="item.accountId === userId ? item.avatar : activeItem.avatar"
+                      :class="item.accountId === userId ? '' : 'mr-10px'"
+                      fallback-src="/logo.png"
+                      :render-placeholder="() => null"
+                      :intersection-observer-options="{
+                        root: '#image-chat-main'
+                      }"></n-avatar>
+                  </ContextMenu>
+                </template>
+                <!-- 用户个人信息框 -->
+                <InfoPopover :info="activeItemRef" />
+              </n-popover>
+              <div
+                class="flex flex-col gap-8px color-[--text-color]"
+                :class="item.accountId === userId ? 'items-end mr-10px' : ''">
+                <ContextMenu
+                  @select="$event.click(item)"
+                  :menu="activeItem.type === RoomTypeEnum.GROUP ? optionsList : []"
+                  :special-menu="report">
+                  <span class="text-12px select-none color-#909090" v-if="activeItem.type === RoomTypeEnum.GROUP">
+                    {{ item.accountId === userId ? item.value : activeItem.accountName }}
+                  </span>
+                </ContextMenu>
+                <!--  气泡样式  -->
+                <ContextMenu
+                  :data-key="item.accountId === userId ? `U${item.key}` : `Q${item.key}`"
+                  @select="$event.click(item)"
+                  :menu="menuList"
+                  :special-menu="specialMenuList"
+                  @click="handleMsgClick(item)">
+                  <!--                &lt;!&ndash; 渲染消息内容体 &ndash;&gt;-->
+                  <!--                <RenderMessage :message="message" />-->
+                  <!--  消息为文本类型  -->
+                  <div
+                    v-if="item.type === MsgEnum.TEXT"
+                    style="white-space: pre-wrap"
+                    :class="[
+                      { active: activeBubble === item.key },
+                      item.accountId === userId ? 'bubble-oneself' : 'bubble'
+                    ]">
+                    <span v-html="item.content"></span>
+                  </div>
 
-                <!--  消息为为图片类型(不固定宽度和高度), 多张图片时渲染  -->
-                <n-image-group v-if="Array.isArray(item.content) && item.type === MsgEnum.IMAGE">
-                  <n-flex class="photo-wall" vertical>
-                    <n-image
-                      v-for="(src, index) in item.content"
-                      :key="index"
-                      :img-props="{ style: { maxWidth: '325px', maxHeight: '165px' } }"
-                      show-toolbar-tooltip
-                      style="border-radius: 8px"
-                      :src="src"></n-image>
-                  </n-flex>
-                </n-image-group>
+                  <!--  消息为为图片类型(不固定宽度和高度), 多张图片时渲染  -->
+                  <n-image-group v-if="Array.isArray(item.content) && item.type === MsgEnum.IMAGE">
+                    <n-flex class="photo-wall" vertical>
+                      <n-image
+                        v-for="(src, index) in item.content"
+                        :key="index"
+                        :img-props="{ style: { maxWidth: '325px', maxHeight: '165px' } }"
+                        show-toolbar-tooltip
+                        style="border-radius: 8px"
+                        :src="src"></n-image>
+                    </n-flex>
+                  </n-image-group>
 
-                <!-- 单张图片时渲染 -->
-                <n-image
-                  v-else-if="typeof item.content === 'string' && item.type === MsgEnum.IMAGE"
-                  :img-props="{ style: { maxWidth: '325px', maxHeight: '165px' } }"
-                  show-toolbar-tooltip
-                  style="border-radius: 8px"
-                  :src="item.content"></n-image>
-              </ContextMenu>
+                  <!-- 单张图片时渲染 -->
+                  <n-image
+                    v-else-if="typeof item.content === 'string' && item.type === MsgEnum.IMAGE"
+                    :img-props="{ style: { maxWidth: '325px', maxHeight: '165px' } }"
+                    show-toolbar-tooltip
+                    style="border-radius: 8px"
+                    :src="item.content"></n-image>
+                </ContextMenu>
+              </div>
             </div>
-          </div>
-        </article>
-      </main>
-    </template>
-  </n-virtual-list>
+          </article>
+        </main>
+      </template>
+    </n-virtual-list>
+  </n-scrollbar>
 
   <!-- 弹出框 -->
   <n-modal v-model:show="modalShow" class="w-350px border-rd-8px">
@@ -143,7 +160,10 @@ import Mitt from '@/utils/Bus.ts'
 import { VirtualListInst } from 'naive-ui'
 import { invoke } from '@tauri-apps/api/tauri'
 import { optionsList, report } from './config.ts'
+import { usePopover } from '@/hooks/usePopover.ts'
 
+/* 当前点击的用户的key */
+const selectKey = ref()
 const activeBubble = ref(-1)
 const userId = ref(10086)
 const copyright = ref('-HuLa©-版权所有')
@@ -172,9 +192,12 @@ const itemComputed = computed(() => {
 })
 /* 虚拟列表 */
 const virtualListInst = ref<VirtualListInst>()
+const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-main')
+
 const { activeItem } = defineProps<{
   activeItem: MockItem
 }>()
+const activeItemRef = ref({ ...activeItem })
 // // 创建一个符合 TextBody 类型的对象
 // const textBody = {
 //   content: '123',
@@ -243,6 +266,7 @@ const items = ref(
 
 watchEffect(() => {
   newMsgNum.value = itemComputed.value - historyIndex.value
+  activeItemRef.value = { ...activeItem }
 })
 
 /* 处理滚动事件(用于页脚显示功能) */
@@ -358,7 +382,7 @@ const closeMenu = (event: any) => {
 }
 
 onMounted(() => {
-  // 启动图标闪烁
+  /*! 启动图标闪烁 需要设置"resources": ["sec-tauri/图标放置的文件夹"]*/
   invoke('tray_blink', {
     isRun: true,
     ms: 500,
@@ -369,6 +393,9 @@ onMounted(() => {
   })
   Mitt.on(MittEnum.SEND_MESSAGE, (event) => {
     handleSendMessage(event)
+  })
+  Mitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
+    activeItemRef.value = event.item
   })
   window.addEventListener('click', closeMenu, true)
   // let index = items.value.length > 0 ? items.value[items.value.length - 1].key : 0

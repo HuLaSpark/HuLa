@@ -66,9 +66,10 @@ Mitt.on(MittEnum.SHRINK_WINDOW, (event) => {
 
 const closeMenu = (event: Event) => {
   const e = event.target as HTMLInputElement
-  /* 判断如果点击的不是滚动条和搜索框，就关闭消息列表 */
-  if (!e.matches('#scrollbar, #scrollbar *, #search *, #search')) {
-    router.push('/message')
+  const route = router.currentRoute.value.path
+  /* 判断如果点击的搜索框，就关闭消息列表 */
+  if (!e.matches('#scrollbar, #scrollbar *, #search *, #search') && route === '/searchDetails') {
+    router.go(-1)
   }
 }
 

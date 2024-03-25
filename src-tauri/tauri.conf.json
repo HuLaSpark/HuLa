@@ -18,6 +18,9 @@
     },
     "allowlist": {
       "all": false,
+      "notification": {
+        "all": true
+      },
       "shell": {
         "all": false,
         "open": true
@@ -35,6 +38,7 @@
     },
     "bundle": {
       "active": true,
+      "resources": ["tray"],
       "targets": "all",
       "identifier": "com.tauri.build",
       "windows": {

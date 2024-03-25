@@ -45,7 +45,7 @@ listen(EventEnum.THEME, (e) => {
     themes.value.pattern = ThemeEnum.OS
   } else {
     globalTheme.value = e.payload === ThemeEnum.DARK ? darkTheme : lightTheme
-    // 判断msgInfo.content是否是深色还是浅色
+    // 判断content是否是深色还是浅色
     document.documentElement.dataset.theme = (e.payload || ThemeEnum.LIGHT) as string
   }
 })

@@ -14,6 +14,7 @@
   <img src="https://img.shields.io/badge/UnoCss-efefef?logo=UnoCss&logoColor=606060">
   <img src="https://img.shields.io/badge/pnpm-909090?logo=pnpm&logoColor=FFC131">
   <img src="https://img.shields.io/badge/Sass-CC6699?logo=sass&logoColor=fff">
+  <img src="https://img.shields.io/badge/Design-Naive-059669">
 </div>
 
 <p align="center">

@@ -50,6 +50,8 @@
   --tray-hover-e: #f5dce1;
   // 群聊列表hover颜色
   --bg-group-hover: #e3e3e3;
+  // 信息框背景颜色
+  --bg-info: rgba(255, 255, 255, 0.2);
 }
 
 html[data-theme='dark'] {
@@ -103,6 +105,8 @@ html[data-theme='dark'] {
   --tray-hover-e: #bb8188;
   // 群聊列表hover颜色
   --bg-group-hover: #3f3f3f;
+  // 信息框背景颜色
+  --bg-info: rgba(27, 27, 27, 0.8);
 }
 /*! end */
 // 线性动画
