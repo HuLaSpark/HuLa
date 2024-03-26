@@ -40,8 +40,6 @@
 import { statusItem } from './config.ts'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
 import { storeToRefs } from 'pinia'
-import { listen } from '@tauri-apps/api/event'
-import { EventEnum } from '@/enums'
 
 const OLStatusStore = onlineStatus()
 const { url, title, bgColor } = storeToRefs(OLStatusStore)
@@ -56,6 +54,9 @@ const RGBA = ref(bgColor?.value)
 
 watchEffect(() => {
   activeItem.index = statusItem.findIndex((item) => item.title === activeItem.title)
+  activeItem.url = url.value
+  activeItem.title = title.value
+  RGBA.value = bgColor?.value
 })
 
 /**
@@ -72,12 +73,6 @@ const handleActive = async (item: OPT.Online, index: number) => {
 
 onMounted(async () => {
   activeItem.index = statusItem.findIndex((item) => item.title === activeItem.title)
-  await listen(EventEnum.SET_OL_STS, (e) => {
-    const val = e.payload as OPT.Online
-    activeItem.url = val.url
-    activeItem.title = val.title
-    RGBA.value = val.bgColor
-  })
 })
 </script>
 <style scoped lang="scss">

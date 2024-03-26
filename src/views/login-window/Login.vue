@@ -96,8 +96,10 @@
     </n-flex>
 
     <!-- 自动登录样式 -->
-    <n-flex vertical :size="40" v-else>
-      <n-flex justify="center" class="text-28px color-#059669 mt-25px font-1000">HuLA</n-flex>
+    <n-flex vertical :size="29" v-else>
+      <n-flex justify="center" class="mt-15px">
+        <img src="@/assets/logo/hula.png" class="w-140px h-60px" alt="" />
+      </n-flex>
 
       <n-flex :size="30" vertical>
         <!-- 头像 -->
@@ -196,7 +198,7 @@ const { createWebviewWindow } = useWindow()
 
 watchEffect(() => {
   loginDisabled.value = !(accountRef.value && passwordRef.value && protocol.value)
-  // 情况账号的时候设置默认头像
+  // 清空账号的时候设置默认头像
   if (!accountRef.value) {
     avatarRef.value = '/logo.png'
   }

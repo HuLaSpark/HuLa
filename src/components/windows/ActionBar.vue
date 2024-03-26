@@ -23,7 +23,7 @@
       <svg class="w-16px h-16px color-[--action-bar-icon-color] cursor-pointer"><use href="#left-bar"></use></svg>
     </div>
     <!-- 最小化 -->
-    <div v-if="minW" @click="minimizeWindow" class="hover-box">
+    <div v-if="minW" @click="appWindow.minimize()" class="hover-box">
       <svg class="w-24px h-24px color-[--action-bar-icon-color] opacity-66 cursor-pointer">
         <use href="#maximize"></use>
       </svg>
@@ -38,36 +38,36 @@
       </svg>
     </div>
     <!-- 关闭窗口 -->
-    <div v-if="closeW" @click="closeWindow(currentLabel as string)" class="action-close">
+    <div v-if="closeW" @click="handleCloseWin" class="action-close">
       <svg class="w-14px h-14px color-[--action-bar-icon-color] cursor-pointer">
         <use href="#close"></use>
       </svg>
     </div>
 
     <!-- 是否退到托盘提示框 -->
-    <n-modal v-if="!tray.notTips" v-model:show="tray.tips" class="border-rd-8px">
+    <n-modal v-if="!tips.notTips" v-model:show="tipsRef.show" class="border-rd-8px">
       <div class="bg-[--bg-popover] w-290px h-full p-6px box-border flex flex-col">
-        <svg @click="tray.tips = false" class="w-12px h-12px ml-a cursor-pointer select-none">
+        <svg @click="tipsRef.show = false" class="w-12px h-12px ml-a cursor-pointer select-none">
           <use href="#close"></use>
         </svg>
         <n-flex vertical :size="20" class="p-[22px_10px_10px_22px] select-none">
           <span class="text-16px">最小化还是直接退出程序?</span>
           <label class="text-14px text-#707070 flex gap-6px lh-16px items-center">
-            <n-radio :checked="trayRef.type === CloseBxEnum.HIDE" @change="trayRef.type = CloseBxEnum.HIDE" />
+            <n-radio :checked="tipsRef.type === CloseBxEnum.HIDE" @change="tipsRef.type = CloseBxEnum.HIDE" />
             <span>最小化到系统托盘</span>
           </label>
           <label class="text-14px text-#707070 flex gap-6px lh-16px items-center">
-            <n-radio :checked="trayRef.type === CloseBxEnum.CLOSE" @change="trayRef.type = CloseBxEnum.CLOSE" />
+            <n-radio :checked="tipsRef.type === CloseBxEnum.CLOSE" @change="tipsRef.type = CloseBxEnum.CLOSE" />
             <span>直接退出程序</span>
           </label>
           <label class="text-12px text-#909090 flex gap-6px justify-end items-center">
-            <n-checkbox size="small" v-model:checked="trayRef.notTips" />
+            <n-checkbox size="small" v-model:checked="tipsRef.notTips" />
             <span>下次不出现此提示</span>
           </label>
 
           <n-flex justify="end">
             <n-button @click="handleConfirm" class="w-78px" color="#059669">确定</n-button>
-            <n-button @click="tray.tips = false" class="w-78px" secondary>取消</n-button>
+            <n-button @click="tipsRef.show = false" class="w-78px" secondary>取消</n-button>
           </n-flex>
         </n-flex>
       </div>
@@ -76,7 +76,6 @@
 </template>
 
 <script setup lang="ts">
-import { closeWindow, maximizeWindow, minimizeWindow, unmaximize } from '@/common/WindowEvent.ts'
 import { appWindow } from '@tauri-apps/api/window'
 import Mitt from '@/utils/Bus'
 import { useWindow } from '@/hooks/useWindow.ts'
@@ -110,16 +109,16 @@ const props = withDefaults(
     shrinkStatus: true
   }
 )
-const { minW, maxW, closeW, topWinLabel, shrinkStatus, currentLabel } = toRefs(props)
+const { minW, maxW, closeW, topWinLabel, shrinkStatus } = toRefs(props)
 const alwaysOnTopStore = alwaysOnTop()
 const settingStore = setting()
-const { tray, escClose } = storeToRefs(settingStore)
+const { tips, escClose } = storeToRefs(settingStore)
 const { resizeWindow } = useWindow()
-const trayRef = reactive({
-  type: tray.value.type,
-  notTips: tray.value.notTips
+const tipsRef = reactive({
+  type: tips.value.type,
+  notTips: tips.value.notTips,
+  show: false
 })
-const ESC = ref(escClose.value)
 // 窗口是否最大化状态
 const windowMaximized = ref(false)
 // 窗口是否置顶状态
@@ -143,14 +142,8 @@ watchEffect(() => {
       console.error('退出失败:', error)
     })
   })
-  listen(EventEnum.CLOSE_HOME, (e) => {
-    trayRef.type = (e.payload as STO.Setting['tray']).type
-    trayRef.notTips = (e.payload as STO.Setting['tray']).notTips
-    ESC.value = (e.payload as STO.Setting).escClose
-    tray.value.tips = false
-  })
 
-  if (ESC.value) {
+  if (escClose.value) {
     window.addEventListener('keydown', (e) => isEsc(e))
   } else {
     window.removeEventListener('keydown', (e) => isEsc(e))
@@ -160,9 +153,9 @@ watchEffect(() => {
 /* 恢复窗口大小 */
 const restoreWindow = async () => {
   if (windowMaximized.value) {
-    await unmaximize()
+    await appWindow.unmaximize()
   } else {
-    await maximizeWindow()
+    await appWindow.maximize()
   }
 }
 
@@ -188,10 +181,10 @@ const handleAlwaysOnTop = async () => {
 
 /* 点击确定时 */
 const handleConfirm = async () => {
-  tray.value.type = trayRef.type
-  tray.value.notTips = trayRef.notTips
-  tray.value.tips = false
-  if (tray.value.type === CloseBxEnum.CLOSE) {
+  tips.value.type = tipsRef.type
+  tips.value.notTips = tipsRef.notTips
+  tipsRef.show = false
+  if (tips.value.type === CloseBxEnum.CLOSE) {
     await emit(EventEnum.EXIT)
   } else {
     await nextTick(() => {
@@ -203,8 +196,8 @@ const handleConfirm = async () => {
 /* 监听是否按下esc */
 const isEsc = (e: PersistedStateOptions) => {
   // 判断按下的是否是esc
-  if (e.key === 'Escape' && ESC.value) {
-    closeWindow(currentLabel.value!)
+  if (e.key === 'Escape' && escClose.value) {
+    handleCloseWin()
   }
 }
 
@@ -213,6 +206,25 @@ const handleResize = () => {
   appWindow.isMaximized().then((res) => {
     windowMaximized.value = res
   })
+}
+
+/* 处理关闭窗口事件 */
+const handleCloseWin = async () => {
+  if (appWindow.label === 'home') {
+    if (!tips.value.notTips) {
+      tipsRef.show = true
+    } else {
+      if (tips.value.type === CloseBxEnum.CLOSE) {
+        await emit(EventEnum.EXIT)
+      } else {
+        await nextTick(() => {
+          appWindow.hide()
+        })
+      }
+    }
+  } else {
+    await appWindow.close()
+  }
 }
 
 // 添加和移除resize事件监听器

@@ -28,8 +28,6 @@ export enum URLEnum {
 
 /** tauri原生跨窗口通信时传输的类型 */
 export enum EventEnum {
-  /** 主题 */
-  THEME = 'theme',
   /** 窗口关闭 */
   WIN_CLOSE = 'winClose',
   /** 窗口显示 */
@@ -38,12 +36,8 @@ export enum EventEnum {
   EXIT = 'exit',
   /** 退出账号 */
   LOGOUT = 'logout',
-  /** 设置在线状态 */
-  SET_OL_STS = 'setOnlineStatus',
   /** 独立窗口 */
-  ALONE = 'alone',
-  /** 修改关闭主面板的行为 */
-  CLOSE_HOME = 'closeHome'
+  ALONE = 'alone'
 }
 
 /** Mitt兄弟组件通信 */

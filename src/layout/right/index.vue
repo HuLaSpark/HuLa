@@ -18,8 +18,7 @@ import Mitt from '@/utils/Bus.ts'
 import router from '@/router'
 import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
-import { EventEnum, MittEnum, ThemeEnum } from '@/enums'
-import { listen } from '@tauri-apps/api/event'
+import { MittEnum, ThemeEnum } from '@/enums'
 import { appWindow } from '@tauri-apps/api/window'
 
 const settingStore = setting()
@@ -43,17 +42,6 @@ const isDetails = computed(() => {
 const followOS = () => {
   imgTheme.value = prefers.matches ? ThemeEnum.DARK : ThemeEnum.LIGHT
 }
-
-/* 监听其他标签页的变化 */
-listen(EventEnum.THEME, (e) => {
-  if (e.payload === ThemeEnum.OS) {
-    followOS()
-    prefers.addEventListener('change', followOS)
-  } else {
-    imgTheme.value = (e.payload || ThemeEnum.LIGHT) as string
-    prefers.removeEventListener('change', followOS)
-  }
-})
 
 watchEffect(() => {
   if (themes.value.pattern === ThemeEnum.OS) {

@@ -42,6 +42,7 @@
     "naive-ui": "^2.38.1",
     "pinia": "^2.1.7",
     "pinia-plugin-persistedstate": "^3.2.1",
+    "pinia-shared-state": "^0.5.1",
     "vue": "^3.4.21",
     "vue-draggable-plus": "^0.3.5",
     "vue-router": "^4.3.0"

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { CloseBxEnum, StoresEnum, ThemeEnum } from '@/enums'
 
+// TODO 使用indexDB或者把配置写出到文件中，还需要根据每个账号来进行配置 (nyh -> 2024-03-26 01:22:12)
 export const setting = defineStore(StoresEnum.SETTING, {
   state: (): STO.Setting => ({
     /* 主题设置 */
@@ -11,9 +12,8 @@ export const setting = defineStore(StoresEnum.SETTING, {
     /* 是否启用ESC关闭窗口 */
     escClose: true,
     /* 系统托盘 */
-    tray: {
+    tips: {
       type: CloseBxEnum.HIDE,
-      tips: true,
       notTips: false
     },
     /* 登录设置 */
@@ -62,5 +62,9 @@ export const setting = defineStore(StoresEnum.SETTING, {
     clearAccount() {
       this.login.accountInfo = { account: '', avatar: '', name: '', password: '' }
     }
+  },
+  share: {
+    enable: true,
+    initialize: true
   }
 })

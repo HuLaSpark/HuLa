@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
-import { EventEnum, StoresEnum } from '@/enums'
+import { StoresEnum } from '@/enums'
 import { statusItem } from '@/views/home-window/onlineStatus/config.ts'
-import { emit } from '@tauri-apps/api/event'
 import Colorthief from 'colorthief'
 
 const colorthief = new Colorthief()
@@ -23,7 +22,6 @@ export const onlineStatus = defineStore(StoresEnum.ONLINE_STATUS, {
       img.onload = async () => {
         const colors = await colorthief.getColor(img, 3)
         this.bgColor = `rgba(${colors.join(',')}, 0.4)`
-        await emit(EventEnum.SET_OL_STS, { url: url, title: title, bgColor: this.bgColor })
       }
     },
     setOnlineStatus(url: string, title: string) {
@@ -34,8 +32,11 @@ export const onlineStatus = defineStore(StoresEnum.ONLINE_STATUS, {
       img.onload = async () => {
         const colors = await colorthief.getColor(img, 3)
         this.bgColor = `rgba(${colors.join(',')}, 0.4)`
-        await emit(EventEnum.SET_OL_STS, { url: this.url, title: this.title, bgColor: this.bgColor })
       }
     }
+  },
+  share: {
+    enable: true,
+    initialize: true
   }
 })

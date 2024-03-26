@@ -1,5 +1,4 @@
 import { LogicalSize, WebviewWindow } from '@tauri-apps/api/window'
-import { autoCloseWindow } from '@/common/WindowEvent.ts'
 import { invoke } from '@tauri-apps/api/tauri'
 
 export const useWindow = () => {
@@ -55,7 +54,8 @@ export const useWindow = () => {
         console.error('设置窗口阴影失败:', error)
       })
       if (wantCloseWindow) {
-        await autoCloseWindow(wantCloseWindow)
+        const win = WebviewWindow.getByLabel(wantCloseWindow)
+        win?.close()
       }
     })
 

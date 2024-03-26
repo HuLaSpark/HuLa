@@ -17,8 +17,7 @@
 import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
 import { dateZhCN, darkTheme, lightTheme, GlobalThemeOverrides, zhCN } from 'naive-ui'
-import { EventEnum, ThemeEnum } from '@/enums'
-import { listen } from '@tauri-apps/api/event'
+import { ThemeEnum } from '@/enums'
 
 const settingStore = setting()
 const { themes } = storeToRefs(settingStore)
@@ -33,28 +32,14 @@ const followOS = () => {
   themes.value.content = prefers.matches ? ThemeEnum.DARK : ThemeEnum.LIGHT
 }
 
-/* 监听其他标签页的变化 */
-listen(EventEnum.THEME, (e) => {
-  if (e.payload === ThemeEnum.OS) {
-    // 赋值给ui组件库的主题
-    globalTheme.value = prefers.matches ? darkTheme : lightTheme
-    // 给全局的dataset.theme赋值主题
-    document.documentElement.dataset.theme = prefers.matches ? ThemeEnum.DARK : ThemeEnum.LIGHT
-    // 修改localStorage中的setting中的themes内容
-    themes.value.content = prefers.matches ? ThemeEnum.DARK : ThemeEnum.LIGHT
-    themes.value.pattern = ThemeEnum.OS
-  } else {
-    globalTheme.value = e.payload === ThemeEnum.DARK ? darkTheme : lightTheme
-    // 判断content是否是深色还是浅色
-    document.documentElement.dataset.theme = (e.payload || ThemeEnum.LIGHT) as string
-  }
-})
-
 watchEffect(() => {
   if (themes.value.pattern === ThemeEnum.OS) {
     followOS()
+    themes.value.pattern = ThemeEnum.OS
     prefers.addEventListener('change', followOS)
   } else {
+    // 判断content是否是深色还是浅色
+    document.documentElement.dataset.theme = themes.value.content || ThemeEnum.LIGHT
     globalTheme.value = themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme
     prefers.removeEventListener('change', followOS)
   }

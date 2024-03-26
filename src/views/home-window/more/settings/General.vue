@@ -34,16 +34,16 @@
             <span>关闭主面板</span>
 
             <label class="text-14px text-#707070 flex gap-6px lh-16px items-center">
-              <n-radio :checked="tray.type === CloseBxEnum.HIDE" @change="tray.type = CloseBxEnum.HIDE" />
+              <n-radio :checked="tips.type === CloseBxEnum.HIDE" @change="tips.type = CloseBxEnum.HIDE" />
               <span>最小化到系统托盘</span>
             </label>
             <label class="text-14px text-#707070 flex gap-6px lh-16px items-center">
-              <n-radio :checked="tray.type === CloseBxEnum.CLOSE" @change="tray.type = CloseBxEnum.CLOSE" />
+              <n-radio :checked="tips.type === CloseBxEnum.CLOSE" @change="tips.type = CloseBxEnum.CLOSE" />
               <span>直接退出程序</span>
             </label>
 
             <label class="text-12px text-#909090 flex gap-6px justify-end items-center">
-              <n-checkbox size="small" v-model:checked="tray.notTips" />
+              <n-checkbox size="small" v-model:checked="tips.notTips" />
               <span>是否关闭提示</span>
             </label>
           </n-flex>
@@ -65,18 +65,12 @@
 <script setup lang="tsx">
 import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
-import { CloseBxEnum, EventEnum, ThemeEnum } from '@/enums'
-import { emit } from '@tauri-apps/api/event'
+import { CloseBxEnum, ThemeEnum } from '@/enums'
 import { titleList } from './model.tsx'
 
 const settingStore = setting()
-const { themes, tray, escClose } = storeToRefs(settingStore)
+const { themes, tips, escClose } = storeToRefs(settingStore)
 const activeItem = ref<string>(themes.value.pattern)
-
-watchEffect(() => {
-  /* 给主页窗口提示传递事件 */
-  emit(EventEnum.CLOSE_HOME, { type: tray.value.type, notTips: tray.value.notTips, escClose: escClose.value })
-})
 
 /* 切换主题 */
 const handleTheme = async (event: MouseEvent, code: string) => {
@@ -88,7 +82,6 @@ const handleTheme = async (event: MouseEvent, code: string) => {
   let isDark: boolean
 
   settingStore.toggleTheme(code)
-  await emit(EventEnum.THEME, code)
   /*判断当前浏览器是否支持startViewTransition API*/
   if (document.startViewTransition) {
     const transition = document.startViewTransition(() => {

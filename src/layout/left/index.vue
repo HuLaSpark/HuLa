@@ -2,7 +2,7 @@
   <main data-tauri-drag-region class="left w-60px h-full p-[30px_6px_15px] box-border flex-col-center select-none">
     <!-- 点击时头像内容框 -->
     <n-popover
-      v-model:show="info.show"
+      v-model:show="infoShow"
       trigger="click"
       :show-arrow="false"
       :placement="shrinkStatus ? 'bottom-start' : 'right-start'"
@@ -10,13 +10,13 @@
       <template #trigger>
         <!-- 头像 -->
         <div class="relative w-36px h-36px rounded-50% cursor-pointer">
-          <img class="rounded-50% wh-full bg-#fff" :src="'https://picsum.photos/140'" alt="" />
+          <n-avatar round :color="'#fff'" :size="36" :src="'https://picsum.photos/140'" fallback-src="/logo.png" />
 
           <div
             @click.stop="openContent('在线状态', 'onlineStatus', 320, 480)"
             class="bg-[--bg-avatar] text-10px rounded-50% w-12px h-12px absolute bottom--2px right--2px"
             style="border: 2px solid var(--bg-avatar)">
-            <img class="rounded-50% wh-full" :src="info.url" alt="" />
+            <img class="rounded-50% wh-full" :src="url" alt="" />
           </div>
         </div>
       </template>
@@ -25,7 +25,7 @@
         vertical
         :size="26"
         class="wh-full p-15px box-border rounded-8px"
-        :style="`background: linear-gradient(to bottom, ${info.bgColor} 0%, ${info.themeColor} 100%)`">
+        :style="`background: linear-gradient(to bottom, ${bgColor} 0%, ${themeColor} 100%)`">
         <!-- 头像以及信息区域 -->
         <n-flex justify="space-between" align="center" :size="25">
           <n-flex>
@@ -40,8 +40,8 @@
                 align="center"
                 style="margin-left: -4px"
                 class="item-hover">
-                <img class="rounded-50% w-18px h-18px" :src="info.url" alt="" />
-                <span>{{ info.title }}</span>
+                <img class="rounded-50% w-18px h-18px" :src="url" alt="" />
+                <span>{{ title }}</span>
               </n-flex>
             </n-flex>
           </n-flex>
@@ -144,29 +144,24 @@ import { onlineStatus } from '@/stores/onlineStatus.ts'
 import { storeToRefs } from 'pinia'
 import { setting } from '@/stores/setting.ts'
 
-/*当前选中的元素 默认选中itemsTop的第一项*/
-const activeItem = ref<string>(itemsTop.value[0].url)
-const settingShow = ref(false)
-const shrinkStatus = ref(false)
-/* 已打开窗口的列表 */
-const openWindowsList = ref(new Set())
 const prefers = matchMedia('(prefers-color-scheme: dark)')
 const { createWebviewWindow } = useWindow()
 const settingStore = setting()
 const { themes } = storeToRefs(settingStore)
 const OLStatusStore = onlineStatus()
 const { url, title, bgColor } = storeToRefs(OLStatusStore)
-const info = reactive({
-  url: url.value,
-  title: title.value,
-  bgColor: bgColor?.value,
-  themeColor: themes.value.content === ThemeEnum.DARK ? 'rgba(63,63,63, 0.2)' : 'rgba(241,241,241, 0.2)',
-  show: false
-})
+/*当前选中的元素 默认选中itemsTop的第一项*/
+const activeItem = ref<string>(itemsTop.value[0].url)
+const settingShow = ref(false)
+const shrinkStatus = ref(false)
+const infoShow = ref(false)
+const themeColor = ref(themes.value.content === ThemeEnum.DARK ? 'rgba(63,63,63, 0.2)' : 'rgba(241,241,241, 0.2)')
+/* 已打开窗口的列表 */
+const openWindowsList = ref(new Set())
 
 /* 跟随系统主题模式切换主题 */
 const followOS = () => {
-  info.themeColor = prefers.matches ? 'rgba(63,63,63, 0.2)' : 'rgba(241,241,241, 0.2)'
+  themeColor.value = prefers.matches ? 'rgba(63,63,63, 0.2)' : 'rgba(241,241,241, 0.2)'
 }
 
 watchEffect(() => {
@@ -180,6 +175,7 @@ watchEffect(() => {
   Mitt.on(MittEnum.TO_SEND_MSG, (event: any) => {
     activeItem.value = event.url
   })
+  /* 判断是否是跟随系统主题 */
   if (themes.value.pattern === ThemeEnum.OS) {
     followOS()
     prefers.addEventListener('change', followOS)
@@ -215,7 +211,7 @@ const openContent = (title: string, label: string, w = 840, h = 600) => {
   delay(async () => {
     await createWebviewWindow(title, label, w, h)
   }, 300)
-  info.show = false
+  infoShow.value = false
 }
 
 const closeMenu = (event: any) => {
@@ -239,19 +235,6 @@ onMounted(async () => {
   })
   await listen(EventEnum.WIN_CLOSE, (e) => {
     openWindowsList.value.delete(e.payload)
-  })
-  await listen(EventEnum.SET_OL_STS, (e) => {
-    const val = e.payload as OPT.Online
-    info.url = val.url
-    info.title = val.title
-    info.bgColor = val.bgColor
-  })
-  await listen(EventEnum.THEME, (e) => {
-    if (e.payload === ThemeEnum.OS) {
-      followOS()
-    } else {
-      info.themeColor = e.payload === ThemeEnum.DARK ? 'rgba(63,63,63, 0.2)' : 'rgba(241,241,241, 0.2)'
-    }
   })
 })
 
