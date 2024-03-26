@@ -1,8 +1,8 @@
 <template>
   <main class="flex-1 bg-[--right-bg-color] h-full w-100vw">
-    <ActionBar />
+    <ActionBar :current-label="appWindow.label" />
     <!-- 需要判断当前路由是否是信息详情界面 -->
-    <ChatBox :active-item="activeItem" v-if="msgBoxShow && isChat" />
+    <ChatBox :active-item="activeItem" v-if="msgBoxShow && isChat && activeItem !== -1" />
 
     <Details :content="DetailsContent" v-else-if="detailsShow && isDetails" />
 
@@ -16,18 +16,18 @@
 <script setup lang="ts">
 import Mitt from '@/utils/Bus.ts'
 import router from '@/router'
-import { theme } from '@/stores/theme.ts'
+import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
-import { EventEnum, ThemeEnum } from '@/enums'
-import { listen } from '@tauri-apps/api/event'
+import { MittEnum, ThemeEnum } from '@/enums'
+import { appWindow } from '@tauri-apps/api/window'
 
-const themeStore = theme()
-const { THEME, PATTERN } = storeToRefs(themeStore)
+const settingStore = setting()
+const { themes } = storeToRefs(settingStore)
 const msgBoxShow = ref(false)
 const detailsShow = ref(false)
 const activeItem = ref()
 const DetailsContent = ref()
-const imgTheme = ref(THEME.value)
+const imgTheme = ref(themes.value.content)
 const prefers = matchMedia('(prefers-color-scheme: dark)')
 // 判断当前路由是否是聊天界面
 const isChat = computed(() => {
@@ -43,37 +43,26 @@ const followOS = () => {
   imgTheme.value = prefers.matches ? ThemeEnum.DARK : ThemeEnum.LIGHT
 }
 
-/* 监听其他标签页的变化 */
-listen(EventEnum.THEME, (e) => {
-  if (e.payload === ThemeEnum.OS) {
-    followOS()
-    prefers.addEventListener('change', followOS)
-  } else {
-    imgTheme.value = (e.payload || ThemeEnum.LIGHT) as string
-    prefers.removeEventListener('change', followOS)
-  }
-})
-
 watchEffect(() => {
-  if (PATTERN.value === ThemeEnum.OS) {
+  if (themes.value.pattern === ThemeEnum.OS) {
     followOS()
     prefers.addEventListener('change', followOS)
   } else {
-    imgTheme.value = THEME.value || ThemeEnum.LIGHT
+    imgTheme.value = themes.value.content || ThemeEnum.LIGHT
     prefers.removeEventListener('change', followOS)
   }
 })
 
 onMounted(() => {
   if (isChat) {
-    Mitt.on('msgBoxShow', (event: any) => {
+    Mitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
       msgBoxShow.value = event.msgBoxShow
       activeItem.value = event.item
     })
   }
 
   if (isDetails) {
-    Mitt.on('detailsShow', (event: any) => {
+    Mitt.on(MittEnum.DETAILS_SHOW, (event: any) => {
       DetailsContent.value = event.data
       detailsShow.value = event.detailsShow as boolean
     })

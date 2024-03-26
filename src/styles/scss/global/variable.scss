@@ -41,7 +41,17 @@
   --bg-bubble: rgb(253, 253, 253);
   --bg-bubble-active: #dedede;
   // 头像状态的背景颜色
-  --bg-avatar: #ccc;
+  --bg-avatar: #e3e3e3;
+  // 个人信息框背景颜色
+  --info-hover: #eee;
+  --info-text-color: #707070;
+  // 系统托盘hover样式
+  --tray-hover: #eee;
+  --tray-hover-e: #f5dce1;
+  // 群聊列表hover颜色
+  --bg-group-hover: #e3e3e3;
+  // 信息框背景颜色
+  --bg-info: rgba(255, 255, 255, 0.2);
 }
 
 html[data-theme='dark'] {
@@ -87,6 +97,16 @@ html[data-theme='dark'] {
   --bg-bubble-active: #202020;
   // 头像状态的背景颜色
   --bg-avatar: #3f3f3f;
+  // 个人信息框背景颜色
+  --info-hover: #3b3b3b;
+  --info-text-color: #ccc;
+  // 系统托盘hover样式
+  --tray-hover: #3b3b3b;
+  --tray-hover-e: #bb8188;
+  // 群聊列表hover颜色
+  --bg-group-hover: #3f3f3f;
+  // 信息框背景颜色
+  --bg-info: rgba(27, 27, 27, 0.8);
 }
 /*! end */
 // 线性动画
@@ -121,10 +141,10 @@ html[data-theme='dark'] {
 // 气泡闪烁动画
 @keyframes bubble-twinkle {
   0% {
-    transform: scale(0.4);
+    transform: scale(0.1);
   }
   50% {
-    transform: scale(1.1);
+    transform: scale(1.01);
   }
   100% {
     transform: scale(1);
@@ -148,11 +168,16 @@ html[data-theme='dark'] {
 }
 /*!end*/
 
-/*! 修改复选框的样式 */
+/*! 修改naive-ui复选框的样式 */
 :deep(.n-checkbox .n-checkbox-box) {
   border-radius: 50%;
   width: 16px;
   height: 16px;
+}
+
+/*! 修改naive-ui滚动条的间距 */
+:deep(.n-scrollbar > .n-scrollbar-rail.n-scrollbar-rail--vertical, .n-scrollbar + .n-scrollbar-rail.n-scrollbar-rail--vertical) {
+  right: 0;
 }
 
 /*! 通用菜单项目样式 */

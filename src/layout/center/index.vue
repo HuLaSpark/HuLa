@@ -1,6 +1,11 @@
 <template>
   <main data-tauri-drag-region class="resizable select-none" :style="{ width: width + 'px' }">
-    <ActionBar class="absolute right-0" v-if="shrinkStatus" :shrink-status="!shrinkStatus" :max-w="false" />
+    <ActionBar
+      class="absolute right-0"
+      v-if="shrinkStatus"
+      :shrink-status="!shrinkStatus"
+      :max-w="false"
+      :current-label="appWindow.label" />
 
     <!--    <div class="resize-handle" @mousedown="initDrag"></div>-->
 
@@ -10,10 +15,12 @@
       class="mt-30px w-full h-38px flex flex-col items-center">
       <div class="flex-center gap-5px w-full pr-16px pl-16px box-border">
         <n-input
-          :on-focus="() => router.push('/searchDetails')"
+          id="search"
+          @focus="() => router.push('/searchDetails')"
           class="rounded-4px w-full"
           style="background: var(--search-bg-color)"
           :maxlength="20"
+          clearable
           size="small"
           placeholder="搜索">
           <template #prefix>
@@ -29,7 +36,7 @@
     </header>
 
     <!-- 列表 -->
-    <n-scrollbar style="max-height: calc(100vh - 70px)">
+    <n-scrollbar style="max-height: calc(100vh - 70px)" id="scrollbar">
       <div class="h-full flex-1 p-[4px_10px_0px_8px]">
         <router-view />
       </div>
@@ -40,6 +47,8 @@
 <script setup lang="ts">
 import Mitt from '@/utils/Bus.ts'
 import router from '@/router'
+import { MittEnum } from '@/enums'
+import { appWindow } from '@tauri-apps/api/window'
 
 // const minWidth = 160 // 设置最小宽度
 // const maxWidth = 320 // 设置最大宽度
@@ -50,11 +59,27 @@ const width = ref(250) // 初始化宽度
 const shrinkStatus = ref(false)
 
 // todo 1.了解这里是怎么实现的 2.修改拖拽放大缩小的事件
-Mitt.on('shrinkWindow', (event) => {
+Mitt.on(MittEnum.SHRINK_WINDOW, (event) => {
   shrinkStatus.value = event as boolean
   width.value = 250
 })
 
+const closeMenu = (event: Event) => {
+  const e = event.target as HTMLInputElement
+  const route = router.currentRoute.value.path
+  /* 判断如果点击的搜索框，就关闭消息列表 */
+  if (!e.matches('#scrollbar, #scrollbar *, #search *, #search') && route === '/searchDetails') {
+    router.go(-1)
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('click', closeMenu, true)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('click', closeMenu, true)
+})
 // watchEffect(() => {
 //   if (width.value === maxWidth) {
 //     Mitt.emit('shrinkWindow', false)
@@ -86,21 +111,6 @@ Mitt.on('shrinkWindow', (event) => {
 // }
 </script>
 
-<style scoped>
-.resizable {
-  height: 100%;
-  position: relative;
-  overflow: hidden;
-  background: var(--center-bg-color);
-}
-
-.resize-handle {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  cursor: ew-resize;
-  background-color: #ccc; /* 可以根据需要更改颜色 */
-}
+<style scoped lang="scss">
+@import 'style';
 </style>

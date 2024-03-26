@@ -1,0 +1,50 @@
+.msg-box {
+  transition:
+          background-color 0.3s ease,
+          border-radius 0.3s ease;
+  color: var(--text-color);
+  .text {
+    color: #808080;
+  }
+  &:not(.active):first-child {
+    background: var(--bg-msg-first-child);
+    border-radius: 6px;
+  }
+  &:not(.active):hover {
+    background: var(--bg-msg-hover);
+    border-radius: 6px;
+    cursor: pointer;
+  }
+}
+
+.active {
+  background: var(--bg-active-msg);
+  border-radius: 8px;
+  color: #fff;
+  .text {
+    color: #fff;
+  }
+}
+
+/*! TransitionGroup过渡样式 */
+.fade-move,
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.8s cubic-bezier(0.55, 0, 0.1, 1);
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: scaleY(0.01) translate(30px, 0);
+}
+
+.fade-leave-active {
+  position: absolute;
+}
+/*! end */
+
+:deep(.n-badge .n-badge-sup) {
+  font-weight: bold;
+  font-size: 10px;
+}

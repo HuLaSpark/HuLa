@@ -1,100 +1,111 @@
 <template>
   <!-- 中间聊天内容(使用虚拟列表) -->
-  <n-virtual-list
+  <n-scrollbar
+    id="image-chat-main"
     ref="virtualListInst"
-    style="max-height: calc(100vh - 260px); position: relative"
-    item-resizable
-    padding-bottom="10px"
-    :item-size="42"
-    :items="items"
-    @scroll="handleScroll($event)">
-    <template #default="{ item }">
-      <main
-        :key="item.key"
-        class="flex-y-center min-h-58px"
-        :class="activeItem.type === RoomTypeEnum.GROUP ? 'p-[18px_20px]' : 'chat-single p-[2px_20px]'">
-        <!-- 好友或者群聊的信息 -->
-        <article class="flex flex-col w-full gap-18px" :class="item.accountId === userId ? 'items-end' : ''">
-          <div
-            class="flex items-start"
-            :class="item.accountId === userId ? 'flex-row-reverse' : ''"
-            style="max-width: calc(100% - 54px)">
-            <!-- 头像  -->
-            <img
-              :class="item.accountId === userId ? '' : 'mr-10px'"
-              class="w-34px rounded-50% select-none"
-              :src="item.accountId === userId ? item.avatar : activeItem.avatar"
-              alt="" />
+    style="max-height: calc(100vh - 260px)"
+    class="relative h-100vh">
+    <n-virtual-list item-resizable padding-bottom="10px" :item-size="42" :items="items" @scroll="handleScroll($event)">
+      <template #default="{ item }">
+        <main
+          :key="item.key"
+          class="flex-y-center min-h-58px"
+          :class="activeItem.type === RoomTypeEnum.GROUP ? 'p-[18px_20px]' : 'chat-single p-[2px_20px]'">
+          <!-- 好友或者群聊的信息 -->
+          <article class="flex flex-col w-full gap-18px" :class="item.accountId === userId ? 'items-end' : ''">
             <div
-              class="flex flex-col gap-8px color-[--text-color]"
-              :class="item.accountId === userId ? 'items-end mr-10px' : ''">
-              <span class="text-12px select-none color-#909090" v-if="activeItem.type === RoomTypeEnum.GROUP">
-                {{ item.accountId === userId ? item.value : activeItem.accountName }}
-              </span>
-              <!--  右键菜单及其气泡样式  -->
-              <ContextMenu
-                :data-key="item.accountId === userId ? `U${item.key}` : `Q${item.key}`"
-                @select="$event.click(item.key)"
-                :menu="menuList"
-                :special-menu="specialMenuList"
-                @click="handleMsgClick(item)">
-                <!--                &lt;!&ndash; 渲染消息内容体 &ndash;&gt;-->
-                <!--                <RenderMessage :message="message" />-->
-                <!--  消息为文本类型  -->
-                <div
-                  v-if="item.type === MsgEnum.TEXT"
-                  :class="[
-                    { active: activeBubble === item.key },
-                    activeItem.type === RoomTypeEnum.GROUP ? '' : 'm-[10px_0]',
-                    item.accountId === userId ? 'bubble-oneself' : 'bubble'
-                  ]"
-                  v-html="item.content"></div>
+              class="flex items-start"
+              :class="item.accountId === userId ? 'flex-row-reverse' : ''"
+              style="max-width: calc(100% - 54px)">
+              <!-- 头像  -->
+              <n-popover
+                @update:show="handlePopoverUpdate(item.key)"
+                trigger="click"
+                placement="right-start"
+                :show-arrow="false"
+                style="padding: 0; background: var(--bg-info); backdrop-filter: blur(10px)">
+                <template #trigger>
+                  <ContextMenu
+                    @select="$event.click(item)"
+                    :menu="activeItem.type === RoomTypeEnum.GROUP ? optionsList : []"
+                    :special-menu="report">
+                    <n-avatar
+                      lazy
+                      round
+                      :color="'#fff'"
+                      :size="34"
+                      @click="selectKey = item.key"
+                      :src="item.accountId === userId ? item.avatar : activeItem.avatar"
+                      :class="item.accountId === userId ? '' : 'mr-10px'"
+                      fallback-src="/logo.png"
+                      :render-placeholder="() => null"
+                      :intersection-observer-options="{
+                        root: '#image-chat-main'
+                      }"></n-avatar>
+                  </ContextMenu>
+                </template>
+                <!-- 用户个人信息框 -->
+                <InfoPopover :info="activeItemRef" />
+              </n-popover>
+              <div
+                class="flex flex-col gap-8px color-[--text-color]"
+                :class="item.accountId === userId ? 'items-end mr-10px' : ''">
+                <ContextMenu
+                  @select="$event.click(item)"
+                  :menu="activeItem.type === RoomTypeEnum.GROUP ? optionsList : []"
+                  :special-menu="report">
+                  <span class="text-12px select-none color-#909090" v-if="activeItem.type === RoomTypeEnum.GROUP">
+                    {{ item.accountId === userId ? item.value : activeItem.accountName }}
+                  </span>
+                </ContextMenu>
+                <!--  气泡样式  -->
+                <ContextMenu
+                  :data-key="item.accountId === userId ? `U${item.key}` : `Q${item.key}`"
+                  @select="$event.click(item)"
+                  :menu="menuList"
+                  :special-menu="specialMenuList"
+                  @click="handleMsgClick(item)">
+                  <!--                &lt;!&ndash; 渲染消息内容体 &ndash;&gt;-->
+                  <!--                <RenderMessage :message="message" />-->
+                  <!--  消息为文本类型  -->
+                  <div
+                    v-if="item.type === MsgEnum.TEXT"
+                    style="white-space: pre-wrap"
+                    :class="[
+                      { active: activeBubble === item.key },
+                      item.accountId === userId ? 'bubble-oneself' : 'bubble'
+                    ]">
+                    <span v-html="item.content"></span>
+                  </div>
 
-                <!-- 消息为超链接时 -->
-                <div
-                  v-if="item.type === MsgEnum.HYPERLINK"
-                  :class="[
-                    { active: activeBubble === item.key },
-                    activeItem.type === RoomTypeEnum.GROUP ? '' : 'm-[10px_0]',
-                    item.accountId === userId ? 'bubble-oneself' : 'bubble'
-                  ]">
-                  <!-- rel="noopener noreferrer" 让网站安全跳转，防止钓鱼网站 -->
-                  <a class="color-inherit" target="_blank" rel="noopener noreferrer" :href="item.content">
-                    {{ item.content }}
-                  </a>
-                </div>
+                  <!--  消息为为图片类型(不固定宽度和高度), 多张图片时渲染  -->
+                  <n-image-group v-if="Array.isArray(item.content) && item.type === MsgEnum.IMAGE">
+                    <n-flex class="photo-wall" vertical>
+                      <n-image
+                        v-for="(src, index) in item.content"
+                        :key="index"
+                        :img-props="{ style: { maxWidth: '325px', maxHeight: '165px' } }"
+                        show-toolbar-tooltip
+                        style="border-radius: 8px"
+                        :src="src"></n-image>
+                    </n-flex>
+                  </n-image-group>
 
-                <!--  消息为为图片类型(不固定宽度和高度), 多张图片时渲染  -->
-                <n-image-group v-if="Array.isArray(item.content) && item.type === MsgEnum.IMAGE">
-                  <n-space
-                    class="photo-wall"
-                    vertical
-                    :class="activeItem.type === RoomTypeEnum.GROUP ? '' : 'm-[10px_0]'">
-                    <n-image
-                      v-for="(src, index) in item.content"
-                      :key="index"
-                      :img-props="{ style: { maxWidth: '325px', maxHeight: '165px' } }"
-                      show-toolbar-tooltip
-                      style="border-radius: 8px"
-                      :src="src"></n-image>
-                  </n-space>
-                </n-image-group>
-
-                <!-- 单张图片时渲染 -->
-                <n-image
-                  v-else-if="typeof item.content === 'string' && item.type === MsgEnum.IMAGE"
-                  :img-props="{ style: { maxWidth: '325px', maxHeight: '165px' } }"
-                  show-toolbar-tooltip
-                  style="border-radius: 8px"
-                  :class="activeItem.type === RoomTypeEnum.GROUP ? '' : 'm-[10px_0]'"
-                  :src="item.content"></n-image>
-              </ContextMenu>
+                  <!-- 单张图片时渲染 -->
+                  <n-image
+                    v-else-if="typeof item.content === 'string' && item.type === MsgEnum.IMAGE"
+                    :img-props="{ style: { maxWidth: '325px', maxHeight: '165px' } }"
+                    show-toolbar-tooltip
+                    style="border-radius: 8px"
+                    :src="item.content"></n-image>
+                </ContextMenu>
+              </div>
             </div>
-          </div>
-        </article>
-      </main>
-    </template>
-  </n-virtual-list>
+          </article>
+        </main>
+      </template>
+    </n-virtual-list>
+  </n-scrollbar>
 
   <!-- 弹出框 -->
   <n-modal v-model:show="modalShow" class="w-350px border-rd-8px">
@@ -114,7 +125,7 @@
   </n-modal>
 
   <!--  悬浮按钮提示(头部悬浮) // TODO 要结合已读未读功能来判断之前的信息有多少没有读，当现在的距离没有到最底部并且又有新消息来未读的时候显示下标的更多信息 (nyh -> 2024-03-07 01:27:22)-->
-  <header class="float-header">
+  <header class="float-header" :class="activeItem.type === RoomTypeEnum.GROUP ? 'right-220px' : 'right-50px'">
     <div class="float-box">
       <n-flex justify="space-between" align="center">
         <n-icon :color="'rgba(5,150,105,0.5)'">
@@ -126,11 +137,11 @@
   </header>
 
   <!-- 悬浮按钮提示(底部悬浮) -->
-  <footer class="float-footer" v-if="floatFooter && newMsgNum > 0">
-    <div
-      class="float-box"
-      :class="{ max: newMsgNum > 99 }"
-      @click="() => virtualListInst?.scrollTo({ position: 'bottom' })">
+  <footer
+    class="float-footer"
+    v-if="floatFooter && newMsgNum > 0"
+    :class="activeItem.type === RoomTypeEnum.GROUP ? 'right-220px' : 'right-50px'">
+    <div class="float-box" :class="{ max: newMsgNum > 99 }" @click="scrollBottom">
       <n-flex justify="space-between" align="center">
         <n-icon :color="newMsgNum > 99 ? '#ce304f' : 'rgba(5,150,105,0.5)'">
           <svg><use href="#double-down"></use></svg>
@@ -143,11 +154,16 @@
   </footer>
 </template>
 <script setup lang="ts">
-import { MsgEnum, RoomTypeEnum } from '@/enums'
-import { Menu, MockItem } from '@/services/types.ts'
+import { MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
+import { MockItem } from '@/services/types.ts'
 import Mitt from '@/utils/Bus.ts'
 import { VirtualListInst } from 'naive-ui'
+import { invoke } from '@tauri-apps/api/tauri'
+import { optionsList, report } from './config.ts'
+import { usePopover } from '@/hooks/usePopover.ts'
 
+/* 当前点击的用户的key */
+const selectKey = ref()
 const activeBubble = ref(-1)
 const userId = ref(10086)
 const copyright = ref('-HuLa©-版权所有')
@@ -174,11 +190,14 @@ const newMsgNum = ref(0)
 const itemComputed = computed(() => {
   return items.value.filter((item) => item.accountId !== userId.value).length
 })
-/* 虚拟列表的距离 */
+/* 虚拟列表 */
 const virtualListInst = ref<VirtualListInst>()
+const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-main')
+
 const { activeItem } = defineProps<{
   activeItem: MockItem
 }>()
+const activeItemRef = ref({ ...activeItem })
 // // 创建一个符合 TextBody 类型的对象
 // const textBody = {
 //   content: '123',
@@ -202,15 +221,14 @@ const { activeItem } = defineProps<{
 //   }
 // })
 // const message = computed(() => msg.value)
-
-/* 右键菜单列表 */
-const menuList = ref<Menu>([
+/* 右键消息菜单列表 */
+const menuList = ref<OPT.RightMenu[]>([
   {
     label: '复制',
     icon: 'copy',
-    click: (index: number) => {
+    click: (item: any) => {
       // 复制内容到剪贴板
-      copyrightComputed.value.copy(index)
+      copyrightComputed.value.copy(item.key)
     }
   },
   {
@@ -222,7 +240,7 @@ const menuList = ref<Menu>([
   { label: '回复', icon: 'reply' }
 ])
 /* 右键菜单下划线后的列表 */
-const specialMenuList = ref<Menu>([
+const specialMenuList = ref<OPT.RightMenu[]>([
   {
     label: '删除',
     icon: 'delete',
@@ -248,6 +266,7 @@ const items = ref(
 
 watchEffect(() => {
   newMsgNum.value = itemComputed.value - historyIndex.value
+  activeItemRef.value = { ...activeItem }
 })
 
 /* 处理滚动事件(用于页脚显示功能) */
@@ -349,6 +368,13 @@ const addToDomUpdateQueue = (index: number, id: number) => {
   })
 }
 
+/* 点击后滚动到底部 */
+const scrollBottom = () => {
+  nextTick(() => {
+    virtualListInst.value?.scrollTo({ position: 'bottom' })
+  })
+}
+
 const closeMenu = (event: any) => {
   if (!event.target.matches('.bubble', 'bubble-oneself')) {
     activeBubble.value = -1
@@ -356,8 +382,20 @@ const closeMenu = (event: any) => {
 }
 
 onMounted(() => {
-  Mitt.on('handleSendMessage', (event) => {
+  /*! 启动图标闪烁 需要设置"resources": ["sec-tauri/图标放置的文件夹"]*/
+  invoke('tray_blink', {
+    isRun: true,
+    ms: 500,
+    iconPath1: 'tray/msg.png',
+    iconPath2: 'tray/msg-sub.png'
+  }).catch((error) => {
+    console.error('设置图标失败:', error)
+  })
+  Mitt.on(MittEnum.SEND_MESSAGE, (event) => {
     handleSendMessage(event)
+  })
+  Mitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
+    activeItemRef.value = event.item
   })
   window.addEventListener('click', closeMenu, true)
   // let index = items.value.length > 0 ? items.value[items.value.length - 1].key : 0
@@ -383,58 +421,5 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-/* 气泡样式 */
-@mixin bubble {
-  @apply w-fit max-w-55vw min-h-1em p-[8px_12px] text-15px line-height-22px bg-[--bg-bubble] rounded-[2px_18px_18px];
-  word-break: break-all; /* 强制连续文本换行 */
-  &.active {
-    background-color: var(--bg-bubble-active);
-    color: var(--text-color);
-  }
-}
-@mixin float($position: top) {
-  @if $position == bottom {
-    @apply fixed z-10 bottom-210px right-50px w-fit select-none text-#059669 cursor-pointer;
-  } @else {
-    @apply fixed z-10 top-80px right-50px w-fit select-none text-#059669 cursor-pointer;
-  }
-}
-.chat-single:first-child {
-  padding-top: 16px;
-}
-.bubble {
-  @include bubble;
-}
-.bubble-oneself {
-  @include bubble;
-  @apply rounded-[18px_2px_18px_18px] color-#fff;
-  background-color: rgba(5, 150, 105, 0.8);
-}
-/*! 气泡动画 */
-.bubble-animation {
-  animation: bubble-twinkle 0.4s ease-out forwards;
-}
-.photo-wall {
-  @extend .bubble-oneself;
-  @apply flex flex-col items-start gap-6px max-w-380px;
-}
-.float-header {
-  @include float;
-}
-.float-footer {
-  @include float(bottom);
-}
-.float-box {
-  background-color: #fff;
-  border-radius: 50px;
-  padding: 6px 8px;
-  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.16);
-  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  &:hover {
-    background-color: rgb(215, 229, 219);
-  }
-}
-.max:hover {
-  background-color: #f5dce1;
-}
+@import '@/styles/scss/chat-main';
 </style>

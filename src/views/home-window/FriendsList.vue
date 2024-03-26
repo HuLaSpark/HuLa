@@ -82,6 +82,7 @@
 <script setup lang="ts">
 import Mitt from '@/utils/Bus.ts'
 import { MockList } from '@/mock/index.ts'
+import { MittEnum } from '@/enums'
 
 const menuList = ref([
   { label: '添加分组', icon: 'plus' },
@@ -106,7 +107,7 @@ const handleClick = (index: number, type: number) => {
         : friendsList.value.filter((item) => item.key === index),
     detailsShow: detailsShow.value
   }
-  Mitt.emit('detailsShow', data)
+  Mitt.emit(MittEnum.DETAILS_SHOW, data)
 }
 // todo 需要循环数组来展示分组
 const showMenu = (event: MouseEvent) => {
@@ -119,7 +120,7 @@ const handleSelect = (event: MouseEvent) => {
 
 onUnmounted(() => {
   detailsShow.value = false
-  Mitt.emit('detailsShow', detailsShow.value)
+  Mitt.emit(MittEnum.DETAILS_SHOW, detailsShow.value)
 })
 </script>
 

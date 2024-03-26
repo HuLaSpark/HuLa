@@ -1,5 +1,4 @@
-import { WebviewWindow, LogicalSize } from '@tauri-apps/api/window'
-import { autoCloseWindow } from '@/common/WindowEvent.ts'
+import { LogicalSize, WebviewWindow } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/tauri'
 
 export const useWindow = () => {
@@ -26,9 +25,17 @@ export const useWindow = () => {
     minW = 310,
     minH = 540
   ) => {
+    const checkLabel = computed(() => {
+      /* 如果是打开独立窗口就截取label中的固定label名称 */
+      if (label.includes('alone')) {
+        return label.replace(/\d/g, '')
+      } else {
+        return label
+      }
+    })
     const webview = new WebviewWindow(label, {
       title: title,
-      url: `/${label}`,
+      url: `/${checkLabel.value}`,
       fullscreen: false,
       resizable: resizable,
       center: true,
@@ -47,23 +54,14 @@ export const useWindow = () => {
         console.error('设置窗口阴影失败:', error)
       })
       if (wantCloseWindow) {
-        await autoCloseWindow(wantCloseWindow)
+        const win = WebviewWindow.getByLabel(wantCloseWindow)
+        win?.close()
       }
     })
 
     await webview.once('tauri://error', async () => {
       // TODO 这里利用错误处理的方式来查询是否是已经创建了窗口,如果一开始就使用WebviewWindow.getByLabel来查询在刷新的时候就会出现问题 (nyh -> 2024-03-06 23:54:17)
-      const isExistsWinds = WebviewWindow.getByLabel(label)
-      if (isExistsWinds) {
-        // 如果窗口已存在，首先检查是否最小化了
-        const minimized = await webview.isMinimized()
-        if (minimized) {
-          // 如果已最小化，恢复窗口
-          await webview.unminimize()
-        }
-        // 如果窗口已存在，则给它焦点，使其在最前面显示
-        await webview.setFocus()
-      }
+      await checkWinExist(label)
     })
 
     return webview
@@ -86,8 +84,32 @@ export const useWindow = () => {
     })
   }
 
+  /**
+   * 检查窗口是否存在
+   * @param L 窗口标签
+   */
+  const checkWinExist = async (L: string) => {
+    const isExistsWinds = WebviewWindow.getByLabel(L)
+    if (isExistsWinds) {
+      // 如果窗口已存在，首先检查是否最小化了
+      const minimized = await isExistsWinds.isMinimized()
+      // 检查是否是隐藏
+      const hidden = await isExistsWinds.isVisible()
+      if (!hidden) {
+        await isExistsWinds.show()
+      }
+      if (minimized) {
+        // 如果已最小化，恢复窗口
+        await isExistsWinds.unminimize()
+      }
+      // 如果窗口已存在，则给它焦点，使其在最前面显示
+      await isExistsWinds.setFocus()
+    }
+  }
+
   return {
     createWebviewWindow,
-    resizeWindow
+    resizeWindow,
+    checkWinExist
   }
 }

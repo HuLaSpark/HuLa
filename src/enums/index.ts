@@ -17,6 +17,7 @@ export enum RCodeEnum {
   /**业务出现问题*/
   BUSINESS_EXCEPTION = '600'
 }
+
 /**URL*/
 export enum URLEnum {
   /**用户*/
@@ -27,12 +28,32 @@ export enum URLEnum {
 
 /** tauri原生跨窗口通信时传输的类型 */
 export enum EventEnum {
-  /** 主题 */
-  THEME = 'theme',
   /** 窗口关闭 */
   WIN_CLOSE = 'winClose',
   /** 窗口显示 */
-  WIN_SHOW = 'winShow'
+  WIN_SHOW = 'winShow',
+  /** 退出程序 */
+  EXIT = 'exit',
+  /** 退出账号 */
+  LOGOUT = 'logout',
+  /** 独立窗口 */
+  ALONE = 'alone'
+}
+
+/** Mitt兄弟组件通信 */
+export enum MittEnum {
+  /** 更新消息数量 */
+  UPDATE_MSG_TOTAL = 'updateMsgTotal',
+  /** 显示消息框 */
+  MSG_BOX_SHOW = 'msgBoxShow',
+  /** 发送消息 */
+  SEND_MESSAGE = 'sendMessage',
+  /** 跳到发送信息 */
+  TO_SEND_MSG = 'toSendMsg',
+  /** 缩小窗口 */
+  SHRINK_WINDOW = 'shrinkWindow',
+  /** 详情页面显示 */
+  DETAILS_SHOW = 'detailsShow'
 }
 
 /** 主题类型 */
@@ -43,6 +64,16 @@ export enum ThemeEnum {
   DARK = 'dark',
   /** 跟随系统 */
   OS = 'os'
+}
+
+/* pinia存储的名称 */
+export enum StoresEnum {
+  /** 置顶 */
+  ALWAYS_ON_TOP = 'alwaysOnTop',
+  /** 设置 */
+  SETTING = 'setting',
+  /** 在线状态 */
+  ONLINE_STATUS = 'onlineStatus'
 }
 
 /**
@@ -72,5 +103,13 @@ export enum RoomTypeEnum {
   /** 1群聊 */
   GROUP = 1,
   /** 2单聊 */
-  SINGLE
+  SINGLE = 2
+}
+
+/** 关闭窗口的行为 */
+export enum CloseBxEnum {
+  /** 隐藏 */
+  HIDE = 'hide',
+  /** 关闭 */
+  CLOSE = 'close'
 }

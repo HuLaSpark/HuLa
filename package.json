@@ -1,17 +1,17 @@
 {
   "name": "hula-im-tauri",
   "private": true,
+  "type": "module",
   "version": "v1.3.0-beta",
   "packageManager": "pnpm@8.15.4",
   "engines": {
     "node": ">=18.12.0",
     "pnpm": ">=8.10.0"
   },
-  "type": "module",
   "author": {
     "name": "nongyehong",
     "email": "2439646234@qq.com",
-    "url": "https://xxxx/xxx"
+    "url": "https://github.com/nongyehong/HuLa-IM-Tauri"
   },
   "lint-staged": {
     "*.{js,jsx,vue,ts,tsx}": [
@@ -26,7 +26,7 @@
     "preview": "vite preview",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
-    "tauri:icon": "tauri icon logo.png",
+    "tauri:icon": "tauri icon /logo.png",
     "preinstall": "npx only-allow pnpm",
     "commit": "git add . && lint-staged && git-cz && conventional-changelog -p cz-config.cjs -i CHANGELOG.md -s -r 0",
     "changelog": "conventional-changelog -p cz-config.cjs -i CHANGELOG.md -s -r 0",
@@ -34,13 +34,15 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^1.5.3",
-    "axios": "^1.6.7",
+    "axios": "^1.6.8",
+    "colorthief": "^2.4.0",
     "dayjs": "^1.11.10",
     "lodash-es": "^4.17.21",
     "mitt": "^3.0.1",
     "naive-ui": "^2.38.1",
     "pinia": "^2.1.7",
     "pinia-plugin-persistedstate": "^3.2.1",
+    "pinia-shared-state": "^0.5.1",
     "vue": "^3.4.21",
     "vue-draggable-plus": "^0.3.5",
     "vue-router": "^4.3.0"
@@ -79,7 +81,7 @@
     "typescript": "^5.4.2",
     "unplugin-auto-import": "^0.17.2",
     "unplugin-vue-components": "^0.26.0",
-    "vite": "5.1.4",
+    "vite": "5.2.6",
     "vue-tsc": "^2.0.6"
   },
   "config": {

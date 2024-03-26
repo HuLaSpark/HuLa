@@ -6,11 +6,14 @@
   </NaiveProvider>
 </template>
 <script setup lang="ts">
-import { theme } from '@/stores/theme.ts'
+import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
+import { StoresEnum, ThemeEnum } from '@/enums'
+import { onlineStatus } from '@/stores/onlineStatus.ts'
 
-const themeStore = theme()
-const { THEME } = storeToRefs(themeStore)
+const settingStore = setting()
+const OLStatusStore = onlineStatus()
+const { themes } = storeToRefs(settingStore)
 
 /* 禁止图片以及输入框的拖拽 */
 const preventDrag = (e: MouseEvent) => {
@@ -22,22 +25,31 @@ const preventDrag = (e: MouseEvent) => {
 }
 
 onMounted(() => {
+  // /*! 使用msi或者其他安装包安装后才会显示应用的名字和图标 */
+  // sendNotification({ title: 'TAURI', body: 'Tauri is awesome!' })
   // 判断localStorage中是否有设置主题
-  if (!localStorage.getItem('theme')) {
-    themeStore.initTheme('light')
+  if (!localStorage.getItem(StoresEnum.SETTING)) {
+    settingStore.init(ThemeEnum.LIGHT)
   }
-  document.documentElement.dataset.theme = THEME.value
+  /* 第一次没有选状态的时候随机选中一个状态 */
+  if (!localStorage.getItem(StoresEnum.ONLINE_STATUS)) {
+    OLStatusStore.init()
+  }
+  document.documentElement.dataset.theme = themes.value.content
   window.addEventListener('dragstart', preventDrag)
-  // /* 禁用浏览器默认的快捷键 */
-  // window.addEventListener('keydown', (e) => {
-  //   // 排除ctrl+c ctrl+v
-  //   if (e.ctrlKey && (e.key === 'c' || e.key === 'v')) return
-  //   if (e.ctrlKey || e.metaKey || e.altKey) {
-  //     e.preventDefault()
-  //   }
-  // })
-  // /* 禁止右键菜单 */
-  // window.addEventListener('contextmenu', (e) => e.preventDefault(), false)
+  /* 开发环境不禁止 */
+  if (process.env.NODE_ENV !== 'development') {
+    /* 禁用浏览器默认的快捷键 */
+    window.addEventListener('keydown', (e) => {
+      // 排除ctrl+c ctrl+v
+      if (e.ctrlKey && (e.key === 'c' || e.key === 'v')) return
+      if (e.ctrlKey || e.metaKey || e.altKey) {
+        e.preventDefault()
+      }
+    })
+    /* 禁止右键菜单 */
+    window.addEventListener('contextmenu', (e) => e.preventDefault(), false)
+  }
 })
 
 onUnmounted(() => {

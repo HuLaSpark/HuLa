@@ -1,0 +1,47 @@
+@mixin action() {
+  padding: 6px 8px 6px 8px;
+  &:not(.active):hover {
+    background: rgba(193, 193, 193, 0.4);
+    border-radius: 8px;
+    color: #059669;
+    cursor: pointer;
+    animation: linearAnimation 3s linear forwards;
+  }
+}
+
+.left {
+  background: var(--left-bg-color);
+}
+
+.top-action,
+.bottom-action,
+.more {
+  @include action;
+}
+
+.active {
+  background: var(--left-active-color);
+  border-radius: 8px;
+  color: #059669;
+}
+
+.setting-item {
+  @include menu-item-style(absolute);
+  left: 58px;
+  bottom: 10px;
+  @include menu-list();
+}
+
+.item-hover {
+  @apply select-none hover:bg-[--info-hover] cursor-pointer w-fit rounded-10px p-4px;
+  transition: all 0.4s ease-in-out;
+}
+
+:deep(.n-badge .n-badge-sup) {
+  font-weight: bold;
+  font-size: 10px;
+}
+
+:deep(.n-badge) {
+  color: inherit;
+}

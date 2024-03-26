@@ -29,12 +29,6 @@ export type login = {
   password: string
 }
 
-export type Menu = {
-  label: string
-  icon: string
-  click?: (...args: any[]) => void
-}[]
-
 /* ===================================================== */
 /** 回复类型 */
 export type ReplyType = {

@@ -1,10 +1,39 @@
 <template>
-  <main class="wh-full bg-[--right-bg-color]">
+  <main class="login-box wh-full select-none">
     <ActionBar :shrink="false" :max-w="false" />
 
-    <div>123</div>
+    <n-flex vertical align="center" justify="center" :size="30" class="wh-full">
+      <img class="w-220px h-100px" src="@/assets/logo/hula.png" alt="" />
+
+      <n-flex vertical align="center" :size="20">
+        <span class="text-15px text-#707070">版本: &nbsp; {{ _pkg.version }}(64位)</span>
+        <n-flex vertical class="text-12px text-#909090" :size="8" align="center">
+          <span>Copyright © 2023-2024 nongyehong</span>
+          <span>All Rights Reserved.</span>
+        </n-flex>
+      </n-flex>
+    </n-flex>
   </main>
 </template>
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import pkg from '~/package.json'
 
-<style scoped></style>
+const _pkg = reactive({
+  version: pkg.version
+})
+</script>
+
+<style scoped lang="scss">
+@import '@/styles/scss/global/login-bg';
+:deep(.hover-box) {
+  @apply w-28px h24px flex-center hover:bg-#e7e7e7;
+  svg {
+    color: #404040;
+  }
+}
+:deep(.action-close) {
+  svg {
+    color: #404040;
+  }
+}
+</style>

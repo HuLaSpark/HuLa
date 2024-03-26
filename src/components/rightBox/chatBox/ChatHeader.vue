@@ -2,7 +2,7 @@
   <!-- 顶部操作栏和显示用户名 -->
   <main
     style="box-shadow: 0 4px 4px var(--box-shadow-color)"
-    class="relative z-20 flex-y-center justify-between p-[8px_20px_12px] select-none">
+    class="relative z-30 flex-y-center justify-between p-[8px_20px_12px] select-none">
     <div class="color-[--text-color]">{{ activeItem.accountName }}</div>
     <!-- 顶部右边选项栏 -->
     <nav class="options flex-y-center gap-20px color-[--icon-color]">
@@ -162,69 +162,5 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-.options {
-  .options-box {
-    cursor: pointer;
-    svg {
-      width: 22px;
-      height: 22px;
-      outline: none;
-    }
-    &:hover svg {
-      color: #059669;
-      animation: twinkle 0.3s ease-in-out;
-    }
-  }
-}
-
-.setting-item {
-  &:first-child {
-    margin-top: 0;
-  }
-  color: var(--text-color);
-  margin-top: 20px;
-  background: var(--bg-setting-item);
-  width: 100%;
-  padding: 12px;
-  border-radius: 12px;
-  box-sizing: border-box;
-  font-size: 14px;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes slideOut {
-  from {
-    transform: translateX(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-}
-
-.sidebar {
-  @apply flex flex-col absolute top-44px right-0 bg-[--bg-chat-drawer] p-22px box-border w-320px h-100vh shadow-[0_14px_14px_rgba(0,0,0,0.35)];
-}
-
-/*! 使用vue内置transition做过渡效果 */
-// 进入动画的生效状态
-.sidebar-enter-active {
-  animation: slideIn 0.3s ease-in-out;
-}
-// 离开动画的生效状态
-.sidebar-leave-active {
-  animation: slideOut 0.3s ease-in-out;
-}
-/*!end */
+@import '@/styles/scss/chat-header';
 </style>

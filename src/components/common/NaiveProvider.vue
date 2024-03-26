@@ -14,48 +14,33 @@
 </template>
 
 <script setup lang="ts">
-import { theme } from '@/stores/theme.ts'
+import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
 import { dateZhCN, darkTheme, lightTheme, GlobalThemeOverrides, zhCN } from 'naive-ui'
-import { EventEnum, ThemeEnum } from '@/enums'
-import { listen } from '@tauri-apps/api/event'
+import { ThemeEnum } from '@/enums'
 
-const themeStore = theme()
-const { THEME, PATTERN } = storeToRefs(themeStore)
+const settingStore = setting()
+const { themes } = storeToRefs(settingStore)
 /*监听深色主题颜色变化*/
-const globalTheme = ref<any>(THEME.value)
+const globalTheme = ref<any>(themes.value.content)
 const prefers = matchMedia('(prefers-color-scheme: dark)')
 
 /* 跟随系统主题模式切换主题 */
 const followOS = () => {
   globalTheme.value = prefers.matches ? darkTheme : lightTheme
   document.documentElement.dataset.theme = prefers.matches ? ThemeEnum.DARK : ThemeEnum.LIGHT
-  THEME.value = prefers.matches ? ThemeEnum.DARK : ThemeEnum.LIGHT
+  themes.value.content = prefers.matches ? ThemeEnum.DARK : ThemeEnum.LIGHT
 }
 
-/* 监听其他标签页的变化 */
-listen(EventEnum.THEME, (e) => {
-  if (e.payload === ThemeEnum.OS) {
-    // 赋值给ui组件库的主题
-    globalTheme.value = prefers.matches ? darkTheme : lightTheme
-    // 给全局的dataset.theme赋值主题
-    document.documentElement.dataset.theme = prefers.matches ? ThemeEnum.DARK : ThemeEnum.LIGHT
-    // 修改localStorage中的THEME和设置中选择(PATTERN)
-    THEME.value = prefers.matches ? ThemeEnum.DARK : ThemeEnum.LIGHT
-    PATTERN.value = ThemeEnum.OS
-  } else {
-    globalTheme.value = e.payload === ThemeEnum.DARK ? darkTheme : lightTheme
-    // 判断msgInfo.content是否是深色还是浅色
-    document.documentElement.dataset.theme = (e.payload || ThemeEnum.LIGHT) as string
-  }
-})
-
 watchEffect(() => {
-  if (PATTERN.value === ThemeEnum.OS) {
+  if (themes.value.pattern === ThemeEnum.OS) {
     followOS()
+    themes.value.pattern = ThemeEnum.OS
     prefers.addEventListener('change', followOS)
   } else {
-    globalTheme.value = THEME.value === ThemeEnum.DARK ? darkTheme : lightTheme
+    // 判断content是否是深色还是浅色
+    document.documentElement.dataset.theme = themes.value.content || ThemeEnum.LIGHT
+    globalTheme.value = themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme
     prefers.removeEventListener('change', followOS)
   }
 })
@@ -89,7 +74,8 @@ const themeOverrides: GlobalThemeOverrides = {
     tabPaddingMediumSegment: '4px'
   },
   Popover: {
-    padding: '5px'
+    padding: '5px',
+    borderRadius: '8px'
   },
   Dropdown: {
     borderRadius: '8px'

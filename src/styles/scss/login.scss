@@ -1,0 +1,24 @@
+/* 修改自定义的关闭和最小化图标的样式 */
+:deep(.hover-box) {
+  @apply w-28px h24px flex-center hover:bg-#e7e7e7;
+  svg {
+    color: #404040;
+  }
+}
+:deep(.action-close) {
+  svg {
+    color: #404040;
+  }
+}
+/* 改变输入框中的位置 */
+:deep(.n-input .n-input__input, .n-input .n-input__textarea) {
+  margin-left: 22px;
+}
+
+/* 隐藏naive UI的滚动条 */
+:deep(
+    .n-scrollbar > .n-scrollbar-rail.n-scrollbar-rail--vertical > .n-scrollbar-rail__scrollbar,
+    .n-scrollbar + .n-scrollbar-rail.n-scrollbar-rail--vertical > .n-scrollbar-rail__scrollbar
+  ) {
+  display: none;
+}

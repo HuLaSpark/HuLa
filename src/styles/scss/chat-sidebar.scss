@@ -1,0 +1,21 @@
+.item-box {
+  @apply flex flex-col w-180px h-100vh z-20 p-[12px_0_12px_6px] box-border select-none text-[--text-color];
+  .item {
+    height: 42px;
+    padding-left: 4px;
+    width: 95%;
+    box-sizing: border-box;
+    border-radius: 6px;
+    &:hover {
+      cursor: pointer;
+      background-color: var(--bg-group-hover);
+    }
+  }
+}
+/*! 修改naive-ui虚拟列表滚动条的宽度 */
+:deep(
+    .n-scrollbar > .n-scrollbar-rail.n-scrollbar-rail--vertical,
+    .n-scrollbar + .n-scrollbar-rail.n-scrollbar-rail--vertical
+  ) {
+  width: 6px;
+}

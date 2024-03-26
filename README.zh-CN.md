@@ -1,9 +1,29 @@
 <p align="center">
-  <img width="144px" src="logo.png" />
+  <img width="144px" src="public/logo.png" />
 </p>
 
 <h1 align="center">HuLa</h1>
 <p align="center">一个基于Tauri、Vite 5、Vue 3 和 TypeScript 构建的即时通讯系统</p>
+
+<div align="center">
+  <img src="https://img.shields.io/badge/TypeScript-blue?logo=Typescript&style=flat&logoColor=fff">
+  <img src="https://img.shields.io/badge/Vue3-35495E?logo=vue.js&logoColor=4FC08D">
+  <img src="https://img.shields.io/badge/Tauri-24C8DB?logo=tauri&logoColor=FFC131">
+  <img src="https://img.shields.io/badge/Rust-c57c54?logo=rust&logoColor=E34F26">
+  <img src="https://img.shields.io/badge/Vite5-35495E?logo=vite&logoColor=41D1FF">
+  <img src="https://img.shields.io/badge/UnoCss-efefef?logo=UnoCss&logoColor=606060">
+  <img src="https://img.shields.io/badge/pnpm-909090?logo=pnpm&logoColor=FFC131">
+  <img src="https://img.shields.io/badge/Sass-CC6699?logo=sass&logoColor=fff">
+  <img src="https://img.shields.io/badge/UI组件库-Naive-059669">
+</div>
+
+<p align="center">
+  gitee：<a target="_blank" href="https://gitee.com/nongyehong/HuLa-IM-Tauri" title="HuLa"><img src="https://img.shields.io/badge/-Gitee-A80025?logo=gitee&logoColor=F16061"></a>
+  github：<a target="_blank" href="https://github.com/nongyehong/HuLa-IM-Tauri" title="HuLa"><img src="https://img.shields.io/badge/-GitHub-181717?style=plastic&logo=github"></a>
+</p>
+<p align="center">
+  微信: <img src="https://img.shields.io/badge/cy2439646234-07C160?logo=wechat&logoColor=fff">
+</p>
 
 <p align="center"><a href="README.md">English</a> | 中文</p>
 
@@ -41,3 +61,7 @@ pnpm run tauri:dev
 
 # 构建生产版本
 pnpm run tauri:build
+```
+
+## 提交规范
+执行 **pnpm run commit** 唤起 _git commit_ 交互，根据提示完成信息的输入和选择

@@ -2,7 +2,7 @@
   <div class="wh-full bg-[--right-bg-color]">
     <ActionBar :shrink="false" :current-label="appWindow.label" />
 
-    <p>邮箱</p>
+    <n-alert title="公告" type="warning"> 此功能有待开发中，请联系开发者 </n-alert>
   </div>
 </template>
 <script setup lang="ts">

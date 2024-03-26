@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
-import { Dynamic, About, Mail } from './noLazyRouter.ts'
+import { Dynamic, Mail, OnlineStatus, Tray, FriendsList } from './noLazyRouter.ts'
 
-/*! 创建窗口后再跳转页面就会导致样式没有生效所以不能使用懒加载路由的方式 */
+/*! 创建窗口后再跳转页面就会导致样式没有生效所以不能使用懒加载路由的方式，有些页面需要快速响应的就不需要懒加载 */
 const { BASE_URL } = import.meta.env
 const routes: Array<RouteRecordRaw> = [
   {
@@ -10,9 +10,14 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/login-window/Login.vue')
   },
   {
-    path: '/QRCode',
-    name: 'QRCode',
+    path: '/qrCode',
+    name: 'qrCode',
     component: () => import('@/views/login-window/QRCode.vue')
+  },
+  {
+    path: '/tray',
+    name: 'tray',
+    component: Tray
   },
   {
     path: '/home',
@@ -22,12 +27,12 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: '/message',
         name: 'message',
-        component: () => import('@/views/home-window/Message.vue')
+        component: () => import('@/views/home-window/message/index.vue')
       },
       {
         path: '/friendsList',
         name: 'friendsList',
-        component: () => import('@/views/home-window/FriendsList.vue')
+        component: FriendsList
       },
       {
         path: '/searchDetails',
@@ -47,9 +52,19 @@ const routes: Array<RouteRecordRaw> = [
     component: Dynamic
   },
   {
+    path: '/onlineStatus',
+    name: 'onlineStatus',
+    component: OnlineStatus
+  },
+  {
     path: '/about',
     name: 'about',
-    component: About
+    component: () => import('@/views/home-window/more/About.vue')
+  },
+  {
+    path: '/alone',
+    name: 'alone',
+    component: () => import('@/views/home-window/message/Alone.vue')
   },
   {
     path: '/settings',
@@ -59,12 +74,17 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: '/general',
         name: 'general',
-        component: () => import('@/views/home-window/more/settings/general.vue')
+        component: () => import('@/views/home-window/more/settings/General.vue')
       },
       {
         path: '/remind',
         name: 'remind',
-        component: () => import('@/views/home-window/more/settings/remind.vue')
+        component: () => import('@/views/home-window/more/settings/Remind.vue')
+      },
+      {
+        path: '/loginSetting',
+        name: 'loginSetting',
+        component: () => import('@/views/home-window/more/settings/LoginSetting.vue')
       }
     ]
   }

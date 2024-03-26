@@ -36,10 +36,9 @@ export default defineConfig(({ mode }: ConfigEnv) => {
     plugins: [
       /**
        * !实验性功能
-       * 开启defineModel
        * 开启defineProps解构语法
        * */
-      vue({ script: { propsDestructure: true, defineModel: true } }),
+      vue({ script: { propsDestructure: true } }),
       vueJsx(), // 开启jsx功能
       unocss(), // 开启unocss
       AutoImport({
@@ -77,7 +76,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
           // 最小化拆分包
           manualChunks(id) {
             if (id.includes('node_modules')) {
-              return id.toString().split('node_modules/')[1].split('/')[0].toString()
+              return 'invariable'
             }
           }
         }

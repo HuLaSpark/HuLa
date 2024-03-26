@@ -18,6 +18,9 @@
     },
     "allowlist": {
       "all": false,
+      "notification": {
+        "all": true
+      },
       "shell": {
         "all": false,
         "open": true
@@ -35,6 +38,7 @@
     },
     "bundle": {
       "active": true,
+      "resources": ["tray"],
       "targets": "all",
       "identifier": "com.tauri.build",
       "windows": {
@@ -66,11 +70,23 @@
         "height": 448,
         "skipTaskbar": false,
         "decorations": false,
-        "transparent":true
+        "transparent": true
+      },
+      {
+        "label": "tray",
+        "url": "/tray",
+        "resizable": false,
+        "center": false,
+        "visible": false,
+        "width": 130,
+        "height": 356,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "decorations": false
       }
     ],
     "systemTray": {
-      "iconPath": "icons/icon.png",
+      "iconPath": "icons/icon.ico",
       "iconAsTemplate": true
     }
   }

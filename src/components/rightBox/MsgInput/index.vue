@@ -1,7 +1,7 @@
 <template>
+  <!-- 输入框 -->
   <ContextMenu class="relative w-full h-100px" @select="$event.click()" :menu="menuList">
     <n-scrollbar style="max-height: 100px">
-      <!-- 输入框 -->
       <div
         class="message-input"
         ref="messageInputDom"
@@ -14,6 +14,10 @@
     </n-scrollbar>
   </ContextMenu>
 
+  <!-- @提及框  -->
+  <div v-if="ait" class="absolute w-180px h-160px bg-#fff top--130px left-20px rounded-8px">123</div>
+
+  <!-- 发送按钮 -->
   <n-config-provider :theme="lightTheme">
     <n-button-group size="small" class="pr-20px">
       <n-button
@@ -33,11 +37,11 @@
 </template>
 <script setup lang="ts">
 import { lightTheme } from 'naive-ui'
-import { MsgEnum } from '@/enums'
+import { MittEnum, MsgEnum } from '@/enums'
 import Mitt from '@/utils/Bus.ts'
 import { createFileOrVideoDom } from '@/utils/CreateDom.ts'
-import { RegExp } from '@/utils/RegExp.ts'
 
+const ait = ref(false)
 const menuList = ref([
   { label: '剪切', icon: 'screenshot', disabled: true },
   { label: '复制', icon: 'copy', disabled: true },
@@ -70,8 +74,6 @@ const menuList = ref([
 const msgInput = ref('')
 // 输入框dom元素
 const messageInputDom = ref()
-// 自定义输入框子节点元素列表
-const childNodes = ref<any>([])
 
 /**
  *  将指定节点插入到光标位置
@@ -168,16 +170,11 @@ const getMessageContentType = () => {
   let hasText = false
   let hasImage = false
   let hasVideo = false
-  let hasHyperlink = false
 
   const elements = messageInputDom.value.childNodes
   for (let element of elements) {
     if (element.nodeType === Node.TEXT_NODE && element.nodeValue.trim() !== '') {
-      if (RegExp.isHyperlink(element.nodeValue)) {
-        hasHyperlink = true
-      } else {
-        hasText = true
-      }
+      hasText = true
     } else if (element.tagName === 'IMG') {
       hasImage = true
     } else if (element.tagName === 'VI  DEO' || (element.tagName === 'A' && element.href.match(/\.(mp4|webm)$/i))) {
@@ -191,8 +188,6 @@ const getMessageContentType = () => {
     return MsgEnum.MIXED
   } else if (hasImage) {
     return MsgEnum.IMAGE
-  } else if (hasHyperlink) {
-    return MsgEnum.HYPERLINK
   } else {
     return MsgEnum.TEXT
   }
@@ -204,7 +199,17 @@ const send = () => {
   const contentType = getMessageContentType()
   const msg = {
     type: contentType,
-    content: msgInput.value
+    content: msgInput.value,
+    hyperlinks: [] as any
+  }
+  const hyperlinkRegex = /(\bhttps?:\/\/[-A-Z0-9+&@#/%?=~_|!:,.;]*[-A-Z0-9+&@#/%=~_|])/gi
+  const foundHyperlinks = msg.content.match(hyperlinkRegex)
+
+  if (foundHyperlinks && foundHyperlinks.length > 0) {
+    msg.hyperlinks = foundHyperlinks
+    msg.content = msg.content.replace(hyperlinkRegex, (match) => {
+      return `<a class="color-inherit" href="${match}" target="_blank" rel="noopener noreferrer">${match}</a>`
+    })
   }
   // 判断文本信息是否超过限制
   if (msg.type === MsgEnum.TEXT && msg.content.length > 2000) {
@@ -216,15 +221,15 @@ const send = () => {
     window.$message.error('暂不支持混合类型消息发送')
     return
   }
-  Mitt.emit('handleSendMessage', msg)
+  Mitt.emit(MittEnum.SEND_MESSAGE, msg)
   msgInput.value = ''
   messageInputDom.value.innerHTML = ''
 }
 
 /* 当输入框手动输入值的时候触发input事件 */
 const handleInput = (e: Event) => {
-  childNodes.value = (e.target as HTMLInputElement).childNodes
   msgInput.value = (e.target as HTMLInputElement).innerHTML
+  ait.value = msgInput.value.endsWith('@')
 }
 
 /* input的keydown事件 */

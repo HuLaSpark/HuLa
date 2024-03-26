@@ -10,7 +10,7 @@
             left: `${pos.posX}px`,
             top: `${pos.posY}px`
           }">
-          <div v-resize="handleSize" class="menu-list">
+          <div v-resize="handleSize" v-if="menu.length > 0" class="menu-list">
             <div v-for="(item, index) in menu as any[]" :key="index">
               <!-- 禁止的菜单选项需要禁止点击事件  -->
               <div class="menu-item-disabled" v-if="item.disabled" @click.prevent="$event.preventDefault()">
