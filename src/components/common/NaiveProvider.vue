@@ -45,7 +45,7 @@ watchEffect(() => {
   }
 })
 
-/*调整naive ui的primary的主题颜色和样式*/
+/*调整naive ui的主题颜色和样式*/
 const themeOverrides: GlobalThemeOverrides = {
   Input: {
     borderRadius: '10px',
@@ -56,21 +56,22 @@ const themeOverrides: GlobalThemeOverrides = {
     boxShadowFocus: '0'
   },
   Checkbox: {
-    colorChecked: '#059669',
-    borderChecked: '1px solid #059669',
-    borderFocus: '1px solid #059669',
-    boxShadowFocus: '0 0 0 2px rgba(5, 150, 105, 0.3)'
+    colorChecked: '#13987f',
+    borderChecked: '1px solid #13987f',
+    borderFocus: '1px solid #13987f',
+    boxShadowFocus: '0 0 0 2px rgba(19, 152, 127, 0.3)'
   },
   Tag: {
     borderRadius: '4px'
   },
   Button: {
-    borderRadiusMedium: '10px'
+    borderRadiusMedium: '10px',
+    colorPrimary: '#13987f'
   },
   Tabs: {
     tabTextColorSegment: '#707070',
-    tabTextColorActiveSegment: '#059669',
-    tabTextColorHoverSegment: '#059669',
+    tabTextColorActiveSegment: '#13987f',
+    tabTextColorHoverSegment: '#13987f',
     tabPaddingMediumSegment: '4px'
   },
   Popover: {
@@ -82,6 +83,22 @@ const themeOverrides: GlobalThemeOverrides = {
   },
   Avatar: {
     border: '1px solid #fff'
+  },
+  Switch: {
+    railColorActive: '#13987f',
+    loadingColor: '#13987f',
+    boxShadowFocus: '0 0 0 2px rgba(19, 152, 127, 0.3)'
+  },
+  Radio: {
+    boxShadowActive: 'inset 0 0 0 1px #13987f',
+    boxShadowFocus: 'inset 0 0 0 1px #13987f,0 0 0 2px rgba(19, 152, 127, 0.3)',
+    boxShadowHover: 'inset 0 0 0 1px #13987f',
+    dotColorActive: '#13987f'
+  },
+  Message: {
+    iconColorSuccess: '#13987f',
+    iconColorLoading: '#13987f',
+    loadingColor: '#13987f'
   }
 }
 

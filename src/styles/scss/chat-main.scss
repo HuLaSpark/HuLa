@@ -9,9 +9,9 @@
 }
 @mixin float($position: top) {
   @if $position == bottom {
-    @apply fixed z-10 bottom-210px w-fit select-none text-#059669 cursor-pointer;
+    @apply fixed z-10 bottom-210px w-fit select-none text-#13987f cursor-pointer;
   } @else {
-    @apply fixed z-10 top-80px w-fit select-none text-#059669 cursor-pointer;
+    @apply fixed z-10 top-80px w-fit select-none text-#13987f cursor-pointer;
   }
 }
 .chat-single:first-child {
@@ -23,7 +23,7 @@
 .bubble-oneself {
   @include bubble;
   @apply rounded-[18px_2px_18px_18px] color-#fff;
-  background-color: rgba(5, 150, 105, 0.8);
+  background-color: var(--bg-active-msg);
 }
 /*! 气泡动画 */
 .bubble-animation {
@@ -46,7 +46,7 @@
   box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.16);
   transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   &:hover {
-    background-color: rgb(215, 229, 219);
+    background-color: rgb(195, 221, 216);
   }
 }
 .max:hover {

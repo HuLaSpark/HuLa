@@ -1,8 +1,8 @@
 <template>
-  <main class="login-box wh-full select-none">
+  <main class="login-box size-full select-none">
     <ActionBar :shrink="false" :max-w="false" />
 
-    <n-flex vertical align="center" justify="center" :size="30" class="wh-full">
+    <n-flex vertical align="center" justify="center" :size="30" class="size-full">
       <img class="w-220px h-100px" src="@/assets/logo/hula.png" alt="" />
 
       <n-flex vertical align="center" :size="20">

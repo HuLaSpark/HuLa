@@ -1,5 +1,5 @@
 <template>
-  <main class="wh-full flex select-none">
+  <main class="size-full flex select-none">
     <!-- 侧边栏选项 -->
     <section class="left-bar" data-tauri-drag-region>
       <div class="menu-list">

@@ -14,8 +14,8 @@
           :key="index">
           <div
             @click="handleTheme($event, item.code)"
-            class="wh-full rounded-8px cursor-pointer"
-            :style="activeItem === item.code ? 'border: 2px solid #059669' : 'border: 2px solid transparent'">
+            class="size-full rounded-8px cursor-pointer"
+            :style="activeItem === item.code ? 'border: 2px solid #13987f' : 'border: 2px solid transparent'">
             <component :is="item.model" />
           </div>
           <span class="text-12px pt-8px color-[--text-color]">{{ item.title }}</span>
@@ -108,6 +108,6 @@ const handleTheme = async (event: MouseEvent, code: string) => {
 <style scoped lang="scss">
 @import '@/styles/scss/toggle-theme';
 .item {
-  @apply bg-[--bg-setting-item] rounded-12px wh-full p-12px box-border;
+  @apply bg-[--bg-setting-item] rounded-12px size-full p-12px box-border;
 }
 </style>

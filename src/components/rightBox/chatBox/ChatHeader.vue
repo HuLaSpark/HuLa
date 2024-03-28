@@ -86,7 +86,7 @@
           <p class="color-#d03553">删除好友</p>
         </div>
 
-        <p class="m-[0_auto] text-#059669 text-12px mt-20px cursor-pointer">被骚扰了?&nbsp;&nbsp;举报该用户</p>
+        <p class="m-[0_auto] text-#13987f text-12px mt-20px cursor-pointer">被骚扰了?&nbsp;&nbsp;举报该用户</p>
       </div>
     </transition>
   </main>
@@ -105,7 +105,7 @@
         </label>
 
         <n-flex justify="end">
-          <n-button @click="handleConfirm" class="w-78px" color="#059669">确定</n-button>
+          <n-button @click="handleConfirm" class="w-78px" color="#13987f">确定</n-button>
           <n-button @click="modalShow = false" class="w-78px" secondary>取消</n-button>
         </n-flex>
       </div>

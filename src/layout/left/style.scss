@@ -3,7 +3,7 @@
   &:not(.active):hover {
     background: rgba(193, 193, 193, 0.4);
     border-radius: 8px;
-    color: #059669;
+    color: #13987f;
     cursor: pointer;
     animation: linearAnimation 3s linear forwards;
   }
@@ -22,7 +22,7 @@
 .active {
   background: var(--left-active-color);
   border-radius: 8px;
-  color: #059669;
+  color: #13987f;
 }
 
 .setting-item {

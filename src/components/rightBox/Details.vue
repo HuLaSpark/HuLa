@@ -27,7 +27,7 @@
           class="cursor-pointer"
           :size="28"
           :border-radius="10"
-          :color="'rgba(5, 150, 105, 0.8)'">
+          :color="'#13987f'">
           <n-icon :size="20">
             <svg><use :href="`#${item.url}`"></use></svg>
           </n-icon>
@@ -62,7 +62,7 @@
           class="cursor-pointer"
           :size="40"
           :border-radius="10"
-          :color="'rgba(5, 150, 105, 0.8)'">
+          :color="'#13987f'">
           <n-icon :size="22">
             <svg><use href="#message"></use></svg>
           </n-icon>

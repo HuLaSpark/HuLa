@@ -79,6 +79,6 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .tray {
-  @apply bg-[--center-bg-color] wh-full p-8px box-border select-none text-[--text-color] text-12px;
+  @apply bg-[--center-bg-color] size-full p-8px box-border select-none text-[--text-color] text-12px;
 }
 </style>

@@ -16,7 +16,7 @@
             @click.stop="openContent('在线状态', 'onlineStatus', 320, 480)"
             class="bg-[--bg-avatar] text-10px rounded-50% w-12px h-12px absolute bottom--2px right--2px"
             style="border: 2px solid var(--bg-avatar)">
-            <img class="rounded-50% wh-full" :src="url" alt="" />
+            <img class="rounded-50% size-full" :src="url" alt="" />
           </div>
         </div>
       </template>
@@ -24,7 +24,7 @@
       <n-flex
         vertical
         :size="26"
-        class="wh-full p-15px box-border rounded-8px"
+        class="size-full p-15px box-border rounded-8px"
         :style="`background: linear-gradient(to bottom, ${bgColor} 0%, ${themeColor} 100%)`">
         <!-- 头像以及信息区域 -->
         <n-flex justify="space-between" align="center" :size="25">
@@ -87,7 +87,7 @@
           @click="pageJumps(item.url)"
           :class="[
             { active: activeItem === item.url && item.url !== 'dynamic' },
-            openWindowsList.has(item.url) ? 'p-[6px_8px] color-#059669' : 'top-action'
+            openWindowsList.has(item.url) ? 'p-[6px_8px] color-#13987f' : 'top-action'
           ]">
           <n-badge :value="item.badge" :max="99">
             <svg class="w-22px h-22px">
@@ -104,7 +104,7 @@
           v-for="(item, index) in itemsBottom"
           :key="index"
           @click="openContent(item.title, item.label)"
-          :class="openWindowsList.has(item.url.substring(1)) ? 'p-[6px_8px] color-#059669' : 'bottom-action'">
+          :class="openWindowsList.has(item.url.substring(1)) ? 'p-[6px_8px] color-#13987f' : 'bottom-action'">
           <svg class="w-22px h-22px">
             <use :href="`#${openWindowsList.has(item.url.substring(1)) ? item.iconAction : item.icon}`"></use>
           </svg>
@@ -113,7 +113,7 @@
         <svg
           @click="settingShow = !settingShow"
           class="more w-22px h-22px relative"
-          :class="{ 'color-#059669': settingShow }">
+          :class="{ 'color-#13987f': settingShow }">
           <use :href="settingShow ? '#hamburger-button-action' : '#hamburger-button'"></use>
         </svg>
 

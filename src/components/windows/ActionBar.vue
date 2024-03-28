@@ -66,7 +66,7 @@
           </label>
 
           <n-flex justify="end">
-            <n-button @click="handleConfirm" class="w-78px" color="#059669">确定</n-button>
+            <n-button @click="handleConfirm" class="w-78px" color="#13987f">确定</n-button>
             <n-button @click="tipsRef.show = false" class="w-78px" secondary>取消</n-button>
           </n-flex>
         </n-flex>
@@ -223,6 +223,7 @@ const handleCloseWin = async () => {
       }
     }
   } else {
+    await emit(EventEnum.WIN_CLOSE, appWindow.label)
     await appWindow.close()
   }
 }

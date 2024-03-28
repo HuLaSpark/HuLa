@@ -1,7 +1,7 @@
 <template>
   <!-- 底部栏 -->
   <main
-    class="wh-full relative z-10 bg-[--right-bg-color] color-[--icon-color]"
+    class="size-full relative z-10 bg-[--right-bg-color] color-[--icon-color]"
     style="box-shadow: 0 -4px 4px var(--box-shadow-color)">
     <!-- 输入框顶部选项栏 -->
     <nav class="flex-between-center p-[10px_22px_5px] select-none">
@@ -81,7 +81,7 @@
     cursor: pointer;
     outline: none;
     &:hover {
-      color: #059669;
+      color: #13987f;
     }
   }
 }

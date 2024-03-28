@@ -7,7 +7,7 @@
     <Details :content="DetailsContent" v-else-if="detailsShow && isDetails" />
 
     <!-- 聊天界面背景图标 -->
-    <div v-else class="flex-center wh-full select-none">
+    <div v-else class="flex-center size-full select-none">
       <img v-if="imgTheme === ThemeEnum.DARK" class="w-130px h-100px" src="@/assets/img/hula_bg_dark.png" alt="" />
       <img v-else class="w-130px h-100px" src="@/assets/img/hula_bg_light.png" alt="" />
     </div>

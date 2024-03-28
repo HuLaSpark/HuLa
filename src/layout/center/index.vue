@@ -36,11 +36,9 @@
     </header>
 
     <!-- 列表 -->
-    <n-scrollbar style="max-height: calc(100vh - 70px)" id="scrollbar">
-      <div class="h-full flex-1 p-[4px_10px_0px_8px]">
-        <router-view />
-      </div>
-    </n-scrollbar>
+    <div id="centerList">
+      <router-view />
+    </div>
   </main>
 </template>
 
@@ -68,7 +66,7 @@ const closeMenu = (event: Event) => {
   const e = event.target as HTMLInputElement
   const route = router.currentRoute.value.path
   /* 判断如果点击的搜索框，就关闭消息列表 */
-  if (!e.matches('#scrollbar, #scrollbar *, #search *, #search') && route === '/searchDetails') {
+  if (!e.matches('#search, #search *, #centerList *, #centerList') && route === '/searchDetails') {
     router.go(-1)
   }
 }

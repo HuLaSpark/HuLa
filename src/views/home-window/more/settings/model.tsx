@@ -5,7 +5,7 @@ const titleList = [
     title: '白天模式',
     code: ThemeEnum.LIGHT,
     model: (() => (
-      <div class="wh-full flex">
+      <div class="size-full flex">
         <div class="bg-#f1f1f1 flex-[1] rounded-[6px_0_0_6px]"></div>
 
         <div class="bg-#fff flex-[3.5] p-[8px_4px] box-border flex flex-col gap-8px">
@@ -33,7 +33,7 @@ const titleList = [
           </div>
 
           <div class="flex-y-center gap-4px ml-a">
-            <div class="bg-#059669 w-28px h-6px"></div>
+            <div class="bg-#13987f w-28px h-6px"></div>
             <div class="bg-#ccc w-6px h-6px rounded-50%"></div>
           </div>
         </div>
@@ -44,7 +44,7 @@ const titleList = [
     title: '夜间模式',
     code: ThemeEnum.DARK,
     model: (() => (
-      <div class="wh-full flex">
+      <div class="size-full flex">
         <div class="bg-#454545 flex-[1] rounded-[6px_0_0_6px]"></div>
 
         <div class="bg-#212121 flex-[3.5] p-[8px_4px] box-border flex flex-col gap-8px">
@@ -83,7 +83,7 @@ const titleList = [
     title: '跟随系统',
     code: ThemeEnum.OS,
     model: (() => (
-      <div class="wh-full flex">
+      <div class="size-full flex">
         <div class="bg-#f1f1f1 flex-[1] rounded-[6px_0_0_6px]"></div>
 
         <div class="bg-#fff flex-[4.5] p-[8px_4px] box-border flex flex-col gap-8px">

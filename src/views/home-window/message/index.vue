@@ -1,45 +1,50 @@
 <template>
-  <!-- 消息列表 -->
-  <!-- 可拖拽排序组件  -->
-  <VueDraggable v-if="MockList.length > 0" ref="el" target=".sort-target" :animation="150" v-model="MockList">
-    <!--  右键菜单组件  -->
-    <TransitionGroup type="transition" tag="div" name="fade" class="sort-target">
-      <ContextMenu
-        @select="$event.click(item)"
-        @click="handleMsgClick(item)"
-        @dblclick="handleMsgDblclick(item)"
-        :menu="menuList"
-        :special-menu="specialMenuList"
-        :class="{ active: activeItem === item.key }"
-        class="msg-box w-full h-75px mb-5px"
-        v-for="item in MockList"
-        :key="item.key">
-        <!-- 消息框，使用v-slide自定义指令来自动抉择右键菜单位置 -->
-        <div v-slide class="flex items-center h-full pl-6px pr-8px gap-10px">
-          <img class="w-44px h-44px rounded-50% bg-#fff" style="border: 1px solid #f1f1f1" :src="item.avatar" alt="" />
+  <!-- 消息列表 // TODO 使用虚拟列表组件就用不了动画和拖动了 (nyh -> 2024-03-28 06:01:00) -->
+  <n-scrollbar ref="scrollbar" v-if="MockList.length > 0" style="max-height: calc(100vh - 70px)">
+    <!-- 可拖拽排序组件  -->
+    <VueDraggable target=".sort-target" :animation="150" v-model="MockList" class="p-[4px_10px_0px_8px]">
+      <!--  右键菜单组件  -->
+      <TransitionGroup type="transition" tag="div" name="fade" class="sort-target">
+        <ContextMenu
+          @select="$event.click(item)"
+          @click="handleMsgClick(item)"
+          @dblclick="handleMsgDblclick(item)"
+          :data-key="item.key"
+          :menu="menuList"
+          :special-menu="specialMenuList"
+          :class="{ active: activeItem === item.key }"
+          class="msg-box w-full h-75px mb-5px"
+          v-for="item in MockList"
+          :key="item.key">
+          <!-- 消息框，使用v-slide自定义指令来自动抉择右键菜单位置 -->
+          <n-flex v-slide align="center" :size="10" class="h-75px pl-6px pr-8px">
+            <n-avatar round bordered :color="'#fff'" :size="44" :src="item.avatar" fallback-src="/logo.png" alt="" />
 
-          <div class="h-38px flex flex-1 flex-col justify-between">
-            <div class="flex-between-center">
-              <span class="text-14px">{{ item.accountName }}</span>
-              <span class="text text-10px">昨天</span>
-            </div>
+            <n-flex vertical justify="space-between" class="h-38px flex-1">
+              <n-flex align="center" justify="space-between">
+                <span class="text-14px">{{ item.accountName }}</span>
+                <span class="text text-10px">昨天</span>
+              </n-flex>
 
-            <div class="flex-between-center">
-              <p class="text w-135px text-12px" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
-                说的很经典哈萨克的哈萨克看到贺卡上
-              </p>
+              <n-flex align="center" justify="space-between">
+                <span
+                  class="text w-135px text-12px"
+                  style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
+                  说的很经典哈萨克的哈萨克看到贺卡上
+                </span>
 
-              <!-- 消息提示 -->
-              <n-badge :value="msgTotal" :max="99" />
-            </div>
-          </div>
-        </div>
-      </ContextMenu>
-    </TransitionGroup>
-  </VueDraggable>
+                <!-- 消息提示 -->
+                <n-badge :value="msgTotal" :max="99" />
+              </n-flex>
+            </n-flex>
+          </n-flex>
+        </ContextMenu>
+      </TransitionGroup>
+    </VueDraggable>
+  </n-scrollbar>
 
   <!-- 暂无消息 -->
-  <div v-else class="wh-full flex-center mt-60px color-[--text-color]">暂无消息</div>
+  <div v-else class="size-full flex-center mt-60px color-[--text-color]">暂无消息</div>
 </template>
 <script setup lang="ts">
 import Mitt from '@/utils/Bus.ts'
@@ -49,6 +54,7 @@ import { useMessage } from '@/hooks/useMessage.ts'
 import { MittEnum } from '@/enums'
 
 const msgTotal = ref(0)
+const scrollbar = ref()
 const { activeItem, handleMsgClick, menuList, specialMenuList, handleMsgDblclick } = useMessage()
 
 watchEffect(() => {
@@ -57,6 +63,17 @@ watchEffect(() => {
 })
 
 onMounted(() => {
+  // TODO 这里的key后面如果换成用户唯一标识的时候记得更换data-key的值 (nyh -> 2024-03-28 18:56:20)
+  if (activeItem.value !== -1) {
+    nextTick(() => {
+      const activeElement = document.querySelector(`.msg-box[data-key="${activeItem.value}"]`) as HTMLElement
+      const rect = activeElement.getBoundingClientRect()
+      scrollbar.value.scrollTo({
+        top: rect.top - 75,
+        behavior: 'smooth'
+      })
+    })
+  }
   // setInterval(() => {
   //   msgTotal.value++
   // }, 1000)

@@ -1,7 +1,7 @@
 <template>
   <!-- todo 这里设置了 data-tauri-drag-region但是有部分区域不可以拖动 -->
   <!-- 单独使用n-config-provider来包裹不需要主题切换的界面 -->
-  <n-config-provider :theme="lightTheme" data-tauri-drag-region class="login-box wh-full rounded-8px select-none">
+  <n-config-provider :theme="lightTheme" data-tauri-drag-region class="login-box size-full rounded-8px select-none">
     <!--顶部操作栏-->
     <ActionBar :max-w="false" :shrink="false" />
 
@@ -78,9 +78,9 @@
           <n-checkbox v-model:checked="protocol" />
           <div class="text-12px color-#909090 cursor-default lh-14px">
             <span>已阅读并同意</span>
-            <span class="color-#059669 cursor-pointer">服务协议</span>
+            <span class="color-#13987f cursor-pointer">服务协议</span>
             <span>和</span>
-            <span class="color-#059669 cursor-pointer">HuLa隐私保护指引</span>
+            <span class="color-#13987f cursor-pointer">HuLa隐私保护指引</span>
           </div>
         </n-flex>
 
@@ -89,7 +89,7 @@
           :disabled="loginDisabled"
           class="w-full mt-8px mb-50px"
           @click="loginWin"
-          color="#059669">
+          color="#13987f">
           {{ loginText }}
         </n-button>
       </n-flex>
@@ -122,7 +122,7 @@
           :disabled="loginDisabled"
           class="w-200px mt-12px mb-40px"
           @click="loginWin"
-          color="#059669">
+          color="#13987f">
           {{ loginText }}
         </n-button>
       </n-flex>
@@ -130,11 +130,11 @@
 
     <!-- 顶部操作栏 -->
     <n-flex justify="center" class="text-14px">
-      <div class="color-#059669 cursor-pointer" @click="router.push('/qrCode')">扫码登录</div>
+      <div class="color-#13987f cursor-pointer" @click="router.push('/qrCode')">扫码登录</div>
       <div class="w-1px h-14px bg-#ccc"></div>
       <n-popover trigger="click" :show-checkmark="false" :show-arrow="false">
         <template #trigger>
-          <div class="color-#059669 cursor-pointer">更多选项</div>
+          <div class="color-#13987f cursor-pointer">更多选项</div>
         </template>
         <n-flex vertical :size="2">
           <div class="text-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px">注册账号</div>

@@ -1,8 +1,7 @@
 <p align="center">
-  <img width="144px" src="public/logo.png" />
+  <img width="350px" height="150px" src="src/assets/logo/hula.png" />
 </p>
 
-<h1 align="center">HuLa</h1>
 <p align="center">一个基于Tauri、Vite 5、Vue 3 和 TypeScript 构建的即时通讯系统</p>
 
 <div align="center">
