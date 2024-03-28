@@ -21,13 +21,13 @@
   <n-config-provider :theme="lightTheme">
     <n-button-group size="small" class="pr-20px">
       <n-button
-        color="#059669"
+        color="#13987f"
         :disabled="msgInput.length === 0 || msgInput.trim() === ''"
         class="w-65px"
         @click="send">
         发送
       </n-button>
-      <n-button color="#059669" class="p-[0_6px]">
+      <n-button color="#13987f" class="p-[0_6px]">
         <template #icon>
           <svg class="w-22px h-22px"><use href="#down"></use></svg>
         </template>
@@ -205,6 +205,7 @@ const send = () => {
   const hyperlinkRegex = /(\bhttps?:\/\/[-A-Z0-9+&@#/%?=~_|!:,.;]*[-A-Z0-9+&@#/%=~_|])/gi
   const foundHyperlinks = msg.content.match(hyperlinkRegex)
 
+  // TODO 这里复制网址会把标签也复制了 (nyh -> 2024-03-28 19:41:06)
   if (foundHyperlinks && foundHyperlinks.length > 0) {
     msg.hyperlinks = foundHyperlinks
     msg.content = msg.content.replace(hyperlinkRegex, (match) => {
@@ -266,7 +267,7 @@ const inputKeyDown = (e: KeyboardEvent) => {
   line-height: 20px; /* 行高 */
   overflow: auto; /* 内容过多时允许滚动 */
   flex: 1; /* 弹性盒自适应填充可用空间 */
-  caret-color: #059669; /* 光标颜色，可根据需求调整 */
+  caret-color: #13987f; /* 光标颜色，可根据需求调整 */
   white-space: pre-wrap; /* 保留空白符号并正常换行 */
   word-break: break-word; /* 在长单词或URL地址内部进行换行 */
 }

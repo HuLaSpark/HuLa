@@ -15,7 +15,6 @@ export default defineConfig({
    * @default '布局样式 - 水平样式 - 垂直样式'
    */
   shortcuts: {
-    'wh-full': 'w-full h-full',
     'flex-center': 'flex justify-center items-center',
     'flex-end-center': 'flex justify-end items-end',
     'flex-start-center': 'flex justify-start items-center',
@@ -30,11 +29,11 @@ export default defineConfig({
     'absolute-lb': 'absolute left-0 bottom-0',
     'absolute-rt': 'absolute right-0 top-0',
     'absolute-rb': 'absolute right-0 bottom-0',
-    'absolute-center': 'absolute-lt flex-center wh-full',
+    'absolute-center': 'absolute-lt flex-center size-full',
     'fixed-lt': 'fixed left-0 top-0',
     'fixed-lb': 'fixed left-0 bottom-0',
     'fixed-rt': 'fixed right-0 top-0',
     'fixed-rb': 'fixed right-0 bottom-0',
-    'fixed-center': 'fixed-lt flex-center wh-full'
+    'fixed-center': 'fixed-lt flex-center size-full'
   }
 })

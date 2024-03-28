@@ -1,12 +1,12 @@
 <template>
-  <main class="wh-full bg-#fff select-none">
+  <main class="size-full bg-#fff select-none">
     <ActionBar class="absolute right-0 w-full" :shrink="false" :max-w="false" :min-w="false" />
 
     <n-flex
       vertical
       :size="130"
       :style="`background: linear-gradient(to bottom, ${RGBA} 0%, #f1f1f1 100%)`"
-      class="wh-full p-20px box-border">
+      class="size-full p-20px box-border">
       <!-- 当前选中的状态 -->
       <n-flex justify="center" align="center" class="pt-80px">
         <img class="w-34px h-34px" :src="activeItem.url" alt="" />

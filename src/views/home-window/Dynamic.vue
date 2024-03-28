@@ -1,7 +1,7 @@
 <template>
-  <main class="wh-full bg-[--right-bg-color]">
+  <main class="size-full bg-[--right-bg-color]">
     <ActionBar :shrink="false" :max-w="false" :top-win-label="appWindow.label" :current-label="appWindow.label" />
-    <article class="flex flex-col items-center text-[--text-color] wh-full bg-[--right-bg-color]">
+    <article class="flex flex-col items-center text-[--text-color] size-full bg-[--right-bg-color]">
       <n-scrollbar
         style="max-height: calc(100vh - 20px)"
         class="w-650px bg-[--center-bg-color] h-full p-[10px_0] box-border rounded-4px">
@@ -18,10 +18,10 @@
               <n-flex vertical style="flex: 1">
                 <n-flex justify="space-between" align="center">
                   <label class="text-14px flex items-center gap-5px">
-                    <span :class="item.isAuth ? 'text-#059669' : ''">{{ item.user }}</span>
+                    <span :class="item.isAuth ? 'text-#13987f' : ''">{{ item.user }}</span>
                     <n-popover trigger="hover" v-if="item.isAuth">
                       <template #trigger>
-                        <svg class="w-20px h-20px color-#059669 select-none outline-none cursor-pointer">
+                        <svg class="w-20px h-20px color-#13987f select-none outline-none cursor-pointer">
                           <use href="#auth"></use>
                         </svg>
                       </template>

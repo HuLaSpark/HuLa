@@ -1,5 +1,5 @@
 <template>
-  <n-config-provider :theme="lightTheme" data-tauri-drag-region class="login-box wh-full rounded-8px select-none">
+  <n-config-provider :theme="lightTheme" data-tauri-drag-region class="login-box size-full rounded-8px select-none">
     <!--顶部操作栏-->
     <ActionBar :max-w="false" :shrink="false" />
 
@@ -23,9 +23,9 @@
 
     <!-- 顶部操作栏 -->
     <n-flex justify="center" class="text-14px mt-48px">
-      <div class="color-#059669 cursor-pointer" @click="toLogin">账密登录</div>
+      <div class="color-#13987f cursor-pointer" @click="toLogin">账密登录</div>
       <div class="w-1px h-14px bg-#ccc"></div>
-      <div class="color-#059669 cursor-pointer">注册账号</div>
+      <div class="color-#13987f cursor-pointer">注册账号</div>
     </n-flex>
   </n-config-provider>
 </template>
