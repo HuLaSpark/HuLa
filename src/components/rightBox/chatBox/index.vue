@@ -19,6 +19,7 @@ import { appWindow } from '@tauri-apps/api/window'
 const { activeItem } = defineProps<{
   activeItem?: MockItem
 }>()
+provide('activeItem', { ...activeItem! })
 const activeItemRef = ref({ ...activeItem! })
 
 watchEffect(() => {

@@ -1,6 +1,6 @@
 <template>
   <!-- 输入框 -->
-  <ContextMenu class="relative w-full h-100px" @select="$event.click()" :menu="menuList">
+  <ContextMenu class="w-full h-100px" @select="$event.click()" :menu="menuList">
     <n-scrollbar style="max-height: 100px">
       <div
         class="message-input"
@@ -8,6 +8,7 @@
         contenteditable
         spellcheck="false"
         autofocus
+        @blur="saveCursor"
         @paste="handlePaste"
         @input="handleInput"
         @keydown.enter="inputKeyDown"></div>
@@ -15,7 +16,26 @@
   </ContextMenu>
 
   <!-- @提及框  -->
-  <div v-if="ait" class="absolute w-180px h-160px bg-#fff top--130px left-20px rounded-8px">123</div>
+  <div v-if="ait && activeItem.type === RoomTypeEnum.GROUP" class="ait">
+    <n-virtual-list id="image-chat-msgInput" style="max-height: 180px" :item-size="26" :items="MockList">
+      <template #default="{ item }">
+        <n-flex @click="handleAit(item)" :key="item.key" align="center" class="ait-item">
+          <n-avatar
+            lazy
+            round
+            :color="'#fff'"
+            :size="22"
+            :src="item.avatar"
+            fallback-src="/logo.png"
+            :render-placeholder="() => null"
+            :intersection-observer-options="{
+              root: '#image-chat-msgInput'
+            }" />
+          <span> {{ item.accountName }}</span>
+        </n-flex>
+      </template>
+    </n-virtual-list>
+  </div>
 
   <!-- 发送按钮 -->
   <n-config-provider :theme="lightTheme">
@@ -37,9 +57,11 @@
 </template>
 <script setup lang="ts">
 import { lightTheme } from 'naive-ui'
-import { MittEnum, MsgEnum } from '@/enums'
+import { MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import Mitt from '@/utils/Bus.ts'
 import { createFileOrVideoDom } from '@/utils/CreateDom.ts'
+import { MockList } from '@/mock'
+import { MockItem } from '@/services/types.ts'
 
 const ait = ref(false)
 const menuList = ref([
@@ -74,6 +96,9 @@ const menuList = ref([
 const msgInput = ref('')
 // 输入框dom元素
 const messageInputDom = ref()
+/* 光标的位置 */
+const cursorLocat = ref()
+const activeItem = ref(inject('activeItem') as MockItem)
 
 /**
  *  将指定节点插入到光标位置
@@ -231,6 +256,19 @@ const send = () => {
 const handleInput = (e: Event) => {
   msgInput.value = (e.target as HTMLInputElement).innerHTML
   ait.value = msgInput.value.endsWith('@')
+  if (ait.value) {
+    // 获取光标
+    const selection = window.getSelection()
+    // 获取选中的内容
+    const range = selection?.getRangeAt(0)
+    const res = range?.getBoundingClientRect() as any
+    nextTick(() => {
+      const dom = document.querySelector('.ait') as HTMLElement
+      dom.style.position = 'fixed'
+      dom.style.left = `${res?.x - 20}px`
+      dom.style.top = `${res?.y - 175}px`
+    })
+  }
 }
 
 /* input的keydown事件 */
@@ -250,6 +288,50 @@ const inputKeyDown = (e: KeyboardEvent) => {
     send()
   }
 }
+
+/* 失焦时保存光标 */
+const saveCursor = () => {
+  if (!window.getSelection) {
+    return null
+  }
+  const sel = window.getSelection()
+  if (sel?.getRangeAt && sel.rangeCount) {
+    cursorLocat.value = sel.getRangeAt(0)
+  }
+}
+
+/* 处理点击@提及框事件 */
+// TODO 删除的时候需要整体删除，并且输入框和渲染气泡的@内容都要高亮 (nyh -> 2024-03-29 23:43:34)
+const handleAit = (item: MockItem) => {
+  // 重新聚焦输入框(聚焦到输入框开头)，所以需要在失焦的时候保存光标的位置
+  messageInputDom.value.focus()
+  const sel = window.getSelection()
+  sel?.removeAllRanges()
+  // 重新设置光标位置
+  sel?.addRange(cursorLocat.value)
+  insertNode(MsgEnum.TEXT, item.accountName)
+  triggerInputEvent(messageInputDom.value)
+  ait.value = false
+}
+
+const closeMenu = (event: any) => {
+  /* 需要判断点击如果不是.context-menu类的元素的时候，menu才会关闭 */
+  if (!event.target.matches('.message-input, .message-input *')) {
+    ait.value = false
+  }
+}
+
+onMounted(() => {
+  Mitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
+    activeItem.value = event.item
+    messageInputDom.value.focus()
+  })
+  window.addEventListener('click', closeMenu, true)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('click', closeMenu, true)
+})
 </script>
 
 <style scoped lang="scss">
@@ -270,5 +352,13 @@ const inputKeyDown = (e: KeyboardEvent) => {
   caret-color: #13987f; /* 光标颜色，可根据需求调整 */
   white-space: pre-wrap; /* 保留空白符号并正常换行 */
   word-break: break-word; /* 在长单词或URL地址内部进行换行 */
+}
+.ait {
+  @apply w-200px h-160px bg-[--center-bg-color] rounded-8px p-[5px_0_5px_5px];
+  box-shadow: 2px 2px 12px 2px var(--box-shadow-color);
+  border: 1px solid var(--box-shadow-color);
+  .ait-item {
+    @apply h-26px text-[--text-color] text-14px p-[5px_0_5px_10px] mr-5px rounded-6px hover:bg-[--bg-group-hover] cursor-pointer;
+  }
 }
 </style>
