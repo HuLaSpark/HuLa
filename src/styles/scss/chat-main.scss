@@ -52,3 +52,7 @@
 .max:hover {
   background-color: #f5dce1;
 }
+/*! 替换ait的字体颜色 */
+:deep(#aitSpan) {
+  @apply text-inherit cursor-pointer;
+}

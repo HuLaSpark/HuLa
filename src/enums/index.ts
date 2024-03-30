@@ -94,8 +94,8 @@ export enum MsgEnum {
   FILE,
   /** 表情 */
   EMOTICON,
-  /** 超链接 */
-  HYPERLINK
+  /** 艾特 */
+  AIT
 }
 
 /** 房间类型 1群聊 2单聊 */
