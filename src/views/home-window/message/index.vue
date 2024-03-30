@@ -12,7 +12,7 @@
           :data-key="item.key"
           :menu="menuList"
           :special-menu="specialMenuList"
-          :class="{ active: activeItem === item.key }"
+          :class="{ active: activeIndex === item.key }"
           class="msg-box w-full h-75px mb-5px"
           v-for="item in MockList"
           :key="item.key">
@@ -55,7 +55,7 @@ import { MittEnum } from '@/enums'
 
 const msgTotal = ref(0)
 const scrollbar = ref()
-const { activeItem, handleMsgClick, menuList, specialMenuList, handleMsgDblclick } = useMessage()
+const { activeIndex, handleMsgClick, menuList, specialMenuList, handleMsgDblclick } = useMessage()
 
 watchEffect(() => {
   // TODO 如果当前信息栏中没有该信息就创建一条 (nyh -> 2024-03-22 01:05:22)
@@ -64,9 +64,9 @@ watchEffect(() => {
 
 onMounted(() => {
   // TODO 这里的key后面如果换成用户唯一标识的时候记得更换data-key的值 (nyh -> 2024-03-28 18:56:20)
-  if (activeItem.value !== -1) {
+  if (activeIndex.value !== -1) {
     nextTick(() => {
-      const activeElement = document.querySelector(`.msg-box[data-key="${activeItem.value}"]`) as HTMLElement
+      const activeElement = document.querySelector(`.msg-box[data-key="${activeIndex.value}"]`) as HTMLElement
       const rect = activeElement.getBoundingClientRect()
       scrollbar.value.scrollTo({
         top: rect.top - 75,

@@ -9,7 +9,7 @@ import { WebviewWindow } from '@tauri-apps/api/window'
 
 const { createWebviewWindow, checkWinExist } = useWindow()
 /* 建议把此状态存入localStorage中 */
-const activeItem = ref(-1)
+const activeIndex = ref(-1)
 const msgBoxShow = ref(false)
 /* 独立窗口的集合 */
 const aloneWin = ref(new Set())
@@ -26,13 +26,13 @@ export const useMessage = () => {
   /* 处理点击选中消息 */
   const handleMsgClick = (item: MockItem) => {
     msgBoxShow.value = true
-    activeItem.value = item.key
+    activeIndex.value = item.key
     const data = { msgBoxShow, item }
     Mitt.emit(MittEnum.MSG_BOX_SHOW, data)
     // 判断是否打开了独立的窗口
     if (aloneWin.value.has(EventEnum.ALONE + item.key)) {
       checkWinExist(EventEnum.ALONE + item.key).then()
-      activeItem.value = -1
+      activeIndex.value = -1
       Mitt.emit(MittEnum.MSG_BOX_SHOW, { item: -1 })
     }
     // 如果是收缩页面状态点击消息框就直接变成独立窗口
@@ -51,8 +51,8 @@ export const useMessage = () => {
   /* 打开独立窗口 */
   const openAloneWin = async (item: MockItem) => {
     itemRef.value = { ...item }
-    if (activeItem.value === item.key) {
-      activeItem.value = -1
+    if (activeIndex.value === item.key) {
+      activeIndex.value = -1
       Mitt.emit(MittEnum.MSG_BOX_SHOW, { item: -1 })
     }
     // TODO 传递用户信息(这里的label最好使用用户唯一的id来代替) (nyh -> 2024-03-18 12:18:10)
@@ -107,14 +107,14 @@ export const useMessage = () => {
         // 如果找到了对应的元素，则移除
         if (index !== -1) {
           const removeItem = MockList.value.splice(index, 1)[0]
-          if (activeItem.value === removeItem.key) {
+          if (activeIndex.value === removeItem.key) {
             if (index < MockList.value.length) {
               // 需要使用新的索引位置找到key更新activeItem.value
-              activeItem.value = MockList.value[index].key
+              activeIndex.value = MockList.value[index].key
               handleMsgClick(MockList.value[index])
             } else {
               // 如果我们删除的是最后一个元素，则需要选中前一个元素
-              activeItem.value = MockList.value[MockList.value.length - 1].key
+              activeIndex.value = MockList.value[MockList.value.length - 1].key
               handleMsgClick(MockList.value[MockList.value.length - 1])
             }
           }
@@ -135,5 +135,5 @@ export const useMessage = () => {
     })
   })
 
-  return { activeItem, msgBoxShow, handleMsgClick, handleMsgDblclick, menuList, specialMenuList }
+  return { activeIndex, msgBoxShow, handleMsgClick, handleMsgDblclick, menuList, specialMenuList }
 }

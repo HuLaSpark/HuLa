@@ -8,7 +8,6 @@
         contenteditable
         spellcheck="false"
         autofocus
-        @blur="saveCursor"
         @paste="handlePaste"
         @input="handleInput"
         @keydown.enter="inputKeyDown"></div>
@@ -17,7 +16,7 @@
 
   <!-- @提及框  -->
   <div v-if="ait && activeItem.type === RoomTypeEnum.GROUP" class="ait">
-    <n-virtual-list id="image-chat-msgInput" style="max-height: 180px" :item-size="26" :items="MockList">
+    <n-virtual-list id="image-chat-msgInput" style="max-height: 180px" :item-size="36" :items="MockList">
       <template #default="{ item }">
         <n-flex @click="handleAit(item)" :key="item.key" align="center" class="ait-item">
           <n-avatar
@@ -96,8 +95,6 @@ const menuList = ref([
 const msgInput = ref('')
 // 输入框dom元素
 const messageInputDom = ref()
-/* 光标的位置 */
-const cursorLocat = ref()
 const activeItem = ref(inject('activeItem') as MockItem)
 
 /**
@@ -113,7 +110,19 @@ const insertNode = (type: MsgEnum, dom: any) => {
   // 删除选中的内容
   range?.deleteContents()
   // 将节点插入范围最前面添加节点
-  if (type === MsgEnum.TEXT) {
+  if (type === MsgEnum.AIT) {
+    // 创建一个span标签节点
+    const spanNode = document.createElement('span')
+    spanNode.id = 'aitSpan' // 设置id为aitSpan
+    spanNode.contentEditable = 'false' // 设置为不可编辑
+    spanNode.classList.add('text-#13987f')
+    spanNode.classList.add('select-none')
+    spanNode.classList.add('cursor-default')
+    // 在span标签后面添加一个空格
+    spanNode.appendChild(document.createTextNode(`@${dom} `))
+    // 将span标签插入到光标位置
+    range?.insertNode(spanNode)
+  } else if (type === MsgEnum.TEXT) {
     range?.insertNode(document.createTextNode(dom))
   } else {
     range?.insertNode(dom)
@@ -221,6 +230,7 @@ const getMessageContentType = () => {
 /* 处理发送信息事件 */
 // TODO 输入框中的内容当我切换消息的时候需要记录之前输入框的内容 (nyh -> 2024-03-01 07:03:43)
 const send = () => {
+  ait.value = false
   const contentType = getMessageContentType()
   const msg = {
     type: contentType,
@@ -266,7 +276,7 @@ const handleInput = (e: Event) => {
       const dom = document.querySelector('.ait') as HTMLElement
       dom.style.position = 'fixed'
       dom.style.left = `${res?.x - 20}px`
-      dom.style.top = `${res?.y - 175}px`
+      dom.style.top = `${res?.y - (dom.offsetHeight + 5)}px`
     })
   }
 }
@@ -289,27 +299,17 @@ const inputKeyDown = (e: KeyboardEvent) => {
   }
 }
 
-/* 失焦时保存光标 */
-const saveCursor = () => {
-  if (!window.getSelection) {
-    return null
-  }
-  const sel = window.getSelection()
-  if (sel?.getRangeAt && sel.rangeCount) {
-    cursorLocat.value = sel.getRangeAt(0)
-  }
-}
-
 /* 处理点击@提及框事件 */
-// TODO 删除的时候需要整体删除，并且输入框和渲染气泡的@内容都要高亮 (nyh -> 2024-03-29 23:43:34)
 const handleAit = (item: MockItem) => {
+  // 截取@字符
+  msgInput.value = msgInput.value.substring(0, msgInput.value.length - 1)
+  messageInputDom.value.innerHTML = msgInput.value
   // 重新聚焦输入框(聚焦到输入框开头)，所以需要在失焦的时候保存光标的位置
   messageInputDom.value.focus()
   const sel = window.getSelection()
-  sel?.removeAllRanges()
-  // 重新设置光标位置
-  sel?.addRange(cursorLocat.value)
-  insertNode(MsgEnum.TEXT, item.accountName)
+  const res = sel?.getRangeAt(0)
+  res?.setStart(messageInputDom.value, messageInputDom.value.childNodes.length)
+  insertNode(MsgEnum.AIT, item.accountName)
   triggerInputEvent(messageInputDom.value)
   ait.value = false
 }
@@ -354,7 +354,7 @@ onUnmounted(() => {
   word-break: break-word; /* 在长单词或URL地址内部进行换行 */
 }
 .ait {
-  @apply w-200px h-160px bg-[--center-bg-color] rounded-8px p-[5px_0_5px_5px];
+  @apply w-200px h-fit max-h-190px bg-[--center-bg-color] rounded-8px p-[5px_0_5px_5px];
   box-shadow: 2px 2px 12px 2px var(--box-shadow-color);
   border: 1px solid var(--box-shadow-color);
   .ait-item {
