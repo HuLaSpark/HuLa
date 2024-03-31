@@ -110,6 +110,7 @@ export const createFileOrVideoDom = (file: File) => {
         // 创建Image DOM元素并指定src为canvas的data url
         const img = new Image()
         img.src = dataURL
+        img.dataset.type = 'file-canvas'
         img.style.cssText = imgStyle
         img.onload = () => resolve(img)
         img.onerror = reject
@@ -138,7 +139,7 @@ export const createFileOrVideoDom = (file: File) => {
       })
       .catch((error) => {
         reject(error)
-        window.$message.error('暂不支持此类型文件粘贴')
+        window.$message.error('暂不支持此类型文件')
       })
   })
 }

@@ -85,7 +85,7 @@ import { emit, listen } from '@tauri-apps/api/event'
 import { CloseBxEnum, EventEnum, MittEnum } from '@/enums'
 import { storeToRefs } from 'pinia'
 import { PersistedStateOptions } from 'pinia-plugin-persistedstate'
-import { invoke } from '@tauri-apps/api/tauri'
+import { exit } from '@tauri-apps/api/process'
 
 /**
  * 新版defineProps可以直接结构 { minW, maxW, closeW } 如果需要使用默认值withDefaults的时候使用新版解构方式会报错
@@ -128,6 +128,7 @@ const alwaysOnTopStatus = computed(() => {
 })
 
 watchEffect(() => {
+  tipsRef.type = tips.value.type
   if (alwaysOnTopStatus.value) {
     appWindow.setAlwaysOnTop(alwaysOnTopStatus.value as boolean)
   }
@@ -138,9 +139,7 @@ watchEffect(() => {
     }
   })
   listen(EventEnum.EXIT, async () => {
-    await invoke('exit').catch((error) => {
-      console.error('退出失败:', error)
-    })
+    await exit(0)
   })
 
   if (escClose.value) {

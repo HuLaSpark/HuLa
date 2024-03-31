@@ -87,6 +87,7 @@
                 <n-image-group v-if="Array.isArray(item.content) && item.type === MsgEnum.IMAGE">
                   <n-flex class="photo-wall" vertical>
                     <n-image
+                      class="select-none"
                       v-for="(src, index) in item.content"
                       :key="index"
                       :img-props="{ style: { maxWidth: '325px', maxHeight: '165px' } }"
@@ -98,9 +99,20 @@
 
                 <!-- 单张图片时渲染 -->
                 <n-image
-                  v-else-if="typeof item.content === 'string' && item.type === MsgEnum.IMAGE"
+                  class="select-none"
+                  v-if="typeof item.content === 'string' && item.type === MsgEnum.IMAGE"
                   :img-props="{ style: { maxWidth: '325px', maxHeight: '165px' } }"
                   show-toolbar-tooltip
+                  style="border-radius: 8px"
+                  :src="item.content"></n-image>
+
+                <!-- 消息为文件 -->
+                <n-image
+                  class="select-none"
+                  v-if="typeof item.content === 'string' && item.type === MsgEnum.FILE"
+                  :img-props="{ style: { maxWidth: '325px', maxHeight: '165px' } }"
+                  show-toolbar-tooltip
+                  preview-disabled
                   style="border-radius: 8px"
                   :src="item.content"></n-image>
               </ContextMenu>
@@ -322,7 +334,7 @@ const handleMsgClick = (item: any) => {
 /* 发送信息 */
 const handleSendMessage = (msg: any) => {
   // 检查是否为图片消息
-  if (msg.type === MsgEnum.IMAGE) {
+  if (msg.type === MsgEnum.IMAGE || msg.type === MsgEnum.FILE) {
     // 查找所有的img标签并存入数组
     const imgSrcArray = [...msg.content.matchAll(/<img.*?src="(.*?)"/g)].map((match) => match[1])
     if (imgSrcArray.length > 1) {

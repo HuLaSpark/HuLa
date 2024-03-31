@@ -35,7 +35,7 @@
       </n-flex>
 
       <component :is="division" />
-      <n-flex @click="exit" align="center" :size="10" class="p-[8px_6px] rounded-4px hover:bg-[--tray-hover-e]">
+      <n-flex @click="exit(0)" align="center" :size="10" class="p-[8px_6px] rounded-4px hover:bg-[--tray-hover-e]">
         <span>退出</span>
       </n-flex>
     </n-flex>
@@ -44,6 +44,7 @@
 <script setup lang="tsx">
 import { useWindow } from '@/hooks/useWindow.ts'
 import { invoke } from '@tauri-apps/api/tauri'
+import { exit } from '@tauri-apps/api/process'
 import { statusItem } from './home-window/onlineStatus/config.ts'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
 import { appWindow } from '@tauri-apps/api/window'
@@ -59,12 +60,6 @@ const division = () => {
 const toggleStatus = (url: string, title: string) => {
   OLStatusStore.setOnlineStatus(url, title)
   appWindow.hide()
-}
-
-const exit = async () => {
-  await invoke('exit').catch((error) => {
-    console.error('退出失败:', error)
-  })
 }
 
 onMounted(() => {

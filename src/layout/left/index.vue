@@ -86,13 +86,13 @@
           :key="index"
           @click="pageJumps(item.url)"
           :class="[
-            { active: activeItem === item.url && item.url !== 'dynamic' },
+            { active: activeUrl === item.url && item.url !== 'dynamic' },
             openWindowsList.has(item.url) ? 'p-[6px_8px] color-#13987f' : 'top-action'
           ]">
           <n-badge :value="item.badge" :max="99">
             <svg class="w-22px h-22px">
               <use
-                :href="`#${activeItem === item.url || openWindowsList.has(item.url) ? item.iconAction : item.icon}`"></use>
+                :href="`#${activeUrl === item.url || openWindowsList.has(item.url) ? item.iconAction : item.icon}`"></use>
             </svg>
           </n-badge>
         </div>
@@ -151,7 +151,7 @@ const { themes } = storeToRefs(settingStore)
 const OLStatusStore = onlineStatus()
 const { url, title, bgColor } = storeToRefs(OLStatusStore)
 /*当前选中的元素 默认选中itemsTop的第一项*/
-const activeItem = ref<string>(itemsTop.value[0].url)
+const activeUrl = ref<string>(itemsTop.value[0].url)
 const settingShow = ref(false)
 const shrinkStatus = ref(false)
 const infoShow = ref(false)
@@ -173,7 +173,7 @@ watchEffect(() => {
     })
   })
   Mitt.on(MittEnum.TO_SEND_MSG, (event: any) => {
-    activeItem.value = event.url
+    activeUrl.value = event.url
   })
   /* 判断是否是跟随系统主题 */
   if (themes.value.pattern === ThemeEnum.OS) {
@@ -195,7 +195,7 @@ const pageJumps = (url: string) => {
       await createWebviewWindow('动态', 'dynamic', 840, 800)
     }, 300)
   } else {
-    activeItem.value = url
+    activeUrl.value = url
     router.push(`/${url}`)
   }
 }
@@ -222,7 +222,7 @@ const closeMenu = (event: any) => {
 
 onMounted(async () => {
   /* 页面加载的时候默认显示消息列表 */
-  pageJumps(activeItem.value)
+  pageJumps(activeUrl.value)
   window.addEventListener('click', closeMenu, true)
 
   Mitt.on(MittEnum.SHRINK_WINDOW, (event) => {
