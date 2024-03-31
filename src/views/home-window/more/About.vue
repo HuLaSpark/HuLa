@@ -6,7 +6,8 @@
       <img class="w-220px h-100px" src="@/assets/logo/hula.png" alt="" />
 
       <n-flex vertical align="center" :size="20">
-        <span class="text-15px text-#707070">版本: &nbsp; {{ _pkg.version }}(64位)</span>
+        <span class="text-15px text-#707070">版本：{{ _pkg.version }}({{ osArch }})</span>
+        <span class="text-15px text-#707070">当前设备：{{ osType }}</span>
         <n-flex vertical class="text-12px text-#909090" :size="8" align="center">
           <span>Copyright © 2023-2024 nongyehong</span>
           <span>All Rights Reserved.</span>
@@ -17,9 +18,31 @@
 </template>
 <script setup lang="ts">
 import pkg from '~/package.json'
+import { type, arch } from '@tauri-apps/api/os'
 
 const _pkg = reactive({
   version: pkg.version
+})
+const osType = ref()
+const osArch = ref()
+
+onMounted(() => {
+  arch().then((e) => {
+    if (e.includes('64')) {
+      osArch.value = '64位'
+    } else {
+      osArch.value = '32位'
+    }
+  })
+  type().then((e) => {
+    if (e === 'Windows_NT') {
+      osType.value = 'Windows'
+    } else if (e === 'Darwin') {
+      osType.value = 'MacOS'
+    } else {
+      osType.value = e
+    }
+  })
 })
 </script>
 

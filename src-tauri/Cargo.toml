@@ -20,7 +20,7 @@ strip = true # 删除调试符号
 tauri-build = { version = "1.5", features = [] }
 
 [dependencies]
-tauri = { version = "1.6.1", features = [ "notification-all", "macos-private-api", "fs-all", "window-all", "system-tray", "shell-open", "icon-png", "icon-ico"] }
+tauri = { version = "1.6.1", features = [ "os-all", "process-all", "notification-all", "macos-private-api", "fs-all", "window-all", "system-tray", "shell-open", "icon-png", "icon-ico"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 window-shadows = "0.2.2" # windows 阴影和圆角

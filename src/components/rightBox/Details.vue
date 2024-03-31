@@ -28,9 +28,14 @@
           :size="28"
           :border-radius="10"
           :color="'#13987f'">
-          <n-icon :size="20">
-            <svg><use :href="`#${item.url}`"></use></svg>
-          </n-icon>
+          <n-popover trigger="hover">
+            <template #trigger>
+              <n-icon :size="20">
+                <svg><use :href="`#${item.url}`"></use></svg>
+              </n-icon>
+            </template>
+            <span>{{ item.title }}</span>
+          </n-popover>
         </n-icon-wrapper>
       </n-flex>
     </n-config-provider>
@@ -111,6 +116,7 @@ const item = computed<MockItem>(() => {
 const footerOptions = ref<OPT.Details[]>([
   {
     url: 'message',
+    title: '发信息',
     click: () => {
       // TODO 需要增加独立窗口功能 (nyh -> 2024-03-25 16:01:23)
       router.push('/message')
@@ -120,12 +126,14 @@ const footerOptions = ref<OPT.Details[]>([
   },
   {
     url: 'phone-telephone',
+    title: '打电话',
     click: () => {
       console.log(123)
     }
   },
   {
     url: 'video-one',
+    title: '打视频',
     click: () => {
       console.log(123)
     }

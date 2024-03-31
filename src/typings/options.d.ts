@@ -44,6 +44,7 @@ declare namespace OPT {
   /* 详情页选项 */
   type Details = {
     url: string
+    title: string
     click: (...args: any[]) => void
   }
 

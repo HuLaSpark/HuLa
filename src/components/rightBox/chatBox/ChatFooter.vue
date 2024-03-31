@@ -4,8 +4,8 @@
     class="size-full relative z-10 bg-[--right-bg-color] color-[--icon-color]"
     style="box-shadow: 0 -4px 4px var(--box-shadow-color)">
     <!-- 输入框顶部选项栏 -->
-    <nav class="flex-between-center p-[10px_22px_5px] select-none">
-      <nav class="input-options flex-y-center">
+    <n-flex align="center" justify="space-between" class="p-[10px_22px_5px] select-none">
+      <n-flex align="center" :size="0" class="input-options">
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
             <svg class="mr-18px"><use href="#smiling-face"></use></svg>
@@ -24,7 +24,7 @@
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
             <div class="flex-center gap-2px mr-12px">
-              <svg><use href="#file2"></use></svg>
+              <svg @click="open()"><use href="#file2"></use></svg>
               <svg style="width: 14px; height: 14px"><use href="#down"></use></svg>
             </div>
           </template>
@@ -32,29 +32,29 @@
         </n-popover>
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
-            <svg class="mr-18px"><use href="#photo"></use></svg>
+            <svg @click="open({ accept: 'image/*' })" class="mr-18px"><use href="#photo"></use></svg>
           </template>
           <span>图片</span>
         </n-popover>
-        <n-popover trigger="hover" :show-arrow="false" placement="bottom">
-          <template #trigger>
-            <svg class="mr-18px"><use href="#shake"></use></svg>
-          </template>
-          <span>窗口抖动</span>
-        </n-popover>
-        <n-popover trigger="hover" :show-arrow="false" placement="bottom">
-          <template #trigger>
-            <svg class="mr-18px"><use href="#red-packet"></use></svg>
-          </template>
-          <span>红包</span>
-        </n-popover>
+        <!--        <n-popover trigger="hover" :show-arrow="false" placement="bottom">-->
+        <!--          <template #trigger>-->
+        <!--            <svg class="mr-18px"><use href="#shake"></use></svg>-->
+        <!--          </template>-->
+        <!--          <span>窗口抖动</span>-->
+        <!--        </n-popover>-->
+        <!--        <n-popover trigger="hover" :show-arrow="false" placement="bottom">-->
+        <!--          <template #trigger>-->
+        <!--            <svg class="mr-18px"><use href="#red-packet"></use></svg>-->
+        <!--          </template>-->
+        <!--          <span>红包</span>-->
+        <!--        </n-popover>-->
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
             <svg class="mr-18px"><use href="#voice"></use></svg>
           </template>
           <span>语音信息</span>
         </n-popover>
-      </nav>
+      </n-flex>
 
       <n-popover trigger="hover" :show-arrow="false" placement="bottom">
         <template #trigger>
@@ -62,16 +62,75 @@
         </template>
         <span>聊天记录</span>
       </n-popover>
-    </nav>
+    </n-flex>
 
     <!-- 输入框及其发送按钮 -->
     <div class="pl-20px flex flex-col items-end gap-6px">
-      <MsgInput />
+      <MsgInput ref="MsgInputRef" />
     </div>
   </main>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { useFileDialog } from '@vueuse/core'
+import { createFileOrVideoDom } from '@/utils/CreateDom.ts'
+import { MsgEnum } from '@/enums'
+
+const { open, onChange } = useFileDialog()
+const MsgInputRef = ref()
+const msgInputDom = ref()
+
+onChange((files) => {
+  if (!files) return
+  if (files.length > 5) {
+    window.$message.warning('一次性只能上传5个文件')
+    return
+  }
+  for (let file of files) {
+    // 检查文件大小
+    let fileSizeInMB = file.size / 1024 / 1024 // 将文件大小转换为兆字节(MB)
+    if (fileSizeInMB > 300) {
+      window.$message.warning(`文件 ${file.name} 超过300MB`)
+      continue // 如果文件大小超过300MB，就跳过这个文件，处理下一个文件
+    }
+    let reader = new FileReader()
+    let type = file.type
+    if (type.startsWith('image/')) {
+      reader.onload = (e: any) => {
+        const img = document.createElement('img')
+        img.src = e.target.result
+        // 设置图片的最大高度和最大宽度
+        img.style.maxHeight = '88px'
+        img.style.maxWidth = '140px'
+        img.style.marginRight = '6px'
+        // 插入图片
+        MsgInputRef.value.insertNode(MsgEnum.IMAGE, img)
+        MsgInputRef.value.triggerInputEvent(msgInputDom.value)
+      }
+    } else {
+      // 使用函数
+      createFileOrVideoDom(file).then((imgTag) => {
+        // 获取光标
+        const selection = window.getSelection()
+        // 获取选中的内容
+        const range = selection?.getRangeAt(0)
+        // 删除选中的内容
+        range?.deleteContents()
+        // 将生成的img标签插入到页面中
+        MsgInputRef.value.insertNode(MsgEnum.FILE, imgTag)
+        MsgInputRef.value.triggerInputEvent(msgInputDom.value)
+      })
+    }
+    nextTick(() => {
+      reader.readAsDataURL(file)
+    })
+  }
+})
+
+onMounted(() => {
+  msgInputDom.value = MsgInputRef.value.messageInputDom
+})
+</script>
 
 <style scoped lang="scss">
 .input-options {

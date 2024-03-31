@@ -1,13 +1,12 @@
 <template>
   <!-- 输入框 -->
-  <ContextMenu class="w-full h-100px" @select="$event.click()" :menu="menuList">
-    <n-scrollbar style="max-height: 100px">
+  <ContextMenu class="w-full h-110px" @select="$event.click()" :menu="menuList">
+    <n-scrollbar style="max-height: 110px">
       <div
-        class="message-input"
+        id="message-input"
         ref="messageInputDom"
         contenteditable
         spellcheck="false"
-        autofocus
         @paste="handlePaste"
         @input="handleInput"
         @keydown.enter="inputKeyDown"></div>
@@ -15,8 +14,8 @@
   </ContextMenu>
 
   <!-- @提及框  -->
-  <div v-if="ait && activeItem.type === RoomTypeEnum.GROUP" class="ait">
-    <n-virtual-list id="image-chat-msgInput" style="max-height: 180px" :item-size="36" :items="MockList">
+  <div v-if="ait && activeItem.type === RoomTypeEnum.GROUP && filteredList.length > 0" class="ait">
+    <n-virtual-list id="image-chat-msgInput" style="max-height: 180px" :item-size="36" :items="filteredList">
       <template #default="{ item }">
         <n-flex @click="handleAit(item)" :key="item.key" align="center" class="ait-item">
           <n-avatar
@@ -61,6 +60,7 @@ import Mitt from '@/utils/Bus.ts'
 import { createFileOrVideoDom } from '@/utils/CreateDom.ts'
 import { MockList } from '@/mock'
 import { MockItem } from '@/services/types.ts'
+import { useDebounceFn } from '@vueuse/core'
 
 const ait = ref(false)
 const menuList = ref([
@@ -96,6 +96,24 @@ const msgInput = ref('')
 // 输入框dom元素
 const messageInputDom = ref()
 const activeItem = ref(inject('activeItem') as MockItem)
+/* 艾特后的关键字的key */
+const aitKey = ref('')
+// 过滤MockList
+const filteredList = computed(() => {
+  if (aitKey.value) {
+    return MockList.value.filter((item) => item.accountName.includes(aitKey.value))
+  } else {
+    return MockList.value
+  }
+})
+
+/* 当切换聊天对象时，重新获取焦点 */
+watch(activeItem, () => {
+  nextTick(() => {
+    const inputDiv = document.getElementById('message-input')
+    inputDiv?.focus()
+  })
+})
 
 /**
  *  将指定节点插入到光标位置
@@ -119,9 +137,14 @@ const insertNode = (type: MsgEnum, dom: any) => {
     spanNode.classList.add('select-none')
     spanNode.classList.add('cursor-default')
     // 在span标签后面添加一个空格
-    spanNode.appendChild(document.createTextNode(`@${dom} `))
+    spanNode.appendChild(document.createTextNode(`@${dom}`))
     // 将span标签插入到光标位置
     range?.insertNode(spanNode)
+    range?.setStart(messageInputDom.value, messageInputDom.value.childNodes.length)
+    // 创建一个空格文本节点
+    const spaceNode = document.createTextNode('\u00A0')
+    // 将空格文本节点插入到光标位置
+    range?.insertNode(spaceNode)
   } else if (type === MsgEnum.TEXT) {
     range?.insertNode(document.createTextNode(dom))
   } else {
@@ -135,17 +158,28 @@ const insertNode = (type: MsgEnum, dom: any) => {
 const handlePaste = (e: any) => {
   e.preventDefault()
   if (e.clipboardData.files.length > 0) {
-    const file = e.clipboardData.files[0]
-    const fileType = file.type as string
-    if (fileType.startsWith('image/')) {
-      // 处理图片粘贴
-      imgPaste(file)
-    } else if (fileType.startsWith('video/')) {
-      // 处理视频粘贴
-      FileOrVideoPaste(file, MsgEnum.VIDEO)
-    } else {
-      // 处理文件粘贴
-      FileOrVideoPaste(file, MsgEnum.FILE)
+    if (e.clipboardData.files.length > 5) {
+      window.$message.warning('一次性只能上传5个文件')
+      return
+    }
+    for (let file of e.clipboardData.files) {
+      // 检查文件大小
+      let fileSizeInMB = file.size / 1024 / 1024 // 将文件大小转换为兆字节(MB)
+      if (fileSizeInMB > 300) {
+        window.$message.warning(`文件 ${file.name} 超过300MB`)
+        continue // 如果文件大小超过300MB，就跳过这个文件，处理下一个文件
+      }
+      let fileType = file.type as string
+      if (fileType.startsWith('image/')) {
+        // 处理图片粘贴
+        imgPaste(file)
+      } else if (fileType.startsWith('video/')) {
+        // 处理视频粘贴
+        FileOrVideoPaste(file, MsgEnum.VIDEO)
+      } else {
+        // 处理文件粘贴
+        FileOrVideoPaste(file, MsgEnum.FILE)
+      }
     }
   } else {
     // 如果没有文件，而是文本，处理纯文本粘贴
@@ -204,19 +238,26 @@ const getMessageContentType = () => {
   let hasText = false
   let hasImage = false
   let hasVideo = false
+  let hasFile = false
 
   const elements = messageInputDom.value.childNodes
   for (let element of elements) {
     if (element.nodeType === Node.TEXT_NODE && element.nodeValue.trim() !== '') {
       hasText = true
     } else if (element.tagName === 'IMG') {
-      hasImage = true
-    } else if (element.tagName === 'VI  DEO' || (element.tagName === 'A' && element.href.match(/\.(mp4|webm)$/i))) {
+      if (element.dataset.type === 'file-canvas') {
+        hasFile = true
+      } else {
+        hasImage = true
+      }
+    } else if (element.tagName === 'VIDEO' || (element.tagName === 'A' && element.href.match(/\.(mp4|webm)$/i))) {
       hasVideo = true
     }
   }
 
-  if (hasVideo) {
+  if (hasFile) {
+    return MsgEnum.FILE
+  } else if (hasVideo) {
     return MsgEnum.VIDEO
   } else if (hasText && hasImage) {
     return MsgEnum.MIXED
@@ -262,24 +303,33 @@ const send = () => {
   messageInputDom.value.innerHTML = ''
 }
 
-/* 当输入框手动输入值的时候触发input事件 */
-const handleInput = (e: Event) => {
+/* 获取@字符后面输入的内容 */
+
+/* 当输入框手动输入值的时候触发input事件(使用vueUse的防抖) */
+const handleInput = useDebounceFn((e: Event) => {
   msgInput.value = (e.target as HTMLInputElement).innerHTML
-  ait.value = msgInput.value.endsWith('@')
+  ait.value = msgInput.value.includes('@')
+  /* 处理输入@时候弹出框 */
   if (ait.value) {
-    // 获取光标
-    const selection = window.getSelection()
-    // 获取选中的内容
-    const range = selection?.getRangeAt(0)
-    const res = range?.getBoundingClientRect() as any
-    nextTick(() => {
-      const dom = document.querySelector('.ait') as HTMLElement
-      dom.style.position = 'fixed'
-      dom.style.left = `${res?.x - 20}px`
-      dom.style.top = `${res?.y - (dom.offsetHeight + 5)}px`
-    })
+    const atIndex = msgInput.value.lastIndexOf('@')
+    aitKey.value = msgInput.value.slice(atIndex + 1)
+    if (filteredList.value.length > 0) {
+      // 获取光标
+      const selection = window.getSelection()
+      // 获取选中的内容
+      const range = selection?.getRangeAt(0)
+      const res = range?.getBoundingClientRect() as any
+      nextTick(() => {
+        const dom = document.querySelector('.ait') as HTMLElement
+        dom.style.position = 'fixed'
+        dom.style.left = `${res?.x - 20}px`
+        dom.style.top = `${res?.y - (dom.offsetHeight + 5)}px`
+      })
+    } else {
+      ait.value = false
+    }
   }
-}
+}, 100)
 
 /* input的keydown事件 */
 const inputKeyDown = (e: KeyboardEvent) => {
@@ -301,8 +351,10 @@ const inputKeyDown = (e: KeyboardEvent) => {
 
 /* 处理点击@提及框事件 */
 const handleAit = (item: MockItem) => {
-  // 截取@字符
-  msgInput.value = msgInput.value.substring(0, msgInput.value.length - 1)
+  // 查找最后一个@字符的位置
+  const atIndex = msgInput.value.lastIndexOf('@')
+  // 截取@字符以及其后面的内容
+  msgInput.value = msgInput.value.substring(0, atIndex)
   messageInputDom.value.innerHTML = msgInput.value
   // 重新聚焦输入框(聚焦到输入框开头)，所以需要在失焦的时候保存光标的位置
   messageInputDom.value.focus()
@@ -316,15 +368,18 @@ const handleAit = (item: MockItem) => {
 
 const closeMenu = (event: any) => {
   /* 需要判断点击如果不是.context-menu类的元素的时候，menu才会关闭 */
-  if (!event.target.matches('.message-input, .message-input *')) {
+  if (!event.target.matches('#message-input, #message-input *')) {
     ait.value = false
   }
 }
 
 onMounted(() => {
+  nextTick(() => {
+    const inputDiv = document.getElementById('message-input')
+    inputDiv?.focus()
+  })
   Mitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
     activeItem.value = event.item
-    messageInputDom.value.focus()
   })
   window.addEventListener('click', closeMenu, true)
 })
@@ -332,10 +387,13 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('click', closeMenu, true)
 })
+
+/* 导出组件方法和属性 */
+defineExpose({ messageInputDom, triggerInputEvent, insertNode })
 </script>
 
 <style scoped lang="scss">
-.message-input {
+#message-input {
   padding: 4px 24px 4px 4px; /* 输入框内填充 */
   font-size: 14px; /* 字体大小 */
   color: inherit; /* 继承颜色 */
