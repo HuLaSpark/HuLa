@@ -67,6 +67,11 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/home-window/message/Alone.vue')
   },
   {
+    path: '/sharedScreen',
+    name: 'sharedScreen',
+    component: () => import('@/views/home-window/SharedScreen.vue')
+  },
+  {
     path: '/settings',
     name: 'settings',
     component: () => import('@/views/home-window/more/settings/index.vue'),

@@ -8,14 +8,14 @@
     :class="{ 'right-1px': activeItem.type === RoomTypeEnum.SINGLE }"
     class="relative h-100vh"
     item-resizable
-    padding-bottom="10px"
-    :item-size="activeItem.type === RoomTypeEnum.GROUP ? 98 : 62"
+    :padding-top="10"
+    :item-size="activeItem.type === RoomTypeEnum.GROUP ? 98 : 70"
     :items="items">
     <template #default="{ item }">
       <main
         :key="item.key"
         class="flex-y-center min-h-58px"
-        :class="activeItem.type === RoomTypeEnum.GROUP ? 'p-[18px_20px]' : 'chat-single p-[2px_20px]'">
+        :class="activeItem.type === RoomTypeEnum.GROUP ? 'p-[18px_20px]' : 'chat-single p-[2px_20px_10px_20px]'">
         <!-- 好友或者群聊的信息 -->
         <article class="flex flex-col w-full gap-18px" :class="item.accountId === userId ? 'items-end' : ''">
           <div
@@ -170,14 +170,17 @@
   </footer>
 </template>
 <script setup lang="ts">
-import { MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
+import { EventEnum, MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import { MockItem } from '@/services/types.ts'
 import Mitt from '@/utils/Bus.ts'
 import { VirtualListInst } from 'naive-ui'
 import { invoke } from '@tauri-apps/api/tauri'
 import { optionsList, report } from './config.ts'
 import { usePopover } from '@/hooks/usePopover.ts'
+import { useWindow } from '@/hooks/useWindow.ts'
+import { listen } from '@tauri-apps/api/event'
 
+const { createWebviewWindow } = useWindow()
 /* 当前点击的用户的key */
 const selectKey = ref()
 const activeBubble = ref(-1)
@@ -333,28 +336,30 @@ const handleMsgClick = (item: any) => {
 
 /* 发送信息 */
 const handleSendMessage = (msg: any) => {
-  // 检查是否为图片消息
-  if (msg.type === MsgEnum.IMAGE || msg.type === MsgEnum.FILE) {
-    // 查找所有的img标签并存入数组
-    const imgSrcArray = [...msg.content.matchAll(/<img.*?src="(.*?)"/g)].map((match) => match[1])
-    if (imgSrcArray.length > 1) {
-      // 图片数量大于1，储存整个数组以便后面在模板中使用
-      msg.content = imgSrcArray
-    } else if (imgSrcArray.length === 1) {
-      // 图片数量为1，只存储单张图片的src
-      msg.content = imgSrcArray[0]
+  nextTick(() => {
+    // 检查是否为图片消息
+    if (msg.type === MsgEnum.IMAGE || msg.type === MsgEnum.FILE) {
+      // 查找所有的img标签并存入数组
+      const imgSrcArray = [...msg.content.matchAll(/<img.*?src="(.*?)"/g)].map((match) => match[1])
+      if (imgSrcArray.length > 1) {
+        // 图片数量大于1，储存整个数组以便后面在模板中使用
+        msg.content = imgSrcArray
+      } else if (imgSrcArray.length === 1) {
+        // 图片数量为1，只存储单张图片的src
+        msg.content = imgSrcArray[0]
+      }
     }
-  }
-  let index = items.value.length > 0 ? items.value[items.value.length - 1].key : 0
-  items.value.push({
-    value: '我',
-    key: index + 1,
-    accountId: userId.value,
-    avatar: 'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg',
-    content: msg.content,
-    type: msg.type
+    let index = items.value.length > 0 ? items.value[items.value.length - 1].key : 0
+    items.value.push({
+      value: '我',
+      key: index + 1,
+      accountId: userId.value,
+      avatar: 'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg',
+      content: msg.content,
+      type: msg.type
+    })
+    addToDomUpdateQueue(index, userId.value)
   })
-  addToDomUpdateQueue(index, userId.value)
 }
 
 /**
@@ -412,6 +417,9 @@ onMounted(() => {
   })
   Mitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
     activeItemRef.value = event.item
+  })
+  listen(EventEnum.SHARE_SCREEN, async () => {
+    await createWebviewWindow('共享屏幕', 'sharedScreen', 840, 840)
   })
   window.addEventListener('click', closeMenu, true)
   // let index = items.value.length > 0 ? items.value[items.value.length - 1].key : 0
