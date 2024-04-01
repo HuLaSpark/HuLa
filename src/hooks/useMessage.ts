@@ -54,6 +54,9 @@ export const useMessage = () => {
     if (activeIndex.value === item.key) {
       activeIndex.value = -1
       Mitt.emit(MittEnum.MSG_BOX_SHOW, { item: -1 })
+      await listen('aloneWin', () => {
+        emit('aloneData', { item: { ...item } })
+      })
     }
     // TODO 传递用户信息(这里的label最好使用用户唯一的id来代替) (nyh -> 2024-03-18 12:18:10)
     await createWebviewWindow(item.accountName, EventEnum.ALONE + item.key, 720, 800, '', true, true, 580)

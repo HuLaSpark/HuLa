@@ -36,7 +36,7 @@ peerConnection.ontrack = function (event) {
 }
 
 onMounted(async () => {
-  await emit('cjwb')
+  await emit('SharedScreenWin')
 })
 </script>
 
