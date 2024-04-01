@@ -1,3 +1,28 @@
+## 1.4.0 (2024-04-01)
+
+* :bug: fix(system): 使用pinia-shared-state来解决标签页之间store的共享问题 ([54cc2a6](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/54cc2a6))
+* :bug: fix(system): 修复已知的问题 ([4b557e2](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/4b557e2))
+* :medal: version(system): . add LICENSE. ([a3f4318](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/a3f4318))
+* :medal: version(system): 发布1.4.0版本 ([1a6c90b](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/1a6c90b))
+* :sparkles: feat(custom): 新增自动登录功能 ([c2fb6d7](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/c2fb6d7))
+* :sparkles: feat(setting): 新增关闭窗口提示 ([183a2e7](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/183a2e7))
+* :sparkles: feat(style): 新增个人信息框 ([9fbb6f3](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/9fbb6f3))
+* :sparkles: feat(style): 新增用户信息框跟随图片背景颜色功能 ([2feb9c0](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/2feb9c0))
+* :sparkles: feat(system): 新增群聊侧边栏 ([4f81f50](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/4f81f50))
+* :sparkles: feat(system): 新增消息独立窗口功能 ([60939bf](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/60939bf))
+* :sparkles: feat(system): 新增在线状态 ([ed7be38](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/ed7be38))
+* :sparkles: feat(system): 新增ait功能 ([9a94c17](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/9a94c17))
+* :zap: perf(setting): 使用命名空间简化ts类型导入 ([bd96330](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/bd96330))
+* :zap: perf(setting): 优化配置 ([d139a36](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/d139a36))
+* :zap: perf(style): 完善主题的配置，优化信息列表功能 ([70fb55b](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/70fb55b))
+* :zap: perf(system): 优化艾特功能 ([e7cb15a](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/e7cb15a))
+* :zap: perf(system): 优化屏幕共享功能 ([5d6c9f3](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/5d6c9f3))
+* :zap: perf(system): 优化文件类型消息 ([2eae033](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/2eae033))
+* :zap: perf(system): 优化系统托盘图标闪烁 ([5614750](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/5614750))
+* :zap: perf(system): 优化系统托盘右键菜单 ([c1563ef](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/c1563ef))
+
+
+
 ## 1.3.0-beta (2024-03-12)
 
 * :bug: fix(custom): 修改页面样式没有加载问题，修复打包后静态文件路径问题 ([63ce821](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/63ce821))
