@@ -27,7 +27,7 @@
       <div class="options-box">
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
-            <svg><use href="#screen-sharing"></use></svg>
+            <svg @click="handleMedia"><use href="#screen-sharing"></use></svg>
           </template>
           <span>屏幕共享</span>
         </n-popover>
@@ -115,7 +115,12 @@
 
 <script setup lang="ts">
 import { MockItem } from '@/services/types.ts'
+import { useDisplayMedia } from '@vueuse/core'
+import { EventEnum } from '@/enums'
+import { emit, listen } from '@tauri-apps/api/event'
 
+// 使用useDisplayMedia获取屏幕共享的媒体流
+const { stream, start, stop } = useDisplayMedia()
 /* 提醒框标题 */
 const tips = ref()
 /* 提醒框的选项 */
@@ -126,6 +131,36 @@ const masking = ref(false)
 const { activeItem } = defineProps<{
   activeItem: MockItem
 }>()
+
+// 创建一个RTCPeerConnection实例
+const peerConnection = new RTCPeerConnection()
+
+watchEffect(() => {
+  stream.value?.getVideoTracks()[0].addEventListener('ended', () => {
+    stop()
+  })
+})
+
+const handleMedia = () => {
+  start().then(() => {
+    // 将媒体流添加到RTCPeerConnection
+    stream.value?.getTracks().forEach((track) => {
+      peerConnection.addTrack(track, stream.value!)
+    })
+
+    // 创建一个offer
+    peerConnection.createOffer().then((offer) => {
+      // 设置本地描述
+      peerConnection.setLocalDescription(offer)
+      emit(EventEnum.SHARE_SCREEN)
+      listen('cjwb', async () => {
+        await emit('offer', offer)
+      })
+      // 在这里，你需要将offer发送给对方
+      // 对方需要调用peerConnection.setRemoteDescription(offer)来接受屏幕共享
+    })
+  })
+}
 
 /* 删除操作二次提醒 */
 const handleDelete = (label: string) => {

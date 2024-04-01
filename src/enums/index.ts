@@ -37,7 +37,9 @@ export enum EventEnum {
   /** 退出账号 */
   LOGOUT = 'logout',
   /** 独立窗口 */
-  ALONE = 'alone'
+  ALONE = 'alone',
+  /** 共享屏幕 */
+  SHARE_SCREEN = 'shareScreen'
 }
 
 /** Mitt兄弟组件通信 */

@@ -14,9 +14,6 @@
     @apply fixed z-10 top-80px w-fit select-none text-#13987f cursor-pointer;
   }
 }
-.chat-single:first-child {
-  padding-top: 16px;
-}
 .bubble {
   @include bubble;
 }
