@@ -153,7 +153,8 @@ const handleMedia = () => {
       // 设置本地描述
       peerConnection.setLocalDescription(offer)
       emit(EventEnum.SHARE_SCREEN)
-      listen('cjwb', async () => {
+      /* 当需要给独立窗口传输数据的时候需要先监听窗口的创建完毕事件 */
+      listen('SharedScreenWin', async () => {
         await emit('offer', offer)
       })
       // 在这里，你需要将offer发送给对方

@@ -61,6 +61,7 @@ import { createFileOrVideoDom } from '@/utils/CreateDom.ts'
 import { MockList } from '@/mock'
 import { MockItem } from '@/services/types.ts'
 import { useDebounceFn } from '@vueuse/core'
+import { emit, listen } from '@tauri-apps/api/event'
 
 const ait = ref(false)
 const menuList = ref([
@@ -374,12 +375,13 @@ const closeMenu = (event: any) => {
 }
 
 onMounted(() => {
+  emit('aloneWin')
   nextTick(() => {
     const inputDiv = document.getElementById('message-input')
     inputDiv?.focus()
   })
-  Mitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
-    activeItem.value = event.item
+  listen('aloneData', (event: any) => {
+    activeItem.value = { ...event.payload.item }
   })
   window.addEventListener('click', closeMenu, true)
 })

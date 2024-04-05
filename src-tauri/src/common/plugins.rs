@@ -10,7 +10,7 @@ pub fn reset_set_window<R: Runtime>(app: tauri::AppHandle<R>, label: String) {
     set_shadow(&window, true).unwrap();
 
     #[cfg(target_os = "macos")]
-    window_vibrancy::apply_vibrancy(&window, NSVisualEffectMaterial::Sidebar)
+    window_vibrancy::apply_acrylic(&window, Some((255, 255, 255, 1)))
         .expect("Unsupported platform! 'apply_vibrancy' is only supported on macOS");
 
     #[cfg(target_os = "windows")]
