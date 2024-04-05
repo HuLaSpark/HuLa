@@ -7,7 +7,7 @@
 
       <n-flex vertical align="center" :size="20">
         <span class="text-15px text-#707070">版本：{{ _pkg.version }}({{ osArch }})</span>
-        <span class="text-15px text-#707070">当前设备：{{ osType }}</span>
+        <span class="text-15px text-#707070">当前设备：{{ osType }}{{ osVersion }}</span>
         <n-flex vertical class="text-12px text-#909090" :size="8" align="center">
           <span>Copyright © 2023-2024 nongyehong</span>
           <span>All Rights Reserved.</span>
@@ -18,15 +18,21 @@
 </template>
 <script setup lang="ts">
 import pkg from '~/package.json'
-import { type, arch } from '@tauri-apps/api/os'
+import { type, arch, version } from '@tauri-apps/api/os'
 
 const _pkg = reactive({
   version: pkg.version
 })
 const osType = ref()
 const osArch = ref()
+const osVersion = ref()
 
 onMounted(() => {
+  version().then((e) => {
+    let parts = e.split('.')
+    let build_number = Number(parts[2])
+    osVersion.value = build_number > 22000 ? '11' : '10'
+  })
   arch().then((e) => {
     if (e.includes('64')) {
       osArch.value = '64位'

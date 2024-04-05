@@ -37,9 +37,15 @@ HuLa 是一个基于 Tauri、Vite 5、Vue 3 和 TypeScript 构建的即时通讯
 - **Vue 3**: Vue 3 是一个渐进式JavaScript框架，用于构建用户界面。它的组合式API、更好的TypeScript集成和对移动端的优化使得开发复杂的单页应用变得更加简单和高效。
 - **TypeScript**: TypeScript 是 JavaScript 的一个超集，它在 JavaScript 的基础上增加了类型系统。这让我们能够在开发过程中捕获更多的错误，并且提供更好的编辑器支持。
 
-## 项目架构
+## 项目预览
 
-HuLa 采用了模块化的架构设计，前端使用 Vue 3 构建用户界面，通过 TypeScript 来增强代码的可读性和维护性。在后端，我们使用 Tauri 框架来打包和发布应用，利用它与操作系统的原生集成为用户提供了更多的功能和更高的性能。
+![img.png](preview/img.png)
+
+![img_1.png](preview/img_1.png)
+
+![img_2.png](preview/img_2.png)
+
+![img_3.png](preview/img_3.png)
 
 ## 安装与运行
 

@@ -37,7 +37,15 @@ HuLa is an instant messaging system developed with Tauri, Vite 5, Vue 3, and Typ
 - **Vue 3**: A progressive JavaScript framework for building user interfaces. Its Composition API, improved TypeScript integration, and optimizations for mobile platforms make developing complex single-page applications simpler and more efficient.
 - **TypeScript**: A superset of JavaScript that adds a type system to the language. It enables catching more errors during development and provides better support from editors.
 
-## Project Architecture
+## Project PreView
+
+![img.png](preview/img.png)
+
+![img_1.png](preview/img_1.png)
+
+![img_2.png](preview/img_2.png)
+
+![img_3.png](preview/img_3.png)
 
 HuLa adopts a modular architecture design, with the front end built using Vue 3 for the user interface, enhanced by TypeScript for better code readability and maintainability. On the backend, we use the Tauri framework for packaging and distributing the application, leveraging its native integration with the operating system to offer users more functionality and higher performance.
 

@@ -2,9 +2,8 @@
 
 * :bug: fix(system): 使用pinia-shared-state来解决标签页之间store的共享问题 ([54cc2a6](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/54cc2a6))
 * :bug: fix(system): 修复已知的问题 ([4b557e2](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/4b557e2))
-* :bug: fix(system): 修复mac打包的问题 ([ebf62c4](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/ebf62c4))
 * :medal: version(system): . add LICENSE. ([a3f4318](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/a3f4318))
-* :medal: version(system): 发布1.4.0版本 ([1a6c90b](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/1a6c90b))
+* :medal: version(system): 发布1.4.0版本 ([665237d](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/665237d))
 * :sparkles: feat(custom): 新增自动登录功能 ([c2fb6d7](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/c2fb6d7))
 * :sparkles: feat(setting): 新增关闭窗口提示 ([183a2e7](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/183a2e7))
 * :sparkles: feat(style): 新增个人信息框 ([9fbb6f3](https://gitee.com/nongyehong/HuLa-IM-Tauri/commits/9fbb6f3))
