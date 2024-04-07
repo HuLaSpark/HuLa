@@ -28,11 +28,6 @@ const osArch = ref()
 const osVersion = ref()
 
 onMounted(() => {
-  version().then((e) => {
-    let parts = e.split('.')
-    let build_number = Number(parts[2])
-    osVersion.value = build_number > 22000 ? '11' : '10'
-  })
   arch().then((e) => {
     if (e.includes('64')) {
       osArch.value = '64位'
@@ -43,6 +38,11 @@ onMounted(() => {
   type().then((e) => {
     if (e === 'Windows_NT') {
       osType.value = 'Windows'
+      version().then((e) => {
+        let parts = e.split('.')
+        let build_number = Number(parts[2])
+        osVersion.value = build_number > 22000 ? '11' : '10'
+      })
     } else if (e === 'Darwin') {
       osType.value = 'MacOS'
     } else {

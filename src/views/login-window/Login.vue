@@ -151,6 +151,7 @@ import { delay } from 'lodash-es'
 import { lightTheme } from 'naive-ui'
 import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
+import { invoke } from '@tauri-apps/api/tauri'
 
 const settingStore = setting()
 const { login } = storeToRefs(settingStore)
@@ -246,6 +247,9 @@ const loginWin = () => {
         avatar: avatarRef.value,
         name: nameRef.value
       })
+      await invoke('set_main_icon').catch((error) => {
+        console.error('设置主要图标失败:', error)
+      })
     }
   }, 1000)
 }
@@ -258,7 +262,10 @@ const handleClickOutside = (event: MouseEvent) => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await invoke('set_stateless_icon').catch((error) => {
+    console.error('设置无状态图标失败:', error)
+  })
   if (login.value.autoLogin && login.value.accountInfo.password !== '') {
     isAutoLogin.value = true
     // TODO 检查用户网络是否连接 (nyh -> 2024-03-16 12:06:59)
