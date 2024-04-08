@@ -152,6 +152,7 @@ import { lightTheme } from 'naive-ui'
 import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
 import { invoke } from '@tauri-apps/api/tauri'
+import { emit } from '@tauri-apps/api/event'
 
 const settingStore = setting()
 const { login } = storeToRefs(settingStore)
@@ -247,6 +248,7 @@ const loginWin = () => {
         avatar: avatarRef.value,
         name: nameRef.value
       })
+      await emit('login_success')
       await invoke('set_main_icon').catch((error) => {
         console.error('设置主要图标失败:', error)
       })

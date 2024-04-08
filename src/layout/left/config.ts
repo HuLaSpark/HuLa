@@ -80,6 +80,7 @@ const moreList = ref<OPT.L.MoreList[]>([
         delay(async () => {
           /* 通知全部打开的窗口然后关闭 */
           await emit(EventEnum.LOGOUT)
+          await emit('logout_success')
         }, 300)
       })
     }

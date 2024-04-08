@@ -1,5 +1,5 @@
 <template>
-  <n-flex vertical :size="6" class="tray">
+  <n-flex v-if="!isLoginWin" vertical :size="6" class="tray">
     <n-flex vertical :size="6">
       <n-flex
         v-for="(item, index) in statusItem.slice(0, 6)"
@@ -40,6 +40,12 @@
       </n-flex>
     </n-flex>
   </n-flex>
+
+  <n-flex v-else vertical :size="6" class="tray">
+    <n-flex @click="exit(0)" align="center" :size="10" class="p-[8px_6px] rounded-4px hover:bg-[--tray-hover-e]">
+      <span>退出</span>
+    </n-flex>
+  </n-flex>
 </template>
 <script setup lang="tsx">
 import { useWindow } from '@/hooks/useWindow.ts'
@@ -50,8 +56,9 @@ import { onlineStatus } from '@/stores/onlineStatus.ts'
 import { appWindow } from '@tauri-apps/api/window'
 import { listen } from '@tauri-apps/api/event'
 
-const { checkWinExist, createWebviewWindow } = useWindow()
+const { checkWinExist, createWebviewWindow, resizeWindow } = useWindow()
 const OLStatusStore = onlineStatus()
+const isLoginWin = ref(true)
 
 const division = () => {
   return <div class={'h-1px bg-[--line-color] w-full'}></div>
@@ -62,9 +69,17 @@ const toggleStatus = (url: string, title: string) => {
   appWindow.hide()
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await listen('login_success', () => {
+    isLoginWin.value = false
+    resizeWindow('tray', 130, 336)
+  })
+  await listen('logout_success', () => {
+    isLoginWin.value = true
+    resizeWindow('tray', 130, 24)
+  })
   // 暂停图标闪烁
-  listen('stop', async () => {
+  await listen('stop', async () => {
     await invoke('tray_blink', { isRun: false }).catch((error) => {
       console.error('暂停闪烁失败:', error)
     })
