@@ -40,6 +40,7 @@
                     :color="'#fff'"
                     :size="34"
                     @click="selectKey = item.key"
+                    class="select-none"
                     :src="item.accountId === userId ? item.avatar : activeItem.avatar"
                     :class="item.accountId === userId ? '' : 'mr-10px'"
                     fallback-src="/logo.png"
