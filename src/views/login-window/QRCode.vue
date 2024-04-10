@@ -45,7 +45,7 @@ const toLogin = () => {
 onMounted(() => {
   delay(() => {
     loading.value = false
-    loadText.value = '请使用HuLaApp扫码登录'
+    loadText.value = '请使用微信扫码登录'
   }, 1000)
 })
 </script>

@@ -14,7 +14,7 @@ const msgBoxShow = ref(false)
 /* 独立窗口的集合 */
 const aloneWin = ref(new Set())
 const shrinkStatus = ref(false)
-const itemRef = ref()
+const itemRef = ref({} as MockItem)
 export const useMessage = () => {
   /* 监听独立窗口关闭事件 */
   watchEffect(() => {
@@ -116,6 +116,7 @@ export const useMessage = () => {
               activeIndex.value = MockList.value[index].key
               handleMsgClick(MockList.value[index])
             } else {
+              if (MockList.value.length === 0) return
               // 如果我们删除的是最后一个元素，则需要选中前一个元素
               activeIndex.value = MockList.value[MockList.value.length - 1].key
               handleMsgClick(MockList.value[MockList.value.length - 1])

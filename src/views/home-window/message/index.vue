@@ -44,7 +44,17 @@
   </n-scrollbar>
 
   <!-- 暂无消息 -->
-  <div v-else class="size-full flex-center mt-60px color-[--text-color]">暂无消息</div>
+  <n-flex id="image-no-data" v-else align="center" vertical class="size-full mt-60px text-[--text-color] text-14px">
+    <n-image
+      width="120px"
+      height="110px"
+      src="src/assets/img/no_data.png"
+      lazy
+      :intersection-observer-options="{
+        root: '#image-no-data'
+      }" />
+    <span>暂无消息</span>
+  </n-flex>
 </template>
 <script setup lang="ts">
 import Mitt from '@/utils/Bus.ts'
@@ -60,6 +70,9 @@ const { activeIndex, handleMsgClick, menuList, specialMenuList, handleMsgDblclic
 watchEffect(() => {
   // TODO 如果当前信息栏中没有该信息就创建一条 (nyh -> 2024-03-22 01:05:22)
   Mitt.emit(MittEnum.UPDATE_MSG_TOTAL, msgTotal.value)
+  if (MockList.value.length === 0) {
+    Mitt.emit(MittEnum.NOT_MSG)
+  }
 })
 
 onMounted(() => {
