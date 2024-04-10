@@ -44,11 +44,11 @@
   </n-scrollbar>
 
   <!-- 暂无消息 -->
-  <n-flex id="image-no-data" v-else align="center" vertical class="size-full mt-60px text-[--text-color] text-14px">
+  <n-flex id="image-no-data" v-else :size="20" align="center" vertical>
     <n-image
       width="120px"
       height="110px"
-      src="src/assets/img/no_data.png"
+      src="src/assets/img/no_data.svg"
       lazy
       :intersection-observer-options="{
         root: '#image-no-data'
@@ -95,4 +95,7 @@ onMounted(() => {
 
 <style scoped lang="scss">
 @import '@/styles/scss/message';
+#image-no-data {
+  @apply size-full mt-60px text-[--text-color] text-14px;
+}
 </style>

@@ -235,6 +235,16 @@ const giveAccount = (item: STO.Setting['login']['accountInfo']) => {
   arrowStatus.value = false
 }
 
+/**
+ * 设置登录状态(系统托盘图标，系统托盘菜单选项)
+ */
+const setLoginState = async () => {
+  await emit('login_success')
+  await invoke('set_main_icon').catch((error) => {
+    console.error('设置主要图标失败:', error)
+  })
+}
+
 /*登录后创建主页窗口*/
 const loginWin = () => {
   loading.value = true
@@ -248,10 +258,7 @@ const loginWin = () => {
         avatar: avatarRef.value,
         name: nameRef.value
       })
-      await emit('login_success')
-      await invoke('set_main_icon').catch((error) => {
-        console.error('设置主要图标失败:', error)
-      })
+      await setLoginState()
     }
   }, 1000)
 }
@@ -272,9 +279,10 @@ onMounted(async () => {
     isAutoLogin.value = true
     // TODO 检查用户网络是否连接 (nyh -> 2024-03-16 12:06:59)
     loginText.value = '网络连接中'
-    delay(() => {
+    delay(async () => {
       loginWin()
       loginText.value = '登录'
+      await setLoginState()
     }, 1000)
   }
   window.addEventListener('click', handleClickOutside, true)
