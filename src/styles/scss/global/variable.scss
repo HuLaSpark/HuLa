@@ -50,6 +50,9 @@
   --bg-group-hover: #e3e3e3;
   // 信息框背景颜色
   --bg-info: rgba(255, 255, 255, 0.8);
+  // 表情框样式
+  --bg-emoji: rgba(255, 255, 255, 0.6);
+  --emoji-hover: #e3e3e3
 }
 
 html[data-theme='dark'] {
@@ -103,6 +106,9 @@ html[data-theme='dark'] {
   --bg-group-hover: #3f3f3f;
   // 信息框背景颜色
   --bg-info: rgba(27, 27, 27, 0.8);
+  // 表情框样式
+  --bg-emoji: rgba(27, 27, 27, 0.8);
+  --emoji-hover: #3b3b3b
 }
 /*! end */
 // 线性动画

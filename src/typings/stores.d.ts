@@ -28,4 +28,14 @@ declare namespace STO {
       }
     }
   }
+
+  /* 置顶 */
+  type AlwaysOnTop = {
+    [key: string]: boolean
+  }
+
+  /* 历史内容 */
+  type History = {
+    emoji: string[]
+  }
 }

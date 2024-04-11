@@ -77,7 +77,9 @@ export enum StoresEnum {
   /** 设置 */
   SETTING = 'setting',
   /** 在线状态 */
-  ONLINE_STATUS = 'onlineStatus'
+  ONLINE_STATUS = 'onlineStatus',
+  /** 历史内容 */
+  HISTORY = 'history'
 }
 
 /**

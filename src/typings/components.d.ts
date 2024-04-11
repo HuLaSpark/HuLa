@@ -15,6 +15,7 @@ declare module 'vue' {
     ChatSidebar: typeof import('./../components/rightBox/chatBox/ChatSidebar.vue')['default']
     ContextMenu: typeof import('./../components/common/ContextMenu.vue')['default']
     Details: typeof import('./../components/rightBox/Details.vue')['default']
+    Emoji: typeof import('./../components/rightBox/emoji/index.vue')['default']
     Image: typeof import('./../components/rightBox/renderMessage/Image.vue')['default']
     InfoPopover: typeof import('./../components/common/InfoPopover.vue')['default']
     MsgInput: typeof import('./../components/rightBox/msgInput/index.vue')['default']

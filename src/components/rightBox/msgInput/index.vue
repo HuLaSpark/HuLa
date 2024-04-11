@@ -357,7 +357,7 @@ const handleAit = (item: MockItem) => {
   // 截取@字符以及其后面的内容
   msgInput.value = msgInput.value.substring(0, atIndex)
   messageInputDom.value.innerHTML = msgInput.value
-  // 重新聚焦输入框(聚焦到输入框开头)，所以需要在失焦的时候保存光标的位置
+  // 重新聚焦输入框(聚焦到输入框开头)
   messageInputDom.value.focus()
   const sel = window.getSelection()
   const res = sel?.getRangeAt(0)
