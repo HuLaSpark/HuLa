@@ -22,4 +22,16 @@ const sideOptions = ref<OPT.L.SettingSide[]>([
   }
 ])
 
-export { sideOptions }
+/* 发送按钮快捷键的选项 */
+const sendOptions = [
+  {
+    label: '按 Enter 键发送消息',
+    value: 'Enter'
+  },
+  {
+    label: '按 Ctrl + Enter 键发送消息',
+    value: 'Ctrl+Enter'
+  }
+]
+
+export { sideOptions, sendOptions }

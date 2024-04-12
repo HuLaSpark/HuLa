@@ -27,36 +27,60 @@
     <n-flex vertical class="text-[--text-color] text-14px" :size="16">
       <span class="pl-10px">系统</span>
 
-      <n-flex class="item" :size="15">
+      <n-flex class="item" :size="15" vertical>
         <!-- 关闭面板 -->
-        <n-flex vertical :size="15" class="w-full">
-          <n-flex align="center" justify="space-between" :size="20" class="h-20px">
-            <span>关闭主面板</span>
+        <n-flex align="center" justify="space-between">
+          <span>关闭主面板</span>
 
-            <label class="text-14px text-#707070 flex gap-6px lh-16px items-center">
-              <n-radio :checked="tips.type === CloseBxEnum.HIDE" @change="tips.type = CloseBxEnum.HIDE" />
-              <span>最小化到系统托盘</span>
-            </label>
-            <label class="text-14px text-#707070 flex gap-6px lh-16px items-center">
-              <n-radio :checked="tips.type === CloseBxEnum.CLOSE" @change="tips.type = CloseBxEnum.CLOSE" />
-              <span>直接退出程序</span>
-            </label>
+          <label class="text-14px text-#707070 flex gap-6px lh-16px items-center">
+            <n-radio :checked="tips.type === CloseBxEnum.HIDE" @change="tips.type = CloseBxEnum.HIDE" />
+            <span>最小化到系统托盘</span>
+          </label>
+          <label class="text-14px text-#707070 flex gap-6px lh-16px items-center">
+            <n-radio :checked="tips.type === CloseBxEnum.CLOSE" @change="tips.type = CloseBxEnum.CLOSE" />
+            <span>直接退出程序</span>
+          </label>
 
-            <label class="text-12px text-#909090 flex gap-6px justify-end items-center">
-              <n-checkbox size="small" v-model:checked="tips.notTips" />
-              <span>是否关闭提示</span>
-            </label>
-          </n-flex>
-          <span class="w-full h-1px bg-[--line-color]"></span>
+          <label class="text-12px text-#909090 flex gap-6px justify-end items-center">
+            <n-checkbox size="small" v-model:checked="tips.notTips" />
+            <span>是否关闭提示</span>
+          </label>
         </n-flex>
 
-        <!-- ESC关闭面板 -->
-        <n-flex vertical :size="15" class="w-full">
-          <n-flex align="center" justify="space-between" :size="20" class="h-20px">
-            <span>是否启用ESC关闭窗口</span>
+        <span class="w-full h-1px bg-[--line-color]"></span>
 
-            <n-switch size="small" v-model:value="escClose" />
-          </n-flex>
+        <!-- ESC关闭面板 -->
+        <n-flex align="center" justify="space-between">
+          <span>是否启用ESC关闭窗口</span>
+
+          <n-switch size="small" v-model:value="escClose" />
+        </n-flex>
+      </n-flex>
+    </n-flex>
+
+    <!--  聊天设置  -->
+    <n-flex vertical class="text-[--text-color] text-14px" :size="16">
+      <span class="pl-10px">聊天</span>
+
+      <n-flex class="item" :size="15" vertical>
+        <!-- 发送信息 -->
+        <n-flex align="center" justify="space-between">
+          <span>发送信息快捷键</span>
+          <n-select
+            class="w-140px"
+            size="small"
+            label-field="value"
+            v-model:value="chat.sendKey"
+            :options="sendOptions" />
+        </n-flex>
+
+        <span class="w-full h-1px bg-[--line-color]"></span>
+
+        <!-- 双击打开独立会话 -->
+        <n-flex align="center" justify="space-between">
+          <span>双击会话列表打开独立聊天窗口</span>
+
+          <n-switch size="small" v-model:value="chat.isDouble" />
         </n-flex>
       </n-flex>
     </n-flex>
@@ -67,9 +91,10 @@ import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
 import { CloseBxEnum, ThemeEnum } from '@/enums'
 import { titleList } from './model.tsx'
+import { sendOptions } from './config.ts'
 
 const settingStore = setting()
-const { themes, tips, escClose } = storeToRefs(settingStore)
+const { themes, tips, escClose, chat } = storeToRefs(settingStore)
 const activeItem = ref<string>(themes.value.pattern)
 
 /* 切换主题 */

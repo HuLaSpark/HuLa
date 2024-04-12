@@ -9,7 +9,8 @@
         spellcheck="false"
         @paste="handlePaste"
         @input="handleInput"
-        @keydown.enter="inputKeyDown"></div>
+        @keydown.exact.enter="inputKeyDown"
+        @keydown.exact.ctrl.enter="inputKeyDown"></div>
     </n-scrollbar>
   </ContextMenu>
 
@@ -47,23 +48,41 @@
       </n-button>
       <n-button color="#13987f" class="p-[0_6px]">
         <template #icon>
-          <svg class="w-22px h-22px"><use href="#down"></use></svg>
+          <n-config-provider :theme="themes.content === ThemeEnum.DARK ? darkTheme : lightTheme">
+            <n-popselect
+              v-model:show="arrow"
+              v-model:value="chatKey"
+              :options="sendOptions"
+              trigger="click"
+              placement="top-end">
+              <svg @click="arrow = true" v-if="!arrow" class="w-22px h-22px outline-none"><use href="#down"></use></svg>
+              <svg @click="arrow = false" v-else class="w-22px h-22px outline-none"><use href="#up"></use></svg>
+            </n-popselect>
+          </n-config-provider>
         </template>
       </n-button>
     </n-button-group>
   </n-config-provider>
 </template>
 <script setup lang="ts">
-import { lightTheme } from 'naive-ui'
-import { MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
+import { lightTheme, darkTheme } from 'naive-ui'
+import { MittEnum, MsgEnum, RoomTypeEnum, ThemeEnum } from '@/enums'
 import Mitt from '@/utils/Bus.ts'
 import { createFileOrVideoDom } from '@/utils/CreateDom.ts'
 import { MockList } from '@/mock'
 import { MockItem } from '@/services/types.ts'
 import { useDebounceFn } from '@vueuse/core'
 import { emit, listen } from '@tauri-apps/api/event'
+import { setting } from '@/stores/setting.ts'
+import { storeToRefs } from 'pinia'
+import { sendOptions } from '@/views/home-window/more/settings/config.ts'
 
+const settingStore = setting()
+const { themes, chat } = storeToRefs(settingStore)
+const chatKey = ref(chat.value.sendKey)
 const ait = ref(false)
+/* 发送按钮旁的箭头 */
+const arrow = ref(false)
 const menuList = ref([
   { label: '剪切', icon: 'screenshot', disabled: true },
   { label: '复制', icon: 'copy', disabled: true },
@@ -108,12 +127,20 @@ const filteredList = computed(() => {
   }
 })
 
+watchEffect(() => {
+  chatKey.value = chat.value.sendKey
+})
+
 /* 当切换聊天对象时，重新获取焦点 */
 watch(activeItem, () => {
   nextTick(() => {
     const inputDiv = document.getElementById('message-input')
     inputDiv?.focus()
   })
+})
+
+watch(chatKey, (v) => {
+  chat.value.sendKey = v
 })
 
 /**
@@ -334,18 +361,15 @@ const handleInput = useDebounceFn((e: Event) => {
 
 /* input的keydown事件 */
 const inputKeyDown = (e: KeyboardEvent) => {
-  const Enter = 'Enter'
-  if (
-    (e.ctrlKey && e.key === 'Enter') ||
-    (e.shiftKey && e.key === 'Enter') ||
-    (e.metaKey && e.key === 'Enter') ||
-    msgInput.value === '' ||
-    msgInput.value.trim() === ''
-  ) {
-    e.preventDefault()
+  if (msgInput.value === '' || msgInput.value.trim() === '') {
+    e?.preventDefault()
     return
-  } else if (e.key === Enter) {
-    e.preventDefault()
+  }
+  if (
+    (chat.value.sendKey === 'Enter' && e.key === 'Enter' && !e.ctrlKey) ||
+    (chat.value.sendKey === 'Ctrl+Enter' && e.ctrlKey && e.key === 'Enter')
+  ) {
+    e?.preventDefault()
     send()
   }
 }

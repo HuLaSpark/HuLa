@@ -27,6 +27,13 @@ declare namespace STO {
         avatar: string
       }
     }
+    /* 聊天设置 */
+    chat: {
+      /* 发送快捷键 */
+      sendKey: string
+      /* 是否双击打开独立会话窗口 */
+      isDouble: boolean
+    }
   }
 
   /* 置顶 */

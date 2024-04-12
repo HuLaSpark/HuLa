@@ -1,37 +1,59 @@
 <template>
-  <n-scrollbar style="max-height: 335px" class="rounded-8px p-14px box-border w-450px h-340px">
-    <div v-if="emojiRef.historyList?.length > 0">
-      <span class="text-12px text-[--text-color]">最近使用</span>
-      <n-flex align="center" class="mt-12px mb-12px">
-        <n-flex
-          align="center"
-          justify="center"
-          class="emoji-item"
-          v-for="(item, index) in [...new Set(emojiRef.historyList)]"
-          :key="index"
-          @click.stop="chooseEmoji(item)">
-          {{ item }}
-        </n-flex>
-      </n-flex>
-    </div>
-
-    <div v-for="items in emojiObj" :key="items?.name">
-      <template v-if="items?.name && items.value?.length">
-        <span class="text-12px text-[--text-color]">{{ items.name }}</span>
-        <n-flex align="center" class="mt-12px mb-12px">
-          <n-flex
-            align="center"
-            justify="center"
-            class="emoji-item"
-            v-for="(item, index) in items.value"
-            :key="index"
-            @click.stop="chooseEmoji(item)">
-            {{ item }}
+  <n-scrollbar style="max-height: 290px" class="p-[14px_14px_0_14px] box-border w-450px h-290px">
+    <transition name="fade" mode="out-in" appear>
+      <!-- 默认表情页面 -->
+      <div v-if="activeIndex === 0">
+        <!-- 最近使用 -->
+        <div v-if="emojiRef.historyList?.length > 0">
+          <span class="text-12px text-[--text-color]">最近使用</span>
+          <n-flex align="center" class="mt-12px mb-12px">
+            <n-flex
+              align="center"
+              justify="center"
+              class="emoji-item"
+              v-for="(item, index) in [...new Set(emojiRef.historyList)]"
+              :key="index"
+              @click.stop="chooseEmoji(item)">
+              {{ item }}
+            </n-flex>
           </n-flex>
-        </n-flex>
-      </template>
-    </div>
+        </div>
+
+        <!-- 表情 -->
+        <div v-for="items in emojiObj" :key="items?.name">
+          <template v-if="items?.name && items.value?.length">
+            <span class="text-12px text-[--text-color]">{{ items.name }}</span>
+            <n-flex align="center" class="mt-12px mb-12px">
+              <n-flex
+                align="center"
+                justify="center"
+                class="emoji-item"
+                v-for="(item, index) in items.value"
+                :key="index"
+                @click.stop="chooseEmoji(item)">
+                {{ item }}
+              </n-flex>
+            </n-flex>
+          </template>
+        </div>
+      </div>
+    </transition>
+
+    <transition name="fade" mode="out-in">
+      <!-- 我的喜欢页面 -->
+      <div v-if="activeIndex === 1">
+        <span>暂无实现</span>
+      </div>
+    </transition>
   </n-scrollbar>
+
+  <!-- 底部选项 -->
+  <n-flex align="center" class="expression-item">
+    <svg :class="{ active: activeIndex === 0 }" @click="activeIndex = 0">
+      <use href="#face"></use>
+    </svg>
+    <svg :class="{ active: activeIndex === 1 }" @click="activeIndex = 1"><use href="#heart"></use></svg>
+  </n-flex>
 </template>
 <script setup lang="ts">
 import { getAllTypeEmojis } from '@/utils/Emoji.ts'
@@ -50,6 +72,7 @@ interface EmojiItem {
 
 const historyStore = history()
 const { emoji } = storeToRefs(historyStore)
+const activeIndex = ref(0)
 
 const emit = defineEmits(['emojiHandle'])
 const props = defineProps<{
@@ -98,7 +121,7 @@ const chooseEmoji = (item: string) => {
   if (emojiRef.historyList.length > 18) {
     emojiRef.historyList.splice(18) // 保留前18个元素
   }
-  historyStore.setEmoji([...emojiRef.historyList]) // 不再使用 Set 去重
+  historyStore.setEmoji([...emojiRef.historyList])
   emit('emojiHandle', item)
   return item
 }
@@ -112,5 +135,28 @@ const chooseEmoji = (item: string) => {
 }
 .emoji-item {
   @apply size-36px cursor-pointer text-26px hover:bg-[--emoji-hover] rounded-8px;
+}
+.expression-item {
+  @apply h-50px w-full p-[0_14px];
+  border-top: 1px solid var(--line-color);
+  svg {
+    @apply size-26px p-8px rounded-8px;
+    &:not(.active):hover {
+      background-color: var(--emoji-hover);
+      cursor: pointer;
+    }
+  }
+}
+.active {
+  background-color: #13987f;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.4s ease-in-out;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

@@ -257,17 +257,23 @@ const menuList = ref<OPT.RightMenu[]>([
     click: () => {}
   },
   { label: '收藏', icon: 'collection-files' },
-  { label: '回复', icon: 'reply' }
+  {
+    label: '回复',
+    icon: 'reply',
+    click: (item: any) => {
+      console.log(item)
+    }
+  }
 ])
 /* 右键菜单下划线后的列表 */
 const specialMenuList = ref<OPT.RightMenu[]>([
   {
     label: '删除',
     icon: 'delete',
-    click: (key: number) => {
+    click: (item: any) => {
       tips.value = '删除后将不会出现在你的消息记录中，确定删除吗?'
       modalShow.value = true
-      delIndex.value = key
+      delIndex.value = item.key
     }
   }
 ])

@@ -182,6 +182,14 @@ html[data-theme='dark'] {
   right: 0;
 }
 
+/*! 修改naive-ui Popselect选中的样式 */
+.n-base-select-menu .n-base-select-option.n-base-select-option--selected {
+  color: #13987f;
+}
+.n-base-select-menu .n-base-select-option .n-base-select-option__check {
+  color: #13987f;
+}
+
 /*! 通用菜单项目样式 */
 @mixin menu-item-style($position: fixed) {
   position: $position;
