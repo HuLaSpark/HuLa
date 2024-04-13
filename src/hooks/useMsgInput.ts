@@ -16,14 +16,18 @@ export const useMsgInput = (messageInputDom: Ref) => {
   const ait = ref(false)
   /* 艾特后的关键字的key */
   const aitKey = ref('')
+  /* 是否正在输入拼音 */
+  const isChinese = ref(false)
   // 过滤MockList
   const filteredList = computed(() => {
-    if (aitKey.value) {
+    if (aitKey.value && !isChinese.value) {
       return MockList.value.filter((item) => item.accountName.includes(aitKey.value))
     } else {
       return MockList.value
     }
   })
+  // 记录当前选中的提及项 key
+  const selectedAitKey = ref(filteredList.value[0]?.key ?? null)
   /* 右键菜单列表 */
   const menuList = ref([
     { label: '剪切', icon: 'screenshot', disabled: true },
@@ -57,10 +61,25 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
   watchEffect(() => {
     chatKey.value = chat.value.sendKey
+    if (!ait.value && filteredList.value.length > 0) {
+      selectedAitKey.value = 0
+    }
   })
 
   watch(chatKey, (v) => {
     chat.value.sendKey = v
+  })
+
+  onMounted(() => {
+    /* 正在输入拼音时触发 */
+    messageInputDom.value.addEventListener('compositionstart', () => {
+      isChinese.value = true
+    })
+    /* 结束输入拼音时触发 */
+    messageInputDom.value.addEventListener('compositionend', (e: CompositionEvent) => {
+      isChinese.value = false
+      aitKey.value = e.data
+    })
   })
 
   /* 触发输入框事件(粘贴的时候需要重新触发这个方法) */
@@ -277,7 +296,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
   /* input的keydown事件 */
   const inputKeyDown = (e: KeyboardEvent) => {
-    if (msgInput.value === '' || msgInput.value.trim() === '') {
+    if (msgInput.value === '' || msgInput.value.trim() === '' || ait.value) {
       e?.preventDefault()
       return
     }
@@ -321,6 +340,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     ait,
     msgInput,
     chatKey,
-    menuList
+    menuList,
+    selectedAitKey
   }
 }

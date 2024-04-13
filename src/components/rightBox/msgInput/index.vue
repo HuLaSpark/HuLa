@@ -16,9 +16,21 @@
 
   <!-- @提及框  -->
   <div v-if="ait && activeItem.type === RoomTypeEnum.GROUP && filteredList.length > 0" class="ait">
-    <n-virtual-list id="image-chat-msgInput" style="max-height: 180px" :item-size="36" :items="filteredList">
+    <n-virtual-list
+      id="image-chat-msgInput"
+      ref="virtualListInst"
+      style="max-height: 180px"
+      :item-size="36"
+      :items="filteredList"
+      v-model:selectedKey="selectedAitKey">
       <template #default="{ item }">
-        <n-flex @click="handleAit(item)" :key="item.key" align="center" class="ait-item">
+        <n-flex
+          @mouseover="() => (selectedAitKey = item.key)"
+          :class="{ active: selectedAitKey === item.key }"
+          @click="handleAit(item)"
+          :key="item.key"
+          align="center"
+          class="ait-item">
           <n-avatar
             lazy
             round
@@ -65,7 +77,7 @@
   </n-config-provider>
 </template>
 <script setup lang="ts">
-import { lightTheme, darkTheme } from 'naive-ui'
+import { lightTheme, darkTheme, VirtualListInst } from 'naive-ui'
 import { MittEnum, RoomTypeEnum, ThemeEnum } from '@/enums'
 import Mitt from '@/utils/Bus.ts'
 import { MockItem } from '@/services/types.ts'
@@ -74,6 +86,7 @@ import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
 import { sendOptions } from '@/views/home-window/more/settings/config.ts'
 import { useMsgInput } from '@/hooks/useMsgInput.ts'
+import { onKeyStroke } from '@vueuse/core'
 
 const settingStore = setting()
 const { themes } = storeToRefs(settingStore)
@@ -82,6 +95,8 @@ const arrow = ref(false)
 // 输入框dom元素
 const messageInputDom = ref()
 const activeItem = ref(inject('activeItem') as MockItem)
+/* 虚拟列表 */
+const virtualListInst = ref<VirtualListInst>()
 /* 引入useMsgInput的相关方法 */
 const {
   handlePaste,
@@ -95,7 +110,8 @@ const {
   ait,
   msgInput,
   chatKey,
-  menuList
+  menuList,
+  selectedAitKey
 } = useMsgInput(messageInputDom)
 
 /* 当切换聊天对象时，重新获取焦点 */
@@ -106,6 +122,15 @@ watch(activeItem, () => {
   })
 })
 
+/* 处理键盘上下键切换提及项 */
+const handleAitKeyChange = (direction: 1 | -1) => {
+  const currentIndex = filteredList.value.findIndex((item) => item.key === selectedAitKey.value)
+  const newIndex = Math.max(0, Math.min(currentIndex + direction, filteredList.value.length - 1))
+  selectedAitKey.value = filteredList.value[newIndex].key
+  // 获取新选中项在列表中的索引，并滚动到该位置
+  virtualListInst.value?.scrollTo({ index: selectedAitKey.value })
+}
+
 const closeMenu = (event: any) => {
   /* 需要判断点击如果不是.context-menu类的元素的时候，menu才会关闭 */
   if (!event.target.matches('#message-input, #message-input *')) {
@@ -114,6 +139,19 @@ const closeMenu = (event: any) => {
 }
 
 onMounted(() => {
+  onKeyStroke('Enter', (e) => {
+    e.preventDefault()
+    const item = filteredList.value.find((item) => item.key === selectedAitKey.value) as MockItem
+    handleAit(item)
+  })
+  onKeyStroke('ArrowUp', (e) => {
+    e.preventDefault()
+    handleAitKeyChange(-1)
+  })
+  onKeyStroke('ArrowDown', (e) => {
+    e.preventDefault()
+    handleAitKeyChange(1)
+  })
   emit('aloneWin')
   nextTick(() => {
     const inputDiv = document.getElementById('message-input')
@@ -163,7 +201,10 @@ defineExpose({ messageInputDom, triggerInputEvent, insertNode })
   box-shadow: 2px 2px 12px 2px var(--box-shadow-color);
   border: 1px solid var(--box-shadow-color);
   .ait-item {
-    @apply h-26px text-[--text-color] text-14px p-[5px_0_5px_10px] mr-5px rounded-6px hover:bg-[--bg-group-hover] cursor-pointer;
+    @apply h-26px text-[--text-color] text-14px p-[5px_0_5px_10px] mr-5px rounded-6px cursor-pointer;
   }
+}
+.active {
+  background-color: var(--bg-group-hover);
 }
 </style>
