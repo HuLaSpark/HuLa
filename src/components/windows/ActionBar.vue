@@ -221,6 +221,8 @@ const handleCloseWin = async () => {
         })
       }
     }
+  } else if (appWindow.label === 'login') {
+    await exit(0)
   } else {
     await emit(EventEnum.WIN_CLOSE, appWindow.label)
     await appWindow.close()

@@ -21,12 +21,13 @@
     ]
   },
   "scripts": {
-    "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build",
+    "dev": "vite --mode dev",
+    "prod": "vite --mode prod",
+    "build": "vue-tsc --noEmit && vite build --mode dev",
     "preview": "vite preview",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
-    "tauri:icon": "tauri icon /logo.png",
+    "tauri:icon": "tauri icon public/logo.png",
     "preinstall": "npx only-allow pnpm",
     "commit": "git add . && lint-staged && git-cz && conventional-changelog -p cz-config.cjs -i CHANGELOG.md -s -r 0",
     "changelog": "conventional-changelog -p cz-config.cjs -i CHANGELOG.md -s -r 0",

@@ -6,12 +6,30 @@
     <!-- 输入框顶部选项栏 -->
     <n-flex align="center" justify="space-between" class="p-[10px_22px_5px] select-none">
       <n-flex align="center" :size="0" class="input-options">
-        <n-popover trigger="hover" :show-arrow="false" placement="bottom">
+        <!-- emoji表情 -->
+        <n-popover
+          v-model:show="emojiShow"
+          trigger="click"
+          :show-arrow="false"
+          placement="top-start"
+          style="
+            padding: 0;
+            background: var(--bg-emoji);
+            backdrop-filter: blur(10px);
+            box-shadow: 2px 2px 12px 2px var(--box-shadow-color);
+            border: 1px solid var(--box-shadow-color);
+          ">
           <template #trigger>
-            <svg class="mr-18px"><use href="#smiling-face"></use></svg>
+            <n-popover trigger="hover" :show-arrow="false" placement="bottom">
+              <template #trigger>
+                <svg class="mr-18px"><use href="#smiling-face"></use></svg>
+              </template>
+              <span>表情</span>
+            </n-popover>
           </template>
-          <span>表情</span>
+          <Emoji @emojiHandle="emojiHandle" :all="false" />
         </n-popover>
+
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
             <div class="flex-center gap-2px mr-12px">
@@ -79,6 +97,22 @@ import { MsgEnum } from '@/enums'
 const { open, onChange } = useFileDialog()
 const MsgInputRef = ref()
 const msgInputDom = ref()
+const emojiShow = ref()
+
+/**
+ * 选择表情，并把表情插入输入框
+ * @param item 选择的表情
+ */
+const emojiHandle = (item: string) => {
+  emojiShow.value = false
+  msgInputDom.value.focus()
+  const sel = window.getSelection()
+  const res = sel?.getRangeAt(0)
+  res?.setStart(msgInputDom.value, msgInputDom.value.childNodes.length)
+  // 插入表情
+  MsgInputRef.value.insertNode(MsgEnum.TEXT, item)
+  MsgInputRef.value.triggerInputEvent(msgInputDom.value)
+}
 
 onChange((files) => {
   if (!files) return

@@ -27,11 +27,18 @@ export const setting = defineStore(StoresEnum.SETTING, {
         name: '',
         avatar: ''
       }
+    },
+    /* 聊天设置 */
+    chat: {
+      /* 发送快捷键 */
+      sendKey: 'Enter',
+      /* 是否双击打开独立会话窗口 */
+      isDouble: true
     }
   }),
   actions: {
-    /* 初始化 */
-    init(theme: string) {
+    /* 初始化主题 */
+    initTheme(theme: string) {
       this.themes.content = theme
       document.documentElement.dataset.theme = theme
       this.themes.pattern = theme

@@ -29,11 +29,23 @@ fn red_icon(app: &AppHandle) {
 pub fn handler(app: &AppHandle, event: SystemTrayEvent) {
     match event {
         SystemTrayEvent::LeftClick { .. } => {
-            // 当我点击闪烁的图标的时候就停止闪烁
-            let window = app.get_window("tray").unwrap();
-            window.emit("stop", false).unwrap();
-            open_home(app);
-            red_icon(app);
+            // 检查 "login" 窗口是否已创建
+            if app.get_window("login").is_some() {
+                // 如果 "login" 窗口已创建，进一步检查其是否处于最小化状态
+                let login_window = app.get_window("login").unwrap();
+                if login_window.is_minimized().unwrap() {
+                    // 如果 "login" 窗口处于最小化状态，先将其还原
+                    login_window.unminimize().unwrap();
+                } else {
+                    login_window.set_focus().unwrap()
+                }
+            } else {
+                // 如果 "login" 窗口未创建，执行以下操作
+                let tray_window = app.get_window("tray").unwrap();
+                tray_window.emit("stop", false).unwrap();
+                open_home(app);
+                red_icon(app);
+            }
         },
         SystemTrayEvent::RightClick { position: p, size: _, .. } => {
             // TODO 这里需要根据鼠标位置来确定窗口的位置 (nyh -> 2024-03-20 13:51:01)

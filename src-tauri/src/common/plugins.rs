@@ -18,6 +18,26 @@ pub fn reset_set_window<R: Runtime>(app: tauri::AppHandle<R>, label: String) {
         .expect("Unsupported platform! 'apply_blur' is only supported on Windows");
 }
 
+/// 设置灰色图标
+#[tauri::command]
+pub fn set_stateless_icon(app: AppHandle) {
+    app.tray_handle()
+        .set_icon(tauri::Icon::Raw(
+            include_bytes!("../../stateless/icon.ico").to_vec(),
+        ))
+        .unwrap();
+}
+
+/// 设置主要图标
+#[tauri::command]
+pub fn set_main_icon(app: AppHandle) {
+    app.tray_handle()
+        .set_icon(tauri::Icon::Raw(
+            include_bytes!("../../icons/icon.ico").to_vec(),
+        ))
+        .unwrap();
+}
+
 /// 退出程序
 #[tauri::command]
 pub fn exit(app: AppHandle) {

@@ -2,6 +2,8 @@
 interface ImportMetaEnv {
   /** 后端项目地址 */
   readonly VITE_SERVICE_URL: string
+  /** websocket 地址 */
+  readonly VITE_WEBSOCKET_URL: string
   /** 项目名称 */
   readonly VITE_APP_NAME: string
   /** 项目标题 */

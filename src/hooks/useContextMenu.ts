@@ -8,9 +8,19 @@ export const useContextMenu = (containerRef: Ref) => {
   // 禁止滚动的默认行为
   const preventDefault = (e: Event) => e.preventDefault()
 
+  /*! 解决使用n-virtual-list时，右键菜单出现还可以滚动的问题 */
+  const handleVirtualListScroll = (isBan: boolean) => {
+    const scrollbar_main = document.querySelector('#image-chat-main') as HTMLElement
+    const scrollbar_sidebar = document.querySelector('#image-chat-sidebar') as HTMLElement
+
+    scrollbar_main && (scrollbar_main.style.pointerEvents = isBan ? 'none' : '')
+    scrollbar_sidebar && (scrollbar_sidebar.style.pointerEvents = isBan ? 'none' : '')
+  }
+
   const handleContextMenu = (e: MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    handleVirtualListScroll(true)
     showMenu.value = true
     x.value = e.clientX
     y.value = e.clientY
@@ -20,6 +30,7 @@ export const useContextMenu = (containerRef: Ref) => {
   const closeMenu = (event: any) => {
     /* 需要判断点击如果不是.context-menu类的元素的时候，menu才会关闭 */
     if (!event.target.matches('.context-menu, .context-menu *')) {
+      handleVirtualListScroll(false)
       showMenu.value = false
     }
     window.removeEventListener('wheel', preventDefault) // 移除禁止滚轮滚动
@@ -45,6 +56,8 @@ export const useContextMenu = (containerRef: Ref) => {
   onUnmounted(() => {
     const div = containerRef.value
     div?.removeEventListener('contextmenu', handleContextMenu)
+    window.removeEventListener('contextmenu', preventDefault)
+    window.removeEventListener('wheel', preventDefault)
     window.removeEventListener('click', closeMenu, true)
     window.removeEventListener('contextmenu', closeMenu, true)
   })

@@ -55,7 +55,9 @@ export enum MittEnum {
   /** 缩小窗口 */
   SHRINK_WINDOW = 'shrinkWindow',
   /** 详情页面显示 */
-  DETAILS_SHOW = 'detailsShow'
+  DETAILS_SHOW = 'detailsShow',
+  /** 消息列表被清空或者暂无消息 */
+  NOT_MSG = 'notMsg'
 }
 
 /** 主题类型 */
@@ -75,7 +77,9 @@ export enum StoresEnum {
   /** 设置 */
   SETTING = 'setting',
   /** 在线状态 */
-  ONLINE_STATUS = 'onlineStatus'
+  ONLINE_STATUS = 'onlineStatus',
+  /** 历史内容 */
+  HISTORY = 'history'
 }
 
 /**

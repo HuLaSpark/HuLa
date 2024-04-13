@@ -1,5 +1,9 @@
 <template>
-  <n-config-provider :theme-overrides="themeOverrides" :theme="globalTheme" :locale="zhCN" :date-locale="dateZhCN">
+  <n-config-provider
+    :theme-overrides="themes.content === ThemeEnum.DARK ? darkThemeOverrides : lightThemeOverrides"
+    :theme="globalTheme"
+    :locale="zhCN"
+    :date-locale="dateZhCN">
     <n-loading-bar-provider>
       <n-dialog-provider>
         <n-notification-provider :max="notificMax">
@@ -45,8 +49,7 @@ watchEffect(() => {
   }
 })
 
-/*调整naive ui的主题颜色和样式*/
-const themeOverrides: GlobalThemeOverrides = {
+const commonTheme: GlobalThemeOverrides = {
   Input: {
     borderRadius: '10px',
     borderHover: '0',
@@ -99,6 +102,24 @@ const themeOverrides: GlobalThemeOverrides = {
     iconColorSuccess: '#13987f',
     iconColorLoading: '#13987f',
     loadingColor: '#13987f'
+  }
+}
+
+/* 浅色模式的主题颜色 */
+const lightThemeOverrides: GlobalThemeOverrides = {
+  ...commonTheme,
+  Scrollbar: {
+    color: '#d5d5d5',
+    colorHover: '#c5c5c5'
+  }
+}
+
+/* 深色模式的主题颜色 */
+const darkThemeOverrides: GlobalThemeOverrides = {
+  ...commonTheme,
+  Scrollbar: {
+    color: 'rgba(255, 255, 255, 0.2)',
+    colorHover: 'rgba(255, 255, 255, 0.3)'
   }
 }
 

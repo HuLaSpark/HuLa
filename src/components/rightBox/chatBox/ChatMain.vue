@@ -40,6 +40,7 @@
                     :color="'#fff'"
                     :size="34"
                     @click="selectKey = item.key"
+                    class="select-none"
                     :src="item.accountId === userId ? item.avatar : activeItem.avatar"
                     :class="item.accountId === userId ? '' : 'mr-10px'"
                     fallback-src="/logo.png"
@@ -185,15 +186,6 @@ const { createWebviewWindow } = useWindow()
 const selectKey = ref()
 const activeBubble = ref(-1)
 const userId = ref(10086)
-const copyright = ref('-HuLa©-版权所有')
-const copyrightComputed = computed(() => {
-  const copy = (index: number) => {
-    items.value[index].content.endsWith(copyright.value)
-      ? navigator.clipboard.writeText(items.value[index].content)
-      : navigator.clipboard.writeText(items.value[index].content + copyright.value)
-  }
-  return { copy }
-})
 /* 提醒框标题 */
 const tips = ref()
 const modalShow = ref(false)
@@ -241,13 +233,14 @@ const activeItemRef = ref({ ...activeItem })
 // })
 // const message = computed(() => msg.value)
 /* 右键消息菜单列表 */
+// 复制内容到剪贴板的通用函数
 const menuList = ref<OPT.RightMenu[]>([
   {
     label: '复制',
     icon: 'copy',
     click: (item: any) => {
-      // 复制内容到剪贴板
-      copyrightComputed.value.copy(item.key)
+      const content = items.value[item.key].content
+      handleCopy(content)
     }
   },
   {
@@ -256,17 +249,23 @@ const menuList = ref<OPT.RightMenu[]>([
     click: () => {}
   },
   { label: '收藏', icon: 'collection-files' },
-  { label: '回复', icon: 'reply' }
+  {
+    label: '回复',
+    icon: 'reply',
+    click: (item: any) => {
+      console.log(item)
+    }
+  }
 ])
 /* 右键菜单下划线后的列表 */
 const specialMenuList = ref<OPT.RightMenu[]>([
   {
     label: '删除',
     icon: 'delete',
-    click: (key: number) => {
+    click: (item: any) => {
       tips.value = '删除后将不会出现在你的消息记录中，确定删除吗?'
       modalShow.value = true
-      delIndex.value = key
+      delIndex.value = item.key
     }
   }
 ])
@@ -287,6 +286,39 @@ watchEffect(() => {
   newMsgNum.value = itemComputed.value - historyIndex.value
   activeItemRef.value = { ...activeItem }
 })
+
+/**
+ * 处理复制事件
+ * @param content 复制的内容
+ */
+const handleCopy = (content: string) => {
+  // 如果是图片
+  // TODO 文件类型的在右键菜单中不设置复制 (nyh -> 2024-04-14 01:14:56)
+  if (content.includes('data:image')) {
+    // 创建一个新的图片标签
+    const img = new Image()
+    img.src = content
+    // 监听图片加载完成事件
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = img.width
+      canvas.height = img.height
+      const ctx = canvas.getContext('2d')
+      ctx?.drawImage(img, 0, 0, img.width, img.height)
+      // 将 base64 图片数据复制到剪贴板
+      canvas.toBlob((blob) => {
+        const item = new ClipboardItem({ 'image/png': blob! })
+        navigator.clipboard.write([item])
+      })
+    }
+  } else {
+    // 如果是纯文本
+    navigator.clipboard.writeText(removeTag(content))
+  }
+}
+
+/* 去除字符串中的元素标记 */
+const removeTag = (fragment: any) => new DOMParser().parseFromString(fragment, 'text/html').body.textContent || ''
 
 /* 处理滚动事件(用于页脚显示功能) */
 const handleScroll = (e: Event) => {
@@ -325,7 +357,8 @@ const handleMsgClick = (item: any) => {
   // 启用键盘监听
   const handleKeyPress = (e: KeyboardEvent) => {
     if (e.ctrlKey && e.key === 'c') {
-      copyrightComputed.value.copy(item.key)
+      const content = items.value[item.key].content
+      handleCopy(content)
       // 取消监听键盘事件，以免多次绑定
       document.removeEventListener('keydown', handleKeyPress)
     }

@@ -47,6 +47,8 @@ HuLa 是一个基于 Tauri、Vite 5、Vue 3 和 TypeScript 构建的即时通讯
 
 ![img_3.png](preview/img_3.png)
 
+![img_4.png](preview/img_4.png)
+
 ## 安装与运行
 
 ```bash

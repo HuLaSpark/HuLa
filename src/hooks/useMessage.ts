@@ -6,6 +6,8 @@ import { MockItem } from '@/services/types.ts'
 import { delay } from 'lodash-es'
 import { MockList } from '@/mock'
 import { WebviewWindow } from '@tauri-apps/api/window'
+import { setting } from '@/stores/setting.ts'
+import { storeToRefs } from 'pinia'
 
 const { createWebviewWindow, checkWinExist } = useWindow()
 /* 建议把此状态存入localStorage中 */
@@ -14,8 +16,10 @@ const msgBoxShow = ref(false)
 /* 独立窗口的集合 */
 const aloneWin = ref(new Set())
 const shrinkStatus = ref(false)
-const itemRef = ref()
+const itemRef = ref({} as MockItem)
 export const useMessage = () => {
+  const settingStore = setting()
+  const { chat } = storeToRefs(settingStore)
   /* 监听独立窗口关闭事件 */
   watchEffect(() => {
     Mitt.on(MittEnum.SHRINK_WINDOW, async (event) => {
@@ -43,6 +47,7 @@ export const useMessage = () => {
 
   /* 处理双击事件 */
   const handleMsgDblclick = (item: MockItem) => {
+    if (!chat.value.isDouble) return
     delay(async () => {
       await openAloneWin(item)
     }, 300)
@@ -116,6 +121,7 @@ export const useMessage = () => {
               activeIndex.value = MockList.value[index].key
               handleMsgClick(MockList.value[index])
             } else {
+              if (MockList.value.length === 0) return
               // 如果我们删除的是最后一个元素，则需要选中前一个元素
               activeIndex.value = MockList.value[MockList.value.length - 1].key
               handleMsgClick(MockList.value[MockList.value.length - 1])

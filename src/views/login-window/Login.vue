@@ -151,6 +151,8 @@ import { delay } from 'lodash-es'
 import { lightTheme } from 'naive-ui'
 import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
+import { invoke } from '@tauri-apps/api/tauri'
+import { emit } from '@tauri-apps/api/event'
 
 const settingStore = setting()
 const { login } = storeToRefs(settingStore)
@@ -233,6 +235,16 @@ const giveAccount = (item: STO.Setting['login']['accountInfo']) => {
   arrowStatus.value = false
 }
 
+/**
+ * 设置登录状态(系统托盘图标，系统托盘菜单选项)
+ */
+const setLoginState = async () => {
+  await emit('login_success')
+  await invoke('set_main_icon').catch((error) => {
+    console.error('设置主要图标失败:', error)
+  })
+}
+
 /*登录后创建主页窗口*/
 const loginWin = () => {
   loading.value = true
@@ -246,6 +258,7 @@ const loginWin = () => {
         avatar: avatarRef.value,
         name: nameRef.value
       })
+      await setLoginState()
     }
   }, 1000)
 }
@@ -258,14 +271,18 @@ const handleClickOutside = (event: MouseEvent) => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await invoke('set_stateless_icon').catch((error) => {
+    console.error('设置无状态图标失败:', error)
+  })
   if (login.value.autoLogin && login.value.accountInfo.password !== '') {
     isAutoLogin.value = true
     // TODO 检查用户网络是否连接 (nyh -> 2024-03-16 12:06:59)
     loginText.value = '网络连接中'
-    delay(() => {
+    delay(async () => {
       loginWin()
       loginText.value = '登录'
+      await setLoginState()
     }, 1000)
   }
   window.addEventListener('click', handleClickOutside, true)

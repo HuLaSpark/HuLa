@@ -10,6 +10,7 @@ import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
 import { StoresEnum, ThemeEnum } from '@/enums'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
+import { initWebSocket } from '@/services/webSocket.ts'
 
 const settingStore = setting()
 const OLStatusStore = onlineStatus()
@@ -25,11 +26,12 @@ const preventDrag = (e: MouseEvent) => {
 }
 
 onMounted(() => {
+  initWebSocket()
   // /*! 使用msi或者其他安装包安装后才会显示应用的名字和图标 */
   // sendNotification({ title: 'TAURI', body: 'Tauri is awesome!' })
   // 判断localStorage中是否有设置主题
   if (!localStorage.getItem(StoresEnum.SETTING)) {
-    settingStore.init(ThemeEnum.LIGHT)
+    settingStore.initTheme(ThemeEnum.OS)
   }
   /* 第一次没有选状态的时候随机选中一个状态 */
   if (!localStorage.getItem(StoresEnum.ONLINE_STATUS)) {
@@ -41,8 +43,8 @@ onMounted(() => {
   if (process.env.NODE_ENV !== 'development') {
     /* 禁用浏览器默认的快捷键 */
     window.addEventListener('keydown', (e) => {
-      // 排除ctrl+c ctrl+v
-      if (e.ctrlKey && (e.key === 'c' || e.key === 'v')) return
+      // 排除ctrl+c ctrl+v ctrl+enter
+      if (e.ctrlKey && (e.key === 'c' || e.key === 'v' || e.key === 'Enter')) return
       if (e.ctrlKey || e.metaKey || e.altKey) {
         e.preventDefault()
       }
