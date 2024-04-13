@@ -1,5 +1,5 @@
 <template>
-  <n-scrollbar style="max-height: 290px" class="p-[14px_14px_0_14px] box-border w-450px h-290px">
+  <n-scrollbar style="max-height: 290px" class="p-[14px_14px_0_14px] box-border w-450px h-290px select-none">
     <transition name="fade" mode="out-in" appear>
       <!-- 默认表情页面 -->
       <div v-if="activeIndex === 0">
