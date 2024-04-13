@@ -18,7 +18,7 @@ declare module 'vue' {
     Emoji: typeof import('./../components/rightBox/emoji/index.vue')['default']
     Image: typeof import('./../components/rightBox/renderMessage/Image.vue')['default']
     InfoPopover: typeof import('./../components/common/InfoPopover.vue')['default']
-    MsgInput: typeof import('./../components/rightBox/msgInput/index.vue')['default']
+    MsgInput: typeof import('./../components/rightBox/MsgInput.vue')['default']
     NaiveProvider: typeof import('./../components/common/NaiveProvider.vue')['default']
     NAlert: typeof import('naive-ui')['NAlert']
     NAvatar: typeof import('naive-ui')['NAvatar']

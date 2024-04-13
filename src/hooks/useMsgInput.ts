@@ -66,6 +66,15 @@ export const useMsgInput = (messageInputDom: Ref) => {
     }
   })
 
+  /* 当ait人员列表发生变化的时候始终select第一个 */
+  watch(filteredList, async (v) => {
+    if (filteredList.value.length > 0) {
+      await nextTick(() => {
+        selectedAitKey.value = v[0].key
+      })
+    }
+  })
+
   watch(chatKey, (v) => {
     chat.value.sendKey = v
   })

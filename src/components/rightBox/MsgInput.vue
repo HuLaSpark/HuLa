@@ -127,8 +127,8 @@ const handleAitKeyChange = (direction: 1 | -1) => {
   const currentIndex = filteredList.value.findIndex((item) => item.key === selectedAitKey.value)
   const newIndex = Math.max(0, Math.min(currentIndex + direction, filteredList.value.length - 1))
   selectedAitKey.value = filteredList.value[newIndex].key
-  // 获取新选中项在列表中的索引，并滚动到该位置
-  virtualListInst.value?.scrollTo({ index: selectedAitKey.value })
+  // 获取新选中项在列表中的索引，并滚动到该位置(使用key来进行定位)
+  virtualListInst.value?.scrollTo({ key: selectedAitKey.value })
 }
 
 const closeMenu = (event: any) => {
@@ -140,9 +140,11 @@ const closeMenu = (event: any) => {
 
 onMounted(() => {
   onKeyStroke('Enter', (e) => {
-    e.preventDefault()
-    const item = filteredList.value.find((item) => item.key === selectedAitKey.value) as MockItem
-    handleAit(item)
+    if (ait.value && selectedAitKey.value > -1) {
+      e.preventDefault()
+      const item = filteredList.value.find((item) => item.key === selectedAitKey.value) as MockItem
+      handleAit(item)
+    }
   })
   onKeyStroke('ArrowUp', (e) => {
     e.preventDefault()
@@ -178,33 +180,5 @@ defineExpose({ messageInputDom, triggerInputEvent, insertNode })
 </script>
 
 <style scoped lang="scss">
-#message-input {
-  padding: 4px 24px 4px 4px; /* 输入框内填充 */
-  font-size: 14px; /* 字体大小 */
-  color: inherit; /* 继承颜色 */
-  cursor: text; /* 文本输入光标 */
-  resize: none; /* 不允许调整尺寸 */
-  background: none; /* 无背景 */
-  border: none; /* 边框样式，可根据需求修改 */
-  border-radius: 0; /* 边框圆角 */
-  outline: none; /* 点击时无轮廓 */
-  min-height: 90px; /* 最小高度 */
-  line-height: 20px; /* 行高 */
-  overflow: auto; /* 内容过多时允许滚动 */
-  flex: 1; /* 弹性盒自适应填充可用空间 */
-  caret-color: #13987f; /* 光标颜色，可根据需求调整 */
-  white-space: pre-wrap; /* 保留空白符号并正常换行 */
-  word-break: break-word; /* 在长单词或URL地址内部进行换行 */
-}
-.ait {
-  @apply w-200px h-fit max-h-190px bg-[--center-bg-color] rounded-8px p-[5px_0_5px_5px];
-  box-shadow: 2px 2px 12px 2px var(--box-shadow-color);
-  border: 1px solid var(--box-shadow-color);
-  .ait-item {
-    @apply h-26px text-[--text-color] text-14px p-[5px_0_5px_10px] mr-5px rounded-6px cursor-pointer;
-  }
-}
-.active {
-  background-color: var(--bg-group-hover);
-}
+@import '@/styles/scss/msg-input';
 </style>
