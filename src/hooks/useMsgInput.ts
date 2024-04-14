@@ -1,5 +1,4 @@
 import { MittEnum, MsgEnum } from '@/enums'
-import { createFileOrVideoDom } from '@/utils/CreateDom.ts'
 import { Ref } from 'vue'
 import { MockItem } from '@/services/types.ts'
 import { setting } from '@/stores/setting.ts'
@@ -7,8 +6,10 @@ import { storeToRefs } from 'pinia'
 import { useDebounceFn } from '@vueuse/core'
 import Mitt from '@/utils/Bus.ts'
 import { MockList } from '@/mock'
+import { useCommon } from './useCommon.ts'
 
 export const useMsgInput = (messageInputDom: Ref) => {
+  const { triggerInputEvent, insertNode, getMessageContentType, getEditorRange, imgPaste } = useCommon()
   const settingStore = setting()
   const { chat } = storeToRefs(settingStore)
   const chatKey = ref(chat.value.sendKey)
@@ -18,6 +19,8 @@ export const useMsgInput = (messageInputDom: Ref) => {
   const aitKey = ref('')
   /* 是否正在输入拼音 */
   const isChinese = ref(false)
+  // 记录编辑器光标的位置
+  const editorRange = ref<{ range: Range; selection: Selection } | null>(null)
   // 过滤MockList
   const filteredList = computed(() => {
     if (aitKey.value && !isChinese.value) {
@@ -49,7 +52,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
             // TODO 右键粘贴动图的时候无法动起来右键粘贴没有获取到类型是gif而是html加上png的格式 (nyh -> 2024-02-27 03:27:10)
             const imageType = clipboardItem.types.find((type) => type.startsWith('image/'))
             clipboardItem.getType(imageType as any).then((blob) => {
-              imgPaste(blob)
+              imgPaste(blob, messageInputDom)
             })
           }
         })
@@ -63,15 +66,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
     chatKey.value = chat.value.sendKey
     if (!ait.value && filteredList.value.length > 0) {
       selectedAitKey.value = 0
-    }
-  })
-
-  /* 当ait人员列表发生变化的时候始终select第一个 */
-  watch(filteredList, async (v) => {
-    if (filteredList.value.length > 0) {
-      await nextTick(() => {
-        selectedAitKey.value = v[0].key
-      })
     }
   })
 
@@ -91,164 +85,11 @@ export const useMsgInput = (messageInputDom: Ref) => {
     })
   })
 
-  /* 触发输入框事件(粘贴的时候需要重新触发这个方法) */
-  const triggerInputEvent = (element: HTMLElement) => {
-    if (element) {
-      const event = new Event('input', {
-        bubbles: true,
-        cancelable: true
-      })
-      element.dispatchEvent(event)
-    }
-  }
-
-  /**
-   *  将指定节点插入到光标位置
-   * @param { MsgEnum } type 插入的类型
-   * @param dom dom节点
-   */
-  const insertNode = (type: MsgEnum, dom: any) => {
-    // 获取光标
-    const selection = window.getSelection()
-    // 获取选中的内容
-    const range = selection?.getRangeAt(0)
-    // 删除选中的内容
-    range?.deleteContents()
-    // 将节点插入范围最前面添加节点
-    if (type === MsgEnum.AIT) {
-      // 创建一个span标签节点
-      const spanNode = document.createElement('span')
-      spanNode.id = 'aitSpan' // 设置id为aitSpan
-      spanNode.contentEditable = 'false' // 设置为不可编辑
-      spanNode.classList.add('text-#13987f')
-      spanNode.classList.add('select-none')
-      spanNode.classList.add('cursor-default')
-      // 在span标签后面添加一个空格
-      spanNode.appendChild(document.createTextNode(`@${dom}`))
-      // 将span标签插入到光标位置
-      range?.insertNode(spanNode)
-      range?.setStart(messageInputDom.value, messageInputDom.value.childNodes.length)
-      // 创建一个空格文本节点
-      const spaceNode = document.createTextNode('\u00A0')
-      // 将空格文本节点插入到光标位置
-      range?.insertNode(spaceNode)
-    } else if (type === MsgEnum.TEXT) {
-      range?.insertNode(document.createTextNode(dom))
-    } else {
-      range?.insertNode(dom)
-    }
-    // 将光标移到选中范围的最后面
-    selection?.collapseToEnd()
-  }
-
-  /* 处理图片粘贴事件 */
-  const imgPaste = (file: any) => {
-    const reader = new FileReader()
-    reader.onload = (e: any) => {
-      const img = document.createElement('img')
-      img.src = e.target.result
-      // 设置图片的最大高度和最大宽度
-      img.style.maxHeight = '88px'
-      img.style.maxWidth = '140px'
-      img.style.marginRight = '6px'
-      // 插入图片
-      insertNode(MsgEnum.IMAGE, img)
-      triggerInputEvent(messageInputDom.value)
-    }
-    reader.readAsDataURL(file)
-  }
-
-  /**
-   * 处理视频或者文件粘贴事件
-   * @param file 文件
-   * @param type 类型
-   */
-  const FileOrVideoPaste = (file: File, type: MsgEnum) => {
-    const reader = new FileReader()
-    // 使用函数
-    createFileOrVideoDom(file).then((imgTag) => {
-      // 将生成的img标签插入到页面中
-      insertNode(type, imgTag)
-      triggerInputEvent(messageInputDom.value)
-    })
-    reader.readAsDataURL(file)
-  }
-
-  /* 处理粘贴事件 */
-  const handlePaste = (e: any) => {
-    e.preventDefault()
-    if (e.clipboardData.files.length > 0) {
-      if (e.clipboardData.files.length > 5) {
-        window.$message.warning('一次性只能上传5个文件')
-        return
-      }
-      for (const file of e.clipboardData.files) {
-        // 检查文件大小
-        const fileSizeInMB = file.size / 1024 / 1024 // 将文件大小转换为兆字节(MB)
-        if (fileSizeInMB > 300) {
-          window.$message.warning(`文件 ${file.name} 超过300MB`)
-          continue // 如果文件大小超过300MB，就跳过这个文件，处理下一个文件
-        }
-        const fileType = file.type as string
-        if (fileType.startsWith('image/')) {
-          // 处理图片粘贴
-          imgPaste(file)
-        } else if (fileType.startsWith('video/')) {
-          // 处理视频粘贴
-          FileOrVideoPaste(file, MsgEnum.VIDEO)
-        } else {
-          // 处理文件粘贴
-          FileOrVideoPaste(file, MsgEnum.FILE)
-        }
-      }
-    } else {
-      // 如果没有文件，而是文本，处理纯文本粘贴
-      const plainText = e.clipboardData.getData('text/plain')
-      insertNode(MsgEnum.TEXT, plainText)
-      triggerInputEvent(messageInputDom.value)
-    }
-  }
-
-  /* 获取messageInputDom输入框中的内容类型 */
-  const getMessageContentType = () => {
-    let hasText = false
-    let hasImage = false
-    let hasVideo = false
-    let hasFile = false
-
-    const elements = messageInputDom.value.childNodes
-    for (const element of elements) {
-      if (element.nodeType === Node.TEXT_NODE && element.nodeValue.trim() !== '') {
-        hasText = true
-      } else if (element.tagName === 'IMG') {
-        if (element.dataset.type === 'file-canvas') {
-          hasFile = true
-        } else {
-          hasImage = true
-        }
-      } else if (element.tagName === 'VIDEO' || (element.tagName === 'A' && element.href.match(/\.(mp4|webm)$/i))) {
-        hasVideo = true
-      }
-    }
-
-    if (hasFile) {
-      return MsgEnum.FILE
-    } else if (hasVideo) {
-      return MsgEnum.VIDEO
-    } else if (hasText && hasImage) {
-      return MsgEnum.MIXED
-    } else if (hasImage) {
-      return MsgEnum.IMAGE
-    } else {
-      return MsgEnum.TEXT
-    }
-  }
-
   /* 处理发送信息事件 */
   // TODO 输入框中的内容当我切换消息的时候需要记录之前输入框的内容 (nyh -> 2024-03-01 07:03:43)
   const send = () => {
     ait.value = false
-    const contentType = getMessageContentType()
+    const contentType = getMessageContentType(messageInputDom)
     const msg = {
       type: contentType,
       content: msgInput.value
@@ -279,27 +120,45 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
   /* 当输入框手动输入值的时候触发input事件(使用vueUse的防抖) */
   const handleInput = useDebounceFn(async (e: Event) => {
-    msgInput.value = (e.target as HTMLInputElement).innerHTML
-    ait.value = msgInput.value.includes('@')
-    /* 处理输入@时候弹出框 */
-    if (ait.value) {
-      const atIndex = msgInput.value.lastIndexOf('@')
-      aitKey.value = msgInput.value.slice(atIndex + 1)
-      if (filteredList.value.length > 0) {
-        // 获取光标
-        const selection = window.getSelection()
-        // 获取选中的内容
-        const range = selection?.getRangeAt(0)
-        const res = range?.getBoundingClientRect() as any
-        await nextTick(() => {
-          const dom = document.querySelector('.ait') as HTMLElement
-          dom.style.position = 'fixed'
-          dom.style.left = `${res?.x - 20}px`
-          dom.style.top = `${res?.y - (dom.offsetHeight + 5)}px`
-        })
-      } else {
-        ait.value = false
-      }
+    const inputElement = e.target as HTMLInputElement
+    msgInput.value = inputElement.innerHTML
+    const { range, selection } = getEditorRange()!
+    /* 获取当前光标所在的节点和文本内容 */
+    if (!range || !selection) {
+      ait.value = false
+      return
+    }
+    /* 获取当前光标所在的节点 */
+    const curNode = range.endContainer
+    /* 判断当前节点是否是文本节点 */
+    if (!curNode || !curNode.textContent || curNode.nodeName !== '#text') {
+      ait.value = false
+      return
+    }
+    const searchStr = curNode.textContent?.slice(0, selection.focusOffset)
+    /* 使用正则表达式匹配@符号之后的关键词 */
+    const keywords = /@([^@]*)$/.exec(searchStr!)
+    if (!keywords || keywords.length < 2) {
+      ait.value = false
+      aitKey.value = ''
+      return
+    }
+    /* 解构关键词并更新ait和aitKey的值，同时将编辑器的范围和选择保存在editorRange中 */
+    const [, keyWord] = keywords
+    ait.value = true
+    aitKey.value = keyWord
+    editorRange.value = { range, selection }
+
+    if (ait.value && filteredList.value.length > 0) {
+      const res = range.getBoundingClientRect()
+      await nextTick(() => {
+        const dom = document.querySelector('.ait') as HTMLElement
+        dom.style.position = 'fixed'
+        dom.style.left = `${res.x - 20}px`
+        dom.style.top = `${res.y - (dom.offsetHeight + 5)}px`
+      })
+    } else {
+      ait.value = false
     }
   }, 100)
 
@@ -320,27 +179,30 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
   /* 处理点击@提及框事件 */
   const handleAit = (item: MockItem) => {
-    // 查找最后一个@字符的位置
-    const atIndex = msgInput.value.lastIndexOf('@')
-    // 截取@字符以及其后面的内容
-    msgInput.value = msgInput.value.substring(0, atIndex)
-    messageInputDom.value.innerHTML = msgInput.value
+    const myEditorRange = editorRange?.value?.range
+    /* 获取光标所在位置的文本节点 */
+    const textNode = myEditorRange?.endContainer
+    if (!textNode) return
+    /* 获取光标在所在文本节点中的偏移位置 */
+    const endOffset = myEditorRange?.endOffset
+    /* 获取文本节点的值，并将其转换为字符串类型 */
+    const textNodeValue = textNode?.nodeValue as string
+    /* 使用正则表达式匹配@符号之后获取到的文本节点的值 */
+    const expRes = /@([^@]*)$/.exec(textNodeValue)
     // 重新聚焦输入框(聚焦到输入框开头)
     messageInputDom.value.focus()
-    const sel = window.getSelection()
-    const res = sel?.getRangeAt(0)
-    res?.setStart(messageInputDom.value, messageInputDom.value.childNodes.length)
+    const { range } = getEditorRange()!
+    /* 设置范围的起始位置为文本节点中@符号的位置 */
+    range?.setStart(textNode, <number>expRes?.index)
+    /* 设置范围的结束位置为光标的位置 */
+    range?.setEnd(textNode, endOffset!)
     insertNode(MsgEnum.AIT, item.accountName)
     triggerInputEvent(messageInputDom.value)
     ait.value = false
   }
 
   return {
-    handlePaste,
-    insertNode,
-    triggerInputEvent,
     imgPaste,
-    FileOrVideoPaste,
     inputKeyDown,
     handleAit,
     handleInput,

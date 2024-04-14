@@ -93,11 +93,13 @@
 import { useFileDialog } from '@vueuse/core'
 import { createFileOrVideoDom } from '@/utils/CreateDom.ts'
 import { MsgEnum } from '@/enums'
+import { useCommon } from '@/hooks/useCommon.ts'
 
 const { open, onChange } = useFileDialog()
 const MsgInputRef = ref()
 const msgInputDom = ref()
 const emojiShow = ref()
+const { insertNode, triggerInputEvent, getEditorRange } = useCommon()
 
 /**
  * 选择表情，并把表情插入输入框
@@ -106,12 +108,11 @@ const emojiShow = ref()
 const emojiHandle = (item: string) => {
   emojiShow.value = false
   msgInputDom.value.focus()
-  const sel = window.getSelection()
-  const res = sel?.getRangeAt(0)
-  res?.setStart(msgInputDom.value, msgInputDom.value.childNodes.length)
+  const { range } = getEditorRange()!
+  range?.collapse(false)
   // 插入表情
-  MsgInputRef.value.insertNode(MsgEnum.TEXT, item)
-  MsgInputRef.value.triggerInputEvent(msgInputDom.value)
+  insertNode(MsgEnum.TEXT, item)
+  triggerInputEvent(msgInputDom.value)
 }
 
 onChange((files) => {
@@ -138,8 +139,8 @@ onChange((files) => {
         img.style.maxWidth = '140px'
         img.style.marginRight = '6px'
         // 插入图片
-        MsgInputRef.value.insertNode(MsgEnum.IMAGE, img)
-        MsgInputRef.value.triggerInputEvent(msgInputDom.value)
+        insertNode(MsgEnum.IMAGE, img)
+        triggerInputEvent(msgInputDom.value)
       }
     } else {
       // 使用函数
@@ -151,8 +152,8 @@ onChange((files) => {
         // 删除选中的内容
         range?.deleteContents()
         // 将生成的img标签插入到页面中
-        MsgInputRef.value.insertNode(MsgEnum.FILE, imgTag)
-        MsgInputRef.value.triggerInputEvent(msgInputDom.value)
+        insertNode(MsgEnum.FILE, imgTag)
+        triggerInputEvent(msgInputDom.value)
       })
     }
     nextTick(() => {
