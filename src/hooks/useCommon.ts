@@ -111,7 +111,7 @@ export const useCommon = () => {
    * @param file 图片文件
    * @param dom 输入框dom
    */
-  const imgPaste = (file: any, dom: Ref) => {
+  const imgPaste = (file: any, dom: HTMLElement) => {
     const reader = new FileReader()
     reader.onload = (e: any) => {
       const img = document.createElement('img')
@@ -122,9 +122,11 @@ export const useCommon = () => {
       img.style.marginRight = '6px'
       // 插入图片
       insertNode(MsgEnum.IMAGE, img)
-      triggerInputEvent(dom.value)
+      triggerInputEvent(dom)
     }
-    reader.readAsDataURL(file)
+    nextTick(() => {}).then(() => {
+      reader.readAsDataURL(file)
+    })
   }
 
   /**
@@ -133,15 +135,17 @@ export const useCommon = () => {
    * @param type 类型
    * @param dom 输入框dom
    */
-  const FileOrVideoPaste = (file: File, type: MsgEnum, dom: Ref) => {
+  const FileOrVideoPaste = (file: File, type: MsgEnum, dom: HTMLElement) => {
     const reader = new FileReader()
     // 使用函数
     createFileOrVideoDom(file).then((imgTag) => {
       // 将生成的img标签插入到页面中
       insertNode(type, imgTag)
-      triggerInputEvent(dom.value)
+      triggerInputEvent(dom)
     })
-    reader.readAsDataURL(file)
+    nextTick(() => {}).then(() => {
+      reader.readAsDataURL(file)
+    })
   }
 
   /**
@@ -149,7 +153,7 @@ export const useCommon = () => {
    * @param e 事件对象
    * @param dom 输入框dom
    */
-  const handlePaste = (e: any, dom: Ref) => {
+  const handlePaste = (e: any, dom: HTMLElement) => {
     e.preventDefault()
     if (e.clipboardData.files.length > 0) {
       if (e.clipboardData.files.length > 5) {
@@ -179,9 +183,12 @@ export const useCommon = () => {
       // 如果没有文件，而是文本，处理纯文本粘贴
       const plainText = e.clipboardData.getData('text/plain')
       insertNode(MsgEnum.TEXT, plainText)
-      triggerInputEvent(dom.value)
+      triggerInputEvent(dom)
     }
   }
+
+  /* 去除字符串中的元素标记 */
+  const removeTag = (fragment: any) => new DOMParser().parseFromString(fragment, 'text/html').body.textContent || ''
 
   return {
     imgPaste,
@@ -189,6 +196,8 @@ export const useCommon = () => {
     getMessageContentType,
     insertNode,
     triggerInputEvent,
-    handlePaste
+    handlePaste,
+    removeTag,
+    FileOrVideoPaste
   }
 }

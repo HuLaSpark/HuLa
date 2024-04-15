@@ -52,7 +52,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
             // TODO 右键粘贴动图的时候无法动起来右键粘贴没有获取到类型是gif而是html加上png的格式 (nyh -> 2024-02-27 03:27:10)
             const imageType = clipboardItem.types.find((type) => type.startsWith('image/'))
             clipboardItem.getType(imageType as any).then((blob) => {
-              imgPaste(blob, messageInputDom)
+              imgPaste(blob, messageInputDom.value)
             })
           }
         })
@@ -97,6 +97,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     const hyperlinkRegex = /(\b(?:https?:\/\/|www)[-A-Z0-9+&@#/%?=~_|!:,.;]*[-A-Z0-9+&@#/%=~_|])/gi
     const foundHyperlinks = msg.content.match(hyperlinkRegex)
 
+    /* 判断是否有超链接 */
     if (foundHyperlinks && foundHyperlinks.length > 0) {
       msg.content = msg.content.replace(hyperlinkRegex, (match) => {
         const href = match.startsWith('www.') ? 'https://' + match : match

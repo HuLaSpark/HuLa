@@ -91,7 +91,6 @@
 
 <script setup lang="ts">
 import { useFileDialog } from '@vueuse/core'
-import { createFileOrVideoDom } from '@/utils/CreateDom.ts'
 import { MsgEnum } from '@/enums'
 import { useCommon } from '@/hooks/useCommon.ts'
 
@@ -99,7 +98,7 @@ const { open, onChange } = useFileDialog()
 const MsgInputRef = ref()
 const msgInputDom = ref()
 const emojiShow = ref()
-const { insertNode, triggerInputEvent, getEditorRange } = useCommon()
+const { insertNode, triggerInputEvent, getEditorRange, imgPaste, FileOrVideoPaste } = useCommon()
 
 /**
  * 选择表情，并把表情插入输入框
@@ -128,37 +127,16 @@ onChange((files) => {
       window.$message.warning(`文件 ${file.name} 超过300MB`)
       continue // 如果文件大小超过300MB，就跳过这个文件，处理下一个文件
     }
-    let reader = new FileReader()
     let type = file.type
     if (type.startsWith('image/')) {
-      reader.onload = (e: any) => {
-        const img = document.createElement('img')
-        img.src = e.target.result
-        // 设置图片的最大高度和最大宽度
-        img.style.maxHeight = '88px'
-        img.style.maxWidth = '140px'
-        img.style.marginRight = '6px'
-        // 插入图片
-        insertNode(MsgEnum.IMAGE, img)
-        triggerInputEvent(msgInputDom.value)
-      }
+      imgPaste(file, MsgInputRef.value.messageInputDom)
+    } else if (type.startsWith('video/')) {
+      // 处理视频粘贴
+      FileOrVideoPaste(file, MsgEnum.VIDEO, MsgInputRef.value.messageInputDom)
     } else {
-      // 使用函数
-      createFileOrVideoDom(file).then((imgTag) => {
-        // 获取光标
-        const selection = window.getSelection()
-        // 获取选中的内容
-        const range = selection?.getRangeAt(0)
-        // 删除选中的内容
-        range?.deleteContents()
-        // 将生成的img标签插入到页面中
-        insertNode(MsgEnum.FILE, imgTag)
-        triggerInputEvent(msgInputDom.value)
-      })
+      // 处理文件粘贴
+      FileOrVideoPaste(file, MsgEnum.FILE, MsgInputRef.value.messageInputDom)
     }
-    nextTick(() => {
-      reader.readAsDataURL(file)
-    })
   }
 })
 

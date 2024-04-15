@@ -68,7 +68,7 @@
               <ContextMenu
                 :data-key="item.accountId === userId ? `U${item.key}` : `Q${item.key}`"
                 @select="$event.click(item)"
-                :menu="menuList"
+                :menu="handleItemType(item.type)"
                 :special-menu="specialMenuList"
                 @click="handleMsgClick(item)">
                 <!--                &lt;!&ndash; 渲染消息内容体 &ndash;&gt;-->
@@ -94,6 +94,7 @@
                       :img-props="{ style: { maxWidth: '325px', maxHeight: '165px' } }"
                       show-toolbar-tooltip
                       style="border-radius: 8px"
+                      :fallback-src="'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg'"
                       :src="src"></n-image>
                   </n-flex>
                 </n-image-group>
@@ -105,6 +106,7 @@
                   :img-props="{ style: { maxWidth: '325px', maxHeight: '165px' } }"
                   show-toolbar-tooltip
                   style="border-radius: 8px"
+                  :fallback-src="'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg'"
                   :src="item.content"></n-image>
 
                 <!-- 消息为文件 -->
@@ -174,41 +176,40 @@
 import { EventEnum, MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import { MockItem } from '@/services/types.ts'
 import Mitt from '@/utils/Bus.ts'
-import { VirtualListInst } from 'naive-ui'
 import { invoke } from '@tauri-apps/api/tauri'
 import { optionsList, report } from './config.ts'
 import { usePopover } from '@/hooks/usePopover.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { listen } from '@tauri-apps/api/event'
-
-const { createWebviewWindow } = useWindow()
-/* 当前点击的用户的key */
-const selectKey = ref()
-const activeBubble = ref(-1)
-const userId = ref(10086)
-/* 提醒框标题 */
-const tips = ref()
-const modalShow = ref(false)
-/* 需要删除信息的下标 */
-const delIndex = ref(0)
-/* 悬浮的页脚 */
-const floatFooter = ref(false)
-/* 记录历史消息下标 */
-const historyIndex = ref(0)
-/* 新消息数 */
-const newMsgNum = ref(0)
-/* 计算出触发页脚后的历史消息下标 */
-const itemComputed = computed(() => {
-  return items.value.filter((item) => item.accountId !== userId.value).length
-})
-/* 虚拟列表 */
-const virtualListInst = ref<VirtualListInst>()
-const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-main')
+import { useChatMain } from '@/hooks/useChatMain.ts'
+import { VirtualListInst } from 'naive-ui'
 
 const { activeItem } = defineProps<{
   activeItem: MockItem
 }>()
 const activeItemRef = ref({ ...activeItem })
+const { createWebviewWindow } = useWindow()
+/* 当前点击的用户的key */
+const selectKey = ref()
+/* 虚拟列表 */
+const virtualListInst = ref<VirtualListInst>()
+const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-main')
+const {
+  handleScroll,
+  handleMsgClick,
+  handleConfirm,
+  handleItemType,
+  items,
+  activeBubble,
+  newMsgNum,
+  floatFooter,
+  historyIndex,
+  tips,
+  modalShow,
+  userId,
+  specialMenuList,
+  itemComputed
+} = useChatMain(activeItem)
 // // 创建一个符合 TextBody 类型的对象
 // const textBody = {
 //   content: '123',
@@ -232,140 +233,11 @@ const activeItemRef = ref({ ...activeItem })
 //   }
 // })
 // const message = computed(() => msg.value)
-/* 右键消息菜单列表 */
-// 复制内容到剪贴板的通用函数
-const menuList = ref<OPT.RightMenu[]>([
-  {
-    label: '复制',
-    icon: 'copy',
-    click: (item: any) => {
-      const content = items.value[item.key].content
-      handleCopy(content)
-    }
-  },
-  {
-    label: '转发',
-    icon: 'share',
-    click: () => {}
-  },
-  { label: '收藏', icon: 'collection-files' },
-  {
-    label: '回复',
-    icon: 'reply',
-    click: (item: any) => {
-      console.log(item)
-    }
-  }
-])
-/* 右键菜单下划线后的列表 */
-const specialMenuList = ref<OPT.RightMenu[]>([
-  {
-    label: '删除',
-    icon: 'delete',
-    click: (item: any) => {
-      tips.value = '删除后将不会出现在你的消息记录中，确定删除吗?'
-      modalShow.value = true
-      delIndex.value = item.key
-    }
-  }
-])
-
-/*! 模拟信息列表 */
-const items = ref(
-  Array.from({ length: 5 }, (_, i) => ({
-    value: `${i}安老师`,
-    key: i,
-    accountId: activeItem.accountId,
-    avatar: activeItem.avatar,
-    content: '123',
-    type: MsgEnum.TEXT
-  }))
-)
 
 watchEffect(() => {
   newMsgNum.value = itemComputed.value - historyIndex.value
   activeItemRef.value = { ...activeItem }
 })
-
-/**
- * 处理复制事件
- * @param content 复制的内容
- */
-const handleCopy = (content: string) => {
-  // 如果是图片
-  // TODO 文件类型的在右键菜单中不设置复制 (nyh -> 2024-04-14 01:14:56)
-  if (content.includes('data:image')) {
-    // 创建一个新的图片标签
-    const img = new Image()
-    img.src = content
-    // 监听图片加载完成事件
-    img.onload = () => {
-      const canvas = document.createElement('canvas')
-      canvas.width = img.width
-      canvas.height = img.height
-      const ctx = canvas.getContext('2d')
-      ctx?.drawImage(img, 0, 0, img.width, img.height)
-      // 将 base64 图片数据复制到剪贴板
-      canvas.toBlob((blob) => {
-        const item = new ClipboardItem({ 'image/png': blob! })
-        navigator.clipboard.write([item])
-      })
-    }
-  } else {
-    // 如果是纯文本
-    navigator.clipboard.writeText(removeTag(content))
-  }
-}
-
-/* 去除字符串中的元素标记 */
-const removeTag = (fragment: any) => new DOMParser().parseFromString(fragment, 'text/html').body.textContent || ''
-
-/* 处理滚动事件(用于页脚显示功能) */
-const handleScroll = (e: Event) => {
-  const target = e.target as HTMLElement
-  // 获取已滚动的距离，即从顶部到当前滚动位置的距离
-  const scrollTop = target.scrollTop
-  // 获取整个滚动容器的高度
-  const scrollHeight = target.scrollHeight
-  // 获取容器的可视区域高度
-  const clientHeight = target.clientHeight
-  // 计算距离底部的距离
-  const distanceFromBottom = scrollHeight - scrollTop - clientHeight
-  // 判断是否大于100
-  if (distanceFromBottom > 100) {
-    floatFooter.value = true
-    // 更新历史消息下标
-    historyIndex.value = itemComputed.value
-  } else {
-    floatFooter.value = false
-    historyIndex.value = 0
-    newMsgNum.value = 0
-  }
-}
-
-/* 删除信息事件 */
-const handleConfirm = () => {
-  // 根据key找到items中对应的下标
-  let index = items.value.findIndex((item) => item.key === delIndex.value)
-  items.value.splice(index, 1)
-  modalShow.value = false
-}
-
-/* 点击气泡消息时候监听用户是否按下ctrl+c来复制内容 */
-const handleMsgClick = (item: any) => {
-  activeBubble.value = item.key
-  // 启用键盘监听
-  const handleKeyPress = (e: KeyboardEvent) => {
-    if (e.ctrlKey && e.key === 'c') {
-      const content = items.value[item.key].content
-      handleCopy(content)
-      // 取消监听键盘事件，以免多次绑定
-      document.removeEventListener('keydown', handleKeyPress)
-    }
-  }
-  // 绑定键盘事件到 document
-  document.addEventListener('keydown', handleKeyPress)
-}
 
 /* 发送信息 */
 const handleSendMessage = (msg: any) => {
@@ -382,7 +254,7 @@ const handleSendMessage = (msg: any) => {
         msg.content = imgSrcArray[0]
       }
     }
-    let index = items.value.length > 0 ? items.value[items.value.length - 1].key : 0
+    const index = items.value.length > 0 ? items.value[items.value.length - 1].key : 0
     items.value.push({
       value: '我',
       key: index + 1,
