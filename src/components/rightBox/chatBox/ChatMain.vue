@@ -14,14 +14,28 @@
     <template #default="{ item }">
       <main
         :key="item.key"
-        class="flex-y-center min-h-58px"
-        :class="activeItem.type === RoomTypeEnum.GROUP ? 'p-[18px_20px]' : 'chat-single p-[2px_20px_10px_20px]'">
+        class="item-main"
+        :class="[
+          [activeItem.type === RoomTypeEnum.GROUP ? 'p-[18px_20px]' : 'chat-single p-[2px_20px_10px_20px]'],
+          { 'active-reply': activeReply === item.key }
+        ]">
         <!-- 好友或者群聊的信息 -->
-        <article class="flex flex-col w-full gap-18px" :class="item.accountId === userId ? 'items-end' : ''">
+        <article
+          class="flex flex-col w-full gap-18px"
+          :class="{
+            'items-end': item.accountId === userId
+          }">
           <div
-            class="flex items-start"
+            class="flex items-start flex-1"
             :class="item.accountId === userId ? 'flex-row-reverse' : ''"
             style="max-width: calc(100% - 54px)">
+            <!-- 回复消息提示的箭头 -->
+            <svg
+              v-if="activeReply === item.key"
+              class="size-16px pt-4px color-#909090"
+              :class="item.accountId === userId ? 'ml-8px' : 'mr-8px'">
+              <use :href="item.accountId === userId ? `#corner-down-left` : `#corner-down-right`"></use>
+            </svg>
             <!-- 头像  -->
             <n-popover
               @update:show="handlePopoverUpdate(item.key)"
@@ -54,7 +68,7 @@
               <InfoPopover :info="activeItemRef" />
             </n-popover>
             <div
-              class="flex flex-col gap-8px color-[--text-color]"
+              class="flex flex-col gap-8px color-[--text-color] flex-1"
               :class="item.accountId === userId ? 'items-end mr-10px' : ''">
               <ContextMenu
                 @select="$event.click(item)"
@@ -118,7 +132,32 @@
                   preview-disabled
                   style="border-radius: 8px"
                   :src="item.content"></n-image>
+
+                <!-- 消息为回复消息 -->
+                <div
+                  v-if="item.type === MsgEnum.REPLY"
+                  style="white-space: pre-wrap"
+                  :class="[
+                    { active: activeBubble === item.key },
+                    item.accountId === userId ? 'bubble-oneself' : 'bubble'
+                  ]">
+                  <span v-html="item.content"></span>
+                </div>
               </ContextMenu>
+
+              <!-- 回复的内容 -->
+              <n-flex
+                align="center"
+                :size="6"
+                v-if="item.reply && item.type === MsgEnum.REPLY"
+                @click="jumpToReplyMsg(item.reply.key)"
+                class="reply-bubble">
+                <svg class="size-14px"><use href="#to-top"></use></svg>
+                <span>{{ `${item.reply.accountName}：` }}</span>
+                <span class="content-span">
+                  {{ item.reply.content }}
+                </span>
+              </n-flex>
             </div>
           </div>
         </article>
@@ -191,6 +230,8 @@ const activeItemRef = ref({ ...activeItem })
 const { createWebviewWindow } = useWindow()
 /* 当前点击的用户的key */
 const selectKey = ref()
+/* 跳转回复消息后选中效果 */
+const activeReply = ref(-1)
 /* 虚拟列表 */
 const virtualListInst = ref<VirtualListInst>()
 const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-main')
@@ -261,9 +302,18 @@ const handleSendMessage = (msg: any) => {
       accountId: userId.value,
       avatar: 'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg',
       content: msg.content,
-      type: msg.type
+      type: msg.type,
+      reply: msg.type === MsgEnum.REPLY ? msg.reply : null
     })
     addToDomUpdateQueue(index, userId.value)
+  })
+}
+
+/* 跳转到回复消息 */
+const jumpToReplyMsg = (key: number) => {
+  nextTick(() => {
+    virtualListInst.value?.scrollTo({ key: key })
+    activeReply.value = key
   })
 }
 
@@ -304,6 +354,9 @@ const scrollBottom = () => {
 const closeMenu = (event: any) => {
   if (!event.target.matches('.bubble', 'bubble-oneself')) {
     activeBubble.value = -1
+  }
+  if (!event.target.matches('.active-reply')) {
+    activeReply.value = -1
   }
 }
 
@@ -351,4 +404,35 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 @import '@/styles/scss/chat-main';
+.item-main {
+  @apply flex-y-center min-h-58px;
+  transition: all 0.4s ease;
+  .reply-bubble {
+    @apply text-12px text-[--reply-color] bg-[--bg-reply-bubble] rounded-8px p-4px cursor-pointer select-none;
+    svg,
+    span {
+      transition: color 0.4s ease-in-out;
+    }
+    &:hover {
+      svg {
+        color: #13987f;
+      }
+      span {
+        color: var(--reply-hover);
+      }
+    }
+    .content-span {
+      width: fit-content;
+      max-width: 250px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+}
+.active-reply {
+  background-color: var(--bg-reply-active);
+  border-radius: 8px;
+  margin: 0 8px;
+}
 </style>

@@ -38,7 +38,6 @@ declare namespace OPT {
   type RightMenu = {
     label: string
     icon: string
-    show?: boolean
     click?: (...args: any[]) => void
   }
 

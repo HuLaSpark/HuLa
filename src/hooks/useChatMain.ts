@@ -1,6 +1,7 @@
 import { useCommon } from '@/hooks/useCommon.ts'
-import { MsgEnum } from '@/enums'
+import { MittEnum, MsgEnum } from '@/enums'
 import { MockItem } from '@/services/types.ts'
+import Mitt from '@/utils/Bus.ts'
 
 export const useChatMain = (activeItem: MockItem) => {
   const { removeTag } = useCommon()
@@ -33,20 +34,19 @@ export const useChatMain = (activeItem: MockItem) => {
       accountId: activeItem.accountId,
       avatar: activeItem.avatar,
       content: '123',
-      type: MsgEnum.TEXT
+      type: MsgEnum.TEXT,
+      reply: MsgEnum.REPLY
+        ? {
+            accountName: '',
+            content: '',
+            key: ''
+          }
+        : null
     }))
   )
 
-  /* 右键消息菜单列表 */
-  const menuList = ref<OPT.RightMenu[]>([
-    {
-      label: '复制',
-      icon: 'copy',
-      click: (item: any) => {
-        const content = items.value[item.key].content
-        handleCopy(content)
-      }
-    },
+  /* 通用右键菜单 */
+  const commonMenuList = ref<OPT.RightMenu[]>([
     {
       label: '转发',
       icon: 'share',
@@ -57,9 +57,21 @@ export const useChatMain = (activeItem: MockItem) => {
       label: '回复',
       icon: 'reply',
       click: (item: any) => {
-        console.log(item)
+        Mitt.emit(MittEnum.REPLY_MEG, item)
       }
     }
+  ])
+  /* 右键消息菜单列表 */
+  const menuList = ref<OPT.RightMenu[]>([
+    {
+      label: '复制',
+      icon: 'copy',
+      click: (item: any) => {
+        const content = items.value[item.key].content
+        handleCopy(content)
+      }
+    },
+    ...commonMenuList.value
   ])
   /* 右键菜单下划线后的列表 */
   const specialMenuList = ref<OPT.RightMenu[]>([
@@ -83,19 +95,7 @@ export const useChatMain = (activeItem: MockItem) => {
         handleCopy(content)
       }
     },
-    {
-      label: '转发',
-      icon: 'share',
-      click: () => {}
-    },
-    { label: '收藏', icon: 'collection-files' },
-    {
-      label: '回复',
-      icon: 'reply',
-      click: (item: any) => {
-        console.log(item)
-      }
-    },
+    ...commonMenuList.value,
     {
       label: '另存为',
       icon: 'download',
@@ -122,19 +122,7 @@ export const useChatMain = (activeItem: MockItem) => {
         handleCopy(content)
       }
     },
-    {
-      label: '转发',
-      icon: 'share',
-      click: () => {}
-    },
-    { label: '收藏', icon: 'collection-files' },
-    {
-      label: '回复',
-      icon: 'reply',
-      click: (item: any) => {
-        console.log(item)
-      }
-    },
+    ...commonMenuList.value,
     {
       label: '另存为',
       icon: 'download',

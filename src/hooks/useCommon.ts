@@ -26,6 +26,7 @@ export const useCommon = () => {
     let hasImage = false
     let hasVideo = false
     let hasFile = false
+    let hasReply = false
 
     const elements = messageInputDom.value.childNodes
     for (const element of elements) {
@@ -39,6 +40,8 @@ export const useCommon = () => {
         }
       } else if (element.tagName === 'VIDEO' || (element.tagName === 'A' && element.href.match(/\.(mp4|webm)$/i))) {
         hasVideo = true
+      } else if (element.id === 'replyDiv') {
+        hasReply = true
       }
     }
 
@@ -50,6 +53,8 @@ export const useCommon = () => {
       return MsgEnum.MIXED
     } else if (hasImage) {
       return MsgEnum.IMAGE
+    } else if (hasReply) {
+      return MsgEnum.REPLY
     } else {
       return MsgEnum.TEXT
     }
@@ -99,6 +104,96 @@ export const useCommon = () => {
       range?.insertNode(spaceNode)
     } else if (type === MsgEnum.TEXT) {
       range?.insertNode(document.createTextNode(dom))
+    } else if (type === MsgEnum.REPLY) {
+      // 创建一个div标签节点
+      const divNode = document.createElement('div')
+      divNode.id = 'replyDiv' // 设置id为replyDiv
+      divNode.contentEditable = 'false' // 设置为不可编辑
+      // 设置div标签的样式，设置文本的长度为当前的最大宽度，超过后省略号显示
+      divNode.style.cssText = `
+        background-color: rgba(204, 204, 204, 0.4);
+        font-size: 12px;
+        padding: 4px 6px;
+        width: fit-content;
+        max-height: 86px;
+        border-radius: 8px;
+        margin-bottom: 2px;
+        user-select: none;
+        cursor: default;
+      `
+      // 把dom中的value值作为回复信息的作者，dom中的content作为回复信息的内容
+      const author = dom.accountName + '：'
+      const content = dom.content
+      // 创建一个div标签节点作为回复信息的头部
+      const headerNode = document.createElement('div')
+      headerNode.style.cssText = `
+        line-height: 1.5;
+        font-size: 12px;
+        margin-bottom: 2px;
+        padding: 0 8px;
+        color: rgba(19, 152, 127);
+        border-left: 3px solid #ccc;
+        cursor: default;
+      `
+      headerNode.appendChild(document.createTextNode(author))
+      // 创建一个div标签节点包裹正文内容
+      const contentNode = document.createElement('div')
+      contentNode.style.cssText = `
+        display: flex;
+        justify-content: space-between;
+        border-radius: 8px;
+        padding: 2px;
+        min-width: 0;
+      `
+      // 把正文放到span标签中，并设置span标签的样式
+      const contentSpan = document.createElement('span')
+      contentSpan.style.cssText = `
+        font-size: 12px;
+        color: #333;
+        cursor: default;
+        width: fit-content;
+        max-width: 350px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      `
+      contentSpan.appendChild(document.createTextNode(content))
+      // 在回复信息的右边添加一个关闭信息的按钮
+      const closeBtn = document.createElement('span')
+      closeBtn.style.cssText = `
+        font-size: 12px;
+        color: #999;
+        cursor: pointer;
+        margin-left: 10px;
+      `
+      closeBtn.textContent = '关闭'
+      closeBtn.addEventListener('click', () => {
+        divNode.remove()
+        const messageInput = document.getElementById('message-input') as HTMLElement
+        // 移除messageInput的最前面的空格节点，获取空格后面的内容
+        messageInput.textContent = messageInput.textContent!.trim()
+        // 创建并初始化 range 对象
+        const range = document.createRange()
+        range.selectNodeContents(messageInput)
+        range.collapse(false) // 将光标移动到末尾
+        // 将光标设置到 messageInput 的末尾
+        const selection = window.getSelection()
+        selection?.removeAllRanges()
+        selection?.addRange(range)
+        triggerInputEvent(messageInput)
+      })
+      // 将头部和正文节点插入到div标签节点中
+      divNode.appendChild(headerNode)
+      divNode.appendChild(contentNode)
+      contentNode.appendChild(contentSpan)
+      contentNode.appendChild(closeBtn)
+      // 将div标签节点插入到光标位置
+      range?.insertNode(divNode)
+      // 将光标折叠到Range的末尾(true表示折叠到Range的开始位置,false表示折叠到Range的末尾)
+      range?.collapse(false)
+      const spaceNode = document.createTextNode('\u00A0')
+      range?.insertNode(spaceNode)
+      range?.collapse(false)
     } else {
       range?.insertNode(dom)
     }

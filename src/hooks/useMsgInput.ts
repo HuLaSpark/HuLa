@@ -9,7 +9,7 @@ import { MockList } from '@/mock'
 import { useCommon } from './useCommon.ts'
 
 export const useMsgInput = (messageInputDom: Ref) => {
-  const { triggerInputEvent, insertNode, getMessageContentType, getEditorRange, imgPaste } = useCommon()
+  const { triggerInputEvent, insertNode, getMessageContentType, getEditorRange, imgPaste, removeTag } = useCommon()
   const settingStore = setting()
   const { chat } = storeToRefs(settingStore)
   const chatKey = ref(chat.value.sendKey)
@@ -29,8 +29,14 @@ export const useMsgInput = (messageInputDom: Ref) => {
       return MockList.value
     }
   })
-  // 记录当前选中的提及项 key
+  /* 记录当前选中的提及项 key */
   const selectedAitKey = ref(filteredList.value[0]?.key ?? null)
+  /* 回复消息 */
+  const reply = ref({
+    accountName: '',
+    content: '',
+    key: ''
+  })
   /* 右键菜单列表 */
   const menuList = ref([
     { label: '剪切', icon: 'screenshot', disabled: true },
@@ -83,6 +89,17 @@ export const useMsgInput = (messageInputDom: Ref) => {
       isChinese.value = false
       aitKey.value = e.data
     })
+    /* 监听回复信息的传递 */
+    Mitt.on(MittEnum.REPLY_MEG, (event: any) => {
+      reply.value = { accountName: event.value, content: event.content, key: event.key }
+      if (messageInputDom.value) {
+        nextTick().then(() => {
+          messageInputDom.value.focus()
+          insertNode(MsgEnum.REPLY, { accountName: event.value, content: event.content })
+          triggerInputEvent(messageInputDom.value)
+        })
+      }
+    })
   })
 
   /* 处理发送信息事件 */
@@ -92,11 +109,20 @@ export const useMsgInput = (messageInputDom: Ref) => {
     const contentType = getMessageContentType(messageInputDom)
     const msg = {
       type: contentType,
-      content: msgInput.value
+      content: msgInput.value,
+      reply: contentType === MsgEnum.REPLY ? reply.value : null
     }
     const hyperlinkRegex = /(\b(?:https?:\/\/|www)[-A-Z0-9+&@#/%?=~_|!:,.;]*[-A-Z0-9+&@#/%=~_|])/gi
     const foundHyperlinks = msg.content.match(hyperlinkRegex)
 
+    /* 如果是Reply消息，需要将消息的样式修改 */
+    if (msg.type === MsgEnum.REPLY) {
+      // 先去掉原来的标签
+      msg.content = removeTag(msg.content)
+      // 截取空格后的内容
+      // TODO 不允许用户删除回复消息中最前面的空格或者标志符号 (nyh -> 2024-04-17 06:39:22)
+      msg.content = msg.content.replace(/^[\S\s]*\u00A0/, '')
+    }
     /* 判断是否有超链接 */
     if (foundHyperlinks && foundHyperlinks.length > 0) {
       msg.content = msg.content.replace(hyperlinkRegex, (match) => {
