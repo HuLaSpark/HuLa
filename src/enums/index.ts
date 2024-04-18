@@ -123,3 +123,9 @@ export enum CloseBxEnum {
   /** 关闭 */
   CLOSE = 'close'
 }
+
+/** 限制上传 */
+export enum LimitEnum {
+  /** 通用限制数量 */
+  COM_COUNT = 5
+}

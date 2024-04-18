@@ -1,4 +1,4 @@
-import { MsgEnum } from '@/enums'
+import { LimitEnum, MsgEnum } from '@/enums'
 import { Ref } from 'vue'
 import { createFileOrVideoDom } from '@/utils/CreateDom.ts'
 
@@ -8,7 +8,8 @@ export const useCommon = () => {
   const reply = ref({
     accountName: '',
     content: '',
-    key: ''
+    key: '',
+    imgCount: 0
   })
   /** 获取当前光标选取的信息(需要判断是否为空) */
 
@@ -128,7 +129,7 @@ export const useCommon = () => {
       `
       // 把dom中的value值作为回复信息的作者，dom中的content作为回复信息的内容
       const author = dom.accountName + '：'
-      const content = dom.content
+      let content = dom.content
       // 创建一个div标签节点作为回复信息的头部
       const headerNode = document.createElement('div')
       headerNode.style.cssText = `
@@ -151,6 +152,14 @@ export const useCommon = () => {
         min-width: 0;
       `
       let contentBox
+      // 判断content内容是否是data:image/开头的数组
+      if (Array.isArray(content)) {
+        // 获取总共有多少张图片
+        const imageCount = content.length
+        // 获取第一个data:image/开头的图片
+        content = content.find((item: string) => item.startsWith('data:image/'))
+        reply.value.imgCount = imageCount
+      }
       // 判断content内容开头是否是data:image/的是图片
       if (content.startsWith('data:image/')) {
         // 再创建一个img标签节点，并设置src属性为base64编码的图片
@@ -165,7 +174,14 @@ export const useCommon = () => {
         `
         // 将img标签节点插入到div标签节点中
         divNode.appendChild(contentBox)
+        // 把图片传入到reply的content属性中
+        reply.value.content = content
       } else {
+        // 判断是否有@标签
+        if (content.includes('id="aitSpan"')) {
+          // 去掉content中的标签
+          content = removeTag(content)
+        }
         // 把正文放到span标签中，并设置span标签的样式
         contentBox = document.createElement('span')
         contentBox.style.cssText = `
@@ -183,6 +199,8 @@ export const useCommon = () => {
       // 在回复信息的右边添加一个关闭信息的按钮
       const closeBtn = document.createElement('span')
       closeBtn.style.cssText = `
+        display: flex;
+        align-items: center;
         font-size: 12px;
         color: #999;
         cursor: pointer;
@@ -203,7 +221,7 @@ export const useCommon = () => {
         selection?.removeAllRanges()
         selection?.addRange(range)
         triggerInputEvent(messageInput)
-        reply.value = { accountName: '', content: '', key: '' }
+        reply.value = { imgCount: 0, accountName: '', content: '', key: '' }
       })
       // 将头部和正文节点插入到div标签节点中
       divNode.appendChild(headerNode)
@@ -281,8 +299,8 @@ export const useCommon = () => {
   const handlePaste = (e: any, dom: HTMLElement) => {
     e.preventDefault()
     if (e.clipboardData.files.length > 0) {
-      if (e.clipboardData.files.length > 5) {
-        window.$message.warning('一次性只能上传5个文件')
+      if (e.clipboardData.files.length > LimitEnum.COM_COUNT) {
+        window.$message.warning(`一次性只能上传${LimitEnum.COM_COUNT}个文件或图片`)
         return
       }
       for (const file of e.clipboardData.files) {

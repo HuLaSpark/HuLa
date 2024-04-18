@@ -91,7 +91,7 @@
 
 <script setup lang="ts">
 import { useFileDialog } from '@vueuse/core'
-import { MsgEnum } from '@/enums'
+import { LimitEnum, MsgEnum } from '@/enums'
 import { useCommon } from '@/hooks/useCommon.ts'
 
 const { open, onChange } = useFileDialog()
@@ -116,8 +116,8 @@ const emojiHandle = (item: string) => {
 
 onChange((files) => {
   if (!files) return
-  if (files.length > 5) {
-    window.$message.warning('一次性只能上传5个文件')
+  if (files.length > LimitEnum.COM_COUNT) {
+    window.$message.warning(`一次性只能上传${LimitEnum.COM_COUNT}个文件或图片`)
     return
   }
   for (let file of files) {

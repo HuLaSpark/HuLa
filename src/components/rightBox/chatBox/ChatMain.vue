@@ -88,9 +88,9 @@
                 @click="handleMsgClick(item)">
                 <!--                &lt;!&ndash; 渲染消息内容体 &ndash;&gt;-->
                 <!--                <RenderMessage :message="message" />-->
-                <!--  消息为文本类型  -->
+                <!--  消息为文本类型或者回复消息  -->
                 <div
-                  v-if="item.type === MsgEnum.TEXT"
+                  v-if="item.type === MsgEnum.TEXT || item.type === MsgEnum.REPLY"
                   style="white-space: pre-wrap"
                   :class="[
                     { active: activeBubble === item.key },
@@ -133,17 +133,6 @@
                   preview-disabled
                   style="border-radius: 8px"
                   :src="item.content"></n-image>
-
-                <!-- 消息为回复消息 -->
-                <div
-                  v-if="item.type === MsgEnum.REPLY"
-                  style="white-space: pre-wrap"
-                  :class="[
-                    { active: activeBubble === item.key },
-                    item.accountId === userId ? 'bubble-oneself' : 'bubble'
-                  ]">
-                  <span v-html="item.content"></span>
-                </div>
               </ContextMenu>
 
               <!-- 回复的内容 -->
@@ -152,12 +141,26 @@
                 :size="6"
                 v-if="item.reply && item.type === MsgEnum.REPLY"
                 @click="jumpToReplyMsg(item.reply.key)"
-                class="reply-bubble">
+                class="reply-bubble relative">
                 <svg class="size-14px"><use href="#to-top"></use></svg>
                 <span>{{ `${item.reply.accountName}：` }}</span>
-                <span class="content-span">
-                  {{ item.reply.content }}
+                <!-- 当回复消息为图片时渲染 -->
+                <n-image
+                  v-if="item.reply.content.startsWith('data:image/')"
+                  :img-props="{ style: { maxWidth: '50px', maxHeight: '50px' } }"
+                  show-toolbar-tooltip
+                  style="border-radius: 4px"
+                  @click.stop
+                  :fallback-src="'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg'"
+                  :src="item.reply.content" />
+                <!-- 当回复消息为文本时渲染(判断是否有aitSpan标签) -->
+                <span v-else class="content-span">
+                  {{ handleReply(item.reply.content) }}
                 </span>
+                <!-- 多个图片时计数器样式 -->
+                <div v-if="item.reply.imgCount" class="reply-img-sub">
+                  {{ item.reply.imgCount }}
+                </div>
               </n-flex>
             </n-flex>
           </div>
@@ -224,6 +227,7 @@ import { listen } from '@tauri-apps/api/event'
 import { useChatMain } from '@/hooks/useChatMain.ts'
 import { VirtualListInst } from 'naive-ui'
 import { delay } from 'lodash-es'
+import { useCommon } from '@/hooks/useCommon.ts'
 
 const { activeItem } = defineProps<{
   activeItem: MockItem
@@ -239,6 +243,7 @@ const itemSize = computed(() => (activeItem.type === RoomTypeEnum.GROUP ? 98 : 7
 /* 虚拟列表 */
 const virtualListInst = ref<VirtualListInst>()
 const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-main')
+const { removeTag } = useCommon()
 const {
   handleScroll,
   handleMsgClick,
@@ -283,6 +288,11 @@ watchEffect(() => {
   newMsgNum.value = itemComputed.value - historyIndex.value
   activeItemRef.value = { ...activeItem }
 })
+
+/* 处理回复消息中的 AIT 标签 */
+const handleReply = (content: string) => {
+  return content.includes('id="aitSpan"') ? removeTag(content) : content
+}
 
 /* 发送信息 */
 const handleSendMessage = (msg: any) => {

@@ -1,4 +1,4 @@
-import { MittEnum, MsgEnum } from '@/enums'
+import { LimitEnum, MittEnum, MsgEnum } from '@/enums'
 import { Ref } from 'vue'
 import { MockItem } from '@/services/types.ts'
 import { setting } from '@/stores/setting.ts'
@@ -70,7 +70,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     }
     // 如果输入框没有值就把回复内容清空
     if (msgInput.value === '') {
-      reply.value = { accountName: '', content: '', key: '' }
+      reply.value = { imgCount: 0, accountName: '', content: '', key: '' }
     }
   })
 
@@ -94,7 +94,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
         // TODO 如果已经有就替换原来的内容 (nyh -> 2024-04-18 23:10:56)
         return
       }
-      reply.value = { accountName: event.value, content: event.content, key: event.key }
+      reply.value = { imgCount: 0, accountName: event.value, content: event.content, key: event.key }
       if (messageInputDom.value) {
         nextTick().then(() => {
           messageInputDom.value.focus()
@@ -108,6 +108,11 @@ export const useMsgInput = (messageInputDom: Ref) => {
   /* 处理发送信息事件 */
   // TODO 输入框中的内容当我切换消息的时候需要记录之前输入框的内容 (nyh -> 2024-03-01 07:03:43)
   const send = () => {
+    // 判断输入框中的图片或者文件数量是否超过限制
+    if (messageInputDom.value.querySelectorAll('img').length > LimitEnum.COM_COUNT) {
+      window.$message.warning(`一次性只能上传${LimitEnum.COM_COUNT}个文件或图片`)
+      return
+    }
     ait.value = false
     const contentType = getMessageContentType(messageInputDom)
     const msg = {
@@ -146,7 +151,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     Mitt.emit(MittEnum.SEND_MESSAGE, msg)
     msgInput.value = ''
     messageInputDom.value.innerHTML = ''
-    reply.value = { accountName: '', content: '', key: '' }
+    reply.value = { imgCount: 0, accountName: '', content: '', key: '' }
   }
 
   /* 当输入框手动输入值的时候触发input事件(使用vueUse的防抖) */

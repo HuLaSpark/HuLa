@@ -72,6 +72,10 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  /* 回复图片的计数器样式 */
+  .reply-img-sub {
+    @apply absolute bottom-8px right-6px color-#13987f bg-[--bg-reply-img-count] p-[2px_4px] rounded-6px text-10px;
+  }
 }
 /* 跳转到回复内容时候显示的样式 */
 .active-reply {
