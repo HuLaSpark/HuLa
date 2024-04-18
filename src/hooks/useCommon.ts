@@ -4,6 +4,12 @@ import { createFileOrVideoDom } from '@/utils/CreateDom.ts'
 
 /** 常用工具类 */
 export const useCommon = () => {
+  /* 回复消息 */
+  const reply = ref({
+    accountName: '',
+    content: '',
+    key: ''
+  })
   /** 获取当前光标选取的信息(需要判断是否为空) */
 
   const getEditorRange = () => {
@@ -109,7 +115,6 @@ export const useCommon = () => {
       const divNode = document.createElement('div')
       divNode.id = 'replyDiv' // 设置id为replyDiv
       divNode.contentEditable = 'false' // 设置为不可编辑
-      // 设置div标签的样式，设置文本的长度为当前的最大宽度，超过后省略号显示
       divNode.style.cssText = `
         background-color: rgba(204, 204, 204, 0.4);
         font-size: 12px;
@@ -145,9 +150,25 @@ export const useCommon = () => {
         padding: 2px;
         min-width: 0;
       `
-      // 把正文放到span标签中，并设置span标签的样式
-      const contentSpan = document.createElement('span')
-      contentSpan.style.cssText = `
+      let contentBox
+      // 判断content内容开头是否是data:image/的是图片
+      if (content.startsWith('data:image/')) {
+        // 再创建一个img标签节点，并设置src属性为base64编码的图片
+        contentBox = document.createElement('img')
+        contentBox.src = content
+        contentBox.style.cssText = `
+          max-width: 55px;
+          max-height: 55px;
+          border-radius: 4px;
+          cursor: default;
+          user-select: none;
+        `
+        // 将img标签节点插入到div标签节点中
+        divNode.appendChild(contentBox)
+      } else {
+        // 把正文放到span标签中，并设置span标签的样式
+        contentBox = document.createElement('span')
+        contentBox.style.cssText = `
         font-size: 12px;
         color: #333;
         cursor: default;
@@ -157,7 +178,8 @@ export const useCommon = () => {
         overflow: hidden;
         text-overflow: ellipsis;
       `
-      contentSpan.appendChild(document.createTextNode(content))
+        contentBox.appendChild(document.createTextNode(content))
+      }
       // 在回复信息的右边添加一个关闭信息的按钮
       const closeBtn = document.createElement('span')
       closeBtn.style.cssText = `
@@ -181,17 +203,25 @@ export const useCommon = () => {
         selection?.removeAllRanges()
         selection?.addRange(range)
         triggerInputEvent(messageInput)
+        reply.value = { accountName: '', content: '', key: '' }
       })
       // 将头部和正文节点插入到div标签节点中
       divNode.appendChild(headerNode)
       divNode.appendChild(contentNode)
-      contentNode.appendChild(contentSpan)
+      contentNode.appendChild(contentBox)
       contentNode.appendChild(closeBtn)
       // 将div标签节点插入到光标位置
       range?.insertNode(divNode)
       // 将光标折叠到Range的末尾(true表示折叠到Range的开始位置,false表示折叠到Range的末尾)
       range?.collapse(false)
-      const spaceNode = document.createTextNode('\u00A0')
+      // 创建一个span节点作为空格
+      const spaceNode = document.createElement('span')
+      spaceNode.textContent = '\u00A0'
+      // 设置不可编辑
+      spaceNode.contentEditable = 'false'
+      // 不可以选中
+      spaceNode.style.userSelect = 'none'
+      // 将空格节点插入到光标位置
       range?.insertNode(spaceNode)
       range?.collapse(false)
     } else {
@@ -293,6 +323,7 @@ export const useCommon = () => {
     triggerInputEvent,
     handlePaste,
     removeTag,
-    FileOrVideoPaste
+    FileOrVideoPaste,
+    reply
   }
 }

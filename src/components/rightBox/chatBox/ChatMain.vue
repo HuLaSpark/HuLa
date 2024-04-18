@@ -9,14 +9,14 @@
     class="relative h-100vh"
     item-resizable
     :padding-top="10"
-    :item-size="activeItem.type === RoomTypeEnum.GROUP ? 98 : 70"
+    :item-size="itemSize"
     :items="items">
     <template #default="{ item }">
       <main
         :key="item.key"
-        class="item-main"
+        class="flex-y-center min-h-58px"
         :class="[
-          [activeItem.type === RoomTypeEnum.GROUP ? 'p-[18px_20px]' : 'chat-single p-[2px_20px_10px_20px]'],
+          [activeItem.type === RoomTypeEnum.GROUP ? 'p-[18px_20px]' : 'chat-single p-[4px_20px_10px_20px]'],
           { 'active-reply': activeReply === item.key }
         ]">
         <!-- 好友或者群聊的信息 -->
@@ -25,10 +25,7 @@
           :class="{
             'items-end': item.accountId === userId
           }">
-          <div
-            class="flex items-start flex-1"
-            :class="item.accountId === userId ? 'flex-row-reverse' : ''"
-            style="max-width: calc(100% - 54px)">
+          <div class="flex items-start flex-1" :class="item.accountId === userId ? 'flex-row-reverse' : ''">
             <!-- 回复消息提示的箭头 -->
             <svg
               v-if="activeReply === item.key"
@@ -67,19 +64,23 @@
               <!-- 用户个人信息框 -->
               <InfoPopover :info="activeItemRef" />
             </n-popover>
-            <div
-              class="flex flex-col gap-8px color-[--text-color] flex-1"
+            <n-flex
+              vertical
+              justify="center"
+              :size="8"
+              class="color-[--text-color] flex-1"
               :class="item.accountId === userId ? 'items-end mr-10px' : ''">
               <ContextMenu
                 @select="$event.click(item)"
                 :menu="activeItem.type === RoomTypeEnum.GROUP ? optionsList : []"
                 :special-menu="report">
                 <span class="text-12px select-none color-#909090" v-if="activeItem.type === RoomTypeEnum.GROUP">
-                  {{ item.accountId === userId ? item.value : activeItem.accountName }}
+                  {{ item.value }}
                 </span>
               </ContextMenu>
               <!--  气泡样式  -->
               <ContextMenu
+                class="size-fit"
                 :data-key="item.accountId === userId ? `U${item.key}` : `Q${item.key}`"
                 @select="$event.click(item)"
                 :menu="handleItemType(item.type)"
@@ -158,7 +159,7 @@
                   {{ item.reply.content }}
                 </span>
               </n-flex>
-            </div>
+            </n-flex>
           </div>
         </article>
       </main>
@@ -222,6 +223,7 @@ import { useWindow } from '@/hooks/useWindow.ts'
 import { listen } from '@tauri-apps/api/event'
 import { useChatMain } from '@/hooks/useChatMain.ts'
 import { VirtualListInst } from 'naive-ui'
+import { delay } from 'lodash-es'
 
 const { activeItem } = defineProps<{
   activeItem: MockItem
@@ -232,6 +234,8 @@ const { createWebviewWindow } = useWindow()
 const selectKey = ref()
 /* 跳转回复消息后选中效果 */
 const activeReply = ref(-1)
+/* item最小高度，用于计算滚动大小和位置 */
+const itemSize = computed(() => (activeItem.type === RoomTypeEnum.GROUP ? 98 : 70))
 /* 虚拟列表 */
 const virtualListInst = ref<VirtualListInst>()
 const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-main')
@@ -326,7 +330,7 @@ const addToDomUpdateQueue = (index: number, id: number) => {
   // 使用 nextTick 确保虚拟列表渲染完最新的项目后进行滚动
   nextTick(() => {
     if (!floatFooter.value || id === userId.value) {
-      virtualListInst.value?.scrollTo({ position: 'bottom' })
+      virtualListInst.value?.scrollTo({ position: 'bottom', debounce: true })
     }
     /* data-key标识的气泡,添加前缀用于区分用户消息，不然气泡动画会被覆盖 */
     const dataKey = id === userId.value ? `U${index + 1}` : `Q${index + 1}`
@@ -347,7 +351,7 @@ const addToDomUpdateQueue = (index: number, id: number) => {
 /* 点击后滚动到底部 */
 const scrollBottom = () => {
   nextTick(() => {
-    virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
+    virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant', debounce: true })
   })
 }
 
@@ -356,7 +360,19 @@ const closeMenu = (event: any) => {
     activeBubble.value = -1
   }
   if (!event.target.matches('.active-reply')) {
-    activeReply.value = -1
+    /* 解决更替交换回复气泡时候没有触发动画的问题 */
+    if (!event.target.matches('.reply-bubble *')) {
+      nextTick(() => {
+        const activeReplyElement = document.querySelector('.active-reply') as HTMLElement
+        if (activeReplyElement) {
+          activeReplyElement.classList.add('reply-exit')
+          delay(() => {
+            activeReplyElement.classList.remove('reply-exit')
+            activeReply.value = -1
+          }, 300)
+        }
+      })
+    }
   }
 }
 
@@ -390,7 +406,8 @@ onMounted(() => {
   //     accountId: activeItem.accountId,
   //     avatar: 'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg',
   //     content: '123',
-  //     type: MsgEnum.TEXT
+  //     type: MsgEnum.TEXT,
+  //     reply: null
   //   }
   //   items.value.push(message)
   //   addToDomUpdateQueue(index - 1, activeItem.accountId)
@@ -404,35 +421,4 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 @import '@/styles/scss/chat-main';
-.item-main {
-  @apply flex-y-center min-h-58px;
-  transition: all 0.4s ease;
-  .reply-bubble {
-    @apply text-12px text-[--reply-color] bg-[--bg-reply-bubble] rounded-8px p-4px cursor-pointer select-none;
-    svg,
-    span {
-      transition: color 0.4s ease-in-out;
-    }
-    &:hover {
-      svg {
-        color: #13987f;
-      }
-      span {
-        color: var(--reply-hover);
-      }
-    }
-    .content-span {
-      width: fit-content;
-      max-width: 250px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-  }
-}
-.active-reply {
-  background-color: var(--bg-reply-active);
-  border-radius: 8px;
-  margin: 0 8px;
-}
 </style>

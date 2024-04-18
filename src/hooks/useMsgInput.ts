@@ -9,7 +9,8 @@ import { MockList } from '@/mock'
 import { useCommon } from './useCommon.ts'
 
 export const useMsgInput = (messageInputDom: Ref) => {
-  const { triggerInputEvent, insertNode, getMessageContentType, getEditorRange, imgPaste, removeTag } = useCommon()
+  const { triggerInputEvent, insertNode, getMessageContentType, getEditorRange, imgPaste, removeTag, reply } =
+    useCommon()
   const settingStore = setting()
   const { chat } = storeToRefs(settingStore)
   const chatKey = ref(chat.value.sendKey)
@@ -31,12 +32,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
   })
   /* 记录当前选中的提及项 key */
   const selectedAitKey = ref(filteredList.value[0]?.key ?? null)
-  /* 回复消息 */
-  const reply = ref({
-    accountName: '',
-    content: '',
-    key: ''
-  })
   /* 右键菜单列表 */
   const menuList = ref([
     { label: '剪切', icon: 'screenshot', disabled: true },
@@ -73,6 +68,10 @@ export const useMsgInput = (messageInputDom: Ref) => {
     if (!ait.value && filteredList.value.length > 0) {
       selectedAitKey.value = 0
     }
+    // 如果输入框没有值就把回复内容清空
+    if (msgInput.value === '') {
+      reply.value = { accountName: '', content: '', key: '' }
+    }
   })
 
   watch(chatKey, (v) => {
@@ -91,6 +90,10 @@ export const useMsgInput = (messageInputDom: Ref) => {
     })
     /* 监听回复信息的传递 */
     Mitt.on(MittEnum.REPLY_MEG, (event: any) => {
+      if (reply.value.content) {
+        // TODO 如果已经有就替换原来的内容 (nyh -> 2024-04-18 23:10:56)
+        return
+      }
       reply.value = { accountName: event.value, content: event.content, key: event.key }
       if (messageInputDom.value) {
         nextTick().then(() => {
@@ -143,6 +146,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     Mitt.emit(MittEnum.SEND_MESSAGE, msg)
     msgInput.value = ''
     messageInputDom.value.innerHTML = ''
+    reply.value = { accountName: '', content: '', key: '' }
   }
 
   /* 当输入框手动输入值的时候触发input事件(使用vueUse的防抖) */
@@ -239,6 +243,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     msgInput,
     chatKey,
     menuList,
-    selectedAitKey
+    selectedAitKey,
+    reply
   }
 }
