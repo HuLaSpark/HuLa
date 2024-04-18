@@ -57,7 +57,9 @@ export enum MittEnum {
   /** 详情页面显示 */
   DETAILS_SHOW = 'detailsShow',
   /** 消息列表被清空或者暂无消息 */
-  NOT_MSG = 'notMsg'
+  NOT_MSG = 'notMsg',
+  /* 回复消息 */
+  REPLY_MEG = 'replyMeg'
 }
 
 /** 主题类型 */
@@ -101,7 +103,9 @@ export enum MsgEnum {
   /** 表情 */
   EMOTICON,
   /** 艾特 */
-  AIT
+  AIT,
+  /** 回复 */
+  REPLY
 }
 
 /** 房间类型 1群聊 2单聊 */
@@ -118,4 +122,10 @@ export enum CloseBxEnum {
   HIDE = 'hide',
   /** 关闭 */
   CLOSE = 'close'
+}
+
+/** 限制上传 */
+export enum LimitEnum {
+  /** 通用限制数量 */
+  COM_COUNT = 5
 }

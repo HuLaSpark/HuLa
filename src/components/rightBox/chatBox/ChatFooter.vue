@@ -91,13 +91,14 @@
 
 <script setup lang="ts">
 import { useFileDialog } from '@vueuse/core'
-import { createFileOrVideoDom } from '@/utils/CreateDom.ts'
-import { MsgEnum } from '@/enums'
+import { LimitEnum, MsgEnum } from '@/enums'
+import { useCommon } from '@/hooks/useCommon.ts'
 
 const { open, onChange } = useFileDialog()
 const MsgInputRef = ref()
 const msgInputDom = ref()
 const emojiShow = ref()
+const { insertNode, triggerInputEvent, getEditorRange, imgPaste, FileOrVideoPaste } = useCommon()
 
 /**
  * 选择表情，并把表情插入输入框
@@ -106,18 +107,17 @@ const emojiShow = ref()
 const emojiHandle = (item: string) => {
   emojiShow.value = false
   msgInputDom.value.focus()
-  const sel = window.getSelection()
-  const res = sel?.getRangeAt(0)
-  res?.setStart(msgInputDom.value, msgInputDom.value.childNodes.length)
+  const { range } = getEditorRange()!
+  range?.collapse(false)
   // 插入表情
-  MsgInputRef.value.insertNode(MsgEnum.TEXT, item)
-  MsgInputRef.value.triggerInputEvent(msgInputDom.value)
+  insertNode(MsgEnum.TEXT, item)
+  triggerInputEvent(msgInputDom.value)
 }
 
 onChange((files) => {
   if (!files) return
-  if (files.length > 5) {
-    window.$message.warning('一次性只能上传5个文件')
+  if (files.length > LimitEnum.COM_COUNT) {
+    window.$message.warning(`一次性只能上传${LimitEnum.COM_COUNT}个文件或图片`)
     return
   }
   for (let file of files) {
@@ -127,37 +127,16 @@ onChange((files) => {
       window.$message.warning(`文件 ${file.name} 超过300MB`)
       continue // 如果文件大小超过300MB，就跳过这个文件，处理下一个文件
     }
-    let reader = new FileReader()
     let type = file.type
     if (type.startsWith('image/')) {
-      reader.onload = (e: any) => {
-        const img = document.createElement('img')
-        img.src = e.target.result
-        // 设置图片的最大高度和最大宽度
-        img.style.maxHeight = '88px'
-        img.style.maxWidth = '140px'
-        img.style.marginRight = '6px'
-        // 插入图片
-        MsgInputRef.value.insertNode(MsgEnum.IMAGE, img)
-        MsgInputRef.value.triggerInputEvent(msgInputDom.value)
-      }
+      imgPaste(file, MsgInputRef.value.messageInputDom)
+    } else if (type.startsWith('video/')) {
+      // 处理视频粘贴
+      FileOrVideoPaste(file, MsgEnum.VIDEO, MsgInputRef.value.messageInputDom)
     } else {
-      // 使用函数
-      createFileOrVideoDom(file).then((imgTag) => {
-        // 获取光标
-        const selection = window.getSelection()
-        // 获取选中的内容
-        const range = selection?.getRangeAt(0)
-        // 删除选中的内容
-        range?.deleteContents()
-        // 将生成的img标签插入到页面中
-        MsgInputRef.value.insertNode(MsgEnum.FILE, imgTag)
-        MsgInputRef.value.triggerInputEvent(msgInputDom.value)
-      })
+      // 处理文件粘贴
+      FileOrVideoPaste(file, MsgEnum.FILE, MsgInputRef.value.messageInputDom)
     }
-    nextTick(() => {
-      reader.readAsDataURL(file)
-    })
   }
 })
 

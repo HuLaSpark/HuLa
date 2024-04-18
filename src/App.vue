@@ -10,7 +10,6 @@ import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
 import { StoresEnum, ThemeEnum } from '@/enums'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
-import { initWebSocket } from '@/services/webSocket.ts'
 
 const settingStore = setting()
 const OLStatusStore = onlineStatus()
@@ -26,7 +25,7 @@ const preventDrag = (e: MouseEvent) => {
 }
 
 onMounted(() => {
-  initWebSocket()
+  // initWebSocket()
   // /*! 使用msi或者其他安装包安装后才会显示应用的名字和图标 */
   // sendNotification({ title: 'TAURI', body: 'Tauri is awesome!' })
   // 判断localStorage中是否有设置主题

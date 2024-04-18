@@ -1,6 +1,6 @@
 /* 气泡样式 */
 @mixin bubble {
-  @apply w-fit max-w-55vw min-h-1em p-[8px_12px] text-15px line-height-22px bg-[--bg-bubble] rounded-[2px_18px_18px];
+  @apply w-fit max-w-35vw min-h-1em p-[8px_12px] text-15px line-height-22px bg-[--bg-bubble] rounded-[2px_18px_18px];
   word-break: break-all; /* 强制连续文本换行 */
   &.active {
     background-color: var(--bg-bubble-active);
@@ -46,8 +46,50 @@
     background-color: rgb(195, 221, 216);
   }
 }
+/* 浮标达到最大值时候的样式 */
 .max:hover {
   background-color: #f5dce1;
+}
+/* 回复气泡的样式 */
+.reply-bubble {
+  @apply text-12px text-[--reply-color] bg-[--bg-reply-bubble] rounded-8px p-4px cursor-pointer select-none;
+  svg,
+  span {
+    transition: color 0.4s ease-in-out;
+  }
+  &:hover {
+    svg {
+      color: #13987f;
+    }
+    span {
+      color: var(--reply-hover);
+    }
+  }
+  .content-span {
+    width: fit-content;
+    max-width: 250px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* 回复图片的计数器样式 */
+  .reply-img-sub {
+    @apply absolute bottom-8px right-6px color-#13987f bg-[--bg-reply-img-count] p-[2px_4px] rounded-6px text-10px;
+  }
+}
+/* 跳转到回复内容时候显示的样式 */
+.active-reply {
+  background-color: var(--bg-reply-active);
+  border-radius: 8px;
+  margin: 0 8px;
+  transition: all 0.4s ease-in-out;
+}
+/*  跳转到回复内容时候的退出动画 */
+.reply-exit {
+  margin: 0;
+  background-color: inherit;
+  border-radius: 0;
+  transition: all 0.4s ease-in-out;
 }
 /*! 替换ait的字体颜色 */
 :deep(#aitSpan) {

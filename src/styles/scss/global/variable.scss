@@ -52,7 +52,13 @@
   --bg-info: rgba(255, 255, 255, 0.8);
   // 表情框样式
   --bg-emoji: rgba(255, 255, 255, 0.6);
-  --emoji-hover: #e3e3e3
+  --emoji-hover: #e3e3e3;
+  // 回复消息样式
+  --bg-reply-active: #e3e3e3;
+  --bg-reply-bubble: #d3d3d3;
+  --reply-color: #909090;
+  --reply-hover: #505050;
+  --bg-reply-img-count: #e3e3e3;
 }
 
 html[data-theme='dark'] {
@@ -108,7 +114,13 @@ html[data-theme='dark'] {
   --bg-info: rgba(27, 27, 27, 0.8);
   // 表情框样式
   --bg-emoji: rgba(27, 27, 27, 0.8);
-  --emoji-hover: #3b3b3b
+  --emoji-hover: #3b3b3b;
+  // 回复消息样式
+  --bg-reply-active: #3b3b3b;
+  --bg-reply-bubble: #505050;
+  --reply-color: #e3e3e3;
+  --reply-hover: #b1b1b1;
+  --bg-reply-img-count: #505050;
 }
 /*! end */
 // 线性动画

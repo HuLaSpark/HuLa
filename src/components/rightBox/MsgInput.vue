@@ -7,7 +7,7 @@
         ref="messageInputDom"
         contenteditable
         spellcheck="false"
-        @paste="handlePaste"
+        @paste="handlePaste($event, messageInputDom)"
         @input="handleInput"
         @keydown.exact.enter="inputKeyDown"
         @keydown.exact.ctrl.enter="inputKeyDown"></div>
@@ -86,6 +86,7 @@ import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
 import { sendOptions } from '@/views/home-window/more/settings/config.ts'
 import { useMsgInput } from '@/hooks/useMsgInput.ts'
+import { useCommon } from '@/hooks/useCommon.ts'
 import { onKeyStroke } from '@vueuse/core'
 
 const settingStore = setting()
@@ -97,22 +98,10 @@ const messageInputDom = ref()
 const activeItem = ref(inject('activeItem') as MockItem)
 /* 虚拟列表 */
 const virtualListInst = ref<VirtualListInst>()
+const { handlePaste } = useCommon()
 /* 引入useMsgInput的相关方法 */
-const {
-  handlePaste,
-  insertNode,
-  triggerInputEvent,
-  inputKeyDown,
-  handleAit,
-  handleInput,
-  send,
-  filteredList,
-  ait,
-  msgInput,
-  chatKey,
-  menuList,
-  selectedAitKey
-} = useMsgInput(messageInputDom)
+const { inputKeyDown, handleAit, handleInput, send, filteredList, ait, msgInput, chatKey, menuList, selectedAitKey } =
+  useMsgInput(messageInputDom)
 
 /* 当切换聊天对象时，重新获取焦点 */
 watch(activeItem, () => {
@@ -120,6 +109,15 @@ watch(activeItem, () => {
     const inputDiv = document.getElementById('message-input')
     inputDiv?.focus()
   })
+})
+
+/* 当ait人员列表发生变化的时候始终select第一个 */
+watch(filteredList, (newList) => {
+  if (newList.length > 0) {
+    /* 先设置滚动条滚动到第一个 */
+    virtualListInst.value?.scrollTo({ key: newList[0].key })
+    selectedAitKey.value = newList[0].key
+  }
 })
 
 /* 处理键盘上下键切换提及项 */
@@ -176,7 +174,7 @@ onUnmounted(() => {
 })
 
 /* 导出组件方法和属性 */
-defineExpose({ messageInputDom, triggerInputEvent, insertNode })
+defineExpose({ messageInputDom })
 </script>
 
 <style scoped lang="scss">
