@@ -9,9 +9,9 @@
       :src="item.avatar"
       alt="" />
 
-    <span class="text-20px text-[--text-color]">{{ item.accountName }}</span>
+    <span class="text-(20px [--text-color])">{{ item.accountName }}</span>
 
-    <span class="text-14px text-#909090">这个人很高冷,暂时没有留下什么</span>
+    <span class="text-(14px #909090)">这个人很高冷,暂时没有留下什么</span>
 
     <n-flex align="center" justify="space-between" :size="30" class="text-#606060">
       <span>性别：男</span>
@@ -54,8 +54,8 @@
           :src="item.avatar"
           alt="" />
 
-        <n-flex vertical :size="16" justify="space-between" class="text-14px color-#909090">
-          <span class="text-16px text-[--text-color]">{{ item.accountName }}</span>
+        <n-flex vertical :size="16" justify="space-between" class="text-(14px #909090)">
+          <span class="text-(16px [--text-color])">{{ item.accountName }}</span>
           <span>群号：1235873897182</span>
           <span>创建时间：2021-01-01</span>
         </n-flex>

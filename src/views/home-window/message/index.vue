@@ -50,6 +50,7 @@
       height="110px"
       src="src/assets/img/no_data.svg"
       lazy
+      preview-disabled
       :intersection-observer-options="{
         root: '#image-no-data'
       }" />

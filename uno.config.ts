@@ -1,6 +1,7 @@
 import { defineConfig } from '@unocss/vite'
 import presetUno from '@unocss/preset-uno'
-import transformerDirectives from '@unocss/transformer-directives'
+import transformerDirectives from '@unocss/transformer-directives' // 设置指令
+import transformerVariantGroup from '@unocss/transformer-variant-group' // 解决繁琐的多次写前缀的情况
 
 export default defineConfig({
   content: {
@@ -9,7 +10,7 @@ export default defineConfig({
     }
   },
   presets: [presetUno({ dark: 'class' })],
-  transformers: [transformerDirectives()],
+  transformers: [transformerDirectives(), transformerVariantGroup()],
   /**
    * 快捷键命名标准
    * @default '布局样式 - 水平样式 - 垂直样式'

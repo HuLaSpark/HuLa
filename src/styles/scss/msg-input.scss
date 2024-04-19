@@ -17,9 +17,8 @@
   word-break: break-word; /* 在长单词或URL地址内部进行换行 */
 }
 .ait {
-  @apply w-200px h-fit max-h-190px bg-[--center-bg-color] rounded-8px p-[5px_0_5px_5px];
+  @apply w-200px h-fit max-h-190px bg-[--center-bg-color] rounded-8px p-[5px_0_5px_5px] border-(1px solid [--box-shadow-color]);
   box-shadow: 2px 2px 12px 2px var(--box-shadow-color);
-  border: 1px solid var(--box-shadow-color);
   .ait-item {
     @apply h-26px text-[--text-color] text-14px p-[5px_0_5px_10px] mr-5px rounded-6px cursor-pointer;
   }

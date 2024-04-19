@@ -14,14 +14,14 @@
             class="w-450px h-fit rounded-8px bg-[--right-bg-color] p-10px box-border">
             <n-flex align="center">
               <!--  用户的头像和用户名以及个签    -->
-              <img class="w-45px h-45px bg-#ccc rounded-50% select-none" :src="item.avatar" alt="" />
+              <img class="size-45px bg-#ccc rounded-50% select-none" :src="item.avatar" alt="" />
               <n-flex vertical style="flex: 1">
                 <n-flex justify="space-between" align="center">
                   <label class="text-14px flex items-center gap-5px">
                     <span :class="item.isAuth ? 'text-#13987f' : ''">{{ item.user }}</span>
                     <n-popover trigger="hover" v-if="item.isAuth">
                       <template #trigger>
-                        <svg class="w-20px h-20px color-#13987f select-none outline-none cursor-pointer">
+                        <svg class="size-20px color-#13987f select-none outline-none cursor-pointer">
                           <use href="#auth"></use>
                         </svg>
                       </template>
@@ -29,10 +29,10 @@
                     </n-popover>
                   </label>
 
-                  <span class="text-12px color-#707070">发布于：2021-01-01</span>
+                  <span class="text-(12px #707070)">发布于：2021-01-01</span>
                 </n-flex>
 
-                <span class="text-12px color-#707070">个性签名</span>
+                <span class="text-(12px #707070)">个性签名</span>
               </n-flex>
 
               <!--  个签照片墙  -->

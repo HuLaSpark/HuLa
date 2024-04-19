@@ -19,7 +19,7 @@
         error-correction-level="H" />
     </n-flex>
 
-    <n-flex justify="center" class="mt-15px text-14px color-#808080">{{ loadText }}</n-flex>
+    <n-flex justify="center" class="mt-15px text-(14px #808080)">{{ loadText }}</n-flex>
 
     <!-- 顶部操作栏 -->
     <n-flex justify="center" class="text-14px mt-48px">

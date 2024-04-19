@@ -7,13 +7,13 @@
             <ContextMenu @contextmenu="showMenu($event)" @select="handleSelect($event.label)" :menu="menuList">
               <n-collapse-item title="我的设备" name="1">
                 <template #header-extra>
-                  <p class="text-10px color-#707070">1/1</p>
+                  <p class="text-(10px #707070)">1/1</p>
                 </template>
                 <div>可以</div>
               </n-collapse-item>
               <n-collapse-item title="特别关心" name="2">
                 <template #header-extra>
-                  <p class="text-10px color-#707070">1/1</p>
+                  <p class="text-(10px #707070)">1/1</p>
                 </template>
 
                 <!-- 用户框 多套一层div来移除默认的右键事件然后覆盖掉因为margin空隙而导致右键可用 -->
@@ -26,11 +26,7 @@
                     v-for="item in friendsList"
                     :key="item.key">
                     <div class="flex items-center h-full pl-6px pr-8px gap-10px">
-                      <img
-                        class="w-44px h-44px rounded-50% bg-#fff"
-                        style="border: 1px solid #f1f1f1"
-                        :src="item.avatar"
-                        alt="" />
+                      <img class="size-44px rounded-50% bg-#fff border-(1px solid #f1f1f1)" :src="item.avatar" alt="" />
 
                       <div class="h-38px flex flex-1 flex-col justify-between">
                         <div class="text-14px flex-y-center gap-4px">
@@ -38,9 +34,9 @@
                         </div>
 
                         <div
-                          class="text w-155px h-14px font-size-12px flex-y-center gap-4px"
+                          class="text w-155px h-14px text-12px flex-y-center gap-4px"
                           style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
-                          <p class="font-size-12px">[⛅今日天气]</p>
+                          <p class="text-12px">[⛅今日天气]</p>
                           <p>说的很经典哈萨克的哈萨克看到贺卡上</p>
                         </div>
                       </div>
@@ -50,7 +46,7 @@
               </n-collapse-item>
               <n-collapse-item title="默认分组" name="3">
                 <template #header-extra>
-                  <p class="font-size-10px color-#707070">1/1</p>
+                  <p class="text-(10px #707070)">1/1</p>
                 </template>
 
                 <div>123</div>
@@ -68,15 +64,11 @@
           :key="item.key">
           <!-- 消息框，使用v-slide自定义指令来自动抉择右键菜单位置 -->
           <div v-slide class="flex items-center h-full pl-6px pr-8px gap-10px">
-            <img
-              class="w-44px h-44px rounded-50% bg-#fff"
-              style="border: 1px solid #f1f1f1"
-              :src="item.avatar"
-              alt="" />
+            <img class="size-44px rounded-50% bg-#fff border-(1px solid #f1f1f1)" :src="item.avatar" alt="" />
 
             <div class="h-38px flex flex-1 flex-col justify-center">
               <div class="flex-between-center">
-                <span class="font-size-14px">{{ item.accountName }}</span>
+                <span class="text-14px">{{ item.accountName }}</span>
               </div>
             </div>
           </div>

@@ -9,13 +9,12 @@
       style="padding: 0; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px)">
       <template #trigger>
         <!-- 头像 -->
-        <div class="relative w-36px h-36px rounded-50% cursor-pointer">
+        <div class="relative size-36px rounded-50% cursor-pointer">
           <n-avatar round :color="'#fff'" :size="36" :src="'https://picsum.photos/140'" fallback-src="/logo.png" />
 
           <div
             @click.stop="openContent('在线状态', 'onlineStatus', 320, 480)"
-            class="bg-[--bg-avatar] text-10px rounded-50% w-12px h-12px absolute bottom--2px right--2px"
-            style="border: 2px solid var(--bg-avatar)">
+            class="bg-[--bg-avatar] text-10px rounded-50% size-12px absolute bottom--2px right--2px border-(2px solid [--bg-avatar])">
             <img class="rounded-50% size-full" :src="url" alt="" />
           </div>
         </div>
@@ -29,25 +28,25 @@
         <!-- 头像以及信息区域 -->
         <n-flex justify="space-between" align="center" :size="25">
           <n-flex>
-            <img class="w-68px h-68px rounded-50% select-none" :src="'https://picsum.photos/140'" alt="" />
+            <img class="size-68px rounded-50% select-none" :src="'https://picsum.photos/140'" alt="" />
 
             <n-flex vertical justify="center" :size="10" class="text-[--text-color]">
               <span class="text-18px">用户名</span>
-              <span class="text-12px text-[--info-text-color]">账号 763868126381</span>
+              <span class="text-(12px [--info-text-color])">账号 763868126381</span>
               <n-flex
                 @click="openContent('在线状态', 'onlineStatus', 320, 480)"
                 :size="5"
                 align="center"
                 style="margin-left: -4px"
                 class="item-hover">
-                <img class="rounded-50% w-18px h-18px" :src="url" alt="" />
+                <img class="rounded-50% size-18px" :src="url" alt="" />
                 <span>{{ title }}</span>
               </n-flex>
             </n-flex>
           </n-flex>
 
           <n-flex vertical align="center" :size="5" class="item-hover">
-            <svg class="w-20px h-20px"><use href="#thumbs-up"></use></svg>
+            <svg class="size-20px"><use href="#thumbs-up"></use></svg>
             <span class="text-12px">9999+</span>
           </n-flex>
         </n-flex>
@@ -90,7 +89,7 @@
             openWindowsList.has(item.url) ? 'p-[6px_8px] color-#13987f' : 'top-action'
           ]">
           <n-badge :value="item.badge" :max="99">
-            <svg class="w-22px h-22px">
+            <svg class="size-22px">
               <use
                 :href="`#${activeUrl === item.url || openWindowsList.has(item.url) ? item.iconAction : item.icon}`"></use>
             </svg>
@@ -105,14 +104,14 @@
           :key="index"
           @click="openContent(item.title, item.label)"
           :class="openWindowsList.has(item.url.substring(1)) ? 'p-[6px_8px] color-#13987f' : 'bottom-action'">
-          <svg class="w-22px h-22px">
+          <svg class="size-22px">
             <use :href="`#${openWindowsList.has(item.url.substring(1)) ? item.iconAction : item.icon}`"></use>
           </svg>
         </div>
 
         <svg
           @click="settingShow = !settingShow"
-          class="more w-22px h-22px relative"
+          class="more size-22px relative"
           :class="{ 'color-#13987f': settingShow }">
           <use :href="settingShow ? '#hamburger-button-action' : '#hamburger-button'"></use>
         </svg>

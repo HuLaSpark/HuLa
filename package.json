@@ -2,7 +2,7 @@
   "name": "hula-im-tauri",
   "private": true,
   "type": "module",
-  "version": "v1.4.0",
+  "version": "v1.5.0",
   "packageManager": "pnpm@8.15.4",
   "engines": {
     "node": ">=18.12.0",
@@ -44,7 +44,7 @@
     "pinia": "^2.1.7",
     "pinia-plugin-persistedstate": "^3.2.1",
     "pinia-shared-state": "^0.5.1",
-    "vue": "^3.4.21",
+    "vue": "^3.4.23",
     "vue-draggable-plus": "^0.4.0",
     "vue-router": "^4.3.0"
   },
@@ -56,10 +56,11 @@
     "@types/node": "^20.10.4",
     "@typescript-eslint/eslint-plugin": "7.1.0",
     "@typescript-eslint/parser": "^7.1.0",
-    "@unocss/preset-uno": "^0.58.7",
-    "@unocss/reset": "^0.58.7",
-    "@unocss/transformer-directives": "^0.58.7",
-    "@unocss/vite": "^0.58.7",
+    "@unocss/preset-uno": "^0.59.4",
+    "@unocss/reset": "^0.59.4",
+    "@unocss/transformer-directives": "^0.59.4",
+    "@unocss/transformer-variant-group": "^0.59.4",
+    "@unocss/vite": "^0.59.4",
     "@vitejs/plugin-vue": "^5.0.4",
     "@vitejs/plugin-vue-jsx": "^3.1.0",
     "@vueuse/core": "^10.8.0",
@@ -82,7 +83,7 @@
     "typescript": "^5.4.3",
     "unplugin-auto-import": "^0.17.2",
     "unplugin-vue-components": "^0.26.0",
-    "vite": "5.2.8",
+    "vite": "5.2.9",
     "vue-tsc": "^2.0.6"
   },
   "config": {

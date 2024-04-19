@@ -86,15 +86,15 @@
           <p class="color-#d03553">删除好友</p>
         </div>
 
-        <p class="m-[0_auto] text-#13987f text-12px mt-20px cursor-pointer">被骚扰了?&nbsp;&nbsp;举报该用户</p>
+        <p class="m-[0_auto] text-(12px #13987f) mt-20px cursor-pointer">被骚扰了?&nbsp;&nbsp;举报该用户</p>
       </div>
     </transition>
   </main>
 
   <!-- 弹出框 -->
-  <n-modal v-model:show="modalShow" class="w-350px border-rd-8px">
+  <n-modal v-model:show="modalShow" class="w-350px rounded-8px">
     <div class="bg-[--bg-popover] w-360px h-full p-6px box-border flex flex-col">
-      <svg @click="modalShow = false" class="w-12px h-12px ml-a cursor-pointer select-none">
+      <svg @click="modalShow = false" class="size-12px ml-a cursor-pointer select-none">
         <use href="#close"></use>
       </svg>
       <div class="flex flex-col gap-30px p-[22px_10px_10px_22px] select-none">

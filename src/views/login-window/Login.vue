@@ -9,11 +9,7 @@
     <n-flex vertical :size="25" v-if="!isAutoLogin">
       <!-- 头像 -->
       <n-flex justify="center" class="w-full mt-35px">
-        <img
-          style="border: 2px solid #fff"
-          class="w-80px h-80px rounded-50% bg-#fff"
-          :src="avatarRef || '/logo.png'"
-          alt="" />
+        <img class="w-80px h-80px rounded-50% bg-#fff border-(2px solid #fff)" :src="avatarRef || '/logo.png'" alt="" />
       </n-flex>
 
       <!-- 登录菜单 -->
@@ -105,8 +101,7 @@
         <!-- 头像 -->
         <n-flex justify="center">
           <img
-            style="border: 2px solid #fff"
-            class="w-110px h-110px rounded-50% bg-#fff"
+            class="w-110px h-110px rounded-50% bg-#fff border-(2px solid #fff)"
             :src="login.accountInfo.avatar || '/logo.png'"
             alt="" />
         </n-flex>

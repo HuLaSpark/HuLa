@@ -1,7 +1,7 @@
 <template>
   <n-flex vertical :size="40">
     <!-- 通用设置 -->
-    <n-flex vertical class="text-[--text-color] text-14px" :size="16">
+    <n-flex vertical class="text-(14px [--text-color])" :size="16">
       <span class="pl-10px">外观设置</span>
       <n-flex align="center" :size="20" class="item">
         <n-flex
@@ -24,7 +24,7 @@
     </n-flex>
 
     <!-- 系统设置 -->
-    <n-flex vertical class="text-[--text-color] text-14px" :size="16">
+    <n-flex vertical class="text-(14px [--text-color])" :size="16">
       <span class="pl-10px">系统</span>
 
       <n-flex class="item" :size="15" vertical>
@@ -32,16 +32,16 @@
         <n-flex align="center" justify="space-between">
           <span>关闭主面板</span>
 
-          <label class="text-14px text-#707070 flex gap-6px lh-16px items-center">
+          <label class="text-(14px #707070) flex gap-6px lh-16px items-center">
             <n-radio :checked="tips.type === CloseBxEnum.HIDE" @change="tips.type = CloseBxEnum.HIDE" />
             <span>最小化到系统托盘</span>
           </label>
-          <label class="text-14px text-#707070 flex gap-6px lh-16px items-center">
+          <label class="text-(14px #707070) flex gap-6px lh-16px items-center">
             <n-radio :checked="tips.type === CloseBxEnum.CLOSE" @change="tips.type = CloseBxEnum.CLOSE" />
             <span>直接退出程序</span>
           </label>
 
-          <label class="text-12px text-#909090 flex gap-6px justify-end items-center">
+          <label class="text-(12px #909090) flex gap-6px justify-end items-center">
             <n-checkbox size="small" v-model:checked="tips.notTips" />
             <span>是否关闭提示</span>
           </label>
@@ -59,7 +59,7 @@
     </n-flex>
 
     <!--  聊天设置  -->
-    <n-flex vertical class="text-[--text-color] text-14px" :size="16">
+    <n-flex vertical class="text-(14px [--text-color])" :size="16">
       <span class="pl-10px">聊天</span>
 
       <n-flex class="item" :size="15" vertical>
