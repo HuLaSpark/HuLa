@@ -6,7 +6,7 @@ interface Document {
   startViewTransition?: (callback: () => Promise<void> | void) => ViewTransition
 }
 
-/* 通用类型 */
+/** 通用类型 */
 declare namespace Common {
   /**
    * 策略模式
@@ -14,7 +14,7 @@ declare namespace Common {
    */
   type StrategyAction = [boolean, () => void]
 
-  /* 选项数据 */
+  /** 选项数据 */
   type OptionWithKey<K> = { value: K; label: string }
 }
 

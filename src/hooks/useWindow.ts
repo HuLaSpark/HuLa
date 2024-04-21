@@ -26,7 +26,7 @@ export const useWindow = () => {
     minH = 540
   ) => {
     const checkLabel = computed(() => {
-      /* 如果是打开独立窗口就截取label中的固定label名称 */
+      /** 如果是打开独立窗口就截取label中的固定label名称 */
       if (label.includes('alone')) {
         return label.replace(/\d/g, '')
       } else {

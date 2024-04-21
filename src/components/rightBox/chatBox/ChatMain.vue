@@ -62,7 +62,7 @@
                 </ContextMenu>
               </template>
               <!-- 用户个人信息框 -->
-              <InfoPopover :info="activeItemRef" />
+              <InfoPopover :info="item.accountId !== userId ? activeItemRef : void 0" />
             </n-popover>
             <n-flex
               vertical
@@ -228,19 +228,23 @@ import { useChatMain } from '@/hooks/useChatMain.ts'
 import { VirtualListInst } from 'naive-ui'
 import { delay } from 'lodash-es'
 import { useCommon } from '@/hooks/useCommon.ts'
+import { setting } from '@/stores/setting.ts'
+import { storeToRefs } from 'pinia'
 
 const { activeItem } = defineProps<{
   activeItem: MockItem
 }>()
 const activeItemRef = ref({ ...activeItem })
+const settingStore = setting()
+const { login } = storeToRefs(settingStore)
 const { createWebviewWindow } = useWindow()
-/* 当前点击的用户的key */
+/** 当前点击的用户的key */
 const selectKey = ref()
-/* 跳转回复消息后选中效果 */
+/** 跳转回复消息后选中效果 */
 const activeReply = ref(-1)
-/* item最小高度，用于计算滚动大小和位置 */
+/** item最小高度，用于计算滚动大小和位置 */
 const itemSize = computed(() => (activeItem.type === RoomTypeEnum.GROUP ? 98 : 70))
-/* 虚拟列表 */
+/** 虚拟列表 */
 const virtualListInst = ref<VirtualListInst>()
 const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-main')
 const { removeTag } = useCommon()
@@ -264,7 +268,7 @@ const {
 // const textBody = {
 //   content: '123',
 //   reply: {
-//     /* 填充合适的回复对象 */
+//     /** 填充合适的回复对象 */
 //   },
 //   urlContentMap: {
 //     // 填充合适的 URL 映射信息，如果没有，则可以是空对象
@@ -279,7 +283,7 @@ const {
 //   body: textBody, // 上面创建的 TextBody 对象
 //   sendTime: Date.now(), // 发送消息的时间戳
 //   messageMark: {
-//     /* 填充合适的 MessageMarkType 对象 */
+//     /** 填充合适的 MessageMarkType 对象 */
 //   }
 // })
 // const message = computed(() => msg.value)
@@ -289,12 +293,12 @@ watchEffect(() => {
   activeItemRef.value = { ...activeItem }
 })
 
-/* 处理回复消息中的 AIT 标签 */
+/** 处理回复消息中的 AIT 标签 */
 const handleReply = (content: string) => {
   return content.includes('id="aitSpan"') ? removeTag(content) : content
 }
 
-/* 发送信息 */
+/** 发送信息 */
 const handleSendMessage = (msg: any) => {
   nextTick(() => {
     // 检查是否为图片消息
@@ -311,10 +315,10 @@ const handleSendMessage = (msg: any) => {
     }
     const index = items.value.length > 0 ? items.value[items.value.length - 1].key : 0
     items.value.push({
-      value: '我',
+      value: login.value.accountInfo.name,
       key: index + 1,
-      accountId: userId.value,
-      avatar: 'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg',
+      accountId: login.value.accountInfo.uid,
+      avatar: login.value.accountInfo.avatar,
       content: msg.content,
       type: msg.type,
       reply: msg.type === MsgEnum.REPLY ? msg.reply : null
@@ -323,7 +327,7 @@ const handleSendMessage = (msg: any) => {
   })
 }
 
-/* 跳转到回复消息 */
+/** 跳转到回复消息 */
 const jumpToReplyMsg = (key: number) => {
   nextTick(() => {
     virtualListInst.value?.scrollTo({ key: key })
@@ -336,13 +340,13 @@ const jumpToReplyMsg = (key: number) => {
  * @param index 下标
  * @param id 用户ID
  */
-const addToDomUpdateQueue = (index: number, id: number) => {
+const addToDomUpdateQueue = (index: number, id: string) => {
   // 使用 nextTick 确保虚拟列表渲染完最新的项目后进行滚动
   nextTick(() => {
     if (!floatFooter.value || id === userId.value) {
       virtualListInst.value?.scrollTo({ position: 'bottom', debounce: true })
     }
-    /* data-key标识的气泡,添加前缀用于区分用户消息，不然气泡动画会被覆盖 */
+    /** data-key标识的气泡,添加前缀用于区分用户消息，不然气泡动画会被覆盖 */
     const dataKey = id === userId.value ? `U${index + 1}` : `Q${index + 1}`
     const lastMessageElement = document.querySelector(`[data-key="${dataKey}"]`) as HTMLElement
     if (lastMessageElement) {
@@ -358,7 +362,7 @@ const addToDomUpdateQueue = (index: number, id: number) => {
   })
 }
 
-/* 点击后滚动到底部 */
+/** 点击后滚动到底部 */
 const scrollBottom = () => {
   nextTick(() => {
     virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant', debounce: true })
@@ -370,7 +374,7 @@ const closeMenu = (event: any) => {
     activeBubble.value = -1
   }
   if (!event.target.matches('.active-reply')) {
-    /* 解决更替交换回复气泡时候没有触发动画的问题 */
+    /** 解决更替交换回复气泡时候没有触发动画的问题 */
     if (!event.target.matches('.reply-bubble *')) {
       nextTick(() => {
         const activeReplyElement = document.querySelector('.active-reply') as HTMLElement
@@ -387,7 +391,7 @@ const closeMenu = (event: any) => {
 }
 
 onMounted(() => {
-  /*! 启动图标闪烁 需要设置"resources": ["sec-tauri/图标放置的文件夹"]*/
+  /**! 启动图标闪烁 需要设置"resources": ["sec-tauri/图标放置的文件夹"]*/
   invoke('tray_blink', {
     isRun: true,
     ms: 500,
@@ -396,7 +400,7 @@ onMounted(() => {
   }).catch((error) => {
     console.error('设置图标失败:', error)
   })
-  Mitt.on(MittEnum.SEND_MESSAGE, (event) => {
+  Mitt.on(MittEnum.SEND_MESSAGE, (event: any) => {
     handleSendMessage(event)
   })
   Mitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {

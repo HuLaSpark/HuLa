@@ -131,7 +131,7 @@ watchEffect(() => {
     appWindow.setAlwaysOnTop(alwaysOnTopStatus.value as boolean)
   }
   listen(EventEnum.LOGOUT, async () => {
-    /* 退出账号前把窗口全部关闭 */
+    /** 退出账号前把窗口全部关闭 */
     if (appWindow.label !== 'login') {
       await appWindow.close()
     }
@@ -147,7 +147,7 @@ watchEffect(() => {
   }
 })
 
-/* 恢复窗口大小 */
+/** 恢复窗口大小 */
 const restoreWindow = async () => {
   if (windowMaximized.value) {
     await appWindow.unmaximize()
@@ -156,9 +156,9 @@ const restoreWindow = async () => {
   }
 }
 
-/* 收缩窗口 */
+/** 收缩窗口 */
 const shrinkWindow = async () => {
-  /*使用mitt给兄弟组件更新*/
+  /**使用mitt给兄弟组件更新*/
   Mitt.emit(MittEnum.SHRINK_WINDOW, shrinkStatus.value)
   if (shrinkStatus.value) {
     await resizeWindow('home', 310, 700)
@@ -167,7 +167,7 @@ const shrinkWindow = async () => {
   }
 }
 
-/* 设置窗口置顶 */
+/** 设置窗口置顶 */
 const handleAlwaysOnTop = async () => {
   if (topWinLabel.value !== void 0) {
     const isTop = !alwaysOnTopStatus.value
@@ -176,7 +176,7 @@ const handleAlwaysOnTop = async () => {
   }
 }
 
-/* 点击确定时 */
+/** 点击确定时 */
 const handleConfirm = async () => {
   tips.value.type = tipsRef.type
   tips.value.notTips = tipsRef.notTips
@@ -190,7 +190,7 @@ const handleConfirm = async () => {
   }
 }
 
-/* 监听是否按下esc */
+/** 监听是否按下esc */
 const isEsc = (e: PersistedStateOptions) => {
   // 判断按下的是否是esc
   if (e.key === 'Escape' && escClose.value) {
@@ -205,7 +205,7 @@ const handleResize = () => {
   })
 }
 
-/* 处理关闭窗口事件 */
+/** 处理关闭窗口事件 */
 const handleCloseWin = async () => {
   if (appWindow.label === 'home') {
     if (!tips.value.notTips) {

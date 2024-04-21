@@ -10,7 +10,7 @@
       <template #trigger>
         <!-- 头像 -->
         <div class="relative size-36px rounded-50% cursor-pointer">
-          <n-avatar round :color="'#fff'" :size="36" :src="'https://picsum.photos/140'" fallback-src="/logo.png" />
+          <n-avatar round :color="'#fff'" :size="36" :src="login.accountInfo.avatar" fallback-src="/logo.png" />
 
           <div
             @click.stop="openContent('在线状态', 'onlineStatus', 320, 480)"
@@ -28,17 +28,16 @@
         <!-- 头像以及信息区域 -->
         <n-flex justify="space-between" align="center" :size="25">
           <n-flex>
-            <img class="size-68px rounded-50% select-none" :src="'https://picsum.photos/140'" alt="" />
+            <img class="size-68px rounded-50% select-none" :src="login.accountInfo.avatar" alt="" />
 
             <n-flex vertical justify="center" :size="10" class="text-[--text-color]">
-              <span class="text-18px">用户名</span>
-              <span class="text-(12px [--info-text-color])">账号 763868126381</span>
+              <span class="text-18px">{{ login.accountInfo.name }}</span>
+              <span class="text-(12px [--info-text-color])">账号 {{ login.accountInfo.uid }}</span>
               <n-flex
                 @click="openContent('在线状态', 'onlineStatus', 320, 480)"
                 :size="5"
                 align="center"
-                style="margin-left: -4px"
-                class="item-hover">
+                class="item-hover ml--4px">
                 <img class="rounded-50% size-18px" :src="url" alt="" />
                 <span>{{ title }}</span>
               </n-flex>
@@ -146,19 +145,19 @@ import { setting } from '@/stores/setting.ts'
 const prefers = matchMedia('(prefers-color-scheme: dark)')
 const { createWebviewWindow } = useWindow()
 const settingStore = setting()
-const { themes } = storeToRefs(settingStore)
+const { themes, login } = storeToRefs(settingStore)
 const OLStatusStore = onlineStatus()
 const { url, title, bgColor } = storeToRefs(OLStatusStore)
-/*当前选中的元素 默认选中itemsTop的第一项*/
+/**当前选中的元素 默认选中itemsTop的第一项*/
 const activeUrl = ref<string>(itemsTop.value[0].url)
 const settingShow = ref(false)
 const shrinkStatus = ref(false)
 const infoShow = ref(false)
 const themeColor = ref(themes.value.content === ThemeEnum.DARK ? 'rgba(63,63,63, 0.2)' : 'rgba(241,241,241, 0.2)')
-/* 已打开窗口的列表 */
+/** 已打开窗口的列表 */
 const openWindowsList = ref(new Set())
 
-/* 跟随系统主题模式切换主题 */
+/** 跟随系统主题模式切换主题 */
 const followOS = () => {
   themeColor.value = prefers.matches ? 'rgba(63,63,63, 0.2)' : 'rgba(241,241,241, 0.2)'
 }
@@ -174,7 +173,7 @@ watchEffect(() => {
   Mitt.on(MittEnum.TO_SEND_MSG, (event: any) => {
     activeUrl.value = event.url
   })
-  /* 判断是否是跟随系统主题 */
+  /** 判断是否是跟随系统主题 */
   if (themes.value.pattern === ThemeEnum.OS) {
     followOS()
     prefers.addEventListener('change', followOS)
@@ -220,7 +219,7 @@ const closeMenu = (event: any) => {
 }
 
 onMounted(async () => {
-  /* 页面加载的时候默认显示消息列表 */
+  /** 页面加载的时候默认显示消息列表 */
   pageJumps(activeUrl.value)
   window.addEventListener('click', closeMenu, true)
 

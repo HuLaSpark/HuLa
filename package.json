@@ -3,10 +3,13 @@
   "private": true,
   "type": "module",
   "version": "v1.5.0",
-  "packageManager": "pnpm@8.15.4",
+  "license": "Apache-2.0",
   "engines": {
     "node": ">=18.12.0",
     "pnpm": ">=8.10.0"
+  },
+  "repository": {
+    "url": "https://github.com/nongyehong/HuLa-IM-Tauri.git"
   },
   "author": {
     "name": "nongyehong",
@@ -29,9 +32,10 @@
     "tauri:build": "tauri build",
     "tauri:icon": "tauri icon public/logo.png",
     "preinstall": "npx only-allow pnpm",
-    "commit": "git add . && lint-staged && git-cz && conventional-changelog -p cz-config.cjs -i CHANGELOG.md -s -r 0",
-    "changelog": "conventional-changelog -p cz-config.cjs -i CHANGELOG.md -s -r 0",
-    "lint:staged": "lint-staged"
+    "commit": "git add . && git-cz",
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0",
+    "lint:staged": "lint-staged",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@tauri-apps/api": "^1.5.3",
@@ -50,6 +54,8 @@
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.23.3",
+    "@commitlint/cli": "^19.2.2",
+    "@commitlint/config-conventional": "^19.2.2",
     "@rollup/plugin-terser": "^0.4.4",
     "@tauri-apps/cli": "^1.5.11",
     "@types/lodash-es": "^4.17.12",
@@ -67,15 +73,14 @@
     "commitizen": "^4.3.0",
     "conventional-changelog": "^5.1.0",
     "conventional-changelog-cli": "^4.1.0",
-    "cz-conventional-changelog": "^3.3.0",
-    "cz-customizable": "^7.0.0",
+    "cz-git": "^1.9.1",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-prettier": "^5.0.1",
     "eslint-plugin-vue": "^9.19.2",
+    "husky": "^9.0.11",
     "lint-staged": "^15.2.0",
-    "only-allow": "^1.2.1",
     "oxlint": "^0.2.4",
     "prettier": "^3.2.5",
     "sass": "^1.71.1",
@@ -88,10 +93,7 @@
   },
   "config": {
     "commitizen": {
-      "path": "./node_modules/cz-customizable"
-    },
-    "cz-customizable": {
-      "config": "config/cz-config.cjs"
+      "path": "node_modules/cz-git"
     }
   }
 }

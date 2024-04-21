@@ -71,7 +71,7 @@ import { InputInst } from 'naive-ui'
 import { optionsList, report } from './config.ts'
 import { usePopover } from '@/hooks/usePopover.ts'
 
-/* 当前点击的用户的key */
+/** 当前点击的用户的key */
 const selectKey = ref()
 const isSearch = ref(false)
 const searchRef = ref('')

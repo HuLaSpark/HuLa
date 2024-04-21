@@ -33,19 +33,44 @@
 import router from '@/router'
 import { delay } from 'lodash-es'
 import { lightTheme } from 'naive-ui'
+import { initWebSocket, sendToServer } from '@/services/webSocket.ts'
+import { WsReqEnum, WsResEnum } from '@/enums'
+import Mitt from '@/utils/Bus.ts'
+import { setting } from '@/stores/setting.ts'
+import { useLogin } from '@/hooks/useLogin.ts'
+import { useWindow } from '@/hooks/useWindow.ts'
 
+const settingStore = setting()
+const { setLoginState } = useLogin()
+const { createWebviewWindow } = useWindow()
 const loading = ref(true)
 const loadText = ref('加载中...')
-const QRCode = ref('HuLa-IM-Tauri')
+const QRCode = ref()
 
 const toLogin = () => {
   router.push('/login')
 }
 // TODO 做一个二维码过期时间重新刷新二维码的功能 (nyh -> 2024-01-27 00:37:18)
 onMounted(() => {
-  delay(() => {
+  initWebSocket()
+  Mitt.on(WsResEnum.QRCODE_LOGIN, (e: any) => {
+    QRCode.value = e.data.loginUrl
     loading.value = false
+  })
+  Mitt.on(WsResEnum.LOGIN_SUCCESS, (e: any) => {
+    delay(async () => {
+      await createWebviewWindow('HuLa', 'home', 960, 720, 'login', false, true)
+      settingStore.setAccountInfo({
+        avatar: e.data.avatar,
+        name: e.data.name,
+        uid: e.data.uid
+      })
+      await setLoginState()
+    }, 1000)
+  })
+  delay(() => {
     loadText.value = '请使用微信扫码登录'
+    sendToServer({ type: WsReqEnum.LOGIN })
   }, 1000)
 })
 </script>

@@ -2,13 +2,17 @@ import { useCommon } from '@/hooks/useCommon.ts'
 import { MittEnum, MsgEnum } from '@/enums'
 import { MockItem } from '@/services/types.ts'
 import Mitt from '@/utils/Bus.ts'
+import { setting } from '@/stores/setting.ts'
+import { storeToRefs } from 'pinia'
 
 export const useChatMain = (activeItem: MockItem) => {
   const { removeTag } = useCommon()
+  const settingStore = setting()
+  const { login } = storeToRefs(settingStore)
   /* 选中的气泡消息 */
   const activeBubble = ref(-1)
   /*  当前登录的用户id */
-  const userId = ref(10086)
+  const userId = ref(login.value.accountInfo.uid)
   /* 提醒框标题 */
   const tips = ref()
   /* 是否显示删除信息的弹窗 */

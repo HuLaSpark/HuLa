@@ -16,9 +16,9 @@ export const useMsgInput = (messageInputDom: Ref) => {
   const chatKey = ref(chat.value.sendKey)
   const msgInput = ref('')
   const ait = ref(false)
-  /* 艾特后的关键字的key */
+  /** 艾特后的关键字的key */
   const aitKey = ref('')
-  /* 是否正在输入拼音 */
+  /** 是否正在输入拼音 */
   const isChinese = ref(false)
   // 记录编辑器光标的位置
   const editorRange = ref<{ range: Range; selection: Selection } | null>(null)
@@ -30,9 +30,9 @@ export const useMsgInput = (messageInputDom: Ref) => {
       return MockList.value
     }
   })
-  /* 记录当前选中的提及项 key */
+  /** 记录当前选中的提及项 key */
   const selectedAitKey = ref(filteredList.value[0]?.key ?? null)
-  /* 右键菜单列表 */
+  /** 右键菜单列表 */
   const menuList = ref([
     { label: '剪切', icon: 'screenshot', disabled: true },
     { label: '复制', icon: 'copy', disabled: true },
@@ -79,16 +79,16 @@ export const useMsgInput = (messageInputDom: Ref) => {
   })
 
   onMounted(() => {
-    /* 正在输入拼音时触发 */
+    /** 正在输入拼音时触发 */
     messageInputDom.value.addEventListener('compositionstart', () => {
       isChinese.value = true
     })
-    /* 结束输入拼音时触发 */
+    /** 结束输入拼音时触发 */
     messageInputDom.value.addEventListener('compositionend', (e: CompositionEvent) => {
       isChinese.value = false
       aitKey.value = e.data
     })
-    /* 监听回复信息的传递 */
+    /** 监听回复信息的传递 */
     Mitt.on(MittEnum.REPLY_MEG, (event: any) => {
       if (reply.value.content) {
         // TODO 如果已经有就替换原来的内容 (nyh -> 2024-04-18 23:10:56)
@@ -105,7 +105,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     })
   })
 
-  /* 处理发送信息事件 */
+  /** 处理发送信息事件 */
   // TODO 输入框中的内容当我切换消息的时候需要记录之前输入框的内容 (nyh -> 2024-03-01 07:03:43)
   const send = () => {
     // 判断输入框中的图片或者文件数量是否超过限制
@@ -123,7 +123,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     const hyperlinkRegex = /(\b(?:https?:\/\/|www)[-A-Z0-9+&@#/%?=~_|!:,.;]*[-A-Z0-9+&@#/%=~_|])/gi
     const foundHyperlinks = msg.content.match(hyperlinkRegex)
 
-    /* 如果是Reply消息，需要将消息的样式修改 */
+    /** 如果是Reply消息，需要将消息的样式修改 */
     if (msg.type === MsgEnum.REPLY) {
       // 先去掉原来的标签
       msg.content = removeTag(msg.content)
@@ -131,7 +131,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       // TODO 不允许用户删除回复消息中最前面的空格或者标志符号 (nyh -> 2024-04-17 06:39:22)
       msg.content = msg.content.replace(/^[\S\s]*\u00A0/, '')
     }
-    /* 判断是否有超链接 */
+    /** 判断是否有超链接 */
     if (foundHyperlinks && foundHyperlinks.length > 0) {
       msg.content = msg.content.replace(hyperlinkRegex, (match) => {
         const href = match.startsWith('www.') ? 'https://' + match : match
@@ -154,32 +154,32 @@ export const useMsgInput = (messageInputDom: Ref) => {
     reply.value = { imgCount: 0, accountName: '', content: '', key: '' }
   }
 
-  /* 当输入框手动输入值的时候触发input事件(使用vueUse的防抖) */
+  /** 当输入框手动输入值的时候触发input事件(使用vueUse的防抖) */
   const handleInput = useDebounceFn(async (e: Event) => {
     const inputElement = e.target as HTMLInputElement
     msgInput.value = inputElement.innerHTML
     const { range, selection } = getEditorRange()!
-    /* 获取当前光标所在的节点和文本内容 */
+    /** 获取当前光标所在的节点和文本内容 */
     if (!range || !selection) {
       ait.value = false
       return
     }
-    /* 获取当前光标所在的节点 */
+    /** 获取当前光标所在的节点 */
     const curNode = range.endContainer
-    /* 判断当前节点是否是文本节点 */
+    /** 判断当前节点是否是文本节点 */
     if (!curNode || !curNode.textContent || curNode.nodeName !== '#text') {
       ait.value = false
       return
     }
     const searchStr = curNode.textContent?.slice(0, selection.focusOffset)
-    /* 使用正则表达式匹配@符号之后的关键词 */
+    /** 使用正则表达式匹配@符号之后的关键词 */
     const keywords = /@([^@]*)$/.exec(searchStr!)
     if (!keywords || keywords.length < 2) {
       ait.value = false
       aitKey.value = ''
       return
     }
-    /* 解构关键词并更新ait和aitKey的值，同时将编辑器的范围和选择保存在editorRange中 */
+    /** 解构关键词并更新ait和aitKey的值，同时将编辑器的范围和选择保存在editorRange中 */
     const [, keyWord] = keywords
     ait.value = true
     aitKey.value = keyWord
@@ -198,7 +198,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     }
   }, 100)
 
-  /* input的keydown事件 */
+  /** input的keydown事件 */
   const inputKeyDown = (e: KeyboardEvent) => {
     if (msgInput.value === '' || msgInput.value.trim() === '' || ait.value) {
       e?.preventDefault()
@@ -213,24 +213,24 @@ export const useMsgInput = (messageInputDom: Ref) => {
     }
   }
 
-  /* 处理点击@提及框事件 */
+  /** 处理点击@提及框事件 */
   const handleAit = (item: MockItem) => {
     const myEditorRange = editorRange?.value?.range
-    /* 获取光标所在位置的文本节点 */
+    /** 获取光标所在位置的文本节点 */
     const textNode = myEditorRange?.endContainer
     if (!textNode) return
-    /* 获取光标在所在文本节点中的偏移位置 */
+    /** 获取光标在所在文本节点中的偏移位置 */
     const endOffset = myEditorRange?.endOffset
-    /* 获取文本节点的值，并将其转换为字符串类型 */
+    /** 获取文本节点的值，并将其转换为字符串类型 */
     const textNodeValue = textNode?.nodeValue as string
-    /* 使用正则表达式匹配@符号之后获取到的文本节点的值 */
+    /** 使用正则表达式匹配@符号之后获取到的文本节点的值 */
     const expRes = /@([^@]*)$/.exec(textNodeValue)
     // 重新聚焦输入框(聚焦到输入框开头)
     messageInputDom.value.focus()
     const { range } = getEditorRange()!
-    /* 设置范围的起始位置为文本节点中@符号的位置 */
+    /** 设置范围的起始位置为文本节点中@符号的位置 */
     range?.setStart(textNode, <number>expRes?.index)
-    /* 设置范围的结束位置为光标的位置 */
+    /** 设置范围的结束位置为光标的位置 */
     range?.setEnd(textNode, endOffset!)
     insertNode(MsgEnum.AIT, item.accountName)
     triggerInputEvent(messageInputDom.value)

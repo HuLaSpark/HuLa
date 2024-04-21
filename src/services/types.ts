@@ -5,7 +5,7 @@
  **/
 import { MsgEnum, RCodeEnum, RoomTypeEnum } from '@/enums'
 
-/*响应请求体*/
+/**响应请求体*/
 export type Response = {
   code: RCodeEnum
   msg: string
@@ -17,19 +17,19 @@ export type Response = {
   success: boolean
   version: string
 }
-/*分页搜索*/
+/**分页搜索*/
 export type parameter = {
   pageNum: number
   pageSize: number
   name: string
 }
-/*登录类型*/
+/**登录类型*/
 export type login = {
   username: string
   password: string
 }
 
-/* ===================================================== */
+/** ===================================================== */
 /** 回复类型 */
 export type ReplyType = {
   id: number
@@ -146,11 +146,11 @@ export type CacheUserItem = {
   /** uid */
   uid: number
 }
-/*! 模拟信息数据的类型 */
+/**! 模拟信息数据的类型 */
 export type MockItem = {
   key: number
   type: RoomTypeEnum
   avatar: string
-  accountId: number
+  accountId: string
   accountName: string
 }

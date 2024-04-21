@@ -38,7 +38,7 @@ watchEffect(() => {
   settingStore.toggleLogin(autoLogin.value, autoStartup.value)
 })
 
-/* 清空账号信息 */
+/** 清空账号信息 */
 const clearInfo = () => {
   settingStore.clearAccount()
   window.$message.success('密码已清空')

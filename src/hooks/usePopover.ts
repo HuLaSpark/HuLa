@@ -1,8 +1,8 @@
 import { Ref } from 'vue'
 
-/*! 这个是暂时用来解决在n-scrollbar中使用n-virtual-list使用n-popover时候滚动出现原生滚动条的方法 */
+/**! 这个是暂时用来解决在n-scrollbar中使用n-virtual-list使用n-popover时候滚动出现原生滚动条的方法 */
 export const usePopover = (selectKey: Ref<number>, id: string) => {
-  /*! 暂时使用这些方法来阻止popover显示时候的滚动行为 */
+  /**! 暂时使用这些方法来阻止popover显示时候的滚动行为 */
   // 禁止滚动的默认行为
   const preventDefault = (e: Event) => e.preventDefault()
   const close = (event: any) => {
@@ -32,7 +32,7 @@ export const usePopover = (selectKey: Ref<number>, id: string) => {
   onUnmounted(() => {
     window.removeEventListener('click', close, true)
   })
-  /*! end */
+  /**! end */
 
   return {
     handlePopoverUpdate

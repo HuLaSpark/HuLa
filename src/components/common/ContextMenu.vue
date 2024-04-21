@@ -54,14 +54,14 @@ const { menu, specialMenu } = defineProps({
 })
 const containerRef = ref(null)
 const emit = defineEmits(['select'])
-/* 获取鼠标位置和是否显示右键菜单 */
+/** 获取鼠标位置和是否显示右键菜单 */
 const { x, y, showMenu } = useContextMenu(containerRef)
-/* 获取视口的宽高 */
+/** 获取视口的宽高 */
 const { vw, vh } = useViewport()
-/* 定义右键菜单尺寸 */
+/** 定义右键菜单尺寸 */
 const w = ref(0)
 const h = ref(0)
-/* 计算右键菜单的位置 */
+/** 计算右键菜单的位置 */
 const pos = computed(() => {
   let posX = x.value
   let posY = y.value
@@ -84,7 +84,7 @@ const handleSize = ({ width, height }: any) => {
   h.value = height
 }
 
-/* 处理右键菜单点击事件 */
+/** 处理右键菜单点击事件 */
 const handleClick = (item: string) => {
   showMenu.value = false
   emit('select', item)

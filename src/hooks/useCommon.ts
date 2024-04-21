@@ -4,7 +4,7 @@ import { createFileOrVideoDom } from '@/utils/CreateDom.ts'
 
 /** 常用工具类 */
 export const useCommon = () => {
-  /* 回复消息 */
+  /** 回复消息 */
   const reply = ref({
     accountName: '',
     content: '',
@@ -330,7 +330,7 @@ export const useCommon = () => {
     }
   }
 
-  /* 去除字符串中的元素标记 */
+  /** 去除字符串中的元素标记 */
   const removeTag = (fragment: any) => new DOMParser().parseFromString(fragment, 'text/html').body.textContent || ''
 
   return {

@@ -10,24 +10,24 @@ import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
 
 const { createWebviewWindow, checkWinExist } = useWindow()
-/* 建议把此状态存入localStorage中 */
+/** 建议把此状态存入localStorage中 */
 const activeIndex = ref(-1)
 const msgBoxShow = ref(false)
-/* 独立窗口的集合 */
+/** 独立窗口的集合 */
 const aloneWin = ref(new Set())
 const shrinkStatus = ref(false)
 const itemRef = ref({} as MockItem)
 export const useMessage = () => {
   const settingStore = setting()
   const { chat } = storeToRefs(settingStore)
-  /* 监听独立窗口关闭事件 */
+  /** 监听独立窗口关闭事件 */
   watchEffect(() => {
     Mitt.on(MittEnum.SHRINK_WINDOW, async (event) => {
       shrinkStatus.value = event as boolean
     })
   })
 
-  /* 处理点击选中消息 */
+  /** 处理点击选中消息 */
   const handleMsgClick = (item: MockItem) => {
     msgBoxShow.value = true
     activeIndex.value = item.key
@@ -45,7 +45,7 @@ export const useMessage = () => {
     }
   }
 
-  /* 处理双击事件 */
+  /** 处理双击事件 */
   const handleMsgDblclick = (item: MockItem) => {
     if (!chat.value.isDouble) return
     delay(async () => {
@@ -53,7 +53,7 @@ export const useMessage = () => {
     }, 300)
   }
 
-  /* 打开独立窗口 */
+  /** 打开独立窗口 */
   const openAloneWin = async (item: MockItem) => {
     itemRef.value = { ...item }
     if (activeIndex.value === item.key) {

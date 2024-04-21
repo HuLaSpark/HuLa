@@ -91,19 +91,19 @@ import { onKeyStroke } from '@vueuse/core'
 
 const settingStore = setting()
 const { themes } = storeToRefs(settingStore)
-/* 发送按钮旁的箭头 */
+/** 发送按钮旁的箭头 */
 const arrow = ref(false)
 // 输入框dom元素
 const messageInputDom = ref()
 const activeItem = ref(inject('activeItem') as MockItem)
-/* 虚拟列表 */
+/** 虚拟列表 */
 const virtualListInst = ref<VirtualListInst>()
 const { handlePaste } = useCommon()
-/* 引入useMsgInput的相关方法 */
+/** 引入useMsgInput的相关方法 */
 const { inputKeyDown, handleAit, handleInput, send, filteredList, ait, msgInput, chatKey, menuList, selectedAitKey } =
   useMsgInput(messageInputDom)
 
-/* 当切换聊天对象时，重新获取焦点 */
+/** 当切换聊天对象时，重新获取焦点 */
 watch(activeItem, () => {
   nextTick(() => {
     const inputDiv = document.getElementById('message-input')
@@ -111,16 +111,16 @@ watch(activeItem, () => {
   })
 })
 
-/* 当ait人员列表发生变化的时候始终select第一个 */
+/** 当ait人员列表发生变化的时候始终select第一个 */
 watch(filteredList, (newList) => {
   if (newList.length > 0) {
-    /* 先设置滚动条滚动到第一个 */
+    /** 先设置滚动条滚动到第一个 */
     virtualListInst.value?.scrollTo({ key: newList[0].key })
     selectedAitKey.value = newList[0].key
   }
 })
 
-/* 处理键盘上下键切换提及项 */
+/** 处理键盘上下键切换提及项 */
 const handleAitKeyChange = (direction: 1 | -1) => {
   const currentIndex = filteredList.value.findIndex((item) => item.key === selectedAitKey.value)
   const newIndex = Math.max(0, Math.min(currentIndex + direction, filteredList.value.length - 1))
@@ -130,7 +130,7 @@ const handleAitKeyChange = (direction: 1 | -1) => {
 }
 
 const closeMenu = (event: any) => {
-  /* 需要判断点击如果不是.context-menu类的元素的时候，menu才会关闭 */
+  /** 需要判断点击如果不是.context-menu类的元素的时候，menu才会关闭 */
   if (!event.target.matches('#message-input, #message-input *')) {
     ait.value = false
   }
@@ -158,11 +158,11 @@ onMounted(() => {
     inputDiv?.focus()
   })
   // TODO 应该把打开的窗口的item给存到set中，需要修改输入框和消息展示的搭配，输入框和消息展示模块应该是一体并且每个用户独立的，这样当我点击这个用户框输入消息的时候就可以暂存信息了并且可以判断每个消息框是什么类型是群聊还是单聊，不然会导致比如@框可以在单聊框中出现 (nyh -> 2024-04-09 01:03:59)
-  /* 当不是独立窗口的时候也就是组件与组件之间进行通信然后监听信息对话的变化 */
+  /** 当不是独立窗口的时候也就是组件与组件之间进行通信然后监听信息对话的变化 */
   Mitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
     activeItem.value = event.item
   })
-  /* 这里使用的是窗口之间的通信来监听信息对话的变化 */
+  /** 这里使用的是窗口之间的通信来监听信息对话的变化 */
   listen('aloneData', (event: any) => {
     activeItem.value = { ...event.payload.item }
   })
@@ -173,7 +173,7 @@ onUnmounted(() => {
   window.removeEventListener('click', closeMenu, true)
 })
 
-/* 导出组件方法和属性 */
+/** 导出组件方法和属性 */
 defineExpose({ messageInputDom })
 </script>
 

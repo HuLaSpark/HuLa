@@ -43,13 +43,13 @@ import { storeToRefs } from 'pinia'
 
 const OLStatusStore = onlineStatus()
 const { url, title, bgColor } = storeToRefs(OLStatusStore)
-/* 选中的状态 */
+/** 选中的状态 */
 const activeItem = reactive({
   index: -1,
   title: title.value,
   url: url.value
 })
-/* 这里不写入activeItem中是因为v-bind要绑定的值是响应式的 */
+/** 这里不写入activeItem中是因为v-bind要绑定的值是响应式的 */
 const RGBA = ref(bgColor?.value)
 
 watchEffect(() => {
@@ -101,7 +101,7 @@ onMounted(async () => {
     color: #404040;
   }
 }
-/* 隐藏naive UI的滚动条 */
+/** 隐藏naive UI的滚动条 */
 :deep(
     .n-scrollbar > .n-scrollbar-rail.n-scrollbar-rail--vertical > .n-scrollbar-rail__scrollbar,
     .n-scrollbar + .n-scrollbar-rail.n-scrollbar-rail--vertical > .n-scrollbar-rail__scrollbar

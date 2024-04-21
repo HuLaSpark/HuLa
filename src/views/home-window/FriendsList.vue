@@ -87,7 +87,7 @@ const menuList = ref([
   { label: '重命名该组', icon: 'edit' },
   { label: '删除分组', icon: 'delete' }
 ])
-/* 建议把此状态存入localStorage中 */
+/** 建议把此状态存入localStorage中 */
 const activeItem = ref(0)
 const detailsShow = ref(false)
 const shrinkStatus = ref(false)
@@ -95,7 +95,7 @@ const shrinkStatus = ref(false)
 const friendsList = ref(MockList.value.filter((item) => item.type === 2))
 const groupChatList = ref(MockList.value.filter((item) => item.type === 1))
 
-/* 监听独立窗口关闭事件 */
+/** 监听独立窗口关闭事件 */
 watchEffect(() => {
   Mitt.on(MittEnum.SHRINK_WINDOW, async (event) => {
     shrinkStatus.value = event as boolean

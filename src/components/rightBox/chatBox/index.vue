@@ -31,7 +31,7 @@ listen(appWindow.label, (e) => {
 })
 </script>
 <style scoped lang="scss">
-/*! 修改naive-ui虚拟列表滚动条的间距 */
+/**! 修改naive-ui虚拟列表滚动条的间距 */
 :deep(
     .n-scrollbar > .n-scrollbar-rail.n-scrollbar-rail--vertical,
     .n-scrollbar + .n-scrollbar-rail.n-scrollbar-rail--vertical

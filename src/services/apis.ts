@@ -11,10 +11,10 @@ const POST = <T>(url: string, params?: any) => request.post<T, Response>(url, pa
 // const DELETE = <T>(url: string, params?: any) => request.delete<T, Response>(url, params)
 
 export default {
-  /*登录 请求*/
+  /**登录 请求*/
   login: (form: login): Promise<Response> => POST(urls.login, form),
-  /*退出 请求*/
+  /**退出 请求*/
   logout: (): Promise<Response> => GET(urls.logout),
-  /*获取文章列表*/
+  /**获取文章列表*/
   getArticlePage: (params: parameter): Promise<Response> => GET(urls.articlePage, { params })
 }

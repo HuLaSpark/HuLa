@@ -147,7 +147,7 @@ import { lightTheme } from 'naive-ui'
 import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
 import { invoke } from '@tauri-apps/api/tauri'
-import { emit } from '@tauri-apps/api/event'
+import { useLogin } from '@/hooks/useLogin.ts'
 
 const settingStore = setting()
 const { login } = storeToRefs(settingStore)
@@ -160,36 +160,41 @@ const loginDisabled = ref(false)
 const loading = ref(false)
 const arrowStatus = ref(false)
 const isAutoLogin = ref(false)
-/* todo 模拟账号列表 */
+const { setLoginState } = useLogin()
+/** todo 模拟账号列表 */
 const accountOption = ref<STO.Setting['login']['accountInfo'][]>([
   {
     account: 'hula',
     password: '123456',
     name: '超级GG帮',
-    avatar: 'https://picsum.photos/140?1'
+    avatar: 'https://picsum.photos/140?1',
+    uid: '123456'
   },
   {
     account: 'hula1',
     password: '123456',
     name: '二狗子',
-    avatar: 'https://picsum.photos/140?2'
+    avatar: 'https://picsum.photos/140?2',
+    uid: '123456'
   },
   {
     account: 'hula2',
     password: '123456',
     name: '李山离',
-    avatar: 'https://picsum.photos/140?3'
+    avatar: 'https://picsum.photos/140?3',
+    uid: '123456'
   },
   {
     account: 'hula3',
     password: '123456',
     name: '牛什么呢',
-    avatar: 'https://picsum.photos/140?4'
+    avatar: 'https://picsum.photos/140?4',
+    uid: '123456'
   }
 ])
 const accountPH = ref('输入HuLa账号')
 const passwordPH = ref('输入HuLa密码')
-/* 登录按钮的文本内容 */
+/** 登录按钮的文本内容 */
 const loginText = ref('登录')
 const { createWebviewWindow } = useWindow()
 
@@ -201,7 +206,7 @@ watchEffect(() => {
   }
 })
 
-/* 删除账号列表内容 */
+/** 删除账号列表内容 */
 const delAccount = (index: number) => {
   // 检查索引有效性
   if (index < 0 || index >= accountOption.value.length) return
@@ -230,17 +235,7 @@ const giveAccount = (item: STO.Setting['login']['accountInfo']) => {
   arrowStatus.value = false
 }
 
-/**
- * 设置登录状态(系统托盘图标，系统托盘菜单选项)
- */
-const setLoginState = async () => {
-  await emit('login_success')
-  await invoke('set_main_icon').catch((error) => {
-    console.error('设置主要图标失败:', error)
-  })
-}
-
-/*登录后创建主页窗口*/
+/**登录后创建主页窗口*/
 const loginWin = () => {
   loading.value = true
   delay(async () => {
@@ -251,14 +246,15 @@ const loginWin = () => {
         account: accountRef.value,
         password: passwordRef.value,
         avatar: avatarRef.value,
-        name: nameRef.value
+        name: nameRef.value,
+        uid: '123456'
       })
       await setLoginState()
     }
   }, 1000)
 }
 
-/*监听是否点击了除了下拉框外的其他地方*/
+/**监听是否点击了除了下拉框外的其他地方*/
 const handleClickOutside = (event: MouseEvent) => {
   const target = event.target as Element
   if (!target.matches('.account-box, .account-box *, .down')) {

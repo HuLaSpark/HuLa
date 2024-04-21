@@ -35,7 +35,7 @@ module.exports = {
 	plugins: ['@typescript-eslint', 'vue'],
 	rules: {
 		'@typescript-eslint/no-non-null-assertion': 'off',
-		/* 允许ts使用命名空间 */
+		/** 允许ts使用命名空间 */
 		'@typescript-eslint/no-namespace': 'off',
 		/**
 		 * 使用新vue3.3的defineProps解构语法需要关闭这个校验

@@ -45,7 +45,7 @@ const itemsBottom: OPT.L.Bottom[] = [
     iconAction: 'collect-action'
   }
 ]
-/* 设置列表菜单项 */
+/** 设置列表菜单项 */
 const moreList = ref<OPT.L.MoreList[]>([
   {
     label: '检查更新',
@@ -77,13 +77,13 @@ const moreList = ref<OPT.L.MoreList[]>([
     click: async () => {
       // todo 退出账号 需要关闭其他的全部窗口
       await createWebviewWindow('登录', 'login', 320, 448, 'home', true, false, 320, 448).then(() => {
-        /* 给一点延迟，不然创建登录窗口后还没有来得及设置阴影和圆角效果 */
+        /** 给一点延迟，不然创建登录窗口后还没有来得及设置阴影和圆角效果 */
         delay(async () => {
-          /* 如果图标在闪烁则先暂停闪烁 */
+          /** 如果图标在闪烁则先暂停闪烁 */
           await invoke('tray_blink', { isRun: false }).catch((error) => {
             console.error('暂停闪烁失败:', error)
           })
-          /* 通知全部打开的窗口然后关闭 */
+          /** 通知全部打开的窗口然后关闭 */
           await emit(EventEnum.LOGOUT)
           await emit('logout_success')
         }, 300)

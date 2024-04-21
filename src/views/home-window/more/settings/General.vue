@@ -97,7 +97,7 @@ const settingStore = setting()
 const { themes, tips, escClose, chat } = storeToRefs(settingStore)
 const activeItem = ref<string>(themes.value.pattern)
 
-/* 切换主题 */
+/** 切换主题 */
 const handleTheme = async (event: MouseEvent, code: string) => {
   if (code === themes.value.pattern) return
   const x = event.clientX
@@ -107,7 +107,7 @@ const handleTheme = async (event: MouseEvent, code: string) => {
   let isDark: boolean
 
   settingStore.toggleTheme(code)
-  /*判断当前浏览器是否支持startViewTransition API*/
+  /**判断当前浏览器是否支持startViewTransition API*/
   if (document.startViewTransition) {
     const transition = document.startViewTransition(() => {
       isDark = code.includes(ThemeEnum.DARK)

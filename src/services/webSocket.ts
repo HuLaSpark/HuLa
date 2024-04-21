@@ -1,10 +1,33 @@
+import { WsReqEnum, WsResEnum } from '@/enums'
+import Mitt from '@/utils/Bus.ts'
+
 const { VITE_WEBSOCKET_URL } = import.meta.env
 /** websocket连接对象 */
 let ws: WebSocket
 const initWebSocket = () => {
   ws = new WebSocket(`${VITE_WEBSOCKET_URL}/`)
   ws.onopen = () => {
-    sendToServer({ type: 1 })
+    // 发送心跳
+    setInterval(() => {
+      sendToServer({
+        type: WsReqEnum.HEARTBEAT
+      })
+    }, 1000 * 60)
+  }
+
+  // 监听服务器返回的消息
+  ws.onmessage = (event: MessageEvent) => {
+    const data: Record<string, any> = JSON.parse(event.data)
+    switch (data.type) {
+      case WsReqEnum.LOGIN:
+        Mitt.emit(WsResEnum.QRCODE_LOGIN, data)
+        break
+      case WsReqEnum.HEARTBEAT:
+        break
+      case WsReqEnum.AUTHORIZE:
+        Mitt.emit(WsResEnum.LOGIN_SUCCESS, data)
+        break
+    }
   }
 
   // websocket出错重连
@@ -24,4 +47,4 @@ const sendToServer = (data: Record<string, any>) => {
   ws.send(json)
 }
 
-export { initWebSocket }
+export { initWebSocket, sendToServer }

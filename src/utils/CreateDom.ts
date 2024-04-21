@@ -37,7 +37,7 @@ export const createFileOrVideoDom = (file: File) => {
         roundRect(ctx, 0, 0, canvas.width, canvas.height, 8)
         ctx.stroke()
 
-        /* 文本过长时截取并使用省略号代替 */
+        /** 文本过长时截取并使用省略号代替 */
         function truncateText(text: string, maxWidth: number) {
           const ellipsis = '...'
           const ellipsisWidth = ctx.measureText(ellipsis).width
@@ -68,7 +68,7 @@ export const createFileOrVideoDom = (file: File) => {
           currentText = text.substring(0, left) + ellipsis + text.substring(text.length - left, text.length)
           return currentText
         }
-        /* 更新canvas的背景颜色和边框 */
+        /** 更新canvas的背景颜色和边框 */
         function updateCanvasBackground(
           canvas: HTMLCanvasElement,
           ctx: CanvasRenderingContext2D,

@@ -8,7 +8,7 @@
           round
           :color="'#fff'"
           :size="80"
-          :src="info.avatar"
+          :src="isCurrentUser.avatar"
           fallback-src="/logo.png"></n-avatar>
 
         <n-flex :size="5" align="center" style="margin-left: -4px" class="item-hover">
@@ -47,17 +47,22 @@
     <img
       class="size-full rounded-8px box-border p-20px absolute top-0 left-0"
       style="filter: blur(28px); opacity: 0.8"
-      :src="info.avatar"
+      :src="isCurrentUser.avatar"
       alt="" />
   </n-flex>
 </template>
 
 <script setup lang="ts">
 import { MockItem } from '@/services/types.ts'
+import { setting } from '@/stores/setting.ts'
+import { storeToRefs } from 'pinia'
 
 const { info } = defineProps<{
-  info: MockItem
+  info?: MockItem
 }>()
+const settingStore = setting()
+const { login } = storeToRefs(settingStore)
+const isCurrentUser = computed(() => (info ? info : login.value.accountInfo))
 </script>
 
 <style scoped lang="scss">
