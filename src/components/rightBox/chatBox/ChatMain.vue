@@ -37,12 +37,13 @@
             <n-popover
               @update:show="handlePopoverUpdate(item.key)"
               trigger="click"
-              placement="right-start"
+              placement="right"
               :show-arrow="false"
+              v-model:show="infoPopover"
               style="padding: 0; background: var(--bg-info); backdrop-filter: blur(10px)">
               <template #trigger>
                 <ContextMenu
-                  @select="$event.click(item)"
+                  @select="$event.click(item, 'Main')"
                   :menu="activeItem.type === RoomTypeEnum.GROUP ? optionsList : []"
                   :special-menu="report">
                   <n-avatar
@@ -62,7 +63,7 @@
                 </ContextMenu>
               </template>
               <!-- 用户个人信息框 -->
-              <InfoPopover :info="item.accountId !== userId ? activeItemRef : void 0" />
+              <InfoPopover v-if="selectKey === item.key" :info="item.accountId !== userId ? activeItemRef : void 0" />
             </n-popover>
             <n-flex
               vertical
@@ -220,7 +221,6 @@ import { EventEnum, MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import { MockItem } from '@/services/types.ts'
 import Mitt from '@/utils/Bus.ts'
 import { invoke } from '@tauri-apps/api/tauri'
-import { optionsList, report } from './config.ts'
 import { usePopover } from '@/hooks/usePopover.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { listen } from '@tauri-apps/api/event'
@@ -238,15 +238,14 @@ const activeItemRef = ref({ ...activeItem })
 const settingStore = setting()
 const { login } = storeToRefs(settingStore)
 const { createWebviewWindow } = useWindow()
-/** 当前点击的用户的key */
-const selectKey = ref()
 /** 跳转回复消息后选中效果 */
 const activeReply = ref(-1)
 /** item最小高度，用于计算滚动大小和位置 */
 const itemSize = computed(() => (activeItem.type === RoomTypeEnum.GROUP ? 98 : 70))
 /** 虚拟列表 */
 const virtualListInst = ref<VirtualListInst>()
-const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-main')
+/** 手动触发Popover显示 */
+const infoPopover = ref(false)
 const { removeTag } = useCommon()
 const {
   handleScroll,
@@ -262,8 +261,12 @@ const {
   modalShow,
   userId,
   specialMenuList,
-  itemComputed
+  itemComputed,
+  optionsList,
+  report,
+  selectKey
 } = useChatMain(activeItem)
+const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-main')
 // // 创建一个符合 TextBody 类型的对象
 // const textBody = {
 //   content: '123',
@@ -402,6 +405,11 @@ onMounted(() => {
   })
   Mitt.on(MittEnum.SEND_MESSAGE, (event: any) => {
     handleSendMessage(event)
+  })
+  Mitt.on(`${MittEnum.INFO_POPOVER}-Main`, (event: any) => {
+    selectKey.value = event
+    infoPopover.value = true
+    handlePopoverUpdate(event)
   })
   Mitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
     activeItemRef.value = event.item

@@ -59,7 +59,9 @@ export enum MittEnum {
   /** 消息列表被清空或者暂无消息 */
   NOT_MSG = 'notMsg',
   /** 回复消息 */
-  REPLY_MEG = 'replyMeg'
+  REPLY_MEG = 'replyMeg',
+  /** 手动触发InfoPopover */
+  INFO_POPOVER = 'infoPopover'
 }
 
 /** 主题类型 */

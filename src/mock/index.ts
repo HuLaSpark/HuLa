@@ -25,7 +25,7 @@ export const MockList = ref<MockItem[]>(
       key: i,
       avatar: `${avatars}?${i}`,
       type: type,
-      accountId: i,
+      accountId: `${i}`,
       accountName: generateRandomString(Math.floor(Math.random() * 10) + 1, type)
     }
   })

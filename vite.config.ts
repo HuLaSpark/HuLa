@@ -9,7 +9,7 @@ import unocss from '@unocss/vite'
 import terser from '@rollup/plugin-terser'
 
 // https://vitejs.dev/config/
-/**! 暂时不需要优化前端打包(如开启gzip这些tauri可能解析不了) */
+/**! 不需要优化前端打包(如开启gzip) */
 export default defineConfig(({ mode }: ConfigEnv) => {
   // 获取当前环境的配置,如何设置第三个参数则加载所有变量，而不是以“VITE_”前缀的变量
   const config = loadEnv(mode, '/')

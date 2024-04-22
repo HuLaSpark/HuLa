@@ -7,6 +7,7 @@ import { useDebounceFn } from '@vueuse/core'
 import Mitt from '@/utils/Bus.ts'
 import { MockList } from '@/mock'
 import { useCommon } from './useCommon.ts'
+import { RegExp } from '@/utils/RegExp.ts'
 
 export const useMsgInput = (messageInputDom: Ref) => {
   const { triggerInputEvent, insertNode, getMessageContentType, getEditorRange, imgPaste, removeTag, reply } =
@@ -120,9 +121,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
       content: msgInput.value,
       reply: contentType === MsgEnum.REPLY ? reply.value : null
     }
-    const hyperlinkRegex = /(\b(?:https?:\/\/|www)[-A-Z0-9+&@#/%?=~_|!:,.;]*[-A-Z0-9+&@#/%=~_|])/gi
-    const foundHyperlinks = msg.content.match(hyperlinkRegex)
-
     /** 如果是Reply消息，需要将消息的样式修改 */
     if (msg.type === MsgEnum.REPLY) {
       // 先去掉原来的标签
@@ -131,6 +129,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       // TODO 不允许用户删除回复消息中最前面的空格或者标志符号 (nyh -> 2024-04-17 06:39:22)
       msg.content = msg.content.replace(/^[\S\s]*\u00A0/, '')
     }
+    const { hyperlinkRegex, foundHyperlinks } = RegExp.isHyperlink(msg.content)
     /** 判断是否有超链接 */
     if (foundHyperlinks && foundHyperlinks.length > 0) {
       msg.content = msg.content.replace(hyperlinkRegex, (match) => {

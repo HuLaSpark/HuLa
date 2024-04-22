@@ -56,6 +56,7 @@ onMounted(() => {
   Mitt.on(WsResEnum.QRCODE_LOGIN, (e: any) => {
     QRCode.value = e.data.loginUrl
     loading.value = false
+    loadText.value = '请使用微信扫码登录'
   })
   Mitt.on(WsResEnum.LOGIN_SUCCESS, (e: any) => {
     delay(async () => {
@@ -69,7 +70,6 @@ onMounted(() => {
     }, 1000)
   })
   delay(() => {
-    loadText.value = '请使用微信扫码登录'
     sendToServer({ type: WsReqEnum.LOGIN })
   }, 1000)
 })

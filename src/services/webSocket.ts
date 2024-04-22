@@ -4,6 +4,7 @@ import Mitt from '@/utils/Bus.ts'
 const { VITE_WEBSOCKET_URL } = import.meta.env
 /** websocket连接对象 */
 let ws: WebSocket
+/** 初始化websocket连接 */
 const initWebSocket = () => {
   ws = new WebSocket(`${VITE_WEBSOCKET_URL}/`)
   ws.onopen = () => {
