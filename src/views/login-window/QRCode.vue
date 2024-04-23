@@ -13,10 +13,20 @@
       <n-qr-code
         v-else
         :size="180"
-        class="rounded-12px"
+        class="rounded-12px relative"
+        :class="{ blur: scanSuccess }"
         :value="QRCode"
         icon-src="/logo.png"
         error-correction-level="H" />
+      <n-flex
+        v-if="scanSuccess"
+        vertical
+        :size="12"
+        align="center"
+        class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+        <svg class="size-42px"><use href="#success"></use></svg>
+        <span class="text-(16px #e3e3e3)">扫码成功</span>
+      </n-flex>
     </n-flex>
 
     <n-flex justify="center" class="mt-15px text-(14px #808080)">{{ loadText }}</n-flex>
@@ -46,6 +56,7 @@ const { createWebviewWindow } = useWindow()
 const loading = ref(true)
 const loadText = ref('加载中...')
 const QRCode = ref()
+const scanSuccess = ref(false)
 
 const toLogin = () => {
   router.push('/login')
@@ -59,6 +70,8 @@ onMounted(() => {
     loadText.value = '请使用微信扫码登录'
   })
   Mitt.on(WsResEnum.LOGIN_SUCCESS, (e: any) => {
+    scanSuccess.value = true
+    loadText.value = '登录中...'
     delay(async () => {
       await createWebviewWindow('HuLa', 'home', 960, 720, 'login', false, true)
       settingStore.setAccountInfo({

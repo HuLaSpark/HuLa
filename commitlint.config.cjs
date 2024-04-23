@@ -60,7 +60,7 @@ module.exports = {
     emojiAlign: "center",
     useAI: false,
     aiNumber: 1,
-    themeColorCode: "",
+    themeColorCode: "38;5;168",
     scopes: [],
     allowCustomScopes: true,
     allowEmptyScopes: true,

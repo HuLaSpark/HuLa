@@ -16,7 +16,7 @@
         :key="item.key"
         class="flex-y-center min-h-58px"
         :class="[
-          [activeItem.type === RoomTypeEnum.GROUP ? 'p-[18px_20px]' : 'chat-single p-[4px_20px_10px_20px]'],
+          [isGroup ? 'p-[18px_20px]' : 'chat-single p-[4px_20px_10px_20px]'],
           { 'active-reply': activeReply === item.key }
         ]">
         <!-- 好友或者群聊的信息 -->
@@ -44,7 +44,7 @@
               <template #trigger>
                 <ContextMenu
                   @select="$event.click(item, 'Main')"
-                  :menu="activeItem.type === RoomTypeEnum.GROUP ? optionsList : []"
+                  :menu="isGroup ? optionsList : void 0"
                   :special-menu="report">
                   <n-avatar
                     lazy
@@ -71,11 +71,8 @@
               :size="8"
               class="color-[--text-color] flex-1"
               :class="item.accountId === userId ? 'items-end mr-10px' : ''">
-              <ContextMenu
-                @select="$event.click(item)"
-                :menu="activeItem.type === RoomTypeEnum.GROUP ? optionsList : []"
-                :special-menu="report">
-                <span class="text-12px select-none color-#909090" v-if="activeItem.type === RoomTypeEnum.GROUP">
+              <ContextMenu @select="$event.click(item)" :menu="isGroup ? optionsList : []" :special-menu="report">
+                <span class="text-12px select-none color-#909090" v-if="isGroup">
                   {{ item.value }}
                 </span>
               </ContextMenu>
@@ -85,7 +82,9 @@
                 :data-key="item.accountId === userId ? `U${item.key}` : `Q${item.key}`"
                 @select="$event.click(item)"
                 :menu="handleItemType(item.type)"
+                :emoji="isGroup ? emojiList : []"
                 :special-menu="specialMenuList"
+                @reply-emoji="handleEmojiSelect($event.label, item.key)"
                 @click="handleMsgClick(item)">
                 <!--                &lt;!&ndash; 渲染消息内容体 &ndash;&gt;-->
                 <!--                <RenderMessage :message="message" />-->
@@ -163,6 +162,15 @@
                   {{ item.reply.imgCount }}
                 </div>
               </n-flex>
+
+              <!-- 群聊回复emoji表情 -->
+              <n-flex
+                v-if="replyEmoji.content && isGroup && item.key === replyEmoji.index"
+                align="center"
+                :size="6"
+                class="relative rounded-8px p-4px cursor-pointer select-none bg-#13987f text-14px w-fit">
+                {{ replyEmoji.content }}
+              </n-flex>
             </n-flex>
           </div>
         </article>
@@ -188,7 +196,7 @@
   </n-modal>
 
   <!--  悬浮按钮提示(头部悬浮) // TODO 要结合已读未读功能来判断之前的信息有多少没有读，当现在的距离没有到最底部并且又有新消息来未读的时候显示下标的更多信息 (nyh -> 2024-03-07 01:27:22)-->
-  <header class="float-header" :class="activeItem.type === RoomTypeEnum.GROUP ? 'right-220px' : 'right-50px'">
+  <header class="float-header" :class="isGroup ? 'right-220px' : 'right-50px'">
     <div class="float-box">
       <n-flex justify="space-between" align="center">
         <n-icon :color="'#13987f'">
@@ -200,10 +208,7 @@
   </header>
 
   <!-- 悬浮按钮提示(底部悬浮) -->
-  <footer
-    class="float-footer"
-    v-if="floatFooter && newMsgNum > 0"
-    :class="activeItem.type === RoomTypeEnum.GROUP ? 'right-220px' : 'right-50px'">
+  <footer class="float-footer" v-if="floatFooter && newMsgNum > 0" :class="isGroup ? 'right-220px' : 'right-50px'">
     <div class="float-box" :class="{ max: newMsgNum > 99 }" @click="scrollBottom">
       <n-flex justify="space-between" align="center">
         <n-icon :color="newMsgNum > 99 ? '#ce304f' : '#13987f'">
@@ -240,12 +245,19 @@ const { login } = storeToRefs(settingStore)
 const { createWebviewWindow } = useWindow()
 /** 跳转回复消息后选中效果 */
 const activeReply = ref(-1)
+/** 当前信息是否是群聊信息 */
+const isGroup = computed(() => activeItem.type === RoomTypeEnum.GROUP)
 /** item最小高度，用于计算滚动大小和位置 */
-const itemSize = computed(() => (activeItem.type === RoomTypeEnum.GROUP ? 98 : 70))
+const itemSize = computed(() => (isGroup.value ? 98 : 70))
 /** 虚拟列表 */
 const virtualListInst = ref<VirtualListInst>()
 /** 手动触发Popover显示 */
 const infoPopover = ref(false)
+/** 群聊的回复表情内容以及下标 */
+const replyEmoji = ref({
+  content: '',
+  index: -1
+})
 const { removeTag } = useCommon()
 const {
   handleScroll,
@@ -264,7 +276,8 @@ const {
   itemComputed,
   optionsList,
   report,
-  selectKey
+  selectKey,
+  emojiList
 } = useChatMain(activeItem)
 const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-main')
 // // 创建一个符合 TextBody 类型的对象
@@ -295,6 +308,12 @@ watchEffect(() => {
   newMsgNum.value = itemComputed.value - historyIndex.value
   activeItemRef.value = { ...activeItem }
 })
+
+/** 处理emoji表情回应 */
+const handleEmojiSelect = (label: any, key: any) => {
+  replyEmoji.value.content = label
+  replyEmoji.value.index = key
+}
 
 /** 处理回复消息中的 AIT 标签 */
 const handleReply = (content: string) => {

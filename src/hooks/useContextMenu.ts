@@ -1,6 +1,12 @@
 import type { Ref } from 'vue'
 
-export const useContextMenu = (containerRef: Ref) => {
+/**
+ * 右键菜单的状态管理
+ * @param containerRef 右键菜单的容器
+ * @param isNull 传入的容器是否为空
+ */
+
+export const useContextMenu = (containerRef: Ref, isNull?: Ref<boolean>) => {
   const showMenu = ref(false)
   const x = ref(0)
   const y = ref(0)
@@ -20,6 +26,7 @@ export const useContextMenu = (containerRef: Ref) => {
   const handleContextMenu = (e: MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    if (isNull?.value) return
     handleVirtualListScroll(true)
     showMenu.value = true
     x.value = e.clientX

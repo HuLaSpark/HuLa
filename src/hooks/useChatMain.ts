@@ -137,7 +137,7 @@ export const useChatMain = (activeItem: MockItem) => {
       }
     }
   ])
-  /** 右键用户信息菜单(单聊的时候显示) */
+  /** 右键用户信息菜单(群聊的时候显示) */
   const optionsList = ref([
     {
       label: '发送信息',
@@ -170,6 +170,21 @@ export const useChatMain = (activeItem: MockItem) => {
       label: '举报',
       icon: 'caution',
       click: () => {}
+    }
+  ])
+  /** emoji表情菜单 */
+  const emojiList = ref([
+    {
+      label: '👍'
+    },
+    {
+      label: '😆'
+    },
+    {
+      label: '🥳'
+    },
+    {
+      label: '🤯'
     }
   ])
 
@@ -275,6 +290,7 @@ export const useChatMain = (activeItem: MockItem) => {
     itemComputed,
     optionsList,
     report,
-    selectKey
+    selectKey,
+    emojiList
   }
 }
