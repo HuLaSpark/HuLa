@@ -58,8 +58,10 @@ export enum MittEnum {
   DETAILS_SHOW = 'detailsShow',
   /** 消息列表被清空或者暂无消息 */
   NOT_MSG = 'notMsg',
-  /* 回复消息 */
-  REPLY_MEG = 'replyMeg'
+  /** 回复消息 */
+  REPLY_MEG = 'replyMeg',
+  /** 手动触发InfoPopover */
+  INFO_POPOVER = 'infoPopover'
 }
 
 /** 主题类型 */
@@ -72,7 +74,7 @@ export enum ThemeEnum {
   OS = 'os'
 }
 
-/* pinia存储的名称 */
+/** pinia存储的名称 */
 export enum StoresEnum {
   /** 置顶 */
   ALWAYS_ON_TOP = 'alwaysOnTop',
@@ -128,4 +130,22 @@ export enum CloseBxEnum {
 export enum LimitEnum {
   /** 通用限制数量 */
   COM_COUNT = 5
+}
+
+/** ws请求类型 */
+export enum WsReqEnum {
+  /** 请求登录二维码 */
+  LOGIN = 1,
+  /** 心跳包 */
+  HEARTBEAT = 2,
+  /** 登录认证 */
+  AUTHORIZE = 3
+}
+
+/** ws响应类型 */
+export enum WsResEnum {
+  /** 二维码登录 */
+  QRCODE_LOGIN = 'qrcodeLogin',
+  /** 登录成功 */
+  LOGIN_SUCCESS = 'loginSuccess'
 }

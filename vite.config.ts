@@ -9,7 +9,7 @@ import unocss from '@unocss/vite'
 import terser from '@rollup/plugin-terser'
 
 // https://vitejs.dev/config/
-/*! 暂时不需要优化前端打包(如开启gzip这些tauri可能解析不了) */
+/**! 不需要优化前端打包(如开启gzip) */
 export default defineConfig(({ mode }: ConfigEnv) => {
   // 获取当前环境的配置,如何设置第三个参数则加载所有变量，而不是以“VITE_”前缀的变量
   const config = loadEnv(mode, '/')
@@ -46,13 +46,13 @@ export default defineConfig(({ mode }: ConfigEnv) => {
         imports: ['vue', { 'naive-ui': ['useDialog', 'useMessage', 'useNotification', 'useLoadingBar'] }],
         dts: 'src/typings/auto-imports.d.ts'
       }),
-      /*自动导入组件，但是不会自动导入jsx和tsx*/
+      /**自动导入组件，但是不会自动导入jsx和tsx*/
       Components({
         dirs: ['src/components/**'], // 设置需要扫描的目录
         resolvers: [NaiveUiResolver()],
         dts: 'src/typings/components.d.ts'
       }),
-      /* 压缩代码 */
+      /** 压缩代码 */
       terser({
         format: {
           comments: false // 移除所有注释

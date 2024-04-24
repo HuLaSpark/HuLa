@@ -2,31 +2,37 @@ import { useCommon } from '@/hooks/useCommon.ts'
 import { MittEnum, MsgEnum } from '@/enums'
 import { MockItem } from '@/services/types.ts'
 import Mitt from '@/utils/Bus.ts'
+import { setting } from '@/stores/setting.ts'
+import { storeToRefs } from 'pinia'
 
 export const useChatMain = (activeItem: MockItem) => {
   const { removeTag } = useCommon()
-  /* 选中的气泡消息 */
+  const settingStore = setting()
+  const { login } = storeToRefs(settingStore)
+  /** 选中的气泡消息 */
   const activeBubble = ref(-1)
-  /*  当前登录的用户id */
-  const userId = ref(10086)
-  /* 提醒框标题 */
+  /**  当前登录的用户id */
+  const userId = ref(login.value.accountInfo.uid)
+  /** 提醒框标题 */
   const tips = ref()
-  /* 是否显示删除信息的弹窗 */
+  /** 是否显示删除信息的弹窗 */
   const modalShow = ref(false)
-  /* 需要删除信息的下标 */
+  /** 需要删除信息的下标 */
   const delIndex = ref(0)
-  /* 悬浮的页脚 */
+  /** 悬浮的页脚 */
   const floatFooter = ref(false)
-  /* 记录历史消息下标 */
+  /** 记录历史消息下标 */
   const historyIndex = ref(0)
-  /* 新消息数 */
+  /** 新消息数 */
   const newMsgNum = ref(0)
-  /* 计算出触发页脚后的历史消息下标 */
+  /** 当前点击的用户的key */
+  const selectKey = ref()
+  /** 计算出触发页脚后的历史消息下标 */
   const itemComputed = computed(() => {
     return items.value.filter((item) => item.accountId !== userId.value).length
   })
 
-  /*! 模拟信息列表 */
+  /**! 模拟信息列表 */
   const items = ref(
     Array.from({ length: 5 }, (_, i) => ({
       value: `${i}安老师`,
@@ -45,7 +51,7 @@ export const useChatMain = (activeItem: MockItem) => {
     }))
   )
 
-  /* 通用右键菜单 */
+  /** 通用右键菜单 */
   const commonMenuList = ref<OPT.RightMenu[]>([
     {
       label: '转发',
@@ -61,7 +67,7 @@ export const useChatMain = (activeItem: MockItem) => {
       }
     }
   ])
-  /* 右键消息菜单列表 */
+  /** 右键消息菜单列表 */
   const menuList = ref<OPT.RightMenu[]>([
     {
       label: '复制',
@@ -73,7 +79,7 @@ export const useChatMain = (activeItem: MockItem) => {
     },
     ...commonMenuList.value
   ])
-  /* 右键菜单下划线后的列表 */
+  /** 右键菜单下划线后的列表 */
   const specialMenuList = ref<OPT.RightMenu[]>([
     {
       label: '删除',
@@ -85,7 +91,7 @@ export const useChatMain = (activeItem: MockItem) => {
       }
     }
   ])
-  /* 文件类型右键菜单 */
+  /** 文件类型右键菜单 */
   const fileMenuList = ref<OPT.RightMenu[]>([
     {
       label: '预览',
@@ -104,7 +110,7 @@ export const useChatMain = (activeItem: MockItem) => {
       }
     }
   ])
-  /* 图片类型右键菜单 */
+  /** 图片类型右键菜单 */
   const imageMenuList = ref<OPT.RightMenu[]>([
     {
       label: '添加到表情',
@@ -129,6 +135,56 @@ export const useChatMain = (activeItem: MockItem) => {
       click: (item: any) => {
         console.log(item)
       }
+    }
+  ])
+  /** 右键用户信息菜单(群聊的时候显示) */
+  const optionsList = ref([
+    {
+      label: '发送信息',
+      icon: 'message-action',
+      click: (item: any) => {
+        console.log(item)
+      }
+    },
+    {
+      label: 'TA',
+      icon: 'aite',
+      click: () => {}
+    },
+    {
+      label: '查看资料',
+      icon: 'notes',
+      click: (item: any, type: string) => {
+        Mitt.emit(`${MittEnum.INFO_POPOVER}-${type}`, item.key)
+      }
+    },
+    {
+      label: '添加好友',
+      icon: 'people-plus',
+      click: () => {}
+    }
+  ])
+  /** 举报选项 */
+  const report = ref([
+    {
+      label: '举报',
+      icon: 'caution',
+      click: () => {}
+    }
+  ])
+  /** emoji表情菜单 */
+  const emojiList = ref([
+    {
+      label: '👍'
+    },
+    {
+      label: '😆'
+    },
+    {
+      label: '🥳'
+    },
+    {
+      label: '🤯'
     }
   ])
 
@@ -162,7 +218,7 @@ export const useChatMain = (activeItem: MockItem) => {
     }
   }
 
-  /* 处理滚动事件(用于页脚显示功能) */
+  /** 处理滚动事件(用于页脚显示功能) */
   const handleScroll = (e: Event) => {
     const target = e.target as HTMLElement
     // 获取已滚动的距离，即从顶部到当前滚动位置的距离
@@ -193,7 +249,7 @@ export const useChatMain = (activeItem: MockItem) => {
     return type === MsgEnum.IMAGE ? imageMenuList.value : type === MsgEnum.FILE ? fileMenuList.value : menuList.value
   }
 
-  /* 删除信息事件 */
+  /** 删除信息事件 */
   const handleConfirm = () => {
     // 根据key找到items中对应的下标
     const index = items.value.findIndex((item) => item.key === delIndex.value)
@@ -201,7 +257,7 @@ export const useChatMain = (activeItem: MockItem) => {
     modalShow.value = false
   }
 
-  /* 点击气泡消息时候监听用户是否按下ctrl+c来复制内容 */
+  /** 点击气泡消息时候监听用户是否按下ctrl+c来复制内容 */
   const handleMsgClick = (item: any) => {
     activeBubble.value = item.key
     // 启用键盘监听
@@ -231,6 +287,10 @@ export const useChatMain = (activeItem: MockItem) => {
     modalShow,
     userId,
     specialMenuList,
-    itemComputed
+    itemComputed,
+    optionsList,
+    report,
+    selectKey,
+    emojiList
   }
 }

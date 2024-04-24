@@ -5,12 +5,10 @@
     <div v-if="topWinLabel !== void 0" @click="handleAlwaysOnTop" class="hover-box">
       <n-popover trigger="hover">
         <template #trigger>
-          <svg
-            v-if="alwaysOnTopStatus"
-            class="w-14px h-14px color-[--action-bar-icon-color] outline-none cursor-pointer">
+          <svg v-if="alwaysOnTopStatus" class="size-14px color-[--action-bar-icon-color] outline-none cursor-pointer">
             <use href="#onTop"></use>
           </svg>
-          <svg v-else class="w-16px h-16px color-[--action-bar-icon-color] outline-none cursor-pointer">
+          <svg v-else class="size-16px color-[--action-bar-icon-color] outline-none cursor-pointer">
             <use href="#notOnTop"></use>
           </svg>
         </template>
@@ -20,47 +18,47 @@
     </div>
     <!-- 收缩页面 -->
     <div v-if="shrink" @click="shrinkWindow" class="hover-box">
-      <svg class="w-16px h-16px color-[--action-bar-icon-color] cursor-pointer"><use href="#left-bar"></use></svg>
+      <svg class="size-16px color-[--action-bar-icon-color] cursor-pointer"><use href="#left-bar"></use></svg>
     </div>
     <!-- 最小化 -->
     <div v-if="minW" @click="appWindow.minimize()" class="hover-box">
-      <svg class="w-24px h-24px color-[--action-bar-icon-color] opacity-66 cursor-pointer">
+      <svg class="size-24px color-[--action-bar-icon-color] opacity-66 cursor-pointer">
         <use href="#maximize"></use>
       </svg>
     </div>
     <!-- 最大化 -->
     <div v-if="maxW" @click="restoreWindow" class="hover-box">
-      <svg v-show="!windowMaximized" class="w-18px h-18px color-[--action-bar-icon-color] cursor-pointer">
+      <svg v-show="!windowMaximized" class="size-18px color-[--action-bar-icon-color] cursor-pointer">
         <use href="#rectangle-small"></use>
       </svg>
-      <svg v-show="windowMaximized" class="w-16px h-16px color-[--action-bar-icon-color] cursor-pointer">
+      <svg v-show="windowMaximized" class="size-16px color-[--action-bar-icon-color] cursor-pointer">
         <use href="#internal-reduction"></use>
       </svg>
     </div>
     <!-- 关闭窗口 -->
     <div v-if="closeW" @click="handleCloseWin" class="action-close">
-      <svg class="w-14px h-14px color-[--action-bar-icon-color] cursor-pointer">
+      <svg class="size-14px color-[--action-bar-icon-color] cursor-pointer">
         <use href="#close"></use>
       </svg>
     </div>
 
     <!-- 是否退到托盘提示框 -->
-    <n-modal v-if="!tips.notTips" v-model:show="tipsRef.show" class="border-rd-8px">
+    <n-modal v-if="!tips.notTips" v-model:show="tipsRef.show" class="rounded-8px">
       <div class="bg-[--bg-popover] w-290px h-full p-6px box-border flex flex-col">
-        <svg @click="tipsRef.show = false" class="w-12px h-12px ml-a cursor-pointer select-none">
+        <svg @click="tipsRef.show = false" class="size-12px ml-a cursor-pointer select-none">
           <use href="#close"></use>
         </svg>
         <n-flex vertical :size="20" class="p-[22px_10px_10px_22px] select-none">
           <span class="text-16px">最小化还是直接退出程序?</span>
-          <label class="text-14px text-#707070 flex gap-6px lh-16px items-center">
+          <label class="text-(14px #707070) flex gap-6px lh-16px items-center">
             <n-radio :checked="tipsRef.type === CloseBxEnum.HIDE" @change="tipsRef.type = CloseBxEnum.HIDE" />
             <span>最小化到系统托盘</span>
           </label>
-          <label class="text-14px text-#707070 flex gap-6px lh-16px items-center">
+          <label class="text-(14px #707070) flex gap-6px lh-16px items-center">
             <n-radio :checked="tipsRef.type === CloseBxEnum.CLOSE" @change="tipsRef.type = CloseBxEnum.CLOSE" />
             <span>直接退出程序</span>
           </label>
-          <label class="text-12px text-#909090 flex gap-6px justify-end items-center">
+          <label class="text-(12px #909090) flex gap-6px justify-end items-center">
             <n-checkbox size="small" v-model:checked="tipsRef.notTips" />
             <span>下次不出现此提示</span>
           </label>
@@ -133,7 +131,7 @@ watchEffect(() => {
     appWindow.setAlwaysOnTop(alwaysOnTopStatus.value as boolean)
   }
   listen(EventEnum.LOGOUT, async () => {
-    /* 退出账号前把窗口全部关闭 */
+    /** 退出账号前把窗口全部关闭 */
     if (appWindow.label !== 'login') {
       await appWindow.close()
     }
@@ -149,7 +147,7 @@ watchEffect(() => {
   }
 })
 
-/* 恢复窗口大小 */
+/** 恢复窗口大小 */
 const restoreWindow = async () => {
   if (windowMaximized.value) {
     await appWindow.unmaximize()
@@ -158,9 +156,9 @@ const restoreWindow = async () => {
   }
 }
 
-/* 收缩窗口 */
+/** 收缩窗口 */
 const shrinkWindow = async () => {
-  /*使用mitt给兄弟组件更新*/
+  /**使用mitt给兄弟组件更新*/
   Mitt.emit(MittEnum.SHRINK_WINDOW, shrinkStatus.value)
   if (shrinkStatus.value) {
     await resizeWindow('home', 310, 700)
@@ -169,7 +167,7 @@ const shrinkWindow = async () => {
   }
 }
 
-/* 设置窗口置顶 */
+/** 设置窗口置顶 */
 const handleAlwaysOnTop = async () => {
   if (topWinLabel.value !== void 0) {
     const isTop = !alwaysOnTopStatus.value
@@ -178,7 +176,7 @@ const handleAlwaysOnTop = async () => {
   }
 }
 
-/* 点击确定时 */
+/** 点击确定时 */
 const handleConfirm = async () => {
   tips.value.type = tipsRef.type
   tips.value.notTips = tipsRef.notTips
@@ -192,7 +190,7 @@ const handleConfirm = async () => {
   }
 }
 
-/* 监听是否按下esc */
+/** 监听是否按下esc */
 const isEsc = (e: PersistedStateOptions) => {
   // 判断按下的是否是esc
   if (e.key === 'Escape' && escClose.value) {
@@ -207,7 +205,7 @@ const handleResize = () => {
   })
 }
 
-/* 处理关闭窗口事件 */
+/** 处理关闭窗口事件 */
 const handleCloseWin = async () => {
   if (appWindow.label === 'home') {
     if (!tips.value.notTips) {

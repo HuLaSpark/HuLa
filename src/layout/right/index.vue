@@ -38,7 +38,7 @@ const isDetails = computed(() => {
   return router.currentRoute.value.path.includes('/friendsList')
 })
 
-/* 跟随系统主题模式切换主题 */
+/** 跟随系统主题模式切换主题 */
 const followOS = () => {
   imgTheme.value = prefers.matches ? ThemeEnum.DARK : ThemeEnum.LIGHT
 }

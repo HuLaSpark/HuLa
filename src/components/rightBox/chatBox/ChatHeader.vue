@@ -86,15 +86,15 @@
           <p class="color-#d03553">删除好友</p>
         </div>
 
-        <p class="m-[0_auto] text-#13987f text-12px mt-20px cursor-pointer">被骚扰了?&nbsp;&nbsp;举报该用户</p>
+        <p class="m-[0_auto] text-(12px #13987f) mt-20px cursor-pointer">被骚扰了?&nbsp;&nbsp;举报该用户</p>
       </div>
     </transition>
   </main>
 
   <!-- 弹出框 -->
-  <n-modal v-model:show="modalShow" class="w-350px border-rd-8px">
+  <n-modal v-model:show="modalShow" class="w-350px rounded-8px">
     <div class="bg-[--bg-popover] w-360px h-full p-6px box-border flex flex-col">
-      <svg @click="modalShow = false" class="w-12px h-12px ml-a cursor-pointer select-none">
+      <svg @click="modalShow = false" class="size-12px ml-a cursor-pointer select-none">
         <use href="#close"></use>
       </svg>
       <div class="flex flex-col gap-30px p-[22px_10px_10px_22px] select-none">
@@ -121,9 +121,9 @@ import { emit, listen } from '@tauri-apps/api/event'
 
 // 使用useDisplayMedia获取屏幕共享的媒体流
 const { stream, start, stop } = useDisplayMedia()
-/* 提醒框标题 */
+/** 提醒框标题 */
 const tips = ref()
-/* 提醒框的选项 */
+/** 提醒框的选项 */
 const tipsOptions = ref(false)
 const modalShow = ref(false)
 const sidebarShow = ref(false)
@@ -153,7 +153,7 @@ const handleMedia = () => {
       // 设置本地描述
       peerConnection.setLocalDescription(offer)
       emit(EventEnum.SHARE_SCREEN)
-      /* 当需要给独立窗口传输数据的时候需要先监听窗口的创建完毕事件 */
+      /** 当需要给独立窗口传输数据的时候需要先监听窗口的创建完毕事件 */
       listen('SharedScreenWin', async () => {
         await emit('offer', offer)
       })
@@ -163,7 +163,7 @@ const handleMedia = () => {
   })
 }
 
-/* 删除操作二次提醒 */
+/** 删除操作二次提醒 */
 const handleDelete = (label: string) => {
   modalShow.value = true
   if (label === 'friends') {
@@ -182,7 +182,7 @@ const handleClick = () => {
 }
 
 const closeMenu = (event: any) => {
-  /* 点击非侧边栏元素时，关闭侧边栏，但点击弹出框元素、侧边栏图标、还有侧边栏里面的元素时不关闭 */
+  /** 点击非侧边栏元素时，关闭侧边栏，但点击弹出框元素、侧边栏图标、还有侧边栏里面的元素时不关闭 */
   if (!event.target.matches('.sidebar, .sidebar *, .n-modal-mask, .options-box *, .n-modal *') && !modalShow.value) {
     sidebarShow.value = false
   }

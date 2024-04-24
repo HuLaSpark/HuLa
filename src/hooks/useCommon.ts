@@ -1,10 +1,11 @@
 import { LimitEnum, MsgEnum } from '@/enums'
 import { Ref } from 'vue'
 import { createFileOrVideoDom } from '@/utils/CreateDom.ts'
+import { RegExp } from '@/utils/RegExp.ts'
 
 /** 常用工具类 */
 export const useCommon = () => {
-  /* 回复消息 */
+  /** 回复消息 */
   const reply = ref({
     accountName: '',
     content: '',
@@ -152,6 +153,15 @@ export const useCommon = () => {
         min-width: 0;
       `
       let contentBox
+      const { hyperlinkRegex, foundHyperlinks } = RegExp.isHyperlink(content)
+      // 判断是否包含超链接
+      if (foundHyperlinks && foundHyperlinks.length > 0) {
+        content.replace(hyperlinkRegex, (match: string) => {
+          reply.value.content = match.startsWith('www.') ? 'https://' + match : match
+        })
+        // 去掉content中的标签
+        content = removeTag(content)
+      }
       // 判断content内容是否是data:image/开头的数组
       if (Array.isArray(content)) {
         // 获取总共有多少张图片
@@ -330,7 +340,7 @@ export const useCommon = () => {
     }
   }
 
-  /* 去除字符串中的元素标记 */
+  /** 去除字符串中的元素标记 */
   const removeTag = (fragment: any) => new DOMParser().parseFromString(fragment, 'text/html').body.textContent || ''
 
   return {

@@ -128,7 +128,7 @@ const chooseEmoji = (item: string) => {
 </script>
 
 <style lang="scss">
-/*! 修改naive-ui滚动条的间距 */
+/**! 修改naive-ui滚动条的间距 */
 .n-scrollbar > .n-scrollbar-rail.n-scrollbar-rail--vertical,
 .n-scrollbar + .n-scrollbar-rail.n-scrollbar-rail--vertical {
   right: 0;

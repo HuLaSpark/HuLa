@@ -1,6 +1,12 @@
 import type { Ref } from 'vue'
 
-export const useContextMenu = (containerRef: Ref) => {
+/**
+ * 右键菜单的状态管理
+ * @param containerRef 右键菜单的容器
+ * @param isNull 传入的容器是否为空
+ */
+
+export const useContextMenu = (containerRef: Ref, isNull?: Ref<boolean>) => {
   const showMenu = ref(false)
   const x = ref(0)
   const y = ref(0)
@@ -8,7 +14,7 @@ export const useContextMenu = (containerRef: Ref) => {
   // 禁止滚动的默认行为
   const preventDefault = (e: Event) => e.preventDefault()
 
-  /*! 解决使用n-virtual-list时，右键菜单出现还可以滚动的问题 */
+  /**! 解决使用n-virtual-list时，右键菜单出现还可以滚动的问题 */
   const handleVirtualListScroll = (isBan: boolean) => {
     const scrollbar_main = document.querySelector('#image-chat-main') as HTMLElement
     const scrollbar_sidebar = document.querySelector('#image-chat-sidebar') as HTMLElement
@@ -20,6 +26,7 @@ export const useContextMenu = (containerRef: Ref) => {
   const handleContextMenu = (e: MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    if (isNull?.value) return
     handleVirtualListScroll(true)
     showMenu.value = true
     x.value = e.clientX
@@ -28,7 +35,7 @@ export const useContextMenu = (containerRef: Ref) => {
   }
 
   const closeMenu = (event: any) => {
-    /* 需要判断点击如果不是.context-menu类的元素的时候，menu才会关闭 */
+    /** 需要判断点击如果不是.context-menu类的元素的时候，menu才会关闭 */
     if (!event.target.matches('.context-menu, .context-menu *')) {
       handleVirtualListScroll(false)
       showMenu.value = false

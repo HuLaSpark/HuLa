@@ -31,11 +31,13 @@ export class RegExp {
   }
 
   /**
-   * 判断是否是超链接
-   * @param val 文本内容
+   * 判断是否包含超链接
+   * @param content 文本内容
+   * @returns hyperlinkRegex 正则表达式，foundHyperlinks 匹配到的超链接
    */
-  public static isHyperlink(val: string): boolean {
-    const hyperlinkRegex = /^http(s)?:\/\/([\w-]+\.)+[\w-]+(\/[\w- ./?%&=]*)?$/
-    return hyperlinkRegex.test(val)
+  public static isHyperlink(content: string) {
+    const hyperlinkRegex = /(\b(?:https?:\/\/|www)[-A-Z0-9+&@#/%?=~_|!:,.;]*[-A-Z0-9+&@#/%=~_|])/gi
+    const foundHyperlinks = content.match(hyperlinkRegex)
+    return { hyperlinkRegex, foundHyperlinks }
   }
 }

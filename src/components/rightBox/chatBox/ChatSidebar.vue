@@ -35,11 +35,12 @@
         <n-popover
           @update:show="handlePopoverUpdate(item.key)"
           trigger="click"
-          placement="left-start"
+          placement="left"
           :show-arrow="false"
+          v-model:show="infoPopover"
           style="padding: 0; background: var(--bg-info); backdrop-filter: blur(10px)">
           <template #trigger>
-            <ContextMenu @select="$event.click(item)" :menu="optionsList" :special-menu="report">
+            <ContextMenu @select="$event.click(item, 'Sidebar')" :menu="optionsList" :special-menu="report">
               <n-flex @click="selectKey = item.key" :key="item.key" :size="10" align="center" class="item">
                 <n-avatar
                   lazy
@@ -57,30 +58,31 @@
             </ContextMenu>
           </template>
           <!-- 用户个人信息框 -->
-          <InfoPopover :info="item" />
+          <InfoPopover v-if="selectKey === item.key" :info="item" />
         </n-popover>
       </template>
     </n-virtual-list>
   </main>
 </template>
 <script setup lang="ts">
-import { RoomTypeEnum } from '@/enums'
+import { MittEnum, RoomTypeEnum } from '@/enums'
 import { MockItem } from '@/services/types.ts'
 import { MockList } from '@/mock'
 import { InputInst } from 'naive-ui'
-import { optionsList, report } from './config.ts'
 import { usePopover } from '@/hooks/usePopover.ts'
-
-/* 当前点击的用户的key */
-const selectKey = ref()
-const isSearch = ref(false)
-const searchRef = ref('')
-const inputInstRef = ref<InputInst | null>(null)
-const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-sidebar')
+import { useChatMain } from '@/hooks/useChatMain.ts'
+import Mitt from '@/utils/Bus.ts'
 
 const { activeItem } = defineProps<{
   activeItem: MockItem
 }>()
+const isSearch = ref(false)
+const searchRef = ref('')
+/** 手动触发Popover显示 */
+const infoPopover = ref(false)
+const inputInstRef = ref<InputInst | null>(null)
+const { optionsList, report, selectKey } = useChatMain(activeItem)
+const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-sidebar')
 
 const handleSearch = () => {
   isSearch.value = !isSearch.value
@@ -88,6 +90,14 @@ const handleSearch = () => {
     inputInstRef.value?.select()
   })
 }
+
+onMounted(() => {
+  Mitt.on(`${MittEnum.INFO_POPOVER}-Sidebar`, (event: any) => {
+    selectKey.value = event
+    infoPopover.value = true
+    handlePopoverUpdate(event)
+  })
+})
 </script>
 
 <style scoped lang="scss">

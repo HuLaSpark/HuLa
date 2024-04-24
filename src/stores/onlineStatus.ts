@@ -12,7 +12,7 @@ export const onlineStatus = defineStore(StoresEnum.ONLINE_STATUS, {
   }),
   actions: {
     init() {
-      /* 随机获取一个状态 */
+      /** 随机获取一个状态 */
       const index = Math.floor(Math.random() * statusItem.length)
       const { url, title } = statusItem[index]
       this.title = title

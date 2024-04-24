@@ -16,7 +16,7 @@
         :key="item.key"
         class="flex-y-center min-h-58px"
         :class="[
-          [activeItem.type === RoomTypeEnum.GROUP ? 'p-[18px_20px]' : 'chat-single p-[4px_20px_10px_20px]'],
+          [isGroup ? 'p-[18px_20px]' : 'chat-single p-[4px_20px_10px_20px]'],
           { 'active-reply': activeReply === item.key }
         ]">
         <!-- 好友或者群聊的信息 -->
@@ -37,13 +37,14 @@
             <n-popover
               @update:show="handlePopoverUpdate(item.key)"
               trigger="click"
-              placement="right-start"
+              placement="right"
               :show-arrow="false"
+              v-model:show="infoPopover"
               style="padding: 0; background: var(--bg-info); backdrop-filter: blur(10px)">
               <template #trigger>
                 <ContextMenu
-                  @select="$event.click(item)"
-                  :menu="activeItem.type === RoomTypeEnum.GROUP ? optionsList : []"
+                  @select="$event.click(item, 'Main')"
+                  :menu="isGroup ? optionsList : void 0"
                   :special-menu="report">
                   <n-avatar
                     lazy
@@ -62,7 +63,7 @@
                 </ContextMenu>
               </template>
               <!-- 用户个人信息框 -->
-              <InfoPopover :info="activeItemRef" />
+              <InfoPopover v-if="selectKey === item.key" :info="item.accountId !== userId ? activeItemRef : void 0" />
             </n-popover>
             <n-flex
               vertical
@@ -70,11 +71,8 @@
               :size="8"
               class="color-[--text-color] flex-1"
               :class="item.accountId === userId ? 'items-end mr-10px' : ''">
-              <ContextMenu
-                @select="$event.click(item)"
-                :menu="activeItem.type === RoomTypeEnum.GROUP ? optionsList : []"
-                :special-menu="report">
-                <span class="text-12px select-none color-#909090" v-if="activeItem.type === RoomTypeEnum.GROUP">
+              <ContextMenu @select="$event.click(item)" :menu="isGroup ? optionsList : []" :special-menu="report">
+                <span class="text-12px select-none color-#909090" v-if="isGroup">
                   {{ item.value }}
                 </span>
               </ContextMenu>
@@ -84,7 +82,9 @@
                 :data-key="item.accountId === userId ? `U${item.key}` : `Q${item.key}`"
                 @select="$event.click(item)"
                 :menu="handleItemType(item.type)"
+                :emoji="isGroup ? emojiList : []"
                 :special-menu="specialMenuList"
+                @reply-emoji="handleEmojiSelect($event.label, item)"
                 @click="handleMsgClick(item)">
                 <!--                &lt;!&ndash; 渲染消息内容体 &ndash;&gt;-->
                 <!--                <RenderMessage :message="message" />-->
@@ -162,6 +162,20 @@
                   {{ item.reply.imgCount }}
                 </div>
               </n-flex>
+
+              <!-- 群聊回复emoji表情 -->
+              <n-flex :size="4" v-if="isGroup && item.emojiList">
+                <n-flex
+                  :size="2"
+                  align="center"
+                  class="emoji-reply-bubble"
+                  @click.stop="cancelReplyEmoji(item, index)"
+                  v-for="(emoji, index) in item.emojiList"
+                  :key="index">
+                  {{ emoji.label }}
+                  <span class="text-(12px #eee)">{{ emoji.count }}</span>
+                </n-flex>
+              </n-flex>
             </n-flex>
           </div>
         </article>
@@ -187,7 +201,7 @@
   </n-modal>
 
   <!--  悬浮按钮提示(头部悬浮) // TODO 要结合已读未读功能来判断之前的信息有多少没有读，当现在的距离没有到最底部并且又有新消息来未读的时候显示下标的更多信息 (nyh -> 2024-03-07 01:27:22)-->
-  <header class="float-header" :class="activeItem.type === RoomTypeEnum.GROUP ? 'right-220px' : 'right-50px'">
+  <header class="float-header" :class="isGroup ? 'right-220px' : 'right-50px'">
     <div class="float-box">
       <n-flex justify="space-between" align="center">
         <n-icon :color="'#13987f'">
@@ -199,10 +213,7 @@
   </header>
 
   <!-- 悬浮按钮提示(底部悬浮) -->
-  <footer
-    class="float-footer"
-    v-if="floatFooter && newMsgNum > 0"
-    :class="activeItem.type === RoomTypeEnum.GROUP ? 'right-220px' : 'right-50px'">
+  <footer class="float-footer" v-if="floatFooter && newMsgNum > 0" :class="isGroup ? 'right-220px' : 'right-50px'">
     <div class="float-box" :class="{ max: newMsgNum > 99 }" @click="scrollBottom">
       <n-flex justify="space-between" align="center">
         <n-icon :color="newMsgNum > 99 ? '#ce304f' : '#13987f'">
@@ -220,7 +231,6 @@ import { EventEnum, MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import { MockItem } from '@/services/types.ts'
 import Mitt from '@/utils/Bus.ts'
 import { invoke } from '@tauri-apps/api/tauri'
-import { optionsList, report } from './config.ts'
 import { usePopover } from '@/hooks/usePopover.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { listen } from '@tauri-apps/api/event'
@@ -228,21 +238,26 @@ import { useChatMain } from '@/hooks/useChatMain.ts'
 import { VirtualListInst } from 'naive-ui'
 import { delay } from 'lodash-es'
 import { useCommon } from '@/hooks/useCommon.ts'
+import { setting } from '@/stores/setting.ts'
+import { storeToRefs } from 'pinia'
 
 const { activeItem } = defineProps<{
   activeItem: MockItem
 }>()
 const activeItemRef = ref({ ...activeItem })
+const settingStore = setting()
+const { login } = storeToRefs(settingStore)
 const { createWebviewWindow } = useWindow()
-/* 当前点击的用户的key */
-const selectKey = ref()
-/* 跳转回复消息后选中效果 */
+/** 跳转回复消息后选中效果 */
 const activeReply = ref(-1)
-/* item最小高度，用于计算滚动大小和位置 */
-const itemSize = computed(() => (activeItem.type === RoomTypeEnum.GROUP ? 98 : 70))
-/* 虚拟列表 */
+/** 当前信息是否是群聊信息 */
+const isGroup = computed(() => activeItem.type === RoomTypeEnum.GROUP)
+/** item最小高度，用于计算滚动大小和位置 */
+const itemSize = computed(() => (isGroup.value ? 98 : 70))
+/** 虚拟列表 */
 const virtualListInst = ref<VirtualListInst>()
-const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-main')
+/** 手动触发Popover显示 */
+const infoPopover = ref(false)
 const { removeTag } = useCommon()
 const {
   handleScroll,
@@ -258,13 +273,18 @@ const {
   modalShow,
   userId,
   specialMenuList,
-  itemComputed
+  itemComputed,
+  optionsList,
+  report,
+  selectKey,
+  emojiList
 } = useChatMain(activeItem)
+const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-main')
 // // 创建一个符合 TextBody 类型的对象
 // const textBody = {
 //   content: '123',
 //   reply: {
-//     /* 填充合适的回复对象 */
+//     /** 填充合适的回复对象 */
 //   },
 //   urlContentMap: {
 //     // 填充合适的 URL 映射信息，如果没有，则可以是空对象
@@ -279,7 +299,7 @@ const {
 //   body: textBody, // 上面创建的 TextBody 对象
 //   sendTime: Date.now(), // 发送消息的时间戳
 //   messageMark: {
-//     /* 填充合适的 MessageMarkType 对象 */
+//     /** 填充合适的 MessageMarkType 对象 */
 //   }
 // })
 // const message = computed(() => msg.value)
@@ -289,12 +309,37 @@ watchEffect(() => {
   activeItemRef.value = { ...activeItem }
 })
 
-/* 处理回复消息中的 AIT 标签 */
+/** 取消回复emoji表情 */
+const cancelReplyEmoji = (item: any, index: number) => {
+  // 判断item.emojiList数组中的count是否为1，如果为1则删除该元素，否则count-1
+  if (item.emojiList[index].count === 1) {
+    item.emojiList.splice(index, 1)
+  } else {
+    item.emojiList[index].count--
+  }
+}
+
+/** 处理emoji表情回应 */
+const handleEmojiSelect = (label: string, item: any) => {
+  if (!item.emojiList) {
+    item.emojiList = [{ label: label, count: 1 }]
+  } else {
+    // 比较label是否存在，存在则计数+1，不存在则新增
+    const index = item.emojiList.findIndex((item: any) => item.label === label)
+    if (index > -1) {
+      item.emojiList[index].count++
+    } else {
+      item.emojiList.push({ label: label, count: 1 })
+    }
+  }
+}
+
+/** 处理回复消息中的 AIT 标签 */
 const handleReply = (content: string) => {
   return content.includes('id="aitSpan"') ? removeTag(content) : content
 }
 
-/* 发送信息 */
+/** 发送信息 */
 const handleSendMessage = (msg: any) => {
   nextTick(() => {
     // 检查是否为图片消息
@@ -311,10 +356,10 @@ const handleSendMessage = (msg: any) => {
     }
     const index = items.value.length > 0 ? items.value[items.value.length - 1].key : 0
     items.value.push({
-      value: '我',
+      value: login.value.accountInfo.name,
       key: index + 1,
-      accountId: userId.value,
-      avatar: 'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg',
+      accountId: login.value.accountInfo.uid,
+      avatar: login.value.accountInfo.avatar,
       content: msg.content,
       type: msg.type,
       reply: msg.type === MsgEnum.REPLY ? msg.reply : null
@@ -323,7 +368,7 @@ const handleSendMessage = (msg: any) => {
   })
 }
 
-/* 跳转到回复消息 */
+/** 跳转到回复消息 */
 const jumpToReplyMsg = (key: number) => {
   nextTick(() => {
     virtualListInst.value?.scrollTo({ key: key })
@@ -336,13 +381,13 @@ const jumpToReplyMsg = (key: number) => {
  * @param index 下标
  * @param id 用户ID
  */
-const addToDomUpdateQueue = (index: number, id: number) => {
+const addToDomUpdateQueue = (index: number, id: string) => {
   // 使用 nextTick 确保虚拟列表渲染完最新的项目后进行滚动
   nextTick(() => {
     if (!floatFooter.value || id === userId.value) {
       virtualListInst.value?.scrollTo({ position: 'bottom', debounce: true })
     }
-    /* data-key标识的气泡,添加前缀用于区分用户消息，不然气泡动画会被覆盖 */
+    /** data-key标识的气泡,添加前缀用于区分用户消息，不然气泡动画会被覆盖 */
     const dataKey = id === userId.value ? `U${index + 1}` : `Q${index + 1}`
     const lastMessageElement = document.querySelector(`[data-key="${dataKey}"]`) as HTMLElement
     if (lastMessageElement) {
@@ -358,7 +403,7 @@ const addToDomUpdateQueue = (index: number, id: number) => {
   })
 }
 
-/* 点击后滚动到底部 */
+/** 点击后滚动到底部 */
 const scrollBottom = () => {
   nextTick(() => {
     virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant', debounce: true })
@@ -370,7 +415,7 @@ const closeMenu = (event: any) => {
     activeBubble.value = -1
   }
   if (!event.target.matches('.active-reply')) {
-    /* 解决更替交换回复气泡时候没有触发动画的问题 */
+    /** 解决更替交换回复气泡时候没有触发动画的问题 */
     if (!event.target.matches('.reply-bubble *')) {
       nextTick(() => {
         const activeReplyElement = document.querySelector('.active-reply') as HTMLElement
@@ -387,7 +432,7 @@ const closeMenu = (event: any) => {
 }
 
 onMounted(() => {
-  /*! 启动图标闪烁 需要设置"resources": ["sec-tauri/图标放置的文件夹"]*/
+  /**! 启动图标闪烁 需要设置"resources": ["sec-tauri/图标放置的文件夹"]*/
   invoke('tray_blink', {
     isRun: true,
     ms: 500,
@@ -396,8 +441,13 @@ onMounted(() => {
   }).catch((error) => {
     console.error('设置图标失败:', error)
   })
-  Mitt.on(MittEnum.SEND_MESSAGE, (event) => {
+  Mitt.on(MittEnum.SEND_MESSAGE, (event: any) => {
     handleSendMessage(event)
+  })
+  Mitt.on(`${MittEnum.INFO_POPOVER}-Main`, (event: any) => {
+    selectKey.value = event
+    infoPopover.value = true
+    handlePopoverUpdate(event)
   })
   Mitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
     activeItemRef.value = event.item

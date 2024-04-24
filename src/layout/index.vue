@@ -13,7 +13,7 @@ import Right from './right/index.vue'
 import Mitt from '@/utils/Bus'
 import { MittEnum } from '@/enums'
 
-/* todo home窗口创建的时候已经设置了resizable: true,可以调整大小了，但是还是不可以调整大小 */
+/** todo home窗口创建的时候已经设置了resizable: true,可以调整大小了，但是还是不可以调整大小 */
 const shrinkStatus = ref(false)
 /**
  * event默认如果没有传递值就为true，所以shrinkStatus的值为false就会发生值的变化

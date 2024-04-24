@@ -27,7 +27,7 @@
   }
 }
 
-/*! TransitionGroup过渡样式 */
+/**! TransitionGroup过渡样式 */
 .fade-move,
 .fade-enter-active,
 .fade-leave-active {
@@ -43,7 +43,7 @@
 .fade-leave-active {
   position: absolute;
 }
-/*! end */
+/**! end */
 
 :deep(.n-badge .n-badge-sup) {
   font-weight: bold;

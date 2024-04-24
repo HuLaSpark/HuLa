@@ -3,7 +3,7 @@ const DURATION = 300 // 持续时间
 
 const map = new WeakMap() // 弱引用映射
 
-/* 创建观察器 */
+/** 创建观察器 */
 const ob = new IntersectionObserver((entries: any) => {
   for (const entry of entries) {
     if (entry.isIntersecting) {

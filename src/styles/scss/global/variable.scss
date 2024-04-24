@@ -1,4 +1,4 @@
-/*! 主题变量 */
+/**! 主题变量 */
 :root {
   // 整体布局背景
   --left-bg-color: rgba(255, 255, 255, 0.6);
@@ -122,7 +122,7 @@ html[data-theme='dark'] {
   --reply-hover: #b1b1b1;
   --bg-reply-img-count: #505050;
 }
-/*! end */
+/**! end */
 // 线性动画
 @keyframes linearAnimation {
   0% {
@@ -164,7 +164,7 @@ html[data-theme='dark'] {
     transform: scale(1);
   }
 }
-/*!修改naive-ui的遮罩层样式*/
+/**!修改naive-ui的遮罩层样式*/
 @mixin mask-style($blur: 4px) {
   position: fixed;
   left: 0;
@@ -180,21 +180,21 @@ html[data-theme='dark'] {
 .n-drawer-mask {
   @include mask-style(2px);
 }
-/*!end*/
+/**!end*/
 
-/*! 修改naive-ui复选框的样式 */
+/**! 修改naive-ui复选框的样式 */
 :deep(.n-checkbox .n-checkbox-box) {
   border-radius: 50%;
   width: 16px;
   height: 16px;
 }
 
-/*! 修改naive-ui滚动条的间距 */
+/**! 修改naive-ui滚动条的间距 */
 :deep(.n-scrollbar > .n-scrollbar-rail.n-scrollbar-rail--vertical, .n-scrollbar + .n-scrollbar-rail.n-scrollbar-rail--vertical) {
   right: 0;
 }
 
-/*! 修改naive-ui Popselect选中的样式 */
+/**! 修改naive-ui Popselect选中的样式 */
 .n-base-select-menu .n-base-select-option.n-base-select-option--selected {
   color: #13987f;
 }
@@ -202,7 +202,7 @@ html[data-theme='dark'] {
   color: #13987f;
 }
 
-/*! 通用菜单项目样式 */
+/**! 通用菜单项目样式 */
 @mixin menu-item-style($position: fixed) {
   position: $position;
   background: var(--bg-menu);
@@ -225,7 +225,7 @@ html[data-theme='dark'] {
   overflow: hidden;
 }
 
-/*! 通用菜单项样式 */
+/**! 通用菜单项样式 */
 @mixin menu-list() {
   padding: 5px;
   display: flex;

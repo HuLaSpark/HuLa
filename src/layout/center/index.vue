@@ -65,7 +65,7 @@ Mitt.on(MittEnum.SHRINK_WINDOW, (event) => {
 const closeMenu = (event: Event) => {
   const e = event.target as HTMLInputElement
   const route = router.currentRoute.value.path
-  /* 判断如果点击的搜索框，就关闭消息列表 */
+  /** 判断如果点击的搜索框，就关闭消息列表 */
   if (!e.matches('#search, #search *, #centerList *, #centerList') && route === '/searchDetails') {
     router.go(-1)
   }

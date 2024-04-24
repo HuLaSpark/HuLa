@@ -25,11 +25,11 @@ import { ThemeEnum } from '@/enums'
 
 const settingStore = setting()
 const { themes } = storeToRefs(settingStore)
-/*监听深色主题颜色变化*/
+/**监听深色主题颜色变化*/
 const globalTheme = ref<any>(themes.value.content)
 const prefers = matchMedia('(prefers-color-scheme: dark)')
 
-/* 跟随系统主题模式切换主题 */
+/** 跟随系统主题模式切换主题 */
 const followOS = () => {
   globalTheme.value = prefers.matches ? darkTheme : lightTheme
   document.documentElement.dataset.theme = prefers.matches ? ThemeEnum.DARK : ThemeEnum.LIGHT
@@ -105,7 +105,7 @@ const commonTheme: GlobalThemeOverrides = {
   }
 }
 
-/* 浅色模式的主题颜色 */
+/** 浅色模式的主题颜色 */
 const lightThemeOverrides: GlobalThemeOverrides = {
   ...commonTheme,
   Scrollbar: {
@@ -114,7 +114,7 @@ const lightThemeOverrides: GlobalThemeOverrides = {
   }
 }
 
-/* 深色模式的主题颜色 */
+/** 深色模式的主题颜色 */
 const darkThemeOverrides: GlobalThemeOverrides = {
   ...commonTheme,
   Scrollbar: {
