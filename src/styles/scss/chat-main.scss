@@ -77,6 +77,10 @@
     @apply absolute bottom-8px right-6px color-#13987f bg-[--bg-reply-img-count] p-[2px_4px] rounded-6px text-10px;
   }
 }
+/** emoji回复气泡的样式 */
+.emoji-reply-bubble {
+  @apply relative rounded-8px p-[4px_8px] cursor-pointer select-none bg-#13987F66 text-14px w-fit;
+}
 /** 跳转到回复内容时候显示的样式 */
 .active-reply {
   background-color: var(--bg-reply-active);

@@ -111,14 +111,18 @@ const handleSize = ({ width, height }: any) => {
 
 /** 处理右键菜单点击事件 */
 const handleClick = (item: string) => {
-  showMenu.value = false
-  emit('select', item)
+  nextTick(() => {
+    showMenu.value = false
+    emit('select', item)
+  })
 }
 
 /** 处理回复表情事件 */
 const handleReplyEmoji = (item: string) => {
-  showMenu.value = false
-  emit('reply-emoji', item)
+  nextTick(() => {
+    showMenu.value = false
+    emit('reply-emoji', item)
+  })
 }
 
 const handleBeforeEnter = (el: any) => {

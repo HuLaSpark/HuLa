@@ -84,7 +84,7 @@
                 :menu="handleItemType(item.type)"
                 :emoji="isGroup ? emojiList : []"
                 :special-menu="specialMenuList"
-                @reply-emoji="handleEmojiSelect($event.label, item.key)"
+                @reply-emoji="handleEmojiSelect($event.label, item)"
                 @click="handleMsgClick(item)">
                 <!--                &lt;!&ndash; 渲染消息内容体 &ndash;&gt;-->
                 <!--                <RenderMessage :message="message" />-->
@@ -164,12 +164,17 @@
               </n-flex>
 
               <!-- 群聊回复emoji表情 -->
-              <n-flex
-                v-if="replyEmoji.content && isGroup && item.key === replyEmoji.index"
-                align="center"
-                :size="6"
-                class="relative rounded-8px p-4px cursor-pointer select-none bg-#13987f text-14px w-fit">
-                {{ replyEmoji.content }}
+              <n-flex :size="4" v-if="isGroup && item.emojiList">
+                <n-flex
+                  :size="2"
+                  align="center"
+                  class="emoji-reply-bubble"
+                  @click.stop="cancelReplyEmoji(item, index)"
+                  v-for="(emoji, index) in item.emojiList"
+                  :key="index">
+                  {{ emoji.label }}
+                  <span class="text-(12px #eee)">{{ emoji.count }}</span>
+                </n-flex>
               </n-flex>
             </n-flex>
           </div>
@@ -253,11 +258,6 @@ const itemSize = computed(() => (isGroup.value ? 98 : 70))
 const virtualListInst = ref<VirtualListInst>()
 /** 手动触发Popover显示 */
 const infoPopover = ref(false)
-/** 群聊的回复表情内容以及下标 */
-const replyEmoji = ref({
-  content: '',
-  index: -1
-})
 const { removeTag } = useCommon()
 const {
   handleScroll,
@@ -309,10 +309,29 @@ watchEffect(() => {
   activeItemRef.value = { ...activeItem }
 })
 
+/** 取消回复emoji表情 */
+const cancelReplyEmoji = (item: any, index: number) => {
+  // 判断item.emojiList数组中的count是否为1，如果为1则删除该元素，否则count-1
+  if (item.emojiList[index].count === 1) {
+    item.emojiList.splice(index, 1)
+  } else {
+    item.emojiList[index].count--
+  }
+}
+
 /** 处理emoji表情回应 */
-const handleEmojiSelect = (label: any, key: any) => {
-  replyEmoji.value.content = label
-  replyEmoji.value.index = key
+const handleEmojiSelect = (label: string, item: any) => {
+  if (!item.emojiList) {
+    item.emojiList = [{ label: label, count: 1 }]
+  } else {
+    // 比较label是否存在，存在则计数+1，不存在则新增
+    const index = item.emojiList.findIndex((item: any) => item.label === label)
+    if (index > -1) {
+      item.emojiList[index].count++
+    } else {
+      item.emojiList.push({ label: label, count: 1 })
+    }
+  }
 }
 
 /** 处理回复消息中的 AIT 标签 */
