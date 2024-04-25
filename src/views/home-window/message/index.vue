@@ -27,11 +27,7 @@
               </n-flex>
 
               <n-flex align="center" justify="space-between">
-                <span
-                  class="text w-135px text-12px"
-                  style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
-                  说的很经典哈萨克的哈萨克看到贺卡上
-                </span>
+                <span class="text w-135px text-12px truncate"> 说的很经典哈萨克的哈萨克看到贺卡上 </span>
 
                 <!-- 消息提示 -->
                 <n-badge :value="msgTotal" :max="99" />

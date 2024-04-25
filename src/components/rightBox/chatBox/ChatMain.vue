@@ -16,15 +16,24 @@
         :key="item.key"
         class="flex-y-center min-h-58px"
         :class="[
-          [isGroup ? 'p-[18px_20px]' : 'chat-single p-[4px_20px_10px_20px]'],
+          [isGroup ? 'p-[14px_20px]' : 'chat-single p-[4px_20px_10px_20px]'],
           { 'active-reply': activeReply === item.key }
         ]">
         <!-- 好友或者群聊的信息 -->
         <article
-          class="flex flex-col w-full gap-18px"
-          :class="{
-            'items-end': item.accountId === userId
-          }">
+          class="flex flex-col w-full"
+          :class="[{ 'items-end': item.accountId === userId }, isGroup ? 'gap-18px' : 'gap-2px']">
+          <!-- 信息时间(单聊) -->
+          <div
+            v-if="!isGroup"
+            class="text-(12px #909090) h-12px w-fit select-none"
+            :class="item.accountId === userId ? 'pr-42px' : 'pl-42px'">
+            <Transition name="fade">
+              <span v-if="hoverBubble.key === item.key">
+                {{ new Date().toLocaleString() }}
+              </span>
+            </Transition>
+          </div>
           <div class="flex items-start flex-1" :class="item.accountId === userId ? 'flex-row-reverse' : ''">
             <!-- 回复消息提示的箭头 -->
             <svg
@@ -68,17 +77,39 @@
             <n-flex
               vertical
               justify="center"
-              :size="8"
+              :size="4"
               class="color-[--text-color] flex-1"
               :class="item.accountId === userId ? 'items-end mr-10px' : ''">
-              <ContextMenu @select="$event.click(item)" :menu="isGroup ? optionsList : []" :special-menu="report">
-                <span class="text-12px select-none color-#909090" v-if="isGroup">
-                  {{ item.value }}
-                </span>
-              </ContextMenu>
+              <n-flex :size="4" :style="item.accountId === userId ? 'flex-direction: row-reverse' : ''">
+                <ContextMenu @select="$event.click(item)" :menu="isGroup ? optionsList : []" :special-menu="report">
+                  <span class="text-12px select-none color-#909090 inline-block align-top" v-if="isGroup">
+                    {{ item.value }}
+                  </span>
+                </ContextMenu>
+                <!-- 群主 -->
+                <div
+                  v-if="isGroup && item.key === groupChatTag.leader"
+                  class="flex p-4px rounded-4px bg-#f5dadf size-fit select-none">
+                  <span class="text-(10px #d5304f)">群主</span>
+                </div>
+                <!-- 管理员 -->
+                <div
+                  v-if="isGroup && groupChatTag.adminList.includes(item.key)"
+                  class="flex p-4px rounded-4px bg-#13987F66 size-fit select-none">
+                  <span class="text-(10px #13987f)">管理员</span>
+                </div>
+                <!-- 信息时间(群聊) -->
+                <Transition name="fade">
+                  <span v-if="isGroup && hoverBubble.key === item.key" class="text-(12px #909090)">
+                    {{ new Date().toLocaleString() }}
+                  </span>
+                </Transition>
+              </n-flex>
               <!--  气泡样式  -->
               <ContextMenu
-                class="size-fit"
+                @mouseenter="handleMouseEnter(item.key)"
+                @mouseleave="handleMouseLeave"
+                class="w-fit"
                 :data-key="item.accountId === userId ? `U${item.key}` : `Q${item.key}`"
                 @select="$event.click(item)"
                 :menu="handleItemType(item.type)"
@@ -253,11 +284,18 @@ const activeReply = ref(-1)
 /** 当前信息是否是群聊信息 */
 const isGroup = computed(() => activeItem.type === RoomTypeEnum.GROUP)
 /** item最小高度，用于计算滚动大小和位置 */
-const itemSize = computed(() => (isGroup.value ? 98 : 70))
+const itemSize = computed(() => (isGroup.value ? 86 : 72))
 /** 虚拟列表 */
 const virtualListInst = ref<VirtualListInst>()
 /** 手动触发Popover显示 */
 const infoPopover = ref(false)
+/** 鼠标悬浮的气泡显示对应的时间 */
+const hoverBubble = ref<{
+  key: number
+  timer?: NodeJS.Timeout
+}>({
+  key: -1
+})
 const { removeTag } = useCommon()
 const {
   handleScroll,
@@ -277,7 +315,8 @@ const {
   optionsList,
   report,
   selectKey,
-  emojiList
+  emojiList,
+  groupChatTag
 } = useChatMain(activeItem)
 const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-main')
 // // 创建一个符合 TextBody 类型的对象
@@ -308,6 +347,25 @@ watchEffect(() => {
   newMsgNum.value = itemComputed.value - historyIndex.value
   activeItemRef.value = { ...activeItem }
 })
+
+// 当鼠标进入时触发的处理函数
+const handleMouseEnter = (key: any) => {
+  // 设置定时器，在1600毫秒后更新悬浮气泡的key值
+  hoverBubble.value.timer = setTimeout(() => {
+    hoverBubble.value.key = key
+  }, 1600)
+}
+
+// 当鼠标离开时触发的处理函数
+const handleMouseLeave = () => {
+  // 如果定时器存在，则清除定时器并重置为undefined
+  if (hoverBubble.value.timer) {
+    clearTimeout(hoverBubble.value.timer)
+    hoverBubble.value.timer = void 0
+  }
+  // 重置悬浮气泡的key值为-1
+  hoverBubble.value.key = -1
+}
 
 /** 取消回复emoji表情 */
 const cancelReplyEmoji = (item: any, index: number) => {
@@ -475,10 +533,22 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  clearTimeout(hoverBubble.value.timer)
+  hoverBubble.value.timer = void 0
+  hoverBubble.value.key = -1
   window.removeEventListener('click', closeMenu, true)
 })
 </script>
 
 <style scoped lang="scss">
 @import '@/styles/scss/chat-main';
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.4s ease-in-out;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
 </style>

@@ -53,7 +53,17 @@
                   :intersection-observer-options="{
                     root: '#image-chat-sidebar'
                   }"></n-avatar>
-                <span class="text-12px">{{ item.accountName }}</span>
+                <span class="text-12px truncate flex-1">{{ item.accountName }}</span>
+                <div
+                  v-if="item.key === groupChatTag.leader"
+                  class="flex p-4px rounded-4px bg-#f5dadf size-fit select-none">
+                  <span class="text-(10px #d5304f)">群主</span>
+                </div>
+                <div
+                  v-if="groupChatTag.adminList.includes(item.key)"
+                  class="flex p-4px rounded-4px bg-#13987F66 size-fit select-none">
+                  <span class="text-(10px #13987f)">管理员</span>
+                </div>
               </n-flex>
             </ContextMenu>
           </template>
@@ -81,7 +91,7 @@ const searchRef = ref('')
 /** 手动触发Popover显示 */
 const infoPopover = ref(false)
 const inputInstRef = ref<InputInst | null>(null)
-const { optionsList, report, selectKey } = useChatMain(activeItem)
+const { optionsList, report, selectKey, groupChatTag } = useChatMain(activeItem)
 const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-sidebar')
 
 const handleSearch = () => {

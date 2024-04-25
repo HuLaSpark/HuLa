@@ -6,6 +6,11 @@ import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
 
 export const useChatMain = (activeItem: MockItem) => {
+  /**! 模拟群主或者管理员id */
+  const groupChatTag = ref({
+    leader: 0,
+    adminList: [1, 2]
+  })
   const { removeTag } = useCommon()
   const settingStore = setting()
   const { login } = storeToRefs(settingStore)
@@ -291,6 +296,7 @@ export const useChatMain = (activeItem: MockItem) => {
     optionsList,
     report,
     selectKey,
-    emojiList
+    emojiList,
+    groupChatTag
   }
 }
