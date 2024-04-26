@@ -18,28 +18,26 @@
 
                 <!-- 用户框 多套一层div来移除默认的右键事件然后覆盖掉因为margin空隙而导致右键可用 -->
                 <div @contextmenu.stop="$event.preventDefault()">
-                  <div
+                  <n-flex
                     v-slide
+                    :size="10"
                     @click="handleClick(item.key, 2)"
                     :class="{ active: activeItem === item.key }"
                     class="user-box w-full h-75px mb-5px"
                     v-for="item in friendsList"
                     :key="item.key">
-                    <div class="flex items-center h-full pl-6px pr-8px gap-10px">
-                      <n-avatar round bordered :color="'#fff'" :size="44" :src="item.avatar" />
+                    <n-flex v-slide align="center" :size="10" class="h-75px pl-6px pr-8px flex-1 truncate">
+                      <n-avatar round bordered :color="'#fff'" :size="44" :src="item.avatar" fallback-src="/logo.png" />
 
-                      <div class="h-38px flex flex-1 flex-col justify-between">
-                        <div class="text-14px flex-y-center gap-4px">
-                          {{ item.accountName }}
-                        </div>
+                      <n-flex vertical justify="space-between" class="h-fit flex-1 truncate">
+                        <span class="text-14px leading-tight flex-1 truncate">{{ item.accountName }}</span>
 
-                        <div class="text w-155px h-14px text-12px flex-y-center gap-4px">
-                          <span class="text-12px">[⛅今日天气]</span>
-                          <span class="flex-1 truncate">说的很经典哈萨克的哈萨克看到贺卡上</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                        <span class="text leading-tight text-12px flex-1 truncate">
+                          [⛅今日天气] 说的很经典哈萨克的哈萨克看到贺卡上
+                        </span>
+                      </n-flex>
+                    </n-flex>
+                  </n-flex>
                 </div>
               </n-collapse-item>
               <n-collapse-item title="默认分组" name="3">
@@ -57,19 +55,14 @@
         <div
           @click="handleClick(item.key, 1)"
           :class="{ active: activeItem === item.key }"
-          class="w-full h-75px mb-5px cursor-pointer"
+          class="w-full h-75px mb-5px"
           v-for="item in groupChatList"
           :key="item.key">
-          <!-- 消息框，使用v-slide自定义指令来自动抉择右键菜单位置 -->
-          <div v-slide class="flex items-center h-full pl-6px pr-8px gap-10px">
-            <n-avatar round bordered :color="'#fff'" :size="44" :src="item.avatar" />
+          <n-flex v-slide align="center" :size="10" class="h-75px pl-6px pr-8px flex-1 truncate">
+            <n-avatar round bordered :color="'#fff'" :size="44" :src="item.avatar" fallback-src="/logo.png" />
 
-            <div class="h-38px flex flex-1 flex-col justify-center">
-              <div class="flex-between-center">
-                <span class="text-14px">{{ item.accountName }}</span>
-              </div>
-            </div>
-          </div>
+            <span class="text-14px leading-tight flex-1 truncate">{{ item.accountName }}</span>
+          </n-flex>
         </div>
       </n-tab-pane>
     </n-tabs>

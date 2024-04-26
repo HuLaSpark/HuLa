@@ -14,18 +14,19 @@
         v-else
         :size="180"
         class="rounded-12px relative"
-        :class="{ blur: scanSuccess }"
+        :class="{ blur: scanStatus.show }"
         :value="QRCode"
         icon-src="/logo.png"
         error-correction-level="H" />
+      <!-- 二维码状态 -->
       <n-flex
-        v-if="scanSuccess"
+        v-if="scanStatus.show"
         vertical
         :size="12"
         align="center"
         class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-        <svg class="size-42px"><use href="#success"></use></svg>
-        <span class="text-(16px #e3e3e3)">扫码成功</span>
+        <svg class="size-42px"><use :href="`#${scanStatus.icon}`"></use></svg>
+        <span class="text-(16px #e3e3e3)">{{ scanStatus.text }}</span>
       </n-flex>
     </n-flex>
 
@@ -33,7 +34,7 @@
 
     <!-- 顶部操作栏 -->
     <n-flex justify="center" class="text-14px mt-48px">
-      <div class="color-#13987f cursor-pointer" @click="toLogin">账密登录</div>
+      <div class="color-#13987f cursor-pointer" @click="router.push('/login')">账密登录</div>
       <div class="w-1px h-14px bg-#ccc"></div>
       <div class="color-#13987f cursor-pointer">注册账号</div>
     </n-flex>
@@ -56,34 +57,60 @@ const { createWebviewWindow } = useWindow()
 const loading = ref(true)
 const loadText = ref('加载中...')
 const QRCode = ref()
-const scanSuccess = ref(false)
+const scanStatus = ref<{
+  status: 'error' | 'success'
+  icon: 'cloudError' | 'success'
+  text: string
+  show: boolean
+}>({ status: 'success', icon: 'success', text: '扫码成功', show: false })
 
-const toLogin = () => {
-  router.push('/login')
+/** 处理二维码登录 */
+const handleQRCodeLogin = (e: any) => {
+  QRCode.value = e.data.loginUrl
+  loading.value = false
+  loadText.value = '请使用微信扫码登录'
 }
+
+/** 处理登录成功 */
+const handleLoginSuccess = async (e: any) => {
+  scanStatus.value.show = true
+  loadText.value = '登录中...'
+  delay(async () => {
+    await createWebviewWindow('HuLa', 'home', 960, 720, 'login', false, true)
+    settingStore.setAccountInfo({
+      avatar: e.data.avatar,
+      name: e.data.name,
+      uid: e.data.uid
+    })
+    await setLoginState()
+  }, 1000)
+}
+
+/** 处理失败场景 */
+const handleError = (e: any) => {
+  loading.value = false
+  scanStatus.value = {
+    status: 'error',
+    icon: 'cloudError',
+    text: e,
+    show: true
+  }
+  loadText.value = '请稍后再试'
+}
+
 // TODO 做一个二维码过期时间重新刷新二维码的功能 (nyh -> 2024-01-27 00:37:18)
 onMounted(() => {
   initWebSocket()
   Mitt.on(WsResEnum.QRCODE_LOGIN, (e: any) => {
-    QRCode.value = e.data.loginUrl
-    loading.value = false
-    loadText.value = '请使用微信扫码登录'
+    handleQRCodeLogin(e)
   })
   Mitt.on(WsResEnum.LOGIN_SUCCESS, (e: any) => {
-    scanSuccess.value = true
-    loadText.value = '登录中...'
-    delay(async () => {
-      await createWebviewWindow('HuLa', 'home', 960, 720, 'login', false, true)
-      settingStore.setAccountInfo({
-        avatar: e.data.avatar,
-        name: e.data.name,
-        uid: e.data.uid
-      })
-      await setLoginState()
-    }, 1000)
+    handleLoginSuccess(e)
   })
   delay(() => {
-    sendToServer({ type: WsReqEnum.LOGIN })
+    sendToServer({ type: WsReqEnum.LOGIN }).catch((e) => {
+      handleError(e)
+    })
   }, 1000)
 })
 </script>

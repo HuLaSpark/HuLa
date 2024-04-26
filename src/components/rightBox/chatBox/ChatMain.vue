@@ -24,10 +24,7 @@
           class="flex flex-col w-full"
           :class="[{ 'items-end': item.accountId === userId }, isGroup ? 'gap-18px' : 'gap-2px']">
           <!-- 信息时间(单聊) -->
-          <div
-            v-if="!isGroup"
-            class="text-(12px #909090) h-12px w-fit select-none"
-            :class="item.accountId === userId ? 'pr-42px' : 'pl-42px'">
+          <div v-if="!isGroup" class="text-(12px #909090) h-12px w-fit select-none" :class="getTimePosition(item)">
             <Transition name="fade">
               <span v-if="hoverBubble.key === item.key">
                 {{ new Date().toLocaleString() }}
@@ -348,6 +345,12 @@ watchEffect(() => {
   activeItemRef.value = { ...activeItem }
 })
 
+/** 计算单聊时间戳显示的位置 */
+const getTimePosition = (item: any) => {
+  const pxVal = activeReply.value === item.key ? '68px' : '42px'
+  return item.accountId === userId.value ? `pr-${pxVal}` : `pl-${pxVal}`
+}
+
 // 当鼠标进入时触发的处理函数
 const handleMouseEnter = (key: any) => {
   // 设置定时器，在1600毫秒后更新悬浮气泡的key值
@@ -542,13 +545,4 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 @import '@/styles/scss/chat-main';
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.4s ease-in-out;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
 </style>

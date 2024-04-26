@@ -68,7 +68,7 @@ export const setting = defineStore(StoresEnum.SETTING, {
     },
     /** 清空账号信息 */
     clearAccount() {
-      this.login.accountInfo = { account: '', avatar: '', name: '', password: '', uid: '' }
+      this.login.accountInfo.password = ''
     }
   },
   share: {

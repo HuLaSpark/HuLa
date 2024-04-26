@@ -9,7 +9,10 @@
     <n-flex vertical :size="25" v-if="!isAutoLogin">
       <!-- 头像 -->
       <n-flex justify="center" class="w-full mt-35px">
-        <img class="w-80px h-80px rounded-50% bg-#fff border-(2px solid #fff)" :src="avatarRef || '/logo.png'" alt="" />
+        <img
+          class="w-80px h-80px rounded-50% bg-#fff border-(2px solid #fff)"
+          :src="info.avatar || '/logo.png'"
+          alt="" />
       </n-flex>
 
       <!-- 登录菜单 -->
@@ -19,7 +22,7 @@
           size="large"
           maxlength="16"
           minlength="6"
-          v-model:value="accountRef"
+          v-model:value="info.account"
           type="text"
           :placeholder="accountPH"
           @focus="accountPH = ''"
@@ -62,7 +65,7 @@
           maxlength="16"
           minlength="6"
           size="large"
-          v-model:value="passwordRef"
+          v-model:value="info.password"
           type="password"
           :placeholder="passwordPH"
           @focus="passwordPH = ''"
@@ -116,18 +119,19 @@
           :loading="loading"
           :disabled="loginDisabled"
           class="w-200px mt-12px mb-40px"
-          @click="loginWin"
+          @click="autoLogin"
           color="#13987f">
           {{ loginText }}
         </n-button>
       </n-flex>
     </n-flex>
 
-    <!-- 顶部操作栏 -->
-    <n-flex justify="center" class="text-14px">
+    <!-- 底部操作栏 -->
+    <n-flex justify="center" class="text-14px" id="bottomBar">
       <div class="color-#13987f cursor-pointer" @click="router.push('/qrCode')">扫码登录</div>
       <div class="w-1px h-14px bg-#ccc"></div>
-      <n-popover trigger="click" :show-checkmark="false" :show-arrow="false">
+      <div v-if="isAutoLogin" class="color-#13987f cursor-pointer">移除账号</div>
+      <n-popover v-else trigger="click" :show-checkmark="false" :show-arrow="false">
         <template #trigger>
           <div class="color-#13987f cursor-pointer">更多选项</div>
         </template>
@@ -151,10 +155,16 @@ import { useLogin } from '@/hooks/useLogin.ts'
 
 const settingStore = setting()
 const { login } = storeToRefs(settingStore)
-const accountRef = ref()
-const passwordRef = ref()
-const avatarRef = ref()
-const nameRef = ref()
+/** 账号信息 */
+const info = ref({
+  account: '',
+  password: '',
+  avatar: '',
+  name: ''
+})
+/** 是否中断登录 */
+const interruptLogin = ref(false)
+/** 协议 */
 const protocol = ref()
 const loginDisabled = ref(false)
 const loading = ref(false)
@@ -199,10 +209,13 @@ const loginText = ref('登录')
 const { createWebviewWindow } = useWindow()
 
 watchEffect(() => {
-  loginDisabled.value = !(accountRef.value && passwordRef.value && protocol.value)
+  loginDisabled.value = !(info.value.account && info.value.password && protocol.value)
   // 清空账号的时候设置默认头像
-  if (!accountRef.value) {
-    avatarRef.value = '/logo.png'
+  if (!info.value.account) {
+    info.value.avatar = '/logo.png'
+  }
+  if (interruptLogin.value) {
+    loginDisabled.value = false
   }
 })
 
@@ -217,9 +230,9 @@ const delAccount = (index: number) => {
   if (lengthBeforeDelete === 1 && accountOption.value.length === 0) {
     arrowStatus.value = false
   }
-  accountRef.value = null
-  passwordRef.value = null
-  avatarRef.value = '/logo.png'
+  info.value.account = ''
+  info.value.password = ''
+  info.value.avatar = '/logo.png'
 }
 
 /**
@@ -228,25 +241,26 @@ const delAccount = (index: number) => {
  * */
 const giveAccount = (item: STO.Setting['login']['accountInfo']) => {
   const { account, password, avatar, name } = item
-  accountRef.value = account
-  passwordRef.value = password
-  avatarRef.value = avatar
-  nameRef.value = name
+  info.value.account = account || ''
+  info.value.password = password || ''
+  info.value.avatar = avatar
+  info.value.name = name
   arrowStatus.value = false
 }
 
 /**登录后创建主页窗口*/
 const loginWin = () => {
+  if (interruptLogin.value) return
   loading.value = true
   delay(async () => {
     await createWebviewWindow('HuLa', 'home', 960, 720, 'login', false, true)
     loading.value = false
     if (!login.value.autoLogin || login.value.accountInfo.password === '') {
       settingStore.setAccountInfo({
-        account: accountRef.value,
-        password: passwordRef.value,
-        avatar: avatarRef.value,
-        name: nameRef.value,
+        account: info.value.account,
+        password: info.value.password,
+        avatar: info.value.avatar,
+        name: info.value.name,
         uid: '123456'
       })
       await setLoginState()
@@ -254,11 +268,26 @@ const loginWin = () => {
   }, 1000)
 }
 
-/**监听是否点击了除了下拉框外的其他地方*/
-const handleClickOutside = (event: MouseEvent) => {
+/** 自动登录 */
+const autoLogin = () => {
+  interruptLogin.value = false
+  isAutoLogin.value = true
+  // TODO 检查用户网络是否连接 (nyh -> 2024-03-16 12:06:59)
+  loginText.value = '网络连接中'
+  delay(async () => {
+    loginWin()
+    loginText.value = '登录'
+    await setLoginState()
+  }, 1000)
+}
+
+const closeMenu = (event: MouseEvent) => {
   const target = event.target as Element
   if (!target.matches('.account-box, .account-box *, .down')) {
     arrowStatus.value = false
+  }
+  if (target.matches('#bottomBar *') && isAutoLogin.value) {
+    interruptLogin.value = true
   }
 }
 
@@ -267,20 +296,13 @@ onMounted(async () => {
     console.error('设置无状态图标失败:', error)
   })
   if (login.value.autoLogin && login.value.accountInfo.password !== '') {
-    isAutoLogin.value = true
-    // TODO 检查用户网络是否连接 (nyh -> 2024-03-16 12:06:59)
-    loginText.value = '网络连接中'
-    delay(async () => {
-      loginWin()
-      loginText.value = '登录'
-      await setLoginState()
-    }, 1000)
+    autoLogin()
   }
-  window.addEventListener('click', handleClickOutside, true)
+  window.addEventListener('click', closeMenu, true)
 })
 
 onUnmounted(() => {
-  window.removeEventListener('click', handleClickOutside, true)
+  window.removeEventListener('click', closeMenu, true)
 })
 </script>
 

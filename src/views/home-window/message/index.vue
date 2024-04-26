@@ -17,17 +17,17 @@
           v-for="item in MockList"
           :key="item.key">
           <!-- 消息框，使用v-slide自定义指令来自动抉择右键菜单位置 -->
-          <n-flex v-slide align="center" :size="10" class="h-75px pl-6px pr-8px">
-            <n-avatar round bordered :color="'#fff'" :size="44" :src="item.avatar" fallback-src="/logo.png" alt="" />
+          <n-flex v-slide align="center" :size="10" class="h-75px pl-6px pr-8px flex-1">
+            <n-avatar round bordered :color="'#fff'" :size="44" :src="item.avatar" fallback-src="/logo.png" />
 
-            <n-flex vertical justify="space-between" class="h-38px flex-1">
-              <n-flex align="center" justify="space-between">
-                <span class="text-14px">{{ item.accountName }}</span>
-                <span class="text text-10px">昨天</span>
+            <n-flex vertical justify="space-between" class="h-fit flex-1 truncate">
+              <n-flex :size="4" align="center" justify="space-between" class="flex-1 truncate">
+                <span class="text-14px leading-tight flex-1 truncate">{{ item.accountName }}</span>
+                <span class="text text-10px w-fit truncate text-right">星期一</span>
               </n-flex>
 
               <n-flex align="center" justify="space-between">
-                <span class="text w-135px text-12px truncate"> 说的很经典哈萨克的哈萨克看到贺卡上 </span>
+                <span class="text flex-1 leading-tight text-12px truncate"> 说的很经典哈萨克的哈萨克看到贺卡上 </span>
 
                 <!-- 消息提示 -->
                 <n-badge :value="msgTotal" :max="99" />

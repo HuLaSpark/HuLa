@@ -1,5 +1,10 @@
 <template>
-  <main data-tauri-drag-region class="resizable select-none" :style="{ width: width + 'px' }">
+  <main
+    data-tauri-drag-region
+    id="center"
+    class="resizable select-none flex flex-col"
+    :style="{ width: `${initWidth}px` }">
+    <div class="resize-handle" @mousedown="initDrag"></div>
     <ActionBar
       class="absolute right-0"
       v-if="shrinkStatus"
@@ -48,19 +53,46 @@ import router from '@/router'
 import { MittEnum } from '@/enums'
 import { appWindow } from '@tauri-apps/api/window'
 
-// const minWidth = 160 // 设置最小宽度
-// const maxWidth = 320 // 设置最大宽度
-const width = ref(250) // 初始化宽度
+/** 设置最小宽度 */
+const minWidth = 160
+/** 设置最大宽度 */
+const maxWidth = 300
+/** 初始化宽度 */
+const initWidth = ref(250)
+/** 窗口宽度 */
+const windowWidth = ref(0)
+/** 是否拖拽 */
+const isDrag = ref(true)
+/** 当前消息 */
+const currentMsg = ref()
 
-// const startX = ref()
-// const startWidth = ref()
+const startX = ref()
+const startWidth = ref()
 const shrinkStatus = ref(false)
 
-// todo 1.了解这里是怎么实现的 2.修改拖拽放大缩小的事件
-Mitt.on(MittEnum.SHRINK_WINDOW, (event) => {
-  shrinkStatus.value = event as boolean
-  width.value = 250
+watchEffect(() => {
+  if (windowWidth.value >= 310 && windowWidth.value < 800) {
+    Mitt.emit(MittEnum.SHRINK_WINDOW, true)
+    const center = document.querySelector('#center')
+    center?.classList.add('flex-1')
+    isDrag.value = false
+  }
+  if (windowWidth.value >= 800) {
+    Mitt.emit(MittEnum.SHRINK_WINDOW, false)
+    if (currentMsg.value) {
+      Mitt.emit(MittEnum.MSG_BOX_SHOW, { msgBoxShow: true, ...currentMsg.value })
+    }
+    const center = document.querySelector('#center')
+    center?.classList.remove('flex-1')
+    isDrag.value = true
+  }
 })
+
+/** 更新窗口宽度 */
+const updateWindowWidth = async () => {
+  const { width } = await appWindow.innerSize()
+  windowWidth.value = width
+}
 
 const closeMenu = (event: Event) => {
   const e = event.target as HTMLInputElement
@@ -71,42 +103,54 @@ const closeMenu = (event: Event) => {
   }
 }
 
-onMounted(() => {
+/** 定义一个函数，在鼠标拖动时调用 */
+const doDrag = (e: MouseEvent) => {
+  // 使用 requestAnimationFrame 来处理动画，确保动画在下一帧渲染前执行
+  requestAnimationFrame(() => {
+    // 计算新的宽度
+    const newWidth = startWidth.value + e.clientX - startX.value
+    // 如果新宽度不等于最大宽度，则更新宽度值
+    if (newWidth !== maxWidth) {
+      initWidth.value = clamp(newWidth, minWidth, maxWidth) // 使用 clamp 函数限制宽度值在最小值和最大值之间
+    }
+  })
+}
+
+/** 定义一个函数，用于将数值限制在指定的最小值和最大值之间 */
+const clamp = (value: number, min: number, max: number) => {
+  return Math.min(Math.max(value, min), max) // 使用 Math.min 和 Math.max 函数来限制数值范围
+}
+
+const initDrag = (e: MouseEvent) => {
+  if (!isDrag.value) return
+  startX.value = e.clientX
+  startWidth.value = initWidth.value
+  document.addEventListener('mousemove', doDrag, false)
+  document.addEventListener('mouseup', stopDrag, false)
+}
+
+const stopDrag = () => {
+  document.removeEventListener('mousemove', doDrag, false)
+  document.removeEventListener('mouseup', stopDrag, false)
+}
+
+onMounted(async () => {
+  await updateWindowWidth()
+  Mitt.on(MittEnum.SHRINK_WINDOW, (event) => {
+    shrinkStatus.value = event as boolean
+  })
+  Mitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
+    if (!event) return
+    currentMsg.value = event
+  })
+  window.addEventListener('resize', updateWindowWidth)
   window.addEventListener('click', closeMenu, true)
 })
 
 onUnmounted(() => {
+  window.removeEventListener('resize', updateWindowWidth)
   window.removeEventListener('click', closeMenu, true)
 })
-// watchEffect(() => {
-//   if (width.value === maxWidth) {
-//     Mitt.emit('shrinkWindow', false)
-//   }
-// })
-
-// const initDrag = (e: MouseEvent) => {
-//   startX.value = e.clientX
-//   startWidth.value = width.value
-//
-//   document.addEventListener('mousemove', doDrag, false)
-//   document.addEventListener('mouseup', stopDrag, false)
-// }
-//
-// const doDrag = (e: MouseEvent) => {
-//   const newWidth = startWidth.value + e.clientX - startX.value
-//   if (newWidth <= maxWidth && newWidth >= minWidth) {
-//     width.value = newWidth
-//   } else if (newWidth > maxWidth) {
-//     width.value = maxWidth
-//   } else if (newWidth < minWidth) {
-//     width.value = minWidth
-//   }
-// }
-//
-// const stopDrag = () => {
-//   document.removeEventListener('mousemove', doDrag, false)
-//   document.removeEventListener('mouseup', stopDrag, false)
-// }
 </script>
 
 <style scoped lang="scss">

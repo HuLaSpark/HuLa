@@ -1,5 +1,5 @@
 <template>
-  <main data-tauri-drag-region class="left w-60px h-full p-[30px_6px_15px] box-border flex-col-center select-none">
+  <main data-tauri-drag-region class="left min-w-60px h-full p-[30px_6px_15px] box-border flex-col-center select-none">
     <!-- 点击时头像内容框 -->
     <n-popover
       v-model:show="infoShow"

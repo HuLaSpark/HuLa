@@ -59,6 +59,8 @@
   --reply-color: #909090;
   --reply-hover: #505050;
   --bg-reply-img-count: #e3e3e3;
+  // 主页面面板分割线样式
+  --split-color: #f1f1f1;
 }
 
 html[data-theme='dark'] {
@@ -121,6 +123,8 @@ html[data-theme='dark'] {
   --reply-color: #e3e3e3;
   --reply-hover: #b1b1b1;
   --bg-reply-img-count: #505050;
+  // 主页面面板分割线样式
+  --split-color: #3b3b3b;
 }
 /**! end */
 // 线性动画
