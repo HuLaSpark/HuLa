@@ -24,7 +24,18 @@
           class="flex flex-col w-full"
           :class="[{ 'items-end': item.accountId === userId }, isGroup ? 'gap-18px' : 'gap-2px']">
           <!-- 信息时间(单聊) -->
-          <div v-if="!isGroup" class="text-(12px #909090) h-12px w-fit select-none" :class="getTimePosition(item)">
+          <div
+            v-if="!isGroup"
+            class="text-(12px #909090) h-12px w-fit select-none"
+            :class="
+              item.accountId === userId
+                ? activeReply === item.key
+                  ? 'pr-68px'
+                  : 'pr-42px'
+                : activeReply === item.key
+                  ? 'pl-68px'
+                  : 'pl-42px'
+            ">
             <Transition name="fade">
               <span v-if="hoverBubble.key === item.key">
                 {{ new Date().toLocaleString() }}
@@ -118,7 +129,7 @@
                 <!--                <RenderMessage :message="message" />-->
                 <!--  消息为文本类型或者回复消息  -->
                 <div
-                  v-if="item.type === MsgEnum.TEXT || item.type === MsgEnum.REPLY"
+                  v-if="item.type === MsgEnum.TEXT"
                   style="white-space: pre-wrap"
                   :class="[
                     { active: activeBubble === item.key },
@@ -134,7 +145,7 @@
                       class="select-none"
                       v-for="(src, index) in item.content"
                       :key="index"
-                      :img-props="{ style: { maxWidth: '325px', maxHeight: '165px' } }"
+                      :img-props="{ style: { maxWidth: '325px', maxHeight: '165px', width: '100%', height: 'auto' } }"
                       show-toolbar-tooltip
                       style="border-radius: 8px"
                       :fallback-src="'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg'"
@@ -146,7 +157,7 @@
                 <n-image
                   class="select-none"
                   v-if="typeof item.content === 'string' && item.type === MsgEnum.IMAGE"
-                  :img-props="{ style: { maxWidth: '325px', maxHeight: '165px' } }"
+                  :img-props="{ style: { maxWidth: '325px', maxHeight: '165px', width: '100%', height: 'auto' } }"
                   show-toolbar-tooltip
                   style="border-radius: 8px"
                   :fallback-src="'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg'"
@@ -167,7 +178,7 @@
               <n-flex
                 align="center"
                 :size="6"
-                v-if="item.reply && item.type === MsgEnum.REPLY"
+                v-if="item.reply && item.reply.content.length > 0"
                 @click="jumpToReplyMsg(item.reply.key)"
                 class="reply-bubble relative">
                 <svg class="size-14px"><use href="#to-top"></use></svg>
@@ -345,12 +356,6 @@ watchEffect(() => {
   activeItemRef.value = { ...activeItem }
 })
 
-/** 计算单聊时间戳显示的位置 */
-const getTimePosition = (item: any) => {
-  const pxVal = activeReply.value === item.key ? '68px' : '42px'
-  return item.accountId === userId.value ? `pr-${pxVal}` : `pl-${pxVal}`
-}
-
 // 当鼠标进入时触发的处理函数
 const handleMouseEnter = (key: any) => {
   // 设置定时器，在1600毫秒后更新悬浮气泡的key值
@@ -423,7 +428,7 @@ const handleSendMessage = (msg: any) => {
       avatar: login.value.accountInfo.avatar,
       content: msg.content,
       type: msg.type,
-      reply: msg.type === MsgEnum.REPLY ? msg.reply : null
+      reply: msg.reply
     })
     addToDomUpdateQueue(index, userId.value)
   })

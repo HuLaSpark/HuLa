@@ -28,7 +28,7 @@
 }
 .photo-wall {
   @extend .bubble-oneself;
-  @apply flex flex-col items-start gap-6px max-w-380px;
+  @apply flex flex-col items-start gap-6px flex-1;
 }
 .float-header {
   @include float;
@@ -66,11 +66,7 @@
     }
   }
   .content-span {
-    width: fit-content;
-    max-width: 250px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    @apply w-fit truncate flex-1;
   }
   /** 回复图片的计数器样式 */
   .reply-img-sub {

@@ -91,9 +91,14 @@ export const useMsgInput = (messageInputDom: Ref) => {
     })
     /** 监听回复信息的传递 */
     Mitt.on(MittEnum.REPLY_MEG, (event: any) => {
+      // 如果已经有回复消息，则替换掉原来的回复消息
       if (reply.value.content) {
-        // TODO 如果已经有就替换原来的内容 (nyh -> 2024-04-18 23:10:56)
-        return
+        // 触发id为closeBtn的按钮点击事件，从而关闭第一个回复框，实现回复消息的替换
+        document.getElementById('closeBtn')?.dispatchEvent(new Event('click'))
+      }
+      if (!Array.isArray(event.content)) {
+        // 回复前把包含&nbsp;的字符替换成空格
+        event.content = event.content.replace(/&nbsp;/g, ' ')
       }
       reply.value = { imgCount: 0, accountName: event.value, content: event.content, key: event.key }
       if (messageInputDom.value) {
@@ -114,20 +119,40 @@ export const useMsgInput = (messageInputDom: Ref) => {
       window.$message.warning(`一次性只能上传${LimitEnum.COM_COUNT}个文件或图片`)
       return
     }
+    // 排除id="replyDiv"的元素的内容
+    const replyDiv = messageInputDom.value.querySelector('#replyDiv')
+    if (replyDiv) {
+      replyDiv.parentNode?.removeChild(replyDiv)
+      // 然后重新赋值给msgInput
+      msgInput.value = messageInputDom.value.innerHTML.replace(replyDiv.outerHTML, '')
+    }
     ait.value = false
     const contentType = getMessageContentType(messageInputDom)
     const msg = {
       type: contentType,
       content: msgInput.value,
-      reply: contentType === MsgEnum.REPLY ? reply.value : null
+      reply: reply.value
     }
-    /** 如果是Reply消息，需要将消息的样式修改 */
-    if (msg.type === MsgEnum.REPLY) {
-      // 先去掉原来的标签
-      msg.content = removeTag(msg.content)
-      // 截取空格后的内容
-      // TODO 不允许用户删除回复消息中最前面的空格或者标志符号 (nyh -> 2024-04-17 06:39:22)
-      msg.content = msg.content.replace(/^[\S\s]*\u00A0/, '')
+    /** 如果reply.value.content中有内容，需要将消息的样式修改 */
+    if (reply.value.content) {
+      if (msg.type === MsgEnum.TEXT) {
+        // 创建一个虚拟div元素以便对HTML进行操作
+        const tempDiv = document.createElement('div')
+        // 将msg.content赋值给虚拟div的innerHTML
+        tempDiv.innerHTML = msg.content
+        // 查找id为"replyDiv"的元素
+        const replyDiv = tempDiv.querySelector('#replyDiv')
+        // 如果找到了元素，则删除它
+        if (replyDiv) {
+          replyDiv.parentNode?.removeChild(replyDiv)
+        }
+        // 先去掉原来的标签
+        tempDiv.innerHTML = removeTag(tempDiv.innerHTML)
+        // 只截取tempDiv.innerHTML开头中的&nbsp;
+        tempDiv.innerHTML = tempDiv.innerHTML.replace(/^\s*&nbsp;/, '')
+        // 处理后的内容可以传给实际发送消息的方法
+        msg.content = tempDiv.innerHTML
+      }
     }
     const { hyperlinkRegex, foundHyperlinks } = RegExp.isHyperlink(msg.content)
     /** 判断是否有超链接 */

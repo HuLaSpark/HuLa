@@ -52,6 +52,7 @@ import Mitt from '@/utils/Bus.ts'
 import router from '@/router'
 import { MittEnum } from '@/enums'
 import { appWindow } from '@tauri-apps/api/window'
+import { useWindowSize } from '@vueuse/core'
 
 /** 设置最小宽度 */
 const minWidth = 160
@@ -59,8 +60,8 @@ const minWidth = 160
 const maxWidth = 300
 /** 初始化宽度 */
 const initWidth = ref(250)
-/** 窗口宽度 */
-const windowWidth = ref(0)
+/**! 使用(vueUse函数获取)视口宽度 */
+const { width } = useWindowSize()
 /** 是否拖拽 */
 const isDrag = ref(true)
 /** 当前消息 */
@@ -71,13 +72,13 @@ const startWidth = ref()
 const shrinkStatus = ref(false)
 
 watchEffect(() => {
-  if (windowWidth.value >= 310 && windowWidth.value < 800) {
+  if (width.value >= 310 && width.value < 800) {
     Mitt.emit(MittEnum.SHRINK_WINDOW, true)
     const center = document.querySelector('#center')
     center?.classList.add('flex-1')
     isDrag.value = false
   }
-  if (windowWidth.value >= 800) {
+  if (width.value >= 800) {
     Mitt.emit(MittEnum.SHRINK_WINDOW, false)
     if (currentMsg.value) {
       Mitt.emit(MittEnum.MSG_BOX_SHOW, { msgBoxShow: true, ...currentMsg.value })
@@ -87,12 +88,6 @@ watchEffect(() => {
     isDrag.value = true
   }
 })
-
-/** 更新窗口宽度 */
-const updateWindowWidth = async () => {
-  const { width } = await appWindow.innerSize()
-  windowWidth.value = width
-}
 
 const closeMenu = (event: Event) => {
   const e = event.target as HTMLInputElement
@@ -135,7 +130,6 @@ const stopDrag = () => {
 }
 
 onMounted(async () => {
-  await updateWindowWidth()
   Mitt.on(MittEnum.SHRINK_WINDOW, (event) => {
     shrinkStatus.value = event as boolean
   })
@@ -143,12 +137,10 @@ onMounted(async () => {
     if (!event) return
     currentMsg.value = event
   })
-  window.addEventListener('resize', updateWindowWidth)
   window.addEventListener('click', closeMenu, true)
 })
 
 onUnmounted(() => {
-  window.removeEventListener('resize', updateWindowWidth)
   window.removeEventListener('click', closeMenu, true)
 })
 </script>
