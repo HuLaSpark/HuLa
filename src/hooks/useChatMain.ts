@@ -180,16 +180,20 @@ export const useChatMain = (activeItem: MockItem) => {
   /** emoji表情菜单 */
   const emojiList = ref([
     {
-      label: '👍'
+      label: '👍',
+      title: '好赞'
     },
     {
-      label: '😆'
+      label: '😆',
+      title: '开心'
     },
     {
-      label: '🥳'
+      label: '🥳',
+      title: '恭喜'
     },
     {
-      label: '🤯'
+      label: '🤯',
+      title: '惊呆了'
     }
   ])
 

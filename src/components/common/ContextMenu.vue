@@ -18,9 +18,14 @@
             align="center"
             justify="space-between"
             class="emoji-list">
-            <n-flex :size="0" align="center" justify="center" class="emoji-item" @click="handleReplyEmoji(item)">
-              {{ item.label }}
-            </n-flex>
+            <n-popover trigger="hover" :show-arrow="false" placement="top">
+              <template #trigger>
+                <n-flex :size="0" align="center" justify="center" class="emoji-item" @click="handleReplyEmoji(item)">
+                  {{ item.label }}
+                </n-flex>
+              </template>
+              <span>{{ item.title }}</span>
+            </n-popover>
           </n-flex>
         </div>
         <!-- 普通右键菜单 -->

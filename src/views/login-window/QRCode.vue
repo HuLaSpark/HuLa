@@ -25,7 +25,7 @@
         :size="12"
         align="center"
         class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-        <svg class="size-42px"><use :href="`#${scanStatus.icon}`"></use></svg>
+        <svg class="size-42px animate-pulse"><use :href="`#${scanStatus.icon}`"></use></svg>
         <span class="text-(16px #e3e3e3)">{{ scanStatus.text }}</span>
       </n-flex>
     </n-flex>

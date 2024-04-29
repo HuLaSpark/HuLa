@@ -159,7 +159,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     if (foundHyperlinks && foundHyperlinks.length > 0) {
       msg.content = msg.content.replace(hyperlinkRegex, (match) => {
         const href = match.startsWith('www.') ? 'https://' + match : match
-        return `<a style="color: inherit" href="${href}" target="_blank" rel="noopener noreferrer">${match}</a>`
+        return `<a style="color: inherit;text-underline-offset: 4px" href="${href}" target="_blank" rel="noopener noreferrer">${match}</a>`
       })
     }
     // 判断文本信息是否超过限制

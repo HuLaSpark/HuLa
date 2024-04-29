@@ -44,7 +44,7 @@ const initWebSocket = () => {
         reconnectAttempts++
         initWebSocket()
       } else {
-        console.error('已达到最大重连次数，放弃重连')
+        window.$message.error('尝试重连失败，请检查后端服务是否正常')
       }
     }, reconnectDelay)
   }
@@ -68,7 +68,7 @@ const sendToServer = (data: Record<string, any>) => {
     ws.send(json)
     return Promise.resolve(true)
   } else {
-    return Promise.reject('网络连接失败，请检查网络设置')
+    return Promise.reject('服务连接失败，请联系管理员')
   }
 }
 

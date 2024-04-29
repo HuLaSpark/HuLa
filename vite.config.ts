@@ -7,13 +7,13 @@ import { getRootPath, getSrcPath } from './build/config/getPath'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import unocss from '@unocss/vite'
 import terser from '@rollup/plugin-terser'
+import { atStartup } from './build/config/console'
 
 // https://vitejs.dev/config/
 /**! 不需要优化前端打包(如开启gzip) */
 export default defineConfig(({ mode }: ConfigEnv) => {
   // 获取当前环境的配置,如何设置第三个参数则加载所有变量，而不是以“VITE_”前缀的变量
-  const config = loadEnv(mode, '/')
-  console.log(config)
+  const config = loadEnv(mode, process.cwd())
   return {
     resolve: {
       alias: {
@@ -35,6 +35,8 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'true'
     },
     plugins: [
+      /**! 启动时候打印项目信息(不需要可关闭)  */
+      atStartup(config, mode),
       /**
        * !实验性功能
        * 开启defineProps解构语法

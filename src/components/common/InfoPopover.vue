@@ -45,8 +45,7 @@
 
     <!-- 背景 -->
     <img
-      class="size-full rounded-8px box-border p-20px absolute top-0 left-0"
-      style="filter: blur(28px); opacity: 0.8"
+      class="size-full rounded-8px box-border p-20px absolute top-0 left-0 blur-xl opacity-80"
       :src="isCurrentUser.avatar"
       alt="" />
   </n-flex>

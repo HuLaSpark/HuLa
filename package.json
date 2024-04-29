@@ -38,7 +38,7 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "@tauri-apps/api": "^1.5.3",
+    "@tauri-apps/api": "^1.5.4",
     "axios": "^1.6.8",
     "colorthief": "^2.4.0",
     "dayjs": "^1.11.10",

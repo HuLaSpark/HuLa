@@ -1,5 +1,6 @@
 import { LogicalSize, WebviewWindow } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/tauri'
+import { EventEnum } from '@/enums'
 
 export const useWindow = () => {
   /**
@@ -27,7 +28,7 @@ export const useWindow = () => {
   ) => {
     const checkLabel = computed(() => {
       /** 如果是打开独立窗口就截取label中的固定label名称 */
-      if (label.includes('alone')) {
+      if (label.includes(EventEnum.ALONE)) {
         return label.replace(/\d/g, '')
       } else {
         return label
