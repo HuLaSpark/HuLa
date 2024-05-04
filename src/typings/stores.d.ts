@@ -25,7 +25,8 @@ declare namespace STO {
         password?: string
         name: string
         avatar: string
-        uid: string
+        uid: number
+        token: string
       }
     }
     /** 聊天设置 */

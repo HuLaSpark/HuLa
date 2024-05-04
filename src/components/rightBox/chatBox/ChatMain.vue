@@ -12,7 +12,7 @@
     :item-size="itemSize"
     :items="items">
     <template #default="{ item }">
-      <main
+      <div
         :key="item.key"
         class="flex-y-center min-h-58px"
         :class="[
@@ -72,7 +72,6 @@
                     class="select-none"
                     :src="item.accountId === userId ? item.avatar : activeItem.avatar"
                     :class="item.accountId === userId ? '' : 'mr-10px'"
-                    fallback-src="/logo.png"
                     :render-placeholder="() => null"
                     :intersection-observer-options="{
                       root: '#image-chat-main'
@@ -218,7 +217,7 @@
             </n-flex>
           </div>
         </article>
-      </main>
+      </div>
     </template>
   </n-virtual-list>
 
@@ -447,7 +446,7 @@ const jumpToReplyMsg = (key: number) => {
  * @param index 下标
  * @param id 用户ID
  */
-const addToDomUpdateQueue = (index: number, id: string) => {
+const addToDomUpdateQueue = (index: number, id: number) => {
   // 使用 nextTick 确保虚拟列表渲染完最新的项目后进行滚动
   nextTick(() => {
     if (!floatFooter.value || id === userId.value) {

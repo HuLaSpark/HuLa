@@ -61,6 +61,8 @@
   --bg-reply-img-count: #e3e3e3;
   // 主页面面板分割线样式
   --split-color: #f1f1f1;
+  // 编辑资料背景颜色
+  --bg-edit: #f0f0f0;
 }
 
 html[data-theme='dark'] {
@@ -125,6 +127,8 @@ html[data-theme='dark'] {
   --bg-reply-img-count: #505050;
   // 主页面面板分割线样式
   --split-color: #3b3b3b;
+  // 编辑资料背景颜色
+  --bg-edit: #262626;
 }
 /**! end */
 // 线性动画

@@ -21,9 +21,9 @@ export enum RCodeEnum {
 /**URL*/
 export enum URLEnum {
   /**用户*/
-  USER = '/user',
-  /**文章*/
-  ARTICLE = '/article'
+  USER = '/api/user',
+  /** 用户背包 */
+  USER_BACKPACK = '/api/userBackpack'
 }
 
 /** tauri原生跨窗口通信时传输的类型 */

@@ -26,7 +26,8 @@ export const setting = defineStore(StoresEnum.SETTING, {
         password: '',
         name: '',
         avatar: '',
-        uid: ''
+        uid: 0,
+        token: ''
       }
     },
     /** 聊天设置 */

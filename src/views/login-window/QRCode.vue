@@ -80,7 +80,8 @@ const handleLoginSuccess = async (e: any) => {
     settingStore.setAccountInfo({
       avatar: e.data.avatar,
       name: e.data.name,
-      uid: e.data.uid
+      uid: e.data.uid,
+      token: e.data.token
     })
     await setLoginState()
   }, 1000)

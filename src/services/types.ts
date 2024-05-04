@@ -3,30 +3,18 @@
  * 注意：请使用TSDoc规范进行注释，以便在使用时能够获得良好提示。
  * @see TSDoc规范https://tsdoc.org/
  **/
-import { MsgEnum, RCodeEnum, RoomTypeEnum } from '@/enums'
+import { MsgEnum, RoomTypeEnum } from '@/enums'
 
 /**响应请求体*/
 export type Response = {
-  code: RCodeEnum
-  msg: string
-  data: {
-    records: any
-    total: number
-  }
-  fail: boolean
+  /** 成功标识true or false */
   success: boolean
-  version: string
-}
-/**分页搜索*/
-export type parameter = {
-  pageNum: number
-  pageSize: number
-  name: string
-}
-/**登录类型*/
-export type login = {
-  username: string
-  password: string
+  /** 错误码 */
+  errCode: number
+  /** 错误消息 */
+  errMsg: string
+  /** 数据 */
+  data: any
 }
 
 /** ===================================================== */
@@ -151,6 +139,6 @@ export type MockItem = {
   key: number
   type: RoomTypeEnum
   avatar: string
-  accountId: string
+  accountId: number
   accountName: string
 }

@@ -71,7 +71,7 @@
         </n-flex>
 
         <n-flex justify="center" align="center" :size="40">
-          <n-button secondary> 编辑资料 </n-button>
+          <n-button secondary @click="handleEditing"> 编辑资料 </n-button>
         </n-flex>
       </n-flex>
     </n-popover>
@@ -128,6 +128,43 @@
         </div>
       </footer>
     </div>
+
+    <!-- 编辑资料弹窗 -->
+    <n-modal v-model:show="editInfo.show" class="rounded-8px" transform-origin="center" :mask-closable="false">
+      <div class="bg-[--bg-edit] w-480px h-530px box-border flex flex-col">
+        <n-flex vertical :size="6">
+          <n-flex justify="center" class="text-(14px --text-color) select-none pt-6px">编辑资料</n-flex>
+          <svg
+            @click="editInfo.show = false"
+            class="size-14px ml-a cursor-pointer pt-6px select-none absolute right-6px">
+            <use href="#close"></use>
+          </svg>
+          <span class="h-1px w-full bg-[--line-color]"></span>
+        </n-flex>
+        <n-flex vertical :size="20" class="p-22px select-none">
+          <!-- 头像 -->
+          <n-flex justify="center">
+            <n-avatar style="border: 3px solid #fff" round :size="80" :src="editInfo.content.avatar" />
+          </n-flex>
+
+          <n-input
+            ref="inputInstRef"
+            v-model:value="editInfo.content.name"
+            clearable
+            placeholder="请输入你的昵称"
+            type="text"
+            :default-value="editInfo.content.name"
+            show-count
+            :maxlength="8"
+            :count-graphemes="countGraphemes"
+            class="rounded-6px">
+            <template #prefix>
+              <span class="pr-6px text-#909090">昵称</span>
+            </template>
+          </n-input>
+        </n-flex>
+      </div>
+    </n-modal>
   </main>
 </template>
 <script setup lang="ts">
@@ -141,6 +178,8 @@ import { itemsTop, itemsBottom, moreList } from './config.ts'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
 import { storeToRefs } from 'pinia'
 import { setting } from '@/stores/setting.ts'
+import apis from '@/services/apis.ts'
+import GraphemeSplitter from 'grapheme-splitter'
 
 const prefers = matchMedia('(prefers-color-scheme: dark)')
 const { createWebviewWindow } = useWindow()
@@ -156,6 +195,14 @@ const infoShow = ref(false)
 const themeColor = ref(themes.value.content === ThemeEnum.DARK ? 'rgba(63,63,63, 0.2)' : 'rgba(241,241,241, 0.2)')
 /** 已打开窗口的列表 */
 const openWindowsList = ref(new Set())
+/** 编辑资料弹窗 */
+// TODO 这里考虑是否查接口查实时的用户信息还是直接查本地存储的用户信息 (nyh -> 2024-05-05 01:12:36)
+const editInfo = ref({
+  show: false,
+  content: {
+    ...login.value.accountInfo
+  }
+})
 
 /** 跟随系统主题模式切换主题 */
 const followOS = () => {
@@ -180,7 +227,25 @@ watchEffect(() => {
   } else {
     prefers.removeEventListener('change', followOS)
   }
+  // 初始化编辑资料弹窗内容
+  if (!editInfo.value.show) {
+    editInfo.value.content = {
+      ...login.value.accountInfo
+    }
+  }
 })
+
+/** 计算字符长度 */
+const countGraphemes = (value: string) => {
+  const splitter = new GraphemeSplitter()
+  return splitter.countGraphemes(value)
+}
+
+/* 打开并且创建modal */
+const handleEditing = () => {
+  infoShow.value = false
+  editInfo.value.show = true
+}
 
 /**
  * 统一跳转路由方法
@@ -219,6 +284,9 @@ const closeMenu = (event: any) => {
 }
 
 onMounted(async () => {
+  apis.getBadgeList().then((res) => {
+    console.log(res)
+  })
   /** 页面加载的时候默认显示消息列表 */
   pageJumps(activeUrl.value)
   window.addEventListener('click', closeMenu, true)

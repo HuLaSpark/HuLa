@@ -5,7 +5,8 @@ const { PROD, VITE_SERVICE_URL } = import.meta.env
 const prefix = PROD ? VITE_SERVICE_URL : ''
 
 export default {
-  login: `${prefix + URLEnum.USER}/login`,
-  logout: `${prefix + URLEnum.USER}/logout`,
-  articlePage: `${prefix + URLEnum.ARTICLE}/page`
+  /** 获取用户信息 */
+  getUserInfo: `${prefix + URLEnum.USER}/userInfo`,
+  /** 获取徽章列表 */
+  getBadgeList: `${prefix + URLEnum.USER}/badges`
 }

@@ -8,8 +8,10 @@
       <n-dialog-provider>
         <n-notification-provider :max="notificMax">
           <n-message-provider :max="messageMax">
-            <slot></slot>
-            <naive-provider-content />
+            <n-modal-provider>
+              <slot></slot>
+              <naive-provider-content />
+            </n-modal-provider>
           </n-message-provider>
         </n-notification-provider>
       </n-dialog-provider>
@@ -135,6 +137,7 @@ const registerNaiveTools = () => {
   window.$dialog = useDialog()
   window.$message = useMessage()
   window.$notification = useNotification()
+  window.$modal = useModal()
 }
 
 const NaiveProviderContent = defineComponent({

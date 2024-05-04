@@ -162,7 +162,8 @@ const info = ref({
   account: '',
   password: '',
   avatar: '',
-  name: ''
+  name: '',
+  uid: 0
 })
 /** 是否中断登录 */
 const interruptLogin = ref(false)
@@ -180,28 +181,32 @@ const accountOption = ref<STO.Setting['login']['accountInfo'][]>([
     password: '123456',
     name: '超级GG帮',
     avatar: 'https://picsum.photos/140?1',
-    uid: '123456'
+    uid: 123456,
+    token: 'test'
   },
   {
     account: 'hula1',
     password: '123456',
     name: '二狗子',
     avatar: 'https://picsum.photos/140?2',
-    uid: '123456'
+    uid: 123456,
+    token: 'test'
   },
   {
     account: 'hula2',
     password: '123456',
     name: '李山离',
     avatar: 'https://picsum.photos/140?3',
-    uid: '123456'
+    uid: 123456,
+    token: 'test'
   },
   {
     account: 'hula3',
     password: '123456',
     name: '牛什么呢',
     avatar: 'https://picsum.photos/140?4',
-    uid: '123456'
+    uid: 123456,
+    token: 'test'
   }
 ])
 const accountPH = ref('输入HuLa账号')
@@ -243,11 +248,12 @@ const delAccount = (index: number) => {
  * @param item 账户信息
  * */
 const giveAccount = (item: STO.Setting['login']['accountInfo']) => {
-  const { account, password, avatar, name } = item
+  const { account, password, avatar, name, uid } = item
   info.value.account = account || ''
   info.value.password = password || ''
   info.value.avatar = avatar
   info.value.name = name
+  info.value.uid = uid
   arrowStatus.value = false
 }
 
@@ -264,7 +270,8 @@ const loginWin = () => {
         password: info.value.password,
         avatar: info.value.avatar,
         name: info.value.name,
-        uid: '123456'
+        uid: info.value.uid,
+        token: 'test'
       })
       await setLoginState()
     }

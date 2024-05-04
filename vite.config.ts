@@ -45,7 +45,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       vueJsx(), // 开启jsx功能
       unocss(), // 开启unocss
       AutoImport({
-        imports: ['vue', { 'naive-ui': ['useDialog', 'useMessage', 'useNotification', 'useLoadingBar'] }],
+        imports: ['vue', { 'naive-ui': ['useDialog', 'useMessage', 'useNotification', 'useLoadingBar', 'useModal'] }],
         dts: 'src/typings/auto-imports.d.ts'
       }),
       /**自动导入组件，但是不会自动导入jsx和tsx*/
@@ -92,6 +92,17 @@ export default defineConfig(({ mode }: ConfigEnv) => {
     clearScreen: false,
     // 2. tauri expects a fixed port, fail if that port is not available
     server: {
+      //配置跨域
+      proxy: {
+        '/api': {
+          // “/api” 以及前置字符串会被替换为真正域名
+          target: config.VITE_SERVICE_URL, // 请求域名
+          changeOrigin: true, // 是否跨域
+          rewrite: (path) => path.replace(/^\/api/, '')
+        }
+      },
+      hmr: true, // 热更新
+      cors: true, // 配置 CORS
       host: '0.0.0.0',
       port: 6130,
       strictPort: true,
