@@ -42,7 +42,7 @@
   --bg-avatar: #e3e3e3;
   // 个人信息框背景颜色
   --info-hover: #eee;
-  --info-text-color: #505050;
+  --info-text-color: #202020;
   // 系统托盘hover样式
   --tray-hover: #eee;
   --tray-hover-e: #f5dce1;
@@ -63,6 +63,8 @@
   --split-color: #f1f1f1;
   // 编辑资料背景颜色
   --bg-edit: #f0f0f0;
+  // 聊天框时间戳样式
+  --time-color: #e3e3e3;
 }
 
 html[data-theme='dark'] {
@@ -129,6 +131,8 @@ html[data-theme='dark'] {
   --split-color: #3b3b3b;
   // 编辑资料背景颜色
   --bg-edit: #262626;
+  // 聊天框时间戳样式
+  --time-color: #3b3b3b;
 }
 /**! end */
 // 线性动画

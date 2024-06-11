@@ -39,7 +39,7 @@ declare namespace OPT {
     label: string
     icon: string
     click?: (...args: any[]) => void
-  }
+  } | null
 
   /** 详情页选项 */
   type Details = {

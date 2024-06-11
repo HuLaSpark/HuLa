@@ -67,7 +67,7 @@ onMounted(() => {
 
   if (isDetails) {
     Mitt.on(MittEnum.DETAILS_SHOW, (event: any) => {
-      DetailsContent.value = event.data
+      DetailsContent.value = event.context
       detailsShow.value = event.detailsShow as boolean
     })
   }

@@ -3,7 +3,12 @@
   <main
     style="box-shadow: 0 4px 4px var(--box-shadow-color)"
     class="relative z-30 flex-y-center justify-between p-[8px_20px_12px] select-none">
-    <div class="color-[--text-color]">{{ activeItem.accountName }}</div>
+    <n-flex align="center">
+      <span class="color-[--text-color]">{{ activeItem.name }}</span>
+      <svg v-if="activeItem.hot_Flag === IsAllUserEnum.Yes" class="size-20px color-#13987f select-none outline-none">
+        <use href="#auth"></use>
+      </svg>
+    </n-flex>
     <!-- 顶部右边选项栏 -->
     <nav class="options flex-y-center gap-20px color-[--icon-color]">
       <div class="options-box">
@@ -114,7 +119,7 @@
 </template>
 
 <script setup lang="ts">
-import { MockItem } from '@/services/types.ts'
+import { IsAllUserEnum, SessionItem } from '@/services/types.ts'
 import { useDisplayMedia } from '@vueuse/core'
 import { EventEnum } from '@/enums'
 import { emit, listen } from '@tauri-apps/api/event'
@@ -129,7 +134,7 @@ const modalShow = ref(false)
 const sidebarShow = ref(false)
 const masking = ref(false)
 const { activeItem } = defineProps<{
-  activeItem: MockItem
+  activeItem: SessionItem
 }>()
 
 // 创建一个RTCPeerConnection实例

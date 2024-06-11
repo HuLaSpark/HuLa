@@ -1,6 +1,10 @@
 import { defineStore } from 'pinia'
 import { CloseBxEnum, StoresEnum, ThemeEnum } from '@/enums'
+import apis from '@/services/apis.ts'
+import { isDiffNow10Min } from '@/utils/ComputedTime.ts'
+import type { CacheBadgeItem } from '@/services/types.ts'
 
+const badgeCachedList = reactive<Record<number, Partial<CacheBadgeItem>>>({})
 // TODO 使用indexDB或者把配置写出到文件中，还需要根据每个账号来进行配置 (nyh -> 2024-03-26 01:22:12)
 export const setting = defineStore(StoresEnum.SETTING, {
   state: (): STO.Setting => ({
@@ -28,7 +32,8 @@ export const setting = defineStore(StoresEnum.SETTING, {
         avatar: '',
         uid: 0,
         token: ''
-      }
+      },
+      badgeList: []
     },
     /** 聊天设置 */
     chat: {
@@ -66,6 +71,27 @@ export const setting = defineStore(StoresEnum.SETTING, {
     /** 设置用户保存的登录信息 */
     setAccountInfo(accountInfo: STO.Setting['login']['accountInfo']) {
       this.login.accountInfo = accountInfo
+    },
+    /** 批量获取用户徽章详细信息 */
+    async getBatchBadgeInfo(itemIds: number[]) {
+      // 没有 lastModifyTime 的要更新，lastModifyTime 距离现在 10 分钟已上的也要更新
+      const result = itemIds
+        .map((itemId) => {
+          const cacheBadge = badgeCachedList[itemId]
+          return { itemId, lastModifyTime: cacheBadge?.lastModifyTime }
+        })
+        .filter((item) => !item.lastModifyTime || isDiffNow10Min(item.lastModifyTime))
+      if (!result.length) return
+      const { data } = await apis.getBadgesBatch(result)
+      data?.forEach(
+        (item: CacheBadgeItem) =>
+          // 更新最后更新时间。
+          (badgeCachedList[item.itemId] = {
+            ...(item?.needRefresh ? item : badgeCachedList[item.itemId]),
+            needRefresh: void 0,
+            lastModifyTime: Date.now()
+          })
+      )
     },
     /** 清空账号信息 */
     clearAccount() {

@@ -1,10 +1,10 @@
 <template>
   <!-- 头部 -->
-  <ChatHeader :active-item="activeItemRef" />
+  <ChatHeader :active-item="activeItemRef as any" />
   <n-flex :size="0" class="h-full">
-    <n-flex vertical :size="0" class="flex-1">
+    <n-flex vertical :size="0" class="flex-1 relative">
       <!-- 中间聊天框内容  -->
-      <ChatMain :active-item="activeItemRef" />
+      <ChatMain :active-item="activeItemRef as any" />
       <!-- 输入框和操作列表 -->
       <ChatFooter class="flex-1" />
     </n-flex>

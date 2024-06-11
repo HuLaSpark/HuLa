@@ -232,7 +232,6 @@ const delAccount = (index: number) => {
   if (index < 0 || index >= accountOption.value.length) return
   // 获取删除前账户列表的长度
   const lengthBeforeDelete = accountOption.value.length
-  // TODO @blur和下面操作会报警告：[Vue warn] Set operation on key "_ctx" failed: target is readonly (nyh -> 2024-04-29 04:39:07)
   accountOption.value.splice(index, 1)
   // 判断是否删除了最后一个条目，并据此更新arrowStatus
   if (lengthBeforeDelete === 1 && accountOption.value.length === 0) {

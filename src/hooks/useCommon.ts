@@ -2,9 +2,15 @@ import { LimitEnum, MsgEnum } from '@/enums'
 import { Ref } from 'vue'
 import { createFileOrVideoDom } from '@/utils/CreateDom.ts'
 import { RegExp } from '@/utils/RegExp.ts'
+import { setting } from '@/stores/setting.ts'
+import { storeToRefs } from 'pinia'
 
 /** 常用工具类 */
 export const useCommon = () => {
+  const settingStore = setting()
+  const { login } = storeToRefs(settingStore)
+  /** 当前登录用户的uid */
+  const userUid = computed(() => login.value.accountInfo.uid)
   /** 回复消息 */
   const reply = ref({
     accountName: '',
@@ -348,6 +354,7 @@ export const useCommon = () => {
     handlePaste,
     removeTag,
     FileOrVideoPaste,
-    reply
+    reply,
+    userUid
   }
 }

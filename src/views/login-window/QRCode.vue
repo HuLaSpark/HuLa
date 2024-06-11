@@ -44,14 +44,19 @@
 import router from '@/router'
 import { delay } from 'lodash-es'
 import { lightTheme } from 'naive-ui'
-import { initWebSocket, sendToServer } from '@/services/webSocket.ts'
-import { WsReqEnum, WsResEnum } from '@/enums'
+import { WsResEnum } from '@/enums'
 import Mitt from '@/utils/Bus.ts'
 import { setting } from '@/stores/setting.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
+import { LoginStatus, useWsLoginStore } from '@/stores/ws.ts'
 
 const settingStore = setting()
+const loginStore = useWsLoginStore()
+/** 获取登录二维码 */
+const loginQrCode = computed(() => loginStore.loginQrCode)
+/** 登录状态 */
+const loginStatus = computed(() => loginStore.loginStatus)
 const { setLoginState } = useLogin()
 const { createWebviewWindow } = useWindow()
 const loading = ref(true)
@@ -64,9 +69,19 @@ const scanStatus = ref<{
   show: boolean
 }>({ status: 'success', icon: 'success', text: '扫码成功', show: false })
 
+watchEffect(() => {
+  // 等待授权中
+  if (loginStatus.value === LoginStatus.Waiting) {
+    loadText.value = '等待授权...'
+  }
+  if (!localStorage.getItem('wsLogin')) {
+    loginStore.getLoginQrCode()
+  }
+})
+
 /** 处理二维码登录 */
-const handleQRCodeLogin = (e: any) => {
-  QRCode.value = e.data.loginUrl
+const handleQRCodeLogin = () => {
+  QRCode.value = loginQrCode.value
   loading.value = false
   loadText.value = '请使用微信扫码登录'
 }
@@ -78,10 +93,10 @@ const handleLoginSuccess = async (e: any) => {
   delay(async () => {
     await createWebviewWindow('HuLa', 'home', 960, 720, 'login', false, true)
     settingStore.setAccountInfo({
-      avatar: e.data.avatar,
-      name: e.data.name,
-      uid: e.data.uid,
-      token: e.data.token
+      avatar: e.avatar,
+      name: e.name,
+      uid: e.uid,
+      token: e.token
     })
     await setLoginState()
   }, 1000)
@@ -101,18 +116,15 @@ const handleError = (e: any) => {
 
 // TODO 做一个二维码过期时间重新刷新二维码的功能 (nyh -> 2024-01-27 00:37:18)
 onMounted(() => {
-  initWebSocket()
-  Mitt.on(WsResEnum.QRCODE_LOGIN, (e: any) => {
-    handleQRCodeLogin(e)
+  Mitt.on(WsResEnum.QRCODE_LOGIN, () => {
+    handleQRCodeLogin()
   })
   Mitt.on(WsResEnum.LOGIN_SUCCESS, (e: any) => {
     handleLoginSuccess(e)
   })
-  delay(() => {
-    sendToServer({ type: WsReqEnum.LOGIN }).catch((e) => {
-      handleError(e)
-    })
-  }, 1000)
+  Mitt.on(WsResEnum.WS_ERROR, (e: any) => {
+    handleError(e.msg)
+  })
 })
 </script>
 

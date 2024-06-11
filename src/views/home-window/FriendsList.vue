@@ -5,13 +5,7 @@
         <n-scrollbar style="max-height: calc(100vh - 126px)">
           <n-collapse :display-directive="'show'">
             <ContextMenu @contextmenu="showMenu($event)" @select="handleSelect($event.label)" :menu="menuList">
-              <n-collapse-item title="我的设备" name="1">
-                <template #header-extra>
-                  <span class="text-(10px #707070)">1/1</span>
-                </template>
-                <div>可以</div>
-              </n-collapse-item>
-              <n-collapse-item title="特别关心" name="2">
+              <n-collapse-item title="我的好友" name="1">
                 <template #header-extra>
                   <span class="text-(10px #707070)">1/1</span>
                 </template>
@@ -21,16 +15,24 @@
                   <n-flex
                     v-slide
                     :size="10"
-                    @click="handleClick(item.key, 2)"
-                    :class="{ active: activeItem === item.key }"
+                    @click="handleClick(item.uid, RoomTypeEnum.SINGLE)"
+                    :class="{ active: activeItem === item.uid }"
                     class="user-box w-full h-75px mb-5px"
-                    v-for="item in friendsList"
-                    :key="item.key">
+                    v-for="item in contactStore.contactsList"
+                    :key="item.uid">
                     <n-flex v-slide align="center" :size="10" class="h-75px pl-6px pr-8px flex-1 truncate">
-                      <n-avatar round bordered :color="'#fff'" :size="44" :src="item.avatar" fallback-src="/logo.png" />
+                      <n-avatar
+                        round
+                        bordered
+                        :color="'#fff'"
+                        :size="44"
+                        :src="useUserInfo(item.uid).value.avatar"
+                        fallback-src="/logo.png" />
 
                       <n-flex vertical justify="space-between" class="h-fit flex-1 truncate">
-                        <span class="text-14px leading-tight flex-1 truncate">{{ item.accountName }}</span>
+                        <span class="text-14px leading-tight flex-1 truncate">{{
+                          useUserInfo(item.uid).value.name
+                        }}</span>
 
                         <span class="text leading-tight text-12px flex-1 truncate">
                           [⛅今日天气] 说的很经典哈萨克的哈萨克看到贺卡上
@@ -40,20 +42,13 @@
                   </n-flex>
                 </div>
               </n-collapse-item>
-              <n-collapse-item title="默认分组" name="3">
-                <template #header-extra>
-                  <span class="text-(10px #707070)">1/1</span>
-                </template>
-
-                <div>123</div>
-              </n-collapse-item>
             </ContextMenu>
           </n-collapse>
         </n-scrollbar>
       </n-tab-pane>
       <n-tab-pane name="2" tab="群聊">
         <div
-          @click="handleClick(item.key, 1)"
+          @click="handleClick(item.key, RoomTypeEnum.GROUP)"
           :class="{ active: activeItem === item.key }"
           class="w-full h-75px mb-5px"
           v-for="item in groupChatList"
@@ -70,8 +65,9 @@
 </template>
 <script setup lang="ts">
 import Mitt from '@/utils/Bus.ts'
-import { MockList } from '@/mock/index.ts'
-import { MittEnum } from '@/enums'
+import { MittEnum, RoomTypeEnum } from '@/enums'
+import { useContactStore } from '@/stores/contacts.ts'
+import { useUserInfo } from '@/hooks/useCached.ts'
 
 const menuList = ref([
   { label: '添加分组', icon: 'plus' },
@@ -82,10 +78,7 @@ const menuList = ref([
 const activeItem = ref(0)
 const detailsShow = ref(false)
 const shrinkStatus = ref(false)
-
-const friendsList = ref(MockList.value.filter((item) => item.type === 2))
-const groupChatList = ref(MockList.value.filter((item) => item.type === 1))
-
+const contactStore = useContactStore()
 /** 监听独立窗口关闭事件 */
 watchEffect(() => {
   Mitt.on(MittEnum.SHRINK_WINDOW, async (event) => {
@@ -97,11 +90,10 @@ const handleClick = (index: number, type: number) => {
   detailsShow.value = true
   activeItem.value = index
   const data = {
-    type: type,
-    data:
-      type === 1
-        ? groupChatList.value.filter((item) => item.key === index)
-        : friendsList.value.filter((item) => item.key === index),
+    context: {
+      type: type,
+      uid: index
+    },
     detailsShow: detailsShow.value
   }
   Mitt.emit(MittEnum.DETAILS_SHOW, data)

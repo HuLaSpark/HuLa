@@ -6,6 +6,25 @@ const isTest = computed(() => {
   return setting().login.accountInfo.token === 'test'
 })
 
+function getToken() {
+  let tempToken = ''
+  return {
+    get() {
+      if (tempToken) return tempToken
+      const token = localStorage.getItem('TOKEN')
+      if (token) {
+        tempToken = token
+      }
+      return tempToken
+    },
+    clear() {
+      tempToken = ''
+    }
+  }
+}
+
+export const computedToken = getToken()
+
 //请求配置
 export const createAxios = (config?: AxiosRequestConfig): AxiosInstance => {
   const instance = axios.create({
