@@ -74,12 +74,9 @@ watchEffect(() => {
   if (loginStatus.value === LoginStatus.Waiting) {
     loadText.value = '等待授权...'
   }
-  if (!localStorage.getItem('wsLogin')) {
-    loginStore.getLoginQrCode()
-  }
 })
 
-/** 处理二维码登录 */
+/** 处理二维码显示和刷新 */
 const handleQRCodeLogin = () => {
   QRCode.value = loginQrCode.value
   loading.value = false
@@ -116,6 +113,11 @@ const handleError = (e: any) => {
 
 // TODO 做一个二维码过期时间重新刷新二维码的功能 (nyh -> 2024-01-27 00:37:18)
 onMounted(() => {
+  if (!localStorage.getItem('wsLogin')) {
+    loginStore.getLoginQrCode()
+  } else {
+    handleQRCodeLogin()
+  }
   Mitt.on(WsResEnum.QRCODE_LOGIN, () => {
     handleQRCodeLogin()
   })

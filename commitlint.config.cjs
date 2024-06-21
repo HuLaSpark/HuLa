@@ -1,4 +1,13 @@
 /** @type {import('cz-git').UserConfig} */
+const fs = require('fs')
+const path = require('path')
+
+/* 获取项目的修改范围 */
+const scopes = fs
+  .readdirSync(path.resolve(__dirname, 'src'), { withFileTypes: true })
+  .filter((dirent) => dirent.isDirectory())
+  .map((dirent) => dirent.name.replace(/s$/, ''))
+
 module.exports = {
   // 继承的规则
   extends: ["@commitlint/config-conventional"],
@@ -61,12 +70,10 @@ module.exports = {
     useAI: false,
     aiNumber: 1,
     themeColorCode: "38;5;168",
-    scopes: [],
     allowCustomScopes: true,
     allowEmptyScopes: true,
-    customScopesAlign: "bottom",
-    customScopesAlias: "custom",
-    emptyScopesAlias: "empty",
+    customScopesAlign: 'bottom',
+    scopes: [...scopes],
     upperCaseSubject: false,
     markBreakingChangeMode: false,
     allowBreakingChanges: ["feat", "fix"],
@@ -88,7 +95,6 @@ module.exports = {
     scopeOverrides: undefined,
     defaultBody: "",
     defaultIssues: "",
-    defaultScope: "",
     defaultSubject: "",
   },
 };

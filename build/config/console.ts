@@ -32,7 +32,7 @@ export const atStartup = (env: { [key: string]: string }, mode: string) => {
       console.log(
         `  ${'\u001b[38;2;26;178;146m'}${'\x1b[1m'}${'\u001b[2m'}${'➜'}${'\x1b[0m'}  ` +
           '后端服务地址: ' +
-          `${'\x1b[38;2;95;175;255m'}待开发中 -->${'\x1b[0m'}`
+          `${'\x1b[38;2;95;175;255m'}https://github.com/nongyehong/HuLa-IM-Server${'\x1b[0m'}`
       )
       console.log(
         `  ${'\u001b[38;2;26;178;146m'}${'\x1b[1m'}${'\u001b[2m'}${'➜'}${'\x1b[0m'}  ` +

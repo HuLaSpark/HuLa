@@ -32,7 +32,9 @@
         "open": true
       },
       "http": {
-        "scope": ["http://**", "https://**"]
+        "all": true,
+        "request": true,
+        "scope": ["http://127.0.0.1:9190/*", "https://**"]
       },
       "fs": {
         "all": true,

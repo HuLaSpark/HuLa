@@ -17,10 +17,10 @@ strip = true # 删除调试符号
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "1.5", features = [] }
+tauri-build = { version = "1.5.2", features = [] }
 
 [dependencies]
-tauri = { version = "1.6.1", features = [ "os-all", "process-all", "notification-all", "macos-private-api", "fs-all", "window-all", "system-tray", "shell-open", "icon-png", "icon-ico"] }
+tauri = { version = "1.6.8", features = [ "http-all", "os-all", "process-all", "notification-all", "macos-private-api", "fs-all", "window-all", "system-tray", "shell-open", "icon-png", "icon-ico"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 window-shadows = "0.2.2" # windows 阴影和圆角

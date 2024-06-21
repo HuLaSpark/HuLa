@@ -46,20 +46,20 @@
           </n-collapse>
         </n-scrollbar>
       </n-tab-pane>
-      <n-tab-pane name="2" tab="群聊">
-        <div
-          @click="handleClick(item.key, RoomTypeEnum.GROUP)"
-          :class="{ active: activeItem === item.key }"
-          class="w-full h-75px mb-5px"
-          v-for="item in groupChatList"
-          :key="item.key">
-          <n-flex v-slide align="center" :size="10" class="h-75px pl-6px pr-8px flex-1 truncate">
-            <n-avatar round bordered :color="'#fff'" :size="44" :src="item.avatar" fallback-src="/logo.png" />
+      <!--      <n-tab-pane name="2" tab="群聊">-->
+      <!--        <div-->
+      <!--          @click="handleClick(item.key, RoomTypeEnum.GROUP)"-->
+      <!--          :class="{ active: activeItem === item.key }"-->
+      <!--          class="w-full h-75px mb-5px"-->
+      <!--          v-for="item in groupChatList"-->
+      <!--          :key="item.key">-->
+      <!--          <n-flex v-slide align="center" :size="10" class="h-75px pl-6px pr-8px flex-1 truncate">-->
+      <!--            <n-avatar round bordered :color="'#fff'" :size="44" :src="item.avatar" fallback-src="/logo.png" />-->
 
-            <span class="text-14px leading-tight flex-1 truncate">{{ item.accountName }}</span>
-          </n-flex>
-        </div>
-      </n-tab-pane>
+      <!--            <span class="text-14px leading-tight flex-1 truncate">{{ item.accountName }}</span>-->
+      <!--          </n-flex>-->
+      <!--        </div>-->
+      <!--      </n-tab-pane>-->
     </n-tabs>
   </n-scrollbar>
 </template>

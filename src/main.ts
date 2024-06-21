@@ -7,9 +7,12 @@ import vResize from '@/directives/v-resize'
 import vSlide from '@/directives/v-slide.ts'
 import router from '@/router'
 import App from '@/App.vue'
-import { consolePrint } from '@/utils/Common.ts'
 
 const app = createApp(App)
 app.use(router).use(pinia).directive('resize', vResize).directive('slide', vSlide).mount('#app')
-/**! 控制台打印项目版本信息(不需要可手动关闭)*/
-consolePrint()
+if (process.env.NODE_ENV === 'development') {
+  import('@/utils/console.ts').then((module) => {
+    /**! 控制台打印项目版本信息(不需要可手动关闭)*/
+    module.consolePrint()
+  })
+}

@@ -289,7 +289,7 @@ const sessionList = computed(() =>
               lastMsgUserName.value.name,
               lastMsg.message?.type,
               lastMsg.message?.body?.content || lastMsg.message?.body
-            )
+            )!
     }
     return {
       ...item,
