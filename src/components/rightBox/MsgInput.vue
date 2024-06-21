@@ -15,20 +15,20 @@
   </ContextMenu>
 
   <!-- @提及框  -->
-  <div v-if="ait && activeItem.type === RoomTypeEnum.GROUP && filteredList.length > 0" class="ait">
+  <div v-if="ait && activeItem.type === RoomTypeEnum.GROUP && personList.length > 0" class="ait">
     <n-virtual-list
       id="image-chat-msgInput"
       ref="virtualListInst"
       style="max-height: 180px"
       :item-size="36"
-      :items="filteredList"
+      :items="personList"
       v-model:selectedKey="selectedAitKey">
       <template #default="{ item }">
         <n-flex
-          @mouseover="() => (selectedAitKey = item.key)"
-          :class="{ active: selectedAitKey === item.key }"
+          @mouseover="() => (selectedAitKey = item.uid)"
+          :class="{ active: selectedAitKey === item.uid }"
           @click="handleAit(item)"
-          :key="item.key"
+          :key="item.uid"
           align="center"
           class="ait-item">
           <n-avatar
@@ -42,7 +42,7 @@
             :intersection-observer-options="{
               root: '#image-chat-msgInput'
             }" />
-          <span> {{ item.accountName }}</span>
+          <span> {{ item.name }}</span>
         </n-flex>
       </template>
     </n-virtual-list>
@@ -80,7 +80,7 @@
 import { lightTheme, darkTheme, VirtualListInst } from 'naive-ui'
 import { MittEnum, RoomTypeEnum, ThemeEnum } from '@/enums'
 import Mitt from '@/utils/Bus.ts'
-import { MockItem } from '@/services/types.ts'
+import { CacheUserItem, MockItem } from '@/services/types.ts'
 import { emit, listen } from '@tauri-apps/api/event'
 import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
@@ -93,14 +93,14 @@ const settingStore = setting()
 const { themes } = storeToRefs(settingStore)
 /** 发送按钮旁的箭头 */
 const arrow = ref(false)
-// 输入框dom元素
+/** 输入框dom元素 */
 const messageInputDom = ref()
 const activeItem = ref(inject('activeItem') as MockItem)
 /** 虚拟列表 */
 const virtualListInst = ref<VirtualListInst>()
 const { handlePaste } = useCommon()
 /** 引入useMsgInput的相关方法 */
-const { inputKeyDown, handleAit, handleInput, send, filteredList, ait, msgInput, chatKey, menuList, selectedAitKey } =
+const { inputKeyDown, handleAit, handleInput, send, personList, ait, msgInput, chatKey, menuList, selectedAitKey } =
   useMsgInput(messageInputDom)
 
 /** 当切换聊天对象时，重新获取焦点 */
@@ -112,19 +112,19 @@ watch(activeItem, () => {
 })
 
 /** 当ait人员列表发生变化的时候始终select第一个 */
-watch(filteredList, (newList) => {
+watch(personList, (newList) => {
   if (newList.length > 0) {
     /** 先设置滚动条滚动到第一个 */
-    virtualListInst.value?.scrollTo({ key: newList[0].key })
-    selectedAitKey.value = newList[0].key
+    virtualListInst.value?.scrollTo({ key: newList[0].uid })
+    selectedAitKey.value = newList[0].uid
   }
 })
 
 /** 处理键盘上下键切换提及项 */
 const handleAitKeyChange = (direction: 1 | -1) => {
-  const currentIndex = filteredList.value.findIndex((item) => item.key === selectedAitKey.value)
-  const newIndex = Math.max(0, Math.min(currentIndex + direction, filteredList.value.length - 1))
-  selectedAitKey.value = filteredList.value[newIndex].key
+  const currentIndex = personList.value.findIndex((item) => item.uid === selectedAitKey.value)
+  const newIndex = Math.max(0, Math.min(currentIndex + direction, personList.value.length - 1))
+  selectedAitKey.value = personList.value[newIndex].uid
   // 获取新选中项在列表中的索引，并滚动到该位置(使用key来进行定位)
   virtualListInst.value?.scrollTo({ key: selectedAitKey.value })
 }
@@ -140,7 +140,7 @@ onMounted(() => {
   onKeyStroke('Enter', (e) => {
     if (ait.value && selectedAitKey.value > -1) {
       e.preventDefault()
-      const item = filteredList.value.find((item) => item.key === selectedAitKey.value) as MockItem
+      const item = personList.value.find((item) => item.uid === selectedAitKey.value) as CacheUserItem
       handleAit(item)
     }
   })

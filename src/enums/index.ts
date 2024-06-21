@@ -21,9 +21,13 @@ export enum RCodeEnum {
 /**URL*/
 export enum URLEnum {
   /**用户*/
-  USER = '/user',
-  /**文章*/
-  ARTICLE = '/article'
+  USER = '/api/user',
+  /**聊天*/
+  CHAT = '/api/chat',
+  /**房间*/
+  ROOM = '/api/room',
+  /**oss*/
+  OSS = '/api/oss'
 }
 
 /** tauri原生跨窗口通信时传输的类型 */
@@ -83,31 +87,92 @@ export enum StoresEnum {
   /** 在线状态 */
   ONLINE_STATUS = 'onlineStatus',
   /** 历史内容 */
-  HISTORY = 'history'
+  HISTORY = 'history',
+  /** 聊天列表 */
+  CHAT_LIST = 'chatList'
 }
 
 /**
  * 消息类型
+ * todo: 后续需要补充
  */
 export enum MsgEnum {
+  /** 未知 */
+  UNKNOWN,
   /** 文本 */
   TEXT,
+  /** 撤回 */
+  RECALL,
   /** 图片 */
   IMAGE,
-  /** 混合 */
-  MIXED,
+  /** 文件 */
+  FILE,
   /** 语音 */
   VOICE,
   /** 视频 */
   VIDEO,
-  /** 文件 */
-  FILE,
-  /** 表情 */
-  EMOTICON,
+  /** 表情包 */
+  EMOJI,
+  /** 系统消息 */
+  SYSTEM,
+  /** 混合 */
+  MIXED,
   /** 艾特 */
   AIT,
   /** 回复 */
   REPLY
+}
+
+/**
+ * 在线状态
+ */
+export enum OnlineEnum {
+  /** 在线 */
+  ONLINE = 1,
+  /** 离线 */
+  OFFLINE
+}
+
+/**
+ * 操作类型
+ */
+export enum ActEnum {
+  /** 确认 */
+  Confirm = 1,
+  /** 取消 */
+  Cancel
+}
+
+export enum SexEnum {
+  MAN = 1,
+  REMALE
+}
+
+export enum PowerEnum {
+  USER,
+  ADMIN
+}
+
+export enum IsYetEnum {
+  NO,
+  YES
+}
+
+export enum MarkEnum {
+  LIKE = 1,
+  DISLIKE
+}
+
+// 成员角色 1群主 2管理员 3普通成员 4踢出群聊
+export enum RoleEnum {
+  /** 1群主 */
+  LORD = 1,
+  /** 2管理员 */
+  ADMIN,
+  /** 3普通成员 */
+  NORMAL,
+  /** 4踢出群聊 */
+  REMOVED
 }
 
 /** 房间类型 1群聊 2单聊 */
@@ -116,6 +181,14 @@ export enum RoomTypeEnum {
   GROUP = 1,
   /** 2单聊 */
   SINGLE = 2
+}
+
+/** 变更类型 1 加入群组，2： 移除群组 */
+export enum ChangeTypeEnum {
+  /** 1 加入群组 */
+  JOIN = 1,
+  /** 2 移除群组 */
+  REMOVE
 }
 
 /** 关闭窗口的行为 */
@@ -147,5 +220,7 @@ export enum WsResEnum {
   /** 二维码登录 */
   QRCODE_LOGIN = 'qrcodeLogin',
   /** 登录成功 */
-  LOGIN_SUCCESS = 'loginSuccess'
+  LOGIN_SUCCESS = 'loginSuccess',
+  /** ws连接错误 */
+  WS_ERROR = 'wsError'
 }

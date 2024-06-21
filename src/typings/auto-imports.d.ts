@@ -55,6 +55,7 @@ declare global {
   const useDialog: typeof import('naive-ui')['useDialog']
   const useLoadingBar: typeof import('naive-ui')['useLoadingBar']
   const useMessage: typeof import('naive-ui')['useMessage']
+  const useModal: typeof import('naive-ui')['useModal']
   const useNotification: typeof import('naive-ui')['useNotification']
   const useSlots: typeof import('vue')['useSlots']
   const watch: typeof import('vue')['watch']

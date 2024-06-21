@@ -1,6 +1,6 @@
 <template>
   <!-- 好友详情 -->
-  <n-flex v-if="item.type === RoomTypeEnum.SINGLE" vertical align="center" :size="30" class="mt-60px select-none">
+  <n-flex v-if="content.type === RoomTypeEnum.SINGLE" vertical align="center" :size="30" class="mt-60px select-none">
     <n-image
       width="146px"
       height="146px"
@@ -9,13 +9,23 @@
       :src="item.avatar"
       alt="" />
 
-    <span class="text-(20px [--text-color])">{{ item.accountName }}</span>
+    <span class="text-(20px [--text-color])">{{ item.name }}</span>
 
     <span class="text-(14px #909090)">这个人很高冷,暂时没有留下什么</span>
 
     <n-flex align="center" justify="space-between" :size="30" class="text-#606060">
-      <span>性别：男</span>
-      <span>电话：13213213213</span>
+      <span>地区：{{ item.locPlace || '未知' }}</span>
+      <n-flex align="center">
+        <span>徽章：</span>
+        <template v-for="badge in item.itemIds" :key="badge">
+          <n-popover trigger="hover">
+            <template #trigger>
+              <img class="size-34px" :src="useBadgeInfo(badge).value.img" alt="" />
+            </template>
+            <span>{{ useBadgeInfo(badge).value.describe }}</span>
+          </n-popover>
+        </template>
+      </n-flex>
     </n-flex>
     <!-- 选项按钮 -->
     <n-config-provider :theme="lightTheme">
@@ -55,7 +65,7 @@
           alt="" />
 
         <n-flex vertical :size="16" justify="space-between" class="text-(14px #909090)">
-          <span class="text-(16px [--text-color])">{{ item.accountName }}</span>
+          <span class="text-(16px [--text-color])">{{ item.name }}</span>
           <span>群号：1235873897182</span>
           <span>创建时间：2021-01-01</span>
         </n-flex>
@@ -97,20 +107,25 @@
   </div>
 </template>
 <script setup lang="ts">
-import { MockItem } from '@/services/types.ts'
 import { MittEnum, RoomTypeEnum } from '@/enums'
 import { lightTheme } from 'naive-ui'
 import router from '@/router'
 import Mitt from '@/utils/Bus.ts'
 import { useMessage } from '@/hooks/useMessage.ts'
+import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
+import apis from '@/services/apis.ts'
+import { useGlobalStore } from '@/stores/global.ts'
+import { useChatStore } from '@/stores/chat.ts'
 
 const { handleMsgClick } = useMessage()
+const globalStore = useGlobalStore()
+const chatStore = useChatStore()
 const props = defineProps<{
-  content: any[]
+  content: any
 }>()
 const { content } = toRefs(props)
-const item = computed<MockItem>(() => {
-  return content.value[0]
+const item = computed(() => {
+  return useUserInfo(content.value.uid).value
 })
 
 const footerOptions = ref<OPT.Details[]>([
@@ -120,7 +135,12 @@ const footerOptions = ref<OPT.Details[]>([
     click: () => {
       // TODO 需要增加独立窗口功能 (nyh -> 2024-03-25 16:01:23)
       router.push('/message')
-      handleMsgClick(item.value)
+      apis.sessionDetailWithFriends({ uid: item.value.uid as number }).then((res) => {
+        globalStore.currentSession.roomId = res.data.roomId
+        globalStore.currentSession.type = RoomTypeEnum.SINGLE
+        chatStore.updateSessionLastActiveTime(res.data.roomId, res.data)
+        handleMsgClick(res.data as any)
+      })
       Mitt.emit(MittEnum.TO_SEND_MSG, { url: 'message' })
     }
   },

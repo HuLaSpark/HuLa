@@ -42,7 +42,7 @@
   </n-flex>
 
   <n-flex v-else vertical :size="6" class="tray">
-    <n-flex @click="exit(0)" align="center" :size="10" class="p-[8px_6px] rounded-4px hover:bg-[--tray-hover-e]">
+    <n-flex @click="handleExit" align="center" :size="10" class="p-[8px_6px] rounded-4px hover:bg-[--tray-hover-e]">
       <span>退出</span>
     </n-flex>
   </n-flex>
@@ -55,13 +55,23 @@ import { statusItem } from './home-window/onlineStatus/config.ts'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
 import { appWindow } from '@tauri-apps/api/window'
 import { listen } from '@tauri-apps/api/event'
+import { useWsLoginStore } from '@/stores/ws.ts'
 
 const { checkWinExist, createWebviewWindow, resizeWindow } = useWindow()
 const OLStatusStore = onlineStatus()
 const isLoginWin = ref(true)
+const loginStore = useWsLoginStore()
+const loginQrCode = computed(() => loginStore.loginQrCode)
 
 const division = () => {
   return <div class={'h-1px bg-[--line-color] w-full'}></div>
+}
+
+const handleExit = () => {
+  exit(0)
+  if (loginQrCode.value) {
+    localStorage.removeItem('wsLogin')
+  }
 }
 
 const toggleStatus = (url: string, title: string) => {

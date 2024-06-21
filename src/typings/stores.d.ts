@@ -25,8 +25,11 @@ declare namespace STO {
         password?: string
         name: string
         avatar: string
-        uid: string
+        uid: number
+        token: string
       }
+      /* 用户徽章列表 */
+      badgeList: T
     }
     /** 聊天设置 */
     chat: {

@@ -2,9 +2,15 @@ import { LimitEnum, MsgEnum } from '@/enums'
 import { Ref } from 'vue'
 import { createFileOrVideoDom } from '@/utils/CreateDom.ts'
 import { RegExp } from '@/utils/RegExp.ts'
+import { setting } from '@/stores/setting.ts'
+import { storeToRefs } from 'pinia'
 
 /** 常用工具类 */
 export const useCommon = () => {
+  const settingStore = setting()
+  const { login } = storeToRefs(settingStore)
+  /** 当前登录用户的uid */
+  const userUid = computed(() => login.value.accountInfo.uid)
   /** 回复消息 */
   const reply = ref({
     accountName: '',
@@ -34,7 +40,6 @@ export const useCommon = () => {
     let hasImage = false
     let hasVideo = false
     let hasFile = false
-    let hasReply = false
 
     const elements = messageInputDom.value.childNodes
     for (const element of elements) {
@@ -48,8 +53,6 @@ export const useCommon = () => {
         }
       } else if (element.tagName === 'VIDEO' || (element.tagName === 'A' && element.href.match(/\.(mp4|webm)$/i))) {
         hasVideo = true
-      } else if (element.id === 'replyDiv') {
-        hasReply = true
       }
     }
 
@@ -61,8 +64,6 @@ export const useCommon = () => {
       return MsgEnum.MIXED
     } else if (hasImage) {
       return MsgEnum.IMAGE
-    } else if (hasReply) {
-      return MsgEnum.REPLY
     } else {
       return MsgEnum.TEXT
     }
@@ -153,15 +154,6 @@ export const useCommon = () => {
         min-width: 0;
       `
       let contentBox
-      const { hyperlinkRegex, foundHyperlinks } = RegExp.isHyperlink(content)
-      // 判断是否包含超链接
-      if (foundHyperlinks && foundHyperlinks.length > 0) {
-        content.replace(hyperlinkRegex, (match: string) => {
-          reply.value.content = match.startsWith('www.') ? 'https://' + match : match
-        })
-        // 去掉content中的标签
-        content = removeTag(content)
-      }
       // 判断content内容是否是data:image/开头的数组
       if (Array.isArray(content)) {
         // 获取总共有多少张图片
@@ -192,6 +184,15 @@ export const useCommon = () => {
           // 去掉content中的标签
           content = removeTag(content)
         }
+        const { hyperlinkRegex, foundHyperlinks } = RegExp.isHyperlink(content)
+        // 判断是否包含超链接
+        if (foundHyperlinks && foundHyperlinks.length > 0) {
+          content.replace(hyperlinkRegex, (match: string) => {
+            reply.value.content = match.startsWith('www.') ? 'https://' + match : match
+          })
+          // 去掉content中的标签
+          content = removeTag(content)
+        }
         // 把正文放到span标签中，并设置span标签的样式
         contentBox = document.createElement('span')
         contentBox.style.cssText = `
@@ -208,6 +209,7 @@ export const useCommon = () => {
       }
       // 在回复信息的右边添加一个关闭信息的按钮
       const closeBtn = document.createElement('span')
+      closeBtn.id = 'closeBtn'
       closeBtn.style.cssText = `
         display: flex;
         align-items: center;
@@ -352,6 +354,7 @@ export const useCommon = () => {
     handlePaste,
     removeTag,
     FileOrVideoPaste,
-    reply
+    reply,
+    userUid
   }
 }

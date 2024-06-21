@@ -5,82 +5,69 @@
         <n-scrollbar style="max-height: calc(100vh - 126px)">
           <n-collapse :display-directive="'show'">
             <ContextMenu @contextmenu="showMenu($event)" @select="handleSelect($event.label)" :menu="menuList">
-              <n-collapse-item title="我的设备" name="1">
+              <n-collapse-item title="我的好友" name="1">
                 <template #header-extra>
-                  <p class="text-(10px #707070)">1/1</p>
-                </template>
-                <div>可以</div>
-              </n-collapse-item>
-              <n-collapse-item title="特别关心" name="2">
-                <template #header-extra>
-                  <p class="text-(10px #707070)">1/1</p>
+                  <span class="text-(10px #707070)">1/1</span>
                 </template>
 
                 <!-- 用户框 多套一层div来移除默认的右键事件然后覆盖掉因为margin空隙而导致右键可用 -->
                 <div @contextmenu.stop="$event.preventDefault()">
-                  <div
+                  <n-flex
                     v-slide
-                    @click="handleClick(item.key, 2)"
-                    :class="{ active: activeItem === item.key }"
+                    :size="10"
+                    @click="handleClick(item.uid, RoomTypeEnum.SINGLE)"
+                    :class="{ active: activeItem === item.uid }"
                     class="user-box w-full h-75px mb-5px"
-                    v-for="item in friendsList"
-                    :key="item.key">
-                    <div class="flex items-center h-full pl-6px pr-8px gap-10px">
-                      <img class="size-44px rounded-50% bg-#fff border-(1px solid #f1f1f1)" :src="item.avatar" alt="" />
+                    v-for="item in contactStore.contactsList"
+                    :key="item.uid">
+                    <n-flex v-slide align="center" :size="10" class="h-75px pl-6px pr-8px flex-1 truncate">
+                      <n-avatar
+                        round
+                        bordered
+                        :color="'#fff'"
+                        :size="44"
+                        :src="useUserInfo(item.uid).value.avatar"
+                        fallback-src="/logo.png" />
 
-                      <div class="h-38px flex flex-1 flex-col justify-between">
-                        <div class="text-14px flex-y-center gap-4px">
-                          {{ item.accountName }}
-                        </div>
+                      <n-flex vertical justify="space-between" class="h-fit flex-1 truncate">
+                        <span class="text-14px leading-tight flex-1 truncate">{{
+                          useUserInfo(item.uid).value.name
+                        }}</span>
 
-                        <div
-                          class="text w-155px h-14px text-12px flex-y-center gap-4px"
-                          style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
-                          <p class="text-12px">[⛅今日天气]</p>
-                          <p>说的很经典哈萨克的哈萨克看到贺卡上</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                        <span class="text leading-tight text-12px flex-1 truncate">
+                          [⛅今日天气] 说的很经典哈萨克的哈萨克看到贺卡上
+                        </span>
+                      </n-flex>
+                    </n-flex>
+                  </n-flex>
                 </div>
-              </n-collapse-item>
-              <n-collapse-item title="默认分组" name="3">
-                <template #header-extra>
-                  <p class="text-(10px #707070)">1/1</p>
-                </template>
-
-                <div>123</div>
               </n-collapse-item>
             </ContextMenu>
           </n-collapse>
         </n-scrollbar>
       </n-tab-pane>
-      <n-tab-pane name="2" tab="群聊">
-        <div
-          @click="handleClick(item.key, 1)"
-          :class="{ active: activeItem === item.key }"
-          class="w-full h-75px mb-5px cursor-pointer"
-          v-for="item in groupChatList"
-          :key="item.key">
-          <!-- 消息框，使用v-slide自定义指令来自动抉择右键菜单位置 -->
-          <div v-slide class="flex items-center h-full pl-6px pr-8px gap-10px">
-            <img class="size-44px rounded-50% bg-#fff border-(1px solid #f1f1f1)" :src="item.avatar" alt="" />
+      <!--      <n-tab-pane name="2" tab="群聊">-->
+      <!--        <div-->
+      <!--          @click="handleClick(item.key, RoomTypeEnum.GROUP)"-->
+      <!--          :class="{ active: activeItem === item.key }"-->
+      <!--          class="w-full h-75px mb-5px"-->
+      <!--          v-for="item in groupChatList"-->
+      <!--          :key="item.key">-->
+      <!--          <n-flex v-slide align="center" :size="10" class="h-75px pl-6px pr-8px flex-1 truncate">-->
+      <!--            <n-avatar round bordered :color="'#fff'" :size="44" :src="item.avatar" fallback-src="/logo.png" />-->
 
-            <div class="h-38px flex flex-1 flex-col justify-center">
-              <div class="flex-between-center">
-                <span class="text-14px">{{ item.accountName }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </n-tab-pane>
+      <!--            <span class="text-14px leading-tight flex-1 truncate">{{ item.accountName }}</span>-->
+      <!--          </n-flex>-->
+      <!--        </div>-->
+      <!--      </n-tab-pane>-->
     </n-tabs>
   </n-scrollbar>
 </template>
 <script setup lang="ts">
 import Mitt from '@/utils/Bus.ts'
-import { MockList } from '@/mock/index.ts'
-import { MittEnum } from '@/enums'
+import { MittEnum, RoomTypeEnum } from '@/enums'
+import { useContactStore } from '@/stores/contacts.ts'
+import { useUserInfo } from '@/hooks/useCached.ts'
 
 const menuList = ref([
   { label: '添加分组', icon: 'plus' },
@@ -91,10 +78,7 @@ const menuList = ref([
 const activeItem = ref(0)
 const detailsShow = ref(false)
 const shrinkStatus = ref(false)
-
-const friendsList = ref(MockList.value.filter((item) => item.type === 2))
-const groupChatList = ref(MockList.value.filter((item) => item.type === 1))
-
+const contactStore = useContactStore()
 /** 监听独立窗口关闭事件 */
 watchEffect(() => {
   Mitt.on(MittEnum.SHRINK_WINDOW, async (event) => {
@@ -106,11 +90,10 @@ const handleClick = (index: number, type: number) => {
   detailsShow.value = true
   activeItem.value = index
   const data = {
-    type: type,
-    data:
-      type === 1
-        ? groupChatList.value.filter((item) => item.key === index)
-        : friendsList.value.filter((item) => item.key === index),
+    context: {
+      type: type,
+      uid: index
+    },
     detailsShow: detailsShow.value
   }
   Mitt.emit(MittEnum.DETAILS_SHOW, data)

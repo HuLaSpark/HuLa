@@ -28,7 +28,7 @@
 }
 .photo-wall {
   @extend .bubble-oneself;
-  @apply flex flex-col items-start gap-6px max-w-380px;
+  @apply flex flex-col items-start gap-6px flex-1;
 }
 .float-header {
   @include float;
@@ -66,11 +66,7 @@
     }
   }
   .content-span {
-    width: fit-content;
-    max-width: 250px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    @apply w-fit truncate flex-1;
   }
   /** 回复图片的计数器样式 */
   .reply-img-sub {
@@ -79,7 +75,7 @@
 }
 /** emoji回复气泡的样式 */
 .emoji-reply-bubble {
-  @apply relative rounded-8px p-[4px_8px] cursor-pointer select-none bg-#13987F66 text-14px w-fit;
+  @apply relative rounded-50px p-[4px_8px] cursor-pointer select-none bg-#13987F66 text-14px w-fit border-(1px solid #13987F);
 }
 /** 跳转到回复内容时候显示的样式 */
 .active-reply {
@@ -94,6 +90,15 @@
   background-color: inherit;
   border-radius: 0;
   transition: all 0.4s ease-in-out;
+}
+/** 时间搓显示时候的动画 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.4s ease-in-out;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 /**! 替换ait的字体颜色 */
 :deep(#aitSpan) {

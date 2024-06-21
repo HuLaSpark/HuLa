@@ -7,13 +7,13 @@ import { getRootPath, getSrcPath } from './build/config/getPath'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import unocss from '@unocss/vite'
 import terser from '@rollup/plugin-terser'
+import { atStartup } from './build/config/console'
 
 // https://vitejs.dev/config/
 /**! 不需要优化前端打包(如开启gzip) */
 export default defineConfig(({ mode }: ConfigEnv) => {
   // 获取当前环境的配置,如何设置第三个参数则加载所有变量，而不是以“VITE_”前缀的变量
-  const config = loadEnv(mode, '/')
-  console.log(config)
+  const config = loadEnv(mode, process.cwd())
   return {
     resolve: {
       alias: {
@@ -35,6 +35,8 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'true'
     },
     plugins: [
+      /**! 启动时候打印项目信息(不需要可关闭)  */
+      atStartup(config, mode),
       /**
        * !实验性功能
        * 开启defineProps解构语法
@@ -43,7 +45,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       vueJsx(), // 开启jsx功能
       unocss(), // 开启unocss
       AutoImport({
-        imports: ['vue', { 'naive-ui': ['useDialog', 'useMessage', 'useNotification', 'useLoadingBar'] }],
+        imports: ['vue', { 'naive-ui': ['useDialog', 'useMessage', 'useNotification', 'useLoadingBar', 'useModal'] }],
         dts: 'src/typings/auto-imports.d.ts'
       }),
       /**自动导入组件，但是不会自动导入jsx和tsx*/
@@ -90,6 +92,17 @@ export default defineConfig(({ mode }: ConfigEnv) => {
     clearScreen: false,
     // 2. tauri expects a fixed port, fail if that port is not available
     server: {
+      //配置跨域
+      proxy: {
+        '/api': {
+          // “/api” 以及前置字符串会被替换为真正域名
+          target: config.VITE_SERVICE_URL, // 请求域名
+          changeOrigin: true, // 是否跨域
+          rewrite: (path) => path.replace(/^\/api/, '')
+        }
+      },
+      hmr: true, // 热更新
+      cors: true, // 配置 CORS
       host: '0.0.0.0',
       port: 6130,
       strictPort: true,

@@ -1,8 +1,8 @@
 <template>
   <!--! 这里最好不要使用n-flex,滚动高度会有问题  -->
-  <main v-if="activeItem.type === RoomTypeEnum.GROUP" style="border-left: 1px solid var(--line-color)" class="item-box">
+  <main v-if="isGroup" style="border-left: 1px solid var(--line-color)" class="item-box">
     <n-flex v-if="!isSearch" align="center" justify="space-between" class="pr-8px pl-8px h-42px">
-      <span class="text-14px">群聊成员</span>
+      <span class="text-14px">群聊成员&nbsp;{{ userList.length }}</span>
       <svg @click="handleSearch" class="size-14px"><use href="#search"></use></svg>
     </n-flex>
     <!-- 搜索框 -->
@@ -30,10 +30,10 @@
       style="max-height: calc(100vh - 130px)"
       item-resizable
       :item-size="42"
-      :items="MockList">
+      :items="userList">
       <template #default="{ item }">
         <n-popover
-          @update:show="handlePopoverUpdate(item.key)"
+          @update:show="handlePopoverUpdate(item.uid)"
           trigger="click"
           placement="left"
           :show-arrow="false"
@@ -41,10 +41,12 @@
           style="padding: 0; background: var(--bg-info); backdrop-filter: blur(10px)">
           <template #trigger>
             <ContextMenu @select="$event.click(item, 'Sidebar')" :menu="optionsList" :special-menu="report">
-              <n-flex @click="selectKey = item.key" :key="item.key" :size="10" align="center" class="item">
+              <n-flex @click="selectKey = item.uid" :key="item.uid" :size="10" align="center" class="item">
                 <n-avatar
                   lazy
                   round
+                  class="grayscale"
+                  :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
                   :color="'#fff'"
                   :size="24"
                   :src="item.avatar"
@@ -53,35 +55,54 @@
                   :intersection-observer-options="{
                     root: '#image-chat-sidebar'
                   }"></n-avatar>
-                <span class="text-12px">{{ item.accountName }}</span>
+                <span class="text-12px truncate flex-1">{{ item.name }}</span>
+                <div v-if="item.uid === 1" class="flex p-4px rounded-4px bg-#f5dadf size-fit select-none">
+                  <span class="text-(10px #d5304f)">群主</span>
+                </div>
+                <div v-if="item.uid === 2" class="flex p-4px rounded-4px bg-#13987F66 size-fit select-none">
+                  <span class="text-(10px #13987f)">管理员</span>
+                </div>
               </n-flex>
             </ContextMenu>
           </template>
           <!-- 用户个人信息框 -->
-          <InfoPopover v-if="selectKey === item.key" :info="item" />
+          <InfoPopover v-if="selectKey === item.uid" :uid="item.uid" />
         </n-popover>
       </template>
     </n-virtual-list>
   </main>
 </template>
 <script setup lang="ts">
-import { MittEnum, RoomTypeEnum } from '@/enums'
-import { MockItem } from '@/services/types.ts'
-import { MockList } from '@/mock'
+import { MittEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
 import { InputInst } from 'naive-ui'
 import { usePopover } from '@/hooks/usePopover.ts'
 import { useChatMain } from '@/hooks/useChatMain.ts'
 import Mitt from '@/utils/Bus.ts'
+import { useGroupStore } from '@/stores/group.ts'
+import { useUserInfo } from '@/hooks/useCached.ts'
+import { useGlobalStore } from '@/stores/global.ts'
+import type { UserItem } from '@/services/types.ts'
 
-const { activeItem } = defineProps<{
-  activeItem: MockItem
-}>()
+const groupStore = useGroupStore()
+const globalStore = useGlobalStore()
+const groupUserList = computed(() => groupStore.userList)
+const userList = computed(() => {
+  return groupUserList.value.map((item: UserItem) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { uid, ...userInfo } = item // 排除uid，获取剩余内容
+    return {
+      ...userInfo,
+      ...useUserInfo(item.uid).value
+    }
+  })
+})
+const isGroup = computed(() => globalStore.currentSession?.type === RoomTypeEnum.GROUP)
 const isSearch = ref(false)
 const searchRef = ref('')
 /** 手动触发Popover显示 */
 const infoPopover = ref(false)
 const inputInstRef = ref<InputInst | null>(null)
-const { optionsList, report, selectKey } = useChatMain(activeItem)
+const { optionsList, report, selectKey } = useChatMain()
 const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-sidebar')
 
 const handleSearch = () => {

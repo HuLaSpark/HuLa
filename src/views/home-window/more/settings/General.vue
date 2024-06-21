@@ -13,7 +13,7 @@
           v-for="(item, index) in titleList"
           :key="index">
           <div
-            @click="handleTheme($event, item.code)"
+            @click="handleTheme(item.code)"
             class="size-full rounded-8px cursor-pointer"
             :style="activeItem === item.code ? 'border: 2px solid #13987f' : 'border: 2px solid transparent'">
             <component :is="item.model" />
@@ -89,7 +89,7 @@
 <script setup lang="tsx">
 import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
-import { CloseBxEnum, ThemeEnum } from '@/enums'
+import { CloseBxEnum } from '@/enums'
 import { titleList } from './model.tsx'
 import { sendOptions } from './config.ts'
 
@@ -98,40 +98,13 @@ const { themes, tips, escClose, chat } = storeToRefs(settingStore)
 const activeItem = ref<string>(themes.value.pattern)
 
 /** 切换主题 */
-const handleTheme = async (event: MouseEvent, code: string) => {
+const handleTheme = (code: string) => {
   if (code === themes.value.pattern) return
-  const x = event.clientX
-  const y = event.clientY
-  const endRadius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y))
-
-  let isDark: boolean
-
   settingStore.toggleTheme(code)
-  /**判断当前浏览器是否支持startViewTransition API*/
-  if (document.startViewTransition) {
-    const transition = document.startViewTransition(() => {
-      isDark = code.includes(ThemeEnum.DARK)
-    })
-    // TODO 从亮色主题切换到暗色主题的时候没有动画效果 (nyh -> 2024-02-12 23:07:54)
-    transition.ready.then(() => {
-      const clipPath = [`circle(0px at ${x}px ${y}px)`, `circle(${endRadius}px at ${x}px ${y}px)`]
-      document.documentElement.animate(
-        {
-          clipPath: isDark ? [...clipPath].reverse() : clipPath
-        },
-        {
-          duration: 500,
-          easing: 'ease-in',
-          pseudoElement: isDark ? '::view-transition-old(root)' : '::view-transition-new(root)'
-        }
-      )
-    })
-  }
 }
 </script>
 
 <style scoped lang="scss">
-@import '@/styles/scss/toggle-theme';
 .item {
   @apply bg-[--bg-setting-item] rounded-12px size-full p-12px box-border;
 }

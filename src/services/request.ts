@@ -1,5 +1,29 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
-import { userStore } from '@/stores/user.ts'
+import { setting } from '@/stores/setting.ts'
+
+/** 是否是测试环境 */
+const isTest = computed(() => {
+  return setting().login.accountInfo.token === 'test'
+})
+
+function getToken() {
+  let tempToken = ''
+  return {
+    get() {
+      if (tempToken) return tempToken
+      const token = localStorage.getItem('TOKEN')
+      if (token) {
+        tempToken = token
+      }
+      return tempToken
+    },
+    clear() {
+      tempToken = ''
+    }
+  }
+}
+
+export const computedToken = getToken()
 
 //请求配置
 export const createAxios = (config?: AxiosRequestConfig): AxiosInstance => {
@@ -19,15 +43,25 @@ export const createAxios = (config?: AxiosRequestConfig): AxiosInstance => {
   instance.interceptors.request.use(
     function (config: any) {
       //判断是否有token 根据自己的需求判断
-      const token = userStore().getBearerToken
-      if (token != undefined) {
-        //如果要求携带在参数中
+      const token = setting().login.accountInfo.token
+      if (isTest.value) {
+        // 如果token为'test'，阻止请求并返回一个错误对象
+        return Promise.reject(
+          window.$message.create('当前为测试环境，请注意辨别', {
+            type: 'warning',
+            closable: true,
+            duration: 0
+          })
+        )
+      }
+      if (token != void 0) {
+        // //如果要求携带在参数中
         // config.params = Object.assign({}, config.params, token)
         // 如果要求携带在请求头中
         // config.headers = Object.assign({}, config.headers, operate.uploadParameters())
         config.headers['Content-Type'] = 'application/json;charset=utf-8'
         // 设置请求头
-        config.headers['token'] = token
+        config.headers['Authorization'] = `Bearer ${token}`
       }
       return config
     },
@@ -98,14 +132,8 @@ export const createAxios = (config?: AxiosRequestConfig): AxiosInstance => {
           default:
             error.message = `连接错误${error.response.status}`
         }
-      } else {
-        // 超时处理
-        if (JSON.stringify(error).includes('timeout')) {
-          error.message = '服务器响应超时，请刷新当前页'
-        } else {
-          error.message = '连接服务器失败'
-        }
       }
+      if (isTest) return Promise.resolve(error.response)
       window.$message.error(error.message)
       /***** 处理结束 *****/
       return Promise.resolve(error.response)

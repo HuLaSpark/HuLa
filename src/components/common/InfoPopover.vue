@@ -22,6 +22,15 @@
         <span class="text-[--info-text-color]">所在地</span>
         <span>中国</span>
       </n-flex>
+      <!-- 获得的徽章 -->
+      <n-flex v-if="isCurrentUser.itemIds && isCurrentUser.itemIds.length > 0" :size="26" class="select-none">
+        <span class="text-[--info-text-color]">获得的徽章</span>
+        <n-flex>
+          <template v-for="id in isCurrentUser.itemIds" :key="id">
+            <img class="size-38px" :src="useBadgeInfo(id).value.img" alt="" />
+          </template>
+        </n-flex>
+      </n-flex>
       <!-- 动态 -->
       <n-flex :size="40" class="select-none">
         <span class="text-[--info-text-color]">动态</span>
@@ -45,24 +54,19 @@
 
     <!-- 背景 -->
     <img
-      class="size-full rounded-8px box-border p-20px absolute top-0 left-0"
-      style="filter: blur(28px); opacity: 0.8"
+      class="size-full rounded-8px box-border p-20px absolute top-0 left-0 blur-xl opacity-80"
       :src="isCurrentUser.avatar"
       alt="" />
   </n-flex>
 </template>
 
 <script setup lang="ts">
-import { MockItem } from '@/services/types.ts'
-import { setting } from '@/stores/setting.ts'
-import { storeToRefs } from 'pinia'
+import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
 
-const { info } = defineProps<{
-  info?: MockItem
+const { uid } = defineProps<{
+  uid: number
 }>()
-const settingStore = setting()
-const { login } = storeToRefs(settingStore)
-const isCurrentUser = computed(() => (info ? info : login.value.accountInfo))
+const isCurrentUser = computed(() => useUserInfo(uid).value)
 </script>
 
 <style scoped lang="scss">

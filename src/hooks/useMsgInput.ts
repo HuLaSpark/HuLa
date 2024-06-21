@@ -1,38 +1,50 @@
 import { LimitEnum, MittEnum, MsgEnum } from '@/enums'
 import { Ref } from 'vue'
-import { MockItem } from '@/services/types.ts'
+import { CacheUserItem } from '@/services/types.ts'
 import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
 import { useDebounceFn } from '@vueuse/core'
 import Mitt from '@/utils/Bus.ts'
-import { MockList } from '@/mock'
 import { useCommon } from './useCommon.ts'
 import { RegExp } from '@/utils/RegExp.ts'
+import apis from '@/services/apis.ts'
+import { useGlobalStore } from '@/stores/global.ts'
+import { useChatStore } from '@/stores/chat.ts'
+import { useUserInfo } from '@/hooks/useCached.ts'
+import { useCachedStore } from '@/stores/cached.ts'
 
 export const useMsgInput = (messageInputDom: Ref) => {
-  const { triggerInputEvent, insertNode, getMessageContentType, getEditorRange, imgPaste, removeTag, reply } =
+  const chatStore = useChatStore()
+  const globalStore = useGlobalStore()
+  const cachedStore = useCachedStore()
+  const { triggerInputEvent, insertNode, getMessageContentType, getEditorRange, imgPaste, removeTag, reply, userUid } =
     useCommon()
   const settingStore = setting()
   const { chat } = storeToRefs(settingStore)
   const chatKey = ref(chat.value.sendKey)
   const msgInput = ref('')
   const ait = ref(false)
+  /** 临时消息id */
+  const tempMessageId = ref(0)
   /** 艾特后的关键字的key */
   const aitKey = ref('')
   /** 是否正在输入拼音 */
   const isChinese = ref(false)
   // 记录编辑器光标的位置
   const editorRange = ref<{ range: Range; selection: Selection } | null>(null)
-  // 过滤MockList
-  const filteredList = computed(() => {
+  /** @候选人列表 */
+  const personList = computed(() => {
     if (aitKey.value && !isChinese.value) {
-      return MockList.value.filter((item) => item.accountName.includes(aitKey.value))
+      return cachedStore.currentAtUsersList.filter(
+        (user) => user.name?.startsWith(aitKey.value) && user.uid !== userUid.value
+      )
     } else {
-      return MockList.value
+      // 过滤当前登录的用户
+      return cachedStore.currentAtUsersList.filter((user) => user.uid !== userUid.value)
     }
   })
   /** 记录当前选中的提及项 key */
-  const selectedAitKey = ref(filteredList.value[0]?.key ?? null)
+  const selectedAitKey = ref(personList.value[0]?.uid ?? null)
   /** 右键菜单列表 */
   const menuList = ref([
     { label: '剪切', icon: 'screenshot', disabled: true },
@@ -66,8 +78,8 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
   watchEffect(() => {
     chatKey.value = chat.value.sendKey
-    if (!ait.value && filteredList.value.length > 0) {
-      selectedAitKey.value = 0
+    if (!ait.value && personList.value.length > 0) {
+      selectedAitKey.value = personList.value[0]?.uid
     }
     // 如果输入框没有值就把回复内容清空
     if (msgInput.value === '') {
@@ -91,15 +103,21 @@ export const useMsgInput = (messageInputDom: Ref) => {
     })
     /** 监听回复信息的传递 */
     Mitt.on(MittEnum.REPLY_MEG, (event: any) => {
+      const accountName = useUserInfo(event.fromUser.uid).value.name!
+      // 如果已经有回复消息，则替换掉原来的回复消息
       if (reply.value.content) {
-        // TODO 如果已经有就替换原来的内容 (nyh -> 2024-04-18 23:10:56)
-        return
+        // 触发id为closeBtn的按钮点击事件，从而关闭第一个回复框，实现回复消息的替换
+        document.getElementById('closeBtn')?.dispatchEvent(new Event('click'))
       }
-      reply.value = { imgCount: 0, accountName: event.value, content: event.content, key: event.key }
+      if (!Array.isArray(event.message.body.content)) {
+        // 回复前把包含&nbsp;的字符替换成空格
+        event.message.body.content = event.message.body.content.replace(/&nbsp;/g, ' ')
+      }
+      reply.value = { imgCount: 0, accountName: accountName, content: event.message.body.content, key: event.key }
       if (messageInputDom.value) {
         nextTick().then(() => {
           messageInputDom.value.focus()
-          insertNode(MsgEnum.REPLY, { accountName: event.value, content: event.content })
+          insertNode(MsgEnum.REPLY, { accountName: accountName, content: event.message.body.content })
           triggerInputEvent(messageInputDom.value)
         })
       }
@@ -114,27 +132,49 @@ export const useMsgInput = (messageInputDom: Ref) => {
       window.$message.warning(`一次性只能上传${LimitEnum.COM_COUNT}个文件或图片`)
       return
     }
+    // 排除id="replyDiv"的元素的内容
+    const replyDiv = messageInputDom.value.querySelector('#replyDiv')
+    if (replyDiv) {
+      replyDiv.parentNode?.removeChild(replyDiv)
+      // 然后重新赋值给msgInput
+      msgInput.value = messageInputDom.value.innerHTML.replace(replyDiv.outerHTML, '')
+    }
     ait.value = false
     const contentType = getMessageContentType(messageInputDom)
     const msg = {
       type: contentType,
-      content: msgInput.value,
-      reply: contentType === MsgEnum.REPLY ? reply.value : null
+      content: removeTag(msgInput.value),
+      reply: reply.value
     }
-    /** 如果是Reply消息，需要将消息的样式修改 */
-    if (msg.type === MsgEnum.REPLY) {
-      // 先去掉原来的标签
-      msg.content = removeTag(msg.content)
-      // 截取空格后的内容
-      // TODO 不允许用户删除回复消息中最前面的空格或者标志符号 (nyh -> 2024-04-17 06:39:22)
-      msg.content = msg.content.replace(/^[\S\s]*\u00A0/, '')
+    // TODO 当输入的类型是艾特类型的时候需要处理 (nyh -> 2024-05-30 19:52:20)
+    // TODO 当输入的内容换行后会有div包裹，这样会有xxr攻击风险 (nyh -> 2024-05-30 20:19:27)
+    /** 如果reply.value.content中有内容，需要将消息的样式修改 */
+    if (reply.value.content) {
+      if (msg.type === MsgEnum.TEXT) {
+        // 创建一个虚拟div元素以便对HTML进行操作
+        const tempDiv = document.createElement('div')
+        // 将msg.content赋值给虚拟div的innerHTML
+        tempDiv.innerHTML = msg.content
+        // 查找id为"replyDiv"的元素
+        const replyDiv = tempDiv.querySelector('#replyDiv')
+        // 如果找到了元素，则删除它
+        if (replyDiv) {
+          replyDiv.parentNode?.removeChild(replyDiv)
+        }
+        // 先去掉原来的标签
+        tempDiv.innerHTML = removeTag(tempDiv.innerHTML)
+        // 只截取tempDiv.innerHTML开头中的&nbsp;
+        tempDiv.innerHTML = tempDiv.innerHTML.replace(/^\s*&nbsp;/, '')
+        // 处理后的内容可以传给实际发送消息的方法
+        msg.content = tempDiv.innerHTML
+      }
     }
     const { hyperlinkRegex, foundHyperlinks } = RegExp.isHyperlink(msg.content)
     /** 判断是否有超链接 */
     if (foundHyperlinks && foundHyperlinks.length > 0) {
       msg.content = msg.content.replace(hyperlinkRegex, (match) => {
         const href = match.startsWith('www.') ? 'https://' + match : match
-        return `<a style="color: inherit" href="${href}" target="_blank" rel="noopener noreferrer">${match}</a>`
+        return `<a style="color: inherit;text-underline-offset: 4px" href="${href}" target="_blank" rel="noopener noreferrer">${match}</a>`
       })
     }
     // 判断文本信息是否超过限制
@@ -147,7 +187,19 @@ export const useMsgInput = (messageInputDom: Ref) => {
       window.$message.error('暂不支持混合类型消息发送')
       return
     }
-    Mitt.emit(MittEnum.SEND_MESSAGE, msg)
+    apis
+      .sendMsg({ roomId: globalStore.currentSession.roomId, msgType: msg.type, body: { content: msg.content } })
+      .then((res) => {
+        if (res.data.message.type === MsgEnum.TEXT) {
+          chatStore.pushMsg(res.data)
+          // 发完消息就要刷新会话列表，
+          //  FIXME 如果当前会话已经置顶了，可以不用刷新
+          chatStore.updateSessionLastActiveTime(globalStore.currentSession.roomId)
+        } else {
+          // 更新上传状态下的消息
+          chatStore.updateMsg(tempMessageId.value, res.data)
+        }
+      })
     msgInput.value = ''
     messageInputDom.value.innerHTML = ''
     reply.value = { imgCount: 0, accountName: '', content: '', key: '' }
@@ -184,7 +236,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     aitKey.value = keyWord
     editorRange.value = { range, selection }
 
-    if (ait.value && filteredList.value.length > 0) {
+    if (ait.value && personList.value.length > 0) {
       const res = range.getBoundingClientRect()
       await nextTick(() => {
         const dom = document.querySelector('.ait') as HTMLElement
@@ -213,7 +265,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
   }
 
   /** 处理点击@提及框事件 */
-  const handleAit = (item: MockItem) => {
+  const handleAit = (item: CacheUserItem) => {
     const myEditorRange = editorRange?.value?.range
     /** 获取光标所在位置的文本节点 */
     const textNode = myEditorRange?.endContainer
@@ -231,7 +283,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     range?.setStart(textNode, <number>expRes?.index)
     /** 设置范围的结束位置为光标的位置 */
     range?.setEnd(textNode, endOffset!)
-    insertNode(MsgEnum.AIT, item.accountName)
+    insertNode(MsgEnum.AIT, item.name)
     triggerInputEvent(messageInputDom.value)
     ait.value = false
   }
@@ -242,7 +294,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     handleAit,
     handleInput,
     send,
-    filteredList,
+    personList,
     ait,
     msgInput,
     chatKey,

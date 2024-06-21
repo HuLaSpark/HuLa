@@ -1,18 +1,22 @@
 import { useCommon } from '@/hooks/useCommon.ts'
 import { MittEnum, MsgEnum } from '@/enums'
-import { MockItem } from '@/services/types.ts'
+import { MessageType, SessionItem } from '@/services/types.ts'
 import Mitt from '@/utils/Bus.ts'
-import { setting } from '@/stores/setting.ts'
-import { storeToRefs } from 'pinia'
+import { useChatStore } from '@/stores/chat.ts'
+import apis from '@/services/apis.ts'
 
-export const useChatMain = (activeItem: MockItem) => {
-  const { removeTag } = useCommon()
-  const settingStore = setting()
-  const { login } = storeToRefs(settingStore)
+export const useChatMain = (activeItem?: SessionItem) => {
+  const { removeTag, userUid } = useCommon()
+  const chatStore = useChatStore()
+  // const userInfo = useUserStore()?.userInfo
+  // const chatMessageList = computed(() => chatStore.chatMessageList)
+  const messageOptions = computed(() => chatStore.currentMessageOptions)
+  /** 滚动条位置 */
+  const scrollTop = ref(-1)
+  /** 是否是超级管理员 */
+  // const isAdmin = computed(() => userInfo?.power === PowerEnum.ADMIN)
   /** 选中的气泡消息 */
   const activeBubble = ref(-1)
-  /**  当前登录的用户id */
-  const userId = ref(login.value.accountInfo.uid)
   /** 提醒框标题 */
   const tips = ref()
   /** 是否显示删除信息的弹窗 */
@@ -29,7 +33,7 @@ export const useChatMain = (activeItem: MockItem) => {
   const selectKey = ref()
   /** 计算出触发页脚后的历史消息下标 */
   const itemComputed = computed(() => {
-    return items.value.filter((item) => item.accountId !== userId.value).length
+    return items.value.filter((item) => item.accountId !== userUid.value).length
   })
 
   /**! 模拟信息列表 */
@@ -37,11 +41,11 @@ export const useChatMain = (activeItem: MockItem) => {
     Array.from({ length: 5 }, (_, i) => ({
       value: `${i}安老师`,
       key: i,
-      accountId: activeItem.accountId,
-      avatar: activeItem.avatar,
+      accountId: activeItem?.roomId,
+      avatar: activeItem?.avatar,
       content: '123',
       type: MsgEnum.TEXT,
-      reply: MsgEnum.REPLY
+      reply: MsgEnum.RECALL
         ? {
             accountName: '',
             content: '',
@@ -65,6 +69,14 @@ export const useChatMain = (activeItem: MockItem) => {
       click: (item: any) => {
         Mitt.emit(MittEnum.REPLY_MEG, item)
       }
+    },
+    {
+      label: '撤回',
+      icon: 'corner-down-left',
+      click: async (item: MessageType) => {
+        await apis.recallMsg({ roomId: 1, msgId: item.message.id })
+        chatStore.updateRecallStatus({ msgId: item.message.id })
+      }
     }
   ])
   /** 右键消息菜单列表 */
@@ -72,9 +84,8 @@ export const useChatMain = (activeItem: MockItem) => {
     {
       label: '复制',
       icon: 'copy',
-      click: (item: any) => {
-        const content = items.value[item.key].content
-        handleCopy(content)
+      click: (item: MessageType) => {
+        handleCopy(item.message.body.content)
       }
     },
     ...commonMenuList.value
@@ -175,16 +186,20 @@ export const useChatMain = (activeItem: MockItem) => {
   /** emoji表情菜单 */
   const emojiList = ref([
     {
-      label: '👍'
+      label: '👍',
+      title: '好赞'
     },
     {
-      label: '😆'
+      label: '😆',
+      title: '开心'
     },
     {
-      label: '🥳'
+      label: '🥳',
+      title: '恭喜'
     },
     {
-      label: '🤯'
+      label: '🤯',
+      title: '惊呆了'
     }
   ])
 
@@ -222,23 +237,30 @@ export const useChatMain = (activeItem: MockItem) => {
   const handleScroll = (e: Event) => {
     const target = e.target as HTMLElement
     // 获取已滚动的距离，即从顶部到当前滚动位置的距离
-    const scrollTop = target.scrollTop
+    scrollTop.value = target.scrollTop
     // 获取整个滚动容器的高度
-    const scrollHeight = target.scrollHeight
-    // 获取容器的可视区域高度
-    const clientHeight = target.clientHeight
+    // const scrollHeight = target.scrollHeight
+    // // 获取容器的可视区域高度
+    // const clientHeight = target.clientHeight
     // 计算距离底部的距离
-    const distanceFromBottom = scrollHeight - scrollTop - clientHeight
-    // 判断是否大于100
-    if (distanceFromBottom > 100) {
-      floatFooter.value = true
-      // 更新历史消息下标
-      historyIndex.value = itemComputed.value
-    } else {
-      floatFooter.value = false
-      historyIndex.value = 0
-      newMsgNum.value = 0
+    // const distanceFromBottom = scrollHeight - scrollTop.value - clientHeight
+    // 判断是否滚动到顶部
+    if (scrollTop.value === 0) {
+      // 记录顶部最后一条消息的下标
+      // historyIndex.value = chatMessageList.value[0].message.id
+      if (messageOptions.value?.isLoading) return
+      chatStore.loadMore()
     }
+    // // 判断是否大于100
+    // if (distanceFromBottom > 100) {
+    //   floatFooter.value = true
+    //   // 更新历史消息下标
+    //   historyIndex.value = itemComputed.value
+    // } else {
+    //   floatFooter.value = false
+    //   historyIndex.value = 0
+    //   newMsgNum.value = 0
+    // }
   }
 
   /**
@@ -258,12 +280,12 @@ export const useChatMain = (activeItem: MockItem) => {
   }
 
   /** 点击气泡消息时候监听用户是否按下ctrl+c来复制内容 */
-  const handleMsgClick = (item: any) => {
-    activeBubble.value = item.key
+  const handleMsgClick = (item: MessageType) => {
+    activeBubble.value = item.message.id
     // 启用键盘监听
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.key === 'c') {
-        const content = items.value[item.key].content
+        const content = items.value[item.message.id].content
         handleCopy(content)
         // 取消监听键盘事件，以免多次绑定
         document.removeEventListener('keydown', handleKeyPress)
@@ -285,12 +307,13 @@ export const useChatMain = (activeItem: MockItem) => {
     historyIndex,
     tips,
     modalShow,
-    userId,
     specialMenuList,
     itemComputed,
     optionsList,
     report,
     selectKey,
-    emojiList
+    emojiList,
+    commonMenuList,
+    scrollTop
   }
 }

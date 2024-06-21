@@ -10,7 +10,8 @@
   right: 0;
   top: 0;
   bottom: 0;
-  width: 2px;
+  width: 1px;
   cursor: ew-resize;
-  background-color: #ccc; /** 可以根据需要更改颜色 */
+  z-index: 9999;
+  background-color: var(--split-color);
 }

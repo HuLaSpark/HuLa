@@ -1,34 +1,36 @@
+import { ref } from 'vue'
+import apis from '@/services/apis'
 import { defineStore } from 'pinia'
+import type { UserInfoType } from '@/services/types'
 
-type IState = {
-  loginInfo: {
-    avatarUrl: string
-    email: string
-    nickname: string
-    ipaddress: string
-    username: string
-    token: string
-  }
-}
+export const useUserStore = defineStore('user', () => {
+  const userInfo = ref<Partial<UserInfoType>>({})
+  const isSign = ref(false)
 
-export const userStore = defineStore('localUserInfo', {
-  state: (): IState =>
-    <IState>{
-      loginInfo: {}
-    },
-  getters: {
-    getBearerToken(): any {
-      return this.loginInfo.token ? this.loginInfo.token : ''
-    }
-  },
-  actions: {
-    setLoginInfo(loginInfo: any) {
-      this.loginInfo = loginInfo
-    },
-    logout() {
-      this.$reset()
-      //删除localStorage中的用户信息
-      localStorage.removeItem('localUserInfo')
-    }
+  let localUserInfo = {}
+  try {
+    localUserInfo = JSON.parse(localStorage.getItem('USER_INFO') || '{}')
+  } catch (error) {
+    localUserInfo = {}
   }
+
+  // 从 local读取
+  if (!Object.keys(userInfo.value).length && Object.keys(localUserInfo).length) {
+    userInfo.value = localUserInfo
+  }
+
+  function getUserDetailAction() {
+    apis
+      .getUserDetail()
+      .then((res) => {
+        userInfo.value = { ...userInfo.value, ...res.data.data }
+      })
+      .catch(() => {
+        // 删除缓存
+        localStorage.removeItem('TOKEN')
+        localStorage.removeItem('USER_INFO')
+      })
+  }
+
+  return { userInfo, isSign, getUserDetailAction }
 })

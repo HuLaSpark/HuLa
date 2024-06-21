@@ -71,4 +71,5 @@ declare interface Window {
   $notification: ReturnType<typeof useNotification>
   $loadingBar: ReturnType<typeof useLoadingBar>
   $dialog: ReturnType<typeof useDialog>
+  $modal: ReturnType<typeof useModal>
 }
