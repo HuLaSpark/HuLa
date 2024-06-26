@@ -48,9 +48,9 @@ onMounted(() => {
         e.preventDefault()
       }
     })
-    /** 禁止右键菜单 */
-    window.addEventListener('contextmenu', (e) => e.preventDefault(), false)
   }
+  /** 禁止右键菜单 */
+  window.addEventListener('contextmenu', (e) => e.preventDefault(), false)
 })
 
 onUnmounted(() => {

@@ -65,7 +65,11 @@ export enum MittEnum {
   /** 回复消息 */
   REPLY_MEG = 'replyMeg',
   /** 手动触发InfoPopover */
-  INFO_POPOVER = 'infoPopover'
+  INFO_POPOVER = 'infoPopover',
+  /** 打开个人信息编辑窗口 */
+  OPEN_EDIT_INFO = 'openEditInfo',
+  /** 关闭个人信息浮窗 */
+  CLOSE_INFO_SHOW = 'closeInfoShow'
 }
 
 /** 主题类型 */

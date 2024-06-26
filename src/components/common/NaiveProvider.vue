@@ -103,7 +103,8 @@ const commonTheme: GlobalThemeOverrides = {
   Message: {
     iconColorSuccess: '#13987f',
     iconColorLoading: '#13987f',
-    loadingColor: '#13987f'
+    loadingColor: '#13987f',
+    borderRadius: '8px'
   }
 }
 

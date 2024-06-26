@@ -42,6 +42,11 @@ const routes: Array<RouteRecordRaw> = [
     ]
   },
   {
+    path: '/robot',
+    name: 'robot',
+    component: () => import('@/views/home-window/robot/index.vue')
+  },
+  {
     path: '/mail',
     name: 'mail',
     component: Mail

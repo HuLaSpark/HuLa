@@ -6,6 +6,16 @@ import { invoke } from '@tauri-apps/api/tauri'
 import axios from 'axios'
 
 const { createWebviewWindow } = useWindow()
+/**
+ * 上半部分操作栏配置
+ * @param url 路由地址
+ * @param icon 图标
+ * @param title 创建新窗口时的标题
+ * @param iconAction 选择后的图标
+ * @param badge 角标
+ * @param tip 提示信息
+ * @param size 窗口大小
+ */
 const itemsTop = ref<OPT.L.Top[]>([
   {
     url: 'message',
@@ -20,9 +30,26 @@ const itemsTop = ref<OPT.L.Top[]>([
   {
     url: 'dynamic',
     icon: 'fire',
-    iconAction: 'fire-action'
+    title: '动态',
+    iconAction: 'fire-action',
+    size: {
+      width: 840,
+      height: 800
+    }
+  },
+  {
+    url: 'robot',
+    icon: 'Robot',
+    title: 'GPT',
+    iconAction: 'Robot',
+    tip: '机器人新功能在开发中',
+    size: {
+      width: 980,
+      height: 800
+    }
   }
 ])
+/** 下半部分操作栏配置 */
 const itemsBottom: OPT.L.Bottom[] = [
   {
     title: '邮件',

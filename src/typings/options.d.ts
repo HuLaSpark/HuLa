@@ -6,8 +6,14 @@ declare namespace OPT {
     type Top = {
       url: string
       icon: string
+      title?: string
       iconAction?: string
       badge?: number
+      tip?: string
+      size?: {
+        width: number
+        height: number
+      }
     }
 
     /** 底部的选项 */
