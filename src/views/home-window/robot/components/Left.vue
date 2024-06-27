@@ -34,19 +34,23 @@
       </n-flex>
       <!-- 会话列表 -->
       <n-scrollbar ref="scrollbar" style="max-height: calc(100vh - 266px); padding-right: 8px">
-        <n-flex vertical :size="10" style="padding: 4px">
-          <TransitionGroup name="list" tag="div" class="flex flex-col-center gap-12px">
+        <VueDraggable v-model="chatList" :animation="150" target=".sort-target">
+          <TransitionGroup name="list" tag="div" style="padding: 4px" class="sort-target flex flex-col-center gap-12px">
             <n-flex
               vertical
               :size="12"
               v-for="item in chatList"
               :key="item.id"
-              @click="activeItem = item.id"
-              :class="{ 'outline outline-2 outline-#13987f outline-offset-1': activeItem === item.id }"
+              @click="handleActive(item)"
+              :class="{ 'outline-dashed outline-2 outline-#13987f outline-offset-1': activeItem === item.id }"
               class="chat-item">
               <div class="absolute flex flex-col gap-14px w-full p-[8px_14px] box-border">
                 <n-flex justify="space-between" align="center" :size="0" class="leading-22px">
-                  <p class="text-(14px [--chat-text-color]) font-semibold select-none">{{ item.name }}</p>
+                  <n-ellipsis
+                    style="width: calc(100% - 20px)"
+                    class="text-(14px [--chat-text-color]) truncate font-semibold select-none">
+                    {{ item.title }}
+                  </n-ellipsis>
                   <svg
                     @click.stop="deleteChat(item)"
                     class="color-[--chat-text-color] size-20px opacity-0 absolute right-0px top-4px">
@@ -60,7 +64,7 @@
               </div>
             </n-flex>
           </TransitionGroup>
-        </n-flex>
+        </VueDraggable>
       </n-scrollbar>
     </n-flex>
 
@@ -86,6 +90,8 @@
 import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
 import { NIcon, VirtualListInst } from 'naive-ui'
+import Mitt from '@/utils/Bus.ts'
+import { VueDraggable } from 'vue-draggable-plus'
 
 const settingStore = setting()
 const { login } = storeToRefs(settingStore)
@@ -94,29 +100,36 @@ const scrollbar = ref<VirtualListInst>()
 const chatList = ref([
   {
     id: 1,
-    name: '新的聊天1',
+    title: '新的聊天1',
     time: '2022-01-01 12:00:00'
   },
   {
     id: 2,
-    name: '新的聊天2',
+    title: '新的聊天2',
     time: '2022-01-01 12:00:00'
   },
   {
     id: 3,
-    name: '新的聊天3',
+    title: '新的聊天3',
     time: '2022-01-01 12:00:00'
   },
   {
     id: 4,
-    name: '新的聊天4',
+    title: '新的聊天4',
     time: '2022-01-01 12:00:00'
   }
 ])
 
+const handleActive = (item: any) => {
+  activeItem.value = item.id
+  nextTick(() => {
+    Mitt.emit('chat-active', item)
+  })
+}
+
 const add = () => {
   const id = chatList.value.length + 1
-  chatList.value.push({ id: id, name: `新的聊天${id}`, time: '2022-01-01 12:00:00' })
+  chatList.value.push({ id: id, title: `新的聊天${id}`, time: '2022-01-01 12:00:00' })
   // 滚动到最底部
   nextTick(() => {
     scrollbar.value?.scrollTo({ position: 'bottom', debounce: true })
@@ -124,20 +137,48 @@ const add = () => {
 }
 
 const deleteChat = (item: any) => {
+  // 根据key找到items中对应的下标
   const index = chatList.value.indexOf(item)
-  if (index > -1) {
-    chatList.value.splice(index, 1)
-    window.$message.success(`已删除 ${item.name}`, {
-      icon: () => h(NIcon, null, { default: () => h('svg', null, [h('use', { href: '#face' })]) })
-    })
-    // 判断是否只有一个内容
-    if (chatList.value.length === 0) {
-      nextTick(() => {
-        add()
+  // 如果找到了对应的元素，则移除
+  if (index !== -1) {
+    const removeItem = chatList.value.splice(index, 1)[0]
+    if (activeItem.value === removeItem.id) {
+      if (index < chatList.value.length) {
+        // 需要使用新的索引位置找到key更新activeItem.value
+        activeItem.value = chatList.value[index].id
+        handleActive(chatList.value[index])
+      } else {
+        // 如果是最后一个元素则触发新增
+        if (chatList.value.length === 0) {
+          nextTick(() => {
+            add()
+            // 选择新增的元素
+            // TODO 这里没有传输数据 (nyh -> 2024-06-27 18:52:11)
+            activeItem.value = chatList.value[0].id
+          })
+        }
+        // 如果我们删除的是最后一个元素，则需要选中前一个元素
+        activeItem.value = chatList.value[chatList.value.length - 1].id
+        handleActive(chatList.value[chatList.value.length - 1])
+      }
+      window.$message.success(`已删除 ${item.title}`, {
+        icon: () => h(NIcon, null, { default: () => h('svg', null, [h('use', { href: '#face' })]) })
       })
     }
   }
 }
+
+onMounted(() => {
+  /** 默认选择第一个聊天内容 */
+  handleActive(chatList.value[0])
+  Mitt.on('update-chat-title', (e) => {
+    chatList.value.filter((item) => {
+      if (item.id === e.id) {
+        item.title = e.title
+      }
+    })
+  })
+})
 </script>
 <style scoped lang="scss">
 .gpt-subtitle {

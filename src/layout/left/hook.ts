@@ -31,7 +31,7 @@ export const leftHook = () => {
   const activeUrl = ref<string>(itemsTop.value[0].url)
   const settingShow = ref(false)
   const shrinkStatus = ref(false)
-  const isNewWindows = ref(['dynamic', 'robot'])
+  const isNewWindows = ref(['dynamic', 'robot', 'mail'])
   /** 是否展示个人信息浮窗 */
   const infoShow = ref(false)
   /** 是否显示上半部分操作栏中的提示 */
@@ -153,16 +153,30 @@ export const leftHook = () => {
   }
 
   /**
-   * 统一跳转路由方法
+   * 侧边栏部分跳转窗口路由事件
    * @param url 跳转的路由
    * @param title 创建窗口时的标题
    * @param size 窗口的大小
+   * @param window 窗口参数
    * */
-  const pageJumps = (url: string, title?: string, size?: { width: number; height: number }) => {
+  const pageJumps = (
+    url: string,
+    title?: string,
+    size?: { width: number; height: number },
+    window?: { isDrag: boolean; resizable: boolean }
+  ) => {
     // 判断url是否等于isNewWindows.value数组中的值，如果是，则创建新的窗口
     if (isNewWindows.value.includes(url)) {
       delay(async () => {
-        await createWebviewWindow(title!, url, <number>size?.width, <number>size?.height)
+        await createWebviewWindow(
+          title!,
+          url,
+          <number>size?.width,
+          <number>size?.height,
+          '',
+          window?.isDrag,
+          window?.resizable
+        )
       }, 300)
     } else {
       activeUrl.value = url

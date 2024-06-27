@@ -9,8 +9,21 @@
           { active: activeUrl === item.url && item.url !== 'dynamic' },
           openWindowsList.has(item.url) ? 'p-[6px_8px] color-#13987f' : 'top-action'
         ]"
-        @click="pageJumps(item.url, item.title, item.size)">
-        <n-popover style="padding: 12px" v-if="item.tip" trigger="manual" v-model:show="tipShow" placement="right">
+        @click="pageJumps(item.url, item.title, item.size, item.window)">
+        <!-- 已经打开窗口时展示 -->
+        <n-popover :show-arrow="false" v-if="openWindowsList.has(item.url)" trigger="hover" placement="right">
+          <template #trigger>
+            <n-badge :max="99" :value="item.badge">
+              <svg class="size-22px" @click="tipShow = false">
+                <use
+                  :href="`#${activeUrl === item.url || openWindowsList.has(item.url) ? item.iconAction : item.icon}`"></use>
+              </svg>
+            </n-badge>
+          </template>
+          <p>{{ item.title }} 已打开</p>
+        </n-popover>
+        <!-- 该选项有提示时展示 -->
+        <n-popover style="padding: 12px" v-else-if="item.tip" trigger="manual" v-model:show="tipShow" placement="right">
           <template #trigger>
             <n-badge :max="99" :value="item.badge">
               <svg class="size-22px" @click="tipShow = false">
@@ -24,6 +37,7 @@
             <svg @click="tipShow = false" class="size-12px cursor-pointer"><use href="#close"></use></svg>
           </n-flex>
         </n-popover>
+        <!-- 该选项无提示时展示 -->
         <n-badge v-else :max="99" :value="item.badge">
           <svg class="size-22px">
             <use
@@ -38,11 +52,42 @@
       <div
         v-for="(item, index) in itemsBottom"
         :key="index"
-        :class="openWindowsList.has(item.url.substring(1)) ? 'p-[6px_8px] color-#13987f' : 'bottom-action'"
-        @click="openContent(item.title, item.label)">
-        <svg class="size-22px">
-          <use :href="`#${openWindowsList.has(item.url.substring(1)) ? item.iconAction : item.icon}`"></use>
-        </svg>
+        :class="openWindowsList.has(item.url) ? 'p-[6px_8px] color-#13987f' : 'bottom-action'"
+        @click="pageJumps(item.url, item.title, item.size, item.window)">
+        <!-- 已经打开窗口时展示 -->
+        <n-popover :show-arrow="false" v-if="openWindowsList.has(item.url)" trigger="hover" placement="right">
+          <template #trigger>
+            <n-badge :max="99" :value="item.badge">
+              <svg class="size-22px" @click="tipShow = false">
+                <use
+                  :href="`#${activeUrl === item.url || openWindowsList.has(item.url) ? item.iconAction : item.icon}`"></use>
+              </svg>
+            </n-badge>
+          </template>
+          <p>{{ item.title }} 已打开</p>
+        </n-popover>
+        <!-- 该选项有提示时展示 -->
+        <n-popover style="padding: 12px" v-else-if="item.tip" trigger="manual" v-model:show="tipShow" placement="right">
+          <template #trigger>
+            <n-badge :max="99" :value="item.badge">
+              <svg class="size-22px" @click="tipShow = false">
+                <use
+                  :href="`#${activeUrl === item.url || openWindowsList.has(item.url) ? item.iconAction : item.icon}`"></use>
+              </svg>
+            </n-badge>
+          </template>
+          <n-flex align="center" justify="space-between">
+            <p class="select-none">{{ item.tip }}</p>
+            <svg @click="tipShow = false" class="size-12px cursor-pointer"><use href="#close"></use></svg>
+          </n-flex>
+        </n-popover>
+        <!-- 该选项无提示时展示 -->
+        <n-badge v-else :max="99" :value="item.badge">
+          <svg class="size-22px">
+            <use
+              :href="`#${activeUrl === item.url || openWindowsList.has(item.url) ? item.iconAction : item.icon}`"></use>
+          </svg>
+        </n-badge>
       </div>
 
       <svg
@@ -70,7 +115,7 @@
 import { itemsBottom, itemsTop, moreList } from '../config.ts'
 import { leftHook } from '../hook.ts'
 
-const { activeUrl, openWindowsList, settingShow, tipShow, openContent, pageJumps } = leftHook()
+const { activeUrl, openWindowsList, settingShow, tipShow, pageJumps } = leftHook()
 
 onMounted(() => {
   /** 十秒后关闭提示 */

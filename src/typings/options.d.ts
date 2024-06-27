@@ -3,7 +3,7 @@ declare namespace OPT {
   /** 主页左侧选项 */
   namespace L {
     /** 顶部的选项 */
-    type Top = {
+    type Common = {
       url: string
       icon: string
       title?: string
@@ -14,15 +14,10 @@ declare namespace OPT {
         width: number
         height: number
       }
-    }
-
-    /** 底部的选项 */
-    type Bottom = {
-      title: string
-      url: string
-      label: string
-      icon: string
-      iconAction?: string
+      window?: {
+        isDrag: boolean
+        resizable: boolean
+      }
     }
 
     /** 更多的选项 */

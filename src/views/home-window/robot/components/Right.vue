@@ -1,30 +1,42 @@
 <template>
-  <n-flex vertical :size="0" class="flex-1 shadow-md select-none text-[--text-color]">
+  <n-flex vertical :size="0" class="flex-1 truncate shadow-md select-none text-[--text-color]">
     <!-- 右上角操作栏 -->
-    <ActionBar
-      class="w-full"
-      :max-w="false"
-      :shrink="false"
-      :current-label="appWindow.label"
-      :top-win-label="appWindow.label" />
+    <ActionBar class="w-full" :shrink="false" :current-label="appWindow.label" :top-win-label="appWindow.label" />
     <!-- 主体内容 -->
-    <main class="flex-1">
-      <n-flex justify="space-between" align="center" :size="0" class="p-[14px_20px]">
-        <n-flex :size="10" vertical>
-          <p class="text-(20px [--chat-text-color]) font-bold hover:underline cursor-pointer">新的聊天</p>
+    <main>
+      <div class="flex flex-1 truncate p-[14px_20px] justify-between items-center gap-50px">
+        <n-flex :size="10" vertical class="truncate">
+          <p
+            v-if="!isEdit"
+            @click="handleEdit"
+            class="text-(22px [--chat-text-color]) truncate font-bold hover:underline cursor-pointer">
+            {{ currentChat.title }}
+          </p>
+          <n-input
+            v-else
+            @blur="handleBlur"
+            ref="inputInstRef"
+            v-model:value="currentChat.title"
+            clearable
+            placeholder="输入标题"
+            type="text"
+            size="tiny"
+            style="width: 200px"
+            class="h-22px lh-22px rounded-6px">
+          </n-input>
           <p class="text-(14px #707070)">共0条对话</p>
         </n-flex>
 
-        <n-flex>
-          <div class="right-btn">
-            <svg class="size-18px cursor-pointer"><use href="#edit"></use></svg>
+        <n-flex class="min-w-fit">
+          <div class="right-btn" @click="handleEdit">
+            <svg><use href="#edit"></use></svg>
           </div>
 
           <div class="right-btn">
-            <svg class="size-18px cursor-pointer"><use href="#Sharing"></use></svg>
+            <svg><use href="#Sharing"></use></svg>
           </div>
         </n-flex>
-      </n-flex>
+      </div>
       <div class="h-1px bg-[--line-color]"></div>
 
       <!-- 聊天信息框 -->
@@ -69,8 +81,18 @@
 import { appWindow } from '@tauri-apps/api/window'
 import { useWindowState } from '@/hooks/useWindowState.ts'
 import MsgInput from '@/components/rightBox/MsgInput.vue'
+import Mitt from '@/utils/Bus.ts'
+import { InputInst } from 'naive-ui'
 
 useWindowState(appWindow.label)
+/** 是否是编辑模式 */
+const isEdit = ref(false)
+const inputInstRef = ref<InputInst | null>(null)
+/** 当前聊天的标题和id */
+const currentChat = ref({
+  id: 0,
+  title: ''
+})
 const features = ref([
   {
     icon: 'SmilingFace',
@@ -85,16 +107,42 @@ const features = ref([
     label: '增强插件'
   },
   {
-    icon: 'Robot',
+    icon: 'robot-action',
     label: 'GPT4'
   }
 ])
+
+const handleBlur = () => {
+  isEdit.value = false
+  if (currentChat.value.title === '') {
+    currentChat.value.title = '新的聊天'
+  }
+  Mitt.emit('update-chat-title', { title: currentChat.value.title, id: currentChat.value.id })
+}
+
+const handleEdit = () => {
+  isEdit.value = true
+  nextTick(() => {
+    inputInstRef.value?.select()
+  })
+}
+
+onMounted(() => {
+  Mitt.on('chat-active', (e) => {
+    const { title, id } = e
+    currentChat.value.title = title
+    currentChat.value.id = id
+  })
+})
 </script>
 
 <style lang="scss" scoped>
 @import '@/styles/scss/chat-main';
 .right-btn {
-  @apply size-fit bg-[--chat-bt-color] color-[--chat-text-color] rounded-8px shadow-md p-[10px_11px];
+  @apply size-fit cursor-pointer bg-[--chat-bt-color] color-[--chat-text-color] rounded-8px shadow-md p-[10px_11px];
+  svg {
+    @apply size-18px;
+  }
 }
 .options {
   svg {

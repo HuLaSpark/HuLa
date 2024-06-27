@@ -97,6 +97,7 @@ const userList = computed(() => {
   })
 })
 const isGroup = computed(() => globalStore.currentSession?.type === RoomTypeEnum.GROUP)
+/** 是否是搜索模式 */
 const isSearch = ref(false)
 const searchRef = ref('')
 /** 手动触发Popover显示 */
