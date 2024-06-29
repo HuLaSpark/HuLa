@@ -34,7 +34,6 @@ declare module 'vue' {
     NDropdown: (typeof import('naive-ui'))['NDropdown']
     NEllipsis: (typeof import('naive-ui'))['NEllipsis']
     NFlex: (typeof import('naive-ui'))['NFlex']
-    NGradientText: (typeof import('naive-ui'))['NGradientText']
     NIcon: (typeof import('naive-ui'))['NIcon']
     NIconWrapper: (typeof import('naive-ui'))['NIconWrapper']
     NImage: (typeof import('naive-ui'))['NImage']

@@ -34,7 +34,7 @@
       </n-flex>
       <!-- 会话列表 -->
       <n-scrollbar ref="scrollbar" style="max-height: calc(100vh - 266px); padding-right: 8px">
-        <VueDraggable v-model="chatList" :animation="150" target=".sort-target">
+        <VueDraggable dragClass="outline-none" v-model="chatList" :animation="150" target=".sort-target">
           <TransitionGroup name="list" tag="div" style="padding: 4px" class="sort-target flex flex-col-center gap-12px">
             <n-flex
               vertical
@@ -44,24 +44,30 @@
               @click="handleActive(item)"
               :class="{ 'outline-dashed outline-2 outline-#13987f outline-offset-1': activeItem === item.id }"
               class="chat-item">
-              <div class="absolute flex flex-col gap-14px w-full p-[8px_14px] box-border">
-                <n-flex justify="space-between" align="center" :size="0" class="leading-22px">
-                  <n-ellipsis
-                    style="width: calc(100% - 20px)"
-                    class="text-(14px [--chat-text-color]) truncate font-semibold select-none">
-                    {{ item.title }}
-                  </n-ellipsis>
-                  <svg
-                    @click.stop="deleteChat(item)"
-                    class="color-[--chat-text-color] size-20px opacity-0 absolute right-0px top-4px">
-                    <use href="#squareClose"></use>
-                  </svg>
-                </n-flex>
-                <n-flex justify="space-between" align="center" :size="0" class="text-(12px #909090)">
-                  <p>0条对话</p>
-                  <p>{{ item.time }}</p>
-                </n-flex>
-              </div>
+              <ContextMenu
+                :menu="menuList"
+                :special-menu="specialMenuList"
+                class="msg-box w-full h-75px mb-5px"
+                @select="$event.click(item)">
+                <div class="absolute flex flex-col gap-14px w-full p-[8px_14px] box-border">
+                  <n-flex justify="space-between" align="center" :size="0" class="leading-22px">
+                    <n-ellipsis
+                      style="width: calc(100% - 20px)"
+                      class="text-(14px [--chat-text-color]) truncate font-semibold select-none">
+                      {{ item.title }}
+                    </n-ellipsis>
+                    <svg
+                      @click.stop="deleteChat(item)"
+                      class="color-[--chat-text-color] size-20px opacity-0 absolute right-0px top-4px">
+                      <use href="#squareClose"></use>
+                    </svg>
+                  </n-flex>
+                  <n-flex justify="space-between" align="center" :size="0" class="text-(12px #909090)">
+                    <p>0条对话</p>
+                    <p>{{ item.time }}</p>
+                  </n-flex>
+                </div>
+              </ContextMenu>
             </n-flex>
           </TransitionGroup>
         </VueDraggable>
@@ -70,10 +76,20 @@
 
     <!-- 底部选项栏 -->
     <n-flex justify="space-between" align="center" class="m-[auto_4px_10px_4px]">
-      <div
-        class="bg-[--chat-bt-color] color-[--chat-text-color] size-fit p-[8px_9px] rounded-8px shadow-md cursor-pointer">
-        <svg class="size-18px"><use href="#settings"></use></svg>
-      </div>
+      <n-flex :size="12" align="center">
+        <div
+          @click="jump"
+          class="bg-[--chat-bt-color] color-[--chat-text-color] size-fit p-[8px_9px] rounded-8px shadow-md cursor-pointer">
+          <svg class="size-18px"><use href="#settings"></use></svg>
+        </div>
+        <a
+          target="_blank"
+          rel="noopener noreferrer"
+          href="https://github.com/nongyehong/HuLa-IM-Tauri"
+          class="bg-[--chat-bt-color] color-[--chat-text-color] size-fit p-[8px_9px] rounded-8px shadow-md cursor-pointer">
+          <svg class="size-18px"><use href="#github"></use></svg>
+        </a>
+      </n-flex>
 
       <n-flex
         :size="4"
@@ -92,6 +108,7 @@ import { storeToRefs } from 'pinia'
 import { NIcon, VirtualListInst } from 'naive-ui'
 import Mitt from '@/utils/Bus.ts'
 import { VueDraggable } from 'vue-draggable-plus'
+import router from '@/router'
 
 const settingStore = setting()
 const { login } = storeToRefs(settingStore)
@@ -119,14 +136,56 @@ const chatList = ref([
     time: '2022-01-01 12:00:00'
   }
 ])
+const menuList = ref<OPT.RightMenu[]>([
+  {
+    label: '置顶',
+    icon: 'topping',
+    click: (item: any) => {
+      const index = chatList.value.findIndex((e) => e.id === item.id)
+      // 实现置顶功能
+      if (index !== 0) {
+        // 交换元素位置
+        const temp = chatList.value[index]
+        chatList.value[index] = chatList.value[0]
+        chatList.value[0] = temp
+      }
+    }
+  },
+  {
+    label: '打开独立聊天窗口',
+    icon: 'freezing-line-column',
+    click: (item: any) => {
+      console.log(item)
+    }
+  }
+])
+const specialMenuList = ref<OPT.RightMenu[]>([
+  {
+    label: '删除',
+    icon: 'delete',
+    click: (item: any) => {
+      deleteChat(item)
+    }
+  }
+])
 
+/** 跳转到设置 */
+const jump = () => {
+  router.push('/chatSettings')
+  activeItem.value = 0
+}
+
+/** 选中会话 */
 const handleActive = (item: any) => {
   activeItem.value = item.id
-  nextTick(() => {
-    Mitt.emit('chat-active', item)
+  router.push('/chat').then(() => {
+    nextTick(() => {
+      Mitt.emit('chat-active', item)
+    })
   })
 }
 
+/** 添加会话 */
 const add = () => {
   const id = chatList.value.length + 1
   chatList.value.push({ id: id, title: `新的聊天${id}`, time: '2022-01-01 12:00:00' })
@@ -136,6 +195,7 @@ const add = () => {
   })
 }
 
+/** 删除会话 */
 const deleteChat = (item: any) => {
   // 根据key找到items中对应的下标
   const index = chatList.value.indexOf(item)
@@ -153,18 +213,20 @@ const deleteChat = (item: any) => {
           nextTick(() => {
             add()
             // 选择新增的元素
-            // TODO 这里没有传输数据 (nyh -> 2024-06-27 18:52:11)
-            activeItem.value = chatList.value[0].id
+            handleActive(chatList.value[0])
+            window.$message.success(`已删除 ${item.title}`, {
+              icon: () => h(NIcon, null, { default: () => h('svg', null, [h('use', { href: '#face' })]) })
+            })
           })
         }
         // 如果我们删除的是最后一个元素，则需要选中前一个元素
         activeItem.value = chatList.value[chatList.value.length - 1].id
         handleActive(chatList.value[chatList.value.length - 1])
       }
-      window.$message.success(`已删除 ${item.title}`, {
-        icon: () => h(NIcon, null, { default: () => h('svg', null, [h('use', { href: '#face' })]) })
-      })
     }
+    window.$message.success(`已删除 ${item.title}`, {
+      icon: () => h(NIcon, null, { default: () => h('svg', null, [h('use', { href: '#face' })]) })
+    })
   }
 }
 
@@ -177,6 +239,9 @@ onMounted(() => {
         item.title = e.title
       }
     })
+  })
+  Mitt.on('return-chat', () => {
+    handleActive(chatList.value[0])
   })
 })
 </script>

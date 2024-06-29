@@ -105,6 +105,14 @@ const commonTheme: GlobalThemeOverrides = {
     iconColorLoading: '#13987f',
     loadingColor: '#13987f',
     borderRadius: '8px'
+  },
+  Slider: {
+    handleSize: '12px',
+    fontSize: '10px',
+    markFontSize: '8px',
+    fillColor: '#13987f',
+    fillColorHover: '#13987f',
+    indicatorBorderRadius: '8px'
   }
 }
 

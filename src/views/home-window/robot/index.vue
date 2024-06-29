@@ -9,6 +9,6 @@
   </div>
 </template>
 <script setup lang="ts">
-import Left from './components/Left.vue'
-import Right from './components/Right.vue'
+import Left from './layout/Left.vue'
+import Right from './layout/Right.vue'
 </script>
