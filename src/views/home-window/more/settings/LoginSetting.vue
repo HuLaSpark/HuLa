@@ -47,6 +47,6 @@ const clearInfo = () => {
 
 <style scoped lang="scss">
 .item-box {
-  @apply text-14px text-[--text-color] bg-[--bg-setting-item] rounded-8px p-10px;
+  @apply text-14px text-[--text-color] bg-[--bg-setting-item] rounded-8px p-10px border-(solid 1px [--line-color]) shadow-md;
 }
 </style>

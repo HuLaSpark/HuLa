@@ -71,6 +71,7 @@ const commonTheme: GlobalThemeOverrides = {
   },
   Button: {
     borderRadiusMedium: '10px',
+    borderRadiusSmall: '6px',
     colorPrimary: '#13987f'
   },
   Tabs: {
@@ -103,7 +104,16 @@ const commonTheme: GlobalThemeOverrides = {
   Message: {
     iconColorSuccess: '#13987f',
     iconColorLoading: '#13987f',
-    loadingColor: '#13987f'
+    loadingColor: '#13987f',
+    borderRadius: '8px'
+  },
+  Slider: {
+    handleSize: '12px',
+    fontSize: '10px',
+    markFontSize: '8px',
+    fillColor: '#13987f',
+    fillColorHover: '#13987f',
+    indicatorBorderRadius: '8px'
   }
 }
 

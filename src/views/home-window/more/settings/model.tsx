@@ -1,16 +1,22 @@
 import { ThemeEnum } from '@/enums'
 
-const titleList = [
+type Topic = {
+  title: string
+  code: ThemeEnum
+  model: JSX.Element
+}[]
+
+const topicsList: Topic = [
   {
     title: '白天模式',
     code: ThemeEnum.LIGHT,
     model: (() => (
       <div class="size-full flex">
-        <div class="bg-#f1f1f1 flex-[1] rounded-[6px_0_0_6px]"></div>
+        <div class="bg-#f1f1f1 flex-1 rounded-[6px_0_0_6px]"></div>
 
         <div class="bg-#fff flex-[3.5] p-[8px_4px] box-border flex flex-col gap-8px">
           <div class="flex gap-4px">
-            <div class="bg-#f1f1f1 w-10px h-10px rounded-50%"></div>
+            <div class="bg-#f1f1f1 size-10px rounded-50%"></div>
             <div class="flex flex-col gap-2px">
               <div class="bg-#f1f1f1 w-16px h-4px"></div>
               <div class="bg-#f1f1f1 w-24px h-4px"></div>
@@ -18,7 +24,7 @@ const titleList = [
           </div>
 
           <div class="flex gap-4px">
-            <div class="bg-#f1f1f1 w-10px h-10px rounded-50%"></div>
+            <div class="bg-#f1f1f1 size-10px rounded-50%"></div>
             <div class="flex flex-col gap-2px">
               <div class="bg-#f1f1f1 w-16px h-4px"></div>
               <div class="bg-#f1f1f1 w-24px h-4px"></div>
@@ -45,11 +51,11 @@ const titleList = [
     code: ThemeEnum.DARK,
     model: (() => (
       <div class="size-full flex">
-        <div class="bg-#454545 flex-[1] rounded-[6px_0_0_6px]"></div>
+        <div class="bg-#454545 flex-1 rounded-[6px_0_0_6px]"></div>
 
         <div class="bg-#212121 flex-[3.5] p-[8px_4px] box-border flex flex-col gap-8px">
           <div class="flex gap-4px">
-            <div class="bg-#4d4d4d w-10px h-10px rounded-50%"></div>
+            <div class="bg-#4d4d4d size-10px rounded-50%"></div>
             <div class="flex flex-col gap-2px">
               <div class="bg-#4d4d4d w-16px h-4px"></div>
               <div class="bg-#4d4d4d w-24px h-4px"></div>
@@ -57,7 +63,7 @@ const titleList = [
           </div>
 
           <div class="flex gap-4px">
-            <div class="bg-#4d4d4d w-10px h-10px rounded-50%"></div>
+            <div class="bg-#4d4d4d size-10px rounded-50%"></div>
             <div class="flex flex-col gap-2px">
               <div class="bg-#4d4d4d w-16px h-4px"></div>
               <div class="bg-#4d4d4d w-24px h-4px"></div>
@@ -84,11 +90,11 @@ const titleList = [
     code: ThemeEnum.OS,
     model: (() => (
       <div class="size-full flex">
-        <div class="bg-#f1f1f1 flex-[1] rounded-[6px_0_0_6px]"></div>
+        <div class="bg-#f1f1f1 flex-1 rounded-[6px_0_0_6px]"></div>
 
         <div class="bg-#fff flex-[4.5] p-[8px_4px] box-border flex flex-col gap-8px">
           <div class="flex gap-4px">
-            <div class="bg-#f1f1f1 w-10px h-10px rounded-50%"></div>
+            <div class="bg-#f1f1f1 size-10px rounded-50%"></div>
             <div class="flex flex-col gap-2px">
               <div class="bg-#f1f1f1 w-16px h-4px"></div>
               <div class="bg-#f1f1f1 w-24px h-4px"></div>
@@ -96,7 +102,7 @@ const titleList = [
           </div>
 
           <div class="flex gap-4px">
-            <div class="bg-#f1f1f1 w-10px h-10px rounded-50%"></div>
+            <div class="bg-#f1f1f1 size-10px rounded-50%"></div>
             <div class="flex flex-col gap-2px">
               <div class="bg-#f1f1f1 w-16px h-4px"></div>
               <div class="bg-#f1f1f1 w-24px h-4px"></div>
@@ -104,11 +110,11 @@ const titleList = [
           </div>
         </div>
 
-        <div class="bg-#454545 flex-[1]"></div>
+        <div class="bg-#454545 flex-1"></div>
 
         <div class="bg-#212121 flex-[4.5] p-[8px_4px] rounded-[0_6px_6px_0] box-border flex flex-col gap-8px">
           <div class="flex gap-4px">
-            <div class="bg-#4d4d4d w-10px h-10px rounded-50%"></div>
+            <div class="bg-#4d4d4d size-10px rounded-50%"></div>
             <div class="flex flex-col gap-2px">
               <div class="bg-#4d4d4d w-16px h-4px"></div>
               <div class="bg-#4d4d4d w-24px h-4px"></div>
@@ -116,7 +122,7 @@ const titleList = [
           </div>
 
           <div class="flex gap-4px">
-            <div class="bg-#4d4d4d w-10px h-10px rounded-50%"></div>
+            <div class="bg-#4d4d4d size-10px rounded-50%"></div>
             <div class="flex flex-col gap-2px">
               <div class="bg-#4d4d4d w-16px h-4px"></div>
               <div class="bg-#4d4d4d w-24px h-4px"></div>
@@ -128,4 +134,4 @@ const titleList = [
   }
 ]
 
-export { titleList }
+export { topicsList }

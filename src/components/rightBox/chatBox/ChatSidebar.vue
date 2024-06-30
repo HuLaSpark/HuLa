@@ -1,6 +1,6 @@
 <template>
   <!--! 这里最好不要使用n-flex,滚动高度会有问题  -->
-  <main v-if="isGroup" style="border-left: 1px solid var(--line-color)" class="item-box">
+  <main v-if="isGroup" style="border-left: 1px solid var(--line-color)" class="item-box shadow-md">
     <n-flex v-if="!isSearch" align="center" justify="space-between" class="pr-8px pl-8px h-42px">
       <span class="text-14px">群聊成员&nbsp;{{ userList.length }}</span>
       <svg @click="handleSearch" class="size-14px"><use href="#search"></use></svg>
@@ -97,6 +97,7 @@ const userList = computed(() => {
   })
 })
 const isGroup = computed(() => globalStore.currentSession?.type === RoomTypeEnum.GROUP)
+/** 是否是搜索模式 */
 const isSearch = ref(false)
 const searchRef = ref('')
 /** 手动触发Popover显示 */

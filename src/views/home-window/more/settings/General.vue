@@ -10,12 +10,12 @@
           class="w-120px h-100px"
           :size="0"
           @click="activeItem = item.code"
-          v-for="(item, index) in titleList"
+          v-for="(item, index) in topicsList"
           :key="index">
           <div
             @click="handleTheme(item.code)"
-            class="size-full rounded-8px cursor-pointer"
-            :style="activeItem === item.code ? 'border: 2px solid #13987f' : 'border: 2px solid transparent'">
+            class="size-full rounded-8px cursor-pointer shadow-md"
+            :class="{ 'outline outline-2 outline-#13987f outline-offset': activeItem === item.code }">
             <component :is="item.model" />
           </div>
           <span class="text-12px pt-8px color-[--text-color]">{{ item.title }}</span>
@@ -90,7 +90,7 @@
 import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
 import { CloseBxEnum } from '@/enums'
-import { titleList } from './model.tsx'
+import { topicsList } from './model.tsx'
 import { sendOptions } from './config.ts'
 
 const settingStore = setting()
@@ -106,6 +106,6 @@ const handleTheme = (code: string) => {
 
 <style scoped lang="scss">
 .item {
-  @apply bg-[--bg-setting-item] rounded-12px size-full p-12px box-border;
+  @apply bg-[--bg-setting-item] rounded-12px size-full p-12px box-border border-(solid 1px [--line-color]) shadow-md;
 }
 </style>

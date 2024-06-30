@@ -14,6 +14,7 @@
 }
 
 .setting-item {
+  @apply border-(solid 1px [--line-color]) shadow-md;
   &:first-child {
     margin-top: 0;
   }

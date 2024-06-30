@@ -121,14 +121,14 @@ onUnmounted(() => {
   }
   &:not(.active):hover {
     background: var(--bg-msg-hover);
-    border-radius: 6px;
+    border-radius: 12px;
     cursor: pointer;
   }
 }
 
 .active {
   background: var(--bg-active-msg);
-  border-radius: 8px;
+  border-radius: 12px;
   color: #fff;
   .text {
     color: #fff;

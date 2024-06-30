@@ -65,6 +65,12 @@
   --bg-edit: #f0f0f0;
   // 聊天框时间戳样式
   --time-color: #e3e3e3;
+  // chat模块样式
+  --chat-bt-color: #fff;
+  --chat-left-bg: #cef9ec;
+  --chat-right-bg: #f1f1f1;
+  --chat-text-color: #505050;
+  --chat-hover-color: #e3e3e3;
 }
 
 html[data-theme='dark'] {
@@ -72,7 +78,7 @@ html[data-theme='dark'] {
   --left-bg-color: rgba(0, 0, 0, 0.7);
   --left-active-color: rgba(193, 193, 193, 0.1);
   --center-bg-color: #1b1b1b;
-  --right-bg-color: #111111;
+  --right-bg-color: #161616;
   // 阴影样式的颜色
   --box-shadow-color: rgba(90,90,90,0.1);
   // 文字颜色
@@ -133,6 +139,12 @@ html[data-theme='dark'] {
   --bg-edit: #262626;
   // 聊天框时间戳样式
   --time-color: #3b3b3b;
+  // chat模块样式
+  --chat-bt-color: #3b3b3b;
+  --chat-left-bg: #355b55;
+  --chat-right-bg: #161616;
+  --chat-text-color: #b1b1b1;
+  --chat-hover-color: #262626;
 }
 /**! end */
 // 线性动画

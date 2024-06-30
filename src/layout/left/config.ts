@@ -6,7 +6,18 @@ import { invoke } from '@tauri-apps/api/tauri'
 import axios from 'axios'
 
 const { createWebviewWindow } = useWindow()
-const itemsTop = ref<OPT.L.Top[]>([
+/**
+ * 上半部分操作栏配置
+ * @param url 路由地址
+ * @param icon 图标
+ * @param title 创建新窗口时的标题
+ * @param iconAction 选择后的图标
+ * @param badge 角标
+ * @param tip 提示信息
+ * @param size 窗口大小
+ * @param window 窗口参数
+ */
+const itemsTop = ref<OPT.L.Common[]>([
   {
     url: 'message',
     icon: 'message',
@@ -20,30 +31,76 @@ const itemsTop = ref<OPT.L.Top[]>([
   {
     url: 'dynamic',
     icon: 'fire',
-    iconAction: 'fire-action'
+    title: '动态',
+    iconAction: 'fire-action2',
+    size: {
+      width: 840,
+      height: 800
+    },
+    window: {
+      isDrag: true,
+      resizable: false
+    }
+  },
+  {
+    url: 'robot',
+    icon: 'robot',
+    title: 'GPT',
+    iconAction: 'robot-action',
+    tip: '机器人新功能在开发中',
+    size: {
+      width: 980,
+      height: 800
+    },
+    window: {
+      isDrag: false,
+      resizable: true
+    }
   }
 ])
-const itemsBottom: OPT.L.Bottom[] = [
+/** 下半部分操作栏配置 */
+const itemsBottom: OPT.L.Common[] = [
   {
     title: '邮件',
-    url: '/mail',
-    label: 'mail',
+    url: 'mail',
     icon: 'mail',
-    iconAction: 'mail-action'
+    iconAction: 'mail-action2',
+    size: {
+      width: 840,
+      height: 600
+    },
+    window: {
+      isDrag: false,
+      resizable: true
+    }
   },
   {
     title: '文件管理器',
-    url: '/folder',
-    label: 'mail',
+    url: 'mail',
     icon: 'file',
-    iconAction: 'file-action'
+    iconAction: 'file-action2',
+    size: {
+      width: 840,
+      height: 600
+    },
+    window: {
+      isDrag: false,
+      resizable: true
+    }
   },
   {
     title: '收藏',
-    url: '/collection',
-    label: 'mail',
+    url: 'mail',
     icon: 'collect',
-    iconAction: 'collect-action'
+    iconAction: 'heart',
+    size: {
+      width: 840,
+      height: 600
+    },
+    window: {
+      isDrag: false,
+      resizable: true
+    }
   }
 ]
 /** 设置列表菜单项 */
