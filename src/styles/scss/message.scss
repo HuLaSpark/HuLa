@@ -1,5 +1,5 @@
 .msg-box {
-  border-radius: 6px;
+  border-radius: 12px;
   transition:
           background-color 0.3s ease,
           border-radius 0.3s ease;
@@ -9,18 +9,18 @@
   }
   &:not(.active):first-child {
     background: var(--bg-msg-first-child);
-    border-radius: 6px;
+    border-radius: 12px;
   }
   &:not(.active):hover {
     background: var(--bg-msg-hover);
-    border-radius: 6px;
+    border-radius: 12px;
     cursor: pointer;
   }
 }
 
 .active {
   background: var(--bg-active-msg);
-  border-radius: 8px;
+  border-radius: 12px;
   color: #fff;
   .text {
     color: #fff;

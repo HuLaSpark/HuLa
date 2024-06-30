@@ -2,7 +2,7 @@
   <main
     data-tauri-drag-region
     id="center"
-    class="resizable select-none flex flex-col"
+    class="resizable select-none flex flex-col shadow-inner"
     :style="{ width: `${initWidth}px` }">
     <div class="resize-handle" @mousedown="initDrag"></div>
     <ActionBar

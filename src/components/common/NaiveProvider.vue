@@ -71,6 +71,7 @@ const commonTheme: GlobalThemeOverrides = {
   },
   Button: {
     borderRadiusMedium: '10px',
+    borderRadiusSmall: '6px',
     colorPrimary: '#13987f'
   },
   Tabs: {

@@ -13,7 +13,7 @@
     </section>
 
     <!-- 右边内容 -->
-    <section class="bg-[--right-bg-color] flex-1">
+    <section class="bg-[--right-bg-color] flex-1 shadow-md">
       <ActionBar :shrink="false" :max-w="false" />
 
       <header class="header" style="box-shadow: 0 4px 4px var(--box-shadow-color)">{{ title }}</header>

@@ -57,7 +57,11 @@
 
     <div class="h-1px bg-[--line-color]"></div>
     <!-- 下半部分输入框以及功能栏 -->
-    <n-flex vertical :size="6" class="size-full p-[14px_22px] box-border shadow-inner">
+    <n-flex
+      vertical
+      :size="6"
+      style="box-shadow: 0 -4px 4px 0 rgba(0, 0, 0, 0.05)"
+      class="size-full p-[14px_22px] box-border">
       <n-flex :size="26" class="options">
         <n-popover v-for="(item, index) in features" :key="index" trigger="hover" :show-arrow="false" placement="top">
           <template #trigger>

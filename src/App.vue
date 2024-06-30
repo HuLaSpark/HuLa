@@ -71,4 +71,12 @@ onUnmounted(() => {
   transition: all 0.9s ease;
   border-radius: 10px;
 }
+/* 修改naive-ui select 组件的样式 */
+.n-base-selection,
+.n-base-select-menu,
+.n-base-select-menu .n-base-select-option .n-base-select-option__content,
+.n-base-select-menu .n-base-select-option::before {
+  border-radius: 8px;
+  font-size: 12px;
+}
 </style>

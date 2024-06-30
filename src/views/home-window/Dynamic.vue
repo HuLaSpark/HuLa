@@ -4,14 +4,14 @@
     <article class="flex flex-col items-center text-[--text-color] size-full bg-[--right-bg-color]">
       <n-scrollbar
         style="max-height: calc(100vh - 20px)"
-        class="w-650px bg-[--center-bg-color] h-full p-[10px_0] box-border rounded-4px">
+        class="w-full bg-[--center-bg-color] border-(solid 1px [--line-color]) h-full p-[10px_0] box-border rounded-4px">
         <n-flex justify="center">
           <!--  动态内容框   -->
           <n-flex
             vertical
             v-for="item in dynamicList"
             :key="item.id"
-            class="w-450px h-fit rounded-8px bg-[--right-bg-color] p-10px box-border">
+            class="w-450px h-fit border-(solid 1px [--line-color]) shadow-md rounded-8px bg-[--right-bg-color] p-10px box-border">
             <n-flex align="center">
               <!--  用户的头像和用户名以及个签    -->
               <img class="size-45px bg-#ccc rounded-50% select-none" :src="item.avatar" alt="" />

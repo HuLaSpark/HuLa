@@ -1,7 +1,7 @@
 @mixin action() {
   padding: 6px 8px 6px 8px;
   &:not(.active):hover {
-    background: rgba(193, 193, 193, 0.4);
+    background: var(--bg-left-menu-hover);
     border-radius: 8px;
     color: #13987f;
     cursor: pointer;

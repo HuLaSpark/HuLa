@@ -15,7 +15,9 @@
 
   <!-- 设置的主体内容  -->
   <div class="flex flex-1 shadow-inner p-20px">
-    <n-flex vertical class="w-full h-fit border-(solid 1px [--line-color]) shadow-md rounded-8px p-10px">
+    <n-flex
+      vertical
+      class="w-full h-fit bg-[--bg-setting-item] border-(solid 1px [--line-color]) shadow-md rounded-8px p-10px">
       <n-flex vertical justify="center" v-for="(item, index) in content.system" :key="index">
         <n-flex justify="space-between" :size="0" align="center" class="p-8px">
           <n-flex vertical :size="4">
@@ -50,5 +52,8 @@ const handleClose = () => {
   svg {
     @apply size-18px;
   }
+}
+:deep(.n-button:not(.n-button--disabled):hover) {
+  color: revert;
 }
 </style>

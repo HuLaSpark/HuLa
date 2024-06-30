@@ -34,7 +34,7 @@ export const content: ChatConfig = {
     {
       title: '字体大小',
       description: '聊天内容的字体大小',
-      features: Slider(20, 12)
+      features: <Slider min={12} max={20} value={14} />
     },
     {
       title: '自动生成标题',
