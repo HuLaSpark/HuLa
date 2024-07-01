@@ -115,7 +115,7 @@ export const useChatMain = (activeItem?: SessionItem) => {
     ...commonMenuList.value,
     {
       label: '另存为',
-      icon: 'download',
+      icon: 'Importing',
       click: (item: any) => {
         console.log(item)
       }
@@ -142,7 +142,7 @@ export const useChatMain = (activeItem?: SessionItem) => {
     ...commonMenuList.value,
     {
       label: '另存为',
-      icon: 'download',
+      icon: 'Importing',
       click: (item: any) => {
         console.log(item)
       }

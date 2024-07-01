@@ -72,7 +72,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
         })
       }
     },
-    { label: '另存为', icon: 'download', disabled: true },
+    { label: '另存为', icon: 'Importing', disabled: true },
     { label: '全部选择', icon: 'check-one' }
   ])
 

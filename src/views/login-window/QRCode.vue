@@ -4,7 +4,7 @@
     <ActionBar :max-w="false" :shrink="false" />
 
     <n-flex justify="center" class="mt-15px">
-      <img src="@/assets/logo/hula.png" class="w-140px h-60px" alt="" />
+      <img src="@/assets/logo/hula.png" class="w-140px h-60px drop-shadow-xl" alt="" />
     </n-flex>
 
     <!-- 二维码 -->
