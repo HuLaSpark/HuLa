@@ -262,19 +262,7 @@ onMounted(() => {
 </script>
 <style scoped lang="scss">
 .gpt-subtitle {
-  --un-gradient-from-position: 0%;
-  --un-gradient-from: rgba(56, 189, 248, 20) var(--un-gradient-from-position);
-  --un-gradient-stops: var(--un-gradient-from), var(--un-gradient-to);
-  --un-gradient-to-position: 100%;
-  --un-gradient-to: rgba(19, 152, 127, 80) var(--un-gradient-to-position);
-  --un-gradient-shape: to right;
-  --un-gradient: var(--un-gradient-shape), var(--un-gradient-stops);
-  background-image: linear-gradient(var(--un-gradient));
-  -webkit-background-clip: text;
-  background-clip: text;
-  font-size: 20px;
-  font-weight: 800;
-  color: transparent;
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-#38BDF8 to-#13987F text-20px font-800;
 }
 .plugins {
   @apply size-fit bg-[--chat-bt-color] rounded-8px shadow-md p-[8px_14px]

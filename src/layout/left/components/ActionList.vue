@@ -25,8 +25,8 @@
         <!-- 该选项有提示时展示 -->
         <n-popover style="padding: 12px" v-else-if="item.tip" trigger="manual" v-model:show="tipShow" placement="right">
           <template #trigger>
-            <n-badge :max="99" :value="item.badge">
-              <svg class="size-22px" @click="tipShow = false">
+            <n-badge :max="99" :value="item.badge" :dot="dotShow">
+              <svg class="size-22px" @click="handleTipShow">
                 <use
                   :href="`#${activeUrl === item.url || openWindowsList.has(item.url) ? item.iconAction : item.icon}`"></use>
               </svg>
@@ -115,13 +115,22 @@
 import { itemsBottom, itemsTop, moreList } from '../config.ts'
 import { leftHook } from '../hook.ts'
 
+const dotShow = ref(false)
 const { activeUrl, openWindowsList, settingShow, tipShow, pageJumps } = leftHook()
 
+const handleTipShow = () => {
+  tipShow.value = false
+  dotShow.value = false
+}
+
 onMounted(() => {
+  if (tipShow.value) {
+    dotShow.value = true
+  }
   /** 十秒后关闭提示 */
   setTimeout(() => {
     tipShow.value = false
-  }, 10000)
+  }, 5000)
 })
 </script>
 <style lang="scss" scoped>
