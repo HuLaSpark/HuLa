@@ -72,7 +72,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
         })
       }
     },
-    { label: '另存为', icon: 'download', disabled: true },
+    { label: '另存为', icon: 'Importing', disabled: true },
     { label: '全部选择', icon: 'check-one' }
   ])
 
@@ -83,7 +83,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     }
     // 如果输入框没有值就把回复内容清空
     if (msgInput.value === '') {
-      reply.value = { imgCount: 0, accountName: '', content: '', key: '' }
+      reply.value = { imgCount: 0, accountName: '', content: '', key: 0 }
     }
   })
 
@@ -113,7 +113,12 @@ export const useMsgInput = (messageInputDom: Ref) => {
         // 回复前把包含&nbsp;的字符替换成空格
         event.message.body.content = event.message.body.content.replace(/&nbsp;/g, ' ')
       }
-      reply.value = { imgCount: 0, accountName: accountName, content: event.message.body.content, key: event.key }
+      reply.value = {
+        imgCount: 0,
+        accountName: accountName,
+        content: event.message.body.content,
+        key: event.message.id
+      }
       if (messageInputDom.value) {
         nextTick().then(() => {
           messageInputDom.value.focus()
@@ -144,10 +149,11 @@ export const useMsgInput = (messageInputDom: Ref) => {
     const msg = {
       type: contentType,
       content: removeTag(msgInput.value),
-      reply: reply.value
+      reply: reply.value.key
     }
     // TODO 当输入的类型是艾特类型的时候需要处理 (nyh -> 2024-05-30 19:52:20)
     // TODO 当输入的内容换行后会有div包裹，这样会有xxr攻击风险 (nyh -> 2024-05-30 20:19:27)
+    // TODO 当输入网址的时候会传递样式进去，会造成xxr攻击 (nyh -> 2024-07-03 17:30:57)
     /** 如果reply.value.content中有内容，需要将消息的样式修改 */
     if (reply.value.content) {
       if (msg.type === MsgEnum.TEXT) {
@@ -188,7 +194,11 @@ export const useMsgInput = (messageInputDom: Ref) => {
       return
     }
     apis
-      .sendMsg({ roomId: globalStore.currentSession.roomId, msgType: msg.type, body: { content: msg.content } })
+      .sendMsg({
+        roomId: globalStore.currentSession.roomId,
+        msgType: msg.type,
+        body: { content: msg.content, replyMsgId: msg.reply !== 0 ? msg.reply : undefined }
+      })
       .then((res) => {
         if (res.data.message.type === MsgEnum.TEXT) {
           chatStore.pushMsg(res.data)
@@ -202,7 +212,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       })
     msgInput.value = ''
     messageInputDom.value.innerHTML = ''
-    reply.value = { imgCount: 0, accountName: '', content: '', key: '' }
+    reply.value = { imgCount: 0, accountName: '', content: '', key: 0 }
   }
 
   /** 当输入框手动输入值的时候触发input事件(使用vueUse的防抖) */

@@ -47,6 +47,11 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/home-window/robot/index.vue'),
     children: [
       {
+        path: '/welcome',
+        name: 'welcome',
+        component: () => import('@/views/home-window/robot/views/Welcome.vue')
+      },
+      {
         path: '/chat',
         name: 'chat',
         component: () => import('@/views/home-window/robot/views/Chat.vue')

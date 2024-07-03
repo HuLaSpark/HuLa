@@ -1,5 +1,6 @@
 <template>
   <!-- 主体内容 -->
+  <!--  // TODO 考虑是否需要添加一个欢迎页面，而不是直接使用聊天窗口 (nyh -> 2024-07-01 10:44:14)-->
   <main>
     <div class="flex truncate p-[14px_20px] justify-between items-center gap-50px">
       <n-flex :size="10" vertical class="truncate">

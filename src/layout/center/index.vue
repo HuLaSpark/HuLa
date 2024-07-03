@@ -22,7 +22,7 @@
         <n-input
           id="search"
           @focus="() => router.push('/searchDetails')"
-          class="rounded-4px w-full"
+          class="rounded-6px w-full"
           style="background: var(--search-bg-color)"
           :maxlength="20"
           clearable

@@ -14,24 +14,28 @@
   <div class="h-1px bg-[--line-color]"></div>
 
   <!-- 设置的主体内容  -->
-  <div class="flex flex-1 shadow-inner p-20px">
-    <n-flex
-      vertical
-      class="w-full h-fit bg-[--bg-setting-item] border-(solid 1px [--line-color]) shadow-md rounded-8px p-10px">
-      <n-flex vertical justify="center" v-for="(item, index) in content.system" :key="index">
-        <n-flex justify="space-between" :size="0" align="center" class="p-8px">
-          <n-flex vertical :size="4">
-            <p class="text-(15px [--chat-text-color]) font-bold">{{ item.title }}</p>
-            <p v-if="item.description" class="text-(12px [--chat-text-color])">{{ item.description }}</p>
+  <n-scrollbar style="max-height: calc(100vh - 104px)">
+    <n-flex vertical :size="20" class="p-[20px_0] shadow-inner">
+      <div v-for="(key, index) in content" :key="index" class="flex flex-1 p-[0_20px]">
+        <n-flex
+          vertical
+          class="w-full h-fit bg-[--bg-setting-item] border-(solid 1px [--line-color]) shadow-md rounded-8px p-10px">
+          <n-flex vertical justify="center" v-for="(item, index) in key" :key="index">
+            <n-flex justify="space-between" :size="0" align="center" class="p-8px">
+              <n-flex vertical :size="4">
+                <p class="text-(15px [--chat-text-color]) font-bold">{{ item.title }}</p>
+                <p v-if="item.description" class="text-(12px [--chat-text-color])">{{ item.description }}</p>
+              </n-flex>
+
+              <component :is="item.features" />
+            </n-flex>
+
+            <div v-if="index !== key.length - 1" class="h-1px bg-[--line-color]"></div>
           </n-flex>
-
-          <component :is="item.features" />
         </n-flex>
-
-        <div v-if="index !== content.system.length - 1" class="h-1px bg-[--line-color]"></div>
-      </n-flex>
+      </div>
     </n-flex>
-  </div>
+  </n-scrollbar>
 </template>
 <script setup lang="tsx">
 import router from '@/router'
@@ -52,8 +56,5 @@ const handleClose = () => {
   svg {
     @apply size-18px;
   }
-}
-:deep(.n-button:not(.n-button--disabled):hover) {
-  color: revert;
 }
 </style>

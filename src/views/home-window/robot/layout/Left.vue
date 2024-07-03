@@ -114,28 +114,13 @@ const settingStore = setting()
 const { login } = storeToRefs(settingStore)
 const activeItem = ref(0)
 const scrollbar = ref<VirtualListInst>()
-const chatList = ref([
-  {
-    id: 1,
-    title: '新的聊天1',
+const chatList = ref(
+  Array.from({ length: 20 }, (_, index) => ({
+    id: index + 1,
+    title: `新的聊天${index + 1}`,
     time: '2022-01-01 12:00:00'
-  },
-  {
-    id: 2,
-    title: '新的聊天2',
-    time: '2022-01-01 12:00:00'
-  },
-  {
-    id: 3,
-    title: '新的聊天3',
-    time: '2022-01-01 12:00:00'
-  },
-  {
-    id: 4,
-    title: '新的聊天4',
-    time: '2022-01-01 12:00:00'
-  }
-])
+  }))
+)
 const menuList = ref<OPT.RightMenu[]>([
   {
     label: '置顶',
@@ -199,6 +184,26 @@ const add = () => {
 const deleteChat = (item: any) => {
   // 根据key找到items中对应的下标
   const index = chatList.value.indexOf(item)
+
+  /**
+   * 删除最后一个元素后触发新增元素的函数
+   * @param isActive 是否选中新增的元素
+   */
+  function triggeringAdd(isActive?: boolean) {
+    if (chatList.value.length === 0) {
+      nextTick(() => {
+        add()
+        // 选择新增的元素
+        if (isActive) {
+          handleActive(chatList.value[0])
+          window.$message.success(`已删除 ${item.title}`, {
+            icon: () => h(NIcon, null, { default: () => h('svg', null, [h('use', { href: '#face' })]) })
+          })
+        }
+      })
+    }
+  }
+
   // 如果找到了对应的元素，则移除
   if (index !== -1) {
     const removeItem = chatList.value.splice(index, 1)[0]
@@ -208,22 +213,15 @@ const deleteChat = (item: any) => {
         activeItem.value = chatList.value[index].id
         handleActive(chatList.value[index])
       } else {
-        // 如果是最后一个元素则触发新增
-        if (chatList.value.length === 0) {
-          nextTick(() => {
-            add()
-            // 选择新增的元素
-            handleActive(chatList.value[0])
-            window.$message.success(`已删除 ${item.title}`, {
-              icon: () => h(NIcon, null, { default: () => h('svg', null, [h('use', { href: '#face' })]) })
-            })
-          })
-        }
+        // 如果选中chatList,并且是最后一个元素则触发新增
+        triggeringAdd(true)
         // 如果我们删除的是最后一个元素，则需要选中前一个元素
         activeItem.value = chatList.value[chatList.value.length - 1].id
         handleActive(chatList.value[chatList.value.length - 1])
       }
     }
+    // 如果是最后一个元素则触发新增
+    triggeringAdd()
     window.$message.success(`已删除 ${item.title}`, {
       icon: () => h(NIcon, null, { default: () => h('svg', null, [h('use', { href: '#face' })]) })
     })
@@ -231,8 +229,10 @@ const deleteChat = (item: any) => {
 }
 
 onMounted(() => {
-  /** 默认选择第一个聊天内容 */
-  handleActive(chatList.value[0])
+  // /** 默认选择第一个聊天内容 */
+  // handleActive(chatList.value[0])
+  /** 刚加载的时候默认跳转到欢迎页面 */
+  router.push('/welcome')
   Mitt.on('update-chat-title', (e) => {
     chatList.value.filter((item) => {
       if (item.id === e.id) {
@@ -247,19 +247,7 @@ onMounted(() => {
 </script>
 <style scoped lang="scss">
 .gpt-subtitle {
-  --un-gradient-from-position: 0%;
-  --un-gradient-from: rgba(56, 189, 248, 20) var(--un-gradient-from-position);
-  --un-gradient-stops: var(--un-gradient-from), var(--un-gradient-to);
-  --un-gradient-to-position: 100%;
-  --un-gradient-to: rgba(19, 152, 127, 80) var(--un-gradient-to-position);
-  --un-gradient-shape: to right;
-  --un-gradient: var(--un-gradient-shape), var(--un-gradient-stops);
-  background-image: linear-gradient(var(--un-gradient));
-  -webkit-background-clip: text;
-  background-clip: text;
-  font-size: 20px;
-  font-weight: 800;
-  color: transparent;
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-#38BDF8 to-#13987F text-20px font-800;
 }
 .plugins {
   @apply size-fit bg-[--chat-bt-color] rounded-8px shadow-md p-[8px_14px]
