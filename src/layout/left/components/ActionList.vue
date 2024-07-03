@@ -34,7 +34,7 @@
           </template>
           <n-flex align="center" justify="space-between">
             <p class="select-none">{{ item.tip }}</p>
-            <svg @click="tipShow = false" class="size-12px cursor-pointer"><use href="#close"></use></svg>
+            <svg @click="handleTipShow" class="size-12px cursor-pointer"><use href="#close"></use></svg>
           </n-flex>
         </n-popover>
         <!-- 该选项无提示时展示 -->

@@ -114,28 +114,13 @@ const settingStore = setting()
 const { login } = storeToRefs(settingStore)
 const activeItem = ref(0)
 const scrollbar = ref<VirtualListInst>()
-const chatList = ref([
-  {
-    id: 1,
-    title: '新的聊天1',
+const chatList = ref(
+  Array.from({ length: 20 }, (_, index) => ({
+    id: index + 1,
+    title: `新的聊天${index + 1}`,
     time: '2022-01-01 12:00:00'
-  },
-  {
-    id: 2,
-    title: '新的聊天2',
-    time: '2022-01-01 12:00:00'
-  },
-  {
-    id: 3,
-    title: '新的聊天3',
-    time: '2022-01-01 12:00:00'
-  },
-  {
-    id: 4,
-    title: '新的聊天4',
-    time: '2022-01-01 12:00:00'
-  }
-])
+  }))
+)
 const menuList = ref<OPT.RightMenu[]>([
   {
     label: '置顶',

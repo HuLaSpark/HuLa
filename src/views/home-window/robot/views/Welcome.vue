@@ -24,7 +24,7 @@
   </n-flex>
 </template>
 <script setup lang="tsx">
-import { NFlex } from 'naive-ui'
+import { NFlex, NImage, NSkeleton } from 'naive-ui'
 
 type Example = {
   title: string
@@ -40,7 +40,15 @@ const examplesList: Example = [
       <NFlex vertical size={12}>
         {Array.from({ length: 3 }, (_, index) => (
           <NFlex key={index} class={'search-item'}>
-            <img class={'rounded-12px w-55px h-45px object-fill'} src={`${avatars}?${index}1`} alt="" />
+            <NImage width={50} height={45} previewDisabled class={'rounded-12px'} src={`${avatars}?${index}1`}>
+              {{
+                placeholder: () => (
+                  <div class="w-50px h-45px rounded-12px bg-[--chat-hover-color]">
+                    <NSkeleton height="100%" width="100%" class={'rounded-12px'} />
+                  </div>
+                )
+              }}
+            </NImage>
             <NFlex vertical justify="center" class={'text-(12px [--chat-text-color]) truncate flex-1'}>
               <p class="truncate w-full">你好，我是机器人小助手，很高兴为你服务。</p>
               <p>你最近怎么样？</p>
@@ -48,7 +56,7 @@ const examplesList: Example = [
 
             <svg
               style={{ filter: 'drop-shadow(0 0 0.6em #13987f)' }}
-              class="color-#13987f p-[10px_4px] size-26px opacity-0 absolute top-1/2 right--14px transform -translate-x-1/2 -translate-y-1/2">
+              class="color-#13987f p-[10px_4px] size-26px opacity-0 absolute top-1/2 right-24px transform -translate-x-1/2 -translate-y-1/2">
               <use href="#Up-GPT"></use>
             </svg>
           </NFlex>
@@ -95,7 +103,15 @@ const examplesList: Example = [
       <NFlex vertical justify="center" size={0} class={'photo-item'}>
         <NFlex align={'center'} size={10} class={'head'}>
           {Array.from({ length: 4 }, (_, index) => (
-            <img class={'rounded-12px w-128px h-90px object-cover'} src={`${avatars}?${index}`} alt="" />
+            <NImage width={128} height={90} previewDisabled class={'rounded-12px'} src={`${avatars}?${index}`}>
+              {{
+                placeholder: () => (
+                  <div class="w-128px h-90px rounded-12px bg-[--chat-hover-color]">
+                    <NSkeleton height="100%" width="100%" class={'rounded-12px'} />
+                  </div>
+                )
+              }}
+            </NImage>
           ))}
         </NFlex>
 
@@ -130,7 +146,7 @@ const examplesList: Example = [
   &:hover {
     @apply bg-[--chat-hover-color] scale-104;
     svg {
-      @apply opacity-100;
+      @apply opacity-100 translate-x-20px;
     }
   }
 }
@@ -141,7 +157,7 @@ const examplesList: Example = [
     @apply bg-[--chat-hover-color] h-195px rounded-12px p-10px box-border transition-all duration-600 ease-in-out;
   }
   .foot {
-    @apply absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
+    @apply absolute top-2/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
     svg,
     p {
       @apply transition-all duration-600 ease-in-out;
@@ -153,7 +169,7 @@ const examplesList: Example = [
   &:hover .foot {
     svg,
     p {
-      @apply opacity-100;
+      @apply opacity-100 translate-y--30px;
     }
   }
 }
@@ -161,15 +177,14 @@ const examplesList: Example = [
 .photo-item {
   @apply relative p-6px box-border;
   .foot {
-    @apply w-full h-40px absolute bottom-0 left-0 rounded-12px transition-all duration-600 ease-in-out;
+    @apply w-full h-40px absolute bottom--30px left-0 rounded-12px transition-all duration-600 ease-in-out;
   }
   &:hover {
     .head {
       @apply blur-md scale-94 transition-all duration-600 ease-in-out;
     }
     .foot {
-      background-color: rgba(241, 241, 241, 0.2);
-      @apply backdrop-blur-xl;
+      @apply backdrop-blur-xl bg-#F1F1F133 translate-y--30px;
       svg,
       p {
         @apply opacity-100;

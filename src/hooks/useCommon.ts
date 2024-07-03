@@ -15,7 +15,7 @@ export const useCommon = () => {
   const reply = ref({
     accountName: '',
     content: '',
-    key: '',
+    key: 0,
     imgCount: 0
   })
   /** 获取当前光标选取的信息(需要判断是否为空) */
@@ -233,7 +233,7 @@ export const useCommon = () => {
         selection?.removeAllRanges()
         selection?.addRange(range)
         triggerInputEvent(messageInput)
-        reply.value = { imgCount: 0, accountName: '', content: '', key: '' }
+        reply.value = { imgCount: 0, accountName: '', content: '', key: 0 }
       })
       // 将头部和正文节点插入到div标签节点中
       divNode.appendChild(headerNode)
