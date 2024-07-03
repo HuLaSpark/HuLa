@@ -20,23 +20,25 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
-          run_install: true
 
       # 安装 Node.js
-      - name: Use Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'pnpm'
+          node-version: '20'
+
+      # 安装 pnpm
+      - name: Install pnpm
+        run: npm install -g pnpm@9.2.0
 
       # 安装 Rust
       - name: install Rust stable
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+
+      - name: Install dependencies
+        run: pnpm install
 
       - name: Build Vite + Tauri
         run: pnpm build
