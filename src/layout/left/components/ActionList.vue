@@ -112,7 +112,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { itemsBottom, itemsTop, moreList } from '../config.ts'
+import { itemsBottom, itemsTop, moreList } from '../config.tsx'
 import { leftHook } from '../hook.ts'
 
 const dotShow = ref(false)

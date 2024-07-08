@@ -15,6 +15,13 @@ declare namespace STO {
     }
     /** 是否启用ESC关闭窗口 */
     escClose: boolean
+    /** 是否锁屏 */
+    lockScreen: {
+      /** 是否启用锁屏 */
+      enable: boolean
+      /** 锁屏密码 */
+      password: string
+    }
     /** 登录设置 */
     login: {
       autoLogin: boolean

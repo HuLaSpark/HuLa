@@ -4,7 +4,7 @@ import { useUserStore } from '@/stores/user.ts'
 import { useCachedStore } from '@/stores/cached.ts'
 import { storeToRefs } from 'pinia'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
-import { itemsTop } from '@/layout/left/config.ts'
+import { itemsTop } from '@/layout/left/config.tsx'
 import { EventEnum, IsYetEnum, MittEnum, MsgEnum, ThemeEnum } from '@/enums'
 import { BadgeType, UserInfoType } from '@/services/types.ts'
 import { useChatStore } from '@/stores/chat.ts'
@@ -81,6 +81,8 @@ export const leftHook = () => {
   const msgTotal = computed(() => {
     return sessionList.value.reduce((total, item) => total + item.unreadCount, 0)
   })
+
+  /* =================================== 方法 =============================================== */
 
   /** 跟随系统主题模式切换主题 */
   const followOS = () => {

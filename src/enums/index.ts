@@ -43,33 +43,37 @@ export enum EventEnum {
   /** 独立窗口 */
   ALONE = 'alone',
   /** 共享屏幕 */
-  SHARE_SCREEN = 'shareScreen'
+  SHARE_SCREEN = 'shareScreen',
+  /** 锁屏 */
+  LOCK_SCREEN = 'lockScreen'
 }
 
 /** Mitt兄弟组件通信 */
 export enum MittEnum {
   /** 更新消息数量 */
-  UPDATE_MSG_TOTAL = 'updateMsgTotal',
+  UPDATE_MSG_TOTAL,
   /** 显示消息框 */
-  MSG_BOX_SHOW = 'msgBoxShow',
+  MSG_BOX_SHOW,
   /** 发送消息 */
-  SEND_MESSAGE = 'sendMessage',
+  SEND_MESSAGE,
   /** 跳到发送信息 */
-  TO_SEND_MSG = 'toSendMsg',
+  TO_SEND_MSG,
   /** 缩小窗口 */
-  SHRINK_WINDOW = 'shrinkWindow',
+  SHRINK_WINDOW,
   /** 详情页面显示 */
-  DETAILS_SHOW = 'detailsShow',
+  DETAILS_SHOW,
   /** 消息列表被清空或者暂无消息 */
-  NOT_MSG = 'notMsg',
+  NOT_MSG,
   /** 回复消息 */
-  REPLY_MEG = 'replyMeg',
+  REPLY_MEG,
   /** 手动触发InfoPopover */
-  INFO_POPOVER = 'infoPopover',
+  INFO_POPOVER,
   /** 打开个人信息编辑窗口 */
-  OPEN_EDIT_INFO = 'openEditInfo',
+  OPEN_EDIT_INFO,
   /** 关闭个人信息浮窗 */
-  CLOSE_INFO_SHOW = 'closeInfoShow'
+  CLOSE_INFO_SHOW,
+  /** 左边菜单弹窗 */
+  LEFT_MODAL_SHOW
 }
 
 /** 主题类型 */
@@ -227,4 +231,12 @@ export enum WsResEnum {
   LOGIN_SUCCESS = 'loginSuccess',
   /** ws连接错误 */
   WS_ERROR = 'wsError'
+}
+
+/** 左边菜单弹出框类型 */
+export enum ModalEnum {
+  /** 锁屏弹窗 */
+  LOCK_SCREEN,
+  /** 检查更新弹窗 */
+  CHECK_UPDATE
 }

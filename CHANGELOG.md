@@ -1,4 +1,4 @@
-# [1.6.0](https://github.com/nongyehong/HuLa-IM-Tauri/compare/v1.4.0...v1.6.0) (2024-07-03)
+# [1.6.0](https://github.com/nongyehong/HuLa-IM-Tauri/compare/v1.5.0...v1.6.0) (2024-07-03)
 
 
 ### Bug Fixes
@@ -10,6 +10,7 @@
 
 ### Features
 
+* :sparkles: 发布v1.6.0版本 ([71a1dd9](https://github.com/nongyehong/HuLa-IM-Tauri/commit/71a1dd93833d4c9534945f28fe636115ef59e862))
 * **component:** :sparkles: 新增GPT欢迎页面，完善设置页面 ([9b771e0](https://github.com/nongyehong/HuLa-IM-Tauri/commit/9b771e02ec31af1238f9662e839df6197f501376))
 * **component:** :sparkles: 新增GPT页面设置功能 ([4c85b4a](https://github.com/nongyehong/HuLa-IM-Tauri/commit/4c85b4afccdafe83aa0fcbd53e94ef5fc63a7a70))
 * **component:** :sparkles: 新增GPT组件 ([7260840](https://github.com/nongyehong/HuLa-IM-Tauri/commit/7260840f4b50bcbb4dad8645a84ade8280de4036))

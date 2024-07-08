@@ -34,7 +34,7 @@
       "http": {
         "all": true,
         "request": true,
-        "scope": ["http://127.0.0.1:9190/*", "https://**"]
+        "scope": ["http://192.168.10.5:9190/*", "http://192.168.10.5:8090/*"]
       },
       "fs": {
         "all": true,
