@@ -49,8 +49,7 @@ export const createAxios = (config?: AxiosRequestConfig): AxiosInstance => {
         return Promise.reject(
           window.$message.create('当前为测试环境，请注意辨别', {
             type: 'warning',
-            closable: true,
-            duration: 0
+            closable: true
           })
         )
       }

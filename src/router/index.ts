@@ -104,11 +104,6 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/home-window/more/settings/General.vue')
       },
       {
-        path: '/remind',
-        name: 'remind',
-        component: () => import('@/views/home-window/more/settings/Remind.vue')
-      },
-      {
         path: '/loginSetting',
         name: 'loginSetting',
         component: () => import('@/views/home-window/more/settings/LoginSetting.vue')

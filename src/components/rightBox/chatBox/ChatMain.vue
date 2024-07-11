@@ -30,7 +30,9 @@
           { 'active-reply': activeReply === item.message.id }
         ]">
         <!-- 信息间隔时间 -->
-        <span class="text-(12px #909090) select-none bg-[--time-color] p-4px rounded-6px" v-if="item.timeBlock">
+        <span
+          class="text-(12px #909090) select-none bg-[--time-color] p-4px rounded-6px shadow-md"
+          v-if="item.timeBlock">
           {{ item.timeBlock }}
         </span>
         <!--  消息为撤回消息  -->
@@ -236,7 +238,7 @@
                 :size="6"
                 v-if="item.message.body.reply"
                 @click="jumpToReplyMsg(item.message.body.reply.id)"
-                class="reply-bubble relative w-fit">
+                class="reply-bubble relative w-fit shadow-md">
                 <svg class="size-14px"><use href="#to-top"></use></svg>
                 <span>{{ `${item.message.body.reply.username}：` }}</span>
                 <!-- 当回复消息为图片时渲染 -->

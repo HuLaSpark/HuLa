@@ -24,12 +24,12 @@
     ]
   },
   "scripts": {
-    "dev": "vite --mode dev",
-    "prod": "vite --mode prod",
-    "build": "vue-tsc --noEmit && vite build --mode pord",
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
+    "tauri:build->debug": "tauri build --debug",
     "tauri:icon": "tauri icon public/logo.png",
     "preinstall": "npx only-allow pnpm",
     "commit": "git add . && git-cz",

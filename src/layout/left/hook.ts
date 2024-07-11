@@ -136,10 +136,17 @@ export const leftHook = () => {
     })
   }
 
-  /** 佩戴卸下徽章 */
+  /** 佩戴徽章 */
   const toggleWarningBadge = async (badge: BadgeType) => {
     if (!badge?.id) return
-    await apis.setUserBadge(badge.id)
+    const res = await apis.setUserBadge(badge.id)
+    if (res.success) {
+      window.$message.success('佩戴成功')
+      /** 获取用户信息 */
+      apis.getUserInfo().then((res) => {
+        editInfo.value.content = res.data
+      })
+    }
   }
 
   /** 计算字符长度 */
