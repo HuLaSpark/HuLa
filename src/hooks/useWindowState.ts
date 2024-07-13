@@ -2,6 +2,10 @@ import { WebviewWindow } from '@tauri-apps/api/window'
 import { EventEnum } from '@/enums'
 import { emit } from '@tauri-apps/api/event'
 
+/**
+ * 监听窗口状态变化
+ * @param label 窗口标签
+ */
 export const useWindowState = (label: string) => {
   const win = WebviewWindow.getByLabel(label)
 

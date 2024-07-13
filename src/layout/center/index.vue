@@ -1,18 +1,12 @@
 <template>
-  <main
-    data-tauri-drag-region
-    id="center"
-    class="resizable select-none flex flex-col shadow-inner"
-    :style="{ width: `${initWidth}px` }">
+  <main id="center" class="resizable select-none flex flex-col shadow-inner" :style="{ width: `${initWidth}px` }">
     <div class="resize-handle" @mousedown="initDrag"></div>
     <ActionBar
-      class="absolute right-0"
+      class="absolute right-0 w-full"
       v-if="shrinkStatus"
       :shrink-status="!shrinkStatus"
       :max-w="false"
       :current-label="appWindow.label" />
-
-    <!--    <div class="resize-handle" @mousedown="initDrag"></div>-->
 
     <!-- 顶部搜索栏 -->
     <header
@@ -22,7 +16,7 @@
         <n-input
           id="search"
           @focus="() => router.push('/searchDetails')"
-          class="rounded-6px w-full"
+          class="rounded-6px w-full relative"
           style="background: var(--search-bg-color)"
           :maxlength="20"
           clearable
@@ -32,16 +26,28 @@
             <svg class="w-12px h-12px"><use href="#search"></use></svg>
           </template>
         </n-input>
-        <n-button size="small" secondary style="padding: 0 5px">
+        <n-button @click="addPanels.show = !addPanels.show" size="small" secondary style="padding: 0 5px">
           <template #icon>
             <svg class="w-24px h-24px"><use href="#plus"></use></svg>
           </template>
         </n-button>
+
+        <!-- 添加面板 -->
+        <div v-if="addPanels.show" class="add-item">
+          <div class="menu-list">
+            <div v-for="(item, index) in addPanels.list" :key="index">
+              <div class="menu-item" @click="() => item.click()">
+                <svg><use :href="`#${item.icon}`"></use></svg>
+                {{ item.label }}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </header>
 
     <!-- 列表 -->
-    <div id="centerList">
+    <div id="centerList" class="h-full">
       <router-view />
     </div>
   </main>
@@ -66,6 +72,26 @@ const { width } = useWindowSize()
 const isDrag = ref(true)
 /** 当前消息 */
 const currentMsg = ref()
+/** 添加面板是否显示 */
+const addPanels = ref({
+  show: false,
+  list: [
+    {
+      label: '发起群聊',
+      icon: 'launch',
+      click: () => {
+        console.log('发起群聊')
+      }
+    },
+    {
+      label: '加好友/群',
+      icon: 'people-plus',
+      click: () => {
+        console.log('加好友/群')
+      }
+    }
+  ]
+})
 
 const startX = ref()
 const startWidth = ref()
@@ -95,6 +121,9 @@ const closeMenu = (event: Event) => {
   /** 判断如果点击的搜索框，就关闭消息列表 */
   if (!e.matches('#search, #search *, #centerList *, #centerList') && route === '/searchDetails') {
     router.go(-1)
+  }
+  if (!e.matches('.add-item')) {
+    addPanels.value.show = false
   }
 }
 

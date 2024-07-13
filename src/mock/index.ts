@@ -47,3 +47,13 @@ export const dynamicList = Array.from({ length: 10 }, (_, i) => {
     isAuth: i % 2 === 0
   }
 })
+
+/** 动态评论 */
+export const dynamicCommentList = Array.from({ length: 50 }, (_, i) => {
+  return {
+    id: i,
+    avatar: `${avatars}?${i}`,
+    user: `泰勒斯威夫特${i}`,
+    content: '点赞了你的动态'
+  }
+})

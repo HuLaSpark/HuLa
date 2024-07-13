@@ -7,7 +7,7 @@
             <ContextMenu @contextmenu="showMenu($event)" @select="handleSelect($event.label)" :menu="menuList">
               <n-collapse-item title="我的好友" name="1">
                 <template #header-extra>
-                  <span class="text-(10px #707070)">1/1</span>
+                  <span class="text-(10px #707070)">0/0</span>
                 </template>
 
                 <!-- 用户框 多套一层div来移除默认的右键事件然后覆盖掉因为margin空隙而导致右键可用 -->

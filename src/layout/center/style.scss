@@ -15,3 +15,10 @@
   z-index: 9999;
   background-color: var(--split-color);
 }
+
+.add-item {
+  @include menu-item-style(absolute);
+  top: 60px;
+  right: 30px;
+  @include menu-list();
+}

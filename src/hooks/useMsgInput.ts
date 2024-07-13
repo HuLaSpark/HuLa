@@ -24,8 +24,8 @@ export const useMsgInput = (messageInputDom: Ref) => {
   const chatKey = ref(chat.value.sendKey)
   const msgInput = ref('')
   const ait = ref(false)
-  /** 临时消息id */
-  const tempMessageId = ref(0)
+  // /** 临时消息id */
+  // const tempMessageId = ref(0)
   /** 艾特后的关键字的key */
   const aitKey = ref('')
   /** 是否正在输入拼音 */
@@ -199,16 +199,13 @@ export const useMsgInput = (messageInputDom: Ref) => {
         msgType: msg.type,
         body: { content: msg.content, replyMsgId: msg.reply !== 0 ? msg.reply : undefined }
       })
-      .then((res) => {
+      .then(async (res) => {
         if (res.data.message.type === MsgEnum.TEXT) {
-          chatStore.pushMsg(res.data)
-          // 发完消息就要刷新会话列表，
-          //  FIXME 如果当前会话已经置顶了，可以不用刷新
-          chatStore.updateSessionLastActiveTime(globalStore.currentSession.roomId)
-        } else {
-          // 更新上传状态下的消息
-          chatStore.updateMsg(tempMessageId.value, res.data)
+          await chatStore.pushMsg(res.data)
         }
+        // 发完消息就要刷新会话列表，
+        //  FIXME 如果当前会话已经置顶了，可以不用刷新
+        chatStore.updateSessionLastActiveTime(globalStore.currentSession.roomId)
       })
     msgInput.value = ''
     messageInputDom.value.innerHTML = ''

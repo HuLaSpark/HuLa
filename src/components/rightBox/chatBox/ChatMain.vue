@@ -16,6 +16,7 @@
     :class="{ 'right-1px': activeItem.type === RoomTypeEnum.SINGLE }"
     class="relative h-100vh"
     :ignore-item-resize="true"
+    :item-resizable="true"
     :padding-top="10"
     :item-size="itemSize"
     :items="chatMessageList">
@@ -50,7 +51,7 @@
           </template>
         </div>
         <!-- 好友或者群聊的信息 -->
-        <article
+        <div
           v-else
           class="flex flex-col w-full"
           :class="[{ 'items-end': item.fromUser.uid === userUid }, chatStore.isGroup ? 'gap-18px' : 'gap-2px']">
@@ -275,7 +276,7 @@
               </n-flex>
             </n-flex>
           </div>
-        </article>
+        </div>
       </n-flex>
     </template>
   </n-virtual-list>

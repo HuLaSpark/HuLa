@@ -99,9 +99,9 @@
         </n-flex>
 
         <n-flex v-if="!isLogining && !isWrongPassword" justify="space-around" align="center" :size="0" class="options">
-          <p class="text-(14px #f1f1f1)" @click="isUnlockPage = false">返回</p>
-          <p class="text-(14px #e3e3e3)" @click="logout">退出登录</p>
-          <p class="text-(14px #e3e3e3)">忘记密码</p>
+          <p class="text-(14px #fefefe)" @click="isUnlockPage = false">返回</p>
+          <p class="text-(14px #fefefe)" @click="logout">退出登录</p>
+          <p class="text-(14px #fefefe)">忘记密码</p>
           <p class="text-(14px #fff)" @click="unlock">进入系统</p>
         </n-flex>
       </n-flex>
