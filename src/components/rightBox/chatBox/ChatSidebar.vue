@@ -1,6 +1,21 @@
 <template>
   <!--! 这里最好不要使用n-flex,滚动高度会有问题  -->
-  <main v-if="isGroup" style="border-left: 1px solid var(--line-color)" class="item-box shadow-md">
+  <main
+    v-if="isGroup"
+    :class="
+      isCollapsed ? 'w-180px border-l-(1px solid [--line-color]) p-[12px_0_12px_6px] custom-shadow' : 'w-0 pr-1px'
+    "
+    class="item-box">
+    <!-- 收缩按钮 -->
+    <div
+      @click.stop="isCollapsed = !isCollapsed"
+      style="border-radius: 18px 0 0 18px"
+      class="contraction transition-all duration-600 ease-in-out absolute top-35% left--14px cursor-pointer opacity-0 bg-#c8c8c833 h-60px w-14px">
+      <svg :class="isCollapsed ? 'rotate-180' : 'rotate-0'" class="size-16px color-#909090 absolute top-38%">
+        <use href="#left-arrow"></use>
+      </svg>
+    </div>
+
     <n-flex v-if="!isSearch" align="center" justify="space-between" class="pr-8px pl-8px h-42px">
       <span class="text-14px">群聊成员&nbsp;{{ userList.length }}</span>
       <svg @click="handleSearch" class="size-14px"><use href="#search"></use></svg>
@@ -103,6 +118,7 @@ const searchRef = ref('')
 /** 手动触发Popover显示 */
 const infoPopover = ref(false)
 const inputInstRef = ref<InputInst | null>(null)
+const isCollapsed = ref(true)
 const { optionsList, report, selectKey } = useChatMain()
 const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-sidebar')
 

@@ -1,8 +1,8 @@
 <template>
   <!-- 底部栏 -->
   <main
-    class="size-full relative z-10 bg-[--right-bg-color] color-[--icon-color]"
-    style="box-shadow: 0 -4px 4px var(--box-shadow-color)">
+    style="box-shadow: var(--shadow-enabled) -4px 4px var(--box-shadow-color)"
+    class="size-full relative z-10 bg-[--right-bg-color] border-t-(1px solid [--line-color]) color-[--icon-color]">
     <!-- 输入框顶部选项栏 -->
     <n-flex align="center" justify="space-between" class="p-[10px_22px_5px] select-none">
       <n-flex align="center" :size="0" class="input-options">

@@ -15,8 +15,8 @@
     style="max-height: calc(100vh - 260px)"
     :class="{ 'right-1px': activeItem.type === RoomTypeEnum.SINGLE }"
     class="relative h-100vh"
-    :ignore-item-resize="true"
-    :item-resizable="true"
+    ignore-item-resize
+    item-resizable
     :padding-top="10"
     :item-size="itemSize"
     :items="chatMessageList">
@@ -32,7 +32,7 @@
         ]">
         <!-- 信息间隔时间 -->
         <span
-          class="text-(12px #909090) select-none bg-[--time-color] p-4px rounded-6px shadow-md"
+          class="text-(12px #909090) select-none bg-[--time-color] p-4px rounded-6px custom-shadow"
           v-if="item.timeBlock">
           {{ item.timeBlock }}
         </span>
@@ -239,7 +239,7 @@
                 :size="6"
                 v-if="item.message.body.reply"
                 @click="jumpToReplyMsg(item.message.body.reply.id)"
-                class="reply-bubble relative w-fit shadow-md">
+                class="reply-bubble relative w-fit custom-shadow">
                 <svg class="size-14px"><use href="#to-top"></use></svg>
                 <span>{{ `${item.message.body.reply.username}：` }}</span>
                 <!-- 当回复消息为图片时渲染 -->

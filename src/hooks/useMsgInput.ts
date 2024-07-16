@@ -184,8 +184,8 @@ export const useMsgInput = (messageInputDom: Ref) => {
       })
     }
     // 判断文本信息是否超过限制
-    if (msg.type === MsgEnum.TEXT && msg.content.length > 2000) {
-      window.$message.info('消息内容超过限制2000，请删减内容')
+    if (msg.type === MsgEnum.TEXT && msg.content.length > 500) {
+      window.$message.info('消息内容超过限制500，请分段发送')
       return
     }
     // TODO 当输入的类型是混合类型如输入文本加上图片的类型需要处理 (nyh -> 2024-02-28 06:32:13)

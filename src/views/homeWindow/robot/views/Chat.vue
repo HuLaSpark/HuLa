@@ -2,7 +2,9 @@
   <!-- 主体内容 -->
   <!--  // TODO 考虑是否需要添加一个欢迎页面，而不是直接使用聊天窗口 (nyh -> 2024-07-01 10:44:14)-->
   <main>
-    <div class="flex truncate p-[14px_20px] justify-between items-center gap-50px">
+    <div
+      style="box-shadow: var(--shadow-enabled) 4px 4px var(--box-shadow-color)"
+      class="flex truncate p-[14px_20px] justify-between items-center gap-50px">
       <n-flex :size="10" vertical class="truncate">
         <p
           v-if="!isEdit"
@@ -38,7 +40,7 @@
     <div class="h-1px bg-[--line-color]"></div>
 
     <!-- 聊天信息框 -->
-    <div class="w-full shadow-inner p-[28px_16px] box-border" style="height: calc(100vh - 300px)">
+    <div class="w-full p-[28px_16px] box-border" style="height: calc(100vh - 300px)">
       <n-flex :size="6">
         <n-avatar
           class="rounded-8px"
@@ -61,7 +63,7 @@
     <n-flex
       vertical
       :size="6"
-      style="box-shadow: 0 -4px 4px 0 rgba(0, 0, 0, 0.05)"
+      style="box-shadow: var(--shadow-enabled) -4px 4px 0 rgba(0, 0, 0, 0.05)"
       class="size-full p-[14px_22px] box-border">
       <n-flex :size="26" class="options">
         <n-popover v-for="(item, index) in features" :key="index" trigger="hover" :show-arrow="false" placement="top">
@@ -136,7 +138,7 @@ onMounted(() => {
 <style scoped lang="scss">
 @import '@/styles/scss/chat-main';
 .right-btn {
-  @apply size-fit cursor-pointer bg-[--chat-bt-color] color-[--chat-text-color] rounded-8px shadow-md p-[10px_11px];
+  @apply size-fit border-(1px solid [--line-color]) cursor-pointer bg-[--chat-bt-color] color-[--chat-text-color] rounded-8px custom-shadow p-[10px_11px];
   svg {
     @apply size-18px;
   }

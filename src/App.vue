@@ -18,7 +18,7 @@ import router from '@/router'
 
 const settingStore = setting()
 const OLStatusStore = onlineStatus()
-const { themes, lockScreen } = storeToRefs(settingStore)
+const { themes, lockScreen, page } = storeToRefs(settingStore)
 /** 不需要锁屏的页面 */
 const LockExclusion = new Set(['/login', '/tray', '/qrCode', '/about', '/onlineStatus'])
 const isLock = computed(() => {
@@ -33,6 +33,15 @@ const preventDrag = (e: MouseEvent) => {
     e.preventDefault()
   }
 }
+
+/** 控制阴影 */
+watch(
+  () => page.value.shadow,
+  (val) => {
+    document.documentElement.style.setProperty('--shadow-enabled', val ? '0' : '1')
+  },
+  { immediate: true }
+)
 
 onMounted(() => {
   // initWebSocket()

@@ -11,6 +11,15 @@ export default defineConfig({
   },
   presets: [presetUno({ dark: 'class' })],
   transformers: [transformerDirectives(), transformerVariantGroup()],
+  /** 自定义规则  */
+  rules: [
+    [
+      /^custom-shadow$/,
+      () => ({
+        'box-shadow': 'var(--shadow-enabled) 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)'
+      })
+    ]
+  ],
   /**
    * 快捷键命名标准
    * @default '布局样式 - 水平样式 - 垂直样式'

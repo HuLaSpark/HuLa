@@ -129,7 +129,7 @@ const examplesList: Example = [
 
 <style lang="scss">
 .examples {
-  @apply w-300px h-fit rounded-12px p-10px box-border cursor-pointer border-(solid 1px [--line-color]) shadow-md;
+  @apply w-300px h-fit rounded-12px p-10px box-border cursor-pointer border-(solid 1px [--line-color]) custom-shadow;
   &:hover {
     .search-item:not(:hover) {
       @apply blur-md scale-94;

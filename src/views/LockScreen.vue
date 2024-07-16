@@ -1,5 +1,6 @@
 <template>
   <!-- 锁屏页面 -->
+  <!--  // TODO 锁屏时隐藏其他窗口，解锁后再显示 (nyh -> 2024-07-14 01:39:01) -->
   <div
     data-tauri-drag-region
     class="lock-bg select-none absolute top-0 left-0 w-full h-full z-9999 transition-all duration-300 ease-in-out">
@@ -56,8 +57,8 @@
               ref="inputInstRef"
               style="
                 width: 320px;
-                border: 2px solid rgba(255, 255, 255, 0.4);
-                border-bottom-color: rgba(19, 152, 127, 0.8);
+                border: 2px solid rgba(255, 255, 255, 0.1);
+                border-bottom-color: rgba(19, 152, 127, 1);
                 background-color: #404040;
                 color: #fff;
               "
@@ -212,7 +213,10 @@ onUnmounted(() => {
 </script>
 <style scoped lang="scss">
 .lock-bg {
-  background-image: url('@/assets/img/lock_bg.png');
+  background-image: url('@/assets/img/lock_bg.jpg');
+  background-size: cover; // 或者使用 contain，取决于你想要的效果
+  background-position: center; // 确保图片居中
+  background-repeat: no-repeat; // 防止图片重复
 }
 
 .options {

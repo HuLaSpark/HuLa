@@ -8,7 +8,7 @@
       <!-- 输入框和操作列表 -->
       <ChatFooter class="flex-1" />
     </n-flex>
-    <ChatSidebar :active-item="activeItemRef" />
+    <ChatSidebar />
   </n-flex>
 </template>
 <script setup lang="ts">

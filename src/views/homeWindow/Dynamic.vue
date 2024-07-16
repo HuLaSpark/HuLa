@@ -40,7 +40,7 @@
             vertical
             v-for="item in dynamicList"
             :key="item.id"
-            class="w-450px h-fit border-(solid 1px [--line-color]) shadow-md rounded-8px bg-[--right-bg-color] p-10px box-border">
+            class="w-450px h-fit border-(solid 1px [--line-color]) custom-shadow rounded-8px bg-[--right-bg-color] p-10px box-border">
             <n-flex align="center">
               <!--  用户的头像和用户名以及个签    -->
               <img class="size-45px bg-#ccc rounded-50% select-none" :src="item.avatar" alt="" />

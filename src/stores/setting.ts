@@ -45,6 +45,10 @@ export const setting = defineStore(StoresEnum.SETTING, {
       sendKey: 'Enter',
       /** 是否双击打开独立会话窗口 */
       isDouble: true
+    },
+    /** 界面设置 */
+    page: {
+      shadow: false
     }
   }),
   actions: {

@@ -59,8 +59,6 @@
   --reply-color: #909090;
   --reply-hover: #505050;
   --bg-reply-img-count: #e3e3e3;
-  // 主页面面板分割线样式
-  --split-color: #f1f1f1;
   // 编辑资料背景颜色
   --bg-edit: #f0f0f0;
   // 聊天框时间戳样式
@@ -71,6 +69,9 @@
   --chat-right-bg: #f1f1f1;
   --chat-text-color: #505050;
   --chat-hover-color: #e3e3e3;
+
+  // 是否启用阴影
+  --shadow-enabled: 1;
 }
 
 html[data-theme='dark'] {
@@ -133,8 +134,6 @@ html[data-theme='dark'] {
   --reply-color: #e3e3e3;
   --reply-hover: #b1b1b1;
   --bg-reply-img-count: #505050;
-  // 主页面面板分割线样式
-  --split-color: #3b3b3b;
   // 编辑资料背景颜色
   --bg-edit: #262626;
   // 聊天框时间戳样式

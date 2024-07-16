@@ -1,6 +1,19 @@
 <template>
-  <main id="center" class="resizable select-none flex flex-col shadow-inner" :style="{ width: `${initWidth}px` }">
-    <div class="resize-handle" @mousedown="initDrag"></div>
+  <main
+    id="center"
+    class="resizable select-none flex flex-col border-r-(1px solid [--line-color])"
+    :style="{ width: `${initWidth}px` }">
+    <!-- 分隔条 -->
+    <div v-if="!shrinkStatus" class="resize-handle transition-all duration-600 ease-in-out" @mousedown="initDrag">
+      <div :class="{ 'opacity-100': isDragging }" class="transition-all duration-600 ease-in-out opacity-0 drag-icon">
+        <div style="border-radius: 8px 0 0 8px" class="bg-#c8c8c833 h-60px w-14px absolute top-40% right-0 drag-icon">
+          <svg class="size-16px absolute top-1/2 right--2px transform -translate-y-1/2 color-#909090">
+            <use href="#sliding"></use>
+          </svg>
+        </div>
+      </div>
+    </div>
+
     <ActionBar
       class="absolute right-0 w-full"
       v-if="shrinkStatus"
@@ -10,8 +23,8 @@
 
     <!-- 顶部搜索栏 -->
     <header
-      style="box-shadow: 0 2px 4px var(--box-shadow-color)"
-      class="mt-30px w-full h-38px flex flex-col items-center">
+      style="box-shadow: var(--shadow-enabled) 4px 4px var(--box-shadow-color)"
+      class="mt-30px w-full h-40px flex flex-col items-center border-b-(1px solid [--line-color])">
       <div class="flex-center gap-5px w-full pr-16px pl-16px box-border">
         <n-input
           id="search"
@@ -96,6 +109,7 @@ const addPanels = ref({
 const startX = ref()
 const startWidth = ref()
 const shrinkStatus = ref(false)
+const isDragging = ref(false)
 
 watchEffect(() => {
   if (width.value >= 310 && width.value < 800) {
@@ -149,6 +163,7 @@ const initDrag = (e: MouseEvent) => {
   if (!isDrag.value) return
   startX.value = e.clientX
   startWidth.value = initWidth.value
+  isDragging.value = true
   document.addEventListener('mousemove', doDrag, false)
   document.addEventListener('mouseup', stopDrag, false)
 }
@@ -156,6 +171,12 @@ const initDrag = (e: MouseEvent) => {
 const stopDrag = () => {
   document.removeEventListener('mousemove', doDrag, false)
   document.removeEventListener('mouseup', stopDrag, false)
+  isDragging.value = false
+  setTimeout(() => {
+    // 移除 hover 样式
+    const resizeHandle = document.querySelector('.resize-handle') as HTMLElement
+    resizeHandle.classList.remove('hover')
+  }, 1000)
 }
 
 onMounted(async () => {

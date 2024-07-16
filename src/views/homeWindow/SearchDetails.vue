@@ -17,7 +17,7 @@
     <template v-for="(item, _index) in historyList" :key="_index">
       <n-flex align="center" :size="14" class="p-6px cursor-pointer rounded-8px hover:bg-[--bg-group-hover]">
         <n-avatar :size="38" round bordered :src="item.avatar" />
-        <p class="text-(16px [--text-color])">{{ item.name }}</p>
+        <p class="text-(14px [--text-color])">{{ item.name }}</p>
       </n-flex>
     </template>
   </n-flex>

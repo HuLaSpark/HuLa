@@ -16,8 +16,7 @@
           @click="onSelectSelectSession(item, item.type)"
           @dblclick="handleMsgDblclick(item)"
           @select="$event.click(item)">
-          <!-- 消息框，使用v-slide自定义指令来自动抉择右键菜单位置 -->
-          <n-flex v-slide :size="10" align="center" class="h-75px pl-6px pr-8px flex-1">
+          <n-flex :size="10" align="center" class="h-75px pl-6px pr-8px flex-1">
             <n-avatar :color="'#fff'" :size="44" :src="item.avatar" bordered fallback-src="/logo.png" round />
 
             <n-flex class="h-fit flex-1 truncate" justify="space-between" vertical>

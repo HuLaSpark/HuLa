@@ -1,6 +1,6 @@
 /** 气泡样式 */
 @mixin bubble {
-  @apply w-fit max-w-35vw min-h-1em p-[8px_12px] text-15px line-height-22px bg-[--bg-bubble] rounded-[2px_18px_18px] shadow-md;
+  @apply w-fit max-w-35vw min-h-1em p-[8px_12px] text-15px line-height-22px bg-[--bg-bubble] rounded-[2px_18px_18px] custom-shadow;
   word-break: break-all; /** 强制连续文本换行 */
   &.active {
     background-color: var(--bg-bubble-active);
@@ -24,6 +24,7 @@
 }
 /**! 气泡动画 */
 .bubble-animation {
+  @apply transform-gpu;
   animation: bubble-twinkle 0.4s ease-out forwards;
 }
 .photo-wall {
@@ -75,7 +76,7 @@
 }
 /** emoji回复气泡的样式 */
 .emoji-reply-bubble {
-  @apply relative rounded-50px p-[4px_8px] cursor-pointer select-none bg-#13987F66 text-14px w-fit border-(1px solid #13987F) shadow-md;
+  @apply relative rounded-50px p-[4px_8px] cursor-pointer select-none bg-#13987F66 text-14px w-fit border-(1px solid #13987F) custom-shadow;
 }
 /** 跳转到回复内容时候显示的样式 */
 .active-reply {

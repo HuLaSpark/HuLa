@@ -13,14 +13,13 @@
                 <!-- 用户框 多套一层div来移除默认的右键事件然后覆盖掉因为margin空隙而导致右键可用 -->
                 <div @contextmenu.stop="$event.preventDefault()">
                   <n-flex
-                    v-slide
                     :size="10"
                     @click="handleClick(item.uid, RoomTypeEnum.SINGLE)"
                     :class="{ active: activeItem === item.uid }"
                     class="user-box w-full h-75px mb-5px"
                     v-for="item in contactStore.contactsList"
                     :key="item.uid">
-                    <n-flex v-slide align="center" :size="10" class="h-75px pl-6px pr-8px flex-1 truncate">
+                    <n-flex align="center" :size="10" class="h-75px pl-6px pr-8px flex-1 truncate">
                       <n-avatar
                         round
                         bordered
