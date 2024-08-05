@@ -6,16 +6,6 @@ const sideOptions = ref<OPT.L.SettingSide[]>([
     icon: 'setting-config'
   },
   {
-    url: '/remind',
-    label: '消息通知',
-    icon: 'remind'
-  },
-  {
-    url: '/collection',
-    label: '存储管理',
-    icon: 'mini-sd-card'
-  },
-  {
     url: '/loginSetting',
     label: '登录设置',
     icon: 'settings'

@@ -35,7 +35,7 @@
       </n-flex>
 
       <component :is="division" />
-      <n-flex @click="exit(0)" align="center" :size="10" class="p-[8px_6px] rounded-4px hover:bg-[--tray-hover-e]">
+      <n-flex @click="handleExit" align="center" :size="10" class="p-[8px_6px] rounded-4px hover:bg-[--tray-hover-e]">
         <span>退出</span>
       </n-flex>
     </n-flex>
@@ -51,14 +51,18 @@
 import { useWindow } from '@/hooks/useWindow.ts'
 import { invoke } from '@tauri-apps/api/tauri'
 import { exit } from '@tauri-apps/api/process'
-import { statusItem } from './home-window/onlineStatus/config.ts'
+import { statusItem } from '@/views/homeWindow/onlineStatus/config.ts'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
 import { appWindow } from '@tauri-apps/api/window'
 import { listen } from '@tauri-apps/api/event'
 import { useWsLoginStore } from '@/stores/ws.ts'
+import { setting } from '@/stores/setting.ts'
+import { storeToRefs } from 'pinia'
 
 const { checkWinExist, createWebviewWindow, resizeWindow } = useWindow()
 const OLStatusStore = onlineStatus()
+const settingStore = setting()
+const { lockScreen } = storeToRefs(settingStore)
 const isLoginWin = ref(true)
 const loginStore = useWsLoginStore()
 const loginQrCode = computed(() => loginStore.loginQrCode)
@@ -68,6 +72,8 @@ const division = () => {
 }
 
 const handleExit = () => {
+  /** 退出时关闭锁屏 */
+  lockScreen.value.enable = false
   exit(0)
   if (loginQrCode.value) {
     localStorage.removeItem('wsLogin')

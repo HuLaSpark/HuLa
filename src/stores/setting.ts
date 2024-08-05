@@ -15,6 +15,10 @@ export const setting = defineStore(StoresEnum.SETTING, {
     },
     /** 是否启用ESC关闭窗口 */
     escClose: true,
+    lockScreen: {
+      enable: false,
+      password: ''
+    },
     /** 系统托盘 */
     tips: {
       type: CloseBxEnum.HIDE,
@@ -41,6 +45,10 @@ export const setting = defineStore(StoresEnum.SETTING, {
       sendKey: 'Enter',
       /** 是否双击打开独立会话窗口 */
       isDouble: true
+    },
+    /** 界面设置 */
+    page: {
+      shadow: false
     }
   }),
   actions: {

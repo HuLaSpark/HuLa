@@ -63,8 +63,8 @@ const loading = ref(true)
 const loadText = ref('加载中...')
 const QRCode = ref()
 const scanStatus = ref<{
-  status: 'error' | 'success'
-  icon: 'cloudError' | 'success'
+  status: 'error' | 'success' | 'auth'
+  icon: 'cloudError' | 'success' | 'Security'
   text: string
   show: boolean
 }>({ status: 'success', icon: 'success', text: '扫码成功', show: false })
@@ -72,7 +72,7 @@ const scanStatus = ref<{
 watchEffect(() => {
   // 等待授权中
   if (loginStatus.value === LoginStatus.Waiting) {
-    loadText.value = '等待授权...'
+    handleAuth()
   }
 })
 
@@ -109,6 +109,18 @@ const handleError = (e: any) => {
     show: true
   }
   loadText.value = '请稍后再试'
+}
+
+/** 处理授权场景 */
+const handleAuth = () => {
+  loading.value = false
+  scanStatus.value = {
+    status: 'auth',
+    icon: 'Security',
+    text: '扫码成功,等待授权',
+    show: true
+  }
+  loadText.value = '等待授权...'
 }
 
 // TODO 做一个二维码过期时间重新刷新二维码的功能 (nyh -> 2024-01-27 00:37:18)

@@ -1,28 +1,35 @@
 <template>
   <main
-    data-tauri-drag-region
     id="center"
-    class="resizable select-none flex flex-col shadow-inner"
+    class="resizable select-none flex flex-col border-r-(1px solid [--line-color])"
     :style="{ width: `${initWidth}px` }">
-    <div class="resize-handle" @mousedown="initDrag"></div>
+    <!-- 分隔条 -->
+    <div v-if="!shrinkStatus" class="resize-handle transition-all duration-600 ease-in-out" @mousedown="initDrag">
+      <div :class="{ 'opacity-100': isDragging }" class="transition-all duration-600 ease-in-out opacity-0 drag-icon">
+        <div style="border-radius: 8px 0 0 8px" class="bg-#c8c8c833 h-60px w-14px absolute top-40% right-0 drag-icon">
+          <svg class="size-16px absolute top-1/2 right--2px transform -translate-y-1/2 color-#909090">
+            <use href="#sliding"></use>
+          </svg>
+        </div>
+      </div>
+    </div>
+
     <ActionBar
-      class="absolute right-0"
+      class="absolute right-0 w-full"
       v-if="shrinkStatus"
       :shrink-status="!shrinkStatus"
       :max-w="false"
       :current-label="appWindow.label" />
 
-    <!--    <div class="resize-handle" @mousedown="initDrag"></div>-->
-
     <!-- 顶部搜索栏 -->
     <header
-      style="box-shadow: 0 2px 4px var(--box-shadow-color)"
-      class="mt-30px w-full h-38px flex flex-col items-center">
+      style="box-shadow: var(--shadow-enabled) 4px 4px var(--box-shadow-color)"
+      class="mt-30px w-full h-40px flex flex-col items-center border-b-(1px solid [--line-color])">
       <div class="flex-center gap-5px w-full pr-16px pl-16px box-border">
         <n-input
           id="search"
           @focus="() => router.push('/searchDetails')"
-          class="rounded-6px w-full"
+          class="rounded-6px w-full relative"
           style="background: var(--search-bg-color)"
           :maxlength="20"
           clearable
@@ -32,16 +39,28 @@
             <svg class="w-12px h-12px"><use href="#search"></use></svg>
           </template>
         </n-input>
-        <n-button size="small" secondary style="padding: 0 5px">
+        <n-button @click="addPanels.show = !addPanels.show" size="small" secondary style="padding: 0 5px">
           <template #icon>
             <svg class="w-24px h-24px"><use href="#plus"></use></svg>
           </template>
         </n-button>
+
+        <!-- 添加面板 -->
+        <div v-if="addPanels.show" class="add-item">
+          <div class="menu-list">
+            <div v-for="(item, index) in addPanels.list" :key="index">
+              <div class="menu-item" @click="() => item.click()">
+                <svg><use :href="`#${item.icon}`"></use></svg>
+                {{ item.label }}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </header>
 
     <!-- 列表 -->
-    <div id="centerList">
+    <div id="centerList" class="h-full">
       <router-view />
     </div>
   </main>
@@ -66,10 +85,31 @@ const { width } = useWindowSize()
 const isDrag = ref(true)
 /** 当前消息 */
 const currentMsg = ref()
+/** 添加面板是否显示 */
+const addPanels = ref({
+  show: false,
+  list: [
+    {
+      label: '发起群聊',
+      icon: 'launch',
+      click: () => {
+        console.log('发起群聊')
+      }
+    },
+    {
+      label: '加好友/群',
+      icon: 'people-plus',
+      click: () => {
+        console.log('加好友/群')
+      }
+    }
+  ]
+})
 
 const startX = ref()
 const startWidth = ref()
 const shrinkStatus = ref(false)
+const isDragging = ref(false)
 
 watchEffect(() => {
   if (width.value >= 310 && width.value < 800) {
@@ -96,6 +136,9 @@ const closeMenu = (event: Event) => {
   if (!e.matches('#search, #search *, #centerList *, #centerList') && route === '/searchDetails') {
     router.go(-1)
   }
+  if (!e.matches('.add-item')) {
+    addPanels.value.show = false
+  }
 }
 
 /** 定义一个函数，在鼠标拖动时调用 */
@@ -120,6 +163,7 @@ const initDrag = (e: MouseEvent) => {
   if (!isDrag.value) return
   startX.value = e.clientX
   startWidth.value = initWidth.value
+  isDragging.value = true
   document.addEventListener('mousemove', doDrag, false)
   document.addEventListener('mouseup', stopDrag, false)
 }
@@ -127,6 +171,12 @@ const initDrag = (e: MouseEvent) => {
 const stopDrag = () => {
   document.removeEventListener('mousemove', doDrag, false)
   document.removeEventListener('mouseup', stopDrag, false)
+  isDragging.value = false
+  setTimeout(() => {
+    // 移除 hover 样式
+    const resizeHandle = document.querySelector('.resize-handle') as HTMLElement
+    resizeHandle.classList.remove('hover')
+  }, 1000)
 }
 
 onMounted(async () => {

@@ -14,7 +14,7 @@
           :key="index">
           <div
             @click="handleTheme(item.code)"
-            class="size-full rounded-8px cursor-pointer shadow-md"
+            class="size-full rounded-8px cursor-pointer custom-shadow"
             :class="{ 'outline outline-2 outline-#13987f outline-offset': activeItem === item.code }">
             <component :is="item.model" />
           </div>
@@ -84,6 +84,20 @@
         </n-flex>
       </n-flex>
     </n-flex>
+
+    <!-- 界面设置 -->
+    <n-flex vertical class="text-(14px [--text-color])" :size="16">
+      <span class="pl-10px">界面</span>
+
+      <n-flex class="item" :size="15" vertical>
+        <!-- 发送信息 -->
+        <n-flex align="center" justify="space-between">
+          <span>是否开启阴影</span>
+
+          <n-switch size="small" v-model:value="page.shadow" />
+        </n-flex>
+      </n-flex>
+    </n-flex>
   </n-flex>
 </template>
 <script setup lang="tsx">
@@ -94,7 +108,7 @@ import { topicsList } from './model.tsx'
 import { sendOptions } from './config.ts'
 
 const settingStore = setting()
-const { themes, tips, escClose, chat } = storeToRefs(settingStore)
+const { themes, tips, escClose, chat, page } = storeToRefs(settingStore)
 const activeItem = ref<string>(themes.value.pattern)
 
 /** 切换主题 */
@@ -106,6 +120,6 @@ const handleTheme = (code: string) => {
 
 <style scoped lang="scss">
 .item {
-  @apply bg-[--bg-setting-item] rounded-12px size-full p-12px box-border border-(solid 1px [--line-color]) shadow-md;
+  @apply bg-[--bg-setting-item] rounded-12px size-full p-12px box-border border-(solid 1px [--line-color]) custom-shadow;
 }
 </style>

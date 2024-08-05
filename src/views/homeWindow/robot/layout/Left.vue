@@ -79,14 +79,14 @@
       <n-flex :size="12" align="center">
         <div
           @click="jump"
-          class="bg-[--chat-bt-color] color-[--chat-text-color] size-fit p-[8px_9px] rounded-8px shadow-md cursor-pointer">
+          class="bg-[--chat-bt-color] border-(1px solid [--line-color]) color-[--chat-text-color] size-fit p-[8px_9px] rounded-8px custom-shadow cursor-pointer">
           <svg class="size-18px"><use href="#settings"></use></svg>
         </div>
         <a
           target="_blank"
           rel="noopener noreferrer"
           href="https://github.com/nongyehong/HuLa-IM-Tauri"
-          class="bg-[--chat-bt-color] color-[--chat-text-color] size-fit p-[8px_9px] rounded-8px shadow-md cursor-pointer">
+          class="bg-[--chat-bt-color] border-(1px solid [--line-color]) color-[--chat-text-color] size-fit p-[8px_9px] rounded-8px custom-shadow cursor-pointer">
           <svg class="size-18px"><use href="#github"></use></svg>
         </a>
       </n-flex>
@@ -95,7 +95,7 @@
         :size="4"
         align="center"
         @click="add"
-        class="bg-[--chat-bt-color] select-none text-(14px [--chat-text-color]) size-fit p-8px rounded-8px shadow-md cursor-pointer">
+        class="bg-[--chat-bt-color] border-(1px solid [--line-color]) select-none text-(14px [--chat-text-color]) size-fit p-8px rounded-8px custom-shadow cursor-pointer">
         <svg class="size-18px"><use href="#plus"></use></svg>
         <p>新的聊天</p>
       </n-flex>
@@ -250,12 +250,12 @@ onMounted(() => {
   @apply bg-clip-text text-transparent bg-gradient-to-r from-#38BDF8 to-#13987F text-20px font-800;
 }
 .plugins {
-  @apply size-fit bg-[--chat-bt-color] rounded-8px shadow-md p-[8px_14px]
+  @apply size-fit bg-[--chat-bt-color] rounded-8px custom-shadow p-[8px_14px]
   flex items-center gap-10px select-none cursor-pointer
-  text-14px color-[--chat-text-color];
+  text-14px color-[--chat-text-color] border-(1px solid [--line-color]);
 }
 .chat-item {
-  @apply relative bg-[--chat-bt-color] cursor-pointer shadow-md rounded-8px w-full h-65px;
+  @apply relative bg-[--chat-bt-color] border-(1px solid [--line-color]) cursor-pointer custom-shadow rounded-8px w-full h-65px;
   &:hover {
     @apply bg-[--chat-hover-color];
     svg {

@@ -1,5 +1,5 @@
 .item-box {
-  @apply flex flex-col w-180px h-100vh p-[12px_0_12px_6px] box-border select-none text-[--text-color];
+  @apply relative flex flex-col h-100vh box-border select-none text-[--text-color];
   .item {
     height: 42px;
     padding: 0 4px;
@@ -9,6 +9,11 @@
     &:hover {
       cursor: pointer;
       background-color: var(--bg-group-hover);
+    }
+  }
+  &:hover {
+    .contraction {
+      opacity: 1;
     }
   }
 }

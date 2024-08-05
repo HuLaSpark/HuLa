@@ -2,13 +2,13 @@
   "build": {
     "beforeDevCommand": "pnpm dev",
     "beforeBuildCommand": "pnpm build",
-    "devPath": "http://localhost:6130",
+    "devPath": "http://127.0.0.1:6130",
     "distDir": "../dist",
     "withGlobalTauri": true
   },
   "package": {
     "productName": "HuLa",
-    "version": "1.5.0"
+    "version": "1.6.0"
   },
   "tauri": {
     "updater": {

@@ -1,5 +1,7 @@
 <template>
-  <div class="flex truncate p-[14px_20px] justify-between items-center gap-50px">
+  <div
+    style="box-shadow: var(--shadow-enabled) 4px 4px var(--box-shadow-color)"
+    class="flex border-b-(1px solid [--line-color]) truncate p-[14px_20px] justify-between items-center gap-50px">
     <n-flex :size="10" vertical class="truncate">
       <p class="text-(22px [--chat-text-color]) truncate font-bold">设置</p>
       <p class="text-(14px #707070)">所有设置选项</p>
@@ -11,15 +13,14 @@
       </div>
     </n-flex>
   </div>
-  <div class="h-1px bg-[--line-color]"></div>
 
   <!-- 设置的主体内容  -->
   <n-scrollbar style="max-height: calc(100vh - 104px)">
-    <n-flex vertical :size="20" class="p-[20px_0] shadow-inner">
+    <n-flex vertical :size="20" class="p-[20px_0]">
       <div v-for="(key, index) in content" :key="index" class="flex flex-1 p-[0_20px]">
         <n-flex
           vertical
-          class="w-full h-fit bg-[--bg-setting-item] border-(solid 1px [--line-color]) shadow-md rounded-8px p-10px">
+          class="w-full h-fit bg-[--bg-setting-item] border-(solid 1px [--line-color]) custom-shadow rounded-8px p-10px">
           <n-flex vertical justify="center" v-for="(item, index) in key" :key="index">
             <n-flex justify="space-between" :size="0" align="center" class="p-8px">
               <n-flex vertical :size="4">
@@ -52,7 +53,7 @@ const handleClose = () => {
 </script>
 <style scoped lang="scss">
 .right-btn {
-  @apply size-fit cursor-pointer bg-[--chat-bt-color] color-[--chat-text-color] rounded-8px shadow-md p-[10px_11px];
+  @apply size-fit border-(1px solid [--line-color]) cursor-pointer bg-[--chat-bt-color] color-[--chat-text-color] rounded-8px custom-shadow p-[10px_11px];
   svg {
     @apply size-18px;
   }

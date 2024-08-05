@@ -10,8 +10,20 @@
   right: 0;
   top: 0;
   bottom: 0;
-  width: 1px;
+  width: 6px;
   cursor: ew-resize;
   z-index: 9999;
-  background-color: var(--split-color);
+  background: transparent;
+  &:hover {
+    .drag-icon {
+      opacity: 1;
+    }
+  }
+}
+
+.add-item {
+  @include menu-item-style(absolute);
+  top: 60px;
+  right: 30px;
+  @include menu-list();
 }

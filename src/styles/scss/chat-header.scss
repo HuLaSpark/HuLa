@@ -14,7 +14,7 @@
 }
 
 .setting-item {
-  @apply border-(solid 1px [--line-color]) shadow-md;
+  @apply border-(solid 1px [--line-color]) custom-shadow;
   &:first-child {
     margin-top: 0;
   }
@@ -51,7 +51,7 @@
 }
 
 .sidebar {
-  @apply flex flex-col absolute top-44px right-0 bg-[--bg-chat-drawer] p-22px box-border w-320px h-100vh shadow-[0_14px_14px_rgba(0,0,0,0.35)];
+  @apply flex flex-col absolute top-42px right-0 bg-[--bg-chat-drawer] p-22px box-border w-320px h-100vh shadow-[0_14px_14px_rgba(0,0,0,0.35)];
 }
 
 /**! 使用vue内置transition做过渡效果 */

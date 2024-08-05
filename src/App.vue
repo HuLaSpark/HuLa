@@ -1,8 +1,11 @@
 <template>
   <NaiveProvider :message-max="3" :notific-max="3">
-    <div id="app">
+    <div v-if="!isLock" id="app">
       <router-view />
     </div>
+
+    <!-- 锁屏页面 -->
+    <LockScreen v-else />
   </NaiveProvider>
 </template>
 <script setup lang="ts">
@@ -10,10 +13,17 @@ import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
 import { StoresEnum, ThemeEnum } from '@/enums'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
+import LockScreen from '@/views/LockScreen.vue'
+import router from '@/router'
 
 const settingStore = setting()
 const OLStatusStore = onlineStatus()
-const { themes } = storeToRefs(settingStore)
+const { themes, lockScreen, page } = storeToRefs(settingStore)
+/** 不需要锁屏的页面 */
+const LockExclusion = new Set(['/login', '/tray', '/qrCode', '/about', '/onlineStatus'])
+const isLock = computed(() => {
+  return !LockExclusion.has(router.currentRoute.value.path) && lockScreen.value.enable
+})
 
 /** 禁止图片以及输入框的拖拽 */
 const preventDrag = (e: MouseEvent) => {
@@ -23,6 +33,15 @@ const preventDrag = (e: MouseEvent) => {
     e.preventDefault()
   }
 }
+
+/** 控制阴影 */
+watch(
+  () => page.value.shadow,
+  (val) => {
+    document.documentElement.style.setProperty('--shadow-enabled', val ? '0' : '1')
+  },
+  { immediate: true }
+)
 
 onMounted(() => {
   // initWebSocket()

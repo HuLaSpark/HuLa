@@ -13,10 +13,12 @@
     </section>
 
     <!-- 右边内容 -->
-    <section class="bg-[--right-bg-color] flex-1 shadow-md">
+    <section class="bg-[--right-bg-color] flex-1 custom-shadow border-l-(1px solid [--line-color])">
       <ActionBar :shrink="false" :max-w="false" />
 
-      <header class="header" style="box-shadow: 0 4px 4px var(--box-shadow-color)">{{ title }}</header>
+      <header class="header" style="box-shadow: var(--shadow-enabled) 4px 4px var(--box-shadow-color)">
+        {{ title }}
+      </header>
 
       <div class="flex-1 p-24px"><router-view /></div>
     </section>
@@ -80,6 +82,6 @@ onMounted(() => {
 }
 
 .header {
-  @apply w-full h-42px flex items-center pl-40px select-none text-18px color-[--text-color];
+  @apply w-full h-42px flex items-center pl-40px select-none text-18px color-[--text-color] border-b-(1px solid [--line-color]);
 }
 </style>

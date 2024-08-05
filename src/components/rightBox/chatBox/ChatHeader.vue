@@ -1,8 +1,8 @@
 <template>
   <!-- 顶部操作栏和显示用户名 -->
   <main
-    style="box-shadow: 0 4px 4px var(--box-shadow-color)"
-    class="relative z-30 flex-y-center justify-between p-[8px_20px_12px] select-none">
+    style="box-shadow: var(--shadow-enabled) 4px 4px var(--box-shadow-color)"
+    class="relative z-30 flex-y-center border-b-(1px solid [--line-color]) justify-between p-[6px_20px_12px] select-none">
     <n-flex align="center">
       <span class="color-[--text-color]">{{ activeItem.name }}</span>
       <svg v-if="activeItem.hot_Flag === IsAllUserEnum.Yes" class="size-20px color-#13987f select-none outline-none">

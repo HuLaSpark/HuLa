@@ -15,6 +15,13 @@ declare namespace STO {
     }
     /** 是否启用ESC关闭窗口 */
     escClose: boolean
+    /** 是否锁屏 */
+    lockScreen: {
+      /** 是否启用锁屏 */
+      enable: boolean
+      /** 锁屏密码 */
+      password: string
+    }
     /** 登录设置 */
     login: {
       autoLogin: boolean
@@ -38,15 +45,28 @@ declare namespace STO {
       /** 是否双击打开独立会话窗口 */
       isDouble: boolean
     }
+    /** 界面设置 */
+    page: {
+      /** 是否开启阴影 */
+      shadow: boolean
+    }
   }
 
-  /** 置顶 */
+  /** 置顶窗口列表 */
   type AlwaysOnTop = {
+    /** 是否置顶窗口列表 */
+    [key: string]: boolean
+  }
+
+  /** 隐藏窗口列表 */
+  type HideWindow = {
+    /** 是否隐藏窗口列表 */
     [key: string]: boolean
   }
 
   /** 历史内容 */
   type History = {
+    /** emoji列表 */
     emoji: string[]
   }
 }

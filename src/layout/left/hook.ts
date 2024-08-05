@@ -4,7 +4,7 @@ import { useUserStore } from '@/stores/user.ts'
 import { useCachedStore } from '@/stores/cached.ts'
 import { storeToRefs } from 'pinia'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
-import { itemsTop } from '@/layout/left/config.ts'
+import { itemsTop } from '@/layout/left/config.tsx'
 import { EventEnum, IsYetEnum, MittEnum, MsgEnum, ThemeEnum } from '@/enums'
 import { BadgeType, UserInfoType } from '@/services/types.ts'
 import { useChatStore } from '@/stores/chat.ts'
@@ -82,6 +82,8 @@ export const leftHook = () => {
     return sessionList.value.reduce((total, item) => total + item.unreadCount, 0)
   })
 
+  /* =================================== 方法 =============================================== */
+
   /** 跟随系统主题模式切换主题 */
   const followOS = () => {
     themeColor.value = prefers.matches ? 'rgba(63,63,63, 0.2)' : 'rgba(241,241,241, 0.2)'
@@ -134,10 +136,17 @@ export const leftHook = () => {
     })
   }
 
-  /** 佩戴卸下徽章 */
+  /** 佩戴徽章 */
   const toggleWarningBadge = async (badge: BadgeType) => {
     if (!badge?.id) return
-    await apis.setUserBadge(badge.id)
+    const res = await apis.setUserBadge(badge.id)
+    if (res.success) {
+      window.$message.success('佩戴成功')
+      /** 获取用户信息 */
+      apis.getUserInfo().then((res) => {
+        editInfo.value.content = res.data
+      })
+    }
   }
 
   /** 计算字符长度 */

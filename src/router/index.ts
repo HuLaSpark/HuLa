@@ -7,12 +7,12 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/login',
     name: 'login',
-    component: () => import('@/views/login-window/Login.vue')
+    component: () => import('@/views/loginWindow/Login.vue')
   },
   {
     path: '/qrCode',
     name: 'qrCode',
-    component: () => import('@/views/login-window/QRCode.vue')
+    component: () => import('@/views/loginWindow/QRCode.vue')
   },
   {
     path: '/tray',
@@ -27,7 +27,7 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: '/message',
         name: 'message',
-        component: () => import('@/views/home-window/message/index.vue')
+        component: () => import('@/views/homeWindow/message/index.vue')
       },
       {
         path: '/friendsList',
@@ -37,29 +37,29 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: '/searchDetails',
         name: 'searchDetails',
-        component: () => import('@/views/home-window/SearchDetails.vue')
+        component: () => import('@/views/homeWindow/SearchDetails.vue')
       }
     ]
   },
   {
     path: '/robot',
     name: 'robot',
-    component: () => import('@/views/home-window/robot/index.vue'),
+    component: () => import('@/views/homeWindow/robot/index.vue'),
     children: [
       {
         path: '/welcome',
         name: 'welcome',
-        component: () => import('@/views/home-window/robot/views/Welcome.vue')
+        component: () => import('@/views/homeWindow/robot/views/Welcome.vue')
       },
       {
         path: '/chat',
         name: 'chat',
-        component: () => import('@/views/home-window/robot/views/Chat.vue')
+        component: () => import('@/views/homeWindow/robot/views/Chat.vue')
       },
       {
         path: '/chatSettings',
         name: 'chatSettings',
-        component: () => import('@/views/home-window/robot/views/chatSettings/index.vue')
+        component: () => import('@/views/homeWindow/robot/views/chatSettings/index.vue')
       }
     ]
   },
@@ -81,37 +81,32 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/about',
     name: 'about',
-    component: () => import('@/views/home-window/more/About.vue')
+    component: () => import('@/views/homeWindow/more/About.vue')
   },
   {
     path: '/alone',
     name: 'alone',
-    component: () => import('@/views/home-window/message/Alone.vue')
+    component: () => import('@/views/homeWindow/message/Alone.vue')
   },
   {
     path: '/sharedScreen',
     name: 'sharedScreen',
-    component: () => import('@/views/home-window/SharedScreen.vue')
+    component: () => import('@/views/homeWindow/SharedScreen.vue')
   },
   {
     path: '/settings',
     name: 'settings',
-    component: () => import('@/views/home-window/more/settings/index.vue'),
+    component: () => import('@/views/homeWindow/more/settings/index.vue'),
     children: [
       {
         path: '/general',
         name: 'general',
-        component: () => import('@/views/home-window/more/settings/General.vue')
-      },
-      {
-        path: '/remind',
-        name: 'remind',
-        component: () => import('@/views/home-window/more/settings/Remind.vue')
+        component: () => import('@/views/homeWindow/more/settings/General.vue')
       },
       {
         path: '/loginSetting',
         name: 'loginSetting',
-        component: () => import('@/views/home-window/more/settings/LoginSetting.vue')
+        component: () => import('@/views/homeWindow/more/settings/LoginSetting.vue')
       }
     ]
   }

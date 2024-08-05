@@ -74,7 +74,11 @@ export const useChatMain = (activeItem?: SessionItem) => {
       label: '撤回',
       icon: 'corner-down-left',
       click: async (item: MessageType) => {
-        await apis.recallMsg({ roomId: 1, msgId: item.message.id })
+        const res = await apis.recallMsg({ roomId: 1, msgId: item.message.id })
+        if (res.errMsg) {
+          window.$message.error(res.errMsg)
+          return
+        }
         chatStore.updateRecallStatus({ msgId: item.message.id })
       }
     }

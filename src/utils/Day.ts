@@ -13,3 +13,8 @@ dayjs.extend(weekday)
 export const handRelativeTime = (time: string) => {
   return dayjs(time).fromNow()
 }
+
+/** 获取指定日期的星期 */
+export const getWeekday = (time: string) => {
+  return dayjs(time).format('ddd')
+}
