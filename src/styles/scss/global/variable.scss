@@ -1,12 +1,18 @@
 @import "fonts";
 * {
-  font-family: 'AliFangYuan', sans-serif !important;
+  font-family: var(--font-family), sans-serif !important;
+  font-weight: 500 !important;
 }
 html, body {
   overscroll-behavior: none; // 禁止mac的“触底反弹”效果
 }
 /**! 主题变量 */
 :root {
+  // 是否启用阴影
+  --shadow-enabled: 1;
+  // 字体
+  --font-family: 'AliFangYuan';
+
   // 整体布局背景
   --left-bg-color: rgba(255, 255, 255, 0.6);
   --left-active-color: rgba(193, 193, 193, 0.6);
@@ -76,9 +82,6 @@ html, body {
   --chat-right-bg: #f1f1f1;
   --chat-text-color: #505050;
   --chat-hover-color: #e3e3e3;
-
-  // 是否启用阴影
-  --shadow-enabled: 1;
 }
 
 html[data-theme='dark'] {

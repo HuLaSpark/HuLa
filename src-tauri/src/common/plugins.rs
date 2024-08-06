@@ -1,6 +1,8 @@
 use std::sync::Mutex;
 use tauri::{AppHandle, Manager, Runtime};
 use window_shadows::set_shadow;
+#[cfg(target_os = "macos")]
+use window_vibrancy::NSVisualEffectMaterial;
 
 /// 重新设置窗口属性
 #[tauri::command]
@@ -10,7 +12,6 @@ pub fn reset_set_window<R: Runtime>(app: tauri::AppHandle<R>, label: String) {
     set_shadow(&window, true).unwrap();
 
     #[cfg(target_os = "macos")]
-    use window_vibrancy::NSVisualEffectMaterial;
     window_vibrancy::apply_vibrancy(&window, NSVisualEffectMaterial::HudWindow, None, None)
                  .expect("Unsupported platform! 'apply_vibrancy' is only supported on macOS");
 

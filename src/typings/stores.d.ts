@@ -49,6 +49,8 @@ declare namespace STO {
     page: {
       /** 是否开启阴影 */
       shadow: boolean
+      /** 字体 */
+      fonts: string
     }
   }
 

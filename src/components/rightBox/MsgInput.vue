@@ -67,8 +67,10 @@
               :options="sendOptions"
               trigger="click"
               placement="top-end">
-              <svg @click="arrow = true" v-if="!arrow" class="w-22px h-22px outline-none"><use href="#down"></use></svg>
-              <svg @click="arrow = false" v-else class="w-22px h-22px outline-none"><use href="#up"></use></svg>
+              <svg @click="arrow = true" v-if="!arrow" class="w-22px h-22px mt-2px outline-none">
+                <use href="#down"></use>
+              </svg>
+              <svg @click="arrow = false" v-else class="w-22px h-22px mt-2px outline-none"><use href="#up"></use></svg>
             </n-popselect>
           </n-config-provider>
         </template>

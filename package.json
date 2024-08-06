@@ -49,7 +49,7 @@
     "pinia": "^2.2.1",
     "pinia-plugin-persistedstate": "^3.2.1",
     "pinia-shared-state": "^0.5.1",
-    "vue": "^3.4.31",
+    "vue": "^3.4.36",
     "vue-draggable-plus": "^0.4.1",
     "vue-router": "^4.4.2"
   },
@@ -84,13 +84,13 @@
     "lint-staged": "^15.2.7",
     "oxlint": "^0.2.18",
     "prettier": "^3.3.2",
-    "sass": "^1.77.8",
+    "sass": "^1.77.6",
     "sass-loader": "^14.2.1",
     "typescript": "^5.5.3",
     "unplugin-auto-import": "^0.17.8",
     "unplugin-vue-components": "^0.26.0",
     "vite": "5.3.5",
-    "vue-tsc": "^2.0.24"
+    "vue-tsc": "^2.0.29"
   },
   "config": {
     "commitizen": {

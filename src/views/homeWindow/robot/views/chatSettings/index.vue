@@ -4,7 +4,7 @@
     class="flex border-b-(1px solid [--line-color]) truncate p-[14px_20px] justify-between items-center gap-50px">
     <n-flex :size="10" vertical class="truncate">
       <p class="text-(22px [--chat-text-color]) truncate font-500">设置</p>
-      <p class="text-(14px #707070)">所有设置选项</p>
+      <p class="text-(14px #909090)">所有设置选项</p>
     </n-flex>
 
     <n-flex class="min-w-fit">
@@ -25,7 +25,7 @@
             <n-flex justify="space-between" :size="0" align="center" class="p-8px">
               <n-flex vertical :size="4">
                 <p class="text-(15px [--chat-text-color]) font-500">{{ item.title }}</p>
-                <p v-if="item.description" class="text-(12px [--chat-text-color])">{{ item.description }}</p>
+                <p v-if="item.description" class="text-(12px #909090)">{{ item.description }}</p>
               </n-flex>
 
               <component :is="item.features" />

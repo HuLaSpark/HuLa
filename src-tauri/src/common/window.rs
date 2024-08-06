@@ -1,5 +1,7 @@
 use tauri::{Manager, Runtime};
 use window_shadows::set_shadow;
+#[cfg(target_os = "macos")]
+use window_vibrancy::NSVisualEffectMaterial;
 
 /// 设置窗口属性
 pub fn set_window_attribute<R: Runtime>(app: &tauri::App<R>) {
@@ -9,7 +11,6 @@ pub fn set_window_attribute<R: Runtime>(app: &tauri::App<R>) {
     set_shadow(&window, true).unwrap();
 
     #[cfg(target_os = "macos")]
-        use window_vibrancy::NSVisualEffectMaterial;
         window_vibrancy::apply_vibrancy(&window, NSVisualEffectMaterial::HudWindow, None, None)
                      .expect("Unsupported platform! 'apply_vibrancy' is only supported on macOS");
 

@@ -96,6 +96,17 @@
 
           <n-switch size="small" v-model:value="page.shadow" />
         </n-flex>
+
+        <!-- 字体 -->
+        <n-flex align="center" justify="space-between">
+          <span>字体样式</span>
+          <n-select
+            class="w-140px"
+            size="small"
+            label-field="label"
+            v-model:value="page.fonts"
+            :options="fontOptions" />
+        </n-flex>
       </n-flex>
     </n-flex>
   </n-flex>
@@ -105,7 +116,7 @@ import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
 import { CloseBxEnum } from '@/enums'
 import { topicsList } from './model.tsx'
-import { sendOptions } from './config.ts'
+import { sendOptions, fontOptions } from './config.ts'
 
 const settingStore = setting()
 const { themes, tips, escClose, chat, page } = storeToRefs(settingStore)

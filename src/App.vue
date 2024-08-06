@@ -43,6 +43,15 @@ watch(
   { immediate: true }
 )
 
+/** 控制字体样式 */
+watch(
+  () => page.value.fonts,
+  (val) => {
+    document.documentElement.style.setProperty('--font-family', val)
+  },
+  { immediate: true }
+)
+
 onMounted(() => {
   // initWebSocket()
   // /**! 使用msi或者其他安装包安装后才会显示应用的名字和图标 */

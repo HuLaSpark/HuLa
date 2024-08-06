@@ -46,7 +46,7 @@ export const useWindow = () => {
       minWidth: minW,
       skipTaskbar: false,
       decorations: false,
-      transparent: false,
+      transparent: true,
       fileDropEnabled: isDrag
     })
 
