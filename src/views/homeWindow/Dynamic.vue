@@ -10,7 +10,7 @@
       class="relative bg-[--left-active-color] h-160px w-full select-none">
       <n-avatar :size="120" round bordered :src="login.accountInfo.avatar" />
       <n-flex vertical justify="center" :size="20">
-        <p class="text-(24px [--chat-text-color]) font-bold">{{ login.accountInfo.name }}</p>
+        <p class="text-(24px [--chat-text-color]) font-500">{{ login.accountInfo.name }}</p>
 
         <n-flex align="center" justify="space-between" :size="30" class="mt-5px">
           <template v-for="item in titleList" :key="item.label">

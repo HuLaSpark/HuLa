@@ -1,6 +1,6 @@
 <template>
   <!--  user-select: none让元素不可以选中 -->
-  <div data-tauri-drag-region class="flex justify-end select-none">
+  <div v-if="osType === 'Windows'" data-tauri-drag-region class="flex justify-end select-none">
     <!--  固定在最顶层  -->
     <div v-if="topWinLabel !== void 0" @click="handleAlwaysOnTop" class="hover-box">
       <n-popover trigger="hover">
@@ -84,6 +84,7 @@ import { CloseBxEnum, EventEnum, MittEnum } from '@/enums'
 import { storeToRefs } from 'pinia'
 import { PersistedStateOptions } from 'pinia-plugin-persistedstate'
 import { exit } from '@tauri-apps/api/process'
+import { type } from '@tauri-apps/api/os'
 
 /**
  * 新版defineProps可以直接结构 { minW, maxW, closeW } 如果需要使用默认值withDefaults的时候使用新版解构方式会报错
@@ -124,6 +125,8 @@ const alwaysOnTopStatus = computed(() => {
   if (topWinLabel.value === void 0) return false
   return alwaysOnTopStore.getWindowTop(topWinLabel.value)
 })
+/** 判断当前是windows还是mac系统 */
+const osType = ref()
 
 watchEffect(() => {
   tipsRef.type = tips.value.type
@@ -230,6 +233,13 @@ const handleCloseWin = async () => {
 // 添加和移除resize事件监听器
 onMounted(() => {
   window.addEventListener('resize', handleResize)
+  type().then((e) => {
+    if (e === 'Windows_NT') {
+      osType.value = 'Windows'
+    } else if (e === 'Darwin') {
+      osType.value = 'MacOS'
+    }
+  })
 })
 
 onUnmounted(() => {

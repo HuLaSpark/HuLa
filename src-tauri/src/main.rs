@@ -12,7 +12,7 @@ mod common;
 #[tokio::main]
 async fn main() {
     let context = tauri::generate_context!();
-    let system_tray = SystemTray::new();
+    let system_tray = SystemTray::new().with_title("HuLa-IM");
     // 初始化状态
     let state = TrayState {
         id: Mutex::new(None)

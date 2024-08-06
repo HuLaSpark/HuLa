@@ -77,8 +77,7 @@
         "width": 320,
         "height": 448,
         "skipTaskbar": false,
-        "decorations": false,
-        "transparent": true
+        "decorations": false
       },
       {
         "label": "tray",

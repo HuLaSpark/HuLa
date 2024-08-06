@@ -10,8 +10,9 @@ pub fn reset_set_window<R: Runtime>(app: tauri::AppHandle<R>, label: String) {
     set_shadow(&window, true).unwrap();
 
     #[cfg(target_os = "macos")]
-    window_vibrancy::apply_acrylic(&window, Some((255, 255, 255, 1)))
-        .expect("Unsupported platform! 'apply_vibrancy' is only supported on macOS");
+    use window_vibrancy::NSVisualEffectMaterial;
+    window_vibrancy::apply_vibrancy(&window, NSVisualEffectMaterial::HudWindow, None, None)
+                 .expect("Unsupported platform! 'apply_vibrancy' is only supported on macOS");
 
     #[cfg(target_os = "windows")]
     window_vibrancy::apply_acrylic(&window, Some((255, 255, 255, 1)))
@@ -23,7 +24,7 @@ pub fn reset_set_window<R: Runtime>(app: tauri::AppHandle<R>, label: String) {
 pub fn set_stateless_icon(app: AppHandle) {
     app.tray_handle()
         .set_icon(tauri::Icon::Raw(
-            include_bytes!("../../stateless/icon.ico").to_vec(),
+            include_bytes!("../../stateless/icon-an.ico").to_vec(),
         ))
         .unwrap();
 }
@@ -33,7 +34,7 @@ pub fn set_stateless_icon(app: AppHandle) {
 pub fn set_main_icon(app: AppHandle) {
     app.tray_handle()
         .set_icon(tauri::Icon::Raw(
-            include_bytes!("../../icons/icon.ico").to_vec(),
+            include_bytes!("../../stateless/icon.ico").to_vec(),
         ))
         .unwrap();
 }

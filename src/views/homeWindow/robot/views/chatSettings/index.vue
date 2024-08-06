@@ -3,7 +3,7 @@
     style="box-shadow: var(--shadow-enabled) 4px 4px var(--box-shadow-color)"
     class="flex border-b-(1px solid [--line-color]) truncate p-[14px_20px] justify-between items-center gap-50px">
     <n-flex :size="10" vertical class="truncate">
-      <p class="text-(22px [--chat-text-color]) truncate font-bold">设置</p>
+      <p class="text-(22px [--chat-text-color]) truncate font-500">设置</p>
       <p class="text-(14px #707070)">所有设置选项</p>
     </n-flex>
 
@@ -24,7 +24,7 @@
           <n-flex vertical justify="center" v-for="(item, index) in key" :key="index">
             <n-flex justify="space-between" :size="0" align="center" class="p-8px">
               <n-flex vertical :size="4">
-                <p class="text-(15px [--chat-text-color]) font-bold">{{ item.title }}</p>
+                <p class="text-(15px [--chat-text-color]) font-500">{{ item.title }}</p>
                 <p v-if="item.description" class="text-(12px [--chat-text-color])">{{ item.description }}</p>
               </n-flex>
 

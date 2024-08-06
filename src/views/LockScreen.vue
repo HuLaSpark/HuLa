@@ -11,7 +11,7 @@
       <div v-if="!isUnlockPage" @click.stop="isUnlockPage = true" class="size-full">
         <n-flex vertical align="center" :size="120" class="size-full mt-10%">
           <n-flex vertical align="center" :size="20" class="will-change-auto will-change-contents">
-            <p class="text-(100px #f1f1f1) font-bold">{{ currentTime }}</p>
+            <p class="text-(100px #f1f1f1) font-500">{{ currentTime }}</p>
             <n-flex align="center" :size="30" class="text-(30px #f1f1f1)">
               <p>{{ currentMonthAndDate }}</p>
               <p>{{ currentWeekday }}</p>
@@ -48,7 +48,7 @@
         class="h-full backdrop-blur-md">
         <n-flex vertical align="center" justify="center" :size="30" class="mt--75px">
           <n-avatar round style="border: 2px solid #f1f1f1" :size="120" :src="login.accountInfo.avatar" />
-          <p class="text-(24px #f1f1f1) font-bold">{{ login.accountInfo.name }}</p>
+          <p class="text-(24px #f1f1f1) font-500">{{ login.accountInfo.name }}</p>
 
           <!-- 密码输入框 -->
           <n-config-provider :theme="lightTheme">
@@ -93,7 +93,7 @@
             <p class="text-(18px #f1f1f1)">密码不正确, 请再试一次</p>
             <p
               @click="init"
-              class="w-120px bg-[rgba(255,255,255,0.1)] backdrop-blur-xl cursor-pointer p-10px rounded-8px text-(14px #323232 center) font-bold">
+              class="w-120px bg-[rgba(255,255,255,0.1)] backdrop-blur-xl cursor-pointer p-10px rounded-8px text-(14px #323232 center) font-500">
               确定
             </p>
           </n-flex>

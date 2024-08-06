@@ -1,3 +1,10 @@
+@import "fonts";
+* {
+  font-family: 'AliFangYuan', sans-serif !important;
+}
+html, body {
+  overscroll-behavior: none; // 禁止mac的“触底反弹”效果
+}
 /**! 主题变量 */
 :root {
   // 整体布局背景
