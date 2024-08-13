@@ -62,7 +62,7 @@ git clone https://gitee.com/nongyehong/HuLa-IM-Tauri.git
 git clone https://github.com/nongyehong/HuLa-IM-Tauri.git
 
 # 进入项目目录
-cd HuLa
+cd HuLa-IM-Tauri
 
 # 安装依赖
 pnpm install
