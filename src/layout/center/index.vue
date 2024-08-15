@@ -1,6 +1,7 @@
 <template>
   <main
     id="center"
+    :class="{ 'rounded-r-8px': shrinkStatus }"
     class="resizable select-none flex flex-col border-r-(1px solid [--line-color])"
     :style="{ width: `${initWidth}px` }">
     <!-- 分隔条 -->
@@ -29,7 +30,7 @@
         <n-input
           id="search"
           @focus="() => router.push('/searchDetails')"
-          class="rounded-6px w-full relative"
+          class="rounded-6px w-full relative text-12px"
           style="background: var(--search-bg-color)"
           :maxlength="20"
           clearable
@@ -70,9 +71,10 @@
 import Mitt from '@/utils/Bus.ts'
 import router from '@/router'
 import { MittEnum } from '@/enums'
-import { appWindow } from '@tauri-apps/api/window'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useWindowSize } from '@vueuse/core'
 
+const appWindow = WebviewWindow.getCurrent()
 /** 设置最小宽度 */
 const minWidth = 160
 /** 设置最大宽度 */

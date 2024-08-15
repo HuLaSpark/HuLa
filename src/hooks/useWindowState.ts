@@ -1,4 +1,4 @@
-import { WebviewWindow } from '@tauri-apps/api/window'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { EventEnum } from '@/enums'
 import { emit } from '@tauri-apps/api/event'
 
@@ -16,7 +16,7 @@ export const useWindowState = (label: string) => {
     })
     // 监听窗口关闭事件,当窗口是非正常关闭的时候触发
     win?.onCloseRequested(async (e) => {
-      await emit(EventEnum.WIN_CLOSE, e.windowLabel)
+      await emit(EventEnum.WIN_CLOSE, e)
     })
   })
 

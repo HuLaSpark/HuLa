@@ -172,20 +172,12 @@ export const leftHook = () => {
     url: string,
     title?: string,
     size?: { width: number; height: number },
-    window?: { isDrag: boolean; resizable: boolean }
+    window?: { resizable: boolean }
   ) => {
     // 判断url是否等于isNewWindows.value数组中的值，如果是，则创建新的窗口
     if (isNewWindows.value.includes(url)) {
       delay(async () => {
-        await createWebviewWindow(
-          title!,
-          url,
-          <number>size?.width,
-          <number>size?.height,
-          '',
-          window?.isDrag,
-          window?.resizable
-        )
+        await createWebviewWindow(title!, url, <number>size?.width, <number>size?.height, '', window?.resizable)
       }, 300)
     } else {
       activeUrl.value = url

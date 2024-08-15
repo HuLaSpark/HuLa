@@ -14,7 +14,7 @@
           :size="12"
           class="examples">
           <n-flex align="center" justify="space-between">
-            <p class="text-(14px [--chat-text-color]) font-bold">{{ item.title }}</p>
+            <p class="text-(14px [--chat-text-color]) font-500">{{ item.title }}</p>
             <svg class="size-16px"><use :href="`#${item.icon}`"></use></svg>
           </n-flex>
           <component :is="item.content" />
@@ -25,11 +25,12 @@
 </template>
 <script setup lang="tsx">
 import { NFlex, NImage, NSkeleton } from 'naive-ui'
+import { VNode } from 'vue'
 
 type Example = {
   title: string
   icon: string
-  content: JSX.Element
+  content: VNode
 }[]
 const avatars = 'https://picsum.photos/140'
 const examplesList: Example = [
@@ -116,7 +117,7 @@ const examplesList: Example = [
         </NFlex>
 
         <NFlex justify={'space-between'} align={'center'} class={'foot'}>
-          <p class={'text-(14px [--chat-text-color]) font-bold pl-6px opacity-0'}>试一试</p>
+          <p class={'text-(14px [--chat-text-color]) font-500 pl-6px opacity-0'}>试一试</p>
           <svg style={{ filter: 'drop-shadow(0 0 0.6em #13987f)' }} class="color-#13987f pr-6px size-26px opacity-0">
             <use href="#Up-GPT"></use>
           </svg>

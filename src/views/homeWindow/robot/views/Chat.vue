@@ -9,7 +9,7 @@
         <p
           v-if="!isEdit"
           @click="handleEdit"
-          class="text-(22px [--chat-text-color]) truncate font-bold hover:underline cursor-pointer">
+          class="text-(22px [--chat-text-color]) truncate font-500 hover:underline cursor-pointer">
           {{ currentChat.title }}
         </p>
         <n-input

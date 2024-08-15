@@ -331,7 +331,7 @@
 import { EventEnum, MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import { type MessageType, SessionItem } from '@/services/types.ts'
 import Mitt from '@/utils/Bus.ts'
-import { invoke } from '@tauri-apps/api/tauri'
+import { invoke } from '@tauri-apps/api/core'
 import { usePopover } from '@/hooks/usePopover.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { listen } from '@tauri-apps/api/event'

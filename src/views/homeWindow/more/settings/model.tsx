@@ -1,4 +1,5 @@
 import { ThemeEnum } from '@/enums'
+import { JSX } from 'vue/jsx-runtime'
 
 type Topic = {
   title: string

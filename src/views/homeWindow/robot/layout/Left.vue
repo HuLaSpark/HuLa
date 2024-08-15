@@ -3,7 +3,7 @@
     vertical
     :size="0"
     data-tauri-drag-region
-    class="bg-[--chat-left-bg] select-none w-300px h-full p-[40px_20px_6px_20px] box-border">
+    class="bg-[--chat-left-bg] rounded-l-8px select-none w-300px h-full p-[40px_20px_6px_20px] box-border">
     <n-flex vertical :size="30">
       <!-- 标题 -->
       <n-flex justify="space-between" align="center" :size="0">
@@ -22,7 +22,7 @@
         <n-flex align="center">
           <n-avatar bordered round :src="login.accountInfo.avatar" :size="48" />
           <n-flex vertical>
-            <p class="text-(14px [--chat-text-color]) font-semibold">{{ login.accountInfo.name }}</p>
+            <p class="text-(14px [--chat-text-color]) font-500">{{ login.accountInfo.name }}</p>
             <p class="text-(12px #909090)">剩余：28天过期</p>
           </n-flex>
         </n-flex>
@@ -53,7 +53,7 @@
                   <n-flex justify="space-between" align="center" :size="0" class="leading-22px">
                     <n-ellipsis
                       style="width: calc(100% - 20px)"
-                      class="text-(14px [--chat-text-color]) truncate font-semibold select-none">
+                      class="text-(14px [--chat-text-color]) truncate font-500 select-none">
                       {{ item.title }}
                     </n-ellipsis>
                     <svg

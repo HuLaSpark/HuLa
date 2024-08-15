@@ -14,8 +14,9 @@
 <script setup lang="ts">
 import { MockItem } from '@/services/types.ts'
 import { listen } from '@tauri-apps/api/event'
-import { appWindow } from '@tauri-apps/api/window'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 
+const appWindow = WebviewWindow.getCurrent()
 const { activeItem } = defineProps<{
   activeItem?: MockItem
 }>()

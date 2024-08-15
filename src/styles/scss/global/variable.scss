@@ -1,7 +1,20 @@
+@import "fonts";
+* {
+  font-family: var(--font-family), sans-serif !important;
+  font-weight: 500 !important;
+}
+html, body {
+  overscroll-behavior: none; // 禁止mac的“触底反弹”效果
+}
 /**! 主题变量 */
 :root {
+  // 是否启用阴影
+  --shadow-enabled: 1;
+  // 字体
+  --font-family: 'AliFangYuan';
+
   // 整体布局背景
-  --left-bg-color: rgba(255, 255, 255, 0.6);
+  --left-bg-color: rgba(241, 241, 241, 1);
   --left-active-color: rgba(193, 193, 193, 0.6);
   --center-bg-color: #fff;
   --right-bg-color: #f1f1f1;
@@ -30,7 +43,7 @@
   --bg-menu-hover: rgba(10, 20, 28, 0.1);
   --line-color: #e3e3e3;
   // 通用左边菜单栏的hover样式
-  --bg-left-menu: rgba(255, 255, 255, 0.1);
+  --bg-left-menu: rgba(241, 241, 241, 1);
   --bg-left-menu-hover: rgba(90, 90, 90, 0.1);
   --bg-left-active: rgba(90, 90, 90, 0.2);
   // 通用禁用时的样式
@@ -69,14 +82,11 @@
   --chat-right-bg: #f1f1f1;
   --chat-text-color: #505050;
   --chat-hover-color: #e3e3e3;
-
-  // 是否启用阴影
-  --shadow-enabled: 1;
 }
 
 html[data-theme='dark'] {
   // 整体布局背景
-  --left-bg-color: rgba(0, 0, 0, 0.7);
+  --left-bg-color: rgba(22, 22, 22, 1);
   --left-active-color: rgba(193, 193, 193, 0.1);
   --center-bg-color: #1b1b1b;
   --right-bg-color: #161616;
@@ -105,7 +115,7 @@ html[data-theme='dark'] {
   --bg-menu-hover: #323232;
   --line-color: #404040;
   // 通用左边菜单栏的hover样式
-  --bg-left-menu: rgba(0, 0, 0, 0.8);
+  --bg-left-menu: rgba(22, 22, 22, 1);
   --bg-left-menu-hover: #3b3b3b;
   --bg-left-active: #444444;
   // 通用禁用时的样式

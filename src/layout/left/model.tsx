@@ -210,7 +210,7 @@ export const CheckUpdate = defineComponent(() => {
             <NFlex justify={'space-between'} align={'center'}>
               <NFlex align={'center'} size={10}>
                 <p>当前版本:</p>
-                <p class="text-(24px #909090) font-bold">{pkg.version}</p>
+                <p class="text-(24px #909090) font-500">{pkg.version}</p>
               </NFlex>
               <NFlex align={'center'} size={10}>
                 <p class="text-(12px #909090)">版本发布日期:</p>

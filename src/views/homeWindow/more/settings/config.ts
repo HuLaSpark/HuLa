@@ -24,4 +24,19 @@ const sendOptions = [
   }
 ]
 
-export { sideOptions, sendOptions }
+/** 字体 */
+const fontOptions = [
+  {
+    label: '阿里妈妈刀隶体',
+    value: 'AliDaoLiTi'
+  },
+  {
+    label: '阿里妈妈方圆体',
+    value: 'AliFangYuan'
+  },
+  {
+    label: '阿里妈妈东方大楷',
+    value: 'AliDongFangDaKai'
+  }
+]
+export { sideOptions, sendOptions, fontOptions }

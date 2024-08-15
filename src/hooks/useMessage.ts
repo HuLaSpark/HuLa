@@ -62,7 +62,7 @@ export const useMessage = () => {
         emit('aloneData', { item: { ...item } })
       })
     }
-    await createWebviewWindow(item.name, EventEnum.ALONE + item.roomId, 720, 800, '', true, true, 580)
+    await createWebviewWindow(item.name, EventEnum.ALONE + item.roomId, 720, 800, '', true, 580)
   }
 
   const menuList = ref<OPT.RightMenu[]>([

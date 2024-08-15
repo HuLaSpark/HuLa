@@ -36,7 +36,7 @@
       </svg>
     </div>
     <!-- 关闭窗口 -->
-    <div v-if="closeW" @click="handleCloseWin" class="action-close">
+    <div v-if="closeW" @click="handleCloseWin" class="action-close rounded-rt-8px">
       <svg class="size-14px color-[--action-bar-icon-color] cursor-pointer">
         <use href="#close"></use>
       </svg>
@@ -74,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { appWindow } from '@tauri-apps/api/window'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import Mitt from '@/utils/Bus'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { alwaysOnTop } from '@/stores/alwaysOnTop.ts'
@@ -83,8 +83,9 @@ import { emit, listen } from '@tauri-apps/api/event'
 import { CloseBxEnum, EventEnum, MittEnum } from '@/enums'
 import { storeToRefs } from 'pinia'
 import { PersistedStateOptions } from 'pinia-plugin-persistedstate'
-import { exit } from '@tauri-apps/api/process'
+import { exit } from '@tauri-apps/plugin-process'
 
+const appWindow = WebviewWindow.getCurrent()
 /**
  * 新版defineProps可以直接结构 { minW, maxW, closeW } 如果需要使用默认值withDefaults的时候使用新版解构方式会报错
  * @description W结尾为窗口图标是否显示 shrink表示是否收缩图标 shrinkStatus表示是否收缩状态
@@ -124,6 +125,8 @@ const alwaysOnTopStatus = computed(() => {
   if (topWinLabel.value === void 0) return false
   return alwaysOnTopStore.getWindowTop(topWinLabel.value)
 })
+/** 判断当前是windows还是mac系统 */
+const osType = ref()
 
 watchEffect(() => {
   tipsRef.type = tips.value.type
@@ -133,6 +136,7 @@ watchEffect(() => {
   listen(EventEnum.LOGOUT, async () => {
     /** 退出账号前把窗口全部关闭 */
     if (appWindow.label !== 'login') {
+      console.log('logout')
       await appWindow.close()
     }
   })
@@ -230,6 +234,7 @@ const handleCloseWin = async () => {
 // 添加和移除resize事件监听器
 onMounted(() => {
   window.addEventListener('resize', handleResize)
+  osType.value = 'macos'
 })
 
 onUnmounted(() => {

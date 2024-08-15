@@ -37,7 +37,6 @@ const itemsTop = ref<OPT.L.Common[]>([
       height: 800
     },
     window: {
-      isDrag: true,
       resizable: false
     }
   },
@@ -52,7 +51,6 @@ const itemsTop = ref<OPT.L.Common[]>([
       height: 800
     },
     window: {
-      isDrag: false,
       resizable: true
     }
   }
@@ -69,7 +67,6 @@ const itemsBottom: OPT.L.Common[] = [
       height: 600
     },
     window: {
-      isDrag: false,
       resizable: true
     }
   },
@@ -83,7 +80,6 @@ const itemsBottom: OPT.L.Common[] = [
       height: 600
     },
     window: {
-      isDrag: false,
       resizable: true
     }
   },
@@ -97,7 +93,6 @@ const itemsBottom: OPT.L.Common[] = [
       height: 600
     },
     window: {
-      isDrag: false,
       resizable: true
     }
   }

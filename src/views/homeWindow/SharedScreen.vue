@@ -1,6 +1,6 @@
 <template>
   <div class="size-full bg-[--right-bg-color]">
-    <ActionBar :shrink="false" :current-label="appWindow.label" />
+    <ActionBar :shrink="false" :current-label="WebviewWindow.getCurrent().label" />
 
     <div class="flex flex-col gap-4 text-center">
       <div>
@@ -10,7 +10,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { appWindow } from '@tauri-apps/api/window'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { emit, listen } from '@tauri-apps/api/event'
 
 const video = ref<HTMLVideoElement>()

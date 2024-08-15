@@ -1,39 +1,27 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+mod tray;
+mod user_cmd;
+use user_cmd::{get_user_info, save_user_info,default_window_icon,screenshot,audio};
+use tauri_plugin_autostart::MacosLauncher;
 
-use std::sync::Mutex;
-use tauri::{SystemTray};
-use crate::common::window::set_window_attribute;
-use crate::common::plugins::{ exit, reset_set_window, tray_blink, TrayState, set_stateless_icon, set_main_icon };
-
-mod common;
-
-
-#[tokio::main]
-async fn main() {
-    let context = tauri::generate_context!();
-    let system_tray = SystemTray::new();
-    // 初始化状态
-    let state = TrayState {
-        id: Mutex::new(None)
-    };
+fn main() {
     tauri::Builder::default()
-        .setup(|app| {
-            set_window_attribute(app);
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_http::init())
+        .plugin(tauri_plugin_websocket::init())
+        .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_upload::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, Some(vec!["--flag1"])))
+        .setup(move |app| {
+            app.handle().plugin(tauri_plugin_global_shortcut::Builder::new().build())?;
+            tray::create_tray(app.handle())?;
             Ok(())
         })
-        .manage(state) // 将状态注入到应用
-        .menu(tauri::Menu::new())// 使用空菜单来替换默认的操作系统菜单
-        .system_tray(system_tray)// 将 `tauri.conf.json` 上配置的图标添加到系统托盘
-        .on_system_tray_event(common::tray::handler) // 注册系统托盘事件处理程序
-        .invoke_handler(tauri::generate_handler![reset_set_window, exit, tray_blink, set_stateless_icon, set_main_icon]) // 使用定义的插件
-        .on_window_event(|event| match event.event() {
-            tauri::WindowEvent::CloseRequested { api, .. } => {
-                event.window().hide().unwrap();
-                api.prevent_close();
-            }
-            _ => {}
-        })// 阻止默认关闭行为
-        .run(context)
+        .invoke_handler(tauri::generate_handler![get_user_info, save_user_info,default_window_icon,screenshot,audio])
+        .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

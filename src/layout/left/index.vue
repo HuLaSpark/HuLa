@@ -1,5 +1,7 @@
 <template>
-  <main class="left min-w-60px h-full p-[30px_6px_15px] box-border flex-col-center select-none" data-tauri-drag-region>
+  <main
+    class="left rounded-l-8px min-w-60px h-full p-[30px_6px_15px] box-border flex-col-center select-none"
+    data-tauri-drag-region>
     <!-- 头像模块 -->
     <LeftAvatar />
     <!-- 导航选项按钮模块 -->

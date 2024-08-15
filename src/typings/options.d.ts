@@ -15,7 +15,6 @@ declare namespace OPT {
         height: number
       }
       window?: {
-        isDrag: boolean
         resizable: boolean
       }
     }

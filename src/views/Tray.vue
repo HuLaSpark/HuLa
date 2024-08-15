@@ -49,16 +49,17 @@
 </template>
 <script setup lang="tsx">
 import { useWindow } from '@/hooks/useWindow.ts'
-import { invoke } from '@tauri-apps/api/tauri'
-import { exit } from '@tauri-apps/api/process'
+import { invoke } from '@tauri-apps/api/core'
+import { exit } from '@tauri-apps/plugin-process'
 import { statusItem } from '@/views/homeWindow/onlineStatus/config.ts'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
-import { appWindow } from '@tauri-apps/api/window'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { listen } from '@tauri-apps/api/event'
 import { useWsLoginStore } from '@/stores/ws.ts'
 import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
 
+const appWindow = WebviewWindow.getCurrent()
 const { checkWinExist, createWebviewWindow, resizeWindow } = useWindow()
 const OLStatusStore = onlineStatus()
 const settingStore = setting()

@@ -43,6 +43,15 @@ watch(
   { immediate: true }
 )
 
+/** 控制字体样式 */
+watch(
+  () => page.value.fonts,
+  (val) => {
+    document.documentElement.style.setProperty('--font-family', val)
+  },
+  { immediate: true }
+)
+
 onMounted(() => {
   // initWebSocket()
   // /**! 使用msi或者其他安装包安装后才会显示应用的名字和图标 */
@@ -57,19 +66,19 @@ onMounted(() => {
   }
   document.documentElement.dataset.theme = themes.value.content
   window.addEventListener('dragstart', preventDrag)
-  /** 开发环境不禁止 */
-  if (process.env.NODE_ENV !== 'development') {
-    /** 禁用浏览器默认的快捷键 */
-    window.addEventListener('keydown', (e) => {
-      // 排除ctrl+c ctrl+v ctrl+enter
-      if (e.ctrlKey && (e.key === 'c' || e.key === 'v' || e.key === 'Enter')) return
-      if (e.ctrlKey || e.metaKey || e.altKey) {
-        e.preventDefault()
-      }
-    })
-  }
-  /** 禁止右键菜单 */
-  window.addEventListener('contextmenu', (e) => e.preventDefault(), false)
+  // /** 开发环境不禁止 */
+  // if (process.env.NODE_ENV !== 'development') {
+  //   /** 禁用浏览器默认的快捷键 */
+  //   window.addEventListener('keydown', (e) => {
+  //     // 排除ctrl+c ctrl+v ctrl+enter
+  //     if (e.ctrlKey && (e.key === 'c' || e.key === 'v' || e.key === 'Enter')) return
+  //     if (e.ctrlKey || e.metaKey || e.altKey) {
+  //       e.preventDefault()
+  //     }
+  //   })
+  // }
+  // /** 禁止右键菜单 */
+  // window.addEventListener('contextmenu', (e) => e.preventDefault(), false)
 })
 
 onUnmounted(() => {

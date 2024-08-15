@@ -1,5 +1,5 @@
 <template>
-  <div class="size-full bg-[--chat-right-bg]">
+  <div class="size-full rounded-8px bg-[--chat-right-bg]">
     <n-flex class="size-full" :size="0">
       <!-- 左边侧边栏 -->
       <Left />
