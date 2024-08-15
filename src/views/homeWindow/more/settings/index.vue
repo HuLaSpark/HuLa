@@ -1,7 +1,7 @@
 <template>
   <main class="size-full flex select-none">
     <!-- 侧边栏选项 -->
-    <section class="left-bar" data-tauri-drag-region>
+    <section class="left-bar rounded-l-8px" data-tauri-drag-region>
       <div class="menu-list">
         <div v-for="(item, index) in sideOptions" :key="index">
           <div class="menu-item" :class="{ active: activeItem === item.url }" @click="pageJumps(item.url, item.label)">
@@ -13,7 +13,7 @@
     </section>
 
     <!-- 右边内容 -->
-    <section class="bg-[--right-bg-color] flex-1 custom-shadow border-l-(1px solid [--line-color])">
+    <section class="bg-[--right-bg-color] rounded-r-8px flex-1 custom-shadow border-l-(1px solid [--line-color])">
       <ActionBar :shrink="false" :max-w="false" />
 
       <header class="header" style="box-shadow: var(--shadow-enabled) 4px 4px var(--box-shadow-color)">

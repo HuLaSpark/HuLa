@@ -1,6 +1,10 @@
 <template>
-  <main class="size-full bg-[--right-bg-color]">
-    <ActionBar :shrink="false" :max-w="false" :top-win-label="appWindow.label" :current-label="appWindow.label" />
+  <main class="size-full rounded-8px bg-[--right-bg-color]">
+    <ActionBar
+      :shrink="false"
+      :max-w="false"
+      :top-win-label="WebviewWindow.getCurrent().label"
+      :current-label="WebviewWindow.getCurrent().label" />
 
     <!-- 头部用户信息栏 -->
     <n-flex
@@ -30,10 +34,10 @@
     </n-flex>
 
     <!-- 动态列表 -->
-    <div class="flex flex-col items-center text-[--text-color] size-full bg-[--right-bg-color]">
+    <div class="flex rounded-8px flex-col items-center text-[--text-color] size-full bg-[--right-bg-color]">
       <n-scrollbar
         style="max-height: calc(100vh - 180px)"
-        class="w-full bg-[--center-bg-color] border-(solid 1px [--line-color]) h-full p-[10px_0] box-border rounded-4px">
+        class="w-full bg-[--center-bg-color] border-(solid 1px [--line-color]) p-[10px_0] box-border">
         <n-flex justify="center">
           <!--  动态内容框   -->
           <n-flex
@@ -117,12 +121,12 @@
 </template>
 <script setup lang="ts">
 import { dynamicList, dynamicCommentList } from '@/mock'
-import { appWindow } from '@tauri-apps/api/window'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useWindowState } from '@/hooks/useWindowState.ts'
 import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
 
-useWindowState(appWindow.label)
+useWindowState(WebviewWindow.getCurrent().label)
 const settingStore = setting()
 const { login } = storeToRefs(settingStore)
 const infoTip = ref({

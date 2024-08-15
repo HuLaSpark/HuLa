@@ -25,11 +25,12 @@
 </template>
 <script setup lang="tsx">
 import { NFlex, NImage, NSkeleton } from 'naive-ui'
+import { VNode } from 'vue'
 
 type Example = {
   title: string
   icon: string
-  content: JSX.Element
+  content: VNode
 }[]
 const avatars = 'https://picsum.photos/140'
 const examplesList: Example = [

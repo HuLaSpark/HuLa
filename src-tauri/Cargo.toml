@@ -1,6 +1,6 @@
 [package]
 name = "hula"
-version = "1.6.0"
+version = "2.0.0"
 description = "hula"
 authors = ["nongyehong"]
 license = ""
@@ -17,16 +17,32 @@ strip = true # 删除调试符号
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "1.5.2", features = [] }
+tauri-build = { version = "2.0.0-rc", features = [] }
 
 [dependencies]
-tauri = { version = "1.7.1", features = [ "macos-private-api", "http-all", "os-all", "process-all", "notification-all", "fs-all", "window-all", "system-tray", "shell-open", "icon-png", "icon-ico"] }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-window-shadows = "0.2.2" # windows 阴影和圆角
-window-vibrancy = "0.4.3" # windows 磨砂背景 tauri-v1.x版本最好使用0.4.3版本
-tokio = { version = "1.36.0", features = ["macros", "windows-sys", "rt-multi-thread", "time"] }
+tauri = { version = "2.0.0-rc.0", features = [ "macos-private-api", "tray-icon", "image-png"] }
+tauri-plugin-os = "2.0.0-rc.0"
+tauri-plugin-shell = "2.0.0-rc.0"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri-plugin-websocket = "2.0.0-rc.0"
+tauri-plugin-http = "2.0.0-rc.0"
+tauri-plugin-process = "2.0.0-rc.0"
+tauri-plugin-fs = "2.0.0-rc.0"
+tauri-plugin-dialog = "2.0.0-rc.0"
+tauri-plugin-upload = "2.0.0-rc.0"
+tauri-plugin-global-shortcut = "2.0.0-rc.0"
+tauri-plugin-autostart = "2.0.0-rc.0"
+lazy_static = "1.4"
+screenshots = "0.5.4"
+base64 = "0.22.1"
+tauri-plugin-clipboard-manager = "2.0.0-rc.0"
+rodio = "0.17.3"
+
 [features]
-# this feature is used for production builds or when `devPath` points to the filesystem
-# DO NOT REMOVE!!
+# by default Tauri runs in production mode
+# when `tauri dev` runs it is executed with `cargo run --no-default-features` if `devPath` is an URL
+default = ["custom-protocol"]
+# this feature is used used for production builds where `devPath` points to the filesystem
+# DO NOT remove this
 custom-protocol = ["tauri/custom-protocol"]

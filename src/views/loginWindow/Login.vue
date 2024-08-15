@@ -152,7 +152,6 @@ import { delay } from 'lodash-es'
 import { lightTheme } from 'naive-ui'
 import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
-import { invoke } from '@tauri-apps/api/tauri'
 import { useLogin } from '@/hooks/useLogin.ts'
 
 const settingStore = setting()
@@ -261,7 +260,7 @@ const loginWin = () => {
   if (interruptLogin.value) return
   loading.value = true
   delay(async () => {
-    await createWebviewWindow('HuLa', 'home', 960, 720, 'login', false, true)
+    await createWebviewWindow('HuLa', 'home', 960, 720, 'login', true)
     loading.value = false
     if (!login.value.autoLogin || login.value.accountInfo.password === '') {
       settingStore.setAccountInfo({
@@ -301,9 +300,6 @@ const closeMenu = (event: MouseEvent) => {
 }
 
 onMounted(async () => {
-  await invoke('set_stateless_icon').catch((error) => {
-    console.error('设置无状态图标失败:', error)
-  })
   if (login.value.autoLogin && login.value.accountInfo.password !== '') {
     autoLogin()
   }

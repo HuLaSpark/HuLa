@@ -1,5 +1,5 @@
 <template>
-  <main class="flex-1 bg-[--right-bg-color] h-full w-100vw min-w-600px">
+  <main class="flex-1 rounded-r-8px bg-[--right-bg-color] h-full w-100vw min-w-600px">
     <ActionBar :current-label="appWindow.label" />
     <!-- 需要判断当前路由是否是信息详情界面 -->
     <ChatBox :active-item="activeItem" v-if="msgBoxShow && isChat && activeItem !== -1" />
@@ -19,8 +19,9 @@ import router from '@/router'
 import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
 import { MittEnum, ThemeEnum } from '@/enums'
-import { appWindow } from '@tauri-apps/api/window'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 
+const appWindow = WebviewWindow.getCurrent()
 const settingStore = setting()
 const { themes } = storeToRefs(settingStore)
 const msgBoxShow = ref(false)

@@ -1,5 +1,5 @@
 <template>
-  <main class="login-box size-full select-none">
+  <main class="login-box rounded-8px size-full select-none">
     <ActionBar :shrink="false" :max-w="false" />
 
     <n-flex vertical align="center" justify="center" :size="30" class="size-full">
@@ -18,7 +18,6 @@
 </template>
 <script setup lang="ts">
 import pkg from '~/package.json'
-import { type, arch, version } from '@tauri-apps/api/os'
 
 const _pkg = reactive({
   version: pkg.version
@@ -28,27 +27,22 @@ const osArch = ref()
 const osVersion = ref()
 
 onMounted(() => {
-  arch().then((e) => {
-    if (e.includes('64')) {
-      osArch.value = '64位'
-    } else {
-      osArch.value = '32位'
-    }
-  })
-  type().then((e) => {
-    if (e === 'Windows_NT') {
-      osType.value = 'Windows'
-      version().then((e) => {
-        let parts = e.split('.')
-        let build_number = Number(parts[2])
-        osVersion.value = build_number > 22000 ? '11' : '10'
-      })
-    } else if (e === 'Darwin') {
-      osType.value = 'MacOS'
-    } else {
-      osType.value = e
-    }
-  })
+  // osArch.value = arch()
+  // osVersion.value = type()
+  // type().then((e) => {
+  //   if (e === 'Windows_NT') {
+  //     osType.value = 'Windows'
+  //     version().then((e) => {
+  //       let parts = e.split('.')
+  //       let build_number = Number(parts[2])
+  //       osVersion.value = build_number > 22000 ? '11' : '10'
+  //     })
+  //   } else if (e === 'Darwin') {
+  //     osType.value = 'MacOS'
+  //   } else {
+  //     osType.value = e
+  //   }
+  // })
 })
 </script>
 

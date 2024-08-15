@@ -3,12 +3,12 @@
   <!--  // TODO 锁屏时隐藏其他窗口，解锁后再显示 (nyh -> 2024-07-14 01:39:01) -->
   <div
     data-tauri-drag-region
-    class="lock-bg select-none absolute top-0 left-0 w-full h-full z-9999 transition-all duration-300 ease-in-out">
+    class="lock-bg rounded-8px select-none absolute top-0 left-0 w-full h-full z-9999 transition-all duration-300 ease-in-out">
     <ActionBar class="absolute top-0 right-0 z-99999" :current-label="appWindow.label" :shrink="false" />
 
     <Transition name="slide-fade" appear>
       <!--  壁纸界面  -->
-      <div v-if="!isUnlockPage" @click.stop="isUnlockPage = true" class="size-full">
+      <div v-if="!isUnlockPage" @click.stop="isUnlockPage = true" class="size-full rounded-8px">
         <n-flex vertical align="center" :size="120" class="size-full mt-10%">
           <n-flex vertical align="center" :size="20" class="will-change-auto will-change-contents">
             <p class="text-(100px #f1f1f1) font-500">{{ currentTime }}</p>
@@ -45,7 +45,7 @@
         align="center"
         justify="center"
         :size="16"
-        class="h-full backdrop-blur-md">
+        class="h-full backdrop-blur-md rounded-8px">
         <n-flex vertical align="center" justify="center" :size="30" class="mt--75px">
           <n-avatar round style="border: 2px solid #f1f1f1" :size="120" :src="login.accountInfo.avatar" />
           <p class="text-(24px #f1f1f1) font-500">{{ login.accountInfo.name }}</p>
@@ -110,7 +110,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { appWindow } from '@tauri-apps/api/window'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
 import { useLogin } from '@/hooks/useLogin.ts'
@@ -119,6 +119,7 @@ import { InputInst, lightTheme } from 'naive-ui'
 import { getWeekday } from '@/utils/Day.ts'
 import dayjs from 'dayjs'
 
+const appWindow = WebviewWindow.getCurrent()
 const settingStore = setting()
 const { lockScreen, login } = storeToRefs(settingStore)
 const { logout } = useLogin()

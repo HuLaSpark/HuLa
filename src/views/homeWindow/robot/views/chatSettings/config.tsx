@@ -1,13 +1,14 @@
 import pkg from '~/package.json'
 import { Button, Select, Slider, Switch, Input, InputNumber } from './model.tsx'
 import { NFlex } from 'naive-ui'
+import { VNode } from 'vue'
 
 type ConfigItemType = 'system' | 'record' | 'identity' | 'cueWords' | 'APIAddress' | 'model' | 'clear'
 type ChatConfig = {
   [key in ConfigItemType]: {
     title: string
     description?: string
-    features: JSX.Element
+    features: VNode
   }[]
 }
 

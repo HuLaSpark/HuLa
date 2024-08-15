@@ -64,7 +64,7 @@ or
 git clone https://github.com/nongyehong/HuLa-IM-Tauri.git
 
 # Enter the project directory
-cd HuLa
+cd HuLa-IM-Tauri
 
 # Install dependencies
 pnpm install

@@ -1,6 +1,6 @@
-import { LogicalSize, WebviewWindow } from '@tauri-apps/api/window'
-import { invoke } from '@tauri-apps/api/tauri'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { EventEnum } from '@/enums'
+import { LogicalSize } from '@tauri-apps/api/dpi'
 
 export const useWindow = () => {
   /**
@@ -10,7 +10,6 @@ export const useWindow = () => {
    * @param wantCloseWindow 创建后需要关闭的窗口
    * @param width 窗口宽度
    * @param height 窗口高度
-   * @param isDrag 是否禁止拖动元素
    * @param resizable 调整窗口大小
    * @param minW 窗口最小宽度
    * @param minH 窗口最小高度
@@ -21,7 +20,6 @@ export const useWindow = () => {
     width: number,
     height: number,
     wantCloseWindow?: string,
-    isDrag = true,
     resizable = false,
     minW = 310,
     minH = 540
@@ -46,14 +44,10 @@ export const useWindow = () => {
       minWidth: minW,
       skipTaskbar: false,
       decorations: false,
-      transparent: true,
-      fileDropEnabled: isDrag
+      transparent: true
     })
 
     await webview.once('tauri://created', async () => {
-      await invoke('reset_set_window', { label }).catch((error) => {
-        console.error('设置窗口阴影失败:', error)
-      })
       if (wantCloseWindow) {
         const win = WebviewWindow.getByLabel(wantCloseWindow)
         win?.close()
