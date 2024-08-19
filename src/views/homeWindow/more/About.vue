@@ -31,20 +31,11 @@ onMounted(() => {
   osType.value = type()
   osArch.value = arch()
   osVersion.value = version()
-  // type().then((e) => {
-  //   if (e === 'Windows_NT') {
-  //     osType.value = 'Windows'
-  //     version().then((e) => {
-  //       let parts = e.split('.')
-  //       let build_number = Number(parts[2])
-  //       osVersion.value = build_number > 22000 ? '11' : '10'
-  //     })
-  //   } else if (e === 'Darwin') {
-  //     osType.value = 'MacOS'
-  //   } else {
-  //     osType.value = e
-  //   }
-  // })
+  if (osType.value === 'windows') {
+    let parts = version().split('.')
+    let build_number = Number(parts[2])
+    osVersion.value = build_number > 22000 ? '11' : '10'
+  }
 })
 </script>
 

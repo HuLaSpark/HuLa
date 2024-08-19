@@ -50,6 +50,8 @@
         </ContextMenu>
       </TransitionGroup>
     </VueDraggable>
+
+    <n-button @click="handleCap">截屏</n-button>
   </n-scrollbar>
 </template>
 <script lang="ts" setup>
@@ -65,6 +67,8 @@ import { useGlobalStore } from '@/stores/global.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { emit } from '@tauri-apps/api/event'
 
 const chatStore = useChatStore()
 const globalStore = useGlobalStore()
@@ -110,6 +114,11 @@ const onSelectSelectSession = (item: SessionItem, roomType: RoomTypeEnum) => {
   handleMsgClick(item)
   globalStore.currentSession.roomId = item.roomId
   globalStore.currentSession.type = roomType
+}
+
+const handleCap = async () => {
+  WebviewWindow.getByLabel('capture')?.show()
+  await emit('capture', true)
 }
 
 watchEffect(() => {

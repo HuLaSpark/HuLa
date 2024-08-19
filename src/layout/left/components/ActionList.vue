@@ -14,7 +14,7 @@
         <n-popover :show-arrow="false" v-if="openWindowsList.has(item.url)" trigger="hover" placement="right">
           <template #trigger>
             <n-badge :max="99" :value="item.badge">
-              <svg class="size-24px" @click="tipShow = false">
+              <svg class="size-22px" @click="tipShow = false">
                 <use
                   :href="`#${activeUrl === item.url || openWindowsList.has(item.url) ? item.iconAction : item.icon}`"></use>
               </svg>
@@ -26,7 +26,7 @@
         <n-popover style="padding: 12px" v-else-if="item.tip" trigger="manual" v-model:show="tipShow" placement="right">
           <template #trigger>
             <n-badge :max="99" :value="item.badge" dot :show="dotShow">
-              <svg class="size-24px" @click="handleTipShow">
+              <svg class="size-22px" @click="handleTipShow">
                 <use
                   :href="`#${activeUrl === item.url || openWindowsList.has(item.url) ? item.iconAction : item.icon}`"></use>
               </svg>
@@ -39,7 +39,7 @@
         </n-popover>
         <!-- 该选项无提示时展示 -->
         <n-badge v-else :max="99" :value="item.badge">
-          <svg class="size-24px">
+          <svg class="size-22px">
             <use
               :href="`#${activeUrl === item.url || openWindowsList.has(item.url) ? item.iconAction : item.icon}`"></use>
           </svg>
@@ -58,7 +58,7 @@
         <n-popover :show-arrow="false" v-if="openWindowsList.has(item.url)" trigger="hover" placement="right">
           <template #trigger>
             <n-badge :max="99" :value="item.badge">
-              <svg class="size-24px" @click="tipShow = false">
+              <svg class="size-22px" @click="tipShow = false">
                 <use
                   :href="`#${activeUrl === item.url || openWindowsList.has(item.url) ? item.iconAction : item.icon}`"></use>
               </svg>
@@ -70,7 +70,7 @@
         <n-popover style="padding: 12px" v-else-if="item.tip" trigger="manual" v-model:show="tipShow" placement="right">
           <template #trigger>
             <n-badge :max="99" :value="item.badge">
-              <svg class="size-24px" @click="tipShow = false">
+              <svg class="size-22px" @click="tipShow = false">
                 <use
                   :href="`#${activeUrl === item.url || openWindowsList.has(item.url) ? item.iconAction : item.icon}`"></use>
               </svg>
@@ -83,7 +83,7 @@
         </n-popover>
         <!-- 该选项无提示时展示 -->
         <n-badge v-else :max="99" :value="item.badge">
-          <svg class="size-24px">
+          <svg class="size-22px">
             <use
               :href="`#${activeUrl === item.url || openWindowsList.has(item.url) ? item.iconAction : item.icon}`"></use>
           </svg>
@@ -92,7 +92,7 @@
 
       <svg
         :class="{ 'color-#13987f': settingShow }"
-        class="more size-24px relative"
+        class="more size-22px relative"
         @click="settingShow = !settingShow">
         <use :href="settingShow ? '#hamburger-button-action' : '#hamburger-button'"></use>
       </svg>

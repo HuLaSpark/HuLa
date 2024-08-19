@@ -58,6 +58,7 @@ import { listen } from '@tauri-apps/api/event'
 import { useWsLoginStore } from '@/stores/ws.ts'
 import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
+import { PhysicalPosition } from '@tauri-apps/api/dpi'
 
 const appWindow = WebviewWindow.getCurrent()
 const { checkWinExist, createWebviewWindow, resizeWindow } = useWindow()
@@ -87,13 +88,40 @@ const toggleStatus = (url: string, title: string) => {
 }
 
 onMounted(async () => {
+  await listen('tray_leave', async () => {
+    const trayWindow = WebviewWindow.getByLabel('tray')
+    trayWindow?.hide()
+  })
+  await listen('tray_enter', async () => {
+    const trayWindow = WebviewWindow.getByLabel('tray')
+    trayWindow?.show()
+    trayWindow?.setFocus()
+  })
+  await listen('tray_menu', async (event) => {
+    console.log(event.payload)
+    const homeWindow = WebviewWindow.getByLabel('tray')
+    if (!homeWindow) return
+
+    let position = event.payload
+    let scaleFactor = await homeWindow.scaleFactor()
+    let logicalPosition = new PhysicalPosition(position.x, position.y).toLogical(scaleFactor)
+    logicalPosition.y = logicalPosition.y - 360
+
+    let trayWindow = WebviewWindow.getByLabel('tray')
+    if (trayWindow) {
+      await trayWindow.setAlwaysOnTop(true)
+      await trayWindow.setPosition(logicalPosition)
+      await trayWindow.show()
+      await trayWindow.setFocus()
+    }
+  })
   await listen('login_success', () => {
     isLoginWin.value = false
-    resizeWindow('tray', 130, 336)
+    resizeWindow('tray', 130, 366)
   })
   await listen('logout_success', () => {
     isLoginWin.value = true
-    resizeWindow('tray', 130, 24)
+    resizeWindow('tray', 130, 44)
   })
   // 暂停图标闪烁
   await listen('stop', async () => {

@@ -36,8 +36,8 @@
         "fullscreen": false,
         "resizable": false,
         "center": true,
-        "width": 320,
-        "height": 448,
+        "width": 306,
+        "height": 410,
         "skipTaskbar": false,
         "transparent": false,
         "titleBarStyle": "Overlay",
@@ -58,14 +58,12 @@
       {
         "label": "capture",
         "url": "/capture",
-        "fullscreen": false,
+        "fullscreen": true,
         "transparent": true,
         "resizable": false,
         "skipTaskbar": false,
         "decorations": false,
         "center": true,
-        "maximized": true,
-        "visibleOnAllWorkspaces": true,
         "visible": false
       }
     ],
