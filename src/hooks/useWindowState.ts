@@ -15,8 +15,8 @@ export const useWindowState = (label: string) => {
       await emit(EventEnum.WIN_CLOSE, e)
     })
     // 监听窗口关闭事件,当窗口是非正常关闭的时候触发
-    win?.onCloseRequested(async (e) => {
-      await emit(EventEnum.WIN_CLOSE, e)
+    win?.onCloseRequested(async () => {
+      await emit(EventEnum.WIN_CLOSE, WebviewWindow.getCurrent().label)
     })
   })
 

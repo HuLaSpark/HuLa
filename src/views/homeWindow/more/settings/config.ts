@@ -1,3 +1,9 @@
+import { type } from '@tauri-apps/plugin-os'
+import { MacOsKeyEnum, WinKeyEnum } from '@/enums'
+
+const key = computed(() => {
+  return `${type() === 'windows' ? WinKeyEnum.ctrl : MacOsKeyEnum['⌘']}`
+})
 /** 侧边栏选项 */
 const sideOptions = ref<OPT.L.SettingSide[]>([
   {
@@ -19,8 +25,8 @@ const sendOptions = [
     value: 'Enter'
   },
   {
-    label: '按 Ctrl + Enter 键发送消息',
-    value: 'Ctrl+Enter'
+    label: `按 ${key.value} + Enter 键发送消息`,
+    value: `${key.value}+Enter`
   }
 ]
 

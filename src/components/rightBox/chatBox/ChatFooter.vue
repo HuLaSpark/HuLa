@@ -33,7 +33,7 @@
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
             <div class="flex-center gap-2px mr-12px">
-              <svg><use href="#screenshot"></use></svg>
+              <svg @click="handleCap()"><use href="#screenshot"></use></svg>
               <svg style="width: 14px; height: 14px"><use href="#down"></use></svg>
             </div>
           </template>
@@ -93,6 +93,8 @@
 import { useFileDialog } from '@vueuse/core'
 import { LimitEnum, MsgEnum } from '@/enums'
 import { useCommon } from '@/hooks/useCommon.ts'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { emit } from '@tauri-apps/api/event'
 
 const { open, onChange } = useFileDialog()
 const MsgInputRef = ref()
@@ -112,6 +114,11 @@ const emojiHandle = (item: string) => {
   // 插入表情
   insertNode(MsgEnum.TEXT, item)
   triggerInputEvent(msgInputDom.value)
+}
+
+const handleCap = async () => {
+  WebviewWindow.getByLabel('capture')?.show()
+  await emit('capture', true)
 }
 
 onChange((files) => {

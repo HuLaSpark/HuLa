@@ -7,8 +7,8 @@
     trigger="click">
     <template #trigger>
       <!-- 头像 -->
-      <div class="relative size-36px rounded-50% cursor-pointer">
-        <n-avatar :color="'#fff'" :size="36" :src="login.accountInfo.avatar" fallback-src="/logo.png" round />
+      <div class="relative size-40px rounded-50% cursor-pointer">
+        <n-avatar :color="'#fff'" :size="40" :src="login.accountInfo.avatar" fallback-src="/logo.png" round />
 
         <div
           class="bg-[--bg-avatar] text-10px rounded-50% size-12px absolute bottom--2px right--2px border-(2px solid [--bg-avatar])"
