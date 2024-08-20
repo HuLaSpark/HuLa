@@ -2,7 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 mod tray;
 mod user_cmd;
-use tauri::Manager;
+use tauri::{LogicalSize, Manager};
 use user_cmd::{get_user_info, save_user_info, default_window_icon, screenshot, audio};
 use tauri_plugin_autostart::MacosLauncher;
 
@@ -24,15 +24,12 @@ fn main() {
 
             let os = std::env::consts::OS;
             match os {
-                "macos" => {
-                    // 如果是 macOS，找到 label 为 "login" 的窗口并设置 decorations 为 true
-                    let window = app.get_webview_window("login").expect("Failed to get window");
-                    window.set_decorations(true).expect("Failed to set decorations");
-                }
                 "windows" => {
                     // 如果是 Windows，找到 label 为 "login" 的窗口并设置 decorations 为 false
                     let window = app.get_webview_window("login").expect("Failed to get window");
                     window.set_decorations(false).expect("Failed to set decorations");
+                    let new_size = LogicalSize { width: 320.0, height: 448.0 };
+                    window.set_size(new_size).expect("Failed to set size");
                 }
                 _ => {}
             }

@@ -9,10 +9,10 @@
     "devUrl": "http://127.0.0.1:6130"
   },
   "bundle": {
-    "active": true,
     "resources": [
       "tray"
     ],
+    "active": true,
     "targets": "all",
     "icon": [
       "icons/32x32.png",
@@ -36,8 +36,8 @@
         "fullscreen": false,
         "resizable": false,
         "center": true,
-        "width": 306,
-        "height": 410,
+        "width": 320,
+        "height": 448,
         "skipTaskbar": false,
         "transparent": false,
         "titleBarStyle": "Overlay",
@@ -58,7 +58,7 @@
       {
         "label": "capture",
         "url": "/capture",
-        "fullscreen": true,
+        "fullscreen": false,
         "transparent": true,
         "resizable": false,
         "skipTaskbar": false,
