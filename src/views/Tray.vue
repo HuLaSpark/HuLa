@@ -59,6 +59,7 @@ import { useWsLoginStore } from '@/stores/ws.ts'
 import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
 import { PhysicalPosition } from '@tauri-apps/api/dpi'
+import { TrayIcon } from '@tauri-apps/api/tray'
 
 const appWindow = WebviewWindow.getCurrent()
 const { checkWinExist, createWebviewWindow, resizeWindow } = useWindow()
@@ -88,21 +89,22 @@ const toggleStatus = (url: string, title: string) => {
 }
 
 onMounted(async () => {
-  await listen('tray_leave', async () => {
-    const trayWindow = WebviewWindow.getByLabel('tray')
-    trayWindow?.hide()
-  })
-  await listen('tray_enter', async () => {
-    const trayWindow = WebviewWindow.getByLabel('tray')
-    trayWindow?.show()
-    trayWindow?.setFocus()
-  })
+  const tray = await TrayIcon.getById('tray')
+  tray?.setIcon('/Users/nyh/Desktop/HuLa/HuLa-IM-Tauri/src-tauri/stateless/hula.png')
+  // await listen('tray_leave', async () => {
+  //   const trayWindow = WebviewWindow.getByLabel('tray')
+  //   trayWindow?.hide()
+  // })
+  // await listen('tray_enter', async () => {
+  //   const trayWindow = WebviewWindow.getByLabel('tray')
+  //   trayWindow?.show()
+  //   trayWindow?.setFocus()
+  // })
   await listen('tray_menu', async (event) => {
-    console.log(event.payload)
     const homeWindow = WebviewWindow.getByLabel('tray')
     if (!homeWindow) return
 
-    let position = event.payload
+    const position = event.payload as any
     let scaleFactor = await homeWindow.scaleFactor()
     let logicalPosition = new PhysicalPosition(position.x, position.y).toLogical(scaleFactor)
     logicalPosition.y = logicalPosition.y - 360

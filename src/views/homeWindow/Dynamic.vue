@@ -7,11 +7,7 @@
       :current-label="WebviewWindow.getCurrent().label" />
 
     <!-- 头部用户信息栏 -->
-    <n-flex
-      align="center"
-      justify="center"
-      :size="20"
-      class="relative bg-[--left-active-color] h-160px w-full select-none">
+    <n-flex align="center" justify="center" :size="20" class="login-box relative h-160px w-full select-none">
       <n-avatar :size="120" round bordered :src="login.accountInfo.avatar" />
       <n-flex vertical justify="center" :size="20">
         <p class="text-(24px [--chat-text-color]) font-500">{{ login.accountInfo.name }}</p>
@@ -96,13 +92,25 @@
     <!-- 弹出框 -->
     <n-modal v-model:show="infoTip.modalShow" class="w-450px border-rd-8px">
       <div class="bg-[--bg-popover] h-full p-6px box-border flex flex-col">
-        <svg @click="infoTip.modalShow = false" class="w-12px h-12px ml-a cursor-pointer select-none">
+        <div
+          v-if="type() === 'macos'"
+          @click="infoTip.modalShow = false"
+          class="mac-close relative size-13px shadow-inner bg-#ed6a5eff rounded-50% select-none">
+          <svg class="hidden size-7px color-#000 font-bold select-none absolute top-3px left-3px">
+            <use href="#close"></use>
+          </svg>
+        </div>
+
+        <svg
+          v-if="type() === 'windows'"
+          @click="infoTip.modalShow = false"
+          class="w-12px h-12px ml-a cursor-pointer select-none">
           <use href="#close"></use>
         </svg>
         <n-virtual-list
           :items="dynamicCommentList"
           :item-size="40"
-          class="max-h-500px w-full p-10px box-border select-none">
+          class="max-h-500px w-full p-[0_10px] box-border select-none">
           <template #default="{ item }">
             <n-flex align="center" justify="space-between" class="mt-18px">
               <n-flex align="center">
@@ -125,6 +133,7 @@ import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useWindowState } from '@/hooks/useWindowState.ts'
 import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
+import { type } from '@tauri-apps/plugin-os'
 
 useWindowState(WebviewWindow.getCurrent().label)
 const settingStore = setting()
@@ -155,3 +164,11 @@ const handleInfoTip = () => {
   infoTip.value.modalShow = true
 }
 </script>
+<style scoped lang="scss">
+@import '@/styles/scss/global/login-bg';
+.mac-close:hover {
+  svg {
+    display: block;
+  }
+}
+</style>

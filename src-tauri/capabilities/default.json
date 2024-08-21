@@ -42,6 +42,8 @@
     "http:allow-fetch-cancel",
     "http:allow-fetch-read-body",
     "http:allow-fetch-send",
+    "core:tray:default",
+    "core:tray:allow-get-by-id",
     {
       "identifier": "http:default",
       "allow": [

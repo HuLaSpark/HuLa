@@ -3,8 +3,8 @@
     <p>搜索建议</p>
 
     <n-flex align="center" class="text-(12px #909090)">
-      <p class="p-6px bg-#eee rounded-8px cursor-pointer">@我</p>
-      <p class="p-6px bg-#eee rounded-8px cursor-pointer">特别关心</p>
+      <p class="p-6px bg-[--search-color] rounded-8px cursor-pointer">@我</p>
+      <p class="p-6px bg-[--search-color] rounded-8px cursor-pointer">特别关心</p>
     </n-flex>
 
     <span class="w-full h-1px bg-[--line-color]"></span>

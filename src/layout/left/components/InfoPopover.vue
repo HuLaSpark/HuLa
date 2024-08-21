@@ -2,8 +2,21 @@
   <n-modal v-model:show="editInfo.show" :mask-closable="false" class="rounded-8px" transform-origin="center">
     <div class="bg-[--bg-edit] w-480px h-fit box-border flex flex-col">
       <n-flex :size="6" vertical>
+        <div
+          v-if="type() === 'macos'"
+          @click="editInfo.show = false"
+          class="mac-close size-13px shadow-inner bg-#ed6a5eff rounded-50% mt-6px select-none absolute left-6px">
+          <svg class="hidden size-7px color-#000 font-bold select-none absolute top-3px left-3px">
+            <use href="#close"></use>
+          </svg>
+        </div>
+
         <n-flex class="text-(14px --text-color) select-none pt-6px" justify="center">编辑资料</n-flex>
-        <svg class="size-14px ml-a cursor-pointer pt-6px select-none absolute right-6px" @click="editInfo.show = false">
+
+        <svg
+          v-if="type() === 'windows'"
+          class="size-14px cursor-pointer pt-6px select-none absolute right-6px"
+          @click="editInfo.show = false">
           <use href="#close"></use>
         </svg>
         <span class="h-1px w-full bg-[--line-color]"></span>
@@ -88,6 +101,7 @@ import { IsYetEnum, MittEnum } from '@/enums'
 import { leftHook } from '@/layout/left/hook.ts'
 import Mitt from '@/utils/Bus.ts'
 import apis from '@/services/apis.ts'
+import { type } from '@tauri-apps/plugin-os'
 
 const { login, editInfo, currentBadge, saveEditInfo, toggleWarningBadge, countGraphemes } = leftHook()
 
@@ -115,6 +129,11 @@ onMounted(() => {
   @apply bg-#ccc relative rounded-50% size-fit p-4px cursor-pointer;
   &:hover .tip {
     @apply opacity-100;
+  }
+}
+.mac-close:hover {
+  svg {
+    display: block;
   }
 }
 </style>

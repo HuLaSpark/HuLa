@@ -82,6 +82,8 @@ html, body {
   --chat-right-bg: #f1f1f1;
   --chat-text-color: #505050;
   --chat-hover-color: #e3e3e3;
+  // 搜索框内样式
+  --search-color: #eee;
 }
 
 html[data-theme='dark'] {
@@ -154,6 +156,8 @@ html[data-theme='dark'] {
   --chat-right-bg: #161616;
   --chat-text-color: #b1b1b1;
   --chat-hover-color: #262626;
+  // 搜索框内样式
+  --search-color: #333;
 }
 /**! end */
 // 线性动画
@@ -241,6 +245,7 @@ html[data-theme='dark'] {
   background: var(--bg-menu);
   color: var(--text-color);
   border-radius: 6px;
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.08),
