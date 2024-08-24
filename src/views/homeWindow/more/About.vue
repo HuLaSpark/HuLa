@@ -18,6 +18,7 @@
 </template>
 <script setup lang="ts">
 import pkg from '~/package.json'
+import { type, arch, version } from '@tauri-apps/plugin-os'
 
 const _pkg = reactive({
   version: pkg.version
@@ -27,22 +28,14 @@ const osArch = ref()
 const osVersion = ref()
 
 onMounted(() => {
-  // osArch.value = arch()
-  // osVersion.value = type()
-  // type().then((e) => {
-  //   if (e === 'Windows_NT') {
-  //     osType.value = 'Windows'
-  //     version().then((e) => {
-  //       let parts = e.split('.')
-  //       let build_number = Number(parts[2])
-  //       osVersion.value = build_number > 22000 ? '11' : '10'
-  //     })
-  //   } else if (e === 'Darwin') {
-  //     osType.value = 'MacOS'
-  //   } else {
-  //     osType.value = e
-  //   }
-  // })
+  osType.value = type()
+  osArch.value = arch()
+  osVersion.value = version()
+  if (osType.value === 'windows') {
+    let parts = version().split('.')
+    let build_number = Number(parts[2])
+    osVersion.value = build_number > 22000 ? '11' : '10'
+  }
 })
 </script>
 

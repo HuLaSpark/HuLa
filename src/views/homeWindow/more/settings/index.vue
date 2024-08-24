@@ -13,21 +13,25 @@
     </section>
 
     <!-- 右边内容 -->
-    <section class="bg-[--right-bg-color] rounded-r-8px flex-1 custom-shadow border-l-(1px solid [--line-color])">
+    <section class="bg-[--right-bg-color] rounded-r-8px flex-1 border-l-(1px solid [--line-color])">
       <ActionBar :shrink="false" :max-w="false" />
 
-      <header class="header" style="box-shadow: var(--shadow-enabled) 4px 4px var(--box-shadow-color)">
+      <header class="header">
         {{ title }}
       </header>
 
-      <div class="flex-1 p-24px"><router-view /></div>
+      <div :class="{ 'shadow-inner': page.shadow }" class="flex-1 p-24px"><router-view /></div>
     </section>
   </main>
 </template>
 <script setup lang="ts">
 import router from '@/router'
 import { sideOptions } from './config.ts'
+import { setting } from '@/stores/setting.ts'
+import { storeToRefs } from 'pinia'
 
+const settingStore = setting()
+const { page } = storeToRefs(settingStore)
 /**当前选中的元素 默认选中itemsTop的第一项*/
 const activeItem = ref<string>(sideOptions.value[0].url)
 const title = ref<string>(sideOptions.value[0].label)
@@ -53,7 +57,7 @@ onMounted(() => {
   @include menu-list();
   background: var(--bg-left-menu);
   width: 200px;
-  padding: 20px 12px;
+  padding: 24px 12px;
   box-sizing: border-box;
   color: var(--text-color);
   .menu-item {

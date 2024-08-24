@@ -174,6 +174,7 @@ const handleAfterEnter = (el: any) => {
     }
   }
   .menu-list {
+    -webkit-backdrop-filter: blur(10px);
     padding: 5px;
     display: flex;
     flex-direction: column;

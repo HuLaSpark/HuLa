@@ -1,5 +1,6 @@
 <template>
   <main
+    data-tauri-drag-region
     id="center"
     :class="{ 'rounded-r-8px': shrinkStatus }"
     class="resizable select-none flex flex-col border-r-(1px solid [--line-color])"
@@ -23,19 +24,18 @@
       :current-label="appWindow.label" />
 
     <!-- 顶部搜索栏 -->
-    <header
-      style="box-shadow: var(--shadow-enabled) 4px 4px var(--box-shadow-color)"
-      class="mt-30px w-full h-40px flex flex-col items-center border-b-(1px solid [--line-color])">
+    <header class="mt-30px w-full h-40px flex flex-col items-center border-b-(1px solid [--line-color])">
       <div class="flex-center gap-5px w-full pr-16px pl-16px box-border">
         <n-input
           id="search"
-          @focus="() => router.push('/searchDetails')"
+          @focus="() => handleSearchFocus()"
+          @blur="() => (searchText = '搜索')"
           class="rounded-6px w-full relative text-12px"
           style="background: var(--search-bg-color)"
           :maxlength="20"
           clearable
           size="small"
-          placeholder="搜索">
+          :placeholder="searchText">
           <template #prefix>
             <svg class="w-12px h-12px"><use href="#search"></use></svg>
           </template>
@@ -61,7 +61,7 @@
     </header>
 
     <!-- 列表 -->
-    <div id="centerList" class="h-full">
+    <div id="centerList" class="h-full" :class="{ 'shadow-inner': page.shadow }">
       <router-view />
     </div>
   </main>
@@ -73,7 +73,11 @@ import router from '@/router'
 import { MittEnum } from '@/enums'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useWindowSize } from '@vueuse/core'
+import { setting } from '@/stores/setting.ts'
+import { storeToRefs } from 'pinia'
 
+const settingStore = setting()
+const { page } = storeToRefs(settingStore)
 const appWindow = WebviewWindow.getCurrent()
 /** 设置最小宽度 */
 const minWidth = 160
@@ -87,6 +91,8 @@ const { width } = useWindowSize()
 const isDrag = ref(true)
 /** 当前消息 */
 const currentMsg = ref()
+/** 搜索框文字 */
+const searchText = ref('搜索')
 /** 添加面板是否显示 */
 const addPanels = ref({
   show: false,
@@ -130,6 +136,11 @@ watchEffect(() => {
     isDrag.value = true
   }
 })
+
+const handleSearchFocus = () => {
+  router.push('/searchDetails')
+  searchText.value = ''
+}
 
 const closeMenu = (event: Event) => {
   const e = event.target as HTMLInputElement

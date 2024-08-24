@@ -12,6 +12,7 @@ import { useGlobalStore } from '@/stores/global.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { useCachedStore } from '@/stores/cached.ts'
+import { type } from '@tauri-apps/plugin-os'
 
 export const useMsgInput = (messageInputDom: Ref) => {
   const chatStore = useChatStore()
@@ -258,14 +259,23 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
   /** input的keydown事件 */
   const inputKeyDown = (e: KeyboardEvent) => {
+    console.log(chat.value.sendKey)
+    const isWindows = type() === 'windows'
+    const isEnterKey = e.key === 'Enter'
+    const isCtrlOrMetaKey = isWindows ? e.ctrlKey : e.metaKey
+
+    const sendKeyIsEnter = chat.value.sendKey === 'Enter'
+    const sendKeyIsCtrlEnter = chat.value.sendKey === `${isWindows ? 'Ctrl' : '⌘'}+Enter`
+
     if (msgInput.value === '' || msgInput.value.trim() === '' || ait.value) {
       e?.preventDefault()
       return
     }
-    if (
-      (chat.value.sendKey === 'Enter' && e.key === 'Enter' && !e.ctrlKey) ||
-      (chat.value.sendKey === 'Ctrl+Enter' && e.ctrlKey && e.key === 'Enter')
-    ) {
+    if (!isWindows && e.ctrlKey && isEnterKey && sendKeyIsEnter) {
+      e?.preventDefault()
+      return
+    }
+    if ((sendKeyIsEnter && isEnterKey && !isCtrlOrMetaKey) || (sendKeyIsCtrlEnter && isCtrlOrMetaKey && isEnterKey)) {
       e?.preventDefault()
       send()
     }

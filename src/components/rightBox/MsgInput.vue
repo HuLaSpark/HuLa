@@ -10,6 +10,7 @@
         @paste="handlePaste($event, messageInputDom)"
         @input="handleInput"
         @keydown.exact.enter="inputKeyDown"
+        @keydown.exact.meta.enter="inputKeyDown"
         @keydown.exact.ctrl.enter="inputKeyDown"></div>
     </n-scrollbar>
   </ContextMenu>
