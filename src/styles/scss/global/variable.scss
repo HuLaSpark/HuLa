@@ -4,7 +4,8 @@
   font-weight: 500 !important;
   caret-color: #13987f !important;  /* 改变输入框光标的颜色 */
 }
-html, body {
+html, body, svg {
+  outline: none;
   overscroll-behavior: none; // 禁止mac的“触底反弹”效果
 }
 /**! 主题变量 */

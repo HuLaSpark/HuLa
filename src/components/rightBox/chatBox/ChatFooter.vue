@@ -157,7 +157,6 @@ onMounted(() => {
     width: 22px;
     height: 22px;
     cursor: pointer;
-    outline: none;
     &:hover {
       color: #13987f;
     }
