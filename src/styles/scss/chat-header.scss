@@ -28,6 +28,12 @@
   font-size: 14px;
 }
 
+.mac-close:hover {
+  svg {
+    display: block;
+  }
+}
+
 @keyframes slideIn {
   from {
     transform: translateX(100%);

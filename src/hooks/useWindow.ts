@@ -1,6 +1,7 @@
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { EventEnum } from '@/enums'
 import { LogicalSize } from '@tauri-apps/api/dpi'
+import { type } from '@tauri-apps/plugin-os'
 
 export const useWindow = () => {
   /**
@@ -43,8 +44,10 @@ export const useWindow = () => {
       minHeight: minH,
       minWidth: minW,
       skipTaskbar: false,
-      decorations: false,
-      transparent: true
+      decorations: type() !== 'windows',
+      transparent: false,
+      titleBarStyle: 'overlay', // mac覆盖标签栏
+      hiddenTitle: true // mac隐藏标题栏
     })
 
     await webview.once('tauri://created', async () => {

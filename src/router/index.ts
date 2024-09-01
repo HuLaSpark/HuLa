@@ -20,6 +20,11 @@ const routes: Array<RouteRecordRaw> = [
     component: Tray
   },
   {
+    path: '/capture',
+    name: 'capture',
+    component: () => import('@/views/Capture.vue')
+  },
+  {
     path: '/home',
     name: 'home',
     component: () => import('@/layout/index.vue'),

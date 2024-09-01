@@ -240,3 +240,31 @@ export enum ModalEnum {
   /** 检查更新弹窗 */
   CHECK_UPDATE
 }
+
+/** MacOS键盘映射 */
+export enum MacOsKeyEnum {
+  '⌘' = '⌘',
+  '⌥' = '⌥',
+  '⇧' = '⇧'
+}
+
+/** Windows键盘映射 */
+export enum WinKeyEnum {
+  ctrl = 'Ctrl',
+  win = 'Win',
+  alt = 'Alt'
+}
+
+/** 插件状态 */
+export enum PluginEnum {
+  /** 已安装 */
+  INSTALLED,
+  /** 下载中 */
+  DOWNLOADING,
+  /** 未安装 */
+  NOT_INSTALLED,
+  /** 卸载中 */
+  UNINSTALLING,
+  /** 可更新 */
+  CAN_UPDATE
+}

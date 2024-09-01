@@ -16,6 +16,7 @@ const { logout } = useLogin()
  * @param size 窗口大小
  * @param window 窗口参数
  */
+/* todo: 这里需要存入到localStore中, 需要区分固定的和不固定的，固定时有会话和用户列表的，其他都为动态添加 */
 const itemsTop = ref<OPT.L.Common[]>([
   {
     url: 'message',
@@ -47,6 +48,7 @@ const itemsTop = ref<OPT.L.Common[]>([
     iconAction: 'robot-action',
     tip: '机器人新功能在开发中',
     size: {
+      minWidth: 780,
       width: 980,
       height: 800
     },

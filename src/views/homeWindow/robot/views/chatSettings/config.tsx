@@ -2,6 +2,12 @@ import pkg from '~/package.json'
 import { Button, Select, Slider, Switch, Input, InputNumber } from './model.tsx'
 import { NFlex } from 'naive-ui'
 import { VNode } from 'vue'
+import { type } from '@tauri-apps/plugin-os'
+import { MacOsKeyEnum, WinKeyEnum } from '@/enums'
+
+const key = computed(() => {
+  return `${type() === 'windows' ? WinKeyEnum.ctrl : MacOsKeyEnum['⌘']}`
+})
 
 type ConfigItemType = 'system' | 'record' | 'identity' | 'cueWords' | 'APIAddress' | 'model' | 'clear'
 type ChatConfig = {
@@ -26,7 +32,7 @@ export const content: ChatConfig = {
         <Select
           content={[
             { label: 'Enter', value: 'Enter' },
-            { label: 'Ctrl + Enter', value: 'Ctrl+Enter' }
+            { label: `${key.value} + Enter`, value: `${key.value}+Enter` }
           ]}
         />
       )

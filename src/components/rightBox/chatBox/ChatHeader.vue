@@ -99,7 +99,16 @@
   <!-- 弹出框 -->
   <n-modal v-model:show="modalShow" class="w-350px rounded-8px">
     <div class="bg-[--bg-popover] w-360px h-full p-6px box-border flex flex-col">
-      <svg @click="modalShow = false" class="size-12px ml-a cursor-pointer select-none">
+      <div
+        v-if="type() === 'macos'"
+        @click="modalShow = false"
+        class="mac-close z-999 size-13px shadow-inner bg-#ed6a5eff rounded-50% select-none absolute left-6px">
+        <svg class="hidden size-7px color-#000 font-bold select-none absolute top-3px left-3px">
+          <use href="#close"></use>
+        </svg>
+      </div>
+
+      <svg v-if="type() === 'windows'" @click="modalShow = false" class="size-12px ml-a cursor-pointer select-none">
         <use href="#close"></use>
       </svg>
       <div class="flex flex-col gap-30px p-[22px_10px_10px_22px] select-none">
@@ -123,6 +132,7 @@ import { IsAllUserEnum, SessionItem } from '@/services/types.ts'
 import { useDisplayMedia } from '@vueuse/core'
 import { EventEnum } from '@/enums'
 import { emit, listen } from '@tauri-apps/api/event'
+import { type } from '@tauri-apps/plugin-os'
 
 // 使用useDisplayMedia获取屏幕共享的媒体流
 const { stream, start, stop } = useDisplayMedia()

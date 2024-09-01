@@ -19,6 +19,8 @@ import { emit } from '@tauri-apps/api/event'
 import { EventEnum } from '@/enums'
 import pkg from '~/package.json'
 import { handRelativeTime } from '@/utils/Day.ts'
+import './style.scss'
+import { type } from '@tauri-apps/plugin-os'
 
 const formRef = ref<FormInst | null>()
 const formValue = ref({
@@ -62,9 +64,19 @@ export const LockScreen = defineComponent(() => {
   return () => (
     <NModal v-model:show={lock.value.modalShow} maskClosable={false} class="w-350px border-rd-8px">
       <div class="bg-[--bg-popover] w-360px h-full p-6px box-border flex flex-col">
-        <svg onClick={() => (lock.value.modalShow = false)} class="w-12px h-12px ml-a cursor-pointer select-none">
-          <use href="#close"></use>
-        </svg>
+        {type() === 'macos' ? (
+          <div
+            onClick={() => (lock.value.modalShow = false)}
+            class="mac-close relative size-13px shadow-inner bg-#ed6a5eff rounded-50% select-none">
+            <svg class="hidden size-7px color-#000 font-bold select-none absolute top-3px left-3px">
+              <use href="#close"></use>
+            </svg>
+          </div>
+        ) : (
+          <svg onClick={() => (lock.value.modalShow = false)} class="w-12px h-12px ml-a cursor-pointer select-none">
+            <use href="#close"></use>
+          </svg>
+        )}
         <div class="flex flex-col gap-10px p-10px select-none">
           <NFlex vertical justify="center" align="center" size={20}>
             <span class="text-(14px center)">锁定屏幕</span>
@@ -196,11 +208,21 @@ export const CheckUpdate = defineComponent(() => {
   return () => (
     <NModal v-model:show={lock.value.modalShow} maskClosable={false} class="w-350px border-rd-8px">
       <div class="bg-[--bg-popover] w-500px h-full p-6px box-border flex flex-col">
-        <svg onClick={() => (lock.value.modalShow = false)} class="w-12px h-12px ml-a cursor-pointer select-none">
-          <use href="#close"></use>
-        </svg>
+        {type() === 'macos' ? (
+          <div
+            onClick={() => (lock.value.modalShow = false)}
+            class="mac-close relative size-13px shadow-inner bg-#ed6a5eff rounded-50% select-none">
+            <svg class="hidden size-7px color-#000 font-bold select-none absolute top-3px left-3px">
+              <use href="#close"></use>
+            </svg>
+          </div>
+        ) : (
+          <svg onClick={() => (lock.value.modalShow = false)} class="w-12px h-12px ml-a cursor-pointer select-none">
+            <use href="#close"></use>
+          </svg>
+        )}
         {loading.value ? (
-          <NFlex vertical justify={'center'} size={10}>
+          <NFlex vertical justify={'center'} size={10} class="mt-6px">
             <NSkeleton text repeat={1} class="rounded-8px h-30px w-120px" />
             <NSkeleton text repeat={1} class="rounded-8px h-300px" />
             <NSkeleton text repeat={1} class="rounded-8px w-80px h-30px m-[0_0_0_auto]" />

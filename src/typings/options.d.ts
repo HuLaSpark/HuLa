@@ -11,6 +11,7 @@ declare namespace OPT {
       badge?: number
       tip?: string
       size?: {
+        minWidth?: number
         width: number
         height: number
       }

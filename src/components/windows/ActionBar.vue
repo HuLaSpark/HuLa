@@ -1,47 +1,50 @@
 <template>
-  <!--  user-select: none让元素不可以选中 -->
-  <div data-tauri-drag-region class="flex justify-end select-none">
-    <!--  固定在最顶层  -->
-    <div v-if="topWinLabel !== void 0" @click="handleAlwaysOnTop" class="hover-box">
-      <n-popover trigger="hover">
-        <template #trigger>
-          <svg v-if="alwaysOnTopStatus" class="size-14px color-[--action-bar-icon-color] outline-none cursor-pointer">
-            <use href="#onTop"></use>
-          </svg>
-          <svg v-else class="size-16px color-[--action-bar-icon-color] outline-none cursor-pointer">
-            <use href="#notOnTop"></use>
-          </svg>
-        </template>
-        <span v-if="alwaysOnTopStatus">取消置顶</span>
-        <span v-else>置顶</span>
-      </n-popover>
-    </div>
-    <!-- 收缩页面 -->
-    <div v-if="shrink" @click="shrinkWindow" class="hover-box">
-      <svg class="size-16px color-[--action-bar-icon-color] cursor-pointer"><use href="#left-bar"></use></svg>
-    </div>
-    <!-- 最小化 -->
-    <div v-if="minW" @click="appWindow.minimize()" class="hover-box">
-      <svg class="size-24px color-[--action-bar-icon-color] opacity-66 cursor-pointer">
-        <use href="#maximize"></use>
-      </svg>
-    </div>
-    <!-- 最大化 -->
-    <div v-if="maxW" @click="restoreWindow" class="hover-box">
-      <svg v-show="!windowMaximized" class="size-18px color-[--action-bar-icon-color] cursor-pointer">
-        <use href="#rectangle-small"></use>
-      </svg>
-      <svg v-show="windowMaximized" class="size-16px color-[--action-bar-icon-color] cursor-pointer">
-        <use href="#internal-reduction"></use>
-      </svg>
-    </div>
-    <!-- 关闭窗口 -->
-    <div v-if="closeW" @click="handleCloseWin" class="action-close rounded-rt-8px">
-      <svg class="size-14px color-[--action-bar-icon-color] cursor-pointer">
-        <use href="#close"></use>
-      </svg>
-    </div>
-
+  <!--  user-select: none让元素不可以选中-->
+  <div
+    data-tauri-drag-region
+    :class="osType === 'windows' ? 'flex justify-end select-none' : 'h-24px select-none w-full'">
+    <template v-if="osType === 'windows'">
+      <!--  固定在最顶层  -->
+      <div v-if="topWinLabel !== void 0" @click="handleAlwaysOnTop" class="hover-box">
+        <n-popover trigger="hover">
+          <template #trigger>
+            <svg v-if="alwaysOnTopStatus" class="size-14px color-[--action-bar-icon-color] outline-none cursor-pointer">
+              <use href="#onTop"></use>
+            </svg>
+            <svg v-else class="size-16px color-[--action-bar-icon-color] outline-none cursor-pointer">
+              <use href="#notOnTop"></use>
+            </svg>
+          </template>
+          <span v-if="alwaysOnTopStatus">取消置顶</span>
+          <span v-else>置顶</span>
+        </n-popover>
+      </div>
+      <!-- 收缩页面 -->
+      <div v-if="shrink" @click="shrinkWindow" class="hover-box">
+        <svg class="size-16px color-[--action-bar-icon-color] cursor-pointer"><use href="#left-bar"></use></svg>
+      </div>
+      <!-- 最小化 -->
+      <div v-if="minW" @click="appWindow.minimize()" class="hover-box">
+        <svg class="size-24px color-[--action-bar-icon-color] opacity-66 cursor-pointer">
+          <use href="#maximize"></use>
+        </svg>
+      </div>
+      <!-- 最大化 -->
+      <div v-if="maxW" @click="restoreWindow" class="hover-box">
+        <svg v-show="!windowMaximized" class="size-18px color-[--action-bar-icon-color] cursor-pointer">
+          <use href="#rectangle-small"></use>
+        </svg>
+        <svg v-show="windowMaximized" class="size-16px color-[--action-bar-icon-color] cursor-pointer">
+          <use href="#internal-reduction"></use>
+        </svg>
+      </div>
+      <!-- 关闭窗口 -->
+      <div v-if="closeW" @click="handleCloseWin" class="action-close rounded-rt-8px">
+        <svg class="size-14px color-[--action-bar-icon-color] cursor-pointer">
+          <use href="#close"></use>
+        </svg>
+      </div>
+    </template>
     <!-- 是否退到托盘提示框 -->
     <n-modal v-if="!tips.notTips" v-model:show="tipsRef.show" class="rounded-8px">
       <div class="bg-[--bg-popover] w-290px h-full p-6px box-border flex flex-col">
@@ -84,6 +87,7 @@ import { CloseBxEnum, EventEnum, MittEnum } from '@/enums'
 import { storeToRefs } from 'pinia'
 import { PersistedStateOptions } from 'pinia-plugin-persistedstate'
 import { exit } from '@tauri-apps/plugin-process'
+import { type } from '@tauri-apps/plugin-os'
 
 const appWindow = WebviewWindow.getCurrent()
 /**
@@ -234,7 +238,7 @@ const handleCloseWin = async () => {
 // 添加和移除resize事件监听器
 onMounted(() => {
   window.addEventListener('resize', handleResize)
-  osType.value = 'macos'
+  osType.value = type()
 })
 
 onUnmounted(() => {

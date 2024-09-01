@@ -1,5 +1,6 @@
 <template>
   <main
+    data-tauri-drag-region
     id="center"
     :class="{ 'rounded-r-8px': shrinkStatus }"
     class="resizable select-none flex flex-col border-r-(1px solid [--line-color])"
@@ -23,45 +24,49 @@
       :current-label="appWindow.label" />
 
     <!-- 顶部搜索栏 -->
-    <header
-      style="box-shadow: var(--shadow-enabled) 4px 4px var(--box-shadow-color)"
-      class="mt-30px w-full h-40px flex flex-col items-center border-b-(1px solid [--line-color])">
+    <header class="mt-30px w-full h-40px flex flex-col items-center border-b-(1px solid [--line-color])">
       <div class="flex-center gap-5px w-full pr-16px pl-16px box-border">
         <n-input
           id="search"
-          @focus="() => router.push('/searchDetails')"
+          @focus="() => handleSearchFocus()"
+          @blur="() => (searchText = '搜索')"
           class="rounded-6px w-full relative text-12px"
           style="background: var(--search-bg-color)"
           :maxlength="20"
           clearable
           size="small"
-          placeholder="搜索">
+          :placeholder="searchText">
           <template #prefix>
             <svg class="w-12px h-12px"><use href="#search"></use></svg>
           </template>
         </n-input>
-        <n-button @click="addPanels.show = !addPanels.show" size="small" secondary style="padding: 0 5px">
-          <template #icon>
-            <svg class="w-24px h-24px"><use href="#plus"></use></svg>
-          </template>
-        </n-button>
 
         <!-- 添加面板 -->
-        <div v-if="addPanels.show" class="add-item">
-          <div class="menu-list">
-            <div v-for="(item, index) in addPanels.list" :key="index">
-              <div class="menu-item" @click="() => item.click()">
-                <svg><use :href="`#${item.icon}`"></use></svg>
-                {{ item.label }}
+        <n-popover v-model:show="addPanels.show" style="padding: 0" :show-arrow="false" trigger="click">
+          <template #trigger>
+            <n-button size="small" secondary style="padding: 0 5px">
+              <template #icon>
+                <svg class="w-24px h-24px"><use href="#plus"></use></svg>
+              </template>
+            </n-button>
+          </template>
+
+          <div @click.stop="addPanels.show = false" class="add-item">
+            <div class="menu-list">
+              <div v-for="(item, index) in addPanels.list" :key="index">
+                <div class="menu-item" @click="() => item.click()">
+                  <svg><use :href="`#${item.icon}`"></use></svg>
+                  {{ item.label }}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </n-popover>
       </div>
     </header>
 
     <!-- 列表 -->
-    <div id="centerList" class="h-full">
+    <div id="centerList" class="h-full" :class="{ 'shadow-inner': page.shadow }">
       <router-view />
     </div>
   </main>
@@ -73,7 +78,11 @@ import router from '@/router'
 import { MittEnum } from '@/enums'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useWindowSize } from '@vueuse/core'
+import { setting } from '@/stores/setting.ts'
+import { storeToRefs } from 'pinia'
 
+const settingStore = setting()
+const { page } = storeToRefs(settingStore)
 const appWindow = WebviewWindow.getCurrent()
 /** 设置最小宽度 */
 const minWidth = 160
@@ -87,6 +96,8 @@ const { width } = useWindowSize()
 const isDrag = ref(true)
 /** 当前消息 */
 const currentMsg = ref()
+/** 搜索框文字 */
+const searchText = ref('搜索')
 /** 添加面板是否显示 */
 const addPanels = ref({
   show: false,
@@ -131,15 +142,17 @@ watchEffect(() => {
   }
 })
 
+const handleSearchFocus = () => {
+  router.push('/searchDetails')
+  searchText.value = ''
+}
+
 const closeMenu = (event: Event) => {
   const e = event.target as HTMLInputElement
   const route = router.currentRoute.value.path
   /** 判断如果点击的搜索框，就关闭消息列表 */
   if (!e.matches('#search, #search *, #centerList *, #centerList') && route === '/searchDetails') {
     router.go(-1)
-  }
-  if (!e.matches('.add-item')) {
-    addPanels.value.show = false
   }
 }
 

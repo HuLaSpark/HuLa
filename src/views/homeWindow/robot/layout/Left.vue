@@ -8,9 +8,12 @@
       <!-- 标题 -->
       <n-flex justify="space-between" align="center" :size="0">
         <n-flex :size="4" vertical>
-          <n-flex :size="0">
+          <n-flex :size="0" align="center">
             <p class="text-(20px [--chat-text-color]) font-semibold select-none">HuLa-</p>
             <p class="gpt-subtitle">ChatBot</p>
+            <div class="ml-6px p-[4px_8px] size-fit bg-[--bate-bg] rounded-8px text-(12px [--bate-color] center)">
+              Beta
+            </div>
           </n-flex>
           <p class="text-(12px #909090)">建立一个属于自己AI</p>
         </n-flex>
@@ -39,7 +42,7 @@
             <n-flex
               vertical
               :size="12"
-              v-for="item in chatList"
+              v-for="(item, index) in chatList"
               :key="item.id"
               @click="handleActive(item)"
               :class="{ 'outline-dashed outline-2 outline-#13987f outline-offset-1': activeItem === item.id }"
@@ -52,10 +55,23 @@
                 <div class="absolute flex flex-col gap-14px w-full p-[8px_14px] box-border">
                   <n-flex justify="space-between" align="center" :size="0" class="leading-22px">
                     <n-ellipsis
+                      v-if="editingItemId !== item.id"
                       style="width: calc(100% - 20px)"
                       class="text-(14px [--chat-text-color]) truncate font-500 select-none">
-                      {{ item.title }}
+                      {{ item.title || `新的聊天${index + 1}` }}
                     </n-ellipsis>
+                    <n-input
+                      v-else
+                      @blur="handleBlur(item, index)"
+                      ref="inputInstRef"
+                      v-model:value="item.title"
+                      clearable
+                      placeholder="输入标题"
+                      type="text"
+                      size="tiny"
+                      style="width: 200px"
+                      class="h-22px lh-22px rounded-6px">
+                    </n-input>
                     <svg
                       @click.stop="deleteChat(item)"
                       class="color-[--chat-text-color] size-20px opacity-0 absolute right-0px top-4px">
@@ -75,8 +91,8 @@
     </n-flex>
 
     <!-- 底部选项栏 -->
-    <n-flex justify="space-between" align="center" class="m-[auto_4px_10px_4px]">
-      <n-flex :size="12" align="center">
+    <n-flex :size="6" justify="space-between" align="center" class="m-[auto_0_10px_0]">
+      <n-flex :size="4" align="center">
         <div
           @click="jump"
           class="bg-[--chat-bt-color] border-(1px solid [--line-color]) color-[--chat-text-color] size-fit p-[8px_9px] rounded-8px custom-shadow cursor-pointer">
@@ -91,13 +107,30 @@
         </a>
       </n-flex>
 
-      <n-flex
-        :size="4"
-        align="center"
-        @click="add"
-        class="bg-[--chat-bt-color] border-(1px solid [--line-color]) select-none text-(14px [--chat-text-color]) size-fit p-8px rounded-8px custom-shadow cursor-pointer">
-        <svg class="size-18px"><use href="#plus"></use></svg>
-        <p>新的聊天</p>
+      <n-flex :size="4" align="center">
+        <div
+          @click="add"
+          class="flex items-center justify-center gap-4px bg-[--chat-bt-color] border-(1px solid [--line-color]) select-none text-(12px [--chat-text-color]) size-fit w-80px h-32px rounded-8px custom-shadow cursor-pointer">
+          <svg class="size-15px pb-2px"><use href="#plus"></use></svg>
+          <p>新的聊天</p>
+        </div>
+        <n-popconfirm v-model:show="showDeleteConfirm">
+          <template #icon>
+            <svg class="size-22px"><use href="#explosion"></use></svg>
+          </template>
+          <template #action>
+            <n-button size="small" tertiary @click.stop="showDeleteConfirm = false">取消</n-button>
+            <n-button size="small" type="error" @click.stop="deleteChat()">删除</n-button>
+          </template>
+          <template #trigger>
+            <div
+              class="flex items-center justify-center gap-4px bg-[--chat-bt-color] border-(1px solid [--line-color]) select-none text-(12px [--chat-text-color]) size-fit w-80px h-32px rounded-8px custom-shadow cursor-pointer">
+              <svg class="size-15px pb-2px"><use href="#delete"></use></svg>
+              <p>全部删除</p>
+            </div>
+          </template>
+          你确定要删除全部会话吗？
+        </n-popconfirm>
       </n-flex>
     </n-flex>
   </n-flex>
@@ -105,7 +138,7 @@
 <script setup lang="ts">
 import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
-import { NIcon, VirtualListInst } from 'naive-ui'
+import { NIcon, VirtualListInst, InputInst } from 'naive-ui'
 import Mitt from '@/utils/Bus.ts'
 import { VueDraggable } from 'vue-draggable-plus'
 import router from '@/router'
@@ -114,6 +147,11 @@ const settingStore = setting()
 const { login } = storeToRefs(settingStore)
 const activeItem = ref(0)
 const scrollbar = ref<VirtualListInst>()
+const inputInstRef = ref<InputInst | null>(null)
+const editingItemId = ref<number | null>()
+/** 原始标题 */
+const originalTitle = ref('')
+const showDeleteConfirm = ref(false)
 const chatList = ref(
   Array.from({ length: 20 }, (_, index) => ({
     id: index + 1,
@@ -141,6 +179,13 @@ const menuList = ref<OPT.RightMenu[]>([
     icon: 'freezing-line-column',
     click: (item: any) => {
       console.log(item)
+    }
+  },
+  {
+    label: '重命名',
+    icon: 'edit',
+    click: (item: any) => {
+      renameChat(item)
     }
   }
 ])
@@ -181,7 +226,8 @@ const add = () => {
 }
 
 /** 删除会话 */
-const deleteChat = (item: any) => {
+const deleteChat = (item?: any) => {
+  showDeleteConfirm.value = false
   // 根据key找到items中对应的下标
   const index = chatList.value.indexOf(item)
 
@@ -201,6 +247,17 @@ const deleteChat = (item: any) => {
           })
         }
       })
+    }
+  }
+
+  //如果没有传值，则删除全部
+  if (!item) {
+    //删除全部的逻辑
+    if (chatList.value.length > 0) {
+      chatList.value.shift()
+      deleteChat()
+    } else {
+      triggeringAdd(true)
     }
   }
 
@@ -226,6 +283,31 @@ const deleteChat = (item: any) => {
       icon: () => h(NIcon, null, { default: () => h('svg', null, [h('use', { href: '#face' })]) })
     })
   }
+}
+
+/** 重命名 */
+const renameChat = (item: any) => {
+  originalTitle.value = item.title
+  editingItemId.value = item.id
+  nextTick(() => {
+    inputInstRef.value?.select()
+  })
+}
+
+const handleBlur = (item: any, index: number) => {
+  editingItemId.value = null
+  if (originalTitle.value === item.title) {
+    return
+  }
+  if (chatList.value[index].title === '') {
+    chatList.value[index].title = `新的聊天${item.id}`
+    return
+  }
+  const newTitle = chatList.value[index].title
+  window.$message.success(`已重命名为 ${newTitle}`, {
+    icon: () => h(NIcon, null, { default: () => h('svg', null, [h('use', { href: '#face' })]) })
+  })
+  Mitt.emit('left-chat-title', { id: item.id, title: newTitle })
 }
 
 onMounted(() => {

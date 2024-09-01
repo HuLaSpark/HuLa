@@ -5,21 +5,23 @@
 
     <n-flex vertical justify="center" :size="16" class="p-[30px_20px]">
       <p class="text-(14px [--chat-text-color])">你可以尝试使用以下功能：</p>
-      <n-flex align="center" :size="[32, 16]">
-        <n-flex
-          vertical
-          v-for="(item, index) in examplesList"
-          :key="index"
-          justify="center"
-          :size="12"
-          class="examples">
-          <n-flex align="center" justify="space-between">
-            <p class="text-(14px [--chat-text-color]) font-500">{{ item.title }}</p>
-            <svg class="size-16px"><use :href="`#${item.icon}`"></use></svg>
+      <n-scrollbar style="max-height: calc(100vh - 210px)">
+        <n-flex style="padding: 6px" align="center" :size="[24, 16]">
+          <n-flex
+            vertical
+            v-for="(item, index) in examplesList"
+            :key="index"
+            justify="center"
+            :size="12"
+            class="examples">
+            <n-flex align="center" justify="space-between">
+              <p class="text-(14px [--chat-text-color]) font-500">{{ item.title }}</p>
+              <svg class="size-16px"><use :href="`#${item.icon}`"></use></svg>
+            </n-flex>
+            <component :is="item.content" />
           </n-flex>
-          <component :is="item.content" />
         </n-flex>
-      </n-flex>
+      </n-scrollbar>
     </n-flex>
   </n-flex>
 </template>

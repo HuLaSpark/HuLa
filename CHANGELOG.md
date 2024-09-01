@@ -1,3 +1,26 @@
+# [2.0.0](https://github.com/nongyehong/HuLa-IM-Tauri/compare/v1.6.0...v2.0.0) (2024-08-15)
+
+
+### Bug Fixes
+
+* **system:** :bug: 修复mac端兼容问题 ([0daef59](https://github.com/nongyehong/HuLa-IM-Tauri/commit/0daef59a9f41326a8e82885c3b84857ec3761e92))
+
+
+### Features
+
+* **common:** :sparkles: 新增修改字体功能 ([6bd6f64](https://github.com/nongyehong/HuLa-IM-Tauri/commit/6bd6f641f1c012dd53bd7dcb5cf4a314bf7d527b))
+* **component:** :sparkles: 新增是否启用界面阴影功能、收缩页面按钮功能 ([085a773](https://github.com/nongyehong/HuLa-IM-Tauri/commit/085a773967fd0a26525a2f87dc1d8fddb8d71f1a))
+* **view:** :sparkles: 新增搜索页面功能 ([866ba89](https://github.com/nongyehong/HuLa-IM-Tauri/commit/866ba89b93d1a2587afb16fac745779093b9af19))
+* **view:** :sparkles: 新增锁屏功能 ([1407343](https://github.com/nongyehong/HuLa-IM-Tauri/commit/14073438d5a9dc82117a84f97b5bd8f239fdfcd4))
+
+
+### Performance Improvements
+
+* :zap: 优化锁屏页面功能 ([85b6cad](https://github.com/nongyehong/HuLa-IM-Tauri/commit/85b6cad03fdcd538adbdae9fc2e63e0ef72b465a))
+* **system:** :zap: 升级tauri-v2版本 ([57dcad1](https://github.com/nongyehong/HuLa-IM-Tauri/commit/57dcad1e9306421c161d555181a9deda48f5685e))
+
+
+
 # [1.6.0](https://github.com/nongyehong/HuLa-IM-Tauri/compare/v1.5.0...v1.6.0) (2024-07-03)
 
 
@@ -12,21 +35,37 @@
 
 * :sparkles: 发布v1.6.0版本 ([71a1dd9](https://github.com/nongyehong/HuLa-IM-Tauri/commit/71a1dd93833d4c9534945f28fe636115ef59e862))
 * **component:** :sparkles: 新增GPT欢迎页面，完善设置页面 ([9b771e0](https://github.com/nongyehong/HuLa-IM-Tauri/commit/9b771e02ec31af1238f9662e839df6197f501376))
-* **component:** :sparkles: 新增GPT页面设置功能 ([4c85b4a](https://github.com/nongyehong/HuLa-IM-Tauri/commit/4c85b4afccdafe83aa0fcbd53e94ef5fc63a7a70))
 * **component:** :sparkles: 新增GPT组件 ([7260840](https://github.com/nongyehong/HuLa-IM-Tauri/commit/7260840f4b50bcbb4dad8645a84ade8280de4036))
-* **components:** :sparkles: 实现群聊回复表情功能 ([1fb3530](https://github.com/nongyehong/HuLa-IM-Tauri/commit/1fb3530cbdceef702430b272b99d3e99277c52d0))
+* **component:** :sparkles: 新增GPT页面设置功能 ([4c85b4a](https://github.com/nongyehong/HuLa-IM-Tauri/commit/4c85b4afccdafe83aa0fcbd53e94ef5fc63a7a70))
 * **components:** :sparkles: 完善右键功能的显示资料 ([cf4820b](https://github.com/nongyehong/HuLa-IM-Tauri/commit/cf4820bffbdee50fc1e7b44c72b51cd2c4d80091))
+* **components:** :sparkles: 实现群聊回复表情功能 ([1fb3530](https://github.com/nongyehong/HuLa-IM-Tauri/commit/1fb3530cbdceef702430b272b99d3e99277c52d0))
 * **style:** :sparkles: 新增项目版本信息打印 ([e17cb7c](https://github.com/nongyehong/HuLa-IM-Tauri/commit/e17cb7c24a233417ab34a1de3b04cbdc32ebc2e0))
 * **view:** :sparkles: 新增GPT首页推荐功能样式 ([e927a95](https://github.com/nongyehong/HuLa-IM-Tauri/commit/e927a95fa4f95da7299459941b00d2f633217bca))
 
 
 ### Performance Improvements
 
-* **components:** :zap: 优化表情回应 ([94d2cb1](https://github.com/nongyehong/HuLa-IM-Tauri/commit/94d2cb1fec8db8901ffc85cdf8680919c58abf11))
 * **components:** :zap: 优化群聊回复表情功能 ([0c4615d](https://github.com/nongyehong/HuLa-IM-Tauri/commit/0c4615d4135fb3f740cb88f8f38502c9fc90bc5d))
+* **components:** :zap: 优化表情回应 ([94d2cb1](https://github.com/nongyehong/HuLa-IM-Tauri/commit/94d2cb1fec8db8901ffc85cdf8680919c58abf11))
 * **services:** :zap: 优化请求接口以及消息提示 ([0355f97](https://github.com/nongyehong/HuLa-IM-Tauri/commit/0355f976b854d96e613160d2bf6cc7e5605ea0ac))
 * **system:** :zap: 对接后端服务 ([ea4b82b](https://github.com/nongyehong/HuLa-IM-Tauri/commit/ea4b82be25a058a198716cebcf8becfcf252819c))
 * **views:** :zap: 优化页面收缩功能 ([31f7e17](https://github.com/nongyehong/HuLa-IM-Tauri/commit/31f7e1732cbe571e3f53564c57a339812b2c1a5b))
+
+
+
+# [1.5.0](https://github.com/nongyehong/HuLa-IM-Tauri/compare/v1.4.0...v1.5.0) (2024-04-19)
+
+
+
+# [1.4.0](https://github.com/nongyehong/HuLa-IM-Tauri/compare/v1.3.0-beta...v1.4.0) (2024-04-01)
+
+
+
+# [1.3.0-beta](https://github.com/nongyehong/HuLa-IM-Tauri/compare/v1.2.9-alpha...v1.3.0-beta) (2024-03-12)
+
+
+
+## 1.2.9-alpha (2024-03-08)
 
 
 

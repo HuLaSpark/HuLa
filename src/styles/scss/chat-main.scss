@@ -47,6 +47,11 @@
     background-color: rgb(195, 221, 216);
   }
 }
+.mac-close:hover {
+  svg {
+    display: block;
+  }
+}
 /** 浮标达到最大值时候的样式 */
 .max:hover {
   background-color: #f5dce1;

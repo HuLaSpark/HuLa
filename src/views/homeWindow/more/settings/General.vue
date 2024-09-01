@@ -29,7 +29,7 @@
 
       <n-flex class="item" :size="15" vertical>
         <!-- 关闭面板 -->
-        <n-flex align="center" justify="space-between">
+        <n-flex v-if="type() === 'windows'" align="center" justify="space-between">
           <span>关闭主面板</span>
 
           <label class="text-(14px #707070) flex gap-6px lh-16px items-center">
@@ -47,7 +47,7 @@
           </label>
         </n-flex>
 
-        <span class="w-full h-1px bg-[--line-color]"></span>
+        <span v-if="type() === 'windows'" class="w-full h-1px bg-[--line-color]"></span>
 
         <!-- ESC关闭面板 -->
         <n-flex align="center" justify="space-between">
@@ -117,6 +117,7 @@ import { storeToRefs } from 'pinia'
 import { CloseBxEnum } from '@/enums'
 import { topicsList } from './model.tsx'
 import { sendOptions, fontOptions } from './config.ts'
+import { type } from '@tauri-apps/plugin-os'
 
 const settingStore = setting()
 const { themes, tips, escClose, chat, page } = storeToRefs(settingStore)

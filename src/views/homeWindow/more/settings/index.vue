@@ -2,7 +2,7 @@
   <main class="size-full flex select-none">
     <!-- 侧边栏选项 -->
     <section class="left-bar rounded-l-8px" data-tauri-drag-region>
-      <div class="menu-list">
+      <div class="menu-list relative">
         <div v-for="(item, index) in sideOptions" :key="index">
           <div class="menu-item" :class="{ active: activeItem === item.url }" @click="pageJumps(item.url, item.label)">
             <svg><use :href="`#${item.icon}`"></use></svg>
@@ -10,24 +10,52 @@
           </div>
         </div>
       </div>
+
+      <div class="absolute bottom-20px left-60px select-none cursor-default flex items-center gap-10px">
+        <p class="text-(12px #666)">提供者:</p>
+        <a
+          target="_blank"
+          rel="noopener noreferrer"
+          href="https://github.com/nongyehong/HuLa-IM-Tauri"
+          class="text-(12px #13987f) cursor-pointer no-underline">
+          HuLa
+        </a>
+      </div>
     </section>
 
     <!-- 右边内容 -->
-    <section class="bg-[--right-bg-color] rounded-r-8px flex-1 custom-shadow border-l-(1px solid [--line-color])">
+    <section class="bg-[--right-bg-color] relative rounded-r-8px flex-1 border-l-(1px solid [--line-color])">
       <ActionBar :shrink="false" :max-w="false" />
 
-      <header class="header" style="box-shadow: var(--shadow-enabled) 4px 4px var(--box-shadow-color)">
+      <header class="header">
         {{ title }}
       </header>
 
-      <div class="flex-1 p-24px"><router-view /></div>
+      <n-scrollbar style="max-height: calc(100vh - 70px)" :class="{ 'shadow-inner': page.shadow }">
+        <n-flex vertical class="p-24px" :size="12" justify="center" v-if="skeleton">
+          <n-skeleton class="rounded-8px" height="26px" text style="width: 30%" />
+          <n-skeleton class="rounded-8px" height="26px" text :repeat="5" />
+          <n-skeleton class="rounded-8px" height="26px" text style="width: 60%" />
+        </n-flex>
+        <template v-else>
+          <div class="flex-1 p-24px"><router-view /></div>
+
+          <Foot />
+        </template>
+      </n-scrollbar>
     </section>
   </main>
 </template>
 <script setup lang="ts">
 import router from '@/router'
 import { sideOptions } from './config.ts'
+import { setting } from '@/stores/setting.ts'
+import { storeToRefs } from 'pinia'
+import Foot from '@/views/homeWindow/more/settings/Foot.vue'
 
+const settingStore = setting()
+const skeleton = ref(true)
+const { page } = storeToRefs(settingStore)
 /**当前选中的元素 默认选中itemsTop的第一项*/
 const activeItem = ref<string>(sideOptions.value[0].url)
 const title = ref<string>(sideOptions.value[0].label)
@@ -44,6 +72,9 @@ const pageJumps = (url: string, label: string) => {
 }
 
 onMounted(() => {
+  setTimeout(() => {
+    skeleton.value = false
+  }, 300)
   pageJumps(activeItem.value, title.value)
 })
 </script>
@@ -53,7 +84,7 @@ onMounted(() => {
   @include menu-list();
   background: var(--bg-left-menu);
   width: 200px;
-  padding: 20px 12px;
+  padding: 24px 12px;
   box-sizing: border-box;
   color: var(--text-color);
   .menu-item {

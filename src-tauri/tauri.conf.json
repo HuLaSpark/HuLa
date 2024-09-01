@@ -9,10 +9,10 @@
     "devUrl": "http://127.0.0.1:6130"
   },
   "bundle": {
-    "active": true,
     "resources": [
       "tray"
     ],
+    "active": true,
     "targets": "all",
     "icon": [
       "icons/32x32.png",
@@ -31,7 +31,6 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "登录",
         "label": "login",
         "url": "/login",
         "fullscreen": false,
@@ -40,8 +39,9 @@
         "width": 320,
         "height": 448,
         "skipTaskbar": false,
-        "decorations": false,
-        "transparent": true
+        "transparent": false,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true
       },
       {
         "label": "tray",
@@ -54,6 +54,16 @@
         "alwaysOnTop": true,
         "skipTaskbar": true,
         "decorations": false
+      },
+      {
+        "label": "capture",
+        "url": "/capture",
+        "fullscreen": false,
+        "transparent": true,
+        "resizable": false,
+        "skipTaskbar": false,
+        "decorations": false,
+        "visible": false
       }
     ],
     "security": {
