@@ -1,7 +1,7 @@
 <template>
   <!-- 头部 -->
   <ChatHeader :active-item="activeItemRef as any" />
-  <n-flex :size="0" class="h-full">
+  <n-flex :class="{ 'shadow-inner': page.shadow }" :size="0" class="h-full">
     <n-flex vertical :size="0" class="flex-1 relative">
       <!-- 中间聊天框内容  -->
       <ChatMain :active-item="activeItemRef as any" />
@@ -15,7 +15,11 @@
 import { MockItem } from '@/services/types.ts'
 import { listen } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { setting } from '@/stores/setting.ts'
+import { storeToRefs } from 'pinia'
 
+const settingStore = setting()
+const { page } = storeToRefs(settingStore)
 const appWindow = WebviewWindow.getCurrent()
 const { activeItem } = defineProps<{
   activeItem?: MockItem

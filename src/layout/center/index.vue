@@ -42,7 +42,11 @@
         </n-input>
 
         <!-- 添加面板 -->
-        <n-popover v-model:show="addPanels.show" style="padding: 0" :show-arrow="false" trigger="click">
+        <n-popover
+          v-model:show="addPanels.show"
+          style="padding: 0; background: transparent"
+          :show-arrow="false"
+          trigger="click">
           <template #trigger>
             <n-button size="small" secondary style="padding: 0 5px">
               <template #icon>

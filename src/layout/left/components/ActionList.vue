@@ -49,7 +49,7 @@
       <!-- (独立)菜单选项 -->
       <n-popover style="padding: 8px; margin-left: 4px" :show-arrow="false" trigger="hover" placement="right">
         <template #trigger>
-          <svg class="size-22px top-action">
+          <svg style="outline: none" class="size-22px top-action">
             <use href="#menu"></use>
           </svg>
         </template>
@@ -111,9 +111,14 @@
       </div>
 
       <!--  更多选项面板  -->
-      <n-popover v-model:show="settingShow" style="padding: 0" :show-arrow="false" trigger="click">
+      <n-popover
+        v-model:show="settingShow"
+        style="padding: 0; background: transparent"
+        :show-arrow="false"
+        trigger="click">
         <template #trigger>
           <svg
+            style="outline: none"
             :class="{ 'color-#13987f': settingShow }"
             class="more size-22px relative"
             @click="settingShow = !settingShow">

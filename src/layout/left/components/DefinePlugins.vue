@@ -25,7 +25,7 @@
         <svg
           v-if="type() === 'windows'"
           @click="handleClose"
-          class="z-10 w-12px h-12px ml-a cursor-pointer select-none">
+          class="z-10 w-12px h-12px absolute top-6px right-6px cursor-pointer select-none">
           <use href="#close"></use>
         </svg>
       </div>

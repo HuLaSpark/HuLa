@@ -27,8 +27,6 @@
 
 .setting-item {
   @include menu-item-style(absolute);
-  left: 58px;
-  bottom: 10px;
   @include menu-list();
 }
 

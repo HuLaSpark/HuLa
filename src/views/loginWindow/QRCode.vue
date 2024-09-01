@@ -88,7 +88,7 @@ const handleLoginSuccess = async (e: any) => {
   scanStatus.value.show = true
   loadText.value = '登录中...'
   delay(async () => {
-    await createWebviewWindow('HuLa', 'home', 960, 720, 'login', false)
+    await createWebviewWindow('HuLa', 'home', 960, 720, 'login', true)
     settingStore.setAccountInfo({
       avatar: e.avatar,
       name: e.name,

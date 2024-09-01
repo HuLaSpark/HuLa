@@ -259,7 +259,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
   /** input的keydown事件 */
   const inputKeyDown = (e: KeyboardEvent) => {
-    console.log(chat.value.sendKey)
     const isWindows = type() === 'windows'
     const isEnterKey = e.key === 'Enter'
     const isCtrlOrMetaKey = isWindows ? e.ctrlKey : e.metaKey

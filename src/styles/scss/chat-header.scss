@@ -13,7 +13,7 @@
   }
 }
 
-.setting-item {
+.box-item {
   @apply border-(solid 1px [--line-color]) custom-shadow;
   &:first-child {
     margin-top: 0;
