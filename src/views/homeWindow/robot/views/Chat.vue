@@ -4,12 +4,12 @@
   <main>
     <div
       style="box-shadow: var(--shadow-enabled) 4px 4px var(--box-shadow-color)"
-      class="flex truncate p-[14px_20px] justify-between items-center gap-50px">
+      class="flex truncate p-[8px_20px_14px_20px] justify-between items-center gap-50px">
       <n-flex :size="10" vertical class="truncate">
         <p
           v-if="!isEdit"
           @click="handleEdit"
-          class="text-(22px [--chat-text-color]) truncate font-500 hover:underline cursor-pointer">
+          class="leading-7 text-(22px [--chat-text-color]) truncate font-500 hover:underline cursor-pointer">
           {{ currentChat.title }}
         </p>
         <n-input
@@ -22,7 +22,7 @@
           type="text"
           size="tiny"
           style="width: 200px"
-          class="h-22px lh-22px rounded-6px">
+          class="leading-7 text-14px rounded-6px">
         </n-input>
         <p class="text-(14px #707070)">共0条对话</p>
       </n-flex>
@@ -83,11 +83,13 @@
 <script setup lang="ts">
 import MsgInput from '@/components/rightBox/MsgInput.vue'
 import Mitt from '@/utils/Bus.ts'
-import { InputInst } from 'naive-ui'
+import { InputInst, NIcon } from 'naive-ui'
 
 /** 是否是编辑模式 */
 const isEdit = ref(false)
 const inputInstRef = ref<InputInst | null>(null)
+/** 原始标题 */
+const originalTitle = ref('')
 /** 当前聊天的标题和id */
 const currentChat = ref({
   id: 0,
@@ -114,13 +116,20 @@ const features = ref([
 
 const handleBlur = () => {
   isEdit.value = false
-  if (currentChat.value.title === '') {
-    currentChat.value.title = '新的聊天'
+  if (originalTitle.value === currentChat.value.title) {
+    return
   }
+  if (currentChat.value.title === '') {
+    currentChat.value.title = `新的聊天${currentChat.value.id}`
+  }
+  window.$message.success(`已重命名为 ${currentChat.value.title}`, {
+    icon: () => h(NIcon, null, { default: () => h('svg', null, [h('use', { href: '#face' })]) })
+  })
   Mitt.emit('update-chat-title', { title: currentChat.value.title, id: currentChat.value.id })
 }
 
 const handleEdit = () => {
+  originalTitle.value = currentChat.value.title
   isEdit.value = true
   nextTick(() => {
     inputInstRef.value?.select()
@@ -128,9 +137,15 @@ const handleEdit = () => {
 }
 
 onMounted(() => {
+  Mitt.on('left-chat-title', (e) => {
+    const { title, id } = e
+    if (id === currentChat.value.id) {
+      currentChat.value.title = title
+    }
+  })
   Mitt.on('chat-active', (e) => {
     const { title, id } = e
-    currentChat.value.title = title
+    currentChat.value.title = title || `新的聊天${currentChat.value.id}`
     currentChat.value.id = id
   })
 })

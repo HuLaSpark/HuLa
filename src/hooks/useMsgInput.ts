@@ -267,6 +267,13 @@ export const useMsgInput = (messageInputDom: Ref) => {
     const sendKeyIsEnter = chat.value.sendKey === 'Enter'
     const sendKeyIsCtrlEnter = chat.value.sendKey === `${isWindows ? 'Ctrl' : '⌘'}+Enter`
 
+    // 如果当前的系统是mac，我需要判断当前的chat.value.sendKey是否是Enter，再判断当前是否是按下⌘+Enter
+    if (!isWindows && chat.value.sendKey === 'Enter' && e.metaKey && e.key === 'Enter') {
+      // 就进行换行操作
+      e.preventDefault()
+      insertNode(MsgEnum.TEXT, '\n')
+      triggerInputEvent(messageInputDom.value)
+    }
     if (msgInput.value === '' || msgInput.value.trim() === '' || ait.value) {
       e?.preventDefault()
       return

@@ -16,6 +16,7 @@
             padding: 0;
             background: var(--bg-emoji);
             backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             box-shadow: 2px 2px 12px 2px var(--box-shadow-color);
             border: 1px solid var(--box-shadow-color);
           ">

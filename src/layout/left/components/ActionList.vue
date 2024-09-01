@@ -45,6 +45,26 @@
           </svg>
         </n-badge>
       </div>
+
+      <!-- (独立)菜单选项 -->
+      <n-popover style="padding: 8px; margin-left: 4px" :show-arrow="false" trigger="hover" placement="right">
+        <template #trigger>
+          <svg class="size-22px top-action">
+            <use href="#menu"></use>
+          </svg>
+        </template>
+        <n-flex
+          @click="menuShow = true"
+          class="p-[6px_10px] rounded-4px cursor-pointer hover:bg-[--setting-item-line]"
+          align="center"
+          justify="space-between"
+          :size="10">
+          <svg class="size-16px">
+            <use href="#settings"></use>
+          </svg>
+          <p class="select-none">插件管理</p>
+        </n-flex>
+      </n-popover>
     </header>
 
     <!-- 下部分操作栏 -->
@@ -90,31 +110,38 @@
         </n-badge>
       </div>
 
-      <svg
-        :class="{ 'color-#13987f': settingShow }"
-        class="more size-22px relative"
-        @click="settingShow = !settingShow">
-        <use :href="settingShow ? '#hamburger-button-action' : '#hamburger-button'"></use>
-      </svg>
-
       <!--  更多选项面板  -->
-      <div v-if="settingShow" class="setting-item">
-        <div class="menu-list">
-          <div v-for="(item, index) in moreList" :key="index">
-            <div class="menu-item" @click="() => item.click()">
-              <svg><use :href="`#${item.icon}`"></use></svg>
-              {{ item.label }}
+      <n-popover v-model:show="settingShow" style="padding: 0" :show-arrow="false" trigger="click">
+        <template #trigger>
+          <svg
+            :class="{ 'color-#13987f': settingShow }"
+            class="more size-22px relative"
+            @click="settingShow = !settingShow">
+            <use :href="settingShow ? '#hamburger-button-action' : '#hamburger-button'"></use>
+          </svg>
+        </template>
+        <div class="setting-item">
+          <div class="menu-list">
+            <div v-for="(item, index) in moreList" :key="index">
+              <div class="menu-item" @click="() => item.click()">
+                <svg><use :href="`#${item.icon}`"></use></svg>
+                {{ item.label }}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </n-popover>
     </footer>
   </div>
+
+  <DefinePlugins :show="menuShow" @close="(e) => (menuShow = e)" />
 </template>
 <script setup lang="ts">
 import { itemsBottom, itemsTop, moreList } from '../config.tsx'
 import { leftHook } from '../hook.ts'
+import DefinePlugins from './DefinePlugins.vue'
 
+const menuShow = ref(false)
 const dotShow = ref(false)
 const { activeUrl, openWindowsList, settingShow, tipShow, pageJumps } = leftHook()
 
@@ -135,4 +162,8 @@ onMounted(() => {
 </script>
 <style lang="scss" scoped>
 @import '../style';
+.setting-item {
+  left: 24px;
+  bottom: -40px;
+}
 </style>

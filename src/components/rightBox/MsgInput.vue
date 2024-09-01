@@ -12,6 +12,12 @@
         @keydown.exact.enter="inputKeyDown"
         @keydown.exact.meta.enter="inputKeyDown"
         @keydown.exact.ctrl.enter="inputKeyDown"></div>
+      <span
+        v-if="isEntering"
+        @click.stop="messageInputDom.focus()"
+        class="absolute select-none top-8px left-6px w-fit text-(12px #777)">
+        聊点什么吧...
+      </span>
     </n-scrollbar>
   </ContextMenu>
 
@@ -50,38 +56,51 @@
   </div>
 
   <!-- 发送按钮 -->
-  <n-config-provider :theme="lightTheme">
-    <n-button-group size="small" class="pr-20px">
-      <n-button
-        color="#13987f"
-        :disabled="msgInput.length === 0 || msgInput.trim() === ''"
-        class="w-65px"
-        @click="send">
-        发送
-      </n-button>
-      <n-button color="#13987f" class="p-[0_6px]">
-        <template #icon>
-          <n-config-provider :theme="themes.content === ThemeEnum.DARK ? darkTheme : lightTheme">
-            <n-popselect
-              v-model:show="arrow"
-              v-model:value="chatKey"
-              :options="sendOptions"
-              trigger="click"
-              placement="top-end">
-              <svg @click="arrow = true" v-if="!arrow" class="w-22px h-22px mt-2px outline-none">
-                <use href="#down"></use>
-              </svg>
-              <svg @click="arrow = false" v-else class="w-22px h-22px mt-2px outline-none"><use href="#up"></use></svg>
-            </n-popselect>
-          </n-config-provider>
-        </template>
-      </n-button>
-    </n-button-group>
-  </n-config-provider>
+  <n-flex align="center" justify="space-between" :size="12">
+    <n-flex align="center" :size="4" class="text-(12px #777) tracking-1">
+      <svg class="size-12px"><use href="#Enter"></use></svg>
+      发送/
+      <n-flex align="center" :size="0">
+        {{ type() === 'macos' ? MacOsKeyEnum['⌘'] : WinKeyEnum.ctrl }}
+        <svg class="size-12px"><use href="#Enter"></use></svg>
+      </n-flex>
+      换行
+    </n-flex>
+    <n-config-provider :theme="lightTheme">
+      <n-button-group size="small" class="pr-20px">
+        <n-button
+          color="#13987f"
+          :disabled="msgInput.length === 0 || msgInput.trim() === ''"
+          class="w-65px"
+          @click="send">
+          发送
+        </n-button>
+        <n-button color="#13987f" class="p-[0_6px]">
+          <template #icon>
+            <n-config-provider :theme="themes.content === ThemeEnum.DARK ? darkTheme : lightTheme">
+              <n-popselect
+                v-model:show="arrow"
+                v-model:value="chatKey"
+                :options="sendOptions"
+                trigger="click"
+                placement="top-end">
+                <svg @click="arrow = true" v-if="!arrow" class="w-22px h-22px mt-2px outline-none">
+                  <use href="#down"></use>
+                </svg>
+                <svg @click="arrow = false" v-else class="w-22px h-22px mt-2px outline-none">
+                  <use href="#up"></use>
+                </svg>
+              </n-popselect>
+            </n-config-provider>
+          </template>
+        </n-button>
+      </n-button-group>
+    </n-config-provider>
+  </n-flex>
 </template>
 <script setup lang="ts">
 import { lightTheme, darkTheme, VirtualListInst } from 'naive-ui'
-import { MittEnum, RoomTypeEnum, ThemeEnum } from '@/enums'
+import { MacOsKeyEnum, MittEnum, RoomTypeEnum, ThemeEnum, WinKeyEnum } from '@/enums'
 import Mitt from '@/utils/Bus.ts'
 import { CacheUserItem, MockItem } from '@/services/types.ts'
 import { emit, listen } from '@tauri-apps/api/event'
@@ -91,6 +110,7 @@ import { sendOptions } from '@/views/homeWindow/more/settings/config.ts'
 import { useMsgInput } from '@/hooks/useMsgInput.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { onKeyStroke } from '@vueuse/core'
+import { type } from '@tauri-apps/plugin-os'
 
 const settingStore = setting()
 const { themes } = storeToRefs(settingStore)
@@ -101,6 +121,10 @@ const messageInputDom = ref()
 const activeItem = ref(inject('activeItem') as MockItem)
 /** 虚拟列表 */
 const virtualListInst = ref<VirtualListInst>()
+/** 是否处于输入状态 */
+const isEntering = computed(() => {
+  return msgInput.value === ''
+})
 const { handlePaste } = useCommon()
 /** 引入useMsgInput的相关方法 */
 const { inputKeyDown, handleAit, handleInput, send, personList, ait, msgInput, chatKey, menuList, selectedAitKey } =

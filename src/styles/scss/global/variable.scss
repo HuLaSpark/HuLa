@@ -2,11 +2,13 @@
 * {
   font-family: var(--font-family), sans-serif !important;
   font-weight: 500 !important;
+  caret-color: #13987f !important;  /* 改变输入框光标的颜色 */
 }
 html, body {
   overscroll-behavior: none; // 禁止mac的“触底反弹”效果
 }
 /**! 主题变量 */
+/* todo: 这里只需要定义单个颜色的变量即可无需重复定义组件的颜色 */
 :root {
   // 是否启用阴影
   --shadow-enabled: 1;
@@ -84,6 +86,11 @@ html, body {
   --chat-hover-color: #e3e3e3;
   // 搜索框内样式
   --search-color: #eee;
+  // bate
+  --bate-color: #a789d9;
+  --bate-bg: #d9ccf7;
+  // 卡片hover样式
+  --card-bg: #13987f60;
 }
 
 html[data-theme='dark'] {
@@ -158,6 +165,11 @@ html[data-theme='dark'] {
   --chat-hover-color: #262626;
   // 搜索框内样式
   --search-color: #333;
+  // bate
+  --bate-color: #a789d9;
+  --bate-bg: #403555;
+  // 卡片hover样式
+  --card-bg: #13987f20;
 }
 /**! end */
 // 线性动画
@@ -210,6 +222,7 @@ html[data-theme='dark'] {
   bottom: 0;
   background-color: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur($blur);
+  -webkit-backdrop-filter: blur($blur);
 }
 .n-modal-mask {
   @include mask-style;
@@ -288,4 +301,11 @@ html[data-theme='dark'] {
       }
     }
   }
+}
+
+/** 修改默认的naive-ui的选择器样式 */
+:deep(.n-base-selection) {
+  --n-box-shadow-active: 0 0 0 2px rgba(19, 152, 127, 0.2) !important;
+  --n-border-active: 1px solid #13987f !important;
+  --n-border-hover: 1px solid #13987f !important;
 }

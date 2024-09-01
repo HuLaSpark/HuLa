@@ -40,23 +40,28 @@
             <svg class="w-12px h-12px"><use href="#search"></use></svg>
           </template>
         </n-input>
-        <n-button @click="addPanels.show = !addPanels.show" size="small" secondary style="padding: 0 5px">
-          <template #icon>
-            <svg class="w-24px h-24px"><use href="#plus"></use></svg>
-          </template>
-        </n-button>
 
         <!-- 添加面板 -->
-        <div v-if="addPanels.show" class="add-item">
-          <div class="menu-list">
-            <div v-for="(item, index) in addPanels.list" :key="index">
-              <div class="menu-item" @click="() => item.click()">
-                <svg><use :href="`#${item.icon}`"></use></svg>
-                {{ item.label }}
+        <n-popover v-model:show="addPanels.show" style="padding: 0" :show-arrow="false" trigger="click">
+          <template #trigger>
+            <n-button size="small" secondary style="padding: 0 5px">
+              <template #icon>
+                <svg class="w-24px h-24px"><use href="#plus"></use></svg>
+              </template>
+            </n-button>
+          </template>
+
+          <div @click.stop="addPanels.show = false" class="add-item">
+            <div class="menu-list">
+              <div v-for="(item, index) in addPanels.list" :key="index">
+                <div class="menu-item" @click="() => item.click()">
+                  <svg><use :href="`#${item.icon}`"></use></svg>
+                  {{ item.label }}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </n-popover>
       </div>
     </header>
 
@@ -148,9 +153,6 @@ const closeMenu = (event: Event) => {
   /** 判断如果点击的搜索框，就关闭消息列表 */
   if (!e.matches('#search, #search *, #centerList *, #centerList') && route === '/searchDetails') {
     router.go(-1)
-  }
-  if (!e.matches('.add-item')) {
-    addPanels.value.show = false
   }
 }
 

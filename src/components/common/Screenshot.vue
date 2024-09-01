@@ -1,377 +1,432 @@
 <template>
-  <div class="screen-container">
-    <canvas ref="canvas"></canvas>
-    <div
-      v-if="showButtons"
-      class="action-buttons"
-      :style="{ top: `${buttonGroupPositions.top}px`, left: `${buttonGroupPositions.left}px` }">
-      <button @click="drawCanvas('rect')">绘制矩形</button>
-      <button @click="drawCanvas('circle')">绘制圆形</button>
-      <button @click="drawCanvas('arrow')">绘制箭头</button>
-      <button @click="drawCanvas('mosaic')">添加马赛克</button>
-      <button @click="drawCanvas('redo')">重做</button>
-      <button @click="drawCanvas('undo')">撤销</button>
-      <!-- <button @click="addText">添加文字</button>
-      <button @click="canvasTool.redo">撤销</button>
-      <button @click="canvasTool.undo">重做</button>
-      <button @click="clearCanvas">清空画布</button> -->
+  <div ref="canvasbox" class="canvasbox">
+    <canvas ref="drawCanvas" class="draw-canvas"></canvas>
+    <canvas ref="maskCanvas" class="mask-canvas"></canvas>
+    <canvas ref="imgCanvas" class="img-canvas"></canvas>
+    <div ref="magnifier" class="magnifier">
+      <canvas ref="magnifierCanvas"></canvas>
+    </div>
+    <div ref="buttonGroup" class="button-group" v-show="showButtonGroup" :style="buttonGroupStyle">
+      <button @click="drawImgCanvas('rect')">矩形</button>
+      <button @click="drawImgCanvas('circle')">圆形</button>
+      <button @click="drawImgCanvas('arrow')">箭头</button>
+      <button @click="drawImgCanvas('mosaic')">马赛克</button>
+      <button @click="drawImgCanvas('redo')">重做</button>
+      <button @click="drawImgCanvas('undo')">撤销</button>
       <button @click="confirmSelection">确定</button>
       <button @click="cancelSelection">取消</button>
     </div>
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { invoke } from '@tauri-apps/api/core'
+import { listen } from '@tauri-apps/api/event'
 import { writeImage } from '@tauri-apps/plugin-clipboard-manager'
 import { useCanvasTool } from '@/hooks/useCanvasTool'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { emit } from '@tauri-apps/api/event'
 
-let canvasTool: any
+const canvasbox = ref(null)
 
-const props = defineProps({
-  isCapturing: {
-    type: Boolean,
-    default: false
-  }
+// 图像层
+const imgCanvas = ref(null)
+const imgCtx = ref(null)
+
+// 蒙版层
+const maskCanvas = ref(null)
+const maskCtx = ref(null)
+
+// 绘图层
+const drawCanvas = ref(null)
+const drawCtx = ref(null)
+let drawTools
+
+// 放大镜
+const magnifier = ref(null)
+const magnifierCanvas = ref(null)
+const magnifierCtx = ref(null)
+const magnifierSize = 150 // 放大镜的尺寸
+const zoomFactor = 3 // 放大的倍数
+
+// 按钮组
+const buttonGroup = ref(null)
+const showButtonGroup = ref(false) // 控制按钮组显示
+
+const buttonGroupStyle = ref({
+  width: 300,
+  height: 40
 })
 
-watch(
-  () => props.isCapturing,
-  (newValue) => {
-    if (newValue) {
-      initCanvas()
-    }
-  }
-)
-
-const canvas = ref<HTMLCanvasElement | null>(null)
-const context = ref<CanvasRenderingContext2D | null>(null)
-const showButtons = ref(false)
-const isDrawGraphics = ref(false) // 添加 isdrawGraphics 变量来跟踪是否正在绘制图形
-
-const isDrawing = ref(false)
-const isMoving = ref(false)
-const startX = ref(0)
-const startY = ref(0)
-const endX = ref(0)
-const endY = ref(0)
-
-const offsetX = ref(0)
-const offsetY = ref(0)
-const initialRect = { x: 0, y: 0, width: 0, height: 0 }
-
-const scaleX = ref(1)
-const scaleY = ref(1)
-
-const cornerRadius = ref(3)
-const screenFillStyle = ref('green')
-const buttonGroupPositions = ref({
-  top: 0,
-  left: 0
+// 截屏信息
+const screenConfig = ref({
+  startX: 0,
+  startY: 0,
+  endX: 0,
+  endY: 0,
+  scaleX: 0,
+  scaleY: 0,
+  isDrawing: false,
+  width: 0,
+  height: 0
 })
 
-let screenshotImage: HTMLImageElement
+// 截屏图片
+let screenshotImage
 
-async function initCanvas() {
-  const config = {
-    x: '0',
-    y: '0',
-    width: `${screen.width * window.devicePixelRatio}`,
-    height: `${screen.height * window.devicePixelRatio}`
-  }
-
-  const screenshotData = await invoke<string>('screenshot', config)
-
-  if (canvas.value) {
-    const { clientWidth: containerWidth, clientHeight: containerHeight } = canvas.value
-    scaleX.value = (screen.width * window.devicePixelRatio) / containerWidth
-    scaleY.value = (screen.height * window.devicePixelRatio) / containerHeight
-
-    canvas.value.width = screen.width * window.devicePixelRatio
-    canvas.value.height = screen.height * window.devicePixelRatio
-    context.value = canvas.value.getContext('2d')
-    screenshotImage = new Image()
-    screenshotImage.src = `data:image/jpeg;base64,${screenshotData}`
-    screenshotImage.onload = () => {
-      if (context.value) {
-        context.value.drawImage(screenshotImage, 0, 0, (canvas.value as any).width, (canvas.value as any).height)
-        drawMask()
-      }
-    }
-
-    canvasTool = useCanvasTool(canvas.value, context.value as any)
-
-    // 事件监听器移入 initCanvas
-    canvas.value.addEventListener('mousedown', handleMouseDown)
-    canvas.value.addEventListener('mousemove', handleMouseMove)
-    canvas.value.addEventListener('mouseup', handleMouseUp)
-  }
-}
+onMounted(async () => {
+  await listen('capture', () => {
+    initCanvas()
+    initMagnifier()
+  })
+})
 
 /**
  * 绘制图形
  * @param {string} type - 图形类型
  */
-const drawCanvas = (type: string) => {
-  if (!canvasTool) return
+function drawImgCanvas(type) {
+  if (!drawTools) return
 
-  isDrawGraphics.value = true
+  //isDrawGraphics.value = true;
 
-  // 确保绘图工具的 canvas 已经创建
-  if (!canvasTool.getOverlayCanvas()) {
-    canvasTool.create()
-  }
   const drawableTypes = ['rect', 'circle', 'arrow', 'mosaic']
   // 绘制马赛克时设置笔宽
   if (type === 'mosaic') {
-    canvasTool.drawMosaicBrushSize(30) // 设置马赛克笔刷大小
+    drawTools.drawMosaicBrushSize(20) // 设置马赛克笔刷大小
   }
 
   if (drawableTypes.includes(type)) {
-    canvasTool.draw(type) // 调用绘图方法
+    drawTools.draw(type) // 调用绘图方法
   } else if (type === 'redo') {
-    canvasTool.redo() // 调用重做方法
+    drawTools.redo() // 调用重做方法
   } else if (type === 'undo') {
-    canvasTool.undo() // 调用撤销方法
+    drawTools.undo() // 调用撤销方法
   }
 }
 
-function drawMask() {
-  if (context.value && canvas.value) {
-    context.value.fillStyle = 'rgba(0, 0, 0, 0.4)'
-    context.value.fillRect(0, 0, canvas.value.width, canvas.value.height)
+/**
+ * 初始化canvas
+ */
+async function initCanvas() {
+  const canvasWidth = screen.width * window.devicePixelRatio
+  const canvasHeight = screen.height * window.devicePixelRatio
+
+  const config = {
+    x: '0',
+    y: '0',
+    width: `${canvasWidth}`,
+    height: `${canvasHeight}`
   }
+
+  const screenshotData = await invoke('screenshot', config)
+
+  if (imgCanvas.value && maskCanvas.value) {
+    imgCanvas.value.width = canvasWidth
+    imgCanvas.value.height = canvasHeight
+    maskCanvas.value.width = canvasWidth
+    maskCanvas.value.height = canvasHeight
+    drawCanvas.value.width = canvasWidth
+    drawCanvas.value.height = canvasHeight
+
+    imgCtx.value = imgCanvas.value.getContext('2d')
+    maskCtx.value = maskCanvas.value.getContext('2d')
+    drawCtx.value = drawCanvas.value.getContext('2d', { willReadFrequently: true })
+
+    // 获取屏幕缩放比例
+    const { clientWidth: containerWidth, clientHeight: containerHeight } = imgCanvas.value
+    screenConfig.value.scaleX = canvasWidth / containerWidth
+    screenConfig.value.scaleY = canvasHeight / containerHeight
+
+    screenshotImage = new Image()
+    screenshotImage.src = `data:image/png;base64,${screenshotData}`
+
+    screenshotImage.onload = () => {
+      if (imgCtx.value) {
+        imgCtx.value.drawImage(screenshotImage, 0, 0, canvasWidth, canvasHeight)
+        // 绘制全屏绿色边框
+        drawRectangle(maskCtx.value, screenConfig.value.startX, screenConfig.value.startY, canvasWidth, canvasHeight, 4)
+
+        drawTools = useCanvasTool(drawCanvas, drawCtx, imgCtx, screenConfig)
+      }
+    }
+  }
+
+  // 添加鼠标监听事件
+  maskCanvas.value.addEventListener('mousedown', handleMaskMouseDown)
+  maskCanvas.value.addEventListener('mousemove', handleMaskMouseMove)
+  maskCanvas.value.addEventListener('mouseup', handleMaskMouseUp)
 }
 
-function drawSelectionRect(x: number, y: number, width: number, height: number) {
-  if (context.value) {
-    context.value.drawImage(screenshotImage, 0, 0, (canvas.value as any).width, (canvas.value as any).height)
+function handleMaskMouseDown(event) {
+  // 如果已经显示按钮组，则不执行任何操作
+  if (showButtonGroup.value) return
+  screenConfig.value.startX = event.offsetX * screenConfig.value.scaleX
+  screenConfig.value.startY = event.offsetY * screenConfig.value.scaleY
+  screenConfig.value.isDrawing = true
+  if (!screenConfig.value.isDrawing) {
     drawMask()
-    context.value.clearRect(x, y, width, height)
-    context.value.drawImage(screenshotImage, x, y, width, height, x, y, width, height)
-    context.value.strokeStyle = screenFillStyle.value
-    context.value.lineWidth = 1
-    context.value.strokeRect(x, y, width, height)
-    drawCornersAndMidpoints(x, y, width, height)
+  } // 先绘制遮罩层
+}
 
-    // 绘制矩形大小文本
-    drawSizeText(x, y, width, height)
+function handleMaskMouseMove(event) {
+  handleMagnifierMouseMove(event)
+  if (!screenConfig.value.isDrawing || !maskCtx.value) return
+
+  const mouseX = event.offsetX * screenConfig.value.scaleX
+  const mouseY = event.offsetY * screenConfig.value.scaleY
+  const width = mouseX - screenConfig.value.startX
+  const height = mouseY - screenConfig.value.startY
+
+  // 清除之前的矩形区域
+  maskCtx.value.clearRect(0, 0, maskCanvas.value.width, maskCanvas.value.height)
+
+  // 重新绘制整个遮罩层
+  drawMask()
+
+  // 清除矩形区域内的遮罩，实现透明效果
+  maskCtx.value.clearRect(screenConfig.value.startX, screenConfig.value.startY, width, height)
+
+  // 绘制矩形边框
+  drawRectangle(maskCtx.value, screenConfig.value.startX, screenConfig.value.startY, width, height)
+}
+
+function handleMaskMouseUp(event) {
+  if (!screenConfig.value.isDrawing) return
+  screenConfig.value.isDrawing = false
+  // 记录矩形区域的结束坐标
+  screenConfig.value.endX = event.offsetX * screenConfig.value.scaleX
+  screenConfig.value.endY = event.offsetY * screenConfig.value.scaleY
+
+  // 记录矩形区域的宽高
+  screenConfig.value.width = Math.abs(screenConfig.value.endX - screenConfig.value.startX)
+  screenConfig.value.height = Math.abs(screenConfig.value.endY - screenConfig.value.startY)
+  // 判断矩形区域是否有效
+  if (screenConfig.value.width > 5 && screenConfig.value.height > 5) {
+    // 根据矩形位置计算按钮组位置
+    updateButtonGroupPosition()
+    showButtonGroup.value = true // 显示按钮组
   }
 }
 
-function drawSizeText(x: number, y: number, width: number, height: number) {
-  if (context.value) {
+// 计算矩形区域工具栏位置
+function updateButtonGroupPosition() {
+  const { scaleX, scaleY, startX, startY, endX, endY } = screenConfig.value
+
+  // 矩形的边界
+  const minX = Math.min(startX, endX) / scaleX
+  const minY = Math.min(startY, endY) / scaleY
+  const maxX = Math.max(startX, endX) / scaleX
+  const maxY = Math.max(startY, endY) / scaleY
+
+  // 按钮组尺寸
+  const buttonGroupHeight = buttonGroupStyle.value.height
+  const buttonGroupWidth = buttonGroupStyle.value.width
+
+  // 可用屏幕尺寸
+  const availableHeight = screen.availHeight
+  const availableWidth = screen.availWidth
+
+  // 根据矩形的位置计算按钮组的垂直位置
+  let topPosition = maxY + 10 + buttonGroupHeight > availableHeight ? minY - 10 - buttonGroupHeight : maxY + 10
+
+  // 根据矩形的位置计算按钮组的水平位置
+  let leftPosition = maxX + buttonGroupWidth > availableWidth ? maxX - buttonGroupWidth : minX
+
+  // 判断矩形高度选取是否超过 屏幕高度，则放置在框选矩形内
+  if (Math.abs(maxY - minY) + buttonGroupHeight + 10 > screen.height) {
+    topPosition = screen.height - buttonGroupHeight - 10
+  }
+
+  buttonGroup.value.style.top = `${topPosition}px`
+  buttonGroup.value.style.left = `${leftPosition}px`
+}
+
+/**
+ * 绘制矩形
+ */
+function drawRectangle(context, x, y, width, height, lineWidth = 2) {
+  context.strokeStyle = 'green'
+  context.lineWidth = lineWidth
+  context.strokeRect(x, y, width, height)
+
+  drawSizeText(context, x, y, width, height)
+}
+
+/**
+ * 绘制矩形尺寸文本
+ */
+function drawSizeText(context, x, y, width, height) {
+  if (context) {
     // 对宽度和高度进行取整
     const roundedWidth = Math.round(Math.abs(width))
     const roundedHeight = Math.round(Math.abs(height))
     const sizeText = `${roundedWidth} x ${roundedHeight}`
 
-    // 设置字体为加粗
-    context.value.font = '500 18px Arial'
-    context.value.fillStyle = 'white'
-    context.value.fillText(sizeText, x, y - 10) // 在矩形上方绘制文本
+    // 确保文本始终显示在矩形的左上角
+    const textX = width >= 0 ? x : x + width
+    const textY = height >= 0 ? y : y + height
+
+    // 设置字体和样式
+    context.font = '14px Arial'
+    context.fillStyle = 'white'
+    // 设置图像插值质量
+    context.imageSmoothingEnabled = true
+    context.imageSmoothingQuality = 'high'
+    context.fillText(sizeText, textX + 5, textY - 10) // 在矩形左上角并稍微偏移的位置绘制文本
   }
 }
 
-function handleMouseDown(event: MouseEvent) {
-  const { offsetX: canvasOffsetX, offsetY: canvasOffsetY } = event
-  const x = canvasOffsetX * scaleX.value
-  const y = canvasOffsetY * scaleY.value
-
-  if (isPointInRectangle(x, y)) {
-    isMoving.value = true
-    offsetX.value = x - startX.value
-    offsetY.value = y - startY.value
-    initialRect.x = startX.value
-    initialRect.y = startY.value
-    initialRect.width = endX.value - startX.value
-    initialRect.height = endY.value - startY.value
-  } else {
-    isDrawing.value = true
-    startX.value = x
-    startY.value = y
-    showButtons.value = false
+/**
+ * 绘制蒙版
+ */
+function drawMask() {
+  if (maskCtx.value) {
+    maskCtx.value.fillStyle = 'rgba(0, 0, 0, 0.4)'
+    maskCtx.value.fillRect(0, 0, maskCanvas.value.width, maskCanvas.value.height)
   }
 }
 
-function handleMouseMove(event: MouseEvent) {
-  const { offsetX: canvasOffsetX, offsetY: canvasOffsetY } = event
-  const x = canvasOffsetX * scaleX.value
-  const y = canvasOffsetY * scaleY.value
-
-  // 判断鼠标是否在矩形区域内
-  if (x >= startX.value && x <= endX.value && y >= startY.value && y <= endY.value) {
-    if (canvas.value) {
-      canvas.value.style.cursor = 'move'
-    }
-  } else {
-    if (canvas.value) {
-      canvas.value.style.cursor = 'default'
-    }
-  }
-
-  if (isDrawing.value) {
-    drawSelectionRect(startX.value, startY.value, x - startX.value, y - startY.value)
-  } else if (isMoving.value) {
-    const newStartX = x - offsetX.value
-    const newStartY = y - offsetY.value
-    startX.value = newStartX
-    startY.value = newStartY
-    endX.value = newStartX + initialRect.width
-    endY.value = newStartY + initialRect.height
-    drawSelectionRect(startX.value, startY.value, initialRect.width, initialRect.height)
+/**
+ * 初始化放大镜
+ */
+function initMagnifier() {
+  if (magnifierCanvas.value) {
+    magnifierCanvas.value.width = magnifierSize
+    magnifierCanvas.value.height = magnifierSize
+    magnifierCtx.value = magnifierCanvas.value.getContext('2d', { willReadFrequently: true })
   }
 }
 
-const calculateButtonPositions = () => {
-  // 计算按钮组的位置
-  const buttonGroupWidth: any = 650 // 按钮组的宽度
-  const buttonGroupHeight: any = 45 // 按钮组的高度
+/**
+ * 放大镜事件
+ */
+function handleMagnifierMouseMove(event) {
+  const { offsetX, offsetY } = event
 
-  let height = screen.availHeight
+  // 可用屏幕尺寸
+  const winHeight = window.innerHeight
+  const winWidth = window.innerWidth
 
-  // let width = screen.availWidth
+  // 计算放大镜的位置，使其跟随鼠标移动
+  let magnifierLeft = offsetX + 20
+  let magnifierTop = offsetY + 20
 
-  //let bigEnd = endX.value < startX.value ? startX.value : endX.value;
-  let x = endX.value < startX.value ? endX.value : startX.value
-
-  //let bigStart = endY.value < startY.value ? startY.value : endY.value;
-  // let y = endY.value < startY.value ? endY.value : startY.value
-
-  if (x < buttonGroupWidth) {
-    buttonGroupPositions.value.left =
-      endX.value > startX.value ? startX.value + 10 + buttonGroupWidth / 2 : endX.value + 10 + buttonGroupWidth / 2
-  } else {
-    buttonGroupPositions.value.left =
-      endX.value > startX.value ? endX.value - buttonGroupWidth / 2 : startX.value - buttonGroupWidth / 2
+  // 防止放大镜超出屏幕边界
+  if (magnifierLeft + magnifierSize > winWidth) {
+    magnifierLeft = winWidth - magnifierSize
   }
 
-  // if (smallStart + buttonGroupHeight + 10 > height) {
-  //   buttonGroupPositions.value.top = endY.value > startY.value ? (startY.value + 10 + buttonGroupHeight / 2) : (endY.value + 10 + buttonGroupHeight / 2);
-  // } else {
-  //   buttonGroupPositions.value.top = endY.value > startY.value ? (endY.value - buttonGroupHeight / 2) : (startY.value - buttonGroupHeight / 2);
-  // }
-  //  y = y + buttonGroupHeight + 10
-  // if ( y > height) {
-  //   buttonGroupPositions.value.top =  (height - (endY.value - startY.value) - 10);
-  // } else {
-  //   buttonGroupPositions.value.top = endY.value + 10;
-  // }
-
-  if (endY.value + buttonGroupHeight + 10 > height) {
-    buttonGroupPositions.value.top = height - (endY.value - startY.value) - 10
-  } else {
-    buttonGroupPositions.value.top = endY.value + 10
+  if (magnifierTop + magnifierSize > winHeight) {
+    magnifierTop = winHeight - magnifierSize
   }
+
+  magnifier.value.style.left = `${magnifierLeft}px`
+  magnifier.value.style.top = `${magnifierTop}px`
+  magnifier.value.style.display = 'block'
+
+  // 在放大镜中绘制放大内容
+  drawMagnifiedContent(offsetX, offsetY)
 }
 
-function handleMouseUp(event: MouseEvent) {
-  if (isDrawing.value) {
-    endX.value = startX.value + event.offsetX * scaleX.value - startX.value
-    endY.value = startY.value + event.offsetY * scaleY.value - startY.value
-    isDrawing.value = false
-    showButtons.value = true
-  } else if (isMoving.value) {
-    isMoving.value = false
-  }
-  calculateButtonPositions()
-}
+/**
+ * 绘制放大镜内容
+ */
+function drawMagnifiedContent(mouseX, mouseY) {
+  const canvasWidth = imgCanvas.value.width
+  const canvasHeight = imgCanvas.value.height
 
-function isPointInRectangle(x: number, y: number) {
-  return x > startX.value && x < endX.value && y > startY.value && y < endY.value
-}
+  // 计算放大镜区域的左上角坐标，确保放大区域以鼠标为中心
+  const magnifierX = Math.max(0, mouseX * window.devicePixelRatio - magnifierSize / (2 * zoomFactor))
+  const magnifierY = Math.max(0, mouseY * window.devicePixelRatio - magnifierSize / (2 * zoomFactor))
 
-function drawCornersAndMidpoints(x: number, y: number, width: number, height: number) {
-  if (context.value) {
-    context.value.fillStyle = screenFillStyle.value
+  // 调整放大镜的位置，避免超出画布边界
+  const adjustedX = Math.min(magnifierX, canvasWidth - magnifierSize / zoomFactor)
+  const adjustedY = Math.min(magnifierY, canvasHeight - magnifierSize / zoomFactor)
 
-    const points = [
-      { x, y },
-      { x: x + width, y },
-      { x, y: y + height },
-      { x: x + width, y: y + height },
-      { x: x + width / 2, y },
-      { x: x + width / 2, y: y + height },
-      { x, y: y + height / 2 },
-      { x: x + width, y: y + height / 2 }
-    ]
+  magnifierCtx.value.clearRect(0, 0, magnifierSize, magnifierSize)
 
-    points.forEach(({ x, y }) => {
-      context.value!.beginPath()
-      context.value!.arc(x, y, cornerRadius.value, 0, 2 * Math.PI)
-      context.value!.fill()
-    })
-  }
+  // 绘制放大区域，以鼠标位置为中心
+  magnifierCtx.value.drawImage(
+    imgCanvas.value,
+    adjustedX,
+    adjustedY,
+    magnifierSize / zoomFactor,
+    magnifierSize / zoomFactor,
+    0,
+    0,
+    magnifierSize,
+    magnifierSize
+  )
 }
 
 function confirmSelection() {
-  if (context.value && canvas.value) {
-    const width = endX.value - startX.value
-    const height = endY.value - startY.value
+  const { startX, startY, endX, endY } = screenConfig.value
 
-    // 获取选区图像数据
-    const imageData = context.value.getImageData(startX.value, startY.value, width, height)
+  // 计算选区的宽高
+  const width = Math.abs(endX - startX)
+  const height = Math.abs(endY - startY)
 
-    // 创建一个离屏 canvas 用于导出选区图像
-    const offscreenCanvas = document.createElement('canvas')
-    offscreenCanvas.width = width
-    offscreenCanvas.height = height
-    const offscreenContext = offscreenCanvas.getContext('2d')
+  // 计算选区的左上角位置
+  const rectX = Math.min(startX, endX)
+  const rectY = Math.min(startY, endY)
 
-    if (offscreenContext) {
-      offscreenContext.putImageData(imageData, 0, 0)
-      offscreenCanvas.toBlob(async (blob) => {
-        if (blob) {
-          const arrayBuffer = await blob.arrayBuffer()
-          const buffer = new Uint8Array(arrayBuffer)
-          writeImage(buffer).then(() => {
-            cancelSelection()
-          })
-        }
-      }, 'image/png')
-    }
+  const devicePixelRatio = window.devicePixelRatio || 1
+
+  imgCtx.value.scale(devicePixelRatio, devicePixelRatio)
+
+  // 将 drawCanvas 的内容绘制到 imgCanvas 上
+  imgCtx.value.drawImage(drawCanvas.value, 0, 0)
+
+  // 创建一个临时 canvas 来存储裁剪后的图像
+  const offscreenCanvas = document.createElement('canvas')
+  const offscreenCtx = offscreenCanvas.getContext('2d')
+
+  // 设置临时 canvas 的尺寸
+  offscreenCanvas.width = width
+  offscreenCanvas.height = height
+
+  if (offscreenCtx) {
+    // 裁剪 imgCanvas 上的选区并绘制到临时 canvas 上
+    offscreenCtx.drawImage(
+      imgCanvas.value,
+      rectX,
+      rectY,
+      width,
+      height, // 裁剪区域
+      0,
+      0,
+      width,
+      height // 绘制到临时 canvas 的区域
+    )
+
+    // 将裁剪后的图像转换为 Blob 并复制到剪贴板
+    offscreenCanvas.toBlob(async (blob) => {
+      if (blob) {
+        const arrayBuffer = await blob.arrayBuffer()
+        const buffer = new Uint8Array(arrayBuffer)
+
+        writeImage(buffer).then(() => {
+          cancelSelection()
+        })
+      }
+    }, 'image/png')
   }
+
+  showButtonGroup.value = false // 隐藏按钮组
 }
 
 function cancelSelection() {
-  if (context.value && canvas.value) {
-    context.value.clearRect(0, 0, canvas.value.width, canvas.value.height)
-
-    context.value = null
-    canvas.value = null
-    showButtons.value = false
-    isDrawing.value = false
-    isMoving.value = false
-    startX.value = 0
-    startY.value = 0
-    endX.value = 0
-    endY.value = 0
-    offsetX.value = 0
-    offsetY.value = 0
-
-    nextTick(() => {
-      WebviewWindow.getByLabel('capture')?.hide()
-      emit('capture', false)
-    })
-  }
+  console.log('取消选区')
+  // 在此处理取消按钮的逻辑
+  showButtonGroup.value = false // 隐藏按钮组
 }
-
-onUnmounted(() => {
-  if (canvas.value) {
-    canvas.value.removeEventListener('mousedown', handleMouseDown)
-    canvas.value.removeEventListener('mousemove', handleMouseMove)
-    canvas.value.removeEventListener('mouseup', handleMouseUp)
-  }
-})
 </script>
 
-<style scoped>
-.screen-container {
+<style lang="scss" scoped>
+.canvasbox {
   width: 100vw;
   height: 100vh;
   position: relative;
+  background-color: transparent;
 }
 
 canvas {
@@ -382,21 +437,50 @@ canvas {
   left: 0;
 }
 
-.action-buttons {
+.magnifier {
+  position: absolute;
+  pointer-events: none;
+  width: 150px;
+  height: 150px;
+  border: 2px solid #ccc;
+  border-radius: 50%;
+  overflow: hidden;
+  display: none;
+}
+
+.img-canvas {
+  z-index: 0;
+}
+
+.mask-canvas {
+  z-index: 1;
+}
+
+.draw-canvas {
+  z-index: 1;
+  pointer-events: none;
+  /* 确保事件穿透到下面的 canvas */
+}
+
+.magnifier canvas {
+  display: block;
+  z-index: 2;
+}
+
+.button-group {
   position: absolute;
   display: flex;
   gap: 10px;
-  height: 35px;
-  transform: translate(-50%, 0);
+  //transform: translate(-50%, 0);
   background: white;
   border: 1px solid #ccc;
   border-radius: 5px;
   padding: 5px;
-}
+  z-index: 3;
 
-.action-buttons button {
-  padding: 5px 10px;
-  font-size: 14px;
-  cursor: pointer;
+  button {
+    padding: 5px 10px;
+    cursor: pointer;
+  }
 }
 </style>

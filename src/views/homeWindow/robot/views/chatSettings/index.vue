@@ -20,7 +20,7 @@
           vertical
           class="w-full h-fit bg-[--bg-setting-item] border-(solid 1px [--line-color]) custom-shadow rounded-8px p-10px">
           <n-flex vertical justify="center" v-for="(item, index) in key" :key="index">
-            <n-flex justify="space-between" :size="0" align="center" class="p-8px">
+            <n-flex justify="space-between" :size="20" align="center" class="p-8px">
               <n-flex vertical :size="4">
                 <p class="text-(15px [--chat-text-color]) font-500">{{ item.title }}</p>
                 <p v-if="item.description" class="text-(12px #909090)">{{ item.description }}</p>

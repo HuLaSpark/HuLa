@@ -1,152 +1,194 @@
-export function useCanvasTool(canvas: any, ctx: any) {
-  const startX = ref(0)
-  const startY = ref(0)
-  const isDrawing = ref(false)
-  const currentTool = ref('rect')
-  const brushSize = ref(10) // 笔的宽度
+import { ref, onBeforeUnmount } from 'vue'
 
-  const actions = ref([])
-  const undoStack = ref([])
+export function useCanvasTool(drawCanvas: any, drawCtx: any, imgCtx: any, screenConfig: any) {
+  const drawConfig = ref({
+    startX: 0,
+    startY: 0,
+    endX: 0,
+    endY: 0,
+    scaleX: 1,
+    scaleY: 1,
+    lineWidth: 2, // 线宽
+    color: 'red', // 颜色
+    isDrawing: false, // 正在绘制
+    brushSize: 10, // 马赛克大小
+    actions: [], // 存储绘制动作
+    undoStack: []
+  })
 
-  let overlayCanvas: HTMLCanvasElement | null = null
-  let overlayCtx: CanvasRenderingContext2D | null = null
-
-  const getOverlayCanvas = () => {
-    return overlayCanvas
-  }
-
-  // 创建工具
-  const create = () => {
-    if (!canvas) return
-    overlayCanvas = document.createElement('canvas')
-    overlayCanvas.width = canvas.width
-    overlayCanvas.height = canvas.height
-    overlayCanvas.style.position = 'absolute'
-    overlayCanvas.style.top = canvas.offsetTop + 'px'
-    overlayCanvas.style.left = canvas.offsetLeft + 'px'
-    overlayCanvas.style.pointerEvents = 'none' // 让事件穿透
-    canvas.parentElement?.appendChild(overlayCanvas)
-
-    overlayCtx = overlayCanvas.getContext('2d')
-
-    saveAction() // 保存当前画布状态
-  }
+  const currentTool = ref('')
 
   const draw = (type: string) => {
+    const { clientWidth: containerWidth, clientHeight: containerHeight } = drawCanvas.value
+    drawConfig.value.scaleX = (screen.width * window.devicePixelRatio) / containerWidth
+    drawConfig.value.scaleY = (screen.height * window.devicePixelRatio) / containerHeight
     currentTool.value = type
-    canvas.addEventListener('mousedown', onMouseDown)
-    document.addEventListener('mousemove', onMouseMove)
-    document.addEventListener('mouseup', onMouseUp)
+    startListen()
   }
 
   onBeforeUnmount(() => {
-    canvas.removeEventListener('mousedown', onMouseDown)
-    document.removeEventListener('mousemove', onMouseMove)
-    document.removeEventListener('mouseup', onMouseUp)
-
-    if (overlayCanvas) {
-      canvas.parentElement?.removeChild(overlayCanvas)
-    }
+    closeListen()
   })
 
-  const onMouseDown = (event: any) => {
-    if (!overlayCtx) return
+  const handleMouseDown = (event: MouseEvent) => {
+    const { offsetX, offsetY } = event
+    drawConfig.value.isDrawing = true
 
-    const rect = canvas.getBoundingClientRect()
-    startX.value = event.clientX - rect.left
-    startY.value = event.clientY - rect.top
-    isDrawing.value = true
+    // 限制起点坐标在框选矩形区域内
+    drawConfig.value.startX = Math.min(
+      Math.max(offsetX * drawConfig.value.scaleX, screenConfig.value.startX),
+      screenConfig.value.endX
+    )
+    drawConfig.value.startY = Math.min(
+      Math.max(offsetY * drawConfig.value.scaleY, screenConfig.value.startY),
+      screenConfig.value.endY
+    )
+  }
 
-    if (currentTool.value === 'mosaic') {
-      drawMosaic(overlayCtx, startX.value, startY.value, brushSize.value)
+  const handleMouseMove = (event: MouseEvent) => {
+    const { offsetX, offsetY } = event
+    if (!drawConfig.value.isDrawing || !drawCtx.value) return
+
+    // 限制绘制区域在框选矩形区域内
+    const limitedX = Math.min(
+      Math.max(offsetX * drawConfig.value.scaleX, screenConfig.value.startX),
+      screenConfig.value.endX
+    )
+    const limitedY = Math.min(
+      Math.max(offsetY * drawConfig.value.scaleY, screenConfig.value.startY),
+      screenConfig.value.endY
+    )
+
+    drawConfig.value.endX = limitedX
+    drawConfig.value.endY = limitedY
+
+    // 清除非马赛克的情况下重新绘制
+    if (currentTool.value !== 'mosaic') {
+      drawCtx.value.clearRect(0, 0, drawCanvas.value.width, drawCanvas.value.height)
+      drawConfig.value.actions.forEach((action) => {
+        drawCtx.value.putImageData(action, 0, 0)
+      })
+    }
+
+    const x = Math.min(drawConfig.value.startX, drawConfig.value.endX)
+    const y = Math.min(drawConfig.value.startY, drawConfig.value.endY)
+
+    const width = Math.abs(drawConfig.value.startX - drawConfig.value.endX)
+    const height = Math.abs(drawConfig.value.startY - drawConfig.value.endY)
+
+    switch (currentTool.value) {
+      case 'rect':
+        drawRectangle(drawCtx.value, x, y, width, height)
+        break
+      case 'circle':
+        drawCircle(
+          drawCtx.value,
+          drawConfig.value.startX,
+          drawConfig.value.startY,
+          drawConfig.value.endX,
+          drawConfig.value.endY
+        )
+        break
+      case 'arrow':
+        drawArrow(
+          drawCtx.value,
+          drawConfig.value.startX,
+          drawConfig.value.startY,
+          drawConfig.value.endX,
+          drawConfig.value.endY
+        )
+        break
+      case 'mosaic':
+        drawMosaic(drawCtx.value, limitedX, limitedY, drawConfig.value.brushSize)
+        break
+      default:
+        break
     }
   }
 
-  const onMouseMove = (event: any) => {
-    if (!isDrawing.value || !overlayCtx) return
+  const handleMouseUp = () => {
+    // const { offsetX, offsetY } = event;
+    drawConfig.value.isDrawing = false
 
-    const rect = canvas.getBoundingClientRect()
-    const currentX = event.clientX - rect.left
-    const currentY = event.clientY - rect.top
+    drawCtx.value.drawImage(drawCanvas.value!, 0, 0, drawCanvas.value.width, drawCanvas.value.height)
 
-    if (currentTool.value === 'mosaic') {
-      drawMosaic(overlayCtx, currentX, currentY, brushSize.value)
-    } else {
-      overlayCtx.clearRect(0, 0, overlayCanvas?.width || 0, overlayCanvas?.height || 0)
-
-      switch (currentTool.value) {
-        case 'rect':
-          drawRectangle(overlayCtx, startX.value, startY.value, currentX - startX.value, currentY - startY.value)
-          break
-        case 'circle':
-          drawCircle(overlayCtx, startX.value, startY.value, currentX, currentY)
-          break
-        case 'arrow':
-          drawArrow(overlayCtx, startX.value, startY.value, currentX, currentY)
-          break
-        default:
-          break
-      }
-    }
-  }
-
-  const onMouseUp = () => {
-    if (!isDrawing.value || !overlayCtx) return
-
-    ctx.drawImage(overlayCanvas!, 0, 0)
-
-    isDrawing.value = false
     saveAction()
-    overlayCtx.clearRect(0, 0, overlayCanvas?.width || 0, overlayCanvas?.height || 0)
   }
 
   const drawRectangle = (context: any, x: any, y: any, width: any, height: any) => {
-    context.strokeStyle = 'red'
-    context.lineWidth = 2
+    context.strokeStyle = drawConfig.value.color
+    context.lineWidth = drawConfig.value.lineWidth
     context.strokeRect(x, y, width, height)
   }
 
-  const drawCircle = (context: any, x: any, y: any, endX: any, endY: any) => {
-    const radius = Math.sqrt(Math.pow(endX - x, 2) + Math.pow(endY - y, 2))
-    context.strokeStyle = 'red'
-    context.lineWidth = 2
+  const drawCircle = (context: any, startX: any, startY: any, endX: any, endY: any) => {
+    // 限制圆形的绘制范围在框选矩形区域内
+    const limitedEndX = Math.min(Math.max(endX, screenConfig.value.startX), screenConfig.value.endX)
+    const limitedEndY = Math.min(Math.max(endY, screenConfig.value.startY), screenConfig.value.endY)
+
+    // 计算半径，保证半径不会超过限定矩形的边界
+    const deltaX = limitedEndX - startX
+    const deltaY = limitedEndY - startY
+
+    // 检查圆形是否会超出矩形区域的边界
+    const maxRadiusX = Math.min(startX - screenConfig.value.startX, screenConfig.value.endX - startX)
+    const maxRadiusY = Math.min(startY - screenConfig.value.startY, screenConfig.value.endY - startY)
+    const maxRadius = Math.min(maxRadiusX, maxRadiusY)
+
+    // 使用 min 函数确保半径不会超过限定范围
+    const radius = Math.min(Math.sqrt(deltaX * deltaX + deltaY * deltaY), maxRadius)
+
+    // 绘制圆形
+    context.strokeStyle = drawConfig.value.color
+    context.lineWidth = drawConfig.value.lineWidth
     context.beginPath()
-    context.arc(x, y, radius, 0, Math.PI * 2)
+    context.arc(startX, startY, radius, 0, Math.PI * 2)
     context.stroke()
   }
 
   const drawArrow = (context: any, fromX: any, fromY: any, toX: any, toY: any) => {
-    const headLength = 10
-    const angle = Math.atan2(toY - fromY, toX - fromX)
-    context.strokeStyle = 'red'
-    context.lineWidth = 2
+    const headLength = 15 // 箭头的长度
+    const angle = Math.atan2(toY - fromY, toX - fromX) // 算出箭头的角度
+
+    context.strokeStyle = drawConfig.value.color
+    context.lineWidth = drawConfig.value.lineWidth
+
+    // 绘制箭头的主线
     context.beginPath()
     context.moveTo(fromX, fromY)
     context.lineTo(toX, toY)
-    context.lineTo(toX - headLength * Math.cos(angle - Math.PI / 6), toY - headLength * Math.sin(angle - Math.PI / 6))
-    context.moveTo(toX, toY)
-    context.lineTo(toX - headLength * Math.cos(angle + Math.PI / 6), toY - headLength * Math.sin(angle + Math.PI / 6))
     context.stroke()
+
+    // 计算箭头三角形的三个角
+    context.beginPath()
+    context.moveTo(toX, toY)
+    context.lineTo(toX - headLength * Math.cos(angle - Math.PI / 6), toY - headLength * Math.sin(angle - Math.PI / 6))
+    context.lineTo(toX - headLength * Math.cos(angle + Math.PI / 6), toY - headLength * Math.sin(angle + Math.PI / 6))
+    context.closePath()
+
+    // 填充箭头三角形
+    context.fillStyle = drawConfig.value.color
+    context.fill()
   }
 
   // 设置马赛克画笔大小
   const drawMosaicBrushSize = (size: any) => {
-    brushSize.value = size
+    drawConfig.value.brushSize = size
   }
 
   // 实时马赛克涂抹
   const drawMosaic = (context: any, x: any, y: any, size: any) => {
-    const imageData = ctx.getImageData(x - size / 2, y - size / 2, size, size)
-    const blurredData = blurImageData(imageData)
-    context.putImageData(blurredData, x - size / 2, y - size / 2)
+    const imageData = imgCtx.value.getImageData(x - size, y - size, size, size)
+    const blurredData = blurImageData(imageData, size)
+    context.putImageData(blurredData, x - size, y - size)
   }
 
-  const blurImageData = (imageData: ImageData): ImageData => {
+  const blurImageData = (imageData: ImageData, size: any): ImageData => {
     const data = imageData.data
     const width = imageData.width
     const height = imageData.height
 
-    const radius = 2 // 模糊半径
+    const radius = size / 2 // 模糊半径
     const tempData = new Uint8ClampedArray(data) // 用于保存原始图像数据
 
     for (let y = 0; y < height; y++) {
@@ -185,78 +227,50 @@ export function useCanvasTool(canvas: any, ctx: any) {
     return imageData
   }
 
-  //马赛克
-  // const mskDraw = (imageData: any) => {
-  //   //修改像素点
-  //   function setPxInfo(imgData: any, x: any, y: any, color: any) {
-  //     const data = imgData.data
-  //     data[(y * imgData.width + x) * 4] = color[0]
-  //     data[(y * imgData.width + x) * 4 + 1] = color[1]
-  //     data[(y * imgData.width + x) * 4 + 2] = color[2]
-  //     data[(y * imgData.width + x) * 4 + 3] = color[3]
-  //   }
-  //   //获取像素点
-  //   function getPxInfo(imgData: any, x: any, y: any) {
-  //     const data = imgData.data
-  //     const color = []
-  //     color[0] = data[(y * imgData.width + x) * 4]
-  //     color[1] = data[(y * imgData.width + x) * 4 + 1]
-  //     color[2] = data[(y * imgData.width + x) * 4 + 2]
-  //     color[3] = data[(y * imgData.width + x) * 4 + 3]
-  //     return color
-  //   }
-  //   //ctx.clearRect(0, 0, canvas.width, canvas.height)
-  //   const size = 10
-  //   for (let i = 0; i < imageData.width / size; i++) {
-  //     for (let j = 0; j < imageData.height / size; j++) {
-  //       const color = getPxInfo(
-  //         imageData,
-  //         Math.floor(i * size + Math.random() * size),
-  //         Math.floor(j * size + Math.random() * size)
-  //       )
-  //       for (let a = 0; a < size; a++) {
-  //         for (let b = 0; b < size; b++) {
-  //           setPxInfo(imageData, i * size + a, j * size + b, color)
-  //         }
-  //       }
-  //     }
-  //   }
-  //   return imageData
-  // }
-
   const saveAction = () => {
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-    actions.value.push(imageData as never)
-    undoStack.value = [] // 清空撤销堆栈
+    const imageData = drawCtx.value.getImageData(0, 0, drawCanvas.value.width, drawCanvas.value.height)
+    drawConfig.value.actions.push(imageData as never)
+    drawConfig.value.undoStack = [] // 清空撤销堆栈
   }
 
   const undo = () => {
-    if (actions.value.length > 1) {
-      undoStack.value.push(actions.value.pop() as never)
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      if (actions.value.length > 0) {
-        ctx.putImageData(actions.value[actions.value.length - 1], 0, 0)
+    closeListen()
+    if (drawConfig.value.actions.length > 0) {
+      drawConfig.value.undoStack.push(drawConfig.value.actions.pop() as never)
+      drawCtx.value.clearRect(0, 0, drawCanvas.value.width, drawCanvas.value.height)
+      if (drawConfig.value.actions.length > 0) {
+        drawCtx.value.putImageData(drawConfig.value.actions[drawConfig.value.actions.length - 1], 0, 0)
       }
     }
   }
 
   const redo = () => {
-    if (undoStack.value.length > 0) {
-      const imageData = undoStack.value.pop()
-      actions.value.push(imageData as never)
-      ctx.putImageData(imageData, 0, 0)
+    closeListen()
+    if (drawConfig.value.undoStack.length > 0) {
+      const imageData = drawConfig.value.undoStack.pop()
+      drawConfig.value.actions.push(imageData as never)
+      drawCtx.value.putImageData(imageData, 0, 0)
     }
   }
 
+  const startListen = () => {
+    document.addEventListener('mousedown', handleMouseDown)
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+  }
+
+  const closeListen = () => {
+    document.removeEventListener('mousedown', handleMouseDown)
+    document.removeEventListener('mousemove', handleMouseMove)
+    document.removeEventListener('mouseup', handleMouseUp)
+  }
+
   return {
-    getOverlayCanvas,
-    create,
     draw,
+    drawMosaicBrushSize,
     drawRectangle,
     drawCircle,
     drawArrow,
-    drawMosaic,
-    drawMosaicBrushSize,
     undo,
     redo
   }

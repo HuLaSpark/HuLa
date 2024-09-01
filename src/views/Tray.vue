@@ -59,7 +59,6 @@ import { useWsLoginStore } from '@/stores/ws.ts'
 import { setting } from '@/stores/setting.ts'
 import { storeToRefs } from 'pinia'
 import { PhysicalPosition } from '@tauri-apps/api/dpi'
-import { TrayIcon } from '@tauri-apps/api/tray'
 
 const appWindow = WebviewWindow.getCurrent()
 const { checkWinExist, createWebviewWindow, resizeWindow } = useWindow()
@@ -89,8 +88,6 @@ const toggleStatus = (url: string, title: string) => {
 }
 
 onMounted(async () => {
-  const tray = await TrayIcon.getById('tray')
-  tray?.setIcon('/Users/nyh/Desktop/HuLa/HuLa-IM-Tauri/src-tauri/stateless/hula.png')
   // await listen('tray_leave', async () => {
   //   const trayWindow = WebviewWindow.getByLabel('tray')
   //   trayWindow?.hide()

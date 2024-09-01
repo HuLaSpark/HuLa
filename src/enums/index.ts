@@ -254,3 +254,17 @@ export enum WinKeyEnum {
   win = 'Win',
   alt = 'Alt'
 }
+
+/** 插件状态 */
+export enum PluginEnum {
+  /** 已安装 */
+  INSTALLED,
+  /** 下载中 */
+  DOWNLOADING,
+  /** 未安装 */
+  NOT_INSTALLED,
+  /** 卸载中 */
+  UNINSTALLING,
+  /** 可更新 */
+  CAN_UPDATE
+}

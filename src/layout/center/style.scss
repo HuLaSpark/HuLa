@@ -23,7 +23,7 @@
 
 .add-item {
   @include menu-item-style(absolute);
-  top: 60px;
-  right: 30px;
+  top: 36px;
+  right: 10px;
   @include menu-list();
 }

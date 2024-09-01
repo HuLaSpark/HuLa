@@ -44,6 +44,8 @@
     "http:allow-fetch-send",
     "core:tray:default",
     "core:tray:allow-get-by-id",
+    "shell:default",
+    "shell:allow-open",
     {
       "identifier": "http:default",
       "allow": [

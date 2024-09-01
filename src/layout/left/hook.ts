@@ -171,13 +171,21 @@ export const leftHook = () => {
   const pageJumps = (
     url: string,
     title?: string,
-    size?: { width: number; height: number },
+    size?: { width: number; height: number; minWidth?: number },
     window?: { resizable: boolean }
   ) => {
     // 判断url是否等于isNewWindows.value数组中的值，如果是，则创建新的窗口
     if (isNewWindows.value.includes(url)) {
       delay(async () => {
-        await createWebviewWindow(title!, url, <number>size?.width, <number>size?.height, '', window?.resizable)
+        await createWebviewWindow(
+          title!,
+          url,
+          <number>size?.width,
+          <number>size?.height,
+          '',
+          window?.resizable,
+          <number>size?.minWidth
+        )
       }, 300)
     } else {
       activeUrl.value = url
