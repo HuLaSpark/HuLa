@@ -1,62 +1,13 @@
 import { useWindow } from '@/hooks/useWindow.ts'
-import { MittEnum, ModalEnum } from '@/enums'
+import { MittEnum, ModalEnum, PluginEnum } from '@/enums'
 import Mitt from '@/utils/Bus.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
 
 const { createWebviewWindow } = useWindow()
 const { logout } = useLogin()
 /**
- * 上半部分操作栏配置
- * @param url 路由地址
- * @param icon 图标
- * @param title 创建新窗口时的标题
- * @param iconAction 选择后的图标
- * @param badge 角标
- * @param tip 提示信息
- * @param size 窗口大小
- * @param window 窗口参数
+ * 这里的顶部的操作栏使用pinia写入了localstorage中
  */
-/* todo: 这里需要存入到localStore中, 需要区分固定的和不固定的，固定时有会话和用户列表的，其他都为动态添加 */
-const itemsTop = ref<OPT.L.Common[]>([
-  {
-    url: 'message',
-    icon: 'message',
-    iconAction: 'message-action'
-  },
-  {
-    url: 'friendsList',
-    icon: 'avatar',
-    iconAction: 'avatar-action'
-  },
-  {
-    url: 'dynamic',
-    icon: 'fire',
-    title: '动态',
-    iconAction: 'fire-action2',
-    size: {
-      width: 840,
-      height: 800
-    },
-    window: {
-      resizable: false
-    }
-  },
-  {
-    url: 'robot',
-    icon: 'robot',
-    title: 'GPT',
-    iconAction: 'robot-action',
-    tip: '机器人新功能在开发中',
-    size: {
-      minWidth: 780,
-      width: 980,
-      height: 800
-    },
-    window: {
-      resizable: true
-    }
-  }
-])
 /** 下半部分操作栏配置 */
 const itemsBottom: OPT.L.Common[] = [
   {
@@ -140,4 +91,99 @@ const moreList = ref<OPT.L.MoreList[]>([
   }
 ])
 
-export { itemsTop, itemsBottom, moreList }
+/** 插件列表 */
+const pluginsList = ref<STO.Plugins<PluginEnum>[]>([
+  {
+    url: 'dynamic',
+    icon: 'fire',
+    title: '动态',
+    isAnimate: true,
+    iconAction: 'fire-action2',
+    state: PluginEnum.BUILTIN,
+    isAdd: true,
+    dot: false,
+    size: {
+      width: 840,
+      height: 800
+    },
+    window: {
+      resizable: false
+    }
+  },
+  {
+    icon: 'robot',
+    iconAction: 'robot-action',
+    url: 'robot',
+    title: 'ChatBot',
+    isAnimate: true,
+    tip: 'ChatBot新应用上线',
+    state: PluginEnum.NOT_INSTALLED,
+    version: 'v2.0.0-Bate',
+    isAdd: false,
+    dot: true,
+    size: {
+      minWidth: 780,
+      width: 980,
+      height: 800
+    },
+    window: {
+      resizable: true
+    }
+  },
+  {
+    icon: 'Music',
+    url: 'music',
+    title: 'HuLa云音乐',
+    tip: 'HuLa云音乐开发中，敬请期待',
+    state: PluginEnum.NOT_INSTALLED,
+    version: 'v1.0.0-Alpha',
+    isAdd: false,
+    dot: true,
+    size: {
+      minWidth: 780,
+      width: 980,
+      height: 800
+    },
+    window: {
+      resizable: true
+    }
+  },
+  {
+    icon: 'UimSlack',
+    url: 'collaboration',
+    title: 'HuLa协作',
+    tip: 'HuLa协作开发中，敬请期待',
+    state: PluginEnum.NOT_INSTALLED,
+    version: 'v1.0.0-Alpha',
+    isAdd: false,
+    dot: true,
+    size: {
+      minWidth: 780,
+      width: 980,
+      height: 800
+    },
+    window: {
+      resizable: true
+    }
+  },
+  {
+    icon: 'vigo',
+    url: 'collaboration',
+    title: 'HuLa短视频',
+    tip: 'HuLa短视频开发中，敬请期待',
+    state: PluginEnum.NOT_INSTALLED,
+    version: 'v1.0.0-Alpha',
+    isAdd: false,
+    dot: true,
+    size: {
+      minWidth: 780,
+      width: 980,
+      height: 800
+    },
+    window: {
+      resizable: true
+    }
+  }
+])
+
+export { itemsBottom, moreList, pluginsList }

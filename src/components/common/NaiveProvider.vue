@@ -76,8 +76,6 @@ const commonTheme: GlobalThemeOverrides = {
   },
   Tabs: {
     tabTextColorSegment: '#707070',
-    tabTextColorActiveSegment: '#13987f',
-    tabTextColorHoverSegment: '#13987f',
     tabPaddingMediumSegment: '4px'
   },
   Popover: {

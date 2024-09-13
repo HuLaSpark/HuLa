@@ -4,7 +4,6 @@ import { useUserStore } from '@/stores/user.ts'
 import { useCachedStore } from '@/stores/cached.ts'
 import { storeToRefs } from 'pinia'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
-import { itemsTop } from '@/layout/left/config.tsx'
 import { EventEnum, IsYetEnum, MittEnum, MsgEnum, ThemeEnum } from '@/enums'
 import { BadgeType, UserInfoType } from '@/services/types.ts'
 import { useChatStore } from '@/stores/chat.ts'
@@ -17,21 +16,21 @@ import GraphemeSplitter from 'grapheme-splitter'
 import { delay } from 'lodash-es'
 import router from '@/router'
 import { listen } from '@tauri-apps/api/event'
+import { useMenuTopStore } from '@/stores/menuTop.ts'
 
 export const leftHook = () => {
   const prefers = matchMedia('(prefers-color-scheme: dark)')
   const { createWebviewWindow } = useWindow()
   const settingStore = setting()
+  const { menuTop } = useMenuTopStore()
   const userStore = useUserStore()
   const cachedStore = useCachedStore()
   const { themes, login } = storeToRefs(settingStore)
   const OLStatusStore = onlineStatus()
   const { url, title, bgColor } = storeToRefs(OLStatusStore)
-  /**当前选中的元素 默认选中itemsTop的第一项*/
-  const activeUrl = ref<string>(itemsTop.value[0].url)
+  const activeUrl = ref<string>(menuTop[0].url)
   const settingShow = ref(false)
   const shrinkStatus = ref(false)
-  const isNewWindows = ref(['dynamic', 'robot', 'mail'])
   /** 是否展示个人信息浮窗 */
   const infoShow = ref(false)
   /** 是否显示上半部分操作栏中的提示 */
@@ -90,7 +89,7 @@ export const leftHook = () => {
   }
 
   watchEffect(() => {
-    itemsTop.value.find((item) => {
+    menuTop.find((item) => {
       if (item.url === 'message') {
         item.badge = msgTotal.value
       }
@@ -174,8 +173,7 @@ export const leftHook = () => {
     size?: { width: number; height: number; minWidth?: number },
     window?: { resizable: boolean }
   ) => {
-    // 判断url是否等于isNewWindows.value数组中的值，如果是，则创建新的窗口
-    if (isNewWindows.value.includes(url)) {
+    if (window) {
       delay(async () => {
         await createWebviewWindow(
           title!,
@@ -225,7 +223,7 @@ export const leftHook = () => {
       infoShow.value = false
     })
     Mitt.on(MittEnum.UPDATE_MSG_TOTAL, (event) => {
-      itemsTop.value.find((item) => {
+      menuTop.find((item) => {
         if (item.url === 'message') {
           item.badge = event as number
         }

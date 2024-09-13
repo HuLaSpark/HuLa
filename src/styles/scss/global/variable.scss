@@ -92,6 +92,8 @@ html, body, svg {
   --bate-bg: #d9ccf7;
   // 卡片hover样式
   --card-bg: #13987f60;
+  // 安装进度条样式
+  --progress-bg: #e0e9fc;
 }
 
 html[data-theme='dark'] {
@@ -171,6 +173,8 @@ html[data-theme='dark'] {
   --bate-bg: #403555;
   // 卡片hover样式
   --card-bg: #13987f20;
+  // 安装进度条样式
+  --progress-bg: transparent;
 }
 /**! end */
 // 线性动画

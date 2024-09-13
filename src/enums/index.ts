@@ -97,7 +97,11 @@ export enum StoresEnum {
   /** 历史内容 */
   HISTORY = 'history',
   /** 聊天列表 */
-  CHAT_LIST = 'chatList'
+  CHAT_LIST = 'chatList',
+  /** 插件列表 */
+  PLUGINS = 'plugins',
+  /** 侧边栏头部菜单栏 */
+  MENUTOP = 'menuTop'
 }
 
 /**
@@ -257,6 +261,8 @@ export enum WinKeyEnum {
 
 /** 插件状态 */
 export enum PluginEnum {
+  /** 已内置 */
+  BUILTIN,
   /** 已安装 */
   INSTALLED,
   /** 下载中 */

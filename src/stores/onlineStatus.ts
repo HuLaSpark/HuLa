@@ -5,7 +5,7 @@ import Colorthief from 'colorthief'
 
 const colorthief = new Colorthief()
 export const onlineStatus = defineStore(StoresEnum.ONLINE_STATUS, {
-  state: (): OPT.Online => ({
+  state: (): STO.OnlineStatus => ({
     url: '',
     title: '',
     bgColor: ''

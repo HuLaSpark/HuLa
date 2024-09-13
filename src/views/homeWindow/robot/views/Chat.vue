@@ -160,6 +160,7 @@ onMounted(() => {
   }
 }
 .options {
+  padding-left: 4px;
   svg {
     @apply size-24px cursor-pointer outline-none;
   }
