@@ -1,3 +1,33 @@
+# [2.1.0](https://github.com/nongyehong/HuLa-IM-Tauri/compare/v2.0.0...v2.1.0) (2024-09-13)
+
+
+### Bug Fixes
+
+* **component:** :bug: 修复windows上的样式问题 ([bb6a9d4](https://github.com/nongyehong/HuLa-IM-Tauri/commit/bb6a9d440db4777989d9a922a5135350e2dbf894))
+* **component:** :bug: 修复系统托盘功能和一些样式问题 ([18277ef](https://github.com/nongyehong/HuLa-IM-Tauri/commit/18277ef0f1ce286b77b91dbc8c6ea8a628eba7d3))
+* **style:** :bug: 统一修复svg点击时有轮廓问题 ([ce68fa1](https://github.com/nongyehong/HuLa-IM-Tauri/commit/ce68fa134368b34802d5b101a1f98a2493f7120b))
+* **system:** :bug: 修复mac端右键菜单透明度问题 ([39d795f](https://github.com/nongyehong/HuLa-IM-Tauri/commit/39d795ff655afd699340d3021a0b471c3060b11c))
+* **system:** :bug: 修复win下窗口高度不一致问题 ([30bb3de](https://github.com/nongyehong/HuLa-IM-Tauri/commit/30bb3de5d10ffea949c32b505f6501b3f7d0f573))
+
+
+### Features
+
+* chatbot删除全部会话功能和右键菜单重命名 ([3426c5f](https://github.com/nongyehong/HuLa-IM-Tauri/commit/3426c5f24fafe66c3543ee8f4172d2dae05740e4))
+* **component:** :sparkles: 新增插件功能(Bate) ([392b7c9](https://github.com/nongyehong/HuLa-IM-Tauri/commit/392b7c99bd38fd2f298e7732499dc7510e4d286a))
+
+
+### Performance Improvements
+
+* :zap: 优化mac标签栏 ([a7c587d](https://github.com/nongyehong/HuLa-IM-Tauri/commit/a7c587d74b771e32e3b61eaef2ba5c902c0e4f6f))
+* **component:** :zap: 升级插件版本内容及其样式 ([8d65ca1](https://github.com/nongyehong/HuLa-IM-Tauri/commit/8d65ca198fa8a01252e0dc7f07f4bd6c796dbfe1))
+
+
+### BREAKING CHANGES
+
+* **system:** 新增mac端弹出框的关闭按钮
+
+
+
 # [2.0.0](https://github.com/nongyehong/HuLa-IM-Tauri/compare/v1.6.0...v2.0.0) (2024-08-15)
 
 

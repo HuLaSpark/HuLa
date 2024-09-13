@@ -159,8 +159,8 @@ const restoreWindow = async () => {
 /** 收缩窗口 */
 const shrinkWindow = async () => {
   /**使用mitt给兄弟组件更新*/
-  Mitt.emit(MittEnum.SHRINK_WINDOW, shrinkStatus.value)
-  if (shrinkStatus.value) {
+  Mitt.emit(MittEnum.SHRINK_WINDOW, shrinkStatus)
+  if (shrinkStatus) {
     await resizeWindow('home', 310, 700)
   } else {
     await resizeWindow('home', 960, 700)

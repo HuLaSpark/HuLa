@@ -6,7 +6,7 @@ export const usePluginsStore = defineStore(
   StoresEnum.PLUGINS,
   () => {
     /** 插件内容 */
-    const plugins = ref<STO.Plugins<PluginEnum>>({})
+    const plugins = ref<STO.Plugins<PluginEnum>[]>([])
     /** 插件查看模式 */
     const viewMode = ref<string>('card')
 
@@ -14,7 +14,7 @@ export const usePluginsStore = defineStore(
      * 设置插件
      * @param newPlugins 插件数据
      */
-    const setPlugins = (newPlugins: STO.Plugins<PluginEnum>) => {
+    const setPlugins = (newPlugins: STO.Plugins<PluginEnum>[]) => {
       plugins.value = newPlugins
     }
 
@@ -50,7 +50,7 @@ export const usePluginsStore = defineStore(
       if (!localStorage.getItem(StoresEnum.PLUGINS)) {
         setPlugins(pluginsList.value)
       } else {
-        Object.assign(pluginsList.value, JSON.parse(localStorage.getItem(StoresEnum.PLUGINS)))
+        Object.assign(pluginsList.value, JSON.parse(localStorage.getItem(StoresEnum.PLUGINS)!))
       }
     })
 

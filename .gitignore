@@ -24,4 +24,3 @@ dist-ssr
 *.sw?
 
 src-tauri/target
-.env.production

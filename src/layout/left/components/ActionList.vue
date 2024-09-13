@@ -59,7 +59,7 @@
         </template>
         <div v-if="excessItems.length">
           <div
-            v-for="(item, index) in excessItems"
+            v-for="(item, index) in excessItems as any"
             :key="'excess-' + index"
             class="p-[6px_10px] rounded-4px cursor-pointer hover:bg-[--setting-item-line]">
             {{ item.title }}
@@ -156,18 +156,17 @@
 import { itemsBottom, moreList } from '../config.tsx'
 import { leftHook } from '../hook.ts'
 import DefinePlugins from './definePlugins/index.vue'
-import { useTemplateRef } from 'vue'
 import { useMenuTopStore } from '@/stores/menuTop.ts'
 import { PluginEnum } from '@/enums'
 
 const { menuTop } = useMenuTopStore()
-const headerRef = useTemplateRef('header')
-const actionListRef = useTemplateRef('actionList')
+// const headerRef = useTemplateRef('header')
+// const actionListRef = useTemplateRef('actionList')
 const excessItems = ref([]) // 用于存储超出的内容
 const menuShow = ref(false)
 const { activeUrl, openWindowsList, settingShow, tipShow, pageJumps } = leftHook()
 
-const handleTipShow = (item) => {
+const handleTipShow = (item: any) => {
   tipShow.value = false
   item.dot = false
 }
@@ -185,31 +184,31 @@ onMounted(() => {
     tipShow.value = false
   }, 5000)
 
-  // 创建 ResizeObserver 实例并监听 headerRef
-  const resizeObserver = new ResizeObserver((entries) => {
-    for (let entry of entries) {
-      console.log(entry.contentRect.height)
-      // if (entry.contentRect.height > 220) {
-      //   // 计算需要移动的项数量
-      //   const itemsToMove = Math.floor(itemsTop.value.length / 2) // 例如：移动一半
-      //   excessItems.value = itemsTop.value.splice(-itemsToMove, itemsToMove)
-      // }
-    }
-  })
-
-  // 观察 headerRef 的大小变化
-  if (headerRef.value) {
-    resizeObserver.observe(headerRef.value)
-  }
-
-  if (actionListRef.value) {
-    resizeObserver.observe(actionListRef.value)
-  }
-
-  // 在组件卸载时停止观察
-  onUnmounted(() => {
-    resizeObserver.disconnect()
-  })
+  // // 创建 ResizeObserver 实例并监听 headerRef
+  // const resizeObserver = new ResizeObserver((entries) => {
+  //   for (let entry of entries) {
+  //     console.log(entry.contentRect.height)
+  //     // if (entry.contentRect.height > 220) {
+  //     //   // 计算需要移动的项数量
+  //     //   const itemsToMove = Math.floor(itemsTop.value.length / 2) // 例如：移动一半
+  //     //   excessItems.value = itemsTop.value.splice(-itemsToMove, itemsToMove)
+  //     // }
+  //   }
+  // })
+  //
+  // // 观察 headerRef 的大小变化
+  // if (headerRef.value) {
+  //   resizeObserver.observe(headerRef.value)
+  // }
+  //
+  // if (actionListRef.value) {
+  //   resizeObserver.observe(actionListRef.value)
+  // }
+  //
+  // // 在组件卸载时停止观察
+  // onUnmounted(() => {
+  //   resizeObserver.disconnect()
+  // })
 })
 </script>
 <style lang="scss" scoped>

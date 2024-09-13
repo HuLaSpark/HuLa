@@ -8,7 +8,7 @@ export const useMenuTopStore = defineStore(
     const { getPluginType } = usePluginsStore()
     const pluginType = getPluginType(PluginEnum.BUILTIN)
     // 初始状态
-    const initialState: STO.Plugins<PluginEnum>[] = [
+    const initialState: OPT.L.Common[] = [
       {
         url: 'message',
         icon: 'message',
@@ -21,7 +21,7 @@ export const useMenuTopStore = defineStore(
       }
     ]
 
-    const menuTop = ref<STO.Plugins<PluginEnum>[]>(initialState)
+    const menuTop = ref<STO.Plugins<PluginEnum>[]>(initialState as any)
 
     onBeforeMount(() => {
       if (!localStorage.getItem(StoresEnum.MENUTOP)) {

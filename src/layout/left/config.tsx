@@ -102,6 +102,7 @@ const pluginsList = ref<STO.Plugins<PluginEnum>[]>([
     state: PluginEnum.BUILTIN,
     isAdd: true,
     dot: false,
+    progress: 0,
     size: {
       width: 840,
       height: 800
@@ -121,6 +122,7 @@ const pluginsList = ref<STO.Plugins<PluginEnum>[]>([
     version: 'v2.0.0-Bate',
     isAdd: false,
     dot: true,
+    progress: 0,
     size: {
       minWidth: 780,
       width: 980,
@@ -139,6 +141,7 @@ const pluginsList = ref<STO.Plugins<PluginEnum>[]>([
     version: 'v1.0.0-Alpha',
     isAdd: false,
     dot: true,
+    progress: 0,
     size: {
       minWidth: 780,
       width: 980,
@@ -157,6 +160,7 @@ const pluginsList = ref<STO.Plugins<PluginEnum>[]>([
     version: 'v1.0.0-Alpha',
     isAdd: false,
     dot: true,
+    progress: 0,
     size: {
       minWidth: 780,
       width: 980,
@@ -175,6 +179,7 @@ const pluginsList = ref<STO.Plugins<PluginEnum>[]>([
     version: 'v1.0.0-Alpha',
     isAdd: false,
     dot: true,
+    progress: 0,
     size: {
       minWidth: 780,
       width: 980,

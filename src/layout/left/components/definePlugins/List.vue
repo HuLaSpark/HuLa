@@ -89,7 +89,7 @@
 
             <!-- 插件操作 -->
             <n-popover
-              v-if="plugin.state === PluginEnum.INSTALLED || index === isCurrently.value"
+              v-if="plugin.state === PluginEnum.INSTALLED || index === isCurrently"
               :show="isCurrently === index"
               style="padding: 0"
               :show-arrow="false"
@@ -142,10 +142,9 @@ const handleScroll = (e: Event) => {
   updateHoverClasses()
 }
 
-const handleState = (plugin) => {
+const handleState = (plugin: STO.Plugins<PluginEnum>) => {
   if (plugin.state === PluginEnum.INSTALLED) return
   plugin.state = PluginEnum.DOWNLOADING
-  plugin.progress = 0
   const interval = setInterval(() => {
     if (plugin.progress < 100) {
       plugin.progress += 10
@@ -157,7 +156,7 @@ const handleState = (plugin) => {
   }, 500)
 }
 
-const handleUnload = (plugin) => {
+const handleUnload = (plugin: STO.Plugins<PluginEnum>) => {
   plugin.state = PluginEnum.UNINSTALLING
   setTimeout(() => {
     handleDelete(plugin)
@@ -167,7 +166,7 @@ const handleUnload = (plugin) => {
   }, 2000)
 }
 
-const handleDelete = (plugin) => {
+const handleDelete = (plugin: STO.Plugins<PluginEnum>) => {
   // 找到 menuTop 中与 item.url 匹配的项并删除
   const itemIndex = menuTop.findIndex((topItem) => topItem.title === plugin.title)
   if (itemIndex !== -1) {
@@ -179,7 +178,7 @@ const handleDelete = (plugin) => {
   }
 }
 
-const handleAdd = (plugin) => {
+const handleAdd = (plugin: STO.Plugins<PluginEnum>) => {
   // 判断如果itemsTop中已经存在该插件，则不再添加
   const itemIndex = menuTop.findIndex((topItem) => topItem.title === plugin.title)
   if (itemIndex !== -1) {

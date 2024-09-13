@@ -101,5 +101,6 @@ declare namespace STO {
     isAdd: boolean
     isAnimate?: boolean
     dot?: boolean
+    progress: number
   } & OPT.L.Common
 }
