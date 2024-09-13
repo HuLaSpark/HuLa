@@ -120,10 +120,9 @@ import { useChatStore } from '@/stores/chat.ts'
 const { handleMsgClick } = useMessage()
 const globalStore = useGlobalStore()
 const chatStore = useChatStore()
-const props = defineProps<{
+const { content } = defineProps<{
   content: any
 }>()
-const { content } = toRefs(props)
 const item = computed(() => {
   return useUserInfo(content.value.uid).value
 })

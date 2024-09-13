@@ -46,7 +46,7 @@
       </div>
     </template>
     <!-- 是否退到托盘提示框 -->
-    <n-modal v-if="!tips.notTips" v-model:show="tipsRef.show" class="rounded-8px">
+    <n-modal v-if="!tips.notTips && osType === 'windows'" v-model:show="tipsRef.show" class="rounded-8px">
       <div class="bg-[--bg-popover] w-290px h-full p-6px box-border flex flex-col">
         <svg @click="tipsRef.show = false" class="size-12px ml-a cursor-pointer select-none">
           <use href="#close"></use>
@@ -80,7 +80,7 @@
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import Mitt from '@/utils/Bus'
 import { useWindow } from '@/hooks/useWindow.ts'
-import { alwaysOnTop } from '@/stores/alwaysOnTop.ts'
+import { useAlwaysOnTopStore } from '@/stores/alwaysOnTop.ts'
 import { setting } from '@/stores/setting.ts'
 import { emit, listen } from '@tauri-apps/api/event'
 import { CloseBxEnum, EventEnum, MittEnum } from '@/enums'
@@ -90,30 +90,23 @@ import { exit } from '@tauri-apps/plugin-process'
 import { type } from '@tauri-apps/plugin-os'
 
 const appWindow = WebviewWindow.getCurrent()
-/**
- * 新版defineProps可以直接结构 { minW, maxW, closeW } 如果需要使用默认值withDefaults的时候使用新版解构方式会报错
- * @description W结尾为窗口图标是否显示 shrink表示是否收缩图标 shrinkStatus表示是否收缩状态
- * */
-const props = withDefaults(
-  defineProps<{
-    minW?: boolean
-    maxW?: boolean
-    closeW?: boolean
-    shrink?: boolean
-    topWinLabel?: string
-    currentLabel?: string
-    shrinkStatus?: boolean
-  }>(),
-  {
-    minW: true,
-    maxW: true,
-    closeW: true,
-    shrink: true,
-    shrinkStatus: true
-  }
-)
-const { minW, maxW, closeW, topWinLabel, shrinkStatus } = toRefs(props)
-const alwaysOnTopStore = alwaysOnTop()
+const {
+  topWinLabel,
+  minW = true,
+  maxW = true,
+  closeW = true,
+  shrink = true,
+  shrinkStatus = true
+} = defineProps<{
+  minW?: boolean
+  maxW?: boolean
+  closeW?: boolean
+  shrink?: boolean
+  topWinLabel?: string
+  currentLabel?: string
+  shrinkStatus?: boolean
+}>()
+const { getWindowTop, setWindowTop } = useAlwaysOnTopStore()
 const settingStore = setting()
 const { tips, escClose } = storeToRefs(settingStore)
 const { resizeWindow } = useWindow()
@@ -126,8 +119,8 @@ const tipsRef = reactive({
 const windowMaximized = ref(false)
 // 窗口是否置顶状态
 const alwaysOnTopStatus = computed(() => {
-  if (topWinLabel.value === void 0) return false
-  return alwaysOnTopStore.getWindowTop(topWinLabel.value)
+  if (topWinLabel === void 0) return false
+  return getWindowTop(topWinLabel)
 })
 /** 判断当前是windows还是mac系统 */
 const osType = ref()
@@ -140,7 +133,6 @@ watchEffect(() => {
   listen(EventEnum.LOGOUT, async () => {
     /** 退出账号前把窗口全部关闭 */
     if (appWindow.label !== 'login') {
-      console.log('logout')
       await appWindow.close()
     }
   })
@@ -148,7 +140,7 @@ watchEffect(() => {
     await exit(0)
   })
 
-  if (escClose.value) {
+  if (escClose.value && type() === 'windows') {
     window.addEventListener('keydown', (e) => isEsc(e))
   } else {
     window.removeEventListener('keydown', (e) => isEsc(e))
@@ -167,8 +159,8 @@ const restoreWindow = async () => {
 /** 收缩窗口 */
 const shrinkWindow = async () => {
   /**使用mitt给兄弟组件更新*/
-  Mitt.emit(MittEnum.SHRINK_WINDOW, shrinkStatus.value)
-  if (shrinkStatus.value) {
+  Mitt.emit(MittEnum.SHRINK_WINDOW, shrinkStatus)
+  if (shrinkStatus) {
     await resizeWindow('home', 310, 700)
   } else {
     await resizeWindow('home', 960, 700)
@@ -177,9 +169,9 @@ const shrinkWindow = async () => {
 
 /** 设置窗口置顶 */
 const handleAlwaysOnTop = async () => {
-  if (topWinLabel.value !== void 0) {
+  if (topWinLabel !== void 0) {
     const isTop = !alwaysOnTopStatus.value
-    alwaysOnTopStore.setWindowTop(topWinLabel.value, isTop)
+    setWindowTop(topWinLabel, isTop)
     await appWindow.setAlwaysOnTop(isTop)
   }
 }

@@ -57,8 +57,7 @@
 </template>
 <script setup lang="ts">
 import { getAllTypeEmojis } from '@/utils/Emoji.ts'
-import { history } from '@/stores/history.ts'
-import { storeToRefs } from 'pinia'
+import { useHistoryStore } from '@/stores/history.ts'
 
 type EmojiType = {
   expressionEmojis: EmojiItem
@@ -70,8 +69,7 @@ interface EmojiItem {
   value: any[]
 }
 
-const historyStore = history()
-const { emoji } = storeToRefs(historyStore)
+const { emoji, setEmoji } = useHistoryStore()
 const activeIndex = ref(0)
 
 const emit = defineEmits(['emojiHandle'])
@@ -102,7 +100,7 @@ const emojiRef = reactive<{
   allEmoji: EmojiType
 }>({
   chooseItem: '',
-  historyList: emoji.value,
+  historyList: emoji,
   allEmoji: emojiObj.value
 })
 
@@ -121,7 +119,7 @@ const chooseEmoji = (item: string) => {
   if (emojiRef.historyList.length > 18) {
     emojiRef.historyList.splice(18) // 保留前18个元素
   }
-  historyStore.setEmoji([...emojiRef.historyList])
+  setEmoji([...emojiRef.historyList])
   emit('emojiHandle', item)
   return item
 }

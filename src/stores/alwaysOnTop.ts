@@ -1,14 +1,24 @@
 import { defineStore } from 'pinia'
 import { StoresEnum } from '@/enums'
 
-export const alwaysOnTop = defineStore(StoresEnum.ALWAYS_ON_TOP, {
-  state: (): STO.AlwaysOnTop => ({}),
-  actions: {
-    setWindowTop(key: string, data: boolean) {
-      this.$state[key] = data
-    },
-    getWindowTop(key: string) {
-      return this.$state[key]
-    }
+interface AlwaysOnTopState {
+  [key: string]: boolean
+}
+
+export const useAlwaysOnTopStore = defineStore(StoresEnum.ALWAYS_ON_TOP, () => {
+  const alwaysOnTop = ref<AlwaysOnTopState>({})
+
+  const setWindowTop = (key: string, data: boolean) => {
+    alwaysOnTop.value[key] = data
+  }
+
+  const getWindowTop = (key: string) => {
+    return alwaysOnTop.value[key]
+  }
+
+  return {
+    alwaysOnTop,
+    setWindowTop,
+    getWindowTop
   }
 })

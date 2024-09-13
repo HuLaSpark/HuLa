@@ -2,9 +2,7 @@
   <!-- 主体内容 -->
   <!--  // TODO 考虑是否需要添加一个欢迎页面，而不是直接使用聊天窗口 (nyh -> 2024-07-01 10:44:14)-->
   <main>
-    <div
-      style="box-shadow: var(--shadow-enabled) 4px 4px var(--box-shadow-color)"
-      class="flex truncate p-[8px_20px_14px_20px] justify-between items-center gap-50px">
+    <div class="flex truncate p-[8px_20px_14px_20px] justify-between items-center gap-50px">
       <n-flex :size="10" vertical class="truncate">
         <p
           v-if="!isEdit"
@@ -40,7 +38,10 @@
     <div class="h-1px bg-[--line-color]"></div>
 
     <!-- 聊天信息框 -->
-    <div class="w-full p-[28px_16px] box-border" style="height: calc(100vh - 300px)">
+    <div
+      :class="{ 'shadow-inner': page.shadow }"
+      class="w-full p-[28px_16px] box-border"
+      style="height: calc(100vh - 300px)">
       <n-flex :size="6">
         <n-avatar
           class="rounded-8px"
@@ -60,11 +61,7 @@
 
     <div class="h-1px bg-[--line-color]"></div>
     <!-- 下半部分输入框以及功能栏 -->
-    <n-flex
-      vertical
-      :size="6"
-      style="box-shadow: var(--shadow-enabled) -4px 4px 0 rgba(0, 0, 0, 0.05)"
-      class="size-full p-[14px_22px] box-border">
+    <n-flex vertical :size="6" class="size-full p-[14px_22px] box-border">
       <n-flex :size="26" class="options">
         <n-popover v-for="(item, index) in features" :key="index" trigger="hover" :show-arrow="false" placement="top">
           <template #trigger>
@@ -84,7 +81,11 @@
 import MsgInput from '@/components/rightBox/MsgInput.vue'
 import Mitt from '@/utils/Bus.ts'
 import { InputInst, NIcon } from 'naive-ui'
+import { setting } from '@/stores/setting.ts'
+import { storeToRefs } from 'pinia'
 
+const settingStore = setting()
+const { page } = storeToRefs(settingStore)
 /** 是否是编辑模式 */
 const isEdit = ref(false)
 const inputInstRef = ref<InputInst | null>(null)
@@ -159,6 +160,7 @@ onMounted(() => {
   }
 }
 .options {
+  padding-left: 4px;
   svg {
     @apply size-24px cursor-pointer outline-none;
   }

@@ -1,7 +1,6 @@
 <template>
   <!-- 顶部操作栏和显示用户名 -->
   <main
-    style="box-shadow: var(--shadow-enabled) 4px 4px var(--box-shadow-color)"
     class="relative z-30 flex-y-center border-b-(1px solid [--line-color]) justify-between p-[6px_20px_12px] select-none">
     <n-flex align="center">
       <span class="color-[--text-color]">{{ activeItem.name }}</span>
@@ -62,9 +61,9 @@
     </nav>
 
     <!-- 侧边选项栏 -->
-    <transition name="sidebar">
+    <Transition name="sidebar">
       <div v-if="sidebarShow" style="border: 1px solid rgba(90, 90, 90, 0.1)" class="sidebar">
-        <div class="setting-item flex-col-y-center">
+        <div class="box-item flex-col-y-center">
           <div class="flex-between-center">
             <p>设为置顶</p>
             <n-switch size="small" />
@@ -76,24 +75,24 @@
           </div>
         </div>
 
-        <div class="setting-item">
+        <div class="box-item">
           <div class="flex-between-center">
             <p>屏蔽此人</p>
             <n-switch size="small" />
           </div>
         </div>
 
-        <div class="setting-item cursor-pointer" @click="handleDelete('chat-history')">
+        <div class="box-item cursor-pointer" @click="handleDelete('chat-history')">
           <p>删除聊天记录</p>
         </div>
 
-        <div class="setting-item flex-x-center cursor-pointer" @click="handleDelete('friends')">
+        <div class="box-item flex-x-center cursor-pointer" @click="handleDelete('friends')">
           <p class="color-#d03553">删除好友</p>
         </div>
 
         <p class="m-[0_auto] text-(12px #13987f) mt-20px cursor-pointer">被骚扰了?&nbsp;&nbsp;举报该用户</p>
       </div>
-    </transition>
+    </Transition>
   </main>
 
   <!-- 弹出框 -->

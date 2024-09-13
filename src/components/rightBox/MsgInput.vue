@@ -1,7 +1,7 @@
 <template>
   <!-- 输入框 -->
   <ContextMenu class="w-full h-110px" @select="$event.click()" :menu="menuList">
-    <n-scrollbar style="max-height: 110px">
+    <n-scrollbar style="max-height: 100px">
       <div
         id="message-input"
         ref="messageInputDom"
@@ -12,6 +12,7 @@
         @keydown.exact.enter="inputKeyDown"
         @keydown.exact.meta.enter="inputKeyDown"
         @keydown.exact.ctrl.enter="inputKeyDown"></div>
+      <!-- TODO 这里的在win上会有延迟显示的bug (nyh -> 2024-09-01 23:40:44) -->
       <span
         v-if="isEntering"
         @click.stop="messageInputDom.focus()"
@@ -55,17 +56,8 @@
     </n-virtual-list>
   </div>
 
-  <!-- 发送按钮 -->
+  <!-- 发送按钮 TODO 建议不要放在外面会影响视觉效果，可以放在发送按钮里面做提示，发送按钮需要修改一下大小 (nyh -> 2024-09-01 23:41:34) -->
   <n-flex align="center" justify="space-between" :size="12">
-    <n-flex align="center" :size="4" class="text-(12px #777) tracking-1">
-      <svg class="size-12px"><use href="#Enter"></use></svg>
-      发送/
-      <n-flex align="center" :size="0">
-        {{ type() === 'macos' ? MacOsKeyEnum['⌘'] : WinKeyEnum.ctrl }}
-        <svg class="size-12px"><use href="#Enter"></use></svg>
-      </n-flex>
-      换行
-    </n-flex>
     <n-config-provider :theme="lightTheme">
       <n-button-group size="small" class="pr-20px">
         <n-button
@@ -90,6 +82,21 @@
                 <svg @click="arrow = false" v-else class="w-22px h-22px mt-2px outline-none">
                   <use href="#up"></use>
                 </svg>
+                <template #action>
+                  <n-flex
+                    justify="center"
+                    align="center"
+                    :size="4"
+                    class="text-(12px #777) cursor-default tracking-1 select-none">
+                    <svg class="size-12px"><use href="#Enter"></use></svg>
+                    发送/
+                    <n-flex align="center" :size="0">
+                      {{ type() === 'macos' ? MacOsKeyEnum['⌘'] : WinKeyEnum.ctrl }}
+                      <svg class="size-12px"><use href="#Enter"></use></svg>
+                    </n-flex>
+                    换行
+                  </n-flex>
+                </template>
               </n-popselect>
             </n-config-provider>
           </template>

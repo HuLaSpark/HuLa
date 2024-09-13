@@ -109,7 +109,7 @@ export const LockScreen = defineComponent(() => {
 
 /** 检查更新弹窗 */
 export const CheckUpdate = defineComponent(() => {
-  const url = `https://gitee.com/api/v5/repos/nongyehong/HuLa-IM-Tauri/releases/tags/${pkg.version}?access_token=${import.meta.env.VITE_GITEE_TOKEN}`
+  const url = `https://gitee.com/api/v5/repos/nongyehong/HuLa-IM-Tauri/releases/tags/v${pkg.version}?access_token=${import.meta.env.VITE_GITEE_TOKEN}`
   /** 项目提交日志记录 */
   const commitLog = ref<{ message: string; icon: string }[]>([])
   const loading = ref(false)
@@ -117,18 +117,32 @@ export const CheckUpdate = defineComponent(() => {
   /** 版本更新日期 */
   const versionTime = ref('')
 
+  // const commitTypeMap: { [key: string]: string } = {
+  //   feat: 'feat',
+  //   fix: 'fix',
+  //   docs: 'docs',
+  //   style: 'style',
+  //   refactor: 'refactor',
+  //   perf: 'perf',
+  //   test: 'test',
+  //   build: 'build',
+  //   ci: 'ci',
+  //   revert: 'revert',
+  //   chore: 'chore'
+  // }
+
   const commitTypeMap: { [key: string]: string } = {
-    feat: 'feat',
-    fix: 'fix',
-    docs: 'docs',
-    style: 'style',
-    refactor: 'refactor',
-    perf: 'perf',
-    test: 'test',
-    build: 'build',
-    ci: 'ci',
-    revert: 'revert',
-    chore: 'chore'
+    feat: 'comet',
+    fix: 'bug',
+    docs: 'memo',
+    style: 'lipstick',
+    refactor: 'recycling-symbol',
+    perf: 'rocket',
+    test: 'test-tube',
+    build: 'package',
+    ci: 'gear',
+    revert: 'right-arrow-curving-left',
+    chore: 'hammer-and-wrench'
   }
 
   const mapCommitType = (commitMessage: string) => {
@@ -144,7 +158,7 @@ export const CheckUpdate = defineComponent(() => {
 
   const checkUpdate = () => {
     const url = `https://gitee.com/api/v5/repos/nongyehong/HuLa-IM-Tauri/tags?access_token=${import.meta.env.VITE_GITEE_TOKEN}&sort=name&direction=desc&page=1&per_page=1`
-    if (lastVersion && lastVersion === pkg.version) {
+    if (lastVersion && lastVersion === `v${pkg.version}`) {
       window.$message.success('当前已是最新版本')
       return
     }
@@ -153,10 +167,12 @@ export const CheckUpdate = defineComponent(() => {
       res
         .json()
         .then(async (data) => {
-          if (data[0].name === pkg.version) {
-            checkLoading.value = false
-            window.$message.success('当前已是最新版本')
-            lastVersion = pkg.version
+          if (data[0].name === `v${pkg.version}`) {
+            setTimeout(() => {
+              window.$message.success('当前已是最新版本')
+              lastVersion = `v${pkg.version}`
+              checkLoading.value = false
+            }, 600)
           } else {
             // TODO 获取最新版本的提交日志，并且更换按钮文字为下载最新版本 (nyh -> 2024-07-11 22:20:33)
           }
@@ -193,7 +209,7 @@ export const CheckUpdate = defineComponent(() => {
             const message = lastColonIndex !== -1 ? commit.substring(lastColonIndex + 1).trim() : commit
             return {
               message: message,
-              icon: mapCommitType(commit)!
+              icon: mapCommitType(commit) || 'alien-monster'
             }
           })
           loading.value = false
@@ -232,7 +248,7 @@ export const CheckUpdate = defineComponent(() => {
             <NFlex justify={'space-between'} align={'center'}>
               <NFlex align={'center'} size={10}>
                 <p>当前版本:</p>
-                <p class="text-(24px #909090) font-500">{pkg.version}</p>
+                <p class="text-(24px #909090) font-500">v{pkg.version}</p>
               </NFlex>
               <NFlex align={'center'} size={10}>
                 <p class="text-(12px #909090)">版本发布日期:</p>
@@ -241,15 +257,16 @@ export const CheckUpdate = defineComponent(() => {
             </NFlex>
             <p class="text-(14px #909090)">版本更新日志</p>
             <NScrollbar class="max-h-460px p-[0_10px] box-border">
-              <NTimeline class="p-[0_6px] box-border">
+              <NTimeline class="p-16px box-border">
                 {commitLog.value.map((log, index) => (
                   <NTimelineItem key={index} content={log.message}>
                     {{
                       icon: () => (
-                        <NIcon size={20}>
-                          <svg>
-                            <use href={`#${log.icon}`}></use>
-                          </svg>
+                        <NIcon size={32}>
+                          {/*<svg>*/}
+                          {/*  <use href={`#${log.icon}`}></use>*/}
+                          {/*</svg>*/}
+                          <img class="size-32px" src={`/emoji/${log.icon}.webp`} alt="" />
                         </NIcon>
                       )
                     }}

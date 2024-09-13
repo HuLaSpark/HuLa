@@ -4,7 +4,6 @@
     svg {
       width: 22px;
       height: 22px;
-      outline: none;
     }
     &:hover svg {
       color: #13987f;
@@ -13,7 +12,7 @@
   }
 }
 
-.setting-item {
+.box-item {
   @apply border-(solid 1px [--line-color]) custom-shadow;
   &:first-child {
     margin-top: 0;

@@ -38,10 +38,9 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       /**! 启动时候打印项目信息(不需要可关闭)  */
       atStartup(config, mode),
       /**
-       * !实验性功能
-       * 开启defineProps解构语法
+       * vue3.5.0已支持解构并具有响应式
        * */
-      vue({ script: { propsDestructure: true } }),
+      vue(),
       vueJsx(), // 开启jsx功能
       unocss(), // 开启unocss
       AutoImport({

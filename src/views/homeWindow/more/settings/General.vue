@@ -24,7 +24,7 @@
     </n-flex>
 
     <!-- 系统设置 -->
-    <n-flex vertical class="text-(14px [--text-color])" :size="16">
+    <n-flex v-if="type() === 'windows'" vertical class="text-(14px [--text-color])" :size="16">
       <span class="pl-10px">系统</span>
 
       <n-flex class="item" :size="15" vertical>
@@ -50,7 +50,7 @@
         <span v-if="type() === 'windows'" class="w-full h-1px bg-[--line-color]"></span>
 
         <!-- ESC关闭面板 -->
-        <n-flex align="center" justify="space-between">
+        <n-flex v-if="type() === 'windows'" align="center" justify="space-between">
           <span>是否启用ESC关闭窗口</span>
 
           <n-switch size="small" v-model:value="escClose" />

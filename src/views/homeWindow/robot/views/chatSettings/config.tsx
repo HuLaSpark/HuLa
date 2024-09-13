@@ -22,7 +22,7 @@ type ChatConfig = {
 export const content: ChatConfig = {
   system: [
     {
-      title: `当前版本：${pkg.version}`,
+      title: `当前版本：v${pkg.version}`,
       description: '已是最新版本',
       features: <Button title={'检查更新'} icon={'refresh'} />
     },

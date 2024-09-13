@@ -1,8 +1,6 @@
 <template>
   <!-- 底部栏 -->
-  <main
-    style="box-shadow: var(--shadow-enabled) -4px 4px var(--box-shadow-color)"
-    class="size-full relative z-10 bg-[--right-bg-color] border-t-(1px solid [--line-color]) color-[--icon-color]">
+  <main class="size-full relative z-10 bg-[--right-bg-color] border-t-(1px solid [--line-color]) color-[--icon-color]">
     <!-- 输入框顶部选项栏 -->
     <n-flex align="center" justify="space-between" class="p-[10px_22px_5px] select-none">
       <n-flex align="center" :size="0" class="input-options">
@@ -159,7 +157,6 @@ onMounted(() => {
     width: 22px;
     height: 22px;
     cursor: pointer;
-    outline: none;
     &:hover {
       color: #13987f;
     }

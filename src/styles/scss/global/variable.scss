@@ -4,7 +4,8 @@
   font-weight: 500 !important;
   caret-color: #13987f !important;  /* 改变输入框光标的颜色 */
 }
-html, body {
+html, body, svg {
+  outline: none;
   overscroll-behavior: none; // 禁止mac的“触底反弹”效果
 }
 /**! 主题变量 */
@@ -91,6 +92,8 @@ html, body {
   --bate-bg: #d9ccf7;
   // 卡片hover样式
   --card-bg: #13987f60;
+  // 安装进度条样式
+  --progress-bg: #e0e9fc;
 }
 
 html[data-theme='dark'] {
@@ -170,6 +173,8 @@ html[data-theme='dark'] {
   --bate-bg: #403555;
   // 卡片hover样式
   --card-bg: #13987f20;
+  // 安装进度条样式
+  --progress-bg: transparent;
 }
 /**! end */
 // 线性动画
