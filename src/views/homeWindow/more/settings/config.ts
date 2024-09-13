@@ -2,7 +2,7 @@ import { type } from '@tauri-apps/plugin-os'
 import { MacOsKeyEnum, WinKeyEnum } from '@/enums'
 
 const key = computed(() => {
-  return `${type() === 'windows' ? WinKeyEnum.ctrl : MacOsKeyEnum['⌘']}`
+  return `${type() === 'windows' ? WinKeyEnum.CTRL : MacOsKeyEnum['⌘']}`
 })
 /** 侧边栏选项 */
 const sideOptions = ref<OPT.L.SettingSide[]>([

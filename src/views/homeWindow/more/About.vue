@@ -7,8 +7,8 @@
         <div id="computer" class="computer">
           <img class="w-224px h-158px relative" src="@/assets/img/win.png" alt="" />
           <div
-            style="background: rgba(80, 80, 80, 0.1)"
-            class="w-170px h-113px backdrop-blur-0 absolute top-9% left-51% transform -translate-x-51% -translate-y-9%"></div>
+            style="background: rgba(111, 111, 111, 0.1)"
+            class="w-170px h-113px absolute top-9% left-51% transform -translate-x-51% -translate-y-9%"></div>
           <img
             class="drop-shadow-md absolute top-30% left-1/2 transform -translate-x-1/2 -translate-y-30% w-140px h-60px"
             src="@/assets/logo/hula.png"

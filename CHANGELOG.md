@@ -5,6 +5,7 @@
 
 * **component:** :bug: 修复windows上的样式问题 ([bb6a9d4](https://github.com/nongyehong/HuLa-IM-Tauri/commit/bb6a9d440db4777989d9a922a5135350e2dbf894))
 * **component:** :bug: 修复系统托盘功能和一些样式问题 ([18277ef](https://github.com/nongyehong/HuLa-IM-Tauri/commit/18277ef0f1ce286b77b91dbc8c6ea8a628eba7d3))
+* **layout:** :bug: 修复ts类型错误导致打包出差问题 ([0d7f7e0](https://github.com/nongyehong/HuLa-IM-Tauri/commit/0d7f7e024d9404fe5fe6829504594a902c27c501))
 * **style:** :bug: 统一修复svg点击时有轮廓问题 ([ce68fa1](https://github.com/nongyehong/HuLa-IM-Tauri/commit/ce68fa134368b34802d5b101a1f98a2493f7120b))
 * **system:** :bug: 修复mac端右键菜单透明度问题 ([39d795f](https://github.com/nongyehong/HuLa-IM-Tauri/commit/39d795ff655afd699340d3021a0b471c3060b11c))
 * **system:** :bug: 修复win下窗口高度不一致问题 ([30bb3de](https://github.com/nongyehong/HuLa-IM-Tauri/commit/30bb3de5d10ffea949c32b505f6501b3f7d0f573))

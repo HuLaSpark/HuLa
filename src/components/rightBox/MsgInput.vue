@@ -5,6 +5,7 @@
       <div
         id="message-input"
         ref="messageInputDom"
+        style="outline: none"
         contenteditable
         spellcheck="false"
         @paste="handlePaste($event, messageInputDom)"
@@ -91,7 +92,7 @@
                     <svg class="size-12px"><use href="#Enter"></use></svg>
                     发送/
                     <n-flex align="center" :size="0">
-                      {{ type() === 'macos' ? MacOsKeyEnum['⌘'] : WinKeyEnum.ctrl }}
+                      {{ type() === 'macos' ? MacOsKeyEnum['⇧'] : WinKeyEnum.SHIFT }}
                       <svg class="size-12px"><use href="#Enter"></use></svg>
                     </n-flex>
                     换行

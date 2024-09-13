@@ -154,6 +154,7 @@ const handleState = (plugin: STO.Plugins<PluginEnum>) => {
     } else {
       clearInterval(interval)
       plugin.state = PluginEnum.INSTALLED
+      plugin.progress = 0
       updatePlugins(plugin)
     }
   }, 500)
@@ -165,6 +166,7 @@ const handleUnload = (plugin: STO.Plugins<PluginEnum>) => {
     handleDelete(plugin)
     plugin.isAdd = false
     plugin.state = PluginEnum.NOT_INSTALLED
+    plugin.progress = 0
     updatePlugins(plugin)
   }, 2000)
 }
