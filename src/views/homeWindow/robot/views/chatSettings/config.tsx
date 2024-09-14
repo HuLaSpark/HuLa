@@ -6,7 +6,7 @@ import { type } from '@tauri-apps/plugin-os'
 import { MacOsKeyEnum, WinKeyEnum } from '@/enums'
 
 const key = computed(() => {
-  return `${type() === 'windows' ? WinKeyEnum.ctrl : MacOsKeyEnum['⌘']}`
+  return `${type() === 'windows' ? WinKeyEnum.CTRL : MacOsKeyEnum['⌘']}`
 })
 
 type ConfigItemType = 'system' | 'record' | 'identity' | 'cueWords' | 'APIAddress' | 'model' | 'clear'

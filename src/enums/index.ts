@@ -254,9 +254,10 @@ export enum MacOsKeyEnum {
 
 /** Windows键盘映射 */
 export enum WinKeyEnum {
-  ctrl = 'Ctrl',
-  win = 'Win',
-  alt = 'Alt'
+  CTRL = 'Ctrl',
+  WIN = 'Win',
+  ALT = 'Alt',
+  SHIFT = 'Shift'
 }
 
 /** 插件状态 */

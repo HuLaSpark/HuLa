@@ -40,7 +40,7 @@ export const setting = defineStore(StoresEnum.SETTING, {
     },
     page: {
       shadow: true,
-      fonts: 'AliFangYuan'
+      fonts: 'PingFang'
     }
   }),
   actions: {

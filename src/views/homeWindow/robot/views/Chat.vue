@@ -61,14 +61,19 @@
 
     <div class="h-1px bg-[--line-color]"></div>
     <!-- 下半部分输入框以及功能栏 -->
-    <n-flex vertical :size="6" class="size-full p-[14px_22px] box-border">
-      <n-flex :size="26" class="options">
+    <n-flex vertical :size="6" class="size-full p-[8px_22px] box-border">
+      <n-flex align="center" :size="26" class="options">
         <n-popover v-for="(item, index) in features" :key="index" trigger="hover" :show-arrow="false" placement="top">
           <template #trigger>
             <svg><use :href="`#${item.icon}`"></use></svg>
           </template>
           <p>{{ item.label }}</p>
         </n-popover>
+
+        <div class="flex items-center gap-6px bg-[--chat-hover-color] rounded-50px w-fit h-fit p-[4px_6px]">
+          <svg style="width: 22px; height: 22px; outline: none; cursor: pointer"><use href="#explosion"></use></svg>
+          <p class="text-(12px #707070) cursor-default select-none pr-6px">使用0</p>
+        </div>
       </n-flex>
 
       <div class="flex flex-col items-end gap-6px">
@@ -98,20 +103,16 @@ const currentChat = ref({
 })
 const features = ref([
   {
-    icon: 'SmilingFace',
-    label: '所有人物'
+    icon: 'model',
+    label: '模型'
   },
   {
-    icon: 'MagicWand',
-    label: '快捷指令'
+    icon: 'voice',
+    label: '语音输入'
   },
   {
-    icon: 'explosion',
-    label: '增强插件'
-  },
-  {
-    icon: 'robot-action',
-    label: 'GPT4'
+    icon: 'plugins2',
+    label: '插件'
   }
 ])
 
@@ -162,7 +163,7 @@ onMounted(() => {
 .options {
   padding-left: 4px;
   svg {
-    @apply size-24px cursor-pointer outline-none;
+    @apply size-22px cursor-pointer outline-none;
   }
 }
 </style>

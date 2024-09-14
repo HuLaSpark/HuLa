@@ -9,13 +9,11 @@
                 <Transition mode="out-in">
                   <svg
                     v-if="plugin.state === PluginEnum.NOT_INSTALLED || plugin.state === PluginEnum.DOWNLOADING"
-                    class="size-34px color-#666">
+                    class="size-34px color-#999">
                     <use :href="`#${plugin.icon}`"></use>
                   </svg>
                   <template v-else>
-                    <img v-if="plugin.isAnimate" class="size-34px" :src="`/emoji/${plugin.icon}.webp`" alt="" />
-
-                    <svg v-else class="size-34px color-#666">
+                    <svg class="size-34px color-#555">
                       <use :href="`#${plugin.iconAction || plugin.icon}`"></use>
                     </svg>
                   </template>
@@ -151,6 +149,7 @@ const handleState = (plugin: STO.Plugins<PluginEnum>) => {
     } else {
       clearInterval(interval)
       plugin.state = PluginEnum.INSTALLED
+      plugin.progress = 0
       updatePlugins(plugin)
     }
   }, 500)
@@ -162,6 +161,7 @@ const handleUnload = (plugin: STO.Plugins<PluginEnum>) => {
     handleDelete(plugin)
     plugin.isAdd = false
     plugin.state = PluginEnum.NOT_INSTALLED
+    plugin.progress = 0
     updatePlugins(plugin)
   }, 2000)
 }

@@ -1,7 +1,7 @@
 <template>
   <main class="size-full flex select-none">
     <!-- 侧边栏选项 -->
-    <section class="left-bar rounded-l-8px" data-tauri-drag-region>
+    <section class="left-bar" data-tauri-drag-region>
       <div class="menu-list relative">
         <div v-for="(item, index) in sideOptions" :key="index">
           <div class="menu-item" :class="{ active: activeItem === item.url }" @click="pageJumps(item.url, item.label)">

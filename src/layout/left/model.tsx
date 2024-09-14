@@ -107,15 +107,25 @@ export const LockScreen = defineComponent(() => {
   )
 })
 
-/** 检查更新弹窗 */
+/**
+ * 检查更新弹窗
+ * 需要按照版本号次版本号不能超过40
+ * @example v2.0.0 -> v2.39.0 -> v3.0.0
+ */
 export const CheckUpdate = defineComponent(() => {
-  const url = `https://gitee.com/api/v5/repos/nongyehong/HuLa-IM-Tauri/releases/tags/v${pkg.version}?access_token=${import.meta.env.VITE_GITEE_TOKEN}`
+  const url = ref(
+    `https://gitee.com/api/v5/repos/nongyehong/HuLa-IM-Tauri/releases/tags/v${pkg.version}?access_token=${import.meta.env.VITE_GITEE_TOKEN}`
+  )
   /** 项目提交日志记录 */
   const commitLog = ref<{ message: string; icon: string }[]>([])
+  const newCommitLog = ref<{ message: string; icon: string }[]>([])
+  const text = ref('检查更新')
+  const newVersion = ref()
   const loading = ref(false)
   const checkLoading = ref(false)
   /** 版本更新日期 */
   const versionTime = ref('')
+  const newVersionTime = ref('')
 
   // const commitTypeMap: { [key: string]: string } = {
   //   feat: 'feat',
@@ -156,6 +166,44 @@ export const CheckUpdate = defineComponent(() => {
   /* 记录检测更新的版本 */
   let lastVersion: string | null = null
 
+  const getCommitLog = (url: string, isNew = false) => {
+    fetch(url).then((res) => {
+      if (!res.ok) {
+        commitLog.value = [{ message: '获取更新日志失败，请配置token后再试', icon: 'cloudError' }]
+        loading.value = false
+        return
+      }
+      res.json().then(async (data) => {
+        isNew ? (newVersionTime.value = data.created_at) : (versionTime.value = data.created_at)
+        await nextTick(() => {
+          // 使用正则表达式提取 * 号后面的内容
+          const regex = /\* (.+)/g
+          let match
+          const logs = []
+          while ((match = regex.exec(data.body)) !== null) {
+            logs.push(match[1])
+          }
+          const processedLogs = logs.map((commit) => {
+            // 获取最后一个 : 号的位置
+            const lastColonIndex = commit.lastIndexOf(':')
+            // 截取最后一个 : 号后的内容
+            const message = lastColonIndex !== -1 ? commit.substring(lastColonIndex + 1).trim() : commit
+            return {
+              message: message,
+              icon: mapCommitType(commit) || 'alien-monster'
+            }
+          })
+          isNew ? (newCommitLog.value = processedLogs) : (commitLog.value = processedLogs)
+          loading.value = false
+        })
+      })
+    })
+  }
+
+  const handleUpdate = () => {
+    window.$message.warning('更新功能暂未开放，敬请期待, 请到github或gitee下载最新版本')
+  }
+
   const checkUpdate = () => {
     const url = `https://gitee.com/api/v5/repos/nongyehong/HuLa-IM-Tauri/tags?access_token=${import.meta.env.VITE_GITEE_TOKEN}&sort=name&direction=desc&page=1&per_page=1`
     if (lastVersion && lastVersion === `v${pkg.version}`) {
@@ -174,7 +222,25 @@ export const CheckUpdate = defineComponent(() => {
               checkLoading.value = false
             }, 600)
           } else {
-            // TODO 获取最新版本的提交日志，并且更换按钮文字为下载最新版本 (nyh -> 2024-07-11 22:20:33)
+            setTimeout(() => {
+              let url = `https://gitee.com/api/v5/repos/nongyehong/HuLa-IM-Tauri/tags?access_token=${import.meta.env.VITE_GITEE_TOKEN}&sort=name&direction=asc&page=1`
+              fetch(url).then((res) => {
+                res.json().then(async (data) => {
+                  const allVersion = [] as number[]
+                  data.forEach((item: any) => {
+                    // 只获取item.name中[1,4]的内容
+                    allVersion.push(Number(item.name.slice(1, 4)))
+                  })
+                  newVersion.value = `v${Math.max(...allVersion)}.0`
+                  url = `https://gitee.com/api/v5/repos/nongyehong/HuLa-IM-Tauri/releases/tags/${newVersion.value}?access_token=${import.meta.env.VITE_GITEE_TOKEN}`
+                  getCommitLog(url, true)
+                  text.value = '立即更新'
+                  checkLoading.value = false
+                })
+              })
+              window.$message.success('有新版本发布，请下载最新版本')
+              // TODO 获取最新版本的提交日志，并且更换按钮文字为下载最新版本 (nyh -> 2024-07-11 22:20:33)
+            }, 1200)
           }
         })
         .catch(() => {
@@ -186,40 +252,11 @@ export const CheckUpdate = defineComponent(() => {
 
   const init = () => {
     loading.value = true
-    fetch(url).then((res) => {
-      if (!res.ok) {
-        commitLog.value = [{ message: '获取更新日志失败，请配置token后再试', icon: 'cloudError' }]
-        loading.value = false
-        return
-      }
-      res.json().then(async (data) => {
-        versionTime.value = data.created_at
-        await nextTick(() => {
-          // 使用正则表达式提取 * 号后面的内容
-          const regex = /\* (.+)/g
-          let match
-          const logs = []
-          while ((match = regex.exec(data.body)) !== null) {
-            logs.push(match[1])
-          }
-          commitLog.value = logs.map((commit) => {
-            // 获取最后一个 : 号的位置
-            const lastColonIndex = commit.lastIndexOf(':')
-            // 截取最后一个 : 号后的内容
-            const message = lastColonIndex !== -1 ? commit.substring(lastColonIndex + 1).trim() : commit
-            return {
-              message: message,
-              icon: mapCommitType(commit) || 'alien-monster'
-            }
-          })
-          loading.value = false
-        })
-      })
-    })
   }
 
   onMounted(() => {
     init()
+    getCommitLog(url.value)
   })
   return () => (
     <NModal v-model:show={lock.value.modalShow} maskClosable={false} class="w-350px border-rd-8px">
@@ -245,18 +282,75 @@ export const CheckUpdate = defineComponent(() => {
           </NFlex>
         ) : (
           <NFlex size={10} vertical justify={'center'} class="p-14px box-border select-none">
-            <NFlex justify={'space-between'} align={'center'}>
+            <NFlex justify={'space-between'} align={'center'} size={0}>
               <NFlex align={'center'} size={10}>
-                <p>当前版本:</p>
-                <p class="text-(24px #909090) font-500">v{pkg.version}</p>
+                <NFlex align={'center'} size={10}>
+                  <p>当前版本:</p>
+                  <p class="text-(20px #909090) font-500">v{pkg.version}</p>
+                </NFlex>
+
+                {newVersion.value ? (
+                  <NFlex align={'center'} size={10} class="relative">
+                    <svg class="w-24px h-24px select-none color-#ccc">
+                      <use href={'#RightArrow'}></use>
+                    </svg>
+
+                    <p class="relative text-(20px #13987f) font-500">{newVersion.value}</p>
+
+                    <span class="absolute top--10px right--44px p-[4px_8px] bg-#f6dfe3ff rounded-6px text-(12px #ce304f)">
+                      new
+                    </span>
+                  </NFlex>
+                ) : null}
               </NFlex>
               <NFlex align={'center'} size={10}>
-                <p class="text-(12px #909090)">版本发布日期:</p>
-                <p class="text-(12px #13987f)">{handRelativeTime(versionTime.value)}</p>
+                {newVersionTime.value ? (
+                  <>
+                    <p class="text-(12px #909090)">新版本发布日期:</p>
+                    <p class="text-(12px #13987f)">{handRelativeTime(newVersionTime.value)}</p>
+                  </>
+                ) : (
+                  <>
+                    <p class="text-(12px #909090)">版本发布日期:</p>
+                    <p class="text-(12px #13987f)">{handRelativeTime(versionTime.value)}</p>
+                  </>
+                )}
               </NFlex>
             </NFlex>
             <p class="text-(14px #909090)">版本更新日志</p>
             <NScrollbar class="max-h-460px p-[0_10px] box-border">
+              {newCommitLog.value.length > 0 ? (
+                <>
+                  <span class="p-[4px_8px] mb-10px w-fit bg-#f6dfe3ff rounded-6px text-(12px #ce304f)">
+                    {newVersion.value}
+                  </span>
+
+                  <NTimeline class="p-16px box-border">
+                    {newCommitLog.value.map((log, index) => (
+                      <NTimelineItem key={index} content={log.message}>
+                        {{
+                          icon: () => (
+                            <NIcon size={32}>
+                              <img class="size-32px" src={`/emoji/${log.icon}.webp`} alt="" />
+                            </NIcon>
+                          )
+                        }}
+                      </NTimelineItem>
+                    ))}
+                  </NTimeline>
+
+                  <NFlex>
+                    <NFlex vertical size={20}>
+                      <svg class="m-[10px_40px] w-24px h-24px select-none rotate-270 color-#ccc">
+                        <use href={'#RightArrow'}></use>
+                      </svg>
+
+                      <span class="p-[4px_8px] w-fit bg-#f1f1f1 rounded-6px text-(12px #999)">v{pkg.version}</span>
+                    </NFlex>
+                  </NFlex>
+                </>
+              ) : null}
+
               <NTimeline class="p-16px box-border">
                 {commitLog.value.map((log, index) => (
                   <NTimelineItem key={index} content={log.message}>
@@ -275,9 +369,15 @@ export const CheckUpdate = defineComponent(() => {
               </NTimeline>
             </NScrollbar>
             <NFlex justify={'end'}>
-              <NButton loading={checkLoading.value} onClick={checkUpdate} secondary type="tertiary">
-                检查更新
-              </NButton>
+              {text.value === '立即更新' ? (
+                <NButton loading={checkLoading.value} onClick={handleUpdate} secondary type="primary">
+                  {text.value}
+                </NButton>
+              ) : (
+                <NButton loading={checkLoading.value} onClick={checkUpdate} secondary type="tertiary">
+                  {text.value}
+                </NButton>
+              )}
             </NFlex>
           </NFlex>
         )}

@@ -14,7 +14,7 @@ const itemsBottom: OPT.L.Common[] = [
     title: '邮件',
     url: 'mail',
     icon: 'mail',
-    iconAction: 'mail-action2',
+    iconAction: 'mail-action',
     size: {
       width: 840,
       height: 600
@@ -27,7 +27,7 @@ const itemsBottom: OPT.L.Common[] = [
     title: '文件管理器',
     url: 'mail',
     icon: 'file',
-    iconAction: 'file-action2',
+    iconAction: 'file-action',
     size: {
       width: 840,
       height: 600
@@ -40,7 +40,7 @@ const itemsBottom: OPT.L.Common[] = [
     title: '收藏',
     url: 'mail',
     icon: 'collect',
-    iconAction: 'heart',
+    iconAction: 'collect-action',
     size: {
       width: 840,
       height: 600
@@ -97,8 +97,7 @@ const pluginsList = ref<STO.Plugins<PluginEnum>[]>([
     url: 'dynamic',
     icon: 'fire',
     title: '动态',
-    isAnimate: true,
-    iconAction: 'fire-action2',
+    iconAction: 'fire-action',
     state: PluginEnum.BUILTIN,
     isAdd: true,
     dot: false,
@@ -113,10 +112,9 @@ const pluginsList = ref<STO.Plugins<PluginEnum>[]>([
   },
   {
     icon: 'robot',
-    iconAction: 'robot-action',
+    iconAction: 'GPT',
     url: 'robot',
     title: 'ChatBot',
-    isAnimate: true,
     tip: 'ChatBot新应用上线',
     state: PluginEnum.NOT_INSTALLED,
     version: 'v2.0.0-Bate',
