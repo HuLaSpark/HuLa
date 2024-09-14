@@ -3,7 +3,7 @@
     vertical
     :size="0"
     data-tauri-drag-region
-    class="bg-[--chat-left-bg] rounded-l-8px select-none w-300px h-full p-[40px_20px_6px_20px] box-border">
+    class="bg-[--chat-left-bg] select-none w-300px h-full p-[40px_20px_6px_20px] box-border">
     <n-flex vertical :size="30">
       <!-- 标题 -->
       <n-flex justify="space-between" align="center" :size="0">

@@ -3,6 +3,7 @@
 
 ### Bug Fixes
 
+* **common:** :bug: 修复插件下载模块进度问题 ([85bc525](https://github.com/nongyehong/HuLa-IM-Tauri/commit/85bc525c1191d65eee0aef0592bf6a2e47746244))
 * **component:** :bug: 修复windows上的样式问题 ([bb6a9d4](https://github.com/nongyehong/HuLa-IM-Tauri/commit/bb6a9d440db4777989d9a922a5135350e2dbf894))
 * **component:** :bug: 修复系统托盘功能和一些样式问题 ([18277ef](https://github.com/nongyehong/HuLa-IM-Tauri/commit/18277ef0f1ce286b77b91dbc8c6ea8a628eba7d3))
 * **layout:** :bug: 修复ts类型错误导致打包出差问题 ([0d7f7e0](https://github.com/nongyehong/HuLa-IM-Tauri/commit/0d7f7e024d9404fe5fe6829504594a902c27c501))

@@ -13,7 +13,7 @@
               :size="8"
               :class="{ 'filter-shadow': page.shadow }"
               class="box bg-[--info-hover]">
-              <svg class="size-38px color-#777"><use :href="`#${plugin.icon}`"></use></svg>
+              <svg class="size-38px color-#999"><use :href="`#${plugin.icon}`"></use></svg>
               <p class="text-(12px #666)">{{ plugin.title }}</p>
 
               <!-- 在下载中进度条 -->
@@ -61,8 +61,7 @@
                   'filter-shadow': page.shadow
                 }
               ]">
-              <img v-if="plugin.isAnimate" class="size-38px" :src="`/emoji/${plugin.icon}.webp`" alt="" />
-              <svg v-else class="size-38px color-#555"><use :href="`#${plugin.iconAction || plugin.icon}`"></use></svg>
+              <svg class="size-38px color-#555"><use :href="`#${plugin.iconAction || plugin.icon}`"></use></svg>
               <p class="text-(12px #666)">{{ plugin.title }}</p>
 
               <n-flex

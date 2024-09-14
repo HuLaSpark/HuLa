@@ -33,6 +33,10 @@ const sendOptions = [
 /** 字体 */
 const fontOptions = [
   {
+    label: '苹方',
+    value: 'PingFang'
+  },
+  {
     label: '阿里妈妈刀隶体',
     value: 'AliDaoLiTi'
   },

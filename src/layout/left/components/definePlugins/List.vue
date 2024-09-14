@@ -9,13 +9,11 @@
                 <Transition mode="out-in">
                   <svg
                     v-if="plugin.state === PluginEnum.NOT_INSTALLED || plugin.state === PluginEnum.DOWNLOADING"
-                    class="size-34px color-#666">
+                    class="size-34px color-#999">
                     <use :href="`#${plugin.icon}`"></use>
                   </svg>
                   <template v-else>
-                    <img v-if="plugin.isAnimate" class="size-34px" :src="`/emoji/${plugin.icon}.webp`" alt="" />
-
-                    <svg v-else class="size-34px color-#666">
+                    <svg class="size-34px color-#555">
                       <use :href="`#${plugin.iconAction || plugin.icon}`"></use>
                     </svg>
                   </template>

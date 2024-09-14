@@ -1,5 +1,5 @@
 <template>
-  <main class="login-box rounded-8px size-full select-none">
+  <main class="login-box size-full select-none">
     <ActionBar :shrink="false" :max-w="false" />
 
     <n-flex vertical align="center" :size="20" class="size-full pt-100px">

@@ -99,7 +99,6 @@ declare namespace STO {
     state: T
     version?: string
     isAdd: boolean
-    isAnimate?: boolean
     dot?: boolean
     progress: number
   } & OPT.L.Common
