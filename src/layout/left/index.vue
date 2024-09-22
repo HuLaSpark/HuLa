@@ -1,18 +1,20 @@
 <template>
-  <main
-    class="left rounded-l-8px min-w-64px h-full p-[30px_6px_15px] box-border flex-col-center select-none"
-    data-tauri-drag-region>
-    <p class="text-(16px [--text-color]) cursor-default select-none m-[4px_0_16px_0]">HuLa</p>
-    <!-- 头像模块 -->
-    <LeftAvatar />
-    <!-- 导航选项按钮模块 -->
-    <ActionList />
-    <!-- 编辑资料弹窗 -->
-    <InfoPopover />
+  <div style="background: rgba(30, 30, 30, 0.8)">
+    <main
+      class="left rounded-l-8px min-w-64px h-full p-[30px_6px_15px] box-border flex-col-center select-none"
+      data-tauri-drag-region>
+      <p class="text-(16px [--left-text-color]) cursor-default select-none m-[4px_0_16px_0]">HuLa</p>
+      <!-- 头像模块 -->
+      <LeftAvatar />
+      <!-- 导航选项按钮模块 -->
+      <ActionList />
+      <!-- 编辑资料弹窗 -->
+      <InfoPopover />
 
-    <!-- 弹出框 -->
-    <component :is="componentMap" />
-  </main>
+      <!-- 弹出框 -->
+      <component :is="componentMap" />
+    </main>
+  </div>
 </template>
 <script lang="tsx" setup>
 import LeftAvatar from './components/LeftAvatar.vue'

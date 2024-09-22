@@ -1,13 +1,13 @@
 <template>
   <div ref="actionList" class="flex-1 mt-20px flex-col-x-center justify-between" data-tauri-drag-region>
     <!-- 上部分操作栏 -->
-    <header ref="header" class="flex-col-x-center gap-10px color-[--icon-color]">
+    <header ref="header" class="flex-col-x-center gap-10px color-[--left-icon-color]">
       <div
         v-for="(item, index) in menuTop"
         :key="index"
         :class="[
           { active: activeUrl === item.url && item.url !== 'dynamic' },
-          openWindowsList.has(item.url) ? 'p-[6px_8px] color-#13987f' : 'top-action'
+          openWindowsList.has(item.url) ? 'p-[6px_8px] color-[--left-win-icon-color]' : 'top-action'
         ]"
         @click="pageJumps(item.url, item.title, item.size, item.window)">
         <!-- 已经打开窗口时展示 -->
@@ -80,11 +80,11 @@
     </header>
 
     <!-- 下部分操作栏 -->
-    <footer class="flex-col-x-center gap-10px color-[--icon-color]">
+    <footer class="flex-col-x-center gap-10px color-[--left-icon-color] select-none">
       <div
         v-for="(item, index) in itemsBottom"
         :key="index"
-        :class="openWindowsList.has(item.url) ? 'p-[6px_8px] color-#13987f' : 'bottom-action'"
+        :class="openWindowsList.has(item.url) ? 'p-[6px_8px] color-[--left-win-icon-color]' : 'bottom-action'"
         @click="pageJumps(item.url, item.title, item.size, item.window)">
         <!-- 已经打开窗口时展示 -->
         <n-popover :show-arrow="false" v-if="openWindowsList.has(item.url)" trigger="hover" placement="right">
@@ -125,12 +125,12 @@
       <!--  更多选项面板  -->
       <n-popover
         v-model:show="settingShow"
-        style="padding: 0; background: transparent"
+        style="padding: 0; background: transparent; user-select: none"
         :show-arrow="false"
         trigger="click">
         <template #trigger>
           <svg
-            :class="{ 'color-#13987f': settingShow }"
+            :class="{ 'color--[--left-active-hover]': settingShow }"
             class="more size-22px relative"
             @click="settingShow = !settingShow">
             <use :href="settingShow ? '#hamburger-button-action' : '#hamburger-button'"></use>

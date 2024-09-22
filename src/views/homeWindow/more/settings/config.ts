@@ -15,6 +15,12 @@ const sideOptions = ref<OPT.L.SettingSide[]>([
     url: '/loginSetting',
     label: '登录设置',
     icon: 'settings'
+  },
+  {
+    url: '/versatile',
+    label: '超级变变变',
+    icon: 'platte',
+    versionStatus: 'New'
   }
 ])
 

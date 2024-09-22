@@ -137,7 +137,6 @@
 </template>
 <script setup lang="ts">
 import { setting } from '@/stores/setting.ts'
-import { storeToRefs } from 'pinia'
 import { NIcon, VirtualListInst, InputInst } from 'naive-ui'
 import Mitt from '@/utils/Bus.ts'
 import { VueDraggable } from 'vue-draggable-plus'

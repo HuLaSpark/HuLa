@@ -1,0 +1,30 @@
+/**! 主题变量 */
+/* todo: 这里只需要定义单个颜色的变量即可无需重复定义组件的颜色 */
+:root {
+  .default {
+    // 侧边栏样式
+    --left-bg-color: #64a29c;
+    --left-active-bg-color: rgba(222, 222, 222, 0.2);
+    --left-text-color: #e3e3e3;
+    --left-icon-color: #e3e3e3;
+    --left-active-hover: #f1f1f1;
+    --left-bg-hover: rgba(255, 255, 255, 0.2);
+    --left-active-icon-color: #f1f1f1;
+    --left-win-icon-color: rgba(255, 255, 255, 0.4);
+  }
+}
+
+html[data-theme='dark'] {
+   .default {
+     // 侧边栏样式
+     --left-bg-color: rgba(62, 101, 100, 0.8);
+     --left-active-bg-color: rgba(222, 222, 222, 0.1);
+     --left-text-color: #282828;
+     --left-icon-color: #282828;
+     --left-active-hover: rgba(19, 152, 127, 0.8);
+     --left-bg-hover: rgba(133, 133, 133, 0.2);
+     --left-active-icon-color: #13987f;
+     --left-win-icon-color: rgba(19, 152, 127, 0.8);
+   }
+}
+/**! end */

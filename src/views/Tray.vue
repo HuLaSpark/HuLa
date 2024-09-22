@@ -57,7 +57,6 @@ import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { listen } from '@tauri-apps/api/event'
 import { useWsLoginStore } from '@/stores/ws.ts'
 import { setting } from '@/stores/setting.ts'
-import { storeToRefs } from 'pinia'
 import { PhysicalPosition } from '@tauri-apps/api/dpi'
 
 const appWindow = WebviewWindow.getCurrent()
@@ -116,7 +115,7 @@ onMounted(async () => {
   })
   await listen('login_success', () => {
     isLoginWin.value = false
-    resizeWindow('tray', 130, 366)
+    resizeWindow('tray', 130, 356)
   })
   await listen('logout_success', () => {
     isLoginWin.value = true

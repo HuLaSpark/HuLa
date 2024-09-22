@@ -27,7 +27,6 @@
 
 <script setup lang="ts">
 import { setting } from '@/stores/setting.ts'
-import { storeToRefs } from 'pinia'
 
 const settingStore = setting()
 const { login } = storeToRefs(settingStore)

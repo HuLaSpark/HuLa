@@ -10,7 +10,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { emit, listen } from '@tauri-apps/api/event'
 
 const video = ref<HTMLVideoElement>()
@@ -36,6 +36,7 @@ peerConnection.ontrack = function (event) {
 }
 
 onMounted(async () => {
+  await getCurrentWebviewWindow().show()
   await emit('SharedScreenWin')
 })
 </script>

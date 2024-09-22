@@ -10,7 +10,6 @@
 </template>
 <script setup lang="ts">
 import { setting } from '@/stores/setting.ts'
-import { storeToRefs } from 'pinia'
 import { StoresEnum, ThemeEnum } from '@/enums'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
 import LockScreen from '@/views/LockScreen.vue'
@@ -52,7 +51,23 @@ watch(
   { immediate: true }
 )
 
-onMounted(() => {
+/** 控制变化主题 */
+watch(
+  () => themes.value.versatile,
+  async (val, oldVal) => {
+    await import(`@/styles/scss/theme/${val}.scss`)
+    // 然后给最顶层的div设置val的类样式
+    const app = document.querySelector('#app')?.classList as DOMTokenList
+    app.remove(oldVal as string)
+    await nextTick(() => {
+      app.add(val)
+    })
+  },
+  { immediate: true }
+)
+
+onMounted(async () => {
+  await import(`@/styles/scss/theme/${themes.value.versatile}.scss`)
   // initWebSocket()
   // /**! 使用msi或者其他安装包安装后才会显示应用的名字和图标 */
   // sendNotification({ title: 'TAURI', body: 'Tauri is awesome!' })
@@ -66,19 +81,19 @@ onMounted(() => {
   }
   document.documentElement.dataset.theme = themes.value.content
   window.addEventListener('dragstart', preventDrag)
-  // /** 开发环境不禁止 */
-  // if (process.env.NODE_ENV !== 'development') {
-  //   /** 禁用浏览器默认的快捷键 */
-  //   window.addEventListener('keydown', (e) => {
-  //     // 排除ctrl+c ctrl+v ctrl+enter
-  //     if (e.ctrlKey && (e.key === 'c' || e.key === 'v' || e.key === 'Enter')) return
-  //     if (e.ctrlKey || e.metaKey || e.altKey) {
-  //       e.preventDefault()
-  //     }
-  //   })
-  // }
-  // /** 禁止右键菜单 */
-  // window.addEventListener('contextmenu', (e) => e.preventDefault(), false)
+  /** 开发环境不禁止 */
+  if (process.env.NODE_ENV !== 'development') {
+    /** 禁用浏览器默认的快捷键 */
+    window.addEventListener('keydown', (e) => {
+      // 排除ctrl+c ctrl+v ctrl+enter
+      if (e.ctrlKey && (e.key === 'c' || e.key === 'v' || e.key === 'Enter')) return
+      if (e.ctrlKey || e.metaKey || e.altKey) {
+        e.preventDefault()
+      }
+    })
+    /** 禁止右键菜单 */
+    window.addEventListener('contextmenu', (e) => e.preventDefault(), false)
+  }
 })
 
 onUnmounted(() => {

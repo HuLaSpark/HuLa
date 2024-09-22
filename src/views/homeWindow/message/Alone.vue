@@ -7,7 +7,7 @@
 </template>
 <script setup lang="ts">
 import { emit } from '@tauri-apps/api/event'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { EventEnum } from '@/enums'
 
 const appWindow = WebviewWindow.getCurrent()
@@ -19,6 +19,7 @@ appWindow.onCloseRequested(async (e) => {
 
 /**! 创建新窗口然后需要通信传递数据时候需要进行提交一次页面创建成功的事件，否则会接收不到数据 */
 onMounted(async () => {
+  await getCurrentWebviewWindow().show()
   await emit(EventEnum.ALONE)
 })
 </script>

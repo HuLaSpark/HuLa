@@ -39,7 +39,7 @@
 <script setup lang="ts">
 import { statusItem } from './config.ts'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
-import { storeToRefs } from 'pinia'
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 
 const OLStatusStore = onlineStatus()
 const { url, title, bgColor } = storeToRefs(OLStatusStore)
@@ -72,6 +72,7 @@ const handleActive = async (item: OPT.Online, index: number) => {
 }
 
 onMounted(async () => {
+  await getCurrentWebviewWindow().show()
   activeItem.index = statusItem.findIndex((item) => item.title === activeItem.title)
 })
 </script>

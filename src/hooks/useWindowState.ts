@@ -21,9 +21,11 @@ export const useWindowState = (label: string) => {
   })
 
   onMounted(async () => {
-    const isShow = await win?.isVisible()
-    if (isShow) {
-      await emit(EventEnum.WIN_SHOW, label)
-    }
+    await nextTick(async () => {
+      const isShow = await win?.isVisible()
+      if (isShow) {
+        await emit(EventEnum.WIN_SHOW, label)
+      }
+    })
   })
 }

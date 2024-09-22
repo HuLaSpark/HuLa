@@ -44,7 +44,7 @@
         <!-- 添加面板 -->
         <n-popover
           v-model:show="addPanels.show"
-          style="padding: 0; background: transparent"
+          style="padding: 0; background: transparent; user-select: none"
           :show-arrow="false"
           trigger="click">
           <template #trigger>
@@ -83,7 +83,6 @@ import { MittEnum } from '@/enums'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useWindowSize } from '@vueuse/core'
 import { setting } from '@/stores/setting.ts'
-import { storeToRefs } from 'pinia'
 
 const settingStore = setting()
 const { page } = storeToRefs(settingStore)

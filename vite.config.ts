@@ -44,7 +44,12 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       vueJsx(), // 开启jsx功能
       unocss(), // 开启unocss
       AutoImport({
-        imports: ['vue', { 'naive-ui': ['useDialog', 'useMessage', 'useNotification', 'useLoadingBar', 'useModal'] }],
+        imports: [
+          'vue',
+          'vue-router',
+          'pinia',
+          { 'naive-ui': ['useDialog', 'useMessage', 'useNotification', 'useLoadingBar', 'useModal'] }
+        ],
         dts: 'src/typings/auto-imports.d.ts'
       }),
       /**自动导入组件，但是不会自动导入jsx和tsx*/

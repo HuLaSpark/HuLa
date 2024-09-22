@@ -6,7 +6,6 @@ import { MockItem, SessionItem } from '@/services/types.ts'
 import { delay } from 'lodash-es'
 import { MockList } from '@/mock'
 import { setting } from '@/stores/setting.ts'
-import { storeToRefs } from 'pinia'
 
 const { createWebviewWindow, checkWinExist } = useWindow()
 /** 建议把此状态存入localStorage中 */

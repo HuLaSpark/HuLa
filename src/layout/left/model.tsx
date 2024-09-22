@@ -14,7 +14,6 @@ import {
 } from 'naive-ui'
 import { FormInst } from 'naive-ui'
 import { setting } from '@/stores/setting.ts'
-import { storeToRefs } from 'pinia'
 import { emit } from '@tauri-apps/api/event'
 import { EventEnum } from '@/enums'
 import pkg from '~/package.json'
@@ -321,9 +320,9 @@ export const CheckUpdate = defineComponent(() => {
             <NScrollbar class="max-h-460px p-[0_10px] box-border">
               {newCommitLog.value.length > 0 ? (
                 <>
-                  <span class="p-[4px_8px] mb-10px w-fit bg-#f6dfe3ff rounded-6px text-(12px #ce304f)">
+                  <div class="p-[4px_8px] mt-4px w-fit bg-#f6dfe3ff rounded-6px text-(12px #ce304f)">
                     {newVersion.value}
-                  </span>
+                  </div>
 
                   <NTimeline class="p-16px box-border">
                     {newCommitLog.value.map((log, index) => (
@@ -341,7 +340,7 @@ export const CheckUpdate = defineComponent(() => {
 
                   <NFlex>
                     <NFlex vertical size={20}>
-                      <svg class="m-[10px_40px] w-24px h-24px select-none rotate-270 color-#ccc">
+                      <svg class="m-[4px_40px] w-24px h-24px select-none rotate-270 color-#ccc">
                         <use href={'#RightArrow'}></use>
                       </svg>
 

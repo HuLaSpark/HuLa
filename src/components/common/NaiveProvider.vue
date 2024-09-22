@@ -21,7 +21,6 @@
 
 <script setup lang="ts">
 import { setting } from '@/stores/setting.ts'
-import { storeToRefs } from 'pinia'
 import { dateZhCN, darkTheme, lightTheme, GlobalThemeOverrides, zhCN } from 'naive-ui'
 import { ThemeEnum } from '@/enums'
 

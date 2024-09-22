@@ -13,59 +13,13 @@
       "tray"
     ],
     "active": true,
-    "targets": "all",
-    "icon": [
-      "icons/32x32.png",
-      "icons/128x128.png",
-      "icons/128x128@2x.png",
-      "icons/icon.icns",
-      "icons/icon.ico"
-    ],
-    "windows": {
-      "wix": {
-        "language": "zh-CN"
-      }
-    }
+    "icon": [],
+    "windows": {},
+    "macOS": {}
   },
   "app": {
     "withGlobalTauri": true,
-    "windows": [
-      {
-        "label": "login",
-        "url": "/login",
-        "fullscreen": false,
-        "resizable": false,
-        "center": true,
-        "width": 320,
-        "height": 448,
-        "skipTaskbar": false,
-        "transparent": false,
-        "titleBarStyle": "Overlay",
-        "hiddenTitle": true
-      },
-      {
-        "label": "tray",
-        "url": "/tray",
-        "resizable": false,
-        "center": false,
-        "visible": false,
-        "width": 130,
-        "height": 44,
-        "alwaysOnTop": true,
-        "skipTaskbar": true,
-        "decorations": false
-      },
-      {
-        "label": "capture",
-        "url": "/capture",
-        "fullscreen": false,
-        "transparent": true,
-        "resizable": false,
-        "skipTaskbar": false,
-        "decorations": false,
-        "visible": false
-      }
-    ],
+    "windows": [],
     "security": {
       "csp": null
     },

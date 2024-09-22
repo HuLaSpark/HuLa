@@ -11,4 +11,9 @@
 <script setup lang="ts">
 import Left from './layout/Left.vue'
 import Right from './layout/Right.vue'
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
+
+onMounted(async () => {
+  await getCurrentWebviewWindow().show()
+})
 </script>

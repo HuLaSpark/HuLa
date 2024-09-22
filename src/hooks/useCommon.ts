@@ -3,7 +3,6 @@ import { Ref } from 'vue'
 import { createFileOrVideoDom } from '@/utils/CreateDom.ts'
 import { RegExp } from '@/utils/RegExp.ts'
 import { setting } from '@/stores/setting.ts'
-import { storeToRefs } from 'pinia'
 
 /** 常用工具类 */
 export const useCommon = () => {

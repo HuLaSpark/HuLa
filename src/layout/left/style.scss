@@ -1,9 +1,9 @@
 @mixin action() {
   padding: 6px 8px 6px 8px;
   &:not(.active):hover {
-    background: var(--bg-left-menu-hover);
+    background: var(--left-bg-hover);
     border-radius: 8px;
-    color: #13987f;
+    color: var(--left-active-hover);
     cursor: pointer;
     animation: linearAnimation 3s linear forwards;
   }
@@ -11,7 +11,6 @@
 
 .left {
   background: var(--left-bg-color);
-  //background: #64a29c;
 }
 
 .top-action,
@@ -21,9 +20,9 @@
 }
 
 .active {
-  background: var(--left-active-color);
+  background: var(--left-active-bg-color);
   border-radius: 8px;
-  color: #13987f;
+  color: var(--left-active-icon-color);
 }
 
 .setting-item {

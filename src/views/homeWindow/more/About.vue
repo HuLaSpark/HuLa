@@ -32,6 +32,7 @@
 import pkg from '~/package.json'
 import dayjs from 'dayjs'
 import { type, arch, version } from '@tauri-apps/plugin-os'
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 
 const _pkg = reactive({
   version: pkg.version
@@ -70,7 +71,8 @@ const handleMouseLeave = () => {
   })
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await getCurrentWebviewWindow().show()
   osType.value = type()
   osArch.value = arch()
   osVersion.value = version()

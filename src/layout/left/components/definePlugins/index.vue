@@ -67,7 +67,6 @@
 <script setup lang="ts">
 import { type } from '@tauri-apps/plugin-os'
 import { usePluginsStore } from '@/stores/plugins.ts'
-import { storeToRefs } from 'pinia'
 import Card from './Card.vue'
 import List from './List.vue'
 

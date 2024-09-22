@@ -65,6 +65,7 @@ import { useGlobalStore } from '@/stores/global.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 
 const chatStore = useChatStore()
 const globalStore = useGlobalStore()
@@ -125,7 +126,8 @@ onBeforeMount(() => {
   chatStore.getSessionList(true)
 })
 
-onMounted(() => {
+onMounted(async () => {
+  await getCurrentWebviewWindow().show()
   // TODO 这里的key后面如果换成用户唯一标识的时候记得更换data-key的值 (nyh -> 2024-03-28 18:56:20)
   // if (currentSession.value.roomId !== -1) {
   //   nextTick(() => {
