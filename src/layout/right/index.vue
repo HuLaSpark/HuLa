@@ -1,6 +1,6 @@
 <template>
   <main class="flex-1 bg-[--right-bg-color] rounded-r-8px h-full w-100vw min-w-600px">
-    <div class="size-full" style="background: radial-gradient(circle at top left, #ffd1ff4c 4%, #82c1bb66 100%)">
+    <div class="size-full" style="background: var(--right-theme-bg-color)">
       <ActionBar :current-label="appWindow.label" />
       <!-- 需要判断当前路由是否是信息详情界面 -->
       <ChatBox :active-item="activeItem" v-if="msgBoxShow && isChat && activeItem !== -1" />
@@ -9,8 +9,8 @@
 
       <!-- 聊天界面背景图标 -->
       <div v-else class="flex-center size-full select-none">
-        <img v-if="imgTheme === ThemeEnum.DARK" class="w-110px h-100px" src="@/assets/img/hula_bg_d.png" alt="" />
-        <img v-else class="w-110px h-100px" src="@/assets/img/hula_bg_l.png" alt="" />
+        <img v-if="imgTheme === ThemeEnum.DARK" class="w-110px h-100px" src="@/assets/img/hula_bg_d.svg" alt="" />
+        <img v-else class="svg-icon w-110px h-100px" src="@/assets/img/hula_bg_l.png" alt="" />
       </div>
     </div>
   </main>

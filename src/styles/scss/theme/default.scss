@@ -1,5 +1,4 @@
 /**! 主题变量 */
-/* todo: 这里只需要定义单个颜色的变量即可无需重复定义组件的颜色 */
 :root {
   .default {
     // 侧边栏样式
@@ -11,6 +10,12 @@
     --left-bg-hover: rgba(255, 255, 255, 0.2);
     --left-active-icon-color: #f1f1f1;
     --left-win-icon-color: rgba(255, 255, 255, 0.4);
+
+    // 包含边框的选中样式
+    --border-active-color: #64a29c;
+
+    // 右边布局内容背景
+    --right-theme-bg-color: radial-gradient(circle at top left, #ffd1ff4c 4%, #82c1bb66 100%);
   }
 }
 
@@ -19,12 +24,18 @@ html[data-theme='dark'] {
      // 侧边栏样式
      --left-bg-color: rgba(62, 101, 100, 0.8);
      --left-active-bg-color: rgba(222, 222, 222, 0.1);
-     --left-text-color: #282828;
-     --left-icon-color: #282828;
+     --left-text-color: #ccc;
+     --left-icon-color: #ccc;
      --left-active-hover: rgba(19, 152, 127, 0.8);
      --left-bg-hover: rgba(133, 133, 133, 0.2);
      --left-active-icon-color: #13987f;
      --left-win-icon-color: rgba(19, 152, 127, 0.8);
+
+     // 包含边框的选中样式
+     --border-active-color: #64a29c;
+
+     // 右边布局内容背景
+     --right-theme-bg-color: radial-gradient(circle at top left, #ffd1ff4c 4%, #82c1bb66 100%);
    }
 }
 /**! end */

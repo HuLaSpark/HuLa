@@ -15,7 +15,7 @@
           <div
             @click="handleTheme(item.code)"
             class="size-full rounded-8px cursor-pointer custom-shadow"
-            :class="{ 'outline outline-2 outline-#13987f outline-offset': activeItem === item.code }">
+            :class="{ 'outline outline-2 outline-[--border-active-color] outline-offset': activeItem === item.code }">
             <component :is="item.model" />
           </div>
           <span class="text-12px pt-8px color-[--text-color]">{{ item.title }}</span>
