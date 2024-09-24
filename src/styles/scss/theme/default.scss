@@ -16,6 +16,13 @@
 
     // 右边布局内容背景
     --right-theme-bg-color: radial-gradient(circle at top left, #ffd1ff4c 4%, #82c1bb66 100%);
+
+    // 聊天框主体样式
+    --right-chat-reply-color: #f1f1f1;
+    --right-chat-reply-active-color: rgba(99, 99, 99, 0.1);
+
+    //列表通用hover
+    --list-hover-color: rgba(99, 99, 99, 0.1);
   }
 }
 
@@ -36,6 +43,13 @@ html[data-theme='dark'] {
 
      // 右边布局内容背景
      --right-theme-bg-color: radial-gradient(circle at top left, #ffd1ff4c 4%, #82c1bb66 100%);
+
+     // 聊天框主体样式
+     --right-chat-reply-color: #666;
+     --right-chat-reply-active-color: rgba(255, 255, 255, 0.1);
+
+     //列表通用hover
+     --list-hover-color: rgba(244, 244, 244, 0.1);
    }
 }
 /**! end */
