@@ -1,7 +1,7 @@
 name: 🐞 Bug 报告
 title: '[bug] '
 description: 报告 bug
-labels: ['type: bug', 'status: needs triage']
+labels: ['bug']
 
 body:
   - type: markdown

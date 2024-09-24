@@ -1,7 +1,7 @@
 name: 💡 功能请求
-title: '[feat] '
+title: '[功能建议] '
 description: 提出想法
-labels: ['type: feature request']
+labels: ['enhancement']
 
 body:
   - type: textarea
@@ -9,7 +9,7 @@ body:
     attributes:
       label: 描述问题
       description: 明确描述此功能将解决的问题
-      placeholder: "我总是想..."
+      placeholder: "我总是感到困扰..."
     validations:
       required: true
 
