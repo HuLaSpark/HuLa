@@ -1,0 +1,41 @@
+/**! 主题变量 */
+:root {
+ .simple {
+   // 侧边栏样式
+   --left-bg-color: rgba(229, 229, 230, 1);
+   --left-active-bg-color: rgba(193, 193, 193, 0.6);
+   --left-text-color: #333;
+   --left-icon-color: #333;
+   --left-active-hover: #13987f;
+   --left-bg-hover: rgba(193, 193, 193, 0.4);
+   --left-active-icon-color: #13987f;
+   --left-win-icon-color: rgba(19, 152, 127, 0.6);
+
+   // 包含边框的选中样式
+   --border-active-color: #13987f;
+
+   // 右边布局内容背景
+   --right-theme-bg-color: #f1f1f1;
+ }
+}
+
+html[data-theme='dark'] {
+  .simple {
+    // 侧边栏样式
+    --left-bg-color: rgba(0, 0, 0, 0.7);
+    --left-active-bg-color: rgba(193, 193, 193, 0.1);
+    --left-text-color: #e3e3e3;
+    --left-icon-color: #e3e3e3;
+    --left-active-hover: #13987f;
+    --left-bg-hover: rgba(255, 255, 255, 0.2);
+    --left-active-icon-color: #13987f;
+    --left-win-icon-color: rgba(19, 152, 127, 0.6);
+
+    // 包含边框的选中样式
+    --border-active-color: #13987f;
+
+    // 右边布局内容背景
+    --right-theme-bg-color: #161616;
+  }
+}
+/**! end */

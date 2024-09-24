@@ -1,0 +1,35 @@
+name: 💡 功能请求
+title: '[功能建议] '
+description: 提出想法
+labels: ['enhancement']
+
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 描述问题
+      description: 明确描述此功能将解决的问题
+      placeholder: "我总是感到困扰..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: "描述您想要的解决方案"
+      description: 明确说明您希望做出的改变
+      placeholder: '我想...'
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 考虑的替代方案
+      description: "您考虑过的任何替代解决方案"
+
+  - type: textarea
+    id: context
+    attributes:
+      label: 其他上下文
+      description: 在此处添加有关问题的任何其他上下文。

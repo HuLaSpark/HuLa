@@ -10,7 +10,8 @@ export const setting = defineStore(StoresEnum.SETTING, {
   state: (): STO.Setting => ({
     themes: {
       content: '',
-      pattern: ''
+      pattern: '',
+      versatile: 'default'
     },
     escClose: true,
     lockScreen: {

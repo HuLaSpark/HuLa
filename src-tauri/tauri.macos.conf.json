@@ -1,0 +1,100 @@
+{
+  "productName": "HuLa",
+  "version": "2.1.0",
+  "identifier": "com.tauri.build",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "beforeBuildCommand": "pnpm build",
+    "frontendDist": "../dist",
+    "devUrl": "http://127.0.0.1:6130"
+  },
+  "bundle": {
+    "resources": [
+      "tray"
+    ],
+    "active": true,
+    "targets": ["dmg"],
+    "icon": [
+      "icons/macos/32x32.png",
+      "icons/macos/128x128.png",
+      "icons/macos/128x128@2x.png",
+      "icons/macos/icon.icns",
+      "icons/macos/icon.ico",
+      "icons/macos/icon.png",
+      "icons/macos/Square30x30Logo.png",
+      "icons/macos/Square44x44Logo.png",
+      "icons/macos/Square71x71Logo.png",
+      "icons/macos/Square89x89Logo.png",
+      "icons/macos/Square107x107Logo.png",
+      "icons/macos/Square142x142Logo.png",
+      "icons/macos/Square150x150Logo.png",
+      "icons/macos/Square284x284Logo.png",
+      "icons/macos/Square310x310Logo.png",
+      "icons/macos/StoreLogo.png"
+    ],
+    "macOS": {
+      "dmg": {
+        "appPosition": {
+          "x": 180,
+          "y": 170
+        },
+        "applicationFolderPosition": {
+          "x": 480,
+          "y": 170
+        },
+        "windowSize": {
+          "height": 400,
+          "width": 660
+        }
+      },
+      "files": {},
+      "hardenedRuntime": true,
+      "minimumSystemVersion": "10.13"
+    }
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "label": "login",
+        "url": "/login",
+        "fullscreen": false,
+        "resizable": false,
+        "center": true,
+        "width": 320,
+        "height": 448,
+        "skipTaskbar": false,
+        "transparent": false,
+        "visible": false,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true
+      },
+      {
+        "label": "tray",
+        "url": "/tray",
+        "resizable": false,
+        "center": false,
+        "visible": false,
+        "width": 130,
+        "height": 44,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "decorations": false
+      },
+      {
+        "label": "capture",
+        "url": "/capture",
+        "fullscreen": false,
+        "transparent": true,
+        "resizable": false,
+        "skipTaskbar": false,
+        "decorations": false,
+        "visible": false
+      }
+    ],
+    "security": {
+      "csp": null
+    },
+    "macOSPrivateApi": true
+  }
+}

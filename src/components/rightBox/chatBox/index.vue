@@ -16,7 +16,6 @@ import { MockItem } from '@/services/types.ts'
 import { listen } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { setting } from '@/stores/setting.ts'
-import { storeToRefs } from 'pinia'
 
 const settingStore = setting()
 const { page } = storeToRefs(settingStore)

@@ -41,7 +41,6 @@ import router from '@/router'
 import Mitt from '@/utils/Bus.ts'
 import { content } from './config.tsx'
 import { setting } from '@/stores/setting.ts'
-import { storeToRefs } from 'pinia'
 
 const settingStore = setting()
 const { page } = storeToRefs(settingStore)

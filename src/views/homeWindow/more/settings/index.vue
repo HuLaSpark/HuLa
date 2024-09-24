@@ -5,8 +5,17 @@
       <div class="menu-list relative">
         <div v-for="(item, index) in sideOptions" :key="index">
           <div class="menu-item" :class="{ active: activeItem === item.url }" @click="pageJumps(item.url, item.label)">
-            <svg><use :href="`#${item.icon}`"></use></svg>
-            {{ item.label }}
+            <n-flex align="center">
+              <svg><use :href="`#${item.icon}`"></use></svg>
+              {{ item.label }}
+            </n-flex>
+            <Transition>
+              <div
+                v-if="item.versionStatus && activeItem !== item.url"
+                class="bg-#f6dfe3ff p-[2px_6px] rounded-6px text-(12px #ce304f)">
+                {{ item.versionStatus }}
+              </div>
+            </Transition>
           </div>
         </div>
       </div>
@@ -50,8 +59,8 @@
 import router from '@/router'
 import { sideOptions } from './config.ts'
 import { setting } from '@/stores/setting.ts'
-import { storeToRefs } from 'pinia'
 import Foot from '@/views/homeWindow/more/settings/Foot.vue'
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 
 const settingStore = setting()
 const skeleton = ref(true)
@@ -71,7 +80,8 @@ const pageJumps = (url: string, label: string) => {
   router.push(url)
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await getCurrentWebviewWindow().show()
   setTimeout(() => {
     skeleton.value = false
   }, 300)
@@ -92,6 +102,8 @@ onMounted(() => {
     border-radius: 10px;
     margin-top: 6px;
     font-size: 14px;
+    display: flex;
+    justify-content: space-between;
     svg {
       width: 18px;
       height: 18px;
@@ -114,5 +126,15 @@ onMounted(() => {
 
 .header {
   @apply w-full h-42px flex items-center pl-40px select-none text-18px color-[--text-color] border-b-(1px solid [--line-color]);
+}
+
+.v-enter-active,
+.v-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.v-enter-from,
+.v-leave-to {
+  opacity: 0;
 }
 </style>

@@ -112,7 +112,6 @@
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { setting } from '@/stores/setting.ts'
-import { storeToRefs } from 'pinia'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { onKeyStroke } from '@vueuse/core'
 import { InputInst, lightTheme } from 'naive-ui'

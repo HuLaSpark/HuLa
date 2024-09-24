@@ -10,7 +10,7 @@
       <!-- 头像 -->
       <n-flex justify="center" class="w-full mt-35px">
         <img
-          class="w-80px h-80px rounded-50% bg-#fff border-(2px solid #fff)"
+          class="w-80px h-80px rounded-50% bg-#b6d6d9ff border-(2px solid #fff)"
           :src="info.avatar || '/logo.png'"
           alt="" />
       </n-flex>
@@ -151,8 +151,8 @@ import { useWindow } from '@/hooks/useWindow.ts'
 import { delay } from 'lodash-es'
 import { lightTheme } from 'naive-ui'
 import { setting } from '@/stores/setting.ts'
-import { storeToRefs } from 'pinia'
 import { useLogin } from '@/hooks/useLogin.ts'
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 
 const settingStore = setting()
 const { login } = storeToRefs(settingStore)
@@ -300,6 +300,7 @@ const closeMenu = (event: MouseEvent) => {
 }
 
 onMounted(async () => {
+  await getCurrentWebviewWindow().show()
   if (login.value.autoLogin && login.value.accountInfo.password !== '') {
     autoLogin()
   }

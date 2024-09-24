@@ -47,7 +47,8 @@ export const useWindow = () => {
       decorations: type() !== 'windows',
       transparent: false,
       titleBarStyle: 'overlay', // mac覆盖标签栏
-      hiddenTitle: true // mac隐藏标题栏
+      hiddenTitle: true, // mac隐藏标题栏
+      visible: false
     })
 
     await webview.once('tauri://created', async () => {

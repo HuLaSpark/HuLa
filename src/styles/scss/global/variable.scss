@@ -16,9 +16,6 @@ html, body, svg {
   // 字体
   --font-family: 'PingFang';
 
-  // 整体布局背景
-  --left-bg-color: rgba(241, 241, 241, 1);
-  --left-active-color: rgba(193, 193, 193, 0.6);
   --center-bg-color: #fff;
   --right-bg-color: #f1f1f1;
   // 阴影样式的颜色
@@ -97,9 +94,6 @@ html, body, svg {
 }
 
 html[data-theme='dark'] {
-  // 整体布局背景
-  --left-bg-color: rgba(22, 22, 22, 1);
-  --left-active-color: rgba(193, 193, 193, 0.1);
   --center-bg-color: #1b1b1b;
   --right-bg-color: #161616;
   // 阴影样式的颜色

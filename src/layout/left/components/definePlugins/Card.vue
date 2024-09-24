@@ -136,7 +136,6 @@ import { PluginEnum } from '@/enums'
 import { setting } from '@/stores/setting.ts'
 import { usePluginsStore } from '@/stores/plugins.ts'
 import { useMenuTopStore } from '@/stores/menuTop.ts'
-import { storeToRefs } from 'pinia'
 
 const settingStore = setting()
 const { updatePlugins, plugins } = usePluginsStore()

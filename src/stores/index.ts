@@ -1,4 +1,3 @@
-import { createPinia } from 'pinia'
 import { createPersistedState } from 'pinia-plugin-persistedstate'
 import { PiniaSharedState } from 'pinia-shared-state' // 标签页共享存储状态
 

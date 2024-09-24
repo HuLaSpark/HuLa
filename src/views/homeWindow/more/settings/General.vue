@@ -15,7 +15,7 @@
           <div
             @click="handleTheme(item.code)"
             class="size-full rounded-8px cursor-pointer custom-shadow"
-            :class="{ 'outline outline-2 outline-#13987f outline-offset': activeItem === item.code }">
+            :class="{ 'outline outline-2 outline-[--border-active-color] outline-offset': activeItem === item.code }">
             <component :is="item.model" />
           </div>
           <span class="text-12px pt-8px color-[--text-color]">{{ item.title }}</span>
@@ -113,19 +113,18 @@
 </template>
 <script setup lang="tsx">
 import { setting } from '@/stores/setting.ts'
-import { storeToRefs } from 'pinia'
 import { CloseBxEnum } from '@/enums'
 import { topicsList } from './model.tsx'
 import { sendOptions, fontOptions } from './config.ts'
 import { type } from '@tauri-apps/plugin-os'
 
 const settingStore = setting()
-const { themes, tips, escClose, chat, page } = storeToRefs(settingStore)
-const activeItem = ref<string>(themes.value.pattern)
+const { themes, tips, escClose, chat, page } = unref(settingStore)
+const activeItem = ref<string>(themes.pattern)
 
 /** 切换主题 */
 const handleTheme = (code: string) => {
-  if (code === themes.value.pattern) return
+  if (code === themes.pattern) return
   settingStore.toggleTheme(code)
 }
 </script>

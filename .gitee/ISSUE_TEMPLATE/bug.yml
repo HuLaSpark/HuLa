@@ -1,0 +1,59 @@
+name: 🐞 Bug 报告
+title: '[bug] '
+description: 报告 bug
+labels: ['bug']
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## First of all
+        1. 请先搜索 [现有问题]（https://gitee.com/nongyehong/HuLa-IM-Tauri/issues?q=is%3Aissue） 关于此问题。
+        2. 确保 rustc 和所有相关的 HuLa-IM-Tauri 包都是最新的。
+        3. 确保这是 HuLa-IM-Tauri 的问题，而不是你正在使用的其他东西。
+        4. 请记住遵循我们的社区准则并保持友好。
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 描述 bug
+      description: 对 bug 的明确描述。如果适用，请包括屏幕截图。
+      placeholder: Bug 描述
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 步骤
+      description: 指向 reproduction 存储库的链接或重现行为的步骤。
+      placeholder: |
+        请提供最小复制或复制步骤，请参阅本指南 https://stackoverflow.com/help/minimal-reproducible-example
+        为什么需要复制？请参阅此文章 https://antfu.me/posts/why-reproductions-are-required
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: 预期行为
+      description: 清楚地描述您期望发生的事情。
+
+  - type: textarea
+    id: info
+    attributes:
+      label: 完整的 'tauri info' 输出
+      description: '“npm run tauri info”或“cargo tauri info”的输出'
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 堆栈跟踪
+      render: text
+
+  - type: textarea
+    id: context
+    attributes:
+      label: 其他上下文
+      description: 在此处添加有关问题的任何其他上下文。

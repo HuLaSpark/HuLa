@@ -47,11 +47,13 @@ declare namespace OPT {
      * @param url 链接
      * @param label 选项名称
      * @param icon 选项图标
+     * @param versionStatus 版本状态
      */
     type SettingSide = {
       url: string
       label: string
       icon: string
+      versionStatus?: 'Beta' | 'New' | 'alpha'
     }
   }
 

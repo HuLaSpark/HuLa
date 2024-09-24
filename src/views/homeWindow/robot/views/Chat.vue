@@ -87,7 +87,6 @@ import MsgInput from '@/components/rightBox/MsgInput.vue'
 import Mitt from '@/utils/Bus.ts'
 import { InputInst, NIcon } from 'naive-ui'
 import { setting } from '@/stores/setting.ts'
-import { storeToRefs } from 'pinia'
 
 const settingStore = setting()
 const { page } = storeToRefs(settingStore)

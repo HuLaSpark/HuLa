@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
-import { Dynamic, Mail, OnlineStatus, Tray, FriendsList } from './noLazyRouter.ts'
 
 /**! 创建窗口后再跳转页面就会导致样式没有生效所以不能使用懒加载路由的方式，有些页面需要快速响应的就不需要懒加载 */
 const { BASE_URL } = import.meta.env
@@ -17,7 +16,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/tray',
     name: 'tray',
-    component: Tray
+    component: () => import('@/views/Tray.vue')
   },
   {
     path: '/capture',
@@ -37,7 +36,7 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: '/friendsList',
         name: 'friendsList',
-        component: FriendsList
+        component: () => import('@/views/homeWindow/FriendsList.vue')
       },
       {
         path: '/searchDetails',
@@ -71,17 +70,17 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/mail',
     name: 'mail',
-    component: Mail
+    component: () => import('@/views/homeWindow/Mail.vue')
   },
   {
     path: '/dynamic',
     name: 'dynamic',
-    component: Dynamic
+    component: () => import('@/views/homeWindow/Dynamic.vue')
   },
   {
     path: '/onlineStatus',
     name: 'onlineStatus',
-    component: OnlineStatus
+    component: () => import('@/views/homeWindow/onlineStatus/index.vue')
   },
   {
     path: '/about',
@@ -112,6 +111,11 @@ const routes: Array<RouteRecordRaw> = [
         path: '/loginSetting',
         name: 'loginSetting',
         component: () => import('@/views/homeWindow/more/settings/LoginSetting.vue')
+      },
+      {
+        path: '/versatile',
+        name: 'versatile',
+        component: () => import('@/views/homeWindow/more/settings/Versatile.vue')
       }
     ]
   }

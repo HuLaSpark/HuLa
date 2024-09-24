@@ -58,7 +58,7 @@
               justify="center"
               align="center"
               :size="8"
-              class="box bg-[--left-active-color]">
+              class="box bg-[--left-active-bg-color]">
               <!-- 在下载中进度条 -->
               <n-flex
                 @click="handleState(plugin)"

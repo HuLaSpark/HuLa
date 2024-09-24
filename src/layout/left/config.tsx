@@ -117,7 +117,7 @@ const pluginsList = ref<STO.Plugins<PluginEnum>[]>([
     title: 'ChatBot',
     tip: 'ChatBot新应用上线',
     state: PluginEnum.NOT_INSTALLED,
-    version: 'v2.0.0-Bate',
+    version: 'v2.0.0-Beta',
     isAdd: false,
     dot: true,
     progress: 0,
