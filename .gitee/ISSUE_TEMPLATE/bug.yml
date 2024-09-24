@@ -7,11 +7,11 @@ body:
   - type: markdown
     attributes:
       value: |
-        ## First of all
-        1. 请先搜索 [现有问题]（https://gitee.com/nongyehong/HuLa-IM-Tauri/issues?q=is%3Aissue） 关于此问题。
-        2. 确保 rustc 和所有相关的 HuLa-IM-Tauri 包都是最新的。
-        3. 确保这是 HuLa-IM-Tauri 的问题，而不是你正在使用的其他东西。
-        4. 请记住遵循我们的社区准则并保持友好。
+        ## 首先
+        1.请先搜索 [现有问题]（https://gitee.com/nongyehong/HuLa-IM-Tauri/issues?q=is%3Aissue） 关于此问题。
+        2.确保 rustc 和所有相关的 HuLa-IM-Tauri 包都是最新的。
+        3.确保这是 HuLa-IM-Tauri 的问题，而不是你正在使用的其他东西。
+        4.请记住遵循我们的社区准则并保持友好。
 
   - type: textarea
     id: description
@@ -41,7 +41,7 @@ body:
     id: info
     attributes:
       label: 完整的 'tauri info' 输出
-      description: '“npm run tauri info”或“cargo tauri info”的输出'
+      description: '“pnpm run tauri info”或“cargo tauri info”的输出'
       render: text
     validations:
       required: true
