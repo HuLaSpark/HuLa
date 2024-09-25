@@ -1,7 +1,6 @@
 <template>
   <!-- 底部栏 -->
-  <main
-    class="size-full relative z-10 bg-transparent backdrop-blur-2xl border-t-(1px solid [--line-color]) color-[--icon-color]">
+  <main class="size-full relative z-10 border-t-(1px solid [--right-chat-footer-line-color]) color-[--icon-color]">
     <!-- 输入框顶部选项栏 -->
     <n-flex align="center" justify="space-between" class="p-[10px_22px_5px] select-none">
       <n-flex align="center" :size="0" class="input-options">

@@ -20,6 +20,13 @@
    // 聊天框主体样式
    --right-chat-reply-color: #ddd;
    --right-chat-reply-active-color: rgba(99, 99, 99, 0.1);
+   --right-chat-footer-line-color: #e3e3e3;
+
+   // 消息列表样式
+   --msg-active-color: #13987f;
+
+   //列表通用hover
+   --list-hover-color: rgba(99, 99, 99, 0.1);
  }
 }
 
@@ -44,6 +51,13 @@ html[data-theme='dark'] {
     // 聊天框主体样式
     --right-chat-reply-color: #3b3b3b;
     --right-chat-reply-active-color: rgba(255, 255, 255, 0.1);
+    --right-chat-footer-line-color: #404040;
+
+    // 消息列表样式
+    --msg-active-color: rgba(19, 152, 127, 0.4);
+
+    //列表通用hover
+    --list-hover-color: rgba(244, 244, 244, 0.1);
   }
 }
 /**! end */

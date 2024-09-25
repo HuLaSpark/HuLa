@@ -50,7 +50,7 @@ html, body, svg {
   --disabled-color: #c1c1c1;
   // 气泡背景颜色
   --bg-bubble: rgb(253, 253, 253);
-  --bg-bubble-active: #dedede;
+  --bg-bubble-active: #f1f1f1;
   // 头像状态的背景颜色
   --bg-avatar: rgba(241, 241, 241, 1);
   // 个人信息框背景颜色
@@ -124,7 +124,7 @@ html[data-theme='dark'] {
   --disabled-color: #575757;
   // 气泡背景颜色
   --bg-bubble: rgb(38, 38, 38);
-  --bg-bubble-active: #202020;
+  --bg-bubble-active: rgba(66, 66, 66, 0.8);
   // 头像状态的背景颜色
   --bg-avatar: rgba(22, 22, 22, 1);
   // 个人信息框背景颜色
