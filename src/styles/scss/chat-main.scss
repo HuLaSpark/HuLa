@@ -58,7 +58,7 @@
 }
 /** 回复气泡的样式 */
 .reply-bubble {
-  @apply text-12px text-[--reply-color] bg-[--bg-reply-bubble] rounded-8px p-4px cursor-pointer select-none;
+  @apply text-12px text-[--reply-color] bg-[--right-chat-reply-color] rounded-8px p-4px cursor-pointer select-none;
   svg,
   span {
     transition: color 0.4s ease-in-out;
@@ -85,7 +85,7 @@
 }
 /** 跳转到回复内容时候显示的样式 */
 .active-reply {
-  background-color: var(--bg-reply-active);
+  background-color: var(--right-chat-reply-active-color);
   border-radius: 8px;
   margin: 0 8px;
   transition: all 0.4s ease-in-out;

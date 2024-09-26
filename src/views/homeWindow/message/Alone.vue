@@ -1,8 +1,10 @@
 <template>
   <main class="flex-1 rounded-8px bg-[--right-bg-color] h-full w-100vw">
-    <ActionBar :shrink="false" :current-label="appWindow.label" />
+    <div style="background: var(--right-theme-bg-color)">
+      <ActionBar :shrink="false" :current-label="appWindow.label" />
 
-    <ChatBox />
+      <ChatBox />
+    </div>
   </main>
 </template>
 <script setup lang="ts">

@@ -31,9 +31,7 @@
           { 'active-reply': activeReply === item.message.id }
         ]">
         <!-- 信息间隔时间 -->
-        <span
-          class="text-(12px #909090) select-none bg-[--time-color] p-4px rounded-6px custom-shadow"
-          v-if="item.timeBlock">
+        <span class="text-(12px #909090) select-none p-4px" v-if="item.timeBlock">
           {{ item.timeBlock }}
         </span>
         <!--  消息为撤回消息  -->

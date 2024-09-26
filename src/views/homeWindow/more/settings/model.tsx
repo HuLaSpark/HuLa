@@ -136,7 +136,7 @@ const topicsList: Topic = [
 ]
 
 const versatileModel: JSX.Element = (() => (
-  <div class="w-300px h-200px rounded-8px custom-shadow flex rounded-8px border-(1px solid [--line-color])">
+  <div class="w-300px h-200px rounded-8px custom-shadow flex border-(1px solid [--line-color])">
     <div class="bg-[--left-bg-color] flex-1 rounded-[6px_0_0_6px] flex-col-x-center">
       <div class="text-(8px [--left-text-color]) mt-10px">HuLa</div>
       <div class="bg-[--left-bg-hover] size-18px rounded-6px mt-10px"></div>
