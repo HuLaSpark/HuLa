@@ -9,3 +9,4 @@ index.html
 src/assets
 .eslintrc.cjs
 **/config
+commitlint.config.cjs
