@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         ## First of all
-        1. Please search for [existing issues](https://github.com/nongyehong/HuLa-IM-Tauri/issues?q=is%3Aissue) about this problem first.
+        1. Please search for [existing issues](https://github.com/HuLaSpark/HuLa-IM-Tauri/issues?q=is%3Aissue) about this problem first.
         2. Make sure `rustc` and all relevant HuLa-IM-Tauri packages are up to date.
         3. Make sure it's an issue with HuLa-IM-Tauri and not something else you are using.
         4. Remember to follow our community guidelines and be friendly.
