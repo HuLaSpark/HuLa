@@ -594,5 +594,5 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-@import '@/styles/scss/chat-main';
+@use '@/styles/scss/chat-main';
 </style>

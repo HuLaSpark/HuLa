@@ -212,5 +212,5 @@ defineExpose({ messageInputDom })
 </script>
 
 <style scoped lang="scss">
-@import '@/styles/scss/msg-input';
+@use '@/styles/scss/msg-input';
 </style>

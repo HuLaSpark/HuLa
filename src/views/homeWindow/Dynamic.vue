@@ -169,7 +169,7 @@ onMounted(async () => {
 })
 </script>
 <style scoped lang="scss">
-@import '@/styles/scss/global/login-bg';
+@use '@/styles/scss/global/login-bg';
 .mac-close:hover {
   svg {
     display: block;

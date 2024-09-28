@@ -49,11 +49,11 @@
     "grapheme-splitter": "^1.0.4",
     "lodash-es": "^4.17.21",
     "mitt": "^3.0.1",
-    "naive-ui": "^2.39.0",
+    "naive-ui": "^2.40.1",
     "pinia": "^2.2.1",
     "pinia-plugin-persistedstate": "^3.2.1",
     "pinia-shared-state": "^0.5.1",
-    "vue": "^3.5.4",
+    "vue": "^3.5.8",
     "vue-draggable-plus": "^0.5.3",
     "vue-router": "^4.4.2"
   },
@@ -93,7 +93,7 @@
     "typescript": "^5.6.2",
     "unplugin-auto-import": "^0.18.2",
     "unplugin-vue-components": "^0.27.4",
-    "vite": "5.4.3",
+    "vite": "5.4.8",
     "vue-tsc": "^2.1.4"
   },
   "config": {

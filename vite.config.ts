@@ -26,7 +26,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
     css: {
       preprocessorOptions: {
         scss: {
-          additionalData: '@import "./src/styles/scss/global/variable.scss";' // 加载全局样式，使用scss特性
+          additionalData: '@use "./src/styles/scss/global/variable.scss" as *;' // 加载全局样式，使用scss特性
         }
       }
     },

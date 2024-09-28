@@ -1,4 +1,4 @@
-@import "fonts";
+@use "fonts";
 * {
   font-family: var(--font-family), sans-serif !important;
   font-weight: 500 !important;
@@ -46,6 +46,8 @@ html, body, svg {
   --bg-left-menu: rgba(241, 241, 241, 1);
   --bg-left-menu-hover: rgba(90, 90, 90, 0.1);
   --bg-left-active: rgba(90, 90, 90, 0.2);
+  //通用按钮样式
+  --button-bg-color: #f1f1f1;
   // 通用禁用时的样式
   --disabled-color: #c1c1c1;
   // 气泡背景颜色
@@ -120,6 +122,8 @@ html[data-theme='dark'] {
   --bg-left-menu: rgba(22, 22, 22, 1);
   --bg-left-menu-hover: #3b3b3b;
   --bg-left-active: #444444;
+  //通用按钮样式
+  --button-bg-color: #3f3f3f;
   // 通用禁用时的样式
   --disabled-color: #575757;
   // 气泡背景颜色

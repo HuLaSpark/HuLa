@@ -152,7 +152,7 @@ onMounted(() => {
 })
 </script>
 <style scoped lang="scss">
-@import '@/styles/scss/chat-main';
+@use '@/styles/scss/chat-main';
 .right-btn {
   @apply size-fit border-(1px solid [--line-color]) cursor-pointer bg-[--chat-bt-color] color-[--chat-text-color] rounded-8px custom-shadow p-[10px_11px];
   svg {
