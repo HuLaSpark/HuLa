@@ -313,6 +313,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-@import '@/styles/scss/global/login-bg';
-@import '@/styles/scss/login';
+@use '@/styles/scss/global/login-bg';
+@use '@/styles/scss/login';
 </style>

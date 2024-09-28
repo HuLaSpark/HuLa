@@ -146,7 +146,7 @@ onMounted(async () => {
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/scss/message';
+@use '@/styles/scss/message';
 #image-no-data {
   @apply size-full mt-60px text-[--text-color] text-14px;
 }

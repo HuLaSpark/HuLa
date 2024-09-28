@@ -212,5 +212,5 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-@import '@/styles/scss/chat-header';
+@use '@/styles/scss/chat-header';
 </style>

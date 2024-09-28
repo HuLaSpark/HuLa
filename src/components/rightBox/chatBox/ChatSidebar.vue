@@ -139,5 +139,5 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-@import '@/styles/scss/chat-sidebar';
+@use '@/styles/scss/chat-sidebar';
 </style>

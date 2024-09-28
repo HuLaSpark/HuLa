@@ -143,7 +143,7 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-@import '@/styles/scss/global/login-bg';
+@use '@/styles/scss/global/login-bg';
 :deep(.hover-box) {
   @apply w-28px h24px flex-center hover:bg-#e7e7e7;
   svg {
