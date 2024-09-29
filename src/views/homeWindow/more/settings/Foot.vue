@@ -26,7 +26,7 @@
               <a
                 target="_blank"
                 rel="noopener noreferrer"
-                href="https://github.com/nongyehong/HuLa-IM-Tauri"
+                href="https://github.com/HuLaSpark/HuLa-IM-Tauri"
                 class="bg-#363636 cursor-pointer w-70px h-30px rounded-8px flex-center text-(12px #f1f1f1) no-underline">
                 点亮星标
               </a>
@@ -57,7 +57,7 @@
               <a
                 target="_blank"
                 rel="noopener noreferrer"
-                href="https://github.com/nongyehong/HuLa-IM-Tauri/issues"
+                href="https://github.com/HuLaSpark/HuLa-IM-Tauri/issues"
                 class="bg-#363636 cursor-pointer w-70px h-30px rounded-8px flex-center text-(12px #f1f1f1) no-underline">
                 提出建议
               </a>
