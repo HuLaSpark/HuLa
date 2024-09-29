@@ -1,6 +1,5 @@
 {
   "name": "hula-im-tauri",
-  "private": true,
   "type": "module",
   "version": "2.1.0",
   "license": "Apache-2.0",
@@ -9,12 +8,12 @@
     "pnpm": ">=8.10.0"
   },
   "repository": {
-    "url": "https://github.com/nongyehong/HuLa-IM-Tauri.git"
+    "url": "https://github.com/HuLaSpark/HuLa-IM-Tauri.git"
   },
   "author": {
     "name": "nongyehong",
     "email": "2439646234@qq.com",
-    "url": "https://github.com/nongyehong/HuLa-IM-Tauri"
+    "url": "https://github.com/HuLaSpark/HuLa-IM-Tauri"
   },
   "lint-staged": {
     "*.{js,jsx,vue,ts,tsx}": [
@@ -26,7 +25,6 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
-    "preview": "vite preview",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
     "tauri:build->debug": "tauri build --debug",
@@ -53,7 +51,7 @@
     "pinia": "^2.2.1",
     "pinia-plugin-persistedstate": "^3.2.1",
     "pinia-shared-state": "^0.5.1",
-    "vue": "^3.5.8",
+    "vue": "^3.5.10",
     "vue-draggable-plus": "^0.5.3",
     "vue-router": "^4.4.2"
   },
