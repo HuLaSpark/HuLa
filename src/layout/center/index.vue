@@ -3,7 +3,7 @@
     data-tauri-drag-region
     id="center"
     :class="{ 'rounded-r-8px': shrinkStatus }"
-    class="resizable select-none flex flex-col border-r-(1px solid [--line-color])"
+    class="resizable select-none flex flex-col border-r-(1px solid [--right-chat-footer-line-color])"
     :style="{ width: `${initWidth}px` }">
     <!-- 分隔条 -->
     <div v-if="!shrinkStatus" class="resize-handle transition-all duration-600 ease-in-out" @mousedown="initDrag">
@@ -24,7 +24,8 @@
       :current-label="appWindow.label" />
 
     <!-- 顶部搜索栏 -->
-    <header class="mt-30px w-full h-40px flex flex-col items-center border-b-(1px solid [--line-color])">
+    <header
+      class="mt-30px w-full h-40px flex flex-col items-center border-b-(1px solid [--right-chat-footer-line-color])">
       <div class="flex-center gap-5px w-full pr-16px pl-16px box-border">
         <n-input
           id="search"

@@ -3,7 +3,9 @@
   <main
     v-if="isGroup"
     :class="
-      isCollapsed ? 'w-180px border-l-(1px solid [--line-color]) p-[12px_0_12px_6px] custom-shadow' : 'w-0 pr-1px'
+      isCollapsed
+        ? 'w-180px border-l-(1px solid [--right-chat-footer-line-color]) p-[12px_0_12px_6px] custom-shadow'
+        : 'w-0 pr-1px'
     "
     class="item-box">
     <!-- 收缩按钮 -->

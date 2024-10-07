@@ -27,6 +27,9 @@
 
    //列表通用hover
    --list-hover-color: rgba(99, 99, 99, 0.1);
+
+   //整体hover图标的样式
+   --icon-hover-color: #e7e7e7;
  }
 }
 
@@ -51,13 +54,16 @@ html[data-theme='dark'] {
     // 聊天框主体样式
     --right-chat-reply-color: #3b3b3b;
     --right-chat-reply-active-color: rgba(255, 255, 255, 0.1);
-    --right-chat-footer-line-color: #404040;
+    --right-chat-footer-line-color: #202020;
 
     // 消息列表样式
     --msg-active-color: rgba(19, 152, 127, 0.4);
 
     //列表通用hover
     --list-hover-color: rgba(244, 244, 244, 0.1);
+
+    //整体hover图标的样式
+    --icon-hover-color: #242424;
   }
 }
 /**! end */

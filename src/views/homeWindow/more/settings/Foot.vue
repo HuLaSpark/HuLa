@@ -16,7 +16,7 @@
               给我们点一颗星吗？这个小小的动作对我们来说意义重大，能激励我们为您持续提供特性体验。
             </p>
 
-            <n-flex :size="20" class="ml-auto">
+            <n-flex :size="10" class="ml-auto">
               <div
                 @click="isStar = false"
                 class="border-(1px solid #999) cursor-pointer w-40px h-30px rounded-8px flex-center text-(12px [--text-color])">
@@ -47,7 +47,7 @@
               您的每一个想法和建议对我们来说都弥足珍贵，我们迫不及待地想知道您的看法！欢迎联系我们提供产品功能和使用体验反馈。
             </p>
 
-            <n-flex :size="20" class="ml-auto">
+            <n-flex :size="10" class="ml-auto">
               <div
                 @click="isIssue = false"
                 class="border-(1px solid #999) cursor-pointer w-40px h-30px rounded-8px flex-center text-(12px [--text-color])">
