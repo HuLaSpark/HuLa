@@ -12,6 +12,7 @@ import Left from './left/index.vue'
 import Right from './right/index.vue'
 import Mitt from '@/utils/Bus'
 import { MittEnum } from '@/enums'
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 
 const shrinkStatus = ref(false)
 /**
@@ -20,5 +21,9 @@ const shrinkStatus = ref(false)
  * */
 Mitt.on(MittEnum.SHRINK_WINDOW, (event) => {
   shrinkStatus.value = event as boolean
+})
+
+onMounted(async () => {
+  await getCurrentWebviewWindow().show()
 })
 </script>

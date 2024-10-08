@@ -130,7 +130,7 @@
         trigger="click">
         <template #trigger>
           <svg
-            :class="{ 'color--[--left-active-hover]': settingShow }"
+            :class="{ 'color-[--left-active-hover]': settingShow }"
             class="more size-22px relative"
             @click="settingShow = !settingShow">
             <use :href="settingShow ? '#hamburger-button-action' : '#hamburger-button'"></use>

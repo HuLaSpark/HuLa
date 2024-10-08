@@ -39,7 +39,7 @@
         </svg>
       </div>
       <!-- 关闭窗口 -->
-      <div v-if="closeW" @click="handleCloseWin" class="action-close rounded-rt-8px">
+      <div v-if="closeW" @click="handleCloseWin" :class="{ windowMaximized: 'rounded-rt-8px' }" class="action-close">
         <svg class="size-14px color-[--action-bar-icon-color] cursor-pointer">
           <use href="#close"></use>
         </svg>
@@ -240,7 +240,7 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .hover-box {
-  @apply w-28px h24px flex-center hover:bg-[--action-bar-icon-hover];
+  @apply w-28px h24px flex-center hover:bg-[--icon-hover-color];
 }
 .action-close {
   @apply w-28px h24px flex-center cursor-pointer hover:bg-#c22b1c svg:hover:color-[#fff];
