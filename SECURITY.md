@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-There are now two versions of HuLa-IM-Tauri, one is an earlier version using simulated data 
+There are now two versions of HuLa, one is an earlier version using simulated data 
 and the other is a later version using server data
 
 | Version | Supported                            |

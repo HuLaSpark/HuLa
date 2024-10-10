@@ -113,7 +113,7 @@ export const LockScreen = defineComponent(() => {
  */
 export const CheckUpdate = defineComponent(() => {
   const url = ref(
-    `https://gitee.com/api/v5/repos/HuLaSpark/HuLa-IM-Tauri/releases/tags/v${pkg.version}?access_token=${import.meta.env.VITE_GITEE_TOKEN}`
+    `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/releases/tags/v${pkg.version}?access_token=${import.meta.env.VITE_GITEE_TOKEN}`
   )
   /** 项目提交日志记录 */
   const commitLog = ref<{ message: string; icon: string }[]>([])
@@ -204,7 +204,7 @@ export const CheckUpdate = defineComponent(() => {
   }
 
   const checkUpdate = () => {
-    const url = `https://gitee.com/api/v5/repos/HuLaSpark/HuLa-IM-Tauri/tags?access_token=${import.meta.env.VITE_GITEE_TOKEN}&sort=name&direction=desc&page=1&per_page=1`
+    const url = `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/tags?access_token=${import.meta.env.VITE_GITEE_TOKEN}&sort=name&direction=desc&page=1&per_page=1`
     if (lastVersion && lastVersion === `v${pkg.version}`) {
       window.$message.success('当前已是最新版本')
       return
@@ -222,7 +222,7 @@ export const CheckUpdate = defineComponent(() => {
             }, 600)
           } else {
             setTimeout(() => {
-              let url = `https://gitee.com/api/v5/repos/HuLaSpark/HuLa-IM-Tauri/tags?access_token=${import.meta.env.VITE_GITEE_TOKEN}&sort=name&direction=asc&page=1`
+              let url = `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/tags?access_token=${import.meta.env.VITE_GITEE_TOKEN}&sort=name&direction=asc&page=1`
               fetch(url).then((res) => {
                 res.json().then(async (data) => {
                   const allVersion = [] as number[]
@@ -231,7 +231,7 @@ export const CheckUpdate = defineComponent(() => {
                     allVersion.push(Number(item.name.slice(1, 4)))
                   })
                   newVersion.value = `v${Math.max(...allVersion)}.0`
-                  url = `https://gitee.com/api/v5/repos/HuLaSpark/HuLa-IM-Tauri/releases/tags/${newVersion.value}?access_token=${import.meta.env.VITE_GITEE_TOKEN}`
+                  url = `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/releases/tags/${newVersion.value}?access_token=${import.meta.env.VITE_GITEE_TOKEN}`
                   getCommitLog(url, true)
                   text.value = '立即更新'
                   checkLoading.value = false

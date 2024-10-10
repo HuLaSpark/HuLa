@@ -29,7 +29,7 @@
               @click.stop="$event.stopPropagation()"
               target="_blank"
               rel="noopener noreferrer"
-              href="https://github.com/HuLaSpark/HuLa-IM-Tauri"
+              href="https://github.com/HuLaSpark/HuLa"
               class="no-underline text-(14px #f3f3f3) opacity-0">
               了解更多
             </a>
