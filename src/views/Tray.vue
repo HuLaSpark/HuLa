@@ -101,16 +101,15 @@ onMounted(async () => {
     if (!homeWindow) return
 
     const position = event.payload as any
-    let scaleFactor = await homeWindow.scaleFactor()
-    let logicalPosition = new PhysicalPosition(position.x, position.y).toLogical(scaleFactor)
-    logicalPosition.y = logicalPosition.y - 360
-
-    let trayWindow = WebviewWindow.getByLabel('tray')
+    let trayWindow = await WebviewWindow.getByLabel('tray')
     if (trayWindow) {
-      await trayWindow.setAlwaysOnTop(true)
-      await trayWindow.setPosition(logicalPosition)
-      await trayWindow.show()
-      await trayWindow.setFocus()
+      let size = await trayWindow.outerSize()
+      let logicalPosition = new PhysicalPosition(position.x, position.y - size.height)
+
+      trayWindow.setAlwaysOnTop(true)
+      trayWindow.setPosition(logicalPosition)
+      trayWindow.show()
+      trayWindow.setFocus()
     }
   })
   await listen('login_success', () => {
