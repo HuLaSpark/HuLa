@@ -2018,7 +2018,7 @@ checksum = "0fcc0b4a115bf80b728eb8ea024ad5bd707b615bfed49e0665b6e0f86fd082d9"
 
 [[package]]
 name = "hula"
-version = "2.1.0"
+version = "2.2.0"
 dependencies = [
  "base64 0.22.1",
  "lazy_static",

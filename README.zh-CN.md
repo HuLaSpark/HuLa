@@ -17,8 +17,8 @@
 </div>
 
 <p align="center">
-  gitee：<a target="_blank" href="https://gitee.com/HuLaSpark/HuLa-IM-Tauri" title="HuLa"><img src="https://img.shields.io/badge/-Gitee-A80025?logo=gitee&logoColor=F16061"></a>
-  github：<a target="_blank" href="https://github.com/HuLaSpark/HuLa-IM-Tauri" title="HuLa"><img src="https://img.shields.io/badge/-GitHub-181717?style=plastic&logo=github"></a>
+  gitee：<a target="_blank" href="https://gitee.com/HuLaSpark/HuLa" title="HuLa"><img src="https://img.shields.io/badge/-Gitee-A80025?logo=gitee&logoColor=F16061"></a>
+  github：<a target="_blank" href="https://github.com/HuLaSpark/HuLa" title="HuLa"><img src="https://img.shields.io/badge/-GitHub-181717?style=plastic&logo=github"></a>
 </p>
 <p align="center">
   微信: <img src="https://img.shields.io/badge/cy2439646234-07C160?logo=wechat&logoColor=fff">
@@ -61,12 +61,12 @@ HuLa 是一个基于 Tauri、Vite 5、Vue 3 和 TypeScript 构建的即时通讯
 
 ```bash
 # 克隆项目
-git clone https://gitee.com/HuLaSpark/HuLa-IM-Tauri.git
+git clone https://gitee.com/HuLaSpark/HuLa.git
 或者
-git clone https://github.com/HuLaSpark/HuLa-IM-Tauri.git
+git clone https://github.com/HuLaSpark/HuLa.git
 
 # 进入项目目录
-cd HuLa-IM-Tauri
+cd HuLa
 
 # 安装依赖
 pnpm install

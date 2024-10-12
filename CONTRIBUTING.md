@@ -1,8 +1,8 @@
-# HuLa-IM-Tauri - Contributing Guide 🌟
+# HuLa - Contributing Guide 🌟
 
-We're thrilled that you want to contribute to HuLa-IM-Tauri! 😄
+We're thrilled that you want to contribute to HuLa! 😄
 
-HuLa-IM-Tauri is an open-source project, and we welcome your collaboration. Before you jump in, let's make sure you're all set to contribute effectively and have loads of fun along the way!
+HuLa is an open-source project, and we welcome your collaboration. Before you jump in, let's make sure you're all set to contribute effectively and have loads of fun along the way!
 
 ## Fork the Repository
 
@@ -13,7 +13,7 @@ HuLa-IM-Tauri is an open-source project, and we welcome your collaboration. Befo
 📦 Clone your forked repository to your local machine using the `git clone` command:
 
 ```bash
-git clone https://github.com/HuLaSpark/HuLa-IM-Tauri.git
+git clone https://github.com/HuLaSpark/HuLa.git
 ```
 
 ## Create a New Branch
@@ -51,16 +51,16 @@ This will commit all the files to git, Please keep your commits focused and clea
 ⚙️ Periodically, sync your forked repository with the original (upstream) repository to stay up-to-date with the latest changes.
 
 ```bash
-git remote add upstream https://github.com/HuLaSpark/HuLa-IM-Tauri.git
+git remote add upstream https://github.com/HuLaSpark/HuLa.git
 git fetch upstream
 git merge upstream/master
 ```
 
-This ensures you're working on the most current version of HuLa-IM-Tauri. Stay fresh! 💨
+This ensures you're working on the most current version of HuLa. Stay fresh! 💨
 
 ## Open a Pull Request
 
-🚀 Time to share your contribution! Head over to the original HuLa-IM-Tauri repository and open a Pull Request (PR). Our maintainers will review your work.
+🚀 Time to share your contribution! Head over to the original HuLa repository and open a Pull Request (PR). Our maintainers will review your work.
 
 ## Review and Collaboration
 
@@ -68,8 +68,8 @@ This ensures you're working on the most current version of HuLa-IM-Tauri. Stay f
 
 ## Celebrate 🎉
 
-Congratulations! Your contribution is now part of HuLa-IM-Tauri. 🥳
+Congratulations! Your contribution is now part of HuLa. 🥳
 
-Thank you for making HuLa-IM-Tauri even more magical. We can't wait to see what you create! 🌠
+Thank you for making HuLa even more magical. We can't wait to see what you create! 🌠
 
 Happy Coding! 🚀

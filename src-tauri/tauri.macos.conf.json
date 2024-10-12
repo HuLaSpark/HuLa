@@ -1,6 +1,6 @@
 {
   "productName": "HuLa",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "identifier": "com.tauri.build",
   "build": {
     "beforeDevCommand": "pnpm dev",

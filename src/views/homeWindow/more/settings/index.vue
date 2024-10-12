@@ -25,7 +25,7 @@
         <a
           target="_blank"
           rel="noopener noreferrer"
-          href="https://github.com/HuLaSpark/HuLa-IM-Tauri"
+          href="https://github.com/HuLaSpark/HuLa"
           class="text-(12px #13987f) cursor-pointer no-underline">
           HuLa
         </a>

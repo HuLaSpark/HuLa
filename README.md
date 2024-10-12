@@ -17,8 +17,8 @@
 </div>
 
 <p align="center">
-  gitee：<a target="_blank" href="https://gitee.com/HuLaSpark/HuLa-IM-Tauri" title="HuLa"><img src="https://img.shields.io/badge/-Gitee-A80025?logo=gitee&logoColor=F16061"></a>
-  github：<a target="_blank" href="https://github.com/HuLaSpark/HuLa-IM-Tauri" title="HuLa"><img src="https://img.shields.io/badge/-GitHub-181717?style=plastic&logo=github"></a>
+  gitee：<a target="_blank" href="https://gitee.com/HuLaSpark/HuLa" title="HuLa"><img src="https://img.shields.io/badge/-Gitee-A80025?logo=gitee&logoColor=F16061"></a>
+  github：<a target="_blank" href="https://github.com/HuLaSpark/HuLa" title="HuLa"><img src="https://img.shields.io/badge/-GitHub-181717?style=plastic&logo=github"></a>
 </p>
 <p align="center">
   WeChat: <img src="https://img.shields.io/badge/cy2439646234-07C160?logo=wechat&logoColor=fff">
@@ -63,12 +63,12 @@ HuLa adopts a modular architecture design, with the front end built using Vue 3 
 
 ```bash
 # Clone the project
-git clone https://gitee.com/HuLaSpark/HuLa-IM-Tauri.git
+git clone https://gitee.com/HuLaSpark/HuLa.git
 or
-git clone https://github.com/HuLaSpark/HuLa-IM-Tauri.git
+git clone https://github.com/HuLaSpark/HuLa.git
 
 # Enter the project directory
-cd HuLa-IM-Tauri
+cd HuLa
 
 # Install dependencies
 pnpm install

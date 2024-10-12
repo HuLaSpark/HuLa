@@ -2,21 +2,16 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 mod tray;
 mod user_cmd;
+mod init;
 use user_cmd::{get_user_info, save_user_info, default_window_icon, screenshot, audio};
-use tauri_plugin_autostart::MacosLauncher;
+use init::CustomInit;
+
 
 fn main() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_os::init())
-        .plugin(tauri_plugin_process::init())
-        .plugin(tauri_plugin_http::init())
-        .plugin(tauri_plugin_websocket::init())
-        .plugin(tauri_plugin_shell::init())
-        .plugin(tauri_plugin_fs::init())
-        .plugin(tauri_plugin_upload::init())
-        .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_clipboard_manager::init())
-        .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, Some(vec!["--flag1"])))
+        .init_plugin()
+        .init_webwindow_event()
+        .init_window_event()
         .setup(move |app| {
             app.handle().plugin(tauri_plugin_global_shortcut::Builder::new().build())?;
             tray::create_tray(app.handle())?;

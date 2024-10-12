@@ -101,7 +101,7 @@
         <a
           target="_blank"
           rel="noopener noreferrer"
-          href="https://github.com/HuLaSpark/HuLa-IM-Tauri"
+          href="https://github.com/HuLaSpark/HuLa"
           class="bg-[--chat-bt-color] border-(1px solid [--line-color]) color-[--chat-text-color] size-fit p-[8px_9px] rounded-8px custom-shadow cursor-pointer">
           <svg class="size-18px"><use href="#github"></use></svg>
         </a>

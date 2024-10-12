@@ -7,9 +7,9 @@ body:
     attributes:
       value: |
         ## 首先
-        1.请先搜索 [现有问题](https://gitee.com/HuLaSpark/HuLa-IM-Tauri/issues)关于此问题。<br>
-        2.确保 rustc 和所有相关的 HuLa-IM-Tauri 包都是最新的。<br>
-        3.确保这是 HuLa-IM-Tauri 的问题，而不是你正在使用的其他东西。<br>
+        1.请先搜索 [现有问题](https://gitee.com/HuLaSpark/HuLa/issues)关于此问题。<br>
+        2.确保 rustc 和所有相关的 HuLa 包都是最新的。<br>
+        3.确保这是 HuLa 的问题，而不是你正在使用的其他东西。<br>
         4.请记住遵循我们的社区准则并保持友好。<br>
 
   - type: input
