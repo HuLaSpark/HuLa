@@ -9,23 +9,33 @@ import { emit } from '@tauri-apps/api/event'
 export const useWindowState = (label: string) => {
   const win = WebviewWindow.getByLabel(label)
 
-  watchEffect(() => {
+  const initWindowListeners = async (win: WebviewWindow | null) => {
     // once一次性监听事件,当用户点击的是关闭按钮时触发
-    win?.once(EventEnum.WIN_CLOSE, async (e) => {
+    await win?.once(EventEnum.WIN_CLOSE, async (e) => {
       await emit(EventEnum.WIN_CLOSE, e)
     })
+
     // 监听窗口关闭事件,当窗口是非正常关闭的时候触发
-    win?.onCloseRequested(async () => {
+    await win?.onCloseRequested(async () => {
       await emit(EventEnum.WIN_CLOSE, WebviewWindow.getCurrent().label)
     })
+
+    // 检查窗口是否可见，并进行相应处理
+    const isShow = await win?.isVisible()
+    if (isShow) {
+      await emit(EventEnum.WIN_SHOW, label)
+    }
+  }
+
+  watchEffect(() => {
+    win.then(initWindowListeners)
   })
 
   onMounted(async () => {
-    await nextTick(async () => {
-      const isShow = await win?.isVisible()
-      if (isShow) {
-        await emit(EventEnum.WIN_SHOW, label)
-      }
+    await nextTick(() => {
+      win.then(async (win) => {
+        await initWindowListeners(win)
+      })
     })
   })
 }

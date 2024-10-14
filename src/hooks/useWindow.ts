@@ -53,7 +53,7 @@ export const useWindow = () => {
 
     await webview.once('tauri://created', async () => {
       if (wantCloseWindow) {
-        const win = WebviewWindow.getByLabel(wantCloseWindow)
+        const win = await WebviewWindow.getByLabel(wantCloseWindow)
         win?.close()
       }
     })
@@ -73,7 +73,7 @@ export const useWindow = () => {
    * @param height 窗口高度
    * */
   const resizeWindow = async (label: string, width: number, height: number) => {
-    const webview = WebviewWindow.getByLabel(label)
+    const webview = await WebviewWindow.getByLabel(label)
     // TODO 使用webview?.setSize重新设置窗口尺寸的时候高度会自动增加20px(bug?) (nyh -> 2024-02-22 03:52:54)
     // 创建一个新的尺寸对象
     const newSize = new LogicalSize(width, height)
@@ -88,7 +88,7 @@ export const useWindow = () => {
    * @param L 窗口标签
    */
   const checkWinExist = async (L: string) => {
-    const isExistsWinds = WebviewWindow.getByLabel(L)
+    const isExistsWinds = await WebviewWindow.getByLabel(L)
     if (isExistsWinds) {
       nextTick().then(async () => {
         // 如果窗口已存在，首先检查是否最小化了

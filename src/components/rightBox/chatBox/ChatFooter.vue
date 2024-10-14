@@ -116,7 +116,9 @@ const emojiHandle = (item: string) => {
 }
 
 const handleCap = async () => {
-  WebviewWindow.getByLabel('capture')?.show()
+  WebviewWindow.getByLabel('capture').then((win) => {
+    win?.show()
+  })
   await emit('capture', true)
 }
 
