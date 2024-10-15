@@ -36,7 +36,7 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "@tauri-apps/api": "2.0.0",
+    "@tauri-apps/api": "2.0.2",
     "@tauri-apps/plugin-clipboard-manager": "2.0.0",
     "@tauri-apps/plugin-http": "2.0.0",
     "@tauri-apps/plugin-os": "2.0.0",

@@ -36,16 +36,16 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
     fn init_window_event(self) -> Self {
         self.on_window_event(|window, event| match event {
             WindowEvent::Focused(flag) => {
-                // "自定义系统托盘-实现托盘菜单失去焦点时隐藏"
+                // 自定义系统托盘-实现托盘菜单失去焦点时隐藏
                 if window.label() != "tray" && *flag {
-                    let _ = window
+                    window
                         .app_handle()
                         .get_webview_window("tray")
                         .unwrap()
-                        .hide();
+                        .hide().unwrap();
                 }
                 if window.label() == "tray" && !flag {
-                    let _ = window.hide();
+                    window.hide().unwrap();
                 }
             }
             _ => (),

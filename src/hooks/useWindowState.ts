@@ -6,8 +6,8 @@ import { emit } from '@tauri-apps/api/event'
  * 监听窗口状态变化
  * @param label 窗口标签
  */
-export const useWindowState = (label: string) => {
-  const win = WebviewWindow.getByLabel(label)
+export const useWindowState = async (label: string) => {
+  const win = await WebviewWindow.getByLabel(label)
 
   const initWindowListeners = async (win: WebviewWindow | null) => {
     // once一次性监听事件,当用户点击的是关闭按钮时触发
@@ -28,14 +28,12 @@ export const useWindowState = (label: string) => {
   }
 
   watchEffect(() => {
-    win.then(initWindowListeners)
+    initWindowListeners(win)
   })
 
   onMounted(async () => {
     await nextTick(() => {
-      win.then(async (win) => {
-        await initWindowListeners(win)
-      })
+      initWindowListeners(win)
     })
   })
 }
