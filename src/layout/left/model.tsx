@@ -113,7 +113,7 @@ export const LockScreen = defineComponent(() => {
  */
 export const CheckUpdate = defineComponent(() => {
   const url = ref(
-    `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/releases/tags/v${pkg.version}?access_token=${import.meta.env.VITE_GITEE_TOKEN}`
+    `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/releases/tags/${pkg.version}?access_token=${import.meta.env.VITE_GITEE_TOKEN}`
   )
   /** 项目提交日志记录 */
   const commitLog = ref<{ message: string; icon: string }[]>([])
@@ -205,7 +205,7 @@ export const CheckUpdate = defineComponent(() => {
 
   const checkUpdate = () => {
     const url = `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/tags?access_token=${import.meta.env.VITE_GITEE_TOKEN}&sort=name&direction=desc&page=1&per_page=1`
-    if (lastVersion && lastVersion === `v${pkg.version}`) {
+    if (lastVersion && lastVersion === `${pkg.version}`) {
       window.$message.success('当前已是最新版本')
       return
     }
@@ -214,10 +214,10 @@ export const CheckUpdate = defineComponent(() => {
       res
         .json()
         .then(async (data) => {
-          if (data[0].name === `v${pkg.version}`) {
+          if (data[0].name === `${pkg.version}`) {
             setTimeout(() => {
               window.$message.success('当前已是最新版本')
-              lastVersion = `v${pkg.version}`
+              lastVersion = `${pkg.version}`
               checkLoading.value = false
             }, 600)
           } else {
@@ -285,7 +285,7 @@ export const CheckUpdate = defineComponent(() => {
               <NFlex align={'center'} size={10}>
                 <NFlex align={'center'} size={10}>
                   <p>当前版本:</p>
-                  <p class="text-(20px #909090) font-500">v{pkg.version}</p>
+                  <p class="text-(20px #909090) font-500">{pkg.version}</p>
                 </NFlex>
 
                 {newVersion.value ? (
@@ -344,7 +344,7 @@ export const CheckUpdate = defineComponent(() => {
                         <use href={'#RightArrow'}></use>
                       </svg>
 
-                      <span class="p-[4px_8px] w-fit bg-#f1f1f1 rounded-6px text-(12px #999)">v{pkg.version}</span>
+                      <span class="p-[4px_8px] w-fit bg-#f1f1f1 rounded-6px text-(12px #999)">{pkg.version}</span>
                     </NFlex>
                   </NFlex>
                 </>

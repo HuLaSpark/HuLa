@@ -12,12 +12,14 @@ export const useMenuTopStore = defineStore(
       {
         url: 'message',
         icon: 'message',
-        iconAction: 'message-action'
+        iconAction: 'message-action',
+        title: '消息'
       },
       {
         url: 'friendsList',
         icon: 'avatar',
-        iconAction: 'avatar-action'
+        iconAction: 'avatar-action',
+        title: '好友'
       }
     ]
 

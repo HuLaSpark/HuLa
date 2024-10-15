@@ -89,8 +89,15 @@
                     align="center"
                     :size="4"
                     class="text-(12px #777) cursor-default tracking-1 select-none">
+                    <span v-if="chatKey !== 'Enter'">
+                      {{ type() === 'macos' ? MacOsKeyEnum['⌘'] : WinKeyEnum.CTRL }}
+                    </span>
                     <svg class="size-12px"><use href="#Enter"></use></svg>
-                    发送/
+                    发送 /
+                    <n-flex v-if="chatKey !== 'Enter'" align="center" :size="6">
+                      <svg class="size-12px"><use href="#Enter"></use></svg>
+                      <p>或</p>
+                    </n-flex>
                     <n-flex align="center" :size="0">
                       {{ type() === 'macos' ? MacOsKeyEnum['⇧'] : WinKeyEnum.SHIFT }}
                       <svg class="size-12px"><use href="#Enter"></use></svg>

@@ -3,7 +3,7 @@ import { setting } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { useCachedStore } from '@/stores/cached.ts'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
-import { EventEnum, IsYetEnum, MittEnum, MsgEnum, ThemeEnum } from '@/enums'
+import { EventEnum, IsYetEnum, MittEnum, MsgEnum, ShowModeEnum, ThemeEnum } from '@/enums'
 import { BadgeType, UserInfoType } from '@/services/types.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
@@ -34,6 +34,8 @@ export const leftHook = () => {
   const infoShow = ref(false)
   /** 是否显示上半部分操作栏中的提示 */
   const tipShow = ref(true)
+  /** 菜单显示模式 */
+  const showMode = ref(ShowModeEnum.ICON)
   const themeColor = ref(themes.value.content === ThemeEnum.DARK ? 'rgba(63,63,63, 0.2)' : 'rgba(241,241,241, 0.2)')
   /** 已打开窗口的列表 */
   const openWindowsList = ref(new Set())
@@ -261,6 +263,7 @@ export const leftHook = () => {
     currentBadge,
     sessionList,
     msgTotal,
+    showMode,
     handleEditing,
     pageJumps,
     openContent,

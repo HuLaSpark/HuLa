@@ -5,7 +5,7 @@ import { isDiffNow10Min } from '@/utils/ComputedTime.ts'
 import type { CacheBadgeItem } from '@/services/types.ts'
 
 const badgeCachedList = reactive<Record<number, Partial<CacheBadgeItem>>>({})
-// TODO 使用indexDB或者把配置写出到文件中，还需要根据每个账号来进行配置 (nyh -> 2024-03-26 01:22:12)
+// TODO 使用indexDB或sqlite缓存数据，还需要根据每个账号来进行配置 (nyh -> 2024-03-26 01:22:12)
 export const setting = defineStore(StoresEnum.SETTING, {
   state: (): STO.Setting => ({
     themes: {

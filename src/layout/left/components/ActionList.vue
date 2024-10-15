@@ -9,7 +9,8 @@
           { active: activeUrl === item.url && item.url !== 'dynamic' },
           openWindowsList.has(item.url) ? 'p-[6px_8px] color-[--left-win-icon-color]' : 'top-action'
         ]"
-        @click="pageJumps(item.url, item.title, item.size, item.window)">
+        @click="pageJumps(item.url, item.title, item.size, item.window)"
+        :title="item.title">
         <!-- 已经打开窗口时展示 -->
         <n-popover :show-arrow="false" v-if="openWindowsList.has(item.url)" trigger="hover" placement="right">
           <template #trigger>
@@ -44,39 +45,45 @@
               :href="`#${activeUrl === item.url || openWindowsList.has(item.url) ? item.iconAction : item.icon}`"></use>
           </svg>
         </n-badge>
+        <p v-if="showMode === ShowModeEnum.TEXT && item.title" style="text-align: center; font-size: x-small">
+          {{ item.title }}
+        </p>
       </div>
 
       <!-- (独立)菜单选项 -->
-      <n-popover
-        style="padding: 8px; margin-left: 4px; background: var(--bg-setting-item)"
-        :show-arrow="false"
-        trigger="hover"
-        placement="right">
-        <template #trigger>
-          <svg class="size-22px top-action">
-            <use href="#menu"></use>
-          </svg>
-        </template>
-        <div v-if="excessItems.length">
-          <div
-            v-for="(item, index) in excessItems as any"
-            :key="'excess-' + index"
-            class="p-[6px_10px] rounded-4px cursor-pointer hover:bg-[--setting-item-line]">
-            {{ item.title }}
+      <div class="top-action">
+        <n-popover
+          style="padding: 8px; margin-left: 4px; background: var(--bg-setting-item)"
+          :show-arrow="false"
+          trigger="hover"
+          placement="right">
+          <template #trigger>
+            <svg class="size-22px">
+              <use href="#menu"></use>
+            </svg>
+          </template>
+          <div v-if="excessItems.length">
+            <div
+              v-for="(item, index) in excessItems as any"
+              :key="'excess-' + index"
+              class="p-[6px_10px] rounded-4px cursor-pointer hover:bg-[--setting-item-line]">
+              {{ item.title }}
+            </div>
           </div>
-        </div>
-        <n-flex
-          @click="menuShow = true"
-          class="p-[6px_10px] rounded-4px cursor-pointer hover:bg-[--setting-item-line]"
-          align="center"
-          justify="space-between"
-          :size="10">
-          <svg class="size-16px">
-            <use href="#settings"></use>
-          </svg>
-          <p class="select-none">插件管理</p>
-        </n-flex>
-      </n-popover>
+          <n-flex
+            @click="menuShow = true"
+            class="p-[6px_10px] rounded-4px cursor-pointer hover:bg-[--setting-item-line]"
+            align="center"
+            justify="space-between"
+            :size="10">
+            <svg class="size-16px">
+              <use href="#settings"></use>
+            </svg>
+            <p class="select-none">插件管理</p>
+          </n-flex>
+        </n-popover>
+        <p v-if="showMode === ShowModeEnum.TEXT" style="text-align: center; font-size: x-small">插件</p>
+      </div>
     </header>
 
     <!-- 下部分操作栏 -->
@@ -85,7 +92,8 @@
         v-for="(item, index) in itemsBottom"
         :key="index"
         :class="openWindowsList.has(item.url) ? 'p-[6px_8px] color-[--left-win-icon-color]' : 'bottom-action'"
-        @click="pageJumps(item.url, item.title, item.size, item.window)">
+        @click="pageJumps(item.url, item.title, item.size, item.window)"
+        :title="item.title">
         <!-- 已经打开窗口时展示 -->
         <n-popover :show-arrow="false" v-if="openWindowsList.has(item.url)" trigger="hover" placement="right">
           <template #trigger>
@@ -120,33 +128,39 @@
               :href="`#${activeUrl === item.url || openWindowsList.has(item.url) ? item.iconAction : item.icon}`"></use>
           </svg>
         </n-badge>
+        <p v-if="showMode === ShowModeEnum.TEXT && item.title" style="text-align: center; font-size: x-small">
+          {{ item.title }}
+        </p>
       </div>
 
       <!--  更多选项面板  -->
-      <n-popover
-        v-model:show="settingShow"
-        style="padding: 0; background: transparent; user-select: none"
-        :show-arrow="false"
-        trigger="click">
-        <template #trigger>
-          <svg
-            :class="{ 'color-[--left-active-hover]': settingShow }"
-            class="more size-22px relative"
-            @click="settingShow = !settingShow">
-            <use :href="settingShow ? '#hamburger-button-action' : '#hamburger-button'"></use>
-          </svg>
-        </template>
-        <div class="setting-item">
-          <div class="menu-list">
-            <div v-for="(item, index) in moreList" :key="index">
-              <div class="menu-item" @click="() => item.click()">
-                <svg><use :href="`#${item.icon}`"></use></svg>
-                {{ item.label }}
+      <div title="更多" :class="{ 'bottom-action': showMode === ShowModeEnum.TEXT }">
+        <n-popover
+          v-model:show="settingShow"
+          style="padding: 0; background: transparent; user-select: none"
+          :show-arrow="false"
+          trigger="click">
+          <template #trigger>
+            <svg
+              :class="[{ 'color-[--left-active-hover]': settingShow }, { more: showMode === ShowModeEnum.ICON }]"
+              class="size-22px relative"
+              @click="settingShow = !settingShow">
+              <use :href="settingShow ? '#hamburger-button-action' : '#hamburger-button'"></use>
+            </svg>
+          </template>
+          <div class="setting-item">
+            <div class="menu-list">
+              <div v-for="(item, index) in moreList" :key="index">
+                <div class="menu-item" @click="() => item.click()">
+                  <svg><use :href="`#${item.icon}`"></use></svg>
+                  {{ item.label }}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </n-popover>
+        </n-popover>
+        <p v-if="showMode === ShowModeEnum.TEXT" style="text-align: center; font-size: x-small">更多</p>
+      </div>
     </footer>
   </div>
 
@@ -157,14 +171,14 @@ import { itemsBottom, moreList } from '../config.tsx'
 import { leftHook } from '../hook.ts'
 import DefinePlugins from './definePlugins/index.vue'
 import { useMenuTopStore } from '@/stores/menuTop.ts'
-import { PluginEnum } from '@/enums'
+import { PluginEnum, ShowModeEnum } from '@/enums'
 
 const { menuTop } = useMenuTopStore()
 // const headerRef = useTemplateRef('header')
 // const actionListRef = useTemplateRef('actionList')
 const excessItems = ref([]) // 用于存储超出的内容
 const menuShow = ref(false)
-const { activeUrl, openWindowsList, settingShow, tipShow, pageJumps } = leftHook()
+const { activeUrl, openWindowsList, settingShow, tipShow, showMode, pageJumps } = leftHook()
 
 const handleTipShow = (item: any) => {
   tipShow.value = false

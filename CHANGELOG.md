@@ -1,3 +1,18 @@
+# [2.3.0](https://github.com/HuLaSpark/HuLa/compare/v2.2.0...v2.3.0) (2024-10-15)
+
+
+### Bug Fixes
+
+* **view:** :bug: 修复侧边栏文字模式下更多图标的样式 ([9d23424](https://github.com/HuLaSpark/HuLa/commit/9d234245877979cc031763a380dc264ea39bc74a)), closes [#IAVNW7](https://github.com/HuLaSpark/HuLa/issues/IAVNW7)
+* **view:** :bug: 状态栏菜单bug修复 ([845b83e](https://github.com/HuLaSpark/HuLa/commit/845b83ebcd7b993468b335073b0b9c7a23b6eddd))
+
+
+### Performance Improvements
+
+* **system:** :zap: tauri-v2.0rc版本升级到正式版本 ([a34b2ce](https://github.com/HuLaSpark/HuLa/commit/a34b2cea9910da1d3e1ecbaf5c8fa98ad7a88438))
+
+
+
 # [2.2.0](https://github.com/HuLaSpark/HuLa/compare/v2.1.0...v2.2.0) (2024-10-08)
 
 
@@ -18,8 +33,8 @@
 ### Performance Improvements
 
 * :zap: 发布v2.2.0版本 ([2a47187](https://github.com/HuLaSpark/HuLa/commit/2a47187f8726b6e38ffbf76bda034e6daeaebbd8))
-* **style:** :zap: 优化聊天框内主题适配 ([60055af](https://github.com/HuLaSpark/HuLa/commit/60055afd1a58e12700c2e68995aa7068168b6318))
 * **style:** :zap: 优化顶部栏和其他内容的一些样式 ([90929a4](https://github.com/HuLaSpark/HuLa/commit/90929a44312af5b93344c4169c0fc77b5d03fe9b))
+* **style:** :zap: 优化聊天框内主题适配 ([60055af](https://github.com/HuLaSpark/HuLa/commit/60055afd1a58e12700c2e68995aa7068168b6318))
 
 
 ### BREAKING CHANGES
@@ -34,8 +49,8 @@
 
 ### Bug Fixes
 
-* **component:** :bug: 修复windows上的样式问题 ([bb6a9d4](https://github.com/HuLaSpark/HuLa/commit/bb6a9d440db4777989d9a922a5135350e2dbf894))
 * **component:** :bug: 修复系统托盘功能和一些样式问题 ([18277ef](https://github.com/HuLaSpark/HuLa/commit/18277ef0f1ce286b77b91dbc8c6ea8a628eba7d3))
+* **component:** :bug: 修复windows上的样式问题 ([bb6a9d4](https://github.com/HuLaSpark/HuLa/commit/bb6a9d440db4777989d9a922a5135350e2dbf894))
 * **layout:** :bug: 修复ts类型错误导致打包出差问题 ([0d7f7e0](https://github.com/HuLaSpark/HuLa/commit/0d7f7e024d9404fe5fe6829504594a902c27c501))
 * **style:** :bug: 统一修复svg点击时有轮廓问题 ([ce68fa1](https://github.com/HuLaSpark/HuLa/commit/ce68fa134368b34802d5b101a1f98a2493f7120b))
 * **system:** :bug: 修复mac端右键菜单透明度问题 ([39d795f](https://github.com/HuLaSpark/HuLa/commit/39d795ff655afd699340d3021a0b471c3060b11c))
@@ -97,18 +112,18 @@
 
 * :sparkles: 发布v1.6.0版本 ([71a1dd9](https://github.com/HuLaSpark/HuLa/commit/71a1dd93833d4c9534945f28fe636115ef59e862))
 * **component:** :sparkles: 新增GPT欢迎页面，完善设置页面 ([9b771e0](https://github.com/HuLaSpark/HuLa/commit/9b771e02ec31af1238f9662e839df6197f501376))
-* **component:** :sparkles: 新增GPT组件 ([7260840](https://github.com/HuLaSpark/HuLa/commit/7260840f4b50bcbb4dad8645a84ade8280de4036))
 * **component:** :sparkles: 新增GPT页面设置功能 ([4c85b4a](https://github.com/HuLaSpark/HuLa/commit/4c85b4afccdafe83aa0fcbd53e94ef5fc63a7a70))
-* **components:** :sparkles: 完善右键功能的显示资料 ([cf4820b](https://github.com/HuLaSpark/HuLa/commit/cf4820bffbdee50fc1e7b44c72b51cd2c4d80091))
+* **component:** :sparkles: 新增GPT组件 ([7260840](https://github.com/HuLaSpark/HuLa/commit/7260840f4b50bcbb4dad8645a84ade8280de4036))
 * **components:** :sparkles: 实现群聊回复表情功能 ([1fb3530](https://github.com/HuLaSpark/HuLa/commit/1fb3530cbdceef702430b272b99d3e99277c52d0))
+* **components:** :sparkles: 完善右键功能的显示资料 ([cf4820b](https://github.com/HuLaSpark/HuLa/commit/cf4820bffbdee50fc1e7b44c72b51cd2c4d80091))
 * **style:** :sparkles: 新增项目版本信息打印 ([e17cb7c](https://github.com/HuLaSpark/HuLa/commit/e17cb7c24a233417ab34a1de3b04cbdc32ebc2e0))
 * **view:** :sparkles: 新增GPT首页推荐功能样式 ([e927a95](https://github.com/HuLaSpark/HuLa/commit/e927a95fa4f95da7299459941b00d2f633217bca))
 
 
 ### Performance Improvements
 
-* **components:** :zap: 优化群聊回复表情功能 ([0c4615d](https://github.com/HuLaSpark/HuLa/commit/0c4615d4135fb3f740cb88f8f38502c9fc90bc5d))
 * **components:** :zap: 优化表情回应 ([94d2cb1](https://github.com/HuLaSpark/HuLa/commit/94d2cb1fec8db8901ffc85cdf8680919c58abf11))
+* **components:** :zap: 优化群聊回复表情功能 ([0c4615d](https://github.com/HuLaSpark/HuLa/commit/0c4615d4135fb3f740cb88f8f38502c9fc90bc5d))
 * **services:** :zap: 优化请求接口以及消息提示 ([0355f97](https://github.com/HuLaSpark/HuLa/commit/0355f976b854d96e613160d2bf6cc7e5605ea0ac))
 * **system:** :zap: 对接后端服务 ([ea4b82b](https://github.com/HuLaSpark/HuLa/commit/ea4b82be25a058a198716cebcf8becfcf252819c))
 * **views:** :zap: 优化页面收缩功能 ([31f7e17](https://github.com/HuLaSpark/HuLa/commit/31f7e1732cbe571e3f53564c57a339812b2c1a5b))
