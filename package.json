@@ -1,7 +1,7 @@
 {
   "name": "hula",
   "type": "module",
-  "version": "2.2.0",
+  "version": "v2.2.0",
   "license": "Apache-2.0",
   "engines": {
     "node": ">=18.12.0",
@@ -33,7 +33,8 @@
     "commit": "git add . && git-cz",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0",
     "lint:staged": "lint-staged",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "release": "release-it --no-npm"
   },
   "dependencies": {
     "@tauri-apps/api": "2.0.2",
@@ -59,6 +60,7 @@
     "@babel/eslint-parser": "^7.24.7",
     "@commitlint/cli": "^19.3.0",
     "@commitlint/config-conventional": "^19.2.2",
+    "@release-it/conventional-changelog": "^9.0.0",
     "@rollup/plugin-terser": "^0.4.4",
     "@tauri-apps/cli": "2.0.0",
     "@types/lodash-es": "^4.17.12",
@@ -86,6 +88,7 @@
     "lint-staged": "^15.2.7",
     "oxlint": "^0.2.18",
     "prettier": "^3.3.2",
+    "release-it": "^17.9.0",
     "sass": "1.77.6",
     "typescript": "^5.6.2",
     "unplugin-auto-import": "^0.18.2",

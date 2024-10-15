@@ -39,7 +39,7 @@ body:
     id: info
     attributes:
       label: '☄️ 完整的 `tauri info` 输出'
-      description: '“pnpm run tauri info”或“cargo tauri info”的输出'
+      description: '请运行 “tauri info” 在控制台等待输出完毕，并将输出内容复制到此处'
       render: text
     validations:
       required: true

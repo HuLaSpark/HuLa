@@ -134,7 +134,7 @@
       </div>
 
       <!--  更多选项面板  -->
-      <div title="更多" class="bottom-action">
+      <div title="更多" :class="{ 'bottom-action': showMode === ShowModeEnum.TEXT }">
         <n-popover
           v-model:show="settingShow"
           style="padding: 0; background: transparent; user-select: none"
@@ -142,8 +142,8 @@
           trigger="click">
           <template #trigger>
             <svg
-              :class="{ 'color-[--left-active-hover]': settingShow }"
-              class="more size-22px relative"
+              :class="[{ 'color-[--left-active-hover]': settingShow }, { more: showMode === ShowModeEnum.ICON }]"
+              class="size-22px relative"
               @click="settingShow = !settingShow">
               <use :href="settingShow ? '#hamburger-button-action' : '#hamburger-button'"></use>
             </svg>

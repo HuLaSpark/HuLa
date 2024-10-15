@@ -39,7 +39,7 @@ body:
     id: info
     attributes:
       label: '☄️ intact `tauri info` output'
-      description: '“pnpm run tauri info” or “cargo tauri info” output'
+      description: 'Please run "tauri info" in the console and wait for the output to finish, then copy the output here'
       render: text
     validations:
       required: true
