@@ -295,7 +295,7 @@ const handleResize = async (e: Event) => {
       newMenuHeight
   )
   if (menuNum < 0) {
-    activePlugins.value.map((i, index) => {
+    noMiniShowPlugins.value.map((i, index) => {
       if (index >= noMiniShowPlugins.value.length + menuNum) {
         pluginsStore.updatePlugin({ ...i, miniShow: true })
       }
