@@ -2,7 +2,6 @@ import { useWindow } from '@/hooks/useWindow.ts'
 import { MittEnum, ModalEnum, PluginEnum } from '@/enums'
 import Mitt from '@/utils/Bus.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
-import { STO } from '@/typings/stores'
 
 const { createWebviewWindow } = useWindow()
 const { logout } = useLogin()

@@ -281,7 +281,7 @@ export enum PluginEnum {
 /** 菜单显示模式 */
 export enum ShowModeEnum {
   /** 图标方式 */
-  ICON = 0,
+  ICON,
   /** 文字方式 */
   TEXT
 }

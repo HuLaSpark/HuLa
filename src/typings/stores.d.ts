@@ -1,7 +1,6 @@
-import { ShowModeEnum } from '../enums'
-
 /** pinia的store的命名空间 */
 declare namespace STO {
+  import { ShowModeEnum } from '@/enums'
   /**
    * 设置
    * @param themes 主题设置

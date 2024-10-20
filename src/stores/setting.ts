@@ -3,7 +3,6 @@ import { CloseBxEnum, StoresEnum, ShowModeEnum, ThemeEnum } from '@/enums'
 import apis from '@/services/apis.ts'
 import { isDiffNow10Min } from '@/utils/ComputedTime.ts'
 import type { CacheBadgeItem } from '@/services/types.ts'
-import { STO } from '../typings/stores'
 
 const badgeCachedList = reactive<Record<number, Partial<CacheBadgeItem>>>({})
 // TODO 使用indexDB或sqlite缓存数据，还需要根据每个账号来进行配置 (nyh -> 2024-03-26 01:22:12)

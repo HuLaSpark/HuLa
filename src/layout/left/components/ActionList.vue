@@ -311,6 +311,7 @@ const handleResize = async (e: Event) => {
 
 const initWindowHeight = async () => {
   let homeWindow = await WebviewWindow.getByLabel('home')
+  await homeWindow?.setResizable(true)
   let size = await homeWindow?.size()
   let sf = await homeWindow?.scaleFactor()
   if (homeWindow && size && sf) {
@@ -350,32 +351,6 @@ onMounted(() => {
   setTimeout(() => {
     tipShow.value = false
   }, 5000)
-
-  // // 创建 ResizeObserver 实例并监听 headerRef
-  // const resizeObserver = new ResizeObserver((entries) => {
-  //   for (let entry of entries) {
-  //     console.log(entry.contentRect.height)
-  //     // if (entry.contentRect.height > 220) {
-  //     //   // 计算需要移动的项数量
-  //     //   const itemsToMove = Math.floor(itemsTop.value.length / 2) // 例如：移动一半
-  //     //   excessItems.value = itemsTop.value.splice(-itemsToMove, itemsToMove)
-  //     // }
-  //   }
-  // })
-  //
-  // // 观察 headerRef 的大小变化
-  // if (headerRef.value) {
-  //   resizeObserver.observe(headerRef.value)
-  // }
-  //
-  // if (actionListRef.value) {
-  //   resizeObserver.observe(actionListRef.value)
-  // }
-  //
-  // // 在组件卸载时停止观察
-  // onUnmounted(() => {
-  //   resizeObserver.disconnect()
-  // })
 })
 </script>
 <style lang="scss" scoped>
