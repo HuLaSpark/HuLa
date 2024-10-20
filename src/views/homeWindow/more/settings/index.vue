@@ -58,11 +58,11 @@
 <script setup lang="ts">
 import router from '@/router'
 import { sideOptions } from './config.ts'
-import { setting } from '@/stores/setting.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 import Foot from '@/views/homeWindow/more/settings/Foot.vue'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 
-const settingStore = setting()
+const settingStore = useSettingStore()
 const skeleton = ref(true)
 const { page } = storeToRefs(settingStore)
 /**当前选中的元素 默认选中itemsTop的第一项*/

@@ -111,7 +111,7 @@
 </template>
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { setting } from '@/stores/setting.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { onKeyStroke } from '@vueuse/core'
 import { InputInst, lightTheme } from 'naive-ui'
@@ -119,7 +119,7 @@ import { getWeekday } from '@/utils/Day.ts'
 import dayjs from 'dayjs'
 
 const appWindow = WebviewWindow.getCurrent()
-const settingStore = setting()
+const settingStore = useSettingStore()
 const { lockScreen, login } = storeToRefs(settingStore)
 const { logout } = useLogin()
 /** 解锁密码 */

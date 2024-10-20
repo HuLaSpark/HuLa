@@ -1,9 +1,9 @@
 import { useWindow } from '@/hooks/useWindow.ts'
-import { setting } from '@/stores/setting.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { useCachedStore } from '@/stores/cached.ts'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
-import { EventEnum, IsYetEnum, MittEnum, MsgEnum, ShowModeEnum, ThemeEnum } from '@/enums'
+import { EventEnum, IsYetEnum, MittEnum, MsgEnum, PluginEnum, ThemeEnum } from '@/enums'
 import { BadgeType, UserInfoType } from '@/services/types.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
@@ -16,15 +16,16 @@ import { delay } from 'lodash-es'
 import router from '@/router'
 import { listen } from '@tauri-apps/api/event'
 import { useMenuTopStore } from '@/stores/menuTop.ts'
+import { STO } from '@/typings/stores'
 
 export const leftHook = () => {
   const prefers = matchMedia('(prefers-color-scheme: dark)')
   const { createWebviewWindow } = useWindow()
-  const settingStore = setting()
+  const settingStore = useSettingStore()
   const { menuTop } = useMenuTopStore()
   const userStore = useUserStore()
   const cachedStore = useCachedStore()
-  const { themes, login } = storeToRefs(settingStore)
+  const { themes, login } = settingStore
   const OLStatusStore = onlineStatus()
   const { url, title, bgColor } = storeToRefs(OLStatusStore)
   const activeUrl = ref<string>(menuTop[0].url)
@@ -34,9 +35,7 @@ export const leftHook = () => {
   const infoShow = ref(false)
   /** 是否显示上半部分操作栏中的提示 */
   const tipShow = ref(true)
-  /** 菜单显示模式 */
-  const showMode = ref(ShowModeEnum.ICON)
-  const themeColor = ref(themes.value.content === ThemeEnum.DARK ? 'rgba(63,63,63, 0.2)' : 'rgba(241,241,241, 0.2)')
+  const themeColor = ref(themes.content === ThemeEnum.DARK ? 'rgba(63,63,63, 0.2)' : 'rgba(241,241,241, 0.2)')
   /** 已打开窗口的列表 */
   const openWindowsList = ref(new Set())
   /** 编辑资料弹窗 */
@@ -90,13 +89,13 @@ export const leftHook = () => {
   }
 
   watchEffect(() => {
-    menuTop.find((item) => {
+    menuTop.find((item: STO.Plugins<PluginEnum>) => {
       if (item.url === 'message') {
         item.badge = msgTotal.value
       }
     })
     /** 判断是否是跟随系统主题 */
-    if (themes.value.pattern === ThemeEnum.OS) {
+    if (themes.pattern === ThemeEnum.OS) {
       followOS()
       prefers.addEventListener('change', followOS)
     } else {
@@ -128,7 +127,7 @@ export const leftHook = () => {
         return
       }
       // 更新本地缓存的用户信息
-      login.value.accountInfo.name = editInfo.value.content.name!
+      login.accountInfo.name = editInfo.value.content.name!
       updateCurrentUserCache('name', editInfo.value.content.name) // 更新缓存里面的用户信息
       if (!editInfo.value.content.modifyNameChance) return
       editInfo.value.content.modifyNameChance -= 1
@@ -224,7 +223,7 @@ export const leftHook = () => {
       infoShow.value = false
     })
     Mitt.on(MittEnum.UPDATE_MSG_TOTAL, (event) => {
-      menuTop.find((item) => {
+      menuTop.find((item: STO.Plugins<PluginEnum>) => {
         if (item.url === 'message') {
           item.badge = event as number
         }
@@ -263,7 +262,6 @@ export const leftHook = () => {
     currentBadge,
     sessionList,
     msgTotal,
-    showMode,
     handleEditing,
     pageJumps,
     openContent,

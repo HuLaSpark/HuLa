@@ -201,6 +201,9 @@ export const useChatStore = defineStore('chat', () => {
       })
     if (!response) return
     const { data } = response
+    if (!data) {
+      return
+    }
     isFresh ? sessionList.splice(0, sessionList.length, ...data.list) : sessionList.push(...data.list)
     sessionOptions.cursor = data.cursor
     sessionOptions.isLast = data.isLast

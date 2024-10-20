@@ -1,12 +1,13 @@
 import { defineStore } from 'pinia'
-import { CloseBxEnum, StoresEnum, ThemeEnum } from '@/enums'
+import { CloseBxEnum, StoresEnum, ShowModeEnum, ThemeEnum } from '@/enums'
 import apis from '@/services/apis.ts'
 import { isDiffNow10Min } from '@/utils/ComputedTime.ts'
 import type { CacheBadgeItem } from '@/services/types.ts'
+import { STO } from '../typings/stores'
 
 const badgeCachedList = reactive<Record<number, Partial<CacheBadgeItem>>>({})
 // TODO 使用indexDB或sqlite缓存数据，还需要根据每个账号来进行配置 (nyh -> 2024-03-26 01:22:12)
-export const setting = defineStore(StoresEnum.SETTING, {
+export const useSettingStore = defineStore(StoresEnum.SETTING, {
   state: (): STO.Setting => ({
     themes: {
       content: '',
@@ -14,6 +15,7 @@ export const setting = defineStore(StoresEnum.SETTING, {
       versatile: 'default'
     },
     escClose: true,
+    showMode: ShowModeEnum.ICON,
     lockScreen: {
       enable: false,
       password: ''
@@ -97,6 +99,10 @@ export const setting = defineStore(StoresEnum.SETTING, {
     /** 清空账号信息 */
     clearAccount() {
       this.login.accountInfo.password = ''
+    },
+    /** 设置菜单显示模式 */
+    setShowMode(showMode: ShowModeEnum): void {
+      this.showMode = showMode
     }
   },
   share: {

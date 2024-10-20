@@ -1,5 +1,6 @@
 @mixin action() {
   padding: 6px 8px 6px 8px;
+
   &:not(.active):hover {
     background: var(--left-bg-hover);
     border-radius: 8px;

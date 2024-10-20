@@ -83,9 +83,9 @@ import router from '@/router'
 import { MittEnum } from '@/enums'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useWindowSize } from '@vueuse/core'
-import { setting } from '@/stores/setting.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 
-const settingStore = setting()
+const settingStore = useSettingStore()
 const { page } = storeToRefs(settingStore)
 const appWindow = WebviewWindow.getCurrent()
 /** 设置最小宽度 */

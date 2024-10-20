@@ -86,9 +86,9 @@
 import MsgInput from '@/components/rightBox/MsgInput.vue'
 import Mitt from '@/utils/Bus.ts'
 import { InputInst, NIcon } from 'naive-ui'
-import { setting } from '@/stores/setting.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 
-const settingStore = setting()
+const settingStore = useSettingStore()
 const { page } = storeToRefs(settingStore)
 /** 是否是编辑模式 */
 const isEdit = ref(false)

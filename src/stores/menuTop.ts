@@ -1,35 +1,29 @@
 import { defineStore } from 'pinia'
 import { PluginEnum, StoresEnum } from '@/enums'
-import { usePluginsStore } from '@/stores/plugins.ts'
+import { STO } from '../typings/stores'
 
 export const useMenuTopStore = defineStore(
   StoresEnum.MENUTOP,
   () => {
-    const { getPluginType } = usePluginsStore()
-    const pluginType = getPluginType(PluginEnum.BUILTIN)
     // 初始状态
     const initialState: OPT.L.Common[] = [
       {
         url: 'message',
         icon: 'message',
         iconAction: 'message-action',
-        title: '消息'
+        title: '消息列表',
+        shortTitle: '消息'
       },
       {
         url: 'friendsList',
         icon: 'avatar',
         iconAction: 'avatar-action',
-        title: '好友'
+        title: '好友列表',
+        shortTitle: '好友'
       }
     ]
 
-    const menuTop = ref<STO.Plugins<PluginEnum>[]>(initialState as any)
-
-    onBeforeMount(() => {
-      if (!localStorage.getItem(StoresEnum.MENUTOP)) {
-        menuTop.value.push(pluginType)
-      }
-    })
+    const menuTop = initialState as STO.Plugins<PluginEnum>[]
 
     return {
       menuTop

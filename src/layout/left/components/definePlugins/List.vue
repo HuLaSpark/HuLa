@@ -2,7 +2,7 @@
   <div>
     <n-scrollbar style="max-height: 280px" @scroll="handleScroll($event)">
       <n-flex vertical :size="0" class="z-10 box-border w-full">
-        <template v-for="(plugin, index) in plugins as STO.Plugins<PluginEnum>[]" :key="index">
+        <template v-for="(plugin, index) in allPlugins" :key="index">
           <n-flex align="center" justify="space-between" class="float-block p-[0_20px]">
             <n-flex :size="14" align="center">
               <n-flex align="center" justify="center" class="size-48px rounded-50% bg-#7676760f">
@@ -124,15 +124,18 @@
 </template>
 
 <script setup lang="ts">
-import { PluginEnum } from '@/enums'
+import { MittEnum, PluginEnum } from '@/enums'
+import { pluginsList } from '@/layout/left/config.tsx'
 import { usePluginsStore } from '@/stores/plugins.ts'
-import { useMenuTopStore } from '@/stores/menuTop.ts'
+import { STO } from '@/typings/stores'
+import Mitt from '@/utils/Bus'
 
-const { plugins, updatePlugins } = usePluginsStore()
-const { menuTop } = useMenuTopStore()
+const pluginsStore = usePluginsStore()
+const { plugins } = storeToRefs(pluginsStore)
 const scrollTop = ref(-1)
-const itemCount = Object.values(plugins).length
+const itemCount = Object.values(pluginsList).length
 const isCurrently = ref(-1)
+const allPlugins = ref([] as STO.Plugins<PluginEnum>[])
 
 const handleScroll = (e: Event) => {
   const target = e.target as HTMLElement
@@ -145,12 +148,12 @@ const handleState = (plugin: STO.Plugins<PluginEnum>) => {
   plugin.state = PluginEnum.DOWNLOADING
   const interval = setInterval(() => {
     if (plugin.progress < 100) {
-      plugin.progress += 10
+      plugin.progress += 50
     } else {
       clearInterval(interval)
       plugin.state = PluginEnum.INSTALLED
       plugin.progress = 0
-      updatePlugins(plugin)
+      pluginsStore.addPlugin(plugin)
     }
   }, 500)
 }
@@ -159,36 +162,32 @@ const handleUnload = (plugin: STO.Plugins<PluginEnum>) => {
   plugin.state = PluginEnum.UNINSTALLING
   setTimeout(() => {
     handleDelete(plugin)
-    plugin.isAdd = false
     plugin.state = PluginEnum.NOT_INSTALLED
     plugin.progress = 0
-    updatePlugins(plugin)
+    pluginsStore.removePlugin(plugin)
   }, 2000)
 }
 
-const handleDelete = (plugin: STO.Plugins<PluginEnum>) => {
-  // 找到 menuTop 中与 item.url 匹配的项并删除
-  const itemIndex = menuTop.findIndex((topItem) => topItem.title === plugin.title)
-  if (itemIndex !== -1) {
+const handleDelete = (p: STO.Plugins<PluginEnum>) => {
+  let plugin = plugins.value.find((i) => i.title === p.title)
+  if (plugin) {
     setTimeout(() => {
-      plugin.isAdd = false
-      updatePlugins(plugin)
-      menuTop.splice(itemIndex, 1)
+      pluginsStore.updatePlugin({ ...plugin, isAdd: false })
+      p.isAdd = false
+      Mitt.emit(MittEnum.HOME_WINDOW_RESIZE)
     }, 300)
   }
 }
 
-const handleAdd = (plugin: STO.Plugins<PluginEnum>) => {
-  // 判断如果itemsTop中已经存在该插件，则不再添加
-  const itemIndex = menuTop.findIndex((topItem) => topItem.title === plugin.title)
-  if (itemIndex !== -1) {
-    return
+const handleAdd = (p: STO.Plugins<PluginEnum>) => {
+  let plugin = plugins.value.find((i) => i.title === p.title)
+  if (plugin) {
+    setTimeout(() => {
+      pluginsStore.updatePlugin({ ...plugin, isAdd: true })
+      p.isAdd = true
+      Mitt.emit(MittEnum.HOME_WINDOW_RESIZE)
+    }, 300)
   }
-  setTimeout(() => {
-    plugin.isAdd = true
-    updatePlugins(plugin)
-    menuTop.push(plugin)
-  }, 300)
 }
 
 const closeMenu = (event: Event) => {
@@ -224,6 +223,17 @@ const updateHoverClasses = () => {
 }
 
 onMounted(() => {
+  allPlugins.value = pluginsList.value.map((i) => {
+    const p = plugins.value.find((z) => z.title === i.title)
+    if (p) {
+      return {
+        ...i,
+        state: p.state,
+        isAdd: p.isAdd
+      }
+    }
+    return i
+  })
   updateHoverClasses()
   window.addEventListener('click', closeMenu, true)
 })

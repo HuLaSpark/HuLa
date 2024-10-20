@@ -1,7 +1,7 @@
 import { LimitEnum, MittEnum, MsgEnum } from '@/enums'
 import { Ref } from 'vue'
 import { CacheUserItem } from '@/services/types.ts'
-import { setting } from '@/stores/setting.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 import { useDebounceFn } from '@vueuse/core'
 import Mitt from '@/utils/Bus.ts'
 import { useCommon } from './useCommon.ts'
@@ -19,7 +19,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
   const cachedStore = useCachedStore()
   const { triggerInputEvent, insertNode, getMessageContentType, getEditorRange, imgPaste, removeTag, reply, userUid } =
     useCommon()
-  const settingStore = setting()
+  const settingStore = useSettingStore()
   const { chat } = storeToRefs(settingStore)
   const chatKey = ref(chat.value.sendKey)
   const msgInput = ref('')

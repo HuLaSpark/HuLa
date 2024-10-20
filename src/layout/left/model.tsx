@@ -13,7 +13,7 @@ import {
   NIcon
 } from 'naive-ui'
 import { FormInst } from 'naive-ui'
-import { setting } from '@/stores/setting.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 import { emit } from '@tauri-apps/api/event'
 import { EventEnum } from '@/enums'
 import pkg from '~/package.json'
@@ -36,7 +36,7 @@ export const lock = ref({
     }
   },
   async handleLock() {
-    const settingStore = setting()
+    const settingStore = useSettingStore()
     const { lockScreen } = storeToRefs(settingStore)
     formRef.value?.validate((errors) => {
       if (errors) return
@@ -58,7 +58,7 @@ export const lock = ref({
 /*============================================ model =====================================================*/
 /**  锁屏弹窗 */
 export const LockScreen = defineComponent(() => {
-  const settingStore = setting()
+  const settingStore = useSettingStore()
   const { login } = storeToRefs(settingStore)
   return () => (
     <NModal v-model:show={lock.value.modalShow} maskClosable={false} class="w-350px border-rd-8px">

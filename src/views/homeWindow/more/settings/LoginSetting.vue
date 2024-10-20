@@ -26,9 +26,9 @@
 </template>
 
 <script setup lang="ts">
-import { setting } from '@/stores/setting.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 
-const settingStore = setting()
+const settingStore = useSettingStore()
 const { login } = storeToRefs(settingStore)
 const autoLogin = ref(login.value.autoLogin)
 const autoStartup = ref(login.value.autoStartup)

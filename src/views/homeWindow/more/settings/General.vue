@@ -107,25 +107,67 @@
             v-model:value="page.fonts"
             :options="fontOptions" />
         </n-flex>
+
+        <!-- 菜单显示模式 -->
+        <n-flex align="center" justify="space-between">
+          <span>显示菜单名</span>
+
+          <n-switch
+            size="small"
+            :value="showMode == ShowModeEnum.TEXT"
+            v-on:update:value="
+              (_) => {
+                haldleShowMode()
+              }
+            " />
+        </n-flex>
       </n-flex>
     </n-flex>
   </n-flex>
 </template>
 <script setup lang="tsx">
-import { setting } from '@/stores/setting.ts'
-import { CloseBxEnum } from '@/enums'
+import { useSettingStore } from '@/stores/setting.ts'
+import { CloseBxEnum, MittEnum, ShowModeEnum } from '@/enums'
 import { topicsList } from './model.tsx'
 import { sendOptions, fontOptions } from './config.ts'
 import { type } from '@tauri-apps/plugin-os'
+import { NSwitch } from 'naive-ui'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { LogicalSize } from '@tauri-apps/api/dpi'
+import Mitt from '@/utils/Bus.ts'
 
-const settingStore = setting()
-const { themes, tips, escClose, chat, page } = unref(settingStore)
+const settingStore = useSettingStore()
+const { themes, tips, escClose, chat, page, setShowMode } = settingStore
+const { showMode } = storeToRefs(settingStore)
 const activeItem = ref<string>(themes.pattern)
 
 /** 切换主题 */
 const handleTheme = (code: string) => {
   if (code === themes.pattern) return
   settingStore.toggleTheme(code)
+}
+
+/** 菜单显示 */
+const haldleShowMode = () => {
+  Mitt.emit(MittEnum.HOME_WINDOW_RESIZE)
+  setShowMode(showMode.value == ShowModeEnum.TEXT ? ShowModeEnum.ICON : ShowModeEnum.TEXT)
+  resizeWindow()
+}
+
+/** 调整高度 */
+const resizeWindow = async () => {
+  let homeWindow = await WebviewWindow.getByLabel('home')
+  let size = await homeWindow?.size()
+  let sf = await homeWindow?.scaleFactor()
+  if (homeWindow && size && sf) {
+    homeWindow?.setMinSize(new LogicalSize(size.width, showMode.value === ShowModeEnum.TEXT ? 492 : 423))
+    homeWindow?.setSize(
+      new LogicalSize(
+        size.toLogical(sf).width,
+        Math.max(showMode.value == ShowModeEnum.TEXT ? 492 : 423, size.toLogical(sf).height)
+      )
+    )
+  }
 }
 </script>
 

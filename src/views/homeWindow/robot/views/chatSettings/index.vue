@@ -40,9 +40,9 @@
 import router from '@/router'
 import Mitt from '@/utils/Bus.ts'
 import { content } from './config.tsx'
-import { setting } from '@/stores/setting.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 
-const settingStore = setting()
+const settingStore = useSettingStore()
 const { page } = storeToRefs(settingStore)
 const handleClose = () => {
   router.push('/chat').then(() => {

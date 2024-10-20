@@ -150,11 +150,12 @@ import router from '@/router'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { delay } from 'lodash-es'
 import { lightTheme } from 'naive-ui'
-import { setting } from '@/stores/setting.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { STO } from '@/typings/stores'
 
-const settingStore = setting()
+const settingStore = useSettingStore()
 const { login } = storeToRefs(settingStore)
 /** 账号信息 */
 const info = ref({

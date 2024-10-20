@@ -131,12 +131,12 @@
 import { dynamicList, dynamicCommentList } from '@/mock'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useWindowState } from '@/hooks/useWindowState.ts'
-import { setting } from '@/stores/setting.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 import { type } from '@tauri-apps/plugin-os'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 
 useWindowState(WebviewWindow.getCurrent().label)
-const settingStore = setting()
+const settingStore = useSettingStore()
 const { login } = storeToRefs(settingStore)
 const infoTip = ref({
   value: dynamicCommentList.length,

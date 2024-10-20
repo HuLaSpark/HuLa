@@ -73,7 +73,9 @@ export enum MittEnum {
   /** 关闭个人信息浮窗 */
   CLOSE_INFO_SHOW,
   /** 左边菜单弹窗 */
-  LEFT_MODAL_SHOW
+  LEFT_MODAL_SHOW,
+  /** 触发home窗口事件 */
+  HOME_WINDOW_RESIZE
 }
 
 /** 主题类型 */
@@ -279,7 +281,7 @@ export enum PluginEnum {
 /** 菜单显示模式 */
 export enum ShowModeEnum {
   /** 图标方式 */
-  ICON,
+  ICON = 0,
   /** 文字方式 */
   TEXT
 }

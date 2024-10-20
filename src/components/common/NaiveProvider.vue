@@ -20,11 +20,11 @@
 </template>
 
 <script setup lang="ts">
-import { setting } from '@/stores/setting.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 import { dateZhCN, darkTheme, lightTheme, GlobalThemeOverrides, zhCN } from 'naive-ui'
 import { ThemeEnum } from '@/enums'
 
-const settingStore = setting()
+const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
 /**监听深色主题颜色变化*/
 const globalTheme = ref<any>(themes.value.content)

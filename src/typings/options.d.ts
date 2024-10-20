@@ -17,6 +17,7 @@ declare namespace OPT {
       url: string
       icon: string
       title?: string
+      shortTitle?: string
       iconAction?: string
       badge?: number
       tip?: string

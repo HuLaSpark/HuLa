@@ -46,12 +46,12 @@ import { delay } from 'lodash-es'
 import { lightTheme } from 'naive-ui'
 import { WsResEnum } from '@/enums'
 import Mitt from '@/utils/Bus.ts'
-import { setting } from '@/stores/setting.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { LoginStatus, useWsLoginStore } from '@/stores/ws.ts'
 
-const settingStore = setting()
+const settingStore = useSettingStore()
 const loginStore = useWsLoginStore()
 /** 获取登录二维码 */
 const loginQrCode = computed(() => loginStore.loginQrCode)

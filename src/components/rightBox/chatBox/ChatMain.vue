@@ -346,7 +346,7 @@ import { useChatMain } from '@/hooks/useChatMain.ts'
 import { VirtualListInst } from 'naive-ui'
 import { delay } from 'lodash-es'
 import { useCommon } from '@/hooks/useCommon.ts'
-import { setting } from '@/stores/setting.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { useUserInfo, useBadgeInfo } from '@/hooks/useCached.ts'
 import { useChatStore } from '@/stores/chat.ts'
@@ -356,7 +356,7 @@ const { activeItem } = defineProps<{
   activeItem: SessionItem
 }>()
 const activeItemRef = ref<SessionItem>({ ...activeItem })
-const settingStore = setting()
+const settingStore = useSettingStore()
 const chatStore = useChatStore()
 // const userInfo = useUserStore()?.userInfo
 /** 消息列表 */

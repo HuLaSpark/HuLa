@@ -5,7 +5,7 @@ import Mitt from '@/utils/Bus.ts'
 import { MockItem, SessionItem } from '@/services/types.ts'
 import { delay } from 'lodash-es'
 import { MockList } from '@/mock'
-import { setting } from '@/stores/setting.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 
 const { createWebviewWindow, checkWinExist } = useWindow()
 /** 建议把此状态存入localStorage中 */
@@ -16,7 +16,7 @@ const aloneWin = ref(new Set())
 const shrinkStatus = ref(false)
 const itemRef = ref<SessionItem>()
 export const useMessage = () => {
-  const settingStore = setting()
+  const settingStore = useSettingStore()
   const { chat } = storeToRefs(settingStore)
   /** 监听独立窗口关闭事件 */
   watchEffect(() => {

@@ -27,7 +27,7 @@
     "build": "vue-tsc --noEmit && vite build",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
-    "tauri:build->debug": "tauri build --debug",
+    "tauri:build:debug": "tauri build --debug",
     "tauri:icon": "tauri icon hula.png",
     "preinstall": "npx only-allow pnpm",
     "commit": "git add . && git-cz",

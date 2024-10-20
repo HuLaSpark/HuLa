@@ -56,12 +56,12 @@ import { onlineStatus } from '@/stores/onlineStatus.ts'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { listen } from '@tauri-apps/api/event'
 import { useWsLoginStore } from '@/stores/ws.ts'
-import { setting } from '@/stores/setting.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 
 const appWindow = WebviewWindow.getCurrent()
 const { checkWinExist, createWebviewWindow, resizeWindow } = useWindow()
 const OLStatusStore = onlineStatus()
-const settingStore = setting()
+const settingStore = useSettingStore()
 const { lockScreen } = storeToRefs(settingStore)
 const isLoginWin = ref(true)
 const loginStore = useWsLoginStore()

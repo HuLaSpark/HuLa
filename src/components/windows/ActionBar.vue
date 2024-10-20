@@ -81,7 +81,7 @@ import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import Mitt from '@/utils/Bus'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { useAlwaysOnTopStore } from '@/stores/alwaysOnTop.ts'
-import { setting } from '@/stores/setting.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 import { emit, listen } from '@tauri-apps/api/event'
 import { CloseBxEnum, EventEnum, MittEnum } from '@/enums'
 import { PersistedStateOptions } from 'pinia-plugin-persistedstate'
@@ -106,7 +106,7 @@ const {
   shrinkStatus?: boolean
 }>()
 const { getWindowTop, setWindowTop } = useAlwaysOnTopStore()
-const settingStore = setting()
+const settingStore = useSettingStore()
 const { tips, escClose } = storeToRefs(settingStore)
 const { resizeWindow } = useWindow()
 const tipsRef = reactive({

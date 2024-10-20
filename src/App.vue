@@ -9,13 +9,13 @@
   </NaiveProvider>
 </template>
 <script setup lang="ts">
-import { setting } from '@/stores/setting.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 import { StoresEnum, ThemeEnum } from '@/enums'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
 import LockScreen from '@/views/LockScreen.vue'
 import router from '@/router'
 
-const settingStore = setting()
+const settingStore = useSettingStore()
 const OLStatusStore = onlineStatus()
 const { themes, lockScreen, page } = storeToRefs(settingStore)
 /** 不需要锁屏的页面 */

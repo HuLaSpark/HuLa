@@ -1,9 +1,9 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
-import { setting } from '@/stores/setting.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 
 /** 是否是测试环境 */
 const isTest = computed(() => {
-  return setting().login.accountInfo.token === 'test'
+  return useSettingStore().login.accountInfo.token === 'test'
 })
 
 function getToken() {
@@ -43,7 +43,7 @@ export const createAxios = (config?: AxiosRequestConfig): AxiosInstance => {
   instance.interceptors.request.use(
     function (config: any) {
       //判断是否有token 根据自己的需求判断
-      const token = setting().login.accountInfo.token
+      const token = useSettingStore().login.accountInfo.token
       if (isTest.value) {
         // 如果token为'test'，阻止请求并返回一个错误对象
         return Promise.reject(

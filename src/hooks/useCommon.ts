@@ -2,11 +2,11 @@ import { LimitEnum, MsgEnum } from '@/enums'
 import { Ref } from 'vue'
 import { createFileOrVideoDom } from '@/utils/CreateDom.ts'
 import { RegExp } from '@/utils/RegExp.ts'
-import { setting } from '@/stores/setting.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 
 /** 常用工具类 */
 export const useCommon = () => {
-  const settingStore = setting()
+  const settingStore = useSettingStore()
   const { login } = storeToRefs(settingStore)
   /** 当前登录用户的uid */
   const userUid = computed(() => login.value.accountInfo.uid)

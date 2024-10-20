@@ -36,9 +36,9 @@
 </template>
 <script setup lang="ts">
 import { versatileModel } from './model.tsx'
-import { setting } from '@/stores/setting.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 
-const settingStore = setting()
+const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
 
 const handleVersatile = (val: string) => {

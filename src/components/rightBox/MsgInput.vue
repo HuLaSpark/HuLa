@@ -119,14 +119,14 @@ import { MacOsKeyEnum, MittEnum, RoomTypeEnum, ThemeEnum, WinKeyEnum } from '@/e
 import Mitt from '@/utils/Bus.ts'
 import { CacheUserItem, MockItem } from '@/services/types.ts'
 import { emit, listen } from '@tauri-apps/api/event'
-import { setting } from '@/stores/setting.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 import { sendOptions } from '@/views/homeWindow/more/settings/config.ts'
 import { useMsgInput } from '@/hooks/useMsgInput.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { onKeyStroke } from '@vueuse/core'
 import { type } from '@tauri-apps/plugin-os'
 
-const settingStore = setting()
+const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
 /** 发送按钮旁的箭头 */
 const arrow = ref(false)

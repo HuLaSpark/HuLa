@@ -2,7 +2,7 @@
   <div>
     <n-scrollbar style="max-height: 280px">
       <n-flex :size="26" class="z-10 p-[18px_18px_36px_18px] box-border w-full">
-        <template v-for="(plugin, index) in plugins" :key="index">
+        <template v-for="(plugin, index) in allPlugins" :key="index">
           <Transition name="fade" mode="out-in">
             <!-- 未安装和下载中状态 -->
             <n-flex
@@ -13,7 +13,9 @@
               :size="8"
               :class="{ 'filter-shadow': page.shadow }"
               class="box bg-[--info-hover]">
-              <svg class="size-38px color-#999"><use :href="`#${plugin.icon}`"></use></svg>
+              <svg class="size-38px color-#999">
+                <use :href="`#${plugin.icon}`"></use>
+              </svg>
               <p class="text-(12px #666)">{{ plugin.title }}</p>
 
               <!-- 在下载中进度条 -->
@@ -61,7 +63,9 @@
                   'filter-shadow': page.shadow
                 }
               ]">
-              <svg class="size-38px color-#555"><use :href="`#${plugin.iconAction || plugin.icon}`"></use></svg>
+              <svg class="size-38px color-#555">
+                <use :href="`#${plugin.iconAction || plugin.icon}`"></use>
+              </svg>
               <p class="text-(12px #666)">{{ plugin.title }}</p>
 
               <n-flex
@@ -110,15 +114,21 @@
                 <div class="action-item">
                   <div class="menu-list">
                     <div v-if="!plugin.isAdd" @click="handleAdd(plugin)" class="menu-item">
-                      <svg class="color-#4C77BD"><use href="#add"></use></svg>
+                      <svg class="color-#4C77BD">
+                        <use href="#add"></use>
+                      </svg>
                       <p class="text-#4C77BD">固定侧边栏</p>
                     </div>
                     <div v-else @click="handleDelete(plugin)" class="menu-item">
-                      <svg class="color-#c14053"><use href="#reduce"></use></svg>
+                      <svg class="color-#c14053">
+                        <use href="#reduce"></use>
+                      </svg>
                       <p class="text-#c14053">取消固定</p>
                     </div>
                     <div @click="handleUnload(plugin)" class="menu-item">
-                      <svg><use href="#delete"></use></svg>
+                      <svg>
+                        <use href="#delete"></use>
+                      </svg>
                       <p>卸载</p>
                     </div>
                   </div>
@@ -132,28 +142,31 @@
   </div>
 </template>
 <script setup lang="ts">
-import { PluginEnum } from '@/enums'
-import { setting } from '@/stores/setting.ts'
+import { MittEnum, PluginEnum } from '@/enums'
+import { pluginsList } from '@/layout/left/config.tsx'
+import { useSettingStore } from '@/stores/setting.ts'
 import { usePluginsStore } from '@/stores/plugins.ts'
-import { useMenuTopStore } from '@/stores/menuTop.ts'
+import { STO } from '@/typings/stores'
+import Mitt from '@/utils/Bus'
 
-const settingStore = setting()
-const { updatePlugins, plugins } = usePluginsStore()
-const { menuTop } = useMenuTopStore()
+const settingStore = useSettingStore()
+const pluginsStore = usePluginsStore()
 const { page } = storeToRefs(settingStore)
+const { plugins } = storeToRefs(pluginsStore)
 const isCurrently = ref(-1)
+const allPlugins = ref([] as STO.Plugins<PluginEnum>[])
 
 const handleState = (plugin: STO.Plugins<PluginEnum>) => {
   if (plugin.state === PluginEnum.INSTALLED) return
   plugin.state = PluginEnum.DOWNLOADING
   const interval = setInterval(() => {
     if (plugin.progress < 100) {
-      plugin.progress += 10
+      plugin.progress += 50
     } else {
       clearInterval(interval)
       plugin.state = PluginEnum.INSTALLED
       plugin.progress = 0
-      updatePlugins(plugin)
+      pluginsStore.addPlugin(plugin)
     }
   }, 500)
 }
@@ -162,36 +175,32 @@ const handleUnload = (plugin: STO.Plugins<PluginEnum>) => {
   plugin.state = PluginEnum.UNINSTALLING
   setTimeout(() => {
     handleDelete(plugin)
-    plugin.isAdd = false
     plugin.state = PluginEnum.NOT_INSTALLED
     plugin.progress = 0
-    updatePlugins(plugin)
+    pluginsStore.removePlugin(plugin)
   }, 2000)
 }
 
-const handleDelete = (plugin: STO.Plugins<PluginEnum>) => {
-  // 找到 menuTop 中与 item.url 匹配的项并删除
-  const itemIndex = menuTop.findIndex((topItem) => topItem.title === plugin.title)
-  if (itemIndex !== -1) {
+const handleDelete = (p: STO.Plugins<PluginEnum>) => {
+  let plugin = plugins.value.find((i) => i.title === p.title)
+  if (plugin) {
     setTimeout(() => {
-      plugin.isAdd = false
-      updatePlugins(plugin)
-      menuTop.splice(itemIndex, 1)
+      pluginsStore.updatePlugin({ ...plugin, isAdd: false })
+      p.isAdd = false
+      Mitt.emit(MittEnum.HOME_WINDOW_RESIZE)
     }, 300)
   }
 }
 
-const handleAdd = (plugin: STO.Plugins<PluginEnum>) => {
-  // 判断如果itemsTop中已经存在该插件，则不再添加
-  const itemIndex = menuTop.findIndex((topItem) => topItem.title === plugin.title)
-  if (itemIndex !== -1) {
-    return
+const handleAdd = (p: STO.Plugins<PluginEnum>) => {
+  let plugin = plugins.value.find((i) => i.title === p.title)
+  if (plugin) {
+    setTimeout(() => {
+      pluginsStore.updatePlugin({ ...plugin, isAdd: true })
+      p.isAdd = true
+      Mitt.emit(MittEnum.HOME_WINDOW_RESIZE)
+    }, 300)
   }
-  setTimeout(() => {
-    plugin.isAdd = true
-    updatePlugins(plugin)
-    menuTop.push(plugin)
-  }, 300)
 }
 
 const closeMenu = (event: Event) => {
@@ -202,6 +211,17 @@ const closeMenu = (event: Event) => {
 }
 
 onMounted(() => {
+  allPlugins.value = pluginsList.value.map((i) => {
+    const p = plugins.value.find((z) => z.title === i.title)
+    if (p) {
+      return {
+        ...i,
+        state: p.state,
+        isAdd: p.isAdd
+      }
+    }
+    return i
+  })
   window.addEventListener('click', closeMenu, true)
 })
 
@@ -214,6 +234,7 @@ onUnmounted(() => {
 .box {
   @apply relative select-none custom-shadow cursor-pointer size-fit w-100px h-100px rounded-8px overflow-hidden;
   transition: all 0.2s;
+
   .flash {
     position: absolute;
     left: -130%;
@@ -224,6 +245,7 @@ onUnmounted(() => {
     transform: skew(-30deg);
     pointer-events: none;
   }
+
   &:hover .flash {
     left: 130%;
     transition: all 0.8s ease-in-out;

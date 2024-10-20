@@ -136,13 +136,13 @@
   </n-flex>
 </template>
 <script setup lang="ts">
-import { setting } from '@/stores/setting.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 import { NIcon, VirtualListInst, InputInst } from 'naive-ui'
 import Mitt from '@/utils/Bus.ts'
 import { VueDraggable } from 'vue-draggable-plus'
 import router from '@/router'
 
-const settingStore = setting()
+const settingStore = useSettingStore()
 const { login } = storeToRefs(settingStore)
 const activeItem = ref(0)
 const scrollbar = ref<VirtualListInst>()

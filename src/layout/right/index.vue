@@ -23,12 +23,12 @@
 <script setup lang="ts">
 import Mitt from '@/utils/Bus.ts'
 import router from '@/router'
-import { setting } from '@/stores/setting.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 import { MittEnum, ThemeEnum } from '@/enums'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 
 const appWindow = WebviewWindow.getCurrent()
-const settingStore = setting()
+const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
 const msgBoxShow = ref(false)
 const detailsShow = ref(false)

@@ -1,3 +1,5 @@
+import { ShowModeEnum } from '../enums'
+
 /** pinia的store的命名空间 */
 declare namespace STO {
   /**
@@ -25,6 +27,8 @@ declare namespace STO {
     }
     /** 是否启用ESC关闭窗口 */
     escClose: boolean
+    /** 菜单显示模式 */
+    showMode: ShowModeEnum
     /** 是否锁屏 */
     lockScreen: {
       /** 是否启用锁屏 */
@@ -102,5 +106,6 @@ declare namespace STO {
     isAdd: boolean
     dot?: boolean
     progress: number
+    miniShow: boolean
   } & OPT.L.Common
 }
