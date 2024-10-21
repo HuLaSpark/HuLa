@@ -224,14 +224,13 @@ const updateHoverClasses = () => {
 onMounted(() => {
   allPlugins.value = pluginsList.value.map((i) => {
     const p = plugins.value.find((z) => z.title === i.title)
-    if (p) {
-      return {
-        ...i,
-        state: p.state,
-        isAdd: p.isAdd
-      }
-    }
-    return i
+    return p
+      ? {
+          ...i,
+          state: p.state,
+          isAdd: p.isAdd
+        }
+      : i
   })
   updateHoverClasses()
   window.addEventListener('click', closeMenu, true)
