@@ -112,14 +112,7 @@
         <n-flex align="center" justify="space-between">
           <span>显示菜单名</span>
 
-          <n-switch
-            size="small"
-            :value="showMode == ShowModeEnum.TEXT"
-            v-on:update:value="
-              (_) => {
-                haldleShowMode()
-              }
-            " />
+          <n-switch size="small" v-model:value="showText" />
         </n-flex>
       </n-flex>
     </n-flex>
@@ -127,19 +120,27 @@
 </template>
 <script setup lang="tsx">
 import { useSettingStore } from '@/stores/setting.ts'
-import { CloseBxEnum, MittEnum, ShowModeEnum } from '@/enums'
+import { CloseBxEnum, ShowModeEnum } from '@/enums'
 import { topicsList } from './model.tsx'
 import { sendOptions, fontOptions } from './config.ts'
 import { type } from '@tauri-apps/plugin-os'
 import { NSwitch } from 'naive-ui'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { LogicalSize } from '@tauri-apps/api/dpi'
-import Mitt from '@/utils/Bus.ts'
+import { invoke } from '@tauri-apps/api/core'
+import { emit } from '@tauri-apps/api/event'
 
 const settingStore = useSettingStore()
-const { themes, tips, escClose, chat, page, setShowMode } = settingStore
+const { themes, tips, escClose, chat, page } = settingStore
 const { showMode } = storeToRefs(settingStore)
 const activeItem = ref<string>(themes.pattern)
+
+const showText = computed({
+  get: () => showMode.value === ShowModeEnum.TEXT,
+  set: (v: any) => {
+    setHomeHeight()
+    emit('startResize')
+    settingStore.setShowMode(v ? ShowModeEnum.TEXT : ShowModeEnum.ICON)
+  }
+})
 
 /** 切换主题 */
 const handleTheme = (code: string) => {
@@ -147,30 +148,11 @@ const handleTheme = (code: string) => {
   settingStore.toggleTheme(code)
 }
 
-/** 菜单显示 */
-const haldleShowMode = () => {
-  Mitt.emit(MittEnum.HOME_WINDOW_RESIZE)
-  setShowMode(showMode.value == ShowModeEnum.TEXT ? ShowModeEnum.ICON : ShowModeEnum.TEXT)
-  resizeWindow()
-}
-
-/** 调整高度 */
-const resizeWindow = async () => {
-  let homeWindow = await WebviewWindow.getByLabel('home')
-  let size = await homeWindow?.size()
-  let sf = await homeWindow?.scaleFactor()
-  if (homeWindow && size && sf) {
-    homeWindow?.setMinSize(new LogicalSize(size.width, showMode.value === ShowModeEnum.TEXT ? 492 : 423))
-    homeWindow?.setSize(
-      new LogicalSize(
-        size.toLogical(sf).width,
-        Math.max(showMode.value == ShowModeEnum.TEXT ? 492 : 423, size.toLogical(sf).height)
-      )
-    )
-  }
+/** 调整主界面高度 */
+const setHomeHeight = async () => {
+  invoke('set_height', { height: showMode.value === ShowModeEnum.TEXT ? 495 : 423 })
 }
 </script>
-
 <style scoped lang="scss">
 .item {
   @apply bg-[--bg-setting-item] rounded-12px size-full p-12px box-border border-(solid 1px [--line-color]) custom-shadow;

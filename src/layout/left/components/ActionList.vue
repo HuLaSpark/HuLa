@@ -239,11 +239,10 @@ import { leftHook } from '../hook.ts'
 import DefinePlugins from './definePlugins/index.vue'
 import { useMenuTopStore } from '@/stores/menuTop.ts'
 import { usePluginsStore } from '@/stores/plugins.ts'
-import { MittEnum, PluginEnum, ShowModeEnum } from '@/enums'
+import { PluginEnum, ShowModeEnum } from '@/enums'
 import { useSettingStore } from '@/stores/setting.ts'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { LogicalSize } from '@tauri-apps/api/dpi'
-import Mitt from '@/utils/Bus.ts'
+import { invoke } from '@tauri-apps/api/core'
+import { listen } from '@tauri-apps/api/event'
 
 const pluginsStore = usePluginsStore()
 const { showMode } = storeToRefs(useSettingStore())
@@ -309,33 +308,23 @@ const handleResize = async (e: Event) => {
   }
 }
 
-const initWindowHeight = async () => {
-  let homeWindow = await WebviewWindow.getByLabel('home')
-  let size = await homeWindow?.size()
-  let sf = await homeWindow?.scaleFactor()
-  if (homeWindow && size && sf) {
-    await homeWindow.setMinSize(new LogicalSize(size.width, showMode.value === ShowModeEnum.TEXT ? 492 : 423))
-    await homeWindow.setSize(
-      new LogicalSize(
-        size.toLogical(sf).width,
-        Math.max(showMode.value === ShowModeEnum.TEXT ? 492 : 423, size.toLogical(sf).height)
-      )
-    )
-  }
+/** 调整主界面高度 */
+const setHomeHeight = async () => {
+  invoke('set_height', { height: showMode.value === ShowModeEnum.TEXT ? 495 : 423 })
 }
 
 onMounted(() => {
   // 初始化窗口高度
-  initWindowHeight()
+  setHomeHeight()
 
-  // 处理菜单收起
+  // 监听窗口大小变化事件，处理菜单收起
   window.addEventListener('resize', handleResize)
 
   // 触发一次resize事件，调整插件菜单的显示
   startResize()
 
-  // 监听窗口大小变化事件
-  Mitt.on(MittEnum.HOME_WINDOW_RESIZE, () => {
+  // 监听自定义事件，处理设置中菜单显示模式切换和添加插件后，导致高度变化，需重新调整插件菜单显示
+  listen('startResize', () => {
     startResize()
   })
 

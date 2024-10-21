@@ -13,15 +13,16 @@ export const usePluginsStore = defineStore(
 
     /**
      * 设置插件
-     * @param newPlugins 插件数据
+     * @param newPlugin 插件数据
      */
     const addPlugin = (newPlugin: STO.Plugins<PluginEnum>) => {
-      plugins.value.push(newPlugin)
+      const index = plugins.value.findIndex((i) => i.title === newPlugin.title)
+      index === -1 && plugins.value.push(newPlugin)
     }
 
     /**
      * 删除插件
-     * @param newPlugins 插件数据
+     * @param p 插件数据
      */
     const removePlugin = (p: STO.Plugins<PluginEnum>) => {
       const index = plugins.value.findIndex((i) => i.title === p.title)
@@ -34,9 +35,7 @@ export const usePluginsStore = defineStore(
      */
     const updatePlugin = (p: STO.Plugins<PluginEnum>) => {
       const index = plugins.value.findIndex((i) => i.title === p.title)
-      if (index !== -1) {
-        plugins.value[index] = p
-      }
+      index !== -1 && (plugins.value[index] = p)
     }
 
     onBeforeMount(() => {

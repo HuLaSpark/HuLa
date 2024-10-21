@@ -103,7 +103,9 @@ export enum StoresEnum {
   /** 插件列表 */
   PLUGINS = 'plugins',
   /** 侧边栏头部菜单栏 */
-  MENUTOP = 'menuTop'
+  MENUTOP = 'menuTop',
+  /** 账号账号历史记录列表 */
+  LOGIN_HISTORY = 'loginHistory'
 }
 
 /**

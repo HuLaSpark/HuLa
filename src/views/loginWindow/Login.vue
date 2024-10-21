@@ -41,19 +41,19 @@
         <!-- 账号选择框 TODO 尝试使用n-popover组件来实现这个功能 (nyh -> 2024-03-09 02:56:06)-->
         <div
           style="border: 1px solid rgba(70, 70, 70, 0.1)"
-          v-if="accountOption.length > 0 && arrowStatus"
+          v-if="loginHistories.length > 0 && arrowStatus"
           class="account-box absolute w-260px max-h-140px bg-#fdfdfd mt-45px z-99 rounded-8px p-8px box-border">
           <n-scrollbar style="max-height: 120px" trigger="none">
             <n-flex
               vertical
-              v-for="(item, index) in accountOption"
+              v-for="item in loginHistories"
               :key="item.account"
               @click="giveAccount(item)"
               class="p-8px cursor-pointer hover:bg-#f3f3f3 hover: rounded-6px">
               <div class="flex-between-center">
                 <img :src="item.avatar" class="w-28px h-28px bg-#ccc rounded-50%" alt="" />
                 <p class="text-14px color-#505050">{{ item.account }}</p>
-                <svg @click.stop="delAccount(index)" class="w-12px h-12px">
+                <svg @click.stop="delAccount(item)" class="w-12px h-12px">
                   <use href="#close"></use>
                 </svg>
               </div>
@@ -154,8 +154,11 @@ import { useSettingStore } from '@/stores/setting.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { STO } from '@/typings/stores'
+import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 
 const settingStore = useSettingStore()
+const loginHistoriesStore = useLoginHistoriesStore()
+const { loginHistories } = loginHistoriesStore
 const { login } = storeToRefs(settingStore)
 /** 账号信息 */
 const info = ref({
@@ -168,47 +171,12 @@ const info = ref({
 /** 是否中断登录 */
 const interruptLogin = ref(false)
 /** 协议 */
-const protocol = ref()
+const protocol = ref(true)
 const loginDisabled = ref(false)
 const loading = ref(false)
 const arrowStatus = ref(false)
 const isAutoLogin = ref(false)
 const { setLoginState } = useLogin()
-/** todo 模拟账号列表 */
-const accountOption = ref<STO.Setting['login']['accountInfo'][]>([
-  {
-    account: 'hula',
-    password: '123456',
-    name: '超级GG帮',
-    avatar: 'https://picsum.photos/140?1',
-    uid: 123456,
-    token: 'test'
-  },
-  {
-    account: 'hula1',
-    password: '123456',
-    name: '二狗子',
-    avatar: 'https://picsum.photos/140?2',
-    uid: 123456,
-    token: 'test'
-  },
-  {
-    account: 'hula2',
-    password: '123456',
-    name: '李山离',
-    avatar: 'https://picsum.photos/140?3',
-    uid: 123456,
-    token: 'test'
-  },
-  {
-    account: 'hula3',
-    password: '123456',
-    name: '牛什么呢',
-    avatar: 'https://picsum.photos/140?4',
-    uid: 123456,
-    token: 'test'
-  }
-])
 const accountPH = ref('输入HuLa账号')
 const passwordPH = ref('输入HuLa密码')
 /** 登录按钮的文本内容 */
@@ -227,14 +195,12 @@ watchEffect(() => {
 })
 
 /** 删除账号列表内容 */
-const delAccount = (index: number) => {
-  // 检查索引有效性
-  if (index < 0 || index >= accountOption.value.length) return
+const delAccount = (item: STO.Setting['login']['accountInfo']) => {
   // 获取删除前账户列表的长度
-  const lengthBeforeDelete = accountOption.value.length
-  accountOption.value.splice(index, 1)
+  const lengthBeforeDelete = loginHistories.length
+  loginHistoriesStore.removeLoginHistory(item)
   // 判断是否删除了最后一个条目，并据此更新arrowStatus
-  if (lengthBeforeDelete === 1 && accountOption.value.length === 0) {
+  if (lengthBeforeDelete === 1 && loginHistories.length === 0) {
     arrowStatus.value = false
   }
   info.value.account = ''
@@ -264,14 +230,12 @@ const loginWin = () => {
     await createWebviewWindow('HuLa', 'home', 960, 720, 'login', true)
     loading.value = false
     if (!login.value.autoLogin || login.value.accountInfo.password === '') {
-      settingStore.setAccountInfo({
-        account: info.value.account,
-        password: info.value.password,
-        avatar: info.value.avatar,
-        name: info.value.name,
-        uid: info.value.uid,
+      const account = {
+        ...info.value,
         token: 'test'
-      })
+      }
+      settingStore.setAccountInfo(account)
+      loginHistoriesStore.addLoginHistory(account)
       await setLoginState()
     }
   }, 1000)
@@ -305,6 +269,7 @@ onMounted(async () => {
   if (login.value.autoLogin && login.value.accountInfo.password !== '') {
     autoLogin()
   }
+  loginHistories.length > 0 && giveAccount(loginHistories[0])
   window.addEventListener('click', closeMenu, true)
 })
 

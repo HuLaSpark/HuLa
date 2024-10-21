@@ -1,4 +1,4 @@
-use tauri::{Manager, Runtime, WindowEvent};
+use tauri::{LogicalSize, Manager, Runtime, WindowEvent};
 use tauri_plugin_autostart::MacosLauncher;
 
 
@@ -34,7 +34,7 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
 
     // 初始化系统窗口事件
     fn init_window_event(self) -> Self {
-        self.on_window_event(|window, event| match event {
+        self.on_window_event(|window, event: &WindowEvent| match event {
             WindowEvent::Focused(flag) => {
                 // 自定义系统托盘-实现托盘菜单失去焦点时隐藏
                 if window.label() != "tray" && *flag {
@@ -46,6 +46,14 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
                 }
                 if window.label() == "tray" && !flag {
                     window.hide().unwrap();
+                }
+            }
+            WindowEvent::Resized(ps) => {
+                let ls = ps.to_logical(window.scale_factor().unwrap());
+                // TODO 根据显示菜单模式不同，设定不同高度
+                let h = 495;
+                if ls.height < h {
+                    window.set_size(LogicalSize::new(ls.width, h)).unwrap();
                 }
             }
             _ => (),

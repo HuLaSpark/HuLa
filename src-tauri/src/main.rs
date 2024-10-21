@@ -3,7 +3,7 @@
 mod tray;
 mod user_cmd;
 mod init;
-use user_cmd::{get_user_info, save_user_info, default_window_icon, screenshot, audio};
+use user_cmd::{get_user_info, save_user_info, default_window_icon, screenshot, audio, set_height};
 use init::CustomInit;
 
 
@@ -17,7 +17,7 @@ fn main() {
             tray::create_tray(app.handle())?;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![get_user_info, save_user_info, default_window_icon, screenshot, audio])
+        .invoke_handler(tauri::generate_handler![get_user_info, save_user_info, default_window_icon, screenshot, audio, set_height])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

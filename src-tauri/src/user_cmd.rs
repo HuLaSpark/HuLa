@@ -2,11 +2,12 @@ use base64::{engine::general_purpose, Engine as _};
 use lazy_static::lazy_static;
 use screenshots::Screen;
 use serde::Serialize;
+use std::cmp;
 use std::sync::{Arc, RwLock};
-use std::thread::{sleep, spawn};
+use std::thread;
 use std::time::Duration;
 use tauri::path::BaseDirectory;
-use tauri::{AppHandle, Manager, ResourceId, Runtime, Webview};
+use tauri::{AppHandle, LogicalSize, Manager, ResourceId, Runtime, Webview};
 
 // 定义用户信息结构体
 #[derive(Debug, Clone, Serialize)]
@@ -78,7 +79,7 @@ pub fn audio(filename: &str, handle: tauri::AppHandle) {
     use std::fs::File;
     use std::io::BufReader;
     let path = "audio/".to_string() + filename;
-    spawn(move || {
+    thread::spawn(move || {
         let audio_path = handle
             .path()
             .resolve(path, BaseDirectory::Resource)
@@ -88,6 +89,14 @@ pub fn audio(filename: &str, handle: tauri::AppHandle) {
         let (_stream, stream_handle) = rodio::OutputStream::try_default().unwrap();
         let source = Decoder::new(file).unwrap();
         stream_handle.play_raw(source.convert_samples()).unwrap();
-        sleep(Duration::from_millis(3000));
+        thread::sleep(Duration::from_millis(3000));
     });
+}
+
+#[tauri::command]
+pub fn set_height(height: u32, handle: tauri::AppHandle) {
+    let home_window = handle.get_webview_window("home").unwrap();
+    let sf = home_window.scale_factor().unwrap();
+    let out_size = home_window.outer_size().unwrap();
+    home_window.set_size(LogicalSize::new(out_size.to_logical(sf).width, cmp::max(out_size.to_logical(sf).height, height))).unwrap();
 }

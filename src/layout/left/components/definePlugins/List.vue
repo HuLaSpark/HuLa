@@ -124,11 +124,11 @@
 </template>
 
 <script setup lang="ts">
-import { MittEnum, PluginEnum } from '@/enums'
+import { PluginEnum } from '@/enums'
 import { pluginsList } from '@/layout/left/config.tsx'
 import { usePluginsStore } from '@/stores/plugins.ts'
 import { STO } from '@/typings/stores'
-import Mitt from '@/utils/Bus'
+import { emit } from '@tauri-apps/api/event'
 
 const pluginsStore = usePluginsStore()
 const { plugins } = storeToRefs(pluginsStore)
@@ -174,7 +174,7 @@ const handleDelete = (p: STO.Plugins<PluginEnum>) => {
     setTimeout(() => {
       pluginsStore.updatePlugin({ ...plugin, isAdd: false })
       p.isAdd = false
-      Mitt.emit(MittEnum.HOME_WINDOW_RESIZE)
+      emit('startResize')
     }, 300)
   }
 }
@@ -185,7 +185,7 @@ const handleAdd = (p: STO.Plugins<PluginEnum>) => {
     setTimeout(() => {
       pluginsStore.updatePlugin({ ...plugin, isAdd: true })
       p.isAdd = true
-      Mitt.emit(MittEnum.HOME_WINDOW_RESIZE)
+      emit('startResize')
     }, 300)
   }
 }
