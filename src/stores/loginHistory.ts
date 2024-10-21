@@ -1,6 +1,5 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import { STO } from '../typings/stores'
 import { StoresEnum } from '../enums'
 
 export const useLoginHistoriesStore = defineStore(

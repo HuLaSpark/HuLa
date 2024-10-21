@@ -16,7 +16,6 @@ import { delay } from 'lodash-es'
 import router from '@/router'
 import { listen } from '@tauri-apps/api/event'
 import { useMenuTopStore } from '@/stores/menuTop.ts'
-import { STO } from '@/typings/stores'
 
 export const leftHook = () => {
   const prefers = matchMedia('(prefers-color-scheme: dark)')

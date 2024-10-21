@@ -153,7 +153,6 @@ import { lightTheme } from 'naive-ui'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { STO } from '@/typings/stores'
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 
 const settingStore = useSettingStore()

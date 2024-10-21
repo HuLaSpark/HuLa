@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { PluginEnum, StoresEnum } from '@/enums'
 import { pluginsList } from '@/layout/left/config.tsx'
-import { STO } from '../typings/stores'
 
 export const usePluginsStore = defineStore(
   StoresEnum.PLUGINS,
@@ -14,6 +13,7 @@ export const usePluginsStore = defineStore(
     /**
      * 设置插件
      * @param newPlugin 插件数据
+     * @param newPlugin 插件数据
      */
     const addPlugin = (newPlugin: STO.Plugins<PluginEnum>) => {
       const index = plugins.value.findIndex((i) => i.title === newPlugin.title)
@@ -23,9 +23,10 @@ export const usePluginsStore = defineStore(
     /**
      * 删除插件
      * @param p 插件数据
+     * @param p 插件数据
      */
     const removePlugin = (p: STO.Plugins<PluginEnum>) => {
-      const index = plugins.value.findIndex((i) => i.title === p.title)
+      const index = plugins.value.findIndex((i: STO.Plugins<PluginEnum>) => i.title === p.title)
       plugins.value.splice(index, 1)
     }
 

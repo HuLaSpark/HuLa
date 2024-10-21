@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import { StoresEnum } from '@/enums'
 import { statusItem } from '@/views/homeWindow/onlineStatus/config.ts'
 import Colorthief from 'colorthief'
-import { STO } from '../typings/stores'
 
 const colorthief = new Colorthief()
 export const onlineStatus = defineStore(StoresEnum.ONLINE_STATUS, {

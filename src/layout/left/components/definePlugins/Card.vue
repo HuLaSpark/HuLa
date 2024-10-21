@@ -146,7 +146,6 @@ import { PluginEnum } from '@/enums'
 import { pluginsList } from '@/layout/left/config.tsx'
 import { useSettingStore } from '@/stores/setting.ts'
 import { usePluginsStore } from '@/stores/plugins.ts'
-import { STO } from '@/typings/stores'
 import { emit } from '@tauri-apps/api/event'
 
 const settingStore = useSettingStore()

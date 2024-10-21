@@ -17,8 +17,8 @@
 </div>
 
 <p align="center">
-  gitee：<a target="_blank" href="https://gitee.com/HuLaSpark/HuLa" title="HuLa"><img src="https://img.shields.io/badge/-Gitee-A80025?logo=gitee&logoColor=F16061"></a>
-  github：<a target="_blank" href="https://github.com/HuLaSpark/HuLa" title="HuLa"><img src="https://img.shields.io/badge/-GitHub-181717?style=plastic&logo=github"></a>
+  gitee：<a href="https://gitee.com/HulaSpark/HuLa/stargazers"><img src="https://gitee.com/HulaSpark/HuLa/badge/star.svg?theme=gvp" alt="star"></a>
+  github：<a href="https://gitee.com/link?target=https://github.com/HulaSpark/HuLa/stargazers"><img src="https://img.shields.io/github/stars/HulaSpark/HuLa" alt="star"></a>
 </p>
 <p align="center">
   微信: <img src="https://img.shields.io/badge/cy2439646234-07C160?logo=wechat&logoColor=fff">
