@@ -98,5 +98,10 @@ pub fn set_height(height: u32, handle: tauri::AppHandle) {
     let home_window = handle.get_webview_window("home").unwrap();
     let sf = home_window.scale_factor().unwrap();
     let out_size = home_window.outer_size().unwrap();
-    home_window.set_size(LogicalSize::new(out_size.to_logical(sf).width, cmp::max(out_size.to_logical(sf).height, height))).unwrap();
+    home_window
+        .set_size(LogicalSize::new(
+            out_size.to_logical(sf).width,
+            cmp::max(out_size.to_logical(sf).height, height),
+        ))
+        .unwrap();
 }

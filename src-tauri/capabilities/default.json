@@ -49,6 +49,9 @@
     "core:tray:allow-get-by-id",
     "shell:default",
     "shell:allow-open",
+    "autostart:allow-enable",
+    "autostart:allow-disable",
+    "autostart:allow-is-enabled",
     {
       "identifier": "http:default",
       "allow": [

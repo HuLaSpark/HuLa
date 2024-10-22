@@ -23,7 +23,7 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
             .plugin(tauri_plugin_clipboard_manager::init())
             .plugin(tauri_plugin_autostart::init(
                 MacosLauncher::LaunchAgent,
-                Some(vec!["--flag1"]),
+                Some(vec!["--flag1", "--flag2"]),
             ))
     }
 

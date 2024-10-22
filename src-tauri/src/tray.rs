@@ -1,5 +1,6 @@
 use tauri::{
-    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent}, Manager, PhysicalPosition, Runtime
+    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
+    Manager, PhysicalPosition, Runtime,
 };
 
 pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
@@ -28,10 +29,12 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
                     // 状态栏图标按下右键时显示状态栏菜单
                     let tray_window = tray.app_handle().get_webview_window("tray").unwrap();
                     if let Ok(outer_size) = tray_window.outer_size() {
-                        tray_window.set_position(PhysicalPosition::new(
-                            position.x,
-                            position.y - outer_size.height as f64,
-                        )).unwrap();
+                        tray_window
+                            .set_position(PhysicalPosition::new(
+                                position.x,
+                                position.y - outer_size.height as f64,
+                            ))
+                            .unwrap();
                         tray_window.set_always_on_top(true).unwrap();
                         tray_window.show().unwrap();
                         tray_window.set_focus().unwrap();
