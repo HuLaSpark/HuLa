@@ -3,7 +3,7 @@
     <div class="flex items-center justify-center gap-8px">
       <svg class="size-18px"><use href="#SmilingFace"></use></svg>
       <p class="text-(12px #777)">喜欢这款的产品？ 在</p>
-      <n-popover v-model:show="isStar" style="padding: 0" trigger="click" placement="top">
+      <n-popover v-model:show="isStar" style="padding: 0" trigger="hover" placement="top">
         <template #trigger>
           <p class="text-(12px #13987f) cursor-pointer">GitHub 给添加星标</p>
         </template>
@@ -35,7 +35,7 @@
         </n-flex>
       </n-popover>
       <p class="text-(12px #777)">并</p>
-      <n-popover v-model:show="isIssue" style="padding: 0" trigger="click" placement="top-end">
+      <n-popover v-model:show="isIssue" style="padding: 0" trigger="hover" placement="top-end">
         <template #trigger>
           <p class="text-(12px #13987f) cursor-pointer">分享您宝贵的建议</p>
         </template>

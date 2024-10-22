@@ -1,9 +1,9 @@
 <template>
-  <n-flex vertical :size="10" align="center" justify="center" class="flex flex-1">
+  <n-flex data-tauri-drag-region vertical :size="10" align="center" justify="center" class="flex flex-1">
     <!-- logo -->
-    <img class="w-275px h-125px drop-shadow-2xl" src="@/assets/logo/hula.png" alt="" />
+    <img data-tauri-drag-region class="w-275px h-125px drop-shadow-2xl" src="@/assets/logo/hula.png" alt="" />
 
-    <n-flex vertical justify="center" :size="16" class="p-[30px_20px]">
+    <n-flex data-tauri-drag-region vertical justify="center" :size="16" class="p-[30px_20px]">
       <p class="text-(14px [--chat-text-color])">你可以尝试使用以下功能：</p>
       <n-scrollbar style="max-height: calc(100vh - 210px)">
         <n-flex style="padding: 6px" align="center" :size="[24, 16]">

@@ -1,14 +1,14 @@
 <template>
   <n-config-provider :theme="lightTheme" data-tauri-drag-region class="login-box size-full rounded-8px select-none">
     <!--顶部操作栏-->
-    <ActionBar :max-w="false" :shrink="false" />
+    <ActionBar :max-w="false" :shrink="false" data-tauri-drag-region />
 
-    <n-flex justify="center" class="mt-15px">
-      <img src="@/assets/logo/hula.png" class="w-140px h-60px drop-shadow-xl" alt="" />
+    <n-flex justify="center" class="mt-15px" data-tauri-drag-region>
+      <img src="@/assets/logo/hula.png" class="w-140px h-60px drop-shadow-xl" alt="" data-tauri-drag-region />
     </n-flex>
 
     <!-- 二维码 -->
-    <n-flex justify="center" class="mt-25px">
+    <n-flex justify="center" class="mt-25px" data-tauri-drag-region>
       <n-skeleton v-if="loading" style="border-radius: 12px" :width="204" :height="204" :sharp="false" size="medium" />
       <n-qr-code
         v-else
@@ -32,8 +32,8 @@
 
     <n-flex justify="center" class="mt-15px text-(14px #808080)">{{ loadText }}</n-flex>
 
-    <!-- 顶部操作栏 -->
-    <n-flex justify="center" class="text-14px mt-48px">
+    <!-- 底部操作栏 -->
+    <n-flex justify="center" class="text-14px mt-48px" data-tauri-drag-region>
       <div class="color-#13987f cursor-pointer" @click="router.push('/login')">账密登录</div>
       <div class="w-1px h-14px bg-#ccc"></div>
       <div class="color-#13987f cursor-pointer">注册账号</div>

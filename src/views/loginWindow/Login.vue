@@ -6,9 +6,9 @@
     <ActionBar :max-w="false" :shrink="false" />
 
     <!--  手动登录样式  -->
-    <n-flex vertical :size="25" v-if="!isAutoLogin">
+    <n-flex vertical :size="25" v-if="!isAutoLogin" data-tauri-drag-region>
       <!-- 头像 -->
-      <n-flex justify="center" class="w-full mt-35px">
+      <n-flex justify="center" class="w-full pt-35px" data-tauri-drag-region>
         <img
           class="w-80px h-80px rounded-50% bg-#b6d6d9ff border-(2px solid #fff)"
           :src="info.avatar || '/logo.png'"
@@ -16,7 +16,7 @@
       </n-flex>
 
       <!-- 登录菜单 -->
-      <n-flex class="ma text-center h-full w-260px" vertical :size="16">
+      <n-flex class="ma text-center h-full w-260px" vertical :size="16" data-tauri-drag-region>
         <n-input
           style="padding-left: 20px"
           size="large"
@@ -95,7 +95,7 @@
     </n-flex>
 
     <!-- 自动登录样式 -->
-    <n-flex vertical :size="29" v-else>
+    <n-flex vertical :size="29" v-else data-tauri-drag-region>
       <n-flex justify="center" class="mt-15px">
         <img src="@/assets/logo/hula.png" class="w-140px h-60px" alt="" />
       </n-flex>
@@ -129,7 +129,7 @@
     </n-flex>
 
     <!-- 底部操作栏 -->
-    <n-flex justify="center" class="text-14px" id="bottomBar">
+    <n-flex justify="center" class="text-14px" id="bottomBar" data-tauri-drag-region>
       <div class="color-#13987f cursor-pointer" @click="router.push('/qrCode')">扫码登录</div>
       <div class="w-1px h-14px bg-#ccc"></div>
       <div v-if="isAutoLogin" class="color-#13987f cursor-pointer">移除账号</div>

@@ -24,7 +24,6 @@ Mitt.on(MittEnum.SHRINK_WINDOW, (event) => {
 })
 
 onMounted(async () => {
-  const w = await getCurrentWebviewWindow()
-  w.show()
+  await getCurrentWebviewWindow().show()
 })
 </script>

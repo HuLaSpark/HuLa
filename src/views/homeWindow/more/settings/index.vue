@@ -36,11 +36,14 @@
     <section class="bg-[--right-bg-color] relative rounded-r-8px flex-1 border-l-(1px solid [--line-color])">
       <ActionBar :shrink="false" :max-w="false" />
 
-      <header class="header">
+      <header class="header" data-tauri-drag-region>
         {{ title }}
       </header>
 
-      <n-scrollbar style="max-height: calc(100vh - 70px)" :class="{ 'shadow-inner': page.shadow }">
+      <n-scrollbar
+        style="max-height: calc(100vh - 70px)"
+        :class="{ 'shadow-inner': page.shadow }"
+        data-tauri-drag-region>
         <n-flex vertical class="p-24px" :size="12" justify="center" v-if="skeleton">
           <n-skeleton class="rounded-8px" height="26px" text style="width: 30%" />
           <n-skeleton class="rounded-8px" height="26px" text :repeat="5" />

@@ -1,6 +1,6 @@
 /** pinia的store的命名空间 */
 declare namespace STO {
-  import { ShowModeEnum } from '@/enums'
+  import { ShowModeEnum, ThemeEnum } from '@/enums'
   /**
    * 设置
    * @param themes 主题设置
@@ -14,7 +14,7 @@ declare namespace STO {
   type Setting = {
     /** 主题设置 */
     themes: {
-      content: string
+      content: ThemeEnum
       pattern: string
       versatile: string
     }

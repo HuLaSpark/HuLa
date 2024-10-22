@@ -6,16 +6,17 @@
       vertical
       :size="130"
       :style="`background: linear-gradient(to bottom, ${RGBA} 0%, #f1f1f1 100%)`"
-      class="size-full p-20px box-border">
+      class="size-full p-20px box-border"
+      data-tauri-drag-region>
       <!-- 当前选中的状态 -->
-      <n-flex justify="center" align="center" class="pt-80px">
+      <n-flex justify="center" align="center" class="pt-80px" data-tauri-drag-region>
         <img class="w-34px h-34px" :src="activeItem.url" alt="" />
         <span class="text-22px">{{ activeItem.title }}</span>
       </n-flex>
 
       <!-- 状态 -->
-      <n-flex vertical class="w-full h-100vh bg-#f1f1f1 rounded-6px box-border p-13px">
-        <n-scrollbar style="max-height: 255px">
+      <n-flex vertical class="w-full h-100vh bg-#f1f1f1 rounded-6px box-border p-13px" data-tauri-drag-region>
+        <n-scrollbar style="max-height: 215px">
           <n-flex align="center" :size="10">
             <n-flex
               @click="handleActive(item, index)"

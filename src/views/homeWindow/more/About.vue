@@ -2,8 +2,8 @@
   <main class="login-box size-full select-none">
     <ActionBar :shrink="false" :max-w="false" />
 
-    <n-flex vertical align="center" :size="20" class="size-full pt-100px">
-      <div @mousemove="handleMouseMove" @mouseleave="handleMouseLeave" class="box">
+    <n-flex vertical align="center" :size="20" class="size-full pt-100px" data-tauri-drag-region>
+      <div @mousemove="handleMouseMove" @mouseleave="handleMouseLeave" class="box" data-tauri-drag-region>
         <div id="computer" class="computer">
           <img class="w-224px h-158px relative" src="@/assets/img/win.png" alt="" />
           <div
@@ -16,8 +16,8 @@
         </div>
       </div>
 
-      <n-flex vertical align="center" :size="20">
-        <span class="text-(15px #707070)">版本：v{{ _pkg.version }}({{ osArch }})</span>
+      <n-flex vertical align="center" :size="20" class="cursor-default" data-tauri-drag-region>
+        <span class="text-(15px #707070)">版本：{{ _pkg.version }}({{ osArch }})</span>
         <span class="text-(15px #707070)">当前设备：{{ osType }}{{ osVersion }}</span>
         <n-flex vertical class="text-(12px #909090)" :size="8" align="center">
           <span>Copyright © {{ currentYear - 1 }}-{{ currentYear }} nongyehong</span>

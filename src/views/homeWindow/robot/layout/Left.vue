@@ -1,10 +1,10 @@
 <template>
   <n-flex
+    data-tauri-drag-region
     vertical
     :size="0"
-    data-tauri-drag-region
     class="bg-[--chat-left-bg] select-none w-300px h-full p-[40px_20px_6px_20px] box-border">
-    <n-flex vertical :size="30">
+    <n-flex vertical :size="30" data-tauri-drag-region>
       <!-- 标题 -->
       <n-flex justify="space-between" align="center" :size="0">
         <n-flex :size="4" vertical>
@@ -91,7 +91,7 @@
     </n-flex>
 
     <!-- 底部选项栏 -->
-    <n-flex :size="6" justify="space-between" align="center" class="m-[auto_0_10px_0]">
+    <n-flex data-tauri-drag-region :size="6" justify="space-between" align="center" class="m-[auto_0_10px_0]">
       <n-flex :size="4" align="center">
         <div
           @click="jump"

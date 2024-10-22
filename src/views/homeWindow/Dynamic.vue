@@ -7,7 +7,12 @@
       :current-label="WebviewWindow.getCurrent().label" />
 
     <!-- 头部用户信息栏 -->
-    <n-flex align="center" justify="center" :size="20" class="login-box relative h-160px w-full select-none">
+    <n-flex
+      data-tauri-drag-region
+      align="center"
+      justify="center"
+      :size="20"
+      class="login-box relative h-160px w-full select-none">
       <n-avatar :size="120" round bordered :src="login.accountInfo.avatar" />
       <n-flex vertical justify="center" :size="20">
         <p class="text-(24px [--chat-text-color]) font-500">{{ login.accountInfo.name }}</p>

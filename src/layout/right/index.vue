@@ -1,6 +1,6 @@
 <template>
-  <main class="flex-1 bg-[--right-bg-color] h-full w-100vw min-w-600px">
-    <div class="size-full" style="background: var(--right-theme-bg-color)">
+  <main data-tauri-drag-region class="flex-1 bg-[--right-bg-color] h-full w-100vw min-w-600px">
+    <div class="size-full" style="background: var(--right-theme-bg-color)" data-tauri-drag-region>
       <ActionBar :current-label="appWindow.label" />
       <!-- 需要判断当前路由是否是信息详情界面 -->
       <ChatBox :active-item="activeItem" v-if="msgBoxShow && isChat && activeItem !== -1" />
@@ -8,7 +8,7 @@
       <Details :content="DetailsContent" v-else-if="detailsShow && isDetails" />
 
       <!-- 聊天界面背景图标 -->
-      <div v-else class="flex-center size-full select-none">
+      <div v-else class="flex-center size-full select-none" data-tauri-drag-region>
         <img
           v-if="imgTheme === ThemeEnum.DARK && themes.versatile === 'default'"
           class="w-110px h-100px"
@@ -34,7 +34,7 @@ const msgBoxShow = ref(false)
 const detailsShow = ref(false)
 const activeItem = ref()
 const DetailsContent = ref()
-const imgTheme = ref(themes.value.content)
+const imgTheme = ref<ThemeEnum>(themes.value.content)
 const prefers = matchMedia('(prefers-color-scheme: dark)')
 // 判断当前路由是否是聊天界面
 const isChat = computed(() => {
