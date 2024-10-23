@@ -120,28 +120,27 @@
             </svg>
           </template>
           <div v-if="miniShowPlugins.length">
-            <div
+            <n-flex
               v-for="(item, index) in miniShowPlugins as any"
               :key="'excess-' + index"
-              @click="
-                () => {
-                  console.log(item.title)
-                }
-              "
-              class="p-[6px_10px] rounded-4px cursor-pointer hover:bg-[--setting-item-line]">
+              @click="pageJumps(item.url, item.title, item.size, item.window)"
+              class="p-[6px_5px] rounded-4px cursor-pointer hover:bg-[--setting-item-line]"
+              :size="5">
+              <svg class="size-16px" @click="tipShow = false">
+                <use :href="`#${item.icon}`"></use>
+              </svg>
               {{ item.title }}
-            </div>
+            </n-flex>
           </div>
           <n-flex
             @click="menuShow = true"
-            class="p-[6px_10px] rounded-4px cursor-pointer hover:bg-[--setting-item-line]"
-            align="center"
-            justify="space-between"
-            :size="10">
+            class="p-[6px_5px] rounded-4px cursor-pointer hover:bg-[--setting-item-line]"
+            :size="5">
             <svg class="size-16px">
               <use href="#settings"></use>
             </svg>
-            <p class="select-none">插件管理</p>
+            <!-- <span class="select-none">插件管理</span> -->
+            插件管理
           </n-flex>
         </n-popover>
         <p v-if="showMode === ShowModeEnum.TEXT" class="text-(10px center)">插件</p>
@@ -149,7 +148,7 @@
     </header>
 
     <!-- 下部分操作栏 -->
-    <footer class="flex-col-x-center gap-10px color-[--left-icon-color] select-none">
+    <footer class="flex-col-x-center mt-10px gap-10px color-[--left-icon-color] select-none">
       <div
         v-for="(item, index) in itemsBottom"
         :key="index"
@@ -316,8 +315,8 @@ const handleResize = async (e: Event) => {
 }
 
 /** 调整主界面高度 */
-const setHomeHeight = async () => {
-  invoke('set_height', { height: showMode.value === ShowModeEnum.TEXT ? 495 : 423 })
+const setHomeHeight = () => {
+  invoke('set_height', { height: showMode.value === ShowModeEnum.TEXT ? 505 : 423 })
 }
 
 onMounted(() => {

@@ -135,10 +135,10 @@ const activeItem = ref<string>(themes.pattern)
 
 const showText = computed({
   get: () => showMode.value === ShowModeEnum.TEXT,
-  set: (v: any) => {
-    setHomeHeight()
-    emit('startResize')
+  set: async (v: any) => {
     settingStore.setShowMode(v ? ShowModeEnum.TEXT : ShowModeEnum.ICON)
+    await setHomeHeight()
+    await emit('startResize')
   }
 })
 
@@ -150,7 +150,7 @@ const handleTheme = (code: string) => {
 
 /** 调整主界面高度 */
 const setHomeHeight = async () => {
-  invoke('set_height', { height: showMode.value === ShowModeEnum.TEXT ? 495 : 423 })
+  invoke('set_height', { height: showMode.value === ShowModeEnum.TEXT ? 505 : 423 })
 }
 </script>
 <style scoped lang="scss">

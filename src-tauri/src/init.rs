@@ -55,7 +55,7 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
                 if window.label().eq("home") {
                     let ls = ps.to_logical(window.scale_factor().unwrap());
                     // TODO 根据显示菜单模式不同，设定不同高度
-                    let h = 495;
+                    let h = 505;
                     if ls.height < h {
                         window.set_size(LogicalSize::new(ls.width, h)).unwrap();
                     }
