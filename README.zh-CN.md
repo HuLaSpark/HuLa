@@ -57,6 +57,12 @@ HuLa 是一个基于 Tauri、Vite 5、Vue 3 和 TypeScript 构建的即时通讯
 
 ![img_6.png](preview/img_8.png)
 
+## 感谢以下贡献者们！
+
+<a href="https://github.com/HuLaSpark/HuLa/graphs/contributors">
+  <img src="https://opencollective.com/HuLaSpark/contributors.svg?width=890" />
+</a>
+
 ## 安装与运行
 
 ```bash
