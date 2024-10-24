@@ -1,5 +1,9 @@
 {
   "plugins": {
+    "@release-it/bumper": {
+      "in": ["src-tauri/tauri.*.json"],
+      "out": ["src-tauri/tauri.*.json"]
+    },
     "@release-it/conventional-changelog": {
       "preset": {
         "name": "conventionalcommits",

@@ -60,6 +60,7 @@
     "@babel/eslint-parser": "^7.24.7",
     "@commitlint/cli": "^19.3.0",
     "@commitlint/config-conventional": "^19.2.2",
+    "@release-it/bumper": "^6.0.1",
     "@release-it/conventional-changelog": "8.0.2",
     "@rollup/plugin-terser": "^0.4.4",
     "@tauri-apps/cli": "2.0.0",
