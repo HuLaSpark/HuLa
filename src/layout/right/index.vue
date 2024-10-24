@@ -8,7 +8,7 @@
       <Details :content="DetailsContent" v-else-if="detailsShow && isDetails" />
 
       <!-- 聊天界面背景图标 -->
-      <div v-else class="flex-center size-full select-none" data-tauri-drag-region>
+      <div v-else class="flex-center size-full select-none">
         <img
           v-if="imgTheme === ThemeEnum.DARK && themes.versatile === 'default'"
           class="w-110px h-100px"
