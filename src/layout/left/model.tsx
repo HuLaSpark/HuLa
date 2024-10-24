@@ -108,12 +108,10 @@ export const LockScreen = defineComponent(() => {
 
 /**
  * 检查更新弹窗
- * 需要按照版本号次版本号不能超过40
- * @example v2.0.0 -> v2.39.0 -> v3.0.0
  */
 export const CheckUpdate = defineComponent(() => {
   const url = ref(
-    `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/releases/tags/${pkg.version}?access_token=${import.meta.env.VITE_GITEE_TOKEN}`
+    `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/releases/tags/v${pkg.version}?access_token=${import.meta.env.VITE_GITEE_TOKEN}`
   )
   /** 项目提交日志记录 */
   const commitLog = ref<{ message: string; icon: string }[]>([])
@@ -205,7 +203,7 @@ export const CheckUpdate = defineComponent(() => {
 
   const checkUpdate = () => {
     const url = `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/tags?access_token=${import.meta.env.VITE_GITEE_TOKEN}&sort=name&direction=desc&page=1&per_page=1`
-    if (lastVersion && lastVersion === `${pkg.version}`) {
+    if (lastVersion && lastVersion === `v${pkg.version}`) {
       window.$message.success('当前已是最新版本')
       return
     }
@@ -214,10 +212,10 @@ export const CheckUpdate = defineComponent(() => {
       res
         .json()
         .then(async (data) => {
-          if (data[0].name === `${pkg.version}`) {
+          if (data[0].name === `v${pkg.version}`) {
             setTimeout(() => {
               window.$message.success('当前已是最新版本')
-              lastVersion = `${pkg.version}`
+              lastVersion = `v${pkg.version}`
               checkLoading.value = false
             }, 600)
           } else {
