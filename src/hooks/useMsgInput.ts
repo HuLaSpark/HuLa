@@ -200,8 +200,8 @@ export const useMsgInput = (messageInputDom: Ref) => {
         body: { content: msg.content, replyMsgId: msg.reply !== 0 ? msg.reply : undefined }
       })
       .then(async (res) => {
-        if (res.data.message.type === MsgEnum.TEXT) {
-          await chatStore.pushMsg(res.data)
+        if (res.message.type === MsgEnum.TEXT) {
+          await chatStore.pushMsg(res)
         }
         // 发完消息就要刷新会话列表，
         //  FIXME 如果当前会话已经置顶了，可以不用刷新

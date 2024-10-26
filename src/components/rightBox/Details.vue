@@ -135,10 +135,10 @@ const footerOptions = ref<OPT.Details[]>([
       // TODO 需要增加独立窗口功能 (nyh -> 2024-03-25 16:01:23)
       router.push('/message')
       apis.sessionDetailWithFriends({ uid: item.value.uid as number }).then((res) => {
-        globalStore.currentSession.roomId = res.data.roomId
+        globalStore.currentSession.roomId = res.roomId
         globalStore.currentSession.type = RoomTypeEnum.SINGLE
-        chatStore.updateSessionLastActiveTime(res.data.roomId, res.data)
-        handleMsgClick(res.data as any)
+        chatStore.updateSessionLastActiveTime(res.roomId, res)
+        handleMsgClick(res as any)
       })
       Mitt.emit(MittEnum.TO_SEND_MSG, { url: 'message' })
     }

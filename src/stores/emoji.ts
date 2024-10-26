@@ -17,10 +17,7 @@ export const useEmojiStore = defineStore('emoji', () => {
       isLoading.value = false
     })
     if (!res) return
-    const {
-      data: { data }
-    } = res
-    emojiList.value = data
+    emojiList.value = res
   }
 
   /**
@@ -30,7 +27,7 @@ export const useEmojiStore = defineStore('emoji', () => {
     const { uid } = userStore.userInfo
     if (!uid || !emojiUrl) return
     apis.addEmoji({ uid, expressionUrl: emojiUrl }).then((res) => {
-      if (res.success) {
+      if (res) {
         window.$message.success('添加成功')
       }
     })

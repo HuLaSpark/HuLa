@@ -83,8 +83,8 @@ export const useUpload = () => {
           const thumbFile = new File([blob], name, { type: 'image/jpeg' })
           // 转成File对象 并上传
           apis.getUploadUrl({ fileName: name, scene: '1' }).then(async (res) => {
-            if (res.data.uploadUrl && res.data.downloadUrl) {
-              await upload(res.data.uploadUrl, thumbFile, true)
+            if (res.uploadUrl && res.downloadUrl) {
+              await upload(res.uploadUrl, thumbFile, true)
               // 等待上传完成
               const timer = setInterval(() => {
                 if (!isUploading.value) {
@@ -92,7 +92,7 @@ export const useUpload = () => {
                   resolve({
                     thumbWidth: canvas.width,
                     thumbHeight: canvas.height,
-                    thumbUrl: res.data.downloadUrl,
+                    thumbUrl: res.downloadUrl,
                     thumbSize: thumbFile.size,
                     tempUrl
                   })
@@ -198,7 +198,7 @@ export const useUpload = () => {
       return
     }
 
-    const { downloadUrl, uploadUrl } = (await apis.getUploadUrl({ fileName: info.name, scene: '1' })).data
+    const { downloadUrl, uploadUrl } = await apis.getUploadUrl({ fileName: info.name, scene: '1' })
 
     if (uploadUrl && downloadUrl) {
       fileInfo.value = { ...info, downloadUrl }

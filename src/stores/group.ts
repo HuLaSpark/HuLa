@@ -95,7 +95,7 @@ export const useGroupStore = defineStore('group', () => {
       }
     })
     if (!res) return
-    const { data } = res
+    const data = res
     const tempNew = cloneDeep(uniqueUserList(refresh ? data.list : [...data.list, ...userList.value]))
     tempNew.sort(sorAction)
     userList.value = tempNew
@@ -112,7 +112,7 @@ export const useGroupStore = defineStore('group', () => {
 
   // 获取群成员数量统计
   const getCountStatistic = async () => {
-    const { data } = await apis.groupDetail({ id: currentRoomId.value })
+    const data = await apis.groupDetail({ id: currentRoomId.value })
     countInfo.value = data
   }
 

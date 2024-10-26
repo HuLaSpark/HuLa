@@ -84,7 +84,7 @@ export const useSettingStore = defineStore(StoresEnum.SETTING, {
         })
         .filter((item) => !item.lastModifyTime || isDiffNow10Min(item.lastModifyTime))
       if (!result.length) return
-      const { data } = await apis.getBadgesBatch(result)
+      const data = await apis.getBadgesBatch(result)
       data?.forEach(
         (item: CacheBadgeItem) =>
           // 更新最后更新时间。

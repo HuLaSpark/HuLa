@@ -23,7 +23,7 @@ export const useUserStore = defineStore('user', () => {
     apis
       .getUserDetail()
       .then((res) => {
-        userInfo.value = { ...userInfo.value, ...res.data.data }
+        userInfo.value = { ...userInfo.value, ...res }
       })
       .catch(() => {
         // 删除缓存

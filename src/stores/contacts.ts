@@ -26,7 +26,7 @@ export const useContactStore = defineStore('contact', () => {
         contactsOptions.isLoading = false
       })
     if (!res) return
-    const { data } = res
+    const data = res
     isFresh ? contactsList.splice(0, contactsList.length, ...data.list) : contactsList.push(...data.list)
     contactsOptions.cursor = data.cursor
     contactsOptions.isLast = data.isLast
@@ -39,7 +39,7 @@ export const useContactStore = defineStore('contact', () => {
       //
     })
     if (!res) return
-    const { data } = res
+    const data = res
     if (typeof data?.unReadCount === 'number') {
       globalStore.unReadMark.newFriendUnreadCount = data.unReadCount
     }
@@ -61,7 +61,7 @@ export const useContactStore = defineStore('contact', () => {
     // 每次加载完新的好友邀请列表都要更新申请未读数
     await getNewFriendCount()
     if (!res) return
-    const { data } = res
+    const data = res
     isFresh
       ? requestFriendsList.splice(0, requestFriendsList.length, ...data.list)
       : requestFriendsList.push(...data.list)

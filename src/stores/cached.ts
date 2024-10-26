@@ -42,7 +42,7 @@ export const useCachedStore = defineStore('cached', () => {
       .filter((item) => !item.lastModifyTime || isDiffNow10Min(item.lastModifyTime))
     if (!result.length) return
     const itemIdSet: Set<number> = new Set()
-    const { data } = await apis.getUserInfoBatch(result)
+    const data = await apis.getUserInfoBatch(result)
     data?.forEach((item: CacheUserItem) => {
       // 更新最后更新时间。
       userCachedList[item.uid] = {
@@ -70,7 +70,7 @@ export const useCachedStore = defineStore('cached', () => {
       })
       .filter((item) => !item.lastModifyTime || isDiffNow10Min(item.lastModifyTime))
     if (!result.length) return
-    const { data } = await apis.getBadgesBatch(result)
+    const data = await apis.getBadgesBatch(result)
     data?.forEach(
       (item: CacheBadgeItem) =>
         // 更新最后更新时间。
@@ -85,7 +85,7 @@ export const useCachedStore = defineStore('cached', () => {
   /** 房间内的所有群成员列表-@专用 */
   const initAllUserBaseInfo = async () => {
     if (localStorage.getItem('IS_INIT_USER_BASE') === null) {
-      const { data } = await apis.getAllUserBaseInfo({ params: { roomId: currentRoomId.value } })
+      const data = await apis.getAllUserBaseInfo({ params: { roomId: currentRoomId.value } })
       data?.forEach((item: CacheUserItem) => (userCachedList[item.uid] = item))
       localStorage.setItem('IS_INIT_USER_BASE', 'true')
     }
@@ -93,7 +93,7 @@ export const useCachedStore = defineStore('cached', () => {
 
   const getGroupAtUserBaseInfo = async () => {
     if (currentRoomId.value === 1) return
-    const { data } = await apis.getAllUserBaseInfo({ params: { roomId: currentRoomId.value } })
+    const data = await apis.getAllUserBaseInfo({ params: { roomId: currentRoomId.value } })
     currentAtUsersList.value = data
   }
 
