@@ -1,5 +1,7 @@
 
 
+## [2.4.3](https://github.com/HuLaSpark/HuLa/compare/v2.4.2...v2.4.3) (2024-10-26)
+
 ## [2.4.0](https://github.com/HuLaSpark/HuLa/compare/v2.3.0...v2.4.0) (2024-10-24)
 
 

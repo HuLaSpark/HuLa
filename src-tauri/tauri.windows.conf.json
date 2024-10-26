@@ -1,6 +1,6 @@
 {
   "productName": "HuLa",
-  "version": "2.4.0",
+  "version": "2.4.3",
   "identifier": "com.tauri.build",
   "build": {
     "beforeDevCommand": "pnpm dev",
@@ -13,7 +13,9 @@
       "tray"
     ],
     "active": true,
-    "targets": ["msi"],
+    "targets": [
+      "msi"
+    ],
     "icon": [
       "icons/windows/32x32.png",
       "icons/windows/128x128.png",

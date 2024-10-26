@@ -62,5 +62,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         # 运行脚本上传latest.json文件
-        run: node scripts/updater.mjs
+        run: node build/config/updater.mjs
 
