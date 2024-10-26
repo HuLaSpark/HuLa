@@ -39,6 +39,7 @@ lazy_static = "1.4"
 screenshots = "0.5.4"
 base64 = "0.22.1"
 rodio = "0.17.3"
+tauri-plugin-updater = "2"
 
 [features]
 # by default Tauri runs in production mode

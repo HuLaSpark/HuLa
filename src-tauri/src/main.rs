@@ -8,6 +8,7 @@ use user_cmd::{audio, default_window_icon, get_user_info, save_user_info, screen
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .init_plugin()
         .init_webwindow_event()
         .init_window_event()

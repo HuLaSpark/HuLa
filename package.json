@@ -36,12 +36,14 @@
     "release": "release-it"
   },
   "dependencies": {
+    "@actions/github": "^6.0.0",
     "@tauri-apps/api": "2.0.2",
     "@tauri-apps/plugin-autostart": "2.0.0",
     "@tauri-apps/plugin-clipboard-manager": "2.0.0",
     "@tauri-apps/plugin-http": "2.0.0",
     "@tauri-apps/plugin-os": "2.0.0",
     "@tauri-apps/plugin-process": "2.0.0",
+    "@tauri-apps/plugin-updater": "~2",
     "axios": "^1.7.4",
     "colorthief": "^2.4.0",
     "dayjs": "^1.11.11",
