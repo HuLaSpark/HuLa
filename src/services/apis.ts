@@ -1,8 +1,8 @@
-import { createAxios } from '@/services/request'
+// import { createAxios } from '@/services/request'
 import urls from '@/services/urls'
 import type {
   Response,
-  BadgeType,
+  // BadgeType,
   CacheBadgeItem,
   CacheBadgeReq,
   CacheUserItem,
@@ -22,12 +22,18 @@ import type {
   UserItem
 } from '@/services/types'
 
-const request = createAxios()
+// const request = createAxios()
+import request from '@/services/request'
 
-const GET = <T>(url: string, params?: any) => request.get<T, Response>(url, params)
-const POST = <T>(url: string, params?: any) => request.post<T, Response>(url, params)
-const PUT = <T>(url: string, params?: any) => request.put<T, Response>(url, params)
-const DELETE = <T>(url: string, params?: any) => request.delete<T, Response>(url, params)
+// const GET = <T>(url: string, params?: any) => request.get<T, Response>(url, params)
+// const POST = <T>(url: string, params?: any) => request.post<T, Response>(url, params)
+// const PUT = <T>(url: string, params?: any) => request.put<T, Response>(url, params)
+// const DELETE = <T>(url: string, params?: any) => request.delete<T, Response>(url, params)
+
+const GET = <T>(url: string, params?: any) => request.get<T>(url, params)
+const POST = <T>(url: string, params?: any) => request.post<T>(url, params)
+const PUT = <T>(url: string, params?: any) => request.put<T>(url, params)
+const DELETE = <T>(url: string, params?: any) => request.delete<T>(url, params)
 
 export default {
   /** 获取用户信息 */
@@ -52,7 +58,7 @@ export default {
   /** 获取用户详细信息 */
   getUserDetail: () => GET<UserInfoType>(urls.getUserInfoDetail, {}),
   /** 获取徽章列表 */
-  getBadgeList: (): Promise<Response> => GET<BadgeType[]>(urls.getBadgeList),
+  getBadgeList: (): Promise<Response> => GET(urls.getBadgeList),
   /** 设置用户勋章 */
   setUserBadge: (badgeId: number) => PUT<void>(urls.setUserBadge, { badgeId }),
   /** 修改用户名 */
