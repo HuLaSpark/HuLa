@@ -1,6 +1,6 @@
 [package]
 name = "hula"
-version = "2.4.0"
+version = "2.5.0"
 description = "hula"
 authors = ["nongyehong"]
 license = ""
@@ -33,13 +33,13 @@ tauri-plugin-dialog = "2.0.1"
 tauri-plugin-upload = "2.0.1"
 tauri-plugin-global-shortcut = "2.0.1"
 tauri-plugin-clipboard-manager = "2.0.1"
+tauri-plugin-updater = "2"
 [target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]
 tauri-plugin-autostart = "2.0.1"
 lazy_static = "1.4"
 screenshots = "0.5.4"
 base64 = "0.22.1"
 rodio = "0.17.3"
-tauri-plugin-updater = "2"
 
 [features]
 # by default Tauri runs in production mode

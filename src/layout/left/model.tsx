@@ -10,7 +10,8 @@ import {
   NTimeline,
   NScrollbar,
   NSkeleton,
-  NIcon
+  NIcon,
+  NProgress
 } from 'naive-ui'
 import { FormInst } from 'naive-ui'
 import { useSettingStore } from '@/stores/setting.ts'
@@ -20,6 +21,8 @@ import pkg from '~/package.json'
 import { handRelativeTime } from '@/utils/Day.ts'
 import './style.scss'
 import { type } from '@tauri-apps/plugin-os'
+import { check } from '@tauri-apps/plugin-updater'
+import { relaunch } from '@tauri-apps/plugin-process'
 
 const formRef = ref<FormInst | null>()
 const formValue = ref({
@@ -120,9 +123,11 @@ export const CheckUpdate = defineComponent(() => {
   const newVersion = ref()
   const loading = ref(false)
   const checkLoading = ref(false)
+  const updating = ref(false)
   /** 版本更新日期 */
   const versionTime = ref('')
   const newVersionTime = ref('')
+  const percentage = ref(0)
 
   // const commitTypeMap: { [key: string]: string } = {
   //   feat: 'feat',
@@ -161,7 +166,7 @@ export const CheckUpdate = defineComponent(() => {
   }
 
   /* 记录检测更新的版本 */
-  let lastVersion: string | null = null
+  //let lastVersion: string | null = null
 
   const getCommitLog = (url: string, isNew = false) => {
     fetch(url).then((res) => {
@@ -197,54 +202,67 @@ export const CheckUpdate = defineComponent(() => {
     })
   }
 
-  const handleUpdate = () => {
-    window.$message.warning('更新功能暂未开放，敬请期待, 请到github或gitee下载最新版本')
-  }
-
-  const checkUpdate = () => {
-    const url = `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/tags?access_token=${import.meta.env.VITE_GITEE_TOKEN}&sort=name&direction=desc&page=1&per_page=1`
-    if (lastVersion && lastVersion === `v${pkg.version}`) {
-      window.$message.success('当前已是最新版本')
+  const handleUpdate = async () => {
+    updating.value = true
+    if (!(await window.confirm('确定更新吗'))) {
       return
     }
     checkLoading.value = true
-    fetch(url).then((res) => {
-      res
-        .json()
-        .then(async (data) => {
-          if (data[0].name === `v${pkg.version}`) {
-            setTimeout(() => {
-              window.$message.success('当前已是最新版本')
-              lastVersion = `v${pkg.version}`
-              checkLoading.value = false
-            }, 600)
-          } else {
-            setTimeout(() => {
-              let url = `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/tags?access_token=${import.meta.env.VITE_GITEE_TOKEN}&sort=name&direction=asc&page=1`
-              fetch(url).then((res) => {
-                res.json().then(async (data) => {
-                  const allVersion = [] as number[]
-                  data.forEach((item: any) => {
-                    // 只获取item.name中[1,4]的内容
-                    allVersion.push(Number(item.name.slice(1, 4)))
-                  })
-                  newVersion.value = `v${Math.max(...allVersion)}.0`
-                  url = `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/releases/tags/${newVersion.value}?access_token=${import.meta.env.VITE_GITEE_TOKEN}`
-                  getCommitLog(url, true)
-                  text.value = '立即更新'
-                  checkLoading.value = false
-                })
-              })
-              window.$message.success('有新版本发布，请下载最新版本')
-              // TODO 获取最新版本的提交日志，并且更换按钮文字为下载最新版本 (nyh -> 2024-07-11 22:20:33)
-            }, 1200)
+    await check()
+      .then(async (e) => {
+        if (!e?.available) {
+          return
+        }
+        let contentLength = 0
+        let downloaded = 0
+
+        await e.downloadAndInstall((event) => {
+          switch (event.event) {
+            case 'Started':
+              contentLength = event.data.contentLength ? event.data.contentLength : 0
+              console.log(`started downloading ${event.data.contentLength} bytes`)
+              break
+            case 'Progress':
+              downloaded += event.data.chunkLength
+              //console.log(`downloaded ${downloaded} from ${contentLength}`);
+              percentage.value = contentLength / downloaded
+              break
+            case 'Finished':
+              console.log('download finished')
+              break
           }
         })
-        .catch(() => {
+        window.$message.success('安装包下载成功，3s后重启并安装')
+        setTimeout(() => {
+          updating.value = false
+          relaunch()
+        }, 3000)
+      })
+      .catch(() => {
+        window.$message.error('检查更新错误，请稍后再试')
+      })
+      .finally(() => {
+        checkLoading.value = false
+        updating.value = false
+      })
+  }
+
+  const checkUpdate = async () => {
+    checkLoading.value = true
+    await check()
+      .then((e) => {
+        if (!e?.available) {
           checkLoading.value = false
-          window.$message.error('请检查配置，配置好token后再试')
-        })
-    })
+          return
+        }
+        newVersion.value = e?.version
+        text.value = '立即更新'
+        checkLoading.value = false
+      })
+      .catch(() => {
+        checkLoading.value = false
+        window.$message.error('检查更新错误，请稍后再试')
+      })
   }
 
   const init = () => {
@@ -254,6 +272,7 @@ export const CheckUpdate = defineComponent(() => {
   onMounted(() => {
     init()
     getCommitLog(url.value)
+    checkUpdate()
   })
   return () => (
     <NModal v-model:show={lock.value.modalShow} maskClosable={false} class="w-350px border-rd-8px">
@@ -374,6 +393,15 @@ export const CheckUpdate = defineComponent(() => {
                 <NButton loading={checkLoading.value} onClick={checkUpdate} secondary type="tertiary">
                   {text.value}
                 </NButton>
+              )}
+              {updating.value && (
+                <NProgress
+                  type="line"
+                  color="#13987f"
+                  indicator-placement="inside"
+                  percentage={percentage.value}
+                  processing
+                />
               )}
             </NFlex>
           </NFlex>

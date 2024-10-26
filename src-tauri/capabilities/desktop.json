@@ -5,7 +5,11 @@
     "windows",
     "linux"
   ],
+  "windows":["home"],
   "permissions": [
-    "updater:default"
+    "updater:default",
+    "updater:allow-check",
+    "updater:allow-download",
+    "updater:allow-install"
   ]
 }

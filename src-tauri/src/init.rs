@@ -25,6 +25,7 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
                 MacosLauncher::LaunchAgent,
                 Some(vec!["--flag1", "--flag2"]),
             ))
+            .plugin(tauri_plugin_updater::Builder::new().build())
     }
 
     // 初始化web窗口事件

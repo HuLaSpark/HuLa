@@ -52,6 +52,8 @@
     "autostart:allow-enable",
     "autostart:allow-disable",
     "autostart:allow-is-enabled",
+    "dialog:allow-confirm",
+    "core:resources:allow-close",
     {
       "identifier": "http:default",
       "allow": [
