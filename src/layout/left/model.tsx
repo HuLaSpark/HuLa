@@ -128,6 +128,8 @@ export const CheckUpdate = defineComponent(() => {
   const versionTime = ref('')
   const newVersionTime = ref('')
   const percentage = ref(0)
+  const total = ref(0)
+  const downloaded = ref(0)
 
   // const commitTypeMap: { [key: string]: string } = {
   //   feat: 'feat',
@@ -203,40 +205,37 @@ export const CheckUpdate = defineComponent(() => {
   }
 
   const handleUpdate = async () => {
-    updating.value = true
     if (!(await window.confirm('确定更新吗'))) {
       return
     }
+    updating.value = true
     checkLoading.value = true
     await check()
       .then(async (e) => {
         if (!e?.available) {
           return
         }
-        let contentLength = 0
-        let downloaded = 0
 
         await e.downloadAndInstall((event) => {
           switch (event.event) {
             case 'Started':
-              contentLength = event.data.contentLength ? event.data.contentLength : 0
+              total.value = event.data.contentLength ? event.data.contentLength : 0
               console.log(`started downloading ${event.data.contentLength} bytes`)
               break
             case 'Progress':
-              downloaded += event.data.chunkLength
-              //console.log(`downloaded ${downloaded} from ${contentLength}`);
-              percentage.value = contentLength / downloaded
+              downloaded.value += event.data.chunkLength
+              percentage.value = parseFloat(((downloaded.value / total.value) * 100 + '').substring(0, 4))
               break
             case 'Finished':
               console.log('download finished')
+              window.$message.success('安装包下载成功，3s后重启并安装')
+              setTimeout(() => {
+                updating.value = false
+                relaunch()
+              }, 3000)
               break
           }
         })
-        window.$message.success('安装包下载成功，3s后重启并安装')
-        setTimeout(() => {
-          updating.value = false
-          relaunch()
-        }, 3000)
       })
       .catch(() => {
         window.$message.error('检查更新错误，请稍后再试')
@@ -388,6 +387,7 @@ export const CheckUpdate = defineComponent(() => {
               {text.value === '立即更新' ? (
                 <NButton loading={checkLoading.value} onClick={handleUpdate} secondary type="primary">
                   {text.value}
+                  {total.value > 0 && parseFloat(total.value / 1024 / 1024 + '').toFixed(2) + 'M'}
                 </NButton>
               ) : (
                 <NButton loading={checkLoading.value} onClick={checkUpdate} secondary type="tertiary">
