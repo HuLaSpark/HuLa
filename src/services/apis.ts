@@ -37,7 +37,7 @@ const DELETE = <T>(url: string, params?: any) => request.delete<T>(url, params)
 
 export default {
   /** 获取用户信息 */
-  getUserInfo: (): Promise<Response> => GET(urls.getUserInfo),
+  getUserInfo: (): Promise<UserItem> => GET(urls.getUserInfo),
   /** 获取群成员列表 */
   getGroupList: (params?: any) => GET<ListResponse<UserItem>>(urls.getGroupUserList, params),
   /** 获取群成员统计 */

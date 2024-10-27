@@ -57,7 +57,7 @@ async function Http<T>(
   }
 
   // 拼接 API 基础路径
-  url = `${import.meta.env.VITE_SERVICE_URL}${url}`
+  //url = `${import.meta.env.VITE_SERVICE_URL}${url}`
 
   // console.log('fetch url: ', url)
   // console.log('fetch options: ', fetchOptions)

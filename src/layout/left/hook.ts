@@ -142,7 +142,7 @@ export const leftHook = () => {
       window.$message.success('佩戴成功')
       /** 获取用户信息 */
       apis.getUserInfo().then((res) => {
-        editInfo.value.content = res.data
+        editInfo.value.content = res
       })
     }
   }
