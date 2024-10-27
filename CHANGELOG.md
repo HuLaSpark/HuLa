@@ -1,5 +1,12 @@
 
 
+## [2.5.0](https://github.com/HuLaSpark/HuLa/compare/v2.4.5...v2.5.0) (2024-10-27)
+
+
+### ✨ Features | 新功能
+
+* **layout:** :sparkles: 自动更新增加进度条 ([6b781a4](https://github.com/HuLaSpark/HuLa/commit/6b781a419417bda256c90a4013bfec0559242e23))
+
 ## [2.4.5](https://github.com/HuLaSpark/HuLa/compare/v2.4.4...v2.4.5) (2024-10-26)
 
 ## [2.4.4](https://github.com/HuLaSpark/HuLa/compare/v2.4.3...v2.4.4) (2024-10-26)
