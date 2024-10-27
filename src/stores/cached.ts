@@ -93,8 +93,7 @@ export const useCachedStore = defineStore('cached', () => {
 
   const getGroupAtUserBaseInfo = async () => {
     if (currentRoomId.value === 1) return
-    const data = await apis.getAllUserBaseInfo({ params: { roomId: currentRoomId.value } })
-    currentAtUsersList.value = data
+    currentAtUsersList.value = await apis.getAllUserBaseInfo({ params: { roomId: currentRoomId.value } })
   }
 
   /**

@@ -131,10 +131,11 @@
                     v-if="chatStore.isGroup"
                     :style="item.fromUser.uid === userUid ? 'flex-direction: row-reverse' : ''">
                     <!-- 用户徽章 -->
-                    <n-popover trigger="hover">
+                    <n-popover
+                      v-if="useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.img"
+                      trigger="hover">
                       <template #trigger>
                         <img
-                          v-if="useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.img"
                           class="size-18px"
                           :src="useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.img"
                           alt="badge" />
@@ -152,17 +153,17 @@
                   </n-flex>
                 </ContextMenu>
                 <!-- 群主 -->
-                <div
-                  v-if="chatStore.isGroup && item.message.id === 1"
-                  class="flex p-4px rounded-4px bg-#f5dadf size-fit select-none">
-                  <span class="text-(10px #d5304f)">群主</span>
-                </div>
+                <!--                <div-->
+                <!--                  v-if="chatStore.isGroup && item.message.id === 1"-->
+                <!--                  class="flex p-4px rounded-4px bg-#f5dadf size-fit select-none">-->
+                <!--                  <span class="text-(10px #d5304f)">群主</span>-->
+                <!--                </div>-->
                 <!-- 管理员 -->
-                <div
-                  v-if="chatStore.isGroup && item.message.id === 2"
-                  class="flex p-4px rounded-4px bg-#13987F66 size-fit select-none">
-                  <span class="text-(10px #13987f)">管理员</span>
-                </div>
+                <!--                <div-->
+                <!--                  v-if="chatStore.isGroup && item.message.id === 2"-->
+                <!--                  class="flex p-4px rounded-4px bg-#13987F66 size-fit select-none">-->
+                <!--                  <span class="text-(10px #13987f)">管理员</span>-->
+                <!--                </div>-->
                 <!-- 信息时间(群聊) -->
                 <Transition name="fade">
                   <span v-if="chatStore.isGroup && hoverBubble.key === item.message.id" class="text-(12px #909090)">
@@ -338,7 +339,6 @@
 import { EventEnum, MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import { type MessageType, SessionItem } from '@/services/types.ts'
 import Mitt from '@/utils/Bus.ts'
-import { invoke } from '@tauri-apps/api/core'
 import { usePopover } from '@/hooks/usePopover.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { listen } from '@tauri-apps/api/event'
@@ -542,14 +542,14 @@ onMounted(() => {
     virtualListInst.value?.scrollTo({ position: 'bottom', debounce: true })
   })
   /**! 启动图标闪烁 需要设置"resources": ["sec-tauri/图标放置的文件夹"]*/
-  invoke('tray_blink', {
-    isRun: true,
-    ms: 500,
-    iconPath1: 'tray/msg.png',
-    iconPath2: 'tray/msg-sub.png'
-  }).catch((error) => {
-    console.error('设置图标失败:', error)
-  })
+  // invoke('tray_blink', {
+  //   isRun: true,
+  //   ms: 500,
+  //   iconPath1: 'tray/msg.png',
+  //   iconPath2: 'tray/msg-sub.png'
+  // }).catch((error) => {
+  //   console.error('设置图标失败:', error)
+  // })
   Mitt.on(MittEnum.SEND_MESSAGE, (event: MessageType) => {
     nextTick(() => {
       addToDomUpdateQueue(event.message.id, event.fromUser.uid)

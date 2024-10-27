@@ -143,11 +143,9 @@ export const useChatStore = defineStore('chat', () => {
     currentMessageOptions.value && (currentMessageOptions.value.isLoading = true)
     const data = await apis
       .getMsgList({
-        params: {
-          pageSize: size,
-          cursor: currentMessageOptions.value?.cursor,
-          roomId: currentRoomId.value
-        }
+        pageSize: size,
+        cursor: currentMessageOptions.value?.cursor,
+        roomId: currentRoomId.value
       })
       .finally(() => {
         currentMessageOptions.value && (currentMessageOptions.value.isLoading = false)

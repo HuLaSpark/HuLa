@@ -227,8 +227,7 @@ const responseInterceptor = async <T>(
     }
 
     const res: any = await data.data
-
-    return Promise.resolve(res)
+    return Promise.resolve(res.data)
   } catch (err) {
     return Promise.reject(`http error: ${err}`)
   }

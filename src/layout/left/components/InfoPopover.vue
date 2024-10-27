@@ -111,11 +111,11 @@ onMounted(() => {
     editInfo.value.show = true
     /** 获取用户的徽章列表 */
     apis.getBadgeList().then((res) => {
-      editInfo.value.badgeList = res.data
+      editInfo.value.badgeList = res as any
     })
     /** 获取用户信息 */
     apis.getUserInfo().then((res) => {
-      editInfo.value.content = res.data
+      editInfo.value.content = res
     })
   })
 })

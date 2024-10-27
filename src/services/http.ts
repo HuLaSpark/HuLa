@@ -59,8 +59,8 @@ async function Http<T>(
   // 拼接 API 基础路径
   url = `${import.meta.env.VITE_SERVICE_URL}${url}`
 
-  console.log('fetch url: ', url)
-  console.log('fetch options: ', fetchOptions)
+  // console.log('fetch url: ', url)
+  // console.log('fetch options: ', fetchOptions)
 
   try {
     const res = await fetch(url, fetchOptions)
@@ -69,7 +69,7 @@ async function Http<T>(
       throw new Error(`HTTP error! status: ${res.status}`)
     }
 
-    const data = options.isBlob ? res.arrayBuffer() : res.json()
+    const data = options.isBlob ? await res.arrayBuffer() : await res.json()
 
     if (fullResponse) {
       return { data, resp: res }
