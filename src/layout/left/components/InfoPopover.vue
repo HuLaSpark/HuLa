@@ -115,7 +115,7 @@ onMounted(() => {
     })
     /** 获取用户信息 */
     apis.getUserInfo().then((res) => {
-      editInfo.value.content = res
+      editInfo.value.content = res as any
     })
   })
 })

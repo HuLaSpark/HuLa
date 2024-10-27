@@ -1,7 +1,7 @@
 <template>
   <!-- 登录设置 -->
   <n-flex vertical :size="20" data-tauri-drag-region>
-    <n-flex :size="14" vertical class="item-box">
+    <n-flex :size="12" vertical class="item-box">
       <n-flex align="center" justify="space-between">
         <span>启动HuLa程序后自动登录账号</span>
         <n-switch size="small" v-model:value="autoLogin" />

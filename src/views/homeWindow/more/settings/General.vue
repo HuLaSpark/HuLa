@@ -27,7 +27,7 @@
     <n-flex v-if="type() === 'windows'" vertical class="text-(14px [--text-color])" :size="16">
       <span class="pl-10px">系统</span>
 
-      <n-flex class="item" :size="15" vertical>
+      <n-flex class="item" :size="12" vertical>
         <!-- 关闭面板 -->
         <n-flex v-if="type() === 'windows'" align="center" justify="space-between">
           <span>关闭主面板</span>
@@ -62,7 +62,7 @@
     <n-flex vertical class="text-(14px [--text-color])" :size="16">
       <span class="pl-10px">聊天</span>
 
-      <n-flex class="item" :size="15" vertical>
+      <n-flex class="item" :size="12" vertical>
         <!-- 发送信息 -->
         <n-flex align="center" justify="space-between">
           <span>发送信息快捷键</span>
@@ -89,13 +89,15 @@
     <n-flex vertical class="text-(14px [--text-color])" :size="16">
       <span class="pl-10px">界面</span>
 
-      <n-flex class="item" :size="15" vertical>
+      <n-flex class="item" :size="12" vertical>
         <!-- 发送信息 -->
         <n-flex align="center" justify="space-between">
           <span>是否开启阴影</span>
 
           <n-switch size="small" v-model:value="page.shadow" />
         </n-flex>
+
+        <span class="w-full h-1px bg-[--line-color]"></span>
 
         <!-- 字体 -->
         <n-flex align="center" justify="space-between">
@@ -108,11 +110,22 @@
             :options="fontOptions" />
         </n-flex>
 
+        <span class="w-full h-1px bg-[--line-color]"></span>
+
         <!-- 菜单显示模式 -->
         <n-flex align="center" justify="space-between">
           <span>显示菜单名</span>
 
           <n-switch size="small" v-model:value="showText" />
+        </n-flex>
+
+        <span class="w-full h-1px bg-[--line-color]"></span>
+
+        <!-- 临时清除缓存 -->
+        <n-flex align="center" justify="space-between">
+          <span>临时功能: 清除localstorage缓存</span>
+
+          <n-button size="small" secondary type="error" @click="clearLocalstorage"> 清除缓存 </n-button>
         </n-flex>
       </n-flex>
     </n-flex>
@@ -151,6 +164,11 @@ const handleTheme = (code: string) => {
 /** 调整主界面高度 */
 const setHomeHeight = async () => {
   invoke('set_height', { height: showMode.value === ShowModeEnum.TEXT ? 505 : 423 })
+}
+
+const clearLocalstorage = () => {
+  localStorage.clear()
+  window.$message?.success('清除成功')
 }
 </script>
 <style scoped lang="scss">

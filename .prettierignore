@@ -5,3 +5,4 @@
 **/*.svg
 **/*.sh
 /public/*
+auto-imports.d.ts

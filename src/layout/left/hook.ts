@@ -41,11 +41,11 @@ export const leftHook = () => {
   // TODO 这里考虑是否查接口查实时的用户信息还是直接查本地存储的用户信息 (nyh -> 2024-05-05 01:12:36)
   const editInfo = ref<{
     show: boolean
-    content: Partial<UserInfoType>
+    content: UserInfoType
     badgeList: BadgeType[]
   }>({
     show: false,
-    content: {},
+    content: {} as UserInfoType,
     badgeList: []
   })
   /** 当前用户佩戴的徽章  */
@@ -142,7 +142,7 @@ export const leftHook = () => {
       window.$message.success('佩戴成功')
       /** 获取用户信息 */
       apis.getUserInfo().then((res) => {
-        editInfo.value.content = res
+        editInfo.value.content = res as any
       })
     }
   }

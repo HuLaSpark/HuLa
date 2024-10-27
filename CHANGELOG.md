@@ -1,38 +1,3 @@
-
-
-## [2.5.0](https://github.com/HuLaSpark/HuLa/compare/v2.4.0...v2.5.0) (2024-10-27)
-
-
-### ⚠ BREAKING CHANGES
-
-* **util:** http请求异常bug
-
-### ✨ Features | 新功能
-
-* **layout:** :sparkles: 自动更新增加进度条 ([4ee3e2b](https://github.com/HuLaSpark/HuLa/commit/4ee3e2b8a36b34cdc996a8b538bddea61bbf1af2))
-
-
-### 🐛 Bug Fixes | Bug 修复
-
-* **api:** 修改websocket请求地址, 修改请求方式采用fetch处理 ([e55f863](https://github.com/HuLaSpark/HuLa/commit/e55f86385fb8e25e826ae57341e0d818f5fe34b2))
-* **layout:** :bug: 修复更新进度条显示异常bug ([45e2bfc](https://github.com/HuLaSpark/HuLa/commit/45e2bfce669c76cbb72be641febf59509b3e6204))
-* **service:** :bug: 修复请求体包裹多层data的问题 ([d97d24f](https://github.com/HuLaSpark/HuLa/commit/d97d24f1c1d554e5477b221c725e45100655c0e0))
-* **util:** :bug: http请求异常bug ([6e82a09](https://github.com/HuLaSpark/HuLa/commit/6e82a099a2a51ea08548c4d5da496393a94b7b05))
-* **view:** :bug: 修复点击右侧布局页面时候不跳转回消息页 ([be0edf9](https://github.com/HuLaSpark/HuLa/commit/be0edf974778b58fe5af9ec030d9927999a6d7bb))
-
-## [2.5.0](https://github.com/HuLaSpark/HuLa/compare/v2.4.5...v2.5.0) (2024-10-27)
-
-
-### ✨ Features | 新功能
-
-* **layout:** :sparkles: 自动更新增加进度条 ([6b781a4](https://github.com/HuLaSpark/HuLa/commit/6b781a419417bda256c90a4013bfec0559242e23))
-
-## [2.4.5](https://github.com/HuLaSpark/HuLa/compare/v2.4.4...v2.4.5) (2024-10-26)
-
-## [2.4.4](https://github.com/HuLaSpark/HuLa/compare/v2.4.3...v2.4.4) (2024-10-26)
-
-## [2.4.3](https://github.com/HuLaSpark/HuLa/compare/v2.4.2...v2.4.3) (2024-10-26)
-
 ## [2.4.0](https://github.com/HuLaSpark/HuLa/compare/v2.3.0...v2.4.0) (2024-10-24)
 
 

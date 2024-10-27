@@ -10,3 +10,4 @@ src/assets
 .eslintrc.cjs
 **/config
 commitlint.config.cjs
+auto-imports.d.ts
