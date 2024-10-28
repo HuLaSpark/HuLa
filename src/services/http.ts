@@ -2,7 +2,6 @@ import { fetch } from '@tauri-apps/plugin-http'
 
 /**
  * @description 请求参数
- * @since Beta v0.5.1
  * @property {"GET"|"POST"|"PUT"|"DELETE"} method 请求方法
  * @property {Record<string, string>} [headers] 请求头
  * @property {Record<string, any>} [query] 请求参数

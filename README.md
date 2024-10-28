@@ -85,4 +85,5 @@ pnpm run tauri:build
 ```
 
 ## SubmissionSpecification
+
 use **pnpm run commit** to invoke the _git commit_ interaction and follow the prompts to complete the input and selection of information

@@ -248,6 +248,8 @@ export const useMsgInput = (messageInputDom: Ref) => {
       await nextTick(() => {
         const dom = document.querySelector('.ait') as HTMLElement
         dom.style.position = 'fixed'
+        dom.style.height = 'auto'
+        dom.style.maxHeight = '190px'
         dom.style.left = `${res.x - 20}px`
         dom.style.top = `${res.y - (dom.offsetHeight + 5)}px`
       })

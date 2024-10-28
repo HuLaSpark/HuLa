@@ -1,10 +1,12 @@
-@use "fonts";
+@use 'fonts';
 * {
   font-family: var(--font-family), sans-serif !important;
   font-weight: 500 !important;
-  caret-color: #13987f !important;  /* 改变输入框光标的颜色 */
+  caret-color: #13987f !important; /* 改变输入框光标的颜色 */
 }
-html, body, svg {
+html,
+body,
+svg {
   outline: none;
   overscroll-behavior: none; // 禁止mac的“触底反弹”效果
 }
@@ -19,7 +21,7 @@ html, body, svg {
   --center-bg-color: #fff;
   --right-bg-color: #f1f1f1;
   // 阴影样式的颜色
-  --box-shadow-color: rgba(0,0,0,0.08);
+  --box-shadow-color: rgba(0, 0, 0, 0.08);
   // 文字颜色
   --text-color: #18181c;
   // 整体图标颜色
@@ -95,7 +97,7 @@ html[data-theme='dark'] {
   --center-bg-color: #1b1b1b;
   --right-bg-color: #161616;
   // 阴影样式的颜色
-  --box-shadow-color: rgba(90,90,90,0.1);
+  --box-shadow-color: rgba(90, 90, 90, 0.1);
   // 文字颜色
   --text-color: #fff;
   // 整体图标颜色
@@ -235,7 +237,10 @@ html[data-theme='dark'] {
 }
 
 /**! 修改naive-ui滚动条的间距 */
-:deep(.n-scrollbar > .n-scrollbar-rail.n-scrollbar-rail--vertical, .n-scrollbar + .n-scrollbar-rail.n-scrollbar-rail--vertical) {
+:deep(
+    .n-scrollbar > .n-scrollbar-rail.n-scrollbar-rail--vertical,
+    .n-scrollbar + .n-scrollbar-rail.n-scrollbar-rail--vertical
+  ) {
   right: 0;
 }
 

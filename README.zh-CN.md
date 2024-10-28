@@ -85,4 +85,5 @@ pnpm run tauri:build
 ```
 
 ## 提交规范
+
 执行 **pnpm run commit** 唤起 _git commit_ 交互，根据提示完成信息的输入和选择

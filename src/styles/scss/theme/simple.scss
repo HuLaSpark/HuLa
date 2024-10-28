@@ -1,36 +1,36 @@
 /**! 主题变量 */
 :root {
- .simple {
-   // 侧边栏样式
-   --left-bg-color: rgba(229, 229, 230, 1);
-   --left-active-bg-color: rgba(193, 193, 193, 0.6);
-   --left-text-color: #333;
-   --left-icon-color: #333;
-   --left-active-hover: #13987f;
-   --left-bg-hover: rgba(193, 193, 193, 0.4);
-   --left-active-icon-color: #13987f;
-   --left-win-icon-color: rgba(19, 152, 127, 0.6);
+  .simple {
+    // 侧边栏样式
+    --left-bg-color: rgba(229, 229, 230, 1);
+    --left-active-bg-color: rgba(193, 193, 193, 0.6);
+    --left-text-color: #333;
+    --left-icon-color: #333;
+    --left-active-hover: #13987f;
+    --left-bg-hover: rgba(193, 193, 193, 0.4);
+    --left-active-icon-color: #13987f;
+    --left-win-icon-color: rgba(19, 152, 127, 0.6);
 
-   // 包含边框的选中样式
-   --border-active-color: #13987f;
+    // 包含边框的选中样式
+    --border-active-color: #13987f;
 
-   // 右边布局内容背景
-   --right-theme-bg-color: #f1f1f1;
+    // 右边布局内容背景
+    --right-theme-bg-color: #f1f1f1;
 
-   // 聊天框主体样式
-   --right-chat-reply-color: #ddd;
-   --right-chat-reply-active-color: rgba(99, 99, 99, 0.1);
-   --right-chat-footer-line-color: #e3e3e3;
+    // 聊天框主体样式
+    --right-chat-reply-color: #ddd;
+    --right-chat-reply-active-color: rgba(99, 99, 99, 0.1);
+    --right-chat-footer-line-color: #e3e3e3;
 
-   // 消息列表样式
-   --msg-active-color: #13987f;
+    // 消息列表样式
+    --msg-active-color: #13987f;
 
-   //列表通用hover
-   --list-hover-color: rgba(99, 99, 99, 0.1);
+    //列表通用hover
+    --list-hover-color: rgba(99, 99, 99, 0.1);
 
-   //整体hover图标的样式
-   --icon-hover-color: #e7e7e7;
- }
+    //整体hover图标的样式
+    --icon-hover-color: #e7e7e7;
+  }
 }
 
 html[data-theme='dark'] {

@@ -15,7 +15,11 @@
     --border-active-color: #64a29c;
 
     // 右边布局内容背景
-    --right-theme-bg-color: radial-gradient(circle at top left, rgba(255, 209, 255, 0.3) 4%, rgba(130, 193, 187, 0.3) 100%);
+    --right-theme-bg-color: radial-gradient(
+      circle at top left,
+      rgba(255, 209, 255, 0.3) 4%,
+      rgba(130, 193, 187, 0.3) 100%
+    );
 
     // 聊天框主体样式
     --right-chat-reply-color: #f1f1f1;
@@ -34,36 +38,40 @@
 }
 
 html[data-theme='dark'] {
-   .default {
-     // 侧边栏样式
-     --left-bg-color: rgba(62, 101, 100, 0.8);
-     --left-active-bg-color: rgba(222, 222, 222, 0.1);
-     --left-text-color: #ccc;
-     --left-icon-color: #ccc;
-     --left-active-hover: rgba(26, 178, 146, 0.8);
-     --left-bg-hover: rgba(133, 133, 133, 0.2);
-     --left-active-icon-color: #1ab292;
-     --left-win-icon-color: #1ab292;
+  .default {
+    // 侧边栏样式
+    --left-bg-color: rgba(62, 101, 100, 0.8);
+    --left-active-bg-color: rgba(222, 222, 222, 0.1);
+    --left-text-color: #ccc;
+    --left-icon-color: #ccc;
+    --left-active-hover: rgba(26, 178, 146, 0.8);
+    --left-bg-hover: rgba(133, 133, 133, 0.2);
+    --left-active-icon-color: #1ab292;
+    --left-win-icon-color: #1ab292;
 
-     // 包含边框的选中样式
-     --border-active-color: #64a29c;
+    // 包含边框的选中样式
+    --border-active-color: #64a29c;
 
-     // 右边布局内容背景
-     --right-theme-bg-color: radial-gradient(circle at top left, rgba(255, 209, 255, 0.2) 4%, rgba(130, 193, 187, 0.2) 100%);
+    // 右边布局内容背景
+    --right-theme-bg-color: radial-gradient(
+      circle at top left,
+      rgba(255, 209, 255, 0.2) 4%,
+      rgba(130, 193, 187, 0.2) 100%
+    );
 
-     // 聊天框主体样式
-     --right-chat-reply-color: #666;
-     --right-chat-reply-active-color: rgba(255, 255, 255, 0.1);
-     --right-chat-footer-line-color: #444;
+    // 聊天框主体样式
+    --right-chat-reply-color: #666;
+    --right-chat-reply-active-color: rgba(255, 255, 255, 0.1);
+    --right-chat-footer-line-color: #444;
 
-     // 消息列表样式
-     --msg-active-color: rgba(19, 152, 127, 0.4);
+    // 消息列表样式
+    --msg-active-color: rgba(19, 152, 127, 0.4);
 
-     //列表通用hover
-     --list-hover-color: rgba(244, 244, 244, 0.1);
+    //列表通用hover
+    --list-hover-color: rgba(244, 244, 244, 0.1);
 
-     //整体hover图标的样式
-     --icon-hover-color: rgba(90, 90, 90, 0.4);
-   }
+    //整体hover图标的样式
+    --icon-hover-color: rgba(90, 90, 90, 0.4);
+  }
 }
 /**! end */
