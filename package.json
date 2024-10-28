@@ -16,9 +16,9 @@
     "url": "https://github.com/HuLaSpark/HuLa"
   },
   "lint-staged": {
-    "*.{js,jsx,vue,ts,tsx}": [
+    "*.*": [
       "oxlint src",
-      "prettier --config .prettierrc --write",
+      "prettier . --write",
       "eslint src"
     ]
   },
