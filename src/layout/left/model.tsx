@@ -248,13 +248,41 @@ export const CheckUpdate = defineComponent(() => {
 
   const checkUpdate = async () => {
     checkLoading.value = true
+
+    const url = `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/tags?access_token=${import.meta.env.VITE_GITEE_TOKEN}&sort=name&direction=desc&page=1&per_page=1`
+
     await check()
       .then((e) => {
         if (!e?.available) {
           checkLoading.value = false
           return
         }
-        newVersion.value = e?.version
+        // 检查版本之间不同的提交信息和提交日期
+        fetch(url).then((res) => {
+          res
+            .json()
+            .then(async () => {
+              await nextTick(() => {
+                let url = `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/tags?access_token=${import.meta.env.VITE_GITEE_TOKEN}&sort=name&direction=asc&page=1`
+                fetch(url).then((res) => {
+                  res.json().then(async (data) => {
+                    const allVersion = [] as number[]
+                    data.forEach((item: any) => {
+                      // 只获取item.name中[1,4]的内容
+                      allVersion.push(Number(item.name.slice(1, 4)))
+                    })
+                    newVersion.value = `v${Math.max(...allVersion)}.0`
+                    url = `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/releases/tags/${newVersion.value}?access_token=${import.meta.env.VITE_GITEE_TOKEN}`
+                    getCommitLog(url, true)
+                  })
+                })
+              })
+            })
+            .catch(() => {
+              checkLoading.value = false
+              window.$message.error('请检查配置，配置好token后再试')
+            })
+        })
         text.value = '立即更新'
         checkLoading.value = false
       })
@@ -268,10 +296,10 @@ export const CheckUpdate = defineComponent(() => {
     loading.value = true
   }
 
-  onMounted(() => {
+  onMounted(async () => {
     init()
     getCommitLog(url.value)
-    checkUpdate()
+    await checkUpdate()
   })
   return () => (
     <NModal v-model:show={lock.value.modalShow} maskClosable={false} class="w-350px border-rd-8px">

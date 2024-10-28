@@ -20,7 +20,7 @@
         <span class="text-(15px #707070)">版本：{{ _pkg.version }}({{ osArch }})</span>
         <span class="text-(15px #707070)">当前设备：{{ osType }}{{ osVersion }}</span>
         <n-flex vertical class="text-(12px #909090)" :size="8" align="center">
-          <span>Copyright © {{ currentYear - 1 }}-{{ currentYear }} nongyehong</span>
+          <span>Copyright © {{ currentYear - 1 }}-{{ currentYear }} HuLaSpark</span>
           <span>All Rights Reserved.</span>
         </n-flex>
       </n-flex>
