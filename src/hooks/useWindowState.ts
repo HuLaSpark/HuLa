@@ -17,6 +17,9 @@ export const useWindowState = async (label: string) => {
 
     // 监听窗口关闭事件,当窗口是非正常关闭的时候触发
     await win?.onCloseRequested(async () => {
+      if (localStorage.getItem('wsLogin')) {
+        localStorage.removeItem('wsLogin')
+      }
       await emit(EventEnum.WIN_CLOSE, WebviewWindow.getCurrent().label)
     })
 

@@ -8,6 +8,10 @@ export const useLogin = () => {
    * 设置登录状态(系统托盘图标，系统托盘菜单选项)
    */
   const setLoginState = async () => {
+    // 登录成功后删除本地存储的wsLogin，防止用户在二维码页面刷新出二维码但是不使用二维码登录，导致二维码过期或者登录失败
+    if (localStorage.getItem('wsLogin')) {
+      localStorage.removeItem('wsLogin')
+    }
     await emit('login_success')
   }
 

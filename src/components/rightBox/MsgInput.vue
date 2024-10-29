@@ -13,7 +13,6 @@
         @keydown.exact.enter="inputKeyDown"
         @keydown.exact.meta.enter="inputKeyDown"
         @keydown.exact.ctrl.enter="inputKeyDown"></div>
-      <!-- TODO 这里的在win上会有延迟显示的bug (nyh -> 2024-09-01 23:40:44) -->
       <span
         v-if="isEntering"
         @click.stop="messageInputDom.focus()"

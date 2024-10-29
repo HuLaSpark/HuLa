@@ -9,7 +9,9 @@
     "devUrl": "http://127.0.0.1:6130"
   },
   "bundle": {
-    "resources": ["tray"],
+    "resources": [
+      "tray"
+    ],
     "createUpdaterArtifacts": true,
     "active": true,
     "icon": [],
@@ -31,7 +33,9 @@
         "installMode": "passive"
       },
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDk1NkNENEZFNzg1MjVFMEEKUldRS1hsSjQvdFJzbGJXcnNPNXBYZ2RlTmlRRFZYYVI3YXhiWGpYZXFwVUtucThZUnJHUGw5dVUK",
-      "endpoints": ["https://github.com/HuLaSpark/HuLa/releases/latest/download/latest.json"]
+      "endpoints": [
+        "https://github.com/HuLaSpark/HuLa/releases/latest/download/latest.json"
+      ]
     }
   }
 }

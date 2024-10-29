@@ -1,6 +1,7 @@
 <template>
   <!-- 顶部操作栏和显示用户名 -->
   <main
+    data-tauri-drag-region
     class="relative z-30 flex-y-center border-b-(1px solid [--right-chat-footer-line-color]) justify-between p-[6px_20px_12px] select-none">
     <n-flex align="center">
       <span class="color-[--text-color]">{{ activeItem.name }}</span>

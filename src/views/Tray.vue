@@ -55,7 +55,6 @@ import { statusItem } from '@/views/homeWindow/onlineStatus/config.ts'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { listen } from '@tauri-apps/api/event'
-import { useWsLoginStore } from '@/stores/ws.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 
 const appWindow = WebviewWindow.getCurrent()
@@ -64,8 +63,6 @@ const OLStatusStore = onlineStatus()
 const settingStore = useSettingStore()
 const { lockScreen } = storeToRefs(settingStore)
 const isLoginWin = ref(true)
-const loginStore = useWsLoginStore()
-const loginQrCode = computed(() => loginStore.loginQrCode)
 
 const division = () => {
   return <div class={'h-1px bg-[--line-color] w-full'}></div>
@@ -75,7 +72,7 @@ const handleExit = () => {
   /** 退出时关闭锁屏 */
   lockScreen.value.enable = false
   exit(0)
-  if (loginQrCode.value) {
+  if (localStorage.getItem('wsLogin')) {
     localStorage.removeItem('wsLogin')
   }
 }

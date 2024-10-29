@@ -250,6 +250,10 @@ export const useCommon = () => {
       spaceNode.contentEditable = 'false'
       // 不可以选中
       spaceNode.style.userSelect = 'none'
+      // 插入一个br标签节点作为换行
+      const brNode = document.createElement('br')
+      // 将br标签节点插入到光标位置
+      range?.insertNode(brNode)
       // 将空格节点插入到光标位置
       range?.insertNode(spaceNode)
       range?.collapse(false)
