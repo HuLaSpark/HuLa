@@ -173,6 +173,7 @@
               </n-flex>
               <!--  气泡样式  -->
               <ContextMenu
+                @contextmenu="handleMacSelect"
                 @mouseenter="handleMouseEnter(item.message.id)"
                 @mouseleave="handleMouseLeave"
                 class="w-fit"
@@ -381,6 +382,9 @@ const hoverBubble = ref<{
 }>({
   key: -1
 })
+/** 记录右键菜单时选中的气泡的元素(用于处理mac右键会选中文本的问题) */
+const recordEL = ref()
+const isMac = computed(() => type() === 'macos')
 const { removeTag, userUid } = useCommon()
 const {
   handleScroll,
@@ -515,9 +519,24 @@ const scrollBottom = () => {
   })
 }
 
+/**
+ * 解决mac右键会选中文本的问题
+ * @param event
+ */
+const handleMacSelect = (event: any) => {
+  if (isMac.value) {
+    event.target.classList.add('select-none')
+    recordEL.value = event.target
+  }
+}
+
 const closeMenu = (event: any) => {
   if (!event.target.matches('.bubble', 'bubble-oneself')) {
     activeBubble.value = -1
+    // 解决mac右键会选中文本的问题
+    if (isMac.value) {
+      recordEL.value.classList.remove('select-none')
+    }
   }
   if (!event.target.matches('.active-reply')) {
     /** 解决更替交换回复气泡时候没有触发动画的问题 */

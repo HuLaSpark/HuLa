@@ -141,7 +141,7 @@ const handleEnter = (el: any) => {
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       el.style.height = `${h}px`
-      el.style.transition = '0.5s'
+      el.style.transition = '0.3s'
     })
   })
 }
@@ -168,6 +168,8 @@ const handleAfterEnter = (el: any) => {
 .context-menu {
   @include menu-item-style();
   .emoji-list {
+    -webkit-backdrop-filter: blur(10px);
+    background: var(--bg-menu);
     @apply size-fit p-4px select-none;
     .emoji-item {
       @apply size-28px rounded-4px text-16px cursor-pointer hover:bg-[--emoji-hover];
