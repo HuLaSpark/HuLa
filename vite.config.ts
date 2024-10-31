@@ -7,7 +7,6 @@ import { getRootPath, getSrcPath } from './build/config/getPath'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import unocss from '@unocss/vite'
 import terser from '@rollup/plugin-terser'
-import { atStartup } from './build/config/console'
 
 // https://vitejs.dev/config/
 /**! 不需要优化前端打包(如开启gzip) */
@@ -35,8 +34,6 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'true'
     },
     plugins: [
-      /**! 启动时候打印项目信息(不需要可关闭)  */
-      atStartup(config, mode),
       /**
        * vue3.5.0已支持解构并具有响应式
        * */

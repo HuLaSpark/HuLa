@@ -5,5 +5,4 @@
 **/*.svg
 **/*.sh
 /public/*
-/src-tauri/*
 auto-imports.d.ts

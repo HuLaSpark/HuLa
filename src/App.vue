@@ -1,6 +1,6 @@
 <template>
   <NaiveProvider :message-max="3" :notific-max="3">
-    <div v-if="!isLock" id="app">
+    <div v-if="!isLock" id="app-container">
       <router-view />
     </div>
 
@@ -102,7 +102,7 @@ onUnmounted(() => {
 })
 </script>
 <style lang="scss">
-#app {
+#app-container {
   min-height: 100vh;
   background-repeat: no-repeat;
   background-size: 100% 100%;
