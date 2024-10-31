@@ -215,13 +215,11 @@ export const useMsgInput = (messageInputDom: Ref) => {
   /** 当输入框手动输入值的时候触发input事件(使用vueUse的防抖) */
   const handleInput = useDebounceFn(async (e: Event) => {
     const inputElement = e.target as HTMLInputElement
-    console.log('input', inputElement)
     // 如果输入框中只有<br />标签，则清空输入框内容
     // TODO: 为什么这里输入后会有一个br标签?
     if (inputElement.innerHTML === '<br>') {
       inputElement.innerHTML = ''
       msgInput.value = inputElement.innerHTML
-      return
     }
     msgInput.value = inputElement.innerHTML || ''
     const { range, selection } = getEditorRange()!

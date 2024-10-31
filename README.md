@@ -84,6 +84,20 @@ pnpm run tauri:dev
 pnpm run tauri:build
 ```
 
+## ⚠️ Precautions(macOS Users)
+
+Downloading the installation package on the web page will indicate that the installation package is corrupted, and you may encounter a certificate issue, which is caused by the security mechanism of the macOS system. Follow these steps to solve:
+
+#### 1. Open "System Settings" - "Security & Privacy", as shown in the figure, check the box: Allow apps downloaded from "Any Source" to run:
+
+![img.png](preview/img_9.png)
+
+#### 2. If an error is reported, run the following command in the terminal to resolve the problem:
+
+```bash
+sudo xattr -rd com.apple.quarantine the Path To Install The Package/HuLa.app
+```
+
 ## SubmissionSpecification
 
 use **pnpm run commit** to invoke the _git commit_ interaction and follow the prompts to complete the input and selection of information

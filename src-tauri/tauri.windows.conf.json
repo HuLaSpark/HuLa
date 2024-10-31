@@ -1,7 +1,7 @@
 {
   "productName": "HuLa",
-  "version": "2.5.1",
-  "identifier": "com.tauri.build",
+  "version": "2.5.2",
+  "identifier": "com.hula.pc",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "beforeBuildCommand": "pnpm build",
@@ -9,13 +9,9 @@
     "devUrl": "http://127.0.0.1:6130"
   },
   "bundle": {
-    "resources": [
-      "tray"
-    ],
+    "resources": ["tray"],
     "active": true,
-    "targets": [
-      "msi"
-    ],
+    "targets": ["msi"],
     "icon": [
       "icons/windows/32x32.png",
       "icons/windows/128x128.png",

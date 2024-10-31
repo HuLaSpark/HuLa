@@ -166,7 +166,7 @@ const handleAitKeyChange = (direction: 1 | -1) => {
   const newIndex = Math.max(0, Math.min(currentIndex + direction, personList.value.length - 1))
   selectedAitKey.value = personList.value[newIndex].uid
   // 获取新选中项在列表中的索引，并滚动到该位置(使用key来进行定位)
-  virtualListInst.value?.scrollTo({ key: selectedAitKey.value })
+  virtualListInst.value?.scrollTo({ index: newIndex })
 }
 
 const closeMenu = (event: any) => {

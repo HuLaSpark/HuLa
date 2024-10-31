@@ -84,6 +84,20 @@ pnpm run tauri:dev
 pnpm run tauri:build
 ```
 
+## ⚠️ 注意事项(macOS用户)
+
+网页上下载安装包会提示安装包已损坏，可能会遇到证书问题，这是因为 macOS 系统的安全机制导致的。请按照以下步骤解决：
+
+#### 1. 打开 “系统设置” - “安全性与隐私”，如图勾选：允许 “任何来源” 下载的 App 运行：
+
+![img.png](preview/img_9.png)
+
+#### 2. 如果还报错，请在终端执行以下命令解决：
+
+```bash
+sudo xattr -rd com.apple.quarantine 你的安装包路径/HuLa.app
+```
+
 ## 提交规范
 
 执行 **pnpm run commit** 唤起 _git commit_ 交互，根据提示完成信息的输入和选择
