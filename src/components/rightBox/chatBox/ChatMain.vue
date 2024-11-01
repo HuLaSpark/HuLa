@@ -534,7 +534,7 @@ const closeMenu = (event: any) => {
   if (!event.target.matches('.bubble', 'bubble-oneself')) {
     activeBubble.value = -1
     // 解决mac右键会选中文本的问题
-    if (isMac.value) {
+    if (isMac.value && recordEL.value) {
       recordEL.value.classList.remove('select-none')
     }
   }
