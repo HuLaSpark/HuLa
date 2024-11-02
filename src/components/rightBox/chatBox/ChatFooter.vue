@@ -95,7 +95,7 @@ import { useCommon } from '@/hooks/useCommon.ts'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { emit } from '@tauri-apps/api/event'
 
-const { open, onChange } = useFileDialog()
+const { open, onChange, reset } = useFileDialog()
 const MsgInputRef = ref()
 const msgInputDom = ref()
 const emojiShow = ref()
@@ -111,7 +111,7 @@ const emojiHandle = (item: string) => {
   const { range } = getEditorRange()!
   range?.collapse(false)
   // 插入表情
-  insertNode(MsgEnum.TEXT, item)
+  insertNode(MsgEnum.TEXT, item, MsgInputRef.value.messageInputDom)
   triggerInputEvent(msgInputDom.value)
 }
 
@@ -145,6 +145,7 @@ onChange((files) => {
       FileOrVideoPaste(file, MsgEnum.FILE, MsgInputRef.value.messageInputDom)
     }
   }
+  reset()
 })
 
 onMounted(() => {
