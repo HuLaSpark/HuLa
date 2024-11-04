@@ -8,7 +8,7 @@
       <!-- 导航选项按钮模块 -->
       <ActionList />
       <!-- 编辑资料弹窗 -->
-      <InfoPopover />
+      <InfoEdit />
 
       <!-- 弹出框 -->
       <component :is="componentMap" />
@@ -18,7 +18,7 @@
 <script lang="tsx" setup>
 import LeftAvatar from './components/LeftAvatar.vue'
 import ActionList from './components/ActionList.vue'
-import InfoPopover from './components/InfoPopover.vue'
+import InfoEdit from './components/InfoEdit.vue'
 import Mitt from '@/utils/Bus.ts'
 import { lock, LockScreen, CheckUpdate } from './model.tsx'
 import { DefineComponent, DefineSetupFnComponent } from 'vue'

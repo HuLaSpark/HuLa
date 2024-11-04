@@ -63,11 +63,13 @@ declare namespace OPT {
    * @param label 选项名称
    * @param icon 选项图标
    * @param click 点击事件
+   * @param visible 显示条件
    */
   type RightMenu = {
     label: string
     icon: string
     click?: (...args: any[]) => void
+    visible?: (...args: any[]) => void
   } | null
 
   /**

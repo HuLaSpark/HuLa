@@ -1,8 +1,7 @@
 // import { createAxios } from '@/services/request'
 import urls from '@/services/urls'
 import type {
-  Response,
-  // BadgeType,
+  BadgeType,
   CacheBadgeItem,
   CacheBadgeReq,
   CacheUserItem,
@@ -57,7 +56,7 @@ export default {
   /** 获取用户详细信息 */
   getUserDetail: () => GET<UserInfoType>(urls.getUserInfoDetail, {}),
   /** 获取徽章列表 */
-  getBadgeList: (): Promise<Response> => GET(urls.getBadgeList),
+  getBadgeList: (): Promise<BadgeType> => GET(urls.getBadgeList),
   /** 设置用户勋章 */
   setUserBadge: (badgeId: number) => PUT<void>(urls.setUserBadge, { badgeId }),
   /** 修改用户名 */

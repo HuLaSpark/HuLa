@@ -142,8 +142,8 @@ import { invoke } from '@tauri-apps/api/core'
 import { emit } from '@tauri-apps/api/event'
 
 const settingStore = useSettingStore()
-const { themes, tips, escClose, chat, page } = settingStore
-const { showMode } = storeToRefs(settingStore)
+const { themes, tips, chat, page } = settingStore
+const { showMode, escClose } = storeToRefs(settingStore)
 const activeItem = ref<string>(themes.pattern)
 
 const showText = computed({

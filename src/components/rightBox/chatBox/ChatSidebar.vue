@@ -57,7 +57,11 @@
           v-model:show="infoPopover"
           style="padding: 0; background: var(--bg-info); backdrop-filter: blur(10px)">
           <template #trigger>
-            <ContextMenu @select="$event.click(item, 'Sidebar')" :menu="optionsList" :special-menu="report">
+            <ContextMenu
+              :content="item"
+              @select="$event.click(item, 'Sidebar')"
+              :menu="optionsList"
+              :special-menu="report">
               <n-flex @click="selectKey = item.uid" :key="item.uid" :size="10" align="center" class="item">
                 <n-avatar
                   lazy
@@ -133,9 +137,9 @@ const handleSearch = () => {
 
 onMounted(() => {
   Mitt.on(`${MittEnum.INFO_POPOVER}-Sidebar`, (event: any) => {
-    selectKey.value = event
+    selectKey.value = event.uid
     infoPopover.value = true
-    handlePopoverUpdate(event)
+    handlePopoverUpdate(event.uid)
   })
 })
 </script>

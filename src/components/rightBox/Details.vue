@@ -124,7 +124,7 @@ const { content } = defineProps<{
   content: any
 }>()
 const item = computed(() => {
-  return useUserInfo(content.value.uid).value
+  return useUserInfo(content.uid).value
 })
 
 const footerOptions = ref<OPT.Details[]>([

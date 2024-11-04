@@ -120,11 +120,7 @@ export const leftHook = () => {
       window.$message.error('改名次数不足')
       return
     }
-    apis.modifyUserName(editInfo.value.content.name).then((res: any) => {
-      if (!res) {
-        window.$message.error(res)
-        return
-      }
+    apis.modifyUserName(editInfo.value.content.name).then(() => {
       // 更新本地缓存的用户信息
       login.accountInfo.name = editInfo.value.content.name!
       updateCurrentUserCache('name', editInfo.value.content.name) // 更新缓存里面的用户信息

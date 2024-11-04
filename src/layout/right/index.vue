@@ -1,11 +1,14 @@
 <template>
   <main data-tauri-drag-region class="flex-1 bg-[--right-bg-color] h-full w-100vw min-w-600px">
-    <div class="size-full" style="background: var(--right-theme-bg-color)" data-tauri-drag-region>
+    <div class="size-full" :style="{ background: isChat ? 'var(--right-theme-bg-color)' : '' }" data-tauri-drag-region>
       <ActionBar :current-label="appWindow.label" />
       <!-- 需要判断当前路由是否是信息详情界面 -->
       <ChatBox :active-item="activeItem" v-if="msgBoxShow && isChat && activeItem !== -1" />
 
       <Details :content="DetailsContent" v-else-if="detailsShow && isDetails" />
+
+      <!-- 好友申请列表 -->
+      <ApplyList v-else-if="DetailsContent && DetailsContent.type === 'apply'" />
 
       <!-- 聊天界面背景图标 -->
       <div v-else class="flex-center size-full select-none">
@@ -73,7 +76,11 @@ onMounted(() => {
   }
 
   if (isDetails) {
+    Mitt.on(MittEnum.APPLY_SHOW, (event: any) => {
+      DetailsContent.value = event.context
+    })
     Mitt.on(MittEnum.DETAILS_SHOW, (event: any) => {
+      console.log('event', event)
       DetailsContent.value = event.context
       detailsShow.value = event.detailsShow as boolean
     })

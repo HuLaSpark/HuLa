@@ -91,6 +91,7 @@
               <template #trigger>
                 <ContextMenu
                   @select="$event.click(item, 'Main')"
+                  :content="item"
                   :menu="chatStore.isGroup ? optionsList : void 0"
                   :special-menu="report">
                   <n-avatar
@@ -122,6 +123,7 @@
                 :style="item.fromUser.uid === userUid ? 'flex-direction: row-reverse' : ''">
                 <ContextMenu
                   @select="$event.click(item)"
+                  :content="item"
                   :menu="chatStore.isGroup ? optionsList : []"
                   :special-menu="report">
                   <n-flex
@@ -173,6 +175,7 @@
               </n-flex>
               <!--  气泡样式  -->
               <ContextMenu
+                :content="item"
                 @contextmenu="handleMacSelect"
                 @mouseenter="handleMouseEnter(item.message.id)"
                 @mouseleave="handleMouseLeave"
@@ -575,9 +578,9 @@ onMounted(() => {
     })
   })
   Mitt.on(`${MittEnum.INFO_POPOVER}-Main`, (event: any) => {
-    selectKey.value = event
+    selectKey.value = event.uid
     infoPopover.value = true
-    handlePopoverUpdate(event)
+    handlePopoverUpdate(event.uid)
   })
   Mitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
     activeItemRef.value = event.item

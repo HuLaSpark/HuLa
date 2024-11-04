@@ -1,5 +1,13 @@
 <template>
   <n-scrollbar style="max-height: calc(100vh - 70px)">
+    <n-flex
+      @click="handleApply"
+      align="center"
+      justify="space-between"
+      class="my-10px p-12px hover:(bg-[--list-hover-color] cursor-pointer)">
+      <div class="text-(14px [--text-color])">好友通知</div>
+      <svg class="size-16px rotate-270 color-[--text-color]"><use href="#down"></use></svg>
+    </n-flex>
     <n-tabs type="segment" animated class="mt-4px p-[4px_10px_0px_8px]">
       <n-tab-pane name="1" tab="好友">
         <n-scrollbar style="max-height: calc(100vh - 126px)">
@@ -7,7 +15,9 @@
             <ContextMenu @contextmenu="showMenu($event)" @select="handleSelect($event.label)" :menu="menuList">
               <n-collapse-item title="我的好友" name="1">
                 <template #header-extra>
-                  <span class="text-(10px #707070)">0/0</span>
+                  <span class="text-(10px #707070)">
+                    {{ contactStore.contactsList.length }}/{{ contactStore.contactsList.length }}
+                  </span>
                 </template>
 
                 <!-- 用户框 多套一层div来移除默认的右键事件然后覆盖掉因为margin空隙而导致右键可用 -->
@@ -88,6 +98,7 @@ watchEffect(() => {
 const handleClick = (index: number, type: number) => {
   detailsShow.value = true
   activeItem.value = index
+  console.log(index, type)
   const data = {
     context: {
       type: type,
@@ -104,6 +115,14 @@ const showMenu = (event: MouseEvent) => {
 
 const handleSelect = (event: MouseEvent) => {
   console.log(event)
+}
+
+const handleApply = () => {
+  Mitt.emit(MittEnum.APPLY_SHOW, {
+    context: {
+      type: 'apply'
+    }
+  })
 }
 
 onUnmounted(() => {

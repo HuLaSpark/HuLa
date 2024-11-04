@@ -8,6 +8,8 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     ActionBar: typeof import('./../components/windows/ActionBar.vue')['default']
+    AddFriendsModal: typeof import('./../components/common/AddFriendsModal.vue')['default']
+    ApplyList: typeof import('./../components/rightBox/ApplyList.vue')['default']
     ChatBox: typeof import('./../components/rightBox/chatBox/index.vue')['default']
     ChatFooter: typeof import('./../components/rightBox/chatBox/ChatFooter.vue')['default']
     ChatHeader: typeof import('./../components/rightBox/chatBox/ChatHeader.vue')['default']
@@ -34,6 +36,7 @@ declare module 'vue' {
     NDropdown: typeof import('naive-ui')['NDropdown']
     NEllipsis: typeof import('naive-ui')['NEllipsis']
     NFlex: typeof import('naive-ui')['NFlex']
+    NGradientText: typeof import('naive-ui')['NGradientText']
     NIcon: typeof import('naive-ui')['NIcon']
     NIconWrapper: typeof import('naive-ui')['NIconWrapper']
     NImage: typeof import('naive-ui')['NImage']
@@ -57,6 +60,7 @@ declare module 'vue' {
     NTab: typeof import('naive-ui')['NTab']
     NTabPane: typeof import('naive-ui')['NTabPane']
     NTabs: typeof import('naive-ui')['NTabs']
+    NText: typeof import('naive-ui')['NText']
     NTooltip: typeof import('naive-ui')['NTooltip']
     NVirtualList: typeof import('naive-ui')['NVirtualList']
     RenderMessage: typeof import('./../components/rightBox/renderMessage/index.vue')['default']
