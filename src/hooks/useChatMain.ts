@@ -7,6 +7,7 @@ import apis from '@/services/apis.ts'
 import { useContactStore } from '@/stores/contacts'
 import { useUserStore } from '@/stores/user'
 import { useGlobalStore } from '@/stores/global.ts'
+import { isDiffNow } from '@/utils/ComputedTime.ts'
 
 export const useChatMain = (activeItem?: SessionItem) => {
   const { removeTag, userUid } = useCommon()
@@ -87,6 +88,9 @@ export const useChatMain = (activeItem?: SessionItem) => {
         chatStore.updateRecallStatus({ msgId: item.message.id })
       },
       visible: (item: MessageType) => {
+        // 判断当前选择的信息的发送时间是否超过2分钟
+        if (isDiffNow({ time: item.message.sendTime, unit: 'minute', diff: 2 })) return
+        // 判断自己是否是发送者或者是否是管理员
         const isCurrentUser = item.fromUser.uid === userUid.value
         const isAdmin = userInfo?.power === PowerEnum.ADMIN
         return isCurrentUser || isAdmin

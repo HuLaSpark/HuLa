@@ -94,7 +94,6 @@ export const useGroupStore = defineStore('group', () => {
         roomId: currentRoomId.value
       }
     })
-    console.log(res)
     if (!res) return
     const data = res
     const tempNew = cloneDeep(uniqueUserList(refresh ? data.list : [...data.list, ...userList.value]))

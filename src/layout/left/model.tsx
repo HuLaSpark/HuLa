@@ -220,14 +220,12 @@ export const CheckUpdate = defineComponent(() => {
           switch (event.event) {
             case 'Started':
               total.value = event.data.contentLength ? event.data.contentLength : 0
-              console.log(`started downloading ${event.data.contentLength} bytes`)
               break
             case 'Progress':
               downloaded.value += event.data.chunkLength
               percentage.value = parseFloat(((downloaded.value / total.value) * 100 + '').substring(0, 4))
               break
             case 'Finished':
-              console.log('download finished')
               window.$message.success('安装包下载成功，3s后重启并安装')
               setTimeout(() => {
                 updating.value = false

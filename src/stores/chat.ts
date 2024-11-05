@@ -5,7 +5,6 @@ import type { MarkItemType, MessageType, RevokedMsgType, SessionItem } from '@/s
 import { MarkEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import { computedTimeBlock } from '@/utils/ComputedTime.ts'
 import { useCachedStore } from '@/stores/cached'
-import { useUserStore } from '@/stores/user'
 import { useGlobalStore } from '@/stores/global'
 import { useGroupStore } from '@/stores/group'
 import { useContactStore } from '@/stores/contacts'
@@ -18,7 +17,7 @@ let isFirstInit = false
 export const useChatStore = defineStore('chat', () => {
   const route = useRoute()
   const cachedStore = useCachedStore()
-  const userStore = useUserStore()
+  // const userStore = useUserStore()
   const globalStore = useGlobalStore()
   const groupStore = useGroupStore()
   const contactStore = useContactStore()
@@ -125,7 +124,7 @@ export const useChatStore = defineStore('chat', () => {
       if (currentRoomType.value === RoomTypeEnum.GROUP) {
         groupStore.getGroupUserList(true)
         groupStore.getCountStatistic()
-        cachedStore.getGroupAtUserBaseInfo()
+        // cachedStore.getGroupAtUserBaseInfo()
       }
     }
 
@@ -219,7 +218,7 @@ export const useChatStore = defineStore('chat', () => {
       // 请求第一个群成员列表
       currentRoomType.value === RoomTypeEnum.GROUP && (await groupStore.getGroupUserList(true))
       // 初始化所有用户基本信息
-      userStore.isSign && (await cachedStore.initAllUserBaseInfo())
+      // userStore.isSign && (await cachedStore.initAllUserBaseInfo())
       // 联系人列表
       await contactStore.getContactList(true)
     }
@@ -279,8 +278,7 @@ export const useChatStore = defineStore('chat', () => {
         detailResponse = await apis.sessionDetail({ id: msg.message.roomId })
       }
       if (detailResponse) {
-        const data = detailResponse
-        updateSessionLastActiveTime(msg.message.roomId, data)
+        updateSessionLastActiveTime(msg.message.roomId, detailResponse)
       }
     }
 

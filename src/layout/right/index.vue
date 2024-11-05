@@ -5,15 +5,15 @@
       <!-- 需要判断当前路由是否是信息详情界面 -->
       <ChatBox :active-item="activeItem" v-if="msgBoxShow && isChat && activeItem !== -1" />
 
-      <Details :content="DetailsContent" v-else-if="detailsShow && isDetails" />
+      <Details :content="DetailsContent" v-else-if="detailsShow && isDetails && DetailsContent.type !== 'apply'" />
 
       <!-- 好友申请列表 -->
-      <ApplyList v-else-if="DetailsContent && DetailsContent.type === 'apply'" />
+      <ApplyList v-else-if="DetailsContent && isDetails && DetailsContent.type === 'apply'" />
 
       <!-- 聊天界面背景图标 -->
       <div v-else class="flex-center size-full select-none">
         <img
-          v-if="imgTheme === ThemeEnum.DARK && themes.versatile === 'default'"
+          v-if="imgTheme === ThemeEnum.DARK && themes.versatile === 'default' && !isDetails"
           class="w-110px h-100px"
           src="@/assets/img/hula_bg_d.svg"
           alt="" />
@@ -80,7 +80,6 @@ onMounted(() => {
       DetailsContent.value = event.context
     })
     Mitt.on(MittEnum.DETAILS_SHOW, (event: any) => {
-      console.log('event', event)
       DetailsContent.value = event.context
       detailsShow.value = event.detailsShow as boolean
     })

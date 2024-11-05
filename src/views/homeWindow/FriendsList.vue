@@ -15,9 +15,7 @@
             <ContextMenu @contextmenu="showMenu($event)" @select="handleSelect($event.label)" :menu="menuList">
               <n-collapse-item title="我的好友" name="1">
                 <template #header-extra>
-                  <span class="text-(10px #707070)">
-                    {{ contactStore.contactsList.length }}/{{ contactStore.contactsList.length }}
-                  </span>
+                  <span class="text-(10px #707070)"> {{ onlineCount }}/{{ contactStore.contactsList.length }} </span>
                 </template>
 
                 <!-- 用户框 多套一层div来移除默认的右键事件然后覆盖掉因为margin空隙而导致右键可用 -->
@@ -35,6 +33,8 @@
                         bordered
                         :color="'#fff'"
                         :size="44"
+                        class="grayscale"
+                        :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
                         :src="useUserInfo(item.uid).value.avatar"
                         fallback-src="/logo.png" />
 
@@ -43,9 +43,15 @@
                           useUserInfo(item.uid).value.name
                         }}</span>
 
-                        <span class="text leading-tight text-12px flex-1 truncate">
-                          [⛅今日天气] 说的很经典哈萨克的哈萨克看到贺卡上
-                        </span>
+                        <div class="text leading-tight text-12px flex-y-center gap-2px flex-1 truncate">
+                          [
+                          <img
+                            class="size-14px"
+                            :src="`/status/${item.activeStatus === OnlineEnum.ONLINE ? 'online.png' : 'offline.png'}`"
+                            alt="离线" />
+                          {{ item.activeStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}
+                          ]
+                        </div>
                       </n-flex>
                     </n-flex>
                   </n-flex>
@@ -74,7 +80,7 @@
 </template>
 <script setup lang="ts">
 import Mitt from '@/utils/Bus.ts'
-import { MittEnum, RoomTypeEnum } from '@/enums'
+import { MittEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
 
@@ -88,6 +94,10 @@ const activeItem = ref(0)
 const detailsShow = ref(false)
 const shrinkStatus = ref(false)
 const contactStore = useContactStore()
+/** 统计在线用户人数 */
+const onlineCount = computed(() => {
+  return contactStore.contactsList.filter((item) => item.activeStatus === OnlineEnum.ONLINE).length
+})
 /** 监听独立窗口关闭事件 */
 watchEffect(() => {
   Mitt.on(MittEnum.SHRINK_WINDOW, async (event) => {
@@ -98,7 +108,6 @@ watchEffect(() => {
 const handleClick = (index: number, type: number) => {
   detailsShow.value = true
   activeItem.value = index
-  console.log(index, type)
   const data = {
     context: {
       type: type,
@@ -123,6 +132,7 @@ const handleApply = () => {
       type: 'apply'
     }
   })
+  activeItem.value = 0
 }
 
 onUnmounted(() => {
@@ -145,7 +155,7 @@ onUnmounted(() => {
 }
 
 .active {
-  background: var(--bg-active-msg);
+  background: var(--msg-active-color);
   border-radius: 12px;
   color: #fff;
   .text {

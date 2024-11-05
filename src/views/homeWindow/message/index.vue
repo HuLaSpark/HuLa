@@ -123,7 +123,7 @@ watchEffect(() => {
 
 onBeforeMount(() => {
   // 请求回话列表
-  chatStore.getSessionList()
+  chatStore.getSessionList(true)
 })
 
 onMounted(() => {

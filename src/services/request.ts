@@ -181,7 +181,7 @@ const responseInterceptor = async <T>(
 
     const resp = data.resp
     const serviceData = (await data.data) as ServiceResponse
-
+    console.log(data)
     //检查发送请求是否成功
     if (resp.status > 400) {
       let message = ''
@@ -228,13 +228,11 @@ const responseInterceptor = async <T>(
       }
       return Promise.reject(`err: ${message}, status: ${resp.status}`)
     }
-    console.log(data)
     //检查服务端返回是否成功，并且中断请求
     if (!serviceData.success) {
       window.$message.error(serviceData.errMsg)
       return Promise.reject(`http error: ${serviceData.errMsg}`)
     }
-    console.log(data)
     return Promise.resolve(serviceData.data)
   } catch (err) {
     return Promise.reject(`http error: ${err}`)

@@ -11,7 +11,10 @@
       class="p-[0_30px]"
       v-for="(item, index) in contactStore.requestFriendsList"
       :key="index">
-      <n-flex align="center" justify="space-between" class="bg-[--center-bg-color] rounded-10px p-20px box-border">
+      <n-flex
+        align="center"
+        justify="space-between"
+        class="bg-[--center-bg-color] rounded-10px p-20px box-border border-(1px solid [--bg-popover])">
         <n-flex align="center" :size="10">
           <n-avatar round size="large" :src="useUserInfo(item.uid).value.avatar" class="mr-10px" />
           <n-flex vertical :size="12">
@@ -42,7 +45,7 @@
           @click="contactStore.onAcceptFriend(item.applyId)">
           接受
         </n-button>
-        <span class="text-(12px [--text-color])" v-else>已添加</span>
+        <span class="text-(12px #64a29c)" v-else>已同意</span>
       </n-flex>
     </n-flex>
   </n-flex>

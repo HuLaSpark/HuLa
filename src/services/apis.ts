@@ -82,7 +82,7 @@ export default {
     POST<EmojiItem[]>(urls.sendAddFriendRequest, params),
   /** 同意好友申请 */
   applyFriendRequest: (params: { applyId: number }) => PUT(urls.sendAddFriendRequest, params),
-  /** 同意好友申请 */
+  /** 删除好友 */
   deleteFriend: (params: { targetUid: number }) => DELETE(urls.deleteFriend, params),
   /** 好友申请未读数 */
   newFriendCount: () => GET<{ unReadCount: number }>(urls.newFriendCount),
@@ -101,11 +101,11 @@ export default {
   /** 删除群成员 */
   removeGroupMember: (params: { roomId: number; uid: number }) => DELETE(urls.inviteGroupMember, params),
   /** 群组详情 */
-  groupDetail: (params: { id: number }) => GET<GroupDetailReq>(urls.groupDetail, { params }),
+  groupDetail: (params: { id: number }) => GET<GroupDetailReq>(urls.groupDetail, params),
   /** 会话详情 */
   sessionDetail: (params: { id: number }) => GET<SessionItem>(urls.sessionDetail, { params }),
   /** 会话详情(联系人列表发消息用) */
-  sessionDetailWithFriends: (params: { uid: number }) => GET<SessionItem>(urls.sessionDetailWithFriends, { params }),
+  sessionDetailWithFriends: (params: { uid: number }) => GET<SessionItem>(urls.sessionDetailWithFriends, params),
   /** 添加群管理 */
   addAdmin: ({ roomId, uidList }: { roomId: number; uidList: number[] }) =>
     PUT<boolean>(urls.addAdmin, {
