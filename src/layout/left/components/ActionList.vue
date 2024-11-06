@@ -43,7 +43,11 @@
           </n-flex>
         </n-popover>
         <!-- 该选项无提示时展示 -->
-        <n-badge v-else :max="99" :value="item.badge">
+        <n-badge
+          v-else
+          :max="99"
+          :value="unReadMark.newMsgUnreadCount"
+          :show="item.icon.includes('message') && unReadMark.newMsgUnreadCount > 0">
           <svg class="size-22px">
             <use
               :href="`#${activeUrl === item.url || openWindowsList.has(item.url) ? item.iconAction : item.icon}`"></use>
@@ -249,11 +253,14 @@ import { PluginEnum, ShowModeEnum } from '@/enums'
 import { useSettingStore } from '@/stores/setting.ts'
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
+import { useGlobalStore } from '@/stores/global.ts'
 
+const globalStore = useGlobalStore()
 const pluginsStore = usePluginsStore()
 const { showMode } = storeToRefs(useSettingStore())
 const { menuTop } = useMenuTopStore()
 const { plugins } = storeToRefs(pluginsStore)
+const unReadMark = computed(() => globalStore.unReadMark)
 // const headerRef = useTemplateRef('header')
 // const actionListRef = useTemplateRef('actionList')
 //const { } = toRefs(getCurrentInstance) // 所有菜单的外层div

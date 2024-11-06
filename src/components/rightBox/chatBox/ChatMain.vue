@@ -91,6 +91,7 @@
               <template #trigger>
                 <ContextMenu
                   @select="$event.click(item, 'Main')"
+                  :content="item"
                   :menu="chatStore.isGroup ? optionsList : void 0"
                   :special-menu="report">
                   <n-avatar
@@ -122,6 +123,7 @@
                 :style="item.fromUser.uid === userUid ? 'flex-direction: row-reverse' : ''">
                 <ContextMenu
                   @select="$event.click(item)"
+                  :content="item"
                   :menu="chatStore.isGroup ? optionsList : []"
                   :special-menu="report">
                   <n-flex
@@ -173,6 +175,7 @@
               </n-flex>
               <!--  气泡样式  -->
               <ContextMenu
+                :content="item"
                 @contextmenu="handleMacSelect"
                 @mouseenter="handleMouseEnter(item.message.id)"
                 @mouseleave="handleMouseLeave"
@@ -338,7 +341,7 @@
 </template>
 <script setup lang="ts">
 import { EventEnum, MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
-import { type MessageType, SessionItem } from '@/services/types.ts'
+import { SessionItem } from '@/services/types.ts'
 import Mitt from '@/utils/Bus.ts'
 import { usePopover } from '@/hooks/usePopover.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
@@ -489,28 +492,28 @@ const jumpToReplyMsg = (key: number) => {
  * @param index 下标
  * @param id 用户ID
  */
-const addToDomUpdateQueue = (index: number, id: number) => {
-  // 使用 nextTick 确保虚拟列表渲染完最新的项目后进行滚动
-  nextTick(() => {
-    if (!floatFooter.value || id === userUid.value) {
-      virtualListInst.value?.scrollTo({ position: 'bottom', debounce: true })
-    }
-    /** data-key标识的气泡,添加前缀用于区分用户消息，不然气泡动画会被覆盖 */
-    const dataKey = id === userUid.value ? `U${index}` : `Q${index}`
-    const lastMessageElement = document.querySelector(`[data-key="${dataKey}"]`) as HTMLElement
-    if (lastMessageElement) {
-      // 添加动画类
-      lastMessageElement.classList.add('bubble-animation')
-      // 监听动画结束事件
-      const handleAnimationEnd = () => {
-        lastMessageElement.classList.remove('bubble-animation')
-        lastMessageElement.removeEventListener('animationend', handleAnimationEnd)
-      }
-      lastMessageElement.addEventListener('animationend', handleAnimationEnd)
-    }
-  })
-  chatStore.clearNewMsgCount()
-}
+// const addToDomUpdateQueue = (index: number, id: number) => {
+//   // 使用 nextTick 确保虚拟列表渲染完最新的项目后进行滚动
+//   nextTick(() => {
+//     if (!floatFooter.value || id === userUid.value) {
+//       virtualListInst.value?.scrollTo({ position: 'bottom', debounce: true })
+//     }
+//     /** data-key标识的气泡,添加前缀用于区分用户消息，不然气泡动画会被覆盖 */
+//     const dataKey = id === userUid.value ? `U${index}` : `Q${index}`
+//     const lastMessageElement = document.querySelector(`[data-key="${dataKey}"]`) as HTMLElement
+//     if (lastMessageElement) {
+//       // 添加动画类
+//       lastMessageElement.classList.add('bubble-animation')
+//       // 监听动画结束事件
+//       const handleAnimationEnd = () => {
+//         lastMessageElement.classList.remove('bubble-animation')
+//         lastMessageElement.removeEventListener('animationend', handleAnimationEnd)
+//       }
+//       lastMessageElement.addEventListener('animationend', handleAnimationEnd)
+//     }
+//   })
+//   chatStore.clearNewMsgCount()
+// }
 
 /** 点击后滚动到底部 */
 const scrollBottom = () => {
@@ -534,7 +537,7 @@ const closeMenu = (event: any) => {
   if (!event.target.matches('.bubble', 'bubble-oneself')) {
     activeBubble.value = -1
     // 解决mac右键会选中文本的问题
-    if (isMac.value) {
+    if (isMac.value && recordEL.value) {
       recordEL.value.classList.remove('select-none')
     }
   }
@@ -560,24 +563,15 @@ onMounted(() => {
     // 滚动到底部
     virtualListInst.value?.scrollTo({ position: 'bottom', debounce: true })
   })
-  /**! 启动图标闪烁 需要设置"resources": ["sec-tauri/图标放置的文件夹"]*/
-  // invoke('tray_blink', {
-  //   isRun: true,
-  //   ms: 500,
-  //   iconPath1: 'tray/msg.png',
-  //   iconPath2: 'tray/msg-sub.png'
-  // }).catch((error) => {
-  //   console.error('设置图标失败:', error)
+  // Mitt.on(MittEnum.SEND_MESSAGE, (event: MessageType) => {
+  //   nextTick(() => {
+  //     addToDomUpdateQueue(event.message.id, event.fromUser.uid)
+  //   })
   // })
-  Mitt.on(MittEnum.SEND_MESSAGE, (event: MessageType) => {
-    nextTick(() => {
-      addToDomUpdateQueue(event.message.id, event.fromUser.uid)
-    })
-  })
   Mitt.on(`${MittEnum.INFO_POPOVER}-Main`, (event: any) => {
-    selectKey.value = event
+    selectKey.value = event.uid
     infoPopover.value = true
-    handlePopoverUpdate(event)
+    handlePopoverUpdate(event.uid)
   })
   Mitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
     activeItemRef.value = event.item

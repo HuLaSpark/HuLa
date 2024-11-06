@@ -52,7 +52,9 @@
   </n-flex>
 
   <!-- 群聊详情 -->
-  <div v-else class="flex flex-col flex-1 mt-60px gap-30px select-none p-[0_40px] box-border">
+  <div
+    v-else-if="content.type === RoomTypeEnum.GROUP"
+    class="flex flex-col flex-1 mt-60px gap-30px select-none p-[0_40px] box-border">
     <!-- 群聊头像以及简介 -->
     <n-flex align="center" justify="space-between">
       <n-flex align="center">
@@ -124,7 +126,7 @@ const { content } = defineProps<{
   content: any
 }>()
 const item = computed(() => {
-  return useUserInfo(content.value.uid).value
+  return useUserInfo(content.uid).value
 })
 
 const footerOptions = ref<OPT.Details[]>([

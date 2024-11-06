@@ -71,6 +71,7 @@ const globalStore = useGlobalStore()
 const { userUid } = useCommon()
 const scrollbar = ref()
 const { handleMsgClick, activeIndex, menuList, specialMenuList, handleMsgDblclick } = useMessage()
+// TODO 艾特我提醒
 const sessionList = computed(() =>
   chatStore.sessionList.map((item) => {
     // 最后一条消息内容

@@ -36,8 +36,8 @@
             left: `${pos.posX}px`,
             top: `${pos.posY}px`
           }">
-          <div v-resize="handleSize" v-if="menu && menu.length > 0" class="menu-list">
-            <div v-for="(item, index) in menu as any[]" :key="index">
+          <div v-resize="handleSize" v-if="visibleMenu && visibleMenu.length > 0" class="menu-list">
+            <div v-for="(item, index) in visibleMenu as any[]" :key="index">
               <!-- 禁止的菜单选项需要禁止点击事件  -->
               <div class="menu-item-disabled" v-if="item.disabled" @click.prevent="$event.preventDefault()">
                 <svg><use :href="`#${item.icon}`"></use></svg>
@@ -68,7 +68,11 @@
 import { useContextMenu } from '@/hooks/useContextMenu.ts'
 import { useViewport } from '@/hooks/useViewport.ts'
 
-const { menu, emoji, specialMenu } = defineProps({
+const { content, menu, emoji, specialMenu } = defineProps({
+  content: {
+    type: Object,
+    required: false
+  },
   menu: {
     type: Array
   },
@@ -79,6 +83,17 @@ const { menu, emoji, specialMenu } = defineProps({
     type: Array,
     default: () => []
   }
+})
+// 使用计算属性过滤显示的菜单项
+const visibleMenu = computed(() => {
+  return menu?.filter((item: any) => {
+    // 检查是否有 visible 属性并作为函数调用
+    if (typeof item.visible === 'function') {
+      return item.visible(content) // 如果 visible 是函数，则调用它
+    }
+    // 如果没有 visible 属性，则默认显示
+    return true
+  })
 })
 /** 判断是否传入了menu */
 const isNull = computed(() => menu === void 0)
@@ -141,7 +156,7 @@ const handleEnter = (el: any) => {
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       el.style.height = `${h}px`
-      el.style.transition = '0.3s'
+      el.style.transition = '0.2s'
     })
   })
 }

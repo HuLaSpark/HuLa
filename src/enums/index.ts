@@ -62,6 +62,8 @@ export enum MittEnum {
   SHRINK_WINDOW,
   /** 详情页面显示 */
   DETAILS_SHOW,
+  /** 好友申请页面显示 */
+  APPLY_SHOW,
   /** 消息列表被清空或者暂无消息 */
   NOT_MSG,
   /** 回复消息 */

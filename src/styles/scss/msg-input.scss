@@ -14,6 +14,8 @@
   caret-color: #13987f; /** 光标颜色，可根据需求调整 */
   white-space: pre-wrap; /** 保留空白符号并正常换行 */
   word-break: break-word; /** 在长单词或URL地址内部进行换行 */
+  -webkit-white-space: pre-wrap; /** 兼容webkit浏览器 */
+  -webkit-word-break: break-word;
 }
 .ait {
   @apply w-200px h-fit max-h-190px bg-[--center-bg-color] rounded-8px p-[5px_0_5px_5px] border-(1px solid [--box-shadow-color]);

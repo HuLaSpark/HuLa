@@ -85,6 +85,16 @@
     <div class="pl-20px flex flex-col items-end gap-6px">
       <MsgInput ref="MsgInputRef" />
     </div>
+
+    <div v-if="isGuest" class="fuzzy">
+      <n-flex align="center" :size="0" class="pb-60px text-(14px [--text-color])">
+        <p>当前为</p>
+        <p class="color-#c14053 px-2px">游客模式</p>
+        <p>，请</p>
+        <p @click="logout(true)" class="color-#13987f px-4px cursor-pointer">扫码登录</p>
+        <p>后使用</p>
+      </n-flex>
+    </div>
   </main>
 </template>
 
@@ -94,12 +104,20 @@ import { LimitEnum, MsgEnum } from '@/enums'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { emit } from '@tauri-apps/api/event'
+import { useLogin } from '@/hooks/useLogin.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 
-const { open, onChange } = useFileDialog()
+const { logout } = useLogin()
+const { open, onChange, reset } = useFileDialog()
+const { login } = useSettingStore()
 const MsgInputRef = ref()
 const msgInputDom = ref()
 const emojiShow = ref()
 const { insertNode, triggerInputEvent, getEditorRange, imgPaste, FileOrVideoPaste } = useCommon()
+/**
+ * 是否为游客模式
+ */
+const isGuest = computed(() => login.accountInfo.token === 'test')
 
 /**
  * 选择表情，并把表情插入输入框
@@ -111,7 +129,7 @@ const emojiHandle = (item: string) => {
   const { range } = getEditorRange()!
   range?.collapse(false)
   // 插入表情
-  insertNode(MsgEnum.TEXT, item)
+  insertNode(MsgEnum.TEXT, item, MsgInputRef.value.messageInputDom)
   triggerInputEvent(msgInputDom.value)
 }
 
@@ -145,10 +163,13 @@ onChange((files) => {
       FileOrVideoPaste(file, MsgEnum.FILE, MsgInputRef.value.messageInputDom)
     }
   }
+  reset()
 })
 
 onMounted(() => {
-  msgInputDom.value = MsgInputRef.value.messageInputDom
+  if (MsgInputRef.value) {
+    msgInputDom.value = MsgInputRef.value.messageInputDom
+  }
 })
 </script>
 
@@ -162,6 +183,13 @@ onMounted(() => {
       color: #13987f;
     }
   }
+}
+
+.fuzzy {
+  @apply bg-transparent select-none cursor-default size-full absolute-flex-center;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 :deep(.n-input .n-input-wrapper) {

@@ -1,13 +1,19 @@
 import { useCommon } from '@/hooks/useCommon.ts'
-import { MittEnum, MsgEnum } from '@/enums'
+import { MittEnum, MsgEnum, PowerEnum } from '@/enums'
 import { MessageType, SessionItem } from '@/services/types.ts'
 import Mitt from '@/utils/Bus.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import apis from '@/services/apis.ts'
+import { useContactStore } from '@/stores/contacts'
+import { useUserStore } from '@/stores/user'
+import { useGlobalStore } from '@/stores/global.ts'
+import { isDiffNow } from '@/utils/ComputedTime.ts'
 
 export const useChatMain = (activeItem?: SessionItem) => {
   const { removeTag, userUid } = useCommon()
+  const globalStore = useGlobalStore()
   const chatStore = useChatStore()
+  const userInfo = useUserStore()?.userInfo
   // const userInfo = useUserStore()?.userInfo
   // const chatMessageList = computed(() => chatStore.chatMessageList)
   const messageOptions = computed(() => chatStore.currentMessageOptions)
@@ -80,6 +86,14 @@ export const useChatMain = (activeItem?: SessionItem) => {
           return
         }
         chatStore.updateRecallStatus({ msgId: item.message.id })
+      },
+      visible: (item: MessageType) => {
+        // 判断当前选择的信息的发送时间是否超过2分钟
+        if (isDiffNow({ time: item.message.sendTime, unit: 'minute', diff: 2 })) return
+        // 判断自己是否是发送者或者是否是管理员
+        const isCurrentUser = item.fromUser.uid === userUid.value
+        const isAdmin = userInfo?.power === PowerEnum.ADMIN
+        return isCurrentUser || isAdmin
       }
     }
   ])
@@ -153,7 +167,7 @@ export const useChatMain = (activeItem?: SessionItem) => {
     }
   ])
   /** 右键用户信息菜单(群聊的时候显示) */
-  const optionsList = ref([
+  const optionsList = ref<OPT.RightMenu[]>([
     {
       label: '发送信息',
       icon: 'message-action',
@@ -170,13 +184,19 @@ export const useChatMain = (activeItem?: SessionItem) => {
       label: '查看资料',
       icon: 'notes',
       click: (item: any, type: string) => {
-        Mitt.emit(`${MittEnum.INFO_POPOVER}-${type}`, item.key)
+        // 如果是聊天框内的资料就使用的是消息的key，如果是群聊成员的资料就使用的是uid
+        const uid = item.uid || item.message.id
+        Mitt.emit(`${MittEnum.INFO_POPOVER}-${type}`, { uid: uid, type: type })
       }
     },
     {
       label: '添加好友',
       icon: 'people-plus',
-      click: () => {}
+      click: (item: any) => {
+        globalStore.addFriendModalInfo.show = true
+        globalStore.addFriendModalInfo.uid = item.uid || item.fromUser.uid
+      },
+      visible: (item: any) => canAddFriend(item.uid || item.fromUser.uid)
     }
   ])
   /** 举报选项 */
@@ -206,6 +226,19 @@ export const useChatMain = (activeItem?: SessionItem) => {
       title: '惊呆了'
     }
   ])
+
+  /**
+   * 判断用户是否可以添加好友
+   * @param uid 用户 ID
+   * @returns {boolean} 如果可以添加好友返回 true，否则返回 false
+   */
+  const canAddFriend = (uid: number): boolean => {
+    const contactStore = useContactStore()
+    const userStore = useUserStore()
+    const myUid = userStore.userInfo.uid
+    // 好友和自己不显示添加好友菜单
+    return !(contactStore.contactsList.some((item) => item.uid === uid) || uid === myUid)
+  }
 
   /**
    * 处理复制事件
@@ -249,12 +282,14 @@ export const useChatMain = (activeItem?: SessionItem) => {
     // 计算距离底部的距离
     // const distanceFromBottom = scrollHeight - scrollTop.value - clientHeight
     // 判断是否滚动到顶部
-    if (scrollTop.value === 0) {
-      // 记录顶部最后一条消息的下标
-      // historyIndex.value = chatMessageList.value[0].message.id
-      if (messageOptions.value?.isLoading) return
-      chatStore.loadMore()
-    }
+    requestAnimationFrame(async () => {
+      if (scrollTop.value === 0) {
+        // 记录顶部最后一条消息的下标
+        // historyIndex.value = chatMessageList.value[0].message.id
+        if (messageOptions.value?.isLoading) return
+        await chatStore.loadMore()
+      }
+    })
     // // 判断是否大于100
     // if (distanceFromBottom > 100) {
     //   floatFooter.value = true

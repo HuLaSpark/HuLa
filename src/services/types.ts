@@ -6,7 +6,7 @@
 import { ActEnum, IsYetEnum, MarkEnum, MsgEnum, OnlineEnum, RoomTypeEnum, SexEnum } from '@/enums'
 
 /**响应请求体*/
-export type Response = {
+export type ServiceResponse = {
   /** 成功标识true or false */
   success: boolean
   /** 错误码 */

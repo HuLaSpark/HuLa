@@ -112,8 +112,7 @@ export const useGroupStore = defineStore('group', () => {
 
   // 获取群成员数量统计
   const getCountStatistic = async () => {
-    const data = await apis.groupDetail({ id: currentRoomId.value })
-    countInfo.value = data
+    countInfo.value = await apis.groupDetail({ id: currentRoomId.value })
   }
 
   // 加载更多群成员

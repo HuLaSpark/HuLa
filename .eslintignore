@@ -9,5 +9,6 @@ index.html
 src/assets
 .eslintrc.cjs
 **/config
+src-tauri/**
 commitlint.config.cjs
 auto-imports.d.ts

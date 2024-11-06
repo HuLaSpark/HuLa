@@ -58,7 +58,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
           if (clipboardItem.types.includes('text/plain')) {
             // 如果是文本，使用 readText() 读取文本内容
             navigator.clipboard.readText().then((text) => {
-              insertNode(MsgEnum.TEXT, text)
+              insertNode(MsgEnum.TEXT, text, {} as HTMLElement)
               triggerInputEvent(messageInputDom.value)
             })
           } else if (clipboardItem.types.find((type) => type.startsWith('image/'))) {
@@ -122,7 +122,11 @@ export const useMsgInput = (messageInputDom: Ref) => {
       if (messageInputDom.value) {
         nextTick().then(() => {
           messageInputDom.value.focus()
-          insertNode(MsgEnum.REPLY, { accountName: accountName, content: event.message.body.content })
+          insertNode(
+            MsgEnum.REPLY,
+            { accountName: accountName, content: event.message.body.content },
+            {} as HTMLElement
+          )
           triggerInputEvent(messageInputDom.value)
         })
       }
@@ -277,7 +281,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     if (!isWindows && chat.value.sendKey === 'Enter' && e.metaKey && e.key === 'Enter') {
       // 就进行换行操作
       e.preventDefault()
-      insertNode(MsgEnum.TEXT, '\n')
+      insertNode(MsgEnum.TEXT, '\n', {} as HTMLElement)
       triggerInputEvent(messageInputDom.value)
     }
     if (msgInput.value === '' || msgInput.value.trim() === '' || ait.value) {
@@ -313,7 +317,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     range?.setStart(textNode, <number>expRes?.index)
     /** 设置范围的结束位置为光标的位置 */
     range?.setEnd(textNode, endOffset!)
-    insertNode(MsgEnum.AIT, item.name)
+    insertNode(MsgEnum.AIT, item.name, {} as HTMLElement)
     triggerInputEvent(messageInputDom.value)
     ait.value = false
   }

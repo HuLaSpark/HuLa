@@ -11,6 +11,11 @@ export const useContactStore = defineStore('contact', () => {
   const requestFriendsList = reactive<RequestFriendItem[]>([])
   const contactsOptions = reactive({ isLast: false, isLoading: false, cursor: '' })
   const requestFriendsOptions = reactive({ isLast: false, isLoading: false, cursor: '' })
+
+  /**
+   * 获取联系人列表
+   * @param isFresh 是否刷新
+   */
   const getContactList = async (isFresh = false) => {
     if (!isFresh) {
       if (contactsOptions.isLast || contactsOptions.isLoading) return
@@ -45,6 +50,10 @@ export const useContactStore = defineStore('contact', () => {
     }
   }
 
+  /**
+   * 获取好友申请列表
+   * @param isFresh 是否刷新
+   */
   const getRequestFriendsList = async (isFresh = false) => {
     if (!isFresh) {
       if (requestFriendsOptions.isLast || requestFriendsOptions.isLoading) return
