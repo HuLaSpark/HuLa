@@ -156,7 +156,7 @@ const handleEnter = (el: any) => {
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       el.style.height = `${h}px`
-      el.style.transition = '0.3s'
+      el.style.transition = '0.2s'
     })
   })
 }

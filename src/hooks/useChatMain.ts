@@ -282,12 +282,14 @@ export const useChatMain = (activeItem?: SessionItem) => {
     // 计算距离底部的距离
     // const distanceFromBottom = scrollHeight - scrollTop.value - clientHeight
     // 判断是否滚动到顶部
-    if (scrollTop.value === 0) {
-      // 记录顶部最后一条消息的下标
-      // historyIndex.value = chatMessageList.value[0].message.id
-      if (messageOptions.value?.isLoading) return
-      chatStore.loadMore()
-    }
+    requestAnimationFrame(async () => {
+      if (scrollTop.value === 0) {
+        // 记录顶部最后一条消息的下标
+        // historyIndex.value = chatMessageList.value[0].message.id
+        if (messageOptions.value?.isLoading) return
+        await chatStore.loadMore()
+      }
+    })
     // // 判断是否大于100
     // if (distanceFromBottom > 100) {
     //   floatFooter.value = true

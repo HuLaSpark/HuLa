@@ -84,7 +84,6 @@ import { useAlwaysOnTopStore } from '@/stores/alwaysOnTop.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { emit, listen } from '@tauri-apps/api/event'
 import { CloseBxEnum, EventEnum, MittEnum } from '@/enums'
-import { PersistedStateOptions } from 'pinia-plugin-persistedstate'
 import { exit } from '@tauri-apps/plugin-process'
 import { type } from '@tauri-apps/plugin-os'
 
@@ -190,7 +189,7 @@ const handleConfirm = async () => {
 }
 
 /** 监听是否按下esc */
-const isEsc = (e: PersistedStateOptions) => {
+const isEsc = (e: KeyboardEvent) => {
   // 判断按下的是否是esc
   if (e.key === 'Escape' && escClose.value) {
     handleCloseWin()

@@ -264,6 +264,13 @@ const closeMenu = (event: MouseEvent) => {
 }
 
 onMounted(async () => {
+  // 判断是否需要马上跳转到二维码登录页面
+  if (localStorage.getItem('isToQrcode')) {
+    router.push('/qrCode')
+    await nextTick(() => {
+      localStorage.removeItem('isToQrcode')
+    })
+  }
   await getCurrentWebviewWindow().show()
   if (login.value.autoLogin && login.value.accountInfo.password !== '') {
     autoLogin()

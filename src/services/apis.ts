@@ -1,4 +1,3 @@
-// import { createAxios } from '@/services/request'
 import urls from '@/services/urls'
 import type {
   BadgeType,
@@ -21,13 +20,7 @@ import type {
   UserItem
 } from '@/services/types'
 
-// const request = createAxios()
 import request from '@/services/request'
-
-// const GET = <T>(url: string, params?: any) => request.get<T, Response>(url, params)
-// const POST = <T>(url: string, params?: any) => request.post<T, Response>(url, params)
-// const PUT = <T>(url: string, params?: any) => request.put<T, Response>(url, params)
-// const DELETE = <T>(url: string, params?: any) => request.delete<T, Response>(url, params)
 
 const GET = <T>(url: string, params?: any) => request.get<T>(url, params)
 const POST = <T>(url: string, params?: any) => request.post<T>(url, params)

@@ -20,12 +20,13 @@
 
     <n-flex v-if="!isSearch" align="center" justify="space-between" class="pr-8px pl-8px h-42px">
       <span class="text-14px">群聊成员&nbsp;{{ userList.length }}</span>
-      <svg @click="handleSearch" class="size-14px"><use href="#search"></use></svg>
+      <svg @click="handleSelect" class="size-14px"><use href="#search"></use></svg>
     </n-flex>
     <!-- 搜索框 -->
     <n-flex v-else align="center" class="pr-8px h-42px">
       <n-input
-        @blur="isSearch = false"
+        :on-input="handleSearch"
+        @blur="handleBlur"
         ref="inputInstRef"
         v-model:value="searchRef"
         clearable
@@ -47,7 +48,7 @@
       style="max-height: calc(100vh - 130px)"
       item-resizable
       :item-size="42"
-      :items="userList">
+      :items="filteredUserList">
       <template #default="{ item }">
         <n-popover
           @update:show="handlePopoverUpdate(item.uid)"
@@ -103,6 +104,7 @@ import { useGroupStore } from '@/stores/group.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import type { UserItem } from '@/services/types.ts'
+import { useDebounceFn } from '@vueuse/core'
 
 const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
@@ -117,6 +119,7 @@ const userList = computed(() => {
     }
   })
 })
+const filteredUserList = shallowRef(userList.value)
 const isGroup = computed(() => globalStore.currentSession?.type === RoomTypeEnum.GROUP)
 /** 是否是搜索模式 */
 const isSearch = ref(false)
@@ -128,12 +131,29 @@ const isCollapsed = ref(true)
 const { optionsList, report, selectKey } = useChatMain()
 const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-sidebar')
 
-const handleSearch = () => {
+const handleSelect = () => {
   isSearch.value = !isSearch.value
   nextTick(() => {
     inputInstRef.value?.select()
   })
 }
+
+/**
+ * 重置搜索状态
+ */
+const handleBlur = () => {
+  isSearch.value = false
+  searchRef.value = ''
+  filteredUserList.value = userList.value
+}
+
+/**
+ * 监听搜索输入过滤用户
+ * @param value 输入值
+ */
+const handleSearch = useDebounceFn((value: string) => {
+  filteredUserList.value = userList.value.filter((user) => user.name.toLowerCase().includes(value.toLowerCase()))
+}, 10)
 
 onMounted(() => {
   Mitt.on(`${MittEnum.INFO_POPOVER}-Sidebar`, (event: any) => {
