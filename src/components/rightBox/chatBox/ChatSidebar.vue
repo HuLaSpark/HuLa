@@ -142,6 +142,8 @@ const handleSelect = () => {
  * 重置搜索状态
  */
 const handleBlur = () => {
+  // 如果输入框有值，则不重置
+  if (searchRef.value) return
   isSearch.value = false
   searchRef.value = ''
   filteredUserList.value = userList.value
