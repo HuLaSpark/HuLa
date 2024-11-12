@@ -1,6 +1,6 @@
 <template>
   <main class="flex-1 rounded-8px bg-[--right-bg-color] h-full w-100vw">
-    <div style="background: var(--right-theme-bg-color)">
+    <div style="background: var(--right-theme-bg-color); height: 100%">
       <ActionBar :shrink="false" :current-label="appWindow.label" />
 
       <ChatBox />
@@ -15,8 +15,8 @@ import { EventEnum } from '@/enums'
 const appWindow = WebviewWindow.getCurrent()
 
 // 监听窗口关闭事件,当窗口是非正常关闭的时候触发
-appWindow.onCloseRequested(async (e) => {
-  await emit(EventEnum.WIN_CLOSE, e)
+appWindow.onCloseRequested(async () => {
+  await emit(EventEnum.WIN_CLOSE, appWindow.label)
 })
 
 /**! 创建新窗口然后需要通信传递数据时候需要进行提交一次页面创建成功的事件，否则会接收不到数据 */

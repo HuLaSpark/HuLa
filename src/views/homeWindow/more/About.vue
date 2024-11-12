@@ -102,7 +102,6 @@ onMounted(async () => {
 .box {
   width: 240px;
   height: 200px;
-  transform-style: preserve-3d;
   perspective: 500px;
   display: flex;
   justify-content: center;
@@ -111,7 +110,6 @@ onMounted(async () => {
   .computer {
     position: relative;
     transition: all 0.2s;
-    transform-style: preserve-3d;
   }
 }
 </style>
