@@ -89,7 +89,7 @@
     "oxlint": "^0.2.18",
     "prettier": "^3.3.2",
     "release-it": "^17.10.0",
-    "sass": "1.77.6",
+    "sass": "1.80.6",
     "typescript": "^5.6.2",
     "unplugin-auto-import": "^0.18.2",
     "unplugin-vue-components": "^0.27.4",

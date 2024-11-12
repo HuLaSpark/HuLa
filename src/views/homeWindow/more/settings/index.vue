@@ -93,6 +93,7 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
+@use '@/styles/scss/global/variable.scss' as *;
 .left-bar {
   @include menu-list();
   background: var(--bg-left-menu);

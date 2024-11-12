@@ -25,13 +25,10 @@ export default defineConfig(({ mode }: ConfigEnv) => {
     css: {
       preprocessorOptions: {
         scss: {
-          additionalData: '@use "./src/styles/scss/global/variable.scss" as *;' // 加载全局样式，使用scss特性
+          api: 'modern-compiler',
+          additionalData: '@use "@/styles/scss/global/variable.scss" as *;' // 加载全局样式，使用scss特性
         }
       }
-    },
-    define: {
-      // enable hydration mismatch details in production build 3.4新增水化不匹配的警告
-      __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'true'
     },
     plugins: [
       /**
