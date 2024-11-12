@@ -80,5 +80,5 @@ import { leftHook } from '../hook.ts'
 const { login, shrinkStatus, url, infoShow, bgColor, title, themeColor, openContent, handleEditing } = leftHook()
 </script>
 <style lang="scss" scoped>
-@import '../style';
+@use '../style';
 </style>
