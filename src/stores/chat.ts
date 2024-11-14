@@ -188,10 +188,8 @@ export const useChatStore = defineStore('chat', () => {
     sessionOptions.isLoading = true
     const response = await apis
       .getSessionList({
-        params: {
-          pageSize: sessionList.length > pageSize ? sessionList.length : pageSize,
-          cursor: isFresh || !sessionOptions.cursor ? undefined : sessionOptions.cursor
-        }
+        pageSize: sessionList.length > pageSize ? sessionList.length : pageSize,
+        cursor: isFresh || !sessionOptions.cursor ? '' : sessionOptions.cursor
       })
       .catch(() => {
         sessionOptions.isLoading = false

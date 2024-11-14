@@ -88,11 +88,9 @@ export const useGroupStore = defineStore('group', () => {
   // 获取群成员
   const getGroupUserList = async (refresh = false) => {
     const res = await apis.getGroupList({
-      params: {
-        pageSize,
-        cursor: refresh ? undefined : userListOptions.cursor,
-        roomId: currentRoomId.value
-      }
+      pageSize: pageSize,
+      cursor: refresh ? '' : userListOptions.cursor,
+      roomId: currentRoomId.value
     })
     if (!res) return
     const data = res
