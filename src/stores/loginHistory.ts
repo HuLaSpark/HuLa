@@ -7,8 +7,8 @@ export const useLoginHistoriesStore = defineStore(
   () => {
     const loginHistories = ref<STO.Setting['login']['accountInfo'][]>([
       {
-        account: 'hula',
-        password: '123456',
+        account: 'admin',
+        password: 'admin',
         name: '超级GG帮',
         avatar: 'https://picsum.photos/140?1',
         uid: 123456,
@@ -16,7 +16,7 @@ export const useLoginHistoriesStore = defineStore(
       },
       {
         account: 'hula1',
-        password: '123456',
+        password: 'hula1',
         name: '二狗子',
         avatar: 'https://picsum.photos/140?2',
         uid: 123456,
@@ -24,7 +24,7 @@ export const useLoginHistoriesStore = defineStore(
       },
       {
         account: 'hula2',
-        password: '123456',
+        password: 'hula2',
         name: '李山离',
         avatar: 'https://picsum.photos/140?3',
         uid: 123456,
@@ -32,7 +32,7 @@ export const useLoginHistoriesStore = defineStore(
       },
       {
         account: 'hula3',
-        password: '123456',
+        password: 'hula3',
         name: '牛什么呢',
         avatar: 'https://picsum.photos/140?4',
         uid: 123456,

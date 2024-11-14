@@ -6,7 +6,7 @@
     <ActionBar :max-w="false" :shrink="false" />
 
     <!--  手动登录样式  -->
-    <n-flex vertical :size="25" v-if="!isAutoLogin" data-tauri-drag-region>
+    <n-flex vertical :size="25" v-if="!login.autoLogin || !login.accountInfo.token" data-tauri-drag-region>
       <!-- 头像 -->
       <n-flex justify="center" class="w-full pt-35px" data-tauri-drag-region>
         <img
@@ -87,9 +87,9 @@
           :loading="loading"
           :disabled="loginDisabled"
           class="w-full mt-8px mb-50px"
-          @click="loginWin"
+          @click="normalLogin"
           color="#13987f">
-          {{ loginText }}
+          <span>{{ loginText }}</span>
         </n-button>
       </n-flex>
     </n-flex>
@@ -99,7 +99,6 @@
       <n-flex justify="center" class="mt-15px">
         <img src="@/assets/logo/hula.png" class="w-140px h-60px" alt="" />
       </n-flex>
-
       <n-flex :size="30" vertical>
         <!-- 头像 -->
         <n-flex justify="center">
@@ -132,13 +131,17 @@
     <n-flex justify="center" class="text-14px" id="bottomBar" data-tauri-drag-region>
       <div class="color-#13987f cursor-pointer" @click="router.push('/qrCode')">扫码登录</div>
       <div class="w-1px h-14px bg-#ccc"></div>
-      <div v-if="isAutoLogin" class="color-#13987f cursor-pointer">移除账号</div>
+      <div v-if="login.autoLogin" class="color-#13987f cursor-pointer" @click="removeToken">移除账号</div>
       <n-popover v-else trigger="click" :show-checkmark="false" :show-arrow="false">
         <template #trigger>
           <div class="color-#13987f cursor-pointer">更多选项</div>
         </template>
         <n-flex vertical :size="2">
-          <div class="text-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px">注册账号</div>
+          <div
+            class="text-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px"
+            @click="router.push('/register')">
+            注册账号
+          </div>
           <div class="text-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px">忘记密码</div>
         </n-flex>
       </n-popover>
@@ -154,6 +157,7 @@ import { useSettingStore } from '@/stores/setting.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
+import apis from '@/services/apis.ts'
 
 const settingStore = useSettingStore()
 const loginHistoriesStore = useLoginHistoriesStore()
@@ -167,6 +171,7 @@ const info = ref({
   name: '',
   uid: 0
 })
+
 /** 是否中断登录 */
 const interruptLogin = ref(false)
 /** 协议 */
@@ -174,7 +179,6 @@ const protocol = ref(true)
 const loginDisabled = ref(false)
 const loading = ref(false)
 const arrowStatus = ref(false)
-const isAutoLogin = ref(false)
 const { setLoginState } = useLogin()
 const accountPH = ref('输入HuLa账号')
 const passwordPH = ref('输入HuLa密码')
@@ -190,6 +194,8 @@ watchEffect(() => {
   }
   if (interruptLogin.value) {
     loginDisabled.value = false
+    loading.value = false
+    interruptLogin.value = false
   }
 })
 
@@ -222,35 +228,61 @@ const giveAccount = (item: STO.Setting['login']['accountInfo']) => {
 }
 
 /**登录后创建主页窗口*/
-const loginWin = () => {
-  if (interruptLogin.value) return
+const normalLogin = async () => {
   loading.value = true
-  delay(async () => {
-    await createWebviewWindow('HuLa', 'home', 960, 720, 'login', true)
-    loading.value = false
-    if (!login.value.autoLogin || login.value.accountInfo.password === '') {
-      const account = {
-        ...info.value,
-        token: 'test'
-      }
-      settingStore.setAccountInfo(account)
-      loginHistoriesStore.addLoginHistory(account)
-      await setLoginState()
-    }
-  }, 1000)
+  apis
+    .login({ ...info.value } as unknown as User)
+    .then((token) => {
+      window.$message.success('登录成功，正在跳转首页')
+      delay(async () => {
+        if (interruptLogin.value) return
+        login.value.accountInfo.token = token
+        // 获取用户信息
+        const userDetail = await apis.getUserDetail()
+        const account = {
+          ...userDetail,
+          token
+        }
+        loading.value = false
+        settingStore.setAccountInfo(account)
+        loginHistoriesStore.addLoginHistory(account)
+        // 打开主界面
+        await openHomeWindow()
+      }, 1000)
+    })
+    .catch(() => {
+      window.$message.error('登录失败')
+      loading.value = false
+    })
+}
+
+const openHomeWindow = async () => {
+  await createWebviewWindow('HuLa', 'home', 960, 720, 'login', true)
 }
 
 /** 自动登录 */
 const autoLogin = () => {
   interruptLogin.value = false
-  isAutoLogin.value = true
+  loading.value = true
   // TODO 检查用户网络是否连接 (nyh -> 2024-03-16 12:06:59)
   loginText.value = '网络连接中'
-  delay(async () => {
-    loginWin()
-    loginText.value = '登录'
-    await setLoginState()
-  }, 1000)
+  apis
+    .checkToken()
+    .then(() => {
+      window.$message.success('登录成功，正在跳转首页')
+      delay(async () => {
+        loading.value = false
+        await openHomeWindow()
+        await setLoginState()
+      }, 1000)
+    })
+    .catch(() => {
+      window.$message.error('登录失败')
+      login.value.accountInfo.token = ''
+      router.push('/login')
+      loading.value = false
+      loginText.value = '登录'
+    })
 }
 
 const closeMenu = (event: MouseEvent) => {
@@ -258,8 +290,27 @@ const closeMenu = (event: MouseEvent) => {
   if (!target.matches('.account-box, .account-box *, .down')) {
     arrowStatus.value = false
   }
-  if (target.matches('#bottomBar *') && isAutoLogin.value) {
+  if (target.matches('#bottomBar *') && login.value.autoLogin) {
     interruptLogin.value = true
+  }
+}
+
+// 移除已登录账号
+const removeToken = () => {
+  login.value.accountInfo = {
+    account: '',
+    password: '',
+    avatar: '/logo.png',
+    name: '',
+    uid: 0,
+    token: ''
+  }
+  login.value.autoLogin = false
+}
+
+const enterKey = (e: KeyboardEvent) => {
+  if (e.key === 'Enter') {
+    normalLogin()
   }
 }
 
@@ -272,15 +323,19 @@ onMounted(async () => {
     })
   }
   await getCurrentWebviewWindow().show()
-  if (login.value.autoLogin && login.value.accountInfo.password !== '') {
+  // 自动登录
+  if (login.value.autoLogin && login.value.accountInfo.token) {
     autoLogin()
+  } else {
+    loginHistories.length > 0 && giveAccount(loginHistories[0])
   }
-  loginHistories.length > 0 && giveAccount(loginHistories[0])
   window.addEventListener('click', closeMenu, true)
+  window.addEventListener('keyup', enterKey)
 })
 
 onUnmounted(() => {
   window.removeEventListener('click', closeMenu, true)
+  window.removeEventListener('keyup', enterKey)
 })
 </script>
 

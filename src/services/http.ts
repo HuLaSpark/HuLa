@@ -24,12 +24,14 @@ export type HttpParams = {
  * @param {string} url 请求地址
  * @param {HttpParams} options 请求参数
  * @param {boolean} [fullResponse=false] 是否返回完整响应
+ * @param {AbortController} abort 中断器
  * @returns {Promise<T | { data: Promise<T>; resp: Response }>} 请求结果
  */
 async function Http<T>(
   url: string,
   options: HttpParams,
-  fullResponse?: true
+  fullResponse?: true,
+  abort?: AbortController
 ): Promise<{ data: Promise<T>; resp: Response }> {
   // 构建请求头
   const httpHeaders = new Headers(options.headers || {})
@@ -37,7 +39,8 @@ async function Http<T>(
   // 构建 fetch 请求选项
   const fetchOptions: RequestInit = {
     method: options.method,
-    headers: httpHeaders
+    headers: httpHeaders,
+    signal: abort?.signal
   }
 
   // 判断是否需要添加请求体
