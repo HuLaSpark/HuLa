@@ -96,7 +96,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
           // “/api” 以及前置字符串会被替换为真正域名
           target: config.VITE_SERVICE_URL, // 请求域名
           changeOrigin: true, // 是否跨域
-          rewrite: (path) => path.replace(/^\/api/, '/api')
+          rewrite: (path) => path.replace(/^\/api/, '')
         }
       },
       hmr: true, // 热更新

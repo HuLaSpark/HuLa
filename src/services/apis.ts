@@ -22,10 +22,10 @@ import type {
 
 import request from '@/services/request'
 
-const GET = <T>(url: string, params?: any) => request.get<T>(url, params)
-const POST = <T>(url: string, params?: any) => request.post<T>(url, params)
-const PUT = <T>(url: string, params?: any) => request.put<T>(url, params)
-const DELETE = <T>(url: string, params?: any) => request.delete<T>(url, params)
+const GET = <T>(url: string, params?: any, abort?: AbortController) => request.get<T>(url, params, abort)
+const POST = <T>(url: string, params?: any, abort?: AbortController) => request.post<T>(url, params, abort)
+const PUT = <T>(url: string, params?: any, abort?: AbortController) => request.put<T>(url, params, abort)
+const DELETE = <T>(url: string, params?: any, abort?: AbortController) => request.delete<T>(url, params, abort)
 
 export default {
   /** 获取用户信息 */
@@ -115,5 +115,26 @@ export default {
   exitGroup: ({ roomId }: { roomId: number }) =>
     DELETE<boolean>(urls.exitGroup, {
       roomId
-    })
+    }),
+  /** 账号密码登录 */
+  login: (user: User, abort?: AbortController) =>
+    POST<string>(
+      urls.login,
+      {
+        account: user.account,
+        password: user.password
+      },
+      abort
+    ),
+  /** 退出登录 */
+  logout: (abort?: AbortController) => POST<string>(urls.logout, abort),
+  /** 注册 */
+  register: (user: User) =>
+    POST<string>(urls.register, {
+      name: user.name,
+      account: user.account,
+      password: user.password
+    }),
+  /** 检查token是否有效 */
+  checkToken: () => POST<string>(urls.checkToken)
 }

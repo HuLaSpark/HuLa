@@ -36,7 +36,7 @@
     <n-flex justify="center" class="text-14px mt-48px" data-tauri-drag-region>
       <div class="color-#13987f cursor-pointer" @click="router.push('/login')">账密登录</div>
       <div class="w-1px h-14px bg-#ccc"></div>
-      <div class="color-#13987f cursor-pointer">注册账号</div>
+      <div class="color-#13987f cursor-pointer" @click="router.push('/register')">注册账号</div>
     </n-flex>
   </n-config-provider>
 </template>

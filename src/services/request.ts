@@ -26,7 +26,8 @@ const responseInterceptor = async <T>(
   url: string,
   method: 'GET' | 'POST' | 'PUT' | 'DELETE',
   query: any,
-  body: any
+  body: any,
+  abort?: AbortController
 ): Promise<T> => {
   const token = useSettingStore().login.accountInfo.token
 
@@ -54,11 +55,11 @@ const responseInterceptor = async <T>(
   }
 
   try {
-    const data = await Http(url, httpParams, true)
+    const data = await Http(url, httpParams, true, abort)
 
     const resp = data.resp
     const serviceData = (await data.data) as ServiceResponse
-    console.log(data)
+    console.log(url, data)
     //检查发送请求是否成功
     if (resp.status > 400) {
       let message = ''
@@ -116,20 +117,20 @@ const responseInterceptor = async <T>(
   }
 }
 
-const get = async <T>(url: string, query: T): Promise<T> => {
-  return responseInterceptor(url, 'GET', query, {})
+const get = async <T>(url: string, query: T, abort?: AbortController): Promise<T> => {
+  return responseInterceptor(url, 'GET', query, {}, abort)
 }
 
-const post = async <T>(url: string, params: any): Promise<T> => {
-  return responseInterceptor(url, 'POST', {}, params)
+const post = async <T>(url: string, params: any, abort?: AbortController): Promise<T> => {
+  return responseInterceptor(url, 'POST', {}, params, abort)
 }
 
-const put = async <T>(url: string, params: any): Promise<T> => {
-  return responseInterceptor(url, 'PUT', {}, params)
+const put = async <T>(url: string, params: any, abort?: AbortController): Promise<T> => {
+  return responseInterceptor(url, 'PUT', {}, params, abort)
 }
 
-const del = async <T>(url: string, params: any): Promise<T> => {
-  return responseInterceptor(url, 'DELETE', {}, params)
+const del = async <T>(url: string, params: any, abort?: AbortController): Promise<T> => {
+  return responseInterceptor(url, 'DELETE', {}, params, abort)
 }
 
 export default {
