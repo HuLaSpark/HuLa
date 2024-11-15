@@ -25,7 +25,7 @@ export const useContactStore = defineStore('contact', () => {
       .getContactList({
         // TODO 先写 100，稍后优化
         pageSize: 100,
-        cursor: isFresh || !contactsOptions.cursor ? undefined : contactsOptions.cursor
+        cursor: isFresh || !contactsOptions.cursor ? '' : contactsOptions.cursor
       })
       .catch(() => {
         contactsOptions.isLoading = false
@@ -62,7 +62,7 @@ export const useContactStore = defineStore('contact', () => {
     const res = await apis
       .requestFriendList({
         pageSize,
-        cursor: isFresh || !requestFriendsOptions.cursor ? undefined : requestFriendsOptions.cursor
+        cursor: isFresh || !requestFriendsOptions.cursor ? '' : requestFriendsOptions.cursor
       })
       .catch(() => {
         requestFriendsOptions.isLoading = false

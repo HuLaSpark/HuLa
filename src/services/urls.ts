@@ -5,6 +5,7 @@ const { VITE_SERVICE_URL } = import.meta.env
 const prefix = VITE_SERVICE_URL
 
 export default {
+  // 用户相关
   getUserInfo: `${prefix + URLEnum.USER}/userInfo`, // 获取用户信息
   getBadgeList: `${prefix + URLEnum.USER}/badges`, // 获取徽章列表
   getMemberStatistic: `${prefix + URLEnum.CHAT}/public/member/statistic`,
@@ -43,5 +44,15 @@ export default {
   revokeAdmin: `${prefix + URLEnum.ROOM}/group/admin`, // 添加管理员
   groupDetail: `${prefix + URLEnum.ROOM}/public/group`, // 群组详情
   sessionDetail: `${prefix + URLEnum.CHAT}/public/contact/detail`, // 会话详情
-  sessionDetailWithFriends: `${prefix + URLEnum.CHAT}/public/contact/detail/friend` // 会话详情(联系人列表发消息用)
+  sessionDetailWithFriends: `${prefix + URLEnum.CHAT}/public/contact/detail/friend`, // 会话详情(联系人列表发消息用)
+
+  // token相关
+  // 注册
+  register: `${prefix + URLEnum.TOKEN}/register`,
+  // 登录
+  login: `${prefix + URLEnum.TOKEN}/login`,
+  // 退出登录
+  logout: `${prefix + URLEnum.TOKEN}/logout`,
+  // 检查token是否有效
+  checkToken: `${prefix + URLEnum.TOKEN}/check`
 }

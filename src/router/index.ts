@@ -9,6 +9,11 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/loginWindow/Login.vue')
   },
   {
+    path: '/register',
+    name: 'register',
+    component: () => import('@/views/registerWindow/Register.vue')
+  },
+  {
     path: '/qrCode',
     name: 'qrCode',
     component: () => import('@/views/loginWindow/QRCode.vue')
