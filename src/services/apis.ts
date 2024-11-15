@@ -117,24 +117,11 @@ export default {
       roomId
     }),
   /** 账号密码登录 */
-  login: (user: User, abort?: AbortController) =>
-    POST<string>(
-      urls.login,
-      {
-        account: user.account,
-        password: user.password
-      },
-      abort
-    ),
+  login: (user: User, abort?: AbortController) => POST<string>(urls.login, user, abort),
   /** 退出登录 */
   logout: (abort?: AbortController) => POST<string>(urls.logout, abort),
   /** 注册 */
-  register: (user: User) =>
-    POST<string>(urls.register, {
-      name: user.name,
-      account: user.account,
-      password: user.password
-    }),
+  register: (user: User) => POST<string>(urls.register, user),
   /** 检查token是否有效 */
   checkToken: () => POST<string>(urls.checkToken)
 }

@@ -49,7 +49,7 @@
               v-for="item in loginHistories"
               :key="item.account"
               @click="giveAccount(item)"
-              class="p-8px cursor-pointer hover:bg-#f3f3f3 hover: rounded-6px">
+              class="p-8px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px">
               <div class="flex-between-center">
                 <img :src="item.avatar" class="w-28px h-28px bg-#ccc rounded-50%" alt="" />
                 <p class="text-14px color-#505050">{{ item.account }}</p>
@@ -233,14 +233,16 @@ const normalLogin = async () => {
   apis
     .login({ ...info.value } as unknown as User)
     .then((token) => {
-      window.$message.success('登录成功，正在跳转首页')
+      loginText.value = '登录成功, 正在跳转'
       delay(async () => {
         if (interruptLogin.value) return
         login.value.accountInfo.token = token
         // 获取用户信息
+        // TODO 这里的id暂时赋值给uid，因为后端没有统一返回uid，待后端调整
         const userDetail = await apis.getUserDetail()
         const account = {
           ...userDetail,
+          uid: (userDetail as any).id,
           token
         }
         loading.value = false

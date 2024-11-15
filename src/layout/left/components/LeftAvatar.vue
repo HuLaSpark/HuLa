@@ -8,7 +8,17 @@
     <template #trigger>
       <!-- 头像 -->
       <div class="relative size-34px rounded-50% cursor-pointer">
-        <n-avatar :color="'#fff'" :size="34" :src="login.accountInfo.avatar" fallback-src="/logo.png" round />
+        <n-avatar
+          v-if="avatarExists"
+          :color="'#909090'"
+          :size="34"
+          :src="login.accountInfo.avatar"
+          fallback-src="/logo.png"
+          round>
+          {{ avatarExists }}
+        </n-avatar>
+
+        <n-avatar v-else :color="'#909090'" :size="34" :src="login.accountInfo.avatar" fallback-src="/logo.png" round />
 
         <div
           class="bg-[--left-bg-color] text-10px rounded-50% size-12px absolute bottom--2px right--2px border-(2px solid [--left-bg-color])"
@@ -24,9 +34,26 @@
       class="size-full p-15px box-border rounded-8px"
       vertical>
       <!-- 头像以及信息区域 -->
-      <n-flex :size="25" align="center" justify="space-between">
+      <n-flex :size="25" align="center" justify="space-between" class="select-none cursor-default">
         <n-flex>
-          <img :src="login.accountInfo.avatar" alt="" class="size-68px rounded-50% select-none" />
+          <n-avatar
+            v-if="avatarExists"
+            :color="'#909090'"
+            :src="login.accountInfo.avatar"
+            round
+            fallback-src="/logo.png"
+            class="size-68px text-20px select-none cursor-default">
+            {{ avatarExists }}
+          </n-avatar>
+
+          <n-avatar
+            v-else
+            :color="'#909090'"
+            :src="login.accountInfo.avatar"
+            round
+            fallback-src="/logo.png"
+            class="size-68px text-20px select-none cursor-default">
+          </n-avatar>
 
           <n-flex :size="10" class="text-[--text-color]" justify="center" vertical>
             <span class="text-18px">{{ login.accountInfo.name }}</span>
@@ -77,6 +104,7 @@
 <script setup lang="ts">
 import { leftHook } from '../hook.ts'
 
+const avatarExists = computed(() => (login.accountInfo.avatar ? void 0 : login.accountInfo.name.slice(0, 1)))
 const { login, shrinkStatus, url, infoShow, bgColor, title, themeColor, openContent, handleEditing } = leftHook()
 </script>
 <style lang="scss" scoped>
