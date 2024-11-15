@@ -21,13 +21,15 @@ export enum RCodeEnum {
 /**URL*/
 export enum URLEnum {
   /**用户*/
-  USER = '/api/user',
+  USER = '/user',
+  /**Token*/
+  TOKEN = '/token',
   /**聊天*/
-  CHAT = '/api/chat',
+  CHAT = '/chat',
   /**房间*/
-  ROOM = '/api/room',
+  ROOM = '/room',
   /**oss*/
-  OSS = '/api/oss'
+  OSS = '/oss'
 }
 
 /** tauri原生跨窗口通信时传输的类型 */

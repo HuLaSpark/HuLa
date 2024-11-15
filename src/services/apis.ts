@@ -22,10 +22,10 @@ import type {
 
 import request from '@/services/request'
 
-const GET = <T>(url: string, params?: any) => request.get<T>(url, params)
-const POST = <T>(url: string, params?: any) => request.post<T>(url, params)
-const PUT = <T>(url: string, params?: any) => request.put<T>(url, params)
-const DELETE = <T>(url: string, params?: any) => request.delete<T>(url, params)
+const GET = <T>(url: string, params?: any, abort?: AbortController) => request.get<T>(url, params, abort)
+const POST = <T>(url: string, params?: any, abort?: AbortController) => request.post<T>(url, params, abort)
+const PUT = <T>(url: string, params?: any, abort?: AbortController) => request.put<T>(url, params, abort)
+const DELETE = <T>(url: string, params?: any, abort?: AbortController) => request.delete<T>(url, params, abort)
 
 export default {
   /** 获取用户信息 */
@@ -67,9 +67,9 @@ export default {
   /** 删除id */
   deleteEmoji: (params: { id: number }) => DELETE<EmojiItem[]>(urls.deleteEmoji, params),
   /** 获取联系人列表 */
-  getContactList: (params?: any) => GET<ListResponse<ContactItem>>(urls.getContactList, { params }),
+  getContactList: (params?: any) => GET<ListResponse<ContactItem>>(urls.getContactList, params),
   /** 获取好友申请列表 */
-  requestFriendList: (params?: any) => GET<ListResponse<RequestFriendItem>>(urls.requestFriendList, { params }),
+  requestFriendList: (params?: any) => GET<ListResponse<RequestFriendItem>>(urls.requestFriendList, params),
   /** 发送添加好友请求 */
   sendAddFriendRequest: (params: { targetUid: number; msg: string }) =>
     POST<EmojiItem[]>(urls.sendAddFriendRequest, params),
@@ -96,7 +96,7 @@ export default {
   /** 群组详情 */
   groupDetail: (params: { id: number }) => GET<GroupDetailReq>(urls.groupDetail, params),
   /** 会话详情 */
-  sessionDetail: (params: { id: number }) => GET<SessionItem>(urls.sessionDetail, { params }),
+  sessionDetail: (params: { id: number }) => GET<SessionItem>(urls.sessionDetail, params),
   /** 会话详情(联系人列表发消息用) */
   sessionDetailWithFriends: (params: { uid: number }) => GET<SessionItem>(urls.sessionDetailWithFriends, params),
   /** 添加群管理 */
@@ -115,5 +115,26 @@ export default {
   exitGroup: ({ roomId }: { roomId: number }) =>
     DELETE<boolean>(urls.exitGroup, {
       roomId
-    })
+    }),
+  /** 账号密码登录 */
+  login: (user: User, abort?: AbortController) =>
+    POST<string>(
+      urls.login,
+      {
+        account: user.account,
+        password: user.password
+      },
+      abort
+    ),
+  /** 退出登录 */
+  logout: (abort?: AbortController) => POST<string>(urls.logout, abort),
+  /** 注册 */
+  register: (user: User) =>
+    POST<string>(urls.register, {
+      name: user.name,
+      account: user.account,
+      password: user.password
+    }),
+  /** 检查token是否有效 */
+  checkToken: () => POST<string>(urls.checkToken)
 }

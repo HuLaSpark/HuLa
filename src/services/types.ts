@@ -135,6 +135,10 @@ export type UserInfoType = {
   /** 用户唯一标识 */
   uid: number
   /** 用户头像 */
+  account: string
+  /** 用户头像 */
+  password: string
+  /** 用户头像 */
   avatar: string
   /** 用户名 */
   name: string

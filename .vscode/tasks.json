@@ -1,0 +1,13 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "npm",
+      "script": "tauri:build:debug",
+      "group": "build",
+      "problemMatcher": [],
+      "label": "npm: tauri:build:debug",
+      "detail": "tauri build --debug"
+    }
+  ]
+}
