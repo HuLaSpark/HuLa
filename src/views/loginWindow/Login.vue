@@ -151,15 +151,21 @@
 <script setup lang="ts">
 import router from '@/router'
 import { useWindow } from '@/hooks/useWindow.ts'
-import { delay } from 'lodash-es'
 import { lightTheme } from 'naive-ui'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import apis from '@/services/apis.ts'
+import { useUserStore } from '@/stores/user.ts'
+import { computedToken } from '@/services/request.ts'
+import { useChatStore } from '@/stores/chat.ts'
+import { useEmojiStore } from '@/stores/emoji.ts'
 
 const settingStore = useSettingStore()
+const userStore = useUserStore()
+const chatStore = useChatStore()
+const emojiStore = useEmojiStore()
 const loginHistoriesStore = useLoginHistoriesStore()
 const { loginHistories } = loginHistoriesStore
 const { login } = storeToRefs(settingStore)
@@ -232,25 +238,48 @@ const normalLogin = async () => {
   loading.value = true
   apis
     .login({ ...info.value } as unknown as User)
-    .then((token) => {
+    .then(async (token) => {
       loginText.value = '登录成功, 正在跳转'
-      delay(async () => {
-        if (interruptLogin.value) return
-        login.value.accountInfo.token = token
-        // 获取用户信息
-        // TODO 这里的id暂时赋值给uid，因为后端没有统一返回uid，待后端调整
-        const userDetail = await apis.getUserDetail()
-        const account = {
-          ...userDetail,
-          uid: (userDetail as any).id,
-          token
-        }
-        loading.value = false
-        settingStore.setAccountInfo(account)
-        loginHistoriesStore.addLoginHistory(account)
-        // 打开主界面
-        await openHomeWindow()
-      }, 1000)
+      if (interruptLogin.value) return
+      userStore.isSign = true
+      login.value.accountInfo.token = token
+      // localStorage.setItem('USER_INFO', JSON.stringify(rest))
+      localStorage.setItem('TOKEN', token)
+      // 需要删除二维码，因为用户可能先跳转到二维码界面再回到登录界面，会导致二维码一直保持在内存中
+      if (localStorage.getItem('wsLogin')) {
+        localStorage.removeItem('wsLogin')
+      }
+      // 更新一下请求里面的 token.
+      computedToken.clear()
+      computedToken.get()
+      // 获取用户详情
+      const userDetail = await apis.getUserDetail()
+      // 自己更新自己上线
+      // groupStore.batchUpdateUserStatus([
+      //   {
+      //     activeStatus: OnlineEnum.ONLINE,
+      //     avatar: rest.avatar,
+      //     lastOptTime: Date.now(),
+      //     name: rest.name,
+      //     uid: rest.uid
+      //   }
+      // ])
+      // 获取用户详情
+      await chatStore.getSessionList(true)
+      // 自定义表情列表
+      await emojiStore.getEmojiList()
+      // TODO 这里的id暂时赋值给uid，因为后端没有统一返回uid，待后端调整
+      const account = {
+        ...userDetail,
+        uid: (userDetail as any).id,
+        token
+      }
+      loading.value = false
+      settingStore.setAccountInfo(account)
+      loginHistoriesStore.addLoginHistory(account)
+      await setLoginState()
+      // 打开主界面
+      await openHomeWindow()
     })
     .catch(() => {
       window.$message.error('登录失败')
@@ -268,15 +297,14 @@ const autoLogin = () => {
   loading.value = true
   // TODO 检查用户网络是否连接 (nyh -> 2024-03-16 12:06:59)
   loginText.value = '网络连接中'
+  // TODO 退出账号后不知道为什么请求头的token被移除了导致checkToken请求401
   apis
     .checkToken()
-    .then(() => {
-      window.$message.success('登录成功，正在跳转首页')
-      delay(async () => {
-        loading.value = false
-        await openHomeWindow()
-        await setLoginState()
-      }, 1000)
+    .then(async () => {
+      loginText.value = '登录成功, 正在跳转'
+      loading.value = false
+      await openHomeWindow()
+      await setLoginState()
     })
     .catch(() => {
       window.$message.error('登录失败')
@@ -317,13 +345,6 @@ const enterKey = (e: KeyboardEvent) => {
 }
 
 onMounted(async () => {
-  // 判断是否需要马上跳转到二维码登录页面
-  if (localStorage.getItem('isToQrcode')) {
-    router.push('/qrCode')
-    await nextTick(() => {
-      localStorage.removeItem('isToQrcode')
-    })
-  }
   await getCurrentWebviewWindow().show()
   // 自动登录
   if (login.value.autoLogin && login.value.accountInfo.token) {

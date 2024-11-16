@@ -17,7 +17,11 @@
           @dblclick="handleMsgDblclick(item)"
           @select="$event.click(item)">
           <n-flex :size="10" align="center" class="h-75px pl-6px pr-8px flex-1">
-            <n-avatar :color="'#fff'" :size="44" :src="item.avatar" bordered fallback-src="/logo.png" round />
+            <n-avatar v-if="item.avatar" :size="44" :src="item.avatar" bordered fallback-src="/logo.png" round />
+
+            <n-avatar v-else :color="'#909090'" :size="44" :src="item.avatar" bordered fallback-src="/logo.png" round>
+              {{ item.name.slice(0, 1) }}
+            </n-avatar>
 
             <n-flex class="h-fit flex-1 truncate" justify="space-between" vertical>
               <n-flex :size="4" align="center" class="flex-1 truncate" justify="space-between">
