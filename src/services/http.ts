@@ -33,8 +33,21 @@ async function Http<T>(
   fullResponse?: true,
   abort?: AbortController
 ): Promise<{ data: Promise<T>; resp: Response }> {
+  // 获取token
+  const token = localStorage.getItem('TOKEN')
+
   // 构建请求头
   const httpHeaders = new Headers(options.headers || {})
+
+  // 设置Content-Type
+  if (!httpHeaders.has('Content-Type') && !(options.body instanceof FormData)) {
+    httpHeaders.set('Content-Type', 'application/json')
+  }
+
+  // 设置Authorization
+  if (token) {
+    httpHeaders.set('Authorization', `Bearer ${token}`)
+  }
 
   // 构建 fetch 请求选项
   const fetchOptions: RequestInit = {

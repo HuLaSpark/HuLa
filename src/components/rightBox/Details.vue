@@ -1,13 +1,15 @@
 <template>
   <!-- 好友详情 -->
   <n-flex v-if="content.type === RoomTypeEnum.SINGLE" vertical align="center" :size="30" class="mt-60px select-none">
-    <n-image
-      width="146px"
-      height="146px"
-      style="border: 2px solid #fff"
-      class="rounded-50%"
-      :src="item.avatar"
-      alt="" />
+    <n-avatar v-if="item.avatar" class="rounded-50% size-146px border-(2px solid #fff)" :src="item.avatar" />
+
+    <n-avatar
+      v-else
+      :color="'#909090'"
+      class="rounded-50% size-146px text-28px border-(2px solid #fff)"
+      :src="item.avatar">
+      {{ item.name!.slice(0, 1) }}
+    </n-avatar>
 
     <span class="text-(20px [--text-color])">{{ item.name }}</span>
 

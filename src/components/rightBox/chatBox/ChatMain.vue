@@ -99,6 +99,7 @@
                     round
                     v-if="avatarExists(item.fromUser.uid)"
                     :size="34"
+                    :color="'#909090'"
                     @click="selectKey = item.message.id"
                     class="select-none"
                     :src="getAvatarSrc(item.fromUser.uid)"

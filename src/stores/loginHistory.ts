@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import { StoresEnum } from '../enums'
+import { StoresEnum } from '@/enums'
 
 export const useLoginHistoriesStore = defineStore(
   StoresEnum.LOGIN_HISTORY,
