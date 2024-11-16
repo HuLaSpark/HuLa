@@ -24,7 +24,20 @@
       <n-flex :size="20" class="p-22px select-none" vertical>
         <!-- 头像 -->
         <n-flex justify="center">
-          <n-avatar :size="80" :src="editInfo.content.avatar" round style="border: 3px solid #fff" />
+          <n-avatar
+            v-if="editInfo.content.avatar"
+            :size="80"
+            :src="editInfo.content.avatar"
+            round
+            style="border: 3px solid #fff" />
+
+          <n-avatar
+            v-else
+            :size="80"
+            :color="'#909090'"
+            :src="editInfo.content.avatar"
+            round
+            style="border: 3px solid #fff" />
         </n-flex>
         <n-flex v-if="currentBadge" align="center" justify="center">
           <span class="text-(14px #707070)">当前佩戴的徽章:</span>

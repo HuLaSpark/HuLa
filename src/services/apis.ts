@@ -47,7 +47,7 @@ export default {
   /** 标记消息，点赞等 */
   markMsg: (data?: MarkMsgReq) => PUT<void>(urls.markMsg, data),
   /** 获取用户详细信息 */
-  getUserDetail: () => GET<UserInfoType>(urls.getUserInfoDetail, {}),
+  getUserDetail: () => GET<UserInfoType>(urls.getUserInfoDetail),
   /** 获取徽章列表 */
   getBadgeList: (): Promise<BadgeType> => GET(urls.getBadgeList),
   /** 设置用户勋章 */

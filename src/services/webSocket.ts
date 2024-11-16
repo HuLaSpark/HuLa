@@ -40,11 +40,11 @@ class WS {
     worker.postMessage(`{"type":"initWS","value":${token ? `"${token}"` : null}}`)
   }
 
-  onWorkerMsg = (e: MessageEvent<any>) => {
+  onWorkerMsg = async (e: MessageEvent<any>) => {
     const params: { type: string; value: unknown } = JSON.parse(e.data)
     switch (params.type) {
       case 'message': {
-        this.onMessage(params.value as string)
+        await this.onMessage(params.value as string)
         break
       }
       case 'open': {
@@ -100,7 +100,7 @@ class WS {
   }
 
   // 收到消息回调
-  onMessage = (value: string) => {
+  onMessage = async (value: string) => {
     // FIXME 可能需要 try catch,
     const params: { type: WsResponseMessageType; data: unknown } = JSON.parse(value)
     const loginStore = useWsLoginStore()
@@ -148,14 +148,14 @@ class WS {
           }
         ])
         // 获取用户详情
-        chatStore.getSessionList(true)
+        await chatStore.getSessionList(true)
         // 自定义表情列表
-        emojiStore.getEmojiList()
+        await emojiStore.getEmojiList()
         break
       }
       // 收到消息
       case WsResponseMessageType.ReceiveMessage: {
-        chatStore.pushMsg(params.data as MessageType)
+        await chatStore.pushMsg(params.data as MessageType)
         Mitt.emit(MittEnum.SEND_MESSAGE, params.data)
         break
       }
