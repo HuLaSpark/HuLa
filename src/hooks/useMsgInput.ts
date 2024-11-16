@@ -203,10 +203,10 @@ export const useMsgInput = (messageInputDom: Ref) => {
         msgType: msg.type,
         body: { content: msg.content, replyMsgId: msg.reply !== 0 ? msg.reply : undefined }
       })
-      .then(async (res) => {
-        if (res.message.type === MsgEnum.TEXT) {
-          await chatStore.pushMsg(res)
-        }
+      .then(async () => {
+        // if (res.message.type === MsgEnum.TEXT) {
+        //   await chatStore.pushMsg(res)
+        // }
         // 发完消息就要刷新会话列表，
         //  FIXME 如果当前会话已经置顶了，可以不用刷新
         chatStore.updateSessionLastActiveTime(globalStore.currentSession.roomId)
