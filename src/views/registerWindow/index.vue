@@ -4,21 +4,21 @@
     <!--顶部操作栏-->
     <ActionBar :max-w="false" :shrink="false" />
 
-    <!--  手动登录样式  -->
-    <n-flex vertical :size="25" data-tauri-drag-region>
-      <!-- 头像 -->
-      <n-flex justify="center" class="w-full pt-20px" data-tauri-drag-region>
-        <img class="w-32px h-32px rounded-50% bg-#b6d6d9ff border-(2px solid #fff)" src="/logo.png" alt="" />
+    <n-flex vertical :size="25" class="pt-80px">
+      <n-flex justify="center" align="center">
+        <span class="text-(24px #70938c) font-bold textFont">欢迎注册</span>
+        <img class="w-100px h-40px" src="@/assets/logo/hula.png" alt="" />
       </n-flex>
 
-      <!-- 登录菜单 -->
-      <n-flex class="ma text-center h-full w-260px" vertical :size="16" data-tauri-drag-region>
+      <!-- 注册菜单 -->
+      <n-flex class="ma text-center h-full w-260px" vertical :size="16">
         <n-input
-          maxlength="16"
-          minlength="6"
+          maxlength="8"
+          minlength="1"
           size="large"
           v-model:value="info.name"
           type="text"
+          :allow-input="noSideSpace"
           :placeholder="namePH"
           @focus="namePH = ''"
           @blur="namePH = '输入HuLa昵称'"
@@ -26,10 +26,11 @@
 
         <n-input
           size="large"
-          maxlength="16"
+          maxlength="12"
           minlength="6"
           v-model:value="info.account"
           type="text"
+          :allow-input="noSideSpace"
           :placeholder="accountPH"
           @focus="accountPH = ''"
           @blur="accountPH = '输入HuLa账号'"
@@ -42,6 +43,7 @@
           size="large"
           v-model:value="info.password"
           type="password"
+          :allow-input="noSideSpace"
           :placeholder="passwordPH"
           @focus="passwordPH = ''"
           @blur="passwordPH = '输入HuLa密码'"
@@ -69,18 +71,17 @@
       </n-flex>
     </n-flex>
 
-    <!-- 底部操作栏 -->
-    <n-flex justify="center" class="text-14px" id="bottomBar" data-tauri-drag-region>
-      <div class="color-#13987f cursor-pointer" @click="router.push('/login')">账号登录</div>
-      <div class="w-1px h-14px bg-#ccc"></div>
-      <div class="color-#13987f cursor-pointer" @click="router.push('/qrCode')">扫码登录</div>
+    <!-- 底部栏 -->
+    <n-flex class="text-(12px #909090)" :size="8" justify="center">
+      <span>Copyright © {{ currentYear - 1 }}-{{ currentYear }} HuLaSpark All Rights Reserved.</span>
     </n-flex>
   </n-config-provider>
 </template>
 <script setup lang="ts">
-import router from '@/router'
 import { lightTheme } from 'naive-ui'
 import apis from '@/services/apis.ts'
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
+import dayjs from 'dayjs'
 
 /** 账号信息 */
 const info = ref({
@@ -88,8 +89,6 @@ const info = ref({
   password: '',
   name: ''
 })
-/** 是否中断登录 */
-const interruptLogin = ref(false)
 /** 协议 */
 const protocol = ref(true)
 const btnEnable = ref(false)
@@ -99,9 +98,14 @@ const accountPH = ref('输入HuLa账号')
 const passwordPH = ref('输入HuLa密码')
 /** 登录按钮的文本内容 */
 const btnText = ref('注册')
+// 使用day.js获取当前年份
+const currentYear = dayjs().year()
+
+/** 不允许输入空格 */
+const noSideSpace = (value: string) => !value.startsWith(' ') && !value.endsWith(' ')
 
 const register = async () => {
-  interruptLogin.value = true
+  btnEnable.value = true
   loading.value = true
   btnText.value = '注册中...'
   // 注册
@@ -113,19 +117,18 @@ const register = async () => {
     })
     .finally(() => {
       loading.value = false
-      interruptLogin.value = false
+      btnEnable.value = false
       btnText.value = '注册'
     })
 }
 
 watchEffect(() => {
   btnEnable.value = !(info.value.account && info.value.password && protocol.value)
-  if (interruptLogin.value) {
-    btnEnable.value = false
-  }
 })
 
-onMounted(async () => {})
+onMounted(async () => {
+  await getCurrentWebviewWindow().show()
+})
 
 onUnmounted(() => {})
 </script>
@@ -133,4 +136,8 @@ onUnmounted(() => {})
 <style scoped lang="scss">
 @use '@/styles/scss/global/login-bg';
 @use '@/styles/scss/login';
+
+.textFont {
+  font-family: AliFangYuan, sans-serif !important;
+}
 </style>

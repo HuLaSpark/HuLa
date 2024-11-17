@@ -18,7 +18,7 @@
           {{ avatarExists }}
         </n-avatar>
 
-        <n-avatar v-else :color="'#909090'" :size="34" :src="login.accountInfo.avatar" fallback-src="/logo.png" round />
+        <n-avatar v-else :size="34" :src="login.accountInfo.avatar" fallback-src="/logo.png" round />
 
         <div
           class="bg-[--left-bg-color] text-10px rounded-50% size-12px absolute bottom--2px right--2px border-(2px solid [--left-bg-color])"

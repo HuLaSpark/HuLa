@@ -37,7 +37,10 @@
             :color="'#909090'"
             :src="editInfo.content.avatar"
             round
-            style="border: 3px solid #fff" />
+            class="text-22px"
+            style="border: 3px solid #fff">
+            {{ editInfo.content.name?.slice(0, 1) }}
+          </n-avatar>
         </n-flex>
         <n-flex v-if="currentBadge" align="center" justify="center">
           <span class="text-(14px #707070)">当前佩戴的徽章:</span>
@@ -60,6 +63,7 @@
               :passively-activated="true"
               class="rounded-6px"
               clearable
+              :allow-input="noSideSpace"
               placeholder="请输入你的昵称"
               show-count
               type="text">
@@ -115,8 +119,13 @@ import { leftHook } from '@/layout/left/hook.ts'
 import Mitt from '@/utils/Bus.ts'
 import apis from '@/services/apis.ts'
 import { type } from '@tauri-apps/plugin-os'
+import { useCommon } from '@/hooks/useCommon.ts'
 
-const { login, editInfo, currentBadge, saveEditInfo, toggleWarningBadge, countGraphemes } = leftHook()
+const { login, editInfo, currentBadge, saveEditInfo, toggleWarningBadge } = leftHook()
+const { countGraphemes } = useCommon()
+
+/** 不允许输入空格 */
+const noSideSpace = (value: string) => !value.startsWith(' ') && !value.endsWith(' ')
 
 onMounted(() => {
   Mitt.on(MittEnum.OPEN_EDIT_INFO, () => {
@@ -137,7 +146,7 @@ onMounted(() => {
 .badge-item {
   .tip {
     transition: opacity 0.4s ease-in-out;
-    @apply absolute top-0 left-0 w-full h-full flex-center z-999 opacity-0;
+    @apply absolute top-0 left-0 w-full h-full flex-center gap-4px z-999 opacity-0;
   }
   @apply bg-#ccc relative rounded-50% size-fit p-4px cursor-pointer;
   &:hover .tip {

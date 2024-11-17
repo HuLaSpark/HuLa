@@ -11,12 +11,17 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/register',
     name: 'register',
-    component: () => import('@/views/loginWindow/Register.vue')
+    component: () => import('@/views/registerWindow/index.vue')
   },
   {
     path: '/qrCode',
     name: 'qrCode',
     component: () => import('@/views/loginWindow/QRCode.vue')
+  },
+  {
+    path: '/proxy',
+    name: 'proxy',
+    component: () => import('@/views/loginWindow/Proxy.vue')
   },
   {
     path: '/tray',
@@ -53,44 +58,44 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/robot',
     name: 'robot',
-    component: () => import('@/views/homeWindow/robot/index.vue'),
+    component: () => import('@/plugins/robot/index.vue'),
     children: [
       {
         path: '/welcome',
         name: 'welcome',
-        component: () => import('@/views/homeWindow/robot/views/Welcome.vue')
+        component: () => import('@/plugins/robot/views/Welcome.vue')
       },
       {
         path: '/chat',
         name: 'chat',
-        component: () => import('@/views/homeWindow/robot/views/Chat.vue')
+        component: () => import('@/plugins/robot/views/Chat.vue')
       },
       {
         path: '/chatSettings',
         name: 'chatSettings',
-        component: () => import('@/views/homeWindow/robot/views/chatSettings/index.vue')
+        component: () => import('@/plugins/robot/views/chatSettings/index.vue')
       }
     ]
   },
   {
     path: '/mail',
     name: 'mail',
-    component: () => import('@/views/homeWindow/Mail.vue')
+    component: () => import('@/views/mailWindow/index.vue')
   },
   {
     path: '/dynamic',
     name: 'dynamic',
-    component: () => import('@/views/homeWindow/Dynamic.vue')
+    component: () => import('@/plugins/dynamic/index.vue')
   },
   {
     path: '/onlineStatus',
     name: 'onlineStatus',
-    component: () => import('@/views/homeWindow/onlineStatus/index.vue')
+    component: () => import('@/views/onlineStatusWindow/index.vue')
   },
   {
     path: '/about',
     name: 'about',
-    component: () => import('@/views/homeWindow/more/About.vue')
+    component: () => import('@/views/aboutWindow/index.vue')
   },
   {
     path: '/alone',
@@ -105,22 +110,22 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/settings',
     name: 'settings',
-    component: () => import('@/views/homeWindow/more/settings/index.vue'),
+    component: () => import('@/views/moreWindow/settings/index.vue'),
     children: [
       {
         path: '/general',
         name: 'general',
-        component: () => import('@/views/homeWindow/more/settings/General.vue')
+        component: () => import('@/views/moreWindow/settings/General.vue')
       },
       {
         path: '/loginSetting',
         name: 'loginSetting',
-        component: () => import('@/views/homeWindow/more/settings/LoginSetting.vue')
+        component: () => import('@/views/moreWindow/settings/LoginSetting.vue')
       },
       {
         path: '/versatile',
         name: 'versatile',
-        component: () => import('@/views/homeWindow/more/settings/Versatile.vue')
+        component: () => import('@/views/moreWindow/settings/Versatile.vue')
       }
     ]
   }
