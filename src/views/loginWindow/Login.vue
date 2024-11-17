@@ -1,22 +1,25 @@
 <template>
-  <!-- todo 这里设置了 data-tauri-drag-region但是有部分区域不可以拖动 -->
   <!-- 单独使用n-config-provider来包裹不需要主题切换的界面 -->
   <n-config-provider :theme="lightTheme" data-tauri-drag-region class="login-box size-full rounded-8px select-none">
     <!--顶部操作栏-->
-    <ActionBar :max-w="false" :shrink="false" />
+    <ActionBar :max-w="false" :shrink="false" proxy />
 
     <!--  手动登录样式  -->
-    <n-flex vertical :size="25" v-if="!login.autoLogin || !login.accountInfo.token" data-tauri-drag-region>
+    <n-flex vertical :size="25" v-if="!login.autoLogin || !login.accountInfo.token">
       <!-- 头像 -->
       <n-flex justify="center" class="w-full pt-35px" data-tauri-drag-region>
-        <img
-          class="w-80px h-80px rounded-50% bg-#b6d6d9ff border-(2px solid #fff)"
-          :src="info.avatar || '/logo.png'"
-          alt="" />
+        <n-avatar
+          v-if="info.avatar"
+          class="size-80px rounded-50% bg-#b6d6d9ff border-(2px solid #fff)"
+          :src="info.avatar || '/logo.png'" />
+
+        <n-avatar v-else class="size-80px text-20px rounded-50% bg-#b6d6d9ff border-(2px solid #fff)">
+          {{ info.name.slice(0, 1) }}
+        </n-avatar>
       </n-flex>
 
       <!-- 登录菜单 -->
-      <n-flex class="ma text-center h-full w-260px" vertical :size="16" data-tauri-drag-region>
+      <n-flex class="ma text-center h-full w-260px" vertical :size="16">
         <n-input
           style="padding-left: 20px"
           size="large"
@@ -38,7 +41,7 @@
           </template>
         </n-input>
 
-        <!-- 账号选择框 TODO 尝试使用n-popover组件来实现这个功能 (nyh -> 2024-03-09 02:56:06)-->
+        <!-- 账号选择框-->
         <div
           style="border: 1px solid rgba(70, 70, 70, 0.1)"
           v-if="loginHistories.length > 0 && arrowStatus"
@@ -51,7 +54,10 @@
               @click="giveAccount(item)"
               class="p-8px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px">
               <div class="flex-between-center">
-                <img :src="item.avatar" class="w-28px h-28px bg-#ccc rounded-50%" alt="" />
+                <n-avatar v-if="item.avatar" :src="item.avatar" class="size-28px bg-#ccc rounded-50%" />
+                <n-avatar v-else :src="item.avatar" :color="'#909090'" class="size-28px text-10px bg-#ccc rounded-50%">
+                  {{ item.name.slice(0, 1) }}
+                </n-avatar>
                 <p class="text-14px color-#505050">{{ item.account }}</p>
                 <svg @click.stop="delAccount(item)" class="w-12px h-12px">
                   <use href="#close"></use>
@@ -128,18 +134,24 @@
     </n-flex>
 
     <!-- 底部操作栏 -->
-    <n-flex justify="center" class="text-14px" id="bottomBar" data-tauri-drag-region>
+    <n-flex justify="center" class="text-14px" id="bottomBar">
       <div class="color-#13987f cursor-pointer" @click="router.push('/qrCode')">扫码登录</div>
       <div class="w-1px h-14px bg-#ccc"></div>
       <div v-if="login.autoLogin" class="color-#13987f cursor-pointer" @click="removeToken">移除账号</div>
-      <n-popover v-else trigger="click" :show-checkmark="false" :show-arrow="false">
+      <n-popover
+        v-else
+        trigger="click"
+        id="moreShow"
+        v-model:show="moreShow"
+        :show-checkmark="false"
+        :show-arrow="false">
         <template #trigger>
           <div class="color-#13987f cursor-pointer">更多选项</div>
         </template>
         <n-flex vertical :size="2">
           <div
             class="text-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px"
-            @click="router.push('/register')">
+            @click="createWebviewWindow('注册', 'register', 600, 600)">
             注册账号
           </div>
           <div class="text-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px">忘记密码</div>
@@ -185,6 +197,7 @@ const protocol = ref(true)
 const loginDisabled = ref(false)
 const loading = ref(false)
 const arrowStatus = ref(false)
+const moreShow = ref(false)
 const { setLoginState } = useLogin()
 const accountPH = ref('输入HuLa账号')
 const passwordPH = ref('输入HuLa密码')
@@ -239,8 +252,9 @@ const normalLogin = async () => {
   apis
     .login({ ...info.value } as unknown as User)
     .then(async (token) => {
-      loginText.value = '登录成功, 正在跳转'
       if (interruptLogin.value) return
+      loginDisabled.value = true
+      loginText.value = '登录成功, 正在跳转'
       userStore.isSign = true
       login.value.accountInfo.token = token
       // localStorage.setItem('USER_INFO', JSON.stringify(rest))
@@ -315,17 +329,7 @@ const autoLogin = () => {
     })
 }
 
-const closeMenu = (event: MouseEvent) => {
-  const target = event.target as Element
-  if (!target.matches('.account-box, .account-box *, .down')) {
-    arrowStatus.value = false
-  }
-  if (target.matches('#bottomBar *') && login.value.autoLogin) {
-    interruptLogin.value = true
-  }
-}
-
-// 移除已登录账号
+/** 移除已登录账号 */
 const removeToken = () => {
   login.value.accountInfo = {
     account: '',
@@ -336,6 +340,19 @@ const removeToken = () => {
     token: ''
   }
   login.value.autoLogin = false
+}
+
+const closeMenu = (event: MouseEvent) => {
+  const target = event.target as Element
+  if (!target.matches('.account-box, .account-box *, .down')) {
+    arrowStatus.value = false
+  }
+  if (target.matches('#bottomBar *') && login.value.autoLogin) {
+    interruptLogin.value = true
+  }
+  if (!target.matches('#moreShow')) {
+    moreShow.value = false
+  }
 }
 
 const enterKey = (e: KeyboardEvent) => {

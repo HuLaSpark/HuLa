@@ -11,7 +11,6 @@ import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import Mitt from '@/utils/Bus.ts'
 import apis from '@/services/apis.ts'
-import GraphemeSplitter from 'grapheme-splitter'
 import { delay } from 'lodash-es'
 import router from '@/router'
 import { listen } from '@tauri-apps/api/event'
@@ -133,20 +132,12 @@ export const leftHook = () => {
   /** 佩戴徽章 */
   const toggleWarningBadge = async (badge: BadgeType) => {
     if (!badge?.id) return
-    const res: any = await apis.setUserBadge(badge.id)
-    if (res) {
-      window.$message.success('佩戴成功')
-      /** 获取用户信息 */
-      apis.getUserInfo().then((res) => {
-        editInfo.value.content = res as any
-      })
-    }
-  }
-
-  /** 计算字符长度 */
-  const countGraphemes = (value: string) => {
-    const splitter = new GraphemeSplitter()
-    return splitter.countGraphemes(value)
+    await apis.setUserBadge(badge.id)
+    window.$message.success('佩戴成功')
+    /** 获取用户信息 */
+    apis.getUserInfo().then((res) => {
+      editInfo.value.content = res as any
+    })
   }
 
   /* 打开并且创建modal */
@@ -262,7 +253,6 @@ export const leftHook = () => {
     openContent,
     saveEditInfo,
     toggleWarningBadge,
-    countGraphemes,
     updateCurrentUserCache,
     followOS
   }

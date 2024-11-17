@@ -3,6 +3,7 @@ import { Ref } from 'vue'
 import { createFileOrVideoDom } from '@/utils/CreateDom.ts'
 import { RegExp } from '@/utils/RegExp.ts'
 import { useSettingStore } from '@/stores/setting.ts'
+import GraphemeSplitter from 'grapheme-splitter'
 
 /** 常用工具类 */
 export const useCommon = () => {
@@ -345,6 +346,12 @@ export const useCommon = () => {
     }
   }
 
+  /** 计算字符长度 */
+  const countGraphemes = (value: string) => {
+    const splitter = new GraphemeSplitter()
+    return splitter.countGraphemes(value)
+  }
+
   /** 去除字符串中的元素标记 */
   const removeTag = (fragment: any) => new DOMParser().parseFromString(fragment, 'text/html').body.textContent || ''
 
@@ -357,6 +364,7 @@ export const useCommon = () => {
     handlePaste,
     removeTag,
     FileOrVideoPaste,
+    countGraphemes,
     reply,
     userUid
   }

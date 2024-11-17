@@ -1,4 +1,3 @@
-import { useSettingStore } from '@/stores/setting.ts'
 import Http, { HttpParams } from './http.ts'
 import { ServiceResponse } from '@/services/types.ts'
 
@@ -29,16 +28,8 @@ const responseInterceptor = async <T>(
   body: any,
   abort?: AbortController
 ): Promise<T> => {
-  const token = useSettingStore().login.accountInfo.token
-
-  const headers = {
-    'Content-Type': 'application/json;charset=utf-8',
-    Authorization: `Bearer ${token}`
-  }
-
   let httpParams: HttpParams = {
-    method,
-    headers
+    method
   }
 
   if (method === 'GET') {

@@ -8,7 +8,7 @@
           <p class="text-(12px #13987f) cursor-pointer">GitHub 给添加星标</p>
         </template>
         <n-flex vertical class="w-360px h-fit">
-          <video class="w-full h-240px rounded-t-8px object-cover" src="@/assets/video/star.mp4" autoplay loop />
+          <video class="w-full h-240px rounded-t-8px object-cover" src="../../../assets/video/star.mp4" autoplay loop />
           <n-flex vertical :size="10" class="p-14px">
             <p class="text-(16px [--text-color] font-bold)">在 GitHub 为我们点亮星标</p>
             <p class="text-(12px [--chat-text-color]) leading-5">
@@ -40,7 +40,11 @@
           <p class="text-(12px #13987f) cursor-pointer">分享您宝贵的建议</p>
         </template>
         <n-flex vertical class="w-360px h-fit">
-          <video class="w-full h-240px rounded-t-8px object-cover" src="@/assets/video/issue.mp4" autoplay loop />
+          <video
+            class="w-full h-240px rounded-t-8px object-cover"
+            src="../../../assets/video/issue.mp4"
+            autoplay
+            loop />
           <n-flex vertical :size="10" class="p-14px">
             <p class="text-(16px [--text-color] font-bold)">在 GitHub 分享您宝贵的反馈</p>
             <p class="text-(12px [--chat-text-color]) leading-5">
