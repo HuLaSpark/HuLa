@@ -56,7 +56,7 @@
               <div class="flex-between-center">
                 <n-avatar v-if="item.avatar" :src="item.avatar" class="size-28px bg-#ccc rounded-50%" />
                 <n-avatar v-else :src="item.avatar" :color="'#909090'" class="size-28px text-10px bg-#ccc rounded-50%">
-                  {{ item.name.slice(0, 1) }}
+                  {{ item.name?.slice(0, 1) }}
                 </n-avatar>
                 <p class="text-14px color-#505050">{{ item.account }}</p>
                 <svg @click.stop="delAccount(item)" class="w-12px h-12px">
@@ -172,12 +172,10 @@ import apis from '@/services/apis.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { computedToken } from '@/services/request.ts'
 import { useChatStore } from '@/stores/chat.ts'
-import { useEmojiStore } from '@/stores/emoji.ts'
 
 const settingStore = useSettingStore()
 const userStore = useUserStore()
 const chatStore = useChatStore()
-const emojiStore = useEmojiStore()
 const loginHistoriesStore = useLoginHistoriesStore()
 const { loginHistories } = loginHistoriesStore
 const { login } = storeToRefs(settingStore)
@@ -280,8 +278,8 @@ const normalLogin = async () => {
       // ])
       // 获取用户详情
       await chatStore.getSessionList(true)
-      // 自定义表情列表
-      await emojiStore.getEmojiList()
+      // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取
+      // await emojiStore.getEmojiList()
       // TODO 这里的id暂时赋值给uid，因为后端没有统一返回uid，待后端调整
       const account = {
         ...userDetail,

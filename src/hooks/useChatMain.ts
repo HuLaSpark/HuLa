@@ -13,7 +13,7 @@ export const useChatMain = (activeItem?: SessionItem) => {
   const { removeTag, userUid } = useCommon()
   const globalStore = useGlobalStore()
   const chatStore = useChatStore()
-  const userInfo = useUserStore()?.userInfo
+  const userStore = useUserStore()?.userInfo
   // const userInfo = useUserStore()?.userInfo
   // const chatMessageList = computed(() => chatStore.chatMessageList)
   const messageOptions = computed(() => chatStore.currentMessageOptions)
@@ -92,7 +92,7 @@ export const useChatMain = (activeItem?: SessionItem) => {
         if (isDiffNow({ time: item.message.sendTime, unit: 'minute', diff: 2 })) return
         // 判断自己是否是发送者或者是否是管理员
         const isCurrentUser = item.fromUser.uid === userUid.value
-        const isAdmin = userInfo?.power === PowerEnum.ADMIN
+        const isAdmin = userStore?.power === PowerEnum.ADMIN
         return isCurrentUser || isAdmin
       }
     }

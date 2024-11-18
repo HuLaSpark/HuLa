@@ -3,7 +3,7 @@ import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { useCachedStore } from '@/stores/cached.ts'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
-import { EventEnum, IsYetEnum, MittEnum, MsgEnum, PluginEnum, ThemeEnum } from '@/enums'
+import { EventEnum, IsYesEnum, MittEnum, MsgEnum, PluginEnum, ThemeEnum } from '@/enums'
 import { BadgeType, UserInfoType } from '@/services/types.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
@@ -37,19 +37,18 @@ export const leftHook = () => {
   /** 已打开窗口的列表 */
   const openWindowsList = ref(new Set())
   /** 编辑资料弹窗 */
-  // TODO 这里考虑是否查接口查实时的用户信息还是直接查本地存储的用户信息 (nyh -> 2024-05-05 01:12:36)
   const editInfo = ref<{
     show: boolean
-    content: UserInfoType
+    content: Partial<UserInfoType>
     badgeList: BadgeType[]
   }>({
     show: false,
-    content: {} as UserInfoType,
+    content: {},
     badgeList: []
   })
   /** 当前用户佩戴的徽章  */
   const currentBadge = computed(() =>
-    editInfo.value.badgeList.find((item) => item.obtain === IsYetEnum.YES && item.wearing === IsYetEnum.YES)
+    editInfo.value.badgeList.find((item) => item.obtain === IsYesEnum.YES && item.wearing === IsYesEnum.YES)
   )
   const chatStore = useChatStore()
   const sessionList = computed(() =>
@@ -134,10 +133,6 @@ export const leftHook = () => {
     if (!badge?.id) return
     await apis.setUserBadge(badge.id)
     window.$message.success('佩戴成功')
-    /** 获取用户信息 */
-    apis.getUserInfo().then((res) => {
-      editInfo.value.content = res as any
-    })
   }
 
   /* 打开并且创建modal */
