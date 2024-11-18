@@ -70,6 +70,7 @@ export const useCachedStore = defineStore('cached', () => {
       })
       .filter((item) => !item.lastModifyTime || isDiffNow10Min(item.lastModifyTime))
     if (!result.length) return
+    // TODO 批量请求徽章详情当翻历史记录的时候会导致发送很多请求，需要优化，可以直接存储到本地
     const data = await apis.getBadgesBatch(result)
     data?.forEach(
       (item: CacheBadgeItem) =>
@@ -93,7 +94,7 @@ export const useCachedStore = defineStore('cached', () => {
 
   const getGroupAtUserBaseInfo = async () => {
     if (currentRoomId.value === 1) return
-    currentAtUsersList.value = await apis.getAllUserBaseInfo({ params: { roomId: currentRoomId.value } })
+    currentAtUsersList.value = await apis.getAllUserBaseInfo({ roomId: currentRoomId.value })
   }
 
   /**

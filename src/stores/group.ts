@@ -82,18 +82,14 @@ export const useGroupStore = defineStore('group', () => {
     roomId: currentRoomId.value
   })
 
-  // 移动端控制显隐
-  const showGroupList = ref(false)
-
   // 获取群成员
   const getGroupUserList = async (refresh = false) => {
-    const res = await apis.getGroupList({
+    const data = await apis.getGroupList({
       pageSize: pageSize,
       cursor: refresh ? '' : userListOptions.cursor,
       roomId: currentRoomId.value
     })
-    if (!res) return
-    const data = res
+    if (!data) return
     const tempNew = cloneDeep(uniqueUserList(refresh ? data.list : [...data.list, ...userList.value]))
     tempNew.sort(sorAction)
     userList.value = tempNew
@@ -114,9 +110,11 @@ export const useGroupStore = defineStore('group', () => {
   }
 
   // 加载更多群成员
-  const loadMore = async () => {
-    if (userListOptions.isLast) return
+  const loadMoreGroupMembers = async () => {
+    if (userListOptions.isLast || userListOptions.loading) return
+    userListOptions.loading = true
     await getGroupUserList()
+    userListOptions.loading = false
   }
 
   // 更新用户在线状态
@@ -128,7 +126,12 @@ export const useGroupStore = defineStore('group', () => {
       findIndex > -1 && (tempNew[findIndex].activeStatus = curUser.activeStatus)
     }
     tempNew.sort(sorAction)
+    // TODO: 这里的数据为什么前后不一致
     userList.value = tempNew
+    console.log(userList.value)
+    setTimeout(() => {
+      console.log(userList.value)
+    }, 3000)
   }
 
   // 过滤掉小黑子
@@ -187,13 +190,12 @@ export const useGroupStore = defineStore('group', () => {
   return {
     userList,
     userListOptions,
-    loadMore,
+    loadMoreGroupMembers,
     getGroupUserList,
     getCountStatistic,
     currentLordId,
     countInfo,
     batchUpdateUserStatus,
-    showGroupList,
     filterUser,
     adminUidList,
     adminList,

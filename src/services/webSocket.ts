@@ -3,7 +3,6 @@ import { useUserStore } from '@/stores/user'
 import { useChatStore } from '@/stores/chat'
 import { useGroupStore } from '@/stores/group'
 import { useGlobalStore } from '@/stores/global'
-import { useEmojiStore } from '@/stores/emoji'
 import { WsResponseMessageType } from '@/utils/wsType'
 import type { LoginSuccessResType, LoginInitResType, WsReqMsgContentType, OnStatusChangeType } from '@/utils/wsType'
 import type { MessageType, MarkItemType, RevokedMsgType } from '@/services/types'
@@ -108,7 +107,6 @@ class WS {
     const chatStore = useChatStore()
     const groupStore = useGroupStore()
     const globalStore = useGlobalStore()
-    const emojiStore = useEmojiStore()
     switch (params.type) {
       // 获取登录二维码
       case WsResponseMessageType.LoginQrCode: {
@@ -126,7 +124,6 @@ class WS {
       case WsResponseMessageType.LoginSuccess: {
         userStore.isSign = true
         const { token, ...rest } = params.data as LoginSuccessResType
-        Mitt.emit(WsResEnum.LOGIN_SUCCESS, params.data)
         // FIXME 可以不需要赋值了，单独请求了接口。
         userStore.userInfo = { ...userStore.userInfo, ...rest }
         localStorage.setItem('USER_INFO', JSON.stringify(rest))
@@ -149,8 +146,9 @@ class WS {
         ])
         // 获取用户详情
         await chatStore.getSessionList(true)
-        // 自定义表情列表
-        await emojiStore.getEmojiList()
+        // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取
+        // await emojiStore.getEmojiList()
+        Mitt.emit(WsResEnum.LOGIN_SUCCESS, params.data)
         break
       }
       // 收到消息
@@ -165,6 +163,7 @@ class WS {
         groupStore.countInfo.onlineNum = data.onlineNum
         // groupStore.countInfo.totalNum = data.totalNum
         groupStore.batchUpdateUserStatus(data.changeList)
+        console.log('收到用户下线通知', data)
         break
       }
       // 用户 token 过期

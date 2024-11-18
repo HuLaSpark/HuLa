@@ -80,7 +80,7 @@
           <template v-for="item in editInfo.badgeList" :key="item.id">
             <div class="badge-item">
               <n-image
-                :class="{ 'grayscale-0': item.obtain === IsYetEnum.YES }"
+                :class="{ 'grayscale-0': item.obtain === IsYesEnum.YES }"
                 :src="item.img"
                 alt="badge"
                 class="flex-center grayscale"
@@ -89,8 +89,8 @@
                 preview-disabled
                 round />
               <div class="tip">
-                <template v-if="item.obtain === IsYetEnum.YES">
-                  <n-button v-if="item.wearing === IsYetEnum.NO" color="#13987f" @click="toggleWarningBadge(item)">
+                <template v-if="item.obtain === IsYesEnum.YES">
+                  <n-button v-if="item.wearing === IsYesEnum.NO" color="#13987f" @click="toggleWarningBadge(item)">
                     佩戴
                   </n-button>
                 </template>
@@ -114,13 +114,15 @@
   </n-modal>
 </template>
 <script setup lang="ts">
-import { IsYetEnum, MittEnum } from '@/enums'
+import { IsYesEnum, MittEnum } from '@/enums'
 import { leftHook } from '@/layout/left/hook.ts'
 import Mitt from '@/utils/Bus.ts'
 import apis from '@/services/apis.ts'
 import { type } from '@tauri-apps/plugin-os'
 import { useCommon } from '@/hooks/useCommon.ts'
+import { useUserStore } from '@/stores/user.ts'
 
+const userStore = useUserStore()
 const { login, editInfo, currentBadge, saveEditInfo, toggleWarningBadge } = leftHook()
 const { countGraphemes } = useCommon()
 
@@ -131,13 +133,10 @@ onMounted(() => {
   Mitt.on(MittEnum.OPEN_EDIT_INFO, () => {
     Mitt.emit(MittEnum.CLOSE_INFO_SHOW)
     editInfo.value.show = true
-    /** 获取用户的徽章列表 */
+    editInfo.value.content = userStore.userInfo
+    /** 获取徽章列表 */
     apis.getBadgeList().then((res) => {
       editInfo.value.badgeList = res as any
-    })
-    /** 获取用户信息 */
-    apis.getUserInfo().then((res) => {
-      editInfo.value.content = res as any
     })
   })
 })

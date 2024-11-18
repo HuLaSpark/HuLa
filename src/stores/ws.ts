@@ -1,6 +1,4 @@
-import { ref } from 'vue'
 import { defineStore } from 'pinia'
-
 import wsIns from '@/services/webSocket.ts'
 import { WsRequestMsgType } from '@/utils/wsType'
 
