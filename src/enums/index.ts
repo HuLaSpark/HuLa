@@ -173,7 +173,7 @@ export enum PowerEnum {
   ADMIN
 }
 
-export enum IsYetEnum {
+export enum IsYesEnum {
   NO,
   YES
 }

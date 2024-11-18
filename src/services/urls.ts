@@ -6,7 +6,6 @@ const prefix = VITE_SERVICE_URL
 
 export default {
   // 用户相关
-  getUserInfo: `${prefix + URLEnum.USER}/userInfo`, // 获取用户信息
   getBadgeList: `${prefix + URLEnum.USER}/badges`, // 获取徽章列表
   getMemberStatistic: `${prefix + URLEnum.CHAT}/public/member/statistic`,
   getUserInfoBatch: `${prefix + URLEnum.USER}/public/summary/userInfo/batch`,

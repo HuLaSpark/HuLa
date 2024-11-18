@@ -20,7 +20,7 @@
             <n-avatar v-if="item.avatar" :size="44" :src="item.avatar" bordered fallback-src="/logo.png" round />
 
             <n-avatar v-else :color="'#909090'" :size="44" :src="item.avatar" bordered fallback-src="/logo.png" round>
-              {{ item.name.slice(0, 1) }}
+              {{ item.name?.slice(0, 1) }}
             </n-avatar>
 
             <n-flex class="h-fit flex-1 truncate" justify="space-between" vertical>
@@ -127,7 +127,7 @@ watchEffect(() => {
 
 onBeforeMount(() => {
   // 请求回话列表
-  chatStore.getSessionList(true)
+  chatStore.getSessionList()
 })
 
 onMounted(() => {

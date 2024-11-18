@@ -28,8 +28,6 @@ const PUT = <T>(url: string, params?: any, abort?: AbortController) => request.p
 const DELETE = <T>(url: string, params?: any, abort?: AbortController) => request.delete<T>(url, params, abort)
 
 export default {
-  /** 获取用户信息 */
-  getUserInfo: (): Promise<UserItem> => GET(urls.getUserInfo),
   /** 获取群成员列表 */
   getGroupList: (params?: any) => GET<ListResponse<UserItem>>(urls.getGroupUserList, params),
   /** 获取群成员统计 */
