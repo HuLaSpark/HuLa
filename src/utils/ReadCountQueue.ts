@@ -17,7 +17,7 @@ const task = () => {
   request?.abort()
   if (queue.size > 0) {
     // 开始新请求
-    request = apis.getMsgReadCount({ params: { msgIds: [...queue] } })
+    request = apis.getMsgReadCount({ msgIds: [...queue] })
     request.send().then((res: MsgReadUnReadCountType[]) => {
       const result = new Map<number, MsgReadUnReadCountType>()
       res.forEach((item) => result.set(item.msgId, item))

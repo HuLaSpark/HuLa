@@ -25,13 +25,10 @@ export default defineConfig(({ mode }: ConfigEnv) => {
     css: {
       preprocessorOptions: {
         scss: {
-          additionalData: '@use "./src/styles/scss/global/variable.scss" as *;' // 加载全局样式，使用scss特性
+          api: 'modern-compiler',
+          additionalData: '@use "@/styles/scss/global/variable.scss" as *;' // 加载全局样式，使用scss特性
         }
       }
-    },
-    define: {
-      // enable hydration mismatch details in production build 3.4新增水化不匹配的警告
-      __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'true'
     },
     plugins: [
       /**
@@ -99,7 +96,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
           // “/api” 以及前置字符串会被替换为真正域名
           target: config.VITE_SERVICE_URL, // 请求域名
           changeOrigin: true, // 是否跨域
-          rewrite: (path) => path.replace(/^\/api/, '/api')
+          rewrite: (path) => path.replace(/^\/api/, '')
         }
       },
       hmr: true, // 热更新

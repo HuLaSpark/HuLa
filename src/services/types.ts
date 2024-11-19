@@ -3,7 +3,7 @@
  * 注意：请使用TSDoc规范进行注释，以便在使用时能够获得良好提示。
  * @see TSDoc规范https://tsdoc.org/
  **/
-import { ActEnum, IsYetEnum, MarkEnum, MsgEnum, OnlineEnum, RoomTypeEnum, SexEnum } from '@/enums'
+import { ActEnum, IsYesEnum, MarkEnum, MsgEnum, OnlineEnum, RoomTypeEnum, SexEnum } from '@/enums'
 
 /**响应请求体*/
 export type ServiceResponse = {
@@ -135,6 +135,10 @@ export type UserInfoType = {
   /** 用户唯一标识 */
   uid: number
   /** 用户头像 */
+  account: string
+  /** 用户头像 */
+  password: string
+  /** 用户头像 */
   avatar: string
   /** 用户名 */
   name: string
@@ -156,9 +160,9 @@ export type BadgeType = {
   // 徽章图标
   img: string
   // 是否拥有 0否 1是
-  obtain: IsYetEnum
+  obtain: IsYesEnum
   // 是否佩戴 0否 1是
-  wearing: IsYetEnum
+  wearing: IsYesEnum
 }
 
 export type MarkItemType = {

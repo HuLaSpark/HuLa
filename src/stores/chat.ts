@@ -124,7 +124,7 @@ export const useChatStore = defineStore('chat', () => {
       if (currentRoomType.value === RoomTypeEnum.GROUP) {
         groupStore.getGroupUserList(true)
         groupStore.getCountStatistic()
-        // cachedStore.getGroupAtUserBaseInfo()
+        cachedStore.getGroupAtUserBaseInfo()
       }
     }
 
@@ -188,10 +188,8 @@ export const useChatStore = defineStore('chat', () => {
     sessionOptions.isLoading = true
     const response = await apis
       .getSessionList({
-        params: {
-          pageSize: sessionList.length > pageSize ? sessionList.length : pageSize,
-          cursor: isFresh || !sessionOptions.cursor ? undefined : sessionOptions.cursor
-        }
+        pageSize: sessionList.length > pageSize ? sessionList.length : pageSize,
+        cursor: isFresh || !sessionOptions.cursor ? '' : sessionOptions.cursor
       })
       .catch(() => {
         sessionOptions.isLoading = false
@@ -220,7 +218,7 @@ export const useChatStore = defineStore('chat', () => {
       // 初始化所有用户基本信息
       // userStore.isSign && (await cachedStore.initAllUserBaseInfo())
       // 联系人列表
-      await contactStore.getContactList(true)
+      await contactStore.getContactList()
     }
   }
 

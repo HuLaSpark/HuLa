@@ -56,7 +56,7 @@
     </n-virtual-list>
   </div>
 
-  <!-- 发送按钮 TODO 建议不要放在外面会影响视觉效果，可以放在发送按钮里面做提示，发送按钮需要修改一下大小 (nyh -> 2024-09-01 23:41:34) -->
+  <!-- 发送按钮 -->
   <n-flex align="center" justify="space-between" :size="12">
     <n-config-provider :theme="lightTheme">
       <n-button-group size="small" class="pr-20px">
@@ -119,7 +119,7 @@ import Mitt from '@/utils/Bus.ts'
 import { CacheUserItem, MockItem } from '@/services/types.ts'
 import { emit, listen } from '@tauri-apps/api/event'
 import { useSettingStore } from '@/stores/setting.ts'
-import { sendOptions } from '@/views/homeWindow/more/settings/config.ts'
+import { sendOptions } from '@/views/moreWindow/settings/config.ts'
 import { useMsgInput } from '@/hooks/useMsgInput.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { onKeyStroke } from '@vueuse/core'

@@ -1,22 +1,25 @@
 <template>
-  <!-- todo 这里设置了 data-tauri-drag-region但是有部分区域不可以拖动 -->
   <!-- 单独使用n-config-provider来包裹不需要主题切换的界面 -->
   <n-config-provider :theme="lightTheme" data-tauri-drag-region class="login-box size-full rounded-8px select-none">
     <!--顶部操作栏-->
-    <ActionBar :max-w="false" :shrink="false" />
+    <ActionBar :max-w="false" :shrink="false" proxy />
 
     <!--  手动登录样式  -->
-    <n-flex vertical :size="25" v-if="!isAutoLogin" data-tauri-drag-region>
+    <n-flex vertical :size="25" v-if="!login.autoLogin || !login.accountInfo.token">
       <!-- 头像 -->
       <n-flex justify="center" class="w-full pt-35px" data-tauri-drag-region>
-        <img
-          class="w-80px h-80px rounded-50% bg-#b6d6d9ff border-(2px solid #fff)"
-          :src="info.avatar || '/logo.png'"
-          alt="" />
+        <n-avatar
+          v-if="info.avatar"
+          class="size-80px rounded-50% bg-#b6d6d9ff border-(2px solid #fff)"
+          :src="info.avatar || '/logo.png'" />
+
+        <n-avatar v-else class="size-80px text-20px rounded-50% bg-#b6d6d9ff border-(2px solid #fff)">
+          {{ info.name.slice(0, 1) }}
+        </n-avatar>
       </n-flex>
 
       <!-- 登录菜单 -->
-      <n-flex class="ma text-center h-full w-260px" vertical :size="16" data-tauri-drag-region>
+      <n-flex class="ma text-center h-full w-260px" vertical :size="16">
         <n-input
           style="padding-left: 20px"
           size="large"
@@ -38,7 +41,7 @@
           </template>
         </n-input>
 
-        <!-- 账号选择框 TODO 尝试使用n-popover组件来实现这个功能 (nyh -> 2024-03-09 02:56:06)-->
+        <!-- 账号选择框-->
         <div
           style="border: 1px solid rgba(70, 70, 70, 0.1)"
           v-if="loginHistories.length > 0 && arrowStatus"
@@ -49,9 +52,12 @@
               v-for="item in loginHistories"
               :key="item.account"
               @click="giveAccount(item)"
-              class="p-8px cursor-pointer hover:bg-#f3f3f3 hover: rounded-6px">
+              class="p-8px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px">
               <div class="flex-between-center">
-                <img :src="item.avatar" class="w-28px h-28px bg-#ccc rounded-50%" alt="" />
+                <n-avatar v-if="item.avatar" :src="item.avatar" class="size-28px bg-#ccc rounded-50%" />
+                <n-avatar v-else :src="item.avatar" :color="'#909090'" class="size-28px text-10px bg-#ccc rounded-50%">
+                  {{ item.name?.slice(0, 1) }}
+                </n-avatar>
                 <p class="text-14px color-#505050">{{ item.account }}</p>
                 <svg @click.stop="delAccount(item)" class="w-12px h-12px">
                   <use href="#close"></use>
@@ -87,9 +93,9 @@
           :loading="loading"
           :disabled="loginDisabled"
           class="w-full mt-8px mb-50px"
-          @click="loginWin"
+          @click="normalLogin"
           color="#13987f">
-          {{ loginText }}
+          <span>{{ loginText }}</span>
         </n-button>
       </n-flex>
     </n-flex>
@@ -99,7 +105,6 @@
       <n-flex justify="center" class="mt-15px">
         <img src="@/assets/logo/hula.png" class="w-140px h-60px" alt="" />
       </n-flex>
-
       <n-flex :size="30" vertical>
         <!-- 头像 -->
         <n-flex justify="center">
@@ -129,16 +134,26 @@
     </n-flex>
 
     <!-- 底部操作栏 -->
-    <n-flex justify="center" class="text-14px" id="bottomBar" data-tauri-drag-region>
+    <n-flex justify="center" class="text-14px" id="bottomBar">
       <div class="color-#13987f cursor-pointer" @click="router.push('/qrCode')">扫码登录</div>
       <div class="w-1px h-14px bg-#ccc"></div>
-      <div v-if="isAutoLogin" class="color-#13987f cursor-pointer">移除账号</div>
-      <n-popover v-else trigger="click" :show-checkmark="false" :show-arrow="false">
+      <div v-if="login.autoLogin" class="color-#13987f cursor-pointer" @click="removeToken">移除账号</div>
+      <n-popover
+        v-else
+        trigger="click"
+        id="moreShow"
+        v-model:show="moreShow"
+        :show-checkmark="false"
+        :show-arrow="false">
         <template #trigger>
           <div class="color-#13987f cursor-pointer">更多选项</div>
         </template>
         <n-flex vertical :size="2">
-          <div class="text-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px">注册账号</div>
+          <div
+            class="text-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px"
+            @click="createWebviewWindow('注册', 'register', 600, 600)">
+            注册账号
+          </div>
           <div class="text-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px">忘记密码</div>
         </n-flex>
       </n-popover>
@@ -148,14 +163,19 @@
 <script setup lang="ts">
 import router from '@/router'
 import { useWindow } from '@/hooks/useWindow.ts'
-import { delay } from 'lodash-es'
 import { lightTheme } from 'naive-ui'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
+import apis from '@/services/apis.ts'
+import { useUserStore } from '@/stores/user.ts'
+import { computedToken } from '@/services/request.ts'
+import { useChatStore } from '@/stores/chat.ts'
 
 const settingStore = useSettingStore()
+const userStore = useUserStore()
+const chatStore = useChatStore()
 const loginHistoriesStore = useLoginHistoriesStore()
 const { loginHistories } = loginHistoriesStore
 const { login } = storeToRefs(settingStore)
@@ -167,6 +187,7 @@ const info = ref({
   name: '',
   uid: 0
 })
+
 /** 是否中断登录 */
 const interruptLogin = ref(false)
 /** 协议 */
@@ -174,7 +195,7 @@ const protocol = ref(true)
 const loginDisabled = ref(false)
 const loading = ref(false)
 const arrowStatus = ref(false)
-const isAutoLogin = ref(false)
+const moreShow = ref(false)
 const { setLoginState } = useLogin()
 const accountPH = ref('输入HuLa账号')
 const passwordPH = ref('输入HuLa密码')
@@ -190,6 +211,8 @@ watchEffect(() => {
   }
   if (interruptLogin.value) {
     loginDisabled.value = false
+    loading.value = false
+    interruptLogin.value = false
   }
 })
 
@@ -222,35 +245,99 @@ const giveAccount = (item: STO.Setting['login']['accountInfo']) => {
 }
 
 /**登录后创建主页窗口*/
-const loginWin = () => {
-  if (interruptLogin.value) return
+const normalLogin = async () => {
   loading.value = true
-  delay(async () => {
-    await createWebviewWindow('HuLa', 'home', 960, 720, 'login', true)
-    loading.value = false
-    if (!login.value.autoLogin || login.value.accountInfo.password === '') {
-      const account = {
-        ...info.value,
-        token: 'test'
+  apis
+    .login({ ...info.value } as unknown as User)
+    .then(async (token) => {
+      if (interruptLogin.value) return
+      loginDisabled.value = true
+      loginText.value = '登录成功, 正在跳转'
+      userStore.isSign = true
+      login.value.accountInfo.token = token
+      // localStorage.setItem('USER_INFO', JSON.stringify(rest))
+      localStorage.setItem('TOKEN', token)
+      // 需要删除二维码，因为用户可能先跳转到二维码界面再回到登录界面，会导致二维码一直保持在内存中
+      if (localStorage.getItem('wsLogin')) {
+        localStorage.removeItem('wsLogin')
       }
+      // 更新一下请求里面的 token.
+      computedToken.clear()
+      computedToken.get()
+      // 获取用户详情
+      const userDetail = await apis.getUserDetail()
+      // 自己更新自己上线
+      // groupStore.batchUpdateUserStatus([
+      //   {
+      //     activeStatus: OnlineEnum.ONLINE,
+      //     avatar: rest.avatar,
+      //     lastOptTime: Date.now(),
+      //     name: rest.name,
+      //     uid: rest.uid
+      //   }
+      // ])
+      // 获取用户详情
+      await chatStore.getSessionList(true)
+      // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取
+      // await emojiStore.getEmojiList()
+      // TODO 这里的id暂时赋值给uid，因为后端没有统一返回uid，待后端调整
+      const account = {
+        ...userDetail,
+        uid: (userDetail as any).id,
+        token
+      }
+      loading.value = false
       settingStore.setAccountInfo(account)
       loginHistoriesStore.addLoginHistory(account)
       await setLoginState()
-    }
-  }, 1000)
+      // 打开主界面
+      await openHomeWindow()
+    })
+    .catch(() => {
+      window.$message.error('登录失败')
+      loading.value = false
+    })
+}
+
+const openHomeWindow = async () => {
+  await createWebviewWindow('HuLa', 'home', 960, 720, 'login', true)
 }
 
 /** 自动登录 */
 const autoLogin = () => {
   interruptLogin.value = false
-  isAutoLogin.value = true
+  loading.value = true
   // TODO 检查用户网络是否连接 (nyh -> 2024-03-16 12:06:59)
   loginText.value = '网络连接中'
-  delay(async () => {
-    loginWin()
-    loginText.value = '登录'
-    await setLoginState()
-  }, 1000)
+  // TODO 退出账号后不知道为什么请求头的token被移除了导致checkToken请求401
+  apis
+    .checkToken()
+    .then(async () => {
+      loginText.value = '登录成功, 正在跳转'
+      loading.value = false
+      await openHomeWindow()
+      await setLoginState()
+    })
+    .catch(() => {
+      window.$message.error('登录失败')
+      login.value.accountInfo.token = ''
+      router.push('/login')
+      loading.value = false
+      loginText.value = '登录'
+    })
+}
+
+/** 移除已登录账号 */
+const removeToken = () => {
+  login.value.accountInfo = {
+    account: '',
+    password: '',
+    avatar: '/logo.png',
+    name: '',
+    uid: 0,
+    token: ''
+  }
+  login.value.autoLogin = false
 }
 
 const closeMenu = (event: MouseEvent) => {
@@ -258,29 +345,35 @@ const closeMenu = (event: MouseEvent) => {
   if (!target.matches('.account-box, .account-box *, .down')) {
     arrowStatus.value = false
   }
-  if (target.matches('#bottomBar *') && isAutoLogin.value) {
+  if (target.matches('#bottomBar *') && login.value.autoLogin) {
     interruptLogin.value = true
+  }
+  if (!target.matches('#moreShow')) {
+    moreShow.value = false
+  }
+}
+
+const enterKey = (e: KeyboardEvent) => {
+  if (e.key === 'Enter') {
+    normalLogin()
   }
 }
 
 onMounted(async () => {
-  // 判断是否需要马上跳转到二维码登录页面
-  if (localStorage.getItem('isToQrcode')) {
-    router.push('/qrCode')
-    await nextTick(() => {
-      localStorage.removeItem('isToQrcode')
-    })
-  }
   await getCurrentWebviewWindow().show()
-  if (login.value.autoLogin && login.value.accountInfo.password !== '') {
+  // 自动登录
+  if (login.value.autoLogin && login.value.accountInfo.token) {
     autoLogin()
+  } else {
+    loginHistories.length > 0 && giveAccount(loginHistories[0])
   }
-  loginHistories.length > 0 && giveAccount(loginHistories[0])
   window.addEventListener('click', closeMenu, true)
+  window.addEventListener('keyup', enterKey)
 })
 
 onUnmounted(() => {
   window.removeEventListener('click', closeMenu, true)
+  window.removeEventListener('keyup', enterKey)
 })
 </script>
 

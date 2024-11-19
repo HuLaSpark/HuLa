@@ -4,12 +4,23 @@
     <n-flex vertical :size="20" class="size-full p-10px box-border z-10">
       <n-flex vertical :size="20" align="center">
         <n-avatar
+          v-if="isCurrentUser.avatar"
           :bordered="true"
           round
-          :color="'#fff'"
           :size="80"
           :src="isCurrentUser.avatar"
           fallback-src="/logo.png"></n-avatar>
+
+        <n-avatar
+          v-else
+          :bordered="true"
+          round
+          :color="'#909090'"
+          :size="80"
+          :src="isCurrentUser.avatar"
+          fallback-src="/logo.png">
+          {{ isCurrentUser.name }}
+        </n-avatar>
 
         <n-flex :size="5" align="center" style="margin-left: -4px" class="item-hover">
           <img class="rounded-50% w-18px h-18px" src="/status/weather_3x.png" alt="" />

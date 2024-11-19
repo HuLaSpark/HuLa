@@ -1,7 +1,7 @@
 <template>
   <n-config-provider :theme="lightTheme" data-tauri-drag-region class="login-box size-full rounded-8px select-none">
     <!--顶部操作栏-->
-    <ActionBar :max-w="false" :shrink="false" data-tauri-drag-region />
+    <ActionBar :max-w="false" :shrink="false" proxy data-tauri-drag-region />
 
     <n-flex justify="center" class="mt-15px" data-tauri-drag-region>
       <img src="@/assets/logo/hula.png" class="w-140px h-60px drop-shadow-xl" alt="" data-tauri-drag-region />
@@ -36,7 +36,9 @@
     <n-flex justify="center" class="text-14px mt-48px" data-tauri-drag-region>
       <div class="color-#13987f cursor-pointer" @click="router.push('/login')">账密登录</div>
       <div class="w-1px h-14px bg-#ccc"></div>
-      <div class="color-#13987f cursor-pointer">注册账号</div>
+      <div class="color-#13987f cursor-pointer" @click="createWebviewWindow('注册', 'register', 600, 600)">
+        注册账号
+      </div>
     </n-flex>
   </n-config-provider>
 </template>

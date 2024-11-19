@@ -5,6 +5,7 @@
 <p align="center">一个基于Tauri、Vite 5、Vue 3 和 TypeScript 构建的即时通讯系统</p>
 
 <div align="center">
+  <a href="https://www.bestpractices.dev/zh-CN/projects/9692"><img src="https://bestpractices.coreinfrastructure.org/projects/9692/badge" alt="CI"></a>
   <img src="https://img.shields.io/badge/TypeScript-blue?logo=Typescript&style=flat&logoColor=fff">
   <img src="https://img.shields.io/badge/Vue3-35495E?logo=vue.js&logoColor=4FC08D">
   <img src="https://img.shields.io/badge/Tauri-24C8DB?logo=tauri&logoColor=FFC131">

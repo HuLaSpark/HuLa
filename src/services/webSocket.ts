@@ -3,7 +3,6 @@ import { useUserStore } from '@/stores/user'
 import { useChatStore } from '@/stores/chat'
 import { useGroupStore } from '@/stores/group'
 import { useGlobalStore } from '@/stores/global'
-import { useEmojiStore } from '@/stores/emoji'
 import { WsResponseMessageType } from '@/utils/wsType'
 import type { LoginSuccessResType, LoginInitResType, WsReqMsgContentType, OnStatusChangeType } from '@/utils/wsType'
 import type { MessageType, MarkItemType, RevokedMsgType } from '@/services/types'
@@ -40,11 +39,11 @@ class WS {
     worker.postMessage(`{"type":"initWS","value":${token ? `"${token}"` : null}}`)
   }
 
-  onWorkerMsg = (e: MessageEvent<any>) => {
+  onWorkerMsg = async (e: MessageEvent<any>) => {
     const params: { type: string; value: unknown } = JSON.parse(e.data)
     switch (params.type) {
       case 'message': {
-        this.onMessage(params.value as string)
+        await this.onMessage(params.value as string)
         break
       }
       case 'open': {
@@ -100,7 +99,7 @@ class WS {
   }
 
   // 收到消息回调
-  onMessage = (value: string) => {
+  onMessage = async (value: string) => {
     // FIXME 可能需要 try catch,
     const params: { type: WsResponseMessageType; data: unknown } = JSON.parse(value)
     const loginStore = useWsLoginStore()
@@ -108,7 +107,6 @@ class WS {
     const chatStore = useChatStore()
     const groupStore = useGroupStore()
     const globalStore = useGlobalStore()
-    const emojiStore = useEmojiStore()
     switch (params.type) {
       // 获取登录二维码
       case WsResponseMessageType.LoginQrCode: {
@@ -126,7 +124,6 @@ class WS {
       case WsResponseMessageType.LoginSuccess: {
         userStore.isSign = true
         const { token, ...rest } = params.data as LoginSuccessResType
-        Mitt.emit(WsResEnum.LOGIN_SUCCESS, params.data)
         // FIXME 可以不需要赋值了，单独请求了接口。
         userStore.userInfo = { ...userStore.userInfo, ...rest }
         localStorage.setItem('USER_INFO', JSON.stringify(rest))
@@ -137,6 +134,8 @@ class WS {
         computedToken.get()
         // 获取用户详情
         userStore.getUserDetailAction()
+        // 获取用户详情
+        await chatStore.getSessionList(true)
         // 自己更新自己上线
         groupStore.batchUpdateUserStatus([
           {
@@ -147,15 +146,14 @@ class WS {
             uid: rest.uid
           }
         ])
-        // 获取用户详情
-        chatStore.getSessionList(true)
-        // 自定义表情列表
-        emojiStore.getEmojiList()
+        // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取
+        // await emojiStore.getEmojiList()
+        Mitt.emit(WsResEnum.LOGIN_SUCCESS, params.data)
         break
       }
       // 收到消息
       case WsResponseMessageType.ReceiveMessage: {
-        chatStore.pushMsg(params.data as MessageType)
+        await chatStore.pushMsg(params.data as MessageType)
         Mitt.emit(MittEnum.SEND_MESSAGE, params.data)
         break
       }
@@ -164,7 +162,9 @@ class WS {
         const data = params.data as OnStatusChangeType
         groupStore.countInfo.onlineNum = data.onlineNum
         // groupStore.countInfo.totalNum = data.totalNum
-        groupStore.batchUpdateUserStatus(data.changeList)
+        //groupStore.batchUpdateUserStatus(data.changeList)
+        groupStore.getGroupUserList(true)
+        console.log('收到用户下线通知', data)
         break
       }
       // 用户 token 过期

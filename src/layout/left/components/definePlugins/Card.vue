@@ -230,6 +230,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
+@use '@/styles/scss/global/variable.scss' as *;
 .box {
   @apply relative select-none custom-shadow cursor-pointer size-fit w-100px h-100px rounded-8px overflow-hidden;
   transition: all 0.2s;
