@@ -7,7 +7,6 @@ import { OnlineEnum, RoleEnum } from '@/enums'
 import { uniqueUserList } from '@/utils/unique'
 import { useCachedStore } from '@/stores/cached'
 import { useUserStore } from '@/stores/user'
-import { cloneDeep } from 'lodash-es'
 
 const sorAction = (pre: UserItem, next: UserItem) => {
   if (pre.activeStatus === OnlineEnum.ONLINE && next.activeStatus === OnlineEnum.ONLINE) {
@@ -90,9 +89,9 @@ export const useGroupStore = defineStore('group', () => {
       roomId: currentRoomId.value
     })
     if (!data) return
-    const tempNew = cloneDeep(uniqueUserList(refresh ? data.list : [...data.list, ...userList.value]))
-    tempNew.sort(sorAction)
-    userList.value = tempNew
+    const newUserList = uniqueUserList(refresh ? data.list : [...data.list, ...userList.value])
+    newUserList.sort(sorAction)
+    userList.value = newUserList
     userListOptions.cursor = data.cursor
     userListOptions.isLast = data.isLast
     userListOptions.loading = false
@@ -119,19 +118,15 @@ export const useGroupStore = defineStore('group', () => {
 
   // 更新用户在线状态
   const batchUpdateUserStatus = (items: UserItem[]) => {
-    const tempNew = cloneDeep(userList.value)
     for (let index = 0, len = items.length; index < len; index++) {
       const curUser = items[index]
-      const findIndex = tempNew.findIndex((item) => item.uid === curUser.uid)
-      findIndex > -1 && (tempNew[findIndex].activeStatus = curUser.activeStatus)
+      const findIndex = userList.value.findIndex((item) => item.uid === curUser.uid)
+      console.log(findIndex)
+      userList.value[findIndex] = {
+        ...userList.value[findIndex],
+        activeStatus: items[index].activeStatus
+      }
     }
-    tempNew.sort(sorAction)
-    // TODO: 这里的数据为什么前后不一致
-    userList.value = tempNew
-    console.log(userList.value)
-    setTimeout(() => {
-      console.log(userList.value)
-    }, 3000)
   }
 
   // 过滤掉小黑子

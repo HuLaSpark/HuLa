@@ -57,11 +57,11 @@
 import { useGlobalStore } from '@/stores/global.ts'
 import { type } from '@tauri-apps/plugin-os'
 import { useUserInfo } from '@/hooks/useCached.ts'
-import { leftHook } from '@/layout/left/hook.ts'
 import apis from '@/services/apis.ts'
+import { useCommon } from '@/hooks/useCommon.ts'
 
 const globalStore = useGlobalStore()
-const { countGraphemes } = leftHook()
+const { countGraphemes } = useCommon()
 const userInfo = ref(useUserInfo(globalStore.addFriendModalInfo.uid).value)
 const requestMsg = ref()
 
