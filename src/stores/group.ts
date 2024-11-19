@@ -121,7 +121,6 @@ export const useGroupStore = defineStore('group', () => {
     for (let index = 0, len = items.length; index < len; index++) {
       const curUser = items[index]
       const findIndex = userList.value.findIndex((item) => item.uid === curUser.uid)
-      console.log(findIndex)
       userList.value[findIndex] = {
         ...userList.value[findIndex],
         activeStatus: items[index].activeStatus
