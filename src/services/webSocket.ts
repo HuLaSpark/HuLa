@@ -137,15 +137,15 @@ class WS {
         // 获取用户详情
         await chatStore.getSessionList(true)
         // 自己更新自己上线
-        // groupStore.batchUpdateUserStatus([
-        //   {
-        //     activeStatus: OnlineEnum.ONLINE,
-        //     avatar: rest.avatar,
-        //     lastOptTime: Date.now(),
-        //     name: rest.name,
-        //     uid: rest.uid
-        //   }
-        // ])
+        groupStore.batchUpdateUserStatus([
+          {
+            activeStatus: OnlineEnum.ONLINE,
+            avatar: rest.avatar,
+            lastOptTime: Date.now(),
+            name: rest.name,
+            uid: rest.uid
+          }
+        ])
         // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取
         // await emojiStore.getEmojiList()
         Mitt.emit(WsResEnum.LOGIN_SUCCESS, params.data)

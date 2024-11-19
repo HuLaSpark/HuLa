@@ -178,7 +178,8 @@ export const useChatMain = (activeItem?: SessionItem) => {
     {
       label: 'TA',
       icon: 'aite',
-      click: () => {}
+      click: () => {},
+      visible: (item: any) => (item.uid ? item.uid !== userUid.value : item.fromUser.uid !== userUid.value)
     },
     {
       label: '查看资料',
@@ -188,6 +189,12 @@ export const useChatMain = (activeItem?: SessionItem) => {
         const uid = item.uid || item.message.id
         Mitt.emit(`${MittEnum.INFO_POPOVER}-${type}`, { uid: uid, type: type })
       }
+    },
+    {
+      label: '修改群昵称',
+      icon: 'edit',
+      click: () => {},
+      visible: (item: any) => (item.uid ? item.uid === userUid.value : item.fromUser.uid === userUid.value)
     },
     {
       label: '添加好友',

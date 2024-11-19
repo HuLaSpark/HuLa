@@ -128,7 +128,6 @@ import { useDebounceFn } from '@vueuse/core'
 const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
 const groupUserList = computed(() => groupStore.userList)
-console.log('groupUserList', groupUserList.value)
 const userList = computed(() => {
   return groupUserList.value.map((item: UserItem) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -152,7 +151,6 @@ const { optionsList, report, selectKey } = useChatMain()
 const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-sidebar')
 
 watch(userList, (newVal) => {
-  console.log('newVal', newVal)
   // 如果正在搜索，则应用搜索过滤
   if (searchRef.value) {
     filteredUserList.value = newVal.filter((user) => user.name.toLowerCase().includes(searchRef.value.toLowerCase()))
