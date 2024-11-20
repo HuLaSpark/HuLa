@@ -80,7 +80,7 @@
     }
   }
   .content-span {
-    @apply w-fit truncate flex-1;
+    @apply max-w-300px w-fit truncate flex-1;
   }
   /** 回复图片的计数器样式 */
   .reply-img-sub {
