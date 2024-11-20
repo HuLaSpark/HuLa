@@ -86,7 +86,7 @@
                   round
                   class="grayscale text-10px"
                   :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
-                  :color="'#909090'"
+                  :color="'rgba(19, 152, 127, 0.4)'"
                   :size="24"
                   :src="item.avatar"
                   fallback-src="/logo.png"
@@ -129,15 +129,20 @@ const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
 const groupUserList = computed(() => groupStore.userList)
 const userList = computed(() => {
-  return groupUserList.value.map((item: UserItem) => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { uid, ...userInfo } = item // 排除uid，获取剩余内容
-    return {
-      ...userInfo,
-      ...useUserInfo(item.uid).value
-    }
-  })
+  return groupUserList.value
+    .map((item: UserItem) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { uid, ...userInfo } = item // 排除uid，获取剩余内容
+      return {
+        ...userInfo,
+        ...useUserInfo(item.uid).value
+      }
+    })
+    .sort((a, b) => {
+      return a.activeStatus - b.activeStatus // 升序排序
+    })
 })
+console.log('userList', userList.value)
 const filteredUserList = shallowRef(userList.value)
 const isGroup = computed(() => globalStore.currentSession?.type === RoomTypeEnum.GROUP)
 /** 是否是搜索模式 */

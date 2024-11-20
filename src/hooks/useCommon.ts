@@ -18,11 +18,26 @@ export const useCommon = () => {
     key: 0,
     imgCount: 0
   })
-  /** 获取当前光标选取的信息(需要判断是否为空) */
 
+  /** 获取当前光标选取的信息(需要判断是否为空) */
   const getEditorRange = () => {
     if (window.getSelection) {
       const selection = window.getSelection()
+      // 如果没有 rangeCount，尝试获取输入框的最后一个子节点
+      if (!selection || selection.rangeCount === 0) {
+        const inputElement = document.getElementById('message-input')
+        if (inputElement) {
+          inputElement.focus()
+          const range = document.createRange()
+          // 将光标移动到输入框的最后
+          range.selectNodeContents(inputElement)
+          range.collapse(false) // 折叠到末尾
+          selection?.removeAllRanges()
+          selection?.addRange(range)
+        }
+      }
+
+      // 重新检查
       if (selection && selection.rangeCount) {
         const range = selection.getRangeAt(0)
         return { range, selection }
@@ -87,6 +102,7 @@ export const useCommon = () => {
    *  将指定节点插入到光标位置
    * @param { MsgEnum } type 插入的类型
    * @param dom dom节点
+   * @param target 目标节点
    */
   const insertNode = (type: MsgEnum, dom: any, target: HTMLElement) => {
     const { selection, range } = getEditorRange()!

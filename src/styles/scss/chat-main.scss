@@ -1,7 +1,12 @@
 /** 气泡样式 */
 @mixin bubble {
   @apply w-fit max-w-35vw min-h-1em p-[8px_12px] text-14px line-height-22px bg-[--bg-bubble] rounded-[2px_18px_18px] custom-shadow;
-  word-break: break-all; /** 强制连续文本换行 */
+  white-space: normal; /** 保留空白符号并正常换行 */
+  word-break: break-word; /** 在长单词或URL地址内部进行换行 */
+  overflow-wrap: break-word;
+  -webkit-white-space: normal; /** 兼容webkit浏览器 */
+  -webkit-word-break: break-word;
+  -webkit-overflow-wrap: break-word;
   &.active {
     background-color: var(--bg-bubble-active);
     color: var(--text-color);

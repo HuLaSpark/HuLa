@@ -82,6 +82,7 @@ import { lightTheme } from 'naive-ui'
 import apis from '@/services/apis.ts'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import dayjs from 'dayjs'
+import { RegisterUserReq } from '@/services/types.ts'
 
 /** 账号信息 */
 const info = ref({
@@ -110,7 +111,7 @@ const register = async () => {
   btnText.value = '注册中...'
   // 注册
   await apis
-    .register({ ...info.value } as User)
+    .register({ ...info.value } as RegisterUserReq)
     .then(() => {
       window.$message.success('注册成功')
       btnText.value = '注册'
