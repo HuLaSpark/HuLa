@@ -1,5 +1,5 @@
 import urls from '@/services/urls'
-import type {
+import {
   BadgeType,
   CacheBadgeItem,
   CacheBadgeReq,
@@ -10,10 +10,12 @@ import type {
   GroupDetailReq,
   GroupStatisticType,
   ListResponse,
+  LoginUserReq,
   MarkMsgReq,
   MessageReq,
   MessageType,
   MsgReadUnReadCountType,
+  RegisterUserReq,
   RequestFriendItem,
   SessionItem,
   UserInfoType,
@@ -69,8 +71,7 @@ export default {
   /** 获取好友申请列表 */
   requestFriendList: (params?: any) => GET<ListResponse<RequestFriendItem>>(urls.requestFriendList, params),
   /** 发送添加好友请求 */
-  sendAddFriendRequest: (params: { targetUid: number; msg: string }) =>
-    POST<EmojiItem[]>(urls.sendAddFriendRequest, params),
+  sendAddFriendRequest: (params: { targetUid: number; msg: string }) => POST(urls.sendAddFriendRequest, params),
   /** 同意好友申请 */
   applyFriendRequest: (params: { applyId: number }) => PUT(urls.sendAddFriendRequest, params),
   /** 删除好友 */
@@ -115,11 +116,11 @@ export default {
       roomId
     }),
   /** 账号密码登录 */
-  login: (user: User, abort?: AbortController) => POST<string>(urls.login, user, abort),
+  login: (user: LoginUserReq, abort?: AbortController) => POST<string>(urls.login, user, abort),
   /** 退出登录 */
   logout: (abort?: AbortController) => POST<string>(urls.logout, abort),
   /** 注册 */
-  register: (user: User) => POST<string>(urls.register, user),
+  register: (user: RegisterUserReq) => POST<string>(urls.register, user),
   /** 检查token是否有效 */
   checkToken: () => POST<string>(urls.checkToken)
 }

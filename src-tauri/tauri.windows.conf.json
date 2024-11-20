@@ -11,7 +11,7 @@
   "bundle": {
     "resources": ["tray"],
     "active": true,
-    "targets": ["msi"],
+    "targets": ["msi", "nsis"],
     "icon": [
       "icons/windows/32x32.png",
       "icons/windows/128x128.png",
@@ -30,11 +30,7 @@
       "icons/windows/Square310x310Logo.png",
       "icons/windows/StoreLogo.png"
     ],
-    "windows": {
-      "wix": {
-        "language": "zh-CN"
-      }
-    }
+    "windows": {}
   },
   "app": {
     "withGlobalTauri": true,

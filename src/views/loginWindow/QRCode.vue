@@ -52,6 +52,8 @@ import { useSettingStore } from '@/stores/setting.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { LoginStatus, useWsLoginStore } from '@/stores/ws.ts'
+import wsIns from '@/services/webSocket.ts'
+import { WsRequestMsgType } from '@/utils/wsType.ts'
 
 const settingStore = useSettingStore()
 const loginStore = useWsLoginStore()
@@ -128,7 +130,7 @@ const handleAuth = () => {
 // TODO 做一个二维码过期时间重新刷新二维码的功能 (nyh -> 2024-01-27 00:37:18)
 onMounted(() => {
   if (!localStorage.getItem('wsLogin')) {
-    loginStore.getLoginQrCode()
+    wsIns.send({ type: WsRequestMsgType.RequestLoginQrCode })
   } else {
     handleQRCodeLogin()
   }

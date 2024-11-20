@@ -247,8 +247,9 @@ const giveAccount = (item: STO.Setting['login']['accountInfo']) => {
 /**登录后创建主页窗口*/
 const normalLogin = async () => {
   loading.value = true
+  const { account, password } = info.value
   apis
-    .login({ ...info.value } as unknown as User)
+    .login({ account, password })
     .then(async (token) => {
       if (interruptLogin.value) return
       loginDisabled.value = true

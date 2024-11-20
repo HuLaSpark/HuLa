@@ -131,20 +131,6 @@ export const CheckUpdate = defineComponent(() => {
   const total = ref(0)
   const downloaded = ref(0)
 
-  // const commitTypeMap: { [key: string]: string } = {
-  //   feat: 'feat',
-  //   fix: 'fix',
-  //   docs: 'docs',
-  //   style: 'style',
-  //   refactor: 'refactor',
-  //   perf: 'perf',
-  //   test: 'test',
-  //   build: 'build',
-  //   ci: 'ci',
-  //   revert: 'revert',
-  //   chore: 'chore'
-  // }
-
   const commitTypeMap: { [key: string]: string } = {
     feat: 'comet',
     fix: 'bug',
@@ -208,6 +194,7 @@ export const CheckUpdate = defineComponent(() => {
     if (!(await window.confirm('确定更新吗'))) {
       return
     }
+    text.value = '正在下载...'
     updating.value = true
     checkLoading.value = true
     await check()
@@ -227,8 +214,9 @@ export const CheckUpdate = defineComponent(() => {
               break
             case 'Finished':
               window.$message.success('安装包下载成功，3s后重启并安装')
+              text.value = '更新成功'
+              updating.value = false
               setTimeout(() => {
-                updating.value = false
                 relaunch()
               }, 3000)
               break
@@ -261,16 +249,11 @@ export const CheckUpdate = defineComponent(() => {
             .json()
             .then(async () => {
               await nextTick(() => {
-                let url = `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/tags?access_token=${import.meta.env.VITE_GITEE_TOKEN}&sort=name&direction=asc&page=1`
+                let url = `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/tags?access_token=${import.meta.env.VITE_GITEE_TOKEN}&sort=updated&direction=desc&page=1&per_page=1`
                 fetch(url).then((res) => {
                   res.json().then(async (data) => {
-                    const allVersion = [] as number[]
-                    data.forEach((item: any) => {
-                      // 只获取item.name中[1,4]的内容
-                      allVersion.push(Number(item.name.slice(1, 4)))
-                    })
-                    newVersion.value = `v${Math.max(...allVersion)}.0`
-                    url = `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/releases/tags/${newVersion.value}?access_token=${import.meta.env.VITE_GITEE_TOKEN}`
+                    newVersion.value = data[0].name.replace('v', '')
+                    url = `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/releases/tags/v${newVersion.value}?access_token=${import.meta.env.VITE_GITEE_TOKEN}`
                     getCommitLog(url, true)
                   })
                 })
@@ -410,16 +393,16 @@ export const CheckUpdate = defineComponent(() => {
               </NTimeline>
             </NScrollbar>
             <NFlex justify={'end'}>
-              {text.value === '立即更新' ? (
-                <NButton loading={checkLoading.value} onClick={handleUpdate} secondary type="primary">
-                  {text.value}
-                  {total.value > 0 && parseFloat(total.value / 1024 / 1024 + '').toFixed(2) + 'M'}
-                </NButton>
-              ) : (
-                <NButton loading={checkLoading.value} onClick={checkUpdate} secondary type="tertiary">
-                  {text.value}
-                </NButton>
-              )}
+              <NButton
+                loading={checkLoading.value}
+                onClick={text.value === '立即更新' ? handleUpdate : checkUpdate}
+                secondary
+                type={text.value === '立即更新' ? 'primary' : 'tertiary'}>
+                {text.value}
+                {text.value === '正在下载...' &&
+                  total.value > 0 &&
+                  `${parseFloat((total.value / 1024 / 1024).toString()).toFixed(2)}M`}
+              </NButton>
               {updating.value && (
                 <NProgress
                   type="line"

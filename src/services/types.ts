@@ -18,6 +18,23 @@ export type ServiceResponse = {
 }
 
 /* ======================================================== */
+
+export type LoginUserReq = {
+  /** 账号 */
+  account: string
+  /** 密码 */
+  password: string
+}
+
+export type RegisterUserReq = {
+  /** 昵称 */
+  name: string
+  /** 账号 */
+  account: string
+  /** 密码 */
+  password: string
+}
+
 export type ListResponse<T> = {
   /** 游标（下次翻页带上这参数）*/
   cursor: string
