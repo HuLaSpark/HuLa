@@ -84,6 +84,10 @@ watch(globalStore.addFriendModalInfo, (val) => {
     userInfo.value = useUserInfo(val.uid).value
   }
 })
+
+onMounted(() => {
+  requestMsg.value = `我是 ${userInfo.value.name}`
+})
 </script>
 
 <style scoped lang="scss"></style>

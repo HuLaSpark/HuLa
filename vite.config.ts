@@ -5,7 +5,7 @@ import Components from 'unplugin-vue-components/vite' //组件注册
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import { getRootPath, getSrcPath } from './build/config/getPath'
 import vueJsx from '@vitejs/plugin-vue-jsx'
-import unocss from '@unocss/vite'
+import UnoCSS from '@unocss/vite'
 import terser from '@rollup/plugin-terser'
 
 // https://vitejs.dev/config/
@@ -36,7 +36,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
        * */
       vue(),
       vueJsx(), // 开启jsx功能
-      unocss(), // 开启unocss
+      UnoCSS(), // 开启UnoCSS
       AutoImport({
         imports: [
           'vue',

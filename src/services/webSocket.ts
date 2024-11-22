@@ -3,8 +3,13 @@ import { useUserStore } from '@/stores/user'
 import { useChatStore } from '@/stores/chat'
 import { useGroupStore } from '@/stores/group'
 import { useGlobalStore } from '@/stores/global'
-import { WsResponseMessageType } from '@/utils/wsType'
-import type { LoginSuccessResType, LoginInitResType, WsReqMsgContentType, OnStatusChangeType } from '@/utils/wsType'
+import { WsResponseMessageType } from '@/services/wsType.ts'
+import type {
+  LoginSuccessResType,
+  LoginInitResType,
+  WsReqMsgContentType,
+  OnStatusChangeType
+} from '@/services/wsType.ts'
 import type { MessageType, MarkItemType, RevokedMsgType } from '@/services/types'
 import { OnlineEnum, ChangeTypeEnum, RoomTypeEnum, WsResEnum, MittEnum } from '@/enums'
 import { computedToken } from '@/services/request'

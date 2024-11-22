@@ -39,17 +39,26 @@ export const useLoginHistoriesStore = defineStore(
       }
     ])
 
+    const getLoginHistoryIndex = (loginHistory: STO.Setting['login']['accountInfo']) => {
+      return loginHistories.value.findIndex((i) => i.account === loginHistory.account)
+    }
+
     const addLoginHistory = (loginHistory: STO.Setting['login']['accountInfo']) => {
-      const index = loginHistories.value.findIndex((i) => i.account === loginHistory.account)
+      const index = getLoginHistoryIndex(loginHistory)
       index === -1 && loginHistories.value.push(loginHistory)
     }
 
+    const updateLoginHistory = (loginHistory: STO.Setting['login']['accountInfo']) => {
+      const index = getLoginHistoryIndex(loginHistory)
+      index !== -1 && (loginHistories.value[index] = loginHistory)
+    }
+
     const removeLoginHistory = (loginHistory: STO.Setting['login']['accountInfo']) => {
-      const index = loginHistories.value.findIndex((i) => i.account === loginHistory.account)
+      const index = getLoginHistoryIndex(loginHistory)
       index !== -1 && loginHistories.value.splice(index, 1)
     }
 
-    return { loginHistories, addLoginHistory, removeLoginHistory }
+    return { loginHistories, addLoginHistory, updateLoginHistory, removeLoginHistory }
   },
   {
     share: {

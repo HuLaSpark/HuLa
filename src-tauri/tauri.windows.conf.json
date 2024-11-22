@@ -30,7 +30,11 @@
       "icons/windows/Square310x310Logo.png",
       "icons/windows/StoreLogo.png"
     ],
-    "windows": {}
+    "windows": {
+      "wix": {
+        "language": "zh-CN"
+      }
+    }
   },
   "app": {
     "withGlobalTauri": true,

@@ -53,7 +53,7 @@ import { useLogin } from '@/hooks/useLogin.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { LoginStatus, useWsLoginStore } from '@/stores/ws.ts'
 import wsIns from '@/services/webSocket.ts'
-import { WsRequestMsgType } from '@/utils/wsType.ts'
+import { WsRequestMsgType } from '@/services/wsType.ts'
 
 const settingStore = useSettingStore()
 const loginStore = useWsLoginStore()

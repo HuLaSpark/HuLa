@@ -15,12 +15,14 @@ import { delay } from 'lodash-es'
 import router from '@/router'
 import { listen } from '@tauri-apps/api/event'
 import { useMenuTopStore } from '@/stores/menuTop.ts'
+import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 
 export const leftHook = () => {
   const prefers = matchMedia('(prefers-color-scheme: dark)')
   const { createWebviewWindow } = useWindow()
   const settingStore = useSettingStore()
   const { menuTop } = useMenuTopStore()
+  const loginHistoriesStore = useLoginHistoriesStore()
   const userStore = useUserStore()
   const cachedStore = useCachedStore()
   const { themes, login } = settingStore
@@ -121,6 +123,7 @@ export const leftHook = () => {
     apis.modifyUserName(editInfo.value.content.name).then(() => {
       // 更新本地缓存的用户信息
       login.accountInfo.name = editInfo.value.content.name!
+      loginHistoriesStore.updateLoginHistory(login.accountInfo) // 更新登录历史记录
       updateCurrentUserCache('name', editInfo.value.content.name) // 更新缓存里面的用户信息
       if (!editInfo.value.content.modifyNameChance) return
       editInfo.value.content.modifyNameChance -= 1

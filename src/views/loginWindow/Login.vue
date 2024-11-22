@@ -68,9 +68,11 @@
         </div>
 
         <n-input
+          class="pl-16px"
           maxlength="16"
           minlength="6"
           size="large"
+          show-password-on="click"
           v-model:value="info.password"
           type="password"
           :placeholder="passwordPH"

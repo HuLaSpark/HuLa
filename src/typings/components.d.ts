@@ -36,6 +36,8 @@ declare module 'vue' {
     NDropdown: typeof import('naive-ui')['NDropdown']
     NEllipsis: typeof import('naive-ui')['NEllipsis']
     NFlex: typeof import('naive-ui')['NFlex']
+    NForm: typeof import('naive-ui')['NForm']
+    NFormItem: typeof import('naive-ui')['NFormItem']
     NIcon: typeof import('naive-ui')['NIcon']
     NIconWrapper: typeof import('naive-ui')['NIconWrapper']
     NImage: typeof import('naive-ui')['NImage']
@@ -66,5 +68,7 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     Screenshot: typeof import('./../components/common/Screenshot.vue')['default']
     Text: typeof import('./../components/rightBox/renderMessage/Text.vue')['default']
+    Validation: typeof import('./../components/common/Validation.vue')['default']
+    ValidationIcon: typeof import('./../components/common/ValidationIcon.vue')['default']
   }
 }
