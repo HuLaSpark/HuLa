@@ -3,7 +3,7 @@
  * 注意：请使用TSDoc规范进行注释，以便在使用时能够获得良好提示。
  * @see TSDoc规范https://tsdoc.org/
  **/
-import { ActEnum, IsYesEnum, MarkEnum, MsgEnum, OnlineEnum, RoomTypeEnum, SexEnum } from '@/enums'
+import { ActEnum, IsYesEnum, MarkEnum, MsgEnum, OnlineEnum, RoomTypeEnum, SexEnum, MessageStatusEnum } from '@/enums'
 
 /**响应请求体*/
 export type ServiceResponse = {
@@ -329,6 +329,8 @@ export type MsgType = {
   sendTime: number
   /** 消息互动信息 */
   messageMark: MessageMarkType
+  /** 消息发送状态 */
+  status: MessageStatusEnum
 }
 
 export type ReplyType = {

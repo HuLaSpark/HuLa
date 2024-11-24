@@ -1,13 +1,12 @@
-import { LimitEnum, MittEnum, MsgEnum } from '@/enums'
+import { LimitEnum, MittEnum, MsgEnum, MessageStatusEnum } from '@/enums'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import apis from '@/services/apis.ts'
-import { CacheUserItem } from '@/services/types.ts'
+import { CacheUserItem, MessageType } from '@/services/types.ts'
 import { useCachedStore } from '@/stores/cached.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import Mitt from '@/utils/Bus.ts'
-import { RegExp } from '@/utils/RegExp.ts'
 import { type } from '@tauri-apps/plugin-os'
 import { useDebounceFn } from '@vueuse/core'
 import { Ref } from 'vue'
@@ -75,7 +74,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
     { label: '另存为', icon: 'Importing', disabled: true },
     { label: '全部选择', icon: 'check-one' }
   ])
-
   watchEffect(() => {
     chatKey.value = chat.value.sendKey
     if (!ait.value && personList.value.length > 0) {
@@ -153,64 +151,153 @@ export const useMsgInput = (messageInputDom: Ref) => {
     const msg = {
       type: contentType,
       content: removeTag(msgInput.value),
-      reply: reply.value.key
+      reply: reply.value.content
+        ? {
+            content: reply.value.content,
+            key: reply.value.key
+          }
+        : undefined
     }
-    // TODO 当输入的类型是艾特类型的时候需要处理 (nyh -> 2024-05-30 19:52:20)
-    // TODO 当输入的内容换行后会有div包裹，这样会有xxr攻击风险 (nyh -> 2024-05-30 20:19:27)
-    // TODO 当输入网址的时候会传递样式进去，会造成xxr攻击 (nyh -> 2024-07-03 17:30:57)
-    /** 如果reply.value.content中有内容，需要将消息的样式修改 */
+
+    // 处理回复内容
     if (reply.value.content) {
       if (msg.type === MsgEnum.TEXT) {
-        // 创建一个虚拟div元素以便对HTML进行操作
         const tempDiv = document.createElement('div')
-        // 将msg.content赋值给虚拟div的innerHTML
         tempDiv.innerHTML = msg.content
-        // 查找id为"replyDiv"的元素
         const replyDiv = tempDiv.querySelector('#replyDiv')
-        // 如果找到了元素，则删除它
         if (replyDiv) {
           replyDiv.parentNode?.removeChild(replyDiv)
         }
-        // 先去掉原来的标签
         tempDiv.innerHTML = removeTag(tempDiv.innerHTML)
-        // 只截取tempDiv.innerHTML开头中的&nbsp;
         tempDiv.innerHTML = tempDiv.innerHTML.replace(/^\s*&nbsp;/, '')
-        // 处理后的内容可以传给实际发送消息的方法
         msg.content = tempDiv.innerHTML
       }
     }
-    const { hyperlinkRegex, foundHyperlinks } = RegExp.isHyperlink(msg.content)
-    /** 判断是否有超链接 */
-    if (foundHyperlinks && foundHyperlinks.length > 0) {
-      msg.content = msg.content.replace(hyperlinkRegex, (match) => {
-        const href = match.startsWith('www.') ? 'https://' + match : match
-        return `<a style="color: inherit;text-underline-offset: 4px" href="${href}" target="_blank" rel="noopener noreferrer">${match}</a>`
-      })
-    }
-    // 判断文本信息是否超过限制
+
+    // // 处理超链接
+    // const { hyperlinkRegex, foundHyperlinks } = RegExp.isHyperlink(msg.content)
+    // if (foundHyperlinks && foundHyperlinks.length > 0) {
+    //   msg.content = msg.content.replace(hyperlinkRegex, (match) => {
+    //     const href = match.startsWith('www.') ? 'https://' + match : match
+    //     return `<a style="color: inherit;text-underline-offset: 4px" href="${href}" target="_blank" rel="noopener noreferrer">${match}</a>`
+    //   })
+    // }
+
+    // 验证消息长度
     if (msg.type === MsgEnum.TEXT && msg.content.length > 500) {
       window.$message.info('消息内容超过限制500，请分段发送')
       return
     }
-    // TODO 当输入的类型是混合类型如输入文本加上图片的类型需要处理 (nyh -> 2024-02-28 06:32:13)
+
     if (msg.type === MsgEnum.MIXED) {
       window.$message.error('暂不支持混合类型消息发送')
       return
     }
+
+    // 创建临时消息ID
+    const tempMsgId = Date.now()
+    const currentTime = new Date().getTime()
+
+    // 根据消息类型创建消息体
+    let messageBody: any
+    switch (msg.type) {
+      case MsgEnum.TEXT:
+        messageBody = {
+          content: msg.content,
+          replyMsgId: msg.reply?.key || void 0,
+          reply: reply.value.content
+            ? {
+                body: reply.value.content,
+                id: reply.value.key,
+                username: reply.value.accountName,
+                type: msg.type
+              }
+            : void 0
+        }
+        break
+      case MsgEnum.IMAGE:
+        messageBody = { url: msg.content }
+        break
+      case MsgEnum.FILE:
+        messageBody = { url: msg.content }
+        break
+      case MsgEnum.VOICE:
+        messageBody = { url: msg.content }
+        break
+      case MsgEnum.VIDEO:
+        messageBody = { url: msg.content }
+        break
+      default:
+        messageBody = { content: msg.content }
+    }
+
+    // 创建消息对象
+    const tempMsg: MessageType = {
+      fromUser: {
+        uid: userUid.value,
+        username: useUserInfo(userUid.value)?.value?.name || '',
+        avatar: useUserInfo(userUid.value)?.value?.avatar || '',
+        locPlace: useUserInfo(userUid.value)?.value?.locPlace || ''
+      },
+      message: {
+        id: tempMsgId,
+        roomId: globalStore.currentSession.roomId,
+        type: msg.type,
+        body: messageBody,
+        sendTime: currentTime,
+        status: MessageStatusEnum.PENDING,
+        messageMark: {
+          userLike: 0,
+          userDislike: 0,
+          likeCount: 0,
+          dislikeCount: 0
+        }
+      },
+      sendTime: new Date(currentTime).toISOString(),
+      loading: false
+    }
+
+    // 先添加到消息列表
+    chatStore.pushMsg(tempMsg)
+    // 触发滚动到底部
+    Mitt.emit(MittEnum.SCROLL_TO_BOTTOM)
+
+    // 设置800ms后显示发送状态的定时器
+    const statusTimer = setTimeout(() => {
+      chatStore.updateMsg({
+        msgId: tempMsgId,
+        status: MessageStatusEnum.SENDING
+      })
+    }, 800)
+
+    console.log('发送消息', messageBody, msg.type)
     apis
       .sendMsg({
         roomId: globalStore.currentSession.roomId,
         msgType: msg.type,
-        body: { content: msg.content, replyMsgId: msg.reply !== 0 ? msg.reply : undefined }
+        body: messageBody
       })
-      .then(async () => {
-        // if (res.message.type === MsgEnum.TEXT) {
-        //   await chatStore.pushMsg(res)
-        // }
-        // 发完消息就要刷新会话列表，
-        //  FIXME 如果当前会话已经置顶了，可以不用刷新
+      .then((res) => {
+        clearTimeout(statusTimer)
+        // 更新消息状态为成功，同时更新消息ID和回复内容
+        chatStore.updateMsg({
+          msgId: tempMsgId,
+          status: MessageStatusEnum.SUCCESS,
+          newMsgId: res.message.id,
+          body: res.message.body // 更新消息体，包含服务器返回的回复内容
+        })
         chatStore.updateSessionLastActiveTime(globalStore.currentSession.roomId)
       })
+      .catch(() => {
+        clearTimeout(statusTimer)
+        // 更新消息状态为失败
+        chatStore.updateMsg({
+          msgId: tempMsgId,
+          status: MessageStatusEnum.FAILED
+        })
+      })
+
+    // 清空输入框和回复信息
     msgInput.value = ''
     messageInputDom.value.innerHTML = ''
     reply.value = { imgCount: 0, accountName: '', content: '', key: 0 }
@@ -232,7 +319,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       ait.value = false
       return
     }
-    /** 获取当前光标所在的节点 */
+    /** 获取当前节点 */
     const curNode = range.endContainer
     /** 判断当前节点是否是文本节点 */
     if (!curNode || !curNode.textContent || curNode.nodeName !== '#text') {

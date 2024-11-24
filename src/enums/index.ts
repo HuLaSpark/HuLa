@@ -79,7 +79,9 @@ export enum MittEnum {
   /** 左边菜单弹窗 */
   LEFT_MODAL_SHOW,
   /** 触发home窗口事件 */
-  HOME_WINDOW_RESIZE
+  HOME_WINDOW_RESIZE,
+  /** 触发滚动事件 */
+  SCROLL_TO_BOTTOM
 }
 
 /** 主题类型 */
@@ -290,4 +292,14 @@ export enum ShowModeEnum {
   ICON,
   /** 文字方式 */
   TEXT
+}
+
+/**
+ * 消息发送状态
+ */
+export enum MessageStatusEnum {
+  PENDING = 'pending',
+  SENDING = 'sending',
+  SUCCESS = 'success',
+  FAILED = 'failed'
 }

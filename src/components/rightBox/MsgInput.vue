@@ -40,9 +40,9 @@
           align="center"
           class="ait-item">
           <n-avatar
+            v-if="item.avatar"
             lazy
             round
-            :color="'#fff'"
             :size="22"
             :src="item.avatar"
             fallback-src="/logo.png"
@@ -50,6 +50,21 @@
             :intersection-observer-options="{
               root: '#image-chat-msgInput'
             }" />
+
+          <n-avatar
+            v-else
+            lazy
+            round
+            :color="'#909090'"
+            :size="22"
+            class="text-10px"
+            fallback-src="/logo.png"
+            :render-placeholder="() => null"
+            :intersection-observer-options="{
+              root: '#image-chat-msgInput'
+            }">
+            {{ item.name.slice(0, 1) }}
+          </n-avatar>
           <span> {{ item.name }}</span>
         </n-flex>
       </template>

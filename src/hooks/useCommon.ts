@@ -1,7 +1,6 @@
 import { LimitEnum, MsgEnum } from '@/enums'
 import { Ref } from 'vue'
 import { createFileOrVideoDom } from '@/utils/CreateDom.ts'
-import { RegExp } from '@/utils/RegExp.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import GraphemeSplitter from 'grapheme-splitter'
 
@@ -197,15 +196,6 @@ export const useCommon = () => {
       } else {
         // 判断是否有@标签
         if (content.includes('id="aitSpan"')) {
-          // 去掉content中的标签
-          content = removeTag(content)
-        }
-        const { hyperlinkRegex, foundHyperlinks } = RegExp.isHyperlink(content)
-        // 判断是否包含超链接
-        if (foundHyperlinks && foundHyperlinks.length > 0) {
-          content.replace(hyperlinkRegex, (match: string) => {
-            reply.value.content = match.startsWith('www.') ? 'https://' + match : match
-          })
           // 去掉content中的标签
           content = removeTag(content)
         }

@@ -142,7 +142,6 @@ const userList = computed(() => {
       return a.activeStatus - b.activeStatus // 升序排序
     })
 })
-console.log('userList', userList.value)
 const filteredUserList = shallowRef(userList.value)
 const isGroup = computed(() => globalStore.currentSession?.type === RoomTypeEnum.GROUP)
 /** 是否是搜索模式 */

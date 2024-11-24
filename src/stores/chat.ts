@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { useRoute } from 'vue-router'
 import apis from '@/services/apis'
 import type { MarkItemType, MessageType, RevokedMsgType, SessionItem } from '@/services/types'
-import { MarkEnum, MsgEnum, RoomTypeEnum } from '@/enums'
+import { MarkEnum, MessageStatusEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import { computedTimeBlock } from '@/utils/ComputedTime.ts'
 import { useCachedStore } from '@/stores/cached'
 import { useGlobalStore } from '@/stores/global'
@@ -401,9 +401,31 @@ export const useChatStore = defineStore('chat', () => {
     currentMessageMap.value?.delete(msgId)
   }
   // 更新消息
-  const updateMsg = (msgId: number, newMessage: MessageType) => {
-    deleteMsg(msgId)
-    pushMsg(newMessage)
+  const updateMsg = ({
+    msgId,
+    status,
+    newMsgId,
+    body
+  }: {
+    msgId: number
+    status: MessageStatusEnum
+    newMsgId?: number
+    body?: any
+  }) => {
+    const msg = currentMessageMap.value?.get(msgId)
+    if (msg) {
+      msg.message.status = status
+      if (newMsgId) {
+        msg.message.id = newMsgId
+      }
+      if (body) {
+        msg.message.body = body
+      }
+      currentMessageMap.value?.set(msg.message.id, msg)
+      if (newMsgId && msgId !== newMsgId) {
+        currentMessageMap.value?.delete(msgId)
+      }
+    }
   }
 
   // 标记已读数为 0

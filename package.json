@@ -16,7 +16,7 @@
     "url": "https://github.com/HuLaSpark/HuLa"
   },
   "lint-staged": {
-    "*.{js,jsx,vue,ts,tsx,json}": [
+    "*.{js,jsx,vue,ts,tsx}": [
       "oxlint src",
       "prettier . --write",
       "eslint src"
@@ -33,7 +33,8 @@
     "commit": "git add . && git-cz",
     "lint:staged": "lint-staged",
     "prepare": "husky install",
-    "release": "release-it"
+    "release": "release-it",
+    "addition-commit": "git add . && git commit --amend --no-edit"
   },
   "dependencies": {
     "@actions/github": "^6.0.0",

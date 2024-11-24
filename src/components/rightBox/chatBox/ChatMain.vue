@@ -18,6 +18,7 @@
     ignore-item-resize
     item-resizable
     :padding-top="10"
+    scroll-mode="viewport"
     :item-size="itemSize"
     :items="chatMessageList">
     <template #default="{ item, index }">
@@ -189,7 +190,7 @@
                 @contextmenu="handleMacSelect"
                 @mouseenter="handleMouseEnter(item.message.id)"
                 @mouseleave="handleMouseLeave"
-                class="w-fit"
+                class="w-fit relative"
                 :data-key="item.fromUser.uid === userUid ? `U${item.message.id}` : `Q${item.message.id}`"
                 @select="$event.click(item)"
                 :menu="handleItemType(item.message.type)"
@@ -207,7 +208,10 @@
                     { active: activeBubble === item.message.id },
                     item.fromUser.uid === userUid ? 'bubble-oneself' : 'bubble'
                   ]">
-                  <span v-html="item.message.body.content"></span>
+                  <pre
+                    style="white-space: pre-wrap"
+                    v-if="isCodeContent(item.message.body.content)"><code>{{item.message.body.content}}</code></pre>
+                  <span v-else v-html="transformMessageContent(item.message.body.content)"></span>
                 </div>
 
                 <!--  消息为为图片类型(不固定宽度和高度), 多张图片时渲染  -->
@@ -244,6 +248,18 @@
                   preview-disabled
                   style="border-radius: 8px"
                   :src="item.content"></n-image>
+                <!-- 消息状态指示器 -->
+                <div v-if="item.fromUser.uid === userUid" class="absolute -left-6 top-2">
+                  <n-icon v-if="item.message.status === MessageStatusEnum.SENDING" class="text-gray-400">
+                    <img class="size-16px" src="@/assets/img/loading-one.svg" alt="" />
+                  </n-icon>
+                  <n-icon
+                    v-if="item.message.status === MessageStatusEnum.FAILED"
+                    class="text-red-500 cursor-pointer"
+                    @click.stop="handleRetry(item)">
+                    <svg class="size-16px"><use href="#cloudError"></use></svg>
+                  </n-icon>
+                </div>
               </ContextMenu>
 
               <!-- 回复的内容 -->
@@ -253,25 +269,16 @@
                 v-if="item.message.body.reply"
                 @click="jumpToReplyMsg(item.message.body.reply.id)"
                 class="reply-bubble relative w-fit custom-shadow">
-                <svg class="size-14px"><use href="#to-top"></use></svg>
+                <svg class="size-14px">
+                  <use href="#to-top"></use>
+                </svg>
                 <span>{{ `${item.message.body.reply.username}：` }}</span>
-                <!-- 当回复消息为图片时渲染 -->
-                <!--                <n-image-->
-                <!--                  v-if="item.reply.content.startsWith('data:image/')"-->
-                <!--                  :img-props="{ style: { maxWidth: '50px', maxHeight: '50px' } }"-->
-                <!--                  show-toolbar-tooltip-->
-                <!--                  style="border-radius: 4px"-->
-                <!--                  @click.stop-->
-                <!--                  :fallback-src="'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg'"-->
-                <!--                  :src="item.reply.content" />-->
-                <!-- 当回复消息为文本时渲染(判断是否有aitSpan标签) -->
                 <span class="content-span">
-                  {{ handleReply(item.message.body.reply.body) }}
+                  {{ item.message.body.reply.body }}
                 </span>
-                <!--                &lt;!&ndash; 多个图片时计数器样式 &ndash;&gt;-->
-                <!--                <div v-if="item.reply.imgCount" class="reply-img-sub">-->
-                <!--                  {{ item.reply.imgCount }}-->
-                <!--                </div>-->
+                <div v-if="item.message.body.reply.imgCount" class="reply-img-sub">
+                  {{ item.message.body.reply.imgCount }}
+                </div>
               </n-flex>
 
               <!-- 群聊回复emoji表情 -->
@@ -350,7 +357,7 @@
   </footer>
 </template>
 <script setup lang="ts">
-import { EventEnum, MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
+import { EventEnum, MittEnum, MsgEnum, RoomTypeEnum, MessageStatusEnum } from '@/enums'
 import { SessionItem } from '@/services/types.ts'
 import Mitt from '@/utils/Bus.ts'
 import { usePopover } from '@/hooks/usePopover.ts'
@@ -398,7 +405,7 @@ const hoverBubble = ref<{
 /** 记录右键菜单时选中的气泡的元素(用于处理mac右键会选中文本的问题) */
 const recordEL = ref()
 const isMac = computed(() => type() === 'macos')
-const { removeTag, userUid } = useCommon()
+const { userUid } = useCommon()
 const {
   handleScroll,
   handleMsgClick,
@@ -494,10 +501,10 @@ const handleEmojiSelect = (label: string, item: any) => {
   }
 }
 
-/** 处理回复消息中的 AIT 标签 */
-const handleReply = (content: string) => {
-  return content.includes('id="aitSpan"') ? removeTag(content) : content
-}
+// /** 处理回复消息中的 AIT 标签 */
+// const handleReply = (content: string) => {
+//   return content.includes('id="aitSpan"') ? removeTag(content) : content
+// }
 
 /** 跳转到回复消息 */
 const jumpToReplyMsg = (key: number) => {
@@ -596,6 +603,11 @@ onMounted(() => {
   Mitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
     activeItemRef.value = event.item
   })
+  Mitt.on(MittEnum.SCROLL_TO_BOTTOM, () => {
+    nextTick(() => {
+      virtualListInst.value?.scrollTo({ position: 'bottom', debounce: true })
+    })
+  })
   listen(EventEnum.SHARE_SCREEN, async () => {
     await createWebviewWindow('共享屏幕', 'sharedScreen', 840, 840)
   })
@@ -624,8 +636,60 @@ onUnmounted(() => {
   hoverBubble.value.key = -1
   window.removeEventListener('click', closeMenu, true)
 })
+
+const handleRetry = (item: any) => {
+  // TODO: 实现重试发送逻辑
+  console.log('重试发送消息:', item)
+}
+
+const transformMessageContent = (content: string) => {
+  // First check if content looks like code (contains multiple line breaks and special characters)
+  const hasCodeIndicators = /[{}[\]();\n]/.test(content) && content.split('\n').length > 2
+
+  if (hasCodeIndicators) {
+    // If it looks like code, wrap it in a pre tag and escape it
+    return `<pre style="background-color: #f5f5f5; padding: 8px; border-radius: 4px; overflow-x: auto; font-family: monospace; white-space: pre;">${content
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;')}</pre>`
+  }
+
+  // For regular text, escape HTML and transform URLs
+  const escapedContent = content
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+
+  // Convert URLs to clickable links
+  return escapedContent.replace(
+    /(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/g,
+    (url) =>
+      `<a style="color: inherit;text-underline-offset: 4px" href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`
+  )
+}
+
+const isCodeContent = (content: string) => {
+  return /[{}[\]();\n]/.test(content) && content.split('\n').length > 2
+}
 </script>
 
 <style scoped lang="scss">
 @use '@/styles/scss/chat-main';
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
 </style>
