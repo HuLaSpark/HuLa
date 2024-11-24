@@ -5287,6 +5287,51 @@
           "const": "shell:deny-stdin-write"
         },
         {
+          "description": "### Default Permissions\n\nThis permission set configures what kind of\ndatabase operations are available from the sql plugin.\n\n### Granted Permissions\n\nAll reading related operations are enabled.\nAlso allows to load or close a connection.\n\n",
+          "type": "string",
+          "const": "sql:default"
+        },
+        {
+          "description": "Enables the close command without any pre-configured scope.",
+          "type": "string",
+          "const": "sql:allow-close"
+        },
+        {
+          "description": "Enables the execute command without any pre-configured scope.",
+          "type": "string",
+          "const": "sql:allow-execute"
+        },
+        {
+          "description": "Enables the load command without any pre-configured scope.",
+          "type": "string",
+          "const": "sql:allow-load"
+        },
+        {
+          "description": "Enables the select command without any pre-configured scope.",
+          "type": "string",
+          "const": "sql:allow-select"
+        },
+        {
+          "description": "Denies the close command without any pre-configured scope.",
+          "type": "string",
+          "const": "sql:deny-close"
+        },
+        {
+          "description": "Denies the execute command without any pre-configured scope.",
+          "type": "string",
+          "const": "sql:deny-execute"
+        },
+        {
+          "description": "Denies the load command without any pre-configured scope.",
+          "type": "string",
+          "const": "sql:deny-load"
+        },
+        {
+          "description": "Denies the select command without any pre-configured scope.",
+          "type": "string",
+          "const": "sql:deny-select"
+        },
+        {
           "description": "This permission set configures which kind of\nupdater functions are exposed to the frontend.\n\n#### Granted Permissions\n\nThe full workflow from checking for updates to installing them\nis enabled.\n\n",
           "type": "string",
           "const": "updater:default"

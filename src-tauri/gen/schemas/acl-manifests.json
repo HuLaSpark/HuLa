@@ -3831,6 +3831,57 @@
       "title": "ShellScopeEntry"
     }
   },
+  "sql": {
+    "default_permission": {
+      "identifier": "default",
+      "description": "### Default Permissions\n\nThis permission set configures what kind of\ndatabase operations are available from the sql plugin.\n\n### Granted Permissions\n\nAll reading related operations are enabled.\nAlso allows to load or close a connection.\n\n",
+      "permissions": ["allow-close", "allow-load", "allow-select"]
+    },
+    "permissions": {
+      "allow-close": {
+        "identifier": "allow-close",
+        "description": "Enables the close command without any pre-configured scope.",
+        "commands": { "allow": ["close"], "deny": [] }
+      },
+      "allow-execute": {
+        "identifier": "allow-execute",
+        "description": "Enables the execute command without any pre-configured scope.",
+        "commands": { "allow": ["execute"], "deny": [] }
+      },
+      "allow-load": {
+        "identifier": "allow-load",
+        "description": "Enables the load command without any pre-configured scope.",
+        "commands": { "allow": ["load"], "deny": [] }
+      },
+      "allow-select": {
+        "identifier": "allow-select",
+        "description": "Enables the select command without any pre-configured scope.",
+        "commands": { "allow": ["select"], "deny": [] }
+      },
+      "deny-close": {
+        "identifier": "deny-close",
+        "description": "Denies the close command without any pre-configured scope.",
+        "commands": { "allow": [], "deny": ["close"] }
+      },
+      "deny-execute": {
+        "identifier": "deny-execute",
+        "description": "Denies the execute command without any pre-configured scope.",
+        "commands": { "allow": [], "deny": ["execute"] }
+      },
+      "deny-load": {
+        "identifier": "deny-load",
+        "description": "Denies the load command without any pre-configured scope.",
+        "commands": { "allow": [], "deny": ["load"] }
+      },
+      "deny-select": {
+        "identifier": "deny-select",
+        "description": "Denies the select command without any pre-configured scope.",
+        "commands": { "allow": [], "deny": ["select"] }
+      }
+    },
+    "permission_sets": {},
+    "global_scope_schema": null
+  },
   "updater": {
     "default_permission": {
       "identifier": "default",

@@ -54,6 +54,10 @@
     "autostart:allow-is-enabled",
     "dialog:allow-confirm",
     "core:resources:allow-close",
+    "sql:allow-load",
+    "sql:allow-execute",
+    "sql:allow-select",
+    "sql:allow-close",
     {
       "identifier": "http:default",
       "allow": [

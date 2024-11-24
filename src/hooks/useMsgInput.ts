@@ -13,6 +13,8 @@ import { useDebounceFn } from '@vueuse/core'
 import { Ref } from 'vue'
 import { useCommon } from './useCommon.ts'
 
+import Database from '@tauri-apps/plugin-sql'
+
 export const useMsgInput = (messageInputDom: Ref) => {
   const chatStore = useChatStore()
   const globalStore = useGlobalStore()
@@ -76,6 +78,8 @@ export const useMsgInput = (messageInputDom: Ref) => {
     { label: '全部选择', icon: 'check-one' }
   ])
 
+  const db = ref<Database>()
+
   watchEffect(() => {
     chatKey.value = chat.value.sendKey
     if (!ait.value && personList.value.length > 0) {
@@ -91,7 +95,28 @@ export const useMsgInput = (messageInputDom: Ref) => {
     chat.value.sendKey = v
   })
 
-  onMounted(() => {
+  onMounted(async () => {
+    db.value = await Database.load('sqlite:sqlite.db')
+    await db.value.execute(`
+      CREATE TABLE IF NOT EXISTS message (
+          id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+          room_id INTEGER NOT NULL,
+          from_uid INTEGER NOT NULL,
+          content TEXT(1024),
+          reply_msg_id INTEGER NOT NULL,
+          status INTEGER,
+          gap_count INTEGER,
+          "type" INTEGER DEFAULT (1),
+          extra TEXT,
+          create_time INTEGER,
+          update_time INTEGER
+      );
+      CREATE INDEX IF NOT EXISTS idx_room_id ON message (room_id);
+      CREATE INDEX IF NOT EXISTS idx_from_uid ON message (from_uid);
+      CREATE INDEX IF NOT EXISTS idx_create_time ON message (create_time);
+      CREATE INDEX IF NOT EXISTS idx_update_time ON message (update_time);
+    `)
+
     /** 正在输入拼音时触发 */
     messageInputDom.value.addEventListener('compositionstart', () => {
       isChinese.value = true
@@ -206,6 +231,21 @@ export const useMsgInput = (messageInputDom: Ref) => {
       .then(async (res) => {
         if (res.message.type === MsgEnum.TEXT) {
           await chatStore.pushMsg(res)
+          // 保存到数据库
+          await db.value?.execute(
+            'INSERT INTO message (room_id, from_uid, content, reply_msg_id, status, gap_count, type, create_time, update_time) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+            [
+              globalStore.currentSession.roomId,
+              userUid.value,
+              msg.content,
+              msg.reply,
+              0,
+              0,
+              msg.type,
+              new Date().getTime(),
+              new Date().getTime()
+            ]
+          )
         }
         // 发完消息就要刷新会话列表，
         //  FIXME 如果当前会话已经置顶了，可以不用刷新
