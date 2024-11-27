@@ -27,7 +27,7 @@ export const useGroupStore = defineStore('group', () => {
   const globalStore = useGlobalStore()
   const userStore = useUserStore()
   const chatStore = useChatStore()
-  // 消息列表
+  // 群用户列表
   const userList = ref<UserItem[]>([])
   const userListOptions = reactive({ isLast: false, loading: true, cursor: '' })
   const currentRoomId = computed(() => globalStore.currentSession?.roomId)

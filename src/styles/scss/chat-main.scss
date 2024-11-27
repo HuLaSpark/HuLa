@@ -1,6 +1,6 @@
 /** 气泡样式 */
 @mixin bubble {
-  @apply w-fit max-w-35vw min-h-1em p-[8px_12px] text-14px line-height-22px bg-[--bg-bubble] rounded-[2px_18px_18px] custom-shadow;
+  @apply w-fit max-w-32vw min-h-1em p-[8px_12px] text-14px line-height-22px bg-[--bg-bubble] rounded-[2px_18px_18px] custom-shadow;
   white-space: normal; /** 保留空白符号并正常换行 */
   word-break: break-word; /** 在长单词或URL地址内部进行换行 */
   overflow-wrap: break-word;

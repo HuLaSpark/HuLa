@@ -198,21 +198,14 @@
                 :special-menu="specialMenuList"
                 @reply-emoji="handleEmojiSelect($event.label, item)"
                 @click="handleMsgClick(item)">
-                <!--                &lt;!&ndash; 渲染消息内容体 &ndash;&gt;-->
-                <!--                <RenderMessage :message="message" />-->
-                <!--  消息为文本类型或者回复消息  -->
-                <div
-                  v-if="item.message.type === MsgEnum.TEXT"
-                  style="white-space: pre-wrap"
+                <!-- 渲染消息内容体 TODO: 等完善消息类型后逐渐替换使用RenderMessage -->
+                <RenderMessage
                   :class="[
                     { active: activeBubble === item.message.id },
                     item.fromUser.uid === userUid ? 'bubble-oneself' : 'bubble'
-                  ]">
-                  <pre
-                    style="white-space: pre-wrap"
-                    v-if="isCodeContent(item.message.body.content)"><code>{{item.message.body.content}}</code></pre>
-                  <span v-else v-html="transformMessageContent(item.message.body.content)"></span>
-                </div>
+                  ]"
+                  v-if="item.message.type === MsgEnum.TEXT"
+                  :message="item.message" />
 
                 <!--  消息为为图片类型(不固定宽度和高度), 多张图片时渲染  -->
                 <n-image-group v-if="Array.isArray(item.content) && item.type === MsgEnum.IMAGE">
@@ -603,11 +596,6 @@ onMounted(() => {
   Mitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
     activeItemRef.value = event.item
   })
-  Mitt.on(MittEnum.SCROLL_TO_BOTTOM, () => {
-    nextTick(() => {
-      virtualListInst.value?.scrollTo({ position: 'bottom', debounce: true })
-    })
-  })
   listen(EventEnum.SHARE_SCREEN, async () => {
     await createWebviewWindow('共享屏幕', 'sharedScreen', 840, 840)
   })
@@ -640,40 +628,6 @@ onUnmounted(() => {
 const handleRetry = (item: any) => {
   // TODO: 实现重试发送逻辑
   console.log('重试发送消息:', item)
-}
-
-const transformMessageContent = (content: string) => {
-  // First check if content looks like code (contains multiple line breaks and special characters)
-  const hasCodeIndicators = /[{}[\]();\n]/.test(content) && content.split('\n').length > 2
-
-  if (hasCodeIndicators) {
-    // If it looks like code, wrap it in a pre tag and escape it
-    return `<pre style="background-color: #f5f5f5; padding: 8px; border-radius: 4px; overflow-x: auto; font-family: monospace; white-space: pre;">${content
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;')}</pre>`
-  }
-
-  // For regular text, escape HTML and transform URLs
-  const escapedContent = content
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;')
-
-  // Convert URLs to clickable links
-  return escapedContent.replace(
-    /(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/g,
-    (url) =>
-      `<a style="color: inherit;text-underline-offset: 4px" href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`
-  )
-}
-
-const isCodeContent = (content: string) => {
-  return /[{}[\]();\n]/.test(content) && content.split('\n').length > 2
 }
 </script>
 

@@ -79,9 +79,7 @@ export enum MittEnum {
   /** 左边菜单弹窗 */
   LEFT_MODAL_SHOW,
   /** 触发home窗口事件 */
-  HOME_WINDOW_RESIZE,
-  /** 触发滚动事件 */
-  SCROLL_TO_BOTTOM
+  HOME_WINDOW_RESIZE
 }
 
 /** 主题类型 */
@@ -203,6 +201,18 @@ export enum RoomTypeEnum {
   GROUP = 1,
   /** 2单聊 */
   SINGLE = 2
+}
+
+/** 房间操作 */
+export enum RoomActEnum {
+  /** 退出群聊 */
+  EXIT_GROUP,
+  /** 删除好友 */
+  DELETE_FRIEND,
+  /** 删除记录 */
+  DELETE_RECORD,
+  /** 屏蔽好友 */
+  BLOCK_FRIEND
 }
 
 /** 变更类型 1 加入群组，2： 移除群组 */

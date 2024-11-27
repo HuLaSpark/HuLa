@@ -259,8 +259,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
     // 先添加到消息列表
     chatStore.pushMsg(tempMsg)
-    // 触发滚动到底部
-    Mitt.emit(MittEnum.SCROLL_TO_BOTTOM)
 
     // 设置800ms后显示发送状态的定时器
     const statusTimer = setTimeout(() => {

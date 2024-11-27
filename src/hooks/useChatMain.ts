@@ -173,7 +173,8 @@ export const useChatMain = (activeItem?: SessionItem) => {
       icon: 'message-action',
       click: (item: any) => {
         console.log(item)
-      }
+      },
+      visible: (item: any) => checkFriendRelation(item.uid || item.fromUser.uid, 'friend')
     },
     {
       label: 'TA',
@@ -203,7 +204,7 @@ export const useChatMain = (activeItem?: SessionItem) => {
         globalStore.addFriendModalInfo.show = true
         globalStore.addFriendModalInfo.uid = item.uid || item.fromUser.uid
       },
-      visible: (item: any) => canAddFriend(item.uid || item.fromUser.uid)
+      visible: (item: any) => !checkFriendRelation(item.uid || item.fromUser.uid, 'all')
     }
   ])
   /** 举报选项 */
@@ -235,16 +236,16 @@ export const useChatMain = (activeItem?: SessionItem) => {
   ])
 
   /**
-   * 判断用户是否可以添加好友
-   * @param uid 用户 ID
-   * @returns {boolean} 如果可以添加好友返回 true，否则返回 false
+   * 检查用户关系
+   * @param uid 用户ID
+   * @param type 检查类型: 'friend' - 仅好友, 'all' - 好友或自己
    */
-  const canAddFriend = (uid: number): boolean => {
+  const checkFriendRelation = (uid: number, type: 'friend' | 'all' = 'all') => {
     const contactStore = useContactStore()
     const userStore = useUserStore()
     const myUid = userStore.userInfo.uid
-    // 好友和自己不显示添加好友菜单
-    return !(contactStore.contactsList.some((item) => item.uid === uid) || uid === myUid)
+    const isFriend = contactStore.contactsList.some((item) => item.uid === uid)
+    return type === 'friend' ? isFriend && uid !== myUid : isFriend || uid === myUid
   }
 
   /**

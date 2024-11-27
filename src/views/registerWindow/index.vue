@@ -122,7 +122,7 @@ const passwordPH = ref('输入HuLa密码')
 const btnText = ref('注册')
 // 使用day.js获取当前年份
 const currentYear = dayjs().year()
-const registerForm = ref(null)
+const registerForm = ref()
 // 校验规则
 const rules = {
   name: {
@@ -169,7 +169,7 @@ const isPasswordValid = computed(() => {
 
 /** 注册 */
 const register = async () => {
-  await registerForm.value.validate((errors) => {
+  await registerForm.value.validate((errors: any) => {
     if (!errors) {
       btnEnable.value = true
       loading.value = true
