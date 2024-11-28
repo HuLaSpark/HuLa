@@ -351,7 +351,7 @@
 </template>
 <script setup lang="ts">
 import { EventEnum, MittEnum, MsgEnum, RoomTypeEnum, MessageStatusEnum } from '@/enums'
-import { SessionItem } from '@/services/types.ts'
+import { type MessageType, SessionItem } from '@/services/types.ts'
 import Mitt from '@/utils/Bus.ts'
 import { usePopover } from '@/hooks/usePopover.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
@@ -583,11 +583,12 @@ onMounted(() => {
     // 滚动到底部
     virtualListInst.value?.scrollTo({ position: 'bottom', debounce: true })
   })
-  // Mitt.on(MittEnum.SEND_MESSAGE, (event: MessageType) => {
-  //   nextTick(() => {
-  //     addToDomUpdateQueue(event.message.id, event.fromUser.uid)
-  //   })
-  // })
+  Mitt.on(MittEnum.SEND_MESSAGE, async (messageType: MessageType) => {
+    await chatStore.pushMsg(messageType)
+    // nextTick(() => {
+    //   addToDomUpdateQueue(event.message.id, event.fromUser.uid)
+    // })
+  })
   Mitt.on(`${MittEnum.INFO_POPOVER}-Main`, (event: any) => {
     selectKey.value = event.uid
     infoPopover.value = true

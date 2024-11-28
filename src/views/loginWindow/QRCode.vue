@@ -46,17 +46,27 @@
 import router from '@/router'
 import { delay } from 'lodash-es'
 import { lightTheme } from 'naive-ui'
-import { WsResEnum } from '@/enums'
+import { OnlineEnum } from '@/enums'
 import Mitt from '@/utils/Bus.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { LoginStatus, useWsLoginStore } from '@/stores/ws.ts'
 import wsIns from '@/services/webSocket.ts'
-import { WsRequestMsgType } from '@/services/wsType.ts'
+import {
+  type LoginInitResType,
+  type LoginSuccessResType,
+  WsRequestMsgType,
+  WsResponseMessageType
+} from '@/services/wsType.ts'
+import { computedToken } from '@/services/request.ts'
+import { useUserStore } from '@/stores/user'
+import { useGroupStore } from '@/stores/group'
 
 const settingStore = useSettingStore()
 const loginStore = useWsLoginStore()
+const userStore = useUserStore()
+const groupStore = useGroupStore()
 /** 获取登录二维码 */
 const loginQrCode = computed(() => loginStore.loginQrCode)
 /** 登录状态 */
@@ -134,13 +144,38 @@ onMounted(() => {
   } else {
     handleQRCodeLogin()
   }
-  Mitt.on(WsResEnum.QRCODE_LOGIN, () => {
+  Mitt.on(WsResponseMessageType.LOGIN_QR_CODE, (loginInitResType: LoginInitResType) => {
+    loginStore.loginQrCode = loginInitResType.loginUrl
     handleQRCodeLogin()
   })
-  Mitt.on(WsResEnum.LOGIN_SUCCESS, (e: any) => {
-    handleLoginSuccess(e)
+  Mitt.on(WsResponseMessageType.LOGIN_SUCCESS, async (loginSuccessResType: LoginSuccessResType) => {
+    userStore.isSign = true
+    const { token, ...rest } = loginSuccessResType
+    // FIXME 可以不需要赋值了，单独请求了接口。
+    userStore.userInfo = { ...userStore.userInfo, ...rest }
+    localStorage.setItem('USER_INFO', JSON.stringify(rest))
+    localStorage.setItem('TOKEN', token)
+    localStorage.removeItem('wsLogin')
+    // 更新一下请求里面的 token.
+    computedToken.clear()
+    computedToken.get()
+    // 获取用户详情
+    userStore.getUserDetailAction()
+    // 自己更新自己上线
+    groupStore.batchUpdateUserStatus([
+      {
+        activeStatus: OnlineEnum.ONLINE,
+        avatar: rest.avatar,
+        lastOptTime: Date.now(),
+        name: rest.name,
+        uid: rest.uid
+      }
+    ])
+    // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取
+    // await emojiStore.getEmojiList()
+    await handleLoginSuccess(loginSuccessResType)
   })
-  Mitt.on(WsResEnum.WS_ERROR, (e: any) => {
+  Mitt.on(WsResponseMessageType.NO_INTERNET, (e: any) => {
     handleError(e.msg)
   })
 })

@@ -122,9 +122,9 @@ watchEffect(() => {
   }
 })
 
-onBeforeMount(() => {
+onBeforeMount(async () => {
   // 请求回话列表
-  chatStore.getSessionList()
+  await chatStore.getSessionList(true)
 })
 
 onMounted(() => {

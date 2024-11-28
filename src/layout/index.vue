@@ -13,13 +13,23 @@ import Center from './center/index.vue'
 import Left from './left/index.vue'
 import Right from './right/index.vue'
 import Mitt from '@/utils/Bus'
-import { MittEnum } from '@/enums'
+import { ChangeTypeEnum, MittEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useContactStore } from '@/stores/contacts.ts'
+import { useGroupStore } from '@/stores/group'
+import { useUserStore } from '@/stores/user'
+import { useChatStore } from '@/stores/chat'
+import { OnStatusChangeType, WsResponseMessageType } from '@/services/wsType.ts'
+import { LoginStatus, useWsLoginStore } from '@/stores/ws.ts'
+import type { MarkItemType, RevokedMsgType } from '@/services/types.ts'
 
 const globalStore = useGlobalStore()
 const contactStore = useContactStore()
+const groupStore = useGroupStore()
+const userStore = useUserStore()
+const loginStore = useWsLoginStore()
+const chatStore = useChatStore()
 // 清空未读消息
 globalStore.unReadMark.newMsgUnreadCount = 0
 const shrinkStatus = ref(false)
@@ -39,5 +49,69 @@ onBeforeMount(() => {
 
 onMounted(async () => {
   await getCurrentWebviewWindow().show()
+
+  Mitt.on(WsResponseMessageType.ON_OFF_LINE, async (onStatusChangeType: OnStatusChangeType) => {
+    groupStore.countInfo.onlineNum = onStatusChangeType.onlineNum
+    // groupStore.countInfo.totalNum = data.totalNum
+    //groupStore.batchUpdateUserStatus(data.changeList)
+    groupStore.getGroupUserList(true)
+    console.log('收到用户下线通知', onStatusChangeType)
+  })
+  Mitt.on(WsResponseMessageType.TOKEN_EXPIRED, () => {
+    userStore.isSign = false
+    userStore.userInfo = {}
+    localStorage.removeItem('USER_INFO')
+    localStorage.removeItem('TOKEN')
+    loginStore.loginStatus = LoginStatus.Init
+  })
+  Mitt.on(WsResponseMessageType.INVALID_USER, (param: { uid: number }) => {
+    const data = param
+    // 消息列表删掉小黑子发言
+    chatStore.filterUser(data.uid)
+    // 群成员列表删掉小黑子
+    groupStore.filterUser(data.uid)
+  })
+  Mitt.on(WsResponseMessageType.MSG_MARK_ITEM, (param: { markList: MarkItemType[] }) => {
+    chatStore.updateMarkCount(param.markList)
+  })
+  Mitt.on(WsResponseMessageType.MSG_RECALL, (param: { data: RevokedMsgType }) => {
+    const { data } = param
+    chatStore.updateRecallStatus(data)
+  })
+  Mitt.on(WsResponseMessageType.REQUEST_NEW_FRIEND, (param: { uid: number; unreadCount: number }) => {
+    globalStore.unReadMark.newFriendUnreadCount += param.unreadCount
+    // notify({
+    //   name: '新好友',
+    //   text: '您有一个新好友, 快来看看~',
+    //   onClick: () => {
+    //     Router.push('/contact')
+    //   }
+    // })
+  })
+  Mitt.on(
+    WsResponseMessageType.NEW_FRIEND_SESSION,
+    (param: {
+      roomId: number
+      uid: number
+      changeType: ChangeTypeEnum
+      activeStatus: OnlineEnum
+      lastOptTime: number
+    }) => {
+      // changeType 1 加入群组，2： 移除群组
+      if (
+        param.roomId === globalStore.currentSession.roomId &&
+        globalStore.currentSession.type === RoomTypeEnum.GROUP
+      ) {
+        if (param.changeType === ChangeTypeEnum.REMOVE) {
+          // 移除群成员
+          groupStore.filterUser(param.uid)
+          // TODO 添加一条退出群聊的消息
+        } else {
+          // TODO 添加群成员
+          // TODO 添加一条入群的消息
+        }
+      }
+    }
+  )
 })
 </script>

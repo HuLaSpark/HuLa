@@ -252,12 +252,16 @@ export enum WsReqEnum {
 }
 
 /** ws响应类型 */
-export enum WsResEnum {
-  /** 二维码登录 */
-  QRCODE_LOGIN = 'qrcodeLogin',
-  /** 登录成功 */
-  LOGIN_SUCCESS = 'loginSuccess',
-  /** ws连接错误 */
+export enum WorkerMsgEnum {
+  /** open */
+  OPEN = 'open',
+  /** message */
+  MESSAGE = 'message',
+  /** close */
+  CLOSE = 'close',
+  /** error */
+  ERROR = 'error',
+  /** ws_error */
   WS_ERROR = 'wsError'
 }
 

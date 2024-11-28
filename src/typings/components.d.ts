@@ -44,7 +44,6 @@ declare module 'vue' {
     NImageGroup: typeof import('naive-ui')['NImageGroup']
     NInput: typeof import('naive-ui')['NInput']
     NLoadingBarProvider: typeof import('naive-ui')['NLoadingBarProvider']
-    NMarquee: typeof import('naive-ui')['NMarquee']
     NMessageProvider: typeof import('naive-ui')['NMessageProvider']
     NModal: typeof import('naive-ui')['NModal']
     NModalProvider: typeof import('naive-ui')['NModalProvider']
@@ -70,6 +69,5 @@ declare module 'vue' {
     Screenshot: typeof import('./../components/common/Screenshot.vue')['default']
     Text: typeof import('./../components/rightBox/renderMessage/Text.vue')['default']
     Validation: typeof import('./../components/common/Validation.vue')['default']
-    ValidationIcon: typeof import('./../components/common/ValidationIcon.vue')['default']
   }
 }

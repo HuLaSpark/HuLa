@@ -173,11 +173,9 @@ import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import apis from '@/services/apis.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { computedToken } from '@/services/request.ts'
-import { useChatStore } from '@/stores/chat.ts'
 
 const settingStore = useSettingStore()
 const userStore = useUserStore()
-const chatStore = useChatStore()
 const loginHistoriesStore = useLoginHistoriesStore()
 const { loginHistories } = loginHistoriesStore
 const { login } = storeToRefs(settingStore)
@@ -279,8 +277,6 @@ const normalLogin = async () => {
       //     uid: rest.uid
       //   }
       // ])
-      // 获取用户详情
-      await chatStore.getSessionList(true)
       // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取
       // await emojiStore.getEmojiList()
       // TODO 这里的id暂时赋值给uid，因为后端没有统一返回uid，待后端调整

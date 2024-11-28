@@ -2,28 +2,30 @@ import type { UserInfoType, UserItem } from '@/services/types.ts'
 
 // 1.登录返回二维码 2.用户扫描成功等待授权 3.用户登录成功返回用户信息 4.收到消息 5.上下线推送 6.前端token失效
 export enum WsResponseMessageType {
+  /** 无网络连接 */
+  NO_INTERNET,
   /** 1.登录返回二维码 */
-  LoginQrCode = 1,
+  LOGIN_QR_CODE,
   /** 2.用户扫描成功等待授权 */
-  WaitingAuthorize,
+  WAITING_AUTHORIZE,
   /** 3.用户登录成功返回用户信息 */
-  LoginSuccess,
+  LOGIN_SUCCESS,
   /** 4.收到消息 */
-  ReceiveMessage,
+  RECEIVE_MESSAGE,
   /** 5.上下线推送 */
-  OnOffLine,
+  ON_OFF_LINE,
   /** 6.前端token失效 */
-  TokenExpired,
+  TOKEN_EXPIRED,
   /** 7.禁用的用户 */
-  InValidUser,
+  INVALID_USER,
   /** 8.点赞、倒赞更新通知 */
-  WSMsgMarkItem,
+  MSG_MARK_ITEM,
   /** 消息撤回 */
-  WSMsgRecall,
+  MSG_RECALL,
   /** 新好友申请 */
-  RequestNewFriend,
+  REQUEST_NEW_FRIEND,
   /** 新好友会话 */
-  NewFriendSession
+  NEW_FRIEND_SESSION
 }
 
 /**

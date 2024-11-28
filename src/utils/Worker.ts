@@ -1,5 +1,5 @@
 // 发消息给主进程
-import { WsResEnum } from '@/enums'
+import { WorkerMsgEnum } from '@/enums'
 
 const postMsg = ({ type, value }: { type: string; value?: object }) => {
   self.postMessage(JSON.stringify({ type, value }))
@@ -57,7 +57,7 @@ const onCloseHandler = () => {
   // 达到重连次数上限
   if (reconnectCount >= reconnectCountMax) {
     reconnectCount = 0
-    postMsg({ type: WsResEnum.WS_ERROR, value: { msg: '连接失败，请检查网络或联系管理员' } })
+    postMsg({ type: WorkerMsgEnum.WS_ERROR, value: { msg: '连接失败，请检查网络或联系管理员' } })
     return
   }
 
@@ -73,26 +73,26 @@ const onCloseHandler = () => {
 // ws 连接 error
 const onConnectError = () => {
   if (connection?.readyState !== WebSocket.OPEN) {
-    postMsg({ type: WsResEnum.WS_ERROR, value: { msg: '连接失败，请检查网络或联系管理员' } })
+    postMsg({ type: WorkerMsgEnum.WS_ERROR, value: { msg: '连接失败，请检查网络或联系管理员' } })
     return
   }
   onCloseHandler()
-  postMsg({ type: 'error' })
+  postMsg({ type: WorkerMsgEnum.ERROR })
 }
 // ws 连接 close
 const onConnectClose = () => {
   onCloseHandler()
   token = null
-  postMsg({ type: 'close' })
+  postMsg({ type: WorkerMsgEnum.CLOSE })
 }
 // ws 连接成功
 const onConnectOpen = () => {
-  postMsg({ type: 'open' })
+  postMsg({ type: WorkerMsgEnum.OPEN })
   // 心跳❤️检测
   sendHeartPack()
 }
 // ws 连接 接收到消息
-const onConnectMsg = (e: any) => postMsg({ type: 'message', value: e.data })
+const onConnectMsg = (e: any) => postMsg({ type: WorkerMsgEnum.MESSAGE, value: e.data })
 
 // 初始化 ws 连接
 const initConnection = () => {
