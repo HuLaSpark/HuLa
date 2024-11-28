@@ -79,7 +79,9 @@ export enum MittEnum {
   /** 左边菜单弹窗 */
   LEFT_MODAL_SHOW,
   /** 触发home窗口事件 */
-  HOME_WINDOW_RESIZE
+  HOME_WINDOW_RESIZE,
+  /** @ AT */
+  AT
 }
 
 /** 主题类型 */
@@ -109,7 +111,9 @@ export enum StoresEnum {
   /** 侧边栏头部菜单栏 */
   MENUTOP = 'menuTop',
   /** 账号账号历史记录列表 */
-  LOGIN_HISTORY = 'loginHistory'
+  LOGIN_HISTORY = 'loginHistory',
+  /** 好友列表 */
+  NOTICE = 'notice'
 }
 
 /**

@@ -2,6 +2,7 @@
   <main data-tauri-drag-region class="flex-1 bg-[--right-bg-color] h-full w-100vw min-w-600px">
     <div class="size-full" :style="{ background: isChat ? 'var(--right-theme-bg-color)' : '' }" data-tauri-drag-region>
       <ActionBar :current-label="appWindow.label" />
+
       <!-- 需要判断当前路由是否是信息详情界面 -->
       <ChatBox :active-item="activeItem" v-if="msgBoxShow && isChat && activeItem !== -1" />
 

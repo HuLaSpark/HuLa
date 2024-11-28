@@ -10,7 +10,7 @@ import { useGlobalStore } from '@/stores/global.ts'
 import { isDiffNow } from '@/utils/ComputedTime.ts'
 
 export const useChatMain = (activeItem?: SessionItem) => {
-  const { removeTag, userUid } = useCommon()
+  const { removeTag, openMsgSession, userUid } = useCommon()
   const globalStore = useGlobalStore()
   const chatStore = useChatStore()
   const userStore = useUserStore()?.userInfo
@@ -172,14 +172,16 @@ export const useChatMain = (activeItem?: SessionItem) => {
       label: '发送信息',
       icon: 'message-action',
       click: (item: any) => {
-        console.log(item)
+        openMsgSession(item.uid || item.fromUser.uid)
       },
       visible: (item: any) => checkFriendRelation(item.uid || item.fromUser.uid, 'friend')
     },
     {
       label: 'TA',
       icon: 'aite',
-      click: () => {},
+      click: (item: any) => {
+        Mitt.emit(MittEnum.AT, item.uid || item.fromUser.uid)
+      },
       visible: (item: any) => (item.uid ? item.uid !== userUid.value : item.fromUser.uid !== userUid.value)
     },
     {

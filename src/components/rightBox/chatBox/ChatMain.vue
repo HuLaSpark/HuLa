@@ -133,9 +133,9 @@
                 align="center"
                 :style="item.fromUser.uid === userUid ? 'flex-direction: row-reverse' : ''">
                 <ContextMenu
-                  @select="$event.click(item)"
+                  @select="$event.click(item, 'Main')"
                   :content="item"
-                  :menu="chatStore.isGroup ? optionsList : []"
+                  :menu="chatStore.isGroup ? optionsList : void 0"
                   :special-menu="report">
                   <n-flex
                     :size="6"

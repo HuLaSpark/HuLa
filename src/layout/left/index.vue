@@ -15,7 +15,7 @@
     </main>
   </div>
 </template>
-<script lang="tsx" setup>
+<script lang="ts" setup>
 import LeftAvatar from './components/LeftAvatar.vue'
 import ActionList from './components/ActionList.vue'
 import InfoEdit from './components/InfoEdit.vue'

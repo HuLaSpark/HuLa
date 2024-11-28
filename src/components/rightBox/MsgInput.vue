@@ -139,6 +139,7 @@ import { useMsgInput } from '@/hooks/useMsgInput.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { onKeyStroke } from '@vueuse/core'
 import { type } from '@tauri-apps/plugin-os'
+import { useUserInfo } from '@/hooks/useCached.ts'
 
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
@@ -216,6 +217,9 @@ onMounted(() => {
   /** 当不是独立窗口的时候也就是组件与组件之间进行通信然后监听信息对话的变化 */
   Mitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
     activeItem.value = event.item
+  })
+  Mitt.on(MittEnum.AT, (event: any) => {
+    handleAit(useUserInfo(event).value as any)
   })
   /** 这里使用的是窗口之间的通信来监听信息对话的变化 */
   listen('aloneData', (event: any) => {

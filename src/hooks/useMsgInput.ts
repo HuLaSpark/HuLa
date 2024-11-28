@@ -385,25 +385,36 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
   /** 处理点击@提及框事件 */
   const handleAit = (item: CacheUserItem) => {
+    // 先确保输入框获得焦点
+    messageInputDom.value?.focus()
+    // 先获取并保存当前的编辑器范围
+    const { range: currentRange, selection: currentSelection } = getEditorRange()!
+    editorRange.value = { range: currentRange, selection: currentSelection }
+
     const myEditorRange = editorRange?.value?.range
     /** 获取光标所在位置的文本节点 */
     const textNode = myEditorRange?.endContainer
-    if (!textNode) return
-    /** 获取光标在所在文本节点中的偏移位置 */
-    const endOffset = myEditorRange?.endOffset
-    /** 获取文本节点的值，并将其转换为字符串类型 */
-    const textNodeValue = textNode?.nodeValue as string
-    /** 使用正则表达式匹配@符号之后获取到的文本节点的值 */
-    const expRes = /@([^@]*)$/.exec(textNodeValue)
-    // 重新聚焦输入框(聚焦到输入框开头)
-    messageInputDom.value.focus()
-    const { range } = getEditorRange()!
-    /** 设置范围的起始位置为文本节点中@符号的位置 */
-    range?.setStart(textNode, <number>expRes?.index)
-    /** 设置范围的结束位置为光标的位置 */
-    range?.setEnd(textNode, endOffset!)
+
+    // 如果有文本节点，说明是通过输入框@触发的
+    if (textNode) {
+      /** 获取光标在所在文本节点中的偏移位置 */
+      const endOffset = myEditorRange?.endOffset
+      /** 获取文本节点的值，并将其转换为字符串类型 */
+      const textNodeValue = textNode?.nodeValue as string
+      /** 使用正则表达式匹配@符号之后获取到的文本节点的值 */
+      const expRes = /@([^@]*)$/.exec(textNodeValue)
+      if (expRes) {
+        /** 设置范围的起始位置为文本节点中@符号的位置 */
+        currentRange.setStart(textNode, expRes.index)
+        /** 设置范围的结束位置为光标的位置 */
+        currentRange.setEnd(textNode, endOffset!)
+      }
+    }
+
+    // 无论是哪种情况，都在当前光标位置插入@提及
     insertNode(MsgEnum.AIT, item.name, {} as HTMLElement)
     triggerInputEvent(messageInputDom.value)
+    console.log(item)
     ait.value = false
   }
 
