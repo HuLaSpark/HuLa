@@ -6,7 +6,7 @@
     <template v-if="osType === 'windows'">
       <!--  登录窗口的代理按钮  -->
       <div v-if="proxy" @click="router.push('/proxy')" class="w-30px h-24px flex-center">
-        <svg class="size-16px color-[--action-bar-icon-color] cursor-pointer"><use href="#settings"></use></svg>
+        <svg class="size-16px color-#404040 cursor-pointer"><use href="#settings"></use></svg>
       </div>
       <!--  固定在最顶层  -->
       <div v-if="topWinLabel !== void 0" @click="handleAlwaysOnTop" class="hover-box">

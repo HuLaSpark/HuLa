@@ -62,6 +62,7 @@ declare module 'vue' {
     NTabPane: typeof import('naive-ui')['NTabPane']
     NTabs: typeof import('naive-ui')['NTabs']
     NTooltip: typeof import('naive-ui')['NTooltip']
+    NTransfer: typeof import('naive-ui')['NTransfer']
     NVirtualList: typeof import('naive-ui')['NVirtualList']
     RenderMessage: typeof import('./../components/rightBox/renderMessage/index.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']

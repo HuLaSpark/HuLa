@@ -74,6 +74,37 @@
     <div id="centerList" class="h-full" :class="{ 'shadow-inner': page.shadow }">
       <router-view />
     </div>
+
+    <!-- 创建群聊穿梭框 -->
+    <n-modal v-model:show="createGroupModal" :mask-closable="false" class="rounded-8px" transform-origin="center">
+      <div class="bg-[--bg-edit] w-520px h-fit box-border flex flex-col">
+        <n-flex :size="6" vertical>
+          <div
+            v-if="type() === 'macos'"
+            @click="createGroupModal = false"
+            class="mac-close size-13px shadow-inner bg-#ed6a5eff rounded-50% mt-6px select-none absolute left-6px">
+            <svg class="hidden size-7px color-#000 font-bold select-none absolute top-3px left-3px">
+              <use href="#close"></use>
+            </svg>
+          </div>
+
+          <n-flex class="text-(14px --text-color) select-none pt-6px" justify="center">创建群聊</n-flex>
+
+          <svg
+            v-if="type() === 'windows'"
+            class="size-14px cursor-pointer pt-6px select-none absolute right-6px"
+            @click="createGroupModal = false">
+            <use href="#close"></use>
+          </svg>
+
+          <n-transfer v-model:value="value" :options="options" :render-target-label="renderLabel" />
+
+          <n-flex align="center" justify="center" class="p-16px">
+            <n-button color="#13987f" @click="createGroupModal = false">创建</n-button>
+          </n-flex>
+        </n-flex>
+      </div>
+    </n-modal>
   </main>
 </template>
 
@@ -84,10 +115,14 @@ import { MittEnum } from '@/enums'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useWindowSize } from '@vueuse/core'
 import { useSettingStore } from '@/stores/setting.ts'
+import { type } from '@tauri-apps/plugin-os'
+import type { TransferRenderTargetLabel } from 'naive-ui'
+import { NAvatar } from 'naive-ui'
 
 const settingStore = useSettingStore()
 const { page } = storeToRefs(settingStore)
 const appWindow = WebviewWindow.getCurrent()
+const createGroupModal = ref(false)
 /** 设置最小宽度 */
 const minWidth = 160
 /** 设置最大宽度 */
@@ -110,6 +145,7 @@ const addPanels = ref({
       label: '发起群聊',
       icon: 'launch',
       click: () => {
+        createGroupModal.value = true
         console.log('发起群聊')
       }
     },
@@ -122,6 +158,61 @@ const addPanels = ref({
     }
   ]
 })
+const options = [
+  {
+    label: '07akioni',
+    value: 'https://avatars.githubusercontent.com/u/18677354?s=60&v=4'
+  },
+  {
+    label: 'amadeus711',
+    value: 'https://avatars.githubusercontent.com/u/46394163?s=60&v=4'
+  },
+  {
+    label: 'Talljack',
+    value: 'https://avatars.githubusercontent.com/u/34439652?s=60&v=4'
+  },
+  {
+    label: 'JiwenBai',
+    value: 'https://avatars.githubusercontent.com/u/43430022?s=60&v=4'
+  },
+  {
+    label: 'songjianet',
+    value: 'https://avatars.githubusercontent.com/u/19239641?s=60&v=4'
+  }
+]
+const value = ref([options[0].value])
+const renderLabel: TransferRenderTargetLabel = function ({ option }) {
+  return h(
+    'div',
+    {
+      style: {
+        display: 'flex',
+        margin: '6px 0'
+      }
+    },
+    {
+      default: () => [
+        h(NAvatar, {
+          round: true,
+          src: option.value as string,
+          size: 'small',
+          fallbackSrc: 'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg'
+        }),
+        h(
+          'div',
+          {
+            style: {
+              display: 'flex',
+              marginLeft: '6px',
+              alignSelf: 'center'
+            }
+          },
+          { default: () => option.label }
+        )
+      ]
+    }
+  )
+}
 
 const startX = ref()
 const startWidth = ref()
@@ -222,4 +313,10 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 @use 'style';
+:deep(.n-transfer .n-transfer-list .n-transfer-list__border) {
+  border: none;
+}
+:deep(.n-transfer .n-transfer-list.n-transfer-list--source .n-transfer-list__border) {
+  border-right: 1px solid var(--n-divider-color);
+}
 </style>
