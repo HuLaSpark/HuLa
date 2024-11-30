@@ -1,7 +1,6 @@
 import { LimitEnum, MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import { Ref } from 'vue'
 import { createFileOrVideoDom } from '@/utils/CreateDom.ts'
-import { useSettingStore } from '@/stores/setting.ts'
 import GraphemeSplitter from 'grapheme-splitter'
 import router from '@/router'
 import apis from '@/services/apis.ts'
@@ -9,17 +8,17 @@ import Mitt from '@/utils/Bus.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useMessage } from '@/hooks/useMessage.ts'
+import { useUserStore } from '@/stores/user.ts'
 
 /** 常用工具类 */
 export const useCommon = () => {
   const route = useRoute()
-  const settingStore = useSettingStore()
   const globalStore = useGlobalStore()
   const chatStore = useChatStore()
+  const userStore = useUserStore()
   const { handleMsgClick } = useMessage()
-  const { login } = storeToRefs(settingStore)
   /** 当前登录用户的uid */
-  const userUid = computed(() => login.value.accountInfo.uid)
+  const userUid = computed(() => userStore.userInfo.uid)
   /** 回复消息 */
   const reply = ref({
     accountName: '',

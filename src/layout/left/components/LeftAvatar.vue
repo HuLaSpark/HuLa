@@ -12,13 +12,13 @@
           v-if="avatarExists"
           :color="'#909090'"
           :size="34"
-          :src="login.accountInfo.avatar"
+          :src="userStore.userInfo.avatar"
           fallback-src="/logo.png"
           round>
           {{ avatarExists }}
         </n-avatar>
 
-        <n-avatar v-else :size="34" :src="login.accountInfo.avatar" fallback-src="/logo.png" round />
+        <n-avatar v-else :size="34" :src="userStore.userInfo.avatar" fallback-src="/logo.png" round />
 
         <div
           class="bg-[--left-bg-color] text-10px rounded-50% size-12px absolute bottom--2px right--2px border-(2px solid [--left-bg-color])"
@@ -39,7 +39,7 @@
           <n-avatar
             v-if="avatarExists"
             :color="'#909090'"
-            :src="login.accountInfo.avatar"
+            :src="userStore.userInfo.avatar"
             round
             fallback-src="/logo.png"
             class="size-68px text-20px select-none cursor-default">
@@ -49,15 +49,15 @@
           <n-avatar
             v-else
             :color="'#909090'"
-            :src="login.accountInfo.avatar"
+            :src="userStore.userInfo.avatar"
             round
             fallback-src="/logo.png"
             class="size-68px text-20px select-none cursor-default">
           </n-avatar>
 
           <n-flex :size="10" class="text-[--text-color]" justify="center" vertical>
-            <span class="text-18px">{{ login.accountInfo.name }}</span>
-            <span class="text-(12px [--info-text-color])">账号 {{ login.accountInfo.uid }}</span>
+            <span class="text-18px">{{ userStore.userInfo.name }}</span>
+            <span class="text-(12px [--info-text-color])">账号 {{ userStore.userInfo.uid }}</span>
             <n-flex
               :size="5"
               align="center"
@@ -103,9 +103,11 @@
 </template>
 <script setup lang="ts">
 import { leftHook } from '../hook.ts'
+import { useUserStore } from '@/stores/user.ts'
 
-const avatarExists = computed(() => (login.accountInfo.avatar ? void 0 : login.accountInfo.name.slice(0, 1)))
-const { login, shrinkStatus, url, infoShow, bgColor, title, themeColor, openContent, handleEditing } = leftHook()
+const userStore = useUserStore()
+const avatarExists = computed(() => (userStore.userInfo.avatar ? void 0 : userStore.userInfo.name?.slice(0, 1)))
+const { shrinkStatus, url, infoShow, bgColor, title, themeColor, openContent, handleEditing } = leftHook()
 </script>
 <style lang="scss" scoped>
 @use '../style';

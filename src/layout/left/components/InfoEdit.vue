@@ -106,7 +106,7 @@
         </n-flex>
       </n-flex>
       <n-flex class="p-12px" align="center" justify="center">
-        <n-button :disabled="editInfo.content.name === login.accountInfo.name" color="#13987f" @click="saveEditInfo">
+        <n-button :disabled="editInfo.content.name === userStore.userInfo.name" color="#13987f" @click="saveEditInfo">
           保存
         </n-button>
       </n-flex>
@@ -123,7 +123,7 @@ import { useCommon } from '@/hooks/useCommon.ts'
 import { useUserStore } from '@/stores/user.ts'
 
 const userStore = useUserStore()
-const { login, editInfo, currentBadge, saveEditInfo, toggleWarningBadge } = leftHook()
+const { editInfo, currentBadge, saveEditInfo, toggleWarningBadge } = leftHook()
 const { countGraphemes } = useCommon()
 
 /** 不允许输入空格 */

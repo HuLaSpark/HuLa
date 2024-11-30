@@ -25,7 +25,7 @@ export const useMockMessage = () => {
     const random: number = Math.floor(Math.random() * 15)
     // 唯一id 后五位时间戳+随机数
     const uniqueId: number = Number(String(currentTimeStamp).slice(-7) + random)
-    const { uid, name: username, avatar } = userInfo.value
+    const { uid = 0, name: username = '', avatar = '' } = userInfo.value || {}
 
     return {
       fromUser: {

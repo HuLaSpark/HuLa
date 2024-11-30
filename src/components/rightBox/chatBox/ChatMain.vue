@@ -360,23 +360,22 @@ import { useChatMain } from '@/hooks/useChatMain.ts'
 import { VirtualListInst } from 'naive-ui'
 import { delay } from 'lodash-es'
 import { useCommon } from '@/hooks/useCommon.ts'
-import { useSettingStore } from '@/stores/setting.ts'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { useUserInfo, useBadgeInfo } from '@/hooks/useCached.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { type } from '@tauri-apps/plugin-os'
+import { useUserStore } from '@/stores/user.ts'
 
 const { activeItem } = defineProps<{
   activeItem: SessionItem
 }>()
 const activeItemRef = ref<SessionItem>({ ...activeItem })
-const settingStore = useSettingStore()
 const chatStore = useChatStore()
+const userStore = useUserStore()
 // const userInfo = useUserStore()?.userInfo
 /** 消息列表 */
 const chatMessageList = computed(() => chatStore.chatMessageList)
 const messageOptions = computed(() => chatStore.currentMessageOptions)
-const { login } = storeToRefs(settingStore)
 const { createWebviewWindow } = useWindow()
 /** 是否是超级管理员 */
 // const isAdmin = computed(() => userInfo?.power === PowerEnum.ADMIN)
@@ -442,7 +441,7 @@ watch(chatMessageList, (value, oldValue) => {
 
 /** 获取用户头像 */
 const getAvatarSrc = (uid: number) => {
-  return uid === userUid.value ? login.value.accountInfo.avatar : useUserInfo(uid).value.avatar
+  return uid === userUid.value ? userStore.userInfo.avatar : useUserInfo(uid).value.avatar
 }
 
 /** 头像是否存在 */

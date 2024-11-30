@@ -15,13 +15,13 @@
       </n-flex>
     </n-flex>
 
-    <n-flex align="center" justify="space-between" class="item-box">
-      <n-flex vertical>
-        <span>清空密码</span>
-        <span class="text-12px text-#909090">清空后，下次需要使用扫码或者账密进行登录</span>
-      </n-flex>
-      <n-button secondary type="primary" @click="clearInfo"> 清空密码 </n-button>
-    </n-flex>
+    <!--    <n-flex align="center" justify="space-between" class="item-box">-->
+    <!--      <n-flex vertical>-->
+    <!--        <span>清空密码</span>-->
+    <!--        <span class="text-12px text-#909090">清空后，下次需要使用扫码或者账密进行登录</span>-->
+    <!--      </n-flex>-->
+    <!--      <n-button secondary type="primary" @click="clearInfo"> 清空密码 </n-button>-->
+    <!--    </n-flex>-->
   </n-flex>
 </template>
 
@@ -40,12 +40,6 @@ watchEffect(() => {
 
 const handleStartUp = async (val: boolean) => {
   await (val ? enable() : disable())
-}
-
-/** 清空账号信息 */
-const clearInfo = () => {
-  settingStore.clearAccount()
-  window.$message.success('密码已清空')
 }
 
 onMounted(async () => {

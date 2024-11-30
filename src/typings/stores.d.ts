@@ -37,19 +37,10 @@ declare namespace STO {
     }
     /** 登录设置 */
     login: {
+      /** 是否启用自动登录 */
       autoLogin: boolean
+      /** 开机启动 */
       autoStartup: boolean
-      /** 用户保存的登录信息 */
-      accountInfo: {
-        account?: string
-        password?: string
-        name: string
-        avatar: string
-        uid: number
-        token: string
-      }
-      /* 用户徽章列表 */
-      badgeList: T
     }
     /** 聊天设置 */
     chat: {

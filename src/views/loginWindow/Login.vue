@@ -5,7 +5,7 @@
     <ActionBar :max-w="false" :shrink="false" proxy />
 
     <!--  手动登录样式  -->
-    <n-flex vertical :size="25" v-if="!login.autoLogin || !login.accountInfo.token">
+    <n-flex vertical :size="25" v-if="!login.autoLogin || !TOKEN">
       <!-- 头像 -->
       <n-flex justify="center" class="w-full pt-35px" data-tauri-drag-region>
         <n-avatar
@@ -115,11 +115,11 @@
             :size="110"
             :color="'#fff'"
             class="border-(2px solid #fff)"
-            :src="login.accountInfo.avatar || '/logo.png'" />
+            :src="userStore.userInfo.avatar || '/logo.png'" />
         </n-flex>
 
         <n-flex justify="center">
-          <n-ellipsis style="max-width: 200px" class="text-18px">{{ login.accountInfo.name }}</n-ellipsis>
+          <n-ellipsis style="max-width: 200px" class="text-18px">{{ userStore.userInfo.name }}</n-ellipsis>
         </n-flex>
       </n-flex>
 
@@ -139,7 +139,7 @@
     <n-flex justify="center" class="text-14px" id="bottomBar">
       <div class="color-#13987f cursor-pointer" @click="router.push('/qrCode')">扫码登录</div>
       <div class="w-1px h-14px bg-#ccc"></div>
-      <div v-if="login.autoLogin" class="color-#13987f cursor-pointer" @click="removeToken">移除账号</div>
+      <div v-if="userStore.userInfo" class="color-#13987f cursor-pointer" @click="removeToken">移除账号</div>
       <n-popover
         v-else
         trigger="click"
@@ -166,19 +166,21 @@
 import router from '@/router'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { lightTheme } from 'naive-ui'
-import { useSettingStore } from '@/stores/setting.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import apis from '@/services/apis.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { computedToken } from '@/services/request.ts'
+import { UserInfoType } from '@/services/types.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 
 const settingStore = useSettingStore()
 const userStore = useUserStore()
 const loginHistoriesStore = useLoginHistoriesStore()
 const { loginHistories } = loginHistoriesStore
 const { login } = storeToRefs(settingStore)
+const TOKEN = ref(JSON.stringify(localStorage.getItem('TOKEN')))
 /** 账号信息 */
 const info = ref({
   account: '',
@@ -217,7 +219,7 @@ watchEffect(() => {
 })
 
 /** 删除账号列表内容 */
-const delAccount = (item: STO.Setting['login']['accountInfo']) => {
+const delAccount = (item: UserInfoType) => {
   // 获取删除前账户列表的长度
   const lengthBeforeDelete = loginHistories.length
   loginHistoriesStore.removeLoginHistory(item)
@@ -234,7 +236,7 @@ const delAccount = (item: STO.Setting['login']['accountInfo']) => {
  * 给账号赋值
  * @param item 账户信息
  * */
-const giveAccount = (item: STO.Setting['login']['accountInfo']) => {
+const giveAccount = (item: UserInfoType) => {
   const { account, password, avatar, name, uid } = item
   info.value.account = account || ''
   info.value.password = password || ''
@@ -255,7 +257,6 @@ const normalLogin = async () => {
       loginDisabled.value = true
       loginText.value = '登录成功, 正在跳转'
       userStore.isSign = true
-      login.value.accountInfo.token = token
       // localStorage.setItem('USER_INFO', JSON.stringify(rest))
       localStorage.setItem('TOKEN', token)
       // 需要删除二维码，因为用户可能先跳转到二维码界面再回到登录界面，会导致二维码一直保持在内存中
@@ -287,7 +288,6 @@ const normalLogin = async () => {
       }
       loading.value = false
       userStore.userInfo = account
-      settingStore.setAccountInfo(account)
       loginHistoriesStore.addLoginHistory(account)
       await setLoginState()
       // 打开主界面
@@ -320,7 +320,7 @@ const autoLogin = () => {
     })
     .catch(() => {
       window.$message.error('登录失败')
-      login.value.accountInfo.token = ''
+      localStorage.removeItem('TOKEN')
       router.push('/login')
       loading.value = false
       loginText.value = '登录'
@@ -329,15 +329,9 @@ const autoLogin = () => {
 
 /** 移除已登录账号 */
 const removeToken = () => {
-  login.value.accountInfo = {
-    account: '',
-    password: '',
-    avatar: '/logo.png',
-    name: '',
-    uid: 0,
-    token: ''
-  }
-  login.value.autoLogin = false
+  localStorage.removeItem('TOKEN')
+  userStore.userInfo = {}
+  localStorage.removeItem('USER_INFO')
 }
 
 const closeMenu = (event: MouseEvent) => {
@@ -345,7 +339,7 @@ const closeMenu = (event: MouseEvent) => {
   if (!target.matches('.account-box, .account-box *, .down')) {
     arrowStatus.value = false
   }
-  if (target.matches('#bottomBar *') && login.value.autoLogin) {
+  if (target.matches('#bottomBar *') && userStore.userInfo) {
     interruptLogin.value = true
   }
   if (!target.matches('#moreShow')) {
@@ -362,7 +356,7 @@ const enterKey = (e: KeyboardEvent) => {
 onMounted(async () => {
   await getCurrentWebviewWindow().show()
   // 自动登录
-  if (login.value.autoLogin && login.value.accountInfo.token) {
+  if (login.value.autoLogin && TOKEN) {
     autoLogin()
   } else {
     loginHistories.length > 0 && giveAccount(loginHistories[0])

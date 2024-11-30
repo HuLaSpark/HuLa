@@ -63,10 +63,10 @@ import { type } from '@tauri-apps/plugin-os'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import apis from '@/services/apis.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
-import { useSettingStore } from '@/stores/setting.ts'
+import { useUserStore } from '@/stores/user.ts'
 
 const globalStore = useGlobalStore()
-const { login } = useSettingStore()
+const userStore = useUserStore()
 const { countGraphemes } = useCommon()
 const userInfo = ref(useUserInfo(globalStore.addFriendModalInfo.uid).value)
 const requestMsg = ref()
@@ -92,7 +92,7 @@ watch(globalStore.addFriendModalInfo, (val) => {
 })
 
 onMounted(() => {
-  requestMsg.value = `我是 ${login.accountInfo.name}`
+  requestMsg.value = `我是 ${userStore.userInfo.name}`
 })
 </script>
 

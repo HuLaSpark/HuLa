@@ -2,17 +2,14 @@ import { useWindow } from '@/hooks/useWindow.ts'
 import { MittEnum, ModalEnum, PluginEnum } from '@/enums'
 import Mitt from '@/utils/Bus.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
-import { useSettingStore } from '@/stores/setting.ts'
 import apis from '@/services/apis.ts'
 import { LoginStatus, useWsLoginStore } from '@/stores/ws.ts'
 import { useUserStore } from '@/stores/user.ts'
 
 const { createWebviewWindow } = useWindow()
 const { logout } = useLogin()
-const settingStore = useSettingStore()
 const loginStore = useWsLoginStore()
 const userStore = useUserStore()
-const { login } = storeToRefs(settingStore)
 /**
  * 这里的顶部的操作栏使用pinia写入了localstorage中
  */
@@ -102,8 +99,7 @@ const moreList = ref<OPT.L.MoreList[]>([
         .then(async () => {
           await logout()
           // 如果没有设置自动登录，则清除用户信息
-          if (!login.value.autoLogin) {
-            login.value.accountInfo.token = ''
+          if (!userStore.userInfo) {
             userStore.userInfo = {}
             localStorage.removeItem('USER_INFO')
             localStorage.removeItem('TOKEN')
