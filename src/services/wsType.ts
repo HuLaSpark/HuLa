@@ -3,29 +3,31 @@ import type { UserInfoType, UserItem } from '@/services/types.ts'
 // 1.登录返回二维码 2.用户扫描成功等待授权 3.用户登录成功返回用户信息 4.收到消息 5.上下线推送 6.前端token失效
 export enum WsResponseMessageType {
   /** 无网络连接 */
-  NO_INTERNET,
+  NO_INTERNET = 'noInternet',
   /** 1.登录返回二维码 */
-  LOGIN_QR_CODE,
+  LOGIN_QR_CODE = 'loginQrCode',
   /** 2.用户扫描成功等待授权 */
-  WAITING_AUTHORIZE,
+  WAITING_AUTHORIZE = 'waitingAuthorize',
   /** 3.用户登录成功返回用户信息 */
-  LOGIN_SUCCESS,
+  LOGIN_SUCCESS = 'loginSuccess',
   /** 4.收到消息 */
-  RECEIVE_MESSAGE,
-  /** 5.上下线推送 */
-  ON_OFF_LINE,
+  RECEIVE_MESSAGE = 'receiveMessage',
+  /** 5.上线推送 */
+  ONLINE = 'online',
   /** 6.前端token失效 */
-  TOKEN_EXPIRED,
+  TOKEN_EXPIRED = 'tokenExpired',
   /** 7.禁用的用户 */
-  INVALID_USER,
+  INVALID_USER = 'invalidUser',
   /** 8.点赞、倒赞更新通知 */
-  MSG_MARK_ITEM,
+  MSG_MARK_ITEM = 'msgMarkItem',
   /** 消息撤回 */
-  MSG_RECALL,
+  MSG_RECALL = 'msgRecall',
   /** 新好友申请 */
-  REQUEST_NEW_FRIEND,
+  REQUEST_NEW_FRIEND = 'requestNewFriend',
   /** 新好友会话 */
-  NEW_FRIEND_SESSION
+  NEW_FRIEND_SESSION = 'newFriendSession',
+  /** 线推送 */
+  OFFLINE = 'offline'
 }
 
 /**
@@ -55,4 +57,8 @@ export type OnStatusChangeType = {
   changeList: UserItem[]
   onlineNum: number
   totalNum: number
+}
+
+export type WsTokenExpire = {
+  ip: string
 }

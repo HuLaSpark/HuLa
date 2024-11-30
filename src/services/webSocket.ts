@@ -1,4 +1,4 @@
-import { WsResponseMessageType } from '@/services/wsType.ts'
+import { WsResponseMessageType, WsTokenExpire } from '@/services/wsType.ts'
 import type {
   LoginSuccessResType,
   LoginInitResType,
@@ -128,16 +128,22 @@ class WS {
         Mitt.emit(MittEnum.SEND_MESSAGE, params.data as MessageType)
         break
       }
+      // 用户上线
+      case WsResponseMessageType.ONLINE: {
+        console.log('上线')
+        Mitt.emit(WsResponseMessageType.ONLINE, params.data as OnStatusChangeType)
+        break
+      }
       // 用户下线
-      case WsResponseMessageType.ON_OFF_LINE: {
-        console.log('上下线')
-        Mitt.emit(WsResponseMessageType.ON_OFF_LINE, params.data as OnStatusChangeType)
+      case WsResponseMessageType.OFFLINE: {
+        console.log('下线')
+        Mitt.emit(WsResponseMessageType.OFFLINE)
         break
       }
       // 用户 token 过期
       case WsResponseMessageType.TOKEN_EXPIRED: {
         console.log('token过期')
-        Mitt.emit(WsResponseMessageType.TOKEN_EXPIRED)
+        Mitt.emit(WsResponseMessageType.TOKEN_EXPIRED, params.data as WsTokenExpire)
         break
       }
       // 小黑子的发言在禁用后，要删除他的发言

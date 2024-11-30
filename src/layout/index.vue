@@ -20,9 +20,11 @@ import { useContactStore } from '@/stores/contacts.ts'
 import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user'
 import { useChatStore } from '@/stores/chat'
-import { OnStatusChangeType, WsResponseMessageType } from '@/services/wsType.ts'
+import { OnStatusChangeType, WsResponseMessageType, WsTokenExpire } from '@/services/wsType.ts'
 import { LoginStatus, useWsLoginStore } from '@/stores/ws.ts'
 import type { MarkItemType, RevokedMsgType } from '@/services/types.ts'
+import router from '@/router'
+import { useLogin } from '@/hooks/useLogin.ts'
 
 const globalStore = useGlobalStore()
 const contactStore = useContactStore()
@@ -30,6 +32,7 @@ const groupStore = useGroupStore()
 const userStore = useUserStore()
 const loginStore = useWsLoginStore()
 const chatStore = useChatStore()
+const { logout } = useLogin()
 // 清空未读消息
 globalStore.unReadMark.newMsgUnreadCount = 0
 const shrinkStatus = ref(false)
@@ -50,21 +53,30 @@ onBeforeMount(() => {
 onMounted(async () => {
   await getCurrentWebviewWindow().show()
 
-  Mitt.on(WsResponseMessageType.ON_OFF_LINE, async (onStatusChangeType: OnStatusChangeType) => {
+  Mitt.on(WsResponseMessageType.OFFLINE, async () => {
+    console.log('收到用户下线通知')
+  })
+  Mitt.on(WsResponseMessageType.ONLINE, async (onStatusChangeType: OnStatusChangeType) => {
     groupStore.countInfo.onlineNum = onStatusChangeType.onlineNum
     // groupStore.countInfo.totalNum = data.totalNum
     //groupStore.batchUpdateUserStatus(data.changeList)
-    groupStore.getGroupUserList(true)
-    console.log('收到用户下线通知', onStatusChangeType)
+    //groupStore.getGroupUserList(true)
+    console.log('收到用户上线通知')
   })
-  Mitt.on(WsResponseMessageType.TOKEN_EXPIRED, () => {
+  Mitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExpire) => {
+    console.log('token过期')
+    await confirm('新设备已在' + (wsTokenExpire.ip ? wsTokenExpire.ip : '未知IP') + '登录')
+    // token已在后端清空，只需要返回登录页
+    await logout()
     userStore.isSign = false
     userStore.userInfo = {}
     localStorage.removeItem('USER_INFO')
     localStorage.removeItem('TOKEN')
     loginStore.loginStatus = LoginStatus.Init
+    router.push('/login')
   })
   Mitt.on(WsResponseMessageType.INVALID_USER, (param: { uid: number }) => {
+    console.log('无效用户')
     const data = param
     // 消息列表删掉小黑子发言
     chatStore.filterUser(data.uid)
