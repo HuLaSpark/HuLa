@@ -65,15 +65,17 @@ onMounted(async () => {
   })
   Mitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExpire) => {
     console.log('token过期')
-    await confirm('新设备已在' + (wsTokenExpire.ip ? wsTokenExpire.ip : '未知IP') + '登录')
-    // token已在后端清空，只需要返回登录页
-    await logout()
-    userStore.isSign = false
-    userStore.userInfo = {}
-    localStorage.removeItem('USER_INFO')
-    localStorage.removeItem('TOKEN')
-    loginStore.loginStatus = LoginStatus.Init
-    router.push('/login')
+    if (userStore.userInfo.uid === wsTokenExpire.uid) {
+      await confirm('新设备已在' + (wsTokenExpire.ip ? wsTokenExpire.ip : '未知IP') + '登录')
+      // token已在后端清空，只需要返回登录页
+      await logout()
+      userStore.isSign = false
+      userStore.userInfo = {}
+      localStorage.removeItem('USER_INFO')
+      localStorage.removeItem('TOKEN')
+      loginStore.loginStatus = LoginStatus.Init
+      router.push('/login')
+    }
   })
   Mitt.on(WsResponseMessageType.INVALID_USER, (param: { uid: number }) => {
     console.log('无效用户')
