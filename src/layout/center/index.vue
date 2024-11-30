@@ -77,7 +77,7 @@
 
     <!-- 创建群聊穿梭框 -->
     <n-modal v-model:show="createGroupModal" :mask-closable="false" class="rounded-8px" transform-origin="center">
-      <div class="bg-[--bg-edit] w-520px h-fit box-border flex flex-col">
+      <div class="bg-[--bg-edit] w-540px h-fit box-border flex flex-col">
         <n-flex :size="6" vertical>
           <div
             v-if="type() === 'macos'"
@@ -97,10 +97,16 @@
             <use href="#close"></use>
           </svg>
 
-          <n-transfer v-model:value="value" :options="options" :render-target-label="renderLabel" />
+          <n-transfer
+            source-filterable
+            target-filterable
+            v-model:value="selectedValue"
+            :options="options as any"
+            :render-source-list="renderSourceList"
+            :render-target-label="renderLabel" />
 
           <n-flex align="center" justify="center" class="p-16px">
-            <n-button color="#13987f" @click="createGroupModal = false">创建</n-button>
+            <n-button :disabled="selectedValue.length === 0" color="#13987f" @click="handleCreateGroup">创建</n-button>
           </n-flex>
         </n-flex>
       </div>
@@ -116,12 +122,12 @@ import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useWindowSize } from '@vueuse/core'
 import { useSettingStore } from '@/stores/setting.ts'
 import { type } from '@tauri-apps/plugin-os'
-import type { TransferRenderTargetLabel } from 'naive-ui'
-import { NAvatar } from 'naive-ui'
+import { renderLabel, renderSourceList, options, createGroup } from './model.tsx'
 
 const settingStore = useSettingStore()
 const { page } = storeToRefs(settingStore)
 const appWindow = WebviewWindow.getCurrent()
+const selectedValue = ref([])
 const createGroupModal = ref(false)
 /** 设置最小宽度 */
 const minWidth = 160
@@ -146,7 +152,6 @@ const addPanels = ref({
       icon: 'launch',
       click: () => {
         createGroupModal.value = true
-        console.log('发起群聊')
       }
     },
     {
@@ -158,61 +163,6 @@ const addPanels = ref({
     }
   ]
 })
-const options = [
-  {
-    label: '07akioni',
-    value: 'https://avatars.githubusercontent.com/u/18677354?s=60&v=4'
-  },
-  {
-    label: 'amadeus711',
-    value: 'https://avatars.githubusercontent.com/u/46394163?s=60&v=4'
-  },
-  {
-    label: 'Talljack',
-    value: 'https://avatars.githubusercontent.com/u/34439652?s=60&v=4'
-  },
-  {
-    label: 'JiwenBai',
-    value: 'https://avatars.githubusercontent.com/u/43430022?s=60&v=4'
-  },
-  {
-    label: 'songjianet',
-    value: 'https://avatars.githubusercontent.com/u/19239641?s=60&v=4'
-  }
-]
-const value = ref([options[0].value])
-const renderLabel: TransferRenderTargetLabel = function ({ option }) {
-  return h(
-    'div',
-    {
-      style: {
-        display: 'flex',
-        margin: '6px 0'
-      }
-    },
-    {
-      default: () => [
-        h(NAvatar, {
-          round: true,
-          src: option.value as string,
-          size: 'small',
-          fallbackSrc: 'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg'
-        }),
-        h(
-          'div',
-          {
-            style: {
-              display: 'flex',
-              marginLeft: '6px',
-              alignSelf: 'center'
-            }
-          },
-          { default: () => option.label }
-        )
-      ]
-    }
-  )
-}
 
 const startX = ref()
 const startWidth = ref()
@@ -236,6 +186,18 @@ watchEffect(() => {
     isDrag.value = true
   }
 })
+
+const handleCreateGroup = async () => {
+  if (selectedValue.value.length === 0) return
+  try {
+    await createGroup(selectedValue.value)
+    createGroupModal.value = false
+    selectedValue.value = []
+    window.$message.success('创建群聊成功')
+  } catch (error) {
+    window.$message.error('创建群聊失败')
+  }
+}
 
 const handleSearchFocus = () => {
   router.push('/searchDetails')
@@ -313,10 +275,4 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 @use 'style';
-:deep(.n-transfer .n-transfer-list .n-transfer-list__border) {
-  border: none;
-}
-:deep(.n-transfer .n-transfer-list.n-transfer-list--source .n-transfer-list__border) {
-  border-right: 1px solid var(--n-divider-color);
-}
 </style>

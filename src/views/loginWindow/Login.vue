@@ -286,6 +286,7 @@ const normalLogin = async () => {
         token
       }
       loading.value = false
+      userStore.userInfo = account
       settingStore.setAccountInfo(account)
       loginHistoriesStore.addLoginHistory(account)
       await setLoginState()

@@ -3,7 +3,7 @@
     <span v-if="chatStore.isGroup" class="text-(14px #909090)">暂无消息，快来发送第一条消息吧~</span>
     <span v-else class="text-(14px #909090)">你们已成功添加为好友，现在可以开始聊天了!</span>
   </div>
-  <n-flex justify="center" class="absolute-x-center top-10px" v-if="messageOptions?.isLoading">
+  <n-flex justify="center" class="absolute-x-center pt-10px h-30px z-999" v-if="messageOptions?.isLoading">
     <img class="size-16px" src="@/assets/img/loading-one.svg" alt="" />
     <span class="text-(14px #909090)">加载中</span>
   </n-flex>
