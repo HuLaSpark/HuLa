@@ -139,7 +139,7 @@
     <n-flex justify="center" class="text-14px" id="bottomBar">
       <div class="color-#13987f cursor-pointer" @click="router.push('/qrCode')">扫码登录</div>
       <div class="w-1px h-14px bg-#ccc"></div>
-      <div v-if="userStore.userInfo" class="color-#13987f cursor-pointer" @click="removeToken">移除账号</div>
+      <div v-if="login.autoLogin && TOKEN" class="color-#13987f cursor-pointer" @click="removeToken">移除账号</div>
       <n-popover
         v-else
         trigger="click"
@@ -211,7 +211,7 @@ watchEffect(() => {
   if (!info.value.account) {
     info.value.avatar = '/logo.png'
   }
-  if (interruptLogin.value) {
+  if (interruptLogin.value && login.value.autoLogin) {
     loginDisabled.value = false
     loading.value = false
     interruptLogin.value = false
