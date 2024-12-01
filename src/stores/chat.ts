@@ -257,7 +257,7 @@ export const useChatStore = defineStore(
 
     const pushMsg = async (msg: MessageType) => {
       const current = messageMap.get(msg.message.roomId)
-      // TODO 操过五分钟发送信息的时候没有显示时间差的时间戳 (nyh -> 2024-05-21 00:17:15)
+      // TODO 超过五分钟发送信息的时候没有显示时间差的时间戳 (nyh -> 2024-05-21 00:17:15)
       current?.set(msg.message.id, msg)
 
       // 获取用户信息缓存
@@ -333,7 +333,6 @@ export const useChatStore = defineStore(
 
     // 过滤掉小黑子的发言
     const filterUser = (uid: number) => {
-      if (typeof uid !== 'number') return
       for (const messages of messageMap.values()) {
         messages?.forEach((msg) => {
           if (msg.fromUser.uid === uid) {

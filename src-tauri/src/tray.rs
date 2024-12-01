@@ -17,11 +17,12 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
             } => match button {
                 MouseButton::Left => {
                     let windows = tray.app_handle().webview_windows();
-                    for (key, value) in windows {
-                        if key == "login" || key == "home" {
-                            value.show().unwrap();
-                            value.unminimize().unwrap();
-                            value.set_focus().unwrap();
+                    for (name, window) in windows {
+                        if name == "login" || name == "home" {
+                            window.show().unwrap();
+                            window.unminimize().unwrap();
+                            window.set_focus().unwrap();
+                            break;
                         }
                     }
                 }

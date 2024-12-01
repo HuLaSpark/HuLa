@@ -234,7 +234,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     // 创建消息对象
     const tempMsg: MessageType = {
       fromUser: {
-        uid: userUid.value,
+        uid: userUid.value || 0,
         username: useUserInfo(userUid.value)?.value?.name || '',
         avatar: useUserInfo(userUid.value)?.value?.avatar || '',
         locPlace: useUserInfo(userUid.value)?.value?.locPlace || ''

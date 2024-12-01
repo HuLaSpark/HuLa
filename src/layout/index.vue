@@ -23,7 +23,6 @@ import { useChatStore } from '@/stores/chat'
 import { OnStatusChangeType, WsResponseMessageType, WsTokenExpire } from '@/services/wsType.ts'
 import { LoginStatus, useWsLoginStore } from '@/stores/ws.ts'
 import type { MarkItemType, RevokedMsgType } from '@/services/types.ts'
-import router from '@/router'
 import { useLogin } from '@/hooks/useLogin.ts'
 
 const globalStore = useGlobalStore()
@@ -74,7 +73,6 @@ onMounted(async () => {
       localStorage.removeItem('USER_INFO')
       localStorage.removeItem('TOKEN')
       loginStore.loginStatus = LoginStatus.Init
-      router.push('/login')
     }
   })
   Mitt.on(WsResponseMessageType.INVALID_USER, (param: { uid: number }) => {

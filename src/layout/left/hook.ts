@@ -123,7 +123,7 @@ export const leftHook = () => {
     apis.modifyUserName(editInfo.value.content.name).then(() => {
       // 更新本地缓存的用户信息
       userStore.userInfo.name = editInfo.value.content.name!
-      loginHistoriesStore.updateLoginHistory(userStore.userInfo) // 更新登录历史记录
+      loginHistoriesStore.updateLoginHistory(<UserInfoType>userStore.userInfo) // 更新登录历史记录
       updateCurrentUserCache('name', editInfo.value.content.name) // 更新缓存里面的用户信息
       if (!editInfo.value.content.modifyNameChance) return
       editInfo.value.content.modifyNameChance -= 1

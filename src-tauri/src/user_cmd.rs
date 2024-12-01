@@ -94,7 +94,7 @@ pub fn audio(filename: &str, handle: tauri::AppHandle) {
 }
 
 #[tauri::command]
-pub fn set_height(height: u32, handle: tauri::AppHandle) {
+pub fn set_height(height: u32, handle: AppHandle) {
     let home_window = handle.get_webview_window("home").unwrap();
     let sf = home_window.scale_factor().unwrap();
     let out_size = home_window.outer_size().unwrap();

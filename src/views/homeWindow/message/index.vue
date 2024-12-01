@@ -109,9 +109,9 @@ const currentSession = computed(() => activeIndex.value)
 
 // 选中会话
 const onSelectSelectSession = (item: SessionItem, roomType: RoomTypeEnum) => {
-  handleMsgClick(item)
   globalStore.currentSession.roomId = item.roomId
   globalStore.currentSession.type = roomType
+  handleMsgClick(item)
 }
 
 watchEffect(() => {

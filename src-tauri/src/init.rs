@@ -25,6 +25,17 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
                 MacosLauncher::LaunchAgent,
                 Some(vec!["--flag1", "--flag2"]),
             ))
+            .plugin(tauri_plugin_single_instance::init(|app, _args, _cmd| {
+                let windows = app.webview_windows();
+                for (name, window) in windows {
+                    if name == "login" || name == "home" {
+                        window.show().unwrap();
+                        window.unminimize().unwrap();
+                        window.set_focus().unwrap();
+                        break;
+                    }
+                }
+            }))
             .plugin(tauri_plugin_updater::Builder::new().build())
     }
 

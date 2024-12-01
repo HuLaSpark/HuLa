@@ -48,7 +48,6 @@ import { delay } from 'lodash-es'
 import { lightTheme } from 'naive-ui'
 import { OnlineEnum } from '@/enums'
 import Mitt from '@/utils/Bus.ts'
-import { useSettingStore } from '@/stores/setting.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { LoginStatus, useWsLoginStore } from '@/stores/ws.ts'
@@ -63,7 +62,6 @@ import { computedToken } from '@/services/request.ts'
 import { useUserStore } from '@/stores/user'
 import { useGroupStore } from '@/stores/group'
 
-const settingStore = useSettingStore()
 const loginStore = useWsLoginStore()
 const userStore = useUserStore()
 const groupStore = useGroupStore()
@@ -98,17 +96,11 @@ const handleQRCodeLogin = () => {
 }
 
 /** 处理登录成功 */
-const handleLoginSuccess = async (e: any) => {
+const handleLoginSuccess = async () => {
   scanStatus.value.show = true
   loadText.value = '登录中...'
   delay(async () => {
     await createWebviewWindow('HuLa', 'home', 960, 720, 'login', true)
-    settingStore.setAccountInfo({
-      avatar: e.avatar,
-      name: e.name,
-      uid: e.uid,
-      token: e.token
-    })
     await setLoginState()
   }, 1000)
 }
@@ -173,7 +165,7 @@ onMounted(() => {
     ])
     // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取
     // await emojiStore.getEmojiList()
-    await handleLoginSuccess(loginSuccessResType)
+    await handleLoginSuccess()
   })
   Mitt.on(WsResponseMessageType.NO_INTERNET, (e: any) => {
     handleError(e.msg)
