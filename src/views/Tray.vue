@@ -16,7 +16,9 @@
         align="center"
         :size="10"
         class="p-6px rounded-4px hover:bg-[--tray-hover]">
-        <svg class="size-14px"><use href="#more"></use></svg>
+        <svg class="size-14px">
+          <use href="#more"></use>
+        </svg>
         <span>更多状态</span>
       </n-flex>
 
@@ -38,6 +40,14 @@
       <n-flex @click="handleExit" align="center" :size="10" class="p-[8px_6px] rounded-4px hover:bg-[--tray-hover-e]">
         <span>退出</span>
       </n-flex>
+      <n-flex
+        v-if="tipVisible"
+        @click="handleTip"
+        align="center"
+        :size="10"
+        class="p-[8px_6px] rounded-4px hover:bg-[--tray-hover-e]">
+        <span>取消闪烁</span>
+      </n-flex>
     </n-flex>
   </n-flex>
 
@@ -56,6 +66,7 @@ import { onlineStatus } from '@/stores/onlineStatus.ts'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { listen } from '@tauri-apps/api/event'
 import { useSettingStore } from '@/stores/setting.ts'
+import { TrayIcon } from '@tauri-apps/api/tray'
 
 const appWindow = WebviewWindow.getCurrent()
 const { checkWinExist, createWebviewWindow, resizeWindow } = useWindow()
@@ -63,6 +74,11 @@ const OLStatusStore = onlineStatus()
 const settingStore = useSettingStore()
 const { lockScreen } = storeToRefs(settingStore)
 const isLoginWin = ref(true)
+// 是否有消息提醒
+const tipVisible = ref(false)
+// 状态栏图标是否显示
+const iconVisible = ref(false)
+let interval: any
 
 const division = () => {
   return <div class={'h-1px bg-[--line-color] w-full'}></div>
@@ -77,10 +93,35 @@ const handleExit = () => {
   }
 }
 
+// 取消状态栏闪烁
+const handleTip = () => {
+  tipVisible.value = false
+}
+
 const toggleStatus = (url: string, title: string) => {
   OLStatusStore.setOnlineStatus(url, title)
   appWindow.hide()
 }
+
+watchEffect(async () => {
+  if (tipVisible.value && !interval) {
+    interval = setInterval(async () => {
+      const tray = await TrayIcon.getById('tray')
+      tray?.setIcon(iconVisible.value ? null : 'icons/windows/32x32.png')
+      iconVisible.value = !iconVisible.value
+    }, 500)
+  } else {
+    const tray = await TrayIcon.getById('tray')
+    tray?.setIcon('icons/windows/32x32.png')
+    clearInterval(interval)
+  }
+})
+
+onUnmounted(async () => {
+  if (interval) {
+    clearInterval(interval)
+  }
+})
 
 onMounted(async () => {
   await listen('login_success', () => {
@@ -90,6 +131,9 @@ onMounted(async () => {
   await listen('logout_success', () => {
     isLoginWin.value = true
     resizeWindow('tray', 130, 44)
+  })
+  await listen('show_tip', () => {
+    tipVisible.value = true
   })
   // 暂停图标闪烁
   await listen('stop', async () => {

@@ -9,6 +9,7 @@ import type { MessageType, MarkItemType, RevokedMsgType } from '@/services/types
 import { OnlineEnum, ChangeTypeEnum, WorkerMsgEnum, MittEnum } from '@/enums'
 import { worker } from '@/utils/InitWorker.ts'
 import Mitt from '@/utils/Bus.ts'
+import { emit } from '@tauri-apps/api/event'
 
 class WS {
   #tasks: WsReqMsgContentType[] = []
@@ -125,6 +126,7 @@ class WS {
       // 收到消息
       case WsResponseMessageType.RECEIVE_MESSAGE: {
         console.log('接收消息')
+        await emit('show_tip')
         Mitt.emit(MittEnum.SEND_MESSAGE, params.data as MessageType)
         break
       }
