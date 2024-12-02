@@ -81,7 +81,9 @@ export enum MittEnum {
   /** 触发home窗口事件 */
   HOME_WINDOW_RESIZE,
   /** @ AT */
-  AT
+  AT,
+  /** 重新编辑 */
+  RE_EDIT
 }
 
 /** 主题类型 */

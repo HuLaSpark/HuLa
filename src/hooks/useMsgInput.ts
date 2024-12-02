@@ -90,6 +90,10 @@ export const useMsgInput = (messageInputDom: Ref) => {
   })
 
   onMounted(() => {
+    Mitt.on(MittEnum.RE_EDIT, (event: any) => {
+      messageInputDom.value.innerHTML = event
+      msgInput.value = event
+    })
     /** 正在输入拼音时触发 */
     messageInputDom.value.addEventListener('compositionstart', () => {
       isChinese.value = true

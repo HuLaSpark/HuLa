@@ -190,11 +190,13 @@ import { type } from '@tauri-apps/plugin-os'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
+import { useContactStore } from '@/stores/contacts.ts'
 
 // 使用useDisplayMedia获取屏幕共享的媒体流
 const { stream, start, stop } = useDisplayMedia()
 const chatStore = useChatStore()
 const groupStore = useGroupStore()
+const contactStore = useContactStore()
 const groupUserList = computed(() => groupStore.userList)
 const userList = computed(() => {
   return groupUserList.value
@@ -214,6 +216,7 @@ const userList = computed(() => {
 })
 /** 提醒框标题 */
 const tips = ref()
+const optionsType = ref<RoomActEnum>()
 const modalShow = ref(false)
 const sidebarShow = ref(false)
 const { activeItem } = defineProps<{
@@ -256,6 +259,7 @@ const handleDelete = (label: RoomActEnum) => {
   modalShow.value = true
   if (label === RoomActEnum.DELETE_FRIEND) {
     tips.value = '确定删除该好友吗?'
+    optionsType.value = RoomActEnum.DELETE_FRIEND
   } else if (label === RoomActEnum.EXIT_GROUP) {
     tips.value = '确定退出该群聊?'
   } else {
@@ -263,7 +267,13 @@ const handleDelete = (label: RoomActEnum) => {
   }
 }
 
-const handleConfirm = () => {}
+const handleConfirm = () => {
+  if (optionsType.value === RoomActEnum.DELETE_FRIEND) {
+    // TODO: 这里需要获取到用户的uid
+    contactStore.onDeleteContact(1111)
+  }
+  modalShow.value = false
+}
 
 const handleClick = () => {
   console.log(111)

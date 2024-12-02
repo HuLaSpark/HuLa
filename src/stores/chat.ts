@@ -34,6 +34,8 @@ export const useChatStore = defineStore(
       new Map([[currentRoomId.value, { isLast: false, isLoading: false, cursor: '' }]])
     )
     const replyMapping = reactive<Map<number, Map<number, number[]>>>(new Map([[currentRoomId.value, new Map()]])) // 回复消息映射
+    // 存储撤回的消息内容和时间
+    const recalledMessages = reactive<Map<number, { content: string; recallTime: number }>>(new Map())
 
     const currentMessageMap = computed({
       get: () => {
@@ -378,6 +380,12 @@ export const useChatStore = defineStore(
       const { msgId } = data
       const message = currentMessageMap.value?.get(msgId)
       if (message && typeof data.recallUid === 'number') {
+        // 存储撤回的消息内容和时间
+        recalledMessages.set(msgId, {
+          content: message.message.body.content,
+          recallTime: Date.now()
+        })
+
         message.message.type = MsgEnum.RECALL
         const cacheUser = cachedStore.userCachedList[data.recallUid]
         // 如果撤回者的 id 不等于消息发送人的 id, 或者你本人就是管理员，那么显示管理员撤回的。
@@ -396,6 +404,10 @@ export const useChatStore = defineStore(
           msg.message.body.reply.body = '原消息已被撤回'
         }
       })
+    }
+    // 获取撤回的消息内容
+    const getRecalledMessage = (msgId: number) => {
+      return recalledMessages.get(msgId)
     }
     // 删除消息
     const deleteMsg = (msgId: number) => {
@@ -479,7 +491,9 @@ export const useChatStore = defineStore(
       isGroup,
       currentSessionInfo,
       getMessage,
-      removeContact
+      removeContact,
+      getRecalledMessage,
+      recalledMessages
     }
   },
   {

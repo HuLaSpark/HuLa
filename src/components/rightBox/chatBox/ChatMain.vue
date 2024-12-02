@@ -38,15 +38,29 @@
         <!--  消息为撤回消息  -->
         <div v-if="item.message.type === MsgEnum.RECALL">
           <template v-if="chatStore.isGroup">
-            <span v-if="item.fromUser.uid === userUid" class="text-12px color-#909090 select-none">
-              你撤回了一条消息
-            </span>
+            <n-flex align="center" :size="6" v-if="item.fromUser.uid === userUid">
+              <p class="text-(12px #909090) select-none cursor-default">你撤回了一条消息</p>
+              <p
+                v-if="canReEdit(item.message.id)"
+                class="text-(12px #13987f) select-none cursor-pointer"
+                @click="handleReEdit(item.message.id)">
+                重新编辑
+              </p>
+            </n-flex>
             <span v-else class="text-12px color-#909090 select-none" v-html="item.message.body"></span>
           </template>
           <template v-else>
-            <span class="text-12px color-#909090 select-none">
-              {{ item.fromUser.uid === userUid ? '你撤回了一条消息' : '对方撤回了一条消息' }}
-            </span>
+            <n-flex align="center" :size="6">
+              <p class="text-(12px #909090) select-none cursor-default">
+                {{ item.fromUser.uid === userUid ? '你撤回了一条消息' : '对方撤回了一条消息' }}
+              </p>
+              <p
+                v-if="canReEdit(item.message.id)"
+                class="text-(12px #13987f) select-none cursor-pointer"
+                @click="handleReEdit(item.message.id)">
+                重新编辑
+              </p>
+            </n-flex>
           </template>
         </div>
         <!-- 好友或者群聊的信息 -->
@@ -360,7 +374,7 @@ import { useChatMain } from '@/hooks/useChatMain.ts'
 import { VirtualListInst } from 'naive-ui'
 import { delay } from 'lodash-es'
 import { useCommon } from '@/hooks/useCommon.ts'
-import { formatTimestamp } from '@/utils/ComputedTime.ts'
+import { formatTimestamp, isDiffNow } from '@/utils/ComputedTime.ts'
 import { useUserInfo, useBadgeInfo } from '@/hooks/useCached.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { type } from '@tauri-apps/plugin-os'
@@ -577,6 +591,34 @@ const closeMenu = (event: any) => {
   }
 }
 
+const handleRetry = (item: any) => {
+  // TODO: 实现重试发送逻辑
+  console.log('重试发送消息:', item)
+}
+
+const canReEdit = computed(() => (msgId: number) => {
+  const recalledMsg = chatStore.getRecalledMessage(msgId)
+  const message = chatStore.getMessage(msgId)
+  if (!recalledMsg || !message) return false
+
+  // 判断是否是当前用户的撤回消息且在2分钟内
+  return (
+    message.fromUser.uid === userUid.value &&
+    !isDiffNow({
+      time: recalledMsg.recallTime,
+      unit: 'minute',
+      diff: 2
+    })
+  )
+})
+
+const handleReEdit = (msgId: number) => {
+  const recalledMsg = chatStore.getRecalledMessage(msgId)
+  if (recalledMsg) {
+    Mitt.emit(MittEnum.RE_EDIT, recalledMsg.content)
+  }
+}
+
 onMounted(() => {
   nextTick(() => {
     // 滚动到底部
@@ -624,26 +666,8 @@ onUnmounted(() => {
   hoverBubble.value.key = -1
   window.removeEventListener('click', closeMenu, true)
 })
-
-const handleRetry = (item: any) => {
-  // TODO: 实现重试发送逻辑
-  console.log('重试发送消息:', item)
-}
 </script>
 
 <style scoped lang="scss">
 @use '@/styles/scss/chat-main';
-
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
 </style>

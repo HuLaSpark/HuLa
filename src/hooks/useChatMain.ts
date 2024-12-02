@@ -85,7 +85,11 @@ export const useChatMain = (activeItem?: SessionItem) => {
           window.$message.error(res)
           return
         }
-        chatStore.updateRecallStatus({ msgId: item.message.id })
+        chatStore.updateRecallStatus({
+          recallUid: item.fromUser.uid,
+          msgId: item.message.id,
+          roomId: item.message.roomId
+        })
       },
       visible: (item: MessageType) => {
         // 判断当前选择的信息的发送时间是否超过2分钟
