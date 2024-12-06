@@ -19,7 +19,7 @@
     </div>
 
     <n-flex v-if="!isSearch" align="center" justify="space-between" class="pr-8px pl-8px h-42px">
-      <span class="text-14px">群聊成员&nbsp;{{ userList.length }}</span>
+      <span class="text-14px">在线群聊成员&nbsp;{{ groupStore.countInfo.onlineNum }}</span>
       <svg @click="handleSelect" class="size-14px"><use href="#search"></use></svg>
     </n-flex>
     <!-- 搜索框 -->
@@ -47,6 +47,7 @@
       id="image-chat-sidebar"
       style="max-height: calc(100vh - 130px)"
       item-resizable
+      @scroll="handleScroll($event)"
       :item-size="42"
       :items="filteredUserList">
       <template #default="{ item }">
@@ -65,6 +66,7 @@
               :special-menu="report">
               <n-flex @click="selectKey = item.uid" :key="item.uid" :size="10" align="center" class="item">
                 <n-avatar
+                  v-if="item.avatar"
                   lazy
                   round
                   class="grayscale"
@@ -77,6 +79,23 @@
                   :intersection-observer-options="{
                     root: '#image-chat-sidebar'
                   }"></n-avatar>
+
+                <n-avatar
+                  v-else
+                  lazy
+                  round
+                  class="grayscale text-10px"
+                  :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
+                  :color="'rgba(19, 152, 127, 0.4)'"
+                  :size="24"
+                  :src="item.avatar"
+                  fallback-src="/logo.png"
+                  :render-placeholder="() => null"
+                  :intersection-observer-options="{
+                    root: '#image-chat-sidebar'
+                  }">
+                  {{ item.name?.slice(0, 1) }}
+                </n-avatar>
                 <span class="text-12px truncate flex-1">{{ item.name }}</span>
                 <div v-if="item.uid === 1" class="flex p-4px rounded-4px bg-#f5dadf size-fit select-none">
                   <span class="text-(10px #d5304f)">群主</span>
@@ -110,15 +129,20 @@ const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
 const groupUserList = computed(() => groupStore.userList)
 const userList = computed(() => {
-  return groupUserList.value.map((item: UserItem) => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { uid, ...userInfo } = item // 排除uid，获取剩余内容
-    return {
-      ...userInfo,
-      ...useUserInfo(item.uid).value
-    }
-  })
+  return groupUserList.value
+    .map((item: UserItem) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { uid, ...userInfo } = item // 排除uid，获取剩余内容
+      return {
+        ...userInfo,
+        ...useUserInfo(item.uid).value
+      }
+    })
+    .sort((a, b) => {
+      return a.activeStatus - b.activeStatus // 升序排序
+    })
 })
+console.log('userList', userList.value)
 const filteredUserList = shallowRef(userList.value)
 const isGroup = computed(() => globalStore.currentSession?.type === RoomTypeEnum.GROUP)
 /** 是否是搜索模式 */
@@ -130,6 +154,15 @@ const inputInstRef = ref<InputInst | null>(null)
 const isCollapsed = ref(true)
 const { optionsList, report, selectKey } = useChatMain()
 const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-sidebar')
+
+watch(userList, (newVal) => {
+  // 如果正在搜索，则应用搜索过滤
+  if (searchRef.value) {
+    filteredUserList.value = newVal.filter((user) => user.name.toLowerCase().includes(searchRef.value.toLowerCase()))
+  } else {
+    filteredUserList.value = newVal
+  }
+})
 
 const handleSelect = () => {
   isSearch.value = !isSearch.value
@@ -156,6 +189,19 @@ const handleBlur = () => {
 const handleSearch = useDebounceFn((value: string) => {
   filteredUserList.value = userList.value.filter((user) => user.name.toLowerCase().includes(value.toLowerCase()))
 }, 10)
+
+/**
+ * 处理滚动事件
+ * @param event 滚动事件
+ */
+const handleScroll = (event: Event) => {
+  const target = event.target as HTMLElement
+  const isBottom = target.scrollHeight - target.scrollTop === target.clientHeight
+
+  if (isBottom && !groupStore.userListOptions.loading) {
+    groupStore.loadMoreGroupMembers()
+  }
+}
 
 onMounted(() => {
   Mitt.on(`${MittEnum.INFO_POPOVER}-Sidebar`, (event: any) => {

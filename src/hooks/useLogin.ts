@@ -16,20 +16,13 @@ export const useLogin = () => {
 
   /**
    * 登出账号
-   * @param isToQrcode 是否返回到二维码页面
    */
-  const logout = async (isToQrcode = false) => {
+  const logout = async () => {
     const { createWebviewWindow } = useWindow()
-    localStorage.removeItem('USER_INFO')
-    localStorage.removeItem('TOKEN')
     // todo 退出账号 需要关闭其他的全部窗口
     await createWebviewWindow('登录', 'login', 320, 448, 'home', false, 320, 448).then(() => {
       emit(EventEnum.LOGOUT)
       emit('logout_success')
-      // 用于跳转到二维码页面
-      if (isToQrcode) {
-        localStorage.setItem('isToQrcode', '1')
-      }
     })
   }
 

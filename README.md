@@ -102,3 +102,13 @@ sudo xattr -rd com.apple.quarantine the Path To Install The Package/HuLa.app
 ## SubmissionSpecification
 
 use **pnpm run commit** to invoke the _git commit_ interaction and follow the prompts to complete the input and selection of information
+
+## Disclaimer
+
+1. This project is provided as an open source project, and the developer does not provide any express or implied warranty of any kind as to the functionality, security, or suitability of the software to the extent permitted by law
+2. The User expressly understands and agrees that the use of the Software is entirely at the User's own risk and that the Software is provided on an "as is" and "as available" basis. The developer disclaims all warranties of any kind, whether express or implied, including, but not limited to, warranties of merchantability, fitness for a particular purpose, and non-infringement
+3. In no event shall Developer or its suppliers be liable for any direct, indirect, incidental, special, punitive, or consequential damages, including, but not limited to, lost profits, business interruption, disclosure of personal information, or other commercial damages or losses arising from the use of the Software
+4. All users who carry out secondary development on this project shall undertake to use this software for legitimate purposes and shall be responsible for complying with local laws and regulations
+5. Developer reserves the right to modify the functionality or features of the Software, as well as any part of this Disclaimer, at any time, and these modifications may be reflected in software updates
+
+**The final interpretation of this disclaimer belongs to the developer**

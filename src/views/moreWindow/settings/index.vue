@@ -62,7 +62,7 @@
 import router from '@/router'
 import { sideOptions } from './config.ts'
 import { useSettingStore } from '@/stores/setting.ts'
-import Foot from '@/views/homeWindow/more/settings/Foot.vue'
+import Foot from '@/views/moreWindow/settings/Foot.vue'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 
 const settingStore = useSettingStore()
@@ -93,6 +93,7 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
+@use '@/styles/scss/global/variable' as *;
 .left-bar {
   @include menu-list();
   background: var(--bg-left-menu);

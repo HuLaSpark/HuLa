@@ -51,7 +51,7 @@
 import { useWindow } from '@/hooks/useWindow.ts'
 import { invoke } from '@tauri-apps/api/core'
 import { exit } from '@tauri-apps/plugin-process'
-import { statusItem } from '@/views/homeWindow/onlineStatus/config.ts'
+import { statusItem } from '@/views/onlineStatusWindow/config.ts'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { listen } from '@tauri-apps/api/event'

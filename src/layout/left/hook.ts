@@ -3,7 +3,7 @@ import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { useCachedStore } from '@/stores/cached.ts'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
-import { EventEnum, IsYetEnum, MittEnum, MsgEnum, PluginEnum, ThemeEnum } from '@/enums'
+import { EventEnum, IsYesEnum, MittEnum, MsgEnum, PluginEnum, ThemeEnum } from '@/enums'
 import { BadgeType, UserInfoType } from '@/services/types.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
@@ -11,7 +11,6 @@ import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import Mitt from '@/utils/Bus.ts'
 import apis from '@/services/apis.ts'
-import GraphemeSplitter from 'grapheme-splitter'
 import { delay } from 'lodash-es'
 import router from '@/router'
 import { listen } from '@tauri-apps/api/event'
@@ -38,19 +37,18 @@ export const leftHook = () => {
   /** 已打开窗口的列表 */
   const openWindowsList = ref(new Set())
   /** 编辑资料弹窗 */
-  // TODO 这里考虑是否查接口查实时的用户信息还是直接查本地存储的用户信息 (nyh -> 2024-05-05 01:12:36)
   const editInfo = ref<{
     show: boolean
-    content: UserInfoType
+    content: Partial<UserInfoType>
     badgeList: BadgeType[]
   }>({
     show: false,
-    content: {} as UserInfoType,
+    content: {},
     badgeList: []
   })
   /** 当前用户佩戴的徽章  */
   const currentBadge = computed(() =>
-    editInfo.value.badgeList.find((item) => item.obtain === IsYetEnum.YES && item.wearing === IsYetEnum.YES)
+    editInfo.value.badgeList.find((item) => item.obtain === IsYesEnum.YES && item.wearing === IsYesEnum.YES)
   )
   const chatStore = useChatStore()
   const sessionList = computed(() =>
@@ -133,20 +131,8 @@ export const leftHook = () => {
   /** 佩戴徽章 */
   const toggleWarningBadge = async (badge: BadgeType) => {
     if (!badge?.id) return
-    const res: any = await apis.setUserBadge(badge.id)
-    if (res) {
-      window.$message.success('佩戴成功')
-      /** 获取用户信息 */
-      apis.getUserInfo().then((res) => {
-        editInfo.value.content = res as any
-      })
-    }
-  }
-
-  /** 计算字符长度 */
-  const countGraphemes = (value: string) => {
-    const splitter = new GraphemeSplitter()
-    return splitter.countGraphemes(value)
+    await apis.setUserBadge(badge.id)
+    window.$message.success('佩戴成功')
   }
 
   /* 打开并且创建modal */
@@ -262,7 +248,6 @@ export const leftHook = () => {
     openContent,
     saveEditInfo,
     toggleWarningBadge,
-    countGraphemes,
     updateCurrentUserCache,
     followOS
   }

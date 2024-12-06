@@ -1,4 +1,3 @@
-import { ref } from 'vue'
 import apis from '@/services/apis'
 import { defineStore } from 'pinia'
 import type { UserInfoType } from '@/services/types'

@@ -13,7 +13,7 @@ export const useChatMain = (activeItem?: SessionItem) => {
   const { removeTag, userUid } = useCommon()
   const globalStore = useGlobalStore()
   const chatStore = useChatStore()
-  const userInfo = useUserStore()?.userInfo
+  const userStore = useUserStore()?.userInfo
   // const userInfo = useUserStore()?.userInfo
   // const chatMessageList = computed(() => chatStore.chatMessageList)
   const messageOptions = computed(() => chatStore.currentMessageOptions)
@@ -92,7 +92,7 @@ export const useChatMain = (activeItem?: SessionItem) => {
         if (isDiffNow({ time: item.message.sendTime, unit: 'minute', diff: 2 })) return
         // 判断自己是否是发送者或者是否是管理员
         const isCurrentUser = item.fromUser.uid === userUid.value
-        const isAdmin = userInfo?.power === PowerEnum.ADMIN
+        const isAdmin = userStore?.power === PowerEnum.ADMIN
         return isCurrentUser || isAdmin
       }
     }
@@ -178,7 +178,8 @@ export const useChatMain = (activeItem?: SessionItem) => {
     {
       label: 'TA',
       icon: 'aite',
-      click: () => {}
+      click: () => {},
+      visible: (item: any) => (item.uid ? item.uid !== userUid.value : item.fromUser.uid !== userUid.value)
     },
     {
       label: '查看资料',
@@ -188,6 +189,12 @@ export const useChatMain = (activeItem?: SessionItem) => {
         const uid = item.uid || item.message.id
         Mitt.emit(`${MittEnum.INFO_POPOVER}-${type}`, { uid: uid, type: type })
       }
+    },
+    {
+      label: '修改群昵称',
+      icon: 'edit',
+      click: () => {},
+      visible: (item: any) => (item.uid ? item.uid === userUid.value : item.fromUser.uid === userUid.value)
     },
     {
       label: '添加好友',

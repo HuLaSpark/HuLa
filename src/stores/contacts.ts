@@ -25,7 +25,7 @@ export const useContactStore = defineStore('contact', () => {
       .getContactList({
         // TODO 先写 100，稍后优化
         pageSize: 100,
-        cursor: isFresh || !contactsOptions.cursor ? undefined : contactsOptions.cursor
+        cursor: isFresh || !contactsOptions.cursor ? '' : contactsOptions.cursor
       })
       .catch(() => {
         contactsOptions.isLoading = false
@@ -62,7 +62,7 @@ export const useContactStore = defineStore('contact', () => {
     const res = await apis
       .requestFriendList({
         pageSize,
-        cursor: isFresh || !requestFriendsOptions.cursor ? undefined : requestFriendsOptions.cursor
+        cursor: isFresh || !requestFriendsOptions.cursor ? '' : requestFriendsOptions.cursor
       })
       .catch(() => {
         requestFriendsOptions.isLoading = false
@@ -84,11 +84,11 @@ export const useContactStore = defineStore('contact', () => {
   /** 接受好友请求 */
   const onAcceptFriend = (applyId: number) => {
     // 同意好友申请
-    apis.applyFriendRequest({ applyId }).then(() => {
+    apis.applyFriendRequest({ applyId }).then(async () => {
       // 刷新好友申请列表
-      getRequestFriendsList(true)
+      await getRequestFriendsList(true)
       // 刷新好友列表
-      getContactList(true)
+      await getContactList(true)
       // 标识为可以发消息的人
       if (globalStore.currentSelectedContact) {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment

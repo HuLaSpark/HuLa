@@ -167,6 +167,7 @@ const handleAfterEnter = (el: any) => {
 </script>
 
 <style scoped lang="scss">
+@use '@/styles/scss/global/variable.scss' as *;
 @mixin menu-item {
   padding: 2px 8px;
   border-radius: 4px;

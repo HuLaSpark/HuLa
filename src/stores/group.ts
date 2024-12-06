@@ -7,7 +7,6 @@ import { OnlineEnum, RoleEnum } from '@/enums'
 import { uniqueUserList } from '@/utils/unique'
 import { useCachedStore } from '@/stores/cached'
 import { useUserStore } from '@/stores/user'
-import { cloneDeep } from 'lodash-es'
 
 const sorAction = (pre: UserItem, next: UserItem) => {
   if (pre.activeStatus === OnlineEnum.ONLINE && next.activeStatus === OnlineEnum.ONLINE) {
@@ -82,23 +81,17 @@ export const useGroupStore = defineStore('group', () => {
     roomId: currentRoomId.value
   })
 
-  // 移动端控制显隐
-  const showGroupList = ref(false)
-
   // 获取群成员
   const getGroupUserList = async (refresh = false) => {
-    const res = await apis.getGroupList({
-      params: {
-        pageSize,
-        cursor: refresh ? undefined : userListOptions.cursor,
-        roomId: currentRoomId.value
-      }
+    const data = await apis.getGroupList({
+      pageSize: pageSize,
+      cursor: refresh ? '' : userListOptions.cursor,
+      roomId: currentRoomId.value
     })
-    if (!res) return
-    const data = res
-    const tempNew = cloneDeep(uniqueUserList(refresh ? data.list : [...data.list, ...userList.value]))
-    tempNew.sort(sorAction)
-    userList.value = tempNew
+    if (!data) return
+    const newUserList = uniqueUserList(refresh ? data.list : [...data.list, ...userList.value])
+    newUserList.sort(sorAction)
+    userList.value = newUserList
     userListOptions.cursor = data.cursor
     userListOptions.isLast = data.isLast
     userListOptions.loading = false
@@ -116,21 +109,23 @@ export const useGroupStore = defineStore('group', () => {
   }
 
   // 加载更多群成员
-  const loadMore = async () => {
-    if (userListOptions.isLast) return
+  const loadMoreGroupMembers = async () => {
+    if (userListOptions.isLast || userListOptions.loading) return
+    userListOptions.loading = true
     await getGroupUserList()
+    userListOptions.loading = false
   }
 
   // 更新用户在线状态
   const batchUpdateUserStatus = (items: UserItem[]) => {
-    const tempNew = cloneDeep(userList.value)
     for (let index = 0, len = items.length; index < len; index++) {
       const curUser = items[index]
-      const findIndex = tempNew.findIndex((item) => item.uid === curUser.uid)
-      findIndex > -1 && (tempNew[findIndex].activeStatus = curUser.activeStatus)
+      const findIndex = userList.value.findIndex((item) => item.uid === curUser.uid)
+      userList.value[findIndex] = {
+        ...userList.value[findIndex],
+        activeStatus: items[index].activeStatus
+      }
     }
-    tempNew.sort(sorAction)
-    userList.value = tempNew
   }
 
   // 过滤掉小黑子
@@ -189,13 +184,12 @@ export const useGroupStore = defineStore('group', () => {
   return {
     userList,
     userListOptions,
-    loadMore,
+    loadMoreGroupMembers,
     getGroupUserList,
     getCountStatistic,
     currentLordId,
     countInfo,
     batchUpdateUserStatus,
-    showGroupList,
     filterUser,
     adminUidList,
     adminList,

@@ -94,18 +94,28 @@
                   :content="item"
                   :menu="chatStore.isGroup ? optionsList : void 0"
                   :special-menu="report">
+                  <!-- 没有头像时候显示 -->
                   <n-avatar
                     round
-                    :color="'#fff'"
+                    v-if="avatarExists(item.fromUser.uid)"
+                    :size="34"
+                    :color="'#909090'"
+                    @click="selectKey = item.message.id"
+                    class="select-none"
+                    :src="getAvatarSrc(item.fromUser.uid)"
+                    :class="item.fromUser.uid === userUid ? '' : 'mr-10px'">
+                    {{ avatarExists(item.fromUser.uid) }}
+                  </n-avatar>
+                  <!-- 存在头像时候显示 -->
+                  <n-avatar
+                    round
+                    v-else
                     :size="34"
                     @click="selectKey = item.message.id"
                     class="select-none"
-                    :src="
-                      item.fromUser.uid === userUid
-                        ? login.accountInfo.avatar
-                        : useUserInfo(item.fromUser.uid).value.avatar
-                    "
-                    :class="item.fromUser.uid === userUid ? '' : 'mr-10px'"></n-avatar>
+                    :src="getAvatarSrc(item.fromUser.uid)"
+                    :class="item.fromUser.uid === userUid ? '' : 'mr-10px'">
+                  </n-avatar>
                 </ContextMenu>
               </template>
               <!-- 用户个人信息框 -->
@@ -429,6 +439,16 @@ watch(chatMessageList, (value, oldValue) => {
     })
   }
 })
+
+/** 获取用户头像 */
+const getAvatarSrc = (uid: number) => {
+  return uid === userUid.value ? login.value.accountInfo.avatar : useUserInfo(uid).value.avatar
+}
+
+/** 头像是否存在 */
+const avatarExists = (uid: number) => {
+  return getAvatarSrc(uid) ? void 0 : useUserInfo(uid).value.name?.slice(0, 1)
+}
 
 // 当鼠标进入时触发的处理函数
 const handleMouseEnter = (key: any) => {

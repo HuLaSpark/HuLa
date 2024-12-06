@@ -1,8 +1,4 @@
-import { ref } from 'vue'
 import { defineStore } from 'pinia'
-
-import wsIns from '@/services/webSocket.ts'
-import { WsRequestMsgType } from '@/utils/wsType'
 
 export enum LoginStatus {
   Init,
@@ -13,9 +9,6 @@ export enum LoginStatus {
 export const useWsLoginStore = defineStore('wsLogin', () => {
   const loginQrCode = ref<string>()
   const loginStatus = ref(LoginStatus.Init)
-  function getLoginQrCode() {
-    wsIns.send({ type: WsRequestMsgType.RequestLoginQrCode })
-  }
   function resetLoginState() {
     loginQrCode.value = undefined
     loginStatus.value = LoginStatus.Init
@@ -24,7 +17,6 @@ export const useWsLoginStore = defineStore('wsLogin', () => {
   return {
     loginQrCode,
     loginStatus,
-    resetLoginState,
-    getLoginQrCode
+    resetLoginState
   }
 })

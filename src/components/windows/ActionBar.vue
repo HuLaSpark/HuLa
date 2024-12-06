@@ -4,6 +4,10 @@
     data-tauri-drag-region
     :class="osType === 'windows' ? 'flex justify-end select-none' : 'h-24px select-none w-full'">
     <template v-if="osType === 'windows'">
+      <!--  登录窗口的代理按钮  -->
+      <div v-if="proxy" @click="router.push('/proxy')" class="w-30px h-24px flex-center">
+        <svg class="size-16px color-[--action-bar-icon-color] cursor-pointer"><use href="#settings"></use></svg>
+      </div>
       <!--  固定在最顶层  -->
       <div v-if="topWinLabel !== void 0" @click="handleAlwaysOnTop" class="hover-box">
         <n-popover trigger="hover">
@@ -86,10 +90,12 @@ import { emit, listen } from '@tauri-apps/api/event'
 import { CloseBxEnum, EventEnum, MittEnum } from '@/enums'
 import { exit } from '@tauri-apps/plugin-process'
 import { type } from '@tauri-apps/plugin-os'
+import router from '@/router'
 
 const appWindow = WebviewWindow.getCurrent()
 const {
   topWinLabel,
+  proxy = false,
   minW = true,
   maxW = true,
   closeW = true,
@@ -103,6 +109,7 @@ const {
   topWinLabel?: string
   currentLabel?: string
   shrinkStatus?: boolean
+  proxy?: boolean
 }>()
 const { getWindowTop, setWindowTop } = useAlwaysOnTopStore()
 const settingStore = useSettingStore()
@@ -239,10 +246,10 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .hover-box {
-  @apply w-28px h24px flex-center hover:bg-[--icon-hover-color];
+  @apply w-28px h-24px flex-center hover:bg-[--icon-hover-color];
 }
 .action-close {
-  @apply w-28px h24px flex-center cursor-pointer hover:bg-#c22b1c svg:hover:color-[#fff];
+  @apply w-28px h-24px flex-center cursor-pointer hover:bg-#c22b1c svg:hover:color-[#fff];
 }
 .n-modal {
   align-self: start;

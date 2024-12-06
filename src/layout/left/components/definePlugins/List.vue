@@ -242,6 +242,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
+@use '@/styles/scss/global/variable.scss' as *;
 .float-block {
   --y: 0;
   --height: 70px;
