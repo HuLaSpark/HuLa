@@ -47,7 +47,7 @@ import router from '@/router'
 import { delay } from 'lodash-es'
 import { lightTheme } from 'naive-ui'
 import { OnlineEnum } from '@/enums'
-import Mitt from '@/utils/Bus.ts'
+import { useMitter } from '@/hooks/useMitt.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { LoginStatus, useWsLoginStore } from '@/stores/ws.ts'
@@ -136,11 +136,11 @@ onMounted(() => {
   } else {
     handleQRCodeLogin()
   }
-  Mitt.on(WsResponseMessageType.LOGIN_QR_CODE, (loginInitResType: LoginInitResType) => {
+  useMitter(WsResponseMessageType.LOGIN_QR_CODE, (loginInitResType: LoginInitResType) => {
     loginStore.loginQrCode = loginInitResType.loginUrl
     handleQRCodeLogin()
   })
-  Mitt.on(WsResponseMessageType.LOGIN_SUCCESS, async (loginSuccessResType: LoginSuccessResType) => {
+  useMitter(WsResponseMessageType.LOGIN_SUCCESS, async (loginSuccessResType: LoginSuccessResType) => {
     userStore.isSign = true
     const { token, ...rest } = loginSuccessResType
     // FIXME 可以不需要赋值了，单独请求了接口。
@@ -167,7 +167,7 @@ onMounted(() => {
     // await emojiStore.getEmojiList()
     await handleLoginSuccess()
   })
-  Mitt.on(WsResponseMessageType.NO_INTERNET, (e: any) => {
+  useMitter(WsResponseMessageType.NO_INTERNET, (e: any) => {
     handleError(e.msg)
   })
 })

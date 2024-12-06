@@ -21,3 +21,5 @@ dist-ssr
 *.sw?
 
 src-tauri/target
+
+.history/

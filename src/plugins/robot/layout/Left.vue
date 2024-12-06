@@ -137,7 +137,7 @@
 </template>
 <script setup lang="ts">
 import { NIcon, VirtualListInst, InputInst } from 'naive-ui'
-import Mitt from '@/utils/Bus.ts'
+import { useMitter, Mitt } from '@/hooks/useMitt.ts'
 import { VueDraggable } from 'vue-draggable-plus'
 import router from '@/router'
 import { useUserStore } from '@/stores/user.ts'
@@ -313,14 +313,14 @@ onMounted(() => {
   // handleActive(chatList.value[0])
   /** 刚加载的时候默认跳转到欢迎页面 */
   router.push('/welcome')
-  Mitt.on('update-chat-title', (e) => {
+  useMitter('update-chat-title', (e) => {
     chatList.value.filter((item) => {
       if (item.id === e.id) {
         item.title = e.title
       }
     })
   })
-  Mitt.on('return-chat', () => {
+  useMitter('return-chat', () => {
     handleActive(chatList.value[0])
   })
 })

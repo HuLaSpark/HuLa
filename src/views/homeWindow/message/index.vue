@@ -54,7 +54,7 @@
   </n-scrollbar>
 </template>
 <script lang="ts" setup>
-import Mitt from '@/utils/Bus.ts'
+import { Mitt } from '@/hooks/useMitt.ts'
 import { MockList } from '@/mock'
 import { useMessage } from '@/hooks/useMessage.ts'
 import { MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'

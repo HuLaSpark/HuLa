@@ -366,7 +366,7 @@
 <script setup lang="ts">
 import { EventEnum, MittEnum, MsgEnum, RoomTypeEnum, MessageStatusEnum } from '@/enums'
 import { type MessageType, SessionItem } from '@/services/types.ts'
-import Mitt from '@/utils/Bus.ts'
+import { useMitter, Mitt } from '@/hooks/useMitt.ts'
 import { usePopover } from '@/hooks/usePopover.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { listen } from '@tauri-apps/api/event'
@@ -624,18 +624,18 @@ onMounted(() => {
     // 滚动到底部
     virtualListInst.value?.scrollTo({ position: 'bottom', debounce: true })
   })
-  Mitt.on(MittEnum.SEND_MESSAGE, async (messageType: MessageType) => {
+  useMitter(MittEnum.SEND_MESSAGE, async (messageType: MessageType) => {
     await chatStore.pushMsg(messageType)
     // nextTick(() => {
     //   addToDomUpdateQueue(event.message.id, event.fromUser.uid)
     // })
   })
-  Mitt.on(`${MittEnum.INFO_POPOVER}-Main`, (event: any) => {
+  useMitter(`${MittEnum.INFO_POPOVER}-Main`, (event: any) => {
     selectKey.value = event.uid
     infoPopover.value = true
     handlePopoverUpdate(event.uid)
   })
-  Mitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
+  useMitter(MittEnum.MSG_BOX_SHOW, (event: any) => {
     activeItemRef.value = event.item
   })
   listen(EventEnum.SHARE_SCREEN, async () => {

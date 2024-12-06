@@ -174,6 +174,7 @@ import { useUserStore } from '@/stores/user.ts'
 import { computedToken } from '@/services/request.ts'
 import { UserInfoType } from '@/services/types.ts'
 import { useSettingStore } from '@/stores/setting.ts'
+// import { consolePrint } from '../../utils/console';
 
 const settingStore = useSettingStore()
 const userStore = useUserStore()

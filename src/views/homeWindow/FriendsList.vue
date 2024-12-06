@@ -92,7 +92,7 @@
   </n-scrollbar>
 </template>
 <script setup lang="ts">
-import Mitt from '@/utils/Bus.ts'
+import { useMitter, Mitt } from '@/hooks/useMitt.ts'
 import { MittEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
@@ -113,7 +113,7 @@ const onlineCount = computed(() => {
 })
 /** 监听独立窗口关闭事件 */
 watchEffect(() => {
-  Mitt.on(MittEnum.SHRINK_WINDOW, async (event) => {
+  useMitter(MittEnum.SHRINK_WINDOW, async (event) => {
     shrinkStatus.value = event as boolean
   })
 })

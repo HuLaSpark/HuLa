@@ -8,7 +8,7 @@ import type {
 import type { MessageType, MarkItemType, RevokedMsgType } from '@/services/types'
 import { OnlineEnum, ChangeTypeEnum, WorkerMsgEnum, MittEnum } from '@/enums'
 import { worker } from '@/utils/InitWorker.ts'
-import Mitt from '@/utils/Bus.ts'
+import { Mitt } from '@/hooks/useMitt.ts'
 import { emit } from '@tauri-apps/api/event'
 
 class WS {

@@ -84,7 +84,7 @@
 </template>
 <script setup lang="ts">
 import MsgInput from '@/components/rightBox/MsgInput.vue'
-import Mitt from '@/utils/Bus.ts'
+import { useMitter, Mitt } from '@/hooks/useMitt.ts'
 import { InputInst, NIcon } from 'naive-ui'
 import { useSettingStore } from '@/stores/setting.ts'
 
@@ -138,13 +138,13 @@ const handleEdit = () => {
 }
 
 onMounted(() => {
-  Mitt.on('left-chat-title', (e) => {
+  useMitter('left-chat-title', (e) => {
     const { title, id } = e
     if (id === currentChat.value.id) {
       currentChat.value.title = title
     }
   })
-  Mitt.on('chat-active', (e) => {
+  useMitter('chat-active', (e) => {
     const { title, id } = e
     currentChat.value.title = title || `新的聊天${currentChat.value.id}`
     currentChat.value.id = id

@@ -9,7 +9,7 @@ import { useChatStore } from '@/stores/chat.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
-import Mitt from '@/utils/Bus.ts'
+import { useMitter, Mitt } from '@/hooks/useMitt.ts'
 import apis from '@/services/apis.ts'
 import { delay } from 'lodash-es'
 import router from '@/router'
@@ -111,20 +111,20 @@ export const leftHook = () => {
   }
 
   /** 保存用户信息 */
-  const saveEditInfo = () => {
-    if (!editInfo.value.content.name || editInfo.value.content.name.trim() === '') {
+  const saveEditInfo = (localUserInfo: any) => {
+    if (!localUserInfo.name || localUserInfo.name.trim() === '') {
       window.$message.error('昵称不能为空')
       return
     }
-    if (editInfo.value.content.modifyNameChance === 0) {
+    if (localUserInfo.modifyNameChance === 0) {
       window.$message.error('改名次数不足')
       return
     }
-    apis.modifyUserName(editInfo.value.content.name).then(() => {
+    apis.modifyUserName(localUserInfo.name).then(() => {
       // 更新本地缓存的用户信息
-      userStore.userInfo.name = editInfo.value.content.name!
+      userStore.userInfo.name = localUserInfo.name!
       loginHistoriesStore.updateLoginHistory(<UserInfoType>userStore.userInfo) // 更新登录历史记录
-      updateCurrentUserCache('name', editInfo.value.content.name) // 更新缓存里面的用户信息
+      updateCurrentUserCache('name', localUserInfo.name) // 更新缓存里面的用户信息
       if (!editInfo.value.content.modifyNameChance) return
       editInfo.value.content.modifyNameChance -= 1
       window.$message.success('保存成功')
@@ -200,20 +200,20 @@ export const leftHook = () => {
     pageJumps(activeUrl.value)
     window.addEventListener('click', closeMenu, true)
 
-    Mitt.on(MittEnum.SHRINK_WINDOW, (event) => {
+    useMitter(MittEnum.SHRINK_WINDOW, (event: any) => {
       shrinkStatus.value = event as boolean
     })
-    Mitt.on(MittEnum.CLOSE_INFO_SHOW, () => {
+    useMitter(MittEnum.CLOSE_INFO_SHOW, () => {
       infoShow.value = false
     })
-    Mitt.on(MittEnum.UPDATE_MSG_TOTAL, (event) => {
+    useMitter(MittEnum.UPDATE_MSG_TOTAL, (event: any) => {
       menuTop.find((item: STO.Plugins<PluginEnum>) => {
         if (item.url === 'message') {
           item.badge = event as number
         }
       })
     })
-    Mitt.on(MittEnum.TO_SEND_MSG, (event: any) => {
+    useMitter(MittEnum.TO_SEND_MSG, (event: any) => {
       activeUrl.value = event.url
     })
     await listen(EventEnum.WIN_SHOW, (e) => {

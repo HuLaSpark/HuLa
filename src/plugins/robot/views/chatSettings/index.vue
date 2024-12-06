@@ -38,7 +38,7 @@
 </template>
 <script setup lang="tsx">
 import router from '@/router'
-import Mitt from '@/utils/Bus.ts'
+import { Mitt } from '@/hooks/useMitt.ts'
 import { content } from './config.tsx'
 import { useSettingStore } from '@/stores/setting.ts'
 

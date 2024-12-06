@@ -1,6 +1,6 @@
 import { useWindow } from '@/hooks/useWindow.ts'
 import { MittEnum, ModalEnum, PluginEnum } from '@/enums'
-import Mitt from '@/utils/Bus.ts'
+import { Mitt } from '@/hooks/useMitt.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
 import apis from '@/services/apis.ts'
 import { LoginStatus, useWsLoginStore } from '@/stores/ws.ts'

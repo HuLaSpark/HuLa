@@ -82,7 +82,7 @@
 
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import Mitt from '@/utils/Bus'
+import { useMitter, Mitt } from '@/hooks/useMitt.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { useAlwaysOnTopStore } from '@/stores/alwaysOnTop.ts'
 import { useSettingStore } from '@/stores/setting.ts'
@@ -231,7 +231,7 @@ const handleCloseWin = async () => {
     await appWindow.close()
   }
 }
-
+useMitter('handleCloseWin', handleCloseWin)
 // 添加和移除resize事件监听器
 onMounted(() => {
   window.addEventListener('resize', handleResize)

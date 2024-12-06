@@ -115,7 +115,7 @@
 </template>
 
 <script setup lang="ts">
-import Mitt from '@/utils/Bus.ts'
+import { useMitter, Mitt } from '@/hooks/useMitt.ts'
 import router from '@/router'
 import { MittEnum } from '@/enums'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
@@ -258,10 +258,10 @@ const stopDrag = () => {
 }
 
 onMounted(async () => {
-  Mitt.on(MittEnum.SHRINK_WINDOW, (event) => {
+  useMitter(MittEnum.SHRINK_WINDOW, (event) => {
     shrinkStatus.value = event as boolean
   })
-  Mitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
+  useMitter(MittEnum.MSG_BOX_SHOW, (event: any) => {
     if (!event) return
     currentMsg.value = event
   })

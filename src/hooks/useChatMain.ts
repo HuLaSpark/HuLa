@@ -1,7 +1,7 @@
 import { useCommon } from '@/hooks/useCommon.ts'
 import { MittEnum, MsgEnum, PowerEnum } from '@/enums'
 import { MessageType, SessionItem } from '@/services/types.ts'
-import Mitt from '@/utils/Bus.ts'
+import { Mitt } from '@/hooks/useMitt.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import apis from '@/services/apis.ts'
 import { useContactStore } from '@/stores/contacts'

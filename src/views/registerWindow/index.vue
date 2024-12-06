@@ -99,18 +99,19 @@
 </template>
 <script setup lang="ts">
 import { lightTheme } from 'naive-ui'
+import { Mitt } from '@/hooks/useMitt.ts'
 import apis from '@/services/apis.ts'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import dayjs from 'dayjs'
 import { RegisterUserReq } from '@/services/types.ts'
 import Validation from '@/components/common/Validation.vue'
-
-/** 账号信息 */
-const info = ref({
+const infoInit = {
   account: '',
   password: '',
   name: ''
-})
+}
+/** 账号信息 */
+const info = ref({ ...infoInit })
 /** 协议 */
 const protocol = ref(true)
 const btnEnable = ref(false)
@@ -180,6 +181,10 @@ const register = async () => {
         .then(() => {
           window.$message.success('注册成功')
           btnText.value = '注册'
+          setTimeout(() => {
+            Object.assign(info.value, infoInit) // 重置表单
+            Mitt.emit('handleCloseWin') // 关闭弹窗
+          }, 500)
         })
         .finally(() => {
           loading.value = false

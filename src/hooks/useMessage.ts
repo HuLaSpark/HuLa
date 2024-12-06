@@ -1,7 +1,7 @@
 import { useWindow } from '@/hooks/useWindow.ts'
 import { emit, listen } from '@tauri-apps/api/event'
 import { EventEnum, MittEnum } from '@/enums'
-import Mitt from '@/utils/Bus.ts'
+import { useMitter, Mitt } from '@/hooks/useMitt.ts'
 import { MockItem, SessionItem } from '@/services/types.ts'
 import { delay } from 'lodash-es'
 import { MockList } from '@/mock'
@@ -20,7 +20,7 @@ export const useMessage = () => {
   const { chat } = storeToRefs(settingStore)
   /** 监听独立窗口关闭事件 */
   watchEffect(() => {
-    Mitt.on(MittEnum.SHRINK_WINDOW, async (event) => {
+    useMitter(MittEnum.SHRINK_WINDOW, async (event: any) => {
       shrinkStatus.value = event as boolean
     })
   })

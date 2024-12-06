@@ -1,4 +1,4 @@
-import Mitt from '@/utils/Bus.ts'
+import { useMitter, Mitt } from '@/hooks/useMitt.ts'
 import apis from '@/services/apis'
 import type { MsgReadUnReadCountType } from '@/services/types'
 
@@ -28,8 +28,8 @@ const task = () => {
 }
 
 export const initListener = () => {
-  Mitt.on('onAddReadCountTask', onAddReadCountTask)
-  Mitt.on('onRemoveReadCountTask', onRemoveReadCountTask)
+  useMitter('onAddReadCountTask', onAddReadCountTask)
+  useMitter('onRemoveReadCountTask', onRemoveReadCountTask)
   clearQueue()
 }
 
