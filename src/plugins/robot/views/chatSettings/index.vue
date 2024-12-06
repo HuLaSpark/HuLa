@@ -38,7 +38,7 @@
 </template>
 <script setup lang="tsx">
 import router from '@/router'
-import { Mitt } from '@/hooks/useMitt.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { content } from './config.tsx'
 import { useSettingStore } from '@/stores/setting.ts'
 
@@ -47,7 +47,7 @@ const { page } = storeToRefs(settingStore)
 const handleClose = () => {
   router.push('/chat').then(() => {
     nextTick(() => {
-      Mitt.emit('return-chat')
+      useMitt.emit('return-chat')
     })
   })
 }

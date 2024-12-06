@@ -137,7 +137,7 @@
 </template>
 <script setup lang="ts">
 import { NIcon, VirtualListInst, InputInst } from 'naive-ui'
-import { useMitter, Mitt } from '@/hooks/useMitt.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { VueDraggable } from 'vue-draggable-plus'
 import router from '@/router'
 import { useUserStore } from '@/stores/user.ts'
@@ -208,7 +208,7 @@ const handleActive = (item: any) => {
   activeItem.value = item.id
   router.push('/chat').then(() => {
     nextTick(() => {
-      Mitt.emit('chat-active', item)
+      useMitt.emit('chat-active', item)
     })
   })
 }
@@ -305,7 +305,7 @@ const handleBlur = (item: any, index: number) => {
   window.$message.success(`已重命名为 ${newTitle}`, {
     icon: () => h(NIcon, null, { default: () => h('svg', null, [h('use', { href: '#face' })]) })
   })
-  Mitt.emit('left-chat-title', { id: item.id, title: newTitle })
+  useMitt.emit('left-chat-title', { id: item.id, title: newTitle })
 }
 
 onMounted(() => {
@@ -313,14 +313,14 @@ onMounted(() => {
   // handleActive(chatList.value[0])
   /** 刚加载的时候默认跳转到欢迎页面 */
   router.push('/welcome')
-  useMitter('update-chat-title', (e) => {
+  useMitt.on('update-chat-title', (e) => {
     chatList.value.filter((item) => {
       if (item.id === e.id) {
         item.title = e.title
       }
     })
   })
-  useMitter('return-chat', () => {
+  useMitt.on('return-chat', () => {
     handleActive(chatList.value[0])
   })
 })

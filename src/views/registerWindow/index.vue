@@ -99,19 +99,20 @@
 </template>
 <script setup lang="ts">
 import { lightTheme } from 'naive-ui'
-import { Mitt } from '@/hooks/useMitt.ts'
 import apis from '@/services/apis.ts'
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import dayjs from 'dayjs'
 import { RegisterUserReq } from '@/services/types.ts'
 import Validation from '@/components/common/Validation.vue'
-const infoInit = {
-  account: '',
-  password: '',
-  name: ''
-}
+
 /** 账号信息 */
-const info = ref({ ...infoInit })
+const info = unref(
+  ref({
+    account: '',
+    password: '',
+    name: ''
+  })
+)
 /** 协议 */
 const protocol = ref(true)
 const btnEnable = ref(false)
@@ -164,7 +165,7 @@ const validateSpecialChar = (value: string) => /[!@#¥$%.&*]/.test(value)
 
 /** 检查密码是否满足所有条件 */
 const isPasswordValid = computed(() => {
-  const password = info.value.password
+  const password = info.password
   return validateMinLength(password) && validateAlphaNumeric(password) && validateSpecialChar(password)
 })
 
@@ -177,14 +178,16 @@ const register = async () => {
       btnText.value = '注册中...'
       // 注册
       apis
-        .register({ ...info.value } as RegisterUserReq)
+        .register({ ...info } as RegisterUserReq)
         .then(() => {
           window.$message.success('注册成功')
           btnText.value = '注册'
           setTimeout(() => {
-            Object.assign(info.value, infoInit) // 重置表单
-            Mitt.emit('handleCloseWin') // 关闭弹窗
-          }, 500)
+            WebviewWindow.getByLabel('login').then((win) => {
+              win?.setFocus()
+            })
+            WebviewWindow.getCurrent().close()
+          }, 600)
         })
         .finally(() => {
           loading.value = false
@@ -196,14 +199,12 @@ const register = async () => {
 }
 
 watchEffect(() => {
-  btnEnable.value = !(info.value.account && isPasswordValid.value && protocol.value)
+  btnEnable.value = !(info.account && isPasswordValid.value && protocol.value)
 })
 
 onMounted(async () => {
   await getCurrentWebviewWindow().show()
 })
-
-onUnmounted(() => {})
 </script>
 
 <style scoped lang="scss">

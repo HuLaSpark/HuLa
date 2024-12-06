@@ -12,7 +12,7 @@
 import Center from './center/index.vue'
 import Left from './left/index.vue'
 import Right from './right/index.vue'
-import { useMitter } from '@/hooks/useMitt.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { ChangeTypeEnum, MittEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useGlobalStore } from '@/stores/global.ts'
@@ -39,8 +39,8 @@ const shrinkStatus = ref(false)
  * event默认如果没有传递值就为true，所以shrinkStatus的值为false就会发生值的变化
  * 因为shrinkStatus的值为false，所以v-if="!shrinkStatus" 否则right组件刚开始渲染的时候不会显示
  * */
-useMitter(MittEnum.SHRINK_WINDOW, (event) => {
-  shrinkStatus.value = event as boolean
+useMitt.on(MittEnum.SHRINK_WINDOW, (event: boolean) => {
+  shrinkStatus.value = event
 })
 
 onBeforeMount(() => {
@@ -52,17 +52,17 @@ onBeforeMount(() => {
 onMounted(async () => {
   await getCurrentWebviewWindow().show()
 })
-useMitter(WsResponseMessageType.OFFLINE, async () => {
+useMitt.on(WsResponseMessageType.OFFLINE, async () => {
   console.log('收到用户下线通知')
 })
-useMitter(WsResponseMessageType.ONLINE, async (onStatusChangeType: OnStatusChangeType) => {
+useMitt.on(WsResponseMessageType.ONLINE, async (onStatusChangeType: OnStatusChangeType) => {
   groupStore.countInfo.onlineNum = onStatusChangeType.onlineNum
   // groupStore.countInfo.totalNum = data.totalNum
   //groupStore.batchUpdateUserStatus(data.changeList)
   //groupStore.getGroupUserList(true)
   console.log('收到用户上线通知')
 })
-useMitter(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExpire) => {
+useMitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExpire) => {
   console.log('token过期')
   if (userStore.userInfo.uid === wsTokenExpire.uid) {
     await confirm('新设备已在' + (wsTokenExpire.ip ? wsTokenExpire.ip : '未知IP') + '登录')
@@ -75,7 +75,7 @@ useMitter(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExpi
     loginStore.loginStatus = LoginStatus.Init
   }
 })
-useMitter(WsResponseMessageType.INVALID_USER, (param: { uid: number }) => {
+useMitt.on(WsResponseMessageType.INVALID_USER, (param: { uid: number }) => {
   console.log('无效用户')
   const data = param
   // 消息列表删掉小黑子发言
@@ -83,14 +83,14 @@ useMitter(WsResponseMessageType.INVALID_USER, (param: { uid: number }) => {
   // 群成员列表删掉小黑子
   groupStore.filterUser(data.uid)
 })
-useMitter(WsResponseMessageType.MSG_MARK_ITEM, (param: { markList: MarkItemType[] }) => {
+useMitt.on(WsResponseMessageType.MSG_MARK_ITEM, (param: { markList: MarkItemType[] }) => {
   chatStore.updateMarkCount(param.markList)
 })
-useMitter(WsResponseMessageType.MSG_RECALL, (param: { data: RevokedMsgType }) => {
+useMitt.on(WsResponseMessageType.MSG_RECALL, (param: { data: RevokedMsgType }) => {
   const { data } = param
   chatStore.updateRecallStatus(data)
 })
-useMitter(WsResponseMessageType.REQUEST_NEW_FRIEND, (param: { uid: number; unreadCount: number }) => {
+useMitt.on(WsResponseMessageType.REQUEST_NEW_FRIEND, (param: { uid: number; unreadCount: number }) => {
   globalStore.unReadMark.newFriendUnreadCount += param.unreadCount
   // notify({
   //   name: '新好友',
@@ -100,7 +100,7 @@ useMitter(WsResponseMessageType.REQUEST_NEW_FRIEND, (param: { uid: number; unrea
   //   }
   // })
 })
-useMitter(
+useMitt.on(
   WsResponseMessageType.NEW_FRIEND_SESSION,
   (param: {
     roomId: number

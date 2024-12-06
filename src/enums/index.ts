@@ -53,37 +53,37 @@ export enum EventEnum {
 /** Mitt兄弟组件通信 */
 export enum MittEnum {
   /** 更新消息数量 */
-  UPDATE_MSG_TOTAL,
+  UPDATE_MSG_TOTAL = 'updateMsgTotal',
   /** 显示消息框 */
-  MSG_BOX_SHOW,
+  MSG_BOX_SHOW = 'msgBoxShow',
   /** 发送消息 */
-  SEND_MESSAGE,
+  SEND_MESSAGE = 'sendMessage',
   /** 跳到发送信息 */
-  TO_SEND_MSG,
+  TO_SEND_MSG = 'toSendMsg',
   /** 缩小窗口 */
-  SHRINK_WINDOW,
+  SHRINK_WINDOW = 'windowShrink',
   /** 详情页面显示 */
-  DETAILS_SHOW,
+  DETAILS_SHOW = 'detailsShow',
   /** 好友申请页面显示 */
-  APPLY_SHOW,
+  APPLY_SHOW = 'applyShow',
   /** 消息列表被清空或者暂无消息 */
-  NOT_MSG,
+  NOT_MSG = 'notMsg',
   /** 回复消息 */
-  REPLY_MEG,
+  REPLY_MEG = 'replyMsg',
   /** 手动触发InfoPopover */
-  INFO_POPOVER,
+  INFO_POPOVER = 'infoPopover',
   /** 打开个人信息编辑窗口 */
-  OPEN_EDIT_INFO,
+  OPEN_EDIT_INFO = 'openEditInfo',
   /** 关闭个人信息浮窗 */
-  CLOSE_INFO_SHOW,
+  CLOSE_INFO_SHOW = 'closeInfoShow',
   /** 左边菜单弹窗 */
-  LEFT_MODAL_SHOW,
+  LEFT_MODAL_SHOW = 'leftModalShow',
   /** 触发home窗口事件 */
-  HOME_WINDOW_RESIZE,
+  HOME_WINDOW_RESIZE = 'homeWindowResize',
   /** @ AT */
-  AT,
+  AT = 'at',
   /** 重新编辑 */
-  RE_EDIT
+  RE_EDIT = 'reEdit'
 }
 
 /** 主题类型 */

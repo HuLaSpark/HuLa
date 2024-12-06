@@ -1,7 +1,7 @@
 import { useCommon } from '@/hooks/useCommon.ts'
 import { MittEnum, MsgEnum, PowerEnum } from '@/enums'
 import { MessageType, SessionItem } from '@/services/types.ts'
-import { Mitt } from '@/hooks/useMitt.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import apis from '@/services/apis.ts'
 import { useContactStore } from '@/stores/contacts'
@@ -73,7 +73,7 @@ export const useChatMain = (activeItem?: SessionItem) => {
       label: '回复',
       icon: 'reply',
       click: (item: any) => {
-        Mitt.emit(MittEnum.REPLY_MEG, item)
+        useMitt.emit(MittEnum.REPLY_MEG, item)
       }
     },
     {
@@ -184,7 +184,7 @@ export const useChatMain = (activeItem?: SessionItem) => {
       label: 'TA',
       icon: 'aite',
       click: (item: any) => {
-        Mitt.emit(MittEnum.AT, item.uid || item.fromUser.uid)
+        useMitt.emit(MittEnum.AT, item.uid || item.fromUser.uid)
       },
       visible: (item: any) => (item.uid ? item.uid !== userUid.value : item.fromUser.uid !== userUid.value)
     },
@@ -194,7 +194,7 @@ export const useChatMain = (activeItem?: SessionItem) => {
       click: (item: any, type: string) => {
         // 如果是聊天框内的资料就使用的是消息的key，如果是群聊成员的资料就使用的是uid
         const uid = item.uid || item.message.id
-        Mitt.emit(`${MittEnum.INFO_POPOVER}-${type}`, { uid: uid, type: type })
+        useMitt.emit(`${MittEnum.INFO_POPOVER}-${type}`, { uid: uid, type: type })
       }
     },
     {

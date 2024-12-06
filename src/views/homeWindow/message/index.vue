@@ -54,7 +54,7 @@
   </n-scrollbar>
 </template>
 <script lang="ts" setup>
-import { Mitt } from '@/hooks/useMitt.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { MockList } from '@/mock'
 import { useMessage } from '@/hooks/useMessage.ts'
 import { MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
@@ -116,9 +116,9 @@ const onSelectSelectSession = (item: SessionItem, roomType: RoomTypeEnum) => {
 
 watchEffect(() => {
   // TODO 如果当前信息栏中没有该信息就创建一条 (nyh -> 2024-03-22 01:05:22)
-  Mitt.emit(MittEnum.UPDATE_MSG_TOTAL, msgTotal.value)
+  useMitt.emit(MittEnum.UPDATE_MSG_TOTAL, msgTotal.value)
   if (MockList.value.length === 0) {
-    Mitt.emit(MittEnum.NOT_MSG)
+    useMitt.emit(MittEnum.NOT_MSG)
   }
 })
 

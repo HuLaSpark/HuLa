@@ -4,7 +4,7 @@ import { createFileOrVideoDom } from '@/utils/CreateDom.ts'
 import GraphemeSplitter from 'grapheme-splitter'
 import router from '@/router'
 import apis from '@/services/apis.ts'
-import { Mitt } from '@/hooks/useMitt.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useMessage } from '@/hooks/useMessage.ts'
@@ -385,7 +385,7 @@ export const useCommon = () => {
       chatStore.updateSessionLastActiveTime(res.roomId, res)
       handleMsgClick(res as any)
     })
-    Mitt.emit(MittEnum.TO_SEND_MSG, { url: 'message' })
+    useMitt.emit(MittEnum.TO_SEND_MSG, { url: 'message' })
   }
 
   return {

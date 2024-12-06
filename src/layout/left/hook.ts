@@ -9,7 +9,7 @@ import { useChatStore } from '@/stores/chat.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
-import { useMitter, Mitt } from '@/hooks/useMitt.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import apis from '@/services/apis.ts'
 import { delay } from 'lodash-es'
 import router from '@/router'
@@ -141,7 +141,7 @@ export const leftHook = () => {
   /* 打开并且创建modal */
   const handleEditing = () => {
     // TODO 暂时使用mitt传递参数，不然会导致子组件的响应式丢失 (nyh -> 2024-06-25 09:53:43)
-    Mitt.emit(MittEnum.OPEN_EDIT_INFO)
+    useMitt.emit(MittEnum.OPEN_EDIT_INFO)
   }
 
   /**
@@ -200,20 +200,20 @@ export const leftHook = () => {
     pageJumps(activeUrl.value)
     window.addEventListener('click', closeMenu, true)
 
-    useMitter(MittEnum.SHRINK_WINDOW, (event: any) => {
+    useMitt.on(MittEnum.SHRINK_WINDOW, (event: any) => {
       shrinkStatus.value = event as boolean
     })
-    useMitter(MittEnum.CLOSE_INFO_SHOW, () => {
+    useMitt.on(MittEnum.CLOSE_INFO_SHOW, () => {
       infoShow.value = false
     })
-    useMitter(MittEnum.UPDATE_MSG_TOTAL, (event: any) => {
+    useMitt.on(MittEnum.UPDATE_MSG_TOTAL, (event: any) => {
       menuTop.find((item: STO.Plugins<PluginEnum>) => {
         if (item.url === 'message') {
           item.badge = event as number
         }
       })
     })
-    useMitter(MittEnum.TO_SEND_MSG, (event: any) => {
+    useMitt.on(MittEnum.TO_SEND_MSG, (event: any) => {
       activeUrl.value = event.url
     })
     await listen(EventEnum.WIN_SHOW, (e) => {

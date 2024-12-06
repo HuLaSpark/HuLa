@@ -1,4 +1,4 @@
-import { useMitter, Mitt } from '@/hooks/useMitt.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import apis from '@/services/apis'
 import type { MsgReadUnReadCountType } from '@/services/types'
 
@@ -21,21 +21,21 @@ const task = () => {
     request.send().then((res: MsgReadUnReadCountType[]) => {
       const result = new Map<number, MsgReadUnReadCountType>()
       res.forEach((item) => result.set(item.msgId, item))
-      Mitt.emit('onGetReadCount', result)
+      useMitt.emit('onGetReadCount', result)
       request = null
     })
   }
 }
 
 export const initListener = () => {
-  useMitter('onAddReadCountTask', onAddReadCountTask)
-  useMitter('onRemoveReadCountTask', onRemoveReadCountTask)
+  useMitt.on('onAddReadCountTask', onAddReadCountTask)
+  useMitt.on('onRemoveReadCountTask', onRemoveReadCountTask)
   clearQueue()
 }
 
 export const clearListener = () => {
-  Mitt.off('onAddReadCountTask', onAddReadCountTask)
-  Mitt.off('onRemoveReadCountTask', onRemoveReadCountTask)
+  useMitt.off('onAddReadCountTask', onAddReadCountTask)
+  useMitt.off('onRemoveReadCountTask', onRemoveReadCountTask)
   timer && clearInterval(timer)
 }
 

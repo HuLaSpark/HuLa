@@ -8,7 +8,7 @@ import type {
 import type { MessageType, MarkItemType, RevokedMsgType } from '@/services/types'
 import { OnlineEnum, ChangeTypeEnum, WorkerMsgEnum, MittEnum } from '@/enums'
 import { worker } from '@/utils/InitWorker.ts'
-import { Mitt } from '@/hooks/useMitt.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { emit } from '@tauri-apps/api/event'
 
 class WS {
@@ -57,7 +57,7 @@ class WS {
       }
       case WorkerMsgEnum.WS_ERROR:
         console.log('无网络连接')
-        Mitt.emit(WsResponseMessageType.NO_INTERNET, params.value)
+        useMitt.emit(WsResponseMessageType.NO_INTERNET, params.value)
         localStorage.removeItem('wsLogin')
         break
     }
@@ -108,74 +108,75 @@ class WS {
       // 获取登录二维码
       case WsResponseMessageType.LOGIN_QR_CODE: {
         console.log('获取二维码')
-        Mitt.emit(WsResponseMessageType.LOGIN_QR_CODE, params.data as LoginInitResType)
+        useMitt.emit(WsResponseMessageType.LOGIN_QR_CODE, params.data as LoginInitResType)
         break
       }
       // 等待授权
       case WsResponseMessageType.WAITING_AUTHORIZE: {
         console.log('等待授权')
-        Mitt.emit(WsResponseMessageType.WAITING_AUTHORIZE)
+        useMitt.emit(WsResponseMessageType.WAITING_AUTHORIZE)
         break
       }
       // 登录成功
       case WsResponseMessageType.LOGIN_SUCCESS: {
         console.log('登录成功')
-        Mitt.emit(WsResponseMessageType.LOGIN_SUCCESS, params.data as LoginSuccessResType)
+        useMitt.emit(WsResponseMessageType.LOGIN_SUCCESS, params.data as LoginSuccessResType)
         break
       }
       // 收到消息
       case WsResponseMessageType.RECEIVE_MESSAGE: {
         console.log('接收消息')
         await emit('show_tip')
-        Mitt.emit(MittEnum.SEND_MESSAGE, params.data as MessageType)
+        useMitt.emit(MittEnum.SEND_MESSAGE, params.data as MessageType)
         break
       }
       // 用户上线
       case WsResponseMessageType.ONLINE: {
         console.log('上线')
-        Mitt.emit(WsResponseMessageType.ONLINE, params.data as OnStatusChangeType)
+        useMitt.emit(WsResponseMessageType.ONLINE, params.data as OnStatusChangeType)
         break
       }
       // 用户下线
       case WsResponseMessageType.OFFLINE: {
         console.log('下线')
-        Mitt.emit(WsResponseMessageType.OFFLINE)
+        useMitt.emit(WsResponseMessageType.OFFLINE)
         break
       }
       // 用户 token 过期
       case WsResponseMessageType.TOKEN_EXPIRED: {
         console.log('token过期')
-        Mitt.emit(WsResponseMessageType.TOKEN_EXPIRED, params.data as WsTokenExpire)
+        localStorage.removeItem('TOKEN')
+        useMitt.emit(WsResponseMessageType.TOKEN_EXPIRED, params.data as WsTokenExpire)
         break
       }
       // 小黑子的发言在禁用后，要删除他的发言
       case WsResponseMessageType.INVALID_USER: {
         console.log('无效用户')
-        Mitt.emit(WsResponseMessageType.INVALID_USER, params.data as { uid: number })
+        useMitt.emit(WsResponseMessageType.INVALID_USER, params.data as { uid: number })
         break
       }
       // 点赞、倒赞消息通知
       case WsResponseMessageType.MSG_MARK_ITEM: {
         console.log('点赞')
-        Mitt.emit(WsResponseMessageType.MSG_MARK_ITEM, params.data as { markList: MarkItemType[] })
+        useMitt.emit(WsResponseMessageType.MSG_MARK_ITEM, params.data as { markList: MarkItemType[] })
         break
       }
       // 消息撤回通知
       case WsResponseMessageType.MSG_RECALL: {
         console.log('撤回')
-        Mitt.emit(WsResponseMessageType.MSG_RECALL, params.data as { data: RevokedMsgType })
+        useMitt.emit(WsResponseMessageType.MSG_RECALL, params.data as { data: RevokedMsgType })
         break
       }
       // 新好友申请
       case WsResponseMessageType.REQUEST_NEW_FRIEND: {
         console.log('好友申请')
-        Mitt.emit(WsResponseMessageType.REQUEST_NEW_FRIEND, params.data as { uid: number; unreadCount: number })
+        useMitt.emit(WsResponseMessageType.REQUEST_NEW_FRIEND, params.data as { uid: number; unreadCount: number })
         break
       }
       // 新好友申请
       case WsResponseMessageType.NEW_FRIEND_SESSION: {
         console.log('新好友')
-        Mitt.emit(
+        useMitt.emit(
           WsResponseMessageType.NEW_FRIEND_SESSION,
           params.data as {
             roomId: number

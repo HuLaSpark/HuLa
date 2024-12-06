@@ -6,7 +6,7 @@ import { useCachedStore } from '@/stores/cached.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useSettingStore } from '@/stores/setting.ts'
-import { useMitter } from '@/hooks/useMitt.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { type } from '@tauri-apps/plugin-os'
 import { useDebounceFn } from '@vueuse/core'
 import { Ref } from 'vue'
@@ -90,9 +90,12 @@ export const useMsgInput = (messageInputDom: Ref) => {
   })
 
   onMounted(() => {
-    useMitter(MittEnum.RE_EDIT, (event: any) => {
-      messageInputDom.value.innerHTML = event
-      msgInput.value = event
+    useMitt.on(MittEnum.RE_EDIT, async (event: string) => {
+      messageInputDom.value.focus()
+      await nextTick(() => {
+        messageInputDom.value.innerHTML = event
+        msgInput.value = event
+      })
     })
     /** 正在输入拼音时触发 */
     messageInputDom.value.addEventListener('compositionstart', () => {
@@ -104,7 +107,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       aitKey.value = e.data
     })
     /** 监听回复信息的传递 */
-    useMitter(MittEnum.REPLY_MEG, (event: any) => {
+    useMitt.on(MittEnum.REPLY_MEG, (event: any) => {
       const accountName = useUserInfo(event.fromUser.uid).value.name!
       // 如果已经有回复消息，则替换掉原来的回复消息
       if (reply.value.content) {

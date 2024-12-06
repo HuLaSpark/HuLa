@@ -174,7 +174,6 @@ import { useUserStore } from '@/stores/user.ts'
 import { computedToken } from '@/services/request.ts'
 import { UserInfoType } from '@/services/types.ts'
 import { useSettingStore } from '@/stores/setting.ts'
-// import { consolePrint } from '../../utils/console';
 
 const settingStore = useSettingStore()
 const userStore = useUserStore()
@@ -190,9 +189,6 @@ const info = ref({
   name: '',
   uid: 0
 })
-
-/** 是否中断登录 */
-const interruptLogin = ref(false)
 /** 协议 */
 const protocol = ref(true)
 const loginDisabled = ref(false)
@@ -211,11 +207,6 @@ watchEffect(() => {
   // 清空账号的时候设置默认头像
   if (!info.value.account) {
     info.value.avatar = '/logo.png'
-  }
-  if (interruptLogin.value && login.value.autoLogin) {
-    loginDisabled.value = false
-    loading.value = false
-    interruptLogin.value = false
   }
 })
 
@@ -254,7 +245,6 @@ const normalLogin = async () => {
   apis
     .login({ account, password })
     .then(async (token) => {
-      if (interruptLogin.value) return
       loginDisabled.value = true
       loginText.value = '登录成功, 正在跳转'
       userStore.isSign = true
@@ -306,7 +296,6 @@ const openHomeWindow = async () => {
 
 /** 自动登录 */
 const autoLogin = () => {
-  interruptLogin.value = false
   loading.value = true
   // TODO 检查用户网络是否连接 (nyh -> 2024-03-16 12:06:59)
   loginText.value = '网络连接中'
@@ -339,9 +328,6 @@ const closeMenu = (event: MouseEvent) => {
   const target = event.target as Element
   if (!target.matches('.account-box, .account-box *, .down')) {
     arrowStatus.value = false
-  }
-  if (target.matches('#bottomBar *') && userStore.userInfo) {
-    interruptLogin.value = true
   }
   if (!target.matches('#moreShow')) {
     moreShow.value = false

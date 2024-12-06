@@ -118,7 +118,7 @@ import { MittEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
 import { InputInst } from 'naive-ui'
 import { usePopover } from '@/hooks/usePopover.ts'
 import { useChatMain } from '@/hooks/useChatMain.ts'
-import { useMitter } from '@/hooks/useMitt.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { useGlobalStore } from '@/stores/global.ts'
@@ -203,7 +203,7 @@ const handleScroll = (event: Event) => {
 }
 
 onMounted(() => {
-  useMitter(`${MittEnum.INFO_POPOVER}-Sidebar`, (event: any) => {
+  useMitt.on(`${MittEnum.INFO_POPOVER}-Sidebar`, (event: any) => {
     selectKey.value = event.uid
     infoPopover.value = true
     handlePopoverUpdate(event.uid)

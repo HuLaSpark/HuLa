@@ -1,7 +1,7 @@
 import { useWindow } from '@/hooks/useWindow.ts'
 import { emit, listen } from '@tauri-apps/api/event'
 import { EventEnum, MittEnum } from '@/enums'
-import { useMitter, Mitt } from '@/hooks/useMitt.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { MockItem, SessionItem } from '@/services/types.ts'
 import { delay } from 'lodash-es'
 import { MockList } from '@/mock'
@@ -20,7 +20,7 @@ export const useMessage = () => {
   const { chat } = storeToRefs(settingStore)
   /** 监听独立窗口关闭事件 */
   watchEffect(() => {
-    useMitter(MittEnum.SHRINK_WINDOW, async (event: any) => {
+    useMitt.on(MittEnum.SHRINK_WINDOW, async (event: any) => {
       shrinkStatus.value = event as boolean
     })
   })
@@ -30,12 +30,12 @@ export const useMessage = () => {
     msgBoxShow.value = true
     activeIndex.value = item.roomId
     const data = { msgBoxShow, item }
-    Mitt.emit(MittEnum.MSG_BOX_SHOW, data)
+    useMitt.emit(MittEnum.MSG_BOX_SHOW, data)
     // 判断是否打开了独立的窗口
     if (aloneWin.value.has(EventEnum.ALONE + item.roomId)) {
       checkWinExist(EventEnum.ALONE + item.roomId).then()
       activeIndex.value = -1
-      Mitt.emit(MittEnum.MSG_BOX_SHOW, { item: -1 })
+      useMitt.emit(MittEnum.MSG_BOX_SHOW, { item: -1 })
     }
     // 如果是收缩页面状态点击消息框就直接变成独立窗口
     if (shrinkStatus.value) {
@@ -56,7 +56,7 @@ export const useMessage = () => {
     itemRef.value = { ...item }
     if (activeIndex.value === item.roomId) {
       activeIndex.value = -1
-      Mitt.emit(MittEnum.MSG_BOX_SHOW, { item: -1 })
+      useMitt.emit(MittEnum.MSG_BOX_SHOW, { item: -1 })
       await listen('aloneWin', () => {
         emit('aloneData', { item: { ...item } })
       })

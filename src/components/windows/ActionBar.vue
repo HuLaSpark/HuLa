@@ -82,7 +82,7 @@
 
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { useMitter, Mitt } from '@/hooks/useMitt.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { useAlwaysOnTopStore } from '@/stores/alwaysOnTop.ts'
 import { useSettingStore } from '@/stores/setting.ts'
@@ -164,7 +164,7 @@ const restoreWindow = async () => {
 /** 收缩窗口 */
 const shrinkWindow = async () => {
   /**使用mitt给兄弟组件更新*/
-  Mitt.emit(MittEnum.SHRINK_WINDOW, shrinkStatus)
+  useMitt.emit(MittEnum.SHRINK_WINDOW, shrinkStatus)
   if (shrinkStatus) {
     await resizeWindow('home', 310, 700)
   } else {
@@ -231,7 +231,6 @@ const handleCloseWin = async () => {
     await appWindow.close()
   }
 }
-useMitter('handleCloseWin', handleCloseWin)
 // 添加和移除resize事件监听器
 onMounted(() => {
   window.addEventListener('resize', handleResize)

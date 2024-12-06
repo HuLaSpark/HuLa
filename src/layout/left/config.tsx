@@ -1,6 +1,6 @@
 import { useWindow } from '@/hooks/useWindow.ts'
 import { MittEnum, ModalEnum, PluginEnum } from '@/enums'
-import { Mitt } from '@/hooks/useMitt.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
 import apis from '@/services/apis.ts'
 import { LoginStatus, useWsLoginStore } from '@/stores/ws.ts'
@@ -64,14 +64,14 @@ const moreList = ref<OPT.L.MoreList[]>([
     label: '检查更新',
     icon: 'arrow-circle-up',
     click: () => {
-      Mitt.emit(MittEnum.LEFT_MODAL_SHOW, ModalEnum.CHECK_UPDATE)
+      useMitt.emit(MittEnum.LEFT_MODAL_SHOW, ModalEnum.CHECK_UPDATE)
     }
   },
   {
     label: '锁定屏幕',
     icon: 'lock',
     click: () => {
-      Mitt.emit(MittEnum.LEFT_MODAL_SHOW, ModalEnum.LOCK_SCREEN)
+      useMitt.emit(MittEnum.LEFT_MODAL_SHOW, ModalEnum.LOCK_SCREEN)
     }
   },
   {

@@ -19,7 +19,7 @@
 import LeftAvatar from './components/LeftAvatar.vue'
 import ActionList from './components/ActionList.vue'
 import InfoEdit from './components/InfoEdit.vue'
-import { useMitter } from '@/hooks/useMitt.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { lock, LockScreen, CheckUpdate } from './model.tsx'
 import type { Component } from 'vue'
 import { MittEnum, ModalEnum } from '@/enums'
@@ -32,7 +32,7 @@ const componentMapping: Record<number, Component> = {
 }
 
 onMounted(() => {
-  useMitter(MittEnum.LEFT_MODAL_SHOW, (event) => {
+  useMitt.on(MittEnum.LEFT_MODAL_SHOW, (event) => {
     componentMap.value = componentMapping[event as ModalEnum]
     nextTick(() => {
       lock.value.modalShow = true

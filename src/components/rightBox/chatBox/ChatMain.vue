@@ -1,11 +1,24 @@
 <template>
-  <div class="absolute-x-center top-20px" v-if="!messageOptions?.isLoading && chatMessageList?.length === 0">
+  <!-- 消息内容到最顶部提示 -->
+  <div
+    class="absolute-x-center top-20px"
+    v-if="!messageOptions?.isLoading && !isOnline && chatMessageList?.length === 0">
     <span v-if="chatStore.isGroup" class="text-(14px #909090)">暂无消息，快来发送第一条消息吧~</span>
     <span v-else class="text-(14px #909090)">你们已成功添加为好友，现在可以开始聊天了!</span>
   </div>
-  <n-flex justify="center" class="absolute-x-center pt-10px h-30px z-999" v-if="messageOptions?.isLoading">
+  <!-- 加载中提示 -->
+  <n-flex justify="center" class="absolute-x-center pt-10px h-30px" v-if="messageOptions?.isLoading">
     <img class="size-16px" src="@/assets/img/loading-one.svg" alt="" />
     <span class="text-(14px #909090)">加载中</span>
+  </n-flex>
+  <!-- 网络断开提示 -->
+  <n-flex
+    v-if="!isOnline"
+    align="center"
+    justify="center"
+    class="z-999 absolute w-full h-40px rounded-4px text-(12px [--danger-text]) bg-[--danger-bg]">
+    <svg class="size-16px"><use href="#cloudError"></use></svg>
+    当前网络不可用，请检查你的网络设置
   </n-flex>
   <!-- 中间聊天内容(使用虚拟列表) -->
   <n-virtual-list
@@ -366,7 +379,7 @@
 <script setup lang="ts">
 import { EventEnum, MittEnum, MsgEnum, RoomTypeEnum, MessageStatusEnum } from '@/enums'
 import { type MessageType, SessionItem } from '@/services/types.ts'
-import { useMitter, Mitt } from '@/hooks/useMitt.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { usePopover } from '@/hooks/usePopover.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { listen } from '@tauri-apps/api/event'
@@ -379,6 +392,7 @@ import { useUserInfo, useBadgeInfo } from '@/hooks/useCached.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { type } from '@tauri-apps/plugin-os'
 import { useUserStore } from '@/stores/user.ts'
+import { useNetwork } from '@vueuse/core'
 
 const { activeItem } = defineProps<{
   activeItem: SessionItem
@@ -410,6 +424,8 @@ const hoverBubble = ref<{
 })
 /** 记录右键菜单时选中的气泡的元素(用于处理mac右键会选中文本的问题) */
 const recordEL = ref()
+/** 网络连接是否正常 */
+const { isOnline } = useNetwork()
 const isMac = computed(() => type() === 'macos')
 const { userUid } = useCommon()
 const {
@@ -615,7 +631,7 @@ const canReEdit = computed(() => (msgId: number) => {
 const handleReEdit = (msgId: number) => {
   const recalledMsg = chatStore.getRecalledMessage(msgId)
   if (recalledMsg) {
-    Mitt.emit(MittEnum.RE_EDIT, recalledMsg.content)
+    useMitt.emit(MittEnum.RE_EDIT, recalledMsg.content)
   }
 }
 
@@ -624,18 +640,18 @@ onMounted(() => {
     // 滚动到底部
     virtualListInst.value?.scrollTo({ position: 'bottom', debounce: true })
   })
-  useMitter(MittEnum.SEND_MESSAGE, async (messageType: MessageType) => {
+  useMitt.on(MittEnum.SEND_MESSAGE, async (messageType: MessageType) => {
     await chatStore.pushMsg(messageType)
     // nextTick(() => {
     //   addToDomUpdateQueue(event.message.id, event.fromUser.uid)
     // })
   })
-  useMitter(`${MittEnum.INFO_POPOVER}-Main`, (event: any) => {
+  useMitt.on(`${MittEnum.INFO_POPOVER}-Main`, (event: any) => {
     selectKey.value = event.uid
     infoPopover.value = true
     handlePopoverUpdate(event.uid)
   })
-  useMitter(MittEnum.MSG_BOX_SHOW, (event: any) => {
+  useMitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
     activeItemRef.value = event.item
   })
   listen(EventEnum.SHARE_SCREEN, async () => {

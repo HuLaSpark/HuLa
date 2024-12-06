@@ -93,6 +93,9 @@ svg {
   --progress-bg: #e0e9fc;
   // 回复消息框背景
   --reply-bg: rgba(204, 204, 204, 0.4);
+  // 危险样式
+  --danger-text: #c14053;
+  --danger-bg: #f6dfe3;
 }
 
 html[data-theme='dark'] {
@@ -171,6 +174,9 @@ html[data-theme='dark'] {
   --progress-bg: transparent;
   // 回复消息框背景
   --reply-bg: rgba(30, 30, 30, 0.6);
+  // 危险样式
+  --danger-text: #da8583;
+  --danger-bg: #37292c;
 }
 /**! end */
 // 线性动画

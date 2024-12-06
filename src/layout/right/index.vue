@@ -25,7 +25,7 @@
   </main>
 </template>
 <script setup lang="ts">
-import { useMitter } from '@/hooks/useMitt.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import router from '@/router'
 import { useSettingStore } from '@/stores/setting.ts'
 import { MittEnum, ThemeEnum } from '@/enums'
@@ -65,22 +65,22 @@ watchEffect(() => {
 })
 
 onMounted(() => {
-  useMitter(MittEnum.NOT_MSG, () => {
+  useMitt.on(MittEnum.NOT_MSG, () => {
     msgBoxShow.value = false
     activeItem.value = -1
   })
   if (isChat) {
-    useMitter(MittEnum.MSG_BOX_SHOW, (event: any) => {
+    useMitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
       msgBoxShow.value = event.msgBoxShow
       activeItem.value = event.item
     })
   }
 
   if (isDetails) {
-    useMitter(MittEnum.APPLY_SHOW, (event: any) => {
+    useMitt.on(MittEnum.APPLY_SHOW, (event: any) => {
       DetailsContent.value = event.context
     })
-    useMitter(MittEnum.DETAILS_SHOW, (event: any) => {
+    useMitt.on(MittEnum.DETAILS_SHOW, (event: any) => {
       DetailsContent.value = event.context
       detailsShow.value = event.detailsShow as boolean
     })

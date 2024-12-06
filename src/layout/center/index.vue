@@ -115,7 +115,7 @@
 </template>
 
 <script setup lang="ts">
-import { useMitter, Mitt } from '@/hooks/useMitt.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import router from '@/router'
 import { MittEnum } from '@/enums'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
@@ -171,15 +171,15 @@ const isDragging = ref(false)
 
 watchEffect(() => {
   if (width.value >= 310 && width.value < 800) {
-    Mitt.emit(MittEnum.SHRINK_WINDOW, true)
+    useMitt.emit(MittEnum.SHRINK_WINDOW, true)
     const center = document.querySelector('#center')
     center?.classList.add('flex-1')
     isDrag.value = false
   }
   if (width.value >= 800) {
-    Mitt.emit(MittEnum.SHRINK_WINDOW, false)
+    useMitt.emit(MittEnum.SHRINK_WINDOW, false)
     if (currentMsg.value) {
-      Mitt.emit(MittEnum.MSG_BOX_SHOW, { msgBoxShow: true, ...currentMsg.value })
+      useMitt.emit(MittEnum.MSG_BOX_SHOW, { msgBoxShow: true, ...currentMsg.value })
     }
     const center = document.querySelector('#center')
     center?.classList.remove('flex-1')
@@ -258,10 +258,10 @@ const stopDrag = () => {
 }
 
 onMounted(async () => {
-  useMitter(MittEnum.SHRINK_WINDOW, (event) => {
-    shrinkStatus.value = event as boolean
+  useMitt.on(MittEnum.SHRINK_WINDOW, (event: boolean) => {
+    shrinkStatus.value = event
   })
-  useMitter(MittEnum.MSG_BOX_SHOW, (event: any) => {
+  useMitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
     if (!event) return
     currentMsg.value = event
   })

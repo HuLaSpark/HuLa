@@ -122,13 +122,14 @@
 <script setup lang="ts">
 import { IsYesEnum, MittEnum } from '@/enums'
 import { leftHook } from '@/layout/left/hook.ts'
-import { useMitter, Mitt } from '@/hooks/useMitt.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import apis from '@/services/apis.ts'
 import { type } from '@tauri-apps/plugin-os'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useUserStore } from '@/stores/user.ts'
+import { UserInfoType } from '@/services/types'
 
-let localUserInfo = ref({})
+let localUserInfo = ref<Partial<UserInfoType>>({})
 const userStore = useUserStore()
 const { editInfo, currentBadge, saveEditInfo, toggleWarningBadge } = leftHook()
 const { countGraphemes } = useCommon()
@@ -137,8 +138,8 @@ const { countGraphemes } = useCommon()
 const noSideSpace = (value: string) => !value.startsWith(' ') && !value.endsWith(' ')
 
 onMounted(() => {
-  useMitter(MittEnum.OPEN_EDIT_INFO, () => {
-    Mitt.emit(MittEnum.CLOSE_INFO_SHOW)
+  useMitt.on(MittEnum.OPEN_EDIT_INFO, () => {
+    useMitt.emit(MittEnum.CLOSE_INFO_SHOW)
     editInfo.value.show = true
     editInfo.value.content = userStore.userInfo
     localUserInfo.value = { ...userStore.userInfo }
