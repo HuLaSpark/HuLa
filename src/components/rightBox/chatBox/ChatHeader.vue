@@ -5,7 +5,7 @@
     class="relative z-30 flex-y-center border-b-(1px solid [--right-chat-footer-line-color]) justify-between p-[6px_20px_12px] select-none">
     <n-flex align="center">
       <span class="color-[--text-color]">{{ activeItem.name }}</span>
-      <svg v-if="activeItem.hot_Flag === IsAllUserEnum.Yes" class="size-20px color-#13987f select-none outline-none">
+      <svg v-if="activeItem.hotFlag === IsAllUserEnum.Yes" class="size-20px color-#13987f select-none outline-none">
         <use href="#auth"></use>
       </svg>
     </n-flex>
@@ -104,7 +104,7 @@
 
               <p class="text-(14px --text-color)">{{ activeItem.name }}</p>
 
-              <n-popover trigger="hover" v-if="activeItem.hot_Flag === IsAllUserEnum.Yes">
+              <n-popover trigger="hover" v-if="activeItem.hotFlag === IsAllUserEnum.Yes">
                 <template #trigger>
                   <svg class="size-20px select-none outline-none cursor-pointer color-#13987f">
                     <use href="#auth"></use>

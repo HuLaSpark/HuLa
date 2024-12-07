@@ -51,7 +51,7 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
         self.on_window_event(|window, event: &WindowEvent| match event {
             WindowEvent::Focused(flag) => {
                 // 自定义系统托盘-实现托盘菜单失去焦点时隐藏
-                if window.label() != "tray" && *flag {
+                if !window.label().eq("tray") && *flag {
                     window
                         .app_handle()
                         .get_webview_window("tray")
@@ -59,7 +59,18 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
                         .hide()
                         .unwrap();
                 }
-                if window.label() == "tray" && !flag {
+                if window.label().eq("tray") && !flag {
+                    window.hide().unwrap();
+                }
+                if !window.label().eq("notify") && *flag {
+                    window
+                        .app_handle()
+                        .get_webview_window("notify")
+                        .unwrap()
+                        .hide()
+                        .unwrap();
+                }
+                if window.label().eq("notify") && !flag {
                     window.hide().unwrap();
                 }
             }
@@ -71,6 +82,12 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
                     if ls.height < h {
                         window.set_size(LogicalSize::new(ls.width, h)).unwrap();
                     }
+                }
+            }
+            WindowEvent::CloseRequested{ .. } => {
+                if window.label().eq("home") {
+                    // TODO 处理异常关闭
+                    //window.app_handle().emit("offline", ()).unwrap();
                 }
             }
             _ => (),

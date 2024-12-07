@@ -285,7 +285,6 @@ const normalLogin = async () => {
       await openHomeWindow()
     })
     .catch(() => {
-      window.$message.error('登录失败')
       loading.value = false
     })
 }
@@ -309,7 +308,6 @@ const autoLogin = () => {
       await setLoginState()
     })
     .catch(() => {
-      window.$message.error('登录失败')
       localStorage.removeItem('TOKEN')
       router.push('/login')
       loading.value = false

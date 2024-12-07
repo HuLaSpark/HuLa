@@ -414,7 +414,7 @@ export type SessionItem = {
   /** 会话头像 */
   avatar: string
   /** 是否全员展示的会话 0否 1是 */
-  hot_Flag: IsAllUserEnum
+  hotFlag: IsAllUserEnum
   /** 会话名称 */
   name: string
   /** 房间id */

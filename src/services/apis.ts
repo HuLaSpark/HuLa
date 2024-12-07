@@ -122,5 +122,7 @@ export default {
   /** 注册 */
   register: (user: RegisterUserReq) => POST<string>(urls.register, user),
   /** 检查token是否有效 */
-  checkToken: () => POST<string>(urls.checkToken)
+  checkToken: () => POST<string>(urls.checkToken),
+  /** 下线 */
+  offline: () => POST<string>(urls.offline)
 }

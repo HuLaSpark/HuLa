@@ -29,6 +29,11 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/Tray.vue')
   },
   {
+    path: '/notify',
+    name: 'notify',
+    component: () => import('@/views/Notify.vue')
+  },
+  {
     path: '/capture',
     name: 'capture',
     component: () => import('@/views/Capture.vue')

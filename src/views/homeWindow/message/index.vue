@@ -25,7 +25,7 @@
             <n-flex :size="4" align="center" class="flex-1 truncate" justify="space-between">
               <n-flex :size="0" align="center" class="leading-tight flex-1 truncate">
                 <span class="text-14px leading-tight flex-1 truncate">{{ item.name }}</span>
-                <n-popover trigger="hover" v-if="item.hot_Flag === IsAllUserEnum.Yes">
+                <n-popover trigger="hover" v-if="item.hotFlag === IsAllUserEnum.Yes">
                   <template #trigger>
                     <svg
                       :class="[currentSession === item.roomId ? 'color-#33ceab' : 'color-#13987f']"
