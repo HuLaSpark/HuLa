@@ -174,6 +174,7 @@ import { useUserStore } from '@/stores/user.ts'
 import { computedToken } from '@/services/request.ts'
 import { UserInfoType } from '@/services/types.ts'
 import { useSettingStore } from '@/stores/setting.ts'
+import { invoke } from '@tauri-apps/api/core'
 
 const settingStore = useSettingStore()
 const userStore = useUserStore()
@@ -280,6 +281,16 @@ const normalLogin = async () => {
       loading.value = false
       userStore.userInfo = account
       loginHistoriesStore.addLoginHistory(account)
+
+      // rust保存用户信息
+      await invoke('save_user_info', {
+        userId: account.uid,
+        username: account.name,
+        token: account.token,
+        portrait: '',
+        isSign: true
+      })
+
       await setLoginState()
       // 打开主界面
       await openHomeWindow()
@@ -304,6 +315,15 @@ const autoLogin = () => {
     .then(async () => {
       loginText.value = '登录成功, 正在跳转'
       loading.value = false
+      const userDetail = await apis.getUserDetail()
+      // rust保存用户信息
+      await invoke('save_user_info', {
+        userId: userDetail.uid,
+        username: userDetail.name,
+        token: '',
+        portrait: '',
+        isSign: true
+      })
       await openHomeWindow()
       await setLoginState()
     })

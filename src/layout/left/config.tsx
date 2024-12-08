@@ -5,6 +5,7 @@ import { useLogin } from '@/hooks/useLogin.ts'
 import apis from '@/services/apis.ts'
 import { LoginStatus, useWsLoginStore } from '@/stores/ws.ts'
 import { useUserStore } from '@/stores/user.ts'
+import { invoke } from '@tauri-apps/api/core'
 
 const { createWebviewWindow } = useWindow()
 const { logout } = useLogin()
@@ -94,22 +95,25 @@ const moreList = ref<OPT.L.MoreList[]>([
     label: '退出账号',
     icon: 'power',
     click: async () => {
-      await apis
-        .logout()
-        .then(async () => {
-          await logout()
-          // 如果没有设置自动登录，则清除用户信息
-          if (!userStore.userInfo) {
-            userStore.userInfo = {}
-            localStorage.removeItem('USER_INFO')
-            localStorage.removeItem('TOKEN')
-          }
-          userStore.isSign = false
-          loginStore.loginStatus = LoginStatus.Init
-        })
-        .catch(() => {
-          window.$message.error('退出账号失败')
-        })
+      // rust保存用户信息
+      await invoke('save_user_info', {
+        userId: '',
+        username: '',
+        token: '',
+        portrait: '',
+        isSign: false
+      })
+      // 后端发布下线通知同时清除token
+      await apis.logout().catch(() => {})
+      await logout()
+      // 如果没有设置自动登录，则清除用户信息
+      if (!userStore.userInfo) {
+        userStore.userInfo = {}
+        localStorage.removeItem('USER_INFO')
+        localStorage.removeItem('TOKEN')
+      }
+      userStore.isSign = false
+      loginStore.loginStatus = LoginStatus.Init
     }
   }
 ])

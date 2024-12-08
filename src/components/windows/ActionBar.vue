@@ -86,7 +86,7 @@ import { useMitt } from '@/hooks/useMitt.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { useAlwaysOnTopStore } from '@/stores/alwaysOnTop.ts'
 import { useSettingStore } from '@/stores/setting.ts'
-import { emit, listen } from '@tauri-apps/api/event'
+import { emit, listen, UnlistenFn } from '@tauri-apps/api/event'
 import { CloseBxEnum, EventEnum, MittEnum } from '@/enums'
 import { type } from '@tauri-apps/plugin-os'
 import router from '@/router'
@@ -236,19 +236,28 @@ const handleCloseWin = async () => {
 }
 
 const offline = async () => {
-  await apis.offline()
+  apis.offline().catch(() => {
+    // 通知下线失败也没关系
+  })
 }
-
+let unOffline: Promise<UnlistenFn>
 useMitt.on('handleCloseWin', handleCloseWin)
 // 添加和移除resize事件监听器
 onMounted(() => {
   window.addEventListener('resize', handleResize)
   osType.value = type()
+  unOffline = listen('offline', async () => {
+    await apis.offline().catch(() => {})
+    await exit(0)
+  })
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
   window.removeEventListener('keydown', (e) => isEsc(e))
+  if (unOffline) {
+    unOffline.catch(() => {})
+  }
 })
 </script>
 

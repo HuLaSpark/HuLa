@@ -1,6 +1,6 @@
-use tauri::{LogicalSize, Manager, Runtime, WindowEvent};
+use tauri::{Emitter, LogicalSize, Manager, Runtime, WindowEvent};
 use tauri_plugin_autostart::MacosLauncher;
-
+use crate::user_cmd::get_user_info;
 pub trait CustomInit {
     fn init_plugin(self) -> Self;
 
@@ -84,10 +84,17 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
                     }
                 }
             }
-            WindowEvent::CloseRequested{ .. } => {
+            WindowEvent::CloseRequested { api, .. } => {
                 if window.label().eq("home") {
-                    // TODO 处理异常关闭
-                    //window.app_handle().emit("offline", ()).unwrap();
+                    match get_user_info().get_is_sign() {
+                        // 处理非正常关闭的情况, 并且还是在登录状态时才发送下线通知
+                        Ok(is_sign) if is_sign => {
+                            window.app_handle().emit("offline", ()).unwrap();
+                            // 由前端退出程序，因为要发下线通知
+                            api.prevent_close();
+                        }
+                        _ => {}
+                    }
                 }
             }
             _ => (),

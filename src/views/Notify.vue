@@ -9,7 +9,7 @@
         <n-image src="/logo.png" width="25" height="25" />
       </n-flex>
       <n-flex vertical align="left" :size="5">
-        <span style="font-size: 14px"> ZOL </span>
+        <span style="font-size: 14px">ZOL</span>
         <span>as</span>
       </n-flex>
       <n-flex align="center" :size="10">

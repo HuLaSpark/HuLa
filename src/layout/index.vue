@@ -58,8 +58,8 @@ useMitt.on(WsResponseMessageType.OFFLINE, async () => {
 useMitt.on(WsResponseMessageType.ONLINE, async (onStatusChangeType: OnStatusChangeType) => {
   groupStore.countInfo.onlineNum = onStatusChangeType.onlineNum
   // groupStore.countInfo.totalNum = data.totalNum
-  //groupStore.batchUpdateUserStatus(data.changeList)
-  //groupStore.getGroupUserList(true)
+  // groupStore.batchUpdateUserStatus(data.changeList)
+  // groupStore.getGroupUserList(true)
   console.log('收到用户上线通知')
 })
 useMitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExpire) => {
