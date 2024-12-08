@@ -92,7 +92,7 @@
   </n-scrollbar>
 </template>
 <script setup lang="ts">
-import Mitt from '@/utils/Bus.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { MittEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
@@ -113,7 +113,7 @@ const onlineCount = computed(() => {
 })
 /** 监听独立窗口关闭事件 */
 watchEffect(() => {
-  Mitt.on(MittEnum.SHRINK_WINDOW, async (event) => {
+  useMitt.on(MittEnum.SHRINK_WINDOW, async (event) => {
     shrinkStatus.value = event as boolean
   })
 })
@@ -128,7 +128,7 @@ const handleClick = (index: number, type: number) => {
     },
     detailsShow: detailsShow.value
   }
-  Mitt.emit(MittEnum.DETAILS_SHOW, data)
+  useMitt.emit(MittEnum.DETAILS_SHOW, data)
 }
 // todo 需要循环数组来展示分组
 const showMenu = (event: MouseEvent) => {
@@ -140,7 +140,7 @@ const handleSelect = (event: MouseEvent) => {
 }
 
 const handleApply = () => {
-  Mitt.emit(MittEnum.APPLY_SHOW, {
+  useMitt.emit(MittEnum.APPLY_SHOW, {
     context: {
       type: 'apply'
     }
@@ -148,9 +148,9 @@ const handleApply = () => {
   activeItem.value = 0
 }
 
-onUnmounted(() => {
+onBeforeUnmount(() => {
   detailsShow.value = false
-  Mitt.emit(MittEnum.DETAILS_SHOW, detailsShow.value)
+  useMitt.emit(MittEnum.DETAILS_SHOW, detailsShow.value)
 })
 </script>
 

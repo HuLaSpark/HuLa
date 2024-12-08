@@ -53,33 +53,37 @@ export enum EventEnum {
 /** Mitt兄弟组件通信 */
 export enum MittEnum {
   /** 更新消息数量 */
-  UPDATE_MSG_TOTAL,
+  UPDATE_MSG_TOTAL = 'updateMsgTotal',
   /** 显示消息框 */
-  MSG_BOX_SHOW,
+  MSG_BOX_SHOW = 'msgBoxShow',
   /** 发送消息 */
-  SEND_MESSAGE,
+  SEND_MESSAGE = 'sendMessage',
   /** 跳到发送信息 */
-  TO_SEND_MSG,
+  TO_SEND_MSG = 'toSendMsg',
   /** 缩小窗口 */
-  SHRINK_WINDOW,
+  SHRINK_WINDOW = 'windowShrink',
   /** 详情页面显示 */
-  DETAILS_SHOW,
+  DETAILS_SHOW = 'detailsShow',
   /** 好友申请页面显示 */
-  APPLY_SHOW,
+  APPLY_SHOW = 'applyShow',
   /** 消息列表被清空或者暂无消息 */
-  NOT_MSG,
+  NOT_MSG = 'notMsg',
   /** 回复消息 */
-  REPLY_MEG,
+  REPLY_MEG = 'replyMsg',
   /** 手动触发InfoPopover */
-  INFO_POPOVER,
+  INFO_POPOVER = 'infoPopover',
   /** 打开个人信息编辑窗口 */
-  OPEN_EDIT_INFO,
+  OPEN_EDIT_INFO = 'openEditInfo',
   /** 关闭个人信息浮窗 */
-  CLOSE_INFO_SHOW,
+  CLOSE_INFO_SHOW = 'closeInfoShow',
   /** 左边菜单弹窗 */
-  LEFT_MODAL_SHOW,
+  LEFT_MODAL_SHOW = 'leftModalShow',
   /** 触发home窗口事件 */
-  HOME_WINDOW_RESIZE
+  HOME_WINDOW_RESIZE = 'homeWindowResize',
+  /** @ AT */
+  AT = 'at',
+  /** 重新编辑 */
+  RE_EDIT = 'reEdit'
 }
 
 /** 主题类型 */
@@ -109,7 +113,9 @@ export enum StoresEnum {
   /** 侧边栏头部菜单栏 */
   MENUTOP = 'menuTop',
   /** 账号账号历史记录列表 */
-  LOGIN_HISTORY = 'loginHistory'
+  LOGIN_HISTORY = 'loginHistory',
+  /** 好友列表 */
+  NOTICE = 'notice'
 }
 
 /**
@@ -203,6 +209,18 @@ export enum RoomTypeEnum {
   SINGLE = 2
 }
 
+/** 房间操作 */
+export enum RoomActEnum {
+  /** 退出群聊 */
+  EXIT_GROUP,
+  /** 删除好友 */
+  DELETE_FRIEND,
+  /** 删除记录 */
+  DELETE_RECORD,
+  /** 屏蔽好友 */
+  BLOCK_FRIEND
+}
+
 /** 变更类型 1 加入群组，2： 移除群组 */
 export enum ChangeTypeEnum {
   /** 1 加入群组 */
@@ -236,12 +254,16 @@ export enum WsReqEnum {
 }
 
 /** ws响应类型 */
-export enum WsResEnum {
-  /** 二维码登录 */
-  QRCODE_LOGIN = 'qrcodeLogin',
-  /** 登录成功 */
-  LOGIN_SUCCESS = 'loginSuccess',
-  /** ws连接错误 */
+export enum WorkerMsgEnum {
+  /** open */
+  OPEN = 'open',
+  /** message */
+  MESSAGE = 'message',
+  /** close */
+  CLOSE = 'close',
+  /** error */
+  ERROR = 'error',
+  /** ws_error */
   WS_ERROR = 'wsError'
 }
 
@@ -290,4 +312,14 @@ export enum ShowModeEnum {
   ICON,
   /** 文字方式 */
   TEXT
+}
+
+/**
+ * 消息发送状态
+ */
+export enum MessageStatusEnum {
+  PENDING = 'pending',
+  SENDING = 'sending',
+  SUCCESS = 'success',
+  FAILED = 'failed'
 }

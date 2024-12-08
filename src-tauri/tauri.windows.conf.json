@@ -30,7 +30,11 @@
       "icons/windows/Square310x310Logo.png",
       "icons/windows/StoreLogo.png"
     ],
-    "windows": {}
+    "windows": {
+      "wix": {
+        "language": "zh-CN"
+      }
+    }
   },
   "app": {
     "withGlobalTauri": true,
@@ -57,6 +61,18 @@
         "visible": false,
         "width": 130,
         "height": 44,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "decorations": false
+      },
+      {
+        "label": "notify",
+        "url": "/notify",
+        "resizable": false,
+        "center": false,
+        "visible": false,
+        "width": 130,
+        "height": 130,
         "alwaysOnTop": true,
         "skipTaskbar": true,
         "decorations": false

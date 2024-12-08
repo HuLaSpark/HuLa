@@ -5,7 +5,7 @@
     <ActionBar :max-w="false" :shrink="false" proxy />
 
     <!--  手动登录样式  -->
-    <n-flex vertical :size="25" v-if="!login.autoLogin || !login.accountInfo.token">
+    <n-flex vertical :size="25" v-if="!login.autoLogin || !TOKEN">
       <!-- 头像 -->
       <n-flex justify="center" class="w-full pt-35px" data-tauri-drag-region>
         <n-avatar
@@ -68,9 +68,11 @@
         </div>
 
         <n-input
+          class="pl-16px"
           maxlength="16"
           minlength="6"
           size="large"
+          show-password-on="click"
           v-model:value="info.password"
           type="password"
           :placeholder="passwordPH"
@@ -113,11 +115,11 @@
             :size="110"
             :color="'#fff'"
             class="border-(2px solid #fff)"
-            :src="login.accountInfo.avatar || '/logo.png'" />
+            :src="userStore.userInfo.avatar || '/logo.png'" />
         </n-flex>
 
         <n-flex justify="center">
-          <n-ellipsis style="max-width: 200px" class="text-18px">{{ login.accountInfo.name }}</n-ellipsis>
+          <n-ellipsis style="max-width: 200px" class="text-18px">{{ userStore.userInfo.name }}</n-ellipsis>
         </n-flex>
       </n-flex>
 
@@ -137,7 +139,7 @@
     <n-flex justify="center" class="text-14px" id="bottomBar">
       <div class="color-#13987f cursor-pointer" @click="router.push('/qrCode')">扫码登录</div>
       <div class="w-1px h-14px bg-#ccc"></div>
-      <div v-if="login.autoLogin" class="color-#13987f cursor-pointer" @click="removeToken">移除账号</div>
+      <div v-if="login.autoLogin && TOKEN" class="color-#13987f cursor-pointer" @click="removeToken">移除账号</div>
       <n-popover
         v-else
         trigger="click"
@@ -164,21 +166,22 @@
 import router from '@/router'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { lightTheme } from 'naive-ui'
-import { useSettingStore } from '@/stores/setting.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import apis from '@/services/apis.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { computedToken } from '@/services/request.ts'
-import { useChatStore } from '@/stores/chat.ts'
+import { UserInfoType } from '@/services/types.ts'
+import { useSettingStore } from '@/stores/setting.ts'
+import { invoke } from '@tauri-apps/api/core'
 
 const settingStore = useSettingStore()
 const userStore = useUserStore()
-const chatStore = useChatStore()
 const loginHistoriesStore = useLoginHistoriesStore()
 const { loginHistories } = loginHistoriesStore
 const { login } = storeToRefs(settingStore)
+const TOKEN = ref(JSON.stringify(localStorage.getItem('TOKEN')))
 /** 账号信息 */
 const info = ref({
   account: '',
@@ -187,9 +190,6 @@ const info = ref({
   name: '',
   uid: 0
 })
-
-/** 是否中断登录 */
-const interruptLogin = ref(false)
 /** 协议 */
 const protocol = ref(true)
 const loginDisabled = ref(false)
@@ -209,15 +209,10 @@ watchEffect(() => {
   if (!info.value.account) {
     info.value.avatar = '/logo.png'
   }
-  if (interruptLogin.value) {
-    loginDisabled.value = false
-    loading.value = false
-    interruptLogin.value = false
-  }
 })
 
 /** 删除账号列表内容 */
-const delAccount = (item: STO.Setting['login']['accountInfo']) => {
+const delAccount = (item: UserInfoType) => {
   // 获取删除前账户列表的长度
   const lengthBeforeDelete = loginHistories.length
   loginHistoriesStore.removeLoginHistory(item)
@@ -234,7 +229,7 @@ const delAccount = (item: STO.Setting['login']['accountInfo']) => {
  * 给账号赋值
  * @param item 账户信息
  * */
-const giveAccount = (item: STO.Setting['login']['accountInfo']) => {
+const giveAccount = (item: UserInfoType) => {
   const { account, password, avatar, name, uid } = item
   info.value.account = account || ''
   info.value.password = password || ''
@@ -251,11 +246,9 @@ const normalLogin = async () => {
   apis
     .login({ account, password })
     .then(async (token) => {
-      if (interruptLogin.value) return
       loginDisabled.value = true
       loginText.value = '登录成功, 正在跳转'
       userStore.isSign = true
-      login.value.accountInfo.token = token
       // localStorage.setItem('USER_INFO', JSON.stringify(rest))
       localStorage.setItem('TOKEN', token)
       // 需要删除二维码，因为用户可能先跳转到二维码界面再回到登录界面，会导致二维码一直保持在内存中
@@ -277,8 +270,6 @@ const normalLogin = async () => {
       //     uid: rest.uid
       //   }
       // ])
-      // 获取用户详情
-      await chatStore.getSessionList(true)
       // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取
       // await emojiStore.getEmojiList()
       // TODO 这里的id暂时赋值给uid，因为后端没有统一返回uid，待后端调整
@@ -288,14 +279,23 @@ const normalLogin = async () => {
         token
       }
       loading.value = false
-      settingStore.setAccountInfo(account)
+      userStore.userInfo = account
       loginHistoriesStore.addLoginHistory(account)
+
+      // rust保存用户信息
+      await invoke('save_user_info', {
+        userId: account.uid,
+        username: account.name,
+        token: account.token,
+        portrait: '',
+        isSign: true
+      })
+
       await setLoginState()
       // 打开主界面
       await openHomeWindow()
     })
     .catch(() => {
-      window.$message.error('登录失败')
       loading.value = false
     })
 }
@@ -306,7 +306,6 @@ const openHomeWindow = async () => {
 
 /** 自动登录 */
 const autoLogin = () => {
-  interruptLogin.value = false
   loading.value = true
   // TODO 检查用户网络是否连接 (nyh -> 2024-03-16 12:06:59)
   loginText.value = '网络连接中'
@@ -316,12 +315,20 @@ const autoLogin = () => {
     .then(async () => {
       loginText.value = '登录成功, 正在跳转'
       loading.value = false
+      const userDetail = await apis.getUserDetail()
+      // rust保存用户信息
+      await invoke('save_user_info', {
+        userId: userDetail.uid,
+        username: userDetail.name,
+        token: '',
+        portrait: '',
+        isSign: true
+      })
       await openHomeWindow()
       await setLoginState()
     })
     .catch(() => {
-      window.$message.error('登录失败')
-      login.value.accountInfo.token = ''
+      localStorage.removeItem('TOKEN')
       router.push('/login')
       loading.value = false
       loginText.value = '登录'
@@ -330,24 +337,15 @@ const autoLogin = () => {
 
 /** 移除已登录账号 */
 const removeToken = () => {
-  login.value.accountInfo = {
-    account: '',
-    password: '',
-    avatar: '/logo.png',
-    name: '',
-    uid: 0,
-    token: ''
-  }
-  login.value.autoLogin = false
+  localStorage.removeItem('TOKEN')
+  userStore.userInfo = {}
+  localStorage.removeItem('USER_INFO')
 }
 
 const closeMenu = (event: MouseEvent) => {
   const target = event.target as Element
   if (!target.matches('.account-box, .account-box *, .down')) {
     arrowStatus.value = false
-  }
-  if (target.matches('#bottomBar *') && login.value.autoLogin) {
-    interruptLogin.value = true
   }
   if (!target.matches('#moreShow')) {
     moreShow.value = false
@@ -363,7 +361,7 @@ const enterKey = (e: KeyboardEvent) => {
 onMounted(async () => {
   await getCurrentWebviewWindow().show()
   // 自动登录
-  if (login.value.autoLogin && login.value.accountInfo.token) {
+  if (login.value.autoLogin && TOKEN) {
     autoLogin()
   } else {
     loginHistories.length > 0 && giveAccount(loginHistories[0])

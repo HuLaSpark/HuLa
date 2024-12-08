@@ -74,20 +74,61 @@
     <div id="centerList" class="h-full" :class="{ 'shadow-inner': page.shadow }">
       <router-view />
     </div>
+
+    <!-- 创建群聊穿梭框 -->
+    <n-modal v-model:show="createGroupModal" :mask-closable="false" class="rounded-8px" transform-origin="center">
+      <div class="bg-[--bg-edit] w-540px h-fit box-border flex flex-col">
+        <n-flex :size="6" vertical>
+          <div
+            v-if="type() === 'macos'"
+            @click="createGroupModal = false"
+            class="mac-close size-13px shadow-inner bg-#ed6a5eff rounded-50% mt-6px select-none absolute left-6px">
+            <svg class="hidden size-7px color-#000 font-bold select-none absolute top-3px left-3px">
+              <use href="#close"></use>
+            </svg>
+          </div>
+
+          <n-flex class="text-(14px --text-color) select-none pt-6px" justify="center">创建群聊</n-flex>
+
+          <svg
+            v-if="type() === 'windows'"
+            class="size-14px cursor-pointer pt-6px select-none absolute right-6px"
+            @click="createGroupModal = false">
+            <use href="#close"></use>
+          </svg>
+
+          <n-transfer
+            source-filterable
+            target-filterable
+            v-model:value="selectedValue"
+            :options="options as any"
+            :render-source-list="renderSourceList"
+            :render-target-label="renderLabel" />
+
+          <n-flex align="center" justify="center" class="p-16px">
+            <n-button :disabled="selectedValue.length === 0" color="#13987f" @click="handleCreateGroup">创建</n-button>
+          </n-flex>
+        </n-flex>
+      </div>
+    </n-modal>
   </main>
 </template>
 
 <script setup lang="ts">
-import Mitt from '@/utils/Bus.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import router from '@/router'
 import { MittEnum } from '@/enums'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useWindowSize } from '@vueuse/core'
 import { useSettingStore } from '@/stores/setting.ts'
+import { type } from '@tauri-apps/plugin-os'
+import { renderLabel, renderSourceList, options, createGroup } from './model.tsx'
 
 const settingStore = useSettingStore()
 const { page } = storeToRefs(settingStore)
 const appWindow = WebviewWindow.getCurrent()
+const selectedValue = ref([])
+const createGroupModal = ref(false)
 /** 设置最小宽度 */
 const minWidth = 160
 /** 设置最大宽度 */
@@ -110,7 +151,7 @@ const addPanels = ref({
       label: '发起群聊',
       icon: 'launch',
       click: () => {
-        console.log('发起群聊')
+        createGroupModal.value = true
       }
     },
     {
@@ -130,21 +171,33 @@ const isDragging = ref(false)
 
 watchEffect(() => {
   if (width.value >= 310 && width.value < 800) {
-    Mitt.emit(MittEnum.SHRINK_WINDOW, true)
+    useMitt.emit(MittEnum.SHRINK_WINDOW, true)
     const center = document.querySelector('#center')
     center?.classList.add('flex-1')
     isDrag.value = false
   }
   if (width.value >= 800) {
-    Mitt.emit(MittEnum.SHRINK_WINDOW, false)
+    useMitt.emit(MittEnum.SHRINK_WINDOW, false)
     if (currentMsg.value) {
-      Mitt.emit(MittEnum.MSG_BOX_SHOW, { msgBoxShow: true, ...currentMsg.value })
+      useMitt.emit(MittEnum.MSG_BOX_SHOW, { msgBoxShow: true, ...currentMsg.value })
     }
     const center = document.querySelector('#center')
     center?.classList.remove('flex-1')
     isDrag.value = true
   }
 })
+
+const handleCreateGroup = async () => {
+  if (selectedValue.value.length === 0) return
+  try {
+    await createGroup(selectedValue.value)
+    createGroupModal.value = false
+    selectedValue.value = []
+    window.$message.success('创建群聊成功')
+  } catch (error) {
+    window.$message.error('创建群聊失败')
+  }
+}
 
 const handleSearchFocus = () => {
   router.push('/searchDetails')
@@ -205,10 +258,10 @@ const stopDrag = () => {
 }
 
 onMounted(async () => {
-  Mitt.on(MittEnum.SHRINK_WINDOW, (event) => {
-    shrinkStatus.value = event as boolean
+  useMitt.on(MittEnum.SHRINK_WINDOW, (event: boolean) => {
+    shrinkStatus.value = event
   })
-  Mitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
+  useMitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
     if (!event) return
     currentMsg.value = event
   })

@@ -81,6 +81,18 @@
         "decorations": false
       },
       {
+        "label": "notify",
+        "url": "/notify",
+        "resizable": false,
+        "center": false,
+        "visible": false,
+        "width": 130,
+        "height": 130,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "decorations": false
+      },
+      {
         "label": "capture",
         "url": "/capture",
         "fullscreen": false,

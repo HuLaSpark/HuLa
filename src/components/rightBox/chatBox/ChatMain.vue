@@ -1,11 +1,24 @@
 <template>
-  <div class="absolute-x-center top-20px" v-if="!messageOptions?.isLoading && chatMessageList?.length === 0">
+  <!-- 消息内容到最顶部提示 -->
+  <div
+    class="absolute-x-center top-20px"
+    v-if="!messageOptions?.isLoading && !isOnline && chatMessageList?.length === 0">
     <span v-if="chatStore.isGroup" class="text-(14px #909090)">暂无消息，快来发送第一条消息吧~</span>
     <span v-else class="text-(14px #909090)">你们已成功添加为好友，现在可以开始聊天了!</span>
   </div>
-  <n-flex justify="center" class="absolute-x-center top-10px" v-if="messageOptions?.isLoading">
+  <!-- 加载中提示 -->
+  <n-flex justify="center" class="absolute-x-center pt-10px h-30px" v-if="messageOptions?.isLoading">
     <img class="size-16px" src="@/assets/img/loading-one.svg" alt="" />
     <span class="text-(14px #909090)">加载中</span>
+  </n-flex>
+  <!-- 网络断开提示 -->
+  <n-flex
+    v-if="!isOnline"
+    align="center"
+    justify="center"
+    class="z-999 absolute w-full h-40px rounded-4px text-(12px [--danger-text]) bg-[--danger-bg]">
+    <svg class="size-16px"><use href="#cloudError"></use></svg>
+    当前网络不可用，请检查你的网络设置
   </n-flex>
   <!-- 中间聊天内容(使用虚拟列表) -->
   <n-virtual-list
@@ -18,6 +31,7 @@
     ignore-item-resize
     item-resizable
     :padding-top="10"
+    scroll-mode="viewport"
     :item-size="itemSize"
     :items="chatMessageList">
     <template #default="{ item, index }">
@@ -37,15 +51,29 @@
         <!--  消息为撤回消息  -->
         <div v-if="item.message.type === MsgEnum.RECALL">
           <template v-if="chatStore.isGroup">
-            <span v-if="item.fromUser.uid === userUid" class="text-12px color-#909090 select-none">
-              你撤回了一条消息
-            </span>
+            <n-flex align="center" :size="6" v-if="item.fromUser.uid === userUid">
+              <p class="text-(12px #909090) select-none cursor-default">你撤回了一条消息</p>
+              <p
+                v-if="canReEdit(item.message.id)"
+                class="text-(12px #13987f) select-none cursor-pointer"
+                @click="handleReEdit(item.message.id)">
+                重新编辑
+              </p>
+            </n-flex>
             <span v-else class="text-12px color-#909090 select-none" v-html="item.message.body"></span>
           </template>
           <template v-else>
-            <span class="text-12px color-#909090 select-none">
-              {{ item.fromUser.uid === userUid ? '你撤回了一条消息' : '对方撤回了一条消息' }}
-            </span>
+            <n-flex align="center" :size="6">
+              <p class="text-(12px #909090) select-none cursor-default">
+                {{ item.fromUser.uid === userUid ? '你撤回了一条消息' : '对方撤回了一条消息' }}
+              </p>
+              <p
+                v-if="canReEdit(item.message.id)"
+                class="text-(12px #13987f) select-none cursor-pointer"
+                @click="handleReEdit(item.message.id)">
+                重新编辑
+              </p>
+            </n-flex>
           </template>
         </div>
         <!-- 好友或者群聊的信息 -->
@@ -132,9 +160,9 @@
                 align="center"
                 :style="item.fromUser.uid === userUid ? 'flex-direction: row-reverse' : ''">
                 <ContextMenu
-                  @select="$event.click(item)"
+                  @select="$event.click(item, 'Main')"
                   :content="item"
-                  :menu="chatStore.isGroup ? optionsList : []"
+                  :menu="chatStore.isGroup ? optionsList : void 0"
                   :special-menu="report">
                   <n-flex
                     :size="6"
@@ -189,7 +217,7 @@
                 @contextmenu="handleMacSelect"
                 @mouseenter="handleMouseEnter(item.message.id)"
                 @mouseleave="handleMouseLeave"
-                class="w-fit"
+                class="w-fit relative"
                 :data-key="item.fromUser.uid === userUid ? `U${item.message.id}` : `Q${item.message.id}`"
                 @select="$event.click(item)"
                 :menu="handleItemType(item.message.type)"
@@ -197,18 +225,14 @@
                 :special-menu="specialMenuList"
                 @reply-emoji="handleEmojiSelect($event.label, item)"
                 @click="handleMsgClick(item)">
-                <!--                &lt;!&ndash; 渲染消息内容体 &ndash;&gt;-->
-                <!--                <RenderMessage :message="message" />-->
-                <!--  消息为文本类型或者回复消息  -->
-                <div
-                  v-if="item.message.type === MsgEnum.TEXT"
-                  style="white-space: pre-wrap"
+                <!-- 渲染消息内容体 TODO: 等完善消息类型后逐渐替换使用RenderMessage -->
+                <RenderMessage
                   :class="[
                     { active: activeBubble === item.message.id },
                     item.fromUser.uid === userUid ? 'bubble-oneself' : 'bubble'
-                  ]">
-                  <span v-html="item.message.body.content"></span>
-                </div>
+                  ]"
+                  v-if="item.message.type === MsgEnum.TEXT"
+                  :message="item.message" />
 
                 <!--  消息为为图片类型(不固定宽度和高度), 多张图片时渲染  -->
                 <n-image-group v-if="Array.isArray(item.content) && item.type === MsgEnum.IMAGE">
@@ -244,6 +268,18 @@
                   preview-disabled
                   style="border-radius: 8px"
                   :src="item.content"></n-image>
+                <!-- 消息状态指示器 -->
+                <div v-if="item.fromUser.uid === userUid" class="absolute -left-6 top-2">
+                  <n-icon v-if="item.message.status === MessageStatusEnum.SENDING" class="text-gray-400">
+                    <img class="size-16px" src="@/assets/img/loading-one.svg" alt="" />
+                  </n-icon>
+                  <n-icon
+                    v-if="item.message.status === MessageStatusEnum.FAILED"
+                    class="text-red-500 cursor-pointer"
+                    @click.stop="handleRetry(item)">
+                    <svg class="size-16px"><use href="#cloudError"></use></svg>
+                  </n-icon>
+                </div>
               </ContextMenu>
 
               <!-- 回复的内容 -->
@@ -253,25 +289,16 @@
                 v-if="item.message.body.reply"
                 @click="jumpToReplyMsg(item.message.body.reply.id)"
                 class="reply-bubble relative w-fit custom-shadow">
-                <svg class="size-14px"><use href="#to-top"></use></svg>
+                <svg class="size-14px">
+                  <use href="#to-top"></use>
+                </svg>
                 <span>{{ `${item.message.body.reply.username}：` }}</span>
-                <!-- 当回复消息为图片时渲染 -->
-                <!--                <n-image-->
-                <!--                  v-if="item.reply.content.startsWith('data:image/')"-->
-                <!--                  :img-props="{ style: { maxWidth: '50px', maxHeight: '50px' } }"-->
-                <!--                  show-toolbar-tooltip-->
-                <!--                  style="border-radius: 4px"-->
-                <!--                  @click.stop-->
-                <!--                  :fallback-src="'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg'"-->
-                <!--                  :src="item.reply.content" />-->
-                <!-- 当回复消息为文本时渲染(判断是否有aitSpan标签) -->
                 <span class="content-span">
-                  {{ handleReply(item.message.body.reply.body) }}
+                  {{ item.message.body.reply.body }}
                 </span>
-                <!--                &lt;!&ndash; 多个图片时计数器样式 &ndash;&gt;-->
-                <!--                <div v-if="item.reply.imgCount" class="reply-img-sub">-->
-                <!--                  {{ item.reply.imgCount }}-->
-                <!--                </div>-->
+                <div v-if="item.message.body.reply.imgCount" class="reply-img-sub">
+                  {{ item.message.body.reply.imgCount }}
+                </div>
               </n-flex>
 
               <!-- 群聊回复emoji表情 -->
@@ -350,9 +377,9 @@
   </footer>
 </template>
 <script setup lang="ts">
-import { EventEnum, MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
-import { SessionItem } from '@/services/types.ts'
-import Mitt from '@/utils/Bus.ts'
+import { EventEnum, MittEnum, MsgEnum, RoomTypeEnum, MessageStatusEnum } from '@/enums'
+import { type MessageType, SessionItem } from '@/services/types.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { usePopover } from '@/hooks/usePopover.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { listen } from '@tauri-apps/api/event'
@@ -360,23 +387,23 @@ import { useChatMain } from '@/hooks/useChatMain.ts'
 import { VirtualListInst } from 'naive-ui'
 import { delay } from 'lodash-es'
 import { useCommon } from '@/hooks/useCommon.ts'
-import { useSettingStore } from '@/stores/setting.ts'
-import { formatTimestamp } from '@/utils/ComputedTime.ts'
+import { formatTimestamp, isDiffNow } from '@/utils/ComputedTime.ts'
 import { useUserInfo, useBadgeInfo } from '@/hooks/useCached.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { type } from '@tauri-apps/plugin-os'
+import { useUserStore } from '@/stores/user.ts'
+import { useNetwork } from '@vueuse/core'
 
 const { activeItem } = defineProps<{
   activeItem: SessionItem
 }>()
 const activeItemRef = ref<SessionItem>({ ...activeItem })
-const settingStore = useSettingStore()
 const chatStore = useChatStore()
+const userStore = useUserStore()
 // const userInfo = useUserStore()?.userInfo
 /** 消息列表 */
 const chatMessageList = computed(() => chatStore.chatMessageList)
 const messageOptions = computed(() => chatStore.currentMessageOptions)
-const { login } = storeToRefs(settingStore)
 const { createWebviewWindow } = useWindow()
 /** 是否是超级管理员 */
 // const isAdmin = computed(() => userInfo?.power === PowerEnum.ADMIN)
@@ -397,8 +424,10 @@ const hoverBubble = ref<{
 })
 /** 记录右键菜单时选中的气泡的元素(用于处理mac右键会选中文本的问题) */
 const recordEL = ref()
+/** 网络连接是否正常 */
+const { isOnline } = useNetwork()
 const isMac = computed(() => type() === 'macos')
-const { removeTag, userUid } = useCommon()
+const { userUid } = useCommon()
 const {
   handleScroll,
   handleMsgClick,
@@ -442,7 +471,7 @@ watch(chatMessageList, (value, oldValue) => {
 
 /** 获取用户头像 */
 const getAvatarSrc = (uid: number) => {
-  return uid === userUid.value ? login.value.accountInfo.avatar : useUserInfo(uid).value.avatar
+  return uid === userUid.value ? userStore.userInfo.avatar : useUserInfo(uid).value.avatar
 }
 
 /** 头像是否存在 */
@@ -494,10 +523,10 @@ const handleEmojiSelect = (label: string, item: any) => {
   }
 }
 
-/** 处理回复消息中的 AIT 标签 */
-const handleReply = (content: string) => {
-  return content.includes('id="aitSpan"') ? removeTag(content) : content
-}
+// /** 处理回复消息中的 AIT 标签 */
+// const handleReply = (content: string) => {
+//   return content.includes('id="aitSpan"') ? removeTag(content) : content
+// }
 
 /** 跳转到回复消息 */
 const jumpToReplyMsg = (key: number) => {
@@ -578,22 +607,51 @@ const closeMenu = (event: any) => {
   }
 }
 
+const handleRetry = (item: any) => {
+  // TODO: 实现重试发送逻辑
+  console.log('重试发送消息:', item)
+}
+
+const canReEdit = computed(() => (msgId: number) => {
+  const recalledMsg = chatStore.getRecalledMessage(msgId)
+  const message = chatStore.getMessage(msgId)
+  if (!recalledMsg || !message) return false
+
+  // 判断是否是当前用户的撤回消息且在2分钟内
+  return (
+    message.fromUser.uid === userUid.value &&
+    !isDiffNow({
+      time: recalledMsg.recallTime,
+      unit: 'minute',
+      diff: 2
+    })
+  )
+})
+
+const handleReEdit = (msgId: number) => {
+  const recalledMsg = chatStore.getRecalledMessage(msgId)
+  if (recalledMsg) {
+    useMitt.emit(MittEnum.RE_EDIT, recalledMsg.content)
+  }
+}
+
 onMounted(() => {
   nextTick(() => {
     // 滚动到底部
     virtualListInst.value?.scrollTo({ position: 'bottom', debounce: true })
   })
-  // Mitt.on(MittEnum.SEND_MESSAGE, (event: MessageType) => {
-  //   nextTick(() => {
-  //     addToDomUpdateQueue(event.message.id, event.fromUser.uid)
-  //   })
-  // })
-  Mitt.on(`${MittEnum.INFO_POPOVER}-Main`, (event: any) => {
+  useMitt.on(MittEnum.SEND_MESSAGE, async (messageType: MessageType) => {
+    await chatStore.pushMsg(messageType)
+    // nextTick(() => {
+    //   addToDomUpdateQueue(event.message.id, event.fromUser.uid)
+    // })
+  })
+  useMitt.on(`${MittEnum.INFO_POPOVER}-Main`, (event: any) => {
     selectKey.value = event.uid
     infoPopover.value = true
     handlePopoverUpdate(event.uid)
   })
-  Mitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
+  useMitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
     activeItemRef.value = event.item
   })
   listen(EventEnum.SHARE_SCREEN, async () => {

@@ -111,6 +111,9 @@ const commonTheme: GlobalThemeOverrides = {
     fillColor: '#13987f',
     fillColorHover: '#13987f',
     indicatorBorderRadius: '8px'
+  },
+  Notification: {
+    borderRadius: '8px'
   }
 }
 

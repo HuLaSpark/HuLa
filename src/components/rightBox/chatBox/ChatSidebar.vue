@@ -118,7 +118,7 @@ import { MittEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
 import { InputInst } from 'naive-ui'
 import { usePopover } from '@/hooks/usePopover.ts'
 import { useChatMain } from '@/hooks/useChatMain.ts'
-import Mitt from '@/utils/Bus.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { useGlobalStore } from '@/stores/global.ts'
@@ -142,7 +142,6 @@ const userList = computed(() => {
       return a.activeStatus - b.activeStatus // 升序排序
     })
 })
-console.log('userList', userList.value)
 const filteredUserList = shallowRef(userList.value)
 const isGroup = computed(() => globalStore.currentSession?.type === RoomTypeEnum.GROUP)
 /** 是否是搜索模式 */
@@ -204,7 +203,7 @@ const handleScroll = (event: Event) => {
 }
 
 onMounted(() => {
-  Mitt.on(`${MittEnum.INFO_POPOVER}-Sidebar`, (event: any) => {
+  useMitt.on(`${MittEnum.INFO_POPOVER}-Sidebar`, (event: any) => {
     selectKey.value = event.uid
     infoPopover.value = true
     handlePopoverUpdate(event.uid)

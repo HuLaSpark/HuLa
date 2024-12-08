@@ -49,6 +49,12 @@ async function Http<T>(
     httpHeaders.set('Authorization', `Bearer ${token}`)
   }
 
+  // 打印所有请求头信息
+  console.log('请求头信息:')
+  httpHeaders.forEach((value, key) => {
+    console.log(`${key}: ${value}`)
+  })
+
   // 构建 fetch 请求选项
   const fetchOptions: RequestInit = {
     method: options.method,

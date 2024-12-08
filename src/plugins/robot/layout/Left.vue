@@ -23,9 +23,9 @@
       <!-- 头像和插件 -->
       <n-flex align="center" justify="space-between" :size="0">
         <n-flex align="center">
-          <n-avatar bordered round :src="login.accountInfo.avatar" :size="48" />
+          <n-avatar bordered round :src="userStore.userInfo.avatar" :size="48" />
           <n-flex vertical>
-            <p class="text-(14px [--chat-text-color]) font-500">{{ login.accountInfo.name }}</p>
+            <p class="text-(14px [--chat-text-color]) font-500">{{ userStore.userInfo.name }}</p>
             <p class="text-(12px #909090)">剩余：28天过期</p>
           </n-flex>
         </n-flex>
@@ -136,14 +136,13 @@
   </n-flex>
 </template>
 <script setup lang="ts">
-import { useSettingStore } from '@/stores/setting.ts'
 import { NIcon, VirtualListInst, InputInst } from 'naive-ui'
-import Mitt from '@/utils/Bus.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { VueDraggable } from 'vue-draggable-plus'
 import router from '@/router'
+import { useUserStore } from '@/stores/user.ts'
 
-const settingStore = useSettingStore()
-const { login } = storeToRefs(settingStore)
+const userStore = useUserStore()
 const activeItem = ref(0)
 const scrollbar = ref<VirtualListInst>()
 const inputInstRef = ref<InputInst | null>(null)
@@ -209,7 +208,7 @@ const handleActive = (item: any) => {
   activeItem.value = item.id
   router.push('/chat').then(() => {
     nextTick(() => {
-      Mitt.emit('chat-active', item)
+      useMitt.emit('chat-active', item)
     })
   })
 }
@@ -306,7 +305,7 @@ const handleBlur = (item: any, index: number) => {
   window.$message.success(`已重命名为 ${newTitle}`, {
     icon: () => h(NIcon, null, { default: () => h('svg', null, [h('use', { href: '#face' })]) })
   })
-  Mitt.emit('left-chat-title', { id: item.id, title: newTitle })
+  useMitt.emit('left-chat-title', { id: item.id, title: newTitle })
 }
 
 onMounted(() => {
@@ -314,14 +313,14 @@ onMounted(() => {
   // handleActive(chatList.value[0])
   /** 刚加载的时候默认跳转到欢迎页面 */
   router.push('/welcome')
-  Mitt.on('update-chat-title', (e) => {
+  useMitt.on('update-chat-title', (e) => {
     chatList.value.filter((item) => {
       if (item.id === e.id) {
         item.title = e.title
       }
     })
   })
-  Mitt.on('return-chat', () => {
+  useMitt.on('return-chat', () => {
     handleActive(chatList.value[0])
   })
 })

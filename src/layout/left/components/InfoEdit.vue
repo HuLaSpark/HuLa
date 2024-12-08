@@ -39,7 +39,8 @@
             round
             class="text-22px"
             style="border: 3px solid #fff">
-            {{ editInfo.content.name?.slice(0, 1) }}
+            {{ localUserInfo.name?.slice(0, 1) }}
+            <!-- {{ editInfo.content.name?.slice(0, 1) }} -->
           </n-avatar>
         </n-flex>
         <n-flex v-if="currentBadge" align="center" justify="center">
@@ -56,9 +57,9 @@
           <template #trigger>
             <n-input
               ref="inputInstRef"
-              v-model:value="editInfo.content.name"
+              v-model:value="localUserInfo.name"
               :count-graphemes="countGraphemes"
-              :default-value="editInfo.content.name"
+              :default-value="localUserInfo.name"
               :maxlength="8"
               :passively-activated="true"
               class="rounded-6px"
@@ -96,7 +97,9 @@
                 </template>
                 <n-popover trigger="hover">
                   <template #trigger>
-                    <svg class="size-24px outline-none"><use href="#tips"></use></svg>
+                    <svg class="size-24px outline-none">
+                      <use href="#tips"></use>
+                    </svg>
                   </template>
                   <span>{{ item.describe }}</span>
                 </n-popover>
@@ -106,7 +109,10 @@
         </n-flex>
       </n-flex>
       <n-flex class="p-12px" align="center" justify="center">
-        <n-button :disabled="editInfo.content.name === login.accountInfo.name" color="#13987f" @click="saveEditInfo">
+        <n-button
+          :disabled="editInfo.content.name === localUserInfo.name"
+          color="#13987f"
+          @click="saveEditInfo(localUserInfo)">
           保存
         </n-button>
       </n-flex>
@@ -116,24 +122,27 @@
 <script setup lang="ts">
 import { IsYesEnum, MittEnum } from '@/enums'
 import { leftHook } from '@/layout/left/hook.ts'
-import Mitt from '@/utils/Bus.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import apis from '@/services/apis.ts'
 import { type } from '@tauri-apps/plugin-os'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useUserStore } from '@/stores/user.ts'
+import { UserInfoType } from '@/services/types'
 
+let localUserInfo = ref<Partial<UserInfoType>>({})
 const userStore = useUserStore()
-const { login, editInfo, currentBadge, saveEditInfo, toggleWarningBadge } = leftHook()
+const { editInfo, currentBadge, saveEditInfo, toggleWarningBadge } = leftHook()
 const { countGraphemes } = useCommon()
 
 /** 不允许输入空格 */
 const noSideSpace = (value: string) => !value.startsWith(' ') && !value.endsWith(' ')
 
 onMounted(() => {
-  Mitt.on(MittEnum.OPEN_EDIT_INFO, () => {
-    Mitt.emit(MittEnum.CLOSE_INFO_SHOW)
+  useMitt.on(MittEnum.OPEN_EDIT_INFO, () => {
+    useMitt.emit(MittEnum.CLOSE_INFO_SHOW)
     editInfo.value.show = true
     editInfo.value.content = userStore.userInfo
+    localUserInfo.value = { ...userStore.userInfo }
     /** 获取徽章列表 */
     apis.getBadgeList().then((res) => {
       editInfo.value.badgeList = res as any
@@ -147,11 +156,14 @@ onMounted(() => {
     transition: opacity 0.4s ease-in-out;
     @apply absolute top-0 left-0 w-full h-full flex-center gap-4px z-999 opacity-0;
   }
+
   @apply bg-#ccc relative rounded-50% size-fit p-4px cursor-pointer;
+
   &:hover .tip {
     @apply opacity-100;
   }
 }
+
 .mac-close:hover {
   svg {
     display: block;

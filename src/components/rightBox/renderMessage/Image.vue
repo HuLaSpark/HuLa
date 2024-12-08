@@ -6,7 +6,6 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, ref } from 'vue'
 import type { ImageBody } from '@/services/types'
 import { formatImage } from '@/utils/Formatting.ts'
 

@@ -15,25 +15,25 @@
     </main>
   </div>
 </template>
-<script lang="tsx" setup>
+<script lang="ts" setup>
 import LeftAvatar from './components/LeftAvatar.vue'
 import ActionList from './components/ActionList.vue'
 import InfoEdit from './components/InfoEdit.vue'
-import Mitt from '@/utils/Bus.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { lock, LockScreen, CheckUpdate } from './model.tsx'
-import { DefineComponent, DefineSetupFnComponent } from 'vue'
+import type { Component } from 'vue'
 import { MittEnum, ModalEnum } from '@/enums'
 
-const componentMap = shallowRef<DefineComponent>()
+const componentMap = shallowRef<Component>()
 /** 弹窗组件内容映射 */
-const componentMapping: Record<number, DefineSetupFnComponent<DefineComponent>> = {
+const componentMapping: Record<number, Component> = {
   [ModalEnum.LOCK_SCREEN]: LockScreen,
   [ModalEnum.CHECK_UPDATE]: CheckUpdate
 }
 
 onMounted(() => {
-  Mitt.on(MittEnum.LEFT_MODAL_SHOW, (event) => {
-    componentMap.value = componentMapping[event as ModalEnum] as DefineComponent
+  useMitt.on(MittEnum.LEFT_MODAL_SHOW, (event) => {
+    componentMap.value = componentMapping[event as ModalEnum]
     nextTick(() => {
       lock.value.modalShow = true
     })

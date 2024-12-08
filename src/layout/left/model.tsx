@@ -14,7 +14,6 @@ import {
   NProgress
 } from 'naive-ui'
 import { FormInst } from 'naive-ui'
-import { useSettingStore } from '@/stores/setting.ts'
 import { emit } from '@tauri-apps/api/event'
 import { EventEnum } from '@/enums'
 import pkg from '~/package.json'
@@ -23,6 +22,8 @@ import './style.scss'
 import { type } from '@tauri-apps/plugin-os'
 import { check } from '@tauri-apps/plugin-updater'
 import { relaunch } from '@tauri-apps/plugin-process'
+import { useUserStore } from '@/stores/user.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 
 const formRef = ref<FormInst | null>()
 const formValue = ref({
@@ -61,8 +62,7 @@ export const lock = ref({
 /*============================================ model =====================================================*/
 /**  锁屏弹窗 */
 export const LockScreen = defineComponent(() => {
-  const settingStore = useSettingStore()
-  const { login } = storeToRefs(settingStore)
+  const userStore = useUserStore()
   return () => (
     <NModal v-model:show={lock.value.modalShow} maskClosable={false} class="w-350px border-rd-8px">
       <div class="bg-[--bg-popover] w-360px h-full p-6px box-border flex flex-col">
@@ -83,9 +83,9 @@ export const LockScreen = defineComponent(() => {
           <NFlex vertical justify="center" align="center" size={20}>
             <span class="text-(14px center)">锁定屏幕</span>
 
-            <NAvatar bordered round size={80} src={login.value.accountInfo.avatar} />
+            <NAvatar bordered round size={80} src={userStore.userInfo.avatar} />
 
-            <p class="text-(14px center [--text-color]) truncate w-200px">{login.value.accountInfo.name}</p>
+            <p class="text-(14px center [--text-color]) truncate w-200px">{userStore.userInfo.name}</p>
           </NFlex>
           <NForm ref={formRef} model={formValue.value} rules={lock.value.rules}>
             <NFormItem label-placement="left" label="锁屏密码" path={'lockPassword'} class="w-full">

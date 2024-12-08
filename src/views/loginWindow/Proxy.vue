@@ -5,19 +5,65 @@
 
     <n-flex vertical :size="25" align="center" class="pt-30px">
       <span class="text-(16px #70938c) font-bold textFont">网络代理设置</span>
-      <p>敬请期待</p>
-      <p @click="router.push('/login')" class="text-(14px #13987f) cursor-pointer">返回</p>
+      <n-flex vertical :size="10" justify="center">
+        <p class="text-12px">类型</p>
+        <n-select class="min-w-240px" v-model:value="proxyType" :options="options" />
+
+        <n-collapse-transition :show="proxyType === 'http'">
+          <n-flex vertical :size="10" justify="center">
+            <p class="text-12px pt-14px">IP地址</p>
+            <n-input
+              class="rounded-6px text-12px"
+              v-model:value="IP"
+              type="text"
+              placeholder="http://xxx 或者 https://xxx" />
+
+            <p class="text-12px pt-14px">端口号</p>
+            <n-input class="rounded-6px text-12px" v-model:value="port" type="text" placeholder="请输入端口号" />
+          </n-flex>
+
+          <p @click="proxyTest" class="text-(14px #13987f center) cursor-pointer pt-20px">网络代理测试</p>
+        </n-collapse-transition>
+      </n-flex>
+
+      <n-flex align="center" justify="center" :size="40" class="pt-10px">
+        <p @click="handleSave" class="text-(14px #13987f) cursor-pointer">保存</p>
+        <p @click="router.push('/login')" class="text-(14px #707070) cursor-pointer">返回</p>
+      </n-flex>
     </n-flex>
   </n-config-provider>
 </template>
 <script setup lang="ts">
 import { lightTheme } from 'naive-ui'
 import router from '@/router'
+
+const options = [
+  {
+    label: '不使用代理',
+    value: ''
+  },
+  {
+    label: 'HTTP代理',
+    value: 'http'
+  }
+]
+const proxyType = ref(options[0].value)
+const IP = ref()
+const port = ref()
+
+const handleSave = () => {}
+const proxyTest = () => {}
 </script>
 
 <style scoped lang="scss">
 @use '@/styles/scss/global/login-bg';
 .textFont {
   font-family: AliFangYuan, sans-serif !important;
+}
+
+:deep(.n-input .n-input__input-el) {
+  padding: 0;
+  height: 30px;
+  line-height: 30px;
 }
 </style>

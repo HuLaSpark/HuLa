@@ -100,7 +100,7 @@ export const useContactStore = defineStore('contact', () => {
   /** 删除好友 */
   const onDeleteContact = async (uid: number) => {
     if (!uid) return
-    // 同意好友申请
+    // 删除好友
     await apis.deleteFriend({ targetUid: uid })
     // 刷新好友申请列表
     // getRequestFriendsList(true)

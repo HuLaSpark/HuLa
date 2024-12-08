@@ -2,6 +2,7 @@
   <main data-tauri-drag-region class="flex-1 bg-[--right-bg-color] h-full w-100vw min-w-600px">
     <div class="size-full" :style="{ background: isChat ? 'var(--right-theme-bg-color)' : '' }" data-tauri-drag-region>
       <ActionBar :current-label="appWindow.label" />
+
       <!-- 需要判断当前路由是否是信息详情界面 -->
       <ChatBox :active-item="activeItem" v-if="msgBoxShow && isChat && activeItem !== -1" />
 
@@ -24,7 +25,7 @@
   </main>
 </template>
 <script setup lang="ts">
-import Mitt from '@/utils/Bus.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import router from '@/router'
 import { useSettingStore } from '@/stores/setting.ts'
 import { MittEnum, ThemeEnum } from '@/enums'
@@ -64,22 +65,22 @@ watchEffect(() => {
 })
 
 onMounted(() => {
-  Mitt.on(MittEnum.NOT_MSG, () => {
+  useMitt.on(MittEnum.NOT_MSG, () => {
     msgBoxShow.value = false
     activeItem.value = -1
   })
   if (isChat) {
-    Mitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
+    useMitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
       msgBoxShow.value = event.msgBoxShow
       activeItem.value = event.item
     })
   }
 
   if (isDetails) {
-    Mitt.on(MittEnum.APPLY_SHOW, (event: any) => {
+    useMitt.on(MittEnum.APPLY_SHOW, (event: any) => {
       DetailsContent.value = event.context
     })
-    Mitt.on(MittEnum.DETAILS_SHOW, (event: any) => {
+    useMitt.on(MittEnum.DETAILS_SHOW, (event: any) => {
       DetailsContent.value = event.context
       detailsShow.value = event.detailsShow as boolean
     })

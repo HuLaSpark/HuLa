@@ -12,42 +12,62 @@
 
       <!-- 注册菜单 -->
       <n-flex class="ma text-center h-full w-260px" vertical :size="16">
-        <n-input
-          maxlength="8"
-          minlength="1"
-          size="large"
-          v-model:value="info.name"
-          type="text"
-          :allow-input="noSideSpace"
-          :placeholder="namePH"
-          @focus="namePH = ''"
-          @blur="namePH = '输入HuLa昵称'"
-          clearable />
+        <n-form :model="info" :rules="rules" ref="registerForm">
+          <n-form-item path="name">
+            <n-input
+              maxlength="8"
+              minlength="1"
+              size="large"
+              v-model:value="info.name"
+              type="text"
+              :allow-input="noSideSpace"
+              :placeholder="namePH"
+              @focus="namePH = ''"
+              @blur="namePH = '输入HuLa昵称'"
+              clearable />
+          </n-form-item>
 
-        <n-input
-          size="large"
-          maxlength="12"
-          minlength="6"
-          v-model:value="info.account"
-          type="text"
-          :allow-input="noSideSpace"
-          :placeholder="accountPH"
-          @focus="accountPH = ''"
-          @blur="accountPH = '输入HuLa账号'"
-          clearable>
-        </n-input>
+          <n-form-item path="account">
+            <n-input
+              size="large"
+              maxlength="12"
+              minlength="6"
+              v-model:value="info.account"
+              type="text"
+              :allow-input="onlyAlphaNumeric"
+              :placeholder="accountPH"
+              @focus="accountPH = ''"
+              @blur="accountPH = '输入HuLa账号'"
+              clearable />
+          </n-form-item>
 
-        <n-input
-          maxlength="16"
-          minlength="6"
-          size="large"
-          v-model:value="info.password"
-          type="password"
-          :allow-input="noSideSpace"
-          :placeholder="passwordPH"
-          @focus="passwordPH = ''"
-          @blur="passwordPH = '输入HuLa密码'"
-          clearable />
+          <n-form-item path="password">
+            <n-input
+              class="pl-16px"
+              maxlength="16"
+              minlength="6"
+              size="large"
+              show-password-on="click"
+              v-model:value="info.password"
+              type="password"
+              :allow-input="noSideSpace"
+              :placeholder="passwordPH"
+              @focus="passwordPH = ''"
+              @blur="passwordPH = '输入HuLa密码'"
+              clearable />
+          </n-form-item>
+          <!-- 密码提示信息 -->
+          <n-flex vertical v-if="info.password">
+            <n-flex vertical :size="4">
+              <Validation :value="info.password" message="最少6位" :validator="validateMinLength" />
+              <Validation :value="info.password" message="由英文和数字构成" :validator="validateAlphaNumeric" />
+              <Validation
+                :value="info.password"
+                message="必须有一个特殊字符!@#¥%.&*"
+                :validator="validateSpecialChar" />
+            </n-flex>
+          </n-flex>
+        </n-form>
 
         <!-- 协议 -->
         <n-flex justify="center" :size="6">
@@ -73,23 +93,26 @@
 
     <!-- 底部栏 -->
     <n-flex class="text-(12px #909090)" :size="8" justify="center">
-      <span>Copyright © {{ currentYear - 1 }}-{{ currentYear }} HuLaSpark All Rights Reserved.</span>
+      <span>Copyright {{ currentYear - 1 }}-{{ currentYear }} HuLaSpark All Rights Reserved.</span>
     </n-flex>
   </n-config-provider>
 </template>
 <script setup lang="ts">
 import { lightTheme } from 'naive-ui'
 import apis from '@/services/apis.ts'
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import dayjs from 'dayjs'
 import { RegisterUserReq } from '@/services/types.ts'
+import Validation from '@/components/common/Validation.vue'
 
 /** 账号信息 */
-const info = ref({
-  account: '',
-  password: '',
-  name: ''
-})
+const info = unref(
+  ref({
+    account: '',
+    password: '',
+    name: ''
+  })
+)
 /** 协议 */
 const protocol = ref(true)
 const btnEnable = ref(false)
@@ -101,37 +124,87 @@ const passwordPH = ref('输入HuLa密码')
 const btnText = ref('注册')
 // 使用day.js获取当前年份
 const currentYear = dayjs().year()
+const registerForm = ref()
+// 校验规则
+const rules = {
+  name: {
+    required: true,
+    message: '请输入昵称',
+    trigger: 'blur'
+  },
+  account: {
+    required: true,
+    message: '请输入账号',
+    trigger: 'blur'
+  },
+  password: {
+    required: true,
+    message: '请输入密码',
+    trigger: ['blur', 'input']
+  }
+}
 
 /** 不允许输入空格 */
 const noSideSpace = (value: string) => !value.startsWith(' ') && !value.endsWith(' ')
 
+/** 只允许输入英文和数字 */
+const onlyAlphaNumeric = (value: string) => /^[a-zA-Z0-9]*$/.test(value)
+
+/** 密码验证函数 */
+const validateMinLength = (value: string) => value.length >= 6
+
+/** 检查密码是否包含英文和数字 */
+const validateAlphaNumeric = (value: string) => {
+  const hasLetter = /[a-zA-Z]/.test(value)
+  const hasNumber = /[0-9]/.test(value)
+  return hasLetter && hasNumber
+}
+
+/** 检查密码是否包含特殊字符 */
+const validateSpecialChar = (value: string) => /[!@#¥$%.&*]/.test(value)
+
+/** 检查密码是否满足所有条件 */
+const isPasswordValid = computed(() => {
+  const password = info.password
+  return validateMinLength(password) && validateAlphaNumeric(password) && validateSpecialChar(password)
+})
+
+/** 注册 */
 const register = async () => {
-  btnEnable.value = true
-  loading.value = true
-  btnText.value = '注册中...'
-  // 注册
-  await apis
-    .register({ ...info.value } as RegisterUserReq)
-    .then(() => {
-      window.$message.success('注册成功')
-      btnText.value = '注册'
-    })
-    .finally(() => {
-      loading.value = false
-      btnEnable.value = false
-      btnText.value = '注册'
-    })
+  await registerForm.value.validate((errors: any) => {
+    if (!errors) {
+      btnEnable.value = true
+      loading.value = true
+      btnText.value = '注册中...'
+      // 注册
+      apis
+        .register({ ...info } as RegisterUserReq)
+        .then(() => {
+          window.$message.success('注册成功')
+          btnText.value = '注册'
+          setTimeout(() => {
+            WebviewWindow.getByLabel('login').then((win) => {
+              win?.setFocus()
+            })
+            WebviewWindow.getCurrent().close()
+          }, 600)
+        })
+        .finally(() => {
+          loading.value = false
+          btnEnable.value = false
+          btnText.value = '注册'
+        })
+    }
+  })
 }
 
 watchEffect(() => {
-  btnEnable.value = !(info.value.account && info.value.password && protocol.value)
+  btnEnable.value = !(info.account && isPasswordValid.value && protocol.value)
 })
 
 onMounted(async () => {
   await getCurrentWebviewWindow().show()
 })
-
-onUnmounted(() => {})
 </script>
 
 <style scoped lang="scss">
@@ -140,5 +213,9 @@ onUnmounted(() => {})
 
 .textFont {
   font-family: AliFangYuan, sans-serif !important;
+}
+
+:deep(.n-form-item.n-form-item--top-labelled) {
+  grid-template-rows: none;
 }
 </style>

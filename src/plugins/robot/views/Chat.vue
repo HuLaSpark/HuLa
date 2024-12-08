@@ -84,7 +84,7 @@
 </template>
 <script setup lang="ts">
 import MsgInput from '@/components/rightBox/MsgInput.vue'
-import Mitt from '@/utils/Bus.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { InputInst, NIcon } from 'naive-ui'
 import { useSettingStore } from '@/stores/setting.ts'
 
@@ -126,7 +126,7 @@ const handleBlur = () => {
   window.$message.success(`已重命名为 ${currentChat.value.title}`, {
     icon: () => h(NIcon, null, { default: () => h('svg', null, [h('use', { href: '#face' })]) })
   })
-  Mitt.emit('update-chat-title', { title: currentChat.value.title, id: currentChat.value.id })
+  useMitt.emit('update-chat-title', { title: currentChat.value.title, id: currentChat.value.id })
 }
 
 const handleEdit = () => {
@@ -138,13 +138,13 @@ const handleEdit = () => {
 }
 
 onMounted(() => {
-  Mitt.on('left-chat-title', (e) => {
+  useMitt.on('left-chat-title', (e) => {
     const { title, id } = e
     if (id === currentChat.value.id) {
       currentChat.value.title = title
     }
   })
-  Mitt.on('chat-active', (e) => {
+  useMitt.on('chat-active', (e) => {
     const { title, id } = e
     currentChat.value.title = title || `新的聊天${currentChat.value.id}`
     currentChat.value.id = id

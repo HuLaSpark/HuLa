@@ -6,7 +6,7 @@
     <template v-if="osType === 'windows'">
       <!--  登录窗口的代理按钮  -->
       <div v-if="proxy" @click="router.push('/proxy')" class="w-30px h-24px flex-center">
-        <svg class="size-16px color-[--action-bar-icon-color] cursor-pointer"><use href="#settings"></use></svg>
+        <svg class="size-16px color-#404040 cursor-pointer"><use href="#settings"></use></svg>
       </div>
       <!--  固定在最顶层  -->
       <div v-if="topWinLabel !== void 0" @click="handleAlwaysOnTop" class="hover-box">
@@ -82,15 +82,16 @@
 
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import Mitt from '@/utils/Bus'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { useAlwaysOnTopStore } from '@/stores/alwaysOnTop.ts'
 import { useSettingStore } from '@/stores/setting.ts'
-import { emit, listen } from '@tauri-apps/api/event'
+import { emit, listen, UnlistenFn } from '@tauri-apps/api/event'
 import { CloseBxEnum, EventEnum, MittEnum } from '@/enums'
-import { exit } from '@tauri-apps/plugin-process'
 import { type } from '@tauri-apps/plugin-os'
 import router from '@/router'
+import apis from '@/services/apis.ts'
+import { exit } from '@tauri-apps/plugin-process'
 
 const appWindow = WebviewWindow.getCurrent()
 const {
@@ -142,6 +143,8 @@ watchEffect(() => {
     }
   })
   listen(EventEnum.EXIT, async () => {
+    // 发送下线通知
+    await offline()
     await exit(0)
   })
 
@@ -164,7 +167,7 @@ const restoreWindow = async () => {
 /** 收缩窗口 */
 const shrinkWindow = async () => {
   /**使用mitt给兄弟组件更新*/
-  Mitt.emit(MittEnum.SHRINK_WINDOW, shrinkStatus)
+  useMitt.emit(MittEnum.SHRINK_WINDOW, shrinkStatus)
   if (shrinkStatus) {
     await resizeWindow('home', 310, 700)
   } else {
@@ -232,15 +235,29 @@ const handleCloseWin = async () => {
   }
 }
 
+const offline = async () => {
+  apis.offline().catch(() => {
+    // 通知下线失败也没关系
+  })
+}
+let unOffline: Promise<UnlistenFn>
+useMitt.on('handleCloseWin', handleCloseWin)
 // 添加和移除resize事件监听器
 onMounted(() => {
   window.addEventListener('resize', handleResize)
   osType.value = type()
+  unOffline = listen('offline', async () => {
+    await apis.offline().catch(() => {})
+    await exit(0)
+  })
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
   window.removeEventListener('keydown', (e) => isEsc(e))
+  if (unOffline) {
+    unOffline.catch(() => {})
+  }
 })
 </script>
 

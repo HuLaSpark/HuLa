@@ -1,7 +1,4 @@
-use tauri::{
-    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    Manager, PhysicalPosition, Runtime,
-};
+use tauri::{tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent}, Emitter, Manager, PhysicalPosition, Runtime};
 
 pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
     let _ = TrayIconBuilder::with_id("tray")
@@ -17,11 +14,12 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
             } => match button {
                 MouseButton::Left => {
                     let windows = tray.app_handle().webview_windows();
-                    for (key, value) in windows {
-                        if key == "login" || key == "home" {
-                            value.show().unwrap();
-                            value.unminimize().unwrap();
-                            value.set_focus().unwrap();
+                    for (name, window) in windows {
+                        if name == "login" || name == "home" {
+                            window.show().unwrap();
+                            window.unminimize().unwrap();
+                            window.set_focus().unwrap();
+                            break;
                         }
                     }
                 }
@@ -41,8 +39,28 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
                     }
                 }
                 _ => {}
-            },
+            }
+            TrayIconEvent::Enter {
+                id: _,
+                position,
+                rect: _} => {
+                tray.app_handle().emit("show_notify", position).unwrap();
+                // 状态栏显示消息提醒
+                // let tray_window = tray.app_handle().get_webview_window("notify").unwrap();
+                // if let Ok(outer_size) = tray_window.outer_size() {
+                //     tray_window
+                //         .set_position(PhysicalPosition::new(
+                //             position.x,
+                //             position.y - outer_size.height as f64,
+                //         ))
+                //         .unwrap();
+                //     tray_window.set_always_on_top(true).unwrap();
+                //     tray_window.show().unwrap();
+                //     tray_window.set_focus().unwrap();
+                // }
+            }
             _ => {}
+
         })
         .build(app);
     Ok(())

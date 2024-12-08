@@ -21,16 +21,7 @@ export const useSettingStore = defineStore(StoresEnum.SETTING, {
     },
     login: {
       autoLogin: false,
-      autoStartup: false,
-      accountInfo: {
-        account: '',
-        password: '',
-        name: '',
-        avatar: '',
-        uid: 0,
-        token: ''
-      },
-      badgeList: []
+      autoStartup: false
     },
     chat: {
       sendKey: 'Enter',
@@ -65,14 +56,6 @@ export const useSettingStore = defineStore(StoresEnum.SETTING, {
     toggleLogin(autoLogin: boolean, autoStartup: boolean) {
       this.login.autoLogin = autoLogin
       this.login.autoStartup = autoStartup
-    },
-    /** 设置用户保存的登录信息 */
-    setAccountInfo(accountInfo: STO.Setting['login']['accountInfo']) {
-      this.login.accountInfo = accountInfo
-    },
-    /** 清空账号信息 */
-    clearAccount() {
-      this.login.accountInfo.password = ''
     },
     /** 设置菜单显示模式 */
     setShowMode(showMode: ShowModeEnum): void {
