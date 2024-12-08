@@ -61,6 +61,7 @@ import { useSettingStore } from '@/stores/setting.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { TrayIcon } from '@tauri-apps/api/tray'
 import { PhysicalPosition } from '@tauri-apps/api/dpi'
+import { type } from '@tauri-apps/plugin-os'
 
 const appWindow = WebviewWindow.getCurrent()
 const { checkWinExist, createWebviewWindow, resizeWindow } = useWindow()
@@ -93,17 +94,19 @@ const toggleStatus = (url: string, title: string) => {
 }
 
 watchEffect(async () => {
-  if (tipVisible.value && !interval) {
-    interval = setInterval(async () => {
+  if (type() === 'windows') {
+    if (tipVisible.value && !interval) {
+      interval = setInterval(async () => {
+        const tray = await TrayIcon.getById('tray')
+        tray?.setIcon(iconVisible.value ? null : 'tray/icon.png')
+        iconVisible.value = !iconVisible.value
+      }, 500)
+    } else {
       const tray = await TrayIcon.getById('tray')
-      tray?.setIcon(iconVisible.value ? null : 'tray/icon.png')
-      iconVisible.value = !iconVisible.value
-    }, 500)
-  } else {
-    const tray = await TrayIcon.getById('tray')
-    tray?.setIcon('tray/icon.png')
-    clearInterval(interval)
-    interval = null
+      tray?.setIcon('tray/icon.png')
+      clearInterval(interval)
+      interval = null
+    }
   }
 })
 
@@ -137,6 +140,7 @@ onMounted(async () => {
         await notifyWindow?.show()
         await notifyWindow?.unminimize()
         await notifyWindow?.setFocus()
+        await notifyWindow?.setAlwaysOnTop(true)
       }
     }
   })

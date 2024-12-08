@@ -71,8 +71,8 @@
         "resizable": false,
         "center": false,
         "visible": false,
-        "width": 130,
-        "height": 130,
+        "width": 280,
+        "height": 140,
         "alwaysOnTop": true,
         "skipTaskbar": true,
         "decorations": false

@@ -44,20 +44,15 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
                 id: _,
                 position,
                 rect: _} => {
-                tray.app_handle().emit("show_notify", position).unwrap();
-                // 状态栏显示消息提醒
-                // let tray_window = tray.app_handle().get_webview_window("notify").unwrap();
-                // if let Ok(outer_size) = tray_window.outer_size() {
-                //     tray_window
-                //         .set_position(PhysicalPosition::new(
-                //             position.x,
-                //             position.y - outer_size.height as f64,
-                //         ))
-                //         .unwrap();
-                //     tray_window.set_always_on_top(true).unwrap();
-                //     tray_window.show().unwrap();
-                //     tray_window.set_focus().unwrap();
-                // }
+                #[cfg(target_os = "windows")]
+                tray.app_handle().emit("notify_enter", position).unwrap();
+            }
+            TrayIconEvent::Leave {
+                id: _,
+                position: _,
+                rect: _} => {
+                #[cfg(target_os = "windows")]
+                tray.app_handle().emit("notify_leave", ()).unwrap();
             }
             _ => {}
 

@@ -354,7 +354,7 @@ const closeMenu = (event: MouseEvent) => {
 }
 
 const enterKey = (e: KeyboardEvent) => {
-  if (e.key === 'Enter') {
+  if (e.key === 'Enter' && !loginDisabled.value) {
     normalLogin()
   }
 }
