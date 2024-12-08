@@ -76,9 +76,9 @@ export const useMsgInput = (messageInputDom: Ref) => {
     { label: '另存为', icon: 'Importing', disabled: true },
     { label: '全部选择', icon: 'check-one' }
   ])
-  
+
   const db = ref<Database>()
-  
+
   watchEffect(() => {
     chatKey.value = chat.value.sendKey
     if (!ait.value && personList.value.length > 0) {
@@ -94,8 +94,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     chat.value.sendKey = v
   })
 
-
-  onMounted(() => {
+  onMounted(async () => {
     db.value = await Database.load('sqlite:sqlite.db')
     await db.value.execute(`
       CREATE TABLE IF NOT EXISTS message (
@@ -123,7 +122,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
         msgInput.value = event
       })
     })
-    
+
     /** 正在输入拼音时触发 */
     messageInputDom.value.addEventListener('compositionstart', () => {
       isChinese.value = true

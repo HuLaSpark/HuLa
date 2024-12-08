@@ -246,9 +246,9 @@ useMitt.on('handleCloseWin', handleCloseWin)
 onMounted(() => {
   window.addEventListener('resize', handleResize)
   osType.value = type()
-  unOffline = listen('offline', async () => {
-    await apis.offline().catch(() => {})
-    await exit(0)
+  unOffline = listen('offline', () => {
+    // 不一定成功
+    offline()
   })
 })
 

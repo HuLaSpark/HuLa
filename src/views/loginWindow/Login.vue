@@ -282,6 +282,7 @@ const normalLogin = async () => {
       userStore.userInfo = account
       loginHistoriesStore.addLoginHistory(account)
 
+      await setLoginState()
       // rust保存用户信息
       await invoke('save_user_info', {
         userId: account.uid,
@@ -289,11 +290,10 @@ const normalLogin = async () => {
         token: account.token,
         portrait: '',
         isSign: true
+      }).finally(() => {
+        // 打开主界面
+        openHomeWindow()
       })
-
-      await setLoginState()
-      // 打开主界面
-      await openHomeWindow()
     })
     .catch(() => {
       loading.value = false
@@ -316,6 +316,7 @@ const autoLogin = () => {
       loginText.value = '登录成功, 正在跳转'
       loading.value = false
       const userDetail = await apis.getUserDetail()
+      await setLoginState()
       // rust保存用户信息
       await invoke('save_user_info', {
         userId: userDetail.uid,
@@ -323,9 +324,9 @@ const autoLogin = () => {
         token: '',
         portrait: '',
         isSign: true
+      }).finally(() => {
+        openHomeWindow()
       })
-      await openHomeWindow()
-      await setLoginState()
     })
     .catch(() => {
       localStorage.removeItem('TOKEN')

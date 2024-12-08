@@ -97,7 +97,7 @@ const moreList = ref<OPT.L.MoreList[]>([
     click: async () => {
       // rust保存用户信息
       await invoke('save_user_info', {
-        userId: '',
+        userId: -1,
         username: '',
         token: '',
         portrait: '',

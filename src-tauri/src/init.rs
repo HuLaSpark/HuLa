@@ -36,6 +36,8 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
                     }
                 }
             }))
+            .plugin(tauri_plugin_sql::Builder::new().build())
+            .plugin(tauri_plugin_global_shortcut::Builder::new().build())
             .plugin(tauri_plugin_updater::Builder::new().build())
     }
 
@@ -86,7 +88,8 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
             }
             WindowEvent::CloseRequested { api, .. } => {
                 if window.label().eq("home") {
-                    match get_user_info().get_is_sign() {
+                    let result = get_user_info().get_is_sign();
+                    match result {
                         // 处理非正常关闭的情况, 并且还是在登录状态时才发送下线通知
                         Ok(is_sign) if is_sign => {
                             window.app_handle().emit("offline", ()).unwrap();
