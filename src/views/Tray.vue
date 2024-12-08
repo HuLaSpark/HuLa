@@ -136,7 +136,8 @@ onMounted(async () => {
       const outerSize = await notifyWindow?.outerSize()
       const sf = await notifyWindow?.scaleFactor()
       if (outerSize && sf) {
-        await notifyWindow?.setPosition(new PhysicalPosition(position.x, position.y - outerSize.height))
+        await notifyWindow?.setPosition(new PhysicalPosition(position.x - 10, position.y - outerSize.height + 20))
+        await notifyWindow?.setAlwaysOnTop(true)
         await notifyWindow?.show()
         await notifyWindow?.unminimize()
         await notifyWindow?.setFocus()

@@ -114,7 +114,7 @@ const {
 }>()
 const { getWindowTop, setWindowTop } = useAlwaysOnTopStore()
 const settingStore = useSettingStore()
-const { tips, escClose } = storeToRefs(settingStore)
+const { tips, escClose, login } = storeToRefs(settingStore)
 const { resizeWindow } = useWindow()
 const tipsRef = reactive({
   type: tips.value.type,
@@ -236,6 +236,9 @@ const handleCloseWin = async () => {
 }
 
 const offline = async () => {
+  if (!login.value.autoLogin) {
+    localStorage.removeItem('TOKEN')
+  }
   apis.offline().catch(() => {
     // 通知下线失败也没关系
   })

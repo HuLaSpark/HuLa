@@ -58,7 +58,6 @@ import {
   WsRequestMsgType,
   WsResponseMessageType
 } from '@/services/wsType.ts'
-import { computedToken } from '@/services/request.ts'
 import { useUserStore } from '@/stores/user'
 import { useGroupStore } from '@/stores/group'
 
@@ -149,8 +148,8 @@ onMounted(() => {
     localStorage.setItem('TOKEN', token)
     localStorage.removeItem('wsLogin')
     // 更新一下请求里面的 token.
-    computedToken.clear()
-    computedToken.get()
+    //computedToken.clear()
+    //computedToken.get()
     // 获取用户详情
     userStore.getUserDetailAction()
     // 自己更新自己上线

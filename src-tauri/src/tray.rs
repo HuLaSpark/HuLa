@@ -54,6 +54,13 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
                 #[cfg(target_os = "windows")]
                 tray.app_handle().emit("notify_leave", ()).unwrap();
             }
+            TrayIconEvent::Leave {
+                id: _,
+                position: _,
+                rect: _,
+            } => {
+                tray.app_handle().get_webview_window("notify").unwrap().hide().unwrap()
+            }
             _ => {}
 
         })

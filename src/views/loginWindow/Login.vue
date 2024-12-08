@@ -103,7 +103,7 @@
     </n-flex>
 
     <!-- 自动登录样式 -->
-    <n-flex vertical :size="29" v-else data-tauri-drag-region>
+    <n-flex v-else vertical :size="29" data-tauri-drag-region>
       <n-flex justify="center" class="mt-15px">
         <img src="@/assets/logo/hula.png" class="w-140px h-60px" alt="" />
       </n-flex>
@@ -171,7 +171,6 @@ import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import apis from '@/services/apis.ts'
 import { useUserStore } from '@/stores/user.ts'
-import { computedToken } from '@/services/request.ts'
 import { UserInfoType } from '@/services/types.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { invoke } from '@tauri-apps/api/core'
@@ -181,7 +180,7 @@ const userStore = useUserStore()
 const loginHistoriesStore = useLoginHistoriesStore()
 const { loginHistories } = loginHistoriesStore
 const { login } = storeToRefs(settingStore)
-const TOKEN = ref(JSON.stringify(localStorage.getItem('TOKEN')))
+const TOKEN = ref(localStorage.getItem('TOKEN'))
 /** 账号信息 */
 const info = ref({
   account: '',
@@ -256,8 +255,8 @@ const normalLogin = async () => {
         localStorage.removeItem('wsLogin')
       }
       // 更新一下请求里面的 token.
-      computedToken.clear()
-      computedToken.get()
+      // computedToken.clear()
+      // computedToken.get()
       // 获取用户详情
       const userDetail = await apis.getUserDetail()
       // 自己更新自己上线
@@ -275,7 +274,6 @@ const normalLogin = async () => {
       // TODO 这里的id暂时赋值给uid，因为后端没有统一返回uid，待后端调整
       const account = {
         ...userDetail,
-        uid: (userDetail as any).id,
         token
       }
       loading.value = false
@@ -309,31 +307,33 @@ const autoLogin = () => {
   loading.value = true
   // TODO 检查用户网络是否连接 (nyh -> 2024-03-16 12:06:59)
   loginText.value = '网络连接中'
-  // TODO 退出账号后不知道为什么请求头的token被移除了导致checkToken请求401
-  apis
-    .checkToken()
-    .then(async () => {
-      loginText.value = '登录成功, 正在跳转'
-      loading.value = false
-      const userDetail = await apis.getUserDetail()
-      await setLoginState()
-      // rust保存用户信息
-      await invoke('save_user_info', {
-        userId: userDetail.uid,
-        username: userDetail.name,
-        token: '',
-        portrait: '',
-        isSign: true
-      }).finally(() => {
-        openHomeWindow()
+  setTimeout(() => {
+    // TODO 退出账号后不知道为什么请求头的token被移除了导致checkToken请求401
+    apis
+      .checkToken()
+      .then(async () => {
+        loginText.value = '登录成功, 正在跳转'
+        loading.value = false
+        const userDetail = await apis.getUserDetail()
+        await setLoginState()
+        // rust保存用户信息
+        await invoke('save_user_info', {
+          userId: userDetail.uid,
+          username: userDetail.name,
+          token: '',
+          portrait: '',
+          isSign: true
+        }).finally(() => {
+          openHomeWindow()
+        })
       })
-    })
-    .catch(() => {
-      localStorage.removeItem('TOKEN')
-      router.push('/login')
-      loading.value = false
-      loginText.value = '登录'
-    })
+      .catch(() => {
+        localStorage.removeItem('TOKEN')
+        router.push('/login')
+        loading.value = false
+        loginText.value = '登录'
+      })
+  }, 1000)
 }
 
 /** 移除已登录账号 */

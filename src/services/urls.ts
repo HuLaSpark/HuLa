@@ -40,7 +40,7 @@ export default {
   inviteGroupMember: `${prefix + URLEnum.ROOM}/group/member`, // 邀请群成员
   exitGroup: `${prefix + URLEnum.ROOM}/group/member/exit`, // 退群
   addAdmin: `${prefix + URLEnum.ROOM}/group/admin`, // 添加管理员
-  revokeAdmin: `${prefix + URLEnum.ROOM}/group/admin`, // 添加管理员
+  revokeAdmin: `${prefix + URLEnum.ROOM}/group/admin`, // 删除管理员
   groupDetail: `${prefix + URLEnum.ROOM}/group`, // 群组详情
   sessionDetail: `${prefix + URLEnum.CHAT}/contact/detail`, // 会话详情
   sessionDetailWithFriends: `${prefix + URLEnum.CHAT}/contact/detail/friend`, // 会话详情(联系人列表发消息用)
