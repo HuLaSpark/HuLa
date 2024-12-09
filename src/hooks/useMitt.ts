@@ -1,7 +1,6 @@
 import mitt from 'mitt'
 import type { Emitter, Handler } from 'mitt'
 import { MittEnum } from '@/enums'
-import { getCurrentScope, onUnmounted } from 'vue'
 
 const mittInstance: Emitter<any> = mitt()
 

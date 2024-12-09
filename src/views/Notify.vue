@@ -5,7 +5,7 @@
     </n-flex>
     <component :is="division" />
     <n-flex
-      @click="handleTip"
+      @click="handleClickMsg"
       align="left"
       :size="10"
       class="p-6px box-border rounded-8px hover:bg-[--tray-hover] cursor-pointer">
@@ -36,7 +36,9 @@ import { useGlobalStore } from '@/stores/global.ts'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { Event, listen } from '@tauri-apps/api/event'
 import { PhysicalPosition } from '@tauri-apps/api/dpi'
+import { useWindow } from '@/hooks/useWindow.ts'
 
+const { checkWinExist } = useWindow()
 const globalStore = useGlobalStore()
 const { tipVisible } = storeToRefs(globalStore)
 const isMouseInWindow = ref(false)
@@ -44,6 +46,13 @@ const msgCount = ref(100)
 
 const division = () => {
   return <div class={'h-1px bg-[--line-color] w-full'}></div>
+}
+
+// 处理点击消息的逻辑
+const handleClickMsg = async () => {
+  // 打开消息页面
+  await checkWinExist('home')
+  await handleTip()
 }
 
 // 取消状态栏闪烁
@@ -60,7 +69,7 @@ const showWindow = async (event: Event<any>) => {
     if (outerSize) {
       await notifyWindow?.setPosition(
         new PhysicalPosition(
-          event.payload.position.Physical.x - 180,
+          event.payload.position.Physical.x - 120,
           event.payload.position.Physical.y - outerSize.height
         )
       )
