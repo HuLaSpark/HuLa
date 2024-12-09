@@ -53,12 +53,17 @@ const handleTip = async () => {
 }
 
 // 处理窗口显示和隐藏的逻辑
-const showWindow = async (event: Event<PhysicalPosition>) => {
+const showWindow = async (event: Event<any>) => {
   if (tipVisible.value) {
     const notifyWindow = await WebviewWindow.getCurrent()
     const outerSize = await notifyWindow?.outerSize()
     if (outerSize) {
-      await notifyWindow?.setPosition(new PhysicalPosition(event.payload.x - 140, event.payload.y - outerSize.height))
+      await notifyWindow?.setPosition(
+        new PhysicalPosition(
+          event.payload.position.Physical.x - 180,
+          event.payload.position.Physical.y - outerSize.height
+        )
+      )
       await notifyWindow?.show()
       await notifyWindow?.unminimize()
       await notifyWindow?.setFocus()
@@ -87,7 +92,7 @@ const handleMouseLeave = async () => {
 
 onMounted(async () => {
   // 监听托盘鼠标进入事件
-  await listen('notify_enter', async (event: Event<PhysicalPosition>) => {
+  await listen('notify_enter', async (event: Event<any>) => {
     if (tipVisible.value) {
       await showWindow(event)
     }
