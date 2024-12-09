@@ -53,7 +53,6 @@ const handleTip = async () => {
 }
 
 // 处理窗口显示和隐藏的逻辑
-// todo: const showWindow = async (position: { x: number; y: number }) => {
 const showWindow = async (event: Event<PhysicalPosition>) => {
   if (tipVisible.value) {
     const notifyWindow = await WebviewWindow.getCurrent()
@@ -88,11 +87,9 @@ const handleMouseLeave = async () => {
 
 onMounted(async () => {
   // 监听托盘鼠标进入事件
-  await listen('notify_enter', async (event) => {
+  await listen('notify_enter', async (event: Event<PhysicalPosition>) => {
     if (tipVisible.value) {
-      // await showWindow(event.payload as PhysicalPosition)
       await showWindow(event)
-      console.log('Tray position:', event.payload)
     }
   })
 

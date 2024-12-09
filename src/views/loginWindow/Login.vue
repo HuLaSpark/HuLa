@@ -308,7 +308,6 @@ const autoLogin = () => {
   // TODO 检查用户网络是否连接 (nyh -> 2024-03-16 12:06:59)
   loginText.value = '网络连接中'
   setTimeout(() => {
-    // TODO 退出账号后不知道为什么请求头的token被移除了导致checkToken请求401
     apis
       .checkToken()
       .then(async () => {
@@ -362,7 +361,7 @@ const enterKey = (e: KeyboardEvent) => {
 onMounted(async () => {
   await getCurrentWebviewWindow().show()
   // 自动登录
-  if (login.value.autoLogin && TOKEN) {
+  if (login.value.autoLogin && TOKEN.value) {
     autoLogin()
   } else {
     loginHistories.length > 0 && giveAccount(loginHistories[0])
