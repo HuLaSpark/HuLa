@@ -1,15 +1,15 @@
-import { useWsLoginStore, LoginStatus } from '@/stores/ws'
-import { useUserStore } from '@/stores/user'
-import { useChatStore } from '@/stores/chat'
-import { useGroupStore } from '@/stores/group'
-import { useGlobalStore } from '@/stores/global'
-import { WsResponseMessageType } from '@/utils/wsType'
-import type { LoginSuccessResType, LoginInitResType, WsReqMsgContentType, OnStatusChangeType } from '@/utils/wsType'
+import { WsResponseMessageType, WsTokenExpire } from '@/services/wsType.ts'
+import type {
+  LoginSuccessResType,
+  LoginInitResType,
+  WsReqMsgContentType,
+  OnStatusChangeType
+} from '@/services/wsType.ts'
 import type { MessageType, MarkItemType, RevokedMsgType } from '@/services/types'
-import { OnlineEnum, ChangeTypeEnum, RoomTypeEnum, WsResEnum, MittEnum } from '@/enums'
-import { computedToken } from '@/services/request'
+import { OnlineEnum, ChangeTypeEnum, WorkerMsgEnum, MittEnum } from '@/enums'
 import { worker } from '@/utils/InitWorker.ts'
-import Mitt from '@/utils/Bus.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
+import { emit } from '@tauri-apps/api/event'
 
 class WS {
   #tasks: WsReqMsgContentType[] = []
@@ -42,21 +42,22 @@ class WS {
   onWorkerMsg = async (e: MessageEvent<any>) => {
     const params: { type: string; value: unknown } = JSON.parse(e.data)
     switch (params.type) {
-      case 'message': {
+      case WorkerMsgEnum.MESSAGE: {
         await this.onMessage(params.value as string)
         break
       }
-      case 'open': {
+      case WorkerMsgEnum.OPEN: {
         this.#dealTasks()
         break
       }
-      case 'close':
-      case 'error': {
+      case WorkerMsgEnum.CLOSE:
+      case WorkerMsgEnum.ERROR: {
         this.#onClose()
         break
       }
-      case WsResEnum.WS_ERROR:
-        Mitt.emit(WsResEnum.WS_ERROR, params.value)
+      case WorkerMsgEnum.WS_ERROR:
+        console.log('无网络连接')
+        useMitt.emit(WsResponseMessageType.NO_INTERNET, params.value)
         localStorage.removeItem('wsLogin')
         break
     }
@@ -73,8 +74,9 @@ class WS {
     // this.#detectionLoginStatus()
 
     setTimeout(() => {
-      const userStore = useUserStore()
-      if (userStore.isSign) {
+      // const userStore = useUserStore()
+      // if (userStore.isSign)
+      {
         // 处理堆积的任务
         this.#tasks.forEach((task) => {
           this.send(task)
@@ -102,137 +104,88 @@ class WS {
   onMessage = async (value: string) => {
     // FIXME 可能需要 try catch,
     const params: { type: WsResponseMessageType; data: unknown } = JSON.parse(value)
-    const loginStore = useWsLoginStore()
-    const userStore = useUserStore()
-    const chatStore = useChatStore()
-    const groupStore = useGroupStore()
-    const globalStore = useGlobalStore()
     switch (params.type) {
       // 获取登录二维码
-      case WsResponseMessageType.LoginQrCode: {
-        const data = params.data as LoginInitResType
-        loginStore.loginQrCode = data.loginUrl
-        Mitt.emit(WsResEnum.QRCODE_LOGIN)
+      case WsResponseMessageType.LOGIN_QR_CODE: {
+        console.log('获取二维码')
+        useMitt.emit(WsResponseMessageType.LOGIN_QR_CODE, params.data as LoginInitResType)
         break
       }
       // 等待授权
-      case WsResponseMessageType.WaitingAuthorize: {
-        loginStore.loginStatus = LoginStatus.Waiting
+      case WsResponseMessageType.WAITING_AUTHORIZE: {
+        console.log('等待授权')
+        useMitt.emit(WsResponseMessageType.WAITING_AUTHORIZE)
         break
       }
       // 登录成功
-      case WsResponseMessageType.LoginSuccess: {
-        userStore.isSign = true
-        const { token, ...rest } = params.data as LoginSuccessResType
-        // FIXME 可以不需要赋值了，单独请求了接口。
-        userStore.userInfo = { ...userStore.userInfo, ...rest }
-        localStorage.setItem('USER_INFO', JSON.stringify(rest))
-        localStorage.setItem('TOKEN', token)
-        localStorage.removeItem('wsLogin')
-        // 更新一下请求里面的 token.
-        computedToken.clear()
-        computedToken.get()
-        // 获取用户详情
-        userStore.getUserDetailAction()
-        // 获取用户详情
-        await chatStore.getSessionList(true)
-        // 自己更新自己上线
-        groupStore.batchUpdateUserStatus([
-          {
-            activeStatus: OnlineEnum.ONLINE,
-            avatar: rest.avatar,
-            lastOptTime: Date.now(),
-            name: rest.name,
-            uid: rest.uid
-          }
-        ])
-        // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取
-        // await emojiStore.getEmojiList()
-        Mitt.emit(WsResEnum.LOGIN_SUCCESS, params.data)
+      case WsResponseMessageType.LOGIN_SUCCESS: {
+        console.log('登录成功')
+        useMitt.emit(WsResponseMessageType.LOGIN_SUCCESS, params.data as LoginSuccessResType)
         break
       }
       // 收到消息
-      case WsResponseMessageType.ReceiveMessage: {
-        await chatStore.pushMsg(params.data as MessageType)
-        Mitt.emit(MittEnum.SEND_MESSAGE, params.data)
+      case WsResponseMessageType.RECEIVE_MESSAGE: {
+        console.log('接收消息')
+        await emit('show_tip')
+        useMitt.emit(MittEnum.SEND_MESSAGE, params.data as MessageType)
+        break
+      }
+      // 用户上线
+      case WsResponseMessageType.ONLINE: {
+        console.log('上线')
+        useMitt.emit(WsResponseMessageType.ONLINE, params.data as OnStatusChangeType)
         break
       }
       // 用户下线
-      case WsResponseMessageType.OnOffLine: {
-        const data = params.data as OnStatusChangeType
-        groupStore.countInfo.onlineNum = data.onlineNum
-        // groupStore.countInfo.totalNum = data.totalNum
-        //groupStore.batchUpdateUserStatus(data.changeList)
-        groupStore.getGroupUserList(true)
-        console.log('收到用户下线通知', data)
+      case WsResponseMessageType.OFFLINE: {
+        console.log('下线')
+        useMitt.emit(WsResponseMessageType.OFFLINE)
         break
       }
       // 用户 token 过期
-      case WsResponseMessageType.TokenExpired: {
-        userStore.isSign = false
-        userStore.userInfo = {}
-        localStorage.removeItem('USER_INFO')
+      case WsResponseMessageType.TOKEN_EXPIRED: {
+        console.log('token过期')
         localStorage.removeItem('TOKEN')
-        loginStore.loginStatus = LoginStatus.Init
+        useMitt.emit(WsResponseMessageType.TOKEN_EXPIRED, params.data as WsTokenExpire)
         break
       }
       // 小黑子的发言在禁用后，要删除他的发言
-      case WsResponseMessageType.InValidUser: {
-        const data = params.data as { uid: number }
-        // 消息列表删掉小黑子发言
-        chatStore.filterUser(data.uid)
-        // 群成员列表删掉小黑子
-        groupStore.filterUser(data.uid)
+      case WsResponseMessageType.INVALID_USER: {
+        console.log('无效用户')
+        useMitt.emit(WsResponseMessageType.INVALID_USER, params.data as { uid: number })
         break
       }
       // 点赞、倒赞消息通知
-      case WsResponseMessageType.WSMsgMarkItem: {
-        const data = params.data as { markList: MarkItemType[] }
-        chatStore.updateMarkCount(data.markList)
+      case WsResponseMessageType.MSG_MARK_ITEM: {
+        console.log('点赞')
+        useMitt.emit(WsResponseMessageType.MSG_MARK_ITEM, params.data as { markList: MarkItemType[] })
         break
       }
       // 消息撤回通知
-      case WsResponseMessageType.WSMsgRecall: {
-        const { data } = params as { data: RevokedMsgType }
-        chatStore.updateRecallStatus(data)
+      case WsResponseMessageType.MSG_RECALL: {
+        console.log('撤回')
+        useMitt.emit(WsResponseMessageType.MSG_RECALL, params.data as { data: RevokedMsgType })
         break
       }
       // 新好友申请
-      case WsResponseMessageType.RequestNewFriend: {
-        const data = params.data as { uid: number; unreadCount: number }
-        globalStore.unReadMark.newFriendUnreadCount += data.unreadCount
-        // notify({
-        //   name: '新好友',
-        //   text: '您有一个新好友, 快来看看~',
-        //   onClick: () => {
-        //     Router.push('/contact')
-        //   }
-        // })
+      case WsResponseMessageType.REQUEST_NEW_FRIEND: {
+        console.log('好友申请')
+        useMitt.emit(WsResponseMessageType.REQUEST_NEW_FRIEND, params.data as { uid: number; unreadCount: number })
         break
       }
       // 新好友申请
-      case WsResponseMessageType.NewFriendSession: {
-        // changeType 1 加入群组，2： 移除群组
-        const data = params.data as {
-          roomId: number
-          uid: number
-          changeType: ChangeTypeEnum
-          activeStatus: OnlineEnum
-          lastOptTime: number
-        }
-        if (
-          data.roomId === globalStore.currentSession.roomId &&
-          globalStore.currentSession.type === RoomTypeEnum.GROUP
-        ) {
-          if (data.changeType === ChangeTypeEnum.REMOVE) {
-            // 移除群成员
-            groupStore.filterUser(data.uid)
-            // TODO 添加一条退出群聊的消息
-          } else {
-            // TODO 添加群成员
-            // TODO 添加一条入群的消息
+      case WsResponseMessageType.NEW_FRIEND_SESSION: {
+        console.log('新好友')
+        useMitt.emit(
+          WsResponseMessageType.NEW_FRIEND_SESSION,
+          params.data as {
+            roomId: number
+            uid: number
+            changeType: ChangeTypeEnum
+            activeStatus: OnlineEnum
+            lastOptTime: number
           }
-        }
+        )
         break
       }
       default: {

@@ -1,7 +1,7 @@
 import { useCommon } from '@/hooks/useCommon.ts'
 import { MittEnum, MsgEnum, PowerEnum } from '@/enums'
 import { MessageType, SessionItem } from '@/services/types.ts'
-import Mitt from '@/utils/Bus.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import apis from '@/services/apis.ts'
 import { useContactStore } from '@/stores/contacts'
@@ -10,7 +10,7 @@ import { useGlobalStore } from '@/stores/global.ts'
 import { isDiffNow } from '@/utils/ComputedTime.ts'
 
 export const useChatMain = (activeItem?: SessionItem) => {
-  const { removeTag, userUid } = useCommon()
+  const { removeTag, openMsgSession, userUid } = useCommon()
   const globalStore = useGlobalStore()
   const chatStore = useChatStore()
   const userStore = useUserStore()?.userInfo
@@ -73,7 +73,7 @@ export const useChatMain = (activeItem?: SessionItem) => {
       label: '回复',
       icon: 'reply',
       click: (item: any) => {
-        Mitt.emit(MittEnum.REPLY_MEG, item)
+        useMitt.emit(MittEnum.REPLY_MEG, item)
       }
     },
     {
@@ -85,7 +85,11 @@ export const useChatMain = (activeItem?: SessionItem) => {
           window.$message.error(res)
           return
         }
-        chatStore.updateRecallStatus({ msgId: item.message.id })
+        chatStore.updateRecallStatus({
+          recallUid: item.fromUser.uid,
+          msgId: item.message.id,
+          roomId: item.message.roomId
+        })
       },
       visible: (item: MessageType) => {
         // 判断当前选择的信息的发送时间是否超过2分钟
@@ -172,13 +176,16 @@ export const useChatMain = (activeItem?: SessionItem) => {
       label: '发送信息',
       icon: 'message-action',
       click: (item: any) => {
-        console.log(item)
-      }
+        openMsgSession(item.uid || item.fromUser.uid)
+      },
+      visible: (item: any) => checkFriendRelation(item.uid || item.fromUser.uid, 'friend')
     },
     {
       label: 'TA',
       icon: 'aite',
-      click: () => {},
+      click: (item: any) => {
+        useMitt.emit(MittEnum.AT, item.uid || item.fromUser.uid)
+      },
       visible: (item: any) => (item.uid ? item.uid !== userUid.value : item.fromUser.uid !== userUid.value)
     },
     {
@@ -187,7 +194,7 @@ export const useChatMain = (activeItem?: SessionItem) => {
       click: (item: any, type: string) => {
         // 如果是聊天框内的资料就使用的是消息的key，如果是群聊成员的资料就使用的是uid
         const uid = item.uid || item.message.id
-        Mitt.emit(`${MittEnum.INFO_POPOVER}-${type}`, { uid: uid, type: type })
+        useMitt.emit(`${MittEnum.INFO_POPOVER}-${type}`, { uid: uid, type: type })
       }
     },
     {
@@ -203,7 +210,7 @@ export const useChatMain = (activeItem?: SessionItem) => {
         globalStore.addFriendModalInfo.show = true
         globalStore.addFriendModalInfo.uid = item.uid || item.fromUser.uid
       },
-      visible: (item: any) => canAddFriend(item.uid || item.fromUser.uid)
+      visible: (item: any) => !checkFriendRelation(item.uid || item.fromUser.uid, 'all')
     }
   ])
   /** 举报选项 */
@@ -235,16 +242,16 @@ export const useChatMain = (activeItem?: SessionItem) => {
   ])
 
   /**
-   * 判断用户是否可以添加好友
-   * @param uid 用户 ID
-   * @returns {boolean} 如果可以添加好友返回 true，否则返回 false
+   * 检查用户关系
+   * @param uid 用户ID
+   * @param type 检查类型: 'friend' - 仅好友, 'all' - 好友或自己
    */
-  const canAddFriend = (uid: number): boolean => {
+  const checkFriendRelation = (uid: number, type: 'friend' | 'all' = 'all') => {
     const contactStore = useContactStore()
     const userStore = useUserStore()
     const myUid = userStore.userInfo.uid
-    // 好友和自己不显示添加好友菜单
-    return !(contactStore.contactsList.some((item) => item.uid === uid) || uid === myUid)
+    const isFriend = contactStore.contactsList.some((item) => item.uid === uid)
+    return type === 'friend' ? isFriend && uid !== myUid : isFriend || uid === myUid
   }
 
   /**

@@ -12,30 +12,45 @@ use tauri::{AppHandle, LogicalSize, Manager, ResourceId, Runtime, Webview};
 // 定义用户信息结构体
 #[derive(Debug, Clone, Serialize)]
 pub struct UserInfo {
-    user_id: String,
+    user_id: i64,
     username: String,
     token: String,
     portrait: String,
+    is_sign: bool
+}
+
+impl UserInfo {
+    pub fn new(user_id: i64, username: String, token: String, portrait: String, is_sign: bool) -> Self {
+        UserInfo{user_id, username, token, portrait, is_sign}
+    }
+    pub fn get_user_id(&self) -> Result<i64, ()> { Ok(self.user_id)}
+    pub fn get_username(&self) -> Result<&str, ()> { Ok(self.username.as_str())}
+    pub fn get_token(&self) -> Result<&str, ()> { Ok(self.token.as_str())}
+    pub fn get_portrait(&self) -> Result<&str, ()> { Ok(self.portrait.as_str())}
+    pub fn get_is_sign(&self) -> Result<bool, ()> { Ok(self.is_sign) }
+
 }
 
 // 全局变量
 lazy_static! {
-    static ref USER_INFO: Arc<RwLock<UserInfo>> = Arc::new(RwLock::new(UserInfo {
-        user_id: String::new(),
-        username: String::new(),
-        token: String::new(),
-        portrait: String::new(),
-    }));
+    static ref USER_INFO: Arc<RwLock<UserInfo>> = Arc::new(RwLock::new(UserInfo::new(
+        -1,
+        String::new(),
+        String::new(),
+        String::new(),
+        false
+    )));
 }
 
 // 保存用户信息的方法
 #[tauri::command]
-pub fn save_user_info(userid: &str, username: &str, token: &str, portrait: &str) -> i32 {
+pub fn save_user_info(user_id: i64, username: &str, token: &str, portrait: &str, is_sign: bool) -> i32 {
     let mut user_info = USER_INFO.write().unwrap();
-    user_info.user_id = userid.to_string();
+    user_info.user_id = user_id;
     user_info.username = username.to_string();
     user_info.token = token.to_string();
     user_info.portrait = portrait.to_string();
+    user_info.is_sign = is_sign;
     0
 }
 
@@ -74,7 +89,7 @@ pub fn screenshot(x: &str, y: &str, width: &str, height: &str) -> String {
 }
 
 #[tauri::command]
-pub fn audio(filename: &str, handle: tauri::AppHandle) {
+pub fn audio(filename: &str, handle: AppHandle) {
     use rodio::{Decoder, Source};
     use std::fs::File;
     use std::io::BufReader;
@@ -94,7 +109,7 @@ pub fn audio(filename: &str, handle: tauri::AppHandle) {
 }
 
 #[tauri::command]
-pub fn set_height(height: u32, handle: tauri::AppHandle) {
+pub fn set_height(height: u32, handle: AppHandle) {
     let home_window = handle.get_webview_window("home").unwrap();
     let sf = home_window.scale_factor().unwrap();
     let out_size = home_window.outer_size().unwrap();
@@ -105,3 +120,4 @@ pub fn set_height(height: u32, handle: tauri::AppHandle) {
         ))
         .unwrap();
 }
+

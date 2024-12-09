@@ -40,9 +40,9 @@
           align="center"
           class="ait-item">
           <n-avatar
+            v-if="item.avatar"
             lazy
             round
-            :color="'#fff'"
             :size="22"
             :src="item.avatar"
             fallback-src="/logo.png"
@@ -50,6 +50,21 @@
             :intersection-observer-options="{
               root: '#image-chat-msgInput'
             }" />
+
+          <n-avatar
+            v-else
+            lazy
+            round
+            :color="'#909090'"
+            :size="22"
+            class="text-10px"
+            fallback-src="/logo.png"
+            :render-placeholder="() => null"
+            :intersection-observer-options="{
+              root: '#image-chat-msgInput'
+            }">
+            {{ item.name.slice(0, 1) }}
+          </n-avatar>
           <span> {{ item.name }}</span>
         </n-flex>
       </template>
@@ -91,15 +106,21 @@
                     <span v-if="chatKey !== 'Enter'">
                       {{ type() === 'macos' ? MacOsKeyEnum['⌘'] : WinKeyEnum.CTRL }}
                     </span>
-                    <svg class="size-12px"><use href="#Enter"></use></svg>
+                    <svg class="size-12px">
+                      <use href="#Enter"></use>
+                    </svg>
                     发送 /
                     <n-flex v-if="chatKey !== 'Enter'" align="center" :size="6">
-                      <svg class="size-12px"><use href="#Enter"></use></svg>
+                      <svg class="size-12px">
+                        <use href="#Enter"></use>
+                      </svg>
                       <p>或</p>
                     </n-flex>
                     <n-flex align="center" :size="0">
                       {{ type() === 'macos' ? MacOsKeyEnum['⇧'] : WinKeyEnum.SHIFT }}
-                      <svg class="size-12px"><use href="#Enter"></use></svg>
+                      <svg class="size-12px">
+                        <use href="#Enter"></use>
+                      </svg>
                     </n-flex>
                     换行
                   </n-flex>
@@ -115,7 +136,6 @@
 <script setup lang="ts">
 import { lightTheme, darkTheme, VirtualListInst } from 'naive-ui'
 import { MacOsKeyEnum, MittEnum, RoomTypeEnum, ThemeEnum, WinKeyEnum } from '@/enums'
-import Mitt from '@/utils/Bus.ts'
 import { CacheUserItem, MockItem } from '@/services/types.ts'
 import { emit, listen } from '@tauri-apps/api/event'
 import { useSettingStore } from '@/stores/setting.ts'
@@ -124,6 +144,8 @@ import { useMsgInput } from '@/hooks/useMsgInput.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { onKeyStroke } from '@vueuse/core'
 import { type } from '@tauri-apps/plugin-os'
+import { useUserInfo } from '@/hooks/useCached.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
@@ -168,7 +190,6 @@ const handleAitKeyChange = (direction: 1 | -1) => {
   // 获取新选中项在列表中的索引，并滚动到该位置(使用key来进行定位)
   virtualListInst.value?.scrollTo({ index: newIndex })
 }
-
 const closeMenu = (event: any) => {
   /** 需要判断点击如果不是.context-menu类的元素的时候，menu才会关闭 */
   if (!event.target.matches('#message-input, #message-input *')) {
@@ -199,8 +220,12 @@ onMounted(() => {
   })
   // TODO 应该把打开的窗口的item给存到set中，需要修改输入框和消息展示的搭配，输入框和消息展示模块应该是一体并且每个用户独立的，这样当我点击这个用户框输入消息的时候就可以暂存信息了并且可以判断每个消息框是什么类型是群聊还是单聊，不然会导致比如@框可以在单聊框中出现 (nyh -> 2024-04-09 01:03:59)
   /** 当不是独立窗口的时候也就是组件与组件之间进行通信然后监听信息对话的变化 */
-  Mitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
+
+  useMitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
     activeItem.value = event.item
+  })
+  useMitt.on(MittEnum.AT, (event: any) => {
+    handleAit(useUserInfo(event).value as any)
   })
   /** 这里使用的是窗口之间的通信来监听信息对话的变化 */
   listen('aloneData', (event: any) => {

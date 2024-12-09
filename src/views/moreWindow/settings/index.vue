@@ -12,7 +12,7 @@
             <Transition>
               <div
                 v-if="item.versionStatus && activeItem !== item.url"
-                class="bg-#f6dfe3ff p-[2px_6px] rounded-6px text-(12px #ce304f)">
+                class="bg-[--danger-bg] p-[2px_6px] rounded-6px text-(12px [--danger-text])">
                 {{ item.versionStatus }}
               </div>
             </Transition>

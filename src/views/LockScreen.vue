@@ -47,8 +47,8 @@
         :size="16"
         class="h-full backdrop-blur-md rounded-8px">
         <n-flex vertical align="center" justify="center" :size="30" class="mt--75px">
-          <n-avatar round style="border: 2px solid #f1f1f1" :size="120" :src="login.accountInfo.avatar" />
-          <p class="text-(24px #f1f1f1) font-500">{{ login.accountInfo.name }}</p>
+          <n-avatar round style="border: 2px solid #f1f1f1" :size="120" :src="userStore.userInfo.avatar" />
+          <p class="text-(24px #f1f1f1) font-500">{{ userStore.userInfo.name }}</p>
 
           <!-- 密码输入框 -->
           <n-config-provider :theme="lightTheme">
@@ -117,10 +117,12 @@ import { onKeyStroke } from '@vueuse/core'
 import { InputInst, lightTheme } from 'naive-ui'
 import { getWeekday } from '@/utils/Day.ts'
 import dayjs from 'dayjs'
+import { useUserStore } from '@/stores/user.ts'
 
 const appWindow = WebviewWindow.getCurrent()
 const settingStore = useSettingStore()
-const { lockScreen, login } = storeToRefs(settingStore)
+const userStore = useUserStore()
+const { lockScreen } = storeToRefs(settingStore)
 const { logout } = useLogin()
 /** 解锁密码 */
 const password = ref('')

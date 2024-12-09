@@ -1,16 +1,24 @@
-import { LimitEnum, MsgEnum } from '@/enums'
+import { LimitEnum, MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import { Ref } from 'vue'
 import { createFileOrVideoDom } from '@/utils/CreateDom.ts'
-import { RegExp } from '@/utils/RegExp.ts'
-import { useSettingStore } from '@/stores/setting.ts'
 import GraphemeSplitter from 'grapheme-splitter'
+import router from '@/router'
+import apis from '@/services/apis.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
+import { useGlobalStore } from '@/stores/global.ts'
+import { useChatStore } from '@/stores/chat.ts'
+import { useMessage } from '@/hooks/useMessage.ts'
+import { useUserStore } from '@/stores/user.ts'
 
 /** 常用工具类 */
 export const useCommon = () => {
-  const settingStore = useSettingStore()
-  const { login } = storeToRefs(settingStore)
+  const route = useRoute()
+  const globalStore = useGlobalStore()
+  const chatStore = useChatStore()
+  const userStore = useUserStore()
+  const { handleMsgClick } = useMessage()
   /** 当前登录用户的uid */
-  const userUid = computed(() => login.value.accountInfo.uid)
+  const userUid = computed(() => userStore.userInfo.uid)
   /** 回复消息 */
   const reply = ref({
     accountName: '',
@@ -135,7 +143,7 @@ export const useCommon = () => {
       divNode.id = 'replyDiv' // 设置id为replyDiv
       divNode.contentEditable = 'false' // 设置为不可编辑
       divNode.style.cssText = `
-        background-color: rgba(204, 204, 204, 0.4);
+        background-color: var(--reply-bg);
         font-size: 12px;
         padding: 4px 6px;
         width: fit-content;
@@ -200,20 +208,11 @@ export const useCommon = () => {
           // 去掉content中的标签
           content = removeTag(content)
         }
-        const { hyperlinkRegex, foundHyperlinks } = RegExp.isHyperlink(content)
-        // 判断是否包含超链接
-        if (foundHyperlinks && foundHyperlinks.length > 0) {
-          content.replace(hyperlinkRegex, (match: string) => {
-            reply.value.content = match.startsWith('www.') ? 'https://' + match : match
-          })
-          // 去掉content中的标签
-          content = removeTag(content)
-        }
         // 把正文放到span标签中，并设置span标签的样式
         contentBox = document.createElement('span')
         contentBox.style.cssText = `
         font-size: 12px;
-        color: #333;
+        color: var(--text-color);
         cursor: default;
         width: fit-content;
         max-width: 350px;
@@ -233,6 +232,7 @@ export const useCommon = () => {
         color: #999;
         cursor: pointer;
         margin-left: 10px;
+        flex-shrink: 0;
       `
       closeBtn.textContent = '关闭'
       closeBtn.addEventListener('click', () => {
@@ -371,6 +371,23 @@ export const useCommon = () => {
   /** 去除字符串中的元素标记 */
   const removeTag = (fragment: any) => new DOMParser().parseFromString(fragment, 'text/html').body.textContent || ''
 
+  /**
+   * 打开消息会话(右键发送消息功能)
+   * @param uid 用户id
+   */
+  const openMsgSession = (uid: number) => {
+    if (route.name !== '/message') {
+      router.push('/message')
+    }
+    apis.sessionDetailWithFriends({ uid: uid }).then((res) => {
+      globalStore.currentSession.roomId = res.roomId
+      globalStore.currentSession.type = RoomTypeEnum.SINGLE
+      chatStore.updateSessionLastActiveTime(res.roomId, res)
+      handleMsgClick(res as any)
+    })
+    useMitt.emit(MittEnum.TO_SEND_MSG, { url: 'message' })
+  }
+
   return {
     imgPaste,
     getEditorRange,
@@ -381,6 +398,7 @@ export const useCommon = () => {
     removeTag,
     FileOrVideoPaste,
     countGraphemes,
+    openMsgSession,
     reply,
     userUid
   }

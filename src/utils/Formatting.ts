@@ -1,3 +1,5 @@
+import { MsgEnum } from '@/enums'
+
 /**
  * 文件大小格式化
  */
@@ -85,6 +87,26 @@ export const getFileSuffix = (fileName: string): string => {
   if (!suffix) return 'other'
 
   return fileSuffixMap[suffix] || 'other'
+}
+
+// 生成消息体
+export const generateBody = (fileInfo: any, msgType: MsgEnum, isMock?: boolean) => {
+  const { size, width, height, downloadUrl, name, second, tempUrl, thumbWidth, thumbHeight, thumbUrl, thumbSize } =
+    fileInfo
+  const url = isMock ? tempUrl : downloadUrl
+  const baseBody = { size, url }
+  let body = {}
+
+  if (msgType === MsgEnum.IMAGE) {
+    body = { ...baseBody, width, height }
+  } else if (msgType === MsgEnum.VOICE) {
+    body = { ...baseBody, second }
+  } else if (msgType === MsgEnum.VIDEO) {
+    body = { ...baseBody, thumbWidth, thumbHeight, thumbUrl, thumbSize }
+  } else if (msgType === MsgEnum.FILE) {
+    body = { ...baseBody, fileName: name, url: downloadUrl }
+  }
+  return { body, type: msgType }
 }
 
 /**

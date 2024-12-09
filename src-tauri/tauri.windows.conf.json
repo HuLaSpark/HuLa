@@ -1,6 +1,6 @@
 {
   "productName": "HuLa",
-  "version": "2.5.5",
+  "version": "2.5.6",
   "identifier": "com.hula.pc",
   "build": {
     "beforeDevCommand": "pnpm dev",
@@ -9,9 +9,14 @@
     "devUrl": "http://127.0.0.1:6130"
   },
   "bundle": {
-    "resources": ["tray"],
+    "resources": [
+      "tray"
+    ],
     "active": true,
-    "targets": ["msi", "nsis"],
+    "targets": [
+      "msi",
+      "nsis"
+    ],
     "icon": [
       "icons/windows/32x32.png",
       "icons/windows/128x128.png",
@@ -30,7 +35,11 @@
       "icons/windows/Square310x310Logo.png",
       "icons/windows/StoreLogo.png"
     ],
-    "windows": {}
+    "windows": {
+      "wix": {
+        "language": "zh-CN"
+      }
+    }
   },
   "app": {
     "withGlobalTauri": true,
@@ -57,6 +66,18 @@
         "visible": false,
         "width": 130,
         "height": 44,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "decorations": false
+      },
+      {
+        "label": "notify",
+        "url": "/notify",
+        "resizable": false,
+        "center": false,
+        "visible": false,
+        "width": 280,
+        "height": 140,
         "alwaysOnTop": true,
         "skipTaskbar": true,
         "decorations": false

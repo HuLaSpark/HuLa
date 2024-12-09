@@ -16,7 +16,9 @@
         align="center"
         :size="10"
         class="p-6px rounded-4px hover:bg-[--tray-hover]">
-        <svg class="size-14px"><use href="#more"></use></svg>
+        <svg class="size-14px">
+          <use href="#more"></use>
+        </svg>
         <span>更多状态</span>
       </n-flex>
 
@@ -54,15 +56,24 @@ import { exit } from '@tauri-apps/plugin-process'
 import { statusItem } from '@/views/onlineStatusWindow/config.ts'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { listen } from '@tauri-apps/api/event'
+import { Event, listen } from '@tauri-apps/api/event'
 import { useSettingStore } from '@/stores/setting.ts'
+import { useGlobalStore } from '@/stores/global.ts'
+import { TrayIcon } from '@tauri-apps/api/tray'
+import { PhysicalPosition } from '@tauri-apps/api/dpi'
+import { type } from '@tauri-apps/plugin-os'
 
 const appWindow = WebviewWindow.getCurrent()
 const { checkWinExist, createWebviewWindow, resizeWindow } = useWindow()
 const OLStatusStore = onlineStatus()
 const settingStore = useSettingStore()
+const globalStore = useGlobalStore()
 const { lockScreen } = storeToRefs(settingStore)
+const { tipVisible } = storeToRefs(globalStore)
 const isLoginWin = ref(true)
+// 状态栏图标是否显示
+const iconVisible = ref(false)
+let interval: any
 
 const division = () => {
   return <div class={'h-1px bg-[--line-color] w-full'}></div>
@@ -82,6 +93,29 @@ const toggleStatus = (url: string, title: string) => {
   appWindow.hide()
 }
 
+watchEffect(async () => {
+  if (type() === 'windows') {
+    if (tipVisible.value && !interval) {
+      interval = setInterval(async () => {
+        const tray = await TrayIcon.getById('tray')
+        tray?.setIcon(iconVisible.value ? null : 'tray/icon.png')
+        iconVisible.value = !iconVisible.value
+      }, 500)
+    } else {
+      const tray = await TrayIcon.getById('tray')
+      tray?.setIcon('tray/icon.png')
+      clearInterval(interval)
+      interval = null
+    }
+  }
+})
+
+onUnmounted(async () => {
+  if (interval) {
+    clearInterval(interval)
+  }
+})
+
 onMounted(async () => {
   await listen('login_success', () => {
     isLoginWin.value = false
@@ -90,6 +124,26 @@ onMounted(async () => {
   await listen('logout_success', () => {
     isLoginWin.value = true
     resizeWindow('tray', 130, 44)
+  })
+  await listen('show_tip', async () => {
+    globalStore.setTipVisible(true)
+  })
+  await listen('show_notify', async (event: Event<PhysicalPosition>) => {
+    if (tipVisible.value) {
+      const position = event.payload
+      // 显示消息提示
+      const notifyWindow = await WebviewWindow.getByLabel('notify')
+      const outerSize = await notifyWindow?.outerSize()
+      const sf = await notifyWindow?.scaleFactor()
+      if (outerSize && sf) {
+        await notifyWindow?.setPosition(new PhysicalPosition(position.x - 10, position.y - outerSize.height + 20))
+        await notifyWindow?.setAlwaysOnTop(true)
+        await notifyWindow?.show()
+        await notifyWindow?.unminimize()
+        await notifyWindow?.setFocus()
+        await notifyWindow?.setAlwaysOnTop(true)
+      }
+    }
   })
   // 暂停图标闪烁
   await listen('stop', async () => {

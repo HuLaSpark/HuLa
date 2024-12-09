@@ -13,9 +13,9 @@
       justify="center"
       :size="20"
       class="login-box relative h-160px w-full select-none">
-      <n-avatar :size="120" round bordered :src="login.accountInfo.avatar" />
+      <n-avatar :size="120" round bordered :src="userStore.userInfo.avatar" />
       <n-flex vertical justify="center" :size="20">
-        <p class="text-(24px [--chat-text-color]) font-500">{{ login.accountInfo.name }}</p>
+        <p class="text-(24px [--chat-text-color]) font-500">{{ userStore.userInfo.name }}</p>
 
         <n-flex align="center" justify="space-between" :size="30" class="mt-5px">
           <template v-for="item in titleList" :key="item.label">
@@ -136,13 +136,12 @@
 import { dynamicList, dynamicCommentList } from '@/mock'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useWindowState } from '@/hooks/useWindowState.ts'
-import { useSettingStore } from '@/stores/setting.ts'
 import { type } from '@tauri-apps/plugin-os'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { useUserStore } from '@/stores/user.ts'
 
 useWindowState(WebviewWindow.getCurrent().label)
-const settingStore = useSettingStore()
-const { login } = storeToRefs(settingStore)
+const userStore = useUserStore()
 const infoTip = ref({
   value: dynamicCommentList.length,
   show: true,

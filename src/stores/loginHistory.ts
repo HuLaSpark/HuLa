@@ -1,55 +1,32 @@
 import { defineStore } from 'pinia'
 import { StoresEnum } from '@/enums'
+import { UserInfoType } from '@/services/types.ts'
 
 export const useLoginHistoriesStore = defineStore(
   StoresEnum.LOGIN_HISTORY,
   () => {
-    const loginHistories = ref<STO.Setting['login']['accountInfo'][]>([
-      {
-        account: 'admin',
-        password: 'admin',
-        name: '超级GG帮',
-        avatar: 'https://picsum.photos/140?1',
-        uid: 123456,
-        token: 'test'
-      },
-      {
-        account: 'hula1',
-        password: 'hula1',
-        name: '二狗子',
-        avatar: 'https://picsum.photos/140?2',
-        uid: 123456,
-        token: 'test'
-      },
-      {
-        account: 'hula2',
-        password: 'hula2',
-        name: '李山离',
-        avatar: 'https://picsum.photos/140?3',
-        uid: 123456,
-        token: 'test'
-      },
-      {
-        account: 'hula3',
-        password: 'hula3',
-        name: '牛什么呢',
-        avatar: 'https://picsum.photos/140?4',
-        uid: 123456,
-        token: 'test'
-      }
-    ])
+    const loginHistories = ref<UserInfoType[]>([])
 
-    const addLoginHistory = (loginHistory: STO.Setting['login']['accountInfo']) => {
-      const index = loginHistories.value.findIndex((i) => i.account === loginHistory.account)
+    const getLoginHistoryIndex = (loginHistory: UserInfoType) => {
+      return loginHistories.value.findIndex((i) => i.account === loginHistory.account)
+    }
+
+    const addLoginHistory = (loginHistory: UserInfoType) => {
+      const index = getLoginHistoryIndex(loginHistory)
       index === -1 && loginHistories.value.push(loginHistory)
     }
 
-    const removeLoginHistory = (loginHistory: STO.Setting['login']['accountInfo']) => {
-      const index = loginHistories.value.findIndex((i) => i.account === loginHistory.account)
+    const updateLoginHistory = (loginHistory: UserInfoType) => {
+      const index = getLoginHistoryIndex(loginHistory)
+      index !== -1 && (loginHistories.value[index] = loginHistory)
+    }
+
+    const removeLoginHistory = (loginHistory: UserInfoType) => {
+      const index = getLoginHistoryIndex(loginHistory)
       index !== -1 && loginHistories.value.splice(index, 1)
     }
 
-    return { loginHistories, addLoginHistory, removeLoginHistory }
+    return { loginHistories, addLoginHistory, updateLoginHistory, removeLoginHistory }
   },
   {
     share: {

@@ -1,7 +1,4 @@
-use tauri::{
-    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    Manager, PhysicalPosition, Runtime,
-};
+use tauri::{tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent}, Emitter, Manager, PhysicalPosition, Runtime};
 
 pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
     let _ = TrayIconBuilder::with_id("tray")
@@ -17,11 +14,12 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
             } => match button {
                 MouseButton::Left => {
                     let windows = tray.app_handle().webview_windows();
-                    for (key, value) in windows {
-                        if key == "login" || key == "home" {
-                            value.show().unwrap();
-                            value.unminimize().unwrap();
-                            value.set_focus().unwrap();
+                    for (name, window) in windows {
+                        if name == "login" || name == "home" {
+                            window.show().unwrap();
+                            window.unminimize().unwrap();
+                            window.set_focus().unwrap();
+                            break;
                         }
                     }
                 }
@@ -41,8 +39,23 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
                     }
                 }
                 _ => {}
-            },
+            }
+            TrayIconEvent::Enter {
+                id: _,
+                position,
+                rect: _} => {
+                #[cfg(target_os = "windows")]
+                tray.app_handle().emit("notify_enter", &tray.rect().unwrap()).unwrap();
+            }
+            TrayIconEvent::Leave {
+                id: _,
+                position: _,
+                rect: _} => {
+                #[cfg(target_os = "windows")]
+                tray.app_handle().emit("notify_leave", ()).unwrap();
+            }
             _ => {}
+
         })
         .build(app);
     Ok(())

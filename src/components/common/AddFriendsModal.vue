@@ -28,7 +28,11 @@
 
       <n-flex vertical justify="center" :size="20" class="p-20px">
         <n-flex align="center" justify="center" :size="20">
-          <n-avatar round size="large" :src="userInfo.avatar" />
+          <n-avatar v-if="userInfo.avatar" round size="large" :src="userInfo.avatar" />
+          <n-avatar v-else round size="large" :src="userInfo.avatar">
+            {{ userInfo.name?.slice(0, 1) }}
+          </n-avatar>
+
           <n-flex vertical :size="10">
             <p class="text-[--text-color]">{{ userInfo.name }}</p>
             <p class="text-(12px [--text-color])">uid: {{ userInfo.uid }}</p>
@@ -59,8 +63,10 @@ import { type } from '@tauri-apps/plugin-os'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import apis from '@/services/apis.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
+import { useUserStore } from '@/stores/user.ts'
 
 const globalStore = useGlobalStore()
+const userStore = useUserStore()
 const { countGraphemes } = useCommon()
 const userInfo = ref(useUserInfo(globalStore.addFriendModalInfo.uid).value)
 const requestMsg = ref()
@@ -83,6 +89,10 @@ watch(globalStore.addFriendModalInfo, (val) => {
   if (val.show) {
     userInfo.value = useUserInfo(val.uid).value
   }
+})
+
+onMounted(() => {
+  requestMsg.value = `我是 ${userStore.userInfo.name}`
 })
 </script>
 

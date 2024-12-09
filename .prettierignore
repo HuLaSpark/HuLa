@@ -5,4 +5,11 @@
 **/*.svg
 **/*.sh
 /public/*
+.idea/**
+.vscode/**
+src-tauri/capabilities/**
+src-tauri/gen/**
+CHANGELOG.md
 auto-imports.d.ts
+.gitee/**
+.github/**

@@ -5,7 +5,7 @@
     class="relative z-30 flex-y-center border-b-(1px solid [--right-chat-footer-line-color]) justify-between p-[6px_20px_12px] select-none">
     <n-flex align="center">
       <span class="color-[--text-color]">{{ activeItem.name }}</span>
-      <svg v-if="activeItem.hot_Flag === IsAllUserEnum.Yes" class="size-20px color-#13987f select-none outline-none">
+      <svg v-if="activeItem.hotFlag === IsAllUserEnum.Yes" class="size-20px color-#13987f select-none outline-none">
         <use href="#auth"></use>
       </svg>
     </n-flex>
@@ -64,34 +64,92 @@
     <!-- 侧边选项栏 -->
     <Transition name="sidebar">
       <div v-if="sidebarShow" style="border: 1px solid rgba(90, 90, 90, 0.1)" class="sidebar">
-        <div class="box-item flex-col-y-center">
-          <div class="flex-between-center">
-            <p>设为置顶</p>
-            <n-switch size="small" />
+        <!-- 单聊侧边栏选项 -->
+        <template v-if="!chatStore.isGroup">
+          <div class="box-item flex-col-y-center">
+            <div class="flex-between-center">
+              <p>设为置顶</p>
+              <n-switch size="small" />
+            </div>
+            <div class="h-1px bg-[--setting-item-line] m-[10px_0]"></div>
+            <div class="flex-between-center">
+              <p>消息免打扰</p>
+              <n-switch size="small" />
+            </div>
           </div>
-          <div class="h-1px bg-[--setting-item-line] m-[10px_0]"></div>
-          <div class="flex-between-center">
-            <p>消息免打扰</p>
-            <n-switch size="small" />
+
+          <div class="box-item">
+            <div class="flex-between-center">
+              <p>屏蔽此人</p>
+              <n-switch size="small" />
+            </div>
           </div>
-        </div>
 
-        <div class="box-item">
-          <div class="flex-between-center">
-            <p>屏蔽此人</p>
-            <n-switch size="small" />
+          <div class="box-item cursor-pointer" @click="handleDelete(RoomActEnum.DELETE_RECORD)">
+            <p>删除聊天记录</p>
           </div>
-        </div>
 
-        <div class="box-item cursor-pointer" @click="handleDelete('chat-history')">
-          <p>删除聊天记录</p>
-        </div>
+          <div class="box-item flex-x-center cursor-pointer" @click="handleDelete(RoomActEnum.DELETE_FRIEND)">
+            <p class="color-#d03553">删除好友</p>
+          </div>
 
-        <div class="box-item flex-x-center cursor-pointer" @click="handleDelete('friends')">
-          <p class="color-#d03553">删除好友</p>
-        </div>
+          <p class="m-[0_auto] text-(12px #13987f) mt-20px cursor-pointer">被骚扰了?&nbsp;&nbsp;举报该用户</p>
+        </template>
 
-        <p class="m-[0_auto] text-(12px #13987f) mt-20px cursor-pointer">被骚扰了?&nbsp;&nbsp;举报该用户</p>
+        <!-- 群聊侧边栏选项 -->
+        <template v-else>
+          <div class="box-item cursor-default">
+            <n-flex align="center" :size="10">
+              <n-avatar round :size="40" :src="activeItem.avatar" />
+
+              <p class="text-(14px --text-color)">{{ activeItem.name }}</p>
+
+              <n-popover trigger="hover" v-if="activeItem.hotFlag === IsAllUserEnum.Yes">
+                <template #trigger>
+                  <svg class="size-20px select-none outline-none cursor-pointer color-#13987f">
+                    <use href="#auth"></use>
+                  </svg>
+                </template>
+                <span>官方群聊认证</span>
+              </n-popover>
+            </n-flex>
+          </div>
+
+          <!-- 群聊成员列表 -->
+          <div class="box-item cursor-default">
+            <n-flex vertical justify="center" :size="16">
+              <p class="text-(14px --text-color)">群成员</p>
+
+              <n-flex align="center" justify="center" :size="20">
+                <template v-for="(item, _index) in userList" :key="_index">
+                  <n-flex v-if="item.avatar" vertical justify="center" align="center" :size="10">
+                    <n-avatar round :size="30" :src="item.avatar" />
+
+                    <p class="text-(10px --text-color center) w-30px truncate">{{ item.name }}</p>
+                  </n-flex>
+
+                  <n-flex v-else vertical justify="center" align="center" :size="10">
+                    <n-avatar class="text-10px" round :size="30">
+                      {{ item.name.slice(0, 1) }}
+                    </n-avatar>
+
+                    <p class="text-(10px --text-color center) w-30px truncate">{{ item.name }}</p>
+                  </n-flex>
+                </template>
+              </n-flex>
+            </n-flex>
+          </div>
+
+          <div class="box-item cursor-pointer" @click="handleDelete(RoomActEnum.DELETE_RECORD)">
+            <p>删除聊天记录</p>
+          </div>
+
+          <div class="box-item flex-x-center cursor-pointer" @click="handleDelete(RoomActEnum.EXIT_GROUP)">
+            <p class="color-#d03553">退出群聊</p>
+          </div>
+
+          <p class="m-[0_auto] text-(12px #13987f) mt-20px cursor-pointer">被骚扰了?&nbsp;&nbsp;举报该群</p>
+        </template>
       </div>
     </Transition>
   </main>
@@ -113,10 +171,6 @@
       </svg>
       <div class="flex flex-col gap-30px p-[22px_10px_10px_22px] select-none">
         <span class="text-14px">{{ tips }}</span>
-        <label v-if="tipsOptions" class="text-14px flex gap-6px lh-16px">
-          <n-checkbox v-model:checked="masking" />
-          <span>同时屏蔽，不再接收此人消息</span>
-        </label>
 
         <n-flex justify="end">
           <n-button @click="handleConfirm" class="w-78px" color="#13987f">确定</n-button>
@@ -128,21 +182,43 @@
 </template>
 
 <script setup lang="ts">
-import { IsAllUserEnum, SessionItem } from '@/services/types.ts'
+import { IsAllUserEnum, SessionItem, UserItem } from '@/services/types.ts'
 import { useDisplayMedia } from '@vueuse/core'
-import { EventEnum } from '@/enums'
+import { EventEnum, RoomActEnum } from '@/enums'
 import { emit, listen } from '@tauri-apps/api/event'
 import { type } from '@tauri-apps/plugin-os'
+import { useChatStore } from '@/stores/chat.ts'
+import { useGroupStore } from '@/stores/group.ts'
+import { useUserInfo } from '@/hooks/useCached.ts'
+import { useContactStore } from '@/stores/contacts.ts'
 
 // 使用useDisplayMedia获取屏幕共享的媒体流
 const { stream, start, stop } = useDisplayMedia()
+const chatStore = useChatStore()
+const groupStore = useGroupStore()
+const contactStore = useContactStore()
+const groupUserList = computed(() => groupStore.userList)
+const userList = computed(() => {
+  return groupUserList.value
+    .map((item: UserItem) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { uid, ...userInfo } = item // 排除uid，获取剩余内容
+      return {
+        ...userInfo,
+        ...useUserInfo(item.uid).value,
+        uid
+      }
+    })
+    .sort((a, b) => {
+      return a.uid - b.uid // 根据 uid 升序排序
+    })
+    .slice(0, 10)
+})
 /** 提醒框标题 */
 const tips = ref()
-/** 提醒框的选项 */
-const tipsOptions = ref(false)
+const optionsType = ref<RoomActEnum>()
 const modalShow = ref(false)
 const sidebarShow = ref(false)
-const masking = ref(false)
 const { activeItem } = defineProps<{
   activeItem: SessionItem
 }>()
@@ -179,18 +255,25 @@ const handleMedia = () => {
 }
 
 /** 删除操作二次提醒 */
-const handleDelete = (label: string) => {
+const handleDelete = (label: RoomActEnum) => {
   modalShow.value = true
-  if (label === 'friends') {
+  if (label === RoomActEnum.DELETE_FRIEND) {
     tips.value = '确定删除该好友吗?'
-    tipsOptions.value = true
+    optionsType.value = RoomActEnum.DELETE_FRIEND
+  } else if (label === RoomActEnum.EXIT_GROUP) {
+    tips.value = '确定退出该群聊?'
   } else {
-    tipsOptions.value = false
     tips.value = '确定后将删除本地聊天记录'
   }
 }
 
-const handleConfirm = () => {}
+const handleConfirm = () => {
+  if (optionsType.value === RoomActEnum.DELETE_FRIEND) {
+    // TODO: 这里需要获取到用户的uid
+    contactStore.onDeleteContact(1111)
+  }
+  modalShow.value = false
+}
 
 const handleClick = () => {
   console.log(111)

@@ -46,17 +46,24 @@
 import router from '@/router'
 import { delay } from 'lodash-es'
 import { lightTheme } from 'naive-ui'
-import { WsResEnum } from '@/enums'
-import Mitt from '@/utils/Bus.ts'
-import { useSettingStore } from '@/stores/setting.ts'
+import { OnlineEnum } from '@/enums'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { LoginStatus, useWsLoginStore } from '@/stores/ws.ts'
 import wsIns from '@/services/webSocket.ts'
-import { WsRequestMsgType } from '@/utils/wsType.ts'
+import {
+  type LoginInitResType,
+  type LoginSuccessResType,
+  WsRequestMsgType,
+  WsResponseMessageType
+} from '@/services/wsType.ts'
+import { useUserStore } from '@/stores/user'
+import { useGroupStore } from '@/stores/group'
 
-const settingStore = useSettingStore()
 const loginStore = useWsLoginStore()
+const userStore = useUserStore()
+const groupStore = useGroupStore()
 /** 获取登录二维码 */
 const loginQrCode = computed(() => loginStore.loginQrCode)
 /** 登录状态 */
@@ -88,17 +95,11 @@ const handleQRCodeLogin = () => {
 }
 
 /** 处理登录成功 */
-const handleLoginSuccess = async (e: any) => {
+const handleLoginSuccess = async () => {
   scanStatus.value.show = true
   loadText.value = '登录中...'
   delay(async () => {
     await createWebviewWindow('HuLa', 'home', 960, 720, 'login', true)
-    settingStore.setAccountInfo({
-      avatar: e.avatar,
-      name: e.name,
-      uid: e.uid,
-      token: e.token
-    })
     await setLoginState()
   }, 1000)
 }
@@ -134,13 +135,38 @@ onMounted(() => {
   } else {
     handleQRCodeLogin()
   }
-  Mitt.on(WsResEnum.QRCODE_LOGIN, () => {
+  useMitt.on(WsResponseMessageType.LOGIN_QR_CODE, (loginInitResType: LoginInitResType) => {
+    loginStore.loginQrCode = loginInitResType.loginUrl
     handleQRCodeLogin()
   })
-  Mitt.on(WsResEnum.LOGIN_SUCCESS, (e: any) => {
-    handleLoginSuccess(e)
+  useMitt.on(WsResponseMessageType.LOGIN_SUCCESS, async (loginSuccessResType: LoginSuccessResType) => {
+    userStore.isSign = true
+    const { token, ...rest } = loginSuccessResType
+    // FIXME 可以不需要赋值了，单独请求了接口。
+    userStore.userInfo = { ...userStore.userInfo, ...rest }
+    localStorage.setItem('USER_INFO', JSON.stringify(rest))
+    localStorage.setItem('TOKEN', token)
+    localStorage.removeItem('wsLogin')
+    // 更新一下请求里面的 token.
+    //computedToken.clear()
+    //computedToken.get()
+    // 获取用户详情
+    userStore.getUserDetailAction()
+    // 自己更新自己上线
+    groupStore.batchUpdateUserStatus([
+      {
+        activeStatus: OnlineEnum.ONLINE,
+        avatar: rest.avatar,
+        lastOptTime: Date.now(),
+        name: rest.name,
+        uid: rest.uid
+      }
+    ])
+    // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取
+    // await emojiStore.getEmojiList()
+    await handleLoginSuccess()
   })
-  Mitt.on(WsResEnum.WS_ERROR, (e: any) => {
+  useMitt.on(WsResponseMessageType.NO_INTERNET, (e: any) => {
     handleError(e.msg)
   })
 })

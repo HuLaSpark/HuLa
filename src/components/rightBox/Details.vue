@@ -111,19 +111,12 @@
   </div>
 </template>
 <script setup lang="ts">
-import { MittEnum, RoomTypeEnum } from '@/enums'
+import { RoomTypeEnum } from '@/enums'
 import { lightTheme } from 'naive-ui'
-import router from '@/router'
-import Mitt from '@/utils/Bus.ts'
-import { useMessage } from '@/hooks/useMessage.ts'
 import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
-import apis from '@/services/apis.ts'
-import { useGlobalStore } from '@/stores/global.ts'
-import { useChatStore } from '@/stores/chat.ts'
+import { useCommon } from '@/hooks/useCommon.ts'
 
-const { handleMsgClick } = useMessage()
-const globalStore = useGlobalStore()
-const chatStore = useChatStore()
+const { openMsgSession } = useCommon()
 const { content } = defineProps<{
   content: any
 }>()
@@ -137,14 +130,7 @@ const footerOptions = ref<OPT.Details[]>([
     title: '发信息',
     click: () => {
       // TODO 需要增加独立窗口功能 (nyh -> 2024-03-25 16:01:23)
-      router.push('/message')
-      apis.sessionDetailWithFriends({ uid: item.value.uid as number }).then((res) => {
-        globalStore.currentSession.roomId = res.roomId
-        globalStore.currentSession.type = RoomTypeEnum.SINGLE
-        chatStore.updateSessionLastActiveTime(res.roomId, res)
-        handleMsgClick(res as any)
-      })
-      Mitt.emit(MittEnum.TO_SEND_MSG, { url: 'message' })
+      openMsgSession(item.value.uid || 0)
     }
   },
   {

@@ -1,32 +1,30 @@
+version = "2.5.6"
+
 [package]
 name = "hula"
 version = "2.5.3"
 description = "hula"
-authors = ["nongyehong"]
+authors = [ "nongyehong" ]
 license = ""
 repository = ""
 edition = "2021"
 
 [profile.release]
-panic = "abort" # 去掉昂贵的恐慌清理逻辑
-codegen-units = 1 # 一个接一个地编译包，这样编译器就可以更好地优化
-lto = true # 启用链接到优化
-opt-level = "s" # 优化二进制文件大小,并且不会太大消耗性能,"z"极致优化大小但是会消耗性能
-strip = true # 删除调试符号
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[build-dependencies]
-tauri-build = { version = "2.0.2", features = [] }
+[build-dependencies.tauri-build]
+version = "2.0.2"
+features = [ ]
 
 [dependencies]
-tauri = { version = "2.0.6", features = [ "macos-private-api", "tray-icon", "image-png"] }
 tauri-plugin-os = "2.0.1"
 tauri-plugin-shell = "2.0.1"
-serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tauri-plugin-websocket = "2.0.1"
-tauri-plugin-http = {version="2.0.1",features= ["unsafe-headers"] }
 tauri-plugin-process = "2.0.1"
 tauri-plugin-fs = "2.0.1"
 tauri-plugin-dialog = "2.0.1"
@@ -34,6 +32,24 @@ tauri-plugin-upload = "2.0.1"
 tauri-plugin-global-shortcut = "2.0.1"
 tauri-plugin-clipboard-manager = "2.0.1"
 tauri-plugin-updater = "2"
+tauri-plugin-single-instance = "2"
+
+  [dependencies.tauri]
+  version = "2.0.6"
+  features = [ "macos-private-api", "tray-icon", "image-png" ]
+
+  [dependencies.serde]
+  version = "1"
+  features = [ "derive" ]
+
+  [dependencies.tauri-plugin-http]
+  version = "2.0.1"
+  features = [ "unsafe-headers" ]
+
+  [dependencies.tauri-plugin-sql]
+  version = "2"
+  features = [ "sqlite" ]
+
 [target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]
 tauri-plugin-autostart = "2.0.1"
 lazy_static = "1.4"
@@ -42,9 +58,5 @@ base64 = "0.22.1"
 rodio = "0.17.3"
 
 [features]
-# by default Tauri runs in production mode
-# when `tauri dev` runs it is executed with `cargo run --no-default-features` if `devPath` is a URL
-default = ["custom-protocol"]
-# this feature is used for production builds where `devPath` points to the filesystem
-# DO NOT remove this
-custom-protocol = ["tauri/custom-protocol"]
+default = [ "custom-protocol" ]
+custom-protocol = [ "tauri/custom-protocol" ]
