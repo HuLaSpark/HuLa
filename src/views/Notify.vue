@@ -1,7 +1,7 @@
 <template>
   <n-flex vertical :size="6" class="notify" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
     <n-flex align="left" :size="10" class="m-[8px_0_0_0]">
-      <span style="font-size: 14px">新消息·16</span>
+      <span style="font-size: 14px">新消息·{{ msgCount }}</span>
     </n-flex>
     <component :is="division" />
     <n-flex
@@ -18,7 +18,7 @@
         <span class="text-(16px [--text-color]) font-bold">Dawn</span>
 
         <n-flex class="w-full" align="center" justify="space-between" :size="10">
-          <span class="max-w-140px truncate text-(12px [--text-color])">你好，你有一条新消息sssssssssssssssssssss</span>
+          <span class="max-w-150px truncate text-(12px [--text-color])">你好，你有一条新消息sssssssssssssssssssss</span>
 
           <!-- 有多少条消息 -->
           <div class="text-(10px #fff) rounded-full px-6px py-2px flex-center bg-#13987f">
@@ -34,7 +34,7 @@
 <script setup lang="tsx">
 import { useGlobalStore } from '@/stores/global.ts'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { listen } from '@tauri-apps/api/event'
+import { Event, listen } from '@tauri-apps/api/event'
 import { PhysicalPosition } from '@tauri-apps/api/dpi'
 
 const globalStore = useGlobalStore()
@@ -54,12 +54,12 @@ const handleTip = async () => {
 
 // 处理窗口显示和隐藏的逻辑
 // todo: const showWindow = async (position: { x: number; y: number }) => {
-const showWindow = async () => {
+const showWindow = async (event: Event<PhysicalPosition>) => {
   if (tipVisible.value) {
     const notifyWindow = await WebviewWindow.getCurrent()
     const outerSize = await notifyWindow?.outerSize()
     if (outerSize) {
-      await notifyWindow?.setPosition(new PhysicalPosition(1556, 1035 - outerSize.height))
+      await notifyWindow?.setPosition(new PhysicalPosition(event.payload.x - 140, event.payload.y - outerSize.height))
       await notifyWindow?.show()
       await notifyWindow?.unminimize()
       await notifyWindow?.setFocus()
@@ -91,7 +91,7 @@ onMounted(async () => {
   await listen('notify_enter', async (event) => {
     if (tipVisible.value) {
       // await showWindow(event.payload as PhysicalPosition)
-      await showWindow()
+      await showWindow(event)
       console.log('Tray position:', event.payload)
     }
   })
