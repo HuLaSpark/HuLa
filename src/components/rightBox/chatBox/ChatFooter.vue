@@ -91,15 +91,15 @@
 <script setup lang="ts">
 import { useFileDialog } from '@vueuse/core'
 import { LimitEnum, MsgEnum } from '@/enums'
-import { useCommon } from '@/hooks/useCommon.ts'
+import { SelectionRange, useCommon } from '@/hooks/useCommon.ts'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { emit } from '@tauri-apps/api/event'
 
 const { open, onChange, reset } = useFileDialog()
 const MsgInputRef = ref()
-const msgInputDom = ref()
+const msgInputDom = ref<HTMLInputElement | null>(null)
 const emojiShow = ref()
-const { insertNode, triggerInputEvent, getEditorRange, imgPaste, FileOrVideoPaste } = useCommon()
+const { insertNodeAtRange, triggerInputEvent, imgPaste, FileOrVideoPaste } = useCommon()
 
 /**
  * 选择表情，并把表情插入输入框
@@ -107,12 +107,25 @@ const { insertNode, triggerInputEvent, getEditorRange, imgPaste, FileOrVideoPast
  */
 const emojiHandle = (item: string) => {
   emojiShow.value = false
-  msgInputDom.value.focus()
-  const { range } = getEditorRange()!
-  range?.collapse(false)
+
+  const inp = msgInputDom.value
+  if (!inp) return
+
+  const lastEditRange: SelectionRange | null = MsgInputRef.value?.getLastEditRange()
+  if (!lastEditRange) return
+
+  // 清空上下文选区
+  const selection = window.getSelection()
+
+  if (selection) {
+    selection.removeAllRanges()
+    selection.addRange(lastEditRange.range)
+  }
+
   // 插入表情
-  insertNode(MsgEnum.TEXT, item, MsgInputRef.value.messageInputDom)
-  triggerInputEvent(msgInputDom.value)
+  insertNodeAtRange(MsgEnum.TEXT, item, inp, lastEditRange)
+  MsgInputRef.value?.recordSelectionRange()
+  triggerInputEvent(inp)
 }
 
 const handleCap = async () => {
