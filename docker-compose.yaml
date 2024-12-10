@@ -1,0 +1,14 @@
+version: "3.7"
+services:
+  tauri:
+    image: ivangabriele/tauri:debian-bullseye-18  # 使用该镜像打包tauri
+    volumes:
+      - .:/app
+    command:
+      - "sh"
+      - "-c"
+      - |  #  使用|表示下面的命令将按照顺序执行
+        cd /app
+        npm config set registry https://registry.npmmirror.com
+        pnpm install
+        pnpm tauri build
