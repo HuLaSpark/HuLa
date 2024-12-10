@@ -33,11 +33,11 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       # 安装 pnpm
       - name: Install pnpm
-        run: npm install -g pnpm@9.2.0
+        run: npm install -g pnpm@latest
 
       - name: Install dependencies
         run: pnpm install

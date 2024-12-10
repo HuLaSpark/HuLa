@@ -1,6 +1,6 @@
+use crate::user_cmd::get_user_info;
 use tauri::{Emitter, LogicalSize, Manager, Runtime, WindowEvent};
 use tauri_plugin_autostart::MacosLauncher;
-use crate::user_cmd::get_user_info;
 pub trait CustomInit {
     fn init_plugin(self) -> Self;
 
@@ -64,6 +64,7 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
                 if window.label().eq("tray") && !flag {
                     window.hide().unwrap();
                 }
+                #[cfg(target_os = "windows")]
                 if !window.label().eq("notify") && *flag {
                     window
                         .app_handle()
@@ -72,6 +73,7 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
                         .hide()
                         .unwrap();
                 }
+                #[cfg(target_os = "windows")]
                 if window.label().eq("notify") && !flag {
                     window.hide().unwrap();
                 }
