@@ -10,6 +10,11 @@ import { useChatStore } from '@/stores/chat.ts'
 import { useMessage } from '@/hooks/useMessage.ts'
 import { useUserStore } from '@/stores/user.ts'
 
+export interface SelectionRange {
+  range: Range
+  selection: Selection
+}
+
 /** 常用工具类 */
 export const useCommon = () => {
   const route = useRoute()
@@ -27,7 +32,9 @@ export const useCommon = () => {
     imgCount: 0
   })
 
-  /** 获取当前光标选取的信息(需要判断是否为空) */
+  /**
+   * 获取当前光标选取的信息(需要判断是否为空)
+   */
   const getEditorRange = () => {
     if (window.getSelection) {
       const selection = window.getSelection()
@@ -113,7 +120,22 @@ export const useCommon = () => {
    * @param target 目标节点
    */
   const insertNode = (type: MsgEnum, dom: any, target: HTMLElement) => {
-    const { selection, range } = getEditorRange()!
+    const sr = getEditorRange()!
+    if (!sr) return
+
+    insertNodeAtRange(type, dom, target, sr)
+  }
+
+  /**
+   *  将指定节点插入到光标位置
+   * @param { MsgEnum } type 插入的类型
+   * @param dom dom节点
+   * @param target 目标节点
+   * @param sr 选区
+   */
+  const insertNodeAtRange = (type: MsgEnum, dom: any, target: HTMLElement, sr: SelectionRange) => {
+    const { range, selection } = sr
+
     // 删除选中的内容
     range?.deleteContents()
     // 将节点插入范围最前面添加节点
@@ -143,40 +165,40 @@ export const useCommon = () => {
       divNode.id = 'replyDiv' // 设置id为replyDiv
       divNode.contentEditable = 'false' // 设置为不可编辑
       divNode.style.cssText = `
-        background-color: var(--reply-bg);
-        font-size: 12px;
-        padding: 4px 6px;
-        width: fit-content;
-        max-height: 86px;
-        border-radius: 8px;
-        margin-bottom: 2px;
-        user-select: none;
-        cursor: default;
-      `
+      background-color: var(--reply-bg);
+      font-size: 12px;
+      padding: 4px 6px;
+      width: fit-content;
+      max-height: 86px;
+      border-radius: 8px;
+      margin-bottom: 2px;
+      user-select: none;
+      cursor: default;
+    `
       // 把dom中的value值作为回复信息的作者，dom中的content作为回复信息的内容
       const author = dom.accountName + '：'
       let content = dom.content
       // 创建一个div标签节点作为回复信息的头部
       const headerNode = document.createElement('div')
       headerNode.style.cssText = `
-        line-height: 1.5;
-        font-size: 12px;
-        margin-bottom: 2px;
-        padding: 0 8px;
-        color: rgba(19, 152, 127);
-        border-left: 3px solid #ccc;
-        cursor: default;
-      `
+      line-height: 1.5;
+      font-size: 12px;
+      margin-bottom: 2px;
+      padding: 0 8px;
+      color: rgba(19, 152, 127);
+      border-left: 3px solid #ccc;
+      cursor: default;
+    `
       headerNode.appendChild(document.createTextNode(author))
       // 创建一个div标签节点包裹正文内容
       const contentNode = document.createElement('div')
       contentNode.style.cssText = `
-        display: flex;
-        justify-content: space-between;
-        border-radius: 8px;
-        padding: 2px;
-        min-width: 0;
-      `
+      display: flex;
+      justify-content: space-between;
+      border-radius: 8px;
+      padding: 2px;
+      min-width: 0;
+    `
       let contentBox
       // 判断content内容是否是data:image/开头的数组
       if (Array.isArray(content)) {
@@ -192,12 +214,12 @@ export const useCommon = () => {
         contentBox = document.createElement('img')
         contentBox.src = content
         contentBox.style.cssText = `
-          max-width: 55px;
-          max-height: 55px;
-          border-radius: 4px;
-          cursor: default;
-          user-select: none;
-        `
+        max-width: 55px;
+        max-height: 55px;
+        border-radius: 4px;
+        cursor: default;
+        user-select: none;
+      `
         // 将img标签节点插入到div标签节点中
         divNode.appendChild(contentBox)
         // 把图片传入到reply的content属性中
@@ -211,29 +233,29 @@ export const useCommon = () => {
         // 把正文放到span标签中，并设置span标签的样式
         contentBox = document.createElement('span')
         contentBox.style.cssText = `
-        font-size: 12px;
-        color: var(--text-color);
-        cursor: default;
-        width: fit-content;
-        max-width: 350px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      `
+      font-size: 12px;
+      color: var(--text-color);
+      cursor: default;
+      width: fit-content;
+      max-width: 350px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    `
         contentBox.appendChild(document.createTextNode(content))
       }
       // 在回复信息的右边添加一个关闭信息的按钮
       const closeBtn = document.createElement('span')
       closeBtn.id = 'closeBtn'
       closeBtn.style.cssText = `
-        display: flex;
-        align-items: center;
-        font-size: 12px;
-        color: #999;
-        cursor: pointer;
-        margin-left: 10px;
-        flex-shrink: 0;
-      `
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+      color: #999;
+      cursor: pointer;
+      margin-left: 10px;
+      flex-shrink: 0;
+    `
       closeBtn.textContent = '关闭'
       closeBtn.addEventListener('click', () => {
         divNode.remove()
@@ -399,6 +421,7 @@ export const useCommon = () => {
     FileOrVideoPaste,
     countGraphemes,
     openMsgSession,
+    insertNodeAtRange,
     reply,
     userUid
   }
