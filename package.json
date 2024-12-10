@@ -15,13 +15,6 @@
     "email": "2439646234@qq.com",
     "url": "https://github.com/HuLaSpark/HuLa"
   },
-  "lint-staged": {
-    "*.{js,jsx,vue,ts,tsx}": [
-      "oxlint src",
-      "prettier . --write",
-      "eslint src"
-    ]
-  },
   "scripts": {
     "========= 启动vue(tauri项目会连带执行不需要单独执行) =========": "",
     "dev": "vite",
