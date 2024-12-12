@@ -79,7 +79,7 @@ importers:
         version: 4.5.0(vue@3.5.13(typescript@5.7.2))
     devDependencies:
       '@babel/eslint-parser':
-        specifier: ^7.24.7
+        specifier: ^7.25.9
         version: 7.25.9(@babel/core@7.26.0)(eslint@8.57.0)
       '@commitlint/cli':
         specifier: ^19.6.0
@@ -136,7 +136,7 @@ importers:
         specifier: ^12.0.0
         version: 12.0.0(typescript@5.7.2)
       commitizen:
-        specifier: ^4.3.0
+        specifier: ^4.3.1
         version: 4.3.1(@types/node@20.14.15)(typescript@5.7.2)
       cz-git:
         specifier: ^1.11.0
