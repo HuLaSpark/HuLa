@@ -114,6 +114,16 @@ const emojiHandle = (item: string) => {
   // 确保输入框有焦点
   inp.focus()
 
+  // 检查是否为 URL
+  const isUrl = (str: string) => {
+    try {
+      new URL(str)
+      return true
+    } catch {
+      return false
+    }
+  }
+
   // 尝试获取最后的编辑范围
   let lastEditRange: SelectionRange | null = MsgInputRef.value?.getLastEditRange()
 
@@ -144,8 +154,25 @@ const emojiHandle = (item: string) => {
     selection.addRange(lastEditRange.range)
   }
 
-  // 插入表情
-  insertNodeAtRange(MsgEnum.TEXT, item, inp, lastEditRange)
+  // 根据内容类型插入不同的节点
+  if (isUrl(item)) {
+    // 如果是URL，创建图片元素并插入
+    const imgElement = document.createElement('img')
+    imgElement.src = item
+    imgElement.style.maxWidth = '80px'
+    imgElement.style.maxHeight = '80px'
+    lastEditRange.range.insertNode(imgElement)
+
+    // 移动光标到图片后面
+    const range = document.createRange()
+    range.setStartAfter(imgElement)
+    range.collapse(true)
+    selection?.removeAllRanges()
+    selection?.addRange(range)
+  } else {
+    // 如果是普通表情，作为文本插入
+    insertNodeAtRange(MsgEnum.TEXT, item, inp, lastEditRange)
+  }
 
   // 记录新的选区位置
   MsgInputRef.value?.recordSelectionRange()
