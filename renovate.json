@@ -17,6 +17,16 @@
   "packageRules": [
     {
       "matchUpdateTypes": ["minor", "patch"]
+    },
+    {
+      "groupName": "Tauri dependencies",
+      "matchPackagePatterns": ["@tauri-apps*"],
+      "groupSlug": "Tauri-deps"
+    },
+    {
+      "groupName": "UnoCSS dependencies",
+      "matchPackagePatterns": ["@unocss*"],
+      "groupSlug": "UnoCSS-deps"
     }
   ],
   "updateInternalDeps": true
