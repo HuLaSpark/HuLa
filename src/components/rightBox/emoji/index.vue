@@ -58,6 +58,7 @@
 <script setup lang="ts">
 import { getAllTypeEmojis } from '@/utils/Emoji.ts'
 import { useHistoryStore } from '@/stores/history.ts'
+import HulaEmojis from 'hula-emojis'
 
 type EmojiType = {
   expressionEmojis: EmojiItem
@@ -70,6 +71,9 @@ interface EmojiItem {
 }
 
 const { emoji, setEmoji } = useHistoryStore()
+/** 获取米游社的表情包 */
+const emojisBbs = HulaEmojis.MihoyoBbs
+console.log(emojisBbs)
 const activeIndex = ref(0)
 
 const emit = defineEmits(['emojiHandle'])
@@ -135,7 +139,7 @@ const chooseEmoji = (item: string) => {
   @apply size-36px cursor-pointer text-26px hover:bg-[--emoji-hover] rounded-8px;
 }
 .expression-item {
-  @apply h-50px w-full p-[0_14px];
+  @apply h-50px w-full p-[0_14px] box-border;
   border-top: 1px solid var(--line-color);
   svg {
     @apply size-26px p-8px rounded-8px;

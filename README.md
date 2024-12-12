@@ -5,6 +5,7 @@
 <p align="center">An Instant Messaging System Built with Tauri, Vite 5, Vue 3, and TypeScript</p>
 
 <div align="center">
+  <a href="https://app.fossa.com/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa?ref=badge_shield"><img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa.svg?type=shield" alt=""></a>
   <a href="https://www.bestpractices.dev/zh-CN/projects/9692"><img src="https://bestpractices.coreinfrastructure.org/projects/9692/badge" alt="CI"></a>
   <img src="https://img.shields.io/badge/TypeScript-blue?logo=Typescript&style=flat&logoColor=fff">
   <img src="https://img.shields.io/badge/Vue3-35495E?logo=vue.js&logoColor=4FC08D">
@@ -41,7 +42,6 @@ HuLa is an instant messaging system developed with Tauri, Vite 5, Vue 3, and Typ
 ## Project PreView
 
 ![img.png](preview/img.png)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa?ref=badge_shield)
 
 ![img_1.png](preview/img_1.png)
 

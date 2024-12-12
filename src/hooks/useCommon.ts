@@ -313,17 +313,52 @@ export const useCommon = () => {
     reader.onload = (e: any) => {
       const img = document.createElement('img')
       img.src = e.target.result
-      // 设置图片的最大高度和最大宽度
       img.style.maxHeight = '88px'
       img.style.maxWidth = '140px'
       img.style.marginRight = '6px'
-      // 插入图片
-      insertNode(MsgEnum.IMAGE, img, dom)
+
+      // 获取MsgInput组件暴露的lastEditRange
+      const lastEditRange = (dom as any).getLastEditRange?.()
+
+      // 确保dom获得焦点
+      dom.focus()
+
+      let range: Range
+      if (!lastEditRange) {
+        // 如果没有lastEditRange，创建一个新的范围到最后
+        range = document.createRange()
+        range.selectNodeContents(dom)
+        range.collapse(false) // 折叠到末尾
+      } else {
+        range = lastEditRange
+      }
+
+      // 确保我们有有效的range
+      const selection = window.getSelection()
+      if (selection) {
+        // 插入图片
+        range.deleteContents()
+        range.insertNode(img)
+
+        // 插入一个零宽空格，确保光标可见并在图片后面
+        range.setStartAfter(img)
+        range.setEndAfter(img)
+
+        // 将光标设置在零宽空格后面
+        range.setStartAfter(img)
+        range.setEndAfter(img)
+
+        // 更新选区
+        selection.removeAllRanges()
+        selection.addRange(range)
+      }
+
+      // 触发输入事件
       triggerInputEvent(dom)
     }
-    nextTick(() => {}).then(() => {
-      reader.readAsDataURL(file)
-    })
+
+    // 读取文件
+    reader.readAsDataURL(file)
   }
 
   /**
@@ -338,6 +373,17 @@ export const useCommon = () => {
     createFileOrVideoDom(file).then((imgTag) => {
       // 将生成的img标签插入到页面中
       insertNode(type, imgTag, dom)
+
+      // 确保光标位置在插入的元素后面
+      const selection = window.getSelection()
+      const range = document.createRange()
+      range.setStartAfter(imgTag as HTMLElement)
+      range.setEndAfter(imgTag as HTMLElement)
+
+      // 更新选区
+      selection?.removeAllRanges()
+      selection?.addRange(range)
+
       triggerInputEvent(dom)
     })
     nextTick(() => {}).then(() => {

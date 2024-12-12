@@ -1,1 +1,0 @@
-exec < /dev/tty && pnpm dlx czg --hook || true

@@ -111,12 +111,34 @@ const emojiHandle = (item: string) => {
   const inp = msgInputDom.value
   if (!inp) return
 
-  const lastEditRange: SelectionRange | null = MsgInputRef.value?.getLastEditRange()
-  if (!lastEditRange) return
+  // 确保输入框有焦点
+  inp.focus()
 
-  // 清空上下文选区
+  // 尝试获取最后的编辑范围
+  let lastEditRange: SelectionRange | null = MsgInputRef.value?.getLastEditRange()
+
+  // 如果没有最后的编辑范围，尝试获取当前选区
+  if (!lastEditRange) {
+    const selection = window.getSelection()
+    if (selection && selection.rangeCount > 0) {
+      lastEditRange = {
+        range: selection.getRangeAt(0),
+        selection
+      }
+    } else {
+      // 如果没有选区，创建一个新的范围到最后
+      const range = document.createRange()
+      range.selectNodeContents(inp)
+      range.collapse(false)
+      lastEditRange = {
+        range,
+        selection: window.getSelection()!
+      }
+    }
+  }
+
+  // 清空上下文选区并设置新的选区
   const selection = window.getSelection()
-
   if (selection) {
     selection.removeAllRanges()
     selection.addRange(lastEditRange.range)
@@ -124,8 +146,15 @@ const emojiHandle = (item: string) => {
 
   // 插入表情
   insertNodeAtRange(MsgEnum.TEXT, item, inp, lastEditRange)
+
+  // 记录新的选区位置
   MsgInputRef.value?.recordSelectionRange()
+
+  // 触发输入事件
   triggerInputEvent(inp)
+
+  // 保持焦点在输入框
+  inp.focus()
 }
 
 const handleCap = async () => {
