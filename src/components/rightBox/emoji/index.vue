@@ -1,76 +1,152 @@
 <template>
-  <n-scrollbar style="max-height: 290px" class="p-[14px_14px_0_14px] box-border w-450px h-290px select-none">
+  <n-scrollbar style="max-height: 290px" class="p-[14px_14px_0_14px] box-border w-460px h-290px select-none">
     <transition name="fade" mode="out-in" appear>
-      <!-- 默认表情页面 -->
-      <div v-if="activeIndex === 0">
+      <div :key="activeIndex" class="emoji-content">
         <!-- 最近使用 -->
-        <div v-if="emojiRef.historyList?.length > 0">
-          <span class="text-12px text-[--text-color]">最近使用</span>
-          <n-flex align="center" class="mt-12px mb-12px">
-            <n-flex
-              align="center"
-              justify="center"
-              class="emoji-item"
-              v-for="(item, index) in [...new Set(emojiRef.historyList)]"
-              :key="index"
-              @click.stop="chooseEmoji(item)">
-              {{ item }}
-            </n-flex>
-          </n-flex>
-        </div>
-
-        <!-- 表情 -->
-        <div v-for="items in emojiObj" :key="items?.name">
-          <template v-if="items?.name && items.value?.length">
-            <span class="text-12px text-[--text-color]">{{ items.name }}</span>
+        <div v-if="activeIndex === 0">
+          <div v-if="emojiRef.historyList?.length > 0">
+            <span class="text-12px text-[--text-color]">最近使用</span>
             <n-flex align="center" class="mt-12px mb-12px">
               <n-flex
                 align="center"
                 justify="center"
                 class="emoji-item"
-                v-for="(item, index) in items.value"
+                v-for="(item, index) in [...new Set(emojiRef.historyList)]"
                 :key="index"
                 @click.stop="chooseEmoji(item)">
                 {{ item }}
               </n-flex>
             </n-flex>
-          </template>
-        </div>
-      </div>
-    </transition>
+          </div>
 
-    <transition name="fade" mode="out-in">
-      <!-- 我的喜欢页面 -->
-      <div v-if="activeIndex === 1">
-        <span>暂无实现</span>
+          <!-- emoji表情 -->
+          <div v-for="items in emojiObj" :key="items?.name">
+            <template v-if="items?.name && items.value?.length">
+              <span class="text-12px text-[--text-color]">{{ items.name }}</span>
+              <n-flex align="center" class="mt-12px mb-12px">
+                <n-flex
+                  align="center"
+                  justify="center"
+                  class="emoji-item"
+                  v-for="(item, index) in items.value"
+                  :key="index"
+                  @click.stop="chooseEmoji(item)">
+                  {{ item }}
+                </n-flex>
+              </n-flex>
+            </template>
+          </div>
+        </div>
+
+        <!-- 表情包系列 -->
+        <div v-else-if="currentSeries">
+          <span class="text-12px text-[--text-color]">{{ currentSeries.name }}</span>
+          <n-flex align="center" class="mx-6px my-12px">
+            <n-flex
+              align="center"
+              justify="center"
+              class="emoji-item"
+              v-for="(item, index) in currentSeries.emojis"
+              :key="index"
+              @click.stop="chooseEmoji(item.url)">
+              <n-popover trigger="hover" :delay="500" :duration="0" :show-arrow="false" placement="top">
+                <template #trigger>
+                  <n-image
+                    preview-disabled
+                    :src="item.url"
+                    class="size-full object-contain rounded-8px transition duration-300 ease-in-out transform-gpu" />
+                </template>
+                <span>{{ item.name }}</span>
+              </n-popover>
+            </n-flex>
+          </n-flex>
+        </div>
+
+        <!-- 我的喜欢页面 -->
+        <div v-else>
+          <span>暂无实现</span>
+        </div>
       </div>
     </transition>
   </n-scrollbar>
 
   <!-- 底部选项 -->
   <n-flex align="center" class="expression-item">
-    <svg :class="{ active: activeIndex === 0 }" @click="activeIndex = 0">
-      <use href="#face"></use>
-    </svg>
-    <svg :class="{ active: activeIndex === 1 }" @click="activeIndex = 1"><use href="#heart"></use></svg>
+    <n-scrollbar x-scrollable class="scrollbar-container">
+      <div class="series-container">
+        <template v-for="item in tabList" :key="item.id">
+          <!-- 图标类型选项 -->
+          <svg
+            class="series-icon"
+            v-if="item.type === 'icon'"
+            :class="{ active: activeIndex === item.id }"
+            @click="handleTabChange(item.id)">
+            <use :href="item.icon"></use>
+          </svg>
+
+          <!-- 系列类型选项 -->
+          <div
+            v-else
+            :class="{ active: activeIndex === item.id }"
+            @click="selectSeries(item.id - 1)"
+            class="series-icon">
+            <img :title="item.name" :src="item.cover" class="w-full h-full object-contain" />
+          </div>
+        </template>
+      </div>
+    </n-scrollbar>
   </n-flex>
 </template>
+
 <script setup lang="ts">
 import { getAllTypeEmojis } from '@/utils/Emoji.ts'
 import { useHistoryStore } from '@/stores/history.ts'
+import HulaEmojis from 'hula-emojis'
 
 type EmojiType = {
   expressionEmojis: EmojiItem
   animalEmojis: EmojiItem
   gestureEmojis: EmojiItem
 }
+
+type TabItem = {
+  id: number
+  type: 'icon' | 'series'
+  name: string
+  icon?: string
+  cover?: string
+}
+
 interface EmojiItem {
   name: string
   value: any[]
 }
 
 const { emoji, setEmoji } = useHistoryStore()
+/** 获取米游社的表情包 */
+const emojisBbs = HulaEmojis.MihoyoBbs
 const activeIndex = ref(0)
+const currentSeriesIndex = ref(0)
+
+// 生成选项卡数组
+const tabList = computed<TabItem[]>(() => {
+  const baseItems: TabItem[] = [
+    { id: 0, type: 'icon', name: 'emoji表情', icon: '#face' },
+    { id: -1, type: 'icon', name: '我喜欢的', icon: '#heart' }
+  ]
+
+  // 添加米游社表情包系列
+  const seriesItems: TabItem[] = emojisBbs.series.map((series, index) => ({
+    id: index + 1,
+    type: 'series',
+    name: series.name,
+    cover: series.cover
+  }))
+
+  return [...baseItems, ...seriesItems]
+})
+
+const currentSeries = computed(() => (activeIndex.value > 0 ? emojisBbs.series[activeIndex.value - 1] : null))
 
 const emit = defineEmits(['emojiHandle'])
 const props = defineProps<{
@@ -94,6 +170,7 @@ if (props.all) {
     gestureEmojis: res.gestureEmojis
   } as EmojiType
 }
+
 const emojiRef = reactive<{
   chooseItem: string
   historyList: string[]
@@ -105,23 +182,58 @@ const emojiRef = reactive<{
 })
 
 /**
+ * 判断是否为URL
+ */
+const isUrl = (str: string) => {
+  try {
+    new URL(str)
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
  * 选择表情
  * @param item
  */
 const chooseEmoji = (item: string) => {
   emojiRef.chooseItem = item
-  // 如果已经存在于历史记录中，则先移除
-  const index = emojiRef.historyList.indexOf(item)
-  if (index !== -1) {
-    emojiRef.historyList.splice(index, 1)
+
+  // 只有非URL的表情（emoji）才记录到历史记录中
+  if (!isUrl(item)) {
+    // 如果已经存在于历史记录中，则先移除
+    const index = emojiRef.historyList.indexOf(item)
+    if (index !== -1) {
+      emojiRef.historyList.splice(index, 1)
+    }
+    emojiRef.historyList.unshift(item)
+    if (emojiRef.historyList.length > 18) {
+      emojiRef.historyList.splice(18) // 保留前18个元素
+    }
+    setEmoji([...emojiRef.historyList])
   }
-  emojiRef.historyList.unshift(item)
-  if (emojiRef.historyList.length > 18) {
-    emojiRef.historyList.splice(18) // 保留前18个元素
-  }
-  setEmoji([...emojiRef.historyList])
+
   emit('emojiHandle', item)
   return item
+}
+
+/**
+ * 切换表情类型标签
+ */
+const handleTabChange = (index: number) => {
+  activeIndex.value = index
+  if (index === 1) {
+    currentSeriesIndex.value = 0
+  }
+}
+
+/**
+ * 选择表情包系列
+ */
+const selectSeries = (index: number) => {
+  currentSeriesIndex.value = index
+  activeIndex.value = index + 1
 }
 </script>
 
@@ -131,30 +243,81 @@ const chooseEmoji = (item: string) => {
 .n-scrollbar + .n-scrollbar-rail.n-scrollbar-rail--vertical {
   right: 0;
 }
-.emoji-item {
-  @apply size-36px cursor-pointer text-26px hover:bg-[--emoji-hover] rounded-8px;
+
+.n-scrollbar > .n-scrollbar-rail.n-scrollbar-rail--horizontal > .n-scrollbar-rail__scrollbar,
+.n-scrollbar + .n-scrollbar-rail.n-scrollbar-rail--horizontal > .n-scrollbar-rail__scrollbar {
+  top: 4px;
 }
+
+.emoji-item {
+  @apply cursor-pointer;
+
+  // 默认表情的样式
+  &:not(:has(.n-image)) {
+    @apply size-36px text-26px hover:bg-[--emoji-hover] rounded-8px;
+  }
+
+  // 米游社表情包的样式
+  &:has(.n-image) {
+    @apply size-60px;
+    &:hover .n-image {
+      @apply hover:scale-116 bg-[--emoji-hover] rounded-8px;
+    }
+  }
+}
+
 .expression-item {
-  @apply h-50px w-full p-[0_14px];
+  @apply h-50px w-full p-[0_14px] box-border select-none;
   border-top: 1px solid var(--line-color);
-  svg {
-    @apply size-26px p-8px rounded-8px;
+
+  .scrollbar-container {
+    @apply w-full max-w-420px;
+    overflow-x: auto;
+  }
+
+  .series-container {
+    @apply flex items-center;
+    white-space: nowrap;
+    width: max-content;
+
+    svg {
+      @apply size-26px my-4px p-6px rounded-8px mr-12px flex-shrink-0 inline-flex items-center justify-center;
+      &:not(.active):hover {
+        background-color: var(--emoji-hover);
+        cursor: pointer;
+      }
+    }
+  }
+
+  .series-icon {
+    @apply size-30px my-4px p-4px rounded-8px mr-12px flex-shrink-0 inline-flex items-center justify-center;
     &:not(.active):hover {
       background-color: var(--emoji-hover);
       cursor: pointer;
     }
+    &:last-child {
+      margin-right: 0;
+    }
   }
 }
+
 .active {
   background-color: #13987f;
 }
 
+.emoji-content {
+  position: relative;
+  width: 100%;
+}
+
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.4s ease-in-out;
+  transition: all 0.3s ease;
 }
+
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+  transform: translateX(-20px);
 }
 </style>

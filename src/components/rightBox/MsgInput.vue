@@ -12,6 +12,8 @@
         @input="handleInput"
         @keydown.exact.enter="inputKeyDown"
         @keydown.exact.meta.enter="inputKeyDown"
+        @keydown.exact="recordSelectionRange"
+        @click="recordSelectionRange"
         @keydown.exact.ctrl.enter="inputKeyDown"></div>
       <span
         v-if="isEntering"
@@ -141,7 +143,7 @@ import { emit, listen } from '@tauri-apps/api/event'
 import { useSettingStore } from '@/stores/setting.ts'
 import { sendOptions } from '@/views/moreWindow/settings/config.ts'
 import { useMsgInput } from '@/hooks/useMsgInput.ts'
-import { useCommon } from '@/hooks/useCommon.ts'
+import { SelectionRange, useCommon } from '@/hooks/useCommon.ts'
 import { onKeyStroke } from '@vueuse/core'
 import { type } from '@tauri-apps/plugin-os'
 import { useUserInfo } from '@/hooks/useCached.ts'
@@ -160,7 +162,18 @@ const virtualListInst = ref<VirtualListInst>()
 const isEntering = computed(() => {
   return msgInput.value === ''
 })
-const { handlePaste } = useCommon()
+const { handlePaste, getEditorRange } = useCommon()
+
+/**
+ * 记录编辑器最后选取范围
+ */
+let lastEditRange: SelectionRange | null = null
+
+/**
+ * 记录当前编辑器的选取范围
+ */
+const recordSelectionRange = () => (lastEditRange = getEditorRange())
+
 /** 引入useMsgInput的相关方法 */
 const { inputKeyDown, handleAit, handleInput, send, personList, ait, msgInput, chatKey, menuList, selectedAitKey } =
   useMsgInput(messageInputDom)
@@ -239,7 +252,7 @@ onUnmounted(() => {
 })
 
 /** 导出组件方法和属性 */
-defineExpose({ messageInputDom })
+defineExpose({ messageInputDom, getLastEditRange: () => lastEditRange, recordSelectionRange })
 </script>
 
 <style scoped lang="scss">

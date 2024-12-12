@@ -91,15 +91,15 @@
 <script setup lang="ts">
 import { useFileDialog } from '@vueuse/core'
 import { LimitEnum, MsgEnum } from '@/enums'
-import { useCommon } from '@/hooks/useCommon.ts'
+import { SelectionRange, useCommon } from '@/hooks/useCommon.ts'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { emit } from '@tauri-apps/api/event'
 
 const { open, onChange, reset } = useFileDialog()
 const MsgInputRef = ref()
-const msgInputDom = ref()
+const msgInputDom = ref<HTMLInputElement | null>(null)
 const emojiShow = ref()
-const { insertNode, triggerInputEvent, getEditorRange, imgPaste, FileOrVideoPaste } = useCommon()
+const { insertNodeAtRange, triggerInputEvent, imgPaste, FileOrVideoPaste } = useCommon()
 
 /**
  * 选择表情，并把表情插入输入框
@@ -107,12 +107,81 @@ const { insertNode, triggerInputEvent, getEditorRange, imgPaste, FileOrVideoPast
  */
 const emojiHandle = (item: string) => {
   emojiShow.value = false
-  msgInputDom.value.focus()
-  const { range } = getEditorRange()!
-  range?.collapse(false)
-  // 插入表情
-  insertNode(MsgEnum.TEXT, item, MsgInputRef.value.messageInputDom)
-  triggerInputEvent(msgInputDom.value)
+
+  const inp = msgInputDom.value
+  if (!inp) return
+
+  // 确保输入框有焦点
+  inp.focus()
+
+  // 检查是否为 URL
+  const isUrl = (str: string) => {
+    try {
+      new URL(str)
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  // 尝试获取最后的编辑范围
+  let lastEditRange: SelectionRange | null = MsgInputRef.value?.getLastEditRange()
+
+  // 如果没有最后的编辑范围，尝试获取当前选区
+  if (!lastEditRange) {
+    const selection = window.getSelection()
+    if (selection && selection.rangeCount > 0) {
+      lastEditRange = {
+        range: selection.getRangeAt(0),
+        selection
+      }
+    } else {
+      // 如果没有选区，创建一个新的范围到最后
+      const range = document.createRange()
+      range.selectNodeContents(inp)
+      range.collapse(false)
+      lastEditRange = {
+        range,
+        selection: window.getSelection()!
+      }
+    }
+  }
+
+  // 清空上下文选区并设置新的选区
+  const selection = window.getSelection()
+  if (selection) {
+    selection.removeAllRanges()
+    selection.addRange(lastEditRange.range)
+  }
+
+  // 根据内容类型插入不同的节点
+  if (isUrl(item)) {
+    // 如果是URL，创建图片元素并插入
+    const imgElement = document.createElement('img')
+    imgElement.src = item
+    imgElement.style.maxWidth = '80px'
+    imgElement.style.maxHeight = '80px'
+    lastEditRange.range.insertNode(imgElement)
+
+    // 移动光标到图片后面
+    const range = document.createRange()
+    range.setStartAfter(imgElement)
+    range.collapse(true)
+    selection?.removeAllRanges()
+    selection?.addRange(range)
+  } else {
+    // 如果是普通表情，作为文本插入
+    insertNodeAtRange(MsgEnum.TEXT, item, inp, lastEditRange)
+  }
+
+  // 记录新的选区位置
+  MsgInputRef.value?.recordSelectionRange()
+
+  // 触发输入事件
+  triggerInputEvent(inp)
+
+  // 保持焦点在输入框
+  inp.focus()
 }
 
 const handleCap = async () => {

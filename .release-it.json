@@ -1,8 +1,8 @@
 {
   "plugins": {
     "@release-it/bumper": {
-      "in": ["src-tauri/tauri.*.json", "src-tauri/Cargo.toml"],
-      "out": ["src-tauri/tauri.*.json", "src-tauri/Cargo.toml"]
+      "in": ["src-tauri/tauri.*.json"],
+      "out": ["src-tauri/tauri.*.json"]
     },
     "@release-it/conventional-changelog": {
       "preset": {

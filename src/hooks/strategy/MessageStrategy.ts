@@ -48,6 +48,8 @@ abstract class AbstractMessageStrategy implements MessageStrategy {
   abstract buildMessageBody(msg: any, reply: any): any
 
   abstract getMsg(msgInputValue: string, replyValue: any): any
+
+  getUpLoadUrl(file: File): string {}
 }
 
 /**
@@ -120,6 +122,10 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
   }
 
   getMsg(msgInputValue: string, replyValue: any): any {
+    const regex = /(?<=(img src="))[^"]*?(?=")/
+    const base64 = regex.exec(msgInputValue)
+    console.log(base64[0])
+    this.base64ToFile(base64[0], 'name')
     return {
       type: this.msgType,
       content: msgInputValue,
@@ -132,6 +138,24 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
     }
   }
 
+  /**
+   *  base64图片转file的方法（base64图片, 设置生成file的文件名）
+   */
+  base64ToFile(base64: string, fileName: string): File {
+    const data = base64.split(',')
+    const type = data[0]?.match(/:(.*?);/)[1]
+    const suffix = type.split('/')[1]
+    const bstr = window.atob(data[1])
+    let n = bstr.length
+    const u8arr = new Uint8Array(n)
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n)
+    }
+    const file = new File([u8arr], `${fileName}.${suffix}`, {
+      type: type
+    })
+    return file
+  }
   buildMessageBody(msg: any, reply: any): any {
     throw new AppException('方法暂未实现')
   }
