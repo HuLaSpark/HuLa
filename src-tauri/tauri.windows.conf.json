@@ -54,7 +54,7 @@
         "width": 320,
         "height": 448,
         "skipTaskbar": false,
-        "transparent": false,
+        "transparent": true,
         "visible": false,
         "decorations": false
       },
@@ -68,7 +68,8 @@
         "height": 44,
         "alwaysOnTop": true,
         "skipTaskbar": true,
-        "decorations": false
+        "decorations": false,
+        "transparent": true
       },
       {
         "label": "notify",
@@ -80,7 +81,8 @@
         "height": 140,
         "alwaysOnTop": true,
         "skipTaskbar": true,
-        "decorations": false
+        "decorations": false,
+        "transparent": true
       },
       {
         "label": "capture",
