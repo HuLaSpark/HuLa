@@ -1,6 +1,6 @@
 {
   "productName": "HuLa",
-  "version": "2.5.7",
+  "version": "2.5.8",
   "identifier": "com.hula.pc",
   "build": {
     "beforeDevCommand": "pnpm dev",
@@ -9,9 +9,14 @@
     "devUrl": "http://127.0.0.1:6130"
   },
   "bundle": {
-    "resources": ["tray"],
+    "resources": [
+      "tray"
+    ],
     "active": true,
-    "targets": ["app", "dmg"],
+    "targets": [
+      "app",
+      "dmg"
+    ],
     "icon": [
       "icons/macos/32x32.png",
       "icons/macos/128x128.png",
