@@ -1,3 +1,8 @@
+# Auto detect text files and perform LF normalization
+* text=auto eol=lf
+"*.rs" eol=lf
+"Cargo.toml" eol=lf
+"Cargo.lock" eol=lf
 "*.vue"    eol=lf
 "*.js"     eol=lf
 "*.ts"     eol=lf
