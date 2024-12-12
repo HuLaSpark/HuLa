@@ -14,9 +14,25 @@ export const createFileOrVideoDom = (file: File) => {
     // 创建带有圆角和SVG图标的canvas元素
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')!
-    // canvas的尺寸
-    canvas.width = 225
-    canvas.height = 85
+
+    // 获取设备像素比
+    const dpr = window.devicePixelRatio || 1
+
+    // canvas的实际尺寸
+    const actualWidth = 225
+    const actualHeight = 85
+
+    // 设置canvas的显示尺寸
+    canvas.style.width = `${actualWidth}px`
+    canvas.style.height = `${actualHeight}px`
+
+    // 设置canvas的缓冲区尺寸
+    canvas.width = actualWidth * dpr
+    canvas.height = actualHeight * dpr
+
+    // 根据dpr缩放上下文
+    ctx.scale(dpr, dpr)
+
     // 加载SVG文件并绘制到canvas,根据文件类型，设置SVG图标
     loadSVG(`/file/${file.name.split('.').pop()}.svg`)
       .then((svgImage: any) => {
@@ -30,11 +46,11 @@ export const createFileOrVideoDom = (file: File) => {
         const maxTextWidth = 160 // 文件名称的最大宽度
 
         // 绘制圆角矩形背景
-        roundRect(ctx, 0, 0, canvas.width, canvas.height, 8)
+        roundRect(ctx, 0, 0, actualWidth, actualHeight, 8)
         ctx.fill()
 
         // 绘制圆角矩形边框
-        roundRect(ctx, 0, 0, canvas.width, canvas.height, 8)
+        roundRect(ctx, 0, 0, actualWidth, actualHeight, 8)
         ctx.stroke()
 
         /** 文本过长时截取并使用省略号代替 */
@@ -43,7 +59,7 @@ export const createFileOrVideoDom = (file: File) => {
           const ellipsisWidth = ctx.measureText(ellipsis).width
 
           if (ctx.measureText(text).width <= maxWidth || maxWidth <= ellipsisWidth) {
-            return text // 字符串宽度或省略号宽度本身就小于等于最大宽度，无需截取
+            return text
           }
 
           let left = 0
@@ -51,7 +67,6 @@ export const createFileOrVideoDom = (file: File) => {
           let currentText
           let currentWidth
 
-          // 尝试逐步减去字符并测试宽度
           while (left < right - 1) {
             const middle = Math.floor((left + right) / 2)
             currentText = text.substring(0, middle) + ellipsis + text.substring(text.length - middle, text.length)
@@ -64,25 +79,28 @@ export const createFileOrVideoDom = (file: File) => {
             }
           }
 
-          // 创建带有省略号的最终文本
           currentText = text.substring(0, left) + ellipsis + text.substring(text.length - left, text.length)
           return currentText
         }
+
         /** 更新canvas的背景颜色和边框 */
         function updateCanvasBackground(
           canvas: HTMLCanvasElement,
           ctx: CanvasRenderingContext2D,
           isImgSelected: boolean
         ) {
+          // 清除之前的内容
+          ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr)
+
           // 更新canvas的背景颜色和边框
           ctx.fillStyle = isImgSelected ? selectedBgColor : unselectedBgColor
           ctx.strokeStyle = '#ccc'
           ctx.lineWidth = 2
 
           // 重新绘制圆角矩形
-          roundRect(ctx, 0, 0, canvas.width, canvas.height, 8)
+          roundRect(ctx, 0, 0, actualWidth, actualHeight, 8)
           ctx.fill()
-          roundRect(ctx, 0, 0, canvas.width, canvas.height, 8)
+          roundRect(ctx, 0, 0, actualWidth, actualHeight, 8)
           ctx.stroke()
 
           // 修改原来的文本绘制部分，使用truncateText函数来截断文本
@@ -93,12 +111,11 @@ export const createFileOrVideoDom = (file: File) => {
 
           ctx.fillStyle = '#909090' // 文本颜色
           ctx.font = 'normal 12px Arial' // 文本样式
-          ctx.fillText(fileSize, 15, canvas.height - 15) // 修改 y 坐标来调整 fileSize 的位置
+          ctx.fillText(fileSize, 15, actualHeight - 15)
 
-          // 在右边绘制SVG图标
-          ctx.drawImage(svgImage, canvas.width - svgImage.width - 10, (canvas.height - svgImage.height) / 2)
+          // 在右边绘制SVG图标，需要根据dpr调整位置
+          ctx.drawImage(svgImage, actualWidth - svgImage.width / dpr - 25, (actualHeight - svgImage.height / dpr) / 2)
 
-          // 更新ImageDataURL
           return canvas.toDataURL('image/png')
         }
 
@@ -112,14 +129,14 @@ export const createFileOrVideoDom = (file: File) => {
         img.src = dataURL
         img.dataset.type = 'file-canvas'
         img.style.cssText = imgStyle
+        img.width = actualWidth
+        img.height = actualHeight
         img.onload = () => resolve(img)
         img.onerror = reject
 
         // img元素点击事件监听
         img.addEventListener('click', (e) => {
-          // 防止事件冒泡
           e.stopPropagation()
-          // 切换选中状态并更新canvas背景
           isImgSelected = !isImgSelected
           img.src = updateCanvasBackground(canvas, ctx, isImgSelected)
         })
@@ -129,7 +146,6 @@ export const createFileOrVideoDom = (file: File) => {
           'click',
           () => {
             if (isImgSelected) {
-              // 如果图片当前是选中状态，则恢复背景色
               isImgSelected = false
               img.src = updateCanvasBackground(canvas, ctx, isImgSelected)
             }

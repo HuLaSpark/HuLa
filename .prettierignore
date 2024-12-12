@@ -9,6 +9,8 @@
 .vscode/**
 src-tauri/capabilities/**
 src-tauri/gen/**
+src-tauri/target/**
+src-tauri/Cargo.toml
 CHANGELOG.md
 auto-imports.d.ts
 .gitee/**

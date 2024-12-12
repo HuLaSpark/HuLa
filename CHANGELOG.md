@@ -1,5 +1,21 @@
 
 
+## [2.5.8](https://github.com/HuLaSpark/HuLa/compare/v2.5.7...v2.5.8) (2024-12-12)
+
+
+### ✨ Features | 新功能
+
+* **component:** :sparkles: 新增米游社表情包功能 ([1b38500](https://github.com/HuLaSpark/HuLa/commit/1b385005be135d8afc83ec1d5fb80d1ab25bf5f5))
+
+
+### 🐛 Bug Fixes | Bug 修复
+
+* **chat-edittor:** 在 Webkit  中 re-focus 后焦点被重置 ([e381a09](https://github.com/HuLaSpark/HuLa/commit/e381a09fb138be627b01df6f096a0ad9383eef99))
+* **common:** :bug: 修改Cargo.lock ([e3ead1c](https://github.com/HuLaSpark/HuLa/commit/e3ead1c7fdf30b7a2eb857973dfcc66bb01dc44b))
+* **component:** :bug: 修复canvas模糊问题，以及图片和emoji的一些插入的位置和优化 ([5dee0ae](https://github.com/HuLaSpark/HuLa/commit/5dee0ae4d4d09178a1664d5f2ec01354a69b8001))
+* **config:** :bug: 修改cargo的镜像源和文件后缀 ([d882e2e](https://github.com/HuLaSpark/HuLa/commit/d882e2e301b8ae27819dd8469452d40a704ea4a6))
+* **package:** :bug: 修复发版和commit的命令 ([6307326](https://github.com/HuLaSpark/HuLa/commit/6307326b016bfc654b0e6f70bc254d59d0fcde67))
+
 ## [2.5.7](https://github.com/HuLaSpark/HuLa/compare/v2.5.6...v2.5.7) (2024-12-10)
 
 

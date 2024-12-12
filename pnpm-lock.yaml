@@ -47,6 +47,9 @@ importers:
       hula:
         specifier: 'file:'
         version: file:(@types/sortablejs@1.15.8)(rollup@4.28.0)(typescript@5.7.2)
+      hula-emojis:
+        specifier: ^1.1.0
+        version: 1.1.0
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
@@ -2844,6 +2847,9 @@ packages:
   https-proxy-agent@7.0.5:
     resolution: {integrity: sha512-1e4Wqeblerz+tMKPIq2EMGiiWW1dIjZOksyHWSUm1rmuvw/how9hBHZ38lAGj5ID4Ik6EdkOw7NmWPy6LAwalw==}
     engines: {node: '>= 14'}
+
+  hula-emojis@1.1.0:
+    resolution: {integrity: sha512-3WrP12KeHxi6Xe8ig7397w5H7ukVFnjDSdVQZqCRDxw+dRNN6Ujt020m5T605bY4GbEBl/I6R+YBnr6qFKe1bw==}
 
   'hula@file:':
     resolution: {directory: '', type: directory}
@@ -7429,6 +7435,8 @@ snapshots:
       debug: 4.3.7
     transitivePeerDependencies:
       - supports-color
+
+  hula-emojis@1.1.0: {}
 
   hula@file:(@types/sortablejs@1.15.8)(rollup@4.28.0)(typescript@5.7.2):
     dependencies:

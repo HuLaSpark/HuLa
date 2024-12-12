@@ -1,7 +1,7 @@
 {
   "name": "hula",
   "type": "module",
-  "version": "2.5.7",
+  "version": "2.5.8",
   "license": "Apache-2.0",
   "engines": {
     "node": ">=18.12.0",
@@ -14,13 +14,6 @@
     "name": "nongyehong",
     "email": "2439646234@qq.com",
     "url": "https://github.com/HuLaSpark/HuLa"
-  },
-  "lint-staged": {
-    "*.{js,jsx,vue,ts,tsx}": [
-      "oxlint src",
-      "prettier . --write",
-      "eslint src"
-    ]
   },
   "scripts": {
     "========= 启动vue(tauri项目会连带执行不需要单独执行) =========": "",
@@ -62,6 +55,7 @@
     "dayjs": "^1.11.11",
     "grapheme-splitter": "^1.0.4",
     "hula": "file:",
+    "hula-emojis": "^1.1.0",
     "lodash-es": "^4.17.21",
     "mitt": "^3.0.1",
     "naive-ui": "^2.40.3",
