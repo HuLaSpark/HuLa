@@ -58,7 +58,7 @@ export const useCommon = () => {
    * 获取messageInputDom输入框中的内容类型
    * @param messageInputDom 输入框dom
    */
-  const getMessageContentType = (messageInputDom: Ref) => {
+  const getMessageContentType = (messageInputDom: Ref): MsgEnum => {
     let hasText = false
     let hasImage = false
     let hasVideo = false
@@ -368,8 +368,11 @@ export const useCommon = () => {
     return splitter.countGraphemes(value)
   }
 
-  /** 去除字符串中的元素标记 */
-  const removeTag = (fragment: any) => new DOMParser().parseFromString(fragment, 'text/html').body.textContent || ''
+  /** 去除字符串中的元素标记
+   *  不是html元素节点返回原字符串
+   * */
+  const removeTag = (fragment: any) =>
+    new DOMParser().parseFromString(fragment, 'text/html').body.textContent || fragment
 
   /**
    * 打开消息会话(右键发送消息功能)
