@@ -80,7 +80,7 @@ importers:
     devDependencies:
       '@babel/eslint-parser':
         specifier: ^7.24.7
-        version: 7.25.1(@babel/core@7.26.0)(eslint@8.57.0)
+        version: 7.25.9(@babel/core@7.26.0)(eslint@8.57.0)
       '@commitlint/cli':
         specifier: ^19.6.0
         version: 19.6.0(@types/node@20.14.15)(typescript@5.7.2)
@@ -221,8 +221,8 @@ packages:
     resolution: {integrity: sha512-i1SLeK+DzNnQ3LL/CswPCa/E5u4lh1k6IAEphON8F+cXt0t9euTshDru0q7/IqMa1PMPz5RnHuHscF8/ZJsStg==}
     engines: {node: '>=6.9.0'}
 
-  '@babel/eslint-parser@7.25.1':
-    resolution: {integrity: sha512-Y956ghgTT4j7rKesabkh5WeqgSFZVFwaPR0IWFm7KFHFmmJ4afbG49SmfW4S+GyRPx0Dy5jxEWA5t0rpxfElWg==}
+  '@babel/eslint-parser@7.25.9':
+    resolution: {integrity: sha512-5UXfgpK0j0Xr/xIdgdLEhOFxaDZ0bRPWJJchRpqOSur/3rZoPbqqki5mm0p4NE2cs28krBEiSM2MB7//afRSQQ==}
     engines: {node: ^10.13.0 || ^12.13.0 || >=14.0.0}
     peerDependencies:
       '@babel/core': ^7.11.0
@@ -4637,7 +4637,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@babel/eslint-parser@7.25.1(@babel/core@7.26.0)(eslint@8.57.0)':
+  '@babel/eslint-parser@7.25.9(@babel/core@7.26.0)(eslint@8.57.0)':
     dependencies:
       '@babel/core': 7.26.0
       '@nicolo-ribaudo/eslint-scope-5-internals': 5.1.1-v1
@@ -7452,6 +7452,7 @@ snapshots:
       colorthief: 2.6.0
       dayjs: 1.11.12
       grapheme-splitter: 1.0.4
+      hula-emojis: 1.1.0
       lodash-es: 4.17.21
       mitt: 3.0.1
       naive-ui: 2.40.3(vue@3.5.13(typescript@5.7.2))
