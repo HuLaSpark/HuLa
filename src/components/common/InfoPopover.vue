@@ -1,6 +1,6 @@
 <template>
   <!-- 个人信息框 -->
-  <n-flex vertical :size="26" class="size-fit box-border rounded-8px relative">
+  <n-flex vertical :size="26" class="size-fit box-border rounded-8px relative min-h-[300px]">
     <n-flex vertical :size="20" class="size-full p-10px box-border z-10">
       <n-flex vertical :size="20" align="center">
         <n-avatar
