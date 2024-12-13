@@ -165,7 +165,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
   /** 处理发送信息事件 */
   // TODO 输入框中的内容当我切换消息的时候需要记录之前输入框的内容 (nyh -> 2024-03-01 07:03:43)
-  const send = () => {
+  const send = (fileList?: FileList) => {
     // 判断输入框中的图片或者文件数量是否超过限制
     if (messageInputDom.value.querySelectorAll('img').length > LimitEnum.COM_COUNT) {
       window.$message.warning(`一次性只能上传${LimitEnum.COM_COUNT}个文件或图片`)
@@ -186,7 +186,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       window.$message.warning('暂不支持发送类型消息')
       return
     }
-    const msg = messageStrategy.getMsg(msgInput.value, reply.value)
+    const msg = messageStrategy.getMsg(msgInput.value, reply.value, fileList)
     // // 处理超链接
     // const { hyperlinkRegex, foundHyperlinks } = RegExp.isHyperlink(msg.content)
     // if (foundHyperlinks && foundHyperlinks.length > 0) {

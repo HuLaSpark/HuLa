@@ -3,9 +3,9 @@ import { MessageType } from '@/services/types.ts'
 import { AppException } from '@/common/exception.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { Ref } from 'vue'
-
+import apis from '@/services/apis.ts'
 interface MessageStrategy {
-  getMsg: (msgInputValue: string, replyValue: any) => any
+  getMsg: (msgInputValue: string, replyValue: any, fileList?: File[]) => any
   buildMessageBody: (msg: any, reply: any) => any
   buildMessageType: (messageId: number, messageBody: any, globalStore: any, userUid: Ref<any>) => MessageType
 }
@@ -47,9 +47,12 @@ abstract class AbstractMessageStrategy implements MessageStrategy {
 
   abstract buildMessageBody(msg: any, reply: any): any
 
-  abstract getMsg(msgInputValue: string, replyValue: any): any
+  abstract getMsg(msgInputValue: string, replyValue: any, fileList?: File[]): any
 
-  getUpLoadUrl(file: File): string {}
+  getUpLoadUrl(file: File): any {
+    file?.name
+    //todo 实现文件上传
+  }
 }
 
 /**
@@ -63,7 +66,8 @@ class TextMessageStrategyImpl extends AbstractMessageStrategy {
     this.domParser = new DOMParser()
   }
 
-  getMsg(msgInputValue: string, replyValue: any): any {
+  getMsg(msgInputValue: string, replyValue: any, fileList?: File[]): any {
+    fileList
     const msg = {
       type: this.msgType,
       content: this.removeTag(msgInputValue),
@@ -121,14 +125,32 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
     super(MsgEnum.IMAGE)
   }
 
-  getMsg(msgInputValue: string, replyValue: any): any {
-    const regex = /(?<=(img src="))[^"]*?(?=")/
-    const base64 = regex.exec(msgInputValue)
-    console.log(base64[0])
-    this.base64ToFile(base64[0], 'name')
+  getMsg(msgInputValue: string, replyValue: any, fileList?: File[]): any {
+    msgInputValue
+    if (fileList.length === 0) {
+      throw new AppException('请选择图片')
+    }
+    const fileMetaList = []
+    fileList.forEach((file) => {
+      const body = {
+        fileName: file.name,
+        scene: 1
+      }
+      const fileMeta = async () => {
+        const res = await apis.getUploadUrl(body)
+        apis.upload(res.uploadUrl, file)
+        return {
+          fileName: file.name,
+          downloadUrl: res.downloadUrl,
+          uploadUrl: res.uploadUrl
+        }
+      }
+      fileMetaList.push(fileMeta())
+    })
+
     return {
       type: this.msgType,
-      content: msgInputValue,
+      content: fileMetaList,
       reply: replyValue.content
         ? {
             content: replyValue.content,
@@ -138,25 +160,9 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
     }
   }
 
-  /**
-   *  base64图片转file的方法（base64图片, 设置生成file的文件名）
-   */
-  base64ToFile(base64: string, fileName: string): File {
-    const data = base64.split(',')
-    const type = data[0]?.match(/:(.*?);/)[1]
-    const suffix = type.split('/')[1]
-    const bstr = window.atob(data[1])
-    let n = bstr.length
-    const u8arr = new Uint8Array(n)
-    while (n--) {
-      u8arr[n] = bstr.charCodeAt(n)
-    }
-    const file = new File([u8arr], `${fileName}.${suffix}`, {
-      type: type
-    })
-    return file
-  }
   buildMessageBody(msg: any, reply: any): any {
+    msg
+    reply
     throw new AppException('方法暂未实现')
   }
 
@@ -173,7 +179,8 @@ class FileMessageStrategyImpl extends AbstractMessageStrategy {
     super(MsgEnum.FILE)
   }
 
-  getMsg(msgInputValue: string, replyValue: any): any {
+  getMsg(msgInputValue: string, replyValue: any, fileList?: File[]): any {
+    fileList
     return {
       type: this.msgType,
       content: msgInputValue,
@@ -187,6 +194,8 @@ class FileMessageStrategyImpl extends AbstractMessageStrategy {
   }
 
   buildMessageBody(msg: any, reply: any): any {
+    msg
+    reply
     throw new AppException('方法暂未实现')
   }
 
@@ -201,15 +210,24 @@ class UnsupportedMessageStrategyImpl extends AbstractMessageStrategy {
     super(MsgEnum.UNKNOWN)
   }
 
-  getMsg(msgInputValue: string, replyValue: any): any {
+  getMsg(msgInputValue: string, replyValue: any, fileList?: File[]): any {
+    replyValue
+    msgInputValue
+    fileList
     throw new AppException('暂不支持该类型消息')
   }
 
   buildMessageBody(msg: any, reply: any): any {
+    msg
+    reply
     throw new AppException('方法暂未实现')
   }
 
   buildMessageType(messageId: number, messageBody: any, globalStore: any, userUid: Ref<any>): MessageType {
+    messageId
+    messageBody
+    globalStore
+    userUid
     throw new AppException('方法暂未实现')
   }
 }
