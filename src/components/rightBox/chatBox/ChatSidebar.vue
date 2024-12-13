@@ -20,7 +20,9 @@
 
     <n-flex v-if="!isSearch" align="center" justify="space-between" class="pr-8px pl-8px h-42px">
       <span class="text-14px">在线群聊成员&nbsp;{{ groupStore.countInfo.onlineNum }}</span>
-      <svg @click="handleSelect" class="size-14px"><use href="#search"></use></svg>
+      <svg @click="handleSelect" class="size-14px">
+        <use href="#search"></use>
+      </svg>
     </n-flex>
     <!-- 搜索框 -->
     <n-flex v-else align="center" class="pr-8px h-42px">
@@ -35,7 +37,9 @@
         size="tiny"
         class="h-26px w-95% lh-26px rounded-6px">
         <template #prefix>
-          <svg class="w-12px h-12px"><use href="#search"></use></svg>
+          <svg class="w-12px h-12px">
+            <use href="#search"></use>
+          </svg>
         </template>
       </n-input>
     </n-flex>
@@ -52,6 +56,7 @@
       :items="filteredUserList">
       <template #default="{ item }">
         <n-popover
+          :animated="false"
           @update:show="handlePopoverUpdate(item.uid)"
           trigger="click"
           placement="left"
