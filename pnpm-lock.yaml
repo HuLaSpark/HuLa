@@ -40,7 +40,7 @@ importers:
         version: 2.6.0
       dayjs:
         specifier: ^1.11.11
-        version: 1.11.12
+        version: 1.11.13
       grapheme-splitter:
         specifier: ^1.0.4
         version: 1.0.4
@@ -2169,8 +2169,8 @@ packages:
   date-fns@3.6.0:
     resolution: {integrity: sha512-fRHTG8g/Gif+kSh50gaGEdToemgfj74aRX3swtiouboip5JDLAyDE9F11nHMIcvOaXeOC6D7SpNhi7uFyB7Uww==}
 
-  dayjs@1.11.12:
-    resolution: {integrity: sha512-Rt2g+nTbLlDWZTwwrIXjy9MeiZmSDI375FvZs72ngxx8PDC6YXOeR3q5LAuPzjZQxhiWdRKac7RKV+YyQYfYIg==}
+  dayjs@1.11.13:
+    resolution: {integrity: sha512-oaMBel6gjolK862uaPQOVTA7q3TZhuSvuMQAAglQDOWYO9A91IrAOUJEyKVlqJlHE0vq5p5UXxzdPfMH/x6xNg==}
 
   de-indent@1.0.2:
     resolution: {integrity: sha512-e/1zu3xH5MQryN2zdVaF0OrdNLUbvWxzMbi+iNA6Bky7l1RoP8a2fIbRocyHclXt/arDrrR6lL3TqFD9pMQTsg==}
@@ -6590,7 +6590,7 @@ snapshots:
 
   date-fns@3.6.0: {}
 
-  dayjs@1.11.12: {}
+  dayjs@1.11.13: {}
 
   de-indent@1.0.2: {}
 
@@ -7418,7 +7418,7 @@ snapshots:
       '@tauri-apps/plugin-sql': 2.0.2
       '@tauri-apps/plugin-updater': 2.0.0
       colorthief: 2.6.0
-      dayjs: 1.11.12
+      dayjs: 1.11.13
       grapheme-splitter: 1.0.4
       hula-emojis: 1.1.0
       lodash-es: 4.17.21
