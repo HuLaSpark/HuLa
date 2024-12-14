@@ -27,8 +27,8 @@ importers:
         specifier: 2.0.0
         version: 2.0.0
       '@tauri-apps/plugin-process':
-        specifier: 2.0.0
-        version: 2.0.0
+        specifier: 2.2.0
+        version: 2.2.0
       '@tauri-apps/plugin-sql':
         specifier: ^2.0.1
         version: 2.0.2
@@ -1391,8 +1391,8 @@ packages:
   '@tauri-apps/plugin-os@2.0.0':
     resolution: {integrity: sha512-M7hG/nNyQYTJxVG/UhTKhp9mpXriwWzrs9mqDreB8mIgqA3ek5nHLdwRZJWhkKjZrnDT4v9CpA9BhYeplTlAiA==}
 
-  '@tauri-apps/plugin-process@2.0.0':
-    resolution: {integrity: sha512-OYzi0GnkrF4NAnsHZU7U3tjSoP0PbeAlO7T1Z+vJoBUH9sFQ1NSLqWYWQyf8hcb3gVWe7P1JggjiskO+LST1ug==}
+  '@tauri-apps/plugin-process@2.2.0':
+    resolution: {integrity: sha512-uypN2Crmyop9z+KRJr3zl71OyVFgTuvHFjsJ0UxxQ/J5212jVa5w4nPEYjIewcn8bUEXacRebwE6F7owgrbhSw==}
 
   '@tauri-apps/plugin-sql@2.0.2':
     resolution: {integrity: sha512-qrSY8hLfqHlnO3nH6DR2h6zEVT5sSeB5HHymvT40/FKwv8unewwRiPq4xV+qQZXN1a58ZtSDqVOCBnLHxGPczQ==}
@@ -5623,7 +5623,7 @@ snapshots:
     dependencies:
       '@tauri-apps/api': 2.0.2
 
-  '@tauri-apps/plugin-process@2.0.0':
+  '@tauri-apps/plugin-process@2.2.0':
     dependencies:
       '@tauri-apps/api': 2.0.2
 
@@ -7414,7 +7414,7 @@ snapshots:
       '@tauri-apps/plugin-clipboard-manager': 2.0.0
       '@tauri-apps/plugin-http': 2.0.0
       '@tauri-apps/plugin-os': 2.0.0
-      '@tauri-apps/plugin-process': 2.0.0
+      '@tauri-apps/plugin-process': 2.2.0
       '@tauri-apps/plugin-sql': 2.0.2
       '@tauri-apps/plugin-updater': 2.0.0
       colorthief: 2.6.0
