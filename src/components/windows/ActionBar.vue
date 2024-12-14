@@ -236,12 +236,12 @@ const handleCloseWin = async () => {
 }
 
 const offline = async () => {
-  if (!login.value.autoLogin) {
-    localStorage.removeItem('TOKEN')
-  }
   apis.offline().catch(() => {
     // 通知下线失败也没关系
   })
+  if (!login.value.autoLogin) {
+    localStorage.removeItem('TOKEN')
+  }
 }
 let unOffline: Promise<UnlistenFn>
 useMitt.on('handleCloseWin', handleCloseWin)

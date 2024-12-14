@@ -107,11 +107,9 @@ const moreList = ref<OPT.L.MoreList[]>([
       await apis.logout().catch(() => {})
       await logout()
       // 如果没有设置自动登录，则清除用户信息
-      if (!userStore.userInfo) {
-        userStore.userInfo = {}
-        localStorage.removeItem('USER_INFO')
-        localStorage.removeItem('TOKEN')
-      }
+      userStore.userInfo = {}
+      localStorage.removeItem('USER_INFO')
+      localStorage.removeItem('TOKEN')
       userStore.isSign = false
       loginStore.loginStatus = LoginStatus.Init
     }
