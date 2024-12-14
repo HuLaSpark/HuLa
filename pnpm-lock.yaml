@@ -72,8 +72,8 @@ importers:
         specifier: ^3.5.13
         version: 3.5.13(typescript@5.7.2)
       vue-draggable-plus:
-        specifier: ^0.5.3
-        version: 0.5.3(@types/sortablejs@1.15.8)
+        specifier: ^0.6.0
+        version: 0.6.0(@types/sortablejs@1.15.8)
       vue-router:
         specifier: ^4.5.0
         version: 4.5.0(vue@3.5.13(typescript@5.7.2))
@@ -4444,8 +4444,8 @@ packages:
       '@vue/composition-api':
         optional: true
 
-  vue-draggable-plus@0.5.3:
-    resolution: {integrity: sha512-dwKDzZ8io3y7k2iuIwVwiGrdiq5C0S7Et7nt5Gz5KjpBS9MtZGFP+L4FJPWGSLYleOT8HmVuCXTZYjGet7wC0g==}
+  vue-draggable-plus@0.6.0:
+    resolution: {integrity: sha512-G5TSfHrt9tX9EjdG49InoFJbt2NYk0h3kgjgKxkFWr3ulIUays0oFObr5KZ8qzD4+QnhtALiRwIqY6qul4egqw==}
     peerDependencies:
       '@types/sortablejs': ^1.15.0
       '@vue/composition-api': '*'
@@ -7442,7 +7442,7 @@ snapshots:
       pinia-plugin-persistedstate: 4.1.2(pinia@2.2.1(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2)))(rollup@4.28.0)
       pinia-shared-state: 0.5.1(pinia@2.2.1(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2)))(vue@3.5.13(typescript@5.7.2))
       vue: 3.5.13(typescript@5.7.2)
-      vue-draggable-plus: 0.5.3(@types/sortablejs@1.15.8)
+      vue-draggable-plus: 0.6.0(@types/sortablejs@1.15.8)
       vue-router: 4.5.0(vue@3.5.13(typescript@5.7.2))
     transitivePeerDependencies:
       - '@pinia/nuxt'
@@ -9084,7 +9084,7 @@ snapshots:
     dependencies:
       vue: 3.5.13(typescript@5.7.2)
 
-  vue-draggable-plus@0.5.3(@types/sortablejs@1.15.8):
+  vue-draggable-plus@0.6.0(@types/sortablejs@1.15.8):
     dependencies:
       '@types/sortablejs': 1.15.8
 
