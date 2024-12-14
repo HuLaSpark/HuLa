@@ -8,7 +8,7 @@
   "prConcurrentLimit": 30,
   "prHourlyLimit": 4,
   "rebaseWhen": "conflicted",
-  "schedule": "on monday at 9:00am",
+  "schedule": "on sunday at 9:00am",
   "timezone": "Asia/Shanghai",
   "vulnerabilityAlerts": {
     "labels": ["security"],
@@ -27,6 +27,12 @@
       "groupName": "UnoCSS dependencies",
       "matchPackagePatterns": ["@unocss*"],
       "groupSlug": "UnoCSS-deps"
+    },
+    {
+      "description": "Rust crate updates",
+      "matchManagers": ["cargo"],
+      "groupName": "Rust dependencies",
+      "groupSlug": "rust-deps"
     }
   ],
   "updateInternalDeps": true

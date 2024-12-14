@@ -47,8 +47,6 @@
     "http:allow-fetch-send",
     "core:tray:default",
     "core:tray:allow-get-by-id",
-    "shell:default",
-    "shell:allow-open",
     "autostart:allow-enable",
     "autostart:allow-disable",
     "autostart:allow-is-enabled",
@@ -58,6 +56,52 @@
     "sql:allow-execute",
     "sql:allow-select",
     "sql:allow-close",
+    "shell:default",
+    "shell:allow-open",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "powershell",
+          "cmd": "powershell",
+          "args":true
+        },
+        {
+          "name": "systemPath",
+          "cmd": "cmd",
+          "args": [
+            "-c",
+            {
+              "validator": "\\S+"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "identifier":"fs:write-files",
+      "allow": [{"path": "**"}]
+    },
+    {
+      "identifier":"fs:allow-mkdir",
+      "allow": [{"path": "**"}]
+    },
+    {
+      "identifier":"fs:read-dirs",
+      "allow": [{"path": "**"}]
+    },
+    {
+      "identifier":"fs:read-files",
+      "allow": [{"path": "**"}]
+    },
+    {
+      "identifier":"fs:allow-copy-file",
+      "allow": [{"path": "**"}]
+    },
+    {
+      "identifier":"fs:allow-read-text-file",
+      "allow": [{"path": "**"}]
+    },
     {
       "identifier": "http:default",
       "allow": [

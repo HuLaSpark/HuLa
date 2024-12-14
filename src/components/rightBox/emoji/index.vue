@@ -102,6 +102,7 @@
 import { getAllTypeEmojis } from '@/utils/Emoji.ts'
 import { useHistoryStore } from '@/stores/history.ts'
 import HulaEmojis from 'hula-emojis'
+import { mkdir, exists, BaseDirectory } from '@tauri-apps/plugin-fs'
 
 type EmojiType = {
   expressionEmojis: EmojiItem
@@ -235,6 +236,25 @@ const selectSeries = (index: number) => {
   currentSeriesIndex.value = index
   activeIndex.value = index + 1
 }
+
+onMounted(async () => {
+  const tokenExists = await exists('Emoticons', {
+    baseDir: BaseDirectory.Resource
+  })
+  if (!tokenExists) {
+    // 创建表情包目录
+    await mkdir('Emoticons', {
+      baseDir: BaseDirectory.Resource
+    })
+  }
+  // try {
+  //   const file = await create('emoji-test.txt', { baseDir: BaseDirectory.App })
+  //   await file.write(new TextEncoder().encode('Hello world'))
+  //   await file.close()
+  // } catch (error) {
+  //   console.error('Error handling file:', error)
+  // }
+})
 </script>
 
 <style lang="scss">
