@@ -65,7 +65,7 @@ const loginStore = useWsLoginStore()
 const userStore = useUserStore()
 const groupStore = useGroupStore()
 /** 获取登录二维码 */
-const loginQrCode = computed(() => loginStore.loginQrCode)
+// const loginQrCode = computed(() => loginStore.loginQrCode)
 /** 登录状态 */
 const loginStatus = computed(() => loginStore.loginStatus)
 const { setLoginState } = useLogin()
@@ -89,9 +89,17 @@ watchEffect(() => {
 
 /** 处理二维码显示和刷新 */
 const handleQRCodeLogin = () => {
-  QRCode.value = loginQrCode.value
   loading.value = false
-  loadText.value = '请使用微信扫码登录'
+  scanStatus.value = {
+    status: 'error',
+    icon: 'cloudError',
+    text: '扫码功能暂时下线',
+    show: true
+  }
+  loadText.value = '请使用账号密码注册后登录'
+  // QRCode.value = loginQrCode.value
+  // loading.value = false
+  // loadText.value = '请使用微信扫码登录'
 }
 
 /** 处理登录成功 */

@@ -38,6 +38,10 @@
     "windows": {
       "wix": {
         "language": "zh-CN"
+      },
+      "nsis": {
+        "displayLanguageSelector": true,
+        "languages":["SimpChinese"]
       }
     }
   },

@@ -20,6 +20,9 @@ importers:
       '@tauri-apps/plugin-clipboard-manager':
         specifier: 2.0.0
         version: 2.0.0
+      '@tauri-apps/plugin-fs':
+        specifier: ~2
+        version: 2.2.0
       '@tauri-apps/plugin-http':
         specifier: 2.0.0
         version: 2.0.0
@@ -28,6 +31,9 @@ importers:
         version: 2.0.0
       '@tauri-apps/plugin-process':
         specifier: 2.2.0
+        version: 2.2.0
+      '@tauri-apps/plugin-shell':
+        specifier: ^2.2.0
         version: 2.2.0
       '@tauri-apps/plugin-sql':
         specifier: ^2.0.1
@@ -48,8 +54,8 @@ importers:
         specifier: 'file:'
         version: file:(@types/sortablejs@1.15.8)(rollup@4.28.0)(typescript@5.7.2)
       hula-emojis:
-        specifier: ^1.1.0
-        version: 1.1.0
+        specifier: ^1.2.1
+        version: 1.2.1
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
@@ -115,14 +121,14 @@ importers:
         specifier: ^0.65.1
         version: 0.65.1
       '@unocss/reset':
-        specifier: ^0.65.0
-        version: 0.65.0
+        specifier: ^0.65.1
+        version: 0.65.1
       '@unocss/transformer-directives':
-        specifier: ^0.65.0
-        version: 0.65.0
+        specifier: ^0.65.1
+        version: 0.65.1
       '@unocss/transformer-variant-group':
-        specifier: ^0.65.0
-        version: 0.65.0
+        specifier: ^0.65.1
+        version: 0.65.1
       '@unocss/vite':
         specifier: ^0.65.1
         version: 0.65.1(rollup@4.28.0)(vite@6.0.3(@types/node@20.14.15)(jiti@2.4.0)(sass@1.83.0)(terser@5.31.5)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.13(typescript@5.7.2))
@@ -1385,6 +1391,9 @@ packages:
   '@tauri-apps/plugin-clipboard-manager@2.0.0':
     resolution: {integrity: sha512-V1sXmbjnwfXt/r48RJMwfUmDMSaP/8/YbH4CLNxt+/sf1eHlIP8PRFdFDQwLN0cNQKu2rqQVbG/Wc/Ps6cDUhw==}
 
+  '@tauri-apps/plugin-fs@2.2.0':
+    resolution: {integrity: sha512-+08mApuONKI8/sCNEZ6AR8vf5vI9DXD4YfrQ9NQmhRxYKMLVhRW164vdW5BSLmMpuevftpQ2FVoL9EFkfG9Z+g==}
+
   '@tauri-apps/plugin-http@2.0.0':
     resolution: {integrity: sha512-UfKAICL25ayluV/SjiEQujz8q/2uyAzp3u9uaHFkaIyKS5usBL8DoqSwi4eKz2mEjkbxTwldhDEXG4CEfTE0JQ==}
 
@@ -1393,6 +1402,9 @@ packages:
 
   '@tauri-apps/plugin-process@2.2.0':
     resolution: {integrity: sha512-uypN2Crmyop9z+KRJr3zl71OyVFgTuvHFjsJ0UxxQ/J5212jVa5w4nPEYjIewcn8bUEXacRebwE6F7owgrbhSw==}
+
+  '@tauri-apps/plugin-shell@2.2.0':
+    resolution: {integrity: sha512-iC3Ic1hLmasoboG7BO+7p+AriSoqAwKrIk+Hpk+S/bjTQdXqbl2GbdclghI4gM32X0bls7xHzIFqhRdrlvJeaA==}
 
   '@tauri-apps/plugin-sql@2.0.2':
     resolution: {integrity: sha512-qrSY8hLfqHlnO3nH6DR2h6zEVT5sSeB5HHymvT40/FKwv8unewwRiPq4xV+qQZXN1a58ZtSDqVOCBnLHxGPczQ==}
@@ -1531,9 +1543,6 @@ packages:
     resolution: {integrity: sha512-Akf5Vm2bGrUK/a10QBF3GLETFJnwW1G8ThPevrOCj0lBVWKlN5eMQnodyNdoCw+JMPfCPZdg+4lU8cJJIRAAbQ==}
     engines: {node: '>=14'}
 
-  '@unocss/core@0.65.0':
-    resolution: {integrity: sha512-2QwjMq/bm7lbxk6BTyGblWuTtSfXRuHJSoN1zys53ES+SrVVYA8FVDIpiTQbxENLcXhwwq1OaN3z7zi714n+OA==}
-
   '@unocss/core@0.65.1':
     resolution: {integrity: sha512-Ke0WNZjfSCE6pniJb8PjiwhO6/McxVb1EQYrkkz8aJuR83xu+AEcTog9D4N9EUkRfHS5tZYXQtTj4Uh90T6CEg==}
 
@@ -1552,22 +1561,18 @@ packages:
   '@unocss/preset-wind@0.65.1':
     resolution: {integrity: sha512-7rw3hAWOkWMSjoprWKcQidqJRFQm8qM0IdLjFLQa2ROSzPSnIlNisXGEwAphf4/VYdP7+URUnu5eySQsIRWRzg==}
 
-  '@unocss/reset@0.65.0':
-    resolution: {integrity: sha512-S1AxgLKCpatz0zqyYg0koGZ003RLbRdTF03fl1jZMuTqzRRPC1FU+cq7Mqknr22Fn7JXfYQw2oTF+BH207M7Ug==}
-
-  '@unocss/rule-utils@0.65.0':
-    resolution: {integrity: sha512-a9glvClBhyhp7ORsmjViTZRWkXbYiuhGEKqMG83vD8JWI7yrVQ2WyVbHdqCjBpxzprdzY2nYD+cUHk3hS0HUgg==}
-    engines: {node: '>=14'}
+  '@unocss/reset@0.65.1':
+    resolution: {integrity: sha512-qyxF7rKGX+Cu3FpV8KCRQbtCvFcBpmzvx5A2wal77tIhrFR5VSH7NzCVmgs2+V9FXvU3aWVNZ79i1KMnLZ5Mjg==}
 
   '@unocss/rule-utils@0.65.1':
     resolution: {integrity: sha512-XGXdXsRmIuMDQk/3Fd3g5JMhsyDGWsTfs6aN4vFQ1rfdSgY4UwbslqUNbIH9xxoTfmzUOJ2lhNrFw78RygCNSA==}
     engines: {node: '>=14'}
 
-  '@unocss/transformer-directives@0.65.0':
-    resolution: {integrity: sha512-4ZE+GyZ4XGvvibaIZVh6rx1jqTPx1YnSXMpiS2ErRwc3BCjdyDXP/IjWdiyhcC1hWW1bXwyoHRgSCcRSF1C3yA==}
+  '@unocss/transformer-directives@0.65.1':
+    resolution: {integrity: sha512-6D3QSeSWXCA+Jc+BQGwat0RfcNtYZdyFFpP+zr1cFpK7nwNZqwqZU+mcY8nywu/u+hYuEQMWPMzEYDAssMfUQQ==}
 
-  '@unocss/transformer-variant-group@0.65.0':
-    resolution: {integrity: sha512-E5zSZgrfDGpjtAldIYkRrrGGT0T6Dj7kjig+zA5GtUKN0LCdmctV2CmiJvyIdRNxf+ChcMrkZu5L2X1hdEl4ZA==}
+  '@unocss/transformer-variant-group@0.65.1':
+    resolution: {integrity: sha512-LdSPDVpVCrMfgTKtGyWz0KkBXiJqFO8FRhiL4/9Hyaf+ECoWQ7RODgO6dKWyFIZEBjkLFK2toeZZvM+KYQlBlw==}
 
   '@unocss/vite@0.65.1':
     resolution: {integrity: sha512-5242hAlgTVUA+tJ9mwo/cpLqD9f4dn5V/prTmtIci0Y7zMsVeBlnQwfsV4MhyTVaF3eFxDy5AUEFiOuXo12rbQ==}
@@ -2854,8 +2859,8 @@ packages:
     resolution: {integrity: sha512-1e4Wqeblerz+tMKPIq2EMGiiWW1dIjZOksyHWSUm1rmuvw/how9hBHZ38lAGj5ID4Ik6EdkOw7NmWPy6LAwalw==}
     engines: {node: '>= 14'}
 
-  hula-emojis@1.1.0:
-    resolution: {integrity: sha512-3WrP12KeHxi6Xe8ig7397w5H7ukVFnjDSdVQZqCRDxw+dRNN6Ujt020m5T605bY4GbEBl/I6R+YBnr6qFKe1bw==}
+  hula-emojis@1.2.1:
+    resolution: {integrity: sha512-PDDnx2u98XYZKeuzEyUXZAfasFCphxynlLLW3dcixPAsm/GVAYZsJqr+IMnjQIpqg8lkBDIVSiu7+K2YQDreoQ==}
 
   'hula@file:':
     resolution: {directory: '', type: directory}
@@ -5622,6 +5627,10 @@ snapshots:
     dependencies:
       '@tauri-apps/api': 2.0.2
 
+  '@tauri-apps/plugin-fs@2.2.0':
+    dependencies:
+      '@tauri-apps/api': 2.0.2
+
   '@tauri-apps/plugin-http@2.0.0':
     dependencies:
       '@tauri-apps/api': 2.0.2
@@ -5631,6 +5640,10 @@ snapshots:
       '@tauri-apps/api': 2.0.2
 
   '@tauri-apps/plugin-process@2.2.0':
+    dependencies:
+      '@tauri-apps/api': 2.0.2
+
+  '@tauri-apps/plugin-shell@2.2.0':
     dependencies:
       '@tauri-apps/api': 2.0.2
 
@@ -5800,8 +5813,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@unocss/core@0.65.0': {}
-
   '@unocss/core@0.65.1': {}
 
   '@unocss/extractor-arbitrary-variants@0.65.1':
@@ -5837,27 +5848,22 @@ snapshots:
       '@unocss/preset-mini': 0.65.1
       '@unocss/rule-utils': 0.65.1
 
-  '@unocss/reset@0.65.0': {}
-
-  '@unocss/rule-utils@0.65.0':
-    dependencies:
-      '@unocss/core': 0.65.1
-      magic-string: 0.30.14
+  '@unocss/reset@0.65.1': {}
 
   '@unocss/rule-utils@0.65.1':
     dependencies:
       '@unocss/core': 0.65.1
       magic-string: 0.30.14
 
-  '@unocss/transformer-directives@0.65.0':
+  '@unocss/transformer-directives@0.65.1':
     dependencies:
-      '@unocss/core': 0.65.0
-      '@unocss/rule-utils': 0.65.0
+      '@unocss/core': 0.65.1
+      '@unocss/rule-utils': 0.65.1
       css-tree: 3.0.1
 
-  '@unocss/transformer-variant-group@0.65.0':
+  '@unocss/transformer-variant-group@0.65.1':
     dependencies:
-      '@unocss/core': 0.65.0
+      '@unocss/core': 0.65.1
 
   '@unocss/vite@0.65.1(rollup@4.28.0)(vite@6.0.3(@types/node@20.14.15)(jiti@2.4.0)(sass@1.83.0)(terser@5.31.5)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.13(typescript@5.7.2))':
     dependencies:
@@ -7418,7 +7424,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  hula-emojis@1.1.0: {}
+  hula-emojis@1.2.1: {}
 
   hula@file:(@types/sortablejs@1.15.8)(rollup@4.28.0)(typescript@5.7.2):
     dependencies:
@@ -7426,15 +7432,17 @@ snapshots:
       '@tauri-apps/api': 2.0.2
       '@tauri-apps/plugin-autostart': 2.2.0
       '@tauri-apps/plugin-clipboard-manager': 2.0.0
+      '@tauri-apps/plugin-fs': 2.2.0
       '@tauri-apps/plugin-http': 2.0.0
       '@tauri-apps/plugin-os': 2.0.0
       '@tauri-apps/plugin-process': 2.2.0
+      '@tauri-apps/plugin-shell': 2.2.0
       '@tauri-apps/plugin-sql': 2.0.2
       '@tauri-apps/plugin-updater': 2.0.0
       colorthief: 2.6.0
       dayjs: 1.11.13
       grapheme-splitter: 1.0.4
-      hula-emojis: 1.1.0
+      hula-emojis: 1.2.1
       lodash-es: 4.17.21
       mitt: 3.0.1
       naive-ui: 2.40.3(vue@3.5.13(typescript@5.7.2))
