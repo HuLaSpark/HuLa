@@ -29,9 +29,9 @@ tauri-plugin-websocket = "2.0.1"
 tauri-plugin-http = {version="2.0.1",features= ["unsafe-headers"] }
 tauri-plugin-process = "2.0.1"
 tauri-plugin-fs = "2.0.1"
-tauri-plugin-dialog = "2.0.1"
+tauri-plugin-dialog = "2.2.0"
 tauri-plugin-upload = "2.0.1"
-tauri-plugin-global-shortcut = "2.0.1"
+tauri-plugin-global-shortcut = "2.2.0"
 tauri-plugin-clipboard-manager = "2.0.1"
 tauri-plugin-updater = "2"
 tauri-plugin-sql = { version = "2", features = ["sqlite"] }

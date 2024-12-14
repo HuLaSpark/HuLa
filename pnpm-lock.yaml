@@ -15,8 +15,8 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       '@tauri-apps/plugin-autostart':
-        specifier: 2.0.0
-        version: 2.0.0
+        specifier: 2.2.0
+        version: 2.2.0
       '@tauri-apps/plugin-clipboard-manager':
         specifier: 2.0.0
         version: 2.0.0
@@ -27,8 +27,8 @@ importers:
         specifier: 2.0.0
         version: 2.0.0
       '@tauri-apps/plugin-process':
-        specifier: 2.0.0
-        version: 2.0.0
+        specifier: 2.2.0
+        version: 2.2.0
       '@tauri-apps/plugin-sql':
         specifier: ^2.0.1
         version: 2.0.2
@@ -72,8 +72,8 @@ importers:
         specifier: ^3.5.13
         version: 3.5.13(typescript@5.7.2)
       vue-draggable-plus:
-        specifier: ^0.5.3
-        version: 0.5.3(@types/sortablejs@1.15.8)
+        specifier: ^0.6.0
+        version: 0.6.0(@types/sortablejs@1.15.8)
       vue-router:
         specifier: ^4.5.0
         version: 4.5.0(vue@3.5.13(typescript@5.7.2))
@@ -112,8 +112,8 @@ importers:
         specifier: ^7.15.0
         version: 7.18.0(eslint@8.57.1)(typescript@5.7.2)
       '@unocss/preset-uno':
-        specifier: ^0.65.0
-        version: 0.65.0
+        specifier: ^0.65.1
+        version: 0.65.1
       '@unocss/reset':
         specifier: ^0.65.0
         version: 0.65.0
@@ -124,8 +124,8 @@ importers:
         specifier: ^0.65.0
         version: 0.65.0
       '@unocss/vite':
-        specifier: ^0.65.0
-        version: 0.65.0(rollup@4.28.0)(vite@6.0.3(@types/node@20.14.15)(jiti@2.4.0)(sass@1.83.0)(terser@5.31.5)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.13(typescript@5.7.2))
+        specifier: ^0.65.1
+        version: 0.65.1(rollup@4.28.0)(vite@6.0.3(@types/node@20.14.15)(jiti@2.4.0)(sass@1.83.0)(terser@5.31.5)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.13(typescript@5.7.2))
       '@vitejs/plugin-vue':
         specifier: ^5.2.1
         version: 5.2.1(vite@6.0.3(@types/node@20.14.15)(jiti@2.4.0)(sass@1.83.0)(terser@5.31.5)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.13(typescript@5.7.2))
@@ -1379,8 +1379,8 @@ packages:
     engines: {node: '>= 10'}
     hasBin: true
 
-  '@tauri-apps/plugin-autostart@2.0.0':
-    resolution: {integrity: sha512-NEwOQWVasZ8RczXkMLNJokRDujneuMH/UFA5t84DLkbNZUmiD3G7HZWhgSd1YQ0BFU9h9w+h2B/py3y6bzWg4Q==}
+  '@tauri-apps/plugin-autostart@2.2.0':
+    resolution: {integrity: sha512-TzVcDZdOvdot0avkpstUWJKKEl4cyxLpFB9DZZRW5zH8k+Bv8IVJmO0zyYuw+7oKlGdHOINbD/7Je7GHMViw5w==}
 
   '@tauri-apps/plugin-clipboard-manager@2.0.0':
     resolution: {integrity: sha512-V1sXmbjnwfXt/r48RJMwfUmDMSaP/8/YbH4CLNxt+/sf1eHlIP8PRFdFDQwLN0cNQKu2rqQVbG/Wc/Ps6cDUhw==}
@@ -1391,8 +1391,8 @@ packages:
   '@tauri-apps/plugin-os@2.0.0':
     resolution: {integrity: sha512-M7hG/nNyQYTJxVG/UhTKhp9mpXriwWzrs9mqDreB8mIgqA3ek5nHLdwRZJWhkKjZrnDT4v9CpA9BhYeplTlAiA==}
 
-  '@tauri-apps/plugin-process@2.0.0':
-    resolution: {integrity: sha512-OYzi0GnkrF4NAnsHZU7U3tjSoP0PbeAlO7T1Z+vJoBUH9sFQ1NSLqWYWQyf8hcb3gVWe7P1JggjiskO+LST1ug==}
+  '@tauri-apps/plugin-process@2.2.0':
+    resolution: {integrity: sha512-uypN2Crmyop9z+KRJr3zl71OyVFgTuvHFjsJ0UxxQ/J5212jVa5w4nPEYjIewcn8bUEXacRebwE6F7owgrbhSw==}
 
   '@tauri-apps/plugin-sql@2.0.2':
     resolution: {integrity: sha512-qrSY8hLfqHlnO3nH6DR2h6zEVT5sSeB5HHymvT40/FKwv8unewwRiPq4xV+qQZXN1a58ZtSDqVOCBnLHxGPczQ==}
@@ -1527,27 +1527,30 @@ packages:
   '@ungap/structured-clone@1.2.1':
     resolution: {integrity: sha512-fEzPV3hSkSMltkw152tJKNARhOupqbH96MZWyRjNaYZOMIzbrTeQDG+MTc6Mr2pgzFQzFxAfmhGDNP5QK++2ZA==}
 
-  '@unocss/config@0.65.0':
-    resolution: {integrity: sha512-nprE4G0HfhQD9+lJv6g91p7U47+2IbFnTo+RfTdkn1NDKNptGBYhcYIn1AlyRlS7MOjU3IlyNBG5rfv1vK77mw==}
+  '@unocss/config@0.65.1':
+    resolution: {integrity: sha512-Akf5Vm2bGrUK/a10QBF3GLETFJnwW1G8ThPevrOCj0lBVWKlN5eMQnodyNdoCw+JMPfCPZdg+4lU8cJJIRAAbQ==}
     engines: {node: '>=14'}
 
   '@unocss/core@0.65.0':
     resolution: {integrity: sha512-2QwjMq/bm7lbxk6BTyGblWuTtSfXRuHJSoN1zys53ES+SrVVYA8FVDIpiTQbxENLcXhwwq1OaN3z7zi714n+OA==}
 
-  '@unocss/extractor-arbitrary-variants@0.65.0':
-    resolution: {integrity: sha512-flWxSflswTAQs2FE0Qn5aaZOkOioKf0N3kGV11vRi0tkRtiQOmWJ24Va5ysdC37MeeWvzsOYfVu662ZVE1CQ9w==}
+  '@unocss/core@0.65.1':
+    resolution: {integrity: sha512-Ke0WNZjfSCE6pniJb8PjiwhO6/McxVb1EQYrkkz8aJuR83xu+AEcTog9D4N9EUkRfHS5tZYXQtTj4Uh90T6CEg==}
 
-  '@unocss/inspector@0.65.0':
-    resolution: {integrity: sha512-/UzXkhHRLB4i+PsXO5lxQlJ/85zFEMMe2iFxLu/ORbn2lINettseqLpMdfdkaDNrqArYVuDcA5WSjsfKNA74HA==}
+  '@unocss/extractor-arbitrary-variants@0.65.1':
+    resolution: {integrity: sha512-VpF7j29TlmVjNolkIjhQ/cwYkuPUoXLv+ko62YRMibE5632QepbNob69pNYGOZustrZt3LvgHD/GcriKwJO4BA==}
 
-  '@unocss/preset-mini@0.65.0':
-    resolution: {integrity: sha512-Vc6ESW/Y5WFMc4TWhTmGtvljlzN83oq0RzPxgsB0XTgIIXBTRpf9O/v3y58lPUyJQo13ycafp+2CqtVVPC5zzg==}
+  '@unocss/inspector@0.65.1':
+    resolution: {integrity: sha512-RtONVp7rPpfSarr48qVEEsm201JyQSv6M21lqu1IzQZ62LQB5Gmi59Y+XR6cYDtwSn5ZUGxowR7nIRTPBMcxkw==}
 
-  '@unocss/preset-uno@0.65.0':
-    resolution: {integrity: sha512-Lsq67rJJ1YoKInwEFsMXMRZUhmxfwQhULPI/A7ghV0Ot/QvCv4hP64QoAReBvkjeV3JgyJJnFb2v4fAfASV8OA==}
+  '@unocss/preset-mini@0.65.1':
+    resolution: {integrity: sha512-dKIxi+ChWSZvXG8I7yVBjw4FLHdAvKrrCN9bjKpR4/4epKD6jRtEcR6S1wL6XSBWabh7V7D/VbVk+XZ6WsGuXA==}
 
-  '@unocss/preset-wind@0.65.0':
-    resolution: {integrity: sha512-teb1KrIxUY8GAYONsgvICyNcioBqo+NzvXymnxZAuVLEt/i3FPi/SriVOn2cda30vzoU7S+Bi1ML0QtA/O6BLg==}
+  '@unocss/preset-uno@0.65.1':
+    resolution: {integrity: sha512-OSEkphrlR9/RM5un9t9AqVQXOGBLJgjcEweZSm2ng9AK7BsxBXuVP1FelmRqeXVYT5uFtBoD4dfgCgBjGFIW9Q==}
+
+  '@unocss/preset-wind@0.65.1':
+    resolution: {integrity: sha512-7rw3hAWOkWMSjoprWKcQidqJRFQm8qM0IdLjFLQa2ROSzPSnIlNisXGEwAphf4/VYdP7+URUnu5eySQsIRWRzg==}
 
   '@unocss/reset@0.65.0':
     resolution: {integrity: sha512-S1AxgLKCpatz0zqyYg0koGZ003RLbRdTF03fl1jZMuTqzRRPC1FU+cq7Mqknr22Fn7JXfYQw2oTF+BH207M7Ug==}
@@ -1556,14 +1559,18 @@ packages:
     resolution: {integrity: sha512-a9glvClBhyhp7ORsmjViTZRWkXbYiuhGEKqMG83vD8JWI7yrVQ2WyVbHdqCjBpxzprdzY2nYD+cUHk3hS0HUgg==}
     engines: {node: '>=14'}
 
+  '@unocss/rule-utils@0.65.1':
+    resolution: {integrity: sha512-XGXdXsRmIuMDQk/3Fd3g5JMhsyDGWsTfs6aN4vFQ1rfdSgY4UwbslqUNbIH9xxoTfmzUOJ2lhNrFw78RygCNSA==}
+    engines: {node: '>=14'}
+
   '@unocss/transformer-directives@0.65.0':
     resolution: {integrity: sha512-4ZE+GyZ4XGvvibaIZVh6rx1jqTPx1YnSXMpiS2ErRwc3BCjdyDXP/IjWdiyhcC1hWW1bXwyoHRgSCcRSF1C3yA==}
 
   '@unocss/transformer-variant-group@0.65.0':
     resolution: {integrity: sha512-E5zSZgrfDGpjtAldIYkRrrGGT0T6Dj7kjig+zA5GtUKN0LCdmctV2CmiJvyIdRNxf+ChcMrkZu5L2X1hdEl4ZA==}
 
-  '@unocss/vite@0.65.0':
-    resolution: {integrity: sha512-Xu9QSDdR0n+mkdIBVm9EQ3BVP+iydNm1PhNrs/ksdXxnoug85GCMIcmJ3GKLVtNXZeRKm9W1Cq1Fc2oMe0FiZw==}
+  '@unocss/vite@0.65.1':
+    resolution: {integrity: sha512-5242hAlgTVUA+tJ9mwo/cpLqD9f4dn5V/prTmtIci0Y7zMsVeBlnQwfsV4MhyTVaF3eFxDy5AUEFiOuXo12rbQ==}
     peerDependencies:
       vite: ^2.9.0 || ^3.0.0-0 || ^4.0.0 || ^5.0.0-0 || ^6.0.0-0
 
@@ -4437,8 +4444,8 @@ packages:
       '@vue/composition-api':
         optional: true
 
-  vue-draggable-plus@0.5.3:
-    resolution: {integrity: sha512-dwKDzZ8io3y7k2iuIwVwiGrdiq5C0S7Et7nt5Gz5KjpBS9MtZGFP+L4FJPWGSLYleOT8HmVuCXTZYjGet7wC0g==}
+  vue-draggable-plus@0.6.0:
+    resolution: {integrity: sha512-G5TSfHrt9tX9EjdG49InoFJbt2NYk0h3kgjgKxkFWr3ulIUays0oFObr5KZ8qzD4+QnhtALiRwIqY6qul4egqw==}
     peerDependencies:
       '@types/sortablejs': ^1.15.0
       '@vue/composition-api': '*'
@@ -5607,7 +5614,7 @@ snapshots:
       '@tauri-apps/cli-win32-ia32-msvc': 2.0.4
       '@tauri-apps/cli-win32-x64-msvc': 2.0.4
 
-  '@tauri-apps/plugin-autostart@2.0.0':
+  '@tauri-apps/plugin-autostart@2.2.0':
     dependencies:
       '@tauri-apps/api': 2.0.2
 
@@ -5623,7 +5630,7 @@ snapshots:
     dependencies:
       '@tauri-apps/api': 2.0.2
 
-  '@tauri-apps/plugin-process@2.0.0':
+  '@tauri-apps/plugin-process@2.2.0':
     dependencies:
       '@tauri-apps/api': 2.0.2
 
@@ -5786,53 +5793,60 @@ snapshots:
 
   '@ungap/structured-clone@1.2.1': {}
 
-  '@unocss/config@0.65.0':
+  '@unocss/config@0.65.1':
     dependencies:
-      '@unocss/core': 0.65.0
+      '@unocss/core': 0.65.1
       unconfig: 0.5.5
     transitivePeerDependencies:
       - supports-color
 
   '@unocss/core@0.65.0': {}
 
-  '@unocss/extractor-arbitrary-variants@0.65.0':
-    dependencies:
-      '@unocss/core': 0.65.0
+  '@unocss/core@0.65.1': {}
 
-  '@unocss/inspector@0.65.0(vue@3.5.13(typescript@5.7.2))':
+  '@unocss/extractor-arbitrary-variants@0.65.1':
     dependencies:
-      '@unocss/core': 0.65.0
-      '@unocss/rule-utils': 0.65.0
+      '@unocss/core': 0.65.1
+
+  '@unocss/inspector@0.65.1(vue@3.5.13(typescript@5.7.2))':
+    dependencies:
+      '@unocss/core': 0.65.1
+      '@unocss/rule-utils': 0.65.1
       gzip-size: 6.0.0
       sirv: 2.0.4
       vue-flow-layout: 0.1.1(vue@3.5.13(typescript@5.7.2))
     transitivePeerDependencies:
       - vue
 
-  '@unocss/preset-mini@0.65.0':
+  '@unocss/preset-mini@0.65.1':
     dependencies:
-      '@unocss/core': 0.65.0
-      '@unocss/extractor-arbitrary-variants': 0.65.0
-      '@unocss/rule-utils': 0.65.0
+      '@unocss/core': 0.65.1
+      '@unocss/extractor-arbitrary-variants': 0.65.1
+      '@unocss/rule-utils': 0.65.1
 
-  '@unocss/preset-uno@0.65.0':
+  '@unocss/preset-uno@0.65.1':
     dependencies:
-      '@unocss/core': 0.65.0
-      '@unocss/preset-mini': 0.65.0
-      '@unocss/preset-wind': 0.65.0
-      '@unocss/rule-utils': 0.65.0
+      '@unocss/core': 0.65.1
+      '@unocss/preset-mini': 0.65.1
+      '@unocss/preset-wind': 0.65.1
+      '@unocss/rule-utils': 0.65.1
 
-  '@unocss/preset-wind@0.65.0':
+  '@unocss/preset-wind@0.65.1':
     dependencies:
-      '@unocss/core': 0.65.0
-      '@unocss/preset-mini': 0.65.0
-      '@unocss/rule-utils': 0.65.0
+      '@unocss/core': 0.65.1
+      '@unocss/preset-mini': 0.65.1
+      '@unocss/rule-utils': 0.65.1
 
   '@unocss/reset@0.65.0': {}
 
   '@unocss/rule-utils@0.65.0':
     dependencies:
-      '@unocss/core': 0.65.0
+      '@unocss/core': 0.65.1
+      magic-string: 0.30.14
+
+  '@unocss/rule-utils@0.65.1':
+    dependencies:
+      '@unocss/core': 0.65.1
       magic-string: 0.30.14
 
   '@unocss/transformer-directives@0.65.0':
@@ -5845,13 +5859,13 @@ snapshots:
     dependencies:
       '@unocss/core': 0.65.0
 
-  '@unocss/vite@0.65.0(rollup@4.28.0)(vite@6.0.3(@types/node@20.14.15)(jiti@2.4.0)(sass@1.83.0)(terser@5.31.5)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.13(typescript@5.7.2))':
+  '@unocss/vite@0.65.1(rollup@4.28.0)(vite@6.0.3(@types/node@20.14.15)(jiti@2.4.0)(sass@1.83.0)(terser@5.31.5)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.13(typescript@5.7.2))':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@rollup/pluginutils': 5.1.3(rollup@4.28.0)
-      '@unocss/config': 0.65.0
-      '@unocss/core': 0.65.0
-      '@unocss/inspector': 0.65.0(vue@3.5.13(typescript@5.7.2))
+      '@unocss/config': 0.65.1
+      '@unocss/core': 0.65.1
+      '@unocss/inspector': 0.65.1(vue@3.5.13(typescript@5.7.2))
       chokidar: 3.6.0
       magic-string: 0.30.14
       tinyglobby: 0.2.10
@@ -7410,11 +7424,11 @@ snapshots:
     dependencies:
       '@actions/github': 6.0.0
       '@tauri-apps/api': 2.0.2
-      '@tauri-apps/plugin-autostart': 2.0.0
+      '@tauri-apps/plugin-autostart': 2.2.0
       '@tauri-apps/plugin-clipboard-manager': 2.0.0
       '@tauri-apps/plugin-http': 2.0.0
       '@tauri-apps/plugin-os': 2.0.0
-      '@tauri-apps/plugin-process': 2.0.0
+      '@tauri-apps/plugin-process': 2.2.0
       '@tauri-apps/plugin-sql': 2.0.2
       '@tauri-apps/plugin-updater': 2.0.0
       colorthief: 2.6.0
@@ -7428,7 +7442,7 @@ snapshots:
       pinia-plugin-persistedstate: 4.1.2(pinia@2.2.1(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2)))(rollup@4.28.0)
       pinia-shared-state: 0.5.1(pinia@2.2.1(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2)))(vue@3.5.13(typescript@5.7.2))
       vue: 3.5.13(typescript@5.7.2)
-      vue-draggable-plus: 0.5.3(@types/sortablejs@1.15.8)
+      vue-draggable-plus: 0.6.0(@types/sortablejs@1.15.8)
       vue-router: 4.5.0(vue@3.5.13(typescript@5.7.2))
     transitivePeerDependencies:
       - '@pinia/nuxt'
@@ -9070,7 +9084,7 @@ snapshots:
     dependencies:
       vue: 3.5.13(typescript@5.7.2)
 
-  vue-draggable-plus@0.5.3(@types/sortablejs@1.15.8):
+  vue-draggable-plus@0.6.0(@types/sortablejs@1.15.8):
     dependencies:
       '@types/sortablejs': 1.15.8
 
