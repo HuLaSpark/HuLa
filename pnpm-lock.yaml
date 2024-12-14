@@ -112,8 +112,8 @@ importers:
         specifier: ^7.15.0
         version: 7.18.0(eslint@8.57.1)(typescript@5.7.2)
       '@unocss/preset-uno':
-        specifier: ^0.65.0
-        version: 0.65.0
+        specifier: ^0.65.1
+        version: 0.65.1
       '@unocss/reset':
         specifier: ^0.65.0
         version: 0.65.0
@@ -1534,26 +1534,33 @@ packages:
   '@unocss/core@0.65.0':
     resolution: {integrity: sha512-2QwjMq/bm7lbxk6BTyGblWuTtSfXRuHJSoN1zys53ES+SrVVYA8FVDIpiTQbxENLcXhwwq1OaN3z7zi714n+OA==}
 
-  '@unocss/extractor-arbitrary-variants@0.65.0':
-    resolution: {integrity: sha512-flWxSflswTAQs2FE0Qn5aaZOkOioKf0N3kGV11vRi0tkRtiQOmWJ24Va5ysdC37MeeWvzsOYfVu662ZVE1CQ9w==}
+  '@unocss/core@0.65.1':
+    resolution: {integrity: sha512-Ke0WNZjfSCE6pniJb8PjiwhO6/McxVb1EQYrkkz8aJuR83xu+AEcTog9D4N9EUkRfHS5tZYXQtTj4Uh90T6CEg==}
+
+  '@unocss/extractor-arbitrary-variants@0.65.1':
+    resolution: {integrity: sha512-VpF7j29TlmVjNolkIjhQ/cwYkuPUoXLv+ko62YRMibE5632QepbNob69pNYGOZustrZt3LvgHD/GcriKwJO4BA==}
 
   '@unocss/inspector@0.65.0':
     resolution: {integrity: sha512-/UzXkhHRLB4i+PsXO5lxQlJ/85zFEMMe2iFxLu/ORbn2lINettseqLpMdfdkaDNrqArYVuDcA5WSjsfKNA74HA==}
 
-  '@unocss/preset-mini@0.65.0':
-    resolution: {integrity: sha512-Vc6ESW/Y5WFMc4TWhTmGtvljlzN83oq0RzPxgsB0XTgIIXBTRpf9O/v3y58lPUyJQo13ycafp+2CqtVVPC5zzg==}
+  '@unocss/preset-mini@0.65.1':
+    resolution: {integrity: sha512-dKIxi+ChWSZvXG8I7yVBjw4FLHdAvKrrCN9bjKpR4/4epKD6jRtEcR6S1wL6XSBWabh7V7D/VbVk+XZ6WsGuXA==}
 
-  '@unocss/preset-uno@0.65.0':
-    resolution: {integrity: sha512-Lsq67rJJ1YoKInwEFsMXMRZUhmxfwQhULPI/A7ghV0Ot/QvCv4hP64QoAReBvkjeV3JgyJJnFb2v4fAfASV8OA==}
+  '@unocss/preset-uno@0.65.1':
+    resolution: {integrity: sha512-OSEkphrlR9/RM5un9t9AqVQXOGBLJgjcEweZSm2ng9AK7BsxBXuVP1FelmRqeXVYT5uFtBoD4dfgCgBjGFIW9Q==}
 
-  '@unocss/preset-wind@0.65.0':
-    resolution: {integrity: sha512-teb1KrIxUY8GAYONsgvICyNcioBqo+NzvXymnxZAuVLEt/i3FPi/SriVOn2cda30vzoU7S+Bi1ML0QtA/O6BLg==}
+  '@unocss/preset-wind@0.65.1':
+    resolution: {integrity: sha512-7rw3hAWOkWMSjoprWKcQidqJRFQm8qM0IdLjFLQa2ROSzPSnIlNisXGEwAphf4/VYdP7+URUnu5eySQsIRWRzg==}
 
   '@unocss/reset@0.65.0':
     resolution: {integrity: sha512-S1AxgLKCpatz0zqyYg0koGZ003RLbRdTF03fl1jZMuTqzRRPC1FU+cq7Mqknr22Fn7JXfYQw2oTF+BH207M7Ug==}
 
   '@unocss/rule-utils@0.65.0':
     resolution: {integrity: sha512-a9glvClBhyhp7ORsmjViTZRWkXbYiuhGEKqMG83vD8JWI7yrVQ2WyVbHdqCjBpxzprdzY2nYD+cUHk3hS0HUgg==}
+    engines: {node: '>=14'}
+
+  '@unocss/rule-utils@0.65.1':
+    resolution: {integrity: sha512-XGXdXsRmIuMDQk/3Fd3g5JMhsyDGWsTfs6aN4vFQ1rfdSgY4UwbslqUNbIH9xxoTfmzUOJ2lhNrFw78RygCNSA==}
     engines: {node: '>=14'}
 
   '@unocss/transformer-directives@0.65.0':
@@ -5795,9 +5802,11 @@ snapshots:
 
   '@unocss/core@0.65.0': {}
 
-  '@unocss/extractor-arbitrary-variants@0.65.0':
+  '@unocss/core@0.65.1': {}
+
+  '@unocss/extractor-arbitrary-variants@0.65.1':
     dependencies:
-      '@unocss/core': 0.65.0
+      '@unocss/core': 0.65.1
 
   '@unocss/inspector@0.65.0(vue@3.5.13(typescript@5.7.2))':
     dependencies:
@@ -5809,30 +5818,35 @@ snapshots:
     transitivePeerDependencies:
       - vue
 
-  '@unocss/preset-mini@0.65.0':
+  '@unocss/preset-mini@0.65.1':
     dependencies:
-      '@unocss/core': 0.65.0
-      '@unocss/extractor-arbitrary-variants': 0.65.0
-      '@unocss/rule-utils': 0.65.0
+      '@unocss/core': 0.65.1
+      '@unocss/extractor-arbitrary-variants': 0.65.1
+      '@unocss/rule-utils': 0.65.1
 
-  '@unocss/preset-uno@0.65.0':
+  '@unocss/preset-uno@0.65.1':
     dependencies:
-      '@unocss/core': 0.65.0
-      '@unocss/preset-mini': 0.65.0
-      '@unocss/preset-wind': 0.65.0
-      '@unocss/rule-utils': 0.65.0
+      '@unocss/core': 0.65.1
+      '@unocss/preset-mini': 0.65.1
+      '@unocss/preset-wind': 0.65.1
+      '@unocss/rule-utils': 0.65.1
 
-  '@unocss/preset-wind@0.65.0':
+  '@unocss/preset-wind@0.65.1':
     dependencies:
-      '@unocss/core': 0.65.0
-      '@unocss/preset-mini': 0.65.0
-      '@unocss/rule-utils': 0.65.0
+      '@unocss/core': 0.65.1
+      '@unocss/preset-mini': 0.65.1
+      '@unocss/rule-utils': 0.65.1
 
   '@unocss/reset@0.65.0': {}
 
   '@unocss/rule-utils@0.65.0':
     dependencies:
       '@unocss/core': 0.65.0
+      magic-string: 0.30.14
+
+  '@unocss/rule-utils@0.65.1':
+    dependencies:
+      '@unocss/core': 0.65.1
       magic-string: 0.30.14
 
   '@unocss/transformer-directives@0.65.0':
