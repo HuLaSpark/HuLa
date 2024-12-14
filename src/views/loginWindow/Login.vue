@@ -240,6 +240,8 @@ const giveAccount = (item: UserInfoType) => {
 
 /**登录后创建主页窗口*/
 const normalLogin = async () => {
+  // 普通登录前需清空token
+  localStorage.removeItem('TOKEN')
   loading.value = true
   const { account, password } = info.value
   apis
