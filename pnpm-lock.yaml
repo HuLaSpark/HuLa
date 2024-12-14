@@ -15,8 +15,8 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       '@tauri-apps/plugin-autostart':
-        specifier: 2.0.0
-        version: 2.0.0
+        specifier: 2.2.0
+        version: 2.2.0
       '@tauri-apps/plugin-clipboard-manager':
         specifier: 2.0.0
         version: 2.0.0
@@ -1379,8 +1379,8 @@ packages:
     engines: {node: '>= 10'}
     hasBin: true
 
-  '@tauri-apps/plugin-autostart@2.0.0':
-    resolution: {integrity: sha512-NEwOQWVasZ8RczXkMLNJokRDujneuMH/UFA5t84DLkbNZUmiD3G7HZWhgSd1YQ0BFU9h9w+h2B/py3y6bzWg4Q==}
+  '@tauri-apps/plugin-autostart@2.2.0':
+    resolution: {integrity: sha512-TzVcDZdOvdot0avkpstUWJKKEl4cyxLpFB9DZZRW5zH8k+Bv8IVJmO0zyYuw+7oKlGdHOINbD/7Je7GHMViw5w==}
 
   '@tauri-apps/plugin-clipboard-manager@2.0.0':
     resolution: {integrity: sha512-V1sXmbjnwfXt/r48RJMwfUmDMSaP/8/YbH4CLNxt+/sf1eHlIP8PRFdFDQwLN0cNQKu2rqQVbG/Wc/Ps6cDUhw==}
@@ -5607,7 +5607,7 @@ snapshots:
       '@tauri-apps/cli-win32-ia32-msvc': 2.0.4
       '@tauri-apps/cli-win32-x64-msvc': 2.0.4
 
-  '@tauri-apps/plugin-autostart@2.0.0':
+  '@tauri-apps/plugin-autostart@2.2.0':
     dependencies:
       '@tauri-apps/api': 2.0.2
 
@@ -7410,7 +7410,7 @@ snapshots:
     dependencies:
       '@actions/github': 6.0.0
       '@tauri-apps/api': 2.0.2
-      '@tauri-apps/plugin-autostart': 2.0.0
+      '@tauri-apps/plugin-autostart': 2.2.0
       '@tauri-apps/plugin-clipboard-manager': 2.0.0
       '@tauri-apps/plugin-http': 2.0.0
       '@tauri-apps/plugin-os': 2.0.0
