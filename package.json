@@ -78,7 +78,7 @@
     "@types/node": "^20.14.14",
     "@typescript-eslint/eslint-plugin": "7.1.0",
     "@typescript-eslint/parser": "^7.15.0",
-    "@unocss/preset-uno": "^0.65.0",
+    "@unocss/preset-uno": "^0.65.1",
     "@unocss/reset": "^0.65.0",
     "@unocss/transformer-directives": "^0.65.0",
     "@unocss/transformer-variant-group": "^0.65.0",
