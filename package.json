@@ -82,7 +82,7 @@
     "@unocss/reset": "^0.65.0",
     "@unocss/transformer-directives": "^0.65.0",
     "@unocss/transformer-variant-group": "^0.65.0",
-    "@unocss/vite": "^0.65.0",
+    "@unocss/vite": "^0.65.1",
     "@vitejs/plugin-vue": "^5.2.1",
     "@vitejs/plugin-vue-jsx": "^4.1.1",
     "@vueuse/core": "^12.0.0",
