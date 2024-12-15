@@ -8,17 +8,7 @@
     <template #trigger>
       <!-- 头像 -->
       <div class="relative size-34px rounded-50% cursor-pointer">
-        <n-avatar
-          v-if="avatarExists"
-          :color="'#909090'"
-          :size="34"
-          :src="userStore.userInfo.avatar"
-          fallback-src="/logo.png"
-          round>
-          {{ avatarExists }}
-        </n-avatar>
-
-        <n-avatar v-else :size="34" :src="userStore.userInfo.avatar" fallback-src="/logo.png" round />
+        <n-avatar :color="'#909090'" :size="34" :src="avatarSrc" fallback-src="/logo.png" round />
 
         <div
           class="bg-[--left-bg-color] text-10px rounded-50% size-12px absolute bottom--2px right--2px border-(2px solid [--left-bg-color])"
@@ -37,23 +27,11 @@
       <n-flex :size="25" align="center" justify="space-between" class="select-none cursor-default">
         <n-flex>
           <n-avatar
-            v-if="avatarExists"
             :color="'#909090'"
-            :src="userStore.userInfo.avatar"
+            :src="avatarSrc"
             round
             fallback-src="/logo.png"
-            class="size-68px text-20px select-none cursor-default">
-            {{ avatarExists }}
-          </n-avatar>
-
-          <n-avatar
-            v-else
-            :color="'#909090'"
-            :src="userStore.userInfo.avatar"
-            round
-            fallback-src="/logo.png"
-            class="size-68px text-20px select-none cursor-default">
-          </n-avatar>
+            class="size-68px text-20px select-none cursor-default" />
 
           <n-flex :size="10" class="text-[--text-color]" justify="center" vertical>
             <span class="text-18px">{{ userStore.userInfo.name }}</span>
@@ -104,9 +82,10 @@
 <script setup lang="ts">
 import { leftHook } from '../hook.ts'
 import { useUserStore } from '@/stores/user.ts'
+import { AvatarUtils } from '@/utils/avatarUtils'
 
 const userStore = useUserStore()
-const avatarExists = computed(() => (userStore.userInfo.avatar ? void 0 : userStore.userInfo.name?.slice(0, 1)))
+const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(userStore.userInfo.avatar as string))
 const { shrinkStatus, url, infoShow, bgColor, title, themeColor, openContent, handleEditing } = leftHook()
 </script>
 <style lang="scss" scoped>

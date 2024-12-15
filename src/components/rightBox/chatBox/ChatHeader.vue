@@ -100,7 +100,7 @@
         <template v-else>
           <div class="box-item cursor-default">
             <n-flex align="center" :size="10">
-              <n-avatar round :size="40" :src="activeItem.avatar" />
+              <n-avatar round :size="40" :src="AvatarUtils.getAvatarUrl(activeItem.avatar)" />
 
               <p class="text-(14px --text-color)">{{ activeItem.name }}</p>
 
@@ -122,16 +122,8 @@
 
               <n-flex align="center" justify="center" :size="20">
                 <template v-for="(item, _index) in userList" :key="_index">
-                  <n-flex v-if="item.avatar" vertical justify="center" align="center" :size="10">
-                    <n-avatar round :size="30" :src="item.avatar" />
-
-                    <p class="text-(10px --text-color center) w-30px truncate">{{ item.name }}</p>
-                  </n-flex>
-
-                  <n-flex v-else vertical justify="center" align="center" :size="10">
-                    <n-avatar class="text-10px" round :size="30">
-                      {{ item.name.slice(0, 1) }}
-                    </n-avatar>
+                  <n-flex vertical justify="center" align="center" :size="10">
+                    <n-avatar round :size="30" :src="AvatarUtils.getAvatarUrl(item.avatar)" />
 
                     <p class="text-(10px --text-color center) w-30px truncate">{{ item.name }}</p>
                   </n-flex>
@@ -191,6 +183,7 @@ import { useChatStore } from '@/stores/chat.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { useContactStore } from '@/stores/contacts.ts'
+import { AvatarUtils } from '@/utils/avatarUtils'
 
 // 使用useDisplayMedia获取屏幕共享的媒体流
 const { stream, start, stop } = useDisplayMedia()

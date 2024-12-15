@@ -1,6 +1,6 @@
 <template>
   <n-scrollbar style="max-height: 290px" class="p-[14px_14px_0_14px] box-border w-460px h-290px select-none">
-    <transition name="fade" mode="out-in" appear>
+    <transition name="fade" mode="out-in">
       <div :key="activeIndex" class="emoji-content">
         <!-- 最近使用 -->
         <div v-if="activeIndex === 0">

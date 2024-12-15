@@ -27,6 +27,8 @@ export type LoginUserReq = {
 }
 
 export type RegisterUserReq = {
+  /** 默认随机头像 */
+  avatar: string
   /** 昵称 */
   name: string
   /** 账号 */

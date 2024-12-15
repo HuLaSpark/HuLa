@@ -16,7 +16,7 @@
         justify="space-between"
         class="bg-[--center-bg-color] rounded-10px p-20px box-border border-(1px solid [--bg-popover])">
         <n-flex align="center" :size="10">
-          <n-avatar round size="large" :src="useUserInfo(item.uid).value.avatar" class="mr-10px" />
+          <n-avatar round size="large" :src="avatarSrc(useUserInfo(item.uid).value.avatar)" class="mr-10px" />
           <n-flex vertical :size="12">
             <n-flex align="center" :size="10">
               <n-popover
@@ -54,9 +54,12 @@
 import { useContactStore } from '@/stores/contacts.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { RequestFriendAgreeStatus } from '@/services/types.ts'
+import { AvatarUtils } from '@/utils/avatarUtils.ts'
 
 const contactStore = useContactStore()
 const currentUserId = ref(0)
+
+const avatarSrc = (url: string) => AvatarUtils.getAvatarUrl(url)
 </script>
 
 <style scoped lang="scss"></style>
