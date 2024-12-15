@@ -16,13 +16,14 @@
 
     <template v-for="(item, _index) in historyList" :key="_index">
       <n-flex align="center" :size="14" class="p-6px cursor-pointer rounded-8px hover:bg-[--list-hover-color]">
-        <n-avatar :size="38" round bordered :src="item.avatar" />
+        <n-avatar :size="38" round bordered :src="AvatarUtils.getAvatarUrl(item.avatar)" />
         <p class="text-(14px [--text-color])">{{ item.name }}</p>
       </n-flex>
     </template>
   </n-flex>
 </template>
 <script setup lang="ts">
+import { AvatarUtils } from '@/utils/avatarUtils'
 const historyList = [
   {
     avatar: 'https://picsum.photos/140?1',

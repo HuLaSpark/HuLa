@@ -71,36 +71,18 @@
               :special-menu="report">
               <n-flex @click="selectKey = item.uid" :key="item.uid" :size="10" align="center" class="item">
                 <n-avatar
-                  v-if="item.avatar"
                   lazy
                   round
                   class="grayscale"
                   :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
                   :color="'#fff'"
                   :size="24"
-                  :src="item.avatar"
+                  :src="AvatarUtils.getAvatarUrl(item.avatar)"
                   fallback-src="/logo.png"
                   :render-placeholder="() => null"
                   :intersection-observer-options="{
                     root: '#image-chat-sidebar'
-                  }"></n-avatar>
-
-                <n-avatar
-                  v-else
-                  lazy
-                  round
-                  class="grayscale text-10px"
-                  :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
-                  :color="'rgba(19, 152, 127, 0.4)'"
-                  :size="24"
-                  :src="item.avatar"
-                  fallback-src="/logo.png"
-                  :render-placeholder="() => null"
-                  :intersection-observer-options="{
-                    root: '#image-chat-sidebar'
-                  }">
-                  {{ item.name?.slice(0, 1) }}
-                </n-avatar>
+                  }" />
                 <span class="text-12px truncate flex-1">{{ item.name }}</span>
                 <div v-if="item.uid === 1" class="flex p-4px rounded-4px bg-#f5dadf size-fit select-none">
                   <span class="text-(10px #d5304f)">群主</span>
@@ -129,6 +111,7 @@ import { useUserInfo } from '@/hooks/useCached.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import type { UserItem } from '@/services/types.ts'
 import { useDebounceFn } from '@vueuse/core'
+import { AvatarUtils } from '@/utils/avatarUtils'
 
 const groupStore = useGroupStore()
 const globalStore = useGlobalStore()

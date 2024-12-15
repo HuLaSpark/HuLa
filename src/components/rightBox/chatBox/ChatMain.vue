@@ -122,28 +122,14 @@
                   :content="item"
                   :menu="chatStore.isGroup ? optionsList : void 0"
                   :special-menu="report">
-                  <!-- 没有头像时候显示 -->
-                  <n-avatar
-                    round
-                    v-if="avatarExists(item.fromUser.uid)"
-                    :size="34"
-                    :color="'#909090'"
-                    @click="selectKey = item.message.id"
-                    class="select-none"
-                    :src="getAvatarSrc(item.fromUser.uid)"
-                    :class="item.fromUser.uid === userUid ? '' : 'mr-10px'">
-                    {{ avatarExists(item.fromUser.uid) }}
-                  </n-avatar>
                   <!-- 存在头像时候显示 -->
                   <n-avatar
                     round
-                    v-else
                     :size="34"
                     @click="selectKey = item.message.id"
                     class="select-none"
                     :src="getAvatarSrc(item.fromUser.uid)"
-                    :class="item.fromUser.uid === userUid ? '' : 'mr-10px'">
-                  </n-avatar>
+                    :class="item.fromUser.uid === userUid ? '' : 'mr-10px'" />
                 </ContextMenu>
               </template>
               <!-- 用户个人信息框 -->
@@ -393,6 +379,7 @@ import { useChatStore } from '@/stores/chat.ts'
 import { type } from '@tauri-apps/plugin-os'
 import { useUserStore } from '@/stores/user.ts'
 import { useNetwork } from '@vueuse/core'
+import { AvatarUtils } from '@/utils/avatarUtils'
 
 const { activeItem } = defineProps<{
   activeItem: SessionItem
@@ -471,12 +458,8 @@ watch(chatMessageList, (value, oldValue) => {
 
 /** 获取用户头像 */
 const getAvatarSrc = (uid: number) => {
-  return uid === userUid.value ? userStore.userInfo.avatar : useUserInfo(uid).value.avatar
-}
-
-/** 头像是否存在 */
-const avatarExists = (uid: number) => {
-  return getAvatarSrc(uid) ? void 0 : useUserInfo(uid).value.name?.slice(0, 1)
+  const avatar = uid === userUid.value ? userStore.userInfo.avatar : useUserInfo(uid).value.avatar
+  return AvatarUtils.getAvatarUrl(avatar as string)
 }
 
 // 当鼠标进入时触发的处理函数

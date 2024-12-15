@@ -29,27 +29,13 @@
                     :key="item.uid">
                     <n-flex align="center" :size="10" class="h-75px pl-6px pr-8px flex-1 truncate">
                       <n-avatar
-                        v-if="useUserInfo(item.uid).value.avatar"
                         round
                         bordered
                         :size="44"
                         class="grayscale"
                         :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
-                        :src="useUserInfo(item.uid).value.avatar"
+                        :src="AvatarUtils.getAvatarUrl(useUserInfo(item.uid).value.avatar)"
                         fallback-src="/logo.png" />
-
-                      <n-avatar
-                        v-else
-                        round
-                        bordered
-                        :color="'#909090'"
-                        :size="44"
-                        class="grayscale"
-                        :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
-                        :src="useUserInfo(item.uid).value.avatar"
-                        fallback-src="/logo.png">
-                        {{ useUserInfo(item.uid).value.name?.slice(0, 1) }}
-                      </n-avatar>
 
                       <n-flex vertical justify="space-between" class="h-fit flex-1 truncate">
                         <span class="text-14px leading-tight flex-1 truncate">{{
@@ -96,6 +82,7 @@ import { useMitt } from '@/hooks/useMitt.ts'
 import { MittEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
+import { AvatarUtils } from '@/utils/avatarUtils'
 
 const menuList = ref([
   { label: '添加分组', icon: 'plus' },

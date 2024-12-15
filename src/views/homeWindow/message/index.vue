@@ -15,11 +15,7 @@
         @dblclick="handleMsgDblclick(item)"
         @select="$event.click(item)">
         <n-flex :size="10" align="center" class="h-75px pl-6px pr-8px flex-1">
-          <n-avatar v-if="item.avatar" :size="44" :src="item.avatar" bordered fallback-src="/logo.png" round />
-
-          <n-avatar v-else :color="'#909090'" :size="44" :src="item.avatar" bordered fallback-src="/logo.png" round>
-            {{ item.name?.slice(0, 1) }}
-          </n-avatar>
+          <n-avatar :size="44" :src="AvatarUtils.getAvatarUrl(item.avatar)" bordered fallback-src="/logo.png" round />
 
           <n-flex class="h-fit flex-1 truncate" justify="space-between" vertical>
             <n-flex :size="4" align="center" class="flex-1 truncate" justify="space-between">
@@ -66,6 +62,7 @@ import { useUserInfo } from '@/hooks/useCached.ts'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import SysNTF from '@/components/common/SystemNotification.tsx'
+import { AvatarUtils } from '@/utils/avatarUtils'
 
 const chatStore = useChatStore()
 const globalStore = useGlobalStore()

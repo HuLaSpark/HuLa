@@ -28,10 +28,7 @@
 
       <n-flex vertical justify="center" :size="20" class="p-20px">
         <n-flex align="center" justify="center" :size="20">
-          <n-avatar v-if="userInfo.avatar" round size="large" :src="userInfo.avatar" />
-          <n-avatar v-else round size="large" :src="userInfo.avatar">
-            {{ userInfo.name?.slice(0, 1) }}
-          </n-avatar>
+          <n-avatar round size="large" :src="avatarSrc" />
 
           <n-flex vertical :size="10">
             <p class="text-[--text-color]">{{ userInfo.name }}</p>
@@ -64,9 +61,11 @@ import { useUserInfo } from '@/hooks/useCached.ts'
 import apis from '@/services/apis.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useUserStore } from '@/stores/user.ts'
+import { AvatarUtils } from '@/utils/avatarUtils'
 
 const globalStore = useGlobalStore()
 const userStore = useUserStore()
+const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(userStore.userInfo.avatar as string))
 const { countGraphemes } = useCommon()
 const userInfo = ref(useUserInfo(globalStore.addFriendModalInfo.uid).value)
 const requestMsg = ref()

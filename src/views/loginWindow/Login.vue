@@ -9,13 +9,8 @@
       <!-- 头像 -->
       <n-flex justify="center" class="w-full pt-35px" data-tauri-drag-region>
         <n-avatar
-          v-if="info.avatar"
           class="size-80px rounded-50% bg-#b6d6d9ff border-(2px solid #fff)"
-          :src="info.avatar || '/logo.png'" />
-
-        <n-avatar v-else class="size-80px text-20px rounded-50% bg-#b6d6d9ff border-(2px solid #fff)">
-          {{ info.name.slice(0, 1) }}
-        </n-avatar>
+          :src="AvatarUtils.getAvatarUrl(info.avatar || '/logo.png')" />
       </n-flex>
 
       <!-- 登录菜单 -->
@@ -54,10 +49,7 @@
               @click="giveAccount(item)"
               class="p-8px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px">
               <div class="flex-between-center">
-                <n-avatar v-if="item.avatar" :src="item.avatar" class="size-28px bg-#ccc rounded-50%" />
-                <n-avatar v-else :src="item.avatar" :color="'#909090'" class="size-28px text-10px bg-#ccc rounded-50%">
-                  {{ item.name?.slice(0, 1) }}
-                </n-avatar>
+                <n-avatar :src="AvatarUtils.getAvatarUrl(item.avatar)" class="size-28px bg-#ccc rounded-50%" />
                 <p class="text-14px color-#505050">{{ item.account }}</p>
                 <svg @click.stop="delAccount(item)" class="w-12px h-12px">
                   <use href="#close"></use>
@@ -115,7 +107,7 @@
             :size="110"
             :color="'#fff'"
             class="border-(2px solid #fff)"
-            :src="userStore.userInfo.avatar || '/logo.png'" />
+            :src="AvatarUtils.getAvatarUrl(userStore.userInfo.avatar || '/logo.png')" />
         </n-flex>
 
         <n-flex justify="center">
@@ -174,6 +166,7 @@ import { useUserStore } from '@/stores/user.ts'
 import { UserInfoType } from '@/services/types.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { invoke } from '@tauri-apps/api/core'
+import { AvatarUtils } from '@/utils/avatarUtils'
 
 const settingStore = useSettingStore()
 const userStore = useUserStore()

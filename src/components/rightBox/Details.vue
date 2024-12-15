@@ -1,15 +1,7 @@
 <template>
   <!-- 好友详情 -->
   <n-flex v-if="content.type === RoomTypeEnum.SINGLE" vertical align="center" :size="30" class="mt-60px select-none">
-    <n-avatar v-if="item.avatar" class="rounded-50% size-146px border-(2px solid #fff)" :src="item.avatar" />
-
-    <n-avatar
-      v-else
-      :color="'#909090'"
-      class="rounded-50% size-146px text-28px border-(2px solid #fff)"
-      :src="item.avatar">
-      {{ item.name!.slice(0, 1) }}
-    </n-avatar>
+    <n-avatar class="rounded-50% size-146px border-(2px solid #fff)" :src="AvatarUtils.getAvatarUrl(item.avatar)" />
 
     <span class="text-(20px [--text-color])">{{ item.name }}</span>
 
@@ -96,7 +88,7 @@
         <template #avatar="{ option: { name, src } }">
           <n-tooltip>
             <template #trigger>
-              <n-avatar :src="src" />
+              <n-avatar :src="AvatarUtils.getAvatarUrl(src)" />
             </template>
             {{ name }}
           </n-tooltip>
@@ -115,6 +107,7 @@ import { RoomTypeEnum } from '@/enums'
 import { lightTheme } from 'naive-ui'
 import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
+import { AvatarUtils } from '@/utils/avatarUtils'
 
 const { openMsgSession } = useCommon()
 const { content } = defineProps<{

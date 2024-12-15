@@ -3,7 +3,7 @@
     <n-scrollbar style="max-height: 280px">
       <n-flex :size="26" class="z-10 p-[18px_18px_36px_18px] box-border w-full">
         <template v-for="(plugin, index) in allPlugins" :key="index">
-          <Transition name="fade" mode="out-in">
+          <Transition name="state-change" mode="out-in">
             <!-- 未安装和下载中状态 -->
             <n-flex
               v-if="plugin.state === PluginEnum.NOT_INSTALLED || plugin.state === PluginEnum.DOWNLOADING"
@@ -233,7 +233,18 @@ onUnmounted(() => {
 @use '@/styles/scss/global/variable.scss' as *;
 .box {
   @apply relative select-none custom-shadow cursor-pointer size-fit w-100px h-100px rounded-8px overflow-hidden;
-  transition: all 0.2s;
+  transition: all 0.3s ease-in-out;
+
+  &.state-change-enter-active,
+  &.state-change-leave-active {
+    transition: all 0.3s ease-in-out;
+  }
+
+  &.state-change-enter-from,
+  &.state-change-leave-to {
+    opacity: 0;
+    transform: scale(0.9);
+  }
 
   .flash {
     position: absolute;

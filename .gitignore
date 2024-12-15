@@ -19,6 +19,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.idea
 
 src-tauri/target
 

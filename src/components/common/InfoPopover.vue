@@ -3,24 +3,7 @@
   <n-flex vertical :size="26" class="size-fit box-border rounded-8px relative min-h-[300px]">
     <n-flex vertical :size="20" class="size-full p-10px box-border z-10">
       <n-flex vertical :size="20" align="center">
-        <n-avatar
-          v-if="isCurrentUser.avatar"
-          :bordered="true"
-          round
-          :size="80"
-          :src="isCurrentUser.avatar"
-          fallback-src="/logo.png"></n-avatar>
-
-        <n-avatar
-          v-else
-          :bordered="true"
-          round
-          :color="'#909090'"
-          :size="80"
-          :src="isCurrentUser.avatar"
-          fallback-src="/logo.png">
-          {{ isCurrentUser.name }}
-        </n-avatar>
+        <n-avatar :bordered="true" round :size="80" :src="avatarSrc" fallback-src="/logo.png" />
 
         <n-flex :size="5" align="center" style="margin-left: -4px" class="item-hover">
           <img class="rounded-50% w-18px h-18px" src="/status/weather_3x.png" alt="" />
@@ -64,20 +47,22 @@
     </n-flex>
 
     <!-- 背景 -->
-    <img
+    <n-avatar
+      :bordered="true"
       class="size-full rounded-8px box-border p-20px absolute top-0 left-0 blur-xl opacity-80"
-      :src="isCurrentUser.avatar"
-      alt="" />
+      :src="avatarSrc" />
   </n-flex>
 </template>
 
 <script setup lang="ts">
 import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
+import { AvatarUtils } from '@/utils/avatarUtils'
 
 const { uid } = defineProps<{
   uid: number
 }>()
 const isCurrentUser = computed(() => useUserInfo(uid).value)
+const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(useUserInfo(uid).value.avatar as string))
 </script>
 
 <style scoped lang="scss">
