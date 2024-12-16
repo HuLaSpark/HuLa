@@ -13,7 +13,12 @@ export const useLoginHistoriesStore = defineStore(
 
     const addLoginHistory = (loginHistory: UserInfoType) => {
       const index = getLoginHistoryIndex(loginHistory)
-      index === -1 && loginHistories.value.push(loginHistory)
+      if (index !== -1) {
+        // 如果已存在，先删除旧的
+        loginHistories.value.splice(index, 1)
+      }
+      // 添加到数组开头
+      loginHistories.value.unshift(loginHistory)
     }
 
     const updateLoginHistory = (loginHistory: UserInfoType) => {

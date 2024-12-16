@@ -177,33 +177,36 @@ const register = async () => {
       btnEnable.value = true
       loading.value = true
       btnText.value = '注册中...'
-      // 随机生成头像编号
-      const avatarNum = Math.floor(Math.random() * 21) + 1
-      const avatarId = avatarNum.toString().padStart(3, '0')
-      info.avatar = avatarId
-      // 更新按钮文本
-      btnText.value = '正在分配默认头像...'
-      // 模拟头像分配延迟
+
       setTimeout(() => {
-        // 注册
-        apis
-          .register({ ...info })
-          .then(() => {
-            window.$message.success('注册成功')
-            btnText.value = '注册'
-            setTimeout(() => {
-              WebviewWindow.getByLabel('login').then((win) => {
-                win?.setFocus()
-              })
-              WebviewWindow.getCurrent().close()
-            }, 600)
-          })
-          .finally(() => {
-            loading.value = false
-            btnEnable.value = false
-            btnText.value = '注册'
-          })
-      }, 800) // 添加800ms延迟来展示头像分配过程
+        // 随机生成头像编号
+        const avatarNum = Math.floor(Math.random() * 21) + 1
+        const avatarId = avatarNum.toString().padStart(3, '0')
+        info.avatar = avatarId
+        // 更新按钮文本
+        btnText.value = '正在分配默认头像...'
+
+        setTimeout(() => {
+          // 注册
+          apis
+            .register({ ...info })
+            .then(() => {
+              window.$message.success('注册成功')
+              btnText.value = '注册'
+              setTimeout(() => {
+                WebviewWindow.getByLabel('login').then((win) => {
+                  win?.setFocus()
+                })
+                WebviewWindow.getCurrent().close()
+              }, 1200)
+            })
+            .finally(() => {
+              loading.value = false
+              btnEnable.value = false
+              btnText.value = '注册'
+            })
+        }, 800)
+      }, 600)
     }
   })
 }
