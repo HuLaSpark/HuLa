@@ -18,7 +18,7 @@ export const useGlobalStore = defineStore(
       msgId: null
     })
     const currentSession = reactive<{ roomId: number; type: RoomTypeEnum }>({
-      roomId: 1,
+      roomId: -1,
       type: RoomTypeEnum.GROUP
     })
     /** 点击联系人选中的联系人项 */
