@@ -94,7 +94,7 @@
                   ? 'pl-68px'
                   : 'pl-42px'
             ">
-            <Transition name="fade">
+            <Transition name="fade-single">
               <span v-if="hoverBubble.key === item.message.id">
                 {{ formatTimestamp(item.message.sendTime, true) }}
               </span>
@@ -191,7 +191,7 @@
                 <!--                  <span class="text-(10px #13987f)">管理员</span>-->
                 <!--                </div>-->
                 <!-- 信息时间(群聊) -->
-                <Transition name="fade">
+                <Transition name="fade-group">
                   <span v-if="chatStore.isGroup && hoverBubble.key === item.message.id" class="text-(12px #909090)">
                     {{ formatTimestamp(item.message.sendTime, true) }}
                   </span>
@@ -204,6 +204,7 @@
                 @mouseenter="handleMouseEnter(item.message.id)"
                 @mouseleave="handleMouseLeave"
                 class="w-fit relative"
+                :style="{ '--bubble-max-width': chatStore.isGroup ? '32vw' : '50vw' }"
                 :data-key="item.fromUser.uid === userUid ? `U${item.message.id}` : `Q${item.message.id}`"
                 @select="$event.click(item)"
                 :menu="handleItemType(item.message.type)"

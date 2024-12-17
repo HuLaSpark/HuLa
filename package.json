@@ -11,7 +11,7 @@
     "url": "https://github.com/HuLaSpark/HuLa.git"
   },
   "author": {
-    "name": "nongyehong",
+    "name": "HuLaSpark团队",
     "email": "2439646234@qq.com",
     "url": "https://github.com/HuLaSpark/HuLa"
   },
@@ -101,6 +101,7 @@
     "prettier": "^3.3.2",
     "release-it": "^17.10.0",
     "sass": "1.83.0",
+    "shiki": "^1.24.2",
     "typescript": "^5.7.2",
     "unplugin-auto-import": "^0.18.6",
     "unplugin-vue-components": "^0.27.5",
