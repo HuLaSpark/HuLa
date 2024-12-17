@@ -136,8 +136,10 @@ export const useMsgInput = (messageInputDom: Ref) => {
     })
     /** 结束输入拼音时触发 */
     messageInputDom.value.addEventListener('compositionend', (e: CompositionEvent) => {
-      isChinese.value = false
-      aitKey.value = e.data
+      setTimeout(() => {
+        isChinese.value = false
+        aitKey.value = e.data
+      }, 10)
     })
     /** 监听回复信息的传递 */
     useMitt.on(MittEnum.REPLY_MEG, (event: any) => {
@@ -415,6 +417,10 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
   /** input的keydown事件 */
   const inputKeyDown = (e: KeyboardEvent) => {
+    // 正在输入拼音，并且是macos系统
+    if (isChinese.value && type() === 'macos') {
+      return
+    }
     const isWindows = type() === 'windows'
     const isEnterKey = e.key === 'Enter'
     const isCtrlOrMetaKey = isWindows ? e.ctrlKey : e.metaKey
@@ -445,6 +451,10 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
   /** 处理点击@提及框事件 */
   const handleAit = (item: CacheUserItem) => {
+    // 如果正在输入拼音，不发送消息
+    if (isChinese.value) {
+      return
+    }
     // 先确保输入框获得焦点
     messageInputDom.value?.focus()
     // 先获取并保存当前的编辑器范围
