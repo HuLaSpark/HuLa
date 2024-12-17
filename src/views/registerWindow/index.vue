@@ -15,6 +15,7 @@
         <n-form :model="info" :rules="rules" ref="registerForm">
           <n-form-item path="name">
             <n-input
+              :class="[{ 'pr-20px': info.name }, { 'pr-16px': showNamePrefix && !info.name }]"
               maxlength="8"
               minlength="1"
               size="large"
@@ -22,13 +23,18 @@
               type="text"
               :allow-input="noSideSpace"
               :placeholder="namePH"
-              @focus="namePH = ''"
-              @blur="namePH = '输入HuLa昵称'"
-              clearable />
+              @focus="handleNameFocus"
+              @blur="handleNameBlur"
+              clearable>
+              <template #prefix v-if="showNamePrefix || info.name">
+                <p class="text-12px">昵称</p>
+              </template>
+            </n-input>
           </n-form-item>
 
           <n-form-item path="account">
             <n-input
+              :class="[{ 'pr-20px': info.account }, { 'pr-16px': showAccountPrefix && !info.account }]"
               size="large"
               maxlength="12"
               minlength="6"
@@ -36,14 +42,18 @@
               type="text"
               :allow-input="onlyAlphaNumeric"
               :placeholder="accountPH"
-              @focus="accountPH = ''"
-              @blur="accountPH = '输入HuLa账号'"
-              clearable />
+              @focus="handleAccountFocus"
+              @blur="handleAccountBlur"
+              clearable>
+              <template #prefix v-if="showAccountPrefix || info.account">
+                <p class="text-12px">账号</p>
+              </template>
+            </n-input>
           </n-form-item>
 
           <n-form-item path="password">
             <n-input
-              class="pl-16px"
+              :class="{ 'pl-16px': !showPasswordPrefix && !info.password }"
               maxlength="16"
               minlength="6"
               size="large"
@@ -52,9 +62,13 @@
               type="password"
               :allow-input="noSideSpace"
               :placeholder="passwordPH"
-              @focus="passwordPH = ''"
-              @blur="passwordPH = '输入HuLa密码'"
-              clearable />
+              @focus="handlePasswordFocus"
+              @blur="handlePasswordBlur"
+              clearable>
+              <template #prefix v-if="showPasswordPrefix || info.password">
+                <p class="text-12px">密码</p>
+              </template>
+            </n-input>
           </n-form-item>
           <!-- 密码提示信息 -->
           <n-flex vertical v-if="info.password">
@@ -169,6 +183,40 @@ const isPasswordValid = computed(() => {
   const password = info.password
   return validateMinLength(password) && validateAlphaNumeric(password) && validateSpecialChar(password)
 })
+
+const showNamePrefix = ref(false)
+const showAccountPrefix = ref(false)
+const showPasswordPrefix = ref(false)
+
+const handleNameFocus = () => {
+  namePH.value = ''
+  showNamePrefix.value = true
+}
+
+const handleNameBlur = () => {
+  namePH.value = '输入HuLa昵称'
+  showNamePrefix.value = false
+}
+
+const handleAccountFocus = () => {
+  accountPH.value = ''
+  showAccountPrefix.value = true
+}
+
+const handleAccountBlur = () => {
+  accountPH.value = '输入HuLa账号'
+  showAccountPrefix.value = false
+}
+
+const handlePasswordFocus = () => {
+  passwordPH.value = ''
+  showPasswordPrefix.value = true
+}
+
+const handlePasswordBlur = () => {
+  passwordPH.value = '输入HuLa密码'
+  showPasswordPrefix.value = false
+}
 
 /** 注册 */
 const register = async () => {

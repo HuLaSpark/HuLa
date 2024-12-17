@@ -190,6 +190,14 @@ const { stream, start, stop } = useDisplayMedia()
 const chatStore = useChatStore()
 const groupStore = useGroupStore()
 const contactStore = useContactStore()
+/** 提醒框标题 */
+const tips = ref()
+const optionsType = ref<RoomActEnum>()
+const modalShow = ref(false)
+const sidebarShow = ref(false)
+const { activeItem } = defineProps<{
+  activeItem: SessionItem
+}>()
 const groupUserList = computed(() => groupStore.userList)
 const userList = computed(() => {
   return groupUserList.value
@@ -207,14 +215,6 @@ const userList = computed(() => {
     })
     .slice(0, 10)
 })
-/** 提醒框标题 */
-const tips = ref()
-const optionsType = ref<RoomActEnum>()
-const modalShow = ref(false)
-const sidebarShow = ref(false)
-const { activeItem } = defineProps<{
-  activeItem: SessionItem
-}>()
 
 // 创建一个RTCPeerConnection实例
 const peerConnection = new RTCPeerConnection()

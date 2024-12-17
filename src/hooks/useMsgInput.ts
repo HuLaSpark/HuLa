@@ -120,6 +120,13 @@ export const useMsgInput = (messageInputDom: Ref) => {
       await nextTick(() => {
         messageInputDom.value.innerHTML = event
         msgInput.value = event
+        // 将光标设置到内容末尾
+        const selection = window.getSelection()
+        const range = document.createRange()
+        range.selectNodeContents(messageInputDom.value)
+        range.collapse(false)
+        selection?.removeAllRanges()
+        selection?.addRange(range)
       })
     })
 

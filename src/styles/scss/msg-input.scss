@@ -13,11 +13,11 @@
   flex: 1; /** 弹性盒自适应填充可用空间 */
   caret-color: #13987f; /** 光标颜色，可根据需求调整 */
   white-space: normal; /** 保留空白符号并正常换行 */
-  word-break: break-word; /** 在长单词或URL地址内部进行换行 */
-  overflow-wrap: break-word;
+  word-break: break-all; /** 强制在单词内部进行换行 */
+  overflow-wrap: break-all;
   -webkit-white-space: normal; /** 兼容webkit浏览器 */
-  -webkit-word-break: break-word;
-  -webkit-overflow-wrap: break-word;
+  -webkit-word-break: break-all;
+  -webkit-overflow-wrap: break-all;
 }
 .ait {
   @apply w-200px h-fit max-h-190px bg-[--center-bg-color] rounded-8px p-[5px_0_5px_5px] border-(1px solid [--box-shadow-color]);
