@@ -22,9 +22,9 @@
               v-model:value="info.name"
               type="text"
               :allow-input="noSideSpace"
-              :placeholder="namePH"
-              @focus="handleNameFocus"
-              @blur="handleNameBlur"
+              :placeholder="showNamePrefix ? '' : placeholders.name"
+              @focus="handleInputState($event, 'name')"
+              @blur="handleInputState($event, 'name')"
               clearable>
               <template #prefix v-if="showNamePrefix || info.name">
                 <p class="text-12px">昵称</p>
@@ -41,9 +41,9 @@
               v-model:value="info.account"
               type="text"
               :allow-input="onlyAlphaNumeric"
-              :placeholder="accountPH"
-              @focus="handleAccountFocus"
-              @blur="handleAccountBlur"
+              :placeholder="showAccountPrefix ? '' : placeholders.account"
+              @focus="handleInputState($event, 'account')"
+              @blur="handleInputState($event, 'account')"
               clearable>
               <template #prefix v-if="showAccountPrefix || info.account">
                 <p class="text-12px">账号</p>
@@ -61,9 +61,9 @@
               v-model:value="info.password"
               type="password"
               :allow-input="noSideSpace"
-              :placeholder="passwordPH"
-              @focus="handlePasswordFocus"
-              @blur="handlePasswordBlur"
+              :placeholder="showPasswordPrefix ? '' : placeholders.password"
+              @focus="handleInputState($event, 'password')"
+              @blur="handleInputState($event, 'password')"
               clearable>
               <template #prefix v-if="showPasswordPrefix || info.password">
                 <p class="text-12px">密码</p>
@@ -119,6 +119,9 @@ import dayjs from 'dayjs'
 import { RegisterUserReq } from '@/services/types.ts'
 import Validation from '@/components/common/Validation.vue'
 
+// 输入框类型定义
+type InputType = 'name' | 'account' | 'password'
+
 /** 账号信息 */
 const info = unref(
   ref<RegisterUserReq>({
@@ -128,13 +131,24 @@ const info = unref(
     name: ''
   })
 )
+
 /** 协议 */
 const protocol = ref(true)
 const btnEnable = ref(false)
 const loading = ref(false)
-const namePH = ref('输入HuLa昵称')
-const accountPH = ref('输入HuLa账号')
-const passwordPH = ref('输入HuLa密码')
+
+// 占位符
+const placeholders: Record<InputType, string> = {
+  name: '输入HuLa昵称',
+  account: '输入HuLa账号',
+  password: '输入HuLa密码'
+} as const
+
+// 前缀显示状态
+const showNamePrefix = ref(false)
+const showAccountPrefix = ref(false)
+const showPasswordPrefix = ref(false)
+
 /** 登录按钮的文本内容 */
 const btnText = ref('注册')
 // 使用day.js获取当前年份
@@ -184,38 +198,18 @@ const isPasswordValid = computed(() => {
   return validateMinLength(password) && validateAlphaNumeric(password) && validateSpecialChar(password)
 })
 
-const showNamePrefix = ref(false)
-const showAccountPrefix = ref(false)
-const showPasswordPrefix = ref(false)
-
-const handleNameFocus = () => {
-  namePH.value = ''
-  showNamePrefix.value = true
-}
-
-const handleNameBlur = () => {
-  namePH.value = '输入HuLa昵称'
-  showNamePrefix.value = false
-}
-
-const handleAccountFocus = () => {
-  accountPH.value = ''
-  showAccountPrefix.value = true
-}
-
-const handleAccountBlur = () => {
-  accountPH.value = '输入HuLa账号'
-  showAccountPrefix.value = false
-}
-
-const handlePasswordFocus = () => {
-  passwordPH.value = ''
-  showPasswordPrefix.value = true
-}
-
-const handlePasswordBlur = () => {
-  passwordPH.value = '输入HuLa密码'
-  showPasswordPrefix.value = false
+/**
+ * 处理输入框状态变化
+ * @param type 输入框类型：name-昵称 / account-账号 / password-密码
+ * @param event 事件对象
+ */
+const handleInputState = (event: FocusEvent, type: InputType): void => {
+  const prefixMap: Record<InputType, Ref<boolean>> = {
+    name: showNamePrefix,
+    account: showAccountPrefix,
+    password: showPasswordPrefix
+  }
+  prefixMap[type].value = event.type === 'focus'
 }
 
 /** 注册 */
