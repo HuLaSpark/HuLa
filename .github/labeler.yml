@@ -1,0 +1,23 @@
+# Add 'frontend' label to any changes in src directory
+frontend:
+  - src/**/*
+
+# Add 'workflow' label to any changes in the .github directory
+workflow:
+  - .github/**/*
+
+# Add 'documentation' label to any markdown files
+documentation:
+  - '**/*.md'
+
+# Add 'dependencies' label to any changes to package files
+dependencies:
+  - package.json
+  - package-lock.json
+  - yarn.lock
+
+# Add 'rust' label to any Rust-related files
+rust:
+  - '**/*.rs'
+  - '**/Cargo.toml'
+  - '**/Cargo.lock'
