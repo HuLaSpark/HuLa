@@ -21,19 +21,16 @@
     当前网络不可用，请检查你的网络设置
   </n-flex>
   <!-- 中间聊天内容(使用虚拟列表) -->
-  <n-virtual-list
+  <VirtualList
     id="image-chat-main"
     ref="virtualListInst"
+    :items="chatMessageList"
+    :estimated-item-height="itemSize"
+    :buffer="5"
     @scroll="handleScroll($event)"
     style="max-height: calc(100vh - 260px)"
     :class="{ 'right-1px': activeItem.type === RoomTypeEnum.SINGLE }"
-    class="relative h-100vh"
-    ignore-item-resize
-    item-resizable
-    :padding-top="10"
-    scroll-mode="viewport"
-    :item-size="itemSize"
-    :items="chatMessageList">
+    class="relative h-100vh">
     <template #default="{ item, index }">
       <n-flex
         vertical
@@ -306,7 +303,7 @@
         </div>
       </n-flex>
     </template>
-  </n-virtual-list>
+  </VirtualList>
 
   <!-- 弹出框 -->
   <n-modal v-model:show="modalShow" class="w-350px border-rd-8px">
@@ -381,6 +378,7 @@ import { type } from '@tauri-apps/plugin-os'
 import { useUserStore } from '@/stores/user.ts'
 import { useNetwork } from '@vueuse/core'
 import { AvatarUtils } from '@/utils/avatarUtils'
+import VirtualList from '@/components/common/VirtualList.vue'
 
 const { activeItem } = defineProps<{
   activeItem: SessionItem
@@ -437,23 +435,34 @@ const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-main')
 
 watch(activeItemRef, (value, oldValue) => {
   if (oldValue.roomId !== value.roomId) {
+    // 等待 DOM 更新完成后再滚动
     nextTick(() => {
-      console.log('切换房间')
-      virtualListInst.value?.scrollTo({ position: 'bottom', debounce: true })
+      // 给予足够的时间让消息加载和渲染
+      setTimeout(() => {
+        virtualListInst.value?.scrollTo({ position: 'bottom' })
+      }, 50)
     })
   }
 })
 
 watch(chatMessageList, (value, oldValue) => {
-  if (scrollTop.value === 0 && value.length > 20) {
+  if (scrollTop.value === 0 && value.length > oldValue.length) {
+    // 如果在顶部加载更多消息，保持在当前位置
     nextTick(() => {
-      // 跳转的下标
-      virtualListInst.value?.scrollTo({ index: value.length - oldValue.length, debounce: true })
+      virtualListInst.value?.scrollTo({ index: value.length - oldValue.length })
     })
-  } else {
-    nextTick(() => {
-      virtualListInst.value?.scrollTo({ position: 'bottom', debounce: true })
-    })
+  } else if (value.length > oldValue.length) {
+    // 判断最新消息是否来自当前用户
+    const latestMessage = value[value.length - 1]
+    if (latestMessage?.fromUser?.uid === userUid.value || !floatFooter.value) {
+      // 如果是当前用户发送的消息，或者距离底部很近，自动滚动到底部
+      nextTick(() => {
+        virtualListInst.value?.scrollTo({ position: 'bottom' })
+      })
+    } else {
+      // 否则增加新消息计数
+      newMsgNum.value++
+    }
   }
 })
 
@@ -515,8 +524,12 @@ const handleEmojiSelect = (label: string, item: any) => {
 /** 跳转到回复消息 */
 const jumpToReplyMsg = (key: number) => {
   nextTick(() => {
-    virtualListInst.value?.scrollTo({ key: key })
-    activeReply.value = key
+    // 找到对应消息的索引
+    const messageIndex = chatMessageList.value.findIndex((msg) => msg.message.id === key)
+    if (messageIndex !== -1) {
+      virtualListInst.value?.scrollTo({ index: messageIndex, behavior: 'smooth' })
+      activeReply.value = key
+    }
   })
 }
 

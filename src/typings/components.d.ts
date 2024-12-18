@@ -20,6 +20,7 @@ declare module 'vue' {
     Emoji: typeof import('./../components/rightBox/emoji/index.vue')['default']
     Image: typeof import('./../components/rightBox/renderMessage/Image.vue')['default']
     InfoPopover: typeof import('./../components/common/InfoPopover.vue')['default']
+    LoadingIndicator: typeof import('./../components/common/LoadingIndicator.vue')['default']
     MsgInput: typeof import('./../components/rightBox/MsgInput.vue')['default']
     NaiveProvider: typeof import('./../components/common/NaiveProvider.vue')['default']
     NAlert: typeof import('naive-ui')['NAlert']
@@ -71,5 +72,6 @@ declare module 'vue' {
     Screenshot: typeof import('./../components/common/Screenshot.vue')['default']
     Text: typeof import('./../components/rightBox/renderMessage/Text.vue')['default']
     Validation: typeof import('./../components/common/Validation.vue')['default']
+    VirtualList: typeof import('./../components/common/VirtualList.vue')['default']
   }
 }
