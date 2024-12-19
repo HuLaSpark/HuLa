@@ -172,8 +172,8 @@ importers:
         specifier: ^9.27.0
         version: 9.27.0(eslint@8.57.1)
       happy-dom:
-        specifier: ^12.10.3
-        version: 12.10.3
+        specifier: ^15.0.0
+        version: 15.11.7
       husky:
         specifier: ^9.0.11
         version: 9.1.7
@@ -206,7 +206,7 @@ importers:
         version: 6.0.3(@types/node@20.14.15)(jiti@2.4.0)(sass@1.83.0)(terser@5.31.5)(tsx@4.19.2)(yaml@2.6.1)
       vitest:
         specifier: ^2.1.8
-        version: 2.1.8(@types/node@20.14.15)(@vitest/ui@2.1.8)(happy-dom@12.10.3)(sass@1.83.0)(terser@5.31.5)
+        version: 2.1.8(@types/node@20.14.15)(@vitest/ui@2.1.8)(happy-dom@15.11.7)(sass@1.83.0)(terser@5.31.5)
       vue-tsc:
         specifier: ^2.1.10
         version: 2.1.10(typescript@5.7.2)
@@ -2372,9 +2372,6 @@ packages:
     resolution: {integrity: sha512-8Fxxv+tGhORlshCdCwnNJytvlvq46sOLSYEx2ZIGurahWvMucSRnyjPA3AmrMq4VPRYbHVpWj5VkiVasrM2H4Q==}
     engines: {node: ^10 || ^12.20.0 || ^14.13.0 || >=15.0.0}
 
-  css.escape@1.5.1:
-    resolution: {integrity: sha512-YUifsXXuknHlUsmlgyY0PKzgPOr7/FjCePfHNt0jxm83wHZi44VDMQ7/fGNkjY3/jV1MC+1CmZbaHzugyeRtpg==}
-
   cssesc@3.0.0:
     resolution: {integrity: sha512-/Tb/JcjK111nNScGob5MNtsntNM1aCNUDipB/TkwZFhyDrrE47SOx/18wF2bbjgc3ZzCSKW1T5nt5EbFoAz/Vg==}
     engines: {node: '>=4'}
@@ -3077,8 +3074,9 @@ packages:
     engines: {node: '>=0.4.7'}
     hasBin: true
 
-  happy-dom@12.10.3:
-    resolution: {integrity: sha512-JzUXOh0wdNGY54oKng5hliuBkq/+aT1V3YpTM+lrN/GoLQTANZsMaIvmHiHe612rauHvPJnDZkZ+5GZR++1Abg==}
+  happy-dom@15.11.7:
+    resolution: {integrity: sha512-KyrFvnl+J9US63TEzwoiJOQzZBJY7KgBushJA8X61DMbNsH+2ONkDuLDnCnwUiPTF42tLoEmrPyoqbenVA5zrg==}
+    engines: {node: '>=18.0.0'}
 
   has-bigints@1.0.2:
     resolution: {integrity: sha512-tSvCKtBr9lkF0Ex0aQiP9N+OpV4zi2r/Nee5VkRDbaqv35RLYMzbwQfFSZZH0kR+Rd6302UJZ2p/bJCEoR3VoQ==}
@@ -3169,10 +3167,6 @@ packages:
 
   iconv-lite@0.4.24:
     resolution: {integrity: sha512-v3MXnZAcvnywkTUEZomIActle7RXXeedOR31wwl7VlyoXO4Qi9arvSenNQWne1TcRwhCL1HwLI21bEqdpj8/rA==}
-    engines: {node: '>=0.10.0'}
-
-  iconv-lite@0.6.3:
-    resolution: {integrity: sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw==}
     engines: {node: '>=0.10.0'}
 
   ieee754@1.2.1:
@@ -4957,10 +4951,6 @@ packages:
   webpack-virtual-modules@0.6.2:
     resolution: {integrity: sha512-66/V2i5hQanC51vBQKPH4aI8NMAcBW59FVBs+rC7eGHupMyfn34q7rZIE+ETlJ+XTevqfUhVVBgSUNSW2flEUQ==}
 
-  whatwg-encoding@2.0.0:
-    resolution: {integrity: sha512-p41ogyeMUrw3jWclHWTQg1k05DSVXPLcVxRTYsXUk+ZooOCZLcoYgPZ/HL/D/N+uQPOtcp1me1WhBEaX02mhWg==}
-    engines: {node: '>=12'}
-
   whatwg-mimetype@3.0.0:
     resolution: {integrity: sha512-nt+N2dzIutVRxARx1nghPKGv1xHikU7HKdfafKkLNLindmPU/ch3U31NOCGGA/dmPcmb1VlofO0vnKAcsm0o/Q==}
     engines: {node: '>=12'}
@@ -6472,7 +6462,7 @@ snapshots:
       std-env: 3.8.0
       test-exclude: 7.0.1
       tinyrainbow: 1.2.0
-      vitest: 2.1.8(@types/node@20.14.15)(@vitest/ui@2.1.8)(happy-dom@12.10.3)(sass@1.83.0)(terser@5.31.5)
+      vitest: 2.1.8(@types/node@20.14.15)(@vitest/ui@2.1.8)(happy-dom@15.11.7)(sass@1.83.0)(terser@5.31.5)
     transitivePeerDependencies:
       - supports-color
 
@@ -6519,7 +6509,7 @@ snapshots:
       sirv: 3.0.0
       tinyglobby: 0.2.10
       tinyrainbow: 1.2.0
-      vitest: 2.1.8(@types/node@20.14.15)(@vitest/ui@2.1.8)(happy-dom@12.10.3)(sass@1.83.0)(terser@5.31.5)
+      vitest: 2.1.8(@types/node@20.14.15)(@vitest/ui@2.1.8)(happy-dom@15.11.7)(sass@1.83.0)(terser@5.31.5)
 
   '@vitest/utils@2.1.8':
     dependencies:
@@ -7211,8 +7201,6 @@ snapshots:
     dependencies:
       mdn-data: 2.12.1
       source-map-js: 1.2.1
-
-  css.escape@1.5.1: {}
 
   cssesc@3.0.0: {}
 
@@ -8087,13 +8075,10 @@ snapshots:
     optionalDependencies:
       uglify-js: 3.19.1
 
-  happy-dom@12.10.3:
+  happy-dom@15.11.7:
     dependencies:
-      css.escape: 1.5.1
       entities: 4.5.0
-      iconv-lite: 0.6.3
       webidl-conversions: 7.0.0
-      whatwg-encoding: 2.0.0
       whatwg-mimetype: 3.0.0
 
   has-bigints@1.0.2: {}
@@ -8196,10 +8181,6 @@ snapshots:
   husky@9.1.7: {}
 
   iconv-lite@0.4.24:
-    dependencies:
-      safer-buffer: 2.1.2
-
-  iconv-lite@0.6.3:
     dependencies:
       safer-buffer: 2.1.2
 
@@ -9942,7 +9923,7 @@ snapshots:
       tsx: 4.19.2
       yaml: 2.6.1
 
-  vitest@2.1.8(@types/node@20.14.15)(@vitest/ui@2.1.8)(happy-dom@12.10.3)(sass@1.83.0)(terser@5.31.5):
+  vitest@2.1.8(@types/node@20.14.15)(@vitest/ui@2.1.8)(happy-dom@15.11.7)(sass@1.83.0)(terser@5.31.5):
     dependencies:
       '@vitest/expect': 2.1.8
       '@vitest/mocker': 2.1.8(vite@5.4.11(@types/node@20.14.15)(sass@1.83.0)(terser@5.31.5))
@@ -9967,7 +9948,7 @@ snapshots:
     optionalDependencies:
       '@types/node': 20.14.15
       '@vitest/ui': 2.1.8(vitest@2.1.8)
-      happy-dom: 12.10.3
+      happy-dom: 15.11.7
     transitivePeerDependencies:
       - less
       - lightningcss
@@ -10053,10 +10034,6 @@ snapshots:
   webidl-conversions@7.0.0: {}
 
   webpack-virtual-modules@0.6.2: {}
-
-  whatwg-encoding@2.0.0:
-    dependencies:
-      iconv-lite: 0.6.3
 
   whatwg-mimetype@3.0.0: {}
 
