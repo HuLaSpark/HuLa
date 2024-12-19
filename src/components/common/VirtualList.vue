@@ -1,7 +1,7 @@
 <template>
   <div ref="containerRef" class="virtual-list-container" @scroll="handleScroll">
     <div class="virtual-list-phantom" :style="{ height: `${totalHeight}px` }"></div>
-    <div class="virtual-list-content" :style="{ transform: `translate3d(0, ${offset}px, 0)` }">
+    <div class="virtual-list-content" :style="{ transform: `translateY(${offset}px)` }">
       <div v-for="item in visibleData" :key="item.message?.id" :id="`item-${item.message?.id}`">
         <slot :item="item" :index="item._index"></slot>
       </div>
@@ -18,6 +18,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   scroll: [event: Event]
+  scrollDirectionChange: [direction: 'up' | 'down']
 }>()
 
 // 常量定义
@@ -188,6 +189,12 @@ const updateFrame = () => {
   if (currentScrollTop !== lastScrollTop.value) {
     // 发生滚动，重置静止帧计数
     consecutiveStaticFrames.value = 0
+    // 发出滚动方向变化事件
+    if (currentScrollTop < lastScrollTop.value) {
+      emit('scrollDirectionChange', 'up')
+    } else if (currentScrollTop > lastScrollTop.value) {
+      emit('scrollDirectionChange', 'down')
+    }
     updateVisibleRange()
     lastScrollTop.value = currentScrollTop
   } else {
@@ -263,9 +270,14 @@ onBeforeUnmount(() => {
   heights.value.clear()
 })
 
-// 暴露方法
-defineExpose({
-  // 滚动到指定位置
+// 类型定义
+export type VirtualListExpose = {
+  scrollTo: (options: { index?: number; position?: 'top' | 'bottom'; behavior?: ScrollBehavior }) => void
+  getContainer: () => HTMLElement | null
+}
+
+// 暴露方法和引用
+defineExpose<VirtualListExpose>({
   scrollTo: (options: { index?: number; position?: 'top' | 'bottom'; behavior?: ScrollBehavior }) => {
     if (!containerRef.value) return
 
@@ -298,7 +310,8 @@ defineExpose({
     // 立即执行一次，并在短暂延迟后再次执行以确保内容已完全加载
     executeScroll()
     setTimeout(executeScroll, 100)
-  }
+  },
+  getContainer: () => containerRef.value
 })
 </script>
 

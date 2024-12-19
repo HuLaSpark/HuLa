@@ -65,6 +65,7 @@ useMitt.on(WsResponseMessageType.ONLINE, async (onStatusChangeType: OnStatusChan
 useMitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExpire) => {
   console.log('token过期')
   if (userStore.userInfo.uid === wsTokenExpire.uid) {
+    // TODO: 换成web的弹出框
     await confirm('新设备已在' + (wsTokenExpire.ip ? wsTokenExpire.ip : '未知IP') + '登录')
     // token已在后端清空，只需要返回登录页
     await logout()

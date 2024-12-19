@@ -23,10 +23,10 @@ impl UserInfo {
     pub fn new(user_id: i64, username: String, token: String, portrait: String, is_sign: bool) -> Self {
         UserInfo{user_id, username, token, portrait, is_sign}
     }
-    pub fn get_user_id(&self) -> Result<i64, ()> { Ok(self.user_id)}
-    pub fn get_username(&self) -> Result<&str, ()> { Ok(self.username.as_str())}
-    pub fn get_token(&self) -> Result<&str, ()> { Ok(self.token.as_str())}
-    pub fn get_portrait(&self) -> Result<&str, ()> { Ok(self.portrait.as_str())}
+    // pub fn get_user_id(&self) -> Result<i64, ()> { Ok(self.user_id)}
+    // pub fn get_username(&self) -> Result<&str, ()> { Ok(self.username.as_str())}
+    // pub fn get_token(&self) -> Result<&str, ()> { Ok(self.token.as_str())}
+    // pub fn get_portrait(&self) -> Result<&str, ()> { Ok(self.portrait.as_str())}
     pub fn get_is_sign(&self) -> Result<bool, ()> { Ok(self.is_sign) }
 
 }

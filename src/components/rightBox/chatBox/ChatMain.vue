@@ -4,11 +4,11 @@
     class="absolute-x-center top-20px"
     v-if="!messageOptions?.isLoading && !isOnline && chatMessageList?.length === 0">
     <span v-if="chatStore.isGroup" class="text-(14px #909090)">暂无消息，快来发送第一条消息吧~</span>
-    <span v-else class="text-(14px #909090)">你们已成功添加为好友，现在可以开始聊天了!</span>
+    <span v-else class="text-(14px #909090)">你们已成功添加为好友，现在可以开始聊天了！</span>
   </div>
   <!-- 加载中提示 -->
   <n-flex justify="center" class="absolute-x-center pt-10px h-30px" v-if="messageOptions?.isLoading">
-    <img class="size-16px" src="@/assets/img/loading-one.svg" alt="" />
+    <img class="size-16px" src="@/assets/img/loading.svg" alt="" />
     <span class="text-(14px #909090)">加载中</span>
   </n-flex>
   <!-- 网络断开提示 -->
@@ -27,7 +27,8 @@
     :items="chatMessageList"
     :estimated-item-height="itemSize"
     :buffer="5"
-    @scroll="handleScroll($event)"
+    @scroll="handleScroll"
+    @scroll-direction-change="handleScrollDirectionChange"
     style="max-height: calc(100vh - 260px)"
     :class="{ 'right-1px': activeItem.type === RoomTypeEnum.SINGLE }"
     class="relative h-100vh">
@@ -368,7 +369,6 @@ import { usePopover } from '@/hooks/usePopover.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { listen } from '@tauri-apps/api/event'
 import { useChatMain } from '@/hooks/useChatMain.ts'
-import { VirtualListInst } from 'naive-ui'
 import { delay } from 'lodash-es'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { formatTimestamp, isDiffNow } from '@/utils/ComputedTime.ts'
@@ -378,18 +378,54 @@ import { type } from '@tauri-apps/plugin-os'
 import { useUserStore } from '@/stores/user.ts'
 import { useNetwork } from '@vueuse/core'
 import { AvatarUtils } from '@/utils/avatarUtils'
-import VirtualList from '@/components/common/VirtualList.vue'
+import VirtualList, { type VirtualListExpose } from '@/components/common/VirtualList.vue'
 
 const { activeItem } = defineProps<{
   activeItem: SessionItem
 }>()
-const activeItemRef = ref<SessionItem>({ ...activeItem })
+const activeItemRef = shallowRef<SessionItem>({ ...activeItem })
 const chatStore = useChatStore()
 const userStore = useUserStore()
-// const userInfo = useUserStore()?.userInfo
-/** 消息列表 */
-const chatMessageList = computed(() => chatStore.chatMessageList)
-const messageOptions = computed(() => chatStore.currentMessageOptions)
+
+// 记录当前滚动位置相关信息
+const isAutoScrolling = ref(false)
+const lastScrollHeight = ref(0)
+const lastScrollTop = ref(0)
+
+/** 记录是否正在向上滚动 */
+const isScrollingUp = ref(false)
+// 添加标记，用于识别是否正在加载历史消息
+const isLoadingMore = ref(false)
+
+const chatMessageList = computed(() => {
+  const messages = chatStore.chatMessageList
+  const container = virtualListInst.value?.getContainer()
+  if (container) {
+    lastScrollHeight.value = container.scrollHeight
+    lastScrollTop.value = container.scrollTop
+
+    // 标记正在自动滚动，防止触发其他滚动事件
+    isAutoScrolling.value = true
+
+    // 在下一个 tick 恢复滚动位置
+    nextTick(() => {
+      const newScrollHeight = container.scrollHeight
+      const heightDiff = newScrollHeight - lastScrollHeight.value
+      // 如果之前在底部，保持在底部
+      if (lastScrollTop.value + 50 >= lastScrollHeight.value - container.clientHeight) {
+        container.scrollTop = newScrollHeight
+      } else {
+        // 否则保持相对位置
+        container.scrollTop = lastScrollTop.value + heightDiff
+      }
+      isAutoScrolling.value = false
+    })
+  }
+
+  return messages
+})
+
+const messageOptions = shallowRef(chatStore.currentMessageOptions)
 const { createWebviewWindow } = useWindow()
 /** 是否是超级管理员 */
 // const isAdmin = computed(() => userInfo?.power === PowerEnum.ADMIN)
@@ -398,9 +434,11 @@ const activeReply = ref(-1)
 /** item最小高度，用于计算滚动大小和位置 */
 const itemSize = computed(() => (chatStore.isGroup ? 90 : 76))
 /** 虚拟列表 */
-const virtualListInst = ref<VirtualListInst>()
+const virtualListInst = useTemplateRef<VirtualListExpose>('virtualListInst')
 /** 手动触发Popover显示 */
 const infoPopover = ref(false)
+// 添加向上滚动时防抖变量
+const loadMoreDebounceTimer = ref<NodeJS.Timeout | null>(null)
 /** 鼠标悬浮的气泡显示对应的时间 */
 const hoverBubble = ref<{
   key: number
@@ -415,7 +453,6 @@ const { isOnline } = useNetwork()
 const isMac = computed(() => type() === 'macos')
 const { userUid } = useCommon()
 const {
-  handleScroll,
   handleMsgClick,
   handleConfirm,
   handleItemType,
@@ -438,33 +475,121 @@ watch(activeItemRef, (value, oldValue) => {
     // 等待 DOM 更新完成后再滚动
     nextTick(() => {
       // 给予足够的时间让消息加载和渲染
-      setTimeout(() => {
-        virtualListInst.value?.scrollTo({ position: 'bottom' })
-      }, 50)
+      virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
     })
   }
 })
 
-watch(chatMessageList, (value, oldValue) => {
-  if (scrollTop.value === 0 && value.length > oldValue.length) {
-    // 如果在顶部加载更多消息，保持在当前位置
-    nextTick(() => {
-      virtualListInst.value?.scrollTo({ index: value.length - oldValue.length })
-    })
-  } else if (value.length > oldValue.length) {
-    // 判断最新消息是否来自当前用户
-    const latestMessage = value[value.length - 1]
-    if (latestMessage?.fromUser?.uid === userUid.value || !floatFooter.value) {
-      // 如果是当前用户发送的消息，或者距离底部很近，自动滚动到底部
-      nextTick(() => {
-        virtualListInst.value?.scrollTo({ position: 'bottom' })
-      })
-    } else {
-      // 否则增加新消息计数
+watch(
+  chatMessageList,
+  (value, oldValue) => {
+    // 消息列表变长的情况
+    if (value.length > oldValue.length) {
+      // 获取最新消息
+      const latestMessage = value[value.length - 1]
+
+      // 如果正在加载历史消息，优先处理历史消息的滚动
+      if (isLoadingMore.value) {
+        if (scrollTop.value < 10) {
+          nextTick(() => {
+            virtualListInst.value?.scrollTo({ index: value.length - oldValue.length })
+          })
+        }
+        return
+      }
+
+      // 优先级1：用户发送的消息，始终滚动到底部
+      if (latestMessage?.fromUser?.uid === userUid.value) {
+        virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
+        return
+      }
+
+      // 优先级2：已经在底部时的新消息
+      const container = virtualListInst.value?.getContainer()
+      if (container) {
+        const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight
+        if (distanceFromBottom <= 20) {
+          virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'smooth' })
+          return
+        }
+      }
+
+      // 其他情况：增加新消息计数
       newMsgNum.value++
     }
-  }
-})
+  },
+  { deep: false }
+)
+
+/** 处理滚动方向变化 */
+const handleScrollDirectionChange = (direction: 'up' | 'down') => {
+  isScrollingUp.value = direction === 'up'
+}
+
+/** 处理滚动事件(用于页脚显示功能) */
+const handleScroll = () => {
+  if (isAutoScrolling.value) return // 如果是自动滚动，不处理
+  const container = virtualListInst.value?.getContainer()
+  if (!container) return
+
+  // 获取已滚动的距离
+  scrollTop.value = container.scrollTop
+  // 获取整个滚动容器的高度
+  const scrollHeight = container.scrollHeight
+  // 获取容器的可视区域高度
+  const clientHeight = container.clientHeight
+  // 计算距离底部的距离
+  const distanceFromBottom = scrollHeight - scrollTop.value - clientHeight
+
+  requestAnimationFrame(async () => {
+    // 处理触顶加载更多
+    if (scrollTop.value === 0) {
+      // 如果正在加载或已经触发了加载，则不重复触发
+      if (messageOptions.value?.isLoading || isLoadingMore.value) return
+
+      // 清除之前的定时器
+      if (loadMoreDebounceTimer.value) {
+        clearTimeout(loadMoreDebounceTimer.value)
+      }
+
+      // 记录当前的内容高度
+      const oldScrollHeight = container.scrollHeight
+
+      // 设置新的定时器，300ms 后执行加载
+      loadMoreDebounceTimer.value = setTimeout(async () => {
+        try {
+          isLoadingMore.value = true
+          // 禁用滚动交互但保持滚动条显示
+          container.style.pointerEvents = 'none'
+          await chatStore.loadMore()
+          // 加载完成后，计算新增内容的高度差，并设置滚动位置
+          nextTick(() => {
+            const newScrollHeight = container.scrollHeight
+            const heightDiff = newScrollHeight - oldScrollHeight
+            if (heightDiff > 0) {
+              container.scrollTop = heightDiff
+            }
+            // 等待一帧后恢复滚动交互，确保位置已经设置好
+            requestAnimationFrame(() => {
+              container.style.pointerEvents = 'auto'
+            })
+          })
+        } finally {
+          isLoadingMore.value = false
+          loadMoreDebounceTimer.value = null
+        }
+      }, 300)
+    }
+
+    // 处理底部滚动和新消息提示
+    if (distanceFromBottom <= 20) {
+      floatFooter.value = false
+      newMsgNum.value = 0
+    } else {
+      floatFooter.value = true
+    }
+  })
+}
 
 /** 获取用户头像 */
 const getAvatarSrc = (uid: number) => {
@@ -474,7 +599,6 @@ const getAvatarSrc = (uid: number) => {
 
 // 当鼠标进入时触发的处理函数
 const handleMouseEnter = (key: any) => {
-  // 设置定时器，在1600毫秒后更新悬浮气泡的key值
   hoverBubble.value.timer = setTimeout(() => {
     hoverBubble.value.key = key
   }, 1600)
@@ -527,7 +651,7 @@ const jumpToReplyMsg = (key: number) => {
     // 找到对应消息的索引
     const messageIndex = chatMessageList.value.findIndex((msg) => msg.message.id === key)
     if (messageIndex !== -1) {
-      virtualListInst.value?.scrollTo({ index: messageIndex, behavior: 'smooth' })
+      virtualListInst.value?.scrollTo({ index: messageIndex, behavior: 'instant' })
       activeReply.value = key
     }
   })
@@ -542,7 +666,7 @@ const jumpToReplyMsg = (key: number) => {
 //   // 使用 nextTick 确保虚拟列表渲染完最新的项目后进行滚动
 //   nextTick(() => {
 //     if (!floatFooter.value || id === userUid.value) {
-//       virtualListInst.value?.scrollTo({ position: 'bottom', debounce: true })
+//       virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'auto' })
 //     }
 //     /** data-key标识的气泡,添加前缀用于区分用户消息，不然气泡动画会被覆盖 */
 //     const dataKey = id === userUid.value ? `U${index}` : `Q${index}`
@@ -563,8 +687,10 @@ const jumpToReplyMsg = (key: number) => {
 
 /** 点击后滚动到底部 */
 const scrollBottom = () => {
+  if (!virtualListInst.value) return
+
   nextTick(() => {
-    virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant', debounce: true })
+    virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
   })
 }
 
@@ -634,8 +760,9 @@ const handleReEdit = (msgId: number) => {
 
 onMounted(() => {
   nextTick(() => {
-    // 滚动到底部
-    virtualListInst.value?.scrollTo({ position: 'bottom', debounce: true })
+    setTimeout(() => {
+      virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
+    }, 10)
   })
   useMitt.on(MittEnum.SEND_MESSAGE, async (messageType: MessageType) => {
     await chatStore.pushMsg(messageType)
@@ -674,8 +801,14 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  clearTimeout(hoverBubble.value.timer)
-  hoverBubble.value.timer = void 0
+  if (loadMoreDebounceTimer.value) {
+    clearTimeout(loadMoreDebounceTimer.value)
+    loadMoreDebounceTimer.value = null
+  }
+  if (hoverBubble.value.timer) {
+    clearTimeout(hoverBubble.value.timer)
+    hoverBubble.value.timer = void 0
+  }
   hoverBubble.value.key = -1
   window.removeEventListener('click', closeMenu, true)
 })

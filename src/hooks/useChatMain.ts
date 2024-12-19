@@ -16,7 +16,7 @@ export const useChatMain = (activeItem?: SessionItem) => {
   const userStore = useUserStore()?.userInfo
   // const userInfo = useUserStore()?.userInfo
   // const chatMessageList = computed(() => chatStore.chatMessageList)
-  const messageOptions = computed(() => chatStore.currentMessageOptions)
+  // const messageOptions = computed(() => chatStore.currentMessageOptions)
   /** 滚动条位置 */
   const scrollTop = ref(-1)
   /** 是否是超级管理员 */
@@ -241,10 +241,6 @@ export const useChatMain = (activeItem?: SessionItem) => {
     }
   ])
 
-  // 添加防抖变量
-  const isLoadingMore = ref(false)
-  const loadMoreDebounceTimer = ref<NodeJS.Timeout | null>(null)
-
   /**
    * 检查用户关系
    * @param uid 用户ID
@@ -288,76 +284,6 @@ export const useChatMain = (activeItem?: SessionItem) => {
     }
   }
 
-  /** 处理滚动事件(用于页脚显示功能) */
-  const handleScroll = (e: Event) => {
-    const target = e.target as HTMLElement
-    // 获取已滚动的距离
-    scrollTop.value = target.scrollTop
-    // 获取整个滚动容器的高度
-    const scrollHeight = target.scrollHeight
-    // 获取容器的可视区域高度
-    const clientHeight = target.clientHeight
-    // 计算距离底部的距离
-    const distanceFromBottom = scrollHeight - scrollTop.value - clientHeight
-
-    requestAnimationFrame(async () => {
-      // 处理触顶加载更多
-      if (scrollTop.value === 0) {
-        // 如果正在加载或已经触发了加载，则不重复触发
-        if (messageOptions.value?.isLoading || isLoadingMore.value) return
-
-        // 清除之前的定时器
-        if (loadMoreDebounceTimer.value) {
-          clearTimeout(loadMoreDebounceTimer.value)
-        }
-
-        // 记录当前的内容高度
-        const oldScrollHeight = target.scrollHeight
-
-        // 设置新的定时器，300ms 后执行加载
-        loadMoreDebounceTimer.value = setTimeout(async () => {
-          try {
-            isLoadingMore.value = true
-            // 禁用滚动交互但保持滚动条显示
-            target.style.pointerEvents = 'none'
-            await chatStore.loadMore()
-            // 加载完成后，计算新增内容的高度差，并设置滚动位置
-            nextTick(() => {
-              const newScrollHeight = target.scrollHeight
-              const heightDiff = newScrollHeight - oldScrollHeight
-              if (heightDiff > 0) {
-                target.scrollTop = heightDiff
-              }
-              // 等待一帧后恢复滚动交互，确保位置已经设置好
-              requestAnimationFrame(() => {
-                target.style.pointerEvents = 'auto'
-              })
-            })
-          } finally {
-            isLoadingMore.value = false
-            loadMoreDebounceTimer.value = null
-          }
-        }, 300)
-      }
-
-      // 处理底部滚动和新消息提示
-      if (distanceFromBottom <= 20) {
-        floatFooter.value = false
-        newMsgNum.value = 0
-      } else {
-        floatFooter.value = true
-      }
-    })
-  }
-
-  // 组件卸载时清理
-  onBeforeUnmount(() => {
-    if (loadMoreDebounceTimer.value) {
-      clearTimeout(loadMoreDebounceTimer.value)
-      loadMoreDebounceTimer.value = null
-    }
-  })
-
   /**
    * 根据消息类型获取右键菜单列表
    * @param type 消息类型
@@ -391,7 +317,6 @@ export const useChatMain = (activeItem?: SessionItem) => {
   }
 
   return {
-    handleScroll,
     handleMsgClick,
     handleConfirm,
     handleItemType,
