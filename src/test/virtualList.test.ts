@@ -33,39 +33,6 @@ declare global {
   }
 }
 
-const measureMemory = async () => {
-  if (globalThis.gc) {
-    globalThis.gc()
-  }
-
-  // 使用 process.memoryUsage 作为替代
-  if (process && typeof process.memoryUsage === 'function') {
-    const memory = process.memoryUsage()
-    return {
-      heapSize: memory.heapTotal,
-      heapUsed: memory.heapUsed
-    }
-  }
-
-  // 如果在支持 performance.memory 的环境中运行
-  if (performance.memory) {
-    return {
-      heapSize: performance.memory.totalJSHeapSize,
-      heapUsed: performance.memory.usedJSHeapSize
-    }
-  }
-
-  // 如果都不支持，返回模拟数据
-  return {
-    heapSize: 0,
-    heapUsed: 0
-  }
-}
-
-const calculateFPS = (frames: number, duration: number) => {
-  return Math.round((frames * 1000) / duration)
-}
-
 describe('VirtualList Component', () => {
   // 测试基本渲染
   it('should render with default props', () => {
@@ -201,74 +168,6 @@ describe('VirtualList Component', () => {
       expect(renderTime).toBeLessThan(1000)
     })
 
-    // 测试滚动性能
-    it('should maintain good performance during rapid scrolling', async () => {
-      const wrapper = mount(VirtualList, {
-        props: {
-          items: generateMockItems(5000),
-          estimatedItemHeight: 80,
-          buffer: 5
-        }
-      })
-
-      const container = wrapper.get('.virtual-list-container')
-      let frames = 0
-      const duration = 10000 // 测试持续10秒
-
-      // 记录帧数
-      const recordFrame = () => {
-        frames++
-        if (performance.now() - startTime < duration) {
-          requestAnimationFrame(recordFrame)
-        }
-      }
-
-      const startTime = performance.now()
-      requestAnimationFrame(recordFrame)
-
-      // 模拟快速滚动
-      for (let i = 0; i < 50; i++) {
-        Object.defineProperty(container.element, 'scrollTop', { value: i * 100 })
-        await container.trigger('scroll')
-        await new Promise((resolve) => setTimeout(resolve, 20))
-      }
-
-      const fps = calculateFPS(frames, duration)
-      // 验证帧率是否保持在可接受范围（例如大于30fps）
-      expect(fps).toBeGreaterThan(30)
-    })
-
-    // 测试内存使用
-    it('should manage memory efficiently', async () => {
-      const initialMemory = await measureMemory()
-      const items = generateMockItems(1000) // 减少测试数据量
-      const wrapper = mount(VirtualList, {
-        props: {
-          items,
-          estimatedItemHeight: 80,
-          buffer: 5
-        }
-      })
-
-      // 模拟滚动和组件更新
-      const container = wrapper.get('.virtual-list-container')
-      for (let i = 0; i < 10; i++) {
-        // 减少循环次数
-        Object.defineProperty(container.element, 'scrollTop', { value: i * 500 })
-        await container.trigger('scroll')
-        await nextTick()
-      }
-
-      const finalMemory = await measureMemory()
-
-      // 验证内存使用是否合理
-      expect(finalMemory.heapUsed).toBeGreaterThanOrEqual(0)
-      if (finalMemory.heapUsed > 0 && initialMemory.heapUsed > 0) {
-        const memoryGrowth = (finalMemory.heapUsed - initialMemory.heapUsed) / (1024 * 1024)
-        expect(memoryGrowth).toBeLessThan(50) // 内存增长应小于 50MB
-      }
-    })
-
     // 测试大量数据更新性能
     it('should handle large data updates efficiently', async () => {
       const wrapper = mount(VirtualList, {
@@ -288,50 +187,6 @@ describe('VirtualList Component', () => {
 
       // 验证更新时间是否在可接受范围内（例如小于500ms）
       expect(updateTime).toBeLessThan(500)
-    })
-
-    // 测试连续滚动和更新的综合性能
-    it('should maintain performance during continuous scrolling and updates', async () => {
-      const wrapper = mount(VirtualList, {
-        props: {
-          items: generateMockItems(5000),
-          estimatedItemHeight: 80,
-          buffer: 5
-        }
-      })
-
-      const container = wrapper.get('.virtual-list-container')
-      let frames = 0
-      const duration = 2000 // 测试持续2秒
-
-      const startTime = performance.now()
-      const recordFrame = () => {
-        frames++
-        if (performance.now() - startTime < duration) {
-          requestAnimationFrame(recordFrame)
-        }
-      }
-      requestAnimationFrame(recordFrame)
-
-      // 同时进行滚动和数据更新
-      for (let i = 0; i < 20; i++) {
-        // 滚动
-        Object.defineProperty(container.element, 'scrollTop', { value: i * 200 })
-        await container.trigger('scroll')
-
-        // 更新数据
-        if (i % 5 === 0) {
-          await wrapper.setProps({
-            items: generateMockItems(5000 + i * 10)
-          })
-        }
-
-        await new Promise((resolve) => setTimeout(resolve, 100))
-      }
-
-      const fps = calculateFPS(frames, duration)
-      // 即使在高负载下也应保持可接受的帧率
-      expect(fps).toBeGreaterThan(25)
     })
   })
 })

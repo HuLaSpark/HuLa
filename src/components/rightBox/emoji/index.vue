@@ -48,7 +48,7 @@
               class="emoji-item"
               v-for="(item, index) in currentSeries.emojis"
               :key="index"
-              @click.stop="chooseEmoji(item.url)">
+              @click.stop="chooseEmoji(item.url, 'url')">
               <n-popover trigger="hover" :delay="500" :duration="0" :show-arrow="false" placement="top">
                 <template #trigger>
                   <n-image
@@ -123,6 +123,10 @@ interface EmojiItem {
   value: any[]
 }
 
+const emit = defineEmits(['emojiHandle'])
+const props = defineProps<{
+  all: boolean
+}>()
 const { emoji, setEmoji } = useHistoryStore()
 /** 获取米游社的表情包 */
 const emojisBbs = HulaEmojis.MihoyoBbs
@@ -148,11 +152,6 @@ const tabList = computed<TabItem[]>(() => {
 })
 
 const currentSeries = computed(() => (activeIndex.value > 0 ? emojisBbs.series[activeIndex.value - 1] : null))
-
-const emit = defineEmits(['emojiHandle'])
-const props = defineProps<{
-  all: boolean
-}>()
 
 const res = getAllTypeEmojis()
 
@@ -183,26 +182,14 @@ const emojiRef = reactive<{
 })
 
 /**
- * 判断是否为URL
- */
-const isUrl = (str: string) => {
-  try {
-    new URL(str)
-    return true
-  } catch {
-    return false
-  }
-}
-
-/**
  * 选择表情
  * @param item
  */
-const chooseEmoji = (item: string) => {
+const chooseEmoji = (item: string, type: 'emoji' | 'url' = 'emoji') => {
   emojiRef.chooseItem = item
 
   // 只有非URL的表情（emoji）才记录到历史记录中
-  if (!isUrl(item)) {
+  if (type === 'emoji') {
     // 如果已经存在于历史记录中，则先移除
     const index = emojiRef.historyList.indexOf(item)
     if (index !== -1) {

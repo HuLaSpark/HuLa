@@ -56,7 +56,6 @@
       :items="filteredUserList">
       <template #default="{ item }">
         <n-popover
-          :animated="false"
           @update:show="handlePopoverUpdate(item.uid)"
           trigger="click"
           placement="left"

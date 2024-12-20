@@ -88,11 +88,11 @@ export const leftHook = () => {
   }
 
   watchEffect(() => {
-    menuTop.find((item: STO.Plugins<PluginEnum>) => {
-      if (item.url === 'message') {
-        item.badge = msgTotal.value
-      }
-    })
+    // menuTop.find((item: STO.Plugins<PluginEnum>) => {
+    //   if (item.url === 'message') {
+    //     item.badge = msgTotal.value
+    //   }
+    // })
     /** 判断是否是跟随系统主题 */
     if (themes.pattern === ThemeEnum.OS) {
       followOS()
