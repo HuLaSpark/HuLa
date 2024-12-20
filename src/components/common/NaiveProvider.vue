@@ -123,6 +123,10 @@ const lightThemeOverrides: GlobalThemeOverrides = {
   Scrollbar: {
     color: '#d5d5d5',
     colorHover: '#c5c5c5'
+  },
+  Skeleton: {
+    color: 'rgba(200, 200, 200, 0.6)',
+    colorEnd: 'rgba(200, 200, 200, 0.2)'
   }
 }
 

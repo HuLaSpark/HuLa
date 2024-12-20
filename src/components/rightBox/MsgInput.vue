@@ -61,13 +61,7 @@
   <n-flex align="center" justify="space-between" :size="12">
     <n-config-provider :theme="lightTheme">
       <n-button-group size="small" class="pr-20px">
-        <n-button
-          color="#13987f"
-          :disabled="msgInput.length === 0 || msgInput.trim() === ''"
-          class="w-65px"
-          @click="send">
-          发送
-        </n-button>
+        <n-button color="#13987f" :disabled="disabledSend" class="w-65px" @click="send"> 发送 </n-button>
         <n-button color="#13987f" class="p-[0_6px]">
           <template #icon>
             <n-config-provider :theme="themes.content === ThemeEnum.DARK ? darkTheme : lightTheme">
@@ -160,8 +154,19 @@ let lastEditRange: SelectionRange | null = null
 const recordSelectionRange = () => (lastEditRange = getEditorRange())
 
 /** 引入useMsgInput的相关方法 */
-const { inputKeyDown, handleAit, handleInput, send, personList, ait, msgInput, chatKey, menuList, selectedAitKey } =
-  useMsgInput(messageInputDom)
+const {
+  inputKeyDown,
+  handleAit,
+  handleInput,
+  send,
+  personList,
+  disabledSend,
+  ait,
+  msgInput,
+  chatKey,
+  menuList,
+  selectedAitKey
+} = useMsgInput(messageInputDom)
 
 /** 当切换聊天对象时，重新获取焦点 */
 watch(activeItem, () => {

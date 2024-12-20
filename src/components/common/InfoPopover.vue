@@ -47,10 +47,10 @@
     </n-flex>
 
     <!-- 背景 -->
-    <n-avatar
-      :bordered="true"
+    <img
       class="size-full rounded-8px box-border p-20px absolute top-0 left-0 blur-xl opacity-80"
-      :src="avatarSrc" />
+      :src="avatarSrc"
+      alt="" />
   </n-flex>
 </template>
 

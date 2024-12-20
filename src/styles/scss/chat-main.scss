@@ -126,6 +126,17 @@
 .fade-group-leave-to {
   opacity: 0;
 }
+
+/** 初始化加载动画 */
+.chat-init-enter-active,
+.chat-init-leave-active {
+  transition: opacity 0.4s ease-in-out;
+}
+.chat-init-enter-from,
+.fchat-init-leave-to {
+  opacity: 0;
+}
+
 /**! 替换ait的字体颜色 */
 :deep(#aitSpan) {
   @apply text-inherit cursor-pointer;

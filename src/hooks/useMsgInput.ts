@@ -22,9 +22,17 @@ export const useMsgInput = (messageInputDom: Ref) => {
     useCommon()
   const settingStore = useSettingStore()
   const { chat } = storeToRefs(settingStore)
+  /** 艾特选项的key  */
   const chatKey = ref(chat.value.sendKey)
+  /** 输入框内容  */
   const msgInput = ref('')
+  /** 艾特状态 */
   const ait = ref(false)
+  /** 发送按钮是否禁用 */
+  const disabledSend = computed(() => {
+    const plainText = stripHtml(msgInput.value)
+    return plainText.length === 0 || plainText.replace(/&nbsp;/g, ' ').trim().length === 0
+  })
   // /** 临时消息id */
   // const tempMessageId = ref(0)
   /** 艾特后的关键字的key */
@@ -94,84 +102,23 @@ export const useMsgInput = (messageInputDom: Ref) => {
     chat.value.sendKey = v
   })
 
-  onMounted(async () => {
-    db.value = await Database.load('sqlite:sqlite.db')
-    await db.value.execute(`
-      CREATE TABLE IF NOT EXISTS message (
-          id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-          room_id INTEGER NOT NULL,
-          from_uid INTEGER NOT NULL,
-          content TEXT(1024),
-          reply_msg_id INTEGER NOT NULL,
-          status INTEGER,
-          gap_count INTEGER,
-          "type" INTEGER DEFAULT (1),
-          extra TEXT,
-          create_time INTEGER,
-          update_time INTEGER
-      );
-      CREATE INDEX IF NOT EXISTS idx_room_id ON message (room_id);
-      CREATE INDEX IF NOT EXISTS idx_from_uid ON message (from_uid);
-      CREATE INDEX IF NOT EXISTS idx_create_time ON message (create_time);
-      CREATE INDEX IF NOT EXISTS idx_update_time ON message (update_time);
-    `)
-    useMitt.on(MittEnum.RE_EDIT, async (event: string) => {
-      messageInputDom.value.focus()
-      await nextTick(() => {
-        messageInputDom.value.innerHTML = event
-        msgInput.value = event
-        // 将光标设置到内容末尾
-        const selection = window.getSelection()
-        const range = document.createRange()
-        range.selectNodeContents(messageInputDom.value)
-        range.collapse(false)
-        selection?.removeAllRanges()
-        selection?.addRange(range)
-      })
-    })
+  /** 去除html标签(用于鉴别回复时是否有输入内容) */
+  const stripHtml = (html: string) => {
+    const tmp = document.createElement('div')
+    tmp.innerHTML = html
+    const replyDiv = tmp.querySelector('#replyDiv')
+    if (replyDiv) {
+      replyDiv.remove()
+    }
+    return tmp.textContent?.trim() || tmp.innerText?.trim() || ''
+  }
 
-    /** 正在输入拼音时触发 */
-    messageInputDom.value.addEventListener('compositionstart', () => {
-      isChinese.value = true
-    })
-    /** 结束输入拼音时触发 */
-    messageInputDom.value.addEventListener('compositionend', (e: CompositionEvent) => {
-      setTimeout(() => {
-        isChinese.value = false
-        aitKey.value = e.data
-      }, 10)
-    })
-    /** 监听回复信息的传递 */
-    useMitt.on(MittEnum.REPLY_MEG, (event: any) => {
-      const accountName = useUserInfo(event.fromUser.uid).value.name!
-      // 如果已经有回复消息，则替换掉原来的回复消息
-      if (reply.value.content) {
-        // 触发id为closeBtn的按钮点击事件，从而关闭第一个回复框，实现回复消息的替换
-        document.getElementById('closeBtn')?.dispatchEvent(new Event('click'))
-      }
-      if (!Array.isArray(event.message.body.content)) {
-        // 回复前把包含&nbsp;的字符替换成空格
-        event.message.body.content = event.message.body.content.replace(/&nbsp;/g, ' ')
-      }
-      reply.value = {
-        imgCount: 0,
-        accountName: accountName,
-        content: event.message.body.content,
-        key: event.message.id
-      }
-      if (messageInputDom.value) {
-        nextTick().then(() => {
-          messageInputDom.value.focus()
-          insertNode(
-            MsgEnum.REPLY,
-            { accountName: accountName, content: event.message.body.content },
-            {} as HTMLElement
-          )
-          triggerInputEvent(messageInputDom.value)
-        })
-      }
-    })
-  })
+  /** 重置输入框内容 */
+  const resetInput = () => {
+    msgInput.value = ''
+    messageInputDom.value.innerHTML = ''
+    reply.value = { imgCount: 0, accountName: '', content: '', key: 0 }
+  }
 
   /** 处理发送信息事件 */
   // TODO 输入框中的内容当我切换消息的时候需要记录之前输入框的内容 (nyh -> 2024-03-01 07:03:43)
@@ -200,7 +147,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
           }
         : undefined
     }
-
     // 处理回复内容
     if (reply.value.content) {
       if (msg.type === MsgEnum.TEXT) {
@@ -358,9 +304,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       })
 
     // 清空输入框和回复信息
-    msgInput.value = ''
-    messageInputDom.value.innerHTML = ''
-    reply.value = { imgCount: 0, accountName: '', content: '', key: 0 }
+    resetInput()
   }
 
   /** 当输入框手动输入值的时候触发input事件(使用vueUse的防抖) */
@@ -417,6 +361,12 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
   /** input的keydown事件 */
   const inputKeyDown = (e: KeyboardEvent) => {
+    if (disabledSend.value) {
+      e.preventDefault()
+      e.stopPropagation()
+      resetInput()
+      return
+    }
     // 正在输入拼音，并且是macos系统
     if (isChinese.value && type() === 'macos') {
       return
@@ -484,9 +434,87 @@ export const useMsgInput = (messageInputDom: Ref) => {
     // 无论是哪种情况，都在当前光标位置插入@提及
     insertNode(MsgEnum.AIT, item.name, {} as HTMLElement)
     triggerInputEvent(messageInputDom.value)
-    console.log(item)
     ait.value = false
   }
+
+  onMounted(async () => {
+    db.value = await Database.load('sqlite:sqlite.db')
+    await db.value.execute(`
+      CREATE TABLE IF NOT EXISTS message (
+          id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+          room_id INTEGER NOT NULL,
+          from_uid INTEGER NOT NULL,
+          content TEXT(1024),
+          reply_msg_id INTEGER NOT NULL,
+          status INTEGER,
+          gap_count INTEGER,
+          "type" INTEGER DEFAULT (1),
+          extra TEXT,
+          create_time INTEGER,
+          update_time INTEGER
+      );
+      CREATE INDEX IF NOT EXISTS idx_room_id ON message (room_id);
+      CREATE INDEX IF NOT EXISTS idx_from_uid ON message (from_uid);
+      CREATE INDEX IF NOT EXISTS idx_create_time ON message (create_time);
+      CREATE INDEX IF NOT EXISTS idx_update_time ON message (update_time);
+    `)
+    useMitt.on(MittEnum.RE_EDIT, async (event: string) => {
+      messageInputDom.value.focus()
+      await nextTick(() => {
+        messageInputDom.value.innerHTML = event
+        msgInput.value = event
+        // 将光标设置到内容末尾
+        const selection = window.getSelection()
+        const range = document.createRange()
+        range.selectNodeContents(messageInputDom.value)
+        range.collapse(false)
+        selection?.removeAllRanges()
+        selection?.addRange(range)
+      })
+    })
+
+    /** 正在输入拼音时触发 */
+    messageInputDom.value.addEventListener('compositionstart', () => {
+      isChinese.value = true
+    })
+    /** 结束输入拼音时触发 */
+    messageInputDom.value.addEventListener('compositionend', (e: CompositionEvent) => {
+      setTimeout(() => {
+        isChinese.value = false
+        aitKey.value = e.data
+      }, 10)
+    })
+    /** 监听回复信息的传递 */
+    useMitt.on(MittEnum.REPLY_MEG, (event: any) => {
+      const accountName = useUserInfo(event.fromUser.uid).value.name!
+      // 如果已经有回复消息，则替换掉原来的回复消息
+      if (reply.value.content) {
+        // 触发id为closeBtn的按钮点击事件，从而关闭第一个回复框，实现回复消息的替换
+        document.getElementById('closeBtn')?.dispatchEvent(new Event('click'))
+      }
+      if (!Array.isArray(event.message.body.content)) {
+        // 回复前把包含&nbsp;的字符替换成空格
+        event.message.body.content = event.message.body.content.replace(/&nbsp;/g, ' ')
+      }
+      reply.value = {
+        imgCount: 0,
+        accountName: accountName,
+        content: event.message.body.content,
+        key: event.message.id
+      }
+      if (messageInputDom.value) {
+        nextTick().then(() => {
+          messageInputDom.value.focus()
+          insertNode(
+            MsgEnum.REPLY,
+            { accountName: accountName, content: event.message.body.content },
+            {} as HTMLElement
+          )
+          triggerInputEvent(messageInputDom.value)
+        })
+      }
+    })
+  })
 
   return {
     imgPaste,
@@ -494,12 +522,14 @@ export const useMsgInput = (messageInputDom: Ref) => {
     handleAit,
     handleInput,
     send,
+    stripHtml,
     personList,
     ait,
     msgInput,
     chatKey,
     menuList,
     selectedAitKey,
-    reply
+    reply,
+    disabledSend
   }
 }
