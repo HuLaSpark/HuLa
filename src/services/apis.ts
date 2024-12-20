@@ -59,7 +59,7 @@ export default {
   /** 拉黑用户 */
   blockUser: (data: { uid: number }) => PUT<void>(urls.blockUser, data),
   /** 获取临时上传链接 */
-  getUploadUrl: (params: any) => GET<{ downloadUrl: string; uploadUrl: string }>(urls.fileUpload, { params }),
+  getUploadUrl: (params: any) => GET<{ downloadUrl: string; uploadUrl: string }>(urls.fileUpload, params),
   /** 新增表情包 */
   addEmoji: (data: { uid: number; expressionUrl: string }) => POST<MessageType>(urls.addEmoji, data),
   /** 获取表情 **/

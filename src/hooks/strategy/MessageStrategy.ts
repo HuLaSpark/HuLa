@@ -3,7 +3,10 @@ import { MessageType } from '@/services/types.ts'
 import { AppException } from '@/common/exception.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { Ref } from 'vue'
+import { parseInnerText } from '@/hooks/useCommon.ts'
 import apis from '@/services/apis.ts'
+import { BaseDirectory, open } from '@tauri-apps/plugin-fs'
+
 interface MessageStrategy {
   getMsg: (msgInputValue: string, replyValue: any, fileList?: File[]) => any
   buildMessageBody: (msg: any, reply: any) => any
@@ -125,32 +128,29 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
     super(MsgEnum.IMAGE)
   }
 
-  getMsg(msgInputValue: string, replyValue: any, fileList?: File[]): any {
-    msgInputValue
-    if (fileList.length === 0) {
-      throw new AppException('请选择图片')
+  getMsg(msgInputValue: string, replyValue: any): any {
+    const path = parseInnerText(msgInputValue, 'temp-image')
+    if (!path) {
+      throw new AppException('文件不存在')
     }
-    const fileMetaList = []
-    fileList.forEach((file) => {
-      const body = {
-        fileName: file.name,
-        scene: 1
-      }
-      const fileMeta = async () => {
-        const res = await apis.getUploadUrl(body)
-        apis.upload(res.uploadUrl, file)
-        return {
-          fileName: file.name,
-          downloadUrl: res.downloadUrl,
-          uploadUrl: res.uploadUrl
-        }
-      }
-      fileMetaList.push(fileMeta())
-    })
-
+    console.log(path)
+    let flag = true
+    let downloadUrl = ''
+    this.uploadFile(path)
+      .then((data) => {
+        console.log('data', data)
+        flag = false
+        downloadUrl = data
+      })
+      .catch((err) => {
+        throw new AppException(err)
+      })
+    // while (flag) {
+    //   console.log('---')
+    // }
     return {
       type: this.msgType,
-      content: fileMetaList,
+      content: downloadUrl,
       reply: replyValue.content
         ? {
             content: replyValue.content,
@@ -160,6 +160,31 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
     }
   }
 
+  async uploadFile(path: string): Promise<any> {
+    const fileName = path.split('/').pop()
+    if (!fileName) {
+      throw new AppException('文件解析出错')
+    }
+    const res = await apis.getUploadUrl({
+      fileName: fileName,
+      scene: 1
+    })
+    console.log(res)
+    const uploadUrl = res.uploadUrl
+    const downloadUrl = res.downloadUrl
+    const file = await open(path, { read: true, write: false, baseDir: BaseDirectory.AppCache })
+    const buf = new Uint8Array()
+    await file.read(buf)
+    await fetch(uploadUrl, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      method: 'PUT',
+      body: new File([buf], fileName)
+    })
+    file.close()
+    return new Promise((resolve) => {
+      resolve(downloadUrl)
+    })
+  }
   buildMessageBody(msg: any, reply: any): any {
     msg
     reply

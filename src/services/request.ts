@@ -50,7 +50,6 @@ const responseInterceptor = async <T>(
 
     const resp = data.resp
     const serviceData = (await data.data) as ServiceResponse
-    console.log(url, data)
     //检查发送请求是否成功
     if (resp.status > 400) {
       let message = ''
