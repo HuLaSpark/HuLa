@@ -65,10 +65,6 @@ watchEffect(() => {
 })
 
 onMounted(() => {
-  useMitt.on(MittEnum.NOT_MSG, () => {
-    msgBoxShow.value = false
-    activeItem.value = -1
-  })
   if (isChat) {
     useMitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
       msgBoxShow.value = event.msgBoxShow

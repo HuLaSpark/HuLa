@@ -1,23 +1,17 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-const stripHtml = (html: string) => {
-  const tmp = document.createElement('div')
-  tmp.innerHTML = html
-  const replyDiv = tmp.querySelector('#replyDiv')
-  if (replyDiv) {
-    replyDiv.remove()
-  }
-  return tmp.textContent?.trim() || tmp.innerText?.trim() || ''
-}
-describe('禁用发送计算属性', () => {
-  let msgInput: any
-  let disabledSend: any
+import { describe, it, expect } from 'vitest'
+import { useMsgInput } from '@/hooks/useMsgInput'
+import { createPinia, setActivePinia } from 'pinia'
+import { ref, computed } from 'vue'
 
-  beforeEach(() => {
-    msgInput = ref('')
-    disabledSend = computed(() => {
-      const plainText = stripHtml(msgInput.value)
-      return plainText.length === 0 || plainText.replace(/&nbsp;/g, ' ').trim().length === 0
-    })
+describe('禁用发送计算属性', () => {
+  // 创建一个新的 pinia 实例并将其激活
+  setActivePinia(createPinia())
+
+  const msgInput = ref('')
+  const { stripHtml } = useMsgInput(msgInput)
+  const disabledSend = computed(() => {
+    const plainText = stripHtml(msgInput.value)
+    return plainText.length === 0 || plainText.replace(/&nbsp;/g, ' ').trim().length === 0
   })
 
   it('对于长度为0应该返回 true', () => {

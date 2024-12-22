@@ -1,5 +1,5 @@
 <template>
-  <div ref="containerRef">
+  <div ref="ContextMenuRef">
     <slot></slot>
     <Teleport to="body">
       <transition-group @beforeEnter="handleBeforeEnter" @enter="handleEnter" @afterEnter="handleAfterEnter">
@@ -97,10 +97,10 @@ const visibleMenu = computed(() => {
 })
 /** 判断是否传入了menu */
 const isNull = computed(() => menu === void 0)
-const containerRef = ref(null)
+const ContextMenuRef = useTemplateRef('ContextMenuRef')
 const emit = defineEmits(['select', 'reply-emoji'])
 /** 获取鼠标位置和是否显示右键菜单 */
-const { x, y, showMenu } = useContextMenu(containerRef, isNull)
+const { x, y, showMenu } = useContextMenu(ContextMenuRef, isNull)
 /** 获取视口的宽高 */
 const { vw, vh } = useViewport()
 /** 定义右键菜单尺寸 */

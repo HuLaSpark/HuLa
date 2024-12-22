@@ -18,7 +18,7 @@ const task = () => {
   if (queue.size > 0) {
     // 开始新请求
     request = apis.getMsgReadCount({ msgIds: [...queue] })
-    request.send().then((res: MsgReadUnReadCountType[]) => {
+    request.then((res: MsgReadUnReadCountType[]) => {
       const result = new Map<number, MsgReadUnReadCountType>()
       res.forEach((item) => result.set(item.msgId, item))
       useMitt.emit('onGetReadCount', result)

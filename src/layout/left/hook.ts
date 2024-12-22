@@ -88,11 +88,11 @@ export const leftHook = () => {
   }
 
   watchEffect(() => {
-    // menuTop.find((item: STO.Plugins<PluginEnum>) => {
-    //   if (item.url === 'message') {
-    //     item.badge = msgTotal.value
-    //   }
-    // })
+    menuTop.find((item: STO.Plugins<PluginEnum>) => {
+      if (item.url === 'message') {
+        item.badge = msgTotal.value
+      }
+    })
     /** 判断是否是跟随系统主题 */
     if (themes.pattern === ThemeEnum.OS) {
       followOS()
@@ -205,13 +205,6 @@ export const leftHook = () => {
     })
     useMitt.on(MittEnum.CLOSE_INFO_SHOW, () => {
       infoShow.value = false
-    })
-    useMitt.on(MittEnum.UPDATE_MSG_TOTAL, (event: any) => {
-      menuTop.find((item: STO.Plugins<PluginEnum>) => {
-        if (item.url === 'message') {
-          item.badge = event as number
-        }
-      })
     })
     useMitt.on(MittEnum.TO_SEND_MSG, (event: any) => {
       activeUrl.value = event.url

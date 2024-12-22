@@ -16,7 +16,7 @@
       <!-- 登录菜单 -->
       <n-flex class="ma text-center h-full w-260px" vertical :size="16">
         <n-input
-          style="padding-left: 20px"
+          :class="{ 'pl-16px': loginHistories.length > 0 }"
           size="large"
           maxlength="16"
           minlength="6"
@@ -27,7 +27,7 @@
           @blur="accountPH = '输入HuLa账号'"
           clearable>
           <template #suffix>
-            <n-flex @click="arrowStatus = !arrowStatus">
+            <n-flex v-if="loginHistories.length > 0" @click="arrowStatus = !arrowStatus">
               <svg v-if="!arrowStatus" class="down w-18px h-18px color-#505050 cursor-pointer">
                 <use href="#down"></use>
               </svg>

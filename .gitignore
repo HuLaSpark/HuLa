@@ -24,3 +24,5 @@ dist-ssr
 src-tauri/target
 
 .history/
+
+/coverage

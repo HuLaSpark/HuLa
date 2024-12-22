@@ -1,7 +1,7 @@
 <template>
   <!-- 好友详情 -->
   <n-flex v-if="content.type === RoomTypeEnum.SINGLE" vertical align="center" :size="30" class="mt-60px select-none">
-    <n-avatar class="rounded-50% size-146px border-(2px solid #fff)" :src="AvatarUtils.getAvatarUrl(item.avatar)" />
+    <n-avatar class="rounded-50% size-146px border-(2px solid #fff)" :src="AvatarUtils.getAvatarUrl(item.avatar!)" />
 
     <span class="text-(20px [--text-color])">{{ item.name }}</span>
 

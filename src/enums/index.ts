@@ -66,8 +66,6 @@ export enum MittEnum {
   DETAILS_SHOW = 'detailsShow',
   /** 好友申请页面显示 */
   APPLY_SHOW = 'applyShow',
-  /** 消息列表被清空或者暂无消息 */
-  NOT_MSG = 'notMsg',
   /** 回复消息 */
   REPLY_MEG = 'replyMsg',
   /** 手动触发InfoPopover */

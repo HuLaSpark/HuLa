@@ -15,7 +15,7 @@
     <span class="text-(14px #909090)">加载中</span>
   </n-flex>
 
-  <Transition name="chat-init" mode="out-in" @after-leave="handleTransitionComplete">
+  <Transition name="chat-init" appear mode="out-in" @after-leave="handleTransitionComplete">
     <!-- 初次加载的骨架屏 -->
     <n-flex
       v-if="messageOptions?.isLoading && !messageOptions?.cursor"
@@ -229,7 +229,6 @@
                   @mouseleave="handleMouseLeave"
                   class="w-fit relative"
                   :style="{ '--bubble-max-width': chatStore.isGroup ? '32vw' : '50vw' }"
-                  :data-key="item.fromUser.uid === userUid ? `U${item.message.id}` : `Q${item.message.id}`"
                   @select="$event.click(item)"
                   :menu="handleItemType(item.message.type)"
                   :emoji="chatStore.isGroup ? emojiList : []"
@@ -303,6 +302,12 @@
                   <svg class="size-14px">
                     <use href="#to-top"></use>
                   </svg>
+                  <n-avatar
+                    class="reply-avatar"
+                    lazy
+                    round
+                    :size="20"
+                    :src="getAvatarSrc(item.message.body.reply.uid)" />
                   <span>{{ `${item.message.body.reply.username}：` }}</span>
                   <span class="content-span">
                     {{ item.message.body.reply.body }}
@@ -374,15 +379,15 @@
   <!-- 悬浮按钮提示(底部悬浮) -->
   <footer
     class="float-footer"
-    v-if="floatFooter && newMsgNum > 0"
+    v-if="floatFooter && currentNewMsgCount?.count && currentNewMsgCount.count > 0"
     :class="chatStore.isGroup ? 'right-220px' : 'right-50px'">
-    <div class="float-box" :class="{ max: newMsgNum > 99 }" @click="scrollBottom">
+    <div class="float-box" :class="{ max: currentNewMsgCount?.count > 99 }" @click="scrollBottom">
       <n-flex justify="space-between" align="center">
-        <n-icon :color="newMsgNum > 99 ? '#ce304f' : '#13987f'">
+        <n-icon :color="currentNewMsgCount?.count > 99 ? '#ce304f' : '#13987f'">
           <svg><use href="#double-down"></use></svg>
         </n-icon>
-        <span class="text-12px" :class="{ 'color-#ce304f': newMsgNum > 99 }">
-          {{ newMsgNum > 99 ? '99+' : newMsgNum }}条新消息
+        <span class="text-12px" :class="{ 'color-#ce304f': currentNewMsgCount?.count > 99 }">
+          {{ currentNewMsgCount?.count > 99 ? '99+' : currentNewMsgCount?.count }}条新消息
         </span>
       </n-flex>
     </div>
@@ -416,42 +421,14 @@ const userStore = useUserStore()
 
 // 记录当前滚动位置相关信息
 const isAutoScrolling = ref(false)
-const lastScrollHeight = ref(0)
-const lastScrollTop = ref(0)
 
 /** 记录是否正在向上滚动 */
 const isScrollingUp = ref(false)
 // 添加标记，用于识别是否正在加载历史消息
 const isLoadingMore = ref(false)
 
-const chatMessageList = computed(() => {
-  const messages = chatStore.chatMessageList
-  const container = virtualListInst.value?.getContainer()
-  if (container) {
-    lastScrollHeight.value = container.scrollHeight
-    lastScrollTop.value = container.scrollTop
-
-    // 标记正在自动滚动，防止触发其他滚动事件
-    isAutoScrolling.value = true
-
-    // 在下一个 tick 恢复滚动位置
-    nextTick(() => {
-      const newScrollHeight = container.scrollHeight
-      const heightDiff = newScrollHeight - lastScrollHeight.value
-      // 如果之前在底部，保持在底部
-      if (lastScrollTop.value + 50 >= lastScrollHeight.value - container.clientHeight) {
-        container.scrollTop = newScrollHeight
-      } else {
-        // 否则保持相对位置
-        container.scrollTop = lastScrollTop.value + heightDiff
-      }
-      isAutoScrolling.value = false
-    })
-  }
-
-  return messages
-})
-
+const chatMessageList = computed(() => chatStore.chatMessageList)
+const currentNewMsgCount = computed(() => chatStore.currentNewMsgCount)
 const messageOptions = computed(() => chatStore.currentMessageOptions)
 const { createWebviewWindow } = useWindow()
 /** 是否是超级管理员 */
@@ -464,8 +441,6 @@ const itemSize = computed(() => (chatStore.isGroup ? 90 : 76))
 const virtualListInst = useTemplateRef<VirtualListExpose>('virtualListInst')
 /** 手动触发Popover显示 */
 const infoPopover = ref(false)
-// 添加向上滚动时防抖变量
-const loadMoreDebounceTimer = ref<NodeJS.Timeout | null>(null)
 // 记录 requestAnimationFrame 的返回值
 const rafId = ref<number>()
 /** 鼠标悬浮的气泡显示对应的时间 */
@@ -486,7 +461,6 @@ const {
   handleConfirm,
   handleItemType,
   activeBubble,
-  newMsgNum,
   floatFooter,
   tips,
   modalShow,
@@ -544,7 +518,7 @@ watch(
       }
 
       // 其他情况：增加新消息计数
-      newMsgNum.value++
+      console.log(currentNewMsgCount.value?.count)
     }
   },
   { deep: false }
@@ -571,50 +545,39 @@ const handleScroll = () => {
   const distanceFromBottom = scrollHeight - scrollTop.value - clientHeight
 
   // 存储 requestAnimationFrame 的返回值
-  rafId.value = requestAnimationFrame(() => {
+  rafId.value = requestAnimationFrame(async () => {
     // 处理触顶加载更多
     if (scrollTop.value === 0) {
       // 如果正在加载或已经触发了加载，则不重复触发
       if (messageOptions.value?.isLoading || isLoadingMore.value) return
 
-      // 清除之前的定时器
-      if (loadMoreDebounceTimer.value) {
-        clearTimeout(loadMoreDebounceTimer.value)
-      }
-
       // 记录当前的内容高度
       const oldScrollHeight = container.scrollHeight
 
-      // 设置新的定时器，300ms 后执行加载
-      loadMoreDebounceTimer.value = setTimeout(async () => {
-        try {
-          isLoadingMore.value = true
-          // 禁用滚动交互但保持滚动条显示
-          container.style.pointerEvents = 'none'
-          await chatStore.loadMore()
-          // 加载完成后，计算新增内容的高度差，并设置滚动位置
-          nextTick(() => {
-            const newScrollHeight = container.scrollHeight
-            const heightDiff = newScrollHeight - oldScrollHeight
-            if (heightDiff > 0) {
-              container.scrollTop = heightDiff
-            }
-            // 恢复滚动交互
-            nextTick(() => {
-              container.style.pointerEvents = 'auto'
-            })
-          })
-        } finally {
-          isLoadingMore.value = false
-          loadMoreDebounceTimer.value = null
+      isLoadingMore.value = true
+      // 禁用滚动交互但保持滚动条显示
+      container.style.pointerEvents = 'none'
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      await chatStore.loadMore()
+      // 加载完成后，计算新增内容的高度差，并设置滚动位置
+      nextTick(() => {
+        const newScrollHeight = container.scrollHeight
+        const heightDiff = newScrollHeight - oldScrollHeight
+        if (heightDiff > 0) {
+          container.scrollTop = heightDiff
         }
-      }, 300)
+        // 恢复滚动交互
+        nextTick(() => {
+          container.style.pointerEvents = 'auto'
+          isLoadingMore.value = false
+        })
+      })
     }
 
     // 处理底部滚动和新消息提示
     if (distanceFromBottom <= 20) {
       floatFooter.value = false
-      newMsgNum.value = 0
+      chatStore.clearNewMsgCount()
     } else {
       floatFooter.value = true
     }
@@ -826,10 +789,6 @@ onMounted(() => {
 onUnmounted(() => {
   if (rafId.value) {
     cancelAnimationFrame(rafId.value)
-  }
-  if (loadMoreDebounceTimer.value) {
-    clearTimeout(loadMoreDebounceTimer.value)
-    loadMoreDebounceTimer.value = null
   }
   if (hoverBubble.value.timer) {
     clearTimeout(hoverBubble.value.timer)

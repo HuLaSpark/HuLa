@@ -18,6 +18,15 @@
       </svg>
     </div>
 
+    <!-- 群公告 -->
+    <n-flex vertical :size="14" class="px-4px py-10px">
+      <p class="text-(14px --text-color) font-bold">群公告须知</p>
+
+      <p class="text-(12px #909090) leading-5 line-clamp-4">
+        请不要把重要信息发到该群（功能暂时还未完善），网络不是法外之地，请遵守网络规范，否则直接删除。
+      </p>
+    </n-flex>
+
     <n-flex v-if="!isSearch" align="center" justify="space-between" class="pr-8px pl-8px h-42px">
       <span class="text-14px">在线群聊成员&nbsp;{{ groupStore.countInfo.onlineNum }}</span>
       <svg @click="handleSelect" class="size-14px">
@@ -49,7 +58,7 @@
     <!-- // TODO 如果直接使用n-virtual-list的滚动配上n-popover似乎也没有这个bug，但是当点击倒数第二个的时候还是会出现滚动条 (nyh -> 2024-03-25 00:30:53)   -->
     <n-virtual-list
       id="image-chat-sidebar"
-      style="max-height: calc(100vh - 130px)"
+      style="max-height: calc(100vh - 260px)"
       item-resizable
       @scroll="handleScroll($event)"
       :item-size="42"

@@ -2,6 +2,7 @@ import type { TransferRenderTargetLabel, TransferRenderSourceList } from 'naive-
 import { NAvatar, NCheckbox } from 'naive-ui'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
+import { AvatarUtils } from '@/utils/avatarUtils'
 import apis from '@/services/apis'
 
 const contactStore = useContactStore()
@@ -9,7 +10,7 @@ export const options = computed(() =>
   contactStore.contactsList.map((item) => ({
     label: useUserInfo(item.uid).value.name,
     value: item.uid,
-    avatar: useUserInfo(item.uid).value.avatar
+    avatar: AvatarUtils.getAvatarUrl(useUserInfo(item.uid).value.avatar!)
   }))
 )
 
