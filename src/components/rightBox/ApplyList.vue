@@ -16,7 +16,7 @@
         justify="space-between"
         class="bg-[--center-bg-color] rounded-10px p-20px box-border border-(1px solid [--bg-popover])">
         <n-flex align="center" :size="10">
-          <n-avatar round size="large" :src="avatarSrc(useUserInfo(item.uid).value.avatar)" class="mr-10px" />
+          <n-avatar round size="large" :src="avatarSrc(useUserInfo(item.uid).value.avatar!)" class="mr-10px" />
           <n-flex vertical :size="12">
             <n-flex align="center" :size="10">
               <n-popover
@@ -41,8 +41,9 @@
 
         <n-button
           secondary
+          :loading="loading"
           v-if="item.status === RequestFriendAgreeStatus.Waiting"
-          @click="contactStore.onAcceptFriend(item.applyId)">
+          @click="handleAgree(item.applyId)">
           接受
         </n-button>
         <span class="text-(12px #64a29c)" v-else>已同意</span>
@@ -58,8 +59,18 @@ import { AvatarUtils } from '@/utils/avatarUtils.ts'
 
 const contactStore = useContactStore()
 const currentUserId = ref(0)
+const loading = ref(false)
 
 const avatarSrc = (url: string) => AvatarUtils.getAvatarUrl(url)
+
+const handleAgree = async (applyId: number) => {
+  loading.value = true
+  contactStore.onAcceptFriend(applyId).then(() => {
+    setTimeout(() => {
+      loading.value = false
+    }, 600)
+  })
+}
 </script>
 
 <style scoped lang="scss"></style>

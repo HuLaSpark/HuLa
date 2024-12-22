@@ -72,7 +72,14 @@
   span {
     transition: color 0.4s ease-in-out;
   }
+  .reply-avatar {
+    filter: grayscale(60%);
+    transition: filter 0.4s ease-in-out;
+  }
   &:hover {
+    .reply-avatar {
+      filter: grayscale(0);
+    }
     svg {
       color: #13987f;
     }

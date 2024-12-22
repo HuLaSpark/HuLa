@@ -98,7 +98,7 @@
           :loading="loading"
           :disabled="btnEnable"
           class="w-full mt-8px mb-50px"
-          @click="register"
+          @click="handleRegisterClick"
           color="#13987f">
           {{ btnText }}
         </n-button>
@@ -109,6 +109,39 @@
     <n-flex class="text-(12px #909090)" :size="8" justify="center">
       <span>Copyright {{ currentYear - 1 }}-{{ currentYear }} HuLaSpark All Rights Reserved.</span>
     </n-flex>
+
+    <!-- 星标提示框 -->
+    <n-modal v-model:show="starTipsModal" :mask-closable="false" class="rounded-8px" transform-origin="center">
+      <div class="bg-[--bg-edit] w-380px h-fit box-border flex flex-col">
+        <n-flex vertical class="w-full h-fit">
+          <video class="w-full h-240px rounded-t-8px object-cover" src="@/assets/video/star.mp4" autoplay loop />
+          <n-flex vertical :size="10" class="p-14px">
+            <p class="text-(16px [--text-color] font-bold)">在 GitHub 为我们点亮星标</p>
+            <p class="text-(12px [--chat-text-color]) leading-5">
+              如果您喜爱我们的产品，并希望支持我们，可以去 GitHub
+              给我们点一颗星吗？这个小小的动作对我们来说意义重大，能激励我们为您持续提供特性体验。
+            </p>
+
+            <n-flex :size="10" class="ml-auto">
+              <div
+                @click="register()"
+                class="border-(1px solid #999) cursor-pointer w-40px h-30px rounded-8px flex-center text-(12px [--text-color])">
+                稍后
+              </div>
+
+              <a
+                target="_blank"
+                rel="noopener noreferrer"
+                @click="register()"
+                href="https://github.com/HuLaSpark/HuLa"
+                class="bg-#363636 cursor-pointer w-70px h-30px rounded-8px flex-center text-(12px #f1f1f1) no-underline">
+                点亮星标
+              </a>
+            </n-flex>
+          </n-flex>
+        </n-flex>
+      </div>
+    </n-modal>
   </n-config-provider>
 </template>
 <script setup lang="ts">
@@ -154,6 +187,7 @@ const btnText = ref('注册')
 // 使用day.js获取当前年份
 const currentYear = dayjs().year()
 const registerForm = ref()
+const starTipsModal = ref(false)
 // 校验规则
 const rules = {
   name: {
@@ -212,45 +246,51 @@ const handleInputState = (event: FocusEvent, type: InputType): void => {
   prefixMap[type].value = event.type === 'focus'
 }
 
-/** 注册 */
-const register = async () => {
+/** 处理星标 */
+const handleRegisterClick = async () => {
   await registerForm.value.validate((errors: any) => {
     if (!errors) {
-      btnEnable.value = true
-      loading.value = true
-      btnText.value = '注册中...'
-
-      setTimeout(() => {
-        // 随机生成头像编号
-        const avatarNum = Math.floor(Math.random() * 21) + 1
-        const avatarId = avatarNum.toString().padStart(3, '0')
-        info.avatar = avatarId
-        // 更新按钮文本
-        btnText.value = '正在分配默认头像...'
-
-        setTimeout(() => {
-          // 注册
-          apis
-            .register({ ...info })
-            .then(() => {
-              window.$message.success('注册成功')
-              btnText.value = '注册'
-              setTimeout(() => {
-                WebviewWindow.getByLabel('login').then((win) => {
-                  win?.setFocus()
-                })
-                WebviewWindow.getCurrent().close()
-              }, 1200)
-            })
-            .finally(() => {
-              loading.value = false
-              btnEnable.value = false
-              btnText.value = '注册'
-            })
-        }, 800)
-      }, 600)
+      starTipsModal.value = true
     }
   })
+}
+
+/** 注册账号 */
+const register = async () => {
+  starTipsModal.value = false
+  btnEnable.value = true
+  loading.value = true
+  btnText.value = '注册中...'
+
+  setTimeout(() => {
+    // 随机生成头像编号
+    const avatarNum = Math.floor(Math.random() * 21) + 1
+    const avatarId = avatarNum.toString().padStart(3, '0')
+    info.avatar = avatarId
+    // 更新按钮文本
+    btnText.value = '正在分配默认头像...'
+
+    setTimeout(() => {
+      // 注册
+      apis
+        .register({ ...info })
+        .then(() => {
+          window.$message.success('注册成功')
+          btnText.value = '注册'
+          setTimeout(() => {
+            WebviewWindow.getByLabel('login').then((win) => {
+              win?.setFocus()
+            })
+            WebviewWindow.getCurrent().close()
+          }, 1200)
+        })
+        .finally(() => {
+          loading.value = false
+          btnEnable.value = false
+          btnText.value = '注册'
+        })
+    }, 800)
+  }, 600)
 }
 
 watchEffect(() => {

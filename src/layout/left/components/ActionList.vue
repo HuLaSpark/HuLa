@@ -43,11 +43,23 @@
           </n-flex>
         </n-popover>
         <!-- 该选项无提示时展示 -->
+        <!-- 消息提示 -->
         <n-badge
-          v-else
+          v-if="item.url === 'message'"
           :max="99"
           :value="unReadMark.newMsgUnreadCount"
-          :show="item.icon.includes('message') && unReadMark.newMsgUnreadCount > 0">
+          :show="unReadMark.newMsgUnreadCount > 0">
+          <svg class="size-22px">
+            <use
+              :href="`#${activeUrl === item.url || openWindowsList.has(item.url) ? item.iconAction : item.icon}`"></use>
+          </svg>
+        </n-badge>
+        <!-- 好友提示 -->
+        <n-badge
+          v-if="item.url === 'friendsList'"
+          :max="99"
+          :value="unReadMark.newFriendUnreadCount"
+          :show="unReadMark.newFriendUnreadCount > 0">
           <svg class="size-22px">
             <use
               :href="`#${activeUrl === item.url || openWindowsList.has(item.url) ? item.iconAction : item.icon}`"></use>

@@ -4,8 +4,11 @@
     data-tauri-drag-region
     class="relative z-30 flex-y-center border-b-(1px solid [--right-chat-footer-line-color]) justify-between p-[6px_20px_12px] select-none">
     <n-flex align="center">
-      <span class="color-[--text-color]">{{ activeItem.name }}</span>
-      <svg v-if="activeItem.hotFlag === IsAllUserEnum.Yes" class="size-20px color-#13987f select-none outline-none">
+      <img v-if="isloading" class="size-16px" src="@/assets/img/loading.svg" alt="" />
+      <span v-else class="color-[--text-color]">{{ activeItem.name }}</span>
+      <svg
+        v-if="activeItem.hotFlag === IsAllUserEnum.Yes && !isloading"
+        class="size-20px color-#13987f select-none outline-none">
         <use href="#auth"></use>
       </svg>
     </n-flex>
@@ -195,10 +198,12 @@ const tips = ref()
 const optionsType = ref<RoomActEnum>()
 const modalShow = ref(false)
 const sidebarShow = ref(false)
+const isloading = ref(false)
 const { activeItem } = defineProps<{
   activeItem: SessionItem
 }>()
 const groupUserList = computed(() => groupStore.userList)
+const messageOptions = computed(() => chatStore.currentMessageOptions)
 const userList = computed(() => {
   return groupUserList.value
     .map((item: UserItem) => {
@@ -219,7 +224,19 @@ const userList = computed(() => {
 // 创建一个RTCPeerConnection实例
 const peerConnection = new RTCPeerConnection()
 
+watch(
+  () => activeItem.roomId,
+  () => {
+    if (messageOptions.value?.isLoading) {
+      isloading.value = true
+    }
+  }
+)
+
 watchEffect(() => {
+  if (!messageOptions.value?.isLoading) {
+    isloading.value = false
+  }
   stream.value?.getVideoTracks()[0].addEventListener('ended', () => {
     stop()
   })

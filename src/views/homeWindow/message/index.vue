@@ -6,12 +6,12 @@
       <ContextMenu
         v-for="item in sessionList"
         :key="item.roomId"
-        :class="{ active: currentSession === item.roomId }"
+        :class="{ active: currentSession.roomId === item.roomId }"
         :data-key="item.roomId"
         :menu="menuList"
         :special-menu="specialMenuList"
         class="msg-box w-full h-75px mb-5px"
-        @click="onSelectSelectSession(item, item.type)"
+        @click="handleMsgClick(item)"
         @dblclick="handleMsgDblclick(item)"
         @select="$event.click(item)">
         <n-flex :size="10" align="center" class="h-75px pl-6px pr-8px flex-1">
@@ -24,7 +24,7 @@
                 <n-popover trigger="hover" v-if="item.hotFlag === IsAllUserEnum.Yes">
                   <template #trigger>
                     <svg
-                      :class="[currentSession === item.roomId ? 'color-#33ceab' : 'color-#13987f']"
+                      :class="[currentSession.roomId === item.roomId ? 'color-#33ceab' : 'color-#13987f']"
                       class="size-20px select-none outline-none cursor-pointer">
                       <use href="#auth"></use>
                     </svg>
@@ -50,10 +50,8 @@
   </n-scrollbar>
 </template>
 <script lang="ts" setup>
-import { useMitt } from '@/hooks/useMitt.ts'
-import { MockList } from '@/mock'
 import { useMessage } from '@/hooks/useMessage.ts'
-import { MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
+import { MsgEnum, RoomTypeEnum } from '@/enums'
 import { IsAllUserEnum, SessionItem } from '@/services/types.ts'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { useChatStore } from '@/stores/chat.ts'
@@ -68,7 +66,8 @@ const chatStore = useChatStore()
 const globalStore = useGlobalStore()
 const { userUid } = useCommon()
 const scrollbar = ref()
-const { handleMsgClick, activeIndex, menuList, specialMenuList, handleMsgDblclick } = useMessage()
+const { handleMsgClick, menuList, specialMenuList, handleMsgDblclick } = useMessage()
+const currentSession = computed(() => globalStore.currentSession)
 // TODO 艾特我提醒
 const sessionList = computed(() =>
   chatStore.sessionList.map((item) => {
@@ -98,47 +97,26 @@ const sessionList = computed(() =>
     }
   })
 )
-const msgTotal = computed(() => {
-  return sessionList.value.reduce((total, item) => total + item.unreadCount, 0)
-})
-// 选中的聊天对话
-const currentSession = computed(() => activeIndex.value)
 
-// 选中会话
-const onSelectSelectSession = (item: SessionItem, roomType: RoomTypeEnum) => {
-  globalStore.currentSession.roomId = item.roomId
-  globalStore.currentSession.type = roomType
-  handleMsgClick(item)
-}
-
-watchEffect(() => {
-  // TODO 如果当前信息栏中没有该信息就创建一条 (nyh -> 2024-03-22 01:05:22)
-  useMitt.emit(MittEnum.UPDATE_MSG_TOTAL, msgTotal.value)
-  if (MockList.value.length === 0) {
-    useMitt.emit(MittEnum.NOT_MSG)
-  }
-})
+watch(
+  () => chatStore.currentSessionInfo,
+  (newVal) => {
+    if (newVal) {
+      handleMsgClick(newVal as SessionItem)
+    }
+  },
+  { immediate: true }
+)
 
 onBeforeMount(async () => {
   // 请求回话列表
-  await chatStore.getSessionList(true)
+  await chatStore.getSessionList()
 })
 
 onMounted(() => {
   SysNTF
-  // TODO 这里的key后面如果换成用户唯一标识的时候记得更换data-key的值 (nyh -> 2024-03-28 18:56:20)
-  // if (currentSession.value.roomId !== -1) {
-  //   nextTick(() => {
-  //     const activeElement = document.querySelector(`.msg-box[data-key="${currentSession.value.roomId}"]`) as HTMLElement
-  //     const rect = activeElement.getBoundingClientRect()
-  //     scrollbar.value.scrollTo({
-  //       top: rect.top - 75,
-  //       behavior: 'smooth'
-  //     })
-  //   })
-  // }
-  // setInterval(() => {
-  //   msgTotal.value++
+  // setTimeout(() => {
+  //   handleMsgClick(chatStore.currentSessionInfo as SessionItem)
   // }, 1000)
 })
 </script>

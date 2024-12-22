@@ -94,7 +94,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     }
     // 如果输入框没有值就把回复内容清空
     if (msgInput.value === '') {
-      reply.value = { imgCount: 0, accountName: '', content: '', key: 0 }
+      reply.value = { avatar: '', imgCount: 0, accountName: '', content: '', key: 0 }
     }
   })
 
@@ -117,7 +117,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
   const resetInput = () => {
     msgInput.value = ''
     messageInputDom.value.innerHTML = ''
-    reply.value = { imgCount: 0, accountName: '', content: '', key: 0 }
+    reply.value = { avatar: '', imgCount: 0, accountName: '', content: '', key: 0 }
   }
 
   /** 处理发送信息事件 */
@@ -487,6 +487,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     /** 监听回复信息的传递 */
     useMitt.on(MittEnum.REPLY_MEG, (event: any) => {
       const accountName = useUserInfo(event.fromUser.uid).value.name!
+      const avatar = useUserInfo(event.fromUser.uid).value.avatar!
       // 如果已经有回复消息，则替换掉原来的回复消息
       if (reply.value.content) {
         // 触发id为closeBtn的按钮点击事件，从而关闭第一个回复框，实现回复消息的替换
@@ -498,6 +499,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       }
       reply.value = {
         imgCount: 0,
+        avatar: avatar,
         accountName: accountName,
         content: event.message.body.content,
         key: event.message.id
@@ -507,7 +509,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
           messageInputDom.value.focus()
           insertNode(
             MsgEnum.REPLY,
-            { accountName: accountName, content: event.message.body.content },
+            { avatar: avatar, accountName: accountName, content: event.message.body.content },
             {} as HTMLElement
           )
           triggerInputEvent(messageInputDom.value)

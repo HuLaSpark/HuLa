@@ -6,15 +6,18 @@ import type {
   OnStatusChangeType
 } from '@/services/wsType.ts'
 import type { MessageType, MarkItemType, RevokedMsgType } from '@/services/types'
-import { OnlineEnum, ChangeTypeEnum, WorkerMsgEnum, MittEnum } from '@/enums'
+import { OnlineEnum, ChangeTypeEnum, WorkerMsgEnum } from '@/enums'
 import { worker } from '@/utils/InitWorker.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { emit } from '@tauri-apps/api/event'
+import { useUserStore } from '@/stores/user'
 
 class WS {
   #tasks: WsReqMsgContentType[] = []
   // 重连🔐
   #connectReady = false
+  // TODO: 暂时使用去重复的逻辑，后续优化
+  #processedMsgIds = new Set<number>()
 
   constructor() {
     this.initConnect()
@@ -74,9 +77,8 @@ class WS {
     // this.#detectionLoginStatus()
 
     setTimeout(() => {
-      // const userStore = useUserStore()
-      // if (userStore.isSign)
-      {
+      const userStore = useUserStore()
+      if (userStore.isSign) {
         // 处理堆积的任务
         this.#tasks.forEach((task) => {
           this.send(task)
@@ -125,9 +127,15 @@ class WS {
       }
       // 收到消息
       case WsResponseMessageType.RECEIVE_MESSAGE: {
-        console.log('接收消息')
+        const message = params.data as MessageType
+        // TODO: 暂时使用去重复的逻辑，后续优化
+        if (this.#isMessageProcessed(message.message.id)) {
+          break
+        }
+
+        console.log('接收消息', message)
         await emit('show_tip')
-        useMitt.emit(MittEnum.SEND_MESSAGE, params.data as MessageType)
+        useMitt.emit(WsResponseMessageType.RECEIVE_MESSAGE, message)
         break
       }
       // 用户上线
@@ -169,6 +177,7 @@ class WS {
       }
       // 新好友申请
       case WsResponseMessageType.REQUEST_NEW_FRIEND: {
+        // TODO: 发送申请后其他人没有接收到好友申请请求，后端查看是否有问题
         console.log('好友申请')
         useMitt.emit(WsResponseMessageType.REQUEST_NEW_FRIEND, params.data as { uid: number; unreadCount: number })
         break
@@ -193,6 +202,22 @@ class WS {
         break
       }
     }
+  }
+  // TODO: 暂时使用去重复的逻辑，后续优化
+  #isMessageProcessed(msgId: number): boolean {
+    if (this.#processedMsgIds.has(msgId)) {
+      return true
+    }
+
+    // 添加到已处理集合
+    this.#processedMsgIds.add(msgId)
+
+    // 设置5秒后从集合中删除
+    setTimeout(() => {
+      this.#processedMsgIds.delete(msgId)
+    }, 5000)
+
+    return false
   }
 }
 

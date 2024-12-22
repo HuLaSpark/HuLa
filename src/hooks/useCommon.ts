@@ -9,6 +9,7 @@ import { useGlobalStore } from '@/stores/global.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useMessage } from '@/hooks/useMessage.ts'
 import { useUserStore } from '@/stores/user.ts'
+import { AvatarUtils } from '@/utils/avatarUtils'
 
 export interface SelectionRange {
   range: Range
@@ -26,6 +27,7 @@ export const useCommon = () => {
   const userUid = computed(() => userStore.userInfo.uid)
   /** 回复消息 */
   const reply = ref({
+    avatar: '',
     accountName: '',
     content: '',
     key: 0,
@@ -178,15 +180,21 @@ export const useCommon = () => {
       // 把dom中的value值作为回复信息的作者，dom中的content作为回复信息的内容
       const author = dom.accountName + '：'
       let content = dom.content
+      // 创建一个img标签节点作为头像
+      const imgNode = document.createElement('img')
+      imgNode.src = AvatarUtils.getAvatarUrl(dom.avatar)
+      imgNode.style.cssText = `
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      `
       // 创建一个div标签节点作为回复信息的头部
       const headerNode = document.createElement('div')
       headerNode.style.cssText = `
       line-height: 1.5;
       font-size: 12px;
-      margin-bottom: 2px;
-      padding: 0 8px;
+      padding: 0 4px;
       color: rgba(19, 152, 127);
-      border-left: 3px solid #ccc;
       cursor: default;
     `
       headerNode.appendChild(document.createTextNode(author))
@@ -197,6 +205,7 @@ export const useCommon = () => {
       justify-content: space-between;
       border-radius: 8px;
       padding: 2px;
+      margin-top: 4px;
       min-width: 0;
     `
       let contentBox
@@ -271,10 +280,21 @@ export const useCommon = () => {
         selection?.removeAllRanges()
         selection?.addRange(range)
         triggerInputEvent(messageInput)
-        reply.value = { imgCount: 0, accountName: '', content: '', key: 0 }
+        reply.value = { avatar: '', imgCount: 0, accountName: '', content: '', key: 0 }
       })
-      // 将头部和正文节点插入到div标签节点中
-      divNode.appendChild(headerNode)
+      // 为头像和标题创建容器
+      const headerContainer = document.createElement('div')
+      headerContainer.style.cssText = `
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      `
+      // 在容器中添加头像和标题
+      headerContainer.appendChild(imgNode)
+      headerContainer.appendChild(headerNode)
+
+      // 将容器添加到主div中
+      divNode.appendChild(headerContainer)
       divNode.appendChild(contentNode)
       contentNode.appendChild(contentBox)
       contentNode.appendChild(closeBtn)

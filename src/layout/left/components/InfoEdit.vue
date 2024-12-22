@@ -26,7 +26,7 @@
         <n-flex justify="center">
           <n-avatar
             :size="80"
-            :src="AvatarUtils.getAvatarUrl(editInfo.content.avatar)"
+            :src="AvatarUtils.getAvatarUrl(editInfo.content.avatar!)"
             round
             style="border: 3px solid #fff" />
         </n-flex>

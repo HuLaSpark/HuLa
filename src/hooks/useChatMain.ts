@@ -33,8 +33,6 @@ export const useChatMain = (activeItem?: SessionItem) => {
   const floatFooter = ref(false)
   /** 记录历史消息下标 */
   const historyIndex = ref(0)
-  /** 新消息数 */
-  const newMsgNum = ref(0)
   /** 当前点击的用户的key */
   const selectKey = ref()
   /** 计算出触发页脚后的历史消息下标 */
@@ -120,7 +118,7 @@ export const useChatMain = (activeItem?: SessionItem) => {
       click: (item: any) => {
         tips.value = '删除后将不会出现在你的消息记录中，确定删除吗?'
         modalShow.value = true
-        delIndex.value = item.key
+        delIndex.value = item.message.id
       }
     }
   ])
@@ -294,9 +292,7 @@ export const useChatMain = (activeItem?: SessionItem) => {
 
   /** 删除信息事件 */
   const handleConfirm = () => {
-    // 根据key找到items中对应的下标
-    const index = items.value.findIndex((item) => item.key === delIndex.value)
-    items.value.splice(index, 1)
+    chatStore.deleteMsg(delIndex.value)
     modalShow.value = false
   }
 
@@ -322,7 +318,6 @@ export const useChatMain = (activeItem?: SessionItem) => {
     handleItemType,
     items,
     activeBubble,
-    newMsgNum,
     floatFooter,
     historyIndex,
     tips,

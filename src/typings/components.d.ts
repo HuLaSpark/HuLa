@@ -20,7 +20,6 @@ declare module 'vue' {
     Emoji: typeof import('./../components/rightBox/emoji/index.vue')['default']
     Image: typeof import('./../components/rightBox/renderMessage/Image.vue')['default']
     InfoPopover: typeof import('./../components/common/InfoPopover.vue')['default']
-    LoadingIndicator: typeof import('./../components/common/LoadingIndicator.vue')['default']
     MsgInput: typeof import('./../components/rightBox/MsgInput.vue')['default']
     NaiveProvider: typeof import('./../components/common/NaiveProvider.vue')['default']
     NAlert: typeof import('naive-ui')['NAlert']
@@ -44,6 +43,7 @@ declare module 'vue' {
     NIconWrapper: typeof import('naive-ui')['NIconWrapper']
     NImage: typeof import('naive-ui')['NImage']
     NImageGroup: typeof import('naive-ui')['NImageGroup']
+    NInfiniteScroll: typeof import('naive-ui')['NInfiniteScroll']
     NInput: typeof import('naive-ui')['NInput']
     NLoadingBarProvider: typeof import('naive-ui')['NLoadingBarProvider']
     NMessageProvider: typeof import('naive-ui')['NMessageProvider']
@@ -71,6 +71,7 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     Screenshot: typeof import('./../components/common/Screenshot.vue')['default']
     Text: typeof import('./../components/rightBox/renderMessage/Text.vue')['default']
+    UpdateNotification: typeof import('./../components/UpdateNotification.vue')['default']
     Validation: typeof import('./../components/common/Validation.vue')['default']
     VirtualList: typeof import('./../components/common/VirtualList.vue')['default']
   }
