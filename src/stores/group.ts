@@ -120,7 +120,9 @@ export const useGroupStore = defineStore('group', () => {
 
     // 收集并获取用户详细信息
     const uidCollectYet: Set<number> = new Set()
-    data.list?.forEach((user: UserItem) => uidCollectYet.add(user.uid))
+    for (const user of data.list || []) {
+      uidCollectYet.add(user.uid)
+    }
     await cachedStore.getBatchUserInfo([...uidCollectYet])
   }
 
@@ -148,12 +150,11 @@ export const useGroupStore = defineStore('group', () => {
    * @param items 需要更新状态的用户列表
    */
   const batchUpdateUserStatus = (items: UserItem[]) => {
-    for (let index = 0, len = items.length; index < len; index++) {
-      const curUser = items[index]
+    for (const curUser of items) {
       const findIndex = userList.value.findIndex((item) => item.uid === curUser.uid)
       userList.value[findIndex] = {
         ...userList.value[findIndex],
-        activeStatus: items[index].activeStatus
+        activeStatus: curUser.activeStatus
       }
     }
   }
@@ -174,11 +175,11 @@ export const useGroupStore = defineStore('group', () => {
   const addAdmin = async (uidList: number[]) => {
     await apis.addAdmin({ roomId: currentRoomId.value, uidList })
     // 更新本地群成员列表中的角色信息
-    userList.value.forEach((user) => {
+    for (const user of userList.value) {
       if (uidList.includes(user.uid)) {
         user.roleId = RoleEnum.ADMIN
       }
-    })
+    }
   }
 
   /**
@@ -188,11 +189,11 @@ export const useGroupStore = defineStore('group', () => {
   const revokeAdmin = async (uidList: number[]) => {
     await apis.revokeAdmin({ roomId: currentRoomId.value, uidList })
     // 更新本地群成员列表中的角色信息
-    userList.value.forEach((user) => {
+    for (const user of userList.value) {
       if (uidList.includes(user.uid)) {
         user.roleId = RoleEnum.NORMAL
       }
-    })
+    }
   }
 
   /**

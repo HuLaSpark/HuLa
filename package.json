@@ -67,7 +67,7 @@
     "hula-emojis": "^1.2.1",
     "lodash-es": "^4.17.21",
     "mitt": "^3.0.1",
-    "naive-ui": "^2.40.3",
+    "naive-ui": "^2.40.4",
     "pinia": "^2.2.1",
     "pinia-plugin-persistedstate": "^4.1.2",
     "pinia-shared-state": "^0.5.1",

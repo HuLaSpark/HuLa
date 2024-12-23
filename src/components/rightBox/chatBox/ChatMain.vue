@@ -302,12 +302,7 @@
                   <svg class="size-14px">
                     <use href="#to-top"></use>
                   </svg>
-                  <n-avatar
-                    class="reply-avatar"
-                    lazy
-                    round
-                    :size="20"
-                    :src="getAvatarSrc(item.message.body.reply.uid)" />
+                  <n-avatar class="reply-avatar" round :size="20" :src="getAvatarSrc(item.message.body.reply.uid)" />
                   <span>{{ `${item.message.body.reply.username}：` }}</span>
                   <span class="content-span">
                     {{ item.message.body.reply.body }}
@@ -511,14 +506,13 @@ watch(
       const container = virtualListInst.value?.getContainer()
       if (container) {
         const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight
-        if (distanceFromBottom <= 20) {
+        if (distanceFromBottom <= 300) {
           virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'smooth' })
           return
         }
       }
 
       // 其他情况：增加新消息计数
-      console.log(currentNewMsgCount.value?.count)
     }
   },
   { deep: false }

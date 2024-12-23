@@ -58,9 +58,9 @@ const cleanupHeightCache = () => {
     const deleteCount = keysToDelete.length - MAX_CACHE_SIZE / 2
 
     if (deleteCount > 0) {
-      keysToDelete.slice(0, deleteCount).forEach((key) => {
+      for (const key of keysToDelete.slice(0, deleteCount)) {
         heights.value.delete(key)
-      })
+      }
     }
   }
 }
@@ -105,16 +105,16 @@ const updateItemHeight = () => {
   if (!containerRef.value) return
 
   // 遍历可见项目，测量并缓存实际高度
-  visibleData.value.forEach((item) => {
+  for (const item of visibleData.value) {
     const id = item.message?.id?.toString()
-    if (!id) return
+    if (!id) continue
 
     const el = document.getElementById(`item-${id}`)
     if (el) {
       const height = el.getBoundingClientRect().height
       heights.value.set(id, height)
     }
-  })
+  }
 
   // 清理过期缓存
   cleanupHeightCache()
