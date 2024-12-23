@@ -1,4 +1,4 @@
-use tauri::{tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent}, Manager, PhysicalPosition, Runtime};
+use tauri::{tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent}, Manager, Emitter, PhysicalPosition, Runtime};
 
 pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
     let _ = TrayIconBuilder::with_id("tray")
@@ -43,7 +43,7 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
             #[cfg(target_os = "windows")]
             TrayIconEvent::Enter {
                 id: _,
-                position,
+                position: _,
                 rect: _} => {
                 tray.app_handle().emit("notify_enter", &tray.rect().unwrap()).unwrap();
             }
