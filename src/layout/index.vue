@@ -1,5 +1,5 @@
 <template>
-  <div id="layout" class="flex size-full min-w-310px">
+  <div id="layout" class="flex size-full min-w-310px bg-[--right-bg-color]">
     <Left />
     <Center />
     <Right v-if="!shrinkStatus" />
@@ -59,8 +59,6 @@ useMitt.on(WsResponseMessageType.LOGIN_SUCCESS, (data: LoginSuccessResType) => {
       uid: rest.uid
     }
   ])
-  // 获取用户详情
-  chatStore.getSessionList(true)
 })
 useMitt.on(WsResponseMessageType.OFFLINE, async () => {
   console.log('收到用户下线通知')

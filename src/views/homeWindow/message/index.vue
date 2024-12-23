@@ -61,9 +61,11 @@ import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import SysNTF from '@/components/common/SystemNotification.tsx'
 import { AvatarUtils } from '@/utils/avatarUtils'
+import { useGroupStore } from '@/stores/group.ts'
 
 const chatStore = useChatStore()
 const globalStore = useGlobalStore()
+const groupStore = useGroupStore()
 const { userUid } = useCommon()
 const scrollbar = ref()
 const { handleMsgClick, menuList, specialMenuList, handleMsgDblclick } = useMessage()
@@ -110,14 +112,12 @@ watch(
 
 onBeforeMount(async () => {
   // 请求回话列表
-  await chatStore.getSessionList()
+  await chatStore.getSessionList(true)
+  groupStore.getCountStatistic()
 })
 
 onMounted(() => {
   SysNTF
-  // setTimeout(() => {
-  //   handleMsgClick(chatStore.currentSessionInfo as SessionItem)
-  // }, 1000)
 })
 </script>
 

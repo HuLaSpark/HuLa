@@ -172,7 +172,7 @@ export const useChatStore = defineStore(
 
       /** 收集需要请求用户详情的 uid */
       const uidCollectYet: Set<number> = new Set() // 去重用
-      computedList.forEach((msg) => {
+      for (const msg of computedList) {
         const replyItem = msg.message.body?.reply
         if (replyItem?.id) {
           const messageIds = currentReplyMap.value?.get(replyItem.id) || []
@@ -184,15 +184,15 @@ export const useChatStore = defineStore(
         }
         // 查询消息发送者的信息
         uidCollectYet.add(msg.fromUser.uid)
-      })
+      }
       // 获取用户信息缓存
       await cachedStore.getBatchUserInfo([...uidCollectYet])
       // 为保证获取的历史消息在前面
       const newList = [...computedList, ...chatMessageList.value]
       currentMessageMap.value?.clear() // 清空Map
-      newList.forEach((msg) => {
+      for (const msg of newList) {
         currentMessageMap.value?.set(msg.message.id, msg)
-      })
+      }
 
       if (currentMessageOptions.value) {
         currentMessageOptions.value.cursor = data.cursor
@@ -244,7 +244,9 @@ export const useChatStore = defineStore(
     /** 会话列表去重并排序 */
     const sortAndUniqueSessionList = () => {
       const temp: Record<string, SessionItem> = {}
-      sessionList.forEach((item) => (temp[item.roomId] = item))
+      for (const item of sessionList) {
+        temp[item.roomId] = item
+      }
       sessionList.splice(0, sessionList.length, ...Object.values(temp))
       sessionList.sort((pre, cur) => cur.activeTime - pre.activeTime)
     }
@@ -326,11 +328,7 @@ export const useChatStore = defineStore(
       //   shakeTitle.start()
       // }
 
-      if (
-        currentNewMsgCount.value &&
-        currentNewMsgCount.value?.isStart &&
-        typeof currentNewMsgCount.value.count === 'number'
-      ) {
+      if (currentNewMsgCount.value) {
         currentNewMsgCount.value.count++
         return
       }
@@ -367,11 +365,11 @@ export const useChatStore = defineStore(
     // 过滤掉小黑子的发言
     const filterUser = (uid: number) => {
       for (const messages of messageMap.values()) {
-        messages?.forEach((msg) => {
+        for (const msg of messages.values()) {
           if (msg.fromUser.uid === uid) {
             messages.delete(msg.message.id)
           }
-        })
+        }
       }
     }
 
@@ -395,7 +393,7 @@ export const useChatStore = defineStore(
 
     // 更新点赞、举报数
     const updateMarkCount = (markList: MarkItemType[]) => {
-      markList.forEach((mark: MarkItemType) => {
+      for (const mark of markList) {
         const { msgId, markType, markCount } = mark
 
         const msgItem = currentMessageMap.value?.get(msgId)
@@ -406,7 +404,7 @@ export const useChatStore = defineStore(
             msgItem.message.messageMark.dislikeCount = markCount
           }
         }
-      })
+      }
     }
 
     // 更新消息撤回状态
@@ -432,12 +430,14 @@ export const useChatStore = defineStore(
       }
       // 更新与这条撤回消息有关的消息
       const messageList = currentReplyMap.value?.get(msgId)
-      messageList?.forEach((id) => {
-        const msg = currentMessageMap.value?.get(id)
-        if (msg) {
-          msg.message.body.reply.body = '原消息已被撤回'
+      if (messageList) {
+        for (const id of messageList) {
+          const msg = currentMessageMap.value?.get(id)
+          if (msg) {
+            msg.message.body.reply.body = '原消息已被撤回'
+          }
         }
-      })
+      }
     }
 
     // 获取撤回的消息内容

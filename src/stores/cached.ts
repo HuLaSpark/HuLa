@@ -54,7 +54,7 @@ export const useCachedStore = defineStore('cached', () => {
     // 收集需要获取的徽章ID
     const itemIdSet: Set<number> = new Set()
     const data = await apis.getUserInfoBatch(result)
-    data?.forEach((item: CacheUserItem) => {
+    for (const item of data || []) {
       // 更新用户信息缓存
       userCachedList[item.uid] = {
         ...(item?.needRefresh ? item : userCachedList[item.uid]),
@@ -65,7 +65,7 @@ export const useCachedStore = defineStore('cached', () => {
       // 收集用户佩戴的徽章ID
       const wearingItemId = item.wearingItemId
       wearingItemId && itemIdSet.add(wearingItemId)
-    })
+    }
     // 批量获取徽章信息
     await getBatchBadgeInfo([...itemIdSet])
   }
@@ -85,14 +85,13 @@ export const useCachedStore = defineStore('cached', () => {
 
     // 获取并更新徽章信息缓存
     const data = await apis.getBadgesBatch(result)
-    data?.forEach(
-      (item: CacheBadgeItem) =>
-        (badgeCachedList[item.itemId] = {
-          ...(item?.needRefresh ? item : badgeCachedList[item.itemId]),
-          needRefresh: undefined,
-          lastModifyTime: Date.now()
-        })
-    )
+    for (const item of data || []) {
+      badgeCachedList[item.itemId] = {
+        ...(item?.needRefresh ? item : badgeCachedList[item.itemId]),
+        needRefresh: undefined,
+        lastModifyTime: Date.now()
+      }
+    }
   }
 
   /** 初始化房间内所有用户的基本信息（用于@功能）
@@ -101,7 +100,9 @@ export const useCachedStore = defineStore('cached', () => {
   const initAllUserBaseInfo = async () => {
     if (localStorage.getItem('IS_INIT_USER_BASE') === null) {
       const data = await apis.getAllUserBaseInfo({ roomId: currentRoomId.value })
-      data?.forEach((item: CacheUserItem) => (userCachedList[item.uid] = item))
+      for (const item of data || []) {
+        userCachedList[item.uid] = item
+      }
       localStorage.setItem('IS_INIT_USER_BASE', 'true')
     }
   }

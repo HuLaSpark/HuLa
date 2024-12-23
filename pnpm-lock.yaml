@@ -66,7 +66,7 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       naive-ui:
-        specifier: ^2.40.3
+        specifier: ^2.40.4
         version: 2.40.4(vue@3.5.13(typescript@5.7.2))
       pinia:
         specifier: ^2.2.1

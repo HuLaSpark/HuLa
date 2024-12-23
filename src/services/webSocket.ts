@@ -80,9 +80,9 @@ class WS {
       const userStore = useUserStore()
       if (userStore.isSign) {
         // 处理堆积的任务
-        this.#tasks.forEach((task) => {
+        for (const task of this.#tasks) {
           this.send(task)
-        })
+        }
         // 清空缓存的消息
         this.#tasks = []
       }
