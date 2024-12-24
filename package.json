@@ -73,7 +73,8 @@
     "pinia-shared-state": "^0.5.1",
     "vue": "^3.5.13",
     "vue-draggable-plus": "^0.6.0",
-    "vue-router": "^4.5.0"
+    "vue-router": "^4.5.0",
+    "dompurify": "^3.2.3"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.25.9",

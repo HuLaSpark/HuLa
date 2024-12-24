@@ -10,6 +10,7 @@ import { useChatStore } from '@/stores/chat.ts'
 import { useMessage } from '@/hooks/useMessage.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/avatarUtils'
+import DOMPurify from 'dompurify';
 
 export interface SelectionRange {
   range: Range
@@ -485,7 +486,10 @@ export const useCommon = () => {
   }
 
   /** 去除字符串中的元素标记 */
-  const removeTag = (fragment: string) => new DOMParser().parseFromString(fragment, 'text/html').body.textContent || ''
+  const removeTag = (fragment: string) => {
+    const sanitizedFragment = DOMPurify.sanitize(fragment);
+    return new DOMParser().parseFromString(sanitizedFragment, 'text/html').body.textContent || '';
+  }
 
   /**
    * 打开消息会话(右键发送消息功能)
