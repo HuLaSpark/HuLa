@@ -50,6 +50,9 @@ importers:
       dayjs:
         specifier: ^1.11.11
         version: 1.11.13
+      dompurify:
+        specifier: ^3.2.3
+        version: 3.2.3
       grapheme-splitter:
         specifier: ^1.0.4
         version: 1.0.4
@@ -1751,9 +1754,6 @@ packages:
   '@tauri-apps/plugin-autostart@2.2.0':
     resolution: {integrity: sha512-TzVcDZdOvdot0avkpstUWJKKEl4cyxLpFB9DZZRW5zH8k+Bv8IVJmO0zyYuw+7oKlGdHOINbD/7Je7GHMViw5w==}
 
-  '@tauri-apps/plugin-clipboard-manager@2.0.0':
-    resolution: {integrity: sha512-V1sXmbjnwfXt/r48RJMwfUmDMSaP/8/YbH4CLNxt+/sf1eHlIP8PRFdFDQwLN0cNQKu2rqQVbG/Wc/Ps6cDUhw==}
-
   '@tauri-apps/plugin-clipboard-manager@2.2.0':
     resolution: {integrity: sha512-sIBrW/HioKq2vqomwwcU/Y8ygAv3DlS32yKPBX5XijCc0IyQKiDxYpGqmvE9DC5Y0lNJ/G53dfS961B31wjJ1g==}
 
@@ -1819,6 +1819,9 @@ packages:
 
   '@types/sortablejs@1.15.8':
     resolution: {integrity: sha512-b79830lW+RZfwaztgs1aVPgbasJ8e7AXtZYHTELNXZPsERt4ymJdjV4OccDbHQAvHrCcFpbF78jkm0R6h/pZVg==}
+
+  '@types/trusted-types@2.0.7':
+    resolution: {integrity: sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==}
 
   '@types/web-bluetooth@0.0.20':
     resolution: {integrity: sha512-g9gZnnXVq7gM7v3tJCWV/qw7w+KeOlSHAhgF9RytFyifW6AF61hdT2ucrYhPq9hLs5JIryeupHV3qGk95dH9ow==}
@@ -2738,6 +2741,9 @@ packages:
   doctrine@3.0.0:
     resolution: {integrity: sha512-yS+Q5i3hBf7GBkd4KG8a7eBNNWNGLTaEwwYWUijIYM7zrlYDM0BFXHjjPWlWZ1Rg7UaddZeIDmi9jF3HmqiQ2w==}
     engines: {node: '>=6.0.0'}
+
+  dompurify@3.2.3:
+    resolution: {integrity: sha512-U1U5Hzc2MO0oW3DF+G9qYN0aT7atAou4AgI0XjWz061nyBPbdxkfdhfy5uMgGn6+oLFCfn44ZGbdDqCzVmlOWA==}
 
   dot-prop@5.3.0:
     resolution: {integrity: sha512-QM8q3zDe58hqUqjraQOmzZ1LIH9SWQJTlEKCH4kJ2oQvLZk7RbQXvtDM2XEq3fwkV9CCvvH4LA0AV+ogFsBM2Q==}
@@ -6612,10 +6618,6 @@ snapshots:
     dependencies:
       '@tauri-apps/api': 2.1.1
 
-  '@tauri-apps/plugin-clipboard-manager@2.0.0':
-    dependencies:
-      '@tauri-apps/api': 2.1.1
-
   '@tauri-apps/plugin-clipboard-manager@2.2.0':
     dependencies:
       '@tauri-apps/api': 2.1.1
@@ -6681,6 +6683,9 @@ snapshots:
   '@types/semver@7.5.8': {}
 
   '@types/sortablejs@1.15.8': {}
+
+  '@types/trusted-types@2.0.7':
+    optional: true
 
   '@types/web-bluetooth@0.0.20': {}
 
@@ -7805,6 +7810,10 @@ snapshots:
     dependencies:
       esutils: 2.0.3
 
+  dompurify@3.2.3:
+    optionalDependencies:
+      '@types/trusted-types': 2.0.7
+
   dot-prop@5.3.0:
     dependencies:
       is-obj: 2.0.0
@@ -8667,7 +8676,7 @@ snapshots:
       '@codecov/vite-plugin': 1.6.0(vite@6.0.5(@types/node@20.17.10)(jiti@2.4.2)(sass@1.83.0)(terser@5.37.0)(tsx@4.19.2)(yaml@2.6.1))
       '@tauri-apps/api': 2.1.1
       '@tauri-apps/plugin-autostart': 2.2.0
-      '@tauri-apps/plugin-clipboard-manager': 2.0.0
+      '@tauri-apps/plugin-clipboard-manager': 2.2.0
       '@tauri-apps/plugin-fs': 2.2.0
       '@tauri-apps/plugin-http': 2.0.1
       '@tauri-apps/plugin-os': 2.0.0
@@ -8677,6 +8686,7 @@ snapshots:
       '@tauri-apps/plugin-updater': 2.3.0
       colorthief: 2.6.0
       dayjs: 1.11.13
+      dompurify: 3.2.3
       grapheme-splitter: 1.0.4
       hula-emojis: 1.2.1
       lodash-es: 4.17.21
