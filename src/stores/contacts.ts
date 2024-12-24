@@ -48,17 +48,18 @@ export const useContactStore = defineStore('contact', () => {
   /**
    * 获取好友申请未读数
    * 更新全局store中的未读计数
+   * TODO：这里每次获取的未读数都是为0
    */
-  const getNewFriendCount = async () => {
-    const res = await apis.newFriendCount().catch(() => {
-      //
-    })
-    if (!res) return
-    const data = res
-    if (typeof data?.unReadCount === 'number') {
-      globalStore.unReadMark.newFriendUnreadCount = data.unReadCount
-    }
-  }
+  // const getNewFriendCount = async () => {
+  //   const res = await apis.newFriendCount().catch(() => {
+  //     //
+  //   })
+  //   console.log('获取好友申请未读数', res)
+
+  //   if (!res) return
+  //   const data = res
+  //   globalStore.unReadMark.newFriendUnreadCount = data.unReadCount
+  // }
 
   /**
    * 获取好友申请列表
@@ -78,8 +79,6 @@ export const useContactStore = defineStore('contact', () => {
       .catch(() => {
         requestFriendsOptions.isLoading = false
       })
-    // 每次加载完新的好友邀请列表都要更新申请未读数
-    await getNewFriendCount()
     if (!res) return
     const data = res
     // 刷新模式下替换整个列表，否则追加到列表末尾
@@ -89,9 +88,14 @@ export const useContactStore = defineStore('contact', () => {
     requestFriendsOptions.cursor = data.cursor
     requestFriendsOptions.isLast = data.isLast
     requestFriendsOptions.isLoading = false
+
+    // TODO：暂时解决方案
+    // 计算等待处理的好友请求数量并更新全局store
+    const waitingCount = requestFriendsList.filter((item) => item.status === RequestFriendAgreeStatus.Waiting).length
+    globalStore.unReadMark.newFriendUnreadCount = waitingCount
   }
 
-  // 初始化时默认执行一次加载（当前已注释）
+  // 初始化时默认执行一次加载
   // getContactList()
   // getRequestFriendsList()
 

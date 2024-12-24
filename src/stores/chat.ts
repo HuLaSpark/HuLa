@@ -295,7 +295,7 @@ export const useChatStore = defineStore(
       // 更新会话的文本属性以触发重新计算
       const session = sessionList.find((item) => item.roomId === msg.message.roomId)
       if (session) {
-        const lastMsgUserName = cachedStore.userCachedList[uid]?.name
+        const lastMsgUserName = cachedStore.currentAtUsersList[uid]?.name
         const formattedText =
           msg.message.type === MsgEnum.RECALL
             ? session.type === RoomTypeEnum.GROUP
@@ -338,7 +338,6 @@ export const useChatStore = defineStore(
         const item = sessionList.find((item) => item.roomId === msg.message.roomId)
         if (item) {
           item.unreadCount += 1
-          console.log('unreadCount', item.unreadCount)
         }
         // 如果新消息的 roomId 和 当前显示的 room 的 Id 一致，就更新已读
       } else {

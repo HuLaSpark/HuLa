@@ -427,6 +427,8 @@ export type SessionItem = {
   type: RoomTypeEnum
   /** 未读数 */
   unreadCount: number
+  /** 在线状态 1在线 2离线 */
+  activeStatus?: OnlineEnum
 }
 
 /** 消息已读未读数列表项 */

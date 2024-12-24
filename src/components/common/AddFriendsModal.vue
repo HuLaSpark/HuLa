@@ -15,7 +15,7 @@
           </svg>
         </div>
 
-        <n-flex class="text-(14px --text-color) select-none pt-6px" justify="center">申请加好友</n-flex>
+        <n-flex class="text-(14px [--text-color]) select-none pt-6px" justify="center">申请加好友</n-flex>
 
         <svg
           v-if="type() === 'windows'"

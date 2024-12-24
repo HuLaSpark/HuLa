@@ -102,7 +102,9 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, (data: MessageType) => {
   chatStore.pushMsg(data)
 })
 useMitt.on(WsResponseMessageType.REQUEST_NEW_FRIEND, (data: { uid: number; unreadCount: number }) => {
-  globalStore.unReadMark.newFriendUnreadCount += data.unreadCount
+  console.log(data.unreadCount)
+
+  // globalStore.unReadMark.newFriendUnreadCount += data.unreadCount
   // notify({
   //   name: '新好友',
   //   text: '您有一个新好友, 快来看看~',
@@ -134,10 +136,10 @@ useMitt.on(
   }
 )
 
-onBeforeMount(() => {
+onBeforeMount(async () => {
   // 默认执行一次
-  contactStore.getContactList(true)
-  contactStore.getRequestFriendsList(true)
+  await contactStore.getContactList(true)
+  await contactStore.getRequestFriendsList(true)
 })
 
 onMounted(async () => {

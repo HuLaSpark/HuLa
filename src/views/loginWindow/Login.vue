@@ -167,9 +167,14 @@ import { UserInfoType } from '@/services/types.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { invoke } from '@tauri-apps/api/core'
 import { AvatarUtils } from '@/utils/avatarUtils'
+import { useMitt } from '@/hooks/useMitt'
+import { WsResponseMessageType } from '@/services/wsType'
+import { useNetwork } from '@vueuse/core'
 
 const settingStore = useSettingStore()
 const userStore = useUserStore()
+/** 网络连接是否正常 */
+const { isOnline } = useNetwork()
 const loginHistoriesStore = useLoginHistoriesStore()
 const { loginHistories } = loginHistoriesStore
 const { login } = storeToRefs(settingStore)
@@ -200,6 +205,13 @@ watchEffect(() => {
   // 清空账号的时候设置默认头像
   if (!info.value.account) {
     info.value.avatar = '/logo.png'
+  }
+})
+
+watch(isOnline, (v) => {
+  if (v) {
+    loginDisabled.value = false
+    loginText.value = '登录'
   }
 })
 
@@ -300,7 +312,6 @@ const openHomeWindow = async () => {
 /** 自动登录 */
 const autoLogin = () => {
   loading.value = true
-  // TODO 检查用户网络是否连接 (nyh -> 2024-03-16 12:06:59)
   loginText.value = '网络连接中'
   setTimeout(() => {
     apis
@@ -322,8 +333,6 @@ const autoLogin = () => {
         })
       })
       .catch(() => {
-        localStorage.removeItem('TOKEN')
-        router.push('/login')
         loading.value = false
         loginText.value = '登录'
       })
@@ -355,6 +364,10 @@ const enterKey = (e: KeyboardEvent) => {
 
 onMounted(async () => {
   await getCurrentWebviewWindow().show()
+  useMitt.on(WsResponseMessageType.NO_INTERNET, () => {
+    loginDisabled.value = true
+    loginText.value = '网络已断开'
+  })
   // 自动登录
   if (login.value.autoLogin && TOKEN.value) {
     autoLogin()

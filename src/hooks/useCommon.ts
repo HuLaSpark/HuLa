@@ -329,6 +329,47 @@ export const useCommon = () => {
    * @param dom 输入框dom
    */
   const imgPaste = (file: any, dom: HTMLElement) => {
+    // 如果file是blob URL格式
+    if (typeof file === 'string' && file.startsWith('blob:')) {
+      const url = file.replace('blob:', '') // 移除blob:前缀
+      console.log(url)
+
+      const img = document.createElement('img')
+      img.src = url
+      img.style.maxHeight = '88px'
+      img.style.maxWidth = '140px'
+      img.style.marginRight = '6px'
+
+      // 获取MsgInput组件暴露的lastEditRange
+      const lastEditRange = (dom as any).getLastEditRange?.()
+
+      // 确保dom获得焦点
+      dom.focus()
+
+      let range: Range
+      if (!lastEditRange) {
+        range = document.createRange()
+        range.selectNodeContents(dom)
+        range.collapse(false)
+      } else {
+        range = lastEditRange
+      }
+
+      const selection = window.getSelection()
+      if (selection) {
+        range.deleteContents()
+        range.insertNode(img)
+        range.setStartAfter(img)
+        range.setEndAfter(img)
+        selection.removeAllRanges()
+        selection.addRange(range)
+      }
+
+      triggerInputEvent(dom)
+      return
+    }
+
+    // 原有的File对象处理逻辑
     const reader = new FileReader()
     reader.onload = (e: any) => {
       const img = document.createElement('img')
@@ -345,39 +386,26 @@ export const useCommon = () => {
 
       let range: Range
       if (!lastEditRange) {
-        // 如果没有lastEditRange，创建一个新的范围到最后
         range = document.createRange()
         range.selectNodeContents(dom)
-        range.collapse(false) // 折叠到末尾
+        range.collapse(false)
       } else {
         range = lastEditRange
       }
 
-      // 确保我们有有效的range
       const selection = window.getSelection()
       if (selection) {
-        // 插入图片
         range.deleteContents()
         range.insertNode(img)
-
-        // 插入一个零宽空格，确保光标可见并在图片后面
         range.setStartAfter(img)
         range.setEndAfter(img)
-
-        // 将光标设置在零宽空格后面
-        range.setStartAfter(img)
-        range.setEndAfter(img)
-
-        // 更新选区
         selection.removeAllRanges()
         selection.addRange(range)
       }
 
-      // 触发输入事件
       triggerInputEvent(dom)
     }
 
-    // 读取文件
     reader.readAsDataURL(file)
   }
 
@@ -457,7 +485,7 @@ export const useCommon = () => {
   }
 
   /** 去除字符串中的元素标记 */
-  const removeTag = (fragment: any) => new DOMParser().parseFromString(fragment, 'text/html').body.textContent || ''
+  const removeTag = (fragment: string) => new DOMParser().parseFromString(fragment, 'text/html').body.textContent || ''
 
   /**
    * 打开消息会话(右键发送消息功能)

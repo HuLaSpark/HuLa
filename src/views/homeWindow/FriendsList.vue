@@ -5,7 +5,10 @@
     justify="space-between"
     class="my-10px p-12px hover:(bg-[--list-hover-color] cursor-pointer)">
     <div class="text-(14px [--text-color])">好友通知</div>
-    <svg class="size-16px rotate-270 color-[--text-color]"><use href="#down"></use></svg>
+    <n-flex align="center" :size="4">
+      <n-badge :value="globalStore.unReadMark.newFriendUnreadCount" :max="15" />
+      <svg class="size-16px rotate-270 color-[--text-color]"><use href="#down"></use></svg>
+    </n-flex>
   </n-flex>
   <n-tabs type="segment" animated class="mt-4px p-[4px_10px_0px_8px]">
     <n-tab-pane name="1" tab="好友">
@@ -40,12 +43,9 @@
                         useUserInfo(item.uid).value.name
                       }}</span>
 
-                      <div class="text leading-tight text-12px flex-y-center gap-2px flex-1 truncate">
+                      <div class="text leading-tight text-12px flex-y-center gap-4px flex-1 truncate">
                         [
-                        <img
-                          class="size-14px"
-                          :src="`/status/${item.activeStatus === OnlineEnum.ONLINE ? 'online.png' : 'offline.png'}`"
-                          alt="离线" />
+                        <n-badge :color="item.activeStatus === OnlineEnum.ONLINE ? '#1ab292' : '#909090'" dot />
                         {{ item.activeStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}
                         ]
                       </div>
@@ -80,6 +80,7 @@ import { MittEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { AvatarUtils } from '@/utils/avatarUtils'
+import { useGlobalStore } from '@/stores/global.ts'
 
 const menuList = ref([
   { label: '添加分组', icon: 'plus' },
@@ -91,6 +92,7 @@ const activeItem = ref(0)
 const detailsShow = ref(false)
 const shrinkStatus = ref(false)
 const contactStore = useContactStore()
+const globalStore = useGlobalStore()
 /** 统计在线用户人数 */
 const onlineCount = computed(() => {
   return contactStore.contactsList.filter((item) => item.activeStatus === OnlineEnum.ONLINE).length

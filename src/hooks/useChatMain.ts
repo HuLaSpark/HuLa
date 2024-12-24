@@ -8,6 +8,7 @@ import { useContactStore } from '@/stores/contacts'
 import { useUserStore } from '@/stores/user'
 import { useGlobalStore } from '@/stores/global.ts'
 import { isDiffNow } from '@/utils/ComputedTime.ts'
+import { writeText } from '@tauri-apps/plugin-clipboard-manager'
 
 export const useChatMain = (activeItem?: SessionItem) => {
   const { removeTag, openMsgSession, userUid } = useCommon()
@@ -128,8 +129,7 @@ export const useChatMain = (activeItem?: SessionItem) => {
       label: '预览',
       icon: 'preview-open',
       click: (item: any) => {
-        const content = items.value[item.key].content
-        handleCopy(content)
+        console.log(item)
       }
     },
     ...commonMenuList.value,
@@ -153,10 +153,9 @@ export const useChatMain = (activeItem?: SessionItem) => {
     {
       label: '复制',
       icon: 'copy',
-      click: (item: any) => {
-        console.log(items.value[item.key].content)
+      click: async (item: any) => {
         const content = items.value[item.key].content
-        handleCopy(content)
+        await handleCopy(content)
       }
     },
     ...commonMenuList.value,
@@ -256,7 +255,7 @@ export const useChatMain = (activeItem?: SessionItem) => {
    * 处理复制事件
    * @param content 复制的内容
    */
-  const handleCopy = (content: string) => {
+  const handleCopy = async (content: string) => {
     // 如果是图片
     // TODO 文件类型的在右键菜单中不设置复制 (nyh -> 2024-04-14 01:14:56)
     if (content.includes('data:image')) {
@@ -278,7 +277,7 @@ export const useChatMain = (activeItem?: SessionItem) => {
       }
     } else {
       // 如果是纯文本
-      navigator.clipboard.writeText(removeTag(content))
+      await writeText(removeTag(content))
     }
   }
 
