@@ -1,6 +1,6 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
-  "identifier": "default",
+  "identifier": "default-capability",
   "description": "Capability for the main window",
   "windows": ["*"],
   "permissions": [
@@ -32,6 +32,8 @@
     "core:webview:allow-webview-size",
     "core:event:default",
     "core:event:allow-listen",
+    "core:image:default",
+    "core:image:allow-rgba",
     "os:default",
     "os:allow-os-type",
     "os:allow-arch",
@@ -40,7 +42,11 @@
     "process:default",
     "process:allow-exit",
     "clipboard-manager:allow-clear",
+    "clipboard-manager:allow-read-image",
+    "clipboard-manager:allow-read-text",
+    "clipboard-manager:allow-write-html",
     "clipboard-manager:allow-write-image",
+    "clipboard-manager:allow-write-text",
     "http:allow-fetch",
     "http:allow-fetch-cancel",
     "http:allow-fetch-read-body",

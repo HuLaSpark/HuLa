@@ -2,15 +2,24 @@
   <!-- 顶部操作栏和显示用户名 -->
   <main
     data-tauri-drag-region
-    class="relative z-30 flex-y-center border-b-(1px solid [--right-chat-footer-line-color]) justify-between p-[6px_20px_12px] select-none">
+    class="relative z-30 flex-y-center border-b-(1px solid [--right-chat-footer-line-color]) justify-between p-[6px_22px_10px] select-none">
     <n-flex align="center">
-      <img v-if="isloading" class="size-16px" src="@/assets/img/loading.svg" alt="" />
-      <span v-else class="color-[--text-color]">{{ activeItem.name }}</span>
-      <svg
-        v-if="activeItem.hotFlag === IsAllUserEnum.Yes && !isloading"
-        class="size-20px color-#13987f select-none outline-none">
-        <use href="#auth"></use>
-      </svg>
+      <img v-if="isloading" class="size-22px py-3px" src="@/assets/img/loading.svg" alt="" />
+      <n-flex v-else align="center">
+        <n-avatar class="rounded-8px" :size="28" :src="AvatarUtils.getAvatarUrl(activeItem.avatar)" />
+        <p class="text-(16px [--text-color])">{{ activeItem.name }}</p>
+        <svg
+          v-if="activeItem.hotFlag === IsAllUserEnum.Yes && !isloading"
+          class="size-20px color-#13987f select-none outline-none">
+          <use href="#auth"></use>
+        </svg>
+        <n-flex v-else align="center">
+          <n-badge :color="activeItem.activeStatus === OnlineEnum.ONLINE ? '#1ab292' : '#909090'" dot />
+          <p class="text-(12px [--text-color])">
+            {{ activeItem.activeStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}
+          </p>
+        </n-flex>
+      </n-flex>
     </n-flex>
     <!-- 顶部右边选项栏 -->
     <nav class="options flex-y-center gap-20px color-[--icon-color]">
@@ -187,6 +196,7 @@ import { useGroupStore } from '@/stores/group.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { useContactStore } from '@/stores/contacts.ts'
 import { AvatarUtils } from '@/utils/avatarUtils'
+import { OnlineEnum } from '@/enums'
 
 // 使用useDisplayMedia获取屏幕共享的媒体流
 const { stream, start, stop } = useDisplayMedia()

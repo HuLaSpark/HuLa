@@ -32,7 +32,7 @@ tauri-plugin-fs = "2.0.1"
 tauri-plugin-dialog = "2.2.0"
 tauri-plugin-upload = "2.0.1"
 tauri-plugin-global-shortcut = "2.2.0"
-tauri-plugin-clipboard-manager = "2.0.1"
+tauri-plugin-clipboard-manager = "2.2.0"
 tauri-plugin-updater = "2.3.0"
 tauri-plugin-sql = { version = "2", features = ["sqlite"] }
 tauri-plugin-single-instance = "2.2.0"

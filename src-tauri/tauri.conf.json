@@ -9,6 +9,9 @@
     "devUrl": "http://127.0.0.1:6130"
   },
   "bundle": {
+    "category": "SocialNetworking",
+    "copyright": "HuLaSpark",
+    "licenseFile": "./copyright/License.txt",
     "resources": [
       "tray"
     ],
@@ -22,7 +25,11 @@
     "withGlobalTauri": true,
     "windows": [],
     "security": {
-      "csp": null
+      "csp": null,
+      "capabilities": [
+        "default-capability",
+        "desktop-capability"
+      ]
     },
     "macOSPrivateApi": true
   },

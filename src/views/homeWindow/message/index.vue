@@ -67,7 +67,7 @@ const chatStore = useChatStore()
 const globalStore = useGlobalStore()
 const groupStore = useGroupStore()
 const { userUid } = useCommon()
-const scrollbar = ref()
+// const scrollbar = useTemplateRef('scrollbar')
 const { handleMsgClick, menuList, specialMenuList, handleMsgDblclick } = useMessage()
 const currentSession = computed(() => globalStore.currentSession)
 // TODO 艾特我提醒
@@ -104,7 +104,18 @@ watch(
   () => chatStore.currentSessionInfo,
   (newVal) => {
     if (newVal) {
+      console.log('newVal', newVal)
+
       handleMsgClick(newVal as SessionItem)
+      // nextTick(() => {
+      //   const index = sessionList.value.findIndex((item) => item.roomId === newVal.roomId)
+      //   if (index !== -1) {
+      //     scrollbar.value?.scrollTo({
+      //       top: index * (75 + 5) + 4, // height of msg-box (75px) + margin-bottom (5px) + top padding (4px)
+      //       behavior: 'smooth'
+      //     })
+      //   }
+      // })
     }
   },
   { immediate: true }
@@ -113,7 +124,7 @@ watch(
 onBeforeMount(async () => {
   // 请求回话列表
   await chatStore.getSessionList(true)
-  groupStore.getCountStatistic()
+  await groupStore.getCountStatistic()
 })
 
 onMounted(() => {

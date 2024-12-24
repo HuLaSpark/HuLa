@@ -11,7 +11,7 @@ import { type } from '@tauri-apps/plugin-os'
 import { useDebounceFn } from '@vueuse/core'
 import { Ref } from 'vue'
 import { useCommon } from './useCommon.ts'
-
+import { readText, readImage } from '@tauri-apps/plugin-clipboard-manager'
 import Database from '@tauri-apps/plugin-sql'
 
 export const useMsgInput = (messageInputDom: Ref) => {
@@ -61,24 +61,41 @@ export const useMsgInput = (messageInputDom: Ref) => {
     {
       label: '粘贴',
       icon: 'intersection',
-      click: () => {
-        navigator.clipboard.read().then((items) => {
-          const clipboardItem = items[0] // 获取剪贴板的第一项
-          if (clipboardItem.types.includes('text/plain')) {
-            // 如果是文本，使用 readText() 读取文本内容
-            navigator.clipboard.readText().then((text) => {
-              insertNode(MsgEnum.TEXT, text, {} as HTMLElement)
+      click: async () => {
+        try {
+          // 先尝试读取图片
+          const clipboardImage = await readImage().catch(() => null)
+          if (clipboardImage) {
+            try {
+              // 获取图片的 RGBA 数据
+              const imageData = await clipboardImage.rgba()
+              const blob = new Blob([imageData], { type: 'image/png' })
+              const url = URL.createObjectURL(blob)
+              console.log(url)
+
+              messageInputDom.value.focus()
+              nextTick(() => {
+                imgPaste(blob, messageInputDom.value)
+              })
+              return
+            } catch (error) {
+              console.error('处理图片数据失败:', error)
+            }
+          }
+
+          // 如果没有图片，尝试读取文本
+          const content = await readText().catch(() => null)
+          if (content) {
+            messageInputDom.value.focus()
+            nextTick(() => {
+              insertNode(MsgEnum.TEXT, content, {} as HTMLElement)
               triggerInputEvent(messageInputDom.value)
             })
-          } else if (clipboardItem.types.find((type) => type.startsWith('image/'))) {
-            // 检查第一项是否是图像
-            // TODO 右键粘贴动图的时候无法动起来右键粘贴没有获取到类型是gif而是html加上png的格式 (nyh -> 2024-02-27 03:27:10)
-            const imageType = clipboardItem.types.find((type) => type.startsWith('image/'))
-            clipboardItem.getType(imageType as any).then((blob) => {
-              imgPaste(blob, messageInputDom.value)
-            })
+            return
           }
-        })
+        } catch (error) {
+          console.error('粘贴失败:', error)
+        }
       }
     },
     { label: '另存为', icon: 'Importing', disabled: true },
@@ -104,20 +121,29 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
   /** 去除html标签(用于鉴别回复时是否有输入内容) */
   const stripHtml = (html: string) => {
-    const tmp = document.createElement('div')
-    tmp.innerHTML = html
-    const replyDiv = tmp.querySelector('#replyDiv')
-    if (replyDiv) {
-      replyDiv.remove()
+    try {
+      const tmp = document.createElement('div')
+      tmp.innerHTML = html
+      const replyDiv = tmp.querySelector('#replyDiv')
+      if (replyDiv) {
+        replyDiv.remove()
+      }
+      return tmp.textContent?.trim() || tmp.innerText?.trim() || ''
+    } catch (error) {
+      console.error('Error in stripHtml:', error)
+      return ''
     }
-    return tmp.textContent?.trim() || tmp.innerText?.trim() || ''
   }
 
   /** 重置输入框内容 */
   const resetInput = () => {
-    msgInput.value = ''
-    messageInputDom.value.innerHTML = ''
-    reply.value = { avatar: '', imgCount: 0, accountName: '', content: '', key: 0 }
+    try {
+      msgInput.value = ''
+      messageInputDom.value.innerHTML = ''
+      reply.value = { avatar: '', imgCount: 0, accountName: '', content: '', key: 0 }
+    } catch (error) {
+      console.error('Error in resetInput:', error)
+    }
   }
 
   /** 处理发送信息事件 */
