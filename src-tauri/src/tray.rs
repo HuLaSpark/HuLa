@@ -1,6 +1,7 @@
 #[cfg(target_os = "windows")]
 use tauri::{tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent}, Manager, Emitter, PhysicalPosition, Runtime};
 
+#[cfg(not(target_os = "windows"))]
 use tauri::{tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent}, Manager, PhysicalPosition, Runtime};
 
 pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {

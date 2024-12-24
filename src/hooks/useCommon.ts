@@ -10,7 +10,7 @@ import { useChatStore } from '@/stores/chat.ts'
 import { useMessage } from '@/hooks/useMessage.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/avatarUtils'
-import DOMPurify from 'dompurify';
+import DOMPurify from 'dompurify'
 
 export interface SelectionRange {
   range: Range
@@ -487,8 +487,8 @@ export const useCommon = () => {
 
   /** 去除字符串中的元素标记 */
   const removeTag = (fragment: string) => {
-    const sanitizedFragment = DOMPurify.sanitize(fragment);
-    return new DOMParser().parseFromString(sanitizedFragment, 'text/html').body.textContent || '';
+    const sanitizedFragment = DOMPurify.sanitize(fragment)
+    return new DOMParser().parseFromString(sanitizedFragment, 'text/html').body.textContent || ''
   }
 
   /**
