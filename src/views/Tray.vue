@@ -51,17 +51,15 @@
 </template>
 <script setup lang="tsx">
 import { useWindow } from '@/hooks/useWindow.ts'
-import { invoke } from '@tauri-apps/api/core'
 import { exit } from '@tauri-apps/plugin-process'
 import { statusItem } from '@/views/onlineStatusWindow/config.ts'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { Event, listen } from '@tauri-apps/api/event'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { TrayIcon } from '@tauri-apps/api/tray'
-import { PhysicalPosition } from '@tauri-apps/api/dpi'
 import { type } from '@tauri-apps/plugin-os'
+import { useTauriListener } from '@/hooks/useTauriListener'
 
 const appWindow = WebviewWindow.getCurrent()
 const { checkWinExist, createWebviewWindow, resizeWindow } = useWindow()
@@ -73,6 +71,7 @@ const { tipVisible } = storeToRefs(globalStore)
 const isLoginWin = ref(true)
 // 状态栏图标是否显示
 const iconVisible = ref(false)
+const { pushListeners } = useTauriListener()
 let interval: any
 
 const division = () => {
@@ -110,47 +109,26 @@ watchEffect(async () => {
   }
 })
 
+onMounted(async () => {
+  await pushListeners([
+    appWindow.listen('login_success', () => {
+      isLoginWin.value = false
+      resizeWindow('tray', 130, 356)
+    }),
+    appWindow.listen('logout_success', () => {
+      isLoginWin.value = true
+      resizeWindow('tray', 130, 44)
+    }),
+    appWindow.listen('show_tip', async () => {
+      globalStore.setTipVisible(true)
+    })
+  ])
+})
+
 onUnmounted(async () => {
   if (interval) {
     clearInterval(interval)
   }
-})
-
-onMounted(async () => {
-  await listen('login_success', () => {
-    isLoginWin.value = false
-    resizeWindow('tray', 130, 356)
-  })
-  await listen('logout_success', () => {
-    isLoginWin.value = true
-    resizeWindow('tray', 130, 44)
-  })
-  await listen('show_tip', async () => {
-    globalStore.setTipVisible(true)
-  })
-  await listen('show_notify', async (event: Event<PhysicalPosition>) => {
-    if (tipVisible.value) {
-      const position = event.payload
-      // 显示消息提示
-      const notifyWindow = await WebviewWindow.getByLabel('notify')
-      const outerSize = await notifyWindow?.outerSize()
-      const sf = await notifyWindow?.scaleFactor()
-      if (outerSize && sf) {
-        await notifyWindow?.setPosition(new PhysicalPosition(position.x - 10, position.y - outerSize.height + 20))
-        await notifyWindow?.setAlwaysOnTop(true)
-        await notifyWindow?.show()
-        await notifyWindow?.unminimize()
-        await notifyWindow?.setFocus()
-        await notifyWindow?.setAlwaysOnTop(true)
-      }
-    }
-  })
-  // 暂停图标闪烁
-  await listen('stop', async () => {
-    await invoke('tray_blink', { isRun: false }).catch((error) => {
-      console.error('暂停闪烁失败:', error)
-    })
-  })
 })
 </script>
 

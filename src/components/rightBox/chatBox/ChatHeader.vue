@@ -4,22 +4,24 @@
     data-tauri-drag-region
     class="relative z-30 flex-y-center border-b-(1px solid [--right-chat-footer-line-color]) justify-between p-[6px_22px_10px] select-none">
     <n-flex align="center">
-      <img v-if="isloading" class="size-22px py-3px" src="@/assets/img/loading.svg" alt="" />
-      <n-flex v-else align="center">
-        <n-avatar class="rounded-8px" :size="28" :src="AvatarUtils.getAvatarUrl(activeItem.avatar)" />
-        <p class="text-(16px [--text-color])">{{ activeItem.name }}</p>
-        <svg
-          v-if="activeItem.hotFlag === IsAllUserEnum.Yes && !isloading"
-          class="size-20px color-#13987f select-none outline-none">
-          <use href="#auth"></use>
-        </svg>
+      <Transition name="loading" mode="out-in">
+        <img v-if="showLoading" class="size-22px py-3px" src="@/assets/img/loading.svg" alt="" />
         <n-flex v-else align="center">
-          <n-badge :color="activeItem.activeStatus === OnlineEnum.ONLINE ? '#1ab292' : '#909090'" dot />
-          <p class="text-(12px [--text-color])">
-            {{ activeItem.activeStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}
-          </p>
+          <n-avatar class="rounded-8px" :size="28" :src="AvatarUtils.getAvatarUrl(activeItem.avatar)" />
+          <p class="text-(16px [--text-color])">{{ activeItem.name }}</p>
+          <svg
+            v-if="activeItem.hotFlag === IsAllUserEnum.Yes && !showLoading"
+            class="size-20px color-#13987f select-none outline-none">
+            <use href="#auth"></use>
+          </svg>
+          <n-flex v-else align="center">
+            <n-badge :color="activeItem.activeStatus === OnlineEnum.ONLINE ? '#1ab292' : '#909090'" dot />
+            <p class="text-(12px [--text-color])">
+              {{ activeItem.activeStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}
+            </p>
+          </n-flex>
         </n-flex>
-      </n-flex>
+      </Transition>
     </n-flex>
     <!-- 顶部右边选项栏 -->
     <nav class="options flex-y-center gap-20px color-[--icon-color]">
@@ -189,7 +191,7 @@
 import { IsAllUserEnum, SessionItem, UserItem } from '@/services/types.ts'
 import { useDisplayMedia } from '@vueuse/core'
 import { EventEnum, RoomActEnum } from '@/enums'
-import { emit, listen } from '@tauri-apps/api/event'
+import { emit } from '@tauri-apps/api/event'
 import { type } from '@tauri-apps/plugin-os'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGroupStore } from '@/stores/group.ts'
@@ -197,7 +199,11 @@ import { useUserInfo } from '@/hooks/useCached.ts'
 import { useContactStore } from '@/stores/contacts.ts'
 import { AvatarUtils } from '@/utils/avatarUtils'
 import { OnlineEnum } from '@/enums'
+import { useTauriListener } from '@/hooks/useTauriListener'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 
+const appWindow = WebviewWindow.getCurrent()
+const { addListener } = useTauriListener()
 // 使用useDisplayMedia获取屏幕共享的媒体流
 const { stream, start, stop } = useDisplayMedia()
 const chatStore = useChatStore()
@@ -208,7 +214,8 @@ const tips = ref()
 const optionsType = ref<RoomActEnum>()
 const modalShow = ref(false)
 const sidebarShow = ref(false)
-const isloading = ref(false)
+const showLoading = ref(true)
+const isLoading = ref(false)
 const { activeItem } = defineProps<{
   activeItem: SessionItem
 }>()
@@ -234,22 +241,45 @@ const userList = computed(() => {
 // 创建一个RTCPeerConnection实例
 const peerConnection = new RTCPeerConnection()
 
+const MIN_LOADING_TIME = 300 // 最小加载时间（毫秒）
+
+// 在数据加载完成后，确保loading动画至少显示一定时间
+const handleLoadingState = async (isDataLoading: boolean) => {
+  if (isDataLoading) {
+    showLoading.value = true
+  } else {
+    // 确保loading动画至少显示MIN_LOADING_TIME时间
+    await new Promise((resolve) => setTimeout(resolve, MIN_LOADING_TIME))
+    showLoading.value = false
+  }
+}
+
+// 监听 isLoading 的变化
+watch(
+  () => isLoading.value,
+  async (newValue) => {
+    await handleLoadingState(newValue)
+  },
+  { immediate: true }
+)
+
 watch(
   () => activeItem.roomId,
   () => {
     if (messageOptions.value?.isLoading) {
-      isloading.value = true
+      isLoading.value = true
+      showLoading.value = true
     }
   }
 )
 
 watchEffect(() => {
   if (!messageOptions.value?.isLoading) {
-    isloading.value = false
+    isLoading.value = false
+    stream.value?.getVideoTracks()[0].addEventListener('ended', () => {
+      stop()
+    })
   }
-  stream.value?.getVideoTracks()[0].addEventListener('ended', () => {
-    stop()
-  })
 })
 
 const handleMedia = () => {
@@ -265,9 +295,11 @@ const handleMedia = () => {
       peerConnection.setLocalDescription(offer)
       emit(EventEnum.SHARE_SCREEN)
       /** 当需要给独立窗口传输数据的时候需要先监听窗口的创建完毕事件 */
-      listen('SharedScreenWin', async () => {
-        await emit('offer', offer)
-      })
+      addListener(
+        appWindow.listen('SharedScreenWin', async () => {
+          await emit('offer', offer)
+        })
+      )
       // 在这里，你需要将offer发送给对方
       // 对方需要调用peerConnection.setRemoteDescription(offer)来接受屏幕共享
     })
@@ -308,6 +340,10 @@ const closeMenu = (event: any) => {
 
 onMounted(() => {
   window.addEventListener('click', closeMenu, true)
+  if (!messageOptions.value?.isLoading) {
+    isLoading.value = false
+    showLoading.value = false
+  }
 })
 
 onUnmounted(() => {
@@ -317,4 +353,14 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 @use '@/styles/scss/chat-header';
+
+.loading-enter-active,
+.loading-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.loading-enter-from,
+.loading-leave-to {
+  opacity: 0;
+}
 </style>

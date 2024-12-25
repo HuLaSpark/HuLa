@@ -394,7 +394,6 @@ import { type MessageType, SessionItem } from '@/services/types.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { usePopover } from '@/hooks/usePopover.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
-import { listen } from '@tauri-apps/api/event'
 import { useChatMain } from '@/hooks/useChatMain.ts'
 import { delay } from 'lodash-es'
 import { useCommon } from '@/hooks/useCommon.ts'
@@ -406,7 +405,11 @@ import { useUserStore } from '@/stores/user.ts'
 import { useNetwork } from '@vueuse/core'
 import { AvatarUtils } from '@/utils/avatarUtils'
 import VirtualList, { type VirtualListExpose } from '@/components/common/VirtualList.vue'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { useTauriListener } from '@/hooks/useTauriListener'
 
+const appWindow = WebviewWindow.getCurrent()
+const { addListener } = useTauriListener()
 const { activeItem } = defineProps<{
   activeItem: SessionItem
 }>()
@@ -754,7 +757,7 @@ const handleReEdit = (msgId: number) => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   nextTick(() => {
     setTimeout(() => {
       virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
@@ -774,9 +777,11 @@ onMounted(() => {
   useMitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
     activeItemRef.value = event.item
   })
-  listen(EventEnum.SHARE_SCREEN, async () => {
-    await createWebviewWindow('共享屏幕', 'sharedScreen', 840, 840)
-  })
+  await addListener(
+    appWindow.listen(EventEnum.SHARE_SCREEN, async () => {
+      await createWebviewWindow('共享屏幕', 'sharedScreen', 840, 840)
+    })
+  )
   window.addEventListener('click', closeMenu, true)
 })
 

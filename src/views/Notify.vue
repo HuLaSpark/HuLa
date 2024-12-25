@@ -34,11 +34,14 @@
 <script setup lang="tsx">
 import { useGlobalStore } from '@/stores/global.ts'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { Event, listen } from '@tauri-apps/api/event'
+import { Event } from '@tauri-apps/api/event'
 import { PhysicalPosition } from '@tauri-apps/api/dpi'
 import { useWindow } from '@/hooks/useWindow.ts'
+import { useTauriListener } from '@/hooks/useTauriListener'
 
+const appWindow = WebviewWindow.getCurrent()
 const { checkWinExist } = useWindow()
+const { pushListeners } = useTauriListener()
 const globalStore = useGlobalStore()
 const { tipVisible } = storeToRefs(globalStore)
 const isMouseInWindow = ref(false)
@@ -100,19 +103,21 @@ const handleMouseLeave = async () => {
 }
 
 onMounted(async () => {
-  // 监听托盘鼠标进入事件
-  await listen('notify_enter', async (event: Event<any>) => {
-    if (tipVisible.value) {
-      await showWindow(event)
-    }
-  })
+  await pushListeners([
+    // 监听托盘鼠标进入事件
+    appWindow.listen('notify_enter', async (event: Event<any>) => {
+      if (tipVisible.value) {
+        await showWindow(event)
+      }
+    }),
 
-  // 监听托盘鼠标离开事件
-  await listen('notify_leave', async () => {
-    setTimeout(async () => {
-      await hideWindow()
-    }, 300)
-  })
+    // 监听托盘鼠标离开事件
+    appWindow.listen('notify_leave', async () => {
+      setTimeout(async () => {
+        await hideWindow()
+      }, 300)
+    })
+  ])
 })
 </script>
 <style scoped lang="scss">

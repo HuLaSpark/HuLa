@@ -139,8 +139,10 @@ import { sendOptions, fontOptions } from './config.ts'
 import { type } from '@tauri-apps/plugin-os'
 import { NSwitch } from 'naive-ui'
 import { invoke } from '@tauri-apps/api/core'
-import { emit } from '@tauri-apps/api/event'
+import { emitTo } from '@tauri-apps/api/event'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 
+const appWindow = WebviewWindow.getCurrent()
 const settingStore = useSettingStore()
 const { themes, tips, chat, page } = settingStore
 const { showMode, escClose } = storeToRefs(settingStore)
@@ -151,7 +153,7 @@ const showText = computed({
   set: async (v: any) => {
     settingStore.setShowMode(v ? ShowModeEnum.TEXT : ShowModeEnum.ICON)
     await setHomeHeight()
-    await emit('startResize')
+    await emitTo(appWindow.label, 'startResize')
   }
 })
 

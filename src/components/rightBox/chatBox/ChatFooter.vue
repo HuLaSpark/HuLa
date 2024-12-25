@@ -93,7 +93,7 @@ import { useFileDialog } from '@vueuse/core'
 import { LimitEnum, MsgEnum } from '@/enums'
 import { SelectionRange, useCommon } from '@/hooks/useCommon.ts'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { emit } from '@tauri-apps/api/event'
+import { emitTo } from '@tauri-apps/api/event'
 
 const { open, onChange, reset } = useFileDialog()
 const MsgInputRef = ref()
@@ -187,7 +187,7 @@ const emojiHandle = (item: string) => {
 const handleCap = async () => {
   let captureWindow = await WebviewWindow.getByLabel('capture')
   captureWindow?.show()
-  await emit('capture', true)
+  await emitTo('capture', 'capture', true)
 }
 
 onChange((files) => {

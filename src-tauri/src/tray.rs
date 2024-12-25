@@ -49,14 +49,14 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
                 id: _,
                 position: _,
                 rect: _} => {
-                tray.app_handle().emit("notify_enter", &tray.rect().unwrap()).unwrap();
+                tray.app_handle().emit_to("notify", "notify_enter", &tray.rect().unwrap()).unwrap();
             }
             #[cfg(target_os = "windows")]
             TrayIconEvent::Leave {
                 id: _,
                 position: _,
                 rect: _} => {
-                tray.app_handle().emit("notify_leave", ()).unwrap();
+                tray.app_handle().emit_("notify", "notify_leave", ()).unwrap();
             }
             _ => {}
 

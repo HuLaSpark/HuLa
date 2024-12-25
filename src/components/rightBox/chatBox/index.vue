@@ -13,10 +13,11 @@
 </template>
 <script setup lang="ts">
 import { MockItem } from '@/services/types.ts'
-import { listen } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useSettingStore } from '@/stores/setting.ts'
+import { useTauriListener } from '@/hooks/useTauriListener'
 
+const { addListener } = useTauriListener()
 const settingStore = useSettingStore()
 const { page } = storeToRefs(settingStore)
 const appWindow = WebviewWindow.getCurrent()
@@ -30,9 +31,11 @@ watchEffect(() => {
   activeItemRef.value = { ...activeItem! }
 })
 
-listen(appWindow.label, (e) => {
-  activeItemRef.value = e.payload as any
-})
+addListener(
+  appWindow.listen(appWindow.label, (e) => {
+    activeItemRef.value = e.payload as any
+  })
+)
 </script>
 <style scoped lang="scss">
 /**! 修改naive-ui虚拟列表滚动条的间距 */

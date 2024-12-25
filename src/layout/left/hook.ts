@@ -13,11 +13,14 @@ import { useMitt } from '@/hooks/useMitt.ts'
 import apis from '@/services/apis.ts'
 import { delay } from 'lodash-es'
 import router from '@/router'
-import { listen } from '@tauri-apps/api/event'
 import { useMenuTopStore } from '@/stores/menuTop.ts'
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
+import { useTauriListener } from '@/hooks/useTauriListener'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 
 export const leftHook = () => {
+  const appWindow = WebviewWindow.getCurrent()
+  const { pushListeners } = useTauriListener()
   const prefers = matchMedia('(prefers-color-scheme: dark)')
   const { createWebviewWindow } = useWindow()
   const settingStore = useSettingStore()
@@ -209,14 +212,16 @@ export const leftHook = () => {
     useMitt.on(MittEnum.TO_SEND_MSG, (event: any) => {
       activeUrl.value = event.url
     })
-    await listen(EventEnum.WIN_SHOW, (e) => {
-      // 如果已经存在就不添加
-      if (openWindowsList.value.has(e.payload)) return
-      openWindowsList.value.add(e.payload)
-    })
-    await listen(EventEnum.WIN_CLOSE, (e) => {
-      openWindowsList.value.delete(e.payload)
-    })
+    await pushListeners([
+      appWindow.listen(EventEnum.WIN_SHOW, (e) => {
+        // 如果已经存在就不添加
+        if (openWindowsList.value.has(e.payload)) return
+        openWindowsList.value.add(e.payload)
+      }),
+      appWindow.listen(EventEnum.WIN_CLOSE, (e) => {
+        openWindowsList.value.delete(e.payload)
+      })
+    ])
   })
 
   onUnmounted(() => {
