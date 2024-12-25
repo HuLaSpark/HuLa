@@ -8,6 +8,8 @@
   -webkit-white-space: normal; /** 兼容webkit浏览器 */
   -webkit-word-break: break-all;
   -webkit-overflow-wrap: break-all;
+  hyphens: auto; /** 行尾自动断开长单词 */
+  -webkit-hyphens: auto;
   &.active {
     background-color: var(--bg-bubble-active);
     color: var(--text-color);

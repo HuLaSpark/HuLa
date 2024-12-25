@@ -1,4 +1,4 @@
-import { emit, listen } from '@tauri-apps/api/event'
+import { emit } from '@tauri-apps/api/event'
 import { EventEnum, MittEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { MockItem, SessionItem } from '@/services/types.ts'
@@ -6,6 +6,8 @@ import { MockList } from '@/mock'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useChatStore } from '@/stores/chat.ts'
+import { useTauriListener } from './useTauriListener'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 
 const msgBoxShow = ref(false)
 /** 独立窗口的集合 */
@@ -13,6 +15,7 @@ const aloneWin = ref(new Set())
 const shrinkStatus = ref(false)
 const itemRef = ref<SessionItem>()
 export const useMessage = () => {
+  const { pushListeners } = useTauriListener()
   const globalStore = useGlobalStore()
   const chatStore = useChatStore()
   const settingStore = useSettingStore()
@@ -112,14 +115,17 @@ export const useMessage = () => {
   ])
 
   onMounted(async () => {
-    await listen(EventEnum.ALONE, () => {
-      emit(EventEnum.ALONE + itemRef.value?.roomId, itemRef.value)
-      if (aloneWin.value.has(EventEnum.ALONE + itemRef.value?.roomId)) return
-      aloneWin.value.add(EventEnum.ALONE + itemRef.value?.roomId)
-    })
-    await listen(EventEnum.WIN_CLOSE, (e) => {
-      aloneWin.value.delete(e.payload)
-    })
+    const appWindow = WebviewWindow.getCurrent()
+    await pushListeners([
+      appWindow.listen(EventEnum.ALONE, () => {
+        emit(EventEnum.ALONE + itemRef.value?.roomId, itemRef.value)
+        if (aloneWin.value.has(EventEnum.ALONE + itemRef.value?.roomId)) return
+        aloneWin.value.add(EventEnum.ALONE + itemRef.value?.roomId)
+      }),
+      appWindow.listen(EventEnum.WIN_CLOSE, (e) => {
+        aloneWin.value.delete(e.payload)
+      })
+    ])
   })
 
   return { msgBoxShow, handleMsgClick, handleMsgDblclick, menuList, specialMenuList }

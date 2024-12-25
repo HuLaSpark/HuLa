@@ -86,12 +86,13 @@ import { useMitt } from '@/hooks/useMitt.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { useAlwaysOnTopStore } from '@/stores/alwaysOnTop.ts'
 import { useSettingStore } from '@/stores/setting.ts'
-import { emit, listen, UnlistenFn } from '@tauri-apps/api/event'
+import { emit } from '@tauri-apps/api/event'
 import { CloseBxEnum, EventEnum, MittEnum } from '@/enums'
 import { type } from '@tauri-apps/plugin-os'
 import router from '@/router'
 import apis from '@/services/apis.ts'
 import { exit } from '@tauri-apps/plugin-process'
+import { useTauriListener } from '@/hooks/useTauriListener'
 
 const appWindow = WebviewWindow.getCurrent()
 const {
@@ -113,6 +114,7 @@ const {
   proxy?: boolean
 }>()
 const { getWindowTop, setWindowTop } = useAlwaysOnTopStore()
+const { pushListeners, addListener } = useTauriListener()
 const settingStore = useSettingStore()
 const { tips, escClose, login } = storeToRefs(settingStore)
 const { resizeWindow } = useWindow()
@@ -136,17 +138,19 @@ watchEffect(() => {
   if (alwaysOnTopStatus.value) {
     appWindow.setAlwaysOnTop(alwaysOnTopStatus.value as boolean)
   }
-  listen(EventEnum.LOGOUT, async () => {
-    /** 退出账号前把窗口全部关闭 */
-    if (appWindow.label !== 'login') {
-      await appWindow.close()
-    }
-  })
-  listen(EventEnum.EXIT, async () => {
-    // 发送下线通知
-    await offline()
-    await exit(0)
-  })
+  pushListeners([
+    appWindow.listen(EventEnum.LOGOUT, async () => {
+      /** 退出账号前把窗口全部关闭 */
+      if (appWindow.label !== 'login') {
+        await appWindow.close()
+      }
+    }),
+    appWindow.listen(EventEnum.EXIT, async () => {
+      // 发送下线通知
+      await offline()
+      await exit(0)
+    })
+  ])
 
   if (escClose.value && type() === 'windows') {
     window.addEventListener('keydown', (e) => isEsc(e))
@@ -243,24 +247,22 @@ const offline = async () => {
     localStorage.removeItem('TOKEN')
   }
 }
-let unOffline: Promise<UnlistenFn>
 useMitt.on('handleCloseWin', handleCloseWin)
 // 添加和移除resize事件监听器
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('resize', handleResize)
   osType.value = type()
-  unOffline = listen('offline', () => {
-    // 不一定成功
-    offline()
-  })
+  await addListener(
+    appWindow.listen('offline', () => {
+      // TODO: 不一定成功
+      offline()
+    })
+  )
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
   window.removeEventListener('keydown', (e) => isEsc(e))
-  if (unOffline) {
-    unOffline.catch(() => {})
-  }
 })
 </script>
 

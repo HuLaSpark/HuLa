@@ -19,6 +19,8 @@
   -webkit-white-space: normal; /** 兼容webkit浏览器 */
   -webkit-word-break: break-all;
   -webkit-overflow-wrap: break-all;
+  hyphens: auto; /** 行尾自动断开长单词 */
+  -webkit-hyphens: auto;
 }
 .ait {
   @apply w-200px h-fit max-h-190px bg-[--center-bg-color] rounded-8px p-[5px_0_5px_5px] border-(1px solid [--box-shadow-color]);

@@ -146,8 +146,10 @@ import { PluginEnum } from '@/enums'
 import { pluginsList } from '@/layout/left/config.tsx'
 import { useSettingStore } from '@/stores/setting.ts'
 import { usePluginsStore } from '@/stores/plugins.ts'
-import { emit } from '@tauri-apps/api/event'
+import { emitTo } from '@tauri-apps/api/event'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 
+const appWindow = WebviewWindow.getCurrent()
 const settingStore = useSettingStore()
 const pluginsStore = usePluginsStore()
 const { page } = storeToRefs(settingStore)
@@ -186,7 +188,7 @@ const handleDelete = (p: STO.Plugins<PluginEnum>) => {
     setTimeout(() => {
       pluginsStore.updatePlugin({ ...plugin, isAdd: false })
       p.isAdd = false
-      emit('startResize')
+      emitTo(appWindow.label, 'startResize')
     }, 300)
   }
 }
@@ -197,7 +199,7 @@ const handleAdd = (p: STO.Plugins<PluginEnum>) => {
     setTimeout(() => {
       pluginsStore.updatePlugin({ ...plugin, isAdd: true })
       p.isAdd = true
-      emit('startResize')
+      emitTo(appWindow.label, 'startResize')
     }, 300)
   }
 }

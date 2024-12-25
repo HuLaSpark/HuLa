@@ -117,8 +117,9 @@
 import { lightTheme, darkTheme, VirtualListInst } from 'naive-ui'
 import { MacOsKeyEnum, MittEnum, RoomTypeEnum, ThemeEnum, WinKeyEnum } from '@/enums'
 import { CacheUserItem, MockItem } from '@/services/types.ts'
-import { emit, listen } from '@tauri-apps/api/event'
+import { emit } from '@tauri-apps/api/event'
 import { useSettingStore } from '@/stores/setting.ts'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { sendOptions } from '@/views/moreWindow/settings/config.ts'
 import { useMsgInput } from '@/hooks/useMsgInput.ts'
 import { SelectionRange, useCommon } from '@/hooks/useCommon.ts'
@@ -127,7 +128,10 @@ import { type } from '@tauri-apps/plugin-os'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { AvatarUtils } from '@/utils/avatarUtils'
+import { useTauriListener } from '@/hooks/useTauriListener'
 
+const appWindow = WebviewWindow.getCurrent()
+const { addListener } = useTauriListener()
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
 /** 发送按钮旁的箭头 */
@@ -200,7 +204,7 @@ const closeMenu = (event: any) => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   onKeyStroke('Enter', (e) => {
     if (ait.value && selectedAitKey.value > -1) {
       e.preventDefault()
@@ -216,6 +220,7 @@ onMounted(() => {
     e.preventDefault()
     handleAitKeyChange(1)
   })
+  // TODO: 暂时已经关闭了独立窗口聊天功能
   emit('aloneWin')
   nextTick(() => {
     const inputDiv = document.getElementById('message-input')
@@ -231,9 +236,11 @@ onMounted(() => {
     handleAit(useUserInfo(event).value as any)
   })
   /** 这里使用的是窗口之间的通信来监听信息对话的变化 */
-  listen('aloneData', (event: any) => {
-    activeItem.value = { ...event.payload.item }
-  })
+  await addListener(
+    appWindow.listen('aloneData', (event: any) => {
+      activeItem.value = { ...event.payload.item }
+    })
+  )
   window.addEventListener('click', closeMenu, true)
 })
 
