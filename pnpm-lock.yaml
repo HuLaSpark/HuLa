@@ -24,7 +24,7 @@ importers:
         specifier: 2.2.0
         version: 2.2.0
       '@tauri-apps/plugin-fs':
-        specifier: ^2.2.0
+        specifier: ~2
         version: 2.2.0
       '@tauri-apps/plugin-http':
         specifier: 2.0.1
@@ -42,7 +42,7 @@ importers:
         specifier: ^2.0.1
         version: 2.2.0
       '@tauri-apps/plugin-updater':
-        specifier: ^2.3.0
+        specifier: ~2
         version: 2.3.0
       colorthief:
         specifier: ^2.6.0
