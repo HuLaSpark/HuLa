@@ -5,6 +5,7 @@ import { MockItem, SessionItem } from '@/services/types.ts'
 import { MockList } from '@/mock'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useGlobalStore } from '@/stores/global.ts'
+import { useChatStore } from '@/stores/chat.ts'
 
 const msgBoxShow = ref(false)
 /** 独立窗口的集合 */
@@ -13,6 +14,7 @@ const shrinkStatus = ref(false)
 const itemRef = ref<SessionItem>()
 export const useMessage = () => {
   const globalStore = useGlobalStore()
+  const chatStore = useChatStore()
   const settingStore = useSettingStore()
   const { chat } = storeToRefs(settingStore)
   /** 监听独立窗口关闭事件 */
@@ -102,9 +104,8 @@ export const useMessage = () => {
       label: '从消息列表中移除',
       icon: 'delete',
       click: (item: SessionItem) => {
-        console.log(item)
         // TODO: 实现从消息列表中移除功能
-        // chatStore.removeContact(item.roomId)
+        chatStore.removeContact(item.roomId)
       }
     },
     { label: '屏蔽此人消息', icon: 'forbid' }

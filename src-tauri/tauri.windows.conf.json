@@ -40,7 +40,7 @@
         "language": "zh-CN"
       },
       "nsis": {
-        "installerIcon": "./icons/icon.ico",
+        "installerIcon": "./icons/windows/icon.ico",
         "displayLanguageSelector": true,
         "languages": [
           "SimpChinese"

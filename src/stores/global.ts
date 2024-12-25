@@ -35,7 +35,7 @@ export const useGlobalStore = defineStore(
     // 添加好友模态框信息
     const addFriendModalInfo = reactive<{ show: boolean; uid?: number }>({
       show: false,
-      uid: undefined
+      uid: void 0
     })
 
     // 创建群聊模态框信息
