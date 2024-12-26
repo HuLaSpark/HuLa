@@ -1,6 +1,33 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended"
-  ]
+  "automerge": false,
+  "dependencyDashboard": true,
+  "ignoreDeps": [],
+  "labels": ["dependencies"],
+  "postUpdateOptions": ["yarnDedupeHighest"],
+  "prConcurrentLimit": 30,
+  "prHourlyLimit": 4,
+  "rebaseWhen": "conflicted",
+  "schedule": "on monday at 9:00am",
+  "timezone": "Asia/Shanghai",
+  "vulnerabilityAlerts": {
+    "labels": ["security"],
+    "automerge": true
+  },
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["minor", "patch"]
+    },
+    {
+      "groupName": "Tauri dependencies",
+      "matchPackagePatterns": ["@tauri-apps*"],
+      "groupSlug": "Tauri-deps"
+    },
+    {
+      "groupName": "UnoCSS dependencies",
+      "matchPackagePatterns": ["@unocss*"],
+      "groupSlug": "UnoCSS-deps"
+    }
+  ],
+  "updateInternalDeps": true
 }
