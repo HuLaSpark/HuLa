@@ -1,7 +1,7 @@
 import { LimitEnum, MittEnum, MsgEnum, MessageStatusEnum } from '@/enums'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import apis from '@/services/apis.ts'
-import { CacheUserItem, MessageType } from '@/services/types.ts'
+import { CacheUserItem } from '@/services/types.ts'
 import { useCachedStore } from '@/stores/cached.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global.ts'
@@ -13,13 +13,13 @@ import { Ref } from 'vue'
 import { useCommon } from './useCommon.ts'
 import { readText, readImage } from '@tauri-apps/plugin-clipboard-manager'
 import Database from '@tauri-apps/plugin-sql'
+import { messageStrategyMap } from '@/hooks/strategy/MessageStrategy.ts'
 
 export const useMsgInput = (messageInputDom: Ref) => {
   const chatStore = useChatStore()
   const globalStore = useGlobalStore()
   const cachedStore = useCachedStore()
-  const { triggerInputEvent, insertNode, getMessageContentType, getEditorRange, imgPaste, removeTag, reply, userUid } =
-    useCommon()
+  const { triggerInputEvent, insertNode, getMessageContentType, getEditorRange, imgPaste, reply, userUid } = useCommon()
   const settingStore = useSettingStore()
   const { chat } = storeToRefs(settingStore)
   /** 艾特选项的key  */
@@ -163,31 +163,13 @@ export const useMsgInput = (messageInputDom: Ref) => {
     }
     ait.value = false
     const contentType = getMessageContentType(messageInputDom)
-    const msg = {
-      type: contentType,
-      content: removeTag(msgInput.value),
-      reply: reply.value.content
-        ? {
-            content: reply.value.content,
-            key: reply.value.key
-          }
-        : undefined
+    //根据消息类型获取消息处理策略
+    const messageStrategy = messageStrategyMap[contentType]
+    if (!messageStrategy) {
+      window.$message.warning('暂不支持发送类型消息')
+      return
     }
-    // 处理回复内容
-    if (reply.value.content) {
-      if (msg.type === MsgEnum.TEXT) {
-        const tempDiv = document.createElement('div')
-        tempDiv.innerHTML = msg.content
-        const replyDiv = tempDiv.querySelector('#replyDiv')
-        if (replyDiv) {
-          replyDiv.parentNode?.removeChild(replyDiv)
-        }
-        tempDiv.innerHTML = removeTag(tempDiv.innerHTML)
-        tempDiv.innerHTML = tempDiv.innerHTML.replace(/^\s*&nbsp;/, '')
-        msg.content = tempDiv.innerHTML
-      }
-    }
-
+    const msg = messageStrategy.getMsg(msgInput.value, reply.value)
     // // 处理超链接
     // const { hyperlinkRegex, foundHyperlinks } = RegExp.isHyperlink(msg.content)
     // if (foundHyperlinks && foundHyperlinks.length > 0) {
@@ -196,81 +178,13 @@ export const useMsgInput = (messageInputDom: Ref) => {
     //     return `<a style="color: inherit;text-underline-offset: 4px" href="${href}" target="_blank" rel="noopener noreferrer">${match}</a>`
     //   })
     // }
-
-    // 验证消息长度
-    if (msg.type === MsgEnum.TEXT && msg.content.length > 500) {
-      window.$message.info('消息内容超过限制500，请分段发送')
-      return
-    }
-
-    if (msg.type === MsgEnum.MIXED) {
-      window.$message.error('暂不支持混合类型消息发送')
-      return
-    }
-
+    console.log(msg)
     // 创建临时消息ID
     const tempMsgId = Date.now()
-    const currentTime = new Date().getTime()
-
     // 根据消息类型创建消息体
-    let messageBody: any
-    switch (msg.type) {
-      case MsgEnum.TEXT:
-        messageBody = {
-          content: msg.content,
-          replyMsgId: msg.reply?.key || void 0,
-          reply: reply.value.content
-            ? {
-                body: reply.value.content,
-                id: reply.value.key,
-                username: reply.value.accountName,
-                type: msg.type
-              }
-            : void 0
-        }
-        break
-      case MsgEnum.IMAGE:
-        messageBody = { url: msg.content }
-        break
-      case MsgEnum.FILE:
-        messageBody = { url: msg.content }
-        break
-      case MsgEnum.VOICE:
-        messageBody = { url: msg.content }
-        break
-      case MsgEnum.VIDEO:
-        messageBody = { url: msg.content }
-        break
-      default:
-        messageBody = { content: msg.content }
-    }
-
-    // 创建消息对象
-    const tempMsg: MessageType = {
-      fromUser: {
-        uid: userUid.value || 0,
-        username: useUserInfo(userUid.value)?.value?.name || '',
-        avatar: useUserInfo(userUid.value)?.value?.avatar || '',
-        locPlace: useUserInfo(userUid.value)?.value?.locPlace || ''
-      },
-      message: {
-        id: tempMsgId,
-        roomId: globalStore.currentSession.roomId,
-        type: msg.type,
-        body: messageBody,
-        sendTime: currentTime,
-        status: MessageStatusEnum.PENDING,
-        messageMark: {
-          userLike: 0,
-          userDislike: 0,
-          likeCount: 0,
-          dislikeCount: 0
-        }
-      },
-      sendTime: new Date(currentTime).toISOString(),
-      loading: false
-    }
-
+    const messageBody = messageStrategy.buildMessageBody(msg, reply)
+    // 创建消息对象;
+    const tempMsg = messageStrategy.buildMessageType(tempMsgId, messageBody, globalStore, userUid)
     // 先添加到消息列表
     chatStore.pushMsg(tempMsg)
 

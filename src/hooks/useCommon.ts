@@ -9,12 +9,59 @@ import { useGlobalStore } from '@/stores/global.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useMessage } from '@/hooks/useMessage.ts'
 import { useUserStore } from '@/stores/user.ts'
+import { BaseDirectory, create, exists, mkdir } from '@tauri-apps/plugin-fs'
+import { getImageCache } from '@/utils/pathUtil.ts'
 import { AvatarUtils } from '@/utils/avatarUtils'
 import DOMPurify from 'dompurify'
 
 export interface SelectionRange {
   range: Range
   selection: Selection
+}
+const domParser = new DOMParser()
+function saveCacheFile(file: any, subFolder: string, dom: HTMLElement) {
+  const fileName = file.name === null ? 'test.png' : file.name
+  const tempPath = getImageCache(subFolder)
+  const fullPath = tempPath + fileName
+  const cacheReader = new FileReader()
+  cacheReader.onload = async (e: any) => {
+    const isExists = await exists(tempPath, { baseDir: BaseDirectory.AppCache })
+    if (!isExists) {
+      await mkdir(tempPath, { baseDir: BaseDirectory.AppCache, recursive: true })
+    }
+    const tempFile = await create(fullPath, { baseDir: BaseDirectory.AppCache })
+    await tempFile.write(e.target.result)
+    tempFile.close()
+  }
+  cacheReader.readAsArrayBuffer(file)
+  const p = document.createElement('p')
+  p.setAttribute('id', 'temp-image')
+  p.style.setProperty('display', 'none')
+  p.textContent = fullPath
+  // 获取MsgInput组件暴露的lastEditRange
+  const lastEditRange = (dom as any).getLastEditRange?.()
+
+  // 确保dom获得焦点
+  dom.focus()
+
+  let range: Range
+  if (!lastEditRange) {
+    // 如果没有lastEditRange，创建一个新的范围到最后
+    range = document.createRange()
+    range.selectNodeContents(dom)
+    range.collapse(false) // 折叠到末尾
+  } else {
+    range = lastEditRange
+  }
+
+  // 确保我们有有效的range
+  const selection = window.getSelection()
+  if (selection) {
+    // 插入图片
+    range.deleteContents()
+    range.insertNode(p)
+  }
+  return fullPath
 }
 
 /** 常用工具类 */
@@ -68,7 +115,7 @@ export const useCommon = () => {
    * 获取messageInputDom输入框中的内容类型
    * @param messageInputDom 输入框dom
    */
-  const getMessageContentType = (messageInputDom: Ref) => {
+  const getMessageContentType = (messageInputDom: Ref): MsgEnum => {
     let hasText = false
     let hasImage = false
     let hasVideo = false
@@ -406,7 +453,9 @@ export const useCommon = () => {
 
       triggerInputEvent(dom)
     }
-
+    //缓存文件
+    saveCacheFile(file, 'img', dom)
+    // 读取文件
     reader.readAsDataURL(file)
   }
 
@@ -485,10 +534,12 @@ export const useCommon = () => {
     return splitter.countGraphemes(value)
   }
 
-  /** 去除字符串中的元素标记 */
+  /** 去除字符串中的元素标记
+   *  不是html元素节点返回原字符串
+   * */
   const removeTag = (fragment: string) => {
     const sanitizedFragment = DOMPurify.sanitize(fragment)
-    return new DOMParser().parseFromString(sanitizedFragment, 'text/html').body.textContent || ''
+    return new DOMParser().parseFromString(sanitizedFragment, 'text/html').body.textContent || fragment
   }
 
   /**
@@ -523,4 +574,14 @@ export const useCommon = () => {
     reply,
     userUid
   }
+}
+
+/**
+ * 返回dom种指定id的文本
+ * @param dom 指定dom
+ * @param id 元素id
+ */
+export const parseInnerText = (dom: string, id: string): string | undefined => {
+  const doc = domParser.parseFromString(dom, 'text/html')
+  return doc.getElementById(id)?.innerText
 }
