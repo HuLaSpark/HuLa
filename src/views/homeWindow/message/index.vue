@@ -1,8 +1,8 @@
 <template>
   <!-- 消息列表 // TODO 使用虚拟列表组件就用不了动画和拖动了 (nyh -> 2024-03-28 06:01:00) -->
-  <n-scrollbar ref="scrollbar" style="max-height: calc(100vh - 70px)">
+  <n-scrollbar ref="msg-scrollbar" style="max-height: calc(100vh - 70px)">
     <!--  右键菜单组件  -->
-    <TransitionGroup class="sort-target p-[4px_10px_0px_8px]" name="fade" tag="div" type="transition">
+    <div class="p-[4px_10px_0px_8px]">
       <ContextMenu
         v-for="item in sessionList"
         :key="item.roomId"
@@ -46,7 +46,7 @@
           </n-flex>
         </n-flex>
       </ContextMenu>
-    </TransitionGroup>
+    </div>
   </n-scrollbar>
 </template>
 <script lang="ts" setup>
@@ -67,7 +67,7 @@ const chatStore = useChatStore()
 const globalStore = useGlobalStore()
 const groupStore = useGroupStore()
 const { userUid } = useCommon()
-// const scrollbar = useTemplateRef('scrollbar')
+// const msgScrollbar = useTemplateRef('msg-scrollbar')
 const { handleMsgClick, menuList, specialMenuList, handleMsgDblclick } = useMessage()
 const currentSession = computed(() => globalStore.currentSession)
 // TODO 艾特我提醒
@@ -107,12 +107,12 @@ watch(
       console.log('newVal', newVal)
 
       handleMsgClick(newVal as SessionItem)
-      // nextTick(() => {
+      // requestAnimationFrame(() => {
       //   const index = sessionList.value.findIndex((item) => item.roomId === newVal.roomId)
       //   if (index !== -1) {
       //     scrollbar.value?.scrollTo({
       //       top: index * (75 + 5) + 4, // height of msg-box (75px) + margin-bottom (5px) + top padding (4px)
-      //       behavior: 'smooth'
+      //       behavior: 'auto'
       //     })
       //   }
       // })

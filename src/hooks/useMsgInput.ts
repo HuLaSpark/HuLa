@@ -1,8 +1,7 @@
 import { LimitEnum, MittEnum, MsgEnum, MessageStatusEnum } from '@/enums'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import apis from '@/services/apis.ts'
-import { CacheUserItem } from '@/services/types.ts'
-import { useCachedStore } from '@/stores/cached.ts'
+import { useCachedStore, type BaseUserItem } from '@/stores/cached.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useSettingStore } from '@/stores/setting.ts'
@@ -13,7 +12,7 @@ import { Ref } from 'vue'
 import { useCommon } from './useCommon.ts'
 import { readText, readImage } from '@tauri-apps/plugin-clipboard-manager'
 import Database from '@tauri-apps/plugin-sql'
-import { messageStrategyMap } from '@/hooks/strategy/MessageStrategy.ts'
+import { messageStrategyMap } from '@/strategy/MessageStrategy.ts'
 
 export const useMsgInput = (messageInputDom: Ref) => {
   const chatStore = useChatStore()
@@ -119,6 +118,41 @@ export const useMsgInput = (messageInputDom: Ref) => {
     chat.value.sendKey = v
   })
 
+  /**
+   * 从HTML内容中提取@用户的uid
+   * @param content HTML格式的消息内容
+   * @param userList 用户列表
+   * @returns 被@用户的uid数组
+   */
+  const extractAtUserIds = (content: string, userList: BaseUserItem[]): number[] => {
+    const atUserIds: number[] = []
+
+    // 创建临时DOM元素来解析HTML
+    const tempDiv = document.createElement('div')
+    tempDiv.innerHTML = content
+
+    // 获取纯文本内容
+    const textContent = tempDiv.textContent || ''
+
+    // 使用更精确的正则表达式匹配@用户
+    // 匹配@后面的非空白字符，直到遇到空白字符或字符串结束
+    const regex = /@([^\s]+)/g
+    const matches = textContent.match(regex)
+
+    if (matches) {
+      matches.forEach((match) => {
+        const username = match.slice(1) // 移除@符号
+        const user = userList.find((u) => u.name === username)
+        if (user) {
+          atUserIds.push(user.uid)
+        }
+      })
+    }
+
+    // 去重并返回
+    return [...new Set(atUserIds)]
+  }
+
   /** 去除html标签(用于鉴别回复时是否有输入内容) */
   const stripHtml = (html: string) => {
     try {
@@ -170,19 +204,18 @@ export const useMsgInput = (messageInputDom: Ref) => {
       return
     }
     const msg = messageStrategy.getMsg(msgInput.value, reply.value)
-    // // 处理超链接
-    // const { hyperlinkRegex, foundHyperlinks } = RegExp.isHyperlink(msg.content)
-    // if (foundHyperlinks && foundHyperlinks.length > 0) {
-    //   msg.content = msg.content.replace(hyperlinkRegex, (match) => {
-    //     const href = match.startsWith('www.') ? 'https://' + match : match
-    //     return `<a style="color: inherit;text-underline-offset: 4px" href="${href}" target="_blank" rel="noopener noreferrer">${match}</a>`
-    //   })
-    // }
-    console.log(msg)
+
+    // 从消息内容中提取@用户的uid
+    const atUidList = extractAtUserIds(msgInput.value, cachedStore.currentAtUsersList)
+
     // 创建临时消息ID
     const tempMsgId = Date.now()
     // 根据消息类型创建消息体
-    const messageBody = messageStrategy.buildMessageBody(msg, reply)
+    const messageBody = {
+      ...messageStrategy.buildMessageBody(msg, reply),
+      atUidList // 添加@用户列表
+    }
+
     // 创建消息对象;
     const tempMsg = messageStrategy.buildMessageType(tempMsgId, messageBody, globalStore, userUid)
     // 先添加到消息列表
@@ -297,7 +330,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     } else {
       ait.value = false
     }
-  }, 10) // 防抖时间过长会导致输入内容已经显示但是实际还没有进入到这里进行处理
+  }, 10) // 防抖时间过长会导致输入内容已经显示但是实际还没有进入到这里处理
 
   /** input的keydown事件 */
   const inputKeyDown = (e: KeyboardEvent) => {
@@ -340,7 +373,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
   }
 
   /** 处理点击@提及框事件 */
-  const handleAit = (item: CacheUserItem) => {
+  const handleAit = (item: BaseUserItem) => {
     // 如果正在输入拼音，不发送消息
     if (isChinese.value) {
       return
@@ -447,6 +480,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       if (messageInputDom.value) {
         nextTick().then(() => {
           messageInputDom.value.focus()
+          // 插入回复框
           insertNode(
             MsgEnum.REPLY,
             { avatar: avatar, accountName: accountName, content: event.message.body.content },

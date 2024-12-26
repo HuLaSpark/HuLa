@@ -25,6 +25,9 @@ import { LoginStatus, useWsLoginStore } from '@/stores/ws.ts'
 import type { MarkItemType, MessageType, RevokedMsgType } from '@/services/types.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { computedToken } from '@/services/request'
+import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification'
+import { useUserInfo } from '@/hooks/useCached.ts'
+import { AvatarUtils } from '@/utils/avatarUtils.ts'
 
 const globalStore = useGlobalStore()
 const contactStore = useContactStore()
@@ -100,6 +103,17 @@ useMitt.on(WsResponseMessageType.MSG_RECALL, (data: RevokedMsgType) => {
 })
 useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, (data: MessageType) => {
   chatStore.pushMsg(data)
+  const username = useUserInfo(data.fromUser.uid).value.name!
+  const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(useUserInfo(data.fromUser.uid).value.avatar as string))
+
+  // 不是自己发的消息才通知
+  if (data.fromUser.uid !== userStore.userInfo.uid) {
+    sendNotification({
+      title: username,
+      body: data.message.body.content,
+      icon: avatarSrc.value
+    })
+  }
 })
 useMitt.on(WsResponseMessageType.REQUEST_NEW_FRIEND, (data: { uid: number; unreadCount: number }) => {
   console.log(data.unreadCount)
@@ -144,5 +158,12 @@ onBeforeMount(async () => {
 
 onMounted(async () => {
   await getCurrentWebviewWindow().show()
+  let permissionGranted = await isPermissionGranted()
+
+  // 如果没有授权，则请求授权系统通知
+  if (!permissionGranted) {
+    const permission = await requestPermission()
+    permissionGranted = permission === 'granted'
+  }
 })
 </script>

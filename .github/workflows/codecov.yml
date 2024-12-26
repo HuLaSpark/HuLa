@@ -43,7 +43,7 @@ jobs:
       - name: Run tests with coverage
         run: pnpm coverage
 
-     - name: Upload coverage to Codecov
+      - name: Upload coverage to Codecov
         uses: ./
         with:
           file: ./coverage/coverage-final.json

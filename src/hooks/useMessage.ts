@@ -107,8 +107,31 @@ export const useMessage = () => {
       label: '从消息列表中移除',
       icon: 'delete',
       click: (item: SessionItem) => {
-        // TODO: 实现从消息列表中移除功能
+        const currentSessions = chatStore.sessionList
+        const currentIndex = currentSessions.findIndex((session) => session.roomId === item.roomId)
+
+        // 检查是否是当前选中的会话
+        const isCurrentSession = item.roomId === globalStore.currentSession.roomId
+
         chatStore.removeContact(item.roomId)
+
+        // 如果不是当前选中的会话，直接返回
+        if (!isCurrentSession) {
+          return
+        }
+
+        const updatedSessions = chatStore.sessionList
+
+        // 如果没有会话就把右侧消息框关闭
+        if (updatedSessions.length === 0) {
+          console.log('没有会话了')
+          useMitt.emit(MittEnum.MSG_BOX_SHOW, { item: -1 })
+          return
+        }
+
+        // 选择下一个或上一个会话
+        const nextIndex = Math.min(currentIndex, updatedSessions.length - 1)
+        handleMsgClick(updatedSessions[nextIndex])
       }
     },
     { label: '屏蔽此人消息', icon: 'forbid' }

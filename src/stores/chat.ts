@@ -11,6 +11,7 @@ import { useContactStore } from '@/stores/contacts.ts'
 import { cloneDeep } from 'lodash-es'
 import { useUserStore } from '@/stores/user.ts'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
+import { sendNotification } from '@tauri-apps/plugin-notification'
 
 // 定义每页加载的消息数量
 export const pageSize = 20
@@ -284,6 +285,7 @@ export const useChatStore = defineStore(
 
       // 获取用户信息缓存
       const uid = msg.fromUser.uid
+      const cacheUser = cachedStore.userCachedList[uid]
       await cachedStore.getBatchUserInfo([uid])
 
       // 发完消息就要刷新会话列表
@@ -292,10 +294,10 @@ export const useChatStore = defineStore(
         detailResponse = await apis.sessionDetail({ id: msg.message.roomId })
       }
 
-      // 更新会话的文本属性以触发重新计算
+      // 更新会话的文本属性和未读数
       const session = sessionList.find((item) => item.roomId === msg.message.roomId)
       if (session) {
-        const lastMsgUserName = cachedStore.currentAtUsersList[uid]?.name
+        const lastMsgUserName = cachedStore.userCachedList[uid]?.name
         const formattedText =
           msg.message.type === MsgEnum.RECALL
             ? session.type === RoomTypeEnum.GROUP
@@ -310,18 +312,27 @@ export const useChatStore = defineStore(
                 session.type
               )
         session.text = formattedText!
+        // 更新未读数
+        if (msg.fromUser.uid !== userStore.userInfo.uid) {
+          if (currentRoomId.value !== msg.message.roomId) {
+            session.unreadCount = (session.unreadCount || 0) + 1
+          } else if (route?.path !== '/message') {
+            session.unreadCount = (session.unreadCount || 0) + 1
+          }
+        }
       }
 
       updateSessionLastActiveTime(msg.message.roomId, detailResponse)
+      console.log(msg.message.body.atUidList)
 
       // 如果收到的消息里面是艾特自己的就发送系统通知
-      // if (msg.message.body.atUidList?.includes(userStore.userInfo.uid) && cacheUser) {
-      //   notify({
-      //     name: cacheUser.name as string,
-      //     text: msg.message.body.content,
-      //     icon: cacheUser.avatar as string
-      //   })
-      // }
+      if (msg.message.body.atUidList?.includes(userStore.userInfo.uid) && cacheUser) {
+        sendNotification({
+          title: cacheUser.name as string,
+          body: msg.message.body.content,
+          icon: cacheUser.avatar as string
+        })
+      }
 
       // tab 在后台获得新消息，就开始闪烁！
       // if (document.hidden && !shakeTitle.isShaking) {
@@ -331,20 +342,6 @@ export const useChatStore = defineStore(
       if (currentNewMsgCount.value) {
         currentNewMsgCount.value.count++
         return
-      }
-
-      // 聊天记录计数
-      if (currentRoomId.value !== msg.message.roomId) {
-        const item = sessionList.find((item) => item.roomId === msg.message.roomId)
-        if (item) {
-          item.unreadCount += 1
-        }
-        // 如果新消息的 roomId 和 当前显示的 room 的 Id 一致，就更新已读
-      } else {
-        // 且当前路由在 聊天 内
-        if (route?.path && route?.path === '/message') {
-          await apis.markMsgRead({ roomId: currentRoomId.value })
-        }
       }
 
       // 如果当前路由不是聊天，就开始计数
@@ -421,7 +418,7 @@ export const useChatStore = defineStore(
         const cacheUser = cachedStore.userCachedList[data.recallUid]
         // 如果撤回者的 id 不等于消息发送人的 id, 或者你本人就是管理员，那么显示管理员撤回的。
         if (data.recallUid !== message.fromUser.uid) {
-          message.message.body = `管理员"${cacheUser.name}"撤回了一条成员消息` // 后期根据本地用户数据修改
+          message.message.body = `管理员"${cacheUser.name}"撤回了一条消息` // 后期根据本地用户数据修改
         } else {
           // 如果被撤回的消息是消息发送者撤回，正常显示
           message.message.body = `"${cacheUser.name}"撤回了一条消息` // 后期根据本地用户数据修改

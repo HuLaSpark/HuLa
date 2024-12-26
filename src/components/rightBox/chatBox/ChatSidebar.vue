@@ -55,7 +55,7 @@
 
     <!--  // TODO popover显示的时候去改变窗口的大小、当点击了半个选项的时候也会出现原生滚动条 (nyh -> 2024-03-25 05:04:37)  -->
     <!-- // TODO 如果popover显示就先暂时不让滚动，因为在n-scrollbar和n-virtual-list中使用当我点击最后一个选项时候n-popover位置不够导致出现原生滚动条 (nyh -> 2024-03-24 22:46:38) -->
-    <!-- // TODO 如果直接使用n-virtual-list的滚动配上n-popover似乎也没有这个bug，但是当点击倒数第二个的时候还是会出现滚动条 (nyh -> 2024-03-25 00:30:53)   -->
+    <!-- // TODO 如果直接使用n-virtual-list的滚动配上n-popover乎也没有这个bug，但是当点击倒数第二个的时候还是会出现滚动条 (nyh -> 2024-03-25 00:30:53)   -->
     <n-virtual-list
       id="image-chat-sidebar"
       style="max-height: calc(100vh - 260px)"
@@ -120,9 +120,11 @@ import { useGlobalStore } from '@/stores/global.ts'
 import type { UserItem } from '@/services/types.ts'
 import { useDebounceFn } from '@vueuse/core'
 import { AvatarUtils } from '@/utils/avatarUtils'
+import { useCachedStore } from '~/src/stores/cached'
 
 const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
+const cachedStore = useCachedStore()
 const groupUserList = computed(() => groupStore.userList)
 const userList = computed(() => {
   return groupUserList.value
@@ -150,40 +152,73 @@ const isCollapsed = ref(true)
 const { optionsList, report, selectKey } = useChatMain()
 const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-sidebar')
 
-watch(userList, (newVal) => {
-  // 如果正在搜索，则应用搜索过滤
-  if (searchRef.value) {
-    filteredUserList.value = newVal.filter((user) => user.name.toLowerCase().includes(searchRef.value.toLowerCase()))
-  } else {
-    filteredUserList.value = newVal
-  }
+// 添加一个新的计算属性来合并用户列表
+const mergedUserList = computed(() => {
+  // 创建一个Map用于去重，使用uid作为key
+  const userMap = new Map()
+
+  // 首先添加在线用户列表
+  userList.value.forEach((user) => {
+    userMap.set(user.uid, user)
+  })
+
+  // 添加缓存的用户列表
+  cachedStore.currentAtUsersList.forEach((cachedUser) => {
+    if (!userMap.has(cachedUser.uid)) {
+      // 如果用户不在在线列表中，添加到Map中
+      // 为缓存用户添加默认的activeStatus
+      userMap.set(cachedUser.uid, {
+        ...cachedUser,
+        activeStatus: OnlineEnum.OFFLINE
+      })
+    }
+  })
+
+  // 转换回数组并按在线状态排序
+  return Array.from(userMap.values()).sort((a, b) => a.activeStatus - b.activeStatus)
 })
 
-const handleSelect = () => {
-  isSearch.value = !isSearch.value
-  nextTick(() => {
-    inputInstRef.value?.select()
-  })
-}
-
-/**
- * 重置搜索状态
- */
-const handleBlur = () => {
-  // 如果输入框有值，则不重置
-  if (searchRef.value) return
-  isSearch.value = false
-  searchRef.value = ''
-  filteredUserList.value = userList.value
-}
+// 修改watch监听器
+watch(
+  [userList, () => cachedStore.currentAtUsersList],
+  () => {
+    // 如果正在搜索，则应用搜索过滤
+    if (searchRef.value) {
+      filteredUserList.value = mergedUserList.value.filter((user) =>
+        user.name.toLowerCase().includes(searchRef.value.toLowerCase())
+      )
+    } else {
+      filteredUserList.value = userList.value
+    }
+  },
+  { immediate: true }
+)
 
 /**
  * 监听搜索输入过滤用户
  * @param value 输入值
  */
 const handleSearch = useDebounceFn((value: string) => {
-  filteredUserList.value = userList.value.filter((user) => user.name.toLowerCase().includes(value.toLowerCase()))
+  if (!value) {
+    // 如果搜索框为空，只显示在线用户列表
+    filteredUserList.value = userList.value
+    return
+  }
+
+  // 从合并后的用户列表中搜索
+  filteredUserList.value = mergedUserList.value.filter((user) => user.name.toLowerCase().includes(value.toLowerCase()))
 }, 10)
+
+/**
+ * 重置搜索状态
+ */
+const handleBlur = () => {
+  if (searchRef.value) return
+  isSearch.value = false
+  searchRef.value = ''
+  // 重置为只显示在线用户列表
+  filteredUserList.value = userList.value
+}
 
 /**
  * 处理滚动事件
@@ -196,6 +231,16 @@ const handleScroll = (event: Event) => {
   if (isBottom && !groupStore.userListOptions.loading) {
     groupStore.loadMoreGroupMembers()
   }
+}
+
+/**
+ * 切换搜索模式并自动聚焦输入框
+ */
+const handleSelect = () => {
+  isSearch.value = !isSearch.value
+  nextTick(() => {
+    inputInstRef.value?.select()
+  })
 }
 
 onMounted(() => {
