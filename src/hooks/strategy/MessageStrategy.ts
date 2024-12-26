@@ -134,20 +134,16 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
       throw new AppException('文件不存在')
     }
     console.log(path)
-    let flag = true
     let downloadUrl = ''
     this.uploadFile(path)
       .then((data) => {
         console.log('data', data)
-        flag = false
         downloadUrl = data
       })
       .catch((err) => {
         throw new AppException(err)
       })
-    // while (flag) {
-    //   console.log('---')
-    // }
+
     return {
       type: this.msgType,
       content: downloadUrl,
