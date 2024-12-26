@@ -16,37 +16,8 @@
   </n-flex>
 
   <Transition name="chat-init" appear mode="out-in" @after-leave="handleTransitionComplete">
-    <!-- 初次加载的骨架屏 -->
-    <n-flex
-      v-if="messageOptions?.isLoading && !messageOptions?.cursor"
-      vertical
-      :size="18"
-      style="max-height: calc(100vh - 260px)"
-      class="relative h-100vh box-border p-20px">
-      <n-flex justify="end">
-        <n-skeleton style="border-radius: 14px" height="40px" width="46%" :sharp="false" />
-        <n-skeleton height="40px" circle />
-      </n-flex>
-
-      <n-flex>
-        <n-skeleton height="40px" circle />
-        <n-skeleton style="border-radius: 14px" height="60px" width="58%" :sharp="false" />
-      </n-flex>
-
-      <n-flex>
-        <n-skeleton height="40px" circle />
-        <n-skeleton style="border-radius: 14px" height="40px" width="26%" :sharp="false" />
-      </n-flex>
-
-      <n-flex justify="end">
-        <n-skeleton style="border-radius: 14px" height="40px" width="60%" :sharp="false" />
-        <n-skeleton height="40px" circle />
-      </n-flex>
-    </n-flex>
-
     <!-- 中间聊天内容(使用虚拟列表) -->
     <VirtualList
-      v-else
       id="image-chat-main"
       ref="virtualListInst"
       :items="chatMessageList"
@@ -54,8 +25,7 @@
       :buffer="5"
       @scroll="handleScroll"
       @scroll-direction-change="handleScrollDirectionChange"
-      :style="{ maxHeight: `calc(100vh - ${messageOptions?.isLoading && isLoadingMore ? '286px' : '260px'})` }"
-      :class="{ 'right-1px': activeItem.type === RoomTypeEnum.SINGLE }">
+      :style="{ maxHeight: `calc(100vh - ${messageOptions?.isLoading && isLoadingMore ? '286px' : '260px'})` }">
       <template #default="{ item, index }">
         <n-flex
           vertical
@@ -389,14 +359,13 @@
   </footer>
 </template>
 <script setup lang="ts">
-import { EventEnum, MittEnum, MsgEnum, RoomTypeEnum, MessageStatusEnum } from '@/enums'
+import { EventEnum, MittEnum, MsgEnum, MessageStatusEnum } from '@/enums'
 import { type MessageType, SessionItem } from '@/services/types.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { usePopover } from '@/hooks/usePopover.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { useChatMain } from '@/hooks/useChatMain.ts'
 import { delay } from 'lodash-es'
-import { useCommon } from '@/hooks/useCommon.ts'
 import { formatTimestamp, isDiffNow } from '@/utils/ComputedTime.ts'
 import { useUserInfo, useBadgeInfo } from '@/hooks/useCached.ts'
 import { useChatStore } from '@/stores/chat.ts'
@@ -410,10 +379,10 @@ import { useTauriListener } from '@/hooks/useTauriListener'
 
 const appWindow = WebviewWindow.getCurrent()
 const { addListener } = useTauriListener()
-const { activeItem } = defineProps<{
+const props = defineProps<{
   activeItem: SessionItem
 }>()
-const activeItemRef = shallowRef<SessionItem>({ ...activeItem })
+const activeItemRef = shallowRef<SessionItem>(props.activeItem)
 const chatStore = useChatStore()
 const userStore = useUserStore()
 
@@ -425,6 +394,7 @@ const isScrollingUp = ref(false)
 // 添加标记，用于识别是否正在加载历史消息
 const isLoadingMore = ref(false)
 
+const userUid = computed(() => userStore.userInfo.uid)
 const chatMessageList = computed(() => chatStore.chatMessageList)
 const currentNewMsgCount = computed(() => chatStore.currentNewMsgCount)
 const messageOptions = computed(() => chatStore.currentMessageOptions)
@@ -453,7 +423,6 @@ const recordEL = ref()
 /** 网络连接是否正常 */
 const { isOnline } = useNetwork()
 const isMac = computed(() => type() === 'macos')
-const { userUid } = useCommon()
 const {
   handleMsgClick,
   handleConfirm,
@@ -468,18 +437,20 @@ const {
   selectKey,
   emojiList,
   scrollTop
-} = useChatMain(activeItem)
+} = useChatMain(props.activeItem)
 const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-main')
 
-watch(activeItemRef, (value, oldValue) => {
-  if (oldValue.roomId !== value.roomId) {
-    // 等待 DOM 更新完成后再滚动
-    nextTick(() => {
-      // 给予足够的时间让消息加载和渲染
-      virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
-    })
+watch(
+  () => props.activeItem,
+  (value, oldValue) => {
+    if (oldValue.roomId !== value.roomId) {
+      requestAnimationFrame(() => {
+        // 给予足够的时间让消息加载和渲染
+        virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
+      })
+    }
   }
-})
+)
 
 watch(
   chatMessageList,
@@ -492,7 +463,7 @@ watch(
       // 如果正在加载历史消息，优先处理历史消息的滚动
       if (isLoadingMore.value) {
         if (scrollTop.value < 10) {
-          nextTick(() => {
+          requestAnimationFrame(() => {
             virtualListInst.value?.scrollTo({ index: value.length - oldValue.length })
           })
         }
@@ -516,6 +487,9 @@ watch(
       }
 
       // 其他情况：增加新消息计数
+      /**
+       * @see {chatStore.pushMsg}
+       */
     }
   },
   { deep: false }
@@ -758,10 +732,8 @@ const handleReEdit = (msgId: number) => {
 }
 
 onMounted(async () => {
-  nextTick(() => {
-    setTimeout(() => {
-      virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
-    }, 10)
+  requestAnimationFrame(() => {
+    virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
   })
   useMitt.on(MittEnum.SEND_MESSAGE, async (messageType: MessageType) => {
     await chatStore.pushMsg(messageType)

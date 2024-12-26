@@ -165,10 +165,10 @@ export type UserInfoType = {
   modifyNameChance: number
   /** 性别 1为男性，2为女性 */
   sex: SexEnum
-  /** 徽章，本地字段，有值用本地，无值用远端 */
-  badge?: string
   /** 权限 */
   power?: number
+  /** 佩戴的徽章 */
+  wearingItemId?: number
 }
 
 export type BadgeType = {

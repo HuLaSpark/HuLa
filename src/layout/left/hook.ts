@@ -3,12 +3,8 @@ import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { useCachedStore } from '@/stores/cached.ts'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
-import { EventEnum, IsYesEnum, MittEnum, MsgEnum, PluginEnum, ThemeEnum } from '@/enums'
+import { EventEnum, IsYesEnum, MittEnum, ThemeEnum } from '@/enums'
 import { BadgeType, UserInfoType } from '@/services/types.ts'
-import { useChatStore } from '@/stores/chat.ts'
-import { useUserInfo } from '@/hooks/useCached.ts'
-import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
-import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import apis from '@/services/apis.ts'
 import { delay } from 'lodash-es'
@@ -55,33 +51,6 @@ export const leftHook = () => {
   const currentBadge = computed(() =>
     editInfo.value.badgeList.find((item) => item.obtain === IsYesEnum.YES && item.wearing === IsYesEnum.YES)
   )
-  const chatStore = useChatStore()
-  const sessionList = computed(() =>
-    chatStore.sessionList.map((item) => {
-      // 最后一条消息内容
-      const lastMsg = Array.from(chatStore.messageMap.get(item.roomId)?.values() || [])?.slice(-1)?.[0]
-      let LastUserMsg = ''
-      if (lastMsg) {
-        const lastMsgUserName = useUserInfo(lastMsg.fromUser.uid)
-        LastUserMsg =
-          lastMsg.message?.type === MsgEnum.RECALL
-            ? `${lastMsgUserName.value.name}:'撤回了一条消息'`
-            : (renderReplyContent(
-                lastMsgUserName.value.name,
-                lastMsg.message?.type,
-                lastMsg.message?.body?.content || lastMsg.message?.body
-              ) as string)
-      }
-      return {
-        ...item,
-        lastMsg: LastUserMsg || item.text || '欢迎使用HuLa',
-        lastMsgTime: formatTimestamp(item?.activeTime)
-      }
-    })
-  )
-  const msgTotal = computed(() => {
-    return sessionList.value.reduce((total, item) => total + item.unreadCount, 0)
-  })
 
   /* =================================== 方法 =============================================== */
 
@@ -91,11 +60,6 @@ export const leftHook = () => {
   }
 
   watchEffect(() => {
-    menuTop.find((item: STO.Plugins<PluginEnum>) => {
-      if (item.url === 'message') {
-        item.badge = msgTotal.value
-      }
-    })
     /** 判断是否是跟随系统主题 */
     if (themes.pattern === ThemeEnum.OS) {
       followOS()
@@ -137,8 +101,29 @@ export const leftHook = () => {
   /** 佩戴徽章 */
   const toggleWarningBadge = async (badge: BadgeType) => {
     if (!badge?.id) return
-    await apis.setUserBadge(badge.id)
-    window.$message.success('佩戴成功')
+    try {
+      await apis.setUserBadge(badge.id)
+      // 更新本地缓存中的用户徽章信息
+      const currentUser = userStore.userInfo.uid && cachedStore.userCachedList[userStore.userInfo.uid]
+      if (currentUser) {
+        // 更新当前佩戴的徽章ID
+        currentUser.wearingItemId = badge.id
+        // 更新用户信息中的佩戴徽章ID
+        userStore.userInfo.wearingItemId = badge.id
+        // 更新徽章列表中的佩戴状态
+        editInfo.value.badgeList = editInfo.value.badgeList.map((item) => ({
+          ...item,
+          wearing: item.id === badge.id ? IsYesEnum.YES : IsYesEnum.NO,
+          obtain: item.obtain // 保持原有的obtain状态
+        }))
+      }
+      // 确保在状态更新后再显示成功消息
+      nextTick(() => {
+        window.$message.success('佩戴成功')
+      })
+    } catch (error) {
+      window.$message.error('佩戴失败，请稍后重试')
+    }
   }
 
   /* 打开并且创建modal */
@@ -241,8 +226,6 @@ export const leftHook = () => {
     openWindowsList,
     editInfo,
     currentBadge,
-    sessionList,
-    msgTotal,
     handleEditing,
     pageJumps,
     openContent,

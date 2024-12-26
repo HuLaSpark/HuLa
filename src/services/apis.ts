@@ -64,7 +64,7 @@ export default {
   addEmoji: (data: { uid: number; expressionUrl: string }) => POST<MessageType>(urls.addEmoji, data),
   /** 获取表情 **/
   getEmoji: (params: { uid: number }) => GET<EmojiItem[]>(urls.getEmoji, { params }),
-  /** 删除id */
+  /** 删除Emoji */
   deleteEmoji: (params: { id: number }) => DELETE<EmojiItem[]>(urls.deleteEmoji, params),
   /** 获取联系人列表 */
   getContactList: (params?: any) => GET<ListResponse<ContactItem>>(urls.getContactList, params),
