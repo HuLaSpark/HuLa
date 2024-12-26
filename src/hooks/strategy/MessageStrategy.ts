@@ -6,6 +6,7 @@ import { Ref } from 'vue'
 import { parseInnerText } from '@/hooks/useCommon.ts'
 import apis from '@/services/apis.ts'
 import { BaseDirectory, open } from '@tauri-apps/plugin-fs'
+import DOMPurify from 'dompurify'
 
 interface MessageStrategy {
   getMsg: (msgInputValue: string, replyValue: any, fileList?: File[]) => any
@@ -84,12 +85,12 @@ class TextMessageStrategyImpl extends AbstractMessageStrategy {
     // 处理回复内容
     if (replyValue.content) {
       const tempDiv = document.createElement('div')
-      tempDiv.innerHTML = msg.content
+      tempDiv.innerHTML = DOMPurify.sanitize(msg.content)
       const replyDiv = tempDiv.querySelector('#replyDiv')
       if (replyDiv) {
         replyDiv.parentNode?.removeChild(replyDiv)
       }
-      tempDiv.innerHTML = this.removeTag(tempDiv.innerHTML)
+      tempDiv.innerHTML = DOMPurify.sanitize(this.removeTag(tempDiv.innerHTML))
       tempDiv.innerHTML = tempDiv.innerHTML.replace(/^\s*&nbsp;/, '')
       msg.content = tempDiv.innerHTML
     }
