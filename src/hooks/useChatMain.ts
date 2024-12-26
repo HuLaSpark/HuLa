@@ -8,6 +8,7 @@ import { useContactStore } from '@/stores/contacts'
 import { useUserStore } from '@/stores/user'
 import { useGlobalStore } from '@/stores/global.ts'
 import { isDiffNow } from '@/utils/ComputedTime.ts'
+import { writeText } from '@tauri-apps/plugin-clipboard-manager'
 
 export const useChatMain = (activeItem?: SessionItem) => {
   const { removeTag, openMsgSession, userUid } = useCommon()
@@ -16,7 +17,7 @@ export const useChatMain = (activeItem?: SessionItem) => {
   const userStore = useUserStore()?.userInfo
   // const userInfo = useUserStore()?.userInfo
   // const chatMessageList = computed(() => chatStore.chatMessageList)
-  const messageOptions = computed(() => chatStore.currentMessageOptions)
+  // const messageOptions = computed(() => chatStore.currentMessageOptions)
   /** 滚动条位置 */
   const scrollTop = ref(-1)
   /** 是否是超级管理员 */
@@ -33,8 +34,6 @@ export const useChatMain = (activeItem?: SessionItem) => {
   const floatFooter = ref(false)
   /** 记录历史消息下标 */
   const historyIndex = ref(0)
-  /** 新消息数 */
-  const newMsgNum = ref(0)
   /** 当前点击的用户的key */
   const selectKey = ref()
   /** 计算出触发页脚后的历史消息下标 */
@@ -120,7 +119,7 @@ export const useChatMain = (activeItem?: SessionItem) => {
       click: (item: any) => {
         tips.value = '删除后将不会出现在你的消息记录中，确定删除吗?'
         modalShow.value = true
-        delIndex.value = item.key
+        delIndex.value = item.message.id
       }
     }
   ])
@@ -130,8 +129,7 @@ export const useChatMain = (activeItem?: SessionItem) => {
       label: '预览',
       icon: 'preview-open',
       click: (item: any) => {
-        const content = items.value[item.key].content
-        handleCopy(content)
+        console.log(item)
       }
     },
     ...commonMenuList.value,
@@ -155,10 +153,9 @@ export const useChatMain = (activeItem?: SessionItem) => {
     {
       label: '复制',
       icon: 'copy',
-      click: (item: any) => {
-        console.log(items.value[item.key].content)
+      click: async (item: any) => {
         const content = items.value[item.key].content
-        handleCopy(content)
+        await handleCopy(content)
       }
     },
     ...commonMenuList.value,
@@ -258,7 +255,7 @@ export const useChatMain = (activeItem?: SessionItem) => {
    * 处理复制事件
    * @param content 复制的内容
    */
-  const handleCopy = (content: string) => {
+  const handleCopy = async (content: string) => {
     // 如果是图片
     // TODO 文件类型的在右键菜单中不设置复制 (nyh -> 2024-04-14 01:14:56)
     if (content.includes('data:image')) {
@@ -280,40 +277,8 @@ export const useChatMain = (activeItem?: SessionItem) => {
       }
     } else {
       // 如果是纯文本
-      navigator.clipboard.writeText(removeTag(content))
+      await writeText(removeTag(content))
     }
-  }
-
-  /** 处理滚动事件(用于页脚显示功能) */
-  const handleScroll = (e: Event) => {
-    const target = e.target as HTMLElement
-    // 获取已滚动的距离，即从顶部到当前滚动位置的距离
-    scrollTop.value = target.scrollTop
-    // 获取整个滚动容器的高度
-    // const scrollHeight = target.scrollHeight
-    // // 获取容器的可视区域高度
-    // const clientHeight = target.clientHeight
-    // 计算距离底部的距离
-    // const distanceFromBottom = scrollHeight - scrollTop.value - clientHeight
-    // 判断是否滚动到顶部
-    requestAnimationFrame(async () => {
-      if (scrollTop.value === 0) {
-        // 记录顶部最后一条消息的下标
-        // historyIndex.value = chatMessageList.value[0].message.id
-        if (messageOptions.value?.isLoading) return
-        await chatStore.loadMore()
-      }
-    })
-    // // 判断是否大于100
-    // if (distanceFromBottom > 100) {
-    //   floatFooter.value = true
-    //   // 更新历史消息下标
-    //   historyIndex.value = itemComputed.value
-    // } else {
-    //   floatFooter.value = false
-    //   historyIndex.value = 0
-    //   newMsgNum.value = 0
-    // }
   }
 
   /**
@@ -326,9 +291,7 @@ export const useChatMain = (activeItem?: SessionItem) => {
 
   /** 删除信息事件 */
   const handleConfirm = () => {
-    // 根据key找到items中对应的下标
-    const index = items.value.findIndex((item) => item.key === delIndex.value)
-    items.value.splice(index, 1)
+    chatStore.deleteMsg(delIndex.value)
     modalShow.value = false
   }
 
@@ -349,13 +312,11 @@ export const useChatMain = (activeItem?: SessionItem) => {
   }
 
   return {
-    handleScroll,
     handleMsgClick,
     handleConfirm,
     handleItemType,
     items,
     activeBubble,
-    newMsgNum,
     floatFooter,
     historyIndex,
     tips,

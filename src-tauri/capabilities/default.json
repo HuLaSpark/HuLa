@@ -1,6 +1,6 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
-  "identifier": "default",
+  "identifier": "default-capability",
   "description": "Capability for the main window",
   "windows": ["*"],
   "permissions": [
@@ -33,6 +33,8 @@
     "core:webview:allow-webview-size",
     "core:event:default",
     "core:event:allow-listen",
+    "core:image:default",
+    "core:image:allow-rgba",
     "os:default",
     "os:allow-os-type",
     "os:allow-arch",
@@ -41,15 +43,17 @@
     "process:default",
     "process:allow-exit",
     "clipboard-manager:allow-clear",
+    "clipboard-manager:allow-read-image",
+    "clipboard-manager:allow-read-text",
+    "clipboard-manager:allow-write-html",
     "clipboard-manager:allow-write-image",
+    "clipboard-manager:allow-write-text",
     "http:allow-fetch",
     "http:allow-fetch-cancel",
     "http:allow-fetch-read-body",
     "http:allow-fetch-send",
     "core:tray:default",
     "core:tray:allow-get-by-id",
-    "shell:default",
-    "shell:allow-open",
     "autostart:allow-enable",
     "autostart:allow-disable",
     "autostart:allow-is-enabled",
@@ -59,6 +63,52 @@
     "sql:allow-execute",
     "sql:allow-select",
     "sql:allow-close",
+    "shell:default",
+    "shell:allow-open",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "powershell",
+          "cmd": "powershell",
+          "args":true
+        },
+        {
+          "name": "systemPath",
+          "cmd": "cmd",
+          "args": [
+            "-c",
+            {
+              "validator": "\\S+"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "identifier":"fs:write-files",
+      "allow": [{"path": "**"}]
+    },
+    {
+      "identifier":"fs:allow-mkdir",
+      "allow": [{"path": "**"}]
+    },
+    {
+      "identifier":"fs:read-dirs",
+      "allow": [{"path": "**"}]
+    },
+    {
+      "identifier":"fs:read-files",
+      "allow": [{"path": "**"}]
+    },
+    {
+      "identifier":"fs:allow-copy-file",
+      "allow": [{"path": "**"}]
+    },
+    {
+      "identifier":"fs:allow-read-text-file",
+      "allow": [{"path": "**"}]
+    },
     {
       "identifier": "http:default",
       "allow": [

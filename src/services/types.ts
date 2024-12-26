@@ -27,6 +27,8 @@ export type LoginUserReq = {
 }
 
 export type RegisterUserReq = {
+  /** 默认随机头像 */
+  avatar: string
   /** 昵称 */
   name: string
   /** 账号 */
@@ -425,6 +427,8 @@ export type SessionItem = {
   type: RoomTypeEnum
   /** 未读数 */
   unreadCount: number
+  /** 在线状态 1在线 2离线 */
+  activeStatus?: OnlineEnum
 }
 
 /** 消息已读未读数列表项 */

@@ -1,16 +1,4 @@
 <template>
-  <!-- 消息内容到最顶部提示 -->
-  <div
-    class="absolute-x-center top-20px"
-    v-if="!messageOptions?.isLoading && !isOnline && chatMessageList?.length === 0">
-    <span v-if="chatStore.isGroup" class="text-(14px #909090)">暂无消息，快来发送第一条消息吧~</span>
-    <span v-else class="text-(14px #909090)">你们已成功添加为好友，现在可以开始聊天了!</span>
-  </div>
-  <!-- 加载中提示 -->
-  <n-flex justify="center" class="absolute-x-center pt-10px h-30px" v-if="messageOptions?.isLoading">
-    <img class="size-16px" src="@/assets/img/loading-one.svg" alt="" />
-    <span class="text-(14px #909090)">加载中</span>
-  </n-flex>
   <!-- 网络断开提示 -->
   <n-flex
     v-if="!isOnline"
@@ -20,306 +8,330 @@
     <svg class="size-16px"><use href="#cloudError"></use></svg>
     当前网络不可用，请检查你的网络设置
   </n-flex>
-  <!-- 中间聊天内容(使用虚拟列表) -->
-  <n-virtual-list
-    id="image-chat-main"
-    ref="virtualListInst"
-    @scroll="handleScroll($event)"
-    style="max-height: calc(100vh - 260px)"
-    :class="{ 'right-1px': activeItem.type === RoomTypeEnum.SINGLE }"
-    class="relative h-100vh"
-    ignore-item-resize
-    item-resizable
-    :padding-top="10"
-    scroll-mode="viewport"
-    :item-size="itemSize"
-    :items="chatMessageList">
-    <template #default="{ item, index }">
-      <n-flex
-        vertical
-        :key="index"
-        class="flex-y-center"
-        :class="[
-          item.message.type === MsgEnum.RECALL ? 'min-h-22px' : 'min-h-62px',
-          chatStore.isGroup ? 'p-[14px_20px]' : 'chat-single p-[4px_20px_10px_20px]',
-          { 'active-reply': activeReply === item.message.id }
-        ]">
-        <!-- 信息间隔时间 -->
-        <span class="text-(12px #909090) select-none p-4px" v-if="item.timeBlock">
-          {{ item.timeBlock }}
-        </span>
-        <!--  消息为撤回消息  -->
-        <div v-if="item.message.type === MsgEnum.RECALL">
-          <template v-if="chatStore.isGroup">
-            <n-flex align="center" :size="6" v-if="item.fromUser.uid === userUid">
-              <p class="text-(12px #909090) select-none cursor-default">你撤回了一条消息</p>
-              <p
-                v-if="canReEdit(item.message.id)"
-                class="text-(12px #13987f) select-none cursor-pointer"
-                @click="handleReEdit(item.message.id)">
-                重新编辑
-              </p>
-            </n-flex>
-            <span v-else class="text-12px color-#909090 select-none" v-html="item.message.body"></span>
-          </template>
-          <template v-else>
-            <n-flex align="center" :size="6">
-              <p class="text-(12px #909090) select-none cursor-default">
-                {{ item.fromUser.uid === userUid ? '你撤回了一条消息' : '对方撤回了一条消息' }}
-              </p>
-              <p
-                v-if="canReEdit(item.message.id)"
-                class="text-(12px #13987f) select-none cursor-pointer"
-                @click="handleReEdit(item.message.id)">
-                重新编辑
-              </p>
-            </n-flex>
-          </template>
-        </div>
-        <!-- 好友或者群聊的信息 -->
-        <div
-          v-else
-          class="flex flex-col w-full"
-          :class="[{ 'items-end': item.fromUser.uid === userUid }, chatStore.isGroup ? 'gap-18px' : 'gap-2px']">
-          <!-- 信息时间(单聊) -->
-          <div
-            v-if="!chatStore.isGroup"
-            class="text-(12px #909090) h-12px w-fit select-none"
-            :class="
-              item.fromUser.uid === userUid
-                ? activeReply === item.message.id
-                  ? 'pr-68px'
-                  : 'pr-42px'
-                : activeReply === item.message.id
-                  ? 'pl-68px'
-                  : 'pl-42px'
-            ">
-            <Transition name="fade">
-              <span v-if="hoverBubble.key === item.message.id">
-                {{ formatTimestamp(item.message.sendTime, true) }}
-              </span>
-            </Transition>
+
+  <!-- 加载中提示 -->
+  <n-flex justify="center" class="box-border pt-10px" v-if="messageOptions?.isLoading && isLoadingMore">
+    <img class="size-16px" src="@/assets/img/loading.svg" alt="" />
+    <span class="text-(14px #909090)">加载中</span>
+  </n-flex>
+
+  <Transition name="chat-init" appear mode="out-in" @after-leave="handleTransitionComplete">
+    <!-- 初次加载的骨架屏 -->
+    <n-flex
+      v-if="messageOptions?.isLoading && !messageOptions?.cursor"
+      vertical
+      :size="18"
+      style="max-height: calc(100vh - 260px)"
+      class="relative h-100vh box-border p-20px">
+      <n-flex justify="end">
+        <n-skeleton style="border-radius: 14px" height="40px" width="46%" :sharp="false" />
+        <n-skeleton height="40px" circle />
+      </n-flex>
+
+      <n-flex>
+        <n-skeleton height="40px" circle />
+        <n-skeleton style="border-radius: 14px" height="60px" width="58%" :sharp="false" />
+      </n-flex>
+
+      <n-flex>
+        <n-skeleton height="40px" circle />
+        <n-skeleton style="border-radius: 14px" height="40px" width="26%" :sharp="false" />
+      </n-flex>
+
+      <n-flex justify="end">
+        <n-skeleton style="border-radius: 14px" height="40px" width="60%" :sharp="false" />
+        <n-skeleton height="40px" circle />
+      </n-flex>
+    </n-flex>
+
+    <!-- 中间聊天内容(使用虚拟列表) -->
+    <VirtualList
+      v-else
+      id="image-chat-main"
+      ref="virtualListInst"
+      :items="chatMessageList"
+      :estimated-item-height="itemSize"
+      :buffer="5"
+      @scroll="handleScroll"
+      @scroll-direction-change="handleScrollDirectionChange"
+      :style="{ maxHeight: `calc(100vh - ${messageOptions?.isLoading && isLoadingMore ? '286px' : '260px'})` }"
+      :class="{ 'right-1px': activeItem.type === RoomTypeEnum.SINGLE }">
+      <template #default="{ item, index }">
+        <n-flex
+          vertical
+          :key="index"
+          class="flex-y-center"
+          :class="[
+            item.message.type === MsgEnum.RECALL ? 'min-h-22px' : 'min-h-62px',
+            chatStore.isGroup ? 'p-[14px_20px]' : 'chat-single p-[4px_20px_10px_20px]',
+            { 'active-reply': activeReply === item.message.id }
+          ]">
+          <!-- 信息间隔时间 -->
+          <span class="text-(12px #909090) select-none p-4px" v-if="item.timeBlock">
+            {{ item.timeBlock }}
+          </span>
+          <!--  消息为撤回消息  -->
+          <div v-if="item.message.type === MsgEnum.RECALL">
+            <template v-if="chatStore.isGroup">
+              <n-flex align="center" :size="6" v-if="item.fromUser.uid === userUid">
+                <p class="text-(12px #909090) select-none cursor-default">你撤回了一条消息</p>
+                <p
+                  v-if="canReEdit(item.message.id)"
+                  class="text-(12px #13987f) select-none cursor-pointer"
+                  @click="handleReEdit(item.message.id)">
+                  重新编辑
+                </p>
+              </n-flex>
+              <span v-else class="text-12px color-#909090 select-none" v-html="item.message.body"></span>
+            </template>
+            <template v-else>
+              <n-flex align="center" :size="6">
+                <p class="text-(12px #909090) select-none cursor-default">
+                  {{ item.fromUser.uid === userUid ? '你撤回了一条消息' : '对方撤回了一条消息' }}
+                </p>
+                <p
+                  v-if="canReEdit(item.message.id)"
+                  class="text-(12px #13987f) select-none cursor-pointer"
+                  @click="handleReEdit(item.message.id)">
+                  重新编辑
+                </p>
+              </n-flex>
+            </template>
           </div>
-          <div class="flex items-start flex-1" :class="item.fromUser.uid === userUid ? 'flex-row-reverse' : ''">
-            <!-- 回复消息提示的箭头 -->
-            <svg
-              v-if="activeReply === item.message.id"
-              class="size-16px pt-4px color-#909090"
-              :class="item.fromUser.uid === userUid ? 'ml-8px' : 'mr-8px'">
-              <use :href="item.fromUser.uid === userUid ? `#corner-down-left` : `#corner-down-right`"></use>
-            </svg>
-            <!-- 头像  -->
-            <n-popover
-              @update:show="handlePopoverUpdate(item.message.id)"
-              trigger="click"
-              placement="right"
-              :show-arrow="false"
-              v-model:show="infoPopover"
-              style="padding: 0; background: var(--bg-info); backdrop-filter: blur(10px)">
-              <template #trigger>
-                <ContextMenu
-                  @select="$event.click(item, 'Main')"
-                  :content="item"
-                  :menu="chatStore.isGroup ? optionsList : void 0"
-                  :special-menu="report">
-                  <!-- 没有头像时候显示 -->
-                  <n-avatar
-                    round
-                    v-if="avatarExists(item.fromUser.uid)"
-                    :size="34"
-                    :color="'#909090'"
-                    @click="selectKey = item.message.id"
-                    class="select-none"
-                    :src="getAvatarSrc(item.fromUser.uid)"
-                    :class="item.fromUser.uid === userUid ? '' : 'mr-10px'">
-                    {{ avatarExists(item.fromUser.uid) }}
-                  </n-avatar>
-                  <!-- 存在头像时候显示 -->
-                  <n-avatar
-                    round
-                    v-else
-                    :size="34"
-                    @click="selectKey = item.message.id"
-                    class="select-none"
-                    :src="getAvatarSrc(item.fromUser.uid)"
-                    :class="item.fromUser.uid === userUid ? '' : 'mr-10px'">
-                  </n-avatar>
-                </ContextMenu>
-              </template>
-              <!-- 用户个人信息框 -->
-              <InfoPopover v-if="selectKey === item.message.id" :uid="item.fromUser.uid" />
-            </n-popover>
-            <n-flex
-              vertical
-              justify="center"
-              :size="6"
-              class="color-[--text-color] flex-1"
-              :class="item.fromUser.uid === userUid ? 'items-end mr-10px' : ''">
-              <n-flex
-                :size="4"
-                align="center"
-                :style="item.fromUser.uid === userUid ? 'flex-direction: row-reverse' : ''">
-                <ContextMenu
-                  @select="$event.click(item, 'Main')"
-                  :content="item"
-                  :menu="chatStore.isGroup ? optionsList : void 0"
-                  :special-menu="report">
-                  <n-flex
-                    :size="6"
-                    class="select-none"
-                    align="center"
-                    v-if="chatStore.isGroup"
-                    :style="item.fromUser.uid === userUid ? 'flex-direction: row-reverse' : ''">
-                    <!-- 用户徽章 -->
-                    <n-popover
-                      v-if="useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.img"
-                      trigger="hover">
-                      <template #trigger>
-                        <img
-                          class="size-18px"
-                          :src="useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.img"
-                          alt="badge" />
-                      </template>
-                      <span>{{ useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.describe }}</span>
-                    </n-popover>
-                    <!-- 用户名 -->
-                    <span class="text-12px select-none color-#909090 inline-block align-top">
-                      {{ useUserInfo(item.fromUser.uid).value.name }}
-                    </span>
-                    <!-- 消息归属地 -->
-                    <span class="text-(12px #909090)">
-                      ({{ useUserInfo(item.fromUser.uid).value.locPlace || '未知' }})
-                    </span>
-                  </n-flex>
-                </ContextMenu>
-                <!-- 群主 -->
-                <!--                <div-->
-                <!--                  v-if="chatStore.isGroup && item.message.id === 1"-->
-                <!--                  class="flex p-4px rounded-4px bg-#f5dadf size-fit select-none">-->
-                <!--                  <span class="text-(10px #d5304f)">群主</span>-->
-                <!--                </div>-->
-                <!-- 管理员 -->
-                <!--                <div-->
-                <!--                  v-if="chatStore.isGroup && item.message.id === 2"-->
-                <!--                  class="flex p-4px rounded-4px bg-#13987F66 size-fit select-none">-->
-                <!--                  <span class="text-(10px #13987f)">管理员</span>-->
-                <!--                </div>-->
-                <!-- 信息时间(群聊) -->
-                <Transition name="fade">
-                  <span v-if="chatStore.isGroup && hoverBubble.key === item.message.id" class="text-(12px #909090)">
-                    {{ formatTimestamp(item.message.sendTime, true) }}
-                  </span>
-                </Transition>
-              </n-flex>
-              <!--  气泡样式  -->
-              <ContextMenu
-                :content="item"
-                @contextmenu="handleMacSelect"
-                @mouseenter="handleMouseEnter(item.message.id)"
-                @mouseleave="handleMouseLeave"
-                class="w-fit relative"
-                :data-key="item.fromUser.uid === userUid ? `U${item.message.id}` : `Q${item.message.id}`"
-                @select="$event.click(item)"
-                :menu="handleItemType(item.message.type)"
-                :emoji="chatStore.isGroup ? emojiList : []"
-                :special-menu="specialMenuList"
-                @reply-emoji="handleEmojiSelect($event.label, item)"
-                @click="handleMsgClick(item)">
-                <!-- 渲染消息内容体 TODO: 等完善消息类型后逐渐替换使用RenderMessage -->
-                <RenderMessage
-                  :class="[
-                    { active: activeBubble === item.message.id },
-                    item.fromUser.uid === userUid ? 'bubble-oneself' : 'bubble'
-                  ]"
-                  v-if="item.message.type === MsgEnum.TEXT"
-                  :message="item.message" />
-
-                <!--  消息为为图片类型(不固定宽度和高度), 多张图片时渲染  -->
-                <n-image-group v-if="Array.isArray(item.content) && item.type === MsgEnum.IMAGE">
-                  <n-flex class="photo-wall" vertical>
-                    <n-image
-                      class="select-none"
-                      v-for="(src, index) in item.content"
-                      :key="index"
-                      :img-props="{ style: { maxWidth: '325px', maxHeight: '165px', width: '100%', height: 'auto' } }"
-                      show-toolbar-tooltip
-                      style="border-radius: 8px"
-                      :fallback-src="'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg'"
-                      :src="src"></n-image>
-                  </n-flex>
-                </n-image-group>
-
-                <!-- 单张图片时渲染 -->
-                <n-image
-                  class="select-none"
-                  v-if="typeof item.content === 'string' && item.type === MsgEnum.IMAGE"
-                  :img-props="{ style: { maxWidth: '325px', maxHeight: '165px', width: '100%', height: 'auto' } }"
-                  show-toolbar-tooltip
-                  style="border-radius: 8px"
-                  :fallback-src="'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg'"
-                  :src="item.content"></n-image>
-
-                <!-- 消息为文件 -->
-                <n-image
-                  class="select-none"
-                  v-if="typeof item.content === 'string' && item.type === MsgEnum.FILE"
-                  :img-props="{ style: { maxWidth: '325px', maxHeight: '165px' } }"
-                  show-toolbar-tooltip
-                  preview-disabled
-                  style="border-radius: 8px"
-                  :src="item.content"></n-image>
-                <!-- 消息状态指示器 -->
-                <div v-if="item.fromUser.uid === userUid" class="absolute -left-6 top-2">
-                  <n-icon v-if="item.message.status === MessageStatusEnum.SENDING" class="text-gray-400">
-                    <img class="size-16px" src="@/assets/img/loading-one.svg" alt="" />
-                  </n-icon>
-                  <n-icon
-                    v-if="item.message.status === MessageStatusEnum.FAILED"
-                    class="text-red-500 cursor-pointer"
-                    @click.stop="handleRetry(item)">
-                    <svg class="size-16px"><use href="#cloudError"></use></svg>
-                  </n-icon>
-                </div>
-              </ContextMenu>
-
-              <!-- 回复的内容 -->
-              <n-flex
-                align="center"
-                :size="6"
-                v-if="item.message.body.reply"
-                @click="jumpToReplyMsg(item.message.body.reply.id)"
-                class="reply-bubble relative w-fit custom-shadow">
-                <svg class="size-14px">
-                  <use href="#to-top"></use>
-                </svg>
-                <span>{{ `${item.message.body.reply.username}：` }}</span>
-                <span class="content-span">
-                  {{ item.message.body.reply.body }}
+          <!-- 好友或者群聊的信息 -->
+          <div
+            v-else
+            class="flex flex-col w-full"
+            :class="[{ 'items-end': item.fromUser.uid === userUid }, chatStore.isGroup ? 'gap-18px' : 'gap-2px']">
+            <!-- 信息时间(单聊) -->
+            <div
+              v-if="!chatStore.isGroup"
+              class="text-(12px #909090) h-12px w-fit select-none"
+              :class="
+                item.fromUser.uid === userUid
+                  ? activeReply === item.message.id
+                    ? 'pr-68px'
+                    : 'pr-42px'
+                  : activeReply === item.message.id
+                    ? 'pl-68px'
+                    : 'pl-42px'
+              ">
+              <Transition name="fade-single">
+                <span v-if="hoverBubble.key === item.message.id">
+                  {{ formatTimestamp(item.message.sendTime, true) }}
                 </span>
-                <div v-if="item.message.body.reply.imgCount" class="reply-img-sub">
-                  {{ item.message.body.reply.imgCount }}
-                </div>
-              </n-flex>
-
-              <!-- 群聊回复emoji表情 -->
-              <n-flex :size="4" v-if="chatStore.isGroup && item.emojiList">
+              </Transition>
+            </div>
+            <div class="flex items-start flex-1" :class="item.fromUser.uid === userUid ? 'flex-row-reverse' : ''">
+              <!-- 回复消息提示的箭头 -->
+              <svg
+                v-if="activeReply === item.message.id"
+                class="size-16px pt-4px color-#909090"
+                :class="item.fromUser.uid === userUid ? 'ml-8px' : 'mr-8px'">
+                <use :href="item.fromUser.uid === userUid ? `#corner-down-left` : `#corner-down-right`"></use>
+              </svg>
+              <!-- 头像  -->
+              <n-popover
+                @update:show="handlePopoverUpdate(item.message.id)"
+                trigger="click"
+                placement="right"
+                :show-arrow="false"
+                v-model:show="infoPopover"
+                style="padding: 0; background: var(--bg-info); backdrop-filter: blur(10px)">
+                <template #trigger>
+                  <ContextMenu
+                    @select="$event.click(item, 'Main')"
+                    :content="item"
+                    :menu="chatStore.isGroup ? optionsList : void 0"
+                    :special-menu="report">
+                    <!-- 存在头像时候显示 -->
+                    <n-avatar
+                      round
+                      :size="34"
+                      @click="selectKey = item.message.id"
+                      class="select-none"
+                      :src="getAvatarSrc(item.fromUser.uid)"
+                      :class="item.fromUser.uid === userUid ? '' : 'mr-10px'" />
+                  </ContextMenu>
+                </template>
+                <!-- 用户个人信息框 -->
+                <InfoPopover v-if="selectKey === item.message.id" :uid="item.fromUser.uid" />
+              </n-popover>
+              <n-flex
+                vertical
+                justify="center"
+                :size="6"
+                class="color-[--text-color] flex-1"
+                :class="item.fromUser.uid === userUid ? 'items-end mr-10px' : ''">
                 <n-flex
-                  :size="2"
+                  :size="4"
                   align="center"
-                  class="emoji-reply-bubble"
-                  @click.stop="cancelReplyEmoji(item, index)"
-                  v-for="(emoji, index) in item.emojiList"
-                  :key="index">
-                  {{ emoji.label }}
-                  <span class="text-(12px #eee)">{{ emoji.count }}</span>
+                  :style="item.fromUser.uid === userUid ? 'flex-direction: row-reverse' : ''">
+                  <ContextMenu
+                    @select="$event.click(item, 'Main')"
+                    :content="item"
+                    :menu="chatStore.isGroup ? optionsList : void 0"
+                    :special-menu="report">
+                    <n-flex
+                      :size="6"
+                      class="select-none"
+                      align="center"
+                      v-if="chatStore.isGroup"
+                      :style="item.fromUser.uid === userUid ? 'flex-direction: row-reverse' : ''">
+                      <!-- 用户徽章 -->
+                      <n-popover
+                        v-if="useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.img"
+                        trigger="hover">
+                        <template #trigger>
+                          <img
+                            class="size-18px"
+                            :src="useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.img"
+                            alt="badge" />
+                        </template>
+                        <span>{{
+                          useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.describe
+                        }}</span>
+                      </n-popover>
+                      <!-- 用户名 -->
+                      <span class="text-12px select-none color-#909090 inline-block align-top">
+                        {{ useUserInfo(item.fromUser.uid).value.name }}
+                      </span>
+                      <!-- 消息归属地 -->
+                      <span class="text-(12px #909090)">
+                        ({{ useUserInfo(item.fromUser.uid).value.locPlace || '未知' }})
+                      </span>
+                    </n-flex>
+                  </ContextMenu>
+                  <!-- 群主 -->
+                  <!--                <div-->
+                  <!--                  v-if="chatStore.isGroup && item.message.id === 1"-->
+                  <!--                  class="flex p-4px rounded-4px bg-#f5dadf size-fit select-none">-->
+                  <!--                  <span class="text-(10px #d5304f)">群主</span>-->
+                  <!--                </div>-->
+                  <!-- 管理员 -->
+                  <!--                <div-->
+                  <!--                  v-if="chatStore.isGroup && item.message.id === 2"-->
+                  <!--                  class="flex p-4px rounded-4px bg-#13987F66 size-fit select-none">-->
+                  <!--                  <span class="text-(10px #13987f)">管理员</span>-->
+                  <!--                </div>-->
+                  <!-- 信息时间(群聊) -->
+                  <Transition name="fade-group">
+                    <span v-if="chatStore.isGroup && hoverBubble.key === item.message.id" class="text-(12px #909090)">
+                      {{ formatTimestamp(item.message.sendTime, true) }}
+                    </span>
+                  </Transition>
+                </n-flex>
+                <!--  气泡样式  -->
+                <ContextMenu
+                  :content="item"
+                  @contextmenu="handleMacSelect"
+                  @mouseenter="handleMouseEnter(item.message.id)"
+                  @mouseleave="handleMouseLeave"
+                  class="w-fit relative"
+                  :style="{ '--bubble-max-width': chatStore.isGroup ? '32vw' : '50vw' }"
+                  @select="$event.click(item)"
+                  :menu="handleItemType(item.message.type)"
+                  :emoji="chatStore.isGroup ? emojiList : []"
+                  :special-menu="specialMenuList"
+                  @reply-emoji="handleEmojiSelect($event.label, item)"
+                  @click="handleMsgClick(item)">
+                  <!-- 渲染消息内容体 TODO: 等完善消息类型后逐渐替换使用RenderMessage -->
+                  <RenderMessage
+                    :class="[
+                      { active: activeBubble === item.message.id },
+                      item.fromUser.uid === userUid ? 'bubble-oneself' : 'bubble'
+                    ]"
+                    v-if="item.message.type === MsgEnum.TEXT"
+                    :message="item.message" />
+
+                  <!--  消息为为图片类型(不固定宽度和高度), 多张图片时渲染  -->
+                  <n-image-group v-if="Array.isArray(item.content) && item.type === MsgEnum.IMAGE">
+                    <n-flex class="photo-wall" vertical>
+                      <n-image
+                        class="select-none"
+                        v-for="(src, index) in item.content"
+                        :key="index"
+                        :img-props="{ style: { maxWidth: '325px', maxHeight: '165px', width: '100%', height: 'auto' } }"
+                        show-toolbar-tooltip
+                        style="border-radius: 8px"
+                        :fallback-src="'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg'"
+                        :src="src"></n-image>
+                    </n-flex>
+                  </n-image-group>
+
+                  <!-- 单张图片时渲染 -->
+                  <n-image
+                    class="select-none"
+                    v-if="typeof item.content === 'string' && item.type === MsgEnum.IMAGE"
+                    :img-props="{ style: { maxWidth: '325px', maxHeight: '165px', width: '100%', height: 'auto' } }"
+                    show-toolbar-tooltip
+                    style="border-radius: 8px"
+                    :fallback-src="'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg'"
+                    :src="item.content"></n-image>
+
+                  <!-- 消息为文件 -->
+                  <n-image
+                    class="select-none"
+                    v-if="typeof item.content === 'string' && item.type === MsgEnum.FILE"
+                    :img-props="{ style: { maxWidth: '325px', maxHeight: '165px' } }"
+                    show-toolbar-tooltip
+                    preview-disabled
+                    style="border-radius: 8px"
+                    :src="item.content"></n-image>
+                  <!-- 消息状态指示器 -->
+                  <div v-if="item.fromUser.uid === userUid" class="absolute -left-6 top-2">
+                    <n-icon v-if="item.message.status === MessageStatusEnum.SENDING" class="text-gray-400">
+                      <img class="size-16px" src="@/assets/img/loading-one.svg" alt="" />
+                    </n-icon>
+                    <n-icon
+                      v-if="item.message.status === MessageStatusEnum.FAILED"
+                      class="text-red-500 cursor-pointer"
+                      @click.stop="handleRetry(item)">
+                      <svg class="size-16px"><use href="#cloudError"></use></svg>
+                    </n-icon>
+                  </div>
+                </ContextMenu>
+
+                <!-- 回复的内容 -->
+                <n-flex
+                  align="center"
+                  :size="6"
+                  v-if="item.message.body.reply"
+                  @click="jumpToReplyMsg(item.message.body.reply.id)"
+                  class="reply-bubble relative w-fit custom-shadow">
+                  <svg class="size-14px">
+                    <use href="#to-top"></use>
+                  </svg>
+                  <n-avatar class="reply-avatar" round :size="20" :src="getAvatarSrc(item.message.body.reply.uid)" />
+                  <span>{{ `${item.message.body.reply.username}：` }}</span>
+                  <span class="content-span">
+                    {{ item.message.body.reply.body }}
+                  </span>
+                  <div v-if="item.message.body.reply.imgCount" class="reply-img-sub">
+                    {{ item.message.body.reply.imgCount }}
+                  </div>
+                </n-flex>
+
+                <!-- 群聊回复emoji表情 -->
+                <n-flex :size="4" v-if="chatStore.isGroup && item.emojiList">
+                  <n-flex
+                    :size="2"
+                    align="center"
+                    class="emoji-reply-bubble"
+                    @click.stop="cancelReplyEmoji(item, index)"
+                    v-for="(emoji, index) in item.emojiList"
+                    :key="index">
+                    {{ emoji.label }}
+                    <span class="text-(12px #eee)">{{ emoji.count }}</span>
+                  </n-flex>
                 </n-flex>
               </n-flex>
-            </n-flex>
+            </div>
           </div>
-        </div>
-      </n-flex>
-    </template>
-  </n-virtual-list>
+        </n-flex>
+      </template>
+    </VirtualList>
+  </Transition>
 
   <!-- 弹出框 -->
   <n-modal v-model:show="modalShow" class="w-350px border-rd-8px">
@@ -362,15 +374,15 @@
   <!-- 悬浮按钮提示(底部悬浮) -->
   <footer
     class="float-footer"
-    v-if="floatFooter && newMsgNum > 0"
+    v-if="floatFooter && currentNewMsgCount?.count && currentNewMsgCount.count > 0"
     :class="chatStore.isGroup ? 'right-220px' : 'right-50px'">
-    <div class="float-box" :class="{ max: newMsgNum > 99 }" @click="scrollBottom">
+    <div class="float-box" :class="{ max: currentNewMsgCount?.count > 99 }" @click="scrollBottom">
       <n-flex justify="space-between" align="center">
-        <n-icon :color="newMsgNum > 99 ? '#ce304f' : '#13987f'">
+        <n-icon :color="currentNewMsgCount?.count > 99 ? '#ce304f' : '#13987f'">
           <svg><use href="#double-down"></use></svg>
         </n-icon>
-        <span class="text-12px" :class="{ 'color-#ce304f': newMsgNum > 99 }">
-          {{ newMsgNum > 99 ? '99+' : newMsgNum }}条新消息
+        <span class="text-12px" :class="{ 'color-#ce304f': currentNewMsgCount?.count > 99 }">
+          {{ currentNewMsgCount?.count > 99 ? '99+' : currentNewMsgCount?.count }}条新消息
         </span>
       </n-flex>
     </div>
@@ -382,9 +394,7 @@ import { type MessageType, SessionItem } from '@/services/types.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { usePopover } from '@/hooks/usePopover.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
-import { listen } from '@tauri-apps/api/event'
 import { useChatMain } from '@/hooks/useChatMain.ts'
-import { VirtualListInst } from 'naive-ui'
 import { delay } from 'lodash-es'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { formatTimestamp, isDiffNow } from '@/utils/ComputedTime.ts'
@@ -393,16 +403,30 @@ import { useChatStore } from '@/stores/chat.ts'
 import { type } from '@tauri-apps/plugin-os'
 import { useUserStore } from '@/stores/user.ts'
 import { useNetwork } from '@vueuse/core'
+import { AvatarUtils } from '@/utils/avatarUtils'
+import VirtualList, { type VirtualListExpose } from '@/components/common/VirtualList.vue'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { useTauriListener } from '@/hooks/useTauriListener'
 
+const appWindow = WebviewWindow.getCurrent()
+const { addListener } = useTauriListener()
 const { activeItem } = defineProps<{
   activeItem: SessionItem
 }>()
-const activeItemRef = ref<SessionItem>({ ...activeItem })
+const activeItemRef = shallowRef<SessionItem>({ ...activeItem })
 const chatStore = useChatStore()
 const userStore = useUserStore()
-// const userInfo = useUserStore()?.userInfo
-/** 消息列表 */
+
+// 记录当前滚动位置相关信息
+const isAutoScrolling = ref(false)
+
+/** 记录是否正在向上滚动 */
+const isScrollingUp = ref(false)
+// 添加标记，用于识别是否正在加载历史消息
+const isLoadingMore = ref(false)
+
 const chatMessageList = computed(() => chatStore.chatMessageList)
+const currentNewMsgCount = computed(() => chatStore.currentNewMsgCount)
 const messageOptions = computed(() => chatStore.currentMessageOptions)
 const { createWebviewWindow } = useWindow()
 /** 是否是超级管理员 */
@@ -412,9 +436,11 @@ const activeReply = ref(-1)
 /** item最小高度，用于计算滚动大小和位置 */
 const itemSize = computed(() => (chatStore.isGroup ? 90 : 76))
 /** 虚拟列表 */
-const virtualListInst = ref<VirtualListInst>()
+const virtualListInst = useTemplateRef<VirtualListExpose>('virtualListInst')
 /** 手动触发Popover显示 */
 const infoPopover = ref(false)
+// 记录 requestAnimationFrame 的返回值
+const rafId = ref<number>()
 /** 鼠标悬浮的气泡显示对应的时间 */
 const hoverBubble = ref<{
   key: number
@@ -429,12 +455,10 @@ const { isOnline } = useNetwork()
 const isMac = computed(() => type() === 'macos')
 const { userUid } = useCommon()
 const {
-  handleScroll,
   handleMsgClick,
   handleConfirm,
   handleItemType,
   activeBubble,
-  newMsgNum,
   floatFooter,
   tips,
   modalShow,
@@ -449,39 +473,131 @@ const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-main')
 
 watch(activeItemRef, (value, oldValue) => {
   if (oldValue.roomId !== value.roomId) {
+    // 等待 DOM 更新完成后再滚动
     nextTick(() => {
-      console.log('切换房间')
-      virtualListInst.value?.scrollTo({ position: 'bottom', debounce: true })
+      // 给予足够的时间让消息加载和渲染
+      virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
     })
   }
 })
 
-watch(chatMessageList, (value, oldValue) => {
-  if (scrollTop.value === 0 && value.length > 20) {
+watch(
+  chatMessageList,
+  (value, oldValue) => {
+    // 消息列表变长的情况
+    if (value.length > oldValue.length) {
+      // 获取最新消息
+      const latestMessage = value[value.length - 1]
+
+      // 如果正在加载历史消息，优先处理历史消息的滚动
+      if (isLoadingMore.value) {
+        if (scrollTop.value < 10) {
+          nextTick(() => {
+            virtualListInst.value?.scrollTo({ index: value.length - oldValue.length })
+          })
+        }
+        return
+      }
+
+      // 优先级1：用户发送的消息，始终滚动到底部
+      if (latestMessage?.fromUser?.uid === userUid.value) {
+        virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
+        return
+      }
+
+      // 优先级2：已经在底部时的新消息
+      const container = virtualListInst.value?.getContainer()
+      if (container) {
+        const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight
+        if (distanceFromBottom <= 300) {
+          virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'smooth' })
+          return
+        }
+      }
+
+      // 其他情况：增加新消息计数
+    }
+  },
+  { deep: false }
+)
+
+/** 处理滚动方向变化 */
+const handleScrollDirectionChange = (direction: 'up' | 'down') => {
+  isScrollingUp.value = direction === 'up'
+}
+
+/** 处理滚动事件(用于页脚显示功能) */
+const handleScroll = () => {
+  if (isAutoScrolling.value) return // 如果是自动滚动，不处理
+  const container = virtualListInst.value?.getContainer()
+  if (!container) return
+
+  // 获取已滚动的距离
+  scrollTop.value = container.scrollTop
+  // 获取整个滚动容器的高度
+  const scrollHeight = container.scrollHeight
+  // 获取容器的可视区域高度
+  const clientHeight = container.clientHeight
+  // 计算距离底部的距离
+  const distanceFromBottom = scrollHeight - scrollTop.value - clientHeight
+
+  // 存储 requestAnimationFrame 的返回值
+  rafId.value = requestAnimationFrame(async () => {
+    // 处理触顶加载更多
+    if (scrollTop.value === 0) {
+      // 如果正在加载或已经触发了加载，则不重复触发
+      if (messageOptions.value?.isLoading || isLoadingMore.value) return
+
+      // 记录当前的内容高度
+      const oldScrollHeight = container.scrollHeight
+
+      isLoadingMore.value = true
+      // 禁用滚动交互但保持滚动条显示
+      container.style.pointerEvents = 'none'
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      await chatStore.loadMore()
+      // 加载完成后，计算新增内容的高度差，并设置滚动位置
+      nextTick(() => {
+        const newScrollHeight = container.scrollHeight
+        const heightDiff = newScrollHeight - oldScrollHeight
+        if (heightDiff > 0) {
+          container.scrollTop = heightDiff
+        }
+        // 恢复滚动交互
+        nextTick(() => {
+          container.style.pointerEvents = 'auto'
+          isLoadingMore.value = false
+        })
+      })
+    }
+
+    // 处理底部滚动和新消息提示
+    if (distanceFromBottom <= 20) {
+      floatFooter.value = false
+      chatStore.clearNewMsgCount()
+    } else {
+      floatFooter.value = true
+    }
+  })
+}
+
+/** 处理过渡动画完成后的滚动 */
+const handleTransitionComplete = () => {
+  if (!messageOptions.value?.isLoading) {
     nextTick(() => {
-      // 跳转的下标
-      virtualListInst.value?.scrollTo({ index: value.length - oldValue.length, debounce: true })
-    })
-  } else {
-    nextTick(() => {
-      virtualListInst.value?.scrollTo({ position: 'bottom', debounce: true })
+      virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
     })
   }
-})
+}
 
 /** 获取用户头像 */
 const getAvatarSrc = (uid: number) => {
-  return uid === userUid.value ? userStore.userInfo.avatar : useUserInfo(uid).value.avatar
-}
-
-/** 头像是否存在 */
-const avatarExists = (uid: number) => {
-  return getAvatarSrc(uid) ? void 0 : useUserInfo(uid).value.name?.slice(0, 1)
+  const avatar = uid === userUid.value ? userStore.userInfo.avatar : useUserInfo(uid).value.avatar
+  return AvatarUtils.getAvatarUrl(avatar as string)
 }
 
 // 当鼠标进入时触发的处理函数
 const handleMouseEnter = (key: any) => {
-  // 设置定时器，在1600毫秒后更新悬浮气泡的key值
   hoverBubble.value.timer = setTimeout(() => {
     hoverBubble.value.key = key
   }, 1600)
@@ -531,8 +647,12 @@ const handleEmojiSelect = (label: string, item: any) => {
 /** 跳转到回复消息 */
 const jumpToReplyMsg = (key: number) => {
   nextTick(() => {
-    virtualListInst.value?.scrollTo({ key: key })
-    activeReply.value = key
+    // 找到对应消息的索引
+    const messageIndex = chatMessageList.value.findIndex((msg) => msg.message.id === key)
+    if (messageIndex !== -1) {
+      virtualListInst.value?.scrollTo({ index: messageIndex, behavior: 'instant' })
+      activeReply.value = key
+    }
   })
 }
 
@@ -545,7 +665,7 @@ const jumpToReplyMsg = (key: number) => {
 //   // 使用 nextTick 确保虚拟列表渲染完最新的项目后进行滚动
 //   nextTick(() => {
 //     if (!floatFooter.value || id === userUid.value) {
-//       virtualListInst.value?.scrollTo({ position: 'bottom', debounce: true })
+//       virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'auto' })
 //     }
 //     /** data-key标识的气泡,添加前缀用于区分用户消息，不然气泡动画会被覆盖 */
 //     const dataKey = id === userUid.value ? `U${index}` : `Q${index}`
@@ -566,8 +686,10 @@ const jumpToReplyMsg = (key: number) => {
 
 /** 点击后滚动到底部 */
 const scrollBottom = () => {
+  if (!virtualListInst.value) return
+
   nextTick(() => {
-    virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant', debounce: true })
+    virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
   })
 }
 
@@ -635,10 +757,11 @@ const handleReEdit = (msgId: number) => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   nextTick(() => {
-    // 滚动到底部
-    virtualListInst.value?.scrollTo({ position: 'bottom', debounce: true })
+    setTimeout(() => {
+      virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
+    }, 10)
   })
   useMitt.on(MittEnum.SEND_MESSAGE, async (messageType: MessageType) => {
     await chatStore.pushMsg(messageType)
@@ -654,31 +777,22 @@ onMounted(() => {
   useMitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
     activeItemRef.value = event.item
   })
-  listen(EventEnum.SHARE_SCREEN, async () => {
-    await createWebviewWindow('共享屏幕', 'sharedScreen', 840, 840)
-  })
+  await addListener(
+    appWindow.listen(EventEnum.SHARE_SCREEN, async () => {
+      await createWebviewWindow('共享屏幕', 'sharedScreen', 840, 840)
+    })
+  )
   window.addEventListener('click', closeMenu, true)
-  // let index = items.value.length > 0 ? items.value[items.value.length - 1].key : 0
-  //
-  // setInterval(() => {
-  //   index++
-  //   const message = {
-  //     value: '按你说的就撒了大家',
-  //     key: index,
-  //     accountId: activeItem.accountId,
-  //     avatar: 'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg',
-  //     content: '123',
-  //     type: MsgEnum.TEXT,
-  //     reply: null
-  //   }
-  //   items.value.push(message)
-  //   addToDomUpdateQueue(index - 1, activeItem.accountId)
-  // }, 2000)
 })
 
 onUnmounted(() => {
-  clearTimeout(hoverBubble.value.timer)
-  hoverBubble.value.timer = void 0
+  if (rafId.value) {
+    cancelAnimationFrame(rafId.value)
+  }
+  if (hoverBubble.value.timer) {
+    clearTimeout(hoverBubble.value.timer)
+    hoverBubble.value.timer = void 0
+  }
   hoverBubble.value.key = -1
   window.removeEventListener('click', closeMenu, true)
 })

@@ -1,5 +1,5 @@
 <template>
-  <div id="layout" class="flex size-full min-w-310px">
+  <div id="layout" class="flex size-full min-w-310px bg-[--right-bg-color]">
     <Left />
     <Center />
     <Right v-if="!shrinkStatus" />
@@ -20,10 +20,11 @@ import { useContactStore } from '@/stores/contacts.ts'
 import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user'
 import { useChatStore } from '@/stores/chat'
-import { OnStatusChangeType, WsResponseMessageType, WsTokenExpire } from '@/services/wsType.ts'
+import { LoginSuccessResType, OnStatusChangeType, WsResponseMessageType, WsTokenExpire } from '@/services/wsType.ts'
 import { LoginStatus, useWsLoginStore } from '@/stores/ws.ts'
-import type { MarkItemType, RevokedMsgType } from '@/services/types.ts'
+import type { MarkItemType, MessageType, RevokedMsgType } from '@/services/types.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
+import { computedToken } from '@/services/request'
 
 const globalStore = useGlobalStore()
 const contactStore = useContactStore()
@@ -33,7 +34,7 @@ const loginStore = useWsLoginStore()
 const chatStore = useChatStore()
 const { logout } = useLogin()
 // 清空未读消息
-globalStore.unReadMark.newMsgUnreadCount = 0
+// globalStore.unReadMark.newMsgUnreadCount = 0
 const shrinkStatus = ref(false)
 /**
  * event默认如果没有传递值就为true，所以shrinkStatus的值为false就会发生值的变化
@@ -43,28 +44,36 @@ useMitt.on(MittEnum.SHRINK_WINDOW, (event: boolean) => {
   shrinkStatus.value = event
 })
 
-onBeforeMount(() => {
-  // 默认执行一次
-  contactStore.getContactList(true)
-  contactStore.getRequestFriendsList(true)
-})
-
-onMounted(async () => {
-  await getCurrentWebviewWindow().show()
+useMitt.on(WsResponseMessageType.LOGIN_SUCCESS, (data: LoginSuccessResType) => {
+  const { ...rest } = data
+  // 更新一下请求里面的 token.
+  computedToken.clear()
+  computedToken.get()
+  // 自己更新自己上线
+  groupStore.batchUpdateUserStatus([
+    {
+      activeStatus: OnlineEnum.ONLINE,
+      avatar: rest.avatar,
+      lastOptTime: Date.now(),
+      name: rest.name,
+      uid: rest.uid
+    }
+  ])
 })
 useMitt.on(WsResponseMessageType.OFFLINE, async () => {
   console.log('收到用户下线通知')
 })
 useMitt.on(WsResponseMessageType.ONLINE, async (onStatusChangeType: OnStatusChangeType) => {
   groupStore.countInfo.onlineNum = onStatusChangeType.onlineNum
-  // groupStore.countInfo.totalNum = data.totalNum
-  // groupStore.batchUpdateUserStatus(data.changeList)
-  // groupStore.getGroupUserList(true)
+  // groupStore.countInfo.totalNum = onStatusChangeType.totalNum
+  groupStore.batchUpdateUserStatus(onStatusChangeType.changeList)
+  groupStore.getGroupUserList(true)
   console.log('收到用户上线通知')
 })
 useMitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExpire) => {
   console.log('token过期')
   if (userStore.userInfo.uid === wsTokenExpire.uid) {
+    // TODO: 换成web的弹出框
     await confirm('新设备已在' + (wsTokenExpire.ip ? wsTokenExpire.ip : '未知IP') + '登录')
     // token已在后端清空，只需要返回登录页
     await logout()
@@ -83,15 +92,19 @@ useMitt.on(WsResponseMessageType.INVALID_USER, (param: { uid: number }) => {
   // 群成员列表删掉小黑子
   groupStore.filterUser(data.uid)
 })
-useMitt.on(WsResponseMessageType.MSG_MARK_ITEM, (param: { markList: MarkItemType[] }) => {
-  chatStore.updateMarkCount(param.markList)
+useMitt.on(WsResponseMessageType.MSG_MARK_ITEM, (markList: MarkItemType[]) => {
+  chatStore.updateMarkCount(markList)
 })
-useMitt.on(WsResponseMessageType.MSG_RECALL, (param: { data: RevokedMsgType }) => {
-  const { data } = param
+useMitt.on(WsResponseMessageType.MSG_RECALL, (data: RevokedMsgType) => {
   chatStore.updateRecallStatus(data)
 })
-useMitt.on(WsResponseMessageType.REQUEST_NEW_FRIEND, (param: { uid: number; unreadCount: number }) => {
-  globalStore.unReadMark.newFriendUnreadCount += param.unreadCount
+useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, (data: MessageType) => {
+  chatStore.pushMsg(data)
+})
+useMitt.on(WsResponseMessageType.REQUEST_NEW_FRIEND, (data: { uid: number; unreadCount: number }) => {
+  console.log(data.unreadCount)
+
+  // globalStore.unReadMark.newFriendUnreadCount += data.unreadCount
   // notify({
   //   name: '新好友',
   //   text: '您有一个新好友, 快来看看~',
@@ -122,4 +135,14 @@ useMitt.on(
     }
   }
 )
+
+onBeforeMount(async () => {
+  // 默认执行一次
+  await contactStore.getContactList(true)
+  await contactStore.getRequestFriendsList(true)
+})
+
+onMounted(async () => {
+  await getCurrentWebviewWindow().show()
+})
 </script>

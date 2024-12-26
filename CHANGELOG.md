@@ -1,5 +1,46 @@
 
 
+## [2.5.10](https://github.com/HuLaSpark/HuLa/compare/v2.5.9...v2.5.10) (2024-12-25)
+
+
+### 🐛 Bug Fixes | Bug 修复
+
+* **common:** :bug: 修复提示的效果问题 ([#121](https://github.com/HuLaSpark/HuLa/issues/121)) ([0b7c873](https://github.com/HuLaSpark/HuLa/commit/0b7c873556be3d14752293d762f87a4d417843dd)), closes [#34](https://github.com/HuLaSpark/HuLa/issues/34)
+* **component:** :bug: 修复输入框和虚拟列表的一些问题 ([#117](https://github.com/HuLaSpark/HuLa/issues/117)) ([7f4040f](https://github.com/HuLaSpark/HuLa/commit/7f4040fd4e5597227cbd3a2c0e3beb84f7e288bd))
+* **component:** :bug: 修复整体流程bug问题 ([#118](https://github.com/HuLaSpark/HuLa/issues/118)) ([11fdfe6](https://github.com/HuLaSpark/HuLa/commit/11fdfe65a0fe46b4792cf579a47bbb9b75f465de))
+* **rust:** :bug: 修复windows启动报错问题 ([#119](https://github.com/HuLaSpark/HuLa/issues/119)) ([311bd72](https://github.com/HuLaSpark/HuLa/commit/311bd72b6af9627221d4c12bf5d1089380d5b4f5)), closes [#IBD413](https://github.com/HuLaSpark/HuLa/issues/IBD413)
+* **rust:** :bug: 修复windows下启动问题 ([#122](https://github.com/HuLaSpark/HuLa/issues/122)) ([9f43c9e](https://github.com/HuLaSpark/HuLa/commit/9f43c9e77d647cfdc30aa04ad51ac6b0ce608a49))
+* **windows:** :bug: 修复windows下打包出错问题 ([#123](https://github.com/HuLaSpark/HuLa/issues/123)) ([e346da3](https://github.com/HuLaSpark/HuLa/commit/e346da33cf26143bc5d98f1bee61933ceebfff58))
+
+
+### ⚡️ Performance Improvements | 性能优化
+
+* **component:** :zap: 优化使用for-of ([#120](https://github.com/HuLaSpark/HuLa/issues/120)) ([003171b](https://github.com/HuLaSpark/HuLa/commit/003171bc1eb688e0a37f94735ca1e4d71446cf94))
+* **component:** :zap: 优化虚拟列表的滚动和性能 ([#112](https://github.com/HuLaSpark/HuLa/issues/112)) ([e8b60ee](https://github.com/HuLaSpark/HuLa/commit/e8b60ee83bb9f7f4048899df31113b83f0f01c62))
+
+## [2.5.9](https://github.com/HuLaSpark/HuLa/compare/v2.5.8...v2.5.9) (2024-12-18)
+
+
+### ✨ Features | 新功能
+
+* **component:** :sparkles: 新增默认头像 ([#104](https://github.com/HuLaSpark/HuLa/issues/104)) ([5a4ff70](https://github.com/HuLaSpark/HuLa/commit/5a4ff7065b2f5c2339f8f6208bf3fe3d73c59400))
+
+
+### 🐛 Bug Fixes | Bug 修复
+
+* **CI:** :bug: 修复release配置 ([#110](https://github.com/HuLaSpark/HuLa/issues/110)) ([6969a09](https://github.com/HuLaSpark/HuLa/commit/6969a0999ec0a0114e21e9db8ea8f56a82c73e09))
+* **component:** :bug: 修复mac下输入框输入拼音时的问题 ([#108](https://github.com/HuLaSpark/HuLa/issues/108)) ([6fd6636](https://github.com/HuLaSpark/HuLa/commit/6fd6636cef63c05cdd2ed04858d533ad98e0c34f))
+* **component:** :bug: 修复naiveui的虚拟列表问题 ([#109](https://github.com/HuLaSpark/HuLa/issues/109)) ([1ec6020](https://github.com/HuLaSpark/HuLa/commit/1ec602016869119e51348c40436aeda120a0dccd))
+* **config:** :bug: 修改renovate bot的配置 ([23511f7](https://github.com/HuLaSpark/HuLa/commit/23511f78cd5b22449bbc53cb5c567255250ca863))
+* **view:** :bug: 修复群里在线人数问题和登录历史记录问题 ([#105](https://github.com/HuLaSpark/HuLa/issues/105)) ([4dae48e](https://github.com/HuLaSpark/HuLa/commit/4dae48e1ad380bc5ca68b664fe89664ac68235fd))
+* **view:** :bug: 修复异常关闭再重新登录会不显示会话的bug ([096df49](https://github.com/HuLaSpark/HuLa/commit/096df49dcd9408eecadb9344d5d7433468e7bc5c))
+
+
+### ⚡️ Performance Improvements | 性能优化
+
+* **hook:** :zap: 优化windows窗口圆角问题 ([024c1a3](https://github.com/HuLaSpark/HuLa/commit/024c1a36d8ab435151d6485921b198070b15076e))
+* **view:** :zap: 优化一下样式和登录页面的提示 ([#107](https://github.com/HuLaSpark/HuLa/issues/107)) ([8bb4aa7](https://github.com/HuLaSpark/HuLa/commit/8bb4aa77d93fb731d3ff85fe273d20e7b4ba991d)), closes [#106](https://github.com/HuLaSpark/HuLa/issues/106)
+
 ## [2.5.8](https://github.com/HuLaSpark/HuLa/compare/v2.5.7...v2.5.8) (2024-12-12)
 
 

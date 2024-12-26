@@ -15,35 +15,45 @@
         <n-form :model="info" :rules="rules" ref="registerForm">
           <n-form-item path="name">
             <n-input
+              :class="[{ 'pr-20px': info.name }, { 'pr-16px': showNamePrefix && !info.name }]"
               maxlength="8"
               minlength="1"
               size="large"
               v-model:value="info.name"
               type="text"
               :allow-input="noSideSpace"
-              :placeholder="namePH"
-              @focus="namePH = ''"
-              @blur="namePH = '输入HuLa昵称'"
-              clearable />
+              :placeholder="showNamePrefix ? '' : placeholders.name"
+              @focus="handleInputState($event, 'name')"
+              @blur="handleInputState($event, 'name')"
+              clearable>
+              <template #prefix v-if="showNamePrefix || info.name">
+                <p class="text-12px">昵称</p>
+              </template>
+            </n-input>
           </n-form-item>
 
           <n-form-item path="account">
             <n-input
+              :class="[{ 'pr-20px': info.account }, { 'pr-16px': showAccountPrefix && !info.account }]"
               size="large"
               maxlength="12"
               minlength="6"
               v-model:value="info.account"
               type="text"
               :allow-input="onlyAlphaNumeric"
-              :placeholder="accountPH"
-              @focus="accountPH = ''"
-              @blur="accountPH = '输入HuLa账号'"
-              clearable />
+              :placeholder="showAccountPrefix ? '' : placeholders.account"
+              @focus="handleInputState($event, 'account')"
+              @blur="handleInputState($event, 'account')"
+              clearable>
+              <template #prefix v-if="showAccountPrefix || info.account">
+                <p class="text-12px">账号</p>
+              </template>
+            </n-input>
           </n-form-item>
 
           <n-form-item path="password">
             <n-input
-              class="pl-16px"
+              :class="{ 'pl-16px': !showPasswordPrefix && !info.password }"
               maxlength="16"
               minlength="6"
               size="large"
@@ -51,10 +61,14 @@
               v-model:value="info.password"
               type="password"
               :allow-input="noSideSpace"
-              :placeholder="passwordPH"
-              @focus="passwordPH = ''"
-              @blur="passwordPH = '输入HuLa密码'"
-              clearable />
+              :placeholder="showPasswordPrefix ? '' : placeholders.password"
+              @focus="handleInputState($event, 'password')"
+              @blur="handleInputState($event, 'password')"
+              clearable>
+              <template #prefix v-if="showPasswordPrefix || info.password">
+                <p class="text-12px">密码</p>
+              </template>
+            </n-input>
           </n-form-item>
           <!-- 密码提示信息 -->
           <n-flex vertical v-if="info.password">
@@ -84,7 +98,7 @@
           :loading="loading"
           :disabled="btnEnable"
           class="w-full mt-8px mb-50px"
-          @click="register"
+          @click="handleRegisterClick"
           color="#13987f">
           {{ btnText }}
         </n-button>
@@ -95,6 +109,39 @@
     <n-flex class="text-(12px #909090)" :size="8" justify="center">
       <span>Copyright {{ currentYear - 1 }}-{{ currentYear }} HuLaSpark All Rights Reserved.</span>
     </n-flex>
+
+    <!-- 星标提示框 -->
+    <n-modal v-model:show="starTipsModal" :mask-closable="false" class="rounded-8px" transform-origin="center">
+      <div class="bg-[--bg-edit] w-380px h-fit box-border flex flex-col">
+        <n-flex vertical class="w-full h-fit">
+          <video class="w-full h-240px rounded-t-8px object-cover" src="@/assets/video/star.mp4" autoplay loop />
+          <n-flex vertical :size="10" class="p-14px">
+            <p class="text-(16px [--text-color] font-bold)">在 GitHub 为我们点亮星标</p>
+            <p class="text-(12px [--chat-text-color]) leading-5">
+              如果您喜爱我们的产品，并希望支持我们，可以去 GitHub
+              给我们点一颗星吗？这个小小的动作对我们来说意义重大，能激励我们为您持续提供特性体验。
+            </p>
+
+            <n-flex :size="10" class="ml-auto">
+              <div
+                @click="register()"
+                class="border-(1px solid #999) cursor-pointer w-40px h-30px rounded-8px flex-center text-(12px [--text-color])">
+                稍后
+              </div>
+
+              <a
+                target="_blank"
+                rel="noopener noreferrer"
+                @click="register()"
+                href="https://github.com/HuLaSpark/HuLa"
+                class="bg-#363636 cursor-pointer w-70px h-30px rounded-8px flex-center text-(12px #f1f1f1) no-underline">
+                点亮星标
+              </a>
+            </n-flex>
+          </n-flex>
+        </n-flex>
+      </div>
+    </n-modal>
   </n-config-provider>
 </template>
 <script setup lang="ts">
@@ -105,26 +152,42 @@ import dayjs from 'dayjs'
 import { RegisterUserReq } from '@/services/types.ts'
 import Validation from '@/components/common/Validation.vue'
 
+// 输入框类型定义
+type InputType = 'name' | 'account' | 'password'
+
 /** 账号信息 */
 const info = unref(
-  ref({
+  ref<RegisterUserReq>({
+    avatar: '',
     account: '',
     password: '',
     name: ''
   })
 )
+
 /** 协议 */
 const protocol = ref(true)
 const btnEnable = ref(false)
 const loading = ref(false)
-const namePH = ref('输入HuLa昵称')
-const accountPH = ref('输入HuLa账号')
-const passwordPH = ref('输入HuLa密码')
+
+// 占位符
+const placeholders: Record<InputType, string> = {
+  name: '输入HuLa昵称',
+  account: '输入HuLa账号',
+  password: '输入HuLa密码'
+} as const
+
+// 前缀显示状态
+const showNamePrefix = ref(false)
+const showAccountPrefix = ref(false)
+const showPasswordPrefix = ref(false)
+
 /** 登录按钮的文本内容 */
 const btnText = ref('注册')
 // 使用day.js获取当前年份
 const currentYear = dayjs().year()
 const registerForm = ref()
+const starTipsModal = ref(false)
 // 校验规则
 const rules = {
   name: {
@@ -169,16 +232,48 @@ const isPasswordValid = computed(() => {
   return validateMinLength(password) && validateAlphaNumeric(password) && validateSpecialChar(password)
 })
 
-/** 注册 */
-const register = async () => {
+/**
+ * 处理输入框状态变化
+ * @param type 输入框类型：name-昵称 / account-账号 / password-密码
+ * @param event 事件对象
+ */
+const handleInputState = (event: FocusEvent, type: InputType): void => {
+  const prefixMap: Record<InputType, Ref<boolean>> = {
+    name: showNamePrefix,
+    account: showAccountPrefix,
+    password: showPasswordPrefix
+  }
+  prefixMap[type].value = event.type === 'focus'
+}
+
+/** 处理星标 */
+const handleRegisterClick = async () => {
   await registerForm.value.validate((errors: any) => {
     if (!errors) {
-      btnEnable.value = true
-      loading.value = true
-      btnText.value = '注册中...'
+      starTipsModal.value = true
+    }
+  })
+}
+
+/** 注册账号 */
+const register = async () => {
+  starTipsModal.value = false
+  btnEnable.value = true
+  loading.value = true
+  btnText.value = '注册中...'
+
+  setTimeout(() => {
+    // 随机生成头像编号
+    const avatarNum = Math.floor(Math.random() * 21) + 1
+    const avatarId = avatarNum.toString().padStart(3, '0')
+    info.avatar = avatarId
+    // 更新按钮文本
+    btnText.value = '正在分配默认头像...'
+
+    setTimeout(() => {
       // 注册
       apis
-        .register({ ...info } as RegisterUserReq)
+        .register({ ...info })
         .then(() => {
           window.$message.success('注册成功')
           btnText.value = '注册'
@@ -187,15 +282,15 @@ const register = async () => {
               win?.setFocus()
             })
             WebviewWindow.getCurrent().close()
-          }, 600)
+          }, 1200)
         })
         .finally(() => {
           loading.value = false
           btnEnable.value = false
           btnText.value = '注册'
         })
-    }
-  })
+    }, 800)
+  }, 600)
 }
 
 watchEffect(() => {

@@ -43,11 +43,23 @@
           </n-flex>
         </n-popover>
         <!-- 该选项无提示时展示 -->
+        <!-- 消息提示 -->
         <n-badge
-          v-else
+          v-if="item.url === 'message'"
           :max="99"
           :value="unReadMark.newMsgUnreadCount"
-          :show="item.icon.includes('message') && unReadMark.newMsgUnreadCount > 0">
+          :show="unReadMark.newMsgUnreadCount > 0">
+          <svg class="size-22px">
+            <use
+              :href="`#${activeUrl === item.url || openWindowsList.has(item.url) ? item.iconAction : item.icon}`"></use>
+          </svg>
+        </n-badge>
+        <!-- 好友提示 -->
+        <n-badge
+          v-if="item.url === 'friendsList'"
+          :max="99"
+          :value="unReadMark.newFriendUnreadCount"
+          :show="unReadMark.newFriendUnreadCount > 0">
           <svg class="size-22px">
             <use
               :href="`#${activeUrl === item.url || openWindowsList.has(item.url) ? item.iconAction : item.icon}`"></use>
@@ -252,9 +264,12 @@ import { usePluginsStore } from '@/stores/plugins.ts'
 import { PluginEnum, ShowModeEnum } from '@/enums'
 import { useSettingStore } from '@/stores/setting.ts'
 import { invoke } from '@tauri-apps/api/core'
-import { listen } from '@tauri-apps/api/event'
 import { useGlobalStore } from '@/stores/global.ts'
+import { useTauriListener } from '@/hooks/useTauriListener.ts'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 
+const appWindow = WebviewWindow.getCurrent()
+const { addListener } = useTauriListener()
 const globalStore = useGlobalStore()
 const pluginsStore = usePluginsStore()
 const { showMode } = storeToRefs(useSettingStore())
@@ -326,7 +341,7 @@ const setHomeHeight = () => {
   invoke('set_height', { height: showMode.value === ShowModeEnum.TEXT ? 505 : 423 })
 }
 
-onMounted(() => {
+onMounted(async () => {
   // 初始化窗口高度
   setHomeHeight()
 
@@ -337,9 +352,11 @@ onMounted(() => {
   startResize()
 
   // 监听自定义事件，处理设置中菜单显示模式切换和添加插件后，导致高度变化，需重新调整插件菜单显示
-  listen('startResize', () => {
-    startResize()
-  })
+  await addListener(
+    appWindow.listen('startResize', () => {
+      startResize()
+    })
+  )
 
   if (tipShow.value) {
     menuTop.filter((item) => {

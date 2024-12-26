@@ -2,11 +2,11 @@ import type { Ref } from 'vue'
 
 /**
  * 右键菜单的状态管理
- * @param containerRef 右键菜单的容器
+ * @param ContextMenuRef 右键菜单的容器
  * @param isNull 传入的容器是否为空
  */
 
-export const useContextMenu = (containerRef: Ref, isNull?: Ref<boolean>) => {
+export const useContextMenu = (ContextMenuRef: Ref, isNull?: Ref<boolean>) => {
   const showMenu = ref(false)
   const x = ref(0)
   const y = ref(0)
@@ -44,7 +44,7 @@ export const useContextMenu = (containerRef: Ref, isNull?: Ref<boolean>) => {
   }
 
   onMounted(() => {
-    const div = containerRef.value
+    const div = ContextMenuRef.value
     //这里只监听了div的右键，如果需要监听其他元素的右键，需要在其他元素上监听
     div.addEventListener('contextmenu', handleContextMenu)
     // 这里需要监听window的右键，否则右键会触发div的右键事件，导致menu无法关闭，并且阻止默认右键菜单
@@ -61,7 +61,7 @@ export const useContextMenu = (containerRef: Ref, isNull?: Ref<boolean>) => {
   })
 
   onUnmounted(() => {
-    const div = containerRef.value
+    const div = ContextMenuRef.value
     div?.removeEventListener('contextmenu', handleContextMenu)
     window.removeEventListener('contextmenu', preventDefault)
     window.removeEventListener('wheel', preventDefault)

@@ -1,101 +1,86 @@
 <template>
-  <n-scrollbar style="max-height: calc(100vh - 70px)">
-    <n-flex
-      @click="handleApply"
-      align="center"
-      justify="space-between"
-      class="my-10px p-12px hover:(bg-[--list-hover-color] cursor-pointer)">
-      <div class="text-(14px [--text-color])">好友通知</div>
+  <n-flex
+    @click="handleApply"
+    align="center"
+    justify="space-between"
+    class="my-10px p-12px hover:(bg-[--list-hover-color] cursor-pointer)">
+    <div class="text-(14px [--text-color])">好友通知</div>
+    <n-flex align="center" :size="4">
+      <n-badge :value="globalStore.unReadMark.newFriendUnreadCount" :max="15" />
       <svg class="size-16px rotate-270 color-[--text-color]"><use href="#down"></use></svg>
     </n-flex>
-    <n-tabs type="segment" animated class="mt-4px p-[4px_10px_0px_8px]">
-      <n-tab-pane name="1" tab="好友">
-        <n-scrollbar style="max-height: calc(100vh - 126px)">
-          <n-collapse :display-directive="'show'">
-            <ContextMenu @contextmenu="showMenu($event)" @select="handleSelect($event.label)" :menu="menuList">
-              <n-collapse-item title="我的好友" name="1">
-                <template #header-extra>
-                  <span class="text-(10px #707070)"> {{ onlineCount }}/{{ contactStore.contactsList.length }} </span>
-                </template>
+  </n-flex>
+  <n-tabs type="segment" animated class="mt-4px p-[4px_10px_0px_8px]">
+    <n-tab-pane name="1" tab="好友">
+      <n-collapse :display-directive="'show'">
+        <ContextMenu @contextmenu="showMenu($event)" @select="handleSelect($event.label)" :menu="menuList">
+          <n-collapse-item title="我的好友" name="1">
+            <template #header-extra>
+              <span class="text-(10px #707070)"> {{ onlineCount }}/{{ contactStore.contactsList.length }} </span>
+            </template>
+            <n-scrollbar style="max-height: calc(100vh - 220px)">
+              <!-- 用户框 多套一层div来移除默认的右键事件然后覆盖掉因为margin空隙而导致右键可用 -->
+              <div @contextmenu.stop="$event.preventDefault()">
+                <n-flex
+                  :size="10"
+                  @click="handleClick(item.uid, RoomTypeEnum.SINGLE)"
+                  :class="{ active: activeItem === item.uid }"
+                  class="user-box w-full h-75px mb-5px"
+                  v-for="item in sortedContacts"
+                  :key="item.uid">
+                  <n-flex align="center" :size="10" class="h-75px pl-6px pr-8px flex-1 truncate">
+                    <n-avatar
+                      round
+                      bordered
+                      :size="44"
+                      class="grayscale"
+                      :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
+                      :src="AvatarUtils.getAvatarUrl(useUserInfo(item.uid).value.avatar!)"
+                      fallback-src="/logo.png" />
 
-                <!-- 用户框 多套一层div来移除默认的右键事件然后覆盖掉因为margin空隙而导致右键可用 -->
-                <div @contextmenu.stop="$event.preventDefault()">
-                  <n-flex
-                    :size="10"
-                    @click="handleClick(item.uid, RoomTypeEnum.SINGLE)"
-                    :class="{ active: activeItem === item.uid }"
-                    class="user-box w-full h-75px mb-5px"
-                    v-for="item in contactStore.contactsList"
-                    :key="item.uid">
-                    <n-flex align="center" :size="10" class="h-75px pl-6px pr-8px flex-1 truncate">
-                      <n-avatar
-                        v-if="useUserInfo(item.uid).value.avatar"
-                        round
-                        bordered
-                        :size="44"
-                        class="grayscale"
-                        :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
-                        :src="useUserInfo(item.uid).value.avatar"
-                        fallback-src="/logo.png" />
+                    <n-flex vertical justify="space-between" class="h-fit flex-1 truncate">
+                      <span class="text-14px leading-tight flex-1 truncate">{{
+                        useUserInfo(item.uid).value.name
+                      }}</span>
 
-                      <n-avatar
-                        v-else
-                        round
-                        bordered
-                        :color="'#909090'"
-                        :size="44"
-                        class="grayscale"
-                        :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
-                        :src="useUserInfo(item.uid).value.avatar"
-                        fallback-src="/logo.png">
-                        {{ useUserInfo(item.uid).value.name?.slice(0, 1) }}
-                      </n-avatar>
-
-                      <n-flex vertical justify="space-between" class="h-fit flex-1 truncate">
-                        <span class="text-14px leading-tight flex-1 truncate">{{
-                          useUserInfo(item.uid).value.name
-                        }}</span>
-
-                        <div class="text leading-tight text-12px flex-y-center gap-2px flex-1 truncate">
-                          [
-                          <img
-                            class="size-14px"
-                            :src="`/status/${item.activeStatus === OnlineEnum.ONLINE ? 'online.png' : 'offline.png'}`"
-                            alt="离线" />
-                          {{ item.activeStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}
-                          ]
-                        </div>
-                      </n-flex>
+                      <div class="text leading-tight text-12px flex-y-center gap-4px flex-1 truncate">
+                        [
+                        <n-badge :color="item.activeStatus === OnlineEnum.ONLINE ? '#1ab292' : '#909090'" dot />
+                        {{ item.activeStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}
+                        ]
+                      </div>
                     </n-flex>
                   </n-flex>
-                </div>
-              </n-collapse-item>
-            </ContextMenu>
-          </n-collapse>
-        </n-scrollbar>
-      </n-tab-pane>
-      <!--      <n-tab-pane name="2" tab="群聊">-->
-      <!--        <div-->
-      <!--          @click="handleClick(item.key, RoomTypeEnum.GROUP)"-->
-      <!--          :class="{ active: activeItem === item.key }"-->
-      <!--          class="w-full h-75px mb-5px"-->
-      <!--          v-for="item in groupChatList"-->
-      <!--          :key="item.key">-->
-      <!--          <n-flex v-slide align="center" :size="10" class="h-75px pl-6px pr-8px flex-1 truncate">-->
-      <!--            <n-avatar round bordered :color="'#fff'" :size="44" :src="item.avatar" fallback-src="/logo.png" />-->
+                </n-flex>
+              </div>
+            </n-scrollbar>
+          </n-collapse-item>
+        </ContextMenu>
+      </n-collapse>
+    </n-tab-pane>
+    <!--      <n-tab-pane name="2" tab="群聊">-->
+    <!--        <div-->
+    <!--          @click="handleClick(item.key, RoomTypeEnum.GROUP)"-->
+    <!--          :class="{ active: activeItem === item.key }"-->
+    <!--          class="w-full h-75px mb-5px"-->
+    <!--          v-for="item in groupChatList"-->
+    <!--          :key="item.key">-->
+    <!--          <n-flex v-slide align="center" :size="10" class="h-75px pl-6px pr-8px flex-1 truncate">-->
+    <!--            <n-avatar round bordered :color="'#fff'" :size="44" :src="item.avatar" fallback-src="/logo.png" />-->
 
-      <!--            <span class="text-14px leading-tight flex-1 truncate">{{ item.accountName }}</span>-->
-      <!--          </n-flex>-->
-      <!--        </div>-->
-      <!--      </n-tab-pane>-->
-    </n-tabs>
-  </n-scrollbar>
+    <!--            <span class="text-14px leading-tight flex-1 truncate">{{ item.accountName }}</span>-->
+    <!--          </n-flex>-->
+    <!--        </div>-->
+    <!--      </n-tab-pane>-->
+  </n-tabs>
 </template>
 <script setup lang="ts">
 import { useMitt } from '@/hooks/useMitt.ts'
 import { MittEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
+import { AvatarUtils } from '@/utils/avatarUtils'
+import { useGlobalStore } from '@/stores/global.ts'
 
 const menuList = ref([
   { label: '添加分组', icon: 'plus' },
@@ -107,9 +92,19 @@ const activeItem = ref(0)
 const detailsShow = ref(false)
 const shrinkStatus = ref(false)
 const contactStore = useContactStore()
+const globalStore = useGlobalStore()
 /** 统计在线用户人数 */
 const onlineCount = computed(() => {
   return contactStore.contactsList.filter((item) => item.activeStatus === OnlineEnum.ONLINE).length
+})
+/** 排序好友列表 */
+const sortedContacts = computed(() => {
+  return [...contactStore.contactsList].sort((a, b) => {
+    // 在线用户排在前面
+    if (a.activeStatus === OnlineEnum.ONLINE && b.activeStatus !== OnlineEnum.ONLINE) return -1
+    if (a.activeStatus !== OnlineEnum.ONLINE && b.activeStatus === OnlineEnum.ONLINE) return 1
+    return 0
+  })
 })
 /** 监听独立窗口关闭事件 */
 watchEffect(() => {

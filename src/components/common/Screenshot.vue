@@ -21,10 +21,12 @@
 
 <script setup>
 import { invoke } from '@tauri-apps/api/core'
-import { listen } from '@tauri-apps/api/event'
 import { writeImage } from '@tauri-apps/plugin-clipboard-manager'
 import { useCanvasTool } from '@/hooks/useCanvasTool'
+import { useTauriListener } from '@/hooks/useTauriListener'
 
+const appWindow = WebviewWindow.getCurrent()
+const { addEventListener } = useTauriListener()
 const canvasbox = ref(null)
 
 // 图像层
@@ -71,13 +73,6 @@ const screenConfig = ref({
 
 // 截屏图片
 let screenshotImage
-
-onMounted(async () => {
-  await listen('capture', () => {
-    initCanvas()
-    initMagnifier()
-  })
-})
 
 /**
  * 绘制图形
@@ -419,6 +414,15 @@ function cancelSelection() {
   // 在此处理取消按钮的逻辑
   showButtonGroup.value = false // 隐藏按钮组
 }
+
+onMounted(async () => {
+  addEventListener(
+    appWindow.listen('capture', () => {
+      initCanvas()
+      initMagnifier()
+    })
+  )
+})
 </script>
 
 <style lang="scss" scoped>

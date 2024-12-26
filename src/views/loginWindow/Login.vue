@@ -9,19 +9,14 @@
       <!-- 头像 -->
       <n-flex justify="center" class="w-full pt-35px" data-tauri-drag-region>
         <n-avatar
-          v-if="info.avatar"
           class="size-80px rounded-50% bg-#b6d6d9ff border-(2px solid #fff)"
-          :src="info.avatar || '/logo.png'" />
-
-        <n-avatar v-else class="size-80px text-20px rounded-50% bg-#b6d6d9ff border-(2px solid #fff)">
-          {{ info.name.slice(0, 1) }}
-        </n-avatar>
+          :src="AvatarUtils.getAvatarUrl(info.avatar || '/logo.png')" />
       </n-flex>
 
       <!-- 登录菜单 -->
       <n-flex class="ma text-center h-full w-260px" vertical :size="16">
         <n-input
-          style="padding-left: 20px"
+          :class="{ 'pl-16px': loginHistories.length > 0 }"
           size="large"
           maxlength="16"
           minlength="6"
@@ -32,7 +27,7 @@
           @blur="accountPH = '输入HuLa账号'"
           clearable>
           <template #suffix>
-            <n-flex @click="arrowStatus = !arrowStatus">
+            <n-flex v-if="loginHistories.length > 0" @click="arrowStatus = !arrowStatus">
               <svg v-if="!arrowStatus" class="down w-18px h-18px color-#505050 cursor-pointer">
                 <use href="#down"></use>
               </svg>
@@ -54,10 +49,7 @@
               @click="giveAccount(item)"
               class="p-8px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px">
               <div class="flex-between-center">
-                <n-avatar v-if="item.avatar" :src="item.avatar" class="size-28px bg-#ccc rounded-50%" />
-                <n-avatar v-else :src="item.avatar" :color="'#909090'" class="size-28px text-10px bg-#ccc rounded-50%">
-                  {{ item.name?.slice(0, 1) }}
-                </n-avatar>
+                <n-avatar :src="AvatarUtils.getAvatarUrl(item.avatar)" class="size-28px bg-#ccc rounded-50%" />
                 <p class="text-14px color-#505050">{{ item.account }}</p>
                 <svg @click.stop="delAccount(item)" class="w-12px h-12px">
                   <use href="#close"></use>
@@ -115,7 +107,7 @@
             :size="110"
             :color="'#fff'"
             class="border-(2px solid #fff)"
-            :src="userStore.userInfo.avatar || '/logo.png'" />
+            :src="AvatarUtils.getAvatarUrl(userStore.userInfo.avatar || '/logo.png')" />
         </n-flex>
 
         <n-flex justify="center">
@@ -174,9 +166,15 @@ import { useUserStore } from '@/stores/user.ts'
 import { UserInfoType } from '@/services/types.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { invoke } from '@tauri-apps/api/core'
+import { AvatarUtils } from '@/utils/avatarUtils'
+import { useMitt } from '@/hooks/useMitt'
+import { WsResponseMessageType } from '@/services/wsType'
+import { useNetwork } from '@vueuse/core'
 
 const settingStore = useSettingStore()
 const userStore = useUserStore()
+/** 网络连接是否正常 */
+const { isOnline } = useNetwork()
 const loginHistoriesStore = useLoginHistoriesStore()
 const { loginHistories } = loginHistoriesStore
 const { login } = storeToRefs(settingStore)
@@ -210,6 +208,13 @@ watchEffect(() => {
   }
 })
 
+watch(isOnline, (v) => {
+  if (v) {
+    loginDisabled.value = false
+    loginText.value = '登录'
+  }
+})
+
 /** 删除账号列表内容 */
 const delAccount = (item: UserInfoType) => {
   // 获取删除前账户列表的长度
@@ -240,6 +245,8 @@ const giveAccount = (item: UserInfoType) => {
 
 /**登录后创建主页窗口*/
 const normalLogin = async () => {
+  // 普通登录前需清空token
+  localStorage.removeItem('TOKEN')
   loading.value = true
   const { account, password } = info.value
   apis
@@ -305,7 +312,6 @@ const openHomeWindow = async () => {
 /** 自动登录 */
 const autoLogin = () => {
   loading.value = true
-  // TODO 检查用户网络是否连接 (nyh -> 2024-03-16 12:06:59)
   loginText.value = '网络连接中'
   setTimeout(() => {
     apis
@@ -327,8 +333,6 @@ const autoLogin = () => {
         })
       })
       .catch(() => {
-        localStorage.removeItem('TOKEN')
-        router.push('/login')
         loading.value = false
         loginText.value = '登录'
       })
@@ -360,6 +364,10 @@ const enterKey = (e: KeyboardEvent) => {
 
 onMounted(async () => {
   await getCurrentWebviewWindow().show()
+  useMitt.on(WsResponseMessageType.NO_INTERNET, () => {
+    loginDisabled.value = true
+    loginText.value = '网络已断开'
+  })
   // 自动登录
   if (login.value.autoLogin && TOKEN.value) {
     autoLogin()

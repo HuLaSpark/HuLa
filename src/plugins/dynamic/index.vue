@@ -13,7 +13,7 @@
       justify="center"
       :size="20"
       class="login-box relative h-160px w-full select-none">
-      <n-avatar :size="120" round bordered :src="userStore.userInfo.avatar" />
+      <n-avatar :size="120" round bordered :src="AvatarUtils.getAvatarUrl(userStore.userInfo.avatar!)" />
       <n-flex vertical justify="center" :size="20">
         <p class="text-(24px [--chat-text-color]) font-500">{{ userStore.userInfo.name }}</p>
 
@@ -119,7 +119,7 @@
           <template #default="{ item }">
             <n-flex align="center" justify="space-between" class="mt-18px">
               <n-flex align="center">
-                <n-avatar :size="36" round bordered :src="item.avatar" />
+                <n-avatar :size="36" round bordered :src="AvatarUtils.getAvatarUrl(item.avatar)" />
                 <p>{{ item.user }}</p>
                 <p class="text-(12px #707070)">{{ item.content }}</p>
               </n-flex>
@@ -139,6 +139,7 @@ import { useWindowState } from '@/hooks/useWindowState.ts'
 import { type } from '@tauri-apps/plugin-os'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useUserStore } from '@/stores/user.ts'
+import { AvatarUtils } from '@/utils/avatarUtils'
 
 useWindowState(WebviewWindow.getCurrent().label)
 const userStore = useUserStore()

@@ -26,8 +26,10 @@
       "~/*": ["./*"],
       "@/*": ["./src/*"]
     },
-    "allowSyntheticDefaultImports": true
+    "types": ["vitest/globals", "@vue/test-utils"],
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"],
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue", "src/**/*.test.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

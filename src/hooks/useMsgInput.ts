@@ -11,7 +11,7 @@ import { type } from '@tauri-apps/plugin-os'
 import { useDebounceFn } from '@vueuse/core'
 import { Ref } from 'vue'
 import { useCommon } from './useCommon.ts'
-
+import { readText, readImage } from '@tauri-apps/plugin-clipboard-manager'
 import Database from '@tauri-apps/plugin-sql'
 import { messageStrategyMap } from '@/hooks/strategy/MessageStrategy.ts'
 
@@ -22,9 +22,17 @@ export const useMsgInput = (messageInputDom: Ref) => {
   const { triggerInputEvent, insertNode, getMessageContentType, getEditorRange, imgPaste, reply, userUid } = useCommon()
   const settingStore = useSettingStore()
   const { chat } = storeToRefs(settingStore)
+  /** 艾特选项的key  */
   const chatKey = ref(chat.value.sendKey)
+  /** 输入框内容  */
   const msgInput = ref('')
+  /** 艾特状态 */
   const ait = ref(false)
+  /** 发送按钮是否禁用 */
+  const disabledSend = computed(() => {
+    const plainText = stripHtml(msgInput.value)
+    return plainText.length === 0 || plainText.replace(/&nbsp;/g, ' ').trim().length === 0
+  })
   // /** 临时消息id */
   // const tempMessageId = ref(0)
   /** 艾特后的关键字的key */
@@ -53,24 +61,41 @@ export const useMsgInput = (messageInputDom: Ref) => {
     {
       label: '粘贴',
       icon: 'intersection',
-      click: () => {
-        navigator.clipboard.read().then((items) => {
-          const clipboardItem = items[0] // 获取剪贴板的第一项
-          if (clipboardItem.types.includes('text/plain')) {
-            // 如果是文本，使用 readText() 读取文本内容
-            navigator.clipboard.readText().then((text) => {
-              insertNode(MsgEnum.TEXT, text, {} as HTMLElement)
+      click: async () => {
+        try {
+          // 先尝试读取图片
+          const clipboardImage = await readImage().catch(() => null)
+          if (clipboardImage) {
+            try {
+              // 获取图片的 RGBA 数据
+              const imageData = await clipboardImage.rgba()
+              const blob = new Blob([imageData], { type: 'image/png' })
+              const url = URL.createObjectURL(blob)
+              console.log(url)
+
+              messageInputDom.value.focus()
+              nextTick(() => {
+                imgPaste(blob, messageInputDom.value)
+              })
+              return
+            } catch (error) {
+              console.error('处理图片数据失败:', error)
+            }
+          }
+
+          // 如果没有图片，尝试读取文本
+          const content = await readText().catch(() => null)
+          if (content) {
+            messageInputDom.value.focus()
+            nextTick(() => {
+              insertNode(MsgEnum.TEXT, content, {} as HTMLElement)
               triggerInputEvent(messageInputDom.value)
             })
-          } else if (clipboardItem.types.find((type) => type.startsWith('image/'))) {
-            // 检查第一项是否是图像
-            // TODO 右键粘贴动图的时候无法动起来右键粘贴没有获取到类型是gif而是html加上png的格式 (nyh -> 2024-02-27 03:27:10)
-            const imageType = clipboardItem.types.find((type) => type.startsWith('image/'))
-            clipboardItem.getType(imageType as any).then((blob) => {
-              imgPaste(blob, messageInputDom.value)
-            })
+            return
           }
-        })
+        } catch (error) {
+          console.error('粘贴失败:', error)
+        }
       }
     },
     { label: '另存为', icon: 'Importing', disabled: true },
@@ -86,7 +111,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     }
     // 如果输入框没有值就把回复内容清空
     if (msgInput.value === '') {
-      reply.value = { imgCount: 0, accountName: '', content: '', key: 0 }
+      reply.value = { avatar: '', imgCount: 0, accountName: '', content: '', key: 0 }
     }
   })
 
@@ -94,74 +119,32 @@ export const useMsgInput = (messageInputDom: Ref) => {
     chat.value.sendKey = v
   })
 
-  onMounted(async () => {
-    db.value = await Database.load('sqlite:sqlite.db')
-    await db.value.execute(`
-      CREATE TABLE IF NOT EXISTS message (
-          id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-          room_id INTEGER NOT NULL,
-          from_uid INTEGER NOT NULL,
-          content TEXT(1024),
-          reply_msg_id INTEGER NOT NULL,
-          status INTEGER,
-          gap_count INTEGER,
-          "type" INTEGER DEFAULT (1),
-          extra TEXT,
-          create_time INTEGER,
-          update_time INTEGER
-      );
-      CREATE INDEX IF NOT EXISTS idx_room_id ON message (room_id);
-      CREATE INDEX IF NOT EXISTS idx_from_uid ON message (from_uid);
-      CREATE INDEX IF NOT EXISTS idx_create_time ON message (create_time);
-      CREATE INDEX IF NOT EXISTS idx_update_time ON message (update_time);
-    `)
-    useMitt.on(MittEnum.RE_EDIT, async (event: string) => {
-      messageInputDom.value.focus()
-      await nextTick(() => {
-        messageInputDom.value.innerHTML = event
-        msgInput.value = event
-      })
-    })
-    /** 正在输入拼音时触发 */
-    messageInputDom.value.addEventListener('compositionstart', () => {
-      isChinese.value = true
-    })
-    /** 结束输入拼音时触发 */
-    messageInputDom.value.addEventListener('compositionend', (e: CompositionEvent) => {
-      isChinese.value = false
-      aitKey.value = e.data
-    })
-    /** 监听回复信息的传递 */
-    useMitt.on(MittEnum.REPLY_MEG, (event: any) => {
-      const accountName = useUserInfo(event.fromUser.uid).value.name!
-      // 如果已经有回复消息，则替换掉原来的回复消息
-      if (reply.value.content) {
-        // 触发id为closeBtn的按钮点击事件，从而关闭第一个回复框，实现回复消息的替换
-        document.getElementById('closeBtn')?.dispatchEvent(new Event('click'))
+  /** 去除html标签(用于鉴别回复时是否有输入内容) */
+  const stripHtml = (html: string) => {
+    try {
+      const tmp = document.createElement('div')
+      tmp.innerHTML = html
+      const replyDiv = tmp.querySelector('#replyDiv')
+      if (replyDiv) {
+        replyDiv.remove()
       }
-      if (!Array.isArray(event.message.body.content)) {
-        // 回复前把包含&nbsp;的字符替换成空格
-        event.message.body.content = event.message.body.content.replace(/&nbsp;/g, ' ')
-      }
-      reply.value = {
-        imgCount: 0,
-        accountName: accountName,
-        content: event.message.body.content,
-        key: event.message.id
-      }
-      if (messageInputDom.value) {
-        nextTick().then(() => {
-          messageInputDom.value.focus()
-          insertNode(
-            MsgEnum.REPLY,
-            { accountName: accountName, content: event.message.body.content },
-            {} as HTMLElement
-          )
-          triggerInputEvent(messageInputDom.value)
-        })
-      }
-    })
-  })
+      return tmp.textContent?.trim() || tmp.innerText?.trim() || ''
+    } catch (error) {
+      console.error('Error in stripHtml:', error)
+      return ''
+    }
+  }
+
+  /** 重置输入框内容 */
+  const resetInput = () => {
+    try {
+      msgInput.value = ''
+      messageInputDom.value.innerHTML = ''
+      reply.value = { avatar: '', imgCount: 0, accountName: '', content: '', key: 0 }
+    } catch (error) {
+      console.error('Error in resetInput:', error)
+    }
+  }
 
   /** 处理发送信息事件 */
   // TODO 输入框中的内容当我切换消息的时候需要记录之前输入框的内容 (nyh -> 2024-03-01 07:03:43)
@@ -261,9 +244,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       })
 
     // 清空输入框和回复信息
-    msgInput.value = ''
-    messageInputDom.value.innerHTML = ''
-    reply.value = { imgCount: 0, accountName: '', content: '', key: 0 }
+    resetInput()
   }
 
   /** 当输入框手动输入值的时候触发input事件(使用vueUse的防抖) */
@@ -320,6 +301,16 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
   /** input的keydown事件 */
   const inputKeyDown = (e: KeyboardEvent) => {
+    if (disabledSend.value) {
+      e.preventDefault()
+      e.stopPropagation()
+      resetInput()
+      return
+    }
+    // 正在输入拼音，并且是macos系统
+    if (isChinese.value && type() === 'macos') {
+      return
+    }
     const isWindows = type() === 'windows'
     const isEnterKey = e.key === 'Enter'
     const isCtrlOrMetaKey = isWindows ? e.ctrlKey : e.metaKey
@@ -350,6 +341,10 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
   /** 处理点击@提及框事件 */
   const handleAit = (item: CacheUserItem) => {
+    // 如果正在输入拼音，不发送消息
+    if (isChinese.value) {
+      return
+    }
     // 先确保输入框获得焦点
     messageInputDom.value?.focus()
     // 先获取并保存当前的编辑器范围
@@ -379,9 +374,89 @@ export const useMsgInput = (messageInputDom: Ref) => {
     // 无论是哪种情况，都在当前光标位置插入@提及
     insertNode(MsgEnum.AIT, item.name, {} as HTMLElement)
     triggerInputEvent(messageInputDom.value)
-    console.log(item)
     ait.value = false
   }
+
+  onMounted(async () => {
+    db.value = await Database.load('sqlite:sqlite.db')
+    await db.value.execute(`
+      CREATE TABLE IF NOT EXISTS message (
+          id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+          room_id INTEGER NOT NULL,
+          from_uid INTEGER NOT NULL,
+          content TEXT(1024),
+          reply_msg_id INTEGER NOT NULL,
+          status INTEGER,
+          gap_count INTEGER,
+          "type" INTEGER DEFAULT (1),
+          extra TEXT,
+          create_time INTEGER,
+          update_time INTEGER
+      );
+      CREATE INDEX IF NOT EXISTS idx_room_id ON message (room_id);
+      CREATE INDEX IF NOT EXISTS idx_from_uid ON message (from_uid);
+      CREATE INDEX IF NOT EXISTS idx_create_time ON message (create_time);
+      CREATE INDEX IF NOT EXISTS idx_update_time ON message (update_time);
+    `)
+    useMitt.on(MittEnum.RE_EDIT, async (event: string) => {
+      messageInputDom.value.focus()
+      await nextTick(() => {
+        messageInputDom.value.innerHTML = event
+        msgInput.value = event
+        // 将光标设置到内容末尾
+        const selection = window.getSelection()
+        const range = document.createRange()
+        range.selectNodeContents(messageInputDom.value)
+        range.collapse(false)
+        selection?.removeAllRanges()
+        selection?.addRange(range)
+      })
+    })
+
+    /** 正在输入拼音时触发 */
+    messageInputDom.value.addEventListener('compositionstart', () => {
+      isChinese.value = true
+    })
+    /** 结束输入拼音时触发 */
+    messageInputDom.value.addEventListener('compositionend', (e: CompositionEvent) => {
+      setTimeout(() => {
+        isChinese.value = false
+        aitKey.value = e.data
+      }, 10)
+    })
+    /** 监听回复信息的传递 */
+    useMitt.on(MittEnum.REPLY_MEG, (event: any) => {
+      const accountName = useUserInfo(event.fromUser.uid).value.name!
+      const avatar = useUserInfo(event.fromUser.uid).value.avatar!
+      // 如果已经有回复消息，则替换掉原来的回复消息
+      if (reply.value.content) {
+        // 触发id为closeBtn的按钮点击事件，从而关闭第一个回复框，实现回复消息的替换
+        document.getElementById('closeBtn')?.dispatchEvent(new Event('click'))
+      }
+      if (!Array.isArray(event.message.body.content)) {
+        // 回复前把包含&nbsp;的字符替换成空格
+        event.message.body.content = event.message.body.content.replace(/&nbsp;/g, ' ')
+      }
+      reply.value = {
+        imgCount: 0,
+        avatar: avatar,
+        accountName: accountName,
+        content: event.message.body.content,
+        key: event.message.id
+      }
+      if (messageInputDom.value) {
+        nextTick().then(() => {
+          messageInputDom.value.focus()
+          insertNode(
+            MsgEnum.REPLY,
+            { avatar: avatar, accountName: accountName, content: event.message.body.content },
+            {} as HTMLElement
+          )
+          triggerInputEvent(messageInputDom.value)
+        })
+      }
+    })
+  })
 
   return {
     imgPaste,
@@ -389,12 +464,14 @@ export const useMsgInput = (messageInputDom: Ref) => {
     handleAit,
     handleInput,
     send,
+    stripHtml,
     personList,
     ait,
     msgInput,
     chatKey,
     menuList,
     selectedAitKey,
-    reply
+    reply,
+    disabledSend
   }
 }

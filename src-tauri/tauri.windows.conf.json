@@ -1,6 +1,6 @@
 {
   "productName": "HuLa",
-  "version": "2.5.8",
+  "version": "2.5.10",
   "identifier": "com.hula.pc",
   "build": {
     "beforeDevCommand": "pnpm dev",
@@ -38,6 +38,13 @@
     "windows": {
       "wix": {
         "language": "zh-CN"
+      },
+      "nsis": {
+        "installerIcon": "./icons/windows/icon.ico",
+        "displayLanguageSelector": true,
+        "languages": [
+          "SimpChinese"
+        ]
       }
     }
   },

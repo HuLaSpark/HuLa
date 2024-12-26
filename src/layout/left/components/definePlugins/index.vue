@@ -40,7 +40,7 @@
 
         <n-tabs
           :value="viewMode"
-          :on-update:value="(v) => (viewMode = v)"
+          :on-update:value="(v: any) => (viewMode = v)"
           class="w-76px h-28px mr-22px"
           type="segment"
           animated>

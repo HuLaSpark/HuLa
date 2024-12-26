@@ -2,16 +2,21 @@
   <Screenshot :is-capturing="isCapturing" />
 </template>
 <script setup lang="ts">
-import { listen } from '@tauri-apps/api/event'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { useTauriListener } from '@/hooks/useTauriListener'
 
+const appWindow = WebviewWindow.getCurrent()
+const { addListener } = useTauriListener()
 const isCapturing = ref(false)
 
 watchEffect(() => {
-  listen('capture', (e) => {
-    nextTick(() => {
-      isCapturing.value = e.payload as boolean
+  addListener(
+    appWindow.listen('capture', (e) => {
+      nextTick(() => {
+        isCapturing.value = e.payload as boolean
+      })
     })
-  })
+  )
 })
 </script>
 

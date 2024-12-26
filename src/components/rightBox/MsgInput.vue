@@ -42,31 +42,15 @@
           align="center"
           class="ait-item">
           <n-avatar
-            v-if="item.avatar"
             lazy
             round
             :size="22"
-            :src="item.avatar"
+            :src="AvatarUtils.getAvatarUrl(item.avatar)"
             fallback-src="/logo.png"
             :render-placeholder="() => null"
             :intersection-observer-options="{
               root: '#image-chat-msgInput'
             }" />
-
-          <n-avatar
-            v-else
-            lazy
-            round
-            :color="'#909090'"
-            :size="22"
-            class="text-10px"
-            fallback-src="/logo.png"
-            :render-placeholder="() => null"
-            :intersection-observer-options="{
-              root: '#image-chat-msgInput'
-            }">
-            {{ item.name.slice(0, 1) }}
-          </n-avatar>
           <span> {{ item.name }}</span>
         </n-flex>
       </template>
@@ -77,13 +61,7 @@
   <n-flex align="center" justify="space-between" :size="12">
     <n-config-provider :theme="lightTheme">
       <n-button-group size="small" class="pr-20px">
-        <n-button
-          color="#13987f"
-          :disabled="msgInput.length === 0 || msgInput.trim() === ''"
-          class="w-65px"
-          @click="send">
-          发送
-        </n-button>
+        <n-button color="#13987f" :disabled="disabledSend" class="w-65px" @click="send"> 发送 </n-button>
         <n-button color="#13987f" class="p-[0_6px]">
           <template #icon>
             <n-config-provider :theme="themes.content === ThemeEnum.DARK ? darkTheme : lightTheme">
@@ -139,8 +117,9 @@
 import { lightTheme, darkTheme, VirtualListInst } from 'naive-ui'
 import { MacOsKeyEnum, MittEnum, RoomTypeEnum, ThemeEnum, WinKeyEnum } from '@/enums'
 import { CacheUserItem, MockItem } from '@/services/types.ts'
-import { emit, listen } from '@tauri-apps/api/event'
+import { emit } from '@tauri-apps/api/event'
 import { useSettingStore } from '@/stores/setting.ts'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { sendOptions } from '@/views/moreWindow/settings/config.ts'
 import { useMsgInput } from '@/hooks/useMsgInput.ts'
 import { SelectionRange, useCommon } from '@/hooks/useCommon.ts'
@@ -148,7 +127,11 @@ import { onKeyStroke } from '@vueuse/core'
 import { type } from '@tauri-apps/plugin-os'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
+import { AvatarUtils } from '@/utils/avatarUtils'
+import { useTauriListener } from '@/hooks/useTauriListener'
 
+const appWindow = WebviewWindow.getCurrent()
+const { addListener } = useTauriListener()
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
 /** 发送按钮旁的箭头 */
@@ -175,8 +158,19 @@ let lastEditRange: SelectionRange | null = null
 const recordSelectionRange = () => (lastEditRange = getEditorRange())
 
 /** 引入useMsgInput的相关方法 */
-const { inputKeyDown, handleAit, handleInput, send, personList, ait, msgInput, chatKey, menuList, selectedAitKey } =
-  useMsgInput(messageInputDom)
+const {
+  inputKeyDown,
+  handleAit,
+  handleInput,
+  send,
+  personList,
+  disabledSend,
+  ait,
+  msgInput,
+  chatKey,
+  menuList,
+  selectedAitKey
+} = useMsgInput(messageInputDom)
 
 /** 当切换聊天对象时，重新获取焦点 */
 watch(activeItem, () => {
@@ -210,7 +204,7 @@ const closeMenu = (event: any) => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   onKeyStroke('Enter', (e) => {
     if (ait.value && selectedAitKey.value > -1) {
       e.preventDefault()
@@ -226,6 +220,7 @@ onMounted(() => {
     e.preventDefault()
     handleAitKeyChange(1)
   })
+  // TODO: 暂时已经关闭了独立窗口聊天功能
   emit('aloneWin')
   nextTick(() => {
     const inputDiv = document.getElementById('message-input')
@@ -241,9 +236,11 @@ onMounted(() => {
     handleAit(useUserInfo(event).value as any)
   })
   /** 这里使用的是窗口之间的通信来监听信息对话的变化 */
-  listen('aloneData', (event: any) => {
-    activeItem.value = { ...event.payload.item }
-  })
+  await addListener(
+    appWindow.listen('aloneData', (event: any) => {
+      activeItem.value = { ...event.payload.item }
+    })
+  )
   window.addEventListener('click', closeMenu, true)
 })
 

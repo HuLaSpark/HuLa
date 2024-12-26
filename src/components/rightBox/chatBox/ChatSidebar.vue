@@ -18,9 +18,20 @@
       </svg>
     </div>
 
+    <!-- 群公告 -->
+    <n-flex vertical :size="14" class="px-4px py-10px">
+      <p class="text-(14px --text-color) font-bold">群公告须知</p>
+
+      <p class="text-(12px #909090) leading-5 line-clamp-4">
+        请不要把重要信息发到该群（功能暂时还未完善），网络不是法外之地，请遵守网络规范，否则直接删除。
+      </p>
+    </n-flex>
+
     <n-flex v-if="!isSearch" align="center" justify="space-between" class="pr-8px pl-8px h-42px">
       <span class="text-14px">在线群聊成员&nbsp;{{ groupStore.countInfo.onlineNum }}</span>
-      <svg @click="handleSelect" class="size-14px"><use href="#search"></use></svg>
+      <svg @click="handleSelect" class="size-14px">
+        <use href="#search"></use>
+      </svg>
     </n-flex>
     <!-- 搜索框 -->
     <n-flex v-else align="center" class="pr-8px h-42px">
@@ -35,7 +46,9 @@
         size="tiny"
         class="h-26px w-95% lh-26px rounded-6px">
         <template #prefix>
-          <svg class="w-12px h-12px"><use href="#search"></use></svg>
+          <svg class="w-12px h-12px">
+            <use href="#search"></use>
+          </svg>
         </template>
       </n-input>
     </n-flex>
@@ -45,7 +58,7 @@
     <!-- // TODO 如果直接使用n-virtual-list的滚动配上n-popover似乎也没有这个bug，但是当点击倒数第二个的时候还是会出现滚动条 (nyh -> 2024-03-25 00:30:53)   -->
     <n-virtual-list
       id="image-chat-sidebar"
-      style="max-height: calc(100vh - 130px)"
+      style="max-height: calc(100vh - 260px)"
       item-resizable
       @scroll="handleScroll($event)"
       :item-size="42"
@@ -66,36 +79,18 @@
               :special-menu="report">
               <n-flex @click="selectKey = item.uid" :key="item.uid" :size="10" align="center" class="item">
                 <n-avatar
-                  v-if="item.avatar"
                   lazy
                   round
                   class="grayscale"
                   :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
                   :color="'#fff'"
                   :size="24"
-                  :src="item.avatar"
+                  :src="AvatarUtils.getAvatarUrl(item.avatar)"
                   fallback-src="/logo.png"
                   :render-placeholder="() => null"
                   :intersection-observer-options="{
                     root: '#image-chat-sidebar'
-                  }"></n-avatar>
-
-                <n-avatar
-                  v-else
-                  lazy
-                  round
-                  class="grayscale text-10px"
-                  :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
-                  :color="'rgba(19, 152, 127, 0.4)'"
-                  :size="24"
-                  :src="item.avatar"
-                  fallback-src="/logo.png"
-                  :render-placeholder="() => null"
-                  :intersection-observer-options="{
-                    root: '#image-chat-sidebar'
-                  }">
-                  {{ item.name?.slice(0, 1) }}
-                </n-avatar>
+                  }" />
                 <span class="text-12px truncate flex-1">{{ item.name }}</span>
                 <div v-if="item.uid === 1" class="flex p-4px rounded-4px bg-#f5dadf size-fit select-none">
                   <span class="text-(10px #d5304f)">群主</span>
@@ -124,6 +119,7 @@ import { useUserInfo } from '@/hooks/useCached.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import type { UserItem } from '@/services/types.ts'
 import { useDebounceFn } from '@vueuse/core'
+import { AvatarUtils } from '@/utils/avatarUtils'
 
 const groupStore = useGroupStore()
 const globalStore = useGlobalStore()

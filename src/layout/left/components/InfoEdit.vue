@@ -11,7 +11,7 @@
           </svg>
         </div>
 
-        <n-flex class="text-(14px --text-color) select-none pt-6px" justify="center">编辑资料</n-flex>
+        <n-flex class="text-(14px [--text-color]) select-none pt-6px" justify="center">编辑资料</n-flex>
 
         <svg
           v-if="type() === 'windows'"
@@ -25,23 +25,10 @@
         <!-- 头像 -->
         <n-flex justify="center">
           <n-avatar
-            v-if="editInfo.content.avatar"
             :size="80"
-            :src="editInfo.content.avatar"
+            :src="AvatarUtils.getAvatarUrl(editInfo.content.avatar!)"
             round
             style="border: 3px solid #fff" />
-
-          <n-avatar
-            v-else
-            :size="80"
-            :color="'#909090'"
-            :src="editInfo.content.avatar"
-            round
-            class="text-22px"
-            style="border: 3px solid #fff">
-            {{ localUserInfo.name?.slice(0, 1) }}
-            <!-- {{ editInfo.content.name?.slice(0, 1) }} -->
-          </n-avatar>
         </n-flex>
         <n-flex v-if="currentBadge" align="center" justify="center">
           <span class="text-(14px #707070)">当前佩戴的徽章:</span>
@@ -128,6 +115,7 @@ import { type } from '@tauri-apps/plugin-os'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { UserInfoType } from '@/services/types'
+import { AvatarUtils } from '@/utils/avatarUtils'
 
 let localUserInfo = ref<Partial<UserInfoType>>({})
 const userStore = useUserStore()
