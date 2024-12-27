@@ -13,10 +13,19 @@ import { useUserStore } from '@/stores/user.ts'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
 import { sendNotification } from '@tauri-apps/plugin-notification'
 
+type RecalledMessage = {
+  messageId: number
+  content: string
+  recallTime: number
+}
+
 // 定义每页加载的消息数量
 export const pageSize = 20
 // 标识是否第一次请求
 let isFirstInit = false
+
+// 撤回消息的过期时间
+const RECALL_EXPIRATION_TIME = 2 * 60 * 1000 // 2分钟，单位毫秒
 
 export const useChatStore = defineStore(
   'chat',
@@ -43,7 +52,7 @@ export const useChatStore = defineStore(
     ) // 消息加载状态
     const replyMapping = reactive<Map<number, Map<number, number[]>>>(new Map([[currentRoomId.value, new Map()]])) // 回复消息的映射关系
     // 存储撤回的消息内容和时间
-    const recalledMessages = reactive<Map<number, { content: string; recallTime: number }>>(new Map())
+    const recalledMessages = reactive<Map<number, RecalledMessage>>(new Map())
 
     // 当前聊天室的消息Map计算属性
     const currentMessageMap = computed({
@@ -334,7 +343,7 @@ export const useChatStore = defineStore(
         })
       }
 
-      // tab 在后台获得新消息，就开始闪烁！
+      // tab 在台获得新消息，就开始闪烁！
       // if (document.hidden && !shakeTitle.isShaking) {
       //   shakeTitle.start()
       // }
@@ -403,16 +412,31 @@ export const useChatStore = defineStore(
       }
     }
 
+    // 存储每条撤回消息的过期定时器
+    const expirationTimers = new Map<number, number>()
+
     // 更新消息撤回状态
     const updateRecallStatus = (data: RevokedMsgType) => {
       const { msgId } = data
       const message = currentMessageMap.value?.get(msgId)
       if (message && typeof data.recallUid === 'number') {
         // 存储撤回的消息内容和时间
+        const recallTime = Date.now()
         recalledMessages.set(msgId, {
+          messageId: msgId,
           content: message.message.body.content,
-          recallTime: Date.now()
+          recallTime
         })
+
+        // 为这条消息设置过期定时器 TODO: setTimeout会有精度问题
+        const timeoutId = window.setTimeout(() => {
+          recalledMessages.delete(msgId)
+          expirationTimers.delete(msgId)
+          triggerMessageMapUpdate()
+        }, RECALL_EXPIRATION_TIME)
+
+        // 存储定时器ID以便清理
+        expirationTimers.set(msgId, timeoutId)
 
         message.message.type = MsgEnum.RECALL
         const cacheUser = cachedStore.userCachedList[data.recallUid]
@@ -436,9 +460,25 @@ export const useChatStore = defineStore(
       }
     }
 
-    // 获取撤回的消息内容
-    const getRecalledMessage = (msgId: number) => {
+    // 添加一个工具函数来触发消息列表更新
+    const triggerMessageMapUpdate = () => {
+      if (currentMessageMap.value) {
+        const newMap = new Map(currentMessageMap.value)
+        currentMessageMap.value = newMap
+      }
+    }
+
+    // 获取撤回消息
+    const getRecalledMessage = (msgId: number): RecalledMessage | undefined => {
       return recalledMessages.get(msgId)
+    }
+
+    // 清理所有定时器
+    const clearAllExpirationTimers = () => {
+      expirationTimers.forEach((timerId) => {
+        clearTimeout(timerId)
+      })
+      expirationTimers.clear()
     }
 
     // 删除消息
@@ -526,7 +566,8 @@ export const useChatStore = defineStore(
       getMessage,
       removeContact,
       getRecalledMessage,
-      recalledMessages
+      recalledMessages,
+      clearAllExpirationTimers
     }
   },
   {

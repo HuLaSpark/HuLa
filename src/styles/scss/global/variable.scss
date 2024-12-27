@@ -8,7 +8,7 @@ html,
 body,
 svg {
   outline: none;
-  overscroll-behavior: none; // 禁止mac的“触底反弹”效果
+  overscroll-behavior: none; // 禁止mac的"触底反弹"效果
 }
 /**! 主题变量 */
 /* todo: 这里只需要定义单个颜色的变量即可无需重复定义组件的颜色 */
@@ -68,6 +68,7 @@ svg {
   // 表情框样式
   --bg-emoji: rgba(255, 255, 255, 0.6);
   --emoji-hover: #e3e3e3;
+  --emoji-active-color: #13987f;
   // 回复消息样式
   --reply-color: #909090;
   --reply-hover: #505050;
@@ -149,6 +150,7 @@ html[data-theme='dark'] {
   // 表情框样式
   --bg-emoji: rgba(27, 27, 27, 0.8);
   --emoji-hover: #3b3b3b;
+  --emoji-active-color: #13987f;
   // 回复消息样式
   --reply-color: #e3e3e3;
   --reply-hover: #b1b1b1;
