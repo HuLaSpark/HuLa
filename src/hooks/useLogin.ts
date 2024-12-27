@@ -20,9 +20,9 @@ export const useLogin = () => {
   const logout = async () => {
     const { createWebviewWindow } = useWindow()
     // todo 退出账号 需要关闭其他的全部窗口
-    await createWebviewWindow('登录', 'login', 320, 448, 'home', false, 320, 448).then(() => {
-      emit(EventEnum.LOGOUT)
-      emitTo('tray', 'logout_success')
+    await createWebviewWindow('登录', 'login', 320, 448, 'home', false, 320, 448).then(async () => {
+      await emit(EventEnum.LOGOUT)
+      await emitTo('tray', 'logout_success')
     })
   }
 

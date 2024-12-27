@@ -302,14 +302,15 @@ onMounted(async () => {
       background-color: var(--emoji-hover);
       cursor: pointer;
     }
+
+    &.active {
+      background-color: var(--emoji-active-color) !important;
+    }
+
     &:last-child {
       margin-right: 0;
     }
   }
-}
-
-.active {
-  background-color: #13987f;
 }
 
 .emoji-content {

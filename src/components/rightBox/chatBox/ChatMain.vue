@@ -16,8 +16,37 @@
   </n-flex>
 
   <Transition name="chat-init" appear mode="out-in" @after-leave="handleTransitionComplete">
+    <!-- 初次加载的骨架屏 -->
+    <n-flex
+      v-if="messageOptions?.isLoading && !messageOptions?.cursor"
+      vertical
+      :size="18"
+      style="max-height: calc(100vh - 260px)"
+      class="relative h-100vh box-border p-20px">
+      <n-flex justify="end">
+        <n-skeleton style="border-radius: 14px" height="40px" width="46%" :sharp="false" />
+        <n-skeleton height="40px" circle />
+      </n-flex>
+
+      <n-flex>
+        <n-skeleton height="40px" circle />
+        <n-skeleton style="border-radius: 14px" height="60px" width="58%" :sharp="false" />
+      </n-flex>
+
+      <n-flex>
+        <n-skeleton height="40px" circle />
+        <n-skeleton style="border-radius: 14px" height="40px" width="26%" :sharp="false" />
+      </n-flex>
+
+      <n-flex justify="end">
+        <n-skeleton style="border-radius: 14px" height="40px" width="60%" :sharp="false" />
+        <n-skeleton height="40px" circle />
+      </n-flex>
+    </n-flex>
+
     <!-- 中间聊天内容(使用虚拟列表) -->
     <VirtualList
+      v-else
       id="image-chat-main"
       ref="virtualListInst"
       :items="chatMessageList"
@@ -366,7 +395,7 @@ import { usePopover } from '@/hooks/usePopover.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { useChatMain } from '@/hooks/useChatMain.ts'
 import { delay } from 'lodash-es'
-import { formatTimestamp, isDiffNow } from '@/utils/ComputedTime.ts'
+import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { useUserInfo, useBadgeInfo } from '@/hooks/useCached.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { type } from '@tauri-apps/plugin-os'
@@ -713,15 +742,8 @@ const canReEdit = computed(() => (msgId: number) => {
   const message = chatStore.getMessage(msgId)
   if (!recalledMsg || !message) return false
 
-  // 判断是否是当前用户的撤回消息且在2分钟内
-  return (
-    message.fromUser.uid === userUid.value &&
-    !isDiffNow({
-      time: recalledMsg.recallTime,
-      unit: 'minute',
-      diff: 2
-    })
-  )
+  // 只需要判断是否是当前用户的消息，时间检查已经在 getRecalledMessage 中处理
+  return message.fromUser.uid === userUid.value
 })
 
 const handleReEdit = (msgId: number) => {
@@ -767,6 +789,9 @@ onUnmounted(() => {
   }
   hoverBubble.value.key = -1
   window.removeEventListener('click', closeMenu, true)
+
+  // 清理所有过期定时器
+  chatStore.clearAllExpirationTimers()
 })
 </script>
 

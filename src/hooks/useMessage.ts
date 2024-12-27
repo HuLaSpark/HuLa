@@ -124,7 +124,6 @@ export const useMessage = () => {
 
         // 如果没有会话就把右侧消息框关闭
         if (updatedSessions.length === 0) {
-          console.log('没有会话了')
           useMitt.emit(MittEnum.MSG_BOX_SHOW, { item: -1 })
           return
         }

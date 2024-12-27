@@ -2,7 +2,7 @@
   <!-- 消息列表 // TODO 使用虚拟列表组件就用不了动画和拖动了 (nyh -> 2024-03-28 06:01:00) -->
   <n-scrollbar ref="msg-scrollbar" style="max-height: calc(100vh - 70px)">
     <!--  右键菜单组件  -->
-    <div class="p-[4px_10px_0px_8px]">
+    <div v-if="sessionList.length > 0" class="p-[4px_10px_0px_8px]">
       <ContextMenu
         v-for="item in sessionList"
         :key="item.roomId"
@@ -47,6 +47,37 @@
         </n-flex>
       </ContextMenu>
     </div>
+
+    <!-- 加载中显示的骨架屏 -->
+    <n-flex
+      v-else-if="chatStore.sessionOptions.isLoading"
+      vertical
+      :size="18"
+      style="max-height: calc(100vh - 70px)"
+      class="relative h-100vh box-border p-20px">
+      <n-flex>
+        <n-skeleton style="border-radius: 14px" height="60px" width="100%" :sharp="false" />
+      </n-flex>
+
+      <n-flex>
+        <n-skeleton style="border-radius: 14px" height="40px" width="80%" :sharp="false" />
+      </n-flex>
+
+      <n-flex justify="end">
+        <n-skeleton style="border-radius: 14px" height="40px" width="80%" :sharp="false" />
+      </n-flex>
+
+      <n-flex>
+        <n-skeleton style="border-radius: 14px" height="60px" width="100%" :sharp="false" />
+      </n-flex>
+    </n-flex>
+
+    <!-- 没有数据显示的提示 -->
+    <n-result v-else class="absolute-center" status="418" description="快和朋友聊天吧！">
+      <template #footer>
+        <n-button secondary type="primary">寻找好友</n-button>
+      </template>
+    </n-result>
   </n-scrollbar>
 </template>
 <script lang="ts" setup>
@@ -60,7 +91,7 @@ import { useUserInfo } from '@/hooks/useCached.ts'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import SysNTF from '@/components/common/SystemNotification.tsx'
-import { AvatarUtils } from '@/utils/avatarUtils'
+import { AvatarUtils } from '@/utils/avatarUtils.ts'
 import { useGroupStore } from '@/stores/group.ts'
 
 const chatStore = useChatStore()

@@ -214,6 +214,7 @@ export const useCommon = () => {
       const divNode = document.createElement('div')
       divNode.id = 'replyDiv' // 设置id为replyDiv
       divNode.contentEditable = 'false' // 设置为不可编辑
+      divNode.tabIndex = -1 // 防止被focus
       divNode.style.cssText = `
       background-color: var(--reply-bg);
       font-size: 12px;
@@ -223,7 +224,9 @@ export const useCommon = () => {
       border-radius: 8px;
       margin-bottom: 2px;
       user-select: none;
+      pointer-events: none; /* 防止鼠标事件 */
       cursor: default;
+      outline: none; /* 移除focus时的轮廓 */
     `
       // 把dom中的value值作为回复信息的作者，dom中的content作为回复信息的内容
       const author = dom.accountName + '：'
@@ -244,6 +247,8 @@ export const useCommon = () => {
       padding: 0 4px;
       color: rgba(19, 152, 127);
       cursor: default;
+      user-select: none;
+      pointer-events: none;
     `
       headerNode.appendChild(document.createTextNode(author))
       // 创建一个div标签节点包裹正文内容
@@ -276,6 +281,7 @@ export const useCommon = () => {
         border-radius: 4px;
         cursor: default;
         user-select: none;
+        pointer-events: none;
       `
         // 将img标签节点插入到div标签节点中
         divNode.appendChild(contentBox)
@@ -298,6 +304,8 @@ export const useCommon = () => {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      user-select: none;
+      pointer-events: none;
     `
         contentBox.appendChild(document.createTextNode(content))
       }
@@ -312,6 +320,8 @@ export const useCommon = () => {
       cursor: pointer;
       margin-left: 10px;
       flex-shrink: 0;
+      user-select: none;
+      pointer-events: auto; /* 确保关闭按钮可以点击 */
     `
       closeBtn.textContent = '关闭'
       closeBtn.addEventListener('click', () => {

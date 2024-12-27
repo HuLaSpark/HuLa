@@ -24,6 +24,7 @@ import { check } from '@tauri-apps/plugin-updater'
 import { relaunch } from '@tauri-apps/plugin-process'
 import { useUserStore } from '@/stores/user.ts'
 import { useSettingStore } from '@/stores/setting.ts'
+import { AvatarUtils } from '@/utils/avatarUtils.ts'
 
 const formRef = ref<FormInst | null>()
 const formValue = ref({
@@ -83,7 +84,7 @@ export const LockScreen = defineComponent(() => {
           <NFlex vertical justify="center" align="center" size={20}>
             <span class="text-(14px center)">锁定屏幕</span>
 
-            <NAvatar bordered round size={80} src={userStore.userInfo.avatar} />
+            <NAvatar bordered round size={80} src={AvatarUtils.getAvatarUrl(userStore.userInfo.avatar!)} />
 
             <p class="text-(14px center [--text-color]) truncate w-200px">{userStore.userInfo.name}</p>
           </NFlex>

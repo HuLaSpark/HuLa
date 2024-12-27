@@ -3,7 +3,7 @@
   <!--  // TODO 锁屏时隐藏其他窗口，解锁后再显示 (nyh -> 2024-07-14 01:39:01) -->
   <div
     data-tauri-drag-region
-    class="lock-bg rounded-8px select-none absolute top-0 left-0 w-full h-full z-9999 transition-all duration-300 ease-in-out">
+    class="lock-bg overflow-y-hidden rounded-8px select-none absolute top-0 left-0 w-full h-full z-9999 transition-all duration-300 ease-in-out">
     <ActionBar class="absolute top-0 right-0 z-99999" :current-label="appWindow.label" :shrink="false" />
 
     <Transition name="slide-fade" appear>
