@@ -37,8 +37,10 @@ jobs:
           version: 9
           run_install: false
 
-      - name: Install Dashscope SDK
-        run: pnpm install @aliyun/dashscope
+      - name: Install OpenAI SDK
+        run: |
+          pnpm config set registry https://registry.npmmirror.com/
+          pnpm add openai
 
       - name: Analyze PR
         id: analyze
@@ -47,27 +49,30 @@ jobs:
           DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
         with:
           script: |
-            const DashScope = require('@aliyun/dashscope');
+            const OpenAI = require('openai');
             
-            const dashscope = new DashScope({
-              apiKey: process.env.DASHSCOPE_API_KEY
+            const openai = new OpenAI({
+              apiKey: process.env.DASHSCOPE_API_KEY,
+              baseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1"
             });
             
             const diff = process.env.DIFF;
             
             try {
-              const response = await dashscope.chat.completions.create({
-                model: "qwen-max",
+              const completion = await openai.chat.completions.create({
+                model: "qwen-plus",
                 messages: [{
                   role: "system",
                   content: "你是一个代码审查助手，请用中文分析以下代码变更。"
                 }, {
                   role: "user",
                   content: `请分析以下代码变更并总结主要改动：\n\n${diff}`
-                }]
+                }],
+                temperature: 0.7,
+                max_tokens: 1000
               });
               
-              const analysis = response.output.choices[0].message.content;
+              const analysis = completion.choices[0].message.content;
               core.setOutput('analysis', analysis);
               
               await github.rest.issues.createComment({
