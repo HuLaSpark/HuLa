@@ -1,4 +1,4 @@
-name: PR Copilot Review
+name: PR Review Bot
 
 on:
   pull_request:
@@ -26,30 +26,57 @@ jobs:
           echo "$DIFF" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
-      - name: GitHub Copilot PR Review
-        uses: github/copilot-preview-action@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          prompt: |
-            请分析以下代码变更并用中文总结这个 PR 的主要改动：
-            
-            ${{ env.DIFF }}
-          
-      - name: Comment PR
+          node-version: '22'
+
+      - name: Install OpenAI SDK
+        run: pnpm install openai
+
+      - name: Analyze PR
+        id: analyze
         uses: actions/github-script@v7
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const response = process.env.COPILOT_OUTPUT;
+            const OpenAI = require('openai');
             
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `## Copilot PR 分析
+            const openai = new OpenAI({
+              apiKey: process.env.OPENAI_API_KEY
+            });
+            
+            const diff = process.env.DIFF;
+            
+            try {
+              const completion = await openai.chat.completions.create({
+                model: "gpt-4",
+                messages: [{
+                  role: "system",
+                  content: "你是一个代码审查助手，请用中文分析以下代码变更。"
+                }, {
+                  role: "user",
+                  content: `请分析以下代码变更并总结主要改动：\n\n${diff}`
+                }],
+                temperature: 0.7,
+                max_tokens: 1000
+              });
+              
+              const analysis = completion.choices[0].message.content;
+              core.setOutput('analysis', analysis);
+              
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `## PR 代码分析
 
-            ${response}
+                ${analysis}
 
-            ---
-            *这是由 GitHub Copilot 自动生成的 PR 分析，仅供参考。*`
-            }); 
+                ---
+                *这是由 AI 自动生成的 PR 分析，仅供参考。*`
+              });
+            } catch (error) {
+              core.setFailed(`分析失败: ${error.message}`);
+            } 
