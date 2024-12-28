@@ -31,6 +31,12 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+          run_install: false
+
       - name: Install OpenAI SDK
         run: pnpm install openai
 
