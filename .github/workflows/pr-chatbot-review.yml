@@ -21,15 +21,29 @@ jobs:
         id: diff
         run: |
           git fetch origin ${{ github.event.pull_request.base.sha }}
-          DIFF=$(git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
-          echo "DIFF<<EOF" >> $GITHUB_ENV
-          echo "$DIFF" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          # 只获取特定文件类型的变更
+          DIFF=$(git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} -- \
+            'src/**/*.vue' \
+            'src/**/*.ts' \
+            'src/**/*.tsx' \
+            'src-tauri/**/*.rs')
+          
+          # 如果没有相关文件变更，设置一个提示信息
+          if [ -z "$DIFF" ]; then
+            echo "NO_CHANGES=true" >> $GITHUB_ENV
+            echo "DIFF=没有检测到相关文件的变更。" >> $GITHUB_ENV
+          else
+            echo "NO_CHANGES=false" >> $GITHUB_ENV
+            echo "DIFF<<EOF" >> $GITHUB_ENV
+            echo "$DIFF" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: 'pnpm'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
@@ -37,13 +51,29 @@ jobs:
           version: 9
           run_install: false
 
-      - name: Install OpenAI SDK
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
         run: |
           pnpm config set registry https://registry.npmmirror.com/
+          pnpm install
           pnpm add openai
 
       - name: Analyze PR
         id: analyze
+        if: env.NO_CHANGES != 'true'
         uses: actions/github-script@v7
         env:
           DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
@@ -63,7 +93,13 @@ jobs:
                 model: "qwen-plus",
                 messages: [{
                   role: "system",
-                  content: "你是一个代码审查助手，请用中文分析以下代码变更。"
+                  content: "你是一个代码审查助手。请用中文分析以下代码变更，重点关注：\n" +
+                          "1. 代码逻辑的改动\n" +
+                          "2. 潜在的问题或优化空间\n" +
+                          "3. TypeScript 类型定义的准确性\n" +
+                          "4. Vue 组件的性能影响\n" +
+                          "5. Rust 代码的安全性和性能\n" +
+                          "请用中文简明扼要地总结。"
                 }, {
                   role: "user",
                   content: `请分析以下代码变更并总结主要改动：\n\n${diff}`
@@ -88,4 +124,21 @@ jobs:
               });
             } catch (error) {
               core.setFailed(`分析失败: ${error.message}`);
-            } 
+            }
+
+      - name: Skip Analysis Comment
+        if: env.NO_CHANGES == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## PR 代码分析
+
+              本次变更不包含需要分析的代码文件（src 目录下的 .vue/.ts/.tsx 文件或 src-tauri 目录下的 .rs 文件）。
+
+              ---
+              *这是自动生成的通知。*`
+            }); 
