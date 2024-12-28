@@ -536,7 +536,7 @@ const handleScroll = () => {
   const scrollHeight = container.scrollHeight
   // 获取容器的可视区域高度
   const clientHeight = container.clientHeight
-  // ��算距离底部的距离
+  // 计算距离底部的距离
   const distanceFromBottom = scrollHeight - scrollTop.value - clientHeight
 
   // 存储 requestAnimationFrame 的返回值
@@ -737,7 +737,7 @@ const canReEdit = computed(() => (msgId: number) => {
   const message = chatStore.getMessage(msgId)
   if (!recalledMsg || !message) return false
 
-  // 只需要判断是否是当前用户的消��，时间检查已经在 getRecalledMessage 中处理
+  // 只需要判断是否是当前用户的消息，时间检查已经在 getRecalledMessage 中处理
   return message.fromUser.uid === userUid.value
 })
 
