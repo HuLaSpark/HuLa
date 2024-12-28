@@ -37,39 +37,37 @@ jobs:
           version: 9
           run_install: false
 
-      - name: Install OpenAI SDK
-        run: pnpm install openai
+      - name: Install Dashscope SDK
+        run: pnpm install @dashscope/api
 
       - name: Analyze PR
         id: analyze
         uses: actions/github-script@v7
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
         with:
           script: |
-            const OpenAI = require('openai');
+            const DashScope = require('@dashscope/api');
             
-            const openai = new OpenAI({
-              apiKey: process.env.OPENAI_API_KEY
+            const dashscope = new DashScope({
+              apiKey: process.env.DASHSCOPE_API_KEY
             });
             
             const diff = process.env.DIFF;
             
             try {
-              const completion = await openai.chat.completions.create({
-                model: "gpt-4",
+              const response = await dashscope.chat.completions.create({
+                model: "qwen-max",
                 messages: [{
                   role: "system",
                   content: "你是一个代码审查助手，请用中文分析以下代码变更。"
                 }, {
                   role: "user",
                   content: `请分析以下代码变更并总结主要改动：\n\n${diff}`
-                }],
-                temperature: 0.7,
-                max_tokens: 1000
+                }]
               });
               
-              const analysis = completion.choices[0].message.content;
+              const analysis = response.output.choices[0].message.content;
               core.setOutput('analysis', analysis);
               
               await github.rest.issues.createComment({
@@ -81,7 +79,7 @@ jobs:
                 ${analysis}
 
                 ---
-                *这是由 AI 自动生成的 PR 分析，仅供参考。*`
+                *这是由通义千问 AI 自动生成的 PR 分析，仅供参考。*`
               });
             } catch (error) {
               core.setFailed(`分析失败: ${error.message}`);
