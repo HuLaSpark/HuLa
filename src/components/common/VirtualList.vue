@@ -1,5 +1,9 @@
 <template>
   <div ref="containerRef" class="virtual-list-container" @scroll="handleScroll">
+    <n-flex v-if="isLoadingMore" justify="center" class="box-border absolute-x-center pt-10px">
+      <img class="size-16px" src="@/assets/img/loading.svg" alt="" />
+      <span class="text-(14px #909090)">加载中</span>
+    </n-flex>
     <div class="virtual-list-phantom" :style="{ height: `${totalHeight}px` }"></div>
     <div class="virtual-list-content" :style="{ transform: `translateY(${offset}px)` }">
       <div v-for="item in visibleData" :key="item.message?.id" :id="`item-${item.message?.id}`">
@@ -14,6 +18,7 @@ const props = defineProps<{
   items: any[]
   estimatedItemHeight?: number
   buffer?: number
+  isLoadingMore?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -25,8 +30,9 @@ const emit = defineEmits<{
 const DEFAULT_ESTIMATED_HEIGHT = 80 // 默认预估的每项高度
 const BUFFER_SIZE = props.buffer || 5 // 上下缓冲区域的数量
 const OVERSCAN_SIZE = 1000 // 预渲染区域的像素高度，防止滚动时出现空白
-const estimatedItemHeight = props.estimatedItemHeight || DEFAULT_ESTIMATED_HEIGHT // 每项的预估高度
 const MAX_CACHE_SIZE = 1000 // 高度缓存的最大数量
+const LOADING_OFFSET = 26 // 加载中需要的偏移量(26px是加载动画的高度)
+const ESTIMATED_ITEM_HEIGHT = props.estimatedItemHeight || DEFAULT_ESTIMATED_HEIGHT // 每项的预估高度
 
 // 响应式引用
 const containerRef = ref<HTMLElement | null>(null) // 容器元素引用
@@ -78,7 +84,7 @@ const visibleData = computed(() => {
 const totalHeight = computed(() => {
   // 累加所有项目的高度，如果没有缓存则使用预估高度
   return props.items.reduce((total, item) => {
-    return total + (heights.value.get(item.message?.id?.toString()) || estimatedItemHeight)
+    return total + (heights.value.get(item.message?.id?.toString()) || ESTIMATED_ITEM_HEIGHT)
   }, 0)
 })
 
@@ -127,18 +133,29 @@ const updateItemHeight = () => {
 
 // 根据滚动位置计算起始索引
 const getStartIndex = (scrollTop: number) => {
-  let total = 0
-  let index = 0
+  const accumulatedHeights: number[] = []
+  let totalHeight = 0
+  // 预计算累积高度 O(n)，但只需要在列表数据变化时更新
+  props.items.forEach((item, index) => {
+    totalHeight += heights.value.get(item.message?.id?.toString()) || ESTIMATED_ITEM_HEIGHT
+    accumulatedHeights[index] = totalHeight
+  })
 
-  // 累加高度直到超过当前滚动位置减去预渲染区域
-  while (total < scrollTop - OVERSCAN_SIZE && index < props.items.length) {
-    const itemHeight = heights.value.get(props.items[index].message?.id?.toString()) || estimatedItemHeight
-    total += itemHeight
-    index++
+  // 二分查找 O(log n)
+  let left = 0
+  let right = accumulatedHeights.length - 1
+  const target = scrollTop - OVERSCAN_SIZE
+
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2)
+    if (accumulatedHeights[mid] < target) {
+      left = mid + 1
+    } else {
+      right = mid - 1
+    }
   }
 
-  // 返回计算后的索引，确保留有缓冲区
-  return Math.max(0, index - BUFFER_SIZE)
+  return Math.max(0, left - BUFFER_SIZE)
 }
 
 // 计算指定索引的偏移量
@@ -146,7 +163,7 @@ const getOffsetForIndex = (index: number) => {
   let total = 0
   // 累加到目标索引前的所有项目高度
   for (let i = 0; i < index; i++) {
-    const itemHeight = heights.value.get(props.items[i].message?.id?.toString()) || estimatedItemHeight
+    const itemHeight = heights.value.get(props.items[i].message?.id?.toString()) || ESTIMATED_ITEM_HEIGHT
     total += itemHeight
   }
   return total
@@ -166,7 +183,7 @@ const updateVisibleRange = () => {
 
   // 累加高度直到超过可视区域加上预渲染区域
   while (total < clientHeight + OVERSCAN_SIZE * 2 && end < props.items.length) {
-    const itemHeight = heights.value.get(props.items[end].message?.id?.toString()) || estimatedItemHeight
+    const itemHeight = heights.value.get(props.items[end].message?.id?.toString()) || ESTIMATED_ITEM_HEIGHT
     total += itemHeight
     end++
   }
@@ -176,7 +193,8 @@ const updateVisibleRange = () => {
 
   // 更新可见范围和偏移量
   visibleRange.value = { start, end }
-  offset.value = getOffsetForIndex(start)
+  // 加上加载中需要的偏移量
+  offset.value = getOffsetForIndex(start) + LOADING_OFFSET
 }
 
 // 更新可见范围的帧动画处理

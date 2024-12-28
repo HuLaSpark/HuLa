@@ -9,12 +9,6 @@
     当前网络不可用，请检查你的网络设置
   </n-flex>
 
-  <!-- 加载中提示 -->
-  <n-flex justify="center" class="box-border pt-10px" v-if="messageOptions?.isLoading && isLoadingMore">
-    <img class="size-16px" src="@/assets/img/loading.svg" alt="" />
-    <span class="text-(14px #909090)">加载中</span>
-  </n-flex>
-
   <Transition name="chat-init" appear mode="out-in" @after-leave="handleTransitionComplete">
     <!-- 初次加载的骨架屏 -->
     <n-flex
@@ -50,11 +44,12 @@
       id="image-chat-main"
       ref="virtualListInst"
       :items="chatMessageList"
-      :estimated-item-height="itemSize"
+      :estimatedItemHeight="itemSize"
       :buffer="5"
+      :isLoadingMore="messageOptions?.isLoading && isLoadingMore"
       @scroll="handleScroll"
       @scroll-direction-change="handleScrollDirectionChange"
-      :style="{ maxHeight: `calc(100vh - ${messageOptions?.isLoading && isLoadingMore ? '286px' : '260px'})` }">
+      style="max-height: calc(100vh - 260px)">
       <template #default="{ item, index }">
         <n-flex
           vertical
@@ -491,7 +486,7 @@ watch(
 
       // 如果正在加载历史消息，优先处理历史消息的滚动
       if (isLoadingMore.value) {
-        if (scrollTop.value < 10) {
+        if (scrollTop.value < 26) {
           requestAnimationFrame(() => {
             virtualListInst.value?.scrollTo({ index: value.length - oldValue.length })
           })
@@ -541,13 +536,13 @@ const handleScroll = () => {
   const scrollHeight = container.scrollHeight
   // 获取容器的可视区域高度
   const clientHeight = container.clientHeight
-  // 计算距离底部的距离
+  // ��算距离底部的距离
   const distanceFromBottom = scrollHeight - scrollTop.value - clientHeight
 
   // 存储 requestAnimationFrame 的返回值
   rafId.value = requestAnimationFrame(async () => {
     // 处理触顶加载更多
-    if (scrollTop.value === 0) {
+    if (scrollTop.value < 26) {
       // 如果正在加载或已经触发了加载，则不重复触发
       if (messageOptions.value?.isLoading || isLoadingMore.value) return
 
@@ -742,7 +737,7 @@ const canReEdit = computed(() => (msgId: number) => {
   const message = chatStore.getMessage(msgId)
   if (!recalledMsg || !message) return false
 
-  // 只需要判断是否是当前用户的消息，时间检查已经在 getRecalledMessage 中处理
+  // 只需要判断是否是当前用户的消��，时间检查已经在 getRecalledMessage 中处理
   return message.fromUser.uid === userUid.value
 })
 
