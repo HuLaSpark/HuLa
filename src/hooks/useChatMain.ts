@@ -9,6 +9,7 @@ import { useUserStore } from '@/stores/user'
 import { useGlobalStore } from '@/stores/global.ts'
 import { isDiffNow } from '@/utils/ComputedTime.ts'
 import { writeText } from '@tauri-apps/plugin-clipboard-manager'
+import { translateText } from '@/services/translate'
 
 export const useChatMain = (activeItem?: SessionItem) => {
   const { removeTag, openMsgSession, userUid } = useCommon()
@@ -66,6 +67,16 @@ export const useChatMain = (activeItem?: SessionItem) => {
       label: '转发',
       icon: 'share',
       click: () => {}
+    },
+    {
+      label: '翻译',
+      icon: 'translate',
+      click: async (item: MessageType) => {
+        const content = item.message.body.content
+        const translatedText = await translateText(content, 'tencent')
+        console.log('原文:', content)
+        console.log('译文:', translatedText)
+      }
     },
     { label: '收藏', icon: 'collection-files' },
     {

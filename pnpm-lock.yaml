@@ -50,6 +50,9 @@ importers:
       colorthief:
         specifier: ^2.6.0
         version: 2.6.0
+      crypto-js:
+        specifier: ^4.2.0
+        version: 4.2.0
       dayjs:
         specifier: ^1.11.11
         version: 1.11.13
@@ -59,9 +62,6 @@ importers:
       grapheme-splitter:
         specifier: ^1.0.4
         version: 1.0.4
-      hula:
-        specifier: 'file:'
-        version: file:(@types/sortablejs@1.15.8)(magicast@0.3.5)(rollup@4.29.0)(typescript@5.7.2)(vite@6.0.5(@types/node@20.17.10)(jiti@2.4.2)(sass@1.83.0)(terser@5.37.0)(tsx@4.19.2)(yaml@2.6.1))
       hula-emojis:
         specifier: ^1.2.1
         version: 1.2.1
@@ -114,6 +114,9 @@ importers:
       '@tauri-apps/cli':
         specifier: 2.0.4
         version: 2.0.4
+      '@types/crypto-js':
+        specifier: ^4.2.2
+        version: 4.2.2
       '@types/lodash-es':
         specifier: ^4.17.12
         version: 4.17.12
@@ -1793,6 +1796,9 @@ packages:
   '@types/conventional-commits-parser@5.0.1':
     resolution: {integrity: sha512-7uz5EHdzz2TqoMfV7ee61Egf5y6NkcO4FB/1iCCQnbeiI1F3xzv3vK5dBCXUCLQgGYS+mUeigK1iKQzvED+QnQ==}
 
+  '@types/crypto-js@4.2.2':
+    resolution: {integrity: sha512-sDOLlVbHhXpAUAL0YHDUUwDZf3iN4Bwi4W6a0W0b+QcAezUbRtH4FVb+9J4h+XFPW7l/gQ9F8qC7P+Ec4k8QVQ==}
+
   '@types/estree@1.0.6':
     resolution: {integrity: sha512-AYnb1nQyY49te+VRAVgmzfcgjYS91mY5P0TKUDCLEM+gNnA+3T6rWITXRLYCpahpqSQbN5cE+gHpnPyXjHWxcw==}
 
@@ -2586,6 +2592,9 @@ packages:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
 
+  crypto-js@4.2.0:
+    resolution: {integrity: sha512-KALDyEYgpY+Rlob/iriUtjV6d5Eq+Y191A5g4UqLAi8CyGP9N1+FdVbkc1SxKc2r4YAYqG8JzO2KGL+AizD70Q==}
+
   css-render@0.15.14:
     resolution: {integrity: sha512-9nF4PdUle+5ta4W5SyZdLCCmFd37uVimSjg1evcTqKJCyvCEEj12WKzOSBNak6r4im4J4iYXKH1OWpUV5LBYFg==}
 
@@ -3371,10 +3380,6 @@ packages:
 
   hula-emojis@1.2.1:
     resolution: {integrity: sha512-PDDnx2u98XYZKeuzEyUXZAfasFCphxynlLLW3dcixPAsm/GVAYZsJqr+IMnjQIpqg8lkBDIVSiu7+K2YQDreoQ==}
-
-  'hula@file:':
-    resolution: {directory: '', type: directory}
-    engines: {node: '>=18.12.0', pnpm: '>=8.10.0'}
 
   human-signals@2.1.0:
     resolution: {integrity: sha512-B4FFZ6q/T2jhhksgkbEW3HBvWIfDW85snkQgawt07S7J5QXTk6BkNV+0yAeZrM5QpMAdYlocGoljn0sJ/WQkFw==}
@@ -6672,6 +6677,8 @@ snapshots:
     dependencies:
       '@types/node': 20.17.10
 
+  '@types/crypto-js@4.2.2': {}
+
   '@types/estree@1.0.6': {}
 
   '@types/json-schema@7.0.15': {}
@@ -7680,6 +7687,8 @@ snapshots:
       shebang-command: 2.0.0
       which: 2.0.2
 
+  crypto-js@4.2.0: {}
+
   css-render@0.15.14:
     dependencies:
       '@emotion/hash': 0.8.0
@@ -8685,44 +8694,6 @@ snapshots:
       - supports-color
 
   hula-emojis@1.2.1: {}
-
-  hula@file:(@types/sortablejs@1.15.8)(magicast@0.3.5)(rollup@4.29.0)(typescript@5.7.2)(vite@6.0.5(@types/node@20.17.10)(jiti@2.4.2)(sass@1.83.0)(terser@5.37.0)(tsx@4.19.2)(yaml@2.6.1)):
-    dependencies:
-      '@actions/github': 6.0.0
-      '@codecov/vite-plugin': 1.6.0(vite@6.0.5(@types/node@20.17.10)(jiti@2.4.2)(sass@1.83.0)(terser@5.37.0)(tsx@4.19.2)(yaml@2.6.1))
-      '@tauri-apps/api': 2.1.1
-      '@tauri-apps/plugin-autostart': 2.2.0
-      '@tauri-apps/plugin-clipboard-manager': 2.2.0
-      '@tauri-apps/plugin-fs': 2.2.0
-      '@tauri-apps/plugin-http': 2.0.1
-      '@tauri-apps/plugin-os': 2.0.0
-      '@tauri-apps/plugin-process': 2.2.0
-      '@tauri-apps/plugin-shell': 2.2.0
-      '@tauri-apps/plugin-sql': 2.2.0
-      '@tauri-apps/plugin-updater': 2.3.0
-      colorthief: 2.6.0
-      dayjs: 1.11.13
-      dompurify: 3.2.3
-      grapheme-splitter: 1.0.4
-      hula-emojis: 1.2.1
-      lodash-es: 4.17.21
-      mitt: 3.0.1
-      naive-ui: 2.40.4(vue@3.5.13(typescript@5.7.2))
-      pinia: 2.3.0(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2))
-      pinia-plugin-persistedstate: 4.2.0(magicast@0.3.5)(pinia@2.3.0(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2)))(rollup@4.29.0)
-      pinia-shared-state: 0.5.1(pinia@2.3.0(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2)))(vue@3.5.13(typescript@5.7.2))
-      vue: 3.5.13(typescript@5.7.2)
-      vue-draggable-plus: 0.6.0(@types/sortablejs@1.15.8)
-      vue-router: 4.5.0(vue@3.5.13(typescript@5.7.2))
-    transitivePeerDependencies:
-      - '@pinia/nuxt'
-      - '@types/sortablejs'
-      - '@vue/composition-api'
-      - magicast
-      - rollup
-      - supports-color
-      - typescript
-      - vite
 
   human-signals@2.1.0: {}
 
