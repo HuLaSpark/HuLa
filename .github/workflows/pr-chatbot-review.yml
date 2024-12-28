@@ -38,7 +38,7 @@ jobs:
           run_install: false
 
       - name: Install Dashscope SDK
-        run: pnpm install @dashscope/api
+        run: pnpm install @aliyun/dashscope
 
       - name: Analyze PR
         id: analyze
@@ -47,7 +47,7 @@ jobs:
           DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
         with:
           script: |
-            const DashScope = require('@dashscope/api');
+            const DashScope = require('@aliyun/dashscope');
             
             const dashscope = new DashScope({
               apiKey: process.env.DASHSCOPE_API_KEY
