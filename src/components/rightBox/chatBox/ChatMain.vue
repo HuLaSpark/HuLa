@@ -221,7 +221,8 @@
                   @contextmenu="handleMacSelect"
                   @mouseenter="handleMouseEnter(item.message.id)"
                   @mouseleave="handleMouseLeave"
-                  class="w-fit relative"
+                  class="w-fit relative flex flex-col"
+                  :class="item.fromUser.uid === userUid ? 'items-end' : 'items-start'"
                   :style="{ '--bubble-max-width': chatStore.isGroup ? '32vw' : '50vw' }"
                   @select="$event.click(item)"
                   :menu="handleItemType(item.message.type)"
@@ -237,6 +238,25 @@
                     ]"
                     v-if="item.message.type === MsgEnum.TEXT"
                     :message="item.message" />
+
+                  <!-- 显示翻译文本 -->
+                  <Transition name="fade-translate" appear mode="out-in">
+                    <div
+                      v-if="item.message.body.translatedText"
+                      class="translated-text select-none cursor-default flex flex-col"
+                      :class="[item.fromUser.uid === userUid ? 'item-end' : 'item-start']">
+                      <n-flex align="center" justify="space-between" class="mb-6px">
+                        <n-flex align="center" :size="4">
+                          <span class="text-(12px #909090)">{{ item.message.body.translatedText.provider }}</span>
+                          <svg class="size-12px"><use href="#success"></use></svg>
+                        </n-flex>
+                        <svg class="size-10px cursor-pointer" @click="item.message.body.translatedText = null">
+                          <use href="#close"></use>
+                        </svg>
+                      </n-flex>
+                      <p class="select-text cursor-text">{{ item.message.body.translatedText.text }}</p>
+                    </div>
+                  </Transition>
 
                   <!--  消息为为图片类型(不固定宽度和高度), 多张图片时渲染  -->
                   <n-image-group v-if="Array.isArray(item.content) && item.type === MsgEnum.IMAGE">

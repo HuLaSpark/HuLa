@@ -73,9 +73,16 @@ export const useChatMain = (activeItem?: SessionItem) => {
       icon: 'translate',
       click: async (item: MessageType) => {
         const content = item.message.body.content
-        const translatedText = await translateText(content, 'tencent')
-        console.log('原文:', content)
-        console.log('译文:', translatedText)
+        const result = await translateText(content, 'tencent')
+        // 将翻译结果添加到消息中
+        if (!item.message.body.translatedText) {
+          item.message.body.translatedText = {
+            provider: result.provider,
+            text: result.text
+          }
+        } else {
+          delete item.message.body.translatedText
+        }
       }
     },
     { label: '收藏', icon: 'collection-files' },
