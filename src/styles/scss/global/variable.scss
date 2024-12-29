@@ -55,6 +55,8 @@ svg {
   // 气泡背景颜色
   --bg-bubble: rgb(253, 253, 253);
   --bg-bubble-active: #f1f1f1;
+  // 翻译气泡背景色
+  --bg-translate-bubble: rgba(200, 200, 200, 0.4);
   // 头像状态的背景颜色
   --bg-avatar: rgba(241, 241, 241, 1);
   // 个人信息框背景颜色
@@ -137,6 +139,8 @@ html[data-theme='dark'] {
   // 气泡背景颜色
   --bg-bubble: rgb(38, 38, 38);
   --bg-bubble-active: rgba(66, 66, 66, 0.8);
+  // 翻译气泡背景色
+  --bg-translate-bubble: rgba(144, 144, 144, 0.2);
   // 头像状态的背景颜色
   --bg-avatar: rgba(22, 22, 22, 1);
   // 个人信息框背景颜色

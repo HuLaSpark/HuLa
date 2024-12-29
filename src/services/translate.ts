@@ -18,6 +18,12 @@ interface TencentResponse {
   }
 }
 
+// 翻译结果类型
+interface TranslateResult {
+  text: string
+  provider: string
+}
+
 // 支持的翻译服务提供商类型
 type TranslateProvider = 'youdao' | 'tencent'
 
@@ -97,9 +103,9 @@ const signUtils = {
  * 统一的翻译函数入口
  * @param text 待翻译文本
  * @param provider 翻译服务提供商，默认为有道云
- * @returns 翻译结果
+ * @returns 翻译结果和提供商信息
  */
-export const translateText = async (text: string, provider: TranslateProvider = 'youdao'): Promise<string> => {
+export const translateText = async (text: string, provider: TranslateProvider = 'youdao'): Promise<TranslateResult> => {
   // 检查输入文本是否为空
   if (!text?.trim()) {
     throw new Error('翻译文本不能为空')
@@ -124,12 +130,18 @@ export const translateText = async (text: string, provider: TranslateProvider = 
 /**
  * 有道云翻译实现
  * @param text 待翻译文本
- * @returns 翻译结果
+ * @returns 翻译结果和提供商信息
  */
-const youdaoTranslate = async (text: string): Promise<string> => {
+const youdaoTranslate = async (text: string): Promise<TranslateResult> => {
   // 从环境变量获取密钥信息
   const appKey = import.meta.env.VITE_YOUDAO_APP_KEY
   const appSecret = import.meta.env.VITE_YOUDAO_APP_SECRET
+
+  // 检查密钥是否为空
+  if (!appKey || !appSecret) {
+    throw window.$message?.error('有道翻译API密钥未配置')
+  }
+
   const salt = new Date().getTime() // 随机数，使用时间戳
   const curtime = Math.round(new Date().getTime() / 1000) // 当前时间戳
 
@@ -166,18 +178,27 @@ const youdaoTranslate = async (text: string): Promise<string> => {
     throw new Error('未获取到翻译结果')
   }
 
-  return data.translation[0]
+  return {
+    text: data.translation[0],
+    provider: '有道云翻译'
+  }
 }
 
 /**
  * 腾讯云翻译实现
  * @param text 待翻译文本
- * @returns 翻译结果
+ * @returns 翻译结果和提供商信息
  */
-const tencentTranslate = async (text: string): Promise<string> => {
+const tencentTranslate = async (text: string): Promise<TranslateResult> => {
   // 从环境变量获取密钥信息
   const secretId = import.meta.env.VITE_TENCENT_SECRET_ID
   const secretKey = import.meta.env.VITE_TENCENT_API_KEY
+
+  // 检查密钥是否为空
+  if (!secretId || !secretKey) {
+    throw window.$message?.error('腾讯云翻译API密钥未配置')
+  }
+
   const timestamp = Math.floor(Date.now() / 1000).toString()
 
   // 计算签名
@@ -215,5 +236,8 @@ const tencentTranslate = async (text: string): Promise<string> => {
     throw new Error('未获取到翻译结果')
   }
 
-  return data.Response.TargetText
+  return {
+    text: data.Response.TargetText,
+    provider: '腾讯云翻译'
+  }
 }
