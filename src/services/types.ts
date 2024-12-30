@@ -440,6 +440,10 @@ export type MsgReadUnReadCountType = {
   /** 未读数 */
   unReadCount: number | null
 }
+
+// 支持的翻译服务提供商类型
+export type TranslateProvider = 'youdao' | 'tencent'
+
 /* ======================================================== */
 /**! 模拟信息数据的类型 */
 export type MockItem = {

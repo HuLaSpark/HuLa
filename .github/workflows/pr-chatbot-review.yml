@@ -27,7 +27,7 @@ jobs:
             'src/**/*.ts' \
             'src/**/*.tsx' \
             'src-tauri/**/*.rs')
-          
+
           # 如果没有相关文件变更，设置一个提示信息
           if [ -z "$DIFF" ]; then
             echo "NO_CHANGES=true" >> $GITHUB_ENV
@@ -77,14 +77,14 @@ jobs:
         with:
           script: |
             const OpenAI = require('openai');
-            
+
             const openai = new OpenAI({
               apiKey: process.env.DASHSCOPE_API_KEY,
               baseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1"
             });
-            
+
             const diff = process.env.DIFF;
-            
+
             try {
               const completion = await openai.chat.completions.create({
                 model: "qwen-plus",
@@ -104,19 +104,19 @@ jobs:
                 temperature: 0.7,
                 max_tokens: 1000
               });
-              
+
               const analysis = completion.choices[0].message.content;
               core.setOutput('analysis', analysis);
-              
+
               await github.rest.issues.createComment({
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: `## PR 代码分析
+                body: `
+                PR 代码分析
 
                 ${analysis}
 
-                ---
                 *这是由通义千问 AI 自动生成的 PR 分析，仅供参考。*`
               });
             } catch (error) {
@@ -138,4 +138,4 @@ jobs:
 
               ---
               *这是自动生成的通知。*`
-            }); 
+            });

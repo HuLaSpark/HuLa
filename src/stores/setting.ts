@@ -25,7 +25,8 @@ export const useSettingStore = defineStore(StoresEnum.SETTING, {
     },
     chat: {
       sendKey: 'Enter',
-      isDouble: true
+      isDouble: true,
+      translate: 'tencent'
     },
     page: {
       shadow: true,

@@ -77,10 +77,22 @@
         <span class="w-full h-1px bg-[--line-color]"></span>
 
         <!-- 双击打开独立会话 -->
-        <n-flex align="center" justify="space-between">
+        <!-- <n-flex align="center" justify="space-between">
           <span>双击会话列表打开独立聊天窗口</span>
 
           <n-switch size="small" v-model:value="chat.isDouble" />
+        </n-flex> -->
+
+        <!-- 翻译api选项 -->
+        <n-flex align="center" justify="space-between">
+          <span>翻译提供商</span>
+
+          <n-select
+            class="w-140px"
+            size="small"
+            label-field="label"
+            v-model:value="chat.translate"
+            :options="translateOptions" />
         </n-flex>
       </n-flex>
     </n-flex>
@@ -135,7 +147,7 @@
 import { useSettingStore } from '@/stores/setting.ts'
 import { CloseBxEnum, ShowModeEnum } from '@/enums'
 import { topicsList } from './model.tsx'
-import { sendOptions, fontOptions } from './config.ts'
+import { sendOptions, fontOptions, translateOptions } from './config.ts'
 import { type } from '@tauri-apps/plugin-os'
 import { NSwitch } from 'naive-ui'
 import { invoke } from '@tauri-apps/api/core'
