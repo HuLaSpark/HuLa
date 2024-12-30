@@ -36,6 +36,18 @@ const sendOptions = [
   }
 ]
 
+/** 翻译提供商的选项 */
+const translateOptions = [
+  {
+    label: '腾讯云翻译',
+    value: 'tencent'
+  },
+  {
+    label: '有道云翻译',
+    value: 'youdao'
+  }
+]
+
 /** 字体 */
 const fontOptions = [
   {
@@ -47,4 +59,4 @@ const fontOptions = [
     value: 'AliFangYuan'
   }
 ]
-export { sideOptions, sendOptions, fontOptions }
+export { sideOptions, sendOptions, fontOptions, translateOptions }

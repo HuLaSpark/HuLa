@@ -1,5 +1,6 @@
 import { fetch } from '@tauri-apps/plugin-http'
 import CryptoJS from 'crypto-js'
+import { TranslateProvider } from './types.ts'
 
 // 有道云翻译接口响应类型
 interface YoudaoResponse {
@@ -23,9 +24,6 @@ interface TranslateResult {
   text: string
   provider: string
 }
-
-// 支持的翻译服务提供商类型
-type TranslateProvider = 'youdao' | 'tencent'
 
 // 签名计算工具对象
 const signUtils = {

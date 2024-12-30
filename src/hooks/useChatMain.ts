@@ -1,6 +1,6 @@
 import { useCommon } from '@/hooks/useCommon.ts'
 import { MittEnum, MsgEnum, PowerEnum } from '@/enums'
-import { MessageType, SessionItem } from '@/services/types.ts'
+import { MessageType } from '@/services/types.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import apis from '@/services/apis.ts'
@@ -10,9 +10,12 @@ import { useGlobalStore } from '@/stores/global.ts'
 import { isDiffNow } from '@/utils/ComputedTime.ts'
 import { writeText } from '@tauri-apps/plugin-clipboard-manager'
 import { translateText } from '@/services/translate'
+import { useSettingStore } from '@/stores/setting.ts'
 
-export const useChatMain = (activeItem?: SessionItem) => {
+export const useChatMain = () => {
   const { removeTag, openMsgSession, userUid } = useCommon()
+  const settingStore = useSettingStore()
+  const { chat } = storeToRefs(settingStore)
   const globalStore = useGlobalStore()
   const chatStore = useChatStore()
   const userStore = useUserStore()?.userInfo
@@ -37,29 +40,6 @@ export const useChatMain = (activeItem?: SessionItem) => {
   const historyIndex = ref(0)
   /** 当前点击的用户的key */
   const selectKey = ref()
-  /** 计算出触发页脚后的历史消息下标 */
-  const itemComputed = computed(() => {
-    return items.value.filter((item) => item.accountId !== userUid.value).length
-  })
-
-  /**! 模拟信息列表 */
-  const items = ref(
-    Array.from({ length: 5 }, (_, i) => ({
-      value: `${i}安老师`,
-      key: i,
-      accountId: activeItem?.roomId,
-      avatar: activeItem?.avatar,
-      content: '123',
-      type: MsgEnum.TEXT,
-      reply: MsgEnum.RECALL
-        ? {
-            accountName: '',
-            content: '',
-            key: ''
-          }
-        : null
-    }))
-  )
 
   /** 通用右键菜单 */
   const commonMenuList = ref<OPT.RightMenu[]>([
@@ -73,7 +53,7 @@ export const useChatMain = (activeItem?: SessionItem) => {
       icon: 'translate',
       click: async (item: MessageType) => {
         const content = item.message.body.content
-        const result = await translateText(content, 'tencent')
+        const result = await translateText(content, chat.value.translate)
         // 将翻译结果添加到消息中
         if (!item.message.body.translatedText) {
           item.message.body.translatedText = {
@@ -171,9 +151,8 @@ export const useChatMain = (activeItem?: SessionItem) => {
     {
       label: '复制',
       icon: 'copy',
-      click: async (item: any) => {
-        const content = items.value[item.key].content
-        await handleCopy(content)
+      click: async (item: MessageType) => {
+        await handleCopy(item.message.body.content)
       }
     },
     ...commonMenuList.value,
@@ -318,9 +297,8 @@ export const useChatMain = (activeItem?: SessionItem) => {
     activeBubble.value = item.message.id
     // 启用键盘监听
     const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key === 'c') {
-        const content = items.value[item.message.id].content
-        handleCopy(content)
+      if ((e.ctrlKey && e.key === 'c') || (e.metaKey && e.key === 'c')) {
+        handleCopy(item.message.body.content)
         // 取消监听键盘事件，以免多次绑定
         document.removeEventListener('keydown', handleKeyPress)
       }
@@ -333,14 +311,12 @@ export const useChatMain = (activeItem?: SessionItem) => {
     handleMsgClick,
     handleConfirm,
     handleItemType,
-    items,
     activeBubble,
     floatFooter,
     historyIndex,
     tips,
     modalShow,
     specialMenuList,
-    itemComputed,
     optionsList,
     report,
     selectKey,

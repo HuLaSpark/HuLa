@@ -481,7 +481,7 @@ const {
   selectKey,
   emojiList,
   scrollTop
-} = useChatMain(props.activeItem)
+} = useChatMain()
 const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-main')
 
 watch(
