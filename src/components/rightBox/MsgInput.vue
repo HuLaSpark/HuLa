@@ -19,16 +19,16 @@
         v-if="isEntering"
         @click.stop="messageInputDom.focus()"
         class="absolute select-none top-8px left-6px w-fit text-(12px #777)">
-        聊点什么吧...
+        输入 / 唤起 AI 助手
       </span>
     </n-scrollbar>
   </ContextMenu>
 
   <!-- @提及框  -->
-  <div v-if="ait && activeItem.type === RoomTypeEnum.GROUP && personList.length > 0" class="ait">
+  <div v-if="ait && activeItem.type === RoomTypeEnum.GROUP && personList.length > 0" class="ait-options">
     <n-virtual-list
-      id="image-chat-msgInput"
-      ref="virtualListInst"
+      id="image-chat-ait"
+      ref="virtualListInst-ait"
       style="max-height: 180px"
       :item-size="36"
       :items="personList"
@@ -49,9 +49,44 @@
             fallback-src="/logo.png"
             :render-placeholder="() => null"
             :intersection-observer-options="{
-              root: '#image-chat-msgInput'
+              root: '#image-chat-ait'
             }" />
           <span> {{ item.name }}</span>
+        </n-flex>
+      </template>
+    </n-virtual-list>
+  </div>
+
+  <!-- / 提及框  -->
+  <div
+    v-if="aiDialogVisible && activeItem.type === RoomTypeEnum.GROUP && groupedAIModels.length > 0"
+    class="AI-options">
+    <n-virtual-list
+      ref="virtualListInst-AI"
+      style="max-height: 180px"
+      :item-size="36"
+      :items="groupedAIModels"
+      v-model:selectedKey="selectedAIKey">
+      <template #default="{ item }">
+        <n-flex
+          @mouseover="() => (selectedAIKey = item.uid)"
+          :class="{ active: selectedAIKey === item.uid }"
+          @click="handleAI(item)"
+          align="center"
+          class="AI-item">
+          <n-flex align="center" justify="space-between" class="w-full pr-6px">
+            <n-flex align="center">
+              <img class="size-18px object-contain" :src="item.avatar" alt="" />
+              <p class="text-(14px [--chat-text-color])">{{ item.name }}</p>
+            </n-flex>
+
+            <n-flex align="center" :size="6">
+              <div class="ml-6px p-[4px_8px] size-fit bg-[--bate-bg] rounded-6px text-(11px [--bate-color] center)">
+                Beta
+              </div>
+              <n-tag size="small" class="text-10px" :bordered="false" type="success">128k</n-tag>
+            </n-flex>
+          </n-flex>
         </n-flex>
       </template>
     </n-virtual-list>
@@ -139,8 +174,10 @@ const arrow = ref(false)
 /** 输入框dom元素 */
 const messageInputDom = ref()
 const activeItem = ref(inject('activeItem') as MockItem)
-/** 虚拟列表 */
-const virtualListInst = ref<VirtualListInst>()
+/** ait 虚拟列表 */
+const virtualListInstAit = useTemplateRef<VirtualListInst>('virtualListInst-ait')
+/** AI 虚拟列表 */
+const virtualListInstAI = useTemplateRef<VirtualListInst>('virtualListInst-AI')
 /** 是否处于输入状态 */
 const isEntering = computed(() => {
   return msgInput.value === ''
@@ -161,15 +198,19 @@ const recordSelectionRange = () => (lastEditRange = getEditorRange())
 const {
   inputKeyDown,
   handleAit,
+  handleAI,
   handleInput,
   send,
   personList,
   disabledSend,
   ait,
+  aiDialogVisible,
+  selectedAIKey,
   msgInput,
   chatKey,
   menuList,
-  selectedAitKey
+  selectedAitKey,
+  groupedAIModels
 } = useMsgInput(messageInputDom)
 
 /** 当切换聊天对象时，重新获取焦点 */
@@ -184,19 +225,34 @@ watch(activeItem, () => {
 watch(personList, (newList) => {
   if (newList.length > 0) {
     /** 先设置滚动条滚动到第一个 */
-    virtualListInst.value?.scrollTo({ key: newList[0].uid })
+    virtualListInstAit.value?.scrollTo({ key: newList[0].uid })
     selectedAitKey.value = newList[0].uid
   }
 })
 
+/** 当AI列表发生变化的时候始终select第一个 */
+watch(groupedAIModels, (newList) => {
+  if (newList.length > 0) {
+    /** 先设置滚动条滚动到第一个 */
+    virtualListInstAI.value?.scrollTo({ key: newList[0].uid })
+    selectedAIKey.value = newList[0].uid
+  }
+})
+
 /** 处理键盘上下键切换提及项 */
-const handleAitKeyChange = (direction: 1 | -1) => {
-  const currentIndex = personList.value.findIndex((item) => item.uid === selectedAitKey.value)
-  const newIndex = Math.max(0, Math.min(currentIndex + direction, personList.value.length - 1))
-  selectedAitKey.value = personList.value[newIndex].uid
+const handleAitKeyChange = (
+  direction: 1 | -1,
+  list: Ref<any[]>,
+  virtualListInst: VirtualListInst,
+  key: Ref<number | string>
+) => {
+  const currentIndex = list.value.findIndex((item) => item.uid === key.value)
+  const newIndex = Math.max(0, Math.min(currentIndex + direction, list.value.length - 1))
+  key.value = list.value[newIndex].uid
   // 获取新选中项在列表中的索引，并滚动到该位置(使用key来进行定位)
-  virtualListInst.value?.scrollTo({ index: newIndex })
+  virtualListInst?.scrollTo({ index: newIndex })
 }
+
 const closeMenu = (event: any) => {
   /** 需要判断点击如果不是.context-menu类的元素的时候，menu才会关闭 */
   if (!event.target.matches('#message-input, #message-input *')) {
@@ -205,20 +261,30 @@ const closeMenu = (event: any) => {
 }
 
 onMounted(async () => {
-  onKeyStroke('Enter', (e) => {
+  onKeyStroke('Enter', () => {
     if (ait.value && selectedAitKey.value > -1) {
-      e.preventDefault()
       const item = personList.value.find((item) => item.uid === selectedAitKey.value) as CacheUserItem
       handleAit(item)
+    } else if (aiDialogVisible.value && Number(selectedAIKey.value) > -1) {
+      const item = groupedAIModels.value.find((item) => item.uid === selectedAIKey.value)
+      handleAI(item)
     }
   })
   onKeyStroke('ArrowUp', (e) => {
     e.preventDefault()
-    handleAitKeyChange(-1)
+    if (ait.value) {
+      handleAitKeyChange(-1, personList, virtualListInstAit.value!, selectedAitKey)
+    } else if (aiDialogVisible.value) {
+      handleAitKeyChange(-1, groupedAIModels, virtualListInstAI.value!, selectedAIKey)
+    }
   })
   onKeyStroke('ArrowDown', (e) => {
     e.preventDefault()
-    handleAitKeyChange(1)
+    if (ait.value) {
+      handleAitKeyChange(1, personList, virtualListInstAit.value!, selectedAitKey)
+    } else if (aiDialogVisible.value) {
+      handleAitKeyChange(1, groupedAIModels, virtualListInstAI.value!, selectedAIKey)
+    }
   })
   // TODO: 暂时已经关闭了独立窗口聊天功能
   emit('aloneWin')

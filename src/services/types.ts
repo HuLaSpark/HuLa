@@ -415,6 +415,8 @@ export type SessionItem = {
   activeTime: number
   /** 会话头像 */
   avatar: string
+  /** 如果是单聊，则是对方的uid，如果是群聊，则是null */
+  friendId: number | null
   /** 是否全员展示的会话 0否 1是 */
   hotFlag: IsAllUserEnum
   /** 会话名称 */
@@ -441,8 +443,17 @@ export type MsgReadUnReadCountType = {
   unReadCount: number | null
 }
 
-// 支持的翻译服务提供商类型
+/** 支持的翻译服务提供商类型  */
 export type TranslateProvider = 'youdao' | 'tencent'
+
+/** AI模型 */
+export type AIModel = {
+  uid: string
+  type: 'Ollama' | 'OpenAI'
+  name: string
+  value: string
+  avatar: string
+}
 
 /* ======================================================== */
 /**! 模拟信息数据的类型 */
