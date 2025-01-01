@@ -13,6 +13,8 @@ import { useCommon } from './useCommon.ts'
 import { readText, readImage } from '@tauri-apps/plugin-clipboard-manager'
 import Database from '@tauri-apps/plugin-sql'
 import { messageStrategyMap } from '@/strategy/MessageStrategy.ts'
+import { useTrigger } from './useTrigger'
+import type { AIModel } from '@/services/types.ts'
 
 export const useMsgInput = (messageInputDom: Ref) => {
   const chatStore = useChatStore()
@@ -25,8 +27,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
   const chatKey = ref(chat.value.sendKey)
   /** 输入框内容  */
   const msgInput = ref('')
-  /** 艾特状态 */
-  const ait = ref(false)
   /** 发送按钮是否禁用 */
   const disabledSend = computed(() => {
     const plainText = stripHtml(msgInput.value)
@@ -34,13 +34,67 @@ export const useMsgInput = (messageInputDom: Ref) => {
   })
   // /** 临时消息id */
   // const tempMessageId = ref(0)
-  /** 艾特后的关键字的key */
+  // @艾特弹出框
+  const ait = ref(false)
   const aitKey = ref('')
+  // AI弹出框
+  const aiDialogVisible = ref(false)
+  const aiKeyword = ref('')
+  const aiModelList = ref<AIModel[]>([
+    {
+      uid: '1',
+      type: 'Ollama',
+      name: 'deepseek',
+      value: 'deepseek',
+      avatar: '/AI/deepseek.png'
+    },
+    {
+      uid: '2',
+      type: 'Ollama',
+      name: '通义千问',
+      value: 'QW',
+      avatar: '/AI/QW.png'
+    },
+    {
+      uid: '3',
+      type: 'OpenAI',
+      name: 'ChatGPT-4',
+      value: 'ChatGPT-4',
+      avatar: '/AI/openai.svg'
+    }
+  ])
+  // 使用计算属性获取分组后的数据
+  const groupedAIModels = computed(() => {
+    if (aiKeyword.value && !isChinese.value) {
+      return aiModelList.value.filter((i) => i.name?.startsWith(aiKeyword.value))
+    } else {
+      return aiModelList.value
+    }
+  })
+  /** 记录当前选中的AI选项 key */
+  const selectedAIKey = ref(groupedAIModels.value[0]?.uid ?? null)
+
+  // #话题弹出框
+  const topicDialogVisible = ref(false)
+  const topicKeyword = ref('')
+  const topicList = ref([
+    {
+      uid: '1',
+      label: '话题1',
+      value: '话题1'
+    },
+    {
+      uid: '2',
+      label: '话题2',
+      value: '话题2'
+    }
+  ])
+
   /** 是否正在输入拼音 */
   const isChinese = ref(false)
   // 记录编辑器光标的位置
   const editorRange = ref<{ range: Range; selection: Selection } | null>(null)
-  /** @候选人列表 */
+  /** @ 候选人列表 */
   const personList = computed(() => {
     if (aitKey.value && !isChinese.value) {
       return cachedStore.currentAtUsersList.filter(
@@ -103,10 +157,26 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
   const db = ref<Database>()
 
+  // 将 useTrigger 的初始化移到这里
+  const { handleTrigger, resetAllStates } = useTrigger(
+    personList,
+    groupedAIModels,
+    topicList,
+    ait,
+    aitKey,
+    aiDialogVisible,
+    aiKeyword,
+    topicDialogVisible,
+    topicKeyword
+  )
+
   watchEffect(() => {
     chatKey.value = chat.value.sendKey
     if (!ait.value && personList.value.length > 0) {
       selectedAitKey.value = personList.value[0]?.uid
+    }
+    if (!aiDialogVisible.value && groupedAIModels.value.length > 0) {
+      selectedAIKey.value = groupedAIModels.value[0]?.uid
     }
     // 如果输入框没有值就把回复内容清空
     if (msgInput.value === '') {
@@ -119,10 +189,10 @@ export const useMsgInput = (messageInputDom: Ref) => {
   })
 
   /**
-   * 从HTML内容中提取@用户的uid
+   * 从HTML内容中提取 @ 用户的uid
    * @param content HTML格式的消息内容
    * @param userList 用户列表
-   * @returns 被@用户的uid数组
+   * @returns 被 @ 用户的uid数组
    */
   const extractAtUserIds = (content: string, userList: BaseUserItem[]): number[] => {
     const atUserIds: number[] = []
@@ -195,7 +265,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
       // 然后重新赋值给msgInput
       msgInput.value = messageInputDom.value.innerHTML.replace(replyDiv.outerHTML, '')
     }
-    ait.value = false
     const contentType = getMessageContentType(messageInputDom)
     //根据消息类型获取消息处理策略
     const messageStrategy = messageStrategyMap[contentType]
@@ -283,6 +352,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
   /** 当输入框手动输入值的时候触发input事件(使用vueUse的防抖) */
   const handleInput = useDebounceFn(async (e: Event) => {
     const inputElement = e.target as HTMLInputElement
+
     // 如果输入框中只有<br />标签，则清空输入框内容
     // TODO: 为什么这里输入后会有一个br标签?
     if (inputElement.innerHTML === '<br>') {
@@ -290,47 +360,28 @@ export const useMsgInput = (messageInputDom: Ref) => {
       msgInput.value = inputElement.innerHTML
     }
     msgInput.value = inputElement.innerHTML || ''
-    const { range, selection } = getEditorRange()!
+
     /** 获取当前光标所在的节点和文本内容 */
+    const { range, selection } = getEditorRange()!
     if (!range || !selection) {
-      ait.value = false
+      resetAllStates()
       return
     }
+
     /** 获取当前节点 */
     const curNode = range.endContainer
     /** 判断当前节点是否是文本节点 */
     if (!curNode || !curNode.textContent || curNode.nodeName !== '#text') {
-      ait.value = false
+      resetAllStates()
       return
     }
-    const searchStr = curNode.textContent?.slice(0, selection.focusOffset)
-    /** 使用正则表达式匹配@符号之后的关键词 */
-    const keywords = /@([^@]*)$/.exec(searchStr!)
-    if (!keywords || keywords.length < 2) {
-      ait.value = false
-      aitKey.value = ''
-      return
-    }
-    /** 解构关键词并更新ait和aitKey的值，同时将编辑器的范围和选择保存在editorRange中 */
-    const [, keyWord] = keywords
-    ait.value = true
-    aitKey.value = keyWord
-    editorRange.value = { range, selection }
 
-    if (ait.value && personList.value.length > 0) {
-      const res = range.getBoundingClientRect()
-      await nextTick(() => {
-        const dom = document.querySelector('.ait') as HTMLElement
-        dom.style.position = 'fixed'
-        dom.style.height = 'auto'
-        dom.style.maxHeight = '190px'
-        dom.style.left = `${res.x - 20}px`
-        dom.style.top = `${res.y - (dom.offsetHeight + 5)}px`
-      })
-    } else {
-      ait.value = false
-    }
-  }, 10) // 防抖时间过长会导致输入内容已经显示但是实际还没有进入到这里处理
+    /** 获取当前光标位置和文本内容 */
+    const cursorPosition = selection.focusOffset
+    const text = curNode.textContent
+
+    await handleTrigger(text, cursorPosition, { range, selection, keyword: '' })
+  }, 0)
 
   /** input的keydown事件 */
   const inputKeyDown = (e: KeyboardEvent) => {
@@ -340,6 +391,13 @@ export const useMsgInput = (messageInputDom: Ref) => {
       resetInput()
       return
     }
+
+    // 当 ait 或 aiDialogVisible 为 true 时，阻止默认行为
+    if (ait.value || aiDialogVisible.value) {
+      e?.preventDefault()
+      return
+    }
+
     // 正在输入拼音，并且是macos系统
     if (isChinese.value && type() === 'macos') {
       return
@@ -369,10 +427,11 @@ export const useMsgInput = (messageInputDom: Ref) => {
     if ((sendKeyIsEnter && isEnterKey && !isCtrlOrMetaKey) || (sendKeyIsCtrlEnter && isCtrlOrMetaKey && isEnterKey)) {
       e?.preventDefault()
       send()
+      resetAllStates()
     }
   }
 
-  /** 处理点击@提及框事件 */
+  /** 处理点击 @ 提及框事件 */
   const handleAit = (item: BaseUserItem) => {
     // 如果正在输入拼音，不发送消息
     if (isChinese.value) {
@@ -408,6 +467,44 @@ export const useMsgInput = (messageInputDom: Ref) => {
     insertNode(MsgEnum.AIT, item.name, {} as HTMLElement)
     triggerInputEvent(messageInputDom.value)
     ait.value = false
+  }
+
+  /** 处理点击 / 提及框事件 */
+  const handleAI = (item: any) => {
+    // 如果正在输入拼音，不发送消息
+    if (isChinese.value) {
+      return
+    }
+    // 先确保输入框获得焦点
+    messageInputDom.value?.focus()
+    // 先获取并保存当前的编辑器范围
+    const { range: currentRange, selection: currentSelection } = getEditorRange()!
+    editorRange.value = { range: currentRange, selection: currentSelection }
+
+    const myEditorRange = editorRange?.value?.range
+    /** 获取光标所在位置的文本节点 */
+    const textNode = myEditorRange?.endContainer
+
+    // 如果有文本节点，说明是通过输入框 / 触发的
+    if (textNode) {
+      /** 获取光标在所在文本节点中的偏移位置 */
+      const endOffset = myEditorRange?.endOffset
+      /** 获取文本节点的值，并将其转换为字符串类型 */
+      const textNodeValue = textNode?.nodeValue as string
+      /** 使用正则表达式匹配 / 符号之后获取到的文本节点的值 */
+      const expRes = /([^/]*)$/.exec(textNodeValue)
+      if (expRes) {
+        /** 设置范围的起始位置为文本节点中 / 符号的位置 */
+        currentRange.setStart(textNode, expRes.index)
+        /** 设置范围的结束位置为光标的位置 */
+        currentRange.setEnd(textNode, endOffset!)
+      }
+    }
+
+    // 无论是哪种情况，都在当前光标位置插入@提及
+    insertNode(MsgEnum.AI, item, {} as HTMLElement)
+    triggerInputEvent(messageInputDom.value)
+    aiDialogVisible.value = false
   }
 
   onMounted(async () => {
@@ -455,6 +552,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       setTimeout(() => {
         isChinese.value = false
         aitKey.value = e.data
+        aiKeyword.value = e.data
       }, 10)
     })
     /** 监听回复信息的传递 */
@@ -496,16 +594,26 @@ export const useMsgInput = (messageInputDom: Ref) => {
     imgPaste,
     inputKeyDown,
     handleAit,
+    handleAI,
     handleInput,
     send,
     stripHtml,
     personList,
     ait,
+    aitKey,
     msgInput,
     chatKey,
     menuList,
     selectedAitKey,
     reply,
-    disabledSend
+    disabledSend,
+    aiDialogVisible,
+    aiKeyword,
+    aiModelList,
+    selectedAIKey,
+    topicDialogVisible,
+    topicKeyword,
+    topicList,
+    groupedAIModels
   }
 }

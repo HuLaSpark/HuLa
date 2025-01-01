@@ -81,7 +81,9 @@ export enum MittEnum {
   /** @ AT */
   AT = 'at',
   /** 重新编辑 */
-  RE_EDIT = 'reEdit'
+  RE_EDIT = 'reEdit',
+  /** 删除会话 */
+  DELETE_SESSION = 'deleteSession'
 }
 
 /** 主题类型 */
@@ -144,7 +146,9 @@ export enum MsgEnum {
   /** 艾特 */
   AIT,
   /** 回复 */
-  REPLY
+  REPLY,
+  /** AI */
+  AI
 }
 
 /**
@@ -320,4 +324,11 @@ export enum MessageStatusEnum {
   SENDING = 'sending',
   SUCCESS = 'success',
   FAILED = 'failed'
+}
+
+/** 触发类型枚举 */
+export const enum TriggerEnum {
+  MENTION = '@',
+  AI = '/',
+  TOPIC = '#'
 }

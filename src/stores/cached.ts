@@ -98,8 +98,9 @@ export const useCachedStore = defineStore('cached', () => {
    * 只在首次加载时执行一次
    */
   const initAllUserBaseInfo = async () => {
+    // 这里获取的是全员群的全部用户信息，所以取1作为roomId
     if (localStorage.getItem('IS_INIT_USER_BASE') === null) {
-      const data = await apis.getAllUserBaseInfo({ roomId: currentRoomId.value })
+      const data = await apis.getAllUserBaseInfo({ roomId: 1 })
       for (const item of data || []) {
         userCachedList[item.uid] = item
       }

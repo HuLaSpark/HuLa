@@ -82,7 +82,7 @@
 </template>
 <script lang="ts" setup>
 import { useMessage } from '@/hooks/useMessage.ts'
-import { MsgEnum, RoomTypeEnum } from '@/enums'
+import { MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import { IsAllUserEnum, SessionItem } from '@/services/types.ts'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { useChatStore } from '@/stores/chat.ts'
@@ -93,13 +93,14 @@ import { useCommon } from '@/hooks/useCommon.ts'
 import SysNTF from '@/components/common/SystemNotification.tsx'
 import { AvatarUtils } from '@/utils/avatarUtils.ts'
 import { useGroupStore } from '@/stores/group.ts'
+import { useMitt } from '~/src/hooks/useMitt'
 
 const chatStore = useChatStore()
 const globalStore = useGlobalStore()
 const groupStore = useGroupStore()
 const { userUid } = useCommon()
 // const msgScrollbar = useTemplateRef('msg-scrollbar')
-const { handleMsgClick, menuList, specialMenuList, handleMsgDblclick } = useMessage()
+const { handleMsgClick, handleMsgDelete, menuList, specialMenuList, handleMsgDblclick } = useMessage()
 const currentSession = computed(() => globalStore.currentSession)
 // TODO 艾特我提醒
 const sessionList = computed(() =>
@@ -160,6 +161,9 @@ onBeforeMount(async () => {
 
 onMounted(() => {
   SysNTF
+  useMitt.on(MittEnum.DELETE_SESSION, (roomId) => {
+    handleMsgDelete(roomId)
+  })
 })
 </script>
 

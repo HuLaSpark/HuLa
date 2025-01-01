@@ -14,10 +14,10 @@
             class="size-20px color-#13987f select-none outline-none">
             <use href="#auth"></use>
           </svg>
-          <n-flex v-else align="center">
-            <n-badge :color="activeItem.activeStatus === OnlineEnum.ONLINE ? '#1ab292' : '#909090'" dot />
+          <n-flex v-else-if="activeItem.type === RoomTypeEnum.SINGLE" align="center">
+            <n-badge :color="isOnline ? '#1ab292' : '#909090'" dot />
             <p class="text-(12px [--text-color])">
-              {{ activeItem.activeStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}
+              {{ isOnline ? '在线' : '离线' }}
             </p>
           </n-flex>
         </n-flex>
@@ -190,7 +190,7 @@
 <script setup lang="ts">
 import { IsAllUserEnum, SessionItem, UserItem } from '@/services/types.ts'
 import { useDisplayMedia } from '@vueuse/core'
-import { EventEnum, RoomActEnum } from '@/enums'
+import { EventEnum, MittEnum, RoomActEnum } from '@/enums'
 import { emit } from '@tauri-apps/api/event'
 import { type } from '@tauri-apps/plugin-os'
 import { useChatStore } from '@/stores/chat.ts'
@@ -201,8 +201,13 @@ import { AvatarUtils } from '@/utils/avatarUtils'
 import { OnlineEnum } from '@/enums'
 import { useTauriListener } from '@/hooks/useTauriListener'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { RoomTypeEnum } from '@/enums'
+import { useMitt } from '@/hooks/useMitt.ts'
 
 const appWindow = WebviewWindow.getCurrent()
+const { activeItem } = defineProps<{
+  activeItem: SessionItem
+}>()
 const { addListener } = useTauriListener()
 // 使用useDisplayMedia获取屏幕共享的媒体流
 const { stream, start, stop } = useDisplayMedia()
@@ -216,9 +221,13 @@ const modalShow = ref(false)
 const sidebarShow = ref(false)
 const showLoading = ref(true)
 const isLoading = ref(false)
-const { activeItem } = defineProps<{
-  activeItem: SessionItem
-}>()
+const isOnline = computed(() => {
+  if (activeItem.type === RoomTypeEnum.GROUP) return false
+
+  const contact = contactStore.contactsList.find((item) => item.uid === activeItem.friendId)
+
+  return contact?.activeStatus === OnlineEnum.ONLINE
+})
 const groupUserList = computed(() => groupStore.userList)
 const messageOptions = computed(() => chatStore.currentMessageOptions)
 const userList = computed(() => {
@@ -320,11 +329,15 @@ const handleDelete = (label: RoomActEnum) => {
 }
 
 const handleConfirm = () => {
-  if (optionsType.value === RoomActEnum.DELETE_FRIEND) {
-    // TODO: 这里需要获取到用户的uid
-    contactStore.onDeleteContact(1111)
+  if (optionsType.value === RoomActEnum.DELETE_FRIEND && activeItem.friendId) {
+    contactStore.onDeleteContact(activeItem.friendId).then(() => {
+      modalShow.value = false
+      sidebarShow.value = false
+      window.$message.success('已删除好友')
+      // 删除当前的会话
+      useMitt.emit(MittEnum.DELETE_SESSION, activeItem.roomId)
+    })
   }
-  modalShow.value = false
 }
 
 const handleClick = () => {

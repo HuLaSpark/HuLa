@@ -45,6 +45,38 @@ export const useMessage = () => {
     // }
   }
 
+  /**
+   * 删除会话
+   * @param roomId 会话信息
+   */
+  const handleMsgDelete = (roomId: number) => {
+    const currentSessions = chatStore.sessionList
+    const currentIndex = currentSessions.findIndex((session) => session.roomId === roomId)
+
+    // 检查是否是当前选中的会话
+    const isCurrentSession = roomId === globalStore.currentSession.roomId
+
+    // TODO： 会话没有真正的删除 后续需要优化
+    chatStore.removeContact(roomId)
+
+    // 如果不是当前选中的会话，直接返回
+    if (!isCurrentSession) {
+      return
+    }
+
+    const updatedSessions = chatStore.sessionList
+
+    // 如果没有会话就把右侧消息框关闭
+    if (updatedSessions.length === 0) {
+      useMitt.emit(MittEnum.MSG_BOX_SHOW, { item: -1 })
+      return
+    }
+
+    // 选择下一个或上一个会话
+    const nextIndex = Math.min(currentIndex, updatedSessions.length - 1)
+    handleMsgClick(updatedSessions[nextIndex])
+  }
+
   /** 处理双击事件 */
   const handleMsgDblclick = (item: SessionItem) => {
     if (!chat.value.isDouble) return
@@ -107,30 +139,7 @@ export const useMessage = () => {
       label: '从消息列表中移除',
       icon: 'delete',
       click: (item: SessionItem) => {
-        const currentSessions = chatStore.sessionList
-        const currentIndex = currentSessions.findIndex((session) => session.roomId === item.roomId)
-
-        // 检查是否是当前选中的会话
-        const isCurrentSession = item.roomId === globalStore.currentSession.roomId
-
-        chatStore.removeContact(item.roomId)
-
-        // 如果不是当前选中的会话，直接返回
-        if (!isCurrentSession) {
-          return
-        }
-
-        const updatedSessions = chatStore.sessionList
-
-        // 如果没有会话就把右侧消息框关闭
-        if (updatedSessions.length === 0) {
-          useMitt.emit(MittEnum.MSG_BOX_SHOW, { item: -1 })
-          return
-        }
-
-        // 选择下一个或上一个会话
-        const nextIndex = Math.min(currentIndex, updatedSessions.length - 1)
-        handleMsgClick(updatedSessions[nextIndex])
+        handleMsgDelete(item.roomId)
       }
     },
     { label: '屏蔽此人消息', icon: 'forbid' }
@@ -150,5 +159,5 @@ export const useMessage = () => {
     ])
   })
 
-  return { msgBoxShow, handleMsgClick, handleMsgDblclick, menuList, specialMenuList }
+  return { msgBoxShow, handleMsgClick, handleMsgDelete, handleMsgDblclick, menuList, specialMenuList }
 }

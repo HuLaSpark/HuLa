@@ -188,6 +188,7 @@ export const useCommon = () => {
 
     // 删除选中的内容
     range?.deleteContents()
+
     // 将节点插入范围最前面添加节点
     if (type === MsgEnum.AIT) {
       // 创建一个span标签节点
@@ -356,6 +357,121 @@ export const useCommon = () => {
       divNode.appendChild(contentNode)
       contentNode.appendChild(contentBox)
       contentNode.appendChild(closeBtn)
+      // 将div标签节点插入到光标位置
+      range?.insertNode(divNode)
+      // 将光标折叠到Range的末尾(true表示折叠到Range的开始位置,false表示折叠到Range的末尾)
+      range?.collapse(false)
+      // 创建一个span节点作为空格
+      const spaceNode = document.createElement('span')
+      spaceNode.textContent = '\u00A0'
+      // 设置不可编辑
+      spaceNode.contentEditable = 'false'
+      // 不可以选中
+      spaceNode.style.userSelect = 'none'
+      // 插入一个br标签节点作为换行
+      const brNode = document.createElement('br')
+      // 将br标签节点插入到光标位置
+      range?.insertNode(brNode)
+      // 将空格节点插入到光标位置
+      range?.insertNode(spaceNode)
+      range?.collapse(false)
+    } else if (type === MsgEnum.AI) {
+      // 删除触发字符 "/"
+      const startContainer = range.startContainer
+      if (startContainer.nodeType === Node.TEXT_NODE) {
+        const text = startContainer.textContent || ''
+        const lastIndex = text.lastIndexOf('/')
+        if (lastIndex !== -1) {
+          startContainer.textContent = text.substring(0, lastIndex)
+        }
+      }
+
+      // 创建一个div标签节点
+      const divNode = document.createElement('div')
+      divNode.id = 'AIDiv' // 设置id为replyDiv
+      divNode.contentEditable = 'false' // 设置为不可编辑
+      divNode.tabIndex = -1 // 防止被focus
+      divNode.style.cssText = `
+      background-color: var(--reply-bg);
+      font-size: 12px;
+      padding: 4px 6px;
+      width: fit-content;
+      max-height: 86px;
+      border-radius: 8px;
+      margin-bottom: 2px;
+      user-select: none;
+      pointer-events: none; /* 防止鼠标事件 */
+      cursor: default;
+      outline: none; /* 移除focus时的轮廓 */
+    `
+      // 把dom中的value值作为回复信息的作者，dom中的content作为回复信息的内容
+      const author = dom.name
+      // 创建一个img标签节点作为头像
+      const imgNode = document.createElement('img')
+      imgNode.src = dom.avatar
+      imgNode.style.cssText = `
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      object-fit: contain;
+      `
+      // 创建一个div标签节点作为回复信息的头部
+      const headerNode = document.createElement('div')
+      headerNode.style.cssText = `
+      line-height: 1.5;
+      font-size: 12px;
+      padding: 0 4px;
+      color: rgba(19, 152, 127);
+      cursor: default;
+      user-select: none;
+      pointer-events: none;
+    `
+      headerNode.appendChild(document.createTextNode(author))
+      // 在回复信息的右边添加一个关闭信息的按钮
+      const closeBtn = document.createElement('span')
+      closeBtn.id = 'closeBtn'
+      closeBtn.style.cssText = `
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+      color: #999;
+      cursor: pointer;
+      margin-left: 10px;
+      flex-shrink: 0;
+      user-select: none;
+      pointer-events: auto; /* 确保关闭按钮可以点击 */
+    `
+      closeBtn.textContent = '关闭'
+      closeBtn.addEventListener('click', () => {
+        divNode.remove()
+        const messageInput = document.getElementById('message-input') as HTMLElement
+        // 移除messageInput的最前面的空格节点，获取空格后面的内容
+        messageInput.textContent = messageInput.textContent!.trim()
+        // 创建并初始化 range 对象
+        const range = document.createRange()
+        range.selectNodeContents(messageInput)
+        range.collapse(false) // 将光标移动到末尾
+        // 将光标设置到 messageInput 的末尾
+        const selection = window.getSelection()
+        selection?.removeAllRanges()
+        selection?.addRange(range)
+        triggerInputEvent(messageInput)
+        reply.value = { avatar: '', imgCount: 0, accountName: '', content: '', key: 0 }
+      })
+      // 为头像和标题创建容器
+      const headerContainer = document.createElement('div')
+      headerContainer.style.cssText = `
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      `
+      // 在容器中添加头像和标题
+      headerContainer.appendChild(imgNode)
+      headerContainer.appendChild(headerNode)
+      headerContainer.appendChild(closeBtn)
+
+      // 将容器添加到主div中
+      divNode.appendChild(headerContainer)
       // 将div标签节点插入到光标位置
       range?.insertNode(divNode)
       // 将光标折叠到Range的末尾(true表示折叠到Range的开始位置,false表示折叠到Range的末尾)
