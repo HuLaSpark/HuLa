@@ -44,15 +44,15 @@ export const useMsgInput = (messageInputDom: Ref) => {
     {
       uid: '1',
       type: 'Ollama',
-      name: 'deepseek',
-      value: 'deepseek',
+      name: 'DeepSeek-V3',
+      value: 'deepseek-chat',
       avatar: '/AI/deepseek.png'
     },
     {
       uid: '2',
       type: 'Ollama',
-      name: '通义千问',
-      value: 'QW',
+      name: '通义千问-Plus',
+      value: 'qwen-plus',
       avatar: '/AI/QW.png'
     },
     {

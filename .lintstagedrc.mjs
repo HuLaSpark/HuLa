@@ -1,8 +1,7 @@
 import path from 'node:path'
 
 function createCommand(prefix, join) {
-  return (filenames) =>
-    `${prefix} ${filenames.map((f) => path.relative(process.cwd(), f)).join(` ${join} `)}`
+  return (filenames) => `${prefix} ${filenames.map((f) => path.relative(process.cwd(), f)).join(` ${join} `)}`
 }
 
 export default {
@@ -10,6 +9,7 @@ export default {
     'oxlint src',
     createCommand('pnpm eslint --fix', ''),
     createCommand('prettier --write', '--write'),
-    () => 'pnpm test:run'
+    () => 'pnpm test:run',
+    () => 'vue-tsc --noEmit'
   ]
 }

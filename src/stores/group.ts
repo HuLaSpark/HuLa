@@ -198,13 +198,10 @@ export const useGroupStore = defineStore('group', () => {
 
   /**
    * 退出群聊
-   * 1. 调用退群API
-   * 2. 更新本地群成员列表
-   * 3. 更新会话列表
-   * 4. 切换到第一个会话
+   * @param roomId 要退出的群聊ID
    */
-  const exitGroup = async () => {
-    await apis.exitGroup({ roomId: currentRoomId.value })
+  const exitGroup = async (roomId: number) => {
+    await apis.exitGroup({ roomId: roomId })
     // 从成员列表中移除自己
     const index = userList.value.findIndex((user) => user.uid === userStore.userInfo.uid)
     userList.value.splice(index, 1)

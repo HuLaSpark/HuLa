@@ -110,6 +110,8 @@ const moreList = ref<OPT.L.MoreList[]>([
       userStore.userInfo = {}
       localStorage.removeItem('USER_INFO')
       localStorage.removeItem('TOKEN')
+      const headers = new Headers()
+      headers.append('Authorization', '')
       userStore.isSign = false
       loginStore.loginStatus = LoginStatus.Init
     }

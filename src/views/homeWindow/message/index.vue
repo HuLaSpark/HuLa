@@ -36,8 +36,7 @@
             </n-flex>
 
             <n-flex align="center" justify="space-between">
-              <span class="text flex-1 leading-tight text-12px truncate">
-                {{ item.lastMsg.replace(':', '：') }}
+              <span class="text flex-1 leading-tight text-12px truncate" v-html="item.lastMsg.replace(':', '：')">
               </span>
 
               <!-- 消息提示 -->
@@ -94,22 +93,39 @@ import SysNTF from '@/components/common/SystemNotification.tsx'
 import { AvatarUtils } from '@/utils/avatarUtils.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { useMitt } from '~/src/hooks/useMitt'
+import { useUserStore } from '@/stores/user'
 
 const chatStore = useChatStore()
 const globalStore = useGlobalStore()
 const groupStore = useGroupStore()
 const { userUid } = useCommon()
+const userStore = useUserStore()
 // const msgScrollbar = useTemplateRef('msg-scrollbar')
 const { handleMsgClick, handleMsgDelete, menuList, specialMenuList, handleMsgDblclick } = useMessage()
 const currentSession = computed(() => globalStore.currentSession)
 // TODO 艾特我提醒
 const sessionList = computed(() =>
   chatStore.sessionList.map((item) => {
-    // 最后一条消息内容
-    const lastMsg = Array.from(chatStore.messageMap.get(item.roomId)?.values() || [])?.slice(-1)?.[0]
+    // 获取该会话的所有消息，避免重复转换
+    const messages = Array.from(chatStore.messageMap.get(item.roomId)?.values() || [])
+    // 获取最后一条消息
+    const lastMsg = messages[messages.length - 1]
     let LastUserMsg = ''
+
     if (lastMsg) {
       const lastMsgUserName = useUserInfo(lastMsg.fromUser.uid)
+
+      // 添加@提醒判断
+      const isAtMe =
+        item.type === RoomTypeEnum.GROUP &&
+        currentSession.value.roomId !== item.roomId &&
+        item.unreadCount > 0 && // 只有未读消息时才检查@
+        messages
+          .slice(-item.unreadCount) // 只检查最新的未读消息
+          .some((msg) => msg.message?.body?.atUidList?.includes(userStore.userInfo.uid))
+
+      const atPrefix = isAtMe ? '<span class="text-#d5304f mr-4px">[有人@我]</span>' : ''
+
       LastUserMsg =
         lastMsg.message?.type === MsgEnum.RECALL
           ? item.type === RoomTypeEnum.GROUP
@@ -117,12 +133,14 @@ const sessionList = computed(() =>
             : lastMsg.fromUser.uid === userUid.value
               ? '你撤回了一条消息'
               : '对方撤回了一条消息'
-          : (renderReplyContent(
-              lastMsgUserName.value.name,
-              lastMsg.message?.type,
-              lastMsg.message?.body?.content || lastMsg.message?.body,
-              item.type
-            ) as string)
+          : `${atPrefix}${
+              renderReplyContent(
+                lastMsgUserName.value.name,
+                lastMsg.message?.type,
+                lastMsg.message?.body?.content || lastMsg.message?.body,
+                item.type
+              ) as string
+            }`
     }
     return {
       ...item,

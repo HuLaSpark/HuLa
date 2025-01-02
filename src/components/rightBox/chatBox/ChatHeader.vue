@@ -103,7 +103,10 @@
             <p>删除聊天记录</p>
           </div>
 
-          <div class="box-item flex-x-center cursor-pointer" @click="handleDelete(RoomActEnum.DELETE_FRIEND)">
+          <div
+            v-if="shouldShowDeleteFriend"
+            class="box-item flex-x-center cursor-pointer"
+            @click="handleDelete(RoomActEnum.DELETE_FRIEND)">
             <p class="color-#d03553">删除好友</p>
           </div>
 
@@ -134,7 +137,7 @@
             <n-flex vertical justify="center" :size="16">
               <p class="text-(14px --text-color)">群成员</p>
 
-              <n-flex align="center" justify="center" :size="20">
+              <n-flex align="center" justify="start" :size="[24, 20]">
                 <template v-for="(item, _index) in userList" :key="_index">
                   <n-flex vertical justify="center" align="center" :size="10">
                     <n-avatar round :size="30" :src="AvatarUtils.getAvatarUrl(item.avatar)" />
@@ -150,7 +153,10 @@
             <p>删除聊天记录</p>
           </div>
 
-          <div class="box-item flex-x-center cursor-pointer" @click="handleDelete(RoomActEnum.EXIT_GROUP)">
+          <div
+            v-if="activeItem.hotFlag !== IsAllUserEnum.Yes"
+            class="box-item flex-x-center cursor-pointer"
+            @click="handleDelete(RoomActEnum.EXIT_GROUP)">
             <p class="color-#d03553">退出群聊</p>
           </div>
 
@@ -221,12 +227,18 @@ const modalShow = ref(false)
 const sidebarShow = ref(false)
 const showLoading = ref(true)
 const isLoading = ref(false)
+/** 是否在线 */
 const isOnline = computed(() => {
   if (activeItem.type === RoomTypeEnum.GROUP) return false
 
   const contact = contactStore.contactsList.find((item) => item.uid === activeItem.friendId)
 
   return contact?.activeStatus === OnlineEnum.ONLINE
+})
+/** 是否还是好友 */
+const shouldShowDeleteFriend = computed(() => {
+  if (activeItem.type === RoomTypeEnum.GROUP) return false
+  return contactStore.contactsList.some((item) => item.uid === activeItem.friendId)
 })
 const groupUserList = computed(() => groupStore.userList)
 const messageOptions = computed(() => chatStore.currentMessageOptions)
@@ -318,13 +330,14 @@ const handleMedia = () => {
 /** 删除操作二次提醒 */
 const handleDelete = (label: RoomActEnum) => {
   modalShow.value = true
+  optionsType.value = label
   if (label === RoomActEnum.DELETE_FRIEND) {
     tips.value = '确定删除该好友吗?'
-    optionsType.value = RoomActEnum.DELETE_FRIEND
   } else if (label === RoomActEnum.EXIT_GROUP) {
     tips.value = '确定退出该群聊?'
   } else {
     tips.value = '确定后将删除本地聊天记录'
+    optionsType.value = RoomActEnum.DELETE_RECORD
   }
 }
 
@@ -334,6 +347,13 @@ const handleConfirm = () => {
       modalShow.value = false
       sidebarShow.value = false
       window.$message.success('已删除好友')
+      // TODO: 删除后当前删除的人提示不准确，无论是删除方还是被删除方都提示“您已被对方拉黑”
+    })
+  } else if (optionsType.value === RoomActEnum.EXIT_GROUP) {
+    groupStore.exitGroup(activeItem.roomId).then(() => {
+      modalShow.value = false
+      sidebarShow.value = false
+      window.$message.success('已退出群聊')
       // 删除当前的会话
       useMitt.emit(MittEnum.DELETE_SESSION, activeItem.roomId)
     })

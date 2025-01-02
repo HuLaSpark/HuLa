@@ -15,6 +15,13 @@ export const useWindowState = async (label: string) => {
       await emit(EventEnum.WIN_CLOSE, e)
     })
 
+    /** 解决mac程序坞右键退出应用后，重新启动请求头还保留着token导致请求失败 TODO: 但是还是会有几率会失败 */
+    await win?.listen('tauri://close-requested', async () => {
+      localStorage.removeItem('TOKEN')
+      const headers = new Headers()
+      headers.append('Authorization', '')
+    })
+
     // 监听窗口关闭事件,当窗口是非正常关闭的时候触发
     await win?.onCloseRequested(async () => {
       if (localStorage.getItem('wsLogin')) {

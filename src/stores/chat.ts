@@ -323,16 +323,14 @@ export const useChatStore = defineStore(
         session.text = formattedText!
         // 更新未读数
         if (msg.fromUser.uid !== userStore.userInfo.uid) {
-          if (currentRoomId.value !== msg.message.roomId) {
+          if (route?.path !== '/message' || msg.message.roomId !== currentRoomId.value) {
             session.unreadCount = (session.unreadCount || 0) + 1
-          } else if (route?.path !== '/message') {
-            session.unreadCount = (session.unreadCount || 0) + 1
+            globalStore.unReadMark.newMsgUnreadCount++
           }
         }
       }
 
       updateSessionLastActiveTime(msg.message.roomId, detailResponse)
-      console.log(msg.message.body.atUidList)
 
       // 如果收到的消息里面是艾特自己的就发送系统通知
       if (msg.message.body.atUidList?.includes(userStore.userInfo.uid) && cacheUser) {
@@ -343,21 +341,9 @@ export const useChatStore = defineStore(
         })
       }
 
-      // tab 在台获得新消息，就开始闪烁！
-      // if (document.hidden && !shakeTitle.isShaking) {
-      //   shakeTitle.start()
-      // }
-
       if (currentNewMsgCount.value) {
         currentNewMsgCount.value.count++
         return
-      }
-
-      // 如果当前路由不是聊天，就开始计数
-      if (route?.path !== '/message') {
-        globalStore.unReadMark.newMsgUnreadCount++
-      } else if (msg.fromUser.uid !== userStore.userInfo.uid && msg.message.roomId !== currentRoomId.value) {
-        globalStore.unReadMark.newMsgUnreadCount++
       }
 
       // 聊天列表滚动到底部
@@ -535,6 +521,16 @@ export const useChatStore = defineStore(
       sessionList.splice(index, 1)
     }
 
+    // 添加新方法：只有当用户真正查看了消息时才清除未读计数
+    const clearGlobalUnreadCount = () => {
+      if (route?.path === '/message' && currentRoomId.value) {
+        const session = sessionList.find((item) => item.roomId === currentRoomId.value)
+        if (session && session.unreadCount === 0) {
+          globalStore.unReadMark.newMsgUnreadCount = 0
+        }
+      }
+    }
+
     return {
       getMsgIndex,
       chatMessageList,
@@ -567,7 +563,8 @@ export const useChatStore = defineStore(
       removeContact,
       getRecalledMessage,
       recalledMessages,
-      clearAllExpirationTimers
+      clearAllExpirationTimers,
+      clearGlobalUnreadCount
     }
   },
   {
