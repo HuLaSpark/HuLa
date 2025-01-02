@@ -142,6 +142,7 @@ watchEffect(() => {
     appWindow.listen(EventEnum.LOGOUT, async () => {
       /** 退出账号前把窗口全部关闭 */
       if (appWindow.label !== 'login') {
+        await nextTick()
         await appWindow.close()
       }
     }),

@@ -73,10 +73,15 @@ export const formatTimestamp = (timestamp: number, isDetail = false): string => 
   const gapDay = dayjs().endOf('day').diff(date, 'day')
   // 消息与今天是否 7 天及以上了
   const isLastWeek = gapDay >= 7
+
+  // 首先检查是否跨年
+  if (now.year() !== date.year()) {
+    return date.format(`${isDetail ? 'YYYY-MM-DD HH:mm:ss' : 'YYYY-MM-DD'}`)
+  }
+
+  // 其他情况保持不变
   if (now.isSame(date, 'day')) {
     return date.format(`${isDetail ? 'HH:mm:ss' : 'HH:mm'}`)
-  } else if (now.diff(date, 'year') >= 1) {
-    return date.format(`${isDetail ? 'YYYY-MM-DD HH:mm:ss' : 'YYYY-MM-DD'}`)
   } else {
     if (isDetail) return date.format('MM-DD HH:mm:ss')
     return gapDay === 1 ? '昨天' : isLastWeek ? date.format('MM-DD') : dayjs(date).format('dddd')

@@ -106,7 +106,7 @@
             :render-target-label="renderLabel" />
 
           <n-flex align="center" justify="center" class="p-16px">
-            <n-button :disabled="selectedValue.length === 0" color="#13987f" @click="handleCreateGroup">创建</n-button>
+            <n-button :disabled="selectedValue.length < 2" color="#13987f" @click="handleCreateGroup">创建</n-button>
           </n-flex>
         </n-flex>
       </div>
@@ -189,7 +189,7 @@ watchEffect(() => {
 })
 
 const handleCreateGroup = async () => {
-  if (selectedValue.value.length === 0) return
+  if (selectedValue.value.length < 2) return
   try {
     await createGroup(selectedValue.value)
     createGroupModal.value = false

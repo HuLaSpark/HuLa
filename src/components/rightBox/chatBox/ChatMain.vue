@@ -197,17 +197,17 @@
                     </n-flex>
                   </ContextMenu>
                   <!-- 群主 -->
-                  <!--                <div-->
-                  <!--                  v-if="chatStore.isGroup && item.message.id === 1"-->
-                  <!--                  class="flex p-4px rounded-4px bg-#f5dadf size-fit select-none">-->
-                  <!--                  <span class="text-(10px #d5304f)">群主</span>-->
-                  <!--                </div>-->
+                  <div
+                    v-if="chatStore.isGroup && item.message.id === 1"
+                    class="flex p-4px rounded-4px bg-#f5dadf size-fit select-none">
+                    <span class="text-(10px #d5304f)">群主</span>
+                  </div>
                   <!-- 管理员 -->
-                  <!--                <div-->
-                  <!--                  v-if="chatStore.isGroup && item.message.id === 2"-->
-                  <!--                  class="flex p-4px rounded-4px bg-#13987F66 size-fit select-none">-->
-                  <!--                  <span class="text-(10px #13987f)">管理员</span>-->
-                  <!--                </div>-->
+                  <div
+                    v-if="chatStore.isGroup && item.message.id === 2"
+                    class="flex p-4px rounded-4px bg-#13987F66size-fit select-none">
+                    <span class="text-(10px #13987f)">管理员</span>
+                  </div>
                   <!-- 信息时间(群聊) -->
                   <Transition name="fade-group">
                     <span v-if="chatStore.isGroup && hoverBubble.key === item.message.id" class="text-(12px #909090)">
@@ -299,7 +299,7 @@
                     </n-icon>
                     <n-icon
                       v-if="item.message.status === MessageStatusEnum.FAILED"
-                      class="text-red-500 cursor-pointer"
+                      class="text-#d5304f cursor-pointer"
                       @click.stop="handleRetry(item)">
                       <svg class="size-16px"><use href="#cloudError"></use></svg>
                     </n-icon>
@@ -374,16 +374,16 @@
   </n-modal>
 
   <!--  悬浮按钮提示(头部悬浮) // TODO 要结合已读未读功能来判断之前的信息有多少没有读，当现在的距离没有到最底部并且又有新消息来未读的时候显示下标的更多信息 (nyh -> 2024-03-07 01:27:22)-->
-  <!--  <header class="float-header" :class="isGroup ? 'right-220px' : 'right-50px'">-->
-  <!--    <div class="float-box">-->
-  <!--      <n-flex justify="space-between" align="center">-->
-  <!--        <n-icon :color="'#13987f'">-->
-  <!--          <svg><use href="#double-up"></use></svg>-->
-  <!--        </n-icon>-->
-  <!--        <span class="text-12px">xx条新信息</span>-->
-  <!--      </n-flex>-->
-  <!--    </div>-->
-  <!--  </header>-->
+  <!-- <header class="float-header" :class="chatStore.isGroup ? 'right-220px' : 'right-50px'">
+    <div class="float-box">
+      <n-flex justify="space-between" align="center">
+        <n-icon :color="'#13987f'">
+          <svg><use href="#double-up"></use></svg>
+        </n-icon>
+        <span class="text-12px">xx条新信息</span>
+      </n-flex>
+    </div>
+  </header> -->
 
   <!-- 悬浮按钮提示(底部悬浮) -->
   <footer

@@ -8,7 +8,6 @@ import apis from '@/services/apis'
 export const useGlobalStore = defineStore(
   'global',
   () => {
-    const route = useRoute()
     const chatStore = useChatStore()
 
     // 未读消息标记：好友请求未读数和新消息未读数
@@ -52,6 +51,15 @@ export const useGlobalStore = defineStore(
     // 提示框显示状态
     const tipVisible = ref<boolean>(false)
 
+    // 更新全局未读消息计数
+    const updateGlobalUnreadCount = () => {
+      // 计算所有会话的未读消息总数
+      const totalUnread = chatStore.sessionList.reduce((total, session) => {
+        return total + (session.unreadCount || 0)
+      }, 0)
+      unReadMark.newMsgUnreadCount = totalUnread
+    }
+
     // 监听当前会话变化
     watch(currentSession, (val) => {
       // 清理已读数查询队列
@@ -60,19 +68,10 @@ export const useGlobalStore = defineStore(
       setTimeout(readCountQueue, 1000)
       // 标记该房间的消息为已读
       apis.markMsgRead({ roomId: val.roomId })
-      // 更新会话的已读状态，并获取未读消息数
-      const unreadCount = chatStore.markSessionRead(val.roomId)
-      // 计算并更新全局未读消息数
-      const resultCount = unReadMark.newMsgUnreadCount - unreadCount
-      unReadMark.newMsgUnreadCount = resultCount > 0 ? resultCount : 0
-    })
-
-    watch(route, (v) => {
-      if (v.path === '/message') {
-        // 更新会话的已读状态，并获取未读消息数
-        const unreadCount = chatStore.markSessionRead(currentSession.roomId)
-        unReadMark.newMsgUnreadCount = unreadCount
-      }
+      // 更新会话的已读状态
+      chatStore.markSessionRead(val.roomId)
+      // 更新全局未读计数
+      updateGlobalUnreadCount()
     })
 
     // 设置提示框显示状态
@@ -88,7 +87,8 @@ export const useGlobalStore = defineStore(
       currentReadUnreadList,
       createGroupModalInfo,
       tipVisible,
-      setTipVisible
+      setTipVisible,
+      updateGlobalUnreadCount
     }
   },
   {

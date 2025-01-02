@@ -8,6 +8,7 @@ import { useGlobalStore } from '@/stores/global.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useTauriListener } from './useTauriListener'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import apis from '@/services/apis'
 
 const msgBoxShow = ref(false)
 /** 独立窗口的集合 */
@@ -15,6 +16,7 @@ const aloneWin = ref(new Set())
 const shrinkStatus = ref(false)
 const itemRef = ref<SessionItem>()
 export const useMessage = () => {
+  const route = useRoute()
   const { pushListeners } = useTauriListener()
   const globalStore = useGlobalStore()
   const chatStore = useChatStore()
@@ -34,15 +36,15 @@ export const useMessage = () => {
     globalStore.currentSession.type = item.type
     const data = { msgBoxShow, item }
     useMitt.emit(MittEnum.MSG_BOX_SHOW, data)
-    // 判断是否打开了独立的窗口 TODO: 暂时下架独立窗口功能,但是功能代码还保留后用
-    // if (aloneWin.value.has(EventEnum.ALONE + item.roomId)) {
-    //   checkWinExist(EventEnum.ALONE + item.roomId)
-    //   useMitt.emit(MittEnum.MSG_BOX_SHOW, { item: -1 })
-    // }
-    // 如果是收缩页面状态点击消息框就直接变成独立窗口
-    // if (shrinkStatus.value) {
-    //   openAloneWin(item)
-    // }
+
+    // 只有在消息页面且有未读消息时，才标记为已读
+    if (route.path === '/message' && item.unreadCount > 0) {
+      apis.markMsgRead({ roomId: item.roomId }).then(() => {
+        chatStore.markSessionRead(item.roomId)
+        // 更新全局未读计数
+        globalStore.updateGlobalUnreadCount()
+      })
+    }
   }
 
   /**

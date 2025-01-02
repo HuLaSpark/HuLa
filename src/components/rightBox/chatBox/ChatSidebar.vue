@@ -91,12 +91,16 @@
                   :intersection-observer-options="{
                     root: '#image-chat-sidebar'
                   }" />
-                <span class="text-12px truncate flex-1">{{ item.name }}</span>
-                <div v-if="item.uid === 1" class="flex p-4px rounded-4px bg-#f5dadf size-fit select-none">
-                  <span class="text-(10px #d5304f)">群主</span>
+                <p class="text-12px truncate flex-1">{{ item.name }}</p>
+                <div
+                  v-if="item.roleId === RoleEnum.LORD"
+                  class="flex p-4px rounded-4px bg-#f5dadf size-fit select-none">
+                  <p class="text-(10px #d5304f)">群主</p>
                 </div>
-                <div v-if="item.uid === 2" class="flex p-4px rounded-4px bg-#13987F66 size-fit select-none">
-                  <span class="text-(10px #13987f)">管理员</span>
+                <div
+                  v-if="item.roleId === RoleEnum.ADMIN"
+                  class="flex p-4px rounded-4px bg-#13987F66 size-fit select-none">
+                  <p class="text-(10px #13987f)">管理员</p>
                 </div>
               </n-flex>
             </ContextMenu>
@@ -109,7 +113,7 @@
   </main>
 </template>
 <script setup lang="ts">
-import { MittEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
+import { MittEnum, OnlineEnum, RoleEnum, RoomTypeEnum } from '@/enums'
 import { InputInst } from 'naive-ui'
 import { usePopover } from '@/hooks/usePopover.ts'
 import { useChatMain } from '@/hooks/useChatMain.ts'
@@ -137,7 +141,17 @@ const userList = computed(() => {
       }
     })
     .sort((a, b) => {
-      return a.activeStatus - b.activeStatus // 升序排序
+      // 首先按照roleId排序
+      if (a.roleId !== b.roleId) {
+        // roleId === 1 的排在最前面
+        if (a.roleId === RoleEnum.LORD) return -1
+        if (b.roleId === RoleEnum.LORD) return 1
+        // roleId === 2 的排在第二位
+        if (a.roleId === RoleEnum.ADMIN) return -1
+        if (b.roleId === RoleEnum.ADMIN) return 1
+      }
+      // roleId相同时，按照activeStatus升序排序
+      return a.activeStatus - b.activeStatus
     })
 })
 const filteredUserList = shallowRef(userList.value)

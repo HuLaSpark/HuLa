@@ -270,5 +270,6 @@ export const messageStrategyMap: Record<MsgEnum, MessageStrategy> = {
   [MsgEnum.SYSTEM]: unsupportedMessageStrategy,
   [MsgEnum.MIXED]: unsupportedMessageStrategy,
   [MsgEnum.AIT]: unsupportedMessageStrategy,
-  [MsgEnum.REPLY]: unsupportedMessageStrategy
+  [MsgEnum.REPLY]: unsupportedMessageStrategy,
+  [MsgEnum.AI]: unsupportedMessageStrategy
 }
