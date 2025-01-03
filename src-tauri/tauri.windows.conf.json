@@ -1,6 +1,6 @@
 {
   "productName": "HuLa",
-  "version": "2.5.10",
+  "version": "2.5.11",
   "identifier": "com.hula.pc",
   "build": {
     "beforeDevCommand": "pnpm dev",

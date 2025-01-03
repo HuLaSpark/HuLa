@@ -1,5 +1,31 @@
 
 
+## [2.5.11](https://github.com/HuLaSpark/HuLa/compare/v2.5.10...v2.5.11) (2025-01-03)
+
+
+### ✨ Features | 新功能
+
+* **component:** :sparkles: 新增AI选项卡，封装提及框功能 ([#133](https://github.com/HuLaSpark/HuLa/issues/133)) ([9fdb695](https://github.com/HuLaSpark/HuLa/commit/9fdb6953ab2c9d46c75b715aac40d211cb605fa7))
+* **notification:** :sparkles: 新增notification系统通知 ([#127](https://github.com/HuLaSpark/HuLa/issues/127)) ([77373e3](https://github.com/HuLaSpark/HuLa/commit/77373e3782f8f5679940605656259efbb21db558))
+* **service:** :sparkles: 新增翻译服务api ([#130](https://github.com/HuLaSpark/HuLa/issues/130)) ([fadbf2b](https://github.com/HuLaSpark/HuLa/commit/fadbf2b24a7f5688d02de47ac36254902018e56e))
+
+
+### 🐛 Bug Fixes | Bug 修复
+
+* **common:** :bug: 修复一些流程和已知的问题 ([#134](https://github.com/HuLaSpark/HuLa/issues/134)) ([ca0dc1f](https://github.com/HuLaSpark/HuLa/commit/ca0dc1fc778c3c2b9b4175b11ea02fc3cace1cd5))
+* **common:** :bug: 修复一些已知问题 ([#137](https://github.com/HuLaSpark/HuLa/issues/137)) ([16cd17a](https://github.com/HuLaSpark/HuLa/commit/16cd17aa54fe32399fdeb6a11470fac6daede754))
+* **event:** :bug: 修复tauri listen未销毁问题 ([#124](https://github.com/HuLaSpark/HuLa/issues/124)) ([7b762e2](https://github.com/HuLaSpark/HuLa/commit/7b762e26a086ca69b0c71093f9382fc865b259aa))
+* **pnpm:** :bug: 更新版本依赖 ([#138](https://github.com/HuLaSpark/HuLa/issues/138)) ([15a645e](https://github.com/HuLaSpark/HuLa/commit/15a645ec78214886e2502226bc7fa176ba91d912))
+* **version:** :bug: 修复升级tauri版本导致的高度问题 ([#125](https://github.com/HuLaSpark/HuLa/issues/125)) ([adf47e7](https://github.com/HuLaSpark/HuLa/commit/adf47e7acc38c7159ddc0aaa4bb38784ff5f1594))
+
+
+### ⚡️ Performance Improvements | 性能优化
+
+* **component:** :zap: 可在设置中切换翻译提供商 ([#132](https://github.com/HuLaSpark/HuLa/issues/132)) ([99a8859](https://github.com/HuLaSpark/HuLa/commit/99a8859476bef5593641076a6fdadd2b48153be2))
+* **component:** :zap: 优化撤回消息重新编辑判定 ([#128](https://github.com/HuLaSpark/HuLa/issues/128)) ([451ded8](https://github.com/HuLaSpark/HuLa/commit/451ded82c58cdfd4d8941533db50df61f448b292))
+* **component:** :zap: 优化翻译的显示 ([#131](https://github.com/HuLaSpark/HuLa/issues/131)) ([c18ee4b](https://github.com/HuLaSpark/HuLa/commit/c18ee4b46715b072cfa7ff82b790c68c63a5eb62))
+* **component:** :zap: 优化虚拟列表加载更多功能 ([#129](https://github.com/HuLaSpark/HuLa/issues/129)) ([a1641e9](https://github.com/HuLaSpark/HuLa/commit/a1641e96ccde507a28f56c8083a8e37bd379da6c))
+
 ## [2.5.10](https://github.com/HuLaSpark/HuLa/compare/v2.5.9...v2.5.10) (2024-12-25)
 
 
