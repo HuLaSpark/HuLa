@@ -16,19 +16,32 @@ pub struct UserInfo {
     username: String,
     token: String,
     portrait: String,
-    is_sign: bool
+    is_sign: bool,
 }
 
 impl UserInfo {
-    pub fn new(user_id: i64, username: String, token: String, portrait: String, is_sign: bool) -> Self {
-        UserInfo{user_id, username, token, portrait, is_sign}
+    pub fn new(
+        user_id: i64,
+        username: String,
+        token: String,
+        portrait: String,
+        is_sign: bool,
+    ) -> Self {
+        UserInfo {
+            user_id,
+            username,
+            token,
+            portrait,
+            is_sign,
+        }
     }
     // pub fn get_user_id(&self) -> Result<i64, ()> { Ok(self.user_id)}
     // pub fn get_username(&self) -> Result<&str, ()> { Ok(self.username.as_str())}
     // pub fn get_token(&self) -> Result<&str, ()> { Ok(self.token.as_str())}
     // pub fn get_portrait(&self) -> Result<&str, ()> { Ok(self.portrait.as_str())}
-    pub fn get_is_sign(&self) -> Result<bool, ()> { Ok(self.is_sign) }
-
+    pub fn get_is_sign(&self) -> Result<bool, ()> {
+        Ok(self.is_sign)
+    }
 }
 
 // 全局变量
@@ -44,7 +57,13 @@ lazy_static! {
 
 // 保存用户信息的方法
 #[tauri::command]
-pub fn save_user_info(user_id: i64, username: &str, token: &str, portrait: &str, is_sign: bool) -> i32 {
+pub fn save_user_info(
+    user_id: i64,
+    username: &str,
+    token: &str,
+    portrait: &str,
+    is_sign: bool,
+) -> i32 {
     let mut user_info = USER_INFO.write().unwrap();
     user_info.user_id = user_id;
     user_info.username = username.to_string();
@@ -121,3 +140,8 @@ pub fn set_height(height: u32, handle: AppHandle) {
         .unwrap();
 }
 
+#[tauri::command]
+pub fn set_badge_count(count: Option<i64>, handle: AppHandle) {
+    let home_window = handle.get_webview_window("home").unwrap();
+    home_window.set_badge_count(count).unwrap();
+}

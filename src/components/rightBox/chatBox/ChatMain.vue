@@ -47,6 +47,7 @@
       :estimatedItemHeight="itemSize"
       :buffer="5"
       :isLoadingMore="messageOptions?.isLoading && isLoadingMore"
+      :isLast="messageOptions?.isLast"
       @scroll="handleScroll"
       @scroll-direction-change="handleScrollDirectionChange"
       style="max-height: calc(100vh - 260px)">
@@ -528,12 +529,20 @@ watch(
           virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'smooth' })
           return
         }
-      }
 
-      // 其他情况：增加新消息计数
-      /**
-       * @see {chatStore.pushMsg}
-       */
+        // 其他情况：如果是他人的消息且不在底部，增加新消息计数
+        if (latestMessage?.fromUser?.uid !== userUid.value) {
+          const current = chatStore.newMsgCount.get(props.activeItem.roomId)
+          if (!current) {
+            chatStore.newMsgCount.set(props.activeItem.roomId, {
+              count: 1,
+              isStart: true
+            })
+          } else {
+            current.count++
+          }
+        }
+      }
     }
   },
   { deep: false }

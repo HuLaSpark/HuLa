@@ -100,7 +100,7 @@ const globalStore = useGlobalStore()
 const groupStore = useGroupStore()
 const { userUid } = useCommon()
 const userStore = useUserStore()
-// const msgScrollbar = useTemplateRef('msg-scrollbar')
+const msgScrollbar = useTemplateRef('msg-scrollbar')
 const { handleMsgClick, handleMsgDelete, menuList, specialMenuList, handleMsgDblclick } = useMessage()
 const currentSession = computed(() => globalStore.currentSession)
 // TODO 艾特我提醒
@@ -154,18 +154,7 @@ watch(
   () => chatStore.currentSessionInfo,
   (newVal) => {
     if (newVal) {
-      console.log('newVal', newVal)
-
       handleMsgClick(newVal as SessionItem)
-      // requestAnimationFrame(() => {
-      //   const index = sessionList.value.findIndex((item) => item.roomId === newVal.roomId)
-      //   if (index !== -1) {
-      //     scrollbar.value?.scrollTo({
-      //       top: index * (75 + 5) + 4, // height of msg-box (75px) + margin-bottom (5px) + top padding (4px)
-      //       behavior: 'auto'
-      //     })
-      //   }
-      // })
     }
   },
   { immediate: true }
@@ -181,6 +170,15 @@ onMounted(() => {
   SysNTF
   useMitt.on(MittEnum.DELETE_SESSION, (roomId) => {
     handleMsgDelete(roomId)
+  })
+  useMitt.on(MittEnum.LOCATE_SESSION, (e) => {
+    const index = sessionList.value.findIndex((item) => item.roomId === e.roomId)
+    if (index !== -1) {
+      msgScrollbar.value?.scrollTo({
+        top: index * (75 + 5) - 264,
+        behavior: 'smooth'
+      })
+    }
   })
 })
 </script>

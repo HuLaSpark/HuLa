@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import apis from '@/services/apis'
 import { useGlobalStore } from '@/stores/global'
-import type { ContactItem, RequestFriendItem } from '@/services/types'
+import type { ContactItem, GroupListReq, RequestFriendItem } from '@/services/types'
 import { RequestFriendAgreeStatus } from '@/services/types'
 
 // 定义分页大小常量
@@ -9,13 +9,14 @@ export const pageSize = 20
 export const useContactStore = defineStore('contact', () => {
   const globalStore = useGlobalStore()
 
-  // 响应式状态定义
   const contactsList = reactive<ContactItem[]>([]) // 联系人列表
   const requestFriendsList = reactive<RequestFriendItem[]>([]) // 好友请求列表
 
   // 分页加载相关的状态
   const contactsOptions = reactive({ isLast: false, isLoading: false, cursor: '' }) // 联系人列表分页选项
   const requestFriendsOptions = reactive({ isLast: false, isLoading: false, cursor: '' }) // 好友请求列表分页选项
+
+  const groupChatList = reactive<GroupListReq[]>([]) // 群聊列表
 
   /**
    * 获取联系人列表
@@ -43,6 +44,14 @@ export const useContactStore = defineStore('contact', () => {
     contactsOptions.cursor = data.cursor
     contactsOptions.isLast = data.isLast
     contactsOptions.isLoading = false
+  }
+
+  /**
+   * 获取群聊列表
+   */
+  const getGroupChatList = async () => {
+    const response = await apis.groupList()
+    groupChatList.push(...response)
   }
 
   /**
@@ -143,8 +152,10 @@ export const useContactStore = defineStore('contact', () => {
 
   return {
     getContactList,
+    getGroupChatList,
     getRequestFriendsList,
     contactsList,
+    groupChatList,
     requestFriendsList,
     contactsOptions,
     requestFriendsOptions,

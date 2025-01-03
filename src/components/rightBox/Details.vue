@@ -1,7 +1,10 @@
 <template>
   <!-- 好友详情 -->
   <n-flex v-if="content.type === RoomTypeEnum.SINGLE" vertical align="center" :size="30" class="mt-60px select-none">
-    <n-avatar class="rounded-50% size-146px border-(2px solid #fff)" :src="AvatarUtils.getAvatarUrl(item.avatar!)" />
+    <n-image
+      class="rounded-50% size-146px border-(2px solid #fff)"
+      :src="AvatarUtils.getAvatarUrl(item.avatar)"
+      alt="" />
 
     <span class="text-(20px [--text-color])">{{ item.name }}</span>
 
@@ -47,7 +50,7 @@
 
   <!-- 群聊详情 -->
   <div
-    v-else-if="content.type === RoomTypeEnum.GROUP"
+    v-else-if="content.type === RoomTypeEnum.GROUP && item"
     class="flex flex-col flex-1 mt-60px gap-30px select-none p-[0_40px] box-border">
     <!-- 群聊头像以及简介 -->
     <n-flex align="center" justify="space-between">
@@ -57,11 +60,11 @@
           height="120px"
           style="border: 2px solid #fff"
           class="rounded-50%"
-          :src="item.avatar"
+          :src="AvatarUtils.getAvatarUrl(item.avatar)"
           alt="" />
 
         <n-flex vertical :size="16" justify="space-between" class="text-(14px #909090)">
-          <span class="text-(16px [--text-color])">{{ item.name }}</span>
+          <span class="text-(16px [--text-color])">{{ item.groupName }}</span>
           <span>群号：1235873897182</span>
           <span>创建时间：2021-01-01</span>
         </n-flex>
@@ -108,13 +111,22 @@ import { lightTheme } from 'naive-ui'
 import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { AvatarUtils } from '@/utils/avatarUtils'
+import apis from '@/services/apis.ts'
 
 const { openMsgSession } = useCommon()
 const { content } = defineProps<{
   content: any
 }>()
-const item = computed(() => {
-  return useUserInfo(content.uid).value
+const item = ref<any>(null)
+
+watchEffect(() => {
+  if (content.type === RoomTypeEnum.SINGLE) {
+    item.value = useUserInfo(content.uid).value
+  } else {
+    apis.groupDetail({ id: content.uid }).then((response) => {
+      item.value = response
+    })
+  }
 })
 
 const footerOptions = ref<OPT.Details[]>([

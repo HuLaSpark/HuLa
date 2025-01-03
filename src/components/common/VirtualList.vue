@@ -1,5 +1,8 @@
 <template>
   <div ref="containerRef" class="virtual-list-container" @scroll="handleScroll">
+    <n-flex v-if="!isLoadingMore && isLast" justify="center" class="box-border absolute-x-center pt-10px">
+      <span class="text-(12px #909090)">以下是全部消息内容</span>
+    </n-flex>
     <n-flex v-if="isLoadingMore" justify="center" class="box-border absolute-x-center pt-10px">
       <img class="size-16px" src="@/assets/img/loading.svg" alt="" />
       <span class="text-(14px #909090)">加载中</span>
@@ -19,6 +22,7 @@ const props = defineProps<{
   estimatedItemHeight?: number
   buffer?: number
   isLoadingMore?: boolean
+  isLast?: boolean
 }>()
 
 const emit = defineEmits<{

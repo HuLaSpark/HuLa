@@ -83,7 +83,9 @@ export enum MittEnum {
   /** 重新编辑 */
   RE_EDIT = 'reEdit',
   /** 删除会话 */
-  DELETE_SESSION = 'deleteSession'
+  DELETE_SESSION = 'deleteSession',
+  /** 定位会话 */
+  LOCATE_SESSION = 'locateSession'
 }
 
 /** 主题类型 */

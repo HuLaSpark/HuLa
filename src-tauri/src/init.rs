@@ -1,4 +1,4 @@
-use crate::user_cmd::get_user_info;
+use crate::common_cmd::get_user_info;
 use tauri::{Emitter, LogicalSize, Manager, Runtime, WindowEvent};
 use tauri_plugin_autostart::MacosLauncher;
 pub trait CustomInit {

@@ -4,6 +4,7 @@ import { useChatStore } from '@/stores/chat'
 import type { ContactItem, RequestFriendItem } from '@/services/types'
 import { clearQueue, readCountQueue } from '@/utils/ReadCountQueue.ts'
 import apis from '@/services/apis'
+import { invoke } from '@tauri-apps/api/core'
 
 export const useGlobalStore = defineStore(
   'global',
@@ -52,12 +53,13 @@ export const useGlobalStore = defineStore(
     const tipVisible = ref<boolean>(false)
 
     // 更新全局未读消息计数
-    const updateGlobalUnreadCount = () => {
+    const updateGlobalUnreadCount = async () => {
       // 计算所有会话的未读消息总数
       const totalUnread = chatStore.sessionList.reduce((total, session) => {
         return total + (session.unreadCount || 0)
       }, 0)
       unReadMark.newMsgUnreadCount = totalUnread
+      await invoke('set_badge_count', { count: totalUnread > 0 ? totalUnread : null })
     }
 
     // 监听当前会话变化

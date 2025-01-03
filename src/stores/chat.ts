@@ -12,6 +12,7 @@ import { cloneDeep } from 'lodash-es'
 import { useUserStore } from '@/stores/user.ts'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
 import { sendNotification } from '@tauri-apps/plugin-notification'
+import { invoke } from '@tauri-apps/api/core'
 
 type RecalledMessage = {
   messageId: number
@@ -53,6 +54,8 @@ export const useChatStore = defineStore(
     const replyMapping = reactive<Map<number, Map<number, number[]>>>(new Map([[currentRoomId.value, new Map()]])) // 回复消息的映射关系
     // 存储撤回的消息内容和时间
     const recalledMessages = reactive<Map<number, RecalledMessage>>(new Map())
+    // 存储每条撤回消息的过期定时器
+    const expirationTimers = new Map<number, number>()
 
     // 当前聊天室的消息Map计算属性
     const currentMessageMap = computed({
@@ -235,7 +238,7 @@ export const useChatStore = defineStore(
 
       sortAndUniqueSessionList()
 
-      sessionList[0].unreadCount = 0
+      // sessionList[0].unreadCount = 0
       if (!isFirstInit) {
         isFirstInit = true
         globalStore.currentSession.roomId = data.list[0].roomId
@@ -326,6 +329,7 @@ export const useChatStore = defineStore(
           if (route?.path !== '/message' || msg.message.roomId !== currentRoomId.value) {
             session.unreadCount = (session.unreadCount || 0) + 1
             globalStore.unReadMark.newMsgUnreadCount++
+            await invoke('set_badge_count', { count: globalStore.unReadMark.newMsgUnreadCount })
           }
         }
       }
@@ -341,10 +345,10 @@ export const useChatStore = defineStore(
         })
       }
 
-      if (currentNewMsgCount.value) {
-        currentNewMsgCount.value.count++
-        return
-      }
+      // if (currentNewMsgCount.value) {
+      //   currentNewMsgCount.value.count++
+      //   return
+      // }
 
       // 聊天列表滚动到底部
       setTimeout(() => {
@@ -397,9 +401,6 @@ export const useChatStore = defineStore(
         }
       }
     }
-
-    // 存储每条撤回消息的过期定时器
-    const expirationTimers = new Map<number, number>()
 
     // 更新消息撤回状态
     const updateRecallStatus = (data: RevokedMsgType) => {
@@ -521,16 +522,6 @@ export const useChatStore = defineStore(
       sessionList.splice(index, 1)
     }
 
-    // 添加新方法：只有当用户真正查看了消息时才清除未读计数
-    const clearGlobalUnreadCount = () => {
-      if (route?.path === '/message' && currentRoomId.value) {
-        const session = sessionList.find((item) => item.roomId === currentRoomId.value)
-        if (session && session.unreadCount === 0) {
-          globalStore.unReadMark.newMsgUnreadCount = 0
-        }
-      }
-    }
-
     return {
       getMsgIndex,
       chatMessageList,
@@ -563,8 +554,7 @@ export const useChatStore = defineStore(
       removeContact,
       getRecalledMessage,
       recalledMessages,
-      clearAllExpirationTimers,
-      clearGlobalUnreadCount
+      clearAllExpirationTimers
     }
   },
   {
