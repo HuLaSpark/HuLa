@@ -8,6 +8,7 @@ import {
   ContactItem,
   EmojiItem,
   GroupDetailReq,
+  GroupListReq,
   GroupStatisticType,
   ListResponse,
   LoginUserReq,
@@ -94,6 +95,8 @@ export default {
   removeGroupMember: (params: { roomId: number; uid: number }) => DELETE(urls.inviteGroupMember, params),
   /** 群组详情 */
   groupDetail: (params: { id: number }) => GET<GroupDetailReq>(urls.groupDetail, params),
+  /** 群聊列表 */
+  groupList: () => GET<GroupListReq[]>(urls.groupList),
   /** 会话详情 */
   sessionDetail: (params: { id: number }) => GET<SessionItem>(urls.sessionDetail, params),
   /** 会话详情(联系人列表发消息用) */

@@ -2,9 +2,9 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 mod init;
 mod tray;
-mod user_cmd;
+mod common_cmd;
 use init::CustomInit;
-use user_cmd::{audio, default_window_icon, get_user_info, save_user_info, screenshot, set_height};
+use common_cmd::{audio, default_window_icon, get_user_info, save_user_info, screenshot, set_height, set_badge_count};
 
 fn main() {
     tauri::Builder::default()
@@ -21,7 +21,8 @@ fn main() {
             default_window_icon,
             screenshot,
             audio,
-            set_height
+            set_height,
+            set_badge_count
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -679,7 +679,15 @@ export const useCommon = () => {
     apis.sessionDetailWithFriends({ uid: uid }).then((res) => {
       globalStore.currentSession.roomId = res.roomId
       globalStore.currentSession.type = RoomTypeEnum.SINGLE
-      chatStore.updateSessionLastActiveTime(res.roomId, res)
+
+      // 先检查会话是否已存在
+      const existingSession = chatStore.getSession(res.roomId)
+      if (!existingSession) {
+        // 只有当会话不存在时才更新会话列表顺序
+        chatStore.updateSessionLastActiveTime(res.roomId, res)
+      }
+      // 发送消息定位 TODO: 现在只支持好友会话定位
+      useMitt.emit(MittEnum.LOCATE_SESSION, { roomId: res.roomId })
       handleMsgClick(res as any)
     })
     useMitt.emit(MittEnum.TO_SEND_MSG, { url: 'message' })

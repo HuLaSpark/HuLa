@@ -65,6 +65,17 @@ export type GroupDetailReq = {
   roomId: number
 }
 
+export type GroupListReq = {
+  /** 群聊id */
+  groupId: number
+  /** 房间id */
+  roomId: number
+  /** 群名称 */
+  roomName: string
+  /** 群头像 */
+  avatar: string
+}
+
 export type CacheBadgeItem = {
   /** 是否需要更新数据源。 */
   needRefresh?: boolean

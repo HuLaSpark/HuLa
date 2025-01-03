@@ -151,6 +151,7 @@ onBeforeMount(async () => {
   // 默认执行一次
   await contactStore.getContactList(true)
   await contactStore.getRequestFriendsList(true)
+  await contactStore.getGroupChatList()
 })
 
 onMounted(async () => {

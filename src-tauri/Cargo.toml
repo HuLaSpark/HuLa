@@ -1,6 +1,6 @@
 [package]
 name = "hula"
-version = "2.5.10"
+version = "2.5.11"
 description = "hula"
 authors = ["nongyehong"]
 license = ""
@@ -20,7 +20,7 @@ strip = true # 删除调试符号
 tauri-build = { version = "2.0.2", features = [] }
 
 [dependencies]
-tauri = { version = "2.0.6", features = [ "macos-private-api", "tray-icon", "image-png"] }
+tauri = { version = "2.2.0", features = [ "macos-private-api", "tray-icon", "image-png"] }
 tauri-plugin-os = "2.0.1"
 tauri-plugin-shell = "2.0.1"
 serde = { version = "1", features = ["derive"] }

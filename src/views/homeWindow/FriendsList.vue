@@ -12,7 +12,7 @@
   </n-flex>
   <n-tabs type="segment" animated class="mt-4px p-[4px_10px_0px_8px]">
     <n-tab-pane name="1" tab="好友">
-      <n-collapse :display-directive="'show'">
+      <n-collapse :display-directive="'show'" accordion :default-expanded-names="['1']">
         <ContextMenu @contextmenu="showMenu($event)" @select="handleSelect($event.label)" :menu="menuList">
           <n-collapse-item title="我的好友" name="1">
             <template #header-extra>
@@ -25,7 +25,7 @@
                   :size="10"
                   @click="handleClick(item.uid, RoomTypeEnum.SINGLE)"
                   :class="{ active: activeItem === item.uid }"
-                  class="user-box w-full h-75px mb-5px"
+                  class="item-box w-full h-75px mb-5px"
                   v-for="item in sortedContacts"
                   :key="item.uid">
                   <n-flex align="center" :size="10" class="h-75px pl-6px pr-8px flex-1 truncate">
@@ -58,20 +58,35 @@
         </ContextMenu>
       </n-collapse>
     </n-tab-pane>
-    <!--      <n-tab-pane name="2" tab="群聊">-->
-    <!--        <div-->
-    <!--          @click="handleClick(item.key, RoomTypeEnum.GROUP)"-->
-    <!--          :class="{ active: activeItem === item.key }"-->
-    <!--          class="w-full h-75px mb-5px"-->
-    <!--          v-for="item in groupChatList"-->
-    <!--          :key="item.key">-->
-    <!--          <n-flex v-slide align="center" :size="10" class="h-75px pl-6px pr-8px flex-1 truncate">-->
-    <!--            <n-avatar round bordered :color="'#fff'" :size="44" :src="item.avatar" fallback-src="/logo.png" />-->
+    <n-tab-pane name="2" tab="群聊">
+      <n-collapse :display-directive="'show'" accordion :default-expanded-names="['1']">
+        <n-collapse-item title="我的群聊" name="1">
+          <template #header-extra>
+            <span class="text-(10px #707070)">{{ groupChatList.length }} </span>
+          </template>
+          <n-scrollbar style="max-height: calc(100vh - 220px)">
+            <div
+              @click="handleClick(item.roomId, RoomTypeEnum.GROUP)"
+              :class="{ active: activeItem === item.roomId }"
+              class="item-box w-full h-75px mb-5px"
+              v-for="item in groupChatList"
+              :key="item.roomId">
+              <n-flex v-slide align="center" :size="10" class="h-75px pl-6px pr-8px flex-1 truncate">
+                <n-avatar
+                  round
+                  bordered
+                  :color="'#fff'"
+                  :size="44"
+                  :src="AvatarUtils.getAvatarUrl(item.avatar)"
+                  fallback-src="/logo.png" />
 
-    <!--            <span class="text-14px leading-tight flex-1 truncate">{{ item.accountName }}</span>-->
-    <!--          </n-flex>-->
-    <!--        </div>-->
-    <!--      </n-tab-pane>-->
+                <span class="text-14px leading-tight flex-1 truncate">{{ item.roomName }}</span>
+              </n-flex>
+            </div>
+          </n-scrollbar>
+        </n-collapse-item>
+      </n-collapse>
+    </n-tab-pane>
   </n-tabs>
 </template>
 <script setup lang="ts">
@@ -93,6 +108,8 @@ const detailsShow = ref(false)
 const shrinkStatus = ref(false)
 const contactStore = useContactStore()
 const globalStore = useGlobalStore()
+/** 群聊列表 */
+const groupChatList = computed(() => contactStore.groupChatList)
 /** 统计在线用户人数 */
 const onlineCount = computed(() => {
   return contactStore.contactsList.filter((item) => item.activeStatus === OnlineEnum.ONLINE).length
@@ -150,7 +167,7 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped lang="scss">
-.user-box {
+.item-box {
   color: var(--text-color);
   .text {
     color: #808080;

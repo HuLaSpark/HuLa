@@ -42,6 +42,7 @@ export default {
   addAdmin: `${prefix + URLEnum.ROOM}/group/admin`, // 添加管理员
   revokeAdmin: `${prefix + URLEnum.ROOM}/group/admin`, // 删除管理员
   groupDetail: `${prefix + URLEnum.ROOM}/group`, // 群组详情
+  groupList: `${prefix + URLEnum.ROOM}/group/list`, // 群聊列表
   sessionDetail: `${prefix + URLEnum.CHAT}/contact/detail`, // 会话详情
   sessionDetailWithFriends: `${prefix + URLEnum.CHAT}/contact/detail/friend`, // 会话详情(联系人列表发消息用)
 
