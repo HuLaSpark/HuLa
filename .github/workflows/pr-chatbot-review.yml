@@ -10,9 +10,6 @@ permissions:
 
 jobs:
   review:
-    if: |
-      contains(github.event.pull_request.files.*.filename, 'src/') ||
-      contains(github.event.pull_request.files.*.filename, 'src-tauri/*.rs')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -24,12 +21,21 @@ jobs:
         id: diff
         run: |
           git fetch origin ${{ github.event.pull_request.base.sha }}
-          # 只获取特定文件类型的变更
+          # 排除配置文件，只分析源代码文件
           DIFF=$(git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} -- \
             'src/**/*.vue' \
             'src/**/*.ts' \
             'src/**/*.tsx' \
-            'src-tauri/**/*.rs')
+            'src-tauri/**/*.rs' \
+            ':!:**/*.json' \
+            ':!:**/*.yaml' \
+            ':!:**/*.yml' \
+            ':!:**/*.config.*' \
+            ':!:**/*.lock' \
+            ':!:**/*.toml' \
+            ':!:.env*' \
+            ':!:.eslintrc*' \
+            ':!:.prettierrc*')
 
           # 如果没有相关文件变更，设置一个提示信息
           if [ -z "$DIFF" ]; then
