@@ -141,7 +141,12 @@ pub fn set_height(height: u32, handle: AppHandle) {
 }
 
 #[tauri::command]
-pub fn set_badge_count(count: Option<i64>, handle: AppHandle) {
-    let home_window = handle.get_webview_window("home").unwrap();
-    home_window.set_badge_count(count).unwrap();
+pub fn set_badge_count(count: Option<i64>, handle: AppHandle) -> Result<(), String> {
+    match handle.get_webview_window("home") {
+        Some(window) => {
+            window.set_badge_count(count).map_err(|e| e.to_string())?;
+            Ok(())
+        }
+        None => Err("No webview window found".to_string()),
+    }
 }
