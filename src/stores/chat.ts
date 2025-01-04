@@ -402,7 +402,7 @@ export const useChatStore = defineStore(
       }
     }
 
-    // 更新消息撤回状态
+    // 更新消息撤回状态 TODO: 撤回消息消息计数没有改变
     const updateRecallStatus = (data: RevokedMsgType) => {
       const { msgId } = data
       const message = currentMessageMap.value?.get(msgId)
