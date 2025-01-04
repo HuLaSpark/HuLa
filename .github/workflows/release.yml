@@ -41,19 +41,19 @@ jobs:
       - name: Set up environment variables
         run: echo "${{ secrets.ENV_LOCAL_CONTENT }}" > .env.local
 
-      # 安装 Node.js
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'pnpm' # 启用 pnpm 缓存
-
-      # 安装 pnpm
+      # 首先安装 pnpm
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 9
           run_install: false
+
+      # 然后设置 Node.js
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install
