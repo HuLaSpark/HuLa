@@ -13,6 +13,7 @@ import { BaseDirectory, create, exists, mkdir } from '@tauri-apps/plugin-fs'
 import { getImageCache } from '@/utils/pathUtil.ts'
 import { AvatarUtils } from '@/utils/avatarUtils'
 import DOMPurify from 'dompurify'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 
 export interface SelectionRange {
   range: Range
@@ -672,8 +673,10 @@ export const useCommon = () => {
    * 打开消息会话(右键发送消息功能)
    * @param uid 用户id
    */
-  const openMsgSession = (uid: number) => {
-    if (route.name !== '/message') {
+  const openMsgSession = async (uid: number) => {
+    // 获取home窗口实例
+    const label = await WebviewWindow.getCurrent().label
+    if (route.name !== '/message' && label === 'home') {
       router.push('/message')
     }
     apis.sessionDetailWithFriends({ uid: uid }).then((res) => {

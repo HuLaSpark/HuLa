@@ -27,6 +27,7 @@ import { useLogin } from '@/hooks/useLogin.ts'
 import { computedToken } from '@/services/request'
 import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification'
 import { useUserInfo } from '@/hooks/useCached.ts'
+import { emitTo } from '@tauri-apps/api/event'
 
 const globalStore = useGlobalStore()
 const contactStore = useContactStore()
@@ -100,8 +101,11 @@ useMitt.on(WsResponseMessageType.MSG_MARK_ITEM, (markList: MarkItemType[]) => {
 useMitt.on(WsResponseMessageType.MSG_RECALL, (data: RevokedMsgType) => {
   chatStore.updateRecallStatus(data)
 })
-useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, (data: MessageType) => {
+useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   chatStore.pushMsg(data)
+  console.log('接收消息', data)
+  await emitTo('tray', 'show_tip')
+  await emitTo('notify', 'notify_cotent', data)
   const username = useUserInfo(data.fromUser.uid).value.name!
   // 不是自己发的消息才通知
   if (data.fromUser.uid !== userStore.userInfo.uid) {

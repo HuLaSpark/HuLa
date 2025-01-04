@@ -2,7 +2,10 @@
   <!-- 好友详情 -->
   <n-flex v-if="content.type === RoomTypeEnum.SINGLE" vertical align="center" :size="30" class="mt-60px select-none">
     <n-image
-      class="rounded-50% size-146px border-(2px solid #fff)"
+      width="146px"
+      height="146px"
+      style="border: 2px solid #fff"
+      class="rounded-50%"
       :src="AvatarUtils.getAvatarUrl(item.avatar)"
       alt="" />
 
