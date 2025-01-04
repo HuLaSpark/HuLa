@@ -6,21 +6,23 @@
       <p>{{ msgCount }}</p>
     </n-flex>
     <component :is="division" />
-    <n-scrollbar style="max-height: 200px">
+    <n-scrollbar style="max-height: 320px">
       <n-flex
         v-for="(group, index) in content"
         :key="index"
         @click="handleClickMsg(group.id)"
         align="left"
         :size="10"
-        class="p-6px box-border rounded-8px hover:bg-[--tray-hover] cursor-pointer">
+        class="mt-2px p-6px box-border rounded-8px hover:bg-[--tray-hover] cursor-pointer">
         <n-avatar round :size="44" :src="AvatarUtils.getAvatarUrl(group.avatar)" />
 
         <n-flex class="flex-1" vertical justify="center" :size="8">
           <span class="text-(16px [--text-color]) font-bold">{{ group.name }}</span>
 
           <n-flex class="w-full" align="center" justify="space-between" :size="10">
-            <span class="max-w-150px truncate text-(12px [--text-color])">{{ group.latestContent }}</span>
+            <span class="max-w-150px truncate text-(12px [--text-color])">
+              <span v-if="group.isAtMe" class="text-#d5304f pr-4px">[有人@我]</span>{{ group.latestContent }}
+            </span>
 
             <!-- 有多少条消息 -->
             <div class="text-(10px #fff) rounded-full px-6px py-2px flex-center bg-#d5304f">
@@ -55,11 +57,12 @@ type GroupedMessage = {
   avatar: string
   name: string
   timestamp: number
+  isAtMe: boolean
 }
 
 const appWindow = WebviewWindow.getCurrent()
-const { checkWinExist } = useWindow()
-const { openMsgSession } = useCommon()
+const { checkWinExist, resizeWindow } = useWindow()
+const { openMsgSession, userUid } = useCommon()
 const { pushListeners } = useTauriListener()
 const globalStore = useGlobalStore()
 const chatStore = useChatStore()
@@ -75,12 +78,19 @@ watch(
     if (!newValue) {
       content.value = []
       msgCount.value = 0
+      // 重置窗口高度
+      resizeWindow('notify', 280, 140)
     }
   }
 )
 
 const division = () => {
   return <div class={'h-1px bg-[--line-color] w-full'}></div>
+}
+
+// 检查是否@了当前用户
+const checkIsAtMe = (content: MessageType) => {
+  return content.message.body.atUidList?.includes(userUid.value)
 }
 
 // 处理点击消息的逻辑
@@ -145,6 +155,8 @@ const sortMessages = () => {
 onMounted(async () => {
   // 确保用户已登录并初始化会话列表
   await chatStore.getSessionList(true)
+  // 初始化窗口高度
+  resizeWindow('notify', 280, 140)
 
   await pushListeners([
     // 监听托盘鼠标进入事件
@@ -167,8 +179,8 @@ onMounted(async () => {
         const message = event.payload
         const session = chatStore.sessionList.find((s) => s.roomId === message.message.roomId)
         const existingGroup = content.value.find((group) => group.roomId === message.message.roomId)
-
-        const currentTime = Date.now() // 使用当前时间戳
+        const isAtMe = checkIsAtMe(message)
+        const currentTime = Date.now()
 
         if (existingGroup) {
           // 如果该房间的消息已存在，更新最新内容和计数
@@ -176,6 +188,7 @@ onMounted(async () => {
           existingGroup.latestContent = message.message.body.content
           existingGroup.messageCount++
           existingGroup.timestamp = currentTime
+          existingGroup.isAtMe = isAtMe
           if (session) {
             existingGroup.avatar = session.avatar
             existingGroup.name = session.name
@@ -189,8 +202,16 @@ onMounted(async () => {
             messageCount: 1,
             avatar: session?.avatar || '',
             name: session?.name || '',
-            timestamp: currentTime
+            timestamp: currentTime,
+            isAtMe: isAtMe
           })
+
+          // 调整窗口高度，基础高度140，从第二个分组开始每组增加60px，最多4个分组
+          const baseHeight = 140
+          const groupCount = content.value.length
+          const additionalHeight = Math.min(Math.max(groupCount - 1, 0), 3) * 60
+          const newHeight = baseHeight + additionalHeight
+          resizeWindow('notify', 280, newHeight)
         }
 
         // 对消息进行排序

@@ -62,7 +62,7 @@ import { type } from '@tauri-apps/plugin-os'
 import { useTauriListener } from '@/hooks/useTauriListener'
 
 const appWindow = WebviewWindow.getCurrent()
-const { checkWinExist, createWebviewWindow } = useWindow()
+const { checkWinExist, createWebviewWindow, resizeWindow } = useWindow()
 const OLStatusStore = onlineStatus()
 const settingStore = useSettingStore()
 const globalStore = useGlobalStore()
@@ -125,14 +125,14 @@ onMounted(async () => {
 
   if (home) {
     await pushListeners([
-      // appWindow.listen('login_success', () => {
-      //   isLoginWin.value = false
-      //   resizeWindow('tray', 130, 356)
-      // }),
-      // appWindow.listen('logout_success', () => {
-      //   isLoginWin.value = true
-      //   resizeWindow('tray', 130, 44)
-      // }),
+      appWindow.listen('login_success', () => {
+        isLoginWin.value = false
+        resizeWindow('tray', 130, 356)
+      }),
+      appWindow.listen('logout_success', () => {
+        isLoginWin.value = true
+        resizeWindow('tray', 130, 44)
+      }),
       // 监听窗口焦点变化
       home.listen('tauri://focus', () => {
         isFocused.value = true
