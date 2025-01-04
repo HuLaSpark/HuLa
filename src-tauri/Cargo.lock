@@ -5282,9 +5282,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-http"
-version = "2.0.1"
+version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "784333f1632d96c94346e8145bfe52970923a38a0e6eacd3dccaa12289275acf"
+checksum = "e62a9bde54d6a0218b63f5a248f02056ad4316ba6ad81dfb9e4f73715df5deb1"
 dependencies = [
  "data-url",
  "http",
@@ -5296,7 +5296,7 @@ dependencies = [
  "tauri",
  "tauri-plugin",
  "tauri-plugin-fs",
- "thiserror 1.0.63",
+ "thiserror 2.0.7",
  "tokio",
  "url",
  "urlpattern",
@@ -5323,9 +5323,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-os"
-version = "2.0.1"
+version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fbc5f23a86f37687c7f4fecfdc706b279087bc44f7a46702f7307ff1551ee03a"
+checksum = "dda2d571a9baf0664c1f2088db227e3072f9028602fafa885deade7547c3b738"
 dependencies = [
  "gethostname 0.5.0",
  "log",
@@ -5336,7 +5336,7 @@ dependencies = [
  "sys-locale",
  "tauri",
  "tauri-plugin",
- "thiserror 1.0.63",
+ "thiserror 2.0.7",
 ]
 
 [[package]]
@@ -5436,9 +5436,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-upload"
-version = "2.0.1"
+version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "116754130d3f95cf73552a0723376186a8f21607ac5ff350980af87a0eccba73"
+checksum = "e90ac6d3a783d4406caeae8c75aa05e96346474765517fddfd1dc313ff91aa89"
 dependencies = [
  "futures-util",
  "log",
@@ -5448,7 +5448,7 @@ dependencies = [
  "serde_json",
  "tauri",
  "tauri-plugin",
- "thiserror 1.0.63",
+ "thiserror 2.0.7",
  "tokio",
  "tokio-util",
 ]

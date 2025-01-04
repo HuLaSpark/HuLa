@@ -9,7 +9,6 @@ import type { MessageType, MarkItemType, RevokedMsgType } from '@/services/types
 import { OnlineEnum, ChangeTypeEnum, WorkerMsgEnum } from '@/enums'
 import { worker } from '@/utils/InitWorker.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
-import { emitTo } from '@tauri-apps/api/event'
 import { useUserStore } from '@/stores/user'
 
 class WS {
@@ -132,9 +131,6 @@ class WS {
         if (this.#isMessageProcessed(message.message.id)) {
           break
         }
-
-        console.log('接收消息', message)
-        await emitTo('tray', 'show_tip')
         useMitt.emit(WsResponseMessageType.RECEIVE_MESSAGE, message)
         break
       }

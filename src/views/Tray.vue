@@ -62,13 +62,15 @@ import { type } from '@tauri-apps/plugin-os'
 import { useTauriListener } from '@/hooks/useTauriListener'
 
 const appWindow = WebviewWindow.getCurrent()
-const { checkWinExist, createWebviewWindow, resizeWindow } = useWindow()
+const { checkWinExist, createWebviewWindow } = useWindow()
 const OLStatusStore = onlineStatus()
 const settingStore = useSettingStore()
 const globalStore = useGlobalStore()
 const { lockScreen } = storeToRefs(settingStore)
 const { tipVisible } = storeToRefs(globalStore)
 const isLoginWin = ref(true)
+const isFocused = ref(false)
+let home: WebviewWindow | null = null
 // 状态栏图标是否显示
 const iconVisible = ref(false)
 const { pushListeners } = useTauriListener()
@@ -94,35 +96,62 @@ const toggleStatus = (url: string, title: string) => {
 
 watchEffect(async () => {
   if (type() === 'windows') {
-    if (tipVisible.value && !interval) {
-      interval = setInterval(async () => {
-        const tray = await TrayIcon.getById('tray')
-        tray?.setIcon(iconVisible.value ? null : 'tray/icon.png')
-        iconVisible.value = !iconVisible.value
-      }, 500)
+    if (tipVisible.value && !isFocused.value) {
+      if (!interval) {
+        console.log('Starting tray icon blink')
+        interval = setInterval(async () => {
+          const tray = await TrayIcon.getById('tray')
+          tray?.setIcon(iconVisible.value ? null : 'tray/icon.png')
+          iconVisible.value = !iconVisible.value
+        }, 500)
+      }
     } else {
+      if (interval) {
+        console.log('Stopping tray icon blink')
+        clearInterval(interval)
+        interval = null
+      }
       const tray = await TrayIcon.getById('tray')
       tray?.setIcon('tray/icon.png')
-      clearInterval(interval)
-      interval = null
+      isFocused.value = false
+      tipVisible.value = false
     }
   }
 })
 
 onMounted(async () => {
-  await pushListeners([
-    appWindow.listen('login_success', () => {
-      isLoginWin.value = false
-      resizeWindow('tray', 130, 356)
-    }),
-    appWindow.listen('logout_success', () => {
-      isLoginWin.value = true
-      resizeWindow('tray', 130, 44)
-    }),
-    appWindow.listen('show_tip', async () => {
-      globalStore.setTipVisible(true)
-    })
-  ])
+  home = await WebviewWindow.getByLabel('home')
+  isFocused.value = (await home?.isFocused()) || false
+
+  if (home) {
+    await pushListeners([
+      // appWindow.listen('login_success', () => {
+      //   isLoginWin.value = false
+      //   resizeWindow('tray', 130, 356)
+      // }),
+      // appWindow.listen('logout_success', () => {
+      //   isLoginWin.value = true
+      //   resizeWindow('tray', 130, 44)
+      // }),
+      // 监听窗口焦点变化
+      home.listen('tauri://focus', () => {
+        isFocused.value = true
+      }),
+
+      home.listen('tauri://blur', () => {
+        isFocused.value = false
+      }),
+      appWindow.listen('show_tip', async () => {
+        console.log('Received show_tip event')
+        globalStore.setTipVisible(true)
+      })
+    ])
+  }
+})
+
+// 可以使用 watch 来观察焦点状态的变化
+watch([isFocused, () => tipVisible.value], ([newFocused, newTipVisible]) => {
+  console.log('Focus or tip state changed:', { focused: newFocused, tipVisible: newTipVisible })
 })
 
 onUnmounted(async () => {
