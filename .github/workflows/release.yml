@@ -3,41 +3,57 @@ name: Release CI
 on:
   push:
     tags:
-      - 'v*'
-  workflow_dispatch:
+      - 'v*'  # 当推送 v 开头的标签时触发
+  workflow_dispatch:  # 允许手动触发工作流
 
 concurrency:
   group: release-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: true  # 如果有新的发布任务，取消正在进行的任务
 
 jobs:
   publish-tauri:
     permissions:
-      contents: write
+      contents: write # 授予写入仓库内容的权限
     strategy:
-      fail-fast: false
+      fail-fast: false  # 某个平台构建失败不影响其他平台
       matrix:
         include:
-          - platform: 'macos-latest' # for Arm based macs (M1 and above).
-            args: '--target aarch64-apple-darwin'
-          - platform: 'macos-latest' # for Intel based macs.
-            args: '--target x86_64-apple-darwin'
-          - platform: 'windows-latest'
-            args: ''
+          - platform: "macos-latest" # for Arm based macs (M1 and above).
+            args: "--target aarch64-apple-darwin"
+          - platform: "macos-latest" # for Intel based macs.
+            args: "--target x86_64-apple-darwin"
+          - platform: "ubuntu-22.04"
+            args: ""
+          - platform: "windows-latest"
+            args: ""
 
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
 
-      # 安装 Node.js
+      - name: install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-22.04' # Tauri v2 最低兼容性版本
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libudev-dev
+
+      # 添加环境变量配置
+      - name: Set up environment variables
+        run: echo "${{ secrets.ENV_LOCAL_CONTENT }}" > .env.local
+
+      # 首先安装 pnpm
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: false
+
+      # 然后设置 Node.js
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-
-      # 安装 pnpm
-      - name: Install pnpm
-        run: npm install -g pnpm@latest
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install

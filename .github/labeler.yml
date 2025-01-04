@@ -1,23 +1,41 @@
-# Add 'frontend' label to any changes in src directory
-frontend:
+# 前端相关变更
+'前端':
   - src/**/*
 
-# Add 'workflow' label to any changes in the .github directory
-workflow:
+# 工作流程相关变更
+'工作流程':
   - .github/**/*
 
-# Add 'documentation' label to any markdown files
-documentation:
+# 文档相关变更
+'文档':
   - '**/*.md'
 
-# Add 'dependencies' label to any changes to package files
-dependencies:
+# 依赖相关变更
+'依赖更新':
   - package.json
-  - package-lock.json
-  - yarn.lock
+  - pnpm-lock.yaml
 
-# Add 'rust' label to any Rust-related files
-rust:
+# Rust 相关变更
+'Rust':
   - '**/*.rs'
   - '**/Cargo.toml'
   - '**/Cargo.lock'
+  - 'src-tauri/**/*'
+
+# 配置文件变更
+'配置':
+  - '*.config.ts'
+  - '*.config.js'
+  - 'tsconfig.json'
+  - '.env*'
+
+# 测试相关变更
+'测试':
+  - '**/*.test.ts'
+  - 'test/**/*'
+
+# 样式相关变更
+'样式':
+  - '**/*.css'
+  - '**/*.scss'
+  - 'uno.config.*'
