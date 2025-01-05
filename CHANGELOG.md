@@ -1,4 +1,16 @@
+# Changelog
 
+## 2.6.0 (2025-01-05)
+
+* feat(system): :sparkles: 新增linxu系统ubuntu兼容 (#148) ([43d1561](https://github.com/HuLaSpark/HuLa/commit/43d1561)), closes [#148](https://github.com/HuLaSpark/HuLa/issues/148)
+* Test actions (#147) ([d0a0e5f](https://github.com/HuLaSpark/HuLa/commit/d0a0e5f)), closes [#147](https://github.com/HuLaSpark/HuLa/issues/147)
+* fix(build): :bug: 去除alsa-sys的安装 ([64f0c39](https://github.com/HuLaSpark/HuLa/commit/64f0c39))
+* fix(build): :bug: 修复ubuntu alsa-sys包版本 (#145) ([d6adb2d](https://github.com/HuLaSpark/HuLa/commit/d6adb2d)), closes [#145](https://github.com/HuLaSpark/HuLa/issues/145)
+* fix(build): :bug: 修复ubuntu CI打包问题 (#144) ([5d66161](https://github.com/HuLaSpark/HuLa/commit/5d66161)), closes [#144](https://github.com/HuLaSpark/HuLa/issues/144)
+* fix(common): :bug: 修复set_badge_count方法没有处理报错问题 (#140) ([4d4bd9c](https://github.com/HuLaSpark/HuLa/commit/4d4bd9c)), closes [#140](https://github.com/HuLaSpark/HuLa/issues/140)
+* fix(view): :bug: 修复setSize方法导致无法修改窗口大小问题 (#143) ([b412c2e](https://github.com/HuLaSpark/HuLa/commit/b412c2e)), closes [#143](https://github.com/HuLaSpark/HuLa/issues/143) [#139](https://github.com/HuLaSpark/HuLa/issues/139)
+* perf(view): :zap: 优化win的托盘闪烁和消息提示 (#142) ([4e49700](https://github.com/HuLaSpark/HuLa/commit/4e49700)), closes [#142](https://github.com/HuLaSpark/HuLa/issues/142)
+* ci: :ferris_wheel: 优化CI配置 (#141) ([6b47049](https://github.com/HuLaSpark/HuLa/commit/6b47049)), closes [#141](https://github.com/HuLaSpark/HuLa/issues/141)
 
 ## [2.5.11](https://github.com/HuLaSpark/HuLa/compare/v2.5.10...v2.5.11) (2025-01-03)
 
