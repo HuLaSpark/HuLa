@@ -4,15 +4,6 @@ on:
   push:
     tags:
       - 'v*'
-    branches:
-      - test-actions  # 添加测试分支
-  workflow_dispatch:  # 已存在的手动触发
-    inputs:
-      debug_enabled:
-        type: boolean
-        description: '启用调试模式'
-        required: false
-        default: false
 
 concurrency:
   group: release-${{ github.ref }}
@@ -20,8 +11,6 @@ concurrency:
 
 jobs:
   publish-tauri:
-    # 添加调试条件
-    if: ${{ !inputs.debug_enabled }}
     permissions:
       contents: write # 授予写入仓库内容的权限
     strategy:
@@ -47,7 +36,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             libwebkit2gtk-4.1-dev \
-            libappindicator3-dev \
             librsvg2-dev \
             patchelf \
             libudev-dev \
