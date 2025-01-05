@@ -1,0 +1,82 @@
+name: Debug Build
+
+on:
+  workflow_dispatch:  # 手动触发
+    inputs:
+      platform:
+        type: choice
+        description: '选择测试平台'
+        required: true
+        default: 'ubuntu-22.04'
+        options:
+          - ubuntu-22.04
+          - macos-latest
+          - windows-latest
+
+jobs:
+  debug-build:
+    runs-on: ${{ inputs.platform }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Ubuntu dependencies
+        if: inputs.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            librsvg2-dev \
+            patchelf \
+            libudev-dev \
+            libasound2-dev \
+            pkg-config \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev
+          
+          # 验证安装的包
+          dpkg -l | grep -E 'webkit|appindicator|rsvg|udev|asound|gtk'
+
+      # 添加环境变量配置
+      - name: Set up environment variables
+        run: echo "${{ secrets.ENV_LOCAL_CONTENT }}" > .env.local
+
+      # 安装 pnpm
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: false
+
+      # 设置 Node.js
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build Vite + Tauri
+        run: pnpm build
+
+      # 安装 Rust
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ inputs.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+        
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      # 只构建不发布
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          releaseId: "debug-build" 

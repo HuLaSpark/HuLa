@@ -3,8 +3,7 @@ name: Release CI
 on:
   push:
     tags:
-      - 'v*'  # 当推送 v 开头的标签时触发
-  workflow_dispatch:  # 允许手动触发工作流
+      - 'v*'
 
 concurrency:
   group: release-${{ github.ref }}
@@ -32,10 +31,18 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-22.04' # Tauri v2 最低兼容性版本
+        if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libudev-dev
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            librsvg2-dev \
+            patchelf \
+            libudev-dev \
+            libasound2-dev \
+            pkg-config \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev
 
       # 添加环境变量配置
       - name: Set up environment variables
