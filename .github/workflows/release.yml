@@ -35,7 +35,7 @@ jobs:
         if: matrix.platform == 'ubuntu-22.04' # Tauri v2 最低兼容性版本
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libudev-dev alsa-sys-dev
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libudev-dev alsa-sys
 
       # 添加环境变量配置
       - name: Set up environment variables
