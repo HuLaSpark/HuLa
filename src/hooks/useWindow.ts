@@ -3,8 +3,8 @@ import { EventEnum } from '@/enums'
 import { LogicalSize } from '@tauri-apps/api/dpi'
 import { type } from '@tauri-apps/plugin-os'
 
-/** 判断是否是windows系统 */
-const isWindows = computed(() => type() === 'windows')
+/** 判断是兼容的系统 */
+const isCompatibility = computed(() => type() === 'windows' || type() === 'linux')
 export const useWindow = () => {
   /**
    * 创建窗口
@@ -46,8 +46,8 @@ export const useWindow = () => {
       minHeight: minH,
       minWidth: minW,
       skipTaskbar: false,
-      decorations: !isWindows.value,
-      transparent: isWindows.value,
+      decorations: !isCompatibility.value,
+      transparent: isCompatibility.value,
       titleBarStyle: 'overlay', // mac覆盖标签栏
       hiddenTitle: true, // mac隐藏标题栏
       visible: false

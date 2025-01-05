@@ -1,0 +1,84 @@
+{
+  "productName": "HuLa",
+  "version": "2.5.11",
+  "identifier": "com.hula.pc",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "beforeBuildCommand": "pnpm build",
+    "frontendDist": "../dist",
+    "devUrl": "http://127.0.0.1:6130"
+  },
+  "bundle": {
+    "resources": [
+      "tray"
+    ],
+    "active": true,
+    "icon": [
+      "icons/windows/32x32.png",
+      "icons/windows/128x128.png",
+      "icons/windows/128x128@2x.png",
+      "icons/windows/icon.icns",
+      "icons/windows/icon.ico",
+      "icons/windows/icon.png",
+      "icons/windows/Square30x30Logo.png",
+      "icons/windows/Square44x44Logo.png",
+      "icons/windows/Square71x71Logo.png",
+      "icons/windows/Square89x89Logo.png",
+      "icons/windows/Square107x107Logo.png",
+      "icons/windows/Square142x142Logo.png",
+      "icons/windows/Square150x150Logo.png",
+      "icons/windows/Square284x284Logo.png",
+      "icons/windows/Square310x310Logo.png",
+      "icons/windows/StoreLogo.png"
+    ],
+    "linux": {
+      "appimage": {
+        "bundleMediaFramework": false,
+        "files": {}
+      },
+      "deb": {
+        "files": {}
+      },
+      "rpm": {
+        "epoch": 0,
+        "files": {},
+        "release": "1"
+      }
+    }
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "登录",
+        "label": "login",
+        "url": "/login",
+        "fullscreen": false,
+        "resizable": false,
+        "center": true,
+        "width": 320,
+        "height": 448,
+        "skipTaskbar": false,
+        "transparent": false,
+        "decorations": false,
+        "visible": false
+      },
+      {
+        "label": "tray",
+        "url": "/tray",
+        "resizable": false,
+        "center": false,
+        "visible": false,
+        "width": 130,
+        "height": 44,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "decorations": false
+      }
+    ],
+    "security": {
+      "csp": null
+    },
+    "macOSPrivateApi": true
+  }
+}
