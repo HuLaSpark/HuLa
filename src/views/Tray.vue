@@ -122,17 +122,18 @@ watchEffect(async () => {
 onMounted(async () => {
   home = await WebviewWindow.getByLabel('home')
   isFocused.value = (await home?.isFocused()) || false
-
+  await pushListeners([
+    appWindow.listen('login_success', () => {
+      isLoginWin.value = false
+      resizeWindow('tray', 130, 356)
+    }),
+    appWindow.listen('logout_success', () => {
+      isLoginWin.value = true
+      resizeWindow('tray', 130, 44)
+    })
+  ])
   if (home) {
     await pushListeners([
-      appWindow.listen('login_success', () => {
-        isLoginWin.value = false
-        resizeWindow('tray', 130, 356)
-      }),
-      appWindow.listen('logout_success', () => {
-        isLoginWin.value = true
-        resizeWindow('tray', 130, 44)
-      }),
       // 监听窗口焦点变化
       home.listen('tauri://focus', () => {
         isFocused.value = true

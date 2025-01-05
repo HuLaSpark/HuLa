@@ -164,10 +164,13 @@ onBeforeMount(async () => {
   // 请求回话列表
   await chatStore.getSessionList(true)
   await groupStore.getCountStatistic()
+  // 从联系人页面切换回消息页面的时候自动定位到选中的会话
+  useMitt.emit(MittEnum.LOCATE_SESSION, { roomId: currentSession.value.roomId })
 })
 
 onMounted(() => {
   SysNTF
+  // TODO：频繁切换会话会导致频繁请求，切换的时候也会有点卡顿
   useMitt.on(MittEnum.DELETE_SESSION, (roomId) => {
     handleMsgDelete(roomId)
   })
