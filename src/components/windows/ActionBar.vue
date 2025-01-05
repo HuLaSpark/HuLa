@@ -1,12 +1,12 @@
 <template>
   <!--  user-select: none让元素不可以选中-->
-  <div
-    data-tauri-drag-region
-    :class="osType === 'windows' ? 'flex justify-end select-none' : 'h-24px select-none w-full'">
-    <template v-if="osType === 'windows'">
+  <div data-tauri-drag-region :class="isCompatibility ? 'flex justify-end select-none' : 'h-24px select-none w-full'">
+    <template v-if="isCompatibility">
       <!--  登录窗口的代理按钮  -->
       <div v-if="proxy" @click="router.push('/proxy')" class="w-30px h-24px flex-center">
-        <svg class="size-16px color-#404040 cursor-pointer"><use href="#settings"></use></svg>
+        <svg class="size-16px color-#404040 cursor-pointer">
+          <use href="#settings"></use>
+        </svg>
       </div>
       <!--  固定在最顶层  -->
       <div v-if="topWinLabel !== void 0" @click="handleAlwaysOnTop" class="hover-box">
@@ -25,7 +25,9 @@
       </div>
       <!-- 收缩页面 -->
       <div v-if="shrink" @click="shrinkWindow" class="hover-box">
-        <svg class="size-16px color-[--action-bar-icon-color] cursor-pointer"><use href="#left-bar"></use></svg>
+        <svg class="size-16px color-[--action-bar-icon-color] cursor-pointer">
+          <use href="#left-bar"></use>
+        </svg>
       </div>
       <!-- 最小化 -->
       <div v-if="minW" @click="appWindow.minimize()" class="hover-box">
@@ -50,7 +52,7 @@
       </div>
     </template>
     <!-- 是否退到托盘提示框 -->
-    <n-modal v-if="!tips.notTips && osType === 'windows'" v-model:show="tipsRef.show" class="rounded-8px">
+    <n-modal v-if="!tips.notTips && isCompatibility" v-model:show="tipsRef.show" class="rounded-8px">
       <div class="bg-[--bg-popover] w-290px h-full p-6px box-border flex flex-col">
         <svg @click="tipsRef.show = false" class="size-12px ml-a cursor-pointer select-none">
           <use href="#close"></use>
@@ -125,6 +127,8 @@ const tipsRef = reactive({
 })
 // 窗口是否最大化状态
 const windowMaximized = ref(false)
+/** 判断是兼容的系统 */
+const isCompatibility = computed(() => type() === 'windows' || type() === 'linux')
 // 窗口是否置顶状态
 const alwaysOnTopStatus = computed(() => {
   if (topWinLabel === void 0) return false
@@ -271,9 +275,11 @@ onUnmounted(() => {
 .hover-box {
   @apply w-28px h-24px flex-center hover:bg-[--icon-hover-color];
 }
+
 .action-close {
   @apply w-28px h-24px flex-center cursor-pointer hover:bg-#c22b1c svg:hover:color-[#fff];
 }
+
 .n-modal {
   align-self: start;
   margin: 60px auto;

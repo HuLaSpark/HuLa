@@ -260,7 +260,10 @@ const userList = computed(() => {
 })
 
 // 创建一个RTCPeerConnection实例
-const peerConnection = new RTCPeerConnection()
+let peerConnection: RTCPeerConnection
+if (type() !== 'linux') {
+  peerConnection = new RTCPeerConnection()
+}
 
 const MIN_LOADING_TIME = 300 // 最小加载时间（毫秒）
 
