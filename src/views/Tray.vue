@@ -119,28 +119,31 @@ watchEffect(async () => {
   }
 })
 
+// 可以使用 watch 来观察焦点状态的变化
+watch([isFocused, () => tipVisible.value], ([newFocused, newTipVisible]) => {
+  console.log('Focus or tip state changed:', { focused: newFocused, tipVisible: newTipVisible })
+})
+
 onMounted(async () => {
   home = await WebviewWindow.getByLabel('home')
   isFocused.value = (await home?.isFocused()) || false
-  await pushListeners([
-    appWindow.listen('login_success', () => {
-      isLoginWin.value = false
-      resizeWindow('tray', 130, 356)
-    }),
-    appWindow.listen('logout_success', () => {
-      isLoginWin.value = true
-      resizeWindow('tray', 130, 44)
-    })
-  ])
-  if (home) {
-    await pushListeners([
-      // 监听窗口焦点变化
-      home.listen('tauri://focus', () => {
-        isFocused.value = true
-      }),
 
-      home.listen('tauri://blur', () => {
-        isFocused.value = false
+  if (home) {
+    // 监听窗口焦点变化
+    home.listen('tauri://focus', () => {
+      isFocused.value = true
+    })
+    home.listen('tauri://blur', () => {
+      isFocused.value = false
+    })
+    await pushListeners([
+      appWindow.listen('login_success', () => {
+        isLoginWin.value = false
+        resizeWindow('tray', 130, 356)
+      }),
+      appWindow.listen('logout_success', () => {
+        isLoginWin.value = true
+        resizeWindow('tray', 130, 44)
       }),
       appWindow.listen('show_tip', async () => {
         console.log('Received show_tip event')
@@ -148,11 +151,6 @@ onMounted(async () => {
       })
     ])
   }
-})
-
-// 可以使用 watch 来观察焦点状态的变化
-watch([isFocused, () => tipVisible.value], ([newFocused, newTipVisible]) => {
-  console.log('Focus or tip state changed:', { focused: newFocused, tipVisible: newTipVisible })
 })
 
 onUnmounted(async () => {

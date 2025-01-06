@@ -33,7 +33,7 @@
       </n-flex>
     </n-scrollbar>
     <component :is="division" />
-    <p @click="handleTip" class="pt-4px pl-6px text-(12px #909090) cursor-pointer">忽略全部</p>
+    <p @click="handleTip" class="pt-4px pl-6px text-(12px #13987f) cursor-pointer">忽略全部</p>
   </n-flex>
 </template>
 <script setup lang="tsx">
