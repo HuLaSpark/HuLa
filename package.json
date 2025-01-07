@@ -113,7 +113,7 @@
     "lint-staged": "^15.2.7",
     "oxlint": "^0.2.18",
     "prettier": "^3.3.2",
-    "release-it": "^17.11.0",
+    "release-it": "^18.0.0",
     "sass": "1.83.0",
     "typescript": "^5.7.2",
     "unplugin-auto-import": "^0.18.6",
