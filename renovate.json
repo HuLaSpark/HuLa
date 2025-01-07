@@ -20,13 +20,13 @@
     },
     {
       "groupName": "Tauri dependencies",
-      "matchPackagePatterns": ["@tauri-apps*"],
-      "groupSlug": "Tauri-deps"
+      "groupSlug": "Tauri-deps",
+      "matchPackageNames": ["/@tauri-apps*/"]
     },
     {
       "groupName": "UnoCSS dependencies",
-      "matchPackagePatterns": ["@unocss*"],
-      "groupSlug": "UnoCSS-deps"
+      "groupSlug": "UnoCSS-deps",
+      "matchPackageNames": ["/@unocss*/"]
     },
     {
       "description": "Rust crate updates",
