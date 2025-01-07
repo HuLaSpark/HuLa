@@ -59,6 +59,7 @@ import { useSettingStore } from '@/stores/setting.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { TrayIcon } from '@tauri-apps/api/tray'
 import { type } from '@tauri-apps/plugin-os'
+import { useTauriListener } from '@/hooks/useTauriListener'
 
 const appWindow = WebviewWindow.getCurrent()
 const { checkWinExist, createWebviewWindow } = useWindow()
@@ -67,6 +68,7 @@ const settingStore = useSettingStore()
 const globalStore = useGlobalStore()
 const { lockScreen } = storeToRefs(settingStore)
 const { tipVisible, isTrayMenuShow } = storeToRefs(globalStore)
+const { pushListeners } = useTauriListener()
 const isFocused = ref(false)
 let home: WebviewWindow | null = null
 // 状态栏图标是否显示
@@ -132,6 +134,12 @@ onMounted(async () => {
     home.listen('tauri://blur', () => {
       isFocused.value = false
     })
+    await pushListeners([
+      appWindow.listen('show_tip', async () => {
+        console.log('Received show_tip event')
+        globalStore.setTipVisible(true)
+      })
+    ])
   }
 })
 

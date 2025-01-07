@@ -91,16 +91,15 @@
       <span class="text-[--text-color]">群成员：({{ options.length }}人)</span>
 
       <n-avatar-group :options="options" :size="40" :max="4" expand-on-hover>
-        <template #avatar="{ option: { name, src } }">
+        <template #avatar="{ option: { src } }">
           <n-tooltip>
             <template #trigger>
               <n-avatar :src="AvatarUtils.getAvatarUrl(src)" />
             </template>
-            {{ name }}
           </n-tooltip>
         </template>
         <template #rest="{ options: restOptions, rest }">
-          <n-dropdown :options="createDropdownOptions(restOptions)" placement="top">
+          <n-dropdown :options="createDropdownOptions(restOptions as any)" placement="top">
             <n-avatar :color="'#52aea3'">+{{ rest }}</n-avatar>
           </n-dropdown>
         </template>
