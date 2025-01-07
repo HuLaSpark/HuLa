@@ -2,6 +2,8 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "automerge": false,
   "dependencyDashboard": true,
+  "baseBranches": ["update-rely"],
+  "automergeBaseBranch": "master",
   "ignoreDeps": [],
   "labels": ["dependencies"],
   "postUpdateOptions": ["yarnDedupeHighest"],
