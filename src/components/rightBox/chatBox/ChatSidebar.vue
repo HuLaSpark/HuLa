@@ -79,18 +79,12 @@
               :special-menu="report">
               <n-flex @click="selectKey = item.uid" :key="item.uid" :size="10" align="center" class="item">
                 <n-avatar
-                  lazy
                   round
                   class="grayscale"
                   :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
                   :color="'#fff'"
                   :size="24"
-                  :src="AvatarUtils.getAvatarUrl(item.avatar)"
-                  fallback-src="/logo.png"
-                  :render-placeholder="() => null"
-                  :intersection-observer-options="{
-                    root: '#image-chat-sidebar'
-                  }" />
+                  :src="AvatarUtils.getAvatarUrl(item.avatar)" />
                 <p class="text-12px truncate flex-1">{{ item.name }}</p>
                 <div
                   v-if="item.roleId === RoleEnum.LORD"
@@ -106,7 +100,7 @@
             </ContextMenu>
           </template>
           <!-- 用户个人信息框 -->
-          <InfoPopover v-if="selectKey === item.uid" :uid="item.uid" />
+          <InfoPopover v-if="selectKey === item.uid" :uid="item.uid" :activeStatus="item.activeStatus" />
         </n-popover>
       </template>
     </n-virtual-list>

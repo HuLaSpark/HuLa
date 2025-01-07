@@ -38,11 +38,9 @@ body:
   - type: textarea
     id: info
     attributes:
-      label: '☄️ 完整的 `tauri info` 输出'
-      description: '请运行 “tauri info” 在控制台等待输出完毕，并将输出内容复制到此处'
+      label: '☄️ 完整的 `pnpm tauri info` 输出'
+      description: '请运行 “pnpm tauri info” 在控制台等待输出完毕，并将输出内容复制到此处'
       render: text
-    validations:
-      required: true
 
   - type: textarea
     attributes:

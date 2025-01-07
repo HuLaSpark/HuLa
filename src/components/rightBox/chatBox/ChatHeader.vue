@@ -135,7 +135,9 @@
           <!-- 群聊成员列表 -->
           <div class="box-item cursor-default">
             <n-flex vertical justify="center" :size="16">
-              <p class="text-(14px --text-color)">群成员</p>
+              <p class="text-(14px --text-color)">
+                {{ activeItem.hotFlag !== IsAllUserEnum.Yes ? '群成员' : '频道成员' }}
+              </p>
 
               <n-flex align="center" justify="start" :size="[24, 20]">
                 <template v-for="(item, _index) in userList" :key="_index">
@@ -149,7 +151,10 @@
             </n-flex>
           </div>
 
-          <div class="box-item cursor-pointer" @click="handleDelete(RoomActEnum.DELETE_RECORD)">
+          <div
+            v-if="activeItem.hotFlag !== IsAllUserEnum.Yes"
+            class="box-item cursor-pointer"
+            @click="handleDelete(RoomActEnum.DELETE_RECORD)">
             <p>删除聊天记录</p>
           </div>
 
@@ -160,7 +165,11 @@
             <p class="color-#d03553">退出群聊</p>
           </div>
 
-          <p class="m-[0_auto] text-(12px #13987f) mt-20px cursor-pointer">被骚扰了?&nbsp;&nbsp;举报该群</p>
+          <p
+            v-if="activeItem.hotFlag !== IsAllUserEnum.Yes"
+            class="m-[0_auto] text-(12px #13987f) mt-20px cursor-pointer">
+            被骚扰了?&nbsp;&nbsp;举报该群
+          </p>
         </template>
       </div>
     </Transition>

@@ -13,7 +13,7 @@
   "author": {
     "name": "HuLaSpark团队",
     "email": "2439646234@qq.com",
-    "url": "https://github.com/HuLaSpark/HuLa"
+    "url": "https://github.com/HuLaSpark"
   },
   "scripts": {
     "========= 启动vue(tauri项目会连带执行不需要单独执行) =========": "",
@@ -28,8 +28,8 @@
     "tauri:build:debug": "tauri build --debug",
     "========= 生成icon =========": "",
     "tauri:icon": "tauri icon hula.png",
-    "========= 安装依赖前执行校验包管理器 =========": "",
-    "preinstall": "npx only-allow pnpm",
+    "========= 安装依赖前执行 =========": "",
+    "preinstall": "npx only-allow pnpm && node scripts/check-env.js",
     "========= 使用commit来进行代码提交 =========": "",
     "commit": "git add . && git-cz",
     "========= 校验代码规范 =========": "",

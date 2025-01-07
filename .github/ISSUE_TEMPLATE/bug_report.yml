@@ -38,11 +38,9 @@ body:
   - type: textarea
     id: info
     attributes:
-      label: '☄️ intact `tauri info` output'
-      description: 'Please run "tauri info" in the console and wait for the output to finish, then copy the output here'
+      label: '☄️ intact `pnpm tauri info` output'
+      description: 'Please run "pnpm tauri info" in the console and wait for the output to finish, then copy the output here'
       render: text
-    validations:
-      required: true
 
   - type: textarea
     attributes:

@@ -1,5 +1,5 @@
 <template>
-  <n-flex v-if="!isLoginWin" vertical :size="6" class="tray">
+  <n-flex v-if="isTrayMenuShow" vertical :size="6" class="tray">
     <n-flex vertical :size="6">
       <n-flex
         v-for="(item, index) in statusItem.slice(0, 6)"
@@ -59,21 +59,18 @@ import { useSettingStore } from '@/stores/setting.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { TrayIcon } from '@tauri-apps/api/tray'
 import { type } from '@tauri-apps/plugin-os'
-import { useTauriListener } from '@/hooks/useTauriListener'
 
 const appWindow = WebviewWindow.getCurrent()
-const { checkWinExist, createWebviewWindow, resizeWindow } = useWindow()
+const { checkWinExist, createWebviewWindow } = useWindow()
 const OLStatusStore = onlineStatus()
 const settingStore = useSettingStore()
 const globalStore = useGlobalStore()
 const { lockScreen } = storeToRefs(settingStore)
-const { tipVisible } = storeToRefs(globalStore)
-const isLoginWin = ref(true)
+const { tipVisible, isTrayMenuShow } = storeToRefs(globalStore)
 const isFocused = ref(false)
 let home: WebviewWindow | null = null
 // 状态栏图标是否显示
 const iconVisible = ref(false)
-const { pushListeners } = useTauriListener()
 let interval: any
 
 const division = () => {
@@ -127,7 +124,6 @@ watch([isFocused, () => tipVisible.value], ([newFocused, newTipVisible]) => {
 onMounted(async () => {
   home = await WebviewWindow.getByLabel('home')
   isFocused.value = (await home?.isFocused()) || false
-
   if (home) {
     // 监听窗口焦点变化
     home.listen('tauri://focus', () => {
@@ -136,20 +132,6 @@ onMounted(async () => {
     home.listen('tauri://blur', () => {
       isFocused.value = false
     })
-    await pushListeners([
-      appWindow.listen('login_success', () => {
-        isLoginWin.value = false
-        resizeWindow('tray', 130, 356)
-      }),
-      appWindow.listen('logout_success', () => {
-        isLoginWin.value = true
-        resizeWindow('tray', 130, 44)
-      }),
-      appWindow.listen('show_tip', async () => {
-        console.log('Received show_tip event')
-        globalStore.setTipVisible(true)
-      })
-    ])
   }
 })
 

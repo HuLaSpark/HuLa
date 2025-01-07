@@ -104,7 +104,8 @@ useMitt.on(WsResponseMessageType.MSG_RECALL, (data: RevokedMsgType) => {
 useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   chatStore.pushMsg(data)
   console.log('接收消息', data)
-  await emitTo('tray', 'show_tip')
+  // 接收到通知就设置图标闪烁
+  globalStore.setTipVisible(true)
   await emitTo('notify', 'notify_cotent', data)
   const username = useUserInfo(data.fromUser.uid).value.name!
   // 不是自己发的消息才通知
