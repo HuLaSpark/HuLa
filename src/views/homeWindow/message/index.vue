@@ -174,12 +174,14 @@ onMounted(() => {
   useMitt.on(MittEnum.DELETE_SESSION, (roomId) => {
     handleMsgDelete(roomId)
   })
-  useMitt.on(MittEnum.LOCATE_SESSION, (e) => {
+  useMitt.on(MittEnum.LOCATE_SESSION, async (e) => {
     const index = sessionList.value.findIndex((item) => item.roomId === e.roomId)
     if (index !== -1) {
-      msgScrollbar.value?.scrollTo({
-        top: index * (75 + 5) - 264,
-        behavior: 'smooth'
+      await nextTick(() => {
+        msgScrollbar.value?.scrollTo({
+          top: index * (75 + 5) - 264,
+          behavior: 'smooth'
+        })
       })
     }
   })

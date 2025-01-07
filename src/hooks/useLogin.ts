@@ -1,8 +1,12 @@
-import { emitTo, emit } from '@tauri-apps/api/event'
+import { emit } from '@tauri-apps/api/event'
 import { EventEnum } from '@/enums'
 import { useWindow } from '@/hooks/useWindow.ts'
+import { useGlobalStore } from '@/stores/global.ts'
 
 export const useLogin = () => {
+  const { resizeWindow } = useWindow()
+  const globalStore = useGlobalStore()
+  const { isTrayMenuShow } = storeToRefs(globalStore)
   /**
    * 设置登录状态(系统托盘图标，系统托盘菜单选项)
    */
@@ -11,7 +15,8 @@ export const useLogin = () => {
     if (localStorage.getItem('wsLogin')) {
       localStorage.removeItem('wsLogin')
     }
-    await emitTo('tray', 'login_success')
+    isTrayMenuShow.value = true
+    await resizeWindow('tray', 130, 356)
   }
 
   /**
@@ -19,10 +24,11 @@ export const useLogin = () => {
    */
   const logout = async () => {
     const { createWebviewWindow } = useWindow()
+    isTrayMenuShow.value = false
     // todo 退出账号 需要关闭其他的全部窗口
     await createWebviewWindow('登录', 'login', 320, 448, 'home', false, 320, 448).then(async () => {
+      await resizeWindow('tray', 130, 44)
       await emit(EventEnum.LOGOUT)
-      await emitTo('tray', 'logout_success')
     })
   }
 

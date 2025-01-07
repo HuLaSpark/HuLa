@@ -5,9 +5,11 @@
       <n-flex vertical :size="20" align="center">
         <n-avatar :bordered="true" round :size="80" :src="avatarSrc" fallback-src="/logo.png" />
 
-        <n-flex :size="5" align="center" style="margin-left: -4px" class="item-hover">
-          <img class="rounded-50% w-18px h-18px" src="/status/weather_3x.png" alt="" />
-          <span>在线状态</span>
+        <n-flex v-if="activeStatus" :size="6" align="center" style="margin-left: -4px" class="item-hover">
+          <n-badge :color="activeStatus === OnlineEnum.ONLINE ? '#1ab292' : '#909090'" dot />
+          <p class="text-(12px [--text-color])">
+            {{ activeStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}
+          </p>
         </n-flex>
       </n-flex>
 
@@ -57,9 +59,11 @@
 <script setup lang="ts">
 import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
 import { AvatarUtils } from '@/utils/avatarUtils'
+import { OnlineEnum } from '@/enums/index.ts'
 
 const { uid } = defineProps<{
   uid: number
+  activeStatus?: OnlineEnum
 }>()
 const isCurrentUser = computed(() => useUserInfo(uid).value)
 const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(useUserInfo(uid).value.avatar as string))

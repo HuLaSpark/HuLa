@@ -49,8 +49,10 @@ export const useGlobalStore = defineStore(
       selectedUid: []
     })
 
-    // 提示框显示状态
+    /** 提示框显示状态 */
     const tipVisible = ref<boolean>(false)
+    /** 系统托盘菜单显示的状态 */
+    const isTrayMenuShow = ref<boolean>(false)
 
     // 更新全局未读消息计数
     const updateGlobalUnreadCount = async () => {
@@ -89,6 +91,7 @@ export const useGlobalStore = defineStore(
       currentReadUnreadList,
       createGroupModalInfo,
       tipVisible,
+      isTrayMenuShow,
       setTipVisible,
       updateGlobalUnreadCount
     }

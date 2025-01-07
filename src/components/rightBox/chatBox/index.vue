@@ -1,10 +1,10 @@
 <template>
   <!-- 头部 -->
-  <ChatHeader :active-item="activeItemRef as any" />
+  <ChatHeader :active-item="activeItemRef" />
   <n-flex :class="{ 'shadow-inner': page.shadow }" :size="0" class="h-full">
     <n-flex vertical :size="0" class="flex-1 relative">
       <!-- 中间聊天框内容  -->
-      <ChatMain :active-item="activeItemRef as any" />
+      <ChatMain :active-item="activeItemRef" />
       <!-- 输入框和操作列表 -->
       <ChatFooter class="flex-1" />
     </n-flex>
@@ -12,7 +12,7 @@
   </n-flex>
 </template>
 <script setup lang="ts">
-import { MockItem } from '@/services/types.ts'
+import type { SessionItem } from '@/services/types.ts'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useTauriListener } from '@/hooks/useTauriListener'
@@ -22,7 +22,7 @@ const settingStore = useSettingStore()
 const { page } = storeToRefs(settingStore)
 const appWindow = WebviewWindow.getCurrent()
 const { activeItem } = defineProps<{
-  activeItem?: MockItem
+  activeItem?: SessionItem
 }>()
 provide('activeItem', { ...activeItem! })
 const activeItemRef = ref({ ...activeItem! })
