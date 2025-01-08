@@ -672,14 +672,15 @@ export const useCommon = () => {
   /**
    * 打开消息会话(右键发送消息功能)
    * @param uid 用户id
+   * @param type
    */
-  const openMsgSession = async (uid: number) => {
+  const openMsgSession = async (uid: number, type: number = 2) => {
     // 获取home窗口实例
     const label = await WebviewWindow.getCurrent().label
     if (route.name !== '/message' && label === 'home') {
       router.push('/message')
     }
-    apis.sessionDetailWithFriends({ uid: uid }).then((res) => {
+    apis.sessionDetailWithFriends({ id: uid, roomType: type }).then((res) => {
       globalStore.currentSession.roomId = res.roomId
       globalStore.currentSession.type = RoomTypeEnum.SINGLE
 

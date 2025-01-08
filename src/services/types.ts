@@ -17,6 +17,13 @@ export type ServiceResponse = {
   data: any
 }
 
+export type PageInfo<T> = {
+  total: number
+  size: number
+  current: number
+  records: T[]
+}
+
 /* ======================================================== */
 
 export type LoginUserReq = {

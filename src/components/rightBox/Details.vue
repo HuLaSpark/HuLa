@@ -75,7 +75,7 @@
 
       <n-config-provider :theme="lightTheme">
         <n-icon-wrapper
-          @click="footerOptions[0].click()"
+          @click="footerOptions[0].click(content.type)"
           class="cursor-pointer"
           :size="40"
           :border-radius="10"
@@ -135,9 +135,17 @@ const footerOptions = ref<OPT.Details[]>([
   {
     url: 'message',
     title: '发信息',
-    click: () => {
+    click: (type) => {
+      console.log(content)
       // TODO 需要增加独立窗口功能 (nyh -> 2024-03-25 16:01:23)
-      openMsgSession(item.value.uid || 0)
+      //群聊传群id
+      let id = 0
+      if (type === RoomTypeEnum.GROUP) {
+        id = item.value.roomId
+      } else {
+        id = item.value.uid
+      }
+      openMsgSession(id, type)
     }
   },
   {

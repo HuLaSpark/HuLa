@@ -50,8 +50,9 @@ export const useContactStore = defineStore('contact', () => {
    * 获取群聊列表
    */
   const getGroupChatList = async () => {
-    const response = await apis.groupList()
-    groupChatList.push(...response)
+    const response = await apis.groupList({ current: 1, size: 50 })
+    console.log(response)
+    groupChatList.push(...response.records)
   }
 
   /**

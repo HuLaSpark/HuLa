@@ -16,6 +16,7 @@ import {
   MessageReq,
   MessageType,
   MsgReadUnReadCountType,
+  PageInfo,
   RegisterUserReq,
   RequestFriendItem,
   SessionItem,
@@ -96,11 +97,12 @@ export default {
   /** 群组详情 */
   groupDetail: (params: { id: number }) => GET<GroupDetailReq>(urls.groupDetail, params),
   /** 群聊列表 */
-  groupList: () => GET<GroupListReq[]>(urls.groupList),
+  groupList: (params: { current: number; size: number }) => GET<PageInfo<GroupListReq>>(urls.groupList, params),
   /** 会话详情 */
   sessionDetail: (params: { id: number }) => GET<SessionItem>(urls.sessionDetail, params),
   /** 会话详情(联系人列表发消息用) */
-  sessionDetailWithFriends: (params: { uid: number }) => GET<SessionItem>(urls.sessionDetailWithFriends, params),
+  sessionDetailWithFriends: (params: { id: number; roomType: number }) =>
+    GET<SessionItem>(urls.sessionDetailWithFriends, params),
   /** 添加群管理 */
   addAdmin: ({ roomId, uidList }: { roomId: number; uidList: number[] }) =>
     PUT<boolean>(urls.addAdmin, {

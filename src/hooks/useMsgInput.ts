@@ -510,23 +510,23 @@ export const useMsgInput = (messageInputDom: Ref) => {
   onMounted(async () => {
     db.value = await Database.load('sqlite:sqlite.db')
     await db.value.execute(`
-      CREATE TABLE IF NOT EXISTS message (
-          id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-          room_id INTEGER NOT NULL,
-          from_uid INTEGER NOT NULL,
-          content TEXT(1024),
-          reply_msg_id INTEGER NOT NULL,
-          status INTEGER,
-          gap_count INTEGER,
-          "type" INTEGER DEFAULT (1),
-          extra TEXT,
-          create_time INTEGER,
-          update_time INTEGER
-      );
-      CREATE INDEX IF NOT EXISTS idx_room_id ON message (room_id);
-      CREATE INDEX IF NOT EXISTS idx_from_uid ON message (from_uid);
-      CREATE INDEX IF NOT EXISTS idx_create_time ON message (create_time);
-      CREATE INDEX IF NOT EXISTS idx_update_time ON message (update_time);
+        CREATE TABLE IF NOT EXISTS message (
+                                               id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                                               room_id INTEGER NOT NULL,
+                                               from_uid INTEGER NOT NULL,
+                                               content TEXT(1024),
+            reply_msg_id INTEGER NOT NULL,
+            status INTEGER,
+            gap_count INTEGER,
+            "type" INTEGER DEFAULT (1),
+            extra TEXT,
+            create_time INTEGER,
+            update_time INTEGER
+            );
+        CREATE INDEX IF NOT EXISTS idx_room_id ON message (room_id);
+        CREATE INDEX IF NOT EXISTS idx_from_uid ON message (from_uid);
+        CREATE INDEX IF NOT EXISTS idx_create_time ON message (create_time);
+        CREATE INDEX IF NOT EXISTS idx_update_time ON message (update_time);
     `)
     useMitt.on(MittEnum.RE_EDIT, async (event: string) => {
       messageInputDom.value.focus()
