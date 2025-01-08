@@ -1,0 +1,58 @@
+// 桌面端依赖
+#[cfg(desktop)]
+mod desktops;
+#[cfg(desktop)]
+use common_cmd::{
+    audio, default_window_icon, get_user_info, save_user_info, screenshot, set_badge_count,
+    set_height,
+};
+#[cfg(desktop)]
+use desktops::common_cmd;
+#[cfg(desktop)]
+use desktops::init;
+#[cfg(desktop)]
+use desktops::tray;
+#[cfg(desktop)]
+use init::CustomInit;
+
+pub fn run() {
+    #[cfg(desktop)]
+    {
+        setup_desktop();
+    }
+    #[cfg(mobile)]
+    {
+        setup_mobile();
+    }
+}
+
+#[cfg(desktop)]
+fn setup_desktop() {
+    tauri::Builder::default()
+        .init_plugin()
+        .init_webwindow_event()
+        .init_window_event()
+        .setup(move |app| {
+            tray::create_tray(app.handle())?;
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![
+            get_user_info,
+            save_user_info,
+            default_window_icon,
+            screenshot,
+            audio,
+            set_height,
+            set_badge_count
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}
+
+#[cfg(mobile)]
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+fn setup_mobile() {
+    tauri::Builder::default()
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}

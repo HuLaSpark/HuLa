@@ -1,6 +1,6 @@
 [package]
 name = "hula"
-version = "2.5.11"
+version = "2.6.0"
 description = "hula"
 authors = ["nongyehong"]
 license = ""
@@ -8,25 +8,36 @@ repository = ""
 edition = "2021"
 
 [profile.release]
-panic = "abort" # 去掉昂贵的恐慌清理逻辑
+panic = "abort"   # 去掉昂贵的恐慌清理逻辑
 codegen-units = 1 # 一个接一个地编译包，这样编译器就可以更好地优化
-lto = true # 启用链接到优化
-opt-level = "s" # 优化二进制文件大小,并且不会太大消耗性能,"z"极致优化大小但是会消耗性能
-strip = true # 删除调试符号
+lto = true        # 启用链接到优化
+opt-level = "s"   # 优化二进制文件大小,并且不会太大消耗性能,"z"极致优化大小但是会消耗性能
+strip = true      # 删除调试符号
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "hula_app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2.0.2", features = [] }
 
 [dependencies]
-tauri = { version = "2.2.0", features = [ "macos-private-api", "tray-icon", "image-png"] }
+tauri = { version = "2.2.0", features = [
+    "macos-private-api",
+    "tray-icon",
+    "image-png",
+] }
 tauri-plugin-os = "2.2.0"
 tauri-plugin-shell = "2.0.1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tauri-plugin-websocket = "2.0.1"
-tauri-plugin-http = {version="2.2.0",features= ["unsafe-headers"] }
+tauri-plugin-http = { version = "2.2.0", features = ["unsafe-headers"] }
 tauri-plugin-process = "2.2.0"
 tauri-plugin-fs = "2.0.1"
 tauri-plugin-dialog = "2.2.0"
