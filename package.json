@@ -4,8 +4,8 @@
   "version": "2.6.0",
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=18.12.0",
-    "pnpm": ">=8.10.0"
+    "node": ">=18.x",
+    "pnpm": ">=9.x"
   },
   "repository": {
     "url": "https://github.com/HuLaSpark/HuLa.git"
@@ -29,7 +29,7 @@
     "========= 生成icon =========": "",
     "tauri:icon": "tauri icon hula.png",
     "========= 安装依赖前执行 =========": "",
-    "preinstall": "npx only-allow pnpm && node scripts/check-env.js",
+    "preinstall": "npx only-allow pnpm && node scripts/check-all.js",
     "========= 使用commit来进行代码提交 =========": "",
     "commit": "git add . && git-cz",
     "========= 校验代码规范 =========": "",
@@ -66,7 +66,7 @@
     "dayjs": "^1.11.11",
     "dompurify": "^3.2.3",
     "grapheme-splitter": "^1.0.4",
-    "hula-emojis": "^1.2.1",
+    "hula-emojis": "^1.2.3",
     "lodash-es": "^4.17.21",
     "mitt": "^3.0.1",
     "naive-ui": "^2.41.0",
@@ -101,6 +101,7 @@
     "@vitest/ui": "^2.1.8",
     "@vue/test-utils": "^2.4.6",
     "@vueuse/core": "^12.0.0",
+    "chalk": "^5.3.0",
     "commitizen": "^4.3.1",
     "cz-git": "^1.11.0",
     "eslint": "^8.57.0",
