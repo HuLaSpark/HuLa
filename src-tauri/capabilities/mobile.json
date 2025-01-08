@@ -1,0 +1,10 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "mobile-capability",
+  "description": "Capability for the main window",
+  "platforms": ["iOS", "android"],
+  "windows": ["*"],
+  "permissions": [
+    "core:default"
+  ]
+}

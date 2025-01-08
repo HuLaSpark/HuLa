@@ -2005,41 +2005,6 @@
       "description": "Permission identifier",
       "oneOf": [
         {
-          "description": "This permission set configures if your\napplication can enable or disable auto\nstarting the application on boot.\n\n#### Granted Permissions\n\nIt allows all to check, enable and\ndisable the automatic start on boot.\n\n",
-          "type": "string",
-          "const": "autostart:default"
-        },
-        {
-          "description": "Enables the disable command without any pre-configured scope.",
-          "type": "string",
-          "const": "autostart:allow-disable"
-        },
-        {
-          "description": "Enables the enable command without any pre-configured scope.",
-          "type": "string",
-          "const": "autostart:allow-enable"
-        },
-        {
-          "description": "Enables the is_enabled command without any pre-configured scope.",
-          "type": "string",
-          "const": "autostart:allow-is-enabled"
-        },
-        {
-          "description": "Denies the disable command without any pre-configured scope.",
-          "type": "string",
-          "const": "autostart:deny-disable"
-        },
-        {
-          "description": "Denies the enable command without any pre-configured scope.",
-          "type": "string",
-          "const": "autostart:deny-enable"
-        },
-        {
-          "description": "Denies the is_enabled command without any pre-configured scope.",
-          "type": "string",
-          "const": "autostart:deny-is-enabled"
-        },
-        {
           "description": "No features are enabled by default, as we believe\nthe clipboard can be inherently dangerous and it is \napplication specific if read and/or write access is needed.\n\nClipboard interaction needs to be explicitly enabled.\n",
           "type": "string",
           "const": "clipboard-manager:default"

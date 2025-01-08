@@ -1,4 +1,5 @@
 {
+  "$schema": "https://schema.tauri.app/config/2",
   "productName": "HuLa",
   "version": "2.6.0",
   "identifier": "com.hula.pc",
