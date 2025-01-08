@@ -18,6 +18,11 @@ on:
 
 jobs:
   rust-clippy-analyze:
+    # 跳过 Renovate PR
+    if: |
+      github.actor != 'renovate[bot]' &&
+      github.actor != 'renovate-preview[bot]'
+
     name: Run rust-clippy analyzing
     runs-on: ubuntu-latest
     permissions:

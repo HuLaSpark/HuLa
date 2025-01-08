@@ -2,10 +2,8 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "automerge": false,
   "dependencyDashboard": true,
-  "baseBranches": ["update-rely"],
-  "automergeBaseBranch": "master",
   "ignoreDeps": [],
-  "labels": ["dependencies"],
+  "labels": ["dependencies", "skip-ci"],
   "postUpdateOptions": ["yarnDedupeHighest"],
   "prConcurrentLimit": 30,
   "prHourlyLimit": 4,
@@ -18,24 +16,31 @@
   },
   "packageRules": [
     {
-      "matchUpdateTypes": ["minor", "patch"]
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "non-major dependencies",
+      "groupSlug": "minor-patch-updates"
     },
     {
       "groupName": "Tauri dependencies",
-      "groupSlug": "Tauri-deps",
-      "matchPackageNames": ["/@tauri-apps*/"]
+      "groupSlug": "tauri-deps",
+      "matchPackagePatterns": ["^@tauri-apps/"],
+      "matchManagers": ["npm"]
     },
     {
       "groupName": "UnoCSS dependencies",
-      "groupSlug": "UnoCSS-deps",
-      "matchPackageNames": ["/@unocss*/"]
+      "groupSlug": "unocss-deps",
+      "matchPackagePatterns": ["^@unocss/"],
+      "matchManagers": ["npm"]
     },
     {
       "description": "Rust crate updates",
       "matchManagers": ["cargo"],
       "groupName": "Rust dependencies",
-      "groupSlug": "rust-deps"
+      "groupSlug": "rust-deps",
+      "enabled": true,
+      "registryUrls": ["https://crates.io"]
     }
   ],
+  "enabledManagers": ["npm", "cargo"],
   "updateInternalDeps": true
 }

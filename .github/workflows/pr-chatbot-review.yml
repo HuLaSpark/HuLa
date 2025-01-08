@@ -10,6 +10,10 @@ permissions:
 
 jobs:
   review:
+    # 跳过 Renovate PR
+    if: |
+      github.actor != 'renovate[bot]' &&
+      github.actor != 'renovate-preview[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
