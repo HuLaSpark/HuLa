@@ -4,6 +4,10 @@ on: [pull_request_target, issues]
 
 jobs:
   greeting:
+    # 跳过 Renovate PR
+    if: |
+      github.actor != 'renovate[bot]' &&
+      github.actor != 'renovate-preview[bot]'
     runs-on: ubuntu-latest
     permissions:
       issues: write
