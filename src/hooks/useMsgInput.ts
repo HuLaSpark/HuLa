@@ -170,6 +170,15 @@ export const useMsgInput = (messageInputDom: Ref) => {
     topicKeyword
   )
 
+  // 在文件顶部添加新的响应式变量
+  const lastCursorPosition = ref<{
+    range: Range | null
+    selection: Selection | null
+  }>({
+    range: null,
+    selection: null
+  })
+
   watchEffect(() => {
     chatKey.value = chat.value.sendKey
     if (!ait.value && personList.value.length > 0) {
@@ -368,6 +377,12 @@ export const useMsgInput = (messageInputDom: Ref) => {
       return
     }
 
+    // 保存最后的光标位置
+    lastCursorPosition.value = {
+      range: range.cloneRange(),
+      selection
+    }
+
     /** 获取当前节点 */
     const curNode = range.endContainer
     /** 判断当前节点是否是文本节点 */
@@ -437,9 +452,18 @@ export const useMsgInput = (messageInputDom: Ref) => {
     if (isChinese.value) {
       return
     }
+
     // 先确保输入框获得焦点
     messageInputDom.value?.focus()
-    // 先获取并保存当前的编辑器范围
+
+    // 恢复上次保存的光标位置
+    if (lastCursorPosition.value.range && lastCursorPosition.value.selection) {
+      const selection = window.getSelection()
+      selection?.removeAllRanges()
+      selection?.addRange(lastCursorPosition.value.range)
+    }
+
+    // 获取当前光标位置
     const { range: currentRange, selection: currentSelection } = getEditorRange()!
     editorRange.value = { range: currentRange, selection: currentSelection }
 
@@ -467,6 +491,15 @@ export const useMsgInput = (messageInputDom: Ref) => {
     insertNode(MsgEnum.AIT, item.name, {} as HTMLElement)
     triggerInputEvent(messageInputDom.value)
     ait.value = false
+
+    // 更新最后的光标位置
+    const newRange = getEditorRange()
+    if (newRange) {
+      lastCursorPosition.value = {
+        range: newRange.range.cloneRange(),
+        selection: newRange.selection
+      }
+    }
   }
 
   /** 处理点击 / 提及框事件 */
@@ -586,6 +619,17 @@ export const useMsgInput = (messageInputDom: Ref) => {
           )
           triggerInputEvent(messageInputDom.value)
         })
+      }
+    })
+
+    // 添加失焦事件监听
+    messageInputDom.value?.addEventListener('blur', () => {
+      const { range, selection } = getEditorRange()!
+      if (range && selection) {
+        lastCursorPosition.value = {
+          range: range.cloneRange(),
+          selection
+        }
       }
     })
   })
