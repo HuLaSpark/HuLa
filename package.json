@@ -58,6 +58,7 @@
   "dependencies": {
     "@actions/github": "^6.0.0",
     "@codecov/vite-plugin": "^1.6.0",
+    "@fingerprintjs/fingerprintjs": "^4.5.1",
     "@tauri-apps/api": "2.2.0",
     "@tauri-apps/plugin-autostart": "2.2.0",
     "@tauri-apps/plugin-clipboard-manager": "2.2.0",

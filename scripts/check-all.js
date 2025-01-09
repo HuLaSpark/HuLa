@@ -13,7 +13,7 @@ const __dirname = dirname(__filename)
  */
 async function runScript(scriptPath, description) {
   const startTime = Date.now()
-  console.log(chalk.blue(`\n[${new Date().toLocaleTimeString()}] 开始${description}...\n`))
+  console.log(chalk.blue(`\n[HuLa ${new Date().toLocaleTimeString()}] 开始${description}...\n`))
 
   try {
     execSync(`node ${scriptPath}`, { stdio: 'inherit' })
