@@ -170,6 +170,8 @@ import { AvatarUtils } from '@/utils/avatarUtils'
 import { useMitt } from '@/hooks/useMitt'
 import { WsResponseMessageType } from '@/services/wsType'
 import { useNetwork } from '@vueuse/core'
+import { computedToken } from '@/services/request'
+import ws from '@/services/webSocket'
 
 const settingStore = useSettingStore()
 const userStore = useUserStore()
@@ -199,6 +201,7 @@ const passwordPH = ref('输入HuLa密码')
 /** 登录按钮的文本内容 */
 const loginText = ref('登录')
 const { createWebviewWindow } = useWindow()
+const route = useRoute()
 
 watchEffect(() => {
   loginDisabled.value = !(info.value.account && info.value.password && protocol.value)
@@ -245,8 +248,6 @@ const giveAccount = (item: UserInfoType) => {
 
 /**登录后创建主页窗口*/
 const normalLogin = async () => {
-  // 普通登录前需清空token
-  localStorage.removeItem('TOKEN')
   loading.value = true
   const { account, password } = info.value
   apis
@@ -266,16 +267,8 @@ const normalLogin = async () => {
       // computedToken.get()
       // 获取用户详情
       const userDetail = await apis.getUserDetail()
-      // 自己更新自己上线
-      // groupStore.batchUpdateUserStatus([
-      //   {
-      //     activeStatus: OnlineEnum.ONLINE,
-      //     avatar: rest.avatar,
-      //     lastOptTime: Date.now(),
-      //     name: rest.name,
-      //     uid: rest.uid
-      //   }
-      // ])
+      console.log(userDetail, token)
+
       // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取
       // await emojiStore.getEmojiList()
       // TODO 这里的id暂时赋值给uid，因为后端没有统一返回uid，待后端调整
@@ -361,6 +354,18 @@ const enterKey = (e: KeyboardEvent) => {
     normalLogin()
   }
 }
+
+onBeforeMount(async () => {
+  // 如果不是自动登录且当前在登录页面，清除 TOKEN，防止用户直接使用控制台退出导致登录前还没有退出账号就继续登录
+  if (!login.value.autoLogin && route.path === '/login') {
+    await apis.logout().catch(() => {})
+    computedToken.clear()
+    // 重新初始化 WebSocket 连接，此时传入 null 作为 token
+    ws.initConnect()
+    const headers = new Headers()
+    headers.append('Authorization', '')
+  }
+})
 
 onMounted(async () => {
   await getCurrentWebviewWindow().show()
