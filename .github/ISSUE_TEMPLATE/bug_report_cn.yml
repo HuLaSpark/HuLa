@@ -23,8 +23,12 @@ body:
       label: '💻 系统环境'
       multiple: true
       options:
-        - 'Windows'
+        - 'Windows 10'
+        - 'Windows 11'
         - 'macOS'
+        - 'Linux'
+        - 'Android'
+        - 'ios'
     validations:
       required: true
 

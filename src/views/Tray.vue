@@ -123,9 +123,14 @@ watch([isFocused, () => tipVisible.value], ([newFocused, newTipVisible]) => {
   console.log('Focus or tip state changed:', { focused: newFocused, tipVisible: newTipVisible })
 })
 
+onBeforeMount(() => {
+  globalStore.setTipVisible(false)
+})
+
 onMounted(async () => {
   home = await WebviewWindow.getByLabel('home')
   isFocused.value = (await home?.isFocused()) || false
+
   if (home) {
     // 监听窗口焦点变化
     home.listen('tauri://focus', () => {

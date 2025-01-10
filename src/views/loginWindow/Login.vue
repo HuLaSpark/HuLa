@@ -172,9 +172,12 @@ import { WsResponseMessageType } from '@/services/wsType'
 import { useNetwork } from '@vueuse/core'
 import { computedToken } from '@/services/request'
 import ws from '@/services/webSocket'
+import { useGlobalStore } from '@/stores/global.ts'
 
 const settingStore = useSettingStore()
 const userStore = useUserStore()
+const globalStore = useGlobalStore()
+const { isTrayMenuShow } = storeToRefs(globalStore)
 /** 网络连接是否正常 */
 const { isOnline } = useNetwork()
 const loginHistoriesStore = useLoginHistoriesStore()
@@ -359,6 +362,7 @@ onBeforeMount(async () => {
   // 如果不是自动登录且当前在登录页面，清除 TOKEN，防止用户直接使用控制台退出导致登录前还没有退出账号就继续登录
   if (!login.value.autoLogin && route.path === '/login') {
     await apis.logout().catch(() => {})
+    isTrayMenuShow.value = false
     computedToken.clear()
     // 重新初始化 WebSocket 连接，此时传入 null 作为 token
     ws.initConnect()

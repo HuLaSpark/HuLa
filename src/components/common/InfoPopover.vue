@@ -1,16 +1,36 @@
 <template>
   <!-- 个人信息框 -->
   <n-flex vertical :size="26" class="size-fit box-border rounded-8px relative min-h-[300px]">
-    <n-flex vertical :size="20" class="size-full p-10px box-border z-10">
-      <n-flex vertical :size="20" align="center">
-        <n-avatar :bordered="true" round :size="80" :src="avatarSrc" fallback-src="/logo.png" />
+    <!-- 背景 -->
+    <img
+      class="absolute rounded-t-8px z-2 top-0 left-0 w-full h-100px object-cover"
+      src="@/assets/img/dispersion-bg.png"
+      alt="" />
+    <div class="h-20px"></div>
+    <n-flex vertical :size="20" class="size-full p-10px box-border z-10 relative">
+      <n-flex vertical :size="20">
+        <n-avatar
+          class="border-(8px solid [--avatar-border-color])"
+          :bordered="true"
+          round
+          :size="80"
+          :src="avatarSrc"
+          fallback-src="/logo.png" />
 
-        <n-flex v-if="activeStatus" :size="6" align="center" style="margin-left: -4px" class="item-hover">
-          <n-badge :color="activeStatus === OnlineEnum.ONLINE ? '#1ab292' : '#909090'" dot />
-          <p class="text-(12px [--text-color])">
-            {{ activeStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}
-          </p>
-        </n-flex>
+        <span
+          @click="openContent('在线状态', 'onlineStatus', 320, 480)"
+          :class="[activeStatus === OnlineEnum.ONLINE ? 'bg-#1ab292' : 'bg-#909090']"
+          class="absolute top-72px left-72px cursor-pointer border-(6px solid [--avatar-border-color]) rounded-full size-18px"></span>
+
+        <div
+          v-if="useUserInfo(uid).value.wearingItemId === 6"
+          class="absolute top-72px left-142px bg-[--bate-bg] border-(1px solid [--bate-color]) text-(12px [--bate-color] center) font-bold p-8px rounded-full">
+          HuLa开发工程师
+        </div>
+
+        <p class="text-(18px [--text-color])" style="font-family: none !important; font-weight: bold !important">
+          {{ useUserInfo(uid).value.name }}
+        </p>
       </n-flex>
 
       <!-- 地址 -->
@@ -44,29 +64,47 @@
       </n-flex>
 
       <n-flex justify="center" align="center" :size="40">
-        <n-button secondary> 发信息 </n-button>
+        <n-button v-if="isCurrentUserUid" secondary type="info" @click="openEditInfo"> 编辑资料 </n-button>
+        <n-button v-else-if="isMyFriend" secondary type="primary" @click="openMsgSession(uid)"> 发信息 </n-button>
+        <n-button v-else secondary @click="addFriend"> 加好友 </n-button>
       </n-flex>
     </n-flex>
-
-    <!-- 背景 -->
-    <img
-      class="size-full rounded-8px box-border p-20px absolute top-0 left-0 blur-xl opacity-80"
-      :src="avatarSrc"
-      alt="" />
   </n-flex>
 </template>
 
 <script setup lang="ts">
 import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
 import { AvatarUtils } from '@/utils/avatarUtils'
-import { OnlineEnum } from '@/enums/index.ts'
+import { MittEnum, OnlineEnum } from '@/enums/index.ts'
+import { useCommon } from '@/hooks/useCommon.ts'
+import { useContactStore } from '@/stores/contacts.ts'
+import { leftHook } from '@/layout/left/hook'
+import { useMitt } from '@/hooks/useMitt'
+import { useGlobalStore } from '@/stores/global'
 
 const { uid } = defineProps<{
   uid: number
   activeStatus?: OnlineEnum
 }>()
+const { userUid, openMsgSession } = useCommon()
+const globalStore = useGlobalStore()
+const { openContent } = leftHook()
+const contactStore = useContactStore()
 const isCurrentUser = computed(() => useUserInfo(uid).value)
 const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(useUserInfo(uid).value.avatar as string))
+/** 是否是当前登录的用户 */
+const isCurrentUserUid = computed(() => userUid.value === uid)
+/** 是否是我的好友 */
+const isMyFriend = computed(() => !!contactStore.contactsList.find((item) => item.uid === uid))
+
+const openEditInfo = () => {
+  useMitt.emit(MittEnum.OPEN_EDIT_INFO)
+}
+
+const addFriend = () => {
+  globalStore.addFriendModalInfo.show = true
+  globalStore.addFriendModalInfo.uid = uid
+}
 </script>
 
 <style scoped lang="scss">

@@ -9,14 +9,18 @@ export const pageSize = 20
 export const useContactStore = defineStore('contact', () => {
   const globalStore = useGlobalStore()
 
-  const contactsList = reactive<ContactItem[]>([]) // 联系人列表
-  const requestFriendsList = reactive<RequestFriendItem[]>([]) // 好友请求列表
+  /** 联系人列表 */
+  const contactsList = reactive<ContactItem[]>([])
+  /** 好友请求列表 */
+  const requestFriendsList = reactive<RequestFriendItem[]>([])
 
-  // 分页加载相关的状态
-  const contactsOptions = reactive({ isLast: false, isLoading: false, cursor: '' }) // 联系人列表分页选项
-  const requestFriendsOptions = reactive({ isLast: false, isLoading: false, cursor: '' }) // 好友请求列表分页选项
+  /** 联系人列表分页选项 */
+  const contactsOptions = reactive({ isLast: false, isLoading: false, cursor: '' })
+  /** 好友请求列表分页选项 */
+  const requestFriendsOptions = reactive({ isLast: false, isLoading: false, cursor: '' })
 
-  const groupChatList = reactive<GroupListReq[]>([]) // 群聊列表
+  /** 群聊列表 */
+  const groupChatList = reactive<GroupListReq[]>([])
 
   /**
    * 获取联系人列表
