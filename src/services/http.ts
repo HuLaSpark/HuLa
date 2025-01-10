@@ -1,5 +1,4 @@
 import { fetch } from '@tauri-apps/plugin-http'
-import { getEnhancedFingerprint } from './fingerprint'
 
 /**
  * @description 请求参数
@@ -36,7 +35,7 @@ async function Http<T>(
 ): Promise<{ data: Promise<T>; resp: Response }> {
   // 获取token和指纹
   const token = localStorage.getItem('TOKEN')
-  const fingerprint = await getEnhancedFingerprint()
+  //const fingerprint = await getEnhancedFingerprint()
 
   // 构建请求头
   const httpHeaders = new Headers(options.headers || {})
@@ -52,9 +51,9 @@ async function Http<T>(
   }
 
   // 设置浏览器指纹
-  if (fingerprint) {
-    httpHeaders.set('X-Device-Fingerprint', fingerprint)
-  }
+  //if (fingerprint) {
+  //httpHeaders.set('X-Device-Fingerprint', fingerprint)
+  //}
 
   // 构建 fetch 请求选项
   const fetchOptions: RequestInit = {
