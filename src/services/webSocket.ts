@@ -10,6 +10,7 @@ import { OnlineEnum, ChangeTypeEnum, WorkerMsgEnum } from '@/enums'
 import { worker } from '@/utils/InitWorker.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useUserStore } from '@/stores/user'
+import { getEnhancedFingerprint } from '@/services/fingerprint.ts'
 
 class WS {
   #tasks: WsReqMsgContentType[] = []
@@ -24,14 +25,17 @@ class WS {
     worker.addEventListener('message', this.onWorkerMsg)
   }
 
-  initConnect = () => {
+  initConnect = async () => {
     const token = localStorage.getItem('TOKEN')
     // 如果token 是 null, 而且 localStorage 的用户信息有值，需要清空用户信息
     if (token === null && localStorage.getItem('USER_INFO')) {
       localStorage.removeItem('USER_INFO')
     }
+    const clientId = await getEnhancedFingerprint()
     // 初始化 ws
-    worker.postMessage(`{"type":"initWS","value":${token ? `"${token}"` : null}}`)
+    worker.postMessage(
+      `{"type":"initWS","value":{"token":${token ? `"${token}"` : null},"clientId":${clientId ? `"${clientId}"` : null}}}`
+    )
   }
 
   onWorkerMsg = async (e: MessageEvent<any>) => {

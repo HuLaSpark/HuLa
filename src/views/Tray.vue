@@ -82,10 +82,10 @@ const division = () => {
 const handleExit = () => {
   /** 退出时关闭锁屏 */
   lockScreen.value.enable = false
-  exit(0)
   if (localStorage.getItem('wsLogin')) {
     localStorage.removeItem('wsLogin')
   }
+  exit(0)
 }
 
 const toggleStatus = (url: string, title: string) => {

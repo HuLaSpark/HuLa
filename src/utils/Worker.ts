@@ -20,6 +20,8 @@ let lockReconnect = false
 // 重连🔐
 let token: null | string = null
 
+let clientId: null | string = null
+
 // 往 ws 发消息
 const connectionSend = (value: object) => {
   connection?.send(JSON.stringify(value))
@@ -62,7 +64,7 @@ const onCloseHandler = () => {
   }
 
   // 断线重连
-  timer = setTimeout(() => {
+  timer = setTimeout(async () => {
     initConnection()
     reconnectCount++
     // 标识已经开启重连任务
@@ -103,7 +105,9 @@ const initConnection = () => {
   // 建立链接
   // 本地配置到 .env 里面修改。生产配置在 .env.production 里面
   if (!connection) {
-    connection = new WebSocket(`${import.meta.env.VITE_WEBSOCKET_URL}${token ? `?token=${token}` : ''}`)
+    connection = new WebSocket(
+      `${import.meta.env.VITE_WEBSOCKET_URL}?clientId=${clientId}${token ? `&token=${token}` : ''}`
+    )
   }
   // 收到消息
   connection.addEventListener('message', onConnectMsg)
@@ -116,11 +120,13 @@ const initConnection = () => {
 }
 
 self.onmessage = (e: MessageEvent<string>) => {
+  console.log(e.data)
   const { type, value } = JSON.parse(e.data)
   switch (type) {
     case 'initWS': {
       reconnectCount = 0
-      token = value
+      token = value['token']
+      clientId = value['clientId']
       initConnection()
       break
     }
