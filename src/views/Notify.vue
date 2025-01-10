@@ -152,18 +152,19 @@ const sortMessages = () => {
   })
 }
 
-onMounted(async () => {
+onBeforeMount(async () => {
   // 确保用户已登录并初始化会话列表
   await chatStore.getSessionList(true)
+})
+
+onMounted(async () => {
   // 初始化窗口高度
   resizeWindow('notify', 280, 140)
 
   await pushListeners([
     // 监听托盘鼠标进入事件
     appWindow.listen('notify_enter', async (event: Event<any>) => {
-      if (tipVisible.value) {
-        await showWindow(event)
-      }
+      await showWindow(event)
     }),
 
     // 监听托盘鼠标离开事件

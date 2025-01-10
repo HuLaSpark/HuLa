@@ -22,13 +22,6 @@ class WS {
     this.initConnect()
     // 收到消息
     worker.addEventListener('message', this.onWorkerMsg)
-
-    // 后台重试次数达到上限之后，tab 获取焦点再重试
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden && !this.#connectReady) {
-        this.initConnect()
-      }
-    })
   }
 
   initConnect = () => {
@@ -178,7 +171,7 @@ class WS {
         useMitt.emit(WsResponseMessageType.REQUEST_NEW_FRIEND, params.data as { uid: number; unreadCount: number })
         break
       }
-      // 新好友申请
+      // 成员变动
       case WsResponseMessageType.NEW_FRIEND_SESSION: {
         console.log('新好友')
         useMitt.emit(

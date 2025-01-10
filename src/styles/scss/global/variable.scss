@@ -99,6 +99,8 @@ svg {
   // 危险样式
   --danger-text: #c14053;
   --danger-bg: #f6dfe3;
+  // 头像边框颜色
+  --avatar-border-color: #fff;
 }
 
 html[data-theme='dark'] {
@@ -183,6 +185,8 @@ html[data-theme='dark'] {
   // 危险样式
   --danger-text: #da8583;
   --danger-bg: #37292c;
+   // 头像边框颜色
+  --avatar-border-color: #232223;
 }
 /**! end */
 // 线性动画

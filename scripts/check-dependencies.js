@@ -8,17 +8,11 @@ const INSTALL_GUIDES = {
   'Node.js': 'https://nodejs.org/zh-cn/download/',
   pnpm: 'https://pnpm.io/zh/installation',
   Rust: 'https://www.rust-lang.org/tools/install',
-  'Visual C++ Build Tools': 'https://visualstudio.microsoft.com/visual-cpp-build-tools/',
   'WebView2 Runtime': 'https://developer.microsoft.com/microsoft-edge/webview2/'
 }
 
 // Windows 特定的检查路径
 const WINDOWS_PATHS = {
-  'Visual C++ Build Tools': [
-    'C:\\Program Files (x86)\\Microsoft Visual Studio\\',
-    'C:\\Program Files\\Microsoft Visual Studio\\',
-    'C:\\Program Files (x86)\\Windows Kits\\10\\bin'
-  ],
   'WebView2 Runtime': [
     'C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application',
     'C:\\Program Files\\Microsoft\\EdgeWebView\\Application',
@@ -58,23 +52,6 @@ const checks = [
 ]
 
 /**
- * 检查 Visual C++ Build Tools 是否安装
- * @returns {boolean}
- */
-const checkVCBuildTools = () => {
-  try {
-    // 检查 cl.exe 是否存在
-    execSync('where cl.exe', { stdio: 'ignore' })
-
-    // 检查是否能正常执行
-    const output = execSync('cl.exe 2>&1', { encoding: 'utf8' })
-    return output.includes('Microsoft') && output.includes('Compiler')
-  } catch {
-    return false
-  }
-}
-
-/**
  * 检查 WebView2 是否安装
  * @returns {boolean}
  */
@@ -93,11 +70,6 @@ const checkWebView2 = () => {
 
 // Windows 特定的检查
 const windowsChecks = [
-  {
-    name: 'Visual C++ Build Tools',
-    checkInstalled: checkVCBuildTools,
-    isRequired: true
-  },
   {
     name: 'WebView2 Runtime',
     checkInstalled: checkWebView2,
@@ -141,7 +113,7 @@ function checkDependency(check) {
     const isVersionValid = compareVersions(version, check.minVersion) >= 0
 
     if (isVersionValid) {
-      console.log(chalk.green(`✓ ${check.name} 版本 ${output} 已安装`))
+      console.log(chalk.green(`✓ ${check.name} 版本 ${output} 已安装\n`))
       return true
     } else {
       console.log(chalk.yellow(`⚠️ ${check.name} 版本过低`))
@@ -191,7 +163,7 @@ function main() {
 
   // 在 Windows 上执行额外检查
   if (isWindows) {
-    console.log(chalk.blue('\n正在检查 Windows 开发环境...'))
+    console.log(chalk.blue(`\n[HuLa ${new Date().toLocaleTimeString()}] 正在检查 Windows 开发环境...\n`))
     const windowsResults = windowsChecks.map(checkWindowsDependency)
     results.push(...windowsResults)
   }

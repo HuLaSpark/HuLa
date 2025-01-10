@@ -28,6 +28,7 @@ import { computedToken } from '@/services/request'
 import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { emitTo } from '@tauri-apps/api/event'
+import { useThrottleFn } from '@vueuse/core'
 
 const globalStore = useGlobalStore()
 const contactStore = useContactStore()
@@ -105,16 +106,19 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   chatStore.pushMsg(data)
   console.log('接收消息', data)
   // 接收到通知就设置图标闪烁
-  await emitTo('tray', 'show_tip')
-  await emitTo('notify', 'notify_cotent', data)
   const username = useUserInfo(data.fromUser.uid).value.name!
   // 不是自己发的消息才通知
   if (data.fromUser.uid !== userStore.userInfo.uid) {
-    sendNotification({
-      title: username,
-      body: data.message.body.content,
-      icon: 'src-tauri/tray/icon.png'
-    })
+    await emitTo('tray', 'show_tip')
+    await emitTo('notify', 'notify_cotent', data)
+    const throttleSendNotification = useThrottleFn(() => {
+      sendNotification({
+        title: username,
+        body: data.message.body.content,
+        icon: 'src-tauri/tray/icon.png'
+      })
+    }, 3000)
+    throttleSendNotification()
   }
 })
 useMitt.on(WsResponseMessageType.REQUEST_NEW_FRIEND, (data: { uid: number; unreadCount: number }) => {

@@ -23,8 +23,12 @@ body:
       label: '💻 Operating System'
       multiple: true
       options:
-        - 'Windows'
+        - 'Windows 10'
+        - 'Windows 11'
         - 'macOS'
+        - 'Linux'
+        - 'Android'
+        - 'ios'
     validations:
       required: true
 
