@@ -17,6 +17,8 @@ svg {
   --shadow-enabled: 1;
   // 字体
   --font-family: 'PingFang';
+  // 是否启用透明高斯模糊
+  --blur-enabled: 1;
 
   --center-bg-color: #fff;
   --right-bg-color: #f1f1f1;
@@ -66,7 +68,7 @@ svg {
   --tray-hover: #eee;
   --tray-hover-e: #f5dce1;
   // 信息框背景颜色
-  --bg-info: rgba(255, 255, 255, 0.8);
+  --bg-info: rgba(255, 255, 255);
   // 表情框样式
   --bg-emoji: rgba(255, 255, 255, 0.6);
   --emoji-hover: #e3e3e3;
@@ -152,7 +154,7 @@ html[data-theme='dark'] {
   --tray-hover: #3b3b3b;
   --tray-hover-e: #bb8188;
   // 信息框背景颜色
-  --bg-info: rgba(27, 27, 27, 0.8);
+  --bg-info: rgba(27, 27, 27);
   // 表情框样式
   --bg-emoji: rgba(27, 27, 27, 0.8);
   --emoji-hover: #3b3b3b;
@@ -237,13 +239,22 @@ html[data-theme='dark'] {
   right: 0;
   top: 0;
   bottom: 0;
-  background-color: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur($blur);
-  -webkit-backdrop-filter: blur($blur);
 }
+
+// 使用CSS变量来控制模糊效果
+html[data-blur="1"] {
+  .n-modal-mask,
+  .n-drawer-mask {
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+}
+
 .n-modal-mask {
   @include mask-style;
 }
+
 .n-drawer-mask {
   @include mask-style(2px);
 }

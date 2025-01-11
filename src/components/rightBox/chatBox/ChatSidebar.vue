@@ -70,7 +70,7 @@
           placement="left"
           :show-arrow="false"
           v-model:show="infoPopover"
-          style="padding: 0; background: var(--bg-info); backdrop-filter: blur(10px)">
+          style="padding: 0; background: var(--bg-info)">
           <template #trigger>
             <ContextMenu
               :content="item"
