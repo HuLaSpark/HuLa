@@ -57,6 +57,8 @@ declare namespace STO {
       shadow: boolean
       /** 字体 */
       fonts: string
+      /** 高斯模糊 */
+      blur: boolean
     }
   }
 

@@ -42,6 +42,15 @@ watch(
   { immediate: true }
 )
 
+/** 控制高斯模糊 */
+watch(
+  () => page.value.blur,
+  (val) => {
+    document.documentElement.setAttribute('data-blur', val ? '1' : '0')
+  },
+  { immediate: true }
+)
+
 /** 控制字体样式 */
 watch(
   () => page.value.fonts,

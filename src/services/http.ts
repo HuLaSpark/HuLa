@@ -19,7 +19,6 @@ export type HttpParams = {
 
 /**
  * @description HTTP 请求实现
- * @since Beta v0.5.1
  * @template T
  * @param {string} url 请求地址
  * @param {HttpParams} options 请求参数

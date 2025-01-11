@@ -102,7 +102,14 @@
       <span class="pl-10px">界面</span>
 
       <n-flex class="item" :size="12" vertical>
-        <!-- 发送信息 -->
+        <n-flex align="center" justify="space-between">
+          <span>是否开启透明高斯模糊</span>
+
+          <n-switch size="small" v-model:value="page.blur" />
+        </n-flex>
+
+        <span class="w-full h-1px bg-[--line-color]"></span>
+
         <n-flex align="center" justify="space-between">
           <span>是否开启阴影</span>
 

@@ -24,7 +24,7 @@
                   trigger="click"
                   placement="bottom-start"
                   :show-arrow="false"
-                  style="padding: 0; background: var(--bg-info); backdrop-filter: blur(10px)">
+                  style="padding: 0; background: var(--bg-info)">
                   <template #trigger>
                     <p @click="currentUserId = item.uid" class="text-(14px #13987f) cursor-pointer">
                       {{ useUserInfo(item.uid).value.name }}
