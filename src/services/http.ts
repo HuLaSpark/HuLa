@@ -61,9 +61,6 @@ async function Http<T>(
     signal: abort?.signal
   }
 
-  // 打印请求头内容
-  console.log(...httpHeaders)
-
   // 判断是否需要添加请求体
   if (options.body) {
     if (!(options.body instanceof FormData || options.body instanceof URLSearchParams)) {
@@ -78,7 +75,7 @@ async function Http<T>(
     const queryString = new URLSearchParams(options.query).toString()
     url += `?${queryString}`
   }
-
+  console.log(url, fetchOptions)
   // 拼接 API 基础路径
   //url = `${import.meta.env.VITE_SERVICE_URL}${url}`
   // console.log(url)
