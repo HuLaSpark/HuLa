@@ -28,13 +28,42 @@ export type RetryOptions = {
 }
 
 /**
+ * @description 自定义错误类，用于标识需要重试的 HTTP 错误
+ */
+class FetchRetryError extends Error {
+  status: number
+  constructor(message: string, status: number) {
+    super(message)
+    this.status = status
+    this.name = 'FetchRetryError'
+  }
+}
+
+/**
+ * @description 等待指定的毫秒数
+ * @param {number} ms 毫秒数
+ * @returns {Promise<void>}
+ */
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+/**
+ * @description 判断是否应进行下一次重试
+ * @returns {boolean} 是否继续重试
+ */
+function shouldRetry(attempt: number, maxRetries: number, abort?: AbortController): boolean {
+  return attempt + 1 < maxRetries && !abort?.signal.aborted
+}
+
+/**
  * @description HTTP 请求实现
  * @template T
  * @param {string} url 请求地址
  * @param {HttpParams} options 请求参数
  * @param {boolean} [fullResponse=false] 是否返回完整响应
  * @param {AbortController} abort 中断器
- * @returns {Promise<T | { data: Promise<T>; resp: Response }>} 请求结果
+ * @returns {Promise<T | { data: T; resp: Response }>} 请求结果
  */
 async function Http<T = any>(
   url: string,
@@ -55,7 +84,7 @@ async function Http<T = any>(
     ...options.retry
   }
 
-  const { retries, retryDelay, retryOn } = retryOptions
+  const { retries = 3, retryDelay, retryOn } = retryOptions
 
   // 获取token和指纹
   const token = localStorage.getItem('TOKEN')
@@ -108,70 +137,52 @@ async function Http<T = any>(
   //url = `${import.meta.env.VITE_SERVICE_URL}${url}`
 
   // 定义重试函数
-  async function attemptFetch(attempt: number): Promise<{ data: T; resp: Response } | T> {
+  async function attemptFetch(currentAttempt: number): Promise<{ data: T; resp: Response } | T> {
     try {
-      const res = await fetch(url, fetchOptions)
-      if (!res.ok) {
-        // 如果状态码在重试列表中，则抛出错误以触发重试
-        if (!retryOn || retryOn.includes(res.status)) {
-          throw new FetchRetryError(`HTTP error! status: ${res.status}`, res.status)
-        } else {
-          throw new Error(`HTTP error! status: ${res.status}`)
+      const response = await fetch(url, fetchOptions)
+      console.log(`Attempt ${currentAttempt + 1}: status = ${response.status}`)
+
+      // 若响应不 OK 并且状态码属于需重试列表，则抛出 FetchRetryError
+      if (!response.ok) {
+        if (!retryOn || retryOn.includes(response.status)) {
+          throw new FetchRetryError(`HTTP error! status: ${response.status}`, response.status)
         }
+        // 如果是非重试状态码，则抛出普通错误
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
-      const data = options.isBlob ? await res.arrayBuffer() : await res.json()
 
-      console.log(url)
-      console.log(data)
+      // 解析响应数据
+      const responseData = options.isBlob ? await response.arrayBuffer() : await response.json()
 
+      // 若有success === false，需要重试
+      if (responseData && responseData.success === false) {
+        throw new Error(url)
+      }
+
+      // 若请求成功且没有业务错误
       if (fullResponse) {
-        return { data, resp: res }
+        return { data: responseData, resp: response }
       }
-
-      return data
+      return responseData
     } catch (err) {
-      // 检查是否达到最大重试次数
-      if (!retries || attempt >= retries) {
-        console.error(`HTTP request to ${url} failed after ${attempt} attempts: `, err)
-        throw err
+      console.error(`Attempt ${currentAttempt + 1} failed →`, err)
+
+      // 检查是否仍需重试
+      if (!shouldRetry(currentAttempt, retries, abort)) {
+        console.error(`Max retries reached or aborted. Request failed → ${url}`)
+        throw err instanceof Error ? err : new Error(String(err)) // 不再重试，抛出最终错误
       }
 
-      // 检查是否是被中断的请求
-      if (abort?.signal.aborted) {
-        console.error(`HTTP request to ${url} was aborted.`)
-        throw new Error('Request aborted')
-      }
-
-      const delay = retryDelay ? retryDelay(attempt) : 1000
-      console.warn(`Retrying request to ${url} (attempt ${attempt + 1} after ${delay}ms)...`)
-      await wait(delay)
-      return attemptFetch(attempt + 1)
+      // 若需继续重试
+      const delayMs = retryDelay ? retryDelay(currentAttempt) : 1000
+      console.warn(`Retrying request → ${url} (next attempt: ${currentAttempt + 2}, waiting ${delayMs}ms)`)
+      await wait(delayMs)
+      return attemptFetch(currentAttempt + 1)
     }
   }
 
-  // 开始第一次尝试
+  // 第一次执行，attempt=0
   return attemptFetch(0)
-}
-
-/**
- * @description 等待指定的毫秒数
- * @param {number} ms 毫秒数
- * @returns {Promise<void>}
- */
-function wait(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
-/**
- * @description 自定义错误类，用于标识需要重试的 HTTP 错误
- */
-class FetchRetryError extends Error {
-  status: number
-  constructor(message: string, status: number) {
-    super(message)
-    this.status = status
-    this.name = 'FetchRetryError'
-  }
 }
 
 export default Http
