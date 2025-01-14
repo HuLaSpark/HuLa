@@ -164,13 +164,15 @@ async function Http<T = any>(
         return { data: responseData, resp: response }
       }
       return responseData
-    } catch (err) {
-      console.error(`Attempt ${currentAttempt + 1} failed →`, err)
+    } catch (error) {
+      console.error(`Attempt ${currentAttempt + 1} failed →`, error)
 
       // 检查是否仍需重试
       if (!shouldRetry(currentAttempt, retries, abort)) {
         console.error(`Max retries reached or aborted. Request failed → ${url}`)
-        throw err instanceof Error ? err : new Error(String(err)) // 不再重试，抛出最终错误
+        const finalError = error instanceof FetchRetryError ? error : new Error(String(error))
+        window.$message?.error(finalError.message)
+        throw finalError // 不再重试，抛出最终错误
       }
 
       // 若需继续重试
