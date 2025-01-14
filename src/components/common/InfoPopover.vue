@@ -28,7 +28,15 @@
           HuLa开发工程师
         </div>
 
-        <p class="text-(18px [--text-color])" style="font-family: none !important; font-weight: bold !important">
+        <p
+          class="text-(18px [--text-color])"
+          style="
+            font-weight: bold !important;
+            font-family:
+              system-ui,
+              -apple-system,
+              sans-serif;
+          ">
           {{ useUserInfo(uid).value.name }}
         </p>
       </n-flex>

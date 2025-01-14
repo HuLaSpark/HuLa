@@ -24,6 +24,7 @@
 <p align="center">
   gitee：<a href="https://gitee.com/HulaSpark/HuLa/stargazers"><img src="https://gitee.com/HulaSpark/HuLa/badge/star.svg?theme=gvp" alt="star"></a>
   github：<a href="https://gitee.com/link?target=https://github.com/HulaSpark/HuLa/stargazers"><img src="https://img.shields.io/github/stars/HulaSpark/HuLa" alt="star"></a>
+  gitcode：<a href="https://gitcode.com/HuLaSpark/HuLa"><img src="https://gitcode.com/HuLaSpark/HuLa/star/badge.svg" alt="star"></a>
 </p>
 <p align="center">
   WeChat: <img src="https://img.shields.io/badge/cy2439646234-07C160?logo=wechat&logoColor=fff">

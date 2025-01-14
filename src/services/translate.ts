@@ -1,6 +1,7 @@
 import { fetch } from '@tauri-apps/plugin-http'
 import CryptoJS from 'crypto-js'
 import { TranslateProvider } from './types.ts'
+import { AppException } from '@/common/exception.ts'
 
 // 有道云翻译接口响应类型
 interface YoudaoResponse {
@@ -106,7 +107,7 @@ const signUtils = {
 export const translateText = async (text: string, provider: TranslateProvider = 'youdao'): Promise<TranslateResult> => {
   // 检查输入文本是否为空
   if (!text?.trim()) {
-    throw new Error('翻译文本不能为空')
+    throw new AppException('翻译文本不能为空')
   }
 
   try {
@@ -173,7 +174,7 @@ const youdaoTranslate = async (text: string): Promise<TranslateResult> => {
 
   // 检查翻译结果
   if (!data.translation?.[0]) {
-    throw new Error('未获取到翻译结果')
+    throw new AppException('未获取到翻译结果')
   }
 
   return {
@@ -231,7 +232,7 @@ const tencentTranslate = async (text: string): Promise<TranslateResult> => {
 
   // 检查翻译结果
   if (!data.Response.TargetText) {
-    throw new Error('未获取到翻译结果')
+    throw new AppException('未获取到翻译结果')
   }
 
   return {
