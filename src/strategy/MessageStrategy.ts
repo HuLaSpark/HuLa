@@ -5,12 +5,15 @@ import { useUserInfo } from '@/hooks/useCached.ts'
 import { Ref } from 'vue'
 import { parseInnerText, useCommon } from '@/hooks/useCommon.ts'
 import apis from '@/services/apis.ts'
-import { BaseDirectory, open } from '@tauri-apps/plugin-fs'
+import { BaseDirectory, readFile } from '@tauri-apps/plugin-fs'
 import DOMPurify from 'dompurify'
 import { BaseUserItem, useCachedStore } from '@/stores/cached.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import Database from '@tauri-apps/plugin-sql'
+import { fetch } from '@tauri-apps/plugin-http'
+import { File } from 'happy-dom'
+
 const { reply, userUid } = useCommon()
 const chatStore = useChatStore()
 const cachedStore = useCachedStore()
@@ -58,7 +61,21 @@ abstract class AbstractMessageStrategy implements MessageStrategy {
     }
   }
 
-  abstract buildMessageBody(msg: any, reply: any): any
+  buildMessageBody(msg: any, reply: any): any {
+    return {
+      content: msg.content,
+      url: msg.url,
+      replyMsgId: msg.reply?.key || void 0,
+      reply: reply.value.content
+        ? {
+            body: reply.value.content,
+            id: reply.value.key,
+            username: reply.value.accountName,
+            type: msg.type
+          }
+        : void 0
+    }
+  }
 
   abstract send(msgInput: Ref, messageInputDom: Ref): any
 
@@ -228,6 +245,7 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
         const msg = {
           type: this.msgType,
           content: data,
+          url: data,
           reply: replyValue.content
             ? {
                 content: replyValue.content,
@@ -235,6 +253,7 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
               }
             : undefined
         }
+        console.log(msg)
         this.sendMsg(msgInput, messageInputDom, msg)
       })
       .catch((err) => {
@@ -247,35 +266,30 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
     if (!fileName) {
       throw new AppException('文件解析出错')
     }
-    console.log(fileName)
     const res = await apis.getUploadUrl({
       fileName: fileName,
       scene: 1
     })
-    console.log(res)
     const uploadUrl = res.uploadUrl
     const downloadUrl = res.downloadUrl
-    const file = await open(path, { read: true, write: false, baseDir: BaseDirectory.AppCache })
-    const buf = new Uint8Array()
-    await file.read(buf)
-    await fetch(uploadUrl, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-      method: 'PUT',
-      body: new File([buf], fileName)
+    const file = await readFile(path, { baseDir: BaseDirectory.AppCache })
+    console.log(file)
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(file)
+        controller.close()
+      }
     })
-    file.close()
+    await fetch(uploadUrl, {
+      headers: { 'Content-Type': 'application/octet-stream' },
+      method: 'PUT',
+      body: stream,
+      duplex: 'half'
+    } as RequestInit)
+    console.log('文件上传完成')
     return new Promise((resolve) => {
       resolve(downloadUrl)
     })
-  }
-  buildMessageBody(msg: any, reply: any): any {
-    msg
-    reply
-    throw new AppException('方法暂未实现')
-  }
-
-  buildMessageType(messageId: number, messageBody: any, globalStore: any, userUid: Ref<any>): MessageType {
-    return super.buildMessageType(messageId, messageBody, globalStore, userUid)
   }
 }
 

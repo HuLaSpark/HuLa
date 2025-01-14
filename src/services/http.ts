@@ -82,11 +82,11 @@ async function Http<T>(
   // console.log(fetchOptions.headers)
   try {
     const res = await fetch(url, fetchOptions)
+    console.log(res)
     if (!res.ok) {
       throw new Error(`HTTP error! status: ${res.status}`)
     }
     const data = options.isBlob ? await res.arrayBuffer() : await res.json()
-    console.log(url)
     console.log(data)
 
     if (fullResponse) {
