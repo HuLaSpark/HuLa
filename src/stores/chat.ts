@@ -38,20 +38,24 @@ export const useChatStore = defineStore(
     const groupStore = useGroupStore()
     const contactStore = useContactStore()
 
-    // 会话列表及其相关状态
-    const sessionList = reactive<SessionItem[]>([]) // 会话列表
-    const sessionOptions = reactive({ isLast: false, isLoading: false, cursor: '' }) // 会话列表的加载状态
+    // 会话列表
+    const sessionList = reactive<SessionItem[]>([])
+    // 会话列表的加载状态
+    const sessionOptions = reactive({ isLast: false, isLoading: false, cursor: '' })
 
     // 当前房间ID和类型的计算属性
     const currentRoomId = computed(() => globalStore.currentSession?.roomId)
     const currentRoomType = computed(() => globalStore.currentSession?.type)
 
-    // 消息相关的响应式数据结构
-    const messageMap = reactive<Map<number, Map<number, MessageType>>>(new Map([[currentRoomId.value, new Map()]])) // 存储所有消息的Map
+    // 存储所有消息的Map
+    const messageMap = reactive<Map<number, Map<number, MessageType>>>(new Map([[currentRoomId.value, new Map()]]))
+    // 消息加载状态
     const messageOptions = reactive<Map<number, { isLast: boolean; isLoading: boolean; cursor: string }>>(
       new Map([[currentRoomId.value, { isLast: false, isLoading: false, cursor: '' }]])
-    ) // 消息加载状态
-    const replyMapping = reactive<Map<number, Map<number, number[]>>>(new Map([[currentRoomId.value, new Map()]])) // 回复消息的映射关系
+    )
+
+    // 回复消息的映射关系
+    const replyMapping = reactive<Map<number, Map<number, number[]>>>(new Map([[currentRoomId.value, new Map()]]))
     // 存储撤回的消息内容和时间
     const recalledMessages = reactive<Map<number, RecalledMessage>>(new Map())
     // 存储每条撤回消息的过期定时器
