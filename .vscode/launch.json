@@ -9,6 +9,20 @@
     },
     {
       "type": "node-terminal",
+      "name": "tauri:ios:dev",
+      "request": "launch",
+      "command": "pnpm run tauri:ios:dev",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "node-terminal",
+      "name": "tauri:android:dev",
+      "request": "launch",
+      "command": "pnpm run tauri:android:dev",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "node-terminal",
       "name": "tauri:build",
       "request": "launch",
       "command": "pnpm run tauri:build",
