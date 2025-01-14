@@ -199,20 +199,9 @@ async function Http<T = any>(
       // 检查是否仍需重试
       if (!shouldRetry(currentAttempt, retries, abort)) {
         console.error(`Max retries reached or aborted. Request failed → ${url}`)
-        if (error instanceof FetchRetryError) {
-          throw new AppException(error.message, {
-            type: error.type,
-            code: error.status,
-            details: { url, attempts: currentAttempt + 1 }
-          })
-        }
-        if (error instanceof AppException) {
-          throw error
-        }
-        throw new AppException(String(error), {
-          type: ErrorType.Unknown,
-          details: { url, attempts: currentAttempt + 1 }
-        })
+        const finalError = error instanceof FetchRetryError ? error : new Error(String(error))
+        window.$message?.error(finalError.message)
+        throw finalError // 不再重试，抛出最终错误
       }
 
       // 若需继续重试
