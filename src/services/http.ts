@@ -1,4 +1,5 @@
 import { fetch } from '@tauri-apps/plugin-http'
+import { AppException, ErrorType } from '../common/exception'
 
 /**
  * @description 请求参数
@@ -32,10 +33,12 @@ export type RetryOptions = {
  */
 class FetchRetryError extends Error {
   status: number
+  type: ErrorType
   constructor(message: string, status: number) {
     super(message)
     this.status = status
     this.name = 'FetchRetryError'
+    this.type = status >= 500 ? ErrorType.Server : ErrorType.Network
   }
 }
 
@@ -144,11 +147,16 @@ async function Http<T = any>(
 
       // 若响应不 OK 并且状态码属于需重试列表，则抛出 FetchRetryError
       if (!response.ok) {
+        const errorType = getErrorType(response.status)
         if (!retryOn || retryOn.includes(response.status)) {
           throw new FetchRetryError(`HTTP error! status: ${response.status}`, response.status)
         }
-        // 如果是非重试状态码，则抛出普通错误
-        throw new Error(`HTTP error! status: ${response.status}`)
+        // 如果是非重试状态码，则抛出带有适当错误类型的 AppException
+        throw new AppException(`HTTP error! status: ${response.status}`, {
+          type: errorType,
+          code: response.status,
+          details: { url, method: options.method }
+        })
       }
 
       // 解析响应数据
@@ -156,7 +164,11 @@ async function Http<T = any>(
 
       // 若有success === false，需要重试
       if (responseData && responseData.success === false) {
-        throw new Error(url)
+        throw new AppException(responseData.message || url, {
+          type: ErrorType.Server,
+          code: response.status,
+          details: responseData
+        })
       }
 
       // 若请求成功且没有业务错误
@@ -170,9 +182,20 @@ async function Http<T = any>(
       // 检查是否仍需重试
       if (!shouldRetry(currentAttempt, retries, abort)) {
         console.error(`Max retries reached or aborted. Request failed → ${url}`)
-        const finalError = error instanceof FetchRetryError ? error : new Error(String(error))
-        window.$message?.error(finalError.message)
-        throw finalError // 不再重试，抛出最终错误
+        if (error instanceof FetchRetryError) {
+          throw new AppException(error.message, {
+            type: error.type,
+            code: error.status,
+            details: { url, attempts: currentAttempt + 1 }
+          })
+        }
+        if (error instanceof AppException) {
+          throw error
+        }
+        throw new AppException(String(error), {
+          type: ErrorType.Unknown,
+          details: { url, attempts: currentAttempt + 1 }
+        })
       }
 
       // 若需继续重试
@@ -181,6 +204,15 @@ async function Http<T = any>(
       await wait(delayMs)
       return attemptFetch(currentAttempt + 1)
     }
+  }
+
+  // 辅助函数：根据HTTP状态码确定错误类型
+  function getErrorType(status: number): ErrorType {
+    if (status >= 500) return ErrorType.Server
+    if (status === 401 || status === 403) return ErrorType.Authentication
+    if (status === 400 || status === 422) return ErrorType.Validation
+    if (status >= 400) return ErrorType.Client
+    return ErrorType.Network
   }
 
   // 第一次执行，attempt=0
