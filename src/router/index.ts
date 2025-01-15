@@ -4,14 +4,41 @@ import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 const { BASE_URL } = import.meta.env
 const routes: Array<RouteRecordRaw> = [
   {
-    path: '/login',
-    name: 'login',
-    component: () => import('@/views/loginWindow/Login.vue')
-  },
-  {
     path: '/mobile/login',
     name: 'mobileLogin',
     component: () => import('@/mobile/login.vue')
+  },
+  {
+    path: '/mobile/home',
+    name: 'mobileHome',
+    component: () => import('@/mobile/layout/index.vue'),
+    children: [
+      // 默认导航第一个子路由
+      {
+        path: '',
+        redirect: '/mobile/message'
+      },
+      {
+        path: '/mobile/message',
+        name: 'mobileMessage',
+        component: () => import('@/mobile/views/message/index.vue')
+      },
+      {
+        path: '/mobile/friends',
+        name: 'mobileFriends',
+        component: () => import('@/mobile/views/friends/index.vue')
+      },
+      {
+        path: '/mobile/my',
+        name: 'mobileMy',
+        component: () => import('@/mobile/views/my/index.vue')
+      }
+    ]
+  },
+  {
+    path: '/login',
+    name: 'login',
+    component: () => import('@/views/loginWindow/Login.vue')
   },
   {
     path: '/register',

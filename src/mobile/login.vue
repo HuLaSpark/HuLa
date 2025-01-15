@@ -1,9 +1,9 @@
 <template>
-  <main class="flex-col-center h-100vh">
+  <n-config-provider :theme="lightTheme" class="login-box flex-col-center gap-40px h-100vh">
     <img src="@/assets/logo/hula.png" alt="logo" class="w-130px h-58px" />
 
     <!-- 登录菜单 -->
-    <n-flex class="ma text-center h-full w-260px" vertical :size="16">
+    <n-flex class="text-center w-260px" vertical :size="16">
       <n-input
         :class="{ 'pl-16px': loginHistories.length > 0 }"
         size="large"
@@ -81,23 +81,22 @@
         <span>{{ loginText }}</span>
       </n-button>
     </n-flex>
-  </main>
+  </n-config-provider>
 </template>
 
 <script setup lang="ts">
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import apis from '@/services/apis'
 import { useUserStore } from '@/stores/user'
-import { invoke } from '@tauri-apps/api/core'
 import { useLogin } from '@/hooks/useLogin'
-import { useWindow } from '@/hooks/useWindow'
 import { AvatarUtils } from '@/utils/avatarUtils'
 import { UserInfoType } from '@/services/types'
+import { lightTheme } from 'naive-ui'
+import router from '../router'
 
 const loginHistoriesStore = useLoginHistoriesStore()
 const userStore = useUserStore()
 const { setLoginState } = useLogin()
-const { createWebviewWindow } = useWindow()
 const { loginHistories } = loginHistoriesStore
 /** 账号信息 */
 const info = ref({
@@ -115,6 +114,14 @@ const loading = ref(false)
 const arrowStatus = ref(false)
 /** 登录按钮的文本内容 */
 const loginText = ref('登录')
+
+watchEffect(() => {
+  loginDisabled.value = !(info.value.account && info.value.password && protocol.value)
+  // 清空账号的时候设置默认头像
+  if (!info.value.account) {
+    info.value.avatar = '/logo.png'
+  }
+})
 
 /**登录后创建主页窗口*/
 const normalLogin = async () => {
@@ -149,27 +156,12 @@ const normalLogin = async () => {
       loading.value = false
       userStore.userInfo = account
       loginHistoriesStore.addLoginHistory(account)
-
+      router.push('/mobile/home')
       await setLoginState()
-      // rust保存用户信息
-      await invoke('save_user_info', {
-        userId: account.uid,
-        username: account.name,
-        token: account.token,
-        portrait: '',
-        isSign: true
-      }).finally(() => {
-        // 打开主界面
-        openHomeWindow()
-      })
     })
     .catch(() => {
       loading.value = false
     })
-}
-
-const openHomeWindow = async () => {
-  await createWebviewWindow('HuLa', 'home', 960, 720, 'login', true)
 }
 
 /**
@@ -201,90 +193,11 @@ const delAccount = (item: UserInfoType) => {
 }
 </script>
 
-<style>
+<style scoped lang="scss">
+@use '@/styles/scss/login';
+@use '@/styles/scss/global/login-bg';
 body {
-  overflow: hidden;
-  background-color: #d8eee2;
-  background-image: radial-gradient(closest-side, #30cfd0, rgba(235, 105, 78, 0)),
-    radial-gradient(closest-side, #52aea3, rgba(243, 11, 164, 0)),
-    radial-gradient(closest-side, #fff1eb, rgba(254, 234, 131, 0)),
-    radial-gradient(closest-side, #fed6e3, rgba(170, 142, 245, 0)),
-    radial-gradient(closest-side, #a8edea, rgba(248, 192, 147, 0));
-  background-size:
-    130vmax 130vmax,
-    80vmax 80vmax,
-    90vmax 90vmax,
-    110vmax 110vmax,
-    90vmax 90vmax;
-  background-position:
-    -80vmax -80vmax,
-    60vmax -30vmax,
-    10vmax 10vmax,
-    -30vmax -10vmax,
-    50vmax 50vmax;
-  background-repeat: no-repeat;
-  animation: 8s movement linear infinite;
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
-}
-
-@keyframes movement {
-  0%,
-  100% {
-    background-size:
-      130vmax 130vmax,
-      80vmax 80vmax,
-      90vmax 90vmax,
-      110vmax 110vmax,
-      90vmax 90vmax;
-    background-position:
-      -80vmax -80vmax,
-      60vmax -30vmax,
-      10vmax 10vmax,
-      -30vmax -10vmax,
-      50vmax 50vmax;
-  }
-  25% {
-    background-size:
-      100vmax 100vmax,
-      90vmax 90vmax,
-      100vmax 100vmax,
-      90vmax 90vmax,
-      60vmax 60vmax;
-    background-position:
-      -60vmax -90vmax,
-      50vmax -40vmax,
-      0vmax -20vmax,
-      -40vmax -20vmax,
-      40vmax 60vmax;
-  }
-  50% {
-    background-size:
-      80vmax 80vmax,
-      110vmax 110vmax,
-      80vmax 80vmax,
-      60vmax 60vmax,
-      80vmax 80vmax;
-    background-position:
-      -50vmax -70vmax,
-      40vmax -30vmax,
-      10vmax 0vmax,
-      20vmax 10vmax,
-      30vmax 70vmax;
-  }
-  75% {
-    background-size:
-      90vmax 90vmax,
-      90vmax 90vmax,
-      100vmax 100vmax,
-      90vmax 90vmax,
-      70vmax 70vmax;
-    background-position:
-      -50vmax -40vmax,
-      50vmax -30vmax,
-      20vmax 0vmax,
-      -10vmax 10vmax,
-      40vmax 60vmax;
-  }
 }
 </style>
