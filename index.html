@@ -8,10 +8,28 @@
 
     <!--引入iconpark图标库-->
     <script defer src="/icon.js"></script>
+
+    <!-- PageSpy SDK -->
+    <script crossorigin="anonymous" src="http://localhost:6752/page-spy/index.min.js"></script>
+
+    <!-- 插件（非必须，但建议使用） -->
+    <script crossorigin="anonymous" src="http://localhost:6752/plugin/data-harbor/index.min.js"></script>
+    <script crossorigin="anonymous" src="http://localhost:6752/plugin/rrweb/index.min.js"></script>
   </head>
 
   <body>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
+
+    <script>
+      window.$harbor = new DataHarborPlugin();
+      window.$rrweb = new RRWebPlugin();
+
+      [window.$harbor, window.$rrweb].forEach(p => {
+        PageSpy.registerPlugin(p)
+      })
+
+      window.$pageSpy = new PageSpy();
+    </script>
   </body>
 </html>

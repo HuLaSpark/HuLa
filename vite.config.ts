@@ -8,7 +8,6 @@ import vueJsx from '@vitejs/plugin-vue-jsx'
 import UnoCSS from '@unocss/vite'
 import terser from '@rollup/plugin-terser'
 import { codecovVitePlugin } from '@codecov/vite-plugin'
-import vueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vitejs.dev/config/
 /**! 不需要优化前端打包(如开启gzip) */
@@ -39,9 +38,6 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       vue(),
       vueJsx(), // 开启jsx功能
       UnoCSS(), // 开启UnoCSS
-      vueDevTools({
-        launchEditor: 'windsurf'
-      }), // 调试工具
       AutoImport({
         imports: [
           'vue',

@@ -15,6 +15,14 @@ use desktops::tray;
 #[cfg(desktop)]
 use init::CustomInit;
 
+// 移动端依赖
+#[cfg(mobile)]
+mod mobiles;
+#[cfg(mobile)]
+use mobiles::init;
+#[cfg(mobile)]
+use init::CustomInit;
+
 pub fn run() {
     #[cfg(desktop)]
     {
@@ -53,6 +61,7 @@ fn setup_desktop() {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 fn setup_mobile() {
     tauri::Builder::default()
+        .init_plugin()
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
