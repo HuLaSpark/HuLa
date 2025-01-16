@@ -79,7 +79,6 @@ const moreList = ref<OPT.L.MoreList[]>([
     label: '设置',
     icon: 'settings',
     click: async () => {
-      // todo 设置
       await createWebviewWindow('设置', 'settings', 840, 840)
     }
   },
@@ -87,7 +86,6 @@ const moreList = ref<OPT.L.MoreList[]>([
     label: '关于',
     icon: 'info',
     click: async () => {
-      // todo 关于
       await createWebviewWindow('关于', 'about', 360, 480)
     }
   },
@@ -108,7 +106,7 @@ const moreList = ref<OPT.L.MoreList[]>([
       await logout()
       // 如果没有设置自动登录，则清除用户信息
       userStore.userInfo = {}
-      localStorage.removeItem('USER_INFO')
+      localStorage.removeItem('user')
       localStorage.removeItem('TOKEN')
       const headers = new Headers()
       headers.append('Authorization', '')

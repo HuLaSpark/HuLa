@@ -6,19 +6,7 @@ export const useUserStore = defineStore('user', () => {
   const userInfo = ref<Partial<UserInfoType>>({})
   const isSign = ref(false)
 
-  let localUserInfo = {}
-  try {
-    localUserInfo = JSON.parse(localStorage.getItem('USER_INFO') || '{}')
-  } catch (error) {
-    localUserInfo = {}
-  }
-
-  // 从 local读取
-  if (!Object.keys(userInfo.value).length && Object.keys(localUserInfo).length) {
-    userInfo.value = localUserInfo
-  }
-
-  function getUserDetailAction() {
+  const getUserDetailAction = () => {
     apis
       .getUserDetail()
       .then((res) => {
@@ -27,7 +15,6 @@ export const useUserStore = defineStore('user', () => {
       .catch(() => {
         // 删除缓存
         localStorage.removeItem('TOKEN')
-        localStorage.removeItem('USER_INFO')
       })
   }
 

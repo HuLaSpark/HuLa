@@ -67,6 +67,7 @@ declare module 'vue' {
     NTooltip: typeof import('naive-ui')['NTooltip']
     NTransfer: typeof import('naive-ui')['NTransfer']
     NVirtualList: typeof import('naive-ui')['NVirtualList']
+    PullToRefresh: typeof import('./../components/mobile/PullToRefresh.vue')['default']
     RenderMessage: typeof import('./../components/rightBox/renderMessage/index.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

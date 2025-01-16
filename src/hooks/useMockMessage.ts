@@ -10,7 +10,7 @@ import { useUserInfo } from '@/hooks/useCached.ts'
 export const useMockMessage = () => {
   const globalStore = useGlobalStore()
   // 获取本地存储的用户信息
-  const userInfo = computed(() => JSON.parse(localStorage.getItem('USER_INFO') || '{}'))
+  const userInfo = computed(() => JSON.parse(localStorage.getItem('user') || '{}'))
   const currentRoomId = computed(() => globalStore.currentSession.roomId)
 
   /**

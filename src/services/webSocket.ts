@@ -28,8 +28,8 @@ class WS {
   initConnect = async () => {
     const token = localStorage.getItem('TOKEN')
     // 如果token 是 null, 而且 localStorage 的用户信息有值，需要清空用户信息
-    if (token === null && localStorage.getItem('USER_INFO')) {
-      localStorage.removeItem('USER_INFO')
+    if (token === null && localStorage.getItem('user')) {
+      localStorage.removeItem('user')
     }
     const clientId = await getEnhancedFingerprint()
     // 初始化 ws

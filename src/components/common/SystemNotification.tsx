@@ -3,7 +3,7 @@ import { NButton, NAvatar } from 'naive-ui'
 import { useNoticeStore } from '@/stores/notice.ts'
 
 const { systemNotice } = storeToRefs(useNoticeStore())
-const SysNTF: any = null
+const SysNTF = null
 if (!systemNotice.value) {
   const SysNTF = window.$notification.create({
     title: () => <p class="text-14px font-bold pl-10px">系统提示</p>,
