@@ -83,7 +83,7 @@ useMitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExp
     await logout()
     userStore.isSign = false
     userStore.userInfo = {}
-    localStorage.removeItem('USER_INFO')
+    localStorage.removeItem('user')
     localStorage.removeItem('TOKEN')
     loginStore.loginStatus = LoginStatus.Init
   }

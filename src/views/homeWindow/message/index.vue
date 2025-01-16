@@ -15,7 +15,7 @@
         @dblclick="handleMsgDblclick(item)"
         @select="$event.click(item)">
         <n-flex :size="10" align="center" class="h-75px pl-6px pr-8px flex-1">
-          <n-avatar :size="44" :src="AvatarUtils.getAvatarUrl(item.avatar)" bordered fallback-src="/logo.png" round />
+          <n-avatar :size="44" :src="AvatarUtils.getAvatarUrl(item.avatar)" fallback-src="/logo.png" round />
 
           <n-flex class="h-fit flex-1 truncate" justify="space-between" vertical>
             <n-flex :size="4" align="center" class="flex-1 truncate" justify="space-between">

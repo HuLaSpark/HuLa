@@ -1,6 +1,6 @@
 <template>
   <nav class="tab-bar">
-    <div class="flex justify-around items-center h-full">
+    <div class="flex justify-around items-end h-full">
       <RouterLink
         v-for="item in navItems"
         :key="item.path"
@@ -49,9 +49,9 @@ const navItems: NavItem[] = [
 
 <style scoped lang="scss">
 .tab-bar {
-  @apply z-99999 fixed bottom-0 w-full bg-#fefefe90 backdrop-blur-md;
-  height: calc(50px + env(safe-area-inset-bottom));
-  padding-bottom: env(safe-area-inset-bottom);
+  @apply z-99999 fixed bottom-0 w-full bg-#fefefe90 backdrop-blur-md min-h-50px;
+  height: calc(max(50px, 20px + env(safe-area-inset-bottom)));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   border-top: 1px solid rgba(0, 0, 0, 0.1);
   transform: translateZ(0);
   -webkit-transform: translateZ(0);

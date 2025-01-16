@@ -1,17 +1,29 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
+import {
+  createRouter,
+  createWebHistory,
+  RouteRecordRaw,
+  NavigationGuardNext,
+  RouteLocationNormalized
+} from 'vue-router'
+import { type } from '@tauri-apps/plugin-os'
+import MobileLogin from '../mobile/login.vue'
+import MobileHome from '../mobile/layout/index.vue'
 
+const isDesktop = computed(() => {
+  return type() === 'windows' || type() === 'linux' || type() === 'macos'
+})
 /**! 创建窗口后再跳转页面就会导致样式没有生效所以不能使用懒加载路由的方式，有些页面需要快速响应的就不需要懒加载 */
 const { BASE_URL } = import.meta.env
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/mobile/login',
     name: 'mobileLogin',
-    component: () => import('@/mobile/login.vue')
+    component: MobileLogin
   },
   {
     path: '/mobile/home',
     name: 'mobileHome',
-    component: () => import('@/mobile/layout/index.vue'),
+    component: MobileHome,
     children: [
       // 默认导航第一个子路由
       {
@@ -173,4 +185,29 @@ const router: any = createRouter({
   history: createWebHistory(BASE_URL),
   routes
 })
+
+// 在创建路由后，添加全局前置守卫
+router.beforeEach((to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
+  // 如果是桌面端，直接放行
+  if (isDesktop.value) {
+    return next()
+  }
+
+  const token = localStorage.getItem('TOKEN')
+  const isLoginPage = to.path === '/mobile/login'
+
+  // 已登录用户访问登录页时重定向到首页
+  if (isLoginPage && token) {
+    return next('/mobile/home')
+  }
+
+  // 未登录用户访问非登录页时重定向到登录页
+  if (!isLoginPage && !token) {
+    return next('/mobile/login')
+  }
+
+  // 其他情况正常放行
+  next()
+})
+
 export default router
