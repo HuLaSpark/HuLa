@@ -143,8 +143,6 @@ async function Http<T = any>(
   async function attemptFetch(currentAttempt: number): Promise<{ data: T; resp: Response } | T> {
     try {
       const response = await fetch(url, fetchOptions)
-      console.log(`Attempt ${currentAttempt + 1}: status = ${response.status}`)
-
       // 若响应不 OK 并且状态码属于需重试列表，则抛出 FetchRetryError
       if (!response.ok) {
         const errorType = getErrorType(response.status)
@@ -177,7 +175,7 @@ async function Http<T = any>(
       }
       return responseData
     } catch (error) {
-      console.error(`Attempt ${currentAttempt + 1} failed →`, error)
+      console.error(`尝试 ${currentAttempt + 1} 失败的 →`, error)
 
       // 检查是否仍需重试
       if (!shouldRetry(currentAttempt, retries, abort)) {

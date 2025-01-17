@@ -24,10 +24,10 @@ name = "hula_app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2.0.2", features = [] }
+tauri-build = { version = "2.0.5", features = [] }
 
 [dependencies]
-tauri = { version = "2.2.0", features = [
+tauri = { version = "2.2.2", features = [
     "macos-private-api",
     "tray-icon",
     "image-png",
@@ -44,10 +44,10 @@ tauri-plugin-dialog = "2.2.0"
 tauri-plugin-upload = "2.2.0"
 tauri-plugin-global-shortcut = "2.2.0"
 tauri-plugin-clipboard-manager = "2.2.0"
-tauri-plugin-updater = "2.3.0"
+tauri-plugin-updater = "2.3.1"
 tauri-plugin-sql = { version = "2", features = ["sqlite"] }
-tauri-plugin-single-instance = "2.2.0"
-tauri-plugin-notification = "2.2.0"
+tauri-plugin-single-instance = "2.2.1"
+tauri-plugin-notification = "2.2.1"
 [target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]
 tauri-plugin-autostart = "2.2.0"
 lazy_static = "1.4"

@@ -71,7 +71,7 @@
               class="item-box w-full h-75px mb-5px"
               v-for="item in groupChatList"
               :key="item.roomId">
-              <n-flex v-slide align="center" :size="10" class="h-75px pl-6px pr-8px flex-1 truncate">
+              <n-flex align="center" :size="10" class="h-75px pl-6px pr-8px flex-1 truncate">
                 <n-avatar
                   round
                   bordered
