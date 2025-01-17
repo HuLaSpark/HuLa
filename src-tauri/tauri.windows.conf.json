@@ -41,7 +41,7 @@
         "language": "zh-CN"
       },
       "nsis": {
-        "installerIcon": "./icons/windows/icon.ico",
+        "installerIcon": "./icons/icon.ico",
         "displayLanguageSelector": true,
         "languages": [
           "SimpChinese"

@@ -428,12 +428,14 @@ export const useChatStore = defineStore(
           recallTime
         })
 
-        // 使用 Worker 来处理定时器
-        timerWorker.postMessage({
-          type: 'startTimer',
-          msgId,
-          duration: RECALL_EXPIRATION_TIME
-        })
+        if (message.fromUser.uid === userStore.userInfo.uid) {
+          // 使用 Worker 来处理定时器
+          timerWorker.postMessage({
+            type: 'startTimer',
+            msgId,
+            duration: RECALL_EXPIRATION_TIME
+          })
+        }
 
         // 记录这个消息ID已经有了定时器
         expirationTimers.set(msgId, true)

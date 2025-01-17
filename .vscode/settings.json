@@ -1,3 +1,6 @@
 {
-    "css.customData": [".vscode/tailwindcss.json"],
+    "css.customData": [
+        ".vscode/tailwindcss.json"
+    ],
+    "java.configuration.updateBuildConfiguration": "disabled",
 }
