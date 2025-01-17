@@ -12,12 +12,12 @@ const __dirname = dirname(__filename)
  * @param {string} description - 检查描述
  */
 async function runScript(scriptPath, description) {
-  const startTime = Date.now()
+  const startTime = performance.now()
   console.log(chalk.blue(`\n[HuLa ${new Date().toLocaleTimeString()}] 开始${description}...\n`))
 
   try {
     execSync(`node ${scriptPath}`, { stdio: 'inherit' })
-    const duration = ((Date.now() - startTime) / 1000).toFixed(2)
+    const duration = ((performance.now() - startTime) / 1000).toFixed(2)
     console.log(chalk.green(`\n✓ ${description}完成 (${duration}s)\n`))
     return true
   } catch (error) {
@@ -41,7 +41,7 @@ async function main() {
     }
   ]
 
-  const startTime = Date.now()
+  const startTime = performance.now()
 
   for (const check of checks) {
     const success = await runScript(check.script, check.description)
@@ -51,7 +51,7 @@ async function main() {
     }
   }
 
-  const totalDuration = ((Date.now() - startTime) / 1000).toFixed(2)
+  const totalDuration = ((performance.now() - startTime) / 1000).toFixed(2)
   console.log(chalk.green(`\n✨ 所有检查通过！总用时：${totalDuration}s\n`))
 }
 

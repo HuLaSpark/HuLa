@@ -334,3 +334,11 @@ export const enum TriggerEnum {
   AI = '/',
   TOPIC = '#'
 }
+
+/** 连接状态枚举 */
+export enum ConnectionState {
+  CONNECTING = 'connecting',
+  CONNECTED = 'connected',
+  DISCONNECTED = 'disconnected',
+  RECONNECTING = 'reconnecting'
+}

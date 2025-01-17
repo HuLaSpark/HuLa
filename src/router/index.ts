@@ -28,6 +28,7 @@ const routes: Array<RouteRecordRaw> = [
       // 默认导航第一个子路由
       {
         path: '',
+        name: 'mobileMessage',
         redirect: '/mobile/message'
       },
       {

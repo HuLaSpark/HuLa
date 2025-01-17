@@ -28,6 +28,14 @@ let isFirstInit = false
 // 撤回消息的过期时间
 const RECALL_EXPIRATION_TIME = 2 * 60 * 1000 // 2分钟，单位毫秒
 
+// 创建src/workers/timer.worker.ts
+const timerWorker = new Worker(new URL('../workers/timer.worker.ts', import.meta.url))
+
+// 添加错误处理
+timerWorker.onerror = (error) => {
+  console.error('[Worker Error]', error)
+}
+
 export const useChatStore = defineStore(
   'chat',
   () => {
@@ -59,7 +67,7 @@ export const useChatStore = defineStore(
     // 存储撤回的消息内容和时间
     const recalledMessages = reactive<Map<number, RecalledMessage>>(new Map())
     // 存储每条撤回消息的过期定时器
-    const expirationTimers = new Map<number, number>()
+    const expirationTimers = new Map<number, boolean>()
 
     // 当前聊天室的消息Map计算属性
     const currentMessageMap = computed({
@@ -222,9 +230,10 @@ export const useChatStore = defineStore(
     const getSessionList = async (isFresh = false) => {
       if (!isFresh && (sessionOptions.isLast || sessionOptions.isLoading)) return
       sessionOptions.isLoading = true
+      // TODO: 这里先请求100条会话列表，后续优化
       const response = await apis
         .getSessionList({
-          pageSize: sessionList.length > pageSize ? sessionList.length : pageSize,
+          pageSize: sessionList.length > 100 ? sessionList.length : 100,
           cursor: isFresh || !sessionOptions.cursor ? '' : sessionOptions.cursor
         })
         .catch(() => {
@@ -419,15 +428,15 @@ export const useChatStore = defineStore(
           recallTime
         })
 
-        // 为这条消息设置过期定时器 TODO: setTimeout会有精度问题
-        const timeoutId = window.setTimeout(() => {
-          recalledMessages.delete(msgId)
-          expirationTimers.delete(msgId)
-          triggerMessageMapUpdate()
-        }, RECALL_EXPIRATION_TIME)
+        // 使用 Worker 来处理定时器
+        timerWorker.postMessage({
+          type: 'startTimer',
+          msgId,
+          duration: RECALL_EXPIRATION_TIME
+        })
 
-        // 存储定时器ID以便清理
-        expirationTimers.set(msgId, timeoutId)
+        // 记录这个消息ID已经有了定时器
+        expirationTimers.set(msgId, true)
 
         message.message.type = MsgEnum.RECALL
         const cacheUser = cachedStore.userCachedList[data.recallUid]
@@ -462,14 +471,6 @@ export const useChatStore = defineStore(
     // 获取撤回消息
     const getRecalledMessage = (msgId: number): RecalledMessage | undefined => {
       return recalledMessages.get(msgId)
-    }
-
-    // 清理所有定时器
-    const clearAllExpirationTimers = () => {
-      expirationTimers.forEach((timerId) => {
-        clearTimeout(timerId)
-      })
-      expirationTimers.clear()
     }
 
     // 删除消息
@@ -524,6 +525,39 @@ export const useChatStore = defineStore(
     const removeContact = (roomId: number) => {
       const index = sessionList.findIndex((session) => session.roomId === roomId)
       sessionList.splice(index, 1)
+    }
+
+    // 监听 Worker 消息
+    timerWorker.onmessage = (e) => {
+      const { type, msgId } = e.data
+
+      if (type === 'timeout') {
+        console.log(`[Timeout] 消息ID: ${msgId} 已过期`)
+        recalledMessages.delete(msgId)
+        expirationTimers.delete(msgId)
+        triggerMessageMapUpdate()
+      } else if (type === 'allTimersCompleted') {
+        // 所有定时器都完成了，可以安全地清理资源
+        clearAllExpirationTimers()
+        terminateWorker()
+      }
+    }
+
+    // 终止 worker
+    const terminateWorker = () => {
+      timerWorker.terminate()
+    }
+
+    // 清理所有定时器
+    const clearAllExpirationTimers = () => {
+      expirationTimers.forEach((_, msgId) => {
+        // 通知 worker 停止对应的定时器
+        timerWorker.postMessage({
+          type: 'clearTimer',
+          msgId
+        })
+      })
+      expirationTimers.clear()
     }
 
     return {
