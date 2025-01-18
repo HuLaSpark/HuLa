@@ -29,7 +29,7 @@
         </div>
 
         <p
-          class="text-(18px [--text-color])"
+          class="text-(18px [--chat-text-color])"
           style="
             font-weight: bold !important;
             font-family:

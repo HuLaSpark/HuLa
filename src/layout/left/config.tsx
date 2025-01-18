@@ -102,7 +102,7 @@ const moreList = ref<OPT.L.MoreList[]>([
         isSign: false
       })
       // 后端发布下线通知同时清除token
-      await apis.logout().catch(() => {})
+      await apis.logout()
       await logout()
       // 如果没有设置自动登录，则清除用户信息
       userStore.userInfo = {}

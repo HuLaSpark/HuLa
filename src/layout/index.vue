@@ -1,17 +1,36 @@
 <template>
   <div id="layout" class="flex size-full min-w-310px bg-[--right-bg-color]">
-    <Left />
-    <Center />
-    <Right v-if="!shrinkStatus" />
+    <Suspense>
+      <template #default>
+        <div class="flex size-full">
+          <!-- 使用keep-alive包裹异步组件 -->
+          <keep-alive>
+            <AsyncLeft />
+          </keep-alive>
+          <keep-alive>
+            <AsyncCenter />
+          </keep-alive>
+          <keep-alive>
+            <AsyncRight v-if="!shrinkStatus" />
+          </keep-alive>
+        </div>
+      </template>
+      <template #fallback>
+        <div class="flex items-center justify-center size-full">
+          <LoadingSpinner />
+        </div>
+      </template>
+    </Suspense>
   </div>
 
-  <AddFriendsModal />
+  <!-- 模态框也可以缓存 -->
+  <keep-alive>
+    <AsyncAddFriendsModal />
+  </keep-alive>
 </template>
 
 <script setup lang="ts">
-import Center from './center/index.vue'
-import Left from './left/index.vue'
-import Right from './right/index.vue'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { ChangeTypeEnum, MittEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
@@ -29,6 +48,34 @@ import { isPermissionGranted, requestPermission, sendNotification } from '@tauri
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { emitTo } from '@tauri-apps/api/event'
 import { useThrottleFn } from '@vueuse/core'
+import apis from '@/services/apis.ts'
+import { confirm } from '@tauri-apps/plugin-dialog'
+
+// 异步加载组件时增加缓存配置
+const AsyncLeft = defineAsyncComponent({
+  loader: async () => await import('./left/index.vue'),
+  delay: 600,
+  timeout: 3000
+})
+
+// 其他异步组件也类似配置
+const AsyncCenter = defineAsyncComponent({
+  loader: async () => await import('./center/index.vue'),
+  delay: 600,
+  timeout: 3000
+})
+
+const AsyncRight = defineAsyncComponent({
+  loader: async () => await import('./right/index.vue'),
+  delay: 600,
+  timeout: 3000
+})
+
+const AsyncAddFriendsModal = defineAsyncComponent({
+  loader: async () => await import('@/components/common/AddFriendsModal.vue'),
+  delay: 600,
+  timeout: 3000
+})
 
 const globalStore = useGlobalStore()
 const contactStore = useContactStore()
@@ -81,6 +128,7 @@ useMitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExp
     await confirm('新设备已在' + (wsTokenExpire.ip ? wsTokenExpire.ip : '未知IP') + '登录')
     // token已在后端清空，只需要返回登录页
     await logout()
+    await apis.logout()
     userStore.isSign = false
     userStore.userInfo = {}
     localStorage.removeItem('user')

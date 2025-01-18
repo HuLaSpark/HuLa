@@ -25,6 +25,7 @@ import { relaunch } from '@tauri-apps/plugin-process'
 import { useUserStore } from '@/stores/user.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { AvatarUtils } from '@/utils/avatarUtils.ts'
+import { confirm } from '@tauri-apps/plugin-dialog'
 
 const formRef = ref<FormInst | null>()
 const formValue = ref({
@@ -192,7 +193,7 @@ export const CheckUpdate = defineComponent(() => {
   }
 
   const handleUpdate = async () => {
-    if (!(await window.confirm('确定更新吗'))) {
+    if (!(await confirm('确定更新吗'))) {
       return
     }
     text.value = '正在下载...'

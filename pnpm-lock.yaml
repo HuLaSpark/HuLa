@@ -26,6 +26,9 @@ importers:
       '@tauri-apps/plugin-clipboard-manager':
         specifier: 2.2.0
         version: 2.2.0
+      '@tauri-apps/plugin-dialog':
+        specifier: ^2.2.0
+        version: 2.2.0
       '@tauri-apps/plugin-fs':
         specifier: ~2.2.0
         version: 2.2.0
@@ -1582,6 +1585,9 @@ packages:
 
   '@tauri-apps/plugin-clipboard-manager@2.2.0':
     resolution: {integrity: sha512-sIBrW/HioKq2vqomwwcU/Y8ygAv3DlS32yKPBX5XijCc0IyQKiDxYpGqmvE9DC5Y0lNJ/G53dfS961B31wjJ1g==}
+
+  '@tauri-apps/plugin-dialog@2.2.0':
+    resolution: {integrity: sha512-6bLkYK68zyK31418AK5fNccCdVuRnNpbxquCl8IqgFByOgWFivbiIlvb79wpSXi0O+8k8RCSsIpOquebusRVSg==}
 
   '@tauri-apps/plugin-fs@2.2.0':
     resolution: {integrity: sha512-+08mApuONKI8/sCNEZ6AR8vf5vI9DXD4YfrQ9NQmhRxYKMLVhRW164vdW5BSLmMpuevftpQ2FVoL9EFkfG9Z+g==}
@@ -6398,6 +6404,10 @@ snapshots:
       '@tauri-apps/api': 2.2.0
 
   '@tauri-apps/plugin-clipboard-manager@2.2.0':
+    dependencies:
+      '@tauri-apps/api': 2.2.0
+
+  '@tauri-apps/plugin-dialog@2.2.0':
     dependencies:
       '@tauri-apps/api': 2.2.0
 
