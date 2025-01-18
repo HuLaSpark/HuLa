@@ -54,6 +54,11 @@ lazy_static = "1.4"
 screenshots = "0.5.4"
 base64 = "0.22.1"
 rodio = "0.17.3"
+reqwest = { version = "0.11", features = [
+    "json",
+    "socks",
+    "native-tls-vendored",
+] }
 
 
 [features]

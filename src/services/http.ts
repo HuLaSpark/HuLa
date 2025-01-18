@@ -74,6 +74,12 @@ async function Http<T = any>(
   fullResponse: boolean = false,
   abort?: AbortController
 ): Promise<{ data: T; resp: Response } | T> {
+  // 打印请求信息
+  console.log(`🚀 发起请求 → ${options.method} ${url}`, {
+    body: options.body,
+    query: options.query
+  })
+
   // 默认重试配置
   const defaultRetryOptions: RetryOptions = {
     retries: 3,
@@ -118,8 +124,15 @@ async function Http<T = any>(
     signal: abort?.signal
   }
 
-  // 打印请求头内容
-  console.log(...httpHeaders)
+  // 获取代理设置
+  // const proxySettings = JSON.parse(localStorage.getItem('proxySettings') || '{}')
+  // 如果设置了代理，添加代理配置 (BETA)
+  // if (proxySettings.type && proxySettings.ip && proxySettings.port) {
+  //   // 使用 Rust 后端的代理客户端
+  //   fetchOptions.proxy = {
+  //     url: `${proxySettings.type}://${proxySettings.ip}:${proxySettings.port}`
+  //   }
+  // }
 
   // 判断是否需要添加请求体
   if (options.body) {
@@ -159,6 +172,12 @@ async function Http<T = any>(
 
       // 解析响应数据
       const responseData = options.isBlob ? await response.arrayBuffer() : await response.json()
+
+      // 打印响应结果
+      console.log(`✅ 请求成功 → ${options.method} ${url}`, {
+        status: response.status,
+        data: responseData
+      })
 
       // 若有success === false，需要重试
       if (responseData && responseData.success === false) {

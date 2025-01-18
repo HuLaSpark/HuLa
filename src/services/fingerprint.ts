@@ -22,7 +22,7 @@ export const getEnhancedFingerprint = async (): Promise<string> => {
 
   // 创建新的Promise并保存引用
   fingerprintPromise = (async () => {
-    console.time('🔍 设备指纹获取总耗时')
+    const totalStart = performance.now()
 
     try {
       // 检查缓存是否有效
@@ -30,14 +30,14 @@ export const getEnhancedFingerprint = async (): Promise<string> => {
       if (cachedData) {
         const { fingerprint, timestamp } = JSON.parse(cachedData)
         if (Date.now() - timestamp < CACHE_DURATION) {
-          console.timeEnd('🔍 设备指纹获取总耗时')
-          console.log('✅ 使用缓存的设备指纹')
+          const totalTime = performance.now() - totalStart
+          console.log(`🔍 使用缓存的设备指纹，总耗时: ${totalTime.toFixed(2)}ms`)
           return fingerprint
         }
       }
 
-      console.time('📊 收集设备信息耗时')
       // 收集设备信息
+      const deviceInfoStart = performance.now()
       const deviceInfo = {
         platform: await type(),
         screenSize: `${window.screen.width}x${window.screen.height}`,
@@ -48,18 +48,20 @@ export const getEnhancedFingerprint = async (): Promise<string> => {
         language: navigator.language,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
       }
-      console.timeEnd('📊 收集设备信息耗时')
+      const deviceInfoTime = performance.now() - deviceInfoStart
+      console.log(`📊 收集设备信息耗时: ${deviceInfoTime.toFixed(2)}ms`)
 
       // 在主线程中获取基础浏览器指纹
-      console.time('Worker: 基础指纹生成')
+      const fpStart = performance.now()
       const fp = await FingerprintJS.load()
       const fpResult = await fp.get({
         debug: false
       })
-      console.timeEnd('Worker: 基础指纹生成')
+      const fpTime = performance.now() - fpStart
+      console.log(`基础指纹生成耗时: ${fpTime.toFixed(2)}ms`)
 
-      // 创建 Promise 等待 Worker 返回结果
-      console.time('🔨 Worker生成指纹耗时')
+      // Worker处理
+      const workerStart = performance.now()
       const fingerprint = await new Promise<string>((resolve) => {
         const handleMessage = (e: MessageEvent) => {
           const { type, fingerprint } = e.data
@@ -76,7 +78,8 @@ export const getEnhancedFingerprint = async (): Promise<string> => {
           browserFingerprint: fpResult.visitorId
         })
       })
-      console.timeEnd('🔨 Worker生成指纹耗时')
+      const workerTime = performance.now() - workerStart
+      console.log(`🔨 Worker生成指纹耗时: ${workerTime.toFixed(2)}ms`)
 
       // 缓存结果
       if (fingerprint) {
@@ -87,17 +90,16 @@ export const getEnhancedFingerprint = async (): Promise<string> => {
             timestamp: Date.now()
           })
         )
-        console.log('✅ 生成新的设备指纹并缓存')
       }
 
-      console.timeEnd('🔍 设备指纹获取总耗时')
+      const totalTime = performance.now() - totalStart
+      console.log(`🔍 设备指纹获取总耗时: ${totalTime.toFixed(2)}ms`)
       return fingerprint
     } catch (error) {
-      console.timeEnd('🔍 设备指纹获取总耗时')
-      console.error('❌ 获取设备指纹失败:', error)
+      const totalTime = performance.now() - totalStart
+      console.error(`❌ 获取设备指纹失败，总耗时: ${totalTime.toFixed(2)}ms`, error)
       return ''
     } finally {
-      // 清除正在进行的Promise引用
       fingerprintPromise = null
     }
   })()

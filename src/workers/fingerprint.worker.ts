@@ -49,15 +49,16 @@ const detectBrowserFeatures = async (): Promise<Record<string, boolean>> => {
 // 生成设备指纹
 const generateFingerprint = async (data: { deviceInfo: any; browserFingerprint: string }): Promise<string> => {
   try {
-    console.time('Worker: 指纹生成总耗时')
+    const totalStart = performance.now()
 
     // 2. 浏览器特征检测
-    console.time('Worker: 特征检测')
+    const featureStart = performance.now()
     const browserFeatures = await detectBrowserFeatures()
-    console.timeEnd('Worker: 特征检测')
+    const featureTime = performance.now() - featureStart
+    console.log(`Worker: 特征检测耗时: ${featureTime.toFixed(2)}ms`)
 
     // 3. 组合所有特征
-    console.time('Worker: SHA-256计算')
+    const hashStart = performance.now()
     const combinedFingerprint = JSON.stringify({
       browserFingerprint: data.browserFingerprint,
       deviceInfo: data.deviceInfo,
@@ -71,12 +72,14 @@ const generateFingerprint = async (data: { deviceInfo: any; browserFingerprint: 
     const fingerprint = Array.from(new Uint8Array(fingerprintBuffer))
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('')
-    console.timeEnd('Worker: SHA-256计算')
+    const hashTime = performance.now() - hashStart
+    console.log(`Worker: SHA-256计算耗时: ${hashTime.toFixed(2)}ms`)
 
-    console.timeEnd('Worker: 指纹生成总耗时')
+    const totalTime = performance.now() - totalStart
+    console.log(`Worker: 指纹生成总耗时: ${totalTime.toFixed(2)}ms`)
+
     return fingerprint
   } catch (error) {
-    console.timeEnd('Worker: 指纹生成总耗时')
     console.error('Worker: ❌ 生成设备指纹失败:', error)
     return ''
   }
