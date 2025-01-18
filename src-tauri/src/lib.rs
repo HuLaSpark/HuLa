@@ -7,6 +7,8 @@ use common_cmd::{
     set_height,
 };
 #[cfg(desktop)]
+mod proxy;
+#[cfg(desktop)]
 use desktops::common_cmd;
 #[cfg(desktop)]
 use desktops::init;
@@ -14,14 +16,16 @@ use desktops::init;
 use desktops::tray;
 #[cfg(desktop)]
 use init::CustomInit;
+#[cfg(desktop)]
+use proxy::test_proxy;
 
 // 移动端依赖
 #[cfg(mobile)]
 mod mobiles;
 #[cfg(mobile)]
-use mobiles::init;
-#[cfg(mobile)]
 use init::CustomInit;
+#[cfg(mobile)]
+use mobiles::init;
 
 pub fn run() {
     #[cfg(desktop)]
@@ -51,7 +55,8 @@ fn setup_desktop() {
             screenshot,
             audio,
             set_height,
-            set_badge_count
+            set_badge_count,
+            test_proxy
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
