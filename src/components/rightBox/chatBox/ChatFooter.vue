@@ -1,105 +1,135 @@
 <template>
   <!-- 底部栏 -->
-  <main class="size-full relative z-10 border-t-(1px solid [--right-chat-footer-line-color]) color-[--icon-color]">
-    <!-- 输入框顶部选项栏 -->
-    <n-flex align="center" justify="space-between" class="p-[10px_22px_5px] select-none">
-      <n-flex align="center" :size="0" class="input-options">
-        <!-- emoji表情 -->
-        <n-popover
-          v-model:show="emojiShow"
-          trigger="click"
-          :show-arrow="false"
-          placement="top-start"
-          style="
-            padding: 0;
-            background: var(--bg-emoji);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            box-shadow: 2px 2px 12px 2px var(--box-shadow-color);
-            border: 1px solid var(--box-shadow-color);
-          ">
-          <template #trigger>
-            <n-popover trigger="hover" :show-arrow="false" placement="bottom">
-              <template #trigger>
-                <svg class="mr-18px"><use href="#smiling-face"></use></svg>
-              </template>
-              <span>表情</span>
-            </n-popover>
-          </template>
-          <Emoji @emojiHandle="emojiHandle" :all="false" />
-        </n-popover>
+  <main class="border-t-(1px solid [--right-chat-footer-line-color]) relative">
+    <!-- 添加遮罩层 -->
+    <div
+      v-if="isSingleChat && !isFriend"
+      class="absolute inset-0 z-20 backdrop-blur-md cursor-default flex-center select-none pointer-events-auto light:bg-[rgba(255,255,255,0.1)] dark:bg-[rgba(33,33,33,0.1)]">
+      <n-flex align="center" justify="center" class="pb-60px">
+        <svg class="size-24px"><use href="#cloudError"></use></svg>
+        <span class="text-(14px [--chat-text-color])">你们当前已经不是好友关系</span>
+      </n-flex>
+    </div>
+
+    <div class="size-full relative z-10 color-[--icon-color]">
+      <!-- 输入框顶部选项栏 -->
+      <n-flex align="center" justify="space-between" class="p-[10px_22px_5px] select-none">
+        <n-flex align="center" :size="0" class="input-options">
+          <!-- emoji表情 -->
+          <n-popover
+            v-model:show="emojiShow"
+            trigger="click"
+            :show-arrow="false"
+            placement="top-start"
+            style="
+              padding: 0;
+              background: var(--bg-emoji);
+              backdrop-filter: blur(10px);
+              -webkit-backdrop-filter: blur(10px);
+              box-shadow: 2px 2px 12px 2px var(--box-shadow-color);
+              border: 1px solid var(--box-shadow-color);
+            ">
+            <template #trigger>
+              <n-popover trigger="hover" :show-arrow="false" placement="bottom">
+                <template #trigger>
+                  <svg class="mr-18px"><use href="#smiling-face"></use></svg>
+                </template>
+                <span>表情</span>
+              </n-popover>
+            </template>
+            <Emoji @emojiHandle="emojiHandle" :all="false" />
+          </n-popover>
+
+          <n-popover trigger="hover" :show-arrow="false" placement="bottom">
+            <template #trigger>
+              <div class="flex-center gap-2px mr-12px">
+                <svg @click="handleCap()"><use href="#screenshot"></use></svg>
+                <svg style="width: 14px; height: 14px"><use href="#down"></use></svg>
+              </div>
+            </template>
+            <span>截图</span>
+          </n-popover>
+          <n-popover trigger="hover" :show-arrow="false" placement="bottom">
+            <template #trigger>
+              <div class="flex-center gap-2px mr-12px">
+                <svg @click="open()"><use href="#file2"></use></svg>
+                <svg style="width: 14px; height: 14px"><use href="#down"></use></svg>
+              </div>
+            </template>
+            <span>文件</span>
+          </n-popover>
+          <n-popover trigger="hover" :show-arrow="false" placement="bottom">
+            <template #trigger>
+              <svg @click="open({ accept: 'image/**' })" class="mr-18px"><use href="#photo"></use></svg>
+            </template>
+            <span>图片</span>
+          </n-popover>
+          <!--        <n-popover trigger="hover" :show-arrow="false" placement="bottom">-->
+          <!--          <template #trigger>-->
+          <!--            <svg class="mr-18px"><use href="#shake"></use></svg>-->
+          <!--          </template>-->
+          <!--          <span>窗口抖动</span>-->
+          <!--        </n-popover>-->
+          <!--        <n-popover trigger="hover" :show-arrow="false" placement="bottom">-->
+          <!--          <template #trigger>-->
+          <!--            <svg class="mr-18px"><use href="#red-packet"></use></svg>-->
+          <!--          </template>-->
+          <!--          <span>红包</span>-->
+          <!--        </n-popover>-->
+          <n-popover trigger="hover" :show-arrow="false" placement="bottom">
+            <template #trigger>
+              <svg class="mr-18px"><use href="#voice"></use></svg>
+            </template>
+            <span>语音信息</span>
+          </n-popover>
+        </n-flex>
 
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
-            <div class="flex-center gap-2px mr-12px">
-              <svg @click="handleCap()"><use href="#screenshot"></use></svg>
-              <svg style="width: 14px; height: 14px"><use href="#down"></use></svg>
-            </div>
+            <svg class="w-22px h-22px cursor-pointer outline-none"><use href="#history"></use></svg>
           </template>
-          <span>截图</span>
-        </n-popover>
-        <n-popover trigger="hover" :show-arrow="false" placement="bottom">
-          <template #trigger>
-            <div class="flex-center gap-2px mr-12px">
-              <svg @click="open()"><use href="#file2"></use></svg>
-              <svg style="width: 14px; height: 14px"><use href="#down"></use></svg>
-            </div>
-          </template>
-          <span>文件</span>
-        </n-popover>
-        <n-popover trigger="hover" :show-arrow="false" placement="bottom">
-          <template #trigger>
-            <svg @click="open({ accept: 'image/**' })" class="mr-18px"><use href="#photo"></use></svg>
-          </template>
-          <span>图片</span>
-        </n-popover>
-        <!--        <n-popover trigger="hover" :show-arrow="false" placement="bottom">-->
-        <!--          <template #trigger>-->
-        <!--            <svg class="mr-18px"><use href="#shake"></use></svg>-->
-        <!--          </template>-->
-        <!--          <span>窗口抖动</span>-->
-        <!--        </n-popover>-->
-        <!--        <n-popover trigger="hover" :show-arrow="false" placement="bottom">-->
-        <!--          <template #trigger>-->
-        <!--            <svg class="mr-18px"><use href="#red-packet"></use></svg>-->
-        <!--          </template>-->
-        <!--          <span>红包</span>-->
-        <!--        </n-popover>-->
-        <n-popover trigger="hover" :show-arrow="false" placement="bottom">
-          <template #trigger>
-            <svg class="mr-18px"><use href="#voice"></use></svg>
-          </template>
-          <span>语音信息</span>
+          <span>聊天记录</span>
         </n-popover>
       </n-flex>
 
-      <n-popover trigger="hover" :show-arrow="false" placement="bottom">
-        <template #trigger>
-          <svg class="w-22px h-22px cursor-pointer outline-none"><use href="#history"></use></svg>
-        </template>
-        <span>聊天记录</span>
-      </n-popover>
-    </n-flex>
-
-    <!-- 输入框及其发送按钮 -->
-    <div class="pl-20px flex flex-col items-end gap-6px">
-      <MsgInput ref="MsgInputRef" />
+      <!-- 输入框及其发送按钮 -->
+      <div class="pl-20px flex flex-col items-end gap-6px">
+        <MsgInput ref="MsgInputRef" />
+      </div>
     </div>
   </main>
 </template>
 
 <script setup lang="ts">
 import { useFileDialog } from '@vueuse/core'
-import { LimitEnum, MsgEnum } from '@/enums'
+import { LimitEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import { SelectionRange, useCommon } from '@/hooks/useCommon.ts'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { emitTo } from '@tauri-apps/api/event'
+import { useGlobalStore } from '@/stores/global.ts'
+import { useContactStore } from '@/stores/contacts.ts'
+import type { ContactItem, SessionItem } from '@/services/types'
 
+const { friendId } = defineProps<{
+  friendId: SessionItem['friendId']
+}>()
+const globalStore = useGlobalStore()
+const contactStore = useContactStore()
 const { open, onChange, reset } = useFileDialog()
 const MsgInputRef = ref()
 const msgInputDom = ref<HTMLInputElement | null>(null)
 const emojiShow = ref()
 const { insertNodeAtRange, triggerInputEvent, imgPaste, FileOrVideoPaste } = useCommon()
+// 判断是否为单聊
+const isSingleChat = computed(() => {
+  return globalStore.currentSession?.type === RoomTypeEnum.SINGLE
+})
+
+// 判断是否为好友
+const isFriend = computed(() => {
+  if (!isSingleChat.value) return true
+  return contactStore.contactsList.some((contact: ContactItem) => contact.uid === friendId)
+})
 
 /**
  * 选择表情，并把表情插入输入框

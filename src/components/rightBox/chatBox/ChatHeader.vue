@@ -15,16 +15,25 @@
             <use href="#auth"></use>
           </svg>
           <n-flex v-else-if="activeItem.type === RoomTypeEnum.SINGLE" align="center">
-            <n-badge :color="isOnline ? '#1ab292' : '#909090'" dot />
-            <p class="text-(12px [--text-color])">
-              {{ isOnline ? '在线' : '离线' }}
-            </p>
+            <template v-if="shouldShowDeleteFriend">
+              <n-badge :color="isOnline ? '#1ab292' : '#909090'" dot />
+              <p class="text-(12px [--text-color])">
+                {{ isOnline ? '在线' : '离线' }}
+              </p>
+            </template>
+
+            <template v-else>
+              <n-flex align="center" :size="4">
+                <svg class="size-16px color-#d03553"><use href="#close"></use></svg>
+                <p class="text-(12px [--text-color])">好友状态异常</p>
+              </n-flex>
+            </template>
           </n-flex>
         </n-flex>
       </Transition>
     </n-flex>
     <!-- 顶部右边选项栏 -->
-    <nav class="options flex-y-center gap-20px color-[--icon-color]">
+    <nav v-if="shouldShowDeleteFriend || chatStore.isGroup" class="options flex-y-center gap-20px color-[--icon-color]">
       <div class="options-box">
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
@@ -76,7 +85,7 @@
     </nav>
 
     <!-- 侧边选项栏 -->
-    <Transition name="sidebar">
+    <Transition v-if="shouldShowDeleteFriend || chatStore.isGroup" name="sidebar">
       <div v-if="sidebarShow" style="border: 1px solid rgba(90, 90, 90, 0.1)" class="sidebar">
         <!-- 单聊侧边栏选项 -->
         <template v-if="!chatStore.isGroup">
@@ -103,10 +112,7 @@
             <p>删除聊天记录</p>
           </div>
 
-          <div
-            v-if="shouldShowDeleteFriend"
-            class="box-item flex-x-center cursor-pointer"
-            @click="handleDelete(RoomActEnum.DELETE_FRIEND)">
+          <div class="box-item flex-x-center cursor-pointer" @click="handleDelete(RoomActEnum.DELETE_FRIEND)">
             <p class="color-#d03553">删除好友</p>
           </div>
 

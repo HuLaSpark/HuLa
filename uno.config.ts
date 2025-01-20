@@ -48,6 +48,8 @@ export default defineConfig({
     'fixed-lb': 'fixed left-0 bottom-0',
     'fixed-rt': 'fixed right-0 top-0',
     'fixed-rb': 'fixed right-0 bottom-0',
-    'fixed-center': 'fixed-lt flex-center size-full'
+    'fixed-center': 'fixed-lt flex-center size-full',
+    'light:': '&[data-theme=light]',
+    'dark:': '&[data-theme=dark]'
   }
 })
