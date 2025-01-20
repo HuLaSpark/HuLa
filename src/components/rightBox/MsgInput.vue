@@ -151,7 +151,7 @@
 <script setup lang="ts">
 import { lightTheme, darkTheme, VirtualListInst } from 'naive-ui'
 import { MacOsKeyEnum, MittEnum, RoomTypeEnum, ThemeEnum, WinKeyEnum } from '@/enums'
-import { CacheUserItem, MockItem } from '@/services/types.ts'
+import { CacheUserItem, SessionItem } from '@/services/types.ts'
 import { emit } from '@tauri-apps/api/event'
 import { useSettingStore } from '@/stores/setting.ts'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
@@ -173,7 +173,7 @@ const { themes } = storeToRefs(settingStore)
 const arrow = ref(false)
 /** 输入框dom元素 */
 const messageInputDom = ref()
-const activeItem = ref(inject('activeItem') as MockItem)
+const activeItem = ref(inject('activeItem') as SessionItem)
 /** ait 虚拟列表 */
 const virtualListInstAit = useTemplateRef<VirtualListInst>('virtualListInst-ait')
 /** AI 虚拟列表 */

@@ -30,6 +30,9 @@
 
     //整体hover图标的样式
     --icon-hover-color: #e7e7e7;
+
+    // 移动端样式
+    --tab-bar-icon-color: rgba(19, 152, 127, 1);
   }
 }
 
@@ -64,6 +67,9 @@ html[data-theme='dark'] {
 
     //整体hover图标的样式
     --icon-hover-color: #242424;
+
+    // 移动端样式
+    --tab-bar-icon-color: rgba(19, 152, 127, 0.4);
   }
 }
 /**! end */

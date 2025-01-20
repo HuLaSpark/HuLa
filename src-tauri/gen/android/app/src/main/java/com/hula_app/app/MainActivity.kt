@@ -1,3 +1,3 @@
-package com.hula.app
+package com.hula_app.app
 
 class MainActivity : TauriActivity()

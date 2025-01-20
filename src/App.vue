@@ -14,6 +14,7 @@ import { StoresEnum, ThemeEnum } from '@/enums'
 import { onlineStatus } from '@/stores/onlineStatus.ts'
 import LockScreen from '@/views/LockScreen.vue'
 import router from '@/router'
+import { type } from '@tauri-apps/plugin-os'
 
 const settingStore = useSettingStore()
 const OLStatusStore = onlineStatus()
@@ -22,6 +23,9 @@ const { themes, lockScreen, page } = storeToRefs(settingStore)
 const LockExclusion = new Set(['/login', '/tray', '/qrCode', '/about', '/onlineStatus'])
 const isLock = computed(() => {
   return !LockExclusion.has(router.currentRoute.value.path) && lockScreen.value.enable
+})
+const isDesktop = computed(() => {
+  return type() === 'windows' || type() === 'linux' || type() === 'macos'
 })
 
 /** 禁止图片以及输入框的拖拽 */
@@ -76,10 +80,9 @@ watch(
 )
 
 onMounted(async () => {
+  // 判断是否是桌面端，桌面端需要调整样式
+  isDesktop.value && (await import('@/styles/scss/desktop.scss'))
   await import(`@/styles/scss/theme/${themes.value.versatile}.scss`)
-  // initWebSocket()
-  // /**! 使用msi或者其他安装包安装后才会显示应用的名字和图标 */
-  // sendNotification({ title: 'TAURI', body: 'Tauri is awesome!' })
   // 判断localStorage中是否有设置主题
   if (!localStorage.getItem(StoresEnum.SETTING)) {
     settingStore.initTheme(ThemeEnum.OS)
@@ -111,18 +114,6 @@ onUnmounted(() => {
 })
 </script>
 <style lang="scss">
-#app-container {
-  min-height: 100vh;
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
-  position: fixed;
-  height: 100%;
-  width: 100%;
-  top: 0;
-  left: 0;
-  transition: all 0.9s ease;
-  border-radius: 10px;
-}
 /* 修改naive-ui select 组件的样式 */
 .n-base-selection,
 .n-base-select-menu,

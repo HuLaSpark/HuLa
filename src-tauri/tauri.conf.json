@@ -1,6 +1,7 @@
 {
+  "$schema": "https://schema.tauri.app/config/2",
   "productName": "HuLa",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "identifier": "com.hula.pc",
   "build": {
     "beforeDevCommand": "pnpm dev",
@@ -12,7 +13,9 @@
     "category": "SocialNetworking",
     "copyright": "HuLaSpark",
     "licenseFile": "./copyright/License.txt",
-    "resources": ["tray"],
+    "resources": [
+      "tray"
+    ],
     "createUpdaterArtifacts": true,
     "active": true,
     "icon": [],
@@ -24,7 +27,11 @@
     "windows": [],
     "security": {
       "csp": null,
-      "capabilities": ["default-capability", "mobile-capability", "desktop-capability"]
+      "capabilities": [
+        "default-capability",
+        "mobile-capability",
+        "desktop-capability"
+      ]
     },
     "macOSPrivateApi": true
   },
@@ -35,7 +42,9 @@
         "installMode": "passive"
       },
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDk1NkNENEZFNzg1MjVFMEEKUldRS1hsSjQvdFJzbGJXcnNPNXBYZ2RlTmlRRFZYYVI3YXhiWGpYZXFwVUtucThZUnJHUGw5dVUK",
-      "endpoints": ["https://github.com/HuLaSpark/HuLa/releases/latest/download/latest.json"]
+      "endpoints": [
+        "https://gitee.com/HuLaSpark/HuLa/releases/download/latest/latest.json"
+      ]
     }
   }
 }

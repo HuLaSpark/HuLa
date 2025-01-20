@@ -386,10 +386,10 @@ export const useMsgInput = (messageInputDom: Ref) => {
     db.value = await Database.load('sqlite:sqlite.db')
     await db.value.execute(`
         CREATE TABLE IF NOT EXISTS message (
-                                               id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-                                               room_id INTEGER NOT NULL,
-                                               from_uid INTEGER NOT NULL,
-                                               content TEXT(1024),
+            id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            room_id INTEGER NOT NULL,
+            from_uid INTEGER NOT NULL,
+            content TEXT(1024),
             reply_msg_id INTEGER NOT NULL,
             status INTEGER,
             gap_count INTEGER,

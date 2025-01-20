@@ -2,7 +2,9 @@ import { emit } from '@tauri-apps/api/event'
 import { EventEnum } from '@/enums'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { useGlobalStore } from '@/stores/global.ts'
+import { type } from '@tauri-apps/plugin-os'
 
+const isMobile = computed(() => type() === 'android' || type() === 'ios')
 export const useLogin = () => {
   const { resizeWindow } = useWindow()
   const globalStore = useGlobalStore()
@@ -16,7 +18,9 @@ export const useLogin = () => {
       localStorage.removeItem('wsLogin')
     }
     isTrayMenuShow.value = true
-    await resizeWindow('tray', 130, 356)
+    if (!isMobile.value) {
+      await resizeWindow('tray', 130, 356)
+    }
   }
 
   /**

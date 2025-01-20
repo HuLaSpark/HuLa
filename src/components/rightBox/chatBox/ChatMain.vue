@@ -813,9 +813,6 @@ onUnmounted(() => {
   }
   hoverBubble.value.key = -1
   window.removeEventListener('click', closeMenu, true)
-
-  // 清理所有过期定时器
-  chatStore.clearAllExpirationTimers()
 })
 </script>
 

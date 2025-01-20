@@ -228,6 +228,7 @@ class TextMessageStrategyImpl extends AbstractMessageStrategy {
   }
 }
 
+/** 处理图片消息 */
 class ImageMessageStrategyImpl extends AbstractMessageStrategy {
   constructor() {
     super(MsgEnum.IMAGE)

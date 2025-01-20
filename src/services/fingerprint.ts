@@ -1,154 +1,108 @@
-import FingerprintJS from '@fingerprintjs/fingerprintjs'
 import { type } from '@tauri-apps/plugin-os'
+import FingerprintJS from '@fingerprintjs/fingerprintjs'
 
 const CACHE_DURATION = 24 * 60 * 60 * 1000 // 24小时缓存
+
+// 创建 Worker 实例
+const worker = new Worker(new URL('../workers/fingerprint.worker.ts', import.meta.url), {
+  type: 'module'
+})
+
+// 添加一个 Promise 来追踪正在进行的指纹生成
+let fingerprintPromise: Promise<string> | null = null
 
 /**
  * 获取性能优化的跨平台设备指纹
  */
 export const getEnhancedFingerprint = async (): Promise<string> => {
-  // 检查缓存是否有效
-  const cachedData = localStorage.getItem('deviceFingerprint')
-  if (cachedData) {
-    const { fingerprint, timestamp } = JSON.parse(cachedData)
-    if (Date.now() - timestamp < CACHE_DURATION) {
-      return fingerprint
-    }
+  // 如果已经有正在进行的请求，直接返回该Promise
+  if (fingerprintPromise) {
+    return fingerprintPromise
   }
 
-  try {
-    // 1. 基础浏览器指纹 (轻量级)
-    const fp = await FingerprintJS.load()
-    const fpResult = await fp.get({
-      debug: false
-    })
+  // 创建新的Promise并保存引用
+  fingerprintPromise = (async () => {
+    const totalStart = performance.now()
 
-    // 2. 平台检测
-    const platform = type()
+    try {
+      // 检查缓存是否有效
+      const cachedData = localStorage.getItem('deviceFingerprint')
+      if (cachedData) {
+        const { fingerprint, timestamp } = JSON.parse(cachedData)
+        if (Date.now() - timestamp < CACHE_DURATION) {
+          const totalTime = performance.now() - totalStart
+          console.log(`🔍 使用缓存的设备指纹，总耗时: ${totalTime.toFixed(2)}ms`)
+          return fingerprint
+        }
+      }
 
-    // 3. 基本设备信息 (跨平台通用)
-    const deviceInfo = {
-      platform: platform,
-      screenSize: `${window.screen.width}x${window.screen.height}`,
-      pixelRatio: window.devicePixelRatio,
-      colorDepth: window.screen.colorDepth,
-      hardwareConcurrency: navigator.hardwareConcurrency || undefined,
-      deviceMemory: (navigator as any).deviceMemory,
-      language: navigator.language,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-    }
+      // 收集设备信息
+      const deviceInfoStart = performance.now()
+      const deviceInfo = {
+        platform: await type(),
+        screenSize: `${window.screen.width}x${window.screen.height}`,
+        pixelRatio: window.devicePixelRatio,
+        colorDepth: window.screen.colorDepth,
+        hardwareConcurrency: navigator.hardwareConcurrency || undefined,
+        deviceMemory: (navigator as any).deviceMemory,
+        language: navigator.language,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      }
+      const deviceInfoTime = performance.now() - deviceInfoStart
+      console.log(`📊 收集设备信息耗时: ${deviceInfoTime.toFixed(2)}ms`)
 
-    // 4. 性能优化的浏览器特征检测
-    const browserFeatures = await detectBrowserFeatures()
-
-    // 组合所有特征
-    const combinedFingerprint = JSON.stringify({
-      browserFingerprint: fpResult.visitorId,
-      deviceInfo,
-      browserFeatures,
-      timestamp: Date.now()
-    })
-
-    // 使用 SHA-256 生成最终指纹
-    const fingerprintBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(combinedFingerprint))
-    const fingerprint = Array.from(new Uint8Array(fingerprintBuffer))
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join('')
-
-    // 缓存结果
-    localStorage.setItem(
-      'deviceFingerprint',
-      JSON.stringify({
-        fingerprint,
-        timestamp: Date.now()
+      // 在主线程中获取基础浏览器指纹
+      const fpStart = performance.now()
+      const fp = await FingerprintJS.load()
+      const fpResult = await fp.get({
+        debug: false
       })
-    )
+      const fpTime = performance.now() - fpStart
+      console.log(`基础指纹生成耗时: ${fpTime.toFixed(2)}ms`)
 
-    return fingerprint
-  } catch (error) {
-    console.error('获取设备指纹失败:', error)
-    return ''
-  }
-}
+      // Worker处理
+      const workerStart = performance.now()
+      const fingerprint = await new Promise<string>((resolve) => {
+        const handleMessage = (e: MessageEvent) => {
+          const { type, fingerprint } = e.data
+          if (type === 'fingerprintGenerated') {
+            worker.removeEventListener('message', handleMessage)
+            resolve(fingerprint)
+          }
+        }
 
-/**
- * 性能优化的浏览器特征检测
- */
-const detectBrowserFeatures = async (): Promise<Record<string, boolean>> => {
-  const features: Record<string, boolean> = {}
+        worker.addEventListener('message', handleMessage)
+        worker.postMessage({
+          type: 'generateFingerprint',
+          deviceInfo,
+          browserFingerprint: fpResult.visitorId
+        })
+      })
+      const workerTime = performance.now() - workerStart
+      console.log(`🔨 Worker生成指纹耗时: ${workerTime.toFixed(2)}ms`)
 
-  const checks = {
-    webgl: async () => {
-      try {
-        const canvas = document.createElement('canvas')
-        return !!canvas.getContext('webgl')
-      } catch {
-        return false
+      // 缓存结果
+      if (fingerprint) {
+        localStorage.setItem(
+          'deviceFingerprint',
+          JSON.stringify({
+            fingerprint,
+            timestamp: Date.now()
+          })
+        )
       }
-    },
-    canvas: async () => {
-      try {
-        const canvas = document.createElement('canvas')
-        return !!canvas.getContext('2d')
-      } catch {
-        return false
-      }
-    },
-    audio: async () => {
-      try {
-        return !!(window.AudioContext || (window as any).webkitAudioContext)
-      } catch {
-        return false
-      }
+
+      const totalTime = performance.now() - totalStart
+      console.log(`🔍 设备指纹获取总耗时: ${totalTime.toFixed(2)}ms`)
+      return fingerprint
+    } catch (error) {
+      const totalTime = performance.now() - totalStart
+      console.error(`❌ 获取设备指纹失败，总耗时: ${totalTime.toFixed(2)}ms`, error)
+      return ''
+    } finally {
+      fingerprintPromise = null
     }
-  }
+  })()
 
-  const results = await Promise.all(
-    Object.entries(checks).map(async ([key, check]) => {
-      try {
-        const result = await check()
-        return [key, result]
-      } catch {
-        return [key, false]
-      }
-    })
-  )
-
-  results.forEach(([key, value]) => {
-    features[key as string] = value as boolean
-  })
-
-  return features
+  return fingerprintPromise
 }
-
-// /**
-//  * 缓存的浏览器指纹值
-//  * 用于避免重复计算指纹，提高性能
-//  */
-// let cachedFingerprint: string | null = null
-
-// /**
-//  * 获取浏览器指纹
-//  * 使用 FingerprintJS 库生成唯一的访客标识符
-//  * @returns {Promise<string>} 返回浏览器指纹字符串，如果获取失败则返回空字符串
-//  */
-// export const getFingerprint = async (): Promise<string> => {
-//   // 如果已有缓存的指纹，直接返回
-//   if (cachedFingerprint) {
-//     return cachedFingerprint
-//   }
-
-//   try {
-//     // 加载 FingerprintJS 实例
-//     const fp = await FingerprintJS.load()
-//     // 获取访客的唯一标识符
-//     const result = await fp.get()
-//     // 缓存并返回指纹值
-//     cachedFingerprint = result.visitorId
-//     return cachedFingerprint
-//   } catch (error) {
-//     // 如果获取失败，记录错误并返回空字符串
-//     console.error('获取浏览器指纹失败:', error)
-//     return ''
-//   }
-// }

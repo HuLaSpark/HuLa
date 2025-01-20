@@ -259,7 +259,6 @@ const normalLogin = async () => {
       loginDisabled.value = true
       loginText.value = '登录成功, 正在跳转'
       userStore.isSign = true
-      // localStorage.setItem('USER_INFO', JSON.stringify(rest))
       localStorage.setItem('TOKEN', token)
       // 需要删除二维码，因为用户可能先跳转到二维码界面再回到登录界面，会导致二维码一直保持在内存中
       if (localStorage.getItem('wsLogin')) {
@@ -270,8 +269,6 @@ const normalLogin = async () => {
       // computedToken.get()
       // 获取用户详情
       const userDetail = await apis.getUserDetail()
-      console.log(userDetail, token)
-
       // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取
       // await emojiStore.getEmojiList()
       // TODO 这里的id暂时赋值给uid，因为后端没有统一返回uid，待后端调整
@@ -339,7 +336,6 @@ const autoLogin = () => {
 const removeToken = () => {
   localStorage.removeItem('TOKEN')
   userStore.userInfo = {}
-  localStorage.removeItem('USER_INFO')
 }
 
 const closeMenu = (event: MouseEvent) => {
@@ -360,8 +356,8 @@ const enterKey = (e: KeyboardEvent) => {
 
 onBeforeMount(async () => {
   // 如果不是自动登录且当前在登录页面，清除 TOKEN，防止用户直接使用控制台退出导致登录前还没有退出账号就继续登录
-  if (!login.value.autoLogin && route.path === '/login') {
-    await apis.logout().catch(() => {})
+  if (!login.value.autoLogin && route.path === '/login' && TOKEN.value) {
+    await apis.logout()
     isTrayMenuShow.value = false
     computedToken.clear()
     // 重新初始化 WebSocket 连接，此时传入 null 作为 token

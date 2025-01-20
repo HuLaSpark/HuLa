@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "HuLa",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "identifier": "com.hula.pc",
   "build": {
     "beforeDevCommand": "pnpm dev",
@@ -19,22 +19,22 @@
       "rpm"
     ],
     "icon": [
-      "icons/windows/32x32.png",
-      "icons/windows/128x128.png",
-      "icons/windows/128x128@2x.png",
-      "icons/windows/icon.icns",
-      "icons/windows/icon.ico",
-      "icons/windows/icon.png",
-      "icons/windows/Square30x30Logo.png",
-      "icons/windows/Square44x44Logo.png",
-      "icons/windows/Square71x71Logo.png",
-      "icons/windows/Square89x89Logo.png",
-      "icons/windows/Square107x107Logo.png",
-      "icons/windows/Square142x142Logo.png",
-      "icons/windows/Square150x150Logo.png",
-      "icons/windows/Square284x284Logo.png",
-      "icons/windows/Square310x310Logo.png",
-      "icons/windows/StoreLogo.png"
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico",
+      "icons/icon.png",
+      "icons/Square30x30Logo.png",
+      "icons/Square44x44Logo.png",
+      "icons/Square71x71Logo.png",
+      "icons/Square89x89Logo.png",
+      "icons/Square107x107Logo.png",
+      "icons/Square142x142Logo.png",
+      "icons/Square150x150Logo.png",
+      "icons/Square284x284Logo.png",
+      "icons/Square310x310Logo.png",
+      "icons/StoreLogo.png"
     ],
     "linux": {
       "appimage": {

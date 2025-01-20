@@ -24,6 +24,7 @@
 <p align="center">
   gitee：<a href="https://gitee.com/HulaSpark/HuLa/stargazers"><img src="https://gitee.com/HulaSpark/HuLa/badge/star.svg?theme=gvp" alt="star"></a>
   github：<a href="https://gitee.com/link?target=https://github.com/HulaSpark/HuLa/stargazers"><img src="https://img.shields.io/github/stars/HulaSpark/HuLa" alt="star"></a>
+  gitcode：<a href="https://gitcode.com/HuLaSpark/HuLa"><img src="https://gitcode.com/HuLaSpark/HuLa/star/badge.svg" alt="star"></a>
 </p>
 <p align="center">
   WeChat: <img src="https://img.shields.io/badge/cy2439646234-07C160?logo=wechat&logoColor=fff">
@@ -52,15 +53,25 @@ HuLa is an instant messaging system developed with Tauri, Vite 5, Vue 3, and Typ
 
 ![img_3.png](preview/img_3.png)
 
-![img_4.png](preview/img_4.png)
+<div style="padding: 28px; display: inline-block;">
+  <img src="preview/img_4.png" alt="img_4.png" style="border-radius: 8px; display: block;"  />
+</div>
 
-![img_5.png](preview/img_5.png)
+<div style="padding: 28px; display: inline-block;">
+  <img src="preview/img_5.png" alt="img_5.png" style="border-radius: 8px; display: block;"  />
+</div>
 
-![img_6.png](preview/img_6.png)
+<div style="padding: 28px; display: inline-block;">
+  <img src="preview/img_6.png" alt="img_6.png" style="border-radius: 8px; display: block;"  />
+</div>
 
-![img_6.png](preview/img_7.png)
+<div style="padding: 28px; display: inline-block;">
+  <img src="preview/img_7.png" alt="img_7.png" style="border-radius: 8px; display: block;"  />
+</div>
 
-![img_6.png](preview/img_8.png)
+<div style="padding: 28px; display: inline-block;">
+  <img src="preview/img_8.png" alt="img_8.png" style="border-radius: 8px; display: block;"  />
+</div>
 
 ## Thanks to the following contributors!
 
@@ -95,7 +106,9 @@ Downloading the installation package on the web page will indicate that the inst
 
 #### 1. Open "System Settings" - "Security & Privacy", as shown in the figure, check the box: Allow apps downloaded from "Any Source" to run:
 
-![img.png](preview/img_9.png)
+<div style="padding: 28px; display: inline-block;">
+  <img src="preview/img_9.png" alt="img_9.png" style="border-radius: 8px; display: block;"  />
+</div>
 
 #### 2. If an error is reported, run the following command in the terminal to resolve the problem:
 
@@ -117,6 +130,8 @@ use **pnpm run commit** to invoke the _git commit_ interaction and follow the pr
 
 **The final interpretation of this disclaimer belongs to the developer**
 
-## License
+## HuLa社区讨论群
+<img src="preview/wx.jpg" width="240" height="280" alt="微信群二维码" style="border-radius: 12px;" />
 
+## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa?ref=badge_large)
