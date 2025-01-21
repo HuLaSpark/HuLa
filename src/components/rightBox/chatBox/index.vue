@@ -32,8 +32,8 @@ watchEffect(() => {
 })
 
 addListener(
-  appWindow.listen(appWindow.label, (e) => {
-    activeItemRef.value = e.payload as any
+  appWindow.listen(appWindow.label, (e: { payload: SessionItem }) => {
+    activeItemRef.value = e.payload
   })
 )
 </script>

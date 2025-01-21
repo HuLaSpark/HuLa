@@ -252,7 +252,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
   /** 处理发送信息事件 */
   // TODO 输入框中的内容当我切换消息的时候需要记录之前输入框的内容 (nyh -> 2024-03-01 07:03:43)
-  const send = () => {
+  const send = async () => {
     // 判断输入框中的图片或者文件数量是否超过限制
     if (messageInputDom.value.querySelectorAll('img').length > LimitEnum.COM_COUNT) {
       window.$message.warning(`一次性只能上传${LimitEnum.COM_COUNT}个文件或图片`)
@@ -272,25 +272,28 @@ export const useMsgInput = (messageInputDom: Ref) => {
       window.$message.warning('暂不支持发送类型消息')
       return
     }
-    const msg = messageStrategy.getMsg(msgInput.value, reply.value)
 
-    // 从消息内容中提取@用户的uid
+    const msg = await messageStrategy.getMsg(msgInput.value, reply.value)
     const atUidList = extractAtUserIds(msgInput.value, cachedStore.currentAtUsersList)
-
-    // 创建临时消息ID
     const tempMsgId = Date.now()
+
     // 根据消息类型创建消息体
     const messageBody = {
       ...messageStrategy.buildMessageBody(msg, reply),
-      atUidList // 添加@用户列表
+      atUidList
     }
 
-    // 创建消息对象;
-    const tempMsg = messageStrategy.buildMessageType(tempMsgId, messageBody, globalStore, userUid)
-    // 先添加到消息列表
-    chatStore.pushMsg(tempMsg)
+    // 创建临时消息对象 - 此时已经包含本地预览链接
+    const tempMsg = await messageStrategy.buildMessageType(tempMsgId, messageBody, globalStore, userUid)
 
-    // 设置800ms后显示发送状态的定时器
+    // 清空输入框和回复信息
+    resetInput()
+
+    // 先添加到消息列表 - 此时会显示本地预览
+    chatStore.pushMsg(tempMsg)
+    console.log('👾临时消息:', tempMsg)
+
+    // 设置发送状态的定时器
     const statusTimer = setTimeout(() => {
       chatStore.updateMsg({
         msgId: tempMsgId,
@@ -298,55 +301,77 @@ export const useMsgInput = (messageInputDom: Ref) => {
       })
     }, 800)
 
-    console.log('发送消息', messageBody, msg.type)
-    apis
-      .sendMsg({
+    try {
+      // 如果是图片消息,需要先上传文件
+      if (msg.type === MsgEnum.IMAGE) {
+        console.log('开始处理图片消息上传')
+        const { uploadUrl, downloadUrl } = await messageStrategy.uploadFile(msg.path)
+        await messageStrategy.doUpload(msg.path, uploadUrl)
+
+        // 更新消息体中的URL为服务器URL
+        messageBody.url = downloadUrl
+        delete messageBody.path // 删除临时路径
+
+        // 更新临时消息的URL
+        chatStore.updateMsg({
+          msgId: tempMsgId,
+          body: {
+            ...messageBody
+          },
+          status: MessageStatusEnum.SENDING
+        })
+        console.log('图片上传完成,更新为服务器URL:', downloadUrl)
+      }
+
+      // 发送消息到服务器
+      const res = await apis.sendMsg({
         roomId: globalStore.currentSession.roomId,
         msgType: msg.type,
         body: messageBody
       })
-      .then(async (res) => {
-        clearTimeout(statusTimer)
-        // 更新消息状态为成功，同时更新消息ID和回复内容
-        chatStore.updateMsg({
-          msgId: tempMsgId,
-          status: MessageStatusEnum.SUCCESS,
-          newMsgId: res.message.id,
-          body: res.message.body // 更新消息体，包含服务器返回的回复内容
-        })
-        if (res.message.type === MsgEnum.TEXT) {
-          await chatStore.pushMsg(res)
-          // 保存到数据库
-          await db.value?.execute(
-            'INSERT INTO message (room_id, from_uid, content, reply_msg_id, status, gap_count, type, create_time, update_time) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
-            [
-              globalStore.currentSession.roomId,
-              userUid.value,
-              msg.content,
-              msg.reply,
-              0,
-              0,
-              msg.type,
-              new Date().getTime(),
-              new Date().getTime()
-            ]
-          )
-        }
-        // 发完消息就要刷新会话列表，
-        //  FIXME 如果当前会话已经置顶了，可以不用刷新
-        chatStore.updateSessionLastActiveTime(globalStore.currentSession.roomId)
-      })
-      .catch(() => {
-        clearTimeout(statusTimer)
-        // 更新消息状态为失败
-        chatStore.updateMsg({
-          msgId: tempMsgId,
-          status: MessageStatusEnum.FAILED
-        })
+
+      // 停止发送状态的定时器
+      clearTimeout(statusTimer)
+
+      // 更新消息状态为成功,并使用服务器返回的消息体
+      chatStore.updateMsg({
+        msgId: tempMsgId,
+        status: MessageStatusEnum.SUCCESS,
+        newMsgId: res.message.id,
+        body: res.message.body
       })
 
-    // 清空输入框和回复信息
-    resetInput()
+      // 更新会话最后活动时间
+      chatStore.updateSessionLastActiveTime(globalStore.currentSession.roomId)
+
+      // // 保存到数据库
+      // await db.value?.execute(
+      //   'INSERT INTO message (room_id, from_uid, content, reply_msg_id, status, gap_count, type, create_time, update_time) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+      //   [
+      //     globalStore.currentSession.roomId,
+      //     userUid.value,
+      //     msg.content,
+      //     msg.reply,
+      //     0,
+      //     0,
+      //     msg.type,
+      //     new Date().getTime(),
+      //     new Date().getTime()
+      //   ]
+      // )
+
+      // 消息发送成功后释放预览URL
+      if (msg.type === MsgEnum.IMAGE && msg.url.startsWith('blob:')) {
+        URL.revokeObjectURL(msg.url)
+      }
+    } catch (error) {
+      console.error('消息发送失败:', error)
+      clearTimeout(statusTimer)
+      chatStore.updateMsg({
+        msgId: tempMsgId,
+        status: MessageStatusEnum.FAILED
+      })
+    }
   }
 
   /** 当输入框手动输入值的时候触发input事件(使用vueUse的防抖) */
@@ -384,7 +409,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
   }, 0)
 
   /** input的keydown事件 */
-  const inputKeyDown = (e: KeyboardEvent) => {
+  const inputKeyDown = async (e: KeyboardEvent) => {
     if (disabledSend.value) {
       e.preventDefault()
       e.stopPropagation()
@@ -426,7 +451,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     }
     if ((sendKeyIsEnter && isEnterKey && !isCtrlOrMetaKey) || (sendKeyIsCtrlEnter && isCtrlOrMetaKey && isEnterKey)) {
       e?.preventDefault()
-      send()
+      await send()
       resetAllStates()
     }
   }

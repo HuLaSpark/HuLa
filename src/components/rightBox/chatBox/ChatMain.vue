@@ -235,9 +235,12 @@
                   <RenderMessage
                     :class="[
                       { active: activeBubble === item.message.id },
-                      item.fromUser.uid === userUid ? 'bubble-oneself' : 'bubble'
+                      item.message.type !== MsgEnum.IMAGE
+                        ? item.fromUser.uid === userUid
+                          ? 'bubble-oneself'
+                          : 'bubble'
+                        : ''
                     ]"
-                    v-if="item.message.type === MsgEnum.TEXT"
                     :message="item.message" />
 
                   <!-- 显示翻译文本 -->
@@ -260,11 +263,11 @@
                   </Transition>
 
                   <!--  消息为为图片类型(不固定宽度和高度), 多张图片时渲染  -->
-                  <n-image-group v-if="Array.isArray(item.content) && item.type === MsgEnum.IMAGE">
+                  <!-- <n-image-group v-if="Array.isArray(item.message.body.url) && item.message.type === MsgEnum.IMAGE">
                     <n-flex class="photo-wall" vertical>
                       <n-image
                         class="select-none"
-                        v-for="(src, index) in item.content"
+                        v-for="(src, index) in item.message.body.url"
                         :key="index"
                         :img-props="{ style: { maxWidth: '325px', maxHeight: '165px', width: '100%', height: 'auto' } }"
                         show-toolbar-tooltip
@@ -272,27 +275,17 @@
                         :fallback-src="'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg'"
                         :src="src"></n-image>
                     </n-flex>
-                  </n-image-group>
-
-                  <!-- 单张图片时渲染 -->
-                  <n-image
-                    class="select-none"
-                    v-if="typeof item.content === 'string' && item.type === MsgEnum.IMAGE"
-                    :img-props="{ style: { maxWidth: '325px', maxHeight: '165px', width: '100%', height: 'auto' } }"
-                    show-toolbar-tooltip
-                    style="border-radius: 8px"
-                    :fallback-src="'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg'"
-                    :src="item.content"></n-image>
+                  </n-image-group> -->
 
                   <!-- 消息为文件 -->
                   <n-image
                     class="select-none"
-                    v-if="typeof item.content === 'string' && item.type === MsgEnum.FILE"
+                    v-if="typeof item.message.body.url === 'string' && item.message.type === MsgEnum.FILE"
                     :img-props="{ style: { maxWidth: '325px', maxHeight: '165px' } }"
                     show-toolbar-tooltip
                     preview-disabled
                     style="border-radius: 8px"
-                    :src="item.content"></n-image>
+                    :src="item.message.body.url"></n-image>
                   <!-- 消息状态指示器 -->
                   <div v-if="item.fromUser.uid === userUid" class="absolute -left-6 top-2">
                     <n-icon v-if="item.message.status === MessageStatusEnum.SENDING" class="text-gray-400">

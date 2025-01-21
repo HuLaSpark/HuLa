@@ -5,13 +5,15 @@ import { useUserInfo } from '@/hooks/useCached.ts'
 import { Ref } from 'vue'
 import { parseInnerText } from '@/hooks/useCommon.ts'
 import apis from '@/services/apis.ts'
-import { BaseDirectory, open } from '@tauri-apps/plugin-fs'
+import { BaseDirectory, readFile } from '@tauri-apps/plugin-fs'
 import DOMPurify from 'dompurify'
 
 interface MessageStrategy {
   getMsg: (msgInputValue: string, replyValue: any, fileList?: File[]) => any
   buildMessageBody: (msg: any, reply: any) => any
   buildMessageType: (messageId: number, messageBody: any, globalStore: any, userUid: Ref<any>) => MessageType
+  uploadFile: (path: string) => Promise<{ uploadUrl: string; downloadUrl: string }>
+  doUpload: (path: string, uploadUrl: string) => Promise<void>
 }
 
 abstract class AbstractMessageStrategy implements MessageStrategy {
@@ -52,6 +54,16 @@ abstract class AbstractMessageStrategy implements MessageStrategy {
   abstract buildMessageBody(msg: any, reply: any): any
 
   abstract getMsg(msgInputValue: string, replyValue: any, fileList?: File[]): any
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  uploadFile(_path: string): Promise<{ uploadUrl: string; downloadUrl: string }> {
+    throw new AppException('该消息类型不支持文件上传')
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  doUpload(_path: string, _uploadUrl: string): Promise<void> {
+    throw new AppException('该消息类型不支持文件上传')
+  }
 
   getUpLoadUrl(file: File): any {
     file?.name
@@ -126,71 +138,187 @@ class TextMessageStrategyImpl extends AbstractMessageStrategy {
 
 /** 处理图片消息 */
 class ImageMessageStrategyImpl extends AbstractMessageStrategy {
+  private readonly MAX_UPLOAD_SIZE = 2 * 1024 * 1024 // 2MB in bytes
+  private readonly ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+
   constructor() {
     super(MsgEnum.IMAGE)
   }
 
-  getMsg(msgInputValue: string, replyValue: any): any {
+  private async validateImage(file: File): Promise<File> {
+    // 检查文件类型
+    if (!this.ALLOWED_TYPES.includes(file.type)) {
+      throw new AppException('仅支持 JPEG、PNG、WebP 格式的图片')
+    }
+
+    // 检查文件大小
+    if (file.size > this.MAX_UPLOAD_SIZE) {
+      throw new AppException('图片大小不能超过2MB')
+    }
+
+    return file
+  }
+
+  // 获取图片信息
+  private getImageInfo(file: File): Promise<{ width: number; height: number; previewUrl: string }> {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      const previewUrl = URL.createObjectURL(file)
+
+      img.onload = () => {
+        resolve({
+          width: img.width,
+          height: img.height,
+          previewUrl
+        })
+      }
+
+      img.onerror = () => {
+        URL.revokeObjectURL(previewUrl)
+        reject(new AppException('图片加载失败'))
+      }
+
+      img.src = previewUrl
+    })
+  }
+
+  async getMsg(msgInputValue: string, replyValue: any): Promise<any> {
     const path = parseInnerText(msgInputValue, 'temp-image')
     if (!path) {
       throw new AppException('文件不存在')
     }
-    console.log(path)
-    let downloadUrl = ''
-    this.uploadFile(path)
-      .then((data) => {
-        console.log('data', data)
-        downloadUrl = data
-      })
-      .catch((err) => {
-        throw new AppException(err)
+
+    // 标准化路径
+    const normalizedPath = path.replace(/\\/g, '/')
+    console.log('标准化路径:', normalizedPath)
+
+    try {
+      const fileData = await readFile(normalizedPath, { baseDir: BaseDirectory.AppCache })
+
+      const fileName = path.split('/').pop() || 'image.png'
+      const fileType = this.getFileType(fileName)
+
+      // 创建文件对象
+      const originalFile = new File([fileData], fileName, {
+        type: fileType
       })
 
-    return {
-      type: this.msgType,
-      content: downloadUrl,
-      reply: replyValue.content
-        ? {
-            content: replyValue.content,
-            key: replyValue.key
-          }
-        : undefined
+      // 验证图片
+      await this.validateImage(originalFile)
+
+      // 获取图片信息（宽度、高度）和预览URL
+      const { width, height, previewUrl } = await this.getImageInfo(originalFile)
+
+      return {
+        type: this.msgType,
+        path: normalizedPath, // 用于上传
+        url: previewUrl, // 用于预览显示
+        imageInfo: {
+          width, // 原始图片宽度
+          height, // 原始图片高度
+          size: originalFile.size // 原始文件大小
+        },
+        reply: replyValue.content
+          ? {
+              content: replyValue.content,
+              key: replyValue.key
+            }
+          : undefined
+      }
+    } catch (error) {
+      console.error('处理图片失败:', error)
+      if (error instanceof AppException) {
+        throw error
+      }
+      throw new AppException('图片预览失败')
     }
   }
 
-  async uploadFile(path: string): Promise<any> {
+  // 根据文件名获取文件类型
+  private getFileType(fileName: string): string {
+    const extension = fileName.split('.').pop()?.toLowerCase()
+    switch (extension) {
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg'
+      case 'png':
+        return 'image/png'
+      case 'webp':
+        return 'image/webp'
+      default:
+        return 'image/png' // 默认类型
+    }
+  }
+
+  async uploadFile(path: string): Promise<{ uploadUrl: string; downloadUrl: string }> {
+    console.log('开始上传图片:', path)
     const fileName = path.split('/').pop()
     if (!fileName) {
       throw new AppException('文件解析出错')
     }
-    const res = await apis.getUploadUrl({
-      fileName: fileName,
-      scene: 1
-    })
-    console.log(res)
-    const uploadUrl = res.uploadUrl
-    const downloadUrl = res.downloadUrl
-    const file = await open(path, { read: true, write: false, baseDir: BaseDirectory.AppCache })
-    const buf = new Uint8Array()
-    await file.read(buf)
-    await fetch(uploadUrl, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-      method: 'PUT',
-      body: new File([buf], fileName)
-    })
-    file.close()
-    return new Promise((resolve) => {
-      resolve(downloadUrl)
-    })
-  }
-  buildMessageBody(msg: any, reply: any): any {
-    msg
-    reply
-    throw new AppException('方法暂未实现')
+
+    try {
+      const res = await apis.getUploadUrl({
+        fileName: fileName,
+        scene: 1
+      })
+
+      console.log('获取上传链接成功:', res)
+      return res
+    } catch (error) {
+      console.error('获取上传链接失败:', error)
+      throw new AppException('获取上传链接失败，请重试')
+    }
   }
 
-  buildMessageType(messageId: number, messageBody: any, globalStore: any, userUid: Ref<any>): MessageType {
-    return super.buildMessageType(messageId, messageBody, globalStore, userUid)
+  // 执行实际的文件上传
+  async doUpload(path: string, uploadUrl: string): Promise<void> {
+    console.log('执行文件上传:', path)
+    try {
+      const file = await readFile(path, { baseDir: BaseDirectory.AppCache })
+
+      // 添加文件大小检查
+      if (file.length > this.MAX_UPLOAD_SIZE) {
+        throw new AppException('图片大小不能超过2MB')
+      }
+
+      const response = await fetch(uploadUrl, {
+        headers: { 'Content-Type': 'application/octet-stream' },
+        method: 'PUT',
+        body: file,
+        duplex: 'half'
+      } as RequestInit)
+
+      if (!response.ok) {
+        throw new Error(`上传失败: ${response.statusText}`)
+      }
+      console.log('文件上传成功')
+    } catch (error) {
+      console.error('文件上传失败:', error)
+      if (error instanceof AppException) {
+        throw error
+      }
+      throw new AppException('文件上传失败，请重试')
+    }
+  }
+
+  buildMessageBody(msg: any, reply: any): any {
+    return {
+      url: msg.url,
+      path: msg.path,
+      width: msg.imageInfo.width,
+      height: msg.imageInfo.height,
+      size: msg.imageInfo.size,
+      replyMsgId: msg.reply?.key || void 0,
+      reply: reply.value.content
+        ? {
+            body: reply.value.content,
+            id: reply.value.key,
+            username: reply.value.accountName,
+            type: msg.type
+          }
+        : void 0
+    }
   }
 }
 
@@ -259,6 +387,7 @@ const textMessageStrategy = new TextMessageStrategyImpl()
 const fileMessageStrategy = new FileMessageStrategyImpl()
 const imageMessageStrategy = new ImageMessageStrategyImpl()
 const unsupportedMessageStrategy = new UnsupportedMessageStrategyImpl()
+
 export const messageStrategyMap: Record<MsgEnum, MessageStrategy> = {
   [MsgEnum.FILE]: fileMessageStrategy,
   [MsgEnum.IMAGE]: imageMessageStrategy,

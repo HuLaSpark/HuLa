@@ -163,7 +163,12 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
       sendNotification({
         title: username,
         body: data.message.body.content,
-        icon: 'src-tauri/tray/icon.png'
+        attachments: [
+          {
+            id: 'image-1',
+            url: 'asset:///tray/icon.png'
+          }
+        ]
       })
     }, 3000)
     throttleSendNotification()
