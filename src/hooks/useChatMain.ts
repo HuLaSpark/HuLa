@@ -11,6 +11,8 @@ import { isDiffNow } from '@/utils/ComputedTime.ts'
 import { writeText } from '@tauri-apps/plugin-clipboard-manager'
 import { translateText } from '@/services/translate'
 import { useSettingStore } from '@/stores/setting.ts'
+import { save } from '@tauri-apps/plugin-dialog'
+import { useDownload } from '@/hooks/useDownload'
 
 export const useChatMain = () => {
   const { removeTag, openMsgSession, userUid } = useCommon()
@@ -19,6 +21,7 @@ export const useChatMain = () => {
   const globalStore = useGlobalStore()
   const chatStore = useChatStore()
   const userStore = useUserStore()?.userInfo
+  const { downloadFile } = useDownload()
   // const userInfo = useUserStore()?.userInfo
   // const chatMessageList = computed(() => chatStore.chatMessageList)
   // const messageOptions = computed(() => chatStore.currentMessageOptions)
@@ -47,23 +50,6 @@ export const useChatMain = () => {
       label: '转发',
       icon: 'share',
       click: () => {}
-    },
-    {
-      label: '翻译',
-      icon: 'translate',
-      click: async (item: MessageType) => {
-        const content = item.message.body.content
-        const result = await translateText(content, chat.value.translate)
-        // 将翻译结果添加到消息中
-        if (!item.message.body.translatedText) {
-          item.message.body.translatedText = {
-            provider: result.provider,
-            text: result.text
-          }
-        } else {
-          delete item.message.body.translatedText
-        }
-      }
     },
     { label: '收藏', icon: 'collection-files' },
     {
@@ -105,6 +91,23 @@ export const useChatMain = () => {
       icon: 'copy',
       click: (item: MessageType) => {
         handleCopy(item.message.body.content)
+      }
+    },
+    {
+      label: '翻译',
+      icon: 'translate',
+      click: async (item: MessageType) => {
+        const content = item.message.body.content
+        const result = await translateText(content, chat.value.translate)
+        // 将翻译结果添加到消息中
+        if (!item.message.body.translatedText) {
+          item.message.body.translatedText = {
+            provider: result.provider,
+            text: result.text
+          }
+        } else {
+          delete item.message.body.translatedText
+        }
       }
     },
     ...commonMenuList.value
@@ -159,10 +162,37 @@ export const useChatMain = () => {
     {
       label: '另存为',
       icon: 'Importing',
-      click: (item: any) => {
-        console.log(item)
+      click: async (item: MessageType) => {
+        try {
+          const imageUrl = item.message.body.url
+          const suggestedName = imageUrl || 'image.png'
+
+          // 这里会自动截取url后的文件名，可以尝试打印一下
+          const savePath = await save({
+            filters: [
+              {
+                name: '图片',
+                extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp']
+              }
+            ],
+            defaultPath: suggestedName
+          })
+
+          if (savePath) {
+            await downloadFile(imageUrl, savePath)
+          }
+        } catch (error) {
+          console.error('保存图片失败:', error)
+          window.$message.error('保存图片失败')
+        }
       }
     }
+    // {
+    //   label: '在文件夹中显示',
+    //   icon: 'file2',
+    //   click: async (item: MessageType) => {},
+    //   visible: (item: MessageType) => {}
+    // }
   ])
   /** 右键用户信息菜单(群聊的时候显示) */
   const optionsList = ref<OPT.RightMenu[]>([

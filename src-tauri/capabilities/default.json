@@ -61,6 +61,7 @@
     "autostart:allow-disable",
     "autostart:allow-is-enabled",
     "dialog:allow-confirm",
+    "dialog:allow-save",
     "core:resources:allow-close",
     "sql:allow-load",
     "sql:allow-execute",

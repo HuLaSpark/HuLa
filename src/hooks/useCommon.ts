@@ -20,7 +20,8 @@ export interface SelectionRange {
   selection: Selection
 }
 const domParser = new DOMParser()
-function saveCacheFile(file: any, subFolder: string, dom: HTMLElement) {
+
+const saveCacheFile = async (file: any, subFolder: string, dom: HTMLElement) => {
   const fileName = file.name === null ? 'test.png' : file.name
   const tempPath = getImageCache(subFolder)
   const fullPath = tempPath + fileName
@@ -63,6 +64,16 @@ function saveCacheFile(file: any, subFolder: string, dom: HTMLElement) {
     range.insertNode(p)
   }
   return fullPath
+}
+
+/**
+ * 返回dom指定id的文本
+ * @param dom 指定dom
+ * @param id 元素id
+ */
+export const parseInnerText = (dom: string, id: string): string | undefined => {
+  const doc = domParser.parseFromString(dom, 'text/html')
+  return doc.getElementById(id)?.innerText
 }
 
 /** 常用工具类 */
@@ -272,8 +283,10 @@ export const useCommon = () => {
         content = content.find((item: string) => item.startsWith('data:image/'))
         reply.value.imgCount = imageCount
       }
-      // 判断content内容开头是否是data:image/的是图片
-      if (content.startsWith('data:image/')) {
+      console.log(content)
+
+      // todo: 暂时用http开头的图片判断，后续需要优化
+      if (content.startsWith('http')) {
         // 再创建一个img标签节点，并设置src属性为base64编码的图片
         contentBox = document.createElement('img')
         contentBox.src = content
@@ -712,14 +725,4 @@ export const useCommon = () => {
     reply,
     userUid
   }
-}
-
-/**
- * 返回dom种指定id的文本
- * @param dom 指定dom
- * @param id 元素id
- */
-export const parseInnerText = (dom: string, id: string): string | undefined => {
-  const doc = domParser.parseFromString(dom, 'text/html')
-  return doc.getElementById(id)?.innerText
 }

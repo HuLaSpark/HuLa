@@ -118,7 +118,7 @@ import { useGlobalStore } from '@/stores/global.ts'
 import type { UserItem } from '@/services/types.ts'
 import { useDebounceFn } from '@vueuse/core'
 import { AvatarUtils } from '@/utils/avatarUtils'
-import { useCachedStore } from '~/src/stores/cached'
+import { useCachedStore } from '@/stores/cached.ts'
 
 const groupStore = useGroupStore()
 const globalStore = useGlobalStore()

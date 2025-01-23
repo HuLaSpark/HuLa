@@ -226,6 +226,16 @@ export const useMsgInput = (messageInputDom: Ref) => {
   /** 去除html标签(用于鉴别回复时是否有输入内容) */
   const stripHtml = (html: string) => {
     try {
+      // 检查是否是表情包
+      if (html.includes('data-type="emoji"')) {
+        const tmp = document.createElement('div')
+        tmp.innerHTML = html
+        const imgElement = tmp.querySelector('img')
+        if (imgElement && imgElement.src) {
+          return (msgInput.value = imgElement.src)
+        }
+      }
+
       const tmp = document.createElement('div')
       tmp.innerHTML = html
       const replyDiv = tmp.querySelector('#replyDiv')
@@ -568,20 +578,24 @@ export const useMsgInput = (messageInputDom: Ref) => {
       })
     })
 
-    /** 正在输入拼音时触发 */
-    messageInputDom.value.addEventListener('compositionstart', () => {
-      isChinese.value = true
-    })
-    /** 结束输入拼音时触发 */
-    messageInputDom.value.addEventListener('compositionend', (e: CompositionEvent) => {
-      setTimeout(() => {
-        isChinese.value = false
-        aitKey.value = e.data
-        aiKeyword.value = e.data
-      }, 10)
-    })
+    if (messageInputDom.value) {
+      /** 正在输入拼音时触发 */
+      messageInputDom.value.addEventListener('compositionstart', () => {
+        isChinese.value = true
+      })
+      /** 结束输入拼音时触发 */
+      messageInputDom.value.addEventListener('compositionend', (e: CompositionEvent) => {
+        setTimeout(() => {
+          isChinese.value = false
+          aitKey.value = e.data
+          aiKeyword.value = e.data
+        }, 10)
+      })
+    }
     /** 监听回复信息的传递 */
     useMitt.on(MittEnum.REPLY_MEG, (event: any) => {
+      console.log('🐝正在回复消息:', event)
+
       const accountName = useUserInfo(event.fromUser.uid).value.name!
       const avatar = useUserInfo(event.fromUser.uid).value.avatar!
       // 如果已经有回复消息，则替换掉原来的回复消息
@@ -589,15 +603,15 @@ export const useMsgInput = (messageInputDom: Ref) => {
         // 触发id为closeBtn的按钮点击事件，从而关闭第一个回复框，实现回复消息的替换
         document.getElementById('closeBtn')?.dispatchEvent(new Event('click'))
       }
-      if (!Array.isArray(event.message.body.content)) {
-        // 回复前把包含&nbsp;的字符替换成空格
-        event.message.body.content = event.message.body.content.replace(/&nbsp;/g, ' ')
-      }
+      // if (!Array.isArray(event.message.body.content)) {
+      //   // 回复前把包含&nbsp;的字符替换成空格
+      //   event.message.body.content = event.message.body.content.replace(/&nbsp;/g, ' ')
+      // }
       reply.value = {
         imgCount: 0,
         avatar: avatar,
         accountName: accountName,
-        content: event.message.body.content,
+        content: event.message.body.content || event.message.body.url,
         key: event.message.id
       }
       if (messageInputDom.value) {
@@ -606,7 +620,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
           // 插入回复框
           insertNode(
             MsgEnum.REPLY,
-            { avatar: avatar, accountName: accountName, content: event.message.body.content },
+            { avatar: avatar, accountName: accountName, content: reply.value.content },
             {} as HTMLElement
           )
           triggerInputEvent(messageInputDom.value)

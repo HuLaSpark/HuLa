@@ -182,7 +182,87 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
     })
   }
 
+  private isImageUrl(url: string): boolean {
+    // 检查是否是有效的URL
+    try {
+      new URL(url)
+      // 检查是否以常见图片扩展名结尾
+      return /\.(jpg|jpeg|png|webp|gif)$/i.test(url)
+    } catch {
+      return false
+    }
+  }
+
+  // 获取表情图片信息
+  private getRemoteImageInfo(url: string): Promise<{ width: number; height: number; size: number }> {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      img.crossOrigin = 'anonymous' // 处理跨域问题
+
+      img.onload = async () => {
+        try {
+          // 获取图片大小
+          const response = await fetch(url, { method: 'HEAD' })
+          const size = parseInt(response.headers.get('content-length') || '0')
+
+          resolve({
+            width: img.width,
+            height: img.height,
+            size: size
+          })
+        } catch (error) {
+          // 如果无法获取大小，使用默认值
+          resolve({
+            width: img.width,
+            height: img.height,
+            size: 0
+          })
+        }
+      }
+
+      img.onerror = () => {
+        reject(new AppException('图片加载失败'))
+      }
+
+      img.src = url
+    })
+  }
+
   async getMsg(msgInputValue: string, replyValue: any): Promise<any> {
+    console.log('开始处理图片消息:', msgInputValue, replyValue)
+
+    // 检查是否是图片URL
+    if (this.isImageUrl(msgInputValue)) {
+      try {
+        // 获取远程图片信息
+        const { width, height, size } = await this.getRemoteImageInfo(msgInputValue)
+
+        return {
+          type: this.msgType,
+          url: msgInputValue, // 直接使用原始URL
+          path: msgInputValue, // 为了保持一致性，也设置path
+          imageInfo: {
+            width,
+            height,
+            size
+          },
+          reply: replyValue.content
+            ? {
+                content: replyValue.content,
+                key: replyValue.key
+              }
+            : undefined
+        }
+      } catch (error) {
+        console.error('处理图片URL失败:', error)
+        if (error instanceof AppException) {
+          throw error
+        }
+        throw new AppException('图片预览失败')
+      }
+    }
+
+    // 原有的本地图片处理逻辑
     const path = parseInnerText(msgInputValue, 'temp-image')
     if (!path) {
       throw new AppException('文件不存在')
@@ -251,6 +331,15 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
   }
 
   async uploadFile(path: string): Promise<{ uploadUrl: string; downloadUrl: string }> {
+    // 如果是URL，直接返回相同的URL作为下载链接
+    if (this.isImageUrl(path)) {
+      return {
+        uploadUrl: '', // 不需要上传URL
+        downloadUrl: path // 直接使用原始URL
+      }
+    }
+
+    // 原有的本地文件上传逻辑
     console.log('开始上传图片:', path)
     const fileName = path.split('/').pop()
     if (!fileName) {
@@ -273,6 +362,12 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
 
   // 执行实际的文件上传
   async doUpload(path: string, uploadUrl: string): Promise<void> {
+    // 如果是URL，跳过上传
+    if (this.isImageUrl(path)) {
+      return
+    }
+
+    // 原有的上传逻辑
     console.log('执行文件上传:', path)
     try {
       const file = await readFile(path, { baseDir: BaseDirectory.AppCache })

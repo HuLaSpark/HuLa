@@ -191,6 +191,7 @@ const emojiHandle = (item: string) => {
     imgElement.src = item
     imgElement.style.maxWidth = '80px'
     imgElement.style.maxHeight = '80px'
+    imgElement.dataset.type = 'emoji'
     lastEditRange.range.insertNode(imgElement)
 
     // 移动光标到图片后面
