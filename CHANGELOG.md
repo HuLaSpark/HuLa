@@ -1,5 +1,14 @@
 # Changelog
 
+## <small>2.6.2 (2025-01-23)</small>
+
+* feat(strategy): :sparkles: 增加表情包功能支持 ([6b19f07](https://github.com/HuLaSpark/HuLa/commit/6b19f07))
+* feat(strategy): :sparkles: 增加发送图片功能(beta) ([f1aef7c](https://github.com/HuLaSpark/HuLa/commit/f1aef7c))
+* chore(deps): update dependency vite to v6.0.9 [security] (#195) ([5777318](https://github.com/HuLaSpark/HuLa/commit/5777318)), closes [#195](https://github.com/HuLaSpark/HuLa/issues/195)
+* perf(component): :zap: 优化组件加载、浏览器指纹生成 (#192) ([0252956](https://github.com/HuLaSpark/HuLa/commit/0252956)), closes [#192](https://github.com/HuLaSpark/HuLa/issues/192)
+* perf(icon): :zap: 修改全平台icon（除了mac） (#193) ([eea52ea](https://github.com/HuLaSpark/HuLa/commit/eea52ea)), closes [#193](https://github.com/HuLaSpark/HuLa/issues/193)
+* perf(view): :zap: 优化已删除好友的界面展示 ([69d7722](https://github.com/HuLaSpark/HuLa/commit/69d7722))
+
 ## <small>2.6.1 (2025-01-17)</small>
 
 * fix(Android): :bug: 修复安卓启动配置 (#191) ([5176aee](https://github.com/HuLaSpark/HuLa/commit/5176aee)), closes [#191](https://github.com/HuLaSpark/HuLa/issues/191)
