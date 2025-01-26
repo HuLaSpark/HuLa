@@ -130,8 +130,14 @@ sudo xattr -rd com.apple.quarantine 你的安装包路径/HuLa.app
 
 **本免责声明的最终解释权归开发者所有**
 
+## 赞助HuLa
+如果您觉得HuLa对您有帮助，欢迎赞助HuLa，您的支持是我们不断前进的动力
+
+<img src="preview/zs.jpg" width="260" height="280" alt="赞助码" style="border-radius: 12px;" />
+
+
 ## HuLa社区讨论群
-<img src="preview/wx.jpg" width="240" height="280" alt="微信群二维码" style="border-radius: 12px;" />
+<img src="preview/wx.jpg" width="260" height="300" alt="微信群二维码" style="border-radius: 12px;" />
 
 ## 许可证
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa?ref=badge_large)

@@ -130,8 +130,14 @@ use **pnpm run commit** to invoke the _git commit_ interaction and follow the pr
 
 **The final interpretation of this disclaimer belongs to the developer**
 
-## HuLa社区讨论群
-<img src="preview/wx.jpg" width="240" height="280" alt="微信群二维码" style="border-radius: 12px;" />
+## Sponsor HuLa
+If you think HuLa is helpful to you, welcome to sponsor HuLa. Your support is our motivation to keep moving forward.
+
+<img src="preview/zs.jpg" width="260" height="280" alt="赞助码" style="border-radius: 12px;" />
+
+
+## HuLa Community discussion groups
+<img src="preview/wx.jpg" width="260" height="300" alt="微信群二维码" style="border-radius: 12px;" />
 
 ## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa?ref=badge_large)
