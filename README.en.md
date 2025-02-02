@@ -137,7 +137,7 @@ If you think HuLa is helpful to you, welcome to sponsor HuLa. Your support is ou
 
 
 ## HuLa Community discussion groups
-<img src="preview/wx.jpg" width="260" height="300" alt="微信群二维码" style="border-radius: 12px;" />
+<img src="preview/wx.png" width="260" height="300" alt="微信群二维码" style="border-radius: 12px;" />
 
 ## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa?ref=badge_large)

@@ -137,7 +137,7 @@ sudo xattr -rd com.apple.quarantine 你的安装包路径/HuLa.app
 
 
 ## HuLa社区讨论群
-<img src="preview/wx.jpg" width="260" height="300" alt="微信群二维码" style="border-radius: 12px;" />
+<img src="preview/wx.png" width="260" height="300" alt="微信群二维码" style="border-radius: 12px;" />
 
 ## 许可证
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa?ref=badge_large)
