@@ -8,6 +8,7 @@ import { AppException, ErrorType } from '../common/exception'
  * @property {Record<string, any>} [query] 请求参数
  * @property {any} [body] 请求体
  * @property {boolean} [isBlob] 是否为Blob
+ * @property {boolean} [noRetry] 是否禁用重试
  * @return HttpParams
  */
 export type HttpParams = {
@@ -17,6 +18,7 @@ export type HttpParams = {
   body?: any
   isBlob?: boolean
   retry?: RetryOptions // 新增重试选项
+  noRetry?: boolean // 新增禁用重试选项
 }
 
 /**
@@ -82,7 +84,7 @@ async function Http<T = any>(
 
   // 默认重试配置
   const defaultRetryOptions: RetryOptions = {
-    retries: 3,
+    retries: options.noRetry ? 0 : 3, // 如果设置了noRetry，则不进行重试
     retryDelay: (attempt) => Math.pow(2, attempt) * 1000, // 指数退避策略
     retryOn: [500, 502, 503, 504]
   }
@@ -181,7 +183,9 @@ async function Http<T = any>(
 
       // 若有success === false，需要重试
       if (responseData && responseData.success === false) {
-        throw new AppException(responseData.message || url, {
+        const errorMessage = responseData.errMsg || '服务器返回错误'
+        window.$message?.error?.(errorMessage)
+        throw new AppException(errorMessage, {
           type: ErrorType.Server,
           code: response.status,
           details: responseData
@@ -200,6 +204,7 @@ async function Http<T = any>(
       if (!shouldRetry(currentAttempt, retries, abort)) {
         console.error(`Max retries reached or aborted. Request failed → ${url}`)
         if (error instanceof FetchRetryError) {
+          window.$message?.error?.(error.message || '网络请求失败')
           throw new AppException(error.message, {
             type: error.type,
             code: error.status,
@@ -207,9 +212,12 @@ async function Http<T = any>(
           })
         }
         if (error instanceof AppException) {
+          window.$message?.error?.(error.message || '请求出错')
           throw error
         }
-        throw new AppException(String(error), {
+        const errorMessage = String(error) || '未知错误'
+        window.$message?.error?.(errorMessage)
+        throw new AppException(errorMessage, {
           type: ErrorType.Unknown,
           details: { url, attempts: currentAttempt + 1 }
         })
