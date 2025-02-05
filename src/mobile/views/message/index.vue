@@ -30,7 +30,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import PullToRefresh from '@/components/mobile/PullToRefresh.vue'
+import PullToRefresh from '#/components/PullToRefresh.vue'
 
 const pullRefreshRef = ref()
 

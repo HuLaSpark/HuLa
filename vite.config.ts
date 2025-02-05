@@ -17,8 +17,10 @@ export default defineConfig(({ mode }: ConfigEnv) => {
   return {
     resolve: {
       alias: {
-        // 配置路径别名@
+        // 配置主路径别名@
         '@': getSrcPath(),
+        // 配置移动端路径别名@
+        '#': getSrcPath('src/mobile'),
         // 配置路径别名~(根路径)
         '~': getRootPath()
       }
@@ -49,7 +51,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       }),
       /**自动导入组件，但是不会自动导入jsx和tsx*/
       Components({
-        dirs: ['src/components/**'], // 设置需要扫描的目录
+        dirs: ['src/components/**', 'src/mobile/components/**'], // 设置需要扫描的目录
         resolvers: [NaiveUiResolver()],
         dts: 'src/typings/components.d.ts'
       }),
