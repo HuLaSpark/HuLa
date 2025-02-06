@@ -1,0 +1,351 @@
+<template>
+  <div class="size-full bg-#222">
+    <!-- 顶部操作栏 -->
+    <ActionBar class="bg-#000" :shrink="false" :current-label="currentLabel" />
+
+    <!-- 主体内容区域 -->
+    <div style="height: calc(100% - 24px)" class="relative w-full flex flex-col">
+      <!-- 图片展示区域 -->
+      <div
+        class="flex-1 relative flex-center"
+        @mousemove="handleMouseMove"
+        @mouseleave="showArrows.left = showArrows.right = false">
+        <img
+          ref="imageRef"
+          :src="currentImage"
+          :style="{
+            willChange: isDragging ? 'transform' : 'auto',
+            cursor: isDragging ? 'grabbing' : 'grab'
+          }"
+          class="max-w-90% max-h-90% select-none"
+          :class="{ 'transition-transform duration-200': !isDragging }"
+          @mousedown="startDrag"
+          @wheel.passive="handleWheel"
+          alt="preview" />
+
+        <!-- 提示文本 -->
+        <transition name="viewer-tip">
+          <div
+            v-if="showTip"
+            class="absolute z-10 bg-black/60 px-24px py-12px rounded-8px text-(white 14px) transition-all duration-300 backdrop-blur-sm select-none flex items-center gap-8px">
+            <svg class="size-16px"><use href="#info"></use></svg>
+            {{ tipText }}
+          </div>
+        </transition>
+
+        <!-- 左右箭头 -->
+        <div
+          v-show="imageList.length > 1 && showArrows.left"
+          @click="prevImage"
+          class="absolute left-20px top-1/2 -translate-y-1/2 size-40px rounded-full bg-black/30 flex-center cursor-pointer hover:bg-black/50 transition-all duration-200 opacity-0"
+          :class="{ 'opacity-100': showArrows.left }">
+          <svg class="size-24px color-white rotate-180"><use href="#arrow-right"></use></svg>
+        </div>
+        <div
+          v-show="imageList.length > 1 && showArrows.right"
+          @click="nextImage"
+          class="absolute right-20px top-1/2 -translate-y-1/2 size-40px rounded-full bg-black/30 flex-center cursor-pointer hover:bg-black/50 transition-all duration-200 opacity-0"
+          :class="{ 'opacity-100': showArrows.right }">
+          <svg class="size-24px color-white"><use href="#arrow-right"></use></svg>
+        </div>
+      </div>
+
+      <!-- 底部工具栏 -->
+      <div data-tauri-drag-region class="z-9999 h-50px bg-#000 flex justify-center items-center gap-30px">
+        <n-tooltip placement="top">
+          <template #trigger>
+            <svg @click="zoomOut" class="size-24px cursor-pointer color-white"><use href="#zoom-out"></use></svg>
+          </template>
+          缩小
+        </n-tooltip>
+
+        <span class="color-white text-14px min-w-50px text-center select-none">{{ scaleText }}</span>
+
+        <n-tooltip placement="top">
+          <template #trigger>
+            <svg @click="zoomIn" class="size-24px cursor-pointer color-white"><use href="#zoom-in"></use></svg>
+          </template>
+          放大
+        </n-tooltip>
+
+        <n-tooltip placement="top">
+          <template #trigger>
+            <svg @click="rotateLeft" class="size-24px cursor-pointer scale-x--100 color-white">
+              <use href="#RotateRight"></use>
+            </svg>
+          </template>
+          向左旋转
+        </n-tooltip>
+
+        <n-tooltip placement="top">
+          <template #trigger>
+            <svg @click="rotateRight" class="size-24px cursor-pointer color-white"><use href="#RotateRight"></use></svg>
+          </template>
+          向右旋转
+        </n-tooltip>
+
+        <n-tooltip placement="top">
+          <template #trigger>
+            <svg @click="resetImage()" class="size-24px cursor-pointer color-white"><use href="#refresh"></use></svg>
+          </template>
+          重置
+        </n-tooltip>
+
+        <n-tooltip placement="top">
+          <template #trigger>
+            <svg @click="saveImage" class="size-24px cursor-pointer color-white"><use href="#Importing"></use></svg>
+          </template>
+          另存为
+        </n-tooltip>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { save } from '@tauri-apps/plugin-dialog'
+import { useDownload } from '@/hooks/useDownload'
+import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import ActionBar from '@/components/windows/ActionBar.vue'
+import { NTooltip } from 'naive-ui'
+import { useImageViewer } from '@/stores/imageViewer.ts'
+
+const { downloadFile } = useDownload()
+const imageViewerStore = useImageViewer()
+const appWindow = WebviewWindow.getCurrent()
+
+// 初始化数据
+const imageList = ref<string[]>([])
+
+const currentLabel = WebviewWindow.getCurrent().label
+const currentIndex = ref(0)
+const scale = ref(1)
+const rotation = ref(0)
+const isDragging = ref(false)
+const dragStart = reactive({ x: 0, y: 0 })
+const imagePosition = reactive({ x: 0, y: 0 })
+const imageRef = ref<HTMLImageElement>()
+//提示相关的响应式变量
+const showTip = ref(false)
+const tipText = ref('')
+// 左右箭头显示
+const showArrows = reactive({
+  left: false,
+  right: false
+})
+
+// 添加缩放倍数显示的计算属性
+const scaleText = computed(() => {
+  return `${Math.round(scale.value * 100)}%`
+})
+// 当前显示的图片URL
+const currentImage = computed(() => imageList.value[currentIndex.value])
+
+// 添加鼠标移动处理函数
+const handleMouseMove = (e: MouseEvent) => {
+  const { clientX } = e
+  const { innerWidth } = window
+
+  // 左侧箭头显示逻辑
+  showArrows.left = clientX <= 78
+
+  // 右侧箭头显示逻辑
+  showArrows.right = innerWidth - clientX <= 78
+}
+
+// 图片拖动相关
+const startDrag = (e: MouseEvent) => {
+  isDragging.value = true
+  dragStart.x = e.clientX - imagePosition.x
+  dragStart.y = e.clientY - imagePosition.y
+
+  // 使用 addEventListener 的第三个参数 { passive: true } 来优化性能
+  document.addEventListener('mousemove', handleDrag, { passive: true })
+  document.addEventListener('mouseup', stopDrag)
+}
+
+const stopDrag = () => {
+  isDragging.value = false
+  document.removeEventListener('mousemove', handleDrag)
+  document.removeEventListener('mouseup', stopDrag)
+}
+
+const updateTransform = () => {
+  if (!imageRef.value) return
+  const transform = `translate3d(${imagePosition.x}px, ${imagePosition.y}px, 0) scale3d(${scale.value}, ${scale.value}, 1) rotate(${rotation.value}deg)`
+
+  requestAnimationFrame(() => {
+    if (imageRef.value) {
+      imageRef.value.style.transform = transform
+    }
+  })
+}
+
+const handleDrag = (e: MouseEvent) => {
+  if (!isDragging.value) return
+  imagePosition.x = e.clientX - dragStart.x
+  imagePosition.y = e.clientY - dragStart.y
+  updateTransform()
+}
+
+// 修改滚轮缩放
+const handleWheel = (e: WheelEvent) => {
+  e.preventDefault()
+  const delta = e.deltaY > 0 ? -0.1 : 0.1
+  const newScale = Math.max(0.1, Math.min(5, scale.value + delta))
+  if (newScale !== scale.value) {
+    scale.value = newScale
+    updateTransform()
+  }
+}
+
+// 工具栏操作
+const zoomIn = () => {
+  scale.value = Math.min(5, scale.value + 0.1)
+  updateTransform()
+}
+
+const zoomOut = () => {
+  scale.value = Math.max(0.1, scale.value - 0.1)
+  updateTransform()
+}
+
+const rotateLeft = () => {
+  rotation.value -= 90
+  updateTransform()
+}
+
+const rotateRight = () => {
+  rotation.value += 90
+  updateTransform()
+}
+
+// 重置图片
+const resetImage = (immediate = false) => {
+  scale.value = 1
+  rotation.value = 0
+  imagePosition.x = 0
+  imagePosition.y = 0
+  if (imageRef.value) {
+    if (immediate) {
+      // 立即重置，不使用过渡动画
+      imageRef.value.style.transition = 'none'
+      imageRef.value.style.transform = ''
+      // 强制重绘
+      imageRef.value.offsetHeight
+      // 恢复过渡动画
+      imageRef.value.style.transition = ''
+    } else {
+      imageRef.value.style.transform = ''
+    }
+  }
+}
+
+const saveImage = async () => {
+  const imageUrl = currentImage.value
+  const suggestedName = imageUrl.split('/').pop() || 'image.png'
+
+  const savePath = await save({
+    filters: [
+      {
+        name: '图片',
+        extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp']
+      }
+    ],
+    defaultPath: suggestedName
+  })
+
+  if (savePath) {
+    await downloadFile(imageUrl, savePath)
+  }
+}
+
+// 显示提示的函数
+const showTipMessage = (message: string) => {
+  tipText.value = message
+  showTip.value = true
+  setTimeout(() => {
+    showTip.value = false
+  }, 1500)
+}
+
+// 修改切换图片的函数
+const prevImage = () => {
+  if (currentIndex.value > 0) {
+    resetImage(true) // 立即重置
+    currentIndex.value--
+  } else {
+    showTipMessage('这是第一张图片')
+  }
+}
+
+const nextImage = () => {
+  if (currentIndex.value < imageList.value.length - 1) {
+    resetImage(true) // 立即重置
+    currentIndex.value++
+  } else {
+    showTipMessage('已经最后一张图片')
+  }
+}
+
+// 添加键盘事件处理
+const handleKeydown = (e: KeyboardEvent) => {
+  switch (e.key) {
+    case 'ArrowLeft':
+      prevImage()
+      break
+    case 'ArrowRight':
+      nextImage()
+      break
+    case '=':
+    case '+':
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault()
+        zoomIn()
+      }
+      break
+    case '-':
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault()
+        zoomOut()
+      }
+      break
+    case '0':
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault()
+        resetImage()
+      }
+      break
+    case 'Escape':
+      appWindow.close()
+      break
+  }
+}
+
+onMounted(async () => {
+  // 显示窗口
+  await getCurrentWebviewWindow().show()
+  imageList.value = imageViewerStore.imageList
+  currentIndex.value = imageViewerStore.currentIndex
+  // 监听键盘事件
+  document.addEventListener('keydown', handleKeydown)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeydown)
+  document.removeEventListener('mousemove', handleDrag)
+  document.removeEventListener('mouseup', stopDrag)
+})
+</script>
+
+<style scoped>
+.viewer-tip-enter-active,
+.viewer-tip-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.viewer-tip-enter-from,
+.viewer-tip-leave-to {
+  opacity: 0;
+}
+</style>

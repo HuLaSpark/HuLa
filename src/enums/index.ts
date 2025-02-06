@@ -117,7 +117,9 @@ export enum StoresEnum {
   /** 账号账号历史记录列表 */
   LOGIN_HISTORY = 'loginHistory',
   /** 好友列表 */
-  NOTICE = 'notice'
+  NOTICE = 'notice',
+  /** 图片查看器数据 */
+  IMAGEVIEWER = 'imageViewer'
 }
 
 /**
