@@ -26,10 +26,14 @@ import {
 
 import request from '@/services/request'
 
-const GET = <T>(url: string, params?: any, abort?: AbortController) => request.get<T>(url, params, abort)
-const POST = <T>(url: string, params?: any, abort?: AbortController) => request.post<T>(url, params, abort)
-const PUT = <T>(url: string, params?: any, abort?: AbortController) => request.put<T>(url, params, abort)
-const DELETE = <T>(url: string, params?: any, abort?: AbortController) => request.delete<T>(url, params, abort)
+const GET = <T>(url: string, params?: any, abort?: AbortController, noRetry?: boolean) =>
+  request.get<T>(url, params, abort, noRetry)
+const POST = <T>(url: string, params?: any, abort?: AbortController, noRetry?: boolean) =>
+  request.post<T>(url, params, abort, noRetry)
+const PUT = <T>(url: string, params?: any, abort?: AbortController, noRetry?: boolean) =>
+  request.put<T>(url, params, abort, noRetry)
+const DELETE = <T>(url: string, params?: any, abort?: AbortController, noRetry?: boolean) =>
+  request.delete<T>(url, params, abort, noRetry)
 
 export default {
   /** 获取群成员列表 */
