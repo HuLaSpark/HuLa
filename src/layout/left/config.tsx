@@ -93,25 +93,29 @@ const moreList = ref<OPT.L.MoreList[]>([
     label: '退出账号',
     icon: 'power',
     click: async () => {
-      // rust保存用户信息
-      await invoke('save_user_info', {
-        userId: -1,
-        username: '',
-        token: '',
-        portrait: '',
-        isSign: false
-      })
-      // 后端发布下线通知同时清除token
-      await apis.logout()
-      await logout()
-      // 如果没有设置自动登录，则清除用户信息
-      userStore.userInfo = {}
-      localStorage.removeItem('user')
-      localStorage.removeItem('TOKEN')
-      const headers = new Headers()
-      headers.append('Authorization', '')
-      userStore.isSign = false
-      loginStore.loginStatus = LoginStatus.Init
+      try {
+        // 1. 先调用后端退出接口
+        await apis.logout()
+        // 2. 保存 rust 端用户信息
+        await invoke('save_user_info', {
+          userId: -1,
+          username: '',
+          token: '',
+          portrait: '',
+          isSign: false
+        })
+        // 3. 清理本地存储
+        localStorage.removeItem('user')
+        localStorage.removeItem('TOKEN')
+        // 4. 重置用户状态
+        userStore.isSign = false
+        userStore.userInfo = {}
+        loginStore.loginStatus = LoginStatus.Init
+        // 5. 最后调用登出方法(这会创建登录窗口)
+        await logout()
+      } catch (error) {
+        console.error('退出登录失败:', error)
+      }
     }
   }
 ])

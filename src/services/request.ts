@@ -1,5 +1,7 @@
 import Http, { HttpParams } from './http.ts'
 import { ServiceResponse } from '@/services/types.ts'
+import { AppException } from '@/common/exception'
+import { ErrorType } from '@/common/exception'
 
 function getToken() {
   let tempToken = ''
@@ -52,12 +54,16 @@ const responseInterceptor = async <T>(
     const serviceData = (await data.data) as ServiceResponse
     //检查服务端返回是否成功，并且中断请求
     if (!serviceData.success) {
-      window.$message.error(serviceData.errMsg)
-      return Promise.reject(`http error: ${serviceData.errMsg}`)
+      return Promise.reject(
+        new AppException(serviceData.errMsg, {
+          type: ErrorType.Server,
+          showError: true
+        })
+      )
     }
     return Promise.resolve(serviceData.data)
   } catch (err) {
-    return Promise.reject(`http error: ${err}`)
+    return Promise.reject(err)
   }
 }
 

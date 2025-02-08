@@ -139,5 +139,20 @@ If you think HuLa is helpful to you, welcome to sponsor HuLa. Your support is ou
 ## HuLa Community discussion groups
 <img src="preview/wx.png" width="260" height="300" alt="微信群二维码" style="border-radius: 12px;" />
 
+## List of sponsors
+Thanks to the following sponsors for their support!
+
+| Date | Sponsor | Sum | Platform |
+|------|--------|------|------|
+| 2025-02-8 | 邓伟 | ￥88 | 微信赞赏码 |
+| 2025-02-8 | Boom.... | ￥100 | 微信赞赏码 |
+| 2025-02-7 | dennis | ￥80 | gitee码云赞赏 |
+| 2025-02-6 | 小二 | ￥62 | 微信转账 |
+
+> Note: This list is manually updated. If you have sponsored but are not displayed in the list, please contact us by:
+ 1. Submit Issue on GitHub
+ 2. Send an email to: 2439646234@qq.com
+ 3. Contact via WeChat: cy2439646234
+
 ## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa?ref=badge_large)

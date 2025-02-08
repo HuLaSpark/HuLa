@@ -16,34 +16,6 @@ export const formatBytes = (bytes: number): string => {
   return size + ' ' + units[unitIndex]
 }
 
-/**
- * 图片尺寸格式化
- * @param width 图片宽度
- * @param height 图片高度
- * @param option 选项: { maxWidth: number, maxHeight: number }
- */
-export const formatImage = (
-  width: number,
-  height: number,
-  option = {
-    maxWidth: 200,
-    maxHeight: 150
-  }
-): number => {
-  const { maxWidth, maxHeight } = option
-  // 小： 如果图片宽高都小于最大宽高，直接返回原高度
-  if (width < maxWidth && height < maxHeight) {
-    return height
-    // 宽： 根据宽度等比缩放
-  } else if (width > height) {
-    return (maxWidth / width) * height
-    // 窄：返回最大高度
-  } else if (width === height || width < height) {
-    return maxHeight
-  }
-  return maxHeight
-}
-
 /** 注意！这是文件图标映射关系表，如有修改需求-请联系前端管理同学 */
 const fileSuffixMap: Record<string, string> = {
   jpg: 'jpg',

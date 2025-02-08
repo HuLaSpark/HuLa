@@ -24,7 +24,7 @@
 }
 .bubble {
   &::selection {
-    background: red; /* 设置选中背景为透明 */
+    background: transparent; /* 设置选中背景为透明 */
   }
   @include bubble;
 }

@@ -11,12 +11,15 @@ export interface ErrorDetails {
   type: ErrorType
   code?: number
   details?: Record<string, any>
+  showError?: boolean
 }
 
 export class AppException extends Error {
   public readonly type: ErrorType
   public readonly code?: number
   public readonly details?: Record<string, any>
+  // 使用静态标志位来追踪是否已经显示过错误消息
+  private static hasShownError = false
 
   constructor(message: string, errorDetails?: Partial<ErrorDetails>) {
     super(message)
@@ -25,9 +28,15 @@ export class AppException extends Error {
     this.code = errorDetails?.code
     this.details = errorDetails?.details
 
-    // Show error message to user if window.$message is available
-    if (window.$message) {
+    // 只有在明确指定显示错误时才显示
+    if (errorDetails?.showError && window.$message && !AppException.hasShownError) {
       window.$message.error(message)
+      AppException.hasShownError = true
+
+      // 只有在 2 秒内没有显示过错误消息时才会显示
+      setTimeout(() => {
+        AppException.hasShownError = false
+      }, 2000)
     }
   }
 

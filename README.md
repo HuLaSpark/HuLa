@@ -104,7 +104,7 @@ pnpm run tauri:build
 
 网页上下载安装包会提示安装包已损坏，可能会遇到证书问题，这是因为 macOS 系统的安全机制导致的。请按照以下步骤解决：
 
-#### 1. 打开 “系统设置” - “安全性与隐私”，如图勾选：允许 “任何来源” 下载的 App 运行：
+#### 1. 打开 "系统设置" - "安全性与隐私"，如图勾选：允许 "任何来源" 下载的 App 运行：
 
 <div style="padding: 28px; display: inline-block;">
   <img src="preview/img_9.png" alt="img_9.png" style="border-radius: 8px; display: block;"  />
@@ -138,6 +138,21 @@ sudo xattr -rd com.apple.quarantine 你的安装包路径/HuLa.app
 
 ## HuLa社区讨论群
 <img src="preview/wx.png" width="260" height="300" alt="微信群二维码" style="border-radius: 12px;" />
+
+## 赞助者名单
+感谢以下赞助者的支持！
+
+| 日期 | 赞助者 | 金额 | 平台 |
+|------|--------|------|------|
+| 2025-02-8 | 邓伟 | ￥88 | 微信赞赏码 |
+| 2025-02-8 | Boom.... | ￥100 | 微信赞赏码 |
+| 2025-02-7 | dennis | ￥80 | gitee码云赞赏 |
+| 2025-02-6 | 小二 | ￥62 | 微信转账 |
+
+> 注：该名单为手动更新。如果您已赞助但未显示在列表中，请通过以下方式联系我们：
+ 1. 在GitHub上提交Issue
+ 2. 发送邮件至: 2439646234@qq.com
+ 3. 通过微信联系: cy2439646234
 
 ## 许可证
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa?ref=badge_large)

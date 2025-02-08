@@ -8,6 +8,7 @@ import { AppException, ErrorType } from '../common/exception'
  * @property {Record<string, any>} [query] 请求参数
  * @property {any} [body] 请求体
  * @property {boolean} [isBlob] 是否为Blob
+ * @property {RetryOptions} [retry] 重试选项
  * @property {boolean} [noRetry] 是否禁用重试
  * @return HttpParams
  */
@@ -184,11 +185,11 @@ async function Http<T = any>(
       // 若有success === false，需要重试
       if (responseData && responseData.success === false) {
         const errorMessage = responseData.errMsg || '服务器返回错误'
-        window.$message?.error?.(errorMessage)
         throw new AppException(errorMessage, {
           type: ErrorType.Server,
           code: response.status,
-          details: responseData
+          details: responseData,
+          showError: !shouldRetry(currentAttempt, retries, abort) // 只在最后一次重试失败时显示错误
         })
       }
 
@@ -204,26 +205,26 @@ async function Http<T = any>(
       if (!shouldRetry(currentAttempt, retries, abort)) {
         console.error(`Max retries reached or aborted. Request failed → ${url}`)
         if (error instanceof FetchRetryError) {
-          window.$message?.error?.(error.message || '网络请求失败')
           throw new AppException(error.message, {
             type: error.type,
             code: error.status,
-            details: { url, attempts: currentAttempt + 1 }
+            details: { url, attempts: currentAttempt + 1 },
+            showError: true // 重试次数用完后显示错误
           })
         }
         if (error instanceof AppException) {
-          window.$message?.error?.(error.message || '请求出错')
+          // 如果是 AppException，保持原有的 showError 设置
           throw error
         }
         const errorMessage = String(error) || '未知错误'
-        window.$message?.error?.(errorMessage)
         throw new AppException(errorMessage, {
           type: ErrorType.Unknown,
-          details: { url, attempts: currentAttempt + 1 }
+          details: { url, attempts: currentAttempt + 1 },
+          showError: true // 重试次数用完后显示错误
         })
       }
 
-      // 若需继续重试
+      // 若需继续重试，不显示错误消息
       const delayMs = retryDelay ? retryDelay(currentAttempt) : 1000
       console.warn(`Retrying request → ${url} (next attempt: ${currentAttempt + 2}, waiting ${delayMs}ms)`)
       await wait(delayMs)
