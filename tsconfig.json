@@ -24,7 +24,8 @@
     "baseUrl": ".",
     "paths": {
       "~/*": ["./*"],
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "#/*": ["./src/mobile/*"]
     },
     "types": ["vitest/globals", "@vue/test-utils"],
     "allowSyntheticDefaultImports": true,

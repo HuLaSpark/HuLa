@@ -126,6 +126,8 @@ export default {
     }),
   /** 账号密码登录 */
   login: (user: LoginUserReq, abort?: AbortController) => POST<string>(urls.login, user, abort),
+  /** 移动端登录 */
+  mobileLogin: (user: LoginUserReq, abort?: AbortController) => POST<string>(urls.mobileLogin, user, abort),
   /** 退出登录 */
   logout: (abort?: AbortController) => POST<string>(urls.logout, abort),
   /** 注册 */

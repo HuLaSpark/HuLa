@@ -84,6 +84,11 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/Capture.vue')
   },
   {
+    path: '/imageViewer',
+    name: 'imageViewer',
+    component: () => import('@/views/imageViewerWindow/index.vue')
+  },
+  {
     path: '/home',
     name: 'home',
     component: () => import('@/layout/index.vue'),
