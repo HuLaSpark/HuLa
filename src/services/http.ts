@@ -17,8 +17,8 @@ export type HttpParams = {
   query?: Record<string, any>
   body?: any
   isBlob?: boolean
-  retry?: RetryOptions // 新增重试选项
-  noRetry?: boolean // 新增禁用重试选项
+  retry?: RetryOptions // 重试选项
+  noRetry?: boolean // 禁用重试
 }
 
 /**
