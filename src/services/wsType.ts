@@ -27,7 +27,9 @@ export enum WsResponseMessageType {
   /** 成员变动 */
   NEW_FRIEND_SESSION = 'newFriendSession',
   /** 下线通知 */
-  OFFLINE = 'offline'
+  OFFLINE = 'offline',
+  /** 同意好友请求 */
+  REQUEST_APPROVAL_FRIEND = 'requestApprovalFriend'
 }
 
 /**

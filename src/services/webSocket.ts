@@ -214,6 +214,17 @@ class WS {
           )
           break
         }
+        // 同意好友请求
+        case WsResponseMessageType.REQUEST_APPROVAL_FRIEND: {
+          console.log('同意好友申请')
+          useMitt.emit(
+            WsResponseMessageType.REQUEST_APPROVAL_FRIEND,
+            params.data as {
+              uid: number
+            }
+          )
+          break
+        }
         default: {
           console.log('接收到未处理类型的消息:', params)
           break
