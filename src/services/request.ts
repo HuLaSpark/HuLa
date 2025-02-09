@@ -1,5 +1,7 @@
 import Http, { HttpParams } from './http.ts'
 import { ServiceResponse } from '@/services/types.ts'
+import { AppException } from '@/common/exception'
+import { ErrorType } from '@/common/exception'
 
 function getToken() {
   let tempToken = ''
@@ -26,10 +28,12 @@ const responseInterceptor = async <T>(
   method: 'GET' | 'POST' | 'PUT' | 'DELETE',
   query: any,
   body: any,
-  abort?: AbortController
+  abort?: AbortController,
+  noRetry?: boolean
 ): Promise<T> => {
   let httpParams: HttpParams = {
-    method
+    method,
+    noRetry
   }
 
   if (method === 'GET') {
@@ -50,29 +54,33 @@ const responseInterceptor = async <T>(
     const serviceData = (await data.data) as ServiceResponse
     //检查服务端返回是否成功，并且中断请求
     if (!serviceData.success) {
-      window.$message.error(serviceData.errMsg)
-      return Promise.reject(`http error: ${serviceData.errMsg}`)
+      return Promise.reject(
+        new AppException(serviceData.errMsg, {
+          type: ErrorType.Server,
+          showError: true
+        })
+      )
     }
     return Promise.resolve(serviceData.data)
   } catch (err) {
-    return Promise.reject(`http error: ${err}`)
+    return Promise.reject(err)
   }
 }
 
-const get = async <T>(url: string, query: T, abort?: AbortController): Promise<T> => {
-  return responseInterceptor(url, 'GET', query, {}, abort)
+const get = async <T>(url: string, query: T, abort?: AbortController, noRetry?: boolean): Promise<T> => {
+  return responseInterceptor(url, 'GET', query, {}, abort, noRetry)
 }
 
-const post = async <T>(url: string, params: any, abort?: AbortController): Promise<T> => {
-  return responseInterceptor(url, 'POST', {}, params, abort)
+const post = async <T>(url: string, params: any, abort?: AbortController, noRetry?: boolean): Promise<T> => {
+  return responseInterceptor(url, 'POST', {}, params, abort, noRetry)
 }
 
-const put = async <T>(url: string, params: any, abort?: AbortController): Promise<T> => {
-  return responseInterceptor(url, 'PUT', {}, params, abort)
+const put = async <T>(url: string, params: any, abort?: AbortController, noRetry?: boolean): Promise<T> => {
+  return responseInterceptor(url, 'PUT', {}, params, abort, noRetry)
 }
 
-const del = async <T>(url: string, params: any, abort?: AbortController): Promise<T> => {
-  return responseInterceptor(url, 'DELETE', {}, params, abort)
+const del = async <T>(url: string, params: any, abort?: AbortController, noRetry?: boolean): Promise<T> => {
+  return responseInterceptor(url, 'DELETE', {}, params, abort, noRetry)
 }
 
 export default {

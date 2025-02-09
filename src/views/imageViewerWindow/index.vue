@@ -1,15 +1,12 @@
 <template>
-  <div class="size-full bg-#222">
+  <div class="size-full bg-#222 relative flex flex-col" @mousemove="handleMouseMove" @mouseleave="handleMouseLeave">
     <!-- 顶部操作栏 -->
-    <ActionBar class="bg-#000" :shrink="false" :current-label="currentLabel" />
+    <ActionBar class="bg-#000 z-9999" :shrink="false" :current-label="currentLabel" />
 
     <!-- 主体内容区域 -->
-    <div style="height: calc(100% - 24px)" class="relative w-full flex flex-col">
+    <div class="flex-1 overflow-auto">
       <!-- 图片展示区域 -->
-      <div
-        class="flex-1 relative flex-center"
-        @mousemove="handleMouseMove"
-        @mouseleave="showArrows.left = showArrows.right = false">
+      <div class="min-h-[calc(100vh-124px)] flex-center">
         <img
           ref="imageRef"
           :src="currentImage"
@@ -20,84 +17,87 @@
           class="max-w-90% max-h-90% select-none"
           :class="{ 'transition-transform duration-200': !isDragging }"
           @mousedown="startDrag"
-          @wheel.passive="handleWheel"
           alt="preview" />
 
         <!-- 提示文本 -->
         <transition name="viewer-tip">
           <div
             v-if="showTip"
-            class="absolute z-10 bg-black/60 px-24px py-12px rounded-8px text-(white 14px) transition-all duration-300 backdrop-blur-sm select-none flex items-center gap-8px">
+            class="fixed z-10 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/60 px-24px py-12px rounded-8px text-(white 14px) transition-all duration-300 backdrop-blur-sm select-none flex items-center gap-8px">
             <svg class="size-16px"><use href="#info"></use></svg>
             {{ tipText }}
           </div>
         </transition>
-
-        <!-- 左右箭头 -->
-        <div
-          v-show="imageList.length > 1 && showArrows.left"
-          @click="prevImage"
-          class="absolute left-20px top-1/2 -translate-y-1/2 size-40px rounded-full bg-black/30 flex-center cursor-pointer hover:bg-black/50 transition-all duration-200 opacity-0"
-          :class="{ 'opacity-100': showArrows.left }">
-          <svg class="size-24px color-white rotate-180"><use href="#arrow-right"></use></svg>
-        </div>
-        <div
-          v-show="imageList.length > 1 && showArrows.right"
-          @click="nextImage"
-          class="absolute right-20px top-1/2 -translate-y-1/2 size-40px rounded-full bg-black/30 flex-center cursor-pointer hover:bg-black/50 transition-all duration-200 opacity-0"
-          :class="{ 'opacity-100': showArrows.right }">
-          <svg class="size-24px color-white"><use href="#arrow-right"></use></svg>
-        </div>
       </div>
+    </div>
 
-      <!-- 底部工具栏 -->
-      <div data-tauri-drag-region class="z-9999 h-50px bg-#000 flex justify-center items-center gap-30px">
-        <n-tooltip placement="top">
-          <template #trigger>
-            <svg @click="zoomOut" class="size-24px cursor-pointer color-white"><use href="#zoom-out"></use></svg>
-          </template>
-          缩小
-        </n-tooltip>
+    <!-- 左右箭头 -->
+    <div
+      v-show="imageList.length > 1 && showArrows.left"
+      @click="prevImage"
+      @mouseenter="handleArrowEnter('left')"
+      @mouseleave="handleArrowLeave('left')"
+      class="fixed left-20px top-1/2 -translate-y-1/2 size-40px rounded-full bg-black/30 flex-center cursor-pointer hover:bg-black/50 transition-all duration-200 opacity-0 z-10"
+      :class="{ 'opacity-100': showArrows.left }">
+      <svg class="size-24px color-white rotate-180"><use href="#arrow-right"></use></svg>
+    </div>
+    <div
+      v-show="imageList.length > 1 && showArrows.right"
+      @click="nextImage"
+      @mouseenter="handleArrowEnter('right')"
+      @mouseleave="handleArrowLeave('right')"
+      class="fixed right-20px top-1/2 -translate-y-1/2 size-40px rounded-full bg-black/30 flex-center cursor-pointer hover:bg-black/50 transition-all duration-200 opacity-0 z-10"
+      :class="{ 'opacity-100': showArrows.right }">
+      <svg class="size-24px color-white"><use href="#arrow-right"></use></svg>
+    </div>
 
-        <span class="color-white text-14px min-w-50px text-center select-none">{{ scaleText }}</span>
+    <!-- 底部工具栏 -->
+    <div data-tauri-drag-region class="z-9999 h-50px bg-#000 flex justify-center items-center gap-30px">
+      <n-tooltip placement="top">
+        <template #trigger>
+          <svg @click="zoomOut" class="size-24px cursor-pointer color-white"><use href="#zoom-out"></use></svg>
+        </template>
+        缩小
+      </n-tooltip>
 
-        <n-tooltip placement="top">
-          <template #trigger>
-            <svg @click="zoomIn" class="size-24px cursor-pointer color-white"><use href="#zoom-in"></use></svg>
-          </template>
-          放大
-        </n-tooltip>
+      <span class="color-white text-14px min-w-50px text-center select-none">{{ scaleText }}</span>
 
-        <n-tooltip placement="top">
-          <template #trigger>
-            <svg @click="rotateLeft" class="size-24px cursor-pointer scale-x--100 color-white">
-              <use href="#RotateRight"></use>
-            </svg>
-          </template>
-          向左旋转
-        </n-tooltip>
+      <n-tooltip placement="top">
+        <template #trigger>
+          <svg @click="zoomIn" class="size-24px cursor-pointer color-white"><use href="#zoom-in"></use></svg>
+        </template>
+        放大
+      </n-tooltip>
 
-        <n-tooltip placement="top">
-          <template #trigger>
-            <svg @click="rotateRight" class="size-24px cursor-pointer color-white"><use href="#RotateRight"></use></svg>
-          </template>
-          向右旋转
-        </n-tooltip>
+      <n-tooltip placement="top">
+        <template #trigger>
+          <svg @click="rotateLeft" class="size-24px cursor-pointer scale-x--100 color-white">
+            <use href="#RotateRight"></use>
+          </svg>
+        </template>
+        向左旋转
+      </n-tooltip>
 
-        <n-tooltip placement="top">
-          <template #trigger>
-            <svg @click="resetImage()" class="size-24px cursor-pointer color-white"><use href="#refresh"></use></svg>
-          </template>
-          重置
-        </n-tooltip>
+      <n-tooltip placement="top">
+        <template #trigger>
+          <svg @click="rotateRight" class="size-24px cursor-pointer color-white"><use href="#RotateRight"></use></svg>
+        </template>
+        向右旋转
+      </n-tooltip>
 
-        <n-tooltip placement="top">
-          <template #trigger>
-            <svg @click="saveImage" class="size-24px cursor-pointer color-white"><use href="#Importing"></use></svg>
-          </template>
-          另存为
-        </n-tooltip>
-      </div>
+      <n-tooltip placement="top">
+        <template #trigger>
+          <svg @click="resetImage()" class="size-24px cursor-pointer color-white"><use href="#refresh"></use></svg>
+        </template>
+        重置
+      </n-tooltip>
+
+      <n-tooltip placement="top">
+        <template #trigger>
+          <svg @click="saveImage" class="size-24px cursor-pointer color-white"><use href="#Importing"></use></svg>
+        </template>
+        另存为
+      </n-tooltip>
     </div>
   </div>
 </template>
@@ -131,7 +131,9 @@ const tipText = ref('')
 // 左右箭头显示
 const showArrows = reactive({
   left: false,
-  right: false
+  right: false,
+  leftHover: false,
+  rightHover: false
 })
 
 // 添加缩放倍数显示的计算属性
@@ -147,10 +149,35 @@ const handleMouseMove = (e: MouseEvent) => {
   const { innerWidth } = window
 
   // 左侧箭头显示逻辑
-  showArrows.left = clientX <= 78
+  if (!showArrows.leftHover) {
+    showArrows.left = clientX <= 78
+  }
 
   // 右侧箭头显示逻辑
-  showArrows.right = innerWidth - clientX <= 78
+  if (!showArrows.rightHover) {
+    showArrows.right = innerWidth - clientX <= 78
+  }
+}
+
+// 添加鼠标离开整个容器的处理
+const handleMouseLeave = () => {
+  if (!showArrows.leftHover) {
+    showArrows.left = false
+  }
+  if (!showArrows.rightHover) {
+    showArrows.right = false
+  }
+}
+
+// 添加箭头hover状态处理
+const handleArrowEnter = (direction: 'left' | 'right') => {
+  showArrows[`${direction}Hover`] = true
+  showArrows[direction] = true
+}
+
+const handleArrowLeave = (direction: 'left' | 'right') => {
+  showArrows[`${direction}Hover`] = false
+  showArrows[direction] = false
 }
 
 // 图片拖动相关
@@ -186,17 +213,6 @@ const handleDrag = (e: MouseEvent) => {
   imagePosition.x = e.clientX - dragStart.x
   imagePosition.y = e.clientY - dragStart.y
   updateTransform()
-}
-
-// 修改滚轮缩放
-const handleWheel = (e: WheelEvent) => {
-  e.preventDefault()
-  const delta = e.deltaY > 0 ? -0.1 : 0.1
-  const newScale = Math.max(0.1, Math.min(5, scale.value + delta))
-  if (newScale !== scale.value) {
-    scale.value = newScale
-    updateTransform()
-  }
 }
 
 // 工具栏操作
@@ -347,5 +363,20 @@ onUnmounted(() => {
 .viewer-tip-enter-from,
 .viewer-tip-leave-to {
   opacity: 0;
+}
+
+/* 自定义滚动条样式 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 </style>

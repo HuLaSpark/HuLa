@@ -26,10 +26,14 @@ import {
 
 import request from '@/services/request'
 
-const GET = <T>(url: string, params?: any, abort?: AbortController) => request.get<T>(url, params, abort)
-const POST = <T>(url: string, params?: any, abort?: AbortController) => request.post<T>(url, params, abort)
-const PUT = <T>(url: string, params?: any, abort?: AbortController) => request.put<T>(url, params, abort)
-const DELETE = <T>(url: string, params?: any, abort?: AbortController) => request.delete<T>(url, params, abort)
+const GET = <T>(url: string, params?: any, abort?: AbortController, noRetry?: boolean) =>
+  request.get<T>(url, params, abort, noRetry)
+const POST = <T>(url: string, params?: any, abort?: AbortController, noRetry?: boolean) =>
+  request.post<T>(url, params, abort, noRetry)
+const PUT = <T>(url: string, params?: any, abort?: AbortController, noRetry?: boolean) =>
+  request.put<T>(url, params, abort, noRetry)
+const DELETE = <T>(url: string, params?: any, abort?: AbortController, noRetry?: boolean) =>
+  request.delete<T>(url, params, abort, noRetry)
 
 export default {
   /** 获取群成员列表 */
@@ -121,15 +125,18 @@ export default {
       roomId
     }),
   /** 账号密码登录 */
-  login: (user: LoginUserReq, abort?: AbortController) => POST<string>(urls.login, user, abort),
+  login: (user: LoginUserReq, abort?: AbortController, noRetry = true) =>
+    POST<string>(urls.login, user, abort, noRetry),
   /** 移动端登录 */
-  mobileLogin: (user: LoginUserReq, abort?: AbortController) => POST<string>(urls.mobileLogin, user, abort),
+  mobileLogin: (user: LoginUserReq, abort?: AbortController, noRetry = true) =>
+    POST<string>(urls.mobileLogin, user, abort, noRetry),
   /** 退出登录 */
-  logout: (abort?: AbortController) => POST<string>(urls.logout, abort),
+  logout: () => POST<string>(urls.logout, void 0, void 0, true),
   /** 注册 */
-  register: (user: RegisterUserReq) => POST<string>(urls.register, user),
+  register: (user: RegisterUserReq, abort?: AbortController, noRetry = true) =>
+    POST<string>(urls.register, user, abort, noRetry),
   /** 检查token是否有效 */
-  checkToken: () => POST<string>(urls.checkToken),
+  checkToken: () => POST<string>(urls.checkToken, void 0, void 0, true),
   /** 下线 */
-  offline: () => POST<string>(urls.offline)
+  offline: () => POST<string>(urls.offline, void 0, void 0, true)
 }

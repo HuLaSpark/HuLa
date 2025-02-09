@@ -43,7 +43,7 @@
     "========= 校验代码规范 =========": "",
     "lint:staged": "lint-staged && vue-tsc --noEmit",
     "========= 安装husky =========": "",
-    "prepare": "husky install",
+    "prepare": "husky",
     "========= 发版 =========": "",
     "release": "release-it",
     "========= commit后再次添加修改到上一次的commit =========": "",

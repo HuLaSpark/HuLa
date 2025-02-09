@@ -371,7 +371,7 @@ onMounted(async () => {
   await getCurrentWebviewWindow().show()
   useMitt.on(WsResponseMessageType.NO_INTERNET, () => {
     loginDisabled.value = true
-    loginText.value = '网络已断开'
+    loginText.value = '服务异常断开'
   })
   // 自动登录
   if (login.value.autoLogin && TOKEN.value) {
