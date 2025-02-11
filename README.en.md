@@ -133,7 +133,11 @@ use **pnpm run commit** to invoke the _git commit_ interaction and follow the pr
 ## Sponsor HuLa
 If you think HuLa is helpful to you, welcome to sponsor HuLa. Your support is our motivation to keep moving forward.
 
-<img src="preview/zs.jpg" width="260" height="280" alt="赞助码" style="border-radius: 12px;" />
+<div style="display: flex;">
+<img src="preview/zs.jpg" width="260" height="280" alt="Sponsorship Code" style="border-radius: 12px;" />
+
+<img src="preview/zfb.png" width="260" height="280" alt="Sponsorship Code" style="border-radius: 12px; margin-left: 40px" />
+</div>
 
 
 ## HuLa Community discussion groups

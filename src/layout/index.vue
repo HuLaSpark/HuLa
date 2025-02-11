@@ -208,6 +208,10 @@ useMitt.on(
     }
   }
 )
+useMitt.on(WsResponseMessageType.REQUEST_APPROVAL_FRIEND, async () => {
+  await contactStore.getContactList(true)
+  await contactStore.getRequestFriendsList(true)
+})
 
 onBeforeMount(async () => {
   // 默认执行一次

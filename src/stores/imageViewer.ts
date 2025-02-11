@@ -6,9 +6,13 @@ export const useImageViewer = defineStore(
   () => {
     const imageList = ref<string[]>([])
     const currentIndex = ref(0)
+    // 单图模式相关变量
+    const singleImage = ref('')
+    const isSingleMode = ref(false)
 
     // 添加一个重置方法,用于设置新的图片列表
     const resetImageList = (list: string[], originalIndex: number) => {
+      isSingleMode.value = false
       // 创建一个去重后的新数组，同时保持原有顺序
       const uniqueList: string[] = []
       const seenUrls = new Set<string>()
@@ -27,10 +31,19 @@ export const useImageViewer = defineStore(
       currentIndex.value = newIndex !== -1 ? newIndex : 0
     }
 
+    // 设置单图的方法
+    const setSingleImage = (url: string) => {
+      singleImage.value = url
+      isSingleMode.value = true
+    }
+
     return {
       imageList,
       currentIndex,
-      resetImageList
+      resetImageList,
+      singleImage,
+      isSingleMode,
+      setSingleImage
     }
   },
   {

@@ -1,10 +1,13 @@
 <template>
-  <div class="size-full bg-#222 relative flex flex-col" @mousemove="handleMouseMove" @mouseleave="handleMouseLeave">
+  <div
+    class="size-full bg-#222 relative flex flex-col select-none"
+    @mousemove="handleMouseMove"
+    @mouseleave="handleMouseLeave">
     <!-- 顶部操作栏 -->
     <ActionBar class="bg-#000 z-9999" :shrink="false" :current-label="currentLabel" />
 
     <!-- 主体内容区域 -->
-    <div class="flex-1 overflow-auto">
+    <div ref="contentRef" class="flex-1 overflow-auto">
       <!-- 图片展示区域 -->
       <div class="min-h-[calc(100vh-124px)] flex-center">
         <img
@@ -15,7 +18,7 @@
             cursor: isDragging ? 'grabbing' : 'grab'
           }"
           class="max-w-90% max-h-90% select-none"
-          :class="{ 'transition-transform duration-200': !isDragging }"
+          :class="[{ 'transition-transform duration-200': !isDragging }, { 'mt-62px': !isScrollbar }]"
           @mousedown="startDrag"
           alt="preview" />
 
@@ -125,6 +128,9 @@ const isDragging = ref(false)
 const dragStart = reactive({ x: 0, y: 0 })
 const imagePosition = reactive({ x: 0, y: 0 })
 const imageRef = ref<HTMLImageElement>()
+// 添加响应式变量来跟踪是否有滚动条
+const contentScrollbar = useTemplateRef('contentRef')
+const isScrollbar = ref(false)
 //提示相关的响应式变量
 const showTip = ref(false)
 const tipText = ref('')
@@ -141,7 +147,12 @@ const scaleText = computed(() => {
   return `${Math.round(scale.value * 100)}%`
 })
 // 当前显示的图片URL
-const currentImage = computed(() => imageList.value[currentIndex.value])
+const currentImage = computed(() => {
+  if (imageViewerStore.isSingleMode) {
+    return imageViewerStore.singleImage
+  }
+  return imageList.value[currentIndex.value]
+})
 
 // 添加鼠标移动处理函数
 const handleMouseMove = (e: MouseEvent) => {
@@ -290,6 +301,9 @@ const prevImage = () => {
   if (currentIndex.value > 0) {
     resetImage(true) // 立即重置
     currentIndex.value--
+    setTimeout(() => {
+      checkScrollbar()
+    }, 16)
   } else {
     showTipMessage('这是第一张图片')
   }
@@ -299,6 +313,9 @@ const nextImage = () => {
   if (currentIndex.value < imageList.value.length - 1) {
     resetImage(true) // 立即重置
     currentIndex.value++
+    setTimeout(() => {
+      checkScrollbar()
+    }, 16)
   } else {
     showTipMessage('已经最后一张图片')
   }
@@ -338,11 +355,30 @@ const handleKeydown = (e: KeyboardEvent) => {
   }
 }
 
+// 检查是否有滚动条的函数
+const checkScrollbar = () => {
+  if (contentScrollbar.value) {
+    isScrollbar.value = contentScrollbar.value.scrollHeight > contentScrollbar.value.clientHeight
+  }
+}
+
 onMounted(async () => {
   // 显示窗口
   await getCurrentWebviewWindow().show()
-  imageList.value = imageViewerStore.imageList
-  currentIndex.value = imageViewerStore.currentIndex
+  setTimeout(() => {
+    checkScrollbar()
+  }, 16)
+
+  if (imageViewerStore.isSingleMode) {
+    // 单图模式下不需要设置 imageList 和 currentIndex
+    imageList.value = [imageViewerStore.singleImage]
+    currentIndex.value = 0
+  } else {
+    // 多图模式保持原有逻辑
+    imageList.value = imageViewerStore.imageList
+    currentIndex.value = imageViewerStore.currentIndex
+  }
+
   // 监听键盘事件
   document.addEventListener('keydown', handleKeydown)
 })
@@ -378,5 +414,13 @@ onUnmounted(() => {
 
 ::-webkit-scrollbar-track {
   background: transparent;
+}
+
+/* 添加以下样式来修改 ActionBar 中的 svg 颜色 */
+:deep(.action-close),
+:deep(.hover-box) {
+  svg {
+    color: #fff !important;
+  }
 }
 </style>

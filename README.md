@@ -133,7 +133,11 @@ sudo xattr -rd com.apple.quarantine 你的安装包路径/HuLa.app
 ## 赞助HuLa
 如果您觉得HuLa对您有帮助，欢迎赞助HuLa，您的支持是我们不断前进的动力
 
+<div style="display: flex;">
 <img src="preview/zs.jpg" width="260" height="280" alt="赞助码" style="border-radius: 12px;" />
+
+<img src="preview/zfb.png" width="260" height="280" alt="赞助码" style="border-radius: 12px; margin-left: 40px" />
+</div>
 
 
 ## HuLa社区讨论群
