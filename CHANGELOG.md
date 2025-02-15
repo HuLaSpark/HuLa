@@ -1,5 +1,20 @@
 # Changelog
 
+## <small>2.6.3 (2025-02-15)</small>
+
+* feat(component): :sparkles: 增加更换头像功能 ([63ba2e6](https://github.com/HuLaSpark/HuLa/commit/63ba2e6))
+* feat(directive): :sparkles: 新增图片查看器 ([6a06f32](https://github.com/HuLaSpark/HuLa/commit/6a06f32))
+* feat(preview): :sparkles: 增加本地开发配置以及赞助渠道 ([788da74](https://github.com/HuLaSpark/HuLa/commit/788da74))
+* feat(service): ✨ 可选参数禁用http请求重试 (#202) ([223b9f2](https://github.com/HuLaSpark/HuLa/commit/223b9f2)), closes [#202](https://github.com/HuLaSpark/HuLa/issues/202)
+* build(deps-dev): bump vitest from 3.0.1 to 3.0.5 (#201) ([2a857e3](https://github.com/HuLaSpark/HuLa/commit/2a857e3)), closes [#201](https://github.com/HuLaSpark/HuLa/issues/201)
+* build(deps): bump dompurify from 3.2.3 to 3.2.4 (#205) ([835fb88](https://github.com/HuLaSpark/HuLa/commit/835fb88)), closes [#205](https://github.com/HuLaSpark/HuLa/issues/205)
+* build(mobile): :package: 修改移动端文件的位置和配置 ([12e81fd](https://github.com/HuLaSpark/HuLa/commit/12e81fd))
+* perf(common): :zap: 优化图片查看器和请求重试报错机制 ([25c39b7](https://github.com/HuLaSpark/HuLa/commit/25c39b7))
+* perf(component): :zap: 优化图片查看器 ([3afd91e](https://github.com/HuLaSpark/HuLa/commit/3afd91e))
+* fix(view): :bug: 修复好友申请方不知道对方已同意的bug (#203) ([01fd658](https://github.com/HuLaSpark/HuLa/commit/01fd658)), closes [#203](https://github.com/HuLaSpark/HuLa/issues/203)
+* Dev retry (#199) ([7abc4b3](https://github.com/HuLaSpark/HuLa/commit/7abc4b3)), closes [#199](https://github.com/HuLaSpark/HuLa/issues/199)
+* docs: :memo: 更新wx群二维码 ([1ad09e6](https://github.com/HuLaSpark/HuLa/commit/1ad09e6))
+
 ## <small>2.6.2 (2025-01-23)</small>
 
 * feat(strategy): :sparkles: 增加表情包功能支持 ([6b19f07](https://github.com/HuLaSpark/HuLa/commit/6b19f07))
