@@ -1,6 +1,6 @@
 [package]
 name = "hula"
-version = "2.6.1"
+version = "2.6.3"
 description = "hula"
 authors = ["nongyehong"]
 license = ""
@@ -27,7 +27,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2.0.5", features = [] }
 
 [dependencies]
-tauri = { version = "2.2.2", features = [
+tauri = { version = "2.2.5", features = [
     "macos-private-api",
     "tray-icon",
     "image-png",
@@ -36,7 +36,6 @@ tauri-plugin-os = "2.2.0"
 tauri-plugin-shell = "2.0.1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-tauri-plugin-websocket = "2.0.1"
 tauri-plugin-http = { version = "2.2.0", features = ["unsafe-headers"] }
 tauri-plugin-process = "2.2.0"
 tauri-plugin-fs = "2.0.1"
@@ -44,7 +43,7 @@ tauri-plugin-dialog = "2.2.0"
 tauri-plugin-upload = "2.2.0"
 tauri-plugin-global-shortcut = "2.2.0"
 tauri-plugin-clipboard-manager = "2.2.0"
-tauri-plugin-updater = "2.3.1"
+tauri-plugin-updater = "2.5.0"
 tauri-plugin-sql = { version = "2", features = ["sqlite"] }
 tauri-plugin-single-instance = "2.2.1"
 tauri-plugin-notification = "2.2.1"

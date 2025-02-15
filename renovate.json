@@ -14,23 +14,27 @@
     "labels": ["security"],
     "automerge": true
   },
+  "rangeStrategy": "bump",
   "packageRules": [
     {
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "non-major dependencies",
-      "groupSlug": "minor-patch-updates"
+      "groupSlug": "minor-patch-updates",
+      "rangeStrategy": "bump"
     },
     {
       "groupName": "Tauri dependencies",
       "groupSlug": "tauri-deps",
       "matchPackagePatterns": ["^@tauri-apps/"],
-      "matchManagers": ["npm"]
+      "matchManagers": ["npm"],
+      "rangeStrategy": "bump"
     },
     {
       "groupName": "UnoCSS dependencies",
       "groupSlug": "unocss-deps",
       "matchPackagePatterns": ["^@unocss/"],
-      "matchManagers": ["npm"]
+      "matchManagers": ["npm"],
+      "rangeStrategy": "bump"
     },
     {
       "description": "Rust crate updates",
@@ -38,7 +42,8 @@
       "groupName": "Rust dependencies",
       "groupSlug": "rust-deps",
       "enabled": true,
-      "registryUrls": ["https://crates.io"]
+      "registryUrls": ["https://crates.io"],
+      "rangeStrategy": "bump"
     }
   ],
   "enabledManagers": ["npm", "cargo"],

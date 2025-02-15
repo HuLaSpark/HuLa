@@ -9,7 +9,7 @@
       <!-- 头像 -->
       <n-flex justify="center" class="w-full pt-35px" data-tauri-drag-region>
         <n-avatar
-          class="size-80px rounded-50% bg-#b6d6d9ff border-(2px solid #fff)"
+          class="size-80px rounded-50% bg-#90909090 border-(2px solid #fff)"
           :src="AvatarUtils.getAvatarUrl(info.avatar || '/logo.png')" />
       </n-flex>
 
@@ -208,11 +208,26 @@ const route = useRoute()
 
 watchEffect(() => {
   loginDisabled.value = !(info.value.account && info.value.password && protocol.value)
-  // 清空账号的时候设置默认头像
-  if (!info.value.account) {
-    info.value.avatar = '/logo.png'
-  }
 })
+
+// 监听账号输入
+watch(
+  () => info.value.account,
+  (newAccount) => {
+    if (!newAccount) {
+      info.value.avatar = '/logo.png'
+      return
+    }
+
+    // 在登录历史中查找匹配的账号
+    const matchedAccount = loginHistories.find((history) => history.account === newAccount)
+    if (matchedAccount) {
+      info.value.avatar = matchedAccount.avatar
+    } else {
+      info.value.avatar = '/logo.png'
+    }
+  }
+)
 
 watch(isOnline, (v) => {
   if (v) {

@@ -31,7 +31,7 @@
                   <n-flex align="center" :size="10" class="h-75px pl-6px pr-8px flex-1 truncate">
                     <n-avatar
                       round
-                      bordered
+                      style="border: 1px solid var(--avatar-border-color)"
                       :size="44"
                       class="grayscale"
                       :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"

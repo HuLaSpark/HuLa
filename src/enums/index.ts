@@ -175,18 +175,27 @@ export enum ActEnum {
   Cancel
 }
 
+/** 性别 */
 export enum SexEnum {
+  /** 男 */
   MAN = 1,
+  /** 女 */
   REMALE
 }
 
+/** 权限状态 */
 export enum PowerEnum {
+  /** 用户 */
   USER,
+  /** 管理员 */
   ADMIN
 }
 
+/** 是否状态 */
 export enum IsYesEnum {
+  /** 否 */
   NO,
+  /** 是 */
   YES
 }
 
@@ -343,4 +352,14 @@ export enum ConnectionState {
   CONNECTED = 'connected',
   DISCONNECTED = 'disconnected',
   RECONNECTING = 'reconnecting'
+}
+
+/** 上传scene值状态 */
+export enum UploadSceneEnum {
+  /** 聊天 */
+  CHAT = 1,
+  /** 表情 */
+  EMOJI,
+  /** 头像 */
+  AVATAR
 }

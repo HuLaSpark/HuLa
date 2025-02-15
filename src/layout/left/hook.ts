@@ -70,7 +70,7 @@ export const leftHook = () => {
   })
 
   /** 更新缓存里面的用户信息 */
-  const updateCurrentUserCache = (key: 'name' | 'wearingItemId', value: any) => {
+  const updateCurrentUserCache = (key: 'name' | 'wearingItemId' | 'avatar', value: any) => {
     const currentUser = userStore.userInfo.uid && cachedStore.userCachedList[userStore.userInfo.uid]
     if (currentUser) {
       currentUser[key] = value // 更新缓存里面的用户信息

@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { createEventHook } from '@vueuse/core'
 import apis from '@/services/apis'
+import { UploadSceneEnum } from '@/enums'
 
 /** 文件信息类型 */
 export type FileInfoType = {
@@ -82,7 +83,7 @@ export const useUpload = () => {
           const name = Date.now() + 'thumb.jpg'
           const thumbFile = new File([blob], name, { type: 'image/jpeg' })
           // 转成File对象 并上传
-          apis.getUploadUrl({ fileName: name, scene: '1' }).then(async (res) => {
+          apis.getUploadUrl({ fileName: name, scene: UploadSceneEnum.CHAT }).then(async (res) => {
             if (res.uploadUrl && res.downloadUrl) {
               await upload(res.uploadUrl, thumbFile, true)
               // 等待上传完成
@@ -198,7 +199,7 @@ export const useUpload = () => {
       return
     }
 
-    const { downloadUrl, uploadUrl } = await apis.getUploadUrl({ fileName: info.name, scene: '1' })
+    const { downloadUrl, uploadUrl } = await apis.getUploadUrl({ fileName: info.name, scene: UploadSceneEnum.CHAT })
 
     if (uploadUrl && downloadUrl) {
       fileInfo.value = { ...info, downloadUrl }

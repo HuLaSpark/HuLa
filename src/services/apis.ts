@@ -26,14 +26,10 @@ import {
 
 import request from '@/services/request'
 
-const GET = <T>(url: string, params?: any, abort?: AbortController, noRetry?: boolean) =>
-  request.get<T>(url, params, abort, noRetry)
-const POST = <T>(url: string, params?: any, abort?: AbortController, noRetry?: boolean) =>
-  request.post<T>(url, params, abort, noRetry)
-const PUT = <T>(url: string, params?: any, abort?: AbortController, noRetry?: boolean) =>
-  request.put<T>(url, params, abort, noRetry)
-const DELETE = <T>(url: string, params?: any, abort?: AbortController, noRetry?: boolean) =>
-  request.delete<T>(url, params, abort, noRetry)
+const GET = <T>(url: string, params?: any, abort?: AbortController) => request.get<T>(url, params, abort)
+const POST = <T>(url: string, params?: any, abort?: AbortController) => request.post<T>(url, params, abort)
+const PUT = <T>(url: string, params?: any, abort?: AbortController) => request.put<T>(url, params, abort)
+const DELETE = <T>(url: string, params?: any, abort?: AbortController) => request.delete<T>(url, params, abort)
 
 export default {
   /** 获取群成员列表 */
@@ -55,7 +51,7 @@ export default {
   /** 获取用户详细信息 */
   getUserDetail: () => GET<UserInfoType>(urls.getUserInfoDetail),
   /** 获取徽章列表 */
-  getBadgeList: (): Promise<BadgeType> => GET(urls.getBadgeList),
+  getBadgeList: () => GET<BadgeType>(urls.getBadgeList),
   /** 设置用户勋章 */
   setUserBadge: (badgeId: number) => PUT<void>(urls.setUserBadge, { badgeId }),
   /** 修改用户名 */
@@ -66,6 +62,8 @@ export default {
   blockUser: (data: { uid: number }) => PUT<void>(urls.blockUser, data),
   /** 获取临时上传链接 */
   getUploadUrl: (params: any) => GET<{ downloadUrl: string; uploadUrl: string }>(urls.fileUpload, params),
+  /** 上传头像 */
+  uploadAvatar: (data: { avatar: string }) => POST<void>(urls.uploadAvatar, data),
   /** 新增表情包 */
   addEmoji: (data: { uid: number; expressionUrl: string }) => POST<MessageType>(urls.addEmoji, data),
   /** 获取表情 **/
@@ -125,18 +123,15 @@ export default {
       roomId
     }),
   /** 账号密码登录 */
-  login: (user: LoginUserReq, abort?: AbortController, noRetry = true) =>
-    POST<string>(urls.login, user, abort, noRetry),
+  login: (user: LoginUserReq, abort?: AbortController) => POST<string>(urls.login, user, abort),
   /** 移动端登录 */
-  mobileLogin: (user: LoginUserReq, abort?: AbortController, noRetry = true) =>
-    POST<string>(urls.mobileLogin, user, abort, noRetry),
+  mobileLogin: (user: LoginUserReq, abort?: AbortController) => POST<string>(urls.mobileLogin, user, abort),
   /** 退出登录 */
-  logout: () => POST<string>(urls.logout, void 0, void 0, true),
+  logout: () => POST<string>(urls.logout),
   /** 注册 */
-  register: (user: RegisterUserReq, abort?: AbortController, noRetry = true) =>
-    POST<string>(urls.register, user, abort, noRetry),
+  register: (user: RegisterUserReq, abort?: AbortController) => POST<string>(urls.register, user, abort),
   /** 检查token是否有效 */
-  checkToken: () => POST<string>(urls.checkToken, void 0, void 0, true),
+  checkToken: () => POST<string>(urls.checkToken),
   /** 下线 */
-  offline: () => POST<string>(urls.offline, void 0, void 0, true)
+  offline: () => POST<string>(urls.offline)
 }

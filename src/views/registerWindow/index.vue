@@ -123,11 +123,11 @@
             </p>
 
             <n-flex :size="10" class="ml-auto">
-              <div
+              <!-- <div
                 @click="register()"
                 class="border-(1px solid #999) cursor-pointer w-40px h-30px rounded-8px flex-center text-(12px [--text-color])">
                 稍后
-              </div>
+              </div> -->
 
               <a
                 target="_blank"

@@ -24,12 +24,25 @@
       <n-flex :size="20" class="p-22px select-none" vertical>
         <!-- 头像 -->
         <n-flex justify="center">
-          <n-avatar
-            :size="80"
-            :src="AvatarUtils.getAvatarUrl(editInfo.content.avatar!)"
-            round
-            style="border: 3px solid #fff" />
+          <n-popover trigger="hover" :delay="300" :duration="300" placement="bottom">
+            <template #trigger>
+              <div class="avatar-wrapper relative" @click="openAvatarCropper">
+                <n-avatar
+                  :size="80"
+                  :src="AvatarUtils.getAvatarUrl(editInfo.content.avatar!)"
+                  round
+                  style="border: 3px solid var(--avatar-border-color)" />
+                <div class="avatar-hover absolute size-full rounded-50% flex-center">
+                  <span class="text-12px color-white">更换头像</span>
+                </div>
+              </div>
+            </template>
+            <p class="text-12px text-[--chat-text-color] w-280px leading-5 p-4px">
+              建议大小180 * 180像素，支持JPG、PNG、WEBP等格式，图片需小于500kb
+            </p>
+          </n-popover>
         </n-flex>
+        <!-- 当前佩戴的徽章 -->
         <n-flex v-if="currentBadge" align="center" justify="center">
           <span class="text-(14px #707070)">当前佩戴的徽章:</span>
           <n-popover trigger="hover">
@@ -39,6 +52,7 @@
             <span>{{ currentBadge?.describe }}</span>
           </n-popover>
         </n-flex>
+
         <!-- 昵称编辑输入框 -->
         <n-popover placement="top-start" trigger="click">
           <template #trigger>
@@ -105,9 +119,17 @@
       </n-flex>
     </div>
   </n-modal>
+  <!-- 添加裁剪组件 -->
+  <input
+    ref="fileInput"
+    type="file"
+    accept="image/jpeg,image/png,image/webp"
+    class="hidden"
+    @change="handleFileChange" />
+  <AvatarCropper ref="cropperRef" v-model:show="showCropper" :image-url="localImageUrl" @crop="handleCrop" />
 </template>
 <script setup lang="ts">
-import { IsYesEnum, MittEnum } from '@/enums'
+import { IsYesEnum, MittEnum, UploadSceneEnum } from '@/enums'
 import { leftHook } from '@/layout/left/hook.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import apis from '@/services/apis.ts'
@@ -116,10 +138,13 @@ import { useCommon } from '@/hooks/useCommon.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { UserInfoType } from '@/services/types'
 import { AvatarUtils } from '@/utils/avatarUtils'
+import AvatarCropper from '@/components/common/AvatarCropper.vue'
+import { useLoginHistoriesStore } from '@/stores/loginHistory'
 
 let localUserInfo = ref<Partial<UserInfoType>>({})
 const userStore = useUserStore()
-const { editInfo, currentBadge, saveEditInfo, toggleWarningBadge } = leftHook()
+const loginHistoriesStore = useLoginHistoriesStore()
+const { editInfo, currentBadge, updateCurrentUserCache, saveEditInfo, toggleWarningBadge } = leftHook()
 const { countGraphemes } = useCommon()
 
 /** 不允许输入空格 */
@@ -137,6 +162,131 @@ onMounted(() => {
     })
   })
 })
+
+const showCropper = ref(false)
+const fileInput = ref<HTMLInputElement>()
+const localImageUrl = ref('')
+const cropperRef = useTemplateRef('cropperRef')
+
+const openAvatarCropper = () => {
+  fileInput.value?.click()
+}
+
+const handleFileChange = (e: Event) => {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (file) {
+    // 添加文件大小限制检查 (500KB = 500 * 1024 bytes)
+    if (file.size > 500 * 1024) {
+      window.$message.error('图片大小不能超过500KB')
+      if (fileInput.value) {
+        fileInput.value.value = ''
+      }
+      return
+    }
+
+    // 先设置图片URL，等待图片加载完成后再显示裁剪窗口
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
+    if (!allowedTypes.includes(file.type)) {
+      window.$message.error('只支持 JPG、PNG、WebP 格式的图片')
+      if (fileInput.value) {
+        fileInput.value.value = ''
+      }
+      return
+    }
+
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+
+    img.onload = () => {
+      localImageUrl.value = url
+
+      nextTick(() => {
+        showCropper.value = true
+      })
+    }
+
+    img.onerror = () => {
+      window.$message.error('图片加载失败')
+      URL.revokeObjectURL(url)
+    }
+
+    img.src = url
+  }
+}
+
+const handleCrop = async (cropBlob: Blob) => {
+  try {
+    const fileName = `avatar_${Date.now()}.png`
+    const file = new File([cropBlob], fileName, { type: 'image/png' })
+
+    // 1. 获取上传URL
+    const { uploadUrl, downloadUrl } = await apis.getUploadUrl({
+      fileName: fileName,
+      scene: UploadSceneEnum.AVATAR
+    })
+
+    // 2. 上传文件
+    const response = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/octet-stream' },
+      body: file,
+      duplex: 'half'
+    } as RequestInit)
+
+    if (!response.ok) {
+      throw new Error('文件上传失败')
+    }
+
+    // 3. 调用更新头像接口
+    await apis.uploadAvatar({ avatar: downloadUrl })
+
+    // 更新编辑信息
+    editInfo.value.content.avatar = downloadUrl
+    // 更新用户信息
+    userStore.userInfo.avatar = downloadUrl
+    // 更新登录历史记录
+    loginHistoriesStore.loginHistories.filter((item) => item.uid === userStore.userInfo.uid)[0].avatar = downloadUrl
+    // 更新缓存里面的用户信息
+    updateCurrentUserCache('avatar', downloadUrl)
+    window.$message.success('头像更新成功')
+
+    // 清理资源
+    if (localImageUrl.value) {
+      URL.revokeObjectURL(localImageUrl.value)
+    }
+    localImageUrl.value = ''
+    if (fileInput.value) {
+      fileInput.value.value = ''
+    }
+
+    // 结束加载状态
+    cropperRef.value?.finishLoading()
+    // 关闭裁剪窗口
+    showCropper.value = false
+  } catch (error) {
+    console.error('上传头像失败:', error)
+    window.$message.error('上传头像失败')
+    // 发生错误时也需要结束加载状态
+    cropperRef.value?.finishLoading()
+  }
+}
+
+// 监听裁剪窗口的关闭
+watch(
+  () => showCropper.value,
+  (newVal) => {
+    if (!newVal) {
+      // 清理资源
+      if (localImageUrl.value) {
+        URL.revokeObjectURL(localImageUrl.value)
+        localImageUrl.value = ''
+      }
+      if (fileInput.value) {
+        fileInput.value.value = ''
+      }
+    }
+  }
+)
 </script>
 <style scoped lang="scss">
 .badge-item {
@@ -155,6 +305,24 @@ onMounted(() => {
 .mac-close:hover {
   svg {
     display: block;
+  }
+}
+
+.avatar-wrapper {
+  cursor: pointer;
+
+  .avatar-hover {
+    background: rgba(33, 33, 33, 0.3);
+    opacity: 0;
+    transition: opacity 0.4s ease-in-out;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    top: 0;
+    left: 0;
+  }
+
+  &:hover .avatar-hover {
+    opacity: 1;
   }
 }
 </style>

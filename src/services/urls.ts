@@ -1,7 +1,6 @@
 import { URLEnum } from '@/enums'
 
 const { VITE_SERVICE_URL } = import.meta.env
-// 本地配置到 .env.development 里面修改。生产配置在 .env.production 里面
 const prefix = VITE_SERVICE_URL
 
 export default {
@@ -23,7 +22,7 @@ export default {
   addEmoji: `${prefix + URLEnum.USER}/emoji`, // 增加表情
   deleteEmoji: `${prefix + URLEnum.USER}/emoji`, // 删除表情
   getEmoji: `${prefix + URLEnum.USER}/emoji/list`, // 查询表情包
-
+  uploadAvatar: `${prefix + URLEnum.USER}/avatar`, // 上传头像
   // -------------- 好友相关 ---------------
   getContactList: `${prefix + URLEnum.USER}/friend/page`, // 联系人列表
   requestFriendList: `${prefix + URLEnum.USER}/friend/apply/page`, // 好友申请列表

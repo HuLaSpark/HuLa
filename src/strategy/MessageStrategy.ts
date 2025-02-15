@@ -1,4 +1,4 @@
-import { MessageStatusEnum, MsgEnum } from '@/enums'
+import { MessageStatusEnum, MsgEnum, UploadSceneEnum } from '@/enums'
 import { MessageType } from '@/services/types.ts'
 import { AppException } from '@/common/exception.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
@@ -349,7 +349,7 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
     try {
       const res = await apis.getUploadUrl({
         fileName: fileName,
-        scene: 1
+        scene: UploadSceneEnum.CHAT
       })
 
       console.log('获取上传链接成功:', res)

@@ -1,5 +1,14 @@
 import { fetch } from '@tauri-apps/plugin-http'
-import { AppException, ErrorType } from '../common/exception'
+import { AppException, ErrorType } from '@/common/exception'
+
+// 错误信息常量
+const ERROR_MESSAGES = {
+  NETWORK: '网络连接异常，请检查网络设置',
+  TIMEOUT: '请求超时，请稍后重试',
+  OFFLINE: '当前网络已断开，请检查网络连接',
+  ABORTED: '请求已取消',
+  UNKNOWN: '请求失败，请稍后重试'
+} as const
 
 /**
  * @description 请求参数
@@ -29,20 +38,6 @@ export type RetryOptions = {
   retries?: number
   retryDelay?: (attempt: number) => number
   retryOn?: number[]
-}
-
-/**
- * @description 自定义错误类，用于标识需要重试的 HTTP 错误
- */
-class FetchRetryError extends Error {
-  status: number
-  type: ErrorType
-  constructor(message: string, status: number) {
-    super(message)
-    this.status = status
-    this.name = 'FetchRetryError'
-    this.type = status >= 500 ? ErrorType.Server : ErrorType.Network
-  }
 }
 
 /**
@@ -83,11 +78,11 @@ async function Http<T = any>(
     query: options.query
   })
 
-  // 默认重试配置
+  // 默认重试配置，只对网络错误进行重试
   const defaultRetryOptions: RetryOptions = {
-    retries: options.noRetry ? 0 : 3, // 如果设置了noRetry，则不进行重试
-    retryDelay: (attempt) => Math.pow(2, attempt) * 1000, // 指数退避策略
-    retryOn: [500, 502, 503, 504]
+    retries: options.noRetry ? 0 : 3,
+    retryDelay: (attempt) => Math.pow(2, attempt) * 1000,
+    retryOn: [] // 状态码意味着已经连接到服务器
   }
 
   // 合并默认重试配置与用户传入的重试配置
@@ -96,7 +91,7 @@ async function Http<T = any>(
     ...options.retry
   }
 
-  const { retries = 3, retryDelay, retryOn } = retryOptions
+  const { retries = 3, retryDelay } = retryOptions
 
   // 获取token和指纹
   const token = localStorage.getItem('TOKEN')
@@ -159,12 +154,11 @@ async function Http<T = any>(
   async function attemptFetch(currentAttempt: number): Promise<{ data: T; resp: Response } | T> {
     try {
       const response = await fetch(url, fetchOptions)
-      // 若响应不 OK 并且状态码属于需重试列表，则抛出 FetchRetryError
+
+      // 如果收到响应，说明已经连接到服务器，不需要重试
       if (!response.ok) {
         const errorType = getErrorType(response.status)
-        if (!retryOn || retryOn.includes(response.status)) {
-          throw new FetchRetryError(`HTTP error! status: ${response.status}`, response.status)
-        }
+
         // 如果是非重试状态码，则抛出带有适当错误类型的 AppException
         throw new AppException(`HTTP error! status: ${response.status}`, {
           type: errorType,
@@ -176,59 +170,68 @@ async function Http<T = any>(
       // 解析响应数据
       const responseData = options.isBlob ? await response.arrayBuffer() : await response.json()
 
+      // 若有success === false，需要重试
+      if (responseData && responseData.success === false) {
+        throw new AppException(responseData.errMsg || '服务器返回错误', {
+          type: ErrorType.Server,
+          code: response.status,
+          details: responseData,
+          showError: true
+        })
+      }
+
       // 打印响应结果
       console.log(`✅ 请求成功 → ${options.method} ${url}`, {
         status: response.status,
         data: responseData
       })
 
-      // 若有success === false，需要重试
-      if (responseData && responseData.success === false) {
-        const errorMessage = responseData.errMsg || '服务器返回错误'
-        throw new AppException(errorMessage, {
-          type: ErrorType.Server,
-          code: response.status,
-          details: responseData,
-          showError: !shouldRetry(currentAttempt, retries, abort) // 只在最后一次重试失败时显示错误
-        })
-      }
-
       // 若请求成功且没有业务错误
       if (fullResponse) {
         return { data: responseData, resp: response }
       }
       return responseData
-    } catch (error) {
-      console.error(`尝试 ${currentAttempt + 1} 失败的 →`, error)
+    } catch (error: any) {
+      // 优化错误日志，仅在开发环境打印详细信息
+      if (import.meta.env.DEV) {
+        console.error(`尝试 ${currentAttempt + 1} 失败 →`, error)
+      }
 
-      // 检查是否仍需重试
-      if (!shouldRetry(currentAttempt, retries, abort)) {
-        console.error(`Max retries reached or aborted. Request failed → ${url}`)
-        if (error instanceof FetchRetryError) {
-          throw new AppException(error.message, {
-            type: error.type,
-            code: error.status,
-            details: { url, attempts: currentAttempt + 1 },
-            showError: true // 重试次数用完后显示错误
-          })
+      // 处理网络相关错误
+      if (
+        error instanceof TypeError || // fetch 的网络错误会抛出 TypeError
+        error.name === 'AbortError' || // 请求被中断
+        !navigator.onLine // 浏览器离线
+      ) {
+        // 获取用户友好的错误信息
+        const errorMessage = getNetworkErrorMessage(error)
+
+        if (shouldRetry(currentAttempt, retries, abort)) {
+          console.warn(`${errorMessage}，准备重试 → 第 ${currentAttempt + 2} 次尝试`)
+          const delayMs = retryDelay ? retryDelay(currentAttempt) : 1000
+          await wait(delayMs)
+          return attemptFetch(currentAttempt + 1)
         }
-        if (error instanceof AppException) {
-          // 如果是 AppException，保持原有的 showError 设置
-          throw error
-        }
-        const errorMessage = String(error) || '未知错误'
+
+        // 重试次数用完，抛出友好的错误信息
         throw new AppException(errorMessage, {
-          type: ErrorType.Unknown,
-          details: { url, attempts: currentAttempt + 1 },
-          showError: true // 重试次数用完后显示错误
+          type: ErrorType.Network,
+          details: { attempts: currentAttempt + 1 },
+          showError: true
         })
       }
 
-      // 若需继续重试，不显示错误消息
-      const delayMs = retryDelay ? retryDelay(currentAttempt) : 1000
-      console.warn(`Retrying request → ${url} (next attempt: ${currentAttempt + 2}, waiting ${delayMs}ms)`)
-      await wait(delayMs)
-      return attemptFetch(currentAttempt + 1)
+      // 非网络错误或重试次数已用完，直接抛出
+      if (error instanceof AppException) {
+        throw error
+      }
+
+      // 未知错误，使用友好的错误提示
+      throw new AppException(ERROR_MESSAGES.UNKNOWN, {
+        type: error instanceof TypeError ? ErrorType.Network : ErrorType.Unknown,
+        details: { attempts: currentAttempt + 1 },
+        showError: true
+      })
     }
   }
 
@@ -239,6 +242,24 @@ async function Http<T = any>(
     if (status === 400 || status === 422) return ErrorType.Validation
     if (status >= 400) return ErrorType.Client
     return ErrorType.Network
+  }
+
+  // 添加获取网络错误信息的辅助函数
+  function getNetworkErrorMessage(error: any): string {
+    if (!navigator.onLine) {
+      return ERROR_MESSAGES.OFFLINE
+    }
+
+    if (error.name === 'AbortError') {
+      return ERROR_MESSAGES.ABORTED
+    }
+
+    // 检查是否包含超时关键词
+    if (error.message?.toLowerCase().includes('timeout')) {
+      return ERROR_MESSAGES.TIMEOUT
+    }
+
+    return ERROR_MESSAGES.NETWORK
   }
 
   // 第一次执行，attempt=0
