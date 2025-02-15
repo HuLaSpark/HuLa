@@ -74,7 +74,7 @@
     "colorthief": "^2.6.0",
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.11",
-    "dompurify": "^3.2.3",
+    "dompurify": "^3.2.4",
     "grapheme-splitter": "^1.0.4",
     "hula-emojis": "^1.2.5",
     "lodash-es": "^4.17.21",
