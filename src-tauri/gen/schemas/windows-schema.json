@@ -5673,31 +5673,6 @@
           "description": "Denies the upload command without any pre-configured scope.",
           "type": "string",
           "const": "upload:deny-upload"
-        },
-        {
-          "description": "Allows connecting and sending data to a WebSocket server",
-          "type": "string",
-          "const": "websocket:default"
-        },
-        {
-          "description": "Enables the connect command without any pre-configured scope.",
-          "type": "string",
-          "const": "websocket:allow-connect"
-        },
-        {
-          "description": "Enables the send command without any pre-configured scope.",
-          "type": "string",
-          "const": "websocket:allow-send"
-        },
-        {
-          "description": "Denies the connect command without any pre-configured scope.",
-          "type": "string",
-          "const": "websocket:deny-connect"
-        },
-        {
-          "description": "Denies the send command without any pre-configured scope.",
-          "type": "string",
-          "const": "websocket:deny-send"
         }
       ]
     },
