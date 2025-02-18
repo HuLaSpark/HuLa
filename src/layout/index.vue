@@ -56,6 +56,7 @@ import { emitTo } from '@tauri-apps/api/event'
 import { useThrottleFn } from '@vueuse/core'
 import apis from '@/services/apis.ts'
 import { confirm } from '@tauri-apps/plugin-dialog'
+import { invoke } from '@tauri-apps/api/core'
 
 // 异步加载组件时增加缓存配置
 const AsyncLeft = defineAsyncComponent({
@@ -138,6 +139,10 @@ useMitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExp
     // token已在后端清空，只需要返回登录页
     await logout()
     await apis.logout()
+    // 清除未读数
+    chatStore.clearUnreadCount()
+    // 清除系统托盘图标上的未读数
+    await invoke('set_badge_count', { count: null })
     userStore.isSign = false
     userStore.userInfo = {}
     localStorage.removeItem('user')

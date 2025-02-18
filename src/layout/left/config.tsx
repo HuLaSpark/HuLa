@@ -6,11 +6,13 @@ import apis from '@/services/apis.ts'
 import { LoginStatus, useWsLoginStore } from '@/stores/ws.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { invoke } from '@tauri-apps/api/core'
+import { useChatStore } from '@/stores/chat'
 
 const { createWebviewWindow } = useWindow()
 const { logout } = useLogin()
 const loginStore = useWsLoginStore()
 const userStore = useUserStore()
+const chatStore = useChatStore()
 /**
  * 这里的顶部的操作栏使用pinia写入了localstorage中
  */
@@ -111,6 +113,10 @@ const moreList = ref<OPT.L.MoreList[]>([
         userStore.isSign = false
         userStore.userInfo = {}
         loginStore.loginStatus = LoginStatus.Init
+        // 清除未读数
+        chatStore.clearUnreadCount()
+        // 清除系统托盘图标上的未读数
+        await invoke('set_badge_count', { count: null })
         // 5. 最后调用登出方法(这会创建登录窗口)
         await logout()
       } catch (error) {

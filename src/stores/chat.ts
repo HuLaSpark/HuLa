@@ -602,6 +602,16 @@ export const useChatStore = defineStore(
       invoke('set_badge_count', { count: totalUnread > 0 ? totalUnread : null })
     }
 
+    // 在 useChatStore 中添加新方法
+    const clearUnreadCount = () => {
+      // 清空所有会话的未读数
+      sessionList.forEach((session) => {
+        session.unreadCount = 0
+      })
+      // 更新全局未读数
+      updateTotalUnreadCount()
+    }
+
     return {
       getMsgIndex,
       chatMessageList,
@@ -635,7 +645,8 @@ export const useChatStore = defineStore(
       getRecalledMessage,
       recalledMessages,
       clearAllExpirationTimers,
-      updateTotalUnreadCount
+      updateTotalUnreadCount,
+      clearUnreadCount
     }
   },
   {
