@@ -113,7 +113,7 @@ Downloading the installation package on the web page will indicate that the inst
 #### 2. If an error is reported, run the following command in the terminal to resolve the problem:
 
 ```bash
-sudo xattr -rd com.apple.quarantine the Path To Install The Package/HuLa.app
+sudo xattr -rd com.apple.quarantine the Path To Install The Package/Download installation package name
 ```
 
 ## SubmissionSpecification
@@ -148,8 +148,9 @@ Thanks to the following sponsors for their support!
 
 | Date | Sponsor | Sum | Platform |
 |------|--------|------|------|
-| 2025-02-8 | 邓伟 | ￥88 | 微信赞赏码 |
+| 2025-02-17 | 禾硕 | ￥168 | 支付宝赞赏 |
 | 2025-02-8 | Boom.... | ￥100 | 微信赞赏码 |
+| 2025-02-8 | 邓伟 | ￥88 | 微信赞赏码 |
 | 2025-02-7 | dennis | ￥80 | gitee码云赞赏 |
 | 2025-02-6 | 小二 | ￥62 | 微信转账 |
 

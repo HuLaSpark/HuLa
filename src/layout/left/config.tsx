@@ -115,6 +115,7 @@ const moreList = ref<OPT.L.MoreList[]>([
         await logout()
       } catch (error) {
         console.error('退出登录失败:', error)
+        window.$message.error('退出登录失败，请重试')
       }
     }
   }

@@ -140,6 +140,8 @@ import { UserInfoType } from '@/services/types'
 import { AvatarUtils } from '@/utils/avatarUtils'
 import AvatarCropper from '@/components/common/AvatarCropper.vue'
 import { useLoginHistoriesStore } from '@/stores/loginHistory'
+import { formatTimestamp, isDiffNow } from '@/utils/ComputedTime.ts'
+import dayjs from 'dayjs'
 
 let localUserInfo = ref<Partial<UserInfoType>>({})
 const userStore = useUserStore()
@@ -169,6 +171,16 @@ const localImageUrl = ref('')
 const cropperRef = useTemplateRef('cropperRef')
 
 const openAvatarCropper = () => {
+  const lastUpdateTime = userStore.userInfo.avatarUpdateTime
+  // 计算30天的毫秒数
+  if (lastUpdateTime && !isDiffNow({ time: lastUpdateTime, unit: 'day', diff: 30 })) {
+    // 计算下次可更新时间
+    const nextUpdateTime = dayjs(lastUpdateTime).add(30, 'day')
+    const formattedDate = formatTimestamp(nextUpdateTime.valueOf(), true)
+    window.$message.warning(`下一次更换头像的时间：${formattedDate}`)
+    return
+  }
+
   fileInput.value?.click()
 }
 
@@ -244,6 +256,8 @@ const handleCrop = async (cropBlob: Blob) => {
     editInfo.value.content.avatar = downloadUrl
     // 更新用户信息
     userStore.userInfo.avatar = downloadUrl
+    // 更新头像更新时间
+    userStore.userInfo.avatarUpdateTime = Date.now()
     // 更新登录历史记录
     loginHistoriesStore.loginHistories.filter((item) => item.uid === userStore.userInfo.uid)[0].avatar = downloadUrl
     // 更新缓存里面的用户信息

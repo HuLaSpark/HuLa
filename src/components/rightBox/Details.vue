@@ -5,8 +5,10 @@
       object-fit="cover"
       show-toolbar-tooltip
       preview-disabled
+      width="146"
+      height="146"
       style="border: 2px solid #fff"
-      class="rounded-50% select-none size-146px"
+      class="rounded-50% select-none"
       :src="AvatarUtils.getAvatarUrl(item.avatar)"
       @dblclick="openImageViewer"
       alt="" />

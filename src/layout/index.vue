@@ -39,7 +39,13 @@ import { useContactStore } from '@/stores/contacts.ts'
 import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user'
 import { useChatStore } from '@/stores/chat'
-import { LoginSuccessResType, OnStatusChangeType, WsResponseMessageType, WsTokenExpire } from '@/services/wsType.ts'
+import {
+  LoginSuccessResType,
+  OnStatusChangeType,
+  UserStateType,
+  WsResponseMessageType,
+  WsTokenExpire
+} from '@/services/wsType.ts'
 import { LoginStatus, useWsLoginStore } from '@/stores/ws.ts'
 import type { MarkItemType, MessageType, RevokedMsgType } from '@/services/types.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
@@ -110,6 +116,9 @@ useMitt.on(WsResponseMessageType.LOGIN_SUCCESS, (data: LoginSuccessResType) => {
       uid: rest.uid
     }
   ])
+})
+useMitt.on(WsResponseMessageType.USER_STATE_CHANGE, async (data: UserStateType) => {
+  console.log('收到用户状态改变', data)
 })
 useMitt.on(WsResponseMessageType.OFFLINE, async () => {
   console.log('收到用户下线通知')

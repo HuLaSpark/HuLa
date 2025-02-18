@@ -3,7 +3,8 @@ import type {
   LoginSuccessResType,
   LoginInitResType,
   WsReqMsgContentType,
-  OnStatusChangeType
+  OnStatusChangeType,
+  UserStateType
 } from '@/services/wsType.ts'
 import type { MessageType, MarkItemType, RevokedMsgType } from '@/services/types'
 import { OnlineEnum, ChangeTypeEnum, WorkerMsgEnum, ConnectionState } from '@/enums'
@@ -153,6 +154,12 @@ class WS {
             break
           }
           useMitt.emit(WsResponseMessageType.RECEIVE_MESSAGE, message)
+          break
+        }
+        // 用户状态改变
+        case WsResponseMessageType.USER_STATE_CHANGE: {
+          console.log('用户状态改变', params.data)
+          useMitt.emit(WsResponseMessageType.USER_STATE_CHANGE, params.data as UserStateType)
           break
         }
         // 用户上线

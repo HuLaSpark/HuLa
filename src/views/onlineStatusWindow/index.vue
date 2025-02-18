@@ -10,8 +10,8 @@
       data-tauri-drag-region>
       <!-- 当前选中的状态 -->
       <n-flex justify="center" align="center" class="pt-80px" data-tauri-drag-region>
-        <img class="w-34px h-34px" :src="activeItem.url" alt="" />
-        <span class="text-22px">{{ activeItem.title }}</span>
+        <img class="w-34px h-34px" :src="currentState.url" alt="" />
+        <span class="text-22px">{{ currentState.title }}</span>
       </n-flex>
 
       <!-- 状态 -->
@@ -19,9 +19,9 @@
         <n-scrollbar style="max-height: 215px">
           <n-flex align="center" :size="10">
             <n-flex
-              @click="handleActive(item, index)"
-              :class="{ active: activeItem.index === index }"
-              v-for="(item, index) in statusItem"
+              @click="handleActive(item)"
+              :class="{ active: currentState.id === item.id }"
+              v-for="item in stateList"
               :key="item.title"
               vertical
               justify="center"
@@ -38,43 +38,34 @@
   </main>
 </template>
 <script setup lang="ts">
-import { statusItem } from './config.ts'
-import { onlineStatus } from '@/stores/onlineStatus.ts'
+import { useUserStatusStore } from '@/stores/userStatus'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
+import apis from '@/services/apis.ts'
+import { useUserStore } from '@/stores/user'
 
-const OLStatusStore = onlineStatus()
-const { url, title, bgColor } = storeToRefs(OLStatusStore)
-/** 选中的状态 */
-const activeItem = reactive({
-  index: -1,
-  title: title.value,
-  url: url.value
-})
+const userStatusStore = useUserStatusStore()
+const userStore = useUserStore()
+const { currentState, stateList, stateId } = storeToRefs(userStatusStore)
 /** 这里不写入activeItem中是因为v-bind要绑定的值是响应式的 */
-const RGBA = ref(bgColor?.value)
+const RGBA = ref(currentState.value?.bgColor)
 
 watchEffect(() => {
-  activeItem.index = statusItem.findIndex((item) => item.title === activeItem.title)
-  activeItem.url = url.value
-  activeItem.title = title.value
-  RGBA.value = bgColor?.value
+  RGBA.value = currentState.value?.bgColor
 })
 
 /**
  * 处理选中的状态
- * @param { OPT.Online } item 状态
- * @param index 选中的下标
+ * @param { OPT.UserState } item 状态
  */
-const handleActive = async (item: OPT.Online, index: number) => {
-  OLStatusStore.setOnlineStatus(item.url, item.title)
-  activeItem.index = index
-  activeItem.title = item.title
-  activeItem.url = item.url
+const handleActive = async (item: OPT.UserState) => {
+  await apis.changeUserState(item.id.toString())
+  stateId.value = item.id
+  userStore.userInfo.userStateId = item.id
 }
 
 onMounted(async () => {
   await getCurrentWebviewWindow().show()
-  activeItem.index = statusItem.findIndex((item) => item.title === activeItem.title)
+  currentState.value.id = stateList.value.find((item) => item.title === currentState.value.title)?.id || 1
 })
 </script>
 <style scoped lang="scss">

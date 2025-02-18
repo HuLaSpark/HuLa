@@ -11,13 +11,11 @@
 <script setup lang="ts">
 import { useSettingStore } from '@/stores/setting.ts'
 import { StoresEnum, ThemeEnum } from '@/enums'
-import { onlineStatus } from '@/stores/onlineStatus.ts'
 import LockScreen from '@/views/LockScreen.vue'
 import router from '@/router'
 import { type } from '@tauri-apps/plugin-os'
 
 const settingStore = useSettingStore()
-const OLStatusStore = onlineStatus()
 const { themes, lockScreen, page } = storeToRefs(settingStore)
 /** 不需要锁屏的页面 */
 const LockExclusion = new Set(['/login', '/tray', '/qrCode', '/about', '/onlineStatus'])
@@ -86,10 +84,6 @@ onMounted(async () => {
   // 判断localStorage中是否有设置主题
   if (!localStorage.getItem(StoresEnum.SETTING)) {
     settingStore.initTheme(ThemeEnum.OS)
-  }
-  /** 第一次没有选状态的时候随机选中一个状态 */
-  if (!localStorage.getItem(StoresEnum.ONLINE_STATUS)) {
-    OLStatusStore.init()
   }
   document.documentElement.dataset.theme = themes.value.content
   window.addEventListener('dragstart', preventDrag)

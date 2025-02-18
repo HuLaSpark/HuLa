@@ -71,9 +71,9 @@ export const useGlobalStore = defineStore(
       // 延迟1秒后开始查询已读数
       setTimeout(readCountQueue, 1000)
       // 标记该房间的消息为已读
-      apis.markMsgRead({ roomId: val.roomId })
+      apis.markMsgRead({ roomId: val.roomId || 1 })
       // 更新会话的已读状态
-      chatStore.markSessionRead(val.roomId)
+      chatStore.markSessionRead(val.roomId || 1)
       // 更新全局未读计数
       updateGlobalUnreadCount()
     })

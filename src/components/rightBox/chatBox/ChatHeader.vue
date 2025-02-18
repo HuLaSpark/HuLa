@@ -2,12 +2,12 @@
   <!-- 顶部操作栏和显示用户名 -->
   <main
     data-tauri-drag-region
-    class="relative z-30 flex-y-center border-b-(1px solid [--right-chat-footer-line-color]) justify-between p-[6px_22px_10px] select-none">
+    class="relative z-30 flex-y-center border-b-(1px solid [--right-chat-footer-line-color]) justify-between p-[6px_22px_10px]">
     <n-flex align="center">
       <Transition name="loading" mode="out-in">
         <img v-if="showLoading" class="size-22px py-3px" src="@/assets/img/loading.svg" alt="" />
         <n-flex v-else align="center">
-          <n-avatar class="rounded-8px" :size="28" :src="AvatarUtils.getAvatarUrl(activeItem.avatar)" />
+          <n-avatar class="rounded-8px select-none" :size="28" :src="AvatarUtils.getAvatarUrl(activeItem.avatar)" />
           <p class="text-(16px [--text-color])">{{ activeItem.name }}</p>
           <svg
             v-if="activeItem.hotFlag === IsAllUserEnum.Yes && !showLoading"

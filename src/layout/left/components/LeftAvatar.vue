@@ -13,14 +13,14 @@
         <div
           class="bg-[--left-bg-color] text-10px rounded-50% size-12px absolute bottom--2px right--2px border-(2px solid [--left-bg-color])"
           @click.stop="openContent('在线状态', 'onlineStatus', 320, 480)">
-          <img :src="url" alt="" class="rounded-50% size-full" />
+          <img :src="currentState.url" alt="" class="rounded-50% size-full" />
         </div>
       </div>
     </template>
     <!-- 用户个人信息框 -->
     <n-flex
       :size="26"
-      :style="`background: linear-gradient(to bottom, ${bgColor} 0%, ${themeColor} 100%)`"
+      :style="`background: linear-gradient(to bottom, ${currentState.bgColor} 0%, ${themeColor} 100%)`"
       class="size-full p-15px box-border rounded-8px"
       vertical>
       <!-- 头像以及信息区域 -->
@@ -41,8 +41,8 @@
               align="center"
               class="item-hover ml--4px"
               @click="openContent('在线状态', 'onlineStatus', 320, 480)">
-              <img :src="url" alt="" class="rounded-50% size-18px" />
-              <span>{{ title }}</span>
+              <img :src="currentState.url" alt="" class="rounded-50% size-18px" />
+              <span>{{ currentState.title }}</span>
             </n-flex>
           </n-flex>
         </n-flex>
@@ -86,7 +86,7 @@ import { AvatarUtils } from '@/utils/avatarUtils'
 
 const userStore = useUserStore()
 const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(userStore.userInfo.avatar as string))
-const { shrinkStatus, url, infoShow, bgColor, title, themeColor, openContent, handleEditing } = leftHook()
+const { shrinkStatus, currentState, infoShow, themeColor, openContent, handleEditing } = leftHook()
 </script>
 <style lang="scss" scoped>
 @use '../style';

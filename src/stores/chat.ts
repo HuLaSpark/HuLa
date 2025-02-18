@@ -168,6 +168,15 @@ export const useChatStore = defineStore(
           groupStore.getCountStatistic()
           cachedStore.getGroupAtUserBaseInfo()
         }
+
+        // 标记当前会话已读
+        if (val) {
+          const session = sessionList.find((s) => s.roomId === val)
+          if (session?.unreadCount) {
+            markSessionRead(val)
+            updateTotalUnreadCount()
+          }
+        }
       }
 
       // 重置当前回复的消息
@@ -252,7 +261,7 @@ export const useChatStore = defineStore(
       sortAndUniqueSessionList()
 
       // sessionList[0].unreadCount = 0
-      if (!isFirstInit) {
+      if (!isFirstInit || isFresh) {
         isFirstInit = true
         globalStore.currentSession.roomId = data.list[0].roomId
         globalStore.currentSession.type = data.list[0].type
@@ -264,6 +273,11 @@ export const useChatStore = defineStore(
         userStore.isSign && (await cachedStore.initAllUserBaseInfo())
         // 联系人列表
         await contactStore.getContactList(true)
+
+        // 确保在会话列表加载完成后更新总未读数
+        await nextTick(() => {
+          updateTotalUnreadCount()
+        })
       }
     }
 
@@ -341,8 +355,9 @@ export const useChatStore = defineStore(
         if (msg.fromUser.uid !== userStore.userInfo.uid) {
           if (route?.path !== '/message' || msg.message.roomId !== currentRoomId.value) {
             session.unreadCount = (session.unreadCount || 0) + 1
-            globalStore.unReadMark.newMsgUnreadCount++
-            await invoke('set_badge_count', { count: globalStore.unReadMark.newMsgUnreadCount })
+            await nextTick(() => {
+              updateTotalUnreadCount()
+            })
           }
         }
       }
@@ -512,8 +527,12 @@ export const useChatStore = defineStore(
     const markSessionRead = (roomId: number) => {
       const session = sessionList.find((item) => item.roomId === roomId)
       const unreadCount = session?.unreadCount || 0
-      if (session) {
+      if (session && session.unreadCount > 0) {
         session.unreadCount = 0
+        // 使用 nextTick 确保状态更新后再计算总未读数
+        nextTick(() => {
+          updateTotalUnreadCount()
+        })
       }
       return unreadCount
     }
@@ -526,7 +545,13 @@ export const useChatStore = defineStore(
     // 删除会话
     const removeContact = (roomId: number) => {
       const index = sessionList.findIndex((session) => session.roomId === roomId)
-      sessionList.splice(index, 1)
+      if (index !== -1) {
+        sessionList.splice(index, 1)
+        // 删除会话后更新未读计数
+        nextTick(() => {
+          updateTotalUnreadCount()
+        })
+      }
     }
 
     // 监听 Worker 消息
@@ -562,6 +587,21 @@ export const useChatStore = defineStore(
       expirationTimers.clear()
     }
 
+    // 在 useChatStore 中添加新方法
+    const updateTotalUnreadCount = () => {
+      // 使用 Array.from 确保遍历的是最新的 sessionList
+      const totalUnread = Array.from(sessionList).reduce((total, session) => {
+        // 确保 unreadCount 是数字且不为负数
+        const unread = Math.max(0, session.unreadCount || 0)
+        return total + unread
+      }, 0)
+
+      // 更新全局 store 中的未读计数
+      globalStore.unReadMark.newMsgUnreadCount = totalUnread
+      // 更新系统托盘图标上的未读数
+      invoke('set_badge_count', { count: totalUnread > 0 ? totalUnread : null })
+    }
+
     return {
       getMsgIndex,
       chatMessageList,
@@ -594,7 +634,8 @@ export const useChatStore = defineStore(
       removeContact,
       getRecalledMessage,
       recalledMessages,
-      clearAllExpirationTimers
+      clearAllExpirationTimers,
+      updateTotalUnreadCount
     }
   },
   {

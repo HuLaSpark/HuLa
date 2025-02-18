@@ -133,5 +133,9 @@ export default {
   /** 检查token是否有效 */
   checkToken: () => POST<string>(urls.checkToken),
   /** 下线 */
-  offline: () => POST<string>(urls.offline)
+  offline: () => POST<string>(urls.offline),
+  /** 获取所有用户状态 */
+  getAllUserState: () => GET<OPT.UserState[]>(urls.getAllUserState),
+  /** 用户状态改变 */
+  changeUserState: (userStateId: string) => POST(`${urls.changeUserState}/${userStateId}`)
 }

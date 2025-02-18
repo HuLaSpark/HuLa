@@ -29,7 +29,9 @@ export enum WsResponseMessageType {
   /** 下线通知 */
   OFFLINE = 'offline',
   /** 同意好友请求 */
-  REQUEST_APPROVAL_FRIEND = 'requestApprovalFriend'
+  REQUEST_APPROVAL_FRIEND = 'requestApprovalFriend',
+  /** 用户状态改变 */
+  USER_STATE_CHANGE = 'userStateChange'
 }
 
 /**
@@ -55,13 +57,22 @@ export type LoginSuccessResType = Pick<UserInfoType, 'avatar' | 'name' | 'uid'> 
   token: string
 }
 
+/** 用户在线状态改变 */
 export type OnStatusChangeType = {
   changeList: UserItem[]
   onlineNum: number
   totalNum: number
 }
 
+/** token过期 */
 export type WsTokenExpire = {
   uid: number
   ip: string
+}
+
+/** 用户状态 */
+export type UserStateType = {
+  id: number
+  title: string
+  url: string
 }

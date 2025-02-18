@@ -173,10 +173,13 @@ import { useNetwork } from '@vueuse/core'
 import { computedToken } from '@/services/request'
 import ws from '@/services/webSocket'
 import { useGlobalStore } from '@/stores/global.ts'
+import { useUserStatusStore } from '@/stores/userStatus'
 
 const settingStore = useSettingStore()
 const userStore = useUserStore()
 const globalStore = useGlobalStore()
+const userStatusStore = useUserStatusStore()
+const { stateId } = storeToRefs(userStatusStore)
 const { isTrayMenuShow } = storeToRefs(globalStore)
 /** 网络连接是否正常 */
 const { isOnline } = useNetwork()
@@ -282,8 +285,20 @@ const normalLogin = async () => {
       // 更新一下请求里面的 token.
       // computedToken.clear()
       // computedToken.get()
+      // 获取用户状态列表
+      if (userStatusStore.stateList.length === 0) {
+        try {
+          userStatusStore.stateList = await apis.getAllUserState()
+        } catch (error) {
+          console.error('获取用户状态列表失败', error)
+        }
+      }
       // 获取用户详情
       const userDetail = await apis.getUserDetail()
+      console.log(userDetail)
+
+      // 设置用户状态id
+      stateId.value = userDetail.userStateId
       // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取
       // await emojiStore.getEmojiList()
       // TODO 这里的id暂时赋值给uid，因为后端没有统一返回uid，待后端调整

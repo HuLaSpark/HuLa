@@ -104,8 +104,6 @@ export enum StoresEnum {
   ALWAYS_ON_TOP = 'alwaysOnTop',
   /** 设置 */
   SETTING = 'setting',
-  /** 在线状态 */
-  ONLINE_STATUS = 'onlineStatus',
   /** 历史内容 */
   HISTORY = 'history',
   /** 聊天列表 */
@@ -119,7 +117,9 @@ export enum StoresEnum {
   /** 好友列表 */
   NOTICE = 'notice',
   /** 图片查看器数据 */
-  IMAGEVIEWER = 'imageViewer'
+  IMAGEVIEWER = 'imageViewer',
+  /** 用户状态 */
+  USER_STATE = 'userState'
 }
 
 /**

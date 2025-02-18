@@ -23,6 +23,9 @@ export default {
   deleteEmoji: `${prefix + URLEnum.USER}/emoji`, // 删除表情
   getEmoji: `${prefix + URLEnum.USER}/emoji/list`, // 查询表情包
   uploadAvatar: `${prefix + URLEnum.USER}/avatar`, // 上传头像
+  getAllUserState: `${prefix + URLEnum.USER}/state/list`, // 获取所有用户状态
+  changeUserState: `${prefix + URLEnum.USER}/state/changeState`, // 用户状态改变
+
   // -------------- 好友相关 ---------------
   getContactList: `${prefix + URLEnum.USER}/friend/page`, // 联系人列表
   requestFriendList: `${prefix + URLEnum.USER}/friend/apply/page`, // 好友申请列表

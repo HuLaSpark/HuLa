@@ -2,7 +2,7 @@ import { useWindow } from '@/hooks/useWindow.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { useCachedStore } from '@/stores/cached.ts'
-import { onlineStatus } from '@/stores/onlineStatus.ts'
+import { useUserStatusStore } from '@/stores/userStatus.ts'
 import { EventEnum, IsYesEnum, MittEnum, ThemeEnum } from '@/enums'
 import { BadgeType, UserInfoType } from '@/services/types.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
@@ -25,8 +25,8 @@ export const leftHook = () => {
   const userStore = useUserStore()
   const cachedStore = useCachedStore()
   const { themes } = settingStore
-  const OLStatusStore = onlineStatus()
-  const { url, title, bgColor } = storeToRefs(OLStatusStore)
+  const userStatusStore = useUserStatusStore()
+  const { currentState } = storeToRefs(userStatusStore)
   const activeUrl = ref<string>(menuTop[0].url)
   const settingShow = ref(false)
   const shrinkStatus = ref(false)
@@ -214,9 +214,7 @@ export const leftHook = () => {
   })
 
   return {
-    url,
-    title,
-    bgColor,
+    currentState,
     activeUrl,
     settingShow,
     shrinkStatus,

@@ -113,7 +113,7 @@ pnpm run tauri:build
 #### 2. 如果还报错，请在终端执行以下命令解决：
 
 ```bash
-sudo xattr -rd com.apple.quarantine 你的安装包路径/HuLa.app
+sudo xattr -rd com.apple.quarantine 你的安装包路径/下载的安装包名称
 ```
 
 ## 提交规范
@@ -148,7 +148,7 @@ sudo xattr -rd com.apple.quarantine 你的安装包路径/HuLa.app
 
 | 日期 | 赞助者 | 金额 | 平台 |
 |------|--------|------|------|
-| 2025-02-8 | 禾硕 | ￥168 | 支付宝赞赏 |
+| 2025-02-17 | 禾硕 | ￥168 | 支付宝赞赏 |
 | 2025-02-8 | Boom.... | ￥100 | 微信赞赏码 |
 | 2025-02-8 | 邓伟 | ￥88 | 微信赞赏码 |
 | 2025-02-7 | dennis | ￥80 | gitee码云赞赏 |

@@ -65,9 +65,9 @@ import { AvatarUtils } from '@/utils/avatarUtils'
 
 const globalStore = useGlobalStore()
 const userStore = useUserStore()
-const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(userStore.userInfo.avatar as string))
 const { countGraphemes } = useCommon()
 const userInfo = ref(useUserInfo(globalStore.addFriendModalInfo.uid).value)
+const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(userInfo.value.avatar as string))
 const requestMsg = ref()
 
 const close = () => {

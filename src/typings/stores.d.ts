@@ -81,10 +81,10 @@ declare namespace STO {
   }
 
   /**
-   * 在线状态
-   * @param OPT.Online 通用在线状态
+   * 用户状态
+   * @param OPT.UserState 通用在线状态
    */
-  type OnlineStatus = OPT.Online
+  type UserState = OPT.UserState
 
   /**
    * 插件管理弹窗数据类型

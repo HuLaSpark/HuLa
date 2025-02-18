@@ -2,11 +2,11 @@
   <n-flex v-if="isTrayMenuShow" vertical :size="6" class="tray">
     <n-flex vertical :size="6">
       <n-flex
-        v-for="(item, index) in statusItem.slice(0, 6)"
+        v-for="(item, index) in stateList.slice(0, 6)"
         :key="index"
         align="center"
         :size="10"
-        @click="toggleStatus(item.url, item.title)"
+        @click="toggleStatus(item)"
         class="p-6px rounded-4px hover:bg-[--tray-hover]">
         <img class="size-14px" :src="item.url" alt="" />
         <span>{{ item.title }}</span>
@@ -52,8 +52,7 @@
 <script setup lang="tsx">
 import { useWindow } from '@/hooks/useWindow.ts'
 import { exit } from '@tauri-apps/plugin-process'
-import { statusItem } from '@/views/onlineStatusWindow/config.ts'
-import { onlineStatus } from '@/stores/onlineStatus.ts'
+import { useUserStatusStore } from '@/stores/userStatus'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useGlobalStore } from '@/stores/global.ts'
@@ -63,10 +62,11 @@ import { useTauriListener } from '@/hooks/useTauriListener'
 
 const appWindow = WebviewWindow.getCurrent()
 const { checkWinExist, createWebviewWindow } = useWindow()
-const OLStatusStore = onlineStatus()
+const userStatusStore = useUserStatusStore()
 const settingStore = useSettingStore()
 const globalStore = useGlobalStore()
 const { lockScreen } = storeToRefs(settingStore)
+const { stateList, stateId } = storeToRefs(userStatusStore)
 const { tipVisible, isTrayMenuShow } = storeToRefs(globalStore)
 const { pushListeners } = useTauriListener()
 const isFocused = ref(false)
@@ -88,8 +88,8 @@ const handleExit = () => {
   exit(0)
 }
 
-const toggleStatus = (url: string, title: string) => {
-  OLStatusStore.setOnlineStatus(url, title)
+const toggleStatus = (item: OPT.UserState) => {
+  stateId.value = item.id
   appWindow.hide()
 }
 
@@ -97,7 +97,6 @@ watchEffect(async () => {
   if (type() === 'windows') {
     if (tipVisible.value && !isFocused.value) {
       if (!interval) {
-        console.log('Starting tray icon blink')
         interval = setInterval(async () => {
           const tray = await TrayIcon.getById('tray')
           tray?.setIcon(iconVisible.value ? null : 'tray/icon.png')
@@ -106,7 +105,6 @@ watchEffect(async () => {
       }
     } else {
       if (interval) {
-        console.log('Stopping tray icon blink')
         clearInterval(interval)
         interval = null
       }

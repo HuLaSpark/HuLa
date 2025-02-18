@@ -12,9 +12,24 @@
     preview-disabled
     style="border-radius: 8px"
     :src="body?.url"
-    @dblclick="openImageViewer">
+    @dblclick="openImageViewer"
+    @error="handleImageError">
+    <template #placeholder>
+      <n-flex
+        v-if="!isError"
+        align="center"
+        justify="center"
+        :style="{
+          width: `${imageStyle.width}`,
+          height: `${imageStyle.height}`,
+          backgroundColor: '#c8c8c833'
+        }"
+        class="rounded-10px">
+        <img class="size-24px select-none" src="@/assets/img/loading.svg" alt="loading" />
+      </n-flex>
+    </template>
     <template #error>
-      <n-flex align="center" justify="center" class="w-200px h-150px bg-#c8c8c833 rounded-10px">
+      <n-flex v-if="isError" align="center" justify="center" class="w-200px h-150px bg-#c8c8c833 rounded-10px">
         <svg class="size-34px color-[--chat-text-color]"><use href="#error-picture"></use></svg>
       </n-flex>
     </template>
@@ -37,6 +52,13 @@ const MAX_WIDTH = 320
 const MAX_HEIGHT = 240
 const MIN_WIDTH = 60
 const MIN_HEIGHT = 60
+//错误状态控制
+const isError = ref(false)
+
+// 处理图片加载错误
+const handleImageError = () => {
+  isError.value = true
+}
 
 // 获取当前聊天中的所有图片URL
 const getAllImagesFromChat = () => {
@@ -129,10 +151,17 @@ const openImageViewer = async () => {
  * 计算图片样式
  */
 const imageStyle = computed(() => {
-  const width = props.body?.width ?? MAX_WIDTH
-  const height = props.body?.height ?? MAX_HEIGHT
-  const aspectRatio = width / height
+  // 如果有原始尺寸，使用原始尺寸计算
+  let width = props.body?.width
+  let height = props.body?.height
 
+  // 如果没有原始尺寸，使用默认尺寸
+  if (!width || !height) {
+    width = MAX_WIDTH
+    height = MAX_HEIGHT
+  }
+
+  const aspectRatio = width / height
   let finalWidth = width
   let finalHeight = height
 
@@ -153,9 +182,10 @@ const imageStyle = computed(() => {
   finalWidth = Math.max(finalWidth, MIN_WIDTH)
   finalHeight = Math.max(finalHeight, MIN_HEIGHT)
 
+  // 向上取整避免小数导致的抖动
   return {
-    width: `${finalWidth}px`,
-    height: `${finalHeight}px`
+    width: `${Math.ceil(finalWidth)}px`,
+    height: `${Math.ceil(finalHeight)}px`
   }
 })
 </script>

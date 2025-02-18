@@ -85,14 +85,15 @@ declare namespace OPT {
   }
 
   /**
-   * 在线状态
+   * 用户状态
    * @param url 链接
    * @param title 标题
    * @param bgColor 背景颜色
    */
-  type Online = {
-    url: string
+  type UserState = {
+    id: number
     title: string
+    url: string
     bgColor?: string
   }
 }

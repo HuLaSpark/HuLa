@@ -187,6 +187,10 @@ export type UserInfoType = {
   power?: number
   /** 佩戴的徽章 */
   wearingItemId?: number
+  /** 用户状态id */
+  userStateId: number
+  /** 头像更新时间 */
+  avatarUpdateTime: number
 }
 
 export type BadgeType = {
