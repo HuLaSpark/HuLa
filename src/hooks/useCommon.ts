@@ -693,20 +693,23 @@ export const useCommon = () => {
     if (route.name !== '/message' && label === 'home') {
       router.push('/message')
     }
-    apis.sessionDetailWithFriends({ id: uid, roomType: type }).then((res) => {
-      globalStore.currentSession.roomId = res.roomId
-      globalStore.currentSession.type = RoomTypeEnum.SINGLE
 
-      // 先检查会话是否已存在
-      const existingSession = chatStore.getSession(res.roomId)
-      if (!existingSession) {
-        // 只有当会话不存在时才更新会话列表顺序
-        chatStore.updateSessionLastActiveTime(res.roomId, res)
-      }
-      // 发送消息定位 TODO: 现在只支持好友会话定位
-      useMitt.emit(MittEnum.LOCATE_SESSION, { roomId: res.roomId })
-      handleMsgClick(res as any)
-    })
+    const res = await apis.sessionDetailWithFriends({ id: uid, roomType: type })
+    globalStore.currentSession.roomId = res.roomId
+    globalStore.currentSession.type = RoomTypeEnum.SINGLE
+
+    // 先检查会话是否已存在
+    const existingSession = chatStore.getSession(res.roomId)
+    if (!existingSession) {
+      // 只有当会话不存在时才更新会话列表顺序
+      chatStore.updateSessionLastActiveTime(res.roomId, res)
+      // 如果会话不存在，需要重新获取会话列表，但保持当前选中的会话
+      await chatStore.getSessionList(true)
+    }
+
+    // 发送消息定位
+    useMitt.emit(MittEnum.LOCATE_SESSION, { roomId: res.roomId })
+    handleMsgClick(res as any)
     useMitt.emit(MittEnum.TO_SEND_MSG, { url: 'message' })
   }
 

@@ -14,14 +14,16 @@ export const useUserStatusStore = defineStore(
 
     const currentState = computed(() => {
       const id = stateId.value === 0 ? 1 : stateId.value
-      const item = stateList.value.find((state) => state.id === id)!
+      const item = stateList.value.find((state) => state.id === id)
       console.log(item)
 
-      const img = new Image()
-      img.src = item.url
-      img.onload = async () => {
-        const colors = await colorthief.getColor(img, 3)
-        item.bgColor = `rgba(${colors.join(',')}, 0.4)`
+      if (item) {
+        const img = new Image()
+        img.src = item.url
+        img.onload = async () => {
+          const colors = await colorthief.getColor(img, 3)
+          item.bgColor = `rgba(${colors.join(',')}, 0.4)`
+        }
       }
       return item as STO.UserState
     })

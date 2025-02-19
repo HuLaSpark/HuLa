@@ -119,9 +119,6 @@ export const useChatStore = defineStore(
       sessionList.find((session) => session.roomId === globalStore.currentSession.roomId)
     )
 
-    // 消息列表滚动到底部的方法引用
-    const chatListToBottomAction = ref<() => void>()
-
     // 新消息计数相关的响应式数据
     const newMsgCount = reactive<Map<number, { count: number; isStart: boolean }>>(
       new Map([
@@ -152,8 +149,6 @@ export const useChatStore = defineStore(
     // 监听当前房间ID的变化
     watch(currentRoomId, (val, oldVal) => {
       if (oldVal !== undefined && val !== oldVal) {
-        // 切换会话，滚动到底部
-        chatListToBottomAction.value?.()
         // 切换的 rooms是空数据的话就请求消息列表
         if (!currentMessageMap.value || currentMessageMap.value.size === 0) {
           if (!currentMessageMap.value) {
@@ -253,6 +248,10 @@ export const useChatStore = defineStore(
       if (!data) {
         return
       }
+
+      // 保存当前选中的会话ID
+      const currentSelectedRoomId = globalStore.currentSession.roomId
+
       isFresh ? sessionList.splice(0, sessionList.length, ...data.list) : sessionList.push(...data.list)
       sessionOptions.cursor = data.cursor
       sessionOptions.isLast = data.isLast
@@ -263,8 +262,12 @@ export const useChatStore = defineStore(
       // sessionList[0].unreadCount = 0
       if (!isFirstInit || isFresh) {
         isFirstInit = true
-        globalStore.currentSession.roomId = data.list[0].roomId
-        globalStore.currentSession.type = data.list[0].type
+        // 只有在没有当前选中会话时，才设置第一个会话为当前会话
+        if (!currentSelectedRoomId || currentSelectedRoomId === 1) {
+          globalStore.currentSession.roomId = data.list[0].roomId
+          globalStore.currentSession.type = data.list[0].type
+        }
+
         // 用会话列表第一个去请求消息列表
         await getMsgList()
         // 请求第一个群成员列表
@@ -377,12 +380,6 @@ export const useChatStore = defineStore(
       //   currentNewMsgCount.value.count++
       //   return
       // }
-
-      // 聊天列表滚动到底部
-      setTimeout(() => {
-        // 如果超过一屏了，不自动滚动到最新消息。
-        chatListToBottomAction.value?.()
-      }, 0)
     }
 
     // 过滤掉小黑子的发言
@@ -621,7 +618,6 @@ export const useChatStore = defineStore(
       updateMarkCount,
       updateRecallStatus,
       updateMsg,
-      chatListToBottomAction,
       newMsgCount,
       messageMap,
       currentMessageMap,
