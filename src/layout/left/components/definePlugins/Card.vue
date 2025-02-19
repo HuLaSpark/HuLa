@@ -12,7 +12,7 @@
               align="center"
               :size="8"
               :class="{ 'filter-shadow': page.shadow }"
-              class="box bg-[--info-hover]">
+              class="box bg-[--plugin-bg-color]">
               <svg class="size-38px color-#999">
                 <use :href="`#${plugin.icon}`"></use>
               </svg>

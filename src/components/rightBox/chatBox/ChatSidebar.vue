@@ -65,7 +65,7 @@
       :items="filteredUserList">
       <template #default="{ item }">
         <n-popover
-          @update:show="handlePopoverUpdate(item.uid)"
+          @update:show="handlePopoverUpdate(item.uid, $event)"
           trigger="click"
           placement="left"
           :show-arrow="false"
@@ -83,9 +83,21 @@
                   class="grayscale"
                   :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
                   :color="'#fff'"
-                  :size="24"
+                  :size="26"
                   :src="AvatarUtils.getAvatarUrl(item.avatar)" />
-                <p class="text-12px truncate flex-1">{{ item.name }}</p>
+                <n-flex vertical :size="2">
+                  <p class="text-12px truncate flex-1">{{ item.name }}</p>
+                  <n-flex
+                    v-if="item.userStateId && getUserState(item.userStateId)"
+                    align="center"
+                    :size="4"
+                    class="flex-1">
+                    <img class="size-14px" :src="getUserState(item.userStateId)?.url" alt="" />
+                    <span class="text-10px text-[--chat-text-color] truncate">
+                      {{ getUserState(item.userStateId)?.title }}
+                    </span>
+                  </n-flex>
+                </n-flex>
                 <div
                   v-if="item.roleId === RoleEnum.LORD"
                   class="flex p-4px rounded-4px bg-#f5dadf size-fit select-none">
@@ -119,12 +131,22 @@ import type { UserItem } from '@/services/types.ts'
 import { useDebounceFn } from '@vueuse/core'
 import { AvatarUtils } from '@/utils/avatarUtils'
 import { useCachedStore } from '@/stores/cached.ts'
+import { useUserStatusStore } from '@/stores/userStatus'
+import { storeToRefs } from 'pinia'
 
 const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
 const cachedStore = useCachedStore()
 const groupUserList = computed(() => groupStore.userList)
 const userList = computed(() => {
+  // 先获取所有需要的用户ID
+  const userIds = groupUserList.value.map((item) => item.uid)
+
+  // 确保所有用户信息都被加载
+  if (userIds.length > 0) {
+    cachedStore.getBatchUserInfo(userIds)
+  }
+
   return groupUserList.value
     .map((item: UserItem) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -158,7 +180,8 @@ const infoPopover = ref(false)
 const inputInstRef = ref<InputInst | null>(null)
 const isCollapsed = ref(true)
 const { optionsList, report, selectKey } = useChatMain()
-const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-sidebar')
+const { handlePopoverUpdate, enableScroll } = usePopover(selectKey, 'image-chat-sidebar')
+provide('popoverControls', { enableScroll })
 
 // 添加一个新的计算属性来合并用户列表
 const mergedUserList = computed(() => {
@@ -251,12 +274,24 @@ const handleSelect = () => {
   })
 }
 
-onMounted(() => {
+const userStatusStore = useUserStatusStore()
+const { stateList } = storeToRefs(userStatusStore)
+
+const getUserState = (stateId: number) => {
+  return stateList.value.find((state) => state.id === stateId)
+}
+
+onMounted(async () => {
   useMitt.on(`${MittEnum.INFO_POPOVER}-Sidebar`, (event: any) => {
     selectKey.value = event.uid
     infoPopover.value = true
     handlePopoverUpdate(event.uid)
   })
+
+  // 初始化时获取当前群组用户的信息
+  if (groupUserList.value.length > 0) {
+    await cachedStore.getBatchUserInfo(groupUserList.value.map((item) => item.uid))
+  }
 })
 </script>
 

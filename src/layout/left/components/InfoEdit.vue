@@ -326,7 +326,6 @@ watch(
   cursor: pointer;
 
   .avatar-hover {
-    background: rgba(33, 33, 33, 0.3);
     opacity: 0;
     transition: opacity 0.4s ease-in-out;
     backdrop-filter: blur(4px);

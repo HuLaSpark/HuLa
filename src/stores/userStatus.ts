@@ -13,9 +13,20 @@ export const useUserStatusStore = defineStore(
     const stateId = ref<number>(1)
 
     const currentState = computed(() => {
-      const id = stateId.value === 0 ? 1 : stateId.value
-      const item = stateList.value.find((state) => state.id === id)
-      console.log(item)
+      const item = stateList.value.find((state) => state.id === stateId.value)
+
+      if (!item) {
+        const defaultItem = stateList.value.find((state) => state.id === 1)
+        if (defaultItem) {
+          const img = new Image()
+          img.src = defaultItem.url
+          img.onload = async () => {
+            const colors = await colorthief.getColor(img, 3)
+            defaultItem.bgColor = `rgba(${colors.join(',')}, 0.4)`
+          }
+          return defaultItem
+        }
+      }
 
       if (item) {
         const img = new Image()

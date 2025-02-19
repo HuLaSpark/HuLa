@@ -127,7 +127,7 @@
               </svg>
               <!-- 头像  -->
               <n-popover
-                @update:show="handlePopoverUpdate(item.message.id)"
+                @update:show="handlePopoverUpdate(item.message.id, $event)"
                 trigger="click"
                 placement="right"
                 :show-arrow="false"
@@ -476,7 +476,8 @@ const {
   emojiList,
   scrollTop
 } = useChatMain()
-const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-main')
+const { handlePopoverUpdate, enableScroll } = usePopover(selectKey, 'image-chat-main')
+provide('popoverControls', { enableScroll })
 
 watch(
   () => props.activeItem,

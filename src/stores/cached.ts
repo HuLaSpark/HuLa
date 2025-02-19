@@ -3,6 +3,7 @@ import apis from '@/services/apis'
 import { useGlobalStore } from '@/stores/global'
 import type { CacheBadgeItem, CacheUserItem } from '@/services/types'
 import { isDiffNow10Min } from '@/utils/ComputedTime.ts'
+import { useDebounceFn } from '@vueuse/core'
 
 // 定义基础用户信息类型，只包含uid、头像和名称
 export type BaseUserItem = Pick<CacheUserItem, 'uid' | 'avatar' | 'name'>
@@ -38,36 +39,69 @@ export const useCachedStore = defineStore('cached', () => {
     }
   })
 
-  /** 批量获取用户详细信息
-   * @param uids 用户ID数组
-   */
-  const getBatchUserInfo = async (uids: number[]) => {
-    // 筛选需要更新的用户：没有lastModifyTime或距离上次更新超过10分钟的用户
-    const result = uids
-      .map((uid) => {
-        const cacheUser = userCachedList[uid]
-        return { uid, lastModifyTime: cacheUser?.lastModifyTime }
-      })
-      .filter((item) => !item.lastModifyTime || isDiffNow10Min(item.lastModifyTime))
-    if (!result.length) return
+  /** 用于存储正在请求的用户ID */
+  const pendingUids = ref(new Set<number>())
 
-    // 收集需要获取的徽章ID
-    const itemIdSet: Set<number> = new Set()
-    const data = await apis.getUserInfoBatch(result)
-    for (const item of data || []) {
-      // 更新用户信息缓存
-      userCachedList[item.uid] = {
-        ...(item?.needRefresh ? item : userCachedList[item.uid]),
-        needRefresh: undefined,
-        lastModifyTime: Date.now()
+  /**
+   * 批量获取用户详细信息的防抖包装函数
+   * 300ms 的防抖时间应该足够合并多次快速调用
+   */
+  const debouncedGetBatchUserInfo = useDebounceFn(async (uids: number[]) => {
+    let result: { uid: number; lastModifyTime: number | undefined }[] = []
+
+    try {
+      // 去重：过滤掉正在请求的用户ID
+      const uniqueUids = uids.filter((uid) => !pendingUids.value.has(uid))
+      if (uniqueUids.length === 0) return
+
+      // 筛选需要更新的用户：没有lastModifyTime或距离上次更新超过10分钟的用户
+      result = uniqueUids
+        .map((uid) => {
+          const cacheUser = userCachedList[uid]
+          return { uid, lastModifyTime: cacheUser?.lastModifyTime }
+        })
+        .filter((item) => !item.lastModifyTime || isDiffNow10Min(item.lastModifyTime))
+
+      if (!result.length) return
+
+      // 将要请求的用户ID添加到待处理集合中
+      result.forEach((item) => pendingUids.value.add(item.uid))
+
+      // 收集需要获取的徽章ID
+      const itemIdSet: Set<number> = new Set()
+      const data = await apis.getUserInfoBatch(result)
+
+      for (const item of data || []) {
+        // 更新用户信息缓存
+        userCachedList[item.uid] = {
+          ...(item?.needRefresh ? item : userCachedList[item.uid]),
+          needRefresh: undefined,
+          lastModifyTime: Date.now()
+        }
+
+        // 收集用户佩戴的徽章ID
+        const wearingItemId = item.wearingItemId
+        wearingItemId && itemIdSet.add(wearingItemId)
+
+        // 从待处理集合中移除已完成的用户ID
+        pendingUids.value.delete(item.uid)
       }
 
-      // 收集用户佩戴的徽章ID
-      const wearingItemId = item.wearingItemId
-      wearingItemId && itemIdSet.add(wearingItemId)
+      // 批量获取徽章信息
+      await getBatchBadgeInfo([...itemIdSet])
+    } catch (error) {
+      console.error('获取用户信息失败:', error)
+      // 发生错误时也要清理待处理集合
+      result?.forEach((item) => pendingUids.value.delete(item.uid))
     }
-    // 批量获取徽章信息
-    await getBatchBadgeInfo([...itemIdSet])
+  }, 300)
+
+  /**
+   * 批量获取用户详细信息
+   * @param uids 用户ID数组
+   */
+  const getBatchUserInfo = (uids: number[]) => {
+    return debouncedGetBatchUserInfo(uids)
   }
 
   /** 批量获取徽章详细信息

@@ -62,7 +62,7 @@ svg {
   // 头像状态的背景颜色
   --bg-avatar: rgba(241, 241, 241, 1);
   // 个人信息框背景颜色
-  --info-hover: #eee;
+  --info-hover: #eeeeee70;
   --info-text-color: #202020;
   // 系统托盘hover样式
   --tray-hover: #eee;
@@ -103,6 +103,8 @@ svg {
   --danger-bg: #f6dfe3;
   // 头像边框颜色
   --avatar-border-color: #fff;
+  // 插件背景颜色
+  --plugin-bg-color: #eee;
 }
 
 html[data-theme='dark'] {
@@ -148,7 +150,7 @@ html[data-theme='dark'] {
   // 头像状态的背景颜色
   --bg-avatar: rgba(22, 22, 22, 1);
   // 个人信息框背景颜色
-  --info-hover: #3b3b3b;
+  --info-hover: #3b3b3b60;
   --info-text-color: #eee;
   // 系统托盘hover样式
   --tray-hover: #3b3b3b;
@@ -188,7 +190,9 @@ html[data-theme='dark'] {
   --danger-text: #da8583;
   --danger-bg: #37292c;
    // 头像边框颜色
-  --avatar-border-color: #232223;
+  --avatar-border-color: #1b1b1b;
+  // 插件背景颜色
+  --plugin-bg-color: #3b3b3b;
 }
 /**! end */
 // 线性动画

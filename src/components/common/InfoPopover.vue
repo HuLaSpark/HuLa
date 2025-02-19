@@ -9,18 +9,47 @@
     <div class="h-20px"></div>
     <n-flex vertical :size="20" class="size-full p-10px box-border z-10 relative">
       <n-flex vertical :size="20">
-        <n-avatar
-          class="border-(8px solid [--avatar-border-color])"
-          :bordered="true"
-          round
-          :size="80"
-          :src="avatarSrc"
-          fallback-src="/logo.png" />
+        <div class="avatar-wrapper relative">
+          <div class="hover-area absolute top-8px left-8px w-80px h-80px rounded-full z-20">
+            <div class="avatar-hover absolute inset-0 rounded-full"></div>
+          </div>
+          <n-avatar
+            class="border-(8px solid [--avatar-border-color])"
+            :bordered="true"
+            round
+            :size="80"
+            :src="avatarSrc"
+            fallback-src="/logo.png" />
+        </div>
 
-        <span
-          @click="openContent('在线状态', 'onlineStatus', 320, 480)"
-          :class="[activeStatus === OnlineEnum.ONLINE ? 'bg-#1ab292' : 'bg-#909090']"
-          class="absolute top-72px left-72px cursor-pointer border-(6px solid [--avatar-border-color]) rounded-full size-18px"></span>
+        <!-- 在线状态点 -->
+        <template v-if="!statusIcon">
+          <n-popover trigger="hover" placement="top" :show-arrow="false">
+            <template #trigger>
+              <div
+                @click="openContent('在线状态', 'onlineStatus', 320, 480)"
+                class="z-30 absolute top-72px left-72px cursor-pointer border-(6px solid [--avatar-border-color]) rounded-full size-18px"
+                :class="[activeStatus === OnlineEnum.ONLINE ? 'bg-#1ab292' : 'bg-#909090']"></div>
+            </template>
+            <span>{{ activeStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}</span>
+          </n-popover>
+        </template>
+
+        <!-- 独立的状态图标 -->
+        <template v-if="statusIcon">
+          <n-popover trigger="hover" placement="top" :show-arrow="false">
+            <template #trigger>
+              <div class="z-30 absolute top-72px left-72px size-26px bg-[--avatar-border-color] rounded-full">
+                <img
+                  :src="statusIcon"
+                  @click="openContent('在线状态', 'onlineStatus', 320, 480)"
+                  class="p-4px cursor-pointer rounded-full size-18px"
+                  alt="" />
+              </div>
+            </template>
+            <span>{{ currentStateTitle }}</span>
+          </n-popover>
+        </template>
 
         <div
           v-if="useUserInfo(uid).value.wearingItemId === 6"
@@ -28,17 +57,26 @@
           HuLa开发工程师
         </div>
 
-        <p
-          class="text-(18px [--chat-text-color])"
-          style="
-            font-weight: bold !important;
-            font-family:
-              system-ui,
-              -apple-system,
-              sans-serif;
-          ">
-          {{ useUserInfo(uid).value.name }}
-        </p>
+        <n-flex align="center" :size="8">
+          <p
+            class="text-underline text-(18px [--chat-text-color]) w-fit"
+            style="
+              font-weight: bold !important;
+              font-family:
+                system-ui,
+                -apple-system,
+                sans-serif;
+            ">
+            {{ useUserInfo(uid).value.name }}
+          </p>
+
+          <n-popover trigger="hover" placement="top" :show-arrow="false">
+            <template #trigger>
+              <svg class="size-18px cursor-pointer text-[--chat-text-color]"><use href="#edit"></use></svg>
+            </template>
+            <span>添加备注</span>
+          </n-popover>
+        </n-flex>
       </n-flex>
 
       <!-- 地址 -->
@@ -73,7 +111,7 @@
 
       <n-flex justify="center" align="center" :size="40">
         <n-button v-if="isCurrentUserUid" secondary type="info" @click="openEditInfo"> 编辑资料 </n-button>
-        <n-button v-else-if="isMyFriend" secondary type="primary" @click="openMsgSession(uid)"> 发信息 </n-button>
+        <n-button v-else-if="isMyFriend" secondary type="primary" @click="handleOpenMsgSession(uid)"> 发信息 </n-button>
         <n-button v-else secondary @click="addFriend"> 加好友 </n-button>
       </n-flex>
     </n-flex>
@@ -89,8 +127,10 @@ import { useContactStore } from '@/stores/contacts.ts'
 import { leftHook } from '@/layout/left/hook'
 import { useMitt } from '@/hooks/useMitt'
 import { useGlobalStore } from '@/stores/global'
+import { useUserStatusStore } from '@/stores/userStatus'
+import { storeToRefs } from 'pinia'
 
-const { uid } = defineProps<{
+const { uid, activeStatus } = defineProps<{
   uid: number
   activeStatus?: OnlineEnum
 }>()
@@ -98,12 +138,43 @@ const { userUid, openMsgSession } = useCommon()
 const globalStore = useGlobalStore()
 const { openContent } = leftHook()
 const contactStore = useContactStore()
+const userStatusStore = useUserStatusStore()
+const { stateList } = storeToRefs(userStatusStore)
 const isCurrentUser = computed(() => useUserInfo(uid).value)
 const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(useUserInfo(uid).value.avatar as string))
 /** 是否是当前登录的用户 */
 const isCurrentUserUid = computed(() => userUid.value === uid)
 /** 是否是我的好友 */
 const isMyFriend = computed(() => !!contactStore.contactsList.find((item) => item.uid === uid))
+
+// 计算当前用户状态图标
+const statusIcon = computed(() => {
+  const userInfo = useUserInfo(uid).value
+  const userStateId = userInfo.userStateId
+
+  // 如果在线且有特殊状态
+  if (activeStatus === OnlineEnum.ONLINE && userStateId && userStateId > 1) {
+    const state = stateList.value.find((s) => s.id === userStateId)
+    if (state) {
+      return state.url
+    }
+  }
+  return null
+})
+
+// 计算当前状态的标题
+const currentStateTitle = computed(() => {
+  const userInfo = useUserInfo(uid).value
+  const userStateId = userInfo.userStateId
+
+  if (activeStatus === OnlineEnum.ONLINE && userStateId && userStateId > 1) {
+    const state = stateList.value.find((s) => s.id === userStateId)
+    if (state) {
+      return state.title
+    }
+  }
+  return activeStatus === OnlineEnum.ONLINE ? '在线' : '离线'
+})
 
 const openEditInfo = () => {
   useMitt.emit(MittEnum.OPEN_EDIT_INFO)
@@ -113,11 +184,40 @@ const addFriend = () => {
   globalStore.addFriendModalInfo.show = true
   globalStore.addFriendModalInfo.uid = uid
 }
+
+// 注入 enableAllScroll 方法
+const { enableScroll } = inject('popoverControls', { enableScroll: () => {} })
+
+const handleOpenMsgSession = async (uid: number) => {
+  enableScroll() // 在打开新会话前恢复所有滚动
+  await openMsgSession(uid)
+}
 </script>
 
 <style scoped lang="scss">
 .item-hover {
   @apply select-none hover:bg-[--info-hover] cursor-pointer w-fit rounded-10px p-4px;
   transition: all 0.4s ease-in-out;
+}
+
+.avatar-wrapper {
+  .hover-area {
+    .avatar-hover {
+      opacity: 0;
+      transition: opacity 0.4s ease-in-out;
+      background: rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+    }
+  }
+
+  .hover-area:hover .avatar-hover {
+    opacity: 1;
+  }
+}
+
+.text-underline {
+  &:hover {
+    @apply cursor-pointer underline underline-offset-3 decoration-2 decoration-[#606060];
+  }
 }
 </style>

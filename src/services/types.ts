@@ -122,6 +122,8 @@ export type CacheUserItem = {
   name: string
   /** uid */
   uid: number
+  /** 用户状态 */
+  userStateId: number
 }
 
 export type UserItem = {

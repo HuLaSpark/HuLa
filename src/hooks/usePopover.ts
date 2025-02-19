@@ -5,22 +5,34 @@ export const usePopover = (selectKey: Ref<number>, id: string) => {
   /**! 暂时使用这些方法来阻止popover显示时候的滚动行为 */
   // 禁止滚动的默认行为
   const preventDefault = (e: Event) => e.preventDefault()
+
+  // 恢复滚动行为
+  const enableScroll = () => {
+    const scrollbar = document.querySelector(`#${id}`) as HTMLElement
+    if (!scrollbar) return
+    scrollbar.style.pointerEvents = ''
+    window.removeEventListener('wheel', preventDefault)
+  }
+
   const close = (event: any) => {
     if (!event.target.matches('.n-popover, .n-popover *')) {
-      const scrollbar = document.querySelector(`#${id}`) as HTMLElement
-      if (!scrollbar) return
-      scrollbar.style.pointerEvents = ''
-      window.removeEventListener('wheel', preventDefault) // 移除禁止滚轮滚动
+      enableScroll()
     }
   }
 
-  const handlePopoverUpdate = (key: number) => {
+  const handlePopoverUpdate = (key: number, show?: boolean) => {
     const scrollbar = document.querySelector(`#${id}`) as HTMLElement
     if (!scrollbar) return
+
     if (selectKey.value === key) {
-      // 禁止 n-scrollbar 滚动
-      scrollbar.style.pointerEvents = 'none'
-      window.addEventListener('wheel', preventDefault, { passive: false }) // 禁止使用滚轮滚动页面
+      if (show) {
+        // popover 显示时禁止滚动
+        scrollbar.style.pointerEvents = 'none'
+        window.addEventListener('wheel', preventDefault, { passive: false })
+      } else {
+        // popover 关闭时恢复滚动
+        enableScroll()
+      }
       return true
     }
   }
@@ -31,10 +43,11 @@ export const usePopover = (selectKey: Ref<number>, id: string) => {
 
   onUnmounted(() => {
     window.removeEventListener('click', close, true)
+    enableScroll() // 确保组件卸载时恢复滚动
   })
-  /**! end */
 
   return {
-    handlePopoverUpdate
+    handlePopoverUpdate,
+    enableScroll
   }
 }
