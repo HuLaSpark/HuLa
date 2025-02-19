@@ -77,27 +77,36 @@
               @select="$event.click(item, 'Sidebar')"
               :menu="optionsList"
               :special-menu="report">
-              <n-flex @click="selectKey = item.uid" :key="item.uid" :size="10" align="center" class="item">
-                <n-avatar
-                  round
-                  class="grayscale"
-                  :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
-                  :color="'#fff'"
-                  :size="26"
-                  :src="AvatarUtils.getAvatarUrl(item.avatar)" />
-                <n-flex vertical :size="2">
-                  <p class="text-12px truncate flex-1">{{ item.name }}</p>
-                  <n-flex
-                    v-if="item.userStateId && getUserState(item.userStateId)"
-                    align="center"
-                    :size="4"
-                    class="flex-1">
-                    <img class="size-14px" :src="getUserState(item.userStateId)?.url" alt="" />
-                    <span class="text-10px text-[--chat-text-color] truncate">
-                      {{ getUserState(item.userStateId)?.title }}
-                    </span>
+              <n-flex
+                @click="selectKey = item.uid"
+                :key="item.uid"
+                :size="10"
+                align="center"
+                justify="space-between"
+                class="item">
+                <n-flex align="center" :size="8">
+                  <n-avatar
+                    round
+                    class="grayscale"
+                    :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
+                    :color="'#fff'"
+                    :size="26"
+                    :src="AvatarUtils.getAvatarUrl(item.avatar)" />
+                  <n-flex vertical :size="2">
+                    <p class="text-12px truncate flex-1">{{ item.name }}</p>
+                    <n-flex
+                      v-if="item.userStateId && getUserState(item.userStateId)"
+                      align="center"
+                      :size="4"
+                      class="flex-1">
+                      <img class="size-12px" :src="getUserState(item.userStateId)?.url" alt="" />
+                      <span class="text-10px text-[--chat-text-color] truncate">
+                        {{ getUserState(item.userStateId)?.title }}
+                      </span>
+                    </n-flex>
                   </n-flex>
                 </n-flex>
+
                 <div
                   v-if="item.roleId === RoleEnum.LORD"
                   class="flex p-4px rounded-4px bg-#f5dadf size-fit select-none">

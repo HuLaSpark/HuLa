@@ -16,10 +16,16 @@
           </svg>
           <n-flex v-else-if="activeItem.type === RoomTypeEnum.SINGLE" align="center">
             <template v-if="shouldShowDeleteFriend">
-              <n-badge :color="isOnline ? '#1ab292' : '#909090'" dot />
-              <p class="text-(12px [--text-color])">
-                {{ isOnline ? '在线' : '离线' }}
-              </p>
+              <n-flex align="center" :size="6">
+                <!-- 状态图标 -->
+                <img v-if="statusIcon" :src="statusIcon" class="size-18px rounded-50%" alt="" />
+                <n-badge v-else :color="isOnline ? '#1ab292' : '#909090'" dot />
+
+                <!-- 状态文本 -->
+                <p class="text-(12px [--text-color])">
+                  {{ statusTitle }}
+                </p>
+              </n-flex>
             </template>
 
             <template v-else>
@@ -216,7 +222,7 @@ import { emit } from '@tauri-apps/api/event'
 import { type } from '@tauri-apps/plugin-os'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGroupStore } from '@/stores/group.ts'
-import { useUserInfo } from '@/hooks/useCached.ts'
+import { useUserInfo } from '@/hooks/useCached'
 import { useContactStore } from '@/stores/contacts.ts'
 import { AvatarUtils } from '@/utils/avatarUtils'
 import { OnlineEnum } from '@/enums'
@@ -224,6 +230,7 @@ import { useTauriListener } from '@/hooks/useTauriListener'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { RoomTypeEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
+import { useUserStatusStore } from '@/stores/userStatus'
 
 const appWindow = WebviewWindow.getCurrent()
 const { activeItem } = defineProps<{
@@ -235,6 +242,7 @@ const { stream, start, stop } = useDisplayMedia()
 const chatStore = useChatStore()
 const groupStore = useGroupStore()
 const contactStore = useContactStore()
+const userStatusStore = useUserStatusStore()
 /** 提醒框标题 */
 const tips = ref()
 const optionsType = ref<RoomActEnum>()
@@ -388,6 +396,29 @@ const closeMenu = (event: any) => {
     sidebarShow.value = false
   }
 }
+
+/** 获取当前用户的状态信息 */
+const currentUserStatus = computed(() => {
+  if (activeItem.type === RoomTypeEnum.GROUP) return null
+
+  // 使用 useUserInfo 获取用户信息
+  if (!activeItem.friendId) return null
+  const userInfo = useUserInfo(activeItem.friendId).value
+
+  // 从状态列表中找到对应的状态
+  return userStatusStore.stateList.find((state) => state.id === userInfo.userStateId)
+})
+
+/** 状态图标 */
+const statusIcon = computed(() => currentUserStatus.value?.url)
+
+/** 状态标题 */
+const statusTitle = computed(() => {
+  if (currentUserStatus.value?.title) {
+    return currentUserStatus.value.title
+  }
+  return isOnline.value ? '在线' : '离线'
+})
 
 onMounted(() => {
   window.addEventListener('click', closeMenu, true)

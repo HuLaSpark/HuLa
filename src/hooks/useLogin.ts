@@ -5,6 +5,7 @@ import { useGlobalStore } from '@/stores/global.ts'
 import { type } from '@tauri-apps/plugin-os'
 import { useChatStore } from '@/stores/chat.ts'
 import { invoke } from '@tauri-apps/api/core'
+import { RoomTypeEnum } from '@/enums'
 
 const isMobile = computed(() => type() === 'android' || type() === 'ios')
 export const useLogin = () => {
@@ -43,6 +44,9 @@ export const useLogin = () => {
       chatStore.clearUnreadCount()
       // 清除系统托盘图标上的未读数
       await invoke('set_badge_count', { count: null })
+      // 重置当前会话为默认值
+      globalStore.currentSession.roomId = 1
+      globalStore.currentSession.type = RoomTypeEnum.GROUP
     } catch (error) {
       console.error('创建登录窗口失败:', error)
     }

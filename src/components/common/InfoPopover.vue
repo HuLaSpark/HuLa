@@ -153,7 +153,7 @@ const statusIcon = computed(() => {
   const userStateId = userInfo.userStateId
 
   // 如果在线且有特殊状态
-  if (activeStatus === OnlineEnum.ONLINE && userStateId && userStateId > 1) {
+  if (userStateId && userStateId > 1) {
     const state = stateList.value.find((s) => s.id === userStateId)
     if (state) {
       return state.url
@@ -167,7 +167,7 @@ const currentStateTitle = computed(() => {
   const userInfo = useUserInfo(uid).value
   const userStateId = userInfo.userStateId
 
-  if (activeStatus === OnlineEnum.ONLINE && userStateId && userStateId > 1) {
+  if (userStateId && userStateId > 1) {
     const state = stateList.value.find((s) => s.id === userStateId)
     if (state) {
       return state.title
