@@ -62,18 +62,18 @@ export const useContactStore = defineStore('contact', () => {
   /**
    * 获取好友申请未读数
    * 更新全局store中的未读计数
-   * TODO：这里每次获取的未读数都是为0
    */
-  // const getNewFriendCount = async () => {
-  //   const res = await apis.newFriendCount().catch(() => {
-  //     //
-  //   })
-  //   console.log('获取好友申请未读数', res)
+  const getNewFriendCount = async () => {
+    const res = await apis.newFriendCount().catch(() => {
+      // 出错时不更新计数
+      return null
+    })
 
-  //   if (!res) return
-  //   const data = res
-  //   globalStore.unReadMark.newFriendUnreadCount = data.unReadCount
-  // }
+    if (!res) return
+
+    // 更新全局store中的未读计数
+    globalStore.unReadMark.newFriendUnreadCount = res.unReadCount
+  }
 
   /**
    * 获取好友申请列表
@@ -102,11 +102,6 @@ export const useContactStore = defineStore('contact', () => {
     requestFriendsOptions.cursor = data.cursor
     requestFriendsOptions.isLast = data.isLast
     requestFriendsOptions.isLoading = false
-
-    // TODO：暂时解决方案
-    // 计算等待处理的好友请求数量并更新全局store
-    const waitingCount = requestFriendsList.filter((item) => item.status === RequestFriendAgreeStatus.Waiting).length
-    globalStore.unReadMark.newFriendUnreadCount = waitingCount
   }
 
   // 初始化时默认执行一次加载
@@ -121,6 +116,7 @@ export const useContactStore = defineStore('contact', () => {
    * 2. 刷新好友申请列表
    * 3. 刷新好友列表
    * 4. 更新当前选中联系人的状态
+   * 5. 更新未读数
    */
   const onAcceptFriend = async (applyId: number) => {
     // 同意好友申请
@@ -135,6 +131,8 @@ export const useContactStore = defineStore('contact', () => {
         // @ts-expect-error
         globalStore.currentSelectedContact.status = RequestFriendAgreeStatus.Agree
       }
+      // 获取最新的未读数
+      await getNewFriendCount()
     })
   }
 
@@ -159,6 +157,7 @@ export const useContactStore = defineStore('contact', () => {
     getContactList,
     getGroupChatList,
     getRequestFriendsList,
+    getNewFriendCount,
     contactsList,
     groupChatList,
     requestFriendsList,

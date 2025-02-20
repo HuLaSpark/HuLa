@@ -39,13 +39,7 @@ import { useContactStore } from '@/stores/contacts.ts'
 import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user'
 import { useChatStore } from '@/stores/chat'
-import {
-  LoginSuccessResType,
-  OnStatusChangeType,
-  UserStateType,
-  WsResponseMessageType,
-  WsTokenExpire
-} from '@/services/wsType.ts'
+import { LoginSuccessResType, OnStatusChangeType, WsResponseMessageType, WsTokenExpire } from '@/services/wsType.ts'
 import { LoginStatus, useWsLoginStore } from '@/stores/ws.ts'
 import type { MarkItemType, MessageType, RevokedMsgType } from '@/services/types.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
@@ -57,6 +51,7 @@ import { useThrottleFn } from '@vueuse/core'
 import apis from '@/services/apis.ts'
 import { confirm } from '@tauri-apps/plugin-dialog'
 import { invoke } from '@tauri-apps/api/core'
+import { useCachedStore } from '@/stores/cached'
 
 // 异步加载组件时增加缓存配置
 const AsyncLeft = defineAsyncComponent({
@@ -118,8 +113,10 @@ useMitt.on(WsResponseMessageType.LOGIN_SUCCESS, (data: LoginSuccessResType) => {
     }
   ])
 })
-useMitt.on(WsResponseMessageType.USER_STATE_CHANGE, async (data: UserStateType) => {
+useMitt.on(WsResponseMessageType.USER_STATE_CHANGE, async (data: { uid: number; userStateId: number }) => {
   console.log('收到用户状态改变', data)
+  const cachedStore = useCachedStore()
+  await cachedStore.updateUserState(data)
 })
 useMitt.on(WsResponseMessageType.OFFLINE, async () => {
   console.log('收到用户下线通知')
@@ -128,7 +125,7 @@ useMitt.on(WsResponseMessageType.ONLINE, async (onStatusChangeType: OnStatusChan
   groupStore.countInfo.onlineNum = onStatusChangeType.onlineNum
   // groupStore.countInfo.totalNum = onStatusChangeType.totalNum
   groupStore.batchUpdateUserStatus(onStatusChangeType.changeList)
-  groupStore.getGroupUserList(true)
+  await groupStore.refreshGroupMembers()
   console.log('收到用户上线通知')
 })
 useMitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExpire) => {
@@ -176,29 +173,26 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
     const throttleSendNotification = useThrottleFn(() => {
       sendNotification({
         title: username,
-        body: data.message.body.content,
-        attachments: [
-          {
-            id: 'image-1',
-            url: 'asset:///tray/icon.png'
-          }
-        ]
+        body: data.message.body.content
       })
     }, 3000)
     throttleSendNotification()
   }
 })
-useMitt.on(WsResponseMessageType.REQUEST_NEW_FRIEND, (data: { uid: number; unreadCount: number }) => {
-  console.log(data.unreadCount)
+useMitt.on(WsResponseMessageType.REQUEST_NEW_FRIEND, async (data: { uid: number; unreadCount: number }) => {
+  console.log('收到好友申请', data.unreadCount)
+  // 更新未读数
+  globalStore.unReadMark.newFriendUnreadCount += data.unreadCount
+  // 刷新好友申请列表
+  await contactStore.getRequestFriendsList(true)
 
-  // globalStore.unReadMark.newFriendUnreadCount += data.unreadCount
-  // notify({
-  //   name: '新好友',
-  //   text: '您有一个新好友, 快来看看~',
-  //   onClick: () => {
-  //     Router.push('/contact')
-  //   }
-  // })
+  const throttleSendNotification = useThrottleFn(() => {
+    sendNotification({
+      title: '新好友',
+      body: `您有${data.unreadCount}条好友申请`
+    })
+  }, 3000)
+  throttleSendNotification()
 })
 useMitt.on(
   WsResponseMessageType.NEW_FRIEND_SESSION,
@@ -223,8 +217,8 @@ useMitt.on(
   }
 )
 useMitt.on(WsResponseMessageType.REQUEST_APPROVAL_FRIEND, async () => {
+  // 刷新好友列表以获取最新状态
   await contactStore.getContactList(true)
-  await contactStore.getRequestFriendsList(true)
 })
 
 onBeforeMount(async () => {

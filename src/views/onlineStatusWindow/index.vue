@@ -58,9 +58,17 @@ watchEffect(() => {
  * @param { OPT.UserState } item 状态
  */
 const handleActive = async (item: OPT.UserState) => {
-  await apis.changeUserState(item.id.toString())
-  stateId.value = item.id
-  userStore.userInfo.userStateId = item.id
+  try {
+    await apis.changeUserState(item.id.toString())
+
+    stateId.value = item.id
+    userStore.userInfo.userStateId = item.id
+
+    window.$message?.success('状态更新成功')
+  } catch (error) {
+    console.error('更新状态失败:', error)
+    window.$message?.error('状态更新失败')
+  }
 }
 
 onMounted(async () => {

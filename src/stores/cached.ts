@@ -159,6 +159,29 @@ export const useCachedStore = defineStore('cached', () => {
     return currentAtUsersList.value.filter((user) => uidList.includes(user.uid))
   }
 
+  /**
+   * 更新用户状态并刷新用户信息
+   * @param data 用户状态变更数据
+   */
+  const updateUserState = async (data: { uid: number; userStateId: number }) => {
+    const { uid, userStateId } = data
+
+    // 更新缓存中的用户状态
+    if (userCachedList[uid]) {
+      userCachedList[uid] = {
+        ...userCachedList[uid],
+        userStateId,
+        // 强制更新
+        needRefresh: true,
+        // 重置最后更新时间，确保能重新获取数据
+        lastModifyTime: 0
+      }
+    }
+
+    // 重新获取该用户的详细信息
+    await getBatchUserInfo([uid])
+  }
+
   return {
     userCachedList,
     badgeCachedList,
@@ -167,6 +190,7 @@ export const useCachedStore = defineStore('cached', () => {
     initAllUserBaseInfo,
     getGroupAtUserBaseInfo,
     currentAtUsersList,
-    filterUsersByUidList
+    filterUsersByUidList,
+    updateUserState
   }
 })

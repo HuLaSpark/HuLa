@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import { useGlobalStore } from '@/stores/global'
 import type { GroupDetailReq, UserItem } from '@/services/types'
 import { pageSize, useChatStore } from './chat'
-import { OnlineEnum, RoleEnum } from '@/enums'
+import { OnlineEnum, RoleEnum, RoomTypeEnum } from '@/enums'
 import { uniqueUserList } from '@/utils/unique'
 import { useCachedStore } from '@/stores/cached'
 import { useUserStore } from '@/stores/user'
@@ -103,11 +103,11 @@ export const useGroupStore = defineStore('group', () => {
    * 获取群成员列表
    * @param refresh 是否刷新（重新加载）
    */
-  const getGroupUserList = async (refresh = false) => {
+  const getGroupUserList = async (refresh = false, specifiedRoomId?: number) => {
     const data = await apis.getGroupList({
       pageSize: pageSize,
       cursor: refresh ? '' : userListOptions.cursor,
-      roomId: currentRoomId.value
+      roomId: specifiedRoomId || currentRoomId.value
     })
     if (!data) return
     // 合并并去重用户列表，然后按在线状态和时间排序
@@ -211,6 +211,19 @@ export const useGroupStore = defineStore('group', () => {
     globalStore.currentSession.roomId = chatStore.sessionList[0].roomId
   }
 
+  /**
+   * 用于处理在线状态变更时的群成员列表刷新
+   */
+  const refreshGroupMembers = async () => {
+    // 始终刷新频道成员列表
+    await getGroupUserList(true, 1)
+
+    // 如果当前选中的是群聊且不是频道，则同时刷新当前群聊的成员列表
+    if (globalStore.currentSession?.type === RoomTypeEnum.GROUP && currentRoomId.value !== 1) {
+      await getGroupUserList(true, currentRoomId.value)
+    }
+  }
+
   return {
     userList,
     userListOptions,
@@ -226,6 +239,7 @@ export const useGroupStore = defineStore('group', () => {
     memberList,
     addAdmin,
     revokeAdmin,
-    exitGroup
+    exitGroup,
+    refreshGroupMembers
   }
 })

@@ -5,7 +5,7 @@
       <svg class="size-18px cursor-pointer"><use href="#delete"></use></svg>
     </n-flex>
 
-    <n-scrollbar style="max-height: calc(100vh - 80px)">
+    <n-scrollbar id="friend-request-scrollbar" style="max-height: calc(100vh - 80px)">
       <n-flex
         vertical
         :size="10"
@@ -21,6 +21,7 @@
             <n-flex vertical :size="12">
               <n-flex align="center" :size="10">
                 <n-popover
+                  @update:show="handlePopoverUpdate(currentUserId, $event)"
                   trigger="click"
                   placement="bottom-start"
                   :show-arrow="false"
@@ -58,10 +59,13 @@ import { useContactStore } from '@/stores/contacts.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { RequestFriendAgreeStatus } from '@/services/types.ts'
 import { AvatarUtils } from '@/utils/avatarUtils.ts'
+import { usePopover } from '@/hooks/usePopover'
 
 const contactStore = useContactStore()
 const currentUserId = ref(0)
 const loading = ref(false)
+const { handlePopoverUpdate, enableScroll } = usePopover(currentUserId, 'friend-request-scrollbar')
+provide('popoverControls', { enableScroll })
 
 const avatarSrc = (url: string) => AvatarUtils.getAvatarUrl(url)
 

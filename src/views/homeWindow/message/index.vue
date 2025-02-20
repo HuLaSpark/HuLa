@@ -97,7 +97,7 @@ import { useCommon } from '@/hooks/useCommon.ts'
 import SysNTF from '@/components/common/SystemNotification.tsx'
 import { AvatarUtils } from '@/utils/avatarUtils.ts'
 import { useGroupStore } from '@/stores/group.ts'
-import { useMitt } from '~/src/hooks/useMitt'
+import { useMitt } from '@/hooks/useMitt'
 import { useUserStore } from '@/stores/user'
 
 const chatStore = useChatStore()
@@ -173,8 +173,9 @@ onBeforeMount(async () => {
   useMitt.emit(MittEnum.LOCATE_SESSION, { roomId: currentSession.value.roomId })
 })
 
-onMounted(() => {
+onMounted(async () => {
   SysNTF
+  // 监听其他窗口发来的WebSocket发送请求
   // TODO：频繁切换会话会导致频繁请求，切换的时候也会有点卡顿
   useMitt.on(MittEnum.DELETE_SESSION, (roomId) => {
     handleMsgDelete(roomId)

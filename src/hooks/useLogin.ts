@@ -31,6 +31,11 @@ export const useLogin = () => {
    * 登出账号
    */
   const logout = async () => {
+    // 重置当前会话为默认值
+    await nextTick(() => {
+      globalStore.currentSession.roomId = 1
+      globalStore.currentSession.type = RoomTypeEnum.GROUP
+    })
     const { createWebviewWindow } = useWindow()
     isTrayMenuShow.value = false
     try {
@@ -44,9 +49,6 @@ export const useLogin = () => {
       chatStore.clearUnreadCount()
       // 清除系统托盘图标上的未读数
       await invoke('set_badge_count', { count: null })
-      // 重置当前会话为默认值
-      globalStore.currentSession.roomId = 1
-      globalStore.currentSession.type = RoomTypeEnum.GROUP
     } catch (error) {
       console.error('创建登录窗口失败:', error)
     }

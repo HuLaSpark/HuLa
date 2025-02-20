@@ -11,11 +11,17 @@ import { OnlineEnum, ChangeTypeEnum, WorkerMsgEnum, ConnectionState } from '@/en
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useUserStore } from '@/stores/user'
 import { getEnhancedFingerprint } from '@/services/fingerprint.ts'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { useTauriListener } from '@/hooks/useTauriListener'
+import { listen, emit } from '@tauri-apps/api/event'
 
 // 创建 webSocket worker
 const worker: Worker = new Worker(new URL('../workers/webSocket.worker.ts', import.meta.url), {
   type: 'module'
 })
+
+// 添加一个标识是否是主窗口的变量
+let isMainWindow = false
 
 class WS {
   // 添加消息队列大小限制
@@ -25,12 +31,49 @@ class WS {
   #connectReady = false
   // 使用LRU缓存替代简单的Set
   #processedMsgCache = new Map<number, number>()
-  readonly #MAX_CACHE_SIZE = 1000
+  // TODO: 暂时使用去重复的逻辑，后续优化
+  // readonly #MAX_CACHE_SIZE = 1000
+
+  #tauriListener: ReturnType<typeof useTauriListener> | null = null
 
   constructor() {
-    this.initConnect()
-    // 收到消息
-    worker.addEventListener('message', this.onWorkerMsg)
+    this.initWindowType()
+    if (isMainWindow) {
+      this.initConnect()
+      // 收到消息
+      worker.addEventListener('message', this.onWorkerMsg)
+    }
+  }
+
+  // 初始化窗口类型
+  private async initWindowType() {
+    const currentWindow = WebviewWindow.getCurrent()
+    isMainWindow = currentWindow.label === 'home'
+
+    if (!isMainWindow) {
+      // 非主窗口监听来自主窗口的消息
+      await this.initChildWindowListeners()
+    }
+  }
+
+  // 为子窗口初始化监听器
+  private async initChildWindowListeners() {
+    this.#tauriListener = useTauriListener()
+
+    // 监听主窗口发来的WebSocket消息
+    this.#tauriListener.addListener(
+      listen('ws-message', (event) => {
+        this.onMessage(event.payload as string)
+      })
+    )
+
+    // 监听连接状态变化
+    this.#tauriListener.addListener(
+      listen('ws-state-change', (event) => {
+        const state = event.payload as ConnectionState
+        useMitt.emit('wsConnectionStateChange', state)
+      })
+    )
   }
 
   initConnect = async () => {
@@ -51,6 +94,10 @@ class WS {
     switch (params.type) {
       case WorkerMsgEnum.MESSAGE: {
         await this.onMessage(params.value as string)
+        // 广播消息给其他窗口
+        if (isMainWindow) {
+          await emit('ws-message', params.value)
+        }
         break
       }
       case WorkerMsgEnum.OPEN: {
@@ -75,9 +122,12 @@ class WS {
       }
       case 'connectionStateChange': {
         const { state } = params.value as { state: ConnectionState }
-        // 可以触发事件通知其他组件
         console.log('连接状态改变', state)
         useMitt.emit('wsConnectionStateChange', state)
+        // 广播状态变化给其他窗口
+        if (isMainWindow) {
+          await emit('ws-state-change', state)
+        }
         break
       }
     }
@@ -111,15 +161,21 @@ class WS {
   }
 
   send = (params: WsReqMsgContentType) => {
-    if (this.#connectReady) {
-      this.#send(params)
-    } else {
-      // 队列限制
-      if (this.#tasks.length >= this.#MAX_QUEUE_SIZE) {
-        console.warn('消息队列已满，正在丢弃最旧的消息')
-        this.#tasks.shift()
+    if (isMainWindow) {
+      // 主窗口直接发送消息
+      if (this.#connectReady) {
+        this.#send(params)
+      } else {
+        // 队列限制
+        if (this.#tasks.length >= this.#MAX_QUEUE_SIZE) {
+          console.warn('消息队列已满，正在丢弃最旧的消息')
+          this.#tasks.shift()
+        }
+        this.#tasks.push(params)
       }
-      this.#tasks.push(params)
+    } else {
+      // 子窗口通过事件发送消息到主窗口
+      emit('ws-send', params)
     }
   }
 
@@ -149,10 +205,10 @@ class WS {
         // 收到消息
         case WsResponseMessageType.RECEIVE_MESSAGE: {
           const message = params.data as MessageType
-          // TODO: 暂时使用去重复的逻辑，后续优化
-          if (this.#isMessageProcessed(message.message.id)) {
-            break
-          }
+          // TODO: 暂时保留去重
+          // if (this.#isMessageProcessed(message.message.id)) {
+          //   break
+          // }
           useMitt.emit(WsResponseMessageType.RECEIVE_MESSAGE, message)
           break
         }
@@ -201,14 +257,13 @@ class WS {
         }
         // 新好友申请
         case WsResponseMessageType.REQUEST_NEW_FRIEND: {
-          // TODO: 发送申请后其他人没有接收到好友申请请求，后端查看是否有问题
           console.log('好友申请')
           useMitt.emit(WsResponseMessageType.REQUEST_NEW_FRIEND, params.data as { uid: number; unreadCount: number })
           break
         }
         // 成员变动
         case WsResponseMessageType.NEW_FRIEND_SESSION: {
-          console.log('新好友')
+          console.log('成员变动')
           useMitt.emit(
             WsResponseMessageType.NEW_FRIEND_SESSION,
             params.data as {
@@ -223,7 +278,7 @@ class WS {
         }
         // 同意好友请求
         case WsResponseMessageType.REQUEST_APPROVAL_FRIEND: {
-          console.log('同意好友申请')
+          console.log('同意好友申请', params.data)
           useMitt.emit(
             WsResponseMessageType.REQUEST_APPROVAL_FRIEND,
             params.data as {
@@ -244,26 +299,26 @@ class WS {
     }
   }
   // TODO: 暂时使用去重复的逻辑，后续优化
-  #isMessageProcessed(msgId: number): boolean {
-    const now = Date.now()
-    const lastProcessed = this.#processedMsgCache.get(msgId)
+  // #isMessageProcessed(msgId: number): boolean {
+  //   const now = Date.now()
+  //   const lastProcessed = this.#processedMsgCache.get(msgId)
 
-    if (lastProcessed && now - lastProcessed < 5000) {
-      return true
-    }
+  //   if (lastProcessed && now - lastProcessed < 5000) {
+  //     return true
+  //   }
 
-    // 清理过期缓存
-    if (this.#processedMsgCache.size >= this.#MAX_CACHE_SIZE) {
-      const oldestEntries = Array.from(this.#processedMsgCache.entries())
-        .sort(([, a], [, b]) => a - b)
-        .slice(0, Math.floor(this.#MAX_CACHE_SIZE / 2))
+  //   // 清理过期缓存
+  //   if (this.#processedMsgCache.size >= this.#MAX_CACHE_SIZE) {
+  //     const oldestEntries = Array.from(this.#processedMsgCache.entries())
+  //       .sort(([, a], [, b]) => a - b)
+  //       .slice(0, Math.floor(this.#MAX_CACHE_SIZE / 2))
 
-      oldestEntries.forEach(([key]) => this.#processedMsgCache.delete(key))
-    }
+  //     oldestEntries.forEach(([key]) => this.#processedMsgCache.delete(key))
+  //   }
 
-    this.#processedMsgCache.set(msgId, now)
-    return false
-  }
+  //   this.#processedMsgCache.set(msgId, now)
+  //   return false
+  // }
 
   destroy() {
     worker.postMessage(JSON.stringify({ type: 'clearReconnectTimer' }))
@@ -271,6 +326,8 @@ class WS {
     this.#tasks = []
     this.#processedMsgCache.clear()
     this.#connectReady = false
+    // 清理 Tauri 事件监听器
+    this.#tauriListener?.cleanup()
   }
 }
 
