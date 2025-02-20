@@ -42,6 +42,7 @@ import { useWindow } from '@/hooks/useWindow.ts'
 import { useChatStore } from '@/stores/chat'
 import { MsgEnum } from '@/enums/index'
 import { useImageViewer } from '@/stores/imageViewer.ts'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 
 const props = defineProps<{ body: ImageBody }>()
 const chatStore = useChatStore()
@@ -90,6 +91,16 @@ const openImageViewer = async () => {
     const { list, index } = getAllImagesFromChat()
     // 使用新的重置方法,自动去重并保持顺序
     imageViewerStore.resetImageList(list, index)
+
+    // 检查图片查看器窗口是否已存在
+    const existingWindow = await WebviewWindow.getByLabel('imageViewer')
+
+    if (existingWindow) {
+      // 如果窗口已存在，更新图片内容并显示窗口
+      await existingWindow.emit('update-image', { list, index }) // 发送更新事件
+      await existingWindow.show()
+      return
+    }
 
     // 获取当前图片的宽高
     const img = new Image()

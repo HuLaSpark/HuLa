@@ -59,7 +59,7 @@ watchEffect(() => {
  */
 const handleActive = async (item: OPT.UserState) => {
   try {
-    await apis.changeUserState(item.id.toString())
+    await apis.changeUserState(item.id)
 
     stateId.value = item.id
     userStore.userInfo.userStateId = item.id

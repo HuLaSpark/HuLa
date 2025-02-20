@@ -45,8 +45,14 @@
 
                       <div class="text leading-tight text-12px flex-y-center gap-4px flex-1 truncate">
                         [
-                        <n-badge :color="item.activeStatus === OnlineEnum.ONLINE ? '#1ab292' : '#909090'" dot />
-                        {{ item.activeStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}
+                        <template v-if="getUserState(item.uid)">
+                          <img class="size-12px rounded-50%" :src="getUserState(item.uid)?.url" alt="" />
+                          {{ getUserState(item.uid)?.title }}
+                        </template>
+                        <template v-else>
+                          <n-badge :color="item.activeStatus === OnlineEnum.ONLINE ? '#1ab292' : '#909090'" dot />
+                          {{ item.activeStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}
+                        </template>
                         ]
                       </div>
                     </n-flex>
@@ -96,6 +102,8 @@ import { useContactStore } from '@/stores/contacts.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { AvatarUtils } from '@/utils/avatarUtils'
 import { useGlobalStore } from '@/stores/global.ts'
+import { useUserStatusStore } from '@/stores/userStatus'
+import { storeToRefs } from 'pinia'
 
 const menuList = ref([
   { label: '添加分组', icon: 'plus' },
@@ -108,6 +116,8 @@ const detailsShow = ref(false)
 const shrinkStatus = ref(false)
 const contactStore = useContactStore()
 const globalStore = useGlobalStore()
+const userStatusStore = useUserStatusStore()
+const { stateList } = storeToRefs(userStatusStore)
 /** 群聊列表 */
 const groupChatList = computed(() => contactStore.groupChatList)
 /** 统计在线用户人数 */
@@ -158,6 +168,17 @@ const handleApply = () => {
     }
   })
   activeItem.value = 0
+}
+
+/** 获取用户状态 */
+const getUserState = (uid: number) => {
+  const userInfo = useUserInfo(uid).value
+  const userStateId = userInfo.userStateId
+
+  if (userStateId && userStateId > 1) {
+    return stateList.value.find((state) => state.id === userStateId)
+  }
+  return null
 }
 
 onBeforeUnmount(() => {

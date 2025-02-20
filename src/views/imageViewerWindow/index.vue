@@ -112,7 +112,9 @@ import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewW
 import ActionBar from '@/components/windows/ActionBar.vue'
 import { NTooltip } from 'naive-ui'
 import { useImageViewer } from '@/stores/imageViewer.ts'
+import { useTauriListener } from '@/hooks/useTauriListener'
 
+const { addListener } = useTauriListener()
 const { downloadFile } = useDownload()
 const imageViewerStore = useImageViewer()
 const appWindow = WebviewWindow.getCurrent()
@@ -368,6 +370,16 @@ onMounted(async () => {
   setTimeout(() => {
     checkScrollbar()
   }, 16)
+
+  await addListener(
+    appWindow.listen('update-image', (event: any) => {
+      const { list, index } = event.payload
+      imageList.value = list
+      currentIndex.value = index
+      // 重置图片状态
+      resetImage(true)
+    })
+  )
 
   if (imageViewerStore.isSingleMode) {
     // 单图模式下不需要设置 imageList 和 currentIndex

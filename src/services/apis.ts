@@ -137,5 +137,5 @@ export default {
   /** 获取所有用户状态 */
   getAllUserState: () => GET<OPT.UserState[]>(urls.getAllUserState),
   /** 用户状态改变 */
-  changeUserState: (userStateId: string) => POST(`${urls.changeUserState}/${userStateId}`)
+  changeUserState: (userStateId: number) => POST(`${urls.changeUserState}/${userStateId}`)
 }
