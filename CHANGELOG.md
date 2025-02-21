@@ -1,5 +1,22 @@
 # Changelog
 
+## <small>2.6.4 (2025-02-21)</small>
+
+* fix(common): :bug: 修复登出账号时没有清空系统托盘图标上的未读数(MacOS) ([383a776](https://github.com/HuLaSpark/HuLa/commit/383a776))
+* fix(component): :bug: 修复跳转到会话选中回退第一个问题 ([029f3f9](https://github.com/HuLaSpark/HuLa/commit/029f3f9))
+* fix(config): :bug: 修复检查更新问题(暂时先切换回github) ([d6d488b](https://github.com/HuLaSpark/HuLa/commit/d6d488b))
+* fix(file): :bug: 修复git未监听文件名大小写修改 ([9a8659b](https://github.com/HuLaSpark/HuLa/commit/9a8659b))
+* fix(git): :bug: 删除多余的文件，导致打包出错 ([df7fed3](https://github.com/HuLaSpark/HuLa/commit/df7fed3))
+* fix(worker): :bug: 修复ws连接问题和一些页面组件问题 ([eadea02](https://github.com/HuLaSpark/HuLa/commit/eadea02))
+* feat(component): :sparkles: 新增用户状态切换 ([5098733](https://github.com/HuLaSpark/HuLa/commit/5098733))
+* feat(service): :sparkles: 增加双token校验 ([776b6ec](https://github.com/HuLaSpark/HuLa/commit/776b6ec)), closes [#IBNT91](https://github.com/HuLaSpark/HuLa/issues/IBNT91)
+* [Snyk] Upgrade @tauri-apps/plugin-clipboard-manager from 2.2.0 to 2.2.1 (#206) ([54354c6](https://github.com/HuLaSpark/HuLa/commit/54354c6)), closes [#206](https://github.com/HuLaSpark/HuLa/issues/206)
+* [Snyk] Upgrade @tauri-apps/plugin-http from 2.2.0 to 2.3.0 (#207) ([cbf5f4d](https://github.com/HuLaSpark/HuLa/commit/cbf5f4d)), closes [#207](https://github.com/HuLaSpark/HuLa/issues/207)
+* perf(view): :zap: 优化群聊侧边栏用户信息展示 ([4b03f57](https://github.com/HuLaSpark/HuLa/commit/4b03f57))
+* perf(view): :zap: 优化群聊侧边栏状态展示和聊天框顶部栏状态展示 ([e15cf9b](https://github.com/HuLaSpark/HuLa/commit/e15cf9b))
+* perf(view): :zap: 优化图片查看器 ([22f84f1](https://github.com/HuLaSpark/HuLa/commit/22f84f1))
+* docs(readme): :memo: 更新赞助者名单 ([4d9aabe](https://github.com/HuLaSpark/HuLa/commit/4d9aabe))
+
 ## <small>2.6.3 (2025-02-15)</small>
 
 * feat(component): :sparkles: 增加更换头像功能 ([63ba2e6](https://github.com/HuLaSpark/HuLa/commit/63ba2e6))
