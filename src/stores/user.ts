@@ -15,6 +15,7 @@ export const useUserStore = defineStore('user', () => {
       .catch(() => {
         // 删除缓存
         localStorage.removeItem('TOKEN')
+        localStorage.removeItem('REFRESH_TOKEN')
       })
   }
 

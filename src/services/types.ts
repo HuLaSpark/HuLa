@@ -193,6 +193,8 @@ export type UserInfoType = {
   userStateId: number
   /** 头像更新时间 */
   avatarUpdateTime: number
+  /** 客户端 */
+  client: string
 }
 
 export type BadgeType = {

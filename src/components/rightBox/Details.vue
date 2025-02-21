@@ -113,7 +113,7 @@
 import { RoomTypeEnum } from '@/enums'
 import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
-import { AvatarUtils } from '@/utils/avatarUtils'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 import apis from '@/services/apis.ts'
 import { useWindow } from '@/hooks/useWindow'
 import { useImageViewer } from '@/stores/imageViewer'

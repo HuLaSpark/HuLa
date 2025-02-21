@@ -232,12 +232,11 @@ class WS {
         }
         // 用户 token 过期
         case WsResponseMessageType.TOKEN_EXPIRED: {
-          console.log('token过期')
-          localStorage.removeItem('TOKEN')
+          console.log('账号在其他设备登录')
           useMitt.emit(WsResponseMessageType.TOKEN_EXPIRED, params.data as WsTokenExpire)
           break
         }
-        // 小黑子的发言在禁用后，要删除他的发言
+        // 拉黑的用户的发言在禁用后，要删除他的发言
         case WsResponseMessageType.INVALID_USER: {
           console.log('无效用户')
           useMitt.emit(WsResponseMessageType.INVALID_USER, params.data as { uid: number })

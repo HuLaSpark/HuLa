@@ -120,7 +120,7 @@
 
 <script setup lang="ts">
 import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
-import { AvatarUtils } from '@/utils/avatarUtils'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 import { MittEnum, OnlineEnum } from '@/enums/index.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useContactStore } from '@/stores/contacts.ts'

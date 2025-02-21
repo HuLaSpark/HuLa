@@ -45,7 +45,7 @@ import { useWindow } from '@/hooks/useWindow.ts'
 import { useTauriListener } from '@/hooks/useTauriListener'
 import type { MessageType } from '@/services/types.ts'
 import { useChatStore } from '@/stores/chat.ts'
-import { AvatarUtils } from '@/utils/avatarUtils.ts'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 import { useCommon } from '@/hooks/useCommon.ts'
 
 // 定义分组消息的类型

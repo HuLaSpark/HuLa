@@ -92,7 +92,11 @@
                 round />
               <div class="tip">
                 <template v-if="item.obtain === IsYesEnum.YES">
-                  <n-button v-if="item.wearing === IsYesEnum.NO" color="#13987f" @click="toggleWarningBadge(item)">
+                  <n-button
+                    style="color: #fff"
+                    v-if="item.wearing === IsYesEnum.NO"
+                    color="#13987f"
+                    @click="toggleWarningBadge(item)">
                     佩戴
                   </n-button>
                 </template>
@@ -111,6 +115,7 @@
       </n-flex>
       <n-flex class="p-12px" align="center" justify="center">
         <n-button
+          style="color: #fff"
           :disabled="editInfo.content.name === localUserInfo.name"
           color="#13987f"
           @click="saveEditInfo(localUserInfo)">
@@ -137,7 +142,7 @@ import { type } from '@tauri-apps/plugin-os'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { UserInfoType } from '@/services/types'
-import { AvatarUtils } from '@/utils/avatarUtils'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 import AvatarCropper from '@/components/common/AvatarCropper.vue'
 import { useLoginHistoriesStore } from '@/stores/loginHistory'
 import { formatTimestamp, isDiffNow } from '@/utils/ComputedTime.ts'

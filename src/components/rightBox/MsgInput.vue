@@ -162,7 +162,7 @@ import { onKeyStroke } from '@vueuse/core'
 import { type } from '@tauri-apps/plugin-os'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
-import { AvatarUtils } from '@/utils/avatarUtils'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 import { useTauriListener } from '@/hooks/useTauriListener'
 
 const appWindow = WebviewWindow.getCurrent()

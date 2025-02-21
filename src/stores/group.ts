@@ -4,7 +4,7 @@ import { useGlobalStore } from '@/stores/global'
 import type { GroupDetailReq, UserItem } from '@/services/types'
 import { pageSize, useChatStore } from './chat'
 import { OnlineEnum, RoleEnum, RoomTypeEnum } from '@/enums'
-import { uniqueUserList } from '@/utils/unique'
+import { uniqueUserList } from '@/utils/Unique.ts'
 import { useCachedStore } from '@/stores/cached'
 import { useUserStore } from '@/stores/user'
 

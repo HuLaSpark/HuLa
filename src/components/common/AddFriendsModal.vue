@@ -61,7 +61,7 @@ import { useUserInfo } from '@/hooks/useCached.ts'
 import apis from '@/services/apis.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useUserStore } from '@/stores/user.ts'
-import { AvatarUtils } from '@/utils/avatarUtils'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 
 const globalStore = useGlobalStore()
 const userStore = useUserStore()

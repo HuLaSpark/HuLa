@@ -141,7 +141,7 @@ import { useMitt } from '@/hooks/useMitt.ts'
 import { VueDraggable } from 'vue-draggable-plus'
 import router from '@/router'
 import { useUserStore } from '@/stores/user.ts'
-import { AvatarUtils } from '@/utils/avatarUtils'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 
 const userStore = useUserStore()
 const activeItem = ref(0)

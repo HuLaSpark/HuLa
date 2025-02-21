@@ -23,7 +23,7 @@
   </n-flex>
 </template>
 <script setup lang="ts">
-import { AvatarUtils } from '@/utils/avatarUtils'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 const historyList = [
   {
     avatar: 'https://picsum.photos/140?1',

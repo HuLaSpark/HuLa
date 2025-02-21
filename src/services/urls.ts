@@ -53,6 +53,8 @@ export default {
   register: `${prefix + URLEnum.TOKEN}/register`,
   // 登录
   login: `${prefix + URLEnum.TOKEN}/login`,
+  // 续签
+  refreshToken: `${prefix + URLEnum.TOKEN}/refreshToken`,
   // 移动端登录
   mobileLogin: `${prefix + URLEnum.TOKEN}/mobileLogin`,
   // 退出登录

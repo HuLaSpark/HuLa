@@ -18,7 +18,7 @@ app.config.errorHandler = (err) => {
   throw err
 }
 if (process.env.NODE_ENV === 'development') {
-  import('@/utils/console.ts').then((module) => {
+  import('@/utils/Console.ts').then((module) => {
     /**! 控制台打印项目版本信息(不需要可手动关闭)*/
     module.consolePrint()
   })

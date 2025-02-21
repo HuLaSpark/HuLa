@@ -1,10 +1,11 @@
 export enum ErrorType {
-  Network = 'NETWORK_ERROR',
-  Authentication = 'AUTH_ERROR',
-  Validation = 'VALIDATION_ERROR',
-  Server = 'SERVER_ERROR',
-  Client = 'CLIENT_ERROR',
-  Unknown = 'UNKNOWN_ERROR'
+  Network = 'Network',
+  Server = 'Server',
+  Client = 'Client',
+  Validation = 'Validation',
+  Authentication = 'Authentication',
+  Unknown = 'Unknown',
+  TokenExpired = 'TokenExpired'
 }
 
 export interface ErrorDetails {

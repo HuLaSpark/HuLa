@@ -3,16 +3,9 @@ import { MittEnum, ModalEnum, PluginEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
 import apis from '@/services/apis.ts'
-import { LoginStatus, useWsLoginStore } from '@/stores/ws.ts'
-import { useUserStore } from '@/stores/user.ts'
-import { invoke } from '@tauri-apps/api/core'
-import { useChatStore } from '@/stores/chat'
 
 const { createWebviewWindow } = useWindow()
-const { logout } = useLogin()
-const loginStore = useWsLoginStore()
-const userStore = useUserStore()
-const chatStore = useChatStore()
+const { logout, resetLoginState } = useLogin()
 /**
  * 这里的顶部的操作栏使用pinia写入了localstorage中
  */
@@ -98,26 +91,9 @@ const moreList = ref<OPT.L.MoreList[]>([
       try {
         // 1. 先调用后端退出接口
         await apis.logout()
-        // 2. 保存 rust 端用户信息
-        await invoke('save_user_info', {
-          userId: -1,
-          username: '',
-          token: '',
-          portrait: '',
-          isSign: false
-        })
-        // 3. 清理本地存储
-        localStorage.removeItem('user')
-        localStorage.removeItem('TOKEN')
-        // 4. 重置用户状态
-        userStore.isSign = false
-        userStore.userInfo = {}
-        loginStore.loginStatus = LoginStatus.Init
-        // 清除未读数
-        chatStore.clearUnreadCount()
-        // 清除系统托盘图标上的未读数
-        await invoke('set_badge_count', { count: null })
-        // 5. 最后调用登出方法(这会创建登录窗口)
+        // 2. 重置登录状态
+        await resetLoginState()
+        // 3. 最后调用登出方法(这会创建登录窗口)
         await logout()
       } catch (error) {
         console.error('退出登录失败:', error)

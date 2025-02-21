@@ -14,9 +14,11 @@ import { StoresEnum, ThemeEnum } from '@/enums'
 import LockScreen from '@/views/LockScreen.vue'
 import router from '@/router'
 import { type } from '@tauri-apps/plugin-os'
+import { useLogin } from '@/hooks/useLogin.ts'
 
 const settingStore = useSettingStore()
 const { themes, lockScreen, page } = storeToRefs(settingStore)
+const { resetLoginState, logout } = useLogin()
 /** 不需要锁屏的页面 */
 const LockExclusion = new Set(['/login', '/tray', '/qrCode', '/about', '/onlineStatus'])
 const isLock = computed(() => {
@@ -100,6 +102,14 @@ onMounted(async () => {
     /** 禁止右键菜单 */
     window.addEventListener('contextmenu', (e) => e.preventDefault(), false)
   }
+  // 监听需要重新登录的事件
+  window.addEventListener('needReLogin', async () => {
+    console.log('👾 需要重新登录')
+    // 重置登录状态
+    await resetLoginState()
+    // 最后调用登出方法(这会创建登录窗口)
+    await logout()
+  })
 })
 
 onUnmounted(() => {

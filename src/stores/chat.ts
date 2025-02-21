@@ -382,7 +382,7 @@ export const useChatStore = defineStore(
       // }
     }
 
-    // 过滤掉小黑子的发言
+    // 过滤掉拉黑用户的发言
     const filterUser = (uid: number) => {
       for (const messages of messageMap.values()) {
         for (const msg of messages.values()) {

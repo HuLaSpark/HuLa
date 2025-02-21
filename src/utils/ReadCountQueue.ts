@@ -83,7 +83,7 @@ const task = async () => {
     // 发送已读计数更新事件
     useMitt.emit('onGetReadCount', result)
   } catch (error) {
-    console.error('Failed to get message read count:', error)
+    console.error('无法获取消息读取计数:', error)
   } finally {
     request = null // 清理请求引用
   }

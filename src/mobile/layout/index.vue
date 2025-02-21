@@ -39,7 +39,7 @@
 import TabBar from './tabBar/index.vue'
 import NavBar from './navBar/index.vue'
 import { useUserStore } from '@/stores/user.ts'
-import { AvatarUtils } from '@/utils/avatarUtils.ts'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 
 const userStore = useUserStore()
 </script>

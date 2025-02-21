@@ -92,6 +92,7 @@ const onCloseHandler = () => {
 
 // ws 连接 error
 const onConnectError = () => {
+  console.log('❌ WebSocket 连接错误')
   if (connection?.readyState !== WebSocket.OPEN) {
     postMsg({ type: WorkerMsgEnum.WS_ERROR, value: { msg: '连接失败，请检查网络或联系管理员' } })
     return
@@ -101,6 +102,7 @@ const onConnectError = () => {
 }
 // ws 连接 close
 const onConnectClose = () => {
+  console.log('📡 WebSocket 连接断开')
   updateConnectionState(ConnectionState.DISCONNECTED)
   onCloseHandler()
   token = null
@@ -108,6 +110,7 @@ const onConnectClose = () => {
 }
 // ws 连接成功
 const onConnectOpen = () => {
+  console.log('✅ WebSocket 连接成功')
   updateConnectionState(ConnectionState.CONNECTED)
   postMsg({ type: WorkerMsgEnum.OPEN })
   sendHeartPack()
@@ -117,6 +120,7 @@ const onConnectMsg = (e: any) => postMsg({ type: WorkerMsgEnum.MESSAGE, value: e
 
 // 初始化 ws 连接
 const initConnection = () => {
+  console.log('🚀 开始初始化 WebSocket 连接')
   updateConnectionState(ConnectionState.CONNECTING)
   connection?.removeEventListener('message', onConnectMsg)
   connection?.removeEventListener('open', onConnectOpen)

@@ -129,10 +129,10 @@ useMitt.on(WsResponseMessageType.ONLINE, async (onStatusChangeType: OnStatusChan
   console.log('收到用户上线通知')
 })
 useMitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExpire) => {
-  console.log('token过期')
-  if (userStore.userInfo.uid === wsTokenExpire.uid) {
+  console.log('账号在其他设备登录', wsTokenExpire)
+  if (userStore.userInfo.uid === wsTokenExpire.uid && userStore.userInfo.client === wsTokenExpire.client) {
     // TODO: 换成web的弹出框
-    await confirm('新设备已在' + (wsTokenExpire.ip ? wsTokenExpire.ip : '未知IP') + '登录')
+    await confirm('账号在其他设备' + (wsTokenExpire.ip ? wsTokenExpire.ip : '未知IP') + '登录')
     // token已在后端清空，只需要返回登录页
     await logout()
     await apis.logout()
@@ -144,15 +144,16 @@ useMitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExp
     userStore.userInfo = {}
     localStorage.removeItem('user')
     localStorage.removeItem('TOKEN')
+    localStorage.removeItem('REFRESH_TOKEN')
     loginStore.loginStatus = LoginStatus.Init
   }
 })
 useMitt.on(WsResponseMessageType.INVALID_USER, (param: { uid: number }) => {
   console.log('无效用户')
   const data = param
-  // 消息列表删掉小黑子发言
+  // 消息列表删掉拉黑的发言
   chatStore.filterUser(data.uid)
-  // 群成员列表删掉小黑子
+  // 群成员列表删掉拉黑的用户
   groupStore.filterUser(data.uid)
 })
 useMitt.on(WsResponseMessageType.MSG_MARK_ITEM, (markList: MarkItemType[]) => {

@@ -250,6 +250,7 @@ const offline = async () => {
   })
   if (!login.value.autoLogin) {
     localStorage.removeItem('TOKEN')
+    localStorage.removeItem('REFRESH_TOKEN')
   }
 }
 useMitt.on('handleCloseWin', handleCloseWin)

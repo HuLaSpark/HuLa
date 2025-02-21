@@ -55,9 +55,9 @@ watchEffect(() => {
 
 /**
  * 处理选中的状态
- * @param { OPT.UserState } item 状态
+ * @param { API.UserState } item 状态
  */
-const handleActive = async (item: OPT.UserState) => {
+const handleActive = async (item: API.UserState) => {
   try {
     await apis.changeUserState(item.id)
 

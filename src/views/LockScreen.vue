@@ -122,7 +122,7 @@ import { InputInst, lightTheme } from 'naive-ui'
 import { getWeekday } from '@/utils/Day.ts'
 import dayjs from 'dayjs'
 import { useUserStore } from '@/stores/user.ts'
-import { AvatarUtils } from '@/utils/avatarUtils'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 
 const appWindow = WebviewWindow.getCurrent()
 const settingStore = useSettingStore()

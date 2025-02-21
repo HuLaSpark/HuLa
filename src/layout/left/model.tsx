@@ -24,7 +24,7 @@ import { check } from '@tauri-apps/plugin-updater'
 import { relaunch } from '@tauri-apps/plugin-process'
 import { useUserStore } from '@/stores/user.ts'
 import { useSettingStore } from '@/stores/setting.ts'
-import { AvatarUtils } from '@/utils/avatarUtils.ts'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 import { confirm } from '@tauri-apps/plugin-dialog'
 
 const formRef = ref<FormInst | null>()

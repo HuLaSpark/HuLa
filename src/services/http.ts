@@ -1,5 +1,7 @@
 import { fetch } from '@tauri-apps/plugin-http'
 import { AppException, ErrorType } from '@/common/exception'
+import { RequestQueue } from '@/utils/RequestQueue'
+import urls from './urls'
 
 // 错误信息常量
 const ERROR_MESSAGES = {
@@ -223,6 +225,23 @@ async function Http<T = any>(
 
       // 非网络错误或重试次数已用完，直接抛出
       if (error instanceof AppException) {
+        if (error.type === ErrorType.TokenExpired) {
+          try {
+            console.log('🔄 开始尝试刷新Token并重试请求')
+            const newToken = await refreshTokenAndRetry()
+            // 使用新token重试当前请求
+            httpHeaders.set('Authorization', `Bearer ${newToken}`)
+            console.log('🔄 使用新Token重试原请求')
+            return attemptFetch(currentAttempt)
+          } catch (refreshError) {
+            // 刷新token失败,需要重新登录
+            localStorage.removeItem('TOKEN')
+            localStorage.removeItem('REFRESH_TOKEN')
+            // 可以触发重新登录事件
+            window.dispatchEvent(new Event('needReLogin'))
+            throw error
+          }
+        }
         throw error
       }
 
@@ -238,7 +257,14 @@ async function Http<T = any>(
   // 辅助函数：根据HTTP状态码确定错误类型
   function getErrorType(status: number): ErrorType {
     if (status >= 500) return ErrorType.Server
-    if (status === 401 || status === 403) return ErrorType.Authentication
+    if (status === 401) {
+      console.log('🔄 Token已过期，准备刷新...')
+      return ErrorType.TokenExpired
+    }
+    if (status === 403) {
+      console.log('🤯 权限不足')
+      return ErrorType.Authentication
+    }
     if (status === 400 || status === 422) return ErrorType.Validation
     if (status >= 400) return ErrorType.Client
     return ErrorType.Network
@@ -264,6 +290,63 @@ async function Http<T = any>(
 
   // 第一次执行，attempt=0
   return attemptFetch(0)
+}
+
+// 添加一个标记,避免多个请求同时刷新token
+let isRefreshing = false
+// 使用队列实现
+const requestQueue = new RequestQueue()
+async function refreshTokenAndRetry(): Promise<string> {
+  if (isRefreshing) {
+    console.log('🔄 已有刷新请求在进行中，加入等待队列')
+    return new Promise((resolve) => {
+      // 可以根据请求类型设置优先级
+      requestQueue.enqueue(resolve, 1)
+    })
+  }
+
+  isRefreshing = true
+  try {
+    const refreshToken = localStorage.getItem('REFRESH_TOKEN')
+    if (!refreshToken) {
+      console.error('❌ 无刷新令牌')
+      throw new Error('无刷新令牌')
+    }
+
+    console.log('📤 正在使用refreshToken获取新的token')
+    const response = await fetch(`${import.meta.env.VITE_SERVICE_URL}${urls.refreshToken}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${refreshToken}`
+      },
+      body: JSON.stringify({ refreshToken })
+    })
+
+    if (!response.ok) {
+      console.error('❌ 刷新Token失败:', response.status)
+      throw new Error('刷新令牌失败')
+    }
+
+    const data = await response.json()
+    const { token, refreshToken: newRefreshToken } = data
+
+    console.log('🔑 Token刷新成功，更新存储')
+    // 更新本地存储的token
+    localStorage.setItem('TOKEN', token)
+    localStorage.setItem('REFRESH_TOKEN', newRefreshToken)
+
+    // 使用队列处理方式
+    await requestQueue.processQueue(token)
+
+    return token
+  } catch (error) {
+    console.error('❌ 刷新Token过程出错:', error)
+    requestQueue.clear() // 发生错误时清空队列
+    throw error
+  } finally {
+    isRefreshing = false
+  }
 }
 
 export default Http

@@ -89,7 +89,7 @@ import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import apis from '@/services/apis'
 import { useUserStore } from '@/stores/user'
 import { useLogin } from '@/hooks/useLogin'
-import { AvatarUtils } from '@/utils/avatarUtils'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 import { UserInfoType } from '@/services/types'
 import { lightTheme } from 'naive-ui'
 import router from '../router'
@@ -128,12 +128,14 @@ const normalLogin = async () => {
   loading.value = true
   const { account, password } = info.value
   apis
-    .login({ account, password })
-    .then(async (token) => {
+    .mobileLogin({ account, password })
+    .then(async (res) => {
       loginDisabled.value = true
       loginText.value = '登录成功, 正在跳转'
       userStore.isSign = true
-      localStorage.setItem('TOKEN', token)
+      // 存储双token
+      localStorage.setItem('TOKEN', res.token)
+      localStorage.setItem('REFRESH_TOKEN', res.refreshToken)
       // 需要删除二维码，因为用户可能先跳转到二维码界面再回到登录界面，会导致二维码一直保持在内存中
       if (localStorage.getItem('wsLogin')) {
         localStorage.removeItem('wsLogin')
@@ -148,7 +150,8 @@ const normalLogin = async () => {
       // TODO 这里的id暂时赋值给uid，因为后端没有统一返回uid，待后端调整
       const account = {
         ...userDetail,
-        token
+        token: res.token,
+        client: res.client
       }
       loading.value = false
       userStore.userInfo = account
@@ -188,11 +191,6 @@ const delAccount = (item: UserInfoType) => {
   info.value.password = ''
   info.value.avatar = '/logo.png'
 }
-
-// const handleLogout = () => {
-//   localStorage.removeItem('TOKEN')
-//   router.push('/mobile/login')
-// }
 </script>
 
 <style scoped lang="scss">

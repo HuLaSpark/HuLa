@@ -58,7 +58,7 @@
 import { useContactStore } from '@/stores/contacts.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { RequestFriendAgreeStatus } from '@/services/types.ts'
-import { AvatarUtils } from '@/utils/avatarUtils.ts'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 import { usePopover } from '@/hooks/usePopover'
 
 const contactStore = useContactStore()

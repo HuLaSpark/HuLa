@@ -68,6 +68,7 @@ export type OnStatusChangeType = {
 export type WsTokenExpire = {
   uid: number
   ip: string
+  client: string
 }
 
 /** 用户状态 */

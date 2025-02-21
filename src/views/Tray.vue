@@ -88,7 +88,7 @@ const handleExit = () => {
   exit(0)
 }
 
-const toggleStatus = (item: OPT.UserState) => {
+const toggleStatus = (item: API.UserState) => {
   stateId.value = item.id
   appWindow.hide()
 }

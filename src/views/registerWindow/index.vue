@@ -98,7 +98,7 @@
           :loading="loading"
           :disabled="btnEnable"
           class="w-full mt-8px mb-50px"
-          @click="handleRegisterClick"
+          @click="register()"
           color="#13987f">
           {{ btnText }}
         </n-button>
@@ -124,7 +124,7 @@
 
             <n-flex :size="10" class="ml-auto">
               <!-- <div
-                @click="register()"
+                @click="starTipsModal = false"
                 class="border-(1px solid #999) cursor-pointer w-40px h-30px rounded-8px flex-center text-(12px [--text-color])">
                 稍后
               </div> -->
@@ -132,9 +132,9 @@
               <a
                 target="_blank"
                 rel="noopener noreferrer"
-                @click="register()"
+                @click="starTipsModal = false"
                 href="https://github.com/HuLaSpark/HuLa"
-                class="bg-#363636 cursor-pointer w-70px h-30px rounded-8px flex-center text-(12px #f1f1f1) no-underline">
+                class="bg-#363636 cursor-pointer w-70px h-30px rounded-8px flex-center text-(12px #f1f1f1) outline-none no-underline">
                 点亮星标
               </a>
             </n-flex>
@@ -246,18 +246,8 @@ const handleInputState = (event: FocusEvent, type: InputType): void => {
   prefixMap[type].value = event.type === 'focus'
 }
 
-/** 处理星标 */
-const handleRegisterClick = async () => {
-  await registerForm.value.validate((errors: any) => {
-    if (!errors) {
-      starTipsModal.value = true
-    }
-  })
-}
-
 /** 注册账号 */
 const register = async () => {
-  starTipsModal.value = false
   btnEnable.value = true
   loading.value = true
   btnText.value = '注册中...'
@@ -299,6 +289,9 @@ watchEffect(() => {
 
 onMounted(async () => {
   await getCurrentWebviewWindow().show()
+  await nextTick(() => {
+    starTipsModal.value = true
+  })
 })
 </script>
 

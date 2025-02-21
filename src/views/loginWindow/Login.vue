@@ -87,7 +87,7 @@
           :loading="loading"
           :disabled="loginDisabled"
           class="w-full mt-8px mb-50px"
-          @click="normalLogin"
+          @click="normalLogin()"
           color="#13987f">
           <span>{{ loginText }}</span>
         </n-button>
@@ -120,7 +120,7 @@
           :loading="loading"
           :disabled="loginDisabled"
           class="w-200px mt-12px mb-40px"
-          @click="autoLogin"
+          @click="normalLogin(true)"
           color="#13987f">
           {{ loginText }}
         </n-button>
@@ -166,7 +166,7 @@ import { useUserStore } from '@/stores/user.ts'
 import { UserInfoType } from '@/services/types.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { invoke } from '@tauri-apps/api/core'
-import { AvatarUtils } from '@/utils/avatarUtils'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 import { useMitt } from '@/hooks/useMitt'
 import { WsResponseMessageType } from '@/services/wsType'
 import { useNetwork } from '@vueuse/core'
@@ -268,16 +268,23 @@ const giveAccount = (item: UserInfoType) => {
 }
 
 /**登录后创建主页窗口*/
-const normalLogin = async () => {
+const normalLogin = async (auto = false) => {
   loading.value = true
-  const { account, password } = info.value
+  // 根据auto参数决定从哪里获取登录信息
+  const loginInfo = auto ? (userStore.userInfo as UserInfoType) : info.value
+  const { account, password } = loginInfo
+
   apis
     .login({ account, password })
-    .then(async (token) => {
+    .then(async (res) => {
+      console.log(res)
+
       loginDisabled.value = true
       loginText.value = '登录成功, 正在跳转'
       userStore.isSign = true
-      localStorage.setItem('TOKEN', token)
+      // 存储双token
+      localStorage.setItem('TOKEN', res.token)
+      localStorage.setItem('REFRESH_TOKEN', res.refreshToken)
       // 需要删除二维码，因为用户可能先跳转到二维码界面再回到登录界面，会导致二维码一直保持在内存中
       if (localStorage.getItem('wsLogin')) {
         localStorage.removeItem('wsLogin')
@@ -304,9 +311,9 @@ const normalLogin = async () => {
       // TODO 这里的id暂时赋值给uid，因为后端没有统一返回uid，待后端调整
       const account = {
         ...userDetail,
-        token
+        token: res.token,
+        client: res.client
       }
-      loading.value = false
       userStore.userInfo = account
       loginHistoriesStore.addLoginHistory(account)
 
@@ -322,9 +329,15 @@ const normalLogin = async () => {
         // 打开主界面
         openHomeWindow()
       })
+      loading.value = false
     })
     .catch(() => {
       loading.value = false
+      // 如果是自动登录失败，重置按钮状态允许手动登录
+      if (auto) {
+        loginDisabled.value = false
+        loginText.value = '登录'
+      }
     })
 }
 
@@ -332,39 +345,10 @@ const openHomeWindow = async () => {
   await createWebviewWindow('HuLa', 'home', 960, 720, 'login', true)
 }
 
-/** 自动登录 */
-const autoLogin = () => {
-  loading.value = true
-  loginText.value = '网络连接中'
-  setTimeout(() => {
-    apis
-      .checkToken()
-      .then(async () => {
-        loginText.value = '登录成功, 正在跳转'
-        loading.value = false
-        const userDetail = await apis.getUserDetail()
-        await setLoginState()
-        // rust保存用户信息
-        await invoke('save_user_info', {
-          userId: userDetail.uid,
-          username: userDetail.name,
-          token: '',
-          portrait: '',
-          isSign: true
-        }).finally(() => {
-          openHomeWindow()
-        })
-      })
-      .catch(() => {
-        loading.value = false
-        loginText.value = '登录'
-      })
-  }, 1000)
-}
-
 /** 移除已登录账号 */
 const removeToken = () => {
   localStorage.removeItem('TOKEN')
+  localStorage.removeItem('REFRESH_TOKEN')
   userStore.userInfo = {}
 }
 
@@ -405,7 +389,7 @@ onMounted(async () => {
   })
   // 自动登录
   if (login.value.autoLogin && TOKEN.value) {
-    autoLogin()
+    normalLogin(true)
   } else {
     loginHistories.length > 0 && giveAccount(loginHistories[0])
   }

@@ -2,7 +2,7 @@ import type { TransferRenderTargetLabel, TransferRenderSourceList } from 'naive-
 import { NAvatar, NCheckbox } from 'naive-ui'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
-import { AvatarUtils } from '@/utils/avatarUtils'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 import apis from '@/services/apis'
 
 const contactStore = useContactStore()

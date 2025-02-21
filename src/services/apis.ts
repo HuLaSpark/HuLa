@@ -123,9 +123,9 @@ export default {
       roomId
     }),
   /** 账号密码登录 */
-  login: (user: LoginUserReq, abort?: AbortController) => POST<string>(urls.login, user, abort),
+  login: (user: LoginUserReq, abort?: AbortController) => POST<API.Login>(urls.login, user, abort),
   /** 移动端登录 */
-  mobileLogin: (user: LoginUserReq, abort?: AbortController) => POST<string>(urls.mobileLogin, user, abort),
+  mobileLogin: (user: LoginUserReq, abort?: AbortController) => POST<API.Login>(urls.mobileLogin, user, abort),
   /** 退出登录 */
   logout: () => POST<string>(urls.logout),
   /** 注册 */
@@ -135,7 +135,7 @@ export default {
   /** 下线 */
   offline: () => POST<string>(urls.offline),
   /** 获取所有用户状态 */
-  getAllUserState: () => GET<OPT.UserState[]>(urls.getAllUserState),
+  getAllUserState: () => GET<API.UserState[]>(urls.getAllUserState),
   /** 用户状态改变 */
   changeUserState: (userStateId: number) => POST(`${urls.changeUserState}/${userStateId}`)
 }

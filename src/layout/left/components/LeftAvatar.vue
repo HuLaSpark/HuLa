@@ -82,7 +82,7 @@
 <script setup lang="ts">
 import { leftHook } from '../hook.ts'
 import { useUserStore } from '@/stores/user.ts'
-import { AvatarUtils } from '@/utils/avatarUtils'
+import { AvatarUtils } from '~/src/utils/AvatarUtils.ts'
 
 const userStore = useUserStore()
 const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(userStore.userInfo.avatar as string))

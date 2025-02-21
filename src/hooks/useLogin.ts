@@ -1,18 +1,21 @@
 import { emit } from '@tauri-apps/api/event'
-import { EventEnum } from '@/enums'
+import { EventEnum, RoomTypeEnum } from '@/enums'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { type } from '@tauri-apps/plugin-os'
-import { useChatStore } from '@/stores/chat.ts'
 import { invoke } from '@tauri-apps/api/core'
-import { RoomTypeEnum } from '@/enums'
+import { LoginStatus, useWsLoginStore } from '@/stores/ws'
+import { useUserStore } from '@/stores/user'
+import { useChatStore } from '@/stores/chat'
 
 const isMobile = computed(() => type() === 'android' || type() === 'ios')
 export const useLogin = () => {
   const { resizeWindow } = useWindow()
   const globalStore = useGlobalStore()
-  const { isTrayMenuShow } = storeToRefs(globalStore)
+  const loginStore = useWsLoginStore()
+  const userStore = useUserStore()
   const chatStore = useChatStore()
+  const { isTrayMenuShow } = storeToRefs(globalStore)
   /**
    * 设置登录状态(系统托盘图标，系统托盘菜单选项)
    */
@@ -31,11 +34,6 @@ export const useLogin = () => {
    * 登出账号
    */
   const logout = async () => {
-    // 重置当前会话为默认值
-    await nextTick(() => {
-      globalStore.currentSession.roomId = 1
-      globalStore.currentSession.type = RoomTypeEnum.GROUP
-    })
     const { createWebviewWindow } = useWindow()
     isTrayMenuShow.value = false
     try {
@@ -45,16 +43,40 @@ export const useLogin = () => {
       await resizeWindow('tray', 130, 44)
       // 发送登出事件
       await emit(EventEnum.LOGOUT)
-      // 清除未读数
-      chatStore.clearUnreadCount()
-      // 清除系统托盘图标上的未读数
-      await invoke('set_badge_count', { count: null })
     } catch (error) {
       console.error('创建登录窗口失败:', error)
     }
   }
 
+  /** 重置登录的状态 */
+  const resetLoginState = async () => {
+    // 1. 保存 rust 端用户信息
+    await invoke('save_user_info', {
+      userId: -1,
+      username: '',
+      token: '',
+      portrait: '',
+      isSign: false
+    })
+    // 2. 清理本地存储
+    localStorage.removeItem('user')
+    localStorage.removeItem('TOKEN')
+    localStorage.removeItem('REFRESH_TOKEN')
+    // 3. 重置用户状态
+    userStore.isSign = false
+    userStore.userInfo = {}
+    loginStore.loginStatus = LoginStatus.Init
+    // 4. 重置当前会话为默认值
+    globalStore.currentSession.roomId = 1
+    globalStore.currentSession.type = RoomTypeEnum.GROUP
+    // 5. 清除未读数
+    chatStore.clearUnreadCount()
+    // 6. 清除系统托盘图标上的未读数
+    await invoke('set_badge_count', { count: null })
+  }
+
   return {
+    resetLoginState,
     setLoginState,
     logout
   }
