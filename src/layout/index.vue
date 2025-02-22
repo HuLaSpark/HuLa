@@ -52,6 +52,7 @@ import apis from '@/services/apis.ts'
 import { confirm } from '@tauri-apps/plugin-dialog'
 import { invoke } from '@tauri-apps/api/core'
 import { useCachedStore } from '@/stores/cached'
+import { clearListener, initListener, readCountQueue } from '@/utils/ReadCountQueue'
 
 // 异步加载组件时增加缓存配置
 const AsyncLeft = defineAsyncComponent({
@@ -85,10 +86,25 @@ const groupStore = useGroupStore()
 const userStore = useUserStore()
 const loginStore = useWsLoginStore()
 const chatStore = useChatStore()
+const cachedStore = useCachedStore()
 const { logout } = useLogin()
 // 清空未读消息
 // globalStore.unReadMark.newMsgUnreadCount = 0
 const shrinkStatus = ref(false)
+
+watch(
+  () => userStore.isSign,
+  (newValue) => {
+    if (newValue) {
+      // 初始化监听器
+      initListener()
+      // 读取消息队列
+      readCountQueue()
+    }
+  },
+  { immediate: true }
+)
+
 /**
  * event默认如果没有传递值就为true，所以shrinkStatus的值为false就会发生值的变化
  * 因为shrinkStatus的值为false，所以v-if="!shrinkStatus" 否则right组件刚开始渲染的时候不会显示
@@ -115,7 +131,6 @@ useMitt.on(WsResponseMessageType.LOGIN_SUCCESS, (data: LoginSuccessResType) => {
 })
 useMitt.on(WsResponseMessageType.USER_STATE_CHANGE, async (data: { uid: number; userStateId: number }) => {
   console.log('收到用户状态改变', data)
-  const cachedStore = useCachedStore()
   await cachedStore.updateUserState(data)
 })
 useMitt.on(WsResponseMessageType.OFFLINE, async () => {
@@ -238,5 +253,9 @@ onMounted(async () => {
     const permission = await requestPermission()
     permissionGranted = permission === 'granted'
   }
+})
+
+onBeforeUnmount(() => {
+  clearListener()
 })
 </script>

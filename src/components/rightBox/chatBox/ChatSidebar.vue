@@ -61,7 +61,7 @@
       style="max-height: calc(100vh - 260px)"
       item-resizable
       @scroll="handleScroll($event)"
-      :item-size="42"
+      :item-size="46"
       :items="filteredUserList">
       <template #default="{ item }">
         <n-popover
@@ -84,7 +84,7 @@
                 align="center"
                 justify="space-between"
                 class="item">
-                <n-flex align="center" :size="8">
+                <n-flex align="center" :size="8" class="flex-1 truncate">
                   <n-avatar
                     round
                     class="grayscale"
@@ -92,8 +92,8 @@
                     :color="'#fff'"
                     :size="26"
                     :src="AvatarUtils.getAvatarUrl(item.avatar)" />
-                  <n-flex vertical :size="2">
-                    <p class="text-12px truncate flex-1">{{ item.name }}</p>
+                  <n-flex vertical :size="2" class="flex-1 truncate">
+                    <p :title="item.name" class="text-12px truncate flex-1">{{ item.name }}</p>
                     <n-flex
                       v-if="item.userStateId && getUserState(item.userStateId)"
                       align="center"
@@ -114,8 +114,8 @@
                 </div>
                 <div
                   v-if="item.roleId === RoleEnum.ADMIN"
-                  class="flex p-4px rounded-4px bg-#13987F66 size-fit select-none">
-                  <p class="text-(10px #13987f)">管理员</p>
+                  class="flex p-4px rounded-4px bg-#cef9ec size-fit select-none">
+                  <p class="text-(10px #1a7d6b)">管理员</p>
                 </div>
               </n-flex>
             </ContextMenu>

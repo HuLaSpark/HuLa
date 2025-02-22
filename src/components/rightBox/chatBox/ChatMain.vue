@@ -175,7 +175,10 @@
                       :style="item.fromUser.uid === userUid ? 'flex-direction: row-reverse' : ''">
                       <!-- 用户徽章 -->
                       <n-popover
-                        v-if="useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.img"
+                        v-if="
+                          currentRoomId === 1 &&
+                          useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.img
+                        "
                         trigger="hover">
                         <template #trigger>
                           <img
@@ -199,15 +202,15 @@
                   </ContextMenu>
                   <!-- 群主 -->
                   <div
-                    v-if="chatStore.isGroup && item.message.id === 1"
+                    v-if="chatStore.isGroup && groupStore.currentLordId === item.fromUser.uid"
                     class="flex p-4px rounded-4px bg-#f5dadf size-fit select-none">
                     <span class="text-(10px #d5304f)">群主</span>
                   </div>
                   <!-- 管理员 -->
                   <div
-                    v-if="chatStore.isGroup && item.message.id === 2"
-                    class="flex p-4px rounded-4px bg-#13987F66size-fit select-none">
-                    <span class="text-(10px #13987f)">管理员</span>
+                    v-if="chatStore.isGroup && groupStore.adminUidList.includes(item.fromUser.uid)"
+                    class="flex p-4px rounded-4px bg-#cef9ec size-fit select-none">
+                    <span class="text-(10px #1a7d6b)">管理员</span>
                   </div>
                   <!-- 信息时间(群聊) -->
                   <Transition name="fade-group">
@@ -414,6 +417,8 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import VirtualList, { type VirtualListExpose } from '@/components/common/VirtualList.vue'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useTauriListener } from '@/hooks/useTauriListener'
+import { useGroupStore } from '@/stores/group.ts'
+import { useGlobalStore } from '@/stores/global'
 
 const appWindow = WebviewWindow.getCurrent()
 const { addListener } = useTauriListener()
@@ -423,6 +428,8 @@ const props = defineProps<{
 const activeItemRef = shallowRef<SessionItem>(props.activeItem)
 const chatStore = useChatStore()
 const userStore = useUserStore()
+const groupStore = useGroupStore()
+const globalStore = useGlobalStore()
 
 // 记录当前滚动位置相关信息
 const isAutoScrolling = ref(false)
@@ -437,6 +444,7 @@ const chatMessageList = computed(() => chatStore.chatMessageList)
 const currentNewMsgCount = computed(() => chatStore.currentNewMsgCount)
 const messageOptions = computed(() => chatStore.currentMessageOptions)
 const { createWebviewWindow } = useWindow()
+const currentRoomId = computed(() => globalStore.currentSession?.roomId)
 /** 是否是超级管理员 */
 // const isAdmin = computed(() => userInfo?.power === PowerEnum.ADMIN)
 /** 跳转回复消息后选中效果 */

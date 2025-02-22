@@ -99,6 +99,7 @@ const openImageViewer = async () => {
       // 如果窗口已存在，更新图片内容并显示窗口
       await existingWindow.emit('update-image', { list, index }) // 发送更新事件
       await existingWindow.show()
+      await existingWindow.setFocus()
       return
     }
 

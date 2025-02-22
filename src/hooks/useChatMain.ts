@@ -1,5 +1,5 @@
 import { useCommon } from '@/hooks/useCommon.ts'
-import { MittEnum, MsgEnum, PowerEnum } from '@/enums'
+import { MittEnum, MsgEnum, PowerEnum, RoleEnum, RoomTypeEnum } from '@/enums'
 import { MessageType } from '@/services/types.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useChatStore } from '@/stores/chat.ts'
@@ -13,12 +13,14 @@ import { translateText } from '@/services/translate'
 import { useSettingStore } from '@/stores/setting.ts'
 import { save } from '@tauri-apps/plugin-dialog'
 import { useDownload } from '@/hooks/useDownload'
+import { useGroupStore } from '@/stores/group'
 
 export const useChatMain = () => {
   const { removeTag, openMsgSession, userUid } = useCommon()
   const settingStore = useSettingStore()
   const { chat } = storeToRefs(settingStore)
   const globalStore = useGlobalStore()
+  const groupStore = useGroupStore()
   const chatStore = useChatStore()
   const userStore = useUserStore()?.userInfo
   const { downloadFile } = useDownload()
@@ -235,10 +237,126 @@ export const useChatMain = () => {
         globalStore.addFriendModalInfo.uid = item.uid || item.fromUser.uid
       },
       visible: (item: any) => !checkFriendRelation(item.uid || item.fromUser.uid, 'all')
+    },
+    {
+      label: '设为管理员',
+      icon: 'people-safe',
+      click: async (item: any) => {
+        const targetUid = item.uid || item.fromUser.uid
+        const roomId = globalStore.currentSession?.roomId
+        if (!roomId) return
+
+        try {
+          await groupStore.addAdmin([targetUid])
+          window.$message.success('设置管理员成功')
+        } catch (error) {
+          window.$message.error('设置管理员失败')
+        }
+      },
+      visible: (item: any) => {
+        // 1. 检查是否在群聊中
+        const isInGroup = globalStore.currentSession?.type === RoomTypeEnum.GROUP
+        if (!isInGroup) return false
+
+        // 2. 检查房间号是否为1(频道)
+        const roomId = globalStore.currentSession?.roomId
+        if (!roomId || roomId === 1) return false
+
+        // 3. 获取目标用户ID
+        const targetUid = item.uid || item.fromUser?.uid
+        if (!targetUid) return false
+
+        // 4. 检查目标用户是否已经是管理员或群主
+        if (item.roleId === RoleEnum.ADMIN || item.roleId === RoleEnum.LORD) return false
+
+        // 5. 检查当前用户是否是群主
+        const currentUser = groupStore.userList.find((user) => user.uid === userUid.value)
+        return currentUser?.roleId === RoleEnum.LORD
+      }
+    },
+    {
+      label: '撤销管理员',
+      icon: 'reduce-user',
+      click: async (item: any) => {
+        const targetUid = item.uid || item.fromUser.uid
+        const roomId = globalStore.currentSession?.roomId
+        if (!roomId) return
+
+        try {
+          await groupStore.revokeAdmin([targetUid])
+          window.$message.success('撤销管理员成功')
+        } catch (error) {
+          window.$message.error('撤销管理员失败')
+        }
+      },
+      visible: (item: any) => {
+        // 1. 检查是否在群聊中
+        const isInGroup = globalStore.currentSession?.type === RoomTypeEnum.GROUP
+        if (!isInGroup) return false
+
+        // 2. 检查房间号是否为1(频道)
+        const roomId = globalStore.currentSession?.roomId
+        if (!roomId || roomId === 1) return false
+
+        // 3. 获取目标用户ID
+        const targetUid = item.uid || item.fromUser?.uid
+        if (!targetUid) return false
+
+        // 4. 检查目标用户是否是管理员(只能撤销管理员,不能撤销群主)
+        if (item.roleId !== RoleEnum.ADMIN) return false
+
+        // 5. 检查当前用户是否是群主
+        const currentUser = groupStore.userList.find((user) => user.uid === userUid.value)
+        return currentUser?.roleId === RoleEnum.LORD
+      }
     }
   ])
   /** 举报选项 */
   const report = ref([
+    {
+      label: '移出本群',
+      icon: 'people-delete-one',
+      click: async (item: any) => {
+        const targetUid = item.uid || item.fromUser.uid
+        const roomId = globalStore.currentSession?.roomId
+        if (!roomId) return
+
+        try {
+          await apis.removeGroupMember({ roomId, uid: targetUid })
+          // 从群成员列表中移除该用户
+          groupStore.filterUser(targetUid)
+          window.$message.success('移出群聊成功')
+        } catch (error) {
+          window.$message.error('移出群聊失败')
+        }
+      },
+      visible: (item: any) => {
+        // 1. 检查是否在群聊中
+        const isInGroup = globalStore.currentSession?.type === RoomTypeEnum.GROUP
+        if (!isInGroup) return false
+
+        // 2. 检查房间号是否为1(频道)
+        const roomId = globalStore.currentSession?.roomId
+        if (!roomId || roomId === 1) return false
+
+        // 3. 获取目标用户ID
+        const targetUid = item.uid || item.fromUser?.uid
+        if (!targetUid) return false
+
+        // 4. 检查目标用户是否是群主(群主不能被移出)
+        if (item.roleId === RoleEnum.LORD) return false
+
+        // 5. 检查当前用户是否有权限(群主或管理员)
+        const currentUser = groupStore.userList.find((user) => user.uid === userUid.value)
+        const isLord = currentUser?.roleId === RoleEnum.LORD
+        const isAdmin = currentUser?.roleId === RoleEnum.ADMIN
+
+        // 6. 如果当前用户是管理员,则不能移出其他管理员
+        if (isAdmin && item.roleId === RoleEnum.ADMIN) return false
+
+        return isLord || isAdmin
+      }
+    },
     {
       label: '举报',
       icon: 'caution',

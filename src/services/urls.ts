@@ -39,7 +39,7 @@ export default {
   getMsgReadCount: `${prefix + URLEnum.CHAT}/msg/read`, // 消息已读未读数
   createGroup: `${prefix + URLEnum.ROOM}/group`, // 新增群组
   getGroupUserList: `${prefix + URLEnum.ROOM}/group/member/page`, // 群成员列表
-  inviteGroupMember: `${prefix + URLEnum.ROOM}/group/member`, // 邀请群成员
+  inviteGroupMember: `${prefix + URLEnum.ROOM}/group/member`, // 邀请群成员 和 移出群成员(post 和 delete)
   exitGroup: `${prefix + URLEnum.ROOM}/group/member/exit`, // 退群
   addAdmin: `${prefix + URLEnum.ROOM}/group/admin`, // 添加管理员
   revokeAdmin: `${prefix + URLEnum.ROOM}/group/admin`, // 删除管理员

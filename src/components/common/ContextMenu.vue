@@ -12,12 +12,7 @@
             left: `${pos.posX}px`,
             top: `${pos.posY - 42}px`
           }">
-          <n-flex
-            v-for="(item, index) in emoji as any[]"
-            :key="index"
-            align="center"
-            justify="space-between"
-            class="emoji-list">
+          <n-flex v-for="(item, index) in emoji" :key="index" align="center" justify="space-between" class="emoji-list">
             <n-popover trigger="hover" :show-arrow="false" placement="top">
               <template #trigger>
                 <n-flex :size="0" align="center" justify="center" class="emoji-item" @click="handleReplyEmoji(item)">
@@ -37,7 +32,7 @@
             top: `${pos.posY}px`
           }">
           <div v-resize="handleSize" v-if="visibleMenu && visibleMenu.length > 0" class="menu-list">
-            <div v-for="(item, index) in visibleMenu as any[]" :key="index">
+            <div v-for="(item, index) in visibleMenu" :key="index">
               <!-- 禁止的菜单选项需要禁止点击事件  -->
               <div class="menu-item-disabled" v-if="item.disabled" @click.prevent="$event.preventDefault()">
                 <svg><use :href="`#${item.icon}`"></use></svg>
@@ -49,10 +44,10 @@
               </div>
             </div>
             <!-- 判断是否有特别的菜单项才需要分割线 -->
-            <div v-if="specialMenu.length > 0" class="flex-col-y-center gap-6px">
+            <div v-if="visibleSpecialMenu.length > 0" class="flex-col-y-center gap-6px">
               <!-- 分割线 -->
               <div class="h-1px bg-[--line-color] m-[2px_8px]"></div>
-              <div @click="handleClick(item)" class="menu-item" v-for="item in specialMenu as any[]" :key="item.label">
+              <div @click="handleClick(item)" class="menu-item" v-for="item in visibleSpecialMenu" :key="item.label">
                 <svg><use :href="`#${item.icon}`"></use></svg>
                 {{ item.label }}
               </div>
@@ -68,35 +63,44 @@
 import { useContextMenu } from '@/hooks/useContextMenu.ts'
 import { useViewport } from '@/hooks/useViewport.ts'
 
-const { content, menu, emoji, specialMenu } = defineProps({
-  content: {
-    type: Object,
-    required: false
-  },
-  menu: {
-    type: Array
-  },
-  emoji: {
-    type: Array
-  },
-  specialMenu: {
-    type: Array,
-    default: () => []
-  }
+type Props = {
+  content?: Record<string, any>
+  menu?: any[]
+  emoji?: any[]
+  specialMenu?: any[]
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  content: () => ({}),
+  menu: () => [],
+  emoji: () => [],
+  specialMenu: () => []
 })
+
 // 使用计算属性过滤显示的菜单项
 const visibleMenu = computed(() => {
-  return menu?.filter((item: any) => {
-    // 检查是否有 visible 属性并作为函数调用
+  // 检查是否有 visible 属性并作为函数调用
+  return props.menu?.filter((item: any) => {
     if (typeof item.visible === 'function') {
-      return item.visible(content) // 如果 visible 是函数，则调用它
+      return item.visible(props.content) // 如果 visible 是函数，则调用它
     }
     // 如果没有 visible 属性，则默认显示
     return true
   })
 })
+
+// 添加 specialMenu 的过滤功能
+const visibleSpecialMenu = computed(() => {
+  return props.specialMenu?.filter((item: any) => {
+    if (typeof item.visible === 'function') {
+      return item.visible(props.content)
+    }
+    return true
+  })
+})
+
 /** 判断是否传入了menu */
-const isNull = computed(() => menu === void 0)
+const isNull = computed(() => props.menu === void 0)
 const ContextMenuRef = useTemplateRef('ContextMenuRef')
 const emit = defineEmits(['select', 'reply-emoji'])
 /** 获取鼠标位置和是否显示右键菜单 */
@@ -138,10 +142,10 @@ const handleClick = (item: string) => {
 }
 
 /** 处理回复表情事件 */
-const handleReplyEmoji = (item: string) => {
+const handleReplyEmoji = (item: { label: string }) => {
   nextTick(() => {
     showMenu.value = false
-    emit('reply-emoji', item)
+    emit('reply-emoji', item.label)
   })
 }
 

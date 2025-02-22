@@ -234,9 +234,6 @@ async function Http<T = any>(
             console.log('🔄 使用新Token重试原请求')
             return attemptFetch(currentAttempt)
           } catch (refreshError) {
-            // 刷新token失败,需要重新登录
-            localStorage.removeItem('TOKEN')
-            localStorage.removeItem('REFRESH_TOKEN')
             // 可以触发重新登录事件
             window.dispatchEvent(new Event('needReLogin'))
             throw error
