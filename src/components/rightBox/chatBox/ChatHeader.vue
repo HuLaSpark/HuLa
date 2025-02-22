@@ -376,6 +376,12 @@ const handleConfirm = () => {
       // TODO: 删除后当前删除的人提示不准确，无论是删除方还是被删除方都提示“您已被对方拉黑”
     })
   } else if (optionsType.value === RoomActEnum.EXIT_GROUP) {
+    if (activeItem.roomId === 1) {
+      window.$message.warning('无法退出频道')
+      modalShow.value = false
+      return
+    }
+
     groupStore.exitGroup(activeItem.roomId).then(() => {
       modalShow.value = false
       sidebarShow.value = false

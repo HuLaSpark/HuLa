@@ -13,7 +13,7 @@ let heartTimer: number | null = null
 // 重连次数上限
 const reconnectCountMax = 5
 let reconnectCount = 0
-// 重连🔐
+// 重连锁
 let lockReconnect = false
 let token: null | string = null
 
@@ -67,7 +67,7 @@ const onCloseHandler = () => {
   clearHeartPackTimer()
   if (lockReconnect) return
 
-  // 添加重连次数限制
+  // 重连次数限制检查
   if (reconnectCount >= reconnectCountMax) {
     console.log('达到最大重连次数，停止重连')
     postMsg({
@@ -80,7 +80,7 @@ const onCloseHandler = () => {
   updateConnectionState(ConnectionState.RECONNECTING)
   lockReconnect = true
 
-  // 使用 timer worker 替代 setTimeout
+  // 使用 timer worker 发起重连
   postMsg({
     type: 'startReconnectTimer',
     value: {

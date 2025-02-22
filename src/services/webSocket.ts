@@ -112,10 +112,10 @@ class WS {
       case WorkerMsgEnum.WS_ERROR: {
         console.log('WebSocket错误:', (params.value as { msg: string }).msg)
         useMitt.emit(WsResponseMessageType.NO_INTERNET, params.value)
-        localStorage.removeItem('wsLogin')
         // 如果是重连失败，可以提示用户刷新页面
         if ((params.value as { msg: string }).msg.includes('连接失败次数过多')) {
           // 可以触发UI提示，让用户刷新页面
+          // TODO: 无感帮助用户刷新页面
           useMitt.emit('wsReconnectFailed', params.value)
         }
         break
