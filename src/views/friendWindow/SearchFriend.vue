@@ -223,7 +223,7 @@ const handleSearch = debounce(async () => {
 const handleAddFriend = async (item: any) => {
   if (searchType.value === 'user') {
     // 创建窗口并获取实例
-    const webview = await createWebviewWindow('申请加好友', 'addFriendVerify', 350, 300)
+    const webview = await createWebviewWindow('申请加好友', 'addFriendVerify', 350, 300, '', false, 350, 300)
 
     // 监听子窗口就绪事件
     const unlisten = await listen(MittEnum.ADD_FRIEND_READY, async () => {

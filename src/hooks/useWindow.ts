@@ -25,8 +25,7 @@ export const useWindow = () => {
     wantCloseWindow?: string,
     resizable = false,
     minW = 310,
-    minH = 300
-    // minH = 495
+    minH = 495
   ) => {
     const checkLabel = computed(() => {
       /** 如果是打开独立窗口就截取label中的固定label名称 */
