@@ -123,6 +123,9 @@ import { useWindowSize } from '@vueuse/core'
 import { useSettingStore } from '@/stores/setting.ts'
 import { type } from '@tauri-apps/plugin-os'
 import { renderLabel, renderSourceList, options, createGroup } from './model.tsx'
+import { useWindow } from '@/hooks/useWindow'
+
+const { createWebviewWindow } = useWindow()
 
 const settingStore = useSettingStore()
 const { page } = storeToRefs(settingStore)
@@ -157,8 +160,8 @@ const addPanels = ref({
     {
       label: '加好友/群',
       icon: 'people-plus',
-      click: () => {
-        console.log('加好友/群')
+      click: async () => {
+        await createWebviewWindow('添加好友/群', 'searchFriend', 500, 570)
       }
     }
   ]

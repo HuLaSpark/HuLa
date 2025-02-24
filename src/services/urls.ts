@@ -5,6 +5,7 @@ const prefix = VITE_SERVICE_URL
 
 export default {
   // 用户相关
+  searchUsers: `${prefix + URLEnum.USER}/search/users`, // 好友中搜索用户 @author mint
   getBadgeList: `${prefix + URLEnum.USER}/badges`, // 获取徽章列表
   getMemberStatistic: `${prefix + URLEnum.CHAT}/member/statistic`,
   getUserInfoBatch: `${prefix + URLEnum.USER}/summary/userInfo/batch`,
@@ -37,6 +38,7 @@ export default {
   getSessionList: `${prefix + URLEnum.CHAT}/contact/page`, // 会话列表
   getMsgReadList: `${prefix + URLEnum.CHAT}/msg/read/page`, // 消息的已读未读列表
   getMsgReadCount: `${prefix + URLEnum.CHAT}/msg/read`, // 消息已读未读数
+  searchGroups: `${prefix + URLEnum.ROOM}/group/search`, // 搜索群组  @author mint
   createGroup: `${prefix + URLEnum.ROOM}/group`, // 新增群组
   getGroupUserList: `${prefix + URLEnum.ROOM}/group/member/page`, // 群成员列表
   inviteGroupMember: `${prefix + URLEnum.ROOM}/group/member`, // 邀请群成员 和 移出群成员(post 和 delete)
