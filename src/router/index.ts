@@ -89,6 +89,16 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/imageViewerWindow/index.vue')
   },
   {
+    path: '/searchFriend', // 搜索好友 @author mint
+    name: 'searchFriend',
+    component: () => import('@/views/friendWindow/SearchFriend.vue')
+  },
+  {
+    path: '/addFriendVerify', // 添加好友 @author mint
+    name: 'addFriendVerify',
+    component: () => import('@/views/friendWindow/AddFriendVerify.vue')
+  },
+  {
     path: '/home',
     name: 'home',
     component: () => import('@/layout/index.vue'),
