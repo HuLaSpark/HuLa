@@ -363,3 +363,13 @@ export enum UploadSceneEnum {
   /** 头像 */
   AVATAR
 }
+
+/** 会话操作 */
+export enum SessionOperateEnum {
+  /** 删除好友 */
+  DELETE_FRIEND = 0,
+  /** 解散群聊 */
+  DISSOLUTION_GROUP = 1,
+  /** 退出群聊 */
+  EXIT_GROUP = 2 | 3
+}

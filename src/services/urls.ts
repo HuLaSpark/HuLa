@@ -37,6 +37,12 @@ export default {
   getSessionList: `${prefix + URLEnum.CHAT}/contact/page`, // 会话列表
   getMsgReadList: `${prefix + URLEnum.CHAT}/msg/read/page`, // 消息的已读未读列表
   getMsgReadCount: `${prefix + URLEnum.CHAT}/msg/read`, // 消息已读未读数
+  sessionDetail: `${prefix + URLEnum.CHAT}/contact/detail`, // 会话详情
+  sessionDetailWithFriends: `${prefix + URLEnum.CHAT}/contact/detail/friend`, // 会话详情(联系人列表发消息用)
+  setSessionTop: `${prefix + URLEnum.CHAT}/setTop`, // 设置会话置顶
+  deleteSession: `${prefix + URLEnum.CHAT}/hide`, // 删除会话
+
+  // -------------- 群聊相关 ---------------
   createGroup: `${prefix + URLEnum.ROOM}/group`, // 新增群组
   getGroupUserList: `${prefix + URLEnum.ROOM}/group/member/page`, // 群成员列表
   inviteGroupMember: `${prefix + URLEnum.ROOM}/group/member`, // 邀请群成员 和 移出群成员(post 和 delete)
@@ -45,8 +51,7 @@ export default {
   revokeAdmin: `${prefix + URLEnum.ROOM}/group/admin`, // 删除管理员
   groupDetail: `${prefix + URLEnum.ROOM}/group`, // 群组详情
   groupList: `${prefix + URLEnum.ROOM}/group/list`, // 群聊列表
-  sessionDetail: `${prefix + URLEnum.CHAT}/contact/detail`, // 会话详情
-  sessionDetailWithFriends: `${prefix + URLEnum.CHAT}/contact/detail/friend`, // 会话详情(联系人列表发消息用)
+  updateRoomInfo: `${prefix + URLEnum.ROOM}/updateRoomInfo`, // 修改群信息
 
   // token相关
   // 注册

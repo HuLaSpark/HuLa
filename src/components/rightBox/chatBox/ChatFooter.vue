@@ -107,14 +107,12 @@ import { SelectionRange, useCommon } from '@/hooks/useCommon.ts'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { emitTo } from '@tauri-apps/api/event'
 import { useGlobalStore } from '@/stores/global.ts'
-import { useContactStore } from '@/stores/contacts.ts'
-import type { ContactItem, SessionItem } from '@/services/types'
+import type { SessionItem } from '@/services/types'
 
-const { friendId } = defineProps<{
-  friendId: SessionItem['friendId']
+const { id } = defineProps<{
+  id?: SessionItem['id']
 }>()
 const globalStore = useGlobalStore()
-const contactStore = useContactStore()
 const { open, onChange, reset } = useFileDialog()
 const MsgInputRef = ref()
 const msgInputDom = ref<HTMLInputElement | null>(null)
@@ -125,10 +123,12 @@ const isSingleChat = computed(() => {
   return globalStore.currentSession?.type === RoomTypeEnum.SINGLE
 })
 
-// 判断是否为好友
+/** 是否是好友关系 */
 const isFriend = computed(() => {
+  // 如果是群聊直接返回true
   if (!isSingleChat.value) return true
-  return contactStore.contactsList.some((contact: ContactItem) => contact.uid === friendId)
+  // 判断id是否存在,存在则为好友关系
+  return !!id
 })
 
 /**

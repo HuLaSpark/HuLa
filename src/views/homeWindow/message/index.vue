@@ -6,10 +6,14 @@
       <ContextMenu
         v-for="item in sessionList"
         :key="item.roomId"
-        :class="{ active: currentSession.roomId === item.roomId }"
+        :class="[
+          { active: currentSession.roomId === item.roomId },
+          { 'bg-[--bg-msg-first-child] rounded-12px relative': item.top }
+        ]"
         :data-key="item.roomId"
         :menu="menuList"
         :special-menu="specialMenuList"
+        :content="item"
         class="msg-box w-full h-75px mb-5px"
         @click="handleMsgClick(item)"
         @dblclick="handleMsgDblclick(item)"
@@ -110,49 +114,66 @@ const { handleMsgClick, handleMsgDelete, menuList, specialMenuList, handleMsgDbl
 const currentSession = computed(() => globalStore.currentSession)
 // TODO 艾特我提醒
 const sessionList = computed(() =>
-  chatStore.sessionList.map((item) => {
-    // 获取该会话的所有消息，避免重复转换
-    const messages = Array.from(chatStore.messageMap.get(item.roomId)?.values() || [])
-    // 获取最后一条消息
-    const lastMsg = messages[messages.length - 1]
-    let LastUserMsg = ''
+  chatStore.sessionList
+    /**
+     * TODO: 添加过滤条件,排除id为null的会话，暂时解决数据中的其他用户能获取到其他单聊房间的会话问题，使用这样的方法会出现其他问题
+     * 1. 如果这会话有新消息会导致这个会话的未读计数一直都在
+     * 2. 群聊没有效果，群聊还是会返回对应群id
+     * 3. 如果用户选中的是删除的好友的会话，那么退出然后重新登录后会在右边聊天框显示，但是会话列表中没有
+     */
+    .filter((item) => item.id !== null)
+    .map((item) => {
+      // 获取该会话的所有消息，避免重复转换
+      const messages = Array.from(chatStore.messageMap.get(item.roomId)?.values() || [])
+      // 获取最后一条消息
+      const lastMsg = messages[messages.length - 1]
+      let LastUserMsg = ''
 
-    if (lastMsg) {
-      const lastMsgUserName = useUserInfo(lastMsg.fromUser.uid)
+      if (lastMsg) {
+        const lastMsgUserName = useUserInfo(lastMsg.fromUser.uid)
 
-      // 添加@提醒判断
-      const isAtMe =
-        item.type === RoomTypeEnum.GROUP &&
-        currentSession.value.roomId !== item.roomId &&
-        item.unreadCount > 0 && // 只有未读消息时才检查@
-        messages
-          .slice(-item.unreadCount) // 只检查最新的未读消息
-          .some((msg) => msg.message?.body?.atUidList?.includes(userStore.userInfo.uid))
+        // 添加@提醒判断
+        const isAtMe =
+          item.type === RoomTypeEnum.GROUP &&
+          currentSession.value.roomId !== item.roomId &&
+          item.unreadCount > 0 && // 只有未读消息时才检查@
+          messages
+            .slice(-item.unreadCount) // 只检查最新的未读消息
+            .some((msg) => msg.message?.body?.atUidList?.includes(userStore.userInfo.uid))
 
-      const atPrefix = isAtMe ? '<span class="text-#d5304f mr-4px">[有人@我]</span>' : ''
+        const atPrefix = isAtMe ? '<span class="text-#d5304f mr-4px">[有人@我]</span>' : ''
 
-      LastUserMsg =
-        lastMsg.message?.type === MsgEnum.RECALL
-          ? item.type === RoomTypeEnum.GROUP
-            ? `${lastMsgUserName.value.name}:撤回了一条消息`
-            : lastMsg.fromUser.uid === userUid.value
-              ? '你撤回了一条消息'
-              : '对方撤回了一条消息'
-          : `${atPrefix}${
-              renderReplyContent(
-                lastMsgUserName.value.name,
-                lastMsg.message?.type,
-                lastMsg.message?.body?.content || lastMsg.message?.body,
-                item.type
-              ) as string
-            }`
-    }
-    return {
-      ...item,
-      lastMsg: LastUserMsg || item.text || '欢迎使用HuLa',
-      lastMsgTime: formatTimestamp(item?.activeTime)
-    }
-  })
+        LastUserMsg =
+          lastMsg.message?.type === MsgEnum.RECALL
+            ? item.type === RoomTypeEnum.GROUP
+              ? `${lastMsgUserName.value.name}:撤回了一条消息`
+              : lastMsg.fromUser.uid === userUid.value
+                ? '你撤回了一条消息'
+                : '对方撤回了一条消息'
+            : `${atPrefix}${
+                renderReplyContent(
+                  lastMsgUserName.value.name,
+                  lastMsg.message?.type,
+                  lastMsg.message?.body?.content || lastMsg.message?.body,
+                  item.type
+                ) as string
+              }`
+      }
+      return {
+        ...item,
+        lastMsg: LastUserMsg || item.text || '欢迎使用HuLa',
+        lastMsgTime: formatTimestamp(item?.activeTime)
+      }
+    })
+    // 添加排序逻辑：先按置顶状态排序，再按活跃时间排序
+    .sort((a, b) => {
+      // 1. 先按置顶状态排序（置顶的排在前面）
+      if (a.top && !b.top) return -1
+      if (!a.top && b.top) return 1
+
+      // 2. 在相同置顶状态下，按最后活跃时间降序排序（最新的排在前面）
+      return b.activeTime - a.activeTime
+    })
 )
 
 watch(
@@ -177,8 +198,8 @@ onMounted(() => {
   SysNTF
   // 监听其他窗口发来的WebSocket发送请求
   // TODO：频繁切换会话会导致频繁请求，切换的时候也会有点卡顿
-  useMitt.on(MittEnum.DELETE_SESSION, (roomId) => {
-    handleMsgDelete(roomId)
+  useMitt.on(MittEnum.DELETE_SESSION, async (roomId) => {
+    await handleMsgDelete(roomId)
   })
   useMitt.on(MittEnum.LOCATE_SESSION, async (e) => {
     const index = sessionList.value.findIndex((item) => item.roomId === e.roomId)

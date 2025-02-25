@@ -1,14 +1,14 @@
 import { emit } from '@tauri-apps/api/event'
-import { EventEnum, MittEnum } from '@/enums'
+import { EventEnum, MittEnum, RoomTypeEnum, SessionOperateEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
-import { MockItem, SessionItem } from '@/services/types.ts'
-import { MockList } from '@/mock'
+import { SessionItem } from '@/services/types.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useTauriListener } from './useTauriListener'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import apis from '@/services/apis'
+import { useContactStore } from '@/stores/contacts.ts'
 
 const msgBoxShow = ref(false)
 /** 独立窗口的集合 */
@@ -22,6 +22,7 @@ export const useMessage = () => {
   const chatStore = useChatStore()
   const settingStore = useSettingStore()
   const { chat } = storeToRefs(settingStore)
+  const contactStore = useContactStore()
   /** 监听独立窗口关闭事件 */
   watchEffect(() => {
     useMitt.on(MittEnum.SHRINK_WINDOW, async (event: any) => {
@@ -51,15 +52,16 @@ export const useMessage = () => {
    * 删除会话
    * @param roomId 会话信息
    */
-  const handleMsgDelete = (roomId: number) => {
+  const handleMsgDelete = async (roomId: number) => {
     const currentSessions = chatStore.sessionList
     const currentIndex = currentSessions.findIndex((session) => session.roomId === roomId)
 
     // 检查是否是当前选中的会话
     const isCurrentSession = roomId === globalStore.currentSession.roomId
 
-    // TODO： 会话没有真正的删除 后续需要优化
     chatStore.removeContact(roomId)
+    const res = await apis.deleteSession({ roomId })
+    console.log(res, roomId)
 
     // 如果不是当前选中的会话，直接返回
     if (!isCurrentSession) {
@@ -104,23 +106,44 @@ export const useMessage = () => {
   const menuList = ref<OPT.RightMenu[]>([
     {
       label: '置顶',
-      icon: 'topping',
-      click: (item: MockItem) => {
-        const index = MockList.value.findIndex((e) => e.key === item.key)
-        // 实现置顶功能
-        if (index !== 0) {
-          // 交换元素位置
-          const temp = MockList.value[index]
-          MockList.value[index] = MockList.value[0]
-          MockList.value[0] = temp
-        }
-      }
+      icon: 'to-top',
+      click: (item: SessionItem) => {
+        apis
+          .setSessionTop({ roomId: item.roomId, top: true })
+          .then(() => {
+            // 更新本地会话状态
+            chatStore.updateSession(item.roomId, { top: true })
+            window.$message.success('已置顶')
+          })
+          .catch(() => {
+            window.$message.error('置顶失败')
+          })
+      },
+      visible: (item: SessionItem) => !item.top
+    },
+    {
+      label: '取消置顶',
+      icon: 'to-bottom',
+      click: (item: SessionItem) => {
+        apis
+          .setSessionTop({ roomId: item.roomId, top: false })
+          .then(() => {
+            // 更新本地会话状态
+            chatStore.updateSession(item.roomId, { top: false })
+            window.$message.success('已取消置顶')
+          })
+          .catch(() => {
+            window.$message.error('取消置顶失败')
+          })
+      },
+      visible: (item: SessionItem) => item.top
     },
     {
       label: '复制账号',
       icon: 'copy',
-      click: (item: MockItem) => {
-        window.$message.success(`复制成功${item.key}`)
+      click: (item: any) => {
+        navigator.clipboard.writeText(item.id)
+        window.$message.success(`复制成功${item.id}`)
       }
     },
     { label: '标记未读', icon: 'message-unread' },
@@ -140,11 +163,85 @@ export const useMessage = () => {
     {
       label: '从消息列表中移除',
       icon: 'delete',
-      click: (item: SessionItem) => {
-        handleMsgDelete(item.roomId)
+      click: async (item: SessionItem) => {
+        await handleMsgDelete(item.roomId)
       }
     },
-    { label: '屏蔽此人消息', icon: 'forbid' }
+    {
+      label: '删除好友',
+      icon: 'forbid',
+      click: async (item: SessionItem) => {
+        // 调用删除好友接口
+        try {
+          if (!item.id) return
+          await contactStore.onDeleteContact(item.id)
+          // 删除会话
+          await handleMsgDelete(item.roomId)
+          window.$message.success('已删除好友')
+        } catch (error) {
+          window.$message.error('删除好友失败')
+        }
+      },
+      visible: (item: SessionItem) => {
+        // 只在单聊且operate为DELETE_FRIEND时显示
+        return item.id && item.type === RoomTypeEnum.SINGLE && item.operate === SessionOperateEnum.DELETE_FRIEND
+      }
+    },
+    {
+      label: '解散群聊',
+      icon: 'delete',
+      click: async (item: SessionItem) => {
+        // 不允许解散频道(roomId === 1)
+        if (item.roomId === 1) {
+          window.$message.warning('无法解散频道')
+          return
+        }
+
+        try {
+          // 调用解散群聊的API
+          // await apis.dismissGroup({ roomId: item.roomId })
+          window.$message.success('已解散群聊')
+          await handleMsgDelete(item.roomId)
+        } catch (error) {
+          window.$message.error('解散群聊失败')
+        }
+      },
+      visible: (item: SessionItem) => {
+        // 如果不是群聊，不显示
+        if (item.type !== RoomTypeEnum.GROUP) return false
+        // 如果是频道，不显示
+        if (item.roomId === 1) return false
+        // 只有群主才能看到解散群聊选项
+        return item.operate === SessionOperateEnum.DISSOLUTION_GROUP
+      }
+    },
+    {
+      label: '退出群聊',
+      icon: 'logout',
+      click: async (item: SessionItem) => {
+        // 不允许退出频道(roomId === 1)
+        if (item.roomId === 1) {
+          window.$message.warning('无法退出频道')
+          return
+        }
+
+        try {
+          await apis.exitGroup({ roomId: item.roomId })
+          window.$message.success('已退出群聊')
+          await handleMsgDelete(item.roomId)
+        } catch (error) {
+          window.$message.error('退出群聊失败')
+        }
+      },
+      visible: (item: SessionItem) => {
+        // 如果不是群聊，不显示
+        if (item.type !== RoomTypeEnum.GROUP) return false
+        // 如果是频道，不显示
+        if (item.roomId === 1) return false
+        // 如果是群主，不显示退出选项（群主应该看到解散群聊选项）
+        return item.operate === SessionOperateEnum.EXIT_GROUP
+      }
+    }
   ])
 
   onMounted(async () => {

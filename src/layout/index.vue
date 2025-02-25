@@ -137,11 +137,11 @@ useMitt.on(WsResponseMessageType.OFFLINE, async () => {
   console.log('收到用户下线通知')
 })
 useMitt.on(WsResponseMessageType.ONLINE, async (onStatusChangeType: OnStatusChangeType) => {
+  console.log('收到用户上线通知')
   groupStore.countInfo.onlineNum = onStatusChangeType.onlineNum
   // groupStore.countInfo.totalNum = onStatusChangeType.totalNum
   groupStore.batchUpdateUserStatus(onStatusChangeType.changeList)
   await groupStore.refreshGroupMembers()
-  console.log('收到用户上线通知')
 })
 useMitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExpire) => {
   console.log('账号在其他设备登录', wsTokenExpire)
