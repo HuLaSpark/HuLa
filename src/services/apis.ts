@@ -105,6 +105,13 @@ export default {
   /** 会话详情(联系人列表发消息用) */
   sessionDetailWithFriends: (params: { id: number; roomType: number }) =>
     GET<SessionItem>(urls.sessionDetailWithFriends, params),
+  /** 设置会话置顶 */
+  setSessionTop: (params: { roomId: number; top: boolean }) => POST<void>(urls.setSessionTop, params),
+  /** 删除会话 */
+  deleteSession: (params: { roomId: number }) => DELETE<void>(urls.deleteSession, params),
+  /** 修改群信息 */
+  updateRoomInfo: (params: { roomId: number; roomName: string; roomAvatar: string }) =>
+    POST<void>(urls.updateRoomInfo, params),
   /** 添加群管理 */
   addAdmin: ({ roomId, uidList }: { roomId: number; uidList: number[] }) =>
     PUT<boolean>(urls.addAdmin, {

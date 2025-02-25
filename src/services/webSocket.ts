@@ -220,7 +220,7 @@ class WS {
         }
         // 用户上线
         case WsResponseMessageType.ONLINE: {
-          console.log('上线')
+          console.log('上线', params.data)
           useMitt.emit(WsResponseMessageType.ONLINE, params.data as OnStatusChangeType)
           break
         }

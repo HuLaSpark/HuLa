@@ -254,14 +254,16 @@ const isLoading = ref(false)
 const isOnline = computed(() => {
   if (activeItem.type === RoomTypeEnum.GROUP) return false
 
-  const contact = contactStore.contactsList.find((item) => item.uid === activeItem.friendId)
+  const contact = contactStore.contactsList.find((item) => item.uid === activeItem.id)
 
   return contact?.activeStatus === OnlineEnum.ONLINE
 })
 /** 是否还是好友 */
 const shouldShowDeleteFriend = computed(() => {
+  // 如果是群聊直接返回false
   if (activeItem.type === RoomTypeEnum.GROUP) return false
-  return contactStore.contactsList.some((item) => item.uid === activeItem.friendId)
+  // 判断id是否存在,存在则为好友关系
+  return !!activeItem.id
 })
 const groupUserList = computed(() => groupStore.userList)
 const messageOptions = computed(() => chatStore.currentMessageOptions)
@@ -368,8 +370,8 @@ const handleDelete = (label: RoomActEnum) => {
 }
 
 const handleConfirm = () => {
-  if (optionsType.value === RoomActEnum.DELETE_FRIEND && activeItem.friendId) {
-    contactStore.onDeleteContact(activeItem.friendId).then(() => {
+  if (optionsType.value === RoomActEnum.DELETE_FRIEND && activeItem.id) {
+    contactStore.onDeleteContact(activeItem.id).then(() => {
       modalShow.value = false
       sidebarShow.value = false
       window.$message.success('已删除好友')
@@ -408,8 +410,8 @@ const currentUserStatus = computed(() => {
   if (activeItem.type === RoomTypeEnum.GROUP) return null
 
   // 使用 useUserInfo 获取用户信息
-  if (!activeItem.friendId) return null
-  const userInfo = useUserInfo(activeItem.friendId).value
+  if (!activeItem.id) return null
+  const userInfo = useUserInfo(activeItem.id).value
 
   // 从状态列表中找到对应的状态
   return userStatusStore.stateList.find((state) => state.id === userInfo.userStateId)

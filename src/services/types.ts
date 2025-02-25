@@ -3,7 +3,17 @@
  * 注意：请使用TSDoc规范进行注释，以便在使用时能够获得良好提示。
  * @see TSDoc规范https://tsdoc.org/
  **/
-import { ActEnum, IsYesEnum, MarkEnum, MsgEnum, OnlineEnum, RoomTypeEnum, SexEnum, MessageStatusEnum } from '@/enums'
+import {
+  ActEnum,
+  IsYesEnum,
+  MarkEnum,
+  MsgEnum,
+  OnlineEnum,
+  RoomTypeEnum,
+  SexEnum,
+  MessageStatusEnum,
+  SessionOperateEnum
+} from '@/enums'
 
 /**响应请求体*/
 export type ServiceResponse = {
@@ -135,10 +145,12 @@ export type UserItem = {
   lastOptTime: number
   /** 用户名称 */
   name: string
-  /** 角色ID */
-  roleId?: number
   /** uid */
   uid: number
+  /** 归属地 */
+  locPlace?: string
+  /** 角色ID */
+  roleId?: number
 }
 
 export type GroupStatisticType = {
@@ -441,8 +453,8 @@ export type SessionItem = {
   activeTime: number
   /** 会话头像 */
   avatar: string
-  /** 如果是单聊，则是对方的uid，如果是群聊，则是null */
-  friendId: number | null
+  /** 如果是单聊，则是对方的uid，如果是群聊，则是群id */
+  id?: number
   /** 是否全员展示的会话 0否 1是 */
   hotFlag: IsAllUserEnum
   /** 会话名称 */
@@ -455,6 +467,10 @@ export type SessionItem = {
   type: RoomTypeEnum
   /** 未读数 */
   unreadCount: number
+  /** 是否置顶 0否 1是 */
+  top: boolean
+  /** 会话操作 */
+  operate: SessionOperateEnum
   /** 在线状态 1在线 2离线 */
   activeStatus?: OnlineEnum
 }

@@ -7,10 +7,6 @@
   .text {
     color: #808080;
   }
-  &:not(.active):first-child {
-    background: var(--bg-msg-first-child);
-    border-radius: 12px;
-  }
   &:not(.active):hover {
     background: var(--bg-msg-hover);
     border-radius: 12px;
