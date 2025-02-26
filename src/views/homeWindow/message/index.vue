@@ -103,11 +103,15 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { useGroupStore } from '@/stores/group.ts'
 import { useMitt } from '@/hooks/useMitt'
 import { useUserStore } from '@/stores/user'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { useTauriListener } from '@/hooks/useTauriListener'
 
+const appWindow = WebviewWindow.getCurrent()
+const { addListener } = useTauriListener()
 const chatStore = useChatStore()
 const globalStore = useGlobalStore()
 const groupStore = useGroupStore()
-const { userUid } = useCommon()
+const { userUid, openMsgSession } = useCommon()
 const userStore = useUserStore()
 const msgScrollbar = useTemplateRef('msg-scrollbar')
 const { handleMsgClick, handleMsgDelete, menuList, specialMenuList, handleMsgDblclick } = useMessage()
@@ -115,13 +119,6 @@ const currentSession = computed(() => globalStore.currentSession)
 // TODO 艾特我提醒
 const sessionList = computed(() =>
   chatStore.sessionList
-    /**
-     * TODO: 添加过滤条件,排除id为null的会话，暂时解决数据中的其他用户能获取到其他单聊房间的会话问题，使用这样的方法会出现其他问题
-     * 1. 如果这会话有新消息会导致这个会话的未读计数一直都在
-     * 2. 群聊没有效果，群聊还是会返回对应群id
-     * 3. 如果用户选中的是删除的好友的会话，那么退出然后重新登录后会在右边聊天框显示，但是会话列表中没有
-     */
-    .filter((item) => item.id !== null)
     .map((item) => {
       // 获取该会话的所有消息，避免重复转换
       const messages = Array.from(chatStore.messageMap.get(item.roomId)?.values() || [])
@@ -198,6 +195,11 @@ onMounted(() => {
   SysNTF
   // 监听其他窗口发来的WebSocket发送请求
   // TODO：频繁切换会话会导致频繁请求，切换的时候也会有点卡顿
+  addListener(
+    appWindow.listen('search_to_msg', (event: { payload: { uid: number; roomType: number } }) => {
+      openMsgSession(event.payload.uid, event.payload.roomType)
+    })
+  )
   useMitt.on(MittEnum.DELETE_SESSION, async (roomId) => {
     await handleMsgDelete(roomId)
   })

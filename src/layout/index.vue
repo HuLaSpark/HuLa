@@ -22,11 +22,6 @@
       </template>
     </Suspense>
   </div>
-
-  <!-- 模态框也可以缓存 -->
-  <keep-alive>
-    <AsyncAddFriendsModal />
-  </keep-alive>
 </template>
 
 <script setup lang="ts">
@@ -70,12 +65,6 @@ const AsyncCenter = defineAsyncComponent({
 
 const AsyncRight = defineAsyncComponent({
   loader: async () => await import('./right/index.vue'),
-  delay: 600,
-  timeout: 3000
-})
-
-const AsyncAddFriendsModal = defineAsyncComponent({
-  loader: async () => await import('@/components/common/AddFriendsModal.vue'),
   delay: 600,
   timeout: 3000
 })

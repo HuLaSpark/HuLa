@@ -52,10 +52,6 @@ export enum EventEnum {
 
 /** Mitt兄弟组件通信 */
 export enum MittEnum {
-  /** 添加好友   @author mint */
-  ADD_FRIEND_INIT = 'addFriendInit',
-  /** 添加好友就绪事件  @author mint */
-  ADD_FRIEND_READY = 'addFriendReady',
   /** 更新消息数量 */
   UPDATE_MSG_TOTAL = 'updateMsgTotal',
   /** 显示消息框 */

@@ -173,7 +173,6 @@ export const useMessage = () => {
       click: async (item: SessionItem) => {
         // 调用删除好友接口
         try {
-          if (!item.id) return
           await contactStore.onDeleteContact(item.id)
           // 删除会话
           await handleMsgDelete(item.roomId)
@@ -184,7 +183,7 @@ export const useMessage = () => {
       },
       visible: (item: SessionItem) => {
         // 只在单聊且operate为DELETE_FRIEND时显示
-        return item.id && item.type === RoomTypeEnum.SINGLE && item.operate === SessionOperateEnum.DELETE_FRIEND
+        return item.type === RoomTypeEnum.SINGLE && item.operate === SessionOperateEnum.DELETE_FRIEND
       }
     },
     {

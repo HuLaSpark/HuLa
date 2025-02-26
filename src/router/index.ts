@@ -88,13 +88,21 @@ const routes: Array<RouteRecordRaw> = [
     name: 'imageViewer',
     component: () => import('@/views/imageViewerWindow/index.vue')
   },
+  /**
+   * 搜索好友/群聊
+   * @author mint
+   */
   {
-    path: '/searchFriend', // 搜索好友 @author mint
+    path: '/searchFriend',
     name: 'searchFriend',
     component: () => import('@/views/friendWindow/SearchFriend.vue')
   },
+  /**
+   * 添加好友
+   * @author mint
+   */
   {
-    path: '/addFriendVerify', // 添加好友 @author mint
+    path: '/addFriendVerify',
     name: 'addFriendVerify',
     component: () => import('@/views/friendWindow/AddFriendVerify.vue')
   },

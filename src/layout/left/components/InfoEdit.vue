@@ -147,33 +147,41 @@ import AvatarCropper from '@/components/common/AvatarCropper.vue'
 import { useLoginHistoriesStore } from '@/stores/loginHistory'
 import { formatTimestamp, isDiffNow } from '@/utils/ComputedTime.ts'
 import dayjs from 'dayjs'
+import { useTauriListener } from '@/hooks/useTauriListener'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 
+const appWindow = WebviewWindow.getCurrent()
 let localUserInfo = ref<Partial<UserInfoType>>({})
 const userStore = useUserStore()
+const { addListener } = useTauriListener()
 const loginHistoriesStore = useLoginHistoriesStore()
 const { editInfo, currentBadge, updateCurrentUserCache, saveEditInfo, toggleWarningBadge } = leftHook()
 const { countGraphemes } = useCommon()
-
-/** 不允许输入空格 */
-const noSideSpace = (value: string) => !value.startsWith(' ') && !value.endsWith(' ')
-
-onMounted(() => {
-  useMitt.on(MittEnum.OPEN_EDIT_INFO, () => {
-    useMitt.emit(MittEnum.CLOSE_INFO_SHOW)
-    editInfo.value.show = true
-    editInfo.value.content = userStore.userInfo
-    localUserInfo.value = { ...userStore.userInfo }
-    /** 获取徽章列表 */
-    apis.getBadgeList().then((res) => {
-      editInfo.value.badgeList = res as any
-    })
-  })
-})
 
 const showCropper = ref(false)
 const fileInput = ref<HTMLInputElement>()
 const localImageUrl = ref('')
 const cropperRef = useTemplateRef('cropperRef')
+
+// 监听裁剪窗口的关闭
+watch(
+  () => showCropper.value,
+  (newVal) => {
+    if (!newVal) {
+      // 清理资源
+      if (localImageUrl.value) {
+        URL.revokeObjectURL(localImageUrl.value)
+        localImageUrl.value = ''
+      }
+      if (fileInput.value) {
+        fileInput.value.value = ''
+      }
+    }
+  }
+)
+
+/** 不允许输入空格 */
+const noSideSpace = (value: string) => !value.startsWith(' ') && !value.endsWith(' ')
 
 const openAvatarCropper = () => {
   const lastUpdateTime = userStore.userInfo.avatarUpdateTime
@@ -290,22 +298,27 @@ const handleCrop = async (cropBlob: Blob) => {
   }
 }
 
-// 监听裁剪窗口的关闭
-watch(
-  () => showCropper.value,
-  (newVal) => {
-    if (!newVal) {
-      // 清理资源
-      if (localImageUrl.value) {
-        URL.revokeObjectURL(localImageUrl.value)
-        localImageUrl.value = ''
-      }
-      if (fileInput.value) {
-        fileInput.value.value = ''
-      }
-    }
-  }
-)
+const openEditInfo = () => {
+  editInfo.value.show = true
+  editInfo.value.content = userStore.userInfo
+  localUserInfo.value = { ...userStore.userInfo }
+  /** 获取徽章列表 */
+  apis.getBadgeList().then((res) => {
+    editInfo.value.badgeList = res as any
+  })
+}
+
+onMounted(() => {
+  addListener(
+    appWindow.listen('open_edit_info', async () => {
+      openEditInfo()
+    })
+  )
+  useMitt.on(MittEnum.OPEN_EDIT_INFO, () => {
+    useMitt.emit(MittEnum.CLOSE_INFO_SHOW)
+    openEditInfo()
+  })
+})
 </script>
 <style scoped lang="scss">
 .badge-item {

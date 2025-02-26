@@ -147,7 +147,17 @@ watchEffect(() => {
       /** 退出账号前把窗口全部关闭 */
       if (appWindow.label !== 'login') {
         await nextTick()
-        await appWindow.close()
+        // 针对不同系统采用不同关闭策略
+        if (type() === 'macos') {
+          // macOS 上先隐藏窗口，然后延迟关闭
+          await appWindow.hide()
+          setTimeout(async () => {
+            await appWindow.close()
+          }, 300)
+        } else {
+          // Windows/Linux 直接关闭
+          await appWindow.close()
+        }
       }
     }),
     appWindow.listen(EventEnum.EXIT, async () => {

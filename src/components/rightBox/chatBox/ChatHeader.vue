@@ -260,10 +260,8 @@ const isOnline = computed(() => {
 })
 /** 是否还是好友 */
 const shouldShowDeleteFriend = computed(() => {
-  // 如果是群聊直接返回false
   if (activeItem.type === RoomTypeEnum.GROUP) return false
-  // 判断id是否存在,存在则为好友关系
-  return !!activeItem.id
+  return contactStore.contactsList.some((item) => item.uid === activeItem.id)
 })
 const groupUserList = computed(() => groupStore.userList)
 const messageOptions = computed(() => chatStore.currentMessageOptions)

@@ -65,6 +65,7 @@
           <span class="text-(12px #909090) select-none p-4px" v-if="item.timeBlock">
             {{ item.timeBlock }}
           </span>
+
           <!--  消息为撤回消息  -->
           <div v-if="item.message.type === MsgEnum.RECALL">
             <template v-if="chatStore.isGroup">
@@ -93,6 +94,14 @@
               </n-flex>
             </template>
           </div>
+
+          <!-- 消息为系统消息时 -->
+          <div v-if="item.message.type === MsgEnum.SYSTEM">
+            <p class="text-(12px #909090) select-none cursor-default">
+              {{ item.message.body }}
+            </p>
+          </div>
+
           <!-- 好友或者群聊的信息 -->
           <div
             v-else

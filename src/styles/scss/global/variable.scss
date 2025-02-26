@@ -105,6 +105,8 @@ svg {
   --avatar-border-color: #fff;
   // 插件背景颜色
   --plugin-bg-color: #eee;
+  // 列表悬浮的颜色
+  --float-block-hover-color: #767676;
 }
 
 html[data-theme='dark'] {
@@ -193,6 +195,8 @@ html[data-theme='dark'] {
   --avatar-border-color: #1b1b1b;
   // 插件背景颜色
   --plugin-bg-color: #3b3b3b;
+  // 列表悬浮的颜色
+  --float-block-hover-color: #fff;
 }
 /**! end */
 // 线性动画

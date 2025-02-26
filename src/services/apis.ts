@@ -144,9 +144,5 @@ export default {
   /** 获取所有用户状态 */
   getAllUserState: () => GET<API.UserState[]>(urls.getAllUserState),
   /** 用户状态改变 */
-  changeUserState: (userStateId: number) => POST(`${urls.changeUserState}/${userStateId}`),
-  /** 搜索用户  @author mint */
-  searchUsers: (keyword: string) => GET<UserItem[]>(urls.searchUsers, { keyword }),
-  /** 搜索群组  @author mint */
-  searchGroups: (keyword: string) => GET<GroupListReq[]>(urls.searchGroups, { keyword })
+  changeUserState: (userStateId: number) => POST(`${urls.changeUserState}/${userStateId}`)
 }

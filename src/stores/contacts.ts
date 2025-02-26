@@ -3,6 +3,7 @@ import apis from '@/services/apis'
 import { useGlobalStore } from '@/stores/global'
 import type { ContactItem, GroupListReq, RequestFriendItem } from '@/services/types'
 import { RequestFriendAgreeStatus } from '@/services/types'
+import { listen, emit } from '@tauri-apps/api/event'
 
 // 定义分页大小常量
 export const pageSize = 20
@@ -48,6 +49,9 @@ export const useContactStore = defineStore('contact', () => {
     contactsOptions.cursor = data.cursor
     contactsOptions.isLast = data.isLast
     contactsOptions.isLoading = false
+
+    // 获取数据后发送更新事件
+    emit('contacts-updated', contactsList)
   }
 
   /**
@@ -152,6 +156,11 @@ export const useContactStore = defineStore('contact', () => {
     // 刷新好友列表
     await getContactList(true)
   }
+
+  // 监听联系人列表更新事件
+  listen('contacts-updated', (event: any) => {
+    contactsList.splice(0, contactsList.length, ...event.payload)
+  })
 
   return {
     getContactList,

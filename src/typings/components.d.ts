@@ -8,7 +8,6 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     ActionBar: typeof import('./../components/windows/ActionBar.vue')['default']
-    AddFriendsModal: typeof import('./../components/common/AddFriendsModal.vue')['default']
     ApplyList: typeof import('./../components/rightBox/ApplyList.vue')['default']
     AvatarCropper: typeof import('./../components/common/AvatarCropper.vue')['default']
     ChatBox: typeof import('./../components/rightBox/chatBox/index.vue')['default']
@@ -19,6 +18,7 @@ declare module 'vue' {
     ContextMenu: typeof import('./../components/common/ContextMenu.vue')['default']
     Details: typeof import('./../components/rightBox/Details.vue')['default']
     Emoji: typeof import('./../components/rightBox/emoji/index.vue')['default']
+    FloatBlockList: typeof import('./../components/common/FloatBlockList.vue')['default']
     Image: typeof import('./../components/rightBox/renderMessage/Image.vue')['default']
     InfoPopover: typeof import('./../components/common/InfoPopover.vue')['default']
     LoadingSpinner: typeof import('./../components/common/LoadingSpinner.vue')['default']
@@ -47,8 +47,6 @@ declare module 'vue' {
     NImage: typeof import('naive-ui')['NImage']
     NImageGroup: typeof import('naive-ui')['NImageGroup']
     NInput: typeof import('naive-ui')['NInput']
-    NList: typeof import('naive-ui')['NList']
-    NListItem: typeof import('naive-ui')['NListItem']
     NLoadingBarProvider: typeof import('naive-ui')['NLoadingBarProvider']
     NMessageProvider: typeof import('naive-ui')['NMessageProvider']
     NModal: typeof import('naive-ui')['NModal']

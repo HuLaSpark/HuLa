@@ -454,7 +454,7 @@ export type SessionItem = {
   /** 会话头像 */
   avatar: string
   /** 如果是单聊，则是对方的uid，如果是群聊，则是群id */
-  id?: number
+  id: number
   /** 是否全员展示的会话 0否 1是 */
   hotFlag: IsAllUserEnum
   /** 会话名称 */

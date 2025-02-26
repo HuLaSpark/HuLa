@@ -14,9 +14,11 @@ import { useSettingStore } from '@/stores/setting.ts'
 import { save } from '@tauri-apps/plugin-dialog'
 import { useDownload } from '@/hooks/useDownload'
 import { useGroupStore } from '@/stores/group'
+import { useWindow } from './useWindow'
 
 export const useChatMain = () => {
   const { removeTag, openMsgSession, userUid } = useCommon()
+  const { createWebviewWindow } = useWindow()
   const settingStore = useSettingStore()
   const { chat } = storeToRefs(settingStore)
   const globalStore = useGlobalStore()
@@ -232,7 +234,8 @@ export const useChatMain = () => {
     {
       label: '添加好友',
       icon: 'people-plus',
-      click: (item: any) => {
+      click: async (item: any) => {
+        await createWebviewWindow('申请加好友', 'addFriendVerify', 380, 300, '', false, 380, 300)
         globalStore.addFriendModalInfo.show = true
         globalStore.addFriendModalInfo.uid = item.uid || item.fromUser.uid
       },

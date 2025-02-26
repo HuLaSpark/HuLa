@@ -10,8 +10,8 @@
       data-tauri-drag-region>
       <!-- 当前选中的状态 -->
       <n-flex justify="center" align="center" class="pt-80px" data-tauri-drag-region>
-        <img class="w-34px h-34px" :src="currentState.url" alt="" />
-        <span class="text-22px">{{ currentState.title }}</span>
+        <img class="w-34px h-34px" :src="currentState?.url" alt="" />
+        <span class="text-22px">{{ currentState?.title }}</span>
       </n-flex>
 
       <!-- 状态 -->
@@ -20,7 +20,7 @@
           <n-flex align="center" :size="10">
             <n-flex
               @click="handleActive(item)"
-              :class="{ active: currentState.id === item.id }"
+              :class="{ active: currentState?.id === item.id }"
               v-for="item in stateList"
               :key="item.title"
               vertical

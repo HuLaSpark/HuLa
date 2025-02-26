@@ -5,7 +5,6 @@ const prefix = VITE_SERVICE_URL
 
 export default {
   // 用户相关
-  searchUsers: `${prefix + URLEnum.USER}/search/users`, // 好友中搜索用户 @author mint
   getBadgeList: `${prefix + URLEnum.USER}/badges`, // 获取徽章列表
   getMemberStatistic: `${prefix + URLEnum.CHAT}/member/statistic`,
   getUserInfoBatch: `${prefix + URLEnum.USER}/summary/userInfo/batch`,

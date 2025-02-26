@@ -76,7 +76,6 @@ export const useWindow = () => {
    * */
   const resizeWindow = async (label: string, width: number, height: number) => {
     const webview = await WebviewWindow.getByLabel(label)
-    // TODO 使用webview?.setSize重新设置窗口尺寸的时候高度会自动增加20px(bug?) (nyh -> 2024-02-22 03:52:54)
     // 创建一个新的尺寸对象
     const newSize = new LogicalSize(width, height)
     // 调用窗口的 setSize 方法进行尺寸调整
