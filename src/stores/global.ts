@@ -33,7 +33,7 @@ export const useGlobalStore = defineStore(
     const currentSelectedContact = ref<ContactItem | RequestFriendItem>()
 
     // 添加好友模态框信息
-    const addFriendModalInfo = reactive<{ show: boolean; uid?: number }>({
+    const addFriendModalInfo = ref<{ show: boolean; uid?: number }>({
       show: false,
       uid: void 0
     })

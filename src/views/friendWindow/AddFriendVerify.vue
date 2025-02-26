@@ -1,17 +1,23 @@
 <template>
   <div class="h-full w-full bg-[--center-bg-color] select-none cursor-default">
     <!-- 窗口头部 -->
-    <ActionBar class="relative" :shrink="false" :current-label="WebviewWindow.getCurrent().label" />
+    <ActionBar
+      class="absolute right-0 w-full z-999"
+      :shrink="false"
+      :max-w="false"
+      :current-label="WebviewWindow.getCurrent().label" />
 
     <!-- 标题 -->
-    <p class="absolute-x-center pt-6px text-(13px [--text-color]) select-none cursor-default" data-tauri-drag-region>
+    <p
+      class="absolute-x-center h-fit pt-6px text-(13px [--text-color]) select-none cursor-default"
+      data-tauri-drag-region>
       申请加好友
     </p>
 
     <!-- 内容区域 -->
     <div class="bg-[--bg-edit] w-380px h-full box-border flex flex-col">
-      <n-flex vertical justify="center" :size="20" class="p-20px">
-        <n-flex align="center" justify="center" :size="20">
+      <n-flex vertical justify="center" :size="20" class="p-[55px_20px]" data-tauri-drag-region>
+        <n-flex align="center" justify="center" :size="20" data-tauri-drag-region>
           <n-avatar round size="large" :src="avatarSrc" />
 
           <n-flex vertical :size="10">

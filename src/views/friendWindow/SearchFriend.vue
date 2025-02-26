@@ -1,15 +1,21 @@
 <template>
   <div class="h-full w-full bg-[--center-bg-color] select-none cursor-default">
     <!-- 窗口头部 -->
-    <ActionBar class="relative" :shrink="false" :current-label="WebviewWindow.getCurrent().label" />
+    <ActionBar
+      class="absolute right-0 w-full z-999"
+      :shrink="false"
+      :max-w="false"
+      :current-label="WebviewWindow.getCurrent().label" />
 
     <!-- 标题 -->
-    <p class="absolute-x-center pt-6px text-(13px [--text-color]) select-none cursor-default" data-tauri-drag-region>
+    <p
+      class="absolute-x-center h-fit pt-6px text-(13px [--text-color]) select-none cursor-default"
+      data-tauri-drag-region>
       全网搜索
     </p>
 
     <!-- 主要内容 -->
-    <n-flex vertical :size="14" class="p-[20px_0_18px]">
+    <n-flex vertical :size="14" class="p-[45px_0_18px]" data-tauri-drag-region>
       <!-- 搜索框 -->
       <div class="px-12px">
         <n-input
