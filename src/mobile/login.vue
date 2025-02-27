@@ -128,7 +128,7 @@ const normalLogin = async () => {
   loading.value = true
   const { account, password } = info.value
   apis
-    .mobileLogin({ account, password })
+    .login({ account, password, source: 'mobile' })
     .then(async (res) => {
       loginDisabled.value = true
       loginText.value = '登录成功, 正在跳转'
@@ -169,9 +169,8 @@ const normalLogin = async () => {
  * @param item 账户信息
  * */
 const giveAccount = (item: UserInfoType) => {
-  const { account, password, avatar, name, uid } = item
+  const { account, avatar, name, uid } = item
   info.value.account = account || ''
-  info.value.password = password || ''
   info.value.avatar = avatar
   info.value.name = name
   info.value.uid = uid

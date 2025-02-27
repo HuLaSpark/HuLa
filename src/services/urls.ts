@@ -60,8 +60,6 @@ export default {
   login: `${prefix + URLEnum.TOKEN}/login`,
   // 续签
   refreshToken: `${prefix + URLEnum.TOKEN}/refreshToken`,
-  // 移动端登录
-  mobileLogin: `${prefix + URLEnum.TOKEN}/mobileLogin`,
   // 退出登录
   logout: `${prefix + URLEnum.TOKEN}/logout`,
   // 检查token是否有效

@@ -238,6 +238,9 @@ async function Http<T = any>(
             window.dispatchEvent(new Event('needReLogin'))
             throw error
           }
+        } else if (error.type === ErrorType.TokenInvalid) {
+          // Token无效的情况直接抛出错误，不尝试刷新
+          throw error
         }
         throw error
       }
@@ -255,7 +258,13 @@ async function Http<T = any>(
   function getErrorType(status: number): ErrorType {
     if (status >= 500) return ErrorType.Server
     if (status === 401) {
-      console.log('🔄 Token已过期，准备刷新...')
+      console.log('🔄 Token无效，清除token并重新登录...')
+      // 触发重新登录事件
+      window.dispatchEvent(new Event('needReLogin'))
+      return ErrorType.TokenInvalid
+    }
+    if (status === 40004) {
+      console.log('🔄 Token需要续签，准备刷新...')
       return ErrorType.TokenExpired
     }
     if (status === 403) {

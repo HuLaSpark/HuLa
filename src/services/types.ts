@@ -41,6 +41,8 @@ export type LoginUserReq = {
   account: string
   /** 密码 */
   password: string
+  /** 登录方式 pc/mobile */
+  source: 'pc' | 'mobile'
 }
 
 export type RegisterUserReq = {
@@ -185,10 +187,12 @@ export type MarkMsgReq = {
 export type UserInfoType = {
   /** 用户唯一标识 */
   uid: number
-  /** 用户头像 */
+  /** 用户账号 */
   account: string
-  /** 用户头像 */
-  password: string
+  /** Hula号 */
+  accountCode: string
+  /** 密码 */
+  password?: string
   /** 用户头像 */
   avatar: string
   /** 用户名 */

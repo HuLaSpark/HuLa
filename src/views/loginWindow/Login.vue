@@ -170,17 +170,12 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { useMitt } from '@/hooks/useMitt'
 import { WsResponseMessageType } from '@/services/wsType'
 import { useNetwork } from '@vueuse/core'
-import { computedToken } from '@/services/request'
-import ws from '@/services/webSocket'
-import { useGlobalStore } from '@/stores/global.ts'
 import { useUserStatusStore } from '@/stores/userStatus'
 
 const settingStore = useSettingStore()
 const userStore = useUserStore()
-const globalStore = useGlobalStore()
 const userStatusStore = useUserStatusStore()
 const { stateId } = storeToRefs(userStatusStore)
-const { isTrayMenuShow } = storeToRefs(globalStore)
 /** 网络连接是否正常 */
 const { isOnline } = useNetwork()
 const loginHistoriesStore = useLoginHistoriesStore()
@@ -206,8 +201,9 @@ const accountPH = ref('输入HuLa账号')
 const passwordPH = ref('输入HuLa密码')
 /** 登录按钮的文本内容 */
 const loginText = ref('登录')
+/** 是否直接跳转 */
+const isJumpDirectly = ref(false)
 const { createWebviewWindow } = useWindow()
-const route = useRoute()
 
 watchEffect(() => {
   loginDisabled.value = !(info.value.account && info.value.password && protocol.value)
@@ -272,13 +268,11 @@ const normalLogin = async (auto = false) => {
   loading.value = true
   // 根据auto参数决定从哪里获取登录信息
   const loginInfo = auto ? (userStore.userInfo as UserInfoType) : info.value
-  const { account, password } = loginInfo
+  const { account } = loginInfo
 
   apis
-    .login({ account, password })
+    .login({ account, password: info.value.password, source: 'pc' })
     .then(async (res) => {
-      console.log(res)
-
       loginDisabled.value = true
       loginText.value = '登录成功, 正在跳转'
       userStore.isSign = true
@@ -369,30 +363,46 @@ const enterKey = (e: KeyboardEvent) => {
 }
 
 onBeforeMount(async () => {
-  // 如果不是自动登录且当前在登录页面，清除 TOKEN，防止用户直接使用控制台退出导致登录前还没有退出账号就继续登录
-  if (!login.value.autoLogin && route.path === '/login' && TOKEN.value) {
-    await apis.logout()
-    isTrayMenuShow.value = false
-    computedToken.clear()
-    // 重新初始化 WebSocket 连接，此时传入 null 作为 token
-    ws.initConnect()
-    const headers = new Headers()
-    headers.append('Authorization', '')
+  const token = localStorage.getItem('TOKEN')
+  const refreshToken = localStorage.getItem('REFRESH_TOKEN')
+
+  if (token && refreshToken) {
+    isJumpDirectly.value = true
+    try {
+      // 验证token有效性
+      await userStore.getUserDetailAction()
+      // token有效，直接打开主窗口
+      await openHomeWindow()
+      return // 直接返回，不执行后续的登录相关逻辑
+    } catch (error) {
+      isJumpDirectly.value = false
+      // token无效，清除token并重置状态
+      localStorage.removeItem('TOKEN')
+      localStorage.removeItem('REFRESH_TOKEN')
+      userStore.userInfo = {}
+      userStore.isSign = false
+    }
   }
 })
 
 onMounted(async () => {
-  await getCurrentWebviewWindow().show()
+  // 只有在需要登录的情况下才显示登录窗口
+  if (!isJumpDirectly.value) {
+    await getCurrentWebviewWindow().show()
+  }
+
   useMitt.on(WsResponseMessageType.NO_INTERNET, () => {
     loginDisabled.value = true
     loginText.value = '服务异常断开'
   })
+
   // 自动登录
   if (login.value.autoLogin && TOKEN.value) {
     normalLogin(true)
   } else {
     loginHistories.length > 0 && giveAccount(loginHistories[0])
   }
+
   window.addEventListener('click', closeMenu, true)
   window.addEventListener('keyup', enterKey)
 })
