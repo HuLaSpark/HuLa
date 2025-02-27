@@ -63,7 +63,5 @@ export default {
   // 退出登录
   logout: `${prefix + URLEnum.TOKEN}/logout`,
   // 检查token是否有效
-  checkToken: `${prefix + URLEnum.TOKEN}/check`,
-  // 下线
-  offline: `${prefix + URLEnum.TOKEN}/offline`
+  checkToken: `${prefix + URLEnum.TOKEN}/check`
 }

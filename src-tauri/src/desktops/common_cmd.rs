@@ -39,9 +39,6 @@ impl UserInfo {
     // pub fn get_username(&self) -> Result<&str, ()> { Ok(self.username.as_str())}
     // pub fn get_token(&self) -> Result<&str, ()> { Ok(self.token.as_str())}
     // pub fn get_portrait(&self) -> Result<&str, ()> { Ok(self.portrait.as_str())}
-    pub fn get_is_sign(&self) -> Result<bool, ()> {
-        Ok(self.is_sign)
-    }
 }
 
 // 全局变量
@@ -53,31 +50,6 @@ lazy_static! {
         String::new(),
         false
     )));
-}
-
-// 保存用户信息的方法
-#[tauri::command]
-pub fn save_user_info(
-    user_id: i64,
-    username: &str,
-    token: &str,
-    portrait: &str,
-    is_sign: bool,
-) -> i32 {
-    let mut user_info = USER_INFO.write().unwrap();
-    user_info.user_id = user_id;
-    user_info.username = username.to_string();
-    user_info.token = token.to_string();
-    user_info.portrait = portrait.to_string();
-    user_info.is_sign = is_sign;
-    0
-}
-
-// 获取用户信息的方法
-#[tauri::command]
-pub fn get_user_info() -> UserInfo {
-    let user_info = USER_INFO.read().unwrap();
-    user_info.clone()
 }
 
 #[tauri::command]

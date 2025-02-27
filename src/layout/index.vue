@@ -35,7 +35,6 @@ import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user'
 import { useChatStore } from '@/stores/chat'
 import { LoginSuccessResType, OnStatusChangeType, WsResponseMessageType, WsTokenExpire } from '@/services/wsType.ts'
-import { LoginStatus, useWsLoginStore } from '@/stores/ws.ts'
 import type { MarkItemType, MessageType, RevokedMsgType } from '@/services/types.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { computedToken } from '@/services/request'
@@ -45,9 +44,9 @@ import { emitTo } from '@tauri-apps/api/event'
 import { useThrottleFn } from '@vueuse/core'
 import apis from '@/services/apis.ts'
 import { confirm } from '@tauri-apps/plugin-dialog'
-import { invoke } from '@tauri-apps/api/core'
 import { useCachedStore } from '@/stores/cached'
 import { clearListener, initListener, readCountQueue } from '@/utils/ReadCountQueue'
+import { useSettingStore } from '@/stores/setting'
 
 // 异步加载组件时增加缓存配置
 const AsyncLeft = defineAsyncComponent({
@@ -73,10 +72,11 @@ const globalStore = useGlobalStore()
 const contactStore = useContactStore()
 const groupStore = useGroupStore()
 const userStore = useUserStore()
-const loginStore = useWsLoginStore()
 const chatStore = useChatStore()
 const cachedStore = useCachedStore()
-const { logout } = useLogin()
+const { logout, resetLoginState } = useLogin()
+const settingStore = useSettingStore()
+const { login } = storeToRefs(settingStore)
 // 清空未读消息
 // globalStore.unReadMark.newMsgUnreadCount = 0
 const shrinkStatus = ref(false)
@@ -138,18 +138,9 @@ useMitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExp
     // TODO: 换成web的弹出框
     await confirm('账号在其他设备' + (wsTokenExpire.ip ? wsTokenExpire.ip : '未知IP') + '登录')
     // token已在后端清空，只需要返回登录页
+    await apis.logout(login.value.autoLogin)
+    await resetLoginState()
     await logout()
-    await apis.logout()
-    // 清除未读数
-    chatStore.clearUnreadCount()
-    // 清除系统托盘图标上的未读数
-    await invoke('set_badge_count', { count: null })
-    userStore.isSign = false
-    userStore.userInfo = {}
-    localStorage.removeItem('user')
-    localStorage.removeItem('TOKEN')
-    localStorage.removeItem('REFRESH_TOKEN')
-    loginStore.loginStatus = LoginStatus.Init
   }
 })
 useMitt.on(WsResponseMessageType.INVALID_USER, (param: { uid: number }) => {

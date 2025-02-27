@@ -106,6 +106,11 @@ export const initListener = () => {
 export const clearListener = () => {
   useMitt.off('onAddReadCountTask', onAddReadCountTask)
   useMitt.off('onRemoveReadCountTask', onRemoveReadCountTask)
+  // 取消当前请求
+  if (request) {
+    request.abort()
+    request = null
+  }
   stopTimer()
 }
 

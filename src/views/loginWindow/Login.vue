@@ -165,7 +165,6 @@ import apis from '@/services/apis.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { UserInfoType } from '@/services/types.ts'
 import { useSettingStore } from '@/stores/setting.ts'
-import { invoke } from '@tauri-apps/api/core'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { useMitt } from '@/hooks/useMitt'
 import { WsResponseMessageType } from '@/services/wsType'
@@ -182,6 +181,7 @@ const loginHistoriesStore = useLoginHistoriesStore()
 const { loginHistories } = loginHistoriesStore
 const { login } = storeToRefs(settingStore)
 const TOKEN = ref(localStorage.getItem('TOKEN'))
+const REFRESH_TOKEN = ref(localStorage.getItem('REFRESH_TOKEN'))
 /** 账号信息 */
 const info = ref({
   account: '',
@@ -270,6 +270,26 @@ const normalLogin = async (auto = false) => {
   const loginInfo = auto ? (userStore.userInfo as UserInfoType) : info.value
   const { account } = loginInfo
 
+  // 自动登录
+  if (auto) {
+    // 添加2秒延迟
+    await new Promise((resolve) => setTimeout(resolve, 1200))
+
+    // 获取用户详情
+    const userDetail = await apis.getUserDetail()
+    // 设置用户状态id
+    stateId.value = userDetail.userStateId
+    const account = {
+      ...userDetail
+    }
+    userStore.userInfo = account
+    loginHistoriesStore.addLoginHistory(account)
+
+    await setLoginState()
+    await openHomeWindow()
+    loading.value = false
+  }
+
   apis
     .login({ account, password: info.value.password, source: 'pc' })
     .then(async (res) => {
@@ -302,7 +322,6 @@ const normalLogin = async (auto = false) => {
       stateId.value = userDetail.userStateId
       // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取
       // await emojiStore.getEmojiList()
-      // TODO 这里的id暂时赋值给uid，因为后端没有统一返回uid，待后端调整
       const account = {
         ...userDetail,
         token: res.token,
@@ -312,17 +331,7 @@ const normalLogin = async (auto = false) => {
       loginHistoriesStore.addLoginHistory(account)
 
       await setLoginState()
-      // rust保存用户信息
-      await invoke('save_user_info', {
-        userId: account.uid,
-        username: account.name,
-        token: account.token,
-        portrait: '',
-        isSign: true
-      }).finally(() => {
-        // 打开主界面
-        openHomeWindow()
-      })
+      await openHomeWindow()
       loading.value = false
     })
     .catch(() => {
@@ -366,12 +375,10 @@ onBeforeMount(async () => {
   const token = localStorage.getItem('TOKEN')
   const refreshToken = localStorage.getItem('REFRESH_TOKEN')
 
-  if (token && refreshToken) {
+  // 只有在非自动登录的情况下才验证token并直接打开主窗口
+  if (token && refreshToken && !login.value.autoLogin) {
     isJumpDirectly.value = true
     try {
-      // 验证token有效性
-      await userStore.getUserDetailAction()
-      // token有效，直接打开主窗口
       await openHomeWindow()
       return // 直接返回，不执行后续的登录相关逻辑
     } catch (error) {
@@ -397,7 +404,7 @@ onMounted(async () => {
   })
 
   // 自动登录
-  if (login.value.autoLogin && TOKEN.value) {
+  if (login.value.autoLogin && TOKEN.value && REFRESH_TOKEN.value) {
     normalLogin(true)
   } else {
     loginHistories.length > 0 && giveAccount(loginHistories[0])

@@ -46,8 +46,13 @@
             <span>{{ tab.label }}</span>
           </template>
 
+          <!-- 初始加载状态 -->
+          <template v-if="initialLoading">
+            <n-spin class="flex-center" style="height: calc(100vh - 200px)" size="large" />
+          </template>
+
           <!-- 搜索结果 -->
-          <template v-if="searchResults.length">
+          <template v-else-if="searchResults.length">
             <FloatBlockList
               :data-source="searchResults"
               item-key="id"
@@ -82,7 +87,19 @@
               </template>
             </FloatBlockList>
           </template>
-          <template v-else-if="searchResults.length === 0">
+
+          <!-- 搜索中状态 -->
+          <template v-else-if="loading">
+            <n-spin class="flex-center" style="height: calc(100vh - 200px)" size="large" />
+          </template>
+
+          <!-- 搜索无结果状态 -->
+          <template v-else-if="hasSearched">
+            <n-empty class="flex-center" style="height: calc(100vh - 200px)" description="未找到相关结果" />
+          </template>
+
+          <!-- 默认空状态 -->
+          <template v-else>
             <n-empty style="height: calc(100vh - 200px)" class="flex-center" description="输入关键词搜索">
               <template #icon>
                 <n-icon>
@@ -90,12 +107,6 @@
                 </n-icon>
               </template>
             </n-empty>
-          </template>
-          <template v-else-if="hasSearched">
-            <n-empty style="height: calc(100vh - 200px)" description="未找到相关结果" />
-          </template>
-          <template v-else-if="loading">
-            <n-spin style="height: calc(100vh - 200px)" size="large" />
           </template>
         </n-tab-pane>
       </n-tabs>
@@ -146,6 +157,8 @@ const searchResults = ref<any[]>([])
 const hasSearched = ref(false)
 // 加载状态
 const loading = ref(false)
+// 初始加载状态
+const initialLoading = ref(true)
 
 // 从缓存存储中获取用户数据
 const getCachedUsers = () => {
@@ -295,15 +308,19 @@ const handleSendMessage = async (item: any) => {
 onMounted(async () => {
   await getCurrentWebviewWindow().show()
 
-  // 初始化联系人列表
-  await contactStore.getContactList(true)
+  try {
+    // 初始化联系人列表
+    await contactStore.getContactList(true)
 
-  // 从缓存中获取推荐用户
-  const cachedUsers = getCachedUsers()
+    // 从缓存中获取推荐用户
+    const cachedUsers = getCachedUsers()
 
-  // 默认展示推荐用户
-  if (searchType.value === 'recommend') {
-    searchResults.value = cachedUsers
+    // 默认展示推荐用户
+    if (searchType.value === 'recommend') {
+      searchResults.value = cachedUsers
+    }
+  } finally {
+    initialLoading.value = false
   }
 })
 </script>

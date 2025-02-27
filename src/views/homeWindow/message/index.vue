@@ -200,10 +200,10 @@ onMounted(() => {
       openMsgSession(event.payload.uid, event.payload.roomType)
     })
   )
-  useMitt.on(MittEnum.DELETE_SESSION, async (roomId) => {
+  useMitt.on(MittEnum.DELETE_SESSION, async (roomId: number) => {
     await handleMsgDelete(roomId)
   })
-  useMitt.on(MittEnum.LOCATE_SESSION, async (e) => {
+  useMitt.on(MittEnum.LOCATE_SESSION, async (e: { roomId: number }) => {
     const index = sessionList.value.findIndex((item) => item.roomId === e.roomId)
     if (index !== -1) {
       await nextTick(() => {

@@ -3,8 +3,12 @@ import { MittEnum, ModalEnum, PluginEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
 import apis from '@/services/apis.ts'
+import { clearListener } from '@/utils/ReadCountQueue.ts'
+import { useSettingStore } from '@/stores/setting'
 
 const { createWebviewWindow } = useWindow()
+const settingStore = useSettingStore()
+const { login } = storeToRefs(settingStore)
 const { logout, resetLoginState } = useLogin()
 /**
  * 这里的顶部的操作栏使用pinia写入了localstorage中
@@ -89,8 +93,10 @@ const moreList = ref<OPT.L.MoreList[]>([
     icon: 'power',
     click: async () => {
       try {
+        // 清理消息已读计数监听器
+        clearListener()
         // 1. 先调用后端退出接口
-        await apis.logout()
+        await apis.logout(login.value.autoLogin)
         // 2. 重置登录状态
         await resetLoginState()
         // 3. 最后调用登出方法(这会创建登录窗口)

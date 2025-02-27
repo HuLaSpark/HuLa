@@ -129,11 +129,13 @@ import { useMitt } from '@/hooks/useMitt'
 import { useGlobalStore } from '@/stores/global'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { storeToRefs } from 'pinia'
+import { useWindow } from '@/hooks/useWindow'
 
 const { uid, activeStatus } = defineProps<{
   uid: number
   activeStatus?: OnlineEnum
 }>()
+const { createWebviewWindow } = useWindow()
 const { userUid, openMsgSession } = useCommon()
 const globalStore = useGlobalStore()
 const { openContent } = leftHook()
@@ -180,7 +182,8 @@ const openEditInfo = () => {
   useMitt.emit(MittEnum.OPEN_EDIT_INFO)
 }
 
-const addFriend = () => {
+const addFriend = async () => {
+  await createWebviewWindow('申请加好友', 'addFriendVerify', 380, 300, '', false, 380, 300)
   globalStore.addFriendModalInfo.show = true
   globalStore.addFriendModalInfo.uid = uid
 }

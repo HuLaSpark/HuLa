@@ -7,6 +7,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { LoginStatus, useWsLoginStore } from '@/stores/ws'
 import { useUserStore } from '@/stores/user'
 import { useChatStore } from '@/stores/chat'
+import { clearListener } from '@/utils/ReadCountQueue'
 
 const isMobile = computed(() => type() === 'android' || type() === 'ios')
 export const useLogin = () => {
@@ -49,29 +50,25 @@ export const useLogin = () => {
   }
 
   /** 重置登录的状态 */
-  const resetLoginState = async () => {
-    // 1. 保存 rust 端用户信息
-    await invoke('save_user_info', {
-      userId: -1,
-      username: '',
-      token: '',
-      portrait: '',
-      isSign: false
-    })
-    // 2. 清理本地存储
-    localStorage.removeItem('user')
-    localStorage.removeItem('TOKEN')
-    localStorage.removeItem('REFRESH_TOKEN')
-    // 3. 重置用户状态
+  const resetLoginState = async (isAutoLogin = false) => {
+    // 清理消息已读计数监听器
+    clearListener()
+    // 1. 清理本地存储
+    if (!isAutoLogin) {
+      localStorage.removeItem('user')
+      localStorage.removeItem('TOKEN')
+      localStorage.removeItem('REFRESH_TOKEN')
+    }
+    // 2. 重置用户状态
     userStore.isSign = false
     userStore.userInfo = {}
     loginStore.loginStatus = LoginStatus.Init
-    // 4. 重置当前会话为默认值
+    // 3. 重置当前会话为默认值
     globalStore.currentSession.roomId = 1
     globalStore.currentSession.type = RoomTypeEnum.GROUP
-    // 5. 清除未读数
+    // 4. 清除未读数
     chatStore.clearUnreadCount()
-    // 6. 清除系统托盘图标上的未读数
+    // 5. 清除系统托盘图标上的未读数
     await invoke('set_badge_count', { count: null })
   }
 

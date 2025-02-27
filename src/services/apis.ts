@@ -132,13 +132,11 @@ export default {
   /** 账号密码登录 */
   login: (user: LoginUserReq, abort?: AbortController) => POST<API.Login>(urls.login, user, abort),
   /** 退出登录 */
-  logout: () => POST<string>(urls.logout),
+  logout: (autoLogin: boolean) => POST<string>(urls.logout, { autoLogin }),
   /** 注册 */
   register: (user: RegisterUserReq, abort?: AbortController) => POST<string>(urls.register, user, abort),
   /** 检查token是否有效 */
   checkToken: () => POST<string>(urls.checkToken),
-  /** 下线 */
-  offline: () => POST<string>(urls.offline),
   /** 获取所有用户状态 */
   getAllUserState: () => GET<API.UserState[]>(urls.getAllUserState),
   /** 用户状态改变 */

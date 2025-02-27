@@ -3,7 +3,7 @@
 mod desktops;
 #[cfg(desktop)]
 use common_cmd::{
-    audio, default_window_icon, get_user_info, save_user_info, screenshot, set_badge_count,
+    audio, default_window_icon, screenshot, set_badge_count,
     set_height,
 };
 #[cfg(desktop)]
@@ -49,8 +49,6 @@ fn setup_desktop() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            get_user_info,
-            save_user_info,
             default_window_icon,
             screenshot,
             audio,

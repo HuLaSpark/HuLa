@@ -53,13 +53,19 @@ import { useCommon } from '@/hooks/useCommon.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 
-const appWindow = WebviewWindow.getCurrent()
 const globalStore = useGlobalStore()
 const userStore = useUserStore()
 const { countGraphemes } = useCommon()
-const userInfo = computed(() => useUserInfo(globalStore.addFriendModalInfo.uid).value)
+const userInfo = ref(useUserInfo(globalStore.addFriendModalInfo.uid).value)
 const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(userInfo.value.avatar as string))
 const requestMsg = ref()
+
+watch(
+  () => globalStore.addFriendModalInfo.uid,
+  (newUid) => {
+    userInfo.value = useUserInfo(newUid).value
+  }
+)
 
 const addFriend = async () => {
   await apis.sendAddFriendRequest({
@@ -67,7 +73,6 @@ const addFriend = async () => {
     targetUid: globalStore.addFriendModalInfo.uid as number
   })
   window.$message.success('已发送好友申请')
-  appWindow.close()
 }
 
 onMounted(async () => {
