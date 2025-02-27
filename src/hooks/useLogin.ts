@@ -64,7 +64,7 @@ export const useLogin = () => {
     userStore.userInfo = {}
     loginStore.loginStatus = LoginStatus.Init
     // 3. 重置当前会话为默认值
-    globalStore.currentSession.roomId = 1
+    globalStore.currentSession.roomId = '1'
     globalStore.currentSession.type = RoomTypeEnum.GROUP
     // 4. 清除未读数
     chatStore.clearUnreadCount()

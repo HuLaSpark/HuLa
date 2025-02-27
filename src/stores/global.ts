@@ -24,8 +24,8 @@ export const useGlobalStore = defineStore(
     })
 
     // 当前会话信息：包含房间ID和房间类型
-    const currentSession = reactive<{ roomId: number; type: RoomTypeEnum }>({
-      roomId: 1,
+    const currentSession = reactive<{ roomId: string; type: RoomTypeEnum }>({
+      roomId: '1',
       type: RoomTypeEnum.GROUP
     })
 
@@ -33,7 +33,7 @@ export const useGlobalStore = defineStore(
     const currentSelectedContact = ref<ContactItem | RequestFriendItem>()
 
     // 添加好友模态框信息
-    const addFriendModalInfo = ref<{ show: boolean; uid?: number }>({
+    const addFriendModalInfo = ref<{ show: boolean; uid?: string }>({
       show: false,
       uid: void 0
     })
@@ -71,9 +71,9 @@ export const useGlobalStore = defineStore(
       // 延迟1秒后开始查询已读数
       setTimeout(readCountQueue, 1000)
       // 标记该房间的消息为已读
-      apis.markMsgRead({ roomId: val.roomId || 1 })
+      apis.markMsgRead({ roomId: val.roomId || '1' })
       // 更新会话的已读状态
-      chatStore.markSessionRead(val.roomId || 1)
+      chatStore.markSessionRead(val.roomId || '1')
       // 更新全局未读计数
       updateGlobalUnreadCount()
     })

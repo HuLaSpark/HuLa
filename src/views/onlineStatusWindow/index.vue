@@ -73,7 +73,7 @@ const handleActive = async (item: API.UserState) => {
 
 onMounted(async () => {
   await getCurrentWebviewWindow().show()
-  currentState.value.id = stateList.value.find((item) => item.title === currentState.value.title)?.id || 1
+  currentState.value.id = stateList.value.find((item) => item.title === currentState.value.title)?.id || '1'
 })
 </script>
 <style scoped lang="scss">

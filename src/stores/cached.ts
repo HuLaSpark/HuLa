@@ -11,15 +11,15 @@ export type BaseUserItem = Pick<CacheUserItem, 'uid' | 'avatar' | 'name'>
 export const useCachedStore = defineStore('cached', () => {
   const globalStore = useGlobalStore()
   // 用户信息缓存列表，key为用户ID
-  const userCachedList = reactive<Record<number, Partial<CacheUserItem>>>({})
+  const userCachedList = reactive<Record<string, Partial<CacheUserItem>>>({})
   // 徽章信息缓存列表，key为徽章ID
-  const badgeCachedList = reactive<Record<number, Partial<CacheBadgeItem>>>({})
+  const badgeCachedList = reactive<Record<string, Partial<CacheBadgeItem>>>({})
 
   // 获取当前聊天室ID
   const currentRoomId = computed(() => globalStore.currentSession?.roomId)
 
   // @ 用户列表的Map，key为房间ID，value为用户列表
-  const atUsersMap = reactive<Record<number, BaseUserItem[]>>({ [currentRoomId.value]: [] }) // 消息Map
+  const atUsersMap = reactive<Record<string, BaseUserItem[]>>({ [currentRoomId.value]: [] }) // 消息Map
 
   // 当前房间可@ 的用户列表
   const currentAtUsersList = computed({
@@ -29,8 +29,12 @@ export const useCachedStore = defineStore('cached', () => {
         atUsersMap[currentRoomId.value] = []
       }
       // 如果是大厅（roomId=1），返回所有缓存的用户
-      if (currentRoomId.value === 1) {
-        return Object.values(userCachedList as BaseUserItem[])
+      if (currentRoomId.value === '1') {
+        return Object.values(userCachedList).map((user) => ({
+          uid: user.uid,
+          avatar: user.avatar,
+          name: user.name
+        })) as BaseUserItem[]
       }
       return atUsersMap[currentRoomId.value]
     },
@@ -40,14 +44,14 @@ export const useCachedStore = defineStore('cached', () => {
   })
 
   /** 用于存储正在请求的用户ID */
-  const pendingUids = ref(new Set<number>())
+  const pendingUids = ref(new Set<string>())
 
   /**
    * 批量获取用户详细信息的防抖包装函数
    * 300ms 的防抖时间应该足够合并多次快速调用
    */
-  const debouncedGetBatchUserInfo = useDebounceFn(async (uids: number[]) => {
-    let result: { uid: number; lastModifyTime: number | undefined }[] = []
+  const debouncedGetBatchUserInfo = useDebounceFn(async (uids: string[]) => {
+    let result: { uid: string; lastModifyTime: number | undefined }[] = []
 
     try {
       // 去重：过滤掉正在请求的用户ID
@@ -68,7 +72,7 @@ export const useCachedStore = defineStore('cached', () => {
       result.forEach((item) => pendingUids.value.add(item.uid))
 
       // 收集需要获取的徽章ID
-      const itemIdSet: Set<number> = new Set()
+      const itemIdSet: Set<string> = new Set()
       const data = await apis.getUserInfoBatch(result)
 
       for (const item of data || []) {
@@ -100,14 +104,14 @@ export const useCachedStore = defineStore('cached', () => {
    * 批量获取用户详细信息
    * @param uids 用户ID数组
    */
-  const getBatchUserInfo = (uids: number[]) => {
+  const getBatchUserInfo = (uids: string[]) => {
     return debouncedGetBatchUserInfo(uids)
   }
 
   /** 批量获取徽章详细信息
    * @param itemIds 徽章ID数组
    */
-  const getBatchBadgeInfo = async (itemIds: number[]) => {
+  const getBatchBadgeInfo = async (itemIds: string[]) => {
     // 筛选需要更新的徽章：没有lastModifyTime或距离上次更新超过10分钟的徽章
     const result = itemIds
       .map((itemId) => {
@@ -146,7 +150,7 @@ export const useCachedStore = defineStore('cached', () => {
    * 如果是大厅（roomId=1）则不执行
    */
   const getGroupAtUserBaseInfo = async () => {
-    if (currentRoomId.value === 1) return
+    if (currentRoomId.value === '1') return
     currentAtUsersList.value = await apis.getAllUserBaseInfo({ roomId: currentRoomId.value })
   }
 
@@ -155,7 +159,7 @@ export const useCachedStore = defineStore('cached', () => {
    * @param uidList 用户ID列表
    * @returns 过滤后的用户列表
    */
-  const filterUsersByUidList = (uidList: number[]) => {
+  const filterUsersByUidList = (uidList: string[]) => {
     return currentAtUsersList.value.filter((user) => uidList.includes(user.uid))
   }
 
@@ -163,7 +167,7 @@ export const useCachedStore = defineStore('cached', () => {
    * 更新用户状态并刷新用户信息
    * @param data 用户状态变更数据
    */
-  const updateUserState = async (data: { uid: number; userStateId: number }) => {
+  const updateUserState = async (data: { uid: string; userStateId: string }) => {
     const { uid, userStateId } = data
 
     // 更新缓存中的用户状态

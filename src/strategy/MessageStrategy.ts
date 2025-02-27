@@ -11,7 +11,7 @@ import DOMPurify from 'dompurify'
 interface MessageStrategy {
   getMsg: (msgInputValue: string, replyValue: any, fileList?: File[]) => any
   buildMessageBody: (msg: any, reply: any) => any
-  buildMessageType: (messageId: number, messageBody: any, globalStore: any, userUid: Ref<any>) => MessageType
+  buildMessageType: (messageId: string, messageBody: any, globalStore: any, userUid: Ref<any>) => MessageType
   uploadFile: (path: string) => Promise<{ uploadUrl: string; downloadUrl: string }>
   doUpload: (path: string, uploadUrl: string) => Promise<void>
 }
@@ -23,7 +23,7 @@ abstract class AbstractMessageStrategy implements MessageStrategy {
     this.msgType = msgType
   }
 
-  buildMessageType(messageId: number, messageBody: any, globalStore: any, userUid: Ref<any>): MessageType {
+  buildMessageType(messageId: string, messageBody: any, globalStore: any, userUid: Ref<any>): MessageType {
     const currentTime = new Date().getTime()
     return {
       fromUser: {
@@ -445,7 +445,7 @@ class FileMessageStrategyImpl extends AbstractMessageStrategy {
     throw new AppException('方法暂未实现')
   }
 
-  buildMessageType(messageId: number, messageBody: any, globalStore: any, userUid: Ref<any>): MessageType {
+  buildMessageType(messageId: string, messageBody: any, globalStore: any, userUid: Ref<any>): MessageType {
     console.log(messageId, messageBody, globalStore, userUid)
     throw new AppException('暂未实现该类型')
   }
@@ -469,7 +469,7 @@ class UnsupportedMessageStrategyImpl extends AbstractMessageStrategy {
     throw new AppException('方法暂未实现')
   }
 
-  buildMessageType(messageId: number, messageBody: any, globalStore: any, userUid: Ref<any>): MessageType {
+  buildMessageType(messageId: string, messageBody: any, globalStore: any, userUid: Ref<any>): MessageType {
     messageId
     messageBody
     globalStore

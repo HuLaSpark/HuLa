@@ -286,7 +286,7 @@ const handleSelect = () => {
 const userStatusStore = useUserStatusStore()
 const { stateList } = storeToRefs(userStatusStore)
 
-const getUserState = (stateId: number) => {
+const getUserState = (stateId: string) => {
   return stateList.value.find((state) => state.id === stateId)
 }
 

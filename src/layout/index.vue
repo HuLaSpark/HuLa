@@ -118,7 +118,7 @@ useMitt.on(WsResponseMessageType.LOGIN_SUCCESS, (data: LoginSuccessResType) => {
     }
   ])
 })
-useMitt.on(WsResponseMessageType.USER_STATE_CHANGE, async (data: { uid: number; userStateId: number }) => {
+useMitt.on(WsResponseMessageType.USER_STATE_CHANGE, async (data: { uid: string; userStateId: string }) => {
   console.log('收到用户状态改变', data)
   await cachedStore.updateUserState(data)
 })
@@ -143,7 +143,7 @@ useMitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExp
     await logout()
   }
 })
-useMitt.on(WsResponseMessageType.INVALID_USER, (param: { uid: number }) => {
+useMitt.on(WsResponseMessageType.INVALID_USER, (param: { uid: string }) => {
   console.log('无效用户')
   const data = param
   // 消息列表删掉拉黑的发言
@@ -159,11 +159,10 @@ useMitt.on(WsResponseMessageType.MSG_RECALL, (data: RevokedMsgType) => {
 })
 useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   chatStore.pushMsg(data)
-  console.log('接收消息', data)
   // 接收到通知就设置图标闪烁
   const username = useUserInfo(data.fromUser.uid).value.name!
   // 不是自己发的消息才通知
-  if (data.fromUser.uid !== userStore.userInfo.uid) {
+  if (Number(data.fromUser.uid) !== Number(userStore.userInfo.uid)) {
     await emitTo('tray', 'show_tip')
     await emitTo('notify', 'notify_cotent', data)
     const throttleSendNotification = useThrottleFn(() => {
@@ -193,8 +192,8 @@ useMitt.on(WsResponseMessageType.REQUEST_NEW_FRIEND, async (data: { uid: number;
 useMitt.on(
   WsResponseMessageType.NEW_FRIEND_SESSION,
   (param: {
-    roomId: number
-    uid: number
+    roomId: string
+    uid: string
     changeType: ChangeTypeEnum
     activeStatus: OnlineEnum
     lastOptTime: number

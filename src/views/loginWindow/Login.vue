@@ -188,7 +188,7 @@ const info = ref({
   password: '',
   avatar: '',
   name: '',
-  uid: 0
+  uid: ''
 })
 /** 协议 */
 const protocol = ref(true)
@@ -272,22 +272,28 @@ const normalLogin = async (auto = false) => {
 
   // 自动登录
   if (auto) {
+    loginText.value = '登录中...'
     // 添加2秒延迟
     await new Promise((resolve) => setTimeout(resolve, 1200))
 
-    // 获取用户详情
-    const userDetail = await apis.getUserDetail()
-    // 设置用户状态id
-    stateId.value = userDetail.userStateId
-    const account = {
-      ...userDetail
-    }
-    userStore.userInfo = account
-    loginHistoriesStore.addLoginHistory(account)
+    try {
+      // 获取用户详情
+      const userDetail = await apis.getUserDetail()
+      // 设置用户状态id
+      stateId.value = userDetail.userStateId
+      const account = {
+        ...userDetail
+      }
+      userStore.userInfo = account
+      loginHistoriesStore.addLoginHistory(account)
 
-    await setLoginState()
-    await openHomeWindow()
-    loading.value = false
+      await setLoginState()
+      await openHomeWindow()
+      loading.value = false
+    } catch (error) {
+      console.error('自动登录失败')
+      localStorage.removeItem('TOKEN')
+    }
   }
 
   apis

@@ -104,7 +104,7 @@ const info = ref({
   password: '',
   avatar: '',
   name: '',
-  uid: 0
+  uid: ''
 })
 const accountPH = ref('输入HuLa账号')
 const passwordPH = ref('输入HuLa密码')

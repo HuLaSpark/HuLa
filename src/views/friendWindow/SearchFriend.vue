@@ -168,8 +168,8 @@ const getCachedUsers = () => {
   // 筛选出需要显示的用户（ID在20016-20030之间的用户）
   return users
     .filter((user) => {
-      const uid = user.uid as number
-      return uid >= 20016 && uid <= 20030
+      const uid = user.uid as string
+      return uid >= '20016' && uid <= '20030'
     })
     .map((user) => ({
       id: user.uid,
@@ -245,19 +245,19 @@ const isFriend = (uid: number | string) => {
 }
 
 // 判断是否是当前登录用户
-const isCurrentUser = (uid: number | string) => {
-  return userStore.userInfo.uid === Number(uid)
+const isCurrentUser = (uid: string) => {
+  return userStore.userInfo.uid === uid
 }
 
 // 获取按钮文本
-const getButtonText = (uid: number | string) => {
+const getButtonText = (uid: string) => {
   if (isCurrentUser(uid)) return '编辑资料'
   if (isFriend(uid)) return '发消息'
   return '添加'
 }
 
 // 获取按钮类型
-const getButtonType = (uid: number | string) => {
+const getButtonType = (uid: string) => {
   if (isCurrentUser(uid)) return 'default'
   if (isFriend(uid)) return 'info'
   return 'primary'
@@ -275,7 +275,7 @@ const handleButtonClick = (item: any) => {
 }
 
 // 处理添加好友或群聊
-const handleAddFriend = async (uid: number) => {
+const handleAddFriend = async (uid: string) => {
   if (searchType.value === 'user' || searchType.value === 'recommend') {
     await createWebviewWindow('申请加好友', 'addFriendVerify', 380, 300, '', false, 380, 300)
     globalStore.addFriendModalInfo.show = true

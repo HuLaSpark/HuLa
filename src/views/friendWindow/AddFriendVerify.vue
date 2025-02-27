@@ -70,7 +70,7 @@ watch(
 const addFriend = async () => {
   await apis.sendAddFriendRequest({
     msg: requestMsg.value,
-    targetUid: globalStore.addFriendModalInfo.uid as number
+    targetUid: globalStore.addFriendModalInfo.uid as string
   })
   window.$message.success('已发送好友申请')
 }

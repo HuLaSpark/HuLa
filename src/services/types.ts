@@ -68,7 +68,7 @@ export type CacheBadgeReq = {
   /** 最后更新时间 更新超过 10 分钟异步去更新。 */
   lastModifyTime?: number
   /** 徽章 ID */
-  itemId: number
+  itemId: string
 }
 
 export type GroupDetailReq = {
@@ -81,14 +81,14 @@ export type GroupDetailReq = {
   /** 成员角色 1群主 2管理员 3普通成员 4踢出群聊 */
   role: number
   /** 房间id */
-  roomId: number
+  roomId: string
 }
 
 export type GroupListReq = {
   /** 群聊id */
-  groupId: number
+  groupId: string
   /** 房间id */
-  roomId: number
+  roomId: string
   /** 群名称 */
   roomName: string
   /** 群头像 */
@@ -105,14 +105,14 @@ export type CacheBadgeItem = {
   /** 徽章图标 */
   img: string
   /** 徽章 ID */
-  itemId: number
+  itemId: string
 }
 
 export type CacheUserReq = {
   /** 最后更新时间 更新超过 10 分钟异步去更新。 */
   lastModifyTime?: number
   /** uid */
-  uid: number
+  uid: string
 }
 
 export type CacheUserItem = {
@@ -121,9 +121,9 @@ export type CacheUserItem = {
   /** 最后更新时间 更新超过 10 分钟异步去更新。 */
   lastModifyTime: number
   /** 获得的徽章 */
-  itemIds: number[]
+  itemIds: string[]
   /** 佩戴的徽章 */
-  wearingItemId: number
+  wearingItemId: string
   /** 归属地 */
   locPlace: string
   /** 头像 */
@@ -133,9 +133,9 @@ export type CacheUserItem = {
   /** 用户名称 */
   name: string
   /** uid */
-  uid: number
+  uid: string
   /** 用户状态 */
-  userStateId: number
+  userStateId: string
 }
 
 export type UserItem = {
@@ -148,7 +148,7 @@ export type UserItem = {
   /** 用户名称 */
   name: string
   /** uid */
-  uid: number
+  uid: string
   /** 归属地 */
   locPlace?: string
   /** 角色ID */
@@ -170,7 +170,7 @@ export type MessageReplyType = {
   /** 跳转间隔的消息条数 */
   gapCount: number
   /** 消息id */
-  id: number
+  id: string
   /** 用户名称 */
   username: string
 }
@@ -181,12 +181,12 @@ export type MarkMsgReq = {
   // 标记类型 1点赞 2举报
   markType: MarkEnum
   // 消息 ID
-  msgId: number
+  msgId: string
 }
 
 export type UserInfoType = {
   /** 用户唯一标识 */
-  uid: number
+  uid: string
   /** 用户账号 */
   account: string
   /** Hula号 */
@@ -204,9 +204,9 @@ export type UserInfoType = {
   /** 权限 */
   power?: number
   /** 佩戴的徽章 */
-  wearingItemId?: number
+  wearingItemId?: string
   /** 用户状态id */
-  userStateId: number
+  userStateId: string
   /** 头像更新时间 */
   avatarUpdateTime: number
   /** 客户端 */
@@ -217,7 +217,7 @@ export type BadgeType = {
   // 徽章描述
   describe: string
   // 徽章id
-  id: number
+  id: string
   // 徽章图标
   img: string
   // 是否拥有 0否 1是
@@ -228,9 +228,9 @@ export type BadgeType = {
 
 export type MarkItemType = {
   /** 操作用户 */
-  uid: number
+  uid: string
   /** 消息id */
-  msgId: number
+  msgId: string
   /** 操作类型 1点赞 2举报 */
   markType: MarkEnum
   /** 数量 */
@@ -241,16 +241,16 @@ export type MarkItemType = {
 
 export type RevokedMsgType = {
   /** 消息ID */
-  msgId: number
+  msgId: string
   /** 会话ID */
-  roomId?: number
+  roomId?: string
   /** 撤回人ID */
-  recallUid?: number
+  recallUid?: string
 }
 
 export type EmojiItem = {
   expressionUrl: string
-  id: number
+  id: string
 }
 
 // -------------------- ⬇消息体类型定义⬇ ----------------
@@ -276,7 +276,7 @@ export type MessageType = {
  */
 export type MsgUserType = {
   /** 用户ID */
-  uid: number
+  uid: string
   /** 用户名 */
   username: string
   /** 头像 */
@@ -362,9 +362,9 @@ export type EmojiBody = {
  */
 export type MsgType = {
   /** 消息ID */
-  id: number
+  id: string
   /**  房间 ID */
-  roomId: number
+  roomId: string
   /** 消息类型 */
   type: MsgEnum
   /** 动态消息体-`根据消息类型变化` */
@@ -378,7 +378,7 @@ export type MsgType = {
 }
 
 export type ReplyType = {
-  id: number
+  id: string
   username: string
   type: MsgEnum
   /** 根据不同类型回复的消息展示也不同-`过渡版` */
@@ -397,7 +397,7 @@ export type ReplyType = {
  */
 export type MessageReq = {
   /** 会话id */
-  roomId: number
+  roomId: string
   /** 消息类型 */
   msgType: MsgEnum
   /** 消息体 */
@@ -422,7 +422,7 @@ export enum RequestFriendAgreeStatus {
 /** 请求添加好友的列表项 */
 export type RequestFriendItem = {
   /** 申请id */
-  applyId: number
+  applyId: string
   /** 申请信息 */
   msg: string
   /** 申请状态 1待审批 2同意 */
@@ -430,9 +430,9 @@ export type RequestFriendItem = {
   /** 申请类型 1加好友 */
   type: number
   /** 申请人uid */
-  uid: number
+  uid: string
   /** 会话 ID */
-  roomId: number
+  roomId: string
 }
 /** 联系人的列表项 */
 export type ContactItem = {
@@ -440,7 +440,7 @@ export type ContactItem = {
   activeStatus: OnlineEnum
   /** 最后一次上下线时间 */
   lastOptTime: number
-  uid: number
+  uid: string
 }
 
 /** 是否全员展示的会话 0否 1是 */
@@ -458,13 +458,13 @@ export type SessionItem = {
   /** 会话头像 */
   avatar: string
   /** 如果是单聊，则是对方的uid，如果是群聊，则是群id */
-  id: number
+  id: string
   /** 是否全员展示的会话 0否 1是 */
   hotFlag: IsAllUserEnum
   /** 会话名称 */
   name: string
   /** 房间id */
-  roomId: number
+  roomId: string
   /** 最新消息 */
   text: string
   /** 房间类型 1群聊 2单聊 */
@@ -482,7 +482,7 @@ export type SessionItem = {
 /** 消息已读未读数列表项 */
 export type MsgReadUnReadCountType = {
   /** 消息 ID */
-  msgId: number
+  msgId: string
   /** 已读数 */
   readCount: number
   /** 未读数 */

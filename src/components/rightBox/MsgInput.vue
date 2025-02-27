@@ -262,7 +262,7 @@ const closeMenu = (event: any) => {
 
 onMounted(async () => {
   onKeyStroke('Enter', () => {
-    if (ait.value && selectedAitKey.value > -1) {
+    if (ait.value && Number(selectedAIKey.value) > -1) {
       const item = personList.value.find((item) => item.uid === selectedAitKey.value) as CacheUserItem
       handleAit(item)
     } else if (aiDialogVisible.value && Number(selectedAIKey.value) > -1) {

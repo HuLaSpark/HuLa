@@ -687,7 +687,7 @@ export const useCommon = () => {
    * @param uid 用户id
    * @param type
    */
-  const openMsgSession = async (uid: number, type: number = 2) => {
+  const openMsgSession = async (uid: string, type: number = 2) => {
     // 获取home窗口实例
     const label = await WebviewWindow.getCurrent().label
     if (route.name !== '/message' && label === 'home') {

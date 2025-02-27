@@ -10,13 +10,13 @@ export const useUserStatusStore = defineStore(
     /** 在线状态列表 */
     const stateList = ref<STO.UserState[]>([])
 
-    const stateId = ref<number>(1)
+    const stateId = ref<string>('1')
 
     const currentState = computed(() => {
       const item = stateList.value.find((state) => state.id === stateId.value)
 
       if (!item) {
-        const defaultItem = stateList.value.find((state) => state.id === 1)
+        const defaultItem = stateList.value.find((state) => state.id === '1')
         if (defaultItem) {
           const img = new Image()
           img.src = defaultItem.url

@@ -37,7 +37,7 @@ export const useEmojiStore = defineStore('emoji', () => {
   /**
    * 删除表情
    */
-  const deleteEmoji = async (id: number) => {
+  const deleteEmoji = async (id: string) => {
     if (!id) return
     await apis.deleteEmoji({ id })
     await getEmojiList()

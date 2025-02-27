@@ -53,79 +53,79 @@ export default {
   /** 获取徽章列表 */
   getBadgeList: () => GET<BadgeType>(urls.getBadgeList),
   /** 设置用户勋章 */
-  setUserBadge: (badgeId: number) => PUT<void>(urls.setUserBadge, { badgeId }),
+  setUserBadge: (badgeId: string) => PUT<void>(urls.setUserBadge, { badgeId }),
   /** 修改用户名 */
   modifyUserName: (name: string) => PUT<void>(urls.modifyUserName, { name }),
   /** 撤回消息 */
-  recallMsg: (data: { msgId: number; roomId: number }) => PUT<void>(urls.recallMsg, data),
+  recallMsg: (data: { msgId: string; roomId: string }) => PUT<void>(urls.recallMsg, data),
   /** 拉黑用户 */
-  blockUser: (data: { uid: number }) => PUT<void>(urls.blockUser, data),
+  blockUser: (data: { uid: string }) => PUT<void>(urls.blockUser, data),
   /** 获取临时上传链接 */
   getUploadUrl: (params: any) => GET<{ downloadUrl: string; uploadUrl: string }>(urls.fileUpload, params),
   /** 上传头像 */
   uploadAvatar: (data: { avatar: string }) => POST<void>(urls.uploadAvatar, data),
   /** 新增表情包 */
-  addEmoji: (data: { uid: number; expressionUrl: string }) => POST<MessageType>(urls.addEmoji, data),
+  addEmoji: (data: { uid: string; expressionUrl: string }) => POST<MessageType>(urls.addEmoji, data),
   /** 获取表情 **/
-  getEmoji: (params: { uid: number }) => GET<EmojiItem[]>(urls.getEmoji, { params }),
+  getEmoji: (params: { uid: string }) => GET<EmojiItem[]>(urls.getEmoji, { params }),
   /** 删除Emoji */
-  deleteEmoji: (params: { id: number }) => DELETE<EmojiItem[]>(urls.deleteEmoji, params),
+  deleteEmoji: (params: { id: string }) => DELETE<EmojiItem[]>(urls.deleteEmoji, params),
   /** 获取联系人列表 */
   getContactList: (params?: any) => GET<ListResponse<ContactItem>>(urls.getContactList, params),
   /** 获取好友申请列表 */
   requestFriendList: (params?: any) => GET<ListResponse<RequestFriendItem>>(urls.requestFriendList, params),
   /** 发送添加好友请求 */
-  sendAddFriendRequest: (params: { targetUid: number; msg: string }) => POST(urls.sendAddFriendRequest, params),
+  sendAddFriendRequest: (params: { targetUid: string; msg: string }) => POST(urls.sendAddFriendRequest, params),
   /** 同意好友申请 */
-  applyFriendRequest: (params: { applyId: number }) => PUT(urls.sendAddFriendRequest, params),
+  applyFriendRequest: (params: { applyId: string }) => PUT(urls.sendAddFriendRequest, params),
   /** 删除好友 */
-  deleteFriend: (params: { targetUid: number }) => DELETE(urls.deleteFriend, params),
+  deleteFriend: (params: { targetUid: string }) => DELETE(urls.deleteFriend, params),
   /** 好友申请未读数 */
   newFriendCount: () => GET<{ unReadCount: number }>(urls.newFriendCount),
   /** 会话列表 */
   getSessionList: (params?: any) => GET<ListResponse<SessionItem>>(urls.getSessionList, params),
   /** 消息的已读未读列表 */
-  getMsgReadList: (params?: any) => GET<ListResponse<{ uid: number }>>(urls.getMsgReadList, params),
+  getMsgReadList: (params?: any) => GET<ListResponse<{ uid: string }>>(urls.getMsgReadList, params),
   /** 消息已读未读数 */
   getMsgReadCount: (params?: any) => GET<MsgReadUnReadCountType[]>(urls.getMsgReadCount, params),
   /** 消息阅读上报 */
   markMsgRead: (params?: any) => PUT<MsgReadUnReadCountType[]>(urls.getMsgReadCount, params),
   /** 新增群组 */
-  createGroup: (params: { uidList: number[] }) => POST<{ id: number }>(urls.createGroup, params),
+  createGroup: (params: { uidList: string[] }) => POST<{ id: number }>(urls.createGroup, params),
   /** 邀请群成员 */
-  inviteGroupMember: (params: { roomId: number; uidList: number[] }) => POST(urls.inviteGroupMember, params),
+  inviteGroupMember: (params: { roomId: string; uidList: string[] }) => POST(urls.inviteGroupMember, params),
   /** 删除群成员 */
-  removeGroupMember: (params: { roomId: number; uid: number }) => DELETE(urls.inviteGroupMember, params),
+  removeGroupMember: (params: { roomId: string; uid: string }) => DELETE(urls.inviteGroupMember, params),
   /** 群组详情 */
-  groupDetail: (params: { id: number }) => GET<GroupDetailReq>(urls.groupDetail, params),
+  groupDetail: (params: { id: string }) => GET<GroupDetailReq>(urls.groupDetail, params),
   /** 群聊列表 */
   groupList: (params: { current: number; size: number }) => GET<PageInfo<GroupListReq>>(urls.groupList, params),
   /** 会话详情 */
-  sessionDetail: (params: { id: number }) => GET<SessionItem>(urls.sessionDetail, params),
+  sessionDetail: (params: { id: string }) => GET<SessionItem>(urls.sessionDetail, params),
   /** 会话详情(联系人列表发消息用) */
-  sessionDetailWithFriends: (params: { id: number; roomType: number }) =>
+  sessionDetailWithFriends: (params: { id: string; roomType: number }) =>
     GET<SessionItem>(urls.sessionDetailWithFriends, params),
   /** 设置会话置顶 */
-  setSessionTop: (params: { roomId: number; top: boolean }) => POST<void>(urls.setSessionTop, params),
+  setSessionTop: (params: { roomId: string; top: boolean }) => POST<void>(urls.setSessionTop, params),
   /** 删除会话 */
-  deleteSession: (params: { roomId: number }) => DELETE<void>(urls.deleteSession, params),
+  deleteSession: (params: { roomId: string }) => DELETE<void>(urls.deleteSession, params),
   /** 修改群信息 */
-  updateRoomInfo: (params: { roomId: number; roomName: string; roomAvatar: string }) =>
+  updateRoomInfo: (params: { roomId: string; roomName: string; roomAvatar: string }) =>
     POST<void>(urls.updateRoomInfo, params),
   /** 添加群管理 */
-  addAdmin: ({ roomId, uidList }: { roomId: number; uidList: number[] }) =>
+  addAdmin: ({ roomId, uidList }: { roomId: string; uidList: string[] }) =>
     PUT<boolean>(urls.addAdmin, {
       roomId,
       uidList
     }),
   /** 撤销群管理 */
-  revokeAdmin: ({ roomId, uidList }: { roomId: number; uidList: number[] }) =>
+  revokeAdmin: ({ roomId, uidList }: { roomId: string; uidList: string[] }) =>
     DELETE<boolean>(urls.revokeAdmin, {
       roomId,
       uidList
     }),
   /** 退群 */
-  exitGroup: ({ roomId }: { roomId: number }) =>
+  exitGroup: ({ roomId }: { roomId: string }) =>
     DELETE<boolean>(urls.exitGroup, {
       roomId
     }),
@@ -140,5 +140,5 @@ export default {
   /** 获取所有用户状态 */
   getAllUserState: () => GET<API.UserState[]>(urls.getAllUserState),
   /** 用户状态改变 */
-  changeUserState: (userStateId: number) => POST(`${urls.changeUserState}/${userStateId}`)
+  changeUserState: (userStateId: string) => POST(`${urls.changeUserState}/${userStateId}`)
 }

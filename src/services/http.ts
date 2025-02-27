@@ -160,7 +160,6 @@ async function Http<T = any>(
       // 如果收到响应，说明已经连接到服务器，不需要重试
       if (!response.ok) {
         const errorType = getErrorType(response.status)
-
         // 如果是非重试状态码，则抛出带有适当错误类型的 AppException
         throw new AppException(`HTTP error! status: ${response.status}`, {
           type: errorType,

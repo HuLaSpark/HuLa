@@ -103,7 +103,7 @@ export const useGroupStore = defineStore('group', () => {
    * 获取群成员列表
    * @param refresh 是否刷新（重新加载）
    */
-  const getGroupUserList = async (refresh = false, specifiedRoomId?: number) => {
+  const getGroupUserList = async (refresh = false, specifiedRoomId?: string) => {
     const data = await apis.getGroupList({
       pageSize: pageSize,
       cursor: refresh ? '' : userListOptions.cursor,
@@ -119,7 +119,7 @@ export const useGroupStore = defineStore('group', () => {
     userListOptions.loading = false
 
     // 收集并获取用户详细信息
-    const uidCollectYet: Set<number> = new Set()
+    const uidCollectYet: Set<string> = new Set()
     for (const user of data.list || []) {
       uidCollectYet.add(user.uid)
     }
@@ -163,7 +163,7 @@ export const useGroupStore = defineStore('group', () => {
    * 从群成员列表中移除指定用户
    * @param uid 要移除的用户ID
    */
-  const filterUser = (uid: number) => {
+  const filterUser = (uid: string) => {
     if (typeof uid !== 'number') return
     userList.value = userList.value.filter((item) => item.uid !== uid)
   }
@@ -172,7 +172,7 @@ export const useGroupStore = defineStore('group', () => {
    * 添加群管理员
    * @param uidList 要添加为管理员的用户ID列表
    */
-  const addAdmin = async (uidList: number[]) => {
+  const addAdmin = async (uidList: string[]) => {
     await apis.addAdmin({ roomId: currentRoomId.value, uidList })
     // 更新本地群成员列表中的角色信息
     for (const user of userList.value) {
@@ -186,7 +186,7 @@ export const useGroupStore = defineStore('group', () => {
    * 撤销群管理员身份
    * @param uidList 要撤销的管理员ID列表
    */
-  const revokeAdmin = async (uidList: number[]) => {
+  const revokeAdmin = async (uidList: string[]) => {
     await apis.revokeAdmin({ roomId: currentRoomId.value, uidList })
     // 更新本地群成员列表中的角色信息
     for (const user of userList.value) {
@@ -200,7 +200,7 @@ export const useGroupStore = defineStore('group', () => {
    * 退出群聊
    * @param roomId 要退出的群聊ID
    */
-  const exitGroup = async (roomId: number) => {
+  const exitGroup = async (roomId: string) => {
     await apis.exitGroup({ roomId: roomId })
     // 从成员列表中移除自己
     const index = userList.value.findIndex((user) => user.uid === userStore.userInfo.uid)
@@ -216,10 +216,10 @@ export const useGroupStore = defineStore('group', () => {
    */
   const refreshGroupMembers = async () => {
     // 始终刷新频道成员列表
-    await getGroupUserList(true, 1)
+    await getGroupUserList(true, '1')
 
     // 如果当前选中的是群聊且不是频道，则同时刷新当前群聊的成员列表
-    if (globalStore.currentSession?.type === RoomTypeEnum.GROUP && currentRoomId.value !== 1) {
+    if (globalStore.currentSession?.type === RoomTypeEnum.GROUP && currentRoomId.value !== '1') {
       await getGroupUserList(true, currentRoomId.value)
     }
   }

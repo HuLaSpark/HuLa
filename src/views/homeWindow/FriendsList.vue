@@ -111,7 +111,7 @@ const menuList = ref([
   { label: '删除分组', icon: 'delete' }
 ])
 /** 建议把此状态存入localStorage中 */
-const activeItem = ref(0)
+const activeItem = ref('')
 const detailsShow = ref(false)
 const shrinkStatus = ref(false)
 const contactStore = useContactStore()
@@ -140,7 +140,7 @@ watchEffect(() => {
   })
 })
 
-const handleClick = (index: number, type: number) => {
+const handleClick = (index: string, type: number) => {
   detailsShow.value = true
   activeItem.value = index
   const data = {
@@ -167,15 +167,15 @@ const handleApply = () => {
       type: 'apply'
     }
   })
-  activeItem.value = 0
+  activeItem.value = ''
 }
 
 /** 获取用户状态 */
-const getUserState = (uid: number) => {
+const getUserState = (uid: string) => {
   const userInfo = useUserInfo(uid).value
   const userStateId = userInfo.userStateId
 
-  if (userStateId && userStateId > 1) {
+  if (userStateId && userStateId !== '1') {
     return stateList.value.find((state) => state.id === userStateId)
   }
   return null

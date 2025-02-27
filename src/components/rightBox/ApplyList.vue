@@ -62,14 +62,14 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { usePopover } from '@/hooks/usePopover'
 
 const contactStore = useContactStore()
-const currentUserId = ref(0)
+const currentUserId = ref('0')
 const loading = ref(false)
 const { handlePopoverUpdate, enableScroll } = usePopover(currentUserId, 'friend-request-scrollbar')
 provide('popoverControls', { enableScroll })
 
 const avatarSrc = (url: string) => AvatarUtils.getAvatarUrl(url)
 
-const handleAgree = async (applyId: number) => {
+const handleAgree = async (applyId: string) => {
   loading.value = true
   contactStore.onAcceptFriend(applyId).then(() => {
     setTimeout(() => {

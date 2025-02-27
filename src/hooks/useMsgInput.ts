@@ -194,8 +194,8 @@ export const useMsgInput = (messageInputDom: Ref) => {
    * @param userList 用户列表
    * @returns 被 @ 用户的uid数组
    */
-  const extractAtUserIds = (content: string, userList: BaseUserItem[]): number[] => {
-    const atUserIds: number[] = []
+  const extractAtUserIds = (content: string, userList: BaseUserItem[]): string[] => {
+    const atUserIds: string[] = []
 
     // 创建临时DOM元素来解析HTML
     const tempDiv = document.createElement('div')
@@ -285,7 +285,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
     const msg = await messageStrategy.getMsg(msgInput.value, reply.value)
     const atUidList = extractAtUserIds(msgInput.value, cachedStore.currentAtUsersList)
-    const tempMsgId = Date.now()
+    const tempMsgId = Date.now().toString()
 
     // 根据消息类型创建消息体
     const messageBody = {

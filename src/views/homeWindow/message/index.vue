@@ -196,14 +196,14 @@ onMounted(() => {
   // 监听其他窗口发来的WebSocket发送请求
   // TODO：频繁切换会话会导致频繁请求，切换的时候也会有点卡顿
   addListener(
-    appWindow.listen('search_to_msg', (event: { payload: { uid: number; roomType: number } }) => {
+    appWindow.listen('search_to_msg', (event: { payload: { uid: string; roomType: number } }) => {
       openMsgSession(event.payload.uid, event.payload.roomType)
     })
   )
-  useMitt.on(MittEnum.DELETE_SESSION, async (roomId: number) => {
+  useMitt.on(MittEnum.DELETE_SESSION, async (roomId: string) => {
     await handleMsgDelete(roomId)
   })
-  useMitt.on(MittEnum.LOCATE_SESSION, async (e: { roomId: number }) => {
+  useMitt.on(MittEnum.LOCATE_SESSION, async (e: { roomId: string }) => {
     const index = sessionList.value.findIndex((item) => item.roomId === e.roomId)
     if (index !== -1) {
       await nextTick(() => {

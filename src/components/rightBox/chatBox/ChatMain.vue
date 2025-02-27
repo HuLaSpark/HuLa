@@ -185,7 +185,7 @@
                       <!-- 用户徽章 -->
                       <n-popover
                         v-if="
-                          currentRoomId === 1 &&
+                          currentRoomId === '1' &&
                           useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.img
                         "
                         trigger="hover">
@@ -457,7 +457,7 @@ const currentRoomId = computed(() => globalStore.currentSession?.roomId)
 /** 是否是超级管理员 */
 // const isAdmin = computed(() => userInfo?.power === PowerEnum.ADMIN)
 /** 跳转回复消息后选中效果 */
-const activeReply = ref(-1)
+const activeReply = ref('')
 /** item最小高度，用于计算滚动大小和位置 */
 const itemSize = computed(() => (chatStore.isGroup ? 90 : 76))
 /** 虚拟列表 */
@@ -629,7 +629,7 @@ const handleTransitionComplete = () => {
 }
 
 /** 获取用户头像 */
-const getAvatarSrc = (uid: number) => {
+const getAvatarSrc = (uid: string) => {
   const avatar = uid === userUid.value ? userStore.userInfo.avatar : useUserInfo(uid).value.avatar
   return AvatarUtils.getAvatarUrl(avatar as string)
 }
@@ -683,7 +683,7 @@ const handleEmojiSelect = (label: string, item: any) => {
 // }
 
 /** 跳转到回复消息 */
-const jumpToReplyMsg = (key: number) => {
+const jumpToReplyMsg = (key: string) => {
   nextTick(() => {
     // 找到对应消息的索引
     const messageIndex = chatMessageList.value.findIndex((msg) => msg.message.id === key)
@@ -744,7 +744,7 @@ const handleMacSelect = (event: any) => {
 
 const closeMenu = (event: any) => {
   if (!event.target.matches('.bubble', 'bubble-oneself')) {
-    activeBubble.value = -1
+    activeBubble.value = ''
     // 解决mac右键会选中文本的问题
     if (isMac.value && recordEL.value) {
       recordEL.value.classList.remove('select-none')
@@ -759,7 +759,7 @@ const closeMenu = (event: any) => {
           activeReplyElement.classList.add('reply-exit')
           delay(() => {
             activeReplyElement.classList.remove('reply-exit')
-            activeReply.value = -1
+            activeReply.value = ''
           }, 300)
         }
       })
@@ -772,7 +772,7 @@ const handleRetry = (item: any) => {
   console.log('重试发送消息:', item)
 }
 
-const canReEdit = computed(() => (msgId: number) => {
+const canReEdit = computed(() => (msgId: string) => {
   const recalledMsg = chatStore.getRecalledMessage(msgId)
   const message = chatStore.getMessage(msgId)
   if (!recalledMsg || !message) return false
@@ -781,7 +781,7 @@ const canReEdit = computed(() => (msgId: number) => {
   return message.fromUser.uid === userUid.value
 })
 
-const handleReEdit = (msgId: number) => {
+const handleReEdit = (msgId: string) => {
   const recalledMsg = chatStore.getRecalledMessage(msgId)
   if (recalledMsg) {
     useMitt.emit(MittEnum.RE_EDIT, recalledMsg.content)

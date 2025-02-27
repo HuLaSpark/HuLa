@@ -19,7 +19,7 @@ declare namespace API {
    * @param bgColor 背景颜色
    */
   type UserState = {
-    id: number
+    id: string
     title: string
     url: string
     bgColor?: string

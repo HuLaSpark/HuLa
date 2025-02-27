@@ -1,7 +1,7 @@
 import { Ref } from 'vue'
 
 /**! 这个是暂时用来解决在n-scrollbar中使用n-virtual-list使用n-popover时候滚动出现原生滚动条的方法 */
-export const usePopover = (selectKey: Ref<number>, id: string) => {
+export const usePopover = (selectKey: Ref<string>, id: string) => {
   /**! 暂时使用这些方法来阻止popover显示时候的滚动行为 */
   // 禁止滚动的默认行为
   const preventDefault = (e: Event) => e.preventDefault()
@@ -20,7 +20,7 @@ export const usePopover = (selectKey: Ref<number>, id: string) => {
     }
   }
 
-  const handlePopoverUpdate = (key: number, show?: boolean) => {
+  const handlePopoverUpdate = (key: string, show?: boolean) => {
     const scrollbar = document.querySelector(`#${id}`) as HTMLElement
     if (!scrollbar) return
 

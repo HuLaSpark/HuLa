@@ -66,7 +66,7 @@ export type OnStatusChangeType = {
 
 /** token过期 */
 export type WsTokenExpire = {
-  uid: number
+  uid: string
   ip: string
   client: string
 }

@@ -50,8 +50,8 @@ import { useCommon } from '@/hooks/useCommon.ts'
 
 // 定义分组消息的类型
 type GroupedMessage = {
-  id: number
-  roomId: number
+  id: string
+  roomId: string
   latestContent: string
   messageCount: number
   avatar: string
@@ -94,7 +94,7 @@ const checkIsAtMe = (content: MessageType) => {
 }
 
 // 处理点击消息的逻辑
-const handleClickMsg = async (uid: number) => {
+const handleClickMsg = async (uid: string) => {
   // 打开消息页面
   await checkWinExist('home')
   await handleTip()

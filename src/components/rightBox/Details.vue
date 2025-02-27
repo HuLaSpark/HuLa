@@ -145,7 +145,7 @@ const footerOptions = ref<OPT.Details[]>([
       console.log(content)
       // TODO 需要增加独立窗口功能 (nyh -> 2024-03-25 16:01:23)
       //群聊传群id
-      let id = 0
+      let id = '0'
       if (type === RoomTypeEnum.GROUP) {
         id = item.value.roomId
       } else {

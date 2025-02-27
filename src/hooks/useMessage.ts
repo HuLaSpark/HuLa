@@ -40,8 +40,8 @@ export const useMessage = () => {
 
     // 只有在消息页面且有未读消息时，才标记为已读
     if (route.path === '/message' && item.unreadCount > 0) {
-      apis.markMsgRead({ roomId: item.roomId || 1 }).then(() => {
-        chatStore.markSessionRead(item.roomId || 1)
+      apis.markMsgRead({ roomId: item.roomId || '1' }).then(() => {
+        chatStore.markSessionRead(item.roomId || '1')
         // 更新全局未读计数
         globalStore.updateGlobalUnreadCount()
       })
@@ -52,7 +52,7 @@ export const useMessage = () => {
    * 删除会话
    * @param roomId 会话信息
    */
-  const handleMsgDelete = async (roomId: number) => {
+  const handleMsgDelete = async (roomId: string) => {
     const currentSessions = chatStore.sessionList
     const currentIndex = currentSessions.findIndex((session) => session.roomId === roomId)
 
@@ -191,7 +191,7 @@ export const useMessage = () => {
       icon: 'delete',
       click: async (item: SessionItem) => {
         // 不允许解散频道(roomId === 1)
-        if (item.roomId === 1) {
+        if (item.roomId === '1') {
           window.$message.warning('无法解散频道')
           return
         }
@@ -209,7 +209,7 @@ export const useMessage = () => {
         // 如果不是群聊，不显示
         if (item.type !== RoomTypeEnum.GROUP) return false
         // 如果是频道，不显示
-        if (item.roomId === 1) return false
+        if (item.roomId === '1') return false
         // 只有群主才能看到解散群聊选项
         return item.operate === SessionOperateEnum.DISSOLUTION_GROUP
       }
@@ -219,7 +219,7 @@ export const useMessage = () => {
       icon: 'logout',
       click: async (item: SessionItem) => {
         // 不允许退出频道(roomId === 1)
-        if (item.roomId === 1) {
+        if (item.roomId === '1') {
           window.$message.warning('无法退出频道')
           return
         }
@@ -236,7 +236,7 @@ export const useMessage = () => {
         // 如果不是群聊，不显示
         if (item.type !== RoomTypeEnum.GROUP) return false
         // 如果是频道，不显示
-        if (item.roomId === 1) return false
+        if (item.roomId === '1') return false
         // 如果是群主，不显示退出选项（群主应该看到解散群聊选项）
         return item.operate === SessionOperateEnum.EXIT_GROUP
       }

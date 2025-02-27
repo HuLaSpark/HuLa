@@ -122,7 +122,7 @@ export const useContactStore = defineStore('contact', () => {
    * 4. 更新当前选中联系人的状态
    * 5. 更新未读数
    */
-  const onAcceptFriend = async (applyId: number) => {
+  const onAcceptFriend = async (applyId: string) => {
     // 同意好友申请
     apis.applyFriendRequest({ applyId }).then(async () => {
       // 刷新好友申请列表
@@ -147,7 +147,7 @@ export const useContactStore = defineStore('contact', () => {
    * 1. 调用删除好友接口
    * 2. 刷新好友列表
    */
-  const onDeleteContact = async (uid: number) => {
+  const onDeleteContact = async (uid: string) => {
     if (!uid) return
     // 删除好友
     await apis.deleteFriend({ targetUid: uid })
