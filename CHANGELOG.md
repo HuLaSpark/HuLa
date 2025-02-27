@@ -1,5 +1,40 @@
 # Changelog
 
+## <small>2.6.5 (2025-02-27)</small>
+
+* fix(common): :bug: 修复登出账号时没有清空系统托盘图标上的未读数(MacOS) ([383a776](https://github.com/HuLaSpark/HuLa/commit/383a776))
+* fix(component): :bug: 修复加好友/群聊顶部栏不可操作问题和窗口通信响应式问题 ([b08e7d8](https://github.com/HuLaSpark/HuLa/commit/b08e7d8))
+* fix(component): :bug: 修复跳转到会话选中回退第一个问题 ([029f3f9](https://github.com/HuLaSpark/HuLa/commit/029f3f9))
+* fix(config): :bug: 修复检查更新问题(暂时先切换回github) ([d6d488b](https://github.com/HuLaSpark/HuLa/commit/d6d488b))
+* fix(file): :bug: 修复git未监听文件名大小写修改 ([9a8659b](https://github.com/HuLaSpark/HuLa/commit/9a8659b))
+* fix(git): :bug: 删除多余的文件，导致打包出错 ([df7fed3](https://github.com/HuLaSpark/HuLa/commit/df7fed3))
+* fix(global): :bug: 修改全局使用到的一些类型为string ([3333aa0](https://github.com/HuLaSpark/HuLa/commit/3333aa0)), closes [#211](https://github.com/HuLaSpark/HuLa/issues/211)
+* fix(worker): :bug: 修复ws连接问题和一些页面组件问题 ([eadea02](https://github.com/HuLaSpark/HuLa/commit/eadea02))
+* perf(component): :zap: 优化侧边栏功能 ([d1f831d](https://github.com/HuLaSpark/HuLa/commit/d1f831d))
+* perf(component): :zap: 优化加好友/群聊窗体样式和功能 ([6716913](https://github.com/HuLaSpark/HuLa/commit/6716913))
+* perf(component): :zap: 优化自动登录功能 ([5cb9bfc](https://github.com/HuLaSpark/HuLa/commit/5cb9bfc))
+* perf(service): :zap: 优化群聊功能 (#208) ([0e07e33](https://github.com/HuLaSpark/HuLa/commit/0e07e33)), closes [#208](https://github.com/HuLaSpark/HuLa/issues/208)
+* perf(view): :zap: 优化登录逻辑 ([67cad46](https://github.com/HuLaSpark/HuLa/commit/67cad46))
+* perf(view): :zap: 优化群聊侧边栏用户信息展示 ([4b03f57](https://github.com/HuLaSpark/HuLa/commit/4b03f57))
+* perf(view): :zap: 优化群聊侧边栏状态展示和聊天框顶部栏状态展示 ([e15cf9b](https://github.com/HuLaSpark/HuLa/commit/e15cf9b))
+* perf(view): :zap: 优化图片查看器 ([22f84f1](https://github.com/HuLaSpark/HuLa/commit/22f84f1))
+* feat(component): :sparkles: 新增用户状态切换 ([5098733](https://github.com/HuLaSpark/HuLa/commit/5098733))
+* feat(service): :sparkles: 增加双token校验 ([776b6ec](https://github.com/HuLaSpark/HuLa/commit/776b6ec)), closes [#IBNT91](https://github.com/HuLaSpark/HuLa/issues/IBNT91)
+* feat(view): :sparkles: 添加好友或群，基本完成了查找添加好友相关的内容，可以查出来群聊信息暂时还没有写添加 (#209) ([90a8985](https://github.com/HuLaSpark/HuLa/commit/90a8985)), closes [#209](https://github.com/HuLaSpark/HuLa/issues/209)
+* chore: 发布 v2.6.4 ([ac9d922](https://github.com/HuLaSpark/HuLa/commit/ac9d922))
+* [Snyk] Upgrade @tauri-apps/plugin-clipboard-manager from 2.2.0 to 2.2.1 (#206) ([54354c6](https://github.com/HuLaSpark/HuLa/commit/54354c6)), closes [#206](https://github.com/HuLaSpark/HuLa/issues/206)
+* [Snyk] Upgrade @tauri-apps/plugin-http from 2.2.0 to 2.3.0 (#207) ([cbf5f4d](https://github.com/HuLaSpark/HuLa/commit/cbf5f4d)), closes [#207](https://github.com/HuLaSpark/HuLa/issues/207)
+* docs(readme): :memo: 更新赞助者名单 ([4d9aabe](https://github.com/HuLaSpark/HuLa/commit/4d9aabe))
+
+
+### BREAKING CHANGE
+
+* 一次性查出多条。添加好友用的是AddFriendsModal.vu页面进行一些修改,
+
+closed https://gitee.com/HuLaSpark/HuLa/issues/IBJYSD
+
+* fix(view): :bug: 修改创建窗体minH的问题
+
 ## <small>2.6.4 (2025-02-21)</small>
 
 * fix(common): :bug: 修复登出账号时没有清空系统托盘图标上的未读数(MacOS) ([383a776](https://github.com/HuLaSpark/HuLa/commit/383a776))
