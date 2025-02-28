@@ -17,7 +17,7 @@
       </template>
       <template #fallback>
         <div class="flex items-center justify-center size-full">
-          <LoadingSpinner />
+          <LoadingSpinner :percentage="loadingPercentage" :loading-text="loadingText" />
         </div>
       </template>
     </Suspense>
@@ -48,22 +48,39 @@ import { useCachedStore } from '@/stores/cached'
 import { clearListener, initListener, readCountQueue } from '@/utils/ReadCountQueue'
 import { useSettingStore } from '@/stores/setting'
 
-// 异步加载组件时增加缓存配置
+const loadingPercentage = ref(0)
+const loadingText = ref('正在加载应用...')
+
+// 修改异步组件的加载配置
 const AsyncLeft = defineAsyncComponent({
-  loader: async () => await import('./left/index.vue'),
+  loader: async () => {
+    loadingText.value = '正在加载左侧面板...'
+    const comp = await import('./left/index.vue')
+    loadingPercentage.value = 33
+    return comp
+  },
   delay: 600,
   timeout: 3000
 })
 
-// 其他异步组件也类似配置
 const AsyncCenter = defineAsyncComponent({
-  loader: async () => await import('./center/index.vue'),
+  loader: async () => {
+    loadingText.value = '正在加载中间面板...'
+    const comp = await import('./center/index.vue')
+    loadingPercentage.value = 66
+    return comp
+  },
   delay: 600,
   timeout: 3000
 })
 
 const AsyncRight = defineAsyncComponent({
-  loader: async () => await import('./right/index.vue'),
+  loader: async () => {
+    loadingText.value = '正在加载右侧面板...'
+    const comp = await import('./right/index.vue')
+    loadingPercentage.value = 100
+    return comp
+  },
   delay: 600,
   timeout: 3000
 })

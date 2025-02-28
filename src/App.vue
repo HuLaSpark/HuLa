@@ -15,10 +15,15 @@ import LockScreen from '@/views/LockScreen.vue'
 import router from '@/router'
 import { type } from '@tauri-apps/plugin-os'
 import { useLogin } from '@/hooks/useLogin.ts'
+import { useStorage } from '@vueuse/core'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 
+const appWindow = WebviewWindow.getCurrent()
 const settingStore = useSettingStore()
 const { themes, lockScreen, page } = storeToRefs(settingStore)
 const { resetLoginState, logout } = useLogin()
+const token = useStorage('TOKEN', null)
+const refreshToken = useStorage('REFRESH_TOKEN', null)
 /** 不需要锁屏的页面 */
 const LockExclusion = new Set(['/login', '/tray', '/qrCode', '/about', '/onlineStatus'])
 const isLock = computed(() => {
@@ -75,6 +80,24 @@ watch(
     await nextTick(() => {
       app.add(val)
     })
+  },
+  { immediate: true }
+)
+
+watch(
+  [token, refreshToken],
+  async ([newToken, newRefreshToken]) => {
+    // 如果不在主窗口下，则不执行token检查和重新登录逻辑
+    if (appWindow.label !== 'home') {
+      return
+    }
+
+    // 非登录页面才执行 token 检查和重新登录逻辑
+    if (!newToken || !newRefreshToken) {
+      console.log('🔑 Token 或 RefreshToken 丢失，需要重新登录')
+      await resetLoginState()
+      await logout()
+    }
   },
   { immediate: true }
 )
