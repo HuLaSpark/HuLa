@@ -16,7 +16,7 @@ export const options = computed(() =>
 
 export const createGroup = async (selectedUids: string[]) => {
   try {
-    const uidList = selectedUids.map((uid) => String(uid))
+    const uidList = selectedUids.map((uid) => uid)
     const result = await apis.createGroup({ uidList })
     return result
   } catch (error) {

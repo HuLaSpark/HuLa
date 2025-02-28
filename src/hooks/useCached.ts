@@ -22,7 +22,7 @@ export const useUserInfo = (uid?: string | ComputedRef<string | undefined> | Ref
  * @param itemId 用户徽章ID
  * @description 引入该Hook后，可响应式获取用户徽章信息
  */
-export const useBadgeInfo = (itemId?: string | ComputedRef<number | undefined>) => {
+export const useBadgeInfo = (itemId?: string | ComputedRef<string | undefined>) => {
   const cachedStore = useCachedStore()
   const badgeInfo = computed(() => (itemId && cachedStore.badgeCachedList[toValue(itemId as string)]) || {})
   // 如果没有就请求

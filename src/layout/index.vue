@@ -162,7 +162,7 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   // 接收到通知就设置图标闪烁
   const username = useUserInfo(data.fromUser.uid).value.name!
   // 不是自己发的消息才通知
-  if (Number(data.fromUser.uid) !== Number(userStore.userInfo.uid)) {
+  if (data.fromUser.uid !== userStore.userInfo.uid) {
     await emitTo('tray', 'show_tip')
     await emitTo('notify', 'notify_cotent', data)
     const throttleSendNotification = useThrottleFn(() => {

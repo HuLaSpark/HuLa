@@ -319,7 +319,7 @@ defineExpose<VirtualListExpose>({
       } else if (options.position === 'top') {
         // 滚动到顶部
         containerRef.value.scrollTop = 0
-      } else if (typeof options.index === 'number') {
+      } else if (typeof options.index === 'string') {
         // 滚动到指定索引位置
         const offset = getOffsetForIndex(options.index)
         containerRef.value.scrollTo({

@@ -73,9 +73,9 @@ const task = async () => {
     }
 
     // 将响应数据转换为 Map 结构，方便查询
-    const result = new Map<number, MsgReadUnReadCountType>()
+    const result = new Map<string, MsgReadUnReadCountType>()
     for (const item of res) {
-      if (typeof item.msgId === 'number') {
+      if (typeof item.msgId === 'string') {
         result.set(item.msgId, item)
       }
     }

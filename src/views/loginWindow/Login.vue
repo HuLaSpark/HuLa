@@ -5,7 +5,7 @@
     <ActionBar :max-w="false" :shrink="false" proxy />
 
     <!--  手动登录样式  -->
-    <n-flex vertical :size="25" v-if="!login.autoLogin || !TOKEN">
+    <n-flex vertical :size="25" v-if="!login.autoLogin || !TOKEN || !isAutoLogin">
       <!-- 头像 -->
       <n-flex justify="center" class="w-full pt-35px" data-tauri-drag-region>
         <n-avatar
@@ -196,6 +196,7 @@ const loginDisabled = ref(false)
 const loading = ref(false)
 const arrowStatus = ref(false)
 const moreShow = ref(false)
+const isAutoLogin = ref(false)
 const { setLoginState } = useLogin()
 const accountPH = ref('输入HuLa账号')
 const passwordPH = ref('输入HuLa密码')
@@ -272,6 +273,7 @@ const normalLogin = async (auto = false) => {
 
   // 自动登录
   if (auto) {
+    isAutoLogin.value = true
     loginText.value = '登录中...'
     // 添加2秒延迟
     await new Promise((resolve) => setTimeout(resolve, 1200))
@@ -293,6 +295,8 @@ const normalLogin = async (auto = false) => {
     } catch (error) {
       console.error('自动登录失败')
       localStorage.removeItem('TOKEN')
+      isAutoLogin.value = false
+      loginDisabled.value = true
     }
   }
 

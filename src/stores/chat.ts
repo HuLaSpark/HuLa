@@ -72,11 +72,11 @@ export const useChatStore = defineStore(
     // 当前聊天室的消息Map计算属性
     const currentMessageMap = computed({
       get: () => {
-        const current = messageMap.get(currentRoomId.value as string)
+        const current = messageMap.get(currentRoomId.value)
         if (current === undefined) {
           messageMap.set(currentRoomId.value, new Map())
         }
-        return messageMap.get(currentRoomId.value as string)
+        return messageMap.get(currentRoomId.value)
       },
       set: (val) => {
         messageMap.set(currentRoomId.value, val as Map<string, MessageType>)
@@ -86,11 +86,11 @@ export const useChatStore = defineStore(
     // 当前聊天室的消息加载状态计算属性
     const currentMessageOptions = computed({
       get: () => {
-        const current = messageOptions.get(currentRoomId.value as string)
+        const current = messageOptions.get(currentRoomId.value)
         if (current === undefined) {
           messageOptions.set(currentRoomId.value, { isLast: false, isLoading: true, cursor: '' })
         }
-        return messageOptions.get(currentRoomId.value as string)
+        return messageOptions.get(currentRoomId.value)
       },
       set: (val) => {
         messageOptions.set(currentRoomId.value, val as { isLast: boolean; isLoading: boolean; cursor: string })
@@ -100,11 +100,11 @@ export const useChatStore = defineStore(
     // 当前聊天室的回复消息映射计算属性
     const currentReplyMap = computed({
       get: () => {
-        const current = replyMapping.get(currentRoomId.value as string)
+        const current = replyMapping.get(currentRoomId.value)
         if (current === undefined) {
           replyMapping.set(currentRoomId.value, new Map())
         }
-        return replyMapping.get(currentRoomId.value as string)
+        return replyMapping.get(currentRoomId.value)
       },
       set: (val) => {
         replyMapping.set(currentRoomId.value, val as Map<string, string[]>)
@@ -135,11 +135,11 @@ export const useChatStore = defineStore(
     // 当前聊天室的新消息计数计算属性
     const currentNewMsgCount = computed({
       get: () => {
-        const current = newMsgCount.get(currentRoomId.value as string)
+        const current = newMsgCount.get(currentRoomId.value)
         if (current === undefined) {
           newMsgCount.set(currentRoomId.value, { count: 0, isStart: false })
         }
-        return newMsgCount.get(currentRoomId.value as string)
+        return newMsgCount.get(currentRoomId.value)
       },
       set: (val) => {
         newMsgCount.set(currentRoomId.value, val as { count: number; isStart: boolean })
@@ -152,7 +152,7 @@ export const useChatStore = defineStore(
         // 切换的 rooms是空数据的话就请求消息列表
         if (!currentMessageMap.value || currentMessageMap.value.size === 0) {
           if (!currentMessageMap.value) {
-            messageMap.set(currentRoomId.value as string, new Map())
+            messageMap.set(currentRoomId.value, new Map())
           }
           getMsgList()
         }
@@ -431,7 +431,7 @@ export const useChatStore = defineStore(
     const updateRecallStatus = (data: RevokedMsgType) => {
       const { msgId } = data
       const message = currentMessageMap.value?.get(msgId)
-      if (message && typeof data.recallUid === 'number') {
+      if (message && typeof data.recallUid === 'string') {
         // 存储撤回的消息内容和时间
         const recallTime = Date.now()
         recalledMessages.set(msgId, {

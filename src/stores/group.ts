@@ -164,7 +164,7 @@ export const useGroupStore = defineStore('group', () => {
    * @param uid 要移除的用户ID
    */
   const filterUser = (uid: string) => {
-    if (typeof uid !== 'number') return
+    if (typeof uid !== 'string') return
     userList.value = userList.value.filter((item) => item.uid !== uid)
   }
 

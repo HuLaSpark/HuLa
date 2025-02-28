@@ -55,6 +55,7 @@ export const useLogin = () => {
     clearListener()
     // 1. 清理本地存储
     if (!isAutoLogin) {
+      // TODO 未来这里需要区分账号，切换不同的account；用不同的REFRESH_TOKEN调用
       localStorage.removeItem('user')
       localStorage.removeItem('TOKEN')
       localStorage.removeItem('REFRESH_TOKEN')
