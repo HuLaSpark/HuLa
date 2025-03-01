@@ -55,7 +55,7 @@ const responseInterceptor = async <T>(
     //检查服务端返回是否成功，并且中断请求
     if (!serviceData.success) {
       return Promise.reject(
-        new AppException(serviceData.errMsg, {
+        new AppException(serviceData.msg, {
           type: ErrorType.Server,
           showError: true
         })

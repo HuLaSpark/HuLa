@@ -19,10 +19,10 @@ import {
 export type ServiceResponse = {
   /** 成功标识true or false */
   success: boolean
-  /** 错误码 */
-  errCode: number
+  /** 状态码 */
+  code: number
   /** 错误消息 */
-  errMsg: string
+  msg: string
   /** 数据 */
   data: any
 }

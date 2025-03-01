@@ -149,20 +149,16 @@ async function Http<T = any>(
     url += `?${queryString}`
   }
 
-  // 拼接 API 基础路径
-  //url = `${import.meta.env.VITE_SERVICE_URL}${url}`
-
   // 定义重试函数
+  let tokenRefreshCount = 0 // 在闭包中存储计数器
   async function attemptFetch(currentAttempt: number): Promise<{ data: T; resp: Response } | T> {
     try {
       const response = await fetch(url, fetchOptions)
 
-      // 如果收到响应，说明已经连接到服务器，不需要重试
+      // 先判断是否连接到服务器，fetch请求是否成功，如果不成功那么就是本地客户端网络异常
       if (!response.ok) {
-        const errorType = getErrorType(response.status)
-        // 如果是非重试状态码，则抛出带有适当错误类型的 AppException
         throw new AppException(`HTTP error! status: ${response.status}`, {
-          type: errorType,
+          type: ErrorType.Network,
           code: response.status,
           details: { url, method: options.method }
         })
@@ -171,9 +167,52 @@ async function Http<T = any>(
       // 解析响应数据
       const responseData = options.isBlob ? await response.arrayBuffer() : await response.json()
 
-      // 若有success === false，需要重试
-      if (responseData && responseData.success === false) {
-        throw new AppException(responseData.errMsg || '服务器返回错误', {
+      // 判断服务器返回的错误码进行操作
+      switch (responseData.code) {
+        case 401: {
+          console.log('🔄 Token无效，清除token并重新登录...')
+          // 触发重新登录事件
+          window.dispatchEvent(new Event('needReLogin'))
+          break
+        }
+        case 403: {
+          console.log('🤯 权限不足')
+          break
+        }
+        case 422: {
+          break
+        }
+        case 40004: {
+          // 限制token刷新重试次数，最多重试一次
+          if (tokenRefreshCount >= 1) {
+            console.log('🚫 Token刷新重试次数超过限制，退出重试')
+            window.dispatchEvent(new Event('needReLogin'))
+            throw new AppException('Token刷新失败', {
+              type: ErrorType.TokenExpired,
+              showError: true
+            })
+          }
+
+          try {
+            console.log('🔄 开始尝试刷新Token并重试请求')
+            const newToken = await refreshTokenAndRetry()
+            // 使用新token重试当前请求
+            httpHeaders.set('Authorization', `Bearer ${newToken}`)
+            console.log('🔄 使用新Token重试原请求')
+            // 增加计数器
+            tokenRefreshCount++
+            return attemptFetch(currentAttempt)
+          } catch (refreshError) {
+            // 续签出错也触发重新登录
+            window.dispatchEvent(new Event('needReLogin'))
+            throw refreshError
+          }
+        }
+      }
+
+      // 如果fecth请求成功，但是服务器请求不成功并且返回了错误，那么就抛出错误
+      if (responseData && !responseData.success) {
+        throw new AppException(responseData.msg || '服务器返回错误', {
           type: ErrorType.Server,
           code: response.status,
           details: responseData,
@@ -222,28 +261,6 @@ async function Http<T = any>(
         })
       }
 
-      // 非网络错误或重试次数已用完，直接抛出
-      if (error instanceof AppException) {
-        if (error.type === ErrorType.TokenExpired) {
-          try {
-            console.log('🔄 开始尝试刷新Token并重试请求')
-            const newToken = await refreshTokenAndRetry()
-            // 使用新token重试当前请求
-            httpHeaders.set('Authorization', `Bearer ${newToken}`)
-            console.log('🔄 使用新Token重试原请求')
-            return attemptFetch(currentAttempt)
-          } catch (refreshError) {
-            // 可以触发重新登录事件
-            window.dispatchEvent(new Event('needReLogin'))
-            throw error
-          }
-        } else if (error.type === ErrorType.TokenInvalid) {
-          // Token无效的情况直接抛出错误，不尝试刷新
-          throw error
-        }
-        throw error
-      }
-
       // 未知错误，使用友好的错误提示
       throw new AppException(ERROR_MESSAGES.UNKNOWN, {
         type: error instanceof TypeError ? ErrorType.Network : ErrorType.Unknown,
@@ -251,28 +268,6 @@ async function Http<T = any>(
         showError: true
       })
     }
-  }
-
-  // 辅助函数：根据HTTP状态码确定错误类型
-  function getErrorType(status: number): ErrorType {
-    if (status >= 500) return ErrorType.Server
-    if (status === 401) {
-      console.log('🔄 Token无效，清除token并重新登录...')
-      // 触发重新登录事件
-      window.dispatchEvent(new Event('needReLogin'))
-      return ErrorType.TokenInvalid
-    }
-    if (status === 40004) {
-      console.log('🔄 Token需要续签，准备刷新...')
-      return ErrorType.TokenExpired
-    }
-    if (status === 403) {
-      console.log('🤯 权限不足')
-      return ErrorType.Authentication
-    }
-    if (status === 400 || status === 422) return ErrorType.Validation
-    if (status >= 400) return ErrorType.Client
-    return ErrorType.Network
   }
 
   // 添加获取网络错误信息的辅助函数
@@ -319,7 +314,7 @@ async function refreshTokenAndRetry(): Promise<string> {
     }
 
     console.log('📤 正在使用refreshToken获取新的token')
-    const response = await fetch(`${import.meta.env.VITE_SERVICE_URL}${urls.refreshToken}`, {
+    const response = await fetch(urls.refreshToken, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -328,16 +323,17 @@ async function refreshTokenAndRetry(): Promise<string> {
       body: JSON.stringify({ refreshToken })
     })
 
-    if (!response.ok) {
-      console.error('❌ 刷新Token失败:', response.status)
+    const data = await response.json()
+
+    if (!response.ok || !data.success) {
+      // 重新登录
+      window.dispatchEvent(new Event('needReLogin'))
       throw new Error('刷新令牌失败')
     }
+    const { token, refreshToken: newRefreshToken } = data.data
 
-    const data = await response.json()
-    const { token, refreshToken: newRefreshToken } = data
-
-    console.log('🔑 Token刷新成功，更新存储')
-    // 更新本地存储的token
+    console.log('🔑 Token刷新成功，更新存储', data)
+    // 更新本地存储的token 知道
     localStorage.setItem('TOKEN', token)
     localStorage.setItem('REFRESH_TOKEN', newRefreshToken)
 
@@ -348,6 +344,7 @@ async function refreshTokenAndRetry(): Promise<string> {
   } catch (error) {
     console.error('❌ 刷新Token过程出错:', error)
     requestQueue.clear() // 发生错误时清空队列
+    window.dispatchEvent(new Event('needReLogin'))
     throw error
   } finally {
     isRefreshing = false

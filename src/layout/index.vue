@@ -48,7 +48,7 @@ import { useCachedStore } from '@/stores/cached'
 import { clearListener, initListener, readCountQueue } from '@/utils/ReadCountQueue'
 import { useSettingStore } from '@/stores/setting'
 
-const loadingPercentage = ref(0)
+const loadingPercentage = ref(10)
 const loadingText = ref('正在加载应用...')
 
 // 修改异步组件的加载配置
@@ -65,6 +65,7 @@ const AsyncLeft = defineAsyncComponent({
 
 const AsyncCenter = defineAsyncComponent({
   loader: async () => {
+    await import('./left/index.vue')
     loadingText.value = '正在加载中间面板...'
     const comp = await import('./center/index.vue')
     loadingPercentage.value = 66
@@ -76,6 +77,7 @@ const AsyncCenter = defineAsyncComponent({
 
 const AsyncRight = defineAsyncComponent({
   loader: async () => {
+    await import('./center/index.vue')
     loadingText.value = '正在加载右侧面板...'
     const comp = await import('./right/index.vue')
     loadingPercentage.value = 100
