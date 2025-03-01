@@ -18,7 +18,7 @@ export default {
   markMsg: `${prefix + URLEnum.CHAT}/msg/mark`, // 消息标记
   blockUser: `${prefix + URLEnum.USER}/black`, // 拉黑用户
   recallMsg: `${prefix + URLEnum.CHAT}/msg/recall`, // 撤回消息
-  fileUpload: `${prefix + URLEnum.OSS}/upload/url`, // 文件上传
+  fileUpload: `${prefix + URLEnum.SYSTEM + URLEnum.OSS}/upload/url`, // 文件上传
   addEmoji: `${prefix + URLEnum.USER}/emoji`, // 增加表情
   deleteEmoji: `${prefix + URLEnum.USER}/emoji`, // 删除表情
   getEmoji: `${prefix + URLEnum.USER}/emoji/list`, // 查询表情包
