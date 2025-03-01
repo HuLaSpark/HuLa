@@ -160,7 +160,11 @@ const finishLoading = () => {
   loadingText.value = '确定'
 }
 
-defineExpose({
+// 定义组件实例类型
+export interface AvatarCropperInstance {
+  finishLoading: () => void
+}
+defineExpose<AvatarCropperInstance>({
   finishLoading
 })
 

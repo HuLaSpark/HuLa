@@ -96,7 +96,7 @@
           </div>
 
           <!-- 消息为系统消息时 -->
-          <div v-if="item.message.type === MsgEnum.SYSTEM">
+          <div v-else-if="item.message.type === MsgEnum.SYSTEM">
             <p class="text-(12px #909090) select-none cursor-default">
               {{ item.message.body }}
             </p>
@@ -318,7 +318,7 @@
                   :size="6"
                   v-if="item.message.body.reply"
                   @click="jumpToReplyMsg(item.message.body.reply.id)"
-                  class="reply-bubble relative w-fit custom-shadow">
+                  class="reply-bubble relative max-w-86% w-fit custom-shadow">
                   <svg class="size-14px">
                     <use href="#to-top"></use>
                   </svg>

@@ -149,6 +149,7 @@ import { formatTimestamp, isDiffNow } from '@/utils/ComputedTime.ts'
 import dayjs from 'dayjs'
 import { useTauriListener } from '@/hooks/useTauriListener'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import type { AvatarCropperInstance } from '@/components/common/AvatarCropper.vue'
 
 const appWindow = WebviewWindow.getCurrent()
 let localUserInfo = ref<Partial<UserInfoType>>({})
@@ -161,7 +162,7 @@ const { countGraphemes } = useCommon()
 const showCropper = ref(false)
 const fileInput = ref<HTMLInputElement>()
 const localImageUrl = ref('')
-const cropperRef = useTemplateRef('cropperRef')
+const cropperRef = useTemplateRef<AvatarCropperInstance>('cropperRef')
 
 // 监听裁剪窗口的关闭
 watch(

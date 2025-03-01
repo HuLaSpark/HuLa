@@ -26,13 +26,30 @@ import { useUserStore } from '@/stores/user.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { confirm } from '@tauri-apps/plugin-dialog'
+import apis from '@/services/apis'
+import { useLogin } from '@/hooks/useLogin'
 
+const { logout, resetLoginState } = useLogin()
 const formRef = ref<FormInst | null>()
 const formValue = ref({
   lockPassword: ''
 })
+export const modalShow = ref(false)
+export const remotelogin = ref({
+  loading: false,
+  async logout() {
+    remotelogin.value.loading = true
+    const settingStore = useSettingStore()
+    const { login } = storeToRefs(settingStore)
+    // token已在后端清空，只需要返回登录页
+    await apis.logout(login.value.autoLogin)
+    await resetLoginState()
+    await logout()
+    modalShow.value = false
+    remotelogin.value.loading = false
+  }
+})
 export const lock = ref({
-  modalShow: false,
   loading: false,
   rules: {
     lockPassword: {
@@ -53,7 +70,7 @@ export const lock = ref({
         /** 发送锁屏事件，当打开的窗口接受到后会自动锁屏 */
         await emit(EventEnum.LOCK_SCREEN)
         lock.value.loading = false
-        lock.value.modalShow = false
+        modalShow.value = false
         formValue.value.lockPassword = ''
       }, 1000)
     })
@@ -66,18 +83,18 @@ export const lock = ref({
 export const LockScreen = defineComponent(() => {
   const userStore = useUserStore()
   return () => (
-    <NModal v-model:show={lock.value.modalShow} maskClosable={false} class="w-350px border-rd-8px">
+    <NModal v-model:show={modalShow.value} maskClosable={false} class="w-350px border-rd-8px">
       <div class="bg-[--bg-popover] w-360px h-full p-6px box-border flex flex-col">
         {type() === 'macos' ? (
           <div
-            onClick={() => (lock.value.modalShow = false)}
+            onClick={() => (modalShow.value = false)}
             class="mac-close relative size-13px shadow-inner bg-#ed6a5eff rounded-50% select-none">
             <svg class="hidden size-7px color-#000 font-bold select-none absolute top-3px left-3px">
               <use href="#close"></use>
             </svg>
           </div>
         ) : (
-          <svg onClick={() => (lock.value.modalShow = false)} class="w-12px h-12px ml-a cursor-pointer select-none">
+          <svg onClick={() => (modalShow.value = false)} class="w-12px h-12px ml-a cursor-pointer select-none">
             <use href="#close"></use>
           </svg>
         )}
@@ -285,18 +302,18 @@ export const CheckUpdate = defineComponent(() => {
     await checkUpdate()
   })
   return () => (
-    <NModal v-model:show={lock.value.modalShow} maskClosable={false} class="w-350px border-rd-8px">
+    <NModal v-model:show={modalShow.value} maskClosable={false} class="w-350px border-rd-8px">
       <div class="bg-[--bg-popover] w-500px h-full p-6px box-border flex flex-col">
         {type() === 'macos' ? (
           <div
-            onClick={() => (lock.value.modalShow = false)}
+            onClick={() => (modalShow.value = false)}
             class="mac-close relative size-13px shadow-inner bg-#ed6a5eff rounded-50% select-none">
             <svg class="hidden size-7px color-#000 font-bold select-none absolute top-3px left-3px">
               <use href="#close"></use>
             </svg>
           </div>
         ) : (
-          <svg onClick={() => (lock.value.modalShow = false)} class="w-12px h-12px ml-a cursor-pointer select-none">
+          <svg onClick={() => (modalShow.value = false)} class="w-12px h-12px ml-a cursor-pointer select-none">
             <use href="#close"></use>
           </svg>
         )}
@@ -420,4 +437,69 @@ export const CheckUpdate = defineComponent(() => {
       </div>
     </NModal>
   )
+})
+
+/**
+ * 异地登录弹窗
+ */
+export const RemoteLogin = defineComponent({
+  props: {
+    ip: {
+      type: String,
+      default: '未知IP'
+    }
+  },
+  setup(props) {
+    const userStore = useUserStore()
+    return () => (
+      <NModal
+        v-model:show={modalShow.value}
+        maskClosable={false}
+        class="w-350px border-rd-8px select-none cursor-default">
+        <div class="bg-[--bg-popover] w-360px h-full p-6px box-border flex flex-col">
+          {type() === 'macos' ? (
+            <div
+              onClick={remotelogin.value.logout}
+              class="mac-close relative size-13px shadow-inner bg-#ed6a5eff rounded-50% select-none">
+              <svg class="hidden size-7px color-#000 font-bold select-none absolute top-3px left-3px">
+                <use href="#close"></use>
+              </svg>
+            </div>
+          ) : (
+            <svg onClick={remotelogin.value.logout} class="w-12px h-12px ml-a cursor-pointer select-none">
+              <use href="#close"></use>
+            </svg>
+          )}
+          <div class="flex flex-col gap-10px p-10px select-none">
+            <NFlex vertical align="center" size={30}>
+              <span class="text-(14px [--text-color])">下线通知</span>
+
+              <div class="relative">
+                <img class="rounded-full size-72px" src={AvatarUtils.getAvatarUrl(userStore.userInfo.avatar!)} />
+                <div class="absolute inset-0 bg-[--avatar-hover-bg] backdrop-blur-[2px] rounded-full flex items-center justify-center">
+                  <svg class="size-34px text-white animate-pulse">
+                    <use href="#cloudError"></use>
+                  </svg>
+                </div>
+              </div>
+
+              <div class="text-(13px centent [--text-color]) px-12px leading-loose mb-20px">
+                您的账号在其他设备 <span class="text-#13987f">{props.ip}</span>{' '}
+                登录，如非本人登录，请尽快修改密码，建议联系管理员
+              </div>
+            </NFlex>
+            <NButton
+              disabled={remotelogin.value.loading}
+              loading={remotelogin.value.loading}
+              onClick={remotelogin.value.logout}
+              style={{ color: '#fff' }}
+              class="w-full"
+              color="#13987f">
+              重新登录
+            </NButton>
+          </div>
+        </div>
+      </NModal>
+    )
+  }
 })

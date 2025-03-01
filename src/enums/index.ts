@@ -287,7 +287,9 @@ export enum ModalEnum {
   /** 锁屏弹窗 */
   LOCK_SCREEN,
   /** 检查更新弹窗 */
-  CHECK_UPDATE
+  CHECK_UPDATE,
+  /** 异地登录弹窗 */
+  REMOTE_LOGIN
 }
 
 /** MacOS键盘映射 */

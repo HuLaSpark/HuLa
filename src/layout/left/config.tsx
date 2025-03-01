@@ -64,14 +64,18 @@ const moreList = ref<OPT.L.MoreList[]>([
     label: '检查更新',
     icon: 'arrow-circle-up',
     click: () => {
-      useMitt.emit(MittEnum.LEFT_MODAL_SHOW, ModalEnum.CHECK_UPDATE)
+      useMitt.emit(MittEnum.LEFT_MODAL_SHOW, {
+        type: ModalEnum.CHECK_UPDATE
+      })
     }
   },
   {
     label: '锁定屏幕',
     icon: 'lock',
     click: () => {
-      useMitt.emit(MittEnum.LEFT_MODAL_SHOW, ModalEnum.LOCK_SCREEN)
+      useMitt.emit(MittEnum.LEFT_MODAL_SHOW, {
+        type: ModalEnum.LOCK_SCREEN
+      })
     }
   },
   {

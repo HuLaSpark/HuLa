@@ -160,7 +160,7 @@ onMounted(() => {
     // 获取用户详情
     userStore.getUserDetailAction()
     // 自己更新自己上线
-    groupStore.batchUpdateUserStatus([
+    await groupStore.batchUpdateUserStatus([
       {
         activeStatus: OnlineEnum.ONLINE,
         avatar: rest.avatar,

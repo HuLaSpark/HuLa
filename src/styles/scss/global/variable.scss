@@ -103,6 +103,8 @@ svg {
   --danger-bg: #f6dfe3;
   // 头像边框颜色
   --avatar-border-color: #fff;
+  // hover头像样式
+  --avatar-hover-bg: rgba(255, 255, 255, 0.1);
   // 插件背景颜色
   --plugin-bg-color: #eee;
   // 列表悬浮的颜色
@@ -193,6 +195,8 @@ html[data-theme='dark'] {
   --danger-bg: #37292c;
    // 头像边框颜色
   --avatar-border-color: #1b1b1b;
+  // hover头像样式
+  --avatar-hover-bg: rgba(30, 30, 30, 0.6);
   // 插件背景颜色
   --plugin-bg-color: #3b3b3b;
   // 列表悬浮的颜色

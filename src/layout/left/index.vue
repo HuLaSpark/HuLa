@@ -11,7 +11,7 @@
       <InfoEdit />
 
       <!-- 弹出框 -->
-      <component :is="componentMap" />
+      <component :is="componentMap" v-bind="componentProps" />
     </main>
   </div>
 </template>
@@ -20,22 +20,27 @@ import LeftAvatar from './components/LeftAvatar.vue'
 import ActionList from './components/ActionList.vue'
 import InfoEdit from './components/InfoEdit.vue'
 import { useMitt } from '@/hooks/useMitt.ts'
-import { lock, LockScreen, CheckUpdate } from './model.tsx'
+import { modalShow, LockScreen, CheckUpdate, RemoteLogin } from './model.tsx'
 import type { Component } from 'vue'
 import { MittEnum, ModalEnum } from '@/enums'
 
 const componentMap = shallowRef<Component>()
+// 存储要传递给组件的props
+const componentProps = shallowRef<Record<string, any>>({})
 /** 弹窗组件内容映射 */
 const componentMapping: Record<number, Component> = {
   [ModalEnum.LOCK_SCREEN]: LockScreen,
-  [ModalEnum.CHECK_UPDATE]: CheckUpdate
+  [ModalEnum.CHECK_UPDATE]: CheckUpdate,
+  [ModalEnum.REMOTE_LOGIN]: RemoteLogin
 }
 
 onMounted(() => {
-  useMitt.on(MittEnum.LEFT_MODAL_SHOW, (event) => {
-    componentMap.value = componentMapping[event as ModalEnum]
+  useMitt.on(MittEnum.LEFT_MODAL_SHOW, (event: { type: ModalEnum; props?: Record<string, any> }) => {
+    componentMap.value = componentMapping[event.type]
+    // 保存传入的props
+    componentProps.value = event.props || {}
     nextTick(() => {
-      lock.value.modalShow = true
+      modalShow.value = true
     })
   })
 })

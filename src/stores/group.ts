@@ -149,7 +149,7 @@ export const useGroupStore = defineStore('group', () => {
    * 批量更新用户在线状态
    * @param items 需要更新状态的用户列表
    */
-  const batchUpdateUserStatus = (items: UserItem[]) => {
+  const batchUpdateUserStatus = async (items: UserItem[]) => {
     for (const curUser of items) {
       const findIndex = userList.value.findIndex((item) => item.uid === curUser.uid)
       userList.value[findIndex] = {

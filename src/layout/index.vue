@@ -27,8 +27,8 @@
 <script setup lang="ts">
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useMitt } from '@/hooks/useMitt.ts'
-import { ChangeTypeEnum, MittEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { ChangeTypeEnum, MittEnum, ModalEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
+import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGroupStore } from '@/stores/group'
@@ -36,17 +36,13 @@ import { useUserStore } from '@/stores/user'
 import { useChatStore } from '@/stores/chat'
 import { LoginSuccessResType, OnStatusChangeType, WsResponseMessageType, WsTokenExpire } from '@/services/wsType.ts'
 import type { MarkItemType, MessageType, RevokedMsgType } from '@/services/types.ts'
-import { useLogin } from '@/hooks/useLogin.ts'
 import { computedToken } from '@/services/request'
 import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { emitTo } from '@tauri-apps/api/event'
 import { useThrottleFn } from '@vueuse/core'
-import apis from '@/services/apis.ts'
-import { confirm } from '@tauri-apps/plugin-dialog'
 import { useCachedStore } from '@/stores/cached'
 import { clearListener, initListener, readCountQueue } from '@/utils/ReadCountQueue'
-import { useSettingStore } from '@/stores/setting'
 
 const loadingPercentage = ref(10)
 const loadingText = ref('正在加载应用...')
@@ -93,9 +89,6 @@ const groupStore = useGroupStore()
 const userStore = useUserStore()
 const chatStore = useChatStore()
 const cachedStore = useCachedStore()
-const { logout, resetLoginState } = useLogin()
-const settingStore = useSettingStore()
-const { login } = storeToRefs(settingStore)
 // 清空未读消息
 // globalStore.unReadMark.newMsgUnreadCount = 0
 const shrinkStatus = ref(false)
@@ -121,13 +114,13 @@ useMitt.on(MittEnum.SHRINK_WINDOW, (event: boolean) => {
   shrinkStatus.value = event
 })
 
-useMitt.on(WsResponseMessageType.LOGIN_SUCCESS, (data: LoginSuccessResType) => {
+useMitt.on(WsResponseMessageType.LOGIN_SUCCESS, async (data: LoginSuccessResType) => {
   const { ...rest } = data
   // 更新一下请求里面的 token.
   computedToken.clear()
   computedToken.get()
   // 自己更新自己上线
-  groupStore.batchUpdateUserStatus([
+  await groupStore.batchUpdateUserStatus([
     {
       activeStatus: OnlineEnum.ONLINE,
       avatar: rest.avatar,
@@ -148,18 +141,24 @@ useMitt.on(WsResponseMessageType.ONLINE, async (onStatusChangeType: OnStatusChan
   console.log('收到用户上线通知')
   groupStore.countInfo.onlineNum = onStatusChangeType.onlineNum
   // groupStore.countInfo.totalNum = onStatusChangeType.totalNum
-  groupStore.batchUpdateUserStatus(onStatusChangeType.changeList)
+  await groupStore.batchUpdateUserStatus(onStatusChangeType.changeList)
   await groupStore.refreshGroupMembers()
 })
 useMitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExpire) => {
-  console.log('账号在其他设备登录', wsTokenExpire)
-  if (userStore.userInfo.uid === wsTokenExpire.uid && userStore.userInfo.client === wsTokenExpire.client) {
-    // TODO: 换成web的弹出框
-    await confirm('账号在其他设备' + (wsTokenExpire.ip ? wsTokenExpire.ip : '未知IP') + '登录')
-    // token已在后端清空，只需要返回登录页
-    await apis.logout(login.value.autoLogin)
-    await resetLoginState()
-    await logout()
+  if (
+    Number(userStore.userInfo.uid) === Number(wsTokenExpire.uid) &&
+    userStore.userInfo.client === wsTokenExpire.client
+  ) {
+    // 聚焦主窗口
+    const home = await WebviewWindow.getByLabel('home')
+    await home?.setFocus()
+    console.log('账号在其他设备登录', wsTokenExpire)
+    useMitt.emit(MittEnum.LEFT_MODAL_SHOW, {
+      type: ModalEnum.REMOTE_LOGIN,
+      props: {
+        ip: wsTokenExpire.ip
+      }
+    })
   }
 })
 useMitt.on(WsResponseMessageType.INVALID_USER, (param: { uid: string }) => {
