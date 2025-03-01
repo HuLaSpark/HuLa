@@ -1,5 +1,13 @@
 # Changelog
 
+## <small>2.6.6 (2025-03-01)</small>
+
+* fix(global): :bug: 修复一些内容的类型问题 ([2c16343](https://github.com/HuLaSpark/HuLa/commit/2c16343))
+* fix(service): :bug: 修复oss接口配置问题 ([5e2f6e4](https://github.com/HuLaSpark/HuLa/commit/5e2f6e4))
+* perf(component): :zap: 优化一些功能的操作体验和样式 ([31c1709](https://github.com/HuLaSpark/HuLa/commit/31c1709))
+* perf(service): :zap: 优化http模块 ([801ec4e](https://github.com/HuLaSpark/HuLa/commit/801ec4e))
+* feat(component): :sparkles: 增加预加载页面样式 ([90f108a](https://github.com/HuLaSpark/HuLa/commit/90f108a))
+
 ## <small>2.6.5 (2025-02-27)</small>
 
 * fix(common): :bug: 修复登出账号时没有清空系统托盘图标上的未读数(MacOS) ([383a776](https://github.com/HuLaSpark/HuLa/commit/383a776))
