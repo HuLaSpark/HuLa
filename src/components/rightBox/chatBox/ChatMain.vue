@@ -318,7 +318,7 @@
                   :size="6"
                   v-if="item.message.body.reply"
                   @click="jumpToReplyMsg(item.message.body.reply.id)"
-                  class="reply-bubble relative max-w-86% w-fit custom-shadow">
+                  class="reply-bubble relative w-fit custom-shadow">
                   <svg class="size-14px">
                     <use href="#to-top"></use>
                   </svg>
