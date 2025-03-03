@@ -170,10 +170,14 @@ import { useMitt } from '@/hooks/useMitt'
 import { WsResponseMessageType } from '@/services/wsType'
 import { useNetwork } from '@vueuse/core'
 import { useUserStatusStore } from '@/stores/userStatus'
+import { clearListener } from '@/utils/ReadCountQueue'
+import { useGlobalStore } from '@/stores/global'
 
 const settingStore = useSettingStore()
 const userStore = useUserStore()
 const userStatusStore = useUserStatusStore()
+const globalStore = useGlobalStore()
+const { isTrayMenuShow } = storeToRefs(globalStore)
 const { stateId } = storeToRefs(userStatusStore)
 /** 网络连接是否正常 */
 const { isOnline } = useNetwork()
@@ -279,7 +283,7 @@ const normalLogin = async (auto = false) => {
     await new Promise((resolve) => setTimeout(resolve, 1200))
 
     try {
-      // 获取用户详情
+      // 直接获取用户详情，如果token过期会自动续签，如果续签失败就回到登录页面
       const userDetail = await apis.getUserDetail()
       // 设置用户状态id
       stateId.value = userDetail.userStateId
@@ -289,6 +293,7 @@ const normalLogin = async (auto = false) => {
       userStore.userInfo = account
       loginHistoriesStore.addLoginHistory(account)
 
+      loginText.value = '登录成功正在跳转...'
       await setLoginState()
       await openHomeWindow()
       loading.value = false
@@ -298,6 +303,7 @@ const normalLogin = async (auto = false) => {
       isAutoLogin.value = false
       loginDisabled.value = true
     }
+    return
   }
 
   apis
@@ -384,6 +390,14 @@ const enterKey = (e: KeyboardEvent) => {
 onBeforeMount(async () => {
   const token = localStorage.getItem('TOKEN')
   const refreshToken = localStorage.getItem('REFRESH_TOKEN')
+
+  if (!login.value.autoLogin) {
+    localStorage.removeItem('TOKEN')
+    localStorage.removeItem('REFRESH_TOKEN')
+    clearListener()
+    isTrayMenuShow.value = false
+    return
+  }
 
   // 只有在非自动登录的情况下才验证token并直接打开主窗口
   if (token && refreshToken && !login.value.autoLogin) {

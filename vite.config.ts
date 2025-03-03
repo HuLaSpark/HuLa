@@ -39,7 +39,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
        * vue3.5.0已支持解构并具有响应式
        * */
       vue(),
-      VueSetupExtend(),
+      VueSetupExtend(), // setup 中给组件命名(keepAlive需要)
       vueJsx(), // 开启jsx功能
       UnoCSS(), // 开启UnoCSS
       AutoImport({
