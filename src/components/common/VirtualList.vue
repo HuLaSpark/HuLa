@@ -352,6 +352,7 @@ defineExpose<VirtualListExpose>({
   background-color: rgba(144, 144, 144, 0.3);
   border-radius: 3px;
   transition: background-color 0.3s;
+  min-height: 75px;
 }
 
 .virtual-list-container::-webkit-scrollbar-thumb:hover {

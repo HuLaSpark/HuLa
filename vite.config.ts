@@ -8,6 +8,7 @@ import vueJsx from '@vitejs/plugin-vue-jsx'
 import UnoCSS from '@unocss/vite'
 import terser from '@rollup/plugin-terser'
 import { codecovVitePlugin } from '@codecov/vite-plugin'
+import VueSetupExtend from 'vite-plugin-vue-setup-extend'
 
 // https://vitejs.dev/config/
 /**! 不需要优化前端打包(如开启gzip) */
@@ -38,6 +39,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
        * vue3.5.0已支持解构并具有响应式
        * */
       vue(),
+      VueSetupExtend(),
       vueJsx(), // 开启jsx功能
       UnoCSS(), // 开启UnoCSS
       AutoImport({

@@ -139,10 +139,13 @@ useMitt.on(WsResponseMessageType.OFFLINE, async () => {
 })
 useMitt.on(WsResponseMessageType.ONLINE, async (onStatusChangeType: OnStatusChangeType) => {
   console.log('收到用户上线通知')
-  groupStore.countInfo.onlineNum = onStatusChangeType.onlineNum
-  // groupStore.countInfo.totalNum = onStatusChangeType.totalNum
-  await groupStore.batchUpdateUserStatus(onStatusChangeType.changeList)
-  await groupStore.refreshGroupMembers()
+  if (onStatusChangeType && onStatusChangeType.onlineNum) {
+    groupStore.countInfo.onlineNum = onStatusChangeType.onlineNum
+  }
+  if (onStatusChangeType && onStatusChangeType.changeList) {
+    await groupStore.batchUpdateUserStatus(onStatusChangeType.changeList)
+    await groupStore.refreshGroupMembers()
+  }
 })
 useMitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExpire) => {
   if (

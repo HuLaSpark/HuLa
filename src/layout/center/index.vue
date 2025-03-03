@@ -72,7 +72,11 @@
 
     <!-- 列表 -->
     <div id="centerList" class="h-full" :class="{ 'shadow-inner': page.shadow }">
-      <router-view />
+      <router-view v-slot="{ Component }">
+        <keep-alive :include="['message', 'friendsList']">
+          <component :is="Component" />
+        </keep-alive>
+      </router-view>
     </div>
 
     <!-- 创建群聊穿梭框 -->

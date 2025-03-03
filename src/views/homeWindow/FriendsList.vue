@@ -95,7 +95,7 @@
     </n-tab-pane>
   </n-tabs>
 </template>
-<script setup lang="ts">
+<script setup lang="ts" name="friendsList">
 import { useMitt } from '@/hooks/useMitt.ts'
 import { MittEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
 import { useContactStore } from '@/stores/contacts.ts'

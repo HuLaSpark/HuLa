@@ -28,6 +28,11 @@ let isFirstInit = false
 // 撤回消息的过期时间
 const RECALL_EXPIRATION_TIME = 2 * 60 * 1000 // 2分钟，单位毫秒
 
+// 定义消息数量阈值
+const MESSAGE_THRESHOLD = 120
+// 定义保留的最新消息数量
+const KEEP_MESSAGE_COUNT = 60
+
 // 创建src/workers/timer.worker.ts
 const timerWorker = new Worker(new URL('../workers/timer.worker.ts', import.meta.url))
 
@@ -322,8 +327,17 @@ export const useChatStore = defineStore(
     // 推送消息
     const pushMsg = async (msg: MessageType) => {
       const current = messageMap.get(msg.message.roomId)
-      // TODO 超过五分钟发送信息的时候没有显示时间差的时间戳 (nyh -> 2024-05-21 00:17:15)
       current?.set(msg.message.id, msg)
+
+      // 检查消息数量是否超过阈值
+      if (current && current.size > MESSAGE_THRESHOLD) {
+        // 获取所有消息ID并按时间排序
+        const messageIds = Array.from(current.keys())
+        const messagesToDelete = messageIds.slice(0, messageIds.length - KEEP_MESSAGE_COUNT)
+
+        // 删除旧消息
+        messagesToDelete.forEach((id) => current.delete(id))
+      }
 
       // 获取用户信息缓存
       const uid = msg.fromUser.uid

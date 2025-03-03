@@ -88,7 +88,7 @@
     </n-result>
   </n-scrollbar>
 </template>
-<script lang="ts" setup>
+<script lang="ts" setup name="message">
 import { useMessage } from '@/hooks/useMessage.ts'
 import { MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import { IsAllUserEnum, SessionItem } from '@/services/types.ts'
@@ -113,7 +113,7 @@ const globalStore = useGlobalStore()
 const groupStore = useGroupStore()
 const { userUid, openMsgSession } = useCommon()
 const userStore = useUserStore()
-const msgScrollbar = useTemplateRef('msg-scrollbar')
+const msgScrollbar = useTemplateRef<HTMLElement>('msg-scrollbar')
 const { handleMsgClick, handleMsgDelete, menuList, specialMenuList, handleMsgDblclick } = useMessage()
 const currentSession = computed(() => globalStore.currentSession)
 // TODO 艾特我提醒

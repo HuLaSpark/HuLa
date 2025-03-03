@@ -40,7 +40,7 @@ export default {
   sessionDetail: `${prefix + URLEnum.CHAT}/contact/detail`, // 会话详情
   sessionDetailWithFriends: `${prefix + URLEnum.CHAT}/contact/detail/friend`, // 会话详情(联系人列表发消息用)
   setSessionTop: `${prefix + URLEnum.CHAT}/setTop`, // 设置会话置顶
-  deleteSession: `${prefix + URLEnum.CHAT}/hide`, // 删除会话
+  deleteSession: `${prefix + URLEnum.CHAT}/delete`, // 删除会话
 
   // -------------- 群聊相关 ---------------
   createGroup: `${prefix + URLEnum.ROOM}/group`, // 新增群组

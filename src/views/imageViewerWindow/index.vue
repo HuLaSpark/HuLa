@@ -131,7 +131,7 @@ const dragStart = reactive({ x: 0, y: 0 })
 const imagePosition = reactive({ x: 0, y: 0 })
 const imageRef = ref<HTMLImageElement>()
 // 添加响应式变量来跟踪是否有滚动条
-const contentScrollbar = useTemplateRef('contentRef')
+const contentScrollbar = useTemplateRef<HTMLElement>('contentRef')
 const isScrollbar = ref(false)
 //提示相关的响应式变量
 const showTip = ref(false)
