@@ -287,7 +287,7 @@ const userStatusStore = useUserStatusStore()
 const { stateList } = storeToRefs(userStatusStore)
 
 const getUserState = (stateId: string) => {
-  return stateList.value.find((state) => state.id === stateId)
+  return stateList.value.find((state: { id: string }) => state.id === stateId)
 }
 
 onMounted(async () => {

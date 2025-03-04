@@ -4,10 +4,11 @@ import { useGlobalStore } from '@/stores/global'
 import type { ContactItem, GroupListReq, RequestFriendItem } from '@/services/types'
 import { RequestFriendAgreeStatus } from '@/services/types'
 import { listen, emit } from '@tauri-apps/api/event'
+import { StoresEnum } from '@/enums'
 
 // 定义分页大小常量
 export const pageSize = 20
-export const useContactStore = defineStore('contact', () => {
+export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
   const globalStore = useGlobalStore()
 
   /** 联系人列表 */

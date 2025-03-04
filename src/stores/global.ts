@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { RoomTypeEnum } from '@/enums'
+import { RoomTypeEnum, StoresEnum } from '@/enums'
 import { useChatStore } from '@/stores/chat'
 import type { ContactItem, RequestFriendItem } from '@/services/types'
 import { clearQueue, readCountQueue } from '@/utils/ReadCountQueue.ts'
@@ -7,7 +7,7 @@ import apis from '@/services/apis'
 import { invoke } from '@tauri-apps/api/core'
 
 export const useGlobalStore = defineStore(
-  'global',
+  StoresEnum.GLOBAL,
   () => {
     const chatStore = useChatStore()
 

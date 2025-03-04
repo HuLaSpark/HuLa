@@ -501,6 +501,28 @@ export type AIModel = {
   avatar: string
 }
 
+/** 登录 */
+export type Login = {
+  /** token */
+  token: string
+  /** 刷新token */
+  refreshToken: string
+  /** 客户端 */
+  client: string
+}
+
+/** 用户状态 */
+export type UserState = {
+  /** id */
+  id: string
+  /** 标题 */
+  title: string
+  /** 链接 */
+  url: string
+  /** 背景颜色 */
+  bgColor?: string
+}
+
 /* ======================================================== */
 /**! 模拟信息数据的类型 */
 export type MockItem = {

@@ -13,10 +13,10 @@ export const useUserStatusStore = defineStore(
     const stateId = ref<string>('1')
 
     const currentState = computed(() => {
-      const item = stateList.value.find((state) => state.id === stateId.value)
+      const item = stateList.value.find((state: { id: string }) => state.id === stateId.value)
 
       if (!item) {
-        const defaultItem = stateList.value.find((state) => state.id === '1')
+        const defaultItem = stateList.value.find((state: { id: string }) => state.id === '1')
         if (defaultItem) {
           const img = new Image()
           img.src = defaultItem.url

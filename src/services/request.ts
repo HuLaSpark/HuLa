@@ -3,7 +3,10 @@ import { ServiceResponse } from '@/services/types.ts'
 import { AppException } from '@/common/exception'
 import { ErrorType } from '@/common/exception'
 
-function getToken() {
+/**
+ * 获取 token 并更新
+ */
+export const computedToken = computed(() => {
   let tempToken = ''
   return {
     get() {
@@ -18,9 +21,7 @@ function getToken() {
       tempToken = ''
     }
   }
-}
-
-export const computedToken = getToken()
+})
 
 // fetch 请求响应拦截器
 const responseInterceptor = async <T>(

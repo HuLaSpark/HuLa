@@ -156,7 +156,7 @@ const statusIcon = computed(() => {
 
   // 如果在线且有特殊状态
   if (userStateId && userStateId !== '1') {
-    const state = stateList.value.find((s) => s.id === userStateId)
+    const state = stateList.value.find((s: { id: string }) => s.id === userStateId)
     if (state) {
       return state.url
     }
@@ -170,7 +170,7 @@ const currentStateTitle = computed(() => {
   const userStateId = userInfo.userStateId
 
   if (userStateId && userStateId !== '1') {
-    const state = stateList.value.find((s) => s.id === userStateId)
+    const state = stateList.value.find((s: { id: string }) => s.id === userStateId)
     if (state) {
       return state.title
     }

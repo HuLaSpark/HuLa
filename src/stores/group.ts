@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import { useGlobalStore } from '@/stores/global'
 import type { GroupDetailReq, UserItem } from '@/services/types'
 import { pageSize, useChatStore } from './chat'
-import { OnlineEnum, RoleEnum, RoomTypeEnum } from '@/enums'
+import { OnlineEnum, RoleEnum, RoomTypeEnum, StoresEnum } from '@/enums'
 import { uniqueUserList } from '@/utils/Unique.ts'
 import { useCachedStore } from '@/stores/cached'
 import { useUserStore } from '@/stores/user'
@@ -28,7 +28,7 @@ const sorAction = (pre: UserItem, next: UserItem) => {
   }
 }
 
-export const useGroupStore = defineStore('group', () => {
+export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
   // 初始化需要使用的store
   const cachedStore = useCachedStore()
   const globalStore = useGlobalStore()

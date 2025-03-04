@@ -176,7 +176,7 @@ const getUserState = (uid: string) => {
   const userStateId = userInfo.userStateId
 
   if (userStateId && userStateId !== '1') {
-    return stateList.value.find((state) => state.id === userStateId)
+    return stateList.value.find((state: { id: string }) => state.id === userStateId)
   }
   return null
 }

@@ -1,6 +1,7 @@
 /** pinia的store的命名空间 */
 declare namespace STO {
   import { ShowModeEnum, ThemeEnum } from '@/enums'
+  import { UserState } from '@/services/types'
   /**
    * 设置
    * @param themes 主题设置
@@ -82,9 +83,9 @@ declare namespace STO {
 
   /**
    * 用户状态
-   * @param API.UserState 通用在线状态
+   * @param {UserState} 通用在线状态
    */
-  type UserState = API.UserState
+  type UserState = UserState
 
   /**
    * 插件管理弹窗数据类型

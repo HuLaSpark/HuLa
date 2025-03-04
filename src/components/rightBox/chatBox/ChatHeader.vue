@@ -413,7 +413,7 @@ const currentUserStatus = computed(() => {
   const userInfo = useUserInfo(activeItem.id).value
 
   // 从状态列表中找到对应的状态
-  return userStatusStore.stateList.find((state) => state.id === userInfo.userStateId)
+  return userStatusStore.stateList.find((state: { id: string }) => state.id === userInfo.userStateId)
 })
 
 /** 状态图标 */

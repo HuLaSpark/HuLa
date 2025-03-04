@@ -2,8 +2,9 @@ import { defineStore } from 'pinia'
 import apis from '@/services/apis'
 import type { EmojiItem } from '@/services/types'
 import { useUserStore } from '@/stores/user'
+import { StoresEnum } from '@/enums'
 
-export const useEmojiStore = defineStore('emoji', () => {
+export const useEmojiStore = defineStore(StoresEnum.EMOJI, () => {
   const isLoading = ref(false) // 是否正在加载
   const userStore = useUserStore()
   const emojiList = ref<EmojiItem[]>([])

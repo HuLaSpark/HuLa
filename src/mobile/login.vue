@@ -140,9 +140,6 @@ const normalLogin = async () => {
       if (localStorage.getItem('wsLogin')) {
         localStorage.removeItem('wsLogin')
       }
-      // 更新一下请求里面的 token.
-      // computedToken.clear()
-      // computedToken.get()
       // 获取用户详情
       const userDetail = await apis.getUserDetail()
       // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取

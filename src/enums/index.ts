@@ -121,7 +121,21 @@ export enum StoresEnum {
   /** 图片查看器数据 */
   IMAGEVIEWER = 'imageViewer',
   /** 用户状态 */
-  USER_STATE = 'userState'
+  USER_STATE = 'userState',
+  /** 用户 */
+  USER = 'user',
+  /** 群组 */
+  GROUP = 'group',
+  /** 全局 */
+  GLOBAL = 'global',
+  /** 表情 */
+  EMOJI = 'emoji',
+  /** 联系人 */
+  CONTACTS = 'contacts',
+  /** 聊天 */
+  CHAT = 'chat',
+  /** 缓存 */
+  CACHED = 'cached'
 }
 
 /**

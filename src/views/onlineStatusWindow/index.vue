@@ -42,6 +42,7 @@ import { useUserStatusStore } from '@/stores/userStatus'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import apis from '@/services/apis.ts'
 import { useUserStore } from '@/stores/user'
+import { UserState } from '@/services/types'
 
 const userStatusStore = useUserStatusStore()
 const userStore = useUserStore()
@@ -55,9 +56,9 @@ watchEffect(() => {
 
 /**
  * 处理选中的状态
- * @param { API.UserState } item 状态
+ * @param { UserState } item 状态
  */
-const handleActive = async (item: API.UserState) => {
+const handleActive = async (item: UserState) => {
   try {
     await apis.changeUserState(item.id)
 
@@ -73,7 +74,8 @@ const handleActive = async (item: API.UserState) => {
 
 onMounted(async () => {
   await getCurrentWebviewWindow().show()
-  currentState.value.id = stateList.value.find((item) => item.title === currentState.value.title)?.id || '1'
+  currentState.value.id =
+    stateList.value.find((item: { title: string }) => item.title === currentState.value.title)?.id || '1'
 })
 </script>
 <style scoped lang="scss">

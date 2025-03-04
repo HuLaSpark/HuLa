@@ -4,11 +4,12 @@ import { useGlobalStore } from '@/stores/global'
 import type { CacheBadgeItem, CacheUserItem } from '@/services/types'
 import { isDiffNow10Min } from '@/utils/ComputedTime.ts'
 import { useDebounceFn } from '@vueuse/core'
+import { StoresEnum } from '@/enums'
 
 // 定义基础用户信息类型，只包含uid、头像和名称
 export type BaseUserItem = Pick<CacheUserItem, 'uid' | 'avatar' | 'name'>
 
-export const useCachedStore = defineStore('cached', () => {
+export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
   const globalStore = useGlobalStore()
   // 用户信息缓存列表，key为用户ID
   const userCachedList = reactive<Record<string, Partial<CacheUserItem>>>({})

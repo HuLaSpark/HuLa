@@ -21,7 +21,9 @@ import {
   RequestFriendItem,
   SessionItem,
   UserInfoType,
-  UserItem
+  UserItem,
+  UserState,
+  Login
 } from '@/services/types'
 
 import request from '@/services/request'
@@ -130,7 +132,7 @@ export default {
       roomId
     }),
   /** 账号密码登录 */
-  login: (user: LoginUserReq, abort?: AbortController) => POST<API.Login>(urls.login, user, abort),
+  login: (user: LoginUserReq, abort?: AbortController) => POST<Login>(urls.login, user, abort),
   /** 退出登录 */
   logout: (autoLogin: boolean) => POST<string>(urls.logout, { autoLogin }),
   /** 注册 */
@@ -138,7 +140,7 @@ export default {
   /** 检查token是否有效 */
   checkToken: () => POST<string>(urls.checkToken),
   /** 获取所有用户状态 */
-  getAllUserState: () => GET<API.UserState[]>(urls.getAllUserState),
+  getAllUserState: () => GET<UserState[]>(urls.getAllUserState),
   /** 用户状态改变 */
   changeUserState: (userStateId: string) => POST(`${urls.changeUserState}/${userStateId}`)
 }

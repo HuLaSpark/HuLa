@@ -154,9 +154,6 @@ onMounted(() => {
     userStore.userInfo = { ...userStore.userInfo, ...rest }
     localStorage.setItem('TOKEN', token)
     localStorage.removeItem('wsLogin')
-    // 更新一下请求里面的 token.
-    //computedToken.clear()
-    //computedToken.get()
     // 获取用户详情
     userStore.getUserDetailAction()
     // 自己更新自己上线

@@ -59,6 +59,7 @@ import { useGlobalStore } from '@/stores/global.ts'
 import { TrayIcon } from '@tauri-apps/api/tray'
 import { type } from '@tauri-apps/plugin-os'
 import { useTauriListener } from '@/hooks/useTauriListener'
+import { UserState } from '@/services/types'
 
 const appWindow = WebviewWindow.getCurrent()
 const { checkWinExist, createWebviewWindow } = useWindow()
@@ -88,7 +89,7 @@ const handleExit = () => {
   exit(0)
 }
 
-const toggleStatus = (item: API.UserState) => {
+const toggleStatus = (item: UserState) => {
   stateId.value = item.id
   appWindow.hide()
 }

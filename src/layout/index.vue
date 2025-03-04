@@ -117,8 +117,8 @@ useMitt.on(MittEnum.SHRINK_WINDOW, (event: boolean) => {
 useMitt.on(WsResponseMessageType.LOGIN_SUCCESS, async (data: LoginSuccessResType) => {
   const { ...rest } = data
   // 更新一下请求里面的 token.
-  computedToken.clear()
-  computedToken.get()
+  computedToken.value.clear()
+  computedToken.value.get()
   // 自己更新自己上线
   await groupStore.batchUpdateUserStatus([
     {

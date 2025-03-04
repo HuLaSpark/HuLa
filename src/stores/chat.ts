@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { useRoute } from 'vue-router'
 import apis from '@/services/apis'
 import type { MarkItemType, MessageType, RevokedMsgType, SessionItem } from '@/services/types'
-import { MarkEnum, MessageStatusEnum, MsgEnum, RoomTypeEnum } from '@/enums'
+import { MarkEnum, MessageStatusEnum, MsgEnum, RoomTypeEnum, StoresEnum } from '@/enums'
 import { computedTimeBlock } from '@/utils/ComputedTime.ts'
 import { useCachedStore } from '@/stores/cached.ts'
 import { useGlobalStore } from '@/stores/global.ts'
@@ -42,7 +42,7 @@ timerWorker.onerror = (error) => {
 }
 
 export const useChatStore = defineStore(
-  'chat',
+  StoresEnum.CHAT,
   () => {
     const route = useRoute()
     const cachedStore = useCachedStore()

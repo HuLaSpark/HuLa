@@ -319,9 +319,6 @@ const normalLogin = async (auto = false) => {
       if (localStorage.getItem('wsLogin')) {
         localStorage.removeItem('wsLogin')
       }
-      // 更新一下请求里面的 token.
-      // computedToken.clear()
-      // computedToken.get()
       // 获取用户状态列表
       if (userStatusStore.stateList.length === 0) {
         try {
