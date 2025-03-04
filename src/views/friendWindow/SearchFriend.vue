@@ -66,11 +66,23 @@
                     <n-flex vertical justify="center" :size="10" class="flex-1">
                       <n-space align="center" :size="10">
                         <span class="text-(14px [--text-color])">{{ item.name }}</span>
-                        <template v-for="id in item.itemIds" :key="id">
-                          <img class="size-20px" :src="useBadgeInfo(id).value.img" alt="" />
+                        <template v-for="accountCode in item.itemIds" :key="accountCode">
+                          <img class="size-20px" :src="useBadgeInfo(accountCode).value.img" alt="" />
                         </template>
                       </n-space>
-                      <span class="text-(12px [--chat-text-color])">{{ `账号：${item.uid}` }}</span>
+                      <n-flex align="center" :size="10">
+                        <span class="text-(12px [--chat-text-color])">{{ `账号：${item.accountCode}` }}</span>
+                        <n-tooltip trigger="hover">
+                          <template #trigger>
+                            <svg
+                              class="size-12px hover:color-#909090 hover:transition-colors"
+                              @click="handleCopy(item.accountCode)">
+                              <use href="#copy"></use>
+                            </svg>
+                          </template>
+                          <span>复制账号</span>
+                        </n-tooltip>
+                      </n-flex>
                     </n-flex>
 
                     <!-- 三种状态的按钮 -->
@@ -128,6 +140,7 @@ import { useContactStore } from '@/stores/contacts'
 import { ContactItem } from '@/services/types'
 import { useUserStore } from '@/stores/user'
 import { useGlobalStore } from '@/stores/global'
+import apis from '@/services/apis'
 
 const { createWebviewWindow } = useWindow()
 const cachedStore = useCachedStore()
@@ -146,8 +159,8 @@ const searchType = ref<'recommend' | 'user' | 'group'>('recommend')
 // 搜索类型对应的placeholder映射
 const searchPlaceholder = {
   recommend: '输入推荐关键词',
-  user: '输入昵称或账号搜索好友',
-  group: '输入群昵称或群号搜索群聊'
+  user: '输入昵称搜索好友',
+  group: '输入群号搜索群聊'
 }
 // 搜索值
 const searchValue = ref('')
@@ -164,6 +177,7 @@ const initialLoading = ref(true)
 const getCachedUsers = () => {
   // 从缓存中获取所有用户
   const users = Object.values(cachedStore.userCachedList)
+  console.log(users)
 
   // 筛选出需要显示的用户（ID在20016-20030之间的用户）
   return users
@@ -172,9 +186,9 @@ const getCachedUsers = () => {
       return uid >= '20016' && uid <= '20030'
     })
     .map((user) => ({
-      id: user.uid,
       uid: user.uid,
-      name: user.name || `用户${user.uid}`, // 如果没有名称就使用默认名称
+      accountCode: user.accountCode,
+      name: user.name,
       avatar: user.avatar,
       itemIds: user.itemIds || null
     }))
@@ -185,6 +199,12 @@ const clearSearchResults = () => {
   searchResults.value = []
   hasSearched.value = false
   searchValue.value = ''
+}
+
+// 处理复制账号
+const handleCopy = (accountCode: string) => {
+  navigator.clipboard.writeText(accountCode)
+  window.$message.success(`复制成功 ${accountCode}`)
 }
 
 // 处理清空按钮点击
@@ -211,24 +231,41 @@ const handleSearch = debounce(async () => {
   hasSearched.value = true
 
   try {
-    // 模拟搜索API调用
-    await new Promise((resolve) => setTimeout(resolve, 800))
-
-    const cachedUsers = getCachedUsers()
-
-    // 根据搜索类型和搜索值过滤结果
-    if (searchType.value === 'user' || searchType.value === 'recommend') {
+    if (searchType.value === 'group') {
+      // 调用群聊搜索接口
+      const res = await apis.searchGroup({ accountCode: searchValue.value })
+      searchResults.value = res.map((group) => ({
+        accountCode: group.accountCode,
+        name: group.name,
+        avatar: group.avatar,
+        deleteStatus: group.deleteStatus,
+        extJson: group.extJson,
+        roomId: group.roomId
+      }))
+    } else if (searchType.value === 'user') {
+      // 调用好友搜索接口
+      const res = await apis.searchFriend({ key: searchValue.value })
+      searchResults.value = res.map((user) => ({
+        uid: user.uid,
+        name: user.name,
+        avatar: user.avatar,
+        accountCode: user.accountCode
+      }))
+    } else {
+      // 推荐标签使用缓存搜索
+      const cachedUsers = getCachedUsers()
       searchResults.value = cachedUsers.filter(
-        (user) => user.name.includes(searchValue.value) || (user.uid && user.uid.toString().includes(searchValue.value))
+        (user) =>
+          user?.name?.includes(searchValue.value) || (user.uid && user.uid.toString().includes(searchValue.value))
       )
-    } else if (searchType.value === 'group') {
-      // 群聊搜索逻辑（示例）
-      searchResults.value = []
     }
+  } catch (error) {
+    window.$message.error('搜索失败')
+    searchResults.value = []
   } finally {
     loading.value = false
   }
-})
+}, 300)
 
 // 处理选项卡切换
 const handleTypeChange = () => {
@@ -270,18 +307,24 @@ const handleButtonClick = (item: any) => {
   } else if (isFriend(item.uid)) {
     handleSendMessage(item)
   } else {
-    handleAddFriend(item.uid)
+    handleAddFriend(item)
   }
 }
 
 // 处理添加好友或群聊
-const handleAddFriend = async (uid: string) => {
+const handleAddFriend = async (item: any) => {
   if (searchType.value === 'user' || searchType.value === 'recommend') {
     await createWebviewWindow('申请加好友', 'addFriendVerify', 380, 300, '', false, 380, 300)
     globalStore.addFriendModalInfo.show = true
-    globalStore.addFriendModalInfo.uid = uid
+    globalStore.addFriendModalInfo.uid = item.uid
   } else {
-    window.$message.info('加入群聊功能开发中')
+    await createWebviewWindow('申请加群', 'addGroupVerify', 380, 400, '', false, 380, 400)
+    console.log(item)
+
+    globalStore.addGroupModalInfo.show = true
+    globalStore.addGroupModalInfo.accountCode = item.accountCode
+    globalStore.addGroupModalInfo.name = item.name
+    globalStore.addGroupModalInfo.avatar = item.avatar
   }
 }
 

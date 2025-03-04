@@ -23,7 +23,9 @@ import {
   UserInfoType,
   UserItem,
   UserState,
-  Login
+  Login,
+  SearchFriend,
+  SearchGroup
 } from '@/services/types'
 
 import request from '@/services/request'
@@ -104,6 +106,12 @@ export default {
   groupList: (params: { current: number; size: number }) => GET<PageInfo<GroupListReq>>(urls.groupList, params),
   /** 会话详情 */
   sessionDetail: (params: { id: string }) => GET<SessionItem>(urls.sessionDetail, params),
+  /** 搜索群聊 */
+  searchGroup: (params: { accountCode: string }) => GET<SearchGroup[]>(urls.searchGroup, params),
+  /** 搜索好友 */
+  searchFriend: (params: { key: string }) => GET<SearchFriend[]>(urls.searchFriend, params),
+  /** 申请加群 */
+  applyGroup: (params: { targetGroupId: number; msg: string }) => POST(urls.applyGroup, params),
   /** 会话详情(联系人列表发消息用) */
   sessionDetailWithFriends: (params: { id: string; roomType: number }) =>
     GET<SessionItem>(urls.sessionDetailWithFriends, params),

@@ -136,6 +136,8 @@ export type CacheUserItem = {
   uid: string
   /** 用户状态 */
   userStateId: string
+  /** 账号 */
+  accountCode: string
 }
 
 export type UserItem = {
@@ -521,6 +523,34 @@ export type UserState = {
   url: string
   /** 背景颜色 */
   bgColor?: string
+}
+
+/** 搜索好友 */
+export type SearchFriend = {
+  /** 用户ID */
+  uid: string
+  /** 用户名 */
+  name: string
+  /** 头像 */
+  avatar: string
+  /** 账号 */
+  accountCode: string
+}
+
+/** 搜索群 */
+export type SearchGroup = {
+  /** 群ID */
+  roomId: string
+  /** 群名称 */
+  name: string
+  /** 头像 */
+  avatar: string
+  /** 账号 */
+  accountCode: string
+  /** 额外信息 */
+  extJson: string
+  /** 是否删除 */
+  deleteStatus: IsYesEnum
 }
 
 /* ======================================================== */

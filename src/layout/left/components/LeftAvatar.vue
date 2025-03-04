@@ -35,7 +35,7 @@
 
           <n-flex :size="10" class="text-[--text-color]" justify="center" vertical>
             <span class="text-18px">{{ userStore.userInfo.name }}</span>
-            <span class="text-(12px [--info-text-color])">账号 {{ userStore.userInfo.uid }}</span>
+            <span class="text-(12px [--info-text-color])">账号 {{ userStore.userInfo.accountCode }}</span>
             <n-flex
               :size="5"
               align="center"

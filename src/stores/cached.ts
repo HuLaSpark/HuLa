@@ -7,7 +7,7 @@ import { useDebounceFn } from '@vueuse/core'
 import { StoresEnum } from '@/enums'
 
 // 定义基础用户信息类型，只包含uid、头像和名称
-export type BaseUserItem = Pick<CacheUserItem, 'uid' | 'avatar' | 'name'>
+export type BaseUserItem = Pick<CacheUserItem, 'uid' | 'avatar' | 'name' | 'accountCode'>
 
 export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
   const globalStore = useGlobalStore()
@@ -34,7 +34,8 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
         return Object.values(userCachedList).map((user) => ({
           uid: user.uid,
           avatar: user.avatar,
-          name: user.name
+          name: user.name,
+          accountCode: user.accountCode
         })) as BaseUserItem[]
       }
       return atUsersMap[currentRoomId.value]
@@ -81,6 +82,7 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
         userCachedList[item.uid] = {
           ...(item?.needRefresh ? item : userCachedList[item.uid]),
           needRefresh: undefined,
+          accountCode: item.accountCode,
           lastModifyTime: Date.now()
         }
 
@@ -177,6 +179,7 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
         ...userCachedList[uid],
         userStateId,
         // 强制更新
+        accountCode: userCachedList[uid].accountCode,
         needRefresh: true,
         // 重置最后更新时间，确保能重新获取数据
         lastModifyTime: 0

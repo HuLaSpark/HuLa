@@ -11,18 +11,18 @@
     <p
       class="absolute-x-center h-fit pt-6px text-(13px [--text-color]) select-none cursor-default"
       data-tauri-drag-region>
-      申请加好友
+      申请加群
     </p>
 
     <!-- 内容区域 -->
     <div class="bg-[--bg-edit] w-380px h-full box-border flex flex-col">
       <n-flex vertical justify="center" :size="20" class="p-[55px_20px]" data-tauri-drag-region>
         <n-flex align="center" justify="center" :size="20" data-tauri-drag-region>
-          <n-avatar round size="large" :src="avatarSrc" />
+          <n-avatar round size="large" :src="userInfo.avatar" />
 
           <n-flex vertical :size="10">
             <p class="text-[--text-color]">{{ userInfo.name }}</p>
-            <p class="text-(12px [--text-color])">账号: {{ userInfo.uid }}</p>
+            <p class="text-(12px [--text-color])">群号: {{ userInfo.accountCode }}</p>
           </n-flex>
         </n-flex>
 
@@ -37,9 +37,9 @@
           :count-graphemes="countGraphemes"
           show-count
           type="textarea"
-          placeholder="输入几句话，对TA说些什么吧" />
+          placeholder="输入验证消息" />
 
-        <n-button color="#13987f" @click="addFriend">添加好友</n-button>
+        <n-button class="mt-120px" color="#13987f" @click="addFriend">申请加入</n-button>
       </n-flex>
     </div>
   </div>
@@ -47,35 +47,34 @@
 <script setup lang="ts">
 import { WebviewWindow, getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useGlobalStore } from '@/stores/global.ts'
-import { useUserInfo } from '@/hooks/useCached.ts'
 import apis from '@/services/apis.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useUserStore } from '@/stores/user.ts'
-import { AvatarUtils } from '@/utils/AvatarUtils'
 
 const globalStore = useGlobalStore()
 const userStore = useUserStore()
 const { countGraphemes } = useCommon()
-const userInfo = ref(useUserInfo(globalStore.addFriendModalInfo.uid).value)
-const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(userInfo.value.avatar as string))
+const userInfo = ref(globalStore.addGroupModalInfo)
 const requestMsg = ref()
 
 watch(
-  () => globalStore.addFriendModalInfo.uid,
+  () => globalStore.addGroupModalInfo,
   (newUid) => {
-    userInfo.value = useUserInfo(newUid).value
+    userInfo.value = { ...newUid }
   }
 )
 
 const addFriend = async () => {
-  await apis.sendAddFriendRequest({
+  await apis.applyGroup({
     msg: requestMsg.value,
-    targetUid: globalStore.addFriendModalInfo.uid as string
+    targetGroupId: Number(globalStore.addGroupModalInfo.accountCode)
   })
-  window.$message.success('已发送好友申请')
+  window.$message.success('已发送群聊申请')
 }
 
 onMounted(async () => {
+  console.log(userInfo.value)
+
   await getCurrentWebviewWindow().show()
   requestMsg.value = `我是 ${userStore.userInfo.name}`
 })

@@ -25,6 +25,7 @@ export default {
   uploadAvatar: `${prefix + URLEnum.USER}/avatar`, // 上传头像
   getAllUserState: `${prefix + URLEnum.USER}/state/list`, // 获取所有用户状态
   changeUserState: `${prefix + URLEnum.USER}/state/changeState`, // 用户状态改变
+  searchFriend: `${prefix + URLEnum.USER}/friend/search`, // 搜索好友
 
   // -------------- 好友相关 ---------------
   getContactList: `${prefix + URLEnum.USER}/friend/page`, // 联系人列表
@@ -52,16 +53,13 @@ export default {
   groupDetail: `${prefix + URLEnum.ROOM}/group`, // 群组详情
   groupList: `${prefix + URLEnum.ROOM}/group/list`, // 群聊列表
   updateRoomInfo: `${prefix + URLEnum.ROOM}/updateRoomInfo`, // 修改群信息
+  searchGroup: `${prefix + URLEnum.ROOM}/search`, // 搜索群聊
+  applyGroup: `${prefix + URLEnum.ROOM}/applyGroup`, // 申请加群
 
-  // token相关
-  // 注册
-  register: `${prefix + URLEnum.TOKEN}/register`,
-  // 登录
-  login: `${prefix + URLEnum.TOKEN}/login`,
-  // 续签
-  refreshToken: `${prefix + URLEnum.TOKEN}/refreshToken`,
-  // 退出登录
-  logout: `${prefix + URLEnum.TOKEN}/logout`,
-  // 检查token是否有效
-  checkToken: `${prefix + URLEnum.TOKEN}/check`
+  // -------------- token相关 ---------------
+  register: `${prefix + URLEnum.TOKEN}/register`, // 注册
+  login: `${prefix + URLEnum.TOKEN}/login`, // 登录
+  refreshToken: `${prefix + URLEnum.TOKEN}/refreshToken`, // 续签
+  logout: `${prefix + URLEnum.TOKEN}/logout`, // 退出登录
+  checkToken: `${prefix + URLEnum.TOKEN}/check` // 检查token是否有效
 }

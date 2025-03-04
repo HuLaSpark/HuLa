@@ -38,6 +38,14 @@ export const useGlobalStore = defineStore(
       uid: void 0
     })
 
+    // 添加群聊模态框信息
+    const addGroupModalInfo = ref<{ show: boolean; name?: string; avatar?: string; accountCode?: string }>({
+      show: false,
+      name: '',
+      avatar: '',
+      accountCode: ''
+    })
+
     // 创建群聊模态框信息
     const createGroupModalInfo = reactive<{
       show: boolean
@@ -87,6 +95,7 @@ export const useGlobalStore = defineStore(
       unReadMark,
       currentSession,
       addFriendModalInfo,
+      addGroupModalInfo,
       currentSelectedContact,
       currentReadUnreadList,
       createGroupModalInfo,

@@ -107,6 +107,11 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/friendWindow/AddFriendVerify.vue')
   },
   {
+    path: '/addGroupVerify',
+    name: 'addGroupVerify',
+    component: () => import('@/views/friendWindow/AddGroupVerify.vue')
+  },
+  {
     path: '/home',
     name: 'home',
     component: () => import('@/layout/index.vue'),
