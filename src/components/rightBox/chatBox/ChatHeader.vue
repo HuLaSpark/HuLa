@@ -98,7 +98,7 @@
           <div class="box-item flex-col-y-center">
             <div class="flex-between-center">
               <p>设为置顶</p>
-              <n-switch size="small" />
+              <n-switch size="small" :value="activeItem.top" @update:value="handleTop" />
             </div>
             <div class="h-1px bg-[--setting-item-line] m-[10px_0]"></div>
             <div class="flex-between-center">
@@ -173,8 +173,16 @@
           <div
             v-if="activeItem.hotFlag !== IsAllUserEnum.Yes"
             class="box-item flex-x-center cursor-pointer"
-            @click="handleDelete(RoomActEnum.EXIT_GROUP)">
-            <p class="color-#d03553">退出群聊</p>
+            @click="
+              handleDelete(
+                activeItem.operate === SessionOperateEnum.DISSOLUTION_GROUP
+                  ? RoomActEnum.DISSOLUTION_GROUP
+                  : RoomActEnum.EXIT_GROUP
+              )
+            ">
+            <p class="color-#d03553">
+              {{ activeItem.operate === SessionOperateEnum.DISSOLUTION_GROUP ? '解散群聊' : '退出群聊' }}
+            </p>
           </div>
 
           <p
@@ -228,9 +236,10 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { OnlineEnum } from '@/enums'
 import { useTauriListener } from '@/hooks/useTauriListener'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { RoomTypeEnum } from '@/enums'
+import { RoomTypeEnum, SessionOperateEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useUserStatusStore } from '@/stores/userStatus'
+import apis from '@/services/apis'
 
 const appWindow = WebviewWindow.getCurrent()
 const { activeItem } = defineProps<{
@@ -354,12 +363,28 @@ const handleMedia = () => {
   })
 }
 
+/** 置顶 */
+const handleTop = (value: boolean) => {
+  apis
+    .setSessionTop({ roomId: activeItem.roomId, top: value })
+    .then(() => {
+      // 更新本地会话状态
+      chatStore.updateSession(activeItem.roomId, { top: value })
+      window.$message.success(value ? '已置顶' : '已取消置顶')
+    })
+    .catch(() => {
+      window.$message.error('置顶失败')
+    })
+}
+
 /** 删除操作二次提醒 */
 const handleDelete = (label: RoomActEnum) => {
   modalShow.value = true
   optionsType.value = label
   if (label === RoomActEnum.DELETE_FRIEND) {
     tips.value = '确定删除该好友吗?'
+  } else if (label === RoomActEnum.DISSOLUTION_GROUP) {
+    tips.value = '确定解散该群聊?'
   } else if (label === RoomActEnum.EXIT_GROUP) {
     tips.value = '确定退出该群聊?'
   } else {
@@ -374,7 +399,20 @@ const handleConfirm = () => {
       modalShow.value = false
       sidebarShow.value = false
       window.$message.success('已删除好友')
-      // TODO: 删除后当前删除的人提示不准确，无论是删除方还是被删除方都提示“您已被对方拉黑”
+    })
+  } else if (optionsType.value === RoomActEnum.DISSOLUTION_GROUP) {
+    if (activeItem.roomId === '1') {
+      window.$message.warning('无法解散频道')
+      modalShow.value = false
+      return
+    }
+
+    groupStore.exitGroup(activeItem.roomId).then(() => {
+      modalShow.value = false
+      sidebarShow.value = false
+      window.$message.success('已解散群聊')
+      // 删除当前的会话
+      useMitt.emit(MittEnum.DELETE_SESSION, activeItem.roomId)
     })
   } else if (optionsType.value === RoomActEnum.EXIT_GROUP) {
     if (activeItem.roomId === '1') {

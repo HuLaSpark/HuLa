@@ -2,6 +2,7 @@ import { fetch } from '@tauri-apps/plugin-http'
 import { AppException, ErrorType } from '@/common/exception'
 import { RequestQueue } from '@/utils/RequestQueue'
 import urls from './urls'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 
 // 错误信息常量
 const ERROR_MESSAGES = {
@@ -60,6 +61,36 @@ function shouldRetry(attempt: number, maxRetries: number, abort?: AbortControlle
 }
 
 /**
+ * TODO: 防止当有请求的时候突然退出登录，导致在登录窗口发生请求错误
+ * 检查是否需要阻止请求
+ * @param url 请求地址
+ * @returns 是否需要阻止请求
+ */
+const shouldBlockRequest = async (url: string) => {
+  try {
+    const currentWindow = WebviewWindow.getCurrent()
+    const isLoginWindow = currentWindow.label === 'login'
+
+    // 如果不是登录窗口,不阻止请求
+    if (!isLoginWindow) return false
+
+    // 登录相关的接口永远不阻止
+    if (url.includes('/login') || url.includes('/refreshToken')) return false
+
+    // 检查是否已登录成功(有双token)
+    const hasToken = localStorage.getItem('TOKEN')
+    const hasRefreshToken = localStorage.getItem('REFRESH_TOKEN')
+    const isLoggedIn = hasToken && hasRefreshToken
+
+    // 在登录窗口但已登录成功的情况下不阻止请求
+    return !isLoggedIn
+  } catch (error) {
+    console.error('检查请求状态失败:', error)
+    return false
+  }
+}
+
+/**
  * @description HTTP 请求实现
  * @template T
  * @param {string} url 请求地址
@@ -74,15 +105,24 @@ async function Http<T = any>(
   fullResponse: boolean = false,
   abort?: AbortController
 ): Promise<{ data: T; resp: Response } | T> {
+  // 检查是否需要阻止请求
+  const shouldBlock = await shouldBlockRequest(url)
+  if (shouldBlock) {
+    throw new AppException('在登录窗口中，取消非登录相关请求', {
+      type: ErrorType.Network,
+      showError: false
+    })
+  }
+
   // 打印请求信息
   console.log(`🚀 发起请求 → ${options.method} ${url}`, {
     body: options.body,
     query: options.query
   })
 
-  // 默认重试配置，只对网络错误进行重试
+  // 默认重试配置，在登录窗口时禁用重试
   const defaultRetryOptions: RetryOptions = {
-    retries: options.noRetry ? 0 : 3,
+    retries: 3,
     retryDelay: (attempt) => Math.pow(2, attempt) * 1000,
     retryOn: [] // 状态码意味着已经连接到服务器
   }

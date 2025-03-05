@@ -161,9 +161,10 @@ onMounted(() => {
       {
         activeStatus: OnlineEnum.ONLINE,
         avatar: rest.avatar,
-        lastOptTime: Date.now(),
+        accountCode: rest.accountCode,
         name: rest.name,
-        uid: rest.uid
+        uid: rest.uid,
+        lastOptTime: Date.now()
       }
     ])
     // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取

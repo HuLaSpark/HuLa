@@ -155,6 +155,8 @@ export type UserItem = {
   locPlace?: string
   /** 角色ID */
   roleId?: number
+  /** 账号 */
+  accountCode: string
 }
 
 export type GroupStatisticType = {

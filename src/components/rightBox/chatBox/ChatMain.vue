@@ -428,6 +428,7 @@ import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useTauriListener } from '@/hooks/useTauriListener'
 import { useGroupStore } from '@/stores/group.ts'
 import { useGlobalStore } from '@/stores/global'
+import { useDebounceFn } from '@vueuse/core'
 
 const appWindow = WebviewWindow.getCurrent()
 const { addListener } = useTauriListener()
@@ -496,22 +497,32 @@ const {
 const { handlePopoverUpdate, enableScroll } = usePopover(selectKey, 'image-chat-main')
 provide('popoverControls', { enableScroll })
 
+// 添加防抖处理
+const debouncedScrollToBottom = useDebounceFn(() => {
+  if (!virtualListInst.value) return
+  virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
+}, 100)
+
+// 监听会话切换
 watch(
   () => props.activeItem,
   (value, oldValue) => {
     if (oldValue.roomId !== value.roomId) {
-      requestAnimationFrame(() => {
-        // 给予足够的时间让消息加载和渲染
-        virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
-      })
+      // 使用防抖的滚动处理
+      debouncedScrollToBottom()
     }
   }
 )
 
+// 监听消息列表变化
 watch(
   chatMessageList,
   (value, oldValue) => {
-    // 消息列表变长的情况
+    // 确保消息属于当前会话
+    if (!value.length || (value[0] && value[0].message.roomId !== props.activeItem.roomId)) {
+      return
+    }
+
     if (value.length > oldValue.length) {
       // 获取最新消息
       const latestMessage = value[value.length - 1]

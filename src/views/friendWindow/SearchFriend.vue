@@ -319,8 +319,6 @@ const handleAddFriend = async (item: any) => {
     globalStore.addFriendModalInfo.uid = item.uid
   } else {
     await createWebviewWindow('申请加群', 'addGroupVerify', 380, 400, '', false, 380, 400)
-    console.log(item)
-
     globalStore.addGroupModalInfo.show = true
     globalStore.addGroupModalInfo.accountCode = item.accountCode
     globalStore.addGroupModalInfo.name = item.name

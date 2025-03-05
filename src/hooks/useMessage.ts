@@ -60,7 +60,8 @@ export const useMessage = () => {
     const isCurrentSession = roomId === globalStore.currentSession.roomId
 
     chatStore.removeContact(roomId)
-    const res = await apis.deleteSession({ roomId })
+    // TODO: 使用隐藏会话接口
+    const res = await apis.hideSession({ roomId, hide: true })
     console.log(res, roomId)
 
     // 如果不是当前选中的会话，直接返回
@@ -198,7 +199,7 @@ export const useMessage = () => {
 
         try {
           // 调用解散群聊的API
-          // await apis.dismissGroup({ roomId: item.roomId })
+          await apis.exitGroup({ roomId: item.roomId })
           window.$message.success('已解散群聊')
           await handleMsgDelete(item.roomId)
         } catch (error) {

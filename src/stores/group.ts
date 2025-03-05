@@ -78,11 +78,13 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
       if (adminUidList.value.includes(member.uid)) {
         return {
           ...member,
+          accountCode: member.accountCode,
           roleId: RoleEnum.ADMIN
         }
       } else if (member.uid === currentLordId.value) {
         return {
           ...member,
+          accountCode: member.accountCode,
           roleId: RoleEnum.LORD
         }
       }
@@ -152,10 +154,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
   const batchUpdateUserStatus = async (items: UserItem[]) => {
     for (const curUser of items) {
       const findIndex = userList.value.findIndex((item) => item.uid === curUser.uid)
-      userList.value[findIndex] = {
-        ...userList.value[findIndex],
-        activeStatus: curUser.activeStatus
-      }
+      userList.value[findIndex] = { ...userList.value[findIndex], ...curUser }
     }
   }
 
@@ -197,7 +196,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
   }
 
   /**
-   * 退出群聊
+   * 退出群聊 / 解散群聊
    * @param roomId 要退出的群聊ID
    */
   const exitGroup = async (roomId: string) => {

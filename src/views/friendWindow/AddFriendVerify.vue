@@ -22,7 +22,7 @@
 
           <n-flex vertical :size="10">
             <p class="text-[--text-color]">{{ userInfo.name }}</p>
-            <p class="text-(12px [--text-color])">账号: {{ userInfo.uid }}</p>
+            <p class="text-(12px [--text-color])">账号: {{ userInfo.accountCode }}</p>
           </n-flex>
         </n-flex>
 
@@ -39,7 +39,7 @@
           type="textarea"
           placeholder="输入几句话，对TA说些什么吧" />
 
-        <n-button color="#13987f" @click="addFriend">添加好友</n-button>
+        <n-button class="mt-30px" color="#13987f" @click="addFriend">添加好友</n-button>
       </n-flex>
     </div>
   </div>
@@ -76,6 +76,8 @@ const addFriend = async () => {
 }
 
 onMounted(async () => {
+  console.log(userInfo.value)
+
   await getCurrentWebviewWindow().show()
   requestMsg.value = `我是 ${userStore.userInfo.name}`
 })

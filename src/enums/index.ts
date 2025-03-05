@@ -86,6 +86,8 @@ export enum MittEnum {
   RE_EDIT = 'reEdit',
   /** 删除会话 */
   DELETE_SESSION = 'deleteSession',
+  /** 隐藏会话 */
+  HIDE_SESSION = 'hideSession',
   /** 定位会话 */
   LOCATE_SESSION = 'locateSession'
 }
@@ -244,6 +246,8 @@ export enum RoomTypeEnum {
 export enum RoomActEnum {
   /** 退出群聊 */
   EXIT_GROUP,
+  /** 解散群聊 */
+  DISSOLUTION_GROUP,
   /** 删除好友 */
   DELETE_FRIEND,
   /** 删除记录 */

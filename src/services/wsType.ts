@@ -64,7 +64,7 @@ export type WsReqMsgContentType = {
 }
 export type LoginInitResType = { loginUrl: string }
 
-export type LoginSuccessResType = Pick<UserInfoType, 'avatar' | 'name' | 'uid'> & {
+export type LoginSuccessResType = Pick<UserInfoType, 'avatar' | 'name' | 'uid' | 'accountCode'> & {
   /** 用户的登录凭证，每次请求携带 */
   token: string
 }

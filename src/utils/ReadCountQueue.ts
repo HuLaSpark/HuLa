@@ -1,6 +1,7 @@
 import { useMitt } from '@/hooks/useMitt.ts'
 import apis from '@/services/apis'
 import type { MsgReadUnReadCountType } from '@/services/types'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 
 /**
  * 消息已读计数队列模块
@@ -45,14 +46,15 @@ const onRemoveReadCountTask = ({ msgId }: ReadCountTaskEvent) => {
 }
 
 /**
- * 检查用户是否已登录
- * 返回布尔值表示登录状态
+ * 检查用户是否可以发送已读计数请求
+ * 返回布尔值表示是否可以发送请求
  */
-const checkUserAuthentication = (): boolean => {
-  // 1. 检查localStorage中的token
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token')
-
-  return !!token // 如果token存在则认为用户已登录
+const checkUserAuthentication = () => {
+  // 1. 检查当前是否在登录窗口
+  const currentWindow = WebviewWindow.getCurrent()
+  if (currentWindow.label === 'login') {
+    return false
+  }
 }
 
 /**
@@ -73,10 +75,12 @@ const task = async () => {
     // 队列为空则不发起请求
     if (queue.size === 0) return
 
-    // 检查用户是否已登录
-    const isLoggedIn = checkUserAuthentication() // 添加用户认证检查
-    if (!isLoggedIn) {
-      console.log('用户未登录，跳过消息已读计数请求')
+    // 检查用户是否可以发送请求
+    const canSendRequest = checkUserAuthentication()
+    if (!canSendRequest) {
+      console.log('用户未登录或在登录窗口，跳过消息已读计数请求')
+      // 在登录窗口时，清空队列并停止定时器
+      clearQueue()
       return
     }
 

@@ -119,6 +119,8 @@ export default {
   setSessionTop: (params: { roomId: string; top: boolean }) => POST<void>(urls.setSessionTop, params),
   /** 删除会话 */
   deleteSession: (params: { roomId: string }) => DELETE<void>(urls.deleteSession, params),
+  /** 隐藏会话 */
+  hideSession: (params: { roomId: string; hide: boolean }) => POST<void>(urls.hideSession, params),
   /** 修改群信息 */
   updateRoomInfo: (params: { roomId: string; roomName: string; roomAvatar: string }) =>
     POST<void>(urls.updateRoomInfo, params),
@@ -135,10 +137,7 @@ export default {
       uidList
     }),
   /** 退群 */
-  exitGroup: ({ roomId }: { roomId: string }) =>
-    DELETE<boolean>(urls.exitGroup, {
-      roomId
-    }),
+  exitGroup: (params: { roomId: string }) => DELETE<boolean>(urls.exitGroup, params),
   /** 账号密码登录 */
   login: (user: LoginUserReq, abort?: AbortController) => POST<Login>(urls.login, user, abort),
   /** 退出登录 */

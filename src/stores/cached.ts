@@ -80,9 +80,9 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
       for (const item of data || []) {
         // 更新用户信息缓存
         userCachedList[item.uid] = {
-          ...(item?.needRefresh ? item : userCachedList[item.uid]),
+          ...userCachedList[item.uid], // 保留旧数据
+          ...item, // 用新数据覆盖
           needRefresh: undefined,
-          accountCode: item.accountCode,
           lastModifyTime: Date.now()
         }
 

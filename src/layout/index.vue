@@ -124,6 +124,7 @@ useMitt.on(WsResponseMessageType.LOGIN_SUCCESS, async (data: LoginSuccessResType
     {
       activeStatus: OnlineEnum.ONLINE,
       avatar: rest.avatar,
+      accountCode: rest.accountCode,
       lastOptTime: Date.now(),
       name: rest.name,
       uid: rest.uid

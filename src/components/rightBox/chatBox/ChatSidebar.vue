@@ -158,20 +158,22 @@ const userList = computed(() => {
 
   return groupUserList.value
     .map((item: UserItem) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { uid, ...userInfo } = item // 排除uid，获取剩余内容
+      const cachedUser = useUserInfo(item.uid).value
+      // 合并数据时保留所有需要的字段
       return {
-        ...userInfo,
-        ...useUserInfo(item.uid).value
+        ...item, // 保留原始数据
+        ...cachedUser, // 合并缓存的用户数据
+        accountCode: cachedUser.accountCode || item.accountCode, // 确保accountCode被保留
+        uid: item.uid // 确保uid被保留
       }
     })
     .sort((a, b) => {
+      // roleId === 1 的排在最前面
       // 首先按照roleId排序
       if (a.roleId !== b.roleId) {
-        // roleId === 1 的排在最前面
+        // roleId === 2 的排在第二位
         if (a.roleId === RoleEnum.LORD) return -1
         if (b.roleId === RoleEnum.LORD) return 1
-        // roleId === 2 的排在第二位
         if (a.roleId === RoleEnum.ADMIN) return -1
         if (b.roleId === RoleEnum.ADMIN) return 1
       }

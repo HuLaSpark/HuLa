@@ -154,13 +154,38 @@ export const useChatStore = defineStore(
     // 监听当前房间ID的变化
     watch(currentRoomId, (val, oldVal) => {
       if (oldVal !== undefined && val !== oldVal) {
-        // 切换的 rooms是空数据的话就请求消息列表
-        if (!currentMessageMap.value || currentMessageMap.value.size === 0) {
-          if (!currentMessageMap.value) {
-            messageMap.set(currentRoomId.value, new Map())
-          }
-          getMsgList()
+        // TODO: 后续增加消息池优化 存储到sqlite
+        // 1. 立即清空当前消息列表
+        if (currentMessageMap.value) {
+          currentMessageMap.value.clear()
         }
+
+        // 2. 重置消息加载状态
+        currentMessageOptions.value = {
+          isLast: false,
+          isLoading: true,
+          cursor: ''
+        }
+
+        // 3. 清空回复映射
+        if (currentReplyMap.value) {
+          currentReplyMap.value.clear()
+        }
+
+        // 4. 使用 nextTick 确保状态已更新
+        nextTick(async () => {
+          try {
+            // 5. 重新加载消息
+            await getMsgList()
+          } catch (error) {
+            console.error('无法加载消息:', error)
+            currentMessageOptions.value = {
+              isLast: false,
+              isLoading: false,
+              cursor: ''
+            }
+          }
+        })
 
         // 群组的时候去请求
         if (currentRoomType.value === RoomTypeEnum.GROUP) {

@@ -1,6 +1,6 @@
 <template>
   <!-- 个人信息框 -->
-  <n-flex vertical :size="26" class="size-fit box-border rounded-8px relative min-h-[300px]">
+  <n-flex vertical :size="26" class="size-fit box-border rounded-8px relative min-h-[300px] select-none cursor-default">
     <!-- 背景 -->
     <img
       class="absolute rounded-t-8px z-2 top-0 left-0 w-full h-100px object-cover"
@@ -77,12 +77,28 @@
             <span>添加备注</span>
           </n-popover>
         </n-flex>
+
+        <!-- 账号 -->
+        <n-flex align="center" :size="10">
+          <n-flex align="center" :size="12">
+            <p class="text-[--info-text-color]">账号</p>
+            <span class="text-(12px [--chat-text-color])">{{ `${useUserInfo(uid).value.accountCode}` }}</span>
+          </n-flex>
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <svg class="size-12px cursor-pointer hover:color-#909090 hover:transition-colors" @click="handleCopy">
+                <use href="#copy"></use>
+              </svg>
+            </template>
+            <span>复制账号</span>
+          </n-tooltip>
+        </n-flex>
       </n-flex>
 
       <!-- 地址 -->
-      <n-flex :size="26" class="select-none">
+      <n-flex align="center" :size="26" class="select-none">
         <span class="text-[--info-text-color]">所在地</span>
-        <span>中国</span>
+        <span class="text-(13px [--chat-text-color])">{{ useUserInfo(uid).value.locPlace || '未知' }}</span>
       </n-flex>
       <!-- 获得的徽章 -->
       <n-flex v-if="isCurrentUser.itemIds && isCurrentUser.itemIds.length > 0" :size="26" class="select-none">
@@ -180,6 +196,15 @@ const currentStateTitle = computed(() => {
 
 const openEditInfo = () => {
   useMitt.emit(MittEnum.OPEN_EDIT_INFO)
+}
+
+// 处理复制账号
+const handleCopy = () => {
+  const accountCode = useUserInfo(uid).value.accountCode
+  if (accountCode) {
+    navigator.clipboard.writeText(accountCode)
+    window.$message.success(`复制成功 ${accountCode}`)
+  }
 }
 
 const addFriend = async () => {
