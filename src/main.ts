@@ -7,6 +7,7 @@ import vSlide from '@/directives/v-slide.ts'
 import router from '@/router'
 import App from '@/App.vue'
 import { AppException } from '@/common/exception.ts'
+import { initDatabase } from './db'
 
 const app = createApp(App)
 app.use(router).use(pinia).directive('resize', vResize).directive('slide', vSlide).mount('#app')
@@ -23,3 +24,11 @@ if (process.env.NODE_ENV === 'development') {
     module.consolePrint()
   })
 }
+// 初始化数据库
+initDatabase().then((success) => {
+  if (success) {
+    console.log('数据库初始化成功')
+  } else {
+    console.error('数据库初始化失败')
+  }
+})

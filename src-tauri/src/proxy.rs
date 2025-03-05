@@ -9,7 +9,11 @@ const TEST_URLS: [&str; 3] = [
 ];
 
 #[tauri::command]
-pub async fn test_proxy(proxy_type: String, proxy_host: String, proxy_port: u16) -> Result<bool, String> {
+pub async fn test_proxy(
+    proxy_type: String,
+    proxy_host: String,
+    proxy_port: u16,
+) -> Result<bool, String> {
     if proxy_type.is_empty() {
         return Ok(true); // 不使用代理时直接返回成功
     }

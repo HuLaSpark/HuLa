@@ -12,6 +12,10 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
     // 初始化插件
     fn init_plugin(self) -> Self {
         self.plugin(tauri_plugin_os::init())
+            .plugin(tauri_plugin_log::Builder::new()
+            .max_file_size(50_000 /* bytes */)
+            .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll)
+            .build())
             .plugin(tauri_plugin_notification::init())
             .plugin(tauri_plugin_process::init())
             .plugin(tauri_plugin_http::init())

@@ -2,10 +2,7 @@
 #[cfg(desktop)]
 mod desktops;
 #[cfg(desktop)]
-use common_cmd::{
-    audio, default_window_icon, screenshot, set_badge_count,
-    set_height,
-};
+use common_cmd::{audio, default_window_icon, screenshot, set_badge_count, set_height};
 #[cfg(desktop)]
 mod proxy;
 #[cfg(desktop)]

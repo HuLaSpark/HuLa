@@ -5230,6 +5230,21 @@
           "const": "http:deny-fetch-send"
         },
         {
+          "description": "Allows the log command",
+          "type": "string",
+          "const": "log:default"
+        },
+        {
+          "description": "Enables the log command without any pre-configured scope.",
+          "type": "string",
+          "const": "log:allow-log"
+        },
+        {
+          "description": "Denies the log command without any pre-configured scope.",
+          "type": "string",
+          "const": "log:deny-log"
+        },
+        {
           "description": "This permission set configures which\nnotification features are by default exposed.\n\n#### Granted Permissions\n\nIt allows all notification related features.\n\n",
           "type": "string",
           "const": "notification:default"

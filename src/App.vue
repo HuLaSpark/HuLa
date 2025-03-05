@@ -17,6 +17,7 @@ import { type } from '@tauri-apps/plugin-os'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { useStorage } from '@vueuse/core'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { closeDatabase } from '@/db'
 
 const appWindow = WebviewWindow.getCurrent()
 const settingStore = useSettingStore()
@@ -138,6 +139,8 @@ onMounted(async () => {
 onUnmounted(() => {
   window.removeEventListener('contextmenu', (e) => e.preventDefault(), false)
   window.removeEventListener('dragstart', preventDrag)
+  // 关闭数据库连接
+  closeDatabase()
 })
 </script>
 <style lang="scss">

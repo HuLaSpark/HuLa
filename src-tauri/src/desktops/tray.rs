@@ -1,8 +1,14 @@
 #[cfg(target_os = "windows")]
-use tauri::{tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent}, Manager, Emitter, PhysicalPosition, Runtime};
+use tauri::{
+    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
+    Emitter, Manager, PhysicalPosition, Runtime,
+};
 
 #[cfg(not(target_os = "windows"))]
-use tauri::{tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent}, Manager, PhysicalPosition, Runtime};
+use tauri::{
+    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
+    Manager, PhysicalPosition, Runtime,
+};
 
 pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
     let _ = TrayIconBuilder::with_id("tray")
@@ -43,23 +49,28 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
                     }
                 }
                 _ => {}
-            }
+            },
             #[cfg(target_os = "windows")]
             TrayIconEvent::Enter {
                 id: _,
                 position: _,
-                rect: _} => {
-                tray.app_handle().emit_to("notify", "notify_enter", &tray.rect().unwrap()).unwrap();
+                rect: _,
+            } => {
+                tray.app_handle()
+                    .emit_to("notify", "notify_enter", &tray.rect().unwrap())
+                    .unwrap();
             }
             #[cfg(target_os = "windows")]
             TrayIconEvent::Leave {
                 id: _,
                 position: _,
-                rect: _} => {
-                tray.app_handle().emit_to("notify", "notify_leave", ()).unwrap();
+                rect: _,
+            } => {
+                tray.app_handle()
+                    .emit_to("notify", "notify_leave", ())
+                    .unwrap();
             }
             _ => {}
-
         })
         .build(app);
     Ok(())

@@ -34,6 +34,8 @@
     "core:webview:allow-internal-toggle-devtools",
     "core:webview:allow-set-webview-size",
     "core:webview:allow-webview-size",
+    "log:allow-log",
+    "log:default",
     "core:event:default",
     "core:event:allow-listen",
     "core:image:default",

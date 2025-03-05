@@ -13,6 +13,8 @@ import { useUserStore } from '@/stores/user.ts'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
 import { sendNotification } from '@tauri-apps/plugin-notification'
 import { invoke } from '@tauri-apps/api/core'
+import { MessageDbService, SessionDbService } from '@/services/dbService'
+import { error } from '@tauri-apps/plugin-log'
 
 type RecalledMessage = {
   messageId: string
@@ -217,46 +219,87 @@ export const useChatStore = defineStore(
     // 获取消息列表
     const getMsgList = async (size = pageSize) => {
       currentMessageOptions.value && (currentMessageOptions.value.isLoading = true)
-      const data = await apis
-        .getMsgList({
-          pageSize: size,
-          cursor: currentMessageOptions.value?.cursor,
-          roomId: currentRoomId.value
-        })
-        .finally(() => {
-          currentMessageOptions.value && (currentMessageOptions.value.isLoading = false)
-        })
-      if (!data) return
-      const computedList = computedTimeBlock(data.list)
 
+      try {
+        // 首先尝试从本地数据库获取消息
+        const localMessages = await MessageDbService.getMessagesByRoomId(
+          currentRoomId.value,
+          size,
+          currentMessageOptions.value?.cursor
+        )
+
+        // 如果本地数据库有数据并且不是第一次加载(无游标)，直接使用本地数据
+        if (localMessages.list.length > 0 && currentMessageOptions.value?.cursor) {
+          // 处理消息列表
+          processMessages(localMessages.list)
+
+          // 更新分页信息
+          if (currentMessageOptions.value) {
+            currentMessageOptions.value.cursor = localMessages.cursor
+            currentMessageOptions.value.isLast = localMessages.isLast
+            currentMessageOptions.value.isLoading = false
+          }
+
+          return
+        }
+
+        // 本地没有数据或是第一次加载，则从API获取
+        const data = await apis
+          .getMsgList({
+            pageSize: size,
+            cursor: currentMessageOptions.value?.cursor,
+            roomId: currentRoomId.value
+          })
+          .finally(() => {
+            currentMessageOptions.value && (currentMessageOptions.value.isLoading = false)
+          })
+
+        if (!data) return
+        const computedList = computedTimeBlock(data.list)
+
+        // 处理消息列表
+        processMessages(computedList)
+
+        // 更新分页信息
+        if (currentMessageOptions.value) {
+          currentMessageOptions.value.cursor = data.cursor
+          currentMessageOptions.value.isLast = data.isLast
+          currentMessageOptions.value.isLoading = false
+        }
+
+        // 将获取的数据保存到本地数据库
+        await MessageDbService.saveMessages(computedList)
+      } catch (err) {
+        error(`加载消息失败: ${err}`)
+        if (currentMessageOptions.value) {
+          currentMessageOptions.value.isLoading = false
+        }
+      }
+    }
+
+    // 处理消息列表的辅助函数
+    const processMessages = (messageList: MessageType[]) => {
       /** 收集需要请求用户详情的 uid */
       const uidCollectYet: Set<string> = new Set() // 去重用
-      for (const msg of computedList) {
+      for (const msg of messageList) {
         const replyItem = msg.message.body?.reply
         if (replyItem?.id) {
           const messageIds = currentReplyMap.value?.get(replyItem.id) || []
           messageIds.push(msg.message.id)
           currentReplyMap.value?.set(replyItem.id, messageIds)
-
-          // 查询被回复用户的信息，被回复的用户信息里暂时无 uid
-          // collectUidItem(replyItem.uid)
         }
         // 查询消息发送者的信息
         uidCollectYet.add(msg.fromUser.uid)
       }
+
       // 获取用户信息缓存
-      await cachedStore.getBatchUserInfo([...uidCollectYet])
+      cachedStore.getBatchUserInfo([...uidCollectYet])
+
       // 为保证获取的历史消息在前面
-      const newList = [...computedList, ...chatMessageList.value]
+      const newList = [...messageList, ...chatMessageList.value]
       currentMessageMap.value?.clear() // 清空Map
       for (const msg of newList) {
         currentMessageMap.value?.set(msg.message.id, msg)
-      }
-
-      if (currentMessageOptions.value) {
-        currentMessageOptions.value.cursor = data.cursor
-        currentMessageOptions.value.isLast = data.isLast
-        currentMessageOptions.value.isLoading = false
       }
     }
 
@@ -264,46 +307,86 @@ export const useChatStore = defineStore(
     const getSessionList = async (isFresh = false) => {
       if (!isFresh && (sessionOptions.isLast || sessionOptions.isLoading)) return
       sessionOptions.isLoading = true
-      // TODO: 这里先请求100条会话列表，后续优化
-      const response = await apis
-        .getSessionList({
-          pageSize: sessionList.length > 100 ? sessionList.length : 100,
-          cursor: isFresh || !sessionOptions.cursor ? '' : sessionOptions.cursor
-        })
-        .catch(() => {
-          sessionOptions.isLoading = false
-        })
-      if (!response) return
-      const data = response
-      if (!data) {
-        return
-      }
 
+      try {
+        // 首先尝试从本地数据库获取会话列表
+        const localSessions = await SessionDbService.getSessionList(
+          sessionList.length > 100 ? sessionList.length : 100,
+          isFresh || !sessionOptions.cursor ? '' : sessionOptions.cursor
+        )
+
+        // 如果本地数据库有数据并且不是刷新操作，直接使用本地数据
+        if (localSessions.list.length > 0 && !isFresh) {
+          // 更新会话列表
+          isFresh
+            ? sessionList.splice(0, sessionList.length, ...localSessions.list)
+            : sessionList.push(...localSessions.list)
+          sessionOptions.cursor = localSessions.cursor
+          sessionOptions.isLast = localSessions.isLast
+          sessionOptions.isLoading = false
+
+          sortAndUniqueSessionList()
+
+          // 处理会话加载完成后的操作
+          handleSessionsLoaded(isFresh)
+          return
+        }
+
+        // 本地没有数据或是刷新操作，则从API获取
+        const response = await apis
+          .getSessionList({
+            pageSize: sessionList.length > 100 ? sessionList.length : 100,
+            cursor: isFresh || !sessionOptions.cursor ? '' : sessionOptions.cursor
+          })
+          .catch(() => {
+            sessionOptions.isLoading = false
+          })
+
+        if (!response) return
+        const data = response
+        if (!data) return
+
+        // 更新会话列表
+        isFresh ? sessionList.splice(0, sessionList.length, ...data.list) : sessionList.push(...data.list)
+        sessionOptions.cursor = data.cursor
+        sessionOptions.isLast = data.isLast
+        sessionOptions.isLoading = false
+
+        sortAndUniqueSessionList()
+
+        // 处理会话加载完成后的操作
+        handleSessionsLoaded(isFresh)
+
+        // 将获取的数据保存到本地数据库
+        await SessionDbService.saveSessions(sessionList)
+      } catch (err) {
+        error(`加载会话列表失败: ${err}`)
+        sessionOptions.isLoading = false
+      }
+    }
+
+    // 处理会话加载完成后的操作
+    const handleSessionsLoaded = async (isFresh: boolean) => {
       // 保存当前选中的会话ID
       const currentSelectedRoomId = globalStore.currentSession.roomId
 
-      isFresh ? sessionList.splice(0, sessionList.length, ...data.list) : sessionList.push(...data.list)
-      sessionOptions.cursor = data.cursor
-      sessionOptions.isLast = data.isLast
-      sessionOptions.isLoading = false
-
-      sortAndUniqueSessionList()
-
-      // sessionList[0].unreadCount = 0
       if (!isFirstInit || isFresh) {
         isFirstInit = true
         // 只有在没有当前选中会话时，才设置第一个会话为当前会话
         if (!currentSelectedRoomId || currentSelectedRoomId === '1') {
-          globalStore.currentSession.roomId = data.list[0].roomId
-          globalStore.currentSession.type = data.list[0].type
+          globalStore.currentSession.roomId = sessionList[0]?.roomId || ''
+          globalStore.currentSession.type = sessionList[0]?.type || RoomTypeEnum.GROUP
         }
 
-        // 用会话列表第一个去请求消息列表
+        // 请求消息列表
         await getMsgList()
+
         // 请求第一个群成员列表
         currentRoomType.value === RoomTypeEnum.GROUP && (await groupStore.getGroupUserList(true))
+
         // 初始化所有用户基本信息
         userStore.isSign && (await cachedStore.initAllUserBaseInfo())
+
         // 联系人列表
         await contactStore.getContactList(true)
 
@@ -351,6 +434,7 @@ export const useChatStore = defineStore(
 
     // 推送消息
     const pushMsg = async (msg: MessageType) => {
+      console.log('开始推送消息:', msg.message.id)
       const current = messageMap.get(msg.message.roomId)
       current?.set(msg.message.id, msg)
 
@@ -362,6 +446,14 @@ export const useChatStore = defineStore(
 
         // 删除旧消息
         messagesToDelete.forEach((id) => current.delete(id))
+
+        // 清理本地数据库中的旧消息
+        try {
+          await MessageDbService.cleanupOldMessages(msg.message.roomId, KEEP_MESSAGE_COUNT)
+          console.log(`清理旧消息成功, 保留${KEEP_MESSAGE_COUNT}条最新消息`)
+        } catch (err) {
+          console.error('清理旧消息失败:', err)
+        }
       }
 
       // 获取用户信息缓存
@@ -393,6 +485,7 @@ export const useChatStore = defineStore(
                 session.type
               )
         session.text = formattedText!
+
         // 更新未读数
         if (msg.fromUser.uid !== userStore.userInfo.uid) {
           if (route?.path !== '/message' || msg.message.roomId !== currentRoomId.value) {
@@ -401,6 +494,14 @@ export const useChatStore = defineStore(
               updateTotalUnreadCount()
             })
           }
+        }
+
+        // 更新本地数据库中的会话信息
+        try {
+          await SessionDbService.saveSession(session)
+          console.log('会话信息保存成功:', session.roomId)
+        } catch (err) {
+          console.error('保存会话信息失败:', err)
         }
       }
 
@@ -415,10 +516,18 @@ export const useChatStore = defineStore(
         })
       }
 
-      // if (currentNewMsgCount.value) {
-      //   currentNewMsgCount.value.count++
-      //   return
-      // }
+      // 将新消息保存到本地数据库
+      try {
+        console.log('开始将消息保存到数据库:', msg.message.id)
+        const result = await MessageDbService.saveMessage(msg)
+        if (result) {
+          console.log('消息保存到数据库成功:', msg.message.id)
+        } else {
+          console.error('消息保存到数据库失败:', msg.message.id)
+        }
+      } catch (err) {
+        console.error('保存消息到数据库时发生异常:', err)
+      }
     }
 
     // 过滤掉拉黑用户的发言
@@ -532,7 +641,7 @@ export const useChatStore = defineStore(
     }
 
     // 更新消息
-    const updateMsg = ({
+    const updateMsg = async ({
       msgId,
       status,
       newMsgId,
@@ -555,12 +664,18 @@ export const useChatStore = defineStore(
         currentMessageMap.value?.set(msg.message.id, msg)
         if (newMsgId && msgId !== newMsgId) {
           currentMessageMap.value?.delete(msgId)
+
+          // 更新本地数据库中的消息ID
+          await MessageDbService.updateMessageId(msgId, newMsgId)
+        } else {
+          // 更新本地数据库中的消息状态
+          await MessageDbService.updateMessageStatus(msgId, status)
         }
       }
     }
 
     // 标记已读数为 0
-    const markSessionRead = (roomId: string) => {
+    const markSessionRead = async (roomId: string) => {
       const session = sessionList.find((item) => item.roomId === roomId)
       const unreadCount = session?.unreadCount || 0
       if (session && session.unreadCount > 0) {
@@ -569,6 +684,9 @@ export const useChatStore = defineStore(
         nextTick(() => {
           updateTotalUnreadCount()
         })
+
+        // 更新本地数据库中的未读数
+        await SessionDbService.updateUnreadCount(roomId, 0)
       }
       return unreadCount
     }
@@ -579,7 +697,7 @@ export const useChatStore = defineStore(
     }
 
     // 删除会话
-    const removeContact = (roomId: string) => {
+    const removeContact = async (roomId: string) => {
       const index = sessionList.findIndex((session) => session.roomId === roomId)
       if (index !== -1) {
         sessionList.splice(index, 1)
@@ -587,6 +705,9 @@ export const useChatStore = defineStore(
         nextTick(() => {
           updateTotalUnreadCount()
         })
+
+        // 从本地数据库中删除会话
+        await SessionDbService.deleteSession(roomId)
       }
     }
 
@@ -623,8 +744,8 @@ export const useChatStore = defineStore(
       expirationTimers.clear()
     }
 
-    // 在 useChatStore 中添加新方法
-    const updateTotalUnreadCount = () => {
+    // 更新全局未读数
+    const updateTotalUnreadCount = async () => {
       // 使用 Array.from 确保遍历的是最新的 sessionList
       const totalUnread = Array.from(sessionList).reduce((total, session) => {
         // 确保 unreadCount 是数字且不为负数
@@ -638,12 +759,14 @@ export const useChatStore = defineStore(
       invoke('set_badge_count', { count: totalUnread > 0 ? totalUnread : null })
     }
 
-    // 在 useChatStore 中添加新方法
-    const clearUnreadCount = () => {
+    // 清空所有未读数
+    const clearUnreadCount = async () => {
       // 清空所有会话的未读数
-      sessionList.forEach((session) => {
+      for (const session of sessionList) {
         session.unreadCount = 0
-      })
+        // 更新本地数据库中的未读数
+        await SessionDbService.updateUnreadCount(session.roomId, 0)
+      }
       // 更新全局未读数
       updateTotalUnreadCount()
     }

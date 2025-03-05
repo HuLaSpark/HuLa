@@ -16,6 +16,7 @@ declare module 'vue' {
     ChatMain: typeof import('./../components/rightBox/chatBox/ChatMain.vue')['default']
     ChatSidebar: typeof import('./../components/rightBox/chatBox/ChatSidebar.vue')['default']
     ContextMenu: typeof import('./../components/common/ContextMenu.vue')['default']
+    DbDebugPanel: typeof import('./../components/common/DbDebugPanel.vue')['default']
     Details: typeof import('./../components/rightBox/Details.vue')['default']
     Emoji: typeof import('./../components/rightBox/emoji/index.vue')['default']
     FloatBlockList: typeof import('./../components/common/FloatBlockList.vue')['default']
