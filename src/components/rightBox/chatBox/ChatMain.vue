@@ -39,10 +39,10 @@
     </n-flex>
 
     <!-- 中间聊天内容(使用虚拟列表) -->
-    <VirtualList
+    <MessageList
       v-else
       id="image-chat-main"
-      ref="virtualListInst"
+      ref="messageListInst"
       :items="chatMessageList"
       :estimatedItemHeight="itemSize"
       :buffer="5"
@@ -50,6 +50,7 @@
       :isLast="messageOptions?.isLast"
       @scroll="handleScroll"
       @scroll-direction-change="handleScrollDirectionChange"
+      @loadMore="handleLoadMore"
       style="max-height: calc(100vh - 260px)">
       <template #default="{ item, index }">
         <n-flex
@@ -235,6 +236,7 @@
                   @mouseenter="handleMouseEnter(item.message.id)"
                   @mouseleave="handleMouseLeave"
                   class="w-fit relative flex flex-col"
+                  :data-key="item.fromUser.uid === userUid ? `U${item.message.id}` : `Q${item.message.id}`"
                   :class="item.fromUser.uid === userUid ? 'items-end' : 'items-start'"
                   :style="{ '--bubble-max-width': chatStore.isGroup ? '32vw' : '50vw' }"
                   @select="$event.click(item)"
@@ -350,7 +352,7 @@
           </div>
         </n-flex>
       </template>
-    </VirtualList>
+    </MessageList>
   </Transition>
 
   <!-- 弹出框 -->
@@ -379,19 +381,7 @@
     </div>
   </n-modal>
 
-  <!--  悬浮按钮提示(头部悬浮) // TODO 要结合已读未读功能来判断之前的信息有多少没有读，当现在的距离没有到最底部并且又有新消息来未读的时候显示下标的更多信息 (nyh -> 2024-03-07 01:27:22)-->
-  <!-- <header class="float-header" :class="chatStore.isGroup ? 'right-220px' : 'right-50px'">
-    <div class="float-box">
-      <n-flex justify="space-between" align="center">
-        <n-icon :color="'#13987f'">
-          <svg><use href="#double-up"></use></svg>
-        </n-icon>
-        <span class="text-12px">xx条新信息</span>
-      </n-flex>
-    </div>
-  </header> -->
-
-  <!-- 悬浮按钮提示(底部悬浮) -->
+  <!--  悬浮按钮提示(底部悬浮) -->
   <footer
     class="float-footer"
     v-if="floatFooter && currentNewMsgCount?.count && currentNewMsgCount.count > 0"
@@ -423,7 +413,7 @@ import { type } from '@tauri-apps/plugin-os'
 import { useUserStore } from '@/stores/user.ts'
 import { useNetwork } from '@vueuse/core'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import VirtualList, { type VirtualListExpose } from '@/components/common/VirtualList.vue'
+import MessageList, { type MessageListExpose } from '@/components/common/MessageList.vue'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useTauriListener } from '@/hooks/useTauriListener'
 import { useGroupStore } from '@/stores/group.ts'
@@ -462,7 +452,7 @@ const activeReply = ref('')
 /** item最小高度，用于计算滚动大小和位置 */
 const itemSize = computed(() => (chatStore.isGroup ? 90 : 76))
 /** 虚拟列表 */
-const virtualListInst = useTemplateRef<VirtualListExpose>('virtualListInst')
+const messageListInst = useTemplateRef<MessageListExpose>('messageListInst')
 /** 手动触发Popover显示 */
 const infoPopover = ref(false)
 // 记录 requestAnimationFrame 的返回值
@@ -499,8 +489,8 @@ provide('popoverControls', { enableScroll })
 
 // 添加防抖处理
 const debouncedScrollToBottom = useDebounceFn(() => {
-  if (!virtualListInst.value) return
-  virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
+  if (!messageListInst.value) return
+  messageListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
 }, 100)
 
 // 监听会话切换
@@ -531,7 +521,7 @@ watch(
       if (isLoadingMore.value) {
         if (scrollTop.value < 26) {
           requestAnimationFrame(() => {
-            virtualListInst.value?.scrollTo({ index: value.length - oldValue.length })
+            messageListInst.value?.scrollTo({ index: value.length - oldValue.length })
           })
         }
         return
@@ -539,16 +529,16 @@ watch(
 
       // 优先级1：用户发送的消息，始终滚动到底部
       if (latestMessage?.fromUser?.uid === userUid.value) {
-        virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
+        messageListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
         return
       }
 
       // 优先级2：已经在底部时的新消息
-      const container = virtualListInst.value?.getContainer()
+      const container = messageListInst.value?.getContainer()
       if (container) {
         const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight
         if (distanceFromBottom <= 300) {
-          virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'smooth' })
+          messageListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
           return
         }
 
@@ -578,7 +568,7 @@ const handleScrollDirectionChange = (direction: 'up' | 'down') => {
 /** 处理滚动事件(用于页脚显示功能) */
 const handleScroll = () => {
   if (isAutoScrolling.value) return // 如果是自动滚动，不处理
-  const container = virtualListInst.value?.getContainer()
+  const container = messageListInst.value?.getContainer()
   if (!container) return
 
   // 获取已滚动的距离
@@ -634,7 +624,7 @@ const handleScroll = () => {
 const handleTransitionComplete = () => {
   if (!messageOptions.value?.isLoading) {
     nextTick(() => {
-      virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
+      messageListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
     })
   }
 }
@@ -699,7 +689,7 @@ const jumpToReplyMsg = (key: string) => {
     // 找到对应消息的索引
     const messageIndex = chatMessageList.value.findIndex((msg) => msg.message.id === key)
     if (messageIndex !== -1) {
-      virtualListInst.value?.scrollTo({ index: messageIndex, behavior: 'instant' })
+      messageListInst.value?.scrollTo({ index: messageIndex, behavior: 'instant' })
       activeReply.value = key
     }
   })
@@ -710,35 +700,31 @@ const jumpToReplyMsg = (key: string) => {
  * @param index 下标
  * @param id 用户ID
  */
-// const addToDomUpdateQueue = (index: number, id: number) => {
-//   // 使用 nextTick 确保虚拟列表渲染完最新的项目后进行滚动
-//   nextTick(() => {
-//     if (!floatFooter.value || id === userUid.value) {
-//       virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'auto' })
-//     }
-//     /** data-key标识的气泡,添加前缀用于区分用户消息，不然气泡动画会被覆盖 */
-//     const dataKey = id === userUid.value ? `U${index}` : `Q${index}`
-//     const lastMessageElement = document.querySelector(`[data-key="${dataKey}"]`) as HTMLElement
-//     if (lastMessageElement) {
-//       // 添加动画类
-//       lastMessageElement.classList.add('bubble-animation')
-//       // 监听动画结束事件
-//       const handleAnimationEnd = () => {
-//         lastMessageElement.classList.remove('bubble-animation')
-//         lastMessageElement.removeEventListener('animationend', handleAnimationEnd)
-//       }
-//       lastMessageElement.addEventListener('animationend', handleAnimationEnd)
-//     }
-//   })
-//   chatStore.clearNewMsgCount()
-// }
+const addToDomUpdateQueue = (index: string, id: string) => {
+  // 使用 nextTick 确保虚拟列表渲染完最新的项目后进行滚动
+  nextTick(() => {
+    /** data-key标识的气泡,添加前缀用于区分用户消息，不然气泡动画会被覆盖 */
+    const dataKey = id === userUid.value ? `U${index}` : `Q${index}`
+    const lastMessageElement = document.querySelector(`[data-key="${dataKey}"]`) as HTMLElement
+    if (lastMessageElement) {
+      // 添加动画类
+      lastMessageElement.classList.add('bubble-animation')
+      // 监听动画结束事件
+      const handleAnimationEnd = () => {
+        lastMessageElement.classList.remove('bubble-animation')
+        lastMessageElement.removeEventListener('animationend', handleAnimationEnd)
+      }
+      lastMessageElement.addEventListener('animationend', handleAnimationEnd)
+    }
+  })
+}
 
 /** 点击后滚动到底部 */
 const scrollBottom = () => {
-  if (!virtualListInst.value) return
+  if (!messageListInst.value) return
 
   nextTick(() => {
-    virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
+    messageListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
   })
 }
 
@@ -799,15 +785,43 @@ const handleReEdit = (msgId: string) => {
   }
 }
 
-onMounted(async () => {
-  requestAnimationFrame(() => {
-    virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
+// 处理加载更多
+const handleLoadMore = async () => {
+  // 如果正在加载或已经触发了加载，则不重复触发
+  if (messageOptions.value?.isLoading || isLoadingMore.value) return
+
+  // 记录当前的内容高度
+  const container = messageListInst.value?.getContainer()
+  if (!container) return
+  const oldScrollHeight = container.scrollHeight
+
+  isLoadingMore.value = true
+  // 禁用滚动交互但保持滚动条显示
+  container.style.pointerEvents = 'none'
+  await new Promise((resolve) => setTimeout(resolve, 300))
+  await chatStore.loadMore()
+
+  // 加载完成后，计算新增内容的高度差，并设置滚动位置
+  nextTick(() => {
+    const newScrollHeight = container.scrollHeight
+    const heightDiff = newScrollHeight - oldScrollHeight
+    if (heightDiff > 0) {
+      container.scrollTop = heightDiff
+    }
+    // 恢复滚动交互
+    nextTick(() => {
+      container.style.pointerEvents = 'auto'
+      isLoadingMore.value = false
+    })
   })
-  useMitt.on(MittEnum.SEND_MESSAGE, async (messageType: MessageType) => {
-    await chatStore.pushMsg(messageType)
-    // nextTick(() => {
-    //   addToDomUpdateQueue(event.message.id, event.fromUser.uid)
-    // })
+}
+
+onMounted(async () => {
+  nextTick(() => {
+    messageListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
+  })
+  useMitt.on(MittEnum.MESSAGE_ANIMATION, async (messageType: MessageType) => {
+    addToDomUpdateQueue(messageType.message.id, messageType.fromUser.uid)
   })
   useMitt.on(`${MittEnum.INFO_POPOVER}-Main`, (event: any) => {
     selectKey.value = event.uid

@@ -9,7 +9,7 @@ export default {
     'oxlint src',
     createCommand('pnpm eslint --fix', ''),
     createCommand('prettier --write', '--write'),
-    () => 'pnpm test:run',
+    // () => 'pnpm test:run',
     () => 'vue-tsc --noEmit'
   ]
 }

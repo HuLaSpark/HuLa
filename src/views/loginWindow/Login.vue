@@ -87,7 +87,7 @@
           :loading="loading"
           :disabled="loginDisabled"
           class="w-full mt-8px mb-50px"
-          @click="normalLogin()"
+          @click="debouncedLogin()"
           color="#13987f">
           <span>{{ loginText }}</span>
         </n-button>
@@ -120,7 +120,7 @@
           :loading="loading"
           :disabled="loginDisabled"
           class="w-200px mt-12px mb-40px"
-          @click="normalLogin(true)"
+          @click="debouncedLogin(true)"
           color="#13987f">
           {{ loginText }}
         </n-button>
@@ -168,7 +168,7 @@ import { useSettingStore } from '@/stores/setting.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { useMitt } from '@/hooks/useMitt'
 import { WsResponseMessageType } from '@/services/wsType'
-import { useNetwork } from '@vueuse/core'
+import { useNetwork, useDebounceFn } from '@vueuse/core'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { clearListener } from '@/utils/ReadCountQueue'
 import { useGlobalStore } from '@/stores/global'
@@ -196,22 +196,27 @@ const info = ref({
 })
 /** 协议 */
 const protocol = ref(true)
-const loginDisabled = ref(false)
+const loginDisabled = ref(!isOnline.value)
 const loading = ref(false)
 const arrowStatus = ref(false)
 const moreShow = ref(false)
-const isAutoLogin = ref(false)
+const isAutoLogin = ref(login.value.autoLogin && TOKEN.value && REFRESH_TOKEN.value)
 const { setLoginState } = useLogin()
 const accountPH = ref('输入HuLa账号')
 const passwordPH = ref('输入HuLa密码')
 /** 登录按钮的文本内容 */
-const loginText = ref('登录')
+const loginText = ref(isOnline.value ? (isAutoLogin.value ? '登录' : '登录') : '网络异常')
 /** 是否直接跳转 */
 const isJumpDirectly = ref(false)
 const { createWebviewWindow } = useWindow()
 
 watchEffect(() => {
-  loginDisabled.value = !(info.value.account && info.value.password && protocol.value)
+  loginDisabled.value = !(info.value.account && info.value.password && protocol.value && isOnline.value)
+})
+
+watch(isOnline, (v) => {
+  loginDisabled.value = !v
+  loginText.value = v ? (isAutoLogin.value ? '登录' : '登录') : '网络异常'
 })
 
 // 监听账号输入
@@ -232,13 +237,6 @@ watch(
     }
   }
 )
-
-watch(isOnline, (v) => {
-  if (v) {
-    loginDisabled.value = false
-    loginText.value = '登录'
-  }
-})
 
 /** 删除账号列表内容 */
 const delAccount = (item: UserInfoType) => {
@@ -271,14 +269,14 @@ const giveAccount = (item: UserInfoType) => {
 /**登录后创建主页窗口*/
 const normalLogin = async (auto = false) => {
   loading.value = true
+  loginText.value = '登录中...'
+  loginDisabled.value = true
   // 根据auto参数决定从哪里获取登录信息
   const loginInfo = auto ? (userStore.userInfo as UserInfoType) : info.value
   const { account } = loginInfo
 
   // 自动登录
   if (auto) {
-    isAutoLogin.value = true
-    loginText.value = '登录中...'
     // 添加2秒延迟
     await new Promise((resolve) => setTimeout(resolve, 1200))
 
@@ -298,10 +296,20 @@ const normalLogin = async (auto = false) => {
       await openHomeWindow()
       loading.value = false
     } catch (error) {
-      console.error('自动登录失败')
-      localStorage.removeItem('TOKEN')
-      isAutoLogin.value = false
-      loginDisabled.value = true
+      console.error('自动登录失败', error)
+      // 如果是网络异常，不删除token
+      if (!isOnline.value) {
+        loginDisabled.value = true
+        loginText.value = '网络异常'
+        loading.value = false
+      } else {
+        // 其他错误才清除token并重置状态
+        localStorage.removeItem('TOKEN')
+        isAutoLogin.value = false
+        loginDisabled.value = true
+        loginText.value = '登录'
+        loading.value = false
+      }
     }
     return
   }
@@ -349,6 +357,8 @@ const normalLogin = async (auto = false) => {
     })
     .catch(() => {
       loading.value = false
+      loginDisabled.value = false
+      loginText.value = '登录'
       // 如果是自动登录失败，重置按钮状态允许手动登录
       if (auto) {
         loginDisabled.value = false
@@ -356,6 +366,8 @@ const normalLogin = async (auto = false) => {
       }
     })
 }
+
+const debouncedLogin = useDebounceFn(normalLogin, 500)
 
 const openHomeWindow = async () => {
   await createWebviewWindow('HuLa', 'home', 960, 720, 'login', true)
@@ -380,7 +392,7 @@ const closeMenu = (event: MouseEvent) => {
 
 const enterKey = (e: KeyboardEvent) => {
   if (e.key === 'Enter' && !loginDisabled.value) {
-    normalLogin()
+    debouncedLogin()
   }
 }
 
@@ -424,9 +436,9 @@ onMounted(async () => {
     loginText.value = '服务异常断开'
   })
 
-  // 自动登录
-  if (login.value.autoLogin && TOKEN.value && REFRESH_TOKEN.value) {
-    normalLogin(true)
+  // 自动登录时直接触发登录
+  if (isAutoLogin.value) {
+    debouncedLogin(true)
   } else {
     loginHistories.length > 0 && giveAccount(loginHistories[0])
   }

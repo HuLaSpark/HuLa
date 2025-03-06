@@ -301,6 +301,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
     // 先添加到消息列表 - 此时会显示本地预览
     chatStore.pushMsg(tempMsg)
+    useMitt.emit(MittEnum.MESSAGE_ANIMATION, tempMsg)
     console.log('👾临时消息:', tempMsg)
 
     // 设置发送状态的定时器
@@ -353,22 +354,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
       // 更新会话最后活动时间
       chatStore.updateSessionLastActiveTime(globalStore.currentSession.roomId)
-
-      // // 保存到数据库
-      // await db.value?.execute(
-      //   'INSERT INTO message (room_id, from_uid, content, reply_msg_id, status, gap_count, type, create_time, update_time) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
-      //   [
-      //     globalStore.currentSession.roomId,
-      //     userUid.value,
-      //     msg.content,
-      //     msg.reply,
-      //     0,
-      //     0,
-      //     msg.type,
-      //     new Date().getTime(),
-      //     new Date().getTime()
-      //   ]
-      // )
 
       // 消息发送成功后释放预览URL
       if (msg.type === MsgEnum.IMAGE && msg.url.startsWith('blob:')) {

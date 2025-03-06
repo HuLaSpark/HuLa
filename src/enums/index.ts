@@ -58,8 +58,6 @@ export enum MittEnum {
   UPDATE_MSG_TOTAL = 'updateMsgTotal',
   /** 显示消息框 */
   MSG_BOX_SHOW = 'msgBoxShow',
-  /** 发送消息 */
-  SEND_MESSAGE = 'sendMessage',
   /** 跳到发送信息 */
   TO_SEND_MSG = 'toSendMsg',
   /** 缩小窗口 */
@@ -89,7 +87,9 @@ export enum MittEnum {
   /** 隐藏会话 */
   HIDE_SESSION = 'hideSession',
   /** 定位会话 */
-  LOCATE_SESSION = 'locateSession'
+  LOCATE_SESSION = 'locateSession',
+  /** 消息动画 */
+  MESSAGE_ANIMATION = 'messageAnimation'
 }
 
 /** 主题类型 */
