@@ -116,62 +116,73 @@ const userStore = useUserStore()
 const msgScrollbar = useTemplateRef<HTMLElement>('msg-scrollbar')
 const { handleMsgClick, handleMsgDelete, menuList, specialMenuList, handleMsgDblclick } = useMessage()
 const currentSession = computed(() => globalStore.currentSession)
-// TODO 艾特我提醒
-const sessionList = computed(() =>
-  chatStore.sessionList
-    .map((item) => {
-      // 获取该会话的所有消息，避免重复转换
-      const messages = Array.from(chatStore.messageMap.get(item.roomId)?.values() || [])
-      // 获取最后一条消息
-      const lastMsg = messages[messages.length - 1]
-      let LastUserMsg = ''
+// 会话列表
+const sessionList = computed(() => {
+  return (
+    chatStore.sessionList
+      .map((item) => {
+        // 获取该会话的所有消息，避免重复转换
+        const messages = Array.from(chatStore.messageMap.get(item.roomId)?.values() || [])
+        // 获取最后一条消息
+        const lastMsg = messages[messages.length - 1]
+        let LastUserMsg = ''
 
-      if (lastMsg) {
-        const lastMsgUserName = useUserInfo(lastMsg.fromUser.uid)
+        // 获取最新的头像
+        let latestAvatar = item.avatar
+        if (item.type === RoomTypeEnum.SINGLE && item.id) {
+          latestAvatar = useUserInfo(item.id).value.avatar || item.avatar
+        }
 
-        // 添加@提醒判断
-        const isAtMe =
-          item.type === RoomTypeEnum.GROUP &&
-          currentSession.value.roomId !== item.roomId &&
-          item.unreadCount > 0 && // 只有未读消息时才检查@
-          messages
-            .slice(-item.unreadCount) // 只检查最新的未读消息
-            .some((msg) => msg.message?.body?.atUidList?.includes(userStore.userInfo.uid))
+        if (lastMsg) {
+          const lastMsgUserName = useUserInfo(lastMsg.fromUser.uid)
 
-        const atPrefix = isAtMe ? '<span class="text-#d5304f mr-4px">[有人@我]</span>' : ''
+          // 添加@提醒判断 - 修改比较逻辑，确保类型一致
+          const messagesWithAt = messages.filter((msg) =>
+            msg.message?.body?.atUidList?.some((atUid: string) => String(atUid) === String(userStore.userInfo.uid))
+          )
 
-        LastUserMsg =
-          lastMsg.message?.type === MsgEnum.RECALL
-            ? item.type === RoomTypeEnum.GROUP
-              ? `${lastMsgUserName.value.name}:撤回了一条消息`
-              : lastMsg.fromUser.uid === userUid.value
-                ? '你撤回了一条消息'
-                : '对方撤回了一条消息'
-            : `${atPrefix}${
-                renderReplyContent(
-                  lastMsgUserName.value.name,
-                  lastMsg.message?.type,
-                  lastMsg.message?.body?.content || lastMsg.message?.body,
-                  item.type
-                ) as string
-              }`
-      }
-      return {
-        ...item,
-        lastMsg: LastUserMsg || item.text || '欢迎使用HuLa',
-        lastMsgTime: formatTimestamp(item?.activeTime)
-      }
-    })
-    // 添加排序逻辑：先按置顶状态排序，再按活跃时间排序
-    .sort((a, b) => {
-      // 1. 先按置顶状态排序（置顶的排在前面）
-      if (a.top && !b.top) return -1
-      if (!a.top && b.top) return 1
+          // 检查是否有@我的消息以及是否在未读范围内
+          const isAtMe =
+            item.type === RoomTypeEnum.GROUP &&
+            currentSession.value.roomId !== item.roomId &&
+            messagesWithAt.some((msg) => messages.indexOf(msg) >= messages.length - (item.unreadCount || 0))
 
-      // 2. 在相同置顶状态下，按最后活跃时间降序排序（最新的排在前面）
-      return b.activeTime - a.activeTime
-    })
-)
+          const atPrefix = isAtMe ? '<span class="text-#d5304f mr-4px">[有人@我]</span>' : ''
+
+          LastUserMsg =
+            lastMsg.message?.type === MsgEnum.RECALL
+              ? item.type === RoomTypeEnum.GROUP
+                ? `${lastMsgUserName.value.name}:撤回了一条消息`
+                : lastMsg.fromUser.uid === userUid.value
+                  ? '你撤回了一条消息'
+                  : '对方撤回了一条消息'
+              : `${atPrefix}${
+                  renderReplyContent(
+                    lastMsgUserName.value.name,
+                    lastMsg.message?.type,
+                    lastMsg.message?.body?.content || lastMsg.message?.body,
+                    item.type
+                  ) as string
+                }`
+        }
+        return {
+          ...item,
+          avatar: latestAvatar,
+          lastMsg: LastUserMsg || item.text || '欢迎使用HuLa',
+          lastMsgTime: formatTimestamp(item?.activeTime)
+        }
+      })
+      // 添加排序逻辑：先按置顶状态排序，再按活跃时间排序
+      .sort((a, b) => {
+        // 1. 先按置顶状态排序（置顶的排在前面）
+        if (a.top && !b.top) return -1
+        if (!a.top && b.top) return 1
+
+        // 2. 在相同置顶状态下，按最后活跃时间降序排序（最新的排在前面）
+        return b.activeTime - a.activeTime
+      })
+  )
+})
 
 watch(
   () => chatStore.currentSessionInfo,

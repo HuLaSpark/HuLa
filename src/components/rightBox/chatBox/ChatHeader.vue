@@ -7,7 +7,7 @@
       <Transition name="loading" mode="out-in">
         <img v-if="showLoading" class="size-22px py-3px" src="@/assets/img/loading.svg" alt="" />
         <n-flex v-else align="center">
-          <n-avatar class="rounded-8px select-none" :size="28" :src="AvatarUtils.getAvatarUrl(activeItem.avatar)" />
+          <n-avatar class="rounded-8px select-none" :size="28" :src="currentUserAvatar" />
           <p class="text-(16px [--text-color])">{{ activeItem.name }}</p>
           <svg
             v-if="activeItem.hotFlag === IsAllUserEnum.Yes && !showLoading"
@@ -463,6 +463,16 @@ const statusTitle = computed(() => {
     return currentUserStatus.value.title
   }
   return isOnline.value ? '在线' : '离线'
+})
+
+// 获取用户的最新头像
+const currentUserAvatar = computed(() => {
+  if (activeItem.type === RoomTypeEnum.GROUP) {
+    return AvatarUtils.getAvatarUrl(activeItem.avatar)
+  } else if (activeItem.id) {
+    return AvatarUtils.getAvatarUrl(useUserInfo(activeItem.id).value.avatar || activeItem.avatar)
+  }
+  return AvatarUtils.getAvatarUrl(activeItem.avatar)
 })
 
 onMounted(() => {

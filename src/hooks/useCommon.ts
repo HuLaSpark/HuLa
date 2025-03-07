@@ -695,6 +695,12 @@ export const useCommon = () => {
     }
 
     const res = await apis.sessionDetailWithFriends({ id: uid, roomType: type })
+    // 把隐藏的会话先显示
+    try {
+      await apis.hideSession({ roomId: res.roomId, hide: false })
+    } catch (error) {
+      window.$message.error('显示会话失败')
+    }
     globalStore.currentSession.roomId = res.roomId
     globalStore.currentSession.type = RoomTypeEnum.SINGLE
 

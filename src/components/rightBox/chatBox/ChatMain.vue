@@ -683,16 +683,67 @@ const handleEmojiSelect = (label: string, item: any) => {
 //   return content.includes('id="aitSpan"') ? removeTag(content) : content
 // }
 
-/** 跳转到回复消息 */
-const jumpToReplyMsg = (key: string) => {
-  nextTick(() => {
-    // 找到对应消息的索引
-    const messageIndex = chatMessageList.value.findIndex((msg) => msg.message.id === key)
+/**
+ * TODO: 现在是遍历去翻记录，后续需要优化
+ * 跳转到回复消息
+ */
+const jumpToReplyMsg = async (key: string) => {
+  // 先在当前列表中尝试查找
+  let messageIndex = chatMessageList.value.findIndex((msg) => msg.message.id === String(key))
+
+  // 如果找到了，直接滚动到该消息
+  if (messageIndex !== -1) {
+    messageListInst.value?.scrollTo({ index: messageIndex, behavior: 'instant' })
+    activeReply.value = String(key)
+    return
+  }
+
+  // 如果没有找到消息，需要加载历史消息
+  // 检查是否正在加载，避免重复加载
+  if (messageOptions.value?.isLoading || isLoadingMore.value) return
+
+  // 设置加载标记
+  isLoadingMore.value = true
+
+  // 显示加载状态
+  window.$message.info('正在查找消息...')
+
+  // 尝试加载历史消息直到找到目标消息或无法再加载
+  let foundMessage = false
+  let attemptCount = 0
+  const MAX_ATTEMPTS = 5 // 设置最大尝试次数，避免无限循环
+
+  while (!foundMessage && attemptCount < MAX_ATTEMPTS && !messageOptions.value?.isLast) {
+    attemptCount++
+
+    // 加载更多历史消息
+    await chatStore.loadMore()
+
+    // 在新加载的消息中查找
+    messageIndex = chatMessageList.value.findIndex((msg) => msg.message.id === key)
+
     if (messageIndex !== -1) {
+      foundMessage = true
+      break
+    }
+
+    // 简单延时，避免快速请求
+    await new Promise((resolve) => setTimeout(resolve, 300))
+  }
+
+  // 重置加载标记
+  isLoadingMore.value = false
+
+  // 如果找到了消息，滚动到该位置
+  if (foundMessage) {
+    nextTick(() => {
       messageListInst.value?.scrollTo({ index: messageIndex, behavior: 'instant' })
       activeReply.value = key
-    }
-  })
+    })
+  } else {
+    // 如果尝试多次后仍未找到消息
+    window.$message.warning('无法找到原始消息，可能已被删除或太久远')
+  }
 }
 
 /**

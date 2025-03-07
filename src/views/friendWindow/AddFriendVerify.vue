@@ -73,6 +73,9 @@ const addFriend = async () => {
     targetUid: globalStore.addFriendModalInfo.uid as string
   })
   window.$message.success('已发送好友申请')
+  setTimeout(async () => {
+    await getCurrentWebviewWindow().close()
+  }, 2000)
 }
 
 onMounted(async () => {

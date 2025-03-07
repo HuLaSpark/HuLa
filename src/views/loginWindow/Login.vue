@@ -87,7 +87,7 @@
           :loading="loading"
           :disabled="loginDisabled"
           class="w-full mt-8px mb-50px"
-          @click="debouncedLogin()"
+          @click="normalLogin()"
           color="#13987f">
           <span>{{ loginText }}</span>
         </n-button>
@@ -120,7 +120,7 @@
           :loading="loading"
           :disabled="loginDisabled"
           class="w-200px mt-12px mb-40px"
-          @click="debouncedLogin(true)"
+          @click="normalLogin(true)"
           color="#13987f">
           {{ loginText }}
         </n-button>
@@ -168,7 +168,7 @@ import { useSettingStore } from '@/stores/setting.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { useMitt } from '@/hooks/useMitt'
 import { WsResponseMessageType } from '@/services/wsType'
-import { useNetwork, useDebounceFn } from '@vueuse/core'
+import { useNetwork } from '@vueuse/core'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { clearListener } from '@/utils/ReadCountQueue'
 import { useGlobalStore } from '@/stores/global'
@@ -367,8 +367,6 @@ const normalLogin = async (auto = false) => {
     })
 }
 
-const debouncedLogin = useDebounceFn(normalLogin, 500)
-
 const openHomeWindow = async () => {
   await createWebviewWindow('HuLa', 'home', 960, 720, 'login', true)
 }
@@ -392,7 +390,7 @@ const closeMenu = (event: MouseEvent) => {
 
 const enterKey = (e: KeyboardEvent) => {
   if (e.key === 'Enter' && !loginDisabled.value) {
-    debouncedLogin()
+    normalLogin()
   }
 }
 
@@ -438,7 +436,7 @@ onMounted(async () => {
 
   // 自动登录时直接触发登录
   if (isAutoLogin.value) {
-    debouncedLogin(true)
+    normalLogin(true)
   } else {
     loginHistories.length > 0 && giveAccount(loginHistories[0])
   }

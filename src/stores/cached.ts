@@ -190,6 +190,15 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
     await getBatchUserInfo([uid])
   }
 
+  const userAvatarUpdated = ref(false)
+
+  const updateUserCache = (userInfo: CacheUserItem) => {
+    // 更新缓存
+    userCachedList[userInfo.uid] = userInfo
+    // 标记头像已更新，触发相关组件重新渲染
+    userAvatarUpdated.value = !userAvatarUpdated.value
+  }
+
   return {
     userCachedList,
     badgeCachedList,
@@ -199,6 +208,8 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
     getGroupAtUserBaseInfo,
     currentAtUsersList,
     filterUsersByUidList,
-    updateUserState
+    updateUserState,
+    userAvatarUpdated,
+    updateUserCache
   }
 })
