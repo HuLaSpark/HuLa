@@ -39,16 +39,16 @@
     </n-flex>
 
     <!-- 中间聊天内容(使用虚拟列表) -->
-    <MessageList
+    <VirtualList
       v-else
       id="image-chat-main"
-      ref="messageListInst"
+      ref="virtualListInst"
       :items="chatMessageList"
       :estimatedItemHeight="itemSize"
-      :buffer="5"
+      :buffer="2"
       :isLoadingMore="messageOptions?.isLoading && isLoadingMore"
       :isLast="messageOptions?.isLast"
-      @scroll="handleScroll"
+      @scroll.passive="handleScroll"
       @scroll-direction-change="handleScrollDirectionChange"
       @loadMore="handleLoadMore"
       style="max-height: calc(100vh - 260px)">
@@ -352,7 +352,7 @@
           </div>
         </n-flex>
       </template>
-    </MessageList>
+    </VirtualList>
   </Transition>
 
   <!-- 弹出框 -->
@@ -413,7 +413,7 @@ import { type } from '@tauri-apps/plugin-os'
 import { useUserStore } from '@/stores/user.ts'
 import { useNetwork } from '@vueuse/core'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import MessageList, { type MessageListExpose } from '@/components/common/MessageList.vue'
+import VirtualList, { type VirtualListExpose } from '@/components/common/VirtualList.vue'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useTauriListener } from '@/hooks/useTauriListener'
 import { useGroupStore } from '@/stores/group.ts'
@@ -452,7 +452,7 @@ const activeReply = ref('')
 /** item最小高度，用于计算滚动大小和位置 */
 const itemSize = computed(() => (chatStore.isGroup ? 90 : 76))
 /** 虚拟列表 */
-const messageListInst = useTemplateRef<MessageListExpose>('messageListInst')
+const virtualListInst = useTemplateRef<VirtualListExpose>('virtualListInst')
 /** 手动触发Popover显示 */
 const infoPopover = ref(false)
 // 记录 requestAnimationFrame 的返回值
@@ -489,8 +489,8 @@ provide('popoverControls', { enableScroll })
 
 // 添加防抖处理
 const debouncedScrollToBottom = useDebounceFn(() => {
-  if (!messageListInst.value) return
-  messageListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
+  if (!virtualListInst.value) return
+  virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
 }, 100)
 
 // 监听会话切换
@@ -521,7 +521,7 @@ watch(
       if (isLoadingMore.value) {
         if (scrollTop.value < 26) {
           requestAnimationFrame(() => {
-            messageListInst.value?.scrollTo({ index: value.length - oldValue.length })
+            virtualListInst.value?.scrollTo({ index: value.length - oldValue.length })
           })
         }
         return
@@ -529,16 +529,16 @@ watch(
 
       // 优先级1：用户发送的消息，始终滚动到底部
       if (latestMessage?.fromUser?.uid === userUid.value) {
-        messageListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
+        virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
         return
       }
 
       // 优先级2：已经在底部时的新消息
-      const container = messageListInst.value?.getContainer()
+      const container = virtualListInst.value?.getContainer()
       if (container) {
         const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight
         if (distanceFromBottom <= 300) {
-          messageListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
+          virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
           return
         }
 
@@ -568,7 +568,7 @@ const handleScrollDirectionChange = (direction: 'up' | 'down') => {
 /** 处理滚动事件(用于页脚显示功能) */
 const handleScroll = () => {
   if (isAutoScrolling.value) return // 如果是自动滚动，不处理
-  const container = messageListInst.value?.getContainer()
+  const container = virtualListInst.value?.getContainer()
   if (!container) return
 
   // 获取已滚动的距离
@@ -624,7 +624,7 @@ const handleScroll = () => {
 const handleTransitionComplete = () => {
   if (!messageOptions.value?.isLoading) {
     nextTick(() => {
-      messageListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
+      virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
     })
   }
 }
@@ -693,7 +693,7 @@ const jumpToReplyMsg = async (key: string) => {
 
   // 如果找到了，直接滚动到该消息
   if (messageIndex !== -1) {
-    messageListInst.value?.scrollTo({ index: messageIndex, behavior: 'instant' })
+    virtualListInst.value?.scrollTo({ index: messageIndex, behavior: 'instant' })
     activeReply.value = String(key)
     return
   }
@@ -737,7 +737,7 @@ const jumpToReplyMsg = async (key: string) => {
   // 如果找到了消息，滚动到该位置
   if (foundMessage) {
     nextTick(() => {
-      messageListInst.value?.scrollTo({ index: messageIndex, behavior: 'instant' })
+      virtualListInst.value?.scrollTo({ index: messageIndex, behavior: 'instant' })
       activeReply.value = key
     })
   } else {
@@ -772,10 +772,10 @@ const addToDomUpdateQueue = (index: string, id: string) => {
 
 /** 点击后滚动到底部 */
 const scrollBottom = () => {
-  if (!messageListInst.value) return
+  if (!virtualListInst.value) return
 
   nextTick(() => {
-    messageListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
+    virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
   })
 }
 
@@ -842,7 +842,7 @@ const handleLoadMore = async () => {
   if (messageOptions.value?.isLoading || isLoadingMore.value) return
 
   // 记录当前的内容高度
-  const container = messageListInst.value?.getContainer()
+  const container = virtualListInst.value?.getContainer()
   if (!container) return
   const oldScrollHeight = container.scrollHeight
 
@@ -869,7 +869,7 @@ const handleLoadMore = async () => {
 
 onMounted(async () => {
   nextTick(() => {
-    messageListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
+    virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
   })
   useMitt.on(MittEnum.MESSAGE_ANIMATION, async (messageType: MessageType) => {
     addToDomUpdateQueue(messageType.message.id, messageType.fromUser.uid)

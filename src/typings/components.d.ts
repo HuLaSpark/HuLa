@@ -22,7 +22,6 @@ declare module 'vue' {
     Image: typeof import('./../components/rightBox/renderMessage/Image.vue')['default']
     InfoPopover: typeof import('./../components/common/InfoPopover.vue')['default']
     LoadingSpinner: typeof import('./../components/common/LoadingSpinner.vue')['default']
-    MessageList: typeof import('./../components/common/MessageList.vue')['default']
     MsgInput: typeof import('./../components/rightBox/MsgInput.vue')['default']
     NaiveProvider: typeof import('./../components/common/NaiveProvider.vue')['default']
     NAlert: typeof import('naive-ui')['NAlert']
