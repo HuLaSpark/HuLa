@@ -181,9 +181,9 @@ useMitt.on(WsResponseMessageType.MSG_RECALL, (data: RevokedMsgType) => {
 })
 useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   chatStore.pushMsg(data)
-  if (data.fromUser.uid !== userStore.userInfo.uid) {
-    useMitt.emit(MittEnum.MESSAGE_ANIMATION, data)
-  }
+  // if (data.fromUser.uid !== userStore.userInfo.uid) {
+  //   useMitt.emit(MittEnum.MESSAGE_ANIMATION, data)
+  // }
   // 接收到通知就设置图标闪烁
   const username = useUserInfo(data.fromUser.uid).value.name!
   // 不是自己发的消息才通知

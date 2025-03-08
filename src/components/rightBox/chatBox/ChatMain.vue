@@ -45,7 +45,7 @@
       ref="virtualListInst"
       :items="chatMessageList"
       :estimatedItemHeight="itemSize"
-      :buffer="2"
+      :buffer="10"
       :isLoadingMore="messageOptions?.isLoading && isLoadingMore"
       :isLast="messageOptions?.isLast"
       @scroll.passive="handleScroll"
@@ -400,7 +400,7 @@
 </template>
 <script setup lang="ts">
 import { EventEnum, MittEnum, MsgEnum, MessageStatusEnum } from '@/enums'
-import { type MessageType, SessionItem } from '@/services/types.ts'
+import { SessionItem } from '@/services/types.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { usePopover } from '@/hooks/usePopover.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
@@ -751,24 +751,27 @@ const jumpToReplyMsg = async (key: string) => {
  * @param index 下标
  * @param id 用户ID
  */
-const addToDomUpdateQueue = (index: string, id: string) => {
-  // 使用 nextTick 确保虚拟列表渲染完最新的项目后进行滚动
-  nextTick(() => {
-    /** data-key标识的气泡,添加前缀用于区分用户消息，不然气泡动画会被覆盖 */
-    const dataKey = id === userUid.value ? `U${index}` : `Q${index}`
-    const lastMessageElement = document.querySelector(`[data-key="${dataKey}"]`) as HTMLElement
-    if (lastMessageElement) {
-      // 添加动画类
-      lastMessageElement.classList.add('bubble-animation')
-      // 监听动画结束事件
-      const handleAnimationEnd = () => {
-        lastMessageElement.classList.remove('bubble-animation')
-        lastMessageElement.removeEventListener('animationend', handleAnimationEnd)
-      }
-      lastMessageElement.addEventListener('animationend', handleAnimationEnd)
-    }
-  })
-}
+// const addToDomUpdateQueue = (index: string, id: string) => {
+//   // 使用 nextTick 确保虚拟列表渲染完最新的项目后进行滚动
+//   nextTick(() => {
+//     /** data-key标识的气泡,添加前缀用于区分用户消息，不然气泡动画会被覆盖 */
+//     const dataKey = id === userUid.value ? `U${index}` : `Q${index}`
+//     const lastMessageElement = document.querySelector(`[data-key="${dataKey}"]`) as HTMLElement
+//     console.log(dataKey, lastMessageElement)
+
+//     if (lastMessageElement) {
+//       console.log('触发气泡添加动画')
+//       // 添加动画类
+//       lastMessageElement.classList.add('bubble-animation')
+//       // 监听动画结束事件
+//       const handleAnimationEnd = () => {
+//         lastMessageElement.classList.remove('bubble-animation')
+//         lastMessageElement.removeEventListener('animationend', handleAnimationEnd)
+//       }
+//       lastMessageElement.addEventListener('animationend', handleAnimationEnd)
+//     }
+//   })
+// }
 
 /** 点击后滚动到底部 */
 const scrollBottom = () => {
@@ -871,9 +874,9 @@ onMounted(async () => {
   nextTick(() => {
     virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
   })
-  useMitt.on(MittEnum.MESSAGE_ANIMATION, async (messageType: MessageType) => {
-    addToDomUpdateQueue(messageType.message.id, messageType.fromUser.uid)
-  })
+  // useMitt.on(MittEnum.MESSAGE_ANIMATION, (messageType: MessageType) => {
+  //   addToDomUpdateQueue(messageType.message.id, messageType.fromUser.uid)
+  // })
   useMitt.on(`${MittEnum.INFO_POPOVER}-Main`, (event: any) => {
     selectKey.value = event.uid
     infoPopover.value = true

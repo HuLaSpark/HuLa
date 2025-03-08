@@ -31,7 +31,7 @@
 </p>
 
 <p align="center">
-  ☕️ 服务端：<a href="https://github.com/HulaSpark/HuLa-Server">github HuLa-Server</a> | <a href="https://github.com/HulaSpark/HuLa-Server">gitee HuLa-Server</a>
+  ☕️ 服务端：<a href="https://github.com/HulaSpark/HuLa-Server">github HuLa-Server</a> | <a href="https://gitee.com/HulaSpark/HuLa-Server">gitee HuLa-Server</a>
 </p>
 
 <p align="center"><a href="README.en.md">English</a> | 中文</p>

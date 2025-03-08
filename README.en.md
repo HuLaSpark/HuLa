@@ -30,6 +30,10 @@
   WeChat: <img src="https://img.shields.io/badge/cy2439646234-07C160?logo=wechat&logoColor=fff">
 </p>
 
+<p align="center">
+  ☕️ server：<a href="https://github.com/HulaSpark/HuLa-Server">github HuLa-Server</a> | <a href="https://gitee.com/HulaSpark/HuLa-Server">gitee HuLa-Server</a>
+</p>
+
 <p align="center"><a href="README.zh-CN.md">中文</a> | English</p>
 
 ## Project Introduction
