@@ -301,7 +301,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
     // 先添加到消息列表 - 此时会显示本地预览
     chatStore.pushMsg(tempMsg)
-    // useMitt.emit(MittEnum.MESSAGE_ANIMATION, tempMsg)
+    useMitt.emit(MittEnum.MESSAGE_ANIMATION, tempMsg)
     console.log('👾临时消息:', tempMsg)
 
     // 设置发送状态的定时器

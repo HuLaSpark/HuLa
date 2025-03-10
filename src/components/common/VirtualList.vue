@@ -17,8 +17,6 @@
 </template>
 
 <script setup lang="ts">
-import { useDebounceFn } from '@vueuse/core'
-
 const props = defineProps<{
   items: any[]
   estimatedItemHeight?: number
@@ -33,12 +31,12 @@ const emit = defineEmits<{
 }>()
 
 // 常量定义
-const DEFAULT_ESTIMATED_HEIGHT = 90 // 默认预估的每项高度
-const BUFFER_SIZE = props.buffer || 10 // 上下缓冲区域的数量
+const DEFAULT_ESTIMATED_HEIGHT = 80 // 默认预估的每项高度
+const BUFFER_SIZE = props.buffer || 5 // 上下缓冲区域的数量
 const OVERSCAN_SIZE = 1000 // 预渲染区域的像素高度，防止滚动时出现空白
+const MAX_CACHE_SIZE = 100 // 高度缓存的最大数量
 const LOADING_OFFSET = 26 // 加载中需要的偏移量(26px是加载动画的高度)
 const ESTIMATED_ITEM_HEIGHT = props.estimatedItemHeight || DEFAULT_ESTIMATED_HEIGHT // 每项的预估高度
-const SCROLL_THROTTLE_DELAY = 16 // 滚动节流延迟时间(约60fps)
 
 // 响应式引用
 const containerRef = ref<HTMLElement | null>(null) // 容器元素引用
@@ -49,64 +47,112 @@ const isScrolling = ref(false) // 是否正在滚动中
 const rafId = ref<number | null>(null) // requestAnimationFrame的ID
 const lastScrollTop = ref(0) // 上次滚动位置
 const consecutiveStaticFrames = ref(0) // 连续静止帧计数
-const accumulatedHeights = ref<number[]>([]) // 缓存累积高度数组
 
 // ResizeObserver 实例
 const resizeObserver = ref<ResizeObserver | null>(null)
 
-// 缓存上一次的可见数据，用于加载更多时保持稳定
-const lastVisibleData = ref<any[]>([])
+// 清理过期的高度缓存
+const cleanupHeightCache = () => {
+  if (heights.value.size > MAX_CACHE_SIZE) {
+    // 获取所有键并按照最近使用时间排序
+    const keys = Array.from(heights.value.keys())
+    const visibleKeys = new Set(
+      props.items
+        .slice(Math.max(0, visibleRange.value.start - BUFFER_SIZE), visibleRange.value.end + BUFFER_SIZE + 1)
+        .map((item) => item.message?.id?.toString())
+        .filter(Boolean)
+    )
+
+    // 保留可见区域的缓存
+    const keysToDelete = keys.filter((key) => !visibleKeys.has(key))
+    const deleteCount = keysToDelete.length - MAX_CACHE_SIZE / 2
+
+    if (deleteCount > 0) {
+      for (const key of keysToDelete.slice(0, deleteCount)) {
+        heights.value.delete(key)
+      }
+    }
+  }
+}
 
 // 计算可见项目
 const visibleData = computed(() => {
-  // 如果正在加载更多，保持当前可见项目不变
-  if (props.isLoadingMore) {
-    return lastVisibleData.value
-  }
-
   // 根据可见范围切片并添加索引信息
-  const data = props.items.slice(visibleRange.value.start, visibleRange.value.end + 1).map((item, index) => ({
+  return props.items.slice(visibleRange.value.start, visibleRange.value.end + 1).map((item, index) => ({
     ...item,
     _index: visibleRange.value.start + index // 添加真实索引，用于渲染
   }))
-
-  // 缓存最后一次的可见数据
-  lastVisibleData.value = data
-  return data
 })
 
-// 计算列表总高度（优化版）
+// 计算列表总高度
 const totalHeight = computed(() => {
-  // 使用缓存的累积高度数组的最后一个值
-  if (accumulatedHeights.value.length > 0) {
-    return accumulatedHeights.value[accumulatedHeights.value.length - 1]
-  }
-
-  // 如果没有缓存，才进行完整计算
+  // 累加所有项目的高度，如果没有缓存则使用预估高度
   return props.items.reduce((total, item) => {
     return total + (heights.value.get(item.message?.id?.toString()) || ESTIMATED_ITEM_HEIGHT)
   }, 0)
 })
 
-// 计算累积高度（仅在数据变化时更新）
-const updateAccumulatedHeights = () => {
-  let totalHeight = 0
-  accumulatedHeights.value = props.items.map((item) => {
-    totalHeight += heights.value.get(item.message?.id?.toString()) || ESTIMATED_ITEM_HEIGHT
-    return totalHeight
-  })
+// 监听列表数据变化
+watch(
+  () => props.items,
+  (newItems, oldItems) => {
+    // 如果列表完全重置，清空高度缓存
+    if (newItems.length === 0 || oldItems.length === 0) {
+      heights.value.clear()
+    }
+
+    // 数据变化时重新计算可见范围和更新高度
+    updateVisibleRange()
+    nextTick(() => {
+      updateItemHeight()
+    })
+  },
+  { deep: false }
+)
+
+// 更新项目实际高度
+const updateItemHeight = () => {
+  if (!containerRef.value) return
+
+  // 遍历可见项目，测量并缓存实际高度
+  for (const item of visibleData.value) {
+    const id = item.message?.id?.toString()
+    if (!id) continue
+
+    const el = document.getElementById(`item-${id}`)
+    if (el) {
+      const height = el.getBoundingClientRect().height
+      heights.value.set(id, height)
+    }
+  }
+
+  // 清理过期缓存
+  cleanupHeightCache()
+
+  // 非滚动状态下更新可见范围
+  if (!isScrolling.value) {
+    updateVisibleRange()
+  }
 }
 
-// 根据滚动位置计算起始索引（优化版）
+// 根据滚动位置计算起始索引
 const getStartIndex = (scrollTop: number) => {
-  const target = scrollTop - OVERSCAN_SIZE
-  let left = 0
-  let right = accumulatedHeights.value.length - 1
+  const accumulatedHeights: number[] = []
+  let totalHeight = 0
+  // 预计算累积高度 O(n)，但只需要在列表数据变化时更新
+  props.items.forEach((item, index) => {
+    totalHeight += heights.value.get(item.message?.id?.toString()) || ESTIMATED_ITEM_HEIGHT
+    accumulatedHeights[index] = totalHeight
+  })
 
-  // 使用缓存的累积高度进行二分查找
+  // 二分查找 O(log n)
+  let left = 0
+  let right = accumulatedHeights.length - 1
+  const target = scrollTop - OVERSCAN_SIZE
+
   while (left <= right) {
     const mid = Math.floor((left + right) / 2)
-    if (accumulatedHeights.value[mid] < target) {
+    if (accumulatedHeights[mid] < target) {
       left = mid + 1
     } else {
       right = mid - 1
@@ -116,15 +162,19 @@ const getStartIndex = (scrollTop: number) => {
   return Math.max(0, left - BUFFER_SIZE)
 }
 
-// 计算指定索引的偏移量（优化版）
+// 计算指定索引的偏移量
 const getOffsetForIndex = (index: number) => {
-  if (index <= 0) return 0
-  if (index >= accumulatedHeights.value.length) return accumulatedHeights.value[accumulatedHeights.value.length - 1]
-  return accumulatedHeights.value[index - 1] || 0
+  let total = 0
+  // 累加到目标索引前的所有项目高度
+  for (let i = 0; i < index; i++) {
+    const itemHeight = heights.value.get(props.items[i].message?.id?.toString()) || ESTIMATED_ITEM_HEIGHT
+    total += itemHeight
+  }
+  return total
 }
 
-// 更新可见范围的节流版本
-const updateVisibleRangeThrottled = useDebounceFn(() => {
+// 更新可见范围
+const updateVisibleRange = () => {
   if (!containerRef.value) return
 
   const scrollTop = containerRef.value.scrollTop
@@ -147,104 +197,13 @@ const updateVisibleRangeThrottled = useDebounceFn(() => {
 
   // 更新可见范围和偏移量
   visibleRange.value = { start, end }
+  // 加上加载中需要的偏移量
   offset.value = getOffsetForIndex(start) + LOADING_OFFSET
-}, SCROLL_THROTTLE_DELAY)
-
-// 更新可见范围
-const updateVisibleRange = () => {
-  updateVisibleRangeThrottled()
 }
 
-// 批量更新函数
-const batchUpdate = () => {
-  // 更新累积高度缓存
-  updateAccumulatedHeights()
-  // 更新可见范围
-  updateVisibleRange()
-  // 更新实际高度
-  nextTick(() => {
-    updateItemHeight()
-  })
-}
-
-// 监听列表数据变化（优化版）
-watch(
-  () => props.items,
-  (newItems, oldItems) => {
-    // 如果是加载更多，使用优化的更新策略
-    if (props.isLoadingMore) {
-      // 只更新累积高度缓存，其他更新推迟到加载完成后
-      updateAccumulatedHeights()
-      return
-    }
-
-    // 如果是完全重置或其他情况，执行完整更新
-    if (newItems.length === 0 || oldItems.length === 0) {
-      heights.value.clear()
-    }
-
-    // 使用批量更新
-    batchUpdate()
-  },
-  { deep: false } // 移除深度监听，提高性能
-)
-
-// 监听加载状态变化
-watch(
-  () => props.isLoadingMore,
-  (isLoading) => {
-    if (!isLoading) {
-      // 加载完成后执行一次完整的批量更新
-      nextTick(() => {
-        batchUpdate()
-      })
-    }
-  },
-  { deep: false }
-)
-
-// 更新项目实际高度（优化版）
-const updateItemHeight = () => {
-  if (!containerRef.value || props.isLoadingMore) return
-
-  let heightsUpdated = false
-  const updatedHeights = new Map()
-
-  // 批量收集高度更新
-  for (const item of visibleData.value) {
-    const id = item.message?.id?.toString()
-    if (!id) continue
-
-    const el = document.getElementById(`item-${id}`)
-    if (el) {
-      const height = el.getBoundingClientRect().height
-      if (heights.value.get(id) !== height) {
-        updatedHeights.set(id, height)
-        heightsUpdated = true
-      }
-    }
-  }
-
-  // 如果有高度更新，批量应用更新
-  if (heightsUpdated) {
-    // 批量更新高度缓存
-    updatedHeights.forEach((height, id) => {
-      heights.value.set(id, height)
-    })
-
-    // 更新累积高度缓存
-    updateAccumulatedHeights()
-
-    // 非滚动状态下更新可见范围
-    if (!isScrolling.value) {
-      updateVisibleRange()
-    }
-  }
-}
-
-// 更新可见范围的帧动画处理（优化版）
+// 更新可见范围的帧动画处理
 const updateFrame = () => {
-  if (!containerRef.value || props.isLoadingMore) return
+  if (!containerRef.value) return
 
   const currentScrollTop = containerRef.value.scrollTop
 
@@ -258,8 +217,7 @@ const updateFrame = () => {
     } else if (currentScrollTop > lastScrollTop.value) {
       emit('scrollDirectionChange', 'down')
     }
-    // 使用节流的可见范围更新
-    updateVisibleRangeThrottled()
+    updateVisibleRange()
     lastScrollTop.value = currentScrollTop
   } else {
     // 滚动位置未变化，增加静止帧计数
@@ -269,9 +227,7 @@ const updateFrame = () => {
     if (consecutiveStaticFrames.value >= 3) {
       // 滚动结束，更新高度并停止动画
       isScrolling.value = false
-      if (!props.isLoadingMore) {
-        updateItemHeight()
-      }
+      updateItemHeight()
       if (rafId.value !== null) {
         cancelAnimationFrame(rafId.value)
         rafId.value = null
@@ -285,7 +241,7 @@ const updateFrame = () => {
 }
 
 // 滚动事件处理
-const handleScroll = useDebounceFn((event: Event) => {
+const handleScroll = (event: Event) => {
   emit('scroll', event)
 
   // 标记滚动状态并开始帧动画
@@ -296,18 +252,15 @@ const handleScroll = useDebounceFn((event: Event) => {
       rafId.value = requestAnimationFrame(updateFrame)
     }
   }
-}, SCROLL_THROTTLE_DELAY)
+}
 
 onMounted(() => {
-  // 初始化累积高度缓存
-  updateAccumulatedHeights()
   // 初始化可见范围
   updateVisibleRange()
 
   // 使用 ResizeObserver 监听容器大小变化
   if (containerRef.value) {
     resizeObserver.value = new ResizeObserver(() => {
-      updateAccumulatedHeights()
       updateVisibleRange()
       nextTick(() => {
         updateItemHeight()
