@@ -1,5 +1,3 @@
-import { ref, onBeforeUnmount } from 'vue'
-
 export function useCanvasTool(drawCanvas: any, drawCtx: any, imgCtx: any, screenConfig: any) {
   const drawConfig = ref({
     startX: 0,
@@ -26,7 +24,7 @@ export function useCanvasTool(drawCanvas: any, drawCtx: any, imgCtx: any, screen
     startListen()
   }
 
-  onBeforeUnmount(() => {
+  onUnmounted(() => {
     closeListen()
   })
 

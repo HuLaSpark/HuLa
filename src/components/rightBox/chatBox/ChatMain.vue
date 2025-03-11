@@ -757,8 +757,6 @@ const addToDomUpdateQueue = (index: string, id: string) => {
     /** data-key标识的气泡,添加前缀用于区分用户消息，不然气泡动画会被覆盖 */
     const dataKey = id === userUid.value ? `U${index}` : `Q${index}`
     const lastMessageElement = document.querySelector(`[data-key="${dataKey}"]`) as HTMLElement
-    console.log(dataKey, lastMessageElement)
-
     if (lastMessageElement) {
       console.log('触发气泡添加动画')
       // 添加动画类

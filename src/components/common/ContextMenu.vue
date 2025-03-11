@@ -6,7 +6,7 @@
         <!-- 群聊emoji表情菜单 -->
         <div
           v-if="showMenu && emoji && emoji.length > 0"
-          class="context-menu"
+          class="context-menu select-none"
           style="display: flex; height: fit-content"
           :style="{
             left: `${pos.posX}px`,
@@ -26,7 +26,7 @@
         <!-- 普通右键菜单 -->
         <div
           v-if="showMenu"
-          class="context-menu"
+          class="context-menu select-none"
           :style="{
             left: `${pos.posX}px`,
             top: `${pos.posY}px`
@@ -35,12 +35,24 @@
             <div v-for="(item, index) in visibleMenu" :key="index">
               <!-- 禁止的菜单选项需要禁止点击事件  -->
               <div class="menu-item-disabled" v-if="item.disabled" @click.prevent="$event.preventDefault()">
-                <svg><use :href="`#${item.icon}`"></use></svg>
-                {{ item.label }}
+                <div class="menu-item-content">
+                  <svg><use :href="`#${getMenuItemProp(item, 'icon')}`"></use></svg>
+                  {{ getMenuItemProp(item, 'label') }}
+                </div>
               </div>
-              <div class="menu-item" v-else @click="handleClick(item)">
-                <svg><use :href="`#${item.icon}`"></use></svg>
-                {{ item.label }}
+              <div
+                class="menu-item"
+                v-else
+                @click="handleItemClick(item)"
+                @mouseenter="handleMouseEnter(item, index)"
+                @mouseleave="handleMouseLeave">
+                <div class="menu-item-content">
+                  <svg><use :href="`#${getMenuItemProp(item, 'icon')}`"></use></svg>
+                  {{ getMenuItemProp(item, 'label') }}
+                  <svg v-if="shouldShowArrow(item)" class="arrow-icon">
+                    <use href="#right"></use>
+                  </svg>
+                </div>
               </div>
             </div>
             <!-- 判断是否有特别的菜单项才需要分割线 -->
@@ -48,8 +60,21 @@
               <!-- 分割线 -->
               <div class="h-1px bg-[--line-color] m-[2px_8px]"></div>
               <div @click="handleClick(item)" class="menu-item" v-for="item in visibleSpecialMenu" :key="item.label">
-                <svg><use :href="`#${item.icon}`"></use></svg>
-                {{ item.label }}
+                <svg><use :href="`#${getMenuItemProp(item, 'icon')}`"></use></svg>
+                {{ getMenuItemProp(item, 'label') }}
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 二级菜单 -->
+        <div v-if="showSubmenu && activeSubmenu" class="context-submenu" :style="submenuPosition">
+          <div class="menu-list">
+            <div v-for="(subItem, subIndex) in activeSubmenu" :key="subIndex" class="menu-item">
+              <div class="menu-item-content" @click="handleSubItemClick(subItem)">
+                <svg class="check-icon">
+                  <use :href="`#${getMenuItemProp(subItem, 'icon')}`"></use>
+                </svg>
+                {{ getMenuItemProp(subItem, 'label') }}
               </div>
             </div>
           </div>
@@ -110,6 +135,13 @@ const { vw, vh } = useViewport()
 /** 定义右键菜单尺寸 */
 const w = ref(0)
 const h = ref(0)
+// 二级菜单状态
+const showSubmenu = ref(false)
+const activeSubmenu = ref<any[]>([])
+const submenuPosition = ref({
+  left: '0px',
+  top: '0px'
+})
 /** 计算右键菜单的位置 */
 const pos = computed(() => {
   let posX = x.value
@@ -127,6 +159,18 @@ const pos = computed(() => {
     posY
   }
 })
+
+// 添加 watch 监听主菜单显示状态
+watch(
+  () => showMenu.value,
+  (newVal) => {
+    if (!newVal) {
+      // 主菜单隐藏时,同时隐藏二级菜单
+      showSubmenu.value = false
+      activeSubmenu.value = []
+    }
+  }
+)
 
 const handleSize = ({ width, height }: any) => {
   w.value = width
@@ -167,6 +211,138 @@ const handleEnter = (el: any) => {
 
 const handleAfterEnter = (el: any) => {
   el.style.transition = 'none'
+}
+
+/**
+ * 获取菜单项的属性值（处理函数式和静态值）
+ * @param item 菜单项
+ * @param prop 属性名 ('icon' | 'label')
+ */
+const getMenuItemProp = (item: any, prop: 'icon' | 'label') => {
+  return typeof item[prop] === 'function' ? item[prop](props.content) : item[prop]
+}
+
+// 修改 handleMouseEnter 函数
+const handleMouseEnter = (item: any, index: number) => {
+  // 检查是否有子菜单（包括函数形式的 children）
+  const hasChildren = typeof item.children === 'function' ? true : Array.isArray(item.children)
+  if (!hasChildren) {
+    showSubmenu.value = false
+    return
+  }
+
+  // 获取子菜单内容
+  const children = typeof item.children === 'function' ? item.children(props.content) : item.children
+  if (!children || children.length === 0) {
+    showSubmenu.value = false
+    return
+  }
+
+  // 获取当前菜单项的位置
+  const menuItem = document.querySelectorAll('.menu-item')[index]
+  const rect = menuItem.getBoundingClientRect()
+
+  // 计算子菜单的预期宽度和高度
+  const submenuWidth = 120 // 子菜单的最小宽度
+  const submenuHeight = children.length * 30 // 预估每项高度
+
+  let left = rect.right + 5
+  let top = rect.top
+
+  // 判断右侧空间是否足够
+  if (rect.right + submenuWidth > vw.value) {
+    // 右侧空间不足，改为显示在下方
+    left = rect.left
+    top = rect.bottom + 5 // 添加一点间距
+
+    // 检查下方空间是否足够，不够则向上显示
+    if (top + submenuHeight > vh.value) {
+      top = rect.top - submenuHeight - 5
+    }
+  } else {
+    // 右侧空间足够，但需要检查垂直方向
+    if (rect.top + submenuHeight > vh.value) {
+      // 如果超出视口底部，向上偏移
+      top = vh.value - submenuHeight - 10
+    }
+  }
+
+  submenuPosition.value = {
+    left: `${left}px`,
+    top: `${top}px`
+  }
+
+  activeSubmenu.value = children
+  showSubmenu.value = true
+}
+
+// 修改鼠标离开处理函数
+const handleMouseLeave = (e: MouseEvent) => {
+  // 添加一个小延时,让用户有时间移动到子菜单
+  setTimeout(() => {
+    if (!isMouseInSubmenu() && !isMouseInMainMenu(e)) {
+      showSubmenu.value = false
+    }
+  }, 100)
+}
+
+// 添加检查鼠标是否在主菜单内的函数
+const isMouseInMainMenu = (e: MouseEvent) => {
+  const mainMenu = document.querySelector('.context-menu')
+  if (!mainMenu) return false
+
+  const rect = mainMenu.getBoundingClientRect()
+  const { clientX, clientY } = e as MouseEvent
+
+  return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom
+}
+
+// 处理子菜单项点击
+const handleSubItemClick = (item: any) => {
+  if (typeof item.click === 'function') {
+    item.click(props.content)
+  }
+  showSubmenu.value = false
+}
+
+// 检查鼠标是否在子菜单内
+const isMouseInSubmenu = () => {
+  const submenu = document.querySelector('.context-submenu')
+  if (!submenu) return false
+
+  const rect = submenu.getBoundingClientRect()
+  const event = window.event as MouseEvent
+  if (!event) return false
+
+  return (
+    event.clientX >= rect.left &&
+    event.clientX <= rect.right &&
+    event.clientY >= rect.top &&
+    event.clientY <= rect.bottom
+  )
+}
+
+// 添加判断是否显示箭头的函数
+const shouldShowArrow = (item: any) => {
+  // 如果 children 是函数，先获取结果
+  const children = typeof item.children === 'function' ? item.children(props.content) : item.children
+
+  // 检查是否有有效的子菜单内容
+  return Array.isArray(children) && children.length > 0
+}
+
+// 处理菜单项点击
+const handleItemClick = (item: any) => {
+  const hasArrow = shouldShowArrow(item)
+  if (hasArrow) {
+    return
+  }
+
+  item.click(props.content)
+  // 关闭菜单
+  nextTick(() => {
+    showMenu.value = false
+  })
 }
 </script>
 
@@ -209,6 +385,14 @@ const handleAfterEnter = (el: any) => {
           animation: twinkle 0.3s ease-in-out;
         }
       }
+      display: flex;
+      align-items: center;
+
+      .menu-item-content {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
     }
     .menu-item-disabled {
       @include menu-item();
@@ -216,6 +400,64 @@ const handleAfterEnter = (el: any) => {
       svg {
         color: var(--disabled-color);
       }
+    }
+  }
+}
+
+.context-submenu {
+  position: fixed;
+  z-index: 1000;
+  @include menu-item-style();
+
+  .menu-list {
+    -webkit-backdrop-filter: blur(10px);
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 120px;
+
+    .menu-item {
+      @include menu-item();
+      &:hover {
+        background-color: var(--bg-menu-hover);
+        svg {
+          animation: twinkle 0.3s ease-in-out;
+        }
+      }
+      display: flex;
+      align-items: center;
+
+      .menu-item-content {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+      }
+    }
+  }
+}
+
+.menu-item {
+  .menu-item-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    position: relative;
+
+    .arrow-icon {
+      position: absolute;
+      right: 0;
+      width: 12px;
+      height: 12px;
+      color: var(--text-color);
+    }
+
+    .check-icon {
+      width: 14px;
+      height: 14px;
+      color: var(--primary-color);
     }
   }
 }

@@ -29,6 +29,7 @@ import {
 } from '@/services/types'
 
 import request from '@/services/request'
+import { NotificationTypeEnum } from '@/enums'
 
 const GET = <T>(url: string, params?: any, abort?: AbortController) => request.get<T>(url, params, abort)
 const POST = <T>(url: string, params?: any, abort?: AbortController) => request.post<T>(url, params, abort)
@@ -110,6 +111,9 @@ export default {
   searchGroup: (params: { accountCode: string }) => GET<SearchGroup[]>(urls.searchGroup, params),
   /** 搜索好友 */
   searchFriend: (params: { key: string }) => GET<SearchFriend[]>(urls.searchFriend, params),
+  /** 免打扰 */
+  notification: (params: { roomId: string; type: NotificationTypeEnum; deFriend: boolean }) =>
+    POST<void>(urls.notification, params),
   /** 申请加群 */
   applyGroup: (params: { targetGroupId: number; msg: string }) => POST(urls.applyGroup, params),
   /** 会话详情(联系人列表发消息用) */

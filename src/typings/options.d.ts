@@ -66,10 +66,11 @@ declare namespace OPT {
    * @param visible 显示条件
    */
   type RightMenu = {
-    label: string
-    icon: string
+    label: string | ((...args: any[]) => string)
+    icon: string | ((...args: any[]) => string)
     click?: (...args: any[]) => void
     visible?: (...args: any[]) => void
+    children?: RightMenu[] | ((...args: any[]) => void)
   } | null
 
   /**

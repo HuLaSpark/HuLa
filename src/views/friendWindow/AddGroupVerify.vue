@@ -70,13 +70,16 @@ const addFriend = async () => {
     targetGroupId: Number(globalStore.addGroupModalInfo.accountCode)
   })
   window.$message.success('已发送群聊申请')
+  setTimeout(async () => {
+    await getCurrentWebviewWindow().close()
+  }, 2000)
 }
 
 onMounted(async () => {
   console.log(userInfo.value)
 
   await getCurrentWebviewWindow().show()
-  requestMsg.value = `我是 ${userStore.userInfo.name}`
+  requestMsg.value = `我是${userStore.userInfo.name}`
 })
 </script>
 

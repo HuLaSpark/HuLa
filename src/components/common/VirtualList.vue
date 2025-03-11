@@ -275,7 +275,7 @@ onMounted(() => {
   })
 })
 
-onBeforeUnmount(() => {
+onUnmounted(() => {
   // 清理动画
   if (rafId.value !== null) {
     cancelAnimationFrame(rafId.value)

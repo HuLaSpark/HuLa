@@ -12,7 +12,8 @@ import {
   RoomTypeEnum,
   SexEnum,
   MessageStatusEnum,
-  SessionOperateEnum
+  SessionOperateEnum,
+  NotificationTypeEnum
 } from '@/enums'
 
 /**响应请求体*/
@@ -481,6 +482,8 @@ export type SessionItem = {
   operate: SessionOperateEnum
   /** 在线状态 1在线 2离线 */
   activeStatus?: OnlineEnum
+  /** 免打扰类型 */
+  muteNotification: NotificationTypeEnum
 }
 
 /** 消息已读未读数列表项 */

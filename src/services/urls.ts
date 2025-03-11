@@ -43,6 +43,7 @@ export default {
   setSessionTop: `${prefix + URLEnum.CHAT}/setTop`, // 设置会话置顶
   deleteSession: `${prefix + URLEnum.CHAT}/delete`, // 删除会话
   hideSession: `${prefix + URLEnum.CHAT}/setHide`, // 隐藏会话
+  notification: `${prefix + URLEnum.CHAT}/notification`, // 免打扰
 
   // -------------- 群聊相关 ---------------
   createGroup: `${prefix + URLEnum.ROOM}/group`, // 新增群组

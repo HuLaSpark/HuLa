@@ -259,7 +259,7 @@ onMounted(async () => {
   }
 })
 
-onBeforeUnmount(() => {
+onUnmounted(() => {
   clearListener()
 })
 </script>

@@ -169,7 +169,7 @@ defineExpose<AvatarCropperInstance>({
 })
 
 // 确保在组件卸载时清理预览
-onBeforeUnmount(() => {
+onUnmounted(() => {
   previewUrl.value = {
     url: '',
     img: null,

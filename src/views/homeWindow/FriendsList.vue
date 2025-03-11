@@ -181,7 +181,7 @@ const getUserState = (uid: string) => {
   return null
 }
 
-onBeforeUnmount(() => {
+onUnmounted(() => {
   detailsShow.value = false
   useMitt.emit(MittEnum.DETAILS_SHOW, detailsShow.value)
 })
