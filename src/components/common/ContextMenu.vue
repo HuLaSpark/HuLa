@@ -278,23 +278,40 @@ const handleMouseEnter = (item: any, index: number) => {
 
 // 修改鼠标离开处理函数
 const handleMouseLeave = (e: MouseEvent) => {
-  // 添加一个小延时,让用户有时间移动到子菜单
+  // 增加一个状态来跟踪鼠标移动
+  const relatedTarget = e.relatedTarget as HTMLElement
+
+  // 如果鼠标是移动到子菜单或者子菜单的子元素上，则不关闭菜单
+  if (relatedTarget?.closest('.context-submenu')) {
+    return
+  }
+
+  // 如果既不在主菜单也不在子菜单内，则关闭子菜单
   setTimeout(() => {
-    if (!isMouseInSubmenu() && !isMouseInMainMenu(e)) {
+    if (!isMouseInSubmenu(e) && !isMouseInMainMenu(e)) {
       showSubmenu.value = false
     }
   }, 100)
 }
 
-// 添加检查鼠标是否在主菜单内的函数
+// 修改检查鼠标是否在子菜单内的函数
+const isMouseInSubmenu = (e: MouseEvent) => {
+  const submenu = document.querySelector('.context-submenu')
+  if (!submenu) return false
+
+  // 使用 document.elementFromPoint 来检查鼠标下的元素
+  const elementsUnderMouse = document.elementsFromPoint(e?.clientX || 0, e?.clientY || 0)
+
+  return elementsUnderMouse.some((el) => el.closest('.context-submenu'))
+}
+
+// 修改检查鼠标是否在主菜单内的函数
 const isMouseInMainMenu = (e: MouseEvent) => {
   const mainMenu = document.querySelector('.context-menu')
   if (!mainMenu) return false
 
-  const rect = mainMenu.getBoundingClientRect()
-  const { clientX, clientY } = e as MouseEvent
-
-  return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom
+  const elementsUnderMouse = document.elementsFromPoint(e.clientX, e.clientY)
+  return elementsUnderMouse.some((el) => el.closest('.context-menu'))
 }
 
 // 处理子菜单项点击
@@ -303,23 +320,6 @@ const handleSubItemClick = (item: any) => {
     item.click(props.content)
   }
   showSubmenu.value = false
-}
-
-// 检查鼠标是否在子菜单内
-const isMouseInSubmenu = () => {
-  const submenu = document.querySelector('.context-submenu')
-  if (!submenu) return false
-
-  const rect = submenu.getBoundingClientRect()
-  const event = window.event as MouseEvent
-  if (!event) return false
-
-  return (
-    event.clientX >= rect.left &&
-    event.clientX <= rect.right &&
-    event.clientY >= rect.top &&
-    event.clientY <= rect.bottom
-  )
 }
 
 // 添加判断是否显示箭头的函数
