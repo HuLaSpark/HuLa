@@ -3,7 +3,6 @@ import apis from '@/services/apis'
 import { useGlobalStore } from '@/stores/global'
 import type { ContactItem, GroupListReq, RequestFriendItem } from '@/services/types'
 import { RequestFriendAgreeStatus } from '@/services/types'
-import { listen, emit } from '@tauri-apps/api/event'
 import { StoresEnum } from '@/enums'
 
 // 定义分页大小常量
@@ -12,17 +11,17 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
   const globalStore = useGlobalStore()
 
   /** 联系人列表 */
-  const contactsList = reactive<ContactItem[]>([])
+  const contactsList = ref<ContactItem[]>([])
   /** 好友请求列表 */
-  const requestFriendsList = reactive<RequestFriendItem[]>([])
+  const requestFriendsList = ref<RequestFriendItem[]>([])
 
   /** 联系人列表分页选项 */
-  const contactsOptions = reactive({ isLast: false, isLoading: false, cursor: '' })
+  const contactsOptions = ref({ isLast: false, isLoading: false, cursor: '' })
   /** 好友请求列表分页选项 */
-  const requestFriendsOptions = reactive({ isLast: false, isLoading: false, cursor: '' })
+  const requestFriendsOptions = ref({ isLast: false, isLoading: false, cursor: '' })
 
   /** 群聊列表 */
-  const groupChatList = reactive<GroupListReq[]>([])
+  const groupChatList = ref<GroupListReq[]>([])
 
   /**
    * 获取联系人列表
@@ -31,28 +30,30 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
   const getContactList = async (isFresh = false) => {
     // 非刷新模式下，如果已经加载完或正在加载中，则直接返回
     if (!isFresh) {
-      if (contactsOptions.isLast || contactsOptions.isLoading) return
+      if (contactsOptions.value.isLast || contactsOptions.value.isLoading) return
     }
-    contactsOptions.isLoading = true
+    contactsOptions.value.isLoading = true
     const res = await apis
       .getContactList({
         // TODO 先写 100，稍后优化
         pageSize: 100,
-        cursor: isFresh || !contactsOptions.cursor ? '' : contactsOptions.cursor
+        cursor: isFresh || !contactsOptions.value.cursor ? '' : contactsOptions.value.cursor
       })
       .catch(() => {
-        contactsOptions.isLoading = false
+        contactsOptions.value.isLoading = false
       })
     if (!res) return
     const data = res
     // 刷新模式下替换整个列表，否则追加到列表末尾
-    isFresh ? contactsList.splice(0, contactsList.length, ...data.list) : contactsList.push(...data.list)
-    contactsOptions.cursor = data.cursor
-    contactsOptions.isLast = data.isLast
-    contactsOptions.isLoading = false
+    isFresh
+      ? contactsList.value.splice(0, contactsList.value.length, ...data.list)
+      : contactsList.value.push(...data.list)
+    contactsOptions.value.cursor = data.cursor
+    contactsOptions.value.isLast = data.isLast
+    contactsOptions.value.isLoading = false
 
-    // 获取数据后发送更新事件
-    emit('contacts-updated', contactsList)
+    // 获取数据后更新联系人列表
+    contactsList.value.splice(0, contactsList.value.length, ...contactsList.value)
   }
 
   /**
@@ -60,7 +61,7 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
    */
   const getGroupChatList = async () => {
     const response = await apis.groupList({ current: 1, size: 50 })
-    groupChatList.push(...response.records)
+    groupChatList.value = response.records
   }
 
   /**
@@ -86,26 +87,26 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
   const getRequestFriendsList = async (isFresh = false) => {
     // 非刷新模式下，如果已经加载完或正在加载中，则直接返回
     if (!isFresh) {
-      if (requestFriendsOptions.isLast || requestFriendsOptions.isLoading) return
+      if (requestFriendsOptions.value.isLast || requestFriendsOptions.value.isLoading) return
     }
-    requestFriendsOptions.isLoading = true
+    requestFriendsOptions.value.isLoading = true
     const res = await apis
       .requestFriendList({
-        pageSize,
-        cursor: isFresh || !requestFriendsOptions.cursor ? '' : requestFriendsOptions.cursor
+        pageSize: 50,
+        cursor: isFresh || !requestFriendsOptions.value.cursor ? '' : requestFriendsOptions.value.cursor
       })
       .catch(() => {
-        requestFriendsOptions.isLoading = false
+        requestFriendsOptions.value.isLoading = false
       })
     if (!res) return
     const data = res
     // 刷新模式下替换整个列表，否则追加到列表末尾
     isFresh
-      ? requestFriendsList.splice(0, requestFriendsList.length, ...data.list)
-      : requestFriendsList.push(...data.list)
-    requestFriendsOptions.cursor = data.cursor
-    requestFriendsOptions.isLast = data.isLast
-    requestFriendsOptions.isLoading = false
+      ? requestFriendsList.value.splice(0, requestFriendsList.value.length, ...data.list)
+      : requestFriendsList.value.push(...data.list)
+    requestFriendsOptions.value.cursor = data.cursor
+    requestFriendsOptions.value.isLast = data.isLast
+    requestFriendsOptions.value.isLoading = false
   }
 
   // 初始化时默认执行一次加载
@@ -156,11 +157,6 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
     // 刷新好友列表
     await getContactList(true)
   }
-
-  // 监听联系人列表更新事件
-  listen('contacts-updated', (event: any) => {
-    contactsList.splice(0, contactsList.length, ...event.payload)
-  })
 
   return {
     getContactList,

@@ -88,11 +88,11 @@
                     <!-- 三种状态的按钮 -->
                     <n-button
                       secondary
-                      :type="getButtonType(item.uid)"
+                      :type="getButtonType(item.uid, item.roomId)"
                       size="small"
                       class="action-button"
                       @click="handleButtonClick(item)">
-                      {{ getButtonText(item.uid) }}
+                      {{ getButtonText(item.uid, item.roomId) }}
                     </n-button>
                   </n-flex>
                 </div>
@@ -137,7 +137,7 @@ import { useCachedStore } from '@/stores/cached'
 import { useBadgeInfo } from '@/hooks/useCached.ts'
 import FloatBlockList from '@/components/common/FloatBlockList.vue'
 import { useContactStore } from '@/stores/contacts'
-import { ContactItem } from '@/services/types'
+import { ContactItem, GroupListReq } from '@/services/types'
 import { useUserStore } from '@/stores/user'
 import { useGlobalStore } from '@/stores/global'
 import apis from '@/services/apis'
@@ -192,6 +192,19 @@ const getCachedUsers = () => {
       avatar: user.avatar,
       itemIds: user.itemIds || null
     }))
+    .sort((a, b) => {
+      // 自己排在最前面
+      if (isCurrentUser(String(a.uid))) return -1
+      if (isCurrentUser(String(b.uid))) return 1
+
+      // 好友排在第二位
+      const aIsFriend = isFriend(String(a.uid))
+      const bIsFriend = isFriend(String(b.uid))
+      if (aIsFriend && !bIsFriend) return -1
+      if (!aIsFriend && bIsFriend) return 1
+
+      return 0
+    })
 }
 
 // 清空搜索结果
@@ -245,19 +258,47 @@ const handleSearch = debounce(async () => {
     } else if (searchType.value === 'user') {
       // 调用好友搜索接口
       const res = await apis.searchFriend({ key: searchValue.value })
-      searchResults.value = res.map((user) => ({
-        uid: user.uid,
-        name: user.name,
-        avatar: user.avatar,
-        accountCode: user.accountCode
-      }))
+      searchResults.value = res
+        .map((user) => ({
+          uid: user.uid,
+          name: user.name,
+          avatar: user.avatar,
+          accountCode: user.accountCode
+        }))
+        .sort((a, b) => {
+          // 自己排在最前面
+          if (isCurrentUser(a.uid)) return -1
+          if (isCurrentUser(b.uid)) return 1
+
+          // 好友排在第二位
+          const aIsFriend = isFriend(a.uid)
+          const bIsFriend = isFriend(b.uid)
+          if (aIsFriend && !bIsFriend) return -1
+          if (!aIsFriend && bIsFriend) return 1
+
+          return 0
+        })
     } else {
-      // 推荐标签使用缓存搜索
+      // 推荐标签搜索结果也需要排序
       const cachedUsers = getCachedUsers()
-      searchResults.value = cachedUsers.filter(
-        (user) =>
-          user?.name?.includes(searchValue.value) || (user.uid && user.uid.toString().includes(searchValue.value))
-      )
+      searchResults.value = cachedUsers
+        .filter(
+          (user) =>
+            user?.name?.includes(searchValue.value) || (user.uid && user.uid.toString().includes(searchValue.value))
+        )
+        .sort((a, b) => {
+          // 自己排在最前面
+          if (isCurrentUser(String(a.uid))) return -1
+          if (isCurrentUser(String(b.uid))) return 1
+
+          // 好友排在第二位
+          const aIsFriend = isFriend(String(a.uid))
+          const bIsFriend = isFriend(String(b.uid))
+          if (aIsFriend && !bIsFriend) return -1
+          if (!aIsFriend && bIsFriend) return 1
+
+          return 0
+        })
     }
   } catch (error) {
     window.$message.error('搜索失败')
@@ -277,7 +318,7 @@ const handleTypeChange = () => {
 }
 
 // 判断是否已经是好友
-const isFriend = (uid: number | string) => {
+const isFriend = (uid: string) => {
   return contactStore.contactsList.some((contact: ContactItem) => contact.uid === uid)
 }
 
@@ -286,15 +327,30 @@ const isCurrentUser = (uid: string) => {
   return userStore.userInfo.uid === uid
 }
 
+// 判断是否已加入群聊
+const isInGroup = (roomId: string) => {
+  return contactStore.groupChatList.some((group: GroupListReq) => group.roomId === roomId)
+}
+
 // 获取按钮文本
-const getButtonText = (uid: string) => {
+const getButtonText = (uid: string, roomId: string) => {
+  // 群聊逻辑
+  if (searchType.value === 'group') {
+    return isInGroup(roomId) ? '发消息' : '添加'
+  }
+  // 用户逻辑
   if (isCurrentUser(uid)) return '编辑资料'
   if (isFriend(uid)) return '发消息'
   return '添加'
 }
 
 // 获取按钮类型
-const getButtonType = (uid: string) => {
+const getButtonType = (uid: string, roomId: string) => {
+  // 群聊逻辑
+  if (searchType.value === 'group') {
+    return isInGroup(roomId) ? 'info' : 'primary'
+  }
+  // 用户逻辑
   if (isCurrentUser(uid)) return 'default'
   if (isFriend(uid)) return 'info'
   return 'primary'
@@ -302,6 +358,16 @@ const getButtonType = (uid: string) => {
 
 // 处理按钮点击
 const handleButtonClick = (item: any) => {
+  if (searchType.value === 'group') {
+    if (isInGroup(item.roomId)) {
+      handleSendGroupMessage(item)
+    } else {
+      handleAddFriend(item)
+    }
+    return
+  }
+
+  // 用户逻辑保持不变
   if (isCurrentUser(item.uid)) {
     handleEditProfile()
   } else if (isFriend(item.uid)) {
@@ -344,6 +410,16 @@ const handleSendMessage = async (item: any) => {
   // 激活主窗口
   await homeWindow?.setFocus()
   emitTo('home', 'search_to_msg', { uid: item.uid, roomType: RoomTypeEnum.SINGLE })
+}
+
+// 处理发送群消息
+const handleSendGroupMessage = async (item: any) => {
+  const homeWindow = await WebviewWindow.getByLabel('home')
+  await homeWindow?.setFocus()
+  emitTo('home', 'search_to_msg', {
+    uid: item.roomId,
+    roomType: RoomTypeEnum.GROUP
+  })
 }
 
 onMounted(async () => {
