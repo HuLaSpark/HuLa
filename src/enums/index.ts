@@ -403,7 +403,5 @@ export enum NotificationTypeEnum {
   /** 允许接受消息 */
   NONE = 0,
   /** 接收但不提醒[免打扰] */
-  ALL = 1,
-  /** 屏蔽消息 */
-  BLOCK = 2
+  ALL = 1
 }

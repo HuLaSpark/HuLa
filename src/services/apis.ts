@@ -112,8 +112,9 @@ export default {
   /** 搜索好友 */
   searchFriend: (params: { key: string }) => GET<SearchFriend[]>(urls.searchFriend, params),
   /** 免打扰 */
-  notification: (params: { roomId: string; type: NotificationTypeEnum; deFriend: boolean }) =>
-    POST<void>(urls.notification, params),
+  notification: (params: { roomId: string; type: NotificationTypeEnum }) => POST<void>(urls.notification, params),
+  /** 屏蔽消息 */
+  shield: (params: { roomId: string; state: boolean }) => POST<void>(urls.shield, params),
   /** 申请加群 */
   applyGroup: (params: { targetGroupId: number; msg: string }) => POST(urls.applyGroup, params),
   /** 会话详情(联系人列表发消息用) */

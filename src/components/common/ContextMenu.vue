@@ -43,7 +43,7 @@
               <div
                 class="menu-item"
                 v-else
-                @click="handleItemClick(item)"
+                @click="handleClick(item)"
                 @mouseenter="handleMouseEnter(item, index)"
                 @mouseleave="handleMouseLeave">
                 <div class="menu-item-content">
@@ -177,7 +177,7 @@ const handleSize = ({ width, height }: any) => {
   h.value = height
 }
 
-/** 处理右键菜单点击事件 */
+/** 处理右键主菜单点击事件 */
 const handleClick = (item: string) => {
   nextTick(() => {
     showMenu.value = false
@@ -191,6 +191,14 @@ const handleReplyEmoji = (item: { label: string }) => {
     showMenu.value = false
     emit('reply-emoji', item.label)
   })
+}
+
+// 处理子菜单项点击
+const handleSubItemClick = (item: any) => {
+  if (typeof item.click === 'function') {
+    item.click(props.content)
+  }
+  showSubmenu.value = false
 }
 
 const handleBeforeEnter = (el: any) => {
@@ -314,14 +322,6 @@ const isMouseInMainMenu = (e: MouseEvent) => {
   return elementsUnderMouse.some((el) => el.closest('.context-menu'))
 }
 
-// 处理子菜单项点击
-const handleSubItemClick = (item: any) => {
-  if (typeof item.click === 'function') {
-    item.click(props.content)
-  }
-  showSubmenu.value = false
-}
-
 // 添加判断是否显示箭头的函数
 const shouldShowArrow = (item: any) => {
   // 如果 children 是函数，先获取结果
@@ -330,24 +330,12 @@ const shouldShowArrow = (item: any) => {
   // 检查是否有有效的子菜单内容
   return Array.isArray(children) && children.length > 0
 }
-
-// 处理菜单项点击
-const handleItemClick = (item: any) => {
-  const hasArrow = shouldShowArrow(item)
-  if (hasArrow) {
-    return
-  }
-
-  item.click(props.content)
-  // 关闭菜单
-  nextTick(() => {
-    showMenu.value = false
-  })
-}
 </script>
 
 <style scoped lang="scss">
 @use '@/styles/scss/global/variable.scss' as *;
+
+// 通用的menu-item样式
 @mixin menu-item {
   padding: 2px 8px;
   border-radius: 4px;
@@ -360,7 +348,34 @@ const handleItemClick = (item: any) => {
     width: 16px;
     height: 16px;
   }
+  .menu-item-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
 }
+
+// menu-list通用样式
+@mixin menu-list {
+  -webkit-backdrop-filter: blur(10px);
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  .menu-item {
+    @include menu-item();
+    display: flex;
+    align-items: center;
+    &:hover {
+      background-color: var(--bg-menu-hover);
+      svg {
+        animation: twinkle 0.3s ease-in-out;
+      }
+    }
+  }
+}
+
 .context-menu {
   @include menu-item-style();
   .emoji-list {
@@ -372,28 +387,7 @@ const handleItemClick = (item: any) => {
     }
   }
   .menu-list {
-    -webkit-backdrop-filter: blur(10px);
-    padding: 5px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    .menu-item {
-      @include menu-item();
-      &:hover {
-        background-color: var(--bg-menu-hover);
-        svg {
-          animation: twinkle 0.3s ease-in-out;
-        }
-      }
-      display: flex;
-      align-items: center;
-
-      .menu-item-content {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-    }
+    @include menu-list();
     .menu-item-disabled {
       @include menu-item();
       color: var(--disabled-color);
@@ -410,38 +404,13 @@ const handleItemClick = (item: any) => {
   @include menu-item-style();
 
   .menu-list {
-    -webkit-backdrop-filter: blur(10px);
-    padding: 5px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+    @include menu-list();
     min-width: 120px;
-
-    .menu-item {
-      @include menu-item();
-      &:hover {
-        background-color: var(--bg-menu-hover);
-        svg {
-          animation: twinkle 0.3s ease-in-out;
-        }
-      }
-      display: flex;
-      align-items: center;
-
-      .menu-item-content {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        width: 100%;
-      }
-    }
   }
 }
 
 .menu-item {
   .menu-item-content {
-    display: flex;
-    align-items: center;
     gap: 10px;
     width: 100%;
     position: relative;

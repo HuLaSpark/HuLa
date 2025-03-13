@@ -166,9 +166,19 @@ export const useMessage = () => {
           },
           {
             label: '屏蔽群消息',
-            icon: item.muteNotification === NotificationTypeEnum.BLOCK ? 'check-small' : '',
+            icon: item.shield ? 'check-small' : '',
             click: async () => {
-              await handleNotificationChange(item, NotificationTypeEnum.BLOCK)
+              await apis.shield({
+                roomId: item.roomId,
+                state: !item.shield
+              })
+
+              // 更新本地会话状态
+              chatStore.updateSession(item.roomId, {
+                shield: !item.shield
+              })
+
+              window.$message.success(item.shield ? '已取消屏蔽' : '已屏蔽消息')
             }
           }
         ]
@@ -237,15 +247,33 @@ export const useMessage = () => {
         // 群聊：始终显示退出选项，如果是群主则显示解散选项
         return true
       }
+    },
+    {
+      label: (item: SessionItem) => (item.shield ? '取消屏蔽消息' : '屏蔽此人消息'),
+      icon: (item: SessionItem) => (item.shield ? 'message-success' : 'people-unknown'),
+      click: async (item: SessionItem) => {
+        await apis.shield({
+          roomId: item.roomId,
+          state: !item.shield
+        })
+
+        // 更新本地会话状态
+        chatStore.updateSession(item.roomId, {
+          shield: !item.shield
+        })
+
+        window.$message.success(item.shield ? '已取消屏蔽' : '已屏蔽消息')
+      },
+      // 只在单聊时显示
+      visible: (item: SessionItem) => item.type === RoomTypeEnum.SINGLE
     }
   ])
 
   // 添加通知设置变更处理函数
-  const handleNotificationChange = async (item: SessionItem, newType: NotificationTypeEnum, deFriend?: boolean) => {
+  const handleNotificationChange = async (item: SessionItem, newType: NotificationTypeEnum) => {
     await apis.notification({
       roomId: item.roomId,
-      type: newType,
-      deFriend: deFriend ?? false
+      type: newType
     })
 
     // 更新本地会话状态
@@ -260,10 +288,7 @@ export const useMessage = () => {
         message = '已允许消息提醒'
         break
       case NotificationTypeEnum.ALL:
-        message = item.type === RoomTypeEnum.GROUP ? '已设置接收消息但不提醒' : '已设置免打扰'
-        break
-      case NotificationTypeEnum.BLOCK:
-        message = '已屏蔽群消息'
+        message = '已设置接收消息但不提醒'
         break
     }
     window.$message.success(message)

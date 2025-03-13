@@ -482,8 +482,12 @@ export type SessionItem = {
   operate: SessionOperateEnum
   /** 在线状态 1在线 2离线 */
   activeStatus?: OnlineEnum
+  /** 隐藏会话 */
+  hide: boolean
   /** 免打扰类型 */
   muteNotification: NotificationTypeEnum
+  /** 屏蔽消息 */
+  shield: boolean
 }
 
 /** 消息已读未读数列表项 */

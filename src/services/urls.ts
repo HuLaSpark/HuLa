@@ -44,7 +44,7 @@ export default {
   deleteSession: `${prefix + URLEnum.CHAT}/delete`, // 删除会话
   hideSession: `${prefix + URLEnum.CHAT}/setHide`, // 隐藏会话
   notification: `${prefix + URLEnum.CHAT}/notification`, // 免打扰
-
+  shield: `${prefix + URLEnum.CHAT}/setShield`, // 屏蔽消息
   // -------------- 群聊相关 ---------------
   createGroup: `${prefix + URLEnum.ROOM}/group`, // 新增群组
   getGroupUserList: `${prefix + URLEnum.ROOM}/group/member/page`, // 群成员列表

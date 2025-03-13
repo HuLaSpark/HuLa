@@ -7,7 +7,7 @@ import type {
   UserStateType
 } from '@/services/wsType.ts'
 import type { MessageType, MarkItemType, RevokedMsgType } from '@/services/types'
-import { OnlineEnum, ChangeTypeEnum, WorkerMsgEnum, ConnectionState, NotificationTypeEnum } from '@/enums'
+import { OnlineEnum, ChangeTypeEnum, WorkerMsgEnum, ConnectionState } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useUserStore } from '@/stores/user'
 import { getEnhancedFingerprint } from '@/services/fingerprint.ts'
@@ -283,15 +283,6 @@ class WS {
             params.data as {
               uid: number
             }
-          )
-          break
-        }
-        // 会话消息接收类型改变
-        case WsResponseMessageType.ROOM_NOTIFICATION: {
-          console.log('会话消息接收类型改变', params.data)
-          useMitt.emit(
-            WsResponseMessageType.ROOM_NOTIFICATION,
-            params.data as { roomId: number; notification: NotificationTypeEnum; deFriend: boolean }
           )
           break
         }
