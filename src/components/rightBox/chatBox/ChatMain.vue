@@ -169,7 +169,7 @@
                 class="color-[--text-color] flex-1"
                 :class="item.fromUser.uid === userUid ? 'items-end mr-10px' : ''">
                 <n-flex
-                  :size="4"
+                  :size="6"
                   align="center"
                   :style="item.fromUser.uid === userUid ? 'flex-direction: row-reverse' : ''">
                   <ContextMenu
@@ -213,14 +213,14 @@
                   <!-- 群主 -->
                   <div
                     v-if="chatStore.isGroup && groupStore.currentLordId === item.fromUser.uid"
-                    class="flex p-4px rounded-4px bg-#f5dadf size-fit select-none">
-                    <span class="text-(10px #d5304f)">群主</span>
+                    class="flex px-4px py-3px rounded-4px bg-#f5dadf size-fit select-none">
+                    <span class="text-(9px #d5304f)">群主</span>
                   </div>
                   <!-- 管理员 -->
                   <div
                     v-if="chatStore.isGroup && groupStore.adminUidList.includes(item.fromUser.uid)"
-                    class="flex p-4px rounded-4px bg-#cef9ec size-fit select-none">
-                    <span class="text-(10px #1a7d6b)">管理员</span>
+                    class="flex px-4px py-3px rounded-4px bg-#cef9ec size-fit select-none">
+                    <span class="text-(9px #1a7d6b)">管理员</span>
                   </div>
                   <!-- 信息时间(群聊) -->
                   <Transition name="fade-group">
