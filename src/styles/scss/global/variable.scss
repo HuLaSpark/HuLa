@@ -109,6 +109,8 @@ svg {
   --plugin-bg-color: #eee;
   // 列表悬浮的颜色
   --float-block-hover-color: #767676;
+  // 悬浮按钮hover样式
+  --float-hover-bg-color: rgb(221, 240, 236);
 }
 
 html[data-theme='dark'] {
@@ -201,6 +203,8 @@ html[data-theme='dark'] {
   --plugin-bg-color: #3b3b3b;
   // 列表悬浮的颜色
   --float-block-hover-color: #fff;
+  // 悬浮按钮hover样式
+  --float-hover-bg-color: rgb(25, 50, 45);
 }
 /**! end */
 // 线性动画

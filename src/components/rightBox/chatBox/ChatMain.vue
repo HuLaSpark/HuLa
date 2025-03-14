@@ -384,14 +384,17 @@
   <!--  悬浮按钮提示(底部悬浮) -->
   <footer
     class="float-footer"
-    v-if="floatFooter && currentNewMsgCount?.count && currentNewMsgCount.count > 0"
+    v-if="shouldShowFloatFooter && currentNewMsgCount"
     :class="chatStore.isGroup ? 'right-220px' : 'right-50px'">
     <div class="float-box" :class="{ max: currentNewMsgCount?.count > 99 }" @click="scrollBottom">
       <n-flex justify="space-between" align="center">
         <n-icon :color="currentNewMsgCount?.count > 99 ? '#ce304f' : '#13987f'">
           <svg><use href="#double-down"></use></svg>
         </n-icon>
-        <span class="text-12px" :class="{ 'color-#ce304f': currentNewMsgCount?.count > 99 }">
+        <span
+          v-if="currentNewMsgCount?.count && currentNewMsgCount.count > 0"
+          class="text-12px"
+          :class="{ 'color-#ce304f': currentNewMsgCount?.count > 99 }">
           {{ currentNewMsgCount?.count > 99 ? '99+' : currentNewMsgCount?.count }}条新消息
         </span>
       </n-flex>
@@ -436,6 +439,8 @@ const isAutoScrolling = ref(false)
 
 /** 记录是否正在向上滚动 */
 const isScrollingUp = ref(false)
+/** 记录是否正在向下滚动 */
+const isScrollingDown = ref(false)
 // 添加标记，用于识别是否正在加载历史消息
 const isLoadingMore = ref(false)
 
@@ -469,12 +474,33 @@ const recordEL = ref()
 /** 网络连接是否正常 */
 const { isOnline } = useNetwork()
 const isMac = computed(() => type() === 'macos')
+// 是否显示悬浮页脚
+const shouldShowFloatFooter = computed(() => {
+  const container = virtualListInst.value?.getContainer()
+  if (!container) return false
+
+  const scrollHeight = container.scrollHeight
+  const clientHeight = container.clientHeight
+  const distanceFromBottom = scrollHeight - scrollTop.value - clientHeight
+
+  // 如果有新消息，优先显示新消息提示
+  if (currentNewMsgCount.value?.count && currentNewMsgCount.value.count > 0) {
+    return true
+  }
+
+  // 只在向下滚动时显示按钮
+  if (!isScrollingDown.value) {
+    return false
+  }
+
+  // 当距离底部超过一个屏幕高度时显示向下箭头
+  return distanceFromBottom > clientHeight
+})
 const {
   handleMsgClick,
   handleConfirm,
   handleItemType,
   activeBubble,
-  floatFooter,
   tips,
   modalShow,
   specialMenuList,
@@ -563,6 +589,7 @@ watch(
 /** 处理滚动方向变化 */
 const handleScrollDirectionChange = (direction: 'up' | 'down') => {
   isScrollingUp.value = direction === 'up'
+  isScrollingDown.value = direction === 'down'
 }
 
 /** 处理滚动事件(用于页脚显示功能) */
@@ -612,10 +639,7 @@ const handleScroll = () => {
 
     // 处理底部滚动和新消息提示
     if (distanceFromBottom <= 20) {
-      floatFooter.value = false
       chatStore.clearNewMsgCount()
-    } else {
-      floatFooter.value = true
     }
   })
 }
@@ -882,6 +906,14 @@ onMounted(async () => {
   })
   useMitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
     activeItemRef.value = event.item
+  })
+  // 监听滚动到底部的事件
+  useMitt.on(MittEnum.CHAT_SCROLL_BOTTOM, () => {
+    if (virtualListInst.value) {
+      nextTick(() => {
+        virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
+      })
+    }
   })
   await addListener(
     appWindow.listen(EventEnum.SHARE_SCREEN, async () => {

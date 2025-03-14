@@ -8,7 +8,7 @@
       width="146"
       height="146"
       style="border: 2px solid #fff"
-      class="rounded-50% select-none"
+      class="rounded-50% select-none cursor-pointer"
       :src="AvatarUtils.getAvatarUrl(item.avatar)"
       @dblclick="openImageViewer"
       alt="" />
@@ -65,7 +65,7 @@
           show-toolbar-tooltip
           preview-disabled
           style="border: 2px solid #fff"
-          class="rounded-50% select-none size-120px"
+          class="rounded-50% select-none size-120px cursor-pointer"
           :src="AvatarUtils.getAvatarUrl(item.avatar)"
           @dblclick="openImageViewer"
           alt="" />

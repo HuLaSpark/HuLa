@@ -43,6 +43,7 @@ import { emitTo } from '@tauri-apps/api/event'
 import { useThrottleFn } from '@vueuse/core'
 import { useCachedStore } from '@/stores/cached'
 import { clearListener, initListener, readCountQueue } from '@/utils/ReadCountQueue'
+import { type } from '@tauri-apps/plugin-os'
 
 const loadingPercentage = ref(10)
 const loadingText = ref('正在加载应用...')
@@ -77,6 +78,13 @@ const AsyncRight = defineAsyncComponent({
     loadingText.value = '正在加载右侧面板...'
     const comp = await import('./right/index.vue')
     loadingPercentage.value = 100
+
+    // 在组件加载完成后，使用nextTick等待DOM更新
+    nextTick(() => {
+      // 发送事件通知聊天框组件滚动到底部
+      useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
+    })
+
     return comp
   },
   delay: 600,
@@ -105,6 +113,16 @@ watch(
   },
   { immediate: true }
 )
+
+// 监听shrinkStatus的变化
+watch(shrinkStatus, (newValue) => {
+  if (!newValue) {
+    // 当shrinkStatus为false时，等待组件渲染完成后滚动到底部
+    nextTick(() => {
+      useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
+    })
+  }
+})
 
 /**
  * event默认如果没有传递值就为true，所以shrinkStatus的值为false就会发生值的变化
@@ -188,13 +206,21 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   const username = useUserInfo(data.fromUser.uid).value.name!
   // 不是自己发的消息才通知
   if (data.fromUser.uid !== userStore.userInfo.uid) {
-    await emitTo('tray', 'show_tip')
+    // 在windows系统下才发送通知
+    if (type() === 'windows') {
+      await emitTo('tray', 'show_tip')
+    }
+
+    // 判断主窗口是否是在其他窗口的前面并且聚焦
+    const home = await WebviewWindow.getByLabel('home')
+    // 是否在其他窗口的前面
+    const isVisible = await home?.isVisible()
 
     // 获取该消息的会话信息
     const session = chatStore.sessionList.find((s) => s.roomId === data.message.roomId)
 
     // 只有非免打扰的会话才发送通知
-    if (session && session.muteNotification !== NotificationTypeEnum.NOT_DISTURB) {
+    if (session && isVisible && session.muteNotification !== NotificationTypeEnum.NOT_DISTURB) {
       await emitTo('notify', 'notify_cotent', data)
       const throttleSendNotification = useThrottleFn(() => {
         sendNotification({

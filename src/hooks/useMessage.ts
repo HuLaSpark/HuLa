@@ -136,24 +136,13 @@ export const useMessage = () => {
     {
       label: (item: SessionItem) => {
         if (item.type === RoomTypeEnum.GROUP) {
-          // 根据当前状态显示对应的设置状态
-          if (item.shield) {
-            return '已屏蔽群消息'
-          } else if (item.muteNotification === NotificationTypeEnum.NOT_DISTURB) {
-            return '接收但不提醒'
-          } else {
-            return '群消息设置'
-          }
+          return '群消息设置'
         }
+
         return item.muteNotification === NotificationTypeEnum.RECEPTION ? '设置免打扰' : '取消免打扰'
       },
       icon: (item: SessionItem) => {
         if (item.type === RoomTypeEnum.GROUP) {
-          if (item.shield) {
-            return 'message-unread'
-          } else if (item.muteNotification === NotificationTypeEnum.NOT_DISTURB) {
-            return 'close-remind'
-          }
           return 'peoples-two'
         }
         return item.muteNotification === NotificationTypeEnum.RECEPTION ? 'close-remind' : 'remind'

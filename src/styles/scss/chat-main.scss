@@ -49,13 +49,13 @@
   @include float(bottom);
 }
 .float-box {
-  background-color: #fff;
+  background-color: var(--right-bg-color);
   border-radius: 50px;
   padding: 6px 8px;
   box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.16);
   transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   &:hover {
-    background-color: rgb(195, 221, 216);
+    background-color: var(--float-hover-bg-color);
   }
 }
 .mac-close:hover {

@@ -89,7 +89,9 @@ export enum MittEnum {
   /** 定位会话 */
   LOCATE_SESSION = 'locateSession',
   /** 消息动画 */
-  MESSAGE_ANIMATION = 'messageAnimation'
+  MESSAGE_ANIMATION = 'messageAnimation',
+  /** 聊天框滚动到底部 */
+  CHAT_SCROLL_BOTTOM = 'CHAT_SCROLL_BOTTOM'
 }
 
 /** 主题类型 */

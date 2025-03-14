@@ -41,8 +41,6 @@ export const useChatMain = () => {
   const modalShow = ref(false)
   /** 需要删除信息的下标 */
   const delIndex = ref('')
-  /** 悬浮的页脚 */
-  const floatFooter = ref(false)
   /** 记录历史消息下标 */
   const historyIndex = ref(0)
   /** 当前点击的用户的key */
@@ -463,7 +461,6 @@ export const useChatMain = () => {
     handleConfirm,
     handleItemType,
     activeBubble,
-    floatFooter,
     historyIndex,
     tips,
     modalShow,
