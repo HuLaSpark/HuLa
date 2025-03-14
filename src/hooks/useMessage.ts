@@ -136,15 +136,27 @@ export const useMessage = () => {
     {
       label: (item: SessionItem) => {
         if (item.type === RoomTypeEnum.GROUP) {
-          return '群消息设置'
+          // 根据当前状态显示对应的设置状态
+          if (item.shield) {
+            return '已屏蔽群消息'
+          } else if (item.muteNotification === NotificationTypeEnum.NOT_DISTURB) {
+            return '接收但不提醒'
+          } else {
+            return '群消息设置'
+          }
         }
-        return item.muteNotification === NotificationTypeEnum.NONE ? '设置免打扰' : '取消免打扰'
+        return item.muteNotification === NotificationTypeEnum.RECEPTION ? '设置免打扰' : '取消免打扰'
       },
       icon: (item: SessionItem) => {
         if (item.type === RoomTypeEnum.GROUP) {
+          if (item.shield) {
+            return 'message-unread'
+          } else if (item.muteNotification === NotificationTypeEnum.NOT_DISTURB) {
+            return 'close-remind'
+          }
           return 'peoples-two'
         }
-        return item.muteNotification === NotificationTypeEnum.NONE ? 'close-remind' : 'remind'
+        return item.muteNotification === NotificationTypeEnum.RECEPTION ? 'close-remind' : 'remind'
       },
       children: (item: SessionItem) => {
         if (item.type === RoomTypeEnum.SINGLE) return null
@@ -152,22 +164,43 @@ export const useMessage = () => {
         return [
           {
             label: '允许消息提醒',
-            icon: item.muteNotification === NotificationTypeEnum.NONE ? 'check-small' : '',
+            icon: !item.shield && item.muteNotification === NotificationTypeEnum.RECEPTION ? 'check-small' : '',
             click: async () => {
-              await handleNotificationChange(item, NotificationTypeEnum.NONE)
+              // 如果当前是屏蔽状态，需要先取消屏蔽
+              if (item.shield) {
+                await apis.shield({
+                  roomId: item.roomId,
+                  state: false
+                })
+                chatStore.updateSession(item.roomId, { shield: false })
+              }
+              await handleNotificationChange(item, NotificationTypeEnum.RECEPTION)
             }
           },
           {
             label: '接收消息但不提醒',
-            icon: item.muteNotification === NotificationTypeEnum.ALL ? 'check-small' : '',
+            icon: !item.shield && item.muteNotification === NotificationTypeEnum.NOT_DISTURB ? 'check-small' : '',
             click: async () => {
-              await handleNotificationChange(item, NotificationTypeEnum.ALL)
+              // 如果当前是屏蔽状态，需要先取消屏蔽
+              if (item.shield) {
+                await apis.shield({
+                  roomId: item.roomId,
+                  state: false
+                })
+                chatStore.updateSession(item.roomId, { shield: false })
+              }
+              await handleNotificationChange(item, NotificationTypeEnum.NOT_DISTURB)
             }
           },
           {
             label: '屏蔽群消息',
             icon: item.shield ? 'check-small' : '',
             click: async () => {
+              // 如果当前是免打扰状态，需要先恢复为允许提醒
+              if (item.muteNotification === NotificationTypeEnum.NOT_DISTURB) {
+                await handleNotificationChange(item, NotificationTypeEnum.RECEPTION)
+              }
+
               await apis.shield({
                 roomId: item.roomId,
                 state: !item.shield
@@ -187,7 +220,9 @@ export const useMessage = () => {
         if (item.type === RoomTypeEnum.GROUP) return // 群聊不执行点击事件
 
         const newType =
-          item.muteNotification === NotificationTypeEnum.NONE ? NotificationTypeEnum.ALL : NotificationTypeEnum.NONE
+          item.muteNotification === NotificationTypeEnum.RECEPTION
+            ? NotificationTypeEnum.NOT_DISTURB
+            : NotificationTypeEnum.RECEPTION
 
         await handleNotificationChange(item, newType)
       }
@@ -281,14 +316,21 @@ export const useMessage = () => {
       muteNotification: newType
     })
 
+    // 如果从免打扰切换到允许提醒，需要重新计算全局未读数
+    if (item.muteNotification === NotificationTypeEnum.NOT_DISTURB && newType === NotificationTypeEnum.RECEPTION) {
+      chatStore.updateTotalUnreadCount()
+    }
+
     // 显示操作成功提示
     let message = ''
     switch (newType) {
-      case NotificationTypeEnum.NONE:
+      case NotificationTypeEnum.RECEPTION:
         message = '已允许消息提醒'
         break
-      case NotificationTypeEnum.ALL:
+      case NotificationTypeEnum.NOT_DISTURB:
         message = '已设置接收消息但不提醒'
+        // 设置免打扰时也需要更新全局未读数，因为该会话的未读数将不再计入
+        chatStore.updateTotalUnreadCount()
         break
     }
     window.$message.success(message)

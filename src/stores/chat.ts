@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { useRoute } from 'vue-router'
 import apis from '@/services/apis'
 import type { MarkItemType, MessageType, RevokedMsgType, SessionItem } from '@/services/types'
-import { MarkEnum, MessageStatusEnum, MsgEnum, RoomTypeEnum, StoresEnum } from '@/enums'
+import { MarkEnum, MessageStatusEnum, MsgEnum, NotificationTypeEnum, RoomTypeEnum, StoresEnum } from '@/enums'
 import { computedTimeBlock } from '@/utils/ComputedTime.ts'
 import { useCachedStore } from '@/stores/cached.ts'
 import { useGlobalStore } from '@/stores/global.ts'
@@ -325,10 +325,16 @@ export const useChatStore = defineStore(
     }
 
     // 更新会话
-    const updateSession = (roomId: string, roomProps: Partial<SessionItem>) => {
-      const session = sessionList.find((item) => item.roomId === roomId)
-      session && roomProps && Object.assign(session, roomProps)
-      sortAndUniqueSessionList()
+    const updateSession = (roomId: string, data: Partial<SessionItem>) => {
+      const index = sessionList.findIndex((session) => session.roomId === roomId)
+      if (index !== -1) {
+        sessionList[index] = { ...sessionList[index], ...data }
+
+        // 如果更新了免打扰状态，需要重新计算全局未读数
+        if ('muteNotification' in data) {
+          updateTotalUnreadCount()
+        }
+      }
     }
 
     // 更新会话最后活跃时间
@@ -561,16 +567,14 @@ export const useChatStore = defineStore(
 
     // 标记已读数为 0
     const markSessionRead = (roomId: string) => {
-      const session = sessionList.find((item) => item.roomId === roomId)
-      const unreadCount = session?.unreadCount || 0
-      if (session && session.unreadCount > 0) {
+      const session = sessionList.find((s) => s.roomId === roomId)
+      if (session) {
+        // 更新会话的未读数
         session.unreadCount = 0
-        // 使用 nextTick 确保状态更新后再计算总未读数
-        nextTick(() => {
-          updateTotalUnreadCount()
-        })
+
+        // 重新计算全局未读数，使用 chatStore 中的方法以保持一致性
+        updateTotalUnreadCount()
       }
-      return unreadCount
     }
 
     // 根据消息id获取消息体
@@ -627,6 +631,10 @@ export const useChatStore = defineStore(
     const updateTotalUnreadCount = () => {
       // 使用 Array.from 确保遍历的是最新的 sessionList
       const totalUnread = Array.from(sessionList).reduce((total, session) => {
+        // 免打扰的会话不计入全局未读数
+        if (session.muteNotification === NotificationTypeEnum.NOT_DISTURB) {
+          return total
+        }
         // 确保 unreadCount 是数字且不为负数
         const unread = Math.max(0, session.unreadCount || 0)
         return total + unread

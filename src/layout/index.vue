@@ -27,7 +27,7 @@
 <script setup lang="ts">
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useMitt } from '@/hooks/useMitt.ts'
-import { ChangeTypeEnum, MittEnum, ModalEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
+import { ChangeTypeEnum, MittEnum, ModalEnum, NotificationTypeEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
 import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useContactStore } from '@/stores/contacts.ts'
@@ -189,14 +189,21 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   // 不是自己发的消息才通知
   if (data.fromUser.uid !== userStore.userInfo.uid) {
     await emitTo('tray', 'show_tip')
-    await emitTo('notify', 'notify_cotent', data)
-    const throttleSendNotification = useThrottleFn(() => {
-      sendNotification({
-        title: username,
-        body: data.message.body.content
-      })
-    }, 3000)
-    throttleSendNotification()
+
+    // 获取该消息的会话信息
+    const session = chatStore.sessionList.find((s) => s.roomId === data.message.roomId)
+
+    // 只有非免打扰的会话才发送通知
+    if (session && session.muteNotification !== NotificationTypeEnum.NOT_DISTURB) {
+      await emitTo('notify', 'notify_cotent', data)
+      const throttleSendNotification = useThrottleFn(() => {
+        sendNotification({
+          title: username,
+          body: data.message.body.content
+        })
+      }, 3000)
+      throttleSendNotification()
+    }
   }
 })
 useMitt.on(WsResponseMessageType.REQUEST_NEW_FRIEND, async (data: { uid: number; unreadCount: number }) => {

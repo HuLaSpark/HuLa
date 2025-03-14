@@ -401,7 +401,7 @@ export enum SessionOperateEnum {
  */
 export enum NotificationTypeEnum {
   /** 允许接受消息 */
-  NONE = 0,
+  RECEPTION = 0,
   /** 接收但不提醒[免打扰] */
-  ALL = 1
+  NOT_DISTURB = 1
 }

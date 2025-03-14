@@ -49,7 +49,18 @@
               </span>
 
               <!-- 消息提示 -->
-              <n-badge :max="99" :value="item.unreadCount" />
+              <template v-if="item.muteNotification === 1 && !item.unreadCount">
+                <svg
+                  :class="[currentSession.roomId === item.roomId ? 'color-#fefefe' : 'color-#909090']"
+                  class="size-14px">
+                  <use href="#close-remind"></use>
+                </svg>
+              </template>
+              <n-badge
+                v-else
+                :max="99"
+                :value="item.unreadCount"
+                :color="item.muteNotification === 1 ? 'rgba(128, 128, 128, 0.5)' : undefined" />
             </n-flex>
           </n-flex>
         </n-flex>

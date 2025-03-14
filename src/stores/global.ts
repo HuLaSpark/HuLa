@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { RoomTypeEnum, StoresEnum } from '@/enums'
+import { NotificationTypeEnum, RoomTypeEnum, StoresEnum } from '@/enums'
 import { useChatStore } from '@/stores/chat'
 import type { ContactItem, RequestFriendItem } from '@/services/types'
 import { clearQueue, readCountQueue } from '@/utils/ReadCountQueue.ts'
@@ -64,8 +64,12 @@ export const useGlobalStore = defineStore(
 
     // 更新全局未读消息计数
     const updateGlobalUnreadCount = async () => {
-      // 计算所有会话的未读消息总数
+      // 计算所有会话的未读消息总数，排除免打扰的会话
       const totalUnread = chatStore.sessionList.reduce((total, session) => {
+        // 如果是免打扰的会话，不计入总数
+        if (session.muteNotification === NotificationTypeEnum.NOT_DISTURB) {
+          return total
+        }
         return total + (session.unreadCount || 0)
       }, 0)
       unReadMark.newMsgUnreadCount = totalUnread
