@@ -451,6 +451,74 @@ class FileMessageStrategyImpl extends AbstractMessageStrategy {
   }
 }
 
+/**
+ * 处理表情包消息
+ */
+class EmojiMessageStrategyImpl extends AbstractMessageStrategy {
+  constructor() {
+    super(MsgEnum.EMOJI)
+  }
+
+  getMsg(msgInputValue: string, replyValue: any): any {
+    // 检查是否是URL
+    if (!this.isValidEmojiUrl(msgInputValue)) {
+      throw new AppException('无效的表情包URL')
+    }
+
+    return {
+      type: this.msgType,
+      url: msgInputValue,
+      path: msgInputValue,
+      reply: replyValue.content
+        ? {
+            content: replyValue.content,
+            key: replyValue.key
+          }
+        : undefined
+    }
+  }
+
+  buildMessageBody(msg: any, reply: any): any {
+    return {
+      url: msg.url,
+      replyMsgId: msg.reply?.key || void 0,
+      reply: reply.value.content
+        ? {
+            body: reply.value.content,
+            id: reply.value.key,
+            username: reply.value.accountName,
+            type: msg.type
+          }
+        : void 0
+    }
+  }
+
+  // 验证是否是有效的表情包URL
+  private isValidEmojiUrl(url: string): boolean {
+    try {
+      new URL(url)
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  // 表情包不需要实际上传，直接返回原始URL
+  async uploadFile(path: string): Promise<{ uploadUrl: string; downloadUrl: string }> {
+    console.log('表情包使用原始URL:', path)
+    return {
+      uploadUrl: '', // 不需要上传URL
+      downloadUrl: path // 直接使用原始URL
+    }
+  }
+
+  // 表情包不需要实际上传，此方法为空实现
+  async doUpload(): Promise<void> {
+    console.log('表情包无需上传，跳过上传步骤')
+    return Promise.resolve()
+  }
+}
+
 class UnsupportedMessageStrategyImpl extends AbstractMessageStrategy {
   constructor() {
     super(MsgEnum.UNKNOWN)
@@ -481,17 +549,18 @@ class UnsupportedMessageStrategyImpl extends AbstractMessageStrategy {
 const textMessageStrategy = new TextMessageStrategyImpl()
 const fileMessageStrategy = new FileMessageStrategyImpl()
 const imageMessageStrategy = new ImageMessageStrategyImpl()
+const emojiMessageStrategy = new EmojiMessageStrategyImpl()
 const unsupportedMessageStrategy = new UnsupportedMessageStrategyImpl()
 
 export const messageStrategyMap: Record<MsgEnum, MessageStrategy> = {
   [MsgEnum.FILE]: fileMessageStrategy,
   [MsgEnum.IMAGE]: imageMessageStrategy,
   [MsgEnum.TEXT]: textMessageStrategy,
+  [MsgEnum.EMOJI]: emojiMessageStrategy,
   [MsgEnum.UNKNOWN]: unsupportedMessageStrategy,
   [MsgEnum.RECALL]: unsupportedMessageStrategy,
   [MsgEnum.VOICE]: unsupportedMessageStrategy,
   [MsgEnum.VIDEO]: unsupportedMessageStrategy,
-  [MsgEnum.EMOJI]: unsupportedMessageStrategy,
   [MsgEnum.SYSTEM]: unsupportedMessageStrategy,
   [MsgEnum.MIXED]: unsupportedMessageStrategy,
   [MsgEnum.AIT]: unsupportedMessageStrategy,

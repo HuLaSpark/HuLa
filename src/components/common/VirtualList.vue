@@ -1,5 +1,11 @@
 <template>
-  <div ref="containerRef" class="virtual-list-container" @scroll.passive="handleScroll">
+  <div
+    ref="containerRef"
+    class="virtual-list-container"
+    :class="{ 'hide-scrollbar': hideScrollbar }"
+    @scroll.passive="handleScroll"
+    @mouseenter="handleMouseEnter"
+    @mouseleave="handleMouseLeave">
     <n-flex v-if="!isLoadingMore && isLast" justify="center" class="box-border absolute-x-center pt-10px">
       <span class="text-(12px #909090)">以下是全部消息内容</span>
     </n-flex>
@@ -17,6 +23,8 @@
 </template>
 
 <script setup lang="ts">
+import { useDebounceFn } from '@vueuse/core'
+
 const props = defineProps<{
   items: any[]
   estimatedItemHeight?: number
@@ -28,6 +36,9 @@ const props = defineProps<{
 const emit = defineEmits<{
   scroll: [event: Event]
   scrollDirectionChange: [direction: 'up' | 'down']
+  loadMore: []
+  mouseenter: []
+  mouseleave: []
 }>()
 
 // 常量定义
@@ -37,6 +48,7 @@ const OVERSCAN_SIZE = 1000 // 预渲染区域的像素高度，防止滚动时�
 const MAX_CACHE_SIZE = 100 // 高度缓存的最大数量
 const LOADING_OFFSET = 26 // 加载中需要的偏移量(26px是加载动画的高度)
 const ESTIMATED_ITEM_HEIGHT = props.estimatedItemHeight || DEFAULT_ESTIMATED_HEIGHT // 每项的预估高度
+const SCROLL_THRESHOLD = 26 // 滚动到顶部的阈值，用于触发加载更多
 
 // 响应式引用
 const containerRef = ref<HTMLElement | null>(null) // 容器元素引用
@@ -47,9 +59,22 @@ const isScrolling = ref(false) // 是否正在滚动中
 const rafId = ref<number | null>(null) // requestAnimationFrame的ID
 const lastScrollTop = ref(0) // 上次滚动位置
 const consecutiveStaticFrames = ref(0) // 连续静止帧计数
+const accumulatedHeights = ref<number[]>([]) // 缓存累积高度，优化二分查找
+const needsHeightRecalculation = ref(true) // 标记是否需要重新计算高度缓存
+const hideScrollbar = ref(true) // 滚动条显示/隐藏
 
 // ResizeObserver 实例
 const resizeObserver = ref<ResizeObserver | null>(null)
+
+const handleMouseEnter = () => {
+  emit('mouseenter')
+  hideScrollbar.value = false
+}
+
+const handleMouseLeave = () => {
+  emit('mouseleave')
+  hideScrollbar.value = true
+}
 
 // 清理过期的高度缓存
 const cleanupHeightCache = () => {
@@ -71,6 +96,8 @@ const cleanupHeightCache = () => {
       for (const key of keysToDelete.slice(0, deleteCount)) {
         heights.value.delete(key)
       }
+      // 标记需要重新计算高度缓存
+      needsHeightRecalculation.value = true
     }
   }
 }
@@ -84,13 +111,35 @@ const visibleData = computed(() => {
   }))
 })
 
-// 计算列表总高度
+// 计算列表总高度 - 使用记忆化缓存优化性能
 const totalHeight = computed(() => {
-  // 累加所有项目的高度，如果没有缓存则使用预估高度
+  // 如果需要重新计算累积高度，则重置缓存
+  if (needsHeightRecalculation.value) {
+    updateAccumulatedHeights()
+    needsHeightRecalculation.value = false
+  }
+
+  // 如果有累积高度缓存，直接使用最后一个值
+  if (accumulatedHeights.value.length > 0 && accumulatedHeights.value.length === props.items.length) {
+    return accumulatedHeights.value[accumulatedHeights.value.length - 1]
+  }
+
+  // 回退到原始计算方法
   return props.items.reduce((total, item) => {
     return total + (heights.value.get(item.message?.id?.toString()) || ESTIMATED_ITEM_HEIGHT)
   }, 0)
 })
+
+// 更新累积高度缓存
+const updateAccumulatedHeights = () => {
+  accumulatedHeights.value = []
+  let totalHeight = 0
+
+  props.items.forEach((item) => {
+    totalHeight += heights.value.get(item.message?.id?.toString()) || ESTIMATED_ITEM_HEIGHT
+    accumulatedHeights.value.push(totalHeight)
+  })
+}
 
 // 监听列表数据变化
 watch(
@@ -99,7 +148,11 @@ watch(
     // 如果列表完全重置，清空高度缓存
     if (newItems.length === 0 || oldItems.length === 0) {
       heights.value.clear()
+      accumulatedHeights.value = []
     }
+
+    // 标记需要重新计算高度缓存
+    needsHeightRecalculation.value = true
 
     // 数据变化时重新计算可见范围和更新高度
     updateVisibleRange()
@@ -122,7 +175,13 @@ const updateItemHeight = () => {
     const el = document.getElementById(`item-${id}`)
     if (el) {
       const height = el.getBoundingClientRect().height
-      heights.value.set(id, height)
+      const oldHeight = heights.value.get(id)
+
+      // 只有当高度发生变化时才更新缓存并标记需要重新计算
+      if (oldHeight !== height) {
+        heights.value.set(id, height)
+        needsHeightRecalculation.value = true
+      }
     }
   }
 
@@ -135,24 +194,22 @@ const updateItemHeight = () => {
   }
 }
 
-// 根据滚动位置计算起始索引
+// 根据滚动位置计算起始索引 - 使用缓存优化二分查找
 const getStartIndex = (scrollTop: number) => {
-  const accumulatedHeights: number[] = []
-  let totalHeight = 0
-  // 预计算累积高度 O(n)，但只需要在列表数据变化时更新
-  props.items.forEach((item, index) => {
-    totalHeight += heights.value.get(item.message?.id?.toString()) || ESTIMATED_ITEM_HEIGHT
-    accumulatedHeights[index] = totalHeight
-  })
+  // 如果需要重新计算累积高度，则更新缓存
+  if (needsHeightRecalculation.value) {
+    updateAccumulatedHeights()
+    needsHeightRecalculation.value = false
+  }
 
   // 二分查找 O(log n)
   let left = 0
-  let right = accumulatedHeights.length - 1
+  let right = accumulatedHeights.value.length - 1
   const target = scrollTop - OVERSCAN_SIZE
 
   while (left <= right) {
     const mid = Math.floor((left + right) / 2)
-    if (accumulatedHeights[mid] < target) {
+    if (accumulatedHeights.value[mid] < target) {
       left = mid + 1
     } else {
       right = mid - 1
@@ -162,10 +219,21 @@ const getStartIndex = (scrollTop: number) => {
   return Math.max(0, left - BUFFER_SIZE)
 }
 
-// 计算指定索引的偏移量
+// 计算指定索引的偏移量 - 使用累积高度缓存优化
 const getOffsetForIndex = (index: number) => {
+  // 如果需要重新计算累积高度，则更新缓存
+  if (needsHeightRecalculation.value) {
+    updateAccumulatedHeights()
+    needsHeightRecalculation.value = false
+  }
+
+  // 如果索引在缓存范围内，直接使用缓存值
+  if (index > 0 && index < accumulatedHeights.value.length) {
+    return accumulatedHeights.value[index - 1]
+  }
+
+  // 回退到原始计算方法
   let total = 0
-  // 累加到目标索引前的所有项目高度
   for (let i = 0; i < index; i++) {
     const itemHeight = heights.value.get(props.items[i].message?.id?.toString()) || ESTIMATED_ITEM_HEIGHT
     total += itemHeight
@@ -207,6 +275,11 @@ const updateFrame = () => {
 
   const currentScrollTop = containerRef.value.scrollTop
 
+  // 检查是否需要加载更多
+  if (currentScrollTop < SCROLL_THRESHOLD && !props.isLoadingMore && !props.isLast) {
+    emit('loadMore')
+  }
+
   // 检查滚动位置是否变化
   if (currentScrollTop !== lastScrollTop.value) {
     // 发生滚动，重置静止帧计数
@@ -240,9 +313,15 @@ const updateFrame = () => {
   rafId.value = requestAnimationFrame(updateFrame)
 }
 
+// 使用防抖处理滚动事件
+const debouncedEmitScroll = useDebounceFn((event: Event) => {
+  emit('scroll', event)
+}, 16) // 约60fps的频率
+
 // 滚动事件处理
 const handleScroll = (event: Event) => {
-  emit('scroll', event)
+  // 使用防抖发出滚动事件
+  debouncedEmitScroll(event)
 
   // 标记滚动状态并开始帧动画
   if (!isScrolling.value) {
@@ -260,11 +339,16 @@ onMounted(() => {
 
   // 使用 ResizeObserver 监听容器大小变化
   if (containerRef.value) {
-    resizeObserver.value = new ResizeObserver(() => {
+    // 使用防抖优化 ResizeObserver 回调
+    const debouncedResize = useDebounceFn(() => {
       updateVisibleRange()
       nextTick(() => {
         updateItemHeight()
       })
+    }, 100)
+
+    resizeObserver.value = new ResizeObserver(() => {
+      debouncedResize()
     })
     resizeObserver.value.observe(containerRef.value)
   }
@@ -272,6 +356,8 @@ onMounted(() => {
   // 初始化高度计算
   nextTick(() => {
     updateItemHeight()
+    // 初始化累积高度缓存
+    updateAccumulatedHeights()
   })
 })
 
@@ -290,6 +376,7 @@ onUnmounted(() => {
 
   // 清理缓存
   heights.value.clear()
+  accumulatedHeights.value = []
 })
 
 // 类型定义
@@ -310,17 +397,34 @@ defineExpose<VirtualListExpose>({
         // 滚动到底部前确保高度已更新
         nextTick(() => {
           updateItemHeight()
+          // 确保累积高度已更新
+          if (needsHeightRecalculation.value) {
+            updateAccumulatedHeights()
+            needsHeightRecalculation.value = false
+          }
           nextTick(() => {
             if (containerRef.value) {
-              containerRef.value.scrollTop = totalHeight.value
+              // 使用 scrollTo 代替直接设置 scrollTop，提高兼容性
+              containerRef.value.scrollTo({
+                top: totalHeight.value,
+                behavior: options.behavior || 'auto'
+              })
             }
           })
         })
       } else if (options.position === 'top') {
         // 滚动到顶部
-        containerRef.value.scrollTop = 0
+        containerRef.value.scrollTo({
+          top: 0,
+          behavior: options.behavior || 'auto'
+        })
       } else if (typeof options.index === 'number') {
         // 滚动到指定索引位置
+        // 确保累积高度已更新
+        if (needsHeightRecalculation.value) {
+          updateAccumulatedHeights()
+          needsHeightRecalculation.value = false
+        }
         const offset = getOffsetForIndex(options.index)
         containerRef.value.scrollTo({
           top: offset,
@@ -343,40 +447,67 @@ defineExpose<VirtualListExpose>({
   overflow-y: auto;
   height: 100%;
   -webkit-overflow-scrolling: touch; /* 在iOS上提供平滑滚动 */
-}
+  overscroll-behavior: contain; /* 防止滚动传播到父元素 */
+  box-sizing: border-box;
+  /* 为滚动条预留空间 */
+  padding-right: 6px;
 
-.virtual-list-container::-webkit-scrollbar {
-  width: 6px;
-}
+  /* 滚动条样式 */
+  &::-webkit-scrollbar {
+    width: 6px;
+    transition: opacity 0.3s ease;
+  }
 
-.virtual-list-container::-webkit-scrollbar-thumb {
-  background-color: rgba(144, 144, 144, 0.3);
-  border-radius: 3px;
-  transition: background-color 0.3s;
-  min-height: 75px;
-  z-index: 999;
-}
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(144, 144, 144, 0.3);
+    border-radius: 3px;
+    transition:
+      background-color 0.3s ease,
+      opacity 0.3s ease;
+    min-height: 75px;
+  }
 
-.virtual-list-container::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(144, 144, 144, 0.5);
-}
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(144, 144, 144, 0.5);
+  }
 
-.virtual-list-container::-webkit-scrollbar-track {
-  background: transparent;
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  /* 隐藏滚动条时的样式 - 保持宽度但隐藏显示 */
+  &.hide-scrollbar {
+    /* 使用 scrollbar-gutter 属性保持滚动条空间 */
+    scrollbar-gutter: stable;
+
+    &::-webkit-scrollbar {
+      /* 保持宽度但改变颜色为透明 */
+      background-color: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      /* 完全透明化滑块 */
+      background-color: transparent;
+    }
+  }
+
+  &.show-scrollbar {
+    scrollbar-gutter: auto;
+  }
 }
 
 .virtual-list-phantom {
   position: absolute;
   left: 0;
   top: 0;
-  right: 0;
+  right: 6px; /* 为滚动条预留空间 */
   z-index: -1;
 }
 
 .virtual-list-content {
   position: absolute;
   left: 0;
-  right: 0;
+  right: 6px; /* 为滚动条预留空间 */
   top: 0;
   will-change: transform;
   transform: translateZ(0); /* 启用GPU加速 */

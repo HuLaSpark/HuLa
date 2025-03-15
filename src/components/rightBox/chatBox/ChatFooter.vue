@@ -37,7 +37,7 @@
                 <span>表情</span>
               </n-popover>
             </template>
-            <Emoji @emojiHandle="emojiHandle" :all="false" />
+            <Emoticon @emojiHandle="emojiHandle" :all="false" />
           </n-popover>
 
           <n-popover trigger="hover" :show-arrow="false" placement="bottom">
@@ -134,8 +134,9 @@ const isFriend = computed(() => {
 /**
  * 选择表情，并把表情插入输入框
  * @param item 选择的表情
+ * @param type 表情类型，'emoji' 为普通表情，'emoji-url' 为表情包URL
  */
-const emojiHandle = (item: string) => {
+const emojiHandle = (item: string, type: 'emoji' | 'emoji-url' = 'emoji') => {
   emojiShow.value = false
 
   const inp = msgInputDom.value
@@ -191,7 +192,8 @@ const emojiHandle = (item: string) => {
     imgElement.src = item
     imgElement.style.maxWidth = '80px'
     imgElement.style.maxHeight = '80px'
-    imgElement.dataset.type = 'emoji'
+    // 设置数据类型，区分是普通图片还是表情包
+    imgElement.dataset.type = type === 'emoji-url' ? 'emoji' : 'image'
     lastEditRange.range.insertNode(imgElement)
 
     // 移动光标到图片后面

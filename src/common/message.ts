@@ -8,5 +8,5 @@ export const MSG_REPLY_TEXT_MAP: Record<number, string> = {
   [MsgEnum.FILE]: '[文件]',
   [MsgEnum.VOICE]: '[语音]',
   [MsgEnum.VIDEO]: '[音频]',
-  [MsgEnum.EMOJI]: '[表情]'
+  [MsgEnum.EMOJI]: '[动画表情]'
 }

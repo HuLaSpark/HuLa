@@ -47,7 +47,7 @@
     "========= 发版 =========": "",
     "release": "release-it",
     "========= commit后再次添加修改到上一次的commit =========": "",
-    "addition-commit": "git add . && vitest run && git commit --amend --no-edit",
+    "addition-commit": "git add . && git commit --amend --no-edit",
     "========= 单元测试 =========": "",
     "test:run": "vitest run",
     "========= 使用 vitest UI =========": "",

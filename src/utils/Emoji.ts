@@ -1,4 +1,4 @@
-import { animalEmojis, expressionEmojis, gestureEmojis } from '@/components/rightBox/emoji/material.ts'
+import { animalEmojis, expressionEmojis, gestureEmojis } from '@/components/rightBox/emoticon/material'
 
 /**
  *

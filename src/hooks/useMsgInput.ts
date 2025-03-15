@@ -313,9 +313,9 @@ export const useMsgInput = (messageInputDom: Ref) => {
     }, 800)
 
     try {
-      // 如果是图片消息,需要先上传文件
-      if (msg.type === MsgEnum.IMAGE) {
-        console.log('开始处理图片消息上传')
+      // 如果是图片或表情消息,需要先上传文件
+      if (msg.type === MsgEnum.IMAGE || msg.type === MsgEnum.EMOJI) {
+        console.log(`开始处理${msg.type === MsgEnum.EMOJI ? '表情包' : '图片'}消息上传`)
         const { uploadUrl, downloadUrl } = await messageStrategy.uploadFile(msg.path)
         await messageStrategy.doUpload(msg.path, uploadUrl)
 
@@ -331,7 +331,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
           },
           status: MessageStatusEnum.SENDING
         })
-        console.log('图片上传完成,更新为服务器URL:', downloadUrl)
+        console.log(`${msg.type === MsgEnum.EMOJI ? '表情包' : '图片'}上传完成,更新为服务器URL:`, downloadUrl)
       }
 
       // 发送消息到服务器
@@ -356,7 +356,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       chatStore.updateSessionLastActiveTime(globalStore.currentSession.roomId)
 
       // 消息发送成功后释放预览URL
-      if (msg.type === MsgEnum.IMAGE && msg.url.startsWith('blob:')) {
+      if ((msg.type === MsgEnum.IMAGE || msg.type === MsgEnum.EMOJI) && msg.url.startsWith('blob:')) {
         URL.revokeObjectURL(msg.url)
       }
     } catch (error) {

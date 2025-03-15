@@ -201,7 +201,8 @@ const chooseEmoji = (item: string, type: 'emoji' | 'url' = 'emoji') => {
     setEmoji([...emojiRef.historyList])
   }
 
-  emit('emojiHandle', item)
+  // 传递表情类型信息，URL类型的表情作为EMOJI类型处理
+  emit('emojiHandle', item, type === 'url' ? 'emoji-url' : 'emoji')
   return item
 }
 

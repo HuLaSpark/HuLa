@@ -132,6 +132,7 @@ export const useCommon = () => {
     let hasImage = false
     let hasVideo = false
     let hasFile = false
+    let hasEmoji = false
 
     const elements = messageInputDom.value.childNodes
     for (const element of elements) {
@@ -140,6 +141,9 @@ export const useCommon = () => {
       } else if (element.tagName === 'IMG') {
         if (element.dataset.type === 'file-canvas') {
           hasFile = true
+        } else if (element.dataset.type === 'emoji') {
+          // 检查是否是表情包图片
+          hasEmoji = true
         } else {
           hasImage = true
         }
@@ -152,6 +156,9 @@ export const useCommon = () => {
       return MsgEnum.FILE
     } else if (hasVideo) {
       return MsgEnum.VIDEO
+    } else if (hasEmoji && !hasText && !hasImage) {
+      // 如果只有表情包，没有其他文本或图片，则返回EMOJI类型
+      return MsgEnum.EMOJI
     } else if (hasText && hasImage) {
       return MsgEnum.MIXED
     } else if (hasImage) {

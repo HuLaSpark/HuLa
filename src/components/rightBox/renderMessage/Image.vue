@@ -12,7 +12,7 @@
     preview-disabled
     style="border-radius: 8px"
     :src="body?.url"
-    @dblclick="openImageViewer"
+    @dblclick="handleOpenImageViewer"
     @error="handleImageError">
     <template #placeholder>
       <n-flex
@@ -38,124 +38,29 @@
 
 <script setup lang="ts">
 import type { ImageBody } from '@/services/types'
-import { useWindow } from '@/hooks/useWindow.ts'
-import { useChatStore } from '@/stores/chat'
 import { MsgEnum } from '@/enums/index'
-import { useImageViewer } from '@/stores/imageViewer.ts'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { useImageViewer } from '@/hooks/useImageViewer'
 
 const props = defineProps<{ body: ImageBody }>()
-const chatStore = useChatStore()
-const { createWebviewWindow } = useWindow()
-const imageViewerStore = useImageViewer()
 // 图片显示相关常量
 const MAX_WIDTH = 320
 const MAX_HEIGHT = 240
 const MIN_WIDTH = 60
 const MIN_HEIGHT = 60
-//错误状态控制
+// 错误状态控制
 const isError = ref(false)
+// 使用图片查看器hook
+const { openImageViewer } = useImageViewer()
 
 // 处理图片加载错误
 const handleImageError = () => {
   isError.value = true
 }
 
-// 获取当前聊天中的所有图片URL
-const getAllImagesFromChat = () => {
-  const messages = [...(chatStore.currentMessageMap?.values() || [])]
-  const imageUrls: string[] = []
-  let currentIndex = 0
-
-  messages.forEach((msg) => {
-    if (msg.message?.type === MsgEnum.IMAGE && msg.message.body?.url) {
-      imageUrls.push(msg.message.body.url)
-      // 找到当前图片的索引
-      if (msg.message.body.url === props.body?.url) {
-        currentIndex = imageUrls.length - 1
-      }
-    }
-  })
-
-  return {
-    list: imageUrls,
-    index: currentIndex
-  }
-}
-
-// 打开图片查看器
-const openImageViewer = async () => {
-  if (!props.body?.url) return
-
-  try {
-    const { list, index } = getAllImagesFromChat()
-    // 使用新的重置方法,自动去重并保持顺序
-    imageViewerStore.resetImageList(list, index)
-
-    // 检查图片查看器窗口是否已存在
-    const existingWindow = await WebviewWindow.getByLabel('imageViewer')
-
-    if (existingWindow) {
-      // 如果窗口已存在，更新图片内容并显示窗口
-      await existingWindow.emit('update-image', { list, index }) // 发送更新事件
-      await existingWindow.show()
-      await existingWindow.setFocus()
-      return
-    }
-
-    // 获取当前图片的宽高
-    const img = new Image()
-    img.src = props.body.url
-
-    await new Promise((resolve, reject) => {
-      img.onload = resolve
-      img.onerror = reject
-    })
-
-    // 默认窗口尺寸（最小尺寸）
-    const MIN_WINDOW_WIDTH = 630
-    const MIN_WINDOW_HEIGHT = 660
-    // 计算实际窗口尺寸（保留一定边距）
-    const MARGIN = 100 // 窗口边距
-    let windowWidth = MIN_WINDOW_WIDTH
-    let windowHeight = MIN_WINDOW_HEIGHT
-
-    // 获取屏幕尺寸
-    const { width: screenWidth, height: screenHeight } = window.screen
-
-    // 计算最大可用尺寸（考虑边距）
-    const maxWidth = screenWidth - MARGIN * 2
-    const maxHeight = screenHeight - MARGIN * 2
-
-    // 保持图片比例计算窗口尺寸
-    const imageRatio = img.width / img.height
-
-    // 计算实际窗口尺寸
-    if (img.width > MIN_WINDOW_WIDTH || img.height > MIN_WINDOW_HEIGHT) {
-      if (imageRatio > maxWidth / maxHeight) {
-        // 以宽度为基准
-        windowWidth = Math.min(img.width + MARGIN, maxWidth)
-        windowHeight = Math.max(windowWidth / imageRatio + MARGIN, MIN_WINDOW_HEIGHT)
-      } else {
-        // 以高度为基准
-        windowHeight = Math.min(img.height + MARGIN, maxHeight)
-        windowWidth = Math.max(windowHeight * imageRatio + MARGIN, MIN_WINDOW_WIDTH)
-      }
-    }
-
-    // 创建窗口，使用计算后的尺寸
-    await createWebviewWindow(
-      '图片查看',
-      'imageViewer',
-      Math.round(windowWidth),
-      Math.round(windowHeight),
-      '',
-      true,
-      Math.round(windowWidth),
-      Math.round(windowHeight)
-    )
-  } catch (error) {
-    console.error('打开图片查看器失败:', error)
+// 处理打开图片查看器
+const handleOpenImageViewer = () => {
+  if (props.body?.url) {
+    openImageViewer(props.body.url, [MsgEnum.IMAGE, MsgEnum.EMOJI])
   }
 }
 
