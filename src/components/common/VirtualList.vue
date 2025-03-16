@@ -531,8 +531,12 @@ defineExpose<VirtualListExpose>({
   -webkit-overflow-scrolling: touch; /* 在iOS上提供平滑滚动 */
   overscroll-behavior: contain; /* 防止滚动传播到父元素 */
   box-sizing: border-box;
+  /* 始终保留滚动条空间 */
+  scrollbar-gutter: stable;
   /* 为滚动条预留空间 */
   padding-right: 6px;
+  /* 兼容性写法，确保在各种浏览器中都有一致的滚动条空间 */
+  overflow-y: scroll;
 
   /* 滚动条样式 */
   &::-webkit-scrollbar {

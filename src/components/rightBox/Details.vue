@@ -57,23 +57,24 @@
   <div
     v-else-if="content.type === RoomTypeEnum.GROUP && item"
     class="flex flex-col flex-1 mt-60px gap-30px select-none p-[0_40px] box-border">
-    <!-- 群聊头像以及简介 -->
-    <n-flex align="center" justify="space-between">
-      <n-flex align="center">
+    <!-- 群聊头像及名称 -->
+    <n-flex align="center" justify="space-between" class="px-30px box-border">
+      <n-flex align="center" :size="30">
         <n-image
           object-fit="cover"
           show-toolbar-tooltip
           preview-disabled
+          width="106"
+          height="106"
           style="border: 2px solid #fff"
-          class="rounded-50% select-none size-120px cursor-pointer"
+          class="rounded-50% select-none cursor-pointer"
           :src="AvatarUtils.getAvatarUrl(item.avatar)"
           @dblclick="openImageViewer"
           alt="" />
 
-        <n-flex vertical :size="16" justify="space-between" class="text-(14px #909090)">
-          <span class="text-(16px [--text-color])">{{ item.groupName }}</span>
-          <span>群号：1235873897182</span>
-          <span>创建时间：2021-01-01</span>
+        <n-flex vertical :size="16">
+          <span class="text-(20px [--text-color])">{{ item.groupName }}</span>
+          <span class="text-(14px #909090)">群号 {{ item.accountCode }}</span>
         </n-flex>
       </n-flex>
 
@@ -89,23 +90,46 @@
       </n-icon-wrapper>
     </n-flex>
 
-    <n-flex vertical :size="20">
-      <span class="text-[--text-color]">群成员：({{ options.length }}人)</span>
+    <!-- 群信息列表 -->
+    <n-flex vertical class="select-none w-full px-30px box-border">
+      <n-flex align="center" justify="space-between" class="py-12px border-b text-[--chat-text-color]">
+        <span>备注</span>
+        <span>{{ item.remark || '设置群聊备注' }}</span>
+      </n-flex>
 
-      <n-avatar-group :options="options" :size="40" :max="4" expand-on-hover>
-        <template #avatar="{ option: { src } }">
-          <n-tooltip>
-            <template #trigger>
-              <n-avatar :src="AvatarUtils.getAvatarUrl(src)" />
-            </template>
-          </n-tooltip>
-        </template>
-        <template #rest="{ options: restOptions, rest }">
-          <n-dropdown :options="createDropdownOptions(restOptions as any)" placement="top">
-            <n-avatar :color="'#52aea3'">+{{ rest }}</n-avatar>
-          </n-dropdown>
-        </template>
-      </n-avatar-group>
+      <n-flex align="center" justify="space-between" class="py-12px border-b text-[--chat-text-color]">
+        <span>我的本群昵称</span>
+        <span class="flex items-center cursor-pointer"
+          >{{ item.myName || '未设置'
+          }}<n-icon size="16" class="ml-1"
+            ><svg><use href="#right"></use></svg></n-icon
+        ></span>
+      </n-flex>
+
+      <n-flex align="center" justify="space-between" class="py-12px border-b text-[--chat-text-color]">
+        <span>群公告</span>
+        <span class="flex items-center cursor-pointer"
+          >未设置
+          <n-icon size="16" class="ml-1"
+            ><svg><use href="#right"></use></svg></n-icon
+        ></span>
+      </n-flex>
+    </n-flex>
+
+    <!-- 群成员 -->
+    <n-flex vertical :size="10" class="px-30px box-border">
+      <n-flex align="center" justify="space-between" class="text-[--chat-text-color]">
+        <span>群成员 ({{ item.memberNum }}人)</span>
+        <span class="flex items-center">在线 {{ item.onlineNum }}人</span>
+      </n-flex>
+
+      <n-flex class="pt-16px">
+        <n-avatar-group :options="options" :size="40" :max="10" expand-on-hover>
+          <template #avatar="{ option: { src } }">
+            <n-avatar :src="AvatarUtils.getAvatarUrl(src)" />
+          </template>
+        </n-avatar-group>
+      </n-flex>
     </n-flex>
   </div>
 </template>
@@ -117,6 +141,7 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import apis from '@/services/apis.ts'
 import { useWindow } from '@/hooks/useWindow'
 import { useImageViewer } from '@/stores/imageViewer'
+import type { UserItem } from '@/services/types'
 
 const { openMsgSession } = useCommon()
 const { createWebviewWindow } = useWindow()
@@ -126,16 +151,51 @@ const { content } = defineProps<{
   content: any
 }>()
 const item = ref<any>(null)
+const options = ref<Array<{ name: string; src: string }>>([])
 
 watchEffect(() => {
   if (content.type === RoomTypeEnum.SINGLE) {
     item.value = useUserInfo(content.uid).value
   } else {
     apis.groupDetail({ id: content.uid }).then((response) => {
+      console.log(response)
       item.value = response
+
+      // 获取群成员列表
+      if (item.value && item.value.roomId) {
+        fetchGroupMembers(item.value.roomId)
+      }
     })
   }
 })
+
+// 获取群成员列表
+const fetchGroupMembers = async (roomId: string) => {
+  try {
+    const params = {
+      roomId: roomId,
+      current: 1,
+      size: 10 // 获取前10个成员
+    }
+    const response = await apis.getGroupList(params)
+    if (response && response.list) {
+      console.log(response)
+
+      // 使用每个成员的uid获取详细信息
+      const memberDetails = response.list.map((member: UserItem) => {
+        const userInfo = useUserInfo(member.uid).value
+        return {
+          name: userInfo.name || member.name || member.uid,
+          src: userInfo.avatar || member.avatar
+        }
+      })
+
+      options.value = memberDetails
+    }
+  } catch (error) {
+    console.error('获取群成员失败:', error)
+  }
+}
 
 const footerOptions = ref<OPT.Details[]>([
   {
@@ -169,35 +229,6 @@ const footerOptions = ref<OPT.Details[]>([
     }
   }
 ])
-const options = [
-  {
-    name: '张三',
-    src: 'https://gw.alipayobjects.com/zos/antfincdn/aPkFc8Sj7n/method-draw-image.svg'
-  },
-  {
-    name: '李四',
-    src: 'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg'
-  },
-  {
-    name: '王五',
-    src: 'https://gw.alipayobjects.com/zos/antfincdn/aPkFc8Sj7n/method-draw-image.svg'
-  },
-  {
-    name: '赵六',
-    src: 'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg'
-  },
-  {
-    name: '七仔',
-    src: 'https://gw.alipayobjects.com/zos/antfincdn/aPkFc8Sj7n/method-draw-image.svg'
-  }
-]
-
-const createDropdownOptions = (options: Array<{ name: string; src: string }>) => {
-  return options.map((option) => ({
-    key: option.name,
-    label: option.name
-  }))
-}
 
 // 打开图片查看器
 const openImageViewer = async () => {
