@@ -71,9 +71,8 @@ export type LoginSuccessResType = Pick<UserInfoType, 'avatar' | 'name' | 'uid' |
 
 /** 用户在线状态改变 */
 export type OnStatusChangeType = {
-  changeList: UserItem[]
+  member: Omit<UserItem, 'name' | 'avatar'>[]
   onlineNum: number
-  totalNum: number
 }
 
 /** token过期 */

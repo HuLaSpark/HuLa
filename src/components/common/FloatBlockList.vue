@@ -1,19 +1,35 @@
 <template>
-  <div class="float-block-container">
-    <n-scrollbar ref="scrollbarRef" :style="{ maxHeight: maxHeight }" @scroll="handleScroll($event)">
-      <n-flex vertical :size="0" class="z-10 box-border w-full">
+  <div class="float-block-container" ref="containerRef">
+    <n-virtual-list
+      ref="virtualListRef"
+      :style="{ maxHeight: maxHeight }"
+      :items="dataSource"
+      :item-size="itemHeight"
+      :item-resize-observer="true"
+      :key-field="itemKey || 'index'"
+      @scroll="handleScroll">
+      <template #default="{ item, index }">
         <div
-          v-for="(item, index) in dataSource"
-          :key="itemKey ? item[itemKey] : index"
           class="float-block"
-          :style="{ height: `${itemHeight}px` }">
+          :data-index="index"
+          :style="{ height: `${itemHeight}px` }"
+          @mouseenter="handleItemMouseEnter(index)">
           <slot name="item" :item="item" :index="index">
             <!-- 默认渲染内容 -->
             <div class="p-[8px_10px] rounded-lg">{{ item }}</div>
           </slot>
         </div>
-      </n-flex>
-    </n-scrollbar>
+      </template>
+    </n-virtual-list>
+    <!-- 悬浮效果层 -->
+    <div
+      v-show="hoverPosition !== null"
+      class="hover-effect"
+      :style="{
+        height: `${itemHeight}px`,
+        opacity: props.hoverOpacity,
+        top: `${hoverPosition}px`
+      }"></div>
   </div>
 </template>
 
@@ -33,7 +49,7 @@ const props = defineProps({
   // 项目高度
   itemHeight: {
     type: Number,
-    default: 68
+    default: 64
   },
   // 最大高度
   maxHeight: {
@@ -44,116 +60,118 @@ const props = defineProps({
   hoverOpacity: {
     type: Number,
     default: 0.06
-  },
-  // 样式表ID，避免冲突
-  styleId: {
-    type: String,
-    default: 'float-hover-classes'
   }
 })
 
-// 滚动位置
-const scrollTop = ref(0)
-const scrollbarRef = ref<any>(null)
+// 引用和状态
+const containerRef = ref<HTMLElement | null>(null)
+const virtualListRef = ref<any>(null)
+const hoverPosition = ref<number | null>(null)
+const currentHoverIndex = ref<number | null>(null)
 
 // 处理滚动事件
-const handleScroll = (e: Event) => {
-  const target = e.target as HTMLElement
-  scrollTop.value = target.scrollTop
-  updateHoverClasses()
+const handleScroll = () => {
+  // 如果当前有悬浮项，更新其位置
+  if (currentHoverIndex.value !== null) {
+    updateHoverPositionByIndex(currentHoverIndex.value)
+  }
 }
 
-// 更新悬浮样式
-const updateHoverClasses = () => {
-  const itemCount = props.dataSource.length
-  if (itemCount === 0) return
+// 处理列表项的鼠标进入事件
+const handleItemMouseEnter = (index: number) => {
+  // 设置当前悬停的索引
+  currentHoverIndex.value = index
 
-  let styleStr = ''
+  // 获取当前悬停项的DOM元素
+  const item =
+    document.activeElement?.closest('.float-block') || (event?.target as HTMLElement)?.closest('.float-block')
 
-  // 为每个项目创建悬浮样式规则
-  for (let i = 0; i < itemCount - 1; i++) {
-    styleStr += `
-      .float-block:nth-child(${i + 1}):hover~.float-block:last-child::before {
-        --y: calc(var(--height) * ${i} - ${scrollTop.value}px);
-      }
-    `
+  if (item) {
+    // 获取元素相对于列表容器的位置
+    const listEl = virtualListRef.value?.$el
+    if (!listEl) return
+
+    const itemRect = item.getBoundingClientRect()
+    const listRect = listEl.getBoundingClientRect()
+
+    // 设置悬浮效果的位置
+    hoverPosition.value = itemRect.top - listRect.top
+  } else {
+    // 如果找不到DOM元素，使用索引计算位置
+    updateHoverPositionByIndex(index)
   }
-
-  // 为最后一个项目添加样式规则
-  styleStr += `.float-block:nth-child(${itemCount}):hover::before {
-    --y: calc(var(--height) * ${itemCount - 1} - ${scrollTop.value}px);
-    opacity: ${props.hoverOpacity};
-  }`
-
-  // 更新或创建样式标签
-  const styleTag = document.getElementById(props.styleId)
-  if (styleTag) styleTag.remove()
-
-  const style = document.createElement('style')
-  style.id = props.styleId
-  style.innerHTML = styleStr
-  document.head.appendChild(style)
 }
 
-// 更新数据源时更新悬浮效果
-watch(
-  () => props.dataSource,
-  () => {
-    nextTick(() => {
-      updateHoverClasses()
-    })
-  },
-  { deep: true }
-)
+// 根据索引获取实际渲染的DOM元素并更新悬浮效果位置
+const updateHoverPositionByIndex = (index: number) => {
+  if (!virtualListRef.value?.$el) return
 
-// 监听高度变化
-watch(
-  () => props.itemHeight,
-  () => {
-    const container = document.querySelector('.float-block-container')
-    const styleTag = container?.querySelector('style')
-    if (styleTag) {
-      styleTag.innerHTML = `.float-block { --height: ${props.itemHeight}px; }`
-    }
-    updateHoverClasses()
+  // 获取所有渲染的列表项元素
+  const items = virtualListRef.value.$el.querySelectorAll('.float-block')
+  if (!items.length) return
+
+  // 获取虚拟列表的起始索引
+  const startIndex = virtualListRef.value?.getOffset?.() || 0
+
+  // 计算目标项在当前可视区域中的相对位置
+  const relativeIndex = index - startIndex
+
+  // 确保索引在可视范围内
+  if (relativeIndex < 0 || relativeIndex >= items.length) {
+    // 如果不在可视范围内，隐藏悬浮效果
+    hoverPosition.value = null
+    return
   }
-)
 
-// 在组件挂载时初始化
+  // 获取目标元素
+  const targetItem = items[relativeIndex]
+  if (!targetItem) {
+    hoverPosition.value = null
+    return
+  }
+
+  // 获取目标元素相对于虚拟列表容器的位置
+  const listContainer = virtualListRef.value.$el
+  const targetRect = targetItem.getBoundingClientRect()
+  const listRect = listContainer.getBoundingClientRect()
+
+  // 计算目标元素相对于列表容器的顶部偏移量
+  hoverPosition.value = targetRect.top - listRect.top
+}
+
+// 处理容器的鼠标离开事件
+const handleMouseLeave = () => {
+  hoverPosition.value = null
+  currentHoverIndex.value = null
+}
+
+// 在组件挂载时添加事件监听
 onMounted(() => {
-  // 添加高度样式
-  const styleTag = document.createElement('style')
-  styleTag.innerHTML = `.float-block { --height: ${props.itemHeight}px; }`
-  const container = document.querySelector('.float-block-container')
-  if (container) {
-    container.appendChild(styleTag)
+  if (containerRef.value) {
+    containerRef.value.addEventListener('mouseleave', handleMouseLeave)
   }
-
-  // 初始化悬浮效果
-  nextTick(() => {
-    updateHoverClasses()
-  })
 })
 
-// 组件卸载时清理
+// 在组件卸载时移除事件监听
 onUnmounted(() => {
-  const styleTag = document.getElementById(props.styleId)
-  if (styleTag) styleTag.remove()
+  if (containerRef.value) {
+    containerRef.value.removeEventListener('mouseleave', handleMouseLeave)
+  }
 })
 
 // 暴露滚动到顶部/底部方法
 defineExpose({
   scrollToTop: () => {
-    if (scrollbarRef.value) {
-      scrollbarRef.value.scrollTo({ top: 0, behavior: 'smooth' })
+    if (virtualListRef.value) {
+      virtualListRef.value.scrollTo({ top: 0, behavior: 'smooth' })
     }
   },
   scrollToBottom: () => {
-    if (scrollbarRef.value && scrollbarRef.value.$el) {
-      const scrollContainer = scrollbarRef.value.$el.querySelector('.n-scrollbar-container')
+    if (virtualListRef.value && virtualListRef.value.$el) {
+      const scrollContainer = virtualListRef.value.$el
       if (scrollContainer) {
         const scrollHeight = scrollContainer.scrollHeight
-        scrollbarRef.value.scrollTo({ top: scrollHeight, behavior: 'smooth' })
+        virtualListRef.value.scrollTo({ top: scrollHeight, behavior: 'smooth' })
       }
     }
   }
@@ -164,34 +182,25 @@ defineExpose({
 .float-block-container {
   position: relative;
   width: 100%;
+  height: 100%;
 }
 
 .float-block {
-  --y: 0;
-  /* --height 在JS中设置 */
-  --surface-2: var(--float-block-hover-color);
-
   width: 100%;
   cursor: pointer;
   box-sizing: border-box;
+  position: relative;
+  z-index: 1;
 }
 
-.float-block:last-child::before {
-  content: '';
-  display: block;
+.hover-effect {
   position: absolute;
-  background: var(--surface-2);
-  opacity: 0;
-  width: 100%;
-  transform: translateY(var(--y));
-  top: 0;
   left: 0;
-  height: var(--height);
+  width: 100%;
+  background: var(--float-block-hover-color, rgba(0, 0, 0, 0.1));
   pointer-events: none;
-  transition: all 0.5s cubic-bezier(0.2, 1, 0.2, 1);
-}
-
-.float-block:hover ~ .float-block:last-child:before {
-  opacity: v-bind('props.hoverOpacity');
+  transition: top 0.2s ease-in-out;
+  z-index: 0;
+  border-radius: 8px;
 }
 </style>

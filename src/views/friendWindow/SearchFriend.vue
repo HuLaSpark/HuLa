@@ -56,7 +56,7 @@
             <FloatBlockList
               :data-source="searchResults"
               item-key="id"
-              :item-height="68"
+              :item-height="64"
               max-height="calc(100vh - 128px)"
               style-id="search-hover-classes">
               <template #item="{ item }">
@@ -180,31 +180,21 @@ const getCachedUsers = () => {
   console.log(users)
 
   // 筛选出需要显示的用户（ID在20016-20030之间的用户）
-  return users
-    .filter((user) => {
-      const uid = user.uid as string
-      return uid >= '20016' && uid <= '20030'
-    })
-    .map((user) => ({
-      uid: user.uid,
-      accountCode: user.accountCode,
-      name: user.name,
-      avatar: user.avatar,
-      itemIds: user.itemIds || null
-    }))
-    .sort((a, b) => {
-      // 自己排在最前面
-      if (isCurrentUser(String(a.uid))) return -1
-      if (isCurrentUser(String(b.uid))) return 1
-
-      // 好友排在第二位
-      const aIsFriend = isFriend(String(a.uid))
-      const bIsFriend = isFriend(String(b.uid))
-      if (aIsFriend && !bIsFriend) return -1
-      if (!aIsFriend && bIsFriend) return 1
-
-      return 0
-    })
+  return sortSearchResults(
+    users
+      .filter((user) => {
+        const uid = user.uid as string
+        return uid >= '20016' && uid <= '20030'
+      })
+      .map((user) => ({
+        uid: user.uid,
+        accountCode: user.accountCode,
+        name: user.name,
+        avatar: user.avatar,
+        itemIds: user.itemIds || null
+      })),
+    'recommend'
+  )
 }
 
 // 清空搜索结果
@@ -258,48 +248,22 @@ const handleSearch = debounce(async () => {
     } else if (searchType.value === 'user') {
       // 调用好友搜索接口
       const res = await apis.searchFriend({ key: searchValue.value })
-      searchResults.value = res
-        .map((user) => ({
-          uid: user.uid,
-          name: user.name,
-          avatar: user.avatar,
-          accountCode: user.accountCode
-        }))
-        .sort((a, b) => {
-          // 自己排在最前面
-          if (isCurrentUser(a.uid)) return -1
-          if (isCurrentUser(b.uid)) return 1
-
-          // 好友排在第二位
-          const aIsFriend = isFriend(a.uid)
-          const bIsFriend = isFriend(b.uid)
-          if (aIsFriend && !bIsFriend) return -1
-          if (!aIsFriend && bIsFriend) return 1
-
-          return 0
-        })
+      searchResults.value = res.map((user) => ({
+        uid: user.uid,
+        name: user.name,
+        avatar: user.avatar,
+        accountCode: user.accountCode
+      }))
     } else {
-      // 推荐标签搜索结果也需要排序
+      // 推荐标签搜索结果
       const cachedUsers = getCachedUsers()
-      searchResults.value = cachedUsers
-        .filter(
-          (user) =>
-            user?.name?.includes(searchValue.value) || (user.uid && user.uid.toString().includes(searchValue.value))
-        )
-        .sort((a, b) => {
-          // 自己排在最前面
-          if (isCurrentUser(String(a.uid))) return -1
-          if (isCurrentUser(String(b.uid))) return 1
-
-          // 好友排在第二位
-          const aIsFriend = isFriend(String(a.uid))
-          const bIsFriend = isFriend(String(b.uid))
-          if (aIsFriend && !bIsFriend) return -1
-          if (!aIsFriend && bIsFriend) return 1
-
-          return 0
-        })
+      searchResults.value = cachedUsers.filter(
+        (user) =>
+          user?.name?.includes(searchValue.value) || (user.uid && user.uid.toString().includes(searchValue.value))
+      )
     }
+    // 通用排序函数
+    searchResults.value = sortSearchResults(searchResults.value, searchType.value)
   } catch (error) {
     window.$message.error('搜索失败')
     searchResults.value = []
@@ -317,6 +281,44 @@ const handleTypeChange = () => {
   }
 }
 
+// 判断是否已加入群聊
+const isInGroup = (roomId: string) => {
+  return contactStore.groupChatList.some((group: GroupListReq) => group.roomId === roomId)
+}
+
+// 通用排序函数
+const sortSearchResults = (items: any[], type: 'user' | 'group' | 'recommend') => {
+  if (type === 'group') {
+    // 群聊排序逻辑：已加入的群聊排在前面
+    return items.sort((a, b) => {
+      const aInGroup = isInGroup(a.roomId)
+      const bInGroup = isInGroup(b.roomId)
+      if (aInGroup && !bInGroup) return -1
+      if (!aInGroup && bInGroup) return 1
+      return 0
+    })
+  } else {
+    // 用户排序逻辑：自己排在最前面，好友排在第二位
+    return items.sort((a, b) => {
+      // 处理uid可能是string或number的情况
+      const aUid = String(a.uid)
+      const bUid = String(b.uid)
+
+      // 自己排在最前面
+      if (isCurrentUser(aUid)) return -1
+      if (isCurrentUser(bUid)) return 1
+
+      // 好友排在第二位
+      const aIsFriend = isFriend(aUid)
+      const bIsFriend = isFriend(bUid)
+      if (aIsFriend && !bIsFriend) return -1
+      if (!aIsFriend && bIsFriend) return 1
+
+      return 0
+    })
+  }
+}
+
 // 判断是否已经是好友
 const isFriend = (uid: string) => {
   return contactStore.contactsList.some((contact: ContactItem) => contact.uid === uid)
@@ -325,11 +327,6 @@ const isFriend = (uid: string) => {
 // 判断是否是当前登录用户
 const isCurrentUser = (uid: string) => {
   return userStore.userInfo.uid === uid
-}
-
-// 判断是否已加入群聊
-const isInGroup = (roomId: string) => {
-  return contactStore.groupChatList.some((group: GroupListReq) => group.roomId === roomId)
 }
 
 // 获取按钮文本

@@ -305,7 +305,6 @@ const startResize = () => {
 
 const handleResize = async (e: Event) => {
   let windowHeight = (e.target as Window).innerHeight
-  console.log((e.target as Window).innerHeight)
   let menuDivHeight = showMode.value === ShowModeEnum.TEXT ? 46 : 34
   let spaceHeight = 10
   let newMenuHeight = menuDivHeight + spaceHeight

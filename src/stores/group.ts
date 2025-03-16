@@ -7,6 +7,7 @@ import { OnlineEnum, RoleEnum, RoomTypeEnum, StoresEnum } from '@/enums'
 import { uniqueUserList } from '@/utils/Unique.ts'
 import { useCachedStore } from '@/stores/cached'
 import { useUserStore } from '@/stores/user'
+import { OnStatusChangeType } from '@/services/wsType'
 
 /**
  * 用户排序函数
@@ -151,7 +152,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
    * 批量更新用户在线状态
    * @param items 需要更新状态的用户列表
    */
-  const batchUpdateUserStatus = async (items: UserItem[]) => {
+  const batchUpdateUserStatus = async (items: UserItem[] | OnStatusChangeType['member']) => {
     for (const curUser of items) {
       const findIndex = userList.value.findIndex((item) => item.uid === curUser.uid)
       userList.value[findIndex] = { ...userList.value[findIndex], ...curUser }

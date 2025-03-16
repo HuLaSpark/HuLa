@@ -161,8 +161,8 @@ useMitt.on(WsResponseMessageType.ONLINE, async (onStatusChangeType: OnStatusChan
   if (onStatusChangeType && onStatusChangeType.onlineNum) {
     groupStore.countInfo.onlineNum = onStatusChangeType.onlineNum
   }
-  if (onStatusChangeType && onStatusChangeType.changeList) {
-    await groupStore.batchUpdateUserStatus(onStatusChangeType.changeList)
+  if (onStatusChangeType && onStatusChangeType.member) {
+    await groupStore.batchUpdateUserStatus(onStatusChangeType.member)
     await groupStore.refreshGroupMembers()
   }
 })

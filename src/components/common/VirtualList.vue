@@ -15,7 +15,11 @@
     </n-flex>
     <div class="virtual-list-phantom" :style="{ height: `${totalHeight}px` }"></div>
     <div class="virtual-list-content" :style="{ transform: `translateY(${offset}px)` }">
-      <div v-for="item in visibleData" :key="item.message?.id" :id="`item-${item.message?.id}`">
+      <div
+        v-for="item in visibleData"
+        :key="item.message?.id"
+        :id="`item-${item.message?.id}`"
+        :data-item-index="item._index">
         <slot :item="item" :index="item._index"></slot>
       </div>
     </div>
@@ -49,6 +53,7 @@ const MAX_CACHE_SIZE = 100 // 高度缓存的最大数量
 const LOADING_OFFSET = 26 // 加载中需要的偏移量(26px是加载动画的高度)
 const ESTIMATED_ITEM_HEIGHT = props.estimatedItemHeight || DEFAULT_ESTIMATED_HEIGHT // 每项的预估高度
 const SCROLL_THRESHOLD = 26 // 滚动到顶部的阈值，用于触发加载更多
+const DOM_CLEANUP_INTERVAL = 60000 // DOM清理间隔，默认1分钟
 
 // 响应式引用
 const containerRef = ref<HTMLElement | null>(null) // 容器元素引用
@@ -62,6 +67,8 @@ const consecutiveStaticFrames = ref(0) // 连续静止帧计数
 const accumulatedHeights = ref<number[]>([]) // 缓存累积高度，优化二分查找
 const needsHeightRecalculation = ref(true) // 标记是否需要重新计算高度缓存
 const hideScrollbar = ref(true) // 滚动条显示/隐藏
+const cleanupTimerId = ref<number | null>(null) // 定时清理DOM的计时器ID
+const previousVisibleIds = ref<Set<string>>(new Set()) // 上一次可见的项目ID集合
 
 // ResizeObserver 实例
 const resizeObserver = ref<ResizeObserver | null>(null)
@@ -149,6 +156,7 @@ watch(
     if (newItems.length === 0 || oldItems.length === 0) {
       heights.value.clear()
       accumulatedHeights.value = []
+      previousVisibleIds.value.clear()
     }
 
     // 标记需要重新计算高度缓存
@@ -162,6 +170,70 @@ watch(
   },
   { deep: false }
 )
+
+// 监听可见数据变化，更新可见项目ID集合
+watch(
+  () => visibleData.value,
+  (newVisibleData) => {
+    // 更新当前可见项目的ID集合
+    const currentVisibleIds = new Set(newVisibleData.map((item) => item.message?.id?.toString()).filter(Boolean))
+    previousVisibleIds.value = currentVisibleIds
+  },
+  { deep: false }
+)
+
+// 清理不可见的DOM节点
+const cleanupInvisibleDOMNodes = () => {
+  if (!containerRef.value) return
+  if (!containerRef.value) return
+
+  // 获取当前可见项目的ID集合
+  const currentVisibleIds = new Set(visibleData.value.map((item) => item.message?.id?.toString()).filter(Boolean))
+
+  // 找出不再可见的项目ID
+  const invisibleIds = Array.from(previousVisibleIds.value).filter((id) => !currentVisibleIds.has(id))
+
+  // 更新上一次可见的项目ID集合
+  previousVisibleIds.value = currentVisibleIds
+
+  // 如果没有不可见的项目，直接返回
+  if (invisibleIds.length === 0) return
+
+  // 获取虚拟列表内容区域
+  const contentEl = containerRef.value.querySelector('.virtual-list-content')
+  if (!contentEl) return
+
+  // 清理不可见的DOM节点
+  let removedCount = 0
+  for (const id of invisibleIds) {
+    const el = document.getElementById(`item-${id}`)
+    if (el && !el.hasAttribute('data-preserved')) {
+      // 移除DOM节点
+      el.remove()
+      removedCount++
+    }
+  }
+
+  // 如果移除了节点，触发垃圾回收
+  if (removedCount > 0 && window.gc) {
+    try {
+      window.gc()
+    } catch (e) {
+      // 忽略错误，gc可能不可用
+    }
+  }
+}
+
+// 定时清理DOM节点
+const startDOMCleanupTimer = () => {
+  if (cleanupTimerId.value !== null) {
+    clearInterval(cleanupTimerId.value)
+  }
+
+  cleanupTimerId.value = window.setInterval(() => {
+    cleanupInvisibleDOMNodes()
+  }, DOM_CLEANUP_INTERVAL)
+}
 
 // 更新项目实际高度
 const updateItemHeight = () => {
@@ -359,6 +431,9 @@ onMounted(() => {
     // 初始化累积高度缓存
     updateAccumulatedHeights()
   })
+
+  // 启动DOM清理定时器
+  startDOMCleanupTimer()
 })
 
 onUnmounted(() => {
@@ -374,9 +449,16 @@ onUnmounted(() => {
     resizeObserver.value = null
   }
 
+  // 清理定时器
+  if (cleanupTimerId.value !== null) {
+    clearInterval(cleanupTimerId.value)
+    cleanupTimerId.value = null
+  }
+
   // 清理缓存
   heights.value.clear()
   accumulatedHeights.value = []
+  previousVisibleIds.value.clear()
 })
 
 // 类型定义

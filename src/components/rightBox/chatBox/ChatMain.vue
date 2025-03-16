@@ -48,7 +48,7 @@
       :buffer="5"
       :is-loading-more="isLoadingMore"
       :is-last="messageOptions?.isLast"
-      @scroll="debouncedHandleScroll"
+      @scroll="handleScroll"
       @scroll-direction-change="handleScrollDirectionChange"
       @load-more="handleLoadMore"
       class="scrollbar-container"
@@ -63,7 +63,7 @@
           class="flex-y-center"
           :class="[
             item.message.type === MsgEnum.RECALL ? 'min-h-22px' : 'min-h-62px',
-            chatStore.isGroup ? 'p-[14px_20px]' : 'chat-single p-[4px_20px_10px_20px]',
+            chatStore.isGroup ? 'p-[14px_10px_14px_20px]' : 'chat-single p-[4px_10px_10px_20px]',
             { 'active-reply': activeReply === item.message.id }
           ]">
           <!-- 信息间隔时间 -->
@@ -390,7 +390,7 @@
     class="float-footer"
     v-if="shouldShowFloatFooter && currentNewMsgCount"
     :class="chatStore.isGroup ? 'right-220px' : 'right-50px'">
-    <div class="float-box" :class="{ max: currentNewMsgCount?.count > 99 }" @click="scrollBottom">
+    <div class="float-box" :class="{ max: currentNewMsgCount?.count > 99 }" @click="scrollToBottom">
       <n-flex justify="space-between" align="center">
         <n-icon :color="currentNewMsgCount?.count > 99 ? '#ce304f' : '#13987f'">
           <svg><use href="#double-down"></use></svg>
@@ -468,6 +468,8 @@ const infoPopover = ref(false)
 const showScrollbar = ref(false)
 // 记录 requestAnimationFrame 的返回值
 const rafId = ref<number>()
+// 缓存消息ID到索引的映射，提高查找效率
+const messageIdToIndexMap = ref(new Map<string, number>())
 /** 鼠标悬浮的气泡显示对应的时间 */
 const hoverBubble = ref<{
   key: number
@@ -519,14 +521,11 @@ const {
 const { handlePopoverUpdate, enableScroll } = usePopover(selectKey, 'image-chat-main')
 provide('popoverControls', { enableScroll })
 
-// 添加防抖处理
-const debouncedScrollToBottom = useDebounceFn(() => {
+// 滚动到底部
+const scrollToBottom = () => {
   if (!virtualListInst.value) return
   virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
-}, 100)
-
-// 缓存消息ID到索引的映射，提高查找效率
-const messageIdToIndexMap = ref(new Map<string, number>())
+}
 
 // 更新消息索引映射
 const updateMessageIndexMap = () => {
@@ -572,9 +571,6 @@ const handleScroll = () => {
   })
 }
 
-// 添加防抖的滚动处理函数
-const debouncedHandleScroll = useDebounceFn(handleScroll, 50)
-
 // 添加防抖的鼠标事件处理
 const debouncedMouseEnter = useDebounceFn((key: any) => {
   hoverBubble.value.key = key
@@ -608,8 +604,7 @@ watch(
   () => props.activeItem,
   (value, oldValue) => {
     if (oldValue.roomId !== value.roomId) {
-      // 使用防抖的滚动处理
-      debouncedScrollToBottom()
+      scrollToBottom()
     }
   }
 )
@@ -642,7 +637,7 @@ watch(
 
       // 优先级1：用户发送的消息，始终滚动到底部
       if (latestMessage?.fromUser?.uid === userUid.value) {
-        debouncedScrollToBottom()
+        scrollToBottom()
         return
       }
 
@@ -651,7 +646,7 @@ watch(
       if (container) {
         const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight
         if (distanceFromBottom <= 300) {
-          debouncedScrollToBottom()
+          scrollToBottom()
           return
         }
 
@@ -787,12 +782,6 @@ const addToDomUpdateQueue = (index: string, id: string) => {
       lastMessageElement.addEventListener('animationend', handleAnimationEnd)
     }
   })
-}
-
-// 点击后滚动到底部
-const scrollBottom = () => {
-  if (!virtualListInst.value) return
-  debouncedScrollToBottom()
 }
 
 // 解决mac右键会选中文本的问题
