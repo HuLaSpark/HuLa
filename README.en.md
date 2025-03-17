@@ -77,6 +77,39 @@ HuLa is an instant messaging system developed with Tauri, Vite 6, Vue 3, and Typ
   <img src="preview/img_8.png" alt="img_8.png" style="border-radius: 8px; display: block;"  />
 </div>
 
+## ✨ Completed Features
+
+| Feature Category | Feature Description | Status |
+|-----------------|---------------------|--------|
+| 🔐 **User Authentication** | Username/Password Login | ✅ Completed |
+| | QR Code Scan Login | ✅ Completed |
+| | Multi-device Login Management | ✅ Completed |
+| 💬 **Messaging** | One-on-one Private Chat | ✅ Completed |
+| | Group Chat | ✅ Completed |
+| | Message Recall | ✅ Completed |
+| | @Mention, Reply Function | ✅ Completed |
+| | Message Read Status | ✅ Completed |
+| | Context Menu Based on Message Type | ✅ Completed |
+| 👥 **Contact & Group Management** | Friend Add/Remove | ✅ Completed |
+| | Friend Search | ✅ Completed |
+| | Group Creation and Management | ✅ Completed |
+| | Friend Online Status | ✅ Completed |
+| | Friend Badges | ✅ Completed |
+| | Friend & Group Notes | ✅ Completed |
+| | Group Announcements | ✅ Completed |
+| | Block, Blacklist, Do Not Disturb | ✅ Completed |
+| 🎨 **UI Interface** | Modern Interface Design | ✅ Completed |
+| | Dark/Light Theme Support | ✅ Completed |
+| | Skin Theme Switching | ✅ Completed |
+| 🛠️ **System Functions** | Multi-window Management | ✅ Completed |
+| | System Tray, Tray Flash Notifications | ✅ Completed |
+| | Message Notifications | ✅ Completed |
+| | Image Viewer | ✅ Completed |
+| | Screenshot Function | 🚧 In Progress |
+| 🌐 **Cross-platform Support** | Win10, Win11/macOS/Linux | ✅ Completed |
+| | iOS/Android Adaptation | 🚧 In Progress |
+| 🤖 **AI** | DeepSeek, ChatGPT, Claude, Qwen, Custom | 🚧 In Progress |
+
 ## Thanks to the following contributors!
 
 <a href="https://github.com/HuLaSpark/HuLa/graphs/contributors">
