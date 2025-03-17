@@ -2,7 +2,7 @@ use std::{env, fs, io};
 
 fn main() -> Result<(),  Box<dyn std::error::Error>> {
     ensure_frontend_dist()?;
-        tauri_build::build();
+    tauri_build::build();
 
     Ok(())
 }
