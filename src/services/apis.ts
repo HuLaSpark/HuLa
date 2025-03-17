@@ -83,6 +83,10 @@ export default {
   sendAddFriendRequest: (params: { targetUid: string; msg: string }) => POST(urls.sendAddFriendRequest, params),
   /** 同意好友申请 */
   applyFriendRequest: (params: { applyId: string }) => PUT(urls.sendAddFriendRequest, params),
+  /** 忽略好友申请 */
+  ignoreFriendRequest: (params: { applyId: string }) => PUT(urls.ignoreFriendRequest, params),
+  /** 拒绝好友申请 */
+  rejectFriendRequest: (params: { applyId: string }) => PUT(urls.rejectFriendRequest, params),
   /** 删除好友 */
   deleteFriend: (params: { targetUid: string }) => DELETE(urls.deleteFriend, params),
   /** 好友申请未读数 */
@@ -116,7 +120,7 @@ export default {
   /** 屏蔽消息 */
   shield: (params: { roomId: string; state: boolean }) => POST<void>(urls.shield, params),
   /** 申请加群 */
-  applyGroup: (params: { targetGroupId: number; msg: string }) => POST(urls.applyGroup, params),
+  applyGroup: (params: { targetGroupId: string; msg: string }) => POST(urls.applyGroup, params),
   /** 会话详情(联系人列表发消息用) */
   sessionDetailWithFriends: (params: { id: string; roomType: number }) =>
     GET<SessionItem>(urls.sessionDetailWithFriends, params),

@@ -30,7 +30,9 @@ export default {
   // -------------- 好友相关 ---------------
   getContactList: `${prefix + URLEnum.USER}/friend/page`, // 联系人列表
   requestFriendList: `${prefix + URLEnum.USER}/friend/apply/page`, // 好友申请列表
-  sendAddFriendRequest: `${prefix + URLEnum.USER}/friend/apply`, // 申请好友
+  sendAddFriendRequest: `${prefix + URLEnum.USER}/friend/apply`, // 申请好友\同意申请
+  rejectFriendRequest: `${prefix + URLEnum.USER}/friend/reject`, // 拒绝好友申请
+  ignoreFriendRequest: `${prefix + URLEnum.USER}/friend/ignore`, // 忽略好友申请
   deleteFriend: `${prefix + URLEnum.USER}/friend`, // 删除好友
   newFriendCount: `${prefix + URLEnum.USER}/friend/apply/unread`, // 申请未读数
 

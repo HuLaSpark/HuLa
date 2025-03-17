@@ -142,6 +142,42 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
   }
 
   /**
+   * 拒绝好友请求
+   * @param applyId 好友申请ID
+   * 处理流程：
+   * 1. 调用接口拒绝好友申请
+   * 2. 刷新好友申请列表
+   * 3. 更新未读数
+   */
+  const onRejectFriend = async (applyId: string) => {
+    // 拒绝好友申请
+    apis.rejectFriendRequest({ applyId }).then(async () => {
+      // 刷新好友申请列表
+      await getRequestFriendsList(true)
+      // 获取最新的未读数
+      await getNewFriendCount()
+    })
+  }
+
+  /**
+   * 忽略好友请求
+   * @param applyId 好友申请ID
+   * 处理流程：
+   * 1. 调用接口忽略好友申请
+   * 2. 刷新好友申请列表
+   * 3. 更新未读数
+   */
+  const onIgnoreFriend = async (applyId: string) => {
+    // 忽略好友申请
+    apis.ignoreFriendRequest({ applyId }).then(async () => {
+      // 刷新好友申请列表
+      await getRequestFriendsList(true)
+      // 获取最新的未读数
+      await getNewFriendCount()
+    })
+  }
+
+  /**
    * 删除好友
    * @param uid 要删除的好友用户ID
    * 处理流程：
@@ -169,6 +205,8 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
     contactsOptions,
     requestFriendsOptions,
     onAcceptFriend,
+    onRejectFriend,
+    onIgnoreFriend,
     onDeleteContact
   }
 })

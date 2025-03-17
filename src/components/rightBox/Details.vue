@@ -73,8 +73,28 @@
           alt="" />
 
         <n-flex vertical :size="16">
-          <span class="text-(20px [--text-color])">{{ item.groupName }}</span>
-          <span class="text-(14px #909090)">群号 {{ item.accountCode }}</span>
+          <n-flex align="center" :size="12">
+            <span class="text-(20px [--text-color])">{{ item.groupName }}</span>
+            <n-popover trigger="hover" v-if="item.roomId === '1'">
+              <template #trigger>
+                <svg class="size-20px color-#13987f select-none outline-none cursor-pointer">
+                  <use href="#auth"></use>
+                </svg>
+              </template>
+              <span>官方群聊认证</span>
+            </n-popover>
+          </n-flex>
+          <n-flex align="center" :size="12">
+            <span class="text-(14px #909090)">群号 {{ item.accountCode }}</span>
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <svg class="size-12px cursor-pointer color-#909090" @click="handleCopy(item.accountCode)">
+                  <use href="#copy"></use>
+                </svg>
+              </template>
+              <span>复制</span>
+            </n-tooltip>
+          </n-flex>
         </n-flex>
       </n-flex>
 
@@ -92,33 +112,35 @@
 
     <!-- 群信息列表 -->
     <n-flex vertical class="select-none w-full px-30px box-border">
-      <n-flex align="center" justify="space-between" class="py-12px border-b text-[--chat-text-color]">
+      <n-flex align="center" justify="space-between" class="py-12px border-b text-(14px [--chat-text-color])">
         <span>备注</span>
         <span>{{ item.remark || '设置群聊备注' }}</span>
       </n-flex>
 
-      <n-flex align="center" justify="space-between" class="py-12px border-b text-[--chat-text-color]">
+      <n-flex align="center" justify="space-between" class="py-12px border-b text-(14px [--chat-text-color])">
         <span>我的本群昵称</span>
-        <span class="flex items-center cursor-pointer"
-          >{{ item.myName || '未设置'
-          }}<n-icon size="16" class="ml-1"
-            ><svg><use href="#right"></use></svg></n-icon
-        ></span>
+        <span class="flex items-center cursor-pointer">
+          <p class="text-#909090">{{ item.myName || '未设置' }}</p>
+          <n-icon size="16" class="ml-1">
+            <svg><use href="#right"></use></svg>
+          </n-icon>
+        </span>
       </n-flex>
 
-      <n-flex align="center" justify="space-between" class="py-12px border-b text-[--chat-text-color]">
+      <n-flex align="center" justify="space-between" class="py-12px border-b text-(14px [--chat-text-color])">
         <span>群公告</span>
-        <span class="flex items-center cursor-pointer"
-          >未设置
-          <n-icon size="16" class="ml-1"
-            ><svg><use href="#right"></use></svg></n-icon
-        ></span>
+        <span class="flex items-center cursor-pointer">
+          <p class="text-#909090">未设置</p>
+          <n-icon size="16" class="ml-1">
+            <svg><use href="#right"></use></svg>
+          </n-icon>
+        </span>
       </n-flex>
     </n-flex>
 
     <!-- 群成员 -->
     <n-flex vertical :size="10" class="px-30px box-border">
-      <n-flex align="center" justify="space-between" class="text-[--chat-text-color]">
+      <n-flex align="center" justify="space-between" class="text-(14px [--chat-text-color])">
         <span>群成员 ({{ item.memberNum }}人)</span>
         <span class="flex items-center">在线 {{ item.onlineNum }}人</span>
       </n-flex>
@@ -168,6 +190,14 @@ watchEffect(() => {
     })
   }
 })
+
+// 复制
+const handleCopy = (accountCode: string) => {
+  if (accountCode) {
+    navigator.clipboard.writeText(accountCode)
+    window.$message.success(`复制成功 ${accountCode}`)
+  }
+}
 
 // 获取群成员列表
 const fetchGroupMembers = async (roomId: string) => {

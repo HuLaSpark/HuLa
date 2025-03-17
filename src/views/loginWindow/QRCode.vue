@@ -157,16 +157,14 @@ onMounted(() => {
     // 获取用户详情
     userStore.getUserDetailAction()
     // 自己更新自己上线
-    await groupStore.batchUpdateUserStatus([
-      {
-        activeStatus: OnlineEnum.ONLINE,
-        avatar: rest.avatar,
-        accountCode: rest.accountCode,
-        name: rest.name,
-        uid: rest.uid,
-        lastOptTime: Date.now()
-      }
-    ])
+    await groupStore.updateUserStatus({
+      activeStatus: OnlineEnum.ONLINE,
+      avatar: rest.avatar,
+      accountCode: rest.accountCode,
+      name: rest.name,
+      uid: rest.uid,
+      lastOptTime: Date.now()
+    })
     // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取
     // await emojiStore.getEmojiList()
     await handleLoginSuccess()

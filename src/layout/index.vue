@@ -138,16 +138,14 @@ useMitt.on(WsResponseMessageType.LOGIN_SUCCESS, async (data: LoginSuccessResType
   computedToken.value.clear()
   computedToken.value.get()
   // 自己更新自己上线
-  await groupStore.batchUpdateUserStatus([
-    {
-      activeStatus: OnlineEnum.ONLINE,
-      avatar: rest.avatar,
-      accountCode: rest.accountCode,
-      lastOptTime: Date.now(),
-      name: rest.name,
-      uid: rest.uid
-    }
-  ])
+  await groupStore.updateUserStatus({
+    activeStatus: OnlineEnum.ONLINE,
+    avatar: rest.avatar,
+    accountCode: rest.accountCode,
+    lastOptTime: Date.now(),
+    name: rest.name,
+    uid: rest.uid
+  })
 })
 useMitt.on(WsResponseMessageType.USER_STATE_CHANGE, async (data: { uid: string; userStateId: string }) => {
   console.log('收到用户状态改变', data)
@@ -162,7 +160,7 @@ useMitt.on(WsResponseMessageType.ONLINE, async (onStatusChangeType: OnStatusChan
     groupStore.countInfo.onlineNum = onStatusChangeType.onlineNum
   }
   if (onStatusChangeType && onStatusChangeType.member) {
-    await groupStore.batchUpdateUserStatus(onStatusChangeType.member)
+    await groupStore.updateUserStatus(onStatusChangeType.member)
     await groupStore.refreshGroupMembers()
   }
 })

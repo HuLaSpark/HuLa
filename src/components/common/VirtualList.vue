@@ -541,15 +541,17 @@ defineExpose<VirtualListExpose>({
   /* 滚动条样式 */
   &::-webkit-scrollbar {
     width: 6px;
-    transition: opacity 0.3s ease;
+    transition-property: opacity;
+    transition-duration: 0.3s;
+    transition-timing-function: ease;
   }
 
   &::-webkit-scrollbar-thumb {
     background-color: rgba(144, 144, 144, 0.3);
     border-radius: 3px;
-    transition:
-      background-color 0.3s ease,
-      opacity 0.3s ease;
+    transition-property: opacity, background-color;
+    transition-duration: 0.3s;
+    transition-timing-function: ease;
     min-height: 75px;
   }
 
@@ -561,20 +563,21 @@ defineExpose<VirtualListExpose>({
     background: transparent;
   }
 
-  /* 隐藏滚动条时的样式 - 保持宽度但隐藏显示 */
+  /* 使用WebKit兼容的方式隐藏滚动条 */
   &.hide-scrollbar {
-    /* 使用 scrollbar-gutter 属性保持滚动条空间 */
-    scrollbar-gutter: stable;
-
+    /* 保持滚动功能但隐藏滚动条 */
     &::-webkit-scrollbar {
-      /* 保持宽度但改变颜色为透明 */
-      background-color: transparent;
+      background: transparent;
     }
-
     &::-webkit-scrollbar-thumb {
-      /* 完全透明化滑块 */
-      background-color: transparent;
+      background: transparent;
     }
+    /* 针对不同WebKit浏览器的兼容性写法 */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+    /* 为了保持布局稳定 */
+    margin-right: 0;
+    padding-right: 12px; /* 6px原始 + 6px补偿 */
   }
 
   &.show-scrollbar {

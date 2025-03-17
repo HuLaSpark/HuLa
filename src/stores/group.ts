@@ -149,13 +149,13 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
   }
 
   /**
-   * 批量更新用户在线状态
-   * @param items 需要更新状态的用户列表
+   * 更新用户在线状态
+   * @param item 需要更新状态的用户
    */
-  const batchUpdateUserStatus = async (items: UserItem[] | OnStatusChangeType['member']) => {
-    for (const curUser of items) {
-      const findIndex = userList.value.findIndex((item) => item.uid === curUser.uid)
-      userList.value[findIndex] = { ...userList.value[findIndex], ...curUser }
+  const updateUserStatus = async (item: UserItem | OnStatusChangeType['member']) => {
+    const findIndex = userList.value.findIndex((i) => i.uid === item.uid)
+    if (findIndex !== -1) {
+      userList.value[findIndex] = { ...userList.value[findIndex], ...item }
     }
   }
 
@@ -232,7 +232,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
     getCountStatistic,
     currentLordId,
     countInfo,
-    batchUpdateUserStatus,
+    updateUserStatus,
     filterUser,
     adminUidList,
     adminList,

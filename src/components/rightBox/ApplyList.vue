@@ -35,19 +35,29 @@
                   <InfoPopover v-if="currentUserId === item.uid" :uid="item.uid" />
                 </n-popover>
 
-                <p class="text-(14px [--text-color])">请求加为好友</p>
+                <p class="text-(14px [--text-color])">
+                  {{ isCurrentUser(item.uid) ? '正在验证你的邀请' : '请求加为好友' }}
+                </p>
               </n-flex>
               <p v-show="item.msg" class="text-(12px [--text-color])">留言：{{ item.msg }}</p>
             </n-flex>
           </n-flex>
 
-          <n-button
-            secondary
-            :loading="loading"
-            v-if="item.status === RequestFriendAgreeStatus.Waiting"
-            @click="handleAgree(item.applyId)">
-            接受
-          </n-button>
+          <n-flex
+            align="center"
+            :size="10"
+            v-if="item.status === RequestFriendAgreeStatus.Waiting && !isCurrentUser(item.uid)">
+            <n-button secondary :loading="loadingMap[item.applyId]" @click="handleAgree(item.applyId)">接受</n-button>
+            <n-dropdown
+              trigger="click"
+              :options="dropdownOptions"
+              @select="(key: string) => handleFriendAction(key, item.applyId)">
+              <n-icon class="cursor-pointer px-6px">
+                <svg class="size-16px"><use href="#more"></use></svg>
+              </n-icon>
+            </n-dropdown>
+          </n-flex>
+          <span class="text-(12px #64a29c)" v-else-if="isCurrentUser(item.uid)">等待验证</span>
           <span class="text-(12px #64a29c)" v-else>已同意</span>
         </n-flex>
       </n-flex>
@@ -60,22 +70,57 @@ import { useUserInfo } from '@/hooks/useCached.ts'
 import { RequestFriendAgreeStatus } from '@/services/types.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { usePopover } from '@/hooks/usePopover'
+import { useUserStore } from '@/stores/user'
 
+const userStore = useUserStore()
 const contactStore = useContactStore()
 const currentUserId = ref('0')
-const loading = ref(false)
+const loadingMap = ref<Record<string, boolean>>({})
 const { handlePopoverUpdate, enableScroll } = usePopover(currentUserId, 'friend-request-scrollbar')
 provide('popoverControls', { enableScroll })
 
+// 下拉菜单选项
+const dropdownOptions = [
+  {
+    label: '拒绝',
+    key: 'reject'
+  },
+  {
+    label: '忽略',
+    key: 'ignore'
+  }
+]
+
 const avatarSrc = (url: string) => AvatarUtils.getAvatarUrl(url)
 
+// 判断是否为当前登录用户
+const isCurrentUser = (uid: string) => {
+  return uid === userStore.userInfo.uid
+}
+
 const handleAgree = async (applyId: string) => {
-  loading.value = true
+  loadingMap.value[applyId] = true
   contactStore.onAcceptFriend(applyId).then(() => {
     setTimeout(() => {
-      loading.value = false
+      loadingMap.value[applyId] = false
     }, 600)
   })
+}
+
+// 处理好友请求操作（拒绝或忽略）
+const handleFriendAction = async (action: string, applyId: string) => {
+  loadingMap.value[applyId] = true
+  try {
+    if (action === 'reject') {
+      await contactStore.onRejectFriend(applyId)
+    } else if (action === 'ignore') {
+      await contactStore.onIgnoreFriend(applyId)
+    }
+  } finally {
+    setTimeout(() => {
+      loadingMap.value[applyId] = false
+    }, 600)
+  }
 }
 </script>
 

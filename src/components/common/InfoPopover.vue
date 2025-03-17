@@ -223,11 +223,6 @@ const handleOpenMsgSession = async (uid: string) => {
 </script>
 
 <style scoped lang="scss">
-.item-hover {
-  @apply select-none hover:bg-[--info-hover] cursor-pointer w-fit rounded-10px p-4px;
-  transition: all 0.4s ease-in-out;
-}
-
 .avatar-wrapper {
   .hover-area {
     .avatar-hover {

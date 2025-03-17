@@ -119,7 +119,14 @@ const globalStore = useGlobalStore()
 const userStatusStore = useUserStatusStore()
 const { stateList } = storeToRefs(userStatusStore)
 /** 群聊列表 */
-const groupChatList = computed(() => contactStore.groupChatList)
+const groupChatList = computed(() => {
+  return [...contactStore.groupChatList].sort((a, b) => {
+    // 将roomId为'1'的群聊排在最前面
+    if (a.roomId === '1' && b.roomId !== '1') return -1
+    if (a.roomId !== '1' && b.roomId === '1') return 1
+    return 0
+  })
+})
 /** 统计在线用户人数 */
 const onlineCount = computed(() => {
   return contactStore.contactsList.filter((item) => item.activeStatus === OnlineEnum.ONLINE).length

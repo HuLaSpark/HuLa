@@ -71,7 +71,7 @@ export type LoginSuccessResType = Pick<UserInfoType, 'avatar' | 'name' | 'uid' |
 
 /** 用户在线状态改变 */
 export type OnStatusChangeType = {
-  member: Omit<UserItem, 'name' | 'avatar'>[]
+  member: Omit<UserItem, 'name' | 'avatar'>
   onlineNum: number
 }
 
