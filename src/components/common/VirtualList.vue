@@ -572,9 +572,6 @@ defineExpose<VirtualListExpose>({
     &::-webkit-scrollbar-thumb {
       background: transparent;
     }
-    /* 针对不同WebKit浏览器的兼容性写法 */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE/Edge */
     /* 为了保持布局稳定 */
     margin-right: 0;
     padding-right: 12px; /* 6px原始 + 6px补偿 */

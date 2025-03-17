@@ -700,13 +700,13 @@ const handleEmojiSelect = (label: string, item: any) => {
 
 // 跳转到回复消息
 const jumpToReplyMsg = async (key: string) => {
-  // 先从缓存中查找消息索引
-  const cachedIndex = messageIdToIndexMap.value.get(key)
+  // 先在当前列表中尝试查找
+  let messageIndex = chatMessageList.value.findIndex((msg) => msg.message.id === String(key))
 
-  // 如果在缓存中找到了索引，直接滚动到该消息
-  if (cachedIndex !== undefined) {
-    virtualListInst.value?.scrollTo({ index: cachedIndex, behavior: 'instant' })
-    activeReply.value = key
+  // 如果找到了，直接滚动到该消息
+  if (messageIndex !== -1) {
+    virtualListInst.value?.scrollTo({ index: messageIndex, behavior: 'instant' })
+    activeReply.value = String(key)
     return
   }
 
@@ -723,7 +723,6 @@ const jumpToReplyMsg = async (key: string) => {
   // 尝试加载历史消息直到找到目标消息或无法再加载
   let foundMessage = false
   let attemptCount = 0
-  let foundIndex = -1
   const MAX_ATTEMPTS = 5 // 设置最大尝试次数，避免无限循环
 
   while (!foundMessage && attemptCount < MAX_ATTEMPTS && !messageOptions.value?.isLast) {
@@ -732,15 +731,11 @@ const jumpToReplyMsg = async (key: string) => {
     // 加载更多历史消息
     await chatStore.loadMore()
 
-    // 更新消息索引映射
-    updateMessageIndexMap()
+    // 在新加载的消息中查找
+    messageIndex = chatMessageList.value.findIndex((msg) => msg.message.id === key)
 
-    // 从更新后的缓存中查找
-    const updatedIndex = messageIdToIndexMap.value.get(key)
-
-    if (updatedIndex !== undefined) {
+    if (messageIndex !== -1) {
       foundMessage = true
-      foundIndex = updatedIndex
       break
     }
 
@@ -752,9 +747,9 @@ const jumpToReplyMsg = async (key: string) => {
   isLoadingMore.value = false
 
   // 如果找到了消息，滚动到该位置
-  if (foundMessage && foundIndex !== -1) {
+  if (foundMessage) {
     nextTick(() => {
-      virtualListInst.value?.scrollTo({ index: foundIndex, behavior: 'instant' })
+      virtualListInst.value?.scrollTo({ index: messageIndex, behavior: 'instant' })
       activeReply.value = key
     })
   } else {

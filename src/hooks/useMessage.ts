@@ -33,6 +33,7 @@ export const useMessage = () => {
   /** 处理点击选中消息 */
   const handleMsgClick = (item: SessionItem) => {
     msgBoxShow.value = true
+    // 更新当前会话信息
     globalStore.currentSession.roomId = item.roomId
     globalStore.currentSession.type = item.type
     const data = { msgBoxShow, item }

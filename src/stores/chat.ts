@@ -357,17 +357,26 @@ export const useChatStore = defineStore(
 
     // 获取消息列表
     const getMsgList = async (size = pageSize) => {
+      // 获取当前房间ID，用于后续比较
+      const requestRoomId = currentRoomId.value
+
       currentMessageOptions.value && (currentMessageOptions.value.isLoading = true)
       const data = await apis
         .getMsgList({
           pageSize: size,
           cursor: currentMessageOptions.value?.cursor,
-          roomId: currentRoomId.value
+          roomId: requestRoomId
         })
         .finally(() => {
-          currentMessageOptions.value && (currentMessageOptions.value.isLoading = false)
+          // 只有当当前房间ID仍然是请求时的房间ID时，才更新加载状态
+          if (requestRoomId === currentRoomId.value && currentMessageOptions.value) {
+            currentMessageOptions.value.isLoading = false
+          }
         })
-      if (!data) return
+
+      // 如果没有数据或者房间ID已经变化，则不处理响应
+      if (!data || requestRoomId !== currentRoomId.value) return
+
       const computedList = computedTimeBlock(data.list)
 
       /** 收集需要请求用户详情的 uid */
@@ -387,6 +396,10 @@ export const useChatStore = defineStore(
       }
       // 获取用户信息缓存
       await cachedStore.getBatchUserInfo([...uidCollectYet])
+
+      // 再次检查房间ID是否变化，防止在获取用户信息期间切换了房间
+      if (requestRoomId !== currentRoomId.value) return
+
       // 为保证获取的历史消息在前面
       const newList = [...computedList, ...chatMessageList.value]
       currentMessageMap.value?.clear() // 清空Map
@@ -401,7 +414,7 @@ export const useChatStore = defineStore(
       }
 
       // 保存消息到localStorage
-      saveMessagesToStorage(currentRoomId.value)
+      saveMessagesToStorage(requestRoomId)
     }
 
     // 获取会话列表
