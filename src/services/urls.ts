@@ -18,7 +18,6 @@ export default {
   markMsg: `${prefix + URLEnum.CHAT}/msg/mark`, // 消息标记
   blockUser: `${prefix + URLEnum.USER}/black`, // 拉黑用户
   recallMsg: `${prefix + URLEnum.CHAT}/msg/recall`, // 撤回消息
-  fileUpload: `${prefix + URLEnum.SYSTEM + URLEnum.OSS}/upload/url`, // 文件上传
   addEmoji: `${prefix + URLEnum.USER}/emoji`, // 增加表情
   deleteEmoji: `${prefix + URLEnum.USER}/emoji`, // 删除表情
   getEmoji: `${prefix + URLEnum.USER}/emoji/list`, // 查询表情包
@@ -59,6 +58,11 @@ export default {
   updateRoomInfo: `${prefix + URLEnum.ROOM}/updateRoomInfo`, // 修改群信息
   searchGroup: `${prefix + URLEnum.ROOM}/search`, // 搜索群聊
   applyGroup: `${prefix + URLEnum.ROOM}/applyGroup`, // 申请加群
+
+  // -------------- 系统相关 ---------------
+  fileUpload: `${prefix + URLEnum.SYSTEM + URLEnum.OSS}/upload/url`, // 文件上传
+  initConfig: `${prefix + URLEnum.SYSTEM}/config/init`, // 获取配置文件
+  getQiniuToken: `${prefix + URLEnum.SYSTEM}/ossToken`, // 获取七牛云上传token
 
   // -------------- token相关 ---------------
   register: `${prefix + URLEnum.TOKEN}/register`, // 注册

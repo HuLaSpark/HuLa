@@ -7,6 +7,10 @@
     <div class="text-(14px [--text-color])">好友通知</div>
     <n-flex align="center" :size="4">
       <n-badge :value="globalStore.unReadMark.newFriendUnreadCount" :max="15" />
+      <n-badge
+        v-if="hasPendingFriendRequests && globalStore.unReadMark.newFriendUnreadCount === 0"
+        dot
+        color="#d5304f" />
       <svg class="size-16px rotate-270 color-[--text-color]"><use href="#down"></use></svg>
     </n-flex>
   </n-flex>
@@ -104,6 +108,8 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { storeToRefs } from 'pinia'
+import { RequestFriendAgreeStatus } from '@/services/types'
+import { useUserStore } from '@/stores/user'
 
 const menuList = ref([
   { label: '添加分组', icon: 'plus' },
@@ -117,7 +123,16 @@ const shrinkStatus = ref(false)
 const contactStore = useContactStore()
 const globalStore = useGlobalStore()
 const userStatusStore = useUserStatusStore()
+const userStore = useUserStore()
 const { stateList } = storeToRefs(userStatusStore)
+
+/** 是否有待处理的好友申请 */
+const hasPendingFriendRequests = computed(() => {
+  return contactStore.requestFriendsList.some(
+    (item) => item.status === RequestFriendAgreeStatus.Waiting && item.uid !== userStore.userInfo.uid
+  )
+})
+
 /** 群聊列表 */
 const groupChatList = computed(() => {
   return [...contactStore.groupChatList].sort((a, b) => {

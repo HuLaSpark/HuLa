@@ -18,7 +18,7 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
   /** 联系人列表分页选项 */
   const contactsOptions = ref({ isLast: false, isLoading: false, cursor: '' })
   /** 好友请求列表分页选项 */
-  const requestFriendsOptions = ref({ isLast: false, isLoading: false, cursor: '' })
+  const requestFriendsOptions = ref({ isLast: false, isLoading: false, cursor: '', pageNo: 1 })
 
   /** 群聊列表 */
   const groupChatList = ref<GroupListReq[]>([])
@@ -69,13 +69,8 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
    * 更新全局store中的未读计数
    */
   const getNewFriendCount = async () => {
-    const res = await apis.newFriendCount().catch(() => {
-      // 出错时不更新计数
-      return null
-    })
-
+    const res = await apis.newFriendCount()
     if (!res) return
-
     // 更新全局store中的未读计数
     globalStore.unReadMark.newFriendUnreadCount = res.unReadCount
   }
@@ -89,24 +84,45 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
     if (!isFresh) {
       if (requestFriendsOptions.value.isLast || requestFriendsOptions.value.isLoading) return
     }
+
+    // 设置加载状态
     requestFriendsOptions.value.isLoading = true
-    const res = await apis
-      .requestFriendList({
-        pageSize: 50,
-        cursor: isFresh || !requestFriendsOptions.value.cursor ? '' : requestFriendsOptions.value.cursor
+
+    // 刷新时重置页码
+    if (isFresh) {
+      requestFriendsOptions.value.pageNo = 1
+      requestFriendsOptions.value.cursor = ''
+    }
+
+    try {
+      const res = await apis.requestFriendList({
+        pageNo: requestFriendsOptions.value.pageNo,
+        pageSize: 30,
+        cursor: isFresh ? '' : requestFriendsOptions.value.cursor
       })
-      .catch(() => {
-        requestFriendsOptions.value.isLoading = false
-      })
-    if (!res) return
-    const data = res
-    // 刷新模式下替换整个列表，否则追加到列表末尾
-    isFresh
-      ? requestFriendsList.value.splice(0, requestFriendsList.value.length, ...data.list)
-      : requestFriendsList.value.push(...data.list)
-    requestFriendsOptions.value.cursor = data.cursor
-    requestFriendsOptions.value.isLast = data.isLast
-    requestFriendsOptions.value.isLoading = false
+      if (!res) return
+      // 刷新模式下替换整个列表，否则追加到列表末尾
+      if (isFresh) {
+        requestFriendsList.value.splice(0, requestFriendsList.value.length, ...res.list)
+      } else {
+        requestFriendsList.value.push(...res.list)
+      }
+
+      // 更新分页信息
+      requestFriendsOptions.value.cursor = res.cursor
+      requestFriendsOptions.value.isLast = res.isLast
+
+      // 如果有返回pageNo，则使用服务器返回的pageNo，否则自增页码
+      if (res.pageNo) {
+        requestFriendsOptions.value.pageNo = res.pageNo + 1
+      } else {
+        requestFriendsOptions.value.pageNo++
+      }
+    } catch (error) {
+      console.error('获取好友申请列表失败:', error)
+    } finally {
+      requestFriendsOptions.value.isLoading = false
+    }
   }
 
   // 初始化时默认执行一次加载

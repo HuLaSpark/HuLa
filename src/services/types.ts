@@ -60,6 +60,8 @@ export type RegisterUserReq = {
 export type ListResponse<T> = {
   /** 游标（下次翻页带上这参数）*/
   cursor: string
+  /** 当前页数 */
+  pageNo?: number
   /** 是否最后一页 */
   isLast: boolean
   list: T[]
@@ -436,6 +438,10 @@ export type RequestFriendItem = {
   type: number
   /** 申请人uid */
   uid: string
+  /** 被申请人id */
+  targetId: string
+  /** 申请时间 */
+  createTime: number
   /** 会话 ID */
   roomId: string
 }
