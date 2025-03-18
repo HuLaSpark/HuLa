@@ -143,7 +143,7 @@ const emojiHandle = (item: string, type: 'emoji' | 'emoji-url' = 'emoji') => {
   if (!inp) return
 
   // 确保输入框有焦点
-  inp.focus()
+  MsgInputRef.value?.focus()
 
   // 检查是否为 URL
   const isUrl = (str: string) => {
@@ -208,13 +208,13 @@ const emojiHandle = (item: string, type: 'emoji' | 'emoji-url' = 'emoji') => {
   }
 
   // 记录新的选区位置
-  MsgInputRef.value?.recordSelectionRange()
+  MsgInputRef.value?.updateSelectionRange()
 
   // 触发输入事件
   triggerInputEvent(inp)
 
   // 保持焦点在输入框
-  inp.focus()
+  MsgInputRef.value?.focus()
 }
 
 const handleCap = async () => {
