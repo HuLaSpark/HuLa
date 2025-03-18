@@ -51,6 +51,7 @@ module.exports = {
     'vue/multi-word-component-names': 'off', //关闭组件命名规则
     '@typescript-eslint/no-explicit-any': 'off', // 关闭any校验
     'no-redeclare': 2, //禁止重复声明变量
-    'eol-last': 'off' // 关闭行尾符（linebreak-style）的校验
+    'eol-last': 'off', // 关闭行尾符（linebreak-style）的校验
+    'vue/use-v-on-exact': 'off', // 如果使用了键盘事件，这个规则必须添加 exact,例如 `@keydown.exact`。该事件对 chat-editor 存在影响
   }
 }
