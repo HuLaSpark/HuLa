@@ -70,7 +70,7 @@ export default {
   /** 上传头像 */
   uploadAvatar: (data: { avatar: string }) => POST<void>(urls.uploadAvatar, data),
   /** 新增表情包 */
-  addEmoji: (data: { uid: string; expressionUrl: string }) => POST<MessageType>(urls.addEmoji, data),
+  addEmoji: (data: { expressionUrl: string }) => POST<MessageType>(urls.addEmoji, data),
   /** 获取表情 **/
   getEmoji: (params: { uid: string }) => GET<EmojiItem[]>(urls.getEmoji, { params }),
   /** 删除Emoji */

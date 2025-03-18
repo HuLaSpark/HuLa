@@ -537,6 +537,7 @@ defineExpose<VirtualListExpose>({
   padding-right: 6px;
   /* 兼容性写法，确保在各种浏览器中都有一致的滚动条空间 */
   overflow-y: scroll;
+  overscroll-behavior: none; /* 禁止mac的“触底反弹”效果 */
 
   /* 滚动条样式 */
   &::-webkit-scrollbar {
