@@ -61,6 +61,8 @@ export default {
   setUserBadge: (badgeId: string) => PUT<void>(urls.setUserBadge, { badgeId }),
   /** 修改用户名 */
   modifyUserName: (name: string) => PUT<void>(urls.modifyUserName, { name }),
+  /** 修改好友备注 */
+  modifyFriendRemark: (data: { targetUid: string; remark: string }) => POST<void>(urls.modifyFriendRemark, data),
   /** 撤回消息 */
   recallMsg: (data: { msgId: string; roomId: string }) => PUT<void>(urls.recallMsg, data),
   /** 拉黑用户 */
@@ -130,9 +132,11 @@ export default {
   deleteSession: (params: { roomId: string }) => DELETE<void>(urls.deleteSession, params),
   /** 隐藏会话 */
   hideSession: (params: { roomId: string; hide: boolean }) => POST<void>(urls.hideSession, params),
-  /** 修改群信息 */
-  updateRoomInfo: (params: { roomId: string; roomName: string; roomAvatar: string }) =>
-    POST<void>(urls.updateRoomInfo, params),
+  /** 修改群信息(群主) */
+  updateRoomInfo: (params: { id: string; name: string; avatar: string }) => POST<void>(urls.updateRoomInfo, params),
+  /** 修改“我”的群聊名称 */
+  updateMyRoomInfo: (params: { id: string; myName: string; remark: string }) =>
+    POST<void>(urls.updateMyRoomInfo, params),
   /** 添加群管理 */
   addAdmin: ({ roomId, uidList }: { roomId: string; uidList: string[] }) =>
     PUT<boolean>(urls.addAdmin, {

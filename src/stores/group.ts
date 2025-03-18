@@ -99,6 +99,10 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
     groupName: '',
     onlineNum: 0,
     role: 0,
+    accountCode: '',
+    memberNum: 0,
+    remark: '',
+    myName: '',
     roomId: currentRoomId.value
   })
 
@@ -224,22 +228,45 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
     }
   }
 
+  /**
+   * 重置群组数据
+   * 用于切换会话时清空当前群组的数据
+   */
+  const resetGroupData = () => {
+    userList.value = []
+    userListOptions.cursor = ''
+    userListOptions.isLast = false
+    userListOptions.loading = false
+    countInfo.value = {
+      avatar: '',
+      groupName: '',
+      onlineNum: 0,
+      role: 0,
+      roomId: '',
+      accountCode: '',
+      memberNum: 0,
+      remark: '',
+      myName: ''
+    }
+  }
+
   return {
     userList,
     userListOptions,
     loadMoreGroupMembers,
     getGroupUserList,
     getCountStatistic,
-    currentLordId,
-    countInfo,
     updateUserStatus,
     filterUser,
+    currentLordId,
     adminUidList,
     adminList,
     memberList,
     addAdmin,
     revokeAdmin,
     exitGroup,
-    refreshGroupMembers
+    refreshGroupMembers,
+    resetGroupData,
+    countInfo
   }
 })

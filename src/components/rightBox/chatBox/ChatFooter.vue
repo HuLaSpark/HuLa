@@ -37,7 +37,7 @@
                 :delay="800"
                 :duration="100"
                 :show-arrow="false"
-                :disabled="emojiShow"
+                :disabled="emojiShow || recentEmojis.length < 4"
                 placement="top">
                 <template #trigger>
                   <svg class="mr-18px"><use href="#smiling-face"></use></svg>

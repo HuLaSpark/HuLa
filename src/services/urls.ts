@@ -34,6 +34,7 @@ export default {
   ignoreFriendRequest: `${prefix + URLEnum.USER}/friend/ignore`, // 忽略好友申请
   deleteFriend: `${prefix + URLEnum.USER}/friend`, // 删除好友
   newFriendCount: `${prefix + URLEnum.USER}/friend/apply/unread`, // 申请未读数
+  modifyFriendRemark: `${prefix + URLEnum.USER}/friend/updateRemark`, // 修改好友备注
 
   // -------------- 聊天室相关 ---------------
   getSessionList: `${prefix + URLEnum.CHAT}/contact/page`, // 会话列表
@@ -55,7 +56,8 @@ export default {
   revokeAdmin: `${prefix + URLEnum.ROOM}/group/admin`, // 删除管理员
   groupDetail: `${prefix + URLEnum.ROOM}/group`, // 群组详情
   groupList: `${prefix + URLEnum.ROOM}/group/list`, // 群聊列表
-  updateRoomInfo: `${prefix + URLEnum.ROOM}/updateRoomInfo`, // 修改群信息
+  updateRoomInfo: `${prefix + URLEnum.ROOM}/updateRoomInfo`, // 修改群信息(群主)
+  updateMyRoomInfo: `${prefix + URLEnum.ROOM}/updateMyRoomInfo`, // 修改“我”的群聊名称
   searchGroup: `${prefix + URLEnum.ROOM}/search`, // 搜索群聊
   applyGroup: `${prefix + URLEnum.ROOM}/applyGroup`, // 申请加群
 

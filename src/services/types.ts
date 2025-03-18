@@ -85,6 +85,14 @@ export type GroupDetailReq = {
   role: number
   /** 房间id */
   roomId: string
+  /** 群号 */
+  accountCode: string
+  /** 群成员数 */
+  memberNum: number
+  /** 群备注 */
+  remark: string
+  /** 我的群昵称 */
+  myName: string
 }
 
 export type GroupListReq = {

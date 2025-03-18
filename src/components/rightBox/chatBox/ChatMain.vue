@@ -5,7 +5,9 @@
     align="center"
     justify="center"
     class="z-999 absolute w-full h-40px rounded-4px text-(12px [--danger-text]) bg-[--danger-bg]">
-    <svg class="size-16px"><use href="#cloudError"></use></svg>
+    <svg class="size-16px">
+      <use href="#cloudError"></use>
+    </svg>
     当前网络不可用，请检查你的网络设置
   </n-flex>
 
@@ -270,7 +272,9 @@
                       <n-flex align="center" justify="space-between" class="mb-6px">
                         <n-flex align="center" :size="4">
                           <span class="text-(12px #909090)">{{ item.message.body.translatedText.provider }}</span>
-                          <svg class="size-12px"><use href="#success"></use></svg>
+                          <svg class="size-12px">
+                            <use href="#success"></use>
+                          </svg>
                         </n-flex>
                         <svg class="size-10px cursor-pointer" @click="item.message.body.translatedText = null">
                           <use href="#close"></use>
@@ -313,7 +317,9 @@
                       v-if="item.message.status === MessageStatusEnum.FAILED"
                       class="text-#d5304f cursor-pointer"
                       @click.stop="handleRetry(item)">
-                      <svg class="size-16px"><use href="#cloudError"></use></svg>
+                      <svg class="size-16px">
+                        <use href="#cloudError"></use>
+                      </svg>
                     </n-icon>
                   </div>
                 </ContextMenu>
@@ -393,7 +399,9 @@
     <div class="float-box" :class="{ max: currentNewMsgCount?.count > 99 }" @click="scrollToBottom">
       <n-flex justify="space-between" align="center">
         <n-icon :color="currentNewMsgCount?.count > 99 ? '#ce304f' : '#13987f'">
-          <svg><use href="#double-down"></use></svg>
+          <svg>
+            <use href="#double-down"></use>
+          </svg>
         </n-icon>
         <span
           v-if="currentNewMsgCount?.count && currentNewMsgCount.count > 0"
@@ -406,7 +414,7 @@
   </footer>
 </template>
 <script setup lang="ts">
-import { EventEnum, MittEnum, MsgEnum, MessageStatusEnum } from '@/enums'
+import { EventEnum, MittEnum, MsgEnum, MessageStatusEnum, RoomTypeEnum } from '@/enums'
 import { MessageType, SessionItem } from '@/services/types.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { usePopover } from '@/hooks/usePopover.ts'
@@ -604,6 +612,12 @@ watch(
   () => props.activeItem,
   (value, oldValue) => {
     if (oldValue.roomId !== value.roomId) {
+      // 重置群组数据并加载新的群组数据（如果适用）
+      groupStore.resetGroupData()
+      // 如果新的会话是群聊，则加载新群的数据
+      if (value.type === RoomTypeEnum.GROUP) {
+        groupStore.getGroupUserList(true, value.roomId)
+      }
       scrollToBottom()
     }
   }
@@ -672,7 +686,7 @@ watch(
 const handleTransitionComplete = () => {
   if (!messageOptions.value?.isLoading) {
     nextTick(() => {
-      virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
+      scrollToBottom()
     })
   }
 }
@@ -874,7 +888,7 @@ const handleLoadMore = async () => {
 
 onMounted(async () => {
   nextTick(() => {
-    virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
+    scrollToBottom()
     // 初始化消息索引映射
     updateMessageIndexMap()
   })
@@ -893,7 +907,7 @@ onMounted(async () => {
   useMitt.on(MittEnum.CHAT_SCROLL_BOTTOM, () => {
     if (virtualListInst.value) {
       nextTick(() => {
-        virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
+        scrollToBottom()
       })
     }
   })
