@@ -219,13 +219,13 @@
                   <!-- 群主 -->
                   <div
                     v-if="chatStore.isGroup && groupStore.currentLordId === item.fromUser.uid"
-                    class="flex px-4px py-3px rounded-4px border-(1px solid #d5304f60) size-fit select-none">
+                    class="flex px-4px py-3px rounded-4px bg-#d5304f30 size-fit select-none">
                     <span class="text-(9px #d5304f)">群主</span>
                   </div>
                   <!-- 管理员 -->
                   <div
                     v-if="chatStore.isGroup && groupStore.adminUidList.includes(item.fromUser.uid)"
-                    class="flex px-4px py-3px rounded-4px border-(1px solid #1a7d6b60) size-fit select-none">
+                    class="flex px-4px py-3px rounded-4px bg-#1a7d6b30 size-fit select-none">
                     <span class="text-(9px #1a7d6b)">管理员</span>
                   </div>
                   <!-- 信息时间(群聊) -->

@@ -125,6 +125,21 @@ export const useChatMain = () => {
         return item.message.type === MsgEnum.TEXT
       }
     },
+    {
+      label: '添加到表情',
+      icon: 'add-expression',
+      click: async (item: MessageType) => {
+        const imageUrl = item.message.body.url
+        if (!imageUrl) {
+          window.$message.error('获取图片地址失败')
+          return
+        }
+        await emojiStore.addEmoji(imageUrl)
+      },
+      visible: (item: MessageType) => {
+        return item.message.type === MsgEnum.IMAGE || item.message.type === MsgEnum.EMOJI
+      }
+    },
     ...commonMenuList.value
   ])
   /** 右键菜单下划线后的列表 */
@@ -193,18 +208,6 @@ export const useChatMain = () => {
           console.error('保存图片失败:', error)
           window.$message.error('保存图片失败')
         }
-      }
-    },
-    {
-      label: '添加到表情',
-      icon: 'add-expression',
-      click: async (item: MessageType) => {
-        const imageUrl = item.message.body.url
-        if (!imageUrl) {
-          window.$message.error('获取图片地址失败')
-          return
-        }
-        await emojiStore.addEmoji(imageUrl)
       }
     }
     // {

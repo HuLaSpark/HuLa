@@ -107,10 +107,14 @@
                   </n-flex>
                 </n-flex>
 
-                <div v-if="item.roleId === RoleEnum.LORD" class="flex px-4px py-3px rounded-4px size-fit select-none">
+                <div
+                  v-if="item.roleId === RoleEnum.LORD"
+                  class="flex px-4px bg-#d5304f30 py-3px rounded-4px size-fit select-none">
                   <p class="text-(10px #d5304f)">群主</p>
                 </div>
-                <div v-if="item.roleId === RoleEnum.ADMIN" class="flex px-4px py-3px rounded-4px size-fit select-none">
+                <div
+                  v-if="item.roleId === RoleEnum.ADMIN"
+                  class="flex px-4px bg-#1a7d6b30 py-3px rounded-4px size-fit select-none">
                   <p class="text-(10px #1a7d6b)">管理员</p>
                 </div>
               </n-flex>

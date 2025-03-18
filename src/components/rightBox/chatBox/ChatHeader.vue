@@ -135,14 +135,15 @@
               <n-flex align="center" :size="10">
                 <!-- 群头像 -->
                 <div class="relative group">
-                  <n-avatar round :size="40" :src="AvatarUtils.getAvatarUrl(activeItem.avatar)" />
                   <!-- 群主可以编辑头像，显示黑色蒙层和上传图标 -->
-                  <div
-                    v-if="isGroupOwner"
-                    class="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                    @click="handleUploadAvatar">
-                    <svg class="size-20px color-white"><use href="#upload"></use></svg>
+                  <div v-if="isGroupOwner" class="avatar-wrapper relative" @click="handleUploadAvatar">
+                    <n-avatar round :size="40" :src="AvatarUtils.getAvatarUrl(activeItem.avatar)" />
+                    <div class="avatar-hover absolute size-full rounded-50% flex-center">
+                      <svg class="size-14px color-#fefefe"><use href="#Export"></use></svg>
+                    </div>
                   </div>
+
+                  <n-avatar v-else round :size="40" :src="AvatarUtils.getAvatarUrl(activeItem.avatar)" />
                 </div>
 
                 <!-- 群名称 -->
@@ -152,7 +153,11 @@
                       ref="groupNameInputRef"
                       v-model:value="editingGroupName"
                       @blur="saveGroupName"
-                      @keydown.enter="saveGroupName" />
+                      @keydown.enter="saveGroupName"
+                      size="small"
+                      maxlength="12"
+                      class="border-(solid 1px [--line-color])"
+                      placeholder="请输入群名称(最多12字)" />
                   </div>
                   <div
                     v-else
@@ -294,6 +299,15 @@
       </div>
     </div>
   </n-modal>
+
+  <!-- 添加裁剪组件和文件输入框 -->
+  <input
+    ref="fileInput"
+    type="file"
+    accept="image/jpeg,image/png,image/webp"
+    class="hidden"
+    @change="handleFileChange" />
+  <AvatarCropper ref="cropperRef" v-model:show="showCropper" :image-url="localImageUrl" @crop="handleCrop" />
 </template>
 
 <script setup lang="ts">
@@ -314,7 +328,8 @@ import { RoomTypeEnum, SessionOperateEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useUserStatusStore } from '@/stores/userStatus'
 import apis from '@/services/apis'
-import { nextTick } from 'vue'
+import AvatarCropper from '@/components/common/AvatarCropper.vue'
+import { useAvatarUpload } from '@/hooks/useAvatarUpload'
 
 const appWindow = WebviewWindow.getCurrent()
 const { activeItem } = defineProps<{
@@ -353,6 +368,13 @@ const isEditingGroupName = ref(false)
 const editingGroupName = ref('')
 // 群名称输入框引用
 const groupNameInputRef = useTemplateRef('groupNameInputRef')
+// 创建一个RTCPeerConnection实例
+let peerConnection: RTCPeerConnection
+if (type() !== 'linux') {
+  peerConnection = new RTCPeerConnection()
+}
+
+const MIN_LOADING_TIME = 300 // 最小加载时间（毫秒）
 /** 是否在线 */
 const isOnline = computed(() => {
   if (activeItem.type === RoomTypeEnum.GROUP) return false
@@ -385,14 +407,30 @@ const userList = computed(() => {
     })
     .slice(0, 10)
 })
-
-// 创建一个RTCPeerConnection实例
-let peerConnection: RTCPeerConnection
-if (type() !== 'linux') {
-  peerConnection = new RTCPeerConnection()
-}
-
-const MIN_LOADING_TIME = 300 // 最小加载时间（毫秒）
+// 使用自定义hook处理头像上传
+const {
+  fileInput,
+  localImageUrl,
+  showCropper,
+  cropperRef,
+  openFileSelector,
+  handleFileChange,
+  handleCrop: onCrop
+} = useAvatarUpload({
+  onSuccess: async (downloadUrl) => {
+    // 调用更新群头像的API
+    await apis.updateRoomInfo({
+      id: activeItem.roomId,
+      name: activeItem.name,
+      avatar: downloadUrl
+    })
+    // 更新本地会话状态
+    chatStore.updateSession(activeItem.roomId, {
+      avatar: downloadUrl
+    })
+    window.$message.success('群头像已更新')
+  }
+})
 
 // 在数据加载完成后，确保loading动画至少显示一定时间
 const handleLoadingState = async (isDataLoading: boolean) => {
@@ -731,19 +769,31 @@ const saveGroupName = async () => {
 
   isEditingGroupName.value = false
 
+  // 检查名称是否为空或超过12个字符
+  const trimmedName = editingGroupName.value.trim()
+  if (trimmedName === '') {
+    window.$message.warning('群名称不能为空')
+    return
+  }
+
+  if (trimmedName.length > 12) {
+    window.$message.warning('群名称不能超过12个字符')
+    return
+  }
+
   // 检查名称是否有变化
-  if (editingGroupName.value.trim() !== activeItem.name && editingGroupName.value.trim() !== '') {
+  if (trimmedName !== activeItem.name) {
     try {
       // 调用更新群信息的API
       await apis.updateRoomInfo({
         id: activeItem.roomId,
-        name: editingGroupName.value.trim(),
+        name: trimmedName,
         avatar: activeItem.avatar
       })
 
       // 更新本地会话状态
       chatStore.updateSession(activeItem.roomId, {
-        name: editingGroupName.value.trim()
+        name: trimmedName
       })
 
       window.$message.success('群名称已更新')
@@ -755,8 +805,15 @@ const saveGroupName = async () => {
 }
 
 // 处理上传头像
-const handleUploadAvatar = async () => {
+const handleUploadAvatar = () => {
   if (!isGroupOwner.value || !activeItem.roomId) return
+
+  openFileSelector()
+}
+
+// 处理裁剪，调用hook中的方法
+const handleCrop = async (cropBlob: Blob) => {
+  await onCrop(cropBlob)
 }
 </script>
 
@@ -771,5 +828,22 @@ const handleUploadAvatar = async () => {
 .loading-enter-from,
 .loading-leave-to {
   opacity: 0;
+}
+
+.avatar-wrapper {
+  cursor: pointer;
+
+  .avatar-hover {
+    opacity: 0;
+    transition: opacity 0.4s ease-in-out;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    top: 0;
+    left: 0;
+  }
+
+  &:hover .avatar-hover {
+    opacity: 1;
+  }
 }
 </style>

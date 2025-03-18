@@ -5,7 +5,7 @@
         <!-- 最近使用 -->
         <div v-if="activeIndex === 0">
           <div v-if="emojiRef.historyList?.length > 0">
-            <span class="text-12px text-[--text-color]">最近使用</span>
+            <span v-if="!checkIsUrl(emojiRef.historyList[0])" class="text-12px text-[--text-color]">最近使用</span>
             <n-flex align="center" class="mt-12px mb-12px">
               <n-flex
                 align="center"

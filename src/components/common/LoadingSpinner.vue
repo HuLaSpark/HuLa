@@ -1,7 +1,9 @@
 <template>
   <div data-tauri-drag-region class="flex-col-center gap-30px size-full">
     <n-flex vertical justify="center" :size="20">
-      <img src="@/assets/logo/hula.png" class="w-220px h-104px mb-10px" />
+      <div class="logo-container">
+        <img src="@/assets/logo/hula.png" class="logo-image" alt="HuLa Logo" loading="eager" />
+      </div>
       <n-progress
         type="line"
         :show-indicator="false"
@@ -22,3 +24,21 @@ defineProps<{
   loadingText: string
 }>()
 </script>
+
+<style scoped>
+.logo-container {
+  width: 220px;
+  height: 104px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.logo-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+</style>
