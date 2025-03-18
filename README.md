@@ -5,9 +5,6 @@
 <p align="center">一款基于Tauri、Vite 6、Vue 3 和 TypeScript 构建的即时通讯系统</p>
 
 <div align="center">
-  <a href="https://codecov.io/gh/HuLaSpark/HuLa" >
-  <img src="https://codecov.io/gh/HuLaSpark/HuLa/branch/fix%2Fglobal/graph/badge.svg?token=NM0Z13M8AZ"/>
-  </a>
   <a href="https://app.fossa.com/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa?ref=badge_shield"><img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa.svg?type=shield" alt=""></a>
   <a href="https://www.bestpractices.dev/zh-CN/projects/9692"><img src="https://bestpractices.coreinfrastructure.org/projects/9692/badge" alt="CI"></a>
   <img src="https://img.shields.io/badge/TypeScript-blue?logo=Typescript&style=flat&logoColor=fff">
@@ -89,6 +86,7 @@ HuLa 是一款基于 Tauri、Vite 6、Vue 3 和 TypeScript 构建的即时通讯
 | | 消息撤回 | ✅ 已完成 |
 | | @提醒、回复功能 | ✅ 已完成 |
 | | 消息已读状态 | ✅ 已完成 |
+| | 表情包功能 | ✅ 已完成 |
 | | 根据消息类型右键菜单 | ✅ 已完成 |
 | 👥 **联系人、群聊管理** | 好友添加与删除 | ✅ 已完成 |
 | | 好友搜索 | ✅ 已完成 |

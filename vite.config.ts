@@ -7,7 +7,6 @@ import { getRootPath, getSrcPath } from './build/config/getPath'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import UnoCSS from '@unocss/vite'
 import terser from '@rollup/plugin-terser'
-import { codecovVitePlugin } from '@codecov/vite-plugin'
 import VueSetupExtend from 'vite-plugin-vue-setup-extend'
 
 // https://vitejs.dev/config/
@@ -56,12 +55,6 @@ export default defineConfig(({ mode }: ConfigEnv) => {
         dirs: ['src/components/**', 'src/mobile/components/**'], // 设置需要扫描的目录
         resolvers: [NaiveUiResolver()],
         dts: 'src/typings/components.d.ts'
-      }),
-      /** 代码覆盖率插件 */
-      codecovVitePlugin({
-        enableBundleAnalysis: process.env.CODECOV_TOKEN !== undefined,
-        bundleName: 'hula',
-        uploadToken: process.env.CODECOV_TOKEN
       }),
       /** 压缩代码 */
       terser({

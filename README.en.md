@@ -5,9 +5,6 @@
 <p align="center">An Instant Messaging System Built with Tauri, Vite 6, Vue 3, and TypeScript</p>
 
 <div align="center">
-  <a href="https://codecov.io/gh/HuLaSpark/HuLa" >
-  <img src="https://codecov.io/gh/HuLaSpark/HuLa/branch/fix%2Fglobal/graph/badge.svg?token=NM0Z13M8AZ"/>
-  </a>
   <a href="https://app.fossa.com/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa?ref=badge_shield"><img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa.svg?type=shield" alt=""></a>
   <a href="https://www.bestpractices.dev/zh-CN/projects/9692"><img src="https://bestpractices.coreinfrastructure.org/projects/9692/badge" alt="CI"></a>
   <img src="https://img.shields.io/badge/TypeScript-blue?logo=Typescript&style=flat&logoColor=fff">
@@ -89,6 +86,7 @@ HuLa is an instant messaging system developed with Tauri, Vite 6, Vue 3, and Typ
 | | Message Recall | ✅ Completed |
 | | @Mention, Reply Function | ✅ Completed |
 | | Message Read Status | ✅ Completed |
+| | Emoji Function | ✅ Completed |
 | | Context Menu Based on Message Type | ✅ Completed |
 | 👥 **Contact & Group Management** | Friend Add/Remove | ✅ Completed |
 | | Friend Search | ✅ Completed |

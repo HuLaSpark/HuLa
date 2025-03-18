@@ -11,7 +11,7 @@
                 align="center"
                 justify="center"
                 class="emoji-item"
-                v-for="(item, index) in [...new Set(emojiRef.historyList)]"
+                v-for="(item, index) in [...new Set(emojiRef.historyList)].filter((emoji) => !checkIsUrl(emoji))"
                 :key="index"
                 @click.stop="chooseEmoji(item)">
                 {{ item }}
@@ -64,7 +64,36 @@
 
         <!-- 我的喜欢页面 -->
         <div v-else>
-          <span>暂无实现</span>
+          <div v-if="emojiStore.emojiList?.length > 0">
+            <span class="text-12px text-[--text-color]">我的表情包</span>
+            <n-flex align="center" class="mx-6px my-12px">
+              <n-flex
+                align="center"
+                justify="center"
+                class="emoji-item"
+                v-for="(item, index) in emojiStore.emojiList"
+                :key="index"
+                @click.stop="chooseEmoji(item.expressionUrl, 'url')">
+                <n-popover trigger="hover" :delay="300" :duration="300" :show-arrow="false" placement="top">
+                  <template #trigger>
+                    <n-image
+                      preview-disabled
+                      :src="item.expressionUrl"
+                      class="size-full object-contain rounded-8px transition duration-300 ease-in-out transform-gpu" />
+                  </template>
+                  <n-button quaternary size="tiny" @click.stop="deleteMyEmoji(item.id)">
+                    删除
+                    <template #icon>
+                      <n-icon>
+                        <svg><use href="#delete"></use></svg>
+                      </n-icon>
+                    </template>
+                  </n-button>
+                </n-popover>
+              </n-flex>
+            </n-flex>
+          </div>
+          <span v-else>暂无表情包</span>
         </div>
       </div>
     </transition>
@@ -101,6 +130,7 @@
 <script setup lang="ts">
 import { getAllTypeEmojis } from '@/utils/Emoji.ts'
 import { useHistoryStore } from '@/stores/history.ts'
+import { useEmojiStore } from '@/stores/emoji'
 import HulaEmojis from 'hula-emojis'
 
 type EmojiType = {
@@ -126,10 +156,11 @@ const emit = defineEmits(['emojiHandle'])
 const props = defineProps<{
   all: boolean
 }>()
-const { emoji, setEmoji } = useHistoryStore()
+const { emoji, setEmoji, lastEmojiTabIndex, setLastEmojiTabIndex } = useHistoryStore()
+const emojiStore = useEmojiStore()
 /** 获取米游社的表情包 */
 const emojisBbs = HulaEmojis.MihoyoBbs
-const activeIndex = ref(0)
+const activeIndex = ref(lastEmojiTabIndex)
 const currentSeriesIndex = ref(0)
 
 // 生成选项卡数组
@@ -181,6 +212,32 @@ const emojiRef = reactive<{
 })
 
 /**
+ * 检查字符串是否为URL
+ */
+const checkIsUrl = (str: string) => {
+  try {
+    new URL(str)
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
+ * 删除我的表情包
+ * @param id 表情包ID
+ */
+const deleteMyEmoji = async (id: string) => {
+  try {
+    await emojiStore.deleteEmoji(id)
+    window.$message.success('删除表情成功')
+  } catch (error) {
+    console.error('删除表情失败:', error)
+    window.$message.error('删除表情失败')
+  }
+}
+
+/**
  * 选择表情
  * @param item
  */
@@ -214,6 +271,7 @@ const handleTabChange = (index: number) => {
   if (index === 1) {
     currentSeriesIndex.value = 0
   }
+  setLastEmojiTabIndex(index)
 }
 
 /**
@@ -222,9 +280,10 @@ const handleTabChange = (index: number) => {
 const selectSeries = (index: number) => {
   currentSeriesIndex.value = index
   activeIndex.value = index + 1
+  setLastEmojiTabIndex(index + 1)
 }
 
-onMounted(() => {
+onMounted(async () => {
   // try {
   //   const file = await create('emoji-test.txt', { baseDir: BaseDirectory.App })
   //   await file.write(new TextEncoder().encode('Hello world'))
@@ -232,6 +291,12 @@ onMounted(() => {
   // } catch (error) {
   //   console.error('Error handling file:', error)
   // }
+  // 获取我的表情包列表
+  await emojiStore.getEmojiList()
+  // 如果上次选择的是表情包系列，设置正确的currentSeriesIndex
+  if (activeIndex.value > 0) {
+    currentSeriesIndex.value = activeIndex.value - 1
+  }
 })
 </script>
 

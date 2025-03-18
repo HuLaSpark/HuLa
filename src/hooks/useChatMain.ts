@@ -15,6 +15,7 @@ import { save } from '@tauri-apps/plugin-dialog'
 import { useDownload } from '@/hooks/useDownload'
 import { useGroupStore } from '@/stores/group'
 import { useWindow } from './useWindow'
+import { useEmojiStore } from '@/stores/emoji'
 
 export const useChatMain = () => {
   const { removeTag, openMsgSession, userUid } = useCommon()
@@ -24,6 +25,7 @@ export const useChatMain = () => {
   const globalStore = useGlobalStore()
   const groupStore = useGroupStore()
   const chatStore = useChatStore()
+  const emojiStore = useEmojiStore()
   const userStore = useUserStore()?.userInfo
   const { downloadFile } = useDownload()
   // const userInfo = useUserStore()?.userInfo
@@ -51,9 +53,17 @@ export const useChatMain = () => {
     {
       label: '转发',
       icon: 'share',
-      click: () => {}
+      click: () => {
+        window.$message.warning('暂未实现')
+      }
     },
-    { label: '收藏', icon: 'collection-files' },
+    {
+      label: '收藏',
+      icon: 'collection-files',
+      click: () => {
+        window.$message.warning('暂未实现')
+      }
+    },
     {
       label: '回复',
       icon: 'reply',
@@ -110,6 +120,9 @@ export const useChatMain = () => {
         } else {
           delete item.message.body.translatedText
         }
+      },
+      visible: (item: MessageType) => {
+        return item.message.type === MsgEnum.TEXT
       }
     },
     ...commonMenuList.value
@@ -147,13 +160,6 @@ export const useChatMain = () => {
   /** 图片类型右键菜单 */
   const imageMenuList = ref<OPT.RightMenu[]>([
     {
-      label: '添加到表情',
-      icon: 'add-expression',
-      click: (item: any) => {
-        console.log(item)
-      }
-    },
-    {
       label: '复制',
       icon: 'copy',
       click: async (item: MessageType) => {
@@ -187,6 +193,18 @@ export const useChatMain = () => {
           console.error('保存图片失败:', error)
           window.$message.error('保存图片失败')
         }
+      }
+    },
+    {
+      label: '添加到表情',
+      icon: 'add-expression',
+      click: async (item: MessageType) => {
+        const imageUrl = item.message.body.url
+        if (!imageUrl) {
+          window.$message.error('获取图片地址失败')
+          return
+        }
+        await emojiStore.addEmoji(imageUrl)
       }
     }
     // {

@@ -27,9 +27,9 @@ export const useEmojiStore = defineStore(StoresEnum.EMOJI, () => {
   const addEmoji = async (emojiUrl: string) => {
     const { uid } = userStore.userInfo
     if (!uid || !emojiUrl) return
-    apis.addEmoji({ uid, expressionUrl: emojiUrl }).then((res) => {
+    apis.addEmoji({ expressionUrl: emojiUrl }).then((res) => {
       if (res) {
-        window.$message.success('添加成功')
+        window.$message.success('添加表情成功')
       }
     })
     await getEmojiList()
