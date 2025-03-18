@@ -1,3 +1,51 @@
+
+
+## [2.6.7](https://github.com/HuLaSpark/HuLa/compare/v2.6.6...v2.6.7) (2025-03-18)
+
+
+### ✨ Features | 新功能
+
+* **component:** :sparkles: 增加表情包功能 ([f0e9f27](https://github.com/HuLaSpark/HuLa/commit/f0e9f27c5fbf28759c5f6520ba49af5649714bb1))
+* **component:** :sparkles: 增加动画表情处理 ([bc65a3b](https://github.com/HuLaSpark/HuLa/commit/bc65a3bd5a97255dbaade6fc4f5e63f29647fdcf))
+* **component:** :sparkles: 增加会话列表右键菜单功能(免打扰) ([6731c89](https://github.com/HuLaSpark/HuLa/commit/6731c89c32ed32c38d1913876d3e9df3d168f969))
+* **component:** :sparkles: 增加localStorage缓存消息列表(暂时) ([e714431](https://github.com/HuLaSpark/HuLa/commit/e7144313a4858bd5c918e9d9a4d377b0ce8cadbc))
+* **vite:** add vite-plugin-vue-devtools for enhanced debugging ([#219](https://github.com/HuLaSpark/HuLa/issues/219)) ([a8b548c](https://github.com/HuLaSpark/HuLa/commit/a8b548cb0bca1eedcd5d16e4589eded8761d2455))
+
+
+### 🐛 Bug Fixes | Bug 修复
+
+* **chat-editor:** record cursor position correctly ([#221](https://github.com/HuLaSpark/HuLa/issues/221)) ([6ad6c58](https://github.com/HuLaSpark/HuLa/commit/6ad6c586912eeeb04a6ea49d9bbf0b5962fdfcc6))
+* **component:** :bug: 完善消息免打扰功能和样式 ([0eed677](https://github.com/HuLaSpark/HuLa/commit/0eed67780521a28cb51a4272498add8f008f784f))
+* **component:** :bug: 修复缓存存储问题、会话切换后聊天框内容混合问题 ([51b7d62](https://github.com/HuLaSpark/HuLa/commit/51b7d621fad80cee15aedf201068103c4e88a23d))
+* **component:** :bug: 修复回复的内容宽度问题 ([0dcddfc](https://github.com/HuLaSpark/HuLa/commit/0dcddfc810b731e194c2a37f16d56473bbf0607a))
+* **component:** :bug: 修复新消息回复无法跳转问题 ([65264b3](https://github.com/HuLaSpark/HuLa/commit/65264b3dacb8820a9938f107408ec31306a0738e))
+* **component:** :bug: 修复用户上线推送的数据类型错误问题 ([474a388](https://github.com/HuLaSpark/HuLa/commit/474a3886f45476e2640a86f3fb8c991fc96399ee))
+* **component:** :bug: 修复右键二级菜单图标错误bug ([0b97ccb](https://github.com/HuLaSpark/HuLa/commit/0b97ccb76785e5f8a13466ad93a8b32beb213572))
+* **component:** :bug: 修复win下聊天框滚动条隐藏坍塌问题和会话快速切换的异步竞态问题 ([a39c054](https://github.com/HuLaSpark/HuLa/commit/a39c054b6264fb2cc0addfb2d1970b880ba53fd4))
+* **layout:** :bug: 修复F5刷新会使窗口变大的bug ([#214](https://github.com/HuLaSpark/HuLa/issues/214)) ([51baa1a](https://github.com/HuLaSpark/HuLa/commit/51baa1a907a1339d354fbe3f131cdf87a9d9a49a))
+* **store:** :bug: 修复群聊列表获取不到问题(后续把stores中定义的reactive换为ref) ([40e9786](https://github.com/HuLaSpark/HuLa/commit/40e97862153a084542bb263f2d5bd33f3dc39472))
+* **util:** :bug: 修复消息上报在未登录的时候触发问题 ([34e6633](https://github.com/HuLaSpark/HuLa/commit/34e663373b1885fab34724b6ef2091a9bb9a9bc0))
+* **view:** :bug: 修复重新启动应用后的登录逻辑 ([1560cb4](https://github.com/HuLaSpark/HuLa/commit/1560cb4a0bc8729f4b008ba8c96ee6918a8b6dfe))
+
+
+### ⚡️ Performance Improvements | 性能优化
+
+* **component:** :zap: 优化好友申请列表 ([52f9047](https://github.com/HuLaSpark/HuLa/commit/52f9047299282c1d5b2f67efbd6f2fc865fc476e))
+* **component:** :zap: 优化好友申请列表和群详情 ([15d16e5](https://github.com/HuLaSpark/HuLa/commit/15d16e567f2082c0ee87939a9816e1c7c84ae362))
+* **component:** :zap: 优化好友页面和聊天页面切换需要重新加载问题 ([20f52e4](https://github.com/HuLaSpark/HuLa/commit/20f52e471bd8684036b1ecfa8ecf6064ea75cc18))
+* **component:** :zap: 优化群聊操作(我的群昵称、群备注、群名称) ([dcf4664](https://github.com/HuLaSpark/HuLa/commit/dcf4664a185b6ab83b324a9e40e191b99c6e09a9))
+* **component:** :zap: 优化群聊详情显示 ([6960555](https://github.com/HuLaSpark/HuLa/commit/696055585c9d734d069b0d9d797aad7b62cd88ee))
+* **component:** :zap: 优化头像上传功能（群头像） ([7e865c7](https://github.com/HuLaSpark/HuLa/commit/7e865c7cb0e6f1c6d4fb87c1a95a8aa2471304fa))
+* **component:** :zap: 优化消息列表 ([1bc38ba](https://github.com/HuLaSpark/HuLa/commit/1bc38ba4c1dea8d0ca830166b9bbbc3e6f41c845))
+* **component:** :zap: 优化虚拟列表 ([19d699b](https://github.com/HuLaSpark/HuLa/commit/19d699b19f7e324ca01c852400add6a98ed3ef5f))
+* **component:** :zap: 优化虚拟列表滚动掉帧问题 ([3bea8d9](https://github.com/HuLaSpark/HuLa/commit/3bea8d9f02ae179528b8673eb3f9cc6894a58381))
+* **component:** :zap: 优化虚拟列表加载更多闪屏的问题和消息气泡动画问题 ([530ce3e](https://github.com/HuLaSpark/HuLa/commit/530ce3e63d74d97a2fbc10ad862a7fe166365bb0))
+* **component:** :zap: 优化右键二级菜单弹出的问题 ([90d55bb](https://github.com/HuLaSpark/HuLa/commit/90d55bb4baefa287fd458ed8f089786a9fb5d372))
+* **component:** :zap: 优化右键二级菜单点击事件不触发问题、拆分屏蔽消息和免打扰功能 ([29bec4f](https://github.com/HuLaSpark/HuLa/commit/29bec4f373d2e8ce1dbcc5a88d02844b70a0b9e1))
+* **view:** :zap: 优化群主管理员标签样式 ([64eefbe](https://github.com/HuLaSpark/HuLa/commit/64eefbe7bdaef03b4598776c64f01ecdbe90626d))
+* **view:** :zap: 优化申请群聊功能 ([c492c0d](https://github.com/HuLaSpark/HuLa/commit/c492c0d18e9b0288ae45827b71bd29f4632bb636))
+* **view:** :zap: 优化项目中类型的编写和定义方式 ([a832dc1](https://github.com/HuLaSpark/HuLa/commit/a832dc1220468de33f724c78256047a84ff62811))
+
 # Changelog
 
 ## <small>2.6.6 (2025-03-01)</small>
