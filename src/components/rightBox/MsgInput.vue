@@ -8,16 +8,18 @@
         style="outline: none"
         contenteditable
         spellcheck="false"
-        @paste="handlePaste($event, messageInputDom)"
+        @paste="onPaste($event)"
         @input="handleInput"
         @keydown.exact.enter="inputKeyDown"
         @keydown.exact.meta.enter="inputKeyDown"
-        @keydown.exact="recordSelectionRange"
-        @click="recordSelectionRange"
+        @keydown="updateSelectionRange"
+        @keyup="updateSelectionRange"
+        @click="updateSelectionRange"
+        @compositionend="updateSelectionRange"
         @keydown.exact.ctrl.enter="inputKeyDown"></div>
       <span
         v-if="isEntering"
-        @click.stop="messageInputDom.focus()"
+        @click.stop="messageInputDom?.focus()"
         class="absolute select-none top-8px left-6px w-fit text-(12px #777)">
         输入 / 唤起 AI 助手
       </span>
@@ -172,7 +174,7 @@ const { themes } = storeToRefs(settingStore)
 /** 发送按钮旁的箭头 */
 const arrow = ref(false)
 /** 输入框dom元素 */
-const messageInputDom = ref()
+const messageInputDom = ref<HTMLElement>()
 const activeItem = ref(inject('activeItem') as SessionItem)
 /** ait 虚拟列表 */
 const virtualListInstAit = useTemplateRef<VirtualListInst>('virtualListInst-ait')
@@ -184,15 +186,19 @@ const isEntering = computed(() => {
 })
 const { handlePaste, getEditorRange } = useCommon()
 
+const onPaste = (e: ClipboardEvent) => {
+  if (messageInputDom.value) handlePaste(e, messageInputDom.value)
+}
+
 /**
  * 记录编辑器最后选取范围
  */
-let lastEditRange: SelectionRange | null = null
+let currentSelectionRange: SelectionRange | null = null
 
 /**
  * 记录当前编辑器的选取范围
  */
-const recordSelectionRange = () => (lastEditRange = getEditorRange())
+const updateSelectionRange = () => (currentSelectionRange = getEditorRange())
 
 /** 引入useMsgInput的相关方法 */
 const {
@@ -314,8 +320,28 @@ onUnmounted(() => {
   window.removeEventListener('click', closeMenu, true)
 })
 
+/**
+ * 恢复编辑器焦点
+ */
+function focus() {
+  const editor = messageInputDom.value
+  if (!editor) return
+  editor.focus()
+
+  const selection = window.getSelection()
+  if (!selection) return
+  const selectionRange = currentSelectionRange
+  if (!selectionRange) return
+
+  const range = document.createRange()
+  range.selectNodeContents(editor)
+  range.collapse(false)
+  selection?.removeAllRanges()
+  selection?.addRange(selectionRange.range)
+}
+
 /** 导出组件方法和属性 */
-defineExpose({ messageInputDom, getLastEditRange: () => lastEditRange, recordSelectionRange })
+defineExpose({ messageInputDom, getLastEditRange: () => currentSelectionRange, updateSelectionRange, focus })
 </script>
 
 <style scoped lang="scss">
