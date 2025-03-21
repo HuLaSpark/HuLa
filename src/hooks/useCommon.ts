@@ -21,6 +21,8 @@ export interface SelectionRange {
 }
 const domParser = new DOMParser()
 
+const REPLY_NODE_ID = 'replyDiv'
+
 const saveCacheFile = async (file: any, subFolder: string, dom: HTMLElement) => {
   const fileName = file.name === null ? 'test.png' : file.name
   const tempPath = getImageCache(subFolder)
@@ -230,156 +232,34 @@ export const useCommon = () => {
     } else if (type === MsgEnum.TEXT) {
       range?.insertNode(document.createTextNode(dom))
     } else if (type === MsgEnum.REPLY) {
-      // 创建一个div标签节点
-      const divNode = document.createElement('div')
-      divNode.id = 'replyDiv' // 设置id为replyDiv
-      divNode.contentEditable = 'false' // 设置为不可编辑
-      divNode.tabIndex = -1 // 防止被focus
-      divNode.style.cssText = `
-      background-color: var(--reply-bg);
-      font-size: 12px;
-      padding: 4px 6px;
-      width: fit-content;
-      max-height: 86px;
-      border-radius: 8px;
-      margin-bottom: 2px;
-      user-select: none;
-      pointer-events: none; /* 防止鼠标事件 */
-      cursor: default;
-      outline: none; /* 移除focus时的轮廓 */
-    `
-      // 把dom中的value值作为回复信息的作者，dom中的content作为回复信息的内容
-      const author = dom.accountName + '：'
-      let content = dom.content
-      // 创建一个img标签节点作为头像
-      const imgNode = document.createElement('img')
-      imgNode.src = AvatarUtils.getAvatarUrl(dom.avatar)
-      imgNode.style.cssText = `
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      `
-      // 创建一个div标签节点作为回复信息的头部
-      const headerNode = document.createElement('div')
-      headerNode.style.cssText = `
-      line-height: 1.5;
-      font-size: 12px;
-      padding: 0 4px;
-      color: rgba(19, 152, 127);
-      cursor: default;
-      user-select: none;
-      pointer-events: none;
-    `
-      headerNode.appendChild(document.createTextNode(author))
-      // 创建一个div标签节点包裹正文内容
-      const contentNode = document.createElement('div')
-      contentNode.style.cssText = `
-      display: flex;
-      justify-content: space-between;
-      border-radius: 8px;
-      padding: 2px;
-      margin-top: 4px;
-      min-width: 0;
-    `
-      let contentBox
-      // 判断content内容是否是data:image/开头的数组
-      if (Array.isArray(content)) {
-        // 获取总共有多少张图片
-        const imageCount = content.length
-        // 获取第一个data:image/开头的图片
-        content = content.find((item: string) => item.startsWith('data:image/'))
-        reply.value.imgCount = imageCount
-      }
-      console.log(content)
+      // TODO This might not be approperiate here. we should retrieve the focus element, But I'm not sure how to proceed at the moment.
+      const inputElement = document.getElementById('message-input')
+      // 记录聚焦元素是否存在子节点
+      const hasChildNodes = inputElement?.hasChildNodes()
 
-      // todo: 暂时用http开头的图片判断，后续需要优化
-      if (content.startsWith('http')) {
-        // 再创建一个img标签节点，并设置src属性为base64编码的图片
-        contentBox = document.createElement('img')
-        contentBox.src = content
-        contentBox.style.cssText = `
-        max-width: 55px;
-        max-height: 55px;
-        border-radius: 4px;
-        cursor: default;
-        user-select: none;
-        pointer-events: none;
-      `
-        // 将img标签节点插入到div标签节点中
-        divNode.appendChild(contentBox)
-        // 把图片传入到reply的content属性中
-        reply.value.content = content
+      const replyNode = createReplyDom(dom)
+      const preReplyNode = document.getElementById('replyDiv')
+      if (preReplyNode) {
+        preReplyNode.replaceWith(replyNode)
       } else {
-        // 判断是否有@标签
-        if (content.includes('id="aitSpan"')) {
-          // 去掉content中的标签
-          content = removeTag(content)
+        // 被聚焦的元素在此之前如果存在子节点，那么需要将光标移动到行首
+        if (hasChildNodes) {
+          // 将光标移动到行首后将 reply-box 插入到光标位置
+          selection.setPosition(selection.anchorNode, 0)
         }
-        // 把正文放到span标签中，并设置span标签的样式
-        contentBox = document.createElement('span')
-        contentBox.style.cssText = `
-      font-size: 12px;
-      color: var(--text-color);
-      cursor: default;
-      width: fit-content;
-      max-width: 350px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      user-select: none;
-      pointer-events: none;
-    `
-        contentBox.appendChild(document.createTextNode(content))
+        selection.getRangeAt(0).insertNode(replyNode)
+        selection.getRangeAt(0).collapse(false)
+        // 在此之前如果存在子节点，那么恢复光标，否则将光标移动到行首
+        if (hasChildNodes) {
+          // 恢复光标
+          selection.removeAllRanges()
+          selection.addRange(range)
+        }
       }
-      // 在回复信息的右边添加一个关闭信息的按钮
-      const closeBtn = document.createElement('span')
-      closeBtn.id = 'closeBtn'
-      closeBtn.style.cssText = `
-      display: flex;
-      align-items: center;
-      font-size: 12px;
-      color: #999;
-      cursor: pointer;
-      margin-left: 10px;
-      flex-shrink: 0;
-      user-select: none;
-      pointer-events: auto; /* 确保关闭按钮可以点击 */
-    `
-      closeBtn.textContent = '关闭'
-      closeBtn.addEventListener('click', () => {
-        divNode.remove()
-        const messageInput = document.getElementById('message-input') as HTMLElement
-        // 移除messageInput的最前面的空格节点，获取空格后面的内容
-        messageInput.textContent = messageInput.textContent!.trim()
-        // 创建并初始化 range 对象
-        const range = document.createRange()
-        range.selectNodeContents(messageInput)
-        range.collapse(false) // 将光标移动到末尾
-        // 将光标设置到 messageInput 的末尾
-        const selection = window.getSelection()
-        selection?.removeAllRanges()
-        selection?.addRange(range)
-        triggerInputEvent(messageInput)
-        reply.value = { avatar: '', imgCount: 0, accountName: '', content: '', key: 0 }
-      })
-      // 为头像和标题创建容器
-      const headerContainer = document.createElement('div')
-      headerContainer.style.cssText = `
-      display: flex;
-      align-items: center;
-      gap: 2px;
-      `
-      // 在容器中添加头像和标题
-      headerContainer.appendChild(imgNode)
-      headerContainer.appendChild(headerNode)
 
-      // 将容器添加到主div中
-      divNode.appendChild(headerContainer)
-      divNode.appendChild(contentNode)
-      contentNode.appendChild(contentBox)
-      contentNode.appendChild(closeBtn)
-      // 将div标签节点插入到光标位置
-      range?.insertNode(divNode)
+      // 如果已经有内容了，那么不需要添加 其它元素
+      if (hasChildNodes) return
+
       // 将光标折叠到Range的末尾(true表示折叠到Range的开始位置,false表示折叠到Range的末尾)
       range?.collapse(false)
       // 创建一个span节点作为空格
@@ -389,10 +269,9 @@ export const useCommon = () => {
       spaceNode.contentEditable = 'false'
       // 不可以选中
       spaceNode.style.userSelect = 'none'
-      // 插入一个br标签节点作为换行
-      const brNode = document.createElement('br')
-      // 将br标签节点插入到光标位置
-      range?.insertNode(brNode)
+      // 插入一个可编辑的文本节点，否则编辑器可能无法聚焦
+      const blankNode = document.createTextNode('')
+      range?.insertNode(blankNode)
       // 将空格节点插入到光标位置
       range?.insertNode(spaceNode)
       range?.collapse(false)
@@ -516,6 +395,161 @@ export const useCommon = () => {
     }
     // 将光标移到选中范围的最后面
     selection?.collapseToEnd()
+  }
+
+  /**
+   * create a reply element
+   */
+  function createReplyDom(dom: { accountName: string; content: string; avatar: string }) {
+    // 创建一个div标签节点
+    const replyNode = document.createElement('div')
+    replyNode.id = REPLY_NODE_ID // 设置id为replyDiv
+    replyNode.contentEditable = 'false' // 设置为不可编辑
+    replyNode.tabIndex = -1 // 防止被focus
+    replyNode.style.cssText = `
+      background-color: var(--reply-bg);
+      font-size: 12px;
+      padding: 4px 6px;
+      width: fit-content;
+      max-height: 86px;
+      border-radius: 8px;
+      margin-bottom: 2px;
+      user-select: none;
+      pointer-events: none; /* 防止鼠标事件 */
+      cursor: default;
+      outline: none; /* 移除focus时的轮廓 */
+      `
+    // 把dom中的value值作为回复信息的作者，dom中的content作为回复信息的内容
+    const author = dom.accountName + '：'
+    let content = dom.content
+    // 创建一个img标签节点作为头像
+    const imgNode = document.createElement('img')
+    imgNode.src = AvatarUtils.getAvatarUrl(dom.avatar)
+    imgNode.style.cssText = `
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      `
+    // 创建一个div标签节点作为回复信息的头部
+    const headerNode = document.createElement('div')
+    headerNode.style.cssText = `
+      line-height: 1.5;
+      font-size: 12px;
+      padding: 0 4px;
+      color: rgba(19, 152, 127);
+      cursor: default;
+      user-select: none;
+      pointer-events: none;
+    `
+    headerNode.appendChild(document.createTextNode(author))
+    // 创建一个div标签节点包裹正文内容
+    const contentNode = document.createElement('div')
+    contentNode.style.cssText = `
+      display: flex;
+      justify-content: space-between;
+      border-radius: 8px;
+      padding: 2px;
+      margin-top: 4px;
+      min-width: 0;
+    `
+    let contentBox
+    // 判断content内容是否是data:image/开头的数组
+    if (Array.isArray(content)) {
+      // 获取总共有多少张图片
+      const imageCount = content.length
+      // 获取第一个data:image/开头的图片
+      content = content.find((item: string) => item.startsWith('data:image/'))
+      reply.value.imgCount = imageCount
+    }
+    console.log(content)
+
+    // todo: 暂时用http开头的图片判断，后续需要优化
+    if (content.startsWith('http')) {
+      // 再创建一个img标签节点，并设置src属性为base64编码的图片
+      contentBox = document.createElement('img')
+      contentBox.src = content
+      contentBox.style.cssText = `
+        max-width: 55px;
+        max-height: 55px;
+        border-radius: 4px;
+        cursor: default;
+        user-select: none;
+        pointer-events: none;
+      `
+      // 将img标签节点插入到div标签节点中
+      replyNode.appendChild(contentBox)
+      // 把图片传入到reply的content属性中
+      reply.value.content = content
+    } else {
+      // 判断是否有@标签
+      if (content.includes('id="aitSpan"')) {
+        // 去掉content中的标签
+        content = removeTag(content)
+      }
+      // 把正文放到span标签中，并设置span标签的样式
+      contentBox = document.createElement('span')
+      contentBox.style.cssText = `
+      font-size: 12px;
+      color: var(--text-color);
+      cursor: default;
+      width: fit-content;
+      max-width: 350px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      user-select: none;
+      pointer-events: none;
+    `
+      contentBox.appendChild(document.createTextNode(content))
+    }
+    // 在回复信息的右边添加一个关闭信息的按钮
+    const closeBtn = document.createElement('span')
+    closeBtn.id = 'closeBtn'
+    closeBtn.style.cssText = `
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+      color: #999;
+      cursor: pointer;
+      margin-left: 10px;
+      flex-shrink: 0;
+      user-select: none;
+      pointer-events: auto; /* 确保关闭按钮可以点击 */
+    `
+    closeBtn.textContent = '关闭'
+    closeBtn.addEventListener('click', () => {
+      replyNode.remove()
+      const messageInput = document.getElementById('message-input') as HTMLElement
+      // 移除messageInput的最前面的空格节点，获取空格后面的内容
+      messageInput.textContent = messageInput.textContent!.trim()
+      // 创建并初始化 range 对象
+      const range = document.createRange()
+      range.selectNodeContents(messageInput)
+      range.collapse(false) // 将光标移动到末尾
+      // 将光标设置到 messageInput 的末尾
+      const selection = window.getSelection()
+      selection?.removeAllRanges()
+      selection?.addRange(range)
+      triggerInputEvent(messageInput)
+      reply.value = { avatar: '', imgCount: 0, accountName: '', content: '', key: 0 }
+    })
+    // 为头像和标题创建容器
+    const headerContainer = document.createElement('div')
+    headerContainer.style.cssText = `
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      `
+    // 在容器中添加头像和标题
+    headerContainer.appendChild(imgNode)
+    headerContainer.appendChild(headerNode)
+
+    // 将容器添加到主div中
+    replyNode.appendChild(headerContainer)
+    replyNode.appendChild(contentNode)
+    contentNode.appendChild(contentBox)
+    contentNode.appendChild(closeBtn)
+    return replyNode
   }
 
   /**

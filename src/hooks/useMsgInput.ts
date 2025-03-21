@@ -9,17 +9,60 @@ import { useMitt } from '@/hooks/useMitt.ts'
 import { type } from '@tauri-apps/plugin-os'
 import { useDebounceFn } from '@vueuse/core'
 import { Ref } from 'vue'
-import { useCommon } from './useCommon.ts'
+import { SelectionRange, useCommon } from './useCommon.ts'
 import { readText, readImage } from '@tauri-apps/plugin-clipboard-manager'
 import Database from '@tauri-apps/plugin-sql'
 import { messageStrategyMap } from '@/strategy/MessageStrategy.ts'
 import { useTrigger } from './useTrigger'
 import type { AIModel } from '@/services/types.ts'
 
+/**
+ * 光标管理器
+ */
+export function useCursorManager() {
+  /**
+   * 记录当前光标范围
+   */
+  let cursorSelectionRange: SelectionRange | null = null
+  /**
+   * 记录当前编辑器的选取范围
+   * ps: 任何修改了原因导致焦点移动，都应该更新，无论如何
+   */
+  function updateSelectionRange(sr: SelectionRange | null) {
+    cursorSelectionRange = sr
+  }
+
+  function getCursorSelectionRange() {
+    return cursorSelectionRange
+  }
+
+  /**
+   * 聚焦制定的编辑器元素
+   * @param editor 可聚焦的编辑器元素
+   */
+  function focusOn(editor: HTMLElement) {
+    editor.focus()
+
+    const selection = window.getSelection()
+    if (!selection) return
+    const selectionRange = getCursorSelectionRange()
+    if (!selectionRange) return
+
+    const range = document.createRange()
+    range.selectNodeContents(editor)
+    range.collapse(false)
+    selection?.removeAllRanges()
+    selection?.addRange(selectionRange.range)
+  }
+
+  return { getCursorSelectionRange, updateSelectionRange, focusOn }
+}
+
 export const useMsgInput = (messageInputDom: Ref) => {
   const chatStore = useChatStore()
   const globalStore = useGlobalStore()
   const cachedStore = useCachedStore()
+  const { getCursorSelectionRange, updateSelectionRange, focusOn } = useCursorManager()
   const { triggerInputEvent, insertNode, getMessageContentType, getEditorRange, imgPaste, reply, userUid } = useCommon()
   const settingStore = useSettingStore()
   const { chat } = storeToRefs(settingStore)
@@ -601,14 +644,14 @@ export const useMsgInput = (messageInputDom: Ref) => {
       }
       if (messageInputDom.value) {
         nextTick().then(() => {
-          messageInputDom.value.focus()
+          focusOn(messageInputDom.value)
           // 插入回复框
           insertNode(
             MsgEnum.REPLY,
             { avatar: avatar, accountName: accountName, content: reply.value.content },
             {} as HTMLElement
           )
-          triggerInputEvent(messageInputDom.value)
+          updateSelectionRange(getEditorRange())
         })
       }
     })
@@ -638,6 +681,9 @@ export const useMsgInput = (messageInputDom: Ref) => {
     topicDialogVisible,
     topicKeyword,
     topicList,
-    groupedAIModels
+    groupedAIModels,
+    getCursorSelectionRange,
+    updateSelectionRange: () => updateSelectionRange(getEditorRange()),
+    focusOn
   }
 }
