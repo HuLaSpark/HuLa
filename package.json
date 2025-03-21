@@ -69,7 +69,7 @@
     "@tauri-apps/plugin-process": "2.2.0",
     "@tauri-apps/plugin-shell": "^2.2.0",
     "@tauri-apps/plugin-sql": "^2.2.0",
-    "@tauri-apps/plugin-updater": "2.5.0",
+    "@tauri-apps/plugin-updater": "2.5.1",
     "colorthief": "^2.6.0",
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.11",
