@@ -159,7 +159,7 @@ import { useSettingStore } from '@/stores/setting.ts'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { sendOptions } from '@/views/moreWindow/settings/config.ts'
 import { useMsgInput } from '@/hooks/useMsgInput.ts'
-import { SelectionRange, useCommon } from '@/hooks/useCommon.ts'
+import { useCommon } from '@/hooks/useCommon.ts'
 import { onKeyStroke } from '@vueuse/core'
 import { type } from '@tauri-apps/plugin-os'
 import { useUserInfo } from '@/hooks/useCached.ts'
@@ -184,7 +184,7 @@ const virtualListInstAI = useTemplateRef<VirtualListInst>('virtualListInst-AI')
 const isEntering = computed(() => {
   return msgInput.value === ''
 })
-const { handlePaste, getEditorRange } = useCommon()
+const { handlePaste } = useCommon()
 
 const onPaste = (e: ClipboardEvent) => {
   if (messageInputDom.value) handlePaste(e, messageInputDom.value)
@@ -193,12 +193,7 @@ const onPaste = (e: ClipboardEvent) => {
 /**
  * 记录编辑器最后选取范围
  */
-let currentSelectionRange: SelectionRange | null = null
-
-/**
- * 记录当前编辑器的选取范围
- */
-const updateSelectionRange = () => (currentSelectionRange = getEditorRange())
+// let currentSelectionRange: SelectionRange | null = null
 
 /** 引入useMsgInput的相关方法 */
 const {
@@ -216,7 +211,10 @@ const {
   chatKey,
   menuList,
   selectedAitKey,
-  groupedAIModels
+  groupedAIModels,
+  getCursorSelectionRange,
+  updateSelectionRange,
+  focusOn
 } = useMsgInput(messageInputDom)
 
 /** 当切换聊天对象时，重新获取焦点 */
@@ -325,23 +323,11 @@ onUnmounted(() => {
  */
 function focus() {
   const editor = messageInputDom.value
-  if (!editor) return
-  editor.focus()
-
-  const selection = window.getSelection()
-  if (!selection) return
-  const selectionRange = currentSelectionRange
-  if (!selectionRange) return
-
-  const range = document.createRange()
-  range.selectNodeContents(editor)
-  range.collapse(false)
-  selection?.removeAllRanges()
-  selection?.addRange(selectionRange.range)
+  if (editor) focusOn(editor)
 }
 
 /** 导出组件方法和属性 */
-defineExpose({ messageInputDom, getLastEditRange: () => currentSelectionRange, updateSelectionRange, focus })
+defineExpose({ messageInputDom, getLastEditRange: () => getCursorSelectionRange(), updateSelectionRange, focus })
 </script>
 
 <style scoped lang="scss">
