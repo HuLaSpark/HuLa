@@ -16,13 +16,9 @@
         @keyup="updateSelectionRange"
         @click="updateSelectionRange"
         @compositionend="updateSelectionRange"
-        @keydown.exact.ctrl.enter="inputKeyDown"></div>
-      <span
-        v-if="isEntering"
-        @click.stop="messageInputDom?.focus()"
-        class="absolute select-none top-8px left-6px w-fit text-(12px #777)">
-        输入 / 唤起 AI 助手
-      </span>
+        @keydown.exact.ctrl.enter="inputKeyDown"
+        data-placeholder="输入 / 唤起 AI 助手"
+        class="empty:before:content-[attr(data-placeholder)] before:text-(12px #777)"></div>
     </n-scrollbar>
   </ContextMenu>
 
@@ -180,10 +176,7 @@ const activeItem = ref(inject('activeItem') as SessionItem)
 const virtualListInstAit = useTemplateRef<VirtualListInst>('virtualListInst-ait')
 /** AI 虚拟列表 */
 const virtualListInstAI = useTemplateRef<VirtualListInst>('virtualListInst-AI')
-/** 是否处于输入状态 */
-const isEntering = computed(() => {
-  return msgInput.value === ''
-})
+
 const { handlePaste, getEditorRange } = useCommon()
 
 const onPaste = (e: ClipboardEvent) => {
@@ -212,7 +205,6 @@ const {
   ait,
   aiDialogVisible,
   selectedAIKey,
-  msgInput,
   chatKey,
   menuList,
   selectedAitKey,
