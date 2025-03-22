@@ -141,13 +141,14 @@
                 :class="item.fromUser.uid === userUid ? 'ml-8px' : 'mr-8px'">
                 <use :href="item.fromUser.uid === userUid ? `#corner-down-left` : `#corner-down-right`"></use>
               </svg>
-              <!-- 头像  -->
+              <!-- 头像 -->
               <n-popover
                 @update:show="handlePopoverUpdate(item.message.id, $event)"
-                trigger="click"
+                trigger="manual"
                 placement="right"
                 :show-arrow="false"
-                v-model:show="infoPopover"
+                :show="infoPopover"
+                :on-clickoutside="() => (infoPopover = !infoPopover)"
                 style="padding: 0; background: var(--bg-info)">
                 <template #trigger>
                   <ContextMenu
@@ -159,7 +160,12 @@
                     <n-avatar
                       round
                       :size="34"
-                      @click="selectKey = item.message.id"
+                      @click="
+                        () => {
+                          selectKey = item.message.id
+                          infoPopover = !infoPopover
+                        }
+                      "
                       class="select-none"
                       :src="getAvatarSrc(item.fromUser.uid)"
                       :class="item.fromUser.uid === userUid ? '' : 'mr-10px'" />
