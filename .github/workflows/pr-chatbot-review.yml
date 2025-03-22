@@ -83,8 +83,10 @@ jobs:
             const OpenAI = require('openai');
 
             const openai = new OpenAI({
-              apiKey: process.env.DASHSCOPE_API_KEY,
-              baseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+              baseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+              defaultHeaders: {
+                'Authorization': `Bearer ${process.env.DASHSCOPE_API_KEY}`
+              }
             });
 
             const diff = process.env.DIFF;
@@ -116,15 +118,31 @@ jobs:
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: `
-                PR 代码分析
+                body: `## PR 代码分析
 
                 ${analysis}
 
+                ---
                 *这是由通义千问 AI 自动生成的 PR 分析，仅供参考。*`
               });
             } catch (error) {
-              core.setFailed(`分析失败: ${error.message}`);
+              console.error('API 调用失败:', error);
+              core.setFailed(`PR 分析失败: ${error.message}`);
+              
+              // 在 PR 中添加错误信息
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `## PR 代码分析失败
+
+                很抱歉，在分析过程中遇到了错误：${error.message}
+
+                请检查 Action 日志以获取更多详细信息。
+
+                ---
+                *这是自动生成的错误通知。*`
+              });
             }
 
       - name: Skip Analysis Comment
