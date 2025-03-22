@@ -501,7 +501,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       return
     }
     // 先确保输入框获得焦点
-    messageInputDom.value?.focus()
+    focusOn(messageInputDom.value)
     // 先获取并保存当前的编辑器范围
     const { range: currentRange, selection: currentSelection } = getEditorRange()!
     editorRange.value = { range: currentRange, selection: currentSelection }
@@ -539,7 +539,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       return
     }
     // 先确保输入框获得焦点
-    messageInputDom.value?.focus()
+    focusOn(messageInputDom.value)
     // 先获取并保存当前的编辑器范围
     const { range: currentRange, selection: currentSelection } = getEditorRange()!
     editorRange.value = { range: currentRange, selection: currentSelection }
