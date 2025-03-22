@@ -66,10 +66,11 @@
       <template #default="{ item }">
         <n-popover
           @update:show="handlePopoverUpdate(item.uid, $event)"
-          trigger="click"
+          trigger="manual"
           placement="left"
           :show-arrow="false"
-          v-model:show="infoPopover"
+          :show="infoPopover"
+          :on-clickoutside="() => (infoPopover = !infoPopover)"
           style="padding: 0; background: var(--bg-info)">
           <template #trigger>
             <ContextMenu
@@ -78,7 +79,12 @@
               :menu="optionsList"
               :special-menu="report">
               <n-flex
-                @click="selectKey = item.uid"
+                @click="
+                  () => {
+                    selectKey = item.uid
+                    infoPopover = !infoPopover
+                  }
+                "
                 :key="item.uid"
                 :size="10"
                 align="center"
