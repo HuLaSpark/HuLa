@@ -1,7 +1,6 @@
 // 发消息给主进程
 import { ConnectionState, WorkerMsgEnum } from '@/enums'
 
-let { VITE_WEBSOCKET_URL } = import.meta.env
 const postMsg = ({ type, value }: { type: string; value?: object }) => {
   self.postMessage(JSON.stringify({ type, value }))
 }
@@ -19,6 +18,8 @@ let lockReconnect = false
 let token: null | string = null
 
 let clientId: null | string = null
+
+let serverUrl: null | string = null
 
 // 往 ws 发消息
 const connectionSend = (value: object) => {
@@ -130,27 +131,7 @@ const initConnection = () => {
   // 建立链接
   // 本地配置到 .env 里面修改。生产配置在 .env.production 里面
   if (!connection) {
-    const savedProxy = localStorage.getItem('proxySettings')
-    if (savedProxy) {
-      const settings = JSON.parse(savedProxy)
-      const suffix = settings.ip + ':' + settings.port + '/websocket'
-      switch (settings.type) {
-        case '':
-          break
-        case 'http':
-          VITE_WEBSOCKET_URL = 'http://' + suffix
-          break
-        case 'https':
-          VITE_WEBSOCKET_URL = 'https://' + suffix
-          break
-        case 'socket5':
-          VITE_WEBSOCKET_URL = 'socket5://' + suffix
-          break
-        default:
-          break
-      }
-    }
-    connection = new WebSocket(`${VITE_WEBSOCKET_URL}?clientId=${clientId}${token ? `&token=${token}` : ''}`)
+    connection = new WebSocket(`${serverUrl}?clientId=${clientId}${token ? `&token=${token}` : ''}`)
   }
   // 收到消息
   connection.addEventListener('message', onConnectMsg)
@@ -178,6 +159,7 @@ self.onmessage = (e: MessageEvent<string>) => {
       reconnectCount = 0
       token = value['token']
       clientId = value['clientId']
+      serverUrl = value['serverUrl']
       initConnection()
       break
     }
