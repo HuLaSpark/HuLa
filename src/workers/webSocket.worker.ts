@@ -1,6 +1,7 @@
 // 发消息给主进程
 import { ConnectionState, WorkerMsgEnum } from '@/enums'
 
+let { VITE_WEBSOCKET_URL } = import.meta.env
 const postMsg = ({ type, value }: { type: string; value?: object }) => {
   self.postMessage(JSON.stringify({ type, value }))
 }
@@ -129,9 +130,27 @@ const initConnection = () => {
   // 建立链接
   // 本地配置到 .env 里面修改。生产配置在 .env.production 里面
   if (!connection) {
-    connection = new WebSocket(
-      `${import.meta.env.VITE_WEBSOCKET_URL}?clientId=${clientId}${token ? `&token=${token}` : ''}`
-    )
+    const savedProxy = localStorage.getItem('proxySettings')
+    if (savedProxy) {
+      const settings = JSON.parse(savedProxy)
+      const suffix = settings.ip + ':' + settings.port + '/websocket'
+      switch (settings.type) {
+        case '':
+          break
+        case 'http':
+          VITE_WEBSOCKET_URL = 'http://' + suffix
+          break
+        case 'https':
+          VITE_WEBSOCKET_URL = 'https://' + suffix
+          break
+        case 'socket5':
+          VITE_WEBSOCKET_URL = 'socket5://' + suffix
+          break
+        default:
+          break
+      }
+    }
+    connection = new WebSocket(`${VITE_WEBSOCKET_URL}?clientId=${clientId}${token ? `&token=${token}` : ''}`)
   }
   // 收到消息
   connection.addEventListener('message', onConnectMsg)

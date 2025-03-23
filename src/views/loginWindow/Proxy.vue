@@ -9,17 +9,17 @@
         <p class="text-12px">类型</p>
         <n-select class="min-w-240px" v-model:value="proxyType" :options="options" />
 
-        <n-collapse-transition :show="proxyType === 'http'">
+        <n-collapse-transition :show="proxyType === 'http' || proxyType === 'https'">
           <n-flex vertical :size="10" justify="center">
             <p class="text-12px pt-14px">IP地址</p>
-            <n-input class="rounded-6px text-12px" v-model:value="IP" type="text" placeholder="例如：127.0.0.1" />
-
-            <p class="text-12px pt-14px">端口号</p>
             <n-input
               class="rounded-6px text-12px"
-              v-model:value="port"
+              v-model:value="IP"
               type="text"
-              placeholder="HTTP:7890 或 SOCKS5:7891" />
+              placeholder="例如：127.0.0.1或hulaspark.com" />
+
+            <p class="text-12px pt-14px">端口号</p>
+            <n-input class="rounded-6px text-12px" v-model:value="port" type="text" placeholder="443" />
           </n-flex>
 
           <p @click="proxyTest" class="text-(14px #13987f center) cursor-pointer pt-20px">网络代理测试</p>
@@ -46,6 +46,10 @@ const options = [
   {
     label: 'HTTP代理',
     value: 'http'
+  },
+  {
+    label: 'HTTPS代理',
+    value: 'https'
   },
   {
     label: 'SOCKS5代理',

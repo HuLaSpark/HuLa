@@ -2,10 +2,8 @@ use reqwest::{Client, Proxy};
 use std::time::Duration;
 
 // 定义测试用的URL列表
-const TEST_URLS: [&str; 3] = [
-    "https://www.baidu.com",
-    "https://www.bing.com",
-    "https://www.qq.com",
+const TEST_URLS: [&str; 1] = [
+    "/api/system/config/init",
 ];
 
 #[tauri::command]
@@ -16,6 +14,7 @@ pub async fn test_proxy(proxy_type: String, proxy_host: String, proxy_port: u16)
 
     let proxy_url = match proxy_type.as_str() {
         "http" => format!("http://{}:{}", proxy_host, proxy_port),
+        "https" => format!("https://{}:{}", proxy_host, proxy_port),
         "socks5" => format!("socks5://{}:{}", proxy_host, proxy_port),
         _ => return Err("不支持的代理类型".to_string()),
     };
@@ -29,7 +28,7 @@ pub async fn test_proxy(proxy_type: String, proxy_host: String, proxy_port: u16)
 
     // 依次测试多个URL，直到有一个成功
     for url in TEST_URLS.iter() {
-        match test_url(&client, url).await {
+        match test_url(&client, format!("{}{}",proxy_url.as_str(), url).as_str()).await {
             Ok(_) => return Ok(true),
             Err(e) => {
                 println!("测试 {} 失败: {}", url, e);
