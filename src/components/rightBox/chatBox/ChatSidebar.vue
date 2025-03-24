@@ -65,11 +65,11 @@
       :items="filteredUserList">
       <template #default="{ item }">
         <n-popover
+          ref="infoPopover"
           @update:show="handlePopoverUpdate(item.uid, $event)"
           trigger="click"
           placement="left"
           :show-arrow="false"
-          v-model:show="infoPopover"
           style="padding: 0; background: var(--bg-info)">
           <template #trigger>
             <ContextMenu
@@ -187,7 +187,7 @@ const isGroup = computed(() => globalStore.currentSession?.type === RoomTypeEnum
 const isSearch = ref(false)
 const searchRef = ref('')
 /** 手动触发Popover显示 */
-const infoPopover = ref(false)
+const infoPopover = ref()
 const inputInstRef = ref<InputInst | null>(null)
 const isCollapsed = ref(true)
 const { optionsList, report, selectKey } = useChatMain()
@@ -295,7 +295,7 @@ const getUserState = (stateId: string) => {
 onMounted(async () => {
   useMitt.on(`${MittEnum.INFO_POPOVER}-Sidebar`, (event: any) => {
     selectKey.value = event.uid
-    infoPopover.value = true
+    infoPopover.value.setShow(true)
     handlePopoverUpdate(event.uid)
   })
 

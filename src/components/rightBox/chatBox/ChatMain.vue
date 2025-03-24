@@ -141,13 +141,13 @@
                 :class="item.fromUser.uid === userUid ? 'ml-8px' : 'mr-8px'">
                 <use :href="item.fromUser.uid === userUid ? `#corner-down-left` : `#corner-down-right`"></use>
               </svg>
-              <!-- 头像  -->
+              <!-- 头像 -->
               <n-popover
+                ref="infoPopoverRef"
                 @update:show="handlePopoverUpdate(item.message.id, $event)"
                 trigger="click"
                 placement="right"
                 :show-arrow="false"
-                v-model:show="infoPopover"
                 style="padding: 0; background: var(--bg-info)">
                 <template #trigger>
                   <ContextMenu
@@ -471,7 +471,7 @@ const itemSize = computed(() => (chatStore.isGroup ? 90 : 76))
 /** 虚拟列表 */
 const virtualListInst = useTemplateRef<VirtualListExpose>('virtualListInst')
 /** 手动触发Popover显示 */
-const infoPopover = ref(false)
+const infoPopover = ref()
 // 是否显示滚动条
 const showScrollbar = ref(false)
 // 记录 requestAnimationFrame 的返回值
@@ -897,7 +897,7 @@ onMounted(async () => {
   })
   useMitt.on(`${MittEnum.INFO_POPOVER}-Main`, (event: any) => {
     selectKey.value = event.uid
-    infoPopover.value = true
+    infoPopover.value.setShow(true)
     handlePopoverUpdate(event.uid)
   })
   useMitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
