@@ -4,18 +4,12 @@ let { VITE_SERVICE_URL } = import.meta.env
 const savedProxy = localStorage.getItem('proxySettings')
 if (savedProxy) {
   const settings = JSON.parse(savedProxy)
-  const suffix = settings.ip + ':' + settings.port + '/api'
-  switch (settings.type) {
-    case '':
-      break
+  const suffix = settings.apiIp + ':' + settings.apiPort + '/' + settings.apiSuffix
+  switch (settings.apiType) {
     case 'http':
-      VITE_SERVICE_URL = 'http://' + suffix
-      break
     case 'https':
-      VITE_SERVICE_URL = 'https://' + suffix
-      break
     case 'socket5':
-      VITE_SERVICE_URL = 'socket5://' + suffix
+      VITE_SERVICE_URL = settings.apiType + '://' + suffix
       break
     default:
       break

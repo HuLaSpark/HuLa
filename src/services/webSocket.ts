@@ -87,21 +87,9 @@ class WS {
     let serverUrl = import.meta.env.VITE_WEBSOCKET_URL
     if (savedProxy) {
       const settings = JSON.parse(savedProxy)
-      const suffix = settings.ip + ':' + settings.port + '/websocket'
-      switch (settings.type) {
-        case '':
-          break
-        case 'http':
-          serverUrl = 'ws://' + suffix
-          break
-        case 'https':
-          serverUrl = 'wss://' + suffix
-          break
-        case 'socket5':
-          serverUrl = 'socket5://' + suffix
-          break
-        default:
-          break
+      const suffix = settings.wsIp + ':' + settings.wsPort + '/' + settings.wsSuffix
+      if (settings.wsType === 'ws' || settings.wsType === 'wss') {
+        serverUrl = settings.wsType + '://' + suffix
       }
     }
     // 初始化 ws
