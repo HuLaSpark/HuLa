@@ -111,7 +111,8 @@
                 :get-show="getShow"
                 :append="true"
                 clearable
-                atocomplete="off"
+                type="text"
+                autocomplete="off"
                 @focus="handleInputState($event, 'email')"
                 @blur="handleInputState($event, 'email')">
                 <template #prefix v-if="showemailPrefix || info.email">

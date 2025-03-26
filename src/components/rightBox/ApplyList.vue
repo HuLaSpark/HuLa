@@ -41,6 +41,8 @@
                         : '请求加为好友'
                     }}
                   </p>
+
+                  <p class="text-(10px #909090)">{{ formatTimestamp(item.createTime) }}</p>
                 </n-flex>
                 <p v-show="item.msg" class="text-(12px [--text-color])">留言：{{ item.msg }}</p>
               </n-flex>
@@ -100,6 +102,7 @@ import { useUserInfo } from '@/hooks/useCached.ts'
 import { RequestFriendAgreeStatus } from '@/services/types.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { useUserStore } from '@/stores/user'
+import { formatTimestamp } from '@/utils/ComputedTime.ts'
 
 const userStore = useUserStore()
 const contactStore = useContactStore()

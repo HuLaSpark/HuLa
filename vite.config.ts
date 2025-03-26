@@ -35,7 +35,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       }
     },
     plugins: [
-      vueDevTools(), // enable vue-devtools
+      vueDevTools(), // 有时候会导致清理存储没有完全清理
       /**
        * vue3.5.0已支持解构并具有响应式
        * */

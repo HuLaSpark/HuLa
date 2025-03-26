@@ -413,7 +413,7 @@ export const useChatStore = defineStore(
         currentMessageOptions.value.isLoading = false
       }
 
-      // 保存消息到localStorage
+      // 消息发送成功才保存消息到localStorage
       saveMessagesToStorage(requestRoomId)
     }
 

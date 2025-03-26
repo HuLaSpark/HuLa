@@ -110,6 +110,8 @@ export type GroupListReq = {
   roomName: string
   /** 群头像 */
   avatar: string
+  /** 群备注 */
+  remark?: string
 }
 
 export type CacheBadgeItem = {
@@ -174,6 +176,8 @@ export type UserItem = {
   roleId?: number
   /** 账号 */
   account: string
+  /** 我的群昵称 */
+  myName?: string
 }
 
 export type GroupStatisticType = {
@@ -508,6 +512,12 @@ export type SessionItem = {
   muteNotification: NotificationTypeEnum
   /** 屏蔽消息 */
   shield: boolean
+  /** 群成员数 */
+  memberNum?: number
+  /** 群备注 */
+  remark?: string
+  /** 我的群昵称 */
+  myName?: string
 }
 
 /** 消息已读未读数列表项 */
@@ -580,6 +590,25 @@ export type SearchGroup = {
   extJson: string
   /** 是否删除 */
   deleteStatus: IsYesEnum
+}
+
+/** 配置 */
+export type ConfigType = {
+  /** logo */
+  logo: string
+  /** 系统名称 */
+  name: string
+  /** 七牛 */
+  qiNiu: {
+    /** oss域名 */
+    ossDomain: string
+    /** 分片大小 */
+    fragmentSize: string
+    /** 超过多少MB开启分片上传 */
+    turnSharSize: string
+  }
+  /** 大群ID */
+  roomGroupId: string
 }
 
 /* ======================================================== */

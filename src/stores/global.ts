@@ -32,7 +32,7 @@ export const useGlobalStore = defineStore(
     /** 当前选中的联系人信息 */
     const currentSelectedContact = ref<ContactItem | RequestFriendItem>()
 
-    // 添加好友模态框信息
+    // 添加好友模态框信息 TODO: 虚拟列表添加好友有时候会不展示对应的用户信息
     const addFriendModalInfo = ref<{ show: boolean; uid?: string }>({
       show: false,
       uid: void 0

@@ -25,7 +25,8 @@ import {
   UserState,
   Login,
   SearchFriend,
-  SearchGroup
+  SearchGroup,
+  ConfigType
 } from '@/services/types'
 
 import request from '@/services/request'
@@ -166,5 +167,15 @@ export default {
   /** 获取所有用户状态 */
   getAllUserState: () => GET<UserState[]>(urls.getAllUserState),
   /** 用户状态改变 */
-  changeUserState: (userStateId: string) => POST(`${urls.changeUserState}/${userStateId}`)
+  changeUserState: (userStateId: string) => POST(`${urls.changeUserState}/${userStateId}`),
+  /** 初始化配置 */
+  initConfig: () => GET<ConfigType>(urls.initConfig),
+  /** 获取七牛token */
+  getQiniuToken: () =>
+    GET<{
+      storagePrefix: string
+      domain: string
+      token: string
+      region?: string
+    }>(urls.getQiniuToken)
 }

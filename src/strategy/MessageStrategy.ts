@@ -3,19 +3,25 @@ import { MessageType } from '@/services/types.ts'
 import { AppException } from '@/common/exception.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { Ref } from 'vue'
-import { parseInnerText } from '@/hooks/useCommon.ts'
-import apis from '@/services/apis.ts'
+import { parseInnerText, useCommon } from '@/hooks/useCommon.ts'
 import { BaseDirectory, readFile } from '@tauri-apps/plugin-fs'
 import DOMPurify from 'dompurify'
+import { useUpload, UploadProviderEnum, UploadOptions } from '@/hooks/useUpload'
 
 interface MessageStrategy {
   getMsg: (msgInputValue: string, replyValue: any, fileList?: File[]) => any
   buildMessageBody: (msg: any, reply: any) => any
   buildMessageType: (messageId: string, messageBody: any, globalStore: any, userUid: Ref<any>) => MessageType
-  uploadFile: (path: string) => Promise<{ uploadUrl: string; downloadUrl: string }>
-  doUpload: (path: string, uploadUrl: string) => Promise<void>
+  uploadFile: (
+    path: string,
+    options?: { provider?: UploadProviderEnum }
+  ) => Promise<{ uploadUrl: string; downloadUrl: string; config?: any }>
+  doUpload: (path: string, uploadUrl: string, options?: any) => Promise<{ qiniuUrl?: string } | void>
 }
 
+/**
+ * 消息策略抽象类，所有消息策略都必须实现这个接口
+ */
 abstract class AbstractMessageStrategy implements MessageStrategy {
   public readonly msgType: MsgEnum
 
@@ -55,19 +61,17 @@ abstract class AbstractMessageStrategy implements MessageStrategy {
 
   abstract getMsg(msgInputValue: string, replyValue: any, fileList?: File[]): any
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  uploadFile(_path: string): Promise<{ uploadUrl: string; downloadUrl: string }> {
+  uploadFile(
+    path: string,
+    options?: { provider?: UploadProviderEnum }
+  ): Promise<{ uploadUrl: string; downloadUrl: string }> {
+    console.log('Base uploadFile method called with:', path, options)
     throw new AppException('该消息类型不支持文件上传')
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  doUpload(_path: string, _uploadUrl: string): Promise<void> {
+  doUpload(path: string, uploadUrl: string, options?: any): Promise<{ qiniuUrl?: string } | void> {
+    console.log('Base doUpload method called with:', path, uploadUrl, options)
     throw new AppException('该消息类型不支持文件上传')
-  }
-
-  getUpLoadUrl(file: File): any {
-    file?.name
-    //todo 实现文件上传
   }
 }
 
@@ -75,18 +79,15 @@ abstract class AbstractMessageStrategy implements MessageStrategy {
  * 处理文本消息
  */
 class TextMessageStrategyImpl extends AbstractMessageStrategy {
-  private domParser: DOMParser
-
   constructor() {
     super(MsgEnum.TEXT)
-    this.domParser = new DOMParser()
   }
 
-  getMsg(msgInputValue: string, replyValue: any, fileList?: File[]): any {
-    fileList
+  getMsg(msgInputValue: string, replyValue: any): any {
+    const { removeTag } = useCommon()
     const msg = {
       type: this.msgType,
-      content: this.removeTag(msgInputValue),
+      content: removeTag(msgInputValue),
       reply: replyValue.content
         ? {
             content: replyValue.content,
@@ -102,7 +103,7 @@ class TextMessageStrategyImpl extends AbstractMessageStrategy {
       if (replyDiv) {
         replyDiv.parentNode?.removeChild(replyDiv)
       }
-      tempDiv.innerHTML = DOMPurify.sanitize(this.removeTag(tempDiv.innerHTML))
+      tempDiv.innerHTML = DOMPurify.sanitize(removeTag(tempDiv.innerHTML))
       tempDiv.innerHTML = tempDiv.innerHTML.replace(/^\s*&nbsp;/, '')
       msg.content = tempDiv.innerHTML
     }
@@ -127,24 +128,25 @@ class TextMessageStrategyImpl extends AbstractMessageStrategy {
         : void 0
     }
   }
-
-  /** 去除字符串中的元素标记
-   *  不是html元素节点返回原字符串
-   * */
-  private removeTag(message: string): string {
-    return this.domParser.parseFromString(message, 'text/html').body.textContent || message
-  }
 }
 
 /** 处理图片消息 */
 class ImageMessageStrategyImpl extends AbstractMessageStrategy {
-  private readonly MAX_UPLOAD_SIZE = 2 * 1024 * 1024 // 2MB in bytes
+  // 最大上传文件大小 2MB
+  private readonly MAX_UPLOAD_SIZE = 2 * 1024 * 1024
+  // 支持的图片类型
   private readonly ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+  private uploadHook = useUpload()
 
   constructor() {
     super(MsgEnum.IMAGE)
   }
 
+  /**
+   * 验证图片文件是否符合上传条件要求
+   * @param file 图片文件
+   * @returns 验证后的图片文件
+   */
   private async validateImage(file: File): Promise<File> {
     // 检查文件类型
     if (!this.ALLOWED_TYPES.includes(file.type)) {
@@ -159,7 +161,11 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
     return file
   }
 
-  // 获取图片信息
+  /**
+   * 获取图片信息(宽度、高度、预览地址)
+   * @param file 图片文件
+   * @returns 图片信息
+   */
   private getImageInfo(file: File): Promise<{ width: number; height: number; previewUrl: string }> {
     return new Promise((resolve, reject) => {
       const img = new Image()
@@ -182,6 +188,11 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
     })
   }
 
+  /**
+   * 检查是否是有效的图片URL
+   * @param url 图片地址
+   * @returns 是否是有效的图片URL
+   */
   private isImageUrl(url: string): boolean {
     // 检查是否是有效的URL
     try {
@@ -193,7 +204,11 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
     }
   }
 
-  // 获取表情图片信息
+  /**
+   * 获取表情图片信息(宽度、高度、大小)
+   * @param url 图片地址
+   * @returns 图片信息
+   */
   private getRemoteImageInfo(url: string): Promise<{ width: number; height: number; size: number }> {
     return new Promise((resolve, reject) => {
       const img = new Image()
@@ -228,8 +243,15 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
     })
   }
 
-  async getMsg(msgInputValue: string, replyValue: any): Promise<any> {
-    console.log('开始处理图片消息:', msgInputValue, replyValue)
+  /**
+   * 处理图片消息
+   * @param msgInputValue 图片消息内容
+   * @param replyValue 回复消息
+   * @param fileList 附件文件列表
+   * @returns 处理后的消息
+   */
+  async getMsg(msgInputValue: string, replyValue: any, fileList?: File[]): Promise<any> {
+    console.log('开始处理图片消息:', msgInputValue, replyValue, fileList?.length ? '有附件文件' : '无附件文件')
 
     // 检查是否是图片URL
     if (this.isImageUrl(msgInputValue)) {
@@ -314,7 +336,11 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
     }
   }
 
-  // 根据文件名获取文件类型
+  /**
+   * 根据文件名获取文件类型
+   * @param fileName 文件名
+   * @returns 文件类型
+   */
   private getFileType(fileName: string): string {
     const extension = fileName.split('.').pop()?.toLowerCase()
     switch (extension) {
@@ -330,7 +356,16 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
     }
   }
 
-  async uploadFile(path: string): Promise<{ uploadUrl: string; downloadUrl: string }> {
+  /**
+   * 上传文件
+   * @param path 文件路径
+   * @param options 上传选项
+   * @returns 上传结果
+   */
+  async uploadFile(
+    path: string,
+    options?: { provider?: UploadProviderEnum }
+  ): Promise<{ uploadUrl: string; downloadUrl: string; config?: any }> {
     // 如果是URL，直接返回相同的URL作为下载链接
     if (this.isImageUrl(path)) {
       return {
@@ -339,55 +374,44 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
       }
     }
 
-    // 原有的本地文件上传逻辑
+    // 使用useUpload hook获取上传和下载URL
     console.log('开始上传图片:', path)
-    const fileName = path.split('/').pop()
-    if (!fileName) {
-      throw new AppException('文件解析出错')
-    }
-
     try {
-      const res = await apis.getUploadUrl({
-        fileName: fileName,
+      const uploadOptions: UploadOptions = {
+        provider: options?.provider || UploadProviderEnum.QINIU,
         scene: UploadSceneEnum.CHAT
-      })
+      }
 
-      console.log('获取上传链接成功:', res)
-      return res
+      const result = await this.uploadHook.getUploadAndDownloadUrl(path, uploadOptions)
+      return result
     } catch (error) {
       console.error('获取上传链接失败:', error)
       throw new AppException('获取上传链接失败，请重试')
     }
   }
 
-  // 执行实际的文件上传
-  async doUpload(path: string, uploadUrl: string): Promise<void> {
+  /**
+   * 执行实际的文件上传
+   * @param path 文件路径
+   * @param uploadUrl 上传URL
+   * @param options 上传选项
+   * @returns 上传结果
+   */
+  async doUpload(path: string, uploadUrl: string, options?: any): Promise<{ qiniuUrl?: string } | void> {
     // 如果是URL，跳过上传
     if (this.isImageUrl(path)) {
       return
     }
 
-    // 原有的上传逻辑
+    // 使用useUpload hook执行上传
     console.log('执行文件上传:', path)
     try {
-      const file = await readFile(path, { baseDir: BaseDirectory.AppCache })
-
-      // 添加文件大小检查
-      if (file.length > this.MAX_UPLOAD_SIZE) {
-        throw new AppException('图片大小不能超过2MB')
+      // enableDeduplication启用文件去重
+      const result = await this.uploadHook.doUpload(path, uploadUrl, { ...options, enableDeduplication: true })
+      // 如果是七牛云上传，返回qiniuUrl
+      if (options?.provider === UploadProviderEnum.QINIU) {
+        return { qiniuUrl: result as string }
       }
-
-      const response = await fetch(uploadUrl, {
-        headers: { 'Content-Type': 'application/octet-stream' },
-        method: 'PUT',
-        body: file,
-        duplex: 'half'
-      } as RequestInit)
-
-      if (!response.ok) {
-        throw new Error(`上传失败: ${response.statusText}`)
-      }
-      console.log('文件上传成功')
     } catch (error) {
       console.error('文件上传失败:', error)
       if (error instanceof AppException) {
@@ -446,8 +470,11 @@ class FileMessageStrategyImpl extends AbstractMessageStrategy {
   }
 
   buildMessageType(messageId: string, messageBody: any, globalStore: any, userUid: Ref<any>): MessageType {
-    console.log(messageId, messageBody, globalStore, userUid)
-    throw new AppException('暂未实现该类型')
+    messageId
+    messageBody
+    globalStore
+    userUid
+    throw new AppException('方法暂未实现')
   }
 }
 
@@ -457,6 +484,16 @@ class FileMessageStrategyImpl extends AbstractMessageStrategy {
 class EmojiMessageStrategyImpl extends AbstractMessageStrategy {
   constructor() {
     super(MsgEnum.EMOJI)
+  }
+
+  // 验证是否是有效的表情包URL
+  private isValidEmojiUrl(url: string): boolean {
+    try {
+      new URL(url)
+      return true
+    } catch {
+      return false
+    }
   }
 
   getMsg(msgInputValue: string, replyValue: any): any {
@@ -493,19 +530,12 @@ class EmojiMessageStrategyImpl extends AbstractMessageStrategy {
     }
   }
 
-  // 验证是否是有效的表情包URL
-  private isValidEmojiUrl(url: string): boolean {
-    try {
-      new URL(url)
-      return true
-    } catch {
-      return false
-    }
-  }
-
   // 表情包不需要实际上传，直接返回原始URL
-  async uploadFile(path: string): Promise<{ uploadUrl: string; downloadUrl: string }> {
-    console.log('表情包使用原始URL:', path)
+  async uploadFile(
+    path: string,
+    options?: { provider?: UploadProviderEnum }
+  ): Promise<{ uploadUrl: string; downloadUrl: string }> {
+    console.log('表情包使用原始URL:', path, options)
     return {
       uploadUrl: '', // 不需要上传URL
       downloadUrl: path // 直接使用原始URL
@@ -513,8 +543,8 @@ class EmojiMessageStrategyImpl extends AbstractMessageStrategy {
   }
 
   // 表情包不需要实际上传，此方法为空实现
-  async doUpload(): Promise<void> {
-    console.log('表情包无需上传，跳过上传步骤')
+  async doUpload(path?: string, uploadUrl?: string, options?: any): Promise<void> {
+    console.log('表情包无需上传，跳过上传步骤', path, uploadUrl, options)
     return Promise.resolve()
   }
 }

@@ -208,7 +208,7 @@
                       </n-popover>
                       <!-- 用户名 -->
                       <span class="text-12px select-none color-#909090 inline-block align-top">
-                        {{ useUserInfo(item.fromUser.uid).value.name }}
+                        {{ myGroupNickname(item.fromUser.uid) || useUserInfo(item.fromUser.uid).value.name }}
                       </span>
                       <!-- 消息归属地 -->
                       <span class="text-(12px #909090)">
@@ -462,6 +462,12 @@ const currentNewMsgCount = computed(() => chatStore.currentNewMsgCount)
 const messageOptions = computed(() => chatStore.currentMessageOptions)
 const { createWebviewWindow } = useWindow()
 const currentRoomId = computed(() => globalStore.currentSession?.roomId)
+// 我的群昵称
+const myGroupNickname = (uid: string) => {
+  if (props.activeItem.type === RoomTypeEnum.GROUP && userUid.value === uid) {
+    return groupStore.countInfo?.myName || ''
+  }
+}
 /** 是否是超级管理员 */
 // const isAdmin = computed(() => userInfo?.power === PowerEnum.ADMIN)
 /** 跳转回复消息后选中效果 */
@@ -612,12 +618,6 @@ watch(
   () => props.activeItem,
   (value, oldValue) => {
     if (oldValue.roomId !== value.roomId) {
-      // 重置群组数据并加载新的群组数据（如果适用）
-      groupStore.resetGroupData()
-      // 如果新的会话是群聊，则加载新群的数据
-      if (value.type === RoomTypeEnum.GROUP) {
-        groupStore.getGroupUserList(true, value.roomId)
-      }
       scrollToBottom()
     }
   }

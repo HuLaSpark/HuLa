@@ -7,7 +7,7 @@
     transform-origin="center">
     <div class="bg-[--bg-edit] w-560px h-480px box-border flex flex-col items-center justify-between">
       <!-- 标题栏 -->
-      <n-flex :size="6" vertical>
+      <n-flex :size="6" vertical class="w-full">
         <div
           v-if="type() === 'macos'"
           @click="closeWindow"
@@ -35,8 +35,9 @@
           <vue-cropper
             ref="cropperRef"
             :img="localImageUrl"
+            :outputSize="0.1"
             :autoCrop="true"
-            :outputType="'png'"
+            :outputType="'jpeg'"
             :fixedBox="true"
             :fixed="true"
             :centerBox="true"

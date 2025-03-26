@@ -51,6 +51,21 @@ export const useChatMain = () => {
   /** 通用右键菜单 */
   const commonMenuList = ref<OPT.RightMenu[]>([
     {
+      label: '添加到表情',
+      icon: 'add-expression',
+      click: async (item: MessageType) => {
+        const imageUrl = item.message.body.url
+        if (!imageUrl) {
+          window.$message.error('获取图片地址失败')
+          return
+        }
+        await emojiStore.addEmoji(imageUrl)
+      },
+      visible: (item: MessageType) => {
+        return item.message.type === MsgEnum.IMAGE || item.message.type === MsgEnum.EMOJI
+      }
+    },
+    {
       label: '转发',
       icon: 'share',
       click: () => {
@@ -123,21 +138,6 @@ export const useChatMain = () => {
       },
       visible: (item: MessageType) => {
         return item.message.type === MsgEnum.TEXT
-      }
-    },
-    {
-      label: '添加到表情',
-      icon: 'add-expression',
-      click: async (item: MessageType) => {
-        const imageUrl = item.message.body.url
-        if (!imageUrl) {
-          window.$message.error('获取图片地址失败')
-          return
-        }
-        await emojiStore.addEmoji(imageUrl)
-      },
-      visible: (item: MessageType) => {
-        return item.message.type === MsgEnum.IMAGE || item.message.type === MsgEnum.EMOJI
       }
     },
     ...commonMenuList.value

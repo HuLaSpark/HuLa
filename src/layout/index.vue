@@ -44,6 +44,7 @@ import { useThrottleFn } from '@vueuse/core'
 import { useCachedStore } from '@/stores/cached'
 import { clearListener, initListener, readCountQueue } from '@/utils/ReadCountQueue'
 import { type } from '@tauri-apps/plugin-os'
+import { useConfigStore } from '@/stores/config'
 
 const loadingPercentage = ref(10)
 const loadingText = ref('正在加载应用...')
@@ -97,6 +98,8 @@ const groupStore = useGroupStore()
 const userStore = useUserStore()
 const chatStore = useChatStore()
 const cachedStore = useCachedStore()
+const configStore = useConfigStore()
+const userUid = computed(() => userStore.userInfo.uid)
 // 清空未读消息
 // globalStore.unReadMark.newMsgUnreadCount = 0
 const shrinkStatus = ref(false)
@@ -165,10 +168,7 @@ useMitt.on(WsResponseMessageType.ONLINE, async (onStatusChangeType: OnStatusChan
   }
 })
 useMitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExpire) => {
-  if (
-    Number(userStore.userInfo.uid) === Number(wsTokenExpire.uid) &&
-    userStore.userInfo.client === wsTokenExpire.client
-  ) {
+  if (Number(userUid) === Number(wsTokenExpire.uid) && userStore.userInfo.client === wsTokenExpire.client) {
     // 聚焦主窗口
     const home = await WebviewWindow.getByLabel('home')
     await home?.setFocus()
@@ -195,15 +195,21 @@ useMitt.on(WsResponseMessageType.MSG_MARK_ITEM, (markList: MarkItemType[]) => {
 useMitt.on(WsResponseMessageType.MSG_RECALL, (data: RevokedMsgType) => {
   chatStore.updateRecallStatus(data)
 })
+useMitt.on(WsResponseMessageType.MY_ROOM_INFO_CHANGE, (data: { myName: string; roomId: string; uid: string }) => {
+  groupStore.updateUserStatus({
+    uid: data.uid,
+    myName: data.myName
+  })
+})
 useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   chatStore.pushMsg(data)
-  if (data.fromUser.uid !== userStore.userInfo.uid) {
+  if (data.fromUser.uid !== userUid.value) {
     useMitt.emit(MittEnum.MESSAGE_ANIMATION, data)
   }
   // 接收到通知就设置图标闪烁
   const username = useUserInfo(data.fromUser.uid).value.name!
   // 不是自己发的消息才通知
-  if (data.fromUser.uid !== userStore.userInfo.uid) {
+  if (data.fromUser.uid !== userUid.value) {
     // 在windows系统下才发送通知
     if (type() === 'windows') {
       await emitTo('tray', 'show_tip')
@@ -280,6 +286,8 @@ onBeforeMount(async () => {
 })
 
 onMounted(async () => {
+  // 初始化配置
+  await configStore.initConfig()
   await getCurrentWebviewWindow().show()
   let permissionGranted = await isPermissionGranted()
 

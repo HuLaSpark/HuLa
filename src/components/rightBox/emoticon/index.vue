@@ -77,6 +77,8 @@
                 <n-popover trigger="hover" :delay="300" :duration="300" :show-arrow="false" placement="top">
                   <template #trigger>
                     <n-image
+                      width="60"
+                      height="60"
                       preview-disabled
                       :src="item.expressionUrl"
                       class="size-full object-contain rounded-8px transition duration-300 ease-in-out transform-gpu" />

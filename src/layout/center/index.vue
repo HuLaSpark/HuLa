@@ -105,7 +105,7 @@
             source-filterable
             target-filterable
             v-model:value="selectedValue"
-            :options="options as any"
+            :options="options"
             :render-source-list="renderSourceList"
             :render-target-label="renderLabel" />
 

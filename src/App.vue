@@ -116,8 +116,8 @@ onMounted(async () => {
   if (process.env.NODE_ENV !== 'development') {
     /** 禁用浏览器默认的快捷键 */
     window.addEventListener('keydown', (e) => {
-      // 排除ctrl+c ctrl+v ctrl+enter
-      if (e.ctrlKey && (e.key === 'c' || e.key === 'v' || e.key === 'Enter')) return
+      // 排除ctrl+c ctrl+v ctrl+a ctrl+enter
+      if (e.ctrlKey && (e.key === 'c' || e.key === 'v' || e.key === 'a' || e.key === 'Enter')) return
       if (e.ctrlKey || e.metaKey || e.altKey) {
         e.preventDefault()
       }

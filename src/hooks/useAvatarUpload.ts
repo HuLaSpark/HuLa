@@ -1,5 +1,5 @@
-import apis from '@/services/apis'
 import { UploadSceneEnum } from '@/enums'
+import { useUpload, UploadProviderEnum } from './useUpload'
 
 export interface AvatarUploadOptions {
   // 上传成功后的回调函数，参数为下载URL
@@ -9,13 +9,12 @@ export interface AvatarUploadOptions {
   // 文件大小限制（KB），默认为500KB
   sizeLimit?: number
 }
-
 /**
  * 上传头像的hook
  * @param options 上传配置
  */
 export const useAvatarUpload = (options: AvatarUploadOptions = {}) => {
-  const { onSuccess, scene = UploadSceneEnum.AVATAR, sizeLimit = 500 } = options
+  const { onSuccess, scene = UploadSceneEnum.AVATAR, sizeLimit = 100 } = options
 
   const fileInput = ref<HTMLInputElement>()
   const localImageUrl = ref('')
@@ -31,41 +30,18 @@ export const useAvatarUpload = (options: AvatarUploadOptions = {}) => {
   const handleFileChange = (e: Event) => {
     const file = (e.target as HTMLInputElement).files?.[0]
     if (file) {
-      // 添加文件大小限制检查
-      if (file.size > sizeLimit * 1024) {
-        window.$message.error(`图片大小不能超过${sizeLimit}KB`)
-        if (fileInput.value) {
-          fileInput.value.value = ''
-        }
-        return
-      }
-
-      // 先设置图片URL，等待图片加载完成后再显示裁剪窗口
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
-      if (!allowedTypes.includes(file.type)) {
-        window.$message.error('只支持 JPG、PNG、WebP 格式的图片')
-        if (fileInput.value) {
-          fileInput.value.value = ''
-        }
-        return
-      }
-
       const img = new Image()
       const url = URL.createObjectURL(file)
-
       img.onload = () => {
         localImageUrl.value = url
-
         nextTick(() => {
           showCropper.value = true
         })
       }
-
       img.onerror = () => {
         window.$message.error('图片加载失败')
         URL.revokeObjectURL(url)
       }
-
       img.src = url
     }
   }
@@ -76,25 +52,37 @@ export const useAvatarUpload = (options: AvatarUploadOptions = {}) => {
       const fileName = `avatar_${Date.now()}.png`
       const file = new File([cropBlob], fileName, { type: 'image/png' })
 
-      // 1. 获取上传URL
-      const { uploadUrl, downloadUrl } = await apis.getUploadUrl({
-        fileName: fileName,
+      // 检查裁剪后的文件大小
+      if (file.size > sizeLimit * 1024) {
+        window.$message.error(`图片大小不能超过${sizeLimit}KB，当前大小为${Math.round(file.size / 1024)}KB`)
+        // 结束加载状态
+        cropperRef.value?.finishLoading()
+        return
+      }
+
+      // 先设置图片URL，等待图片加载完成后再显示裁剪窗口
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
+      if (!allowedTypes.includes(file.type)) {
+        window.$message.error('只支持 JPG、PNG、WebP 格式的图片')
+        // 结束加载状态
+        cropperRef.value?.finishLoading()
+        return
+      }
+
+      // 使用useUpload中的七牛云上传功能
+      const { uploadFile, fileInfo } = useUpload()
+
+      // 执行上传，使用七牛云上传方式
+      await uploadFile(file, {
+        provider: UploadProviderEnum.QINIU,
+        enableDeduplication: true,
         scene: scene
       })
 
-      // 2. 上传文件
-      const response = await fetch(uploadUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/octet-stream' },
-        body: file,
-        duplex: 'half'
-      } as RequestInit)
+      // 获取下载URL
+      const downloadUrl = fileInfo.value?.downloadUrl || ''
 
-      if (!response.ok) {
-        throw new Error('文件上传失败')
-      }
-
-      // 3. 调用成功回调
+      // 调用成功回调
       if (onSuccess) {
         onSuccess(downloadUrl)
       }

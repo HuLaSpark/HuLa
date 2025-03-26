@@ -113,7 +113,7 @@
     <!-- 群信息列表 -->
     <n-flex vertical class="select-none w-full px-30px box-border">
       <n-flex align="center" justify="space-between" class="py-12px border-b text-(14px [--chat-text-color])">
-        <span>备注</span>
+        <span>群备注</span>
         <span>{{ item.remark || '设置群聊备注' }}</span>
       </n-flex>
 
