@@ -66,17 +66,17 @@
                     <n-flex vertical justify="center" :size="10" class="flex-1">
                       <n-space align="center" :size="10">
                         <span class="text-(14px [--text-color])">{{ item.name }}</span>
-                        <template v-for="accountCode in item.itemIds" :key="accountCode">
-                          <img class="size-20px" :src="useBadgeInfo(accountCode).value.img" alt="" />
+                        <template v-for="account in item.itemIds" :key="account">
+                          <img class="size-20px" :src="useBadgeInfo(account).value.img" alt="" />
                         </template>
                       </n-space>
                       <n-flex align="center" :size="10">
-                        <span class="text-(12px [--chat-text-color])">{{ `账号：${item.accountCode}` }}</span>
+                        <span class="text-(12px [--chat-text-color])">{{ `账号：${item.account}` }}</span>
                         <n-tooltip trigger="hover">
                           <template #trigger>
                             <svg
                               class="size-12px hover:color-#909090 hover:transition-colors"
-                              @click="handleCopy(item.accountCode)">
+                              @click="handleCopy(item.account)">
                               <use href="#copy"></use>
                             </svg>
                           </template>
@@ -188,7 +188,7 @@ const getCachedUsers = () => {
       })
       .map((user) => ({
         uid: user.uid,
-        accountCode: user.accountCode,
+        account: user.account,
         name: user.name,
         avatar: user.avatar,
         itemIds: user.itemIds || null
@@ -205,9 +205,9 @@ const clearSearchResults = () => {
 }
 
 // 处理复制账号
-const handleCopy = (accountCode: string) => {
-  navigator.clipboard.writeText(accountCode)
-  window.$message.success(`复制成功 ${accountCode}`)
+const handleCopy = (account: string) => {
+  navigator.clipboard.writeText(account)
+  window.$message.success(`复制成功 ${account}`)
 }
 
 // 处理清空按钮点击
@@ -236,9 +236,9 @@ const handleSearch = debounce(async () => {
   try {
     if (searchType.value === 'group') {
       // 调用群聊搜索接口
-      const res = await apis.searchGroup({ accountCode: searchValue.value })
+      const res = await apis.searchGroup({ account: searchValue.value })
       searchResults.value = res.map((group) => ({
-        accountCode: group.accountCode,
+        account: group.account,
         name: group.name,
         avatar: group.avatar,
         deleteStatus: group.deleteStatus,
@@ -252,7 +252,7 @@ const handleSearch = debounce(async () => {
         uid: user.uid,
         name: user.name,
         avatar: user.avatar,
-        accountCode: user.accountCode
+        account: user.account
       }))
     } else {
       // 推荐标签搜索结果
@@ -383,7 +383,7 @@ const handleAddFriend = async (item: any) => {
   } else {
     await createWebviewWindow('申请加群', 'addGroupVerify', 380, 400, '', false, 380, 400)
     globalStore.addGroupModalInfo.show = true
-    globalStore.addGroupModalInfo.accountCode = item.accountCode
+    globalStore.addGroupModalInfo.account = item.account
     globalStore.addGroupModalInfo.name = item.name
     globalStore.addGroupModalInfo.avatar = item.avatar
   }

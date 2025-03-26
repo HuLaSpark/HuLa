@@ -79,13 +79,13 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
       if (adminUidList.value.includes(member.uid)) {
         return {
           ...member,
-          accountCode: member.accountCode,
+          account: member.account,
           roleId: RoleEnum.ADMIN
         }
       } else if (member.uid === currentLordId.value) {
         return {
           ...member,
-          accountCode: member.accountCode,
+          account: member.account,
           roleId: RoleEnum.LORD
         }
       }
@@ -99,7 +99,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
     groupName: '',
     onlineNum: 0,
     role: 0,
-    accountCode: '',
+    account: '',
     memberNum: 0,
     remark: '',
     myName: '',
@@ -243,7 +243,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
       onlineNum: 0,
       role: 0,
       roomId: '',
-      accountCode: '',
+      account: '',
       memberNum: 0,
       remark: '',
       myName: ''

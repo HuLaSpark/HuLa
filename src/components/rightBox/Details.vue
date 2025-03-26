@@ -85,10 +85,10 @@
             </n-popover>
           </n-flex>
           <n-flex align="center" :size="12">
-            <span class="text-(14px #909090)">群号 {{ item.accountCode }}</span>
+            <span class="text-(14px #909090)">群号 {{ item.account }}</span>
             <n-tooltip trigger="hover">
               <template #trigger>
-                <svg class="size-12px cursor-pointer color-#909090" @click="handleCopy(item.accountCode)">
+                <svg class="size-12px cursor-pointer color-#909090" @click="handleCopy(item.account)">
                   <use href="#copy"></use>
                 </svg>
               </template>
@@ -192,10 +192,10 @@ watchEffect(() => {
 })
 
 // 复制
-const handleCopy = (accountCode: string) => {
-  if (accountCode) {
-    navigator.clipboard.writeText(accountCode)
-    window.$message.success(`复制成功 ${accountCode}`)
+const handleCopy = (account: string) => {
+  if (account) {
+    navigator.clipboard.writeText(account)
+    window.$message.success(`复制成功 ${account}`)
   }
 }
 

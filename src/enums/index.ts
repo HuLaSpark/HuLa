@@ -31,7 +31,9 @@ export enum URLEnum {
   /**oss*/
   OSS = '/oss',
   /**系统*/
-  SYSTEM = '/system'
+  SYSTEM = '/system',
+  /**验证码*/
+  CAPTCHA = '/captcha'
 }
 
 /** tauri原生跨窗口通信时传输的类型 */

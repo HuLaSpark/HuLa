@@ -51,13 +51,7 @@ import { useMitt } from '@/hooks/useMitt.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { LoginStatus, useWsLoginStore } from '@/stores/ws.ts'
-import wsIns from '@/services/webSocket.ts'
-import {
-  type LoginInitResType,
-  type LoginSuccessResType,
-  WsRequestMsgType,
-  WsResponseMessageType
-} from '@/services/wsType.ts'
+import { type LoginInitResType, type LoginSuccessResType, WsResponseMessageType } from '@/services/wsType.ts'
 import { useUserStore } from '@/stores/user'
 import { useGroupStore } from '@/stores/group'
 
@@ -138,11 +132,12 @@ const handleAuth = () => {
 
 // TODO 做一个二维码过期时间重新刷新二维码的功能 (nyh -> 2024-01-27 00:37:18)
 onMounted(() => {
-  if (!localStorage.getItem('wsLogin')) {
-    wsIns.send({ type: WsRequestMsgType.RequestLoginQrCode })
-  } else {
-    handleQRCodeLogin()
-  }
+  handleQRCodeLogin()
+  // if (!localStorage.getItem('wsLogin')) {
+  //   wsIns.send({ type: WsRequestMsgType.RequestLoginQrCode })
+  // } else {
+  //   handleQRCodeLogin()
+  // }
   useMitt.on(WsResponseMessageType.LOGIN_QR_CODE, (loginInitResType: LoginInitResType) => {
     loginStore.loginQrCode = loginInitResType.loginUrl
     handleQRCodeLogin()
@@ -160,7 +155,7 @@ onMounted(() => {
     await groupStore.updateUserStatus({
       activeStatus: OnlineEnum.ONLINE,
       avatar: rest.avatar,
-      accountCode: rest.accountCode,
+      account: rest.account,
       name: rest.name,
       uid: rest.uid,
       lastOptTime: Date.now()

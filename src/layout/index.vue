@@ -141,7 +141,7 @@ useMitt.on(WsResponseMessageType.LOGIN_SUCCESS, async (data: LoginSuccessResType
   await groupStore.updateUserStatus({
     activeStatus: OnlineEnum.ONLINE,
     avatar: rest.avatar,
-    accountCode: rest.accountCode,
+    account: rest.account,
     lastOptTime: Date.now(),
     name: rest.name,
     uid: rest.uid

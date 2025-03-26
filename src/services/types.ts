@@ -26,6 +26,8 @@ export type ServiceResponse = {
   msg: string
   /** 数据 */
   data: any
+  /** 版本号 */
+  version: string
 }
 
 export type PageInfo<T> = {
@@ -51,10 +53,14 @@ export type RegisterUserReq = {
   avatar: string
   /** 昵称 */
   name: string
-  /** 账号 */
-  account: string
+  /** 邮箱 */
+  email: string
   /** 密码 */
   password: string
+  /** 邮箱验证码 */
+  code: string
+  /** 识别码 */
+  uuid: string
 }
 
 export type ListResponse<T> = {
@@ -86,7 +92,7 @@ export type GroupDetailReq = {
   /** 房间id */
   roomId: string
   /** 群号 */
-  accountCode: string
+  account: string
   /** 群成员数 */
   memberNum: number
   /** 群备注 */
@@ -148,7 +154,7 @@ export type CacheUserItem = {
   /** 用户状态 */
   userStateId: string
   /** 账号 */
-  accountCode: string
+  account: string
 }
 
 export type UserItem = {
@@ -167,7 +173,7 @@ export type UserItem = {
   /** 角色ID */
   roleId?: number
   /** 账号 */
-  accountCode: string
+  account: string
 }
 
 export type GroupStatisticType = {
@@ -204,8 +210,8 @@ export type UserInfoType = {
   uid: string
   /** 用户账号 */
   account: string
-  /** Hula号 */
-  accountCode: string
+  /** 邮箱 */
+  email: string
   /** 密码 */
   password?: string
   /** 用户头像 */
@@ -557,7 +563,7 @@ export type SearchFriend = {
   /** 头像 */
   avatar: string
   /** 账号 */
-  accountCode: string
+  account: string
 }
 
 /** 搜索群 */
@@ -569,7 +575,7 @@ export type SearchGroup = {
   /** 头像 */
   avatar: string
   /** 账号 */
-  accountCode: string
+  account: string
   /** 额外信息 */
   extJson: string
   /** 是否删除 */

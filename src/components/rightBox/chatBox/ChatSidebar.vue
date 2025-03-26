@@ -163,7 +163,7 @@ const userList = computed(() => {
       return {
         ...item, // 保留原始数据
         ...cachedUser, // 合并缓存的用户数据
-        accountCode: cachedUser.accountCode || item.accountCode, // 确保accountCode被保留
+        account: cachedUser.account || item.account, // 确保accountCode被保留
         uid: item.uid // 确保uid被保留
       }
     })

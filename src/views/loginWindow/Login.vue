@@ -18,13 +18,13 @@
         <n-input
           :class="{ 'pl-16px': loginHistories.length > 0 }"
           size="large"
-          maxlength="16"
+          maxlength="24"
           minlength="6"
-          v-model:value="info.account"
+          v-model:value="info.email"
           type="text"
           :placeholder="accountPH"
           @focus="accountPH = ''"
-          @blur="accountPH = '输入HuLa账号'"
+          @blur="accountPH = '邮箱/HuLa账号'"
           clearable>
           <template #suffix>
             <n-flex v-if="loginHistories.length > 0" @click="arrowStatus = !arrowStatus">
@@ -45,12 +45,12 @@
             <n-flex
               vertical
               v-for="item in loginHistories"
-              :key="item.account"
+              :key="item.email"
               @click="giveAccount(item)"
               class="p-8px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px">
               <div class="flex-between-center">
                 <n-avatar :src="AvatarUtils.getAvatarUrl(item.avatar)" class="size-28px bg-#ccc rounded-50%" />
-                <p class="text-14px color-#505050">{{ item.account }}</p>
+                <p class="text-14px color-#505050">{{ item.email }}</p>
                 <svg @click.stop="delAccount(item)" class="w-12px h-12px">
                   <use href="#close"></use>
                 </svg>
@@ -188,7 +188,7 @@ const TOKEN = ref(localStorage.getItem('TOKEN'))
 const REFRESH_TOKEN = ref(localStorage.getItem('REFRESH_TOKEN'))
 /** 账号信息 */
 const info = ref({
-  account: '',
+  email: '',
   password: '',
   avatar: '',
   name: '',
@@ -202,7 +202,7 @@ const arrowStatus = ref(false)
 const moreShow = ref(false)
 const isAutoLogin = ref(login.value.autoLogin && TOKEN.value && REFRESH_TOKEN.value)
 const { setLoginState } = useLogin()
-const accountPH = ref('输入HuLa账号')
+const accountPH = ref('邮箱/HuLa账号')
 const passwordPH = ref('输入HuLa密码')
 /** 登录按钮的文本内容 */
 const loginText = ref(isOnline.value ? (isAutoLogin.value ? '登录' : '登录') : '网络异常')
@@ -211,7 +211,7 @@ const isJumpDirectly = ref(false)
 const { createWebviewWindow } = useWindow()
 
 watchEffect(() => {
-  loginDisabled.value = !(info.value.account && info.value.password && protocol.value && isOnline.value)
+  loginDisabled.value = !(info.value.email && info.value.password && protocol.value && isOnline.value)
 })
 
 watch(isOnline, (v) => {
@@ -221,7 +221,7 @@ watch(isOnline, (v) => {
 
 // 监听账号输入
 watch(
-  () => info.value.account,
+  () => info.value.email,
   (newAccount) => {
     if (!newAccount) {
       info.value.avatar = '/logo.png'
@@ -229,7 +229,7 @@ watch(
     }
 
     // 在登录历史中查找匹配的账号
-    const matchedAccount = loginHistories.find((history) => history.account === newAccount)
+    const matchedAccount = loginHistories.find((history) => history.email === newAccount)
     if (matchedAccount) {
       info.value.avatar = matchedAccount.avatar
     } else {
@@ -247,7 +247,7 @@ const delAccount = (item: UserInfoType) => {
   if (lengthBeforeDelete === 1 && loginHistories.length === 0) {
     arrowStatus.value = false
   }
-  info.value.account = ''
+  info.value.email = ''
   info.value.password = ''
   info.value.avatar = '/logo.png'
 }
@@ -257,8 +257,8 @@ const delAccount = (item: UserInfoType) => {
  * @param item 账户信息
  * */
 const giveAccount = (item: UserInfoType) => {
-  const { account, password, avatar, name, uid } = item
-  info.value.account = account || ''
+  const { email, password, avatar, name, uid } = item
+  info.value.email = email || ''
   info.value.password = password || ''
   info.value.avatar = avatar
   info.value.name = name
@@ -273,7 +273,7 @@ const normalLogin = async (auto = false) => {
   loginDisabled.value = true
   // 根据auto参数决定从哪里获取登录信息
   const loginInfo = auto ? (userStore.userInfo as UserInfoType) : info.value
-  const { account } = loginInfo
+  const { email } = loginInfo
 
   // 自动登录
   if (auto) {
@@ -315,7 +315,7 @@ const normalLogin = async (auto = false) => {
   }
 
   apis
-    .login({ account, password: info.value.password, source: 'pc' })
+    .login({ account: email, password: info.value.password, source: 'pc' })
     .then(async (res) => {
       loginDisabled.value = true
       loginText.value = '登录成功, 正在跳转'
