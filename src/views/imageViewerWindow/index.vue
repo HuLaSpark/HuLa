@@ -359,9 +359,11 @@ const handleKeydown = (e: KeyboardEvent) => {
 
 // 检查是否有滚动条的函数
 const checkScrollbar = () => {
-  if (contentScrollbar.value) {
-    isScrollbar.value = contentScrollbar.value.scrollHeight > contentScrollbar.value.clientHeight
-  }
+  setTimeout(() => {
+    if (contentScrollbar.value) {
+      isScrollbar.value = contentScrollbar.value.scrollHeight > contentScrollbar.value.clientHeight
+    }
+  }, 16)
 }
 
 onMounted(async () => {

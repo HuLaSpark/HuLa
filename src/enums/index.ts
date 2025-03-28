@@ -31,7 +31,9 @@ export enum URLEnum {
   /**oss*/
   OSS = '/oss',
   /**系统*/
-  SYSTEM = '/system'
+  SYSTEM = '/system',
+  /**验证码*/
+  CAPTCHA = '/captcha'
 }
 
 /** tauri原生跨窗口通信时传输的类型 */
@@ -139,7 +141,9 @@ export enum StoresEnum {
   /** 聊天 */
   CHAT = 'chat',
   /** 缓存 */
-  CACHED = 'cached'
+  CACHED = 'cached',
+  /** 配置 */
+  CONFIG = 'config'
 }
 
 /**
@@ -381,11 +385,11 @@ export enum ConnectionState {
 /** 上传scene值状态 */
 export enum UploadSceneEnum {
   /** 聊天 */
-  CHAT = 1,
+  CHAT = 'chat',
   /** 表情 */
-  EMOJI,
+  EMOJI = 'emoji',
   /** 头像 */
-  AVATAR
+  AVATAR = 'avatar'
 }
 
 /** 会话操作 */

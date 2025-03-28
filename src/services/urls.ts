@@ -75,6 +75,10 @@ export default {
   searchGroup: `${prefix + URLEnum.ROOM}/search`, // 搜索群聊
   applyGroup: `${prefix + URLEnum.ROOM}/applyGroup`, // 申请加群
 
+  // -------------- 验证码 ---------------
+  getCaptcha: `${prefix + URLEnum.CAPTCHA}/captcha`, // 获取图片验证码
+  sendCaptcha: `${prefix + URLEnum.CAPTCHA}/sendCode`, // 发送验证码到用户邮箱
+
   // -------------- 系统相关 ---------------
   fileUpload: `${prefix + URLEnum.SYSTEM + URLEnum.OSS}/upload/url`, // 文件上传
   initConfig: `${prefix + URLEnum.SYSTEM}/config/init`, // 获取配置文件

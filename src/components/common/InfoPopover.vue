@@ -82,7 +82,7 @@
         <n-flex align="center" :size="10">
           <n-flex align="center" :size="12">
             <p class="text-[--info-text-color]">账号</p>
-            <span class="text-(12px [--chat-text-color])">{{ `${useUserInfo(uid).value.accountCode}` }}</span>
+            <span class="text-(12px [--chat-text-color])">{{ `${useUserInfo(uid).value.account}` }}</span>
           </n-flex>
           <n-tooltip trigger="hover">
             <template #trigger>
@@ -200,10 +200,10 @@ const openEditInfo = () => {
 
 // 处理复制账号
 const handleCopy = () => {
-  const accountCode = useUserInfo(uid).value.accountCode
-  if (accountCode) {
-    navigator.clipboard.writeText(accountCode)
-    window.$message.success(`复制成功 ${accountCode}`)
+  const account = useUserInfo(uid).value.account
+  if (account) {
+    navigator.clipboard.writeText(account)
+    window.$message.success(`复制成功 ${account}`)
   }
 }
 

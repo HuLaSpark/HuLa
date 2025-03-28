@@ -295,6 +295,19 @@ class WS {
           )
           break
         }
+        // 自己修改我在群里的信息
+        case WsResponseMessageType.MY_ROOM_INFO_CHANGE: {
+          console.log('自己修改我在群里的信息', params.data)
+          useMitt.emit(
+            WsResponseMessageType.MY_ROOM_INFO_CHANGE,
+            params.data as {
+              myName: string
+              roomId: string
+              uid: string
+            }
+          )
+          break
+        }
         default: {
           console.log('接收到未处理类型的消息:', params)
           break

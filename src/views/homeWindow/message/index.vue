@@ -127,7 +127,7 @@ const userStore = useUserStore()
 const msgScrollbar = useTemplateRef<HTMLElement>('msg-scrollbar')
 const { handleMsgClick, handleMsgDelete, menuList, specialMenuList, handleMsgDblclick } = useMessage()
 const currentSession = computed(() => globalStore.currentSession)
-// 会话列表
+// 会话列表 TODO: 需要后端返回对应字段
 const sessionList = computed(() => {
   return (
     chatStore.sessionList
@@ -197,9 +197,23 @@ const sessionList = computed(() => {
 
 watch(
   () => chatStore.currentSessionInfo,
-  (newVal) => {
+  async (newVal) => {
     if (newVal) {
-      handleMsgClick(newVal as SessionItem)
+      // 判断是否是群聊
+      if (newVal.type === RoomTypeEnum.GROUP) {
+        // 确保获取到最新的群组详情
+        await groupStore.getCountStatistic()
+        // 将群组详情信息传递给handleMsgClick方法
+        handleMsgClick({
+          ...newVal,
+          memberNum: groupStore.countInfo?.memberNum,
+          remark: groupStore.countInfo?.remark,
+          myName: groupStore.countInfo?.myName
+        })
+      } else {
+        // 非群聊直接传递原始信息
+        handleMsgClick(newVal as SessionItem)
+      }
     }
   },
   { immediate: true }
@@ -208,7 +222,6 @@ watch(
 onBeforeMount(async () => {
   // 请求回话列表
   await chatStore.getSessionList(true)
-  await groupStore.getCountStatistic()
   // 从联系人页面切换回消息页面的时候自动定位到选中的会话
   useMitt.emit(MittEnum.LOCATE_SESSION, { roomId: currentSession.value.roomId })
 })

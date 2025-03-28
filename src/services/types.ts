@@ -26,6 +26,8 @@ export type ServiceResponse = {
   msg: string
   /** 数据 */
   data: any
+  /** 版本号 */
+  version: string
 }
 
 export type PageInfo<T> = {
@@ -51,10 +53,14 @@ export type RegisterUserReq = {
   avatar: string
   /** 昵称 */
   name: string
-  /** 账号 */
-  account: string
+  /** 邮箱 */
+  email: string
   /** 密码 */
   password: string
+  /** 邮箱验证码 */
+  code: string
+  /** 识别码 */
+  uuid: string
 }
 
 export type ListResponse<T> = {
@@ -86,7 +92,7 @@ export type GroupDetailReq = {
   /** 房间id */
   roomId: string
   /** 群号 */
-  accountCode: string
+  account: string
   /** 群成员数 */
   memberNum: number
   /** 群备注 */
@@ -104,6 +110,8 @@ export type GroupListReq = {
   roomName: string
   /** 群头像 */
   avatar: string
+  /** 群备注 */
+  remark?: string
 }
 
 export type CacheBadgeItem = {
@@ -148,7 +156,7 @@ export type CacheUserItem = {
   /** 用户状态 */
   userStateId: string
   /** 账号 */
-  accountCode: string
+  account: string
 }
 
 export type UserItem = {
@@ -167,7 +175,9 @@ export type UserItem = {
   /** 角色ID */
   roleId?: number
   /** 账号 */
-  accountCode: string
+  account: string
+  /** 我的群昵称 */
+  myName?: string
 }
 
 export type GroupStatisticType = {
@@ -204,8 +214,8 @@ export type UserInfoType = {
   uid: string
   /** 用户账号 */
   account: string
-  /** Hula号 */
-  accountCode: string
+  /** 邮箱 */
+  email: string
   /** 密码 */
   password?: string
   /** 用户头像 */
@@ -502,6 +512,12 @@ export type SessionItem = {
   muteNotification: NotificationTypeEnum
   /** 屏蔽消息 */
   shield: boolean
+  /** 群成员数 */
+  memberNum?: number
+  /** 群备注 */
+  remark?: string
+  /** 我的群昵称 */
+  myName?: string
 }
 
 /** 消息已读未读数列表项 */
@@ -557,7 +573,7 @@ export type SearchFriend = {
   /** 头像 */
   avatar: string
   /** 账号 */
-  accountCode: string
+  account: string
 }
 
 /** 搜索群 */
@@ -569,11 +585,30 @@ export type SearchGroup = {
   /** 头像 */
   avatar: string
   /** 账号 */
-  accountCode: string
+  account: string
   /** 额外信息 */
   extJson: string
   /** 是否删除 */
   deleteStatus: IsYesEnum
+}
+
+/** 配置 */
+export type ConfigType = {
+  /** logo */
+  logo: string
+  /** 系统名称 */
+  name: string
+  /** 七牛 */
+  qiNiu: {
+    /** oss域名 */
+    ossDomain: string
+    /** 分片大小 */
+    fragmentSize: string
+    /** 超过多少MB开启分片上传 */
+    turnSharSize: string
+  }
+  /** 大群ID */
+  roomGroupId: string
 }
 
 /* ======================================================== */

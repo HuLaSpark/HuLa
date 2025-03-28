@@ -22,7 +22,7 @@
 
           <n-flex vertical :size="10">
             <p class="text-[--text-color]">{{ userInfo.name }}</p>
-            <p class="text-(12px [--text-color])">账号: {{ userInfo.accountCode }}</p>
+            <p class="text-(12px [--text-color])">账号: {{ userInfo.account }}</p>
           </n-flex>
         </n-flex>
 

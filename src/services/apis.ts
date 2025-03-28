@@ -25,7 +25,8 @@ import {
   UserState,
   Login,
   SearchFriend,
-  SearchGroup
+  SearchGroup,
+  ConfigType
 } from '@/services/types'
 
 import request from '@/services/request'
@@ -114,7 +115,7 @@ export default {
   /** 会话详情 */
   sessionDetail: (params: { id: string }) => GET<SessionItem>(urls.sessionDetail, params),
   /** 搜索群聊 */
-  searchGroup: (params: { accountCode: string }) => GET<SearchGroup[]>(urls.searchGroup, params),
+  searchGroup: (params: { account: string }) => GET<SearchGroup[]>(urls.searchGroup, params),
   /** 搜索好友 */
   searchFriend: (params: { key: string }) => GET<SearchFriend[]>(urls.searchFriend, params),
   /** 免打扰 */
@@ -157,10 +158,24 @@ export default {
   logout: (autoLogin: boolean) => POST<string>(urls.logout, { autoLogin }),
   /** 注册 */
   register: (user: RegisterUserReq, abort?: AbortController) => POST<string>(urls.register, user, abort),
+  /** 获取验证码 */
+  getCaptcha: () => GET<{ img: string; uuid: string }>(urls.getCaptcha),
+  /** 发送验证码 */
+  sendCaptcha: (params: { email: string; code: string; uuid: string }) => POST<void>(urls.sendCaptcha, params),
   /** 检查token是否有效 */
   checkToken: () => POST<string>(urls.checkToken),
   /** 获取所有用户状态 */
   getAllUserState: () => GET<UserState[]>(urls.getAllUserState),
   /** 用户状态改变 */
-  changeUserState: (userStateId: string) => POST(`${urls.changeUserState}/${userStateId}`)
+  changeUserState: (userStateId: string) => POST(`${urls.changeUserState}/${userStateId}`),
+  /** 初始化配置 */
+  initConfig: () => GET<ConfigType>(urls.initConfig),
+  /** 获取七牛token */
+  getQiniuToken: () =>
+    GET<{
+      storagePrefix: string
+      domain: string
+      token: string
+      region?: string
+    }>(urls.getQiniuToken)
 }

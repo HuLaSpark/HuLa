@@ -6,12 +6,13 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import apis from '@/services/apis'
 
 const contactStore = useContactStore()
-export const options = computed(() =>
-  contactStore.contactsList.map((item) => ({
-    label: useUserInfo(item.uid).value.name,
-    value: item.uid,
-    avatar: AvatarUtils.getAvatarUrl(useUserInfo(item.uid).value.avatar!)
-  }))
+export const options = computed(
+  () =>
+    contactStore.contactsList.map((item) => ({
+      label: useUserInfo(item.uid).value.name,
+      value: item.uid,
+      avatar: AvatarUtils.getAvatarUrl(useUserInfo(item.uid).value.avatar!)
+    })) as any
 )
 
 export const createGroup = async (selectedUids: string[]) => {
@@ -27,12 +28,12 @@ export const createGroup = async (selectedUids: string[]) => {
 
 export const renderSourceList: TransferRenderSourceList = ({ onCheck, checkedOptions, pattern }) => {
   const filteredOptions = pattern
-    ? options.value.filter((option) => option.label?.toLowerCase().includes(pattern.toLowerCase()))
+    ? options.value.filter((option: { label: string }) => option.label?.toLowerCase().includes(pattern.toLowerCase()))
     : options.value
 
   return (
     <div>
-      {filteredOptions.map((option) => {
+      {filteredOptions.map((option: any) => {
         const checked = checkedOptions.some((o) => o.value === option.value)
         return (
           <div

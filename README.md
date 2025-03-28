@@ -104,6 +104,7 @@ HuLa 是一款基于 Tauri、Vite 6、Vue 3 和 TypeScript 构建的即时通讯
 | | 消息通知 | ✅ 已完成 |
 | | 图片查看器 | ✅ 已完成 |
 | | 截图功能 | 🚧 进行中 |
+| | 文件上传（支持七牛云存储） | ✅ 已完成 |
 | 🌐 **跨平台支持** | win10、win11/macOS/linux | ✅ 已完成 |
 | | iOS/Android适配 | 🚧 进行中 |
 | 🤖 **AI** | deepseek、chatgpt、claude、qwen、自定义 | 🚧 进行中 |

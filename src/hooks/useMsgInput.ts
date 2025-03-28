@@ -11,10 +11,10 @@ import { useDebounceFn } from '@vueuse/core'
 import { Ref } from 'vue'
 import { SelectionRange, useCommon } from './useCommon.ts'
 import { readText, readImage } from '@tauri-apps/plugin-clipboard-manager'
-import Database from '@tauri-apps/plugin-sql'
 import { messageStrategyMap } from '@/strategy/MessageStrategy.ts'
 import { useTrigger } from './useTrigger'
 import type { AIModel } from '@/services/types.ts'
+import { UploadProviderEnum } from './useUpload.ts'
 
 /**
  * 光标管理器
@@ -198,8 +198,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
     { label: '全部选择', icon: 'check-one' }
   ])
 
-  const db = ref<Database>()
-
   // 将 useTrigger 的初始化移到这里
   const { handleTrigger, resetAllStates } = useTrigger(
     personList,
@@ -359,11 +357,15 @@ export const useMsgInput = (messageInputDom: Ref) => {
       // 如果是图片或表情消息,需要先上传文件
       if (msg.type === MsgEnum.IMAGE || msg.type === MsgEnum.EMOJI) {
         console.log(`开始处理${msg.type === MsgEnum.EMOJI ? '表情包' : '图片'}消息上传`)
-        const { uploadUrl, downloadUrl } = await messageStrategy.uploadFile(msg.path)
-        await messageStrategy.doUpload(msg.path, uploadUrl)
+        // TODO: 如果使用的是默认上传方式,则uploadFile方法就会返回上传和下载链接了，但是使用七牛云上传方式则需要调用doUpload方法后才会返回对应的下载链接
+        const { uploadUrl, downloadUrl, config } = await messageStrategy.uploadFile(msg.path, {
+          provider: UploadProviderEnum.QINIU
+        })
+        const doUploadResult = await messageStrategy.doUpload(msg.path, uploadUrl, config)
 
-        // 更新消息体中的URL为服务器URL
-        messageBody.url = downloadUrl
+        // 更新消息体中的URL为服务器URL(判断使用的是七牛云还是默认上传方式),如果没有provider就默认赋值downloadUrl
+        messageBody.url =
+          config?.provider && config?.provider === UploadProviderEnum.QINIU ? doUploadResult?.qiniuUrl : downloadUrl
         delete messageBody.path // 删除临时路径
 
         // 更新临时消息的URL
@@ -374,7 +376,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
           },
           status: MessageStatusEnum.SENDING
         })
-        console.log(`${msg.type === MsgEnum.EMOJI ? '表情包' : '图片'}上传完成,更新为服务器URL:`, downloadUrl)
+        console.log(`${msg.type === MsgEnum.EMOJI ? '表情包' : '图片'}上传完成,更新为服务器URL:`, messageBody.url)
       }
 
       // 发送消息到服务器
@@ -571,26 +573,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
   }
 
   onMounted(async () => {
-    db.value = await Database.load('sqlite:sqlite.db')
-    await db.value.execute(`
-        CREATE TABLE IF NOT EXISTS message (
-            id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-            room_id INTEGER NOT NULL,
-            from_uid INTEGER NOT NULL,
-            content TEXT(1024),
-            reply_msg_id INTEGER NOT NULL,
-            status INTEGER,
-            gap_count INTEGER,
-            "type" INTEGER DEFAULT (1),
-            extra TEXT,
-            create_time INTEGER,
-            update_time INTEGER
-            );
-        CREATE INDEX IF NOT EXISTS idx_room_id ON message (room_id);
-        CREATE INDEX IF NOT EXISTS idx_from_uid ON message (from_uid);
-        CREATE INDEX IF NOT EXISTS idx_create_time ON message (create_time);
-        CREATE INDEX IF NOT EXISTS idx_update_time ON message (update_time);
-    `)
     useMitt.on(MittEnum.RE_EDIT, async (event: string) => {
       messageInputDom.value.focus()
       await nextTick(() => {

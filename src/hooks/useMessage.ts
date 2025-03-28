@@ -126,8 +126,8 @@ export const useMessage = () => {
       label: '复制账号',
       icon: 'copy',
       click: (item: any) => {
-        navigator.clipboard.writeText(item.accountCode)
-        window.$message.success(`复制成功 ${item.accountCode}`)
+        navigator.clipboard.writeText(item.account)
+        window.$message.success(`复制成功 ${item.account}`)
       }
     },
     {

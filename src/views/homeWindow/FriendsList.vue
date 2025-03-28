@@ -90,7 +90,7 @@
                   :src="AvatarUtils.getAvatarUrl(item.avatar)"
                   fallback-src="/logo.png" />
 
-                <span class="text-14px leading-tight flex-1 truncate">{{ item.roomName }}</span>
+                <span class="text-14px leading-tight flex-1 truncate">{{ item.remark || item.roomName }}</span>
               </n-flex>
             </div>
           </n-scrollbar>

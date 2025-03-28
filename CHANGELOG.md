@@ -1,5 +1,21 @@
 
 
+## [2.6.8](https://github.com/HuLaSpark/HuLa/compare/v2.6.7...v2.6.8) (2025-03-26)
+
+
+### ✨ Features | 新功能
+
+* **component:** :sparkles: 增加兼容七牛云上传功能 ([eca26a9](https://github.com/HuLaSpark/HuLa/commit/eca26a977d315da23dec8c178b96b7db3b8a804f))
+* **component:** :sparkles: 增加邮箱登录、PIN输入框 ([4be6db7](https://github.com/HuLaSpark/HuLa/commit/4be6db7d31e77efd93cef9c4108ae0a8cc7ef2e0))
+
+
+### 🐛 Bug Fixes | Bug 修复
+
+* **chat:** 修复回复消息导致光标偏移 [#223](https://github.com/HuLaSpark/HuLa/issues/223) ([#224](https://github.com/HuLaSpark/HuLa/issues/224)) ([2cbf727](https://github.com/HuLaSpark/HuLa/commit/2cbf7273fb107de1bf363958758aa0a61e1206b4))
+* **component:** 🐛 使用setShow手动触发Popover显示 ([#230](https://github.com/HuLaSpark/HuLa/issues/230)) ([28fdc79](https://github.com/HuLaSpark/HuLa/commit/28fdc79e1891ca0f81cafe44d65c806bf2bda4f8)), closes [#210](https://github.com/HuLaSpark/HuLa/issues/210) [#210](https://github.com/HuLaSpark/HuLa/issues/210) [#210](https://github.com/HuLaSpark/HuLa/issues/210)
+* **hooks:** replace focus call with focusOn function in useMsgInput ([#227](https://github.com/HuLaSpark/HuLa/issues/227)) ([9deefc0](https://github.com/HuLaSpark/HuLa/commit/9deefc0fa21df42def3aac8012d622e46a270ef4)), closes [#151](https://github.com/HuLaSpark/HuLa/issues/151)
+* Implement placeholder by CSS ([#226](https://github.com/HuLaSpark/HuLa/issues/226)) ([9e867c6](https://github.com/HuLaSpark/HuLa/commit/9e867c672c482e3ca38b03033d80cd79df1c457d))
+
 ## [2.6.7](https://github.com/HuLaSpark/HuLa/compare/v2.6.6...v2.6.7) (2025-03-18)
 
 

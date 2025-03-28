@@ -22,7 +22,7 @@
 
           <n-flex vertical :size="10">
             <p class="text-[--text-color]">{{ userInfo.name }}</p>
-            <p class="text-(12px [--text-color])">群号: {{ userInfo.accountCode }}</p>
+            <p class="text-(12px [--text-color])">群号: {{ userInfo.account }}</p>
           </n-flex>
         </n-flex>
 
@@ -67,7 +67,7 @@ watch(
 const addFriend = async () => {
   await apis.applyGroup({
     msg: requestMsg.value,
-    targetGroupId: String(globalStore.addGroupModalInfo.accountCode)
+    targetGroupId: String(globalStore.addGroupModalInfo.account)
   })
   window.$message.success('已发送群聊申请')
   setTimeout(async () => {

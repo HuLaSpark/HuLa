@@ -8,7 +8,12 @@
         <img v-if="showLoading" class="size-22px py-3px" src="@/assets/img/loading.svg" alt="" />
         <n-flex v-else align="center">
           <n-avatar class="rounded-8px select-none" :size="28" :src="currentUserAvatar" />
-          <p class="text-(16px [--text-color])">{{ activeItem.name }}</p>
+          <label class="flex-y-center gap-6px">
+            <p class="text-(16px [--text-color])">{{ myGroupRemark || activeItem.name }}</p>
+            <p v-if="activeItem.type === RoomTypeEnum.GROUP" class="text-(11px #808080)">
+              [{{ activeItem?.memberNum }}]
+            </p>
+          </label>
           <svg
             v-if="activeItem.hotFlag === IsAllUserEnum.Yes && !showLoading"
             class="size-20px color-#13987f select-none outline-none">
@@ -172,7 +177,7 @@
                   </div>
                 </n-flex>
 
-                <n-popover trigger="hover" v-if="activeItem.hotFlag === IsAllUserEnum.Yes">
+                <n-popover trigger="hover" v-if="activeItem.hotFlag === IsAllUserEnum.Yes && !isEditingGroupName">
                   <template #trigger>
                     <svg class="size-20px select-none outline-none cursor-pointer color-#13987f">
                       <use href="#auth"></use>
@@ -206,13 +211,13 @@
             <p class="text-(12px #909090) mt-20px mb-10px">我本群的昵称</p>
             <n-input
               class="border-(solid 1px [--line-color]) custom-shadow"
-              v-model="groupDetail.myNickname"
+              v-model:value="groupDetail.myNickname"
               @update:value="updateGroupInfo($event, 'nickname')" />
             <!-- 群备注 -->
             <p class="text-(12px #909090) mt-20px mb-10px">群备注</p>
             <n-input
               class="border-(solid 1px [--line-color]) custom-shadow"
-              v-model="groupDetail.groupRemark"
+              v-model:value="groupDetail.groupRemark"
               @update:value="updateGroupInfo($event, 'remark')" />
 
             <!-- 群设置选项 -->
@@ -362,6 +367,12 @@ const originalGroupDetail = ref({
 })
 // 是否为群主
 const isGroupOwner = computed(() => groupDetail.value.role === 1)
+// 我的群备注
+const myGroupRemark = computed(() => {
+  if (activeItem.type === RoomTypeEnum.GROUP) {
+    return groupStore.countInfo?.remark || ''
+  }
+})
 // 是否正在编辑群名称
 const isEditingGroupName = ref(false)
 // 编辑中的群名称
@@ -406,6 +417,38 @@ const userList = computed(() => {
       return Number(a.uid) - Number(b.uid)
     })
     .slice(0, 10)
+})
+/** 获取当前用户的状态信息 */
+const currentUserStatus = computed(() => {
+  if (activeItem.type === RoomTypeEnum.GROUP) return null
+
+  // 使用 useUserInfo 获取用户信息
+  if (!activeItem.id) return null
+  const userInfo = useUserInfo(activeItem.id).value
+
+  // 从状态列表中找到对应的状态
+  return userStatusStore.stateList.find((state: { id: string }) => state.id === userInfo.userStateId)
+})
+
+/** 状态图标 */
+const statusIcon = computed(() => currentUserStatus.value?.url)
+
+/** 状态标题 */
+const statusTitle = computed(() => {
+  if (currentUserStatus.value?.title) {
+    return currentUserStatus.value.title
+  }
+  return isOnline.value ? '在线' : '离线'
+})
+
+// 获取用户的最新头像
+const currentUserAvatar = computed(() => {
+  if (activeItem.type === RoomTypeEnum.GROUP) {
+    return AvatarUtils.getAvatarUrl(activeItem.avatar)
+  } else if (activeItem.id) {
+    return AvatarUtils.getAvatarUrl(useUserInfo(activeItem.id).value.avatar || activeItem.avatar)
+  }
+  return AvatarUtils.getAvatarUrl(activeItem.avatar)
 })
 // 使用自定义hook处理头像上传
 const {
@@ -478,19 +521,15 @@ watchEffect(() => {
 // 获取群组详情
 const fetchGroupDetail = async () => {
   if (!activeItem.roomId || activeItem.type !== RoomTypeEnum.GROUP) return
-
-  const response = await apis.groupDetail({ id: activeItem.roomId })
-  if (response) {
-    groupDetail.value = {
-      myNickname: response.myName || '',
-      groupRemark: response.remark || '',
-      role: response.role || 3 // 添加角色信息
-    }
-    // 保存原始值，用于后续比较
-    originalGroupDetail.value = {
-      myNickname: response.myName || '',
-      groupRemark: response.remark || ''
-    }
+  groupDetail.value = {
+    myNickname: groupStore.countInfo?.myName || '',
+    groupRemark: groupStore.countInfo?.remark || '',
+    role: groupStore.countInfo?.role || 3 // 添加角色信息
+  }
+  // 保存原始值，用于后续比较
+  originalGroupDetail.value = {
+    myNickname: groupStore.countInfo?.myName || '',
+    groupRemark: groupStore.countInfo?.remark || ''
   }
 }
 
@@ -528,6 +567,13 @@ const saveGroupInfo = async () => {
       originalGroupDetail.value = {
         myNickname: groupDetail.value.myNickname,
         groupRemark: groupDetail.value.groupRemark
+      }
+
+      // 更新群聊缓存信息
+      groupStore.countInfo = {
+        ...groupStore.countInfo,
+        myName: groupDetail.value.myNickname,
+        remark: groupDetail.value.groupRemark
       }
 
       window.$message.success('群聊信息已更新')
@@ -689,67 +735,6 @@ const handleClick = () => {
   console.log(111)
 }
 
-const closeMenu = (event: any) => {
-  /** 点击非侧边栏元素时，关闭侧边栏，但点击弹出框元素、侧边栏图标、还有侧边栏里面的元素时不关闭 */
-  if (!event.target.matches('.sidebar, .sidebar *, .n-modal-mask, .options-box *, .n-modal *') && !modalShow.value) {
-    if (sidebarShow.value) {
-      // 如果侧边栏正在显示，则在关闭前保存群聊信息
-      saveGroupInfo()
-    }
-    sidebarShow.value = false
-  }
-}
-
-/** 获取当前用户的状态信息 */
-const currentUserStatus = computed(() => {
-  if (activeItem.type === RoomTypeEnum.GROUP) return null
-
-  // 使用 useUserInfo 获取用户信息
-  if (!activeItem.id) return null
-  const userInfo = useUserInfo(activeItem.id).value
-
-  // 从状态列表中找到对应的状态
-  return userStatusStore.stateList.find((state: { id: string }) => state.id === userInfo.userStateId)
-})
-
-/** 状态图标 */
-const statusIcon = computed(() => currentUserStatus.value?.url)
-
-/** 状态标题 */
-const statusTitle = computed(() => {
-  if (currentUserStatus.value?.title) {
-    return currentUserStatus.value.title
-  }
-  return isOnline.value ? '在线' : '离线'
-})
-
-// 获取用户的最新头像
-const currentUserAvatar = computed(() => {
-  if (activeItem.type === RoomTypeEnum.GROUP) {
-    return AvatarUtils.getAvatarUrl(activeItem.avatar)
-  } else if (activeItem.id) {
-    return AvatarUtils.getAvatarUrl(useUserInfo(activeItem.id).value.avatar || activeItem.avatar)
-  }
-  return AvatarUtils.getAvatarUrl(activeItem.avatar)
-})
-
-onMounted(() => {
-  window.addEventListener('click', closeMenu, true)
-  if (!messageOptions.value?.isLoading) {
-    isLoading.value = false
-    showLoading.value = false
-  }
-
-  // 如果是群聊，初始化时获取群组详情
-  if (activeItem.type === RoomTypeEnum.GROUP) {
-    fetchGroupDetail()
-  }
-})
-
-onUnmounted(() => {
-  window.removeEventListener('click', closeMenu, true)
-})
-
 // 开始编辑群名称
 const startEditGroupName = () => {
   if (!isGroupOwner.value) return
@@ -815,6 +800,34 @@ const handleUploadAvatar = () => {
 const handleCrop = async (cropBlob: Blob) => {
   await onCrop(cropBlob)
 }
+
+const closeMenu = (event: any) => {
+  /** 点击非侧边栏元素时，关闭侧边栏，但点击弹出框元素、侧边栏图标、还有侧边栏里面的元素时不关闭 */
+  if (!event.target.matches('.sidebar, .sidebar *, .n-modal-mask, .options-box *, .n-modal *') && !modalShow.value) {
+    if (sidebarShow.value) {
+      // 如果侧边栏正在显示，则在关闭前保存群聊信息
+      saveGroupInfo()
+    }
+    sidebarShow.value = false
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('click', closeMenu, true)
+  if (!messageOptions.value?.isLoading) {
+    isLoading.value = false
+    showLoading.value = false
+  }
+
+  // 如果是群聊，初始化时获取群组详情
+  if (activeItem.type === RoomTypeEnum.GROUP) {
+    fetchGroupDetail()
+  }
+})
+
+onUnmounted(() => {
+  window.removeEventListener('click', closeMenu, true)
+})
 </script>
 
 <style scoped lang="scss">
