@@ -85,7 +85,6 @@
 import { lightTheme } from 'naive-ui'
 import router from '@/router'
 import { invoke } from '@tauri-apps/api/core'
-import { relaunch } from '@tauri-apps/plugin-process'
 
 const apiOptions = [
   {
@@ -146,7 +145,6 @@ onMounted(() => {
     savedProxy.wsIp = parse.wsIp
     savedProxy.wsPort = parse.wsPort
     savedProxy.wsSuffix = parse.wsSuffix
-    console.log('savedProxy', savedProxy)
   }
 })
 
@@ -167,35 +165,33 @@ const handleSave = async () => {
     ) {
       window.$message.warning('请填写完整的代理信息')
       return
-    } else {
-      let proxySettings
-      if (proxy.value === 'api') {
-        // 保存到本地存储
-        proxySettings = {
-          ...savedProxy,
-          apiType: savedProxy.apiType === '' ? '' : savedProxy.apiType,
-          apiIp: savedProxy.apiType === '' ? '' : savedProxy.apiIp,
-          apiPort: savedProxy.apiType === '' ? '' : savedProxy.apiPort,
-          apiSuffix: savedProxy.apiType === '' ? '' : savedProxy.apiSuffix
-        }
-      } else {
-        // 保存到本地存储
-        proxySettings = {
-          ...savedProxy,
-          wsType: savedProxy.wsType === '' ? '' : savedProxy.wsType,
-          wsIp: savedProxy.wsType === '' ? '' : savedProxy.wsIp,
-          wsPort: savedProxy.wsType === '' ? '' : savedProxy.wsPort,
-          wsSuffix: savedProxy.wsType === '' ? '' : savedProxy.wsSuffix
-        }
-      }
-      localStorage.setItem('proxySettings', JSON.stringify(proxySettings))
     }
+    let proxySettings
+    if (proxy.value === 'api') {
+      // 保存到本地存储
+      proxySettings = {
+        ...savedProxy,
+        apiType: savedProxy.apiType,
+        apiIp: savedProxy.apiIp,
+        apiPort: savedProxy.apiPort,
+        apiSuffix: savedProxy.apiSuffix
+      }
+    } else {
+      // 保存到本地存储
+      proxySettings = {
+        ...savedProxy,
+        wsType: savedProxy.wsType,
+        wsIp: savedProxy.wsIp,
+        wsPort: savedProxy.wsPort,
+        wsSuffix: savedProxy.wsSuffix
+      }
+    }
+    const settings = JSON.stringify(proxySettings)
+    localStorage.setItem('proxySettings', settings)
 
     window.$message.success('代理设置保存成功')
-    setTimeout(async () => {
-      if (await confirm('代理设置需重启方可生效，是否重启？')) {
-        await relaunch()
-      }
+    setTimeout(() => {
+      location.reload()
     }, 1000)
   } catch (error) {
     window.$message.error('代理设置失败：' + error)
