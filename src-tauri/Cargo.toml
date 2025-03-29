@@ -47,6 +47,7 @@ tauri-plugin-updater = "2.6.1"
 tauri-plugin-sql = { version = "2", features = ["sqlite"] }
 tauri-plugin-single-instance = "2.2.2"
 tauri-plugin-notification = "2.2.2"
+tungstenite = {  version = "0.26.2", features = ["native-tls"] }
 [target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]
 tauri-plugin-autostart = "2.2.0"
 lazy_static = "1.4"
