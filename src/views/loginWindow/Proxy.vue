@@ -246,4 +246,8 @@ const proxyTest = async () => {
   height: 30px;
   line-height: 30px;
 }
+
+:deep(.n-tabs .n-tabs-nav.n-tabs-nav--line-type.n-tabs-nav--top .n-tabs-nav-scroll-content) {
+  border-bottom: 1px solid transparent;
+}
 </style>

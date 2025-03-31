@@ -1,10 +1,8 @@
 use reqwest::{Client, Proxy};
 use std::time::Duration;
 use tungstenite::client::connect_with_config;
-use tungstenite::connect;
 use tungstenite::http::Uri;
 use tungstenite::protocol::WebSocketConfig;
-use crate::proxy;
 
 // 定义测试用的URL列表
 const TEST_API_URLS: [&str; 1] = [
