@@ -271,7 +271,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       if (html.includes('data-type="emoji"')) {
         const tmp = document.createElement('div')
         tmp.innerHTML = html
-        const imgElement = tmp.querySelector('img')
+        const imgElement = tmp.querySelector<HTMLImageElement>('img[data-type]')
         if (imgElement && imgElement.src) {
           return (msgInput.value = imgElement.src)
         }
