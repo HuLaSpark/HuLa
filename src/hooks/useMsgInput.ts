@@ -312,9 +312,12 @@ export const useMsgInput = (messageInputDom: Ref) => {
     // 排除id="replyDiv"的元素的内容
     const replyDiv = messageInputDom.value.querySelector('#replyDiv')
     if (replyDiv) {
-      replyDiv.parentNode?.removeChild(replyDiv)
+      // TODO: 修复回复图片时 innerHTML.replace 导致图片地址被替换。为什么调用 replace ? 原因不明，可能 remove 会导致有什么 BUG？此处需要多次审查
+      replyDiv?.remove()
+      // replyDiv.parentNode?.removeChild(replyDiv)
+      // messageInputDom.value.querySelector('#reply-heade-space')?.remove()
       // 然后重新赋值给msgInput
-      msgInput.value = messageInputDom.value.innerHTML.replace(replyDiv.outerHTML, '')
+      // msgInput.value = messageInputDom.value.innerHTML.replace(replyDiv.outerHTML, '')
     }
     const contentType = getMessageContentType(messageInputDom)
     //根据消息类型获取消息处理策略
