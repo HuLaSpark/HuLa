@@ -10,8 +10,10 @@
           <n-avatar class="rounded-8px select-none" :size="28" :src="currentUserAvatar" />
           <label class="flex-y-center gap-6px">
             <p class="text-(16px [--text-color])">{{ myGroupRemark || activeItem.name }}</p>
-            <p v-if="activeItem.type === RoomTypeEnum.GROUP" class="text-(11px #808080)">
-              [{{ activeItem?.memberNum }}]
+            <p
+              v-if="activeItem.type === RoomTypeEnum.GROUP && groupStore.countInfo?.memberNum"
+              class="text-(11px #808080)">
+              [{{ groupStore.countInfo?.memberNum }}]
             </p>
           </label>
           <svg
@@ -555,32 +557,27 @@ const saveGroupInfo = async () => {
 
   // 只有当数据发生变化时才发送请求
   if (nicknameChanged || remarkChanged) {
-    try {
-      // 使用updateMyRoomInfo接口更新我在群里的昵称和群备注
-      await apis.updateMyRoomInfo({
-        id: activeItem.roomId,
-        myName: groupDetail.value.myNickname,
-        remark: groupDetail.value.groupRemark
-      })
+    // 使用updateMyRoomInfo接口更新我在群里的昵称和群备注
+    await apis.updateMyRoomInfo({
+      id: activeItem.roomId,
+      myName: groupDetail.value.myNickname,
+      remark: groupDetail.value.groupRemark
+    })
 
-      // 更新原始值为当前值
-      originalGroupDetail.value = {
-        myNickname: groupDetail.value.myNickname,
-        groupRemark: groupDetail.value.groupRemark
-      }
-
-      // 更新群聊缓存信息
-      groupStore.countInfo = {
-        ...groupStore.countInfo,
-        myName: groupDetail.value.myNickname,
-        remark: groupDetail.value.groupRemark
-      }
-
-      window.$message.success('群聊信息已更新')
-    } catch (error) {
-      window.$message.error('群聊信息更新失败')
-      console.error('更新群聊信息失败:', error)
+    // 更新原始值为当前值
+    originalGroupDetail.value = {
+      myNickname: groupDetail.value.myNickname,
+      groupRemark: groupDetail.value.groupRemark
     }
+
+    // 更新群聊缓存信息
+    groupStore.countInfo = {
+      ...groupStore.countInfo,
+      myName: groupDetail.value.myNickname,
+      remark: groupDetail.value.groupRemark
+    }
+
+    window.$message.success('群聊信息已更新')
   }
 }
 

@@ -37,7 +37,7 @@
             :img="localImageUrl"
             :outputSize="0.1"
             :autoCrop="true"
-            :outputType="'jpeg'"
+            outputType="webp"
             :fixedBox="true"
             :fixed="true"
             :centerBox="true"

@@ -151,142 +151,9 @@ export const useChatStore = defineStore(
       }
     })
 
-    /** ========================== localStorage 存储逻辑   ==================================== */
-    // 本地存储消息的键名前缀
-    const MESSAGE_STORAGE_KEY_PREFIX = 'hula_messages_'
-    // 本地存储消息选项的键名前缀
-    const MESSAGE_OPTIONS_STORAGE_KEY_PREFIX = 'hula_message_options_'
-    // 本地存储回复映射的键名前缀
-    const REPLY_MAPPING_STORAGE_KEY_PREFIX = 'hula_reply_mapping_'
-    // localStorage 存储大小限制 (约 5MB)
-    const STORAGE_SIZE_LIMIT = 5 * 1024 * 1024
-
-    // 将消息保存到 localStorage
-    const saveMessagesToStorage = (roomId: string) => {
-      try {
-        if (!roomId) return
-
-        // 获取当前房间的消息
-        const messages = messageMap.get(roomId)
-        if (!messages || messages.size === 0) return
-
-        // 将 Map 转换为数组以便序列化
-        const messagesArray = Array.from(messages.entries())
-        const serializedMessages = JSON.stringify(messagesArray)
-
-        // 检查序列化后的数据大小
-        if (serializedMessages.length > STORAGE_SIZE_LIMIT) {
-          console.warn(`消息数据过大，无法完全保存到 localStorage: ${roomId}`)
-          // 只保存最新的消息
-          const recentMessages = Array.from(messages.entries()).slice(-KEEP_MESSAGE_COUNT)
-          localStorage.setItem(`${MESSAGE_STORAGE_KEY_PREFIX}${roomId}`, JSON.stringify(recentMessages))
-        } else {
-          localStorage.setItem(`${MESSAGE_STORAGE_KEY_PREFIX}${roomId}`, serializedMessages)
-        }
-
-        // 保存消息加载状态
-        const options = messageOptions.get(roomId)
-        if (options) {
-          localStorage.setItem(`${MESSAGE_OPTIONS_STORAGE_KEY_PREFIX}${roomId}`, JSON.stringify(options))
-        }
-
-        // 保存回复映射
-        const replyMap = replyMapping.get(roomId)
-        if (replyMap) {
-          const replyMapArray = Array.from(replyMap.entries())
-          localStorage.setItem(`${REPLY_MAPPING_STORAGE_KEY_PREFIX}${roomId}`, JSON.stringify(replyMapArray))
-        }
-      } catch (error) {
-        console.error('保存消息到 localStorage 失败:', error)
-      }
-    }
-
-    // 从 localStorage 加载消息
-    const loadMessagesFromStorage = (roomId: string): boolean => {
-      try {
-        if (!roomId) return false
-
-        // 加载消息
-        const serializedMessages = localStorage.getItem(`${MESSAGE_STORAGE_KEY_PREFIX}${roomId}`)
-        if (serializedMessages) {
-          const messagesArray = JSON.parse(serializedMessages)
-          // 只加载最新的20条消息
-          const recentMessages = messagesArray.slice(-pageSize)
-          const messagesMap = new Map(recentMessages)
-          messageMap.set(roomId, messagesMap as Map<string, MessageType>)
-
-          // 加载消息选项
-          const serializedOptions = localStorage.getItem(`${MESSAGE_OPTIONS_STORAGE_KEY_PREFIX}${roomId}`)
-          if (serializedOptions) {
-            const options = JSON.parse(serializedOptions)
-            messageOptions.set(roomId, options)
-          }
-
-          // 加载回复映射
-          const serializedReplyMap = localStorage.getItem(`${REPLY_MAPPING_STORAGE_KEY_PREFIX}${roomId}`)
-          if (serializedReplyMap) {
-            const replyMapArray = JSON.parse(serializedReplyMap)
-            const replyMap = new Map(replyMapArray)
-            replyMapping.set(roomId, replyMap as Map<string, string[]>)
-          }
-
-          return true
-        }
-        return false
-      } catch (error) {
-        console.error('从 localStorage 加载消息失败:', error)
-        return false
-      }
-    }
-
-    // 清理过期或不需要的消息缓存
-    const cleanupMessageStorage = () => {
-      try {
-        // 获取所有 localStorage 键
-        const keys = Object.keys(localStorage)
-
-        // 找出所有消息相关的键
-        const messageKeys = keys.filter(
-          (key) =>
-            key.startsWith(MESSAGE_STORAGE_KEY_PREFIX) ||
-            key.startsWith(MESSAGE_OPTIONS_STORAGE_KEY_PREFIX) ||
-            key.startsWith(REPLY_MAPPING_STORAGE_KEY_PREFIX)
-        )
-
-        // 获取当前活跃的房间ID列表
-        const activeRoomIds = sessionList.map((session) => session.roomId)
-
-        // 删除不在活跃会话列表中的消息缓存
-        messageKeys.forEach((key) => {
-          // 提取房间ID
-          let roomId = ''
-          if (key.startsWith(MESSAGE_STORAGE_KEY_PREFIX)) {
-            roomId = key.substring(MESSAGE_STORAGE_KEY_PREFIX.length)
-          } else if (key.startsWith(MESSAGE_OPTIONS_STORAGE_KEY_PREFIX)) {
-            roomId = key.substring(MESSAGE_OPTIONS_STORAGE_KEY_PREFIX.length)
-          } else if (key.startsWith(REPLY_MAPPING_STORAGE_KEY_PREFIX)) {
-            roomId = key.substring(REPLY_MAPPING_STORAGE_KEY_PREFIX.length)
-          }
-
-          // 如果房间ID不在活跃列表中，删除相关缓存
-          if (roomId && !activeRoomIds.includes(roomId)) {
-            localStorage.removeItem(key)
-          }
-        })
-      } catch (error) {
-        console.error('清理消息缓存失败:', error)
-      }
-    }
-    /** ========================== end  ==================================== */
-
     // 监听当前房间ID的变化
     watch(currentRoomId, (val, oldVal) => {
       if (oldVal !== undefined && val !== oldVal) {
-        // 保存旧房间的消息到 localStorage
-        if (oldVal) {
-          saveMessagesToStorage(oldVal)
-        }
-
         // 1. 立即清空当前消息列表
         if (currentMessageMap.value) {
           currentMessageMap.value.clear()
@@ -304,34 +171,24 @@ export const useChatStore = defineStore(
           currentReplyMap.value.clear()
         }
 
-        // 4. 尝试从 localStorage 加载新房间的消息
-        const loadedFromStorage = val ? loadMessagesFromStorage(val) : false
-
-        // 5. 如果没有从 localStorage 加载到消息，则从服务器加载
-        if (!loadedFromStorage) {
-          // 使用 nextTick 确保状态已更新
-          nextTick(async () => {
-            try {
-              // 从服务器加载消息
-              await getMsgList()
-            } catch (error) {
-              console.error('无法加载消息:', error)
-              currentMessageOptions.value = {
-                isLast: false,
-                isLoading: false,
-                cursor: ''
-              }
+        // 4. 尝试从服务器加载新房间的消息
+        nextTick(async () => {
+          try {
+            // 从服务器加载消息
+            await getMsgList()
+          } catch (error) {
+            console.error('无法加载消息:', error)
+            currentMessageOptions.value = {
+              isLast: false,
+              isLoading: false,
+              cursor: ''
             }
-          })
-        } else {
-          // 从 localStorage 加载成功，更新加载状态
-          currentMessageOptions.value.isLoading = false
-        }
+          }
+        })
 
         // 群组的时候去请求
         if (currentRoomType.value === RoomTypeEnum.GROUP) {
           groupStore.getGroupUserList(true)
-          groupStore.getCountStatistic()
           cachedStore.getGroupAtUserBaseInfo()
         }
 
@@ -412,9 +269,6 @@ export const useChatStore = defineStore(
         currentMessageOptions.value.isLast = data.isLast
         currentMessageOptions.value.isLoading = false
       }
-
-      // 消息发送成功才保存消息到localStorage
-      saveMessagesToStorage(requestRoomId)
     }
 
     // 获取会话列表
@@ -445,9 +299,6 @@ export const useChatStore = defineStore(
       sessionOptions.isLoading = false
 
       sortAndUniqueSessionList()
-
-      // 清理不再活跃的会话消息缓存
-      cleanupMessageStorage()
 
       // sessionList[0].unreadCount = 0
       if (!isFirstInit || isFresh) {
@@ -529,9 +380,6 @@ export const useChatStore = defineStore(
         // 删除旧消息
         messagesToDelete.forEach((id) => current.delete(id))
       }
-
-      // 保存消息到localStorage
-      saveMessagesToStorage(msg.message.roomId)
 
       // 获取用户信息缓存
       const uid = msg.fromUser.uid
@@ -852,10 +700,7 @@ export const useChatStore = defineStore(
       recalledMessages,
       clearAllExpirationTimers,
       updateTotalUnreadCount,
-      clearUnreadCount,
-      saveMessagesToStorage,
-      loadMessagesFromStorage,
-      cleanupMessageStorage
+      clearUnreadCount
     }
   },
   {

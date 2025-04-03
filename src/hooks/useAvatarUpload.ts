@@ -6,7 +6,7 @@ export interface AvatarUploadOptions {
   onSuccess?: (downloadUrl: string) => void
   // 上传场景，默认为头像
   scene?: UploadSceneEnum
-  // 文件大小限制（KB），默认为500KB
+  // 文件大小限制（KB），默认为100KB
   sizeLimit?: number
 }
 /**
@@ -49,8 +49,8 @@ export const useAvatarUpload = (options: AvatarUploadOptions = {}) => {
   // 处理裁剪
   const handleCrop = async (cropBlob: Blob) => {
     try {
-      const fileName = `avatar_${Date.now()}.png`
-      const file = new File([cropBlob], fileName, { type: 'image/png' })
+      const fileName = `avatar_${Date.now()}.webp`
+      const file = new File([cropBlob], fileName, { type: 'image/webp' })
 
       // 检查裁剪后的文件大小
       if (file.size > sizeLimit * 1024) {
