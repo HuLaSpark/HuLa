@@ -50,6 +50,9 @@
     },
     {
       "matchUpdateTypes": ["patch", "digest", "pin"],
+      "matchManagers": ["npm", "cargo"]
+    },
+    {
       "matchManagers": ["npm", "cargo"],
       "rangeStrategy": "replace"
     }
