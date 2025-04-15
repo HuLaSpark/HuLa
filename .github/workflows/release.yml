@@ -5,6 +5,10 @@ on:
     tags:
       - 'v*'
 
+# 确保默认情况下所有 job 都只有只读权限，只有需要写权限的 job（比如发布 release 的 job）才会单独提升权限，其他 job 依然保持最小权限，最大程度保护仓库安全
+permissions:
+  contents: read
+
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: true  # 如果有新的发布任务，取消正在进行的任务

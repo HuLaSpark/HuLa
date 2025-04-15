@@ -171,7 +171,7 @@ const { themes } = storeToRefs(settingStore)
 const arrow = ref(false)
 /** 输入框dom元素 */
 const messageInputDom = ref<HTMLElement>()
-const activeItem = ref(inject('activeItem') as SessionItem)
+const activeItem = ref()
 /** ait 虚拟列表 */
 const virtualListInstAit = useTemplateRef<VirtualListInst>('virtualListInst-ait')
 /** AI 虚拟列表 */
@@ -257,6 +257,7 @@ const closeMenu = (event: any) => {
 }
 
 onMounted(async () => {
+  activeItem.value = inject('activeItem') as SessionItem
   onKeyStroke('Enter', () => {
     if (ait.value && Number(selectedAIKey.value) > -1) {
       const item = personList.value.find((item) => item.uid === selectedAitKey.value) as CacheUserItem

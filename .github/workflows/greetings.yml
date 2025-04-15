@@ -2,6 +2,10 @@ name: Greetings
 
 on: [pull_request_target, issues]
 
+# 顶层设置最小权限，推荐 contents: read
+permissions:
+  contents: read
+
 jobs:
   greeting:
     # 跳过 Renovate PR

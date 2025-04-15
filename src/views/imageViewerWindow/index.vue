@@ -9,7 +9,7 @@
     <!-- 主体内容区域 -->
     <div ref="contentRef" class="flex-1 overflow-auto">
       <!-- 图片展示区域 -->
-      <div class="min-h-[calc(100vh-124px)] flex-center">
+      <div ref="imgContainerRef" class="min-h-[calc(100vh-124px)] flex-center">
         <img
           ref="imageRef"
           :src="currentImage"
@@ -18,8 +18,9 @@
             cursor: isDragging ? 'grabbing' : 'grab'
           }"
           class="max-w-90% max-h-90% select-none"
-          :class="[{ 'transition-transform duration-200': !isDragging }, { 'mt-62px': !isScrollbar }]"
+          :class="[{ 'transition-transform duration-200': !isDragging }]"
           @mousedown="startDrag"
+          @load="checkScrollbar"
           alt="preview" />
 
         <!-- 提示文本 -->
@@ -132,7 +133,8 @@ const imagePosition = reactive({ x: 0, y: 0 })
 const imageRef = ref<HTMLImageElement>()
 // 添加响应式变量来跟踪是否有滚动条
 const contentScrollbar = useTemplateRef<HTMLElement>('contentRef')
-const isScrollbar = ref(false)
+// 图片容器
+const imgContainer = useTemplateRef<HTMLElement>('imgContainerRef')
 //提示相关的响应式变量
 const showTip = ref(false)
 const tipText = ref('')
@@ -360,8 +362,9 @@ const handleKeydown = (e: KeyboardEvent) => {
 // 检查是否有滚动条的函数
 const checkScrollbar = () => {
   setTimeout(() => {
-    if (contentScrollbar.value) {
-      isScrollbar.value = contentScrollbar.value.scrollHeight > contentScrollbar.value.clientHeight
+    if (imgContainer.value && contentScrollbar.value) {
+      imgContainer.value.style.height =
+        contentScrollbar.value.scrollHeight > contentScrollbar.value.clientHeight ? 'auto' : '100%'
     }
   }, 16)
 }
@@ -369,9 +372,6 @@ const checkScrollbar = () => {
 onMounted(async () => {
   // 显示窗口
   await getCurrentWebviewWindow().show()
-  setTimeout(() => {
-    checkScrollbar()
-  }, 16)
 
   await addListener(
     appWindow.listen('update-image', (event: any) => {

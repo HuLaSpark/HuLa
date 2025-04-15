@@ -97,6 +97,16 @@ export const useCommon = () => {
   })
 
   /**
+   * 判断 URL 是否安全
+   * @param url URL 字符串
+   * @returns 是否安全
+   */
+  const isSafeUrl = (url: string) => {
+    // 只允许 http/https 协议，且不能包含 javascript: 或 data:
+    return /^(https?:\/\/|\/)/.test(url) && !/^javascript:/i.test(url) && !/^data:/i.test(url)
+  }
+
+  /**
    * 获取当前光标选取的信息(需要判断是否为空)
    */
   const getEditorRange = () => {
@@ -308,7 +318,12 @@ export const useCommon = () => {
       const author = dom.name
       // 创建一个img标签节点作为头像
       const imgNode = document.createElement('img')
-      imgNode.src = dom.avatar
+      if (isSafeUrl(dom.avatar)) {
+        imgNode.src = dom.avatar
+      } else {
+        // 设置为默认头像或空
+        imgNode.src = 'avatar/001.png'
+      }
       imgNode.style.cssText = `
       width: 20px;
       height: 20px;
@@ -424,7 +439,13 @@ export const useCommon = () => {
     let content = dom.content
     // 创建一个img标签节点作为头像
     const imgNode = document.createElement('img')
-    imgNode.src = AvatarUtils.getAvatarUrl(dom.avatar)
+    const avatarUrl = AvatarUtils.getAvatarUrl(dom.avatar)
+    if (isSafeUrl(avatarUrl)) {
+      imgNode.src = avatarUrl
+    } else {
+      // 设置为默认头像或空
+      imgNode.src = 'avatar/001.png'
+    }
     imgNode.style.cssText = `
       width: 20px;
       height: 20px;
@@ -461,7 +482,6 @@ export const useCommon = () => {
       content = content.find((item: string) => item.startsWith('data:image/'))
       reply.value.imgCount = imageCount
     }
-    console.log(content)
 
     // todo: 暂时用http开头的图片判断，后续需要优化
     if (content.startsWith('http')) {

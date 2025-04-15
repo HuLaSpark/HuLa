@@ -70,7 +70,7 @@
               <n-flex
                 align="center"
                 justify="center"
-                class="emoji-item"
+                class="emoji-item py-4px"
                 v-for="(item, index) in emojiStore.emojiList"
                 :key="index"
                 @click.stop="chooseEmoji(item.expressionUrl, 'url')">
