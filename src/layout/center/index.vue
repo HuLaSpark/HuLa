@@ -106,7 +106,7 @@
             target-filterable
             v-model:value="selectedValue"
             :options="options"
-            :render-source-list="renderSourceList"
+            :render-source-list="renderSourceList()"
             :render-target-label="renderLabel" />
 
           <n-flex align="center" justify="center" class="p-16px">

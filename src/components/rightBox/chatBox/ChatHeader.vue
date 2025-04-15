@@ -83,12 +83,13 @@
         </n-popover>
       </div>
 
-      <div class="options-box">
+      <div class="options-box" @click="handleCreateGroupOrInvite">
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
             <svg><use href="#launch"></use></svg>
           </template>
-          <span>发起群聊</span>
+          <span v-if="activeItem.type === RoomTypeEnum.GROUP">邀请进群</span>
+          <span v-else>发起群聊</span>
         </n-popover>
       </div>
 
@@ -337,11 +338,13 @@ import { useUserStatusStore } from '@/stores/userStatus'
 import apis from '@/services/apis'
 import AvatarCropper from '@/components/common/AvatarCropper.vue'
 import { useAvatarUpload } from '@/hooks/useAvatarUpload'
+import { useWindow } from '@/hooks/useWindow'
 
 const appWindow = WebviewWindow.getCurrent()
 const { activeItem } = defineProps<{
   activeItem: SessionItem
 }>()
+const { createModalWindow } = useWindow()
 const { addListener } = useTauriListener()
 // 使用useDisplayMedia获取屏幕共享的媒体流
 const { stream, start, stop } = useDisplayMedia()
@@ -519,6 +522,26 @@ watchEffect(() => {
     })
   }
 })
+
+/** 处理创建群聊或邀请进群 */
+const handleCreateGroupOrInvite = () => {
+  if (activeItem.type === RoomTypeEnum.GROUP) {
+    handleInvite()
+  } else {
+    handleCreateGroup()
+  }
+}
+
+/** 处理创建群聊 */
+const handleCreateGroup = () => {
+  console.log(111)
+}
+
+/** 处理邀请进群 */
+const handleInvite = async () => {
+  // 使用封装后的createModalWindow方法创建模态窗口
+  await createModalWindow('邀请好友进群', 'modal-invite', 600, 500, 'home')
+}
 
 // 获取群组详情
 const fetchGroupDetail = async () => {

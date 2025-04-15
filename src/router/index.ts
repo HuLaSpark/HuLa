@@ -186,6 +186,11 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/homeWindow/SharedScreen.vue')
   },
   {
+    path: '/modal-invite',
+    name: 'modal-invite',
+    component: () => import('@/views/modalWindow/index.vue')
+  },
+  {
     path: '/settings',
     name: 'settings',
     component: () => import('@/views/moreWindow/settings/index.vue'),

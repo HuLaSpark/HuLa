@@ -305,9 +305,6 @@ const prevImage = () => {
   if (currentIndex.value > 0) {
     resetImage(true) // 立即重置
     currentIndex.value--
-    setTimeout(() => {
-      checkScrollbar()
-    }, 16)
   } else {
     showTipMessage('这是第一张图片')
   }
@@ -317,9 +314,6 @@ const nextImage = () => {
   if (currentIndex.value < imageList.value.length - 1) {
     resetImage(true) // 立即重置
     currentIndex.value++
-    setTimeout(() => {
-      checkScrollbar()
-    }, 16)
   } else {
     showTipMessage('已经最后一张图片')
   }
@@ -361,12 +355,12 @@ const handleKeydown = (e: KeyboardEvent) => {
 
 // 检查是否有滚动条的函数
 const checkScrollbar = () => {
-  setTimeout(() => {
-    if (imgContainer.value && contentScrollbar.value) {
-      imgContainer.value.style.height =
-        contentScrollbar.value.scrollHeight > contentScrollbar.value.clientHeight ? 'auto' : '100%'
-    }
-  }, 16)
+  if (!imgContainer.value || !contentScrollbar.value || !imageRef.value) return
+
+  imgContainer.value.style.height = 'auto' // 先重置为auto以便正确计算
+  // 检查是否有滚动条
+  imgContainer.value.style.height =
+    contentScrollbar.value.scrollHeight > contentScrollbar.value.clientHeight ? 'auto' : '100%'
 }
 
 onMounted(async () => {

@@ -58,7 +58,7 @@
                 :options="dropdownOptions"
                 @select="(key: string) => handleFriendAction(key, item.applyId)">
                 <n-icon class="cursor-pointer px-6px">
-                  <svg class="size-16px"><use href="#more"></use></svg>
+                  <svg class="size-16px color-[--text-color]"><use href="#more"></use></svg>
                 </n-icon>
               </n-dropdown>
             </n-flex>
