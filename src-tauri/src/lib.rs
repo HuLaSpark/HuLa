@@ -17,7 +17,8 @@ use desktops::tray;
 #[cfg(desktop)]
 use init::CustomInit;
 #[cfg(desktop)]
-use proxy::test_proxy;
+use proxy::test_api_proxy;
+use proxy::test_ws_proxy;
 
 // 移动端依赖
 #[cfg(mobile)]
@@ -54,7 +55,8 @@ fn setup_desktop() {
             audio,
             set_height,
             set_badge_count,
-            test_proxy
+            test_api_proxy,
+            test_ws_proxy
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

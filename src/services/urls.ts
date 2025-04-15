@@ -1,6 +1,20 @@
 import { URLEnum } from '@/enums'
 
-const { VITE_SERVICE_URL } = import.meta.env
+let { VITE_SERVICE_URL } = import.meta.env
+const savedProxy = localStorage.getItem('proxySettings')
+if (savedProxy) {
+  const settings = JSON.parse(savedProxy)
+  const suffix = settings.apiIp + ':' + settings.apiPort + '/' + settings.apiSuffix
+  switch (settings.apiType) {
+    case 'http':
+    case 'https':
+    case 'socket5':
+      VITE_SERVICE_URL = settings.apiType + '://' + suffix
+      break
+    default:
+      break
+  }
+}
 const prefix = VITE_SERVICE_URL
 
 export default {

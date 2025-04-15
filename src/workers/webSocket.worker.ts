@@ -19,6 +19,8 @@ let token: null | string = null
 
 let clientId: null | string = null
 
+let serverUrl: null | string = null
+
 // 往 ws 发消息
 const connectionSend = (value: object) => {
   connection?.send(JSON.stringify(value))
@@ -129,9 +131,7 @@ const initConnection = () => {
   // 建立链接
   // 本地配置到 .env 里面修改。生产配置在 .env.production 里面
   if (!connection) {
-    connection = new WebSocket(
-      `${import.meta.env.VITE_WEBSOCKET_URL}?clientId=${clientId}${token ? `&token=${token}` : ''}`
-    )
+    connection = new WebSocket(`${serverUrl}?clientId=${clientId}${token ? `&token=${token}` : ''}`)
   }
   // 收到消息
   connection.addEventListener('message', onConnectMsg)
@@ -158,6 +158,7 @@ self.onmessage = (e: MessageEvent<string>) => {
       reconnectCount = 0
       token = value['token']
       clientId = value['clientId']
+      serverUrl = value['serverUrl']
       initConnection()
       break
     }
