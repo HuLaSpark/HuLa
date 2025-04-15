@@ -15,6 +15,10 @@
     "automerge": true
   },
   "rangeStrategy": "bump",
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["on sunday at 9:00am"]
+  },
   "packageRules": [
     {
       "matchUpdateTypes": ["minor", "patch"],
@@ -25,13 +29,15 @@
       "groupName": "Tauri dependencies",
       "groupSlug": "tauri-deps",
       "matchPackagePatterns": ["^@tauri-apps/"],
-      "matchManagers": ["npm"]
+      "matchManagers": ["npm"],
+      "rangeStrategy": "replace"
     },
     {
       "groupName": "UnoCSS dependencies",
       "groupSlug": "unocss-deps",
       "matchPackagePatterns": ["^@unocss/"],
-      "matchManagers": ["npm"]
+      "matchManagers": ["npm"],
+      "rangeStrategy": "replace"
     },
     {
       "description": "Rust crate updates",
@@ -39,7 +45,16 @@
       "groupName": "Rust dependencies",
       "groupSlug": "rust-deps",
       "enabled": true,
-      "registryUrls": ["https://crates.io"]
+      "registryUrls": ["https://crates.io"],
+      "rangeStrategy": "replace"
+    },
+    {
+      "matchUpdateTypes": ["patch", "digest", "pin"],
+      "matchManagers": ["npm", "cargo"]
+    },
+    {
+      "matchManagers": ["npm", "cargo"],
+      "rangeStrategy": "replace"
     }
   ],
   "enabledManagers": ["npm", "cargo"],

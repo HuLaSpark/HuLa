@@ -112,16 +112,47 @@
 
     <!-- 群信息列表 -->
     <n-flex vertical class="select-none w-full px-30px box-border">
-      <n-flex align="center" justify="space-between" class="py-12px border-b text-(14px [--chat-text-color])">
+      <n-flex
+        align="center"
+        justify="space-between"
+        class="py-6px h-26px pr-4px border-b text-(14px [--chat-text-color])">
         <span>群备注</span>
-        <span>{{ item.remark || '设置群聊备注' }}</span>
+        <div v-if="isEditingRemark" class="flex items-center">
+          <n-input
+            ref="remarkInputRef"
+            v-model:value="remarkValue"
+            size="tiny"
+            class="border-(1px solid #90909080)"
+            placeholder="请输入群聊备注"
+            clearable
+            @blur="handleRemarkUpdate"
+            @keydown.enter="handleRemarkUpdate" />
+        </div>
+        <span v-else class="cursor-pointer" @click="startEditRemark">
+          {{ item.remark || '设置群聊备注' }}
+        </span>
       </n-flex>
 
-      <n-flex align="center" justify="space-between" class="py-12px border-b text-(14px [--chat-text-color])">
+      <n-flex
+        align="center"
+        justify="space-between"
+        :class="{ 'pr-4px': item.myName }"
+        class="py-6px border-b h-26px text-(14px [--chat-text-color])">
         <span>我的本群昵称</span>
-        <span class="flex items-center cursor-pointer">
+        <div v-if="isEditingNickname" class="flex items-center">
+          <n-input
+            ref="nicknameInputRef"
+            v-model:value="nicknameValue"
+            size="tiny"
+            class="border-(1px solid #90909080)"
+            placeholder="请输入本群昵称"
+            clearable
+            @blur="handleNicknameUpdate"
+            @keydown.enter="handleNicknameUpdate" />
+        </div>
+        <span v-else class="flex items-center cursor-pointer" @click="startEditNickname">
           <p class="text-#909090">{{ item.myName || '未设置' }}</p>
-          <n-icon size="16" class="ml-1">
+          <n-icon v-if="!item.myName" size="16" class="ml-1">
             <svg><use href="#right"></use></svg>
           </n-icon>
         </span>
@@ -175,13 +206,26 @@ const { content } = defineProps<{
 const item = ref<any>(null)
 const options = ref<Array<{ name: string; src: string }>>([])
 
+// 编辑群备注相关状态
+const isEditingRemark = ref(false)
+const remarkValue = ref('')
+const remarkInputRef = useTemplateRef('remarkInputRef')
+
+// 编辑本群昵称相关状态
+const isEditingNickname = ref(false)
+const nicknameValue = ref('')
+const nicknameInputRef = useTemplateRef('nicknameInputRef')
+
 watchEffect(() => {
   if (content.type === RoomTypeEnum.SINGLE) {
     item.value = useUserInfo(content.uid).value
   } else {
     apis.groupDetail({ id: content.uid }).then((response) => {
-      console.log(response)
       item.value = response
+
+      // 初始化备注和昵称值
+      remarkValue.value = response.remark || ''
+      nicknameValue.value = response.myName || ''
 
       // 获取群成员列表
       if (item.value && item.value.roomId) {
@@ -191,6 +235,52 @@ watchEffect(() => {
   }
 })
 
+// 开始编辑群备注
+const startEditRemark = () => {
+  remarkValue.value = item.value.remark || ''
+  isEditingRemark.value = true
+  nextTick(() => {
+    remarkInputRef.value?.focus()
+  })
+}
+
+// 处理群备注更新
+const handleRemarkUpdate = async () => {
+  if (remarkValue.value !== item.value.remark) {
+    await apis.updateMyRoomInfo({
+      id: item.value.roomId,
+      remark: remarkValue.value,
+      myName: item.value.myName || ''
+    })
+    item.value.remark = remarkValue.value
+    window.$message.success('群备注更新成功')
+  }
+  isEditingRemark.value = false
+}
+
+// 开始编辑本群昵称
+const startEditNickname = () => {
+  nicknameValue.value = item.value.myName || ''
+  isEditingNickname.value = true
+  nextTick(() => {
+    nicknameInputRef.value?.focus()
+  })
+}
+
+// 处理本群昵称更新
+const handleNicknameUpdate = async () => {
+  if (nicknameValue.value !== item.value.myName) {
+    await apis.updateMyRoomInfo({
+      id: item.value.roomId,
+      myName: nicknameValue.value,
+      remark: item.value.remark || ''
+    })
+    item.value.myName = nicknameValue.value
+    window.$message.success('本群昵称更新成功')
+  }
+  isEditingNickname.value = false
+}
+
 // 复制
 const handleCopy = (account: string) => {
   if (account) {
@@ -199,7 +289,7 @@ const handleCopy = (account: string) => {
   }
 }
 
-// 获取群成员列表
+// 获取群组详情和成员信息
 const fetchGroupMembers = async (roomId: string) => {
   try {
     const params = {
@@ -209,8 +299,6 @@ const fetchGroupMembers = async (roomId: string) => {
     }
     const response = await apis.getGroupList(params)
     if (response && response.list) {
-      console.log(response)
-
       // 使用每个成员的uid获取详细信息
       const memberDetails = response.list.map((member: UserItem) => {
         const userInfo = useUserInfo(member.uid).value

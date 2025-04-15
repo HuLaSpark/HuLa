@@ -152,7 +152,6 @@ const updateConnectionState = (newState: ConnectionState) => {
 }
 
 self.onmessage = (e: MessageEvent<string>) => {
-  console.log(e.data)
   const { type, value } = JSON.parse(e.data)
   switch (type) {
     case 'initWS': {

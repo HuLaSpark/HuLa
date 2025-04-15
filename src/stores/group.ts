@@ -156,7 +156,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
    * 更新用户在线状态
    * @param item 需要更新状态的用户
    */
-  const updateUserStatus = async (item: UserItem | OnStatusChangeType['member'] | { uid: string; myName: string }) => {
+  const updateUserStatus = async (item: UserItem | OnStatusChangeType['member']) => {
     const findIndex = userList.value.findIndex((i) => i.uid === item.uid)
     if (findIndex !== -1) {
       userList.value[findIndex] = { ...userList.value[findIndex], ...item }

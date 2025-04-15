@@ -196,10 +196,12 @@ useMitt.on(WsResponseMessageType.MSG_RECALL, (data: RevokedMsgType) => {
   chatStore.updateRecallStatus(data)
 })
 useMitt.on(WsResponseMessageType.MY_ROOM_INFO_CHANGE, (data: { myName: string; roomId: string; uid: string }) => {
-  groupStore.updateUserStatus({
-    uid: data.uid,
-    myName: data.myName
-  })
+  // 更新用户在群聊中的昵称
+  cachedStore.updateUserGroupNickname(data)
+  // 如果当前正在查看的是该群聊，则更新群组信息
+  if (globalStore.currentSession?.roomId === data.roomId) {
+    groupStore.getCountStatistic()
+  }
 })
 useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   chatStore.pushMsg(data)
@@ -287,7 +289,9 @@ onBeforeMount(async () => {
 
 onMounted(async () => {
   // 初始化配置
-  await configStore.initConfig()
+  if (!localStorage.getItem('config')) {
+    await configStore.initConfig()
+  }
   await getCurrentWebviewWindow().show()
   let permissionGranted = await isPermissionGranted()
 
