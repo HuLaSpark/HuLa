@@ -156,6 +156,7 @@ const { page } = storeToRefs(settingStore)
 const { plugins } = storeToRefs(pluginsStore)
 const isCurrently = ref(-1)
 const allPlugins = ref([] as STO.Plugins<PluginEnum>[])
+const pluginsLists = ref<STO.Plugins<PluginEnum>[]>(JSON.parse(JSON.stringify(pluginsList.value)))
 
 const handleState = (plugin: STO.Plugins<PluginEnum>) => {
   if (plugin.state === PluginEnum.INSTALLED) return
@@ -212,7 +213,7 @@ const closeMenu = (event: Event) => {
 }
 
 onMounted(() => {
-  allPlugins.value = pluginsList.value.map((i) => {
+  allPlugins.value = pluginsLists.value.map((i) => {
     const p = plugins.value.find((z) => z.title === i.title)
     if (p) {
       return {
