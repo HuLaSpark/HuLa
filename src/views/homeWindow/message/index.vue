@@ -45,8 +45,7 @@
             </n-flex>
 
             <n-flex align="center" justify="space-between">
-              <span class="text flex-1 leading-tight text-12px truncate" v-html="item.lastMsg.replace(':', '：')">
-              </span>
+              <span class="text flex-1 leading-tight text-12px truncate" v-text="item.lastMsg.replace(':', '：')" />
 
               <!-- 消息提示 -->
               <template v-if="item.muteNotification === 1 && !item.unreadCount">
@@ -254,6 +253,7 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 @use '@/styles/scss/message';
+
 #image-no-data {
   @apply size-full mt-60px text-[--text-color] text-14px;
 }
