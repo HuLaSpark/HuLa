@@ -879,4 +879,8 @@ onUnmounted(() => {
     opacity: 1;
   }
 }
+
+:deep(.n-scrollbar > .n-scrollbar-container > .n-scrollbar-content) {
+  padding-left: 2px;
+}
 </style>

@@ -7,7 +7,7 @@
       max-height="280px"
       style-id="plugins-hover-classes">
       <template #item="{ item: plugin, index }">
-        <n-flex align="center" justify="space-between" class="p-[0_20px] mt-10px">
+        <n-flex align="center" justify="space-between" class="p-[10px_20px] mt-10px">
           <n-flex :size="14" align="center">
             <n-flex align="center" justify="center" class="size-48px rounded-50% bg-#7676760f">
               <Transition mode="out-in">

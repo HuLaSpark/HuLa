@@ -1,5 +1,5 @@
 <template>
-  <div class="float-block-container" ref="containerRef">
+  <div class="float-block-container select-none" ref="containerRef">
     <n-virtual-list
       ref="virtualListRef"
       :style="{ maxHeight: maxHeight }"
@@ -28,7 +28,8 @@
       :style="{
         height: `${itemHeight}px`,
         opacity: props.hoverOpacity,
-        top: `${hoverPosition}px`
+        top: `${hoverPosition}px`,
+        display: isHoverPositionValid ? 'block' : 'none'
       }"></div>
   </div>
 </template>
@@ -68,9 +69,28 @@ const containerRef = ref<HTMLElement | null>(null)
 const virtualListRef = ref<any>(null)
 const hoverPosition = ref<number | null>(null)
 const currentHoverIndex = ref<number | null>(null)
+const containerHeight = ref<number>(0)
+
+// 计算属性：判断悬浮位置是否有效（是否在容器范围内）
+const isHoverPositionValid = computed(() => {
+  if (hoverPosition.value === null) return false
+
+  // 确保悬浮位置 + 项目高度不超过容器高度
+  return hoverPosition.value >= 0 && hoverPosition.value + props.itemHeight <= containerHeight.value
+})
+
+// 更新容器高度
+const updateContainerHeight = () => {
+  if (virtualListRef.value?.$el) {
+    containerHeight.value = virtualListRef.value.$el.clientHeight
+  }
+}
 
 // 处理滚动事件
 const handleScroll = () => {
+  // 更新容器高度
+  updateContainerHeight()
+
   // 如果当前有悬浮项，更新其位置
   if (currentHoverIndex.value !== null) {
     updateHoverPositionByIndex(currentHoverIndex.value)
@@ -96,6 +116,9 @@ const handleItemMouseEnter = (index: number) => {
 
     // 设置悬浮效果的位置
     hoverPosition.value = itemRect.top - listRect.top
+
+    // 更新容器高度
+    updateContainerHeight()
   } else {
     // 如果找不到DOM元素，使用索引计算位置
     updateHoverPositionByIndex(index)
@@ -137,6 +160,9 @@ const updateHoverPositionByIndex = (index: number) => {
 
   // 计算目标元素相对于列表容器的顶部偏移量
   hoverPosition.value = targetRect.top - listRect.top
+
+  // 更新容器高度
+  updateContainerHeight()
 }
 
 // 处理容器的鼠标离开事件
@@ -150,6 +176,12 @@ onMounted(() => {
   if (containerRef.value) {
     containerRef.value.addEventListener('mouseleave', handleMouseLeave)
   }
+
+  // 初始化容器高度
+  updateContainerHeight()
+
+  // 监听窗口大小变化
+  window.addEventListener('resize', updateContainerHeight)
 })
 
 // 在组件卸载时移除事件监听
@@ -157,6 +189,9 @@ onUnmounted(() => {
   if (containerRef.value) {
     containerRef.value.removeEventListener('mouseleave', handleMouseLeave)
   }
+
+  // 移除窗口大小变化监听
+  window.removeEventListener('resize', updateContainerHeight)
 })
 
 // 暴露滚动到顶部/底部方法
@@ -201,6 +236,5 @@ defineExpose({
   pointer-events: none;
   transition: top 0.2s ease-in-out;
   z-index: 0;
-  border-radius: 8px;
 }
 </style>
