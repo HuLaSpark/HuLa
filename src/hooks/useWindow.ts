@@ -97,19 +97,23 @@ export const useWindow = () => {
       height: height,
       resizable: false,
       center: true,
-      decorations: false,
-      transparent: false,
       minWidth: 500,
       minHeight: 500,
       focus: true,
       parent: parentWindow ? parentWindow : parent,
+      decorations: !isCompatibility.value,
+      transparent: isCompatibility.value,
+      titleBarStyle: 'overlay', // mac覆盖标签栏
+      hiddenTitle: true, // mac隐藏标题栏
       visible: false
     })
 
     // 监听窗口创建完成事件
     modalWindow.once('tauri://created', async () => {
-      // 禁用父窗口，模拟模态窗口效果
-      await parentWindow?.setEnabled(false)
+      if (type() === 'windows') {
+        // 禁用父窗口，模拟模态窗口效果
+        await parentWindow?.setEnabled(false)
+      }
 
       // 设置窗口为焦点
       await modalWindow.setFocus()

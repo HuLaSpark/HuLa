@@ -29,7 +29,6 @@ export const getDisabledOptions = () => {
 
   // 确保返回群内所有成员的UID
   const result = groupStore.userList.map((member) => member.uid)
-  console.log('禁用选项列表:', result)
   return result
 }
 
