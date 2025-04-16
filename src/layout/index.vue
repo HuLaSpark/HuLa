@@ -37,8 +37,10 @@ import { useChatStore } from '@/stores/chat'
 import { LoginSuccessResType, OnStatusChangeType, WsResponseMessageType, WsTokenExpire } from '@/services/wsType.ts'
 import type { MarkItemType, MessageType, RevokedMsgType } from '@/services/types.ts'
 import { computedToken } from '@/services/request'
-import { isPermissionGranted, requestPermission } from '@tauri-apps/plugin-notification'
+import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification'
+import { useUserInfo } from '@/hooks/useCached.ts'
 import { emitTo } from '@tauri-apps/api/event'
+import { useThrottleFn } from '@vueuse/core'
 import { useCachedStore } from '@/stores/cached'
 import { clearListener, initListener, readCountQueue } from '@/utils/ReadCountQueue'
 import { type } from '@tauri-apps/plugin-os'
@@ -208,8 +210,7 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
     useMitt.emit(MittEnum.MESSAGE_ANIMATION, data)
   }
   // 接收到通知就设置图标闪烁
-  // TODO： 先取消通知功能，会导致程序闪退
-  // const username = useUserInfo(data.fromUser.uid).value.name!
+  const username = useUserInfo(data.fromUser.uid).value.name!
   // 不是自己发的消息才通知
   if (data.fromUser.uid !== userUid.value) {
     // 在windows系统下才发送通知
@@ -230,14 +231,13 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
       await emitTo('notify', 'notify_cotent', data)
       // 请求用户注意窗口
       home?.requestUserAttention(UserAttentionType.Critical)
-      // TODO： 先取消通知功能，会导致程序闪退
-      // const throttleSendNotification = useThrottleFn(() => {
-      //   sendNotification({
-      //     title: username,
-      //     body: data.message.body.content
-      //   })
-      // }, 3000)
-      // throttleSendNotification()
+      const throttleSendNotification = useThrottleFn(() => {
+        sendNotification({
+          title: username,
+          body: data.message.body.content
+        })
+      }, 3000)
+      throttleSendNotification()
     }
   }
 })
@@ -248,17 +248,13 @@ useMitt.on(WsResponseMessageType.REQUEST_NEW_FRIEND, async (data: { uid: number;
   // 刷新好友申请列表
   await contactStore.getRequestFriendsList(true)
 
-  // 判断主窗口是否是在其他窗口的前面并且聚焦
-  const home = await WebviewWindow.getByLabel('home')
-  home?.requestUserAttention(UserAttentionType.Critical)
-  // TODO： 先取消通知功能，会导致程序闪退
-  // const throttleSendNotification = useThrottleFn(() => {
-  //   sendNotification({
-  //     title: '新好友',
-  //     body: `您有${data.unreadCount}条好友申请`
-  //   })
-  // }, 3000)
-  // throttleSendNotification()
+  const throttleSendNotification = useThrottleFn(() => {
+    sendNotification({
+      title: '新好友',
+      body: `您有${data.unreadCount}条好友申请`
+    })
+  }, 3000)
+  throttleSendNotification()
 })
 useMitt.on(
   WsResponseMessageType.NEW_FRIEND_SESSION,
