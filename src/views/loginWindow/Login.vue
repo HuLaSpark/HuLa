@@ -149,6 +149,12 @@
             注册账号
           </div>
           <div class="text-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px">忘记密码</div>
+          <div
+            v-if="!isCompatibility"
+            @click="router.push('/proxy')"
+            class="text-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px">
+            网络设置
+          </div>
         </n-flex>
       </n-popover>
     </n-flex>
@@ -172,7 +178,9 @@ import { useNetwork } from '@vueuse/core'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { clearListener } from '@/utils/ReadCountQueue'
 import { useGlobalStore } from '@/stores/global'
+import { type } from '@tauri-apps/plugin-os'
 
+const isCompatibility = computed(() => type() === 'windows' || type() === 'linux')
 const settingStore = useSettingStore()
 const userStore = useUserStore()
 const userStatusStore = useUserStatusStore()
