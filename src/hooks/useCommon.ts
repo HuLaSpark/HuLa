@@ -171,7 +171,7 @@ export const useCommon = () => {
     } else if (hasEmoji && !hasText && !hasImage) {
       // 如果只有表情包，没有其他文本或图片，则返回EMOJI类型
       return MsgEnum.EMOJI
-    } else if (hasText && hasImage) {
+    } else if (hasText && hasImage || hasText && hasEmoji) {
       return MsgEnum.MIXED
     } else if (hasImage) {
       return MsgEnum.IMAGE
