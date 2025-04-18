@@ -52,6 +52,7 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
         self.on_window_event(|window, event: &WindowEvent| match event {
             WindowEvent::Focused(flag) => {
                 // 自定义系统托盘-实现托盘菜单失去焦点时隐藏
+                #[cfg(not(target_os = "macos"))]
                 if !window.label().eq("tray") && *flag {
                     window
                         .app_handle()

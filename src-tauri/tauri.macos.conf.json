@@ -75,18 +75,6 @@
         "hiddenTitle": true
       },
       {
-        "label": "tray",
-        "url": "/tray",
-        "resizable": false,
-        "center": false,
-        "visible": false,
-        "width": 130,
-        "height": 44,
-        "alwaysOnTop": true,
-        "skipTaskbar": true,
-        "decorations": false
-      },
-      {
         "label": "capture",
         "url": "/capture",
         "fullscreen": false,
