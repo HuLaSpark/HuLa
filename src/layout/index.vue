@@ -282,6 +282,22 @@ useMitt.on(WsResponseMessageType.REQUEST_APPROVAL_FRIEND, async () => {
   // 刷新好友列表以获取最新状态
   await contactStore.getContactList(true)
 })
+useMitt.on(WsResponseMessageType.ROOM_INFO_CHANGE, async (data: { roomId: string; name: string; avatar: string }) => {
+  // 根据roomId修改对应房间中的群名称和群头像
+  const { roomId, name, avatar } = data
+
+  // 更新chatStore中的会话信息
+  chatStore.updateSession(roomId, {
+    name,
+    avatar
+  })
+
+  // 如果当前正在查看的是该群聊，则需要刷新群组详情
+  if (globalStore.currentSession?.roomId === roomId && globalStore.currentSession.type === RoomTypeEnum.GROUP) {
+    // 重新获取群组信息统计
+    await groupStore.getCountStatistic()
+  }
+})
 
 onBeforeMount(async () => {
   // 默认执行一次

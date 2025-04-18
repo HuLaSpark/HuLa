@@ -308,6 +308,18 @@ class WS {
           )
           break
         }
+        case WsResponseMessageType.ROOM_INFO_CHANGE: {
+          console.log('群主修改群聊信息', params.data)
+          useMitt.emit(
+            WsResponseMessageType.ROOM_INFO_CHANGE,
+            params.data as {
+              roomId: string
+              name: string
+              avatar: string
+            }
+          )
+          break
+        }
         default: {
           console.log('接收到未处理类型的消息:', params)
           break

@@ -186,6 +186,11 @@ const handleFriendAction = async (action: string, applyId: string) => {
     }, 600)
   }
 }
+
+onMounted(() => {
+  // 组件挂载时刷新一次列表
+  contactStore.getRequestFriendsList(true)
+})
 </script>
 
 <style scoped lang="scss"></style>

@@ -28,23 +28,37 @@
 </p>
 
 <p align="center">
+  💻 Official Website：<a href="https://hulaspark.com">HuLaSpark</a>
+</p>
+
+<p align="center">
   ☕️ server：<a href="https://github.com/HulaSpark/HuLa-Server">github HuLa-Server</a> | <a href="https://gitee.com/HulaSpark/HuLa-Server">gitee HuLa-Server</a>
 </p>
 
 <p align="center"><a href="README.zh-CN.md">中文</a> | English</p>
 
-## Project Introduction
+## 🌐 Support platform
+
+| Platform | Supported version |
+|------|---------|
+| Windows | Windows 10, Windows 11 |
+| macOS | macOS 10.5+ |
+| Linux | Ubuntu 22.0+ |
+| iOS/iPadOS | iOS 9.0+, iPadOS 9.0+ |
+| Android | Android 8.0+ |
+
+## 📝 Project Introduction
 
 HuLa is an instant messaging system developed with Tauri, Vite 6, Vue 3, and TypeScript. It leverages the cross-platform capabilities of Tauri and the reactive design of Vue 3, combined with TypeScript's type safety features and the fast build system of Vite 6, to provide users with an efficient, secure, and easy-to-use communication solution.
 
-## Technology Stack
+## 🛠️ Technology Stack
 
 - **Tauri**: Provides a lightweight, high-performance desktop application container, enabling the development of cross-platform desktop applications with a web technology stack. Tauri's design philosophy aims to minimize resource consumption while ensuring security.
 - **Vite 6**: A modern front-end build tool that uses native ES module import to offer a fast development server. At the same time, it provides robust support for production builds. Vite 6 is its latest version, bringing more optimizations and features.
 - **Vue 3**: A progressive JavaScript framework for building user interfaces. Its Composition API, improved TypeScript integration, and optimizations for mobile platforms make developing complex single-page applications simpler and more efficient.
 - **TypeScript**: A superset of JavaScript that adds a type system to the language. It enables catching more errors during development and provides better support from editors.
 
-## Project PreView
+## 🖼️ Project PreView
 
 ![img.png](preview/img.png)
 
@@ -108,13 +122,13 @@ HuLa is an instant messaging system developed with Tauri, Vite 6, Vue 3, and Typ
 | | iOS/Android Adaptation | 🚧 In Progress |
 | 🤖 **AI** | DeepSeek, ChatGPT, Claude, Qwen, Custom | 🚧 In Progress |
 
-## Thanks to the following contributors!
+## 👏 Thanks to the following contributors!
 
 <a href="https://github.com/HuLaSpark/HuLa/graphs/contributors">
   <img src="https://opencollective.com/HuLaSpark/contributors.svg?width=890" />
 </a>
 
-## Installation and Running
+## 📥 Installation and Running
 
 ```bash
 # Clone the project
@@ -151,11 +165,11 @@ Downloading the installation package on the web page will indicate that the inst
 sudo xattr -rd com.apple.quarantine the Path To Install The Package/Download installation package name
 ```
 
-## SubmissionSpecification
+## 📋 SubmissionSpecification
 
 use **pnpm run commit** to invoke the _git commit_ interaction and follow the prompts to complete the input and selection of information
 
-## Disclaimer
+## ⚖️ Disclaimer
 
 1. This project is provided as an open source project, and the developer does not provide any express or implied warranty of any kind as to the functionality, security, or suitability of the software to the extent permitted by law
 2. The User expressly understands and agrees that the use of the Software is entirely at the User's own risk and that the Software is provided on an "as is" and "as available" basis. The developer disclaims all warranties of any kind, whether express or implied, including, but not limited to, warranties of merchantability, fitness for a particular purpose, and non-infringement
@@ -165,7 +179,7 @@ use **pnpm run commit** to invoke the _git commit_ interaction and follow the pr
 
 **The final interpretation of this disclaimer belongs to the developer**
 
-## Sponsor HuLa
+## 🎁 Sponsor HuLa
 If you think HuLa is helpful to you, welcome to sponsor HuLa. Your support is our motivation to keep moving forward.
 
 <div style="display: flex;">
@@ -175,10 +189,10 @@ If you think HuLa is helpful to you, welcome to sponsor HuLa. Your support is ou
 </div>
 
 
-## HuLa Community discussion groups
+## 💬 HuLa Community discussion groups
 <img src="preview/wx.png" width="260" height="300" alt="微信群二维码" style="border-radius: 12px;" />
 
-## List of sponsors
+## 🙏 List of sponsors
 Thanks to the following sponsors for their support!
 
 | Date | Sponsor | Sum | Platform |
@@ -195,5 +209,5 @@ Thanks to the following sponsors for their support!
  2. Send an email to: 2439646234@qq.com
  3. Contact via WeChat: cy2439646234
 
-## License
+## 📄 License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa?ref=badge_large)

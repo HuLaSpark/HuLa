@@ -242,49 +242,110 @@ export const useCommon = () => {
     } else if (type === MsgEnum.TEXT) {
       range?.insertNode(document.createTextNode(dom))
     } else if (type === MsgEnum.REPLY) {
-      // TODO This might not be approperiate here. we should retrieve the focus element, But I'm not sure how to proceed at the moment.
+      // 获取消息输入框元素
       const inputElement = document.getElementById('message-input')
-      // 记录聚焦元素是否存在子节点
-      const hasChildNodes = inputElement?.hasChildNodes()
+      if (!inputElement) return
 
+      // 确保输入框获得焦点
+      inputElement.focus()
+
+      // 创建回复节点
       const replyNode = createReplyDom(dom)
+
+      // 如果已经存在回复框，则替换它
       const preReplyNode = document.getElementById('replyDiv')
       if (preReplyNode) {
         preReplyNode.replaceWith(replyNode)
       } else {
-        // 被聚焦的元素在此之前如果存在子节点，那么需要将光标移动到行首
+        // 检查输入框是否有内容
+        const hasChildNodes =
+          inputElement.childNodes.length > 0 &&
+          !(
+            inputElement.childNodes.length === 1 &&
+            inputElement.childNodes[0].nodeType === Node.TEXT_NODE &&
+            !inputElement.childNodes[0].textContent?.trim()
+          )
+
+        // 将回复框插入到输入框的开始位置
+        const newRange = document.createRange()
+        newRange.selectNodeContents(inputElement)
+        newRange.collapse(true) // 折叠到开始位置
+
+        // 插入回复节点
+        newRange.insertNode(replyNode)
+
+        // 如果输入框已有内容，需要确保光标位置正确
         if (hasChildNodes) {
-          // 将光标移动到行首后将 reply-box 插入到光标位置
-          selection.setPosition(selection.anchorNode, 0)
-        }
-        selection.getRangeAt(0).insertNode(replyNode)
-        selection.getRangeAt(0).collapse(false)
-        // 在此之前如果存在子节点，那么恢复光标，否则将光标移动到行首
-        if (hasChildNodes) {
-          // 恢复光标
+          // 获取回复框后的第一个文本节点
+          let nextNode = replyNode.nextSibling
+          let position = 0
+
+          // 将选择范围设置在回复框之后
+          if (nextNode) {
+            if (nextNode.nodeType === Node.TEXT_NODE) {
+              position = 0 // 文本节点的开始位置
+            } else {
+              // 如果不是文本节点，找到下一个文本节点
+              while (nextNode && nextNode.nodeType !== Node.TEXT_NODE) {
+                nextNode = nextNode.nextSibling
+              }
+              if (!nextNode) {
+                // 如果没有找到文本节点，创建一个
+                nextNode = document.createTextNode(' ')
+                inputElement.appendChild(nextNode)
+              }
+              position = 0
+            }
+
+            // 设置选区在回复框之后
+            selection.removeAllRanges()
+            const rangeAfter = document.createRange()
+            rangeAfter.setStart(nextNode, position)
+            rangeAfter.setEnd(nextNode, position)
+            selection.addRange(rangeAfter)
+          } else {
+            // 没有后续节点，创建一个
+            nextNode = document.createTextNode(' ')
+            inputElement.appendChild(nextNode)
+
+            // 设置选区在新创建的节点
+            selection.removeAllRanges()
+            const rangeAfter = document.createRange()
+            rangeAfter.setStart(nextNode, 0)
+            rangeAfter.setEnd(nextNode, 0)
+            selection.addRange(rangeAfter)
+          }
+        } else {
+          // 如果输入框没有内容，添加一个空格节点以便于后续编辑
+          const spaceNode = document.createElement('span')
+          spaceNode.textContent = '\u00A0'
+          spaceNode.contentEditable = 'false'
+          spaceNode.style.userSelect = 'none'
+
+          // 在回复框后插入空格节点
+          const afterRange = document.createRange()
+          afterRange.selectNode(replyNode)
+          afterRange.collapse(false) // 折叠到结束位置
+          afterRange.insertNode(spaceNode)
+
+          // 在空格节点后插入一个空的文本节点，便于光标定位
+          const textNode = document.createTextNode('')
+          afterRange.selectNode(spaceNode)
+          afterRange.collapse(false)
+          afterRange.insertNode(textNode)
+
+          // 设置光标位置在文本节点处
           selection.removeAllRanges()
-          selection.addRange(range)
+          const newRangeAfter = document.createRange()
+          newRangeAfter.setStart(textNode, 0)
+          newRangeAfter.setEnd(textNode, 0)
+          selection.addRange(newRangeAfter)
         }
       }
 
-      // 如果已经有内容了，那么不需要添加 其它元素
-      if (hasChildNodes) return
-
-      // 将光标折叠到Range的末尾(true表示折叠到Range的开始位置,false表示折叠到Range的末尾)
-      range?.collapse(false)
-      // 创建一个span节点作为空格
-      const spaceNode = document.createElement('span')
-      spaceNode.textContent = '\u00A0'
-      // 设置不可编辑
-      spaceNode.contentEditable = 'false'
-      // 不可以选中
-      spaceNode.style.userSelect = 'none'
-      // 插入一个可编辑的文本节点，否则编辑器可能无法聚焦
-      const blankNode = document.createTextNode('')
-      range?.insertNode(blankNode)
-      // 将空格节点插入到光标位置
-      range?.insertNode(spaceNode)
-      range?.collapse(false)
+      // 触发输入事件，确保UI更新
+      triggerInputEvent(inputElement)
+      return
     } else if (type === MsgEnum.AI) {
       // 删除触发字符 "/"
       const startContainer = range.startContainer
@@ -358,20 +419,39 @@ export const useCommon = () => {
     `
       closeBtn.textContent = '关闭'
       closeBtn.addEventListener('click', () => {
+        // 首先移除回复节点
         divNode.remove()
+
+        // 获取消息输入框
         const messageInput = document.getElementById('message-input') as HTMLElement
-        // 移除messageInput的最前面的空格节点，获取空格后面的内容
-        messageInput.textContent = messageInput.textContent!.trim()
-        // 创建并初始化 range 对象
-        const range = document.createRange()
-        range.selectNodeContents(messageInput)
-        range.collapse(false) // 将光标移动到末尾
-        // 将光标设置到 messageInput 的末尾
-        const selection = window.getSelection()
-        selection?.removeAllRanges()
-        selection?.addRange(range)
-        triggerInputEvent(messageInput)
+        if (!messageInput) return
+
+        // 确保输入框获得焦点
+        messageInput.focus()
+
+        // 完全清空reply状态
         reply.value = { avatar: '', imgCount: 0, accountName: '', content: '', key: 0 }
+
+        // 优化光标处理
+        const selection = window.getSelection()
+        if (selection) {
+          const range = document.createRange()
+
+          // 处理输入框内容，如果只有空格，则清空它
+          if (messageInput.textContent && messageInput.textContent.trim() === '') {
+            messageInput.textContent = ''
+          }
+
+          // 将光标移动到输入框的末尾
+          range.selectNodeContents(messageInput)
+          range.collapse(false) // 折叠到末尾
+
+          selection.removeAllRanges()
+          selection.addRange(range)
+
+          // 触发输入事件以更新UI状态
+          triggerInputEvent(messageInput)
+        }
       })
       // 为头像和标题创建容器
       const headerContainer = document.createElement('div')
@@ -538,20 +618,39 @@ export const useCommon = () => {
     `
     closeBtn.textContent = '关闭'
     closeBtn.addEventListener('click', () => {
+      // 首先移除回复节点
       replyNode.remove()
+
+      // 获取消息输入框
       const messageInput = document.getElementById('message-input') as HTMLElement
-      // 移除messageInput的最前面的空格节点，获取空格后面的内容
-      messageInput.textContent = messageInput.textContent!.trim()
-      // 创建并初始化 range 对象
-      const range = document.createRange()
-      range.selectNodeContents(messageInput)
-      range.collapse(false) // 将光标移动到末尾
-      // 将光标设置到 messageInput 的末尾
-      const selection = window.getSelection()
-      selection?.removeAllRanges()
-      selection?.addRange(range)
-      triggerInputEvent(messageInput)
+      if (!messageInput) return
+
+      // 确保输入框获得焦点
+      messageInput.focus()
+
+      // 完全清空reply状态
       reply.value = { avatar: '', imgCount: 0, accountName: '', content: '', key: 0 }
+
+      // 优化光标处理
+      const selection = window.getSelection()
+      if (selection) {
+        const range = document.createRange()
+
+        // 处理输入框内容，如果只有空格，则清空它
+        if (messageInput.textContent && messageInput.textContent.trim() === '') {
+          messageInput.textContent = ''
+        }
+
+        // 将光标移动到输入框的末尾
+        range.selectNodeContents(messageInput)
+        range.collapse(false) // 折叠到末尾
+
+        selection.removeAllRanges()
+        selection.addRange(range)
+
+        // 触发输入事件以更新UI状态
+        triggerInputEvent(messageInput)
+      }
     })
     // 为头像和标题创建容器
     const headerContainer = document.createElement('div')
@@ -685,7 +784,7 @@ export const useCommon = () => {
 
       triggerInputEvent(dom)
     })
-    nextTick(() => {}).then(() => {
+    nextTick(() => {
       reader.readAsDataURL(file)
     })
   }

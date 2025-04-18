@@ -6,7 +6,7 @@ export interface AvatarUploadOptions {
   onSuccess?: (downloadUrl: string) => void
   // 上传场景，默认为头像
   scene?: UploadSceneEnum
-  // 文件大小限制（KB），默认为100KB
+  // 文件大小限制（KB），默认为150KB
   sizeLimit?: number
 }
 /**
@@ -14,7 +14,7 @@ export interface AvatarUploadOptions {
  * @param options 上传配置
  */
 export const useAvatarUpload = (options: AvatarUploadOptions = {}) => {
-  const { onSuccess, scene = UploadSceneEnum.AVATAR, sizeLimit = 100 } = options
+  const { onSuccess, scene = UploadSceneEnum.AVATAR, sizeLimit = 150 } = options
 
   const fileInput = ref<HTMLInputElement>()
   const localImageUrl = ref('')
@@ -54,7 +54,7 @@ export const useAvatarUpload = (options: AvatarUploadOptions = {}) => {
 
       // 检查裁剪后的文件大小
       if (file.size > sizeLimit * 1024) {
-        window.$message.error(`图片大小不能超过${sizeLimit}KB，当前大小为${Math.round(file.size / 1024)}KB`)
+        window.$message.error(`图片大小不能超过${sizeLimit}KB，当前图片裁剪后大小为${Math.round(file.size / 1024)}KB`)
         // 结束加载状态
         cropperRef.value?.finishLoading()
         return

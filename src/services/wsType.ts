@@ -32,7 +32,7 @@ export enum WsResponseMessageType {
   REQUEST_APPROVAL_FRIEND = 'requestApprovalFriend',
   /** 用户状态改变 */
   USER_STATE_CHANGE = 'userStateChange',
-  /** 管理员修改群聊信息 */
+  /** 群主修改群聊信息 */
   ROOM_INFO_CHANGE = 'roomInfoChange',
   /** 自己修改我在群里的信息 */
   MY_ROOM_INFO_CHANGE = 'myRoomInfoChange',

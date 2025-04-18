@@ -100,53 +100,78 @@ export const useTrigger = (
 
   /** 检查是否应该触发 */
   const shouldTrigger = (text: string, cursorPosition: number, triggerSymbol: string) => {
-    const searchStr = text.slice(0, cursorPosition)
-    const pattern = new RegExp(`\\${triggerSymbol}([^\\${triggerSymbol}]*)$`)
-    return pattern.test(searchStr)
+    try {
+      // 确保有效的文本和光标位置
+      if (!text || cursorPosition === undefined || cursorPosition < 0) {
+        return false
+      }
+
+      const searchStr = text.slice(0, cursorPosition)
+      const pattern = new RegExp(`\\${triggerSymbol}([^\\${triggerSymbol}]*)$`)
+      return pattern.test(searchStr)
+    } catch (err) {
+      console.error('检查触发条件出错:', err)
+      return false
+    }
   }
 
   /** 提取关键词 */
   const extractKeyword = (text: string, cursorPosition: number, triggerSymbol: string) => {
-    const searchStr = text.slice(0, cursorPosition)
-    const pattern = new RegExp(`\\${triggerSymbol}([^\\${triggerSymbol}]*)$`)
-    const matches = pattern.exec(searchStr)
-    return matches && matches.length > 1 ? matches[1] : null
+    try {
+      if (!text || cursorPosition === undefined || cursorPosition < 0) {
+        return null
+      }
+
+      const searchStr = text.slice(0, cursorPosition)
+      const pattern = new RegExp(`\\${triggerSymbol}([^\\${triggerSymbol}]*)$`)
+      const matches = pattern.exec(searchStr)
+      return matches && matches.length > 1 ? matches[1] : null
+    } catch (err) {
+      console.error('提取关键词出错:', err)
+      return null
+    }
   }
 
   /** 处理触发 */
   const handleTrigger = async (text: string, cursorPosition: number, context: TriggerContext) => {
-    let hasTriggered = false
+    try {
+      let hasTriggered = false
 
-    // 检查@提及
-    if (shouldTrigger(text, cursorPosition, TriggerEnum.MENTION)) {
-      const keyword = extractKeyword(text, cursorPosition, TriggerEnum.MENTION)
-      if (keyword !== null) {
-        await handleMention({ ...context, keyword })
-        hasTriggered = true
+      // 检查@提及
+      if (shouldTrigger(text, cursorPosition, TriggerEnum.MENTION)) {
+        const keyword = extractKeyword(text, cursorPosition, TriggerEnum.MENTION)
+        if (keyword !== null) {
+          await handleMention({ ...context, keyword })
+          hasTriggered = true
+        }
       }
-    }
-    // 检查AI对话
-    else if (shouldTrigger(text, cursorPosition, TriggerEnum.AI)) {
-      const keyword = extractKeyword(text, cursorPosition, TriggerEnum.AI)
-      if (keyword !== null) {
-        await handleAI({ ...context, keyword })
-        hasTriggered = true
+      // 检查AI对话
+      else if (shouldTrigger(text, cursorPosition, TriggerEnum.AI)) {
+        const keyword = extractKeyword(text, cursorPosition, TriggerEnum.AI)
+        if (keyword !== null) {
+          await handleAI({ ...context, keyword })
+          hasTriggered = true
+        }
       }
-    }
-    // 检查话题标签
-    else if (shouldTrigger(text, cursorPosition, TriggerEnum.TOPIC)) {
-      const keyword = extractKeyword(text, cursorPosition, TriggerEnum.TOPIC)
-      if (keyword !== null) {
-        await handleTopic({ ...context, keyword })
-        hasTriggered = true
+      // 检查话题标签
+      else if (shouldTrigger(text, cursorPosition, TriggerEnum.TOPIC)) {
+        const keyword = extractKeyword(text, cursorPosition, TriggerEnum.TOPIC)
+        if (keyword !== null) {
+          await handleTopic({ ...context, keyword })
+          hasTriggered = true
+        }
       }
-    }
 
-    if (!hasTriggered) {
+      if (!hasTriggered) {
+        resetAllStates()
+      }
+
+      return hasTriggered
+    } catch (err) {
+      console.error('处理触发事件出错:', err)
       resetAllStates()
+      return false
     }
-
-    return hasTriggered
   }
 
   return {
