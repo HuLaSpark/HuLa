@@ -301,6 +301,8 @@ export const useMsgInput = (messageInputDom: Ref) => {
     }
   }
 
+  const retainRawContent = (type: MsgEnum) => [MsgEnum.EMOJI, MsgEnum.IMAGE].includes(type)
+
   /** 处理发送信息事件 */
   // TODO 输入框中的内容当我切换消息的时候需要记录之前输入框的内容 (nyh -> 2024-03-01 07:03:43)
   const send = async () => {
@@ -309,16 +311,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
       window.$message.warning(`一次性只能上传${LimitEnum.COM_COUNT}个文件或图片`)
       return
     }
-    // 排除id="replyDiv"的元素的内容
-    const replyDiv = messageInputDom.value.querySelector('#replyDiv')
-    if (replyDiv) {
-      // TODO: 修复回复图片时 innerHTML.replace 导致图片地址被替换。为什么调用 replace ? 原因不明，可能 remove 会导致有什么 BUG？此处需要多次审查
-      replyDiv?.remove()
-      // replyDiv.parentNode?.removeChild(replyDiv)
-      // messageInputDom.value.querySelector('#reply-heade-space')?.remove()
-      // 然后重新赋值给msgInput
-      // msgInput.value = messageInputDom.value.innerHTML.replace(replyDiv.outerHTML, '')
-    }
     const contentType = getMessageContentType(messageInputDom)
     //根据消息类型获取消息处理策略
     const messageStrategy = messageStrategyMap[contentType]
@@ -326,7 +318,14 @@ export const useMsgInput = (messageInputDom: Ref) => {
       window.$message.warning('暂不支持发送类型消息')
       return
     }
-
+    // 排除id="replyDiv"的元素的内容
+    const replyDiv = messageInputDom.value.querySelector('#replyDiv')
+    if (replyDiv) {
+      replyDiv?.remove()
+      // 如果回复的内容是一个链接，那么需要保留链接数据
+      if (!retainRawContent(contentType))
+        msgInput.value = messageInputDom.value.innerHTML.replace(replyDiv.outerHTML, '')
+    }
     const msg = await messageStrategy.getMsg(msgInput.value, reply.value)
     const atUidList = extractAtUserIds(msgInput.value, cachedStore.currentAtUsersList)
     const tempMsgId = Date.now().toString()
@@ -382,12 +381,20 @@ export const useMsgInput = (messageInputDom: Ref) => {
         console.log(`${msg.type === MsgEnum.EMOJI ? '表情包' : '图片'}上传完成,更新为服务器URL:`, messageBody.url)
       }
 
+      console.log('发送消息到服务器 ===>>> ', {
+        roomId: globalStore.currentSession.roomId,
+        msgType: msg.type,
+        body: messageBody
+      })
+
       // 发送消息到服务器
       const res = await apis.sendMsg({
         roomId: globalStore.currentSession.roomId,
         msgType: msg.type,
         body: messageBody
       })
+
+      console.log('服务器返回的消息 ===> ', res)
 
       // 停止发送状态的定时器
       clearTimeout(statusTimer)
