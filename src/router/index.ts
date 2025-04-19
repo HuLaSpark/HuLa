@@ -79,6 +79,11 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/Notify.vue')
   },
   {
+    path: '/update',
+    name: 'update',
+    component: () => import('@/views/Update.vue')
+  },
+  {
     path: '/capture',
     name: 'capture',
     component: () => import('@/views/Capture.vue')
