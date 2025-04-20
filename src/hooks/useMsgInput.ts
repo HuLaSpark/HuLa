@@ -699,6 +699,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
             )
 
             // 确保光标位置在正确的位置
+            updateSelectionRange(getEditorRange())
             focusOn(messageInputDom.value)
 
             // 触发input事件以更新UI
