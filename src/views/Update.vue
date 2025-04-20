@@ -8,6 +8,7 @@
 <script setup lang="tsx">
 import { check } from '@tauri-apps/plugin-updater'
 import { relaunch } from '@tauri-apps/plugin-process'
+
 const updating = ref(false)
 const percentage = ref(0)
 const total = ref(0)
@@ -29,10 +30,14 @@ const doUpdate = async () => {
             percentage.value = parseFloat(((downloaded.value / total.value) * 100 + '').substring(0, 4))
             break
           case 'Finished':
-            relaunch()
             break
         }
       })
+      try {
+        await relaunch()
+      } catch (e) {
+        console.log(e)
+      }
     })
     .catch((e) => {
       console.log(e)

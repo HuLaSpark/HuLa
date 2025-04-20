@@ -88,7 +88,6 @@
         "visible": false,
         "width": 150,
         "height": 150,
-        "skipTaskbar": true,
         "decorations": false
       }
     ],
