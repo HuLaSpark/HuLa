@@ -1,7 +1,7 @@
 {
   "name": "hula",
   "type": "module",
-  "version": "2.6.8",
+  "version": "2.6.9",
   "license": "Apache-2.0",
   "engines": {
     "node": ">=18.x",
