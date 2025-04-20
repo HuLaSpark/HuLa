@@ -105,12 +105,15 @@
       {
         "label": "update",
         "url": "/update",
+        "fullscreen": false,
         "resizable": false,
         "center": true,
+        "closable": false,
+        "width": 490,
+        "height": 335,
+        "skipTaskbar": true,
         "visible": false,
-        "width": 150,
-        "height": 150,
-        "decorations": false
+        "hiddenTitle": true
       }
     ],
     "security": {
