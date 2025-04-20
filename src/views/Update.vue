@@ -24,7 +24,7 @@
           data-tauri-drag-region
           v-for="(it, i) in list"
           :key="i"
-          class="whitespace-nowrap align-middle text-ellipsis max-w-full box-border color-#13987f"
+          class="whitespace-nowrap align-middle text-(12px ellipsis) max-w-full box-border color-#909090"
           :title="it"
           >{{ it }}</NCarouselItem
         >
@@ -43,6 +43,10 @@ import { changeColor } from 'seemly'
 import { NCarousel, NCarouselItem } from 'naive-ui'
 
 const list = ref<string[]>([])
+const updating = ref(false)
+const percentage = ref(0)
+const total = ref(0)
+const downloaded = ref(0)
 
 // https://gitee.com/api/v5/repos/HuLaSpark/HuLa/releases/tags/v${newVersion.value}?access_token=${import.meta.env.VITE_GITEE_TOKEN}
 
@@ -58,7 +62,7 @@ interface GiteeCommitResultStruct {
   assets: unknown
 }
 
-async function fetchGiteeReleaseData(version: string) {
+const fetchGiteeReleaseData = async (version: string) => {
   const apiEndpoint = new URL(`https://gitee.com/api/v5/repos/HuLaSpark/HuLa/releases/tags/v${version}`)
 
   apiEndpoint.search = new URLSearchParams({
@@ -74,13 +78,13 @@ async function fetchGiteeReleaseData(version: string) {
   return (await response.json()) as GiteeCommitResultStruct
 }
 
-function extractCommitMessages(releaseBody: string) {
+const extractCommitMessages = (releaseBody: string) => {
   const commitmessageRegex = /^\* (.+)/gm
   const matchs = releaseBody.matchAll(commitmessageRegex)
   return Array.from(matchs, (match) => match[1])
 }
 
-async function setupCommitList(version: string) {
+const setupCommitList = async (version: string) => {
   try {
     const releaseData = await fetchGiteeReleaseData(version)
     list.value = extractCommitMessages(releaseData.body)
@@ -90,11 +94,6 @@ async function setupCommitList(version: string) {
       err instanceof Error ? [`Error fetching release data: ${err.message}`] : ['Error fetching release data']
   }
 }
-
-const updating = ref(false)
-const percentage = ref(0)
-const total = ref(0)
-const downloaded = ref(0)
 
 const doUpdate = async () => {
   await check()

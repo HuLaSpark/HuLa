@@ -111,8 +111,8 @@
         "closable": false,
         "width": 490,
         "height": 335,
-        "skipTaskbar": true,
         "visible": false,
+        "decorations": false,
         "hiddenTitle": true
       }
     ],
