@@ -83,6 +83,20 @@
         "skipTaskbar": false,
         "decorations": false,
         "visible": false
+      },
+      {
+        "label": "update",
+        "url": "/update",
+        "fullscreen": false,
+        "resizable": false,
+        "center": true,
+        "closable": false,
+        "width": 490,
+        "height": 335,
+        "skipTaskbar": true,
+        "visible": false,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true
       }
     ],
     "security": {

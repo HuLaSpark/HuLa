@@ -232,15 +232,18 @@ export const CheckUpdate = defineComponent(() => {
               percentage.value = parseFloat(((downloaded.value / total.value) * 100 + '').substring(0, 4))
               break
             case 'Finished':
-              window.$message.success('安装包下载成功，3s后重启并安装')
+              window.$message.success('安装包下载成功，稍后将自动安装并重启')
               text.value = '更新成功'
               updating.value = false
-              setTimeout(() => {
-                relaunch()
-              }, 3000)
               break
           }
         })
+        try {
+          await relaunch()
+        } catch (e) {
+          console.log(e)
+          window.$message.error('重启失败，请手动重启')
+        }
       })
       .catch(() => {
         window.$message.error('检查更新错误，请稍后再试')
