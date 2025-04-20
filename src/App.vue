@@ -3,7 +3,6 @@
     <div v-if="!isLock" id="app-container">
       <router-view />
     </div>
-
     <!-- 锁屏页面 -->
     <LockScreen v-else />
   </NaiveProvider>
@@ -17,13 +16,18 @@ import { type } from '@tauri-apps/plugin-os'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { useStorage } from '@vueuse/core'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { check } from '@tauri-apps/plugin-updater'
+import { getVersion } from '@tauri-apps/api/app'
+import { useWindow } from '@/hooks/useWindow.ts'
 
 const appWindow = WebviewWindow.getCurrent()
 const settingStore = useSettingStore()
+const { createWebviewWindow } = useWindow()
 const { themes, lockScreen, page } = storeToRefs(settingStore)
 const { resetLoginState, logout } = useLogin()
 const token = useStorage('TOKEN', null)
 const refreshToken = useStorage('REFRESH_TOKEN', null)
+
 /** 不需要锁屏的页面 */
 const LockExclusion = new Set(['/login', '/tray', '/qrCode', '/about', '/onlineStatus'])
 const isLock = computed(() => {
@@ -102,6 +106,57 @@ watch(
   { immediate: true }
 )
 
+const checkUpdate = async () => {
+  const url = `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/tags?access_token=${import.meta.env.VITE_GITEE_TOKEN}&sort=name&direction=desc&page=1&per_page=1`
+
+  await check()
+    .then((e) => {
+      if (!e?.available) {
+        return
+      }
+      // 检查版本之间不同的提交信息和提交日期
+      fetch(url).then((res) => {
+        res
+          .json()
+          .then(async () => {
+            await nextTick(() => {
+              let url = `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/tags?access_token=${import.meta.env.VITE_GITEE_TOKEN}&sort=updated&direction=desc&page=1&per_page=1`
+              fetch(url).then((res) => {
+                res.json().then(async (data) => {
+                  const newVersion = data[0].name.replace('v', '')
+                  const newMajorVersion = newVersion.substring(0, newVersion.indexOf('.'))
+                  const newMiddleVersion = newVersion.substring(
+                    newVersion.indexOf('.') + 1,
+                    newVersion.lastIndexOf('.') === -1 ? newVersion.length : newVersion.lastIndexOf('.')
+                  )
+                  const currenVersion = await getVersion()
+                  const currentMajorVersion = currenVersion.substring(0, currenVersion.indexOf('.'))
+                  const currentMiddleVersion = currenVersion.substring(
+                    currenVersion.indexOf('.') + 1,
+                    currenVersion.lastIndexOf('.') === -1 ? currenVersion.length : currenVersion.lastIndexOf('.')
+                  )
+                  if (
+                    newMajorVersion > currentMajorVersion ||
+                    (newMajorVersion === currentMajorVersion && newMiddleVersion > currentMiddleVersion)
+                  ) {
+                    await createWebviewWindow('HuLa', 'update', 490, 335, '', false)
+                    const loginWindow = await WebviewWindow.getByLabel('login')
+                    loginWindow?.close()
+                  }
+                })
+              })
+            })
+          })
+          .catch((e) => {
+            console.log(e)
+          })
+      })
+    })
+    .catch((e) => {
+      console.log(e)
+    })
+}
+
 onMounted(async () => {
   // 判断是否是桌面端，桌面端需要调整样式
   isDesktop.value && (await import('@/styles/scss/desktop.scss'))
@@ -131,6 +186,7 @@ onMounted(async () => {
     // 最后调用登出方法(这会创建登录窗口)
     await logout()
   })
+  await checkUpdate()
 })
 
 onUnmounted(() => {
