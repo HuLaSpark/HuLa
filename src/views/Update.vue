@@ -1,19 +1,28 @@
 <template>
-  <n-flex
-    data-tauri-drag-region
-    vertical
-    align="center"
-    justify="center"
-    style="height: 150px"
-    class="update no-select">
-    <n-progress size="12" type="circle" color="#d8eee2" rail-color="white" :percentage="percentage">
-      <span style="text-align: center; color: #18a058">更新中<br />{{ percentage }}%</span></n-progress
-    >
+  <n-flex data-tauri-drag-region vertical class="login-box size-full select-none !gap-0">
+    <video class="w-full h-240px rounded-t-8px object-cover" autoplay loop data-tauri-drag-region>
+      <source src="@/assets/video/issue.mp4" type="video/mp4" />
+      <source src="@/assets/video/star.mp4" type="video/mp4" />
+    </video>
+    <div class="justify-center items-center flex-1" data-tauri-drag-region>
+      <n-progress
+        data-tauri-drag-region
+        size="12"
+        :border-radius="0"
+        :color="changeColor('#13987f', { alpha: 0.6 })"
+        :rail-color="changeColor('#13987f', { alpha: 0.2 })"
+        :percentage="percentage"
+        :show-indicator="false" />
+      <p class="cursor-default color-#13987f text-center text-sm mt-4" data-tauri-drag-region>
+        更新中 {{ percentage }}%
+      </p>
+    </div>
   </n-flex>
 </template>
 <script setup lang="tsx">
 import { check } from '@tauri-apps/plugin-updater'
 import { relaunch } from '@tauri-apps/plugin-process'
+import { changeColor } from 'seemly'
 
 const updating = ref(false)
 const percentage = ref(0)
@@ -59,13 +68,5 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
-.update {
-  background-color: #d8eee2;
-}
-.no-select {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-}
+@use '@/styles/scss/global/login-bg';
 </style>
