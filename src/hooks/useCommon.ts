@@ -171,7 +171,7 @@ export const useCommon = () => {
     } else if (hasEmoji && !hasText && !hasImage) {
       // 如果只有表情包，没有其他文本或图片，则返回EMOJI类型
       return MsgEnum.EMOJI
-    } else if (hasText && hasImage || hasText && hasEmoji) {
+    } else if ((hasText && hasImage) || (hasText && hasEmoji)) {
       return MsgEnum.MIXED
     } else if (hasImage) {
       return MsgEnum.IMAGE
@@ -265,14 +265,8 @@ export const useCommon = () => {
             inputElement.childNodes[0].nodeType === Node.TEXT_NODE &&
             !inputElement.childNodes[0].textContent?.trim()
           )
-
-        // 将回复框插入到输入框的开始位置
-        const newRange = document.createRange()
-        newRange.selectNodeContents(inputElement)
-        newRange.collapse(true) // 折叠到开始位置
-
         // 插入回复节点
-        newRange.insertNode(replyNode)
+        inputElement.insertBefore(replyNode, inputElement.firstChild)
 
         // 如果输入框已有内容，需要确保光标位置正确
         if (hasChildNodes) {
