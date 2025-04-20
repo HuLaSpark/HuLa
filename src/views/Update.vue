@@ -4,7 +4,7 @@
       <source src="@/assets/video/issue.mp4" type="video/mp4" />
       <source src="@/assets/video/star.mp4" type="video/mp4" />
     </video>
-    <div class="justify-center items-center flex-1" data-tauri-drag-region>
+    <div data-tauri-drag-region>
       <n-progress
         data-tauri-drag-region
         size="12"
@@ -13,6 +13,23 @@
         :rail-color="changeColor('#13987f', { alpha: 0.2 })"
         :percentage="percentage"
         :show-indicator="false" />
+
+      <NCarousel
+        autoplay
+        direction="vertical"
+        :interval="3000"
+        :show-dots="false"
+        class="w-[90%] text-sm line-height-30px h-[30px] px-2 overflow-hidden cursor-default">
+        <NCarouselItem
+          data-tauri-drag-region
+          v-for="(it, i) in list"
+          :key="i"
+          class="whitespace-nowrap align-middle text-ellipsis max-w-full box-border color-#13987f"
+          :title="it"
+          >{{ it }}</NCarouselItem
+        >
+      </NCarousel>
+
       <p class="cursor-default color-#13987f text-center text-sm mt-4" data-tauri-drag-region>
         更新中 {{ percentage }}%
       </p>
@@ -23,17 +40,70 @@
 import { check } from '@tauri-apps/plugin-updater'
 import { relaunch } from '@tauri-apps/plugin-process'
 import { changeColor } from 'seemly'
+import { NCarousel, NCarouselItem } from 'naive-ui'
+
+const list = ref<string[]>([])
+
+// https://gitee.com/api/v5/repos/HuLaSpark/HuLa/releases/tags/v${newVersion.value}?access_token=${import.meta.env.VITE_GITEE_TOKEN}
+
+interface GiteeCommitResultStruct {
+  id: number
+  tag_name: string
+  target_commitish: string
+  prerelease: boolean
+  name: string
+  body: string
+  author: unknown
+  created_at: string
+  assets: unknown
+}
+
+async function fetchGiteeReleaseData(version: string) {
+  const apiEndpoint = new URL(`https://gitee.com/api/v5/repos/HuLaSpark/HuLa/releases/tags/v${version}`)
+
+  apiEndpoint.search = new URLSearchParams({
+    access_token: import.meta.env.VITE_GITEE_TOKEN
+  }).toString()
+
+  const response = await fetch(apiEndpoint.toString())
+
+  if (!response.ok) {
+    throw new Error(`API request failed with status ${response.status}`)
+  }
+
+  return (await response.json()) as GiteeCommitResultStruct
+}
+
+function extractCommitMessages(releaseBody: string) {
+  const commitmessageRegex = /^\* (.+)/gm
+  const matchs = releaseBody.matchAll(commitmessageRegex)
+  return Array.from(matchs, (match) => match[1])
+}
+
+async function setupCommitList(version: string) {
+  try {
+    const releaseData = await fetchGiteeReleaseData(version)
+    list.value = extractCommitMessages(releaseData.body)
+  } catch (err) {
+    console.error(`v${version} 版本 Commit 信息获取失败:`, err)
+    list.value =
+      err instanceof Error ? [`Error fetching release data: ${err.message}`] : ['Error fetching release data']
+  }
+}
 
 const updating = ref(false)
 const percentage = ref(0)
 const total = ref(0)
 const downloaded = ref(0)
+
 const doUpdate = async () => {
   await check()
     .then(async (e) => {
       if (!e?.available) {
         return
       }
+
+      setupCommitList(e.version)
 
       await e.downloadAndInstall((event) => {
         switch (event.event) {

@@ -139,7 +139,7 @@ const checkUpdate = async () => {
                     newMajorVersion > currentMajorVersion ||
                     (newMajorVersion === currentMajorVersion && newMiddleVersion > currentMiddleVersion)
                   ) {
-                    await createWebviewWindow('HuLa', 'update', 150, 150, '', false)
+                    await createWebviewWindow('HuLa', 'update', 490, 335, '', false)
                     const loginWindow = await WebviewWindow.getByLabel('login')
                     loginWindow?.close()
                   }
