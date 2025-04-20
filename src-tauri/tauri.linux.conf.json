@@ -79,6 +79,17 @@
         "alwaysOnTop": true,
         "skipTaskbar": true,
         "decorations": false
+      },
+      {
+        "label": "update",
+        "url": "/update",
+        "resizable": false,
+        "center": true,
+        "visible": false,
+        "width": 150,
+        "height": 150,
+        "skipTaskbar": true,
+        "decorations": false
       }
     ],
     "security": {

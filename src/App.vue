@@ -18,9 +18,11 @@ import { useStorage } from '@vueuse/core'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { check } from '@tauri-apps/plugin-updater'
 import { getVersion } from '@tauri-apps/api/app'
+import { useWindow } from '@/hooks/useWindow.ts'
 
 const appWindow = WebviewWindow.getCurrent()
 const settingStore = useSettingStore()
+const { createWebviewWindow } = useWindow()
 const { themes, lockScreen, page } = storeToRefs(settingStore)
 const { resetLoginState, logout } = useLogin()
 const token = useStorage('TOKEN', null)
@@ -137,7 +139,9 @@ const checkUpdate = async () => {
                     newMajorVersion > currentMajorVersion ||
                     (newMajorVersion === currentMajorVersion && newMiddleVersion > currentMiddleVersion)
                   ) {
-                    router.push('/update')
+                    await createWebviewWindow('HuLa', 'update', 150, 150, '', false)
+                    const loginWindow = await WebviewWindow.getByLabel('login')
+                    loginWindow?.close()
                   }
                 })
               })
