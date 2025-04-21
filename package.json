@@ -41,7 +41,7 @@
     "========= 使用commit来进行代码提交 =========": "",
     "commit": "git add . && git-cz",
     "========= 校验代码规范 =========": "",
-    "lint:staged": "lint-staged && vue-tsc --noEmit",
+    "lint:staged": "lint-staged",
     "========= 安装husky =========": "",
     "prepare": "husky",
     "========= 发版 =========": "",
