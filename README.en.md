@@ -102,6 +102,7 @@ HuLa is an instant messaging system developed with Tauri, Vite 6, Vue 3, and Typ
 | | Message Read Status | ✅ Completed |
 | | Emoji Function | ✅ Completed |
 | | Context Menu Based on Message Type | ✅ Completed |
+| | Support parsing links as preview cards | ✅ Completed |
 | 👥 **Contact & Group Management** | Friend Add/Remove | ✅ Completed |
 | | Friend Search | ✅ Completed |
 | | Group Creation and Management | ✅ Completed |
@@ -110,6 +111,9 @@ HuLa is an instant messaging system developed with Tauri, Vite 6, Vue 3, and Typ
 | | Friend & Group Notes | ✅ Completed |
 | | Group Announcements | ✅ Completed |
 | | Block, Blacklist, Do Not Disturb | ✅ Completed |
+| | Message by message merging and forwarding | 🚧 In Progress |
+| | Group Announcement | 🚧 In Progress |
+| | Group chat/individual chat notes, nicknames, etc | 🚧 In Progress |
 | 🎨 **UI Interface** | Modern Interface Design | ✅ Completed |
 | | Dark/Light Theme Support | ✅ Completed |
 | | Skin Theme Switching | ✅ Completed |
@@ -118,6 +122,8 @@ HuLa is an instant messaging system developed with Tauri, Vite 6, Vue 3, and Typ
 | | Message Notifications | ✅ Completed |
 | | Image Viewer | ✅ Completed |
 | | Screenshot Function | 🚧 In Progress |
+| | Support automatic/forced updates | ✅ Completed |
+| | Customize update page | ✅ Completed |
 | 🌐 **Cross-platform Support** | Win10, Win11/macOS/Linux | ✅ Completed |
 | | iOS/Android Adaptation | 🚧 In Progress |
 | 🤖 **AI** | DeepSeek, ChatGPT, Claude, Qwen, Custom | 🚧 In Progress |
@@ -162,7 +168,12 @@ Downloading the installation package on the web page will indicate that the inst
 #### 2. If an error is reported, run the following command in the terminal to resolve the problem:
 
 ```bash
+## Execute before installation
 sudo xattr -rd com.apple.quarantine the Path To Install The Package/Download installation package name
+```
+```bash
+## If it has already been installed, proceed as follows
+sudo xattr -r -d com.apple.quarantine /Applications/apply name.app
 ```
 
 ## 📋 SubmissionSpecification
@@ -197,6 +208,7 @@ Thanks to the following sponsors for their support!
 
 | Date | Sponsor | Sum | Platform |
 |------|--------|------|------|
+| 2025-04-20 | 姜兴(Simon) | ￥188 | 微信赞赏码 |
 | 2025-02-17 | 禾硕 | ￥168 | 支付宝赞赏 |
 | 2025-02-8 | Boom.... | ￥100 | 微信赞赏码 |
 | 2025-04-01 | 墨       | ￥88.88 | 微信转账 |
