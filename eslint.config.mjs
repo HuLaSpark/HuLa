@@ -73,8 +73,6 @@ export default tseslint.config(
             'eol-last': 'off',
             'vue/use-v-on-exact': 'off',
             // Note: you must disable the base rule as it can report incorrect errors
-            // TODO 无法打开 no-unused-vars
-            'no-unused-vars': 'off',
             '@typescript-eslint/no-unused-vars': [
                 'error',
                 {
