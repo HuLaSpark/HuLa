@@ -11,6 +11,9 @@ import eslintConfigPrettier from 'eslint-config-prettier/flat'
 export default tseslint.config(
     js.configs.recommended,
     ...tseslint.configs.recommended,
+    ...vue.configs['flat/essential'],
+    eslintConfigPrettier,
+
     defineConfig([globalIgnores([
         '**/node_modules',
         '**/*.md',
@@ -49,9 +52,6 @@ export default tseslint.config(
             },
         },
     },
-
-    ...vue.configs['flat/essential'],
-        eslintConfigPrettier,
 
     {
         rules: {
