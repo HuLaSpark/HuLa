@@ -25,7 +25,7 @@
         rel="noopener noreferrer"
         target="_blank"
         class="text-card"
-        @click="openUrl(item.trim())">
+        @click="openUrl(item)">
         <div v-if="urlMap[item].image" class="text-card-image-wrapper">
           <img class="text-card-image" :src="urlMap[item].image" @error="onImageLoadError" />
         </div>
@@ -39,6 +39,7 @@
 </template>
 <script setup lang="ts">
 import type { TextBody } from '@/services/types'
+import { open } from '@tauri-apps/plugin-shell'
 
 const props = defineProps<{ body: TextBody }>()
 // 获取所有匹配的字符串
@@ -71,24 +72,90 @@ const processLongUrls = computed(() => {
 
 // 使用匹配字符串创建动态正则表达式，并将文本拆分为片段数组
 const fragments = computed(() => {
-  let content = processLongUrls.value
+  const content = processLongUrls.value
 
-  // 创建正则表达式，包含@开头的内容、urlMap中的keys、以及其他内容
-  const regex = new RegExp(`(@\\S+\\s|${keys.join('|')}|\\S+\\s)`, 'g')
-  return content.split(regex)
+  // 创建一个数组来存储所有的特殊标记位置
+  const markers = []
+
+  // 添加@提及的标记
+  const mentionRegex = /@\S+\s/g
+  let match
+  while ((match = mentionRegex.exec(content)) !== null) {
+    markers.push({
+      start: match.index,
+      end: match.index + match[0].length,
+      text: match[0],
+      type: 'mention'
+    })
+  }
+
+  // 添加URL的标记
+  keys.forEach((key) => {
+    let index = 0
+    while ((index = content.indexOf(key, index)) !== -1) {
+      markers.push({
+        start: index,
+        end: index + key.length,
+        text: key,
+        type: 'url'
+      })
+      index += key.length
+    }
+  })
+
+  // 按照开始位置排序标记
+  markers.sort((a, b) => a.start - b.start)
+
+  // 合并重叠的标记
+  for (let i = 0; i < markers.length - 1; i++) {
+    if (markers[i + 1].start < markers[i].end) {
+      // 如果下一个标记的开始位置在当前标记的结束位置之前，说明有重叠
+      // 选择保留较长的标记
+      if (markers[i + 1].end - markers[i + 1].start > markers[i].end - markers[i].start) {
+        markers.splice(i, 1) // 删除当前标记
+      } else {
+        markers.splice(i + 1, 1) // 删除下一个标记
+      }
+      i-- // 重新检查当前位置
+    }
+  }
+
+  // 构建最终的片段数组
+  const result = []
+  let lastEnd = 0
+
+  for (const marker of markers) {
+    // 添加标记前的普通文本
+    if (marker.start > lastEnd) {
+      result.push(content.substring(lastEnd, marker.start))
+    }
+    // 添加标记的文本
+    result.push(marker.text)
+    lastEnd = marker.end
+  }
+
+  // 添加最后一段普通文本
+  if (lastEnd < content.length) {
+    result.push(content.substring(lastEnd))
+  }
+
+  // 如果没有任何标记，直接返回整个内容
+  return result.length > 0 ? result : [content]
 })
 
 // 打开链接
-const openUrl = (url: string) => {
+const openUrl = async (url: string) => {
   if (!url) return
-
-  // 处理以@开头的URL
-  if (url.startsWith('@http')) {
-    url = url.substring(1) // 移除@符号
-  }
-
   // 当没有协议时，自动添加协议
-  window.open(url.startsWith('http') ? url : '//' + url, '_blank')
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    url = 'https://' + url
+  }
+  try {
+    // 使用系统默认浏览器打开链接
+    await open(url)
+  } catch (error) {
+    console.error('打开链接失败:', error)
+  }
 }
 
 // 处理复制
