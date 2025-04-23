@@ -426,7 +426,6 @@ const shouldShowArrow = (item: any) => {
     .check-icon {
       width: 14px;
       height: 14px;
-      color: var(--primary-color);
     }
   }
 }
