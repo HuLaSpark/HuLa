@@ -68,7 +68,7 @@
               @click="handleState(plugin)"
               align="center"
               class="relative"
-              :class="[plugin.state === PluginEnum.DOWNLOADING ? 'downloading' : 'bg-[--primary-color] size-full']">
+              :class="[plugin.state === PluginEnum.DOWNLOADING ? 'downloading' : 'size-full']">
               <div
                 :style="{
                   width: plugin.state === PluginEnum.DOWNLOADING ? `${plugin.progress * 0.6}px` : 'auto'

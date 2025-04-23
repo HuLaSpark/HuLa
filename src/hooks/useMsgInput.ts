@@ -37,7 +37,7 @@ export function useCursorManager() {
   }
 
   /**
-   * 聚焦制定的编辑器元素
+   * 聚焦指定的编辑器元素
    * @param editor 可聚焦的编辑器元素
    */
   function focusOn(editor: HTMLElement) {
@@ -271,7 +271,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       if (html.includes('data-type="emoji"')) {
         const tmp = document.createElement('div')
         tmp.innerHTML = html
-        const imgElement = tmp.querySelector('img')
+        const imgElement = tmp.querySelector<HTMLImageElement>('img[data-type]')
         if (imgElement && imgElement.src) {
           return (msgInput.value = imgElement.src)
         }
@@ -301,6 +301,8 @@ export const useMsgInput = (messageInputDom: Ref) => {
     }
   }
 
+  const retainRawContent = (type: MsgEnum) => [MsgEnum.EMOJI, MsgEnum.IMAGE].includes(type)
+
   /** 处理发送信息事件 */
   // TODO 输入框中的内容当我切换消息的时候需要记录之前输入框的内容 (nyh -> 2024-03-01 07:03:43)
   const send = async () => {
@@ -309,13 +311,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
       window.$message.warning(`一次性只能上传${LimitEnum.COM_COUNT}个文件或图片`)
       return
     }
-    // 排除id="replyDiv"的元素的内容
-    const replyDiv = messageInputDom.value.querySelector('#replyDiv')
-    if (replyDiv) {
-      replyDiv.parentNode?.removeChild(replyDiv)
-      // 然后重新赋值给msgInput
-      msgInput.value = messageInputDom.value.innerHTML.replace(replyDiv.outerHTML, '')
-    }
     const contentType = getMessageContentType(messageInputDom)
     //根据消息类型获取消息处理策略
     const messageStrategy = messageStrategyMap[contentType]
@@ -323,7 +318,14 @@ export const useMsgInput = (messageInputDom: Ref) => {
       window.$message.warning('暂不支持发送类型消息')
       return
     }
-
+    // 排除id="replyDiv"的元素的内容
+    const replyDiv = messageInputDom.value.querySelector('#replyDiv')
+    if (replyDiv) {
+      replyDiv?.remove()
+      // 如果回复的内容是一个链接，那么需要保留链接数据
+      if (!retainRawContent(contentType))
+        msgInput.value = messageInputDom.value.innerHTML.replace(replyDiv.outerHTML, '')
+    }
     const msg = await messageStrategy.getMsg(msgInput.value, reply.value)
     const atUidList = extractAtUserIds(msgInput.value, cachedStore.currentAtUsersList)
     const tempMsgId = Date.now().toString()
@@ -379,12 +381,20 @@ export const useMsgInput = (messageInputDom: Ref) => {
         console.log(`${msg.type === MsgEnum.EMOJI ? '表情包' : '图片'}上传完成,更新为服务器URL:`, messageBody.url)
       }
 
+      console.log('发送消息到服务器 ===>>> ', {
+        roomId: globalStore.currentSession.roomId,
+        msgType: msg.type,
+        body: messageBody
+      })
+
       // 发送消息到服务器
       const res = await apis.sendMsg({
         roomId: globalStore.currentSession.roomId,
         msgType: msg.type,
         body: messageBody
       })
+
+      console.log('服务器返回的消息 ===> ', res)
 
       // 停止发送状态的定时器
       clearTimeout(statusTimer)
@@ -615,7 +625,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
     /** 监听回复信息的传递 */
     useMitt.on(MittEnum.REPLY_MEG, (event: any) => {
       console.log('🐝正在回复消息:', event)
-
       // 如果输入框不存在，直接返回
       if (!messageInputDom.value) return
 
@@ -624,7 +633,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
         const avatar = useUserInfo(event.fromUser.uid).value.avatar!
 
         // 步骤1: 确保输入框先获得焦点
-        messageInputDom.value.focus()
+        focusOn(messageInputDom.value)
 
         // 步骤2: 完全清理现有的回复状态
         // 如果已经有回复消息，需要先移除现有的回复框
@@ -660,26 +669,27 @@ export const useMsgInput = (messageInputDom: Ref) => {
         nextTick().then(() => {
           try {
             // 再次确保输入框获得焦点
-            messageInputDom.value.focus()
+            // messageInputDom.value.focus()
+            focusOn(messageInputDom.value)
 
-            // 创建一个合适的选区，确保回复框被插入到正确的位置
-            const selection = window.getSelection()
+            // // 创建一个合适的选区，确保回复框被插入到正确的位置
+            // const selection = window.getSelection()
 
-            if (!selection) return
+            // if (!selection) return
 
-            // 移除所有现有的选区
-            selection.removeAllRanges()
+            // // 移除所有现有的选区
+            // selection.removeAllRanges()
 
-            // 创建新选区
-            const range = document.createRange()
-            range.selectNodeContents(messageInputDom.value)
-            range.collapse(true) // 将范围折叠到开始位置
+            // // 创建新选区
+            // const range = document.createRange()
+            // range.selectNodeContents(messageInputDom.value)
+            // range.collapse(true) // 将范围折叠到开始位置
 
-            // 应用选区
-            selection.addRange(range)
+            // // 应用选区
+            // selection.addRange(range)
 
             // 保存选区以便后续使用
-            updateSelectionRange({ range, selection })
+            // updateSelectionRange({ range, selection })
 
             // 插入回复框
             insertNode(
@@ -689,7 +699,8 @@ export const useMsgInput = (messageInputDom: Ref) => {
             )
 
             // 确保光标位置在正确的位置
-            messageInputDom.value.focus()
+            updateSelectionRange(getEditorRange())
+            focusOn(messageInputDom.value)
 
             // 触发input事件以更新UI
             triggerInputEvent(messageInputDom.value)
