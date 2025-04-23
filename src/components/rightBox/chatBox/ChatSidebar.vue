@@ -334,10 +334,11 @@ const isAdmin = computed(() => {
  */
 const handleLoadGroupAnnoun = async (roomId: string, reload: boolean) => {
   // 判断是否是群主管理员
-  // console.log('是否是群主:', isLord.value)
-  // console.log('是否是管理员:', isAdmin.value)
+  console.log('是否是群主:', isLord.value)
+  console.log('是否是管理员:', isAdmin.value)
   // 设置是否可以添加公告
   isAddAnnoun.value = isLord.value || isAdmin.value
+  console.log('是否可以添加公告:', isAddAnnoun.value)
 
   console.log('handleLoadGroupAnnoun-获取群公告列表:', roomId)
   // 获取群公告列表

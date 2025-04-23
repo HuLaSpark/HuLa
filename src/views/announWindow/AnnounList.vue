@@ -1,8 +1,8 @@
 <template>
-  <main class="announ-list-box size-full bg-[--right-bg-color] select-none cursor-default">
+  <main v-cloak class="announ-list-box size-full bg-[--right-bg-color] select-none cursor-default">
     <ActionBar :shrink="false" :max-w="false" />
     <!-- 编辑公告视图 -->
-    <n-flex v-if="viewType === '0'" vertical class="size-full flex-start-center">
+    <n-flex v-if="viewType === '0' && isAdmin" vertical class="size-full flex-start-center">
       <div class="text-(14px [--text-color]) flex-start-center w-95% h-40px">{{ title }}</div>
       <div class="w-95%">
         <n-input
@@ -209,13 +209,15 @@ onMounted(async () => {
     roomId.value = $route.params.roomId as string
     viewType.value = $route.params.type as string
 
-    const currentWindow = getCurrentWebviewWindow()
-    await currentWindow.show()
-    await currentWindow.setFocus()
-    title.value = await currentWindow.title()
-    console.log('title', title.value)
-
     await handleInit(false)
+
+    setTimeout(async () => {
+      const currentWindow = getCurrentWebviewWindow()
+      await currentWindow.show()
+      await currentWindow.setFocus()
+      title.value = (await currentWindow.title()) + '-' + viewType.value
+      console.log('title', title.value)
+    }, 200)
   } catch (error) {
     console.error('组件挂载初始化失败:', error)
   }
