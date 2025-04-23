@@ -1,12 +1,12 @@
 <template>
-  <main v-cloak class="announ-list-box size-full bg-[--right-bg-color] select-none cursor-default">
+  <main v-cloak class="size-full bg-[--right-bg-color] select-none cursor-default">
     <ActionBar :shrink="false" :max-w="false" />
     <!-- 编辑公告视图 -->
-    <n-flex v-if="viewType === '0' && isAdmin" vertical class="size-full flex-start-center">
-      <div class="text-(14px [--text-color]) flex-start-center w-95% h-40px">{{ title }}</div>
+    <n-flex v-if="viewType === '0' && isAdmin" vertical class="size-full flex-center">
+      <div class="text-(14px [--chat-text-color]) flex-start-center w-95% h-40px">{{ title }}</div>
       <div class="w-95%">
         <n-input
-          class="border-(1px solid #90909080) rounded-6px bg-[--center-bg-color]"
+          class="max-h-480px border-(1px solid #90909080) rounded-6px bg-[--center-bg-color]"
           v-model:value="announContent"
           type="textarea"
           placeholder="填写公告，1～600字"
@@ -33,53 +33,78 @@
       </n-flex>
     </n-flex>
     <!-- 查看公告列表视图 -->
-    <n-flex v-else vertical class="size-full flex-start-center">
-      <div class="text-(14px [--text-color]) flex-between-center w-95% h-40px">
+    <n-flex v-else vertical :size="6" class="size-full flex-center">
+      <div class="text-(14px [--chat-text-color]) flex-between-center w-95% pt-10px">
         <span>{{ title }}</span>
-        <n-button v-if="isAdmin" class="bg-[--button-bg] ml-5px" @click="handleNew">发布新公告</n-button>
+        <n-button v-if="isAdmin" size="small" secondary @click="handleNew">发布新公告</n-button>
       </div>
 
       <n-infinite-scroll class="h-95%">
         <!-- 展示公告列表 -->
-        <div class="w-100% flex-col-x-center">
+        <div class="w-full flex-col-x-center">
           <div
             v-for="announcement in announList"
             :key="announcement.id"
             class="w-91% h-auto bg-[--group-notice-list-bg] flex-start-center flex-col p-[0px_8px_12px_8px] border-[1px --group-notice-list-bg] mt-10px rounded-6px">
-            <div class="w-100% h-40px flex-start-center">
-              <div class="w-95% h-100% flex-start-center">
-                <div class="text-(12px [#909090]) mr-6px">{{ announcement?.userName || '无' }}</div>
-                <div class="text-(12px [#909090])">{{ announcement?.publishTime }}</div>
-                <div
-                  v-if="announcement?.top"
-                  class="p-[3px_4px] bg-[#237265] c-#fff rounded-3px text-[10px] flex-center ml-6px">
-                  <span>置顶</span>
-                </div>
-                <svg
-                  v-if="isAdmin"
-                  class="size-16px color-[#909090] ml-8px hover:color-[#f98e5a] cursor-pointer"
-                  @click="handleEdit(announcement)">
-                  <use href="#edit"></use>
-                </svg>
-                <svg
-                  v-if="isAdmin"
-                  class="size-14px color-[#909090] ml-8px hover:color-[#ff1f2c] cursor-pointer"
-                  @click="handleDel(announcement)">
-                  <use href="#delete"></use>
-                </svg>
+            <div class="w-full h-40px flex-start-center">
+              <div class="size-full flex-between-center">
+                <n-flex align="center" :size="16">
+                  <n-flex align="center" :size="6">
+                    <n-avatar round :size="28" :src="avatarSrc(announcement.uid)" fallback-src="/logo.png" />
+                    <n-flex vertical :size="4">
+                      <div class="text-(12px [--chat-text-color])">{{ useUserInfo(announcement.uid).value.name }}</div>
+                      <div class="text-(12px [#909090])">{{ announcement?.publishTime }}</div>
+                    </n-flex>
+                  </n-flex>
+                  <div
+                    v-if="announcement?.top"
+                    class="p-[3px_4px] bg-[#237265] c-#fff rounded-3px text-[10px] flex-center">
+                    <span>置顶</span>
+                  </div>
+                </n-flex>
+
+                <n-flex align="center" :size="6">
+                  <svg
+                    v-if="isAdmin"
+                    class="size-16px color-[#909090] ml-8px hover:color-#404040 cursor-pointer"
+                    @click="handleEdit(announcement)">
+                    <use href="#edit"></use>
+                  </svg>
+                  <svg
+                    v-if="isAdmin"
+                    class="size-14px color-[#909090] ml-8px hover:color-#d5304f cursor-pointer"
+                    @click="handleDel(announcement)">
+                    <use href="#delete"></use>
+                  </svg>
+                </n-flex>
               </div>
             </div>
-            <div class="w-96% text-(13px [--text-color]) ws-pre-wrap line-height-tight">
-              {{ announcement?.content }}
+            <div class="w-96% text-(13px [--text-color]) ws-pre-wrap line-height-tight pt-12px">
+              <div
+                :class="[
+                  'content-wrapper',
+                  { 'content-collapsed': !announcement.expanded && needsExpansion(announcement.content) }
+                ]">
+                {{ announcement?.content }}
+              </div>
+              <div
+                v-if="needsExpansion(announcement.content)"
+                class="expand-button"
+                @click.stop="toggleExpand(announcement)">
+                <span>{{ announcement.expanded ? '收起' : '展开' }}</span>
+                <svg class="size-12px ml-2px" :class="{ 'rotate-180': announcement.expanded }">
+                  <use href="#arrow-down"></use>
+                </svg>
+              </div>
             </div>
           </div>
         </div>
         <!-- 加载更多 -->
-        <div v-if="announList.length > 0" class="w-100% h-40px flex-center mt-10px">
+        <div v-if="announList.length > 0" class="w-full h-40px flex-center mt-10px">
           <n-button v-if="!isLast" class="bg-[--button-bg]" @click="handleLoadMore">加载更多</n-button>
           <span v-else class="text-[12px] color-[#909090]">没有更多公告了</span>
         </div>
-        <div class="w-100% h-40px"></div>
+        <div class="w-full h-40px"></div>
       </n-infinite-scroll>
 
       <!--暂无数据-->
@@ -99,6 +124,8 @@ import { WsResponseMessageType } from '@/services/wsType.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useCachedStore } from '@/stores/cached'
 import { useUserStore } from '@/stores/user'
+import { useUserInfo } from '@/hooks/useCached.ts'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 
 // 定义响应式变量
 const title = ref('')
@@ -131,6 +158,8 @@ const isAdmin = computed(() => {
   return false
 })
 
+const avatarSrc = (uid: string) => AvatarUtils.getAvatarUrl(useUserInfo(uid).value.avatar as string)
+
 // 初始化函数，获取群公告列表
 const handleInit = async (reload: boolean) => {
   if (roomId.value) {
@@ -138,6 +167,7 @@ const handleInit = async (reload: boolean) => {
       pageNum.value = 1
       const data = await groupStore.getGroupAnnouncementList(roomId.value, pageNum.value, pageSize, reload)
       if (data) {
+        console.log('data', data)
         announList.value = data.records
         if (announList.value.length === 0) {
           viewType.value = '0'
@@ -147,6 +177,8 @@ const handleInit = async (reload: boolean) => {
         // 处理公告的userName getUserGroupNickname
         announList.value.forEach((item) => {
           item.userName = cachedStore.getUserGroupNickname(item.uid, roomId.value)
+          // 添加展开/收起状态控制
+          item.expanded = false
         })
 
         // 处理置顶公告，置顶的公告排在列表前面
@@ -185,6 +217,11 @@ const handleLoadMore = async () => {
           return
         }
 
+        // 为新加载的公告添加展开/收起状态
+        data.records.forEach((item: any) => {
+          item.expanded = false
+        })
+
         // 添加到现有列表中
         announList.value.push(...data.records)
         pageNum.value++
@@ -200,28 +237,6 @@ const handleLoadMore = async () => {
     }
   }
 }
-
-// 组件挂载时执行初始化操作
-onMounted(async () => {
-  try {
-    await nextTick()
-    console.log('route', $route)
-    roomId.value = $route.params.roomId as string
-    viewType.value = $route.params.type as string
-
-    await handleInit(false)
-
-    setTimeout(async () => {
-      const currentWindow = getCurrentWebviewWindow()
-      await currentWindow.show()
-      await currentWindow.setFocus()
-      title.value = (await currentWindow.title()) + '-' + viewType.value
-      console.log('title', title.value)
-    }, 200)
-  } catch (error) {
-    console.error('组件挂载初始化失败:', error)
-  }
-})
 
 // 切换到编辑公告视图
 const handleNew = () => {
@@ -319,13 +334,62 @@ const handlePushAnnouncement = async () => {
   }
 }
 
-onUnmounted(() => {
-  useMitt.off(WsResponseMessageType.ROOM_REFRESH_GROUP_NOTICE_MSG, () => {})
+// 控制内容展开/收起
+const needsExpansion = (content: string) => {
+  return content && content.length > 80 // 根据实际情况调整，大约200px的文本量
+}
+
+// 切换展开/收起状态
+const toggleExpand = (announcement: any) => {
+  announcement.expanded = !announcement.expanded
+}
+
+// 组件挂载时执行初始化操作
+onMounted(async () => {
+  try {
+    await nextTick()
+    roomId.value = $route.params.roomId as string
+    viewType.value = $route.params.type as string
+
+    await handleInit(false)
+
+    setTimeout(async () => {
+      const currentWindow = getCurrentWebviewWindow()
+      await currentWindow.show()
+      await currentWindow.setFocus()
+      title.value = await currentWindow.title()
+      console.log('title', title.value)
+    }, 200)
+  } catch (error) {
+    console.error('组件挂载初始化失败:', error)
+  }
 })
 </script>
 <style scoped lang="scss">
-.announ-list-box {
-  width: 100%;
-  height: 100%;
+[v-cloak] {
+  display: none;
+}
+.content-wrapper {
+  position: relative;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+.content-collapsed {
+  max-height: 100px; // 设置为约200px的显示高度
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 60%, rgba(0, 0, 0, 0));
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 60%, rgba(0, 0, 0, 0));
+}
+.expand-button {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 4px;
+  color: var(--msg-active-color, #13987f);
+  cursor: pointer;
+  font-size: 12px;
+
+  svg {
+    transition: transform 0.3s ease;
+  }
 }
 </style>

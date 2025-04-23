@@ -32,14 +32,14 @@
         </svg>
       </n-flex>
 
-      <n-infinite-scroll class="h-70px">
-        <p class="text-(12px #909090) leading-5 line-clamp-4" v-if="announNum === 0">
+      <n-scrollbar class="h-74px">
+        <p class="text-(12px #909090) leading-6 line-clamp-4 max-w-99%" v-if="announNum === 0">
           请不要把重要信息发到该群，网络不是法外之地，请遵守网络规范，否则直接删除。
         </p>
-        <p v-else class="text-(12px #909090) leading-5 line-clamp-4">
+        <p v-else class="text-(12px #909090) leading-6 line-clamp-4 max-w-99%">
           {{ announList[0]?.content }}
         </p>
-      </n-infinite-scroll>
+      </n-scrollbar>
     </n-flex>
 
     <n-flex v-if="!isSearch" align="center" justify="space-between" class="pr-8px pl-8px h-42px">
@@ -314,7 +314,6 @@ const handleSelect = () => {
  */
 const handleOpenAnnoun = (isAdd: boolean) => {
   nextTick(async () => {
-    console.log('打开群公告')
     const roomId = globalStore.currentSession?.roomId
     await createWebviewWindow(isAdd ? '新增群公告' : '查看群公告', `announList/${roomId}/${isAdd ? 0 : 1}`, 420, 620)
   })

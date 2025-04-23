@@ -25,7 +25,7 @@ export const useWindow = () => {
     height: number,
     wantCloseWindow?: string,
     resizable = false,
-    minW = 310,
+    minW = 330,
     minH = 495
   ) => {
     const checkLabel = computed(() => {
