@@ -43,7 +43,11 @@ export enum WsResponseMessageType {
   /** 群公告已读 */
   ROOM_GROUP_NOTICE_READ_MSG = 'roomGroupNoticeReadMsg',
   /** 群解散 */
-  ROOM_DISSOLUTION = 'roomDissolution'
+  ROOM_DISSOLUTION = 'roomDissolution',
+  /** 编辑群公告 */
+  ROOM_EDIT_GROUP_NOTICE_MSG = 'roomEditGroupNoticeMsg',
+  /** 强制刷新右上角群公告 */
+  ROOM_REFRESH_GROUP_NOTICE_MSG = 'roomRefreshGroupNoticeMsg'
 }
 
 /**

@@ -74,6 +74,10 @@ export default {
   updateMyRoomInfo: `${prefix + URLEnum.ROOM}/updateMyRoomInfo`, // 修改“我”的群聊名称
   searchGroup: `${prefix + URLEnum.ROOM}/search`, // 搜索群聊
   applyGroup: `${prefix + URLEnum.ROOM}/applyGroup`, // 申请加群
+  getAnnouncementList: `${prefix + URLEnum.ROOM}/announcement/list`, // 获取群公告
+  pushAnnouncement: `${prefix + URLEnum.ROOM}/announcement/push`, // 发布群公告
+  deleteAnnouncement: `${prefix + URLEnum.ROOM}/announcement/delete`, // 删除群公告
+  editAnnouncement: `${prefix + URLEnum.ROOM}/announcement/edit`, // 编辑群公告
 
   // -------------- 验证码 ---------------
   getCaptcha: `${prefix + URLEnum.CAPTCHA}/captcha`, // 获取图片验证码

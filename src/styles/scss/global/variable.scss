@@ -111,6 +111,8 @@ svg {
   --float-block-hover-color: #767676;
   // 悬浮按钮hover样式
   --float-hover-bg-color: rgb(221, 240, 236);
+  // 群公告列表背景色
+  --group-notice-list-bg: #ffffffb6;
 }
 
 html[data-theme='dark'] {
@@ -205,6 +207,8 @@ html[data-theme='dark'] {
   --float-block-hover-color: #fff;
   // 悬浮按钮hover样式
   --float-hover-bg-color: rgb(25, 50, 45);
+  // 群公告列表背景色
+  --group-notice-list-bg: #262626;
 }
 /**! end */
 // 线性动画

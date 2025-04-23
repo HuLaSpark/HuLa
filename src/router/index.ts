@@ -211,6 +211,11 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/moreWindow/settings/Versatile.vue')
       }
     ]
+  },
+  {
+    path: '/announList/:roomId/:type',
+    name: 'announList',
+    component: () => import('@/views/announWindow/AnnounList.vue')
   }
 ]
 

@@ -177,5 +177,16 @@ export default {
       domain: string
       token: string
       region?: string
-    }>(urls.getQiniuToken)
+    }>(urls.getQiniuToken),
+  /** 获取群公告列表 */
+  getAnnouncementList: (roomId: string, params: { current: number; size: number }) =>
+    GET<ListResponse<any>>(`${urls.getAnnouncementList}/${roomId}`, params),
+  /** 发布群公告 */
+  pushAnnouncement: (params: { roomId: string; content: string; top: boolean }) =>
+    POST<{ msg: string; data: boolean }>(urls.pushAnnouncement, params),
+  /** 删除群公告 */
+  deleteAnnouncement: (id: string) => POST<{ msg: string; data: boolean }>(`${urls.deleteAnnouncement}/${id}`, {}),
+  /** 编辑群公告 */
+  editAnnouncement: (params: { id: string; roomId: string; content: string; top: boolean }) =>
+    POST<any>(urls.editAnnouncement, params)
 }
