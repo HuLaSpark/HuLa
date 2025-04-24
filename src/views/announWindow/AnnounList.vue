@@ -79,7 +79,7 @@
                 </n-flex>
               </div>
             </div>
-            <div class="w-96% text-(13px [--text-color]) ws-pre-wrap line-height-tight pt-12px">
+            <div class="w-96% text-(13px [--text-color]) ws-pre-wrap line-height-tight pt-12px break-words">
               <div
                 :class="[
                   'content-wrapper',
