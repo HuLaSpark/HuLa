@@ -188,7 +188,8 @@ export const useChatStore = defineStore(
 
         // 群组的时候去请求
         if (currentRoomType.value === RoomTypeEnum.GROUP) {
-          groupStore.getGroupUserList(true)
+          // 放到和公告一起加载
+          // groupStore.getGroupUserList(true)
           cachedStore.getGroupAtUserBaseInfo()
         }
 
