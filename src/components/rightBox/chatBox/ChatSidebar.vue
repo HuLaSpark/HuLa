@@ -165,6 +165,7 @@ const { createWebviewWindow } = useWindow()
 const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
 const cachedStore = useCachedStore()
+const userStore = useUserStore()
 const groupUserList = computed(() => groupStore.userList)
 const userList = computed(() => {
   // 先获取所有需要的用户ID
@@ -212,6 +213,24 @@ const isCollapsed = ref(true)
 const { optionsList, report, selectKey } = useChatMain()
 const { handlePopoverUpdate, enableScroll } = usePopover(selectKey, 'image-chat-sidebar')
 provide('popoverControls', { enableScroll })
+
+const isLord = computed(() => {
+  const currentUser = groupUserList.value.find((user) => user.uid === useUserStore().userInfo?.uid)
+  return currentUser?.roleId === RoleEnum.LORD
+})
+const isAdmin = computed(() => {
+  const currentUser = groupUserList.value.find((user) => user.uid === useUserStore().userInfo?.uid)
+  return currentUser?.roleId === RoleEnum.ADMIN
+})
+
+/** 判断当前用户是否拥有id为6的徽章 并且是频道 */
+const hasBadge6 = computed(() => {
+  // 只有当 roomId 为 "1" 时才进行徽章判断（频道）
+  if (globalStore.currentSession?.roomId !== '1') return false
+
+  const currentUser = useUserInfo(userStore.userInfo?.uid).value
+  return currentUser?.itemIds?.includes('6')
+})
 
 /** 群公告相关 */
 const announList = ref<any[]>([])
@@ -319,24 +338,16 @@ const handleOpenAnnoun = (isAdd: boolean) => {
   })
 }
 
-const isLord = computed(() => {
-  const currentUser = groupUserList.value.find((user) => user.uid === useUserStore().userInfo?.uid)
-  return currentUser?.roleId === RoleEnum.LORD
-})
-const isAdmin = computed(() => {
-  const currentUser = groupUserList.value.find((user) => user.uid === useUserStore().userInfo?.uid)
-  return currentUser?.roleId === RoleEnum.ADMIN
-})
-
 /**
  * 加载群公告
  */
+// TODO：这里会出现把上一次的内容连贯起来一起打印，会出现打印好几十次的情况
 const handleLoadGroupAnnoun = async (roomId: string, reload: boolean) => {
   // 判断是否是群主管理员
   console.log('是否是群主:', isLord.value)
   console.log('是否是管理员:', isAdmin.value)
   // 设置是否可以添加公告
-  isAddAnnoun.value = isLord.value || isAdmin.value
+  isAddAnnoun.value = isLord.value || isAdmin.value || hasBadge6.value!
   console.log('是否可以添加公告:', isAddAnnoun.value)
 
   console.log('handleLoadGroupAnnoun-获取群公告列表:', roomId)

@@ -27,8 +27,15 @@
           <span class="text-(14px [--text-color]) ml-10px">置顶</span>
         </div>
         <div class="w-45% h-42px flex-end-center">
-          <n-button class="bg-[--button-bg]" @click="handleCancel">取消</n-button>
-          <n-button class="bg-[--button-bg] ml-5px" @click="handlePushAnnouncement">发布</n-button>
+          <n-button quaternary size="small" class="bg-[--button-bg]" @click="handleCancel">取消</n-button>
+          <n-button
+            secondary
+            type="primary"
+            size="small"
+            class="bg-[--button-bg] ml-5px"
+            @click="handlePushAnnouncement">
+            发布
+          </n-button>
         </div>
       </n-flex>
     </n-flex>
@@ -39,7 +46,18 @@
         <n-button v-if="isAdmin" size="small" secondary @click="handleNew">发布新公告</n-button>
       </div>
 
-      <n-infinite-scroll class="h-95%">
+      <!--暂无数据-->
+      <div v-if="!announList || announList.length === 0" class="flex-center">
+        <n-empty style="height: calc(100vh - 100px)" class="flex-center" description="暂无公告">
+          <template #icon>
+            <n-icon>
+              <svg><use href="#explosion"></use></svg>
+            </n-icon>
+          </template>
+        </n-empty>
+      </div>
+
+      <n-infinite-scroll v-else class="h-95%">
         <!-- 展示公告列表 -->
         <div class="w-full flex-col-x-center">
           <div
@@ -64,18 +82,20 @@
                 </n-flex>
 
                 <n-flex align="center" :size="6">
-                  <svg
-                    v-if="isAdmin"
-                    class="size-16px color-[#909090] ml-8px hover:color-#404040 cursor-pointer"
-                    @click="handleEdit(announcement)">
-                    <use href="#edit"></use>
-                  </svg>
-                  <svg
-                    v-if="isAdmin"
-                    class="size-14px color-[#909090] ml-8px hover:color-#d5304f cursor-pointer"
-                    @click="handleDel(announcement)">
-                    <use href="#delete"></use>
-                  </svg>
+                  <n-button class="rounded-6px" v-if="isAdmin" @click="handleEdit(announcement)" quaternary size="tiny">
+                    <template #icon>
+                      <svg class="size-14px">
+                        <use href="#edit"></use>
+                      </svg>
+                    </template>
+                  </n-button>
+                  <n-button class="rounded-6px" v-if="isAdmin" @click="handleDel(announcement)" quaternary size="tiny">
+                    <template #icon>
+                      <svg class="size-14px">
+                        <use href="#delete"></use>
+                      </svg>
+                    </template>
+                  </n-button>
                 </n-flex>
               </div>
             </div>
@@ -106,11 +126,6 @@
         </div>
         <div class="w-full h-40px"></div>
       </n-infinite-scroll>
-
-      <!--暂无数据-->
-      <div v-if="!announList || announList.length === 0" class="w-95% h-40px flex-center">
-        <span class="text-(14px [--text-color])">暂无公告</span>
-      </div>
     </n-flex>
   </main>
 </template>
@@ -147,12 +162,21 @@ const isLast = ref(false)
 // 引入 group store
 const groupStore = useGroupStore()
 const cachedStore = useCachedStore()
+const userStore = useUserStore()
+/** 判断当前用户是否拥有id为6的徽章 并且是频道 */
+const hasBadge6 = computed(() => {
+  // 只有当 roomId 为 "1" 时才进行徽章判断（频道）
+  if (roomId.value !== '1') return false
+
+  const currentUser = useUserInfo(userStore.userInfo?.uid).value
+  return currentUser?.itemIds?.includes('6')
+})
 const isAdmin = computed(() => {
   let LordId = groupStore.currentLordId
   let adminUserTds = groupStore.adminUidList
   let uid = useUserStore().userInfo?.uid
   // 由于 uid 可能为 undefined，需要进行类型检查，确保其为 string 类型
-  if (uid && (uid === LordId || adminUserTds.includes(uid))) {
+  if (uid && (uid === LordId || adminUserTds.includes(uid) || hasBadge6.value)) {
     return true
   }
   return false
