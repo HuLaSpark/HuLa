@@ -20,11 +20,26 @@
 
     <!-- 群公告 -->
     <n-flex vertical :size="14" class="px-4px py-10px">
-      <p class="text-(14px --text-color) font-bold">群公告须知</p>
+      <n-flex
+        align="center"
+        justify="space-between"
+        class="cursor-pointer"
+        @click="handleOpenAnnoun(announNum === 0 && isAddAnnoun)">
+        <p class="text-(14px --text-color) font-bold">群公告须知</p>
+        <svg class="size-16px rotate-270 color-[--text-color]">
+          <use v-if="announNum === 0 && isAddAnnoun" href="#plus"></use>
+          <use v-else href="#down"></use>
+        </svg>
+      </n-flex>
 
-      <p class="text-(12px #909090) leading-5 line-clamp-4">
-        请不要把重要信息发到该群（功能暂时还未完善），网络不是法外之地，请遵守网络规范，否则直接删除。
-      </p>
+      <n-scrollbar class="h-74px">
+        <p class="text-(12px #909090) leading-6 line-clamp-4 max-w-99%" v-if="announNum === 0">
+          请不要把重要信息发到该群，网络不是法外之地，请遵守网络规范，否则直接删除。
+        </p>
+        <p v-else class="announcement-text text-(12px #909090) leading-6 line-clamp-4 max-w-99% break-words">
+          {{ announList.length > 0 ? announList[0]?.content : '' }}
+        </p>
+      </n-scrollbar>
     </n-flex>
 
     <n-flex v-if="!isSearch" align="center" justify="space-between" class="pr-8px pl-8px h-42px">
@@ -142,10 +157,19 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { useCachedStore } from '@/stores/cached.ts'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { storeToRefs } from 'pinia'
+import { useWindow } from '@/hooks/useWindow.ts'
+import { useUserStore } from '@/stores/user'
+import { WsResponseMessageType } from '@/services/wsType.ts'
+import { useTauriListener } from '@/hooks/useTauriListener'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 
+const appWindow = WebviewWindow.getCurrent()
+const { createWebviewWindow } = useWindow()
 const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
 const cachedStore = useCachedStore()
+const userStore = useUserStore()
+const { addListener } = useTauriListener()
 const groupUserList = computed(() => groupStore.userList)
 const userList = computed(() => {
   // 先获取所有需要的用户ID
@@ -193,6 +217,29 @@ const isCollapsed = ref(true)
 const { optionsList, report, selectKey } = useChatMain()
 const { handlePopoverUpdate, enableScroll } = usePopover(selectKey, 'image-chat-sidebar')
 provide('popoverControls', { enableScroll })
+
+const isLord = computed(() => {
+  const currentUser = groupUserList.value.find((user) => user.uid === useUserStore().userInfo?.uid)
+  return currentUser?.roleId === RoleEnum.LORD
+})
+const isAdmin = computed(() => {
+  const currentUser = groupUserList.value.find((user) => user.uid === useUserStore().userInfo?.uid)
+  return currentUser?.roleId === RoleEnum.ADMIN
+})
+
+/** 判断当前用户是否拥有id为6的徽章 并且是频道 */
+const hasBadge6 = computed(() => {
+  // 只有当 roomId 为 "1" 时才进行徽章判断（频道）
+  if (globalStore.currentSession?.roomId !== '1') return false
+
+  const currentUser = useUserInfo(userStore.userInfo?.uid).value
+  return currentUser?.itemIds?.includes('6')
+})
+
+/** 群公告相关 */
+const announList = ref<any[]>([])
+const announNum = ref(0)
+const isAddAnnoun = ref(false)
 
 // 添加一个新的计算属性来合并用户列表
 const mergedUserList = computed(() => {
@@ -285,6 +332,61 @@ const handleSelect = () => {
   })
 }
 
+/**
+ * 打开群公告
+ */
+const handleOpenAnnoun = (isAdd: boolean) => {
+  nextTick(async () => {
+    const roomId = globalStore.currentSession?.roomId
+    await createWebviewWindow(isAdd ? '新增群公告' : '查看群公告', `announList/${roomId}/${isAdd ? 0 : 1}`, 420, 620)
+  })
+}
+
+/**
+ * 加载群公告
+ */
+// TODO：这里会出现把上一次的内容连贯起来一起打印，会出现打印好几十次的情况
+const handleLoadGroupAnnoun = async (roomId: string, reload: boolean) => {
+  // 判断是否是群主管理员
+  console.log('是否是群主:', isLord.value)
+  console.log('是否是管理员:', isAdmin.value)
+  // 设置是否可以添加公告
+  isAddAnnoun.value = isLord.value || isAdmin.value || hasBadge6.value!
+  console.log('是否可以添加公告:', isAddAnnoun.value)
+
+  console.log('handleLoadGroupAnnoun-获取群公告列表:', roomId)
+  // 获取群公告列表
+  const data = await groupStore.getGroupAnnouncementList(roomId, 1, 10, reload)
+  console.log('获取群公告列表:', data)
+  if (data) {
+    announList.value = data.records
+    // 处理置顶公告
+    if (announList.value && announList.value.length > 0) {
+      const topAnnouncement = announList.value.find((item: any) => item.top)
+      if (topAnnouncement) {
+        announList.value = [topAnnouncement, ...announList.value.filter((item: any) => !item.top)]
+      }
+    }
+    announNum.value = parseInt(data.total || 0)
+  }
+}
+
+/**
+ * 初始化群公告所需要的信息
+ */
+const handleInitAnnoun = async (reload: boolean) => {
+  // 初始化时获取群公告
+  if (isGroup.value) {
+    if (globalStore.currentSession?.roomId) {
+      await groupStore.getGroupUserList(true, globalStore.currentSession.roomId)
+    }
+    const roomId = globalStore.currentSession?.roomId
+    if (roomId) {
+      await handleLoadGroupAnnoun(roomId, reload)
+    }
+  }
+}
+
 const userStatusStore = useUserStatusStore()
 const { stateList } = storeToRefs(userStatusStore)
 
@@ -299,9 +401,43 @@ onMounted(async () => {
     handlePopoverUpdate(event.uid)
   })
 
+  addListener(
+    appWindow.listen('announcementClear', async () => {
+      announNum.value = 0
+    })
+  )
+
+  addListener(
+    appWindow.listen('announcementUpdated', async (event: any) => {
+      if (event.payload) {
+        const { hasAnnouncements, topAnnouncement } = event.payload
+        if (hasAnnouncements && topAnnouncement) {
+          // 更新公告列表显示
+          announList.value = [topAnnouncement, ...(announList.value.filter((a) => a.id !== topAnnouncement.id) || [])]
+          announNum.value = announList.value.length
+        }
+      }
+    })
+  )
+
   // 初始化时获取当前群组用户的信息
   if (groupUserList.value.length > 0) {
     await cachedStore.getBatchUserInfo(groupUserList.value.map((item) => item.uid))
+    const handleAnnounInitOnEvent = (shouldReload: boolean) => {
+      return async (event: any) => {
+        if (shouldReload || event) {
+          await handleInitAnnoun(shouldReload)
+        }
+      }
+    }
+
+    // 为不同事件注册处理函数
+    // useMitt.on(MittEnum.MSG_BOX_SHOW, handleAnnounInitOnEvent(false))
+    // 监听群公告消息
+    useMitt.on(WsResponseMessageType.ROOM_GROUP_NOTICE_MSG, handleAnnounInitOnEvent(true))
+    useMitt.on(WsResponseMessageType.ROOM_EDIT_GROUP_NOTICE_MSG, handleAnnounInitOnEvent(true))
+
+    await handleInitAnnoun(true)
   }
 })
 </script>

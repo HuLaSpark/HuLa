@@ -250,6 +250,15 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
     }
   }
 
+  /**
+   * 获取群组公告
+   */
+  const getGroupAnnouncementList = async (roomId: string, page: number, size: number, reload: boolean) => {
+    const data = await cachedStore.getGroupAnnouncementList(roomId, page, size, reload)
+    if (!data) return null
+    return data
+  }
+
   return {
     userList,
     userListOptions,
@@ -267,6 +276,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
     exitGroup,
     refreshGroupMembers,
     resetGroupData,
-    countInfo
+    countInfo,
+    getGroupAnnouncementList
   }
 })

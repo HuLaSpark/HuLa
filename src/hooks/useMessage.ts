@@ -37,6 +37,7 @@ export const useMessage = () => {
     globalStore.currentSession.type = item.type
     const data = { msgBoxShow, item }
     // TODO 不应该再通过 mitt 去控制 UI
+    console.log('handleMsgClick:', item)
     useMitt.emit(MittEnum.MSG_BOX_SHOW, data)
 
     // 只有在消息页面且有未读消息时，才标记为已读
@@ -338,6 +339,12 @@ export const useMessage = () => {
         aloneWin.value.delete(e.payload)
       })
     ])
+  })
+
+  onBeforeUnmount(() => {
+    // 取消监听, 避免内存中还存在监听，导致请求次数过多
+    useMitt.off(MittEnum.MSG_BOX_SHOW, () => {})
+    useMitt.off(MittEnum.SHRINK_WINDOW, () => {})
   })
 
   return { msgBoxShow, handleMsgClick, handleMsgDelete, handleMsgDblclick, menuList, specialMenuList }
