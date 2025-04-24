@@ -51,13 +51,15 @@
         <n-empty style="height: calc(100vh - 100px)" class="flex-center" description="暂无公告">
           <template #icon>
             <n-icon>
-              <svg><use href="#explosion"></use></svg>
+              <svg>
+                <use href="#explosion"></use>
+              </svg>
             </n-icon>
           </template>
         </n-empty>
       </div>
 
-      <n-infinite-scroll v-else class="h-95%">
+      <n-scrollbar @scroll="handleScroll" v-else class="h-95%">
         <!-- 展示公告列表 -->
         <div class="w-full flex-col-x-center">
           <div
@@ -121,11 +123,12 @@
         </div>
         <!-- 加载更多 -->
         <div v-if="announList.length > 0" class="w-full h-40px flex-center mt-10px">
-          <n-button v-if="!isLast" class="bg-[--button-bg]" @click="handleLoadMore">加载更多</n-button>
-          <span v-else class="text-[12px] color-[#909090]">没有更多公告了</span>
+          <!-- <n-button v-if="!isLast" class="bg-[--button-bg]" @click="handleLoadMore">加载更多</n-button> -->
+          <img v-if="isLoading" class="size-16px" src="@/assets/img/loading.svg" alt="" />
+          <span v-if="isLast && !isLoading" class="text-[12px] color-[#909090]">没有更多公告了</span>
         </div>
         <div class="w-full h-40px"></div>
-      </n-infinite-scroll>
+      </n-scrollbar>
     </n-flex>
   </main>
 </template>
@@ -158,6 +161,7 @@ const pageSize = 10
 const pageNum = ref(1)
 // 已经到底了
 const isLast = ref(false)
+const isLoading = ref(false)
 
 // 引入 group store
 const groupStore = useGroupStore()
@@ -220,23 +224,28 @@ const handleInit = async (reload: boolean) => {
   }
 }
 
+/**
+ * 处理滚动事件
+ * @param event 滚动事件
+ */
+const handleScroll = (event: Event) => {
+  const target = event.target as HTMLElement
+  const isBottom = target.scrollHeight - target.scrollTop === target.clientHeight
+
+  if (isBottom && !isLast.value) {
+    handleLoadMore()
+  }
+}
+
 // 加载更多公告
 const handleLoadMore = async () => {
   if (roomId.value) {
     try {
+      isLoading.value = true
       const data = await groupStore.getGroupAnnouncementList(roomId.value, pageNum.value, pageSize, true)
       if (data) {
         // 如果没有更多数据，不再加载
         if (data.records.length === 0) {
-          isLast.value = true
-          return
-        }
-
-        console.log('data', data)
-        console.log('pageNum', pageNum.value)
-        console.log('data.pages', data.pages)
-        console.log('pageNum.value === parseInt(data.pages)', pageNum.value === parseInt(data.pages))
-        if (pageNum.value === parseInt(data.pages) || pageNum.value > parseInt(data.pages)) {
           isLast.value = true
           return
         }
@@ -255,9 +264,16 @@ const handleLoadMore = async () => {
           item.userName = cachedStore.getUserGroupNickname(item.uid, roomId.value)
         })
         isLast.value = false
+
+        if (pageNum.value === parseInt(data.pages) || pageNum.value > parseInt(data.pages)) {
+          isLast.value = true
+          return
+        }
       }
     } catch (error) {
       console.error('加载更多公告失败:', error)
+    } finally {
+      isLoading.value = false
     }
   }
 }
@@ -375,7 +391,7 @@ onMounted(async () => {
     roomId.value = $route.params.roomId as string
     viewType.value = $route.params.type as string
 
-    await handleInit(false)
+    await handleInit(true)
 
     setTimeout(async () => {
       const currentWindow = getCurrentWebviewWindow()
@@ -393,16 +409,19 @@ onMounted(async () => {
 [v-cloak] {
   display: none;
 }
+
 .content-wrapper {
   position: relative;
   overflow: hidden;
   transition: max-height 0.3s ease;
 }
+
 .content-collapsed {
   max-height: 100px; // 设置为约200px的显示高度
   mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 60%, rgba(0, 0, 0, 0));
   -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 60%, rgba(0, 0, 0, 0));
 }
+
 .expand-button {
   display: flex;
   align-items: center;
