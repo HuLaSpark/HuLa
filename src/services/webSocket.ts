@@ -320,6 +320,30 @@ class WS {
           )
           break
         }
+        case WsResponseMessageType.ROOM_GROUP_NOTICE_MSG: {
+          console.log('发布群公告', params.data)
+          useMitt.emit(
+            WsResponseMessageType.ROOM_GROUP_NOTICE_MSG,
+            params.data as {
+              id: string
+              content: string
+              top: string
+            }
+          )
+          break
+        }
+        case WsResponseMessageType.ROOM_EDIT_GROUP_NOTICE_MSG: {
+          console.log('编辑群公告', params.data)
+          useMitt.emit(
+            WsResponseMessageType.ROOM_EDIT_GROUP_NOTICE_MSG,
+            params.data as {
+              id: string
+              content: string
+              top: string
+            }
+          )
+          break
+        }
         default: {
           console.log('接收到未处理类型的消息:', params)
           break

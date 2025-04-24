@@ -222,7 +222,12 @@ const handleOpenMsgSession = async (uid: string) => {
 
 onMounted(() => {
   // 注入 enableAllScroll 方法
-  enableScroll.bind(inject('popoverControls', { enableScroll }))
+  const popoverControls = inject('popoverControls', { enableScroll: () => {} })
+  enableScroll = () => {
+    if (typeof popoverControls.enableScroll === 'function') {
+      popoverControls.enableScroll()
+    }
+  }
 })
 </script>
 

@@ -24,3 +24,12 @@
   ) {
   width: 6px;
 }
+
+.announcement-text {
+  white-space: normal; /** 保留空白符号并正常换行 */
+  word-break: break-all; /** 强制在单词内部进行换行 */
+  overflow-wrap: break-all;
+  -webkit-white-space: normal; /** 兼容webkit浏览器 */
+  -webkit-word-break: break-all;
+  -webkit-overflow-wrap: break-all;
+}

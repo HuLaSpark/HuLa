@@ -246,6 +246,36 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
     return userCachedList[uid]?.name || ''
   }
 
+  /**
+   * 获取群组公告
+   * @roomId 群组ID
+   * @reload 是否强制重新加载
+   * @returns 群组公告列表
+   * @description 如果有缓存且不需要重新加载，则直接从缓存中获取
+   * 如果没有缓存，则请求群组公告列表, 并缓存到本地, 固定获取10条
+   * 如果请求失败，则返回空数组
+   */
+  const getGroupAnnouncementList = async (roomId: string, page: number, size: number, reload: boolean) => {
+    console.log('group-获取群公告', roomId, reload)
+    if (localStorage.getItem('GroupAnnouncementList') && !reload) {
+      // 如果有缓存且不需要重新加载，则直接从缓存中获取
+      const localList = JSON.parse(localStorage.getItem('GroupAnnouncementList') || '{}')
+      console.log('localList', localList)
+      if (localList[roomId]) {
+        return localList[roomId] || []
+      }
+    } else {
+      // 如果没有缓存，则请求群组公告列表, 并缓存到本地, 固定获取10条
+      const data = await apis.getAnnouncementList(roomId, { current: page, size: size })
+      if (data) {
+        localStorage.setItem('GroupAnnouncementList', JSON.stringify({ [roomId]: data }))
+        return data
+      }
+    }
+    // 如果请求失败，则返回空数组
+    return []
+  }
+
   return {
     userCachedList,
     badgeCachedList,
@@ -260,6 +290,7 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
     updateUserCache,
     updateUserGroupNickname,
     getUserGroupNickname,
-    userGroupNicknameMap
+    userGroupNicknameMap,
+    getGroupAnnouncementList
   }
 })
