@@ -11,13 +11,33 @@
     当前网络不可用，请检查你的网络设置
   </n-flex>
 
+  <!-- 置顶公告提示 -->
+  <div
+    v-if="isGroup && topAnnouncement"
+    class="feishu-announcement"
+    :class="{ 'announcement-hover': isAnnouncementHover }"
+    @mouseenter="isAnnouncementHover = true"
+    @mouseleave="isAnnouncementHover = false">
+    <n-flex :wrap="false" class="w-full" align="center" justify="space-between">
+      <n-flex :wrap="false" align="center" class="pl-12px" :size="6">
+        <svg class="size-16px flex-shrink-0"><use href="#Loudspeaker"></use></svg>
+        <div style="max-width: calc(100vw - 630px)" class="line-clamp-1 text-(12px [--chat-text-color])">
+          {{ topAnnouncement.content }}
+        </div>
+      </n-flex>
+      <div class="flex-shrink-0 w-60px" @click="handleViewAnnouncement">
+        <p class="text-(12px #13987f) cursor-pointer">查看全部</p>
+      </div>
+    </n-flex>
+  </div>
+
   <Transition name="chat-init" appear mode="out-in" @after-leave="handleTransitionComplete">
     <!-- 初次加载的骨架屏 -->
     <n-flex
       v-if="messageOptions?.isLoading && !messageOptions?.cursor"
       vertical
       :size="18"
-      style="max-height: calc(100vh - 260px)"
+      :style="{ 'max-height': `calc(100vh - ${announcementHeight}px)` }"
       class="relative h-100vh box-border p-20px">
       <n-flex justify="end">
         <n-skeleton style="border-radius: 14px" height="40px" width="46%" :sharp="false" />
@@ -55,7 +75,7 @@
       @load-more="handleLoadMore"
       class="scrollbar-container"
       :class="{ 'hide-scrollbar': !showScrollbar }"
-      style="max-height: calc(100vh - 260px)"
+      :style="{ 'max-height': `calc(100vh - ${announcementHeight}px)` }"
       @mouseenter="showScrollbar = true"
       @mouseleave="showScrollbar = false">
       <template #default="{ item, index }">
@@ -65,7 +85,7 @@
           class="flex-y-center"
           :class="[
             item.message.type === MsgEnum.RECALL ? 'min-h-22px' : 'min-h-62px',
-            chatStore.isGroup ? 'p-[14px_10px_14px_20px]' : 'chat-single p-[4px_10px_10px_20px]',
+            isGroup ? 'p-[14px_10px_14px_20px]' : 'chat-single p-[4px_10px_10px_20px]',
             { 'active-reply': activeReply === item.message.id }
           ]">
           <!-- 信息间隔时间 -->
@@ -75,7 +95,7 @@
 
           <!--  消息为撤回消息  -->
           <div v-if="item.message.type === MsgEnum.RECALL">
-            <template v-if="chatStore.isGroup">
+            <template v-if="isGroup">
               <n-flex align="center" :size="6" v-if="item.fromUser.uid === userUid">
                 <p class="text-(12px #909090) select-none cursor-default">你撤回了一条消息</p>
                 <p
@@ -113,10 +133,10 @@
           <div
             v-else
             class="flex flex-col w-full"
-            :class="[{ 'items-end': item.fromUser.uid === userUid }, chatStore.isGroup ? 'gap-18px' : 'gap-2px']">
+            :class="[{ 'items-end': item.fromUser.uid === userUid }, isGroup ? 'gap-18px' : 'gap-2px']">
             <!-- 信息时间(单聊) -->
             <div
-              v-if="!chatStore.isGroup"
+              v-if="!isGroup"
               class="text-(12px #909090) h-12px w-fit select-none"
               :class="
                 item.fromUser.uid === userUid
@@ -153,7 +173,7 @@
                   <ContextMenu
                     @select="$event.click(item, 'Main')"
                     :content="item"
-                    :menu="chatStore.isGroup ? optionsList : void 0"
+                    :menu="isGroup ? optionsList : void 0"
                     :special-menu="report">
                     <!-- 存在头像时候显示 -->
                     <n-avatar
@@ -181,13 +201,13 @@
                   <ContextMenu
                     @select="$event.click(item, 'Main')"
                     :content="item"
-                    :menu="chatStore.isGroup ? optionsList : void 0"
+                    :menu="isGroup ? optionsList : void 0"
                     :special-menu="report">
                     <n-flex
                       :size="6"
                       class="select-none"
                       align="center"
-                      v-if="chatStore.isGroup"
+                      v-if="isGroup"
                       :style="item.fromUser.uid === userUid ? 'flex-direction: row-reverse' : ''">
                       <!-- 用户徽章 -->
                       <n-popover
@@ -218,19 +238,19 @@
                   </ContextMenu>
                   <!-- 群主 -->
                   <div
-                    v-if="chatStore.isGroup && groupStore.currentLordId === item.fromUser.uid"
+                    v-if="isGroup && groupStore.currentLordId === item.fromUser.uid"
                     class="flex px-4px py-3px rounded-4px bg-#d5304f30 size-fit select-none">
                     <span class="text-(9px #d5304f)">群主</span>
                   </div>
                   <!-- 管理员 -->
                   <div
-                    v-if="chatStore.isGroup && groupStore.adminUidList.includes(item.fromUser.uid)"
+                    v-if="isGroup && groupStore.adminUidList.includes(item.fromUser.uid)"
                     class="flex px-4px py-3px rounded-4px bg-#1a7d6b30 size-fit select-none">
                     <span class="text-(9px #1a7d6b)">管理员</span>
                   </div>
                   <!-- 信息时间(群聊) -->
                   <Transition name="fade-group">
-                    <span v-if="chatStore.isGroup && hoverBubble.key === item.message.id" class="text-(12px #909090)">
+                    <span v-if="isGroup && hoverBubble.key === item.message.id" class="text-(12px #909090)">
                       {{ formatTimestamp(item.message.sendTime, true) }}
                     </span>
                   </Transition>
@@ -244,10 +264,10 @@
                   class="w-fit relative flex flex-col"
                   :data-key="item.fromUser.uid === userUid ? `U${item.message.id}` : `Q${item.message.id}`"
                   :class="item.fromUser.uid === userUid ? 'items-end' : 'items-start'"
-                  :style="{ '--bubble-max-width': chatStore.isGroup ? '32vw' : '50vw' }"
+                  :style="{ '--bubble-max-width': isGroup ? '32vw' : '50vw' }"
                   @select="$event.click(item)"
                   :menu="handleItemType(item.message.type)"
-                  :emoji="chatStore.isGroup ? emojiList : []"
+                  :emoji="isGroup ? emojiList : []"
                   :special-menu="specialMenuList"
                   @reply-emoji="handleEmojiSelect($event.label, item)"
                   @click="handleMsgClick(item)">
@@ -345,7 +365,7 @@
                 </n-flex>
 
                 <!-- 群聊回复emoji表情 -->
-                <n-flex :size="4" v-if="chatStore.isGroup && item.emojiList">
+                <n-flex :size="4" v-if="isGroup && item.emojiList">
                   <n-flex
                     :size="2"
                     align="center"
@@ -395,7 +415,7 @@
   <footer
     class="float-footer"
     v-if="shouldShowFloatFooter && currentNewMsgCount"
-    :class="chatStore.isGroup ? 'right-220px' : 'right-50px'">
+    :class="isGroup ? 'right-220px' : 'right-50px'">
     <div class="float-box" :class="{ max: currentNewMsgCount?.count > 99 }" @click="scrollToBottom">
       <n-flex justify="space-between" align="center">
         <n-icon :color="currentNewMsgCount?.count > 99 ? '#ce304f' : '#13987f'">
@@ -456,6 +476,8 @@ const isScrollingDown = ref(false)
 // 添加标记，用于识别是否正在加载历史消息
 const isLoadingMore = ref(false)
 
+// 是否是群聊
+const isGroup = computed(() => chatStore.isGroup)
 const userUid = computed(() => userStore.userInfo.uid)
 const chatMessageList = computed(() => chatStore.chatMessageList)
 const currentNewMsgCount = computed(() => chatStore.currentNewMsgCount)
@@ -473,7 +495,7 @@ const myGroupNickname = (uid: string) => {
 /** 跳转回复消息后选中效果 */
 const activeReply = ref('')
 /** item最小高度，用于计算滚动大小和位置 */
-const itemSize = computed(() => (chatStore.isGroup ? 90 : 76))
+const itemSize = computed(() => (isGroup.value ? 90 : 76))
 /** 虚拟列表 */
 const virtualListInst = useTemplateRef<VirtualListExpose>('virtualListInst')
 /** 手动触发Popover显示 */
@@ -496,6 +518,12 @@ const recordEL = ref()
 /** 网络连接是否正常 */
 const { isOnline } = useNetwork()
 const isMac = computed(() => type() === 'macos')
+// 公告展示时需要减去的高度
+const announcementHeight = computed(() => (isGroup.value && topAnnouncement.value ? 300 : 260))
+// 置顶公告hover状态
+const isAnnouncementHover = ref(false)
+// 置顶公告相关
+const topAnnouncement = ref<any>(null)
 // 是否显示悬浮页脚
 const shouldShowFloatFooter = computed(() => {
   const container = virtualListInst.value?.getContainer()
@@ -619,6 +647,13 @@ watch(
   (value, oldValue) => {
     if (oldValue.roomId !== value.roomId) {
       scrollToBottom()
+      // 在会话切换时加载新会话的置顶公告
+      if (isGroup.value) {
+        loadTopAnnouncement()
+      } else {
+        // 如果不是群聊，清空置顶公告
+        topAnnouncement.value = null
+      }
     }
   }
 )
@@ -886,11 +921,55 @@ const handleLoadMore = async () => {
   }
 }
 
+// 获取置顶公告
+const loadTopAnnouncement = async () => {
+  if (currentRoomId.value && isGroup.value) {
+    try {
+      const data = await groupStore.getGroupAnnouncementList(currentRoomId.value, 1, 1, true)
+      if (data && data.records.length > 0) {
+        // 查找置顶公告
+        const topNotice = data.records.find((item: any) => item.top)
+        topAnnouncement.value = topNotice || null
+      } else {
+        topAnnouncement.value = null
+      }
+    } catch (error) {
+      console.error('获取置顶公告失败:', error)
+      topAnnouncement.value = null
+    }
+  }
+}
+
+const cancelReplyEmoji = (item: any, index: number) => {
+  // 判断item.emojiList数组中的count是否为1，如果为1则删除该元素，否则count-1
+  if (item.emojiList[index].count === 1) {
+    item.emojiList.splice(index, 1)
+  } else {
+    item.emojiList[index].count--
+  }
+}
+
+// 获取用户头像
+const getAvatarSrc = (uid: string) => {
+  const avatar = uid === userUid.value ? userStore.userInfo.avatar : useUserInfo(uid).value.avatar
+  return AvatarUtils.getAvatarUrl(avatar as string)
+}
+
+// 处理点击查看公告
+const handleViewAnnouncement = () => {
+  nextTick(async () => {
+    if (!currentRoomId.value) return
+    await createWebviewWindow('查看群公告', `announList/${currentRoomId.value}/1`, 420, 620)
+  })
+}
+
 onMounted(async () => {
   nextTick(() => {
     scrollToBottom()
     // 初始化消息索引映射
     updateMessageIndexMap()
+    // 初始加载置顶公告
+    loadTopAnnouncement()
   })
   useMitt.on(MittEnum.MESSAGE_ANIMATION, (messageType: MessageType) => {
     addToDomUpdateQueue(messageType.message.id, messageType.fromUser.uid)
@@ -911,6 +990,35 @@ onMounted(async () => {
       })
     }
   })
+
+  // 监听公告更新事件
+  await addListener(
+    appWindow.listen('announcementUpdated', async (event: any) => {
+      if (event.payload) {
+        const { hasAnnouncements, topAnnouncement: newTopAnnouncement } = event.payload
+        if (hasAnnouncements && newTopAnnouncement) {
+          // 只有置顶公告才更新顶部提示
+          if (newTopAnnouncement.top) {
+            topAnnouncement.value = newTopAnnouncement
+          } else if (topAnnouncement.value) {
+            // 如果当前有显示置顶公告，但新公告不是置顶的，保持不变
+            await loadTopAnnouncement() // 重新获取置顶公告
+          }
+        } else {
+          // 如果没有公告，清空显示
+          topAnnouncement.value = null
+        }
+      }
+    })
+  )
+
+  // 监听公告清空事件
+  await addListener(
+    appWindow.listen('announcementClear', () => {
+      topAnnouncement.value = null
+    })
+  )
+
   await addListener(
     appWindow.listen(EventEnum.SHARE_SCREEN, async () => {
       await createWebviewWindow('共享屏幕', 'sharedScreen', 840, 840)
@@ -930,21 +1038,6 @@ onUnmounted(() => {
   hoverBubble.value.key = -1
   window.removeEventListener('click', closeMenu, true)
 })
-
-const cancelReplyEmoji = (item: any, index: number) => {
-  // 判断item.emojiList数组中的count是否为1，如果为1则删除该元素，否则count-1
-  if (item.emojiList[index].count === 1) {
-    item.emojiList.splice(index, 1)
-  } else {
-    item.emojiList[index].count--
-  }
-}
-
-// 获取用户头像
-const getAvatarSrc = (uid: string) => {
-  const avatar = uid === userUid.value ? userStore.userInfo.avatar : useUserInfo(uid).value.avatar
-  return AvatarUtils.getAvatarUrl(avatar as string)
-}
 </script>
 
 <style scoped lang="scss">

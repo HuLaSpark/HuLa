@@ -45,9 +45,7 @@ export enum WsResponseMessageType {
   /** 群解散 */
   ROOM_DISSOLUTION = 'roomDissolution',
   /** 编辑群公告 */
-  ROOM_EDIT_GROUP_NOTICE_MSG = 'roomEditGroupNoticeMsg',
-  /** 强制刷新右上角群公告 */
-  ROOM_REFRESH_GROUP_NOTICE_MSG = 'roomRefreshGroupNoticeMsg'
+  ROOM_EDIT_GROUP_NOTICE_MSG = 'roomEditGroupNoticeMsg'
 }
 
 /**

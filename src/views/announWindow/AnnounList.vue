@@ -68,7 +68,7 @@
             class="w-91% h-auto bg-[--group-notice-list-bg] flex-start-center flex-col p-[0px_8px_12px_8px] border-[1px --group-notice-list-bg] mt-10px rounded-6px">
             <div class="w-full h-40px flex-start-center">
               <div class="size-full flex-between-center">
-                <n-flex align="center" :size="16">
+                <n-flex align="center" :size="16" class="pl-4px pt-4px">
                   <n-flex align="center" :size="6">
                     <n-avatar round :size="28" :src="avatarSrc(announcement.uid)" fallback-src="/logo.png" />
                     <n-flex vertical :size="4">
@@ -91,13 +91,36 @@
                       </svg>
                     </template>
                   </n-button>
-                  <n-button class="rounded-6px" v-if="isAdmin" @click="handleDel(announcement)" quaternary size="tiny">
+                  <n-popconfirm v-if="isAdmin" v-model:show="announcementStates[announcement.id].showDeleteConfirm">
                     <template #icon>
-                      <svg class="size-14px">
-                        <use href="#delete"></use>
-                      </svg>
+                      <svg class="size-22px"><use href="#explosion"></use></svg>
                     </template>
-                  </n-button>
+                    <template #action>
+                      <n-button
+                        size="small"
+                        tertiary
+                        @click.stop="announcementStates[announcement.id].showDeleteConfirm = false"
+                        >取消</n-button
+                      >
+                      <n-button
+                        size="small"
+                        type="error"
+                        :loading="announcementStates[announcement.id].deleteLoading"
+                        @click="handleDel(announcement)">
+                        删除
+                      </n-button>
+                    </template>
+                    <template #trigger>
+                      <n-button class="rounded-6px" quaternary size="tiny">
+                        <template #icon>
+                          <svg class="size-14px">
+                            <use href="#delete"></use>
+                          </svg>
+                        </template>
+                      </n-button>
+                    </template>
+                    你确定要删除全部会话吗？
+                  </n-popconfirm>
                 </n-flex>
               </div>
             </div>
@@ -138,12 +161,11 @@ import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import apis from '@/services/apis'
 import { useRoute } from 'vue-router'
 import { useGroupStore } from '@/stores/group.ts'
-import { WsResponseMessageType } from '@/services/wsType.ts'
-import { useMitt } from '@/hooks/useMitt.ts'
 import { useCachedStore } from '@/stores/cached'
 import { useUserStore } from '@/stores/user'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { emitTo } from '@tauri-apps/api/event'
 
 // 定义响应式变量
 const title = ref('')
@@ -162,6 +184,7 @@ const pageNum = ref(1)
 // 已经到底了
 const isLast = ref(false)
 const isLoading = ref(false)
+const announcementStates = ref<Record<string, { showDeleteConfirm: boolean; deleteLoading: boolean }>>({})
 
 // 引入 group store
 const groupStore = useGroupStore()
@@ -186,6 +209,15 @@ const isAdmin = computed(() => {
   return false
 })
 
+watch(
+  () => viewType.value,
+  (newVal) => {
+    if (newVal === '0') {
+      title.value = '新增群公告'
+    }
+  }
+)
+
 const avatarSrc = (uid: string) => AvatarUtils.getAvatarUrl(useUserInfo(uid).value.avatar as string)
 
 // 初始化函数，获取群公告列表
@@ -207,6 +239,10 @@ const handleInit = async (reload: boolean) => {
           item.userName = cachedStore.getUserGroupNickname(item.uid, roomId.value)
           // 添加展开/收起状态控制
           item.expanded = false
+          announcementStates.value[item.id] = {
+            showDeleteConfirm: false,
+            deleteLoading: false
+          }
         })
 
         // 处理置顶公告，置顶的公告排在列表前面
@@ -215,7 +251,6 @@ const handleInit = async (reload: boolean) => {
           if (!a.top && b.top) return 1
           return 0
         })
-        useMitt.emit(WsResponseMessageType.ROOM_REFRESH_GROUP_NOTICE_MSG, {})
         pageNum.value++
       }
     } catch (error) {
@@ -253,6 +288,10 @@ const handleLoadMore = async () => {
         // 为新加载的公告添加展开/收起状态
         data.records.forEach((item: any) => {
           item.expanded = false
+          announcementStates.value[item.id] = {
+            showDeleteConfirm: false,
+            deleteLoading: false
+          }
         })
 
         // 添加到现有列表中
@@ -284,6 +323,7 @@ const handleNew = () => {
   viewType.value = '0'
   isBack.value = true
   isEdit.value = false
+  title.value = '新增群公告'
 }
 
 // 处理取消操作
@@ -292,6 +332,7 @@ const handleCancel = () => {
   if (isBack.value) {
     viewType.value = '1'
     isBack.value = false
+    title.value = '查看群公告'
     return
   }
   getCurrentWebviewWindow().close()
@@ -300,10 +341,35 @@ const handleCancel = () => {
 // 删除公告
 const handleDel = async (announcement: any) => {
   try {
+    announcementStates.value[announcement.id].deleteLoading = true
     await apis.deleteAnnouncement(announcement.id)
-    handleInit(true)
+    // 重置该公告的确认框状态
+    announcementStates.value[announcement.id].showDeleteConfirm = false
+    announcementStates.value[announcement.id].deleteLoading = false
+
+    // 重新获取公告列表
+    await handleInit(true)
+
+    // 找出新的置顶公告
+    let newTopAnnouncement = null
+    if (announList.value.length > 0) {
+      newTopAnnouncement = announList.value.find((item: any) => item.top)
+    }
+
+    // 发送刷新消息通知其他组件
+    if (announList.value.length === 0) {
+      // 如果没有公告了，发送清空事件
+      emitTo('home', 'announcementClear')
+    }
+
+    // 无论如何都要发送更新事件，携带最新状态
+    emitTo('home', 'announcementUpdated', {
+      hasAnnouncements: announList.value.length > 0,
+      topAnnouncement: newTopAnnouncement
+    })
   } catch (error) {
     console.error('删除公告失败:', error)
+    announcementStates.value[announcement.id].deleteLoading = false
   }
 }
 
@@ -316,6 +382,7 @@ const handleEdit = (announcement: any) => {
   isTop.value = announcement.top
   viewType.value = '0'
   isBack.value = true
+  title.value = '编辑群公告'
 }
 
 // 验证公告内容
@@ -359,7 +426,22 @@ const handlePushAnnouncement = async () => {
   try {
     await apiCall()
     window.$message.success(successMessage)
+
+    // 重新获取公告列表
     await handleInit(true)
+
+    // 找出新的置顶公告
+    let newTopAnnouncement = null
+    if (announList.value.length > 0) {
+      newTopAnnouncement = announList.value.find((item: any) => item.top)
+    }
+
+    // 发送更新事件通知其他组件
+    emitTo('home', 'announcementUpdated', {
+      hasAnnouncements: announList.value.length > 0,
+      topAnnouncement: newTopAnnouncement
+    })
+
     if (!isEdit.value) {
       setTimeout(() => {
         getCurrentWebviewWindow().close()

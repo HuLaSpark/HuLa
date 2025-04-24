@@ -168,6 +168,26 @@
   opacity: 0;
 }
 
+// 置顶公告样式
+.feishu-announcement {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  background-color: var(--bg-notice, rgba(19, 152, 127, 0.08));
+  border-radius: 8px;
+  border: 1px solid var(--bg-notice, rgba(19, 152, 127, 0.2));
+  margin: 6px 12px 0 12px;
+  height: 34px;
+  user-select: none;
+  transition: all 0.3s ease-in-out;
+  z-index: 10;
+}
+
+.announcement-hover {
+  background-color: var(--bg-notice-hover, rgba(19, 152, 127, 0.14));
+}
+
 /**! 替换ait的字体颜色 */
 :deep(#aitSpan) {
   @apply text-inherit cursor-pointer;

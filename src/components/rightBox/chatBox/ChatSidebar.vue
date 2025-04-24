@@ -36,8 +36,8 @@
         <p class="text-(12px #909090) leading-6 line-clamp-4 max-w-99%" v-if="announNum === 0">
           请不要把重要信息发到该群，网络不是法外之地，请遵守网络规范，否则直接删除。
         </p>
-        <p v-else class="text-(12px #909090) leading-6 line-clamp-4 max-w-99%">
-          {{ announList[0]?.content }}
+        <p v-else class="announcement-text text-(12px #909090) leading-6 line-clamp-4 max-w-99% break-words">
+          {{ announList.length > 0 ? announList[0]?.content : '' }}
         </p>
       </n-scrollbar>
     </n-flex>
@@ -158,14 +158,18 @@ import { useCachedStore } from '@/stores/cached.ts'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { storeToRefs } from 'pinia'
 import { useWindow } from '@/hooks/useWindow.ts'
-import { useUserStore } from '~/src/stores/user'
+import { useUserStore } from '@/stores/user'
 import { WsResponseMessageType } from '@/services/wsType.ts'
+import { useTauriListener } from '@/hooks/useTauriListener'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 
+const appWindow = WebviewWindow.getCurrent()
 const { createWebviewWindow } = useWindow()
 const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
 const cachedStore = useCachedStore()
 const userStore = useUserStore()
+const { addListener } = useTauriListener()
 const groupUserList = computed(() => groupStore.userList)
 const userList = computed(() => {
   // 先获取所有需要的用户ID
@@ -397,6 +401,25 @@ onMounted(async () => {
     handlePopoverUpdate(event.uid)
   })
 
+  addListener(
+    appWindow.listen('announcementClear', async () => {
+      announNum.value = 0
+    })
+  )
+
+  addListener(
+    appWindow.listen('announcementUpdated', async (event: any) => {
+      if (event.payload) {
+        const { hasAnnouncements, topAnnouncement } = event.payload
+        if (hasAnnouncements && topAnnouncement) {
+          // 更新公告列表显示
+          announList.value = [topAnnouncement, ...(announList.value.filter((a) => a.id !== topAnnouncement.id) || [])]
+          announNum.value = announList.value.length
+        }
+      }
+    })
+  )
+
   // 初始化时获取当前群组用户的信息
   if (groupUserList.value.length > 0) {
     await cachedStore.getBatchUserInfo(groupUserList.value.map((item) => item.uid))
@@ -413,7 +436,6 @@ onMounted(async () => {
     // 监听群公告消息
     useMitt.on(WsResponseMessageType.ROOM_GROUP_NOTICE_MSG, handleAnnounInitOnEvent(true))
     useMitt.on(WsResponseMessageType.ROOM_EDIT_GROUP_NOTICE_MSG, handleAnnounInitOnEvent(true))
-    useMitt.on(WsResponseMessageType.ROOM_REFRESH_GROUP_NOTICE_MSG, handleAnnounInitOnEvent(true))
 
     await handleInitAnnoun(true)
   }
