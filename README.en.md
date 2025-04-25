@@ -206,6 +206,7 @@ Thanks to the following sponsors for their support!
 
 | Date | Sponsor | Sum | Platform |
 |------|--------|------|------|
+| 2025-04-25 | 上官俊斌 | ￥200 | 微信赞赏码 |
 | 2025-04-20 | 姜兴(Simon) | ￥188 | 微信赞赏码 |
 | 2025-02-17 | 禾硕 | ￥168 | 支付宝赞赏 |
 | 2025-02-8 | Boom.... | ￥100 | 微信赞赏码 |
