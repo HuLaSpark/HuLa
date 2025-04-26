@@ -220,7 +220,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/announList/:roomId/:type',
     name: 'announList',
-    component: () => import('@/views/announWindow/AnnounList.vue')
+    component: () => import('@/views/announWindow/index.vue')
   }
 ]
 

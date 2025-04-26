@@ -227,7 +227,6 @@ const handleInit = async (reload: boolean) => {
       pageNum.value = 1
       const data = await groupStore.getGroupAnnouncementList(roomId.value, pageNum.value, pageSize, reload)
       if (data) {
-        console.log('data', data)
         announList.value = data.records
         if (announList.value.length === 0) {
           viewType.value = '0'
@@ -375,7 +374,6 @@ const handleDel = async (announcement: any) => {
 
 // 编辑公告
 const handleEdit = (announcement: any) => {
-  console.log('edit：', announcement)
   isEdit.value = true
   editAnnoouncement.value = announcement
   announContent.value = announcement.content
@@ -387,7 +385,6 @@ const handleEdit = (announcement: any) => {
 
 // 验证公告内容
 const validateAnnouncement = (content: string) => {
-  console.log('content', content)
   if (content.length < 1) {
     window.$message.error('公告内容不能为空')
     return false
@@ -480,7 +477,6 @@ onMounted(async () => {
       await currentWindow.show()
       await currentWindow.setFocus()
       title.value = await currentWindow.title()
-      console.log('title', title.value)
     }, 200)
   } catch (error) {
     console.error('组件挂载初始化失败:', error)
