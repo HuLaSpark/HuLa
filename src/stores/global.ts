@@ -24,7 +24,7 @@ export const useGlobalStore = defineStore(
     })
 
     // 当前会话信息：包含房间ID和房间类型
-    const currentSession = reactive<{ roomId: string; type: RoomTypeEnum }>({
+    const currentSession = ref<{ roomId: string; type: RoomTypeEnum }>({
       roomId: '1',
       type: RoomTypeEnum.GROUP
     })

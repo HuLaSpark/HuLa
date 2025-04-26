@@ -344,6 +344,11 @@ class WS {
           )
           break
         }
+        case WsResponseMessageType.ROOM_DISSOLUTION: {
+          console.log('群解散', params.data)
+          useMitt.emit(WsResponseMessageType.ROOM_DISSOLUTION, params.data)
+          break
+        }
         default: {
           console.log('接收到未处理类型的消息:', params)
           break

@@ -135,6 +135,7 @@ const hasPendingFriendRequests = computed(() => {
 
 /** 群聊列表 */
 const groupChatList = computed(() => {
+  console.log(contactStore.groupChatList)
   return [...contactStore.groupChatList].sort((a, b) => {
     // 将roomId为'1'的群聊排在最前面
     if (a.roomId === '1' && b.roomId !== '1') return -1

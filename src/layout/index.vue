@@ -169,11 +169,11 @@ useMitt.on(WsResponseMessageType.ONLINE, async (onStatusChangeType: OnStatusChan
   }
 })
 useMitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExpire) => {
-  if (Number(userUid) === Number(wsTokenExpire.uid) && userStore.userInfo.client === wsTokenExpire.client) {
+  if (Number(userUid.value) === Number(wsTokenExpire.uid) && userStore.userInfo.client === wsTokenExpire.client) {
+    console.log('收到用户token过期通知', wsTokenExpire)
     // 聚焦主窗口
     const home = await WebviewWindow.getByLabel('home')
     await home?.setFocus()
-    console.log('账号在其他设备登录', wsTokenExpire)
     useMitt.emit(MittEnum.LEFT_MODAL_SHOW, {
       type: ModalEnum.REMOTE_LOGIN,
       props: {
@@ -297,6 +297,10 @@ useMitt.on(WsResponseMessageType.ROOM_INFO_CHANGE, async (data: { roomId: string
     // 重新获取群组信息统计
     await groupStore.getCountStatistic()
   }
+})
+useMitt.on(WsResponseMessageType.ROOM_DISSOLUTION, async () => {
+  // 刷新群聊列表
+  await contactStore.getGroupChatList()
 })
 
 onBeforeMount(async () => {

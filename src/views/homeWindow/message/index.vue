@@ -148,6 +148,13 @@ const sessionList = computed(() => {
           latestAvatar = useUserInfo(item.id).value.avatar || item.avatar
         }
 
+        // 获取群聊备注名称（如果有）
+        let displayName = item.name
+        if (item.type === RoomTypeEnum.GROUP && item.remark) {
+          // 使用群组备注（如果存在）
+          displayName = item.remark
+        }
+
         if (lastMsg) {
           const lastMsgUserName = useUserInfo(lastMsg.fromUser.uid)
 
@@ -184,20 +191,22 @@ const sessionList = computed(() => {
                 ? `${atPrefix}${messageContent}` // 有人@我时才保留HTML标签
                 : messageContent // 正常消息内容已在renderReplyContent中被转义
 
-          // 返回带有isAtMe标记的对象
+          // 返回带有isAtMe标记的对象和修改后的名称
           return {
             ...item,
             avatar: latestAvatar,
+            name: displayName, // 使用可能修改过的显示名称
             lastMsg: LastUserMsg || item.text || '欢迎使用HuLa',
             lastMsgTime: formatTimestamp(item?.activeTime),
             isAtMe: isAtMe
           }
         }
 
-        // 如果没有最后一条消息，则返回不带@标记的对象
+        // 如果没有最后一条消息，则返回不带@标记的对象，但也包含修改后的名称
         return {
           ...item,
           avatar: latestAvatar,
+          name: displayName, // 使用可能修改过的显示名称
           lastMsg: item.text || '欢迎使用HuLa',
           lastMsgTime: formatTimestamp(item?.activeTime),
           isAtMe: false
