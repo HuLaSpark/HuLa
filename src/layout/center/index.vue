@@ -270,6 +270,11 @@ onMounted(async () => {
   useMitt.on(MittEnum.SHRINK_WINDOW, (event: boolean) => {
     shrinkStatus.value = event
   })
+  useMitt.on(MittEnum.CREATE_GROUP, (event: { id: string }) => {
+    createGroupModal.value = true
+    console.log(event)
+    // TODO: 选用并且禁用当前 event.id 对应的uid的用户
+  })
   useMitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
     if (!event) return
     currentMsg.value = event

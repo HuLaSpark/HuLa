@@ -98,7 +98,9 @@ export enum MittEnum {
   /** 消息动画 */
   MESSAGE_ANIMATION = 'messageAnimation',
   /** 聊天框滚动到底部 */
-  CHAT_SCROLL_BOTTOM = 'CHAT_SCROLL_BOTTOM'
+  CHAT_SCROLL_BOTTOM = 'CHAT_SCROLL_BOTTOM',
+  /** 创建群聊 */
+  CREATE_GROUP = 'createGroup'
 }
 
 /** 主题类型 */

@@ -83,7 +83,7 @@
         </n-popover>
       </div>
 
-      <div class="options-box" @click="handleCreateGroupOrInvite">
+      <div v-if="activeItem.roomId !== '1'" class="options-box" @click="handleCreateGroupOrInvite">
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
             <svg><use href="#launch"></use></svg>
@@ -211,13 +211,16 @@
             </div>
 
             <!-- 我本群的昵称 -->
-            <p class="text-(12px #909090) mt-20px mb-10px">我本群的昵称</p>
+            <p class="text-(12px [--chat-text-color]) mt-20px mb-10px">我本群的昵称</p>
             <n-input
               class="border-(solid 1px [--line-color]) custom-shadow"
               v-model:value="groupDetail.myNickname"
               @update:value="updateGroupInfo($event, 'nickname')" />
             <!-- 群备注 -->
-            <p class="text-(12px #909090) mt-20px mb-10px">群备注</p>
+            <p class="flex-start-center gap-10px text-(12px [--chat-text-color]) mt-20px mb-10px">
+              群备注
+              <span class="text-(10px #909090)">(群备注仅自己可见)</span>
+            </p>
             <n-input
               class="border-(solid 1px [--line-color]) custom-shadow"
               v-model:value="groupDetail.groupRemark"
@@ -242,12 +245,21 @@
                     :value="activeItem.muteNotification === NotificationTypeEnum.NOT_DISTURB"
                     @update:value="handleNotification" />
                 </div>
+              </n-flex>
+            </div>
 
-                <div class="h-1px bg-[--setting-item-line] m-[10px_0]"></div>
+            <!-- 群消息设置（仅在消息免打扰开启时显示） -->
+            <div
+              v-if="activeItem.muteNotification === NotificationTypeEnum.NOT_DISTURB"
+              class="box-item cursor-default">
+              <n-flex vertical justify="center" :size="4">
+                <p class="text-(12px #909090) pb-14px">群消息设置</p>
 
                 <div class="flex-between-center">
-                  <p>屏蔽群消息</p>
-                  <n-switch size="small" :value="activeItem.shield" @update:value="handleShield" />
+                  <n-select
+                    v-model:value="messageSettingType"
+                    :options="messageSettingOptions"
+                    @update:value="handleMessageSetting" />
                 </div>
               </n-flex>
             </div>
@@ -410,6 +422,17 @@ if (type() !== 'linux') {
   peerConnection = new RTCPeerConnection()
 }
 
+const messageSettingType = ref(
+  activeItem.shield
+    ? 'shield'
+    : activeItem.muteNotification === NotificationTypeEnum.NOT_DISTURB
+      ? 'notification'
+      : 'shield'
+)
+const messageSettingOptions = ref([
+  { label: '接收消息但不提醒', value: 'notification' },
+  { label: '屏蔽消息', value: 'shield' }
+])
 const MIN_LOADING_TIME = 300 // 最小加载时间（毫秒）
 /** 是否在线 */
 const isOnline = computed(() => {
@@ -568,7 +591,7 @@ const handleCreateGroupOrInvite = () => {
 
 /** 处理创建群聊 */
 const handleCreateGroup = () => {
-  console.log(111)
+  useMitt.emit(MittEnum.CREATE_GROUP, activeItem.id)
 }
 
 /** 处理邀请进群 */
@@ -684,7 +707,14 @@ const handleTop = (value: boolean) => {
 /** 处理消息免打扰 */
 const handleNotification = (value: boolean) => {
   const newType = value ? NotificationTypeEnum.NOT_DISTURB : NotificationTypeEnum.RECEPTION
-
+  // 如果当前是屏蔽状态，需要先取消屏蔽
+  if (activeItem.shield) {
+    handleShield(false)
+  }
+  // 设置为消息免打扰时初始化为接收消息但不提醒
+  if (value) {
+    messageSettingType.value = 'notification'
+  }
   apis
     .notification({
       roomId: activeItem.roomId,
@@ -745,6 +775,23 @@ const handleShield = (value: boolean) => {
     .catch(() => {
       window.$message.error('设置失败')
     })
+}
+
+const handleMessageSetting = (value: string) => {
+  if (value === 'shield') {
+    if (activeItem.shield) return
+    handleShield(true)
+  } else if (value === 'notification') {
+    // 检查当前的消息提醒状态是否已经是免打扰
+    const isCurrentlyMuted = activeItem.muteNotification === NotificationTypeEnum.NOT_DISTURB
+
+    // 如果当前是屏蔽状态，需要先取消屏蔽
+    if (activeItem.shield) {
+      handleShield(false)
+    }
+    if (isCurrentlyMuted) return
+    handleNotification(true)
+  }
 }
 
 /** 删除操作二次提醒 */
