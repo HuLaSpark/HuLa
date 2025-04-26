@@ -347,17 +347,10 @@ const handleOpenAnnoun = (isAdd: boolean) => {
  */
 // TODO：这里会出现把上一次的内容连贯起来一起打印，会出现打印好几十次的情况
 const handleLoadGroupAnnoun = async (roomId: string, reload: boolean) => {
-  // 判断是否是群主管理员
-  console.log('是否是群主:', isLord.value)
-  console.log('是否是管理员:', isAdmin.value)
   // 设置是否可以添加公告
   isAddAnnoun.value = isLord.value || isAdmin.value || hasBadge6.value!
-  console.log('是否可以添加公告:', isAddAnnoun.value)
-
-  console.log('handleLoadGroupAnnoun-获取群公告列表:', roomId)
   // 获取群公告列表
   const data = await groupStore.getGroupAnnouncementList(roomId, 1, 10, reload)
-  console.log('获取群公告列表:', data)
   if (data) {
     announList.value = data.records
     // 处理置顶公告

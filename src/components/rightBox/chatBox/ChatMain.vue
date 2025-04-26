@@ -19,13 +19,13 @@
     @mouseenter="isAnnouncementHover = true"
     @mouseleave="isAnnouncementHover = false">
     <n-flex :wrap="false" class="w-full" align="center" justify="space-between">
-      <n-flex :wrap="false" align="center" class="pl-12px" :size="6">
+      <n-flex :wrap="false" align="center" class="pl-12px select-none" :size="6">
         <svg class="size-16px flex-shrink-0"><use href="#Loudspeaker"></use></svg>
         <div style="max-width: calc(100vw - 630px)" class="line-clamp-1 text-(12px [--chat-text-color])">
           {{ topAnnouncement.content }}
         </div>
       </n-flex>
-      <div class="flex-shrink-0 w-60px" @click="handleViewAnnouncement">
+      <div class="flex-shrink-0 w-60px select-none" @click="handleViewAnnouncement">
         <p class="text-(12px #13987f) cursor-pointer">查看全部</p>
       </div>
     </n-flex>

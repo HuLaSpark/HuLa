@@ -256,11 +256,9 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
    * 如果请求失败，则返回空数组
    */
   const getGroupAnnouncementList = async (roomId: string, page: number, size: number, reload: boolean) => {
-    console.log('group-获取群公告', roomId, reload)
     if (localStorage.getItem('GroupAnnouncementList') && !reload) {
       // 如果有缓存且不需要重新加载，则直接从缓存中获取
       const localList = JSON.parse(localStorage.getItem('GroupAnnouncementList') || '{}')
-      console.log('localList', localList)
       if (localList[roomId]) {
         return localList[roomId] || []
       }
