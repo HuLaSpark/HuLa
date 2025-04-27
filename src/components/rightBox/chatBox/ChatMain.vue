@@ -274,8 +274,8 @@
                   <!-- 渲染消息内容体 TODO: 等完善消息类型后逐渐替换使用RenderMessage -->
                   <RenderMessage
                     :class="[
-                      { active: activeBubble === item.message.id },
-                      item.message.type !== MsgEnum.IMAGE && item.message.type !== MsgEnum.EMOJI
+                      { active: activeBubble === item.message.id && !isSpecialMsgType(item.message.type) },
+                      !isSpecialMsgType(item.message.type)
                         ? item.fromUser.uid === userUid
                           ? 'bubble-oneself'
                           : 'bubble'
@@ -929,6 +929,7 @@ const loadTopAnnouncement = async () => {
       if (data && data.records.length > 0) {
         // 查找置顶公告
         const topNotice = data.records.find((item: any) => item.top)
+        console.log('置顶公告:', data)
         topAnnouncement.value = topNotice || null
       } else {
         topAnnouncement.value = null
@@ -961,6 +962,10 @@ const handleViewAnnouncement = () => {
     if (!currentRoomId.value) return
     await createWebviewWindow('查看群公告', `announList/${currentRoomId.value}/1`, 420, 620)
   })
+}
+
+const isSpecialMsgType = (type: number) => {
+  return type === MsgEnum.IMAGE || type === MsgEnum.EMOJI || type === MsgEnum.NOTICE
 }
 
 onMounted(async () => {

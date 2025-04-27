@@ -176,6 +176,10 @@ export enum MsgEnum {
   EMOJI,
   /** 系统消息 */
   SYSTEM,
+  /** 合并消息 */
+  MERGE,
+  /** 公告 */
+  NOTICE,
   /** 混合 */
   MIXED,
   /** 艾特 */
