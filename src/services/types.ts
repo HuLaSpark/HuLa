@@ -377,6 +377,11 @@ export type TextBody = {
     }
   >
 }
+/** 公告消息体 */
+export type AnnouncementBody = TextBody & {
+  /** 创建时间 */
+  createdTime: number
+}
 /** 表情消息 */
 export type EmojiBody = {
   url: string
@@ -441,7 +446,11 @@ export enum RequestFriendAgreeStatus {
   /** 1待审批 */
   Waiting = 1,
   /** 2同意 */
-  Agree
+  Agree,
+  /** 3拒绝 */
+  Reject,
+  /** 4忽略 */
+  Ignore
 }
 
 /** 请求添加好友的列表项 */
@@ -450,7 +459,7 @@ export type RequestFriendItem = {
   applyId: string
   /** 申请信息 */
   msg: string
-  /** 申请状态 1待审批 2同意 */
+  /** 申请状态 1待审批 2同意 3拒绝 4忽略 */
   status: RequestFriendAgreeStatus
   /** 申请类型 1加好友 */
   type: number

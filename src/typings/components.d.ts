@@ -9,6 +9,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     ActionBar: typeof import('./../components/windows/ActionBar.vue')['default']
+    Announcement: typeof import('./../components/rightBox/renderMessage/Announcement.vue')['default']
     ApplyList: typeof import('./../components/rightBox/ApplyList.vue')['default']
     AvatarCropper: typeof import('./../components/common/AvatarCropper.vue')['default']
     ChatBox: typeof import('./../components/rightBox/chatBox/index.vue')['default']

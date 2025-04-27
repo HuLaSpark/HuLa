@@ -594,6 +594,8 @@ export const messageStrategyMap: Record<MsgEnum, MessageStrategy> = {
   [MsgEnum.FILE]: fileMessageStrategy,
   [MsgEnum.IMAGE]: imageMessageStrategy,
   [MsgEnum.TEXT]: textMessageStrategy,
+  [MsgEnum.NOTICE]: unsupportedMessageStrategy,
+  [MsgEnum.MERGE]: unsupportedMessageStrategy,
   [MsgEnum.EMOJI]: emojiMessageStrategy,
   [MsgEnum.UNKNOWN]: unsupportedMessageStrategy,
   [MsgEnum.RECALL]: unsupportedMessageStrategy,

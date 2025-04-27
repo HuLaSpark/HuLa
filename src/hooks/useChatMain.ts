@@ -288,8 +288,17 @@ export const useChatMain = () => {
         const targetUid = item.uid || item.fromUser?.uid
         if (!targetUid) return false
 
-        // 4. 检查目标用户是否已经是管理员或群主
-        if (item.roleId === RoleEnum.ADMIN || item.roleId === RoleEnum.LORD) return false
+        // 4. 检查目标用户角色
+        let targetRoleId = item.roleId
+
+        // 如果item中没有roleId，则通过uid从群成员列表中查找
+        if (targetRoleId === void 0) {
+          const targetUser = groupStore.userList.find((user) => user.uid === targetUid)
+          targetRoleId = targetUser?.roleId
+        }
+
+        // 检查目标用户是否已经是管理员或群主
+        if (targetRoleId === RoleEnum.ADMIN || targetRoleId === RoleEnum.LORD) return false
 
         // 5. 检查当前用户是否是群主
         const currentUser = groupStore.userList.find((user) => user.uid === userUid.value)
@@ -324,8 +333,17 @@ export const useChatMain = () => {
         const targetUid = item.uid || item.fromUser?.uid
         if (!targetUid) return false
 
-        // 4. 检查目标用户是否是管理员(只能撤销管理员,不能撤销群主)
-        if (item.roleId !== RoleEnum.ADMIN) return false
+        // 4. 检查目标用户角色
+        let targetRoleId = item.roleId
+
+        // 如果item中没有roleId，则通过uid从群成员列表中查找
+        if (targetRoleId === void 0) {
+          const targetUser = groupStore.userList.find((user) => user.uid === targetUid)
+          targetRoleId = targetUser?.roleId
+        }
+
+        // 检查目标用户是否是管理员(只能撤销管理员,不能撤销群主)
+        if (targetRoleId !== RoleEnum.ADMIN) return false
 
         // 5. 检查当前用户是否是群主
         const currentUser = groupStore.userList.find((user) => user.uid === userUid.value)
@@ -365,8 +383,17 @@ export const useChatMain = () => {
         const targetUid = item.uid || item.fromUser?.uid
         if (!targetUid) return false
 
-        // 4. 检查目标用户是否是群主(群主不能被移出)
-        if (item.roleId === RoleEnum.LORD) return false
+        // 4. 检查目标用户角色
+        let targetRoleId = item.roleId
+
+        // 如果item中没有roleId，则通过uid从群成员列表中查找
+        if (targetRoleId === void 0) {
+          const targetUser = groupStore.userList.find((user) => user.uid === targetUid)
+          targetRoleId = targetUser?.roleId
+        }
+
+        // 检查目标用户是否是群主(群主不能被移出)
+        if (targetRoleId === RoleEnum.LORD) return false
 
         // 5. 检查当前用户是否有权限(群主或管理员)
         const currentUser = groupStore.userList.find((user) => user.uid === userUid.value)
@@ -374,7 +401,7 @@ export const useChatMain = () => {
         const isAdmin = currentUser?.roleId === RoleEnum.ADMIN
 
         // 6. 如果当前用户是管理员,则不能移出其他管理员
-        if (isAdmin && item.roleId === RoleEnum.ADMIN) return false
+        if (isAdmin && targetRoleId === RoleEnum.ADMIN) return false
 
         return isLord || isAdmin
       }
