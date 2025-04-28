@@ -251,27 +251,12 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
    * @roomId 群组ID
    * @reload 是否强制重新加载
    * @returns 群组公告列表
-   * @description 如果有缓存且不需要重新加载，则直接从缓存中获取
-   * 如果没有缓存，则请求群组公告列表, 并缓存到本地, 固定获取10条
-   * 如果请求失败，则返回空数组
    */
-  const getGroupAnnouncementList = async (roomId: string, page: number, size: number, reload: boolean) => {
-    if (localStorage.getItem('groupAnnouncementList') && !reload) {
-      // 如果有缓存且不需要重新加载，则直接从缓存中获取
-      const localList = JSON.parse(localStorage.getItem('groupAnnouncementList') || '{}')
-      if (localList[roomId]) {
-        return localList[roomId] || []
-      }
-    } else {
-      // 如果没有缓存，则请求群组公告列表, 并缓存到本地, 固定获取10条
-      const data = await apis.getAnnouncementList(roomId, { current: page, size: size })
-      if (data) {
-        localStorage.setItem('groupAnnouncementList', JSON.stringify({ [roomId]: data }))
-        return data
-      }
+  const getGroupAnnouncementList = async (roomId: string, page: number, size: number) => {
+    const data = await apis.getAnnouncementList(roomId, { current: page, size: size })
+    if (data) {
+      return data
     }
-    // 如果请求失败，则返回空数组
-    return []
   }
 
   return {

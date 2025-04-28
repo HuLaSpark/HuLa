@@ -345,11 +345,11 @@ const handleOpenAnnoun = (isAdd: boolean) => {
 /**
  * 加载群公告
  */
-const handleLoadGroupAnnoun = async (roomId: string, reload: boolean) => {
+const handleLoadGroupAnnoun = async (roomId: string) => {
   // 设置是否可以添加公告
   isAddAnnoun.value = isLord.value || isAdmin.value || hasBadge6.value!
   // 获取群公告列表
-  const data = await cachedStore.getGroupAnnouncementList(roomId, 1, 10, reload)
+  const data = await cachedStore.getGroupAnnouncementList(roomId, 1, 10)
   if (data) {
     announList.value = data.records
     // 处理置顶公告
@@ -359,14 +359,14 @@ const handleLoadGroupAnnoun = async (roomId: string, reload: boolean) => {
         announList.value = [topAnnouncement, ...announList.value.filter((item: any) => !item.top)]
       }
     }
-    announNum.value = parseInt(data.total || 0)
+    announNum.value = parseInt(data.total)
   }
 }
 
 /**
  * 初始化群公告所需要的信息
  */
-const handleInitAnnoun = async (reload: boolean) => {
+const handleInitAnnoun = async () => {
   // 初始化时获取群公告
   if (isGroup.value) {
     if (globalStore.currentSession?.roomId) {
@@ -374,7 +374,7 @@ const handleInitAnnoun = async (reload: boolean) => {
     }
     const roomId = globalStore.currentSession?.roomId
     if (roomId) {
-      await handleLoadGroupAnnoun(roomId, reload)
+      await handleLoadGroupAnnoun(roomId)
     }
   }
 }
@@ -418,7 +418,7 @@ onMounted(async () => {
     const handleAnnounInitOnEvent = (shouldReload: boolean) => {
       return async (event: any) => {
         if (shouldReload || event) {
-          await handleInitAnnoun(shouldReload)
+          await handleInitAnnoun()
         }
       }
     }
@@ -429,7 +429,7 @@ onMounted(async () => {
     useMitt.on(WsResponseMessageType.ROOM_GROUP_NOTICE_MSG, handleAnnounInitOnEvent(true))
     useMitt.on(WsResponseMessageType.ROOM_EDIT_GROUP_NOTICE_MSG, handleAnnounInitOnEvent(true))
 
-    await handleInitAnnoun(true)
+    await handleInitAnnoun()
   }
 })
 </script>

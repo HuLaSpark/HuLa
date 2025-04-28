@@ -221,11 +221,12 @@ watch(
 const avatarSrc = (uid: string) => AvatarUtils.getAvatarUrl(useUserInfo(uid).value.avatar as string)
 
 // 初始化函数，获取群公告列表
-const handleInit = async (reload: boolean) => {
+const handleInit = async () => {
   if (roomId.value) {
     try {
       pageNum.value = 1
-      const data = await cachedStore.getGroupAnnouncementList(roomId.value, pageNum.value, pageSize, reload)
+      isLast.value = false
+      const data = await cachedStore.getGroupAnnouncementList(roomId.value, pageNum.value, pageSize)
       if (data) {
         announList.value = data.records
         if (announList.value.length === 0) {
@@ -273,39 +274,48 @@ const handleScroll = (event: Event) => {
 
 // 加载更多公告
 const handleLoadMore = async () => {
-  if (roomId.value) {
+  if (roomId.value && !isLoading.value && !isLast.value) {
     try {
       isLoading.value = true
-      const data = await cachedStore.getGroupAnnouncementList(roomId.value, pageNum.value, pageSize, true)
+      const data = await cachedStore.getGroupAnnouncementList(roomId.value, pageNum.value, pageSize)
       if (data) {
-        // 如果没有更多数据，不再加载
-        if (data.records.length === 0) {
+        // 如果没有数据，标记为最后一页
+        if (!data.records) {
           isLast.value = true
           return
         }
 
+        // 检查重复数据
+        const existingIds = new Set(announList.value.map((item) => item.id))
+        const newRecords = data.records.filter((newItem: any) => !existingIds.has(newItem.id))
+
         // 为新加载的公告添加展开/收起状态
-        data.records.forEach((item: any) => {
+        newRecords.forEach((item: any) => {
           item.expanded = false
           announcementStates.value[item.id] = {
             showDeleteConfirm: false,
             deleteLoading: false
           }
-        })
-
-        // 添加到现有列表中
-        announList.value.push(...data.records)
-        pageNum.value++
-
-        // 处理公告的userName getUserGroupNickname
-        announList.value.forEach((item) => {
+          // 处理公告的userName
           item.userName = cachedStore.getUserGroupNickname(item.uid, roomId.value)
         })
-        isLast.value = false
 
-        if (pageNum.value === parseInt(data.pages) || pageNum.value > parseInt(data.pages)) {
-          isLast.value = true
+        // 添加新的非重复数据到列表中
+        if (newRecords.length > 0) {
+          announList.value.push(...newRecords)
+          // 判断累计加载的数据量是否达到总数
+          if (announList.value.length >= Number(data.total)) {
+            isLast.value = true
+            return
+          }
+          pageNum.value++
+        } else if (pageNum.value < Number(data.pages)) {
+          // 如果当前页没有新数据但还没到最后一页，尝试加载下一页
+          pageNum.value++
+          handleLoadMore()
           return
+        } else {
+          isLast.value = true
         }
       }
     } catch (error) {
@@ -341,13 +351,16 @@ const handleCancel = () => {
 const handleDel = async (announcement: any) => {
   try {
     announcementStates.value[announcement.id].deleteLoading = true
-    await apis.deleteAnnouncement(announcement.id)
+
+    // 同时处理删除请求和最小延迟时间
+    await Promise.all([apis.deleteAnnouncement(announcement.id), new Promise((resolve) => setTimeout(resolve, 600))])
+
     // 重置该公告的确认框状态
     announcementStates.value[announcement.id].showDeleteConfirm = false
     announcementStates.value[announcement.id].deleteLoading = false
 
     // 重新获取公告列表
-    await handleInit(true)
+    await handleInit()
 
     // 找出新的置顶公告
     let newTopAnnouncement = null
@@ -425,7 +438,7 @@ const handlePushAnnouncement = async () => {
     window.$message.success(successMessage)
 
     // 重新获取公告列表
-    await handleInit(true)
+    await handleInit()
 
     // 找出新的置顶公告
     let newTopAnnouncement = null
@@ -470,7 +483,7 @@ onMounted(async () => {
     roomId.value = $route.params.roomId as string
     viewType.value = $route.params.type as string
 
-    await handleInit(true)
+    await handleInit()
 
     setTimeout(async () => {
       const currentWindow = getCurrentWebviewWindow()

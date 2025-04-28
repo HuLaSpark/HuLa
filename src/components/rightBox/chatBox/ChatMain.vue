@@ -927,7 +927,7 @@ const handleLoadMore = async () => {
 const loadTopAnnouncement = async () => {
   if (currentRoomId.value && isGroup.value) {
     try {
-      const data = await cachedStore.getGroupAnnouncementList(currentRoomId.value, 1, 1, true)
+      const data = await cachedStore.getGroupAnnouncementList(currentRoomId.value, 1, 1)
       if (data && data.records.length > 0) {
         // 查找置顶公告
         const topNotice = data.records.find((item: any) => item.top)
