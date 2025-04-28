@@ -63,6 +63,21 @@ export type RegisterUserReq = {
   uuid: string
 }
 
+/** 分页翻页 */
+export type PageResponse<T> = {
+  /** 总数 */
+  total: string
+  /** 总页数 */
+  pages: string
+  /** 当前页 */
+  current: string
+  /** 每页大小 */
+  size: string
+  /** 数据 */
+  records: T[]
+}
+
+/** 游标翻页 */
 export type ListResponse<T> = {
   /** 游标（下次翻页带上这参数）*/
   cursor: string
@@ -618,6 +633,22 @@ export type ConfigType = {
   }
   /** 大群ID */
   roomGroupId: string
+}
+
+/** 群组公告 */
+export type AnnouncementItem = {
+  /** 公告ID */
+  id: string
+  /** 房间ID */
+  roomId: string
+  /** 发布者ID */
+  uid: string
+  /** 公告内容 */
+  content: string
+  /** 创建时间 */
+  createdTime: number
+  /** 是否置顶 */
+  top: boolean
 }
 
 /* ======================================================== */

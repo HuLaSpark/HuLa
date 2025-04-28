@@ -345,12 +345,11 @@ const handleOpenAnnoun = (isAdd: boolean) => {
 /**
  * 加载群公告
  */
-// TODO：这里会出现把上一次的内容连贯起来一起打印，会出现打印好几十次的情况
 const handleLoadGroupAnnoun = async (roomId: string, reload: boolean) => {
   // 设置是否可以添加公告
   isAddAnnoun.value = isLord.value || isAdmin.value || hasBadge6.value!
   // 获取群公告列表
-  const data = await groupStore.getGroupAnnouncementList(roomId, 1, 10, reload)
+  const data = await cachedStore.getGroupAnnouncementList(roomId, 1, 10, reload)
   if (data) {
     announList.value = data.records
     // 处理置顶公告

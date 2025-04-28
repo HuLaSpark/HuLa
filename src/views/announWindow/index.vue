@@ -225,7 +225,7 @@ const handleInit = async (reload: boolean) => {
   if (roomId.value) {
     try {
       pageNum.value = 1
-      const data = await groupStore.getGroupAnnouncementList(roomId.value, pageNum.value, pageSize, reload)
+      const data = await cachedStore.getGroupAnnouncementList(roomId.value, pageNum.value, pageSize, reload)
       if (data) {
         announList.value = data.records
         if (announList.value.length === 0) {
@@ -276,7 +276,7 @@ const handleLoadMore = async () => {
   if (roomId.value) {
     try {
       isLoading.value = true
-      const data = await groupStore.getGroupAnnouncementList(roomId.value, pageNum.value, pageSize, true)
+      const data = await cachedStore.getGroupAnnouncementList(roomId.value, pageNum.value, pageSize, true)
       if (data) {
         // 如果没有更多数据，不再加载
         if (data.records.length === 0) {

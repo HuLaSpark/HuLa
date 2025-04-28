@@ -26,7 +26,9 @@ import {
   Login,
   SearchFriend,
   SearchGroup,
-  ConfigType
+  ConfigType,
+  AnnouncementItem,
+  PageResponse
 } from '@/services/types'
 
 import request from '@/services/request'
@@ -181,7 +183,7 @@ export default {
     }>(urls.getQiniuToken),
   /** 获取群公告列表 */
   getAnnouncementList: (roomId: string, params: { current: number; size: number }) =>
-    GET<ListResponse<any>>(`${urls.getAnnouncementList}/${roomId}`, params),
+    GET<PageResponse<AnnouncementItem[]>>(`${urls.getAnnouncementList}/${roomId}`, params),
   /** 发布群公告 */
   pushAnnouncement: (params: { roomId: string; content: string; top: boolean }) =>
     POST<{ msg: string; data: boolean }>(urls.pushAnnouncement, params),
