@@ -416,19 +416,13 @@ export const useChatMain = () => {
   const emojiList = ref([
     {
       label: '👍',
+      value: 1,
       title: '好赞'
     },
     {
-      label: '😆',
-      title: '开心'
-    },
-    {
-      label: '🥳',
-      title: '恭喜'
-    },
-    {
-      label: '🤯',
-      title: '惊呆了'
+      label: '☹️',
+      value: 2,
+      title: '不满'
     }
   ])
 

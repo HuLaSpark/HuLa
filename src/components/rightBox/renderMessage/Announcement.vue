@@ -1,6 +1,6 @@
 <template>
   <!-- 公告消息 -->
-  <n-flex vertical :size="0" class="w-240px h-170px bg-#fff rounded-8px custom-shadow">
+  <n-flex vertical :size="0" class="w-240px h-170px bg-[--group-notice-bg] rounded-8px custom-shadow">
     <n-flex class="px-12px py-8px select-none cursor-default" align="center" :size="8">
       <svg class="size-16px flex-shrink-0"><use href="#Loudspeaker"></use></svg>
       <p class="text-(12px [--chat-text-color])">公告</p>

@@ -268,9 +268,9 @@ export type BadgeType = {
 
 export type MarkItemType = {
   /** 操作用户 */
-  uid: string
+  uid: number
   /** 消息id */
-  msgId: string
+  msgId: number
   /** 操作类型 1点赞 2举报 */
   markType: MarkEnum
   /** 数量 */
