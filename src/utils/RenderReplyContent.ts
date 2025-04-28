@@ -33,6 +33,16 @@ export const renderReplyContent = (name?: string, type?: MsgEnum, content?: stri
         ? `${name}:${MSG_REPLY_TEXT_MAP[MsgEnum.EMOJI]}`
         : MSG_REPLY_TEXT_MAP[MsgEnum.EMOJI]
     }
+    case MsgEnum.NOTICE: {
+      return roomType === RoomTypeEnum.GROUP
+        ? `${name}:${MSG_REPLY_TEXT_MAP[MsgEnum.NOTICE]}`
+        : MSG_REPLY_TEXT_MAP[MsgEnum.NOTICE]
+    }
+    case MsgEnum.MERGE: {
+      return roomType === RoomTypeEnum.GROUP
+        ? `${name}:${MSG_REPLY_TEXT_MAP[MsgEnum.MERGE]}`
+        : MSG_REPLY_TEXT_MAP[MsgEnum.MERGE]
+    }
     default: {
       return ''
     }

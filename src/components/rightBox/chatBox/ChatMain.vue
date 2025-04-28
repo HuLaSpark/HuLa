@@ -454,6 +454,7 @@ import { useTauriListener } from '@/hooks/useTauriListener'
 import { useGroupStore } from '@/stores/group.ts'
 import { useGlobalStore } from '@/stores/global'
 import { useDebounceFn } from '@vueuse/core'
+import { useCachedStore } from '@/stores/cached'
 
 const appWindow = WebviewWindow.getCurrent()
 const { addListener } = useTauriListener()
@@ -465,6 +466,7 @@ const chatStore = useChatStore()
 const userStore = useUserStore()
 const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
+const cachedStore = useCachedStore()
 
 // 记录当前滚动位置相关信息
 const isAutoScrolling = ref(false)
@@ -925,11 +927,10 @@ const handleLoadMore = async () => {
 const loadTopAnnouncement = async () => {
   if (currentRoomId.value && isGroup.value) {
     try {
-      const data = await groupStore.getGroupAnnouncementList(currentRoomId.value, 1, 1, true)
+      const data = await cachedStore.getGroupAnnouncementList(currentRoomId.value, 1, 1, true)
       if (data && data.records.length > 0) {
         // 查找置顶公告
         const topNotice = data.records.find((item: any) => item.top)
-        console.log('置顶公告:', data)
         topAnnouncement.value = topNotice || null
       } else {
         topAnnouncement.value = null
