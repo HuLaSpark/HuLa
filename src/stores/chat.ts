@@ -473,7 +473,7 @@ export const useChatStore = defineStore(
       for (const mark of markList) {
         const { msgId, markType, markCount } = mark
 
-        const msgItem = currentMessageMap.value?.get(msgId)
+        const msgItem = currentMessageMap.value?.get(String(msgId))
         if (msgItem) {
           if (markType === MarkEnum.LIKE) {
             msgItem.message.messageMark.likeCount = markCount

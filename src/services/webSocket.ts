@@ -251,9 +251,8 @@ class WS {
           useMitt.emit(WsResponseMessageType.INVALID_USER, params.data as { uid: number })
           break
         }
-        // 点赞、倒赞消息通知
+        // 点赞、不满消息通知
         case WsResponseMessageType.MSG_MARK_ITEM: {
-          console.log('点赞')
           useMitt.emit(WsResponseMessageType.MSG_MARK_ITEM, params.data as { markList: MarkItemType[] })
           break
         }

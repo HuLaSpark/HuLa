@@ -269,7 +269,7 @@
                   :menu="handleItemType(item.message.type)"
                   :emoji="isGroup ? emojiList : []"
                   :special-menu="specialMenuList"
-                  @reply-emoji="handleEmojiSelect($event.label, item)"
+                  @reply-emoji="handleEmojiSelect($event, item)"
                   @click="handleMsgClick(item)">
                   <!-- 渲染消息内容体 TODO: 等完善消息类型后逐渐替换使用RenderMessage -->
                   <RenderMessage
@@ -364,17 +364,21 @@
                   </div>
                 </n-flex>
 
-                <!-- 群聊回复emoji表情 -->
-                <n-flex :size="4" v-if="isGroup && item.emojiList">
-                  <n-flex
-                    :size="2"
-                    align="center"
-                    class="emoji-reply-bubble"
-                    @click.stop="cancelReplyEmoji(item, index)"
-                    v-for="(emoji, index) in item.emojiList"
-                    :key="index">
-                    {{ emoji.label }}
-                    <span class="text-(12px #eee)">{{ emoji.count }}</span>
+                <n-flex align="center">
+                  <!-- 群聊消息点赞表情 -->
+                  <n-flex :size="4" v-if="isGroup && item.message.messageMark.likeCount > 0">
+                    <n-flex :size="2" align="center" class="emoji-reply-bubble" @click.stop="cancelReplyEmoji(item, 1)">
+                      👍
+                      <span class="text-(12px #eee)">{{ item.message.messageMark.likeCount }}</span>
+                    </n-flex>
+                  </n-flex>
+
+                  <!-- 群聊消息不满表情 -->
+                  <n-flex :size="4" v-if="isGroup && item.message.messageMark.dislikeCount > 0">
+                    <n-flex :size="2" align="center" class="emoji-reply-bubble" @click.stop="cancelReplyEmoji(item, 2)">
+                      ☹️
+                      <span class="text-(12px #eee)">{{ item.message.messageMark.dislikeCount }}</span>
+                    </n-flex>
                   </n-flex>
                 </n-flex>
               </n-flex>
@@ -455,6 +459,7 @@ import { useGroupStore } from '@/stores/group.ts'
 import { useGlobalStore } from '@/stores/global'
 import { useDebounceFn } from '@vueuse/core'
 import { useCachedStore } from '@/stores/cached'
+import apis from '@/services/apis'
 
 const appWindow = WebviewWindow.getCurrent()
 const { addListener } = useTauriListener()
@@ -734,19 +739,22 @@ const handleScrollDirectionChange = (direction: 'up' | 'down') => {
   isScrollingDown.value = direction === 'down'
 }
 
-// 处理emoji表情回应
-const handleEmojiSelect = (label: string, item: any) => {
-  if (!item.emojiList) {
-    item.emojiList = [{ label: label, count: 1 }]
-  } else {
-    // 比较label是否存在，存在则计数+1，不存在则新增
-    const index = item.emojiList.findIndex((item: any) => item.label === label)
-    if (index > -1) {
-      item.emojiList[index].count++
-    } else {
-      item.emojiList.push({ label: label, count: 1 })
-    }
-  }
+// 取消点赞和不满
+const cancelReplyEmoji = (item: any, type: number) => {
+  apis.markMsg({
+    msgId: item.message.id,
+    markType: type, // 使用LIKE作为标记类型
+    actType: 2 // 使用Confirm作为操作类型
+  })
+}
+
+// 处理点赞和不满表情回应
+const handleEmojiSelect = (context: { label: string; value: number; title: string }, item: any) => {
+  apis.markMsg({
+    msgId: item.message.id,
+    markType: context.value, // 使用LIKE作为标记类型
+    actType: 1 // 使用Confirm作为操作类型
+  })
 }
 
 // 跳转到回复消息
@@ -939,15 +947,6 @@ const loadTopAnnouncement = async () => {
       console.error('获取置顶公告失败:', error)
       topAnnouncement.value = null
     }
-  }
-}
-
-const cancelReplyEmoji = (item: any, index: number) => {
-  // 判断item.emojiList数组中的count是否为1，如果为1则删除该元素，否则count-1
-  if (item.emojiList[index].count === 1) {
-    item.emojiList.splice(index, 1)
-  } else {
-    item.emojiList[index].count--
   }
 }
 

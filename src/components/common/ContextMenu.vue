@@ -186,10 +186,11 @@ const handleClick = (item: string) => {
 }
 
 /** 处理回复表情事件 */
-const handleReplyEmoji = (item: { label: string }) => {
+const handleReplyEmoji = (item: string) => {
+  if (!item) return
   nextTick(() => {
     showMenu.value = false
-    emit('reply-emoji', item.label)
+    emit('reply-emoji', item)
   })
 }
 

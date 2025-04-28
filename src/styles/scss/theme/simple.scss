@@ -24,6 +24,8 @@
 
     // 消息列表样式
     --msg-active-color: #13987f;
+    // 群公告消息背景色
+    --group-notice-bg: #fff;
 
     // 列表通用hover
     --list-hover-color: rgba(99, 99, 99, 0.1);
@@ -61,6 +63,8 @@ html[data-theme='dark'] {
 
     // 消息列表样式
     --msg-active-color: rgba(19, 152, 127, 0.4);
+    // 群公告消息背景色
+    --group-notice-bg: rgba(133, 133, 133, 0.2);
 
     // 列表通用hover
     --list-hover-color: rgba(244, 244, 244, 0.1);
