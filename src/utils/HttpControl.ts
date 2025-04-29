@@ -5,7 +5,7 @@
  * </p>
  *
  * @version: v1.0
- * @author: Clover
+ * @author: Clover You
  * @create: 2025-04-30 02:04
  */
 import { tryOnBeforeUnmount } from '@vueuse/core'
@@ -75,6 +75,7 @@ export class HttpControl<T extends unknown[] = [], R = Promise<void>> {
   public static isCancel(suspect: unknown) {
     if (suspect instanceof AbortError) return true
     if (suspect instanceof Error) return suspect.name === 'AbortError' || suspect.message === ERROR_REQUEST_CANCELLED
+    if (typeof suspect === 'string' && suspect === ERROR_REQUEST_CANCELLED) return true
     return false
   }
 
@@ -102,8 +103,8 @@ export class HttpControl<T extends unknown[] = [], R = Promise<void>> {
     // Ensure this is a Promise
     if (result instanceof Promise)
       result.catch((err) => {
-        if (HttpControl.isCancel(err)) throw new AbortError()
-        throw err
+        if (HttpControl.isCancel(err)) return Promise.reject(new AbortError())
+        return Promise.reject(err)
       })
 
     return result
