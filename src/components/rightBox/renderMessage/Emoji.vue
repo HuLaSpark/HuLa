@@ -5,11 +5,9 @@
     :img-props="{
       style: {
         width: '120px',
-        height: '120px',
-        objectFit: 'contain'
+        height: '120px'
       }
     }"
-    object-fit="contain"
     show-toolbar-tooltip
     preview-disabled
     style="border-radius: 8px"
