@@ -31,7 +31,7 @@
         </div>
         <div class="text-card-link-content">
           <span class="text-14px line-clamp-1"> {{ urlMap[item].title }}</span>
-          <span class="text-(12px [rgba(0,0,0,0.6)]) mt-4px line-clamp-2">{{ urlMap[item].description }}</span>
+          <span class="text-(12px [--chat-text-color]) mt-4px line-clamp-2">{{ urlMap[item].description }}</span>
         </div>
       </div>
     </template>

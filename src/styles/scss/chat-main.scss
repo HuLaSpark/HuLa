@@ -1,6 +1,6 @@
 /** 气泡样式 */
 @mixin bubble {
-  @apply w-fit min-h-1em p-[8px_12px] text-14px line-height-22px bg-[--bg-bubble] rounded-[2px_18px_18px] custom-shadow;
+  @apply w-fit select-text min-h-1em p-[8px_12px] text-14px line-height-22px bg-[--bg-bubble] rounded-[2px_18px_18px] custom-shadow;
   max-width: var(--bubble-max-width, 32vw); /** 默认为群聊宽度 */
   white-space: normal; /** 保留空白符号并正常换行 */
   word-break: break-all; /** 强制在单词内部进行换行 */
