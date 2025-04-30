@@ -274,6 +274,7 @@
                   <!-- 渲染消息内容体 TODO: 等完善消息类型后逐渐替换使用RenderMessage -->
                   <RenderMessage
                     :class="[
+                      '!select-auto !cursor-text',
                       { active: activeBubble === item.message.id && !isSpecialMsgType(item.message.type) },
                       !isSpecialMsgType(item.message.type)
                         ? item.fromUser.uid === userUid

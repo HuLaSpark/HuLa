@@ -203,4 +203,17 @@ onUnmounted(() => {
   border-radius: 8px;
   font-size: 12px;
 }
+
+* {
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
+}
+
+input,
+button,
+a {
+  user-select: auto;
+  cursor: auto;
+}
 </style>
