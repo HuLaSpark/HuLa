@@ -131,7 +131,7 @@
     "typescript": "^5.7.2",
     "unplugin-auto-import": "^19.1.1",
     "unplugin-vue-components": "^28.4.1",
-    "vite": "6.3.3",
+    "vite": "6.3.4",
     "vite-plugin-vue-devtools": "^7.7.2",
     "vite-plugin-vue-setup-extend": "^0.4.0",
     "vitest": "^3.0.5",
