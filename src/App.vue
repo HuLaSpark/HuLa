@@ -207,7 +207,6 @@ onUnmounted(() => {
 * {
   user-select: none;
   -webkit-user-select: none;
-  cursor: default;
 }
 
 input,
