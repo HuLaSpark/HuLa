@@ -1,0 +1,279 @@
+<template>
+  <div id="layout" class="flex size-full min-w-310px bg-[--right-bg-color]">
+    <div class="flex size-full">
+      <!-- 使用keep-alive包裹异步组件 -->
+      <AsyncLeft />
+      <router-view />
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { useMitt } from '@/hooks/useMitt.ts'
+import { ChangeTypeEnum, MittEnum, ModalEnum, NotificationTypeEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
+import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { useGlobalStore } from '@/stores/global.ts'
+import { useContactStore } from '@/stores/contacts.ts'
+import { useGroupStore } from '@/stores/group'
+import { useUserStore } from '@/stores/user'
+import { useChatStore } from '@/stores/chat'
+import { LoginSuccessResType, OnStatusChangeType, WsResponseMessageType, WsTokenExpire } from '@/services/wsType.ts'
+import type { MarkItemType, MessageType, RevokedMsgType } from '@/services/types.ts'
+import { computedToken } from '@/services/request'
+import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification'
+import { useUserInfo } from '@/hooks/useCached.ts'
+import { emitTo } from '@tauri-apps/api/event'
+import { useThrottleFn } from '@vueuse/core'
+import { useCachedStore } from '@/stores/cached'
+import { clearListener, initListener, readCountQueue } from '@/utils/ReadCountQueue'
+import { type } from '@tauri-apps/plugin-os'
+import { useConfigStore } from '@/stores/config'
+import { UserAttentionType } from '@tauri-apps/api/window'
+
+const loadingPercentage = ref(10)
+const loadingText = ref('正在加载应用...')
+
+// 修改异步组件的加载配置
+const AsyncLeft = defineAsyncComponent({
+  loader: async () => {
+    loadingText.value = '正在加载左侧面板...'
+    const comp = await import('@/layout/left/index.vue')
+    loadingPercentage.value = 33
+    return comp
+  },
+  delay: 600,
+  timeout: 3000
+})
+
+const globalStore = useGlobalStore()
+const contactStore = useContactStore()
+const groupStore = useGroupStore()
+const userStore = useUserStore()
+const chatStore = useChatStore()
+const cachedStore = useCachedStore()
+const configStore = useConfigStore()
+const userUid = computed(() => userStore.userInfo.uid)
+// 清空未读消息
+// globalStore.unReadMark.newMsgUnreadCount = 0
+const shrinkStatus = ref(false)
+
+watch(
+  () => userStore.isSign,
+  (newValue) => {
+    if (newValue) {
+      // 初始化监听器
+      initListener()
+      // 读取消息队列
+      readCountQueue()
+    }
+  },
+  { immediate: true }
+)
+
+// 监听shrinkStatus的变化
+watch(shrinkStatus, (newValue) => {
+  if (!newValue) {
+    // 当shrinkStatus为false时，等待组件渲染完成后滚动到底部
+    nextTick(() => {
+      useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
+    })
+  }
+})
+
+/**
+ * event默认如果没有传递值就为true，所以shrinkStatus的值为false就会发生值的变化
+ * 因为shrinkStatus的值为false，所以v-if="!shrinkStatus" 否则right组件刚开始渲染的时候不会显示
+ * */
+useMitt.on(MittEnum.SHRINK_WINDOW, (event: boolean) => {
+  shrinkStatus.value = event
+})
+
+useMitt.on(WsResponseMessageType.LOGIN_SUCCESS, async (data: LoginSuccessResType) => {
+  const { ...rest } = data
+  // 更新一下请求里面的 token.
+  computedToken.value.clear()
+  computedToken.value.get()
+  // 自己更新自己上线
+  await groupStore.updateUserStatus({
+    activeStatus: OnlineEnum.ONLINE,
+    avatar: rest.avatar,
+    account: rest.account,
+    lastOptTime: Date.now(),
+    name: rest.name,
+    uid: rest.uid
+  })
+})
+useMitt.on(WsResponseMessageType.USER_STATE_CHANGE, async (data: { uid: string; userStateId: string }) => {
+  console.log('收到用户状态改变', data)
+  await cachedStore.updateUserState(data)
+})
+useMitt.on(WsResponseMessageType.OFFLINE, async () => {
+  console.log('收到用户下线通知')
+})
+useMitt.on(WsResponseMessageType.ONLINE, async (onStatusChangeType: OnStatusChangeType) => {
+  console.log('收到用户上线通知')
+  if (onStatusChangeType && onStatusChangeType.onlineNum) {
+    groupStore.countInfo.onlineNum = onStatusChangeType.onlineNum
+  }
+  if (onStatusChangeType && onStatusChangeType.member) {
+    await groupStore.updateUserStatus(onStatusChangeType.member)
+    await groupStore.refreshGroupMembers()
+  }
+})
+useMitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExpire) => {
+  if (Number(userUid) === Number(wsTokenExpire.uid) && userStore.userInfo.client === wsTokenExpire.client) {
+    // 聚焦主窗口
+    const home = await WebviewWindow.getByLabel('home')
+    await home?.setFocus()
+    console.log('账号在其他设备登录', wsTokenExpire)
+    useMitt.emit(MittEnum.LEFT_MODAL_SHOW, {
+      type: ModalEnum.REMOTE_LOGIN,
+      props: {
+        ip: wsTokenExpire.ip
+      }
+    })
+  }
+})
+useMitt.on(WsResponseMessageType.INVALID_USER, (param: { uid: string }) => {
+  console.log('无效用户')
+  const data = param
+  // 消息列表删掉拉黑的发言
+  chatStore.filterUser(data.uid)
+  // 群成员列表删掉拉黑的用户
+  groupStore.filterUser(data.uid)
+})
+useMitt.on(WsResponseMessageType.MSG_MARK_ITEM, (markList: MarkItemType[]) => {
+  chatStore.updateMarkCount(markList)
+})
+useMitt.on(WsResponseMessageType.MSG_RECALL, (data: RevokedMsgType) => {
+  chatStore.updateRecallStatus(data)
+})
+useMitt.on(WsResponseMessageType.MY_ROOM_INFO_CHANGE, (data: { myName: string; roomId: string; uid: string }) => {
+  // 更新用户在群聊中的昵称
+  cachedStore.updateUserGroupNickname(data)
+  // 如果当前正在查看的是该群聊，则更新群组信息
+  if (globalStore.currentSession?.roomId === data.roomId) {
+    groupStore.getCountStatistic()
+  }
+})
+useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
+  chatStore.pushMsg(data)
+  if (data.fromUser.uid !== userUid.value) {
+    useMitt.emit(MittEnum.MESSAGE_ANIMATION, data)
+  }
+  // 接收到通知就设置图标闪烁
+  const username = useUserInfo(data.fromUser.uid).value.name!
+  // 不是自己发的消息才通知
+  if (data.fromUser.uid !== userUid.value) {
+    // 在windows系统下才发送通知
+    if (type() === 'windows') {
+      await emitTo('tray', 'show_tip')
+    }
+
+    // 判断主窗口是否是在其他窗口的前面并且聚焦
+    const home = await WebviewWindow.getByLabel('home')
+    // 是否在其他窗口的前面
+    const isVisible = await home?.isVisible()
+
+    // 获取该消息的会话信息
+    const session = chatStore.sessionList.find((s) => s.roomId === data.message.roomId)
+
+    // 只有非免打扰的会话才发送通知
+    if (session && isVisible && session.muteNotification !== NotificationTypeEnum.NOT_DISTURB) {
+      await emitTo('notify', 'notify_cotent', data)
+      // 请求用户注意窗口
+      home?.requestUserAttention(UserAttentionType.Critical)
+      const throttleSendNotification = useThrottleFn(() => {
+        sendNotification({
+          title: username,
+          body: data.message.body.content
+        })
+      }, 3000)
+      throttleSendNotification()
+    }
+  }
+})
+useMitt.on(WsResponseMessageType.REQUEST_NEW_FRIEND, async (data: { uid: number; unreadCount: number }) => {
+  console.log('收到好友申请', data.unreadCount)
+  // 更新未读数
+  globalStore.unReadMark.newFriendUnreadCount += data.unreadCount
+  // 刷新好友申请列表
+  await contactStore.getRequestFriendsList(true)
+
+  const throttleSendNotification = useThrottleFn(() => {
+    sendNotification({
+      title: '新好友',
+      body: `您有${data.unreadCount}条好友申请`
+    })
+  }, 3000)
+  throttleSendNotification()
+})
+useMitt.on(
+  WsResponseMessageType.NEW_FRIEND_SESSION,
+  (param: {
+    roomId: string
+    uid: string
+    changeType: ChangeTypeEnum
+    activeStatus: OnlineEnum
+    lastOptTime: number
+  }) => {
+    // changeType 1 加入群组，2： 移除群组
+    if (param.roomId === globalStore.currentSession.roomId && globalStore.currentSession.type === RoomTypeEnum.GROUP) {
+      if (param.changeType === ChangeTypeEnum.REMOVE) {
+        // 移除群成员
+        groupStore.filterUser(param.uid)
+        // TODO 添加一条退出群聊的消息
+      } else {
+        // TODO 添加群成员
+        // TODO 添加一条入群的消息
+      }
+    }
+  }
+)
+useMitt.on(WsResponseMessageType.REQUEST_APPROVAL_FRIEND, async () => {
+  // 刷新好友列表以获取最新状态
+  await contactStore.getContactList(true)
+})
+useMitt.on(WsResponseMessageType.ROOM_INFO_CHANGE, async (data: { roomId: string; name: string; avatar: string }) => {
+  // 根据roomId修改对应房间中的群名称和群头像
+  const { roomId, name, avatar } = data
+
+  // 更新chatStore中的会话信息
+  chatStore.updateSession(roomId, {
+    name,
+    avatar
+  })
+
+  // 如果当前正在查看的是该群聊，则需要刷新群组详情
+  if (globalStore.currentSession?.roomId === roomId && globalStore.currentSession.type === RoomTypeEnum.GROUP) {
+    // 重新获取群组信息统计
+    await groupStore.getCountStatistic()
+  }
+})
+
+onBeforeMount(async () => {
+  // 默认执行一次
+  await contactStore.getContactList(true)
+  await contactStore.getRequestFriendsList(true)
+  await contactStore.getGroupChatList()
+})
+
+onMounted(async () => {
+  // 初始化配置
+  if (!localStorage.getItem('config')) {
+    await configStore.initConfig()
+  }
+  await getCurrentWebviewWindow().show()
+  let permissionGranted = await isPermissionGranted()
+
+  // 如果没有授权，则请求授权系统通知
+  if (!permissionGranted) {
+    const permission = await requestPermission()
+    permissionGranted = permission === 'granted'
+  }
+})
+
+onUnmounted(() => {
+  clearListener()
+})
+</script>

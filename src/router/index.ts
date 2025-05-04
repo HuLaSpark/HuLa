@@ -16,42 +16,53 @@ const isDesktop = computed(() => {
 const { BASE_URL } = import.meta.env
 const routes: Array<RouteRecordRaw> = [
   {
-    path: '/mobile/login',
-    name: 'mobileLogin',
-    component: MobileLogin
+    path: '/login',
+    name: 'login',
+    component: () => import('@/views/loginWindow/Login.vue')
   },
   {
-    path: '/mobile/home',
-    name: 'mobileHome',
-    component: MobileHome,
+    path: '/home',
+    name: 'home',
+    component: () => import('@/HomePage.vue'),
+    // 如果来到了首页，那么重定向到消息页面
+    redirect: '/home/message',
     children: [
-      // 默认导航第一个子路由
       {
-        path: '',
-        name: 'mobileMessage',
-        redirect: '/mobile/message'
+        path: 'message',
+        name: 'message',
+        component: () => import('@/MessagePanel.vue'),
+        children: [
+          {
+            path: 'room/:id',
+            name: 'message-room',
+            component: () => import('@/ChatRoom.vue')
+          }
+        ]
       },
       {
-        path: '/mobile/message',
-        name: 'mobileMessage',
-        component: () => import('@/mobile/views/message/index.vue')
+        path: 'friendsList',
+        name: 'friendsList',
+        component: () => import('@/FriendsPanel.vue'),
+        children: [
+          {
+            path: 'detail/:uid/:type',
+            name: 'detail',
+            component: () => import('@/FriendDetail.vue')
+          }
+        ]
       },
+      // TODO 这应该是一个局部组件而不是一个路由？
       {
-        path: '/mobile/friends',
-        name: 'mobileFriends',
-        component: () => import('@/mobile/views/friends/index.vue')
-      },
-      {
-        path: '/mobile/my',
-        name: 'mobileMy',
-        component: () => import('@/mobile/views/my/index.vue')
+        path: 'searchDetails',
+        name: 'searchDetails',
+        component: () => import('@/SearchDetail.vue')
       }
     ]
   },
   {
-    path: '/login',
-    name: 'login',
-    component: () => import('@/views/loginWindow/Login.vue')
+    path: '/imageViewer',
+    name: 'imageViewer',
+    component: () => import('@/views/imageViewerWindow/index.vue')
   },
   {
     path: '/register',
@@ -89,55 +100,110 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/Capture.vue')
   },
   {
-    path: '/imageViewer',
-    name: 'imageViewer',
-    component: () => import('@/views/imageViewerWindow/index.vue')
+    path: '/register',
+    name: 'register',
+    component: () => import('@/views/registerWindow/index.vue')
   },
-  /**
-   * 搜索好友/群聊
-   * @author mint
-   */
   {
-    path: '/searchFriend',
-    name: 'searchFriend',
-    component: () => import('@/views/friendWindow/SearchFriend.vue')
+    path: '/qrCode',
+    name: 'qrCode',
+    component: () => import('@/views/loginWindow/QRCode.vue')
   },
-  /**
-   * 添加好友
-   * @author mint
-   */
   {
-    path: '/addFriendVerify',
-    name: 'addFriendVerify',
-    component: () => import('@/views/friendWindow/AddFriendVerify.vue')
+    path: '/proxy',
+    name: 'proxy',
+    component: () => import('@/views/loginWindow/Proxy.vue')
   },
+  {
+    path: '/tray',
+    name: 'tray',
+    component: () => import('@/views/Tray.vue')
+  },
+  {
+    path: '/notify',
+    name: 'notify',
+    component: () => import('@/views/Notify.vue')
+  },
+  {
+    path: '/update',
+    name: 'update',
+    component: () => import('@/views/Update.vue')
+  },
+  {
+    path: '/capture',
+    name: 'capture',
+    component: () => import('@/views/Capture.vue')
+  },
+  {
+    path: '/mobile/login',
+    name: 'mobileLogin',
+    component: MobileLogin
+  },
+  {
+    path: '/mobile/home',
+    name: 'mobileHome',
+    component: MobileHome,
+    children: [
+      // 默认导航第一个子路由
+      {
+        path: '',
+        name: 'mobileMessage',
+        redirect: '/mobile/message'
+      },
+      {
+        path: '/mobile/message',
+        name: 'mobileMessage',
+        component: () => import('@/mobile/views/message/index.vue')
+      },
+      {
+        path: '/mobile/friends',
+        name: 'mobileFriends',
+        component: () => import('@/mobile/views/friends/index.vue')
+      },
+      {
+        path: '/mobile/my',
+        name: 'mobileMy',
+        component: () => import('@/mobile/views/my/index.vue')
+      }
+    ]
+  },
+
+  // /**
+  //  * 搜索好友/群聊
+  //  * @author mint
+  //  */
+  // {
+  //   path: '/searchFriend',
+  //   name: 'searchFriend',
+  //   component: () => import('@/views/friendWindow/SearchFriend.vue')
+  // },
   {
     path: '/addGroupVerify',
     name: 'addGroupVerify',
     component: () => import('@/views/friendWindow/AddGroupVerify.vue')
   },
-  {
-    path: '/home',
-    name: 'home',
-    component: () => import('@/layout/index.vue'),
-    children: [
-      {
-        path: '/message',
-        name: 'message',
-        component: () => import('@/views/homeWindow/message/index.vue')
-      },
-      {
-        path: '/friendsList',
-        name: 'friendsList',
-        component: () => import('@/views/homeWindow/FriendsList.vue')
-      },
-      {
-        path: '/searchDetails',
-        name: 'searchDetails',
-        component: () => import('@/views/homeWindow/SearchDetails.vue')
-      }
-    ]
-  },
+  // {
+  //   path: '/home',
+  //   name: 'home',
+  //   component: () => import('@/layout/index.vue'),
+  //   children: [
+  //     {
+  //       path: '/message',
+  //       name: 'message',
+  //       component: () => import('@/views/homeWindow/message/index.vue')
+  //     },
+  //     {
+  //       path: '/friendsList',
+  //       name: 'friendsList',
+  //       component: () => import('@/views/homeWindow/FriendsList.vue')
+  //     },
+  //     {
+  //       path: '/searchDetails',
+  //       name: 'searchDetails',
+  //       component: () => import('@/views/homeWindow/SearchDetails.vue')
+  //     }
+  //   ]
+  // },
   {
     path: '/robot',
     name: 'robot',

@@ -13,6 +13,7 @@ import { useUserStore } from '@/stores/user.ts'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
 import { sendNotification } from '@tauri-apps/plugin-notification'
 import { invoke } from '@tauri-apps/api/core'
+import { HttpControl } from '../utils/HttpControl'
 
 type RecalledMessage = {
   messageId: string
@@ -212,24 +213,25 @@ export const useChatStore = defineStore(
     // 将消息列表转换为数组
     const chatMessageList = computed(() => [...(currentMessageMap.value?.values() || [])])
 
+    const msgListHttp = new HttpControl((control, params?: unknown) => apis.getMsgList(params, control))
+
     // 获取消息列表
     const getMsgList = async (size = pageSize) => {
       // 获取当前房间ID，用于后续比较
       const requestRoomId = currentRoomId.value
 
       currentMessageOptions.value && (currentMessageOptions.value.isLoading = true)
-      const data = await apis
-        .getMsgList({
-          pageSize: size,
-          cursor: currentMessageOptions.value?.cursor,
-          roomId: requestRoomId
-        })
-        .finally(() => {
-          // 只有当当前房间ID仍然是请求时的房间ID时，才更新加载状态
-          if (requestRoomId === currentRoomId.value && currentMessageOptions.value) {
-            currentMessageOptions.value.isLoading = false
-          }
-        })
+      const data = await msgListHttp.fetch({
+        pageSize: size,
+        cursor: currentMessageOptions.value?.cursor,
+        roomId: requestRoomId
+      })
+      // .finally(() => {
+      //   // 只有当当前房间ID仍然是请求时的房间ID时，才更新加载状态
+      //   if (requestRoomId === currentRoomId.value && currentMessageOptions.value) {
+      //     currentMessageOptions.value.isLoading = false
+      //   }
+      // })
 
       // 如果没有数据或者房间ID已经变化，则不处理响应
       if (!data || requestRoomId !== currentRoomId.value) return

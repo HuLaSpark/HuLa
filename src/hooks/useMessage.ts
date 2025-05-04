@@ -16,7 +16,6 @@ const aloneWin = ref(new Set())
 const shrinkStatus = ref(false)
 const itemRef = ref<SessionItem>()
 export const useMessage = () => {
-  const route = useRoute()
   const { pushListeners } = useTauriListener()
   const globalStore = useGlobalStore()
   const chatStore = useChatStore()
@@ -37,10 +36,11 @@ export const useMessage = () => {
     globalStore.currentSession.roomId = item.roomId
     globalStore.currentSession.type = item.type
     const data = { msgBoxShow, item }
+    // TODO 不应该再通过 mitt 去控制 UI
     useMitt.emit(MittEnum.MSG_BOX_SHOW, data)
 
     // 只有在消息页面且有未读消息时，才标记为已读
-    if (route.path === '/message' && item.unreadCount > 0) {
+    if (item.unreadCount > 0) {
       apis.markMsgRead({ roomId: item.roomId || '1' }).then(() => {
         chatStore.markSessionRead(item.roomId || '1')
         // 更新全局未读计数

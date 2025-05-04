@@ -185,7 +185,7 @@ export const leftHook = () => {
 
   onMounted(async () => {
     /** 页面加载的时候默认显示消息列表 */
-    pageJumps(activeUrl.value)
+    // pageJumps(activeUrl.value)
     window.addEventListener('click', closeMenu, true)
 
     useMitt.on(MittEnum.SHRINK_WINDOW, (event: any) => {
@@ -197,6 +197,7 @@ export const leftHook = () => {
     useMitt.on(MittEnum.TO_SEND_MSG, (event: any) => {
       activeUrl.value = event.url
     })
+    console.log('e =========>>>')
     await pushListeners([
       appWindow.listen(EventEnum.WIN_SHOW, (e) => {
         // 如果已经存在就不添加

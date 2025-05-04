@@ -162,16 +162,21 @@ watchEffect(() => {
   })
 })
 
-const handleClick = (index: string, type: number) => {
+const router = useRouter()
+
+const handleClick = (uuid: string, type: number) => {
   detailsShow.value = true
-  activeItem.value = index
+  activeItem.value = uuid
   const data = {
     context: {
       type: type,
-      uid: index
+      uid: uuid
     },
     detailsShow: detailsShow.value
   }
+
+  router.push({ path: `/home/friendsList/detail/${uuid}/${type}` })
+  // TODO 不再通过 mitt 控制 UI
   useMitt.emit(MittEnum.DETAILS_SHOW, data)
 }
 // todo 需要循环数组来展示分组

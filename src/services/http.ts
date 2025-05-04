@@ -3,6 +3,7 @@ import { AppException, ErrorType } from '@/common/exception'
 import { RequestQueue } from '@/utils/RequestQueue'
 import urls from './urls'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { HttpControl } from '../utils/HttpControl'
 
 // 错误信息常量
 const ERROR_MESSAGES = {
@@ -277,10 +278,12 @@ async function Http<T = any>(
         console.error(`尝试 ${currentAttempt + 1} 失败 →`, error)
       }
 
+      // 如果请求被中断，应该手动处理
+      if (HttpControl.isCancel(error)) throw error
+
       // 处理网络相关错误
       if (
         error instanceof TypeError || // fetch 的网络错误会抛出 TypeError
-        error.name === 'AbortError' || // 请求被中断
         !navigator.onLine // 浏览器离线
       ) {
         // 获取用户友好的错误信息

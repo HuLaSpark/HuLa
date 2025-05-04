@@ -49,7 +49,7 @@ export default {
   /** 批量获取徽章信息 */
   getBadgesBatch: (badges: CacheBadgeReq[]) => POST<CacheBadgeItem[]>(urls.getBadgesBatch, { reqList: badges }),
   /** 获取消息列表 */
-  getMsgList: (params?: any) => GET<ListResponse<MessageType>>(urls.getMsgList, params),
+  getMsgList: (params?: any, abort?: AbortController) => GET<ListResponse<MessageType>>(urls.getMsgList, params, abort),
   /** 发送消息 */
   sendMsg: (data?: MessageReq) => POST<MessageType>(urls.sendMsg, data),
   /** 标记消息，点赞等 */
@@ -109,7 +109,8 @@ export default {
   /** 删除群成员 */
   removeGroupMember: (params: { roomId: string; uid: string }) => DELETE(urls.inviteGroupMember, params),
   /** 群组详情 */
-  groupDetail: (params: { id: string }) => GET<GroupDetailReq>(urls.groupDetail, params),
+  groupDetail: (params: { id: string }, signal?: AbortController) =>
+    GET<GroupDetailReq>(urls.groupDetail, params, signal),
   /** 群聊列表 */
   groupList: (params: { current: number; size: number }) => GET<PageInfo<GroupListReq>>(urls.groupList, params),
   /** 会话详情 */

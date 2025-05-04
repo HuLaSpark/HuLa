@@ -845,7 +845,7 @@ export const useCommon = () => {
     // 获取home窗口实例
     const label = await WebviewWindow.getCurrent().label
     if (route.name !== '/message' && label === 'home') {
-      router.push('/message')
+      router.push(`/home/message/room/${uid}`)
     }
 
     const res = await apis.sessionDetailWithFriends({ id: uid, roomType: type })
