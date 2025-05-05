@@ -1,11 +1,11 @@
 [package]
 name = "hula"
-version = "2.6.8"
+version = "2.6.9"
 description = "hula"
 authors = ["nongyehong"]
 license = ""
 repository = ""
-edition = "2021"
+edition = "2024"
 
 [profile.release]
 panic = "abort"   # 去掉昂贵的恐慌清理逻辑
@@ -44,7 +44,7 @@ tauri-plugin-upload = "2.2.0"
 tauri-plugin-global-shortcut = "2.2.0"
 tauri-plugin-clipboard-manager = "2.2.2"
 tauri-plugin-updater = "2.7.1"
-tauri-plugin-sql = { version = "2", features = ["sqlite"] }
+tauri-plugin-sql = { version = "2.2.0", features = ["sqlite"] }
 tauri-plugin-single-instance = "2.2.3"
 tauri-plugin-notification = "2.2.2"
 tungstenite = {  version = "0.26.2", features = ["native-tls"] }
