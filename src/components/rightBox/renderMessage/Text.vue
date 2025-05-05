@@ -4,6 +4,7 @@
       <span
         v-if="item.startsWith('@') && item.trim() !== '' && item.trim() !== '@'"
         :key="item"
+        style="-webkit-user-select: text !important; user-select: text !important"
         class="text-#fbb990 cursor-pointer">
         {{ item }}
       </span>

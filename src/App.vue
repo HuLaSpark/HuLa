@@ -204,11 +204,6 @@ onUnmounted(() => {
   font-size: 12px;
 }
 
-* {
-  user-select: none;
-  -webkit-user-select: none;
-}
-
 input,
 button,
 a {

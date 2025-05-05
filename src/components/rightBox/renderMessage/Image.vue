@@ -10,7 +10,7 @@
     object-fit="cover"
     show-toolbar-tooltip
     preview-disabled
-    style="border-radius: 8px"
+    style="border-radius: 8px; cursor: pointer !important"
     :src="body?.url"
     @dblclick="handleOpenImageViewer"
     @error="handleImageError">

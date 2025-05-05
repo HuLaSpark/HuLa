@@ -256,6 +256,21 @@ const closeMenu = (event: any) => {
   }
 }
 
+/** 禁用浏览器默认的全选快捷键，当输入框有内容或者聚焦时不禁用 */
+const disableSelectAll = (e: KeyboardEvent) => {
+  if (e.ctrlKey && e.key === 'a') {
+    const inputDiv = document.getElementById('message-input')
+    // 检查输入框是否存在、是否有内容、是否聚焦
+    const hasFocus = document.activeElement === inputDiv
+    const hasContent = inputDiv && inputDiv.textContent && inputDiv.textContent.trim().length > 0
+
+    // 只有当输入框没有聚焦或没有内容时才阻止默认行为
+    if (!hasFocus || !hasContent) {
+      e.preventDefault()
+    }
+  }
+}
+
 onMounted(async () => {
   activeItem.value = inject('activeItem') as SessionItem
   onKeyStroke('Enter', () => {
@@ -305,10 +320,12 @@ onMounted(async () => {
     })
   )
   window.addEventListener('click', closeMenu, true)
+  window.addEventListener('keydown', disableSelectAll)
 })
 
 onUnmounted(() => {
   window.removeEventListener('click', closeMenu, true)
+  window.removeEventListener('keydown', disableSelectAll)
 })
 
 /**
