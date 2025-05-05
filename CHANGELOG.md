@@ -1,5 +1,30 @@
 
 
+## [2.6.10](https://github.com/HuLaSpark/HuLa/compare/v2.6.9...v2.6.10) (2025-05-05)
+
+
+### ✨ Features | 新功能
+
+* **component:** :sparkles: 增加公告类型消息 ([f0b0656](https://github.com/HuLaSpark/HuLa/commit/f0b0656ddc874a597a49de2e4f8666913730e759))
+* **view:** :sparkles: 新增发布群公告功能 ([#259](https://github.com/HuLaSpark/HuLa/issues/259)) ([87fc30d](https://github.com/HuLaSpark/HuLa/commit/87fc30d170996022379b45d9b94110edbe1c5c74))
+
+
+### 🐛 Bug Fixes | Bug 修复
+
+* **chat:** 隔离聊天窗口内部数据 ([#258](https://github.com/HuLaSpark/HuLa/issues/258)) ([635f729](https://github.com/HuLaSpark/HuLa/commit/635f72996b8e03e1c00bc20fe9ad870ae8d303f4))
+* **component:** :bug: 修复表情包圆角样式 ([e5e1725](https://github.com/HuLaSpark/HuLa/commit/e5e1725d42b41c2bc518e5f4c91cbdbb5f2a3421))
+* **component:** :bug: 修复公告排序问题、公告加载更多重复数据问题 ([8d21d22](https://github.com/HuLaSpark/HuLa/commit/8d21d2228a6f743faa1aa4bf635d9fe8d41efd1f))
+* **component:** :bug: 修复链接卡片无法点击后默认浏览器打开的问题 ([296a944](https://github.com/HuLaSpark/HuLa/commit/296a944c9f0312548e668ae1a6b831d821b502d2))
+* **component:** :bug: 修复全选意外选中全部内容的问题 ([6616a93](https://github.com/HuLaSpark/HuLa/commit/6616a932c57a7189d1540575332471d03684f49b))
+* **component:** :bug: 修改群聊中群消息设置逻辑 ([62460fb](https://github.com/HuLaSpark/HuLa/commit/62460fbfe04802764d5a4d60430d587ecbee528d))
+* **component:** :bug: 修改url文本解析样式 ([0d5455c](https://github.com/HuLaSpark/HuLa/commit/0d5455c9c590406878c572b667dbf8d21ae7a5b1))
+* **readme:** :bug: 修改readme中的描述 ([91feb14](https://github.com/HuLaSpark/HuLa/commit/91feb14ff4fa77c6bb11aeddd90863cd197fec78))
+
+
+### ⚡️ Performance Improvements | 性能优化
+
+* **component:** :zap: 优化消息点赞和不满功能 ([4d17127](https://github.com/HuLaSpark/HuLa/commit/4d171273e9ba4f6e584206720eeae636d72626e6))
+
 ## [2.6.9](https://github.com/HuLaSpark/HuLa/compare/v2.6.8...v2.6.9) (2025-04-20)
 
 
