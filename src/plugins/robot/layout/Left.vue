@@ -142,6 +142,7 @@ import { VueDraggable } from 'vue-draggable-plus'
 import router from '@/router'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { listChat } from '../api/index.ts'
 
 const userStore = useUserStore()
 const activeItem = ref(0)
@@ -151,13 +152,14 @@ const editingItemId = ref<number | null>()
 /** 原始标题 */
 const originalTitle = ref('')
 const showDeleteConfirm = ref(false)
-const chatList = ref(
-  Array.from({ length: 20 }, (_, index) => ({
-    id: index + 1,
-    title: `新的聊天${index + 1}`,
-    time: '2022-01-01 12:00:00'
-  }))
-)
+
+interface chatItem {
+  id: number
+  title: string
+  time: string
+}
+
+const chatList = ref<Array<chatItem>>([])
 const menuList = ref<OPT.RightMenu[]>([
   {
     label: '置顶',
@@ -197,6 +199,24 @@ const specialMenuList = ref<OPT.RightMenu[]>([
     }
   }
 ])
+
+/** 获取会话列表 */
+const handleGetChatList = () => {
+  chatList.value = []
+  // 获取会话列表
+  listChat({
+    current: 1,
+    size: 10
+  }).then((res: any) => {
+    console.log(res)
+    if (res.length === 0) {
+      chatList.value.push({ id: 1, title: '新的聊天1', time: new Date().toLocaleString() })
+    }
+    res.forEach((item: any) => {
+      chatList.value.push(item)
+    })
+  })
+}
 
 /** 跳转到设置 */
 const jump = () => {
@@ -310,6 +330,8 @@ const handleBlur = (item: any, index: number) => {
 }
 
 onMounted(() => {
+  //  获取会话列表
+  handleGetChatList()
   // /** 默认选择第一个聊天内容 */
   // handleActive(chatList.value[0])
   /** 刚加载的时候默认跳转到欢迎页面 */

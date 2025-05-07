@@ -145,7 +145,9 @@ export enum StoresEnum {
   /** 缓存 */
   CACHED = 'cached',
   /** 配置 */
-  CONFIG = 'config'
+  CONFIG = 'config',
+  /** AI Chat */
+  AICHAT = 'aiChat'
 }
 
 /**

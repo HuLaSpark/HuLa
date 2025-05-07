@@ -41,33 +41,132 @@
     <div
       :class="{ 'shadow-inner': page.shadow }"
       class="w-full p-[28px_16px] box-border"
-      style="height: calc(100vh - 300px)">
-      <n-flex :size="6">
-        <n-avatar
-          class="rounded-8px"
-          src="https://img1.baidu.com/it/u=3613958228,3522035000&fm=253&fmt=auto&app=120&f=JPEG?w=500&h=500" />
-        <n-flex vertical justify="space-between">
-          <p class="text-(12px [--chat-text-color])">GPT-4</p>
+      style="height: calc(100vh - 400px)">
+      <!--      <n-flex :size="6">-->
+      <!--        <n-avatar-->
+      <!--          class="rounded-8px"-->
+      <!--          src="https://img1.baidu.com/it/u=3613958228,3522035000&fm=253&fmt=auto&app=120&f=JPEG?w=500&h=500" />-->
+      <!--        <n-flex vertical justify="space-between">-->
+      <!--          <p class="text-(12px [&#45;&#45;chat-text-color])">GPT-4</p>-->
 
-          <!--  气泡样式  -->
-          <ContextMenu>
-            <div style="white-space: pre-wrap" class="bubble select-text">
-              <span v-html="'你好，我是GPT4机器人，很高兴为您服务。'"></span>
-            </div>
-          </ContextMenu>
+      <!--          &lt;!&ndash;  气泡样式  &ndash;&gt;-->
+      <!--          <ContextMenu>-->
+      <!--            <div style="white-space: pre-wrap" class="bubble select-text">-->
+      <!--              <span v-html="'你好，我是GPT4机器人，很高兴为您服务。'"></span>-->
+      <!--            </div>-->
+      <!--          </ContextMenu>-->
+      <!--        </n-flex>-->
+      <!--      </n-flex>-->
+
+      <Transition name="chat-init" appear mode="out-in" @after-leave="handleTransitionComplete">
+        <!-- 初次加载的骨架屏 -->
+        <n-flex
+          v-if="messageLoading"
+          vertical
+          :size="18"
+          :style="{ 'max-height': `calc(100vh - 350px)` }"
+          class="relative h-100vh box-border p-20px">
+          <n-flex justify="end">
+            <n-skeleton style="border-radius: 14px" height="40px" width="46%" :sharp="false" />
+            <n-skeleton height="40px" circle />
+          </n-flex>
+
+          <n-flex>
+            <n-skeleton height="40px" circle />
+            <n-skeleton style="border-radius: 14px" height="60px" width="58%" :sharp="false" />
+          </n-flex>
+
+          <n-flex>
+            <n-skeleton height="40px" circle />
+            <n-skeleton style="border-radius: 14px" height="40px" width="26%" :sharp="false" />
+          </n-flex>
+
+          <n-flex justify="end">
+            <n-skeleton style="border-radius: 14px" height="40px" width="60%" :sharp="false" />
+            <n-skeleton height="40px" circle />
+          </n-flex>
         </n-flex>
-      </n-flex>
+
+        <!-- 聊天内容 -->
+        <VirtualList
+          v-else
+          id="image-chat-main"
+          ref="virtualListInst"
+          :items="chatMessageList"
+          :estimatedItemHeight="itemSize"
+          :buffer="5"
+          :is-loading-more="isLoadingMore"
+          :is-last="isMessageLast"
+          @scroll="handleScroll"
+          @load-more="handleLoadMore"
+          class="scrollbar-container"
+          :class="{ 'hide-scrollbar': !showScrollbar }"
+          :style="{ 'max-height': `calc(100vh - 400px)` }"
+          @mouseenter="showScrollbar = true"
+          @mouseleave="showScrollbar = false">
+          <template #default="{ item, index }">
+            <n-flex :size="6" v-if="item.role === 'assistant'" :key="index">
+              <n-avatar
+                class="rounded-8px"
+                src="https://img1.baidu.com/it/u=3613958228,3522035000&fm=253&fmt=auto&app=120&f=JPEG?w=500&h=500" />
+              <n-flex vertical justify="space-between">
+                <p class="text-(12px [--chat-text-color])">GPT-4</p>
+
+                <!--  气泡样式  -->
+                <ContextMenu>
+                  <div style="white-space: pre-wrap" class="bubble select-text mb-[10px]">
+                    <span v-html="item.content"></span>
+                  </div>
+                </ContextMenu>
+              </n-flex>
+            </n-flex>
+
+            <n-flex :size="6" v-if="item.role === 'user'" justify="end" :key="index">
+              <n-flex vertical justify="space-between">
+                <!--  气泡样式  -->
+                <ContextMenu>
+                  <div style="white-space: pre-wrap" class="bubble-oneself select-text mb-[10px]">
+                    <span v-html="item.content"></span>
+                  </div>
+                </ContextMenu>
+              </n-flex>
+              <n-avatar bordered round :src="AvatarUtils.getAvatarUrl(userStore.userInfo.avatar!)" :size="35" />
+            </n-flex>
+          </template>
+        </VirtualList>
+      </Transition>
     </div>
 
     <div class="h-1px bg-[--line-color]"></div>
     <!-- 下半部分输入框以及功能栏 -->
     <n-flex vertical :size="6" class="size-full p-[8px_22px] box-border">
       <n-flex align="center" :size="26" class="options">
-        <n-popover v-for="(item, index) in features" :key="index" trigger="hover" :show-arrow="false" placement="top">
+        <n-dropdown
+          :render-icon="handleRenderIcon"
+          :on-select="handleSelModel"
+          :options="modelsOptions"
+          placement="bottom-start"
+          trigger="click"
+          key-field="version"
+          label-field="name">
+          <n-popover trigger="hover" :show-arrow="false" placement="top">
+            <template #trigger>
+              <svg><use :href="`#model`"></use></svg>
+            </template>
+            <p>模型</p>
+          </n-popover>
+        </n-dropdown>
+        <n-popover trigger="hover" :show-arrow="false" placement="top">
           <template #trigger>
-            <svg><use :href="`#${item.icon}`"></use></svg>
+            <svg><use :href="`#voice`"></use></svg>
           </template>
-          <p>{{ item.label }}</p>
+          <p>语音输入</p>
+        </n-popover>
+        <n-popover trigger="hover" :show-arrow="false" placement="top">
+          <template #trigger>
+            <svg><use :href="`#plugins2`"></use></svg>
+          </template>
+          <p>插件</p>
         </n-popover>
 
         <div class="flex items-center gap-6px bg-[--chat-hover-color] rounded-50px w-fit h-fit p-[4px_6px]">
@@ -77,18 +176,42 @@
       </n-flex>
 
       <div class="flex flex-col items-end gap-6px">
-        <MsgInput />
+        <n-auto-complete class="w-full">
+          <template #default="{ handleInput, handleBlur, handleFocus }">
+            <n-input
+              class="w-full bg-transparent rounded-1"
+              ref="inputRef"
+              v-model:value="prompt"
+              type="textarea"
+              :placeholder="'来说点什么吧'"
+              :autosize="{ minRows: 8, maxRows: 8 }"
+              @input="handleInput"
+              @focus="handleFocus"
+              @blur="handleBlur"
+              @keypress="handleEnter"></n-input>
+          </template>
+        </n-auto-complete>
+        <n-button class="mt-[8px]" type="primary" size="medium">发送</n-button>
       </div>
     </n-flex>
   </main>
 </template>
 <script setup lang="ts">
-import MsgInput from '@/components/rightBox/MsgInput.vue'
+// import MsgInput from '@/components/rightBox/MsgInput.vue'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { InputInst, NIcon } from 'naive-ui'
 import { useSettingStore } from '@/stores/setting.ts'
+// useAiChatStore
+import { useAiChatStore } from '@/stores/aiChat.ts'
+import VirtualList, { type VirtualListExpose } from '@/components/common/VirtualList.vue'
+import { fetchChatAPI, fetchChatAPIProcess, fetchChatMessageAPI, listChatMessage } from '@/plugins/robot/api'
+import { AvatarUtils } from '@/utils/AvatarUtils.ts'
+import { useUserStore } from '@/stores/user.ts'
+// import { useSSE } from '@/plugins/robot/hook/useSSE.ts'
 
+const userStore = useUserStore()
 const settingStore = useSettingStore()
+const aiChatStore = useAiChatStore()
 const { page } = storeToRefs(settingStore)
 /** 是否是编辑模式 */
 const isEdit = ref(false)
@@ -98,22 +221,57 @@ const originalTitle = ref('')
 /** 当前聊天的标题和id */
 const currentChat = ref({
   id: 0,
-  title: ''
+  title: '',
+  chatNumber: null
 })
-const features = ref([
-  {
-    icon: 'model',
-    label: '模型'
-  },
-  {
-    icon: 'voice',
-    label: '语音输入'
-  },
-  {
-    icon: 'plugins2',
-    label: '插件'
-  }
-])
+/** 输入框的值 */
+const prompt = ref('')
+/** 虚拟列表 */
+const virtualListInst = useTemplateRef<VirtualListExpose>('virtualListInst')
+/** message loading */
+const messageLoading = ref(false)
+const chatMessageList = ref<Array<any>>([])
+/** item最小高度，用于计算滚动大小和位置 */
+const itemSize = ref(90)
+/** 添加标记，用于识别是否正在加载历史消息 */
+const isLoadingMore = ref(false)
+/** isMessageLast */
+const isMessageLast = ref(true)
+/** 是否显示滚动条 */
+const showScrollbar = ref(false)
+/** 是否第一次发消息 */
+const isFirstSend = ref(true)
+/** 模型列表 */
+const modelsOptions = computed(() => aiChatStore.aiModels)
+/**  */
+const currentModel = ref({
+  createdTime: '',
+  icon: '',
+  id: '',
+  knowledge: '',
+  localModelType: 0,
+  model: '',
+  modelUrl: '',
+  name: '',
+  sort: 0,
+  status: 1,
+  version: ''
+})
+
+// const features = ref([
+//   {
+//     icon: 'model',
+//     label: '模型'
+//   },
+//   {
+//     icon: 'voice',
+//     label: '语音输入'
+//   },
+//   {
+//     icon: 'plugins2',
+//     label: '插件'
+//   }
+// ])
 
 const handleBlur = () => {
   isEdit.value = false
@@ -137,6 +295,132 @@ const handleEdit = () => {
   })
 }
 
+const handleEnter = (e: KeyboardEvent) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault()
+    handleSubmit()
+  }
+}
+
+// 处理过渡动画完成后的滚动
+const handleTransitionComplete = () => {
+  nextTick(() => {
+    scrollToBottom()
+  })
+}
+
+// 处理加载更多
+const handleLoadMore = async () => {
+  console.log('handleLoadMore')
+}
+
+// 处理滚动事件(用于页脚显示功能)
+const handleScroll = () => {
+  console.log('handleScroll')
+}
+
+const scrollToBottom = () => {
+  if (!virtualListInst.value) return
+  virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
+}
+
+// 提交事件
+const handleSubmit = () => {
+  if (!currentModel.value.model) {
+    window.$message.error('请选择模型')
+    return
+  }
+  if (isFirstSend.value && !currentChat.value.chatNumber) handleFirstSendMsg()
+  else handleSend()
+}
+
+/** 第一次发消息时是创建会话 */
+const handleFirstSendMsg = () => {
+  fetchChatAPI({
+    chatNumber: currentChat.value.chatNumber,
+    prompt: prompt.value,
+    model: currentModel.value,
+    modelVersion: currentModel.value.version
+  })
+    .then((res) => {
+      console.log(res)
+      handleSend()
+      isFirstSend.value = false
+    })
+    .finally(() => {
+      prompt.value = ''
+    })
+}
+
+/** 发送消息 */
+const handleSend = () => {
+  // const { connect } = useSSE('api/chat/sse/create')
+  // connect()
+  chatMessageList.value.push({
+    content: prompt.value,
+    contentType: 'text',
+    parentMessageId: '',
+    role: 'user'
+  })
+  scrollToBottom()
+
+  fetchChatMessageAPI({
+    chatNumber: currentChat.value.chatNumber,
+    prompt: prompt.value,
+    model: currentModel.value.model,
+    modelVersion: currentModel.value.version
+  })
+    .then((res: string) => {
+      console.log(res)
+      if (res) {
+        fetchChatAPIProcess({ conversationId: res, fileIds: [] })
+          .then((response) => response.text())
+          .then((result) => {
+            let str = result.split('\n')
+            let content: any = {}
+            str.forEach((item) => {
+              if (item) {
+                content = JSON.parse(item)
+              }
+            })
+            chatMessageList.value.push(content)
+            scrollToBottom()
+          })
+          .catch((error) => console.log('error', error))
+      }
+    })
+    .finally(() => {
+      prompt.value = ''
+    })
+}
+
+const handleInitMessageList = () => {
+  messageLoading.value = true
+  listChatMessage({
+    current: 1,
+    size: 10,
+    chatNumber: currentChat.value.id
+  })
+    .then((res) => {
+      console.log(res)
+    })
+    .finally(() => {
+      messageLoading.value = false
+      scrollToBottom()
+    })
+}
+
+const handleRenderIcon = (option: any) => {
+  const icon = option.model // 假设每个 option 中有 model 字段表示图标名
+  return h(NIcon, null, { default: () => h('svg', null, [h('use', { href: `#${icon}` })]) })
+}
+
+const handleSelModel = (version: string) => {
+  console.log('version:', version)
+  currentModel.value = aiChatStore.aiModels.find((item: any) => item.version === version)
+  console.log('currentModel.value:', currentModel.value)
+}
+
 onMounted(() => {
   useMitt.on('left-chat-title', (e) => {
     const { title, id } = e
@@ -145,10 +429,19 @@ onMounted(() => {
     }
   })
   useMitt.on('chat-active', (e) => {
-    const { title, id } = e
+    const { title, id, chatNumber } = e
+    console.log('e:', e)
     currentChat.value.title = title || `新的聊天${currentChat.value.id}`
     currentChat.value.id = id
+    currentChat.value.chatNumber = chatNumber
+    console.log('currentChat.value:', currentChat.value)
+    // 初始化消息列表
+    handleInitMessageList()
   })
+  if (isFirstSend.value) {
+    // 初始化消息列表
+    handleInitMessageList()
+  }
 })
 </script>
 <style scoped lang="scss">

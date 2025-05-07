@@ -12,8 +12,15 @@
 import Left from './layout/Left.vue'
 import Right from './layout/Right.vue'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { useAiChatStore } from '@/stores/aiChat.ts'
 
+const aiChatStore = useAiChatStore()
 onMounted(async () => {
   await getCurrentWebviewWindow().show()
+  handleInitModels()
 })
+
+const handleInitModels = () => {
+  aiChatStore.InitModels()
+}
 </script>
