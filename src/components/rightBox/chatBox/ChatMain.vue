@@ -267,7 +267,7 @@
                   :style="{ '--bubble-max-width': isGroup ? '32vw' : '50vw' }"
                   @select="$event.click(item)"
                   :menu="handleItemType(item.message.type)"
-                  :emoji="isGroup ? emojiList : []"
+                  :emoji="emojiList"
                   :special-menu="specialMenuList"
                   @reply-emoji="handleEmojiSelect($event, item)"
                   @click="handleMsgClick(item)">
@@ -365,23 +365,20 @@
                   </div>
                 </n-flex>
 
-                <n-flex align="center">
-                  <!-- 群聊消息点赞表情 -->
-                  <n-flex :size="4" v-if="isGroup && item.message.messageMark.likeCount > 0">
-                    <n-flex :size="2" align="center" class="emoji-reply-bubble" @click.stop="cancelReplyEmoji(item, 1)">
-                      👍
-                      <span class="text-(12px #eee)">{{ item.message.messageMark.likeCount }}</span>
-                    </n-flex>
-                  </n-flex>
-
-                  <!-- 群聊消息不满表情 -->
-                  <n-flex :size="4" v-if="isGroup && item.message.messageMark.dislikeCount > 0">
-                    <n-flex :size="2" align="center" class="emoji-reply-bubble" @click.stop="cancelReplyEmoji(item, 2)">
-                      ☹️
-                      <span class="text-(12px #eee)">{{ item.message.messageMark.dislikeCount }}</span>
-                    </n-flex>
-                  </n-flex>
-                </n-flex>
+                <!-- 动态渲染所有回复表情反应 -->
+                <div
+                  class="flex-y-center gap-6px flex-wrap w-270px"
+                  :class="{ 'justify-end': isSingleLineEmojis(item) }">
+                  <template v-for="emoji in emojiList" :key="emoji.value">
+                    <!-- 根据表情类型获取对应的计数属性名 -->
+                    <div class="flex-y-center" v-if="getEmojiCount(item, emoji.value) > 0">
+                      <div class="emoji-reply-bubble" @click.stop="cancelReplyEmoji(item, emoji.value)">
+                        {{ emoji.label }}
+                        <span class="text-(12px #eee)">{{ getEmojiCount(item, emoji.value) }}</span>
+                      </div>
+                    </div>
+                  </template>
+                </div>
               </n-flex>
             </div>
           </div>
@@ -740,22 +737,53 @@ const handleScrollDirectionChange = (direction: 'up' | 'down') => {
   isScrollingDown.value = direction === 'down'
 }
 
-// 取消点赞和不满
+// 取消表情反应
 const cancelReplyEmoji = (item: any, type: number) => {
-  apis.markMsg({
-    msgId: item.message.id,
-    markType: type, // 使用LIKE作为标记类型
-    actType: 2 // 使用Confirm作为操作类型
-  })
+  // 检查该表情是否已被当前用户标记
+  const markStats = item.message.messageMark?.markStats
+  const userMarked = markStats?.[String(type)]?.userMarked
+
+  // 只有当用户已标记时才发送取消请求
+  if (userMarked) {
+    apis.markMsg({
+      msgId: item.message.id,
+      markType: type, // 使用对应的MarkEnum类型
+      actType: 2 // 使用Confirm作为操作类型
+    })
+  }
 }
 
-// 处理点赞和不满表情回应
+/**
+ * 根据表情类型获取对应的计数
+ * @param item 消息项
+ * @param emojiType 表情类型值
+ * @returns 计数值
+ */
+const getEmojiCount = (item: any, emojiType: number): number => {
+  if (!item?.message?.messageMark?.markStats) return 0
+
+  // markStats 是一个对象，键是表情类型，值是包含 count 和 userMarked 的对象
+  const markStats = item.message.messageMark.markStats
+
+  // 如果存在该表情类型的统计数据，返回其计数值，否则返回0
+  return markStats[String(emojiType)]?.count || 0
+}
+
+// 处理表情回应
 const handleEmojiSelect = (context: { label: string; value: number; title: string }, item: any) => {
-  apis.markMsg({
-    msgId: item.message.id,
-    markType: context.value, // 使用LIKE作为标记类型
-    actType: 1 // 使用Confirm作为操作类型
-  })
+  // 检查该表情是否已被当前用户标记
+  const markStats = item.message.messageMark?.markStats
+  const userMarked = markStats?.[String(context.value)]?.userMarked
+  // 只给没有标记过的图标标记
+  if (!userMarked) {
+    apis.markMsg({
+      msgId: item.message.id,
+      markType: context.value,
+      actType: 1
+    })
+  } else {
+    window.$message.warning('该表情已标记')
+  }
 }
 
 // 跳转到回复消息
@@ -967,6 +995,21 @@ const handleViewAnnouncement = () => {
 
 const isSpecialMsgType = (type: number) => {
   return type === MsgEnum.IMAGE || type === MsgEnum.EMOJI || type === MsgEnum.NOTICE
+}
+
+// 判断表情反应是否只有一行
+const isSingleLineEmojis = (item: any) => {
+  // 计算有多少个表情反应
+  let emojiCount = 0
+  for (const emoji of emojiList.value) {
+    if (getEmojiCount(item, emoji.value) > 0) {
+      emojiCount++
+    }
+  }
+
+  // 如果表情数量小于等于3个，认为是一行
+  // 这个阈值可以根据实际UI调整
+  return emojiCount <= 5 && item.fromUser.uid === userUid.value
 }
 
 onMounted(async () => {

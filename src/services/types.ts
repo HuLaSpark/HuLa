@@ -271,7 +271,7 @@ export type MarkItemType = {
   uid: number
   /** 消息id */
   msgId: number
-  /** 操作类型 1点赞 2举报 */
+  /** 操作类型 */
   markType: MarkEnum
   /** 数量 */
   markCount: number
@@ -336,14 +336,19 @@ export type MsgUserType = {
  * 消息互动信息
  */
 export type MessageMarkType = {
-  /** 点赞 */
-  userLike: number
-  /** 举报 */
-  userDislike: number
-  /** 点赞数 */
-  likeCount: number
-  /** 举报数 */
-  dislikeCount: number
+  /**
+   * 新的标记统计数据结构
+   * 键是表情类型，值是包含 count 和 userMarked 的对象
+   */
+  markStats?: Record<
+    string,
+    {
+      /** 该表情的计数 */
+      count: number
+      /** 当前用户是否标记了该表情 */
+      userMarked: boolean
+    }
+  >
 }
 
 /** 图片消息体 */
