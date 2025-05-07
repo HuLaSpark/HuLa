@@ -103,6 +103,7 @@ HuLa is an instant messaging system developed with Tauri, Vite 6, Vue 3, and Typ
 | | Emoji Function | ✅ Completed |
 | | Context Menu Based on Message Type | ✅ Completed |
 | | Support parsing links as preview cards | ✅ Completed |
+| | Message likes and dissatisfaction status | ✅ Completed |
 | 👥 **Contact & Group Management** | Friend Add/Remove | ✅ Completed |
 | | Friend Search | ✅ Completed |
 | | Group Creation and Management | ✅ Completed |
@@ -110,8 +111,8 @@ HuLa is an instant messaging system developed with Tauri, Vite 6, Vue 3, and Typ
 | | Friend Badges | ✅ Completed |
 | | Block, Blacklist, Do Not Disturb | ✅ Completed |
 | | Message by message merging and forwarding | 🚧 In Progress |
-| | Group Announcement | 🚧 In Progress |
-| | Group chat、individual chat notes, nicknames, etc | 🚧 In Progress |
+| | Group Announcement | ✅ 已完成 |
+| | Group chat、individual chat notes, nicknames, etc | ✅ 已完成 |
 | 🎨 **UI Interface** | Modern Interface Design | ✅ Completed |
 | | Dark/Light Theme Support | ✅ Completed |
 | | Skin Theme Switching | ✅ Completed |

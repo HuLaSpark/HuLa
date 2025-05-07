@@ -23,9 +23,9 @@
   }
 }
 .bubble {
-  &::selection {
-    background: transparent; /* 设置选中背景为透明 */
-  }
+  // &::selection {
+  //   background: transparent; /* 设置选中背景为透明 */
+  // }
   @include bubble;
 }
 .bubble-oneself {
