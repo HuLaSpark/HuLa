@@ -235,8 +235,34 @@ export enum IsYesEnum {
 }
 
 export enum MarkEnum {
+  /** 点赞 */
   LIKE = 1,
-  DISLIKE
+  /** 不满 */
+  DISLIKE,
+  /** 爱心 */
+  HEART,
+  /** 愤怒 */
+  ANGRY,
+  /** 礼炮 */
+  CELEBRATE,
+  /** 火箭 */
+  ROCKET,
+  /** 笑哭 */
+  LOL,
+  /** 鼓掌 */
+  APPLAUSE,
+  /** 鲜花 */
+  FLOWER,
+  /** 炸弹 */
+  BOMB,
+  /** 疑问 */
+  CONFUSED,
+  /** 胜利 */
+  VICTORY,
+  /** 灯光 */
+  LIGHT,
+  /** 红包 */
+  MONEY
 }
 
 // 成员角色 1群主 2管理员 3普通成员 4踢出群聊

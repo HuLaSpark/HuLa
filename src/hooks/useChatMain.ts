@@ -423,6 +423,66 @@ export const useChatMain = () => {
       label: '☹️',
       value: 2,
       title: '不满'
+    },
+    {
+      label: '❤️',
+      value: 3,
+      title: '爱心'
+    },
+    {
+      label: '😡',
+      value: 4,
+      title: '愤怒'
+    },
+    {
+      label: '🎉',
+      value: 5,
+      title: '礼炮'
+    },
+    {
+      label: '🚀',
+      value: 6,
+      title: '火箭'
+    },
+    {
+      label: '😂',
+      value: 7,
+      title: '笑哭'
+    },
+    {
+      label: '👏',
+      value: 8,
+      title: '鼓掌'
+    },
+    {
+      label: '🌹',
+      value: 9,
+      title: '鲜花'
+    },
+    {
+      label: '💣',
+      value: 10,
+      title: '炸弹'
+    },
+    {
+      label: '🤯',
+      value: 11,
+      title: '疑问'
+    },
+    {
+      label: '✌️',
+      value: 12,
+      title: '胜利'
+    },
+    {
+      label: '💡',
+      value: 13,
+      title: '灯光'
+    },
+    {
+      label: '🧧',
+      value: 14,
+      title: '红包'
     }
   ])
 

@@ -3,29 +3,31 @@
     <slot></slot>
     <Teleport to="body">
       <transition-group @beforeEnter="handleBeforeEnter" @enter="handleEnter" @afterEnter="handleAfterEnter">
-        <!-- 群聊emoji表情菜单 -->
+        <!-- emoji表情菜单 -->
         <div
           v-if="showMenu && emoji && emoji.length > 0"
           class="context-menu select-none"
-          style="display: flex; height: fit-content"
-          :style="{
-            left: `${pos.posX}px`,
-            top: `${pos.posY - 42}px`
-          }">
-          <n-flex v-for="(item, index) in emoji" :key="index" align="center" justify="space-between" class="emoji-list">
-            <n-popover trigger="hover" :show-arrow="false" placement="top">
-              <template #trigger>
-                <n-flex :size="0" align="center" justify="center" class="emoji-item" @click="handleReplyEmoji(item)">
-                  {{ item.label }}
-                </n-flex>
-              </template>
-              <span>{{ item.title }}</span>
-            </n-popover>
-          </n-flex>
+          style="height: fit-content"
+          :style="emojiMenuPosition">
+          <div class="emoji-container">
+            <div v-for="(item, index) in displayedEmojis" :key="index" class="p-4px">
+              <n-popover :delay="500" :duration="0" trigger="hover" :show-arrow="false" placement="top">
+                <template #trigger>
+                  <div class="emoji-item" @click="handleReplyEmoji(item)">
+                    {{ item.label }}
+                  </div>
+                </template>
+                <span>{{ item.title }}</span>
+              </n-popover>
+            </div>
+            <div v-if="!showAllEmojis && emoji.length > 4" class="p-4px">
+              <div class="emoji-more-btn" @click="showAllEmojis = true">更多</div>
+            </div>
+          </div>
         </div>
         <!-- 普通右键菜单 -->
         <div
-          v-if="showMenu"
+          v-if="showMenu && !(emoji && emoji.length > 0 && showAllEmojis)"
           class="context-menu select-none"
           :style="{
             left: `${pos.posX}px`,
@@ -102,6 +104,14 @@ const props = withDefaults(defineProps<Props>(), {
   specialMenu: () => []
 })
 
+// 控制是否显示全部表情
+const showAllEmojis = ref(false)
+
+// 计算要显示的表情列表
+const displayedEmojis = computed(() => {
+  return showAllEmojis.value ? props.emoji : props.emoji.slice(0, 4)
+})
+
 // 使用计算属性过滤显示的菜单项
 const visibleMenu = computed(() => {
   // 检查是否有 visible 属性并作为函数调用
@@ -160,6 +170,39 @@ const pos = computed(() => {
   }
 })
 
+/** 表情菜单的尺寸和位置 */
+const emojiWidth = ref(180) // 表情菜单的大约宽度，根据.emoji-container的max-w-180px设置
+
+// 根据是否展示全部表情动态计算菜单高度
+const emojiHeight = computed(() => {
+  return showAllEmojis.value ? 114 : 40 // 没有展示更多时为56，展开更多时为126
+})
+
+/** 计算表情菜单的位置 */
+const emojiMenuPosition = computed(() => {
+  let posX = x.value
+  let posY = y.value - emojiHeight.value // 默认在点击位置上方显示
+
+  // 检查水平方向是否超出视口
+  if (x.value + emojiWidth.value > vw.value) {
+    posX = vw.value - emojiWidth.value - 20 // 留出20px的安全距离
+  }
+  if (posX < 10) {
+    posX = 10 // 确保不会超出左边界
+  }
+
+  // 检查垂直方向是否超出视口
+  if (posY < 10) {
+    // 如果上方空间不足，则在点击位置下方显示
+    posY = y.value + 10
+  }
+
+  return {
+    left: `${posX}px`,
+    top: `${posY}px`
+  }
+})
+
 // 添加 watch 监听主菜单显示状态
 watch(
   () => showMenu.value,
@@ -168,6 +211,8 @@ watch(
       // 主菜单隐藏时,同时隐藏二级菜单
       showSubmenu.value = false
       activeSubmenu.value = []
+      // 重置表情显示状态
+      showAllEmojis.value = false
     }
   }
 )
@@ -379,13 +424,19 @@ const shouldShowArrow = (item: any) => {
 
 .context-menu {
   @include menu-item-style();
-  .emoji-list {
+  .emoji-container {
     -webkit-backdrop-filter: blur(10px);
     background: var(--bg-menu);
-    @apply size-fit p-4px select-none;
-    .emoji-item {
-      @apply size-28px rounded-4px text-16px cursor-pointer hover:bg-[--emoji-hover];
-    }
+    /* 允许放置表情符号，每个28px宽，加上间隔 */
+    @apply flex flex-wrap max-w-180px px-6px select-none;
+  }
+
+  .emoji-item {
+    @apply flex-center size-28px rounded-4px text-16px cursor-pointer hover:bg-[--emoji-hover];
+  }
+
+  .emoji-more-btn {
+    @apply flex-center size-28px rounded-4px text-12px cursor-pointer bg-[--bg-menu-hover] hover:bg-[--emoji-hover];
   }
   .menu-list {
     @include menu-list();

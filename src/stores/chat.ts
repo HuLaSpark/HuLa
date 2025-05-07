@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { useRoute } from 'vue-router'
 import apis from '@/services/apis'
 import type { MarkItemType, MessageType, RevokedMsgType, SessionItem } from '@/services/types'
-import { MarkEnum, MessageStatusEnum, MsgEnum, NotificationTypeEnum, RoomTypeEnum, StoresEnum } from '@/enums'
+import { MessageStatusEnum, MsgEnum, NotificationTypeEnum, RoomTypeEnum, StoresEnum } from '@/enums'
 import { computedTimeBlock } from '@/utils/ComputedTime.ts'
 import { useCachedStore } from '@/stores/cached.ts'
 import { useGlobalStore } from '@/stores/global.ts'
@@ -470,18 +470,41 @@ export const useChatStore = defineStore(
       return keys.findIndex((key) => key === msgId)
     }
 
-    // 更新点赞、举报数
+    // 更新所有标记类型的数量
     const updateMarkCount = (markList: MarkItemType[]) => {
       for (const mark of markList) {
-        const { msgId, markType, markCount } = mark
+        const { msgId, markType, markCount, actType, uid } = mark
 
         const msgItem = currentMessageMap.value?.get(String(msgId))
-        if (msgItem) {
-          if (markType === MarkEnum.LIKE) {
-            msgItem.message.messageMark.likeCount = markCount
-          } else if (markType === MarkEnum.DISLIKE) {
-            msgItem.message.messageMark.dislikeCount = markCount
+        if (msgItem && msgItem.message.messageMark.markStats) {
+          // 获取当前的标记状态，如果不存在则初始化
+          const currentMarkStat = msgItem.message.messageMark.markStats[String(markType)] || {
+            count: 0,
+            userMarked: false
           }
+
+          // 根据动作类型更新计数和用户标记状态
+          // actType: 1表示确认(添加标记)，2表示取消(移除标记)
+          if (actType === 1) {
+            // 添加标记
+            // 如果是当前用户的操作，设置userMarked为true
+            if (String(uid) === userStore.userInfo.uid) {
+              currentMarkStat.userMarked = true
+            }
+            // 更新计数
+            currentMarkStat.count = markCount
+          } else if (actType === 2) {
+            // 取消标记
+            // 如果是当前用户的操作，设置userMarked为false
+            if (String(uid) === userStore.userInfo.uid) {
+              currentMarkStat.userMarked = false
+            }
+            // 更新计数
+            currentMarkStat.count = markCount
+          }
+
+          // 更新markStats对象
+          msgItem.message.messageMark.markStats[String(markType)] = currentMarkStat
         }
       }
     }

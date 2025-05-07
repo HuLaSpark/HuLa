@@ -46,10 +46,7 @@ abstract class AbstractMessageStrategy implements MessageStrategy {
         type: this.msgType,
         body: messageBody,
         messageMark: {
-          userLike: 0,
-          userDislike: 0,
-          likeCount: 0,
-          dislikeCount: 0
+          markStats: {}
         }
       },
       sendTime: new Date(currentTime).toISOString(),
