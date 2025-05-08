@@ -154,40 +154,61 @@
                   <n-avatar v-else round :size="40" :src="AvatarUtils.getAvatarUrl(activeItem.avatar)" />
                 </div>
 
-                <!-- 群名称 -->
-                <n-flex :size="10" align="center">
-                  <div v-if="isGroupOwner && isEditingGroupName" class="flex-1">
-                    <n-input
-                      ref="groupNameInputRef"
-                      v-model:value="editingGroupName"
-                      @blur="saveGroupName"
-                      @keydown.enter="saveGroupName"
-                      size="small"
-                      maxlength="12"
-                      class="border-(solid 1px [--line-color])"
-                      placeholder="请输入群名称(最多12字)" />
-                  </div>
-                  <div
-                    v-else
-                    class="text-(14px --text-color) cursor-default"
-                    :class="{ 'cursor-pointer': isGroupOwner }"
-                    @click="isGroupOwner && startEditGroupName()">
-                    {{ activeItem.name }}
-                    <!-- 显示编辑图标 -->
-                    <svg v-if="isGroupOwner" class="size-14px ml-1 inline-block color-[--icon-color]">
-                      <use href="#edit"></use>
-                    </svg>
-                  </div>
-                </n-flex>
+                <n-flex vertical :size="6">
+                  <!-- 群名称 -->
+                  <n-flex :size="10" align="center">
+                    <div v-if="isGroupOwner && isEditingGroupName" class="flex-1">
+                      <n-input
+                        ref="groupNameInputRef"
+                        v-model:value="editingGroupName"
+                        @blur="saveGroupName"
+                        @keydown.enter="saveGroupName"
+                        size="tiny"
+                        maxlength="12"
+                        class="border-(solid 1px [--line-color])"
+                        placeholder="请输入群名称(最多12字)" />
+                    </div>
+                    <div
+                      v-else
+                      class="text-(14px --text-color) cursor-default"
+                      :class="{ 'cursor-pointer': isGroupOwner }"
+                      @click="isGroupOwner && startEditGroupName()">
+                      {{ activeItem.name }}
+                      <!-- 显示编辑图标 -->
+                      <svg v-if="isGroupOwner" class="size-14px ml-1 inline-block color-[--icon-color]">
+                        <use href="#edit"></use>
+                      </svg>
+                    </div>
 
-                <n-popover trigger="hover" v-if="activeItem.hotFlag === IsAllUserEnum.Yes && !isEditingGroupName">
-                  <template #trigger>
-                    <svg class="size-20px select-none outline-none cursor-pointer color-#13987f">
-                      <use href="#auth"></use>
-                    </svg>
-                  </template>
-                  <span>官方群聊认证</span>
-                </n-popover>
+                    <n-popover trigger="hover" v-if="activeItem.hotFlag === IsAllUserEnum.Yes && !isEditingGroupName">
+                      <template #trigger>
+                        <svg class="size-20px select-none outline-none cursor-pointer color-#13987f">
+                          <use href="#auth"></use>
+                        </svg>
+                      </template>
+                      <span>官方群聊认证</span>
+                    </n-popover>
+                  </n-flex>
+
+                  <n-flex align="center" :size="8">
+                    <!-- hula号 -->
+                    <p
+                      class="text-(12px center [--chat-text-color]) rounded-4px w-100px py-2px bg-[#e3e3e3] dark:bg-[#505050]">
+                      {{ activeItem.account }}
+                    </p>
+
+                    <n-tooltip trigger="hover">
+                      <template #trigger>
+                        <svg
+                          class="size-12px cursor-pointer hover:color-#909090 hover:transition-colors"
+                          @click="handleCopy">
+                          <use href="#copy"></use>
+                        </svg>
+                      </template>
+                      <span>复制</span>
+                    </n-tooltip>
+                  </n-flex>
+                </n-flex>
               </n-flex>
             </div>
 
@@ -579,6 +600,14 @@ watchEffect(() => {
     })
   }
 })
+
+// 处理复制账号
+const handleCopy = () => {
+  if (activeItem.account) {
+    navigator.clipboard.writeText(activeItem.account)
+    window.$message.success(`复制成功 ${activeItem.account}`)
+  }
+}
 
 /** 处理创建群聊或邀请进群 */
 const handleCreateGroupOrInvite = () => {
