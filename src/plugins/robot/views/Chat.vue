@@ -59,81 +59,75 @@
       <!--      </n-flex>-->
 
       <Transition name="chat-init" appear mode="out-in" @after-leave="handleTransitionComplete">
-        <!-- 初次加载的骨架屏 -->
-        <n-flex
-          v-if="messageLoading"
-          vertical
-          :size="18"
-          :style="{ 'max-height': `calc(100vh - 350px)` }"
-          class="relative h-100vh box-border p-20px">
-          <n-flex justify="end">
-            <n-skeleton style="border-radius: 14px" height="40px" width="46%" :sharp="false" />
-            <n-skeleton height="40px" circle />
-          </n-flex>
-
-          <n-flex>
-            <n-skeleton height="40px" circle />
-            <n-skeleton style="border-radius: 14px" height="60px" width="58%" :sharp="false" />
-          </n-flex>
-
-          <n-flex>
-            <n-skeleton height="40px" circle />
-            <n-skeleton style="border-radius: 14px" height="40px" width="26%" :sharp="false" />
-          </n-flex>
-
-          <n-flex justify="end">
-            <n-skeleton style="border-radius: 14px" height="40px" width="60%" :sharp="false" />
-            <n-skeleton height="40px" circle />
-          </n-flex>
-        </n-flex>
-
-        <!-- 聊天内容 -->
-        <VirtualList
-          v-else
-          id="image-chat-main"
-          ref="virtualListInst"
-          :items="chatMessageList"
-          :estimatedItemHeight="itemSize"
-          :buffer="5"
-          :is-loading-more="isLoadingMore"
-          :is-last="isMessageLast"
-          @scroll="handleScroll"
-          @load-more="handleLoadMore"
-          class="scrollbar-container"
-          :class="{ 'hide-scrollbar': !showScrollbar }"
-          :style="{ 'max-height': `calc(100vh - 400px)` }"
-          @mouseenter="showScrollbar = true"
-          @mouseleave="showScrollbar = false">
-          <template #default="{ item, index }">
-            <n-flex :size="6" v-if="item.role === 'assistant'" :key="index">
-              <n-avatar
-                class="rounded-8px"
-                src="https://img1.baidu.com/it/u=3613958228,3522035000&fm=253&fmt=auto&app=120&f=JPEG?w=500&h=500" />
-              <n-flex vertical justify="space-between">
-                <p class="text-(12px [--chat-text-color])">GPT-4</p>
-
-                <!--  气泡样式  -->
-                <ContextMenu>
-                  <div style="white-space: pre-wrap" class="bubble select-text mb-[10px]">
-                    <span v-html="item.content"></span>
-                  </div>
-                </ContextMenu>
-              </n-flex>
+        <div>
+          <!-- 初次加载的骨架屏 -->
+          <n-flex
+            v-if="messageLoading"
+            vertical
+            :size="18"
+            :style="{ 'max-height': `calc(100vh - 350px)` }"
+            class="relative h-100vh box-border p-20px">
+            <n-flex justify="end">
+              <n-skeleton style="border-radius: 14px" height="40px" width="46%" :sharp="false" />
+              <n-skeleton height="40px" circle />
             </n-flex>
 
-            <n-flex :size="6" v-if="item.role === 'user'" justify="end" :key="index">
-              <n-flex vertical justify="space-between">
-                <!--  气泡样式  -->
-                <ContextMenu>
-                  <div style="white-space: pre-wrap" class="bubble-oneself select-text mb-[10px]">
-                    <span v-html="item.content"></span>
-                  </div>
-                </ContextMenu>
-              </n-flex>
-              <n-avatar bordered round :src="AvatarUtils.getAvatarUrl(userStore.userInfo.avatar!)" :size="35" />
+            <n-flex>
+              <n-skeleton height="40px" circle />
+              <n-skeleton style="border-radius: 14px" height="60px" width="58%" :sharp="false" />
             </n-flex>
-          </template>
-        </VirtualList>
+
+            <n-flex>
+              <n-skeleton height="40px" circle />
+              <n-skeleton style="border-radius: 14px" height="40px" width="26%" :sharp="false" />
+            </n-flex>
+
+            <n-flex justify="end">
+              <n-skeleton style="border-radius: 14px" height="40px" width="60%" :sharp="false" />
+              <n-skeleton height="40px" circle />
+            </n-flex>
+          </n-flex>
+
+          <!-- 聊天内容 -->
+          <n-scrollbar v-else ref="virtualListInst" :style="{ 'max-height': `calc(100vh - 440px)` }">
+            <n-flex v-if="chatMessageList.length === 0" justify="center" :size="18">
+              <p class="text-[#707070]">暂无数据</p>
+            </n-flex>
+            <template v-for="(item, index) in chatMessageList">
+              <n-flex :size="6" v-if="item.role === 'assistant'" :key="index">
+                <n-avatar
+                  class="rounded-8px"
+                  src="https://img1.baidu.com/it/u=3613958228,3522035000&fm=253&fmt=auto&app=120&f=JPEG?w=500&h=500" />
+                <n-flex vertical justify="space-between">
+                  <p class="text-(12px [--chat-text-color])">GPT-4</p>
+
+                  <!--  气泡样式  -->
+                  <ContextMenu>
+                    <div style="white-space: pre-wrap" class="bubble select-text mb-[10px]">
+                      <span v-if="item.contentType === 'text'" v-html="item.content"></span>
+                      <div v-if="item.contentType === 'think'" class="flex-start-center">
+                        <span>正在思考</span>
+                        <img class="size-14px ml-2" src="@/assets/img/loading.svg" alt="" />
+                      </div>
+                    </div>
+                  </ContextMenu>
+                </n-flex>
+              </n-flex>
+
+              <n-flex :size="6" v-if="item.role === 'user'" justify="end" :key="index">
+                <n-flex vertical justify="space-between">
+                  <!--  气泡样式  -->
+                  <ContextMenu>
+                    <div style="white-space: pre-wrap" class="bubble-oneself select-text mb-[10px]">
+                      <span v-html="item.content"></span>
+                    </div>
+                  </ContextMenu>
+                </n-flex>
+                <n-avatar bordered round :src="AvatarUtils.getAvatarUrl(userStore.userInfo.avatar!)" :size="35" />
+              </n-flex>
+            </template>
+          </n-scrollbar>
+        </div>
       </Transition>
     </div>
 
@@ -203,7 +197,6 @@ import { InputInst, NIcon } from 'naive-ui'
 import { useSettingStore } from '@/stores/setting.ts'
 // useAiChatStore
 import { useAiChatStore } from '@/stores/aiChat.ts'
-import VirtualList, { type VirtualListExpose } from '@/components/common/VirtualList.vue'
 import { fetchChatAPI, fetchChatAPIProcess, fetchChatMessageAPI, listChatMessage } from '@/plugins/robot/api'
 import { AvatarUtils } from '@/utils/AvatarUtils.ts'
 import { useUserStore } from '@/stores/user.ts'
@@ -227,18 +220,10 @@ const currentChat = ref({
 /** 输入框的值 */
 const prompt = ref('')
 /** 虚拟列表 */
-const virtualListInst = useTemplateRef<VirtualListExpose>('virtualListInst')
+const virtualListInst = useTemplateRef<any>('virtualListInst')
 /** message loading */
 const messageLoading = ref(false)
 const chatMessageList = ref<Array<any>>([])
-/** item最小高度，用于计算滚动大小和位置 */
-const itemSize = ref(90)
-/** 添加标记，用于识别是否正在加载历史消息 */
-const isLoadingMore = ref(false)
-/** isMessageLast */
-const isMessageLast = ref(true)
-/** 是否显示滚动条 */
-const showScrollbar = ref(false)
 /** 是否第一次发消息 */
 const isFirstSend = ref(true)
 /** 模型列表 */
@@ -309,19 +294,9 @@ const handleTransitionComplete = () => {
   })
 }
 
-// 处理加载更多
-const handleLoadMore = async () => {
-  console.log('handleLoadMore')
-}
-
-// 处理滚动事件(用于页脚显示功能)
-const handleScroll = () => {
-  console.log('handleScroll')
-}
-
 const scrollToBottom = () => {
   if (!virtualListInst.value) return
-  virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
+  virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'auto' })
 }
 
 // 提交事件
@@ -364,6 +339,15 @@ const handleSend = () => {
   })
   scrollToBottom()
 
+  let answer: any = {
+    content: '',
+    contentType: 'think',
+    parentMessageId: '',
+    role: 'assistant'
+  }
+  chatMessageList.value.push(answer)
+  scrollToBottom()
+
   fetchChatMessageAPI({
     chatNumber: currentChat.value.chatNumber,
     prompt: prompt.value,
@@ -373,18 +357,50 @@ const handleSend = () => {
     .then((res: string) => {
       console.log(res)
       if (res) {
+        chatMessageList.value.forEach((item) => {
+          if (item.parentMessageId) item.parentMessageId = res
+        })
         fetchChatAPIProcess({ conversationId: res, fileIds: [] })
           .then((response) => response.text())
           .then((result) => {
-            let str = result.split('\n')
-            let content: any = {}
-            str.forEach((item) => {
-              if (item) {
-                content = JSON.parse(item)
-              }
-            })
-            chatMessageList.value.push(content)
-            scrollToBottom()
+            // 假设 result 是一个包含多行文本的字符串
+            console.log('result:', result)
+            const str = result.split('\n')
+            const validLines = str.filter(Boolean) // 过滤掉空行
+
+            if (validLines.length > 0) {
+              answer = JSON.parse(validLines[validLines.length - 1])
+            }
+            console.log('answer:')
+            console.log(answer)
+            const bak = JSON.parse(JSON.stringify(answer))
+            const len = chatMessageList.value.length
+            const targetIndex = len - 1
+
+            // 确保不会越界
+            if (targetIndex >= 0 && chatMessageList.value[targetIndex]) {
+              chatMessageList.value[targetIndex].content = ''
+              chatMessageList.value[targetIndex].contentType = 'text'
+
+              console.log('answer:')
+              console.log(bak)
+              // 打字动画函数
+              console.log('bak.content:', bak.content)
+              const chank = bak.content.split('')
+              let index = 0
+              const typingSpeed = 50
+              const timer = setInterval(() => {
+                if (index < chank.length) {
+                  chatMessageList.value[targetIndex].content += chank[index]
+                  index++
+                } else {
+                  clearInterval(timer)
+                  scrollToBottom()
+                }
+              }, typingSpeed)
+
+              // 如果需要支持取消动画，可将 timer 存入组件状态中
+            }
           })
           .catch((error) => console.log('error', error))
       }
@@ -399,10 +415,14 @@ const handleInitMessageList = () => {
   listChatMessage({
     current: 1,
     size: 10,
-    chatNumber: currentChat.value.id
+    chatNumber: currentChat.value.chatNumber
   })
-    .then((res) => {
+    .then((res: any) => {
       console.log(res)
+      chatMessageList.value = res
+      setTimeout(() => {
+        scrollToBottom()
+      }, 200)
     })
     .finally(() => {
       messageLoading.value = false

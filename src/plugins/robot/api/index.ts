@@ -67,7 +67,6 @@ export function fetchChatAPIProcess(data: { conversationId: string; fileIds: str
     body: raw,
     redirect: 'follow'
   }
-
   return fetch(`${prefix}/chat/completions`, requestOptions)
 }
 
