@@ -1,5 +1,5 @@
 <template>
-  <n-config-provider :theme="lightTheme" class="size-full rounded-8px select-none cursor-default">
+  <n-config-provider :theme="lightTheme" class="size-full bg-#fff rounded-8px select-none cursor-default">
     <!--顶部操作栏-->
     <ActionBar :max-w="false" :shrink="false" />
 
