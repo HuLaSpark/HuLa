@@ -740,8 +740,7 @@ const handleScrollDirectionChange = (direction: 'up' | 'down') => {
 // 取消表情反应
 const cancelReplyEmoji = (item: any, type: number) => {
   // 检查该表情是否已被当前用户标记
-  const markStats = item.message.messageMark?.markStats
-  const userMarked = markStats?.[String(type)]?.userMarked
+  const userMarked = item.message.messageMarks[String(type)]?.userMarked
 
   // 只有当用户已标记时才发送取消请求
   if (userMarked) {
@@ -760,20 +759,17 @@ const cancelReplyEmoji = (item: any, type: number) => {
  * @returns 计数值
  */
 const getEmojiCount = (item: any, emojiType: number): number => {
-  if (!item?.message?.messageMark?.markStats) return 0
+  if (!item?.message?.messageMarks) return 0
 
-  // markStats 是一个对象，键是表情类型，值是包含 count 和 userMarked 的对象
-  const markStats = item.message.messageMark.markStats
-
+  // messageMarks 是一个对象，键是表情类型，值是包含 count 和 userMarked 的对象
   // 如果存在该表情类型的统计数据，返回其计数值，否则返回0
-  return markStats[String(emojiType)]?.count || 0
+  return item.message.messageMarks[String(emojiType)]?.count || 0
 }
 
 // 处理表情回应
 const handleEmojiSelect = (context: { label: string; value: number; title: string }, item: any) => {
   // 检查该表情是否已被当前用户标记
-  const markStats = item.message.messageMark?.markStats
-  const userMarked = markStats?.[String(context.value)]?.userMarked
+  const userMarked = item.message.messageMarks[String(context.value)]?.userMarked
   // 只给没有标记过的图标标记
   if (!userMarked) {
     apis.markMsg({

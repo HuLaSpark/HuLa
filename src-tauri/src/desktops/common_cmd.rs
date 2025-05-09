@@ -119,6 +119,9 @@ pub fn set_badge_count(count: Option<i64>, handle: AppHandle) -> Result<(), Stri
             window.set_badge_count(count).map_err(|e| e.to_string())?;
             Ok(())
         }
-        None => Err("No webview window found".to_string()),
+        None => {
+            // 如果找不到 home 窗口，直接返回成功，不抛出错误
+            Ok(())
+        }
     }
 }

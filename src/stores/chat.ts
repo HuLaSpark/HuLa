@@ -474,9 +474,9 @@ export const useChatStore = defineStore(
         const { msgId, markType, markCount, actType, uid } = mark
 
         const msgItem = currentMessageMap.value?.get(String(msgId))
-        if (msgItem && msgItem.message.messageMark.markStats) {
+        if (msgItem && msgItem.message.messageMarks) {
           // 获取当前的标记状态，如果不存在则初始化
-          const currentMarkStat = msgItem.message.messageMark.markStats[String(markType)] || {
+          const currentMarkStat = msgItem.message.messageMarks[String(markType)] || {
             count: 0,
             userMarked: false
           }
@@ -501,8 +501,8 @@ export const useChatStore = defineStore(
             currentMarkStat.count = markCount
           }
 
-          // 更新markStats对象
-          msgItem.message.messageMark.markStats[String(markType)] = currentMarkStat
+          // 更新messageMark对象
+          msgItem.message.messageMarks[String(markType)] = currentMarkStat
         }
       }
     }

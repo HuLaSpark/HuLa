@@ -59,6 +59,11 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/registerWindow/index.vue')
   },
   {
+    path: '/forgetPassword',
+    name: 'forgetPassword',
+    component: () => import('@/views/forgetPasswordWindow/index.vue')
+  },
+  {
     path: '/qrCode',
     name: 'qrCode',
     component: () => import('@/views/loginWindow/QRCode.vue')
