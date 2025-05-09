@@ -335,21 +335,15 @@ export type MsgUserType = {
 /**
  * 消息互动信息
  */
-export type MessageMarkType = {
-  /**
-   * 新的标记统计数据结构
-   * 键是表情类型，值是包含 count 和 userMarked 的对象
-   */
-  markStats?: Record<
-    string,
-    {
-      /** 该表情的计数 */
-      count: number
-      /** 当前用户是否标记了该表情 */
-      userMarked: boolean
-    }
-  >
-}
+export type MessageMarkType = Record<
+  string,
+  {
+    /** 该表情的计数 */
+    count: number
+    /** 当前用户是否标记了该表情 */
+    userMarked: boolean
+  }
+>
 
 /** 图片消息体 */
 export type ImageBody = {
@@ -424,7 +418,7 @@ export type MsgType = {
   /** 发送时间戳 */
   sendTime: number
   /** 消息互动信息 */
-  messageMark: MessageMarkType
+  messageMarks: MessageMarkType
   /** 消息发送状态 */
   status: MessageStatusEnum
 }
@@ -513,6 +507,8 @@ export enum IsAllUserEnum {
 
 /** 会话列表项 */
 export type SessionItem = {
+  /** hula号 */
+  account: string
   /** 房间最后活跃时间(用来排序) */
   activeTime: number
   /** 会话头像 */

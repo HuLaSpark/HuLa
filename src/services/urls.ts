@@ -93,5 +93,6 @@ export default {
   login: `${prefix + URLEnum.TOKEN}/login`, // 登录
   refreshToken: `${prefix + URLEnum.TOKEN}/refreshToken`, // 续签
   logout: `${prefix + URLEnum.TOKEN}/logout`, // 退出登录
-  checkToken: `${prefix + URLEnum.TOKEN}/check` // 检查token是否有效
+  checkToken: `${prefix + URLEnum.TOKEN}/check`, // 检查token是否有效
+  forgetPassword: `${prefix + URLEnum.TOKEN}/forgotPassword` // 忘记密码
 }

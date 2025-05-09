@@ -45,9 +45,7 @@ abstract class AbstractMessageStrategy implements MessageStrategy {
         status: MessageStatusEnum.PENDING,
         type: this.msgType,
         body: messageBody,
-        messageMark: {
-          markStats: {}
-        }
+        messageMarks: {}
       },
       sendTime: new Date(currentTime).toISOString(),
       loading: false
