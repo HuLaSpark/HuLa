@@ -72,11 +72,12 @@
 
     <!-- 列表 -->
     <div id="centerList" class="h-full" :class="{ 'shadow-inner': page.shadow }">
-      <router-view v-slot="{ Component }">
+      <!-- <router-view v-slot="{ Component }">
         <keep-alive :include="['message', 'friendsList']">
           <component :is="Component" />
-        </keep-alive>
-      </router-view>
+        </keep-alive> -->
+      <!-- </router-view> -->
+      <slot />
     </div>
 
     <!-- 创建群聊穿梭框 -->
@@ -208,7 +209,7 @@ const handleCreateGroup = async () => {
 }
 
 const handleSearchFocus = () => {
-  router.push('/searchDetails')
+  router.push('/home/searchDetails')
   searchText.value = ''
 }
 

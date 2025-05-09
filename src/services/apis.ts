@@ -51,7 +51,7 @@ export default {
   /** 批量获取徽章信息 */
   getBadgesBatch: (badges: CacheBadgeReq[]) => POST<CacheBadgeItem[]>(urls.getBadgesBatch, { reqList: badges }),
   /** 获取消息列表 */
-  getMsgList: (params?: any) => GET<ListResponse<MessageType>>(urls.getMsgList, params),
+  getMsgList: (params?: any, abort?: AbortController) => GET<ListResponse<MessageType>>(urls.getMsgList, params, abort),
   /** 发送消息 */
   sendMsg: (data?: MessageReq) => POST<MessageType>(urls.sendMsg, data),
   /** 标记消息，点赞等 */
@@ -111,7 +111,8 @@ export default {
   /** 删除群成员 */
   removeGroupMember: (params: { roomId: string; uid: string }) => DELETE(urls.inviteGroupMember, params),
   /** 群组详情 */
-  groupDetail: (params: { id: string }) => GET<GroupDetailReq>(urls.groupDetail, params),
+  groupDetail: (params: { id: string }, signal?: AbortController) =>
+    GET<GroupDetailReq>(urls.groupDetail, params, signal),
   /** 群聊列表 */
   groupList: (params: { current: number; size: number }) => GET<PageInfo<GroupListReq>>(urls.groupList, params),
   /** 会话详情 */
@@ -163,13 +164,17 @@ export default {
   /** 获取验证码 */
   getCaptcha: () => GET<{ img: string; uuid: string }>(urls.getCaptcha),
   /** 发送验证码 */
-  sendCaptcha: (params: { email: string; code: string; uuid: string }) => POST<void>(urls.sendCaptcha, params),
+  sendCaptcha: (params: { email: string; code: string; uuid?: string; operationType?: 'register' | 'forgot' }) =>
+    POST<void>(urls.sendCaptcha, params),
   /** 检查token是否有效 */
   checkToken: () => POST<string>(urls.checkToken),
   /** 获取所有用户状态 */
   getAllUserState: () => GET<UserState[]>(urls.getAllUserState),
   /** 用户状态改变 */
   changeUserState: (userStateId: string) => POST(`${urls.changeUserState}/${userStateId}`),
+  /** 忘记密码 */
+  forgetPassword: (params: { email: string; code: string; uuid: string; password: string }) =>
+    POST<void>(urls.forgetPassword, params),
   /** 初始化配置 */
   initConfig: () => GET<ConfigType>(urls.initConfig),
   /** 获取七牛token */

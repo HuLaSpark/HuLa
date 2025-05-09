@@ -64,9 +64,14 @@ export enum MittEnum {
   TO_SEND_MSG = 'toSendMsg',
   /** 缩小窗口 */
   SHRINK_WINDOW = 'windowShrink',
-  /** 详情页面显示 */
+  /**
+   * @deprecated
+   *  详情页面显示 */
   DETAILS_SHOW = 'detailsShow',
-  /** 好友申请页面显示 */
+  /**
+   * @deprecated
+   * 好友申请页面显示
+   * */
   APPLY_SHOW = 'applyShow',
   /** 回复消息 */
   REPLY_MEG = 'replyMsg',

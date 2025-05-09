@@ -31,6 +31,26 @@
     </n-flex>
   </div>
 
+  <!-- 置顶公告提示 -->
+  <div
+    v-if="isGroup && topAnnouncement"
+    class="feishu-announcement"
+    :class="{ 'announcement-hover': isAnnouncementHover }"
+    @mouseenter="isAnnouncementHover = true"
+    @mouseleave="isAnnouncementHover = false">
+    <n-flex :wrap="false" class="w-full" align="center" justify="space-between">
+      <n-flex :wrap="false" align="center" class="pl-12px select-none" :size="6">
+        <svg class="size-16px flex-shrink-0"><use href="#Loudspeaker"></use></svg>
+        <div style="max-width: calc(100vw - 70vw)" class="line-clamp-1 text-(12px [--chat-text-color])">
+          {{ topAnnouncement.content }}
+        </div>
+      </n-flex>
+      <div class="flex-shrink-0 w-60px select-none" @click="handleViewAnnouncement">
+        <p class="text-(12px #13987f) cursor-pointer">查看全部</p>
+      </div>
+    </n-flex>
+  </div>
+
   <Transition name="chat-init" appear mode="out-in" @after-leave="handleTransitionComplete">
     <!-- 初次加载的骨架屏 -->
     <n-flex
@@ -85,6 +105,7 @@
           class="flex-y-center"
           :class="[
             item.message.type === MsgEnum.RECALL ? 'min-h-22px' : 'min-h-62px',
+            isGroup ? 'p-[14px_10px_14px_20px]' : 'chat-single p-[4px_10px_10px_20px]',
             isGroup ? 'p-[14px_10px_14px_20px]' : 'chat-single p-[4px_10px_10px_20px]',
             { 'active-reply': activeReply === item.message.id }
           ]">
@@ -740,8 +761,7 @@ const handleScrollDirectionChange = (direction: 'up' | 'down') => {
 // 取消表情反应
 const cancelReplyEmoji = (item: any, type: number) => {
   // 检查该表情是否已被当前用户标记
-  const markStats = item.message.messageMark?.markStats
-  const userMarked = markStats?.[String(type)]?.userMarked
+  const userMarked = item.message.messageMarks[String(type)]?.userMarked
 
   // 只有当用户已标记时才发送取消请求
   if (userMarked) {
@@ -760,20 +780,17 @@ const cancelReplyEmoji = (item: any, type: number) => {
  * @returns 计数值
  */
 const getEmojiCount = (item: any, emojiType: number): number => {
-  if (!item?.message?.messageMark?.markStats) return 0
+  if (!item?.message?.messageMarks) return 0
 
-  // markStats 是一个对象，键是表情类型，值是包含 count 和 userMarked 的对象
-  const markStats = item.message.messageMark.markStats
-
+  // messageMarks 是一个对象，键是表情类型，值是包含 count 和 userMarked 的对象
   // 如果存在该表情类型的统计数据，返回其计数值，否则返回0
-  return markStats[String(emojiType)]?.count || 0
+  return item.message.messageMarks[String(emojiType)]?.count || 0
 }
 
 // 处理表情回应
 const handleEmojiSelect = (context: { label: string; value: number; title: string }, item: any) => {
   // 检查该表情是否已被当前用户标记
-  const markStats = item.message.messageMark?.markStats
-  const userMarked = markStats?.[String(context.value)]?.userMarked
+  const userMarked = item.message.messageMarks[String(context.value)]?.userMarked
   // 只给没有标记过的图标标记
   if (!userMarked) {
     apis.markMsg({

@@ -148,7 +148,11 @@
             @click="createWebviewWindow('注册', 'register', 600, 600)">
             注册账号
           </div>
-          <div class="text-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px">忘记密码</div>
+          <div
+            class="text-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px"
+            @click="createWebviewWindow('忘记密码', 'forgetPassword', 600, 600)">
+            忘记密码
+          </div>
           <div
             v-if="!isCompatibility"
             @click="router.push('/proxy')"

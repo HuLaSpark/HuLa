@@ -45,7 +45,7 @@
         <!-- 该选项无提示时展示 -->
         <!-- 消息提示 -->
         <n-badge
-          v-if="item.url === 'message'"
+          v-if="item.url === 'home/message'"
           :max="99"
           :value="unReadMark.newMsgUnreadCount"
           :show="unReadMark.newMsgUnreadCount > 0">
@@ -56,7 +56,7 @@
         </n-badge>
         <!-- 好友提示 -->
         <n-badge
-          v-if="item.url === 'friendsList'"
+          v-if="item.url === 'home/friendsList'"
           :max="99"
           :value="unReadMark.newFriendUnreadCount"
           :show="unReadMark.newFriendUnreadCount > 0">

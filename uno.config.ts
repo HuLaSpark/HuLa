@@ -1,5 +1,5 @@
 import { defineConfig } from '@unocss/vite'
-import presetUno from '@unocss/preset-uno'
+import { presetWind3 } from '@unocss/preset-wind3'
 import transformerDirectives from '@unocss/transformer-directives' // 设置指令
 import transformerVariantGroup from '@unocss/transformer-variant-group' // 解决繁琐的多次写前缀的情况
 
@@ -9,7 +9,14 @@ export default defineConfig({
       exclude: ['node_modules', 'dist', '.git', '.vscode', 'public', 'build', 'config', 'src-tauri']
     }
   },
-  presets: [presetUno({ dark: 'class' })],
+  presets: [
+    presetWind3({
+      dark: {
+        dark: '[data-theme="dark"]',
+        light: '[data-theme="light"]'
+      }
+    })
+  ],
   transformers: [transformerDirectives(), transformerVariantGroup()],
   /** 自定义规则  */
   rules: [
@@ -48,8 +55,6 @@ export default defineConfig({
     'fixed-lb': 'fixed left-0 bottom-0',
     'fixed-rt': 'fixed right-0 top-0',
     'fixed-rb': 'fixed right-0 bottom-0',
-    'fixed-center': 'fixed-lt flex-center size-full',
-    'light:': '&[data-theme=light]',
-    'dark:': '&[data-theme=dark]'
+    'fixed-center': 'fixed-lt flex-center size-full'
   }
 })

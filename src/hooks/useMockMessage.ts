@@ -17,10 +17,10 @@ export const useMockMessage = () => {
    * 模拟消息生成
    * @param type 消息类型
    * @param body 消息体
-   * @param messageMark 互动信息
+   * @param messageMarks 互动信息
    * @returns 服务器格式消息
    */
-  const mockMessage = (type: number, body: any, messageMark?: any): MessageType => {
+  const mockMessage = (type: number, body: any, messageMarks?: any): MessageType => {
     const currentTimeStamp: number = Date.now()
     const random: number = Math.floor(Math.random() * 15)
     // 唯一id 后五位时间戳+随机数
@@ -40,12 +40,12 @@ export const useMockMessage = () => {
         sendTime: Number(currentTimeStamp),
         type: type,
         body,
-        messageMark: {
+        messageMarks: {
           likeCount: 0,
           userLike: 0,
           dislikeCount: 0,
           userDislike: 0,
-          ...messageMark
+          ...messageMarks
         },
         status: MessageStatusEnum.PENDING
       },

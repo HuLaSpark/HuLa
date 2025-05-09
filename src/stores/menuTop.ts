@@ -7,14 +7,14 @@ export const useMenuTopStore = defineStore(
     // 初始状态
     const initialState: OPT.L.Common[] = [
       {
-        url: 'message',
+        url: 'home/message',
         icon: 'message',
         iconAction: 'message-action',
         title: '消息列表',
         shortTitle: '消息'
       },
       {
-        url: 'friendsList',
+        url: 'home/friendsList',
         icon: 'avatar',
         iconAction: 'avatar-action',
         title: '好友列表',
