@@ -182,8 +182,14 @@ const getCommitLog = async (url: string, isNew = false) => {
 }
 
 const handleClose = async () => {
+  // 显示窗口
   const loginWindow = await WebviewWindow.getByLabel('login')
-  await loginWindow?.show()
+  if (loginWindow) {
+    await loginWindow.show()
+  } else {
+    const homeWindow = await WebviewWindow.getByLabel('home')
+    await homeWindow?.show()
+  }
   const current = WebviewWindow.getCurrent()
   current?.close()
 }
@@ -206,9 +212,15 @@ const dismissUpdate = async () => {
     return
   }
   settingStore.update.dismiss = newVersion.value
-  // 显示登录窗口
+  // 显示窗口
   const loginWindow = await WebviewWindow.getByLabel('login')
-  await loginWindow?.show()
+  if (loginWindow) {
+    await loginWindow.show()
+  } else {
+    const homeWindow = await WebviewWindow.getByLabel('home')
+    await homeWindow?.show()
+  }
+
   const checkUpdateWindow = await WebviewWindow.getByLabel('checkupdate')
   checkUpdateWindow?.close()
 }

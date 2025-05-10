@@ -11,6 +11,9 @@ const timerIds = new Map<TimerId, TimerInfo>()
 // 添加一个计数器来跟踪活动的定时器数量
 let activeTimers = 0
 
+/** 检查更新时间 30分 */
+export const CHECK_UPDATE_TIME = 30 * 60 * 1000
+
 // 检查并通知所有定时器是否完成
 const checkAllTimersCompleted = () => {
   if (activeTimers === 0) {

@@ -46,6 +46,10 @@ import { clearListener, initListener, readCountQueue } from '@/utils/ReadCountQu
 import { type } from '@tauri-apps/plugin-os'
 import { useConfigStore } from '@/stores/config'
 import { UserAttentionType } from '@tauri-apps/api/window'
+import { check } from '@tauri-apps/plugin-updater'
+import { getVersion } from '@tauri-apps/api/app'
+import { useSettingStore } from '@/stores/setting.ts'
+import { CHECK_UPDATE_TIME } from '@/workers/timer.worker.ts'
 
 const loadingPercentage = ref(10)
 const loadingText = ref('正在加载应用...')
@@ -100,10 +104,60 @@ const userStore = useUserStore()
 const chatStore = useChatStore()
 const cachedStore = useCachedStore()
 const configStore = useConfigStore()
+const settingStore = useSettingStore()
 const userUid = computed(() => userStore.userInfo.uid)
 // 清空未读消息
 // globalStore.unReadMark.newMsgUnreadCount = 0
 const shrinkStatus = ref(false)
+
+// 导入Web Worker
+const timerWorker = new Worker(new URL('@/workers/timer.worker.ts', import.meta.url))
+
+// 添加错误处理
+timerWorker.onerror = (error) => {
+  console.error('[Worker Error]', error)
+}
+
+// 监听 Worker 消息
+timerWorker.onmessage = (e) => {
+  const { type } = e.data
+  if (type === 'timeout') {
+    checkUpdate()
+  }
+}
+
+const checkUpdate = async () => {
+  await check()
+    .then(async (e) => {
+      if (!e?.available) {
+        return
+      }
+
+      const newVersion = e.version
+      const newMajorVersion = newVersion.substring(0, newVersion.indexOf('.'))
+      const newMiddleVersion = newVersion.substring(
+        newVersion.indexOf('.') + 1,
+        newVersion.lastIndexOf('.') === -1 ? newVersion.length : newVersion.lastIndexOf('.')
+      )
+      const currenVersion = await getVersion()
+      const currentMajorVersion = currenVersion.substring(0, currenVersion.indexOf('.'))
+      const currentMiddleVersion = currenVersion.substring(
+        currenVersion.indexOf('.') + 1,
+        currenVersion.lastIndexOf('.') === -1 ? currenVersion.length : currenVersion.lastIndexOf('.')
+      )
+      if (
+        newMajorVersion > currentMajorVersion ||
+        (newMajorVersion === currentMajorVersion && newMiddleVersion > currentMiddleVersion)
+      ) {
+        useMitt.emit(MittEnum.DO_UPDATE, { close: 'login' })
+      } else if (newVersion !== currenVersion && settingStore.update.dismiss !== newVersion) {
+        useMitt.emit(MittEnum.CHECK_UPDATE, { close: 'login' })
+      }
+    })
+    .catch((e) => {
+      console.log(e)
+    })
+}
 
 watch(
   () => userStore.isSign,
@@ -331,9 +385,23 @@ onMounted(async () => {
     const permission = await requestPermission()
     permissionGranted = permission === 'granted'
   }
+  setInterval(() => {
+    // 使用 Worker 来处理定时器
+    timerWorker.postMessage({
+      type: 'startTimer',
+      msgId: 'checkUpdate',
+      duration: 1000
+    })
+  }, CHECK_UPDATE_TIME)
 })
 
 onUnmounted(() => {
   clearListener()
+  // 清除Web Worker计时器
+  timerWorker.postMessage({
+    type: 'clearTimer',
+    msgId: 'checkUpdate'
+  })
+  timerWorker.terminate()
 })
 </script>
