@@ -101,7 +101,7 @@ const handleLoginSuccess = async () => {
   scanStatus.value.show = true
   loadText.value = '登录中...'
   delay(async () => {
-    await createWebviewWindow('HuLa', 'home', 960, 720, 'login', undefined, 440)
+    await createWebviewWindow('HuLa', 'home', 960, 720, 'login', true, undefined, 440)
     await setLoginState()
   }, 1000)
 }
