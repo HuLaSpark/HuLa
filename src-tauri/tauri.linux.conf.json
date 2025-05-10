@@ -81,14 +81,16 @@
         "decorations": false
       },
       {
-        "label": "update",
-        "url": "/update",
+        "label": "checkupdate",
+        "url": "/checkupdate",
         "resizable": false,
         "center": true,
+        "closable": false,
+        "width": 500,
+        "height": 600,
         "visible": false,
-        "width": 150,
-        "height": 150,
-        "decorations": false
+        "decorations": false,
+        "hiddenTitle": true
       }
     ],
     "security": {

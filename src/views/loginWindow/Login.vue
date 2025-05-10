@@ -179,6 +179,9 @@ import { useUserStatusStore } from '@/stores/userStatus'
 import { clearListener } from '@/utils/ReadCountQueue'
 import { useGlobalStore } from '@/stores/global'
 import { type } from '@tauri-apps/plugin-os'
+import { check } from '@tauri-apps/plugin-updater'
+import { getVersion } from '@tauri-apps/api/app'
+import { MittEnum } from '@/enums'
 
 const isCompatibility = computed(() => type() === 'windows' || type() === 'linux')
 const settingStore = useSettingStore()
@@ -433,6 +436,39 @@ onBeforeMount(async () => {
   }
 })
 
+const checkUpdate = async () => {
+  await check()
+    .then(async (e) => {
+      if (!e?.available) {
+        return
+      }
+
+      const newVersion = e.version
+      const newMajorVersion = newVersion.substring(0, newVersion.indexOf('.'))
+      const newMiddleVersion = newVersion.substring(
+        newVersion.indexOf('.') + 1,
+        newVersion.lastIndexOf('.') === -1 ? newVersion.length : newVersion.lastIndexOf('.')
+      )
+      const currenVersion = await getVersion()
+      const currentMajorVersion = currenVersion.substring(0, currenVersion.indexOf('.'))
+      const currentMiddleVersion = currenVersion.substring(
+        currenVersion.indexOf('.') + 1,
+        currenVersion.lastIndexOf('.') === -1 ? currenVersion.length : currenVersion.lastIndexOf('.')
+      )
+      if (
+        newMajorVersion > currentMajorVersion ||
+        (newMajorVersion === currentMajorVersion && newMiddleVersion > currentMiddleVersion)
+      ) {
+        useMitt.emit(MittEnum.DO_UPDATE, { close: 'login' })
+      } else if (newVersion !== currenVersion && settingStore.update.dismiss !== newVersion) {
+        useMitt.emit(MittEnum.CHECK_UPDATE, { close: 'login' })
+      }
+    })
+    .catch((e) => {
+      console.log(e)
+    })
+}
+
 onMounted(async () => {
   // 只有在需要登录的情况下才显示登录窗口
   if (!isJumpDirectly.value) {
@@ -453,6 +489,7 @@ onMounted(async () => {
 
   window.addEventListener('click', closeMenu, true)
   window.addEventListener('keyup', enterKey)
+  await checkUpdate()
 })
 
 onUnmounted(() => {

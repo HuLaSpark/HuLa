@@ -36,6 +36,9 @@ export const useSettingStore = defineStore(StoresEnum.SETTING, {
       shadow: true,
       fonts: 'PingFang',
       blur: true
+    },
+    update: {
+      dismiss: ''
     }
   }),
   actions: {

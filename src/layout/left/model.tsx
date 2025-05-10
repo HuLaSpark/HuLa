@@ -16,7 +16,6 @@ import {
 import { FormInst } from 'naive-ui'
 import { emit } from '@tauri-apps/api/event'
 import { EventEnum } from '@/enums'
-import pkg from '~/package.json'
 import { handRelativeTime } from '@/utils/Day.ts'
 import './style.scss'
 import { type } from '@tauri-apps/plugin-os'
@@ -28,6 +27,7 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { confirm } from '@tauri-apps/plugin-dialog'
 import apis from '@/services/apis'
 import { useLogin } from '@/hooks/useLogin'
+import { getVersion } from '@tauri-apps/api/app'
 
 const { logout, resetLoginState } = useLogin()
 const formRef = ref<FormInst | null>()
@@ -132,14 +132,12 @@ export const LockScreen = defineComponent(() => {
  * 检查更新弹窗
  */
 export const CheckUpdate = defineComponent(() => {
-  const url = ref(
-    `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/releases/tags/v${pkg.version}?access_token=${import.meta.env.VITE_GITEE_TOKEN}`
-  )
   /** 项目提交日志记录 */
   const commitLog = ref<{ message: string; icon: string }[]>([])
   const newCommitLog = ref<{ message: string; icon: string }[]>([])
   const text = ref('检查更新')
-  const newVersion = ref()
+  const currentVersion = ref('')
+  const newVersion = ref('')
   const loading = ref(false)
   const checkLoading = ref(false)
   const updating = ref(false)
@@ -175,7 +173,7 @@ export const CheckUpdate = defineComponent(() => {
   /* 记录检测更新的版本 */
   //let lastVersion: string | null = null
 
-  const getCommitLog = (url: string, isNew = false) => {
+  const getCommitLog = async (url: string, isNew = false) => {
     fetch(url).then((res) => {
       if (!res.ok) {
         commitLog.value = [{ message: '获取更新日志失败，请配置token后再试', icon: 'cloudError' }]
@@ -209,7 +207,7 @@ export const CheckUpdate = defineComponent(() => {
     })
   }
 
-  const handleUpdate = async () => {
+  const doUpdate = async () => {
     if (!(await confirm('确定更新吗'))) {
       return
     }
@@ -256,36 +254,16 @@ export const CheckUpdate = defineComponent(() => {
 
   const checkUpdate = async () => {
     checkLoading.value = true
-
-    const url = `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/tags?access_token=${import.meta.env.VITE_GITEE_TOKEN}&sort=name&direction=desc&page=1&per_page=1`
-
     await check()
       .then((e) => {
         if (!e?.available) {
           checkLoading.value = false
           return
         }
+        newVersion.value = e.version
         // 检查版本之间不同的提交信息和提交日期
-        fetch(url).then((res) => {
-          res
-            .json()
-            .then(async () => {
-              await nextTick(() => {
-                let url = `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/tags?access_token=${import.meta.env.VITE_GITEE_TOKEN}&sort=updated&direction=desc&page=1&per_page=1`
-                fetch(url).then((res) => {
-                  res.json().then(async (data) => {
-                    newVersion.value = data[0].name.replace('v', '')
-                    url = `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/releases/tags/v${newVersion.value}?access_token=${import.meta.env.VITE_GITEE_TOKEN}`
-                    getCommitLog(url, true)
-                  })
-                })
-              })
-            })
-            .catch(() => {
-              checkLoading.value = false
-              window.$message.error('请检查配置，配置好token后再试')
-            })
-        })
+        const url = `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/releases/tags/v${newVersion.value}?access_token=${import.meta.env.VITE_GITEE_TOKEN}`
+        getCommitLog(url, true)
         text.value = '立即更新'
         checkLoading.value = false
       })
@@ -295,13 +273,15 @@ export const CheckUpdate = defineComponent(() => {
       })
   }
 
-  const init = () => {
+  const init = async () => {
     loading.value = true
+    currentVersion.value = await getVersion()
   }
 
   onMounted(async () => {
-    init()
-    getCommitLog(url.value)
+    await init()
+    const url = `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/releases/tags/v${currentVersion.value}?access_token=${import.meta.env.VITE_GITEE_TOKEN}`
+    await getCommitLog(url)
     await checkUpdate()
   })
   return () => (
@@ -332,7 +312,7 @@ export const CheckUpdate = defineComponent(() => {
               <NFlex align={'center'} size={10}>
                 <NFlex align={'center'} size={10}>
                   <p>当前版本:</p>
-                  <p class="text-(20px #909090) font-500">{pkg.version}</p>
+                  <p class="text-(20px #909090) font-500">{currentVersion.value}</p>
                 </NFlex>
 
                 {newVersion.value ? (
@@ -391,7 +371,9 @@ export const CheckUpdate = defineComponent(() => {
                         <use href={'#RightArrow'}></use>
                       </svg>
 
-                      <span class="p-[4px_8px] w-fit bg-#f1f1f1 rounded-6px text-(12px #999)">{pkg.version}</span>
+                      <span class="p-[4px_8px] w-fit bg-#f1f1f1 rounded-6px text-(12px #999)">
+                        {currentVersion.value}
+                      </span>
                     </NFlex>
                   </NFlex>
                 </>
@@ -417,7 +399,7 @@ export const CheckUpdate = defineComponent(() => {
             <NFlex justify={'end'}>
               <NButton
                 loading={checkLoading.value}
-                onClick={text.value === '立即更新' ? handleUpdate : checkUpdate}
+                onClick={text.value === '立即更新' ? doUpdate : checkUpdate}
                 secondary
                 type={text.value === '立即更新' ? 'primary' : 'tertiary'}>
                 {text.value}

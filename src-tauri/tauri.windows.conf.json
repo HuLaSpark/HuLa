@@ -103,14 +103,13 @@
         "visible": false
       },
       {
-        "label": "update",
-        "url": "/update",
-        "fullscreen": false,
+        "label": "checkupdate",
+        "url": "/checkupdate",
         "resizable": false,
         "center": true,
         "closable": false,
-        "width": 490,
-        "height": 335,
+        "width": 500,
+        "height": 600,
         "visible": false,
         "decorations": false,
         "hiddenTitle": true

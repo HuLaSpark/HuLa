@@ -85,17 +85,15 @@
         "visible": false
       },
       {
-        "label": "update",
-        "url": "/update",
-        "fullscreen": false,
+        "label": "checkupdate",
+        "url": "/checkupdate",
         "resizable": false,
         "center": true,
         "closable": false,
-        "width": 490,
-        "height": 335,
-        "skipTaskbar": true,
+        "width": 500,
+        "height": 600,
         "visible": false,
-        "titleBarStyle": "Overlay",
+        "decorations": false,
         "hiddenTitle": true
       }
     ],
