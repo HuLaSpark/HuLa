@@ -1,4 +1,4 @@
-use tauri::{LogicalSize, Manager, Runtime, WindowEvent};
+use tauri::{Manager, Runtime, WindowEvent};
 use tauri_plugin_autostart::MacosLauncher;
 pub trait CustomInit {
     fn init_plugin(self) -> Self;

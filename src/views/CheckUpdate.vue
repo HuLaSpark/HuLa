@@ -1,5 +1,16 @@
 <template>
-  <div data-tauri-drag-region class="bg-[--bg-popover] w-500px h-full mt-10px p-6px box-border flex flex-col">
+  <div data-tauri-drag-region class="bg-[--bg-popover] w-500px h-full p-6px box-border flex flex-col">
+    <div
+      v-if="type() === 'macos'"
+      :onclick="handleClose"
+      class="mac-close relative size-13px shadow-inner bg-#ed6a5eff rounded-50% select-none">
+      <svg class="hidden size-7px color-#000 font-bold select-none absolute top-3px left-3px">
+        <use href="#close"></use>
+      </svg>
+    </div>
+    <svg v-else :onclick="handleClose" class="w-12px h-12px ml-a cursor-pointer select-none">
+      <use href="#close"></use>
+    </svg>
     <NFlex data-tauri-drag-region v-if="loading" vertical justify="center" size="small" class="mt-6px">
       <NSkeleton text :repeat="1" class="rounded-8px h-30px w-120px" />
       <NSkeleton text :repeat="1" class="rounded-8px h-300px" />
@@ -94,6 +105,7 @@ import { getVersion } from '@tauri-apps/api/app'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
+import { type } from '@tauri-apps/plugin-os'
 
 const settingStore = useSettingStore()
 const { createWebviewWindow } = useWindow()
@@ -165,6 +177,11 @@ const getCommitLog = async (url: string, isNew = false) => {
       })
     })
   })
+}
+
+const handleClose = async () => {
+  const current = await WebviewWindow.getCurrent()
+  current?.close()
 }
 
 const doUpdate = async () => {
