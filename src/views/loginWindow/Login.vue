@@ -183,9 +183,7 @@ import { useUserStatusStore } from '@/stores/userStatus'
 import { clearListener } from '@/utils/ReadCountQueue'
 import { useGlobalStore } from '@/stores/global'
 import { type } from '@tauri-apps/plugin-os'
-import { check } from '@tauri-apps/plugin-updater'
-import { getVersion } from '@tauri-apps/api/app'
-import { MittEnum } from '@/enums'
+import { useCheckUpdate } from '@/hooks/useCheckUpdate'
 
 const isCompatibility = computed(() => type() === 'windows' || type() === 'linux')
 const settingStore = useSettingStore()
@@ -218,6 +216,7 @@ const moreShow = ref(false)
 const isAutoLogin = ref(login.value.autoLogin && TOKEN.value && REFRESH_TOKEN.value)
 const { setLoginState } = useLogin()
 const { createWebviewWindow } = useWindow()
+const { checkUpdate, CHECK_UPDATE_TIME } = useCheckUpdate()
 
 const accountPH = ref('邮箱/HuLa账号')
 const passwordPH = ref('输入HuLa密码')
@@ -238,7 +237,7 @@ timerWorker.onerror = (error) => {
 timerWorker.onmessage = (e) => {
   const { type } = e.data
   if (type === 'timeout') {
-    checkUpdate()
+    checkUpdate('login')
   }
 }
 
@@ -457,39 +456,6 @@ onBeforeMount(async () => {
   }
 })
 
-const checkUpdate = async () => {
-  await check()
-    .then(async (e) => {
-      if (!e?.available) {
-        return
-      }
-
-      const newVersion = e.version
-      const newMajorVersion = newVersion.substring(0, newVersion.indexOf('.'))
-      const newMiddleVersion = newVersion.substring(
-        newVersion.indexOf('.') + 1,
-        newVersion.lastIndexOf('.') === -1 ? newVersion.length : newVersion.lastIndexOf('.')
-      )
-      const currenVersion = await getVersion()
-      const currentMajorVersion = currenVersion.substring(0, currenVersion.indexOf('.'))
-      const currentMiddleVersion = currenVersion.substring(
-        currenVersion.indexOf('.') + 1,
-        currenVersion.lastIndexOf('.') === -1 ? currenVersion.length : currenVersion.lastIndexOf('.')
-      )
-      if (
-        newMajorVersion > currentMajorVersion ||
-        (newMajorVersion === currentMajorVersion && newMiddleVersion > currentMiddleVersion)
-      ) {
-        useMitt.emit(MittEnum.DO_UPDATE, { close: 'login' })
-      } else if (newVersion !== currenVersion && settingStore.update.dismiss !== newVersion) {
-        useMitt.emit(MittEnum.CHECK_UPDATE)
-      }
-    })
-    .catch((e) => {
-      console.log(e)
-    })
-}
-const CHECK_UPDATE_TIME = 30 * 60 * 1000
 onMounted(async () => {
   // 只有在需要登录的情况下才显示登录窗口
   if (!isJumpDirectly.value) {
@@ -510,7 +476,7 @@ onMounted(async () => {
 
   window.addEventListener('click', closeMenu, true)
   window.addEventListener('keyup', enterKey)
-  await checkUpdate()
+  await checkUpdate('login')
   setInterval(() => {
     // 使用 Worker 来处理定时器
     timerWorker.postMessage({

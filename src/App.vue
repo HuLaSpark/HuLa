@@ -134,12 +134,6 @@ onMounted(async () => {
     // 最后调用登出方法(这会创建登录窗口)
     await logout()
   })
-  useMitt.on(MittEnum.CHECK_UPDATE, async () => {
-    const checkUpdateWindow = await WebviewWindow.getByLabel('checkupdate')
-    if (checkUpdateWindow) {
-      await checkUpdateWindow.show()
-    }
-  })
   useMitt.on(MittEnum.DO_UPDATE, async (event) => {
     await createWebviewWindow('更新', 'update', 490, 335, '', false, 490, 335, false, true)
     const closeWindow = await WebviewWindow.getByLabel(event.close)

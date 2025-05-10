@@ -1,32 +1,22 @@
 <template>
-  <div data-tauri-drag-region class="bg-[--bg-popover] w-500px h-full p-6px box-border flex flex-col">
-    <div
-      v-if="type() === 'macos'"
-      :onclick="handleClose"
-      class="mac-close relative size-13px shadow-inner bg-#ed6a5eff rounded-50% select-none">
-      <svg class="hidden size-7px color-#000 font-bold select-none absolute top-3px left-3px">
-        <use href="#close"></use>
-      </svg>
-    </div>
-    <div v-else :onclick="handleClose" class="size-13px ml-a">
-      <svg class="w-12px h-12px cursor-pointer select-none">
-        <use href="#close"></use>
-      </svg>
-    </div>
-    <n-flex data-tauri-drag-region v-if="loading" vertical justify="center" size="small" class="mt-6px">
+  <div class="size-full bg-[--bg-popover] select-none cursor-default">
+    <!--顶部操作栏-->
+    <ActionBar :max-w="false" :min-w="false" :shrink="false" />
+
+    <n-flex data-tauri-drag-region v-if="loading" vertical justify="center" class="mt-6px box-border px-12px">
       <n-skeleton text :repeat="1" class="rounded-8px h-30px w-120px" />
       <n-skeleton text :repeat="1" class="rounded-8px h-300px" />
       <n-skeleton text :repeat="1" class="rounded-8px w-80px h-30px m-[0_0_0_auto]" />
     </n-flex>
-    <n-flex data-tauri-drag-region v-else size="small" vertical justify="center" class="p-14px box-border select-none">
-      <n-flex justify="space-between" align="center" size="small">
-        <n-flex align="center" size="small">
-          <n-flex align="center" size="small">
-            <p>当前版本:</p>
+    <n-flex data-tauri-drag-region v-else vertical justify="center" class="p-14px box-border select-none">
+      <n-flex justify="space-between" align="center">
+        <n-flex align="center">
+          <n-flex align="center">
+            <p class="text-[--text-color]">当前版本:</p>
             <p class="text-(20px #909090) font-500">{{ currentVersion }}</p>
           </n-flex>
 
-          <n-flex v-if="newVersion" align="center" size="small" class="relative">
+          <n-flex v-if="newVersion" align="center" class="relative">
             <svg class="w-24px h-24px select-none color-#ccc">
               <use href="#RightArrow"></use>
             </svg>
@@ -50,48 +40,65 @@
           </div>
         </n-flex>
       </n-flex>
-      <p class="text-(14px #909090)">版本更新日志</p>
-      <n-scrollbar class="max-h-460px p-[0_10px] box-border">
-        <div v-if="newCommitLog.length > 0">
-          <div class="p-[4px_8px] mt-4px w-fit bg-#f6dfe3ff rounded-6px text-(12px #ce304f)">
-            {{ newVersion }}
+      <n-flex justify="space-between" align="center" class="mb-2px">
+        <p class="text-(14px #909090)">版本更新日志</p>
+        <n-button text @click="toggleLogVisible">
+          <n-flex align="center">
+            <span class="text-(12px #13987f)">{{ logVisible ? '收起' : '展开' }}</span>
+            <svg
+              class="w-16px h-16px select-none color-#13987f ml-2px transition-transform duration-300"
+              :class="{ 'rotate-180': !logVisible }">
+              <use href="#ArrowDown"></use>
+            </svg>
+          </n-flex>
+        </n-button>
+      </n-flex>
+      <div
+        v-show="logVisible"
+        class="overflow-hidden transition-all duration-300"
+        :class="logVisible ? 'max-h-460px' : 'max-h-0'">
+        <n-scrollbar class="p-[0_10px] box-border">
+          <div v-if="newCommitLog.length > 0">
+            <div class="p-[4px_8px] mt-4px w-fit bg-#f6dfe3ff rounded-6px text-(12px #ce304f)">
+              {{ newVersion }}
+            </div>
+
+            <n-timeline class="p-16px box-border">
+              <n-timeline-item
+                data-tauri-drag-region
+                v-for="(log, index) in newCommitLog"
+                :key="index"
+                :content="log.message">
+                <template #icon>
+                  <n-icon :size="32">
+                    <img class="size-32px" :src="`/emoji/${log.icon}.webp`" alt="" />
+                  </n-icon>
+                </template>
+              </n-timeline-item>
+            </n-timeline>
+
+            <n-flex>
+              <n-flex vertical :size="20">
+                <svg class="m-[4px_40px] w-24px h-24px select-none rotate-270 color-#ccc">
+                  <use href="#RightArrow"></use>
+                </svg>
+
+                <span class="p-[4px_8px] w-fit bg-#f1f1f1 rounded-6px text-(12px #999)">{{ currentVersion }}</span>
+              </n-flex>
+            </n-flex>
           </div>
 
           <n-timeline class="p-16px box-border">
-            <n-timeline-item
-              data-tauri-drag-region
-              v-for="(log, index) in newCommitLog"
-              :key="index"
-              :content="log.message">
+            <n-timeline-item v-for="(log, index) in commitLog" :key="index" :content="log.message">
               <template #icon>
-                <n-icon size="{32}">
+                <n-icon :size="32">
                   <img class="size-32px" :src="`/emoji/${log.icon}.webp`" alt="" />
                 </n-icon>
               </template>
             </n-timeline-item>
           </n-timeline>
-
-          <n-flex>
-            <n-flex vertical :size="20">
-              <svg class="m-[4px_40px] w-24px h-24px select-none rotate-270 color-#ccc">
-                <use href="#RightArrow"></use>
-              </svg>
-
-              <span class="p-[4px_8px] w-fit bg-#f1f1f1 rounded-6px text-(12px #999)">{{ currentVersion }}</span>
-            </n-flex>
-          </n-flex>
-        </div>
-
-        <n-timeline class="p-16px box-border">
-          <n-timeline-item v-for="(log, index) in commitLog" :key="index" :content="log.message">
-            <template #icon>
-              <n-icon size="{32}">
-                <img class="size-32px" :src="`/emoji/${log.icon}.webp`" alt="" />
-              </n-icon>
-            </template>
-          </n-timeline-item>
-        </n-timeline>
-      </n-scrollbar>
+        </n-scrollbar>
+      </div>
       <n-flex justify="end" class="mt-10px">
         <n-button :onclick="dismissUpdate" secondary> 忽略更新</n-button>
         <n-button :onclick="doUpdate" secondary type="primary"> 立即更新</n-button>
@@ -99,18 +106,18 @@
     </n-flex>
   </div>
 </template>
-<script setup lang="tsx">
+<script setup lang="ts">
 import { confirm } from '@tauri-apps/plugin-dialog'
 import { check } from '@tauri-apps/plugin-updater'
-import { handRelativeTime } from '../utils/Day.ts'
+import { handRelativeTime } from '@/utils/Day.ts'
 import { getVersion } from '@tauri-apps/api/app'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
-import { type } from '@tauri-apps/plugin-os'
+import { currentMonitor, PhysicalPosition } from '@tauri-apps/api/window'
 
 const settingStore = useSettingStore()
-const { createWebviewWindow } = useWindow()
+const { createWebviewWindow, resizeWindow } = useWindow()
 /** 项目提交日志记录 */
 const commitLog = ref<{ message: string; icon: string }[]>([])
 const newCommitLog = ref<{ message: string; icon: string }[]>([])
@@ -118,6 +125,8 @@ const text = ref('检查更新')
 const currentVersion = ref('')
 const newVersion = ref('')
 const loading = ref(false)
+/** 控制日志是否可见 */
+const logVisible = ref(false)
 /** 版本更新日期 */
 const versionTime = ref('')
 const newVersionTime = ref('')
@@ -181,11 +190,6 @@ const getCommitLog = async (url: string, isNew = false) => {
   })
 }
 
-const handleClose = async () => {
-  const current = WebviewWindow.getCurrent()
-  current?.close()
-}
-
 const doUpdate = async () => {
   if (!(await confirm('确定更新吗'))) {
     return
@@ -225,6 +229,50 @@ const checkUpdate = async () => {
     })
 }
 
+const toggleLogVisible = async () => {
+  logVisible.value = !logVisible.value
+
+  // 获取当前窗口实例
+  const checkUpdateWindow = await WebviewWindow.getByLabel('checkupdate')
+  if (!checkUpdateWindow) return
+
+  // 根据日志显示状态调整窗口高度
+  if (logVisible.value) {
+    // 展开日志，调整窗口高度为600px
+    await resizeWindow('checkupdate', 500, 620)
+  } else {
+    // 收起日志，调整窗口高度为420px
+    await resizeWindow('checkupdate', 500, 150)
+  }
+
+  // 调整窗口位置到右下角，保持右下角位置不变
+  setTimeout(moveWindowToBottomRight, 10)
+}
+
+// 设置窗口位置到屏幕右下角
+const moveWindowToBottomRight = async () => {
+  try {
+    const checkUpdateWindow = await WebviewWindow.getByLabel('checkupdate')
+    if (!checkUpdateWindow) return
+
+    // 获取当前显示器信息
+    const monitor = await currentMonitor()
+    if (!monitor) return
+
+    // 获取窗口大小
+    const size = await checkUpdateWindow.outerSize()
+
+    // 计算右下角位置（留出一定边距）
+    const x = Math.floor(monitor.size.width - size.width)
+    const y = Math.floor(monitor.size.height - size.height - 50)
+
+    // 移动窗口到右下角
+    await checkUpdateWindow.setPosition(new PhysicalPosition(x, y))
+  } catch (error) {
+    console.error('移动窗口失败:', error)
+  }
+}
+
 const init = async () => {
   loading.value = true
   currentVersion.value = await getVersion()
@@ -235,9 +283,9 @@ onMounted(async () => {
   const url = `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/releases/tags/v${currentVersion.value}?access_token=${import.meta.env.VITE_GITEE_TOKEN}`
   await getCommitLog(url)
   await checkUpdate()
+
+  // 窗口加载完成后移动到右下角
+  // 延迟一小段时间确保窗口已完全加载
+  setTimeout(moveWindowToBottomRight, 10)
 })
 </script>
-
-<style scoped lang="scss">
-@use '@/styles/scss/global/login-bg';
-</style>

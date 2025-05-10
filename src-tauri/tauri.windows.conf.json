@@ -105,11 +105,12 @@
       {
         "label": "checkupdate",
         "url": "/checkupdate",
-        "resizable": false,
-        "center": true,
-        "closable": false,
+        "resizable": true,
         "width": 500,
-        "height": 600,
+        "height": 150,
+        "alwaysOnTop": true,
+        "focus": true,
+        "skipTaskbar": true,
         "visible": false,
         "decorations": false,
         "hiddenTitle": true

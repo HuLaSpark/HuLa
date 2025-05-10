@@ -98,7 +98,7 @@ export enum MittEnum {
   CREATE_GROUP = 'createGroup',
   /** 更新提示 */
   CHECK_UPDATE = 'checkUpdate',
-  /** 更新提示 */
+  /** 强制更新 */
   DO_UPDATE = 'doUpdate'
 }
 

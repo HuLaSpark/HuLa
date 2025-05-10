@@ -46,9 +46,7 @@ import { clearListener, initListener, readCountQueue } from '@/utils/ReadCountQu
 import { type } from '@tauri-apps/plugin-os'
 import { useConfigStore } from '@/stores/config'
 import { UserAttentionType } from '@tauri-apps/api/window'
-import { check } from '@tauri-apps/plugin-updater'
-import { getVersion } from '@tauri-apps/api/app'
-import { useSettingStore } from '@/stores/setting.ts'
+import { useCheckUpdate } from '@/hooks/useCheckUpdate'
 
 const loadingPercentage = ref(10)
 const loadingText = ref('正在加载应用...')
@@ -103,7 +101,7 @@ const userStore = useUserStore()
 const chatStore = useChatStore()
 const cachedStore = useCachedStore()
 const configStore = useConfigStore()
-const settingStore = useSettingStore()
+const { checkUpdate, CHECK_UPDATE_TIME } = useCheckUpdate()
 const userUid = computed(() => userStore.userInfo.uid)
 // 清空未读消息
 // globalStore.unReadMark.newMsgUnreadCount = 0
@@ -121,41 +119,8 @@ timerWorker.onerror = (error) => {
 timerWorker.onmessage = (e) => {
   const { type } = e.data
   if (type === 'timeout') {
-    checkUpdate()
+    checkUpdate('home')
   }
-}
-
-const checkUpdate = async () => {
-  await check()
-    .then(async (e) => {
-      if (!e?.available) {
-        return
-      }
-
-      const newVersion = e.version
-      const newMajorVersion = newVersion.substring(0, newVersion.indexOf('.'))
-      const newMiddleVersion = newVersion.substring(
-        newVersion.indexOf('.') + 1,
-        newVersion.lastIndexOf('.') === -1 ? newVersion.length : newVersion.lastIndexOf('.')
-      )
-      const currenVersion = await getVersion()
-      const currentMajorVersion = currenVersion.substring(0, currenVersion.indexOf('.'))
-      const currentMiddleVersion = currenVersion.substring(
-        currenVersion.indexOf('.') + 1,
-        currenVersion.lastIndexOf('.') === -1 ? currenVersion.length : currenVersion.lastIndexOf('.')
-      )
-      if (
-        newMajorVersion > currentMajorVersion ||
-        (newMajorVersion === currentMajorVersion && newMiddleVersion > currentMiddleVersion)
-      ) {
-        useMitt.emit(MittEnum.DO_UPDATE, { close: 'home' })
-      } else if (newVersion !== currenVersion && settingStore.update.dismiss !== newVersion) {
-        useMitt.emit(MittEnum.CHECK_UPDATE)
-      }
-    })
-    .catch((e) => {
-      console.log(e)
-    })
 }
 
 watch(
@@ -371,7 +336,6 @@ onBeforeMount(async () => {
   await contactStore.getGroupChatList()
 })
 
-const CHECK_UPDATE_TIME = 30 * 60 * 1000
 onMounted(async () => {
   // 初始化配置
   if (!localStorage.getItem('config')) {
