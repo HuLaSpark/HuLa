@@ -13,20 +13,20 @@
         <use href="#close"></use>
       </svg>
     </div>
-    <NFlex data-tauri-drag-region v-if="loading" vertical justify="center" size="small" class="mt-6px">
-      <NSkeleton text :repeat="1" class="rounded-8px h-30px w-120px" />
-      <NSkeleton text :repeat="1" class="rounded-8px h-300px" />
-      <NSkeleton text :repeat="1" class="rounded-8px w-80px h-30px m-[0_0_0_auto]" />
-    </NFlex>
-    <NFlex data-tauri-drag-region v-else size="small" vertical justify="center" class="p-14px box-border select-none">
-      <NFlex justify="space-between" align="center" size="small">
-        <NFlex align="center" size="small">
-          <NFlex align="center" size="small">
+    <n-flex data-tauri-drag-region v-if="loading" vertical justify="center" size="small" class="mt-6px">
+      <n-skeleton text :repeat="1" class="rounded-8px h-30px w-120px" />
+      <n-skeleton text :repeat="1" class="rounded-8px h-300px" />
+      <n-skeleton text :repeat="1" class="rounded-8px w-80px h-30px m-[0_0_0_auto]" />
+    </n-flex>
+    <n-flex data-tauri-drag-region v-else size="small" vertical justify="center" class="p-14px box-border select-none">
+      <n-flex justify="space-between" align="center" size="small">
+        <n-flex align="center" size="small">
+          <n-flex align="center" size="small">
             <p>当前版本:</p>
             <p class="text-(20px #909090) font-500">{{ currentVersion }}</p>
-          </NFlex>
+          </n-flex>
 
-          <NFlex v-if="newVersion" align="center" size="small" class="relative">
+          <n-flex v-if="newVersion" align="center" size="small" class="relative">
             <svg class="w-24px h-24px select-none color-#ccc">
               <use href="#RightArrow"></use>
             </svg>
@@ -36,9 +36,9 @@
             <span class="absolute top--10px right--44px p-[4px_8px] bg-#f6dfe3ff rounded-6px text-(12px #ce304f)">
               new
             </span>
-          </NFlex>
-        </NFlex>
-        <NFlex align="center" size="medium">
+          </n-flex>
+        </n-flex>
+        <n-flex align="center" size="medium">
           <div v-if="newVersionTime">
             <span class="text-(12px #909090)">新版本发布日期：</span>
             <span class="text-(12px #13987f)">{{ handRelativeTime(newVersionTime) }}</span>
@@ -48,55 +48,55 @@
             <span class="text-(12px #909090)">版本发布日期：</span>
             <span class="text-(12px #13987f)">{{ handRelativeTime(versionTime) }}</span>
           </div>
-        </NFlex>
-      </NFlex>
+        </n-flex>
+      </n-flex>
       <p class="text-(14px #909090)">版本更新日志</p>
-      <NScrollbar class="max-h-460px p-[0_10px] box-border">
+      <n-scrollbar class="max-h-460px p-[0_10px] box-border">
         <div v-if="newCommitLog.length > 0">
           <div class="p-[4px_8px] mt-4px w-fit bg-#f6dfe3ff rounded-6px text-(12px #ce304f)">
             {{ newVersion }}
           </div>
 
-          <NTimeline class="p-16px box-border">
-            <NTimelineItem
+          <n-timeline class="p-16px box-border">
+            <n-timeline-item
               data-tauri-drag-region
               v-for="(log, index) in newCommitLog"
               :key="index"
               :content="log.message">
               <template #icon>
-                <NIcon size="{32}">
+                <n-icon size="{32}">
                   <img class="size-32px" :src="`/emoji/${log.icon}.webp`" alt="" />
-                </NIcon>
+                </n-icon>
               </template>
-            </NTimelineItem>
-          </NTimeline>
+            </n-timeline-item>
+          </n-timeline>
 
-          <NFlex>
-            <NFlex vertical :size="20">
+          <n-flex>
+            <n-flex vertical :size="20">
               <svg class="m-[4px_40px] w-24px h-24px select-none rotate-270 color-#ccc">
                 <use href="#RightArrow"></use>
               </svg>
 
               <span class="p-[4px_8px] w-fit bg-#f1f1f1 rounded-6px text-(12px #999)">{{ currentVersion }}</span>
-            </NFlex>
-          </NFlex>
+            </n-flex>
+          </n-flex>
         </div>
 
-        <NTimeline class="p-16px box-border">
-          <NTimelineItem v-for="(log, index) in commitLog" :key="index" :content="log.message">
+        <n-timeline class="p-16px box-border">
+          <n-timeline-item v-for="(log, index) in commitLog" :key="index" :content="log.message">
             <template #icon>
-              <NIcon size="{32}">
+              <n-icon size="{32}">
                 <img class="size-32px" :src="`/emoji/${log.icon}.webp`" alt="" />
-              </NIcon>
+              </n-icon>
             </template>
-          </NTimelineItem>
-        </NTimeline>
-      </NScrollbar>
-      <NFlex justify="end" class="mt-10px">
-        <NButton :onclick="dismissUpdate" secondary> 忽略更新</NButton>
-        <NButton :onclick="doUpdate" secondary type="primary"> 立即更新</NButton>
-      </NFlex>
-    </NFlex>
+          </n-timeline-item>
+        </n-timeline>
+      </n-scrollbar>
+      <n-flex justify="end" class="mt-10px">
+        <n-button :onclick="dismissUpdate" secondary> 忽略更新</n-button>
+        <n-button :onclick="doUpdate" secondary type="primary"> 立即更新</n-button>
+      </n-flex>
+    </n-flex>
   </div>
 </template>
 <script setup lang="tsx">
