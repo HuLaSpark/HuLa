@@ -8,9 +8,11 @@
         <use href="#close"></use>
       </svg>
     </div>
-    <svg v-else :onclick="handleClose" class="w-12px h-12px ml-a cursor-pointer select-none">
-      <use href="#close"></use>
-    </svg>
+    <div v-else :onclick="handleClose" class="size-13px ml-a">
+      <svg class="w-12px h-12px cursor-pointer select-none">
+        <use href="#close"></use>
+      </svg>
+    </div>
     <NFlex data-tauri-drag-region v-if="loading" vertical justify="center" size="small" class="mt-6px">
       <NSkeleton text :repeat="1" class="rounded-8px h-30px w-120px" />
       <NSkeleton text :repeat="1" class="rounded-8px h-300px" />
@@ -91,8 +93,8 @@
         </NTimeline>
       </NScrollbar>
       <NFlex justify="end" class="mt-10px">
-        <NButton :onclick="dismissUpdate" secondary> 忽略更新 </NButton>
-        <NButton :onclick="doUpdate" secondary type="primary"> 立即更新 </NButton>
+        <NButton :onclick="dismissUpdate" secondary> 忽略更新</NButton>
+        <NButton :onclick="doUpdate" secondary type="primary"> 立即更新</NButton>
       </NFlex>
     </NFlex>
   </div>
