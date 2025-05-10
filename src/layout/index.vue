@@ -150,7 +150,7 @@ const checkUpdate = async () => {
       ) {
         useMitt.emit(MittEnum.DO_UPDATE, { close: 'home' })
       } else if (newVersion !== currenVersion && settingStore.update.dismiss !== newVersion) {
-        useMitt.emit(MittEnum.CHECK_UPDATE, { close: 'home' })
+        useMitt.emit(MittEnum.CHECK_UPDATE)
       }
     })
     .catch((e) => {

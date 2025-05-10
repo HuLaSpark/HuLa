@@ -134,12 +134,10 @@ onMounted(async () => {
     // 最后调用登出方法(这会创建登录窗口)
     await logout()
   })
-  useMitt.on(MittEnum.CHECK_UPDATE, async (event) => {
+  useMitt.on(MittEnum.CHECK_UPDATE, async () => {
     const checkUpdateWindow = await WebviewWindow.getByLabel('checkupdate')
     if (checkUpdateWindow) {
       await checkUpdateWindow.show()
-      const closeWindow = await WebviewWindow.getByLabel(event.close)
-      closeWindow?.hide()
     }
   })
   useMitt.on(MittEnum.DO_UPDATE, async (event) => {
