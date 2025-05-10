@@ -34,7 +34,7 @@ const MESSAGE_THRESHOLD = 120
 const KEEP_MESSAGE_COUNT = 60
 
 // 创建src/workers/timer.worker.ts
-const timerWorker = new Worker(new URL('@/workers/timer.worker.ts', import.meta.url))
+const timerWorker = new Worker(new URL('../workers/timer.worker.ts', import.meta.url))
 
 // 添加错误处理
 timerWorker.onerror = (error) => {

@@ -159,7 +159,7 @@ import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import Validation from '@/components/common/Validation.vue'
 
 // 导入Web Worker
-const timerWorker = new Worker(new URL('@/workers/timer.worker.ts', import.meta.url))
+const timerWorker = new Worker(new URL('../../workers/timer.worker.ts', import.meta.url))
 
 // 步骤状态
 const currentStep = ref(1)

@@ -228,7 +228,7 @@ const loginText = ref(isOnline.value ? (isAutoLogin.value ? '登录' : '登录')
 const isJumpDirectly = ref(false)
 
 // 导入Web Worker
-const timerWorker = new Worker(new URL('@/workers/timer.worker.ts', import.meta.url))
+const timerWorker = new Worker(new URL('../../workers/timer.worker.ts', import.meta.url))
 
 // 添加错误处理
 timerWorker.onerror = (error) => {
