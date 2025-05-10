@@ -119,6 +119,10 @@ const commonTheme: GlobalThemeOverrides = {
   },
   Notification: {
     borderRadius: '8px'
+  },
+  Steps: {
+    indicatorBorderColorProcess: '#13987f',
+    indicatorColorProcess: '#52aea3'
   }
 }
 

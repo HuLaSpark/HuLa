@@ -271,7 +271,7 @@ export type MarkItemType = {
   uid: number
   /** 消息id */
   msgId: number
-  /** 操作类型 1点赞 2举报 */
+  /** 操作类型 */
   markType: MarkEnum
   /** 数量 */
   markCount: number
@@ -335,16 +335,15 @@ export type MsgUserType = {
 /**
  * 消息互动信息
  */
-export type MessageMarkType = {
-  /** 点赞 */
-  userLike: number
-  /** 举报 */
-  userDislike: number
-  /** 点赞数 */
-  likeCount: number
-  /** 举报数 */
-  dislikeCount: number
-}
+export type MessageMarkType = Record<
+  string,
+  {
+    /** 该表情的计数 */
+    count: number
+    /** 当前用户是否标记了该表情 */
+    userMarked: boolean
+  }
+>
 
 /** 图片消息体 */
 export type ImageBody = {
@@ -419,7 +418,7 @@ export type MsgType = {
   /** 发送时间戳 */
   sendTime: number
   /** 消息互动信息 */
-  messageMark: MessageMarkType
+  messageMarks: MessageMarkType
   /** 消息发送状态 */
   status: MessageStatusEnum
 }
@@ -508,6 +507,8 @@ export enum IsAllUserEnum {
 
 /** 会话列表项 */
 export type SessionItem = {
+  /** hula号 */
+  account: string
   /** 房间最后活跃时间(用来排序) */
   activeTime: number
   /** 会话头像 */
