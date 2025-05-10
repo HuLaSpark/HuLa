@@ -149,9 +149,9 @@ const checkUpdate = async () => {
         newMajorVersion > currentMajorVersion ||
         (newMajorVersion === currentMajorVersion && newMiddleVersion > currentMiddleVersion)
       ) {
-        useMitt.emit(MittEnum.DO_UPDATE, { close: 'login' })
+        useMitt.emit(MittEnum.DO_UPDATE, { close: 'home' })
       } else if (newVersion !== currenVersion && settingStore.update.dismiss !== newVersion) {
-        useMitt.emit(MittEnum.CHECK_UPDATE, { close: 'login' })
+        useMitt.emit(MittEnum.CHECK_UPDATE, { close: 'home' })
       }
     })
     .catch((e) => {
