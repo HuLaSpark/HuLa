@@ -186,7 +186,6 @@ import { type } from '@tauri-apps/plugin-os'
 import { check } from '@tauri-apps/plugin-updater'
 import { getVersion } from '@tauri-apps/api/app'
 import { MittEnum } from '@/enums'
-import { CHECK_UPDATE_TIME } from '@/workers/timer.worker.ts'
 
 const isCompatibility = computed(() => type() === 'windows' || type() === 'linux')
 const settingStore = useSettingStore()
@@ -490,7 +489,7 @@ const checkUpdate = async () => {
       console.log(e)
     })
 }
-
+const CHECK_UPDATE_TIME = 30 * 60 * 1000
 onMounted(async () => {
   // 只有在需要登录的情况下才显示登录窗口
   if (!isJumpDirectly.value) {

@@ -49,7 +49,6 @@ import { UserAttentionType } from '@tauri-apps/api/window'
 import { check } from '@tauri-apps/plugin-updater'
 import { getVersion } from '@tauri-apps/api/app'
 import { useSettingStore } from '@/stores/setting.ts'
-import { CHECK_UPDATE_TIME } from '@/workers/timer.worker.ts'
 
 const loadingPercentage = ref(10)
 const loadingText = ref('正在加载应用...')
@@ -372,6 +371,7 @@ onBeforeMount(async () => {
   await contactStore.getGroupChatList()
 })
 
+const CHECK_UPDATE_TIME = 30 * 60 * 1000
 onMounted(async () => {
   // 初始化配置
   if (!localStorage.getItem('config')) {
