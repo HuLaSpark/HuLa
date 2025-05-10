@@ -92,7 +92,9 @@
         "closable": false,
         "width": 500,
         "height": 600,
+        "skipTaskbar": true,
         "visible": false,
+        "titleBarStyle": "Overlay",
         "decorations": false,
         "hiddenTitle": true
       }
