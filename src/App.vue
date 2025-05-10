@@ -136,9 +136,11 @@ onMounted(async () => {
   })
   useMitt.on(MittEnum.CHECK_UPDATE, async (event) => {
     const checkUpdateWindow = await WebviewWindow.getByLabel('checkupdate')
-    checkUpdateWindow?.show()
-    const closeWindow = await WebviewWindow.getByLabel(event.close)
-    closeWindow?.hide()
+    if (checkUpdateWindow) {
+      await checkUpdateWindow.show()
+      const closeWindow = await WebviewWindow.getByLabel(event.close)
+      closeWindow?.hide()
+    }
   })
   useMitt.on(MittEnum.DO_UPDATE, async (event) => {
     await createWebviewWindow('更新', 'update', 490, 335, '', false, 490, 335, false, true)

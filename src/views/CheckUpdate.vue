@@ -182,7 +182,9 @@ const getCommitLog = async (url: string, isNew = false) => {
 }
 
 const handleClose = async () => {
-  const current = await WebviewWindow.getCurrent()
+  const loginWindow = await WebviewWindow.getByLabel('login')
+  await loginWindow?.show()
+  const current = WebviewWindow.getCurrent()
   current?.close()
 }
 
