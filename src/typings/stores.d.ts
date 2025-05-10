@@ -61,6 +61,11 @@ declare namespace STO {
       /** 高斯模糊 */
       blur: boolean
     }
+    /** 更新设置 */
+    update: {
+      /** 忽略更新版本 */
+      dismiss: string
+    }
   }
 
   /**

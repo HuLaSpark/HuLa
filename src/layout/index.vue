@@ -46,6 +46,7 @@ import { clearListener, initListener, readCountQueue } from '@/utils/ReadCountQu
 import { type } from '@tauri-apps/plugin-os'
 import { useConfigStore } from '@/stores/config'
 import { UserAttentionType } from '@tauri-apps/api/window'
+import { useCheckUpdate } from '@/hooks/useCheckUpdate'
 
 const loadingPercentage = ref(10)
 const loadingText = ref('正在加载应用...')
@@ -100,10 +101,27 @@ const userStore = useUserStore()
 const chatStore = useChatStore()
 const cachedStore = useCachedStore()
 const configStore = useConfigStore()
+const { checkUpdate, CHECK_UPDATE_TIME } = useCheckUpdate()
 const userUid = computed(() => userStore.userInfo.uid)
 // 清空未读消息
 // globalStore.unReadMark.newMsgUnreadCount = 0
 const shrinkStatus = ref(false)
+
+// 导入Web Worker
+const timerWorker = new Worker(new URL('../workers/timer.worker.ts', import.meta.url))
+
+// 添加错误处理
+timerWorker.onerror = (error) => {
+  console.error('[Worker Error]', error)
+}
+
+// 监听 Worker 消息
+timerWorker.onmessage = (e) => {
+  const { type } = e.data
+  if (type === 'timeout') {
+    checkUpdate('home')
+  }
+}
 
 watch(
   () => userStore.isSign,
@@ -331,9 +349,23 @@ onMounted(async () => {
     const permission = await requestPermission()
     permissionGranted = permission === 'granted'
   }
+  setInterval(() => {
+    // 使用 Worker 来处理定时器
+    timerWorker.postMessage({
+      type: 'startTimer',
+      msgId: 'checkUpdate',
+      duration: 1000
+    })
+  }, CHECK_UPDATE_TIME)
 })
 
 onUnmounted(() => {
   clearListener()
+  // 清除Web Worker计时器
+  timerWorker.postMessage({
+    type: 'clearTimer',
+    msgId: 'checkUpdate'
+  })
+  timerWorker.terminate()
 })
 </script>

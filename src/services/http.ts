@@ -3,6 +3,7 @@ import { AppException, ErrorType } from '@/common/exception'
 import { RequestQueue } from '@/utils/RequestQueue'
 import urls from './urls'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { URLEnum } from '@/enums'
 
 // 错误信息常量
 const ERROR_MESSAGES = {
@@ -69,13 +70,14 @@ function shouldRetry(attempt: number, maxRetries: number, abort?: AbortControlle
 const shouldBlockRequest = async (url: string) => {
   try {
     const currentWindow = WebviewWindow.getCurrent()
-    const isLoginWindow = currentWindow.label === 'login'
+    // TODO: 这里如果后续不需要token就可以发送请求还有在没有登录下的窗口都不需要阻止
+    const isLoginWindow = currentWindow.label === 'login' || 'register' || 'forgetPassword' || 'tray'
 
     // 如果不是登录窗口,不阻止请求
     if (!isLoginWindow) return false
 
     // 登录相关的接口永远不阻止
-    if (url.includes('/login') || url.includes('/refreshToken')) return false
+    if (url.includes(URLEnum.TOKEN) || url.includes(URLEnum.CAPTCHA)) return false
 
     // 检查是否已登录成功(有双token)
     const hasToken = localStorage.getItem('TOKEN')
