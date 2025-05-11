@@ -216,7 +216,7 @@ const moreShow = ref(false)
 const isAutoLogin = ref(login.value.autoLogin && TOKEN.value && REFRESH_TOKEN.value)
 const { setLoginState } = useLogin()
 const { createWebviewWindow } = useWindow()
-const { checkUpdate, CHECK_UPDATE_TIME } = useCheckUpdate()
+const { checkUpdate, CHECK_UPDATE_LOGIN_TIME } = useCheckUpdate()
 
 const accountPH = ref('邮箱/HuLa账号')
 const passwordPH = ref('输入HuLa密码')
@@ -484,7 +484,7 @@ onMounted(async () => {
       msgId: 'checkUpdate',
       duration: 1000
     })
-  }, CHECK_UPDATE_TIME)
+  }, CHECK_UPDATE_LOGIN_TIME)
 })
 
 onUnmounted(() => {

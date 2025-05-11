@@ -1,14 +1,14 @@
 <template>
   <div class="size-full bg-[--bg-popover] select-none cursor-default">
     <!--顶部操作栏-->
-    <ActionBar :max-w="false" :min-w="false" :shrink="false" />
+    <ActionBar :is-drag="false" :max-w="false" :min-w="false" :shrink="false" />
 
-    <n-flex data-tauri-drag-region v-if="loading" vertical justify="center" class="mt-6px box-border px-12px">
+    <n-flex v-if="loading" vertical justify="center" class="mt-6px box-border px-12px">
       <n-skeleton text :repeat="1" class="rounded-8px h-30px w-120px" />
       <n-skeleton text :repeat="1" class="rounded-8px h-300px" />
       <n-skeleton text :repeat="1" class="rounded-8px w-80px h-30px m-[0_0_0_auto]" />
     </n-flex>
-    <n-flex data-tauri-drag-region v-else vertical justify="center" class="p-14px box-border select-none">
+    <n-flex v-else vertical justify="center" class="p-14px box-border select-none">
       <n-flex justify="space-between" align="center">
         <n-flex align="center">
           <n-flex align="center">
@@ -56,7 +56,7 @@
       <div
         v-show="logVisible"
         class="overflow-hidden transition-all duration-300"
-        :class="logVisible ? 'max-h-460px' : 'max-h-0'">
+        :class="logVisible ? 'h-460px' : 'h-0'">
         <n-scrollbar class="p-[0_10px] box-border">
           <div v-if="newCommitLog.length > 0">
             <div class="p-[4px_8px] mt-4px w-fit bg-#f6dfe3ff rounded-6px text-(12px #ce304f)">
@@ -64,11 +64,7 @@
             </div>
 
             <n-timeline class="p-16px box-border">
-              <n-timeline-item
-                data-tauri-drag-region
-                v-for="(log, index) in newCommitLog"
-                :key="index"
-                :content="log.message">
+              <n-timeline-item v-for="(log, index) in newCommitLog" :key="index" :content="log.message">
                 <template #icon>
                   <n-icon :size="32">
                     <img class="size-32px" :src="`/emoji/${log.icon}.webp`" alt="" />

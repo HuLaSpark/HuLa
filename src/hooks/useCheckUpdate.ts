@@ -10,7 +10,9 @@ import { useSettingStore } from '@/stores/setting.ts'
 export const useCheckUpdate = () => {
   const settingStore = useSettingStore()
   // 检查更新周期
-  const CHECK_UPDATE_TIME = 1 * 60 * 1000
+  const CHECK_UPDATE_TIME = 30 * 60 * 1000
+  // 在未登录情况下缩短检查周期
+  const CHECK_UPDATE_LOGIN_TIME = 5 * 60 * 1000
 
   /**
    * 检查更新
@@ -51,6 +53,7 @@ export const useCheckUpdate = () => {
 
   return {
     checkUpdate,
-    CHECK_UPDATE_TIME
+    CHECK_UPDATE_TIME,
+    CHECK_UPDATE_LOGIN_TIME
   }
 }
