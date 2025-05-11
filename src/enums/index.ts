@@ -95,7 +95,11 @@ export enum MittEnum {
   /** 聊天框滚动到底部 */
   CHAT_SCROLL_BOTTOM = 'CHAT_SCROLL_BOTTOM',
   /** 创建群聊 */
-  CREATE_GROUP = 'createGroup'
+  CREATE_GROUP = 'createGroup',
+  /** 更新提示 */
+  CHECK_UPDATE = 'checkUpdate',
+  /** 强制更新 */
+  DO_UPDATE = 'doUpdate'
 }
 
 /** 主题类型 */

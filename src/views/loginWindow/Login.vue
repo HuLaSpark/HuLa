@@ -183,6 +183,7 @@ import { useUserStatusStore } from '@/stores/userStatus'
 import { clearListener } from '@/utils/ReadCountQueue'
 import { useGlobalStore } from '@/stores/global'
 import { type } from '@tauri-apps/plugin-os'
+import { useCheckUpdate } from '@/hooks/useCheckUpdate'
 
 const isCompatibility = computed(() => type() === 'windows' || type() === 'linux')
 const settingStore = useSettingStore()
@@ -214,13 +215,31 @@ const arrowStatus = ref(false)
 const moreShow = ref(false)
 const isAutoLogin = ref(login.value.autoLogin && TOKEN.value && REFRESH_TOKEN.value)
 const { setLoginState } = useLogin()
+const { createWebviewWindow } = useWindow()
+const { checkUpdate, CHECK_UPDATE_LOGIN_TIME } = useCheckUpdate()
+
 const accountPH = ref('邮箱/HuLa账号')
 const passwordPH = ref('输入HuLa密码')
 /** 登录按钮的文本内容 */
 const loginText = ref(isOnline.value ? (isAutoLogin.value ? '登录' : '登录') : '网络异常')
 /** 是否直接跳转 */
 const isJumpDirectly = ref(false)
-const { createWebviewWindow } = useWindow()
+
+// 导入Web Worker
+const timerWorker = new Worker(new URL('../../workers/timer.worker.ts', import.meta.url))
+
+// 添加错误处理
+timerWorker.onerror = (error) => {
+  console.error('[Worker Error]', error)
+}
+
+// 监听 Worker 消息
+timerWorker.onmessage = (e) => {
+  const { type } = e.data
+  if (type === 'timeout') {
+    checkUpdate('login')
+  }
+}
 
 watchEffect(() => {
   loginDisabled.value = !(info.value.account && info.value.password && protocol.value && isOnline.value)
@@ -382,7 +401,7 @@ const normalLogin = async (auto = false) => {
 }
 
 const openHomeWindow = async () => {
-  await createWebviewWindow('HuLa', 'home', 960, 720, 'login', true)
+  await createWebviewWindow('HuLa', 'home', 960, 720, 'login', true, undefined, 480)
 }
 
 /** 移除已登录账号 */
@@ -457,11 +476,26 @@ onMounted(async () => {
 
   window.addEventListener('click', closeMenu, true)
   window.addEventListener('keyup', enterKey)
+  await checkUpdate('login')
+  setInterval(() => {
+    // 使用 Worker 来处理定时器
+    timerWorker.postMessage({
+      type: 'startTimer',
+      msgId: 'checkUpdate',
+      duration: 1000
+    })
+  }, CHECK_UPDATE_LOGIN_TIME)
 })
 
 onUnmounted(() => {
   window.removeEventListener('click', closeMenu, true)
   window.removeEventListener('keyup', enterKey)
+  // 清除Web Worker计时器
+  timerWorker.postMessage({
+    type: 'clearTimer',
+    msgId: 'checkUpdate'
+  })
+  timerWorker.terminate()
 })
 </script>
 

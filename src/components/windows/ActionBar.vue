@@ -1,6 +1,8 @@
 <template>
   <!--  user-select: none让元素不可以选中-->
-  <div data-tauri-drag-region :class="isCompatibility ? 'flex justify-end select-none' : 'h-24px select-none w-full'">
+  <div
+    :data-tauri-drag-region="isDrag"
+    :class="isCompatibility ? 'flex justify-end select-none' : 'h-24px select-none w-full'">
     <template v-if="isCompatibility">
       <!--  登录窗口的代理按钮  -->
       <div v-if="proxy" @click="router.push('/proxy')" class="w-30px h-24px flex-center">
@@ -103,7 +105,8 @@ const {
   maxW = true,
   closeW = true,
   shrink = true,
-  shrinkStatus = true
+  shrinkStatus = true,
+  isDrag = true
 } = defineProps<{
   minW?: boolean
   maxW?: boolean
@@ -113,6 +116,7 @@ const {
   currentLabel?: string
   shrinkStatus?: boolean
   proxy?: boolean
+  isDrag?: boolean
 }>()
 const { getWindowTop, setWindowTop } = useAlwaysOnTopStore()
 const { pushListeners } = useTauriListener()

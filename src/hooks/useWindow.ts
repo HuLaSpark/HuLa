@@ -17,6 +17,8 @@ export const useWindow = () => {
    * @param resizable 调整窗口大小
    * @param minW 窗口最小宽度
    * @param minH 窗口最小高度
+   * @param transparent 是否透明
+   * @param visible 是否显示
    * */
   const createWebviewWindow = async (
     title: string,
@@ -26,7 +28,9 @@ export const useWindow = () => {
     wantCloseWindow?: string,
     resizable = false,
     minW = 330,
-    minH = 495
+    minH = 495,
+    transparent?: boolean,
+    visible = false
   ) => {
     const checkLabel = computed(() => {
       /** 如果是打开独立窗口就截取label中的固定label名称 */
@@ -48,10 +52,10 @@ export const useWindow = () => {
       minWidth: minW,
       skipTaskbar: false,
       decorations: !isCompatibility.value,
-      transparent: isCompatibility.value,
+      transparent: transparent || isCompatibility.value,
       titleBarStyle: 'overlay', // mac覆盖标签栏
       hiddenTitle: true, // mac隐藏标题栏
-      visible: false
+      visible: visible
     })
 
     await webview.once('tauri://created', async () => {
