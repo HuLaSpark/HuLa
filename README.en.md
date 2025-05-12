@@ -88,6 +88,10 @@ HuLa is an instant messaging system developed with Tauri, Vite 6, Vue 3, and Typ
   <img src="preview/img_8.png" alt="img_8.png" style="border-radius: 8px; display: block;"  />
 </div>
 
+<div style="padding: 28px; display: inline-block;">
+  <img src="preview/img_9.png" alt="img_9.png" style="border-radius: 8px; display: block;"  />
+</div>
+
 ## ✨ Completed Features
 
 | Feature Category | Feature Description | Status |
@@ -161,7 +165,7 @@ Downloading the installation package on the web page will indicate that the inst
 #### 1. Open "System Settings" - "Security & Privacy", as shown in the figure, check the box: Allow apps downloaded from "Any Source" to run:
 
 <div style="padding: 28px; display: inline-block;">
-  <img src="preview/img_9.png" alt="img_9.png" style="border-radius: 8px; display: block;"  />
+  <img src="preview/img_10.png" alt="img_10.png" style="border-radius: 8px; display: block;"  />
 </div>
 
 #### 2. If an error is reported, run the following command in the terminal to resolve the problem:
