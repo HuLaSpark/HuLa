@@ -152,6 +152,7 @@ unsafe fn hidden_standard_window_button(window: *mut Object, window_button_kind:
 /// # 返回
 /// * `Result<(), String>` - 成功返回Ok(()), 失败返回错误信息
 #[tauri::command]
+#[cfg(target_os = "macos")]
 pub fn hide_title_bar_buttons(window_label: &str, handle: AppHandle) -> Result<(), String> {
     #[cfg(target_os = "macos")]
     {

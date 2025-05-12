@@ -11,6 +11,11 @@ const INSTALL_GUIDES = {
   'WebView2 Runtime': 'https://developer.microsoft.com/microsoft-edge/webview2/'
 }
 
+// 更新指南
+const UPDATE_GUIDES = {
+  Rust: '请运行 `rustup update` 命令更新 Rust 版本'
+}
+
 // Windows 特定的检查路径
 const WINDOWS_PATHS = {
   'WebView2 Runtime': [
@@ -46,7 +51,7 @@ const checks = [
     name: 'Rust',
     command: 'rustc --version',
     versionExtractor: (output) => output.split(' ')[1],
-    minVersion: '1.78.0',
+    minVersion: '1.86.0',
     isRequired: true
   }
 ]
@@ -119,6 +124,12 @@ function checkDependency(check) {
       console.log(chalk.yellow(`⚠️ ${check.name} 版本过低`))
       console.log(chalk.yellow(`  当前版本: ${output}`))
       console.log(chalk.yellow(`  需要版本: >=${check.minVersion}`))
+
+      // 对 Rust 进行特殊处理，提示使用 rustup update
+      if (check.name === 'Rust') {
+        console.log(chalk.yellow(`  ${UPDATE_GUIDES[check.name]}`))
+      }
+
       console.log(chalk.gray(`  👉 升级指南: ${INSTALL_GUIDES[check.name]}`))
       return false
     }

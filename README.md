@@ -88,6 +88,10 @@ HuLa 是一款基于 Tauri、Vite 6、Vue 3 和 TypeScript 构建的即时通讯
   <img src="preview/img_8.png" alt="img_8.png" style="border-radius: 8px; display: block;"  />
 </div>
 
+<div style="padding: 28px; display: inline-block;">
+  <img src="preview/img_9.png" alt="img_9.png" style="border-radius: 8px; display: block;"  />
+</div>
+
 ## ✨ 已完成功能
 
 | 功能分类 | 功能描述 | 状态 |
@@ -162,7 +166,7 @@ pnpm run tauri:build
 #### 1. 打开 "系统设置" - "安全性与隐私"，如图勾选：允许 "任何来源" 下载的 App 运行：
 
 <div style="padding: 28px; display: inline-block;">
-  <img src="preview/img_9.png" alt="img_9.png" style="border-radius: 8px; display: block;"  />
+  <img src="preview/img_10.png" alt="img_10.png" style="border-radius: 8px; display: block;"  />
 </div>
 
 #### 2. 如果还报错，请在终端执行以下命令解决：
