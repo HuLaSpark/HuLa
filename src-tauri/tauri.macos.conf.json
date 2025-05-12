@@ -87,7 +87,7 @@
       {
         "label": "checkupdate",
         "url": "/checkupdate",
-        "resizable": true,
+        "resizable": false,
         "width": 500,
         "height": 150,
         "alwaysOnTop": true,
@@ -95,7 +95,6 @@
         "skipTaskbar": true,
         "visible": false,
         "titleBarStyle": "Overlay",
-        "decorations": false,
         "hiddenTitle": true
       }
     ],

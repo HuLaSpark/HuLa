@@ -11,6 +11,12 @@ const timerIds = new Map<TimerId, TimerInfo>()
 // 添加一个计数器来跟踪活动的定时器数量
 let activeTimers = 0
 
+// 周期性心跳定时器ID
+let periodicHeartbeatId: NodeJS.Timeout | null = null
+
+// 日志控制开关，默认不打印日志
+let enableLogging = false
+
 // 检查并通知所有定时器是否完成
 const checkAllTimersCompleted = () => {
   if (activeTimers === 0) {
@@ -20,17 +26,38 @@ const checkAllTimersCompleted = () => {
 
 // 添加调试信息打印函数
 const logDebugInfo = (msgId: number, remainingTime: number) => {
-  console.log(`[Worker Debug] 消息ID: ${msgId}, 剩余时间: ${(remainingTime / 1000).toFixed(1)}秒`)
-  self.postMessage({
-    type: 'debug',
-    msgId,
-    remainingTime,
-    timestamp: Date.now()
-  })
+  // 只有开启日志功能时才打印
+  if (enableLogging) {
+    console.log(`[Worker Debug] 消息ID: ${msgId}, 剩余时间: ${(remainingTime / 1000).toFixed(1)}秒`)
+    self.postMessage({
+      type: 'debug',
+      msgId,
+      remainingTime,
+      timestamp: Date.now()
+    })
+  }
+}
+
+// 安全的日志函数
+/**
+ * @description 如何开启日志打印
+ * @example timerWorker.postMessage({ type: 'setLogging', logging: true })
+ */
+const safeLog = (message: string, ...args: any[]) => {
+  if (enableLogging) {
+    console.log(message, ...args)
+  }
 }
 
 self.onmessage = (e) => {
-  const { type, msgId, duration, reconnectCount } = e.data
+  const { type, msgId, duration, reconnectCount, interval, logging } = e.data
+
+  // 如果收到日志控制参数，则更新日志缀状态
+  if (type === 'setLogging') {
+    enableLogging = !!logging
+    safeLog(`[Worker] 日志状态已${enableLogging ? '开启' : '关闭'}`)
+    return
+  }
 
   switch (type) {
     case 'startReconnectTimer': {
@@ -43,6 +70,7 @@ self.onmessage = (e) => {
 
       // 现在可以使用字符串作为key了
       timerIds.set('reconnect', { timerId, debugId: null })
+      safeLog('[Worker] 启动重连定时器')
       break
     }
 
@@ -51,18 +79,21 @@ self.onmessage = (e) => {
         const { timerId } = timerIds.get('reconnect')!
         clearTimeout(timerId)
         timerIds.delete('reconnect')
+        safeLog('[Worker] 清除重连定时器')
       }
       break
     }
 
     case 'startTimer': {
       activeTimers++
+      safeLog(`[Worker] 启动定时器: ${msgId}, 时长: ${duration}ms`)
       // 使用数字类型的msgId
       if (timerIds.has(msgId)) {
         const { timerId, debugId } = timerIds.get(msgId)!
         clearTimeout(timerId)
         if (debugId) clearInterval(debugId)
         timerIds.delete(msgId)
+        safeLog(`[Worker] 替换已存在的定时器: ${msgId}`)
       }
 
       const startTime = Date.now()
@@ -83,7 +114,7 @@ self.onmessage = (e) => {
 
       const timerId = setTimeout(() => {
         clearInterval(debugId)
-        console.log('[Worker] 定时器到期:', msgId)
+        safeLog('[Worker] 定时器到期:', msgId)
         self.postMessage({ type: 'timeout', msgId })
         timerIds.delete(msgId)
 
@@ -96,7 +127,7 @@ self.onmessage = (e) => {
     }
 
     case 'clearTimer': {
-      console.log('[Worker] 清理定时器:', msgId)
+      safeLog('[Worker] 清理定时器:', msgId)
       if (timerIds.has(msgId)) {
         const { timerId, debugId } = timerIds.get(msgId)!
         clearTimeout(timerId)
@@ -104,6 +135,33 @@ self.onmessage = (e) => {
         timerIds.delete(msgId)
         activeTimers--
         checkAllTimersCompleted()
+      }
+      break
+    }
+
+    // 心跳周期性定时器相关功能
+    case 'startPeriodicHeartbeat': {
+      // 先清除之前的定时器如果存在
+      if (periodicHeartbeatId) {
+        clearInterval(periodicHeartbeatId)
+        periodicHeartbeatId = null
+      }
+
+      // 创建新的周期性心跳定时器
+      periodicHeartbeatId = setInterval(() => {
+        safeLog('[Worker] 发送心跳')
+        self.postMessage({ type: 'periodicHeartbeat' })
+      }, interval || 9900) as any
+
+      safeLog('[Worker] 心跳定时器已启动, 间隔:', interval, 'ms')
+      break
+    }
+
+    case 'stopPeriodicHeartbeat': {
+      if (periodicHeartbeatId) {
+        clearInterval(periodicHeartbeatId)
+        periodicHeartbeatId = null
+        safeLog('[Worker] 心跳定时器已停止')
       }
       break
     }

@@ -349,14 +349,11 @@ onMounted(async () => {
     const permission = await requestPermission()
     permissionGranted = permission === 'granted'
   }
-  setInterval(() => {
-    // 使用 Worker 来处理定时器
-    timerWorker.postMessage({
-      type: 'startTimer',
-      msgId: 'checkUpdate',
-      duration: 1000
-    })
-  }, CHECK_UPDATE_TIME)
+  timerWorker.postMessage({
+    type: 'startTimer',
+    msgId: 'checkUpdate',
+    duration: CHECK_UPDATE_TIME
+  })
 })
 
 onUnmounted(() => {

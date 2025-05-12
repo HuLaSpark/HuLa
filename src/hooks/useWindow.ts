@@ -174,10 +174,25 @@ export const useWindow = () => {
     }
   }
 
+  /**
+   * 设置窗口是否可调整大小
+   * @param label 窗口名称
+   * @param resizable 是否可调整大小
+   */
+  const setResizable = async (label: string, resizable: boolean) => {
+    const webview = await WebviewWindow.getByLabel(label)
+    if (webview) {
+      await webview.setResizable(resizable).catch((error) => {
+        console.error('设置窗口可调整大小失败:', error)
+      })
+    }
+  }
+
   return {
     createWebviewWindow,
     createModalWindow,
     resizeWindow,
-    checkWinExist
+    checkWinExist,
+    setResizable
   }
 }

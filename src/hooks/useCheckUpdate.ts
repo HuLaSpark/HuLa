@@ -17,8 +17,9 @@ export const useCheckUpdate = () => {
   /**
    * 检查更新
    * @param closeWin 需要关闭的窗口
+   * @param initialCheck 是否是初始检查，默认为false。初始检查时只显示强制更新提示，不显示普通更新提示
    */
-  const checkUpdate = async (closeWin: string) => {
+  const checkUpdate = async (closeWin: string, initialCheck: boolean = false) => {
     await check()
       .then(async (e) => {
         if (!e?.available) {
@@ -42,7 +43,8 @@ export const useCheckUpdate = () => {
           (newMajorVersion === currentMajorVersion && newMiddleVersion > currentMiddleVersion)
         ) {
           useMitt.emit(MittEnum.DO_UPDATE, { close: closeWin })
-        } else if (newVersion !== currenVersion && settingStore.update.dismiss !== newVersion) {
+        } else if (newVersion !== currenVersion && settingStore.update.dismiss !== newVersion && !initialCheck) {
+          // 只在非初始检查时显示普通更新提示
           useMitt.emit(MittEnum.CHECK_UPDATE)
         }
       })

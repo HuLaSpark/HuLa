@@ -39,9 +39,17 @@
                 v-model:value="formData.imgCode"
                 placeholder="请输入图片验证码"
                 maxlength="5" />
-              <div class="w-120px h-40px cursor-pointer" @click="getCaptchaImage">
-                <img :src="captchaImage" alt="验证码" class="w-full h-full" />
-              </div>
+              <n-image
+                width="120"
+                height="40"
+                class="cursor-pointer"
+                :src="captchaImage"
+                preview-disabled
+                @click="getCaptchaImage">
+                <template #placeholder>
+                  <n-skeleton height="40px" width="120px" class="rounded-10px" />
+                </template>
+              </n-image>
             </n-flex>
           </n-form-item>
 
