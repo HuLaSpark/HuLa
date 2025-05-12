@@ -74,7 +74,8 @@ const isFocused = ref(false)
 let home: WebviewWindow | null = null
 // 状态栏图标是否显示
 const iconVisible = ref(false)
-let interval: any
+// 创建Timer Worker实例
+let timerWorker: Worker | null = null
 
 const division = () => {
   return <div class={'h-1px bg-[--line-color] w-full'}></div>
@@ -94,23 +95,81 @@ const toggleStatus = (item: UserState) => {
   appWindow.hide()
 }
 
+// 初始化Timer Worker
+const initWorker = () => {
+  if (!timerWorker) {
+    timerWorker = new Worker(new URL('../workers/timer.worker.ts', import.meta.url))
+
+    // 监听Worker消息
+    timerWorker.onmessage = async (e) => {
+      const { type, msgId } = e.data
+
+      // 处理定时器超时消息
+      if (type === 'timeout' && msgId === 'trayIconBlink') {
+        // 定时器触发时，切换图标状态
+        const tray = await TrayIcon.getById('tray')
+        tray?.setIcon(iconVisible.value ? null : 'tray/icon.png')
+        iconVisible.value = !iconVisible.value
+
+        // 如果仍需闪烁，重新启动定时器
+        if (tipVisible.value && !isFocused.value) {
+          startBlinkTimer()
+        }
+      }
+    }
+
+    // 添加错误处理
+    timerWorker.onerror = (error) => {
+      console.error('[Tray Worker Error]', error)
+    }
+  }
+}
+
+// 启动图标闪烁定时器
+const startBlinkTimer = () => {
+  if (!timerWorker) {
+    initWorker()
+  }
+
+  // 确保timerWorker已初始化
+  if (timerWorker) {
+    // 启动新的定时器，500ms间隔
+    timerWorker.postMessage({
+      type: 'startTimer',
+      msgId: 'trayIconBlink',
+      duration: 500 // 闪烁间隔时间
+    })
+  }
+}
+
+// 停止图标闪烁定时器
+const stopBlinkTimer = () => {
+  if (timerWorker) {
+    timerWorker.postMessage({
+      type: 'clearTimer',
+      msgId: 'trayIconBlink'
+    })
+  }
+}
+
+// 终止Worker
+const terminateWorker = () => {
+  if (timerWorker) {
+    stopBlinkTimer()
+    timerWorker.terminate()
+    timerWorker = null
+  }
+}
+
 watchEffect(async () => {
   if (type() === 'windows') {
     if (tipVisible.value && !isFocused.value) {
-      if (!interval) {
-        interval = setInterval(async () => {
-          const tray = await TrayIcon.getById('tray')
-          tray?.setIcon(iconVisible.value ? null : 'tray/icon.png')
-          iconVisible.value = !iconVisible.value
-        }, 500)
-      }
+      initWorker() // 确保Worker已初始化
+      startBlinkTimer() // 启动图标闪烁
     } else {
-      if (interval) {
-        clearInterval(interval)
-        interval = null
-      }
+      stopBlinkTimer() // 停止图标闪烁
       const tray = await TrayIcon.getById('tray')
-      tray?.setIcon('tray/icon.png')
+      tray?.setIcon('tray/icon.png') // 恢复默认图标
       isFocused.value = false
       tipVisible.value = false
     }
@@ -148,9 +207,7 @@ onMounted(async () => {
 })
 
 onUnmounted(async () => {
-  if (interval) {
-    clearInterval(interval)
-  }
+  terminateWorker() // 清理Worker资源
 })
 </script>
 

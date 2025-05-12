@@ -1,4 +1,5 @@
-use base64::{engine::general_purpose, Engine as _};
+#![allow(unexpected_cfgs)]
+use base64::{Engine as _, engine::general_purpose};
 use lazy_static::lazy_static;
 use screenshots::Screen;
 use serde::Serialize;
@@ -8,6 +9,11 @@ use std::thread;
 use std::time::Duration;
 use tauri::path::BaseDirectory;
 use tauri::{AppHandle, LogicalSize, Manager, ResourceId, Runtime, Webview};
+
+#[cfg(target_os = "macos")]
+use cocoa::appkit::{NSWindow, NSWindowButton};
+#[cfg(target_os = "macos")]
+use objc::runtime::Object;
 
 // 定义用户信息结构体
 #[derive(Debug, Clone, Serialize)]
@@ -124,4 +130,53 @@ pub fn set_badge_count(count: Option<i64>, handle: AppHandle) -> Result<(), Stri
             Ok(())
         }
     }
+}
+
+#[cfg(target_os = "macos")]
+unsafe fn hidden_standard_window_button(window: *mut Object, window_button_kind: NSWindowButton) {
+    use cocoa::base::YES;
+    use objc::{msg_send, sel, sel_impl};
+
+    let btn = unsafe { window.standardWindowButton_(window_button_kind) };
+    if !btn.is_null() {
+        let _: () = msg_send![btn, setHidden: YES];
+    }
+}
+
+/// 隐藏Mac窗口的标题栏按钮（红绿灯按钮）和标题
+///
+/// # 参数
+/// * `window_label` - 窗口的标签名称
+/// * `handle` - Tauri应用句柄
+///
+/// # 返回
+/// * `Result<(), String>` - 成功返回Ok(()), 失败返回错误信息
+#[tauri::command]
+pub fn hide_title_bar_buttons(window_label: &str, handle: AppHandle) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    {
+        use cocoa::appkit::NSWindowButton;
+        use cocoa::base::NO;
+        use cocoa::base::id;
+        use objc::{msg_send, sel, sel_impl};
+
+        let ns_window = handle
+            .get_webview_window(window_label)
+            .unwrap()
+            .ns_window()
+            .unwrap() as id;
+
+        unsafe {
+            // 隐藏标题栏按钮
+            // hidden_standard_window_button(ns_window, NSWindowButton::NSWindowCloseButton);
+            hidden_standard_window_button(ns_window, NSWindowButton::NSWindowFullScreenButton);
+            hidden_standard_window_button(ns_window, NSWindowButton::NSWindowFullScreenButton);
+            hidden_standard_window_button(ns_window, NSWindowButton::NSWindowMiniaturizeButton);
+            hidden_standard_window_button(ns_window, NSWindowButton::NSWindowZoomButton);
+
+            // 设置窗口不可拖动
+            let _: () = msg_send![ns_window, setMovable: NO];
+        }
+    }
+    Ok(())
 }

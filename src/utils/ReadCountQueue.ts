@@ -19,8 +19,9 @@ const INTERVAL_DELAY = 10000 // 轮询间隔时间：10秒
 
 // 状态变量
 const queue: ReadCountQueue = new Set<number>() // 待处理的消息ID队列
-let timer: ReturnType<typeof setInterval> | null = null // 轮询定时器
+let timerWorker: Worker | null = null // Web Worker定时器
 let request: AbortableRequest | null = null // 当前正在进行的请求
+let isTimerActive = false // 标记定时器是否活跃
 
 // 事件类型定义
 interface ReadCountTaskEvent {
@@ -134,15 +135,21 @@ export const clearListener = () => {
     request = null
   }
   stopTimer()
+  // 终止Worker
+  terminateWorker()
 }
 
 /**
  * 停止轮询定时器
  */
 const stopTimer = () => {
-  if (timer) {
-    clearInterval(timer)
-    timer = null
+  if (timerWorker && isTimerActive) {
+    // 发送消息给worker停止定时器
+    timerWorker.postMessage({
+      type: 'clearTimer',
+      msgId: 'readCountQueue' // 使用固定字符串作为定时器ID
+    })
+    isTimerActive = false
   }
 }
 
@@ -156,14 +163,81 @@ export const clearQueue = () => {
 }
 
 /**
+ * 初始化Web Worker
+ */
+const initWorker = () => {
+  if (!timerWorker) {
+    timerWorker = new Worker(new URL('../workers/timer.worker.ts', import.meta.url))
+
+    // 监听Worker消息
+    timerWorker.onmessage = (e) => {
+      const { type, msgId } = e.data
+
+      // 当timer.worker.ts发送timeout消息时，执行task任务
+      if (type === 'timeout' && msgId === 'readCountQueue') {
+        void task()
+        // 重新启动定时器
+        startTimer()
+      }
+    }
+
+    // 添加错误处理
+    timerWorker.onerror = (error) => {
+      console.error('[ReadCountQueue Worker Error]', error)
+      isTimerActive = false
+    }
+  }
+}
+
+/**
+ * 启动定时器
+ */
+const startTimer = () => {
+  if (!timerWorker) {
+    initWorker()
+  }
+
+  // 清除可能存在的旧定时器
+  stopTimer()
+
+  // 确保timerWorker已初始化
+  if (timerWorker) {
+    // 启动新的定时器
+    timerWorker.postMessage({
+      type: 'startTimer',
+      msgId: 'readCountQueue', // 使用固定字符串作为定时器ID
+      duration: INTERVAL_DELAY // 使用相同的轮询间隔时间
+    })
+
+    isTimerActive = true
+  } else {
+    console.error('[ReadCountQueue] 无法初始化Web Worker定时器')
+  }
+}
+
+/**
+ * 终止Worker
+ */
+const terminateWorker = () => {
+  if (timerWorker) {
+    stopTimer()
+    timerWorker.terminate()
+    timerWorker = null
+  }
+}
+
+/**
  * 启动消息已读计数队列
  * 1. 立即执行一次查询任务
  * 2. 启动定时轮询
  */
 export const readCountQueue = () => {
+  // 初始化Worker
+  initWorker()
+
   // 立即执行一次任务
   void task()
-  // 设置定时器，每10秒执行一次
-  stopTimer() // 确保不会创建多个定时器
-  timer = setInterval(() => void task(), INTERVAL_DELAY)
+
+  // 启动定时器
+  startTimer()
 }

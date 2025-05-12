@@ -111,9 +111,11 @@ import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { currentMonitor, PhysicalPosition } from '@tauri-apps/api/window'
+import { type } from '@tauri-apps/plugin-os'
+import { invoke } from '@tauri-apps/api/core'
 
 const settingStore = useSettingStore()
-const { createWebviewWindow, resizeWindow } = useWindow()
+const { createWebviewWindow, resizeWindow, setResizable } = useWindow()
 /** 项目提交日志记录 */
 const commitLog = ref<{ message: string; icon: string }[]>([])
 const newCommitLog = ref<{ message: string; icon: string }[]>([])
@@ -126,6 +128,8 @@ const logVisible = ref(false)
 /** 版本更新日期 */
 const versionTime = ref('')
 const newVersionTime = ref('')
+// 获取操作系统类型
+const osType = type()
 
 const commitTypeMap: { [key: string]: string } = {
   feat: 'comet',
@@ -225,27 +229,7 @@ const checkUpdate = async () => {
     })
 }
 
-const toggleLogVisible = async () => {
-  logVisible.value = !logVisible.value
-
-  // 获取当前窗口实例
-  const checkUpdateWindow = await WebviewWindow.getByLabel('checkupdate')
-  if (!checkUpdateWindow) return
-
-  // 根据日志显示状态调整窗口高度
-  if (logVisible.value) {
-    // 展开日志，调整窗口高度为600px
-    await resizeWindow('checkupdate', 500, 620)
-  } else {
-    // 收起日志，调整窗口高度为420px
-    await resizeWindow('checkupdate', 500, 150)
-  }
-
-  // 调整窗口位置到右下角，保持右下角位置不变
-  setTimeout(moveWindowToBottomRight, 10)
-}
-
-// 设置窗口位置到屏幕右下角
+// 根据操作系统类型设置窗口位置（macOS为右上角，其他为右下角）
 const moveWindowToBottomRight = async () => {
   try {
     const checkUpdateWindow = await WebviewWindow.getByLabel('checkupdate')
@@ -258,20 +242,62 @@ const moveWindowToBottomRight = async () => {
     // 获取窗口大小
     const size = await checkUpdateWindow.outerSize()
 
-    // 计算右下角位置（留出一定边距）
-    const x = Math.floor(monitor.size.width - size.width)
-    const y = Math.floor(monitor.size.height - size.height - 50)
+    // 计算窗口位置（留出一定边距）
+    let y = 0
+    let x = 0
 
-    // 移动窗口到右下角
+    if (osType === 'macos') {
+      // macOS - 放置在右上角
+      y = 50 // 为顶部菜单栏留出空间
+      x = Math.floor(monitor.size.width - size.width - 10)
+    } else {
+      // Windows/Linux - 放置在右下角（保持原有逻辑）
+      y = Math.floor(monitor.size.height - size.height - 50)
+      x = Math.floor(monitor.size.width - size.width)
+    }
+
+    // 移动窗口到计算的位置
     await checkUpdateWindow.setPosition(new PhysicalPosition(x, y))
   } catch (error) {
     console.error('移动窗口失败:', error)
   }
 }
 
+const toggleLogVisible = async () => {
+  logVisible.value = !logVisible.value
+
+  // 获取当前窗口实例
+  const checkUpdateWindow = await WebviewWindow.getByLabel('checkupdate')
+  if (!checkUpdateWindow) return
+
+  // 设置窗口可调整大小，以便能够调整窗口高度
+  await setResizable('checkupdate', true)
+
+  // 根据日志显示状态调整窗口高度
+  if (logVisible.value) {
+    // 展开日志，调整窗口高度为600px
+    await resizeWindow('checkupdate', 500, 620)
+  } else {
+    // 收起日志，调整窗口高度为420px
+    await resizeWindow('checkupdate', 500, 150)
+  }
+  await setResizable('checkupdate', false)
+  // 调整窗口位置到右下角，保持右下角位置不变
+  await moveWindowToBottomRight()
+}
+
 const init = async () => {
+  await moveWindowToBottomRight()
   loading.value = true
   currentVersion.value = await getVersion()
+  if (osType === 'macos') {
+    // 隐藏标题栏按钮
+    try {
+      await invoke('hide_title_bar_buttons', { windowLabel: 'checkupdate' })
+    } catch (error) {
+      console.error('隐藏标题栏按钮失败:', error)
+    }
+  }
 }
 
 onMounted(async () => {
@@ -279,9 +305,5 @@ onMounted(async () => {
   const url = `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/releases/tags/v${currentVersion.value}?access_token=${import.meta.env.VITE_GITEE_TOKEN}`
   await getCommitLog(url)
   await checkUpdate()
-
-  // 窗口加载完成后移动到右下角
-  // 延迟一小段时间确保窗口已完全加载
-  setTimeout(moveWindowToBottomRight, 10)
 })
 </script>

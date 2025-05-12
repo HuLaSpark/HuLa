@@ -20,6 +20,11 @@ const worker: Worker = new Worker(new URL('../workers/webSocket.worker.ts', impo
   type: 'module'
 })
 
+// 创建 timer worker
+const timerWorker: Worker = new Worker(new URL('../workers/timer.worker.ts', import.meta.url), {
+  type: 'module'
+})
+
 // 添加一个标识是否是主窗口的变量
 let isMainWindow = false
 
@@ -40,8 +45,30 @@ class WS {
     this.initWindowType()
     if (isMainWindow) {
       this.initConnect()
-      // 收到消息
+      // 收到WebSocket worker消息
       worker.addEventListener('message', this.onWorkerMsg)
+      // 收到Timer worker消息
+      timerWorker.addEventListener('message', this.onTimerWorkerMsg)
+    }
+  }
+
+  // 处理Timer worker消息
+  onTimerWorkerMsg = (e: MessageEvent<any>) => {
+    const data = e.data
+    switch (data.type) {
+      case 'timeout': {
+        // 检查是否是心跳超时消息
+        if (data.msgId && data.msgId.startsWith('heartbeat_timeout_')) {
+          // 转发给WebSocket worker
+          worker.postMessage(JSON.stringify({ type: 'heartbeatTimeout' }))
+        }
+        break
+      }
+      case 'periodicHeartbeat': {
+        // 心跳触发，转发给WebSocket worker
+        worker.postMessage(JSON.stringify({ type: 'heartbeatTimerTick' }))
+        break
+      }
     }
   }
 
@@ -123,10 +150,46 @@ class WS {
         useMitt.emit(WsResponseMessageType.NO_INTERNET, params.value)
         // 如果是重连失败，可以提示用户刷新页面
         if ((params.value as { msg: string }).msg.includes('连接失败次数过多')) {
+          useMitt.emit('showMainMessage', { title: '连接断开', content: '连接已断开，请刷新页面或重新登录。' })
           // 可以触发UI提示，让用户刷新页面
-          // TODO: 无感帮助用户刷新页面
           useMitt.emit('wsReconnectFailed', params.value)
         }
+        break
+      }
+      // 心跳定时器相关消息处理
+      case 'startHeartbeatTimer': {
+        // 启动心跳定时器
+        const { interval } = params.value as { interval: number }
+        timerWorker.postMessage({
+          type: 'startPeriodicHeartbeat',
+          interval
+        })
+        break
+      }
+      case 'stopHeartbeatTimer': {
+        // 停止心跳定时器
+        timerWorker.postMessage({
+          type: 'stopPeriodicHeartbeat'
+        })
+        break
+      }
+      case 'startHeartbeatTimeoutTimer': {
+        // 启动心跳超时定时器
+        const { timerId, timeout } = params.value as { timerId: string; timeout: number }
+        timerWorker.postMessage({
+          type: 'startTimer',
+          msgId: timerId,
+          duration: timeout
+        })
+        break
+      }
+      case 'clearHeartbeatTimeoutTimer': {
+        // 清除心跳超时定时器
+        const { timerId } = params.value as { timerId: string }
+        timerWorker.postMessage({
+          type: 'clearTimer',
+          msgId: timerId
+        })
         break
       }
       case 'connectionStateChange': {
@@ -384,6 +447,10 @@ class WS {
   destroy() {
     worker.postMessage(JSON.stringify({ type: 'clearReconnectTimer' }))
     worker.terminate()
+    // 同时终止timer worker相关的心跳
+    timerWorker.postMessage({
+      type: 'stopPeriodicHeartbeat'
+    })
     this.#tasks = []
     this.#processedMsgCache.clear()
     this.#connectReady = false

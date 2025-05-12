@@ -7,8 +7,6 @@ const postMsg = ({ type, value }: { type: string; value?: object }) => {
 
 // ws instance
 let connection: WebSocket
-// 心跳 timer
-let heartTimer: number | null = null
 
 // 重连次数上限
 const reconnectCountMax = 5
@@ -27,34 +25,53 @@ const connectionSend = (value: object) => {
 }
 
 // 添加心跳超时检测
-let heartbeatTimeout: number | null = null
+let heartbeatTimeout: string | null = null
 const HEARTBEAT_TIMEOUT = 15000 // 15秒超时
+const HEARTBEAT_INTERVAL = 9900 // 心跳间隔
 
-// 发送心跳 10s 内发送
+// 发送心跳请求，使用timer.worker
 const sendHeartPack = () => {
-  // 10s 检测心跳
-  heartTimer = setInterval(() => {
-    // 心跳消息类型 2
-    connectionSend({ type: 2 })
-
-    // 清除之前的超时计时器
-    if (heartbeatTimeout) {
-      clearTimeout(heartbeatTimeout)
-    }
-
-    // 设置新的超时计时器
-    heartbeatTimeout = setTimeout(() => {
-      console.log('心跳超时，重连...')
-      connection.close()
-    }, HEARTBEAT_TIMEOUT) as any
-  }, 9900) as any
+  // 请求主线程启动心跳定时器
+  postMsg({
+    type: 'startHeartbeatTimer',
+    value: { interval: HEARTBEAT_INTERVAL }
+  })
 }
 
-// 清除❤️跳 timer
+// 发送单次心跳
+const sendSingleHeartbeat = () => {
+  // 心跳消息类型 2
+  connectionSend({ type: 2 })
+
+  // 清除之前的超时计时器
+  if (heartbeatTimeout) {
+    postMsg({
+      type: 'clearHeartbeatTimeoutTimer',
+      value: { timerId: heartbeatTimeout }
+    })
+    heartbeatTimeout = null
+  }
+
+  // 设置新的超时计时器
+  const timeoutId = `heartbeat_timeout_${Date.now()}`
+  heartbeatTimeout = timeoutId
+  postMsg({
+    type: 'startHeartbeatTimeoutTimer',
+    value: { timerId: timeoutId, timeout: HEARTBEAT_TIMEOUT }
+  })
+}
+
+// 清除心跳定时器
 const clearHeartPackTimer = () => {
-  if (heartTimer) {
-    clearInterval(heartTimer)
-    heartTimer = null
+  postMsg({ type: 'stopHeartbeatTimer' })
+
+  // 清除超时定时器
+  if (heartbeatTimeout) {
+    postMsg({
+      type: 'clearHeartbeatTimeoutTimer',
+      value: { timerId: heartbeatTimeout }
+    })
+    heartbeatTimeout = null
   }
 }
 
@@ -180,6 +197,17 @@ self.onmessage = (e: MessageEvent<string>) => {
           value: { msg: '连接失败次数过多，请刷新页面重试' }
         })
       }
+      break
+    }
+    // 心跳定时器触发
+    case 'heartbeatTimerTick': {
+      sendSingleHeartbeat()
+      break
+    }
+    // 心跳超时
+    case 'heartbeatTimeout': {
+      console.log('心跳超时，重连...')
+      connection.close()
       break
     }
   }

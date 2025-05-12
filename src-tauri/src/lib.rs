@@ -3,8 +3,7 @@
 mod desktops;
 #[cfg(desktop)]
 use common_cmd::{
-    audio, default_window_icon, screenshot, set_badge_count,
-    set_height,
+    audio, default_window_icon, hide_title_bar_buttons, screenshot, set_badge_count, set_height,
 };
 #[cfg(desktop)]
 mod proxy;
@@ -56,7 +55,8 @@ fn setup_desktop() {
             set_height,
             set_badge_count,
             test_api_proxy,
-            test_ws_proxy
+            test_ws_proxy,
+            hide_title_bar_buttons
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

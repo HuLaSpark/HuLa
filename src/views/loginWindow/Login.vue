@@ -370,7 +370,6 @@ const normalLogin = async (auto = false) => {
       }
       // 获取用户详情
       const userDetail = await apis.getUserDetail()
-      console.log(userDetail)
 
       // 设置用户状态id
       stateId.value = userDetail.userStateId
@@ -476,15 +475,12 @@ onMounted(async () => {
 
   window.addEventListener('click', closeMenu, true)
   window.addEventListener('keyup', enterKey)
-  await checkUpdate('login')
-  setInterval(() => {
-    // 使用 Worker 来处理定时器
-    timerWorker.postMessage({
-      type: 'startTimer',
-      msgId: 'checkUpdate',
-      duration: 1000
-    })
-  }, CHECK_UPDATE_LOGIN_TIME)
+  await checkUpdate('login', true)
+  timerWorker.postMessage({
+    type: 'startTimer',
+    msgId: 'checkUpdate',
+    duration: CHECK_UPDATE_LOGIN_TIME
+  })
 })
 
 onUnmounted(() => {
