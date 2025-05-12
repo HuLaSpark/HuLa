@@ -45,7 +45,6 @@ import { useCachedStore } from '@/stores/cached'
 import { clearListener, initListener, readCountQueue } from '@/utils/ReadCountQueue'
 import { type } from '@tauri-apps/plugin-os'
 import { useConfigStore } from '@/stores/config'
-import { UserAttentionType } from '@tauri-apps/api/window'
 import { useCheckUpdate } from '@/hooks/useCheckUpdate'
 
 const loadingPercentage = ref(10)
@@ -232,31 +231,31 @@ useMitt.on(WsResponseMessageType.MY_ROOM_INFO_CHANGE, (data: { myName: string; r
 })
 useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   chatStore.pushMsg(data)
-  if (data.fromUser.uid !== userUid.value) {
-    useMitt.emit(MittEnum.MESSAGE_ANIMATION, data)
-  }
   // 接收到通知就设置图标闪烁
   const username = useUserInfo(data.fromUser.uid).value.name!
+  const home = await WebviewWindow.getByLabel('home')
+  // 当home窗口不显示并且home窗口不是最小化的时候并且不是聚焦窗口的时候
+  const homeShow = await home?.isVisible()
+  const isHomeMinimized = await home?.isMinimized()
+  const isHomeFocused = await home?.isFocused()
+  if (homeShow && !isHomeMinimized && isHomeFocused) return
+
   // 不是自己发的消息才通知
   if (data.fromUser.uid !== userUid.value) {
+    useMitt.emit(MittEnum.MESSAGE_ANIMATION, data)
     // 在windows系统下才发送通知
     if (type() === 'windows') {
       await emitTo('tray', 'show_tip')
     }
 
-    // 判断主窗口是否是在其他窗口的前面并且聚焦
-    const home = await WebviewWindow.getByLabel('home')
-    // 是否在其他窗口的前面
-    const isVisible = await home?.isVisible()
-
     // 获取该消息的会话信息
     const session = chatStore.sessionList.find((s) => s.roomId === data.message.roomId)
 
     // 只有非免打扰的会话才发送通知
-    if (session && isVisible && session.muteNotification !== NotificationTypeEnum.NOT_DISTURB) {
+    if (session && session.muteNotification !== NotificationTypeEnum.NOT_DISTURB) {
       await emitTo('notify', 'notify_cotent', data)
       // 请求用户注意窗口
-      home?.requestUserAttention(UserAttentionType.Critical)
+      // home?.requestUserAttention(UserAttentionType.Critical)
       const throttleSendNotification = useThrottleFn(() => {
         sendNotification({
           title: username,

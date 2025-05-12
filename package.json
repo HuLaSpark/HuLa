@@ -83,7 +83,6 @@
     "pinia-plugin-persistedstate": "^4.2.0",
     "pinia-shared-state": "^1.0.1",
     "seemly": "^0.3.10",
-    "vite-plugin-vue-devtools": "^7.7.2",
     "vue": "^3.5.13",
     "vue-cropper": "1.1.4",
     "vue-draggable-plus": "^0.6.0",
@@ -132,7 +131,6 @@
     "unplugin-auto-import": "^19.1.1",
     "unplugin-vue-components": "^28.4.1",
     "vite": "6.3.4",
-    "vite-plugin-vue-devtools": "^7.7.2",
     "vite-plugin-vue-setup-extend": "^0.4.0",
     "vitest": "^3.0.5",
     "vue-tsc": "^2.2.0"
