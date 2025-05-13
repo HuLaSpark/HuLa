@@ -39,7 +39,7 @@
 <script setup lang="tsx">
 import { useGlobalStore } from '@/stores/global.ts'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { Event } from '@tauri-apps/api/event'
+import { emitTo, Event, listen } from '@tauri-apps/api/event'
 import { PhysicalPosition } from '@tauri-apps/api/dpi'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { useTauriListener } from '@/hooks/useTauriListener'
@@ -62,7 +62,7 @@ type GroupedMessage = {
 
 const appWindow = WebviewWindow.getCurrent()
 const { checkWinExist, resizeWindow } = useWindow()
-const { openMsgSession, userUid } = useCommon()
+const { userUid } = useCommon()
 const { pushListeners } = useTauriListener()
 const globalStore = useGlobalStore()
 const chatStore = useChatStore()
@@ -98,7 +98,11 @@ const handleClickMsg = async (uid: string) => {
   // 打开消息页面
   await checkWinExist('home')
   await handleTip()
-  openMsgSession(uid)
+  // TODO： 跳转页面还有问题
+  emitTo('home', 'search_to_msg', {
+    uid: uid,
+    roomType: 1
+  })
 }
 
 // 取消状态栏闪烁
@@ -161,6 +165,7 @@ onMounted(async () => {
   // 初始化窗口高度
   resizeWindow('notify', 280, 140)
 
+  // 监听全局事件，以及本地窗口事件
   await pushListeners([
     // 监听托盘鼠标进入事件
     appWindow.listen('notify_enter', async (event: Event<any>) => {
@@ -172,57 +177,62 @@ onMounted(async () => {
       setTimeout(async () => {
         await hideWindow()
       }, 300)
-    }),
-
-    // 监听消息的内容
-    appWindow.listen('notify_cotent', async (event: Event<MessageType>) => {
-      if (tipVisible.value) {
-        const message = event.payload
-        const session = chatStore.sessionList.find((s) => s.roomId === message.message.roomId)
-        const existingGroup = content.value.find((group) => group.roomId === message.message.roomId)
-        const isAtMe = checkIsAtMe(message)
-        const currentTime = Date.now()
-
-        if (existingGroup) {
-          // 如果该房间的消息已存在，更新最新内容和计数
-          existingGroup.id = message.message.id
-          existingGroup.latestContent = message.message.body.content
-          existingGroup.messageCount++
-          existingGroup.timestamp = currentTime
-          existingGroup.isAtMe = isAtMe
-          if (session) {
-            existingGroup.avatar = session.avatar
-            existingGroup.name = session.name
-          }
-        } else {
-          // 如果是新的房间，创建新的分组
-          content.value.push({
-            id: message.message.id,
-            roomId: message.message.roomId,
-            latestContent: message.message.body.content,
-            messageCount: 1,
-            avatar: session?.avatar || '',
-            name: session?.name || '',
-            timestamp: currentTime,
-            isAtMe: isAtMe
-          })
-
-          // 调整窗口高度，基础高度140，从第二个分组开始每组增加60px，最多4个分组
-          const baseHeight = 140
-          const groupCount = content.value.length
-          const additionalHeight = Math.min(Math.max(groupCount - 1, 0), 3) * 60
-          const newHeight = baseHeight + additionalHeight
-          resizeWindow('notify', 280, newHeight)
-        }
-
-        // 对消息进行排序
-        sortMessages()
-
-        msgCount.value = content.value.reduce((acc, group) => acc + group.messageCount, 0)
-        console.log('Grouped messages:', content.value)
-      }
     })
   ])
+
+  // 使用全局事件监听器接收通知消息
+  const contentEventUnlisten = listen('notify_cotent', async (event: Event<MessageType>) => {
+    if (event.payload) {
+      // 窗口显示将由notify_enter事件触发
+
+      // 处理消息内容
+      const message = event.payload
+      const session = chatStore.sessionList.find((s) => s.roomId === message.message.roomId)
+      const existingGroup = content.value.find((group) => group.roomId === message.message.roomId)
+      const isAtMe = checkIsAtMe(message)
+      const currentTime = Date.now()
+
+      if (existingGroup) {
+        // 如果该房间的消息已存在，更新最新内容和计数
+        existingGroup.id = message.message.id
+        existingGroup.latestContent = message.message.body.content
+        existingGroup.messageCount++
+        existingGroup.timestamp = currentTime
+        existingGroup.isAtMe = isAtMe
+        if (session) {
+          existingGroup.avatar = session.avatar
+          existingGroup.name = session.name
+        }
+      } else {
+        // 如果是新的房间，创建新的分组
+        content.value.push({
+          id: message.message.id,
+          roomId: message.message.roomId,
+          latestContent: message.message.body.content,
+          messageCount: 1,
+          avatar: session?.avatar || '',
+          name: session?.name || '',
+          timestamp: currentTime,
+          isAtMe: isAtMe
+        })
+
+        // 调整窗口高度，基础高度140，从第二个分组开始每组增加60px，最多4个分组
+        const baseHeight = 140
+        const groupCount = content.value.length
+        const additionalHeight = Math.min(Math.max(groupCount - 1, 0), 3) * 60
+        const newHeight = baseHeight + additionalHeight
+        resizeWindow('notify', 280, newHeight)
+      }
+
+      // 对消息进行排序
+      sortMessages()
+
+      msgCount.value = content.value.reduce((acc, group) => acc + group.messageCount, 0)
+    }
+  })
+
+  // 添加到监听器列表以便在组件卸载时自动清理
+  await pushListeners([contentEventUnlisten])
 })
 </script>
 <style scoped lang="scss">

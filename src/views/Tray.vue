@@ -69,7 +69,7 @@ const globalStore = useGlobalStore()
 const { lockScreen } = storeToRefs(settingStore)
 const { stateList, stateId } = storeToRefs(userStatusStore)
 const { tipVisible, isTrayMenuShow } = storeToRefs(globalStore)
-const { pushListeners } = useTauriListener()
+const { addListener } = useTauriListener()
 const isFocused = ref(false)
 let home: WebviewWindow | null = null
 // 状态栏图标是否显示
@@ -197,13 +197,14 @@ onMounted(async () => {
     home.listen('tauri://blur', () => {
       isFocused.value = false
     })
-    await pushListeners([
-      appWindow.listen('show_tip', async () => {
-        console.log('Received show_tip event')
-        globalStore.setTipVisible(true)
-      })
-    ])
   }
+
+  // 将监听器添加到pushListeners中以便于组件卸载时自动移除
+  await addListener(
+    appWindow.listen('show_tip', async () => {
+      globalStore.setTipVisible(true)
+    })
+  )
 })
 
 onUnmounted(async () => {

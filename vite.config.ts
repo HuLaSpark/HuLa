@@ -8,7 +8,6 @@ import vueJsx from '@vitejs/plugin-vue-jsx'
 import UnoCSS from '@unocss/vite'
 import terser from '@rollup/plugin-terser'
 import VueSetupExtend from 'vite-plugin-vue-setup-extend'
-import vueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vitejs.dev/config/
 /**! 不需要优化前端打包(如开启gzip) */
@@ -35,7 +34,6 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       }
     },
     plugins: [
-      vueDevTools(), // 有时候会导致清理存储没有完全清理
       /**
        * vue3.5.0已支持解构并具有响应式
        * */
