@@ -142,7 +142,7 @@ import { VueDraggable } from 'vue-draggable-plus'
 import router from '@/router'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { listChat } from '../api/index.ts'
+import { listChat, removeChat } from '../api/index.ts'
 
 const userStore = useUserStore()
 const activeItem = ref(0)
@@ -301,6 +301,7 @@ const deleteChat = (item?: any) => {
     window.$message.success(`已删除 ${item.title}`, {
       icon: () => h(NIcon, null, { default: () => h('svg', null, [h('use', { href: '#face' })]) })
     })
+    removeChat(item.chatNumber)
   }
 }
 
@@ -345,6 +346,9 @@ onMounted(() => {
   })
   useMitt.on('return-chat', () => {
     handleActive(chatList.value[0])
+  })
+  useMitt.on('get-chat-list', () => {
+    handleGetChatList()
   })
 })
 </script>

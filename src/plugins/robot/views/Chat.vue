@@ -89,9 +89,20 @@
           </n-flex>
 
           <!-- 聊天内容 -->
-          <n-scrollbar v-else ref="virtualListInst" :style="{ 'max-height': `calc(100vh - 440px)` }">
+          <n-scrollbar
+            v-else
+            ref="virtualListInst"
+            :style="{ 'max-height': `calc(100vh - 440px)` }"
+            :on-scroll="handleScroll">
             <n-flex v-if="chatMessageList.length === 0" justify="center" :size="18">
               <p class="text-[#707070]">暂无数据</p>
+            </n-flex>
+            <n-flex v-if="isTop" justify="center" :size="18">
+              <p class="text-[#707070]">以下是全部消息内容</p>
+            </n-flex>
+            <n-flex v-if="isLoading" justify="center" :size="18">
+              <p class="text-[#707070]">正在加载...</p>
+              <img class="size-14px ml-2" src="@/assets/img/loading.svg" alt="" />
             </n-flex>
             <template v-for="(item, index) in chatMessageList">
               <n-flex :size="6" v-if="item.role === 'assistant'" :key="index">
@@ -243,6 +254,11 @@ const currentModel = ref({
   version: ''
 })
 
+const pageNum = ref<number>(1)
+const size = ref<number>(10)
+const isLoading = ref(false)
+const isTop = ref(false)
+
 // const features = ref([
 //   {
 //     icon: 'model',
@@ -299,28 +315,87 @@ const scrollToBottom = () => {
   virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'auto' })
 }
 
+const oldScrollTop = ref(0)
+const SCROLL_THRESHOLD = 200
+
+function throttle(fn: any, delay: number) {
+  let lastCall = 0
+  return (...args: any[]) => {
+    const now = Date.now()
+    if (now - lastCall >= delay) {
+      lastCall = now
+      return fn(...args)
+    }
+  }
+}
+
+const handleScroll = throttle((e: any) => {
+  const target = e.target
+  const currentScrollTop = e.target.scrollTop
+
+  // 判断滚动方向
+  if (currentScrollTop > oldScrollTop.value) {
+    console.log('滚动向下')
+  } else if (currentScrollTop < oldScrollTop.value) {
+    console.log('滚动向上')
+  }
+
+  // 更新旧的 scrollTop 值
+  oldScrollTop.value = currentScrollTop
+  // 判断是否滚动到顶部附近
+  const isScrolledToTop =
+    target.scrollTop <= SCROLL_THRESHOLD &&
+    target.scrollHeight - target.clientHeight - target.scrollTop <= SCROLL_THRESHOLD
+
+  // 判断滚动方向
+  const isScrollingUp = currentScrollTop < oldScrollTop.value
+
+  // 判断是否接近顶部并加载更多内容
+  if (isScrolledToTop && isScrollingUp && !isLoading.value) {
+    isLoading.value = true
+    pageNum.value++
+
+    try {
+      handleGetMessageList(false)
+    } catch (error) {
+      console.error('获取消息列表失败:', error)
+    } finally {
+      setTimeout(() => {
+        isLoading.value = false
+      }, 500)
+    }
+  }
+}, 100) // 每100ms最多执行一次
+
 // 提交事件
 const handleSubmit = () => {
   if (!currentModel.value.model) {
     window.$message.error('请选择模型')
     return
   }
+  const chatNumber = currentChat.value.chatNumber
+    ? currentChat.value.chatNumber
+    : Math.random().toString(36).substring(2, 15)
   if (isFirstSend.value && !currentChat.value.chatNumber) handleFirstSendMsg()
-  else handleSend()
+  else handleSend(chatNumber)
 }
 
 /** 第一次发消息时是创建会话 */
 const handleFirstSendMsg = () => {
+  const chatNumber = currentChat.value.chatNumber
+    ? currentChat.value.chatNumber
+    : Math.random().toString(36).substring(2, 15)
   fetchChatAPI({
-    chatNumber: currentChat.value.chatNumber,
+    chatNumber: chatNumber,
     prompt: prompt.value,
-    model: currentModel.value,
+    model: currentModel.value.model,
     modelVersion: currentModel.value.version
   })
     .then((res) => {
       console.log(res)
-      handleSend()
+      handleSend(res.chatNumber)
       isFirstSend.value = false
+      useMitt.emit('get-chat-list')
     })
     .finally(() => {
       prompt.value = ''
@@ -328,7 +403,7 @@ const handleFirstSendMsg = () => {
 }
 
 /** 发送消息 */
-const handleSend = () => {
+const handleSend = (chatNumber: string) => {
   // const { connect } = useSSE('api/chat/sse/create')
   // connect()
   chatMessageList.value.push({
@@ -349,7 +424,7 @@ const handleSend = () => {
   scrollToBottom()
 
   fetchChatMessageAPI({
-    chatNumber: currentChat.value.chatNumber,
+    chatNumber: chatNumber,
     prompt: prompt.value,
     model: currentModel.value.model,
     modelVersion: currentModel.value.version
@@ -410,23 +485,33 @@ const handleSend = () => {
     })
 }
 
-const handleInitMessageList = () => {
+const handleGetMessageList = (isToBottom: boolean = true) => {
   messageLoading.value = true
   listChatMessage({
-    current: 1,
-    size: 10,
+    current: pageNum.value,
+    size: size.value,
     chatNumber: currentChat.value.chatNumber
   })
     .then((res: any) => {
       console.log(res)
-      chatMessageList.value = res
-      setTimeout(() => {
-        scrollToBottom()
-      }, 200)
+      // 添加到chatMessageList最前
+      if (pageNum.value === 1) {
+        chatMessageList.value = res
+      } else {
+        if (res.length === 0) {
+          isTop.value = true
+        } else {
+          chatMessageList.value = [...res, ...chatMessageList.value]
+        }
+      }
     })
     .finally(() => {
       messageLoading.value = false
-      scrollToBottom()
+      if (isToBottom) {
+        setTimeout(() => {
+          scrollToBottom()
+        }, 200)
+      }
     })
 }
 
@@ -456,11 +541,12 @@ onMounted(() => {
     currentChat.value.chatNumber = chatNumber
     console.log('currentChat.value:', currentChat.value)
     // 初始化消息列表
-    handleInitMessageList()
+    pageNum.value = 1
+    handleGetMessageList()
   })
   if (isFirstSend.value) {
     // 初始化消息列表
-    handleInitMessageList()
+    handleGetMessageList()
   }
 })
 </script>
