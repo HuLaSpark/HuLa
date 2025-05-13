@@ -5,6 +5,7 @@
 <p align="center">一款基于Tauri、Vite 6、Vue 3 和 TypeScript 构建的即时通讯系统</p>
 
 <div align="center">
+  <a href="https://deepwiki.com/HuLaSpark/HuLa"><img src="https://deepwiki.com/badge.svg" alt=""></a>
   <a href="https://app.fossa.com/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa?ref=badge_shield"><img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa.svg?type=shield" alt=""></a>
   <a href="https://www.bestpractices.dev/zh-CN/projects/9692"><img src="https://bestpractices.coreinfrastructure.org/projects/9692/badge" alt="CI"></a>
   <img src="https://img.shields.io/badge/TypeScript-blue?logo=Typescript&style=flat&logoColor=fff">
@@ -15,7 +16,6 @@
   <img src="https://img.shields.io/badge/UnoCss-efefef?logo=UnoCss&logoColor=606060">
   <img src="https://img.shields.io/badge/pnpm-909090?logo=pnpm&logoColor=FFC131">
   <img src="https://img.shields.io/badge/Sass-CC6699?logo=sass&logoColor=fff">
-  <img src="https://img.shields.io/badge/UI组件库-Naive-059669">
 </div>
 
 <p align="center">
