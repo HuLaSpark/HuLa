@@ -19,6 +19,7 @@ use desktops::tray;
 use init::CustomInit;
 #[cfg(desktop)]
 use proxy::test_api_proxy;
+#[cfg(desktop)]
 use proxy::test_ws_proxy;
 
 // 移动端依赖
