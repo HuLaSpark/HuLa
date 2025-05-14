@@ -80,7 +80,7 @@
       :items="filteredUserList">
       <template #default="{ item }">
         <n-popover
-          ref="infoPopover"
+          :ref="(el) => (infoPopoverRefs[item.uid] = el)"
           @update:show="handlePopoverUpdate(item.uid, $event)"
           trigger="click"
           placement="left"
@@ -210,8 +210,8 @@ const isGroup = computed(() => globalStore.currentSession?.type === RoomTypeEnum
 /** 是否是搜索模式 */
 const isSearch = ref(false)
 const searchRef = ref('')
-/** 手动触发Popover显示 */
-const infoPopover = ref()
+/** List中的Popover组件实例 */
+const infoPopoverRefs = ref<Record<string, any>>([])
 const inputInstRef = ref<InputInst | null>(null)
 const isCollapsed = ref(true)
 const { optionsList, report, selectKey } = useChatMain()
@@ -389,7 +389,7 @@ const getUserState = (stateId: string) => {
 onMounted(async () => {
   useMitt.on(`${MittEnum.INFO_POPOVER}-Sidebar`, (event: any) => {
     selectKey.value = event.uid
-    infoPopover.value.setShow(true)
+    infoPopoverRefs.value[event.uid].setShow(true)
     handlePopoverUpdate(event.uid)
   })
 

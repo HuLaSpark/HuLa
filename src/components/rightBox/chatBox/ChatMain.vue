@@ -163,7 +163,7 @@
               </svg>
               <!-- 头像 -->
               <n-popover
-                ref="infoPopoverRef"
+                :ref="(el) => (infoPopoverRefs[item.message.id] = el)"
                 @update:show="handlePopoverUpdate(item.message.id, $event)"
                 trigger="click"
                 placement="right"
@@ -503,8 +503,8 @@ const activeReply = ref('')
 const itemSize = computed(() => (isGroup.value ? 90 : 76))
 /** 虚拟列表 */
 const virtualListInst = useTemplateRef<VirtualListExpose>('virtualListInst')
-/** 手动触发Popover显示 */
-const infoPopover = ref()
+/** List中的Popover组件实例 */
+const infoPopoverRefs = ref<Record<string, any>>([])
 // 是否显示滚动条
 const showScrollbar = ref(false)
 // 记录 requestAnimationFrame 的返回值
@@ -1021,7 +1021,7 @@ onMounted(async () => {
   })
   useMitt.on(`${MittEnum.INFO_POPOVER}-Main`, (event: any) => {
     selectKey.value = event.uid
-    infoPopover.value.setShow(true)
+    infoPopoverRefs.value[event.uid].setShow(true)
     handlePopoverUpdate(event.uid)
   })
   useMitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
