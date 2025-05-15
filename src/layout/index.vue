@@ -353,6 +353,19 @@ onMounted(async () => {
     msgId: 'checkUpdate',
     duration: CHECK_UPDATE_TIME
   })
+
+  // 监听home窗口被聚焦的事件，当窗口被聚焦时自动关闭状态栏通知
+  const homeWindow = await WebviewWindow.getByLabel('home')
+  if (homeWindow) {
+    homeWindow.onFocusChanged(({ payload: focused }) => {
+      // 当窗口获得焦点时，关闭通知提示
+      if (focused) {
+        globalStore.setTipVisible(false)
+        // 同时通知通知窗口隐藏
+        emitTo('notify', 'hide_notify')
+      }
+    })
+  }
 })
 
 onUnmounted(() => {

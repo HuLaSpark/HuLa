@@ -118,8 +118,11 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
    * @param itemIds 徽章ID数组
    */
   const getBatchBadgeInfo = async (itemIds: string[]) => {
+    // 限制每次最多处理50个ID
+    const limitedItemIds = itemIds.slice(0, 50)
+
     // 筛选需要更新的徽章：没有lastModifyTime或距离上次更新超过10分钟的徽章
-    const result = itemIds
+    const result = limitedItemIds
       .map((itemId) => {
         const cacheBadge = badgeCachedList[itemId]
         return { itemId, lastModifyTime: cacheBadge?.lastModifyTime }
