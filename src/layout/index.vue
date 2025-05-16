@@ -46,6 +46,7 @@ import { clearListener, initListener, readCountQueue } from '@/utils/ReadCountQu
 import { type } from '@tauri-apps/plugin-os'
 import { useConfigStore } from '@/stores/config'
 import { useCheckUpdate } from '@/hooks/useCheckUpdate'
+import { UserAttentionType } from '@tauri-apps/api/window'
 
 const loadingPercentage = ref(10)
 const loadingText = ref('正在加载应用...')
@@ -231,7 +232,6 @@ useMitt.on(WsResponseMessageType.MY_ROOM_INFO_CHANGE, (data: { myName: string; r
 })
 useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   chatStore.pushMsg(data)
-  // 接收到通知就设置图标闪烁
   const username = useUserInfo(data.fromUser.uid).value.name!
   const home = await WebviewWindow.getByLabel('home')
   // 当home窗口不显示并且home窗口不是最小化的时候并且不是聚焦窗口的时候
@@ -242,20 +242,21 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
 
   // 不是自己发的消息才通知
   if (data.fromUser.uid !== userUid.value) {
-    useMitt.emit(MittEnum.MESSAGE_ANIMATION, data)
-    // 在windows系统下才发送通知
-    if (type() === 'windows') {
-      await emitTo('tray', 'show_tip')
-    }
-
     // 获取该消息的会话信息
     const session = chatStore.sessionList.find((s) => s.roomId === data.message.roomId)
 
-    // 只有非免打扰的会话才发送通知
+    // 只有非免打扰的会话才发送通知和触发图标闪烁
     if (session && session.muteNotification !== NotificationTypeEnum.NOT_DISTURB) {
+      // 设置图标闪烁
+      useMitt.emit(MittEnum.MESSAGE_ANIMATION, data)
+      // 在windows系统下才发送通知
+      if (type() === 'windows') {
+        await emitTo('tray', 'show_tip')
+        // 请求用户注意窗口
+        home?.requestUserAttention(UserAttentionType.Critical)
+      }
+
       await emitTo('notify', 'notify_cotent', data)
-      // 请求用户注意窗口
-      // home?.requestUserAttention(UserAttentionType.Critical)
       const throttleSendNotification = useThrottleFn(() => {
         sendNotification({
           title: username,
