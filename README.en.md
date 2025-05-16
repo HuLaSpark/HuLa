@@ -223,6 +223,7 @@ Thanks to the following sponsors for their support!
 | 2025-04-01 | 墨       | ￥88.88 | 微信转账 |
 | 2025-02-8 | 邓伟 | ￥88 | 微信赞赏码 |
 | 2025-02-7 | dennis | ￥80 | gitee码云赞赏 |
+| 2025-05-15 | 孤鸿影 | ￥56 | 微信红包 |
 | 2025-02-6 | 小二 | ￥62 | 微信转账 |
 
 > Note: This list is manually updated. If you have sponsored but are not displayed in the list, please contact us by:
