@@ -250,7 +250,7 @@
                   </div>
                   <!-- 信息时间(群聊) -->
                   <Transition name="fade-group">
-                    <span v-if="isGroup && hoverBubble.key === item.message.id" class="text-(12px #909090)">
+                    <span v-if="isGroup && hoverBubble.key === item.message.id" class="text-(12px #909090) select-none">
                       {{ formatTimestamp(item.message.sendTime, true) }}
                     </span>
                   </Transition>

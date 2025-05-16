@@ -78,23 +78,36 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
 
       // 收集需要获取的徽章ID
       const itemIdSet: Set<string> = new Set()
-      const data = await apis.getUserInfoBatch(result)
 
-      for (const item of data || []) {
-        // 更新用户信息缓存
-        userCachedList[item.uid] = {
-          ...userCachedList[item.uid], // 保留旧数据
-          ...item, // 用新数据覆盖
-          needRefresh: undefined,
-          lastModifyTime: Date.now()
+      // 后端限制每批最多50个用户，需要分批处理
+      const batchSize = 50
+      const totalBatches = Math.ceil(result.length / batchSize)
+
+      for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
+        // 计算当前批次的起始和结束索引
+        const startIndex = batchIndex * batchSize
+        const endIndex = Math.min(startIndex + batchSize, result.length)
+        const batchUsers = result.slice(startIndex, endIndex)
+
+        // 批量获取当前批次的用户信息
+        const batchData = await apis.getUserInfoBatch(batchUsers)
+
+        for (const item of batchData || []) {
+          // 更新用户信息缓存
+          userCachedList[item.uid] = {
+            ...userCachedList[item.uid], // 保留旧数据
+            ...item, // 用新数据覆盖
+            needRefresh: void 0,
+            lastModifyTime: Date.now()
+          }
+
+          // 收集用户佩戴的徽章ID
+          const wearingItemId = item.wearingItemId
+          wearingItemId && itemIdSet.add(wearingItemId)
+
+          // 从待处理集合中移除已完成的用户ID
+          pendingUids.value.delete(item.uid)
         }
-
-        // 收集用户佩戴的徽章ID
-        const wearingItemId = item.wearingItemId
-        wearingItemId && itemIdSet.add(wearingItemId)
-
-        // 从待处理集合中移除已完成的用户ID
-        pendingUids.value.delete(item.uid)
       }
 
       // 批量获取徽章信息
@@ -118,11 +131,8 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
    * @param itemIds 徽章ID数组
    */
   const getBatchBadgeInfo = async (itemIds: string[]) => {
-    // 限制每次最多处理50个ID
-    const limitedItemIds = itemIds.slice(0, 50)
-
     // 筛选需要更新的徽章：没有lastModifyTime或距离上次更新超过10分钟的徽章
-    const result = limitedItemIds
+    const result = itemIds
       .map((itemId) => {
         const cacheBadge = badgeCachedList[itemId]
         return { itemId, lastModifyTime: cacheBadge?.lastModifyTime }

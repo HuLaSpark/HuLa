@@ -139,7 +139,7 @@ const showWindow = async (event: Event<any>) => {
       await notifyWindow?.setPosition(
         new PhysicalPosition(
           event.payload.position.Physical.x - 120,
-          event.payload.position.Physical.y - outerSize.height
+          event.payload.position.Physical.y - outerSize.height + 8
         )
       )
       await notifyWindow?.show()

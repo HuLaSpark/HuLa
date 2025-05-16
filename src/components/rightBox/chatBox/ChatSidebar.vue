@@ -43,7 +43,13 @@
     </n-flex>
 
     <n-flex v-if="!isSearch" align="center" justify="space-between" class="pr-8px pl-8px h-42px">
-      <span class="text-14px">在线群聊成员&nbsp;{{ groupStore.countInfo.onlineNum }}</span>
+      <span class="text-14px">
+        在线群聊成员&nbsp;
+        <template v-if="groupStore.countInfo && groupStore.countInfo.onlineNum !== void 0">
+          {{ groupStore.countInfo.onlineNum }}
+        </template>
+        <img v-else class="size-16px" src="@/assets/img/loading.svg" alt="" />
+      </span>
       <svg @click="handleSelect" class="size-14px">
         <use href="#search"></use>
       </svg>
@@ -100,13 +106,19 @@
                 justify="space-between"
                 class="item">
                 <n-flex align="center" :size="8" class="flex-1 truncate">
-                  <n-avatar
-                    round
-                    class="grayscale"
-                    :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
-                    :color="'#fff'"
-                    :size="26"
-                    :src="AvatarUtils.getAvatarUrl(item.avatar)" />
+                  <div class="relative inline-flex items-center justify-center">
+                    <n-skeleton v-if="!avatarLoadedMap[item.uid]" text :repeat="1" :width="26" :height="26" circle />
+                    <n-avatar
+                      v-show="avatarLoadedMap[item.uid]"
+                      round
+                      class="grayscale"
+                      :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
+                      :color="'#fff'"
+                      :size="26"
+                      :src="AvatarUtils.getAvatarUrl(item.avatar)"
+                      @load="avatarLoadedMap[item.uid] = true"
+                      @error="avatarLoadedMap[item.uid] = true" />
+                  </div>
                   <n-flex vertical :size="2" class="flex-1 truncate">
                     <p :title="item.name" class="text-12px truncate flex-1">{{ item.name }}</p>
                     <n-flex
@@ -241,6 +253,9 @@ const announList = ref<any[]>([])
 const announNum = ref(0)
 const isAddAnnoun = ref(false)
 
+/** 头像加载状态 */
+const avatarLoadedMap = ref<Record<string, boolean>>({})
+
 // 添加一个新的计算属性来合并用户列表
 const mergedUserList = computed(() => {
   // 创建一个Map用于去重，使用uid作为key
@@ -369,9 +384,6 @@ const handleLoadGroupAnnoun = async (roomId: string) => {
 const handleInitAnnoun = async () => {
   // 初始化时获取群公告
   if (isGroup.value) {
-    if (globalStore.currentSession?.roomId) {
-      await groupStore.getGroupUserList(true, globalStore.currentSession.roomId)
-    }
     const roomId = globalStore.currentSession?.roomId
     if (roomId) {
       await handleLoadGroupAnnoun(roomId)
