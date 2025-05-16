@@ -14,7 +14,7 @@
               <n-popover :delay="500" :duration="0" trigger="hover" :show-arrow="false" placement="top">
                 <template #trigger>
                   <div class="emoji-item" @click="handleReplyEmoji(item)">
-                    {{ item.label }}
+                    <img :title="item.title" class="size-18px" :src="item.url" :alt="item.title" />
                   </div>
                 </template>
                 <span>{{ item.title }}</span>

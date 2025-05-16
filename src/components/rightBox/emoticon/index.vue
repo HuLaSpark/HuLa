@@ -1,5 +1,8 @@
 <template>
-  <n-scrollbar style="max-height: 290px" class="p-[14px_14px_0_14px] box-border w-460px h-290px select-none">
+  <n-scrollbar
+    style="max-height: 290px"
+    class="p-[14px_14px_0_14px] box-border w-460px h-290px select-none"
+    @scroll="activeMenuId = ''">
     <transition name="fade" mode="out-in">
       <div :key="activeIndex" class="emoji-content">
         <!-- 最近使用 -->
@@ -49,15 +52,11 @@
               v-for="(item, index) in currentSeries.emojis"
               :key="index"
               @click.stop="chooseEmoji(item.url, 'url')">
-              <n-popover trigger="hover" :delay="500" :duration="0" :show-arrow="false" placement="top">
-                <template #trigger>
-                  <n-image
-                    preview-disabled
-                    :src="item.url"
-                    class="size-full object-contain rounded-8px transition duration-300 ease-in-out transform-gpu" />
-                </template>
-                <span>{{ item.name }}</span>
-              </n-popover>
+              <n-image
+                :title="item.name"
+                preview-disabled
+                :src="item.url"
+                class="size-full object-contain rounded-8px transition duration-300 ease-in-out transform-gpu" />
             </n-flex>
           </n-flex>
         </div>
@@ -74,13 +73,20 @@
                 v-for="(item, index) in emojiStore.emojiList"
                 :key="index"
                 @click.stop="chooseEmoji(item.expressionUrl, 'url')">
-                <n-popover trigger="hover" :delay="600" :duration="0" :show-arrow="false" placement="top">
+                <n-popover
+                  trigger="manual"
+                  :show="activeMenuId === item.id"
+                  :duration="300"
+                  :show-arrow="false"
+                  placement="top"
+                  @clickoutside="activeMenuId = ''">
                   <template #trigger>
                     <n-image
                       width="60"
                       height="60"
                       preview-disabled
                       :src="item.expressionUrl"
+                      @contextmenu.prevent="handleContextMenu($event, item)"
                       class="size-full object-contain rounded-8px transition duration-300 ease-in-out transform-gpu" />
                   </template>
                   <n-button quaternary size="tiny" @click.stop="deleteMyEmoji(item.id)">
@@ -164,6 +170,8 @@ const emojiStore = useEmojiStore()
 const emojisBbs = HulaEmojis.MihoyoBbs
 const activeIndex = ref(lastEmojiTabIndex)
 const currentSeriesIndex = ref(0)
+// 设置当前右键点击的表情项ID
+const activeMenuId = ref('')
 
 // 生成选项卡数组
 const tabList = computed<TabItem[]>(() => {
@@ -226,6 +234,17 @@ const checkIsUrl = (str: string) => {
 }
 
 /**
+ * 处理右键菜单点击事件
+ * @param event 鼠标事件
+ * @param item 表情项
+ */
+const handleContextMenu = (event: MouseEvent, item: any) => {
+  // 阻止原生右键菜单
+  event.preventDefault()
+  activeMenuId.value = item.id
+}
+
+/**
  * 删除我的表情包
  * @param id 表情包ID
  */
@@ -233,6 +252,8 @@ const deleteMyEmoji = async (id: string) => {
   try {
     await emojiStore.deleteEmoji(id)
     window.$message.success('删除表情成功')
+    // 关闭菜单
+    activeMenuId.value = ''
   } catch (error) {
     console.error('删除表情失败:', error)
     window.$message.error('删除表情失败')

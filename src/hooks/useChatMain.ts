@@ -415,72 +415,72 @@ export const useChatMain = () => {
   /** emoji表情菜单 */
   const emojiList = ref([
     {
-      label: '👍',
+      url: '/msgAction/like.png',
       value: 1,
       title: '好赞'
     },
     {
-      label: '☹️',
+      url: '/msgAction/slightly-frowning-face.png',
       value: 2,
       title: '不满'
     },
     {
-      label: '❤️',
+      url: '/msgAction/heart-on-fire.png',
       value: 3,
       title: '爱心'
     },
     {
-      label: '😡',
+      url: '/msgAction/enraged-face.png',
       value: 4,
       title: '愤怒'
     },
     {
-      label: '🎉',
+      url: '/emoji/party-popper.webp',
       value: 5,
       title: '礼炮'
     },
     {
-      label: '🚀',
+      url: '/emoji/rocket.webp',
       value: 6,
       title: '火箭'
     },
     {
-      label: '😂',
+      url: '/msgAction/face-with-tears-of-joy.png',
       value: 7,
       title: '笑哭'
     },
     {
-      label: '👏',
+      url: '/msgAction/clapping.png',
       value: 8,
       title: '鼓掌'
     },
     {
-      label: '🌹',
+      url: '/msgAction/rose.png',
       value: 9,
       title: '鲜花'
     },
     {
-      label: '💣',
+      url: '/msgAction/bomb.png',
       value: 10,
       title: '炸弹'
     },
     {
-      label: '🤯',
+      url: '/msgAction/exploding-head.png',
       value: 11,
       title: '疑问'
     },
     {
-      label: '✌️',
+      url: '/msgAction/victory-hand.png',
       value: 12,
       title: '胜利'
     },
     {
-      label: '💡',
+      url: '/msgAction/flashlight.png',
       value: 13,
       title: '灯光'
     },
     {
-      label: '🧧',
+      url: '/msgAction/pocket-money.png',
       value: 14,
       title: '红包'
     }
