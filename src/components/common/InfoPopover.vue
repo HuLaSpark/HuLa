@@ -105,7 +105,15 @@
         <span class="text-[--info-text-color]">获得的徽章</span>
         <n-flex>
           <template v-for="id in isCurrentUser.itemIds" :key="id">
-            <img class="size-38px" :src="useBadgeInfo(id).value.img" alt="" />
+            <n-skeleton v-if="!badgeLoadedMap[id]" text :repeat="1" :width="38" :height="38" circle />
+            <n-avatar
+              v-show="badgeLoadedMap[id]"
+              round
+              :width="38"
+              :height="38"
+              :src="useBadgeInfo(id).value.img"
+              @load="badgeLoadedMap[id] = true"
+              @error="badgeLoadedMap[id] = true" />
           </template>
         </n-flex>
       </n-flex>
@@ -159,6 +167,8 @@ const contactStore = useContactStore()
 const userStatusStore = useUserStatusStore()
 const { stateList } = storeToRefs(userStatusStore)
 const isCurrentUser = computed(() => useUserInfo(uid).value)
+/** 头像加载状态 */
+const badgeLoadedMap = ref<Record<string, boolean>>({})
 const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(useUserInfo(uid).value.avatar as string))
 /** 是否是当前登录的用户 */
 const isCurrentUserUid = computed(() => userUid.value === uid)
