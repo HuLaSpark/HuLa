@@ -1,5 +1,41 @@
 
 
+## [2.6.11](https://github.com/HuLaSpark/HuLa/compare/v2.6.10...v2.6.11) (2025-05-18)
+
+
+### ⚠ BREAKING CHANGES
+
+* **component:** webSocket的计时器调整为worker计时器
+
+### ✨ Features | 新功能
+
+* **view:** :sparkles: 新增重置密码功能 ([b45cfd2](https://github.com/HuLaSpark/HuLa/commit/b45cfd22120c9fe46fead1fcb9daf5cc7b25f423))
+* **view:** :sparkles: 增加修订版本更新检测，修复每次版本变动都更新的bug ([#271](https://github.com/HuLaSpark/HuLa/issues/271)) ([833d09e](https://github.com/HuLaSpark/HuLa/commit/833d09efe4e218d483c37a87cb1bdd39443f46c7))
+
+
+### 🐛 Bug Fixes | Bug 修复
+
+* **component:** :bug: 点击头像弹出个人信息面板 ([#273](https://github.com/HuLaSpark/HuLa/issues/273)) ([eaa4288](https://github.com/HuLaSpark/HuLa/commit/eaa42885c33a03d84cc2999c6a77a1eb4d5baf0a))
+* **component:** :bug: 修复回复消息表情不展示问题 ([f33f41d](https://github.com/HuLaSpark/HuLa/commit/f33f41d41f0f60fb5ab9e0cff6305b0cef548eea))
+* **component:** :bug: 修复图片截图功能文件大小问题 ([f816314](https://github.com/HuLaSpark/HuLa/commit/f816314115a02e10241f299536db9e54854a510f))
+* **component:** :bug: 修复因公告宽度导致聊天框布局混乱问题 ([2753e89](https://github.com/HuLaSpark/HuLa/commit/2753e89dd52f7a4a66eca3ffe5e8189bdc266170))
+* **component:** :bug: 修复mac下更新提示窗口可以调整大小、拖动、标题栏显示问题 ([c761486](https://github.com/HuLaSpark/HuLa/commit/c76148687cd86b2f56d34525bc3d56b859d74a13))
+* **component:** :bug: 优化windows上群聊的展示时机和样式 ([92dba12](https://github.com/HuLaSpark/HuLa/commit/92dba1218ffc113e9ea492c1ead20732c40bce32))
+* **ios:** :bug: 修复ios init导致无法启动问题 ([3ef1666](https://github.com/HuLaSpark/HuLa/commit/3ef1666ef7eadae9990fbeed357b5c1ccc085c12))
+* **notify:** :bug: 修复免打扰时还会触发托盘图标闪烁(windows) ([02ef835](https://github.com/HuLaSpark/HuLa/commit/02ef83585549851836b11dc1e58e7f47e5a06754))
+* **view:** :bug: 修复系统托盘闪烁和提示菜单内容不显示问题 ([4954b1c](https://github.com/HuLaSpark/HuLa/commit/4954b1cc241ed0275619d7c3b7db2b7ead7e680e))
+* **view:** :bug: 修复系统托盘信息提示菜单内容展示问题和点击跳转问题 ([2c8b15c](https://github.com/HuLaSpark/HuLa/commit/2c8b15cd3a971de02c50c682b2f3b8902ba52479))
+* **view:** :bug: 修复win下忘记密码页面背景颜色问题 ([bd825e0](https://github.com/HuLaSpark/HuLa/commit/bd825e0c32534be3cce4788de8b53d9c686c7464))
+
+
+### ⚡️ Performance Improvements | 性能优化
+
+* **component:** :zap: 优化群聊成员和公告展示、以及完成搜索会话功能 ([a8bf8e0](https://github.com/HuLaSpark/HuLa/commit/a8bf8e00aba0ea0df35cc165ae0fc71aa333e511))
+* **component:** :zap: 优化消息回复表情功能 ([2081e99](https://github.com/HuLaSpark/HuLa/commit/2081e99d4ad45b8f13ebf57ae7f6b5cceb6f1dbc))
+* **component:** :zap: 优化emoji的样式和展示 ([f0aa001](https://github.com/HuLaSpark/HuLa/commit/f0aa0014a9d6a5ff32a537f4900a61ce340db6de))
+* **service:** :zap: 优化websocket可以在窗口隐藏后继续监听 ([884a53e](https://github.com/HuLaSpark/HuLa/commit/884a53e4484a1a0d0efbcb17f5761ddd80409461))
+* **view:** :zap: 优化在登录框下未提示更新、右下角窗口可拖动问题 ([777951b](https://github.com/HuLaSpark/HuLa/commit/777951bb8cff2383611a81e9aaaa4fc2c2e7f6a6))
+
 ## [2.6.10](https://github.com/HuLaSpark/HuLa/compare/v2.6.9...v2.6.10) (2025-05-05)
 
 
