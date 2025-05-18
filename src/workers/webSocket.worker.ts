@@ -5,6 +5,9 @@ const postMsg = ({ type, value }: { type: string; value?: object }) => {
   self.postMessage(JSON.stringify({ type, value }))
 }
 
+// 最后一次收到pong消息的时间
+let lastPongTime: number | null = null
+
 // ws instance
 let connection: WebSocket
 
@@ -42,6 +45,21 @@ const sendHeartPack = () => {
 const sendSingleHeartbeat = () => {
   // 心跳消息类型 2
   connectionSend({ type: 2 })
+  const pingTime = Date.now()
+
+  // 检测连接健康状态
+  if (lastPongTime !== null) {
+    const timeSinceLastPong = pingTime - lastPongTime
+    const isConnectionHealthy = timeSinceLastPong < HEARTBEAT_INTERVAL * 2
+
+    // 如果连接不健康，通知主线程
+    if (!isConnectionHealthy) {
+      postMsg({
+        type: WorkerMsgEnum.ERROR,
+        value: { msg: '连接响应较慢，可能存在网络问题', timeSinceLastPong }
+      })
+    }
+  }
 
   // 清除之前的超时计时器
   if (heartbeatTimeout) {
@@ -135,7 +153,23 @@ const onConnectOpen = () => {
   sendHeartPack()
 }
 // ws 连接 接收到消息
-const onConnectMsg = (e: any) => postMsg({ type: WorkerMsgEnum.MESSAGE, value: e.data })
+const onConnectMsg = (e: any) => {
+  // 检查是否是pong消息（服务器响应心跳）
+  try {
+    const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data
+    if (data && (data.type === 'pong' || data.type === 3)) {
+      // 3是pong的消息类型
+      lastPongTime = Date.now()
+      // 告知主线程收到了pong
+      postMsg({ type: 'pongReceived', value: { timestamp: lastPongTime } })
+    }
+  } catch (err) {
+    // 解析失败则当作普通消息处理
+  }
+
+  // 转发消息给主线程
+  postMsg({ type: WorkerMsgEnum.MESSAGE, value: e.data })
+}
 
 // 初始化 ws 连接
 const initConnection = () => {
@@ -176,6 +210,7 @@ self.onmessage = (e: MessageEvent<string>) => {
       token = value['token']
       clientId = value['clientId']
       serverUrl = value['serverUrl']
+      lastPongTime = null // 重置pong时间
       initConnection()
       break
     }
@@ -208,6 +243,33 @@ self.onmessage = (e: MessageEvent<string>) => {
     case 'heartbeatTimeout': {
       console.log('心跳超时，重连...')
       connection.close()
+      break
+    }
+    // 页面可见性变化
+    case 'visibilityChange': {
+      const { isHidden } = value
+      if (isHidden) {
+        // console.log('页面切换到后台，Web Worker继续维持心跳')
+        // 页面在后台，Web Worker继续正常工作
+      } else {
+        // console.log('页面切换到前台，恢复正常心跳')
+        // 立即发送一次心跳
+        sendSingleHeartbeat()
+      }
+      break
+    }
+    // 请求检查连接健康状态
+    case 'checkConnectionHealth': {
+      const now = Date.now()
+      const isHealthy = lastPongTime !== null && now - lastPongTime < HEARTBEAT_INTERVAL * 2
+      postMsg({
+        type: 'connectionHealthStatus',
+        value: {
+          isHealthy,
+          lastPongTime,
+          timeSinceLastPong: lastPongTime ? now - lastPongTime : null
+        }
+      })
       break
     }
   }
