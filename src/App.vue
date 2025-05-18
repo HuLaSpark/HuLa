@@ -160,6 +160,11 @@ onUnmounted(() => {
   font-size: 12px;
 }
 
+img {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 input,
 button,
 a {

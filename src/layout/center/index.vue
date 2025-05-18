@@ -29,14 +29,16 @@
       <div class="flex-center gap-5px w-full pr-16px pl-16px box-border">
         <n-input
           id="search"
+          v-model:value="searchText"
           @focus="() => handleSearchFocus()"
           @blur="() => (searchText = '搜索')"
+          @update:value="handleSearchInputChange"
           class="rounded-6px w-full relative text-12px"
           style="background: var(--search-bg-color)"
           :maxlength="20"
           clearable
           size="small"
-          :placeholder="searchText">
+          :placeholder="isSearchMode ? '' : '搜索'">
           <template #prefix>
             <svg class="w-12px h-12px"><use href="#search"></use></svg>
           </template>
@@ -150,6 +152,8 @@ const isDrag = ref(true)
 const currentMsg = ref()
 /** 搜索框文字 */
 const searchText = ref('搜索')
+/** 是否处于搜索模式 */
+const isSearchMode = ref(false)
 /** 添加面板是否显示 */
 const addPanels = ref({
   show: false,
@@ -210,6 +214,20 @@ const handleCreateGroup = async () => {
 const handleSearchFocus = () => {
   router.push('/searchDetails')
   searchText.value = ''
+  isSearchMode.value = true
+
+  // 延迟发送当前搜索框的值到SearchDetails组件
+  setTimeout(() => {
+    useMitt.emit('search_input_change', searchText.value)
+  }, 100)
+}
+
+// 处理搜索输入变化
+const handleSearchInputChange = (value: string) => {
+  // 如果处于搜索详情页面，将输入值发送到SearchDetails组件
+  if (isSearchMode.value) {
+    useMitt.emit('search_input_change', value)
+  }
 }
 
 const closeMenu = (event: Event) => {
@@ -218,6 +236,7 @@ const closeMenu = (event: Event) => {
   /** 判断如果点击的搜索框，就关闭消息列表 */
   if (!e.matches('#search, #search *, #centerList *, #centerList') && route === '/searchDetails') {
     router.go(-1)
+    isSearchMode.value = false
   }
 }
 

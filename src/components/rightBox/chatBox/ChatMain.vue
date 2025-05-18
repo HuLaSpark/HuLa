@@ -250,7 +250,7 @@
                   </div>
                   <!-- 信息时间(群聊) -->
                   <Transition name="fade-group">
-                    <span v-if="isGroup && hoverBubble.key === item.message.id" class="text-(12px #909090)">
+                    <span v-if="isGroup && hoverBubble.key === item.message.id" class="text-(12px #909090) select-none">
                       {{ formatTimestamp(item.message.sendTime, true) }}
                     </span>
                   </Transition>
@@ -373,7 +373,7 @@
                     <!-- 根据表情类型获取对应的计数属性名 -->
                     <div class="flex-y-center" v-if="getEmojiCount(item, emoji.value) > 0">
                       <div class="emoji-reply-bubble" @click.stop="cancelReplyEmoji(item, emoji.value)">
-                        {{ emoji.label }}
+                        <img :title="emoji.title" class="size-18px" :src="emoji.url" :alt="emoji.title" />
                         <span class="text-(12px #eee)">{{ getEmojiCount(item, emoji.value) }}</span>
                       </div>
                     </div>

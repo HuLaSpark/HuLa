@@ -105,19 +105,18 @@
 </template>
 <script lang="ts" setup name="message">
 import { useMessage } from '@/hooks/useMessage.ts'
-import { MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
+import { MittEnum, RoomTypeEnum } from '@/enums'
 import { IsAllUserEnum, SessionItem } from '@/services/types.ts'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
-import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
+import { useReplaceMsg } from '@/hooks/useReplaceMsg.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import SysNTF from '@/components/common/SystemNotification.tsx'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { useGroupStore } from '@/stores/group.ts'
 import { useMitt } from '@/hooks/useMitt'
-import { useUserStore } from '@/stores/user'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useTauriListener } from '@/hooks/useTauriListener'
 
@@ -126,8 +125,7 @@ const { addListener } = useTauriListener()
 const chatStore = useChatStore()
 const globalStore = useGlobalStore()
 const groupStore = useGroupStore()
-const { userUid, openMsgSession } = useCommon()
-const userStore = useUserStore()
+const { openMsgSession } = useCommon()
 const msgScrollbar = useTemplateRef<HTMLElement>('msg-scrollbar')
 const { handleMsgClick, handleMsgDelete, menuList, specialMenuList, handleMsgDblclick } = useMessage()
 const currentSession = computed(() => globalStore.currentSession)
@@ -156,40 +154,17 @@ const sessionList = computed(() => {
         }
 
         if (lastMsg) {
-          const lastMsgUserName = useUserInfo(lastMsg.fromUser.uid)
+          // 使用 useAtMention hook 检查是否有@我的消息
+          const { checkRoomAtMe, formatMessageContent, getMessageSenderName } = useReplaceMsg()
 
-          // 添加@提醒判断 - 修改比较逻辑，确保类型一致
-          const messagesWithAt = messages.filter((msg) =>
-            msg.message?.body?.atUidList?.some((atUid: string) => String(atUid) === String(userStore.userInfo.uid))
-          )
+          // 获取发送者信息
+          const senderName = getMessageSenderName(lastMsg)
 
-          // 检查是否有@我的消息以及是否在未读范围内
-          const isAtMe =
-            item.type === RoomTypeEnum.GROUP &&
-            currentSession.value.roomId !== item.roomId &&
-            messagesWithAt.some((msg) => messages.indexOf(msg) >= messages.length - (item.unreadCount || 0))
+          // 检查是否有@我的消息
+          const isAtMe = checkRoomAtMe(item.roomId, item.type, currentSession.value.roomId, messages, item.unreadCount)
 
-          const atPrefix = isAtMe ? '<span class="text-#d5304f mr-4px">[有人@我]</span>' : ''
-
-          // 获取正常的消息内容
-          const messageContent = renderReplyContent(
-            lastMsgUserName.value.name,
-            lastMsg.message?.type,
-            lastMsg.message?.body?.content || lastMsg.message?.body,
-            item.type
-          ) as string
-
-          // 撤回消息直接显示文本，没有HTML
-          LastUserMsg =
-            lastMsg.message?.type === MsgEnum.RECALL
-              ? item.type === RoomTypeEnum.GROUP
-                ? `${lastMsgUserName.value.name}:撤回了一条消息`
-                : lastMsg.fromUser.uid === userUid.value
-                  ? '你撤回了一条消息'
-                  : '对方撤回了一条消息'
-              : isAtMe
-                ? `${atPrefix}${messageContent}` // 有人@我时才保留HTML标签
-                : messageContent // 正常消息内容已在renderReplyContent中被转义
+          // 使用封装后的方法处理消息内容，包括撤回消息和@提醒
+          LastUserMsg = formatMessageContent(lastMsg, item.type, senderName, isAtMe)
 
           // 返回带有isAtMe标记的对象和修改后的名称
           return {
@@ -232,16 +207,20 @@ watch(
       if (newVal.type === RoomTypeEnum.GROUP) {
         // 在这里请求是因为这里一开始选中就会触发，而在chat.ts中则需要切换会话才会触发
         await groupStore.getCountStatistic()
+        // 同时获取群成员列表，确保首次加载时也能显示群成员
+        await groupStore.getGroupUserList(true, newVal.roomId)
         // 将群组详情信息传递给handleMsgClick方法
-        handleMsgClick({
+        const sessionItem = {
           ...newVal,
           memberNum: groupStore.countInfo?.memberNum,
           remark: groupStore.countInfo?.remark,
           myName: groupStore.countInfo?.myName
-        })
+        }
+        handleMsgClick(sessionItem)
       } else {
         // 非群聊直接传递原始信息
-        handleMsgClick(newVal as SessionItem)
+        const sessionItem = newVal as SessionItem
+        handleMsgClick(sessionItem)
       }
     }
   },
