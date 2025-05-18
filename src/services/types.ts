@@ -251,6 +251,8 @@ export type UserInfoType = {
   avatarUpdateTime: number
   /** 客户端 */
   client: string
+  /** 剩余使用次数 */
+  num: number
 }
 
 export type BadgeType = {

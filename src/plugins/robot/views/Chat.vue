@@ -27,11 +27,15 @@
 
       <n-flex class="min-w-fit">
         <div class="right-btn" @click="handleEdit">
-          <svg><use href="#edit"></use></svg>
+          <svg>
+            <use href="#edit"></use>
+          </svg>
         </div>
 
         <div class="right-btn">
-          <svg><use href="#Sharing"></use></svg>
+          <svg>
+            <use href="#Sharing"></use>
+          </svg>
         </div>
       </n-flex>
     </div>
@@ -40,24 +44,8 @@
     <!-- 聊天信息框 -->
     <div
       :class="{ 'shadow-inner': page.shadow }"
-      class="w-full p-[28px_16px] box-border"
-      style="height: calc(100vh - 400px)">
-      <!--      <n-flex :size="6">-->
-      <!--        <n-avatar-->
-      <!--          class="rounded-8px"-->
-      <!--          src="https://img1.baidu.com/it/u=3613958228,3522035000&fm=253&fmt=auto&app=120&f=JPEG?w=500&h=500" />-->
-      <!--        <n-flex vertical justify="space-between">-->
-      <!--          <p class="text-(12px [&#45;&#45;chat-text-color])">GPT-4</p>-->
-
-      <!--          &lt;!&ndash;  气泡样式  &ndash;&gt;-->
-      <!--          <ContextMenu>-->
-      <!--            <div style="white-space: pre-wrap" class="bubble select-text">-->
-      <!--              <span v-html="'你好，我是GPT4机器人，很高兴为您服务。'"></span>-->
-      <!--            </div>-->
-      <!--          </ContextMenu>-->
-      <!--        </n-flex>-->
-      <!--      </n-flex>-->
-
+      class="w-full p-[10px_16px_26px_16px] box-border"
+      style="height: calc(100vh - 380px)">
       <Transition name="chat-init" appear mode="out-in" @after-leave="handleTransitionComplete">
         <div>
           <!-- 初次加载的骨架屏 -->
@@ -65,7 +53,7 @@
             v-if="messageLoading"
             vertical
             :size="18"
-            :style="{ 'max-height': `calc(100vh - 350px)` }"
+            :style="{ 'max-height': `calc(98%)` }"
             class="relative h-100vh box-border p-20px">
             <n-flex justify="end">
               <n-skeleton style="border-radius: 14px" height="40px" width="46%" :sharp="false" />
@@ -89,55 +77,61 @@
           </n-flex>
 
           <!-- 聊天内容 -->
-          <n-scrollbar
-            v-else
-            ref="virtualListInst"
-            :style="{ 'max-height': `calc(100vh - 440px)` }"
-            :on-scroll="handleScroll">
-            <n-flex v-if="chatMessageList.length === 0" justify="center" :size="18">
-              <p class="text-[#707070]">暂无数据</p>
-            </n-flex>
-            <n-flex v-if="isTop" justify="center" :size="18">
-              <p class="text-[#707070]">以下是全部消息内容</p>
-            </n-flex>
-            <n-flex v-if="isLoading" justify="center" :size="18">
-              <p class="text-[#707070]">正在加载...</p>
-              <img class="size-14px ml-2" src="@/assets/img/loading.svg" alt="" />
-            </n-flex>
-            <template v-for="(item, index) in chatMessageList">
-              <n-flex :size="6" v-if="item.role === 'assistant'" :key="index">
-                <n-avatar
-                  class="rounded-8px"
-                  src="https://img1.baidu.com/it/u=3613958228,3522035000&fm=253&fmt=auto&app=120&f=JPEG?w=500&h=500" />
-                <n-flex vertical justify="space-between">
-                  <p class="text-(12px [--chat-text-color])">GPT-4</p>
+          <div v-else class="w-100% h-100% bg-transparent">
+            <div class="w-full h-30px flex-center bg-transparent">
+              <n-flex v-if="chatMessageList.length === 0" justify="center" :size="18">
+                <p class="text-[#707070]">暂无数据</p>
+              </n-flex>
+              <n-flex v-if="isTop && chatMessageList.length > 0" justify="center" :size="18">
+                <p class="text-[#707070]">以下是全部消息内容</p>
+              </n-flex>
+              <n-flex v-if="isLoading" justify="center" :size="18">
+                <p class="text-[#707070]">正在加载...</p>
+                <img class="size-14px ml-2" src="@/assets/img/loading.svg" alt="" />
+              </n-flex>
+            </div>
 
-                  <!--  气泡样式  -->
-                  <ContextMenu>
-                    <div style="white-space: pre-wrap" class="bubble select-text mb-[10px]">
-                      <span v-if="item.contentType === 'text'" v-html="item.content"></span>
-                      <div v-if="item.contentType === 'think'" class="flex-start-center">
-                        <span>正在思考</span>
-                        <img class="size-14px ml-2" src="@/assets/img/loading.svg" alt="" />
+            <n-scrollbar ref="messageScrollbar" :style="{ height: `calc(100vh - 430px)` }" :on-scroll="handleScroll">
+              <template v-for="(item, index) in chatMessageList">
+                <n-flex :size="6" v-if="item.role === 'assistant'" :key="index">
+                  <n-avatar
+                    class="rounded-8px"
+                    src="https://img1.baidu.com/it/u=3613958228,3522035000&fm=253&fmt=auto&app=120&f=JPEG?w=500&h=500" />
+                  <n-flex vertical justify="space-between">
+                    <p class="text-(12px [--chat-text-color])">
+                      {{ item.modelVersion ? item.modelVersion : currentModel.label }}
+                    </p>
+
+                    <!--  气泡样式  -->
+                    <ContextMenu>
+                      <div style="white-space: pre-wrap" class="bubble select-text mb-[10px]">
+                        <span v-if="item.contentType === 'text'" v-html="item.content"></span>
+                        <div v-if="item.contentType === 'think'" class="flex-start-center">
+                          <span>正在思考</span>
+                          <img class="size-14px ml-2" src="@/assets/img/loading.svg" alt="" />
+                        </div>
+                        <div v-if="item.contentType === 'error'" class="flex-start-center">
+                          <span>{{ item.content }}</span>
+                        </div>
                       </div>
-                    </div>
-                  </ContextMenu>
+                    </ContextMenu>
+                  </n-flex>
                 </n-flex>
-              </n-flex>
 
-              <n-flex :size="6" v-if="item.role === 'user'" justify="end" :key="index">
-                <n-flex vertical justify="space-between">
-                  <!--  气泡样式  -->
-                  <ContextMenu>
-                    <div style="white-space: pre-wrap" class="bubble-oneself select-text mb-[10px]">
-                      <span v-html="item.content"></span>
-                    </div>
-                  </ContextMenu>
+                <n-flex :size="6" v-if="item.role === 'user'" justify="end" :key="index">
+                  <n-flex vertical justify="space-between">
+                    <!--  气泡样式  -->
+                    <ContextMenu>
+                      <div style="white-space: pre-wrap" class="bubble-oneself select-text mb-[10px]">
+                        <span v-html="item.content"></span>
+                      </div>
+                    </ContextMenu>
+                  </n-flex>
+                  <n-avatar bordered round :src="AvatarUtils.getAvatarUrl(userStore.userInfo.avatar!)" :size="35" />
                 </n-flex>
-                <n-avatar bordered round :src="AvatarUtils.getAvatarUrl(userStore.userInfo.avatar!)" :size="35" />
-              </n-flex>
-            </template>
-          </n-scrollbar>
+              </template>
+            </n-scrollbar>
+          </div>
         </div>
       </Transition>
     </div>
@@ -151,31 +145,43 @@
           :on-select="handleSelModel"
           :options="modelsOptions"
           placement="bottom-start"
-          trigger="click"
-          key-field="version"
-          label-field="name">
+          trigger="click">
           <n-popover trigger="hover" :show-arrow="false" placement="top">
             <template #trigger>
-              <svg><use :href="`#model`"></use></svg>
+              <div
+                :class="[
+                  'cursor-default size-[30px] flex-center rounded-5px',
+                  currentModel.key ? 'text-(12px #707070) bg-[--chat-hover-color] rounded-5px' : ''
+                ]">
+                <svg>
+                  <use :href="`#model`"></use>
+                </svg>
+              </div>
             </template>
             <p>模型</p>
           </n-popover>
         </n-dropdown>
         <n-popover trigger="hover" :show-arrow="false" placement="top">
           <template #trigger>
-            <svg><use :href="`#voice`"></use></svg>
+            <svg>
+              <use :href="`#voice`"></use>
+            </svg>
           </template>
           <p>语音输入</p>
         </n-popover>
         <n-popover trigger="hover" :show-arrow="false" placement="top">
           <template #trigger>
-            <svg><use :href="`#plugins2`"></use></svg>
+            <svg>
+              <use :href="`#plugins2`"></use>
+            </svg>
           </template>
           <p>插件</p>
         </n-popover>
 
         <div class="flex items-center gap-6px bg-[--chat-hover-color] rounded-50px w-fit h-fit p-[4px_6px]">
-          <svg style="width: 22px; height: 22px; outline: none; cursor: pointer"><use href="#explosion"></use></svg>
+          <svg style="width: 22px; height: 22px; outline: none; cursor: pointer">
+            <use href="#explosion"></use>
+          </svg>
           <p class="text-(12px #707070) cursor-default select-none pr-6px">使用0</p>
         </div>
       </n-flex>
@@ -196,7 +202,7 @@
               @keypress="handleEnter"></n-input>
           </template>
         </n-auto-complete>
-        <n-button class="mt-[8px]" type="primary" size="medium">发送</n-button>
+        <n-button class="mt-[8px] cursor-default" type="primary" size="medium" @click="handleSubmit">发送</n-button>
       </div>
     </n-flex>
   </main>
@@ -212,6 +218,8 @@ import { fetchChatAPI, fetchChatAPIProcess, fetchChatMessageAPI, listChatMessage
 import { AvatarUtils } from '@/utils/AvatarUtils.ts'
 import { useUserStore } from '@/stores/user.ts'
 // import { useSSE } from '@/plugins/robot/hook/useSSE.ts'
+import { ref, computed, onMounted, nextTick } from 'vue'
+import { storeToRefs } from 'pinia'
 
 const userStore = useUserStore()
 const settingStore = useSettingStore()
@@ -230,8 +238,6 @@ const currentChat = ref({
 })
 /** 输入框的值 */
 const prompt = ref('')
-/** 虚拟列表 */
-const virtualListInst = useTemplateRef<any>('virtualListInst')
 /** message loading */
 const messageLoading = ref(false)
 const chatMessageList = ref<Array<any>>([])
@@ -251,13 +257,16 @@ const currentModel = ref({
   name: '',
   sort: 0,
   status: 1,
-  version: ''
+  version: '',
+  label: '',
+  key: ''
 })
 
 const pageNum = ref<number>(1)
 const size = ref<number>(10)
 const isLoading = ref(false)
 const isTop = ref(false)
+const messageScrollbar = ref<any>(null)
 
 // const features = ref([
 //   {
@@ -311,61 +320,66 @@ const handleTransitionComplete = () => {
 }
 
 const scrollToBottom = () => {
-  if (!virtualListInst.value) return
-  virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'auto' })
+  if (!messageScrollbar.value) return
+  setTimeout(() => {
+    messageScrollbar.value?.scrollTo({ position: 'bottom', behavior: 'smooth' })
+  }, 100)
 }
 
-const oldScrollTop = ref(0)
-const SCROLL_THRESHOLD = 200
+// const SCROLL_THRESHOLD = 200
 
-function throttle(fn: any, delay: number) {
-  let lastCall = 0
-  return (...args: any[]) => {
-    const now = Date.now()
-    if (now - lastCall >= delay) {
-      lastCall = now
-      return fn(...args)
-    }
-  }
-}
+// function throttle(fn: any, delay: number) {
+//   let lastCall = 0
+//   return (...args: any[]) => {
+//     const now = Date.now()
+//     if (now - lastCall >= delay) {
+//       lastCall = now
+//       return fn(...args)
+//     }
+//   }
+// }
 
-const handleScroll = throttle((e: any) => {
+// // 优化后的滚动处理函数
+// const handleScroll = throttle((e: any) => {
+//   const target = e.target;
+//   const { scrollTop, scrollHeight, clientHeight } = target;
+
+//   // 判断是否接近顶部并加载更多内容
+//   if (scrollTop <= SCROLL_THRESHOLD && !isLoading.value && !isTop.value) {
+//     isLoading.value = true;
+//     pageNum.value++;
+
+//     handleGetMessageList(false)
+//      .catch((error) => {
+//         console.error('获取消息列表失败:', error);
+//       })
+//   }
+// }, 100); // 每100ms最多执行一次
+
+const handleScroll = (e: any) => {
   const target = e.target
-  const currentScrollTop = e.target.scrollTop
-
-  // 判断滚动方向
-  if (currentScrollTop > oldScrollTop.value) {
-    console.log('滚动向下')
-  } else if (currentScrollTop < oldScrollTop.value) {
-    console.log('滚动向上')
-  }
-
-  // 更新旧的 scrollTop 值
-  oldScrollTop.value = currentScrollTop
-  // 判断是否滚动到顶部附近
-  const isScrolledToTop =
-    target.scrollTop <= SCROLL_THRESHOLD &&
-    target.scrollHeight - target.clientHeight - target.scrollTop <= SCROLL_THRESHOLD
-
-  // 判断滚动方向
-  const isScrollingUp = currentScrollTop < oldScrollTop.value
-
+  const { scrollTop } = target
+  // console.log('scrollTop:', scrollTop)
+  // console.log('scrollHeight:', scrollHeight)
+  // console.log('clientHeight:', clientHeight)
   // 判断是否接近顶部并加载更多内容
-  if (isScrolledToTop && isScrollingUp && !isLoading.value) {
+  if (scrollTop === 0 && !isLoading.value && !isTop.value) {
     isLoading.value = true
     pageNum.value++
-
-    try {
-      handleGetMessageList(false)
-    } catch (error) {
-      console.error('获取消息列表失败:', error)
-    } finally {
-      setTimeout(() => {
-        isLoading.value = false
-      }, 500)
-    }
+    handleGetMessageList(false)
+      .catch((error) => {
+        console.error('获取消息列表失败:', error)
+      })
+      .finally(() => {
+        console.log('finally')
+        // 滚动到指定位置
+        messageScrollbar.value?.scrollTo({
+          top: 200,
+          behavior: 'smooth'
+        })
+      })
   }
-}, 100) // 每100ms最多执行一次
+}
 
 // 提交事件
 const handleSubmit = () => {
@@ -393,6 +407,7 @@ const handleFirstSendMsg = () => {
   })
     .then((res) => {
       console.log(res)
+      currentChat.value.chatNumber = res.chatNumber
       handleSend(res.chatNumber)
       isFirstSend.value = false
       useMitt.emit('get-chat-list')
@@ -423,6 +438,8 @@ const handleSend = (chatNumber: string) => {
   chatMessageList.value.push(answer)
   scrollToBottom()
 
+  const len = chatMessageList.value.length
+  const targetIndex = len - 1
   fetchChatMessageAPI({
     chatNumber: chatNumber,
     prompt: prompt.value,
@@ -449,11 +466,9 @@ const handleSend = (chatNumber: string) => {
             console.log('answer:')
             console.log(answer)
             const bak = JSON.parse(JSON.stringify(answer))
-            const len = chatMessageList.value.length
-            const targetIndex = len - 1
 
             // 确保不会越界
-            if (targetIndex >= 0 && chatMessageList.value[targetIndex]) {
+            if (bak.content && targetIndex >= 0 && chatMessageList.value[targetIndex]) {
               chatMessageList.value[targetIndex].content = ''
               chatMessageList.value[targetIndex].contentType = 'text'
 
@@ -475,44 +490,76 @@ const handleSend = (chatNumber: string) => {
               }, typingSpeed)
 
               // 如果需要支持取消动画，可将 timer 存入组件状态中
+            } else {
+              chatMessageList.value[targetIndex].content = ''
+              chatMessageList.value[targetIndex].contentType = 'error'
+              chatMessageList.value[targetIndex].content = bak.msg
+              scrollToBottom()
             }
           })
-          .catch((error) => console.log('error', error))
+          .catch((error) => {
+            console.error('Error:', error)
+            // 处理错误
+            chatMessageList.value[targetIndex].content = ''
+            chatMessageList.value[targetIndex].contentType = 'error'
+            chatMessageList.value[targetIndex].content = error
+            scrollToBottom()
+          })
       }
+    })
+    .catch((error) => {
+      console.error('Error:', error)
+      // 处理错误
+      chatMessageList.value[targetIndex].content = ''
+      chatMessageList.value[targetIndex].contentType = 'error'
+      chatMessageList.value[targetIndex].content = error
+      scrollToBottom()
     })
     .finally(() => {
       prompt.value = ''
     })
 }
 
-const handleGetMessageList = (isToBottom: boolean = true) => {
-  messageLoading.value = true
-  listChatMessage({
-    current: pageNum.value,
-    size: size.value,
-    chatNumber: currentChat.value.chatNumber
-  })
-    .then((res: any) => {
-      console.log(res)
-      // 添加到chatMessageList最前
-      if (pageNum.value === 1) {
-        chatMessageList.value = res
-      } else {
-        if (res.length === 0) {
-          isTop.value = true
+// 修改为返回 Promise，方便在 handleScroll 中处理
+const handleGetMessageList = (isToBottom: boolean = true): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    listChatMessage({
+      current: pageNum.value,
+      size: size.value,
+      chatNumber: currentChat.value.chatNumber
+    })
+      .then((res: any) => {
+        console.log(res)
+        // 添加到chatMessageList最前
+        if (pageNum.value === 1) {
+          chatMessageList.value = res
         } else {
-          chatMessageList.value = [...res, ...chatMessageList.value]
+          if (res.length === 0) {
+            setTimeout(() => {
+              isTop.value = true
+            }, 300)
+          } else {
+            isTop.value = false
+            chatMessageList.value = [...res, ...chatMessageList.value]
+          }
         }
-      }
-    })
-    .finally(() => {
-      messageLoading.value = false
-      if (isToBottom) {
+        resolve()
+      })
+      .catch((error) => {
+        reject(error)
+      })
+      .finally(() => {
         setTimeout(() => {
-          scrollToBottom()
-        }, 200)
-      }
-    })
+          messageLoading.value = false
+          isLoading.value = false
+          if (isToBottom) {
+            setTimeout(() => {
+              scrollToBottom()
+            }, 200)
+          }
+        }, 1000)
+      })
+  })
 }
 
 const handleRenderIcon = (option: any) => {
@@ -520,9 +567,9 @@ const handleRenderIcon = (option: any) => {
   return h(NIcon, null, { default: () => h('svg', null, [h('use', { href: `#${icon}` })]) })
 }
 
-const handleSelModel = (version: string) => {
-  console.log('version:', version)
-  currentModel.value = aiChatStore.aiModels.find((item: any) => item.version === version)
+const handleSelModel = (key: string) => {
+  console.log('version:', key)
+  currentModel.value = aiChatStore.aiModels.find((item: any) => item.key === key)
   console.log('currentModel.value:', currentModel.value)
 }
 
@@ -542,24 +589,29 @@ onMounted(() => {
     console.log('currentChat.value:', currentChat.value)
     // 初始化消息列表
     pageNum.value = 1
+    messageLoading.value = true
     handleGetMessageList()
   })
-  if (isFirstSend.value) {
-    // 初始化消息列表
-    handleGetMessageList()
-  }
+
+  nextTick(() => {
+    messageScrollbar.value?.addEventListener('scroll', handleScroll)
+  })
 })
 </script>
 <style scoped lang="scss">
 @use '@/styles/scss/chat-main';
+
 .right-btn {
   @apply size-fit border-(1px solid [--line-color]) cursor-pointer bg-[--chat-bt-color] color-[--chat-text-color] rounded-8px custom-shadow p-[10px_11px];
+
   svg {
     @apply size-18px;
   }
 }
+
 .options {
   padding-left: 4px;
+
   svg {
     @apply size-22px cursor-pointer outline-none;
   }

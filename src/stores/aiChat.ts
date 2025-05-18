@@ -11,6 +11,11 @@ export const useAiChatStore = defineStore(StoresEnum.AICHAT, () => {
       model: ''
     }).then((res: any) => {
       aiModels.value = res
+      aiModels.value.forEach((item: any) => {
+        item.label = item.name + '(' + item.version + ')'
+        item.key = item.version
+      })
+      console.log(aiModels.value)
     })
   }
 
