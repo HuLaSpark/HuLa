@@ -52,7 +52,7 @@ export const useChatStore = defineStore(
     const contactStore = useContactStore()
 
     // 会话列表
-    const sessionList = reactive<SessionItem[]>([])
+    const sessionList = ref<SessionItem[]>([])
     // 会话列表的加载状态
     const sessionOptions = reactive({ isLast: false, isLoading: false, cursor: '' })
 
@@ -121,7 +121,7 @@ export const useChatStore = defineStore(
 
     // 获取当前会话信息的计算属性
     const currentSessionInfo = computed(() =>
-      sessionList.find((session) => session.roomId === globalStore.currentSession.roomId)
+      sessionList.value.find((session) => session.roomId === globalStore.currentSession.roomId)
     )
 
     // 新消息计数相关的响应式数据
@@ -195,7 +195,7 @@ export const useChatStore = defineStore(
 
         // 标记当前会话已读
         if (val) {
-          const session = sessionList.find((s) => s.roomId === val)
+          const session = sessionList.value.find((s) => s.roomId === val)
           if (session?.unreadCount) {
             markSessionRead(val)
             updateTotalUnreadCount()
@@ -279,7 +279,7 @@ export const useChatStore = defineStore(
       // TODO: 这里先请求100条会话列表，后续优化
       const response = await apis
         .getSessionList({
-          pageSize: sessionList.length > 100 ? sessionList.length : 100,
+          pageSize: sessionList.value.length > 100 ? sessionList.value.length : 100,
           cursor: isFresh || !sessionOptions.cursor ? '' : sessionOptions.cursor
         })
         .catch(() => {
@@ -294,7 +294,9 @@ export const useChatStore = defineStore(
       // 保存当前选中的会话ID
       const currentSelectedRoomId = globalStore.currentSession.roomId
 
-      isFresh ? sessionList.splice(0, sessionList.length, ...data.list) : sessionList.push(...data.list)
+      isFresh
+        ? sessionList.value.splice(0, sessionList.value.length, ...data.list)
+        : sessionList.value.push(...data.list)
       sessionOptions.cursor = data.cursor
       sessionOptions.isLast = data.isLast
       sessionOptions.isLoading = false
@@ -329,18 +331,18 @@ export const useChatStore = defineStore(
     /** 会话列表去重并排序 */
     const sortAndUniqueSessionList = () => {
       const temp: Record<string, SessionItem> = {}
-      for (const item of sessionList) {
+      for (const item of sessionList.value) {
         temp[item.roomId] = item
       }
-      sessionList.splice(0, sessionList.length, ...Object.values(temp))
-      sessionList.sort((pre, cur) => cur.activeTime - pre.activeTime)
+      sessionList.value.splice(0, sessionList.value.length, ...Object.values(temp))
+      sessionList.value.sort((pre, cur) => cur.activeTime - pre.activeTime)
     }
 
     // 更新会话
     const updateSession = (roomId: string, data: Partial<SessionItem>) => {
-      const index = sessionList.findIndex((session) => session.roomId === roomId)
+      const index = sessionList.value.findIndex((session) => session.roomId === roomId)
       if (index !== -1) {
-        sessionList[index] = { ...sessionList[index], ...data }
+        sessionList.value[index] = { ...sessionList.value[index], ...data }
 
         // 如果更新了免打扰状态，需要重新计算全局未读数
         if ('muteNotification' in data) {
@@ -351,20 +353,20 @@ export const useChatStore = defineStore(
 
     // 更新会话最后活跃时间
     const updateSessionLastActiveTime = (roomId: string, room?: SessionItem) => {
-      const session = sessionList.find((item) => item.roomId === roomId)
+      const session = sessionList.value.find((item) => item.roomId === roomId)
       if (session) {
         Object.assign(session, { activeTime: Date.now() })
       } else if (room) {
         const newItem = cloneDeep(room)
         newItem.activeTime = Date.now()
-        sessionList.unshift(newItem)
+        sessionList.value.unshift(newItem)
       }
       sortAndUniqueSessionList()
     }
 
     // 通过房间ID获取会话信息
     const getSession = (roomId: string): SessionItem => {
-      return sessionList.find((item) => item.roomId === roomId) as SessionItem
+      return sessionList.value.find((item) => item.roomId === roomId) as SessionItem
     }
 
     // 推送消息
@@ -394,7 +396,7 @@ export const useChatStore = defineStore(
       }
 
       // 更新会话的文本属性和未读数
-      const session = sessionList.find((item) => item.roomId === msg.message.roomId)
+      const session = sessionList.value.find((item) => item.roomId === msg.message.roomId)
       if (session) {
         const lastMsgUserName = cachedStore.userCachedList[uid]?.name
         const formattedText =
@@ -602,7 +604,7 @@ export const useChatStore = defineStore(
 
     // 标记已读数为 0
     const markSessionRead = (roomId: string) => {
-      const session = sessionList.find((s) => s.roomId === roomId)
+      const session = sessionList.value.find((s) => s.roomId === roomId)
       if (session) {
         // 更新会话的未读数
         session.unreadCount = 0
@@ -619,9 +621,9 @@ export const useChatStore = defineStore(
 
     // 删除会话
     const removeContact = (roomId: string) => {
-      const index = sessionList.findIndex((session) => session.roomId === roomId)
+      const index = sessionList.value.findIndex((session) => session.roomId === roomId)
       if (index !== -1) {
-        sessionList.splice(index, 1)
+        sessionList.value.splice(index, 1)
         // 删除会话后更新未读计数
         nextTick(() => {
           updateTotalUnreadCount()
@@ -665,7 +667,7 @@ export const useChatStore = defineStore(
     // 在 useChatStore 中添加新方法
     const updateTotalUnreadCount = () => {
       // 使用 Array.from 确保遍历的是最新的 sessionList
-      const totalUnread = Array.from(sessionList).reduce((total, session) => {
+      const totalUnread = Array.from(sessionList.value).reduce((total, session) => {
         // 免打扰的会话不计入全局未读数
         if (session.muteNotification === NotificationTypeEnum.NOT_DISTURB) {
           return total
@@ -684,7 +686,7 @@ export const useChatStore = defineStore(
     // 在 useChatStore 中添加新方法
     const clearUnreadCount = () => {
       // 清空所有会话的未读数
-      sessionList.forEach((session) => {
+      sessionList.value.forEach((session) => {
         session.unreadCount = 0
       })
       // 更新全局未读数

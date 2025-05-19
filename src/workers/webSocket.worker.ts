@@ -249,10 +249,10 @@ self.onmessage = (e: MessageEvent<string>) => {
     case 'visibilityChange': {
       const { isHidden } = value
       if (isHidden) {
-        // console.log('页面切换到后台，Web Worker继续维持心跳')
+        console.log('页面切换到后台，Web Worker继续维持心跳')
         // 页面在后台，Web Worker继续正常工作
       } else {
-        // console.log('页面切换到前台，恢复正常心跳')
+        console.log('页面切换到前台，恢复正常心跳')
         // 立即发送一次心跳
         sendSingleHeartbeat()
       }

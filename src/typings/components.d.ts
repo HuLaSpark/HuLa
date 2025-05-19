@@ -63,7 +63,6 @@ declare module 'vue' {
     NQrCode: typeof import('naive-ui')['NQrCode']
     NRadio: typeof import('naive-ui')['NRadio']
     NResult: typeof import('naive-ui')['NResult']
-    NS: typeof import('naive-ui')['NS']
     NScrollbar: typeof import('naive-ui')['NScrollbar']
     NSelect: typeof import('naive-ui')['NSelect']
     NSkeleton: typeof import('naive-ui')['NSkeleton']
