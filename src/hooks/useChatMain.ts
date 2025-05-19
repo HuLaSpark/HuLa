@@ -534,7 +534,11 @@ export const useChatMain = () => {
    * @param type 消息类型
    */
   const handleItemType = (type: MsgEnum) => {
-    return type === MsgEnum.IMAGE ? imageMenuList.value : type === MsgEnum.FILE ? fileMenuList.value : menuList.value
+    return type === MsgEnum.IMAGE || MsgEnum.EMOJI
+      ? imageMenuList.value
+      : type === MsgEnum.FILE
+        ? fileMenuList.value
+        : menuList.value
   }
 
   /** 删除信息事件 */
