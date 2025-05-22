@@ -61,10 +61,12 @@ self.onmessage = (e) => {
 
   switch (type) {
     case 'startReconnectTimer': {
+      // 主线程发送重启timer事件, 延时后返回reconnectTimeout事件给主线程
+      console.log('[Timer Worker] 启动重连定时器.....')
       const timerId = setTimeout(() => {
         self.postMessage({
           type: 'reconnectTimeout',
-          value: { reconnectCount }
+          reconnectCount
         })
       }, e.data.value.delay)
 

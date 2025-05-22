@@ -139,6 +139,17 @@ class WS {
         worker.postMessage(JSON.stringify({ type: 'heartbeatTimerTick' }))
         break
       }
+      case 'reconnectTimeout': {
+        // timer上报重连超时事件，转发给WebSocket worker
+        console.log('重试次数: ', data.reconnectCount)
+        worker.postMessage(
+          JSON.stringify({
+            type: 'reconnectTimeout',
+            value: { reconnectCount: data.reconnectCount }
+          })
+        )
+        break
+      }
     }
   }
 
@@ -224,6 +235,16 @@ class WS {
           // 可以触发UI提示，让用户刷新页面
           useMitt.emit('wsReconnectFailed', params.value)
         }
+        break
+      }
+      case 'startReconnectTimer': {
+        console.log('worker上报心跳超时事件', params.value)
+        // 向timer发送startReconnectTimer事件
+        timerWorker.postMessage({
+          type: 'startReconnectTimer',
+          reconnectCount: (params.value as any).reconnectCount as number,
+          value: { delay: 1000 }
+        })
         break
       }
       // 心跳定时器相关消息处理
