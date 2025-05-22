@@ -132,6 +132,18 @@ class WS {
           // 转发给WebSocket worker
           worker.postMessage(JSON.stringify({ type: 'heartbeatTimeout' }))
         }
+        // 处理任务队列定时器超时
+        else if (data.msgId === 'process_tasks_timer') {
+          const userStore = useUserStore()
+          if (userStore.isSign) {
+            // 处理堆积的任务
+            for (const task of this.#tasks) {
+              this.send(task)
+            }
+            // 清空缓存的消息
+            this.#tasks = []
+          }
+        }
         break
       }
       case 'periodicHeartbeat': {
@@ -334,17 +346,11 @@ class WS {
     // 先探测登录态
     // this.#detectionLoginStatus()
 
-    setTimeout(() => {
-      const userStore = useUserStore()
-      if (userStore.isSign) {
-        // 处理堆积的任务
-        for (const task of this.#tasks) {
-          this.send(task)
-        }
-        // 清空缓存的消息
-        this.#tasks = []
-      }
-    }, 500)
+    timerWorker.postMessage({
+      type: 'startTimer',
+      msgId: 'process_tasks_timer',
+      duration: 500
+    })
   }
 
   #send(msg: WsReqMsgContentType) {
