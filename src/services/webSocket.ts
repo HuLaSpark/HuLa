@@ -132,11 +132,34 @@ class WS {
           // 转发给WebSocket worker
           worker.postMessage(JSON.stringify({ type: 'heartbeatTimeout' }))
         }
+        // 处理任务队列定时器超时
+        else if (data.msgId === 'process_tasks_timer') {
+          const userStore = useUserStore()
+          if (userStore.isSign) {
+            // 处理堆积的任务
+            for (const task of this.#tasks) {
+              this.send(task)
+            }
+            // 清空缓存的消息
+            this.#tasks = []
+          }
+        }
         break
       }
       case 'periodicHeartbeat': {
         // 心跳触发，转发给WebSocket worker
         worker.postMessage(JSON.stringify({ type: 'heartbeatTimerTick' }))
+        break
+      }
+      case 'reconnectTimeout': {
+        // timer上报重连超时事件，转发给WebSocket worker
+        console.log('重试次数: ', data.reconnectCount)
+        worker.postMessage(
+          JSON.stringify({
+            type: 'reconnectTimeout',
+            value: { reconnectCount: data.reconnectCount }
+          })
+        )
         break
       }
     }
@@ -226,6 +249,16 @@ class WS {
         }
         break
       }
+      case 'startReconnectTimer': {
+        console.log('worker上报心跳超时事件', params.value)
+        // 向timer发送startReconnectTimer事件
+        timerWorker.postMessage({
+          type: 'startReconnectTimer',
+          reconnectCount: (params.value as any).reconnectCount as number,
+          value: { delay: 1000 }
+        })
+        break
+      }
       // 心跳定时器相关消息处理
       case 'startHeartbeatTimer': {
         // 启动心跳定时器
@@ -313,17 +346,11 @@ class WS {
     // 先探测登录态
     // this.#detectionLoginStatus()
 
-    setTimeout(() => {
-      const userStore = useUserStore()
-      if (userStore.isSign) {
-        // 处理堆积的任务
-        for (const task of this.#tasks) {
-          this.send(task)
-        }
-        // 清空缓存的消息
-        this.#tasks = []
-      }
-    }, 500)
+    timerWorker.postMessage({
+      type: 'startTimer',
+      msgId: 'process_tasks_timer',
+      duration: 500
+    })
   }
 
   #send(msg: WsReqMsgContentType) {
