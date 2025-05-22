@@ -189,9 +189,9 @@ const shrinkWindow = async () => {
   /**使用mitt给兄弟组件更新*/
   useMitt.emit(MittEnum.SHRINK_WINDOW, shrinkStatus)
   if (shrinkStatus) {
-    await resizeWindow('home', 310, 700)
+    await resizeWindow('home', 310, 720)
   } else {
-    await resizeWindow('home', 960, 700)
+    await resizeWindow('home', 960, 720)
   }
 }
 

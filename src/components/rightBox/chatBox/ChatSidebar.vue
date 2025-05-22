@@ -51,10 +51,10 @@
     </n-flex>
 
     <n-flex v-if="!isSearch" align="center" justify="space-between" class="pr-8px pl-8px h-42px">
-      <n-skeleton v-if="isLoadingMembers" text class="rounded-4px" :width="80" />
+      <n-skeleton v-if="isLoadingOnlineCount" text class="rounded-4px" :width="80" />
       <template v-else>
         <span class="text-14px">
-          在线群聊成员&nbsp;
+          在线成员&nbsp;
           {{ groupStore.countInfo.onlineNum }}
         </span>
         <svg @click="handleSelect" class="size-14px">
@@ -87,7 +87,7 @@
     <!-- // TODO 如果直接使用n-virtual-list的滚动配上n-popover乎也没有这个bug，但是当点击倒数第二个的时候还是会出现滚动条 (nyh -> 2024-03-25 00:30:53)   -->
     <!-- 骨架屏加载中 -->
     <div v-if="isLoadingMembers" style="max-height: calc(100vh - 260px); overflow-y: hidden">
-      <n-flex v-for="i in 10" :key="i" align="center" justify="space-between" class="item px-8px py-10px">
+      <n-flex v-for="i in 6" :key="i" align="center" justify="space-between" class="item px-8px py-10px">
         <n-flex align="center" :size="8" class="flex-1 truncate">
           <n-skeleton text :repeat="1" :width="26" :height="26" circle />
           <n-flex vertical :size="2" class="flex-1 truncate ml-8px">
@@ -130,16 +130,16 @@
                 class="item">
                 <n-flex align="center" :size="8" class="flex-1 truncate">
                   <div class="relative inline-flex items-center justify-center">
-                    <n-skeleton v-if="!avatarLoadedMap[item.uid]" text :repeat="1" :width="26" :height="26" circle />
+                    <n-skeleton v-if="!userLoadedMap[item.uid]" text :repeat="1" :width="26" :height="26" circle />
                     <n-avatar
-                      v-show="avatarLoadedMap[item.uid]"
+                      v-show="userLoadedMap[item.uid]"
                       round
                       class="grayscale"
                       :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
                       :size="26"
                       :src="AvatarUtils.getAvatarUrl(item.avatar)"
-                      @load="avatarLoadedMap[item.uid] = true"
-                      @error="avatarLoadedMap[item.uid] = true" />
+                      @load="userLoadedMap[item.uid] = true"
+                      @error="userLoadedMap[item.uid] = true" />
                   </div>
                   <n-flex vertical :size="2" class="flex-1 truncate">
                     <p :title="item.name" class="text-12px truncate flex-1">{{ item.name }}</p>
@@ -210,6 +210,8 @@ const currentLoadingRoomId = ref('')
 const isLoadingMembers = ref(true)
 // 公告列表加载状态
 const isLoadingAnnouncement = ref(true)
+// 在线人数加载状态
+const isLoadingOnlineCount = ref(true)
 const groupUserList = computed(() => groupStore.userList)
 const userList = computed(() => {
   // 先获取所有需要的用户ID
@@ -281,8 +283,8 @@ const announList = ref<any[]>([])
 const announNum = ref(0)
 const isAddAnnoun = ref(false)
 
-/** 头像加载状态 */
-const avatarLoadedMap = ref<Record<string, boolean>>({})
+/** 用户信息加载状态 */
+const userLoadedMap = ref<Record<string, boolean>>({})
 
 // 添加一个新的计算属性来合并用户列表
 const mergedUserList = computed(() => {
@@ -472,12 +474,14 @@ onMounted(async () => {
         if (newSession?.roomId !== oldSession?.roomId) {
           isLoadingMembers.value = true
           isLoadingAnnouncement.value = true
+          isLoadingOnlineCount.value = true
           currentLoadingRoomId.value = newSession.roomId
-
           // 重置群组数据后再加载新的群成员数据
           groupStore.resetGroupData()
           await groupStore.getGroupUserList(true, newSession.roomId)
-
+          // 获取群组统计信息（包括在线人数）
+          await groupStore.getCountStatistic()
+          isLoadingOnlineCount.value = false
           // 初始化群公告
           await handleInitAnnoun()
         }

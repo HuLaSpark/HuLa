@@ -560,6 +560,14 @@ export const useMsgInput = (messageInputDom: Ref) => {
     if (isChinese.value) {
       return
     }
+
+    // TODO: (临时展示) 显示AI对接中的提示
+    window.$message.info('当前ai正在对接，敬请期待')
+    console.log(item)
+    // 关闭AI选择弹窗
+    aiDialogVisible.value = false
+
+    // 清理输入框中的/触发词
     // 先确保输入框获得焦点
     focusOn(messageInputDom.value)
     // 先获取并保存当前的编辑器范围
@@ -583,13 +591,16 @@ export const useMsgInput = (messageInputDom: Ref) => {
         currentRange.setStart(textNode, expRes.index)
         /** 设置范围的结束位置为光标的位置 */
         currentRange.setEnd(textNode, endOffset!)
+        //TODO: (临时删除)  删除/触发词
+        currentRange.deleteContents()
+        triggerInputEvent(messageInputDom.value)
       }
     }
 
     // 无论是哪种情况，都在当前光标位置插入@提及
-    insertNode(MsgEnum.AI, item, {} as HTMLElement)
-    triggerInputEvent(messageInputDom.value)
-    aiDialogVisible.value = false
+    // insertNode(MsgEnum.AI, item, {} as HTMLElement)
+    // triggerInputEvent(messageInputDom.value)
+    // aiDialogVisible.value = false
   }
 
   onMounted(async () => {

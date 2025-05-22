@@ -14,6 +14,7 @@ import { getEnhancedFingerprint } from '@/services/fingerprint.ts'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useTauriListener } from '@/hooks/useTauriListener'
 import { listen, emit } from '@tauri-apps/api/event'
+import { useDebounceFn } from '@vueuse/core'
 
 // 创建 webSocket worker
 const worker: Worker = new Worker(new URL('../workers/webSocket.worker.ts', import.meta.url), {
@@ -36,10 +37,18 @@ class WS {
   #connectReady = false
   // 使用LRU缓存替代简单的Set
   #processedMsgCache = new Map<number, number>()
-  // TODO: 暂时使用去重复的逻辑，后续优化
-  // readonly #MAX_CACHE_SIZE = 1000
 
   #tauriListener: ReturnType<typeof useTauriListener> | null = null
+
+  // 存储前一个连接状态，用于检测重连成功
+  #previousConnectionState = ConnectionState.DISCONNECTED
+
+  // 存储连接健康状态信息
+  #connectionHealth = {
+    isHealthy: true,
+    lastPongTime: null as number | null,
+    timeSinceLastPong: null as number | null
+  }
 
   constructor() {
     this.initWindowType()
@@ -49,6 +58,67 @@ class WS {
       worker.addEventListener('message', this.onWorkerMsg)
       // 收到Timer worker消息
       timerWorker.addEventListener('message', this.onTimerWorkerMsg)
+      // 添加页面可见性监听
+      this.initVisibilityListener()
+    }
+  }
+
+  // 初始化页面可见性监听
+  private async initVisibilityListener() {
+    const handleVisibilityChange = (isVisible: boolean) => {
+      worker.postMessage(
+        JSON.stringify({
+          type: 'visibilityChange',
+          value: { isHidden: !isVisible }
+        })
+      )
+    }
+
+    const debouncedVisibilityChange = useDebounceFn((isVisible: boolean) => {
+      handleVisibilityChange(isVisible)
+    }, 300)
+
+    // 使用document.visibilitychange事件 兼容web
+    document.addEventListener('visibilitychange', () => {
+      const isVisible = !document.hidden
+      console.log(`document visibility change: ${document.hidden ? '隐藏' : '可见'}`)
+      debouncedVisibilityChange(isVisible)
+    })
+
+    // 跟踪当前窗口状态，避免无变化时重复触发
+    let currentVisibilityState = true
+
+    // 创建状态变更处理器
+    const createStateChangeHandler = (newState: boolean) => {
+      return () => {
+        if (currentVisibilityState !== newState) {
+          currentVisibilityState = newState
+          debouncedVisibilityChange(newState)
+        }
+      }
+    }
+
+    try {
+      // 设置各种Tauri窗口事件监听器
+      // 窗口失去焦点 - 隐藏状态
+      await listen('tauri://blur', createStateChangeHandler(false))
+
+      // 窗口获得焦点 - 可见状态
+      await listen('tauri://focus', createStateChangeHandler(true))
+
+      // 窗口最小化 - 隐藏状态
+      await listen('tauri://window-minimized', createStateChangeHandler(false))
+
+      // 窗口恢复 - 可见状态
+      await listen('tauri://window-restored', createStateChangeHandler(true))
+
+      // 窗口隐藏 - 隐藏状态
+      await listen('tauri://window-hidden', createStateChangeHandler(false))
+
+      // 窗口显示 - 可见状态
+      await listen('tauri://window-shown', createStateChangeHandler(true))
+    } catch (error) {
+      console.error('无法设置Tauri Window事件监听:', error)
     }
   }
 
@@ -194,12 +264,40 @@ class WS {
       }
       case 'connectionStateChange': {
         const { state } = params.value as { state: ConnectionState }
+
+        // 检测重连成功: 从RECONNECTING状态变为CONNECTED状态
+        if (this.#previousConnectionState === ConnectionState.RECONNECTING && state === ConnectionState.CONNECTED) {
+          console.log('🔄 WebSocket 重连成功')
+          // 可以添加UI提示
+          useMitt.emit('showMainMessage', { title: '连接恢复', content: '网络连接已恢复' })
+        }
+
+        // 更新前一状态
+        this.#previousConnectionState = state
+
         console.log('连接状态改变', state)
         useMitt.emit('wsConnectionStateChange', state)
         // 广播状态变化给其他窗口
         if (isMainWindow) {
           await emit('ws-state-change', state)
         }
+        break
+      }
+      // 处理心跳响应
+      case 'pongReceived': {
+        const { timestamp } = params.value as { timestamp: number }
+        this.#connectionHealth.lastPongTime = timestamp
+        break
+      }
+      // 处理连接健康状态
+      case 'connectionHealthStatus': {
+        const { isHealthy, lastPongTime, timeSinceLastPong } = params.value as {
+          isHealthy: boolean
+          lastPongTime: number | null
+          timeSinceLastPong: number | null
+        }
+        this.#connectionHealth = { isHealthy, lastPongTime, timeSinceLastPong }
+        useMitt.emit('wsConnectionHealthChange', this.#connectionHealth)
         break
       }
     }
@@ -277,10 +375,6 @@ class WS {
         // 收到消息
         case WsResponseMessageType.RECEIVE_MESSAGE: {
           const message = params.data as MessageType
-          // TODO: 暂时保留去重
-          // if (this.#isMessageProcessed(message.message.id)) {
-          //   break
-          // }
           useMitt.emit(WsResponseMessageType.RECEIVE_MESSAGE, message)
           break
         }
@@ -422,27 +516,24 @@ class WS {
       return
     }
   }
-  // TODO: 暂时使用去重复的逻辑，后续优化
-  // #isMessageProcessed(msgId: number): boolean {
-  //   const now = Date.now()
-  //   const lastProcessed = this.#processedMsgCache.get(msgId)
 
-  //   if (lastProcessed && now - lastProcessed < 5000) {
-  //     return true
-  //   }
+  // 检查连接健康状态
+  checkConnectionHealth() {
+    if (isMainWindow) {
+      worker.postMessage(
+        JSON.stringify({
+          type: 'checkConnectionHealth'
+        })
+      )
+      return this.#connectionHealth
+    }
+    return null
+  }
 
-  //   // 清理过期缓存
-  //   if (this.#processedMsgCache.size >= this.#MAX_CACHE_SIZE) {
-  //     const oldestEntries = Array.from(this.#processedMsgCache.entries())
-  //       .sort(([, a], [, b]) => a - b)
-  //       .slice(0, Math.floor(this.#MAX_CACHE_SIZE / 2))
-
-  //     oldestEntries.forEach(([key]) => this.#processedMsgCache.delete(key))
-  //   }
-
-  //   this.#processedMsgCache.set(msgId, now)
-  //   return false
-  // }
+  // 获取当前连接健康状态
+  getConnectionHealth() {
+    return this.#connectionHealth
+  }
 
   destroy() {
     worker.postMessage(JSON.stringify({ type: 'clearReconnectTimer' }))
