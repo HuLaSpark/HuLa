@@ -142,7 +142,6 @@ const onConnectClose = () => {
   console.log('📡 WebSocket 连接断开')
   updateConnectionState(ConnectionState.DISCONNECTED)
   onCloseHandler()
-  token = null
   postMsg({ type: WorkerMsgEnum.CLOSE })
 }
 // ws 连接成功
@@ -227,6 +226,7 @@ self.onmessage = (e: MessageEvent<string>) => {
       reconnectCount = value.reconnectCount + 1
       // 如果没有超过最大重连次数才继续重连
       if (reconnectCount < reconnectCountMax) {
+        console.log('重连中，当前clientId:', clientId, '当前token状态:', token ? '存在' : '不存在')
         initConnection()
         lockReconnect = false
       } else {
