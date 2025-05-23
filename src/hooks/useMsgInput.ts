@@ -11,6 +11,7 @@ import { useDebounceFn } from '@vueuse/core'
 import { Ref } from 'vue'
 import { SelectionRange, useCommon } from './useCommon.ts'
 import { readText, readImage } from '@tauri-apps/plugin-clipboard-manager'
+import { processClipboardImage } from '@/utils/imageUtils'
 import { messageStrategyMap } from '@/strategy/MessageStrategy.ts'
 import { useTrigger } from './useTrigger'
 import type { AIModel } from '@/services/types.ts'
@@ -165,61 +166,14 @@ export const useMsgInput = (messageInputDom: Ref) => {
           const clipboardImage = await readImage().catch(() => null)
           if (clipboardImage) {
             try {
-              // 获取图片的宽度和高度
-              const { width, height } = await clipboardImage.size()
+              // 使用工具函数处理剪贴板图片数据
+              const file = await processClipboardImage(clipboardImage)
 
-              // 获取图片的 RGBA 数据
-              const imageData = await clipboardImage.rgba()
-
-              // 创建Canvas来正确转换RGBA数据为PNG格式
-              const canvas = document.createElement('canvas')
-              canvas.width = width
-              canvas.height = height
-              const ctx = canvas.getContext('2d')
-
-              if (!ctx) {
-                console.log('无法创建Canvas上下文')
-                return
-              }
-
-              // 创建ImageData对象
-              const canvasImageData = ctx.createImageData(width, height)
-
-              // 将RGBA数据复制到ImageData中
-              let uint8Array: Uint8Array
-              if (imageData.buffer instanceof ArrayBuffer) {
-                uint8Array = new Uint8Array(imageData.buffer, imageData.byteOffset, imageData.byteLength)
-              } else {
-                // 如果不是ArrayBuffer，创建新的Uint8Array
-                uint8Array = new Uint8Array(imageData)
-              }
-
-              // 复制数据到canvas ImageData
-              canvasImageData.data.set(uint8Array)
-
-              // 将ImageData绘制到canvas
-              ctx.putImageData(canvasImageData, 0, 0)
-
-              // 将canvas转换为Blob
-              canvas.toBlob(
-                (blob) => {
-                  if (!blob) {
-                    console.error('Canvas转换为Blob失败')
-                    return
-                  }
-
-                  // 创建File对象，使用缓存机制
-                  const file = new File([blob], `image-${Date.now()}.png`, { type: 'image/png' })
-
-                  messageInputDom.value.focus()
-                  nextTick(() => {
-                    // 使用File对象触发缓存机制
-                    imgPaste(file, messageInputDom.value)
-                  })
-                },
-                'image/png',
-                1
-              )
+              messageInputDom.value.focus()
+              nextTick(() => {
+                // 使用File对象触发缓存机制
+                imgPaste(file, messageInputDom.value)
+              })
 
               imageProcessed = true
             } catch (error) {
