@@ -26,8 +26,7 @@
               class="border-(1px solid #90909080)"
               v-model:value="formData.email"
               placeholder="请输入您的邮箱"
-              clearable
-              maxlength="32" />
+              clearable />
           </n-form-item>
 
           <!-- 图片验证码 -->
