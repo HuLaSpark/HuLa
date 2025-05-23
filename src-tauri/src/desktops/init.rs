@@ -78,9 +78,7 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
                     window.hide().unwrap();
                 }
             }
-            WindowEvent::Resized(_ps) => {
-
-            }
+            WindowEvent::Resized(_ps) => {}
             _ => (),
         })
     }

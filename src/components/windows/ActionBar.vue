@@ -54,7 +54,7 @@
       </div>
     </template>
     <!-- 是否退到托盘提示框 -->
-    <n-modal v-if="!tips.notTips && isCompatibility" v-model:show="tipsRef.show" class="rounded-8px">
+    <n-modal v-if="!tips.notTips" v-model:show="tipsRef.show" class="rounded-8px">
       <div class="bg-[--bg-popover] w-290px h-full p-6px box-border flex flex-col">
         <svg @click="tipsRef.show = false" class="size-12px ml-a cursor-pointer select-none">
           <use href="#close"></use>
@@ -140,16 +140,61 @@ const alwaysOnTopStatus = computed(() => {
 /** 判断当前是windows还是mac系统 */
 const osType = ref()
 
+// macOS 关闭按钮拦截的 unlisten 函数
+let unlistenCloseRequested: (() => void) | null = null
+// 是否是程序内部触发的关闭操作
+let isProgrammaticClose = false
+
 watchEffect(() => {
   tipsRef.type = tips.value.type
   if (alwaysOnTopStatus.value) {
     appWindow.setAlwaysOnTop(alwaysOnTopStatus.value as boolean)
   }
+
+  // 添加 macOS 关闭按钮拦截逻辑 - 只拦截 home 窗口
+  if (type() === 'macos' && appWindow.label === 'home' && !unlistenCloseRequested) {
+    // 监听 macOS 原生关闭按钮事件
+    appWindow
+      .onCloseRequested((event) => {
+        // 如果是程序内部触发的关闭操作，不拦截
+        if (isProgrammaticClose) {
+          return
+        }
+        // 阻止默认关闭行为
+        event.preventDefault()
+
+        // 显示关闭确认对话框或执行自定义逻辑
+        console.log('主窗口关闭拦截，显示确认对话框或执行设置的操作')
+        if (!tips.value.notTips) {
+          tipsRef.show = true
+        } else {
+          if (tips.value.type === CloseBxEnum.CLOSE) {
+            // 用户选择直接退出
+            console.log('用户设置为直接退出应用')
+            emit(EventEnum.EXIT)
+          } else {
+            // 用户选择最小化到托盘
+            console.log('用户设置为最小化到托盘')
+            appWindow.hide()
+          }
+        }
+      })
+      .then((unlisten) => {
+        console.log('macOS home窗口关闭按钮事件监听器已设置')
+        unlistenCloseRequested = unlisten
+      })
+      .catch((error) => {
+        console.error('设置 macOS home窗口关闭按钮监听器失败:', error)
+      })
+  }
+
   pushListeners([
     appWindow.listen(EventEnum.LOGOUT, async () => {
       /** 退出账号前把窗口全部关闭 */
       if (appWindow.label !== 'login') {
         await nextTick()
+        // 设置程序内部关闭标志
+        isProgrammaticClose = true
         // 针对不同系统采用不同关闭策略
         if (type() === 'macos') {
           // macOS 上先隐藏窗口，然后延迟关闭
@@ -164,6 +209,8 @@ watchEffect(() => {
       }
     }),
     appWindow.listen(EventEnum.EXIT, async () => {
+      // 设置程序内部关闭标志
+      isProgrammaticClose = true
       await exit(0)
     })
   ])
@@ -210,6 +257,8 @@ const handleConfirm = async () => {
   tips.value.notTips = tipsRef.notTips
   tipsRef.show = false
   if (tips.value.type === CloseBxEnum.CLOSE) {
+    // 设置程序内部关闭标志
+    isProgrammaticClose = true
     await emit(EventEnum.EXIT)
   } else {
     await nextTick(() => {
@@ -270,6 +319,12 @@ onMounted(async () => {
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
   window.removeEventListener('keydown', (e) => isEsc(e))
+
+  // 清理 macOS 关闭按钮事件监听器
+  if (unlistenCloseRequested) {
+    unlistenCloseRequested()
+    unlistenCloseRequested = null
+  }
 })
 </script>
 
