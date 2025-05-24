@@ -142,7 +142,6 @@ const onConnectClose = () => {
   console.log('📡 WebSocket 连接断开')
   updateConnectionState(ConnectionState.DISCONNECTED)
   onCloseHandler()
-  token = null
   postMsg({ type: WorkerMsgEnum.CLOSE })
 }
 // ws 连接成功
@@ -181,8 +180,11 @@ const initConnection = () => {
   connection?.removeEventListener('error', onConnectError)
   // 建立链接
   // 本地配置到 .env 里面修改。生产配置在 .env.production 里面
-  if (!connection) {
+  try {
     connection = new WebSocket(`${serverUrl}?clientId=${clientId}${token ? `&token=${token}` : ''}`)
+  } catch (err) {
+    console.log('🚀 创建 WebSocket 链接失败')
+    postMsg({ type: WorkerMsgEnum.WS_ERROR, value: { msg: '创建 WebSocket 链接失败' } })
   }
   // 收到消息
   connection.addEventListener('message', onConnectMsg)
@@ -220,9 +222,11 @@ self.onmessage = (e: MessageEvent<string>) => {
       break
     }
     case 'reconnectTimeout': {
+      console.log('重试次数: ', value.reconnectCount)
       reconnectCount = value.reconnectCount + 1
       // 如果没有超过最大重连次数才继续重连
       if (reconnectCount < reconnectCountMax) {
+        console.log('重连中，当前clientId:', clientId, '当前token状态:', token ? '存在' : '不存在')
         initConnection()
         lockReconnect = false
       } else {
@@ -243,6 +247,7 @@ self.onmessage = (e: MessageEvent<string>) => {
     case 'heartbeatTimeout': {
       console.log('心跳超时，重连...')
       connection.close()
+      postMsg({ type: 'heartbeatTimeout' })
       break
     }
     // 页面可见性变化

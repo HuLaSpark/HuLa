@@ -12,7 +12,7 @@
   "bundle": {
     "category": "SocialNetworking",
     "copyright": "HuLaSpark",
-    "licenseFile": "./copyright/License.txt",
+    "licenseFile": "./copyright/License.rtf",
     "resources": [
       "tray"
     ],

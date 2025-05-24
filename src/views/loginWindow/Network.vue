@@ -4,10 +4,10 @@
     <ActionBar :max-w="false" :shrink="false" proxy data-tauri-drag-region />
 
     <n-flex vertical :size="12" align="center" class="pt-10px">
-      <span class="text-(16px #70938c) font-bold textFont">网络代理设置</span>
+      <span class="text-(16px #70938c) font-bold textFont">网络设置</span>
 
       <n-tabs type="line" animated justify-content="center" @update:value="handleTab">
-        <n-tab-pane name="api" tab="API代理">
+        <n-tab-pane name="api" tab="API">
           <n-flex vertical :size="10" align="center" class="pt-10px">
             <n-flex vertical :size="8" justify="center">
               <p class="text-12px">类型</p>
@@ -39,7 +39,7 @@
             </n-flex>
           </n-flex>
         </n-tab-pane>
-        <n-tab-pane name="ws" tab="WebSocket代理">
+        <n-tab-pane name="ws" tab="WebSocket">
           <n-flex vertical :size="10" align="center" class="pt-10px">
             <n-flex vertical :size="8" justify="center">
               <p class="text-12px">类型</p>
@@ -88,34 +88,30 @@ import { invoke } from '@tauri-apps/api/core'
 
 const apiOptions = [
   {
-    label: '不使用代理',
+    label: '不使用(默认为官方地址)',
     value: ''
   },
   {
-    label: 'HTTP代理',
+    label: 'HTTP',
     value: 'http'
   },
   {
-    label: 'HTTPS代理',
+    label: 'HTTPS',
     value: 'https'
-  },
-  {
-    label: 'SOCKS5代理',
-    value: 'socks5'
   }
 ]
 
 const wsOptions = [
   {
-    label: '不使用代理',
+    label: '不使用(默认为官方地址)',
     value: ''
   },
   {
-    label: 'WS代理',
+    label: 'WS',
     value: 'ws'
   },
   {
-    label: 'WSS代理',
+    label: 'WSS',
     value: 'wss'
   }
 ]
@@ -132,7 +128,7 @@ const savedProxy = reactive({
   wsSuffix: ''
 })
 
-// 从本地存储加载代理设置
+// 从本地存储加载设置
 onMounted(() => {
   let proxySettings = localStorage.getItem('proxySettings')
   if (proxySettings) {
@@ -156,14 +152,14 @@ const handleTab = async (tab: string) => {
   }
 }
 
-// 保存代理设置
+// 保存设置
 const handleSave = async () => {
   try {
     if (
       (savedProxy.apiType && (!savedProxy.apiIp || !savedProxy.apiPort)) ||
       (savedProxy.wsType && (!savedProxy.wsIp || !savedProxy.wsPort))
     ) {
-      window.$message.warning('请填写完整的代理信息')
+      window.$message.warning('请填写完整的网络设置信息')
       return
     }
     let proxySettings
@@ -189,27 +185,27 @@ const handleSave = async () => {
     const settings = JSON.stringify(proxySettings)
     localStorage.setItem('proxySettings', settings)
 
-    window.$message.success('代理设置保存成功')
+    window.$message.success('网络设置保存成功')
     setTimeout(() => {
       location.reload()
     }, 1000)
   } catch (error) {
-    window.$message.error('代理设置失败：' + error)
+    window.$message.error('网络设置失败：' + error)
   }
 }
 
-// 测试代理连接
+// 测试网络连接
 const proxyTest = async () => {
   if (
     (savedProxy.apiType && (!savedProxy.apiIp || !savedProxy.apiPort)) ||
     (savedProxy.wsType && (!savedProxy.wsIp || !savedProxy.wsPort))
   ) {
-    window.$message.warning('请填写完整的代理信息')
+    window.$message.warning('请填写完整的网络信息')
     return
   }
 
   try {
-    window.$message.loading('正在测试代理连接...', {
+    window.$message.loading('正在测试网络连接...', {
       duration: 0
     })
 
@@ -221,13 +217,13 @@ const proxyTest = async () => {
     })
 
     if (result) {
-      window.$message.success('代理连接测试成功')
+      window.$message.success('网络连接测试成功')
     } else {
-      window.$message.error('代理连接测试失败')
+      window.$message.error('网络连接测试失败')
     }
   } catch (error) {
     // 显示具体的错误信息
-    window.$message.error(`代理测试失败: ${error}`)
+    window.$message.error(`网络测试失败: ${error}`)
   } finally {
     window.$message.destroyAll() // 清除loading消息
   }

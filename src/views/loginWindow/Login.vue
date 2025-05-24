@@ -18,8 +18,6 @@
         <n-input
           :class="{ 'pl-16px': loginHistories.length > 0 }"
           size="large"
-          maxlength="24"
-          minlength="6"
           v-model:value="info.account"
           type="text"
           :placeholder="accountPH"
@@ -155,7 +153,7 @@
           </div>
           <div
             v-if="!isCompatibility"
-            @click="router.push('/proxy')"
+            @click="router.push('/network')"
             class="text-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px">
             网络设置
           </div>

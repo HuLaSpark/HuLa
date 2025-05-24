@@ -180,21 +180,34 @@ const emojiHeight = computed(() => {
 
 /** 计算表情菜单的位置 */
 const emojiMenuPosition = computed(() => {
-  let posX = x.value
-  let posY = y.value - emojiHeight.value // 默认在点击位置上方显示
+  // 使用普通右键菜单计算后的位置作为基础
+  let posX = pos.value.posX
+  let posY = pos.value.posY - emojiHeight.value // 默认在右键菜单位置上方显示
 
-  // 检查水平方向是否超出视口
-  if (x.value + emojiWidth.value > vw.value) {
-    posX = vw.value - emojiWidth.value - 20 // 留出20px的安全距离
-  }
-  if (posX < 10) {
-    posX = 10 // 确保不会超出左边界
+  // 判断消息是在左边还是右边（通过原始鼠标位置与屏幕中心的关系）
+  const isRightSideMessage = x.value > vw.value / 2
+
+  if (isRightSideMessage) {
+    // emoji菜单的左边位置 = 右键菜单右边界 - emoji菜单宽度
+    posX = pos.value.posX + w.value - emojiWidth.value
+
+    // 确保不会超出左边界
+    if (posX < 10) {
+      posX = 10
+    }
+  } else {
+    posX = pos.value.posX
+
+    // 检查是否会超出右边界
+    if (posX + emojiWidth.value > vw.value) {
+      posX = vw.value - emojiWidth.value - 10
+    }
   }
 
   // 检查垂直方向是否超出视口
   if (posY < 10) {
-    // 如果上方空间不足，则在点击位置下方显示
-    posY = y.value + 10
+    // 如果上方空间不足，则在右键菜单位置下方显示
+    posY = pos.value.posY + 10
   }
 
   return {

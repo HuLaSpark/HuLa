@@ -69,9 +69,9 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/loginWindow/QRCode.vue')
   },
   {
-    path: '/proxy',
-    name: 'proxy',
-    component: () => import('@/views/loginWindow/Proxy.vue')
+    path: '/network',
+    name: 'network',
+    component: () => import('@/views/loginWindow/Network.vue')
   },
   {
     path: '/tray',

@@ -103,8 +103,6 @@
             <n-form-item path="email">
               <n-auto-complete
                 size="large"
-                maxlength="22"
-                minlength="10"
                 v-model:value="info.email"
                 :placeholder="showemailPrefix ? '' : placeholders.email"
                 :options="commonEmailDomains"

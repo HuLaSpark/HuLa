@@ -169,7 +169,7 @@ const addPanels = ref({
       label: '加好友/群',
       icon: 'people-plus',
       click: async () => {
-        await createWebviewWindow('添加好友/群', 'searchFriend', 500, 570)
+        await createWebviewWindow('添加好友/群', 'searchFriend', 500, 580)
       }
     }
   ]

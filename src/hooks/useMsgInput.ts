@@ -11,6 +11,7 @@ import { useDebounceFn } from '@vueuse/core'
 import { Ref } from 'vue'
 import { SelectionRange, useCommon } from './useCommon.ts'
 import { readText, readImage } from '@tauri-apps/plugin-clipboard-manager'
+import { processClipboardImage } from '@/utils/imageUtils'
 import { messageStrategyMap } from '@/strategy/MessageStrategy.ts'
 import { useTrigger } from './useTrigger'
 import type { AIModel } from '@/services/types.ts'
@@ -159,35 +160,41 @@ export const useMsgInput = (messageInputDom: Ref) => {
       icon: 'intersection',
       click: async () => {
         try {
-          // 先尝试读取图片
+          let imageProcessed = false
+
+          // 使用Tauri的readImage API获取剪贴板图片
           const clipboardImage = await readImage().catch(() => null)
           if (clipboardImage) {
             try {
-              // 获取图片的 RGBA 数据
-              const imageData = await clipboardImage.rgba()
-              const blob = new Blob([imageData], { type: 'image/png' })
-              const url = URL.createObjectURL(blob)
-              console.log(url)
+              // 使用工具函数处理剪贴板图片数据
+              const file = await processClipboardImage(clipboardImage)
 
               messageInputDom.value.focus()
               nextTick(() => {
-                imgPaste(blob, messageInputDom.value)
+                // 使用File对象触发缓存机制
+                imgPaste(file, messageInputDom.value)
               })
-              return
+
+              imageProcessed = true
             } catch (error) {
-              console.error('处理图片数据失败:', error)
+              console.error('Tauri处理图片数据失败:', error)
             }
           }
 
           // 如果没有图片，尝试读取文本
-          const content = await readText().catch(() => null)
-          if (content) {
-            messageInputDom.value.focus()
-            nextTick(() => {
-              insertNode(MsgEnum.TEXT, content, {} as HTMLElement)
-              triggerInputEvent(messageInputDom.value)
-            })
-            return
+          if (!imageProcessed) {
+            const content = await readText().catch(() => null)
+            if (content) {
+              messageInputDom.value.focus()
+              nextTick(() => {
+                insertNode(MsgEnum.TEXT, content, {} as HTMLElement)
+                triggerInputEvent(messageInputDom.value)
+              })
+              return
+            } else {
+              // 当既没有图片也没有文本时，显示提示信息
+              alert('无法获取当前剪贴板中对于的类型的内容，请使用 ctrl/command + v')
+            }
           }
         } catch (error) {
           console.error('粘贴失败:', error)

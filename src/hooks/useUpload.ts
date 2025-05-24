@@ -6,6 +6,7 @@ import { BaseDirectory, readFile } from '@tauri-apps/plugin-fs'
 import { useConfigStore } from '@/stores/config'
 import { MD5, lib } from 'crypto-js'
 import { useUserStore } from '@/stores/user'
+import { getImageDimensions } from '@/utils/imageUtils'
 
 /** 文件信息类型 */
 export type FileInfoType = {
@@ -444,19 +445,17 @@ export const useUpload = () => {
   /**
    * 获取图片宽高
    */
-  const getImgWH = (file: File) => {
-    const img = new Image()
-    const tempUrl = URL.createObjectURL(file)
-    img.src = tempUrl
-    return new Promise((resolve, reject) => {
-      img.onload = function () {
-        resolve({ width: img.width, height: img.height, tempUrl })
+  const getImgWH = async (file: File) => {
+    try {
+      const result = await getImageDimensions(file, { includePreviewUrl: true })
+      return {
+        width: result.width,
+        height: result.height,
+        tempUrl: result.previewUrl!
       }
-      img.onerror = function () {
-        URL.revokeObjectURL(tempUrl) // 释放临时URL资源
-        reject({ width: 0, height: 0, url: null })
-      }
-    })
+    } catch (error) {
+      return { width: 0, height: 0, url: null }
+    }
   }
 
   /**
@@ -668,7 +667,7 @@ export const useUpload = () => {
 
         // 创建File对象
         const fileName = path.split('/').pop() || 'file'
-        const fileObj = new File([file], fileName, {
+        const fileObj = new File([new Uint8Array(file)], fileName, {
           type: getFileType(fileName)
         })
 
