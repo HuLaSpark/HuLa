@@ -77,61 +77,71 @@
           </n-flex>
 
           <!-- 聊天内容 -->
-          <div v-else class="w-100% h-100% bg-transparent">
-            <div class="w-full h-30px flex-center bg-transparent">
-              <n-flex v-if="chatMessageList.length === 0" justify="center" :size="18">
-                <p class="text-[#707070]">暂无数据</p>
-              </n-flex>
-              <n-flex v-if="isTop && chatMessageList.length > 0" justify="center" :size="18">
-                <p class="text-[#707070]">以下是全部消息内容</p>
-              </n-flex>
-              <n-flex v-if="isLoading" justify="center" :size="18">
-                <p class="text-[#707070]">正在加载...</p>
-                <img class="size-14px ml-2" src="@/assets/img/loading.svg" alt="" />
-              </n-flex>
-            </div>
-
-            <n-scrollbar ref="messageScrollbar" :style="{ height: `calc(100vh - 430px)` }" :on-scroll="handleScroll">
-              <template v-for="(item, index) in chatMessageList">
-                <n-flex :size="6" v-if="item.role === 'assistant'" :key="index">
+          <VirtualList
+            v-else
+            ref="virtualListInst"
+            :items="chatMessageList"
+            :estimatedItemHeight="76"
+            :buffer="5"
+            :is-loading-more="isLoadingMore"
+            @scroll="handleScroll"
+            @scroll-direction-change="handleScrollDirectionChange"
+            @load-more="handleLoadMore"
+            class="scrollbar-container"
+            :class="{ 'hide-scrollbar': !showScrollbar }"
+            :style="{ height: `calc(100vh - 400px)` }"
+            @mouseenter="showScrollbar = true"
+            @mouseleave="showScrollbar = false">
+            <template #default="{ item, index }">
+              <div
+                class="flex flex-col w-full"
+                :key="index"
+                :class="[{ 'items-end': item.role === 'user' }, 'gap-2px']">
+                <div class="flex items-start" :class="item.role === 'user' ? 'flex-row-reverse' : ''">
+                  <!-- 头像 -->
                   <n-avatar
-                    class="rounded-8px"
-                    src="https://img1.baidu.com/it/u=3613958228,3522035000&fm=253&fmt=auto&app=120&f=JPEG?w=500&h=500" />
-                  <n-flex vertical justify="space-between">
-                    <p class="text-(12px [--chat-text-color])">
-                      {{ item.modelVersion ? item.modelVersion : currentModel.label }}
-                    </p>
+                    :class="item.role === 'user' ? 'ml-8px' : 'mr-8px'"
+                    bordered
+                    round
+                    :src="AvatarUtils.getAvatarUrl(userStore.userInfo.avatar!)"
+                    :size="35" />
+
+                  <n-flex
+                    vertical
+                    justify="center"
+                    :size="6"
+                    class="color-[--text-color] flex-1"
+                    :class="item.role === 'user' ? 'items-end mr-10px' : ''">
+                    <n-flex :size="6" align="center" :style="item.role === 'user' ? 'flex-direction: row-reverse' : ''">
+                      <n-flex
+                        :size="6"
+                        class="select-none"
+                        align="center"
+                        :style="item.role === 'user' ? 'flex-direction: row-reverse' : ''">
+                        <span class="text-12px select-none color-#909090 inline-block align-top">
+                          {{ userStore.userInfo.name }}
+                        </span>
+                      </n-flex>
+                    </n-flex>
 
                     <!--  气泡样式  -->
-                    <ContextMenu>
-                      <div style="white-space: pre-wrap" class="bubble select-text mb-[10px]">
+                    <ContextMenu
+                      class="w-fit relative flex flex-col"
+                      :class="item.role === 'user' ? 'items-end' : 'items-start'"
+                      :style="{ '--bubble-max-width': '50vw' }">
+                      <div
+                        style="white-space: pre-wrap"
+                        class="select-text mb-[10px]"
+                        :class="item.role === 'user' ? 'bubble-oneself' : 'bubble'">
                         <span v-if="item.contentType === 'text'" v-html="item.content"></span>
-                        <div v-if="item.contentType === 'think'" class="flex-start-center">
-                          <span>正在思考</span>
-                          <img class="size-14px ml-2" src="@/assets/img/loading.svg" alt="" />
-                        </div>
-                        <div v-if="item.contentType === 'error'" class="flex-start-center">
-                          <span>{{ item.content }}</span>
-                        </div>
+                        <span v-if="item.contentType === 'think'">正在思考...</span>
                       </div>
                     </ContextMenu>
                   </n-flex>
-                </n-flex>
-
-                <n-flex :size="6" v-if="item.role === 'user'" justify="end" :key="index">
-                  <n-flex vertical justify="space-between">
-                    <!--  气泡样式  -->
-                    <ContextMenu>
-                      <div style="white-space: pre-wrap" class="bubble-oneself select-text mb-[10px]">
-                        <span v-html="item.content"></span>
-                      </div>
-                    </ContextMenu>
-                  </n-flex>
-                  <n-avatar bordered round :src="AvatarUtils.getAvatarUrl(userStore.userInfo.avatar!)" :size="35" />
-                </n-flex>
-              </template>
-            </n-scrollbar>
-          </div>
+                </div>
+              </div>
+            </template>
+          </VirtualList>
         </div>
       </Transition>
     </div>
@@ -213,8 +223,10 @@ import { useMitt } from '@/hooks/useMitt.ts'
 import { InputInst, NIcon } from 'naive-ui'
 import { useSettingStore } from '@/stores/setting.ts'
 // useAiChatStore
+import { useChatMain } from '@/hooks/useChatMain.ts'
 import { useAiChatStore } from '@/stores/aiChat.ts'
 import { fetchChatAPI, fetchChatAPIProcess, fetchChatMessageAPI, listChatMessage } from '@/plugins/robot/api'
+import VirtualList, { type VirtualListExpose } from '@/components/common/VirtualList.vue'
 import { AvatarUtils } from '@/utils/AvatarUtils.ts'
 import { useUserStore } from '@/stores/user.ts'
 // import { useSSE } from '@/plugins/robot/hook/useSSE.ts'
@@ -266,22 +278,23 @@ const pageNum = ref<number>(1)
 const size = ref<number>(10)
 const isLoading = ref(false)
 const isTop = ref(false)
-const messageScrollbar = ref<any>(null)
+// 添加标记，用于识别是否正在加载历史消息
+const isLoadingMore = ref(false)
+/** 虚拟列表 */
+const virtualListInst = useTemplateRef<VirtualListExpose>('virtualListInst')
+// 记录当前滚动位置相关信息
+const isAutoScrolling = ref(false)
 
-// const features = ref([
-//   {
-//     icon: 'model',
-//     label: '模型'
-//   },
-//   {
-//     icon: 'voice',
-//     label: '语音输入'
-//   },
-//   {
-//     icon: 'plugins2',
-//     label: '插件'
-//   }
-// ])
+/** 记录是否正在向上滚动 */
+const isScrollingUp = ref(false)
+/** 记录是否正在向下滚动 */
+const isScrollingDown = ref(false)
+// 是否显示滚动条
+const showScrollbar = ref(false)
+// 记录 requestAnimationFrame 的返回值
+const rafId = ref<number>()
+
+const { scrollTop } = useChatMain()
 
 const handleBlur = () => {
   isEdit.value = false
@@ -320,10 +333,8 @@ const handleTransitionComplete = () => {
 }
 
 const scrollToBottom = () => {
-  if (!messageScrollbar.value) return
-  setTimeout(() => {
-    messageScrollbar.value?.scrollTo({ position: 'bottom', behavior: 'smooth' })
-  }, 100)
+  if (!virtualListInst.value) return
+  virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
 }
 
 // const SCROLL_THRESHOLD = 200
@@ -339,45 +350,74 @@ const scrollToBottom = () => {
 //   }
 // }
 
-// // 优化后的滚动处理函数
-// const handleScroll = throttle((e: any) => {
-//   const target = e.target;
-//   const { scrollTop, scrollHeight, clientHeight } = target;
+// 处理滚动事件(用于页脚显示功能)
+const handleScroll = () => {
+  if (isAutoScrolling.value) return // 如果是自动滚动，不处理
+  const container = virtualListInst.value?.getContainer()
+  if (!container) return
 
-//   // 判断是否接近顶部并加载更多内容
-//   if (scrollTop <= SCROLL_THRESHOLD && !isLoading.value && !isTop.value) {
-//     isLoading.value = true;
-//     pageNum.value++;
+  // 获取已滚动的距离
+  scrollTop.value = container.scrollTop
 
-//     handleGetMessageList(false)
-//      .catch((error) => {
-//         console.error('获取消息列表失败:', error);
-//       })
-//   }
-// }, 100); // 每100ms最多执行一次
+  // 存储 requestAnimationFrame 的返回值
+  if (rafId.value) {
+    cancelAnimationFrame(rafId.value)
+  }
 
-const handleScroll = (e: any) => {
-  const target = e.target
-  const { scrollTop } = target
-  // console.log('scrollTop:', scrollTop)
-  // console.log('scrollHeight:', scrollHeight)
-  // console.log('clientHeight:', clientHeight)
-  // 判断是否接近顶部并加载更多内容
-  if (scrollTop === 0 && !isLoading.value && !isTop.value) {
-    isLoading.value = true
+  rafId.value = requestAnimationFrame(async () => {
+    // 处理触顶加载更多
+    if (scrollTop.value < 26) {
+      // 如果正在加载或已经触发了加载，则不重复触发
+      if (isLoadingMore.value) return
+
+      await handleLoadMore()
+    }
+  })
+}
+
+// 处理滚动方向变化
+const handleScrollDirectionChange = (direction: 'up' | 'down') => {
+  isScrollingUp.value = direction === 'up'
+  isScrollingDown.value = direction === 'down'
+}
+
+// 处理加载更多
+const handleLoadMore = async () => {
+  // 如果正在加载或已经触发了加载，则不重复触发
+  if (isLoadingMore.value) return
+  // 记录当前的内容高度
+  const container = virtualListInst.value?.getContainer()
+  if (!container) return
+  const oldScrollHeight = container.scrollHeight
+
+  isLoadingMore.value = true
+
+  // 使用CSS变量控制滚动行为，避免直接操作DOM样式
+  container.classList.add('loading-history')
+
+  try {
+    // 加载历史消息
     pageNum.value++
-    handleGetMessageList(false)
-      .catch((error) => {
-        console.error('获取消息列表失败:', error)
-      })
-      .finally(() => {
-        console.log('finally')
-        // 滚动到指定位置
-        messageScrollbar.value?.scrollTo({
-          top: 200,
-          behavior: 'smooth'
-        })
-      })
+    await handleGetMessageList()
+
+    // 加载完成后，计算新增内容的高度差，并设置滚动位置
+    await nextTick()
+    const newScrollHeight = container.scrollHeight
+    const heightDiff = newScrollHeight - oldScrollHeight
+    if (heightDiff > 0) {
+      container.scrollTop = heightDiff
+    }
+
+    // 更新消息索引映射
+    // updateMessageIndexMap()
+  } catch (error) {
+    console.error('加载历史消息失败:', error)
+  } finally {
+    // 恢复滚动交互
+    setTimeout(() => {
+      container.classList.remove('loading-history')
+      isLoadingMore.value = false
+    }, 100)
   }
 }
 
@@ -522,6 +562,7 @@ const handleSend = (chatNumber: string) => {
 
 // 修改为返回 Promise，方便在 handleScroll 中处理
 const handleGetMessageList = (isToBottom: boolean = true): Promise<void> => {
+  isLoadingMore.value = true
   return new Promise((resolve, reject) => {
     listChatMessage({
       current: pageNum.value,
@@ -543,6 +584,7 @@ const handleGetMessageList = (isToBottom: boolean = true): Promise<void> => {
             chatMessageList.value = [...res, ...chatMessageList.value]
           }
         }
+        // chatMessageList.value.reverse()
         resolve()
       })
       .catch((error) => {
@@ -552,6 +594,7 @@ const handleGetMessageList = (isToBottom: boolean = true): Promise<void> => {
         setTimeout(() => {
           messageLoading.value = false
           isLoading.value = false
+          isLoadingMore.value = false
           if (isToBottom) {
             setTimeout(() => {
               scrollToBottom()
@@ -591,10 +634,6 @@ onMounted(() => {
     pageNum.value = 1
     messageLoading.value = true
     handleGetMessageList()
-  })
-
-  nextTick(() => {
-    messageScrollbar.value?.addEventListener('scroll', handleScroll)
   })
 })
 </script>
