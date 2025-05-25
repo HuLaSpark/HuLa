@@ -1,5 +1,32 @@
 
 
+## [2.6.12](https://github.com/HuLaSpark/HuLa/compare/v2.6.11...v2.6.12) (2025-05-25)
+
+
+### ✨ Features | 新功能
+
+* **component:** :sparkles: 增加右键emoji可以另存为 ([0dfdfc1](https://github.com/HuLaSpark/HuLa/commit/0dfdfc1269256baa59316b7936db94468b733b69))
+* **hook:** :sparkles: 增强文本选择复制 ([791b9cc](https://github.com/HuLaSpark/HuLa/commit/791b9cc69485d9c8245396d72cca834ac9a61aa0)), closes [#279](https://github.com/HuLaSpark/HuLa/issues/279)
+
+
+### 🐛 Bug Fixes | Bug 修复
+
+* 修复ws链接断开没有重试问题 ([#276](https://github.com/HuLaSpark/HuLa/issues/276)) ([e068a25](https://github.com/HuLaSpark/HuLa/commit/e068a253e5215aacb606f852087e5e9e67010404))
+* **agreement:** :bug: 安装界面乱码 ([#277](https://github.com/HuLaSpark/HuLa/issues/277)) ([13c528a](https://github.com/HuLaSpark/HuLa/commit/13c528a35e11ee5fa7325beb1fcef8d28f2550e3)), closes [#275](https://github.com/HuLaSpark/HuLa/issues/275)
+* **hook:** :bug: 修复除emoji类型和图片类型都可以另存为的bug ([d2b6ab2](https://github.com/HuLaSpark/HuLa/commit/d2b6ab25d6fd7ea5a4e9df1d287fe3d3cc9a1b58))
+* **hook:** :bug: 修复mac系统右键会选中文本的问题 ([7e762e8](https://github.com/HuLaSpark/HuLa/commit/7e762e8524df0d17f85ca71eedb95d01dea7c8d3))
+* **hook:** :bug: 暂时移除/唤起ai快捷键识别 ([4a1a05c](https://github.com/HuLaSpark/HuLa/commit/4a1a05cf51b4bab670b2da5faac43bf33f902998))
+* **input:** :bug: 修复mac下输入框检查拼写和字母大小写问题 ([f8602e5](https://github.com/HuLaSpark/HuLa/commit/f8602e56ebbf4ae90f5f5dc7e7cebee317bf4ab4))
+* **mac:** :bug: 修复mac下点击关闭按钮无法关闭home窗口问题 ([2a63046](https://github.com/HuLaSpark/HuLa/commit/2a63046bbd2d7c4cd484d456c708ab47bdc8e792))
+* **view:** :bug: 修复托盘菜单内容不展示问题和托盘图标闪烁后不展示问题 ([c927be4](https://github.com/HuLaSpark/HuLa/commit/c927be4c3fd00cdde9f93c15793ea56ce5b11d14))
+* **view:** :bug: 修改邮箱输入框长度限制 ([61618db](https://github.com/HuLaSpark/HuLa/commit/61618db93cbe9512eceb66fbc50006a90f7d44f1)), closes [#278](https://github.com/HuLaSpark/HuLa/issues/278)
+* **worker:** :bug: 修复ws在重连后清空token导致无法对应获取消息问题 ([030fed7](https://github.com/HuLaSpark/HuLa/commit/030fed7d60a6eb03dccb49e6f108b2b5d67161e4))
+
+
+### ⚡️ Performance Improvements | 性能优化
+
+* **global:** :zap: 增加ws健康检查兜底刷新最新消息内容、网络断线恢复重连 ([f734dca](https://github.com/HuLaSpark/HuLa/commit/f734dca910b17e3dd8a4d8e5e58cae3e7caaa333))
+
 ## [2.6.11](https://github.com/HuLaSpark/HuLa/compare/v2.6.10...v2.6.11) (2025-05-18)
 
 
