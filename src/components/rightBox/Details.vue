@@ -125,6 +125,10 @@
             class="border-(1px solid #90909080)"
             placeholder="请输入群聊备注"
             clearable
+            spellCheck="false"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
             @blur="handleRemarkUpdate"
             @keydown.enter="handleRemarkUpdate" />
         </div>
@@ -147,6 +151,10 @@
             class="border-(1px solid #90909080)"
             placeholder="请输入本群昵称"
             clearable
+            spellCheck="false"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
             @blur="handleNicknameUpdate"
             @keydown.enter="handleNicknameUpdate" />
         </div>

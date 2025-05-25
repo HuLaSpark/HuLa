@@ -165,6 +165,10 @@
                         @keydown.enter="saveGroupName"
                         size="tiny"
                         maxlength="12"
+                        spellCheck="false"
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="off"
                         class="border-(solid 1px [--line-color])"
                         placeholder="请输入群名称(最多12字)" />
                     </div>
@@ -235,6 +239,10 @@
             <p class="text-(12px [--chat-text-color]) mt-20px mb-10px">我本群的昵称</p>
             <n-input
               class="border-(solid 1px [--line-color]) custom-shadow"
+              spellCheck="false"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
               v-model:value="groupDetail.myNickname"
               @update:value="updateGroupInfo($event, 'nickname')" />
             <!-- 群备注 -->
@@ -245,6 +253,10 @@
             <n-input
               class="border-(solid 1px [--line-color]) custom-shadow"
               v-model:value="groupDetail.groupRemark"
+              spellCheck="false"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
               @update:value="updateGroupInfo($event, 'remark')" />
 
             <!-- 群设置选项 -->

@@ -23,6 +23,10 @@
           :placeholder="accountPH"
           @focus="accountPH = ''"
           @blur="accountPH = '邮箱/HuLa账号'"
+          spellCheck="false"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
           clearable>
           <template #suffix>
             <n-flex v-if="loginHistories.length > 0" @click="arrowStatus = !arrowStatus">
@@ -65,6 +69,10 @@
           show-password-on="click"
           v-model:value="info.password"
           type="password"
+          spellCheck="false"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
           :placeholder="passwordPH"
           @focus="passwordPH = ''"
           @blur="passwordPH = '输入HuLa密码'"

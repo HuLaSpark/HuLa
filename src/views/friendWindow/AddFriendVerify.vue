@@ -36,6 +36,10 @@
           :maxlength="60"
           :count-graphemes="countGraphemes"
           show-count
+          spellCheck="false"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
           type="textarea"
           placeholder="输入几句话，对TA说些什么吧" />
 

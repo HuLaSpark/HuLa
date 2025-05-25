@@ -26,6 +26,10 @@
           :placeholder="searchPlaceholder[searchType]"
           :maxlength="20"
           round
+          spellCheck="false"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
           clearable
           @keydown.enter="handleSearch"
           @clear="handleClear">

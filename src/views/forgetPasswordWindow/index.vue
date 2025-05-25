@@ -26,6 +26,10 @@
               class="border-(1px solid #90909080)"
               v-model:value="formData.email"
               placeholder="请输入您的邮箱"
+              spellCheck="false"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
               clearable />
           </n-form-item>
 
@@ -37,6 +41,10 @@
                 class="border-(1px solid #90909080)"
                 v-model:value="formData.imgCode"
                 placeholder="请输入图片验证码"
+                spellCheck="false"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
                 maxlength="5" />
               <n-image
                 width="120"
@@ -60,6 +68,10 @@
                 class="border-(1px solid #90909080)"
                 v-model:value="formData.emailCode"
                 placeholder="请输入邮箱验证码"
+                spellCheck="false"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
                 maxlength="6" />
               <n-button
                 color="#13987f"
@@ -98,6 +110,10 @@
                 show-password-on="click"
                 placeholder="请输入6-16位新密码"
                 maxlength="16"
+                spellCheck="false"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
                 minlength="6" />
               <n-flex vertical :size="4" class="space-y-4px">
                 <Validation :value="passwordForm.password" message="密码长度为6-16位" :validator="validateMinLength" />
@@ -123,6 +139,10 @@
                 type="password"
                 show-password-on="click"
                 placeholder="请再次输入密码"
+                spellCheck="false"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
                 maxlength="16"
                 minlength="6" />
               <n-flex vertical :size="4">

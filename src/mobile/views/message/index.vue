@@ -8,6 +8,10 @@
             class="rounded-6px w-full relative text-12px"
             :maxlength="20"
             clearable
+            spellCheck="false"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
             :placeholder="'搜索'">
             <template #prefix>
               <svg class="w-12px h-12px"><use href="#search"></use></svg>

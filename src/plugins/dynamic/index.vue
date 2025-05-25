@@ -86,7 +86,7 @@
                   </n-image-group>
                 </n-scrollbar>
 
-                <n-input />
+                <n-input spellCheck="false" autoComplete="off" autoCorrect="off" autoCapitalize="off" />
               </n-flex>
             </n-flex>
           </n-flex>

@@ -12,6 +12,10 @@
           placeholder="填写公告，1～600字"
           :autosize="{ minRows: 20 }"
           maxlength="600"
+          spellCheck="false"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
           show-count
           autofocus />
       </div>
