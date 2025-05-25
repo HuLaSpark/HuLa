@@ -101,6 +101,9 @@ svg {
   // 危险样式
   --danger-text: #c14053;
   --danger-bg: #f6dfe3;
+  // 警告样式
+  --warning-text: #f7b668ff;
+  --warning-bg: #fdeeddff;
   // 头像边框颜色
   --avatar-border-color: #fff;
   // hover头像样式
@@ -197,7 +200,10 @@ html[data-theme='dark'] {
   // 危险样式
   --danger-text: #da8583;
   --danger-bg: #37292c;
-   // 头像边框颜色
+  // 警告样式
+  --warning-text: #f4c375ff;
+  --warning-bg: #402f1dff;
+  // 头像边框颜色
   --avatar-border-color: #1b1b1b;
   // hover头像样式
   --avatar-hover-bg: rgba(30, 30, 30, 0.6);

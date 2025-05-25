@@ -13,8 +13,10 @@ import { useUserStore } from '@/stores/user'
 import { getEnhancedFingerprint } from '@/services/fingerprint.ts'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useTauriListener } from '@/hooks/useTauriListener'
-import { listen, emit } from '@tauri-apps/api/event'
+import { listen } from '@tauri-apps/api/event'
 import { useDebounceFn } from '@vueuse/core'
+// 使用类型导入避免直接执行代码
+import type { useNetworkReconnect as UseNetworkReconnectType } from '@/hooks/useNetworkReconnect'
 
 // 创建 webSocket worker
 const worker: Worker = new Worker(new URL('../workers/webSocket.worker.ts', import.meta.url), {
@@ -50,6 +52,12 @@ class WS {
     timeSinceLastPong: null as number | null
   }
 
+  // 网络重连工具，延迟初始化
+  #networkReconnect: ReturnType<typeof UseNetworkReconnectType> | null = null
+
+  // 存储watch清理函数
+  #unwatchFunctions: (() => void)[] = []
+
   constructor() {
     this.initWindowType()
     if (isMainWindow) {
@@ -60,7 +68,38 @@ class WS {
       timerWorker.addEventListener('message', this.onTimerWorkerMsg)
       // 添加页面可见性监听
       this.initVisibilityListener()
+
+      this.initNetworkReconnect()
     }
+  }
+
+  // 初始化网络重连工具
+  private initNetworkReconnect() {
+    // 动态导入以延迟执行
+    import('@/hooks/useNetworkReconnect')
+      .then(({ useNetworkReconnect }) => {
+        this.#networkReconnect = useNetworkReconnect()
+        console.log('[WebSocket] 网络重连工具初始化完成')
+
+        // 监听网络在线状态变化
+        if (this.#networkReconnect.isOnline) {
+          const unwatch = watch(this.#networkReconnect.isOnline, (newValue, oldValue) => {
+            // 只在网络从离线变为在线时执行重连
+            if (newValue === true && oldValue === false) {
+              console.log('[WebSocket] 网络恢复在线状态，主动重新初始化WebSocket连接')
+              // 重置重连计数并重新初始化连接
+              this.forceReconnect()
+            }
+          })
+
+          // 存储清理函数
+          this.#unwatchFunctions = this.#unwatchFunctions || []
+          this.#unwatchFunctions.push(unwatch)
+        }
+      })
+      .catch((err) => {
+        console.error('[WebSocket] 网络重连工具初始化失败:', err)
+      })
   }
 
   // 初始化页面可见性监听
@@ -72,6 +111,18 @@ class WS {
           value: { isHidden: !isVisible }
         })
       )
+
+      // 如果从不可见变为可见状态，并且网络重连工具已初始化，检查是否需要刷新数据
+      if (isVisible && this.#networkReconnect?.isOnline?.value) {
+        // 检查最后一次通信时间，如果太久没有通信，刷新数据
+        const now = Date.now()
+        const lastPongTime = this.#connectionHealth.lastPongTime
+        if (lastPongTime && now - lastPongTime > 60000) {
+          // 如果超过1分钟没有心跳
+          console.log('[Network] 应用从后台恢复且长时间无心跳，刷新数据')
+          this.#networkReconnect?.refreshAllData()
+        }
+      }
     }
 
     const debouncedVisibilityChange = useDebounceFn((isVisible: boolean) => {
@@ -169,31 +220,6 @@ class WS {
   private async initWindowType() {
     const currentWindow = WebviewWindow.getCurrent()
     isMainWindow = currentWindow.label === 'home'
-
-    if (!isMainWindow) {
-      // 非主窗口监听来自主窗口的消息
-      await this.initChildWindowListeners()
-    }
-  }
-
-  // 为子窗口初始化监听器
-  private async initChildWindowListeners() {
-    this.#tauriListener = useTauriListener()
-
-    // 监听主窗口发来的WebSocket消息
-    this.#tauriListener.addListener(
-      listen('ws-message', (event) => {
-        this.onMessage(event.payload as string)
-      })
-    )
-
-    // 监听连接状态变化
-    this.#tauriListener.addListener(
-      listen('ws-state-change', (event) => {
-        const state = event.payload as ConnectionState
-        useMitt.emit('wsConnectionStateChange', state)
-      })
-    )
   }
 
   initConnect = async () => {
@@ -223,10 +249,6 @@ class WS {
     switch (params.type) {
       case WorkerMsgEnum.MESSAGE: {
         await this.onMessage(params.value as string)
-        // 广播消息给其他窗口
-        if (isMainWindow) {
-          await emit('ws-message', params.value)
-        }
         break
       }
       case WorkerMsgEnum.OPEN: {
@@ -243,7 +265,6 @@ class WS {
         useMitt.emit(WsResponseMessageType.NO_INTERNET, params.value)
         // 如果是重连失败，可以提示用户刷新页面
         if ((params.value as { msg: string }).msg.includes('连接失败次数过多')) {
-          useMitt.emit('showMainMessage', { title: '连接断开', content: '连接已断开，请刷新页面或重新登录。' })
           // 可以触发UI提示，让用户刷新页面
           useMitt.emit('wsReconnectFailed', params.value)
         }
@@ -299,21 +320,21 @@ class WS {
         const { state } = params.value as { state: ConnectionState }
 
         // 检测重连成功: 从RECONNECTING状态变为CONNECTED状态
+        // TODO 重连的时候没有执行这里
         if (this.#previousConnectionState === ConnectionState.RECONNECTING && state === ConnectionState.CONNECTED) {
           console.log('🔄 WebSocket 重连成功')
-          // 可以添加UI提示
-          useMitt.emit('showMainMessage', { title: '连接恢复', content: '网络连接已恢复' })
+          // 网络重连成功后刷新数据
+          if (isMainWindow && this.#networkReconnect) {
+            console.log('开始刷新数据...')
+            this.#networkReconnect.refreshAllData()
+          } else if (isMainWindow) {
+            // 如果还没初始化，延迟初始化后再刷新
+            this.initNetworkReconnect()
+          }
         }
 
         // 更新前一状态
         this.#previousConnectionState = state
-
-        console.log('连接状态改变', state)
-        useMitt.emit('wsConnectionStateChange', state)
-        // 广播状态变化给其他窗口
-        if (isMainWindow) {
-          await emit('ws-state-change', state)
-        }
         break
       }
       // 处理心跳响应
@@ -370,9 +391,6 @@ class WS {
         }
         this.#tasks.push(params)
       }
-    } else {
-      // 子窗口通过事件发送消息到主窗口
-      emit('ws-send', params)
     }
   }
 
@@ -562,6 +580,22 @@ class WS {
     return this.#connectionHealth
   }
 
+  // 强制重新连接WebSocket
+  forceReconnect() {
+    console.log('[WebSocket] 强制重新初始化WebSocket连接')
+    // 停止当前的重连计时器
+    worker.postMessage(JSON.stringify({ type: 'clearReconnectTimer' }))
+
+    // 停止心跳
+    worker.postMessage(JSON.stringify({ type: 'stopHeartbeat' }))
+
+    // 重置重连计数并重新初始化
+    worker.postMessage(JSON.stringify({ type: 'resetReconnectCount' }))
+
+    // 重新初始化连接
+    this.initConnect()
+  }
+
   destroy() {
     worker.postMessage(JSON.stringify({ type: 'clearReconnectTimer' }))
     worker.terminate()
@@ -574,6 +608,10 @@ class WS {
     this.#connectReady = false
     // 清理 Tauri 事件监听器
     this.#tauriListener?.cleanup()
+
+    // 清理所有watch
+    this.#unwatchFunctions.forEach((unwatch) => unwatch())
+    this.#unwatchFunctions = []
   }
 }
 

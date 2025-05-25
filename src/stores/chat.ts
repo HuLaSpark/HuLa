@@ -664,7 +664,7 @@ export const useChatStore = defineStore(
       expirationTimers.clear()
     }
 
-    // 在 useChatStore 中添加新方法
+    // 更新未读消息计数
     const updateTotalUnreadCount = () => {
       // 使用 Array.from 确保遍历的是最新的 sessionList
       const totalUnread = Array.from(sessionList.value).reduce((total, session) => {
@@ -683,14 +683,57 @@ export const useChatStore = defineStore(
       invoke('set_badge_count', { count: totalUnread > 0 ? totalUnread : null })
     }
 
-    // 在 useChatStore 中添加新方法
+    // 清空所有会话的未读数
     const clearUnreadCount = () => {
-      // 清空所有会话的未读数
       sessionList.value.forEach((session) => {
         session.unreadCount = 0
       })
       // 更新全局未读数
       updateTotalUnreadCount()
+    }
+
+    // 重置当前聊天室的消息并刷新最新消息
+    const resetAndRefreshCurrentRoomMessages = async () => {
+      if (!currentRoomId.value) return
+
+      // 保存当前房间ID，用于后续比较
+      const requestRoomId = currentRoomId.value
+
+      try {
+        // 1. 清空当前消息列表
+        if (currentMessageMap.value) {
+          currentMessageMap.value.clear()
+        }
+
+        // 2. 重置消息加载状态
+        if (currentMessageOptions.value) {
+          currentMessageOptions.value = {
+            isLast: false,
+            isLoading: true,
+            cursor: ''
+          }
+        }
+
+        // 3. 清空回复映射
+        if (currentReplyMap.value) {
+          currentReplyMap.value.clear()
+        }
+
+        // 4. 从服务器获取最新的消息（默认20条）
+        await getMsgList(pageSize)
+
+        console.log('[Network] 已重置并刷新当前聊天室的消息列表')
+      } catch (error) {
+        console.error('[Network] 重置并刷新消息列表失败:', error)
+        // 如果获取失败，确保重置加载状态
+        if (currentRoomId.value === requestRoomId && currentMessageOptions.value) {
+          currentMessageOptions.value = {
+            isLast: false,
+            isLoading: false,
+            cursor: ''
+          }
+        }
+      }
     }
 
     return {
@@ -726,7 +769,8 @@ export const useChatStore = defineStore(
       recalledMessages,
       clearAllExpirationTimers,
       updateTotalUnreadCount,
-      clearUnreadCount
+      clearUnreadCount,
+      resetAndRefreshCurrentRoomMessages
     }
   },
   {

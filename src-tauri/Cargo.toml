@@ -37,7 +37,10 @@ tauri-plugin-os = "2.2.1"
 tauri-plugin-shell = "2.2.1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-tauri-plugin-http = { version = "2.4.3", features = ["unsafe-headers", "rustls-tls"] }
+tauri-plugin-http = { version = "2.4.3", features = [
+    "unsafe-headers",
+    "rustls-tls",
+] }
 tauri-plugin-process = "2.2.1"
 tauri-plugin-fs = "2.2.1"
 tauri-plugin-dialog = "2.2.1"
@@ -48,7 +51,8 @@ tauri-plugin-updater = "2.7.1"
 tauri-plugin-sql = { version = "2.2.0", features = ["sqlite"] }
 tauri-plugin-single-instance = "2.2.3"
 tauri-plugin-notification = "2.2.2"
-tungstenite = {  version = "0.26.2", features = ["rustls-tls-webpki-roots"] }
+tungstenite = { version = "0.26.2", features = ["rustls-tls-webpki-roots"] }
+tokio = { version = "1", features = ["full"] }
 
 [target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]
 tauri-plugin-autostart = "2.3.0"
@@ -60,7 +64,10 @@ reqwest = { version = "0.11", features = [
     "json",
     "socks",
     "rustls-tls",
+    "blocking",
 ] }
+surge-ping = "0.8.0"
+rand = "0.8.5"
 [target."cfg(target_os =\"macos\")".dependencies]
 cocoa = "0.26.0"
 objc = "0.2.7"

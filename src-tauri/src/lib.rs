@@ -1,18 +1,18 @@
 // 桌面端依赖
 #[cfg(desktop)]
 mod desktops;
-#[cfg(desktop)]
-use common_cmd::{
-    audio, default_window_icon, screenshot, set_badge_count, set_height,
-};
 #[cfg(target_os = "macos")]
-use common_cmd::{hide_title_bar_buttons};
+use common_cmd::hide_title_bar_buttons;
+#[cfg(desktop)]
+use common_cmd::{audio, default_window_icon, screenshot, set_badge_count, set_height};
 #[cfg(desktop)]
 mod proxy;
 #[cfg(desktop)]
 use desktops::common_cmd;
 #[cfg(desktop)]
 use desktops::init;
+#[cfg(desktop)]
+use desktops::network_monitor::{check_network, get_network_status, start_network_monitor};
 #[cfg(desktop)]
 use desktops::tray;
 #[cfg(desktop)]
@@ -49,6 +49,8 @@ fn setup_desktop() {
         .init_window_event()
         .setup(move |app| {
             tray::create_tray(app.handle())?;
+            // 启动网络监测服务
+            start_network_monitor(app.handle().clone());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -59,6 +61,8 @@ fn setup_desktop() {
             set_badge_count,
             test_api_proxy,
             test_ws_proxy,
+            get_network_status,
+            check_network,
             #[cfg(target_os = "macos")]
             hide_title_bar_buttons
         ])
