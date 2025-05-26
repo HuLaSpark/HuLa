@@ -247,7 +247,8 @@ const router: any = createRouter({
 })
 
 // 在创建路由后，添加全局前置守卫
-router.beforeEach((_from: RouteLocationNormalized, next: NavigationGuardNext) => {
+// 为解决 “已声明‘to’，但从未读取其值” 的问题，将 to 参数改为下划线开头表示该参数不会被使用
+router.beforeEach((_to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
   // 如果是桌面端，直接放行
   if (isDesktop.value) {
     return next()
