@@ -21,7 +21,7 @@
       {
         "title": "登录",
         "label": "login",
-        "url": "/mobile/login",
+        "url": "/mobile/launch",
         "resizable": false,
         "fullscreen": true
       }
