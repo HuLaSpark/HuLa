@@ -11,18 +11,6 @@
     当前网络不可用，请检查你的网络设置
   </n-flex>
 
-  <!-- 弱网提示 -->
-  <n-flex
-    v-if="networkStatus.isOnline.value && networkStatus.networkStrength.value === NetworkStrength.Weak"
-    align="center"
-    justify="center"
-    class="z-999 absolute w-full h-40px rounded-4px text-(12px [--warning-text]) bg-[--warning-bg]">
-    <svg class="size-16px">
-      <use href="#cloudWarning"></use>
-    </svg>
-    当前网络信号较弱，可能影响聊天体验 (延迟: {{ networkStatus.latencyMs.value }}ms)
-  </n-flex>
-
   <!-- 置顶公告提示 -->
   <div
     v-if="isGroup && topAnnouncement"
@@ -469,6 +457,7 @@ import { useGlobalStore } from '@/stores/global'
 import { useDebounceFn } from '@vueuse/core'
 import { useCachedStore } from '@/stores/cached'
 import apis from '@/services/apis'
+import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 
 const appWindow = WebviewWindow.getCurrent()
 const { addListener } = useTauriListener()
@@ -481,6 +470,7 @@ const userStore = useUserStore()
 const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
 const cachedStore = useCachedStore()
+const networkStatus = useNetworkStatus()
 
 // 记录当前滚动位置相关信息
 const isAutoScrolling = ref(false)
@@ -531,10 +521,6 @@ const hoverBubble = ref<{
 })
 /** 记录右键菜单时选中的气泡的元素(用于处理mac右键会选中文本的问题) */
 const recordEL = ref()
-/** 网络连接是否正常 */
-// 使用自定义网络状态钩子替代vueuse的useNetwork
-import { useNetworkStatus, NetworkStrength } from '@/hooks/useNetworkStatus'
-const networkStatus = useNetworkStatus()
 const isMac = computed(() => type() === 'macos')
 // 公告展示时需要减去的高度
 const announcementHeight = computed(() => (isGroup.value && topAnnouncement.value ? 300 : 260))

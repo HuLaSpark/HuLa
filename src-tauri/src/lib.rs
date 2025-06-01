@@ -12,8 +12,6 @@ use desktops::common_cmd;
 #[cfg(desktop)]
 use desktops::init;
 #[cfg(desktop)]
-use desktops::network_monitor::{check_network, get_network_status, start_network_monitor};
-#[cfg(desktop)]
 use desktops::tray;
 #[cfg(desktop)]
 use init::CustomInit;
@@ -49,8 +47,6 @@ fn setup_desktop() {
         .init_window_event()
         .setup(move |app| {
             tray::create_tray(app.handle())?;
-            // 启动网络监测服务
-            start_network_monitor(app.handle().clone());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -61,8 +57,6 @@ fn setup_desktop() {
             set_badge_count,
             test_api_proxy,
             test_ws_proxy,
-            get_network_status,
-            check_network,
             #[cfg(target_os = "macos")]
             hide_title_bar_buttons
         ])

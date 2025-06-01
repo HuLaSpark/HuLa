@@ -129,27 +129,35 @@ const sendSingleHeartbeat = () => {
     return
   }
 
-  // 检测连接健康状态
+  // 优化的连接健康检测机制
   if (lastPongTime !== null) {
     const timeSinceLastPong = lastPingSent - lastPongTime
-    const isConnectionHealthy = timeSinceLastPong < HEARTBEAT_INTERVAL * 2
+    const healthThreshold = HEARTBEAT_INTERVAL * 2.5 // 增加容错时间
+    const isConnectionHealthy = timeSinceLastPong < healthThreshold
 
     // 如果连接不健康，通知主线程
     if (!isConnectionHealthy) {
       consecutiveHeartbeatFailures++
-      logHeartbeat('连接响应缓慢', {
-        consecutiveFailures: consecutiveHeartbeatFailures,
-        timeSinceLastPong
-      })
 
-      postMsg({
-        type: WorkerMsgEnum.ERROR,
-        value: {
-          msg: '连接响应较慢，可能存在网络问题',
-          timeSinceLastPong,
-          consecutiveFailures: consecutiveHeartbeatFailures
-        }
-      })
+      // 只在关键阈值时记录日志，减少日志开销
+      if (consecutiveHeartbeatFailures === 1 || consecutiveHeartbeatFailures % 3 === 0) {
+        logHeartbeat('连接响应缓慢', {
+          consecutiveFailures: consecutiveHeartbeatFailures,
+          timeSinceLastPong
+        })
+      }
+
+      // 延迟错误通知，避免频繁触发
+      if (consecutiveHeartbeatFailures >= 2) {
+        postMsg({
+          type: WorkerMsgEnum.ERROR,
+          value: {
+            msg: '连接响应较慢，可能存在网络问题',
+            timeSinceLastPong,
+            consecutiveFailures: consecutiveHeartbeatFailures
+          }
+        })
+      }
 
       // 连续失败次数过多，尝试重连
       if (consecutiveHeartbeatFailures >= MAX_HEARTBEAT_FAILURES) {
@@ -244,11 +252,15 @@ const tryReconnect = () => {
   }
 }
 
+// 优化的智能退避算法
 const getBackoffDelay = (retryCount: number) => {
   const baseDelay = 1000 // 基础延迟1秒
-  const maxDelay = 30000 // 最大延迟30秒
-  const delay = Math.min(baseDelay * Math.pow(2, retryCount), maxDelay)
-  return delay + Math.random() * 1000 // 添加随机抖动
+  const maxDelay = 15000 // 减少最大延迟到15秒
+  const multiplier = Math.min(1.5, 2 - retryCount * 0.1)
+  const delay = Math.min(baseDelay * Math.pow(multiplier, retryCount), maxDelay)
+
+  // 减少随机抖动范围
+  return delay + Math.random() * 500
 }
 
 const onCloseHandler = () => {
