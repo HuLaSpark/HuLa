@@ -162,9 +162,6 @@ watchEffect(() => {
         }
         // 阻止默认关闭行为
         event.preventDefault()
-
-        // 显示关闭确认对话框或执行自定义逻辑
-        console.log('主窗口关闭拦截，显示确认对话框或执行设置的操作')
         if (!tips.value.notTips) {
           tipsRef.show = true
         } else {
