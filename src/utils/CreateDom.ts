@@ -32,9 +32,9 @@ export const createFileOrVideoDom = (file: File) => {
 
     // 根据dpr缩放上下文
     ctx.scale(dpr, dpr)
-
+    const extension = file.name.split('.').pop()?.toLowerCase() || 'file'
     // 加载SVG文件并绘制到canvas,根据文件类型，设置SVG图标
-    loadSVG(`/file/${file.name.split('.').pop()}.svg`)
+    loadSVG(`/file/${extension}.svg`)
       .then((svgImage: any) => {
         // 圆角矩形的背景和边框，您可以根据需要调整样式
         ctx.fillStyle = '#fdfdfd' // 背景颜色
@@ -121,37 +121,65 @@ export const createFileOrVideoDom = (file: File) => {
 
         // Canvas 转化为 Data URL
         const dataURL = updateCanvasBackground(canvas, ctx, isImgSelected)
-
-        // img样式
+        const VIDEO_EXTENSIONS = ['mp4', 'mov', 'avi', 'wmv', 'mkv', 'flv']
         const imgStyle = 'border-radius: 8px; margin-right: 6px; cursor: pointer;'
-        // 创建Image DOM元素并指定src为canvas的data url
-        const img = new Image()
-        img.src = dataURL
-        img.dataset.type = 'file-canvas'
-        img.style.cssText = imgStyle
-        img.width = actualWidth
-        img.height = actualHeight
-        img.onload = () => resolve(img)
-        img.onerror = reject
-
-        // img元素点击事件监听
-        img.addEventListener('click', (e) => {
-          e.stopPropagation()
-          isImgSelected = !isImgSelected
-          img.src = updateCanvasBackground(canvas, ctx, isImgSelected)
-        })
-
-        // document点击事件监听
-        document.addEventListener(
-          'click',
-          () => {
-            if (isImgSelected) {
-              isImgSelected = false
-              img.src = updateCanvasBackground(canvas, ctx, isImgSelected)
+        const isVideo = VIDEO_EXTENSIONS.includes(extension)
+        if (isVideo) {
+          // 创建video元素
+          const video = document.createElement('video')
+          try {
+            // 1. 先验证文件对象有效性
+            if (!(file instanceof File) || file.size === 0) {
+              throw new Error('无效的视频文件')
             }
-          },
-          true
-        )
+            video.src = URL.createObjectURL(file)
+            video.dataset.type = 'video'
+            video.poster = dataURL
+            video.style.cssText = imgStyle
+            video.width = actualWidth
+            video.height = actualHeight
+          } catch (error) {
+            reject(error)
+            window.$message.error('视频处理失败: ' + error)
+          }
+          // // 点击事件处理
+          // video.addEventListener('click', (e) => {
+          //   e.stopPropagation();
+          //   // 可以在这里添加播放/暂停逻辑
+          // });
+
+          video.onloadeddata = () => resolve(video)
+          video.onerror = reject
+        } else {
+          // 创建Image DOM元素并指定src为canvas的data url
+          const img = new Image()
+          img.src = dataURL
+          img.dataset.type = 'file-canvas'
+          img.style.cssText = imgStyle
+          img.width = actualWidth
+          img.height = actualHeight
+          img.onload = () => resolve(img)
+          img.onerror = reject
+
+          // img元素点击事件监听
+          img.addEventListener('click', (e) => {
+            e.stopPropagation()
+            isImgSelected = !isImgSelected
+            img.src = updateCanvasBackground(canvas, ctx, isImgSelected)
+          })
+
+          // document点击事件监听
+          document.addEventListener(
+            'click',
+            () => {
+              if (isImgSelected) {
+                isImgSelected = false
+                img.src = updateCanvasBackground(canvas, ctx, isImgSelected)
+              }
+            },
+            true
+          )
+        }
       })
       .catch((error) => {
         reject(error)

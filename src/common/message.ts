@@ -7,7 +7,7 @@ export const MSG_REPLY_TEXT_MAP: Record<number, string> = {
   [MsgEnum.IMAGE]: '[图片]',
   [MsgEnum.FILE]: '[文件]',
   [MsgEnum.VOICE]: '[语音]',
-  [MsgEnum.VIDEO]: '[音频]',
+  [MsgEnum.VIDEO]: '[视频]',
   [MsgEnum.EMOJI]: '[动画表情]',
   [MsgEnum.MERGE]: '[合并消息]',
   [MsgEnum.NOTICE]: '[公告]'

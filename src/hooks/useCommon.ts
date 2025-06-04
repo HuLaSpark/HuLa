@@ -23,7 +23,7 @@ const domParser = new DOMParser()
 
 const REPLY_NODE_ID = 'replyDiv'
 
-const saveCacheFile = async (file: any, subFolder: string, dom: HTMLElement) => {
+const saveCacheFile = async (file: any, subFolder: string, dom: HTMLElement, id: string) => {
   const fileName = file.name === null ? 'test.png' : file.name
   const tempPath = getImageCache(subFolder)
   const fullPath = tempPath + fileName
@@ -39,7 +39,7 @@ const saveCacheFile = async (file: any, subFolder: string, dom: HTMLElement) => 
   }
   cacheReader.readAsArrayBuffer(file)
   const p = document.createElement('p')
-  p.setAttribute('id', 'temp-image')
+  p.setAttribute('id', id)
   p.style.setProperty('display', 'none')
   p.textContent = fullPath
   // 获取MsgInput组件暴露的lastEditRange
@@ -748,7 +748,7 @@ export const useCommon = () => {
       triggerInputEvent(dom)
     }
     //缓存文件
-    saveCacheFile(file, 'img', dom)
+    saveCacheFile(file, 'img', dom, 'temp-image')
     // 读取文件
     reader.readAsDataURL(file)
   }
@@ -759,8 +759,12 @@ export const useCommon = () => {
    * @param type 类型
    * @param dom 输入框dom
    */
-  const FileOrVideoPaste = (file: File, type: MsgEnum, dom: HTMLElement) => {
+  const FileOrVideoPaste = async (file: File, type: MsgEnum, dom: HTMLElement) => {
     const reader = new FileReader()
+    if (file.size > 1024 * 1024 * 50) {
+      window.$message.warning('文件大小不能超过50M，请重新选择')
+      return
+    }
     // 使用函数
     createFileOrVideoDom(file).then((imgTag) => {
       // 将生成的img标签插入到页面中
@@ -778,6 +782,7 @@ export const useCommon = () => {
 
       triggerInputEvent(dom)
     })
+    saveCacheFile(file, 'video', dom, 'temp-video')
     nextTick(() => {
       reader.readAsDataURL(file)
     })

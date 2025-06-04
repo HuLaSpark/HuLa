@@ -149,7 +149,9 @@ export enum StoresEnum {
   /** 缓存 */
   CACHED = 'cached',
   /** 配置 */
-  CONFIG = 'config'
+  CONFIG = 'config',
+  /** 视频查看器数据 */
+  VIDEOVIEWER = 'videoViewer'
 }
 
 /**

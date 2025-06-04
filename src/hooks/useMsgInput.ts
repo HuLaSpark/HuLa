@@ -1,4 +1,4 @@
-import { LimitEnum, MittEnum, MsgEnum, MessageStatusEnum, RoomTypeEnum } from '@/enums'
+import { LimitEnum, MittEnum, MsgEnum, MessageStatusEnum, RoomTypeEnum, UploadSceneEnum } from '@/enums'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import apis from '@/services/apis.ts'
 import { useCachedStore, type BaseUserItem } from '@/stores/cached.ts'
@@ -15,8 +15,7 @@ import { processClipboardImage } from '@/utils/imageUtils'
 import { messageStrategyMap } from '@/strategy/MessageStrategy.ts'
 import { useTrigger } from './useTrigger'
 import type { AIModel } from '@/services/types.ts'
-import { UploadProviderEnum } from './useUpload.ts'
-
+import { UploadProviderEnum, useUpload } from './useUpload.ts'
 /**
  * 光标管理器
  */
@@ -283,7 +282,10 @@ export const useMsgInput = (messageInputDom: Ref) => {
           return (msgInput.value = imgElement.src)
         }
       }
-
+      // 检查是否是视频
+      if (html.includes('data-type="video"')) {
+        return html
+      }
       const tmp = document.createElement('div')
       tmp.innerHTML = html
       const replyDiv = tmp.querySelector('#replyDiv')
@@ -345,8 +347,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
     // 创建临时消息对象 - 此时已经包含本地预览链接
     const tempMsg = await messageStrategy.buildMessageType(tempMsgId, messageBody, globalStore, userUid)
-
-    // 清空输入框和回复信息
     resetInput()
 
     // 先添加到消息列表 - 此时会显示本地预览
@@ -371,7 +371,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
           provider: UploadProviderEnum.QINIU
         })
         const doUploadResult = await messageStrategy.doUpload(msg.path, uploadUrl, config)
-
         // 更新消息体中的URL为服务器URL(判断使用的是七牛云还是默认上传方式),如果没有provider就默认赋值downloadUrl
         messageBody.url =
           config?.provider && config?.provider === UploadProviderEnum.QINIU ? doUploadResult?.qiniuUrl : downloadUrl
@@ -386,8 +385,37 @@ export const useMsgInput = (messageInputDom: Ref) => {
           status: MessageStatusEnum.SENDING
         })
         console.log(`${msg.type === MsgEnum.EMOJI ? '表情包' : '图片'}上传完成,更新为服务器URL:`, messageBody.url)
+      } else if (msg.type === MsgEnum.VIDEO) {
+        const uploadResult = await useUpload()
+          .uploadFile(msg.thumbnail, {
+            provider: UploadProviderEnum.QINIU,
+            scene: UploadSceneEnum.CHAT
+          })
+          .then((UploadResult) => {
+            return UploadResult.downloadUrl
+          })
+        console.log('开始处理视频消息上传', uploadResult)
+        const { uploadUrl, downloadUrl, config } = await messageStrategy.uploadFile(msg.path, {
+          provider: UploadProviderEnum.QINIU
+        })
+        const doUploadResult = await messageStrategy.doUpload(msg.path, uploadUrl, config)
+        messageBody.url =
+          config?.provider && config?.provider === UploadProviderEnum.QINIU ? doUploadResult?.qiniuUrl : downloadUrl
+        delete messageBody.path // 删除临时路径
+        messageBody.thumbUrl = uploadResult
+        messageBody.thumbSize = msg.thumbnail.size
+        messageBody.thumbWidth = 300
+        messageBody.thumbHeight = 150
+        // 更新临时消息的URL
+        chatStore.updateMsg({
+          msgId: tempMsgId,
+          body: {
+            ...messageBody
+          },
+          status: MessageStatusEnum.SENDING
+        })
+        console.log(`${msg.type === MsgEnum.VIDEO}上传完成,更新为服务器URL:`, messageBody.url)
       }
-
       console.log('发送消息到服务器 ===>>> ', {
         roomId: globalStore.currentSession.roomId,
         msgType: msg.type,

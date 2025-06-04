@@ -989,7 +989,7 @@ const handleViewAnnouncement = () => {
 }
 
 const isSpecialMsgType = (type: number) => {
-  return type === MsgEnum.IMAGE || type === MsgEnum.EMOJI || type === MsgEnum.NOTICE
+  return type === MsgEnum.IMAGE || type === MsgEnum.EMOJI || type === MsgEnum.NOTICE || type === MsgEnum.VIDEO
 }
 
 // 判断表情反应是否只有一行

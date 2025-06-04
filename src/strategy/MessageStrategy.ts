@@ -6,7 +6,7 @@ import { Ref } from 'vue'
 import { parseInnerText, useCommon } from '@/hooks/useCommon.ts'
 import { BaseDirectory, readFile } from '@tauri-apps/plugin-fs'
 import DOMPurify from 'dompurify'
-import { useUpload, UploadProviderEnum, UploadOptions } from '@/hooks/useUpload'
+import { UploadOptions, UploadProviderEnum, useUpload } from '@/hooks/useUpload'
 import { getImageDimensions } from '@/utils/imageUtils'
 
 interface MessageStrategy {
@@ -523,6 +523,243 @@ class EmojiMessageStrategyImpl extends AbstractMessageStrategy {
   }
 }
 
+/**
+ * 处理视频消息
+ */
+class VideoMessageStrategyImpl extends AbstractMessageStrategy {
+  // 最大上传文件大小 50MB
+  private readonly MAX_UPLOAD_SIZE = 50 * 1024 * 1024
+  // 支持的视频类型
+  private readonly ALLOWED_TYPES = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/x-ms-wmv']
+  private uploadHook = useUpload()
+
+  constructor() {
+    super(MsgEnum.VIDEO)
+  }
+
+  /**
+   * 验证视频文件
+   * @param file 视频文件
+   */
+  private async validateVideo(file: File): Promise<File> {
+    // 检查文件类型
+    if (!this.ALLOWED_TYPES.includes(file.type)) {
+      throw new AppException('仅支持 MP4/MOV/AVI/WMV 格式的视频')
+    }
+    // 检查文件大小
+    if (file.size > this.MAX_UPLOAD_SIZE) {
+      throw new AppException('视频大小不能超过50MB')
+    }
+    return file
+  }
+
+  /**
+   * 获取视频缩略图（第一帧）
+   * @param file 视频文件
+   */
+  private async getVideoThumbnail(file: File): Promise<File> {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video')
+      const canvas = document.createElement('canvas')
+      video.src = URL.createObjectURL(file)
+
+      video.addEventListener('loadeddata', () => {
+        canvas.width = video.videoWidth
+        canvas.height = video.videoHeight
+        const ctx = canvas.getContext('2d')!
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+        // 将canvas转换为Blob然后创建File对象
+        canvas.toBlob(
+          (blob) => {
+            URL.revokeObjectURL(video.src) // 释放内存
+            if (blob) {
+              resolve(new File([blob], 'thumbnail.jpg', { type: 'image/jpeg' }))
+            } else {
+              reject(new AppException('无法生成视频缩略图'))
+            }
+          },
+          'image/jpeg',
+          0.8
+        )
+      })
+
+      video.addEventListener('error', () => {
+        URL.revokeObjectURL(video.src)
+        reject(new AppException('视频加载失败'))
+      })
+    })
+  }
+
+  async getMsg(msgInputValue: string, replyValue: any, fileList?: File[]): Promise<any> {
+    // 1. 优先处理远程视频URL的情况
+    if (this.isVideoUrl(msgInputValue)) {
+      return {
+        type: this.msgType,
+        url: msgInputValue,
+        path: msgInputValue,
+        reply: replyValue.content ? { content: replyValue.content, key: replyValue.key } : undefined
+      }
+    }
+    if (!fileList?.[0] && !msgInputValue) {
+      throw new AppException('请提供有效的视频文件或URL')
+    }
+    const actualFile = await this.convertToVideoFile(msgInputValue)
+    if (!actualFile) {
+      throw new AppException('请选择视频文件或提供有效的视频URL')
+    }
+
+    // 4. 验证视频文件
+    const validatedFile = await this.validateVideo(actualFile)
+    const thumbnail = await this.getVideoThumbnail(validatedFile)
+    const path = parseInnerText(msgInputValue, 'temp-video')
+    if (!path) {
+      throw new AppException('文件不存在')
+    }
+    const normalizedPath = path.replace(/\\/g, '/')
+    return {
+      type: this.msgType,
+      path: normalizedPath,
+      url: '', // 上传后会更新
+      thumbnail: thumbnail || '',
+      size: validatedFile.size,
+      duration: 0, // 实际项目中可解析视频时长
+      reply: replyValue.content ? { content: replyValue.content, key: replyValue.key } : undefined
+    }
+  }
+  private async convertToVideoFile(videoFile: string | File): Promise<File> {
+    // 1. 如果已经是File对象直接返回
+    if (videoFile instanceof File) {
+      return videoFile
+    }
+    // 2. 检查是否是HTML标签（无效路径）
+    if (videoFile.startsWith('<') || videoFile.includes('src="blob:')) {
+      // 提取 Blob URL
+      const blobUrlMatch = videoFile.match(/src="(blob:[^"]+)"/)
+      if (!blobUrlMatch) {
+        throw new AppException('无法提取视频 Blob URL')
+      }
+      const blobUrl = blobUrlMatch[1]
+
+      // 3. 使用 fetch 获取 Blob 数据
+      try {
+        const response = await fetch(blobUrl)
+        const blob = await response.blob()
+
+        // 4. 转换为 File 对象
+        const fileName = `video_${Date.now()}.mp4` // 默认文件名
+        return new File([blob], fileName, { type: blob.type || 'video/mp4' })
+      } catch (error) {
+        console.error('Blob 转换失败:', error)
+        throw new AppException('无法从 Blob URL 创建视频文件')
+      }
+    }
+
+    // 5. 处理合法字符串路径的情况（原逻辑）
+    try {
+      const normalizedPath = videoFile.replace(/\\/g, '/')
+      const fileData = await readFile(normalizedPath, {
+        baseDir: BaseDirectory.AppCache
+      })
+
+      const fileName = normalizedPath.split('/').pop() || 'video.mp4'
+      return new File([new Uint8Array(fileData)], fileName, {
+        type: this.getVideoType(fileName)
+      })
+    } catch (error) {
+      console.error('视频文件读取失败:', error)
+      throw new AppException('无法读取视频文件，请检查文件路径是否正确')
+    }
+  }
+
+  // 根据文件名获取视频类型
+  private getVideoType(fileName: string): string {
+    const extension = fileName.split('.').pop()?.toLowerCase()
+    switch (extension) {
+      case 'mp4':
+        return 'video/mp4'
+      case 'mov':
+        return 'video/quicktime'
+      case 'avi':
+        return 'video/x-msvideo'
+      case 'wmv':
+        return 'video/x-ms-wmv'
+      default:
+        return 'video/mp4' // 默认类型
+    }
+  }
+
+  buildMessageBody(msg: any, reply: any): any {
+    return {
+      url: msg.url,
+      path: msg.path,
+      thumbnail: msg.thumbnail,
+      size: msg.size,
+      duration: msg.duration,
+      replyMsgId: msg.reply?.key || void 0,
+      reply: reply.value.content
+        ? {
+            body: reply.value.content,
+            id: reply.value.key,
+            username: reply.value.accountName,
+            type: msg.type
+          }
+        : void 0
+    }
+  }
+
+  async uploadFile(
+    path: string,
+    options?: { provider?: UploadProviderEnum }
+  ): Promise<{ uploadUrl: string; downloadUrl: string; config?: any }> {
+    // 远程视频直接返回URL
+    if (this.isVideoUrl(path)) {
+      return { uploadUrl: '', downloadUrl: path }
+    }
+
+    try {
+      const result = await this.uploadHook.getUploadAndDownloadUrl(path, {
+        provider: options?.provider || UploadProviderEnum.QINIU,
+        scene: UploadSceneEnum.CHAT
+      })
+      return result
+    } catch (error) {
+      throw new AppException('获取视频上传链接失败')
+    }
+  }
+  async doUpload(path: string, uploadUrl: string, options?: any): Promise<{ qiniuUrl?: string } | void> {
+    if (this.isVideoUrl(path)) {
+      throw new AppException('检查是否是有效的视频URL')
+    }
+
+    try {
+      // enableDeduplication启用文件去重
+      const result = await this.uploadHook.doUpload(path, uploadUrl, { ...options, enableDeduplication: true })
+      if (options?.provider === UploadProviderEnum.QINIU) {
+        return { qiniuUrl: result as string }
+      }
+    } catch (error) {
+      console.error('文件上传失败:', error)
+      if (error instanceof AppException) {
+        throw error
+      }
+      throw new AppException('文件上传失败，请重试')
+    }
+  }
+
+  /**
+   * 检查是否是有效的视频URL
+   */
+  private isVideoUrl(url: string): boolean {
+    try {
+      new URL(url)
+      return /\.(mp4|mov|avi|wmv)$/i.test(url)
+    } catch {
+      return false
+    }
+  }
+}
+
 class UnsupportedMessageStrategyImpl extends AbstractMessageStrategy {
   constructor() {
     super(MsgEnum.UNKNOWN)
@@ -555,6 +792,7 @@ const fileMessageStrategy = new FileMessageStrategyImpl()
 const imageMessageStrategy = new ImageMessageStrategyImpl()
 const emojiMessageStrategy = new EmojiMessageStrategyImpl()
 const unsupportedMessageStrategy = new UnsupportedMessageStrategyImpl()
+const videoMessageStrategy = new VideoMessageStrategyImpl()
 
 export const messageStrategyMap: Record<MsgEnum, MessageStrategy> = {
   [MsgEnum.FILE]: fileMessageStrategy,
@@ -566,7 +804,7 @@ export const messageStrategyMap: Record<MsgEnum, MessageStrategy> = {
   [MsgEnum.UNKNOWN]: unsupportedMessageStrategy,
   [MsgEnum.RECALL]: unsupportedMessageStrategy,
   [MsgEnum.VOICE]: unsupportedMessageStrategy,
-  [MsgEnum.VIDEO]: unsupportedMessageStrategy,
+  [MsgEnum.VIDEO]: videoMessageStrategy,
   [MsgEnum.SYSTEM]: unsupportedMessageStrategy,
   [MsgEnum.MIXED]: unsupportedMessageStrategy,
   [MsgEnum.AIT]: unsupportedMessageStrategy,
