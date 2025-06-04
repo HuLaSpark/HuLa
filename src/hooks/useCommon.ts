@@ -10,7 +10,7 @@ import { useChatStore } from '@/stores/chat.ts'
 import { useMessage } from '@/hooks/useMessage.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { BaseDirectory, create, exists, mkdir } from '@tauri-apps/plugin-fs'
-import { getImageCache } from '@/utils/PathUtil.ts'
+import { getPathCache } from '@/utils/PathUtil.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import DOMPurify from 'dompurify'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
@@ -25,7 +25,7 @@ const REPLY_NODE_ID = 'replyDiv'
 
 const saveCacheFile = async (file: any, subFolder: string, dom: HTMLElement, id: string) => {
   const fileName = file.name === null ? 'test.png' : file.name
-  const tempPath = getImageCache(subFolder)
+  const tempPath = getPathCache(subFolder)
   const fullPath = tempPath + fileName
   const cacheReader = new FileReader()
   cacheReader.onload = async (e: any) => {

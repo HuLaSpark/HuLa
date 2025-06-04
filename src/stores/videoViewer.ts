@@ -1,9 +1,8 @@
 import { defineStore } from 'pinia'
 import { StoresEnum } from '@/enums'
 
-// 由于原函数名 useImageViewer 包含图片相关字样，这里改为 useVideoViewer
 export const useVideoViewer = defineStore(
-  StoresEnum.VIDEOVIEWER, // 假设这里枚举值可以修改为 VIDEOVIEWER
+  StoresEnum.VIDEOVIEWER,
   () => {
     const imageList = ref<string[]>([])
     const currentIndex = ref(0)
@@ -45,8 +44,7 @@ export const useVideoViewer = defineStore(
       isSingleMode.value = true
     }
 
-    // 添加一个重置方法,用于设置新的视频列表
-    // 优化后的重置视频列表方法，逻辑不变，命名更清晰
+    // 用于设置新的视频列表
     const resetVideoListOptimized = (list: string[], originalIndex: number) => {
       isSingleVideoMode.value = false
       const uniqueList: string[] = []
@@ -65,7 +63,6 @@ export const useVideoViewer = defineStore(
       currentVideoIndex.value = newIndex !== -1 ? newIndex : 0
     }
 
-    // 优化后的设置单视频方法，逻辑不变，命名更清晰
     const setSingleVideoOptimized = (url: string) => {
       singleVideo.value = url
       isSingleVideoMode.value = true

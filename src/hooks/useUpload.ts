@@ -375,7 +375,7 @@ export const useUpload = () => {
       const tempUrl = URL.createObjectURL(file)
       video.src = tempUrl
       video.crossOrigin = 'anonymous' // 视频跨域
-      video.currentTime = 2 // 第2帧
+      video.currentTime = 10 // 第10帧
       video.oncanplay = async () => {
         const canvas = document.createElement('canvas')
         canvas.width = video.videoWidth

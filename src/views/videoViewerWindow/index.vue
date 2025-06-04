@@ -12,7 +12,7 @@
           :src="currentVideo"
           controls
           class="w-full h-full object-cover"
-          @loadeddata="checkScrollbar"
+          @loadeddata="onVideoLoaded"
           alt="preview" />
 
         <!-- 提示文本 -->
@@ -107,16 +107,25 @@ const checkScrollbar = () => {
   videoContainer.value.style.height =
     contentScrollbar.value.scrollHeight > contentScrollbar.value.clientHeight ? 'auto' : '100%'
 }
+
+// 自动播放视频
+const onVideoLoaded = () => {
+  checkScrollbar()
+  if (videoRef.value) {
+    videoRef.value.play().then(() => {
+      isPlaying.value = true
+    })
+  }
+}
+
 onMounted(async () => {
   await getCurrentWebviewWindow().show()
 
   // 修改事件名称与发送端保持一致
   await addListener(
     appWindow.listen('video-updated', (event: any) => {
-      // 原为'update-video'
       const { list, index } = event.payload
-      console.log('Received new video list:', list)
-      videoList.value = [...list] // 使用展开运算符创建新数组
+      videoList.value = list
       currentIndex.value = index
       nextTick(() => {
         if (videoRef.value) {
