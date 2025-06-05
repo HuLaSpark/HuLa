@@ -1,6 +1,11 @@
 <template>
-  <n-config-provider :theme="lightTheme" class="login-box flex-col-center gap-40px h-100vh">
-    <img src="@/assets/logo/hula.png" class="w-65%" alt="" />
+  <n-config-provider :theme="lightTheme" class="launch-page h-100vh">
+    <img src="/Mobile/4.png" class="w-300px h-200px mb-140px" alt="hula" />
+
+    <div class="flex-center gap-16px absolute bottom--40px">
+      <img src="/Mobile/3.png" class="size-50px rounded-14px" alt="hula" />
+      <img src="/Mobile/1.png" class="w-78px h-40px" alt="hula" />
+    </div>
   </n-config-provider>
 </template>
 
@@ -14,6 +19,9 @@ onMounted(() => {
     // 已登录用户访问登录页时重定向到首页
     if (token) {
       router.replace('/mobile/home')
+      nextTick(() => {
+        router.replace('/mobile/message')
+      })
     } else {
       router.replace('/mobile/login')
     }
@@ -22,8 +30,16 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/scss/login';
-@use '@/styles/scss/global/login-bg';
+.launch-page {
+  background-image: url('/Mobile/2.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
 
 body {
   padding-top: env(safe-area-inset-top);
