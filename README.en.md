@@ -216,6 +216,7 @@ Thanks to the following sponsors for their support!
 | Date | Sponsor | Sum | Platform |
 |------|--------|------|------|
 | 2025-04-25 | 上官俊斌 | ￥200 | 微信赞赏码 |
+| 2025-05-27 | 临安居士 | ￥188 | 微信赞赏码 |
 | 2025-04-20 | 姜兴(Simon) | ￥188 | 微信赞赏码 |
 | 2025-02-17 | 禾硕 | ￥168 | 支付宝赞赏 |
 | 2025-02-8 | Boom.... | ￥100 | 微信赞赏码 |
@@ -225,6 +226,8 @@ Thanks to the following sponsors for their support!
 | 2025-02-7 | dennis | ￥80 | gitee码云赞赏 |
 | 2025-05-15 | 孤鸿影 | ￥56 | 微信红包 |
 | 2025-02-6 | 小二 | ￥62 | 微信转账 |
+| 2025-06-03 | 洪流 | ￥20 | 微信赞赏码 |
+| 2025-05-27 | 刘启成 | ￥20 | 微信赞赏码 |
 | 2025-05-20 | 没有留名的赞助者 | ￥20 | 微信赞赏码 |
 
 > Note: This list is manually updated. If you have sponsored but are not displayed in the list, please contact us by:

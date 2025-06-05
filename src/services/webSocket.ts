@@ -31,19 +31,50 @@ const timerWorker: Worker = new Worker(new URL('../workers/timer.worker.ts', imp
 // 添加一个标识是否是主窗口的变量
 let isMainWindow = false
 
+// LRU缓存实现
+class LRUCache<K, V> {
+  private maxSize: number
+  private cache = new Map<K, V>()
+
+  constructor(maxSize: number = 1000) {
+    this.maxSize = maxSize
+  }
+
+  set(key: K, value: V) {
+    if (this.cache.has(key)) {
+      this.cache.delete(key)
+    } else if (this.cache.size >= this.maxSize) {
+      const firstKey = this.cache.keys().next().value
+      if (firstKey) {
+        this.cache.delete(firstKey)
+      }
+    }
+    this.cache.set(key, value)
+  }
+
+  has(key: K): boolean {
+    return this.cache.has(key)
+  }
+
+  clear() {
+    this.cache.clear()
+  }
+
+  get size(): number {
+    return this.cache.size
+  }
+}
+
 class WS {
   // 添加消息队列大小限制
-  readonly #MAX_QUEUE_SIZE = 100
+  readonly #MAX_QUEUE_SIZE = 50 // 减少队列大小
   #tasks: WsReqMsgContentType[] = []
   // 重连🔐
   #connectReady = false
   // 使用LRU缓存替代简单的Set
-  #processedMsgCache = new Map<number, number>()
+  #processedMsgCache = new LRUCache<number, number>(1000) // 使用LRU缓存
 
   #tauriListener: ReturnType<typeof useTauriListener> | null = null
-
-  // 存储前一个连接状态，用于检测重连成功
-  #previousConnectionState = ConnectionState.DISCONNECTED
 
   // 存储连接健康状态信息
   #connectionHealth = {
@@ -112,13 +143,13 @@ class WS {
         })
       )
 
-      // 如果从不可见变为可见状态，并且网络重连工具已初始化，检查是否需要刷新数据
+      // 优化的可见性恢复检查
       if (isVisible && this.#networkReconnect?.isOnline?.value) {
         // 检查最后一次通信时间，如果太久没有通信，刷新数据
         const now = Date.now()
         const lastPongTime = this.#connectionHealth.lastPongTime
-        if (lastPongTime && now - lastPongTime > 60000) {
-          // 如果超过1分钟没有心跳
+        const heartbeatTimeout = 90000 // 增加到90秒，减少误触发
+        if (lastPongTime && now - lastPongTime > heartbeatTimeout) {
           console.log('[Network] 应用从后台恢复且长时间无心跳，刷新数据')
           this.#networkReconnect?.refreshAllData()
         }
@@ -317,11 +348,10 @@ class WS {
         break
       }
       case 'connectionStateChange': {
-        const { state } = params.value as { state: ConnectionState }
+        const { state, isReconnection } = params.value as { state: ConnectionState; isReconnection: boolean }
 
-        // 检测重连成功: 从RECONNECTING状态变为CONNECTED状态
-        // TODO 重连的时候没有执行这里
-        if (this.#previousConnectionState === ConnectionState.RECONNECTING && state === ConnectionState.CONNECTED) {
+        // 检测重连成功
+        if (isReconnection && state === ConnectionState.CONNECTED) {
           console.log('🔄 WebSocket 重连成功')
           // 网络重连成功后刷新数据
           if (isMainWindow && this.#networkReconnect) {
@@ -331,10 +361,9 @@ class WS {
             // 如果还没初始化，延迟初始化后再刷新
             this.initNetworkReconnect()
           }
+        } else if (!isReconnection && state === ConnectionState.CONNECTED) {
+          console.log('✅ WebSocket 首次连接成功')
         }
-
-        // 更新前一状态
-        this.#previousConnectionState = state
         break
       }
       // 处理心跳响应
@@ -384,10 +413,19 @@ class WS {
       if (this.#connectReady) {
         this.#send(params)
       } else {
-        // 队列限制
+        // 优化的队列管理
         if (this.#tasks.length >= this.#MAX_QUEUE_SIZE) {
-          console.warn('消息队列已满，正在丢弃最旧的消息')
-          this.#tasks.shift()
+          // 优先丢弃非关键消息
+          const nonCriticalIndex = this.#tasks.findIndex(
+            (task) => typeof task === 'object' && task.type !== 1 && task.type !== 2
+          )
+          if (nonCriticalIndex !== -1) {
+            this.#tasks.splice(nonCriticalIndex, 1)
+            console.warn('消息队列已满，丢弃非关键消息')
+          } else {
+            this.#tasks.shift()
+            console.warn('消息队列已满，丢弃最旧消息')
+          }
         }
         this.#tasks.push(params)
       }
@@ -597,21 +635,50 @@ class WS {
   }
 
   destroy() {
-    worker.postMessage(JSON.stringify({ type: 'clearReconnectTimer' }))
-    worker.terminate()
-    // 同时终止timer worker相关的心跳
-    timerWorker.postMessage({
-      type: 'stopPeriodicHeartbeat'
-    })
-    this.#tasks = []
-    this.#processedMsgCache.clear()
-    this.#connectReady = false
-    // 清理 Tauri 事件监听器
-    this.#tauriListener?.cleanup()
+    try {
+      // 优化的资源清理顺序
+      worker.postMessage(JSON.stringify({ type: 'clearReconnectTimer' }))
+      worker.postMessage(JSON.stringify({ type: 'stopHeartbeat' }))
 
-    // 清理所有watch
-    this.#unwatchFunctions.forEach((unwatch) => unwatch())
-    this.#unwatchFunctions = []
+      // 同时终止timer worker相关的心跳
+      timerWorker.postMessage({
+        type: 'stopPeriodicHeartbeat'
+      })
+
+      // 清理内存
+      this.#tasks.length = 0 // 更高效的数组清空
+      this.#processedMsgCache.clear()
+      this.#connectReady = false
+
+      // 重置连接健康状态
+      this.#connectionHealth = {
+        isHealthy: true,
+        lastPongTime: null,
+        timeSinceLastPong: null
+      }
+
+      // 清理 Tauri 事件监听器
+      this.#tauriListener?.cleanup()
+      this.#tauriListener = null
+
+      // 清理所有watch
+      this.#unwatchFunctions.forEach((unwatch) => {
+        try {
+          unwatch()
+        } catch (error) {
+          console.warn('清理watch函数时出错:', error)
+        }
+      })
+      this.#unwatchFunctions.length = 0
+
+      // 最后终止workers
+      setTimeout(() => {
+        worker.terminate()
+        timerWorker.terminate()
+      }, 100) // 给一点时间让消息处理完成
+    } catch (error) {
+      console.error('销毁WebSocket时出错:', error)
+    }
   }
 }
 
