@@ -58,6 +58,7 @@
   "dependencies": {
     "@actions/github": "^6.0.0",
     "@fingerprintjs/fingerprintjs": "^4.6.0",
+    "@microsoft/fetch-event-source": "^2.0.1",
     "@tauri-apps/api": "2.5.0",
     "@tauri-apps/plugin-autostart": "2.3.0",
     "@tauri-apps/plugin-clipboard-manager": "2.2.2",

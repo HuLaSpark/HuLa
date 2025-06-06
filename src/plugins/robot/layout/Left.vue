@@ -17,7 +17,9 @@
           </n-flex>
           <p class="text-(12px #909090)">建立一个属于自己AI</p>
         </n-flex>
-        <svg class="size-44px color-#13987f opacity-20"><use href="#GPT"></use></svg>
+        <svg class="size-44px color-#13987f opacity-20">
+          <use href="#GPT"></use>
+        </svg>
       </n-flex>
 
       <!-- 头像和插件 -->
@@ -31,7 +33,9 @@
         </n-flex>
 
         <div class="plugins">
-          <svg class="size-22px"><use href="#plugins"></use></svg>
+          <svg class="size-22px">
+            <use href="#plugins"></use>
+          </svg>
           <p>插件</p>
         </div>
       </n-flex>
@@ -96,14 +100,18 @@
         <div
           @click="jump"
           class="bg-[--chat-bt-color] border-(1px solid [--line-color]) color-[--chat-text-color] size-fit p-[8px_9px] rounded-8px custom-shadow cursor-pointer">
-          <svg class="size-18px"><use href="#settings"></use></svg>
+          <svg class="size-18px">
+            <use href="#settings"></use>
+          </svg>
         </div>
         <a
           target="_blank"
           rel="noopener noreferrer"
           href="https://github.com/HuLaSpark/HuLa"
           class="bg-[--chat-bt-color] border-(1px solid [--line-color]) color-[--chat-text-color] size-fit p-[8px_9px] rounded-8px custom-shadow cursor-pointer">
-          <svg class="size-18px"><use href="#github"></use></svg>
+          <svg class="size-18px">
+            <use href="#github"></use>
+          </svg>
         </a>
       </n-flex>
 
@@ -111,12 +119,16 @@
         <div
           @click="add"
           class="flex items-center justify-center gap-4px bg-[--chat-bt-color] border-(1px solid [--line-color]) select-none text-(12px [--chat-text-color]) size-fit w-80px h-32px rounded-8px custom-shadow cursor-pointer">
-          <svg class="size-15px pb-2px"><use href="#plus"></use></svg>
+          <svg class="size-15px pb-2px">
+            <use href="#plus"></use>
+          </svg>
           <p>新的聊天</p>
         </div>
         <n-popconfirm v-model:show="showDeleteConfirm">
           <template #icon>
-            <svg class="size-22px"><use href="#explosion"></use></svg>
+            <svg class="size-22px">
+              <use href="#explosion"></use>
+            </svg>
           </template>
           <template #action>
             <n-button size="small" tertiary @click.stop="showDeleteConfirm = false">取消</n-button>
@@ -125,7 +137,9 @@
           <template #trigger>
             <div
               class="flex items-center justify-center gap-4px bg-[--chat-bt-color] border-(1px solid [--line-color]) select-none text-(12px [--chat-text-color]) size-fit w-80px h-32px rounded-8px custom-shadow cursor-pointer">
-              <svg class="size-15px pb-2px"><use href="#delete"></use></svg>
+              <svg class="size-15px pb-2px">
+                <use href="#delete"></use>
+              </svg>
               <p>全部删除</p>
             </div>
           </template>
@@ -142,19 +156,19 @@ import { VueDraggable } from 'vue-draggable-plus'
 import router from '@/router'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { listChat, removeChat } from '../api/index.ts'
+import { ChatConversationApi, ChatConversationVO } from '../api/chat/conversation'
 
 const userStore = useUserStore()
-const activeItem = ref(0)
+const activeItem = ref('')
 const scrollbar = ref<VirtualListInst>()
 const inputInstRef = ref<InputInst | null>(null)
-const editingItemId = ref<number | null>()
+const editingItemId = ref<string | null>()
 /** 原始标题 */
 const originalTitle = ref('')
 const showDeleteConfirm = ref(false)
 
 interface chatItem {
-  id: number
+  id: string
   title: string
   time: string
 }
@@ -204,24 +218,22 @@ const specialMenuList = ref<OPT.RightMenu[]>([
 const handleGetChatList = () => {
   chatList.value = []
   // 获取会话列表
-  listChat({
-    current: 1,
-    size: 10
-  }).then((res: any) => {
+  ChatConversationApi.getChatConversationMyList().then((res: any) => {
     console.log(res)
     if (res.length === 0) {
-      chatList.value.push({ id: 1, title: '新的聊天1', time: new Date().toLocaleString() })
+      add()
+    } else {
+      res.forEach((item: any) => {
+        chatList.value.push(item)
+      })
     }
-    res.forEach((item: any) => {
-      chatList.value.push(item)
-    })
   })
 }
 
 /** 跳转到设置 */
 const jump = () => {
   router.push('/chatSettings')
-  activeItem.value = 0
+  activeItem.value = ''
 }
 
 /** 选中会话 */
@@ -236,11 +248,14 @@ const handleActive = (item: any) => {
 
 /** 添加会话 */
 const add = () => {
-  const id = chatList.value.length + 1
-  chatList.value.push({ id: id, title: `新的聊天${id}`, time: '2022-01-01 12:00:00' })
-  // 滚动到最底部
-  nextTick(() => {
-    scrollbar.value?.scrollTo({ position: 'bottom', debounce: true })
+  ChatConversationApi.createChatConversationMy({} as unknown as ChatConversationVO).then((id: any) => {
+    console.log(id)
+    const length = chatList.value.length + 1
+    chatList.value.push({ id: id, title: `新的聊天${length}`, time: '2022-01-01 12:00:00' })
+    // 滚动到最底部
+    nextTick(() => {
+      scrollbar.value?.scrollTo({ position: 'bottom', debounce: true })
+    })
   })
 }
 
@@ -301,8 +316,15 @@ const deleteChat = (item?: any) => {
     window.$message.success(`已删除 ${item.title}`, {
       icon: () => h(NIcon, null, { default: () => h('svg', null, [h('use', { href: '#face' })]) })
     })
-    removeChat(item.chatNumber)
+    removeChat(item.id)
   }
+}
+
+const removeChat = (id: string) => {
+  console.log(id)
+  ChatConversationApi.deleteChatConversationMy(id).then((res: any) => {
+    console.log(res)
+  })
 }
 
 /** 重命名 */
@@ -356,26 +378,30 @@ onMounted(() => {
 .gpt-subtitle {
   @apply bg-clip-text text-transparent bg-gradient-to-r from-#38BDF8 to-#13987F text-20px font-800;
 }
+
 .plugins {
-  @apply size-fit bg-[--chat-bt-color] rounded-8px custom-shadow p-[8px_14px]
-  flex items-center gap-10px select-none cursor-pointer
-  text-14px color-[--chat-text-color] border-(1px solid [--line-color]);
+  @apply size-fit bg-[--chat-bt-color] rounded-8px custom-shadow p-[8px_14px] flex items-center gap-10px select-none cursor-pointer text-14px color-[--chat-text-color] border-(1px solid [--line-color]);
 }
+
 .chat-item {
   @apply relative bg-[--chat-bt-color] border-(1px solid [--line-color]) cursor-pointer custom-shadow rounded-8px w-full h-65px;
+
   &:hover {
     @apply bg-[--chat-hover-color];
+
     svg {
       @apply opacity-100 -translate-x-1 transition-all duration-800 ease-in-out;
     }
   }
 }
 
-.list-move, /* 对移动中的元素应用的过渡 */
+.list-move,
+/* 对移动中的元素应用的过渡 */
 .list-enter-active,
 .list-leave-active {
   transition: all 0.5s ease;
 }
+
 .list-enter-from,
 .list-leave-to {
   opacity: 0;
