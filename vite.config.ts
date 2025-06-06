@@ -12,7 +12,7 @@ import VueSetupExtend from 'vite-plugin-vue-setup-extend'
 // https://vitejs.dev/config/
 /**! 不需要优化前端打包(如开启gzip) */
 export default defineConfig(({ mode }: ConfigEnv) => {
-  // 获取当前环境的配置,如何设置第三个参数则加载所有变量，而不是以“VITE_”前缀的变量
+  // 获取当前环境的配置,如何设置第三个参数则加载所有变量，而不是以"VITE_"前缀的变量
   const config = loadEnv(mode, process.cwd())
   return {
     resolve: {
@@ -97,10 +97,38 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       //配置跨域
       proxy: {
         '/api': {
-          // “/api” 以及前置字符串会被替换为真正域名
+          // "/api" 以及前置字符串会被替换为真正域名
           target: config.VITE_SERVICE_URL, // 请求域名
           changeOrigin: true, // 是否跨域
-          rewrite: (path) => path.replace(/^\/api/, '')
+          rewrite: (path) => path.replace(/^\/api/, ''),
+          // 支持SSE流式连接的配置
+          configure: (proxy) => {
+            proxy.on('proxyReq', (proxyReq, req) => {
+              // 保持连接活跃
+              proxyReq.setHeader('Connection', 'keep-alive')
+              // 禁用缓存
+              proxyReq.setHeader('Cache-Control', 'no-cache')
+              // 设置SSE相关头部
+              if (req.url?.includes('send-stream')) {
+                proxyReq.setHeader('Accept', 'text/event-stream')
+              }
+            })
+            proxy.on('proxyRes', (proxyRes, req) => {
+              // 处理SSE响应
+              if (req.url?.includes('send-stream')) {
+                // 确保SSE响应头正确
+                proxyRes.headers['cache-control'] = 'no-cache'
+                proxyRes.headers['connection'] = 'keep-alive'
+                // 禁用缓冲，立即传输数据
+                delete proxyRes.headers['content-length']
+              }
+            })
+            proxy.on('error', (err) => {
+              console.error('代理错误:', err.message)
+            })
+          },
+          // 增加超时时间以支持长连接
+          timeout: 0 // 无限超时，适用于SSE
         }
       },
       hmr: true, // 热更新
