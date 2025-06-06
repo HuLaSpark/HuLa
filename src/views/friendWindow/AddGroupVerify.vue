@@ -36,6 +36,10 @@
           :maxlength="60"
           :count-graphemes="countGraphemes"
           show-count
+          spellCheck="false"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
           type="textarea"
           placeholder="输入验证消息" />
 

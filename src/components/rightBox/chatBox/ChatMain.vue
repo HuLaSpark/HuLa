@@ -1,7 +1,7 @@
 <template>
-  <!-- 网络断开提示 -->
+  <!-- 网络状态提示 -->
   <n-flex
-    v-if="!isOnline"
+    v-if="!networkStatus.isOnline.value"
     align="center"
     justify="center"
     class="z-999 absolute w-full h-40px rounded-4px text-(12px [--danger-text]) bg-[--danger-bg]">
@@ -448,7 +448,6 @@ import { useUserInfo, useBadgeInfo } from '@/hooks/useCached.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { type } from '@tauri-apps/plugin-os'
 import { useUserStore } from '@/stores/user.ts'
-import { useNetwork } from '@vueuse/core'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import VirtualList, { type VirtualListExpose } from '@/components/common/VirtualList.vue'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
@@ -458,6 +457,7 @@ import { useGlobalStore } from '@/stores/global'
 import { useDebounceFn } from '@vueuse/core'
 import { useCachedStore } from '@/stores/cached'
 import apis from '@/services/apis'
+import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 
 const appWindow = WebviewWindow.getCurrent()
 const { addListener } = useTauriListener()
@@ -470,6 +470,7 @@ const userStore = useUserStore()
 const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
 const cachedStore = useCachedStore()
+const networkStatus = useNetworkStatus()
 
 // 记录当前滚动位置相关信息
 const isAutoScrolling = ref(false)
@@ -520,8 +521,6 @@ const hoverBubble = ref<{
 })
 /** 记录右键菜单时选中的气泡的元素(用于处理mac右键会选中文本的问题) */
 const recordEL = ref()
-/** 网络连接是否正常 */
-const { isOnline } = useNetwork()
 const isMac = computed(() => type() === 'macos')
 // 公告展示时需要减去的高度
 const announcementHeight = computed(() => (isGroup.value && topAnnouncement.value ? 300 : 260))

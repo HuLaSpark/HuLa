@@ -43,7 +43,7 @@
     <template v-else-if="searchResults.length > 0">
       <p class="text-(12px #909090) mb-6px">搜索结果</p>
 
-      <n-scrollbar style="max-height: calc(100vh - 212px)">
+      <n-scrollbar style="max-height: calc(100vh - 142px)">
         <template v-for="item in searchResults" :key="item.roomId">
           <n-flex
             align="center"

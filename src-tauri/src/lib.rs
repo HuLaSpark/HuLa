@@ -1,12 +1,10 @@
 // 桌面端依赖
 #[cfg(desktop)]
 mod desktops;
-#[cfg(desktop)]
-use common_cmd::{
-    audio, default_window_icon, screenshot, set_badge_count, set_height,
-};
 #[cfg(target_os = "macos")]
-use common_cmd::{hide_title_bar_buttons};
+use common_cmd::hide_title_bar_buttons;
+#[cfg(desktop)]
+use common_cmd::{audio, default_window_icon, screenshot, set_badge_count, set_height};
 #[cfg(desktop)]
 mod proxy;
 #[cfg(desktop)]

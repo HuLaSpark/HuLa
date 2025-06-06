@@ -20,6 +20,10 @@
                     class="rounded-6px text-12px"
                     v-model:value="savedProxy.apiIp"
                     type="text"
+                    spellCheck="false"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
                     placeholder="127.0.0.1或hulaspark.com" />
 
                   <p class="text-12px pt-6px">端口</p>
@@ -27,12 +31,20 @@
                     class="rounded-6px text-12px"
                     v-model:value="savedProxy.apiPort"
                     type="text"
+                    spellCheck="false"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
                     placeholder="443" />
                   <p class="text-12px pt-6px">后缀</p>
                   <n-input
                     class="rounded-6px text-12px"
                     v-model:value="savedProxy.apiSuffix"
                     type="text"
+                    spellCheck="false"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
                     placeholder="api" />
                 </n-flex>
               </n-collapse-transition>
@@ -52,6 +64,10 @@
                     class="rounded-6px text-12px"
                     v-model:value="savedProxy.wsIp"
                     type="text"
+                    spellCheck="false"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
                     placeholder="127.0.0.1或hulaspark.com" />
 
                   <p class="text-12px pt-6px">端口</p>
@@ -59,12 +75,20 @@
                     class="rounded-6px text-12px"
                     v-model:value="savedProxy.wsPort"
                     type="text"
+                    spellCheck="false"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
                     placeholder="443" />
                   <p class="text-12px pt-6px">后缀</p>
                   <n-input
                     class="rounded-6px text-12px"
                     v-model:value="savedProxy.wsSuffix"
                     type="text"
+                    spellCheck="false"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
                     placeholder="websocket" />
                 </n-flex>
               </n-collapse-transition>

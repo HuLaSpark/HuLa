@@ -66,6 +66,10 @@
                 background-color: #404040;
                 color: #fff;
               "
+              spellCheck="false"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
               placeholder="锁屏密码"
               show-password-on="click"
               type="password"

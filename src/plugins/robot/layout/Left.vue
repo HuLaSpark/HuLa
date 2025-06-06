@@ -73,6 +73,10 @@
                       placeholder="输入标题"
                       type="text"
                       size="tiny"
+                      spellCheck="false"
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
                       style="width: 200px"
                       class="h-22px lh-22px rounded-6px">
                     </n-input>

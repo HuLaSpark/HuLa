@@ -37,6 +37,10 @@
           style="background: var(--search-bg-color)"
           :maxlength="20"
           clearable
+          spellCheck="false"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
           size="small"
           :placeholder="isSearchMode ? '' : '搜索'">
           <template #prefix>

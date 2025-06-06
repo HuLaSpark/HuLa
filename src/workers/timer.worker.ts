@@ -24,17 +24,20 @@ const checkAllTimersCompleted = () => {
   }
 }
 
-// 添加调试信息打印函数
+// 优化的调试信息打印函数
 const logDebugInfo = (msgId: number, remainingTime: number) => {
-  // 只有开启日志功能时才打印
-  if (enableLogging) {
+  // 只有开启日志功能时才打印，且只在关键时间点打印
+  if (enableLogging && (remainingTime <= 5000 || remainingTime % 10000 < 1000)) {
     console.log(`[Worker Debug] 消息ID: ${msgId}, 剩余时间: ${(remainingTime / 1000).toFixed(1)}秒`)
-    self.postMessage({
-      type: 'debug',
-      msgId,
-      remainingTime,
-      timestamp: Date.now()
-    })
+    // 减少向主线程发送调试消息的频率
+    if (remainingTime <= 3000) {
+      self.postMessage({
+        type: 'debug',
+        msgId,
+        remainingTime,
+        timestamp: Date.now()
+      })
+    }
   }
 }
 
@@ -103,7 +106,8 @@ self.onmessage = (e) => {
       // 立即打印一次初始状态
       logDebugInfo(msgId, duration)
 
-      // 创建定时打印的间隔器，每1000ms打印一次
+      // 优化的调试间隔器，减少打印频率
+      const debugInterval = duration > 10000 ? 5000 : 1000 // 长任务每5秒打印，短任务每秒打印
       const debugId = setInterval(() => {
         const elapsed = Date.now() - startTime
         const remaining = duration - elapsed
@@ -112,7 +116,7 @@ self.onmessage = (e) => {
         } else {
           clearInterval(debugId)
         }
-      }, 1000) // 每秒打印一次
+      }, debugInterval)
 
       const timerId = setTimeout(() => {
         clearInterval(debugId)

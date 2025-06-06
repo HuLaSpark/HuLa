@@ -61,6 +61,10 @@
               :passively-activated="true"
               class="rounded-6px"
               clearable
+              spellCheck="false"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
               :allow-input="noSideSpace"
               placeholder="请输入你的昵称"
               show-count

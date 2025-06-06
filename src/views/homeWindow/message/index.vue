@@ -134,12 +134,6 @@ const sessionList = computed(() => {
   return (
     chatStore.sessionList
       .map((item) => {
-        // 获取该会话的所有消息，避免重复转换
-        const messages = Array.from(chatStore.messageMap.get(item.roomId)?.values() || [])
-        // 获取最后一条消息
-        const lastMsg = messages[messages.length - 1]
-        let LastUserMsg = ''
-
         // 获取最新的头像
         let latestAvatar = item.avatar
         if (item.type === RoomTypeEnum.SINGLE && item.id) {
@@ -153,27 +147,26 @@ const sessionList = computed(() => {
           displayName = item.remark
         }
 
-        if (lastMsg) {
-          // 使用 useAtMention hook 检查是否有@我的消息
-          const { checkRoomAtMe, formatMessageContent, getMessageSenderName } = useReplaceMsg()
+        // 获取该会话的所有消息用于检查@我
+        const messages = Array.from(chatStore.messageMap.get(item.roomId)?.values() || [])
+        const { checkRoomAtMe, getAtMeContent, getMessageSenderName, formatMessageContent } = useReplaceMsg()
+        // 检查是否有@我的消息
+        const isAtMe = checkRoomAtMe(item.roomId, item.type, currentSession.value.roomId, messages, item.unreadCount)
 
-          // 获取发送者信息
-          const senderName = getMessageSenderName(lastMsg)
+        // 处理显示消息
+        let displayMsg = ''
 
-          // 检查是否有@我的消息
-          const isAtMe = checkRoomAtMe(item.roomId, item.type, currentSession.value.roomId, messages, item.unreadCount)
-
-          // 使用封装后的方法处理消息内容，包括撤回消息和@提醒
-          LastUserMsg = formatMessageContent(lastMsg, item.type, senderName, isAtMe)
-
-          // 返回带有isAtMe标记的对象和修改后的名称
-          return {
-            ...item,
-            avatar: latestAvatar,
-            name: displayName, // 使用可能修改过的显示名称
-            lastMsg: LastUserMsg || item.text || '欢迎使用HuLa',
-            lastMsgTime: formatTimestamp(item?.activeTime),
-            isAtMe: isAtMe
+        // 优先使用session.text作为内容来源
+        if (item.text) {
+          // 如果有@我，对text应用[有人@我]的样式
+          displayMsg = isAtMe ? getAtMeContent(true, item.text) : item.text
+        }
+        // 如果没有text，则尝试从消息列表中获取
+        else if (messages.length > 0) {
+          const lastMsg = messages[messages.length - 1]
+          if (lastMsg) {
+            const senderName = getMessageSenderName(lastMsg)
+            displayMsg = formatMessageContent(lastMsg, item.type, senderName, isAtMe)
           }
         }
 
@@ -182,9 +175,9 @@ const sessionList = computed(() => {
           ...item,
           avatar: latestAvatar,
           name: displayName, // 使用可能修改过的显示名称
-          lastMsg: item.text || '欢迎使用HuLa',
+          lastMsg: displayMsg || '欢迎使用HuLa',
           lastMsgTime: formatTimestamp(item?.activeTime),
-          isAtMe: false
+          isAtMe
         }
       })
       // 添加排序逻辑：先按置顶状态排序，再按活跃时间排序

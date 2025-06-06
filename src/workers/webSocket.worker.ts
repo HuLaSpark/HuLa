@@ -5,8 +5,19 @@ const postMsg = ({ type, value }: { type: string; value?: object }) => {
   self.postMessage(JSON.stringify({ type, value }))
 }
 
+// 连接状态
+let connectionState = ConnectionState.DISCONNECTED
+
 // 最后一次收到pong消息的时间
 let lastPongTime: number | null = null
+
+// 连续心跳失败计数（未收到pong响应）
+let consecutiveHeartbeatFailures = 0
+// 最大允许的连续心跳失败次数，超过这个值会触发重连
+const MAX_HEARTBEAT_FAILURES = 3
+
+// 心跳日志记录开关
+let heartbeatLoggingEnabled = false
 
 // ws instance
 let connection: WebSocket
@@ -22,6 +33,9 @@ let clientId: null | string = null
 
 let serverUrl: null | string = null
 
+// 心跳状态
+let heartbeatActive = false
+
 // 往 ws 发消息
 const connectionSend = (value: object) => {
   connection?.send(JSON.stringify(value))
@@ -32,32 +46,131 @@ let heartbeatTimeout: string | null = null
 const HEARTBEAT_TIMEOUT = 15000 // 15秒超时
 const HEARTBEAT_INTERVAL = 9900 // 心跳间隔
 
+// 上次发送心跳的时间
+let lastPingSent: number | null = null
+
+// 健康检查间隔
+const HEALTH_CHECK_INTERVAL = 30000 // 30秒检查一次连接健康状态
+
+// 健康检查定时器ID
+let healthCheckTimerId: string | null = null
+
 // 发送心跳请求，使用timer.worker
 const sendHeartPack = () => {
+  // 启动健康检查定时器
+  startHealthCheck()
+
+  // 标记心跳活跃
+  heartbeatActive = true
+
   // 请求主线程启动心跳定时器
   postMsg({
     type: 'startHeartbeatTimer',
     value: { interval: HEARTBEAT_INTERVAL }
   })
+
+  // 记录日志
+  logHeartbeat('心跳定时器已启动')
+}
+
+// 启动定期健康检查
+const startHealthCheck = () => {
+  // 清除之前的健康检查定时器
+  if (healthCheckTimerId) {
+    postMsg({
+      type: 'clearTimer',
+      value: { msgId: healthCheckTimerId }
+    })
+    healthCheckTimerId = null
+  }
+
+  // 设置新的健康检查定时器
+  const timerId = `health_check_${Date.now()}`
+  healthCheckTimerId = timerId
+  postMsg({
+    type: 'startTimer',
+    value: { msgId: timerId, duration: HEALTH_CHECK_INTERVAL }
+  })
+
+  logHeartbeat('健康检查定时器已启动')
+}
+
+// 心跳日志记录
+const logHeartbeat = (message: string, data?: any) => {
+  if (heartbeatLoggingEnabled) {
+    console.log(`[WebSocket心跳] ${message}`, data || '')
+    postMsg({
+      type: 'heartbeatLog',
+      value: { message, data, timestamp: Date.now() }
+    })
+  }
 }
 
 // 发送单次心跳
 const sendSingleHeartbeat = () => {
-  // 心跳消息类型 2
-  connectionSend({ type: 2 })
-  const pingTime = Date.now()
+  // 检查WebSocket连接状态
+  if (connection?.readyState !== WebSocket.OPEN) {
+    logHeartbeat('尝试发送心跳时发现连接未打开', { readyState: connection?.readyState })
+    tryReconnect()
+    return
+  }
 
-  // 检测连接健康状态
+  // 记录本次发送心跳时间
+  lastPingSent = Date.now()
+
+  // 心跳消息类型 2
+  try {
+    connectionSend({ type: 2 })
+    logHeartbeat('心跳已发送', { timestamp: lastPingSent })
+  } catch (err) {
+    logHeartbeat('心跳发送失败', { error: err })
+    // 发送失败，可能连接已经中断但状态未更新
+    tryReconnect()
+    return
+  }
+
+  // 优化的连接健康检测机制
   if (lastPongTime !== null) {
-    const timeSinceLastPong = pingTime - lastPongTime
-    const isConnectionHealthy = timeSinceLastPong < HEARTBEAT_INTERVAL * 2
+    const timeSinceLastPong = lastPingSent - lastPongTime
+    const healthThreshold = HEARTBEAT_INTERVAL * 2.5 // 增加容错时间
+    const isConnectionHealthy = timeSinceLastPong < healthThreshold
 
     // 如果连接不健康，通知主线程
     if (!isConnectionHealthy) {
-      postMsg({
-        type: WorkerMsgEnum.ERROR,
-        value: { msg: '连接响应较慢，可能存在网络问题', timeSinceLastPong }
-      })
+      consecutiveHeartbeatFailures++
+
+      // 只在关键阈值时记录日志，减少日志开销
+      if (consecutiveHeartbeatFailures === 1 || consecutiveHeartbeatFailures % 3 === 0) {
+        logHeartbeat('连接响应缓慢', {
+          consecutiveFailures: consecutiveHeartbeatFailures,
+          timeSinceLastPong
+        })
+      }
+
+      // 延迟错误通知，避免频繁触发
+      if (consecutiveHeartbeatFailures >= 2) {
+        postMsg({
+          type: WorkerMsgEnum.ERROR,
+          value: {
+            msg: '连接响应较慢，可能存在网络问题',
+            timeSinceLastPong,
+            consecutiveFailures: consecutiveHeartbeatFailures
+          }
+        })
+      }
+
+      // 连续失败次数过多，尝试重连
+      if (consecutiveHeartbeatFailures >= MAX_HEARTBEAT_FAILURES) {
+        logHeartbeat('连续心跳失败次数过多，触发重连', { consecutiveFailures: consecutiveHeartbeatFailures })
+        tryReconnect()
+        return
+      }
+    } else {
+      // 重置连续失败计数
+      if (consecutiveHeartbeatFailures > 0) {
+        logHeartbeat('心跳恢复正常', { previousFailures: consecutiveHeartbeatFailures })
+        consecutiveHeartbeatFailures = 0
+      }
     }
   }
 
@@ -79,8 +192,16 @@ const sendSingleHeartbeat = () => {
   })
 }
 
+// 更新连接状态
+const updateConnectionState = (newState: ConnectionState) => {
+  connectionState = newState
+  postMsg({ type: 'connectionStateChange', value: { state: connectionState } })
+}
+
 // 清除心跳定时器
 const clearHeartPackTimer = () => {
+  logHeartbeat('清除心跳定时器')
+  heartbeatActive = false
   postMsg({ type: 'stopHeartbeatTimer' })
 
   // 清除超时定时器
@@ -91,13 +212,55 @@ const clearHeartPackTimer = () => {
     })
     heartbeatTimeout = null
   }
+
+  // 清除健康检查定时器
+  if (healthCheckTimerId) {
+    postMsg({
+      type: 'clearTimer',
+      value: { msgId: healthCheckTimerId }
+    })
+    healthCheckTimerId = null
+  }
 }
 
+// 主动尝试重连
+const tryReconnect = () => {
+  logHeartbeat('触发主动重连')
+
+  // 主动关闭当前连接
+  connection?.close()
+
+  // 重置心跳状态
+  heartbeatActive = false
+
+  // 清除心跳定时器
+  clearHeartPackTimer()
+
+  // 触发重连流程
+  updateConnectionState(ConnectionState.RECONNECTING)
+  if (!lockReconnect) {
+    lockReconnect = true
+
+    // 使用短延迟立即重连
+    postMsg({
+      type: 'startReconnectTimer',
+      value: {
+        delay: 1000, // 快速重连，1秒后
+        reconnectCount
+      }
+    })
+  }
+}
+
+// 优化的智能退避算法
 const getBackoffDelay = (retryCount: number) => {
   const baseDelay = 1000 // 基础延迟1秒
-  const maxDelay = 30000 // 最大延迟30秒
-  const delay = Math.min(baseDelay * Math.pow(2, retryCount), maxDelay)
-  return delay + Math.random() * 1000 // 添加随机抖动
+  const maxDelay = 15000 // 减少最大延迟到15秒
+  const multiplier = Math.min(1.5, 2 - retryCount * 0.1)
+  const delay = Math.min(baseDelay * Math.pow(multiplier, retryCount), maxDelay)
+
+  // 减少随机抖动范围
+  return delay + Math.random() * 500
 }
 
 const onCloseHandler = () => {
@@ -147,8 +310,18 @@ const onConnectClose = () => {
 // ws 连接成功
 const onConnectOpen = () => {
   console.log('✅ WebSocket 连接成功')
+  // 重置心跳相关状态
+  consecutiveHeartbeatFailures = 0
+  lastPongTime = null
+  lastPingSent = null
+
   updateConnectionState(ConnectionState.CONNECTED)
   postMsg({ type: WorkerMsgEnum.OPEN })
+
+  // 连接成功后立即发送一次心跳
+  sendSingleHeartbeat()
+
+  // 然后开始定期心跳
   sendHeartPack()
 }
 // ws 连接 接收到消息
@@ -159,11 +332,42 @@ const onConnectMsg = (e: any) => {
     if (data && (data.type === 'pong' || data.type === 3)) {
       // 3是pong的消息类型
       lastPongTime = Date.now()
+
+      // 计算心跳往返时间
+      let roundTripTime = null
+      if (lastPingSent) {
+        roundTripTime = lastPongTime - lastPingSent
+      }
+
+      // 重置连续失败计数
+      if (consecutiveHeartbeatFailures > 0) {
+        logHeartbeat('收到pong响应，重置连续失败计数', {
+          previousFailures: consecutiveHeartbeatFailures,
+          roundTripTime
+        })
+        consecutiveHeartbeatFailures = 0
+      } else {
+        logHeartbeat('收到pong响应', { roundTripTime })
+      }
+
       // 告知主线程收到了pong
-      postMsg({ type: 'pongReceived', value: { timestamp: lastPongTime } })
+      postMsg({
+        type: 'pongReceived',
+        value: {
+          timestamp: lastPongTime,
+          roundTripTime,
+          consecutiveFailures: consecutiveHeartbeatFailures
+        }
+      })
     }
   } catch (err) {
     // 解析失败则当作普通消息处理
+    logHeartbeat('解析消息失败', { error: err })
+  }
+
+  // 如果收到任何消息，说明连接是有效的，更新连接状态
+  if (connectionState !== ConnectionState.CONNECTED) {
+    updateConnectionState(ConnectionState.CONNECTED)
   }
 
   // 转发消息给主线程
@@ -196,12 +400,18 @@ const initConnection = () => {
   connection.addEventListener('error', onConnectError)
 }
 
-let connectionState = ConnectionState.DISCONNECTED
+// 停止所有心跳相关活动
+const stopAllHeartbeat = () => {
+  console.log('停止所有心跳活动')
+  heartbeatActive = false
+  clearHeartPackTimer()
+}
 
-// 更新连接状态
-const updateConnectionState = (newState: ConnectionState) => {
-  connectionState = newState
-  postMsg({ type: 'connectionStateChange', value: { state: connectionState } })
+// 重置重连状态
+const resetReconnection = () => {
+  reconnectCount = 0
+  lockReconnect = false
+  console.log('重置重连计数和状态')
 }
 
 self.onmessage = (e: MessageEvent<string>) => {
@@ -250,6 +460,22 @@ self.onmessage = (e: MessageEvent<string>) => {
       postMsg({ type: 'heartbeatTimeout' })
       break
     }
+    // 停止心跳
+    case 'stopHeartbeat': {
+      stopAllHeartbeat()
+      break
+    }
+    // 重置重连计数
+    case 'resetReconnectCount': {
+      resetReconnection()
+      break
+    }
+    // 清除重连计时器
+    case 'clearReconnectTimer': {
+      lockReconnect = true // 锁定重连，阻止旧的重连流程
+      console.log('清除重连计时器')
+      break
+    }
     // 页面可见性变化
     case 'visibilityChange': {
       const { isHidden } = value
@@ -267,14 +493,77 @@ self.onmessage = (e: MessageEvent<string>) => {
     case 'checkConnectionHealth': {
       const now = Date.now()
       const isHealthy = lastPongTime !== null && now - lastPongTime < HEARTBEAT_INTERVAL * 2
+
+      // 连续失败次数也是健康状态的一个指标
+      const healthStatus = {
+        isHealthy,
+        lastPongTime,
+        lastPingSent,
+        connectionState,
+        heartbeatActive,
+        consecutiveFailures: consecutiveHeartbeatFailures,
+        timeSinceLastPong: lastPongTime ? now - lastPongTime : null,
+        readyState: connection?.readyState
+      }
+
+      logHeartbeat('健康检查', healthStatus)
+
+      // 如果连接不健康但状态显示已连接，尝试修复
+      if (!isHealthy && connection?.readyState === WebSocket.OPEN && heartbeatActive) {
+        logHeartbeat('健康检查发现异常，尝试恢复心跳', healthStatus)
+        // 立即发送一次心跳
+        sendSingleHeartbeat()
+      }
+
+      // 如果心跳应该活跃但心跳定时器未运行，重启心跳
+      if (connectionState === ConnectionState.CONNECTED && !heartbeatActive) {
+        logHeartbeat('发现心跳停止但连接正常，重启心跳', healthStatus)
+        sendHeartPack()
+      }
+
       postMsg({
         type: 'connectionHealthStatus',
-        value: {
-          isHealthy,
-          lastPongTime,
-          timeSinceLastPong: lastPongTime ? now - lastPongTime : null
-        }
+        value: healthStatus
       })
+      break
+    }
+
+    // 健康检查定时器触发
+    case 'healthCheckTimeout': {
+      // 定期健康检查触发
+      const { msgId } = value
+      if (msgId === healthCheckTimerId) {
+        // 执行健康检查
+        const now = Date.now()
+        const isHealthy = lastPongTime !== null && now - lastPongTime < HEARTBEAT_INTERVAL * 2
+
+        logHeartbeat('定期健康检查', {
+          isHealthy,
+          timeSinceLastPong: lastPongTime ? now - lastPongTime : null,
+          heartbeatActive,
+          readyState: connection?.readyState
+        })
+
+        // 如果不健康且连接状态异常，尝试重连
+        if (!isHealthy && consecutiveHeartbeatFailures >= 1) {
+          logHeartbeat('定期健康检查发现连接异常，尝试重连')
+          tryReconnect()
+        }
+        // 如果心跳定时器应该在运行但实际没有运行，重启心跳
+        else if (connectionState === ConnectionState.CONNECTED && !heartbeatActive) {
+          logHeartbeat('发现心跳停止但连接正常，重启心跳')
+          sendHeartPack()
+        }
+        // 继续启动下一次健康检查
+        startHealthCheck()
+      }
+      break
+    }
+
+    // 控制心跳日志记录
+    case 'setHeartbeatLogging': {
+      heartbeatLoggingEnabled = !!value.enabled
+      logHeartbeat(`心跳日志${heartbeatLoggingEnabled ? '已开启' : '已关闭'}`)
       break
     }
   }

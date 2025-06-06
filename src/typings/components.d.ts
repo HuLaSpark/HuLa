@@ -22,6 +22,7 @@ declare module 'vue' {
     Emoji: typeof import('./../components/rightBox/renderMessage/Emoji.vue')['default']
     Emoticon: typeof import('./../components/rightBox/emoticon/index.vue')['default']
     FloatBlockList: typeof import('./../components/common/FloatBlockList.vue')['default']
+    HInput: typeof import('./../components/common/HInput.vue')['default']
     Image: typeof import('./../components/rightBox/renderMessage/Image.vue')['default']
     InfoPopover: typeof import('./../components/common/InfoPopover.vue')['default']
     LoadingSpinner: typeof import('./../components/common/LoadingSpinner.vue')['default']

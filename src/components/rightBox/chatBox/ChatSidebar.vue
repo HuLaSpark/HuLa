@@ -73,6 +73,10 @@
         placeholder="搜索"
         type="text"
         size="tiny"
+        spellCheck="false"
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
         class="h-26px w-95% lh-26px rounded-6px">
         <template #prefix>
           <svg class="w-12px h-12px">
