@@ -80,8 +80,8 @@ const put = async <T>(url: string, params: any, abort?: AbortController, noRetry
   return responseInterceptor(url, 'PUT', {}, params, abort, noRetry)
 }
 
-const del = async <T>(url: string, params: any, abort?: AbortController, noRetry?: boolean): Promise<T> => {
-  return responseInterceptor(url, 'DELETE', {}, params, abort, noRetry)
+const del = async <T>(url: string, params: any, body: any, abort?: AbortController, noRetry?: boolean): Promise<T> => {
+  return responseInterceptor(url, 'DELETE', params, body, abort, noRetry)
 }
 
 export default {
