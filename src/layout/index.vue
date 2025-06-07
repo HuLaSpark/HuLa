@@ -358,6 +358,7 @@ onMounted(async () => {
   // 监听home窗口被聚焦的事件，当窗口被聚焦时自动关闭状态栏通知
   const homeWindow = await WebviewWindow.getByLabel('home')
   if (homeWindow) {
+    homeWindow.show()
     homeWindow.onFocusChanged(({ payload: focused }) => {
       // 当窗口获得焦点时，关闭通知提示
       if (focused) {

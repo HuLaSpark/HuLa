@@ -47,6 +47,8 @@ fn setup_desktop() {
         .init_window_event()
         .setup(move |app| {
             tray::create_tray(app.handle())?;
+            #[cfg(desktop)]
+            let _ = app.handle().plugin(tauri_plugin_window_state::Builder::default().build());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
