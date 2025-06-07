@@ -124,7 +124,7 @@
                         align="center"
                         :style="item.type === 'user' ? 'flex-direction: row-reverse' : ''">
                         <span class="text-12px select-none color-#909090 inline-block align-top">
-                          {{ userStore.userInfo.name }}
+                          {{ item.type === 'user' ? userStore.userInfo.name : item.model }}
                         </span>
                       </n-flex>
                     </n-flex>
@@ -234,42 +234,49 @@
         </div>
       </n-flex>
 
-      <div class="flex flex-col items-end gap-6px">
-        <n-auto-complete class="w-full">
-          <template #default="{ handleInput, handleBlur, handleFocus }">
-            <n-input
-              class="w-full bg-transparent rounded-1"
-              ref="inputRef"
-              v-model:value="prompt"
-              type="textarea"
-              :placeholder="'来说点什么吧'"
-              :autosize="{ minRows: 8, maxRows: 8 }"
-              @input="handleInput"
-              @focus="handleFocus"
-              @blur="handleBlur"
-              @keypress="handleEnter"></n-input>
-          </template>
-        </n-auto-complete>
-        <n-button
-          class="mt-[8px] cursor-default"
-          type="primary"
-          size="medium"
-          :loading="conversationInProgress"
-          v-if="conversationInProgress == false"
-          @click="handleSubmit"
-          >发送</n-button
-        >
-        <n-button
-          class="mt-[8px] cursor-default stop-button"
-          type="error"
-          size="medium"
-          v-if="conversationInProgress"
-          @click="stopStream">
-          <template #icon>
-            <div class="stop-icon">⏹</div>
-          </template>
-          停止
-        </n-button>
+      <div class="flex flex-col items-center">
+        <!-- 富文本输入框 -->
+        <div class="w-full flex flex-col items-center relative">
+          <div
+            id="chat-message-input"
+            ref="messageInputDom"
+            style="outline: none; height: 160px; overflow-y: auto"
+            contenteditable
+            spellcheck="false"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            @paste="onPaste"
+            @input="handleInputChange"
+            @keydown.exact.enter="handleEnterKey"
+            @keydown.exact.ctrl.enter="handleEnterKey"
+            @keydown.exact.meta.enter="handleEnterKey"
+            @keydown.exact.shift.enter="handleShiftEnterKey"
+            data-placeholder="来说点什么吧"
+            class="w-full bg-transparent rounded-1 p-[12px_16px] empty:before:content-[attr(data-placeholder)] before:text-(14px [--text-color-3]) transition-colors"></div>
+        </div>
+        <div class="w-full flex items-end justify-end">
+          <n-button
+            class="mt-[2px] cursor-default"
+            type="primary"
+            size="medium"
+            :disabled="disabledSend"
+            v-if="conversationInProgress == false"
+            @click="handleSubmit"
+            >发送</n-button
+          >
+          <n-button
+            class="mt-[4px] cursor-default stop-button"
+            type="error"
+            size="medium"
+            v-if="conversationInProgress"
+            @click="stopStream">
+            <template #icon>
+              <div class="stop-icon">⏹</div>
+            </template>
+            停止
+          </n-button>
+        </div>
       </div>
     </n-flex>
   </main>
@@ -304,8 +311,6 @@ const currentChat = ref({
   id: '0',
   title: ''
 })
-/** 输入框的值 */
-const prompt = ref('')
 /** message loading */
 const messageLoading = ref(false)
 const chatMessageList = ref<Array<any>>([])
@@ -313,8 +318,10 @@ const chatMessageList = ref<Array<any>>([])
 const isFirstSend = ref(true)
 /** 模型列表 */
 const modelscOptions = computed(() => aiChatStore.aiModels)
-/**  */
+/** 当前模型ID */
 const currentModel = ref('')
+/** 当前模型名称 */
+const currentModelName = ref('')
 
 const pageNum = ref<number>(1)
 const size = ref<number>(10)
@@ -345,10 +352,16 @@ const isNearBottom = ref(false) // 初始化为false，等实际检测后再更�
 const conversationInProgress = ref(false) // 对话是否正在进行中。目前只有【发送】消息时，会更新为 true，避免切换对话、删除对话等操作
 const conversationInAbortController = ref<any>() // 对话进行中 abort 控制器(控制 stream 对话)
 const enableContext = ref<boolean>(true) // 是否开启上下文
+/** 输入框DOM引用 */
+const messageInputDom = ref<HTMLElement>()
+/** 发送按钮是否禁用 */
+const disabledSend = ref(true)
+
 const { scrollTop } = useChatMain()
 
 const handleModelChange = (value: string) => {
   currentModel.value = value
+  currentModelName.value = modelscOptions.value.find((item: any) => item.value === value)?.model || ''
 }
 
 const handleBlur = () => {
@@ -371,13 +384,6 @@ const handleEdit = () => {
   nextTick(() => {
     inputInstRef.value?.select()
   })
-}
-
-const handleEnter = (e: KeyboardEvent) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault()
-    handleSubmit()
-  }
 }
 
 // 处理过渡动画完成后的滚动
@@ -553,10 +559,20 @@ const handleSubmit = async () => {
     window.$message.error('请选择模型')
     return
   }
+
+  // 检查输入内容
+  const inputText = getInputText()
+  if (!inputText) {
+    window.$message.warning('请输入消息内容')
+    return
+  }
+
   if (isFirstSend.value) {
     isFirstSend.value = false
     if (chatMessageList.value.length === 0) {
-      currentChat.value.title = prompt.value
+      // 使用输入内容的前30个字符作为标题
+      const title = inputText.length > 30 ? inputText.substring(0, 30) + '...' : inputText
+      currentChat.value.title = title
       useMitt.emit('update-chat-title', { title: currentChat.value.title, id: currentChat.value.id })
     }
     await ChatConversationApi.updateChatConversationMy({
@@ -577,11 +593,18 @@ const stopStream = async () => {
   }
   // 设置为 false
   conversationInProgress.value = false
+  // 更新发送按钮状态
+  updateSendButtonState()
 }
 
 /** 发送消息 */
 const handleSend = async () => {
-  const content = prompt.value
+  const content = getInputText() // 使用新的获取方式
+
+  if (!content) {
+    window.$message.warning('请输入消息内容')
+    return
+  }
 
   // 如果已有进行中的对话，先停止
   if (conversationInProgress.value) {
@@ -605,12 +628,13 @@ const handleSend = async () => {
     id: '-2',
     content: 'think',
     type: 'assistant',
+    model: currentModelName.value,
     conversationId: currentChat.value.id
   }
   chatMessageList.value.push(answer)
   safeScrollToBottom('添加思考消息')
 
-  prompt.value = ''
+  clearInput() // 使用新的清空方式
 
   let isFirstChunk = true // 是否是第一个 chunk 消息段
   let updateTimer: number | null = null // 更新节流器
@@ -684,6 +708,9 @@ const handleSend = async () => {
             chatMessageList.value.pop()
             chatMessageList.value.pop()
             // 更新返回的数据
+            console.log(data.send)
+            console.log(data.receive)
+            data.receive.model = currentModelName.value
             chatMessageList.value.push(data.send)
             chatMessageList.value.push(data.receive)
 
@@ -811,7 +838,130 @@ const handleGetMessageList = (isToBottom: boolean = true): Promise<void> => {
   })
 }
 
+// 获取输入框纯文本内容
+const getInputText = (): string => {
+  if (!messageInputDom.value) return ''
+  const text = messageInputDom.value.innerText || messageInputDom.value.textContent || ''
+  return text.trim()
+}
+
+// 清空输入框
+const clearInput = () => {
+  if (!messageInputDom.value) return
+  messageInputDom.value.innerHTML = ''
+  messageInputDom.value.innerText = ''
+  updateSendButtonState()
+}
+
+// 更新发送按钮状态
+const updateSendButtonState = () => {
+  const text = getInputText()
+  disabledSend.value = !text || conversationInProgress.value || text.length > 4000
+}
+
+// 处理粘贴事件
+const onPaste = (e: ClipboardEvent) => {
+  e.preventDefault()
+
+  const clipboardData = e.clipboardData
+  if (!clipboardData) return
+
+  // 获取纯文本
+  const text = clipboardData.getData('text/plain')
+  if (!text) return
+
+  // 清理文本，避免重复内容
+  const cleanText = text.replace(/[\r\n\t]+/g, ' ').trim()
+  if (!cleanText) return
+
+  // 插入纯文本到光标位置
+  const selection = window.getSelection()
+  if (selection && selection.rangeCount > 0) {
+    const range = selection.getRangeAt(0)
+    range.deleteContents()
+
+    // 创建文本节点并插入
+    const textNode = document.createTextNode(cleanText)
+    range.insertNode(textNode)
+
+    // 将光标移动到插入文本的末尾
+    range.setStartAfter(textNode)
+    range.collapse(true)
+
+    selection.removeAllRanges()
+    selection.addRange(range)
+  }
+
+  updateSendButtonState()
+}
+
+// 处理输入变化
+const handleInputChange = (e: Event) => {
+  console.log('handleInputChange', e)
+  // 防止内容重复
+  if (!messageInputDom.value) return
+
+  // 获取当前内容
+  const currentContent = messageInputDom.value.innerText || ''
+
+  // 检查是否有异常重复的内容
+  const lines = currentContent.split('\n')
+  const uniqueLines = [...new Set(lines.filter((line) => line.trim()))]
+
+  // 如果检测到大量重复行，清理内容
+  if (lines.length > 10 && uniqueLines.length === 1 && uniqueLines[0].length < 50) {
+    messageInputDom.value.innerText = uniqueLines[0]
+    // 重新设置光标到末尾
+    const range = document.createRange()
+    const selection = window.getSelection()
+    range.selectNodeContents(messageInputDom.value)
+    range.collapse(false)
+    selection?.removeAllRanges()
+    selection?.addRange(range)
+  }
+
+  updateSendButtonState()
+}
+
+// 处理Enter键（发送）
+const handleEnterKey = (e: KeyboardEvent) => {
+  e.preventDefault()
+  if (!disabledSend.value) {
+    handleSubmit()
+  }
+}
+
+// 处理Shift+Enter（换行）
+const handleShiftEnterKey = (e: KeyboardEvent) => {
+  e.preventDefault()
+
+  const selection = window.getSelection()
+  if (selection && selection.rangeCount > 0) {
+    const range = selection.getRangeAt(0)
+    range.deleteContents()
+
+    // 插入换行
+    const br = document.createElement('br')
+    range.insertNode(br)
+    range.setStartAfter(br)
+    range.collapse(true)
+
+    selection.removeAllRanges()
+    selection.addRange(range)
+  }
+
+  updateSendButtonState()
+}
+
 onMounted(() => {
+  // 初始化输入框焦点
+  nextTick(() => {
+    if (messageInputDom.value) {
+      messageInputDom.value.focus()
+      updateSendButtonState()
+    }
+  })
+
   useMitt.on('left-chat-title', (e) => {
     const { title, id } = e
     if (id === currentChat.value.id) {
@@ -828,6 +978,13 @@ onMounted(() => {
       isTop.value = false // 重置到顶部状态
       messageLoading.value = true
       handleGetMessageList()
+
+      // 切换对话时重新聚焦输入框
+      nextTick(() => {
+        if (messageInputDom.value) {
+          messageInputDom.value.focus()
+        }
+      })
     }
   })
 })
@@ -1133,5 +1290,88 @@ onBeforeUnmount(() => {
 .scroll-to-bottom-leave-to {
   opacity: 0;
   transform: translateY(10px) scale(0.9);
+}
+
+/* 富文本输入框样式 */
+#chat-message-input {
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-color);
+  background-color: transparent;
+  resize: none;
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: pre-wrap;
+  border: none; /* 明确移除边框 */
+
+  /* 防止内容溢出和异常显示 */
+  overflow-wrap: break-word;
+  hyphens: auto;
+
+  /* 禁用浏览器的拼写检查样式 */
+  &::-webkit-input-placeholder {
+    color: var(--text-color-3);
+  }
+
+  /* 禁用浏览器默认的拼写检查下划线 */
+  &::-webkit-grammar-error-start,
+  &::-webkit-spelling-error-start {
+    background: none;
+    border: none;
+  }
+
+  /* 焦点状态 - 确保没有边框 */
+  &:focus {
+    outline: none;
+    border: none;
+    box-shadow: none;
+  }
+
+  /* 滚动条样式 */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-color);
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scrollbar-hover-color);
+  }
+
+  /* 占位符样式 */
+  &::before {
+    position: absolute;
+    top: 12px;
+    left: 0;
+    pointer-events: none;
+    opacity: 0.6;
+  }
+
+  /* 有内容时隐藏占位符 */
+  &:not(:empty)::before {
+    display: none;
+  }
+
+  /* 防止内容重复显示的样式修复 */
+  * {
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+  }
+
+  /* 确保换行正常显示 */
+  br {
+    display: block;
+    content: '';
+    margin: 0;
+  }
 }
 </style>

@@ -50,14 +50,6 @@ export const ChatMessageApi = {
 
     // 使用代理模式避免CORS问题
     const apiUrl = '/api/ai/chat/message/send-stream'
-    console.log('🔗 使用代理模式:', apiUrl)
-
-    console.log('🚀 开始SSE连接:', {
-      url: apiUrl,
-      conversationId,
-      content: content.substring(0, 50) + (content.length > 50 ? '...' : ''),
-      enableContext
-    })
 
     return fetchEventSource(apiUrl, {
       method: 'post',
@@ -74,7 +66,7 @@ export const ChatMessageApi = {
         useContext: enableContext
       }),
       onopen: async (response) => {
-        console.log('📡 SSE连接响应:', {
+        console.log('SSE连接响应:', {
           status: response.status,
           statusText: response.statusText,
           contentType: response.headers.get('content-type'),
@@ -82,18 +74,18 @@ export const ChatMessageApi = {
         })
 
         if (response.ok && response.headers.get('content-type')?.includes('text/event-stream')) {
-          console.log('✅ SSE连接已建立')
+          console.log('SSE连接已建立')
           return // 连接成功
         } else if (response.status >= 400 && response.status < 500 && response.status !== 429) {
-          console.error('❌ SSE连接失败，状态码：', response.status)
+          console.error('SSE连接失败，状态码：', response.status)
           throw new Error(`连接失败: ${response.status}`)
         } else {
-          console.warn('⚠️ SSE连接异常，尝试重试：', response.status)
+          console.warn('SSE连接异常，尝试重试：', response.status)
           throw new Error(`临时错误: ${response.status}`)
         }
       },
       onmessage: (event) => {
-        console.log('📨 收到SSE消息:', event.data.substring(0, 100) + (event.data.length > 100 ? '...' : ''))
+        console.log('收到SSE消息:', event.data.substring(0, 100) + (event.data.length > 100 ? '...' : ''))
         onMessage(event)
       },
       onerror: (err) => {

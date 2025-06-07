@@ -18,6 +18,7 @@ export const useAiChatStore = defineStore(StoresEnum.AICHAT, () => {
         aiModels.value.push({
           label: item.platform + ':' + item.name,
           value: item.id,
+          model: item.model,
           disabled: false
         })
       })
