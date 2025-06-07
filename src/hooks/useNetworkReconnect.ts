@@ -14,13 +14,6 @@ import webSocket from '@/services/webSocket'
  * 刷新当前聊天室消息、会话列表、群组信息等
  */
 export const useNetworkReconnect = () => {
-  // 获取所需的stores
-  const chatStore = useChatStore()
-  const globalStore = useGlobalStore()
-  const groupStore = useGroupStore()
-  const cachedStore = useCachedStore()
-  const contactStore = useContactStore()
-
   // 使用VueUse的useNetwork获取网络状态
   const { isOnline, offlineAt, onlineAt } = useNetwork()
 
@@ -140,6 +133,12 @@ export const useNetworkReconnect = () => {
    * 刷新所有重要数据
    */
   const refreshAllData = async () => {
+    const chatStore = useChatStore()
+    const globalStore = useGlobalStore()
+    const groupStore = useGroupStore()
+    const cachedStore = useCachedStore()
+    const contactStore = useContactStore()
+
     // 刷新会话列表
     await chatStore.getSessionList(true)
     // 如果当前有选中的聊天室，重置并刷新消息列表
