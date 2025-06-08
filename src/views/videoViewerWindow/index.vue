@@ -4,9 +4,9 @@
     <ActionBar class="bg-#000 z-9999" :shrink="false" :current-label="currentLabel" />
 
     <!-- 主体内容区域 -->
-    <div ref="contentRef" class="flex-1 overflow-auto">
+    <div class="flex-1 overflow-auto">
       <!-- 视频展示区域 -->
-      <div ref="videoContainerRef" class="min-h-[calc(100vh-124px)] flex-center w-full h-full">
+      <div class="min-h-[calc(100vh-124px)] flex-center w-full h-full">
         <video
           ref="videoRef"
           :src="currentVideo"
@@ -28,19 +28,56 @@
     </div>
 
     <!-- 底部工具栏 -->
-    <div data-tauri-drag-region class="z-9999 h-50px bg-#000 flex justify-center items-center gap-30px">
+    <div data-tauri-drag-region class="z-9999 h-50px bg-#000 flex justify-center items-center gap-20px">
+      <!-- 上一个视频 -->
       <n-tooltip placement="top">
         <template #trigger>
-          <svg @click="playPause" class="size-24px cursor-pointer color-white"><use href="#play-pause"></use></svg>
+          <div
+            @click="previousVideo"
+            class="bottom-operation"
+            :class="canGoPrevious ? 'cursor-pointer hover:bg-gray-600/50' : 'cursor-not-allowed'">
+            <svg
+              class="size-20px rotate-180"
+              :class="canGoPrevious ? 'color-white' : 'color-gray-500 cursor-not-allowed'">
+              <use href="#right"></use>
+            </svg>
+          </div>
+        </template>
+        上一个视频
+      </n-tooltip>
+
+      <n-tooltip placement="top">
+        <template #trigger>
+          <div @click="playPause" class="bottom-operation">
+            <svg class="size-20px color-white">
+              <use :href="isPlaying ? '#pause-one' : '#play'"></use>
+            </svg>
+          </div>
         </template>
         {{ isPlaying ? '暂停' : '播放' }}
       </n-tooltip>
 
       <n-tooltip placement="top">
         <template #trigger>
-          <svg @click="muteUnmute" class="size-24px cursor-pointer color-white"><use href="#volume"></use></svg>
+          <div @click="muteUnmute" class="bottom-operation">
+            <svg class="size-20px color-white">
+              <use :href="isMuted ? '#volume-mute' : '#volume-notice'"></use>
+            </svg>
+          </div>
         </template>
         {{ isMuted ? '取消静音' : '静音' }}
+      </n-tooltip>
+
+      <!-- 下一个视频 -->
+      <n-tooltip placement="top">
+        <template #trigger>
+          <div @click="nextVideo" class="bottom-operation">
+            <svg class="size-20px" :class="canGoNext ? 'color-white' : 'color-gray-500 cursor-not-allowed'">
+              <use href="#right"></use>
+            </svg>
+          </div>
+        </template>
+        下一个视频
       </n-tooltip>
     </div>
   </div>
@@ -48,8 +85,8 @@
 
 <script setup lang="ts">
 import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { convertFileSrc } from '@tauri-apps/api/core'
 import ActionBar from '@/components/windows/ActionBar.vue'
-import { NTooltip } from 'naive-ui'
 import { useVideoViewer } from '@/stores/videoViewer.ts'
 import { useTauriListener } from '@/hooks/useTauriListener'
 
@@ -65,25 +102,50 @@ const currentIndex = ref(0)
 const isPlaying = ref(false)
 const isMuted = ref(false)
 const videoRef = ref<HTMLVideoElement>()
-const contentScrollbar = useTemplateRef<HTMLElement>('contentRef')
-const videoContainer = useTemplateRef<HTMLElement>('videoContainerRef')
 const showTip = ref(false)
 const tipText = ref('')
 
 // 当前显示的视频URL
 const currentVideo = computed(() => {
+  let videoUrl = ''
   if (videoViewerStore.isSingleMode) {
-    return videoViewerStore.singleVideo
+    videoUrl = videoViewerStore.singleVideo
+  } else {
+    videoUrl = videoList.value[currentIndex.value]
   }
-  return videoList.value[currentIndex.value]
+
+  // 如果是本地文件路径，使用 Tauri 的 convertFileSrc 来转换
+  if (videoUrl && !videoUrl.startsWith('http')) {
+    return convertFileSrc(videoUrl)
+  }
+  return videoUrl
+})
+
+// 是否可以切换到上一个视频
+const canGoPrevious = computed(() => {
+  if (videoViewerStore.isSingleMode) return false
+  return currentIndex.value > 0
+})
+
+// 是否可以切换到下一个视频
+const canGoNext = computed(() => {
+  if (videoViewerStore.isSingleMode) return false
+  return currentIndex.value < videoList.value.length - 1
 })
 
 // 播放/暂停视频
 const playPause = () => {
   if (videoRef.value) {
     if (videoRef.value.paused) {
-      videoRef.value.play()
-      isPlaying.value = true
+      videoRef.value
+        .play()
+        .then(() => {
+          isPlaying.value = true
+        })
+        .catch((error) => {
+          console.warn('视频播放失败:', error)
+          isPlaying.value = false
+        })
     } else {
       videoRef.value.pause()
       isPlaying.value = false
@@ -98,24 +160,75 @@ const muteUnmute = () => {
     isMuted.value = videoRef.value.muted
   }
 }
-// 检查是否有滚动条的函数
-const checkScrollbar = () => {
-  if (!videoContainer.value || !contentScrollbar.value || !videoRef.value) return
-
-  videoContainer.value.style.height = 'auto' // 先重置为auto以便正确计算
-  // 检查是否有滚动条
-  videoContainer.value.style.height =
-    contentScrollbar.value.scrollHeight > contentScrollbar.value.clientHeight ? 'auto' : '100%'
-}
 
 // 自动播放视频
 const onVideoLoaded = () => {
-  checkScrollbar()
   if (videoRef.value) {
-    videoRef.value.play().then(() => {
-      isPlaying.value = true
-    })
+    videoRef.value
+      .play()
+      .then(() => {
+        isPlaying.value = true
+      })
+      .catch((error) => {
+        console.warn('自动播放失败，可能需要用户交互:', error)
+        isPlaying.value = false
+      })
   }
+}
+
+// 切换到上一个视频
+const previousVideo = () => {
+  if (!canGoPrevious.value) return
+
+  currentIndex.value--
+  showVideoTip(`正在播放第 ${currentIndex.value + 1} 个视频`)
+
+  nextTick(() => {
+    if (videoRef.value) {
+      videoRef.value.load()
+      videoRef.value
+        .play()
+        .then(() => {
+          isPlaying.value = true
+        })
+        .catch((error) => {
+          console.warn('视频播放失败:', error)
+          isPlaying.value = false
+        })
+    }
+  })
+}
+
+// 切换到下一个视频
+const nextVideo = () => {
+  if (!canGoNext.value) return
+
+  currentIndex.value++
+  showVideoTip(`正在播放第 ${currentIndex.value + 1} 个视频`)
+
+  nextTick(() => {
+    if (videoRef.value) {
+      videoRef.value.load()
+      videoRef.value
+        .play()
+        .then(() => {
+          isPlaying.value = true
+        })
+        .catch((error) => {
+          console.warn('视频播放失败:', error)
+          isPlaying.value = false
+        })
+    }
+  })
+}
+
+// 显示提示信息
+const showVideoTip = (message: string) => {
+  tipText.value = message
+  showTip.value = true
+  setTimeout(() => {
+    showTip.value = false
+  }, 2000)
 }
 
 onMounted(async () => {
@@ -130,7 +243,10 @@ onMounted(async () => {
       nextTick(() => {
         if (videoRef.value) {
           videoRef.value.load()
-          videoRef.value.play()
+          videoRef.value.play().catch((error) => {
+            console.warn('视频播放失败:', error)
+            isPlaying.value = false
+          })
         }
       })
     })
@@ -150,6 +266,10 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.bottom-operation {
+  @apply flex-center px-8px py-7px rounded-8px cursor-pointer hover:bg-gray-600/50 transition-colors duration-300;
+}
+
 /* 自定义滚动条样式 */
 ::-webkit-scrollbar {
   width: 6px;

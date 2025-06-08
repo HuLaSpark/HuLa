@@ -1,5 +1,5 @@
 <template>
-  <div class="video-container" :style="containerStyle" @dblclick="handleOpenVideoViewer">
+  <div :style="containerStyle" @dblclick="handleOpenVideoViewer">
     <n-image
       v-if="body?.thumbUrl"
       class="select-none cursor-pointer video-thumbnail"
@@ -37,16 +37,49 @@
 
     <!-- 视频蒙层 -->
     <div class="video-overlay">
-      <!-- 播放按钮 -->
-      <div class="play-button cursor-pointer" @click="handleOpenVideoViewer" :class="{ loading: isOpening }">
-        <svg v-if="!isOpening" class="size-full color-white"><use href="#play"></use></svg>
-        <div v-else class="loading-spinner"></div>
+      <!-- 播放/下载按钮 -->
+      <div
+        class="play-button cursor-pointer"
+        @click="handlePlayButtonClick"
+        :class="{ loading: isOpening || isDownloading }">
+        <!-- 下载中显示进度 -->
+        <div v-if="isDownloading" class="download-progress">
+          <div class="progress-circle">
+            <svg class="progress-ring" width="44" height="44">
+              <circle
+                class="progress-ring-circle"
+                stroke="rgba(255,255,255,0.3)"
+                stroke-width="3"
+                fill="transparent"
+                r="18"
+                cx="22"
+                cy="22" />
+              <circle
+                class="progress-ring-circle progress-ring-fill"
+                stroke="white"
+                stroke-width="3"
+                fill="transparent"
+                r="18"
+                cx="22"
+                cy="22"
+                :stroke-dasharray="`${2 * Math.PI * 18}`"
+                :stroke-dashoffset="`${2 * Math.PI * 18 * (1 - process / 100)}`" />
+            </svg>
+            <svg class="download-icon"><use href="#arrow-down"></use></svg>
+          </div>
+        </div>
+        <!-- 打开中显示加载动画 -->
+        <div v-else-if="isOpening" class="loading-spinner"></div>
+        <!-- 未下载显示下载图标 -->
+        <svg v-else-if="!isVideoDownloaded" class="size-38px color-white"><use href="#download-one"></use></svg>
+        <!-- 已下载显示播放图标 -->
+        <svg v-else class="size-full color-white"><use href="#play"></use></svg>
       </div>
 
       <!-- 视频信息 -->
       <div class="video-info">
-        <div class="video-filename">{{ getVideoFilename() }}</div>
-        <div class="video-filesize">{{ formatFileSize(body?.size) }}</div>
+        <div class="video-filename">{{ getVideoFilenameEllipsis(body?.url) }}</div>
+        <div class="video-filesize">{{ formatBytes(body?.size) }}</div>
       </div>
 
       <!-- 加载提示 -->
@@ -63,8 +96,15 @@
 import type { VideoBody } from '@/services/types'
 import { MsgEnum } from '@/enums/index'
 import { useVideoViewer } from '@/hooks/useVideoViewer'
+import { useVideoViewer as useVideoViewerStore } from '@/stores/videoViewer'
+import { useDownload } from '@/hooks/useDownload'
+import { BaseDirectory } from '@tauri-apps/plugin-fs'
+import { join, resourceDir } from '@tauri-apps/api/path'
+import { formatBytes } from '@/utils/Formatting.ts'
 
-const { openVideoViewer } = useVideoViewer()
+const { openVideoViewer, getLocalVideoPath, checkVideoDownloaded, getVideoFilenameEllipsis } = useVideoViewer()
+const videoViewerStore = useVideoViewerStore()
+const { downloadFile, isDownloading, process } = useDownload()
 const props = defineProps<{ body: VideoBody }>()
 const MAX_WIDTH = 320
 const MAX_HEIGHT = 240
@@ -74,6 +114,8 @@ const MIN_HEIGHT = 60
 const isError = ref(false)
 // 视频打开状态
 const isOpening = ref(false)
+// 视频下载状态
+const isVideoDownloaded = ref(false)
 
 const imageStyle = computed(() => {
   // 如果有原始尺寸，使用原始尺寸计算
@@ -118,9 +160,56 @@ const containerStyle = computed(() => {
   return `width: ${style.width}; height: ${style.height}; position: relative; border-radius: 8px; overflow: hidden; cursor: pointer;`
 })
 
+// 监听视频URL变化，重新检查下载状态
+watch(
+  () => props.body?.url,
+  async () => {
+    if (props.body?.url) {
+      isVideoDownloaded.value = await checkVideoDownloaded(props.body?.url)
+    }
+  },
+  { immediate: true }
+)
+
 // 处理图片加载错误
 const handleImageError = () => {
   isError.value = true
+}
+
+// 下载视频
+const downloadVideo = async () => {
+  if (!props.body?.url || isDownloading.value) return
+
+  try {
+    const localPath = await getLocalVideoPath(props.body?.url)
+    if (localPath) {
+      await downloadFile(props.body.url, localPath, BaseDirectory.Resource)
+      isVideoDownloaded.value = await checkVideoDownloaded(props.body.url)
+
+      // 下载完成后，更新videoViewer store中的视频路径
+      if (isVideoDownloaded.value) {
+        const resourceDirPath = await resourceDir()
+        const path = await join(resourceDirPath, localPath)
+        videoViewerStore.updateVideoPath(props.body.url, path)
+      }
+    }
+  } catch (error) {
+    console.error('下载视频失败:', error)
+  }
+}
+
+// 处理播放按钮点击
+const handlePlayButtonClick = async () => {
+  if (!props.body?.url) return
+
+  // 如果视频未下载，先下载
+  if (!isVideoDownloaded.value) {
+    await downloadVideo()
+    return
+  }
+
+  // 如果已下载，直接播放
+  await handleOpenVideoViewer()
 }
 
 // 处理打开视频查看器
@@ -128,13 +217,18 @@ const handleOpenVideoViewer = async () => {
   if (props.body?.url && !isOpening.value) {
     try {
       isOpening.value = true
-      await openVideoViewer(props.body.url, [MsgEnum.VIDEO])
+      // 如果视频已下载，使用本地绝对路径，否则使用原始URL
+      let videoUrl = props.body.url
+      if (isVideoDownloaded.value) {
+        const localPath = await getLocalVideoPath(props.body?.url)
+        const resourceDirPath = await resourceDir()
+        videoUrl = await join(resourceDirPath, localPath)
+      }
+      await openVideoViewer(videoUrl, [MsgEnum.VIDEO])
     } catch (error) {
       console.error('打开视频失败:', error)
     } finally {
-      setTimeout(() => {
-        isOpening.value = false
-      }, 1000)
+      isOpening.value = false
     }
   }
 }
@@ -151,49 +245,14 @@ const preloadVideoMetadata = () => {
   }
 }
 
-// 格式化文件大小
-const formatFileSize = (size?: number) => {
-  if (!size) return '未知大小'
-
-  const units = ['B', 'KB', 'MB', 'GB']
-  let index = 0
-  let fileSize = size
-
-  while (fileSize >= 1024 && index < units.length - 1) {
-    fileSize /= 1024
-    index++
-  }
-
-  return `${fileSize.toFixed(1)} ${units[index]}`
-}
-
-// 获取视频文件名
-const getVideoFilename = () => {
-  if (props.body?.filename) {
-    return props.body.filename
-  }
-  if (props.body?.url) {
-    // 从URL中提取文件名
-    const urlParts = props.body.url.split('/')
-    const filename = urlParts[urlParts.length - 1]
-    if (filename && filename.includes('.')) {
-      return filename
-    }
-  }
-  return '视频文件'
-}
-
-onMounted(() => {
+onMounted(async () => {
   setTimeout(preloadVideoMetadata, 500)
+  // 检查视频是否已下载
+  isVideoDownloaded.value = await checkVideoDownloaded(props.body?.url)
 })
 </script>
 
 <style scoped>
-.video-container {
-  position: relative;
-  display: inline-block;
-}
-
 .video-thumbnail {
   width: 100%;
   height: 100%;
@@ -253,6 +312,40 @@ onMounted(() => {
   border-top: 2px solid white;
   border-radius: 50%;
   animation: spin 1s linear infinite;
+}
+
+.download-progress {
+  position: relative;
+  width: 44px;
+  height: 44px;
+}
+
+.progress-circle {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: rotate(-90deg);
+}
+
+.progress-ring-circle {
+  transition: stroke-dashoffset 0.3s ease;
+}
+
+.download-icon {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  color: white;
+  z-index: 1;
 }
 
 @keyframes spin {

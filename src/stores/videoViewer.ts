@@ -68,6 +68,27 @@ export const useVideoViewer = defineStore(
       isSingleVideoMode.value = true
     }
 
+    // 更新视频列表中的特定视频路径（用于下载完成后更新为本地路径）
+    const updateVideoPath = (originalUrl: string, newPath: string) => {
+      const index = videoList.value.findIndex((url) => url === originalUrl)
+      if (index !== -1) {
+        videoList.value[index] = newPath
+      }
+      // 如果当前单视频模式的视频是被更新的视频，也要更新
+      if (singleVideo.value === originalUrl) {
+        singleVideo.value = newPath
+      }
+    }
+
+    // 批量更新视频路径（用于批量处理本地路径）
+    const updateVideoListPaths = (pathMapping: Record<string, string>) => {
+      videoList.value = videoList.value.map((url) => pathMapping[url] || url)
+      // 更新单视频模式的路径
+      if (singleVideo.value && pathMapping[singleVideo.value]) {
+        singleVideo.value = pathMapping[singleVideo.value]
+      }
+    }
+
     return {
       imageList,
       currentIndex,
@@ -80,7 +101,9 @@ export const useVideoViewer = defineStore(
       resetVideoListOptimized,
       singleVideo,
       isSingleVideoMode,
-      setSingleVideoOptimized
+      setSingleVideoOptimized,
+      updateVideoPath,
+      updateVideoListPaths
     }
   },
   {

@@ -10,7 +10,7 @@ import { useChatStore } from '@/stores/chat.ts'
 import { useMessage } from '@/hooks/useMessage.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { BaseDirectory, create, exists, mkdir } from '@tauri-apps/plugin-fs'
-import { getPathCache } from '@/utils/PathUtil.ts'
+import { getImageCache } from '@/utils/PathUtil.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import DOMPurify from 'dompurify'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
@@ -24,8 +24,10 @@ const domParser = new DOMParser()
 const REPLY_NODE_ID = 'replyDiv'
 
 const saveCacheFile = async (file: any, subFolder: string, dom: HTMLElement, id: string) => {
+  const { userUid } = useCommon()
+  // TODO: 这里需要获取到需要发送的图片、文件的本地地址，如果不是本地地址，就需要先下载到本地cache文件夹里面
   const fileName = file.name === null ? 'test.png' : file.name
-  const tempPath = getPathCache(subFolder)
+  const tempPath = getImageCache(subFolder, userUid.value!)
   const fullPath = tempPath + fileName
   const cacheReader = new FileReader()
   cacheReader.onload = async (e: any) => {

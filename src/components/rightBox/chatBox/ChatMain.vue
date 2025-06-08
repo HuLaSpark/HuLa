@@ -163,7 +163,7 @@
               </svg>
               <!-- 头像 -->
               <n-popover
-                :ref="(el) => (infoPopoverRefs[item.message.id] = el)"
+                :ref="(el: any) => (infoPopoverRefs[item.message.id] = el)"
                 @update:show="handlePopoverUpdate(item.message.id, $event)"
                 trigger="click"
                 placement="right"
