@@ -138,18 +138,12 @@ export const createFileOrVideoDom = (file: File) => {
             video.style.cssText = imgStyle
             video.width = actualWidth
             video.height = actualHeight
+            video.onloadeddata = () => resolve(video)
+            video.onerror = reject
           } catch (error) {
             reject(error)
             window.$message.error('视频处理失败: ' + error)
           }
-          // // 点击事件处理
-          // video.addEventListener('click', (e) => {
-          //   e.stopPropagation();
-          //   // 可以在这里添加播放/暂停逻辑
-          // });
-
-          video.onloadeddata = () => resolve(video)
-          video.onerror = reject
         } else {
           // 创建Image DOM元素并指定src为canvas的data url
           const img = new Image()
