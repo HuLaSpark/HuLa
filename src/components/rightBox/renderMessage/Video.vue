@@ -71,7 +71,7 @@
         <!-- 打开中显示加载动画 -->
         <div v-else-if="isOpening" class="loading-spinner"></div>
         <!-- 未下载显示下载图标 -->
-        <svg v-else-if="!isVideoDownloaded" class="size-38px color-white"><use href="#download-one"></use></svg>
+        <svg v-else-if="!isVideoDownloaded" class="size-32px color-white"><use href="#Importing"></use></svg>
         <!-- 已下载显示播放图标 -->
         <svg v-else class="size-full color-white"><use href="#play"></use></svg>
       </div>
@@ -106,8 +106,8 @@ const { openVideoViewer, getLocalVideoPath, checkVideoDownloaded, getVideoFilena
 const videoViewerStore = useVideoViewerStore()
 const { downloadFile, isDownloading, process } = useDownload()
 const props = defineProps<{ body: VideoBody }>()
-const MAX_WIDTH = 320
-const MAX_HEIGHT = 240
+const MAX_WIDTH = 300
+const MAX_HEIGHT = 150
 const MIN_WIDTH = 60
 const MIN_HEIGHT = 60
 // 错误状态控制

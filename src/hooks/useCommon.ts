@@ -785,9 +785,7 @@ export const useCommon = () => {
       triggerInputEvent(dom)
     })
     saveCacheFile(file, 'video', dom, 'temp-video')
-    nextTick(() => {
-      reader.readAsDataURL(file)
-    })
+    reader.readAsDataURL(file)
   }
 
   /**
