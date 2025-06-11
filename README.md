@@ -39,7 +39,18 @@
   ☕️ 服务端：<a href="https://github.com/HulaSpark/HuLa-Server">github HuLa-Server</a> | <a href="https://gitee.com/HulaSpark/HuLa-Server">gitee HuLa-Server</a>
 </p>
 
-<p align="center"><a href="README.en.md">English</a> | 中文</p>
+<p align="center">
+  中文 | 
+  <a href="README.en.md">English</a> | 
+  <!-- Keep these links. Translations will automatically update with the README. -->
+  <a href="https://www.readme-i18n.com/HuLaSpark/HuLa?lang=de">Deutsch</a> | 
+  <a href="https://www.readme-i18n.com/HuLaSpark/HuLa?lang=es">Español</a> | 
+  <a href="https://www.readme-i18n.com/HuLaSpark/HuLa?lang=fr">français</a> | 
+  <a href="https://www.readme-i18n.com/HuLaSpark/HuLa?lang=ja">日本語</a> | 
+  <a href="https://www.readme-i18n.com/HuLaSpark/HuLa?lang=ko">한국어</a> | 
+  <a href="https://www.readme-i18n.com/HuLaSpark/HuLa?lang=pt">Português</a> | 
+  <a href="https://www.readme-i18n.com/HuLaSpark/HuLa?lang=ru">Русский</a>
+</p>
 
 ## 🌐 支持平台
 
