@@ -19,7 +19,16 @@ const createUserVideosDir = async (): Promise<void> => {
 
 const getUserVideosDir = async (userUid: string, roomId: string): Promise<string> => {
   await createUserVideosDir()
-  return await join('user-videos', userUid, roomId)
+  // 确保用户ID和房间ID的子目录也存在
+  const userRoomDir = await join('user-videos', userUid, roomId)
+  const userRoomDirExists = await exists(userRoomDir, { baseDir: BaseDirectory.Resource })
+  if (!userRoomDirExists) {
+    await mkdir(userRoomDir, {
+      baseDir: BaseDirectory.Resource,
+      recursive: true
+    })
+  }
+  return userRoomDir
 }
 
 const getImageCache = (subFolder: string, userUid: string): string => {
