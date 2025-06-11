@@ -33,6 +33,9 @@ let clientId: null | string = null
 
 let serverUrl: null | string = null
 
+// 标识是否曾经成功连接过，用于区分首次连接和重连
+let hasEverConnected = false
+
 // 心跳状态
 let heartbeatActive = false
 
@@ -193,9 +196,15 @@ const sendSingleHeartbeat = () => {
 }
 
 // 更新连接状态
-const updateConnectionState = (newState: ConnectionState) => {
+const updateConnectionState = (newState: ConnectionState, isReconnection?: boolean) => {
   connectionState = newState
-  postMsg({ type: 'connectionStateChange', value: { state: connectionState } })
+  postMsg({
+    type: 'connectionStateChange',
+    value: {
+      state: connectionState,
+      isReconnection: isReconnection || false
+    }
+  })
 }
 
 // 清除心跳定时器
@@ -309,13 +318,19 @@ const onConnectClose = () => {
 }
 // ws 连接成功
 const onConnectOpen = () => {
-  console.log('✅ WebSocket 连接成功')
+  console.log('🔌 WebSocket 连接成功')
   // 重置心跳相关状态
   consecutiveHeartbeatFailures = 0
   lastPongTime = null
   lastPingSent = null
 
-  updateConnectionState(ConnectionState.CONNECTED)
+  // 判断是否为重连（在设置hasEverConnected之前）
+  const isReconnection = hasEverConnected
+
+  // 标记已经成功连接过
+  hasEverConnected = true
+
+  updateConnectionState(ConnectionState.CONNECTED, isReconnection)
   postMsg({ type: WorkerMsgEnum.OPEN })
 
   // 连接成功后立即发送一次心跳
@@ -411,6 +426,7 @@ const stopAllHeartbeat = () => {
 const resetReconnection = () => {
   reconnectCount = 0
   lockReconnect = false
+  hasEverConnected = false
   console.log('重置重连计数和状态')
 }
 

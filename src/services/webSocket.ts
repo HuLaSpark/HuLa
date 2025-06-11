@@ -76,9 +76,6 @@ class WS {
 
   #tauriListener: ReturnType<typeof useTauriListener> | null = null
 
-  // 存储前一个连接状态，用于检测重连成功
-  #previousConnectionState = ConnectionState.DISCONNECTED
-
   // 存储连接健康状态信息
   #connectionHealth = {
     isHealthy: true,
@@ -351,11 +348,10 @@ class WS {
         break
       }
       case 'connectionStateChange': {
-        const { state } = params.value as { state: ConnectionState }
+        const { state, isReconnection } = params.value as { state: ConnectionState; isReconnection: boolean }
 
-        // 检测重连成功: 从RECONNECTING状态变为CONNECTED状态
-        // TODO 重连的时候没有执行这里
-        if (this.#previousConnectionState === ConnectionState.RECONNECTING && state === ConnectionState.CONNECTED) {
+        // 检测重连成功
+        if (isReconnection && state === ConnectionState.CONNECTED) {
           console.log('🔄 WebSocket 重连成功')
           // 网络重连成功后刷新数据
           if (isMainWindow && this.#networkReconnect) {
@@ -365,10 +361,9 @@ class WS {
             // 如果还没初始化，延迟初始化后再刷新
             this.initNetworkReconnect()
           }
+        } else if (!isReconnection && state === ConnectionState.CONNECTED) {
+          console.log('✅ WebSocket 首次连接成功')
         }
-
-        // 更新前一状态
-        this.#previousConnectionState = state
         break
       }
       // 处理心跳响应
