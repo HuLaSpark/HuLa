@@ -234,19 +234,19 @@ const handleOpenVideoViewer = async () => {
 }
 
 // 预加载视频元数据
-const preloadVideoMetadata = () => {
-  if (props.body?.url) {
-    const video = document.createElement('video')
-    video.preload = 'metadata'
-    video.src = props.body.url
-    video.muted = true
-    // 静默预加载，不阻塞UI
-    video.load()
-  }
-}
+// const preloadVideoMetadata = () => {
+//   if (props.body?.url) {
+//     const video = document.createElement('video')
+//     video.preload = 'metadata'
+//     video.src = props.body.url
+//     video.muted = true
+//     // 静默预加载，不阻塞UI
+//     video.load()
+//   }
+// }
 
 onMounted(async () => {
-  setTimeout(preloadVideoMetadata, 500)
+  // setTimeout(preloadVideoMetadata, 500)
   // 检查视频是否已下载
   isVideoDownloaded.value = await checkVideoDownloaded(props.body?.url)
 })
