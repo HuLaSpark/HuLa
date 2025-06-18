@@ -23,10 +23,14 @@ export const useDownload = () => {
       }
 
       const response = await fetch(url)
-      if (!response.ok) throw new Error('下载失败')
+      if (!response.ok) {
+        return window.$message.error('下载失败')
+      }
 
       const reader = response.body?.getReader()
-      if (!reader) throw new Error('无法读取响应内容')
+      if (!reader) {
+        return window.$message.error('无法读取响应内容')
+      }
 
       const contentLength = Number(response.headers.get('Content-Length')) || 0
       const chunks: Uint8Array[] = []
@@ -54,11 +58,10 @@ export const useDownload = () => {
 
       await writeFile(savePath, allChunks, { baseDir })
       trigger('success')
-      window.$message.success('视频下载成功')
     } catch (error) {
       console.error('下载失败:', error)
-      window.$message.error('视频下载失败')
       trigger('fail')
+      throw error
     } finally {
       isDownloading.value = false
       process.value = 0

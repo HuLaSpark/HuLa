@@ -13,6 +13,9 @@
           controls
           class="w-full h-full object-cover"
           @loadeddata="onVideoLoaded"
+          @ended="onVideoEnded"
+          @pause="onVideoPaused"
+          @play="onVideoPlay"
           alt="preview" />
 
         <!-- 提示文本 -->
@@ -174,6 +177,21 @@ const onVideoLoaded = () => {
         isPlaying.value = false
       })
   }
+}
+
+// 视频播放结束事件
+const onVideoEnded = () => {
+  isPlaying.value = false
+}
+
+// 视频暂停事件
+const onVideoPaused = () => {
+  isPlaying.value = false
+}
+
+// 视频播放事件
+const onVideoPlay = () => {
+  isPlaying.value = true
 }
 
 // 切换到上一个视频
