@@ -367,7 +367,7 @@ export const useUpload = () => {
   }
 
   /**
-   * 获取视频第一帧
+   * 获取视频第十帧
    */
   const getVideoCover = async (file: File, scene: UploadSceneEnum) => {
     return new Promise((resolve, reject) => {

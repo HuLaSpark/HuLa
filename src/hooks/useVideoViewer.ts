@@ -114,29 +114,6 @@ export const useVideoViewer = () => {
     }
   }
 
-  // 异步加载视频元数据
-  const loadVideoMetaData = async (url: string) => {
-    try {
-      const video = document.createElement('video')
-      video.muted = true
-      video.preload = 'metadata'
-      video.src = url
-
-      await new Promise((resolve, reject) => {
-        video.onloadedmetadata = resolve
-        video.onerror = reject
-        setTimeout(() => reject(new Error('元数据加载超时')), 3000)
-      })
-
-      return {
-        width: video.videoWidth || 800,
-        height: video.videoHeight || 600
-      }
-    } catch {
-      return { width: 800, height: 600 }
-    }
-  }
-
   /**
    * 视频加载处理
    * @param url 视频链接
@@ -179,12 +156,7 @@ export const useVideoViewer = () => {
       return
     }
 
-    // 获取当前视频URL（已处理为本地路径或原始URL）
-    const currentVideoUrl = processedList[finalIndex]
     await createWebviewWindow('视频查看器', 'videoViewer', 800, 600, '', true, 800, 600)
-
-    // 后台异步加载视频元数据以优化尺寸（不阻塞窗口创建）
-    await loadVideoMetaData(currentVideoUrl)
   }
 
   return {

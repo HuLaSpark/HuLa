@@ -4,7 +4,7 @@ import { AppException } from '@/common/exception.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { Ref } from 'vue'
 import { parseInnerText, useCommon } from '@/hooks/useCommon.ts'
-import { BaseDirectory, readFile } from '@tauri-apps/plugin-fs'
+import { BaseDirectory, readFile, writeFile, remove } from '@tauri-apps/plugin-fs'
 import DOMPurify from 'dompurify'
 import { UploadOptions, UploadProviderEnum, useUpload } from '@/hooks/useUpload'
 import { getImageDimensions } from '@/utils/imageUtils'
@@ -18,6 +18,11 @@ interface MessageStrategy {
     options?: { provider?: UploadProviderEnum }
   ) => Promise<{ uploadUrl: string; downloadUrl: string; config?: any }>
   doUpload: (path: string, uploadUrl: string, options?: any) => Promise<{ qiniuUrl?: string } | void>
+  uploadThumbnail?: (
+    thumbnailFile: File,
+    options?: { provider?: UploadProviderEnum }
+  ) => Promise<{ uploadUrl: string; downloadUrl: string; config?: any }>
+  doUploadThumbnail?: (thumbnailFile: File, uploadUrl: string, options?: any) => Promise<{ qiniuUrl?: string } | void>
 }
 
 /**
@@ -554,7 +559,70 @@ class VideoMessageStrategyImpl extends AbstractMessageStrategy {
   }
 
   /**
-   * 获取视频缩略图（第一帧）
+   * 压缩缩略图
+   * @param file 原始缩略图文件
+   * @param maxWidth 最大宽度，默认300px
+   * @param maxHeight 最大高度，默认300px
+   * @param quality 压缩质量，默认0.7
+   */
+  private async compressThumbnail(
+    file: File,
+    maxWidth: number = 300,
+    maxHeight: number = 300,
+    quality: number = 0.7
+  ): Promise<File> {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')!
+
+      img.onload = () => {
+        // 计算压缩后的尺寸
+        let { width, height } = img
+
+        // 按比例缩放
+        if (width > height) {
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width
+            width = maxWidth
+          }
+        } else {
+          if (height > maxHeight) {
+            width = (width * maxHeight) / height
+            height = maxHeight
+          }
+        }
+
+        canvas.width = width
+        canvas.height = height
+
+        // 绘制压缩后的图片
+        ctx.drawImage(img, 0, 0, width, height)
+
+        // 转换为压缩后的文件
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(new File([blob], file.name, { type: 'image/jpeg' }))
+            } else {
+              reject(new AppException('缩略图压缩失败'))
+            }
+          },
+          'image/jpeg',
+          quality
+        )
+      }
+
+      img.onerror = () => {
+        reject(new AppException('缩略图加载失败'))
+      }
+
+      img.src = URL.createObjectURL(file)
+    })
+  }
+
+  /**
+   * 获取视频缩略图（第十帧）
    * @param file 视频文件
    */
   private async getVideoThumbnail(file: File): Promise<File> {
@@ -562,8 +630,18 @@ class VideoMessageStrategyImpl extends AbstractMessageStrategy {
       const video = document.createElement('video')
       const canvas = document.createElement('canvas')
       video.src = URL.createObjectURL(file)
+      video.addEventListener('loadedmetadata', () => {
+        // 计算第十帧的时间点（假设视频帧率为30fps）
+        const frameRate = 30
+        const targetFrame = 10
+        const targetTime = targetFrame / frameRate
 
-      video.addEventListener('loadeddata', () => {
+        // 确保不超过视频总时长
+        const seekTime = Math.min(targetTime, video.duration - 0.1)
+        video.currentTime = seekTime
+      })
+
+      video.addEventListener('seeked', async () => {
         canvas.width = video.videoWidth
         canvas.height = video.videoHeight
         const ctx = canvas.getContext('2d')!
@@ -571,10 +649,17 @@ class VideoMessageStrategyImpl extends AbstractMessageStrategy {
 
         // 将canvas转换为Blob然后创建File对象
         canvas.toBlob(
-          (blob) => {
+          async (blob) => {
             URL.revokeObjectURL(video.src) // 释放内存
             if (blob) {
-              resolve(new File([blob], 'thumbnail.jpg', { type: 'image/jpeg' }))
+              try {
+                const originalThumbnail = new File([blob], 'thumbnail.jpg', { type: 'image/jpeg' })
+                // 压缩缩略图
+                const compressedThumbnail = await this.compressThumbnail(originalThumbnail)
+                resolve(compressedThumbnail)
+              } catch (error) {
+                reject(error)
+              }
             } else {
               reject(new AppException('无法生成视频缩略图'))
             }
@@ -689,11 +774,96 @@ class VideoMessageStrategyImpl extends AbstractMessageStrategy {
     }
   }
 
+  /**
+   * 上传缩略图文件
+   * @param thumbnailFile 缩略图文件
+   * @param options 上传选项
+   * @returns 上传结果
+   */
+  async uploadThumbnail(
+    thumbnailFile: File,
+    options?: { provider?: UploadProviderEnum }
+  ): Promise<{ uploadUrl: string; downloadUrl: string; config?: any }> {
+    try {
+      // 创建临时文件路径用于上传
+      const tempPath = `temp-thumbnail-${Date.now()}-${thumbnailFile.name}`
+
+      const uploadOptions: UploadOptions = {
+        provider: options?.provider || UploadProviderEnum.QINIU,
+        scene: UploadSceneEnum.CHAT,
+        enableDeduplication: true // 启用去重，使用哈希值计算
+      }
+
+      // 使用现有的getUploadAndDownloadUrl方法
+      const result = await this.uploadHook.getUploadAndDownloadUrl(tempPath, uploadOptions)
+      return result
+    } catch (error) {
+      console.error('获取缩略图上传链接失败:', error)
+      throw new AppException('获取缩略图上传链接失败，请重试')
+    }
+  }
+
+  /**
+   * 执行缩略图上传
+   * @param thumbnailFile 缩略图文件
+   * @param uploadUrl 上传URL
+   * @param options 上传选项
+   * @returns 上传结果
+   */
+  async doUploadThumbnail(
+    thumbnailFile: File,
+    uploadUrl: string,
+    options?: any
+  ): Promise<{ qiniuUrl?: string } | void> {
+    try {
+      // 将File对象写入临时文件，然后使用现有的doUpload方法
+      const tempPath = `temp-thumbnail-${Date.now()}-${thumbnailFile.name}`
+
+      // 将File对象转换为ArrayBuffer，然后写入临时文件
+      const arrayBuffer = await thumbnailFile.arrayBuffer()
+      const uint8Array = new Uint8Array(arrayBuffer)
+
+      // 写入临时文件
+      await writeFile(tempPath, uint8Array, { baseDir: BaseDirectory.AppCache })
+
+      // enableDeduplication启用文件去重，使用哈希值计算
+      const result = await this.uploadHook.doUpload(tempPath, uploadUrl, { ...options, enableDeduplication: true })
+
+      // 清理临时文件
+      try {
+        await remove(tempPath, { baseDir: BaseDirectory.AppCache })
+      } catch (cleanupError) {
+        console.warn('清理临时文件失败:', cleanupError)
+      }
+
+      // 如果是七牛云上传，返回qiniuUrl
+      if (options?.provider === UploadProviderEnum.QINIU) {
+        return { qiniuUrl: result as string }
+      }
+    } catch (error) {
+      console.error('缩略图上传失败:', error)
+      if (error instanceof AppException) {
+        throw error
+      }
+      throw new AppException('缩略图上传失败，请重试')
+    }
+  }
+
   buildMessageBody(msg: any, reply: any): any {
+    // 为缩略图创建本地预览URL
+    let thumbUrl = ''
+    if (msg.thumbnail instanceof File) {
+      thumbUrl = URL.createObjectURL(msg.thumbnail)
+    }
+
     return {
       url: msg.url,
       path: msg.path,
       thumbnail: msg.thumbnail,
+      thumbUrl: thumbUrl, // 本地预览URL，上传完成后会被替换为服务器URL
+      thumbSize: msg.thumbnail?.size || 0,
+      thumbWidth: 300,
+      thumbHeight: 150,
       size: msg.size,
       duration: msg.duration,
       replyMsgId: msg.reply?.key || void 0,

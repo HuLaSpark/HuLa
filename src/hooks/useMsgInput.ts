@@ -386,15 +386,35 @@ export const useMsgInput = (messageInputDom: Ref) => {
         })
         console.log(`${msg.type === MsgEnum.EMOJI ? '表情包' : '图片'}上传完成,更新为服务器URL:`, messageBody.url)
       } else if (msg.type === MsgEnum.VIDEO) {
-        const uploadResult = await useUpload()
-          .uploadFile(msg.thumbnail, {
-            provider: UploadProviderEnum.QINIU,
-            scene: UploadSceneEnum.CHAT
+        console.log('开始处理视频消息上传')
+
+        // 先上传缩略图（使用去重功能）
+        let uploadResult: string
+        if (messageStrategy.uploadThumbnail && messageStrategy.doUploadThumbnail) {
+          const thumbnailUploadInfo = await messageStrategy.uploadThumbnail(msg.thumbnail, {
+            provider: UploadProviderEnum.QINIU
           })
-          .then((UploadResult) => {
-            return UploadResult.downloadUrl
-          })
-        console.log('开始处理视频消息上传', uploadResult)
+          const thumbnailUploadResult = await messageStrategy.doUploadThumbnail(
+            msg.thumbnail,
+            thumbnailUploadInfo.uploadUrl,
+            thumbnailUploadInfo.config
+          )
+          uploadResult =
+            thumbnailUploadInfo.config?.provider === UploadProviderEnum.QINIU
+              ? thumbnailUploadResult?.qiniuUrl || thumbnailUploadInfo.downloadUrl
+              : thumbnailUploadInfo.downloadUrl
+        } else {
+          uploadResult = await useUpload()
+            .uploadFile(msg.thumbnail, {
+              provider: UploadProviderEnum.QINIU,
+              scene: UploadSceneEnum.CHAT
+            })
+            .then((UploadResult) => {
+              return UploadResult.downloadUrl
+            })
+        }
+
+        // 再上传视频文件
         const { uploadUrl, downloadUrl, config } = await messageStrategy.uploadFile(msg.path, {
           provider: UploadProviderEnum.QINIU
         })
@@ -406,6 +426,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
         messageBody.thumbSize = msg.thumbnail.size
         messageBody.thumbWidth = 300
         messageBody.thumbHeight = 150
+
         // 更新临时消息的URL
         chatStore.updateMsg({
           msgId: tempMsgId,
@@ -414,7 +435,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
           },
           status: MessageStatusEnum.SENDING
         })
-        console.log(`${msg.type === MsgEnum.VIDEO}上传完成,更新为服务器URL:`, messageBody.url)
+        console.log('视频上传完成,更新为服务器URL:', messageBody.url)
       }
       console.log('发送消息到服务器 ===>>> ', {
         roomId: globalStore.currentSession.roomId,
@@ -449,6 +470,11 @@ export const useMsgInput = (messageInputDom: Ref) => {
       if ((msg.type === MsgEnum.IMAGE || msg.type === MsgEnum.EMOJI) && msg.url.startsWith('blob:')) {
         URL.revokeObjectURL(msg.url)
       }
+
+      // 释放视频缩略图的本地预览URL
+      if (msg.type === MsgEnum.VIDEO && messageBody.thumbUrl && messageBody.thumbUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(messageBody.thumbUrl)
+      }
     } catch (error) {
       console.error('消息发送失败:', error)
       clearTimeout(statusTimer)
@@ -456,6 +482,16 @@ export const useMsgInput = (messageInputDom: Ref) => {
         msgId: tempMsgId,
         status: MessageStatusEnum.FAILED
       })
+
+      // 释放预览URL
+      if ((msg.type === MsgEnum.IMAGE || msg.type === MsgEnum.EMOJI) && msg.url.startsWith('blob:')) {
+        URL.revokeObjectURL(msg.url)
+      }
+
+      // 释放视频缩略图的本地预览URL
+      if (msg.type === MsgEnum.VIDEO && messageBody.thumbUrl && messageBody.thumbUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(messageBody.thumbUrl)
+      }
     }
   }
 
@@ -693,7 +729,11 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
         // 步骤3: 处理回复内容
         // 回复前把包含&nbsp;的字符替换成空格
-        let content = event.message.body.content || event.message.body.url
+        let content =
+          event.message.body.content ||
+          (event.message.type === MsgEnum.VIDEO
+            ? event.message.body.thumbUrl || event.message.body.url
+            : event.message.body.url)
         if (content && typeof content === 'string') {
           content = content.replace(/&nbsp;/g, ' ')
         } else if (Array.isArray(content)) {

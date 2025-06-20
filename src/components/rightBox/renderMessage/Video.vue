@@ -94,13 +94,14 @@
 
 <script setup lang="ts">
 import type { VideoBody } from '@/services/types'
-import { MsgEnum } from '@/enums/index'
+import { MsgEnum, MittEnum } from '@/enums/index'
 import { useVideoViewer } from '@/hooks/useVideoViewer'
 import { useVideoViewer as useVideoViewerStore } from '@/stores/videoViewer'
 import { useDownload } from '@/hooks/useDownload'
 import { BaseDirectory } from '@tauri-apps/plugin-fs'
 import { join, resourceDir } from '@tauri-apps/api/path'
 import { formatBytes } from '@/utils/Formatting.ts'
+import { useMitt } from '@/hooks/useMitt'
 
 const { openVideoViewer, getLocalVideoPath, checkVideoDownloaded, getVideoFilenameEllipsis } = useVideoViewer()
 const videoViewerStore = useVideoViewerStore()
@@ -217,13 +218,29 @@ const handleOpenVideoViewer = async () => {
   if (props.body?.url && !isOpening.value) {
     try {
       isOpening.value = true
-      // 如果视频已下载，使用本地绝对路径，否则使用原始URL
-      let videoUrl = props.body.url
-      if (isVideoDownloaded.value) {
-        const localPath = await getLocalVideoPath(props.body?.url)
-        const resourceDirPath = await resourceDir()
-        videoUrl = await join(resourceDirPath, localPath)
+
+      // 检查视频是否已下载
+      const isDownloaded = await checkVideoDownloaded(props.body.url)
+      isVideoDownloaded.value = isDownloaded
+
+      // 如果视频未下载，先下载
+      if (!isDownloaded) {
+        await downloadVideo()
+        // 下载完成后重新检查状态
+        isVideoDownloaded.value = await checkVideoDownloaded(props.body.url)
+
+        // 如果下载失败，不继续打开视频
+        if (!isVideoDownloaded.value) {
+          console.error('视频下载失败，无法打开')
+          return
+        }
       }
+
+      // 使用本地绝对路径打开视频
+      const localPath = await getLocalVideoPath(props.body.url)
+      const resourceDirPath = await resourceDir()
+      const videoUrl = await join(resourceDirPath, localPath)
+
       await openVideoViewer(videoUrl, [MsgEnum.VIDEO])
     } catch (error) {
       console.error('打开视频失败:', error)
@@ -245,10 +262,20 @@ const handleOpenVideoViewer = async () => {
 //   }
 // }
 
+// 监听视频下载状态更新事件
+const handleVideoDownloadStatusUpdate = (data: { url: string; downloaded: boolean }) => {
+  if (data.url === props.body?.url) {
+    isVideoDownloaded.value = data.downloaded
+  }
+}
+
 onMounted(async () => {
   // setTimeout(preloadVideoMetadata, 500)
   // 检查视频是否已下载
   isVideoDownloaded.value = await checkVideoDownloaded(props.body?.url)
+
+  // 监听视频下载状态更新事件
+  useMitt.on(MittEnum.VIDEO_DOWNLOAD_STATUS_UPDATED, handleVideoDownloadStatusUpdate)
 })
 </script>
 

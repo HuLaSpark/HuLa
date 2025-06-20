@@ -27,7 +27,7 @@ import { useVideoViewer } from '@/hooks/useVideoViewer'
 export const useChatMain = () => {
   const { removeTag, openMsgSession, userUid } = useCommon()
   const { createWebviewWindow } = useWindow()
-  const { openVideoViewer, getLocalVideoPath, checkVideoDownloaded } = useVideoViewer()
+  const { getLocalVideoPath, checkVideoDownloaded } = useVideoViewer()
   const settingStore = useSettingStore()
   const { chat } = storeToRefs(settingStore)
   const globalStore = useGlobalStore()
@@ -131,18 +131,6 @@ export const useChatMain = () => {
     },
     ...commonMenuList.value,
     {
-      label: '预览',
-      icon: 'play',
-      click: async (item: MessageType) => {
-        try {
-          await openVideoViewer(item.message.body.url, [MsgEnum.VIDEO])
-        } catch (error) {
-          console.error('预览视频失败:', error)
-          window.$message.error('预览视频失败')
-        }
-      }
-    },
-    {
       label: '另存为',
       icon: 'Importing',
       click: async (item: MessageType) => {
@@ -182,6 +170,8 @@ export const useChatMain = () => {
           if (!isDownloaded) {
             // 如果未下载，先下载视频
             await downloadFile(item.message.body.url, localPath, BaseDirectory.Resource)
+            // 通知相关组件更新视频下载状态
+            useMitt.emit(MittEnum.VIDEO_DOWNLOAD_STATUS_UPDATED, { url: item.message.body.url, downloaded: true })
           }
 
           // 获取视频的绝对路径
