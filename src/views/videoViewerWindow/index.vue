@@ -89,6 +89,8 @@
 <script setup lang="ts">
 import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { convertFileSrc } from '@tauri-apps/api/core'
+import { readDir } from '@tauri-apps/plugin-fs'
+import { join, dirname } from '@tauri-apps/api/path'
 import ActionBar from '@/components/windows/ActionBar.vue'
 import { useVideoViewer } from '@/stores/videoViewer.ts'
 import { useTauriListener } from '@/hooks/useTauriListener'
@@ -96,6 +98,8 @@ import { useTauriListener } from '@/hooks/useTauriListener'
 const { addListener } = useTauriListener()
 const videoViewerStore = useVideoViewer()
 const appWindow = WebviewWindow.getCurrent()
+// 支持的视频文件扩展名
+const supportedVideoExtensions = ['.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm', '.m4v']
 
 // 初始化数据
 const videoList = ref<string[]>([])
@@ -127,14 +131,61 @@ const currentVideo = computed(() => {
 // 是否可以切换到上一个视频
 const canGoPrevious = computed(() => {
   if (videoViewerStore.isSingleMode) return false
-  return currentIndex.value > 0
+
+  const currentVideoPath = videoList.value[currentIndex.value]
+  if (!currentVideoPath || currentVideoPath.startsWith('http')) {
+    // 网络视频使用原有逻辑
+    return currentIndex.value > 0
+  }
+
+  // 本地视频总是返回true，具体判断在点击时进行
+  return true
 })
 
 // 是否可以切换到下一个视频
 const canGoNext = computed(() => {
   if (videoViewerStore.isSingleMode) return false
-  return currentIndex.value < videoList.value.length - 1
+
+  const currentVideoPath = videoList.value[currentIndex.value]
+  if (!currentVideoPath || currentVideoPath.startsWith('http')) {
+    // 网络视频使用原有逻辑
+    return currentIndex.value < videoList.value.length - 1
+  }
+
+  // 本地视频总是返回true，具体判断在点击时进行
+  return true
 })
+
+// 检查文件是否为视频文件
+const isVideoFile = (filename: string) => {
+  const ext = filename.toLowerCase().substring(filename.lastIndexOf('.'))
+  return supportedVideoExtensions.includes(ext)
+}
+
+// 获取当前视频所在文件夹的所有视频文件
+const getVideosFromCurrentFolder = async (currentVideoPath: string) => {
+  try {
+    if (!currentVideoPath || currentVideoPath.startsWith('http')) {
+      return []
+    }
+
+    const folderPath = await dirname(currentVideoPath)
+
+    // 使用绝对路径读取目录
+    const entries = await readDir(folderPath)
+
+    const videoFiles = await Promise.all(
+      entries
+        .filter((entry) => entry.isFile && isVideoFile(entry.name))
+        .map(async (entry) => await join(folderPath, entry.name))
+    )
+
+    return videoFiles.sort() // 按文件名排序
+  } catch (error) {
+    console.warn('获取文件夹视频文件失败:', error)
+    return []
+  }
+}
 
 // 播放/暂停视频
 const playPause = () => {
@@ -195,11 +246,36 @@ const onVideoPlay = () => {
 }
 
 // 切换到上一个视频
-const previousVideo = () => {
+const previousVideo = async () => {
   if (!canGoPrevious.value) return
 
-  currentIndex.value--
-  showVideoTip(`正在播放第 ${currentIndex.value + 1} 个视频`)
+  // 如果是单视频模式，不允许切换
+  if (videoViewerStore.isSingleMode) return
+
+  const currentVideoPath = videoList.value[currentIndex.value]
+  if (!currentVideoPath || currentVideoPath.startsWith('http')) {
+    // 如果是网络视频，使用原有逻辑
+    currentIndex.value--
+    showVideoTip(`正在播放第 ${currentIndex.value + 1} 个视频`)
+  } else {
+    // 如果是本地视频，从文件夹获取视频列表
+    const folderVideos = await getVideosFromCurrentFolder(currentVideoPath)
+    if (folderVideos.length > 0) {
+      const currentVideoIndex = folderVideos.findIndex((path) => path === currentVideoPath)
+      if (currentVideoIndex > 0) {
+        const previousVideoPath = folderVideos[currentVideoIndex - 1]
+        videoList.value[currentIndex.value] = previousVideoPath
+        showVideoTip('正在播放上一个视频')
+      } else {
+        showVideoTip('已经是第一个视频了')
+        return
+      }
+    } else {
+      // 如果获取文件夹视频失败，使用原有逻辑
+      currentIndex.value--
+      showVideoTip(`正在播放第 ${currentIndex.value + 1} 个视频`)
+    }
+  }
 
   nextTick(() => {
     if (videoRef.value) {
@@ -218,11 +294,36 @@ const previousVideo = () => {
 }
 
 // 切换到下一个视频
-const nextVideo = () => {
+const nextVideo = async () => {
   if (!canGoNext.value) return
 
-  currentIndex.value++
-  showVideoTip(`正在播放第 ${currentIndex.value + 1} 个视频`)
+  // 如果是单视频模式，不允许切换
+  if (videoViewerStore.isSingleMode) return
+
+  const currentVideoPath = videoList.value[currentIndex.value]
+  if (!currentVideoPath || currentVideoPath.startsWith('http')) {
+    // 如果是网络视频，使用原有逻辑
+    currentIndex.value++
+    showVideoTip(`正在播放第 ${currentIndex.value + 1} 个视频`)
+  } else {
+    // 如果是本地视频，从文件夹获取视频列表
+    const folderVideos = await getVideosFromCurrentFolder(currentVideoPath)
+    if (folderVideos.length > 0) {
+      const currentVideoIndex = folderVideos.findIndex((path) => path === currentVideoPath)
+      if (currentVideoIndex < folderVideos.length - 1) {
+        const nextVideoPath = folderVideos[currentVideoIndex + 1]
+        videoList.value[currentIndex.value] = nextVideoPath
+        showVideoTip('正在播放下一个视频')
+      } else {
+        showVideoTip('已经是最后一个视频了')
+        return
+      }
+    } else {
+      // 如果获取文件夹视频失败，使用原有逻辑
+      currentIndex.value++
+      showVideoTip(`正在播放第 ${currentIndex.value + 1} 个视频`)
+    }
+  }
 
   nextTick(() => {
     if (videoRef.value) {

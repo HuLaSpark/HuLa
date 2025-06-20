@@ -250,18 +250,6 @@ const handleOpenVideoViewer = async () => {
   }
 }
 
-// 预加载视频元数据
-// const preloadVideoMetadata = () => {
-//   if (props.body?.url) {
-//     const video = document.createElement('video')
-//     video.preload = 'metadata'
-//     video.src = props.body.url
-//     video.muted = true
-//     // 静默预加载，不阻塞UI
-//     video.load()
-//   }
-// }
-
 // 监听视频下载状态更新事件
 const handleVideoDownloadStatusUpdate = (data: { url: string; downloaded: boolean }) => {
   if (data.url === props.body?.url) {
@@ -270,7 +258,6 @@ const handleVideoDownloadStatusUpdate = (data: { url: string; downloaded: boolea
 }
 
 onMounted(async () => {
-  // setTimeout(preloadVideoMetadata, 500)
   // 检查视频是否已下载
   isVideoDownloaded.value = await checkVideoDownloaded(props.body?.url)
 
