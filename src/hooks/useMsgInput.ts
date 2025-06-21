@@ -73,7 +73,13 @@ export const useMsgInput = (messageInputDom: Ref) => {
   /** 发送按钮是否禁用 */
   const disabledSend = computed(() => {
     const plainText = stripHtml(msgInput.value)
-    return plainText.length === 0 || plainText.replace(/&nbsp;/g, ' ').trim().length === 0
+    return (
+      plainText.length === 0 ||
+      plainText
+        .replace(/&nbsp;/g, ' ')
+        .replace(/\u00A0/g, ' ')
+        .trim().length === 0
+    )
   })
   // /** 临时消息id */
   // const tempMessageId = ref(0)
@@ -304,6 +310,8 @@ export const useMsgInput = (messageInputDom: Ref) => {
     try {
       msgInput.value = ''
       messageInputDom.value.innerHTML = ''
+      // 确保完全清除所有空白字符
+      messageInputDom.value.textContent = ''
       reply.value = { avatar: '', imgCount: 0, accountName: '', content: '', key: 0 }
     } catch (error) {
       console.error('Error in resetInput:', error)
@@ -499,11 +507,27 @@ export const useMsgInput = (messageInputDom: Ref) => {
   const handleInput = useDebounceFn(async (e: Event) => {
     const inputElement = e.target as HTMLInputElement
 
-    // 如果输入框中只有<br />标签，则清空输入框内容
-    // TODO: 为什么这里输入后会有一个br标签?
-    if (inputElement.innerHTML === '<br>') {
+    // 检查输入框内容，如果只有空白字符、br标签或空元素则清空
+    const textContent = inputElement.textContent || ''
+    const innerHTML = inputElement.innerHTML || ''
+
+    // 检查是否有实际内容（图片、视频、表情等）
+    const hasMediaContent =
+      innerHTML.includes('<img') || innerHTML.includes('<video') || innerHTML.includes('data-type=')
+
+    // 清理各种空白字符和空标签
+    const cleanText = textContent.replace(/[\u00A0\u0020\u2000-\u200B\u2028\u2029]/g, '').trim()
+    const hasOnlyEmptyElements =
+      innerHTML === '<br>' ||
+      innerHTML === '<div><br></div>' ||
+      innerHTML.match(/^(<br>|<div><br><\/div>|<p><br><\/p>|\s)*$/)
+
+    // 只有在没有媒体内容且没有有效文本时才清空
+    if (!hasMediaContent && (cleanText === '' || hasOnlyEmptyElements)) {
       inputElement.innerHTML = ''
-      msgInput.value = inputElement.innerHTML
+      inputElement.textContent = ''
+      msgInput.value = ''
+      return
     }
     msgInput.value = inputElement.innerHTML || ''
 

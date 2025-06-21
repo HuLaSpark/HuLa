@@ -138,6 +138,9 @@ export const createFileOrVideoDom = (file: File) => {
             video.style.cssText = imgStyle
             video.width = actualWidth
             video.height = actualHeight
+            // 确保video元素不会干扰光标显示
+            video.setAttribute('contenteditable', 'false')
+            video.setAttribute('draggable', 'false')
             video.onloadeddata = () => resolve(video)
             video.onerror = reject
           } catch (error) {

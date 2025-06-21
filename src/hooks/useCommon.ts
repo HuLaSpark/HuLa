@@ -216,7 +216,7 @@ export const useCommon = () => {
    * @param target 目标节点
    * @param sr 选区
    */
-  const insertNodeAtRange = (type: MsgEnum, dom: any, target: HTMLElement, sr: SelectionRange) => {
+  const insertNodeAtRange = (type: MsgEnum, dom: any, _target: HTMLElement, sr: SelectionRange) => {
     const { range, selection } = sr
 
     // 删除选中的内容
@@ -482,7 +482,8 @@ export const useCommon = () => {
       range?.insertNode(spaceNode)
       range?.collapse(false)
     } else {
-      target.appendChild(dom)
+      range?.insertNode(dom)
+      range?.collapse(false)
     }
     // 将光标移到选中范围的最后面
     selection?.collapseToEnd()
@@ -769,19 +770,10 @@ export const useCommon = () => {
     }
     // 使用函数
     createFileOrVideoDom(file).then((imgTag) => {
-      // 将生成的img标签插入到页面中
+      // 将生成的img/video标签插入到页面中
       insertNode(type, imgTag, dom)
 
-      // 确保光标位置在插入的元素后面
-      const selection = window.getSelection()
-      const range = document.createRange()
-      range.setStartAfter(imgTag as HTMLElement)
-      range.setEndAfter(imgTag as HTMLElement)
-
-      // 更新选区
-      selection?.removeAllRanges()
-      selection?.addRange(range)
-
+      // insertNode已经处理了光标位置，直接触发输入事件
       triggerInputEvent(dom)
     })
     saveCacheFile(file, 'video', dom, 'temp-video')
