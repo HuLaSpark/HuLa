@@ -362,6 +362,7 @@ export type VoiceBody = {
 export type VideoBody = {
   size: number
   url: string
+  filename: string
   thumbSize?: number
   thumbWidth?: number
   thumbHeight?: number

@@ -23,9 +23,11 @@ const domParser = new DOMParser()
 
 const REPLY_NODE_ID = 'replyDiv'
 
-const saveCacheFile = async (file: any, subFolder: string, dom: HTMLElement) => {
+const saveCacheFile = async (file: any, subFolder: string, dom: HTMLElement, id: string) => {
+  const { userUid } = useCommon()
+  // TODO: 这里需要获取到需要发送的图片、文件的本地地址，如果不是本地地址，就需要先下载到本地cache文件夹里面
   const fileName = file.name === null ? 'test.png' : file.name
-  const tempPath = getImageCache(subFolder)
+  const tempPath = getImageCache(subFolder, userUid.value!)
   const fullPath = tempPath + fileName
   const cacheReader = new FileReader()
   cacheReader.onload = async (e: any) => {
@@ -39,7 +41,7 @@ const saveCacheFile = async (file: any, subFolder: string, dom: HTMLElement) => 
   }
   cacheReader.readAsArrayBuffer(file)
   const p = document.createElement('p')
-  p.setAttribute('id', 'temp-image')
+  p.setAttribute('id', id)
   p.style.setProperty('display', 'none')
   p.textContent = fullPath
   // 获取MsgInput组件暴露的lastEditRange
@@ -214,7 +216,7 @@ export const useCommon = () => {
    * @param target 目标节点
    * @param sr 选区
    */
-  const insertNodeAtRange = (type: MsgEnum, dom: any, target: HTMLElement, sr: SelectionRange) => {
+  const insertNodeAtRange = (type: MsgEnum, dom: any, _target: HTMLElement, sr: SelectionRange) => {
     const { range, selection } = sr
 
     // 删除选中的内容
@@ -480,7 +482,8 @@ export const useCommon = () => {
       range?.insertNode(spaceNode)
       range?.collapse(false)
     } else {
-      target.appendChild(dom)
+      range?.insertNode(dom)
+      range?.collapse(false)
     }
     // 将光标移到选中范围的最后面
     selection?.collapseToEnd()
@@ -748,7 +751,7 @@ export const useCommon = () => {
       triggerInputEvent(dom)
     }
     //缓存文件
-    saveCacheFile(file, 'img', dom)
+    saveCacheFile(file, 'img', dom, 'temp-image')
     // 读取文件
     reader.readAsDataURL(file)
   }
@@ -759,28 +762,22 @@ export const useCommon = () => {
    * @param type 类型
    * @param dom 输入框dom
    */
-  const FileOrVideoPaste = (file: File, type: MsgEnum, dom: HTMLElement) => {
+  const FileOrVideoPaste = async (file: File, type: MsgEnum, dom: HTMLElement) => {
     const reader = new FileReader()
+    if (file.size > 1024 * 1024 * 50) {
+      window.$message.warning('文件大小不能超过50M，请重新选择')
+      return
+    }
     // 使用函数
     createFileOrVideoDom(file).then((imgTag) => {
-      // 将生成的img标签插入到页面中
+      // 将生成的img/video标签插入到页面中
       insertNode(type, imgTag, dom)
 
-      // 确保光标位置在插入的元素后面
-      const selection = window.getSelection()
-      const range = document.createRange()
-      range.setStartAfter(imgTag as HTMLElement)
-      range.setEndAfter(imgTag as HTMLElement)
-
-      // 更新选区
-      selection?.removeAllRanges()
-      selection?.addRange(range)
-
+      // insertNode已经处理了光标位置，直接触发输入事件
       triggerInputEvent(dom)
     })
-    nextTick(() => {
-      reader.readAsDataURL(file)
-    })
+    saveCacheFile(file, 'video', dom, 'temp-video')
+    reader.readAsDataURL(file)
   }
 
   /**

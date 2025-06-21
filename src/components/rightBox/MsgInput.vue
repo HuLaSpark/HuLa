@@ -17,7 +17,7 @@
         @click="updateSelectionRange"
         @compositionend="updateSelectionRange"
         @keydown.exact.ctrl.enter="inputKeyDown"
-        data-placeholder="输入 / 唤起 AI 助手"
+        data-placeholder="善言一句暖人心，恶语一句伤人心"
         class="empty:before:content-[attr(data-placeholder)] before:text-(12px #777)"></div>
     </n-scrollbar>
   </ContextMenu>

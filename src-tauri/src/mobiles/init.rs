@@ -15,6 +15,7 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
             .plugin(tauri_plugin_upload::init())
             .plugin(tauri_plugin_dialog::init())
             .plugin(tauri_plugin_clipboard_manager::init())
+            .plugin(tauri_plugin_opener::init())
             .plugin(tauri_plugin_sql::Builder::new().build())
     }
 }

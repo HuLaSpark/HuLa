@@ -11,9 +11,8 @@ use tauri::path::BaseDirectory;
 use tauri::{AppHandle, LogicalSize, Manager, ResourceId, Runtime, Webview};
 
 #[cfg(target_os = "macos")]
-use cocoa::appkit::{NSWindow, NSWindowButton};
-#[cfg(target_os = "macos")]
-use objc::runtime::Object;
+#[allow(deprecated)]
+use cocoa::appkit::NSWindow;
 
 // 定义用户信息结构体
 #[derive(Debug, Clone, Serialize)]
@@ -41,10 +40,7 @@ impl UserInfo {
             is_sign,
         }
     }
-    // pub fn get_user_id(&self) -> Result<i64, ()> { Ok(self.user_id)}
-    // pub fn get_username(&self) -> Result<&str, ()> { Ok(self.username.as_str())}
-    // pub fn get_token(&self) -> Result<&str, ()> { Ok(self.token.as_str())}
-    // pub fn get_portrait(&self) -> Result<&str, ()> { Ok(self.portrait.as_str())}
+
 }
 
 // 全局变量
@@ -132,17 +128,6 @@ pub fn set_badge_count(count: Option<i64>, handle: AppHandle) -> Result<(), Stri
     }
 }
 
-#[cfg(target_os = "macos")]
-unsafe fn hidden_standard_window_button(window: *mut Object, window_button_kind: NSWindowButton) {
-    use cocoa::base::YES;
-    use objc::{msg_send, sel, sel_impl};
-
-    let btn = unsafe { window.standardWindowButton_(window_button_kind) };
-    if !btn.is_null() {
-        let _: () = msg_send![btn, setHidden: YES];
-    }
-}
-
 /// 隐藏Mac窗口的标题栏按钮（红绿灯按钮）和标题
 ///
 /// # 参数
@@ -155,10 +140,10 @@ unsafe fn hidden_standard_window_button(window: *mut Object, window_button_kind:
 #[cfg(target_os = "macos")]
 pub fn hide_title_bar_buttons(window_label: &str, handle: AppHandle) -> Result<(), String> {
     #[cfg(target_os = "macos")]
+    #[allow(deprecated)]
     {
         use cocoa::appkit::NSWindowButton;
-        use cocoa::base::NO;
-        use cocoa::base::id;
+        use cocoa::base::{id, NO, YES};
         use objc::{msg_send, sel, sel_impl};
 
         let ns_window = handle
@@ -168,12 +153,18 @@ pub fn hide_title_bar_buttons(window_label: &str, handle: AppHandle) -> Result<(
             .unwrap() as id;
 
         unsafe {
-            // 隐藏标题栏按钮
-            // hidden_standard_window_button(ns_window, NSWindowButton::NSWindowCloseButton);
-            hidden_standard_window_button(ns_window, NSWindowButton::NSWindowFullScreenButton);
-            hidden_standard_window_button(ns_window, NSWindowButton::NSWindowFullScreenButton);
-            hidden_standard_window_button(ns_window, NSWindowButton::NSWindowMiniaturizeButton);
-            hidden_standard_window_button(ns_window, NSWindowButton::NSWindowZoomButton);
+            // 隐藏标题栏按钮的辅助函数
+            let hide_button = |window: id, button_type: NSWindowButton| {
+                let btn = window.standardWindowButton_(button_type);
+                if !btn.is_null() {
+                    let _: () = msg_send![btn, setHidden: YES];
+                }
+            };
+
+            // 隐藏各种标题栏按钮
+            hide_button(ns_window, NSWindowButton::NSWindowFullScreenButton);
+            hide_button(ns_window, NSWindowButton::NSWindowMiniaturizeButton);
+            hide_button(ns_window, NSWindowButton::NSWindowZoomButton);
 
             // 设置窗口不可拖动
             let _: () = msg_send![ns_window, setMovable: NO];
