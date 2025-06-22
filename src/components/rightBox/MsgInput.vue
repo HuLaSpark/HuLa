@@ -1,6 +1,9 @@
 <template>
+  <!-- 录音模式 -->
+  <VoiceRecorder v-if="isVoiceMode" @cancel="handleVoiceCancel" @send="handleVoiceSend" />
+
   <!-- 输入框 -->
-  <ContextMenu class="w-full h-110px" @select="$event.click()" :menu="menuList">
+  <ContextMenu v-else class="w-full h-110px" @select="$event.click()" :menu="menuList">
     <n-scrollbar style="max-height: 100px">
       <div
         id="message-input"
@@ -23,7 +26,9 @@
   </ContextMenu>
 
   <!-- @提及框  -->
-  <div v-if="ait && activeItem.type === RoomTypeEnum.GROUP && personList.length > 0" class="ait-options">
+  <div
+    v-if="ait && activeItem.type === RoomTypeEnum.GROUP && personList.length > 0 && !isVoiceMode"
+    class="ait-options">
     <n-virtual-list
       id="image-chat-ait"
       ref="virtualListInst-ait"
@@ -57,7 +62,7 @@
 
   <!-- / 提及框  -->
   <div
-    v-if="aiDialogVisible && activeItem.type === RoomTypeEnum.GROUP && groupedAIModels.length > 0"
+    v-if="aiDialogVisible && !isVoiceMode && activeItem.type === RoomTypeEnum.GROUP && groupedAIModels.length > 0"
     class="AI-options">
     <n-virtual-list
       ref="virtualListInst-AI"
@@ -91,7 +96,7 @@
   </div>
 
   <!-- 发送按钮 -->
-  <n-flex align="center" justify="space-between" :size="12">
+  <n-flex v-if="!isVoiceMode" align="center" justify="space-between" :size="12">
     <n-config-provider :theme="lightTheme">
       <n-button-group size="small" class="pr-20px">
         <n-button color="#13987f" :disabled="disabledSend" class="w-65px" @click="send"> 发送 </n-button>
@@ -176,6 +181,8 @@ const activeItem = ref()
 const virtualListInstAit = useTemplateRef<VirtualListInst>('virtualListInst-ait')
 /** AI 虚拟列表 */
 const virtualListInstAI = useTemplateRef<VirtualListInst>('virtualListInst-AI')
+// 录音模式状态
+const isVoiceMode = ref(false)
 
 const { handlePaste } = useCommon()
 
@@ -313,6 +320,18 @@ onMounted(async () => {
   useMitt.on(MittEnum.AT, (event: any) => {
     handleAit(useUserInfo(event).value as any)
   })
+
+  // 监听语音消息发送事件
+  useMitt.on('VOICE_MESSAGE_SEND', (voiceData: any) => {
+    // 将语音数据插入到输入框
+    insertVoiceMessage(voiceData)
+  })
+
+  // 监听录音模式切换事件
+  useMitt.on('VOICE_RECORD_TOGGLE', () => {
+    console.log('收到 VOICE_RECORD_TOGGLE 事件，切换录音模式:', !isVoiceMode.value)
+    isVoiceMode.value = !isVoiceMode.value
+  })
   /** 这里使用的是窗口之间的通信来监听信息对话的变化 */
   await addListener(
     appWindow.listen('aloneData', (event: any) => {
@@ -334,6 +353,142 @@ onUnmounted(() => {
 function focus() {
   const editor = messageInputDom.value
   if (editor) focusOn(editor)
+}
+
+// 语音录制相关事件处理
+const handleVoiceCancel = () => {
+  isVoiceMode.value = false
+}
+
+const handleVoiceSend = (voiceData: any) => {
+  isVoiceMode.value = false
+  insertVoiceMessageToInput(voiceData)
+}
+
+// 插入录制的语音消息到输入框（从录音组件来的）
+const insertVoiceMessageToInput = (voiceData: any) => {
+  if (!messageInputDom.value) return
+
+  console.log('插入语音消息到输入框:', voiceData)
+
+  // 创建隐藏的 p 元素，包含本地文件路径（类似其他文件发送）
+  const pathElement = document.createElement('p')
+  pathElement.setAttribute('id', 'temp-voice')
+  pathElement.style.setProperty('display', 'none')
+  pathElement.textContent = voiceData.localPath
+
+  // 创建可见的语音消息显示元素
+  const voiceElement = document.createElement('div')
+  voiceElement.className = 'voice-message-placeholder'
+  voiceElement.style.cssText = `
+    display: inline-flex;
+    align-items: center;
+    background: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 18px;
+    padding: 8px 12px;
+    margin: 2px;
+    font-size: 12px;
+    color: #666;
+    cursor: pointer;
+  `
+  voiceElement.innerHTML = `
+    <svg style="width: 16px; height: 16px; margin-right: 6px;" viewBox="0 0 24 24">
+      <path fill="currentColor" d="M12,2A3,3 0 0,1 15,5V11A3,3 0 0,1 12,14A3,3 0 0,1 9,11V5A3,3 0 0,1 12,2M19,11C19,14.53 16.39,17.44 13,17.93V21H11V17.93C7.61,17.44 5,14.53 5,11H7A5,5 0 0,0 12,16A5,5 0 0,0 17,11H19Z" />
+    </svg>
+    语音 ${Math.round(voiceData.duration)}s
+  `
+
+  // 设置数据属性
+  voiceElement.dataset.type = 'voice'
+  voiceElement.dataset.localPath = voiceData.localPath
+  voiceElement.dataset.duration = voiceData.duration.toString()
+  voiceElement.dataset.size = voiceData.size.toString()
+  voiceElement.dataset.filename = voiceData.filename
+
+  // 插入到输入框
+  const selection = window.getSelection()
+  if (selection && selection.rangeCount > 0) {
+    const range = selection.getRangeAt(0)
+    range.deleteContents()
+    // 先插入隐藏的路径元素
+    range.insertNode(pathElement)
+    // 再插入可见的语音元素
+    range.insertNode(voiceElement)
+
+    // 移动光标到语音消息后面
+    const newRange = document.createRange()
+    newRange.setStartAfter(voiceElement)
+    newRange.collapse(true)
+    selection.removeAllRanges()
+    selection.addRange(newRange)
+  } else {
+    // 如果没有选区，插入到最后
+    messageInputDom.value.appendChild(pathElement)
+    messageInputDom.value.appendChild(voiceElement)
+  }
+
+  // 触发输入事件，自动发送
+  nextTick(() => {
+    send()
+  })
+}
+
+// 处理从其他地方发送的语音消息（保持原有逻辑）
+const insertVoiceMessage = (voiceData: any) => {
+  if (!messageInputDom.value) return
+
+  // 创建语音消息DOM元素
+  const voiceElement = document.createElement('div')
+  voiceElement.className = 'voice-message-placeholder'
+  voiceElement.style.cssText = `
+    display: inline-flex;
+    align-items: center;
+    background: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 18px;
+    padding: 8px 12px;
+    margin: 2px;
+    font-size: 12px;
+    color: #666;
+    cursor: pointer;
+  `
+  voiceElement.innerHTML = `
+    <svg style="width: 16px; height: 16px; margin-right: 6px;" viewBox="0 0 24 24">
+      <path fill="currentColor" d="M12,2A3,3 0 0,1 15,5V11A3,3 0 0,1 12,14A3,3 0 0,1 9,11V5A3,3 0 0,1 12,2M19,11C19,14.53 16.39,17.44 13,17.93V21H11V17.93C7.61,17.44 5,14.53 5,11H7A5,5 0 0,0 12,16A5,5 0 0,0 17,11H19Z" />
+    </svg>
+    语音 ${Math.round(voiceData.duration)}s
+  `
+
+  // 设置数据属性
+  voiceElement.dataset.type = 'voice'
+  voiceElement.dataset.url = voiceData.url
+  voiceElement.dataset.duration = voiceData.duration.toString()
+  voiceElement.dataset.size = voiceData.size.toString()
+  voiceElement.dataset.filename = voiceData.filename
+
+  // 插入到输入框
+  const selection = window.getSelection()
+  if (selection && selection.rangeCount > 0) {
+    const range = selection.getRangeAt(0)
+    range.deleteContents()
+    range.insertNode(voiceElement)
+
+    // 移动光标到语音消息后面
+    const newRange = document.createRange()
+    newRange.setStartAfter(voiceElement)
+    newRange.collapse(true)
+    selection.removeAllRanges()
+    selection.addRange(newRange)
+  } else {
+    // 如果没有选区，插入到最后
+    messageInputDom.value.appendChild(voiceElement)
+  }
+
+  // 触发输入事件，自动发送
+  nextTick(() => {
+    send()
+  })
 }
 
 /** 导出组件方法和属性 */

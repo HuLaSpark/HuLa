@@ -11,6 +11,9 @@ importers:
       '@actions/github':
         specifier: ^6.0.0
         version: 6.0.0
+      '@breezystack/lamejs':
+        specifier: ^1.2.7
+        version: 1.2.7
       '@fingerprintjs/fingerprintjs':
         specifier: ^4.6.0
         version: 4.6.0
@@ -95,6 +98,9 @@ importers:
       seemly:
         specifier: ^0.3.10
         version: 0.3.10
+      tauri-plugin-mic-recorder-api:
+        specifier: ^2.0.0
+        version: 2.0.0
       vue:
         specifier: ^3.5.17
         version: 3.5.17(typescript@5.8.3)
@@ -413,6 +419,9 @@ packages:
   '@bcoe/v8-coverage@1.0.2':
     resolution: {integrity: sha512-6zABk/ECA/QYSCQ1NGiVwwbQerUCZ+TQbp64Q3AgmfNvurHH0j8TtXa1qbShXA6qqkpAj4V5W8pP6mLe1mcMqA==}
     engines: {node: '>=18'}
+
+  '@breezystack/lamejs@1.2.7':
+    resolution: {integrity: sha512-6wc7ck65ctA75Hq7FYHTtTvGnYs6msgdxiSUICQ+A01nVOWg6rqouZB8IdyteRlfpYYiFovkf67dIeOgWIUzTA==}
 
   '@commitlint/cli@19.6.1':
     resolution: {integrity: sha512-8hcyA6ZoHwWXC76BoC8qVOSr8xHy00LZhZpauiD0iO0VYbVhMnED0da85lTfIULxl7Lj4c6vZgF0Wu/ed1+jlQ==}
@@ -4580,6 +4589,9 @@ packages:
     resolution: {integrity: sha512-vrozgXDQwYO72vHjUb/HnFbQx1exDjoKzqx23aXEg2a9VIg2TSFZ8FmeZpTjUCFMYw7mpX4BE2SFu8wI7asYsw==}
     engines: {node: ^14.18.0 || >=16.0.0}
 
+  tauri-plugin-mic-recorder-api@2.0.0:
+    resolution: {integrity: sha512-04wqYCX4WIlYd6KUY7aS3+W4B5RtnSoVczaQCBSXKpQkEx9XdaaBN05XCee2unxGva0btSXBItFqQSdosnS4jQ==}
+
   terser@5.37.0:
     resolution: {integrity: sha512-B8wRRkmre4ERucLM/uXx4MOV5cbnOlVAqUst+1+iLKPI0dOgFO28f84ptoQt9HEI537PMzfYa/d+GEPKTRXmYA==}
     engines: {node: '>=10'}
@@ -5328,6 +5340,8 @@ snapshots:
       '@babel/helper-validator-identifier': 7.27.1
 
   '@bcoe/v8-coverage@1.0.2': {}
+
+  '@breezystack/lamejs@1.2.7': {}
 
   '@commitlint/cli@19.6.1(@types/node@24.0.3)(typescript@5.8.3)':
     dependencies:
@@ -9702,6 +9716,10 @@ snapshots:
     dependencies:
       '@pkgr/core': 0.1.1
       tslib: 2.8.1
+
+  tauri-plugin-mic-recorder-api@2.0.0:
+    dependencies:
+      '@tauri-apps/api': 2.5.0
 
   terser@5.37.0:
     dependencies:

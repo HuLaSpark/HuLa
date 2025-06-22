@@ -10,12 +10,14 @@ import Emoji from './Emoji.vue'
 import Announcement from './Announcement.vue'
 import type { Component } from 'vue'
 import Video from './Video.vue'
+import Voice from './Voice.vue'
 
 const componentMap: Partial<Record<MsgEnum, Component>> = {
   [MsgEnum.TEXT]: Text,
   [MsgEnum.IMAGE]: Image,
   [MsgEnum.EMOJI]: Emoji,
   [MsgEnum.VIDEO]: Video,
+  [MsgEnum.VOICE]: Voice,
   [MsgEnum.NOTICE]: Announcement
 }
 

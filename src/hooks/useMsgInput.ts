@@ -527,6 +527,8 @@ export const useMsgInput = (messageInputDom: Ref) => {
       inputElement.innerHTML = ''
       inputElement.textContent = ''
       msgInput.value = ''
+      // 输入框为空时重置所有状态
+      resetAllStates()
       return
     }
     msgInput.value = inputElement.innerHTML || ''

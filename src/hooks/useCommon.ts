@@ -147,6 +147,7 @@ export const useCommon = () => {
     let hasVideo = false
     let hasFile = false
     let hasEmoji = false
+    let hasVoice = false
 
     const elements = messageInputDom.value.childNodes
     for (const element of elements) {
@@ -163,10 +164,14 @@ export const useCommon = () => {
         }
       } else if (element.tagName === 'VIDEO' || (element.tagName === 'A' && element.href.match(/\.(mp4|webm)$/i))) {
         hasVideo = true
+      } else if (element.tagName === 'DIV' && element.className === 'voice-message-placeholder') {
+        hasVoice = true
       }
     }
 
-    if (hasFile) {
+    if (hasVoice) {
+      return MsgEnum.VOICE
+    } else if (hasFile) {
       return MsgEnum.FILE
     } else if (hasVideo) {
       return MsgEnum.VIDEO

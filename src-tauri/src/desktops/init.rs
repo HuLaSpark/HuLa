@@ -39,6 +39,7 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
             .plugin(tauri_plugin_sql::Builder::new().build())
             .plugin(tauri_plugin_global_shortcut::Builder::new().build())
             .plugin(tauri_plugin_updater::Builder::new().build())
+            .plugin(tauri_plugin_mic_recorder::init())
     }
 
     // 初始化web窗口事件

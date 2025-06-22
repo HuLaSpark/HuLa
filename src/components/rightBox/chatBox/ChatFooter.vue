@@ -98,7 +98,7 @@
           <!--        </n-popover>-->
           <n-popover trigger="hover" :show-arrow="false" placement="bottom">
             <template #trigger>
-              <svg class="mr-18px"><use href="#voice"></use></svg>
+              <svg @click="handleVoiceRecord" class="mr-18px"><use href="#voice"></use></svg>
             </template>
             <span>语音信息</span>
           </n-popover>
@@ -130,6 +130,7 @@ import { useGlobalStore } from '@/stores/global.ts'
 import type { ContactItem, SessionItem } from '@/services/types'
 import { useContactStore } from '@/stores/contacts'
 import { useHistoryStore } from '@/stores/history'
+import { useMitt } from '@/hooks/useMitt'
 
 const { id } = defineProps<{
   id: SessionItem['id']
@@ -333,6 +334,12 @@ const handleCap = async () => {
   let captureWindow = await WebviewWindow.getByLabel('capture')
   captureWindow?.show()
   await emitTo('capture', 'capture', true)
+}
+
+const handleVoiceRecord = () => {
+  console.log('点击语音按钮，发射 VOICE_RECORD_TOGGLE 事件')
+  // 触发录音模式切换事件
+  useMitt.emit('VOICE_RECORD_TOGGLE')
 }
 
 onChange((files) => {

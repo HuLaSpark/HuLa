@@ -27,7 +27,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2.2.0", features = [] }
 
 [dependencies]
-# Tauri基础依赖
+# Tauri 官方依赖
 tauri = { version = "2.5.1", features = [ "protocol-asset",
     "macos-private-api",
     "tray-icon",
@@ -55,6 +55,8 @@ tauri-plugin-opener = "2.3.0"
 tauri-plugin-autostart = "2.4.0"
 [target."cfg(any(target_os = \"macos\", target_os = \"windows\", target_os = \"linux\"))".dependencies]
 tauri-plugin-window-state = "2.2.3"
+# Tauri 非官方依赖
+tauri-plugin-mic-recorder = "2.0.0"
 
 # 其他依赖
 serde = { version = "1", features = ["derive"] }

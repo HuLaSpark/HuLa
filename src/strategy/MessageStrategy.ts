@@ -957,12 +957,78 @@ class UnsupportedMessageStrategyImpl extends AbstractMessageStrategy {
   }
 }
 
+class VoiceMessageStrategyImpl extends AbstractMessageStrategy {
+  constructor() {
+    super(MsgEnum.VOICE)
+  }
+
+  getMsg(): any {
+    const voiceMessageDivs = document.querySelectorAll('.voice-message-placeholder')
+    const lastVoiceDiv = voiceMessageDivs[voiceMessageDivs.length - 1] as HTMLElement
+
+    if (!lastVoiceDiv || !lastVoiceDiv.dataset.url) {
+      throw new AppException('语音消息数据缺失')
+    }
+
+    return {
+      type: MsgEnum.VOICE,
+      url: lastVoiceDiv.dataset.url,
+      size: parseInt(lastVoiceDiv.dataset.size || '0'),
+      duration: parseFloat(lastVoiceDiv.dataset.duration || '0'),
+      filename: lastVoiceDiv.dataset.filename || 'voice.mp3'
+    }
+  }
+
+  buildMessageBody(msg: any): any {
+    return {
+      url: msg.url,
+      size: msg.size,
+      duration: msg.duration
+    }
+  }
+
+  buildMessageType(messageId: string, messageBody: any, globalStore: any, userUid: Ref<any>): MessageType {
+    const baseMessage = super.buildMessageType(messageId, messageBody, globalStore, userUid)
+    return {
+      ...baseMessage,
+      message: {
+        ...baseMessage.message,
+        type: MsgEnum.VOICE,
+        body: {
+          url: messageBody.url,
+          size: messageBody.size,
+          duration: messageBody.duration
+        }
+      }
+    }
+  }
+
+  async uploadFile(
+    path: string,
+    options?: { provider?: UploadProviderEnum }
+  ): Promise<{ uploadUrl: string; downloadUrl: string; config?: any }> {
+    // 语音文件已经上传，直接返回URL
+    console.log(options)
+
+    return {
+      uploadUrl: path,
+      downloadUrl: path
+    }
+  }
+
+  async doUpload(): Promise<{ qiniuUrl?: string } | void> {
+    // 语音文件已经上传，不需要额外处理
+    return
+  }
+}
+
 const textMessageStrategy = new TextMessageStrategyImpl()
 const fileMessageStrategy = new FileMessageStrategyImpl()
 const imageMessageStrategy = new ImageMessageStrategyImpl()
 const emojiMessageStrategy = new EmojiMessageStrategyImpl()
 const unsupportedMessageStrategy = new UnsupportedMessageStrategyImpl()
 const videoMessageStrategy = new VideoMessageStrategyImpl()
+const voiceMessageStrategy = new VoiceMessageStrategyImpl()
 
 export const messageStrategyMap: Record<MsgEnum, MessageStrategy> = {
   [MsgEnum.FILE]: fileMessageStrategy,
@@ -973,7 +1039,7 @@ export const messageStrategyMap: Record<MsgEnum, MessageStrategy> = {
   [MsgEnum.EMOJI]: emojiMessageStrategy,
   [MsgEnum.UNKNOWN]: unsupportedMessageStrategy,
   [MsgEnum.RECALL]: unsupportedMessageStrategy,
-  [MsgEnum.VOICE]: unsupportedMessageStrategy,
+  [MsgEnum.VOICE]: voiceMessageStrategy,
   [MsgEnum.VIDEO]: videoMessageStrategy,
   [MsgEnum.SYSTEM]: unsupportedMessageStrategy,
   [MsgEnum.MIXED]: unsupportedMessageStrategy,
