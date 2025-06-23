@@ -786,36 +786,32 @@ export const useCommon = () => {
   }
 
   /**
+   * 处理确认的文件列表（来自弹窗）
+   * @param files 文件列表
+   * @param dom 输入框dom
+   */
+  const handleConfirmFiles = async (files: File[], dom: HTMLElement) => {
+    for (const file of files) {
+      const fileType = file.type as string
+      if (fileType.startsWith('video/')) {
+        await FileOrVideoPaste(file, MsgEnum.VIDEO, dom)
+      } else {
+        await FileOrVideoPaste(file, MsgEnum.FILE, dom)
+      }
+    }
+  }
+
+  /**
    * 处理粘贴事件
    * @param e 事件对象
    * @param dom 输入框dom
+   * @param showFileModal 显示文件弹窗的回调函数
    */
-  const handlePaste = (e: any, dom: HTMLElement) => {
+  const handlePaste = (e: any, dom: HTMLElement, showFileModal?: (files: File[]) => void) => {
     e.preventDefault()
     if (e.clipboardData.files.length > 0) {
-      if (e.clipboardData.files.length > LimitEnum.COM_COUNT) {
-        window.$message.warning(`一次性只能上传${LimitEnum.COM_COUNT}个文件或图片`)
-        return
-      }
-      for (const file of e.clipboardData.files) {
-        // 检查文件大小
-        const fileSizeInMB = file.size / 1024 / 1024 // 将文件大小转换为兆字节(MB)
-        if (fileSizeInMB > 300) {
-          window.$message.warning(`文件 ${file.name} 超过300MB`)
-          continue // 如果文件大小超过300MB，就跳过这个文件，处理下一个文件
-        }
-        const fileType = file.type as string
-        if (fileType.startsWith('image/')) {
-          // 处理图片粘贴
-          imgPaste(file, dom)
-        } else if (fileType.startsWith('video/')) {
-          // 处理视频粘贴
-          FileOrVideoPaste(file, MsgEnum.VIDEO, dom)
-        } else {
-          // 处理文件粘贴
-          FileOrVideoPaste(file, MsgEnum.FILE, dom)
-        }
-      }
+      // 使用通用文件处理函数
+      processFiles(Array.from(e.clipboardData.files), dom, showFileModal)
     } else {
       // 如果没有文件，而是文本，处理纯文本粘贴
       const plainText = e.clipboardData.getData('text/plain')
@@ -875,6 +871,62 @@ export const useCommon = () => {
     useMitt.emit(MittEnum.TO_SEND_MSG, { url: 'message' })
   }
 
+  /**
+   * 通用文件处理函数
+   * @param files 文件列表
+   * @param dom 输入框DOM元素
+   * @param showFileModal 显示文件弹窗的回调函数
+   * @param resetCallback 重置回调函数（可选）
+   */
+  const processFiles = (
+    files: File[],
+    dom: HTMLElement,
+    showFileModal?: (files: File[]) => void,
+    resetCallback?: () => void
+  ) => {
+    if (!files) return
+
+    // 检查文件数量
+    if (files.length > LimitEnum.COM_COUNT) {
+      window.$message.warning(`一次性只能上传${LimitEnum.COM_COUNT}个文件或图片`)
+      return
+    }
+
+    // 分类文件：图片 or 其他文件
+    const imageFiles: File[] = []
+    const otherFiles: File[] = []
+
+    for (const file of files) {
+      // 检查文件大小
+      const fileSizeInMB = file.size / 1024 / 1024
+      if (fileSizeInMB > 100) {
+        window.$message.warning(`文件 ${file.name} 超过100MB`)
+        continue
+      }
+
+      const fileType = file.type
+      if (fileType.startsWith('image/')) {
+        imageFiles.push(file)
+      } else {
+        // 视频和其他文件通过弹窗处理
+        otherFiles.push(file)
+      }
+    }
+
+    // 处理图片文件（直接插入输入框）
+    imageFiles.forEach((file) => {
+      imgPaste(file, dom)
+    })
+
+    // 处理其他文件（显示弹窗）
+    if (otherFiles.length > 0 && showFileModal) {
+      showFileModal(otherFiles)
+    }
+
+    // 执行重置回调
+    resetCallback?.()
+  }
+
   return {
     imgPaste,
     getEditorRange,
@@ -884,10 +936,12 @@ export const useCommon = () => {
     handlePaste,
     removeTag,
     FileOrVideoPaste,
+    handleConfirmFiles,
     countGraphemes,
     openMsgSession,
     insertNodeAtRange,
     reply,
-    userUid
+    userUid,
+    processFiles
   }
 }

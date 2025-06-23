@@ -150,6 +150,13 @@
       </n-button-group>
     </n-config-provider>
   </n-flex>
+
+  <!-- 文件上传弹窗 -->
+  <FileUploadModal
+    v-model:show="showFileModal"
+    :files="pendingFiles"
+    @confirm="handleFileConfirm"
+    @cancel="handleFileCancel" />
 </template>
 <script setup lang="ts">
 import { lightTheme, darkTheme, VirtualListInst } from 'naive-ui'
@@ -184,16 +191,11 @@ const virtualListInstAI = useTemplateRef<VirtualListInst>('virtualListInst-AI')
 // 录音模式状态
 const isVoiceMode = ref(false)
 
-const { handlePaste } = useCommon()
+// 文件上传弹窗状态
+const showFileModal = ref(false)
+const pendingFiles = ref<File[]>([])
 
-const onPaste = (e: ClipboardEvent) => {
-  if (messageInputDom.value) handlePaste(e, messageInputDom.value)
-}
-
-/**
- * 记录编辑器最后选取范围
- */
-// let currentSelectionRange: SelectionRange | null = null
+const { handlePaste, handleConfirmFiles } = useCommon()
 
 /** 引入useMsgInput的相关方法 */
 const {
@@ -241,6 +243,31 @@ watch(groupedAIModels, (newList) => {
     selectedAIKey.value = newList[0].uid
   }
 })
+
+// 显示文件弹窗的回调函数
+const showFileModalCallback = (files: File[]) => {
+  pendingFiles.value = files
+  showFileModal.value = true
+}
+
+const onPaste = (e: ClipboardEvent) => {
+  if (messageInputDom.value) handlePaste(e, messageInputDom.value, showFileModalCallback)
+}
+
+// 处理弹窗确认
+const handleFileConfirm = async (files: File[]) => {
+  if (messageInputDom.value) {
+    await handleConfirmFiles(files, messageInputDom.value)
+  }
+  showFileModal.value = false
+  pendingFiles.value = []
+}
+
+// 处理弹窗取消
+const handleFileCancel = () => {
+  showFileModal.value = false
+  pendingFiles.value = []
+}
 
 /** 处理键盘上下键切换提及项 */
 const handleAitKeyChange = (
@@ -492,7 +519,13 @@ const insertVoiceMessage = (voiceData: any) => {
 }
 
 /** 导出组件方法和属性 */
-defineExpose({ messageInputDom, getLastEditRange: () => getCursorSelectionRange(), updateSelectionRange, focus })
+defineExpose({
+  messageInputDom,
+  getLastEditRange: () => getCursorSelectionRange(),
+  updateSelectionRange,
+  focus,
+  showFileModal: showFileModalCallback
+})
 </script>
 
 <style scoped lang="scss">

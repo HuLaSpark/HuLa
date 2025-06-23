@@ -122,7 +122,7 @@
 
 <script setup lang="ts">
 import { useFileDialog } from '@vueuse/core'
-import { LimitEnum, MsgEnum, RoomTypeEnum } from '@/enums'
+import { MsgEnum, RoomTypeEnum } from '@/enums'
 import { SelectionRange, useCommon } from '@/hooks/useCommon.ts'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { emitTo } from '@tauri-apps/api/event'
@@ -146,7 +146,7 @@ const recentlyTip = ref(false)
 const recentEmojis = computed(() => {
   return historyStore.emoji.slice(0, 15)
 })
-const { insertNodeAtRange, triggerInputEvent, imgPaste, FileOrVideoPaste } = useCommon()
+const { insertNodeAtRange, triggerInputEvent, processFiles } = useCommon()
 
 /**
  * 检查字符串是否为URL
@@ -344,29 +344,13 @@ const handleVoiceRecord = () => {
 
 onChange((files) => {
   if (!files) return
-  if (files.length > LimitEnum.COM_COUNT) {
-    window.$message.warning(`一次性只能上传${LimitEnum.COM_COUNT}个文件或图片`)
-    return
-  }
-  for (let file of files) {
-    // 检查文件大小
-    let fileSizeInMB = file.size / 1024 / 1024 // 将文件大小转换为兆字节(MB)
-    if (fileSizeInMB > 300) {
-      window.$message.warning(`文件 ${file.name} 超过300MB`)
-      continue // 如果文件大小超过300MB，就跳过这个文件，处理下一个文件
-    }
-    let type = file.type
-    if (type.startsWith('image/')) {
-      imgPaste(file, MsgInputRef.value.messageInputDom)
-    } else if (type.startsWith('video/')) {
-      // 处理视频粘贴
-      FileOrVideoPaste(file, MsgEnum.VIDEO, MsgInputRef.value.messageInputDom)
-    } else {
-      // 处理文件粘贴
-      FileOrVideoPaste(file, MsgEnum.FILE, MsgInputRef.value.messageInputDom)
-    }
-  }
-  reset()
+  // 使用通用文件处理函数
+  processFiles(
+    Array.from(files),
+    MsgInputRef.value.messageInputDom,
+    MsgInputRef.value?.showFileModal,
+    reset // 重置回调
+  )
 })
 
 onMounted(async () => {
