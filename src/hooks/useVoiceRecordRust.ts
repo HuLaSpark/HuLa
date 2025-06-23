@@ -1,8 +1,8 @@
 import { startRecording, stopRecording } from 'tauri-plugin-mic-recorder-api'
-import { BaseDirectory, create, exists, mkdir, readFile } from '@tauri-apps/plugin-fs'
+import { BaseDirectory, create, exists, mkdir, readFile, remove } from '@tauri-apps/plugin-fs'
 import { getImageCache } from '@/utils/PathUtil.ts'
 import { useUserStore } from '@/stores/user'
-import { compressAudioToMp3, getAudioInfo, calculateCompressionRatio } from '@/utils/audioCompression'
+import { compressAudioToMp3, getAudioInfo, calculateCompressionRatio } from '@/utils/AudioCompression'
 
 // 导入worker计时器
 let timerWorker: Worker | null = null
@@ -145,6 +145,14 @@ export const useVoiceRecordRust = (options: VoiceRecordRustOptions = {}) => {
           console.error('缓存音频文件失败:', error)
           // 缓存失败不影响主要功能，只记录错误
         })
+
+        // 删除原始的wav文件，释放磁盘空间
+        try {
+          await remove(audioPath)
+          console.log('已删除原始录音文件:', audioPath)
+        } catch (deleteError) {
+          console.warn('删除原始录音文件失败:', deleteError)
+        }
       }
     } catch (error) {
       console.error('停止录音或压缩失败:', error)
@@ -159,6 +167,14 @@ export const useVoiceRecordRust = (options: VoiceRecordRustOptions = {}) => {
           const duration = (Date.now() - startTime.value) / 1000
           options.onStop?.(audioBlob, duration, audioPath)
           saveAudioToCache(audioBlob, duration)
+
+          // 删除原始的wav文件
+          try {
+            await remove(audioPath)
+            console.log('已删除原始录音文件:', audioPath)
+          } catch (deleteError) {
+            console.warn('删除原始录音文件失败:', deleteError)
+          }
         }
       } catch (fallbackError) {
         console.error('回退处理也失败:', fallbackError)

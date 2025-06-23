@@ -6,7 +6,7 @@ import { BaseDirectory, readFile } from '@tauri-apps/plugin-fs'
 import { useConfigStore } from '@/stores/config'
 import { MD5, lib } from 'crypto-js'
 import { useUserStore } from '@/stores/user'
-import { getImageDimensions } from '@/utils/imageUtils'
+import { getImageDimensions } from '@/utils/ImageUtils'
 
 /** 文件信息类型 */
 export type FileInfoType = {

@@ -7,7 +7,7 @@ import { parseInnerText, useCommon } from '@/hooks/useCommon.ts'
 import { BaseDirectory, readFile, writeFile, remove } from '@tauri-apps/plugin-fs'
 import DOMPurify from 'dompurify'
 import { UploadOptions, UploadProviderEnum, useUpload } from '@/hooks/useUpload'
-import { getImageDimensions } from '@/utils/imageUtils'
+import { getImageDimensions } from '@/utils/ImageUtils'
 
 interface MessageStrategy {
   getMsg: (msgInputValue: string, replyValue: any, fileList?: File[]) => any

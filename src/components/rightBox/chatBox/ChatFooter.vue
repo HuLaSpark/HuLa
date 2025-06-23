@@ -80,7 +80,11 @@
           </n-popover>
           <n-popover trigger="hover" :show-arrow="false" placement="bottom">
             <template #trigger>
-              <svg @click="open({ accept: 'image/**' })" class="mr-18px"><use href="#photo"></use></svg>
+              <svg
+                @click="open({ accept: 'image/jpeg,image/jpg,image/png,image/gif,image/webp,image/bmp,image/svg+xml' })"
+                class="mr-18px">
+                <use href="#photo"></use>
+              </svg>
             </template>
             <span>图片</span>
           </n-popover>
