@@ -98,3 +98,31 @@ export const urlToFile = async (url: string, fileName?: string): Promise<File> =
   const name = fileName || Date.now() + '_emoji.png' // 时间戳生成唯一文件名
   return new File([blob], name, { type: fileType })
 }
+
+/**
+ * 从文件路径中提取文件名
+ * @param path 文件路径
+ * @returns 文件名
+ */
+export const extractFileName = (path: string): string => {
+  return path.split('/').pop() || path.split('\\').pop() || 'file'
+}
+
+/**
+ * 根据文件扩展名获取MIME类型
+ * @param fileName 文件名
+ * @returns MIME类型
+ */
+export const getMimeTypeFromExtension = (fileName: string): string => {
+  const ext = fileName.split('.').pop()?.toLowerCase() || ''
+  const mimeMap: Record<string, string> = {
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    png: 'image/png',
+    gif: 'image/gif',
+    webp: 'image/webp',
+    bmp: 'image/bmp',
+    svg: 'image/svg+xml'
+  }
+  return mimeMap[ext] || 'image/png'
+}

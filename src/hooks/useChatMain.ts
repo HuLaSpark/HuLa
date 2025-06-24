@@ -23,6 +23,7 @@ import { useGroupStore } from '@/stores/group'
 import { useWindow } from './useWindow'
 import { useEmojiStore } from '@/stores/emoji'
 import { useVideoViewer } from '@/hooks/useVideoViewer'
+import { extractFileName } from '@/utils/Formatting'
 
 export const useChatMain = () => {
   const { removeTag, openMsgSession, userUid } = useCommon()
@@ -136,7 +137,7 @@ export const useChatMain = () => {
       click: async (item: MessageType) => {
         try {
           const fileUrl = item.message.body.url
-          const filename = fileUrl.split('/').pop() || 'file'
+          const filename = extractFileName(fileUrl)
 
           const savePath = await save({
             defaultPath: filename,
@@ -244,7 +245,7 @@ export const useChatMain = () => {
       click: async (item: any) => {
         try {
           const fileUrl = item.message.body.url
-          const filename = fileUrl.split('/').pop() || 'file'
+          const filename = extractFileName(fileUrl)
           const savePath = await save({
             defaultPath: filename
           })
@@ -264,7 +265,7 @@ export const useChatMain = () => {
       click: async (item: any) => {
         try {
           const fileUrl = item.message.body.url
-          const filename = fileUrl.split('/').pop() || 'file'
+          const filename = extractFileName(fileUrl)
           const savePath = await save({
             defaultPath: filename
           })

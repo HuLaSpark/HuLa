@@ -8,6 +8,7 @@ import { BaseDirectory, readFile, writeFile, remove } from '@tauri-apps/plugin-f
 import DOMPurify from 'dompurify'
 import { UploadOptions, UploadProviderEnum, useUpload } from '@/hooks/useUpload'
 import { getImageDimensions } from '@/utils/ImageUtils'
+import { getMimeTypeFromExtension } from '@/utils/Formatting'
 
 interface MessageStrategy {
   getMsg: (msgInputValue: string, replyValue: any, fileList?: File[]) => any
@@ -277,7 +278,7 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
       const fileData = await readFile(normalizedPath, { baseDir: BaseDirectory.AppCache })
 
       const fileName = path.split('/').pop() || 'image.png'
-      const fileType = this.getFileType(fileName)
+      const fileType = getMimeTypeFromExtension(fileName)
 
       // 创建文件对象
       const originalFile = new File([new Uint8Array(fileData)], fileName, {
@@ -312,26 +313,6 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
         throw error
       }
       throw new AppException('图片预览失败')
-    }
-  }
-
-  /**
-   * 根据文件名获取文件类型
-   * @param fileName 文件名
-   * @returns 文件类型
-   */
-  private getFileType(fileName: string): string {
-    const extension = fileName.split('.').pop()?.toLowerCase()
-    switch (extension) {
-      case 'jpg':
-      case 'jpeg':
-        return 'image/jpeg'
-      case 'png':
-        return 'image/png'
-      case 'webp':
-        return 'image/webp'
-      default:
-        return 'image/png' // 默认类型
     }
   }
 

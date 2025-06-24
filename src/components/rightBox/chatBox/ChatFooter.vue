@@ -72,7 +72,7 @@
           <n-popover trigger="hover" :show-arrow="false" placement="bottom">
             <template #trigger>
               <div class="flex-center gap-2px mr-12px">
-                <svg @click="open()"><use href="#file2"></use></svg>
+                <svg @click="handleFileOpen"><use href="#file2"></use></svg>
                 <svg style="width: 14px; height: 14px"><use href="#down"></use></svg>
               </div>
             </template>
@@ -80,9 +80,7 @@
           </n-popover>
           <n-popover trigger="hover" :show-arrow="false" placement="bottom">
             <template #trigger>
-              <svg
-                @click="open({ accept: 'image/jpeg,image/jpg,image/png,image/gif,image/webp,image/bmp,image/svg+xml' })"
-                class="mr-18px">
+              <svg @click="handleImageOpen" class="mr-18px">
                 <use href="#photo"></use>
               </svg>
             </template>
@@ -125,7 +123,8 @@
 </template>
 
 <script setup lang="ts">
-import { useFileDialog } from '@vueuse/core'
+import { open } from '@tauri-apps/plugin-dialog'
+import { readFile } from '@tauri-apps/plugin-fs'
 import { MsgEnum, RoomTypeEnum } from '@/enums'
 import { SelectionRange, useCommon } from '@/hooks/useCommon.ts'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
@@ -135,6 +134,7 @@ import type { ContactItem, SessionItem } from '@/services/types'
 import { useContactStore } from '@/stores/contacts'
 import { useHistoryStore } from '@/stores/history'
 import { useMitt } from '@/hooks/useMitt'
+import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
 
 const { id } = defineProps<{
   id: SessionItem['id']
@@ -142,7 +142,6 @@ const { id } = defineProps<{
 const globalStore = useGlobalStore()
 const contactStore = useContactStore()
 const historyStore = useHistoryStore()
-const { open, onChange, reset } = useFileDialog()
 const MsgInputRef = ref()
 const msgInputDom = ref<HTMLInputElement | null>(null)
 const emojiShow = ref(false)
@@ -150,7 +149,7 @@ const recentlyTip = ref(false)
 const recentEmojis = computed(() => {
   return historyStore.emoji.slice(0, 15)
 })
-const { insertNodeAtRange, triggerInputEvent, processFiles } = useCommon()
+const { insertNodeAtRange, triggerInputEvent, processFiles, imgPaste } = useCommon()
 
 /**
  * 检查字符串是否为URL
@@ -181,6 +180,59 @@ watch(emojiShow, (newValue) => {
     recentlyTip.value = false
   }
 })
+
+// 文件选择（不限制类型）
+const handleFileOpen = async () => {
+  const selected = await open({
+    multiple: true
+    // 不设置filters，允许选择所有文件类型
+  })
+
+  if (selected && Array.isArray(selected)) {
+    const files = await Promise.all(
+      selected.map(async (path) => {
+        const fileData = await readFile(path)
+        const fileName = extractFileName(path)
+        const blob = new Blob([fileData])
+        return new File([blob], fileName, { type: blob.type })
+      })
+    )
+    // 使用processFiles方法进行文件类型验证
+    processFiles(files, MsgInputRef.value.messageInputDom, MsgInputRef.value?.showFileModal)
+  }
+}
+
+// 图片选择（只能选择图片类型）
+const handleImageOpen = async () => {
+  const selected = await open({
+    multiple: true,
+    filters: [
+      {
+        name: 'Images',
+        extensions: ['jpeg', 'jpg', 'png', 'gif', 'webp', 'bmp', 'svg']
+      }
+    ]
+  })
+
+  if (selected && Array.isArray(selected)) {
+    // 并行处理所有图片文件
+    const imagePromises = selected.map(async (path) => {
+      const fileData = await readFile(path)
+      const fileName = extractFileName(path)
+      const mimeType = getMimeTypeFromExtension(fileName)
+
+      const blob = new Blob([fileData], { type: mimeType })
+      return new File([blob], fileName, { type: mimeType })
+    })
+
+    const files = await Promise.all(imagePromises)
+
+    // 将所有图片插入到输入框
+    files.forEach((file) => {
+      imgPaste(file, MsgInputRef.value.messageInputDom)
+    })
+  }
+}
 
 /**
  * 选择表情，并把表情插入输入框
@@ -345,17 +397,6 @@ const handleVoiceRecord = () => {
   // 触发录音模式切换事件
   useMitt.emit('VOICE_RECORD_TOGGLE')
 }
-
-onChange((files) => {
-  if (!files) return
-  // 使用通用文件处理函数
-  processFiles(
-    Array.from(files),
-    MsgInputRef.value.messageInputDom,
-    MsgInputRef.value?.showFileModal,
-    reset // 重置回调
-  )
-})
 
 onMounted(async () => {
   if (MsgInputRef.value) {

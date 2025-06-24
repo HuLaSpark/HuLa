@@ -7,6 +7,7 @@ import { useConfigStore } from '@/stores/config'
 import { MD5, lib } from 'crypto-js'
 import { useUserStore } from '@/stores/user'
 import { getImageDimensions } from '@/utils/ImageUtils'
+import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
 
 /** 文件信息类型 */
 export type FileInfoType = {
@@ -96,16 +97,14 @@ export const useUpload = () => {
    */
   const getFileType = (fileName: string): string => {
     const extension = fileName.split('.').pop()?.toLowerCase()
+
+    // 对于图片类型，使用统一的 getMimeTypeFromExtension 函数
+    if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'svg'].includes(extension || '')) {
+      return getMimeTypeFromExtension(fileName)
+    }
+
+    // 其他文件类型
     switch (extension) {
-      case 'jpg':
-      case 'jpeg':
-        return 'image/jpeg'
-      case 'png':
-        return 'image/png'
-      case 'webp':
-        return 'image/webp'
-      case 'gif':
-        return 'image/gif'
       case 'mp4':
         return 'video/mp4'
       case 'mp3':
@@ -633,7 +632,7 @@ export const useUpload = () => {
     } else {
       // 使用默认上传方式
       console.log('开始默认上传图片:', path)
-      const fileName = path.split('/').pop()
+      const fileName = extractFileName(path)
       if (!fileName) {
         throw new Error('文件解析出错')
       }
@@ -666,7 +665,7 @@ export const useUpload = () => {
         const file = await readFile(path, { baseDir: BaseDirectory.AppCache })
 
         // 创建File对象
-        const fileName = path.split('/').pop() || 'file'
+        const fileName = extractFileName(path)
         const fileObj = new File([new Uint8Array(file)], fileName, {
           type: getFileType(fileName)
         })
