@@ -228,7 +228,7 @@
                       </n-popover>
                       <!-- 用户名 -->
                       <span class="text-12px select-none color-#909090 inline-block align-top">
-                        {{ myGroupNickname(item.fromUser.uid) || useUserInfo(item.fromUser.uid).value.name }}
+                        {{ item.fromUser.nickname }}
                       </span>
                       <!-- 消息归属地 -->
                       <span class="text-(12px #909090)">
@@ -436,7 +436,7 @@
   </footer>
 </template>
 <script setup lang="ts">
-import { EventEnum, MittEnum, MsgEnum, MessageStatusEnum, RoomTypeEnum } from '@/enums'
+import { EventEnum, MittEnum, MsgEnum, MessageStatusEnum } from '@/enums'
 import { MessageType, SessionItem } from '@/services/types.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { usePopover } from '@/hooks/usePopover.ts'
@@ -491,11 +491,11 @@ const messageOptions = computed(() => chatStore.currentMessageOptions)
 const { createWebviewWindow } = useWindow()
 const currentRoomId = computed(() => globalStore.currentSession?.roomId)
 // 我的群昵称
-const myGroupNickname = (uid: string) => {
-  if (props.activeItem.type === RoomTypeEnum.GROUP && userUid.value === uid) {
-    return groupStore.countInfo?.myName || ''
-  }
-}
+// const myGroupNickname = (uid: string) => {
+//   if (props.activeItem.type === RoomTypeEnum.GROUP && userUid.value === uid) {
+//     return groupStore.countInfo?.myName || ''
+//   }
+// }
 /** 是否是超级管理员 */
 // const isAdmin = computed(() => userInfo?.power === PowerEnum.ADMIN)
 /** 跳转回复消息后选中效果 */
