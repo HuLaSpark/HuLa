@@ -53,7 +53,9 @@
     "========= 使用 vitest UI =========": "",
     "test:ui": "vitest --ui --coverage.enabled=true",
     "========= 测试覆盖率 =========": "",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "========= 单独提交 =========": "",
+    "gitcz": "git-cz"
   },
   "dependencies": {
     "@actions/github": "^6.0.0",
