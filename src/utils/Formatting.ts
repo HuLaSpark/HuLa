@@ -105,7 +105,9 @@ export const urlToFile = async (url: string, fileName?: string): Promise<File> =
  * @returns 文件名
  */
 export const extractFileName = (path: string): string => {
-  return path.split('/').pop() || path.split('\\').pop() || 'file'
+  // 同时处理 Unix 和 Windows 路径分隔符
+  const fileName = path.split(/[/\\]/).pop()
+  return fileName || 'file'
 }
 
 /**

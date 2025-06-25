@@ -179,6 +179,7 @@ const appWindow = WebviewWindow.getCurrent()
 const { addListener } = useTauriListener()
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
+const { handlePaste } = useCommon()
 /** 发送按钮旁的箭头 */
 const arrow = ref(false)
 /** 输入框dom元素 */
@@ -195,8 +196,6 @@ const isVoiceMode = ref(false)
 const showFileModal = ref(false)
 const pendingFiles = ref<File[]>([])
 
-const { handlePaste, handleConfirmFiles } = useCommon()
-
 /** 引入useMsgInput的相关方法 */
 const {
   inputKeyDown,
@@ -204,6 +203,7 @@ const {
   handleAI,
   handleInput,
   send,
+  sendFilesDirect,
   personList,
   disabledSend,
   ait,
@@ -250,14 +250,16 @@ const showFileModalCallback = (files: File[]) => {
   showFileModal.value = true
 }
 
-const onPaste = (e: ClipboardEvent) => {
-  if (messageInputDom.value) handlePaste(e, messageInputDom.value, showFileModalCallback)
+const onPaste = async (e: ClipboardEvent) => {
+  if (messageInputDom.value) await handlePaste(e, messageInputDom.value, showFileModalCallback)
 }
 
 // 处理弹窗确认
 const handleFileConfirm = async (files: File[]) => {
-  if (messageInputDom.value) {
-    await handleConfirmFiles(files, messageInputDom.value)
+  try {
+    await sendFilesDirect(files)
+  } catch (error) {
+    console.error('弹窗发送文件失败:', error)
   }
   showFileModal.value = false
   pendingFiles.value = []

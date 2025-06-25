@@ -198,7 +198,7 @@ const handleFileOpen = async () => {
       })
     )
     // 使用processFiles方法进行文件类型验证
-    processFiles(files, MsgInputRef.value.messageInputDom, MsgInputRef.value?.showFileModal)
+    await processFiles(files, MsgInputRef.value.messageInputDom, MsgInputRef.value?.showFileModal)
   }
 }
 
@@ -228,9 +228,9 @@ const handleImageOpen = async () => {
     const files = await Promise.all(imagePromises)
 
     // 将所有图片插入到输入框
-    files.forEach((file) => {
-      imgPaste(file, MsgInputRef.value.messageInputDom)
-    })
+    for (const file of files) {
+      await imgPaste(file, MsgInputRef.value.messageInputDom)
+    }
   }
 }
 

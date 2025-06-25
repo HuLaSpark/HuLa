@@ -62,8 +62,18 @@ export const useMsgInput = (messageInputDom: Ref) => {
   const chatStore = useChatStore()
   const globalStore = useGlobalStore()
   const cachedStore = useCachedStore()
+  const { uploadToQiniu } = useUpload()
   const { getCursorSelectionRange, updateSelectionRange, focusOn } = useCursorManager()
-  const { triggerInputEvent, insertNode, getMessageContentType, getEditorRange, imgPaste, reply, userUid } = useCommon()
+  const {
+    triggerInputEvent,
+    insertNode,
+    getMessageContentType,
+    getEditorRange,
+    imgPaste,
+    saveCacheFile,
+    reply,
+    userUid
+  } = useCommon()
   const settingStore = useSettingStore()
   const { chat } = storeToRefs(settingStore)
   /** 艾特选项的key  */
@@ -826,6 +836,173 @@ export const useMsgInput = (messageInputDom: Ref) => {
     })
   })
 
+  /**
+   * 发送文件的函数
+   * @param files 要发送的文件数组
+   */
+  const sendFilesDirect = async (files: File[]) => {
+    for (const file of files) {
+      const videoFileName = file.name.toLowerCase()
+
+      // 修复 MIME 类型问题
+      let processedFile = file
+      if (!file.type || file.type === '') {
+        const ext = videoFileName.split('.').pop()?.toLowerCase()
+        let mimeType = 'video/mp4'
+
+        switch (ext) {
+          case 'mp4':
+            mimeType = 'video/mp4'
+            break
+          case 'mov':
+            mimeType = 'video/quicktime'
+            break
+          case 'avi':
+            mimeType = 'video/x-msvideo'
+            break
+          case 'wmv':
+            mimeType = 'video/x-ms-wmv'
+            break
+        }
+
+        processedFile = new File([file], file.name, { type: mimeType })
+      }
+
+      // 生成唯一消息ID，避免重复
+      const tempMsgId = `${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
+      const msgType = MsgEnum.VIDEO
+      const messageStrategy = messageStrategyMap[msgType]
+
+      try {
+        // 立即创建并显示消息
+        const tempMsg = messageStrategy.buildMessageType(
+          tempMsgId,
+          {
+            url: URL.createObjectURL(processedFile),
+            size: processedFile.size,
+            fileName: processedFile.name,
+            thumbUrl: '',
+            thumbWidth: 300,
+            thumbHeight: 150,
+            thumbSize: 0
+          },
+          globalStore,
+          userUid
+        )
+        tempMsg.message.status = MessageStatusEnum.SENDING
+
+        chatStore.pushMsg(tempMsg)
+        useMitt.emit(MittEnum.MESSAGE_ANIMATION, tempMsg)
+
+        // 异步处理上传
+        const videoPath = await saveCacheFile(processedFile, 'video/')
+
+        // 直接使用 VideoMessageStrategy 生成缩略图，避免重复处理
+        const videoStrategy = messageStrategy as any
+        const thumbnailFile = await videoStrategy.getVideoThumbnail(processedFile)
+
+        // 生成本地缩略图预览URL，立即更新消息显示
+        const localThumbUrl = URL.createObjectURL(thumbnailFile)
+        chatStore.updateMsg({
+          msgId: tempMsgId,
+          status: MessageStatusEnum.SENDING,
+          body: {
+            ...tempMsg.message.body,
+            thumbUrl: localThumbUrl,
+            thumbSize: thumbnailFile.size
+          }
+        })
+
+        // 获取一次七牛云配置，共享使用
+        const videoUploadResult = await messageStrategy.uploadFile(videoPath, { provider: UploadProviderEnum.QINIU })
+        const qiniuConfig = videoUploadResult.config // 使用第一次获取的配置
+
+        // 更新状态为上传中
+        chatStore.updateMsg({
+          msgId: tempMsgId,
+          status: MessageStatusEnum.SENDING
+        })
+
+        // 上传视频
+        const videoUploadResponse = await messageStrategy.doUpload(videoPath, videoUploadResult.uploadUrl, {
+          provider: UploadProviderEnum.QINIU,
+          ...qiniuConfig
+        })
+
+        // 直接使用七牛云上传缩略图，避免通过doUpload路径
+        const thumbnailUploadResponse = await uploadToQiniu(
+          thumbnailFile,
+          qiniuConfig.scene || 'CHAT',
+          qiniuConfig,
+          true // 是否启用文件去重
+        )
+
+        const finalVideoUrl = videoUploadResponse?.qiniuUrl || videoUploadResult.downloadUrl
+        const finalThumbnailUrl =
+          thumbnailUploadResponse?.downloadUrl || `${qiniuConfig.domain}/${thumbnailUploadResponse?.key}`
+
+        // 验证上传是否真正成功
+        if (!videoUploadResponse?.qiniuUrl && !videoUploadResult.downloadUrl) {
+          throw new Error('视频上传失败')
+        }
+
+        if (thumbnailUploadResponse?.error) {
+          throw new Error('缩略图上传失败: ' + thumbnailUploadResponse.error)
+        }
+
+        if (!finalThumbnailUrl && !thumbnailUploadResponse?.key) {
+          throw new Error('缩略图上传失败')
+        }
+
+        console.log('✅ 七牛云上传成功，返回的数据:', {
+          videoUrl: finalVideoUrl,
+          thumbnailUrl: finalThumbnailUrl,
+          videoResponse: videoUploadResponse,
+          thumbnailResponse: thumbnailUploadResponse
+        })
+
+        // 发送消息到服务器保存
+        const serverResponse = await apis.sendMsg({
+          roomId: globalStore.currentSession.roomId,
+          msgType: MsgEnum.VIDEO,
+          body: {
+            url: finalVideoUrl,
+            size: processedFile.size,
+            fileName: processedFile.name,
+            thumbUrl: finalThumbnailUrl,
+            thumbWidth: 300,
+            thumbHeight: 150,
+            thumbSize: thumbnailFile.size
+          }
+        })
+
+        // 使用服务器返回的数据更新消息状态为SUCCESS
+        chatStore.updateMsg({
+          msgId: tempMsgId,
+          status: MessageStatusEnum.SUCCESS,
+          newMsgId: serverResponse.message.id, // 使用服务器返回的消息ID
+          body: serverResponse.message.body // 使用服务器返回的消息体
+        })
+
+        // 清理本地URL
+        URL.revokeObjectURL(tempMsg.message.body.url)
+        URL.revokeObjectURL(localThumbUrl)
+
+        // 清空输入框内容，避免重复发送
+        if (messageInputDom.value) {
+          messageInputDom.value.innerHTML = ''
+        }
+      } catch (error) {
+        console.error('视频发送失败:', error)
+        chatStore.updateMsg({
+          msgId: tempMsgId,
+          status: MessageStatusEnum.FAILED
+        })
+        window.$message.error('视频发送失败')
+      }
+    }
+  }
+
   return {
     imgPaste,
     inputKeyDown,
@@ -834,6 +1011,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     handleInput,
     send,
     stripHtml,
+    sendFilesDirect,
     personList,
     ait,
     aitKey,

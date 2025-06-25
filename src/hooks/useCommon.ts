@@ -9,11 +9,11 @@ import { useGlobalStore } from '@/stores/global.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useMessage } from '@/hooks/useMessage.ts'
 import { useUserStore } from '@/stores/user.ts'
-import { BaseDirectory, create, exists, mkdir } from '@tauri-apps/plugin-fs'
 import { getImageCache } from '@/utils/PathUtil.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import DOMPurify from 'dompurify'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { BaseDirectory, create, exists, mkdir } from '@tauri-apps/plugin-fs'
 
 export interface SelectionRange {
   range: Range
@@ -23,7 +23,7 @@ const domParser = new DOMParser()
 
 const REPLY_NODE_ID = 'replyDiv'
 
-const saveCacheFile = async (file: any, subFolder: string, dom: HTMLElement, id: string) => {
+const saveCacheFile = async (file: any, subFolder: string) => {
   const { userUid } = useCommon()
   // TODO: 这里需要获取到需要发送的图片、文件的本地地址，如果不是本地地址，就需要先下载到本地cache文件夹里面
   const fileName = file.name === null ? 'test.png' : file.name
@@ -40,33 +40,6 @@ const saveCacheFile = async (file: any, subFolder: string, dom: HTMLElement, id:
     tempFile.close()
   }
   cacheReader.readAsArrayBuffer(file)
-  const p = document.createElement('p')
-  p.setAttribute('id', id)
-  p.style.setProperty('display', 'none')
-  p.textContent = fullPath
-  // 获取MsgInput组件暴露的lastEditRange
-  const lastEditRange = (dom as any).getLastEditRange?.()
-
-  // 确保dom获得焦点
-  dom.focus()
-
-  let range: Range
-  if (!lastEditRange) {
-    // 如果没有lastEditRange，创建一个新的范围到最后
-    range = document.createRange()
-    range.selectNodeContents(dom)
-    range.collapse(false) // 折叠到末尾
-  } else {
-    range = lastEditRange
-  }
-
-  // 确保我们有有效的range
-  const selection = window.getSelection()
-  if (selection) {
-    // 插入图片
-    range.deleteContents()
-    range.insertNode(p)
-  }
   return fullPath
 }
 
@@ -678,7 +651,7 @@ export const useCommon = () => {
    * @param file 图片文件
    * @param dom 输入框dom
    */
-  const imgPaste = (file: any, dom: HTMLElement) => {
+  const imgPaste = async (file: any, dom: HTMLElement) => {
     // 如果file是blob URL格式
     if (typeof file === 'string' && file.startsWith('blob:')) {
       const url = file.replace('blob:', '') // 移除blob:前缀
@@ -756,7 +729,7 @@ export const useCommon = () => {
       triggerInputEvent(dom)
     }
     //缓存文件
-    saveCacheFile(file, 'img', dom, 'temp-image')
+    await saveCacheFile(file, 'img')
     // 读取文件
     reader.readAsDataURL(file)
   }
@@ -781,7 +754,7 @@ export const useCommon = () => {
       // insertNode已经处理了光标位置，直接触发输入事件
       triggerInputEvent(dom)
     })
-    saveCacheFile(file, 'video', dom, 'temp-video')
+    await saveCacheFile(file, 'video')
     reader.readAsDataURL(file)
   }
 
@@ -807,11 +780,11 @@ export const useCommon = () => {
    * @param dom 输入框dom
    * @param showFileModal 显示文件弹窗的回调函数
    */
-  const handlePaste = (e: any, dom: HTMLElement, showFileModal?: (files: File[]) => void) => {
+  const handlePaste = async (e: any, dom: HTMLElement, showFileModal?: (files: File[]) => void) => {
     e.preventDefault()
     if (e.clipboardData.files.length > 0) {
       // 使用通用文件处理函数
-      processFiles(Array.from(e.clipboardData.files), dom, showFileModal)
+      await processFiles(Array.from(e.clipboardData.files), dom, showFileModal)
     } else {
       // 如果没有文件，而是文本，处理纯文本粘贴
       const plainText = e.clipboardData.getData('text/plain')
@@ -878,7 +851,7 @@ export const useCommon = () => {
    * @param showFileModal 显示文件弹窗的回调函数
    * @param resetCallback 重置回调函数（可选）
    */
-  const processFiles = (
+  const processFiles = async (
     files: File[],
     dom: HTMLElement,
     showFileModal?: (files: File[]) => void,
@@ -914,9 +887,9 @@ export const useCommon = () => {
     }
 
     // 处理图片文件（直接插入输入框）
-    imageFiles.forEach((file) => {
-      imgPaste(file, dom)
-    })
+    for (const file of imageFiles) {
+      await imgPaste(file, dom)
+    }
 
     // 处理其他文件（显示弹窗）
     if (otherFiles.length > 0 && showFileModal) {
@@ -942,6 +915,7 @@ export const useCommon = () => {
     insertNodeAtRange,
     reply,
     userUid,
-    processFiles
+    processFiles,
+    saveCacheFile
   }
 }
