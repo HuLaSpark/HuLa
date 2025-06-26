@@ -72,9 +72,6 @@ rand = "0.8.5"
 cocoa = "0.26.0"
 objc = "0.2.7"
 
-[target."cfg(any(target_os = \"macos\", target_os = \"windows\", target_os = \"linux\"))".dependencies]
-tauri-plugin-window-state = "2.2.2"
-
 [features]
 # by default Tauri runs in production mode
 # when `tauri dev` runs it is executed with `cargo run --no-default-features` if `devPath` is a URL

@@ -102,7 +102,7 @@ const doUpdate = async () => {
         return
       }
 
-      setupCommitList(e.version)
+      await setupCommitList(e.version)
 
       await e.downloadAndInstall((event) => {
         switch (event.event) {

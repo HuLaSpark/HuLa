@@ -62,6 +62,9 @@ export const useGlobalStore = defineStore(
     /** 系统托盘菜单显示的状态 */
     const isTrayMenuShow = ref<boolean>(false)
 
+    // home窗口位置、宽高信息
+    const homeWindowState = ref<{ width?: number; height?: number }>({})
+
     // 更新全局未读消息计数
     const updateGlobalUnreadCount = async () => {
       // 计算所有会话的未读消息总数，排除免打扰的会话
@@ -95,6 +98,11 @@ export const useGlobalStore = defineStore(
       tipVisible.value = visible
     }
 
+    // 设置home窗口位置、宽高信息
+    const setHomeWindowState = (newState: { width: number; height: number }) => {
+      homeWindowState.value = { ...homeWindowState.value, ...newState }
+    }
+
     return {
       unReadMark,
       currentSession,
@@ -105,8 +113,10 @@ export const useGlobalStore = defineStore(
       createGroupModalInfo,
       tipVisible,
       isTrayMenuShow,
+      homeWindowState,
       setTipVisible,
-      updateGlobalUnreadCount
+      updateGlobalUnreadCount,
+      setHomeWindowState
     }
   },
   {
