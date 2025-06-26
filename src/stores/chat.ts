@@ -294,25 +294,8 @@ export const useChatStore = defineStore(
       // 保存当前选中的会话ID
       const currentSelectedRoomId = globalStore.currentSession.roomId
 
-      if (isFresh) {
-        const localSessionMap = new Map(sessionList.value.map((s) => [s.roomId, s]))
-        const newSessionList = data.list.map((serverSession) => {
-          const localSession = localSessionMap.get(serverSession.roomId)
-          if (localSession && localSession.activeTime > serverSession.activeTime) {
-            return {
-              ...serverSession,
-              text: localSession.text,
-              activeTime: localSession.activeTime,
-              unreadCount: localSession.unreadCount
-            }
-          } else {
-            return serverSession
-          }
-        })
-        sessionList.value.splice(0, sessionList.value.length, ...newSessionList)
-      } else {
-        sessionList.value.push(...data.list)
-      }
+      sessionList.value = []
+      sessionList.value.push(...data.list)
 
       sessionOptions.cursor = data.cursor
       sessionOptions.isLast = data.isLast
