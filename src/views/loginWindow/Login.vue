@@ -406,7 +406,7 @@ const normalLogin = async (auto = false) => {
 }
 
 const openHomeWindow = async () => {
-  await createWebviewWindow('HuLa', 'home', 960, 720, 'login', true, undefined, 480)
+  await createWebviewWindow('HuLa', 'home', 960, 720, 'login', true, undefined, 480, undefined, false)
 }
 
 /** 移除已登录账号 */

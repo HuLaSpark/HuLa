@@ -53,7 +53,9 @@
     "========= 使用 vitest UI =========": "",
     "test:ui": "vitest --ui --coverage.enabled=true",
     "========= 测试覆盖率 =========": "",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "========= 单独提交 =========": "",
+    "gitcz": "git-cz"
   },
   "dependencies": {
     "@actions/github": "^6.0.0",
@@ -63,13 +65,14 @@
     "@tauri-apps/plugin-clipboard-manager": "2.2.2",
     "@tauri-apps/plugin-dialog": "^2.2.1",
     "@tauri-apps/plugin-fs": "^2.2.1",
-    "@tauri-apps/plugin-http": "2.4.3",
+    "@tauri-apps/plugin-http": "2.4.4",
     "@tauri-apps/plugin-notification": "^2.2.2",
     "@tauri-apps/plugin-os": "2.2.1",
     "@tauri-apps/plugin-process": "2.2.1",
     "@tauri-apps/plugin-shell": "^2.2.1",
     "@tauri-apps/plugin-sql": "^2.2.0",
     "@tauri-apps/plugin-updater": "2.7.1",
+    "@tauri-apps/plugin-window-state": "^2.2.2",
     "colorthief": "^2.6.0",
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.11",
