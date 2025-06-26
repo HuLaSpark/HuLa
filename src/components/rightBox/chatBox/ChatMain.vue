@@ -163,7 +163,7 @@
               </svg>
               <!-- 头像 -->
               <n-popover
-                :ref="(el) => (infoPopoverRefs[item.message.id] = el)"
+                :ref="(el: any) => (infoPopoverRefs[item.message.id] = el)"
                 @update:show="handlePopoverUpdate(item.message.id, $event)"
                 trigger="click"
                 placement="right"
@@ -989,7 +989,7 @@ const handleViewAnnouncement = () => {
 }
 
 const isSpecialMsgType = (type: number) => {
-  return type === MsgEnum.IMAGE || type === MsgEnum.EMOJI || type === MsgEnum.NOTICE
+  return type === MsgEnum.IMAGE || type === MsgEnum.EMOJI || type === MsgEnum.NOTICE || type === MsgEnum.VIDEO
 }
 
 // 判断表情反应是否只有一行

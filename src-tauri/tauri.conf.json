@@ -31,7 +31,11 @@
         "default-capability",
         "mobile-capability",
         "desktop-capability"
-      ]
+      ],
+      "assetProtocol": {
+        "enable": true,
+        "scope": ["**"]
+      }
     },
     "macOSPrivateApi": true
   },

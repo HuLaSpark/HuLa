@@ -6,7 +6,8 @@ import { BaseDirectory, readFile } from '@tauri-apps/plugin-fs'
 import { useConfigStore } from '@/stores/config'
 import { MD5, lib } from 'crypto-js'
 import { useUserStore } from '@/stores/user'
-import { getImageDimensions } from '@/utils/imageUtils'
+import { getImageDimensions } from '@/utils/ImageUtils'
+import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
 
 /** 文件信息类型 */
 export type FileInfoType = {
@@ -96,16 +97,14 @@ export const useUpload = () => {
    */
   const getFileType = (fileName: string): string => {
     const extension = fileName.split('.').pop()?.toLowerCase()
+
+    // 对于图片类型，使用统一的 getMimeTypeFromExtension 函数
+    if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'svg'].includes(extension || '')) {
+      return getMimeTypeFromExtension(fileName)
+    }
+
+    // 其他文件类型
     switch (extension) {
-      case 'jpg':
-      case 'jpeg':
-        return 'image/jpeg'
-      case 'png':
-        return 'image/png'
-      case 'webp':
-        return 'image/webp'
-      case 'gif':
-        return 'image/gif'
       case 'mp4':
         return 'video/mp4'
       case 'mp3':
@@ -367,15 +366,15 @@ export const useUpload = () => {
   }
 
   /**
-   * 获取视频第一帧
+   * 获取视频第十帧
    */
-  const getVideoCover = async (file: File, scene: UploadSceneEnum) => {
+  const getVideoCover = async (file: File) => {
     return new Promise((resolve, reject) => {
       const video = document.createElement('video')
       const tempUrl = URL.createObjectURL(file)
       video.src = tempUrl
       video.crossOrigin = 'anonymous' // 视频跨域
-      video.currentTime = 2 // 第2帧
+      video.currentTime = 10 // 第10帧
       video.oncanplay = async () => {
         const canvas = document.createElement('canvas')
         canvas.width = video.videoWidth
@@ -389,50 +388,14 @@ export const useUpload = () => {
           const name = Date.now() + 'thumb.jpg'
           const thumbFile = new File([blob], name, { type: 'image/jpeg' })
 
-          if (currentProvider.value === UploadProviderEnum.QINIU) {
-            try {
-              // 获取七牛云token
-              const qiniuConfig = await apis.getQiniuToken()
-              const result = (await uploadToQiniu(thumbFile, scene, qiniuConfig)) as any
-              if (result && result.key) {
-                const thumbUrl = `${result.domain}/${result.key}`
-                resolve({
-                  thumbWidth: canvas.width,
-                  thumbHeight: canvas.height,
-                  thumbUrl: thumbUrl,
-                  thumbSize: thumbFile.size,
-                  tempUrl
-                })
-              }
-            } catch (error) {
-              console.error('获取七牛云token失败:', error)
-              reject(error)
-            }
-          } else {
-            // 使用默认上传方式
-            try {
-              const res = await apis.getUploadUrl({ fileName: name, scene: UploadSceneEnum.CHAT })
-              if (res.uploadUrl && res.downloadUrl) {
-                await uploadToDefault(res.uploadUrl, thumbFile)
-                // 等待上传完成
-                const timer = setInterval(() => {
-                  if (!isUploading.value) {
-                    clearInterval(timer)
-                    resolve({
-                      thumbWidth: canvas.width,
-                      thumbHeight: canvas.height,
-                      thumbUrl: res.downloadUrl,
-                      thumbSize: thumbFile.size,
-                      tempUrl
-                    })
-                  }
-                })
-              }
-            } catch (error) {
-              console.error('获取上传链接失败:', error)
-              reject(error)
-            }
-          }
+          // 只返回缩略图文件和基本信息
+          resolve({
+            thumbWidth: canvas.width,
+            thumbHeight: canvas.height,
+            thumbFile: thumbFile, // 返回文件对象供后续统一上传
+            thumbSize: thumbFile.size,
+            tempUrl
+          })
         })
       }
       video.onerror = function () {
@@ -507,11 +470,8 @@ export const useUpload = () => {
     }
     // 如果是视频
     if (type.includes('video')) {
-      const { thumbWidth, thumbHeight, tempUrl, thumbTempUrl, thumbUrl, thumbSize } = (await getVideoCover(
-        file,
-        addParams.scene
-      )) as any
-      return { ...baseInfo, thumbWidth, thumbHeight, tempUrl, thumbTempUrl, thumbUrl, thumbSize }
+      const { thumbWidth, thumbHeight, tempUrl, thumbFile, thumbSize } = (await getVideoCover(file)) as any
+      return { ...baseInfo, thumbWidth, thumbHeight, tempUrl, thumbFile, thumbSize }
     }
 
     return baseInfo
@@ -615,6 +575,7 @@ export const useUpload = () => {
       try {
         // 获取七牛云token
         const qiniuConfig = await apis.getQiniuToken()
+
         const config = {
           ...qiniuConfig,
           provider: options?.provider,
@@ -623,7 +584,7 @@ export const useUpload = () => {
 
         // 对于七牛云，我们不需要预先获取上传URL，而是直接返回一个标记
         return {
-          uploadUrl: 'qiniu', // 标记为七牛云上传
+          uploadUrl: UploadProviderEnum.QINIU, // 标记为七牛云上传
           downloadUrl: qiniuConfig.domain, // 下载URL会在实际上传后生成
           config: config
         }
@@ -633,7 +594,7 @@ export const useUpload = () => {
     } else {
       // 使用默认上传方式
       console.log('开始默认上传图片:', path)
-      const fileName = path.split('/').pop()
+      const fileName = extractFileName(path)
       if (!fileName) {
         throw new Error('文件解析出错')
       }
@@ -662,11 +623,25 @@ export const useUpload = () => {
   const doUpload = async (path: string, uploadUrl: string, options?: any): Promise<{ qiniuUrl: string } | string> => {
     // 如果是七牛云上传
     if (uploadUrl === UploadProviderEnum.QINIU && options) {
+      // 如果没有提供七牛云配置，尝试获取
+      if (!options.domain || !options.token) {
+        try {
+          console.log('获取七牛云配置...')
+          const qiniuConfig = await apis.getQiniuToken()
+          options.domain = qiniuConfig.domain
+          options.token = qiniuConfig.token
+          options.storagePrefix = qiniuConfig.storagePrefix
+          options.region = qiniuConfig.region
+        } catch (error) {
+          console.error('七牛云上传配置不完整，缺少 domain 或 token', error)
+        }
+      }
+
       try {
         const file = await readFile(path, { baseDir: BaseDirectory.AppCache })
 
         // 创建File对象
-        const fileName = path.split('/').pop() || 'file'
+        const fileName = extractFileName(path)
         const fileObj = new File([new Uint8Array(file)], fileName, {
           type: getFileType(fileName)
         })
@@ -924,6 +899,8 @@ export const useUpload = () => {
     onStart: onStart.on,
     onChange,
     uploadFile,
+    parseFile,
+    uploadToQiniu,
     getUploadAndDownloadUrl,
     doUpload,
     UploadProviderEnum

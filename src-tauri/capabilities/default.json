@@ -94,6 +94,9 @@
     "window-state:allow-filename",
     "window-state:allow-restore-state",
     "window-state:allow-save-window-state",
+    "opener:default",
+    "opener:allow-reveal-item-in-dir",
+    "mic-recorder:default",
     {
       "identifier": "shell:allow-execute",
       "allow": [

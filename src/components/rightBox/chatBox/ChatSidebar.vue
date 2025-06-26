@@ -459,11 +459,10 @@ onMounted(async () => {
   addListener(
     appWindow.listen('announcementUpdated', async (event: any) => {
       if (event.payload) {
-        const { hasAnnouncements, topAnnouncement } = event.payload
-        if (hasAnnouncements && topAnnouncement) {
-          // 更新公告列表显示
-          announList.value = [topAnnouncement, ...(announList.value.filter((a) => a.id !== topAnnouncement.id) || [])]
-          announNum.value = announList.value.length
+        const { hasAnnouncements } = event.payload
+        if (hasAnnouncements) {
+          // 初始化群公告
+          await handleInitAnnoun()
         }
       }
     })

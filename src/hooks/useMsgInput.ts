@@ -1,4 +1,4 @@
-import { LimitEnum, MittEnum, MsgEnum, MessageStatusEnum, RoomTypeEnum } from '@/enums'
+import { LimitEnum, MittEnum, MsgEnum, MessageStatusEnum, RoomTypeEnum, UploadSceneEnum } from '@/enums'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import apis from '@/services/apis.ts'
 import { useCachedStore, type BaseUserItem } from '@/stores/cached.ts'
@@ -11,12 +11,11 @@ import { useDebounceFn } from '@vueuse/core'
 import { Ref } from 'vue'
 import { SelectionRange, useCommon } from './useCommon.ts'
 import { readText, readImage } from '@tauri-apps/plugin-clipboard-manager'
-import { processClipboardImage } from '@/utils/imageUtils'
+import { processClipboardImage } from '@/utils/ImageUtils.ts'
 import { messageStrategyMap } from '@/strategy/MessageStrategy.ts'
 import { useTrigger } from './useTrigger'
 import type { AIModel } from '@/services/types.ts'
-import { UploadProviderEnum } from './useUpload.ts'
-
+import { UploadProviderEnum, useUpload } from './useUpload.ts'
 /**
  * 光标管理器
  */
@@ -63,8 +62,18 @@ export const useMsgInput = (messageInputDom: Ref) => {
   const chatStore = useChatStore()
   const globalStore = useGlobalStore()
   const cachedStore = useCachedStore()
+  const { uploadToQiniu } = useUpload()
   const { getCursorSelectionRange, updateSelectionRange, focusOn } = useCursorManager()
-  const { triggerInputEvent, insertNode, getMessageContentType, getEditorRange, imgPaste, reply, userUid } = useCommon()
+  const {
+    triggerInputEvent,
+    insertNode,
+    getMessageContentType,
+    getEditorRange,
+    imgPaste,
+    saveCacheFile,
+    reply,
+    userUid
+  } = useCommon()
   const settingStore = useSettingStore()
   const { chat } = storeToRefs(settingStore)
   /** 艾特选项的key  */
@@ -74,7 +83,13 @@ export const useMsgInput = (messageInputDom: Ref) => {
   /** 发送按钮是否禁用 */
   const disabledSend = computed(() => {
     const plainText = stripHtml(msgInput.value)
-    return plainText.length === 0 || plainText.replace(/&nbsp;/g, ' ').trim().length === 0
+    return (
+      plainText.length === 0 ||
+      plainText
+        .replace(/&nbsp;/g, ' ')
+        .replace(/\u00A0/g, ' ')
+        .trim().length === 0
+    )
   })
   // /** 临时消息id */
   // const tempMessageId = ref(0)
@@ -283,7 +298,10 @@ export const useMsgInput = (messageInputDom: Ref) => {
           return (msgInput.value = imgElement.src)
         }
       }
-
+      // 检查是否是视频
+      if (html.includes('data-type="video"')) {
+        return html
+      }
       const tmp = document.createElement('div')
       tmp.innerHTML = html
       const replyDiv = tmp.querySelector('#replyDiv')
@@ -302,6 +320,8 @@ export const useMsgInput = (messageInputDom: Ref) => {
     try {
       msgInput.value = ''
       messageInputDom.value.innerHTML = ''
+      // 确保完全清除所有空白字符
+      messageInputDom.value.textContent = ''
       reply.value = { avatar: '', imgCount: 0, accountName: '', content: '', key: 0 }
     } catch (error) {
       console.error('Error in resetInput:', error)
@@ -345,8 +365,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
     // 创建临时消息对象 - 此时已经包含本地预览链接
     const tempMsg = await messageStrategy.buildMessageType(tempMsgId, messageBody, globalStore, userUid)
-
-    // 清空输入框和回复信息
     resetInput()
 
     // 先添加到消息列表 - 此时会显示本地预览
@@ -371,7 +389,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
           provider: UploadProviderEnum.QINIU
         })
         const doUploadResult = await messageStrategy.doUpload(msg.path, uploadUrl, config)
-
         // 更新消息体中的URL为服务器URL(判断使用的是七牛云还是默认上传方式),如果没有provider就默认赋值downloadUrl
         messageBody.url =
           config?.provider && config?.provider === UploadProviderEnum.QINIU ? doUploadResult?.qiniuUrl : downloadUrl
@@ -386,8 +403,58 @@ export const useMsgInput = (messageInputDom: Ref) => {
           status: MessageStatusEnum.SENDING
         })
         console.log(`${msg.type === MsgEnum.EMOJI ? '表情包' : '图片'}上传完成,更新为服务器URL:`, messageBody.url)
-      }
+      } else if (msg.type === MsgEnum.VIDEO) {
+        console.log('开始处理视频消息上传')
 
+        // 先上传缩略图（使用去重功能）
+        let uploadResult: string
+        if (messageStrategy.uploadThumbnail && messageStrategy.doUploadThumbnail) {
+          const thumbnailUploadInfo = await messageStrategy.uploadThumbnail(msg.thumbnail, {
+            provider: UploadProviderEnum.QINIU
+          })
+          const thumbnailUploadResult = await messageStrategy.doUploadThumbnail(
+            msg.thumbnail,
+            thumbnailUploadInfo.uploadUrl,
+            thumbnailUploadInfo.config
+          )
+          uploadResult =
+            thumbnailUploadInfo.config?.provider === UploadProviderEnum.QINIU
+              ? thumbnailUploadResult?.qiniuUrl || thumbnailUploadInfo.downloadUrl
+              : thumbnailUploadInfo.downloadUrl
+        } else {
+          uploadResult = await useUpload()
+            .uploadFile(msg.thumbnail, {
+              provider: UploadProviderEnum.QINIU,
+              scene: UploadSceneEnum.CHAT
+            })
+            .then((UploadResult) => {
+              return UploadResult.downloadUrl
+            })
+        }
+
+        // 再上传视频文件
+        const { uploadUrl, downloadUrl, config } = await messageStrategy.uploadFile(msg.path, {
+          provider: UploadProviderEnum.QINIU
+        })
+        const doUploadResult = await messageStrategy.doUpload(msg.path, uploadUrl, config)
+        messageBody.url =
+          config?.provider && config?.provider === UploadProviderEnum.QINIU ? doUploadResult?.qiniuUrl : downloadUrl
+        delete messageBody.path // 删除临时路径
+        messageBody.thumbUrl = uploadResult
+        messageBody.thumbSize = msg.thumbnail.size
+        messageBody.thumbWidth = 300
+        messageBody.thumbHeight = 150
+
+        // 更新临时消息的URL
+        chatStore.updateMsg({
+          msgId: tempMsgId,
+          body: {
+            ...messageBody
+          },
+          status: MessageStatusEnum.SENDING
+        })
+        console.log('视频上传完成,更新为服务器URL:', messageBody.url)
+      }
       console.log('发送消息到服务器 ===>>> ', {
         roomId: globalStore.currentSession.roomId,
         msgType: msg.type,
@@ -421,6 +488,11 @@ export const useMsgInput = (messageInputDom: Ref) => {
       if ((msg.type === MsgEnum.IMAGE || msg.type === MsgEnum.EMOJI) && msg.url.startsWith('blob:')) {
         URL.revokeObjectURL(msg.url)
       }
+
+      // 释放视频缩略图的本地预览URL
+      if (msg.type === MsgEnum.VIDEO && messageBody.thumbUrl && messageBody.thumbUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(messageBody.thumbUrl)
+      }
     } catch (error) {
       console.error('消息发送失败:', error)
       clearTimeout(statusTimer)
@@ -428,6 +500,16 @@ export const useMsgInput = (messageInputDom: Ref) => {
         msgId: tempMsgId,
         status: MessageStatusEnum.FAILED
       })
+
+      // 释放预览URL
+      if ((msg.type === MsgEnum.IMAGE || msg.type === MsgEnum.EMOJI) && msg.url.startsWith('blob:')) {
+        URL.revokeObjectURL(msg.url)
+      }
+
+      // 释放视频缩略图的本地预览URL
+      if (msg.type === MsgEnum.VIDEO && messageBody.thumbUrl && messageBody.thumbUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(messageBody.thumbUrl)
+      }
     }
   }
 
@@ -435,11 +517,29 @@ export const useMsgInput = (messageInputDom: Ref) => {
   const handleInput = useDebounceFn(async (e: Event) => {
     const inputElement = e.target as HTMLInputElement
 
-    // 如果输入框中只有<br />标签，则清空输入框内容
-    // TODO: 为什么这里输入后会有一个br标签?
-    if (inputElement.innerHTML === '<br>') {
+    // 检查输入框内容，如果只有空白字符、br标签或空元素则清空
+    const textContent = inputElement.textContent || ''
+    const innerHTML = inputElement.innerHTML || ''
+
+    // 检查是否有实际内容（图片、视频、表情等）
+    const hasMediaContent =
+      innerHTML.includes('<img') || innerHTML.includes('<video') || innerHTML.includes('data-type=')
+
+    // 清理各种空白字符和空标签
+    const cleanText = textContent.replace(/[\u00A0\u0020\u2000-\u200B\u2028\u2029]/g, '').trim()
+    const hasOnlyEmptyElements =
+      innerHTML === '<br>' ||
+      innerHTML === '<div><br></div>' ||
+      innerHTML.match(/^(<br>|<div><br><\/div>|<p><br><\/p>|\s)*$/)
+
+    // 只有在没有媒体内容且没有有效文本时才清空
+    if (!hasMediaContent && (cleanText === '' || hasOnlyEmptyElements)) {
       inputElement.innerHTML = ''
-      msgInput.value = inputElement.innerHTML
+      inputElement.textContent = ''
+      msgInput.value = ''
+      // 输入框为空时重置所有状态
+      resetAllStates()
+      return
     }
     msgInput.value = inputElement.innerHTML || ''
 
@@ -665,7 +765,11 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
         // 步骤3: 处理回复内容
         // 回复前把包含&nbsp;的字符替换成空格
-        let content = event.message.body.content || event.message.body.url
+        let content =
+          event.message.body.content ||
+          (event.message.type === MsgEnum.VIDEO
+            ? event.message.body.thumbUrl || event.message.body.url
+            : event.message.body.url)
         if (content && typeof content === 'string') {
           content = content.replace(/&nbsp;/g, ' ')
         } else if (Array.isArray(content)) {
@@ -732,6 +836,173 @@ export const useMsgInput = (messageInputDom: Ref) => {
     })
   })
 
+  /**
+   * 发送文件的函数
+   * @param files 要发送的文件数组
+   */
+  const sendFilesDirect = async (files: File[]) => {
+    for (const file of files) {
+      const videoFileName = file.name.toLowerCase()
+
+      // 修复 MIME 类型问题
+      let processedFile = file
+      if (!file.type || file.type === '') {
+        const ext = videoFileName.split('.').pop()?.toLowerCase()
+        let mimeType = 'video/mp4'
+
+        switch (ext) {
+          case 'mp4':
+            mimeType = 'video/mp4'
+            break
+          case 'mov':
+            mimeType = 'video/quicktime'
+            break
+          case 'avi':
+            mimeType = 'video/x-msvideo'
+            break
+          case 'wmv':
+            mimeType = 'video/x-ms-wmv'
+            break
+        }
+
+        processedFile = new File([file], file.name, { type: mimeType })
+      }
+
+      // 生成唯一消息ID，避免重复
+      const tempMsgId = `${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
+      const msgType = MsgEnum.VIDEO
+      const messageStrategy = messageStrategyMap[msgType]
+
+      try {
+        // 立即创建并显示消息
+        const tempMsg = messageStrategy.buildMessageType(
+          tempMsgId,
+          {
+            url: URL.createObjectURL(processedFile),
+            size: processedFile.size,
+            fileName: processedFile.name,
+            thumbUrl: '',
+            thumbWidth: 300,
+            thumbHeight: 150,
+            thumbSize: 0
+          },
+          globalStore,
+          userUid
+        )
+        tempMsg.message.status = MessageStatusEnum.SENDING
+
+        chatStore.pushMsg(tempMsg)
+        useMitt.emit(MittEnum.MESSAGE_ANIMATION, tempMsg)
+
+        // 异步处理上传
+        const videoPath = await saveCacheFile(processedFile, 'video/')
+
+        // 直接使用 VideoMessageStrategy 生成缩略图，避免重复处理
+        const videoStrategy = messageStrategy as any
+        const thumbnailFile = await videoStrategy.getVideoThumbnail(processedFile)
+
+        // 生成本地缩略图预览URL，立即更新消息显示
+        const localThumbUrl = URL.createObjectURL(thumbnailFile)
+        chatStore.updateMsg({
+          msgId: tempMsgId,
+          status: MessageStatusEnum.SENDING,
+          body: {
+            ...tempMsg.message.body,
+            thumbUrl: localThumbUrl,
+            thumbSize: thumbnailFile.size
+          }
+        })
+
+        // 获取一次七牛云配置，共享使用
+        const videoUploadResult = await messageStrategy.uploadFile(videoPath, { provider: UploadProviderEnum.QINIU })
+        const qiniuConfig = videoUploadResult.config // 使用第一次获取的配置
+
+        // 更新状态为上传中
+        chatStore.updateMsg({
+          msgId: tempMsgId,
+          status: MessageStatusEnum.SENDING
+        })
+
+        // 上传视频
+        const videoUploadResponse = await messageStrategy.doUpload(videoPath, videoUploadResult.uploadUrl, {
+          provider: UploadProviderEnum.QINIU,
+          ...qiniuConfig
+        })
+
+        // 直接使用七牛云上传缩略图，避免通过doUpload路径
+        const thumbnailUploadResponse = await uploadToQiniu(
+          thumbnailFile,
+          qiniuConfig.scene || 'CHAT',
+          qiniuConfig,
+          true // 是否启用文件去重
+        )
+
+        const finalVideoUrl = videoUploadResponse?.qiniuUrl || videoUploadResult.downloadUrl
+        const finalThumbnailUrl =
+          thumbnailUploadResponse?.downloadUrl || `${qiniuConfig.domain}/${thumbnailUploadResponse?.key}`
+
+        // 验证上传是否真正成功
+        if (!videoUploadResponse?.qiniuUrl && !videoUploadResult.downloadUrl) {
+          throw new Error('视频上传失败')
+        }
+
+        if (thumbnailUploadResponse?.error) {
+          throw new Error('缩略图上传失败: ' + thumbnailUploadResponse.error)
+        }
+
+        if (!finalThumbnailUrl && !thumbnailUploadResponse?.key) {
+          throw new Error('缩略图上传失败')
+        }
+
+        console.log('✅ 七牛云上传成功，返回的数据:', {
+          videoUrl: finalVideoUrl,
+          thumbnailUrl: finalThumbnailUrl,
+          videoResponse: videoUploadResponse,
+          thumbnailResponse: thumbnailUploadResponse
+        })
+
+        // 发送消息到服务器保存
+        const serverResponse = await apis.sendMsg({
+          roomId: globalStore.currentSession.roomId,
+          msgType: MsgEnum.VIDEO,
+          body: {
+            url: finalVideoUrl,
+            size: processedFile.size,
+            fileName: processedFile.name,
+            thumbUrl: finalThumbnailUrl,
+            thumbWidth: 300,
+            thumbHeight: 150,
+            thumbSize: thumbnailFile.size
+          }
+        })
+
+        // 使用服务器返回的数据更新消息状态为SUCCESS
+        chatStore.updateMsg({
+          msgId: tempMsgId,
+          status: MessageStatusEnum.SUCCESS,
+          newMsgId: serverResponse.message.id, // 使用服务器返回的消息ID
+          body: serverResponse.message.body // 使用服务器返回的消息体
+        })
+
+        // 清理本地URL
+        URL.revokeObjectURL(tempMsg.message.body.url)
+        URL.revokeObjectURL(localThumbUrl)
+
+        // 清空输入框内容，避免重复发送
+        if (messageInputDom.value) {
+          messageInputDom.value.innerHTML = ''
+        }
+      } catch (error) {
+        console.error('视频发送失败:', error)
+        chatStore.updateMsg({
+          msgId: tempMsgId,
+          status: MessageStatusEnum.FAILED
+        })
+        window.$message.error('视频发送失败')
+      }
+    }
+  }
+
   return {
     imgPaste,
     inputKeyDown,
@@ -740,6 +1011,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     handleInput,
     send,
     stripHtml,
+    sendFilesDirect,
     personList,
     ait,
     aitKey,
