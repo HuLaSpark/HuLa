@@ -33,7 +33,9 @@
               <svg v-if="!arrowStatus" class="down w-18px h-18px color-#505050 cursor-pointer">
                 <use href="#down"></use>
               </svg>
-              <svg v-else class="down w-18px h-18px color-#505050 cursor-pointer"><use href="#up"></use></svg>
+              <svg v-else class="down w-18px h-18px color-#505050 cursor-pointer">
+                <use href="#up"></use>
+              </svg>
             </n-flex>
           </template>
         </n-input>
@@ -354,7 +356,7 @@ const normalLogin = async (auto = false) => {
   }
 
   apis
-    .login({ account: account, password: info.value.password, source: 'pc' })
+    .login({ account: account, password: info.value.password, source: 'pc', systemType: 2, grantType: 'PASSWORD' })
     .then(async (res) => {
       loginDisabled.value = true
       loginText.value = '登录成功, 正在跳转'

@@ -149,9 +149,12 @@ async function Http<T = any>(
     httpHeaders.set('Content-Type', 'application/json')
   }
 
-  // 设置Authorization
+  // 统一设置基础认证头
+  const basicAuth = btoa('luohuo_web_pro:luohuo_web_pro_secret')
+  httpHeaders.set('Authorization', `${basicAuth}`)
+
   if (token) {
-    httpHeaders.set('Authorization', `Bearer ${token}`)
+    httpHeaders.set('token', `${token}`)
   }
 
   // 设置浏览器指纹

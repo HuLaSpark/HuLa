@@ -90,9 +90,9 @@ export default {
 
   // -------------- token相关 ---------------
   register: `${prefix + URLEnum.TOKEN}/register`, // 注册
-  login: `${prefix + URLEnum.TOKEN}/login`, // 登录
+  login: `${prefix + URLEnum.TOKEN}/anyTenant/login`, // 登录
   refreshToken: `${prefix + URLEnum.TOKEN}/refreshToken`, // 续签
-  logout: `${prefix + URLEnum.TOKEN}/logout`, // 退出登录
+  logout: `${prefix + URLEnum.TOKEN}/anyUser/logout`, // 退出登录
   checkToken: `${prefix + URLEnum.TOKEN}/check`, // 检查token是否有效
   forgetPassword: `${prefix + URLEnum.TOKEN}/forgotPassword` // 忘记密码
 }

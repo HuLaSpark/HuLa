@@ -46,6 +46,10 @@ export type LoginUserReq = {
   password: string
   /** 登录方式 pc/mobile */
   source: 'pc' | 'mobile'
+  systemType: number
+  grantType: 'CAPTCHA' | 'REFRESH_TOKEN' | 'PASSWORD' | 'MOBILE'
+  key?: string
+  code?: string
 }
 
 export type RegisterUserReq = {
