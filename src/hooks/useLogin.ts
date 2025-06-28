@@ -39,7 +39,7 @@ export const useLogin = () => {
     isTrayMenuShow.value = false
     try {
       // 创建登录窗口
-      await createWebviewWindow('登录', 'login', 320, 448, 'home', false, 320, 448)
+      await createWebviewWindow('登录', 'login', 420, 600, 'home', false, 420, 600)
       // 调整托盘大小
       await resizeWindow('tray', 130, 44)
       // 发送登出事件
