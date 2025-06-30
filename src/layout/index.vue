@@ -28,7 +28,7 @@
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { ChangeTypeEnum, MittEnum, ModalEnum, NotificationTypeEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
-import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGroupStore } from '@/stores/group'
@@ -47,6 +47,7 @@ import { type } from '@tauri-apps/plugin-os'
 import { useConfigStore } from '@/stores/config'
 import { useCheckUpdate } from '@/hooks/useCheckUpdate'
 import { UserAttentionType } from '@tauri-apps/api/window'
+import { LogicalSize } from '@tauri-apps/api/dpi'
 
 const loadingPercentage = ref(10)
 const loadingText = ref('正在加载应用...')
@@ -341,7 +342,6 @@ onMounted(async () => {
   if (!localStorage.getItem('config')) {
     await configStore.initConfig()
   }
-  await getCurrentWebviewWindow().show()
   let permissionGranted = await isPermissionGranted()
 
   // 如果没有授权，则请求授权系统通知
@@ -358,8 +358,14 @@ onMounted(async () => {
   // 监听home窗口被聚焦的事件，当窗口被聚焦时自动关闭状态栏通知
   const homeWindow = await WebviewWindow.getByLabel('home')
   if (homeWindow) {
-    homeWindow.show()
-    homeWindow.onFocusChanged(({ payload: focused }) => {
+    // 恢复大小
+    if (globalStore.homeWindowState.width && globalStore.homeWindowState.height) {
+      await homeWindow.setSize(new LogicalSize(globalStore.homeWindowState.width, globalStore.homeWindowState.height))
+    }
+    // 居中
+    await homeWindow.center()
+    await homeWindow.show()
+    await homeWindow.onFocusChanged(({ payload: focused }) => {
       // 当窗口获得焦点时，关闭通知提示
       if (focused) {
         globalStore.setTipVisible(false)

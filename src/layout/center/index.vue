@@ -134,10 +134,12 @@ import { useSettingStore } from '@/stores/setting.ts'
 import { type } from '@tauri-apps/plugin-os'
 import { renderLabel, renderSourceList, options, createGroup } from './model.tsx'
 import { useWindow } from '@/hooks/useWindow'
+import { useGlobalStore } from '@/stores/global.ts'
 
 const { createWebviewWindow } = useWindow()
 
 const settingStore = useSettingStore()
+const globalStore = useGlobalStore()
 const { page } = storeToRefs(settingStore)
 const appWindow = WebviewWindow.getCurrent()
 const selectedValue = ref([])
@@ -149,7 +151,7 @@ const maxWidth = 300
 /** 初始化宽度 */
 const initWidth = ref(250)
 /**! 使用(vueUse函数获取)视口宽度 */
-const { width } = useWindowSize()
+const { width, height } = useWindowSize()
 /** 是否拖拽 */
 const isDrag = ref(true)
 /** 当前消息 */
@@ -201,6 +203,7 @@ watchEffect(() => {
     center?.classList.remove('flex-1')
     isDrag.value = true
   }
+  globalStore.setHomeWindowState({ width: width.value, height: height.value })
 })
 
 const handleCreateGroup = async () => {
