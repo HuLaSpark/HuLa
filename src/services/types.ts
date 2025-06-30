@@ -56,7 +56,7 @@ export type RegisterUserReq = {
   /** 默认随机头像 */
   avatar: string
   /** 昵称 */
-  name: string
+  nickName: string
   /** 邮箱 */
   email: string
   /** 密码 */
@@ -65,6 +65,8 @@ export type RegisterUserReq = {
   code: string
   /** 识别码 */
   uuid: string
+  key: string
+  confirmPassword: string
 }
 
 /** 分页翻页 */

@@ -17,11 +17,11 @@
           <div v-if="currentStep === 1">
             <n-form-item path="name">
               <n-input
-                :class="[{ 'pr-20px': info.name }, { 'pr-16px': showNamePrefix && !info.name }]"
+                :class="[{ 'pr-20px': info.nickName }, { 'pr-16px': showNamePrefix && !info.nickName }]"
                 maxlength="8"
                 minlength="1"
                 size="large"
-                v-model:value="info.name"
+                v-model:value="info.nickName"
                 type="text"
                 spellCheck="false"
                 autoComplete="off"
@@ -32,7 +32,7 @@
                 @focus="handleInputState($event, 'name')"
                 @blur="handleInputState($event, 'name')"
                 clearable>
-                <template #prefix v-if="showNamePrefix || info.name">
+                <template #prefix v-if="showNamePrefix || info.nickName">
                   <p class="text-12px">昵称</p>
                 </template>
               </n-input>
@@ -253,9 +253,11 @@ const info = unref(
     avatar: '',
     email: '',
     password: '',
-    name: '',
+    nickName: '',
     code: '',
-    uuid: ''
+    uuid: '',
+    key: 'REGISTER_EMAIL',
+    confirmPassword: ''
   })
 )
 
@@ -385,7 +387,7 @@ const isPasswordValid = computed(() => {
 
 /** 检查第一步是否可以继续 */
 const isStep1Valid = computed(() => {
-  return info.name && isPasswordValid.value && confirmPassword.value === info.password && protocol.value
+  return info.nickName && isPasswordValid.value && confirmPassword.value === info.password && protocol.value
 })
 
 /** 检查第二步是否可以继续 */
@@ -493,6 +495,8 @@ const register = async () => {
     const avatarNum = Math.floor(Math.random() * 21) + 1
     const avatarId = avatarNum.toString().padStart(3, '0')
     info.avatar = avatarId
+
+    info.confirmPassword = confirmPassword.value
 
     // 注册
     await apis.register({ ...info })

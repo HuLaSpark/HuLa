@@ -89,7 +89,7 @@ export default {
   getQiniuToken: `${prefix + URLEnum.SYSTEM}/ossToken`, // 获取七牛云上传token
 
   // -------------- token相关 ---------------
-  register: `${prefix + URLEnum.TOKEN}/register`, // 注册
+  register: `${prefix + URLEnum.TOKEN}/anyTenant/registerByEmail`, // 注册
   login: `${prefix + URLEnum.TOKEN}/anyTenant/login`, // 登录
   refreshToken: `${prefix + URLEnum.TOKEN}/refreshToken`, // 续签
   logout: `${prefix + URLEnum.TOKEN}/anyUser/logout`, // 退出登录
