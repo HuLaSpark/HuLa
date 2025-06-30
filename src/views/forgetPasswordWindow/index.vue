@@ -234,7 +234,7 @@ const emailRules = {
   ],
   imgCode: [
     { required: true, message: '请输入图片验证码', trigger: 'blur' },
-    { min: 4, max: 5, message: '验证码长度为4-5位', trigger: 'blur' }
+    { min: 1, max: 5, message: '验证码长度为4-5位', trigger: 'blur' }
   ],
   emailCode: [
     { required: true, message: '请输入邮箱验证码', trigger: 'blur' },
@@ -347,7 +347,7 @@ const sendEmailCode = async () => {
       code: formData.value.imgCode,
       uuid: formData.value.uuid,
       operationType: 'forgot',
-      templateCode: 'REGISTER_EMAIL'
+      templateCode: 'PASSWORD_EDIT'
     })
 
     window.$message.success('验证码已发送至您的邮箱')
@@ -409,7 +409,9 @@ const submitNewPassword = async () => {
       email: formData.value.email,
       code: formData.value.emailCode,
       uuid: formData.value.uuid,
-      password: passwordForm.value.password
+      password: passwordForm.value.password,
+      confirmPassword: passwordForm.value.confirmPassword,
+      key: 'PASSWORD_EDIT'
     })
 
     currentStep.value = 3

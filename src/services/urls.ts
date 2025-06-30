@@ -94,5 +94,5 @@ export default {
   refreshToken: `${prefix + URLEnum.TOKEN}/refreshToken`, // 续签
   logout: `${prefix + URLEnum.TOKEN}/anyUser/logout`, // 退出登录
   checkToken: `${prefix + URLEnum.TOKEN}/check`, // 检查token是否有效
-  forgetPassword: `${prefix + URLEnum.TOKEN}/forgotPassword` // 忘记密码
+  forgetPassword: `${prefix + URLEnum.TOKEN}/anyTenant/password` // 忘记密码
 }

@@ -168,7 +168,7 @@ export default {
     code: string
     uuid?: string
     operationType?: 'register' | 'forgot'
-    templateCode: 'REGISTER_EMAIL' | 'REGISTER_SMS' | 'MOBILE_LOGIN' | 'MOBILE_EDIT' | 'EMAIL_EDIT'
+    templateCode: 'REGISTER_EMAIL' | 'REGISTER_SMS' | 'MOBILE_LOGIN' | 'MOBILE_EDIT' | 'EMAIL_EDIT' | 'PASSWORD_EDIT'
   }) => POST<void>(urls.sendCaptcha, params),
   /** 检查token是否有效 */
   checkToken: () => POST<string>(urls.checkToken),
@@ -177,8 +177,14 @@ export default {
   /** 用户状态改变 */
   changeUserState: (userStateId: string) => POST(`${urls.changeUserState}/${userStateId}`),
   /** 忘记密码 */
-  forgetPassword: (params: { email: string; code: string; uuid: string; password: string }) =>
-    POST<void>(urls.forgetPassword, params),
+  forgetPassword: (params: {
+    email: string
+    code: string
+    uuid: string
+    password: string
+    confirmPassword: string
+    key: string
+  }) => PUT<void>(urls.forgetPassword, params),
   /** 初始化配置 */
   initConfig: () => GET<ConfigType>(urls.initConfig),
   /** 获取七牛token */
