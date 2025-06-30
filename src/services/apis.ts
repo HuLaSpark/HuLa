@@ -163,8 +163,13 @@ export default {
   /** 获取验证码 */
   getCaptcha: () => GET<{ img: string; uuid: string }>(urls.getCaptcha),
   /** 发送验证码 */
-  sendCaptcha: (params: { email: string; code: string; uuid?: string; operationType?: 'register' | 'forgot' }) =>
-    POST<void>(urls.sendCaptcha, params),
+  sendCaptcha: (params: {
+    email: string
+    code: string
+    uuid?: string
+    operationType?: 'register' | 'forgot'
+    templateCode: 'REGISTER_EMAIL' | 'REGISTER_SMS' | 'MOBILE_LOGIN' | 'MOBILE_EDIT' | 'EMAIL_EDIT'
+  }) => POST<void>(urls.sendCaptcha, params),
   /** 检查token是否有效 */
   checkToken: () => POST<string>(urls.checkToken),
   /** 获取所有用户状态 */

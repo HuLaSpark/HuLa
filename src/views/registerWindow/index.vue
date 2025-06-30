@@ -456,7 +456,12 @@ const handleStepAction = async () => {
     loading.value = true
     try {
       // 发送邮箱验证码
-      await apis.sendCaptcha({ email: info.email, code: info.code.toString(), uuid: captcha.value.uuid.toString() })
+      await apis.sendCaptcha({
+        email: info.email,
+        code: info.code.toString(),
+        uuid: captcha.value.uuid.toString(),
+        templateCode: 'REGISTER_EMAIL'
+      })
       window.$message.success('验证码已发送')
       loading.value = false
       // 显示邮箱验证码输入弹窗

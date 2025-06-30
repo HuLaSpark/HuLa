@@ -80,12 +80,12 @@ export default {
   editAnnouncement: `${prefix + URLEnum.ROOM}/announcement/edit`, // 编辑群公告
 
   // -------------- 验证码 ---------------
-  getCaptcha: `${prefix + URLEnum.CAPTCHA}/captcha`, // 获取图片验证码
-  sendCaptcha: `${prefix + URLEnum.CAPTCHA}/sendCode`, // 发送验证码到用户邮箱
+  getCaptcha: `${prefix + URLEnum.TOKEN}/anyTenant/captcha`, // 获取图片验证码
+  sendCaptcha: `${prefix + URLEnum.TOKEN}/anyTenant/sendEmailCode`, // 发送验证码到用户邮箱
 
   // -------------- 系统相关 ---------------
   fileUpload: `${prefix + URLEnum.SYSTEM + URLEnum.OSS}/upload/url`, // 文件上传
-  initConfig: `${prefix + URLEnum.SYSTEM}/config/init`, // 获取配置文件
+  initConfig: `${prefix}/im/anyTenant/config/init`, // 获取配置文件
   getQiniuToken: `${prefix + URLEnum.SYSTEM}/ossToken`, // 获取七牛云上传token
 
   // -------------- token相关 ---------------

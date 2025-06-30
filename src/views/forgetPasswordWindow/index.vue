@@ -346,7 +346,8 @@ const sendEmailCode = async () => {
       email: formData.value.email,
       code: formData.value.imgCode,
       uuid: formData.value.uuid,
-      operationType: 'forgot'
+      operationType: 'forgot',
+      templateCode: 'REGISTER_EMAIL'
     })
 
     window.$message.success('验证码已发送至您的邮箱')
