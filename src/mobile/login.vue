@@ -69,15 +69,8 @@
         @blur="passwordPH = '输入HuLa密码'"
         clearable />
 
-      <!-- 协议 -->
-      <n-flex justify="center" :size="6">
-        <n-checkbox v-model:checked="protocol" />
-        <div class="text-12px color-#909090 cursor-default lh-14px">
-          <span>已阅读并同意</span>
-          <span class="color-#13987f cursor-pointer">服务协议</span>
-          <span>和</span>
-          <span class="color-#13987f cursor-pointer">HuLa隐私保护指引</span>
-        </div>
+      <n-flex justify="flex-end" :size="6">
+        <n-button text color="#13987f" @click="handleForgetPassword"> 忘记密码 </n-button>
       </n-flex>
 
       <n-button
@@ -88,6 +81,17 @@
         color="#13987f">
         <span>{{ loginText }}</span>
       </n-button>
+
+      <!-- 协议 -->
+      <n-flex justify="center" :size="6" class="absolute bottom-0">
+        <n-checkbox v-model:checked="protocol" />
+        <div class="text-12px color-#909090 cursor-default lh-14px">
+          <span>已阅读并同意</span>
+          <span class="color-#13987f cursor-pointer">服务协议</span>
+          <span>和</span>
+          <span class="color-#13987f cursor-pointer">HuLa隐私保护指引</span>
+        </div>
+      </n-flex>
     </n-flex>
   </n-config-provider>
 </template>
@@ -161,7 +165,7 @@ const normalLogin = async () => {
       loading.value = false
       userStore.userInfo = account
       loginHistoriesStore.addLoginHistory(account)
-      router.push('/mobile/home')
+      router.push('/mobile/message')
       await setLoginState()
     })
     .catch(() => {
@@ -195,13 +199,19 @@ const delAccount = (item: UserInfoType) => {
   info.value.password = ''
   info.value.avatar = '/logo.png'
 }
+
+const handleForgetPassword = () => {
+  router.push('/mobile/forget-password')
+}
 </script>
 
 <style scoped lang="scss">
 @use '@/styles/scss/login';
 @use '@/styles/scss/global/login-bg';
-body {
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
+</style>
+
+<style>
+.n-message-container.n-message-container--top {
+  top: 65px !important;
 }
 </style>

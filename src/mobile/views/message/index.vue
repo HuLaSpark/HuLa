@@ -20,10 +20,15 @@
         </div>
 
         <div class="flex-1">
-          <div v-for="item in messageItems" :key="item.key" class="message-item">
+          <div v-for="item in messageItems" :key="item.id" class="message-item relative">
             <n-avatar :size="40" :src="item.avatar" fallback-src="/logo.png" round />
-            <div class="flex-1">
-              <span>{{ item.value }}</span>
+            <div class="flex flex-col ml-14px justify-between h-[35px]">
+              <span class="text-14px text-#333">{{ item.name }}</span>
+              <span class="text-12px text-#999">{{ item.text }}</span>
+            </div>
+            <!-- 未读数 悬浮到头像上 -->
+            <div v-if="item.unreadCount > 0" class="flex flex-col justify-between h-[35px] absolute left-30px top-5px">
+              <span class="text-12px text-[#fff] bg-[red] rounded-full px-8px py-3px">{{ item.unreadCount }}</span>
             </div>
           </div>
         </div>
@@ -34,37 +39,25 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useChatStore } from '@/stores/chat.ts'
 import PullToRefresh from '#/components/PullToRefresh.vue'
+
+const chatStore = useChatStore()
 
 const pullRefreshRef = ref()
 
-const avatars = [
-  'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg',
-  'https://avatars.githubusercontent.com/u/20943608?s=60&v=4',
-  'https://avatars.githubusercontent.com/u/46394163?s=60&v=4',
-  'https://avatars.githubusercontent.com/u/39197136?s=60&v=4',
-  'https://avatars.githubusercontent.com/u/19239641?s=60&v=4'
-]
+const messageItems = computed(() => chatStore.sessionList)
 
-const messageItems = ref(
-  Array.from({ length: 20 }, (_, i) => ({
-    key: `${i}`,
-    value: i,
-    avatar: avatars[i % avatars.length]
-  }))
-)
+const getSessionList = async () => {
+  await chatStore.getSessionList(true)
+}
+
+onMounted(() => {
+  getSessionList()
+})
 
 const handleRefresh = async () => {
-  // 模拟加载数据
-  await new Promise((resolve) => setTimeout(resolve, 1000))
-
-  // 在这里添加新的消息数据
-  messageItems.value.unshift({
-    key: `new-${Date.now()}`,
-    value: messageItems.value.length,
-    avatar: avatars[messageItems.value.length % avatars.length]
-  })
-
+  await getSessionList()
   // 完成刷新
   pullRefreshRef.value?.finishRefresh()
 }
