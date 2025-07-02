@@ -299,7 +299,8 @@ async function Http<T = any>(
         throw new AppException(errorMessage, {
           type: ErrorType.Network,
           details: { attempts: currentAttempt + 1 },
-          showError: true
+          showError: true,
+          isRetryError: true
         })
       }
 
@@ -307,7 +308,8 @@ async function Http<T = any>(
       throw new AppException(ERROR_MESSAGES.UNKNOWN, {
         type: error instanceof TypeError ? ErrorType.Network : ErrorType.Unknown,
         details: { attempts: currentAttempt + 1 },
-        showError: true
+        showError: true,
+        isRetryError: true
       })
     }
   }

@@ -14,6 +14,7 @@ export interface ErrorDetails {
   code?: number
   details?: Record<string, any>
   showError?: boolean
+  isRetryError?: boolean
 }
 
 export class AppException extends Error {
@@ -31,16 +32,19 @@ export class AppException extends Error {
     this.details = errorDetails?.details
 
     // 只有在明确指定显示错误时才显示
-    if (errorDetails?.showError && window.$message && !AppException.hasShownError) {
-      // TODO: 移除一些强烈推荐提醒使用console来打印错误
-      // window.$message.error(message)
-      console.error(message)
-      AppException.hasShownError = true
+    if (errorDetails?.showError && !AppException.hasShownError) {
+      // 如果是重试相关的错误，使用console.log打印而不是弹窗提示
+      if (errorDetails?.isRetryError) {
+        console.log('🔄 重试错误:', message, this.details)
+      } else {
+        window.$message.error(message)
+        AppException.hasShownError = true
 
-      // 只有在 2 秒内没有显示过错误消息时才会显示
-      setTimeout(() => {
-        AppException.hasShownError = false
-      }, 2000)
+        // 只有在 2 秒内没有显示过错误消息时才会显示
+        setTimeout(() => {
+          AppException.hasShownError = false
+        }, 2000)
+      }
     }
   }
 
