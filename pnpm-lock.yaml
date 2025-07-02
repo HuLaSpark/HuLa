@@ -68,6 +68,9 @@ importers:
       dayjs:
         specifier: ^1.11.11
         version: 1.11.13
+      digest-wasm:
+        specifier: ^0.1.4
+        version: 0.1.4
       dompurify:
         specifier: ^3.2.4
         version: 3.2.4
@@ -2521,6 +2524,9 @@ packages:
   detect-libc@2.0.3:
     resolution: {integrity: sha512-bwy0MGW55bG41VqxxypOsdSdGqLwXPI/focwgTYCFMbdUiBAxLg9CFzG08sz2aqzknwiX7Hkl0bQENjg8iLByw==}
     engines: {node: '>=8'}
+
+  digest-wasm@0.1.4:
+    resolution: {integrity: sha512-pz4nYXZBTVJ3MDfjOv0ZG7Vyf6Nad5er94vyqsxTxZJQDyS9CiKbDgBTrLCM4N2/0C3cwhwPL2D/OJWPg3TE8Q==}
 
   dir-glob@3.0.1:
     resolution: {integrity: sha512-WkrWp9GR4KXfKGYzOLmTuGVi1UWFfws377n9cc55/tb6DuqyF6pcQ5AbiHEshaDpY9v6oaSr2XCDidGmMwdzIA==}
@@ -7391,6 +7397,8 @@ snapshots:
     optional: true
 
   detect-libc@2.0.3: {}
+
+  digest-wasm@0.1.4: {}
 
   dir-glob@3.0.1:
     dependencies:

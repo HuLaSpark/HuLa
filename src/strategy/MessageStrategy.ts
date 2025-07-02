@@ -3,12 +3,14 @@ import { MessageType } from '@/services/types.ts'
 import { AppException } from '@/common/exception.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { Ref } from 'vue'
-import { parseInnerText, useCommon } from '@/hooks/useCommon.ts'
+import { parseInnerText } from '@/hooks/useCommon.ts'
 import { BaseDirectory, readFile, writeFile, remove } from '@tauri-apps/plugin-fs'
 import DOMPurify from 'dompurify'
 import { UploadOptions, UploadProviderEnum, useUpload } from '@/hooks/useUpload'
 import { getImageDimensions } from '@/utils/ImageUtils'
-import { getMimeTypeFromExtension } from '@/utils/Formatting'
+import { getMimeTypeFromExtension, removeTag } from '@/utils/Formatting'
+import { join, appCacheDir } from '@tauri-apps/api/path'
+import { invoke } from '@tauri-apps/api/core'
 
 interface MessageStrategy {
   getMsg: (msgInputValue: string, replyValue: any, fileList?: File[]) => any
@@ -24,6 +26,7 @@ interface MessageStrategy {
     options?: { provider?: UploadProviderEnum }
   ) => Promise<{ uploadUrl: string; downloadUrl: string; config?: any }>
   doUploadThumbnail?: (thumbnailFile: File, uploadUrl: string, options?: any) => Promise<{ qiniuUrl?: string } | void>
+  getUploadProgress?: () => { progress: any; onChange: any }
 }
 
 /**
@@ -86,8 +89,6 @@ class TextMessageStrategyImpl extends AbstractMessageStrategy {
   }
 
   getMsg(msgInputValue: string, replyValue: any): any {
-    const { removeTag } = useCommon()
-
     // 处理&nbsp;为空格
     let content = removeTag(msgInputValue)
     if (content && typeof content === 'string') {
@@ -519,6 +520,14 @@ class VideoMessageStrategyImpl extends AbstractMessageStrategy {
   private readonly ALLOWED_TYPES = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/x-ms-wmv']
   private uploadHook = useUpload()
 
+  // 暴露上传进度监听
+  getUploadProgress() {
+    return {
+      progress: this.uploadHook.progress,
+      onChange: this.uploadHook.onChange
+    }
+  }
+
   constructor() {
     super(MsgEnum.VIDEO)
   }
@@ -543,14 +552,14 @@ class VideoMessageStrategyImpl extends AbstractMessageStrategy {
    * 压缩缩略图
    * @param file 原始缩略图文件
    * @param maxWidth 最大宽度，默认300px
-   * @param maxHeight 最大高度，默认300px
-   * @param quality 压缩质量，默认0.7
+   * @param maxHeight 最大高度，默认150px
+   * @param quality 压缩质量，默认0.6
    */
   private async compressThumbnail(
     file: File,
     maxWidth: number = 300,
-    maxHeight: number = 300,
-    quality: number = 0.7
+    maxHeight: number = 150,
+    quality: number = 0.6
   ): Promise<File> {
     return new Promise((resolve, reject) => {
       const img = new Image()
@@ -603,58 +612,58 @@ class VideoMessageStrategyImpl extends AbstractMessageStrategy {
   }
 
   /**
-   * 获取视频缩略图（第十帧）
+   * 获取视频缩略图
    * @param file 视频文件
    */
   private async getVideoThumbnail(file: File): Promise<File> {
-    return new Promise((resolve, reject) => {
-      const video = document.createElement('video')
-      const canvas = document.createElement('canvas')
-      video.src = URL.createObjectURL(file)
-      video.addEventListener('loadedmetadata', () => {
-        // 计算第十帧的时间点（假设视频帧率为30fps）
-        const frameRate = 30
-        const targetFrame = 10
-        const targetTime = targetFrame / frameRate
+    try {
+      // 首先将文件保存到临时位置
+      const tempPath = `temp-video-${Date.now()}-${file.name}`
+      const arrayBuffer = await file.arrayBuffer()
+      const uint8Array = new Uint8Array(arrayBuffer)
 
-        // 确保不超过视频总时长
-        const seekTime = Math.min(targetTime, video.duration - 0.1)
-        video.currentTime = seekTime
+      // 写入临时文件
+      await writeFile(tempPath, uint8Array, { baseDir: BaseDirectory.AppCache })
+
+      // 构建完整的文件路径
+      const fullPath = await join(await appCacheDir(), tempPath)
+
+      // 调用 Rust 函数生成缩略图
+      const thumbnailInfo = await invoke<{
+        thumbnail_base64: string
+        width: number
+        height: number
+        duration: number
+      }>('get_video_thumbnail', {
+        videoPath: fullPath,
+        targetTime: 0.1 // 第1秒对应约0.1秒
       })
 
-      video.addEventListener('seeked', async () => {
-        canvas.width = video.videoWidth
-        canvas.height = video.videoHeight
-        const ctx = canvas.getContext('2d')!
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+      // 将 base64 转换为 File 对象
+      const base64Data = thumbnailInfo.thumbnail_base64
+      const binaryString = atob(base64Data)
+      const bytes = new Uint8Array(binaryString.length)
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i)
+      }
 
-        // 将canvas转换为Blob然后创建File对象
-        canvas.toBlob(
-          async (blob) => {
-            URL.revokeObjectURL(video.src) // 释放内存
-            if (blob) {
-              try {
-                const originalThumbnail = new File([blob], 'thumbnail.jpg', { type: 'image/jpeg' })
-                // 压缩缩略图
-                const compressedThumbnail = await this.compressThumbnail(originalThumbnail)
-                resolve(compressedThumbnail)
-              } catch (error) {
-                reject(error)
-              }
-            } else {
-              reject(new AppException('无法生成视频缩略图'))
-            }
-          },
-          'image/jpeg',
-          0.8
-        )
-      })
+      const thumbnailBlob = new Blob([bytes], { type: 'image/jpeg' })
+      const thumbnailFile = new File([thumbnailBlob], 'thumbnail.jpg', { type: 'image/jpeg' })
 
-      video.addEventListener('error', () => {
-        URL.revokeObjectURL(video.src)
-        reject(new AppException('视频加载失败'))
-      })
-    })
+      // 清理临时文件
+      try {
+        await remove(tempPath, { baseDir: BaseDirectory.AppCache })
+      } catch (cleanupError) {
+        console.warn('清理临时文件失败:', cleanupError)
+      }
+
+      // 压缩缩略图
+      const compressedThumbnail = await this.compressThumbnail(thumbnailFile)
+      return compressedThumbnail
+    } catch (error) {
+      console.error('Rust 缩略图生成失败:', error)
+      throw new AppException(`生成视频缩略图失败: ${error}`)
+    }
   }
 
   async getMsg(msgInputValue: string, replyValue: any, fileList?: File[]): Promise<any> {
@@ -693,6 +702,8 @@ class VideoMessageStrategyImpl extends AbstractMessageStrategy {
       reply: replyValue.content ? { content: replyValue.content, key: replyValue.key } : undefined
     }
   }
+
+  // 转换为视频文件
   private async convertToVideoFile(videoFile: string | File): Promise<File> {
     // 1. 如果已经是File对象直接返回
     if (videoFile instanceof File) {
@@ -721,7 +732,7 @@ class VideoMessageStrategyImpl extends AbstractMessageStrategy {
       }
     }
 
-    // 5. 处理合法字符串路径的情况（原逻辑）
+    // 5. 处理合法字符串路径的情况
     try {
       const normalizedPath = videoFile.replace(/\\/g, '/')
       const fileData = await readFile(normalizedPath, {
@@ -947,13 +958,13 @@ class VoiceMessageStrategyImpl extends AbstractMessageStrategy {
     const voiceMessageDivs = document.querySelectorAll('.voice-message-placeholder')
     const lastVoiceDiv = voiceMessageDivs[voiceMessageDivs.length - 1] as HTMLElement
 
-    if (!lastVoiceDiv || !lastVoiceDiv.dataset.url) {
-      throw new AppException('语音消息数据缺失')
-    }
+    // 将相对路径转换为 Tauri 资源路径
+    const localPath = lastVoiceDiv.dataset.url
+    const assetUrl = `asset://${localPath}`
 
     return {
       type: MsgEnum.VOICE,
-      url: lastVoiceDiv.dataset.url,
+      url: assetUrl,
       size: parseInt(lastVoiceDiv.dataset.size || '0'),
       duration: parseFloat(lastVoiceDiv.dataset.duration || '0'),
       filename: lastVoiceDiv.dataset.filename || 'voice.mp3'
@@ -964,7 +975,7 @@ class VoiceMessageStrategyImpl extends AbstractMessageStrategy {
     return {
       url: msg.url,
       size: msg.size,
-      duration: msg.duration
+      second: Math.round(msg.duration)
     }
   }
 
@@ -978,7 +989,7 @@ class VoiceMessageStrategyImpl extends AbstractMessageStrategy {
         body: {
           url: messageBody.url,
           size: messageBody.size,
-          duration: messageBody.duration
+          second: messageBody.second
         }
       }
     }
@@ -988,18 +999,35 @@ class VoiceMessageStrategyImpl extends AbstractMessageStrategy {
     path: string,
     options?: { provider?: UploadProviderEnum }
   ): Promise<{ uploadUrl: string; downloadUrl: string; config?: any }> {
-    // 语音文件已经上传，直接返回URL
-    console.log(options)
+    const uploadHook = useUpload()
 
-    return {
-      uploadUrl: path,
-      downloadUrl: path
+    try {
+      const uploadOptions: UploadOptions = {
+        provider: options?.provider || UploadProviderEnum.QINIU,
+        scene: UploadSceneEnum.CHAT
+      }
+
+      const result = await uploadHook.getUploadAndDownloadUrl(path, uploadOptions)
+      return result
+    } catch (error) {
+      throw new AppException('获取语音上传链接失败，请重试')
     }
   }
 
-  async doUpload(): Promise<{ qiniuUrl?: string } | void> {
-    // 语音文件已经上传，不需要额外处理
-    return
+  async doUpload(path: string, uploadUrl: string, options?: any): Promise<{ qiniuUrl?: string } | void> {
+    const uploadHook = useUpload()
+
+    try {
+      // enableDeduplication启用文件去重
+      const result = await uploadHook.doUpload(path, uploadUrl, { ...options, enableDeduplication: true })
+
+      // 如果是七牛云上传，返回qiniuUrl
+      if (options?.provider === UploadProviderEnum.QINIU) {
+        return { qiniuUrl: result as string }
+      }
+    } catch (error) {
+      throw new AppException('语音文件上传失败，请重试')
+    }
   }
 }
 

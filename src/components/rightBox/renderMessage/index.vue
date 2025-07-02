@@ -1,5 +1,11 @@
 <template>
-  <component :is="componentMap[message.type]" :body="message.body" :data-message-id="message.id" />
+  <component
+    :is="componentMap[message.type]"
+    :body="message.body"
+    :message-status="message.status"
+    :upload-progress="uploadProgress"
+    :from-user-uid="fromUser?.uid"
+    :data-message-id="message.id" />
 </template>
 <script setup lang="ts">
 import { MsgEnum } from '@/enums'
@@ -21,5 +27,11 @@ const componentMap: Partial<Record<MsgEnum, Component>> = {
   [MsgEnum.NOTICE]: Announcement
 }
 
-defineProps<{ message: MsgType }>()
+defineProps<{
+  message: MsgType
+  uploadProgress?: number
+  fromUser?: {
+    uid: string
+  }
+}>()
 </script>

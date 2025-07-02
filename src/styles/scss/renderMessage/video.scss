@@ -1,0 +1,111 @@
+.video-thumbnail {
+  @apply: select-none cursor-default size-full;
+  transition: transform 0.4s ease-in-out;
+
+  &:hover {
+    transform: scale(1.06);
+  }
+}
+
+.video-overlay {
+  @apply: absolute top-0 left-0 right-0 bottom-0 opacity-100 flex-center rounded-8px cursor-default select-none;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.6) 100%);
+  pointer-events: none;
+}
+
+.play-button {
+  @apply: absolute-center flex-center rounded-full size-44px cursor-pointer;
+  transition: all 0.3s ease;
+  pointer-events: auto;
+
+  &:hover:not(.loading) {
+    background: rgba(0, 0, 0, 0.4);
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+
+  &.loading {
+    background: rgba(0, 0, 0, 0.6);
+    cursor: not-allowed;
+  }
+}
+
+.loading-spinner {
+  @apply: size-20px rounded-full;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  animation: spin 1s linear infinite;
+}
+
+.upload-progress,
+.download-progress {
+  @apply: relative size-44px;
+}
+
+.progress-circle {
+  @apply: relative size-full flex-center;
+}
+
+.progress-ring {
+  @apply: absolute-lt;
+  transform: rotate(-90deg);
+}
+
+.progress-ring-circle {
+  transition: stroke-dashoffset 0.3s ease;
+}
+
+.upload-icon,
+.download-icon {
+  @apply: absolute size-16px color-white z-1;
+}
+
+.upload-icon {
+  color: rgba(19, 152, 127, 0.4);
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-tip {
+  @apply: absolute top-8px right-8px color-white px-8px py-4px rounded-4px text-10px backdrop-blur-4px;
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.upload-tip {
+  @apply: color-white backdrop-blur-4px;
+  background: rgba(19, 152, 127, 0.4);
+}
+
+.loading-text {
+  @apply: whitespace-nowrap;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.video-info {
+  @apply: absolute bottom-8px left-8px color-white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.video-filename {
+  @apply: text-12px mb-2px max-w-200px overflow-hidden text-ellipsis whitespace-nowrap;
+}
+
+.video-filesize {
+  @apply: text-10px opacity-90;
+}

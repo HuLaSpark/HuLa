@@ -65,6 +65,7 @@ lazy_static = "1.4"
 screenshots = "0.5.4"
 base64 = "0.22.1"
 rodio = "0.17.3"
+image = { version = "0.25", features = ["jpeg", "png"] }
 reqwest = { version = "0.11", features = [
     "json",
     "socks",
@@ -75,9 +76,13 @@ tungstenite = { version = "0.26.2", features = ["rustls-tls-webpki-roots"] }
 tokio = { version = "1", features = ["full"] }
 surge-ping = "0.8.0"
 rand = "0.8.5"
+
+# mac平台需要依赖
 [target."cfg(target_os =\"macos\")".dependencies]
 cocoa = "0.26.0"
 objc = "0.2.7"
+core-foundation = "0.10.1"
+core-graphics = "0.25.0"
 
 [features]
 # by default Tauri runs in production mode

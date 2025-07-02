@@ -2,7 +2,7 @@
   <div :style="containerStyle" @dblclick="handleOpenVideoViewer">
     <n-image
       v-if="body?.thumbUrl"
-      class="select-none cursor-pointer video-thumbnail"
+      class="video-thumbnail"
       object-fit="cover"
       show-toolbar-tooltip
       preview-disabled
@@ -11,7 +11,6 @@
           ...imageStyle
         }
       }"
-      style="border-radius: 8px; cursor: pointer !important; position: relative; width: 100%; height: 100%"
       :src="body?.thumbUrl"
       @error="handleImageError">
       <template #placeholder>
@@ -39,11 +38,37 @@
     <div class="video-overlay">
       <!-- 播放/下载按钮 -->
       <div
-        class="play-button cursor-pointer"
+        class="play-button"
         @click="handlePlayButtonClick"
-        :class="{ loading: isOpening || isDownloading }">
+        :class="{ loading: isOpening || isDownloading || isUploading }">
+        <!-- 上传中显示进度 -->
+        <div v-if="isUploading" class="upload-progress">
+          <div class="progress-circle">
+            <svg class="progress-ring" width="44" height="44">
+              <circle
+                class="progress-ring-circle"
+                stroke="rgba(255,255,255,0.3)"
+                stroke-width="3"
+                fill="transparent"
+                r="18"
+                cx="22"
+                cy="22" />
+              <circle
+                class="progress-ring-circle progress-ring-fill"
+                stroke="#13987f"
+                stroke-width="3"
+                fill="transparent"
+                r="18"
+                cx="22"
+                cy="22"
+                :stroke-dasharray="`${2 * Math.PI * 18}`"
+                :stroke-dashoffset="`${2 * Math.PI * 18 * (1 - uploadProgress / 100)}`" />
+            </svg>
+            <svg class="upload-icon"><use href="#Importing"></use></svg>
+          </div>
+        </div>
         <!-- 下载中显示进度 -->
-        <div v-if="isDownloading" class="download-progress">
+        <div v-else-if="isDownloading" class="download-progress">
           <div class="progress-circle">
             <svg class="progress-ring" width="44" height="44">
               <circle
@@ -84,7 +109,10 @@
 
       <!-- 加载提示 -->
       <transition name="fade">
-        <div v-if="isOpening" class="loading-tip">
+        <div v-if="isUploading" class="loading-tip upload-tip">
+          <div class="loading-text">正在上传视频... {{ uploadProgress }}%</div>
+        </div>
+        <div v-else-if="isOpening" class="loading-tip">
           <div class="loading-text">正在打开视频...</div>
         </div>
       </transition>
@@ -102,11 +130,16 @@ import { BaseDirectory } from '@tauri-apps/plugin-fs'
 import { join, resourceDir } from '@tauri-apps/api/path'
 import { formatBytes } from '@/utils/Formatting.ts'
 import { useMitt } from '@/hooks/useMitt'
+import { MessageStatusEnum } from '@/enums'
 
 const { openVideoViewer, getLocalVideoPath, checkVideoDownloaded, getVideoFilenameEllipsis } = useVideoViewer()
 const videoViewerStore = useVideoViewerStore()
 const { downloadFile, isDownloading, process } = useDownload()
-const props = defineProps<{ body: VideoBody }>()
+const props = defineProps<{
+  body: VideoBody
+  messageStatus?: MessageStatusEnum
+  uploadProgress?: number
+}>()
 const MAX_WIDTH = 300
 const MAX_HEIGHT = 150
 const MIN_WIDTH = 60
@@ -117,6 +150,11 @@ const isError = ref(false)
 const isOpening = ref(false)
 // 视频下载状态
 const isVideoDownloaded = ref(false)
+// 视频上传状态
+const isUploading = computed(() => props.messageStatus === MessageStatusEnum.SENDING)
+const uploadProgress = computed(() => {
+  return props.uploadProgress || 0
+})
 
 const imageStyle = computed(() => {
   // 如果有原始尺寸，使用原始尺寸计算
@@ -203,6 +241,9 @@ const downloadVideo = async () => {
 const handlePlayButtonClick = async () => {
   if (!props.body?.url) return
 
+  // 如果正在上传，不允许点击
+  if (isUploading.value) return
+
   // 如果视频未下载，先下载
   if (!isVideoDownloaded.value) {
     await downloadVideo()
@@ -266,157 +307,6 @@ onMounted(async () => {
 })
 </script>
 
-<style scoped>
-.video-thumbnail {
-  width: 100%;
-  height: 100%;
-  transition: transform 0.4s ease-in-out;
-}
-
-.video-thumbnail:hover {
-  transform: scale(1.06);
-}
-
-.video-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.6) 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 1;
-  border-radius: 8px;
-  user-select: none;
-  cursor: default;
-  pointer-events: none;
-}
-
-.play-button {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  pointer-events: auto;
-}
-
-.play-button:hover:not(.loading) {
-  background: rgba(0, 0, 0, 0.4);
-  transform: translate(-50%, -50%) scale(1.1);
-}
-
-.play-button.loading {
-  background: rgba(0, 0, 0, 0.6);
-  cursor: not-allowed;
-}
-
-.loading-spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top: 2px solid white;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-.download-progress {
-  position: relative;
-  width: 44px;
-  height: 44px;
-}
-
-.progress-circle {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.progress-ring {
-  position: absolute;
-  top: 0;
-  left: 0;
-  transform: rotate(-90deg);
-}
-
-.progress-ring-circle {
-  transition: stroke-dashoffset 0.3s ease;
-}
-
-.download-icon {
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  color: white;
-  z-index: 1;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.loading-tip {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 10px;
-  backdrop-filter: blur(4px);
-}
-
-.loading-text {
-  white-space: nowrap;
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
-.video-info {
-  position: absolute;
-  bottom: 8px;
-  left: 8px;
-  color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-}
-
-.video-filename {
-  font-size: 12px;
-  font-weight: 500;
-  margin-bottom: 2px;
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.video-filesize {
-  font-size: 10px;
-  opacity: 0.9;
-}
+<style scoped lang="scss">
+@use '@/styles/scss/renderMessage/video.scss';
 </style>

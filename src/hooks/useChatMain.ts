@@ -23,10 +23,10 @@ import { useGroupStore } from '@/stores/group'
 import { useWindow } from './useWindow'
 import { useEmojiStore } from '@/stores/emoji'
 import { useVideoViewer } from '@/hooks/useVideoViewer'
-import { extractFileName } from '@/utils/Formatting'
+import { extractFileName, removeTag } from '@/utils/Formatting'
 
 export const useChatMain = () => {
-  const { removeTag, openMsgSession, userUid } = useCommon()
+  const { openMsgSession, userUid } = useCommon()
   const { createWebviewWindow } = useWindow()
   const { getLocalVideoPath, checkVideoDownloaded } = useVideoViewer()
   const settingStore = useSettingStore()

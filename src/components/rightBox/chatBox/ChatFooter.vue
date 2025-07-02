@@ -125,7 +125,7 @@
 <script setup lang="ts">
 import { open } from '@tauri-apps/plugin-dialog'
 import { readFile } from '@tauri-apps/plugin-fs'
-import { MsgEnum, RoomTypeEnum } from '@/enums'
+import { MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import { SelectionRange, useCommon } from '@/hooks/useCommon.ts'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { emitTo } from '@tauri-apps/api/event'
@@ -393,9 +393,8 @@ const handleCap = async () => {
 }
 
 const handleVoiceRecord = () => {
-  console.log('点击语音按钮，发射 VOICE_RECORD_TOGGLE 事件')
   // 触发录音模式切换事件
-  useMitt.emit('VOICE_RECORD_TOGGLE')
+  useMitt.emit(MittEnum.VOICE_RECORD_TOGGLE)
 }
 
 onMounted(async () => {

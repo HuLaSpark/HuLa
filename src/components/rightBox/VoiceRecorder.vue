@@ -197,7 +197,10 @@ const togglePlayback = () => {
 
 // 发送语音
 const handleSend = async () => {
-  if (!audioBlob.value || !localAudioPath.value) return
+  if (!audioBlob.value || !localAudioPath.value) {
+    console.log('🎤 缺少音频数据，退出发送')
+    return
+  }
 
   try {
     sending.value = true
@@ -212,12 +215,10 @@ const handleSend = async () => {
       type: 'audio/mp3'
     }
 
-    console.log('发送语音数据:', voiceData)
+    console.log('🎤 发送语音数据:', voiceData)
     emit('send', voiceData)
-    window.$message?.success('语音发送成功')
   } catch (error) {
-    console.error('发送语音失败:', error)
-    window.$message?.error('发送失败')
+    console.error('🎤 发送语音失败:', error)
   } finally {
     sending.value = false
   }

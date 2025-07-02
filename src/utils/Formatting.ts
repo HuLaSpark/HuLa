@@ -1,4 +1,5 @@
 import { MsgEnum } from '@/enums'
+import DOMPurify from 'dompurify'
 
 /**
  * 文件大小格式化
@@ -127,4 +128,13 @@ export const getMimeTypeFromExtension = (fileName: string): string => {
     svg: 'image/svg+xml'
   }
   return mimeMap[ext] || 'image/png'
+}
+
+/**
+ * @param fragment 字符串
+ * @returns 去除元素标记后的字符串
+ * */
+export const removeTag = (fragment: string) => {
+  const sanitizedFragment = DOMPurify.sanitize(fragment)
+  return new DOMParser().parseFromString(sanitizedFragment, 'text/html').body.textContent || fragment
 }

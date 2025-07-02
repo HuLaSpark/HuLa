@@ -9,6 +9,7 @@ import { useMitt } from '@/hooks/useMitt.ts'
 import { type } from '@tauri-apps/plugin-os'
 import { useDebounceFn } from '@vueuse/core'
 import { Ref } from 'vue'
+import { storeToRefs } from 'pinia'
 import { SelectionRange, useCommon } from './useCommon.ts'
 import { readText, readImage } from '@tauri-apps/plugin-clipboard-manager'
 import { processClipboardImage } from '@/utils/ImageUtils.ts'
@@ -26,13 +27,12 @@ export function useCursorManager() {
   let cursorSelectionRange: SelectionRange | null = null
   /**
    * 记录当前编辑器的选取范围
-   * ps: 任何修改了原因导致焦点移动，都应该更新，无论如何
    */
-  function updateSelectionRange(sr: SelectionRange | null) {
+  const updateSelectionRange = (sr: SelectionRange | null) => {
     cursorSelectionRange = sr
   }
 
-  function getCursorSelectionRange() {
+  const getCursorSelectionRange = () => {
     return cursorSelectionRange
   }
 
@@ -40,7 +40,7 @@ export function useCursorManager() {
    * 聚焦指定的编辑器元素
    * @param editor 可聚焦的编辑器元素
    */
-  function focusOn(editor: HTMLElement) {
+  const focusOn = (editor: HTMLElement) => {
     editor.focus()
 
     const selection = window.getSelection()
@@ -91,8 +91,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
         .trim().length === 0
     )
   })
-  // /** 临时消息id */
-  // const tempMessageId = ref(0)
   // @艾特弹出框
   const ait = ref(false)
   const aitKey = ref('')
@@ -363,11 +361,11 @@ export const useMsgInput = (messageInputDom: Ref) => {
       atUidList
     }
 
-    // 创建临时消息对象 - 此时已经包含本地预览链接
+    // 创建临时消息对象
     const tempMsg = await messageStrategy.buildMessageType(tempMsgId, messageBody, globalStore, userUid)
     resetInput()
 
-    // 先添加到消息列表 - 此时会显示本地预览
+    // 先添加到消息列表
     chatStore.pushMsg(tempMsg)
     useMitt.emit(MittEnum.MESSAGE_ANIMATION, tempMsg)
     console.log('👾临时消息:', tempMsg)
@@ -455,20 +453,12 @@ export const useMsgInput = (messageInputDom: Ref) => {
         })
         console.log('视频上传完成,更新为服务器URL:', messageBody.url)
       }
-      console.log('发送消息到服务器 ===>>> ', {
-        roomId: globalStore.currentSession.roomId,
-        msgType: msg.type,
-        body: messageBody
-      })
-
       // 发送消息到服务器
       const res = await apis.sendMsg({
         roomId: globalStore.currentSession.roomId,
         msgType: msg.type,
         body: messageBody
       })
-
-      console.log('服务器返回的消息 ===> ', res)
 
       // 停止发送状态的定时器
       clearTimeout(statusTimer)
@@ -703,11 +693,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
         triggerInputEvent(messageInputDom.value)
       }
     }
-
-    // 无论是哪种情况，都在当前光标位置插入@提及
-    // insertNode(MsgEnum.AI, item, {} as HTMLElement)
-    // triggerInputEvent(messageInputDom.value)
-    // aiDialogVisible.value = false
   }
 
   onMounted(async () => {
@@ -791,27 +776,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
         nextTick().then(() => {
           try {
             // 再次确保输入框获得焦点
-            // messageInputDom.value.focus()
             focusOn(messageInputDom.value)
-
-            // // 创建一个合适的选区，确保回复框被插入到正确的位置
-            // const selection = window.getSelection()
-
-            // if (!selection) return
-
-            // // 移除所有现有的选区
-            // selection.removeAllRanges()
-
-            // // 创建新选区
-            // const range = document.createRange()
-            // range.selectNodeContents(messageInputDom.value)
-            // range.collapse(true) // 将范围折叠到开始位置
-
-            // // 应用选区
-            // selection.addRange(range)
-
-            // 保存选区以便后续使用
-            // updateSelectionRange({ range, selection })
 
             // 插入回复框
             insertNode(
@@ -872,6 +837,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       const tempMsgId = `${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
       const msgType = MsgEnum.VIDEO
       const messageStrategy = messageStrategyMap[msgType]
+      let progressUnsubscribe: (() => void) | null = null
 
       try {
         // 立即创建并显示消息
@@ -920,14 +886,59 @@ export const useMsgInput = (messageInputDom: Ref) => {
         // 更新状态为上传中
         chatStore.updateMsg({
           msgId: tempMsgId,
-          status: MessageStatusEnum.SENDING
+          status: MessageStatusEnum.SENDING,
+          uploadProgress: 0
         })
 
-        // 上传视频
-        const videoUploadResponse = await messageStrategy.doUpload(videoPath, videoUploadResult.uploadUrl, {
-          provider: UploadProviderEnum.QINIU,
-          ...qiniuConfig
-        })
+        // 获取视频策略的上传进度监听
+        const { progress, onChange } = (messageStrategy as any).getUploadProgress()
+
+        // 使用标志来控制事件处理
+        let isProgressActive = true
+
+        // 监听上传进度并实时更新消息
+        const handleProgress = (event: string) => {
+          if (!isProgressActive) return // 如果已经取消，不处理事件
+          if (event === 'progress') {
+            console.log(`🔄 视频上传进度更新: ${progress.value}% (消息ID: ${tempMsgId})`)
+            chatStore.updateMsg({
+              msgId: tempMsgId,
+              status: MessageStatusEnum.SENDING,
+              uploadProgress: progress.value
+            })
+          }
+        }
+
+        // 添加监听器
+        onChange(handleProgress)
+
+        // 创建取消函数
+        progressUnsubscribe = () => {
+          isProgressActive = false
+          console.log(`🗑️ 清理进度监听器 (消息ID: ${tempMsgId})`)
+        }
+
+        let videoUploadResponse: any = null
+        try {
+          // 上传视频
+          videoUploadResponse = await messageStrategy.doUpload(videoPath, videoUploadResult.uploadUrl, {
+            provider: UploadProviderEnum.QINIU,
+            ...qiniuConfig
+          })
+
+          // 清理进度监听器
+          if (progressUnsubscribe) {
+            progressUnsubscribe()
+            progressUnsubscribe = null
+          }
+        } catch (uploadError) {
+          // 清理进度监听器
+          if (progressUnsubscribe) {
+            progressUnsubscribe()
+            progressUnsubscribe = null
+          }
+          throw uploadError
+        }
 
         // 直接使用七牛云上传缩略图，避免通过doUpload路径
         const thumbnailUploadResponse = await uploadToQiniu(
@@ -941,26 +952,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
         const finalThumbnailUrl =
           thumbnailUploadResponse?.downloadUrl || `${qiniuConfig.domain}/${thumbnailUploadResponse?.key}`
 
-        // 验证上传是否真正成功
-        if (!videoUploadResponse?.qiniuUrl && !videoUploadResult.downloadUrl) {
-          throw new Error('视频上传失败')
-        }
-
-        if (thumbnailUploadResponse?.error) {
-          throw new Error('缩略图上传失败: ' + thumbnailUploadResponse.error)
-        }
-
-        if (!finalThumbnailUrl && !thumbnailUploadResponse?.key) {
-          throw new Error('缩略图上传失败')
-        }
-
-        console.log('✅ 七牛云上传成功，返回的数据:', {
-          videoUrl: finalVideoUrl,
-          thumbnailUrl: finalThumbnailUrl,
-          videoResponse: videoUploadResponse,
-          thumbnailResponse: thumbnailUploadResponse
-        })
-
         // 发送消息到服务器保存
         const serverResponse = await apis.sendMsg({
           roomId: globalStore.currentSession.roomId,
@@ -972,16 +963,19 @@ export const useMsgInput = (messageInputDom: Ref) => {
             thumbUrl: finalThumbnailUrl,
             thumbWidth: 300,
             thumbHeight: 150,
-            thumbSize: thumbnailFile.size
+            thumbSize: thumbnailFile.size,
+            localPath: videoPath, // 保存本地缓存路径
+            senderUid: userUid.value // 保存发送者UID
           }
         })
 
-        // 使用服务器返回的数据更新消息状态为SUCCESS
+        // 使用服务器返回的数据更新消息状态为SUCCESS，清除进度信息
         chatStore.updateMsg({
           msgId: tempMsgId,
           status: MessageStatusEnum.SUCCESS,
           newMsgId: serverResponse.message.id, // 使用服务器返回的消息ID
-          body: serverResponse.message.body // 使用服务器返回的消息体
+          body: serverResponse.message.body, // 使用服务器返回的消息体
+          uploadProgress: undefined // 清除进度信息
         })
 
         // 清理本地URL
@@ -994,12 +988,149 @@ export const useMsgInput = (messageInputDom: Ref) => {
         }
       } catch (error) {
         console.error('视频发送失败:', error)
+
+        // 确保清理进度监听器
+        if (progressUnsubscribe) {
+          progressUnsubscribe()
+          progressUnsubscribe = null
+        }
+
+        chatStore.updateMsg({
+          msgId: tempMsgId,
+          status: MessageStatusEnum.FAILED,
+          uploadProgress: undefined // 清除进度信息
+        })
+        window.$message.error('视频发送失败')
+      }
+    }
+  }
+
+  /**
+   * 发送语音的函数
+   * @param voiceData 语音数据
+   */
+  const sendVoiceDirect = async (voiceData: any) => {
+    try {
+      // 创建语音消息数据
+      const msg = {
+        type: MsgEnum.VOICE,
+        path: voiceData.localPath, // 本地路径用于上传
+        url: `asset://${voiceData.localPath}`, // 本地预览URL
+        size: voiceData.size,
+        duration: voiceData.duration,
+        filename: voiceData.filename
+      }
+      const tempMsgId = Date.now().toString()
+
+      // 创建消息体（初始使用本地路径）
+      const messageBody = {
+        url: msg.url,
+        path: msg.path,
+        size: msg.size,
+        second: Math.round(msg.duration)
+      }
+
+      // 创建临时消息对象
+      const userInfo = useUserInfo(userUid.value)?.value
+      const tempMsg = {
+        fromUser: {
+          uid: String(userUid.value || 0),
+          username: userInfo?.name || '',
+          avatar: userInfo?.avatar || '',
+          locPlace: userInfo?.locPlace || ''
+        },
+        message: {
+          id: tempMsgId,
+          roomId: globalStore.currentSession.roomId,
+          sendTime: Date.now(),
+          status: MessageStatusEnum.PENDING,
+          type: MsgEnum.VOICE,
+          body: messageBody,
+          messageMarks: {}
+        },
+        sendTime: new Date().toISOString(),
+        loading: false
+      }
+
+      // 添加到消息列表（显示本地预览）
+      chatStore.pushMsg(tempMsg)
+      useMitt.emit(MittEnum.MESSAGE_ANIMATION, tempMsg)
+
+      // 设置发送状态的定时器
+      const statusTimer = setTimeout(() => {
+        chatStore.updateMsg({
+          msgId: tempMsgId,
+          status: MessageStatusEnum.SENDING
+        })
+      }, 800)
+
+      try {
+        // 获取语音消息策略
+        const messageStrategy = messageStrategyMap[MsgEnum.VOICE]
+        // 上传语音文件到七牛云
+        const { uploadUrl, downloadUrl, config } = await messageStrategy.uploadFile(msg.path, {
+          provider: UploadProviderEnum.QINIU
+        })
+        const doUploadResult = await messageStrategy.doUpload(msg.path, uploadUrl, config)
+
+        // 更新消息体中的URL为服务器URL
+        const finalUrl =
+          config?.provider && config?.provider === UploadProviderEnum.QINIU ? doUploadResult?.qiniuUrl : downloadUrl
+        messageBody.url = finalUrl || ''
+        delete messageBody.path // 删除临时路径
+
+        // 更新临时消息的URL
+        chatStore.updateMsg({
+          msgId: tempMsgId,
+          body: {
+            ...messageBody
+          },
+          status: MessageStatusEnum.SENDING
+        })
+
+        const sendData = {
+          roomId: globalStore.currentSession.roomId,
+          msgType: MsgEnum.VOICE,
+          body: messageBody
+        }
+
+        try {
+          const res = await apis.sendMsg(sendData)
+          // 停止发送状态的定时器
+          clearTimeout(statusTimer)
+          // 更新消息状态为成功,并使用服务器返回的消息体
+          chatStore.updateMsg({
+            msgId: tempMsgId,
+            status: MessageStatusEnum.SUCCESS,
+            newMsgId: res.message.id,
+            body: res.message.body
+          })
+
+          // 更新会话最后活动时间
+          chatStore.updateSessionLastActiveTime(globalStore.currentSession.roomId)
+
+          // 释放本地预览URL
+          if (msg.url.startsWith('asset://')) {
+            // asset:// 协议不需要手动释放
+          }
+        } catch (apiError: any) {
+          clearTimeout(statusTimer)
+          chatStore.updateMsg({
+            msgId: tempMsgId,
+            status: MessageStatusEnum.FAILED
+          })
+          throw new Error(`发送消息失败: ${apiError.message || apiError}`)
+        }
+      } catch (uploadError) {
+        clearTimeout(statusTimer)
         chatStore.updateMsg({
           msgId: tempMsgId,
           status: MessageStatusEnum.FAILED
         })
-        window.$message.error('视频发送失败')
+        throw uploadError
       }
+    } catch (error) {
+      console.error('🎤 语音消息发送失败:', error)
     }
   }
 
@@ -1012,6 +1143,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     send,
     stripHtml,
     sendFilesDirect,
+    sendVoiceDirect,
     personList,
     ait,
     aitKey,

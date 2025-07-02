@@ -90,7 +90,6 @@ declare module 'vue' {
     Text: typeof import('./../components/rightBox/renderMessage/Text.vue')['default']
     Validation: typeof import('./../components/common/Validation.vue')['default']
     Video: typeof import('./../components/rightBox/renderMessage/Video.vue')['default']
-    VideoPlayer: typeof import('./../components/common/VideoPlayer.vue')['default']
     VirtualList: typeof import('./../components/common/VirtualList.vue')['default']
     Voice: typeof import('./../components/rightBox/renderMessage/Voice.vue')['default']
     VoiceRecorder: typeof import('./../components/rightBox/VoiceRecorder.vue')['default']

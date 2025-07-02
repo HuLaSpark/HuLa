@@ -11,9 +11,9 @@ import { useMessage } from '@/hooks/useMessage.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { getImageCache } from '@/utils/PathUtil.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import DOMPurify from 'dompurify'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { BaseDirectory, create, exists, mkdir } from '@tauri-apps/plugin-fs'
+import { removeTag } from '@/utils/Formatting'
 
 export interface SelectionRange {
   range: Range
@@ -23,24 +23,40 @@ const domParser = new DOMParser()
 
 const REPLY_NODE_ID = 'replyDiv'
 
-const saveCacheFile = async (file: any, subFolder: string) => {
+const saveCacheFile = async (file: any, subFolder: string): Promise<string> => {
   const { userUid } = useCommon()
   // TODO: 这里需要获取到需要发送的图片、文件的本地地址，如果不是本地地址，就需要先下载到本地cache文件夹里面
   const fileName = file.name === null ? 'test.png' : file.name
   const tempPath = getImageCache(subFolder, userUid.value!)
   const fullPath = tempPath + fileName
-  const cacheReader = new FileReader()
-  cacheReader.onload = async (e: any) => {
-    const isExists = await exists(tempPath, { baseDir: BaseDirectory.AppCache })
-    if (!isExists) {
-      await mkdir(tempPath, { baseDir: BaseDirectory.AppCache, recursive: true })
+
+  console.log(`💾 开始保存缓存文件: ${fullPath}, 原始大小: ${file.size} bytes`)
+
+  return new Promise((resolve, reject) => {
+    const cacheReader = new FileReader()
+    cacheReader.onload = async (e: any) => {
+      try {
+        const isExists = await exists(tempPath, { baseDir: BaseDirectory.AppCache })
+        if (!isExists) {
+          await mkdir(tempPath, { baseDir: BaseDirectory.AppCache, recursive: true })
+        }
+        const tempFile = await create(fullPath, { baseDir: BaseDirectory.AppCache })
+        await tempFile.write(e.target.result)
+        await tempFile.close()
+
+        console.log(`✅ 缓存文件保存成功: ${fullPath}, 写入大小: ${e.target.result.byteLength} bytes`)
+        resolve(fullPath)
+      } catch (error) {
+        reject(error)
+      }
     }
-    const tempFile = await create(fullPath, { baseDir: BaseDirectory.AppCache })
-    await tempFile.write(e.target.result)
-    tempFile.close()
-  }
-  cacheReader.readAsArrayBuffer(file)
-  return fullPath
+
+    cacheReader.onerror = (error) => {
+      reject(error)
+    }
+
+    cacheReader.readAsArrayBuffer(file)
+  })
 }
 
 /**
@@ -799,14 +815,6 @@ export const useCommon = () => {
     return splitter.countGraphemes(value)
   }
 
-  /** 去除字符串中的元素标记
-   *  不是html元素节点返回原字符串
-   * */
-  const removeTag = (fragment: string) => {
-    const sanitizedFragment = DOMPurify.sanitize(fragment)
-    return new DOMParser().parseFromString(sanitizedFragment, 'text/html').body.textContent || fragment
-  }
-
   /**
    * 打开消息会话(右键发送消息功能)
    * @param uid 用户id
@@ -907,7 +915,6 @@ export const useCommon = () => {
     insertNode,
     triggerInputEvent,
     handlePaste,
-    removeTag,
     FileOrVideoPaste,
     handleConfirmFiles,
     countGraphemes,

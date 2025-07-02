@@ -125,13 +125,17 @@ const removeFile = (index: number) => {
 }
 
 const handleCancel = () => {
-  emit('cancel')
   visible.value = false
+  emit('cancel')
 }
 
-const handleConfirm = () => {
-  emit('confirm', fileList.value)
+const handleConfirm = async () => {
   visible.value = false
+  await nextTick()
+  await new Promise((resolve) => {
+    setTimeout(resolve, 100)
+  })
+  emit('confirm', fileList.value)
 }
 </script>
 
