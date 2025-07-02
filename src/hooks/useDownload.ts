@@ -1,22 +1,36 @@
 import { ref } from 'vue'
 import { createEventHook } from '@vueuse/core'
-import { writeFile } from '@tauri-apps/plugin-fs'
+import { writeFile, mkdir, exists } from '@tauri-apps/plugin-fs'
+import { BaseDirectory } from '@tauri-apps/plugin-fs'
 
 export const useDownload = () => {
   const process = ref(0)
   const isDownloading = ref(false)
   const { on: onLoaded, trigger } = createEventHook()
 
-  const downloadFile = async (url: string, savePath: string) => {
+  const downloadFile = async (url: string, savePath: string, baseDir: BaseDirectory = BaseDirectory.AppCache) => {
     try {
       isDownloading.value = true
       process.value = 0
 
+      // 确保目录存在
+      const dirPath = savePath.substring(0, savePath.lastIndexOf('/'))
+      if (dirPath) {
+        const dirExists = await exists(dirPath, { baseDir })
+        if (!dirExists) {
+          await mkdir(dirPath, { baseDir, recursive: true })
+        }
+      }
+
       const response = await fetch(url)
-      if (!response.ok) throw new Error('下载失败')
+      if (!response.ok) {
+        return window.$message.error('下载失败')
+      }
 
       const reader = response.body?.getReader()
-      if (!reader) throw new Error('无法读取响应内容')
+      if (!reader) {
+        return window.$message.error('无法读取响应内容')
+      }
 
       const contentLength = Number(response.headers.get('Content-Length')) || 0
       const chunks: Uint8Array[] = []
@@ -42,13 +56,12 @@ export const useDownload = () => {
         position += chunk.length
       }
 
-      await writeFile(savePath, allChunks)
+      await writeFile(savePath, allChunks, { baseDir })
       trigger('success')
-      window.$message.success('保存成功')
     } catch (error) {
-      console.error('保存失败:', error)
-      window.$message.error('保存失败')
+      console.error('下载失败:', error)
       trigger('fail')
+      throw error
     } finally {
       isDownloading.value = false
       process.value = 0

@@ -32,7 +32,9 @@ export class AppException extends Error {
 
     // 只有在明确指定显示错误时才显示
     if (errorDetails?.showError && window.$message && !AppException.hasShownError) {
-      window.$message.error(message)
+      // TODO: 移除一些强烈推荐提醒使用console来打印错误
+      // window.$message.error(message)
+      console.error(message)
       AppException.hasShownError = true
 
       // 只有在 2 秒内没有显示过错误消息时才会显示

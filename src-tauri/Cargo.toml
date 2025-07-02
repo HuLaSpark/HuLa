@@ -1,6 +1,6 @@
 [package]
 name = "hula"
-version = "2.6.10"
+version = "2.6.12"
 description = "hula"
 authors = ["nongyehong"]
 license = ""
@@ -27,50 +27,73 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2.2.0", features = [] }
 
 [dependencies]
-tauri = { version = "2.5.1", features = [
+# Tauri 官方依赖
+tauri = { version = "2.5.1", features = [ "protocol-asset",
     "macos-private-api",
     "tray-icon",
     "image-png",
     "rustls-tls",
 ] }
-tauri-plugin-os = "2.2.1"
-tauri-plugin-shell = "2.2.1"
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-tauri-plugin-http = { version = "2.4.3", features = [
+tauri-plugin-os = "2.2.2"
+tauri-plugin-shell = "2.2.2"
+tauri-plugin-http = { version = "2.4.4", features = [
     "unsafe-headers",
     "rustls-tls",
 ] }
-tauri-plugin-process = "2.2.1"
-tauri-plugin-fs = "2.2.1"
-tauri-plugin-dialog = "2.2.1"
-tauri-plugin-upload = "2.2.0"
-tauri-plugin-global-shortcut = "2.2.0"
-tauri-plugin-clipboard-manager = "2.2.2"
-tauri-plugin-updater = "2.7.1"
-tauri-plugin-sql = { version = "2.2.0", features = ["sqlite"] }
-tauri-plugin-single-instance = "2.2.3"
-tauri-plugin-notification = "2.2.2"
-tungstenite = { version = "0.26.2", features = ["rustls-tls-webpki-roots"] }
-tokio = { version = "1", features = ["full"] }
-
+tauri-plugin-process = "2.2.2"
+tauri-plugin-fs = "2.3.0"
+tauri-plugin-dialog = "2.2.2"
+tauri-plugin-upload = "2.2.2"
+tauri-plugin-global-shortcut = "2.2.1"
+tauri-plugin-clipboard-manager = "2.2.3"
+tauri-plugin-updater = "2.8.1"
+tauri-plugin-sql = { version = "2.2.1", features = ["sqlite"] }
+tauri-plugin-single-instance = "2.2.4"
+tauri-plugin-notification = "2.2.3"
+tauri-plugin-opener = "2.3.0"
 [target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]
-tauri-plugin-autostart = "2.3.0"
+tauri-plugin-autostart = "2.4.0"
+# Tauri 非官方依赖
+tauri-plugin-mic-recorder = "2.0.0"
+
+# 其他依赖
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 lazy_static = "1.4"
 screenshots = "0.5.4"
 base64 = "0.22.1"
 rodio = "0.17.3"
+image = { version = "0.25", features = ["jpeg", "png"] }
 reqwest = { version = "0.11", features = [
     "json",
     "socks",
     "rustls-tls",
     "blocking",
 ] }
+tungstenite = { version = "0.26.2", features = ["rustls-tls-webpki-roots"] }
+tokio = { version = "1", features = ["full"] }
 surge-ping = "0.8.0"
 rand = "0.8.5"
+
+# mac平台需要依赖
 [target."cfg(target_os =\"macos\")".dependencies]
 cocoa = "0.26.0"
 objc = "0.2.7"
+core-foundation = "0.10.1"
+core-graphics = "0.25.0"
+
+# windows平台需要依赖
+[target."cfg(target_os = \"windows\")".dependencies]
+windows = { version = "0.52", features = [
+    "Win32_System_Com",
+    "Win32_UI_Shell",
+    "Win32_UI_Shell_Common",
+    "Win32_Graphics_Gdi",
+    "Win32_Foundation",
+    "Win32_System_Ole",
+    "Win32_Storage_FileSystem",
+    "Win32_UI_WindowsAndMessaging",
+] }
 
 [features]
 # by default Tauri runs in production mode

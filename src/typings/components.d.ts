@@ -21,8 +21,8 @@ declare module 'vue' {
     Details: typeof import('./../components/rightBox/Details.vue')['default']
     Emoji: typeof import('./../components/rightBox/renderMessage/Emoji.vue')['default']
     Emoticon: typeof import('./../components/rightBox/emoticon/index.vue')['default']
+    FileUploadModal: typeof import('./../components/rightBox/FileUploadModal.vue')['default']
     FloatBlockList: typeof import('./../components/common/FloatBlockList.vue')['default']
-    HInput: typeof import('./../components/common/HInput.vue')['default']
     Image: typeof import('./../components/rightBox/renderMessage/Image.vue')['default']
     InfoPopover: typeof import('./../components/common/InfoPopover.vue')['default']
     LoadingSpinner: typeof import('./../components/common/LoadingSpinner.vue')['default']
@@ -89,6 +89,9 @@ declare module 'vue' {
     Screenshot: typeof import('./../components/common/Screenshot.vue')['default']
     Text: typeof import('./../components/rightBox/renderMessage/Text.vue')['default']
     Validation: typeof import('./../components/common/Validation.vue')['default']
+    Video: typeof import('./../components/rightBox/renderMessage/Video.vue')['default']
     VirtualList: typeof import('./../components/common/VirtualList.vue')['default']
+    Voice: typeof import('./../components/rightBox/renderMessage/Voice.vue')['default']
+    VoiceRecorder: typeof import('./../components/rightBox/VoiceRecorder.vue')['default']
   }
 }

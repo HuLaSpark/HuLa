@@ -579,12 +579,14 @@ export const useChatStore = defineStore(
       msgId,
       status,
       newMsgId,
-      body
+      body,
+      uploadProgress
     }: {
       msgId: string
       status: MessageStatusEnum
       newMsgId?: string
       body?: any
+      uploadProgress?: number
     }) => {
       const msg = currentMessageMap.value?.get(msgId)
       if (msg) {
@@ -595,7 +597,16 @@ export const useChatStore = defineStore(
         if (body) {
           msg.message.body = body
         }
-        currentMessageMap.value?.set(msg.message.id, msg)
+        if (uploadProgress !== undefined) {
+          console.log(`📱 更新消息进度: ${uploadProgress}% (消息ID: ${msgId})`)
+          // 确保响应式更新，创建新的消息对象
+          const updatedMsg = { ...msg, uploadProgress }
+          currentMessageMap.value?.set(msg.message.id, updatedMsg)
+          // 强制触发响应式更新
+          messageMap.set(currentRoomId.value, new Map(currentMessageMap.value))
+        } else {
+          currentMessageMap.value?.set(msg.message.id, msg)
+        }
         if (newMsgId && msgId !== newMsgId) {
           currentMessageMap.value?.delete(msgId)
         }

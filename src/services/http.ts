@@ -168,7 +168,7 @@ async function Http<T = any>(
 
   // 获取代理设置
   // const proxySettings = JSON.parse(localStorage.getItem('proxySettings') || '{}')
-  // 如果设置了代理，添加代理配置 (BETA)
+  // // 如果设置了代理，添加代理配置 (BETA)
   // if (proxySettings.type && proxySettings.ip && proxySettings.port) {
   //   // 使用 Rust 后端的代理客户端
   //   fetchOptions.proxy = {

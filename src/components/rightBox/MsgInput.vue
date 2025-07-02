@@ -1,6 +1,9 @@
 <template>
+  <!-- 录音模式 -->
+  <VoiceRecorder v-if="isVoiceMode" @cancel="handleVoiceCancel" @send="handleVoiceSend" />
+
   <!-- 输入框 -->
-  <ContextMenu class="w-full h-110px" @select="$event.click()" :menu="menuList">
+  <ContextMenu v-else class="w-full h-110px" @select="$event.click()" :menu="menuList">
     <n-scrollbar style="max-height: 100px">
       <div
         id="message-input"
@@ -17,13 +20,15 @@
         @click="updateSelectionRange"
         @compositionend="updateSelectionRange"
         @keydown.exact.ctrl.enter="inputKeyDown"
-        data-placeholder="输入 / 唤起 AI 助手"
+        data-placeholder="善言一句暖人心，恶语一句伤人心"
         class="empty:before:content-[attr(data-placeholder)] before:text-(12px #777)"></div>
     </n-scrollbar>
   </ContextMenu>
 
   <!-- @提及框  -->
-  <div v-if="ait && activeItem.type === RoomTypeEnum.GROUP && personList.length > 0" class="ait-options">
+  <div
+    v-if="ait && activeItem?.type === RoomTypeEnum.GROUP && personList.length > 0 && !isVoiceMode"
+    class="ait-options">
     <n-virtual-list
       id="image-chat-ait"
       ref="virtualListInst-ait"
@@ -57,7 +62,7 @@
 
   <!-- / 提及框  -->
   <div
-    v-if="aiDialogVisible && activeItem.type === RoomTypeEnum.GROUP && groupedAIModels.length > 0"
+    v-if="aiDialogVisible && !isVoiceMode && activeItem?.type === RoomTypeEnum.GROUP && groupedAIModels.length > 0"
     class="AI-options">
     <n-virtual-list
       ref="virtualListInst-AI"
@@ -91,7 +96,7 @@
   </div>
 
   <!-- 发送按钮 -->
-  <n-flex align="center" justify="space-between" :size="12">
+  <n-flex v-if="!isVoiceMode" align="center" justify="space-between" :size="12">
     <n-config-provider :theme="lightTheme">
       <n-button-group size="small" class="pr-20px">
         <n-button color="#13987f" :disabled="disabledSend" class="w-65px" @click="send"> 发送 </n-button>
@@ -145,8 +150,17 @@
       </n-button-group>
     </n-config-provider>
   </n-flex>
+
+  <!-- 文件上传弹窗 -->
+  <FileUploadModal
+    v-model:show="showFileModal"
+    :files="pendingFiles"
+    @confirm="handleFileConfirm"
+    @cancel="handleFileCancel" />
 </template>
 <script setup lang="ts">
+import { type Ref } from 'vue'
+import { storeToRefs } from 'pinia'
 import { lightTheme, darkTheme, VirtualListInst } from 'naive-ui'
 import { MacOsKeyEnum, MittEnum, RoomTypeEnum, ThemeEnum, WinKeyEnum } from '@/enums'
 import { CacheUserItem, SessionItem } from '@/services/types.ts'
@@ -167,26 +181,22 @@ const appWindow = WebviewWindow.getCurrent()
 const { addListener } = useTauriListener()
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
+const { handlePaste } = useCommon()
 /** 发送按钮旁的箭头 */
 const arrow = ref(false)
 /** 输入框dom元素 */
 const messageInputDom = ref<HTMLElement>()
-const activeItem = ref()
+const activeItem = ref<SessionItem>()
 /** ait 虚拟列表 */
 const virtualListInstAit = useTemplateRef<VirtualListInst>('virtualListInst-ait')
 /** AI 虚拟列表 */
 const virtualListInstAI = useTemplateRef<VirtualListInst>('virtualListInst-AI')
+// 录音模式状态
+const isVoiceMode = ref(false)
 
-const { handlePaste } = useCommon()
-
-const onPaste = (e: ClipboardEvent) => {
-  if (messageInputDom.value) handlePaste(e, messageInputDom.value)
-}
-
-/**
- * 记录编辑器最后选取范围
- */
-// let currentSelectionRange: SelectionRange | null = null
+// 文件上传弹窗状态
+const showFileModal = ref(false)
+const pendingFiles = ref<File[]>([])
 
 /** 引入useMsgInput的相关方法 */
 const {
@@ -195,6 +205,8 @@ const {
   handleAI,
   handleInput,
   send,
+  sendFilesDirect,
+  sendVoiceDirect,
   personList,
   disabledSend,
   ait,
@@ -235,6 +247,33 @@ watch(groupedAIModels, (newList) => {
   }
 })
 
+// 显示文件弹窗的回调函数
+const showFileModalCallback = (files: File[]) => {
+  pendingFiles.value = files
+  showFileModal.value = true
+}
+
+const onPaste = async (e: ClipboardEvent) => {
+  if (messageInputDom.value) await handlePaste(e, messageInputDom.value, showFileModalCallback)
+}
+
+// 处理弹窗确认
+const handleFileConfirm = async (files: File[]) => {
+  try {
+    await sendFilesDirect(files)
+  } catch (error) {
+    console.error('弹窗发送文件失败:', error)
+  }
+  showFileModal.value = false
+  pendingFiles.value = []
+}
+
+// 处理弹窗取消
+const handleFileCancel = () => {
+  showFileModal.value = false
+  pendingFiles.value = []
+}
+
 /** 处理键盘上下键切换提及项 */
 const handleAitKeyChange = (
   direction: 1 | -1,
@@ -270,6 +309,34 @@ const disableSelectAll = (e: KeyboardEvent) => {
     }
   }
 }
+
+/**
+ * 恢复编辑器焦点
+ */
+const focus = () => {
+  const editor = messageInputDom.value
+  if (editor) focusOn(editor)
+}
+
+// 语音录制相关事件处理
+const handleVoiceCancel = () => {
+  isVoiceMode.value = false
+}
+
+// 处理发送语音消息
+const handleVoiceSend = async (voiceData: any) => {
+  isVoiceMode.value = false
+  await sendVoiceDirect(voiceData)
+}
+
+/** 导出组件方法和属性 */
+defineExpose({
+  messageInputDom,
+  getLastEditRange: () => getCursorSelectionRange(),
+  updateSelectionRange,
+  focus,
+  showFileModal: showFileModalCallback
+})
 
 onMounted(async () => {
   activeItem.value = inject('activeItem') as SessionItem
@@ -313,6 +380,10 @@ onMounted(async () => {
   useMitt.on(MittEnum.AT, (event: any) => {
     handleAit(useUserInfo(event).value as any)
   })
+  // 监听录音模式切换事件
+  useMitt.on(MittEnum.VOICE_RECORD_TOGGLE, () => {
+    isVoiceMode.value = !isVoiceMode.value
+  })
   /** 这里使用的是窗口之间的通信来监听信息对话的变化 */
   await addListener(
     appWindow.listen('aloneData', (event: any) => {
@@ -327,17 +398,6 @@ onUnmounted(() => {
   window.removeEventListener('click', closeMenu, true)
   window.removeEventListener('keydown', disableSelectAll)
 })
-
-/**
- * 恢复编辑器焦点
- */
-function focus() {
-  const editor = messageInputDom.value
-  if (editor) focusOn(editor)
-}
-
-/** 导出组件方法和属性 */
-defineExpose({ messageInputDom, getLastEditRange: () => getCursorSelectionRange(), updateSelectionRange, focus })
 </script>
 
 <style scoped lang="scss">

@@ -103,6 +103,11 @@ const routes: Array<RouteRecordRaw> = [
     name: 'imageViewer',
     component: () => import('@/views/imageViewerWindow/index.vue')
   },
+  {
+    path: '/videoViewer',
+    name: 'videoViewer',
+    component: () => import('@/views/videoViewerWindow/index.vue')
+  },
   /**
    * 搜索好友/群聊
    * @author mint

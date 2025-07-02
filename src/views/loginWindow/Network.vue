@@ -270,4 +270,16 @@ const proxyTest = async () => {
 :deep(.n-tabs .n-tabs-nav.n-tabs-nav--line-type.n-tabs-nav--top .n-tabs-nav-scroll-content) {
   border-bottom: 1px solid transparent;
 }
+
+:deep(.hover-box) {
+  @apply w-28px h24px flex-center hover:bg-#e7e7e7;
+  svg {
+    color: #404040;
+  }
+}
+:deep(.action-close) {
+  svg {
+    color: #404040;
+  }
+}
 </style>

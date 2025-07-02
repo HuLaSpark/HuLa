@@ -163,7 +163,7 @@
               </svg>
               <!-- 头像 -->
               <n-popover
-                :ref="(el) => (infoPopoverRefs[item.message.id] = el)"
+                :ref="(el: any) => (infoPopoverRefs[item.message.id] = el)"
                 @update:show="handlePopoverUpdate(item.message.id, $event)"
                 trigger="click"
                 placement="right"
@@ -274,15 +274,22 @@
                   <!-- 渲染消息内容体 TODO: 等完善消息类型后逐渐替换使用RenderMessage -->
                   <RenderMessage
                     :class="[
-                      '!select-auto !cursor-text',
-                      { active: activeBubble === item.message.id && !isSpecialMsgType(item.message.type) },
-                      !isSpecialMsgType(item.message.type)
+                      item.message.type === MsgEnum.VOICE ? 'select-none cursor-pointer' : '!select-auto !cursor-text',
+                      {
+                        active:
+                          activeBubble === item.message.id &&
+                          !isSpecialMsgType(item.message.type) &&
+                          item.message.type !== MsgEnum.VOICE
+                      },
+                      !isSpecialMsgType(item.message.type) || item.message.type === MsgEnum.VOICE
                         ? item.fromUser.uid === userUid
                           ? 'bubble-oneself'
                           : 'bubble'
                         : ''
                     ]"
-                    :message="item.message" />
+                    :message="item.message"
+                    :from-user-uid="item.fromUser.uid"
+                    :upload-progress="item.uploadProgress" />
 
                   <!-- 显示翻译文本 -->
                   <Transition name="fade-translate" appear mode="out-in">
@@ -458,6 +465,7 @@ import { useDebounceFn } from '@vueuse/core'
 import { useCachedStore } from '@/stores/cached'
 import apis from '@/services/apis'
 import { useNetworkStatus } from '@/hooks/useNetworkStatus'
+import { audioManager } from '@/utils/AudioManager'
 
 const appWindow = WebviewWindow.getCurrent()
 const { addListener } = useTauriListener()
@@ -650,6 +658,9 @@ watch(
   () => props.activeItem,
   (value, oldValue) => {
     if (oldValue.roomId !== value.roomId) {
+      // 使用音频管理器停止所有音频
+      audioManager.stopAll()
+
       scrollToBottom()
       // 在会话切换时加载新会话的置顶公告
       if (isGroup.value) {
@@ -989,7 +1000,7 @@ const handleViewAnnouncement = () => {
 }
 
 const isSpecialMsgType = (type: number) => {
-  return type === MsgEnum.IMAGE || type === MsgEnum.EMOJI || type === MsgEnum.NOTICE
+  return type === MsgEnum.IMAGE || type === MsgEnum.EMOJI || type === MsgEnum.NOTICE || type === MsgEnum.VIDEO
 }
 
 // 判断表情反应是否只有一行
