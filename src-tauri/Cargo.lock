@@ -2511,7 +2511,6 @@ dependencies = [
  "tauri-plugin-sql",
  "tauri-plugin-updater",
  "tauri-plugin-upload",
- "tauri-plugin-window-state",
  "tokio",
  "tungstenite",
  "windows 0.52.0",
@@ -6548,21 +6547,6 @@ dependencies = [
  "thiserror 2.0.12",
  "tokio",
  "tokio-util",
-]
-
-[[package]]
-name = "tauri-plugin-window-state"
-version = "2.2.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "136e5ce5e61edc8eeeaca70080811bbdcdd890cac9c4070cb4db9cc3de1da449"
-dependencies = [
- "bitflags 2.9.1",
- "log",
- "serde",
- "serde_json",
- "tauri",
- "tauri-plugin",
- "thiserror 2.0.12",
 ]
 
 [[package]]

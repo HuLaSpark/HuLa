@@ -56,9 +56,6 @@ importers:
       '@tauri-apps/plugin-updater':
         specifier: 2.8.1
         version: 2.8.1
-      '@tauri-apps/plugin-window-state':
-        specifier: ^2.2.3
-        version: 2.2.3
       colorthief:
         specifier: ^2.6.0
         version: 2.6.0
@@ -1534,9 +1531,6 @@ packages:
 
   '@tauri-apps/plugin-updater@2.8.1':
     resolution: {integrity: sha512-VVQ3wCfM+zok/e0QNBT0oBaFu3gBbzzMsRHzS2yxl7VOCh9dWuZo4yyl29OfaExxSvcixWJ9BZ6pWmKdUt8fCg==}
-
-  '@tauri-apps/plugin-window-state@2.2.3':
-    resolution: {integrity: sha512-Iqqzugs6lxpa9JPOe4O33lkCUyMGvh9dqnXof1tK4dP2wU7jKa7W3MLwVyo6c3oVl3dUCm73wkB3RJ0exR0SPg==}
 
   '@tokenizer/token@0.3.0':
     resolution: {integrity: sha512-OvjF+z51L3ov0OyAU0duzsYuvO01PH7x4t6DJx+guahgTnBHkhJdG7soQeTSFLWN3efnHyibZ4Z8l2EuWwJN3A==}
@@ -6219,10 +6213,6 @@ snapshots:
       '@tauri-apps/api': 2.5.0
 
   '@tauri-apps/plugin-updater@2.8.1':
-    dependencies:
-      '@tauri-apps/api': 2.5.0
-
-  '@tauri-apps/plugin-window-state@2.2.3':
     dependencies:
       '@tauri-apps/api': 2.5.0
 
