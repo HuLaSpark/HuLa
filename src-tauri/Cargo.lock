@@ -2514,6 +2514,7 @@ dependencies = [
  "tauri-plugin-window-state",
  "tokio",
  "tungstenite",
+ "windows 0.52.0",
 ]
 
 [[package]]

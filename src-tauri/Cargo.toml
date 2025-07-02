@@ -84,6 +84,19 @@ objc = "0.2.7"
 core-foundation = "0.10.1"
 core-graphics = "0.25.0"
 
+# windows平台需要依赖
+[target."cfg(target_os = \"windows\")".dependencies]
+windows = { version = "0.52", features = [
+    "Win32_System_Com",
+    "Win32_UI_Shell",
+    "Win32_UI_Shell_Common",
+    "Win32_Graphics_Gdi",
+    "Win32_Foundation",
+    "Win32_System_Ole",
+    "Win32_Storage_FileSystem",
+    "Win32_UI_WindowsAndMessaging",
+] }
+
 [features]
 # by default Tauri runs in production mode
 # when `tauri dev` runs it is executed with `cargo run --no-default-features` if `devPath` is a URL
