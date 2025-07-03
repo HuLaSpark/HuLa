@@ -23,12 +23,14 @@ import { useGroupStore } from '@/stores/group'
 import { useWindow } from './useWindow'
 import { useEmojiStore } from '@/stores/emoji'
 import { useVideoViewer } from '@/hooks/useVideoViewer'
+import { useFileDownloadStore } from '@/stores/fileDownload'
 import { extractFileName, removeTag } from '@/utils/Formatting'
 
 export const useChatMain = () => {
   const { openMsgSession, userUid } = useCommon()
   const { createWebviewWindow } = useWindow()
   const { getLocalVideoPath, checkVideoDownloaded } = useVideoViewer()
+  const fileDownloadStore = useFileDownloadStore()
   const settingStore = useSettingStore()
   const { chat } = storeToRefs(settingStore)
   const globalStore = useGlobalStore()
@@ -265,18 +267,25 @@ export const useChatMain = () => {
       click: async (item: any) => {
         try {
           const fileUrl = item.message.body.url
-          const filename = extractFileName(fileUrl)
-          const savePath = await save({
-            defaultPath: filename
-          })
-          if (savePath) {
-            await downloadFile(fileUrl, savePath)
-            // 下载完成后在文件管理器中显示
-            await revealItemInDir(savePath)
+          const fileName = item.message.body.fileName || extractFileName(fileUrl)
+
+          // 检查文件是否已下载
+          const fileStatus = fileDownloadStore.getFileStatus(fileUrl)
+
+          if (fileStatus.isDownloaded && fileStatus.absolutePath) {
+            // 文件已下载，直接显示
+            await revealItemInDir(fileStatus.absolutePath)
+          } else {
+            // 文件未下载，先下载再显示
+            window.$message.info('正在下载文件...')
+            const absolutePath = await fileDownloadStore.downloadFile(fileUrl, fileName)
+
+            if (absolutePath) {
+              await revealItemInDir(absolutePath)
+            }
           }
         } catch (error) {
           console.error('显示文件失败:', error)
-          window.$message.error('显示文件失败')
         }
       }
     }

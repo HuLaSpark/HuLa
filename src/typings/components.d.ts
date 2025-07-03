@@ -21,6 +21,7 @@ declare module 'vue' {
     Details: typeof import('./../components/rightBox/Details.vue')['default']
     Emoji: typeof import('./../components/rightBox/renderMessage/Emoji.vue')['default']
     Emoticon: typeof import('./../components/rightBox/emoticon/index.vue')['default']
+    File: typeof import('./../components/rightBox/renderMessage/File.vue')['default']
     FileUploadModal: typeof import('./../components/rightBox/FileUploadModal.vue')['default']
     FloatBlockList: typeof import('./../components/common/FloatBlockList.vue')['default']
     Image: typeof import('./../components/rightBox/renderMessage/Image.vue')['default']

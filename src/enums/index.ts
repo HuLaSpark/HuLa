@@ -155,7 +155,9 @@ export enum StoresEnum {
   /** 配置 */
   CONFIG = 'config',
   /** 视频查看器数据 */
-  VIDEOVIEWER = 'videoViewer'
+  VIDEOVIEWER = 'videoViewer',
+  /** 文件下载管理 */
+  FILE_DOWNLOAD = 'fileDownload'
 }
 
 /**
