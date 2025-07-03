@@ -86,7 +86,7 @@ export default {
   // -------------- 系统相关 ---------------
   fileUpload: `${prefix + URLEnum.SYSTEM + URLEnum.OSS}/upload/url`, // 文件上传
   initConfig: `${prefix}/im/anyTenant/config/init`, // 获取配置文件
-  getQiniuToken: `${prefix + URLEnum.SYSTEM}/ossToken`, // 获取七牛云上传token
+  getQiniuToken: `${prefix + URLEnum.TOKEN}/anyTenant/ossToken`, // 获取七牛云上传token
 
   // -------------- token相关 ---------------
   register: `${prefix + URLEnum.TOKEN}/anyTenant/registerByEmail`, // 注册
