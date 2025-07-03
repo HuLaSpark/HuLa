@@ -523,7 +523,7 @@ defineExpose<VirtualListExpose>({
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .virtual-list-container {
   position: relative;
   overflow-y: auto;
