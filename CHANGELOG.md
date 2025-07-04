@@ -1,5 +1,33 @@
 
 
+## [2.6.13](https://github.com/HuLaSpark/HuLa/compare/v2.6.12...v2.6.13) (2025-07-04)
+
+
+### ✨ Features | 新功能
+
+* **component:** :sparkles: 增加文件类型(除语音、视频)等文件类型的样式兼容 ([99711a7](https://github.com/HuLaSpark/HuLa/commit/99711a73f3296eaefe1281251f76303465cd72d5))
+* **component:** :sparkles:增加上传视频、文件、音频等功能 ([#292](https://github.com/HuLaSpark/HuLa/issues/292)) ([203af0d](https://github.com/HuLaSpark/HuLa/commit/203af0d06030a6b19c5a2a4705098073f0e9000d))
+* **view:** :sparkles: 保持窗口位置和大小 ([#287](https://github.com/HuLaSpark/HuLa/issues/287)) ([dfc29fa](https://github.com/HuLaSpark/HuLa/commit/dfc29fa3ed19313f4bc8539a0c788d8c6df3eaab))
+
+
+### 🐛 Bug Fixes | Bug 修复
+
+* **common:** :bug: 修复未提示用户错误弹框问题 ([916ab6c](https://github.com/HuLaSpark/HuLa/commit/916ab6c56aeab81b99a14fd2fc6200ffd2226a6a))
+* **component:** :bug: 修复mac启动依赖问题 ([81d3bc9](https://github.com/HuLaSpark/HuLa/commit/81d3bc9f018ea9ba29baae5867e36cc3d2b35eea))
+* **component:** :bug: 用户修改当前群聊昵称显示问题 ([e4c43ae](https://github.com/HuLaSpark/HuLa/commit/e4c43aee74d534f2f9d3ee45a97aeb2d3ecfffa6))
+* **hook:** :bug: 修复pinia初始化报错问题 ([c9cdcc0](https://github.com/HuLaSpark/HuLa/commit/c9cdcc0cc585d260b416c680bc5ccd20dee74526))
+* macos开发模式样式不生效 ([#299](https://github.com/HuLaSpark/HuLa/issues/299)) ([0a1f4ec](https://github.com/HuLaSpark/HuLa/commit/0a1f4ecd180ad55fdc5be58c1e6798065f37f48e))
+* **service:** :bug: 修复网络设置后缀为空时，调用接口失败的bug ([cb1fb70](https://github.com/HuLaSpark/HuLa/commit/cb1fb701818f1411da76f0dea3b3e8aef1d049de))
+* **view:** :bug: 修复文件类型气泡的样式和上传分片功能 ([57ac5c9](https://github.com/HuLaSpark/HuLa/commit/57ac5c98b7be12113367b54406d72f794a1a96e4))
+* **view:** :bug: 只保持主窗口窗口大小 ([8164e91](https://github.com/HuLaSpark/HuLa/commit/8164e916704dce7f197387f623688a865fe67011))
+
+
+### ⚡️ Performance Improvements | 性能优化
+
+* **component:** :zap: 优化webSocket的重连性能和网络检测方法 ([54f32ee](https://github.com/HuLaSpark/HuLa/commit/54f32eec5f4260501c75fa23459ecbcc82e17cb4))
+* **service:** :zap: 优化webSocket重连机制 ([18ffde1](https://github.com/HuLaSpark/HuLa/commit/18ffde1d49bd661ffc283d68e959b669c4bbb54d))
+* **store:** :zap: 优化刷新会话列表后，时间和最新消息简介没有更新的问题 ([d2ab29b](https://github.com/HuLaSpark/HuLa/commit/d2ab29bfd585218447641368a55069286e5e2714))
+
 ## [2.6.12](https://github.com/HuLaSpark/HuLa/compare/v2.6.11...v2.6.12) (2025-05-25)
 
 
