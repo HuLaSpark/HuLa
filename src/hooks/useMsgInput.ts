@@ -17,6 +17,8 @@ import { messageStrategyMap } from '@/strategy/MessageStrategy.ts'
 import { useTrigger } from './useTrigger'
 import type { AIModel } from '@/services/types.ts'
 import { UploadProviderEnum, useUpload } from './useUpload.ts'
+import { getReplyContent } from '@/utils/MessageReply.ts'
+import { fixFileMimeType, getMessageTypeByFile } from '@/utils/FileType.ts'
 /**
  * 光标管理器
  */
@@ -300,12 +302,20 @@ export const useMsgInput = (messageInputDom: Ref) => {
       if (html.includes('data-type="video"')) {
         return html
       }
+
       const tmp = document.createElement('div')
       tmp.innerHTML = html
       const replyDiv = tmp.querySelector('#replyDiv')
       if (replyDiv) {
         replyDiv.remove()
       }
+
+      // 检查是否包含粘贴的图片（有temp-image id的图片元素）
+      const pastedImage = tmp.querySelector('#temp-image')
+      if (pastedImage) {
+        return 'image' // 返回非空字符串，表示有内容
+      }
+
       return tmp.textContent?.trim() || tmp.innerText?.trim() || ''
     } catch (error) {
       console.error('Error in stripHtml:', error)
@@ -749,19 +759,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
         reply.value = { avatar: '', imgCount: 0, accountName: '', content: '', key: 0 }
 
         // 步骤3: 处理回复内容
-        // 回复前把包含&nbsp;的字符替换成空格
-        let content =
-          event.message.body.content ||
-          (event.message.type === MsgEnum.VIDEO
-            ? event.message.body.thumbUrl || event.message.body.url
-            : event.message.body.url)
-        if (content && typeof content === 'string') {
-          content = content.replace(/&nbsp;/g, ' ')
-        } else if (Array.isArray(content)) {
-          content = content.map((item: string) => {
-            return typeof item === 'string' ? item.replace(/&nbsp;/g, ' ') : item
-          })
-        }
+        const content = getReplyContent(event.message)
 
         // 步骤4: 设置新的回复内容
         reply.value = {
@@ -807,187 +805,295 @@ export const useMsgInput = (messageInputDom: Ref) => {
    */
   const sendFilesDirect = async (files: File[]) => {
     for (const file of files) {
-      const videoFileName = file.name.toLowerCase()
+      // 判断文件类型和修复MIME类型
+      const processedFile = fixFileMimeType(file)
+      let msgType = getMessageTypeByFile(processedFile)
 
-      // 修复 MIME 类型问题
-      let processedFile = file
-      if (!file.type || file.type === '') {
-        const ext = videoFileName.split('.').pop()?.toLowerCase()
-        let mimeType = 'video/mp4'
-
-        switch (ext) {
-          case 'mp4':
-            mimeType = 'video/mp4'
-            break
-          case 'mov':
-            mimeType = 'video/quicktime'
-            break
-          case 'avi':
-            mimeType = 'video/x-msvideo'
-            break
-          case 'wmv':
-            mimeType = 'video/x-ms-wmv'
-            break
-        }
-
-        processedFile = new File([file], file.name, { type: mimeType })
+      // 对音频文件进行特殊处理：通过文件选择的方式发送，作为文件类型处理
+      if (msgType === MsgEnum.VOICE) {
+        msgType = MsgEnum.FILE
       }
 
       // 生成唯一消息ID，避免重复
       const tempMsgId = `${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
-      const msgType = MsgEnum.VIDEO
       const messageStrategy = messageStrategyMap[msgType]
       let progressUnsubscribe: (() => void) | null = null
 
       try {
-        // 立即创建并显示消息
-        const tempMsg = messageStrategy.buildMessageType(
-          tempMsgId,
-          {
-            url: URL.createObjectURL(processedFile),
-            size: processedFile.size,
-            fileName: processedFile.name,
-            thumbUrl: '',
-            thumbWidth: 300,
-            thumbHeight: 150,
-            thumbSize: 0
-          },
-          globalStore,
-          userUid
-        )
-        tempMsg.message.status = MessageStatusEnum.SENDING
+        if (msgType === MsgEnum.VIDEO) {
+          // 视频文件处理逻辑
+          const tempMsg = messageStrategy.buildMessageType(
+            tempMsgId,
+            {
+              url: URL.createObjectURL(processedFile),
+              size: processedFile.size,
+              fileName: processedFile.name,
+              thumbUrl: '',
+              thumbWidth: 300,
+              thumbHeight: 150,
+              thumbSize: 0
+            },
+            globalStore,
+            userUid
+          )
+          tempMsg.message.status = MessageStatusEnum.SENDING
 
-        chatStore.pushMsg(tempMsg)
-        useMitt.emit(MittEnum.MESSAGE_ANIMATION, tempMsg)
+          chatStore.pushMsg(tempMsg)
+          useMitt.emit(MittEnum.MESSAGE_ANIMATION, tempMsg)
 
-        // 异步处理上传
-        const videoPath = await saveCacheFile(processedFile, 'video/')
+          // 异步处理上传
+          const videoPath = await saveCacheFile(processedFile, 'video/')
 
-        // 直接使用 VideoMessageStrategy 生成缩略图，避免重复处理
-        const videoStrategy = messageStrategy as any
-        const thumbnailFile = await videoStrategy.getVideoThumbnail(processedFile)
+          // 直接使用 VideoMessageStrategy 生成缩略图，避免重复处理
+          const videoStrategy = messageStrategy as any
+          const thumbnailFile = await videoStrategy.getVideoThumbnail(processedFile)
 
-        // 生成本地缩略图预览URL，立即更新消息显示
-        const localThumbUrl = URL.createObjectURL(thumbnailFile)
-        chatStore.updateMsg({
-          msgId: tempMsgId,
-          status: MessageStatusEnum.SENDING,
-          body: {
-            ...tempMsg.message.body,
-            thumbUrl: localThumbUrl,
-            thumbSize: thumbnailFile.size
-          }
-        })
-
-        // 获取一次七牛云配置，共享使用
-        const videoUploadResult = await messageStrategy.uploadFile(videoPath, { provider: UploadProviderEnum.QINIU })
-        const qiniuConfig = videoUploadResult.config // 使用第一次获取的配置
-
-        // 更新状态为上传中
-        chatStore.updateMsg({
-          msgId: tempMsgId,
-          status: MessageStatusEnum.SENDING,
-          uploadProgress: 0
-        })
-
-        // 获取视频策略的上传进度监听
-        const { progress, onChange } = (messageStrategy as any).getUploadProgress()
-
-        // 使用标志来控制事件处理
-        let isProgressActive = true
-
-        // 监听上传进度并实时更新消息
-        const handleProgress = (event: string) => {
-          if (!isProgressActive) return // 如果已经取消，不处理事件
-          if (event === 'progress') {
-            console.log(`🔄 视频上传进度更新: ${progress.value}% (消息ID: ${tempMsgId})`)
-            chatStore.updateMsg({
-              msgId: tempMsgId,
-              status: MessageStatusEnum.SENDING,
-              uploadProgress: progress.value
-            })
-          }
-        }
-
-        // 添加监听器
-        onChange(handleProgress)
-
-        // 创建取消函数
-        progressUnsubscribe = () => {
-          isProgressActive = false
-          console.log(`🗑️ 清理进度监听器 (消息ID: ${tempMsgId})`)
-        }
-
-        let videoUploadResponse: any = null
-        try {
-          // 上传视频
-          videoUploadResponse = await messageStrategy.doUpload(videoPath, videoUploadResult.uploadUrl, {
-            provider: UploadProviderEnum.QINIU,
-            ...qiniuConfig
+          // 生成本地缩略图预览URL，立即更新消息显示
+          const localThumbUrl = URL.createObjectURL(thumbnailFile)
+          chatStore.updateMsg({
+            msgId: tempMsgId,
+            status: MessageStatusEnum.SENDING,
+            body: {
+              ...tempMsg.message.body,
+              thumbUrl: localThumbUrl,
+              thumbSize: thumbnailFile.size
+            }
           })
 
-          // 清理进度监听器
-          if (progressUnsubscribe) {
-            progressUnsubscribe()
-            progressUnsubscribe = null
+          // 获取一次七牛云配置，共享使用
+          const videoUploadResult = await messageStrategy.uploadFile(videoPath, { provider: UploadProviderEnum.QINIU })
+          const qiniuConfig = videoUploadResult.config // 使用第一次获取的配置
+
+          // 更新状态为上传中
+          chatStore.updateMsg({
+            msgId: tempMsgId,
+            status: MessageStatusEnum.SENDING,
+            uploadProgress: 0
+          })
+
+          // 获取视频策略的上传进度监听
+          const { progress, onChange } = (messageStrategy as any).getUploadProgress()
+
+          // 使用标志来控制事件处理
+          let isProgressActive = true
+
+          // 监听上传进度并实时更新消息
+          const handleProgress = (event: string) => {
+            if (!isProgressActive) return // 如果已经取消，不处理事件
+            if (event === 'progress') {
+              console.log(`🔄 视频上传进度更新: ${progress.value}% (消息ID: ${tempMsgId})`)
+              chatStore.updateMsg({
+                msgId: tempMsgId,
+                status: MessageStatusEnum.SENDING,
+                uploadProgress: progress.value
+              })
+            }
           }
-        } catch (uploadError) {
-          // 清理进度监听器
-          if (progressUnsubscribe) {
-            progressUnsubscribe()
-            progressUnsubscribe = null
+
+          // 添加监听器
+          onChange(handleProgress)
+
+          // 创建取消函数
+          progressUnsubscribe = () => {
+            isProgressActive = false
+            console.log(`🗑️ 清理进度监听器 (消息ID: ${tempMsgId})`)
           }
-          throw uploadError
+
+          let videoUploadResponse: any = null
+          try {
+            // 上传视频
+            videoUploadResponse = await messageStrategy.doUpload(videoPath, videoUploadResult.uploadUrl, {
+              provider: UploadProviderEnum.QINIU,
+              ...qiniuConfig
+            })
+
+            // 清理进度监听器
+            if (progressUnsubscribe) {
+              progressUnsubscribe()
+              progressUnsubscribe = null
+            }
+          } catch (uploadError) {
+            // 清理进度监听器
+            if (progressUnsubscribe) {
+              progressUnsubscribe()
+              progressUnsubscribe = null
+            }
+            throw uploadError
+          }
+
+          // 直接使用七牛云上传缩略图，避免通过doUpload路径
+          const thumbnailUploadResponse = await uploadToQiniu(
+            thumbnailFile,
+            qiniuConfig.scene || 'CHAT',
+            qiniuConfig,
+            true // 是否启用文件去重
+          )
+
+          const finalVideoUrl = videoUploadResponse?.qiniuUrl || videoUploadResult.downloadUrl
+          const finalThumbnailUrl =
+            thumbnailUploadResponse?.downloadUrl || `${qiniuConfig.domain}/${thumbnailUploadResponse?.key}`
+
+          // 发送消息到服务器保存
+          const serverResponse = await apis.sendMsg({
+            roomId: globalStore.currentSession.roomId,
+            msgType: MsgEnum.VIDEO,
+            body: {
+              url: finalVideoUrl,
+              size: processedFile.size,
+              fileName: processedFile.name,
+              thumbUrl: finalThumbnailUrl,
+              thumbWidth: 300,
+              thumbHeight: 150,
+              thumbSize: thumbnailFile.size,
+              localPath: videoPath, // 保存本地缓存路径
+              senderUid: userUid.value // 保存发送者UID
+            }
+          })
+
+          // 使用服务器返回的数据更新消息状态为SUCCESS，清除进度信息
+          chatStore.updateMsg({
+            msgId: tempMsgId,
+            status: MessageStatusEnum.SUCCESS,
+            newMsgId: serverResponse.message.id, // 使用服务器返回的消息ID
+            body: serverResponse.message.body, // 使用服务器返回的消息体
+            uploadProgress: undefined // 清除进度信息
+          })
+
+          // 清理本地URL
+          URL.revokeObjectURL(tempMsg.message.body.url)
+          URL.revokeObjectURL(localThumbUrl)
+        } else if (msgType === MsgEnum.IMAGE) {
+          // 图片文件处理逻辑
+          // 直接通过fileList参数传递文件，ImageMessageStrategy会处理文件缓存和预览URL
+          const msg = await messageStrategy.getMsg('', reply, [processedFile])
+          const messageBody = messageStrategy.buildMessageBody(msg, reply)
+
+          // 创建临时消息对象，使用ImageStrategy提供的预览URL
+          const tempMsg = messageStrategy.buildMessageType(tempMsgId, messageBody, globalStore, userUid)
+          tempMsg.message.status = MessageStatusEnum.SENDING
+
+          // 添加到消息列表
+          chatStore.pushMsg(tempMsg)
+          useMitt.emit(MittEnum.MESSAGE_ANIMATION, tempMsg)
+
+          console.log('🖼️ 开始处理图片上传:', processedFile.name)
+
+          // 上传图片
+          const { uploadUrl, downloadUrl, config } = await messageStrategy.uploadFile(msg.path, {
+            provider: UploadProviderEnum.QINIU
+          })
+
+          const doUploadResult = await messageStrategy.doUpload(msg.path, uploadUrl, config)
+
+          // 更新消息体中的URL为服务器URL
+          messageBody.url =
+            config?.provider && config?.provider === UploadProviderEnum.QINIU ? doUploadResult?.qiniuUrl : downloadUrl
+          delete messageBody.path // 删除临时路径
+
+          // 更新临时消息的URL
+          chatStore.updateMsg({
+            msgId: tempMsgId,
+            body: {
+              ...messageBody
+            },
+            status: MessageStatusEnum.SENDING
+          })
+
+          console.log('🖼️ 图片上传完成，更新为服务器URL:', messageBody.url)
+
+          // 发送消息到服务器
+          const serverResponse = await apis.sendMsg({
+            roomId: globalStore.currentSession.roomId,
+            msgType: MsgEnum.IMAGE,
+            body: messageBody
+          })
+
+          // 更新消息状态为成功，并使用服务器返回的消息体
+          chatStore.updateMsg({
+            msgId: tempMsgId,
+            status: MessageStatusEnum.SUCCESS,
+            newMsgId: serverResponse.message.id,
+            body: serverResponse.message.body
+          })
+
+          // 更新会话最后活动时间
+          chatStore.updateSessionLastActiveTime(globalStore.currentSession.roomId)
+
+          // 释放本地预览URL
+          URL.revokeObjectURL(msg.url)
+        } else if (msgType === MsgEnum.FILE) {
+          // 文件处理逻辑（包括被重分类为文件的音频）
+          const msg = await messageStrategy.getMsg('', reply, [processedFile])
+          const messageBody = messageStrategy.buildMessageBody(msg, reply)
+
+          // 创建临时消息对象
+          const tempMsg = messageStrategy.buildMessageType(
+            tempMsgId,
+            {
+              ...messageBody,
+              url: '' // 文件URL，上传后会被设置
+            },
+            globalStore,
+            userUid
+          )
+          tempMsg.message.status = MessageStatusEnum.SENDING
+
+          // 添加到消息列表
+          chatStore.pushMsg(tempMsg)
+          useMitt.emit(MittEnum.MESSAGE_ANIMATION, tempMsg)
+
+          console.log('📎 开始处理文件上传:', processedFile.name)
+
+          // 上传文件
+          const { uploadUrl, downloadUrl, config } = await messageStrategy.uploadFile(msg.path, {
+            provider: UploadProviderEnum.QINIU
+          })
+
+          const doUploadResult = await messageStrategy.doUpload(msg.path, uploadUrl, config)
+
+          // 更新消息体中的URL为服务器URL
+          messageBody.url =
+            config?.provider && config?.provider === UploadProviderEnum.QINIU ? doUploadResult?.qiniuUrl : downloadUrl
+          delete messageBody.path // 删除临时路径
+
+          // 更新临时消息的URL
+          chatStore.updateMsg({
+            msgId: tempMsgId,
+            body: {
+              ...messageBody
+            },
+            status: MessageStatusEnum.SENDING
+          })
+
+          console.log('📎 文件上传完成，更新为服务器URL:', messageBody.url)
+
+          // 发送消息到服务器
+          const serverResponse = await apis.sendMsg({
+            roomId: globalStore.currentSession.roomId,
+            msgType: MsgEnum.FILE,
+            body: messageBody
+          })
+
+          // 更新消息状态为成功，并使用服务器返回的消息体
+          chatStore.updateMsg({
+            msgId: tempMsgId,
+            status: MessageStatusEnum.SUCCESS,
+            newMsgId: serverResponse.message.id,
+            body: serverResponse.message.body
+          })
+
+          // 更新会话最后活动时间
+          chatStore.updateSessionLastActiveTime(globalStore.currentSession.roomId)
+
+          console.log('📎 文件消息发送成功:', serverResponse.message.id)
         }
-
-        // 直接使用七牛云上传缩略图，避免通过doUpload路径
-        const thumbnailUploadResponse = await uploadToQiniu(
-          thumbnailFile,
-          qiniuConfig.scene || 'CHAT',
-          qiniuConfig,
-          true // 是否启用文件去重
-        )
-
-        const finalVideoUrl = videoUploadResponse?.qiniuUrl || videoUploadResult.downloadUrl
-        const finalThumbnailUrl =
-          thumbnailUploadResponse?.downloadUrl || `${qiniuConfig.domain}/${thumbnailUploadResponse?.key}`
-
-        // 发送消息到服务器保存
-        const serverResponse = await apis.sendMsg({
-          roomId: globalStore.currentSession.roomId,
-          msgType: MsgEnum.VIDEO,
-          body: {
-            url: finalVideoUrl,
-            size: processedFile.size,
-            fileName: processedFile.name,
-            thumbUrl: finalThumbnailUrl,
-            thumbWidth: 300,
-            thumbHeight: 150,
-            thumbSize: thumbnailFile.size,
-            localPath: videoPath, // 保存本地缓存路径
-            senderUid: userUid.value // 保存发送者UID
-          }
-        })
-
-        // 使用服务器返回的数据更新消息状态为SUCCESS，清除进度信息
-        chatStore.updateMsg({
-          msgId: tempMsgId,
-          status: MessageStatusEnum.SUCCESS,
-          newMsgId: serverResponse.message.id, // 使用服务器返回的消息ID
-          body: serverResponse.message.body, // 使用服务器返回的消息体
-          uploadProgress: undefined // 清除进度信息
-        })
-
-        // 清理本地URL
-        URL.revokeObjectURL(tempMsg.message.body.url)
-        URL.revokeObjectURL(localThumbUrl)
 
         // 清空输入框内容，避免重复发送
         if (messageInputDom.value) {
           messageInputDom.value.innerHTML = ''
         }
       } catch (error) {
-        console.error('视频发送失败:', error)
+        console.error(`${msgType === MsgEnum.VIDEO ? '视频' : '文件'}发送失败:`, error)
 
         // 确保清理进度监听器
         if (progressUnsubscribe) {
@@ -1000,7 +1106,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
           status: MessageStatusEnum.FAILED,
           uploadProgress: undefined // 清除进度信息
         })
-        window.$message.error('视频发送失败')
+        window.$message.error(`${msgType === MsgEnum.VIDEO ? '视频' : '文件'}发送失败`)
       }
     }
   }

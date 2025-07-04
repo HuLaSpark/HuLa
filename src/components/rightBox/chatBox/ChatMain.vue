@@ -328,14 +328,14 @@
                   </n-image-group> -->
 
                   <!-- 消息为文件 -->
-                  <n-image
+                  <!-- <n-image
                     class="select-none"
                     v-if="typeof item.message.body.url === 'string' && item.message.type === MsgEnum.FILE"
                     :img-props="{ style: { maxWidth: '325px', maxHeight: '165px' } }"
                     show-toolbar-tooltip
                     preview-disabled
                     style="border-radius: 8px"
-                    :src="item.message.body.url"></n-image>
+                    :src="item.message.body.url"></n-image> -->
                   <!-- 消息状态指示器 -->
                   <div v-if="item.fromUser.uid === userUid" class="absolute -left-6 top-2">
                     <n-icon v-if="item.message.status === MessageStatusEnum.SENDING" class="text-gray-400">
@@ -1000,7 +1000,13 @@ const handleViewAnnouncement = () => {
 }
 
 const isSpecialMsgType = (type: number) => {
-  return type === MsgEnum.IMAGE || type === MsgEnum.EMOJI || type === MsgEnum.NOTICE || type === MsgEnum.VIDEO
+  return (
+    type === MsgEnum.IMAGE ||
+    type === MsgEnum.EMOJI ||
+    type === MsgEnum.NOTICE ||
+    type === MsgEnum.VIDEO ||
+    type === MsgEnum.FILE
+  )
 }
 
 // 判断表情反应是否只有一行

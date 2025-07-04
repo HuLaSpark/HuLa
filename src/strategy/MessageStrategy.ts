@@ -11,6 +11,7 @@ import { getImageDimensions } from '@/utils/ImageUtils'
 import { getMimeTypeFromExtension, removeTag } from '@/utils/Formatting'
 import { join, appCacheDir } from '@tauri-apps/api/path'
 import { invoke } from '@tauri-apps/api/core'
+import { isVideoUrl, fixFileMimeType } from '@/utils/FileType'
 
 interface MessageStrategy {
   getMsg: (msgInputValue: string, replyValue: any, fileList?: File[]) => any
@@ -143,7 +144,7 @@ class TextMessageStrategyImpl extends AbstractMessageStrategy {
 
 /** 处理图片消息 */
 class ImageMessageStrategyImpl extends AbstractMessageStrategy {
-  // 最大上传文件大小 2MB
+  // 最大上传图片大小 2MB
   private readonly MAX_UPLOAD_SIZE = 2 * 1024 * 1024
   // 支持的图片类型
   private readonly ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
@@ -159,17 +160,20 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
    * @returns 验证后的图片文件
    */
   private async validateImage(file: File): Promise<File> {
+    // 先修复可能缺失或错误的MIME类型
+    const fixedFile = fixFileMimeType(file)
+
     // 检查文件类型
-    if (!this.ALLOWED_TYPES.includes(file.type)) {
+    if (!this.ALLOWED_TYPES.includes(fixedFile.type)) {
       throw new AppException('仅支持 JPEG、PNG、WebP 格式的图片')
     }
 
     // 检查文件大小
-    if (file.size > this.MAX_UPLOAD_SIZE) {
+    if (fixedFile.size > this.MAX_UPLOAD_SIZE) {
       throw new AppException('图片大小不能超过2MB')
     }
 
-    return file
+    return fixedFile
   }
 
   /**
@@ -234,6 +238,40 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
   async getMsg(msgInputValue: string, replyValue: any, fileList?: File[]): Promise<any> {
     console.log('开始处理图片消息:', msgInputValue, replyValue, fileList?.length ? '有附件文件' : '无附件文件')
 
+    // 优先处理fileList中的文件
+    if (fileList && fileList.length > 0) {
+      const file = fileList[0]
+
+      // 验证图片
+      await this.validateImage(file)
+
+      // 获取图片信息（宽度、高度）和预览URL
+      const { width, height, previewUrl } = await this.getImageInfo(file)
+
+      // 将文件保存到缓存目录
+      const tempPath = `temp-image-${Date.now()}-${file.name}`
+      const arrayBuffer = await file.arrayBuffer()
+      const uint8Array = new Uint8Array(arrayBuffer)
+      await writeFile(tempPath, uint8Array, { baseDir: BaseDirectory.AppCache })
+
+      return {
+        type: this.msgType,
+        path: tempPath, // 用于上传
+        url: previewUrl, // 用于预览显示
+        imageInfo: {
+          width, // 原始图片宽度
+          height, // 原始图片高度
+          size: file.size // 原始文件大小
+        },
+        reply: replyValue.content
+          ? {
+              content: replyValue.content,
+              key: replyValue.key
+            }
+          : undefined
+      }
+    }
+
     // 检查是否是图片URL
     if (this.isImageUrl(msgInputValue)) {
       try {
@@ -265,8 +303,14 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
       }
     }
 
-    // 原有的本地图片处理逻辑
-    const path = parseInnerText(msgInputValue, 'temp-image')
+    // 原有的本地图片处理逻辑（从HTML解析）
+    const doc = new DOMParser().parseFromString(msgInputValue, 'text/html')
+    const imgElement = doc.getElementById('temp-image')
+    if (!imgElement) {
+      throw new AppException('文件不存在')
+    }
+
+    const path = imgElement.getAttribute('data-path')
     if (!path) {
       throw new AppException('文件不存在')
     }
@@ -406,15 +450,81 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
  * 处理文件消息
  */
 class FileMessageStrategyImpl extends AbstractMessageStrategy {
+  // 最大上传文件大小 100MB
+  private readonly MAX_UPLOAD_SIZE = 100 * 1024 * 1024
+  private uploadHook = useUpload()
+
   constructor() {
     super(MsgEnum.FILE)
   }
 
-  getMsg(msgInputValue: string, replyValue: any, fileList?: File[]): any {
-    fileList
+  /**
+   * 验证文件是否符合上传条件
+   * @param file 文件对象
+   * @returns 验证后的文件
+   */
+  private async validateFile(file: File): Promise<File> {
+    // 检查文件大小
+    if (file.size > this.MAX_UPLOAD_SIZE) {
+      throw new AppException('文件大小不能超过100MB')
+    }
+    return file
+  }
+
+  /**
+   * 从文件路径读取文件信息
+   * @param path 文件路径
+   * @returns 文件信息
+   */
+  private async getFileFromPath(path: string): Promise<File> {
+    try {
+      const normalizedPath = path.replace(/\\/g, '/')
+      const fileData = await readFile(normalizedPath, { baseDir: BaseDirectory.AppCache })
+
+      const fileName = normalizedPath.split('/').pop() || 'unknown'
+      const fileType = getMimeTypeFromExtension(fileName)
+
+      return new File([new Uint8Array(fileData)], fileName, { type: fileType })
+    } catch (error) {
+      console.error('读取文件失败:', error)
+      throw new AppException('无法读取文件，请检查文件是否存在')
+    }
+  }
+
+  async getMsg(msgInputValue: string, replyValue: any, fileList?: File[]): Promise<any> {
+    console.log('开始处理文件消息:', msgInputValue, replyValue, fileList?.length ? '有附件文件' : '无附件文件')
+
+    let file: File | null = null
+
+    // 优先使用fileList中的文件
+    if (fileList && fileList.length > 0) {
+      file = fileList[0]
+    } else {
+      // 尝试从msgInputValue解析文件路径
+      const path = parseInnerText(msgInputValue, 'temp-file')
+      if (!path) {
+        throw new AppException('请选择要发送的文件')
+      }
+      file = await this.getFileFromPath(path)
+    }
+
+    // 验证文件
+    const validatedFile = await this.validateFile(file)
+
+    // 创建临时路径用于上传
+    const tempPath = `temp-file-${Date.now()}-${validatedFile.name}`
+
+    // 将文件保存到临时位置
+    const arrayBuffer = await validatedFile.arrayBuffer()
+    const uint8Array = new Uint8Array(arrayBuffer)
+    await writeFile(tempPath, uint8Array, { baseDir: BaseDirectory.AppCache })
+
     return {
       type: this.msgType,
-      content: msgInputValue,
+      path: tempPath,
+      fileName: validatedFile.name,
+      size: validatedFile.size,
+      mimeType: validatedFile.type,
       reply: replyValue.content
         ? {
             content: replyValue.content,
@@ -425,17 +535,73 @@ class FileMessageStrategyImpl extends AbstractMessageStrategy {
   }
 
   buildMessageBody(msg: any, reply: any): any {
-    msg
-    reply
-    throw new AppException('方法暂未实现')
+    return {
+      url: '', // 上传后会被设置
+      path: msg.path,
+      fileName: msg.fileName,
+      size: msg.size,
+      mimeType: msg.mimeType,
+      replyMsgId: msg.reply?.key || undefined,
+      reply: reply.value.content
+        ? {
+            body: reply.value.content,
+            id: reply.value.key,
+            username: reply.value.accountName,
+            type: msg.type
+          }
+        : undefined
+    }
   }
 
-  buildMessageType(messageId: string, messageBody: any, globalStore: any, userUid: Ref<any>): MessageType {
-    messageId
-    messageBody
-    globalStore
-    userUid
-    throw new AppException('方法暂未实现')
+  /**
+   * 上传文件
+   * @param path 文件路径
+   * @param options 上传选项
+   * @returns 上传结果
+   */
+  async uploadFile(
+    path: string,
+    options?: { provider?: UploadProviderEnum }
+  ): Promise<{ uploadUrl: string; downloadUrl: string; config?: any }> {
+    console.log('开始上传文件:', path)
+    try {
+      const uploadOptions: UploadOptions = {
+        provider: options?.provider || UploadProviderEnum.QINIU,
+        scene: UploadSceneEnum.CHAT
+      }
+
+      const result = await this.uploadHook.getUploadAndDownloadUrl(path, uploadOptions)
+      return result
+    } catch (error) {
+      console.error('获取文件上传链接失败:', error)
+      throw new AppException('获取文件上传链接失败，请重试')
+    }
+  }
+
+  /**
+   * 执行实际的文件上传
+   * @param path 文件路径
+   * @param uploadUrl 上传URL
+   * @param options 上传选项
+   * @returns 上传结果
+   */
+  async doUpload(path: string, uploadUrl: string, options?: any): Promise<{ qiniuUrl?: string } | void> {
+    console.log('执行文件上传:', path)
+    try {
+      // enableDeduplication启用文件去重
+      const result = await this.uploadHook.doUpload(path, uploadUrl, { ...options, enableDeduplication: true })
+
+      // 如果是七牛云上传，返回qiniuUrl
+      if (options?.provider === UploadProviderEnum.QINIU) {
+        return { qiniuUrl: result as string }
+      }
+    } catch (error) {
+      console.error('文件上传失败:', error)
+      if (error instanceof AppException) {
+        throw error
+      }
+      throw new AppException('文件上传失败，请重试')
+    }
   }
 }
 
@@ -667,8 +833,33 @@ class VideoMessageStrategyImpl extends AbstractMessageStrategy {
   }
 
   async getMsg(msgInputValue: string, replyValue: any, fileList?: File[]): Promise<any> {
-    // 1. 优先处理远程视频URL的情况
-    if (this.isVideoUrl(msgInputValue)) {
+    // 1. 优先处理fileList中的文件
+    if (fileList && fileList.length > 0) {
+      const file = fileList[0]
+
+      // 验证视频文件
+      const validatedFile = await this.validateVideo(file)
+      const thumbnail = await this.getVideoThumbnail(validatedFile)
+
+      // 将文件保存到缓存目录
+      const tempPath = `temp-video-${Date.now()}-${file.name}`
+      const arrayBuffer = await file.arrayBuffer()
+      const uint8Array = new Uint8Array(arrayBuffer)
+      await writeFile(tempPath, uint8Array, { baseDir: BaseDirectory.AppCache })
+
+      return {
+        type: this.msgType,
+        path: tempPath,
+        url: '', // 上传后会更新
+        thumbnail: thumbnail || '',
+        size: validatedFile.size,
+        duration: 0, // 实际项目中可解析视频时长
+        reply: replyValue.content ? { content: replyValue.content, key: replyValue.key } : undefined
+      }
+    }
+
+    // 2. 处理远程视频URL的情况
+    if (isVideoUrl(msgInputValue)) {
       return {
         type: this.msgType,
         url: msgInputValue,
@@ -676,13 +867,7 @@ class VideoMessageStrategyImpl extends AbstractMessageStrategy {
         reply: replyValue.content ? { content: replyValue.content, key: replyValue.key } : undefined
       }
     }
-    if (!fileList?.[0] && !msgInputValue) {
-      throw new AppException('请提供有效的视频文件或URL')
-    }
     const actualFile = await this.convertToVideoFile(msgInputValue)
-    if (!actualFile) {
-      throw new AppException('请选择视频文件或提供有效的视频URL')
-    }
 
     // 4. 验证视频文件
     const validatedFile = await this.validateVideo(actualFile)
@@ -875,7 +1060,7 @@ class VideoMessageStrategyImpl extends AbstractMessageStrategy {
     options?: { provider?: UploadProviderEnum }
   ): Promise<{ uploadUrl: string; downloadUrl: string; config?: any }> {
     // 远程视频直接返回URL
-    if (this.isVideoUrl(path)) {
+    if (isVideoUrl(path)) {
       return { uploadUrl: '', downloadUrl: path }
     }
 
@@ -890,7 +1075,7 @@ class VideoMessageStrategyImpl extends AbstractMessageStrategy {
     }
   }
   async doUpload(path: string, uploadUrl: string, options?: any): Promise<{ qiniuUrl?: string } | void> {
-    if (this.isVideoUrl(path)) {
+    if (isVideoUrl(path)) {
       throw new AppException('检查是否是有效的视频URL')
     }
 
@@ -906,18 +1091,6 @@ class VideoMessageStrategyImpl extends AbstractMessageStrategy {
         throw error
       }
       throw new AppException('文件上传失败，请重试')
-    }
-  }
-
-  /**
-   * 检查是否是有效的视频URL
-   */
-  private isVideoUrl(url: string): boolean {
-    try {
-      new URL(url)
-      return /\.(mp4|mov|avi|wmv)$/i.test(url)
-    } catch {
-      return false
     }
   }
 }

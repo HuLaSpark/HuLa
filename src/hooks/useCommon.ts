@@ -1,6 +1,5 @@
 import { LimitEnum, MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import { Ref } from 'vue'
-import { createFileOrVideoDom } from '@/utils/CreateDom.ts'
 import GraphemeSplitter from 'grapheme-splitter'
 import router from '@/router'
 import apis from '@/services/apis.ts'
@@ -708,6 +707,9 @@ export const useCommon = () => {
       return
     }
 
+    //缓存文件
+    const cachePath = await saveCacheFile(file, 'img')
+
     // 原有的File对象处理逻辑
     const reader = new FileReader()
     reader.onload = (e: any) => {
@@ -716,6 +718,9 @@ export const useCommon = () => {
       img.style.maxHeight = '88px'
       img.style.maxWidth = '140px'
       img.style.marginRight = '6px'
+      // 设置ID，使用缓存路径作为ID，这样parseInnerText可以找到它
+      img.id = 'temp-image'
+      img.setAttribute('data-path', cachePath)
 
       // 获取MsgInput组件暴露的lastEditRange
       const lastEditRange = (dom as any).getLastEditRange?.()
@@ -744,8 +749,6 @@ export const useCommon = () => {
 
       triggerInputEvent(dom)
     }
-    //缓存文件
-    await saveCacheFile(file, 'img')
     // 读取文件
     reader.readAsDataURL(file)
   }
@@ -756,20 +759,12 @@ export const useCommon = () => {
    * @param type 类型
    * @param dom 输入框dom
    */
-  const FileOrVideoPaste = async (file: File, type: MsgEnum, dom: HTMLElement) => {
+  const FileOrVideoPaste = async (file: File) => {
     const reader = new FileReader()
     if (file.size > 1024 * 1024 * 50) {
       window.$message.warning('文件大小不能超过50M，请重新选择')
       return
     }
-    // 使用函数
-    createFileOrVideoDom(file).then((imgTag) => {
-      // 将生成的img/video标签插入到页面中
-      insertNode(type, imgTag, dom)
-
-      // insertNode已经处理了光标位置，直接触发输入事件
-      triggerInputEvent(dom)
-    })
     await saveCacheFile(file, 'video')
     reader.readAsDataURL(file)
   }
@@ -779,14 +774,9 @@ export const useCommon = () => {
    * @param files 文件列表
    * @param dom 输入框dom
    */
-  const handleConfirmFiles = async (files: File[], dom: HTMLElement) => {
+  const handleConfirmFiles = async (files: File[]) => {
     for (const file of files) {
-      const fileType = file.type as string
-      if (fileType.startsWith('video/')) {
-        await FileOrVideoPaste(file, MsgEnum.VIDEO, dom)
-      } else {
-        await FileOrVideoPaste(file, MsgEnum.FILE, dom)
-      }
+      await FileOrVideoPaste(file)
     }
   }
 

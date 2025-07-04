@@ -1,0 +1,416 @@
+<template>
+  <div
+    class="file-container select-none"
+    :class="{ downloading: isDownloading, uploading: isUploading }"
+    @click="handleFileClick">
+    <!-- 文件信息 -->
+    <div class="file-info select-none">
+      <div class="file-name" :title="body?.fileName">
+        {{ truncateFileName(body?.fileName || '未知文件') }}
+      </div>
+      <div class="file-size">
+        {{ formatBytes(body?.size || 0) }}
+      </div>
+    </div>
+
+    <!-- 文件图标区域 -->
+    <div class="file-icon-wrapper select-none cursor-pointer">
+      <!-- 文件图标 -->
+      <img
+        :src="`/file/${getFileSuffix(body?.fileName || '')}.svg`"
+        :alt="getFileSuffix(body?.fileName || '')"
+        @error="handleIconError"
+        class="file-icon-img" />
+
+      <!-- 蒙层和操作图标 -->
+      <div v-if="isUploading || isDownloading || needsDownload" class="file-overlay">
+        <!-- 上传中显示进度 -->
+        <div v-if="isUploading" class="upload-progress">
+          <div class="progress-circle">
+            <svg class="progress-ring" width="24" height="24">
+              <circle
+                class="progress-ring-circle"
+                stroke="rgba(19, 152, 127, 0.3)"
+                stroke-width="2"
+                fill="transparent"
+                r="10"
+                cx="12"
+                cy="12" />
+              <circle
+                class="progress-ring-circle progress-ring-fill"
+                stroke="#13987f"
+                stroke-width="2"
+                fill="transparent"
+                r="10"
+                cx="12"
+                cy="12"
+                :stroke-dasharray="`${2 * Math.PI * 10}`"
+                :stroke-dashoffset="`${2 * Math.PI * 10 * (1 - (isUploading ? uploadProgress : downloadProgress) / 100)}`" />
+            </svg>
+          </div>
+          <div class="progress-text">{{ isUploading ? uploadProgress : downloadProgress }}%</div>
+        </div>
+        <!-- 下载中显示进度 -->
+        <div v-else-if="isDownloading" class="download-progress">
+          <div v-if="downloadProgress > 0" class="progress-circle">
+            <svg class="progress-ring" width="24" height="24">
+              <circle
+                class="progress-ring-circle"
+                stroke="rgba(255, 255, 255, 0.3)"
+                stroke-width="2"
+                fill="transparent"
+                r="10"
+                cx="12"
+                cy="12" />
+              <circle
+                class="progress-ring-circle progress-ring-fill"
+                stroke="#fff"
+                stroke-width="2"
+                fill="transparent"
+                r="10"
+                cx="12"
+                cy="12"
+                :stroke-dasharray="`${2 * Math.PI * 10}`"
+                :stroke-dashoffset="`${2 * Math.PI * 10 * (1 - downloadProgress / 100)}`" />
+            </svg>
+          </div>
+          <svg v-else class="loading-icon">
+            <use href="#loading"></use>
+          </svg>
+          <!-- 下载进度 -->
+          <!-- <div v-if="downloadProgress > 0" class="progress-text">{{ downloadProgress }}%</div> -->
+        </div>
+        <!-- 需要下载显示下载图标 -->
+        <div v-else-if="needsDownload" class="download-icon">
+          <svg class="download-btn-icon">
+            <use href="#arrow-down"></use>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import type { FileBody } from '@/services/types'
+import { MessageStatusEnum } from '@/enums'
+import { formatBytes, getFileSuffix } from '@/utils/Formatting'
+import { useDownload } from '@/hooks/useDownload'
+import { useFileDownloadStore } from '@/stores/fileDownload'
+import { openPath, revealItemInDir } from '@tauri-apps/plugin-opener'
+
+const { isDownloading: legacyIsDownloading } = useDownload()
+const fileDownloadStore = useFileDownloadStore()
+
+const props = defineProps<{
+  body: FileBody
+  messageStatus?: MessageStatusEnum
+  uploadProgress?: number
+}>()
+
+// 上传状态
+const isUploading = computed(() => props.messageStatus === MessageStatusEnum.SENDING)
+const uploadProgress = computed(() => props.uploadProgress || 0)
+
+// 文件下载状态
+const fileStatus = computed(() => {
+  if (!props.body?.url) return null
+  return fileDownloadStore.getFileStatus(props.body.url)
+})
+
+// 是否正在下载
+const isDownloading = computed(() => {
+  return fileStatus.value?.status === 'downloading' || legacyIsDownloading.value
+})
+
+// 下载进度
+const downloadProgress = computed(() => {
+  return fileStatus.value?.progress || 0
+})
+
+// 是否需要下载（文件未下载到本地且不是上传/下载状态）
+const needsDownload = computed(() => {
+  if (isUploading.value || isDownloading.value) return false
+  if (!props.body?.url) return false
+
+  // 如果是本地文件路径，不需要下载
+  if (props.body.url.startsWith('file://') || props.body.url.startsWith('/')) return false
+
+  // 检查文件是否已下载
+  const status = fileStatus.value
+  return !status?.isDownloaded
+})
+
+// 监听 props 变化，重新检查文件状态
+watch(
+  () => [props.body?.url, props.body?.fileName],
+  async ([newUrl, newFileName]) => {
+    if (newUrl && newFileName) {
+      try {
+        await fileDownloadStore.checkFileExists(newUrl, newFileName)
+      } catch (error) {
+        console.error('检查文件状态失败:', error)
+      }
+    }
+  },
+  { immediate: false }
+)
+
+// 截断文件名，保留后缀
+const truncateFileName = (fileName: string): string => {
+  if (!fileName) return '未知文件'
+
+  const maxWidth = 170 // 最大宽度像素
+  const averageCharWidth = 9 // 平均字符宽度（基于14px Arial字体）
+  const maxChars = Math.floor(maxWidth / averageCharWidth)
+
+  if (fileName.length <= maxChars) {
+    return fileName
+  }
+
+  // 获取文件扩展名
+  const lastDotIndex = fileName.lastIndexOf('.')
+  if (lastDotIndex === -1) {
+    // 没有扩展名，直接截断
+    return fileName.substring(0, maxChars - 3) + '...'
+  }
+
+  const name = fileName.substring(0, lastDotIndex)
+  const extension = fileName.substring(lastDotIndex)
+
+  // 计算可用于文件名的字符数（保留扩展名和省略号的空间）
+  const availableChars = maxChars - extension.length - 3 // 3 是省略号的长度
+
+  if (availableChars <= 0) {
+    // 如果扩展名太长，只显示扩展名
+    return '...' + extension
+  }
+
+  return name.substring(0, availableChars) + '...' + extension
+}
+
+// 处理图标加载错误
+const handleIconError = (event: Event) => {
+  const target = event.target as HTMLImageElement
+  target.src = '/file/other.svg'
+}
+
+// 处理文件点击
+const handleFileClick = async () => {
+  if (!props.body?.url || !props.body?.fileName || isUploading.value) return
+
+  try {
+    // 检查文件是否已下载
+    const status = fileStatus.value
+
+    if (status?.isDownloaded && status.absolutePath) {
+      // 文件已下载，尝试打开本地文件
+      try {
+        await openPath(status.absolutePath)
+      } catch (openError) {
+        await revealItemInDir(status.absolutePath)
+      }
+    } else if (needsDownload.value) {
+      // 需要下载文件
+      await downloadAndOpenFile()
+    } else {
+      // 本地文件路径，尝试打开
+      try {
+        await openPath(props.body.url)
+      } catch (openError) {
+        console.warn('无法直接打开文件，尝试在文件管理器中显示:', openError)
+        await revealItemInDir(props.body.url)
+      }
+    }
+  } catch (error) {
+    console.error('打开文件失败:', error)
+    const errorMessage = error instanceof Error ? error.message : '未知错误'
+    if (errorMessage.includes('Not allowed to open path') || errorMessage.includes('revealItemInDir')) {
+      console.error('无法打开或显示文件。请手动在文件管理器中找到并打开文件。')
+    } else {
+      console.error(`打开文件失败: ${errorMessage}`)
+    }
+  }
+}
+
+// 下载并打开文件
+const downloadAndOpenFile = async () => {
+  if (!props.body?.url || !props.body?.fileName) return
+
+  try {
+    const fileName = props.body.fileName
+    const absolutePath = await fileDownloadStore.downloadFile(props.body.url, fileName)
+
+    if (absolutePath) {
+      // 下载成功后尝试打开文件
+      try {
+        await openPath(absolutePath)
+      } catch (openError) {
+        console.warn('无法直接打开文件，尝试在文件管理器中显示:', openError)
+        await revealItemInDir(absolutePath)
+      }
+    }
+  } catch (error) {
+    console.error('下载文件失败:', error)
+    const errorMessage = error instanceof Error ? error.message : '未知错误'
+    if (errorMessage.includes('Not allowed to open path') || errorMessage.includes('revealItemInDir')) {
+      window.$message?.error('文件下载成功，但无法打开或显示文件。请手动在文件管理器中查找下载的文件。')
+    } else {
+      window.$message?.error(`下载文件失败: ${errorMessage}`)
+    }
+  }
+}
+
+// 组件挂载时检查文件状态
+onMounted(async () => {
+  if (props.body?.url && props.body?.fileName) {
+    try {
+      // 检查文件是否已存在于本地
+      await fileDownloadStore.checkFileExists(props.body.url, props.body.fileName)
+    } catch (error) {
+      console.error('检查文件状态失败:', error)
+    }
+  }
+})
+</script>
+
+<style scoped lang="scss">
+.file-container {
+  @apply custom-shadow px-14px py-8px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 225px;
+  height: 85px;
+  border-radius: 8px;
+  background: #fdfdfd;
+  cursor: default !important;
+  transition: all 0.2s ease;
+
+  &.downloading {
+    opacity: 0.7;
+  }
+
+  &.uploading {
+    opacity: 0.8;
+  }
+}
+
+.file-info {
+  flex: 1;
+  min-width: 0;
+  margin-right: 10px;
+}
+
+.file-name {
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+  font-size: 14px;
+  color: #333;
+  line-height: 1.2;
+  margin-bottom: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+.file-size {
+  font-family: Arial, sans-serif;
+  font-weight: normal;
+  font-size: 12px;
+  color: #909090;
+  line-height: 1.2;
+}
+
+.file-icon-wrapper {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.file-icon-img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+}
+
+.file-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.upload-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.download-progress,
+.download-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-circle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-ring {
+  transform: rotate(-90deg);
+}
+
+.progress-ring-circle {
+  transition: stroke-dashoffset 0.3s ease;
+}
+
+.progress-text {
+  font-size: 8px;
+  color: #fff;
+  text-align: center;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.loading-icon {
+  width: 20px;
+  height: 20px;
+  color: #fff;
+  animation: spin 1s linear infinite;
+}
+
+.download-btn-icon {
+  width: 16px;
+  height: 16px;
+  color: #fff;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+</style>
