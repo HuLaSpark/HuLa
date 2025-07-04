@@ -56,6 +56,15 @@ importers:
       '@tauri-apps/plugin-updater':
         specifier: 2.8.1
         version: 2.8.1
+      '@vue-office/docx':
+        specifier: ^1.6.3
+        version: 1.6.3(vue-demi@0.14.6(vue@3.5.17(typescript@5.8.3)))(vue@3.5.17(typescript@5.8.3))
+      '@vue-office/pdf':
+        specifier: ^2.0.10
+        version: 2.0.10(vue-demi@0.14.6(vue@3.5.17(typescript@5.8.3)))(vue@3.5.17(typescript@5.8.3))
+      base64url:
+        specifier: ^3.0.1
+        version: 3.0.1
       colorthief:
         specifier: ^2.6.0
         version: 2.6.0
@@ -107,6 +116,9 @@ importers:
       vue-cropper:
         specifier: 1.1.4
         version: 1.1.4
+      vue-demi:
+        specifier: 0.14.6
+        version: 0.14.6(vue@3.5.17(typescript@5.8.3))
       vue-draggable-plus:
         specifier: ^0.6.0
         version: 0.6.0(@types/sortablejs@1.15.8)
@@ -173,7 +185,7 @@ importers:
         version: 4.2.0(vite@6.3.5(@types/node@24.0.3)(jiti@2.4.2)(sass@1.89.2)(terser@5.37.0)(tsx@4.19.2)(yaml@2.6.1))(vue@3.5.17(typescript@5.8.3))
       '@vitest/coverage-v8':
         specifier: ^3.0.5
-        version: 3.0.5(vitest@3.0.5)
+        version: 3.0.5(vitest@3.0.5(@types/node@24.0.3)(@vitest/ui@3.0.5)(happy-dom@15.11.7)(jiti@2.4.2)(sass@1.89.2)(terser@5.37.0)(tsx@4.19.2)(yaml@2.6.1))
       '@vitest/ui':
         specifier: ^3.0.5
         version: 3.0.5(vitest@3.0.5)
@@ -1774,6 +1786,26 @@ packages:
   '@volar/typescript@2.4.14':
     resolution: {integrity: sha512-p8Z6f/bZM3/HyCdRNFZOEEzts51uV8WHeN8Tnfnm2EBv6FDB2TQLzfVx7aJvnl8ofKAOnS64B2O8bImBFaauRw==}
 
+  '@vue-office/docx@1.6.3':
+    resolution: {integrity: sha512-Cs+3CAaRBOWOiW4XAhTwwxJ0dy8cPIf6DqfNvYcD3YACiLwO4kuawLF2IAXxyijhbuOeoFsfvoVbOc16A/4bZA==}
+    peerDependencies:
+      '@vue/composition-api': ^1.7.1
+      vue: ^2.0.0 || >=3.0.0
+      vue-demi: ^0.14.6
+    peerDependenciesMeta:
+      '@vue/composition-api':
+        optional: true
+
+  '@vue-office/pdf@2.0.10':
+    resolution: {integrity: sha512-yHVLrMAKpMPBkhBwofFyGEtEeJF0Zd7oGmf56Pe5aj/xObdRq3E1CIZqTqhWJNgHV8oLQqaX0vs4p5T1zq+GIA==}
+    peerDependencies:
+      '@vue/composition-api': ^1.7.1
+      vue: ^2.0.0 || >=3.0.0
+      vue-demi: ^0.14.6
+    peerDependenciesMeta:
+      '@vue/composition-api':
+        optional: true
+
   '@vue/babel-helper-vue-transform-on@1.4.0':
     resolution: {integrity: sha512-mCokbouEQ/ocRce/FpKCRItGo+013tHg7tixg3DUNS+6bmIchPt66012kBMm476vyEIJPafrvOf4E5OYj3shSw==}
 
@@ -2011,6 +2043,10 @@ packages:
 
   base64-js@1.5.1:
     resolution: {integrity: sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==}
+
+  base64url@3.0.1:
+    resolution: {integrity: sha512-ir1UPr3dkwexU7FdV8qBBbNDRUhMmIekYMFZfi+C/sLNnRESKPl23nB9b2pltqfOQNnGzsDdId90AEtG5tCx4A==}
+    engines: {node: '>=6.0.0'}
 
   basic-ftp@5.0.5:
     resolution: {integrity: sha512-4Bcg1P8xhUuqcii/S0Z9wiHIrQVPMermM1any+MX5GeGD7faD3/msQUDGLol9wOcz4/jbg/WJnGqoJF6LiBdtg==}
@@ -4947,6 +4983,17 @@ packages:
   vue-cropper@1.1.4:
     resolution: {integrity: sha512-5m98vBsCEI9rbS4JxELxXidtAui3qNyTHLHg67Qbn7g8cg+E6LcnC+hh3SM/p94x6mFh6KRxT1ttnta+wCYqWA==}
 
+  vue-demi@0.14.6:
+    resolution: {integrity: sha512-8QA7wrYSHKaYgUxDA5ZC24w+eHm3sYCbp0EzcDwKqN3p6HqtTCGR/GVsPyZW92unff4UlcSh++lmqDWN3ZIq4w==}
+    engines: {node: '>=12'}
+    hasBin: true
+    peerDependencies:
+      '@vue/composition-api': ^1.0.0-rc.1
+      vue: ^3.0.0-0 || ^2.6.0
+    peerDependenciesMeta:
+      '@vue/composition-api':
+        optional: true
+
   vue-draggable-plus@0.6.0:
     resolution: {integrity: sha512-G5TSfHrt9tX9EjdG49InoFJbt2NYk0h3kgjgKxkFWr3ulIUays0oFObr5KZ8qzD4+QnhtALiRwIqY6qul4egqw==}
     peerDependencies:
@@ -6458,7 +6505,7 @@ snapshots:
       vite: 6.3.5(@types/node@24.0.3)(jiti@2.4.2)(sass@1.89.2)(terser@5.37.0)(tsx@4.19.2)(yaml@2.6.1)
       vue: 3.5.17(typescript@5.8.3)
 
-  '@vitest/coverage-v8@3.0.5(vitest@3.0.5)':
+  '@vitest/coverage-v8@3.0.5(vitest@3.0.5(@types/node@24.0.3)(@vitest/ui@3.0.5)(happy-dom@15.11.7)(jiti@2.4.2)(sass@1.89.2)(terser@5.37.0)(tsx@4.19.2)(yaml@2.6.1))':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 1.0.2
@@ -6538,6 +6585,16 @@ snapshots:
       '@volar/language-core': 2.4.14
       path-browserify: 1.0.1
       vscode-uri: 3.1.0
+
+  '@vue-office/docx@1.6.3(vue-demi@0.14.6(vue@3.5.17(typescript@5.8.3)))(vue@3.5.17(typescript@5.8.3))':
+    dependencies:
+      vue: 3.5.17(typescript@5.8.3)
+      vue-demi: 0.14.6(vue@3.5.17(typescript@5.8.3))
+
+  '@vue-office/pdf@2.0.10(vue-demi@0.14.6(vue@3.5.17(typescript@5.8.3)))(vue@3.5.17(typescript@5.8.3))':
+    dependencies:
+      vue: 3.5.17(typescript@5.8.3)
+      vue-demi: 0.14.6(vue@3.5.17(typescript@5.8.3))
 
   '@vue/babel-helper-vue-transform-on@1.4.0': {}
 
@@ -6855,6 +6912,8 @@ snapshots:
   balanced-match@1.0.2: {}
 
   base64-js@1.5.1: {}
+
+  base64url@3.0.1: {}
 
   basic-ftp@5.0.5: {}
 
@@ -10121,6 +10180,10 @@ snapshots:
   vue-component-type-helpers@2.2.0: {}
 
   vue-cropper@1.1.4: {}
+
+  vue-demi@0.14.6(vue@3.5.17(typescript@5.8.3)):
+    dependencies:
+      vue: 3.5.17(typescript@5.8.3)
 
   vue-draggable-plus@0.6.0(@types/sortablejs@1.15.8):
     dependencies:

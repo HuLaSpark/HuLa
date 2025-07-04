@@ -25,6 +25,7 @@ import { useEmojiStore } from '@/stores/emoji'
 import { useVideoViewer } from '@/hooks/useVideoViewer'
 import { useFileDownloadStore } from '@/stores/fileDownload'
 import { extractFileName, removeTag } from '@/utils/Formatting'
+import base64url from 'base64url'
 
 export const useChatMain = () => {
   const { openMsgSession, userUid } = useCommon()
@@ -237,7 +238,68 @@ export const useChatMain = () => {
       label: '预览',
       icon: 'preview-open',
       click: (item: any) => {
-        console.log(item)
+        console.log('预览文件的参数：', item)
+        nextTick(async () => {
+          // TODO: 这里要做预览功能（2025-7-4 15:09）
+          /**
+           *  构建router请求参数
+           *  - 要传参包括userId、roomId、文件名、文件url
+           */
+
+          // /**
+          //  *  发送文件预览窗口载荷内容
+          //  *  - 在新窗口中主动调用事件来消费该事件的载荷数据，rust用做临时保存
+          //  *  - 要传参包括userId、roomId、文件名、文件url
+          //  */
+          // const sendPreviewFileWindowPayload = async (
+          //   userId: string,
+          //   roomId: string,
+          //   fileName: string,
+          //   remoteUrl: string
+          // ) => {
+          //   try {
+          //     const res = await invoke('send_window_payload', {
+          //       label: LABEL,
+          //       payload: {
+          //         userId,
+          //         roomId,
+          //         fileName,
+          //         remoteUrl
+          //       }
+          //     })
+          //     console.log('发送完成：', res)
+          //   } catch (error) {
+          //     console.log('发送窗口消息失败', error)
+          //   }
+          // }
+
+          // await createWebviewWindow('预览文件', LABEL, 700, 620)
+
+          // await sendPreviewFileWindowPayload(
+          //   item.fromUser.uid,
+          //   item.message.roomId,
+          //   item.message.body.fileName,
+          //   item.message.body.url
+          // )
+
+          const buildRouterUrl = (userId: string, roomId: string, fileName: string, remoteUrl: string): string => {
+            console.log('数据：', fileName)
+            const encodedFileName = base64url(fileName)
+
+            const encodedUrl = base64url(remoteUrl)
+            return `/previewFile/${userId}/${roomId}/${encodedFileName}/${encodedUrl}`
+          }
+          const routerUrl = buildRouterUrl(
+            item.fromUser.uid,
+            item.message.roomId,
+            item.message.body.fileName,
+            item.message.body.url
+          )
+
+          console.log('路由url:', routerUrl)
+
+          await createWebviewWindow('预览文件', routerUrl, 700, 620)
+        })
       }
     },
     ...commonMenuList.value,
@@ -745,6 +807,7 @@ export const useChatMain = () => {
 
   /** 点击气泡消息时候监听用户是否按下ctrl+c来复制内容 */
   const handleMsgClick = (item: MessageType) => {
+    console.log('点击的消息：', item)
     activeBubble.value = item.message.id
     // 启用键盘监听
     const handleKeyPress = (e: KeyboardEvent) => {

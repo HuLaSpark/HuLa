@@ -74,6 +74,9 @@
     "@tauri-apps/plugin-shell": "^2.2.2",
     "@tauri-apps/plugin-sql": "^2.2.1",
     "@tauri-apps/plugin-updater": "2.8.1",
+    "@vue-office/docx": "^1.6.3",
+    "@vue-office/pdf": "^2.0.10",
+    "base64url": "^3.0.1",
     "colorthief": "^2.6.0",
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.11",
@@ -91,6 +94,7 @@
     "tauri-plugin-mic-recorder-api": "^2.0.0",
     "vue": "^3.5.17",
     "vue-cropper": "1.1.4",
+    "vue-demi": "0.14.6",
     "vue-draggable-plus": "^0.6.0",
     "vue-router": "^4.5.0"
   },
