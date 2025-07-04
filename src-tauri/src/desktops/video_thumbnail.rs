@@ -1,7 +1,7 @@
 use base64::{Engine as _, engine::general_purpose};
 use image::{ImageFormat};
 #[cfg(target_os = "macos")]
-use image::{ImageFormat, ImageReader};
+use image::{ImageReader};
 use serde::Serialize;
 use std::path::Path;
 #[cfg(target_os = "macos")]

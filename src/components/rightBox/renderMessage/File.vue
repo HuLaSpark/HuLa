@@ -276,7 +276,7 @@ onMounted(async () => {
 
 <style scoped lang="scss">
 .file-container {
-  @apply custom-shadow px-14px py-8px;
+  @apply custom-shadow px-14px py-4px;
   position: relative;
   display: flex;
   align-items: center;
@@ -285,6 +285,7 @@ onMounted(async () => {
   border-radius: 8px;
   background: #fdfdfd;
   cursor: default !important;
+  user-select: none !important;
   transition: all 0.2s ease;
 
   &.downloading {
