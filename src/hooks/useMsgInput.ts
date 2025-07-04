@@ -1042,7 +1042,33 @@ export const useMsgInput = (messageInputDom: Ref) => {
           chatStore.pushMsg(tempMsg)
           useMitt.emit(MittEnum.MESSAGE_ANIMATION, tempMsg)
 
-          console.log('📎 开始处理文件上传:', processedFile.name)
+          // 获取上传进度监听
+          const { progress, onChange } = (messageStrategy as any).getUploadProgress()
+
+          // 使用标志来控制事件处理
+          let isProgressActive = true
+
+          // 监听上传进度并实时更新消息
+          const handleProgress = (event: string) => {
+            if (!isProgressActive) return // 如果已经取消，不处理事件
+            if (event === 'progress') {
+              console.log(`🔄 文件上传进度更新: ${progress.value}% (消息ID: ${tempMsgId})`)
+              chatStore.updateMsg({
+                msgId: tempMsgId,
+                status: MessageStatusEnum.SENDING,
+                uploadProgress: progress.value
+              })
+            }
+          }
+
+          // 添加监听器
+          onChange(handleProgress)
+
+          // 创建取消函数
+          progressUnsubscribe = () => {
+            isProgressActive = false
+            console.log(`🗑️ 清理文件上传进度监听器 (消息ID: ${tempMsgId})`)
+          }
 
           // 上传文件
           const { uploadUrl, downloadUrl, config } = await messageStrategy.uploadFile(msg.path, {
@@ -1086,6 +1112,12 @@ export const useMsgInput = (messageInputDom: Ref) => {
           chatStore.updateSessionLastActiveTime(globalStore.currentSession.roomId)
 
           console.log('📎 文件消息发送成功:', serverResponse.message.id)
+
+          // 清理进度监听器
+          if (progressUnsubscribe) {
+            progressUnsubscribe()
+            progressUnsubscribe = null
+          }
         }
 
         // 清空输入框内容，避免重复发送

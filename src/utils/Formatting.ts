@@ -5,7 +5,7 @@ import DOMPurify from 'dompurify'
  * 文件大小格式化
  */
 export const formatBytes = (bytes: number): string => {
-  if (bytes === 0 || !bytes) {
+  if (bytes <= 0 || isNaN(bytes)) {
     return '0 B'
   }
 

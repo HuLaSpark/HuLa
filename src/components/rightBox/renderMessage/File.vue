@@ -9,28 +9,32 @@
         {{ truncateFileName(body?.fileName || '未知文件') }}
       </div>
       <div class="file-size">
-        {{ formatBytes(body?.size || 0) }}
+        {{ formatBytes(body?.size != null && !isNaN(body.size) ? body.size : 0) }}
+        <span class="download-status" :class="{ downloaded: fileStatus?.isDownloaded }">
+          {{ fileStatus?.isDownloaded ? '已下载' : '未下载' }}
+        </span>
       </div>
     </div>
 
     <!-- 文件图标区域 -->
-    <div class="file-icon-wrapper select-none cursor-pointer">
+    <div :title="body?.fileName" class="file-icon-wrapper select-none cursor-pointer">
       <!-- 文件图标 -->
       <img
         :src="`/file/${getFileSuffix(body?.fileName || '')}.svg`"
         :alt="getFileSuffix(body?.fileName || '')"
         @error="handleIconError"
+        @load="handleIconLoad"
         class="file-icon-img" />
 
       <!-- 蒙层和操作图标 -->
-      <div v-if="isUploading || isDownloading || needsDownload" class="file-overlay">
+      <div v-if="isUploading || isDownloading || needsDownload" class="file-overlay" :style="overlayStyle">
         <!-- 上传中显示进度 -->
         <div v-if="isUploading" class="upload-progress">
           <div class="progress-circle">
             <svg class="progress-ring" width="24" height="24">
               <circle
                 class="progress-ring-circle"
-                stroke="rgba(19, 152, 127, 0.3)"
+                stroke="rgba(19, 152, 127, 0.4)"
                 stroke-width="2"
                 fill="transparent"
                 r="10"
@@ -48,11 +52,12 @@
                 :stroke-dashoffset="`${2 * Math.PI * 10 * (1 - (isUploading ? uploadProgress : downloadProgress) / 100)}`" />
             </svg>
           </div>
-          <div class="progress-text">{{ isUploading ? uploadProgress : downloadProgress }}%</div>
+          <!-- 上传进度 -->
+          <!-- <div class="progress-text">{{ isUploading ? uploadProgress : downloadProgress }}%</div> -->
         </div>
         <!-- 下载中显示进度 -->
         <div v-else-if="isDownloading" class="download-progress">
-          <div v-if="downloadProgress > 0" class="progress-circle">
+          <div class="progress-circle">
             <svg class="progress-ring" width="24" height="24">
               <circle
                 class="progress-ring-circle"
@@ -74,17 +79,16 @@
                 :stroke-dashoffset="`${2 * Math.PI * 10 * (1 - downloadProgress / 100)}`" />
             </svg>
           </div>
-          <svg v-else class="loading-icon">
-            <use href="#loading"></use>
-          </svg>
           <!-- 下载进度 -->
-          <!-- <div v-if="downloadProgress > 0" class="progress-text">{{ downloadProgress }}%</div> -->
+          <!-- <div class="progress-text">{{ downloadProgress }}%</div> -->
         </div>
         <!-- 需要下载显示下载图标 -->
         <div v-else-if="needsDownload" class="download-icon">
-          <svg class="download-btn-icon">
-            <use href="#arrow-down"></use>
-          </svg>
+          <div class="download-circle">
+            <svg class="download-btn-icon">
+              <use href="#arrow-down"></use>
+            </svg>
+          </div>
         </div>
       </div>
     </div>
@@ -107,6 +111,9 @@ const props = defineProps<{
   messageStatus?: MessageStatusEnum
   uploadProgress?: number
 }>()
+
+// 图标尺寸状态
+const iconDimensions = ref({ width: 40, height: 40 })
 
 // 上传状态
 const isUploading = computed(() => props.messageStatus === MessageStatusEnum.SENDING)
@@ -141,6 +148,21 @@ const needsDownload = computed(() => {
   return !status?.isDownloaded
 })
 
+// 计算overlay样式
+const overlayStyle = computed(() => {
+  const { width, height } = iconDimensions.value
+  const overlayWidth = Math.max(width - 4, 38)
+  const overlayHeight = Math.max(height, 42)
+  return {
+    width: `${overlayWidth}px`,
+    height: `${overlayHeight}px`,
+    left: '50%',
+    top: '50%',
+    transform: 'translate(-50%, -50%)',
+    position: 'absolute' as const
+  }
+})
+
 // 监听 props 变化，重新检查文件状态
 watch(
   () => [props.body?.url, props.body?.fileName],
@@ -160,7 +182,7 @@ watch(
 const truncateFileName = (fileName: string): string => {
   if (!fileName) return '未知文件'
 
-  const maxWidth = 170 // 最大宽度像素
+  const maxWidth = 160 // 最大宽度像素
   const averageCharWidth = 9 // 平均字符宽度（基于14px Arial字体）
   const maxChars = Math.floor(maxWidth / averageCharWidth)
 
@@ -187,6 +209,17 @@ const truncateFileName = (fileName: string): string => {
   }
 
   return name.substring(0, availableChars) + '...' + extension
+}
+
+// 处理图标加载
+const handleIconLoad = (event: Event) => {
+  const target = event.target as HTMLImageElement
+  // 获取图标的实际显示尺寸
+  const rect = target.getBoundingClientRect()
+  iconDimensions.value = {
+    width: rect.width,
+    height: rect.height
+  }
 }
 
 // 处理图标加载错误
@@ -276,14 +309,7 @@ onMounted(async () => {
 
 <style scoped lang="scss">
 .file-container {
-  @apply custom-shadow px-14px py-4px;
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 225px;
-  height: 85px;
-  border-radius: 8px;
-  background: #fdfdfd;
+  @apply relative custom-shadow bg-[--file-bg-color] w-225px h-70px rounded-8px px-14px py-4px flex-y-center;
   cursor: default !important;
   user-select: none !important;
   transition: all 0.2s ease;
@@ -304,24 +330,35 @@ onMounted(async () => {
 }
 
 .file-name {
-  font-family: Arial, sans-serif;
-  font-weight: bold;
   font-size: 14px;
-  color: #333;
+  color: var(--text-color);
   line-height: 1.2;
   margin-bottom: 8px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 160px;
+  max-width: 170px;
 }
 
 .file-size {
-  font-family: Arial, sans-serif;
-  font-weight: normal;
   font-size: 12px;
   color: #909090;
-  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.download-status {
+  font-size: 10px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  @apply light:bg-#60606020 dark:bg-#444;
+  color: #909090;
+
+  &.downloaded {
+    background: rgba(19, 152, 127, 0.3);
+    color: #13987f;
+  }
 }
 
 .file-icon-wrapper {
@@ -329,8 +366,8 @@ onMounted(async () => {
   right: 15px;
   top: 50%;
   transform: translateY(-50%);
-  width: 42px;
-  height: 42px;
+  width: 39px;
+  height: 41px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -343,11 +380,6 @@ onMounted(async () => {
 }
 
 .file-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
   background: rgba(0, 0, 0, 0.6);
   border-radius: 4px;
   display: flex;
@@ -360,14 +392,28 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
 }
 
 .download-progress,
 .download-icon {
+  @apply flex-center;
+}
+
+.download-circle {
+  width: 22px;
+  height: 22px;
+  background: rgba(20, 20, 20, 0.6);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+.download-circle .download-btn-icon {
+  width: 14px;
+  height: 14px;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .progress-circle {
