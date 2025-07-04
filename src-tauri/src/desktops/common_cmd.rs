@@ -1,5 +1,5 @@
 #![allow(unexpected_cfgs)]
-use base64::{Engine as _, engine::general_purpose};
+use base64::{engine::general_purpose, Engine as _};
 use lazy_static::lazy_static;
 use screenshots::Screen;
 use serde::Serialize;
@@ -8,11 +8,16 @@ use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::Duration;
 use tauri::path::BaseDirectory;
-use tauri::{AppHandle, LogicalSize, Manager, ResourceId, Runtime, Webview};
+use tauri::{AppHandle, Emitter, LogicalSize, Manager, ResourceId, Runtime, Webview};
 
 #[cfg(target_os = "macos")]
 #[allow(deprecated)]
 use cocoa::appkit::NSWindow;
+
+use crate::desktops::window_payload::{
+    get_window_payload as _get_window_payload, push_window_payload as _push_window_payload,
+    WindowPayload,
+};
 
 // 定义用户信息结构体
 #[derive(Debug, Clone, Serialize)]
@@ -40,7 +45,6 @@ impl UserInfo {
             is_sign,
         }
     }
-
 }
 
 // 全局变量
@@ -171,4 +175,40 @@ pub fn hide_title_bar_buttons(window_label: &str, handle: AppHandle) -> Result<(
         }
     }
     Ok(())
+}
+
+#[tauri::command]
+pub async fn push_window_payload(
+    label: String,
+    payload: serde_json::Value,
+    handle: AppHandle,
+) -> Result<(), String> {
+    let payload_entity = WindowPayload::new(payload);
+
+    let option_window = handle.get_webview_window(&label);
+
+    if let Some(window) = option_window {
+        // 找到了对应label的window说明已经打开了，就只需要提醒刷新就行了
+        let _ = window.emit(&format!("{}:update", label), payload_entity);
+        return Ok(());
+    } else {
+        let result = _push_window_payload(label, payload_entity).await;
+
+        // 这里是存在值的时候才算失败，不存在值则是插入成功
+        if let Some(_) = result {
+            Err("none".to_string())
+        } else {
+            Ok(())
+        }
+    }
+}
+
+#[tauri::command]
+pub async fn get_window_payload(label: String) -> Result<serde_json::Value, ()> {
+    let result = _get_window_payload(label).await;
+    if let Some(payload_entity) = result {
+        Ok(payload_entity.payload)
+    } else {
+        Err(())
+    }
 }

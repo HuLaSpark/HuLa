@@ -25,7 +25,7 @@ import { useEmojiStore } from '@/stores/emoji'
 import { useVideoViewer } from '@/hooks/useVideoViewer'
 import { useFileDownloadStore } from '@/stores/fileDownload'
 import { extractFileName, removeTag } from '@/utils/Formatting'
-import base64url from 'base64url'
+import { invoke } from '@tauri-apps/api/core'
 
 export const useChatMain = () => {
   const { openMsgSession, userUid } = useCommon()
@@ -282,23 +282,59 @@ export const useChatMain = () => {
           //   item.message.body.url
           // )
 
-          const buildRouterUrl = (userId: string, roomId: string, fileName: string, remoteUrl: string): string => {
-            console.log('数据：', fileName)
-            const encodedFileName = base64url(fileName)
+          // const buildRouterUrl = (userId: string, roomId: string, fileName: string, remoteUrl: string): string => {
+          //   console.log('数据：', typeof fileName)
+          //   const encodedFileName = base64url(fileName.toString())
 
-            const encodedUrl = base64url(remoteUrl)
-            return `/previewFile/${userId}/${roomId}/${encodedFileName}/${encodedUrl}`
+          //   const encodedUrl = base64url(remoteUrl.toString())
+          //   return `/previewFile/${userId}/${roomId}/${encodedFileName}/${encodedUrl}`
+          // }
+          // const routerUrl = buildRouterUrl(
+          //   item.fromUser.uid,
+          //   item.message.roomId,
+          //   item.message.body.fileName,
+          //   item.message.body.url
+          // )
+
+          // console.log('路由url:', routerUrl)
+
+          const path = 'previewFile'
+          const LABEL = 'previewFile'
+
+          const saveWindowPayload = async (
+            userId: string,
+            roomId: string,
+            fileName: string,
+            remoteUrl: string,
+            messageId: string
+          ) => {
+            try {
+              await invoke('push_window_payload', {
+                label: LABEL,
+                // 这个payload只要是json就能传，不限制字段
+                payload: {
+                  userId,
+                  roomId,
+                  fileName,
+                  remoteUrl,
+                  messageId
+                }
+              })
+              console.log('写入完成')
+            } catch (_) {
+              console.log('写入窗口载荷时出现错误了')
+            }
           }
-          const routerUrl = buildRouterUrl(
+
+          await saveWindowPayload(
             item.fromUser.uid,
             item.message.roomId,
             item.message.body.fileName,
-            item.message.body.url
+            item.message.body.url,
+            item.message.id
           )
 
-          console.log('路由url:', routerUrl)
-
-          await createWebviewWindow('预览文件', routerUrl, 700, 620)
+          await createWebviewWindow('预览文件', path, 700, 620)
         })
       }
     },

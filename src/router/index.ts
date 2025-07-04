@@ -238,7 +238,7 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/announWindow/index.vue')
   },
   {
-    path: '/previewFile/:userId/:roomId/:fileName/:remoteUrl',
+    path: '/previewFile',
     name: 'previewFile',
     component: () => import('@/views/previewFileWindow/index.vue')
   }
