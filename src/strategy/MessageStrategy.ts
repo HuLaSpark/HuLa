@@ -408,8 +408,6 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
       return
     }
 
-    // 使用useUpload hook执行上传
-    console.log('执行文件上传:', path)
     try {
       // enableDeduplication启用文件去重
       const result = await this.uploadHook.doUpload(path, uploadUrl, { ...options, enableDeduplication: true })
@@ -563,7 +561,6 @@ class FileMessageStrategyImpl extends AbstractMessageStrategy {
     path: string,
     options?: { provider?: UploadProviderEnum }
   ): Promise<{ uploadUrl: string; downloadUrl: string; config?: any }> {
-    console.log('开始上传文件:', path)
     try {
       const uploadOptions: UploadOptions = {
         provider: options?.provider || UploadProviderEnum.QINIU,
@@ -586,7 +583,6 @@ class FileMessageStrategyImpl extends AbstractMessageStrategy {
    * @returns 上传结果
    */
   async doUpload(path: string, uploadUrl: string, options?: any): Promise<{ qiniuUrl?: string } | void> {
-    console.log('执行文件上传:', path)
     try {
       // enableDeduplication启用文件去重
       const result = await this.uploadHook.doUpload(path, uploadUrl, { ...options, enableDeduplication: true })
@@ -601,6 +597,16 @@ class FileMessageStrategyImpl extends AbstractMessageStrategy {
         throw error
       }
       throw new AppException('文件上传失败，请重试')
+    }
+  }
+
+  /**
+   * 暴露上传进度监听
+   */
+  getUploadProgress() {
+    return {
+      progress: this.uploadHook.progress,
+      onChange: this.uploadHook.onChange
     }
   }
 }

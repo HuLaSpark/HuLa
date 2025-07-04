@@ -4,8 +4,9 @@
     class="select-none cursor-pointer"
     :img-props="{
       style: {
-        width: '120px',
-        height: '120px'
+        maxWidth: '120px',
+        maxHeight: '120px',
+        objectFit: 'contain'
       }
     }"
     show-toolbar-tooltip

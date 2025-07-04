@@ -14,9 +14,16 @@ export const renderReplyContent = (name?: string, type?: MsgEnum, content?: stri
         : MSG_REPLY_TEXT_MAP[MsgEnum.IMAGE]
     }
     case MsgEnum.FILE: {
-      return roomType === RoomTypeEnum.GROUP
-        ? `${name}:${MSG_REPLY_TEXT_MAP[MsgEnum.FILE]}`
-        : MSG_REPLY_TEXT_MAP[MsgEnum.FILE]
+      // 如果content是对象，尝试提取fileName
+      let fileContent = ''
+      if (typeof content === 'string') {
+        fileContent = content
+      } else if (content && typeof content === 'object' && 'fileName' in content) {
+        fileContent = (content as any).fileName
+      }
+      fileContent = fileContent || MSG_REPLY_TEXT_MAP[MsgEnum.FILE]
+
+      return roomType === RoomTypeEnum.GROUP ? `${name}:${fileContent}` : `[文件] ${fileContent}`
     }
     case MsgEnum.VOICE: {
       return roomType === RoomTypeEnum.GROUP
