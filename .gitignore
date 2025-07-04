@@ -28,3 +28,6 @@ src-tauri/target
 /coverage
 .cursorrules
 .claude/
+
+target
+.sqlite

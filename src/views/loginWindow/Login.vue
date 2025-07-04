@@ -190,6 +190,7 @@ import { clearListener } from '@/utils/ReadCountQueue'
 import { useGlobalStore } from '@/stores/global'
 import { type } from '@tauri-apps/plugin-os'
 import { useCheckUpdate } from '@/hooks/useCheckUpdate'
+import { invoke } from '@tauri-apps/api/core'
 
 const isCompatibility = computed(() => type() === 'windows' || type() === 'linux')
 const settingStore = useSettingStore()
@@ -387,6 +388,9 @@ const normalLogin = async (auto = false) => {
         client: res.client
       }
       userStore.userInfo = account
+      invoke('save_user_info', {
+        userInfo: JSON.stringify(account)
+      })
       loginHistoriesStore.addLoginHistory(account)
 
       await setLoginState()
