@@ -2,14 +2,16 @@
 @mixin bubble {
   @apply w-fit min-h-1em p-[8px_12px] text-14px line-height-22px bg-[--bg-bubble] rounded-[2px_18px_18px] custom-shadow;
   max-width: var(--bubble-max-width, 32vw); /** 默认为群聊宽度 */
-  white-space: normal; /** 保留空白符号并正常换行 */
-  word-break: break-all; /** 强制在单词内部进行换行 */
-  overflow-wrap: break-all;
-  -webkit-white-space: normal; /** 兼容webkit浏览器 */
-  -webkit-word-break: break-all;
-  -webkit-overflow-wrap: break-all;
+  white-space: pre-wrap; /** 保留空白符号并正常换行，支持特殊字符 */
+  word-break: break-word; /** 优先在单词边界换行，必要时在单词内换行 */
+  overflow-wrap: anywhere; /** 在任何位置都可以换行，包括特殊字符 */
+  word-wrap: break-word; /** 兼容旧版浏览器 */
+  -webkit-white-space: pre-wrap; /** 兼容webkit浏览器 */
+  -webkit-word-break: break-word;
+  -webkit-overflow-wrap: anywhere;
   hyphens: auto; /** 行尾自动断开长单词 */
   -webkit-hyphens: auto;
+  line-break: anywhere; /** 支持任意位置换行，包括特殊字符和符号 */
   user-select: text; /** 只允许选中文本 */
   -webkit-user-select: text;
   -moz-user-select: text;

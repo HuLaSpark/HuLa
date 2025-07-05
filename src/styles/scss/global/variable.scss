@@ -116,6 +116,8 @@ svg {
   --float-hover-bg-color: rgb(221, 240, 236);
   // 群公告列表背景色
   --group-notice-list-bg: #ffffffb6;
+  // 文件文本的背景颜色
+  --file-bg-color: #fdfdfd;
 }
 
 html[data-theme='dark'] {
@@ -215,6 +217,8 @@ html[data-theme='dark'] {
   --float-hover-bg-color: rgb(25, 50, 45);
   // 群公告列表背景色
   --group-notice-list-bg: #262626;
+  // 文件文本的背景颜色
+  --file-bg-color: #222;
 }
 /**! end */
 // 线性动画

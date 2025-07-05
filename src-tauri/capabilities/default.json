@@ -91,6 +91,10 @@
     "notification:allow-delete-channel",
     "notification:allow-create-channel",
     "notification:allow-permission-state",
+    "opener:default",
+    "opener:allow-reveal-item-in-dir",
+    "opener:allow-open-path",
+    "mic-recorder:default",
     {
       "identifier": "shell:allow-execute",
       "allow": [

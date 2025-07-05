@@ -1,6 +1,5 @@
 import { LimitEnum, MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import { Ref } from 'vue'
-import { createFileOrVideoDom } from '@/utils/CreateDom.ts'
 import GraphemeSplitter from 'grapheme-splitter'
 import router from '@/router'
 import apis from '@/services/apis.ts'
@@ -9,11 +8,11 @@ import { useGlobalStore } from '@/stores/global.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useMessage } from '@/hooks/useMessage.ts'
 import { useUserStore } from '@/stores/user.ts'
-import { BaseDirectory, create, exists, mkdir } from '@tauri-apps/plugin-fs'
 import { getImageCache } from '@/utils/PathUtil.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import DOMPurify from 'dompurify'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { BaseDirectory, create, exists, mkdir } from '@tauri-apps/plugin-fs'
+import { removeTag } from '@/utils/Formatting'
 
 export interface SelectionRange {
   range: Range
@@ -23,49 +22,40 @@ const domParser = new DOMParser()
 
 const REPLY_NODE_ID = 'replyDiv'
 
-const saveCacheFile = async (file: any, subFolder: string, dom: HTMLElement) => {
+const saveCacheFile = async (file: any, subFolder: string): Promise<string> => {
+  const { userUid } = useCommon()
+  // TODO: 这里需要获取到需要发送的图片、文件的本地地址，如果不是本地地址，就需要先下载到本地cache文件夹里面
   const fileName = file.name === null ? 'test.png' : file.name
-  const tempPath = getImageCache(subFolder)
+  const tempPath = getImageCache(subFolder, userUid.value!)
   const fullPath = tempPath + fileName
-  const cacheReader = new FileReader()
-  cacheReader.onload = async (e: any) => {
-    const isExists = await exists(tempPath, { baseDir: BaseDirectory.AppCache })
-    if (!isExists) {
-      await mkdir(tempPath, { baseDir: BaseDirectory.AppCache, recursive: true })
+
+  console.log(`💾 开始保存缓存文件: ${fullPath}, 原始大小: ${file.size} bytes`)
+
+  return new Promise((resolve, reject) => {
+    const cacheReader = new FileReader()
+    cacheReader.onload = async (e: any) => {
+      try {
+        const isExists = await exists(tempPath, { baseDir: BaseDirectory.AppCache })
+        if (!isExists) {
+          await mkdir(tempPath, { baseDir: BaseDirectory.AppCache, recursive: true })
+        }
+        const tempFile = await create(fullPath, { baseDir: BaseDirectory.AppCache })
+        await tempFile.write(e.target.result)
+        await tempFile.close()
+
+        console.log(`✅ 缓存文件保存成功: ${fullPath}, 写入大小: ${e.target.result.byteLength} bytes`)
+        resolve(fullPath)
+      } catch (error) {
+        reject(error)
+      }
     }
-    const tempFile = await create(fullPath, { baseDir: BaseDirectory.AppCache })
-    await tempFile.write(e.target.result)
-    tempFile.close()
-  }
-  cacheReader.readAsArrayBuffer(file)
-  const p = document.createElement('p')
-  p.setAttribute('id', 'temp-image')
-  p.style.setProperty('display', 'none')
-  p.textContent = fullPath
-  // 获取MsgInput组件暴露的lastEditRange
-  const lastEditRange = (dom as any).getLastEditRange?.()
 
-  // 确保dom获得焦点
-  dom.focus()
+    cacheReader.onerror = (error) => {
+      reject(error)
+    }
 
-  let range: Range
-  if (!lastEditRange) {
-    // 如果没有lastEditRange，创建一个新的范围到最后
-    range = document.createRange()
-    range.selectNodeContents(dom)
-    range.collapse(false) // 折叠到末尾
-  } else {
-    range = lastEditRange
-  }
-
-  // 确保我们有有效的range
-  const selection = window.getSelection()
-  if (selection) {
-    // 插入图片
-    range.deleteContents()
-    range.insertNode(p)
-  }
-  return fullPath
+    cacheReader.readAsArrayBuffer(file)
+  })
 }
 
 /**
@@ -145,6 +135,7 @@ export const useCommon = () => {
     let hasVideo = false
     let hasFile = false
     let hasEmoji = false
+    let hasVoice = false
 
     const elements = messageInputDom.value.childNodes
     for (const element of elements) {
@@ -161,10 +152,14 @@ export const useCommon = () => {
         }
       } else if (element.tagName === 'VIDEO' || (element.tagName === 'A' && element.href.match(/\.(mp4|webm)$/i))) {
         hasVideo = true
+      } else if (element.tagName === 'DIV' && element.className === 'voice-message-placeholder') {
+        hasVoice = true
       }
     }
 
-    if (hasFile) {
+    if (hasVoice) {
+      return MsgEnum.VOICE
+    } else if (hasFile) {
       return MsgEnum.FILE
     } else if (hasVideo) {
       return MsgEnum.VIDEO
@@ -214,7 +209,7 @@ export const useCommon = () => {
    * @param target 目标节点
    * @param sr 选区
    */
-  const insertNodeAtRange = (type: MsgEnum, dom: any, target: HTMLElement, sr: SelectionRange) => {
+  const insertNodeAtRange = (type: MsgEnum, dom: any, _target: HTMLElement, sr: SelectionRange) => {
     const { range, selection } = sr
 
     // 删除选中的内容
@@ -480,7 +475,8 @@ export const useCommon = () => {
       range?.insertNode(spaceNode)
       range?.collapse(false)
     } else {
-      target.appendChild(dom)
+      range?.insertNode(dom)
+      range?.collapse(false)
     }
     // 将光标移到选中范围的最后面
     selection?.collapseToEnd()
@@ -670,7 +666,7 @@ export const useCommon = () => {
    * @param file 图片文件
    * @param dom 输入框dom
    */
-  const imgPaste = (file: any, dom: HTMLElement) => {
+  const imgPaste = async (file: any, dom: HTMLElement) => {
     // 如果file是blob URL格式
     if (typeof file === 'string' && file.startsWith('blob:')) {
       const url = file.replace('blob:', '') // 移除blob:前缀
@@ -711,6 +707,9 @@ export const useCommon = () => {
       return
     }
 
+    //缓存文件
+    const cachePath = await saveCacheFile(file, 'img')
+
     // 原有的File对象处理逻辑
     const reader = new FileReader()
     reader.onload = (e: any) => {
@@ -719,6 +718,9 @@ export const useCommon = () => {
       img.style.maxHeight = '88px'
       img.style.maxWidth = '140px'
       img.style.marginRight = '6px'
+      // 设置ID，使用缓存路径作为ID，这样parseInnerText可以找到它
+      img.id = 'temp-image'
+      img.setAttribute('data-path', cachePath)
 
       // 获取MsgInput组件暴露的lastEditRange
       const lastEditRange = (dom as any).getLastEditRange?.()
@@ -747,8 +749,6 @@ export const useCommon = () => {
 
       triggerInputEvent(dom)
     }
-    //缓存文件
-    saveCacheFile(file, 'img', dom)
     // 读取文件
     reader.readAsDataURL(file)
   }
@@ -759,61 +759,38 @@ export const useCommon = () => {
    * @param type 类型
    * @param dom 输入框dom
    */
-  const FileOrVideoPaste = (file: File, type: MsgEnum, dom: HTMLElement) => {
+  const FileOrVideoPaste = async (file: File) => {
     const reader = new FileReader()
-    // 使用函数
-    createFileOrVideoDom(file).then((imgTag) => {
-      // 将生成的img标签插入到页面中
-      insertNode(type, imgTag, dom)
+    if (file.size > 1024 * 1024 * 50) {
+      window.$message.warning('文件大小不能超过50M，请重新选择')
+      return
+    }
+    await saveCacheFile(file, 'video')
+    reader.readAsDataURL(file)
+  }
 
-      // 确保光标位置在插入的元素后面
-      const selection = window.getSelection()
-      const range = document.createRange()
-      range.setStartAfter(imgTag as HTMLElement)
-      range.setEndAfter(imgTag as HTMLElement)
-
-      // 更新选区
-      selection?.removeAllRanges()
-      selection?.addRange(range)
-
-      triggerInputEvent(dom)
-    })
-    nextTick(() => {
-      reader.readAsDataURL(file)
-    })
+  /**
+   * 处理确认的文件列表（来自弹窗）
+   * @param files 文件列表
+   * @param dom 输入框dom
+   */
+  const handleConfirmFiles = async (files: File[]) => {
+    for (const file of files) {
+      await FileOrVideoPaste(file)
+    }
   }
 
   /**
    * 处理粘贴事件
    * @param e 事件对象
    * @param dom 输入框dom
+   * @param showFileModal 显示文件弹窗的回调函数
    */
-  const handlePaste = (e: any, dom: HTMLElement) => {
+  const handlePaste = async (e: any, dom: HTMLElement, showFileModal?: (files: File[]) => void) => {
     e.preventDefault()
     if (e.clipboardData.files.length > 0) {
-      if (e.clipboardData.files.length > LimitEnum.COM_COUNT) {
-        window.$message.warning(`一次性只能上传${LimitEnum.COM_COUNT}个文件或图片`)
-        return
-      }
-      for (const file of e.clipboardData.files) {
-        // 检查文件大小
-        const fileSizeInMB = file.size / 1024 / 1024 // 将文件大小转换为兆字节(MB)
-        if (fileSizeInMB > 300) {
-          window.$message.warning(`文件 ${file.name} 超过300MB`)
-          continue // 如果文件大小超过300MB，就跳过这个文件，处理下一个文件
-        }
-        const fileType = file.type as string
-        if (fileType.startsWith('image/')) {
-          // 处理图片粘贴
-          imgPaste(file, dom)
-        } else if (fileType.startsWith('video/')) {
-          // 处理视频粘贴
-          FileOrVideoPaste(file, MsgEnum.VIDEO, dom)
-        } else {
-          // 处理文件粘贴
-          FileOrVideoPaste(file, MsgEnum.FILE, dom)
-        }
-      }
+      // 使用通用文件处理函数
+      await processFiles(Array.from(e.clipboardData.files), dom, showFileModal)
     } else {
       // 如果没有文件，而是文本，处理纯文本粘贴
       const plainText = e.clipboardData.getData('text/plain')
@@ -826,14 +803,6 @@ export const useCommon = () => {
   const countGraphemes = (value: string) => {
     const splitter = new GraphemeSplitter()
     return splitter.countGraphemes(value)
-  }
-
-  /** 去除字符串中的元素标记
-   *  不是html元素节点返回原字符串
-   * */
-  const removeTag = (fragment: string) => {
-    const sanitizedFragment = DOMPurify.sanitize(fragment)
-    return new DOMParser().parseFromString(sanitizedFragment, 'text/html').body.textContent || fragment
   }
 
   /**
@@ -873,6 +842,62 @@ export const useCommon = () => {
     useMitt.emit(MittEnum.TO_SEND_MSG, { url: 'message' })
   }
 
+  /**
+   * 通用文件处理函数
+   * @param files 文件列表
+   * @param dom 输入框DOM元素
+   * @param showFileModal 显示文件弹窗的回调函数
+   * @param resetCallback 重置回调函数（可选）
+   */
+  const processFiles = async (
+    files: File[],
+    dom: HTMLElement,
+    showFileModal?: (files: File[]) => void,
+    resetCallback?: () => void
+  ) => {
+    if (!files) return
+
+    // 检查文件数量
+    if (files.length > LimitEnum.COM_COUNT) {
+      window.$message.warning(`一次性只能上传${LimitEnum.COM_COUNT}个文件或图片`)
+      return
+    }
+
+    // 分类文件：图片 or 其他文件
+    const imageFiles: File[] = []
+    const otherFiles: File[] = []
+
+    for (const file of files) {
+      // 检查文件大小
+      const fileSizeInMB = file.size / 1024 / 1024
+      if (fileSizeInMB > 100) {
+        window.$message.warning(`文件 ${file.name} 超过100MB`)
+        continue
+      }
+
+      const fileType = file.type
+      if (fileType.startsWith('image/')) {
+        imageFiles.push(file)
+      } else {
+        // 视频和其他文件通过弹窗处理
+        otherFiles.push(file)
+      }
+    }
+
+    // 处理图片文件（直接插入输入框）
+    for (const file of imageFiles) {
+      await imgPaste(file, dom)
+    }
+
+    // 处理其他文件（显示弹窗）
+    if (otherFiles.length > 0 && showFileModal) {
+      showFileModal(otherFiles)
+    }
+
+    // 执行重置回调
+    resetCallback?.()
+  }
+
   return {
     imgPaste,
     getEditorRange,
@@ -880,12 +905,14 @@ export const useCommon = () => {
     insertNode,
     triggerInputEvent,
     handlePaste,
-    removeTag,
     FileOrVideoPaste,
+    handleConfirmFiles,
     countGraphemes,
     openMsgSession,
     insertNodeAtRange,
     reply,
-    userUid
+    userUid,
+    processFiles,
+    saveCacheFile
   }
 }

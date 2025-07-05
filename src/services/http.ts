@@ -168,7 +168,7 @@ async function Http<T = any>(
 
   // 获取代理设置
   // const proxySettings = JSON.parse(localStorage.getItem('proxySettings') || '{}')
-  // 如果设置了代理，添加代理配置 (BETA)
+  // // 如果设置了代理，添加代理配置 (BETA)
   // if (proxySettings.type && proxySettings.ip && proxySettings.port) {
   //   // 使用 Rust 后端的代理客户端
   //   fetchOptions.proxy = {
@@ -299,7 +299,8 @@ async function Http<T = any>(
         throw new AppException(errorMessage, {
           type: ErrorType.Network,
           details: { attempts: currentAttempt + 1 },
-          showError: true
+          showError: true,
+          isRetryError: true
         })
       }
 
@@ -307,7 +308,8 @@ async function Http<T = any>(
       throw new AppException(ERROR_MESSAGES.UNKNOWN, {
         type: error instanceof TypeError ? ErrorType.Network : ErrorType.Unknown,
         details: { attempts: currentAttempt + 1 },
-        showError: true
+        showError: true,
+        isRetryError: true
       })
     }
   }

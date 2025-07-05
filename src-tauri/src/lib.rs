@@ -6,6 +6,8 @@ use common_cmd::hide_title_bar_buttons;
 #[cfg(desktop)]
 use common_cmd::{audio, default_window_icon, screenshot, set_badge_count, set_height};
 #[cfg(desktop)]
+use desktops::video_thumbnail::get_video_thumbnail;
+#[cfg(desktop)]
 mod proxy;
 #[cfg(desktop)]
 use desktops::common_cmd;
@@ -57,6 +59,7 @@ fn setup_desktop() {
             set_badge_count,
             test_api_proxy,
             test_ws_proxy,
+            get_video_thumbnail,
             #[cfg(target_os = "macos")]
             hide_title_bar_buttons
         ])

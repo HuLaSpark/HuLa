@@ -46,10 +46,14 @@
 
             <n-flex align="center" justify="space-between">
               <template v-if="item.isAtMe">
-                <span class="text flex-1 leading-tight text-12px truncate" v-html="item.lastMsg.replace(':', '：')" />
+                <span
+                  class="text flex-1 leading-tight text-12px truncate"
+                  v-html="String(item.lastMsg || '').replace(':', '：')" />
               </template>
               <template v-else>
-                <span class="text flex-1 leading-tight text-12px truncate" v-text="item.lastMsg.replace(':', '：')" />
+                <span
+                  class="text flex-1 leading-tight text-12px truncate"
+                  v-text="String(item.lastMsg || '').replace(':', '：')" />
               </template>
 
               <!-- 消息提示 -->

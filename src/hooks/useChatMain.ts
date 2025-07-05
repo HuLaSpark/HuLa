@@ -9,18 +9,28 @@ import { useUserStore } from '@/stores/user'
 import { useGlobalStore } from '@/stores/global.ts'
 import { isDiffNow } from '@/utils/ComputedTime.ts'
 import { writeText, writeImage } from '@tauri-apps/plugin-clipboard-manager'
-import { detectImageFormat, imageUrlToUint8Array, isImageUrl } from '@/utils/imageUtils'
+import { detectImageFormat, imageUrlToUint8Array, isImageUrl } from '@/utils/ImageUtils'
 import { translateText } from '@/services/translate'
 import { useSettingStore } from '@/stores/setting.ts'
 import { save } from '@tauri-apps/plugin-dialog'
+import { revealItemInDir } from '@tauri-apps/plugin-opener'
+import { type } from '@tauri-apps/plugin-os'
+import { BaseDirectory } from '@tauri-apps/plugin-fs'
+import { resourceDir } from '@tauri-apps/api/path'
+import { join } from '@tauri-apps/api/path'
 import { useDownload } from '@/hooks/useDownload'
 import { useGroupStore } from '@/stores/group'
 import { useWindow } from './useWindow'
 import { useEmojiStore } from '@/stores/emoji'
+import { useVideoViewer } from '@/hooks/useVideoViewer'
+import { useFileDownloadStore } from '@/stores/fileDownload'
+import { extractFileName, removeTag } from '@/utils/Formatting'
 
 export const useChatMain = () => {
-  const { removeTag, openMsgSession, userUid } = useCommon()
+  const { openMsgSession, userUid } = useCommon()
   const { createWebviewWindow } = useWindow()
+  const { getLocalVideoPath, checkVideoDownloaded } = useVideoViewer()
+  const fileDownloadStore = useFileDownloadStore()
   const settingStore = useSettingStore()
   const { chat } = storeToRefs(settingStore)
   const globalStore = useGlobalStore()
@@ -113,6 +123,71 @@ export const useChatMain = () => {
       }
     }
   ])
+  /** 视频右键菜单 */
+  const videoMenuList = ref<OPT.RightMenu[]>([
+    {
+      label: '复制',
+      icon: 'copy',
+      click: (item: MessageType) => {
+        handleCopy(item.message.body.url, true)
+      }
+    },
+    ...commonMenuList.value,
+    {
+      label: '另存为',
+      icon: 'Importing',
+      click: async (item: MessageType) => {
+        try {
+          const fileUrl = item.message.body.url
+          const filename = extractFileName(fileUrl)
+
+          const savePath = await save({
+            defaultPath: filename,
+            filters: [
+              {
+                name: 'Video',
+                extensions: ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm']
+              }
+            ]
+          })
+          if (savePath) {
+            await downloadFile(item.message.body.url, savePath)
+            window.$message.success('视频保存成功')
+          }
+        } catch (error) {
+          console.error('保存视频失败:', error)
+          window.$message.error('保存视频失败')
+        }
+      }
+    },
+    {
+      label: type() === 'macos' ? '在Finder中显示' : '在文件夹中打开',
+      icon: 'file2',
+      click: async (item: MessageType) => {
+        try {
+          const localPath = await getLocalVideoPath(item.message.body.url)
+
+          // 检查视频是否已下载
+          const isDownloaded = await checkVideoDownloaded(item.message.body.url)
+
+          if (!isDownloaded) {
+            // 如果未下载，先下载视频
+            await downloadFile(item.message.body.url, localPath, BaseDirectory.Resource)
+            // 通知相关组件更新视频下载状态
+            useMitt.emit(MittEnum.VIDEO_DOWNLOAD_STATUS_UPDATED, { url: item.message.body.url, downloaded: true })
+          }
+
+          // 获取视频的绝对路径
+          const resourceDirPath = await resourceDir()
+          const absolutePath = await join(resourceDirPath, localPath)
+          // 在文件管理器中显示视频
+          await revealItemInDir(absolutePath)
+        } catch (error) {
+          console.error('Failed to show video in folder:', error)
+        }
+      }
+    }
+  ])
   /** 右键消息菜单列表 */
   const menuList = ref<OPT.RightMenu[]>([
     {
@@ -169,8 +244,49 @@ export const useChatMain = () => {
     {
       label: '另存为',
       icon: 'Importing',
-      click: (item: any) => {
-        console.log(item)
+      click: async (item: any) => {
+        try {
+          const fileUrl = item.message.body.url
+          const filename = extractFileName(fileUrl)
+          const savePath = await save({
+            defaultPath: filename
+          })
+          if (savePath) {
+            await downloadFile(fileUrl, savePath)
+            window.$message.success('文件下载成功')
+          }
+        } catch (error) {
+          console.error('保存文件失败:', error)
+          window.$message.error('保存文件失败')
+        }
+      }
+    },
+    {
+      label: type() === 'macos' ? '在Finder中显示' : '打开文件夹',
+      icon: 'file2',
+      click: async (item: any) => {
+        try {
+          const fileUrl = item.message.body.url
+          const fileName = item.message.body.fileName || extractFileName(fileUrl)
+
+          // 检查文件是否已下载
+          const fileStatus = fileDownloadStore.getFileStatus(fileUrl)
+
+          if (fileStatus.isDownloaded && fileStatus.absolutePath) {
+            // 文件已下载，直接显示
+            await revealItemInDir(fileStatus.absolutePath)
+          } else {
+            // 文件未下载，先下载再显示
+            window.$message.info('正在下载文件...')
+            const absolutePath = await fileDownloadStore.downloadFile(fileUrl, fileName)
+
+            if (absolutePath) {
+              await revealItemInDir(absolutePath)
+            }
+          }
+        } catch (error) {
+          console.error('显示文件失败:', error)
+        }
       }
     }
   ])
@@ -213,13 +329,36 @@ export const useChatMain = () => {
           window.$message.error('保存图片失败')
         }
       }
+    },
+    {
+      label: type() === 'macos' ? '在Finder中显示' : '打开文件夹',
+      icon: 'file2',
+      click: async (item: MessageType) => {
+        try {
+          const imageUrl = item.message.body.url
+          const suggestedName = imageUrl || 'image.png'
+
+          const savePath = await save({
+            filters: [
+              {
+                name: '图片',
+                extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp']
+              }
+            ],
+            defaultPath: suggestedName
+          })
+
+          if (savePath) {
+            await downloadFile(imageUrl, savePath)
+            // 下载完成后在文件管理器中显示
+            await revealItemInDir(savePath)
+          }
+        } catch (error) {
+          console.error('显示图片失败:', error)
+          window.$message.error('显示图片失败')
+        }
+      }
     }
-    // {
-    //   label: '在文件夹中显示',
-    //   icon: 'file2',
-    //   click: async (item: MessageType) => {},
-    //   visible: (item: MessageType) => {}
-    // }
   ])
   /** 右键用户信息菜单(群聊的时候显示) */
   const optionsList = ref<OPT.RightMenu[]>([
@@ -593,7 +732,9 @@ export const useChatMain = () => {
       ? imageMenuList.value
       : type === MsgEnum.FILE
         ? fileMenuList.value
-        : menuList.value
+        : type === MsgEnum.VIDEO
+          ? videoMenuList.value
+          : menuList.value
   }
 
   /** 删除信息事件 */
@@ -625,6 +766,7 @@ export const useChatMain = () => {
     handleConfirm,
     handleItemType,
     handleCopy,
+    videoMenuList,
     getSelectedText,
     hasSelectedText,
     clearSelection,

@@ -72,7 +72,7 @@
           <n-popover trigger="hover" :show-arrow="false" placement="bottom">
             <template #trigger>
               <div class="flex-center gap-2px mr-12px">
-                <svg @click="open()"><use href="#file2"></use></svg>
+                <svg @click="handleFileOpen"><use href="#file2"></use></svg>
                 <svg style="width: 14px; height: 14px"><use href="#down"></use></svg>
               </div>
             </template>
@@ -80,7 +80,9 @@
           </n-popover>
           <n-popover trigger="hover" :show-arrow="false" placement="bottom">
             <template #trigger>
-              <svg @click="open({ accept: 'image/**' })" class="mr-18px"><use href="#photo"></use></svg>
+              <svg @click="handleImageOpen" class="mr-18px">
+                <use href="#photo"></use>
+              </svg>
             </template>
             <span>图片</span>
           </n-popover>
@@ -98,7 +100,7 @@
           <!--        </n-popover>-->
           <n-popover trigger="hover" :show-arrow="false" placement="bottom">
             <template #trigger>
-              <svg class="mr-18px"><use href="#voice"></use></svg>
+              <svg @click="handleVoiceRecord" class="mr-18px"><use href="#voice"></use></svg>
             </template>
             <span>语音信息</span>
           </n-popover>
@@ -121,8 +123,9 @@
 </template>
 
 <script setup lang="ts">
-import { useFileDialog } from '@vueuse/core'
-import { LimitEnum, MsgEnum, RoomTypeEnum } from '@/enums'
+import { open } from '@tauri-apps/plugin-dialog'
+import { readFile } from '@tauri-apps/plugin-fs'
+import { MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import { SelectionRange, useCommon } from '@/hooks/useCommon.ts'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { emitTo } from '@tauri-apps/api/event'
@@ -130,6 +133,8 @@ import { useGlobalStore } from '@/stores/global.ts'
 import type { ContactItem, SessionItem } from '@/services/types'
 import { useContactStore } from '@/stores/contacts'
 import { useHistoryStore } from '@/stores/history'
+import { useMitt } from '@/hooks/useMitt'
+import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
 
 const { id } = defineProps<{
   id: SessionItem['id']
@@ -137,7 +142,6 @@ const { id } = defineProps<{
 const globalStore = useGlobalStore()
 const contactStore = useContactStore()
 const historyStore = useHistoryStore()
-const { open, onChange, reset } = useFileDialog()
 const MsgInputRef = ref()
 const msgInputDom = ref<HTMLInputElement | null>(null)
 const emojiShow = ref(false)
@@ -145,7 +149,7 @@ const recentlyTip = ref(false)
 const recentEmojis = computed(() => {
   return historyStore.emoji.slice(0, 15)
 })
-const { insertNodeAtRange, triggerInputEvent, imgPaste, FileOrVideoPaste } = useCommon()
+const { insertNodeAtRange, triggerInputEvent, processFiles, imgPaste } = useCommon()
 
 /**
  * 检查字符串是否为URL
@@ -176,6 +180,59 @@ watch(emojiShow, (newValue) => {
     recentlyTip.value = false
   }
 })
+
+// 文件选择（不限制类型）
+const handleFileOpen = async () => {
+  const selected = await open({
+    multiple: true
+    // 不设置filters，允许选择所有文件类型
+  })
+
+  if (selected && Array.isArray(selected)) {
+    const files = await Promise.all(
+      selected.map(async (path) => {
+        const fileData = await readFile(path)
+        const fileName = extractFileName(path)
+        const blob = new Blob([fileData])
+        return new File([blob], fileName, { type: blob.type })
+      })
+    )
+    // 使用processFiles方法进行文件类型验证
+    await processFiles(files, MsgInputRef.value.messageInputDom, MsgInputRef.value?.showFileModal)
+  }
+}
+
+// 图片选择（只能选择图片类型）
+const handleImageOpen = async () => {
+  const selected = await open({
+    multiple: true,
+    filters: [
+      {
+        name: 'Images',
+        extensions: ['jpeg', 'jpg', 'png', 'gif', 'webp', 'bmp', 'svg']
+      }
+    ]
+  })
+
+  if (selected && Array.isArray(selected)) {
+    // 并行处理所有图片文件
+    const imagePromises = selected.map(async (path) => {
+      const fileData = await readFile(path)
+      const fileName = extractFileName(path)
+      const mimeType = getMimeTypeFromExtension(fileName)
+
+      const blob = new Blob([fileData], { type: mimeType })
+      return new File([blob], fileName, { type: mimeType })
+    })
+
+    const files = await Promise.all(imagePromises)
+
+    // 将所有图片插入到输入框
+    for (const file of files) {
+      await imgPaste(file, MsgInputRef.value.messageInputDom)
+    }
+  }
+}
 
 /**
  * 选择表情，并把表情插入输入框
@@ -335,32 +392,10 @@ const handleCap = async () => {
   await emitTo('capture', 'capture', true)
 }
 
-onChange((files) => {
-  if (!files) return
-  if (files.length > LimitEnum.COM_COUNT) {
-    window.$message.warning(`一次性只能上传${LimitEnum.COM_COUNT}个文件或图片`)
-    return
-  }
-  for (let file of files) {
-    // 检查文件大小
-    let fileSizeInMB = file.size / 1024 / 1024 // 将文件大小转换为兆字节(MB)
-    if (fileSizeInMB > 300) {
-      window.$message.warning(`文件 ${file.name} 超过300MB`)
-      continue // 如果文件大小超过300MB，就跳过这个文件，处理下一个文件
-    }
-    let type = file.type
-    if (type.startsWith('image/')) {
-      imgPaste(file, MsgInputRef.value.messageInputDom)
-    } else if (type.startsWith('video/')) {
-      // 处理视频粘贴
-      FileOrVideoPaste(file, MsgEnum.VIDEO, MsgInputRef.value.messageInputDom)
-    } else {
-      // 处理文件粘贴
-      FileOrVideoPaste(file, MsgEnum.FILE, MsgInputRef.value.messageInputDom)
-    }
-  }
-  reset()
-})
+const handleVoiceRecord = () => {
+  // 触发录音模式切换事件
+  useMitt.emit(MittEnum.VOICE_RECORD_TOGGLE)
+}
 
 onMounted(async () => {
   if (MsgInputRef.value) {
