@@ -1,9 +1,37 @@
 <template>
   <n-config-provider :theme="lightTheme" class="login-box flex-col-center gap-40px h-100vh">
-    <img src="@/assets/logo/hula.png" alt="logo" class="w-130px h-58px" />
+    <!-- 选项卡导航 -->
+    <div class="w-[80%] h-40px absolute top-20vh flex justify-center items-center">
+      <div class="flex w-200px relative">
+        <div
+          @click="activeTab = 'login'"
+          :class="[
+            'text-22px cursor-pointer w-100px text-center transition-all duration-300',
+            activeTab === 'login' ? 'color-#13987f font-medium' : 'color-#909090'
+          ]">
+          登录
+        </div>
+        <div
+          @click="activeTab = 'register'"
+          :class="[
+            'text-22px cursor-pointer w-100px text-center transition-all duration-300',
+            activeTab === 'register' ? 'color-#13987f font-medium' : 'color-#909090'
+          ]">
+          注册
+        </div>
+        <!-- 选中条 -->
+        <div
+          :class="[
+            'absolute bottom-[-10px] h-7px w-40px bg-#13987f transition-all duration-300 ease-out rounded-4px',
+            activeTab === 'login' ? 'left-[30px]' : 'left-[130px]'
+          ]"></div>
+      </div>
+    </div>
 
-    <!-- 登录菜单 -->
-    <n-flex class="text-center w-260px" vertical :size="16">
+    <img v-if="activeTab === 'login'" src="@/assets/logo/hula.png" alt="logo" class="w-130px h-58px" />
+
+    <!-- 登录表单 -->
+    <n-flex v-if="activeTab === 'login'" class="text-center w-[80%]" vertical :size="16">
       <n-input
         :class="{ 'pl-16px': loginHistories.length > 0 }"
         size="large"
@@ -83,7 +111,7 @@
       </n-button>
 
       <!-- 协议 -->
-      <n-flex justify="center" :size="6" class="absolute bottom-0">
+      <n-flex justify="center" :size="6" class="absolute bottom-0 w-[80%]">
         <n-checkbox v-model:checked="protocol" />
         <div class="text-12px color-#909090 cursor-default lh-14px">
           <span>已阅读并同意</span>
@@ -93,24 +121,207 @@
         </div>
       </n-flex>
     </n-flex>
+
+    <!-- 注册表单 - 第一步：昵称和密码 -->
+    <n-flex v-if="activeTab === 'register' && currentStep === 1" class="text-center w-[80%]" vertical :size="16">
+      <n-input
+        size="large"
+        maxlength="8"
+        minlength="1"
+        v-model:value="registerInfo.name"
+        type="text"
+        spellCheck="false"
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        :allow-input="noSideSpace"
+        :placeholder="registerNamePH"
+        @focus="registerNamePH = ''"
+        @blur="registerNamePH = '输入HuLa昵称'"
+        clearable />
+
+      <n-input
+        size="large"
+        maxlength="16"
+        minlength="6"
+        show-password-on="click"
+        v-model:value="registerInfo.password"
+        type="password"
+        spellCheck="false"
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        :allow-input="noSideSpace"
+        :placeholder="registerPasswordPH"
+        @focus="registerPasswordPH = ''"
+        @blur="registerPasswordPH = '设置密码'"
+        clearable />
+
+      <n-input
+        size="large"
+        maxlength="16"
+        minlength="6"
+        show-password-on="click"
+        v-model:value="registerInfo.confirmPassword"
+        type="password"
+        spellCheck="false"
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        :allow-input="noSideSpace"
+        :placeholder="confirmPasswordPH"
+        @focus="confirmPasswordPH = ''"
+        @blur="confirmPasswordPH = '确认密码'"
+        clearable />
+
+      <!-- 密码提示信息 -->
+      <n-flex vertical v-if="registerInfo.password" :size="4" class="mt-8px">
+        <Validation :value="registerInfo.password" message="最少6位" :validator="validateMinLength" />
+        <Validation :value="registerInfo.password" message="由英文和数字构成" :validator="validateAlphaNumeric" />
+        <Validation
+          :value="registerInfo.password"
+          message="必须有一个特殊字符!@#¥%.&*"
+          :validator="validateSpecialChar" />
+      </n-flex>
+
+      <!-- 协议 -->
+      <n-flex justify="center" :size="6" class="mt-10px">
+        <n-checkbox v-model:checked="registerProtocol" />
+        <div class="text-12px color-#909090 cursor-default lh-14px">
+          <span>已阅读并同意</span>
+          <span class="color-#13987f cursor-pointer">服务协议</span>
+          <span>和</span>
+          <span class="color-#13987f cursor-pointer">HuLa隐私保护指引</span>
+        </div>
+      </n-flex>
+
+      <n-button
+        :loading="registerLoading"
+        :disabled="!isStep1Valid"
+        class="w-full mt-8px mb-50px"
+        @click="handleRegisterStep"
+        color="#13987f">
+        <span>下一步</span>
+      </n-button>
+    </n-flex>
+
+    <!-- 注册表单 - 第二步：邮箱和图片验证码 -->
+    <n-flex v-if="activeTab === 'register' && currentStep === 2" class="text-center w-[80%]" vertical :size="16">
+      <n-auto-complete
+        size="large"
+        v-model:value="registerInfo.email"
+        :placeholder="registerEmailPH"
+        :options="commonEmailDomains"
+        :get-show="getShow"
+        clearable
+        type="text"
+        @focus="registerEmailPH = ''"
+        @blur="registerEmailPH = '输入邮箱'" />
+
+      <!-- 图片验证码 -->
+      <div class="flex justify-between items-center gap-10px">
+        <n-input
+          size="large"
+          maxlength="6"
+          v-model:value="registerInfo.code"
+          type="text"
+          spellCheck="false"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          :allow-input="noSideSpace"
+          :placeholder="registerCodePH"
+          @focus="registerCodePH = ''"
+          @blur="registerCodePH = '输入验证码'"
+          clearable />
+
+        <n-image
+          width="120"
+          height="40"
+          class="rounded-8px cursor-pointer flex-shrink-0"
+          :src="captcha.base64"
+          preview-disabled
+          @click="getVerifyCode">
+          <template #placeholder>
+            <n-skeleton height="40px" width="120px" class="rounded-8px" />
+          </template>
+        </n-image>
+      </div>
+
+      <n-button
+        :loading="registerLoading"
+        :disabled="!isStep2Valid"
+        class="w-full mt-8px mb-50px"
+        @click="handleRegisterStep"
+        color="#13987f">
+        <span>发送验证码</span>
+      </n-button>
+    </n-flex>
+
+    <!-- 邮箱验证码输入弹窗 -->
+    <n-modal v-model:show="emailCodeModal" :mask-closable="false" class="rounded-8px" transform-origin="center">
+      <div class="bg-#fdfdfd w-320px h-fit box-border flex flex-col rounded-8px">
+        <n-flex vertical class="w-full h-fit">
+          <n-flex vertical :size="10" class="p-20px">
+            <p class="text-(16px #333) font-bold mb-10px">请输入邮箱验证码</p>
+            <p class="text-(12px #666) leading-5 mb-10px">
+              验证码已发送至 {{ registerInfo.email }}，请查收并输入验证码完成注册
+            </p>
+
+            <!-- PIN 输入框 -->
+            <div class="mb-20px">
+              <PinInput
+                v-model="emailCode"
+                @complete="handleRegisterComplete"
+                ref="pinInputRef"
+                input-class="bg-#f5f5f5 border-#e0e0e0" />
+            </div>
+
+            <n-button
+              :loading="finalRegisterLoading"
+              :disabled="!isEmailCodeComplete"
+              class="w-full"
+              @click="handleRegisterComplete"
+              color="#13987f">
+              注册
+            </n-button>
+          </n-flex>
+        </n-flex>
+      </div>
+    </n-modal>
   </n-config-provider>
 </template>
 
 <script setup lang="ts">
+import { ref, computed, watch, watchEffect, onMounted, nextTick } from 'vue'
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import apis from '@/services/apis'
 import { useUserStore } from '@/stores/user'
 import { useLogin } from '@/hooks/useLogin'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { UserInfoType } from '@/services/types'
+import { UserInfoType, RegisterUserReq } from '@/services/types'
 import { lightTheme } from 'naive-ui'
 import router from '../router'
+import Validation from '@/components/common/Validation.vue'
+import PinInput from '@/components/common/PinInput.vue'
+
+// 本地注册信息类型，扩展API类型以包含确认密码
+interface LocalRegisterInfo extends RegisterUserReq {
+  confirmPassword: string
+}
 
 const loginHistoriesStore = useLoginHistoriesStore()
 const userStore = useUserStore()
 const { setLoginState } = useLogin()
 const { loginHistories } = loginHistoriesStore
-/** 账号信息 */
+
+/** 当前激活的选项卡 */
+const activeTab = ref<'login' | 'register'>('login')
+
+/** 当前注册步骤 */
+const currentStep = ref(1)
+
+/** 登录账号信息 */
 const info = ref({
   account: '',
   password: '',
@@ -118,15 +329,103 @@ const info = ref({
   name: '',
   uid: ''
 })
+
+/** 注册账号信息 */
+const registerInfo = ref<LocalRegisterInfo>({
+  name: '',
+  email: '',
+  password: '',
+  confirmPassword: '',
+  code: '',
+  uuid: '',
+  avatar: ''
+})
+
+// 登录相关的占位符和状态
 const accountPH = ref('输入HuLa账号')
 const passwordPH = ref('输入HuLa密码')
 const protocol = ref(true)
 const loginDisabled = ref(false)
 const loading = ref(false)
 const arrowStatus = ref(false)
-/** 登录按钮的文本内容 */
 const loginText = ref('登录')
 
+// 注册相关的占位符和状态
+const registerNamePH = ref('输入HuLa昵称')
+const registerEmailPH = ref('输入邮箱')
+const registerPasswordPH = ref('设置密码')
+const confirmPasswordPH = ref('确认密码')
+const registerCodePH = ref('输入验证码')
+const registerProtocol = ref(true)
+const registerLoading = ref(false)
+const finalRegisterLoading = ref(false)
+
+/** 验证码 */
+const captcha = ref({ base64: '', uuid: '' })
+
+/** 邮箱验证码模态框 */
+const emailCodeModal = ref(false)
+const emailCode = ref('')
+const pinInputRef = ref()
+
+// 常用邮箱后缀
+const commonEmailDomains = computed(() => {
+  return ['gmail.com', '163.com', 'qq.com'].map((suffix) => {
+    return {
+      label: suffix,
+      value: suffix
+    }
+  })
+})
+
+/** 不允许输入空格 */
+const noSideSpace = (value: string) => !value.startsWith(' ') && !value.endsWith(' ')
+
+/** 密码验证函数 */
+const validateMinLength = (value: string) => value.length >= 6
+
+/** 检查密码是否包含英文和数字 */
+const validateAlphaNumeric = (value: string) => {
+  const hasLetter = /[a-zA-Z]/.test(value)
+  const hasNumber = /[0-9]/.test(value)
+  return hasLetter && hasNumber
+}
+
+/** 检查密码是否包含特殊字符 */
+const validateSpecialChar = (value: string) => /[!@#¥$%.&*]/.test(value)
+
+/** 检查密码是否满足所有条件 */
+const isPasswordValid = computed(() => {
+  const password = registerInfo.value.password
+  return validateMinLength(password) && validateAlphaNumeric(password) && validateSpecialChar(password)
+})
+
+/** 检查第一步是否可以继续 */
+const isStep1Valid = computed(() => {
+  return (
+    registerInfo.value.name &&
+    isPasswordValid.value &&
+    registerInfo.value.confirmPassword === registerInfo.value.password &&
+    registerProtocol.value
+  )
+})
+
+/** 检查第二步是否可以继续 */
+const isStep2Valid = computed(() => {
+  return registerInfo.value.email && registerInfo.value.code
+})
+
+/** 检查邮箱验证码是否完整 */
+const isEmailCodeComplete = computed(() => emailCode.value.length === 6)
+
+const getShow = (value: string) => {
+  if (value.endsWith('@')) {
+    return true
+  }
+  return false
+}
+
+// 监听登录表单变化
 watchEffect(() => {
   loginDisabled.value = !(info.value.account && info.value.password && protocol.value)
   // 清空账号的时候设置默认头像
@@ -134,6 +433,134 @@ watchEffect(() => {
     info.value.avatar = '/logo.png'
   }
 })
+
+// 监听选项卡切换，重置状态
+watch(activeTab, (newTab) => {
+  if (newTab === 'login') {
+    // 切换到登录时重置注册状态
+    resetRegisterForm()
+  } else {
+    // 切换到注册时重置登录表单
+    resetLoginForm()
+  }
+})
+
+/** 重置登录表单 */
+const resetLoginForm = () => {
+  info.value = {
+    account: '',
+    password: '',
+    avatar: '',
+    name: '',
+    uid: ''
+  }
+  accountPH.value = '输入HuLa账号'
+  passwordPH.value = '输入HuLa密码'
+  arrowStatus.value = false
+}
+
+/** 重置注册表单 */
+const resetRegisterForm = () => {
+  registerInfo.value = {
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    code: '',
+    uuid: '',
+    avatar: ''
+  } as LocalRegisterInfo
+  currentStep.value = 1
+  registerNamePH.value = '输入HuLa昵称'
+  registerEmailPH.value = '输入邮箱'
+  registerPasswordPH.value = '设置密码'
+  confirmPasswordPH.value = '确认密码'
+  registerCodePH.value = '输入验证码'
+  emailCode.value = ''
+  emailCodeModal.value = false
+}
+
+/**
+ * 获取验证码
+ */
+const getVerifyCode = async () => {
+  try {
+    const { img, uuid } = await apis.getCaptcha()
+    captcha.value = { base64: img, uuid }
+  } catch (error) {
+    // 处理错误
+  }
+}
+
+/** 处理注册步骤 */
+const handleRegisterStep = async () => {
+  if (currentStep.value === 1) {
+    // 进入第二步
+    currentStep.value = 2
+    // 获取验证码
+    await getVerifyCode()
+  } else if (currentStep.value === 2) {
+    // 发送邮箱验证码
+    registerLoading.value = true
+    try {
+      await apis.sendCaptcha({
+        email: registerInfo.value.email,
+        code: registerInfo.value.code.toString(),
+        uuid: captcha.value.uuid.toString()
+      })
+
+      registerLoading.value = false
+      // 显示邮箱验证码输入弹窗
+      emailCodeModal.value = true
+      emailCode.value = ''
+
+      // 聚焦第一个输入框
+      nextTick(() => {
+        if (pinInputRef.value) {
+          pinInputRef.value.focus()
+        }
+      })
+    } catch (error) {
+      registerLoading.value = false
+    }
+  }
+}
+
+/** 完成注册 */
+const handleRegisterComplete = async () => {
+  finalRegisterLoading.value = true
+
+  try {
+    // 合并验证码
+    registerInfo.value.code = emailCode.value
+    registerInfo.value.uuid = captcha.value.uuid
+
+    // 随机生成头像编号
+    const avatarNum = Math.floor(Math.random() * 21) + 1
+    const avatarId = avatarNum.toString().padStart(3, '0')
+    registerInfo.value.avatar = avatarId
+
+    // 注册 - 只传递API需要的字段
+    const { ...apiRegisterInfo } = registerInfo.value
+    await apis.register(apiRegisterInfo)
+
+    // 关闭弹窗并切换到登录页面
+    emailCodeModal.value = false
+    activeTab.value = 'login'
+    info.value.account = registerInfo.value.name || registerInfo.value.email
+
+    // 重置注册表单
+    resetRegisterForm()
+
+    setTimeout(() => {
+      // 可以添加成功提示
+    }, 500)
+  } catch (error) {
+    // 处理注册失败
+  } finally {
+    finalRegisterLoading.value = false
+  }
+}
 
 /**登录后创建主页窗口*/
 const normalLogin = async () => {
@@ -203,6 +630,11 @@ const delAccount = (item: UserInfoType) => {
 const handleForgetPassword = () => {
   router.push('/mobile/forget-password')
 }
+
+// 初始化时获取验证码
+onMounted(() => {
+  // 可以在这里执行初始化逻辑
+})
 </script>
 
 <style scoped lang="scss">
