@@ -76,6 +76,9 @@ let home: WebviewWindow | null = null
 const iconVisible = ref(false)
 // 创建Timer Worker实例
 let timerWorker: Worker | null = null
+// Worker健康检测
+let workerHealthTimer: NodeJS.Timeout | null = null
+let lastWorkerResponse = Date.now()
 
 const division = () => {
   return <div class={'h-1px bg-[--line-color] w-full'}></div>
@@ -106,6 +109,9 @@ const initWorker = () => {
 
       // 处理定时器超时消息
       if (type === 'timeout' && msgId === 'trayIconBlink') {
+        // 更新最后响应时间
+        lastWorkerResponse = Date.now()
+
         // 定时器触发时，切换图标状态
         const tray = await TrayIcon.getById('tray')
         tray?.setIcon(iconVisible.value ? null : 'tray/icon.png')
@@ -118,9 +124,17 @@ const initWorker = () => {
       }
     }
 
-    // 添加错误处理
+    // 添加错误处理和重新初始化机制
     timerWorker.onerror = (error) => {
       console.error('[Tray Worker Error]', error)
+      // Worker出错时重新初始化
+      setTimeout(() => {
+        terminateWorker()
+        if (tipVisible.value && !isFocused.value) {
+          initWorker()
+          startBlinkTimer()
+        }
+      }, 1000)
     }
   }
 }
@@ -133,6 +147,23 @@ const startBlinkTimer = () => {
 
   // 确保timerWorker已初始化
   if (timerWorker) {
+    // 重置健康检测时间
+    lastWorkerResponse = Date.now()
+
+    // 启动Worker健康检测
+    if (!workerHealthTimer) {
+      workerHealthTimer = setInterval(() => {
+        const timeSinceLastResponse = Date.now() - lastWorkerResponse
+        // 如果超过3秒没有响应，认为Worker可能已经停止工作
+        if (timeSinceLastResponse > 3000 && tipVisible.value && !isFocused.value) {
+          console.warn('[Tray] Worker可能已停止工作，重新初始化')
+          terminateWorker()
+          initWorker()
+          startBlinkTimer()
+        }
+      }, 2000)
+    }
+
     // 启动新的定时器，500ms间隔
     timerWorker.postMessage({
       type: 'startTimer',
@@ -150,6 +181,12 @@ const stopBlinkTimer = () => {
       msgId: 'trayIconBlink'
     })
   }
+
+  // 清理健康检测定时器
+  if (workerHealthTimer) {
+    clearInterval(workerHealthTimer)
+    workerHealthTimer = null
+  }
 }
 
 // 终止Worker
@@ -158,6 +195,12 @@ const terminateWorker = () => {
     stopBlinkTimer()
     timerWorker.terminate()
     timerWorker = null
+  }
+
+  // 清理健康检测定时器
+  if (workerHealthTimer) {
+    clearInterval(workerHealthTimer)
+    workerHealthTimer = null
   }
 }
 
@@ -169,7 +212,12 @@ watchEffect(async () => {
     } else {
       stopBlinkTimer() // 停止图标闪烁
       const tray = await TrayIcon.getById('tray')
-      tray?.setIcon('tray/icon.png') // 恢复默认图标
+      if (tray) {
+        // 确保图标可见并恢复默认状态
+        await tray.setVisible(true)
+        await tray.setIcon('tray/icon.png')
+        iconVisible.value = false
+      }
       isFocused.value = false
       tipVisible.value = false
     }
