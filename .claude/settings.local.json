@@ -3,7 +3,12 @@
     "allow": [
       "Bash(rg:*)",
       "Bash(find:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm install:*)",
+      "Bash(grep:*)",
+      "Bash(npx tauri signer generate:*)",
+      "Bash(pnpm tauri signer generate:*)"
     ],
     "deny": []
   }

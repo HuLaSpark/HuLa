@@ -37,21 +37,21 @@ const checks = [
     name: 'Node.js',
     command: 'node --version',
     versionExtractor: (output) => output.replace('v', ''),
-    minVersion: '18.0.0',
+    minVersion: '^20.19.0 || >=22.12.0',
     isRequired: true
   },
   {
     name: 'pnpm',
     command: 'pnpm --version',
     versionExtractor: (output) => output.trim(),
-    minVersion: '9.0.0',
+    minVersion: '10.0.0',
     isRequired: true
   },
   {
     name: 'Rust',
     command: 'rustc --version',
     versionExtractor: (output) => output.split(' ')[1],
-    minVersion: '1.86.0',
+    minVersion: '1.88.0',
     isRequired: true
   }
 ]

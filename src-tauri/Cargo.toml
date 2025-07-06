@@ -1,6 +1,6 @@
 [package]
 name = "hula"
-version = "2.6.12"
+version = "2.6.13"
 description = "hula"
 authors = ["nongyehong"]
 license = ""
@@ -24,35 +24,35 @@ name = "hula_app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2.2.0", features = [] }
+tauri-build = { version = "2.3.0", features = [] }
 
 [dependencies]
 # Tauri 官方依赖
-tauri = { version = "2.5.1", features = [ "protocol-asset",
+tauri = { version = "2.6.2", features = [ "protocol-asset",
     "macos-private-api",
     "tray-icon",
     "image-png",
     "rustls-tls",
 ] }
-tauri-plugin-os = "2.2.2"
-tauri-plugin-shell = "2.2.2"
-tauri-plugin-http = { version = "2.4.4", features = [
+tauri-plugin-os = "2.3.0"
+tauri-plugin-shell = "2.3.0"
+tauri-plugin-http = { version = "2.5.0", features = [
     "unsafe-headers",
     "rustls-tls",
 ] }
-tauri-plugin-process = "2.2.2"
+tauri-plugin-process = "2.3.0"
 tauri-plugin-fs = "2.3.0"
-tauri-plugin-dialog = "2.2.2"
-tauri-plugin-upload = "2.2.2"
-tauri-plugin-global-shortcut = "2.2.1"
-tauri-plugin-clipboard-manager = "2.2.3"
-tauri-plugin-updater = "2.8.1"
-tauri-plugin-sql = { version = "2.2.1", features = ["sqlite"] }
-tauri-plugin-single-instance = "2.2.4"
-tauri-plugin-notification = "2.2.3"
+tauri-plugin-dialog = "2.3.0"
+tauri-plugin-upload = "2.3.0"
+tauri-plugin-global-shortcut = "2.3.0"
+tauri-plugin-clipboard-manager = "2.3.0"
+tauri-plugin-updater = "2.9.0"
+tauri-plugin-sql = { version = "2.3.0", features = ["sqlite"] }
+tauri-plugin-single-instance = "2.3.0"
+tauri-plugin-notification = "2.3.0"
 tauri-plugin-opener = "2.3.0"
 [target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]
-tauri-plugin-autostart = "2.4.0"
+tauri-plugin-autostart = "2.5.0"
 # Tauri 非官方依赖
 tauri-plugin-mic-recorder = "2.0.0"
 
