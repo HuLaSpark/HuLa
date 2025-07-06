@@ -27,3 +27,4 @@ src-tauri/target
 
 /coverage
 .cursorrules
+.claude/
