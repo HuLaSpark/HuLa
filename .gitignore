@@ -31,3 +31,4 @@ src-tauri/target
 
 target
 .sqlite
+.claude/
