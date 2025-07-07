@@ -1,11 +1,12 @@
 use crate::vo::user_info::UserInfoVO;
-use crate::{entity::im_user, AppData};
+use crate::{AppData};
 use chrono::DateTime;
 use entity::prelude::ImUserEntity;
 use sea_orm::ActiveValue::Set;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, ModelTrait, QueryFilter};
 use std::ops::Deref;
 use tauri::State;
+use entity::im_user;
 
 #[tauri::command]
 pub async fn save_user_info(user_info: String, state: State<'_, AppData>) -> Result<(), String> {

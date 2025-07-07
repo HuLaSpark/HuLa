@@ -12,8 +12,6 @@ use desktops::video_thumbnail::get_video_thumbnail;
 #[cfg(desktop)]
 mod proxy;
 #[cfg(desktop)]
-mod entity;
-#[cfg(desktop)]
 mod command;
 #[cfg(desktop)]
 use desktops::common_cmd;
