@@ -256,7 +256,7 @@ async function Http<T = any>(
       if (responseData && !responseData.success) {
         throw new AppException(responseData.msg || '服务器返回错误', {
           type: ErrorType.Server,
-          code: response.status,
+          code: responseData.code,
           details: responseData,
           showError: true
         })

@@ -76,7 +76,7 @@ pub fn screenshot(x: &str, y: &str, width: &str, height: &str) -> String {
             height.parse::<u32>().unwrap(),
         )
         .unwrap();
-    let buffer = image.buffer();
+    let buffer = image.as_raw();
     let base64_str = general_purpose::STANDARD_NO_PAD.encode(buffer);
     base64_str
 }

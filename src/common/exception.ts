@@ -36,7 +36,7 @@ export class AppException extends Error {
       // 如果是重试相关的错误，使用console.log打印而不是弹窗提示
       if (errorDetails?.isRetryError) {
         console.log('🔄 重试错误:', message, this.details)
-      } else if (this.code === 1001) {
+      } else if (this.code === 1001 || this.code === -1) {
         // code为1001的错误只打印日志，不显示弹窗
         console.log(message, this.details)
       } else {
