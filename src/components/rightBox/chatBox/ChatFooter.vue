@@ -183,9 +183,10 @@ watch(emojiShow, (newValue) => {
 })
 
 type FilesType = {
-  file_type: string
   name: string
   path: string
+  file_type: string
+  mime_type: string
 }[]
 
 // 文件选择（不限制类型）
@@ -210,7 +211,7 @@ const handleFileOpen = async () => {
 
         // 找到对应路径的文件，并且获取其类型
         const fileMeta = filesType.find((f) => f.path === path)
-        const fileType = fileMeta?.file_type || ''
+        const fileType = fileMeta?.mime_type || fileMeta?.file_type
 
         // 最后手动传入blob中，因为blob无法自动判断文件类型
         return new File([blob], fileName, { type: fileType })

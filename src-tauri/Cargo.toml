@@ -51,6 +51,7 @@ tauri-plugin-sql = { version = "2.2.1", features = ["sqlite"] }
 tauri-plugin-single-instance = "2.2.4"
 tauri-plugin-notification = "2.2.3"
 tauri-plugin-opener = "2.3.0"
+mime_guess = "2.0.5"
 [target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]
 tauri-plugin-autostart = "2.4.0"
 # Tauri 非官方依赖

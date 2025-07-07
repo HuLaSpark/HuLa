@@ -1,6 +1,7 @@
 #![allow(unexpected_cfgs)]
 use base64::{engine::general_purpose, Engine as _};
 use lazy_static::lazy_static;
+use mime_guess::from_path;
 use screenshots::Screen;
 use serde::Serialize;
 use std::cmp;
@@ -219,6 +220,7 @@ pub struct FileMeta {
     name: String,
     path: String,
     file_type: String,
+    mime_type: String,
 }
 
 type FilePath = String;
@@ -242,10 +244,13 @@ pub async fn get_files_meta(files_path: Vec<FilePath>) -> Result<Vec<FileMeta>, 
             .unwrap_or("")
             .to_string();
 
+        let mime_type = from_path(&file_buf).first_or_octet_stream().to_string();
+
         files_meta.push(FileMeta {
             name,
             path: file_buf.to_string_lossy().to_string(),
             file_type,
+            mime_type,
         });
     }
 
