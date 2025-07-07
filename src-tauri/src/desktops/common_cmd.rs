@@ -4,6 +4,7 @@ use lazy_static::lazy_static;
 use screenshots::Screen;
 use serde::Serialize;
 use std::cmp;
+use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::Duration;
@@ -211,4 +212,42 @@ pub async fn get_window_payload(label: String) -> Result<serde_json::Value, ()> 
     } else {
         Err(())
     }
+}
+
+#[derive(Serialize)]
+pub struct FileMeta {
+    name: String,
+    path: String,
+    file_type: String,
+}
+
+type FilePath = String;
+
+#[tauri::command]
+pub async fn get_files_meta(files_path: Vec<FilePath>) -> Result<Vec<FileMeta>, String> {
+    let mut files_meta: Vec<FileMeta> = Vec::new();
+
+    for path in files_path {
+        let file_buf = PathBuf::from(&path);
+
+        let name = file_buf
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("")
+            .to_string();
+
+        let file_type = file_buf
+            .extension()
+            .and_then(|e| e.to_str())
+            .unwrap_or("")
+            .to_string();
+
+        files_meta.push(FileMeta {
+            name,
+            path: file_buf.to_string_lossy().to_string(),
+            file_type,
+        });
+    }
+
+    Ok(files_meta)
 }

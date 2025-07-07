@@ -135,6 +135,7 @@ import { useContactStore } from '@/stores/contacts'
 import { useHistoryStore } from '@/stores/history'
 import { useMitt } from '@/hooks/useMitt'
 import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
+import { invoke } from '@tauri-apps/api/core'
 
 const { id } = defineProps<{
   id: SessionItem['id']
@@ -181,20 +182,38 @@ watch(emojiShow, (newValue) => {
   }
 })
 
+type FilesType = {
+  file_type: string
+  name: string
+  path: string
+}[]
+
 // 文件选择（不限制类型）
 const handleFileOpen = async () => {
+  // 获取文件路径列表
   const selected = await open({
     multiple: true
     // 不设置filters，允许选择所有文件类型
   })
 
   if (selected && Array.isArray(selected)) {
+    // 获取选中文件的类型
+    const filesType = await invoke<FilesType>('get_files_meta', {
+      filesPath: selected
+    })
+
     const files = await Promise.all(
       selected.map(async (path) => {
         const fileData = await readFile(path)
         const fileName = extractFileName(path)
         const blob = new Blob([fileData])
-        return new File([blob], fileName, { type: blob.type })
+
+        // 找到对应路径的文件，并且获取其类型
+        const fileMeta = filesType.find((f) => f.path === path)
+        const fileType = fileMeta?.file_type || ''
+
+        // 最后手动传入blob中，因为blob无法自动判断文件类型
+        return new File([blob], fileName, { type: fileType })
       })
     )
     // 使用processFiles方法进行文件类型验证
