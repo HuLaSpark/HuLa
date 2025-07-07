@@ -748,17 +748,32 @@ const handleScrollDirectionChange = (direction: 'up' | 'down') => {
 }
 
 // 取消表情反应
-const cancelReplyEmoji = (item: any, type: number) => {
+const cancelReplyEmoji = async (item: any, type: number) => {
   // 检查该表情是否已被当前用户标记
   const userMarked = item.message.messageMarks[String(type)]?.userMarked
 
   // 只有当用户已标记时才发送取消请求
   if (userMarked) {
-    apis.markMsg({
-      msgId: item.message.id,
-      markType: type, // 使用对应的MarkEnum类型
-      actType: 2 // 使用Confirm作为操作类型
-    })
+    try {
+      await apis.markMsg({
+        msgId: item.message.id,
+        markType: type, // 使用对应的MarkEnum类型
+        actType: 2 // 使用Confirm作为操作类型
+      })
+
+      const currentCount = item.message.messageMarks[String(type)]?.count || 0
+      chatStore.updateMarkCount([
+        {
+          msgId: Number(item.message.id),
+          markType: type,
+          markCount: Math.max(0, currentCount - 1), // 确保计数不会为负数
+          actType: 2,
+          uid: Number(userStore.userInfo.uid)
+        }
+      ])
+    } catch (error) {
+      console.error('取消表情标记失败:', error)
+    }
   }
 }
 
@@ -777,16 +792,31 @@ const getEmojiCount = (item: any, emojiType: number): number => {
 }
 
 // 处理表情回应
-const handleEmojiSelect = (context: { label: string; value: number; title: string }, item: any) => {
+const handleEmojiSelect = async (context: { label: string; value: number; title: string }, item: any) => {
   // 检查该表情是否已被当前用户标记
   const userMarked = item.message.messageMarks[String(context.value)]?.userMarked
   // 只给没有标记过的图标标记
   if (!userMarked) {
-    apis.markMsg({
-      msgId: item.message.id,
-      markType: context.value,
-      actType: 1
-    })
+    try {
+      await apis.markMsg({
+        msgId: item.message.id,
+        markType: context.value,
+        actType: 1
+      })
+
+      const currentCount = item.message.messageMarks[String(context.value)]?.count || 0
+      chatStore.updateMarkCount([
+        {
+          msgId: Number(item.message.id),
+          markType: context.value,
+          markCount: currentCount + 1,
+          actType: 1,
+          uid: Number(userStore.userInfo.uid)
+        }
+      ])
+    } catch (error) {
+      console.error('标记表情失败:', error)
+    }
   } else {
     window.$message.warning('该表情已标记')
   }
