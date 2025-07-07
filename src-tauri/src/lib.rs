@@ -30,6 +30,9 @@ use proxy::test_ws_proxy;
 #[cfg(mobile)]
 mod mobiles;
 mod vo;
+pub mod error;
+pub mod repository;
+mod configuration;
 
 #[cfg(mobile)]
 use init::CustomInit;
