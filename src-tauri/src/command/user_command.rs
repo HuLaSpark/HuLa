@@ -5,8 +5,12 @@ use entity::prelude::ImUserEntity;
 use sea_orm::ActiveValue::Set;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, ModelTrait, QueryFilter};
 use std::ops::Deref;
+use anyhow::Context;
 use tauri::State;
 use entity::im_user;
+use crate::error::CommonError;
+use crate::pojo::common::{ApiResult, LoginParam, LoginResp};
+use crate::repository::im_config_repository::save_or_update_token;
 
 #[tauri::command]
 pub async fn save_user_info(user_info: String, state: State<'_, AppData>) -> Result<(), String> {
@@ -44,4 +48,32 @@ pub async fn save_user_info(user_info: String, state: State<'_, AppData>) -> Res
         }
     };
     Ok(())
+}
+
+#[tauri::command]
+pub async fn login(login_param: LoginParam, state: State<'_, AppData>) -> Result<(), String> {
+    // 执行登录操作并处理错误
+    let result = async {
+        let resp = state
+            .request_client
+            .post(&format!("{}/token/login", state.config.backend.base_url))
+            .json(&login_param)
+            .send()
+            .await
+            .with_context(|| "登录请求发送失败")?
+            .json::<ApiResult<LoginResp>>()
+            .await
+            .with_context(|| "登录响应解析失败")?;
+
+        save_or_update_token(state.db_conn.deref(), resp.data.token, resp.data.refresh_token).await?;
+        Ok::<(), CommonError>(())
+    }.await;
+
+    match result {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            eprintln!("登录失败: {:?}", e);
+            Err(e.to_string())
+        }
+    }
 }

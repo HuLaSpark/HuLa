@@ -1,14 +1,15 @@
 // 桌面端依赖
 #[cfg(desktop)]
 mod desktops;
-use std::sync::Arc;
-
+use anyhow::Context;
 #[cfg(target_os = "macos")]
 use common_cmd::hide_title_bar_buttons;
 #[cfg(desktop)]
 use common_cmd::{audio, default_window_icon, screenshot, set_badge_count, set_height};
 #[cfg(desktop)]
 use desktops::video_thumbnail::get_video_thumbnail;
+use reqwest::header;
+use std::sync::Arc;
 #[cfg(desktop)]
 mod proxy;
 #[cfg(desktop)]
@@ -32,8 +33,14 @@ mod mobiles;
 mod vo;
 pub mod error;
 pub mod repository;
-mod configuration;
+pub mod configuration;
+pub mod pojo;
 
+use crate::command::room_member_command::{page_room_members};
+use crate::command::user_command::login;
+use crate::configuration::get_configuration;
+use crate::error::CommonError;
+use crate::repository::im_config_repository::get_token;
 #[cfg(mobile)]
 use init::CustomInit;
 #[cfg(mobile)]
@@ -43,7 +50,7 @@ use sea_orm::DatabaseConnection;
 pub async fn run() {
     #[cfg(desktop)]
     {
-        setup_desktop().await;
+        setup_desktop().await.unwrap();
     }
     #[cfg(mobile)]
     {
@@ -53,28 +60,27 @@ pub async fn run() {
 
 struct AppData {
     db_conn: Arc<DatabaseConnection>,
+    config: Arc<configuration::Settings>,
+    request_client: Arc<reqwest::Client>,
 }
 
 #[cfg(desktop)]
-async fn setup_desktop() {
-    use std::path::PathBuf;
+async fn setup_desktop() -> Result<(), CommonError> {
     use tauri::Manager;
 
-    use sea_orm::Database;
     use crate::command::user_command::save_user_info;
 
-    let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR")); // 项目根目录
-    path.push("db.sqlite");
-    let db_url = format!("sqlite:{}?mode=rwc", path.display());
-    
-    let db: DatabaseConnection = Database::connect(db_url).await.unwrap();
+    let configuration = get_configuration().expect("加载配置文件失败");
+    let db = configuration.database.connection_string().await?;
+
+    let client = build_request_client(&db).await?;
 
     tauri::Builder::default()
         .init_plugin()
         .init_webwindow_event()
         .init_window_event()
         .setup(move |app| {
-            app.manage(AppData { db_conn: Arc::new(db) });
+            app.manage(AppData { db_conn: Arc::new(db), config: Arc::new(configuration), request_client: Arc::new(client) });
             tray::create_tray(app.handle())?;
             Ok(())
         })
@@ -89,10 +95,26 @@ async fn setup_desktop() {
             get_video_thumbnail,
             #[cfg(target_os = "macos")]
             hide_title_bar_buttons,
-            save_user_info
+            save_user_info,
+            login,
+            page_room_members
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+
+    Ok(())
+}
+
+pub async fn build_request_client(db: &DatabaseConnection) -> Result<reqwest::Client, CommonError> {
+    let token = get_token(db).await?;
+
+    let mut headers = header::HeaderMap::new();
+    if let Some(token) = token {
+        headers.insert(header::AUTHORIZATION, format!("Bearer {}", token).parse().unwrap());
+    }
+    let client = reqwest::Client::builder().default_headers(headers).build().with_context(|| "Reqwest client 异常")?;
+
+    Ok(client)
 }
 
 #[cfg(mobile)]

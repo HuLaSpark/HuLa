@@ -388,8 +388,12 @@ const normalLogin = async (auto = false) => {
         client: res.client
       }
       userStore.userInfo = account
-      invoke('save_user_info', {
-        userInfo: JSON.stringify(account)
+      await invoke('login', {
+        loginParam: {
+          account: 'Dawn',
+          password: '123456',
+          source: 'pc'
+        }
       })
       loginHistoriesStore.addLoginHistory(account)
 
@@ -397,7 +401,8 @@ const normalLogin = async (auto = false) => {
       await openHomeWindow()
       loading.value = false
     })
-    .catch(() => {
+    .catch((e) => {
+      console.error('登录异常：', e)
       loading.value = false
       loginDisabled.value = false
       loginText.value = '登录'

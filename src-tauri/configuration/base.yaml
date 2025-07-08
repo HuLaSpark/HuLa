@@ -1,0 +1,4 @@
+database:
+  sqlite_file: db.sqlite
+backend:
+  base_url: http://localhost:9190

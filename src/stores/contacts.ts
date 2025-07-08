@@ -4,6 +4,7 @@ import { useGlobalStore } from '@/stores/global'
 import type { ContactItem, GroupListReq, RequestFriendItem } from '@/services/types'
 import { RequestFriendAgreeStatus } from '@/services/types'
 import { StoresEnum } from '@/enums'
+import { invoke } from '@tauri-apps/api/core'
 
 // 定义分页大小常量
 export const pageSize = 20
@@ -60,7 +61,11 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
    * 获取群聊列表
    */
   const getGroupChatList = async () => {
-    const response = await apis.groupList({ current: 1, size: 50 })
+    const response: any = await invoke('page_room_members', {
+      pageParam: { current: 1, size: 50 }
+    })
+    console.log('response', response)
+    // const response = await apis.groupList({ current: 1, size: 50 })
     groupChatList.value = response.records
   }
 
