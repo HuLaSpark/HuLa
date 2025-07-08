@@ -245,6 +245,25 @@ export const useChatMain = () => {
           const path = 'previewFile'
           const LABEL = 'previewFile'
 
+          // 检查文件是否存在文件中，如果不存在则更新消息状态
+          const checkFileExists = async () => {
+            const fileStatus = fileDownloadStore.getFileStatus(item.message.body.url)
+
+            if (fileStatus.isDownloaded && fileStatus.absolutePath) {
+              try {
+                // 尝试读取一次文件meta信息，不排除已下载但是用户又手动删除而保留发送消息的情况
+                await invoke<FilesMeta>('get_files_meta', { filesPath: [fileStatus.absolutePath] })
+                await revealItemInDir(fileStatus.absolutePath)
+              } catch (error) {
+                fileDownloadStore.resetFileDownloadStatus(item.message.body.url)
+                window.$message.success('即将打开在线预览~')
+                console.error('获取文件失败：', error)
+              }
+            }
+          }
+
+          await checkFileExists()
+
           /**
            * 保存打开新窗口的载荷数据
            * - 用于新窗口获取文件数据和窗口间通信
@@ -300,9 +319,6 @@ export const useChatMain = () => {
 
           // 再创建窗口，创建完成后，在窗口页面的onMounted中主动invoke来获取payload数据
           await createWebviewWindow('预览文件', path, windowWidth, 720, '', true)
-
-          // TODO 修复文件上传的下载，在提交文件后，复制一份到对应roomId的文件夹中
-          // TODO 下载文件被删除掉的缓存更新
         })
       }
     },
