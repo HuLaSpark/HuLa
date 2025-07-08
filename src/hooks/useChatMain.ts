@@ -253,7 +253,6 @@ export const useChatMain = () => {
               try {
                 // 尝试读取一次文件meta信息，不排除已下载但是用户又手动删除而保留发送消息的情况
                 await invoke<FilesMeta>('get_files_meta', { filesPath: [fileStatus.absolutePath] })
-                await revealItemInDir(fileStatus.absolutePath)
               } catch (error) {
                 fileDownloadStore.resetFileDownloadStatus(item.message.body.url)
                 window.$message.success('即将打开在线预览~')
