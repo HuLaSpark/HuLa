@@ -664,3 +664,10 @@ export type MockItem = {
   accountId: number
   accountName: string
 }
+
+export type FilesMeta = {
+  name: string
+  path: string
+  file_type: string
+  mime_type: string
+}[]

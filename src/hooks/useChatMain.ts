@@ -26,6 +26,8 @@ import { useVideoViewer } from '@/hooks/useVideoViewer'
 import { useFileDownloadStore } from '@/stores/fileDownload'
 import { extractFileName, removeTag } from '@/utils/Formatting'
 import { invoke } from '@tauri-apps/api/core'
+import { detectRemoteFileType } from '@/utils/PathUtil'
+import { FileTypeResult } from 'file-type'
 
 export const useChatMain = () => {
   const { openMsgSession, userUid } = useCommon()
@@ -240,73 +242,22 @@ export const useChatMain = () => {
       click: (item: any) => {
         console.log('预览文件的参数：', item)
         nextTick(async () => {
-          // TODO: 这里要做预览功能（2025-7-4 15:09）
-          /**
-           *  构建router请求参数
-           *  - 要传参包括userId、roomId、文件名、文件url
-           */
-
-          // /**
-          //  *  发送文件预览窗口载荷内容
-          //  *  - 在新窗口中主动调用事件来消费该事件的载荷数据，rust用做临时保存
-          //  *  - 要传参包括userId、roomId、文件名、文件url
-          //  */
-          // const sendPreviewFileWindowPayload = async (
-          //   userId: string,
-          //   roomId: string,
-          //   fileName: string,
-          //   remoteUrl: string
-          // ) => {
-          //   try {
-          //     const res = await invoke('send_window_payload', {
-          //       label: LABEL,
-          //       payload: {
-          //         userId,
-          //         roomId,
-          //         fileName,
-          //         remoteUrl
-          //       }
-          //     })
-          //     console.log('发送完成：', res)
-          //   } catch (error) {
-          //     console.log('发送窗口消息失败', error)
-          //   }
-          // }
-
-          // await createWebviewWindow('预览文件', LABEL, 700, 620)
-
-          // await sendPreviewFileWindowPayload(
-          //   item.fromUser.uid,
-          //   item.message.roomId,
-          //   item.message.body.fileName,
-          //   item.message.body.url
-          // )
-
-          // const buildRouterUrl = (userId: string, roomId: string, fileName: string, remoteUrl: string): string => {
-          //   console.log('数据：', typeof fileName)
-          //   const encodedFileName = base64url(fileName.toString())
-
-          //   const encodedUrl = base64url(remoteUrl.toString())
-          //   return `/previewFile/${userId}/${roomId}/${encodedFileName}/${encodedUrl}`
-          // }
-          // const routerUrl = buildRouterUrl(
-          //   item.fromUser.uid,
-          //   item.message.roomId,
-          //   item.message.body.fileName,
-          //   item.message.body.url
-          // )
-
-          // console.log('路由url:', routerUrl)
-
           const path = 'previewFile'
           const LABEL = 'previewFile'
 
+          /**
+           * 保存打开新窗口的载荷数据
+           * - 用于新窗口获取文件数据和窗口间通信
+           */
           const saveWindowPayload = async (
             userId: string,
             roomId: string,
-            fileName: string,
-            remoteUrl: string,
-            messageId: string
+            messageId: string,
+            resourceFile: {
+              fileName: string
+              url: string
+              type: FileTypeResult | undefined
+            }
           ) => {
             try {
               await invoke('push_window_payload', {
@@ -315,26 +266,39 @@ export const useChatMain = () => {
                 payload: {
                   userId,
                   roomId,
-                  fileName,
-                  remoteUrl,
-                  messageId
+                  messageId,
+                  resourceFile
                 }
               })
-              console.log('写入完成')
             } catch (_) {
-              console.log('写入窗口载荷时出现错误了')
+              console.error('写入窗口载荷时出现错误了')
             }
           }
 
-          await saveWindowPayload(
-            item.fromUser.uid,
-            item.message.roomId,
-            item.message.body.fileName,
-            item.message.body.url,
-            item.message.id
-          )
+          const remoteResourceType = await detectRemoteFileType(item.message.body.url)
 
-          await createWebviewWindow('预览文件', path, 700, 620)
+          // 先保存窗口载荷数据
+          await saveWindowPayload(item.fromUser.uid, item.message.roomId, item.message.id, {
+            url: item.message.body.url,
+            fileName: item.message.body.fileName,
+            type: remoteResourceType
+          })
+
+          let windowWidth = 850
+
+          if (remoteResourceType?.ext === 'pdf') {
+            windowWidth = 1080
+          } else if (remoteResourceType?.ext === 'doc') {
+            windowWidth = 860
+          } else {
+            windowWidth = 860
+          }
+
+          // 再创建窗口，创建完成后，在窗口页面的onMounted中主动invoke来获取payload数据
+          await createWebviewWindow('预览文件', path, windowWidth, 720, '', true)
+
+          // TODO 修复文件上传的下载，在提交文件后，复制一份到对应roomId的文件夹中
+          // TODO 下载文件被删除掉的缓存更新
         })
       }
     },

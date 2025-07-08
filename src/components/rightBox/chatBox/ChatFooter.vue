@@ -130,7 +130,7 @@ import { SelectionRange, useCommon } from '@/hooks/useCommon.ts'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { emitTo } from '@tauri-apps/api/event'
 import { useGlobalStore } from '@/stores/global.ts'
-import type { ContactItem, SessionItem } from '@/services/types'
+import type { ContactItem, FilesMeta, SessionItem } from '@/services/types'
 import { useContactStore } from '@/stores/contacts'
 import { useHistoryStore } from '@/stores/history'
 import { useMitt } from '@/hooks/useMitt'
@@ -182,13 +182,6 @@ watch(emojiShow, (newValue) => {
   }
 })
 
-type FilesType = {
-  name: string
-  path: string
-  file_type: string
-  mime_type: string
-}[]
-
 // 文件选择（不限制类型）
 const handleFileOpen = async () => {
   // 获取文件路径列表
@@ -199,7 +192,7 @@ const handleFileOpen = async () => {
 
   if (selected && Array.isArray(selected)) {
     // 获取选中文件的类型
-    const filesType = await invoke<FilesType>('get_files_meta', {
+    const filesType = await invoke<FilesMeta>('get_files_meta', {
       filesPath: selected
     })
 
