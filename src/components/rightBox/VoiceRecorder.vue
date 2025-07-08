@@ -149,8 +149,8 @@ const startRecording = async () => {
 }
 
 // 停止录音
-const stopRecording = () => {
-  stopRecord()
+const stopRecording = async () => {
+  await stopRecord()
 }
 
 // 取消录音

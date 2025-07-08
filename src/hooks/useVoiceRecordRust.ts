@@ -26,6 +26,11 @@ export const useVoiceRecordRust = (options: VoiceRecordRustOptions = {}) => {
   /** 开始录音 */
   const startRecordingAudio = async () => {
     try {
+      // 如果有录音正在进行，先停止再开始新录音
+      if (isRecording.value) {
+        await stopRecordingAudio()
+      }
+
       // 调用Rust后端开始录音
       await startRecording()
 
@@ -156,30 +161,23 @@ export const useVoiceRecordRust = (options: VoiceRecordRustOptions = {}) => {
       }
     } catch (error) {
       console.error('停止录音或压缩失败:', error)
-      window.$message?.error('停止录音失败')
 
-      // 如果压缩失败，回退到原始音频
-      try {
-        const audioPath = await stopRecording()
-        if (audioPath) {
-          const audioData = await readFile(audioPath)
-          const audioBlob = new Blob([audioData], { type: 'audio/mp3' })
-          const duration = (Date.now() - startTime.value) / 1000
-          options.onStop?.(audioBlob, duration, audioPath)
-          saveAudioToCache(audioBlob, duration)
+      // 确保录音状态被正确重置
+      isRecording.value = false
 
-          // 删除原始的wav文件
-          try {
-            await remove(audioPath)
-            console.log('已删除原始录音文件:', audioPath)
-          } catch (deleteError) {
-            console.warn('删除原始录音文件失败:', deleteError)
-          }
-        }
-      } catch (fallbackError) {
-        console.error('回退处理也失败:', fallbackError)
-        options.onError?.('停止录音失败')
+      // 清理worker定时器
+      if (timerWorker) {
+        timerWorker.postMessage({
+          type: 'clearTimer',
+          msgId: timerMsgId
+        })
       }
+
+      if (audioMonitor.value) {
+        clearInterval(audioMonitor.value)
+        audioMonitor.value = null
+      }
+      options.onError?.('停止录音失败')
     }
   }
 
@@ -188,7 +186,10 @@ export const useVoiceRecordRust = (options: VoiceRecordRustOptions = {}) => {
     try {
       if (!isRecording.value) return
 
-      // 由于插件没有 cancelRecording 方法，直接停止录音但不保存
+      // 调用Rust后端停止录音，但不处理返回的音频文件
+      await stopRecording()
+      console.log('取消录音')
+
       isRecording.value = false
 
       // 清理worker定时器
@@ -205,6 +206,8 @@ export const useVoiceRecordRust = (options: VoiceRecordRustOptions = {}) => {
       }
     } catch (error) {
       console.error('取消录音失败:', error)
+      // 确保状态被重置
+      isRecording.value = false
       options.onError?.('取消录音失败')
     }
   }
