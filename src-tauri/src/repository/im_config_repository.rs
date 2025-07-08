@@ -19,6 +19,20 @@ pub async fn get_token(db: &DatabaseConnection) -> Result<Option<String>, Common
     }
 }
 
+pub async fn get_refresh_token(db: &DatabaseConnection) -> Result<Option<String>, CommonError> {
+    // 获取 refresh_token
+    let refresh_token: Option<im_config::Model> = im_config::Entity::find()
+        .filter(im_config::Column::ConfigKey.eq("refresh_token"))
+        .one(db)
+        .await
+        .with_context(|| "数据库查询 refresh_token 异常")?;
+
+    match refresh_token {
+        None => Ok(None),
+        Some(data) => Ok(data.config_value),
+    }
+}
+
 pub async fn save_or_update_token(db: &DatabaseConnection, token: String, refresh_token: String) -> Result<(), CommonError> {
     // 处理 token - 如果存在则更新，不存在则插入
     let existing_token = im_config::Entity::find()

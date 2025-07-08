@@ -91,6 +91,7 @@ migration = { path = "migration" } # depends on your needs
 anyhow = "1.0.98"
 thiserror = "2.0.12"
 config = { version = "0.15.11", default-features = false, features = ["yaml"] }
+http = "0.2"
 
 # mac平台需要依赖
 [target."cfg(target_os =\"macos\")".dependencies]

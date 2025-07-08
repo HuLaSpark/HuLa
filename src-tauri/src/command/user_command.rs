@@ -1,16 +1,15 @@
+use crate::error::CommonError;
+use crate::pojo::common::{ApiResult, LoginParam, LoginResp};
+use crate::repository::im_config_repository::save_or_update_token;
 use crate::vo::user_info::UserInfoVO;
-use crate::{AppData};
+use crate::AppData;
 use chrono::DateTime;
+use entity::im_user;
 use entity::prelude::ImUserEntity;
 use sea_orm::ActiveValue::Set;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, ModelTrait, QueryFilter};
 use std::ops::Deref;
-use anyhow::Context;
 use tauri::State;
-use entity::im_user;
-use crate::error::CommonError;
-use crate::pojo::common::{ApiResult, LoginParam, LoginResp};
-use crate::repository::im_config_repository::save_or_update_token;
 
 #[tauri::command]
 pub async fn save_user_info(user_info: String, state: State<'_, AppData>) -> Result<(), String> {
@@ -56,16 +55,16 @@ pub async fn login(login_param: LoginParam, state: State<'_, AppData>) -> Result
     let result = async {
         let resp = state
             .request_client
+            .lock()
+            .await
             .post(&format!("{}/token/login", state.config.backend.base_url))
             .json(&login_param)
-            .send()
-            .await
-            .with_context(|| "登录请求发送失败")?
-            .json::<ApiResult<LoginResp>>()
-            .await
-            .with_context(|| "登录响应解析失败")?;
+            .send_json::<ApiResult<LoginResp>>()
+            .await?;
 
-        save_or_update_token(state.db_conn.deref(), resp.data.token, resp.data.refresh_token).await?;
+        if let Some(data) = resp.data {
+            save_or_update_token(state.db_conn.deref(), data.token, data.refresh_token).await?;
+        }
         Ok::<(), CommonError>(())
     }.await;
 

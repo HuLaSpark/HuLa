@@ -21,15 +21,15 @@ pub struct ApiResult<T> {
     pub msg: Option<String>,
     pub tid: String,
     pub version: String,
-    pub data: T,
+    pub data: Option<T>,
 }
 
 #[derive(serde::Deserialize, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Page<T> {
     pub records: Vec<T>,
-    pub total: u64,
-    pub size: u32,
+    pub total: String,
+    pub size: String,
 }
 
 #[derive(serde::Deserialize, Debug)]

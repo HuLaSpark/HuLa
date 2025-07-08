@@ -35,17 +35,20 @@ pub mod error;
 pub mod repository;
 pub mod configuration;
 pub mod pojo;
+pub mod im_reqest_client;
 
 use crate::command::room_member_command::{page_room_members};
 use crate::command::user_command::login;
 use crate::configuration::get_configuration;
 use crate::error::CommonError;
+use crate::im_reqest_client::ImRequestClient;
 use crate::repository::im_config_repository::get_token;
 #[cfg(mobile)]
 use init::CustomInit;
 #[cfg(mobile)]
 use mobiles::init;
 use sea_orm::DatabaseConnection;
+use serde::{Deserialize, Serialize};
 
 pub async fn run() {
     #[cfg(desktop)]
@@ -61,8 +64,11 @@ pub async fn run() {
 struct AppData {
     db_conn: Arc<DatabaseConnection>,
     config: Arc<configuration::Settings>,
-    request_client: Arc<reqwest::Client>,
+    request_client: Arc<Mutex<ImRequestClient>>,
 }
+
+use tauri::Listener;
+use tokio::sync::Mutex;
 
 #[cfg(desktop)]
 async fn setup_desktop() -> Result<(), CommonError> {
@@ -70,17 +76,32 @@ async fn setup_desktop() -> Result<(), CommonError> {
 
     use crate::command::user_command::save_user_info;
 
-    let configuration = get_configuration().expect("加载配置文件失败");
-    let db = configuration.database.connection_string().await?;
+    let configuration = Arc::new(get_configuration().expect("加载配置文件失败"));
+    let db = Arc::new(configuration.database.connection_string().await?);
 
-    let client = build_request_client(&db).await?;
+    let client = build_request_client(&db.clone()).await?;
+    let im_request_client = ImRequestClient::new(db.clone(), configuration.clone().backend.base_url.clone()).await?;
 
     tauri::Builder::default()
         .init_plugin()
         .init_webwindow_event()
         .init_window_event()
         .setup(move |app| {
-            app.manage(AppData { db_conn: Arc::new(db), config: Arc::new(configuration), request_client: Arc::new(client) });
+            let client = Arc::new(Mutex::new(im_request_client));
+            app.listen("set_token", {
+                let client = client.clone();
+                move |event| {
+                    let client = client.clone();
+                    tauri::async_runtime::spawn(async move {
+                        if let Ok(payload) = serde_json::from_str::<Token>(&event.payload()) {
+                            let mut client = client.lock().await;
+                            client.token = Some(payload.token);
+                        }
+                    });
+                }
+            });
+
+            app.manage(AppData { db_conn: db.clone(), config: configuration.clone(), request_client: client.clone() });
             tray::create_tray(app.handle())?;
             Ok(())
         })
@@ -105,8 +126,14 @@ async fn setup_desktop() -> Result<(), CommonError> {
     Ok(())
 }
 
+
+#[derive(Serialize, Deserialize)]
+pub struct Token {
+    pub token: String,
+}
+
 pub async fn build_request_client(db: &DatabaseConnection) -> Result<reqwest::Client, CommonError> {
-    let token = get_token(db).await?;
+    let token: Option<String> = get_token(db).await?;
 
     let mut headers = header::HeaderMap::new();
     if let Some(token) = token {

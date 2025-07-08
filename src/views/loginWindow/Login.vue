@@ -190,7 +190,7 @@ import { clearListener } from '@/utils/ReadCountQueue'
 import { useGlobalStore } from '@/stores/global'
 import { type } from '@tauri-apps/plugin-os'
 import { useCheckUpdate } from '@/hooks/useCheckUpdate'
-import { invoke } from '@tauri-apps/api/core'
+import { emit } from '@tauri-apps/api/event'
 
 const isCompatibility = computed(() => type() === 'windows' || type() === 'linux')
 const settingStore = useSettingStore()
@@ -363,6 +363,10 @@ const normalLogin = async (auto = false) => {
       // 存储双token
       localStorage.setItem('TOKEN', res.token)
       localStorage.setItem('REFRESH_TOKEN', res.refreshToken)
+
+      emit('set_token', {
+        token: res.token
+      })
       // 需要删除二维码，因为用户可能先跳转到二维码界面再回到登录界面，会导致二维码一直保持在内存中
       if (localStorage.getItem('wsLogin')) {
         localStorage.removeItem('wsLogin')
@@ -388,13 +392,6 @@ const normalLogin = async (auto = false) => {
         client: res.client
       }
       userStore.userInfo = account
-      await invoke('login', {
-        loginParam: {
-          account: 'Dawn',
-          password: '123456',
-          source: 'pc'
-        }
-      })
       loginHistoriesStore.addLoginHistory(account)
 
       await setLoginState()

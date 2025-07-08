@@ -2712,6 +2712,7 @@ dependencies = [
  "core-foundation 0.10.1",
  "core-graphics 0.25.0",
  "entity",
+ "http 0.2.12",
  "image",
  "lazy_static",
  "migration",
