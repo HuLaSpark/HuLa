@@ -60,6 +60,23 @@ export const useFileDownloadStore = defineStore(
     }
 
     /**
+     * 重置文件下载状态
+     * - 用于文件被删除后但发送消息仍然保留时，重置下载状态的功能
+     */
+    const resetFileDownloadStatus = (fileUrl: string) => {
+      const fileStatus = downloadStatusMap.value.get(fileUrl)
+      if (fileStatus) {
+        fileStatus.isDownloaded = false
+        fileStatus.absolutePath = ''
+        fileStatus.displayPath = ''
+        fileStatus.localPath = ''
+        fileStatus.nativePath = ''
+        fileStatus.progress = 0
+        fileStatus.status = 'pending'
+      }
+    }
+
+    /**
      * 检查文件是否已下载
      * @param fileUrl 文件URL
      * @param fileName 文件名
@@ -259,7 +276,8 @@ export const useFileDownloadStore = defineStore(
       getLocalPath,
       clearDownloadStatus,
       removeFileStatus,
-      batchCheckFileStatus
+      batchCheckFileStatus,
+      resetFileDownloadStatus
     }
   },
   {

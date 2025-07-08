@@ -1,6 +1,6 @@
 import { useCommon } from '@/hooks/useCommon.ts'
 import { MittEnum, MsgEnum, PowerEnum, RoleEnum, RoomTypeEnum } from '@/enums'
-import { MessageType } from '@/services/types.ts'
+import { FilesMeta, MessageType } from '@/services/types.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import apis from '@/services/apis.ts'
@@ -277,6 +277,10 @@ export const useChatMain = () => {
 
           const remoteResourceType = await detectRemoteFileType(item.message.body.url)
 
+          if (!remoteResourceType) {
+            return
+          }
+
           // 先保存窗口载荷数据
           await saveWindowPayload(item.fromUser.uid, item.message.roomId, item.message.id, {
             url: item.message.body.url,
@@ -334,15 +338,28 @@ export const useChatMain = () => {
           // 检查文件是否已下载
           const fileStatus = fileDownloadStore.getFileStatus(fileUrl)
 
+          console.log('找到的文件状态：', fileStatus)
+
           if (fileStatus.isDownloaded && fileStatus.absolutePath) {
+            try {
+              // 尝试读取一次文件meta信息，不排除已下载但是用户又手动删除而保留发送消息的情况
+              await invoke<FilesMeta>('get_files_meta', { filesPath: [fileStatus.absolutePath] })
+              await revealItemInDir(fileStatus.absolutePath)
+            } catch (error) {
+              fileDownloadStore.resetFileDownloadStatus(fileUrl)
+              window.$message.warning('文件不见了😞 请重新下载哦~')
+              console.error('获取文件失败：', error)
+            }
+
             // 文件已下载，直接显示
-            await revealItemInDir(fileStatus.absolutePath)
           } else {
             // 文件未下载，先下载再显示
-            window.$message.info('正在下载文件...')
+            const downloadMessage = window.$message.info('文件没下载哦~ 正在下载文件🚀...')
             const absolutePath = await fileDownloadStore.downloadFile(fileUrl, fileName)
 
             if (absolutePath) {
+              downloadMessage.destroy()
+              window.$message.success('文件下载好啦！请查看~')
               await revealItemInDir(absolutePath)
             }
           }

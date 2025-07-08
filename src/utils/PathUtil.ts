@@ -54,19 +54,24 @@ const getImageCache = (subFolder: string, userUid: string): string => {
  * @returns { ext: string, mime: string } 或 undefined（无法识别）
  */
 export async function detectRemoteFileType(url: string, byteLength = 4100): Promise<FileTypeResult | undefined> {
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      Range: `bytes=0-${byteLength - 1}` // 请求前 N 字节
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Range: `bytes=0-${byteLength - 1}` // 请求前 N 字节
+      }
+    })
+
+    if (!response.ok) {
+      window.$message?.error('找不到文件了😞 ~')
+      throw new Error(`尝试请求 ${url} 的头数据获取类型时失败, 状态: ${response.status}`)
     }
-  })
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch file header from ${url}, status: ${response.status}`)
+    const buffer = await response.arrayBuffer()
+    return await fileTypeFromBuffer(buffer)
+  } catch (error) {
+    console.error('尝试解析远程文件类型时出现错误：', error)
   }
-
-  const buffer = await response.arrayBuffer()
-  return await fileTypeFromBuffer(buffer)
 }
 
 export async function getFile(absolutePath: string) {
