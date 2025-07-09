@@ -1,26 +1,17 @@
 use crate::error::CommonError;
-use crate::repository::im_config_repository::{get_token, get_refresh_token, save_or_update_token};
 use anyhow::Context;
-use reqwest::{header, Client, Method, RequestBuilder, Response};
-use sea_orm::DatabaseConnection;
-use serde_json::Value;
-use std::sync::Arc;
-use tokio::sync::Mutex;
+use reqwest::{header, Client, Method, RequestBuilder};
 
 /// 智能 HTTP 客户端，支持自动 token 管理和过期重试
 pub struct ImRequestClient {
     client: Client,
-    db_conn: Arc<DatabaseConnection>,
     base_url: String,
-    /// 防止并发刷新 token
-    refresh_lock: Arc<Mutex<()>>,
     pub token: Option<String>,
 }
 
 impl ImRequestClient {
     /// 创建新的请求客户端
     pub async fn new(
-        db_conn: Arc<DatabaseConnection>,
         base_url: String,
     ) -> Result<Self, CommonError> {
         let client = Client::builder()
@@ -30,9 +21,7 @@ impl ImRequestClient {
 
         Ok(Self {
             client,
-            db_conn,
             base_url,
-            refresh_lock: Arc::new(Mutex::new(())),
             token: None,
         })
     }
@@ -111,17 +100,14 @@ impl<'a> RequestBuilderWrapper<'a> {
     }
     
     /// 发送请求并解析 JSON 响应，支持自动 token 刷新
-    pub async fn send_json<T: serde::de::DeserializeOwned>(self) -> Result<T, CommonError> {
+    pub async fn send_json<T: serde::de::DeserializeOwned>(mut self) -> Result<T, CommonError> {
         // 获取 token 并添加到请求头
-        let mut request_builder = self.request_builder.try_clone()
-            .ok_or_else(|| anyhow::anyhow!("无法克隆请求"))?;
-        
         if let Some(token) = &self.client.token {
-            request_builder = request_builder.header(header::AUTHORIZATION, format!("Bearer {}", token));
+            self.request_builder = self.request_builder.header(header::AUTHORIZATION, format!("Bearer {}", token));
         }
     
         // 第一次尝试
-        let response = request_builder
+        let response = self.request_builder
             .send()
             .await
             .with_context(|| format!("[{}:{}] 发送请求失败: {}", file!(), line!(), self.url))?;
@@ -130,8 +116,6 @@ impl<'a> RequestBuilderWrapper<'a> {
             .text()
             .await
             .with_context(|| format!("[{}:{}] 读取响应体失败", file!(), line!()))?;
-
-        println!("[{}:{}] 响应内容: {}", file!(), line!(), response_text);
 
         // 解析为目标类型
         serde_json::from_str(&response_text)

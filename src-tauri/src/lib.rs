@@ -8,7 +8,6 @@ use common_cmd::hide_title_bar_buttons;
 use common_cmd::{audio, default_window_icon, screenshot, set_badge_count, set_height};
 #[cfg(desktop)]
 use desktops::video_thumbnail::get_video_thumbnail;
-use reqwest::header;
 use std::sync::Arc;
 #[cfg(desktop)]
 mod proxy;
@@ -37,12 +36,10 @@ pub mod configuration;
 pub mod pojo;
 pub mod im_reqest_client;
 
-use crate::command::room_member_command::{page_room_members};
-use crate::command::user_command::login;
+use crate::command::room_member_command::{get_room_members, page_room};
 use crate::configuration::get_configuration;
 use crate::error::CommonError;
 use crate::im_reqest_client::ImRequestClient;
-use crate::repository::im_config_repository::get_token;
 #[cfg(mobile)]
 use init::CustomInit;
 #[cfg(mobile)]
@@ -63,7 +60,6 @@ pub async fn run() {
 
 struct AppData {
     db_conn: Arc<DatabaseConnection>,
-    config: Arc<configuration::Settings>,
     request_client: Arc<Mutex<ImRequestClient>>,
 }
 
@@ -79,8 +75,7 @@ async fn setup_desktop() -> Result<(), CommonError> {
     let configuration = Arc::new(get_configuration().expect("加载配置文件失败"));
     let db = Arc::new(configuration.database.connection_string().await?);
 
-    let client = build_request_client(&db.clone()).await?;
-    let im_request_client = ImRequestClient::new(db.clone(), configuration.clone().backend.base_url.clone()).await?;
+    let im_request_client = ImRequestClient::new(configuration.clone().backend.base_url.clone()).await?;
 
     tauri::Builder::default()
         .init_plugin()
@@ -101,7 +96,7 @@ async fn setup_desktop() -> Result<(), CommonError> {
                 }
             });
 
-            app.manage(AppData { db_conn: db.clone(), config: configuration.clone(), request_client: client.clone() });
+            app.manage(AppData { db_conn: db.clone(), request_client: client.clone() });
             tray::create_tray(app.handle())?;
             Ok(())
         })
@@ -117,8 +112,8 @@ async fn setup_desktop() -> Result<(), CommonError> {
             #[cfg(target_os = "macos")]
             hide_title_bar_buttons,
             save_user_info,
-            login,
-            page_room_members
+            page_room,
+            get_room_members
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -132,15 +127,8 @@ pub struct Token {
     pub token: String,
 }
 
-pub async fn build_request_client(db: &DatabaseConnection) -> Result<reqwest::Client, CommonError> {
-    let token: Option<String> = get_token(db).await?;
-
-    let mut headers = header::HeaderMap::new();
-    if let Some(token) = token {
-        headers.insert(header::AUTHORIZATION, format!("Bearer {}", token).parse().unwrap());
-    }
-    let client = reqwest::Client::builder().default_headers(headers).build().with_context(|| "Reqwest client 异常")?;
-
+pub async fn build_request_client() -> Result<reqwest::Client, CommonError> {
+    let client = reqwest::Client::builder().build().with_context(|| "Reqwest client 异常")?;
     Ok(client)
 }
 

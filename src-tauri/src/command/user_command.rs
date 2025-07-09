@@ -1,6 +1,3 @@
-use crate::error::CommonError;
-use crate::pojo::common::{ApiResult, LoginParam, LoginResp};
-use crate::repository::im_config_repository::save_or_update_token;
 use crate::vo::user_info::UserInfoVO;
 use crate::AppData;
 use chrono::DateTime;
@@ -47,32 +44,4 @@ pub async fn save_user_info(user_info: String, state: State<'_, AppData>) -> Res
         }
     };
     Ok(())
-}
-
-#[tauri::command]
-pub async fn login(login_param: LoginParam, state: State<'_, AppData>) -> Result<(), String> {
-    // 执行登录操作并处理错误
-    let result = async {
-        let resp = state
-            .request_client
-            .lock()
-            .await
-            .post(&format!("{}/token/login", state.config.backend.base_url))
-            .json(&login_param)
-            .send_json::<ApiResult<LoginResp>>()
-            .await?;
-
-        if let Some(data) = resp.data {
-            save_or_update_token(state.db_conn.deref(), data.token, data.refresh_token).await?;
-        }
-        Ok::<(), CommonError>(())
-    }.await;
-
-    match result {
-        Ok(_) => Ok(()),
-        Err(e) => {
-            eprintln!("登录失败: {:?}", e);
-            Err(e.to_string())
-        }
-    }
 }
