@@ -21,7 +21,6 @@ import {
   RequestFriendItem,
   SessionItem,
   UserInfoType,
-  UserItem,
   UserState,
   Login,
   SearchFriend,
@@ -40,8 +39,6 @@ const PUT = <T>(url: string, params?: any, abort?: AbortController) => request.p
 const DELETE = <T>(url: string, params?: any, abort?: AbortController) => request.delete<T>(url, params, abort)
 
 export default {
-  /** 获取群成员列表 */
-  getGroupList: (params?: any) => GET<ListResponse<UserItem>>(urls.getGroupUserList, params),
   /** 获取群成员统计 */
   getMemberStatistic: () => GET<GroupStatisticType>(urls.getMemberStatistic),
   /** 房间内的所有群成员列表-@专用 */

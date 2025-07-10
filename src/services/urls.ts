@@ -63,7 +63,7 @@ export default {
   shield: `${prefix + URLEnum.CHAT}/setShield`, // 屏蔽消息
   // -------------- 群聊相关 ---------------
   createGroup: `${prefix + URLEnum.ROOM}/group`, // 新增群组
-  getGroupUserList: `${prefix + URLEnum.ROOM}/group/member/page`, // 群成员列表
+  // getGroupUserList: `${prefix + URLEnum.ROOM}/group/member/page`, // 群成员列表
   inviteGroupMember: `${prefix + URLEnum.ROOM}/group/member`, // 邀请群成员 和 移出群成员(post 和 delete)
   exitGroup: `${prefix + URLEnum.ROOM}/group/member/exit`, // 退群
   addAdmin: `${prefix + URLEnum.ROOM}/group/admin`, // 添加管理员

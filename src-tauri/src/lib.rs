@@ -36,7 +36,7 @@ pub mod configuration;
 pub mod pojo;
 pub mod im_reqest_client;
 
-use crate::command::room_member_command::{get_room_members, page_room, update_my_room_info};
+use crate::command::room_member_command::{cursor_page_room_members, get_room_members, page_room, update_my_room_info};
 use crate::configuration::get_configuration;
 use crate::error::CommonError;
 use crate::im_reqest_client::ImRequestClient;
@@ -126,7 +126,8 @@ async fn setup_desktop() -> Result<(), CommonError> {
             save_user_info,
             page_room,
             get_room_members,
-            update_my_room_info
+            update_my_room_info,
+            cursor_page_room_members
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

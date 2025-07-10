@@ -15,8 +15,7 @@ pub struct Model {
     pub active_status: Option<u8>,
     pub group_role: Option<i64>,
     pub loc_place: Option<String>,
-    #[sea_orm(column_type = "Text", nullable)]
-    pub last_opt_time: Option<DateTime>,
+    pub last_opt_time: i64,
     pub create_time: Option<i64>,
 }
 

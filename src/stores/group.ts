@@ -3,11 +3,12 @@ import { defineStore } from 'pinia'
 import { useGlobalStore } from '@/stores/global'
 import type { GroupDetailReq, UserItem } from '@/services/types'
 import { pageSize, useChatStore } from './chat'
-import { OnlineEnum, RoleEnum, RoomTypeEnum, StoresEnum } from '@/enums'
+import { OnlineEnum, RoleEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
 import { uniqueUserList } from '@/utils/Unique.ts'
 import { useCachedStore } from '@/stores/cached'
 import { useUserStore } from '@/stores/user'
 import { OnStatusChangeType } from '@/services/wsType'
+import { invoke } from '@tauri-apps/api/core'
 
 /**
  * 用户排序函数
@@ -111,10 +112,12 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
    * @param refresh 是否刷新（重新加载）
    */
   const getGroupUserList = async (refresh = false, specifiedRoomId?: string) => {
-    const data = await apis.getGroupList({
-      pageSize: pageSize,
-      cursor: refresh ? '' : userListOptions.cursor,
-      roomId: specifiedRoomId || currentRoomId.value
+    const data: any = await invoke(TauriCommand.CURSOR_PAGE_ROOM_MEMBERS, {
+      param: {
+        pageSize: pageSize,
+        cursor: refresh ? '' : userListOptions.cursor,
+        roomId: specifiedRoomId || currentRoomId.value
+      }
     })
     if (!data) return
     // 合并并去重用户列表，然后按在线状态和时间排序

@@ -195,7 +195,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { RoomTypeEnum } from '@/enums'
+import { RoomTypeEnum, TauriCommand } from '@/enums'
 import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
@@ -204,6 +204,7 @@ import { useWindow } from '@/hooks/useWindow'
 import { useImageViewer } from '@/stores/imageViewer'
 import type { UserItem } from '@/services/types'
 import { useCachedStore } from '~/src/stores/cached'
+import { invoke } from '@tauri-apps/api/core'
 
 const { openMsgSession } = useCommon()
 const { createWebviewWindow } = useWindow()
@@ -307,7 +308,9 @@ const fetchGroupMembers = async (roomId: string) => {
       current: 1,
       size: 10 // 获取前10个成员
     }
-    const response = await apis.getGroupList(params)
+    const response: any = await invoke(TauriCommand.CURSOR_PAGE_ROOM_MEMBERS, {
+      param: params
+    })
     if (response && response.list) {
       // 使用每个成员的uid获取详细信息
       const memberDetails = response.list.map((member: UserItem) => {

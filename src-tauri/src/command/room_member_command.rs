@@ -1,13 +1,15 @@
 use crate::error::CommonError;
-use crate::pojo::common::{ApiResult, Page, PageParam};
+use crate::pojo::common::{ApiResult, CursorPageParam, CursorPageResp, Page, PageParam};
 use crate::repository::im_room_member_repository::{get_room_members_by_room_id, get_room_page, save_room_batch, save_room_member_batch, update_my_room_info as update_my_room_info_db};
 use crate::vo::vo::MyRoomInfoReq;
 use crate::AppData;
-use anyhow::Context;
+use anyhow::{Context};
 use entity::{im_room, im_room_member};
 
 use std::ops::Deref;
+use serde::{Deserialize, Serialize};
 use tauri::State;
+use crate::repository::im_room_member_repository;
 
 #[tauri::command]
 pub async fn update_my_room_info(my_room_info: MyRoomInfoReq, state: State<'_, AppData>) -> Result<(), String> {
@@ -97,6 +99,22 @@ pub async fn get_room_members(room_id: String, state: State<'_, AppData>) -> Res
             Err(e.to_string())
         }
     }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct CursorPageRoomMemberParam {
+    room_id: String,
+    #[serde(flatten)]
+    cursor_page_param: CursorPageParam
+}
+
+// 游标分页查询数据
+#[tauri::command]
+pub async fn cursor_page_room_members(param: CursorPageRoomMemberParam, state: State<'_, AppData>) -> Result<CursorPageResp<Vec<im_room_member::Model>>, String>{
+    let data = im_room_member_repository::cursor_page_room_members(state.db_conn.deref(), param.room_id, param.cursor_page_param)
+        .await.map_err(|e| e.to_string())?;
+    Ok(data)
 }
 
 /// 从本地数据库分页查询房间数据，如果为空则从后端获取

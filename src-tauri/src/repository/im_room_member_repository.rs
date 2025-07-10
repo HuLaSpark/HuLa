@@ -1,17 +1,69 @@
 use anyhow::Context;
 use entity::{im_room, im_room_member};
-use sea_orm::{ActiveModelTrait, Set};
 use sea_orm::EntityTrait;
 use sea_orm::IntoActiveModel;
 use sea_orm::PaginatorTrait;
 use sea_orm::QuerySelect;
 use sea_orm::TransactionTrait;
-use sea_orm::{ColumnTrait, DatabaseConnection, NotSet, QueryFilter};
+use sea_orm::{ActiveModelTrait, Set};
+use sea_orm::{ColumnTrait, DatabaseConnection, NotSet, QueryFilter, QueryOrder};
 
+use crate::pojo::common::{CursorPageParam, CursorPageResp};
 use crate::{
     error::CommonError,
     pojo::common::{Page, PageParam},
 };
+
+pub async fn cursor_page_room_members(
+    db: &DatabaseConnection,
+    room_id: String,
+    cursor_page_param: CursorPageParam,
+) -> Result<CursorPageResp<Vec<im_room_member::Model>>, CommonError> {
+    // 查询总数
+    let total = im_room_member::Entity::find()
+        .filter(im_room_member::Column::RoomId.eq(&room_id))
+        .count(db)
+        .await
+        .with_context(|| "查询房间成员总数失败")?;
+
+    let mut query = im_room_member::Entity::find()
+        .filter(im_room_member::Column::RoomId.eq(room_id))
+        .order_by_desc(im_room_member::Column::LastOptTime)
+        .limit(cursor_page_param.page_size as u64);
+
+    // 如果提供了游标，解析游标值并添加过滤条件
+    if !cursor_page_param.cursor.is_empty() {
+        // 从 cursor 中根据'_'分割最后一个字符串转为 i64
+        let cursor_parts: Vec<&str> = cursor_page_param.cursor.split('_').collect();
+        if let Some(last_part) = cursor_parts.last() {
+            if let Ok(cursor_value) = last_part.parse::<i64>() {
+                // 使用游标值过滤，获取小于该值的记录（因为是降序排列）
+                query = query.filter(im_room_member::Column::LastOptTime.lt(cursor_value));
+            }
+        }
+    }
+
+    let members = query.all(db).await.with_context(|| "查询房间成员失败")?;
+
+    // 构建下一页游标和判断是否为最后一页
+    let (next_cursor, is_last) = if members.len() < cursor_page_param.page_size as usize {
+        // 如果返回的记录数少于请求的页面大小，说明是最后一页
+        (String::new(), true)
+    } else if let Some(last_member) = members.last() {
+        // 使用最后一条记录的 last_opt_time 构建下一页游标
+        let next_cursor = format!("{}", last_member.last_opt_time);
+        (next_cursor, false)
+    } else {
+        (String::new(), true)
+    };
+
+    Ok(CursorPageResp {
+        cursor: next_cursor,
+        is_last,
+        list: Some(members),
+        total,
+    })
+}
 
 pub async fn get_room_page(
     page_param: PageParam,
@@ -102,7 +154,9 @@ pub async fn save_room_member_batch(
     for member in room_members {
         let mut member_active = member.into_active_model();
         member_active.room_id = Set(Some(room_id.to_string()));
-        im_room_member::Entity::insert(member_active).exec(&txn).await?;
+        im_room_member::Entity::insert(member_active)
+            .exec(&txn)
+            .await?;
     }
 
     // 提交事务
@@ -110,7 +164,12 @@ pub async fn save_room_member_batch(
     Ok(())
 }
 
-pub async fn update_my_room_info(db: &DatabaseConnection, my_name: &str, room_id: &str, uid: &str) -> Result<(), CommonError> {
+pub async fn update_my_room_info(
+    db: &DatabaseConnection,
+    my_name: &str,
+    room_id: &str,
+    uid: &str,
+) -> Result<(), CommonError> {
     // 根据 room_id 和 uid 查找房间成员记录
     let member = im_room_member::Entity::find()
         .filter(im_room_member::Column::RoomId.eq(room_id))
@@ -124,7 +183,7 @@ pub async fn update_my_room_info(db: &DatabaseConnection, my_name: &str, room_id
         // 如果找到记录，更新 nickname 字段
         let mut member_active = member.into_active_model();
         member_active.my_name = Set(Some(my_name.to_string()));
-        
+
         member_active
             .update(db)
             .await
@@ -134,7 +193,9 @@ pub async fn update_my_room_info(db: &DatabaseConnection, my_name: &str, room_id
     } else {
         // 如果没有找到记录，返回错误
         Err(CommonError::UnexpectedError(anyhow::anyhow!(
-            "未找到指定的房间成员记录: room_id={}, uid={}", room_id, uid
+            "未找到指定的房间成员记录: room_id={}, uid={}",
+            room_id,
+            uid
         )))
     }
 }
