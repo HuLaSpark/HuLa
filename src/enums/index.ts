@@ -455,3 +455,11 @@ export enum NotificationTypeEnum {
   /** 接收但不提醒[免打扰] */
   NOT_DISTURB = 1
 }
+
+/** Tauri 命令 */
+export enum TauriCommand {
+  /** 更新我的群聊信息 */
+  UPDATE_MY_ROOM_INFO = 'update_my_room_info',
+  GET_ROOM_MEMBERS = 'get_room_members',
+  PAGE_ROOM = 'page_room'
+}

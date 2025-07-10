@@ -4,7 +4,7 @@ import { useGlobalStore } from '@/stores/global'
 import type { CacheBadgeItem, CacheUserItem } from '@/services/types'
 import { isDiffNow10Min } from '@/utils/ComputedTime.ts'
 import { useDebounceFn } from '@vueuse/core'
-import { StoresEnum } from '@/enums'
+import { StoresEnum, TauriCommand } from '@/enums'
 import { invoke } from '@tauri-apps/api/core'
 
 // 定义基础用户信息类型，只包含uid、头像和名称
@@ -159,7 +159,7 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
     // 这里获取的是全员群的全部用户信息，所以取1作为roomId
     if (localStorage.getItem('IS_INIT_USER_BASE') === null) {
       // const data = await apis.getAllUserBaseInfo({ roomId: 1 })
-      const data: any = await invoke('get_room_members', {
+      const data: any = await invoke(TauriCommand.GET_ROOM_MEMBERS, {
         roomId: '1'
       })
       for (const item of data || []) {
@@ -174,7 +174,7 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
    */
   const getGroupAtUserBaseInfo = async () => {
     if (currentRoomId.value === '1') return
-    const data: any = await invoke('get_room_members', {
+    const data: any = await invoke(TauriCommand.GET_ROOM_MEMBERS, {
       roomId: currentRoomId.value.toString
     })
     currentAtUsersList.value = data
@@ -279,6 +279,13 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
     }
   }
 
+  const updateMyRoomInfo = async (data: any) => {
+    await invoke(TauriCommand.UPDATE_MY_ROOM_INFO, {
+      myRoomInfo: data
+    })
+    await getGroupAtUserBaseInfo()
+  }
+
   return {
     userCachedList,
     badgeCachedList,
@@ -294,6 +301,7 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
     updateUserGroupNickname,
     getUserGroupNickname,
     userGroupNicknameMap,
-    getGroupAnnouncementList
+    getGroupAnnouncementList,
+    updateMyRoomInfo
   }
 })

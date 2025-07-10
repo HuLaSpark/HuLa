@@ -7,15 +7,17 @@ use serde::{Deserialize, Serialize};
 pub struct Model {
     #[sea_orm(primary_key)]
     #[serde(default)]
-    pub id: i64,
+    pub id: String,
     pub room_id: Option<String>,
     pub uid: Option<String>,
     pub account: Option<String>,
-    pub nickname: Option<String>,
+    pub my_name: Option<String>,
     pub active_status: Option<u8>,
-    pub role_id: Option<i64>,
+    pub group_role: Option<i64>,
     pub loc_place: Option<String>,
-    pub last_opt_time: Option<DateTime>
+    #[sea_orm(column_type = "Text", nullable)]
+    pub last_opt_time: Option<DateTime>,
+    pub create_time: Option<i64>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

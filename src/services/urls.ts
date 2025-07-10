@@ -71,7 +71,7 @@ export default {
   groupDetail: `${prefix + URLEnum.ROOM}/group`, // 群组详情
   groupList: `${prefix + URLEnum.ROOM}/group/list`, // 群聊列表
   updateRoomInfo: `${prefix + URLEnum.ROOM}/updateRoomInfo`, // 修改群信息(群主)
-  updateMyRoomInfo: `${prefix + URLEnum.ROOM}/updateMyRoomInfo`, // 修改“我”的群聊名称
+  // updateMyRoomInfo: `${prefix + URLEnum.ROOM}/updateMyRoomInfo`, // 修改“我”的群聊名称
   searchGroup: `${prefix + URLEnum.ROOM}/search`, // 搜索群聊
   applyGroup: `${prefix + URLEnum.ROOM}/applyGroup`, // 申请加群
   getAnnouncementList: `${prefix + URLEnum.ROOM}/announcement/list`, // 获取群公告

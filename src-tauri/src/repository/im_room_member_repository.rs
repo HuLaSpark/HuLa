@@ -101,15 +101,40 @@ pub async fn save_room_member_batch(
     // 保存新的room_members数据
     for member in room_members {
         let mut member_active = member.into_active_model();
-        member_active.id = NotSet;
         member_active.room_id = Set(Some(room_id.to_string()));
-        member_active
-            .insert(&txn)
-            .await
-            .with_context(|| "插入房间成员失败")?;
+        im_room_member::Entity::insert(member_active).exec(&txn).await?;
     }
 
     // 提交事务
     txn.commit().await?;
     Ok(())
+}
+
+pub async fn update_my_room_info(db: &DatabaseConnection, my_name: &str, room_id: &str, uid: &str) -> Result<(), CommonError> {
+    // 根据 room_id 和 uid 查找房间成员记录
+    let member = im_room_member::Entity::find()
+        .filter(im_room_member::Column::RoomId.eq(room_id))
+        .filter(im_room_member::Column::Uid.eq(uid))
+        .one(db)
+        .await
+        .with_context(|| "查询房间成员失败")?;
+
+    if let Some(member) = member {
+        println!("找到房间成员记录: {:?}", member);
+        // 如果找到记录，更新 nickname 字段
+        let mut member_active = member.into_active_model();
+        member_active.my_name = Set(Some(my_name.to_string()));
+        
+        member_active
+            .update(db)
+            .await
+            .with_context(|| "更新房间成员昵称失败")?;
+        println!("更新成员房间成员信息成功");
+        Ok(())
+    } else {
+        // 如果没有找到记录，返回错误
+        Err(CommonError::UnexpectedError(anyhow::anyhow!(
+            "未找到指定的房间成员记录: room_id={}, uid={}", room_id, uid
+        )))
+    }
 }

@@ -1,6 +1,7 @@
 use crate::error::CommonError;
 use crate::pojo::common::{ApiResult, Page, PageParam};
-use crate::repository::im_room_member_repository::{get_room_members_by_room_id, get_room_page, save_room_batch, save_room_member_batch};
+use crate::repository::im_room_member_repository::{get_room_members_by_room_id, get_room_page, save_room_batch, save_room_member_batch, update_my_room_info as update_my_room_info_db};
+use crate::vo::vo::MyRoomInfoReq;
 use crate::AppData;
 use anyhow::Context;
 use entity::{im_room, im_room_member};
@@ -8,7 +9,47 @@ use entity::{im_room, im_room_member};
 use std::ops::Deref;
 use tauri::State;
 
+#[tauri::command]
+pub async fn update_my_room_info(my_room_info: MyRoomInfoReq, state: State<'_, AppData>) -> Result<(), String> {
+    let result: Result<(), CommonError> = async {
+        // 获取当前用户信息
+        let user_info = state.user_info.lock().await;
+        let uid = user_info.uid.clone();
+        drop(user_info);
 
+        // 调用后端接口更新房间信息
+        let _resp = state
+            .request_client
+            .lock()
+            .await
+            .post("/room/updateMyRoomInfo")
+            .json(&my_room_info)
+            .send_json::<crate::pojo::common::ApiResult<bool>>()
+            .await
+            .with_context(|| format!("[{}:{}] 调用后端接口更新房间信息失败", file!(), line!()))?;
+
+        // 更新本地数据库
+        update_my_room_info_db(
+            state.db_conn.deref(),
+            &my_room_info.my_name,
+            &my_room_info.id,
+            &uid,
+        )
+        .await
+        .with_context(|| format!("[{}:{}] 更新本地数据库失败", file!(), line!()))?;
+        Ok(())
+    }.await;
+
+    match result {
+        Ok(members) => Ok(members),
+        Err(e) => {
+            eprintln!("更新房间信息失败: {:?}", e);
+            Err(e.to_string())
+        }
+    }
+}
+
+/// 获取room_id的房间的所有成员列表
 #[tauri::command]
 pub async fn get_room_members(room_id: String, state: State<'_, AppData>) -> Result<Vec<im_room_member::Model>, String> {
     let result: Result<Vec<im_room_member::Model>, CommonError> = async {
@@ -24,7 +65,7 @@ pub async fn get_room_members(room_id: String, state: State<'_, AppData>) -> Res
                 .request_client
                 .lock()
                 .await
-                .get(&format!("/room/group/member/list"))
+                .get(&format!("/room/group/listMember"))
                 .query(&[("roomId", &room_id)])
                 .send_json::<ApiResult<Vec<im_room_member::Model>>>()
                 .await?;
@@ -52,13 +93,13 @@ pub async fn get_room_members(room_id: String, state: State<'_, AppData>) -> Res
     match result {
         Ok(members) => Ok(members),
         Err(e) => {
-            eprintln!("获取房间成员数据失败: {:?}", e);
+            eprintln!("获取房间全部成员数据失败: {:?}", e);
             Err(e.to_string())
         }
     }
 }
 
-/// 从本地数据库分页查询房间成员数据，如果为空则从后端获取
+/// 从本地数据库分页查询房间数据，如果为空则从后端获取
 #[tauri::command]
 pub async fn page_room(
     page_param: PageParam,
@@ -104,7 +145,7 @@ pub async fn page_room(
     match result {
         Ok(page_data) => Ok(page_data),
         Err(e) => {
-            eprintln!("获取房间成员数据失败: {:?}", e);
+            eprintln!("分页获取房间数据失败: {:?}", e);
             Err(e.to_string())
         }
     }

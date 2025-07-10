@@ -386,6 +386,7 @@ import AvatarCropper from '@/components/common/AvatarCropper.vue'
 import { useAvatarUpload } from '@/hooks/useAvatarUpload'
 import { useWindow } from '@/hooks/useWindow'
 import { useGlobalStore } from '@/stores/global'
+import { useCachedStore } from '~/src/stores/cached'
 
 const appWindow = WebviewWindow.getCurrent()
 const { activeItem } = defineProps<{
@@ -408,6 +409,7 @@ const modalShow = ref(false)
 const sidebarShow = ref(false)
 const showLoading = ref(true)
 const isLoading = ref(false)
+const cacheStore = useCachedStore()
 // 群组详情数据
 const groupDetail = ref({
   myNickname: '', // 我在本群的昵称
@@ -684,7 +686,7 @@ const saveGroupInfo = async () => {
   // 只有当数据发生变化时才发送请求
   if (nicknameChanged || remarkChanged) {
     // 使用updateMyRoomInfo接口更新我在群里的昵称和群备注
-    await apis.updateMyRoomInfo({
+    await cacheStore.updateMyRoomInfo({
       id: activeItem.roomId,
       myName: groupDetail.value.myNickname,
       remark: groupDetail.value.groupRemark

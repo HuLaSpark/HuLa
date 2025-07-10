@@ -203,6 +203,7 @@ import apis from '@/services/apis.ts'
 import { useWindow } from '@/hooks/useWindow'
 import { useImageViewer } from '@/stores/imageViewer'
 import type { UserItem } from '@/services/types'
+import { useCachedStore } from '~/src/stores/cached'
 
 const { openMsgSession } = useCommon()
 const { createWebviewWindow } = useWindow()
@@ -223,6 +224,7 @@ const remarkInputRef = useTemplateRef('remarkInputRef')
 const isEditingNickname = ref(false)
 const nicknameValue = ref('')
 const nicknameInputRef = useTemplateRef('nicknameInputRef')
+const cacheStore = useCachedStore()
 
 watchEffect(() => {
   if (content.type === RoomTypeEnum.SINGLE) {
@@ -255,7 +257,7 @@ const startEditRemark = () => {
 // 处理群备注更新
 const handleRemarkUpdate = async () => {
   if (remarkValue.value !== item.value.remark) {
-    await apis.updateMyRoomInfo({
+    await cacheStore.updateMyRoomInfo({
       id: item.value.roomId,
       remark: remarkValue.value,
       myName: item.value.myName || ''
@@ -278,10 +280,10 @@ const startEditNickname = () => {
 // 处理本群昵称更新
 const handleNicknameUpdate = async () => {
   if (nicknameValue.value !== item.value.myName) {
-    await apis.updateMyRoomInfo({
+    await cacheStore.updateMyRoomInfo({
       id: item.value.roomId,
-      myName: nicknameValue.value,
-      remark: item.value.remark || ''
+      remark: remarkValue.value,
+      myName: item.value.myName || ''
     })
     item.value.myName = nicknameValue.value
     window.$message.success('本群昵称更新成功')

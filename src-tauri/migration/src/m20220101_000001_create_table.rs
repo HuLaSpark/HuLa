@@ -1,5 +1,5 @@
 use sea_orm_migration::{prelude::*, schema::*};
-use entity::{im_room_member, im_user};
+use entity::{im_user};
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -35,20 +35,7 @@ impl MigrationTrait for Migration {
                     .col(integer_null(im_user::Column::UserType))
                     .to_owned(),
             )
-            .await?;
-        
-        manager.create_table(
-            Table::create()
-                .table(im_room_member::Entity)
-                .col(pk_auto(im_room_member::Column::Id))
-                .col(string_null(im_room_member::Column::Uid))
-                .col(string_null(im_room_member::Column::Account))
-                .col(integer_null(im_room_member::Column::ActiveStatus))
-                .col(big_integer_null(im_room_member::Column::RoleId))
-                .col(string_null(im_room_member::Column::LocPlace))
-                .col(string_null(im_room_member::Column::LastOptTime))
-                .to_owned()
-        ).await
+            .await
     }
 
     async fn down(&self, _manager: &SchemaManager) -> Result<(), DbErr> {

@@ -364,9 +364,6 @@ const normalLogin = async (auto = false) => {
       localStorage.setItem('TOKEN', res.token)
       localStorage.setItem('REFRESH_TOKEN', res.refreshToken)
 
-      emit('set_token', {
-        token: res.token
-      })
       // 需要删除二维码，因为用户可能先跳转到二维码界面再回到登录界面，会导致二维码一直保持在内存中
       if (localStorage.getItem('wsLogin')) {
         localStorage.removeItem('wsLogin')
@@ -393,6 +390,11 @@ const normalLogin = async (auto = false) => {
       }
       userStore.userInfo = account
       loginHistoriesStore.addLoginHistory(account)
+
+      emit('set_user_info', {
+        token: res.token,
+        uid: account.uid
+      })
 
       await setLoginState()
       await openHomeWindow()
