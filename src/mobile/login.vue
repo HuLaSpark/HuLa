@@ -1,42 +1,50 @@
 <template>
-  <n-config-provider :theme="lightTheme" class="login-box flex-col-center gap-40px h-100vh">
+  <n-config-provider :theme="lightTheme" class="login-bg flex-col-center gap-40px h-100vh">
+    <div class="absolute top-13vh left-36px flex-center">
+      <p class="text-(20px #333) font-bold">HI, 欢迎来到</p>
+      <img src="@/assets/mobile/2.svg" alt="" class="w-80px h-20px" />
+    </div>
+
     <!-- 选项卡导航 -->
-    <div class="w-[80%] h-40px absolute top-20vh flex justify-center items-center">
+    <div class="w-80% h-40px absolute top-20vh flex-center">
       <div class="flex w-200px relative">
         <div
           @click="activeTab = 'login'"
           :class="[
-            'text-22px cursor-pointer w-100px text-center transition-all duration-300',
-            activeTab === 'login' ? 'color-#13987f font-medium' : 'color-#909090'
+            'z-999 w-100px text-center transition-all duration-300 font-bold',
+            activeTab === 'login' ? 'text-(18px #000)' : 'text-(16px #666)'
           ]">
           登录
         </div>
         <div
           @click="activeTab = 'register'"
           :class="[
-            'text-22px cursor-pointer w-100px text-center transition-all duration-300',
-            activeTab === 'register' ? 'color-#13987f font-medium' : 'color-#909090'
+            'z-999 w-100px text-center transition-all duration-300 font-bold',
+            activeTab === 'register' ? 'text-(18px #000)' : 'text-(16px #666)'
           ]">
           注册
         </div>
         <!-- 选中条 -->
         <div
+          style="border-radius: 24px 42px 4px 24px"
           :class="[
-            'absolute bottom-[-10px] h-7px w-40px bg-#13987f transition-all duration-300 ease-out rounded-4px',
-            activeTab === 'login' ? 'left-[30px]' : 'left-[130px]'
+            'z-10 absolute bottom--4px h-6px w-34px bg-#13987f transition-all duration-300 ease-out',
+            activeTab === 'login' ? 'left-[33px]' : 'left-[133px]'
           ]"></div>
       </div>
     </div>
 
-    <img v-if="activeTab === 'login'" src="@/assets/logo/hula.png" alt="logo" class="w-130px h-58px" />
+    <img
+      v-if="activeTab === 'login'"
+      :src="AvatarUtils.getAvatarUrl(info.avatar || '/logo.png')"
+      alt="logo"
+      class="size-86px rounded-full" />
 
     <!-- 登录表单 -->
-    <n-flex v-if="activeTab === 'login'" class="text-center w-[80%]" vertical :size="16">
+    <n-flex v-if="activeTab === 'login'" class="text-center w-80%" vertical :size="16">
       <n-input
-        :class="{ 'pl-16px': loginHistories.length > 0 }"
+        :class="{ 'pl-22px': loginHistories.length > 0 }"
         size="large"
-        maxlength="16"
-        minlength="6"
         v-model:value="info.account"
         type="text"
         spellCheck="false"
@@ -49,10 +57,10 @@
         clearable>
         <template #suffix>
           <n-flex v-if="loginHistories.length > 0" @click="arrowStatus = !arrowStatus">
-            <svg v-if="!arrowStatus" class="down w-18px h-18px color-#505050 cursor-pointer">
+            <svg v-if="!arrowStatus" class="down w-18px h-18px color-#505050">
               <use href="#down"></use>
             </svg>
-            <svg v-else class="down w-18px h-18px color-#505050 cursor-pointer"><use href="#up"></use></svg>
+            <svg v-else class="down w-18px h-18px color-#505050"><use href="#up"></use></svg>
           </n-flex>
         </template>
       </n-input>
@@ -61,14 +69,14 @@
       <div
         style="border: 1px solid rgba(70, 70, 70, 0.1)"
         v-if="loginHistories.length > 0 && arrowStatus"
-        class="account-box absolute w-260px max-h-140px bg-#fdfdfd mt-45px z-99 rounded-8px p-8px box-border">
+        class="account-box absolute w-80% max-h-140px bg-#fdfdfd mt-45px z-99 rounded-8px p-8px box-border">
         <n-scrollbar style="max-height: 120px" trigger="none">
           <n-flex
             vertical
             v-for="item in loginHistories"
             :key="item.account"
             @click="giveAccount(item)"
-            class="p-8px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px">
+            class="p-8px hover:bg-#f3f3f3 hover:rounded-6px">
             <div class="flex-between-center">
               <n-avatar :src="AvatarUtils.getAvatarUrl(item.avatar)" class="size-28px bg-#ccc rounded-50%" />
               <p class="text-14px color-#505050">{{ item.account }}</p>
@@ -81,9 +89,7 @@
       </div>
 
       <n-input
-        class="pl-16px"
-        maxlength="16"
-        minlength="6"
+        class="pl-22px mt-8px"
         size="large"
         show-password-on="click"
         v-model:value="info.password"
@@ -104,9 +110,10 @@
       <n-button
         :loading="loading"
         :disabled="loginDisabled"
-        class="w-full mt-8px mb-50px"
-        @click="normalLogin"
-        color="#13987f">
+        tertiary
+        style="color: #fff"
+        class="login-button"
+        @click="normalLogin">
         <span>{{ loginText }}</span>
       </n-button>
 
@@ -115,15 +122,15 @@
         <n-checkbox v-model:checked="protocol" />
         <div class="text-12px color-#909090 cursor-default lh-14px">
           <span>已阅读并同意</span>
-          <span class="color-#13987f cursor-pointer">服务协议</span>
+          <span class="color-#13987f">服务协议</span>
           <span>和</span>
-          <span class="color-#13987f cursor-pointer">HuLa隐私保护指引</span>
+          <span class="color-#13987f">HuLa隐私保护指引</span>
         </div>
       </n-flex>
     </n-flex>
 
     <!-- 注册表单 - 第一步：昵称和密码 -->
-    <n-flex v-if="activeTab === 'register' && currentStep === 1" class="text-center w-[80%]" vertical :size="16">
+    <n-flex v-if="activeTab === 'register' && currentStep === 1" class="text-center w-80%" vertical :size="16">
       <n-input
         size="large"
         maxlength="8"
@@ -141,8 +148,8 @@
         clearable />
 
       <n-input
+        class="pl-16px"
         size="large"
-        maxlength="16"
         minlength="6"
         show-password-on="click"
         v-model:value="registerInfo.password"
@@ -158,8 +165,8 @@
         clearable />
 
       <n-input
+        class="pl-16px"
         size="large"
-        maxlength="16"
         minlength="6"
         show-password-on="click"
         v-model:value="registerInfo.confirmPassword"
@@ -175,7 +182,7 @@
         clearable />
 
       <!-- 密码提示信息 -->
-      <n-flex vertical v-if="registerInfo.password" :size="4" class="mt-8px">
+      <n-flex vertical v-if="registerInfo.password" :size="10" class="mt-8px">
         <Validation :value="registerInfo.password" message="最少6位" :validator="validateMinLength" />
         <Validation :value="registerInfo.password" message="由英文和数字构成" :validator="validateAlphaNumeric" />
         <Validation
@@ -189,24 +196,25 @@
         <n-checkbox v-model:checked="registerProtocol" />
         <div class="text-12px color-#909090 cursor-default lh-14px">
           <span>已阅读并同意</span>
-          <span class="color-#13987f cursor-pointer">服务协议</span>
+          <span class="color-#13987f">服务协议</span>
           <span>和</span>
-          <span class="color-#13987f cursor-pointer">HuLa隐私保护指引</span>
+          <span class="color-#13987f">HuLa隐私保护指引</span>
         </div>
       </n-flex>
 
       <n-button
         :loading="registerLoading"
         :disabled="!isStep1Valid"
-        class="w-full mt-8px mb-50px"
-        @click="handleRegisterStep"
-        color="#13987f">
+        tertiary
+        style="color: #fff"
+        class="login-button"
+        @click="handleRegisterStep">
         <span>下一步</span>
       </n-button>
     </n-flex>
 
     <!-- 注册表单 - 第二步：邮箱和图片验证码 -->
-    <n-flex v-if="activeTab === 'register' && currentStep === 2" class="text-center w-[80%]" vertical :size="16">
+    <n-flex v-if="activeTab === 'register' && currentStep === 2" class="text-center w-80%" vertical :size="16">
       <n-auto-complete
         size="large"
         v-model:value="registerInfo.email"
@@ -238,7 +246,7 @@
         <n-image
           width="120"
           height="40"
-          class="rounded-8px cursor-pointer flex-shrink-0"
+          class="rounded-8px flex-shrink-0"
           :src="captcha.base64"
           preview-disabled
           @click="getVerifyCode">
@@ -251,9 +259,10 @@
       <n-button
         :loading="registerLoading"
         :disabled="!isStep2Valid"
-        class="w-full mt-8px mb-50px"
-        @click="handleRegisterStep"
-        color="#13987f">
+        tertiary
+        style="color: #fff"
+        class="login-button"
+        @click="handleRegisterStep">
         <span>发送验证码</span>
       </n-button>
     </n-flex>
@@ -273,6 +282,7 @@
               <PinInput
                 v-model="emailCode"
                 @complete="handleRegisterComplete"
+                :size="'40px'"
                 ref="pinInputRef"
                 input-class="bg-#f5f5f5 border-#e0e0e0" />
             </div>
@@ -280,9 +290,10 @@
             <n-button
               :loading="finalRegisterLoading"
               :disabled="!isEmailCodeComplete"
-              class="w-full"
-              @click="handleRegisterComplete"
-              color="#13987f">
+              tertiary
+              style="color: #fff; margin-bottom: 0"
+              class="login-button"
+              @click="handleRegisterComplete">
               注册
             </n-button>
           </n-flex>
@@ -293,7 +304,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, watchEffect, onMounted, nextTick } from 'vue'
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import apis from '@/services/apis'
 import { useUserStore } from '@/stores/user'
@@ -631,19 +641,39 @@ const handleForgetPassword = () => {
   router.push('/mobile/forget-password')
 }
 
-// 初始化时获取验证码
+const closeMenu = (event: MouseEvent) => {
+  const target = event.target as Element
+  if (!target.matches('.account-box, .account-box *, .down')) {
+    arrowStatus.value = false
+  }
+}
+
 onMounted(() => {
-  // 可以在这里执行初始化逻辑
+  window.addEventListener('click', closeMenu, true)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('click', closeMenu, true)
 })
 </script>
 
 <style scoped lang="scss">
 @use '@/styles/scss/login';
-@use '@/styles/scss/global/login-bg';
-</style>
-
-<style>
-.n-message-container.n-message-container--top {
-  top: 65px !important;
+.login-bg {
+  background-image: url('@/assets/mobile/1.webp');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.login-button {
+  @apply w-full mt-8px mb-50px text-#fff border-none;
+  background: linear-gradient(to left, #7db1ac, #acd7da);
+  box-shadow:
+    inset 0px 3px 16px 0px rgba(255, 255, 255, 0.5),
+    inset 0px -2px 27px 0px rgba(105, 187, 157, 0.76),
+    inset 0px 2px 6px 0px rgba(254, 254, 254, 0.5);
+  &:span {
+    color: #fff;
+  }
 }
 </style>

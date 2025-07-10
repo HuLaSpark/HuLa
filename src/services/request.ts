@@ -58,7 +58,6 @@ const responseInterceptor = async <T>(
       return Promise.reject(
         new AppException(serviceData.msg, {
           type: ErrorType.Server,
-          code: serviceData.code,
           showError: true
         })
       )
