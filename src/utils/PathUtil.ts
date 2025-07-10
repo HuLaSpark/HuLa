@@ -109,11 +109,7 @@ export async function detectRemoteFileType(options: {
 }
 
 export async function getFile(absolutePath: string) {
-  const filesMeta = await invoke<FilesMeta>('get_files_meta', {
-    filesPath: [absolutePath]
-  })
-
-  const fileMeta = filesMeta[0]
+  const [fileMeta] = await getFilesMeta<FilesMeta>([absolutePath])
 
   const fileData = await readFile(absolutePath)
   const fileName = fileMeta.name

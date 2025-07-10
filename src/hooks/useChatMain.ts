@@ -245,7 +245,6 @@ export const useChatMain = () => {
 
           const path = 'previewFile'
           const LABEL = 'previewFile'
-          // TODO 还有一种情况，就是用户下载完成后，又把文件删掉，然后又点击“预览”，然后这时消息会更新状态为“未下载”，这时用户又手动把它撤回删除，文件又恢复了，这时应该再点击“预览”时，恢复成为已下载才对
 
           const fileStatus: FileDownloadStatus = fileDownloadStore.getFileStatus(item.message.body.url)
 
@@ -276,7 +275,7 @@ export const useChatMain = () => {
                 fileName: item.message.body.fileName,
                 absolutePath: fileStatus?.absolutePath,
                 nativePath: fileStatus?.nativePath,
-                url: localExists && fileStatus?.absolutePath ? fileStatus.absolutePath : item.message.body.url,
+                url: item.message.body.url,
                 type,
                 localExists
               }
