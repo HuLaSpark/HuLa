@@ -5,15 +5,18 @@ import { fileTypeFromBuffer, type FileTypeResult } from 'file-type'
 import { FilesMeta } from '@/services/types'
 import { invoke } from '@tauri-apps/api/core'
 
+// 用户数据
+const USER_DATA = 'userData'
+
 const getPathCache = async (subFolder: string, userUid: string): Promise<string> => {
   const cacheDir = await appCacheDir()
   return await join(cacheDir, String(userUid), subFolder)
 }
 
 const createUserVideosDir = async (): Promise<void> => {
-  const dirExists = await exists('user-videos', { baseDir: BaseDirectory.Resource })
+  const dirExists = await exists(USER_DATA, { baseDir: BaseDirectory.Resource })
   if (!dirExists) {
-    await mkdir('user-videos', {
+    await mkdir(USER_DATA, {
       baseDir: BaseDirectory.Resource,
       recursive: true
     })
@@ -23,7 +26,7 @@ const createUserVideosDir = async (): Promise<void> => {
 const getUserVideosDir = async (userUid: string, roomId: string): Promise<string> => {
   await createUserVideosDir()
   // 确保用户ID和房间ID的子目录也存在
-  const userRoomDir = await join('user-videos', userUid, roomId)
+  const userRoomDir = await join(USER_DATA, userUid, roomId)
   const userRoomDirExists = await exists(userRoomDir, { baseDir: BaseDirectory.Resource })
   if (!userRoomDirExists) {
     await mkdir(userRoomDir, {
