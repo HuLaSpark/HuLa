@@ -241,8 +241,6 @@ export const useChatMain = () => {
       click: (item: RightMouseMessageItem) => {
         console.log('预览文件的参数：', item)
         nextTick(async () => {
-          const beforeOpenMessage = window.$message.loading('即将打开预览哦~')
-
           const path = 'previewFile'
           const LABEL = 'previewFile'
 
@@ -343,7 +341,6 @@ export const useChatMain = () => {
 
           // 最后创建用于预览文件的 WebView 窗口
           await createWebviewWindow('预览文件', path, 860, 720, '', true)
-          beforeOpenMessage.destroy()
         })
       }
     },
