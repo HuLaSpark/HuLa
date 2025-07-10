@@ -876,7 +876,9 @@ export const useCommon = () => {
       }
 
       const fileType = file.type
-      if (fileType.startsWith('image/')) {
+
+      // 加上includes用于保底判断文件类型不是mime时的处理逻辑
+      if (fileType.startsWith('image/') || ['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(fileType)) {
         imageFiles.push(file)
       } else {
         // 视频和其他文件通过弹窗处理

@@ -1,6 +1,6 @@
 import { useCommon } from '@/hooks/useCommon.ts'
 import { MittEnum, MsgEnum, PowerEnum, RoleEnum, RoomTypeEnum } from '@/enums'
-import { MessageType } from '@/services/types.ts'
+import { FilesMeta, MessageType, RightMouseMessageItem } from '@/services/types.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import apis from '@/services/apis.ts'
@@ -23,12 +23,14 @@ import { useGroupStore } from '@/stores/group'
 import { useWindow } from './useWindow'
 import { useEmojiStore } from '@/stores/emoji'
 import { useVideoViewer } from '@/hooks/useVideoViewer'
-import { useFileDownloadStore } from '@/stores/fileDownload'
+import { FileDownloadStatus, useFileDownloadStore } from '@/stores/fileDownload'
 import { extractFileName, removeTag } from '@/utils/Formatting'
+import { detectRemoteFileType, getFilesMeta, getUserAbsoluteVideosDir } from '@/utils/PathUtil'
+import { FileTypeResult } from 'file-type'
 
 export const useChatMain = () => {
   const { openMsgSession, userUid } = useCommon()
-  const { createWebviewWindow } = useWindow()
+  const { createWebviewWindow, sendWindowPayload } = useWindow()
   const { getLocalVideoPath, checkVideoDownloaded } = useVideoViewer()
   const fileDownloadStore = useFileDownloadStore()
   const settingStore = useSettingStore()
@@ -236,8 +238,110 @@ export const useChatMain = () => {
     {
       label: '预览',
       icon: 'preview-open',
-      click: (item: any) => {
-        console.log(item)
+      click: (item: RightMouseMessageItem) => {
+        console.log('预览文件的参数：', item)
+        nextTick(async () => {
+          const path = 'previewFile'
+          const LABEL = 'previewFile'
+
+          const fileStatus: FileDownloadStatus = fileDownloadStore.getFileStatus(item.message.body.url)
+
+          const currentChatRoomId = globalStore.currentSession.roomId // 这个id可能为群id可能为用户uid，所以不能只用用户uid
+          const currentUserUid = userStore.uid as string
+
+          /**
+           * 构建窗口所需的 payload 数据，用于传递文件预览相关的信息。
+           *
+           * 包括用户 ID、房间 ID、消息 ID、文件路径、类型、是否存在本地等。
+           * 若本地存在文件，则 url 使用本地路径，否则使用远程 URL。
+           *
+           * @param item - 右键点击的消息项，包含文件的消息结构和用户信息。
+           * @param type - 文件类型信息（扩展名和 MIME 类型），可为空。
+           * @param localExists - 文件是否存在于本地，用于决定路径选择。
+           * @returns 构建后的 payload 对象。
+           */
+          const buildPayload = (
+            item: RightMouseMessageItem,
+            type: FileTypeResult | undefined,
+            localExists: boolean
+          ) => {
+            const payload = {
+              userId: currentUserUid,
+              roomId: currentChatRoomId,
+              messageId: item.message.id,
+              resourceFile: {
+                fileName: item.message.body.fileName,
+                absolutePath: fileStatus?.absolutePath,
+                nativePath: fileStatus?.nativePath,
+                url: item.message.body.url,
+                type,
+                localExists
+              }
+            }
+            return payload
+          }
+
+          /**
+           * 当本地文件不存在或获取元数据失败时，执行远程文件类型检测，并构建 fallback payload。
+           *
+           * 构建完成后通过窗口通信接口发送该 payload，供目标窗口使用。
+           *
+           * @returns Promise<void>
+           */
+          const fallbackToRemotePayload = async () => {
+            const remoteType = await detectRemoteFileType({
+              url: item.message.body.url,
+              fileSize: Number(item.message.body.size)
+            })
+            const fallbackPayload = buildPayload(item, remoteType, false)
+            await sendWindowPayload(LABEL, fallbackPayload)
+          }
+
+          // 这里不用状态中的absolute，是因为不能完全相信状态的绝对路径是否存在，有时不存在
+          const resourceDirPath = await getUserAbsoluteVideosDir(currentUserUid, currentChatRoomId)
+          const absolutePath = await join(resourceDirPath, item.message.body.fileName)
+
+          // 获取文件元信息（判断文件是否已下载/存在）
+          const result = await getFilesMeta<FilesMeta>([
+            fileStatus?.absolutePath || absolutePath || item.message.body.url
+          ])
+          const fileMeta = result[0]
+
+          try {
+            // 如果本地不存在该文件，清空旧的下载状态，准备读取远程链接作为兜底
+            if (!fileMeta.exists) {
+              await fallbackToRemotePayload()
+            } else {
+              // 本地存在文件，构造 payload 使用本地路径和已知类型
+              const payload = buildPayload(
+                item,
+                {
+                  ext: fileMeta.file_type,
+                  mime: fileMeta.mime_type
+                },
+                fileMeta.exists
+              )
+
+              await sendWindowPayload(LABEL, payload)
+            }
+          } catch (error) {
+            // 本地信息获取失败，可能是路径非法或 RPC 异常，兜底走远程解析
+            await fallbackToRemotePayload()
+            console.error('检查文件出错：', error)
+          }
+
+          console.log('预览时刷新下载状态')
+          await fileDownloadStore.refreshFileDownloadStatus({
+            fileUrl: item.message.body.url,
+            roomId: currentChatRoomId,
+            userId: currentUserUid,
+            fileName: item.message.body.fileName,
+            exists: fileMeta.exists
+          })
+
+          // 最后创建用于预览文件的 WebView 窗口
+          await createWebviewWindow('预览文件', path, 860, 720, '', true)
+        })
       }
     },
     ...commonMenuList.value,
@@ -264,29 +368,84 @@ export const useChatMain = () => {
     {
       label: type() === 'macos' ? '在Finder中显示' : '打开文件夹',
       icon: 'file2',
-      click: async (item: any) => {
-        try {
-          const fileUrl = item.message.body.url
-          const fileName = item.message.body.fileName || extractFileName(fileUrl)
+      click: async (item: RightMouseMessageItem) => {
+        // try {
+        //   const fileUrl = item.message.body.url
+        //   const fileName = item.message.body.fileName || extractFileName(fileUrl)
 
-          // 检查文件是否已下载
-          const fileStatus = fileDownloadStore.getFileStatus(fileUrl)
+        //   // 检查文件是否已下载
+        //   const fileStatus = fileDownloadStore.getFileStatus(fileUrl)
 
-          if (fileStatus.isDownloaded && fileStatus.absolutePath) {
-            // 文件已下载，直接显示
-            await revealItemInDir(fileStatus.absolutePath)
+        //   console.log('找到的文件状态：', fileStatus)
+
+        //   if (fileStatus.isDownloaded && fileStatus.absolutePath) {
+        //     try {
+        //       // 尝试读取一次文件meta信息，不排除已下载但是用户又手动删除而保留发送消息的情况
+        //       await invoke<FilesMeta>('get_files_meta', { filesPath: [fileStatus.absolutePath] })
+        //       await revealItemInDir(fileStatus.absolutePath)
+        //     } catch (error) {
+        //       fileDownloadStore.refreshFileDownloadStatus(fileUrl)
+        //       window.$message.warning('文件不见了😞 请重新下载哦~')
+        //       console.error('获取文件失败：', error)
+        //     }
+
+        //     // 文件已下载，直接显示
+        //   } else {
+        //     // 文件未下载，先下载再显示
+        //     const downloadMessage = window.$message.info('文件没下载哦~ 正在下载文件🚀...')
+        //     const absolutePath = await fileDownloadStore.downloadFile(fileUrl, fileName)
+
+        //     if (absolutePath) {
+        //       downloadMessage.destroy()
+        //       window.$message.success('文件下载好啦！请查看~')
+        //       await revealItemInDir(absolutePath)
+        //     }
+        //   }
+        // } catch (error) {
+        //   console.error('显示文件失败:', error)
+        // }
+        console.log('打开文件夹的item项：', item)
+
+        const fileUrl = item.message.body.url
+        const fileName = item.message.body.fileName || extractFileName(fileUrl)
+
+        // 检查文件是否已下载
+        const fileStatus = fileDownloadStore.getFileStatus(fileUrl)
+
+        console.log('找到的文件状态：', fileStatus)
+        const currentChatRoomId = globalStore.currentSession.roomId // 这个id可能为群id可能为用户uid，所以不能只用用户uid
+        const currentUserUid = userStore.uid as string
+
+        const resourceDirPath = await getUserAbsoluteVideosDir(currentUserUid, currentChatRoomId)
+        let absolutePath = await join(resourceDirPath, fileName)
+
+        const [fileMeta] = await getFilesMeta<FilesMeta>([fileStatus?.absolutePath || absolutePath || fileUrl])
+
+        // 最后判断文件不存在本地，那就下载它
+        if (!fileMeta.exists) {
+          // 文件不存在本地
+          const downloadMessage = window.$message.info('文件没下载哦~ 请下载文件后再打开🚀...')
+          const _absolutePath = await fileDownloadStore.downloadFile(fileUrl, fileName)
+
+          if (_absolutePath) {
+            absolutePath = _absolutePath
+            downloadMessage.destroy()
+            window.$message.success('文件下载好啦！请查看~')
+            await revealItemInDir(_absolutePath)
+            await fileDownloadStore.refreshFileDownloadStatus({
+              fileUrl: item.message.body.url,
+              roomId: currentChatRoomId,
+              userId: currentUserUid,
+              fileName: item.message.body.fileName,
+              exists: true
+            })
           } else {
-            // 文件未下载，先下载再显示
-            window.$message.info('正在下载文件...')
-            const absolutePath = await fileDownloadStore.downloadFile(fileUrl, fileName)
-
-            if (absolutePath) {
-              await revealItemInDir(absolutePath)
-            }
+            absolutePath = ''
+            window.$message.error('文件下载失败，请重试~')
           }
-        } catch (error) {
-          console.error('显示文件失败:', error)
         }
+
+        await revealItemInDir(absolutePath)
       }
     }
   ])
@@ -745,6 +904,7 @@ export const useChatMain = () => {
 
   /** 点击气泡消息时候监听用户是否按下ctrl+c来复制内容 */
   const handleMsgClick = (item: MessageType) => {
+    console.log('点击的消息：', item)
     activeBubble.value = item.message.id
     // 启用键盘监听
     const handleKeyPress = (e: KeyboardEvent) => {

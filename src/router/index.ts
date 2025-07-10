@@ -236,6 +236,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/announList/:roomId/:type',
     name: 'announList',
     component: () => import('@/views/announWindow/index.vue')
+  },
+  {
+    path: '/previewFile',
+    name: 'previewFile',
+    component: () => import('@/views/previewFileWindow/index.vue')
   }
 ]
 

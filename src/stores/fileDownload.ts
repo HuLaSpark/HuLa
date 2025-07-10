@@ -1,11 +1,12 @@
 import { defineStore } from 'pinia'
 import { StoresEnum } from '@/enums'
-import { getUserVideosDir } from '@/utils/PathUtil'
+import { getFilesMeta, getUserAbsoluteVideosDir, getUserVideosDir } from '@/utils/PathUtil'
 import { useUserStore } from '@/stores/user'
 import { useGlobalStore } from '@/stores/global'
 import { join, resourceDir } from '@tauri-apps/api/path'
 import { writeFile, exists } from '@tauri-apps/plugin-fs'
 import { BaseDirectory } from '@tauri-apps/plugin-fs'
+import { FilesMeta } from '@/services/types'
 
 export interface FileDownloadStatus {
   /** 文件是否已下载 */
@@ -57,6 +58,95 @@ export const useFileDownloadStore = defineStore(
       const currentStatus = getFileStatus(fileUrl)
       const newStatus = { ...currentStatus, ...status }
       downloadStatusMap.value.set(fileUrl, newStatus)
+    }
+
+    /**
+     * 刷新文件消息的下载状态
+     */
+    const refreshFileDownloadStatus = async (options: {
+      fileUrl: string
+      userId: string
+      roomId: string
+      fileName: string
+      exists?: boolean
+    }) => {
+      console.log('触发状态刷新：', options)
+      const fileStatus = downloadStatusMap.value.get(options.fileUrl)
+
+      const resetStatus = () => {
+        if (fileStatus) {
+          fileStatus.isDownloaded = false
+          fileStatus.absolutePath = ''
+          fileStatus.displayPath = ''
+          fileStatus.localPath = ''
+          fileStatus.nativePath = ''
+          fileStatus.progress = 0
+          fileStatus.status = 'pending'
+        }
+      }
+
+      const updateSuccess = (absolutePath: string) => {
+        if (fileStatus) {
+          const normalizedPath = absolutePath.replace(/\\/g, '/')
+          fileStatus.isDownloaded = true
+          fileStatus.nativePath = absolutePath
+          fileStatus.absolutePath = absolutePath
+          fileStatus.displayPath = normalizedPath
+        }
+      }
+
+      const resourceDirPath = await getUserAbsoluteVideosDir(options.userId, options.roomId)
+      const absolutePath = await join(resourceDirPath, options.fileName)
+
+      // 如果直接知道文件不存在，那就直接刷新，如果不知道则再做处理
+      if (Object.prototype.hasOwnProperty.call(options, 'exists')) {
+        if (options.exists && fileStatus?.isDownloaded) {
+          console.log('匹配1')
+          return
+        }
+
+        if (options.exists) {
+          console.log('匹配2')
+          updateSuccess(absolutePath)
+          return
+        }
+
+        if (options.exists && !fileStatus?.isDownloaded) {
+          console.log('匹配3')
+          updateSuccess(absolutePath)
+          return
+        }
+
+        if (!options.exists && fileStatus?.isDownloaded) {
+          console.log('匹配4')
+          resetStatus()
+          return
+        }
+
+        if (!options.exists && fileStatus?.isDownloaded) {
+          console.log('匹配5')
+          resetStatus()
+          return
+        }
+        console.log('匹配6')
+
+        resetStatus()
+        return
+      }
+
+      // 这是匹配未查找到exists字段的逻辑
+      const result = await getFilesMeta<FilesMeta>([absolutePath || options.fileUrl])
+      const fileMeta = result[0]
+
+      if (fileMeta.exists) {
+        // 把状态更新为完成
+        updateSuccess(absolutePath)
+        console.log('匹配7')
+      } else {
+        // 把状态更新为未完成
+        resetStatus()
+        console.log('匹配8')
+      }
     }
 
     /**
@@ -259,7 +349,8 @@ export const useFileDownloadStore = defineStore(
       getLocalPath,
       clearDownloadStatus,
       removeFileStatus,
-      batchCheckFileStatus
+      batchCheckFileStatus,
+      refreshFileDownloadStatus
     }
   },
   {
