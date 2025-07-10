@@ -241,6 +241,8 @@ export const useChatMain = () => {
       click: (item: RightMouseMessageItem) => {
         console.log('预览文件的参数：', item)
         nextTick(async () => {
+          const beforeOpenMessage = window.$message.loading('即将打开预览哦~')
+
           const path = 'previewFile'
           const LABEL = 'previewFile'
           // TODO 还有一种情况，就是用户下载完成后，又把文件删掉，然后又点击“预览”，然后这时消息会更新状态为“未下载”，这时用户又手动把它撤回删除，文件又恢复了，这时应该再点击“预览”时，恢复成为已下载才对
@@ -342,6 +344,7 @@ export const useChatMain = () => {
 
           // 最后创建用于预览文件的 WebView 窗口
           await createWebviewWindow('预览文件', path, 860, 720, '', true)
+          beforeOpenMessage.destroy()
         })
       }
     },
