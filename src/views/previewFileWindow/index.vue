@@ -4,10 +4,11 @@
     <n-scrollbar
       style="max-height: calc(100vh)"
       class="w-full box-border bg-[--center-bg-color] rounded-b-8px border-(solid 1px [--line-color])">
-      <div class="flex flex-col gap-4">
-        <VueOfficeDocx
+      <div class="flex flex-col gap-4 bg-#808080">
+        <!-- <VueOfficeDocx
           v-if="uiData.resourceFile.type?.ext === 'docx' || uiData.resourceFile.type?.ext === 'doc'"
-          :src="uiData.resourceFile.url" />
+          :src="uiData.resourceFile.url" /> -->
+        <VueOfficeDocx v-if="shouldRenderWord" :src="uiData.resourceFile.url" style="height: 100vh" />
         <VueOfficePdf
           v-else-if="uiData.resourceFile.type?.ext === 'pdf'"
           :src="uiData.resourceFile.url"
@@ -34,34 +35,21 @@ import VueOfficeDocx from '@vue-office/docx/lib/v3/vue-office-docx.mjs'
 import VueOfficePdf from '@vue-office/pdf/lib/v3/vue-office-pdf.mjs'
 import VueOfficeExcel from '@vue-office/excel/lib/v3/vue-office-excel.mjs'
 import VueOfficePptx from '@vue-office/pptx/lib/v3/vue-office-pptx.mjs'
-import { invoke } from '@tauri-apps/api/core'
-import { listen } from '@tauri-apps/api/event'
 import { FileTypeResult } from 'file-type'
 import '@vue-office/docx/lib/v3/index.css'
 import '@vue-office/excel/lib/v3/index.css'
 import { getFile, getUserAbsoluteVideosDir } from '@/utils/PathUtil'
 import { BaseDirectory, join } from '@tauri-apps/api/path'
 import { exists } from '@tauri-apps/plugin-fs'
+import { useWindow } from '@/hooks/useWindow'
 
 type ResourceFile = {
   fileName: string
-  url: string | File
+  absolutePath: string | undefined
+  nativePath: string | undefined
+  url: string
   type: FileTypeResult | undefined
-}
-
-const uiData = ref({
-  resourceFile: {} as ResourceFile,
-  userId: '',
-  roomId: ''
-})
-
-const video = ref<HTMLVideoElement>()
-let peerConnection = new RTCPeerConnection()
-
-peerConnection.ontrack = function (event) {
-  if (video.value) {
-    video.value.srcObject = event.streams[0]
-  }
+  localExists: boolean
 }
 
 type PayloadData = {
@@ -70,6 +58,20 @@ type PayloadData = {
   messageId: string
   resourceFile: ResourceFile
 }
+
+const uiData = ref({
+  resourceFile: {} as ResourceFile,
+  userId: '',
+  roomId: ''
+})
+
+const shouldRenderWord = computed(() => {
+  const ext = uiData.value.resourceFile.type?.ext?.toLowerCase()
+  if (ext) {
+    return ['docx', 'doc', 'cfb'].includes(ext)
+  }
+  return false
+})
 
 // PDF 渲染完成回调
 function onPdfRendered() {
@@ -81,20 +83,27 @@ function onPdfError(error: any) {
   console.error('❌ PDF 渲染失败', error)
 }
 
+const { getWindowPayload, getWindowPayloadListener } = useWindow()
+
 async function initResourceFile(payload: PayloadData) {
   const absolutePath = await join(
     await getUserAbsoluteVideosDir(payload.userId, payload.roomId),
     payload.resourceFile.fileName
   )
 
+  console.log('文件本地绝对路径：', absolutePath)
+
   const fileExists = await exists(absolutePath, { baseDir: BaseDirectory.AppCache })
 
   if (fileExists) {
     const result = await getFile(absolutePath)
     console.log('✅ 使用本地文件渲染：', absolutePath)
+
     uiData.value.resourceFile = {
       ...payload.resourceFile,
-      url: URL.createObjectURL(result.file), // 替换为 blob URL
+      absolutePath,
+      localExists: true,
+      url: URL.createObjectURL(result.file),
       type: {
         ext: result.meta.file_type,
         mime: result.meta.mime_type
@@ -102,49 +111,57 @@ async function initResourceFile(payload: PayloadData) {
     }
   } else {
     console.log('⚠️ 本地文件不存在，使用远程链接：', payload.resourceFile.url)
-    uiData.value.resourceFile = payload.resourceFile
+
+    uiData.value.resourceFile = {
+      ...payload.resourceFile,
+      absolutePath,
+      localExists: false
+    }
   }
 }
 
-let unListen: any = null
+let unListen: (() => void) | null = null
 
 onMounted(async () => {
   const webviewWindow = getCurrentWebviewWindow()
   const label = webviewWindow.label
-  const listenLabel = `${label}:update`
 
-  // 窗口完成加载后监听更新
-  unListen = await listen<PayloadData>(listenLabel, (event) => {
+  unListen = await getWindowPayloadListener(label, (event: any) => {
     const payload = event.payload
-    uiData.value.resourceFile = payload.resourceFile
+    console.log('payload更新：', payload)
+
     uiData.value.userId = payload.userId
     uiData.value.roomId = payload.roomId
-    console.log('payload更新：', payload)
+
+    initResourceFile(payload)
   })
 
   try {
-    // 窗口初次加载时调用
-    const result: PayloadData = await invoke('get_window_payload', {
-      label
-    })
+    const result = await getWindowPayload<PayloadData>(label)
 
-    uiData.value.resourceFile = result.resourceFile
+    console.log('获取的载荷信息：', result)
+
     uiData.value.userId = result.userId
     uiData.value.roomId = result.roomId
 
-    initResourceFile(result)
+    await initResourceFile(result)
 
     console.log('获取完成：', result)
   } catch (error) {
     console.log('获取错误：', error)
   }
 
-  await getCurrentWebviewWindow().show()
-  // await emit('SharedScreenWin')
+  await webviewWindow.show()
 })
 
 onBeforeUnmount(async () => {
-  await unListen()
+  if (uiData.value.resourceFile.localExists && uiData.value.resourceFile.url?.startsWith('blob:')) {
+    URL.revokeObjectURL(uiData.value.resourceFile.url)
+  }
+
+  if (unListen) {
+    await unListen()
+  }
 })
 </script>
 

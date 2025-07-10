@@ -191,7 +191,12 @@ pub async fn push_window_payload(
 
     if let Some(window) = option_window {
         // 找到了对应label的window说明已经打开了，就只需要提醒刷新就行了
-        let _ = window.emit(&format!("{}:update", label), payload_entity);
+        let res = window.emit(&format!("{}:update", label), payload_entity);
+
+        if let Err(e) = res {
+            return Err(e.to_string());
+        }
+
         return Ok(());
     } else {
         let result = _push_window_payload(label, payload_entity).await;
@@ -221,6 +226,7 @@ pub struct FileMeta {
     path: String,
     file_type: String,
     mime_type: String,
+    exists: bool,
 }
 
 type FilePath = String;
@@ -246,11 +252,22 @@ pub async fn get_files_meta(files_path: Vec<FilePath>) -> Result<Vec<FileMeta>, 
 
         let mime_type = from_path(&file_buf).first_or_octet_stream().to_string();
 
+        let is_url = path.starts_with("http://") || path.starts_with("https://");
+
+        let exists = {
+            if is_url {
+                false
+            } else {
+                file_buf.exists() // 如果不是url就找该文件是否存在
+            }
+        };
+
         files_meta.push(FileMeta {
             name,
             path: file_buf.to_string_lossy().to_string(),
             file_type,
             mime_type,
+            exists,
         });
     }
 
