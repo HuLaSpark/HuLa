@@ -150,11 +150,18 @@ pub async fn save_room_member_batch(
             .with_context(|| "删除房间成员失败")?;
     }
 
-    // 保存新的room_members数据
-    for member in room_members {
-        let mut member_active = member.into_active_model();
-        member_active.room_id = Set(Some(room_id.to_string()));
-        im_room_member::Entity::insert(member_active)
+    // 保存新的room_members数据（批量插入）
+    if !room_members.is_empty() {
+        let active_models: Vec<im_room_member::ActiveModel> = room_members
+            .into_iter()
+            .map(|member| {
+                let mut member_active = member.into_active_model();
+                member_active.room_id = Set(Some(room_id.to_string()));
+                member_active
+            })
+            .collect();
+        
+        im_room_member::Entity::insert_many(active_models)
             .exec(&txn)
             .await?;
     }

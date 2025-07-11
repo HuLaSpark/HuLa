@@ -116,8 +116,8 @@ impl<'a> RequestBuilderWrapper<'a> {
             .text()
             .await
             .with_context(|| format!("[{}:{}] 读取响应体失败", file!(), line!()))?;
-        
-        println!("响应：{:#?}", response_text);
+
+        // println!("响应：{:#?}", response_text);
 
         // 解析为目标类型
         serde_json::from_str(&response_text)

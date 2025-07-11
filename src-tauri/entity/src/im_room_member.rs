@@ -19,6 +19,7 @@ pub struct Model {
     pub create_time: Option<i64>,
     pub name: String,
     pub avatar: Option<String>,
+    pub user_state_id: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

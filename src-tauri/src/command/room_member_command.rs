@@ -7,8 +7,12 @@ use anyhow::{Context};
 use entity::{im_room, im_room_member};
 
 use std::ops::Deref;
+use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 use tauri::State;
+use tokio::sync::Mutex;
+use sea_orm::DatabaseConnection;
+use crate::im_reqest_client::ImRequestClient;
 use crate::repository::im_room_member_repository;
 
 
@@ -27,7 +31,7 @@ pub async fn update_my_room_info(my_room_info: MyRoomInfoReq, state: State<'_, A
             .await
             .post("/room/updateMyRoomInfo")
             .json(&my_room_info)
-            .send_json::<crate::pojo::common::ApiResult<bool>>()
+            .send_json::<ApiResult<bool>>()
             .await
             .with_context(|| format!("[{}:{}] 调用后端接口更新房间信息失败", file!(), line!()))?;
 
@@ -56,46 +60,36 @@ pub async fn update_my_room_info(my_room_info: MyRoomInfoReq, state: State<'_, A
 #[tauri::command]
 pub async fn get_room_members(room_id: String, state: State<'_, AppData>) -> Result<Vec<im_room_member::Model>, String> {
     let result: Result<Vec<im_room_member::Model>, CommonError> = async {
-        // 先从本地数据库查询
-        let mut local_members = get_room_members_by_room_id(&room_id, state.db_conn.deref())
-            .await
-            .with_context(|| format!("[{}:{}] 本地数据库查询房间成员失败", file!(), line!()))?;
+        // 检查缓存中是否存在该room_id
+        let cache_key = format!("room_members_{}", room_id);
+        let is_cached = state.cache.get(&cache_key).await.is_some();
         
-        // 对查询结果进行排序：在线用户优先(active_status=1)，相同状态下按last_opt_time降序
-        sort_room_members(&mut local_members);
-        
-        // 如果本地数据为空，则从后端获取
-        if local_members.is_empty() {
-            // 从后端API获取数据
-            let resp = state
-                .request_client
-                .lock()
-                .await
-                .get(&format!("/room/group/listMember"))
-                .query(&[("roomId", &room_id)])
-                .send_json::<ApiResult<Vec<im_room_member::Model>>>()
-                .await?;
-            
-            // 保存到本地数据库
-            if let Some(mut data) = resp.data {
-                if !data.is_empty() {
-                    let room_id_i64 = room_id.parse::<i64>().unwrap_or(0);
-                    save_room_member_batch(state.db_conn.deref(), data.clone(), room_id_i64)
-                        .await
-                        .with_context(|| {
-                            format!("[{}:{}] 保存房间成员数据到本地数据库失败", file!(), line!())
-                        })?;
-                }
-                
-                // 对从后端获取的数据也进行排序
-                sort_room_members(&mut data);
-                
-                return Ok(data);
-            } else {
-                return Err(CommonError::UnexpectedError(anyhow::anyhow!("后端返回数据为空")));
-            }
+        if !is_cached {
+            let mut data = fetch_and_update_room_members(room_id.clone(), state.db_conn.clone(), state.request_client.clone()).await?;
+            // 设置缓存标记
+            state.cache.insert(cache_key, "cached".to_string()).await;
+            // 对从后端获取的数据进行排序
+            sort_room_members(&mut data);
+            return Ok(data);
         } else {
-            // 返回本地数据
+            // 有缓存：从本地数据库获取数据
+            let mut local_members = get_room_members_by_room_id(&room_id, state.db_conn.deref())
+                .await
+                .with_context(|| format!("[{}:{}] 本地数据库查询房间成员失败", file!(), line!()))?;
+            
+            // 对查询结果进行排序
+            sort_room_members(&mut local_members);
+            
+            // 异步调用后端接口更新本地数据库
+            let db_conn = state.db_conn.clone();
+            let request_client = state.request_client.clone();
+            let room_id_clone = room_id.clone();
+            tokio::spawn(async move {
+                if let Err(e) = fetch_and_update_room_members(room_id_clone, db_conn, request_client).await {
+                    eprintln!("异步更新房间成员数据失败: {:?}", e);
+                }
+            });
+            
             Ok(local_members)
         }
     }.await;
@@ -192,4 +186,35 @@ fn sort_room_members(members: &mut Vec<im_room_member::Model>) {
             other => other,
         }
     });
+}
+
+/// 异步更新房间成员数据
+async fn fetch_and_update_room_members(
+    room_id: String, 
+    db_conn: Arc<DatabaseConnection>, 
+    request_client: Arc<Mutex<ImRequestClient>>
+) -> Result<Vec<im_room_member::Model>, CommonError> {
+    // 从后端API获取最新数据
+    let resp = request_client
+        .lock()
+        .await
+        .get("/room/group/listMember")
+        .query(&[("roomId", &room_id)])
+        .send_json::<ApiResult<Vec<im_room_member::Model>>>()
+        .await?;
+    
+    // 更新本地数据库
+    if let Some(data) = resp.data {
+        if !data.is_empty() {
+            let room_id_i64 = room_id.parse::<i64>().unwrap_or(0);
+            save_room_member_batch(db_conn.deref(), data.clone(), room_id_i64)
+                .await
+                .with_context(|| {
+                    format!("[{}:{}] 异步更新房间成员数据到本地数据库失败", file!(), line!())
+                })?;
+            return Ok(data.clone());
+        }
+    }
+
+    Ok(Vec::new())
 }

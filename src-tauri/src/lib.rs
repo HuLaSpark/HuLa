@@ -9,6 +9,9 @@ use common_cmd::{audio, default_window_icon, screenshot, set_badge_count, set_he
 #[cfg(desktop)]
 use desktops::video_thumbnail::get_video_thumbnail;
 use std::sync::Arc;
+use std::time::Duration;
+use moka::future::Cache;
+
 #[cfg(desktop)]
 mod proxy;
 #[cfg(desktop)]
@@ -62,6 +65,7 @@ struct AppData {
     db_conn: Arc<DatabaseConnection>,
     request_client: Arc<Mutex<ImRequestClient>>,
     user_info: Arc<Mutex<UserInfo>>,
+    cache: Cache<String, String>,
 }
 
 use tauri::Listener;
@@ -82,6 +86,13 @@ async fn setup_desktop() -> Result<(), CommonError> {
         uid: Default::default(),
     };
 
+    // 创建一个缓存实例
+    let cache: Cache<String, String> = Cache::builder()
+        // Time to idle (TTI):  30 minutes
+        .time_to_idle(Duration::from_secs( 30 * 60))
+        // Create the cache.
+        .build();
+
     tauri::Builder::default()
         .init_plugin()
         .init_webwindow_event()
@@ -89,6 +100,8 @@ async fn setup_desktop() -> Result<(), CommonError> {
         .setup(move |app| {
             let client = Arc::new(Mutex::new(im_request_client));
             let user_info = Arc::new(Mutex::new(user_info));
+            
+            // 监听前端事件，保存登录用户信息
             app.listen("set_user_info", {
                 let client = client.clone();
                 let user_info = user_info.clone();
@@ -108,7 +121,7 @@ async fn setup_desktop() -> Result<(), CommonError> {
                 }
             });
 
-            app.manage(AppData { db_conn: db.clone(), request_client: client.clone(), user_info: user_info.clone() });
+            app.manage(AppData { db_conn: db.clone(), request_client: client.clone(), user_info: user_info.clone(), cache });
             tray::create_tray(app.handle())?;
             Ok(())
         })
