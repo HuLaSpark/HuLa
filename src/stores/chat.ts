@@ -189,7 +189,6 @@ export const useChatStore = defineStore(
         // 群组的时候去请求
         if (currentRoomType.value === RoomTypeEnum.GROUP) {
           // 放到和公告一起加载
-          // groupStore.getGroupUserList(true)
           cachedStore.getGroupAtUserBaseInfo()
         }
 
@@ -315,7 +314,7 @@ export const useChatStore = defineStore(
         // 用会话列表第一个去请求消息列表
         await getMsgList()
         // 请求第一个群成员列表
-        currentRoomType.value === RoomTypeEnum.GROUP && (await groupStore.getGroupUserList(true))
+        currentRoomType.value === RoomTypeEnum.GROUP && (await groupStore.getGroupUserList())
         // 初始化所有用户基本信息
         userStore.isSign && (await cachedStore.initAllUserBaseInfo())
         // 联系人列表

@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 use tauri::State;
 use crate::repository::im_room_member_repository;
 
+
 #[tauri::command]
 pub async fn update_my_room_info(my_room_info: MyRoomInfoReq, state: State<'_, AppData>) -> Result<(), String> {
     let result: Result<(), CommonError> = async {
@@ -56,9 +57,12 @@ pub async fn update_my_room_info(my_room_info: MyRoomInfoReq, state: State<'_, A
 pub async fn get_room_members(room_id: String, state: State<'_, AppData>) -> Result<Vec<im_room_member::Model>, String> {
     let result: Result<Vec<im_room_member::Model>, CommonError> = async {
         // 先从本地数据库查询
-        let local_members = get_room_members_by_room_id(&room_id, state.db_conn.deref())
+        let mut local_members = get_room_members_by_room_id(&room_id, state.db_conn.deref())
             .await
             .with_context(|| format!("[{}:{}] 本地数据库查询房间成员失败", file!(), line!()))?;
+        
+        // 对查询结果进行排序：在线用户优先(active_status=1)，相同状态下按last_opt_time降序
+        sort_room_members(&mut local_members);
         
         // 如果本地数据为空，则从后端获取
         if local_members.is_empty() {
@@ -73,7 +77,7 @@ pub async fn get_room_members(room_id: String, state: State<'_, AppData>) -> Res
                 .await?;
             
             // 保存到本地数据库
-            if let Some(data) = resp.data {
+            if let Some(mut data) = resp.data {
                 if !data.is_empty() {
                     let room_id_i64 = room_id.parse::<i64>().unwrap_or(0);
                     save_room_member_batch(state.db_conn.deref(), data.clone(), room_id_i64)
@@ -82,6 +86,10 @@ pub async fn get_room_members(room_id: String, state: State<'_, AppData>) -> Res
                             format!("[{}:{}] 保存房间成员数据到本地数据库失败", file!(), line!())
                         })?;
                 }
+                
+                // 对从后端获取的数据也进行排序
+                sort_room_members(&mut data);
+                
                 return Ok(data);
             } else {
                 return Err(CommonError::UnexpectedError(anyhow::anyhow!("后端返回数据为空")));
@@ -167,4 +175,21 @@ pub async fn page_room(
             Err(e.to_string())
         }
     }
+}
+
+/// 对房间成员列表进行排序：在线用户优先(active_status=1)，相同状态下按last_opt_time降序
+fn sort_room_members(members: &mut Vec<im_room_member::Model>) {
+    members.sort_by(|a, b| {
+        let a_status = a.active_status.unwrap_or(0);
+        let b_status = b.active_status.unwrap_or(0);
+        
+        // 先按active_status升序排序（在线用户优先）
+        match a_status.cmp(&b_status) {
+            std::cmp::Ordering::Equal => {
+                // active_status相同时，按last_opt_time降序排序
+                b.last_opt_time.cmp(&a.last_opt_time)
+            }
+            other => other,
+        }
+    });
 }

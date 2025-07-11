@@ -6,6 +6,7 @@ import { isDiffNow10Min } from '@/utils/ComputedTime.ts'
 import { useDebounceFn } from '@vueuse/core'
 import { StoresEnum, TauriCommand } from '@/enums'
 import { invoke } from '@tauri-apps/api/core'
+import { useGroupStore } from './group'
 
 // 定义基础用户信息类型，只包含uid、头像和名称
 export type BaseUserItem = Pick<CacheUserItem, 'uid' | 'avatar' | 'name' | 'account'>
@@ -169,14 +170,18 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
     }
   }
 
+  const groupStore = useGroupStore()
+
   /** 获取群组内可@的用户基本信息
    * 如果是大厅（roomId=1）则不执行
    */
   const getGroupAtUserBaseInfo = async () => {
-    if (currentRoomId.value === '1' || currentRoomId.value == null) return
+    // if (currentRoomId.value === '1' || currentRoomId.value == null) return
     const data: any = await invoke(TauriCommand.GET_ROOM_MEMBERS, {
       roomId: currentRoomId.value.toString()
     })
+    // 更新 groupStore 中的 userList
+    groupStore.userList = data
     currentAtUsersList.value = data
   }
 

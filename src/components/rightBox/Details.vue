@@ -303,13 +303,8 @@ const handleCopy = (account: string) => {
 // 获取群组详情和成员信息
 const fetchGroupMembers = async (roomId: string) => {
   try {
-    const params = {
-      roomId: roomId,
-      current: 1,
-      size: 10 // 获取前10个成员
-    }
-    const response: any = await invoke(TauriCommand.CURSOR_PAGE_ROOM_MEMBERS, {
-      param: params
+    const response: any = await invoke(TauriCommand.GET_ROOM_MEMBERS, {
+      roomId: roomId
     })
     if (response && response.list) {
       // 使用每个成员的uid获取详细信息

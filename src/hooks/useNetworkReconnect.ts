@@ -148,7 +148,7 @@ export const useNetworkReconnect = () => {
     }
     // 如果当前是群聊，刷新群组信息
     if (globalStore.currentSession?.type === 2) {
-      await groupStore.getGroupUserList(true)
+      await groupStore.getGroupUserList()
       await groupStore.getCountStatistic()
       await cachedStore.getGroupAtUserBaseInfo()
     }
