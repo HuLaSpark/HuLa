@@ -1,5 +1,5 @@
 <template>
-  <div class="size-full bg-#222 relative flex flex-col select-none">
+  <div class="size-full bg-#000 relative flex flex-col select-none">
     <!-- 顶部操作栏 -->
     <ActionBar class="bg-#000 z-9999" :shrink="false" :current-label="currentLabel" />
 
@@ -11,7 +11,7 @@
           ref="videoRef"
           :src="currentVideo"
           controls
-          class="w-full h-full object-cover"
+          :class="videoClass"
           @loadeddata="onVideoLoaded"
           @ended="onVideoEnded"
           @pause="onVideoPaused"
@@ -111,6 +111,8 @@ const isMuted = ref(false)
 const videoRef = ref<HTMLVideoElement>()
 const showTip = ref(false)
 const tipText = ref('')
+const videoWidth = ref(0)
+const videoHeight = ref(0)
 
 // 当前显示的视频URL
 const currentVideo = computed(() => {
@@ -126,6 +128,14 @@ const currentVideo = computed(() => {
     return convertFileSrc(videoUrl)
   }
   return videoUrl
+})
+
+// 视频样式类
+const videoClass = computed(() => {
+  if (videoWidth.value > 0 && videoWidth.value < 800) {
+    return 'w-full h-full object-contain aspect-video'
+  }
+  return 'w-full h-full object-cover aspect-video'
 })
 
 // 是否可以切换到上一个视频
@@ -218,6 +228,10 @@ const muteUnmute = () => {
 // 自动播放视频
 const onVideoLoaded = () => {
   if (videoRef.value) {
+    // 获取视频原始尺寸
+    videoWidth.value = videoRef.value.videoWidth
+    videoHeight.value = videoRef.value.videoHeight
+
     videoRef.value
       .play()
       .then(() => {

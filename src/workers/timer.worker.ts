@@ -1,21 +1,24 @@
-// 修改类型定义以支持字符串和数字类型的key
+/** 修改类型定义以支持字符串和数字类型的key */
 type TimerId = number | string
 type TimerInfo = {
   timerId: NodeJS.Timeout
   debugId: NodeJS.Timeout | null
 }
 
-// 存储定时器ID和调试定时器ID
+/** 存储定时器ID和调试定时器ID */
 const timerIds = new Map<TimerId, TimerInfo>()
 
-// 添加一个计数器来跟踪活动的定时器数量
+/** 添加一个计数器来跟踪活动的定时器数量 */
 let activeTimers = 0
 
-// 周期性心跳定时器ID
+/** 周期性心跳定时器ID */
 let periodicHeartbeatId: NodeJS.Timeout | null = null
 
-// 日志控制开关，默认不打印日志
-let enableLogging = false
+/** 日志控制开关，默认不打印日志 */
+let ENABLE_LOGGING = false
+
+/** 间隔多少时间去执行 */
+const DEBUG_INTERVAL = 1000
 
 // 检查并通知所有定时器是否完成
 const checkAllTimersCompleted = () => {
@@ -25,19 +28,17 @@ const checkAllTimersCompleted = () => {
 }
 
 // 优化的调试信息打印函数
-const logDebugInfo = (msgId: number, remainingTime: number) => {
-  // 只有开启日志功能时才打印，且只在关键时间点打印
-  if (enableLogging && (remainingTime <= 5000 || remainingTime % 10000 < 1000)) {
+const logDebugInfo = (msgId: TimerId, remainingTime: number) => {
+  self.postMessage({
+    type: 'debug',
+    msgId,
+    remainingTime,
+    timestamp: Date.now()
+  })
+
+  // 日志打印：只有开启日志功能时才打印，且只在关键时间点打印
+  if (ENABLE_LOGGING && (remainingTime <= 5000 || remainingTime % 10000 < 1000)) {
     console.log(`[Worker Debug] 消息ID: ${msgId}, 剩余时间: ${(remainingTime / 1000).toFixed(1)}秒`)
-    // 减少向主线程发送调试消息的频率
-    if (remainingTime <= 3000) {
-      self.postMessage({
-        type: 'debug',
-        msgId,
-        remainingTime,
-        timestamp: Date.now()
-      })
-    }
   }
 }
 
@@ -47,7 +48,7 @@ const logDebugInfo = (msgId: number, remainingTime: number) => {
  * @example timerWorker.postMessage({ type: 'setLogging', logging: true })
  */
 const safeLog = (message: string, ...args: any[]) => {
-  if (enableLogging) {
+  if (ENABLE_LOGGING) {
     console.log(message, ...args)
   }
 }
@@ -57,8 +58,8 @@ self.onmessage = (e) => {
 
   // 如果收到日志控制参数，则更新日志缀状态
   if (type === 'setLogging') {
-    enableLogging = !!logging
-    safeLog(`[Worker] 日志状态已${enableLogging ? '开启' : '关闭'}`)
+    ENABLE_LOGGING = !!logging
+    safeLog(`[Worker] 日志状态已${ENABLE_LOGGING ? '开启' : '关闭'}`)
     return
   }
 
@@ -106,8 +107,6 @@ self.onmessage = (e) => {
       // 立即打印一次初始状态
       logDebugInfo(msgId, duration)
 
-      // 优化的调试间隔器，减少打印频率
-      const debugInterval = duration > 10000 ? 5000 : 1000 // 长任务每5秒打印，短任务每秒打印
       const debugId = setInterval(() => {
         const elapsed = Date.now() - startTime
         const remaining = duration - elapsed
@@ -116,7 +115,7 @@ self.onmessage = (e) => {
         } else {
           clearInterval(debugId)
         }
-      }, debugInterval)
+      }, DEBUG_INTERVAL)
 
       const timerId = setTimeout(() => {
         clearInterval(debugId)

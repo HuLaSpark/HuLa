@@ -168,9 +168,10 @@
         <n-button
           :loading="loading"
           :disabled="btnEnable"
-          class="w-full mt-8px mb-50px"
-          @click="handleStepAction"
-          color="#13987f">
+          tertiary
+          style="color: #fff"
+          class="w-full mt-8px mb-50px gradient-button"
+          @click="handleStepAction">
           {{ btnText }}
         </n-button>
       </n-flex>
@@ -226,9 +227,10 @@
             <n-button
               :loading="registerLoading"
               :disabled="!isEmailCodeComplete"
-              class="w-full"
-              @click="register"
-              color="#13987f">
+              tertiary
+              style="color: #fff"
+              class="w-full gradient-button"
+              @click="register">
               注册
             </n-button>
           </n-flex>

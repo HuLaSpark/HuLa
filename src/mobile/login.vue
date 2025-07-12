@@ -112,7 +112,7 @@
         :disabled="loginDisabled"
         tertiary
         style="color: #fff"
-        class="login-button"
+        class="w-full mt-8px mb-50px gradient-button"
         @click="normalLogin">
         <span>{{ loginText }}</span>
       </n-button>
@@ -207,7 +207,7 @@
         :disabled="!isStep1Valid"
         tertiary
         style="color: #fff"
-        class="login-button"
+        class="w-full mt-8px mb-50px gradient-button"
         @click="handleRegisterStep">
         <span>下一步</span>
       </n-button>
@@ -261,7 +261,7 @@
         :disabled="!isStep2Valid"
         tertiary
         style="color: #fff"
-        class="login-button"
+        class="w-full mt-8px mb-50px gradient-button"
         @click="handleRegisterStep">
         <span>发送验证码</span>
       </n-button>
@@ -292,7 +292,7 @@
               :disabled="!isEmailCodeComplete"
               tertiary
               style="color: #fff; margin-bottom: 0"
-              class="login-button"
+              class="w-full mt-8px mb-50px gradient-button"
               @click="handleRegisterComplete">
               注册
             </n-button>
@@ -664,16 +664,5 @@ onUnmounted(() => {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-}
-.login-button {
-  @apply w-full mt-8px mb-50px text-#fff border-none;
-  background: linear-gradient(to left, #7db1ac, #acd7da);
-  box-shadow:
-    inset 0px 3px 16px 0px rgba(255, 255, 255, 0.5),
-    inset 0px -2px 27px 0px rgba(105, 187, 157, 0.76),
-    inset 0px 2px 6px 0px rgba(254, 254, 254, 0.5);
-  &:span {
-    color: #fff;
-  }
 }
 </style>

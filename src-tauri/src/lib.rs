@@ -8,8 +8,6 @@ use common_cmd::{audio, default_window_icon, screenshot, set_badge_count, set_he
 #[cfg(desktop)]
 use desktops::video_thumbnail::get_video_thumbnail;
 #[cfg(desktop)]
-mod proxy;
-#[cfg(desktop)]
 use desktops::common_cmd;
 #[cfg(desktop)]
 use desktops::init;
@@ -17,10 +15,6 @@ use desktops::init;
 use desktops::tray;
 #[cfg(desktop)]
 use init::CustomInit;
-#[cfg(desktop)]
-use proxy::test_api_proxy;
-#[cfg(desktop)]
-use proxy::test_ws_proxy;
 
 // 移动端依赖
 #[cfg(mobile)]
@@ -57,8 +51,6 @@ fn setup_desktop() {
             audio,
             set_height,
             set_badge_count,
-            test_api_proxy,
-            test_ws_proxy,
             get_video_thumbnail,
             #[cfg(target_os = "macos")]
             hide_title_bar_buttons
