@@ -5,17 +5,17 @@ mod desktops;
 use common_cmd::hide_title_bar_buttons;
 #[cfg(desktop)]
 use common_cmd::{
-    audio, default_window_icon, get_files_meta, get_window_payload, push_window_payload,
-    screenshot, set_badge_count, set_height,
+    audio, default_window_icon, get_directory_size, get_directory_usage_info, get_files_meta,
+    get_window_payload, push_window_payload, screenshot, set_badge_count, set_height
 };
-#[cfg(desktop)]
-use desktops::video_thumbnail::get_video_thumbnail;
 #[cfg(desktop)]
 use desktops::common_cmd;
 #[cfg(desktop)]
 use desktops::init;
 #[cfg(desktop)]
 use desktops::tray;
+#[cfg(desktop)]
+use desktops::video_thumbnail::get_video_thumbnail;
 #[cfg(desktop)]
 use init::CustomInit;
 
@@ -59,7 +59,9 @@ fn setup_desktop() {
             hide_title_bar_buttons,
             push_window_payload,
             get_window_payload,
-            get_files_meta
+            get_files_meta,
+            get_directory_size,
+            get_directory_usage_info
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -39,18 +39,19 @@
               <div class="menu-item-disabled" v-if="item.disabled" @click.prevent="$event.preventDefault()">
                 <div class="menu-item-content">
                   <svg><use :href="`#${getMenuItemProp(item, 'icon')}`"></use></svg>
-                  {{ getMenuItemProp(item, 'label') }}
+                  <p class="h-24px">{{ getMenuItemProp(item, 'label') }}</p>
                 </div>
               </div>
               <div
                 class="menu-item"
+                :class="{ 'menu-item-danger': isDangerousItem(item) }"
                 v-else
                 @click="handleClick(item)"
                 @mouseenter="handleMouseEnter(item, index)"
                 @mouseleave="handleMouseLeave">
                 <div class="menu-item-content">
                   <svg><use :href="`#${getMenuItemProp(item, 'icon')}`"></use></svg>
-                  {{ getMenuItemProp(item, 'label') }}
+                  <p class="h-24px">{{ getMenuItemProp(item, 'label') }}</p>
                   <svg v-if="shouldShowArrow(item)" class="arrow-icon">
                     <use href="#right"></use>
                   </svg>
@@ -61,9 +62,14 @@
             <div v-if="visibleSpecialMenu.length > 0" class="flex-col-y-center gap-6px">
               <!-- 分割线 -->
               <div class="h-1px bg-[--line-color] m-[2px_8px]"></div>
-              <div @click="handleClick(item)" class="menu-item" v-for="item in visibleSpecialMenu" :key="item.label">
+              <div
+                @click="handleClick(item)"
+                class="menu-item"
+                :class="{ 'menu-item-danger': isDangerousItem(item) }"
+                v-for="item in visibleSpecialMenu"
+                :key="item.label">
                 <svg><use :href="`#${getMenuItemProp(item, 'icon')}`"></use></svg>
-                {{ getMenuItemProp(item, 'label') }}
+                <p class="h-24px">{{ getMenuItemProp(item, 'label') }}</p>
               </div>
             </div>
           </div>
@@ -71,12 +77,16 @@
         <!-- 二级菜单 -->
         <div v-if="showSubmenu && activeSubmenu" class="context-submenu" :style="submenuPosition">
           <div class="menu-list">
-            <div v-for="(subItem, subIndex) in activeSubmenu" :key="subIndex" class="menu-item">
+            <div
+              v-for="(subItem, subIndex) in activeSubmenu"
+              :key="subIndex"
+              class="menu-item"
+              :class="{ 'menu-item-danger': isDangerousItem(subItem) }">
               <div class="menu-item-content" @click="handleSubItemClick(subItem)">
                 <svg class="check-icon">
                   <use :href="`#${getMenuItemProp(subItem, 'icon')}`"></use>
                 </svg>
-                {{ getMenuItemProp(subItem, 'label') }}
+                <p class="h-24px">{{ getMenuItemProp(subItem, 'label') }}</p>
               </div>
             </div>
           </div>
@@ -289,6 +299,15 @@ const getMenuItemProp = (item: any, prop: 'icon' | 'label') => {
   return typeof item[prop] === 'function' ? item[prop](props.content) : item[prop]
 }
 
+/**
+ * 判断菜单项是否需要危险样式
+ * @param item 菜单项
+ */
+const isDangerousItem = (item: any) => {
+  const icon = getMenuItemProp(item, 'icon')
+  return ['logout', 'forbid'].includes(icon)
+}
+
 // 修改 handleMouseEnter 函数
 const handleMouseEnter = (item: any, index: number) => {
   // 检查是否有子菜单（包括函数形式的 children）
@@ -460,6 +479,12 @@ const shouldShowArrow = (item: any) => {
         color: var(--disabled-color);
       }
     }
+    .menu-item-danger {
+      color: #d03553;
+      svg {
+        color: #d03553;
+      }
+    }
   }
 }
 
@@ -471,6 +496,12 @@ const shouldShowArrow = (item: any) => {
   .menu-list {
     @include menu-list();
     min-width: 120px;
+    .menu-item-danger {
+      color: #d03553;
+      svg {
+        color: #d03553;
+      }
+    }
   }
 }
 
