@@ -246,7 +246,7 @@
                   <div
                     v-if="isGroup && groupStore.adminUidList.includes(item.fromUser.uid)"
                     class="flex px-4px py-3px rounded-4px bg-#1a7d6b30 size-fit select-none">
-                    <span class="text-(9px #1a7d6b)">管理员</span>
+                    <span class="text-(9px #008080)">管理员</span>
                   </div>
                   <!-- 信息时间(群聊) -->
                   <Transition name="fade-group">
