@@ -1,0 +1,5 @@
+onlyBuiltDependencies:
+  - '@vue-office/docx'
+  - '@vue-office/excel'
+  - '@vue-office/pdf'
+  - '@vue-office/pptx'

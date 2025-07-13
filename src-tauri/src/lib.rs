@@ -4,7 +4,10 @@ mod desktops;
 #[cfg(target_os = "macos")]
 use common_cmd::hide_title_bar_buttons;
 #[cfg(desktop)]
-use common_cmd::{audio, default_window_icon, screenshot, set_badge_count, set_height};
+use common_cmd::{
+    audio, default_window_icon, get_files_meta, get_window_payload, push_window_payload,
+    screenshot, set_badge_count, set_height,
+};
 #[cfg(desktop)]
 use desktops::video_thumbnail::get_video_thumbnail;
 #[cfg(desktop)]
@@ -53,7 +56,10 @@ fn setup_desktop() {
             set_badge_count,
             get_video_thumbnail,
             #[cfg(target_os = "macos")]
-            hide_title_bar_buttons
+            hide_title_bar_buttons,
+            push_window_payload,
+            get_window_payload,
+            get_files_meta
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

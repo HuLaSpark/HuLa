@@ -1,18 +1,25 @@
 #![allow(unexpected_cfgs)]
-use base64::{Engine as _, engine::general_purpose};
+use base64::{engine::general_purpose, Engine as _};
 use lazy_static::lazy_static;
+use mime_guess::from_path;
 use screenshots::Screen;
 use serde::Serialize;
 use std::cmp;
+use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::Duration;
 use tauri::path::BaseDirectory;
-use tauri::{AppHandle, LogicalSize, Manager, ResourceId, Runtime, Webview};
+use tauri::{AppHandle, Emitter, LogicalSize, Manager, ResourceId, Runtime, Webview};
 
 #[cfg(target_os = "macos")]
 #[allow(deprecated)]
 use cocoa::appkit::NSWindow;
+
+use crate::desktops::window_payload::{
+    get_window_payload as _get_window_payload, push_window_payload as _push_window_payload,
+    WindowPayload,
+};
 
 // 定义用户信息结构体
 #[derive(Debug, Clone, Serialize)]
@@ -40,7 +47,6 @@ impl UserInfo {
             is_sign,
         }
     }
-
 }
 
 // 全局变量
@@ -171,4 +177,99 @@ pub fn hide_title_bar_buttons(window_label: &str, handle: AppHandle) -> Result<(
         }
     }
     Ok(())
+}
+
+#[tauri::command]
+pub async fn push_window_payload(
+    label: String,
+    payload: serde_json::Value,
+    handle: AppHandle,
+) -> Result<(), String> {
+    let payload_entity = WindowPayload::new(payload);
+
+    let option_window = handle.get_webview_window(&label);
+
+    if let Some(window) = option_window {
+        // 找到了对应label的window说明已经打开了，就只需要提醒刷新就行了
+        let res = window.emit(&format!("{}:update", label), payload_entity);
+
+        if let Err(e) = res {
+            return Err(e.to_string());
+        }
+
+        return Ok(());
+    } else {
+        let result = _push_window_payload(label, payload_entity).await;
+
+        // 这里是存在值的时候才算失败，不存在值则是插入成功
+        if let Some(_) = result {
+            Err("none".to_string())
+        } else {
+            Ok(())
+        }
+    }
+}
+
+#[tauri::command]
+pub async fn get_window_payload(label: String) -> Result<serde_json::Value, ()> {
+    let result = _get_window_payload(label).await;
+    if let Some(payload_entity) = result {
+        Ok(payload_entity.payload)
+    } else {
+        Err(())
+    }
+}
+
+#[derive(Serialize)]
+pub struct FileMeta {
+    name: String,
+    path: String,
+    file_type: String,
+    mime_type: String,
+    exists: bool,
+}
+
+type FilePath = String;
+
+#[tauri::command]
+pub async fn get_files_meta(files_path: Vec<FilePath>) -> Result<Vec<FileMeta>, String> {
+    let mut files_meta: Vec<FileMeta> = Vec::new();
+
+    for path in files_path {
+        let file_buf = PathBuf::from(&path);
+
+        let name = file_buf
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("")
+            .to_string();
+
+        let file_type = file_buf
+            .extension()
+            .and_then(|e| e.to_str())
+            .unwrap_or("")
+            .to_string();
+
+        let mime_type = from_path(&file_buf).first_or_octet_stream().to_string();
+
+        let is_url = path.starts_with("http://") || path.starts_with("https://");
+
+        let exists = {
+            if is_url {
+                false
+            } else {
+                file_buf.exists() // 如果不是url就找该文件是否存在
+            }
+        };
+
+        files_meta.push(FileMeta {
+            name,
+            path: file_buf.to_string_lossy().to_string(),
+            file_type,
+            mime_type,
+            exists,
+        });
+    }
+
+    Ok(files_meta)
 }

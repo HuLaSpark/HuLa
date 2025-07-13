@@ -124,17 +124,20 @@
 
 <script setup lang="ts">
 import { open } from '@tauri-apps/plugin-dialog'
-import { readFile } from '@tauri-apps/plugin-fs'
+import { copyFile, readFile } from '@tauri-apps/plugin-fs'
 import { MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import { SelectionRange, useCommon } from '@/hooks/useCommon.ts'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { emitTo } from '@tauri-apps/api/event'
 import { useGlobalStore } from '@/stores/global.ts'
-import type { ContactItem, SessionItem } from '@/services/types'
+import type { ContactItem, FilesMeta, SessionItem } from '@/services/types'
 import { useContactStore } from '@/stores/contacts'
 import { useHistoryStore } from '@/stores/history'
 import { useMitt } from '@/hooks/useMitt'
 import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
+import { getFilesMeta, getUserAbsoluteVideosDir } from '@/utils/PathUtil'
+import { useUserStore } from '@/stores/user'
+import { join } from '@tauri-apps/api/path'
 
 const { id } = defineProps<{
   id: SessionItem['id']
@@ -150,6 +153,7 @@ const recentEmojis = computed(() => {
   return historyStore.emoji.slice(0, 15)
 })
 const { insertNodeAtRange, triggerInputEvent, processFiles, imgPaste } = useCommon()
+const userStore = useUserStore()?.userInfo
 
 /**
  * 检查字符串是否为URL
@@ -183,18 +187,46 @@ watch(emojiShow, (newValue) => {
 
 // 文件选择（不限制类型）
 const handleFileOpen = async () => {
+  // 获取文件路径列表
   const selected = await open({
     multiple: true
     // 不设置filters，允许选择所有文件类型
   })
 
   if (selected && Array.isArray(selected)) {
+    const filesMeta = await getFilesMeta<FilesMeta>(selected)
+
+    const copyUploadFile = async () => {
+      console.log('复制上传文件')
+      const currentChatRoomId = globalStore.currentSession.roomId // 这个id可能为群id可能为用户uid，所以不能只用用户uid
+      const currentUserUid = userStore.uid as string
+
+      const userResourceDir = await getUserAbsoluteVideosDir(currentUserUid, currentChatRoomId)
+
+      for (const filePathStr of selected) {
+        const fileMeta = filesMeta.find((f) => f.path === filePathStr)
+        if (fileMeta) {
+          copyFile(filePathStr, await join(userResourceDir, fileMeta.name))
+        }
+      }
+    }
+
+    await copyUploadFile()
+
+    // 获取选中文件的类型
+
     const files = await Promise.all(
       selected.map(async (path) => {
         const fileData = await readFile(path)
         const fileName = extractFileName(path)
         const blob = new Blob([fileData])
-        return new File([blob], fileName, { type: blob.type })
+
+        // 找到对应路径的文件，并且获取其类型
+        const fileMeta = filesMeta.find((f) => f.path === path)
+        const fileType = fileMeta?.mime_type || fileMeta?.file_type
+
+        // 最后手动传入blob中，因为blob无法自动判断文件类型
+        return new File([blob], fileName, { type: fileType })
       })
     )
     // 使用processFiles方法进行文件类型验证
