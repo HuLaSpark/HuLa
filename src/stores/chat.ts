@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { useRoute } from 'vue-router'
 import apis from '@/services/apis'
 import type { MarkItemType, MessageType, RevokedMsgType, SessionItem } from '@/services/types'
-import { MessageStatusEnum, MsgEnum, NotificationTypeEnum, RoomTypeEnum, StoresEnum } from '@/enums'
+import { MessageStatusEnum, MsgEnum, NotificationTypeEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
 import { computedTimeBlock } from '@/utils/ComputedTime.ts'
 import { useCachedStore } from '@/stores/cached.ts'
 import { useGlobalStore } from '@/stores/global.ts'
@@ -273,17 +273,11 @@ export const useChatStore = defineStore(
 
     // 获取会话列表
     const getSessionList = async (isFresh = false) => {
-      if (!isFresh && (sessionOptions.isLast || sessionOptions.isLoading)) return
+      if (sessionOptions.isLoading) return
       sessionOptions.isLoading = true
-      // TODO: 这里先请求100条会话列表，后续优化
-      const response = await apis
-        .getSessionList({
-          pageSize: sessionList.value.length > 100 ? sessionList.value.length : 100,
-          cursor: isFresh || !sessionOptions.cursor ? '' : sessionOptions.cursor
-        })
-        .catch(() => {
-          sessionOptions.isLoading = false
-        })
+      const response: any = await invoke(TauriCommand.LIST_CONTACTS).catch(() => {
+        sessionOptions.isLoading = false
+      })
       if (!response) return
       const data = response
       if (!data) {
@@ -294,10 +288,7 @@ export const useChatStore = defineStore(
       const currentSelectedRoomId = globalStore.currentSession.roomId
 
       sessionList.value = []
-      sessionList.value.push(...data.list)
-
-      sessionOptions.cursor = data.cursor
-      sessionOptions.isLast = data.isLast
+      sessionList.value.push(...data)
       sessionOptions.isLoading = false
 
       sortAndUniqueSessionList()

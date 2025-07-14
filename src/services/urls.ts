@@ -51,7 +51,7 @@ export default {
   modifyFriendRemark: `${prefix + URLEnum.USER}/friend/updateRemark`, // 修改好友备注
 
   // -------------- 聊天室相关 ---------------
-  getSessionList: `${prefix + URLEnum.CHAT}/contact/page`, // 会话列表
+  // getSessionList: `${prefix + URLEnum.CHAT}/contact/page`, // 会话列表
   getMsgReadList: `${prefix + URLEnum.CHAT}/msg/read/page`, // 消息的已读未读列表
   getMsgReadCount: `${prefix + URLEnum.CHAT}/msg/read`, // 消息已读未读数
   sessionDetail: `${prefix + URLEnum.CHAT}/contact/detail`, // 会话详情

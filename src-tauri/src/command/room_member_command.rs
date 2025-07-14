@@ -126,37 +126,32 @@ pub async fn page_room(
     state: State<'_, AppData>,
 ) -> Result<Page<im_room::Model>, String> {
     let result: Result<Page<im_room::Model>, CommonError> = async {
-        // 先从本地数据库查询
-        let local_result = get_room_page(page_param.clone(), state.db_conn.deref())
-            .await
-            .with_context(|| format!("[{}:{}] 本地数据库查询失败", file!(), line!()))?;
-
-        // 如果本地数据为空，则从后端获取
-        if local_result.records.is_empty() {
-            // 从后端API获取数据并保存到本地
-            let resp = state
-                .request_client
-                .lock()
-                .await
-                .get("/room/group/list")
-                .query(&page_param)
-                .send_json::<ApiResult<Page<im_room::Model>>>()
-                .await?;
-
-            // 保存到本地数据库
-            if let Some(data) = resp.data {
-                save_room_batch(state.db_conn.deref(), data.records.clone())
-                    .await
-                    .with_context(|| {
-                        format!("[{}:{}] 保存房间成员数据到本地数据库失败", file!(), line!())
-                    })?;
-
-                return Ok(data);
-            } else {
-                return Err(CommonError::UnexpectedError(anyhow::anyhow!("<UNK>")));
-            }
+        // 检查缓存中是否存在房间列表数据
+        let cache_key = format!("room_list_page_{}_{}", page_param.current, page_param.size);
+        let is_cached = state.cache.get(&cache_key).await.is_some();
+        
+        if !is_cached {
+            // 第一次查询：先调用后端接口，再更新本地数据库
+            let data = fetch_and_update_rooms(page_param.clone(), state.db_conn.clone(), state.request_client.clone()).await?;
+            // 设置缓存标记
+            state.cache.insert(cache_key, "cached".to_string()).await;
+            return Ok(data);
         } else {
-            // 返回本地数据
+            // 有缓存：从本地数据库获取数据
+            let local_result = get_room_page(page_param.clone(), state.db_conn.deref())
+                .await
+                .with_context(|| format!("[{}:{}] 本地数据库查询失败", file!(), line!()))?;
+            
+            // 异步调用后端接口更新本地数据库
+            let db_conn = state.db_conn.clone();
+            let request_client = state.request_client.clone();
+            let page_param_clone = page_param.clone();
+            tokio::spawn(async move {
+                if let Err(e) = fetch_and_update_rooms(page_param_clone, db_conn, request_client).await {
+                    eprintln!("异步更新房间数据失败: {:?}", e);
+                }
+            });
+            
             Ok(local_result)
         }
     }
@@ -217,4 +212,33 @@ async fn fetch_and_update_room_members(
     }
 
     Ok(Vec::new())
+}
+
+/// 获取并更新房间数据
+async fn fetch_and_update_rooms(
+    page_param: PageParam,
+    db_conn: Arc<DatabaseConnection>,
+    request_client: Arc<Mutex<ImRequestClient>>,
+) -> Result<Page<im_room::Model>, CommonError> {
+    // 从后端API获取数据
+    let resp = request_client
+        .lock()
+        .await
+        .get("/room/group/list")
+        .query(&page_param)
+        .send_json::<ApiResult<Page<im_room::Model>>>()
+        .await?;
+
+    if let Some(data) = resp.data {
+        // 保存到本地数据库
+        save_room_batch(db_conn.deref(), data.records.clone())
+            .await
+            .with_context(|| {
+                format!("[{}:{}] 保存房间数据到本地数据库失败", file!(), line!())
+            })?;
+        
+        Ok(data)
+    } else {
+        Err(CommonError::UnexpectedError(anyhow::anyhow!("获取房间数据失败")))
+    }
 }
