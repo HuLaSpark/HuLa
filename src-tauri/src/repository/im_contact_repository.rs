@@ -1,12 +1,16 @@
 use crate::error::CommonError;
 use entity::im_contact;
-use sea_orm::{DatabaseConnection, EntityTrait, TransactionTrait, IntoActiveModel};
+use sea_orm::{DatabaseConnection, EntityTrait, TransactionTrait, IntoActiveModel, QueryFilter, ColumnTrait};
 use anyhow::Context;
 
 pub async fn list_contact(
     db: &DatabaseConnection,
+    login_uid: &str,
 ) -> Result<Vec<im_contact::Model>, CommonError> {
-    let list = im_contact::Entity::find().all(db).await?;
+    let list = im_contact::Entity::find()
+        .filter(im_contact::Column::LoginUid.eq(login_uid))
+        .all(db)
+        .await?;
     Ok(list)
 }
 
@@ -14,6 +18,7 @@ pub async fn list_contact(
 pub async fn save_contact_batch(
     db: &DatabaseConnection,
     contacts: Vec<im_contact::Model>,
+    login_uid: &str,
 ) -> Result<(), CommonError> {
     if contacts.is_empty() {
         return Ok(());
@@ -22,8 +27,9 @@ pub async fn save_contact_batch(
     // 使用事务确保操作的原子性
     let txn = db.begin().await?;
 
-    // 先删除现有的会话数据
+    // 先删除当前用户的现有会话数据
     im_contact::Entity::delete_many()
+        .filter(im_contact::Column::LoginUid.eq(login_uid))
         .exec(&txn)
         .await
         .with_context(|| "删除现有会话数据失败")?;
@@ -31,7 +37,8 @@ pub async fn save_contact_batch(
     // 批量插入新的会话数据
     let active_models: Vec<im_contact::ActiveModel> = contacts
         .into_iter()
-        .map(|contact| {
+        .map(|mut contact| {
+            contact.login_uid = login_uid.to_string();
             let active_model = contact.into_active_model();
             active_model
         })

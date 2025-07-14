@@ -41,6 +41,7 @@ pub async fn update_my_room_info(my_room_info: MyRoomInfoReq, state: State<'_, A
             &my_room_info.my_name,
             &my_room_info.id,
             &uid,
+            &uid,
         )
         .await
         .with_context(|| format!("[{}:{}] 更新本地数据库失败", file!(), line!()))?;
@@ -65,15 +66,27 @@ pub async fn get_room_members(room_id: String, state: State<'_, AppData>) -> Res
         let is_cached = state.cache.get(&cache_key).await.is_some();
         
         if !is_cached {
-            let mut data = fetch_and_update_room_members(room_id.clone(), state.db_conn.clone(), state.request_client.clone()).await?;
+            // 获取当前登录用户的 uid
+            let login_uid = {
+                let user_info = state.user_info.lock().await;
+                user_info.uid.clone()
+            };
+            
+            let mut data = fetch_and_update_room_members(room_id.clone(), state.db_conn.clone(), state.request_client.clone(), login_uid.clone()).await?;
             // 设置缓存标记
             state.cache.insert(cache_key, "cached".to_string()).await;
             // 对从后端获取的数据进行排序
             sort_room_members(&mut data);
             return Ok(data);
         } else {
+            // 获取当前登录用户的 uid
+            let login_uid = {
+                let user_info = state.user_info.lock().await;
+                user_info.uid.clone()
+            };
+            
             // 有缓存：从本地数据库获取数据
-            let mut local_members = get_room_members_by_room_id(&room_id, state.db_conn.deref())
+            let mut local_members = get_room_members_by_room_id(&room_id, state.db_conn.deref(), &login_uid)
                 .await
                 .with_context(|| format!("[{}:{}] 本地数据库查询房间成员失败", file!(), line!()))?;
             
@@ -84,8 +97,9 @@ pub async fn get_room_members(room_id: String, state: State<'_, AppData>) -> Res
             let db_conn = state.db_conn.clone();
             let request_client = state.request_client.clone();
             let room_id_clone = room_id.clone();
+            let login_uid_clone = login_uid.clone();
             tokio::spawn(async move {
-                if let Err(e) = fetch_and_update_room_members(room_id_clone, db_conn, request_client).await {
+                if let Err(e) = fetch_and_update_room_members(room_id_clone, db_conn, request_client, login_uid_clone).await {
                     eprintln!("异步更新房间成员数据失败: {:?}", e);
                 }
             });
@@ -114,7 +128,13 @@ pub struct CursorPageRoomMemberParam {
 // 游标分页查询数据
 #[tauri::command]
 pub async fn cursor_page_room_members(param: CursorPageRoomMemberParam, state: State<'_, AppData>) -> Result<CursorPageResp<Vec<im_room_member::Model>>, String>{
-    let data = im_room_member_repository::cursor_page_room_members(state.db_conn.deref(), param.room_id, param.cursor_page_param)
+    // 获取当前登录用户的 uid
+    let login_uid = {
+        let user_info = state.user_info.lock().await;
+        user_info.uid.clone()
+    };
+    
+    let data = im_room_member_repository::cursor_page_room_members(state.db_conn.deref(), param.room_id, param.cursor_page_param, &login_uid)
         .await.map_err(|e| e.to_string())?;
     Ok(data)
 }
@@ -131,14 +151,26 @@ pub async fn page_room(
         let is_cached = state.cache.get(&cache_key).await.is_some();
         
         if !is_cached {
+            // 获取当前登录用户的 uid
+            let login_uid = {
+                let user_info = state.user_info.lock().await;
+                user_info.uid.clone()
+            };
+            
             // 第一次查询：先调用后端接口，再更新本地数据库
-            let data = fetch_and_update_rooms(page_param.clone(), state.db_conn.clone(), state.request_client.clone()).await?;
+            let data = fetch_and_update_rooms(page_param.clone(), state.db_conn.clone(), state.request_client.clone(), login_uid).await?;
             // 设置缓存标记
             state.cache.insert(cache_key, "cached".to_string()).await;
             return Ok(data);
         } else {
+            // 获取当前登录用户的 uid
+            let login_uid = {
+                let user_info = state.user_info.lock().await;
+                user_info.uid.clone()
+            };
+            
             // 有缓存：从本地数据库获取数据
-            let local_result = get_room_page(page_param.clone(), state.db_conn.deref())
+            let local_result = get_room_page(page_param.clone(), state.db_conn.deref(), &login_uid)
                 .await
                 .with_context(|| format!("[{}:{}] 本地数据库查询失败", file!(), line!()))?;
             
@@ -146,8 +178,9 @@ pub async fn page_room(
             let db_conn = state.db_conn.clone();
             let request_client = state.request_client.clone();
             let page_param_clone = page_param.clone();
+            let login_uid_clone = login_uid.clone();
             tokio::spawn(async move {
-                if let Err(e) = fetch_and_update_rooms(page_param_clone, db_conn, request_client).await {
+                if let Err(e) = fetch_and_update_rooms(page_param_clone, db_conn, request_client, login_uid_clone).await {
                     eprintln!("异步更新房间数据失败: {:?}", e);
                 }
             });
@@ -187,7 +220,8 @@ fn sort_room_members(members: &mut Vec<im_room_member::Model>) {
 async fn fetch_and_update_room_members(
     room_id: String, 
     db_conn: Arc<DatabaseConnection>, 
-    request_client: Arc<Mutex<ImRequestClient>>
+    request_client: Arc<Mutex<ImRequestClient>>,
+    login_uid: String
 ) -> Result<Vec<im_room_member::Model>, CommonError> {
     // 从后端API获取最新数据
     let resp = request_client
@@ -202,7 +236,7 @@ async fn fetch_and_update_room_members(
     if let Some(data) = resp.data {
         if !data.is_empty() {
             let room_id_i64 = room_id.parse::<i64>().unwrap_or(0);
-            save_room_member_batch(db_conn.deref(), data.clone(), room_id_i64)
+            save_room_member_batch(db_conn.deref(), data.clone(), room_id_i64, &login_uid)
                 .await
                 .with_context(|| {
                     format!("[{}:{}] 异步更新房间成员数据到本地数据库失败", file!(), line!())
@@ -219,6 +253,7 @@ async fn fetch_and_update_rooms(
     page_param: PageParam,
     db_conn: Arc<DatabaseConnection>,
     request_client: Arc<Mutex<ImRequestClient>>,
+    login_uid: String,
 ) -> Result<Page<im_room::Model>, CommonError> {
     // 从后端API获取数据
     let resp = request_client
@@ -231,7 +266,7 @@ async fn fetch_and_update_rooms(
 
     if let Some(data) = resp.data {
         // 保存到本地数据库
-        save_room_batch(db_conn.deref(), data.records.clone())
+        save_room_batch(db_conn.deref(), data.records.clone(), &login_uid)
             .await
             .with_context(|| {
                 format!("[{}:{}] 保存房间数据到本地数据库失败", file!(), line!())

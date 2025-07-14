@@ -18,16 +18,19 @@ pub async fn cursor_page_room_members(
     db: &DatabaseConnection,
     room_id: String,
     cursor_page_param: CursorPageParam,
+    login_uid: &str,
 ) -> Result<CursorPageResp<Vec<im_room_member::Model>>, CommonError> {
     // 查询总数
     let total = im_room_member::Entity::find()
         .filter(im_room_member::Column::RoomId.eq(&room_id))
+        .filter(im_room_member::Column::LoginUid.eq(login_uid))
         .count(db)
         .await
         .with_context(|| "查询房间成员总数失败")?;
 
     let mut query = im_room_member::Entity::find()
         .filter(im_room_member::Column::RoomId.eq(room_id))
+        .filter(im_room_member::Column::LoginUid.eq(login_uid))
         .order_by_desc(im_room_member::Column::LastOptTime)
         .limit(cursor_page_param.page_size as u64);
 
@@ -68,18 +71,21 @@ pub async fn cursor_page_room_members(
 pub async fn get_room_page(
     page_param: PageParam,
     db: &DatabaseConnection,
+    login_uid: &str,
 ) -> Result<Page<im_room::Model>, CommonError> {
     // 计算偏移量
     let offset = (page_param.current - 1) * page_param.size;
 
     // 查询总数
     let total = im_room::Entity::find()
+        .filter(im_room::Column::LoginUid.eq(login_uid))
         .count(db)
         .await
         .with_context(|| "查询房间成员总数失败")?;
 
     // 分页查询数据
     let records = im_room::Entity::find()
+        .filter(im_room::Column::LoginUid.eq(login_uid))
         .offset(offset as u64)
         .limit(page_param.size as u64)
         .all(db)
@@ -96,11 +102,14 @@ pub async fn get_room_page(
 pub async fn save_room_batch(
     db: &DatabaseConnection,
     room_members: Vec<im_room::Model>,
+    login_uid: &str,
 ) -> Result<(), CommonError> {
     // 使用事务确保批量操作的原子性
     let txn = db.begin().await?;
 
-    for member in room_members {
+    for mut member in room_members {
+        // 设置 login_uid
+        member.login_uid = login_uid.to_string();
         // 转换为 ActiveModel
         let mut member_active = member.into_active_model();
         member_active.id = NotSet;
@@ -116,9 +125,11 @@ pub async fn save_room_batch(
 pub async fn get_room_members_by_room_id(
     room_id: &str,
     db: &DatabaseConnection,
+    login_uid: &str,
 ) -> Result<Vec<im_room_member::Model>, CommonError> {
     let members = im_room_member::Entity::find()
         .filter(im_room_member::Column::RoomId.eq(room_id))
+        .filter(im_room_member::Column::LoginUid.eq(login_uid))
         .all(db)
         .await
         .with_context(|| "查询房间成员失败")?;
@@ -130,21 +141,24 @@ pub async fn save_room_member_batch(
     db: &DatabaseConnection,
     room_members: Vec<im_room_member::Model>,
     room_id: i64,
+    login_uid: &str,
 ) -> Result<(), CommonError> {
     // 使用事务确保操作的原子性
     let txn = db.begin().await?;
 
-    // 根据room_id查询现有数据
+    // 根据room_id和login_uid查询现有数据
     let existing_members = im_room_member::Entity::find()
         .filter(im_room_member::Column::RoomId.eq(room_id.to_string()))
+        .filter(im_room_member::Column::LoginUid.eq(login_uid))
         .all(&txn)
         .await
         .with_context(|| "查询房间成员失败")?;
 
     if !existing_members.is_empty() {
-        // 如果有数据，则删除现有数据
+        // 如果有数据，则删除当前用户的现有数据
         im_room_member::Entity::delete_many()
             .filter(im_room_member::Column::RoomId.eq(room_id.to_string()))
+            .filter(im_room_member::Column::LoginUid.eq(login_uid))
             .exec(&txn)
             .await
             .with_context(|| "删除房间成员失败")?;
@@ -154,7 +168,8 @@ pub async fn save_room_member_batch(
     if !room_members.is_empty() {
         let active_models: Vec<im_room_member::ActiveModel> = room_members
             .into_iter()
-            .map(|member| {
+            .map(|mut member| {
+                member.login_uid = login_uid.to_string();
                 let mut member_active = member.into_active_model();
                 member_active.room_id = Set(Some(room_id.to_string()));
                 member_active
@@ -176,11 +191,13 @@ pub async fn update_my_room_info(
     my_name: &str,
     room_id: &str,
     uid: &str,
+    login_uid: &str,
 ) -> Result<(), CommonError> {
-    // 根据 room_id 和 uid 查找房间成员记录
+    // 根据 room_id、uid 和 login_uid 查找房间成员记录
     let member = im_room_member::Entity::find()
         .filter(im_room_member::Column::RoomId.eq(room_id))
         .filter(im_room_member::Column::Uid.eq(uid))
+        .filter(im_room_member::Column::LoginUid.eq(login_uid))
         .one(db)
         .await
         .with_context(|| "查询房间成员失败")?;

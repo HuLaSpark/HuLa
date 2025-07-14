@@ -17,6 +17,8 @@ pub struct Model {
     pub message_marks: Option<String>,
     pub create_time: Option<i64>,
     pub update_time: Option<i64>,
+    #[serde(skip)]
+    pub login_uid: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

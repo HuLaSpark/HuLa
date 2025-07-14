@@ -147,11 +147,18 @@ pub struct CursorPageMessageParam {
 
 #[tauri::command]
 pub async fn page_msg(param: CursorPageMessageParam, state: State<'_, AppData>) -> Result<CursorPageResp<Vec<MessageResp>>, String> {
+    // 获取当前登录用户的 uid
+    let login_uid = {
+        let user_info = state.user_info.lock().await;
+        user_info.uid.clone()
+    };
+    
     // 从数据库查询消息
     let db_result = im_message_repository::cursor_page_messages(
         state.db_conn.deref(), 
         param.room_id, 
-        param.cursor_page_param
+        param.cursor_page_param,
+        &login_uid
     ).await.map_err(|e| e.to_string())?;
     
     // 转换数据库模型为响应模型
@@ -201,6 +208,12 @@ fn convert_message_to_resp(msg: im_message::Model) -> MessageResp {
 
 #[tauri::command]
 pub async fn save_all_msg(room_id: String, state: State<'_, AppData>) -> Result<(), String> {
+    // 获取当前登录用户的 uid
+    let login_uid = {
+        let user_info = state.user_info.lock().await;
+        user_info.uid.clone()
+    };
+    
     // 后端接口URL（临时占位符）
     let api_url = format!("https://api.example.com/messages/{}", room_id);
     
@@ -219,7 +232,7 @@ pub async fn save_all_msg(room_id: String, state: State<'_, AppData>) -> Result<
         .collect();
     
     // 保存到本地数据库
-    im_message_repository::save_all(state.db_conn.deref(), db_messages)
+    im_message_repository::save_all(state.db_conn.deref(), db_messages, &login_uid)
         .await
         .map_err(|e| format!("保存消息到数据库失败: {}", e))?;
     
@@ -249,5 +262,6 @@ fn convert_resp_to_model(msg_resp: MessageResp) -> im_message::Model {
         send_time: msg_resp.create_time,
         create_time: msg_resp.create_time,
         update_time: msg_resp.update_time,
+        login_uid: String::new(), // 这里暂时设为空字符串，实际使用时会在 save_all 中设置
     }
 }

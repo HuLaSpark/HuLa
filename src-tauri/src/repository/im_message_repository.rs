@@ -10,10 +10,12 @@ use sea_orm::{
 pub async fn save_all(
     db: &DatabaseConnection,
     messages: Vec<im_message::Model>,
+    login_uid: &str,
 ) -> Result<(), CommonError> {
     let active_models: Vec<im_message::ActiveModel> = messages
         .into_iter()
-        .map(|message| {
+        .map(|mut message| {
+            message.login_uid = login_uid.to_string();
             let msg_active = message.into_active_model();
             msg_active
         })
@@ -29,16 +31,19 @@ pub async fn cursor_page_messages(
     db: &DatabaseConnection,
     room_id: String,
     cursor_page_param: CursorPageParam,
+    login_uid: &str,
 ) -> Result<CursorPageResp<Vec<im_message::Model>>, CommonError> {
     // 查询总数
     let total = im_message::Entity::find()
         .filter(im_message::Column::RoomId.eq(&room_id))
+        .filter(im_message::Column::LoginUid.eq(login_uid))
         .count(db)
         .await
         .with_context(|| "查询消息总数失败")?;
 
     let mut query = im_message::Entity::find()
         .filter(im_message::Column::RoomId.eq(room_id))
+        .filter(im_message::Column::LoginUid.eq(login_uid))
         .order_by_desc(im_message::Column::Id)
         .limit(cursor_page_param.page_size as u64);
 
