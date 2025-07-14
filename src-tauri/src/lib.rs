@@ -6,16 +6,10 @@ use common_cmd::hide_title_bar_buttons;
 #[cfg(desktop)]
 use common_cmd::{
     audio, default_window_icon, get_directory_size, get_directory_usage_info, get_files_meta,
-    get_window_payload, push_window_payload, screenshot, set_badge_count, set_height
+    get_window_payload, push_window_payload, screenshot, set_badge_count, set_height,
 };
 #[cfg(desktop)]
-use desktops::common_cmd;
-#[cfg(desktop)]
-use desktops::init;
-#[cfg(desktop)]
-use desktops::tray;
-#[cfg(desktop)]
-use desktops::video_thumbnail::get_video_thumbnail;
+use desktops::{app_event, common_cmd, init, tray, video_thumbnail::get_video_thumbnail};
 #[cfg(desktop)]
 use init::CustomInit;
 
@@ -63,8 +57,11 @@ fn setup_desktop() {
             get_directory_size,
             get_directory_usage_info
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app_handle, event| {
+            app_event::handle_app_event(&app_handle, event);
+        });
 }
 
 #[cfg(mobile)]
