@@ -218,19 +218,18 @@ export const useChatStore = defineStore(
       const requestRoomId = currentRoomId.value
 
       currentMessageOptions.value && (currentMessageOptions.value.isLoading = true)
-      const data = await apis
-        .getMsgList({
+      const data: any = await invoke(TauriCommand.PAGE_MSG, {
+        param: {
           pageSize: size,
           cursor: currentMessageOptions.value?.cursor,
           roomId: requestRoomId
-        })
-        .finally(() => {
-          // 只有当当前房间ID仍然是请求时的房间ID时，才更新加载状态
-          if (requestRoomId === currentRoomId.value && currentMessageOptions.value) {
-            currentMessageOptions.value.isLoading = false
-          }
-        })
-
+        }
+      }).finally(() => {
+        // 只有当当前房间ID仍然是请求时的房间ID时，才更新加载状态
+        if (requestRoomId === currentRoomId.value && currentMessageOptions.value) {
+          currentMessageOptions.value.isLoading = false
+        }
+      })
       // 如果没有数据或者房间ID已经变化，则不处理响应
       if (!data || requestRoomId !== currentRoomId.value) return
 

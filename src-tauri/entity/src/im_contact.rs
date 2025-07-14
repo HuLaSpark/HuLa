@@ -30,6 +30,8 @@ pub struct Model {
     pub unread_count: Option<u8>,
     pub create_time: Option<i64>,
     pub update_time: Option<i64>,
+    #[serde(skip)]
+    pub login_uid: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

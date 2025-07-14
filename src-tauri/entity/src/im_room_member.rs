@@ -20,6 +20,8 @@ pub struct Model {
     pub name: String,
     pub avatar: Option<String>,
     pub user_state_id: Option<String>,
+    #[serde(skip)]
+    pub login_uid: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

@@ -11,9 +11,12 @@ pub struct Model {
     pub nickname: String,
     pub room_id: String,
     pub send_time: Option<i64>,
+    #[serde(rename = "type")]
     pub message_type: Option<u8>,
     pub body: Option<String>,
     pub message_marks: Option<String>,
+    pub create_time: Option<i64>,
+    pub update_time: Option<i64>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

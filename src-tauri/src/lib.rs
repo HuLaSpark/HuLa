@@ -71,6 +71,7 @@ struct AppData {
 use tauri::Listener;
 use tokio::sync::Mutex;
 use crate::command::contact_command::list_contacts_command;
+use crate::command::message_command::{page_msg, save_all_msg};
 
 #[cfg(desktop)]
 async fn setup_desktop() -> Result<(), CommonError> {
@@ -142,7 +143,9 @@ async fn setup_desktop() -> Result<(), CommonError> {
             get_room_members,
             update_my_room_info,
             cursor_page_room_members,
-            list_contacts_command
+            list_contacts_command,
+            page_msg,
+            save_all_msg
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

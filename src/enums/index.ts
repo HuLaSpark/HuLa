@@ -467,5 +467,7 @@ export enum TauriCommand {
   /** 分页查询房间成员 */
   CURSOR_PAGE_ROOM_MEMBERS = 'cursor_page_room_members',
   /** 列出所有会话列表 */
-  LIST_CONTACTS = 'list_contacts_command'
+  LIST_CONTACTS = 'list_contacts_command',
+  SAVE_ALL_MSG = 'save_all_msg',
+  PAGE_MSG = 'page_msg'
 }

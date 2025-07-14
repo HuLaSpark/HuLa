@@ -12,6 +12,8 @@ pub struct Model {
     pub group_id: Option<String>,
     pub room_name: String,
     pub avatar: Option<String>,
+    #[serde(skip)]
+    pub login_uid: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
