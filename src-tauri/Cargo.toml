@@ -28,7 +28,8 @@ tauri-build = { version = "2.3.0", features = [] }
 
 [dependencies]
 # Tauri 官方依赖
-tauri = { version = "2.6.2", features = [ "protocol-asset",
+tauri = { version = "2.6.2", features = [
+    "protocol-asset",
     "macos-private-api",
     "tray-icon",
     "image-png",

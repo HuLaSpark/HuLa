@@ -8,8 +8,10 @@ use common_cmd::{
     audio, default_window_icon, get_directory_size, get_directory_usage_info, get_files_meta,
     get_window_payload, push_window_payload, screenshot, set_badge_count, set_height,
 };
+#[cfg(target_os = "macos")]
+use desktops::app_event;
 #[cfg(desktop)]
-use desktops::{app_event, common_cmd, init, tray, video_thumbnail::get_video_thumbnail};
+use desktops::{common_cmd, init, tray, video_thumbnail::get_video_thumbnail};
 #[cfg(desktop)]
 use init::CustomInit;
 
@@ -60,7 +62,12 @@ fn setup_desktop() {
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
         .run(|app_handle, event| {
+            #[cfg(target_os = "macos")]
             app_event::handle_app_event(&app_handle, event);
+            #[cfg(not(target_os = "macos"))]
+            {
+                let _ = (app_handle, event);
+            }
         });
 }
 
