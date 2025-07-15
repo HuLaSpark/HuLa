@@ -38,75 +38,9 @@ pub struct Message {
     pub room_id: Option<String>,
     #[serde(rename = "type")]
     pub message_type: Option<u8>,
-    pub body: Option<MessageBody>,
+    pub body: Option<serde_json::Value>,
     pub message_marks: Option<HashMap<String, MessageMark>>,
     pub send_time: Option<i64>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-#[serde(untagged)]
-pub enum MessageBody {
-    EmojiMsg {
-        url: Option<String>,
-        reply_msg_id: Option<String>,
-        at_uid_last: Option<String>,
-        reply: Option<Box<ReplyMsg>>,
-    },
-    FileMsg {
-        file_name: Option<String>,
-        reply_msg_id: Option<String>,
-        at_uid_list: Option<Vec<String>>,
-        reply: Option<Box<ReplyMsg>>,
-        size: Option<i64>,
-        url: Option<String>,
-    },
-    ImgMsg {
-        width: u16,
-        height: u16,
-        reply_msg_id: Option<String>,
-        at_uid_list: Option<Vec<String>>,
-        reply: Option<Box<ReplyMsg>>,
-    },
-    MergeMsg {
-        messages: Vec<MergeMessage>,
-        reply_msg_id: Option<String>,
-        reply: Option<Box<ReplyMsg>>,
-    },
-    NoticeMsg {
-        id: Option<String>,
-        room_id: Option<String>,
-        uid: Option<String>,
-        content: Option<String>,
-        created_time: Option<i64>,
-        top: Option<bool>,
-        reply_msg_id: Option<String>,
-        reply: Option<Box<ReplyMsg>>,
-    },
-    SoundMsg {
-        second: Option<u32>,
-        reply_msg_id: Option<String>,
-        size: Option<String>,
-        url: Option<String>,
-    },
-    SystemMsg(String),
-    TextMsg {
-        content: Option<String>,
-        url_content_map: Option<HashMap<String, UrlInfo>>,
-        at_uid_list: Option<Vec<String>>,
-        reply: Option<Box<ReplyMsg>>,
-    },
-    VideoMsg {
-        thumb_width: Option<u32>,
-        thumb_height: Option<u32>,
-        thumb_size: Option<String>,
-        thumb_url: Option<String>,
-        reply_msg_id: Option<String>,
-        at_uid_list: Option<Vec<String>>,
-        reply: Option<Box<ReplyMsg>>,
-        size: Option<String>,
-        url: Option<String>,
-    },
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -133,7 +67,7 @@ pub struct ReplyMsg {
     pub username: Option<String>,
     #[serde(rename = "type")]
     pub msg_type: Option<u8>,
-    pub body: Option<Box<MessageBody>>,
+    pub body: Option<Box<serde_json::Value>>,
     pub can_callback: u8,
     pub gap_count: u32,
 }
@@ -187,7 +121,7 @@ pub async fn page_msg(param: CursorPageMessageParam, state: State<'_, AppData>) 
 fn convert_message_to_resp(msg: im_message::Model) -> MessageResp {
     // 解析消息体
     let body = msg.body.as_ref().and_then(|b| {
-        serde_json::from_str::<MessageBody>(b).ok()
+        serde_json::from_str(b).ok()
     });
     
     // 解析消息标记
