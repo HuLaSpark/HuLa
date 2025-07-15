@@ -1,5 +1,5 @@
 use crate::error::CommonError;
-use crate::pojo::common::{ApiResult, CursorPageParam, CursorPageResp, Page, PageParam};
+use crate::pojo::common::{CursorPageParam, CursorPageResp, Page, PageParam};
 use crate::repository::im_room_member_repository::{get_room_members_by_room_id, get_room_page, save_room_batch, save_room_member_batch, update_my_room_info as update_my_room_info_db};
 use crate::vo::vo::MyRoomInfoReq;
 use crate::AppData;
@@ -31,7 +31,7 @@ pub async fn update_my_room_info(my_room_info: MyRoomInfoReq, state: State<'_, A
             .await
             .post("/room/updateMyRoomInfo")
             .json(&my_room_info)
-            .send_json::<ApiResult<bool>>()
+            .send_json::<bool>()
             .await
             .with_context(|| format!("[{}:{}] 调用后端接口更新房间信息失败", file!(), line!()))?;
 
@@ -229,7 +229,7 @@ async fn fetch_and_update_room_members(
         .await
         .get("/room/group/listMember")
         .query(&[("roomId", &room_id)])
-        .send_json::<ApiResult<Vec<im_room_member::Model>>>()
+        .send_json::<Vec<im_room_member::Model>>()
         .await?;
     
     // 更新本地数据库
@@ -261,7 +261,7 @@ async fn fetch_and_update_rooms(
         .await
         .get("/room/group/list")
         .query(&page_param)
-        .send_json::<ApiResult<Page<im_room::Model>>>()
+        .send_json::<Page<im_room::Model>>()
         .await?;
 
     if let Some(data) = resp.data {

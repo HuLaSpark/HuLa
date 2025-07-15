@@ -2,7 +2,6 @@ use tauri::State;
 use entity::im_contact;
 use crate::AppData;
 use crate::error::CommonError;
-use crate::pojo::common::ApiResult;
 use crate::repository::im_contact_repository::{list_contact, save_contact_batch};
 use anyhow::Context;
 use std::ops::Deref;
@@ -70,7 +69,7 @@ async fn fetch_and_update_contacts(
         .lock()
         .await
         .get("/chat/contact/list")
-        .send_json::<ApiResult<Vec<im_contact::Model>>>()
+        .send_json::<Vec<im_contact::Model>>()
         .await?;
     
     if let Some(data) = resp.data {

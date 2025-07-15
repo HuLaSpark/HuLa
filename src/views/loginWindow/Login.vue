@@ -393,12 +393,13 @@ const normalLogin = async (auto = false) => {
       userStore.userInfo = account
       loginHistoriesStore.addLoginHistory(account)
 
-      emit('set_user_info', {
-        token: res.token,
-        uid: account.uid
-      })
       await invoke(TauriCommand.SAVE_USER_INFO, {
         userInfo: account
+      })
+
+      await emit('set_user_info', {
+        token: res.token,
+        uid: account.uid
       })
 
       await setLoginState()

@@ -1,7 +1,6 @@
 // 桌面端依赖
 #[cfg(desktop)]
 mod desktops;
-use anyhow::Context;
 #[cfg(target_os = "macos")]
 use common_cmd::hide_title_bar_buttons;
 #[cfg(desktop)]
@@ -49,6 +48,8 @@ use init::CustomInit;
 use mobiles::init;
 use sea_orm::DatabaseConnection;
 use serde::{Deserialize, Serialize};
+use std::ops::Deref;
+use anyhow::Context;
 
 pub async fn run() {
     #[cfg(desktop)]
@@ -71,7 +72,7 @@ struct AppData {
 use tauri::Listener;
 use tokio::sync::Mutex;
 use crate::command::contact_command::list_contacts_command;
-use crate::command::message_command::{page_msg, save_all_msg};
+use crate::command::message_command::{page_msg, save_all_msg, check_user_init_and_fetch_messages};
 
 #[cfg(desktop)]
 async fn setup_desktop() -> Result<(), CommonError> {
@@ -104,24 +105,7 @@ async fn setup_desktop() -> Result<(), CommonError> {
             let user_info = Arc::new(Mutex::new(user_info));
             
             // 监听前端事件，保存登录用户信息
-            app.listen("set_user_info", {
-                let client = client.clone();
-                let user_info = user_info.clone();
-                move |event| {
-                    let client = client.clone();
-                    let user_info = user_info.clone();
-                    tauri::async_runtime::spawn(async move {
-                        if let Ok(payload) = serde_json::from_str::<UserInfo>(&event.payload()) {
-                            let mut client = client.lock().await;
-                            client.token = Some(payload.token.clone());
-
-                            let mut user_info = user_info.lock().await;
-                            user_info.uid = payload.uid;
-                            user_info.token = payload.token;
-                        }
-                    });
-                }
-            });
+            setup_user_info_listener(app, client.clone(), user_info.clone(), db.clone());
 
             app.manage(AppData { db_conn: db.clone(), request_client: client.clone(), user_info: user_info.clone(), cache });
             tray::create_tray(app.handle())?;
@@ -153,6 +137,39 @@ async fn setup_desktop() -> Result<(), CommonError> {
     Ok(())
 }
 
+/// 设置用户信息事件监听器
+fn setup_user_info_listener(
+    app: &tauri::App,
+    client: Arc<Mutex<ImRequestClient>>,
+    user_info: Arc<Mutex<UserInfo>>,
+    db_conn: Arc<DatabaseConnection>,
+) {
+    app.listen("set_user_info", {
+        let client = client.clone();
+        let user_info = user_info.clone();
+        let db_conn = db_conn.clone();
+        move |event| {
+            let client = client.clone();
+            let user_info = user_info.clone();
+            let db_conn = db_conn.clone();
+            tauri::async_runtime::spawn(async move {
+                if let Ok(payload) = serde_json::from_str::<UserInfo>(&event.payload()) {
+                    let mut client = client.lock().await;
+                    client.token = Some(payload.token.clone());
+
+                    let mut user_info = user_info.lock().await;
+                    user_info.uid = payload.uid.clone();
+                    user_info.token = payload.token.clone();
+                    
+                    // 检查用户的 is_init 状态并获取消息
+                    if let Err(e) = check_user_init_and_fetch_messages(&client, db_conn.deref(), &payload.uid).await {
+                        eprintln!("检查用户初始化状态并获取消息失败: {}", e);
+                    }
+                }
+            });
+        }
+    });
+}
 
 #[derive(Serialize, Deserialize)]
 pub struct UserInfo {

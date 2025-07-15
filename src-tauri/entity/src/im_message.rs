@@ -8,7 +8,7 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String,
     pub uid: String,
-    pub nickname: String,
+    pub nickname: Option<String>,
     pub room_id: String,
     pub send_time: Option<i64>,
     #[serde(rename = "type")]

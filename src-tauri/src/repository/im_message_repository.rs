@@ -1,10 +1,11 @@
 use crate::error::CommonError;
 use crate::pojo::common::{CursorPageParam, CursorPageResp};
+use crate::repository::im_user_repository;
 use anyhow::Context;
 use entity::im_message;
 use sea_orm::{
     ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, PaginatorTrait, QueryFilter,
-    QueryOrder, QuerySelect,
+    QueryOrder, QuerySelect, TransactionTrait,
 };
 
 pub async fn save_all(
@@ -12,6 +13,10 @@ pub async fn save_all(
     messages: Vec<im_message::Model>,
     login_uid: &str,
 ) -> Result<(), CommonError> {
+    // SQLite 的变量限制通常是 999，为了安全起见，我们设置批次大小为 100
+    // 每个消息大约有 10-15 个字段，所以 100 条消息大约使用 1000-1500 个变量
+    const BATCH_SIZE: usize = 100;
+    
     let active_models: Vec<im_message::ActiveModel> = messages
         .into_iter()
         .map(|mut message| {
@@ -20,9 +25,42 @@ pub async fn save_all(
             msg_active
         })
         .collect();
-    im_message::Entity::insert_many(active_models)
-        .exec(db)
-        .await?;
+    
+    // 使用事务确保消息插入和用户状态更新的原子性
+    let txn = db.begin().await.with_context(|| "开始事务失败")?;
+    
+    // 如果数据量小于批次大小，直接插入
+    if active_models.len() <= BATCH_SIZE {
+        if !active_models.is_empty() {
+            let count = active_models.len();
+            im_message::Entity::insert_many(active_models)
+                .exec(&txn)
+                .await
+                .with_context(|| "批量插入消息失败")?;
+            println!("消息插入完成，共 {} 条", count);
+        }
+    } else {
+        // 分批插入
+        for (batch_index, chunk) in active_models.chunks(BATCH_SIZE).enumerate() {
+            println!("正在插入第 {} 批消息，共 {} 条", batch_index + 1, chunk.len());
+            
+            im_message::Entity::insert_many(chunk.to_vec())
+                .exec(&txn)
+                .await
+                .with_context(|| format!("插入第 {} 批消息失败", batch_index + 1))?;
+        }
+        
+        println!("所有消息批量插入完成，总计 {} 条", active_models.len());
+    }
+    
+    // 消息保存完成后，将用户的 is_init 状态设置为 false
+    im_user_repository::update_user_init_status(&txn, login_uid, false)
+        .await
+        .with_context(|| "更新用户 is_init 状态失败")?;
+    
+    // 提交事务
+    txn.commit().await.with_context(|| "提交事务失败")?;
+    
     Ok(())
 }
 

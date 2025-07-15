@@ -1,6 +1,6 @@
 use crate::error::CommonError;
 use anyhow::Context;
-use sea_orm::{Database, DatabaseConnection};
+use sea_orm::{ConnectionTrait, Database, DatabaseConnection};
 use std::path::PathBuf;
 
 #[derive(serde::Deserialize, Clone)]

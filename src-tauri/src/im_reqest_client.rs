@@ -1,6 +1,7 @@
 use crate::error::CommonError;
+use crate::pojo::common::ApiResult;
 use anyhow::Context;
-use reqwest::{header, Client, Method, RequestBuilder};
+use reqwest::{Client, Method, RequestBuilder, header};
 
 /// 智能 HTTP 客户端，支持自动 token 管理和过期重试
 pub struct ImRequestClient {
@@ -11,9 +12,7 @@ pub struct ImRequestClient {
 
 impl ImRequestClient {
     /// 创建新的请求客户端
-    pub async fn new(
-        base_url: String,
-    ) -> Result<Self, CommonError> {
+    pub async fn new(base_url: String) -> Result<Self, CommonError> {
         let client = Client::builder()
             .timeout(std::time::Duration::from_secs(30))
             .build()
@@ -51,7 +50,11 @@ impl ImRequestClient {
         let url = if path.starts_with("http") {
             path.to_string()
         } else {
-            format!("{}/{}", self.base_url.trim_end_matches('/'), path.trim_start_matches('/'))
+            format!(
+                "{}/{}",
+                self.base_url.trim_end_matches('/'),
+                path.trim_start_matches('/')
+            )
         };
 
         let request_builder = self.client.request(method, &url);
@@ -98,30 +101,59 @@ impl<'a> RequestBuilderWrapper<'a> {
         self.request_builder = self.request_builder.header(key, value);
         self
     }
-    
+
     /// 发送请求并解析 JSON 响应，支持自动 token 刷新
-    pub async fn send_json<T: serde::de::DeserializeOwned>(mut self) -> Result<T, CommonError> {
+    pub async fn send_json<T: serde::de::DeserializeOwned>(
+        mut self,
+    ) -> Result<ApiResult<T>, CommonError> {
+        // 打印请求信息
+        println!("发送请求到: {}", self.url);
+
         // 获取 token 并添加到请求头
         if let Some(token) = &self.client.token {
-            self.request_builder = self.request_builder.header(header::AUTHORIZATION, format!("Bearer {}", token));
+            println!(
+                "使用 token: {}...",
+                &token[..std::cmp::min(10, token.len())]
+            );
+            self.request_builder = self
+                .request_builder
+                .header(header::AUTHORIZATION, format!("Bearer {}", token));
+        } else {
+            println!("警告: 没有设置 token");
         }
-    
-        // 第一次尝试
-        let response = self.request_builder
+
+        let response = self
+            .request_builder
             .send()
             .await
             .with_context(|| format!("[{}:{}] 发送请求失败: {}", file!(), line!(), self.url))?;
+
+        let status = response.status();
+        println!("响应状态码: {}", status);
 
         let response_text = response
             .text()
             .await
             .with_context(|| format!("[{}:{}] 读取响应体失败", file!(), line!()))?;
 
-        // println!("响应：{:#?}", response_text);
-
+        println!("开始解析");
         // 解析为目标类型
-        serde_json::from_str(&response_text)
-            .with_context(|| format!("[{}:{}] 解析 JSON 为目标类型失败", file!(), line!()))
-            .map_err(|e| e.into())
+        let result: ApiResult<T> = match serde_json::from_str(&response_text) {
+            Ok(result) => result,
+            Err(e) => {
+                eprintln!("JSON 解析错误: {}", e);
+                eprintln!("响应内容: {}", response_text);
+                return Err(CommonError::UnexpectedError(anyhow::anyhow!(
+                    "解析 JSON 失败: {}", e
+                )));
+            }
+        };
+
+        if !&result.success {
+            println!("请求失败: {}", &result.msg.clone().unwrap_or_default());
+            return Err(CommonError::UnexpectedError(anyhow::anyhow!("请求失败！")));
+        }
+        println!("解析完成");
+        Ok(result)
     }
 }
