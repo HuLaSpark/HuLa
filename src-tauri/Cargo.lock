@@ -256,6 +256,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "async-fs"
+version = "2.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ebcd09b382f40fcd159c2d695175b2ae620ffa5f3bd6f664131efff4e8b9e04a"
+dependencies = [
+ "async-lock",
+ "blocking",
+ "futures-lite",
+]
+
+[[package]]
 name = "async-io"
 version = "2.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -268,7 +279,7 @@ dependencies = [
  "futures-lite",
  "parking",
  "polling",
- "rustix 1.0.7",
+ "rustix 1.0.8",
  "slab",
  "tracing",
  "windows-sys 0.59.0",
@@ -300,7 +311,7 @@ dependencies = [
  "cfg-if",
  "event-listener",
  "futures-lite",
- "rustix 1.0.7",
+ "rustix 1.0.8",
  "tracing",
 ]
 
@@ -327,7 +338,7 @@ dependencies = [
  "cfg-if",
  "futures-core",
  "futures-io",
- "rustix 1.0.7",
+ "rustix 1.0.8",
  "signal-hook-registry",
  "slab",
  "windows-sys 0.59.0",
@@ -348,6 +359,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.104",
+]
+
+[[package]]
+name = "async-walkdir"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "37672978ae0febce7516ae0a85b53e6185159a9a28787391eb63fc44ec36037d"
+dependencies = [
+ "async-fs",
+ "futures-lite",
+ "thiserror 2.0.12",
 ]
 
 [[package]]
@@ -2034,7 +2056,7 @@ version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc257fdb4038301ce4b9cd1b3b51704509692bb3ff716a410cbd07925d9dae55"
 dependencies = [
- "rustix 1.0.7",
+ "rustix 1.0.8",
  "windows-targets 0.52.6",
 ]
 
@@ -2485,10 +2507,12 @@ checksum = "df3b46402a9d5adb4c86a0cf463f42e19994e3ee891101b1841f30a545cb49a9"
 name = "hula"
 version = "2.6.13"
 dependencies = [
+ "async-walkdir",
  "base64 0.22.1",
  "cocoa",
  "core-foundation 0.10.1",
  "core-graphics 0.25.0",
+ "futures",
  "image 0.25.6",
  "lazy_static",
  "mime_guess",
@@ -2521,7 +2545,6 @@ dependencies = [
  "tauri-plugin-upload",
  "tokio",
  "tungstenite",
- "walkdir",
  "windows 0.52.0",
 ]
 
@@ -4485,7 +4508,7 @@ dependencies = [
  "concurrent-queue",
  "hermit-abi 0.5.2",
  "pin-project-lite",
- "rustix 1.0.7",
+ "rustix 1.0.8",
  "tracing",
  "windows-sys 0.59.0",
 ]
@@ -5225,15 +5248,15 @@ dependencies = [
 
 [[package]]
 name = "rustix"
-version = "1.0.7"
+version = "1.0.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c71e83d6afe7ff64890ec6b71d6a69bb8a610ab78ce364b3352876bb4c801266"
+checksum = "11181fbabf243db407ef8df94a6ce0b2f9a733bd8be4ad02b4eda9602296cac8"
 dependencies = [
  "bitflags 2.9.1",
  "errno",
  "libc",
  "linux-raw-sys 0.9.4",
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -6902,7 +6925,7 @@ dependencies = [
  "fastrand",
  "getrandom 0.3.3",
  "once_cell",
- "rustix 1.0.7",
+ "rustix 1.0.8",
  "windows-sys 0.59.0",
 ]
 
@@ -8742,7 +8765,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "af3a19837351dc82ba89f8a125e22a3c475f05aba604acc023d62b2739ae2909"
 dependencies = [
  "libc",
- "rustix 1.0.7",
+ "rustix 1.0.8",
 ]
 
 [[package]]

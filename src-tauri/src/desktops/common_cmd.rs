@@ -1,19 +1,18 @@
 #![allow(unexpected_cfgs)]
-use base64::{engine::general_purpose, Engine as _};
+use base64::{Engine as _, engine::general_purpose};
 use lazy_static::lazy_static;
 use mime_guess::from_path;
 use screenshots::Screen;
 use serde::Serialize;
 use std::cmp;
 use std::path::PathBuf;
-use std::sync::{Arc, RwLock};
+use std::sync::{
+    Arc, RwLock,
+};
 use std::thread;
 use std::time::Duration;
 use tauri::path::BaseDirectory;
 use tauri::{AppHandle, Emitter, LogicalSize, Manager, ResourceId, Runtime, Webview};
-use sysinfo::{Disks};
-use walkdir::WalkDir;
-// use std::env;
 
 #[derive(Serialize)]
 pub struct DiskInfo {
@@ -24,22 +23,14 @@ pub struct DiskInfo {
     usage_percentage: f64,
 }
 
-#[derive(Serialize)]
-pub struct DirectoryInfo {
-    path: String,
-    total_size: u64,
-    disk_mount_point: String,
-    disk_total_space: u64,
-    usage_percentage: f64,
-}
 
 #[cfg(target_os = "macos")]
 #[allow(deprecated)]
 use cocoa::appkit::NSWindow;
 
 use crate::desktops::window_payload::{
-    get_window_payload as _get_window_payload, push_window_payload as _push_window_payload,
-    WindowPayload,
+    WindowPayload, get_window_payload as _get_window_payload,
+    push_window_payload as _push_window_payload,
 };
 
 // 定义用户信息结构体
@@ -179,7 +170,7 @@ pub fn hide_title_bar_buttons(window_label: &str, handle: AppHandle) -> Result<(
     #[allow(deprecated)]
     {
         use cocoa::appkit::NSWindowButton;
-        use cocoa::base::{id, NO, YES};
+        use cocoa::base::{NO, YES, id};
         use objc::{msg_send, sel, sel_impl};
 
         let ns_window = handle
@@ -293,176 +284,8 @@ pub async fn get_files_meta(files_path: Vec<String>) -> Result<Vec<FileMeta>, St
     Ok(files_meta)
 }
 
-// #[tauri::command]
-// pub fn get_current_app_disk(handle: AppHandle) -> Result<String, String> {
-//     // 首先尝试使用Tauri的app目录API
-//     let app_path_result = handle.path().app_data_dir();
-    
-//     let app_path_str = match app_path_result {
-//         Ok(path) => path.to_string_lossy().to_string(),
-//         Err(_) => {
-//             // 如果Tauri API失败，回退到使用std::env
-//             let current_exe = env::current_exe().map_err(|e| e.to_string())?;
-//             let app_path = current_exe.parent().ok_or("无法获取应用目录")?;
-//             app_path.to_string_lossy().to_string()
-//         }
-//     };
-    
-//     let disks = Disks::new_with_refreshed_list();
-    
-//     let mut best_match = String::new();
-//     let mut best_match_len = 0;
-    
-//     for disk in &disks {
-//         let mount_point = disk.mount_point().to_string_lossy().to_string();
-        
-//         // 调试信息
-//         println!("磁盘挂载点: {}", mount_point);
-//         println!("应用路径: {}", app_path_str);
-        
-//         // Windows下路径比较需要处理路径分隔符
-//         let normalized_app_path = app_path_str.replace('\\', "/");
-//         let normalized_mount_point = mount_point.replace('\\', "/");
-        
-//         if normalized_app_path.starts_with(&normalized_mount_point) && mount_point.len() > best_match_len {
-//             best_match_len = mount_point.len();
-//             best_match = mount_point;
-//         }
-//     }
-    
-//     if best_match.is_empty() {
-//         // 如果没有找到匹配的磁盘，返回所有可用磁盘信息用于调试
-//         let all_disks: Vec<String> = disks.iter()
-//             .map(|d| d.mount_point().to_string_lossy().to_string())
-//             .collect();
-//         Err(format!("无法找到应用所在的磁盘。应用路径: {}，可用磁盘: {:?}", app_path_str, all_disks))
-//     } else {
-//         Ok(best_match)
-//     }
-// }
 
-// #[tauri::command]
-// pub fn get_disk_info(mount_point: Option<String>, handle: AppHandle) -> Result<DiskInfo, String> {
-//     let disks = Disks::new_with_refreshed_list();
-    
-//     let target_mount_point = match mount_point {
-//         Some(path) => path,
-//         None => get_current_app_disk(handle)?,
-//     };
-    
-//     println!("目标挂载点: {}", target_mount_point);
-    
-//     for disk in &disks {
-//         let disk_mount_point = disk.mount_point().to_string_lossy().to_string();
-//         println!("检查磁盘: {}", disk_mount_point);
-        
-//         // 路径规范化比较
-//         let normalized_target = target_mount_point.replace('\\', "/");
-//         let normalized_disk = disk_mount_point.replace('\\', "/");
-        
-//         if normalized_disk == normalized_target || disk_mount_point == target_mount_point {
-//             let total_space = disk.total_space();
-//             let available_space = disk.available_space();
-//             let used_space = total_space - available_space;
-//             let usage_percentage = if total_space > 0 {
-//                 (used_space as f64 / total_space as f64) * 100.0
-//             } else {
-//                 0.0
-//             };
-            
-//             return Ok(DiskInfo {
-//                 mount_point: disk_mount_point,
-//                 total_space,
-//                 available_space,
-//                 used_space,
-//                 usage_percentage,
-//             });
-//         }
-//     }
-    
-//     let all_disks: Vec<String> = disks.iter()
-//         .map(|d| d.mount_point().to_string_lossy().to_string())
-//         .collect();
-//     Err(format!("未找到指定的磁盘: {}。可用磁盘: {:?}", target_mount_point, all_disks))
-// }
 
-/// 目录信息
-#[tauri::command]
-pub fn get_directory_size(directory_path: String) -> Result<u64, String> {
-    let path = PathBuf::from(&directory_path);
-    
-    if !path.exists() {
-        return Err("目录不存在".to_string());
-    }
-    
-    if !path.is_dir() {
-        return Err("指定路径不是目录".to_string());
-    }
-    
-    let mut total_size = 0u64;
-    
-    for entry in WalkDir::new(&path) {
-        match entry {
-            Ok(entry) => {
-                if entry.file_type().is_file() {
-                    match entry.metadata() {
-                        Ok(metadata) => {
-                            total_size = total_size.saturating_add(metadata.len());
-                        }
-                        Err(_) => continue,
-                    }
-                }
-            }
-            Err(_) => continue,
-        }
-    }
-    
-    Ok(total_size)
-}
 
-/// 获取目录使用信息
-#[tauri::command]
-pub fn get_directory_usage_info(directory_path: String) -> Result<DirectoryInfo, String> {
-    let total_size = get_directory_size(directory_path.clone())?;
-    
-    let path = PathBuf::from(&directory_path);
-    let path_str = path.to_string_lossy().to_string();
-    
-    let disks = Disks::new_with_refreshed_list();
-    
-    let mut best_match = String::new();
-    let mut best_match_len = 0;
-    let mut disk_total_space = 0u64;
-    
-    for disk in &disks {
-        let mount_point = disk.mount_point().to_string_lossy().to_string();
-        
-        // Windows下路径比较需要处理路径分隔符
-        let normalized_path = path_str.replace('\\', "/");
-        let normalized_mount_point = mount_point.replace('\\', "/");
-        
-        if normalized_path.starts_with(&normalized_mount_point) && mount_point.len() > best_match_len {
-            best_match_len = mount_point.len();
-            disk_total_space = disk.total_space();
-            best_match = mount_point;
-        }
-    }
-    
-    if best_match.is_empty() {
-        return Err("无法找到目录所在的磁盘".to_string());
-    }
-    
-    let usage_percentage = if disk_total_space > 0 {
-        (total_size as f64 / disk_total_space as f64) * 100.0
-    } else {
-        0.0
-    };
-    
-    Ok(DirectoryInfo {
-        path: directory_path,
-        total_size,
-        disk_mount_point: best_match,
-        disk_total_space,
-        usage_percentage,
-    })
-}
+
+
