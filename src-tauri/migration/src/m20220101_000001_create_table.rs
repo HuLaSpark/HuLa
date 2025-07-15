@@ -14,18 +14,17 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(
                         ColumnDef::new(ImUser::Id)
-                            .big_integer()
+                            .string()
                             .not_null()
-                            .auto_increment()
                             .primary_key(),
                     )
                     .col(ColumnDef::new(ImUser::UserId).big_integer())
                     .col(ColumnDef::new(ImUser::Name).string())
                     .col(ColumnDef::new(ImUser::Avatar).string())
-                    .col(ColumnDef::new(ImUser::Email).string().not_null())
-                    .col(ColumnDef::new(ImUser::Account).string().not_null())
+                    .col(ColumnDef::new(ImUser::Email).string())
+                    .col(ColumnDef::new(ImUser::Account).string())
                     .col(ColumnDef::new(ImUser::Sex).integer())
-                    .col(ColumnDef::new(ImUser::OpenId).string().not_null())
+                    .col(ColumnDef::new(ImUser::OpenId).string())
                     .col(ColumnDef::new(ImUser::ActiveStatus).integer())
                     .col(ColumnDef::new(ImUser::UserStateId).big_integer())
                     .col(ColumnDef::new(ImUser::LastOptTime).timestamp())
@@ -34,11 +33,12 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(ImUser::State).integer())
                     .col(ColumnDef::new(ImUser::CreateTime).timestamp())
                     .col(ColumnDef::new(ImUser::UpdateTime).timestamp())
-                    .col(ColumnDef::new(ImUser::Password).string().not_null())
+                    .col(ColumnDef::new(ImUser::Password).string())
                     .col(ColumnDef::new(ImUser::AvatarUpdateTime).timestamp())
-                    .col(ColumnDef::new(ImUser::Num).integer().not_null())
-                    .col(ColumnDef::new(ImUser::Context).boolean().not_null())
-                    .col(ColumnDef::new(ImUser::UserType).integer().not_null())
+                    .col(ColumnDef::new(ImUser::Num).integer())
+                    .col(ColumnDef::new(ImUser::Context).boolean())
+                    .col(ColumnDef::new(ImUser::UserType).integer())
+                    .col(ColumnDef::new(ImUser::IsInit).boolean().not_null().default(false))
                     .to_owned(),
             )
             .await?;
@@ -55,6 +55,7 @@ impl MigrationTrait for Migration {
                             .not_null()
                             .primary_key(),
                     )
+                    .col(ColumnDef::new(ImContact::DetailId).string().not_null())
                     .col(ColumnDef::new(ImContact::RoomId).string().not_null())
                     .col(ColumnDef::new(ImContact::ContactType).tiny_unsigned())
                     .col(ColumnDef::new(ImContact::HotFlag).tiny_unsigned())
@@ -228,12 +229,14 @@ enum ImUser {
     Num,
     Context,
     UserType,
+    IsInit,
 }
 
 #[derive(DeriveIden)]
 enum ImContact {
     Table,
     Id,
+    DetailId,
     RoomId,
     ContactType,
     HotFlag,

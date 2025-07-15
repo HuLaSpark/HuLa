@@ -473,14 +473,14 @@ const MIN_LOADING_TIME = 300 // 最小加载时间（毫秒）
 const isOnline = computed(() => {
   if (activeItem.type === RoomTypeEnum.GROUP) return false
 
-  const contact = contactStore.contactsList.find((item) => item.uid === activeItem.id)
+  const contact = contactStore.contactsList.find((item) => item.uid === activeItem.detailId)
 
   return contact?.activeStatus === OnlineEnum.ONLINE
 })
 /** 是否还是好友 */
 const shouldShowDeleteFriend = computed(() => {
   if (activeItem.type === RoomTypeEnum.GROUP) return false
-  return contactStore.contactsList.some((item) => item.uid === activeItem.id)
+  return contactStore.contactsList.some((item) => item.uid === activeItem.detailId)
 })
 const groupUserList = computed(() => groupStore.userList)
 const messageOptions = computed(() => chatStore.currentMessageOptions)
@@ -506,8 +506,8 @@ const currentUserStatus = computed(() => {
   if (activeItem.type === RoomTypeEnum.GROUP) return null
 
   // 使用 useUserInfo 获取用户信息
-  if (!activeItem.id) return null
-  const userInfo = useUserInfo(activeItem.id).value
+  if (!activeItem.detailId) return null
+  const userInfo = useUserInfo(activeItem.detailId).value
 
   // 从状态列表中找到对应的状态
   return userStatusStore.stateList.find((state: { id: string }) => state.id === userInfo.userStateId)
@@ -528,8 +528,8 @@ const statusTitle = computed(() => {
 const currentUserAvatar = computed(() => {
   if (activeItem.type === RoomTypeEnum.GROUP) {
     return AvatarUtils.getAvatarUrl(activeItem.avatar)
-  } else if (activeItem.id) {
-    return AvatarUtils.getAvatarUrl(useUserInfo(activeItem.id).value.avatar || activeItem.avatar)
+  } else if (activeItem.detailId) {
+    return AvatarUtils.getAvatarUrl(useUserInfo(activeItem.detailId).value.avatar || activeItem.avatar)
   }
   return AvatarUtils.getAvatarUrl(activeItem.avatar)
 })
@@ -634,7 +634,7 @@ const handleCreateGroupOrInvite = () => {
 
 /** 处理创建群聊 */
 const handleCreateGroup = () => {
-  useMitt.emit(MittEnum.CREATE_GROUP, activeItem.id)
+  useMitt.emit(MittEnum.CREATE_GROUP, activeItem.detailId)
 }
 
 /** 处理邀请进群 */
@@ -854,8 +854,8 @@ const handleDelete = (label: RoomActEnum) => {
 }
 
 const handleConfirm = () => {
-  if (optionsType.value === RoomActEnum.DELETE_FRIEND && activeItem.id) {
-    contactStore.onDeleteContact(activeItem.id).then(() => {
+  if (optionsType.value === RoomActEnum.DELETE_FRIEND && activeItem.detailId) {
+    contactStore.onDeleteContact(activeItem.detailId).then(() => {
       modalShow.value = false
       sidebarShow.value = false
       window.$message.success('已删除好友')

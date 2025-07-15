@@ -1,47 +1,43 @@
-use crate::vo::user_info::UserInfoVO;
 use crate::AppData;
-use chrono::DateTime;
 use entity::im_user;
 use entity::prelude::ImUserEntity;
 use sea_orm::ActiveValue::Set;
-use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, ModelTrait, QueryFilter};
+use sea_orm::ColumnTrait;
+use sea_orm::EntityTrait;
+use sea_orm::QueryFilter;
 use std::ops::Deref;
+use serde::{Deserialize, Serialize};
 use tauri::State;
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct UserInfo {
+    uid: String,
+}
+
 #[tauri::command]
-pub async fn save_user_info(user_info: String, state: State<'_, AppData>) -> Result<(), String> {
+pub async fn save_user_info(user_info: UserInfo, state: State<'_, AppData>) -> Result<(), String> {
     let db = state.db_conn.clone();
-    let user_info: UserInfoVO = serde_json::from_str(&user_info).unwrap();
 
-    let user = im_user::ActiveModel {
-        user_id: Set(Some(user_info.uid.parse::<i64>().unwrap())),
-        name: Set(Some(user_info.name)),
-        avatar: Set(Some(user_info.avatar)),
-        sex: Set(user_info.sex),
-        user_state_id: Set(user_info.user_state_id.map(|id| id.parse::<i64>().unwrap())),
-        avatar_update_time: Set(user_info
-            .avatar_update_time
-            .map(|time| DateTime::from_timestamp_millis(time).unwrap().naive_local())),
-        context: Set(user_info.context),
-        num: Set(user_info.num),
-        update_time: Set(user_info
-            .update_time
-            .map(|time| DateTime::from_timestamp_millis(time).unwrap().naive_local())),
-        create_time: Set(user_info
-            .create_time
-            .map(|time| DateTime::from_timestamp_millis(time).unwrap().naive_local())),
-        ..Default::default()
-    };
+    // 检查用户是否存在
+    let exists = ImUserEntity::find()
+        .filter(im_user::Column::Id.eq(&user_info.uid))
+        .one(db.deref())
+        .await
+        .map_err(|err| format!("查询用户失败: {}", err))?;
 
-    match ImUserEntity::find().filter(im_user::Column::UserId.eq(user_info.uid)).one(db.deref()).await.map_err(|err| err.to_string())? {
-        None => {
-            user.insert(db.deref()).await.map_err(|err| err.to_string())?;
-        }
-        Some(data) => {
-            data.delete(db.deref()).await.map_err(|err| err.to_string())?;
-            user.insert(db.deref()).await.map_err(|err| err.to_string())?;
-            return Ok(());
-        }
-    };
+    if exists.is_none() {
+        println!("用户不存在，准备插入新用户");
+
+        let user = im_user::ActiveModel {
+            id: Set(user_info.uid.clone()),
+            is_init: Set(false),
+            ..Default::default()
+        };
+        
+        im_user::Entity::insert(user).exec(db.deref()).await.map_err(|err| format!("插入用户失败: {}", err))?;
+    } else {
+        println!("用户已存在，无需插入");
+    }
     Ok(())
 }

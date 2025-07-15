@@ -6,7 +6,7 @@
       <!-- 中间聊天框内容  -->
       <ChatMain :active-item="activeItemRef" />
       <!-- 输入框和操作列表 -->
-      <ChatFooter class="flex-1" :id="activeItemRef.id" />
+      <ChatFooter class="flex-1" :detail-id="activeItemRef.detailId" />
     </n-flex>
     <ChatSidebar />
   </n-flex>

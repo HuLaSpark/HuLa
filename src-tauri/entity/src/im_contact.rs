@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String,
+    pub detail_id: String,
     pub room_id: String,
     #[serde(rename = "type")]
     pub contact_type: Option<u8>,

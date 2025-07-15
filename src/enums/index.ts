@@ -469,5 +469,6 @@ export enum TauriCommand {
   /** 列出所有会话列表 */
   LIST_CONTACTS = 'list_contacts_command',
   SAVE_ALL_MSG = 'save_all_msg',
-  PAGE_MSG = 'page_msg'
+  PAGE_MSG = 'page_msg',
+  SAVE_USER_INFO = 'save_user_info'
 }

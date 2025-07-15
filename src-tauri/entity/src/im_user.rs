@@ -6,14 +6,14 @@ use sea_orm::entity::prelude::*;
 #[sea_orm(table_name = "im_user")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: i64,
+    pub id: String,
     pub user_id: Option<i64>,
     pub name: Option<String>,
     pub avatar: Option<String>,
-    pub email: String,
-    pub account: String,
+    pub email: Option<String>,
+    pub account: Option<String>,
     pub sex: Option<i32>,
-    pub open_id: String,
+    pub open_id: Option<String>,
     pub active_status: Option<i32>,
     pub user_state_id: Option<i64>,
     pub last_opt_time: Option<DateTime>,
@@ -22,11 +22,12 @@ pub struct Model {
     pub state: Option<i32>,
     pub create_time: Option<DateTime>,
     pub update_time: Option<DateTime>,
-    pub password: String,
+    pub password: Option<String>,
     pub avatar_update_time: Option<DateTime>,
-    pub num: i32,
-    pub context: bool,
-    pub user_type: i32,
+    pub num: Option<i32>,
+    pub context: Option<bool>,
+    pub user_type: Option<i32>,
+    pub is_init: bool,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

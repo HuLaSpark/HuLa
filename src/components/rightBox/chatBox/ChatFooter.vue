@@ -136,8 +136,8 @@ import { useHistoryStore } from '@/stores/history'
 import { useMitt } from '@/hooks/useMitt'
 import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
 
-const { id } = defineProps<{
-  id: SessionItem['id']
+const { detailId } = defineProps<{
+  detailId: SessionItem['detailId']
 }>()
 const globalStore = useGlobalStore()
 const contactStore = useContactStore()
@@ -171,7 +171,7 @@ const isSingleChat = computed(() => {
 /** 是否是好友关系 */
 const isFriend = computed(() => {
   if (!isSingleChat.value) return true
-  return contactStore.contactsList.some((contact: ContactItem) => contact.uid === id)
+  return contactStore.contactsList.some((contact: ContactItem) => contact.uid === detailId)
 })
 
 // 监听emojiShow的变化，当emojiShow为true时关闭recentlyTip
