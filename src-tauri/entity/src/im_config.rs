@@ -4,7 +4,7 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
-#[sea_orm(table_name = "im_contact")]
+#[sea_orm(table_name = "im_config")]
 #[serde(rename_all = "camelCase")]
 pub struct Model {
     #[sea_orm(primary_key)]
