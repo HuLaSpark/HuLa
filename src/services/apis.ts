@@ -13,7 +13,6 @@ import {
   ListResponse,
   LoginUserReq,
   MarkMsgReq,
-  MessageReq,
   MessageType,
   MsgReadUnReadCountType,
   PageInfo,
@@ -50,7 +49,7 @@ export default {
   /** 获取消息列表 */
   getMsgList: (params?: any) => GET<ListResponse<MessageType>>(urls.getMsgList, params),
   /** 发送消息 */
-  sendMsg: (data?: MessageReq) => POST<MessageType>(urls.sendMsg, data),
+  // sendMsg: (data?: MessageReq) => POST<MessageType>(urls.sendMsg, data),
   /** 标记消息，点赞等 */
   markMsg: (data?: MarkMsgReq) => PUT<void>(urls.markMsg, data),
   /** 获取用户详细信息 */

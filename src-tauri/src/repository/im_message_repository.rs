@@ -5,7 +5,7 @@ use anyhow::Context;
 use entity::im_message;
 use sea_orm::{
     ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, PaginatorTrait, QueryFilter,
-    QueryOrder, QuerySelect, TransactionTrait,
+    QueryOrder, QuerySelect, TransactionTrait, Set,
 };
 use log::{debug, info};
 
@@ -112,4 +112,42 @@ pub async fn cursor_page_messages(
         list: Some(messages),
         total,
     })
+}
+
+/// 保存单个消息到数据库
+pub async fn save_message(
+    db: &DatabaseConnection,
+    message: im_message::Model,
+) -> Result<(), CommonError> {
+    let active_model = message.into_active_model();
+    im_message::Entity::insert(active_model).exec(db).await?;
+    Ok(())
+}
+
+/// 更新消息发送状态
+pub async fn update_message_status(
+    db: &DatabaseConnection,
+    message_id: &str,
+    status: &str,
+    id: Option<String>,
+) -> Result<(), CommonError> {
+    let mut active_model: im_message::ActiveModel = im_message::Entity::find_by_id(message_id)
+        .one(db)
+        .await
+        .with_context(|| "查找消息失败")?
+        .ok_or_else(|| CommonError::UnexpectedError(anyhow::anyhow!("消息不存在")))?.
+        into_active_model();
+    
+    active_model.send_status = Set(status.to_string());
+    
+    if status == "success" {
+        active_model.id = Set(id.unwrap());
+    }
+    
+    im_message::Entity::update_many()
+        .set(active_model)
+        .filter(im_message::Column::Id.eq(message_id))
+        .exec(db)
+        .await?;
+    Ok(())
 }

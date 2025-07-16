@@ -25,7 +25,7 @@ export default {
   getBadgesBatch: `${prefix + URLEnum.USER}/badges/batch`,
   getAllUserBaseInfo: `${prefix + URLEnum.ROOM}/group/member/list`, // 房间内的所有群成员列表-@专用
   getMsgList: `${prefix + URLEnum.CHAT}/msg/page`,
-  sendMsg: `${prefix + URLEnum.CHAT}/msg`,
+  // sendMsg: `${prefix + URLEnum.CHAT}/msg`,
   getUserInfoDetail: `${prefix + URLEnum.USER}/userInfo`, // 获取用户信息详情
   modifyUserName: `${prefix + URLEnum.USER}/name`, // 修改用户名
   setUserBadge: `${prefix + URLEnum.USER}/badge`, // 设置用户徽章

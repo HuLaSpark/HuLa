@@ -112,10 +112,6 @@ impl<'a> RequestBuilderWrapper<'a> {
 
         // 获取 token 并添加到请求头
         if let Some(token) = &self.client.token {
-            debug!(
-                "使用 token: {}...",
-                &token[..std::cmp::min(10, token.len())]
-            );
             self.request_builder = self
                 .request_builder
                 .header(header::AUTHORIZATION, format!("Bearer {}", token));
@@ -128,9 +124,6 @@ impl<'a> RequestBuilderWrapper<'a> {
             .send()
             .await
             .with_context(|| format!("[{}:{}] 发送请求失败: {}", file!(), line!(), self.url))?;
-
-        let status = response.status();
-        debug!("响应状态码: {}", status);
 
         let response_text = response
             .text()

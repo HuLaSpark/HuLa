@@ -72,11 +72,10 @@ struct AppData {
 use tauri::Listener;
 use tokio::sync::Mutex;
 use crate::command::contact_command::list_contacts_command;
-use crate::command::message_command::{page_msg, save_all_msg, check_user_init_and_fetch_messages};
+use crate::command::message_command::{page_msg, check_user_init_and_fetch_messages, send_msg};
 
 #[cfg(desktop)]
 async fn setup_desktop() -> Result<(), CommonError> {
-    use tauri::Manager;
 
     use crate::command::user_command::save_user_info;
 
@@ -96,18 +95,16 @@ async fn setup_desktop() -> Result<(), CommonError> {
         // Create the cache.
         .build();
 
+    let client = Arc::new(Mutex::new(im_request_client));
+    let user_info = Arc::new(Mutex::new(user_info));
     tauri::Builder::default()
         .init_plugin()
         .init_webwindow_event()
         .init_window_event()
+        .manage(AppData { db_conn: db.clone(), request_client: client.clone(), user_info: user_info.clone(), cache })
         .setup(move |app| {
-            let client = Arc::new(Mutex::new(im_request_client));
-            let user_info = Arc::new(Mutex::new(user_info));
-            
             // 监听前端事件，保存登录用户信息
             setup_user_info_listener(app, client.clone(), user_info.clone(), db.clone());
-
-            app.manage(AppData { db_conn: db.clone(), request_client: client.clone(), user_info: user_info.clone(), cache });
             tray::create_tray(app.handle())?;
             Ok(())
         })
@@ -129,7 +126,7 @@ async fn setup_desktop() -> Result<(), CommonError> {
             cursor_page_room_members,
             list_contacts_command,
             page_msg,
-            save_all_msg
+            send_msg,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

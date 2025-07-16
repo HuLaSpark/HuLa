@@ -1,6 +1,5 @@
-import { LimitEnum, MittEnum, MsgEnum, MessageStatusEnum, RoomTypeEnum, UploadSceneEnum } from '@/enums'
+import { LimitEnum, MittEnum, MsgEnum, MessageStatusEnum, RoomTypeEnum, UploadSceneEnum, TauriCommand } from '@/enums'
 import { useUserInfo } from '@/hooks/useCached.ts'
-import apis from '@/services/apis.ts'
 import { useCachedStore, type BaseUserItem } from '@/stores/cached.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global.ts'
@@ -19,6 +18,7 @@ import type { AIModel } from '@/services/types.ts'
 import { UploadProviderEnum, useUpload } from './useUpload.ts'
 import { getReplyContent } from '@/utils/MessageReply.ts'
 import { fixFileMimeType, getMessageTypeByFile } from '@/utils/FileType.ts'
+import { invoke } from '@tauri-apps/api/core'
 /**
  * 光标管理器
  */
@@ -464,22 +464,24 @@ export const useMsgInput = (messageInputDom: Ref) => {
         console.log('视频上传完成,更新为服务器URL:', messageBody.url)
       }
       // 发送消息到服务器
-      const res = await apis.sendMsg({
-        roomId: globalStore.currentSession.roomId,
-        msgType: msg.type,
-        body: messageBody
+      await invoke(TauriCommand.SEND_MSG, {
+        data: {
+          id: tempMsgId,
+          roomId: globalStore.currentSession.roomId,
+          msgType: msg.type,
+          body: messageBody
+        }
       })
 
       // 停止发送状态的定时器
       clearTimeout(statusTimer)
 
       // 更新消息状态为成功,并使用服务器返回的消息体
-      chatStore.updateMsg({
-        msgId: tempMsgId,
-        status: MessageStatusEnum.SUCCESS,
-        newMsgId: res.message.id,
-        body: res.message.body
-      })
+      // chatStore.updateMsg({
+      //   msgId: tempMsgId,
+      //   status: MessageStatusEnum.SUCCESS,
+      //   newMsgId: res,
+      // })
 
       // 更新会话最后活动时间
       chatStore.updateSessionLastActiveTime(globalStore.currentSession.roomId)
@@ -934,31 +936,24 @@ export const useMsgInput = (messageInputDom: Ref) => {
             thumbnailUploadResponse?.downloadUrl || `${qiniuConfig.domain}/${thumbnailUploadResponse?.key}`
 
           // 发送消息到服务器保存
-          const serverResponse = await apis.sendMsg({
-            roomId: globalStore.currentSession.roomId,
-            msgType: MsgEnum.VIDEO,
-            body: {
-              url: finalVideoUrl,
-              size: processedFile.size,
-              fileName: processedFile.name,
-              thumbUrl: finalThumbnailUrl,
-              thumbWidth: 300,
-              thumbHeight: 150,
-              thumbSize: thumbnailFile.size,
-              localPath: videoPath, // 保存本地缓存路径
-              senderUid: userUid.value // 保存发送者UID
+          await invoke(TauriCommand.SEND_MSG, {
+            data: {
+              id: tempMsgId,
+              roomId: globalStore.currentSession.roomId,
+              msgType: MsgEnum.VIDEO,
+              body: {
+                url: finalVideoUrl,
+                size: processedFile.size,
+                fileName: processedFile.name,
+                thumbUrl: finalThumbnailUrl,
+                thumbWidth: 300,
+                thumbHeight: 150,
+                thumbSize: thumbnailFile.size,
+                localPath: videoPath, // 保存本地缓存路径
+                senderUid: userUid.value // 保存发送者UID
+              }
             }
           })
-
-          // 使用服务器返回的数据更新消息状态为SUCCESS，清除进度信息
-          chatStore.updateMsg({
-            msgId: tempMsgId,
-            status: MessageStatusEnum.SUCCESS,
-            newMsgId: serverResponse.message.id, // 使用服务器返回的消息ID
-            body: serverResponse.message.body, // 使用服务器返回的消息体
-            uploadProgress: undefined // 清除进度信息
-          })
-
           // 清理本地URL
           URL.revokeObjectURL(tempMsg.message.body.url)
           URL.revokeObjectURL(localThumbUrl)
@@ -1002,18 +997,13 @@ export const useMsgInput = (messageInputDom: Ref) => {
           console.log('🖼️ 图片上传完成，更新为服务器URL:', messageBody.url)
 
           // 发送消息到服务器
-          const serverResponse = await apis.sendMsg({
-            roomId: globalStore.currentSession.roomId,
-            msgType: MsgEnum.IMAGE,
-            body: messageBody
-          })
-
-          // 更新消息状态为成功，并使用服务器返回的消息体
-          chatStore.updateMsg({
-            msgId: tempMsgId,
-            status: MessageStatusEnum.SUCCESS,
-            newMsgId: serverResponse.message.id,
-            body: serverResponse.message.body
+          await invoke(TauriCommand.SEND_MSG, {
+            data: {
+              id: tempMsgId,
+              roomId: globalStore.currentSession.roomId,
+              msgType: MsgEnum.IMAGE,
+              body: messageBody
+            }
           })
 
           // 更新会话最后活动时间
@@ -1094,24 +1084,19 @@ export const useMsgInput = (messageInputDom: Ref) => {
           console.log('📎 文件上传完成，更新为服务器URL:', messageBody.url)
 
           // 发送消息到服务器
-          const serverResponse = await apis.sendMsg({
-            roomId: globalStore.currentSession.roomId,
-            msgType: MsgEnum.FILE,
-            body: messageBody
-          })
-
-          // 更新消息状态为成功，并使用服务器返回的消息体
-          chatStore.updateMsg({
-            msgId: tempMsgId,
-            status: MessageStatusEnum.SUCCESS,
-            newMsgId: serverResponse.message.id,
-            body: serverResponse.message.body
+          await invoke(TauriCommand.SEND_MSG, {
+            data: {
+              id: tempMsgId,
+              roomId: globalStore.currentSession.roomId,
+              msgType: MsgEnum.FILE,
+              body: messageBody
+            }
           })
 
           // 更新会话最后活动时间
           chatStore.updateSessionLastActiveTime(globalStore.currentSession.roomId)
 
-          console.log('📎 文件消息发送成功:', serverResponse.message.id)
+          // console.log('📎 文件消息发送成功:', serverResponse.message.id)
 
           // 清理进度监听器
           if (progressUnsubscribe) {
@@ -1227,22 +1212,18 @@ export const useMsgInput = (messageInputDom: Ref) => {
         })
 
         const sendData = {
+          id: tempMsgId,
           roomId: globalStore.currentSession.roomId,
           msgType: MsgEnum.VOICE,
           body: messageBody
         }
 
         try {
-          const res = await apis.sendMsg(sendData)
+          await invoke(TauriCommand.SEND_MSG, {
+            data: sendData
+          })
           // 停止发送状态的定时器
           clearTimeout(statusTimer)
-          // 更新消息状态为成功,并使用服务器返回的消息体
-          chatStore.updateMsg({
-            msgId: tempMsgId,
-            status: MessageStatusEnum.SUCCESS,
-            newMsgId: res.message.id,
-            body: res.message.body
-          })
 
           // 更新会话最后活动时间
           chatStore.updateSessionLastActiveTime(globalStore.currentSession.roomId)

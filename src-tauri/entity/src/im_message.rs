@@ -19,6 +19,8 @@ pub struct Model {
     pub update_time: Option<i64>,
     #[serde(skip)]
     pub login_uid: String,
+    /// 消息发送状态: pending, success, fail
+    pub send_status: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
