@@ -7,6 +7,7 @@ use sea_orm::QuerySelect;
 use sea_orm::TransactionTrait;
 use sea_orm::{ActiveModelTrait, Set};
 use sea_orm::{ColumnTrait, DatabaseConnection, NotSet, QueryFilter, QueryOrder};
+use log::{debug, info};
 
 use crate::pojo::common::{CursorPageParam, CursorPageResp};
 use crate::{
@@ -203,7 +204,7 @@ pub async fn update_my_room_info(
         .with_context(|| "查询房间成员失败")?;
 
     if let Some(member) = member {
-        println!("找到房间成员记录: {:?}", member);
+        debug!("找到房间成员记录: {:?}", member);
         // 如果找到记录，更新 nickname 字段
         let mut member_active = member.into_active_model();
         member_active.my_name = Set(Some(my_name.to_string()));
@@ -212,7 +213,7 @@ pub async fn update_my_room_info(
             .update(db)
             .await
             .with_context(|| "更新房间成员昵称失败")?;
-        println!("更新成员房间成员信息成功");
+        info!("更新成员房间成员信息成功");
         Ok(())
     } else {
         // 如果没有找到记录，返回错误

@@ -5,6 +5,7 @@ use crate::vo::vo::MyRoomInfoReq;
 use crate::AppData;
 use anyhow::{Context};
 use entity::{im_room, im_room_member};
+use log::error;
 
 use std::ops::Deref;
 use std::sync::Arc;
@@ -51,7 +52,7 @@ pub async fn update_my_room_info(my_room_info: MyRoomInfoReq, state: State<'_, A
     match result {
         Ok(members) => Ok(members),
         Err(e) => {
-            eprintln!("更新房间信息失败: {:?}", e);
+            error!("更新房间信息失败: {:?}", e);
             Err(e.to_string())
         }
     }
@@ -100,7 +101,7 @@ pub async fn get_room_members(room_id: String, state: State<'_, AppData>) -> Res
             let login_uid_clone = login_uid.clone();
             tokio::spawn(async move {
                 if let Err(e) = fetch_and_update_room_members(room_id_clone, db_conn, request_client, login_uid_clone).await {
-                    eprintln!("异步更新房间成员数据失败: {:?}", e);
+                    error!("异步更新房间成员数据失败: {:?}", e);
                 }
             });
             
@@ -111,7 +112,7 @@ pub async fn get_room_members(room_id: String, state: State<'_, AppData>) -> Res
     match result {
         Ok(members) => Ok(members),
         Err(e) => {
-            eprintln!("获取房间全部成员数据失败: {:?}", e);
+            error!("获取房间全部成员数据失败: {:?}", e);
             Err(e.to_string())
         }
     }
@@ -181,7 +182,7 @@ pub async fn page_room(
             let login_uid_clone = login_uid.clone();
             tokio::spawn(async move {
                 if let Err(e) = fetch_and_update_rooms(page_param_clone, db_conn, request_client, login_uid_clone).await {
-                    eprintln!("异步更新房间数据失败: {:?}", e);
+                    error!("异步更新房间数据失败: {:?}", e);
                 }
             });
             
@@ -193,7 +194,7 @@ pub async fn page_room(
     match result {
         Ok(page_data) => Ok(page_data),
         Err(e) => {
-            eprintln!("分页获取房间数据失败: {:?}", e);
+            error!("分页获取房间数据失败: {:?}", e);
             Err(e.to_string())
         }
     }

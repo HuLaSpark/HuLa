@@ -163,7 +163,7 @@ fn setup_user_info_listener(
                     
                     // 检查用户的 is_init 状态并获取消息
                     if let Err(e) = check_user_init_and_fetch_messages(&client, db_conn.deref(), &payload.uid).await {
-                        eprintln!("检查用户初始化状态并获取消息失败: {}", e);
+                        log::error!("检查用户初始化状态并获取消息失败: {}", e);
                     }
                 }
             });

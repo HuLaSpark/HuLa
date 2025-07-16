@@ -1,5 +1,8 @@
 use tauri::{Manager, Runtime, WindowEvent};
 use tauri_plugin_autostart::MacosLauncher;
+use tauri_plugin_log::{Target, TargetKind};
+use tauri_plugin_log::fern::colors::{ColoredLevelConfig, Color};
+
 pub trait CustomInit {
     fn init_plugin(self) -> Self;
 
@@ -40,6 +43,27 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
             .plugin(tauri_plugin_global_shortcut::Builder::new().build())
             .plugin(tauri_plugin_updater::Builder::new().build())
             .plugin(tauri_plugin_mic_recorder::init())
+            .plugin(
+                tauri_plugin_log::Builder::new()
+                    .targets([
+                        Target::new(TargetKind::Stdout),
+                        Target::new(TargetKind::LogDir { file_name: None }),
+                        Target::new(TargetKind::Webview),
+                    ])
+                    .level(log::LevelFilter::Info)
+                    .level_for("sqlx::query", log::LevelFilter::Warn)
+                    .level_for("hula_app_lib", log::LevelFilter::Debug)
+                    .with_colors(
+                        ColoredLevelConfig::new()
+                            .trace(Color::Magenta)
+                            .debug(Color::Cyan)
+                            .info(Color::Green)
+                            .warn(Color::Yellow)
+                            .error(Color::Red)
+                    )
+                    .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
+                    .build(),
+            )
     }
 
     // 初始化web窗口事件

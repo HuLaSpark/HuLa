@@ -3,6 +3,7 @@ use std::time::Duration;
 use tungstenite::client::connect_with_config;
 use tungstenite::http::Uri;
 use tungstenite::protocol::WebSocketConfig;
+use log::{debug, error};
 
 // 定义测试用的URL列表
 const TEST_API_URLS: [&str; 1] = [
@@ -27,7 +28,7 @@ pub async fn test_ws_proxy(proxy_type: String, proxy_host: String, proxy_port: u
             ws
         }
         Err(e) => {
-            println!("{:?}", e);
+            error!("WebSocket代理连接失败: {:?}", e);
             return Err("代理无法连接，请检查代理设置".to_string())
         }
     };
@@ -60,7 +61,7 @@ pub async fn test_api_proxy(proxy_type: String, proxy_host: String, proxy_port: 
         match test_url(&client, format!("{}/{}{}",proxy_url.as_str(), proxy_suffix.as_str(), url).as_str()).await {
             Ok(_) => return Ok(true),
             Err(e) => {
-                println!("测试 {} 失败: {}", url, e);
+                debug!("测试 {} 失败: {}", url, e);
                 // 如果是DNS错误，直接返回特定错误信息
                 if e.contains("dns error") {
                     return Err("DNS解析失败，请检查网络连接或代理设置".to_string());

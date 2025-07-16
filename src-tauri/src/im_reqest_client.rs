@@ -2,6 +2,7 @@ use crate::error::CommonError;
 use crate::pojo::common::ApiResult;
 use anyhow::Context;
 use reqwest::{Client, Method, RequestBuilder, header};
+use log::{debug, error, warn};
 
 /// 智能 HTTP 客户端，支持自动 token 管理和过期重试
 pub struct ImRequestClient {
@@ -106,12 +107,12 @@ impl<'a> RequestBuilderWrapper<'a> {
     pub async fn send_json<T: serde::de::DeserializeOwned>(
         mut self,
     ) -> Result<ApiResult<T>, CommonError> {
-        // 打印请求信息
-        println!("发送请求到: {}", self.url);
+        // 记录请求信息
+        debug!("发送请求到: {}", self.url);
 
         // 获取 token 并添加到请求头
         if let Some(token) = &self.client.token {
-            println!(
+            debug!(
                 "使用 token: {}...",
                 &token[..std::cmp::min(10, token.len())]
             );
@@ -119,7 +120,7 @@ impl<'a> RequestBuilderWrapper<'a> {
                 .request_builder
                 .header(header::AUTHORIZATION, format!("Bearer {}", token));
         } else {
-            println!("警告: 没有设置 token");
+            warn!("没有设置 token");
         }
 
         let response = self
@@ -129,20 +130,20 @@ impl<'a> RequestBuilderWrapper<'a> {
             .with_context(|| format!("[{}:{}] 发送请求失败: {}", file!(), line!(), self.url))?;
 
         let status = response.status();
-        println!("响应状态码: {}", status);
+        debug!("响应状态码: {}", status);
 
         let response_text = response
             .text()
             .await
             .with_context(|| format!("[{}:{}] 读取响应体失败", file!(), line!()))?;
 
-        println!("开始解析");
+        debug!("开始解析响应");
         // 解析为目标类型
         let result: ApiResult<T> = match serde_json::from_str(&response_text) {
             Ok(result) => result,
             Err(e) => {
-                eprintln!("JSON 解析错误: {}", e);
-                eprintln!("响应内容: {}", response_text);
+                error!("JSON 解析错误: {}", e);
+                error!("响应内容: {}", response_text);
                 return Err(CommonError::UnexpectedError(anyhow::anyhow!(
                     "解析 JSON 失败: {}", e
                 )));
@@ -150,10 +151,10 @@ impl<'a> RequestBuilderWrapper<'a> {
         };
 
         if !&result.success {
-            println!("请求失败: {}", &result.msg.clone().unwrap_or_default());
+            error!("请求失败: {}", &result.msg.clone().unwrap_or_default());
             return Err(CommonError::UnexpectedError(anyhow::anyhow!("请求失败！")));
         }
-        println!("解析完成");
+        debug!("解析完成");
         Ok(result)
     }
 }

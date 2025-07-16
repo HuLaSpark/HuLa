@@ -11,6 +11,7 @@ use tauri::State;
 use crate::im_reqest_client::ImRequestClient;
 use sea_orm::DatabaseConnection;
 use crate::error::CommonError;
+use log::{debug, error, info};
 
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -215,7 +216,7 @@ pub async fn check_user_init_and_fetch_messages(
     db_conn: &DatabaseConnection,
     uid: &str,
 ) -> Result<(), CommonError> {
-    println!("check_user_init_and_fetch_messages uid: {}", uid);
+    debug!("检查用户初始化状态并获取消息, uid: {}", uid);
     // 检查用户的 is_init 状态
     if let Ok(user) = ImUserEntity::find()
         .filter(im_user::Column::Id.eq(uid))
@@ -225,9 +226,9 @@ pub async fn check_user_init_and_fetch_messages(
         if let Some(user_model) = user {
             // 如果 is_init 为 true，调用后端接口获取所有消息
             if user_model.is_init {
-                println!("用户 {} 初始化，获取所有消息", uid);
+                info!("用户 {} 需要初始化，开始获取所有消息", uid);
                 if let Err(e) = fetch_all_messages(client, db_conn, uid).await {
-                    eprintln!("获取所有消息失败: {}", e);
+                    error!("获取所有消息失败: {}", e);
                     return Err(e);
                 }
             }
@@ -257,10 +258,10 @@ pub async fn fetch_all_messages(
         // 保存到本地数据库
         match im_message_repository::save_all(db_conn, db_messages, uid).await {
             Ok(_) => {
-                println!("消息保存到数据库成功");
+                info!("消息保存到数据库成功");
             }
             Err(e) => {
-                eprintln!("保存消息到数据库失败，详细错误: {:?}", e);
+                error!("保存消息到数据库失败，详细错误: {:?}", e);
                 return Err(e.into());
             }
         }

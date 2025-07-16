@@ -7,6 +7,7 @@ use sea_orm::{
     ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, PaginatorTrait, QueryFilter,
     QueryOrder, QuerySelect, TransactionTrait,
 };
+use log::{debug, info};
 
 pub async fn save_all(
     db: &DatabaseConnection,
@@ -37,12 +38,12 @@ pub async fn save_all(
                 .exec(&txn)
                 .await
                 .with_context(|| "批量插入消息失败")?;
-            println!("消息插入完成，共 {} 条", count);
+            info!("消息插入完成，共 {} 条", count);
         }
     } else {
         // 分批插入
         for (batch_index, chunk) in active_models.chunks(BATCH_SIZE).enumerate() {
-            println!("正在插入第 {} 批消息，共 {} 条", batch_index + 1, chunk.len());
+            debug!("正在插入第 {} 批消息，共 {} 条", batch_index + 1, chunk.len());
             
             im_message::Entity::insert_many(chunk.to_vec())
                 .exec(&txn)
@@ -50,7 +51,7 @@ pub async fn save_all(
                 .with_context(|| format!("插入第 {} 批消息失败", batch_index + 1))?;
         }
         
-        println!("所有消息批量插入完成，总计 {} 条", active_models.len());
+        info!("所有消息批量插入完成，总计 {} 条", active_models.len());
     }
     
     // 消息保存完成后，将用户的 is_init 状态设置为 false

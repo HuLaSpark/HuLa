@@ -8,6 +8,7 @@ use sea_orm::QueryFilter;
 use std::ops::Deref;
 use serde::{Deserialize, Serialize};
 use tauri::State;
+use log::{debug, info};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -27,7 +28,7 @@ pub async fn save_user_info(user_info: UserInfo, state: State<'_, AppData>) -> R
         .map_err(|err| format!("查询用户失败: {}", err))?;
 
     if exists.is_none() {
-        println!("用户不存在，准备插入新用户");
+        info!("用户不存在，准备插入新用户");
 
         let user = im_user::ActiveModel {
             id: Set(user_info.uid.clone()),
@@ -37,7 +38,7 @@ pub async fn save_user_info(user_info: UserInfo, state: State<'_, AppData>) -> R
         
         im_user::Entity::insert(user).exec(db.deref()).await.map_err(|err| format!("插入用户失败: {}", err))?;
     } else {
-        println!("用户已存在，无需插入");
+        debug!("用户已存在，无需插入");
     }
     Ok(())
 }

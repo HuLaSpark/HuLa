@@ -9,6 +9,7 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 use sea_orm::DatabaseConnection;
 use crate::im_reqest_client::ImRequestClient;
+use log::error;
 
 #[tauri::command]
 pub async fn list_contacts_command(state: State<'_, AppData>) -> Result<Vec<im_contact::Model>, String> {
@@ -41,7 +42,7 @@ pub async fn list_contacts_command(state: State<'_, AppData>) -> Result<Vec<im_c
             let login_uid_clone = login_uid.clone();
             tokio::spawn(async move {
                 if let Err(e) = fetch_and_update_contacts(db_conn, request_client, login_uid_clone).await {
-                    eprintln!("异步更新联系人数据失败: {:?}", e);
+                    error!("异步更新联系人数据失败: {:?}", e);
                 }
             });
             
@@ -52,7 +53,7 @@ pub async fn list_contacts_command(state: State<'_, AppData>) -> Result<Vec<im_c
     match result {
         Ok(contacts) => Ok(contacts),
         Err(e) => {
-            eprintln!("获取联系人列表失败: {:?}", e);
+            error!("获取联系人列表失败: {:?}", e);
             Err(e.to_string())
         }
     }
