@@ -283,7 +283,7 @@ const mergedUserList = computed(() => {
 
 // 修改watch监听器
 watch(
-  [groupStore.userList, () => cachedStore.currentAtUsersList],
+  [() => groupStore.userList, () => cachedStore.currentAtUsersList],
   () => {
     // 如果正在搜索，则应用搜索过滤
     if (searchRef.value) {

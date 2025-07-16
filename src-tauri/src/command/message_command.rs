@@ -109,6 +109,7 @@ pub async fn page_msg(param: CursorPageMessageParam, state: State<'_, AppData>) 
     let message_resps: Vec<MessageResp> = db_result.list.unwrap_or_default()
         .into_iter()
         .map(|msg| convert_message_to_resp(msg))
+        .rev()
         .collect();
     
     Ok(CursorPageResp {

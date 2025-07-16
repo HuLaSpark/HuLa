@@ -39,7 +39,7 @@ watchEffect(() => {
 const unlistenSuccess = await listen('send_msg_success', async (event) => {
   let msg = event.payload as any
   chatStore.updateMsg({
-    msgId: msg.old_msg_id,
+    msgId: msg.oldMsgId,
     status: MessageStatusEnum.SUCCESS,
     newMsgId: msg.message.id,
     body: msg.message.body
