@@ -5,17 +5,15 @@ mod desktops;
 use common_cmd::hide_title_bar_buttons;
 #[cfg(desktop)]
 use common_cmd::{
-    audio, default_window_icon, get_directory_size, get_directory_usage_info, get_files_meta,
-    get_window_payload, push_window_payload, screenshot, set_badge_count, set_height
+    audio, default_window_icon, get_files_meta, get_window_payload, push_window_payload,
+    screenshot, set_badge_count, set_height,
 };
+#[cfg(target_os = "macos")]
+use desktops::app_event;
 #[cfg(desktop)]
-use desktops::common_cmd;
+use desktops::{common_cmd, directory_scanner, init, tray, video_thumbnail::get_video_thumbnail};
 #[cfg(desktop)]
-use desktops::init;
-#[cfg(desktop)]
-use desktops::tray;
-#[cfg(desktop)]
-use desktops::video_thumbnail::get_video_thumbnail;
+use directory_scanner::{cancel_directory_scan, get_directory_usage_info_with_progress};
 #[cfg(desktop)]
 use init::CustomInit;
 
@@ -60,11 +58,19 @@ fn setup_desktop() {
             push_window_payload,
             get_window_payload,
             get_files_meta,
-            get_directory_size,
-            get_directory_usage_info
+            get_directory_usage_info_with_progress,
+            cancel_directory_scan
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app_handle, event| {
+            #[cfg(target_os = "macos")]
+            app_event::handle_app_event(&app_handle, event);
+            #[cfg(not(target_os = "macos"))]
+            {
+                let _ = (app_handle, event);
+            }
+        });
 }
 
 #[cfg(mobile)]

@@ -143,7 +143,7 @@
     "typescript": "^5.8.3",
     "unplugin-auto-import": "^19.3.0",
     "unplugin-vue-components": "^28.8.0",
-    "vite": "7.0.2",
+    "vite": "7.0.4",
     "vite-plugin-vue-setup-extend": "^0.4.0",
     "vitest": "^3.0.5",
     "vue-tsc": "^3.0.1"
@@ -152,5 +152,11 @@
     "commitizen": {
       "path": "node_modules/cz-git"
     }
+  },
+  "pnpm": {
+    "ignoredBuiltDependencies": [
+      "esbuild",
+      "vue-demi"
+    ]
   }
 }

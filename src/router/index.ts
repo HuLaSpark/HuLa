@@ -235,6 +235,11 @@ const routes: Array<RouteRecordRaw> = [
         path: '/versatile',
         name: 'versatile',
         component: () => import('@/views/moreWindow/settings/Versatile.vue')
+      },
+      {
+        path: '/manageStore',
+        name: 'manageStore',
+        component: () => import('@/views/moreWindow/settings/ManageStore.vue')
       }
     ]
   },
