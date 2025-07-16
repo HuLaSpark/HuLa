@@ -35,6 +35,9 @@ const isLock = computed(() => {
 const isDesktop = computed(() => {
   return type() === 'windows' || type() === 'linux' || type() === 'macos'
 })
+const isMobile = computed(() => {
+  return type() === 'android' || type() === 'ios'
+})
 
 /** 禁止图片以及输入框的拖拽 */
 const preventDrag = (e: MouseEvent) => {
@@ -107,7 +110,9 @@ watch(
 
 onMounted(async () => {
   // 判断是否是桌面端，桌面端需要调整样式
-  isDesktop.value && (await import('@/styles/scss/desktop.scss'))
+  isDesktop.value && (await import('@/styles/scss/global/desktop.scss'))
+  // 判断是否是移动端，移动端需要加载安全区域适配样式
+  isMobile.value && (await import('@/styles/scss/global/mobile.scss'))
   await import(`@/styles/scss/theme/${themes.value.versatile}.scss`)
   // 判断localStorage中是否有设置主题
   if (!localStorage.getItem(StoresEnum.SETTING)) {

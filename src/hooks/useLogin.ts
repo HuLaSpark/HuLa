@@ -70,7 +70,11 @@ export const useLogin = () => {
     // 4. 清除未读数
     chatStore.clearUnreadCount()
     // 5. 清除系统托盘图标上的未读数
-    await invoke('set_badge_count', { count: null })
+    try {
+      await invoke('set_badge_count', { count: null })
+    } catch (error) {
+      console.error('清除系统托盘图标上的未读数失败:', error)
+    }
   }
 
   return {

@@ -1,20 +1,20 @@
 #[cfg(target_os = "windows")]
 use tauri::{
-    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     Emitter, Manager, PhysicalPosition, Runtime,
+    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
 };
 
 #[cfg(target_os = "macos")]
 use tauri::{
-    menu::{MenuBuilder, MenuId, MenuItem, PredefinedMenuItem},
-    tray::TrayIconBuilder,
     Manager, Runtime,
+    menu::{MenuBuilder, MenuId, MenuItem, PredefinedMenuItem},
+    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
 };
 
 #[cfg(not(any(target_os = "windows", target_os = "macos")))]
 use tauri::{
-    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     Manager, PhysicalPosition, Runtime,
+    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
 };
 
 pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
@@ -40,14 +40,17 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
         let _ = TrayIconBuilder::with_id("tray")
             .tooltip("HuLa")
             .icon(app.default_window_icon().unwrap().clone())
-            .menu(&tray_menu)
+            .menu(&tray_menu)  // 直接设置菜单，让系统处理右键显示
+            .show_menu_on_left_click(false)  // 禁用左键显示菜单
             .on_menu_event(move |app, event| {
                 let id = event.id();
                 if id == &open_id {
                     // 打开主面板
                     let windows = app.webview_windows();
+
+                    // 优先显示已存在的home窗口
                     for (name, window) in windows {
-                        if name == "login" || name == "home" {
+                        if name == "home" {
                             let _ = window.show();
                             let _ = window.unminimize();
                             let _ = window.set_focus();
@@ -58,6 +61,32 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
                     // 退出应用
                     let _ = tray_handler.exit(0);
                 }
+            })
+            .on_tray_icon_event(move |tray, event| match event {
+                TrayIconEvent::Click {
+                    id: _,
+                    position: _,
+                    rect: _,
+                    button,
+                    button_state,
+                } => match button {
+                    MouseButton::Left if MouseButtonState::Up == button_state => {
+                        // 左键点击直接打开主面板
+                        let windows = tray.app_handle().webview_windows();
+
+                        // 优先显示已存在的home窗口
+                        for (name, window) in windows {
+                            if name == "home" {
+                                let _ = window.show();
+                                let _ = window.unminimize();
+                                let _ = window.set_focus();
+                                break;
+                            }
+                        }
+                    }
+                    _ => {}
+                },
+                _ => {}
             })
             .build(app)?;
     }
@@ -112,7 +141,7 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
                     tray.app_handle()
                         .emit_to("notify", "notify_enter", &tray.rect().unwrap())
                         .unwrap();
-                },
+                }
                 #[cfg(target_os = "windows")]
                 TrayIconEvent::Leave {
                     id: _,
@@ -122,7 +151,7 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
                     tray.app_handle()
                         .emit_to("notify", "notify_leave", ())
                         .unwrap();
-                },
+                }
                 _ => {}
             })
             .build(app);

@@ -122,7 +122,10 @@
                 :append="true"
                 clearable
                 type="text"
-                autocomplete="off"
+                spellCheck="false"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
                 @focus="handleInputState($event, 'email')"
                 @blur="handleInputState($event, 'email')">
                 <template #prefix v-if="showemailPrefix || info.email">
@@ -165,9 +168,10 @@
         <n-button
           :loading="loading"
           :disabled="btnEnable"
-          class="w-full mt-8px mb-50px"
-          @click="handleStepAction"
-          color="#13987f">
+          tertiary
+          style="color: #fff"
+          class="w-full mt-8px mb-50px gradient-button"
+          @click="handleStepAction">
           {{ btnText }}
         </n-button>
       </n-flex>
@@ -207,7 +211,7 @@
 
     <!-- 邮箱验证码输入弹窗 -->
     <n-modal v-model:show="emailCodeModal" :mask-closable="false" class="rounded-8px" transform-origin="center">
-      <div class="bg-[--bg-edit] w-380px h-fit box-border flex flex-col">
+      <div class="bg-#f0f0f0 w-380px h-fit box-border flex flex-col">
         <n-flex vertical class="w-full h-fit">
           <n-flex vertical :size="10" class="p-20px">
             <p class="text-(16px [--text-color] font-bold) mb-10px">请输入邮箱验证码</p>
@@ -223,9 +227,10 @@
             <n-button
               :loading="registerLoading"
               :disabled="!isEmailCodeComplete"
-              class="w-full"
-              @click="register"
-              color="#13987f">
+              tertiary
+              style="color: #fff"
+              class="w-full gradient-button"
+              @click="register">
               注册
             </n-button>
           </n-flex>

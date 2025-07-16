@@ -8,6 +8,7 @@ import {
 import { type } from '@tauri-apps/plugin-os'
 import MobileLogin from '../mobile/login.vue'
 import MobileHome from '../mobile/layout/index.vue'
+import MobileLaunch from '../mobile/launch.vue'
 
 const isDesktop = computed(() => {
   return type() === 'windows' || type() === 'linux' || type() === 'macos'
@@ -19,6 +20,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/mobile/login',
     name: 'mobileLogin',
     component: MobileLogin
+  },
+  {
+    path: '/mobile/launch',
+    name: 'mobileLaunch',
+    component: MobileLaunch
   },
   {
     path: '/mobile/home',
@@ -229,6 +235,11 @@ const routes: Array<RouteRecordRaw> = [
         path: '/versatile',
         name: 'versatile',
         component: () => import('@/views/moreWindow/settings/Versatile.vue')
+      },
+      {
+        path: '/manageStore',
+        name: 'manageStore',
+        component: () => import('@/views/moreWindow/settings/ManageStore.vue')
       }
     ]
   },
@@ -251,24 +262,25 @@ const router: any = createRouter({
 })
 
 // 在创建路由后，添加全局前置守卫
-router.beforeEach((to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
+// 为解决 “已声明‘to’，但从未读取其值” 的问题，将 to 参数改为下划线开头表示该参数不会被使用
+router.beforeEach((_to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
   // 如果是桌面端，直接放行
   if (isDesktop.value) {
     return next()
   }
 
-  const token = localStorage.getItem('TOKEN')
-  const isLoginPage = to.path === '/mobile/login'
+  // const token = localStorage.getItem('TOKEN')
+  // const isLoginPage = to.path === '/mobile/login'
 
-  // 已登录用户访问登录页时重定向到首页
-  if (isLoginPage && token) {
-    return next('/mobile/home')
-  }
+  // // 已登录用户访问登录页时重定向到首页
+  // if (isLoginPage && token) {
+  //   return next('/mobile/home')
+  // }
 
-  // 未登录用户访问非登录页时重定向到登录页
-  if (!isLoginPage && !token) {
-    return next('/mobile/login')
-  }
+  // // 未登录用户访问非登录页时重定向到登录页
+  // if (!isLoginPage && !token) {
+  //   return next('/mobile/login')
+  // }
 
   // 其他情况正常放行
   next()

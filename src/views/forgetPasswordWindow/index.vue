@@ -88,9 +88,10 @@
           <n-button
             :loading="verifyLoading"
             :disabled="nextDisabled"
+            tertiary
+            style="color: #fff"
             @click="verifyEmail"
-            color="#13987f"
-            class="mt-10px w-full">
+            class="mt-10px w-full gradient-button">
             下一步
           </n-button>
         </n-form>
@@ -156,7 +157,12 @@
 
           <n-flex :size="16" class="mt-30px">
             <n-button @click="goBack" class="flex-1">上一步</n-button>
-            <n-button color="#13987f" :loading="submitLoading" @click="submitNewPassword" class="flex-1">
+            <n-button
+              :loading="submitLoading"
+              tertiary
+              style="color: #fff"
+              @click="submitNewPassword"
+              class="flex-1 gradient-button">
               提交
             </n-button>
           </n-flex>
@@ -237,7 +243,7 @@ const emailRules = {
     { min: 4, max: 5, message: '验证码长度为4-5位', trigger: 'blur' }
   ],
   emailCode: [
-    { required: true, message: '请输入邮箱验证码', trigger: 'blur' },
+    { required: true, message: '请输入邮箱验证码', trigger: 'input' },
     { min: 6, max: 6, message: '验证码长度为6位', trigger: 'blur' }
   ]
 }
@@ -481,3 +487,6 @@ onBeforeUnmount(() => {
   timerWorker.terminate()
 })
 </script>
+<style scoped lang="scss">
+@use '@/styles/scss/login';
+</style>

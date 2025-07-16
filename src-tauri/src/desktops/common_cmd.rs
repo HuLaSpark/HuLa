@@ -1,24 +1,36 @@
 #![allow(unexpected_cfgs)]
-use base64::{engine::general_purpose, Engine as _};
+use base64::{Engine as _, engine::general_purpose};
 use lazy_static::lazy_static;
 use mime_guess::from_path;
 use screenshots::Screen;
 use serde::Serialize;
 use std::cmp;
 use std::path::PathBuf;
-use std::sync::{Arc, RwLock};
+use std::sync::{
+    Arc, RwLock,
+};
 use std::thread;
 use std::time::Duration;
 use tauri::path::BaseDirectory;
 use tauri::{AppHandle, Emitter, LogicalSize, Manager, ResourceId, Runtime, Webview};
+
+#[derive(Serialize)]
+pub struct DiskInfo {
+    mount_point: String,
+    total_space: u64,
+    available_space: u64,
+    used_space: u64,
+    usage_percentage: f64,
+}
+
 
 #[cfg(target_os = "macos")]
 #[allow(deprecated)]
 use cocoa::appkit::NSWindow;
 
 use crate::desktops::window_payload::{
-    get_window_payload as _get_window_payload, push_window_payload as _push_window_payload,
-    WindowPayload,
+    WindowPayload, get_window_payload as _get_window_payload,
+    push_window_payload as _push_window_payload,
 };
 
 // 定义用户信息结构体
@@ -29,6 +41,15 @@ pub struct UserInfo {
     token: String,
     portrait: String,
     is_sign: bool,
+}
+
+#[derive(Serialize)]
+pub struct FileMeta {
+    name: String,
+    path: String,
+    file_type: String,
+    mime_type: String,
+    exists: bool,
 }
 
 impl UserInfo {
@@ -82,7 +103,7 @@ pub fn screenshot(x: &str, y: &str, width: &str, height: &str) -> String {
             height.parse::<u32>().unwrap(),
         )
         .unwrap();
-    let buffer = image.buffer();
+    let buffer = image.as_raw();
     let base64_str = general_purpose::STANDARD_NO_PAD.encode(buffer);
     base64_str
 }
@@ -149,7 +170,7 @@ pub fn hide_title_bar_buttons(window_label: &str, handle: AppHandle) -> Result<(
     #[allow(deprecated)]
     {
         use cocoa::appkit::NSWindowButton;
-        use cocoa::base::{id, NO, YES};
+        use cocoa::base::{NO, YES, id};
         use objc::{msg_send, sel, sel_impl};
 
         let ns_window = handle
@@ -220,19 +241,8 @@ pub async fn get_window_payload(label: String) -> Result<serde_json::Value, ()> 
     }
 }
 
-#[derive(Serialize)]
-pub struct FileMeta {
-    name: String,
-    path: String,
-    file_type: String,
-    mime_type: String,
-    exists: bool,
-}
-
-type FilePath = String;
-
 #[tauri::command]
-pub async fn get_files_meta(files_path: Vec<FilePath>) -> Result<Vec<FileMeta>, String> {
+pub async fn get_files_meta(files_path: Vec<String>) -> Result<Vec<FileMeta>, String> {
     let mut files_meta: Vec<FileMeta> = Vec::new();
 
     for path in files_path {
@@ -273,3 +283,9 @@ pub async fn get_files_meta(files_path: Vec<FilePath>) -> Result<Vec<FileMeta>, 
 
     Ok(files_meta)
 }
+
+
+
+
+
+

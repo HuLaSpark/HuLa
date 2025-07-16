@@ -6,6 +6,7 @@ import { useCachedStore } from '@/stores/cached'
 import { useContactStore } from '@/stores/contacts'
 import { type } from '@tauri-apps/plugin-os'
 import webSocket from '@/services/webSocket'
+import { RoomTypeEnum } from '@/enums'
 
 /**
  * 网络重连Hook，监测网络恢复并自动刷新数据
@@ -147,7 +148,7 @@ export const useNetworkReconnect = () => {
       await chatStore.resetAndRefreshCurrentRoomMessages()
     }
     // 如果当前是群聊，刷新群组信息
-    if (globalStore.currentSession?.type === 2) {
+    if (globalStore.currentSession?.type === RoomTypeEnum.GROUP) {
       await groupStore.getGroupUserList(true)
       await groupStore.getCountStatistic()
       await cachedStore.getGroupAtUserBaseInfo()
