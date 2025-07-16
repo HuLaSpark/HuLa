@@ -239,55 +239,55 @@ const drawWaveform = () => {
 }
 
 /**
+ * 尝试从本地缓存中读取音频文件。
+ *
+ * @param fileName 音频文件名（如 voice_1234.mp3）
+ * @returns 包含文件 buffer、完整路径、缓存路径和是否存在标志的对象
+ */
+const getLocalAudioFile = async (fileName: string) => {
+  const audioFolder = 'audio'
+  // 拼接缓存路径（如 cache\46022457888256\audio）
+  const cachePath = getImageCache(audioFolder, userStore.userInfo.uid as string)
+  const fullPath = await join(cachePath, fileName)
+
+  // 检查文件是否存在于本地缓存文件夹中
+  const fileExists = await exists(fullPath, { baseDir: BaseDirectory.AppCache })
+  if (!fileExists) {
+    console.log('找不到该音频文件，即将使用在线资源')
+    return {
+      cachePath,
+      fullPath,
+      fileBuffer: new ArrayBuffer(),
+      fileExists
+    }
+  }
+
+  // 读取音频文件内容
+  const fileBuffer = await readFile(fullPath, { baseDir: BaseDirectory.AppCache })
+
+  // 如果是 Uint8Array，手动转成ArrayBuffer
+  const arrayBuffer =
+    fileBuffer instanceof Uint8Array
+      ? fileBuffer.buffer.slice(fileBuffer.byteOffset, fileBuffer.byteOffset + fileBuffer.byteLength)
+      : fileBuffer
+
+  console.log('找到文件：', fileName, fileBuffer)
+
+  return {
+    fileBuffer: arrayBuffer,
+    cachePath,
+    fullPath,
+    fileExists
+  }
+}
+
+/**
  * 加载音频波形数据并绘制波形。
  *
  * 优先尝试从本地缓存中读取音频文件，若不存在则从远程 URL 下载，
  * 并保存到本地缓存中以供后续使用。支持错误回退生成默认波形。
  */
 const loadAudioWaveform = async () => {
-  /**
-   * 尝试从本地缓存中读取音频文件。
-   *
-   * @param fileName 音频文件名（如 voice_1234.mp3）
-   * @returns 包含文件 buffer、完整路径、缓存路径和是否存在标志的对象
-   */
-  const getLocalAudioFile = async (fileName: string) => {
-    const audioFolder = 'audio'
-    // 拼接缓存路径（如 cache\46022457888256\audio）
-    const cachePath = getImageCache(audioFolder, userStore.userInfo.uid as string)
-    const fullPath = await join(cachePath, fileName)
-
-    // 检查文件是否存在于本地缓存文件夹中
-    const fileExists = await exists(fullPath, { baseDir: BaseDirectory.AppCache })
-    if (!fileExists) {
-      console.log('找不到该音频文件，即将使用在线资源')
-      return {
-        cachePath,
-        fullPath,
-        fileBuffer: new ArrayBuffer(),
-        fileExists
-      }
-    }
-
-    // 读取音频文件内容
-    const fileBuffer = await readFile(fullPath, { baseDir: BaseDirectory.AppCache })
-
-    // 如果是 Uint8Array，手动转成ArrayBuffer
-    const arrayBuffer =
-      fileBuffer instanceof Uint8Array
-        ? fileBuffer.buffer.slice(fileBuffer.byteOffset, fileBuffer.byteOffset + fileBuffer.byteLength)
-        : fileBuffer
-
-    console.log('找到文件：', fileName, fileBuffer)
-
-    return {
-      fileBuffer: arrayBuffer,
-      cachePath,
-      fullPath,
-      fileExists
-    }
-  }
-
   /**
    * 从远程下载音频文件并保存到本地缓存目录。
    *
@@ -353,11 +353,48 @@ const seekToPosition = (event: MouseEvent) => {
   }
 }
 
+const existsAudioFile = async (): Promise<{
+  exists: boolean
+  fullPath: string
+  fileMeta: {
+    name: string
+    path: string
+    file_type: string
+    mime_type: string
+    exists: boolean
+  }
+}> => {
+  const [fileMeta] = await getFilesMeta<FilesMeta>([props.body.url])
+  const audioFolder = 'audio'
+  const cachePath = getImageCache(audioFolder, userStore.userInfo.uid as string)
+  const fullPath = await join(cachePath, fileMeta.name)
+
+  const fileExists = await exists(fullPath, { baseDir: BaseDirectory.AppCache })
+  console.log('文件是否存在本地：', fileExists, fullPath)
+  return {
+    exists: fileExists,
+    fullPath: fullPath,
+    fileMeta: fileMeta
+  }
+}
+
 // 创建音频元素
-const createAudioElement = () => {
+const createAudioElement = async () => {
   if (audioElement.value) return
 
-  audioElement.value = new Audio(props.body.url)
+  const existsData = await existsAudioFile()
+
+  let playableUrl = props.body.url // 默认使用远程地址
+
+  if (existsData.exists) {
+    console.log('找到音频文件：', existsData)
+    const fileData = await getLocalAudioFile(existsData.fileMeta.name)
+    playableUrl = URL.createObjectURL(new Blob([fileData.fileBuffer]))
+  }
+
+  console.log('完成后的路径：', playableUrl)
+
+  audioElement.value = new Audio(playableUrl)
 
   // 设置事件监听
   audioElement.value.addEventListener('loadstart', () => {
@@ -425,11 +462,12 @@ const togglePlayback = async () => {
     drawWaveform()
 
     // 创建新的音频元素
-    createAudioElement()
+    await createAudioElement()
 
     if (!audioElement.value) return
 
     await audioManager.play(audioElement.value, audioId.value)
+    console.log('play')
     isPlaying.value = true
   } catch (error) {
     isPlaying.value = false
@@ -451,6 +489,7 @@ const handleAudioStateChange = () => {
 
 // 组件挂载时加载波形并添加监听器
 onMounted(() => {
+  console.log('加载完成,props：', props)
   loadAudioWaveform()
   audioManager.addListener(handleAudioStateChange)
 })
