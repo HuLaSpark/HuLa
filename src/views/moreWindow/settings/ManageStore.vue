@@ -6,8 +6,12 @@
       <n-flex justify="center" align="center" class="py-20px">
         <n-progress
           type="multiple-circle"
-          :circle-gap="1"
+          :circle-gap="-16"
           :color="showDiskUsage ? ['var(--warning-text)', '#13987f'] : ['#13987f']"
+          :rail-style="[
+            { stroke: '#7db1ac', opacity: 0.2 },
+            { stroke: '#fff', opacity: 0 }
+          ]"
           :percentage="
             showDiskUsage
               ? [Number(diskInfo?.disk_usage_percentage.toFixed(2)), scanFilesUsagePercentage]
@@ -16,7 +20,7 @@
           :processing="scanning"
           :offset-degree="180"
           style="width: 160px; height: 160px"
-          :stroke-width="10">
+          :stroke-width="16">
           <n-flex vertical align="center" justify="center" :size="4">
             <span class="text-(18px [--text-color]) font-bold">
               {{ showDiskUsage ? scanFilesUsagePercentage.toFixed(2) : scanningProgress.toFixed(1) }}%
@@ -39,7 +43,7 @@
           <span class="text-(11px #666)">磁盘分区已用空间</span>
         </n-flex>
         <n-flex align="center" :size="8">
-          <div class="w-12px h-12px rounded-2px bg-#444"></div>
+          <div class="w-12px h-12px rounded-2px bg-#7db1ac50"></div>
           <span class="text-(11px #666)">剩余可用空间</span>
         </n-flex>
       </n-flex>
@@ -48,7 +52,7 @@
       <n-flex vertical :size="8">
         <n-flex v-if="scanning" justify="space-between">
           <span class="text-(12px #666)">当前文件:</span>
-          <span class="text-(12px #666)" style="max-width: 300px; word-break: break-all">
+          <span class="text-(12px #666) max-w-300px truncate">
             {{ scanProgress.current_path }}
           </span>
         </n-flex>
@@ -118,7 +122,7 @@
         <n-flex align="center" justify="space-between">
           <span>当前目录：</span>
           <n-flex vertical align="end" :size="8">
-            <span class="text-(12px #666)" style="max-width: 300px; word-break: break-all">
+            <span class="text-(12px #666) max-w-300px truncate">
               {{ currentDirectory || '正在获取目录路径...' }}
             </span>
             <n-flex :size="8">
