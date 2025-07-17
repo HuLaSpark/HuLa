@@ -143,7 +143,7 @@ impl MigrationTrait for Migration {
                             .primary_key(),
                     )
                     .col(ColumnDef::new(ImMessage::Uid).string().not_null())
-                    .col(ColumnDef::new(ImMessage::Nickname).string().not_null())
+                    .col(ColumnDef::new(ImMessage::Nickname).string())
                     .col(ColumnDef::new(ImMessage::RoomId).string().not_null())
                     .col(ColumnDef::new(ImMessage::SendTime).big_integer())
                     .col(ColumnDef::new(ImMessage::MessageType).tiny_unsigned())
