@@ -1,18 +1,18 @@
+use crate::AppData;
+use crate::error::CommonError;
+use crate::im_reqest_client::ImRequestClient;
 use crate::pojo::common::{CursorPageParam, CursorPageResp};
 use crate::repository::im_message_repository;
-use crate::AppData;
-use entity::{im_message, im_user};
+use crate::vo::vo::ChatMessageReq;
 use entity::im_user::Entity as ImUserEntity;
-use sea_orm::{EntityTrait, ColumnTrait, QueryFilter};
+use entity::{im_message, im_user};
+use log::{debug, error, info};
+use sea_orm::DatabaseConnection;
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::ops::Deref;
 use tauri::{AppHandle, Emitter, State};
-use crate::im_reqest_client::ImRequestClient;
-use sea_orm::DatabaseConnection;
-use crate::error::CommonError;
-use log::{debug, error, info};
-use crate::vo::vo::ChatMessageReq;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -78,7 +78,7 @@ pub struct ReplyMsg {
 #[serde(rename_all = "camelCase")]
 pub struct MessageMark {
     pub count: u32,
-    pub user_marked: bool
+    pub user_marked: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -86,32 +86,39 @@ pub struct MessageMark {
 pub struct CursorPageMessageParam {
     room_id: String,
     #[serde(flatten)]
-    cursor_page_param: CursorPageParam
+    cursor_page_param: CursorPageParam,
 }
 
 #[tauri::command]
-pub async fn page_msg(param: CursorPageMessageParam, state: State<'_, AppData>) -> Result<CursorPageResp<Vec<MessageResp>>, String> {
+pub async fn page_msg(
+    param: CursorPageMessageParam,
+    state: State<'_, AppData>,
+) -> Result<CursorPageResp<Vec<MessageResp>>, String> {
     // 获取当前登录用户的 uid
     let login_uid = {
         let user_info = state.user_info.lock().await;
         user_info.uid.clone()
     };
-    
+
     // 从数据库查询消息
     let db_result = im_message_repository::cursor_page_messages(
-        state.db_conn.deref(), 
-        param.room_id, 
+        state.db_conn.deref(),
+        param.room_id,
         param.cursor_page_param,
-        &login_uid
-    ).await.map_err(|e| e.to_string())?;
-    
+        &login_uid,
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
     // 转换数据库模型为响应模型
-    let message_resps: Vec<MessageResp> = db_result.list.unwrap_or_default()
+    let message_resps: Vec<MessageResp> = db_result
+        .list
+        .unwrap_or_default()
         .into_iter()
         .map(|msg| convert_message_to_resp(msg))
         .rev()
         .collect();
-    
+
     Ok(CursorPageResp {
         cursor: db_result.cursor,
         is_last: db_result.is_last,
@@ -123,15 +130,14 @@ pub async fn page_msg(param: CursorPageMessageParam, state: State<'_, AppData>) 
 /// 将数据库消息模型转换为响应模型
 fn convert_message_to_resp(msg: im_message::Model) -> MessageResp {
     // 解析消息体
-    let body = msg.body.as_ref().and_then(|b| {
-        serde_json::from_str(b).ok()
-    });
-    
+    let body = msg.body.as_ref().and_then(|b| serde_json::from_str(b).ok());
+
     // 解析消息标记
-    let message_marks = msg.message_marks.as_ref().and_then(|marks| {
-        serde_json::from_str::<HashMap<String, MessageMark>>(marks).ok()
-    });
-    
+    let message_marks = msg
+        .message_marks
+        .as_ref()
+        .and_then(|marks| serde_json::from_str::<HashMap<String, MessageMark>>(marks).ok());
+
     MessageResp {
         create_id: Some(msg.id.clone()),
         create_time: msg.send_time,
@@ -216,17 +222,21 @@ pub async fn fetch_all_messages(
 /// 将 MessageResp 转换为数据库模型（用于 fetch_all_messages）
 fn convert_resp_to_model_for_fetch(msg_resp: MessageResp) -> im_message::Model {
     use serde_json;
-    
+
     // 序列化消息体为 JSON 字符串
-    let body_json = msg_resp.message.body
+    let body_json = msg_resp
+        .message
+        .body
         .as_ref()
         .and_then(|body| serde_json::to_string(body).ok());
-    
+
     // 序列化消息标记为 JSON 字符串
-    let marks_json = msg_resp.message.message_marks
+    let marks_json = msg_resp
+        .message
+        .message_marks
         .as_ref()
         .and_then(|marks| serde_json::to_string(marks).ok());
-    
+
     im_message::Model {
         id: msg_resp.message.id.unwrap_or_default(),
         uid: msg_resp.from_user.uid,
@@ -243,27 +253,32 @@ fn convert_resp_to_model_for_fetch(msg_resp: MessageResp) -> im_message::Model {
     }
 }
 
-
 #[tauri::command]
-pub async fn send_msg(data: ChatMessageReq, state: State<'_, AppData>, app: AppHandle) -> Result<(), String> {
+pub async fn send_msg(
+    data: ChatMessageReq,
+    state: State<'_, AppData>,
+    app: AppHandle,
+) -> Result<(), String> {
     use std::ops::Deref;
-    
+
     // 获取当前登录用户信息
     let (login_uid, nickname) = {
         let user_info = state.user_info.lock().await;
         (user_info.uid.clone(), None) // UserInfo只有uid和token字段，nickname暂时设为None
     };
-    
+
     // 生成消息ID
     let current_time = chrono::Utc::now().timestamp_millis();
-    
+
     // 先克隆data以避免所有权问题
     let send_data = data.clone();
-    
+
     // 序列化消息体
-    let body_json = data.body.as_ref()
+    let body_json = data
+        .body
+        .as_ref()
         .and_then(|body| serde_json::to_string(body).ok());
-    
+
     // 创建消息模型
     let message = im_message::Model {
         id: data.id.clone(),
@@ -279,32 +294,35 @@ pub async fn send_msg(data: ChatMessageReq, state: State<'_, AppData>, app: AppH
         login_uid: login_uid.clone(),
         send_status: "pending".to_string(), // 初始状态为pending
     };
-    
+
     // 先保存到本地数据库
-    if let Err(e) = im_message_repository::save_message(state.db_conn.deref(), message.clone()).await {
+    if let Err(e) =
+        im_message_repository::save_message(state.db_conn.deref(), message.clone()).await
+    {
         error!("保存消息到数据库失败: {}", e);
         return Err(e.to_string());
     }
-    
+
     info!("消息已保存到本地数据库，ID: {}", message.id.clone());
-    
+
     // 异步发送到后端接口
     let db_conn = state.db_conn.clone();
     let request_client = state.request_client.clone();
     let msg_id = message.id.clone();
-    
+
     tokio::spawn(async move {
         // 发送到后端接口
         let result = {
             let client = request_client.lock().await;
-            client.post("/chat/msg")
+            client
+                .post("/chat/msg")
                 .json(&send_data)
                 .send_json::<MessageResp>()
                 .await
         };
 
         let mut id = None;
-        
+
         // 根据发送结果更新消息状态
         let status = match result {
             Ok(resp) => {
@@ -312,7 +330,7 @@ pub async fn send_msg(data: ChatMessageReq, state: State<'_, AppData>, app: AppH
                 let mut result = resp.data.clone().unwrap();
                 result.old_msg_id = Some(msg_id.clone());
                 id = result.message.id.clone();
-                
+
                 let _ = app.emit::<MessageResp>("send_msg_success", result);
                 "success"
             }
@@ -322,17 +340,14 @@ pub async fn send_msg(data: ChatMessageReq, state: State<'_, AppData>, app: AppH
                 "fail"
             }
         };
-        
+
         // 更新消息状态
-        if let Err(e) = im_message_repository::update_message_status(
-            db_conn.deref(),
-            &msg_id,
-            status,
-            id,
-        ).await {
+        if let Err(e) =
+            im_message_repository::update_message_status(db_conn.deref(), &msg_id, status, id).await
+        {
             error!("更新消息状态失败: {}", e);
         }
     });
-    
+
     Ok(())
 }

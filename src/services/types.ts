@@ -666,3 +666,43 @@ export type MockItem = {
   accountId: number
   accountName: string
 }
+
+export type FilesMeta = {
+  name: string
+  path: string
+  file_type: string
+  mime_type: string
+  exists: boolean
+}[]
+
+export type RightMouseMessageItem = {
+  createId: string | null
+  updateId: string | null
+  fromUser: {
+    uid: string
+    nickname: string | null
+  }
+  message: {
+    id: string
+    roomId: string
+    sendTime: number
+    type: number
+    body: {
+      size: string
+      url: string
+      fileName: string
+      replyMsgId: string | null
+      atUidList: string[] | null
+      reply: any | null // 可进一步细化
+    }
+    messageMarks: {
+      [key: string]: {
+        count: number
+        userMarked: boolean
+      }
+    }
+  }
+  createTime: number | null
+  updateTime: number | null
+  _index: number
+}

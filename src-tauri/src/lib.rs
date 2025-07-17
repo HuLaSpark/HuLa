@@ -4,52 +4,59 @@ mod desktops;
 #[cfg(target_os = "macos")]
 use common_cmd::hide_title_bar_buttons;
 #[cfg(desktop)]
-use common_cmd::{audio, default_window_icon, screenshot, set_badge_count, set_height};
+use common_cmd::{
+    audio, default_window_icon, get_files_meta, get_window_payload, push_window_payload,
+    screenshot, set_badge_count, set_height,
+};
+#[cfg(target_os = "macos")]
+use desktops::app_event;
 #[cfg(desktop)]
-use desktops::video_thumbnail::get_video_thumbnail;
-use std::sync::Arc;
-use std::time::Duration;
-use moka::future::Cache;
-
+use desktops::{common_cmd, directory_scanner, init, tray, video_thumbnail::get_video_thumbnail};
 #[cfg(desktop)]
-mod proxy;
-#[cfg(desktop)]
-mod command;
-#[cfg(desktop)]
-use desktops::common_cmd;
-#[cfg(desktop)]
-use desktops::init;
-#[cfg(desktop)]
-use desktops::tray;
+use directory_scanner::{cancel_directory_scan, get_directory_usage_info_with_progress};
 #[cfg(desktop)]
 use init::CustomInit;
-#[cfg(desktop)]
-use proxy::test_api_proxy;
-#[cfg(desktop)]
-use proxy::test_ws_proxy;
-
-// 移动端依赖
-#[cfg(mobile)]
-mod mobiles;
-mod vo;
-pub mod error;
-pub mod repository;
+use moka::future::Cache;
+use std::sync::Arc;
+use std::time::Duration;
+pub mod command;
 pub mod configuration;
-pub mod pojo;
+pub mod error;
 pub mod im_reqest_client;
+pub mod pojo;
+pub mod repository;
+mod vo;
 
-use crate::command::room_member_command::{cursor_page_room_members, get_room_members, page_room, update_my_room_info};
+use crate::command::room_member_command::{
+    cursor_page_room_members, get_room_members, page_room, update_my_room_info,
+};
 use crate::configuration::get_configuration;
 use crate::error::CommonError;
 use crate::im_reqest_client::ImRequestClient;
+use anyhow::Context;
+use sea_orm::DatabaseConnection;
+use serde::{Deserialize, Serialize};
+use std::ops::Deref;
+
+// 移动端依赖
 #[cfg(mobile)]
 use init::CustomInit;
 #[cfg(mobile)]
 use mobiles::init;
-use sea_orm::DatabaseConnection;
-use serde::{Deserialize, Serialize};
-use std::ops::Deref;
-use anyhow::Context;
+#[cfg(mobile)]
+mod mobiles;
+
+struct AppData {
+    db_conn: Arc<DatabaseConnection>,
+    request_client: Arc<Mutex<ImRequestClient>>,
+    user_info: Arc<Mutex<UserInfo>>,
+    cache: Cache<String, String>,
+}
+
+use crate::command::contact_command::list_contacts_command;
+use crate::command::message_command::{check_user_init_and_fetch_messages, page_msg, send_msg};
+use tauri::Listener;
+use tokio::sync::Mutex;
 
 pub async fn run() {
     #[cfg(desktop)]
@@ -62,27 +69,15 @@ pub async fn run() {
     }
 }
 
-struct AppData {
-    db_conn: Arc<DatabaseConnection>,
-    request_client: Arc<Mutex<ImRequestClient>>,
-    user_info: Arc<Mutex<UserInfo>>,
-    cache: Cache<String, String>,
-}
-
-use tauri::Listener;
-use tokio::sync::Mutex;
-use crate::command::contact_command::list_contacts_command;
-use crate::command::message_command::{page_msg, check_user_init_and_fetch_messages, send_msg};
-
 #[cfg(desktop)]
 async fn setup_desktop() -> Result<(), CommonError> {
-
     use crate::command::user_command::save_user_info;
 
     let configuration = Arc::new(get_configuration().expect("加载配置文件失败"));
     let db = Arc::new(configuration.database.connection_string().await?);
 
-    let im_request_client = ImRequestClient::new(configuration.clone().backend.base_url.clone()).await?;
+    let im_request_client =
+        ImRequestClient::new(configuration.clone().backend.base_url.clone()).await?;
     let user_info = UserInfo {
         token: Default::default(),
         uid: Default::default(),
@@ -91,7 +86,7 @@ async fn setup_desktop() -> Result<(), CommonError> {
     // 创建一个缓存实例
     let cache: Cache<String, String> = Cache::builder()
         // Time to idle (TTI):  30 minutes
-        .time_to_idle(Duration::from_secs( 30 * 60))
+        .time_to_idle(Duration::from_secs(30 * 60))
         // Create the cache.
         .build();
 
@@ -101,7 +96,12 @@ async fn setup_desktop() -> Result<(), CommonError> {
         .init_plugin()
         .init_webwindow_event()
         .init_window_event()
-        .manage(AppData { db_conn: db.clone(), request_client: client.clone(), user_info: user_info.clone(), cache })
+        .manage(AppData {
+            db_conn: db.clone(),
+            request_client: client.clone(),
+            user_info: user_info.clone(),
+            cache,
+        })
         .setup(move |app| {
             // 监听前端事件，保存登录用户信息
             setup_user_info_listener(app, client.clone(), user_info.clone(), db.clone());
@@ -114,8 +114,6 @@ async fn setup_desktop() -> Result<(), CommonError> {
             audio,
             set_height,
             set_badge_count,
-            test_api_proxy,
-            test_ws_proxy,
             get_video_thumbnail,
             #[cfg(target_os = "macos")]
             hide_title_bar_buttons,
@@ -127,10 +125,22 @@ async fn setup_desktop() -> Result<(), CommonError> {
             list_contacts_command,
             page_msg,
             send_msg,
+            push_window_payload,
+            get_window_payload,
+            get_files_meta,
+            get_directory_usage_info_with_progress,
+            cancel_directory_scan
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
-
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app_handle, event| {
+            #[cfg(target_os = "macos")]
+            app_event::handle_app_event(&app_handle, event);
+            #[cfg(not(target_os = "macos"))]
+            {
+                let _ = (app_handle, event);
+            }
+        });
     Ok(())
 }
 
@@ -157,9 +167,12 @@ fn setup_user_info_listener(
                     let mut user_info = user_info.lock().await;
                     user_info.uid = payload.uid.clone();
                     user_info.token = payload.token.clone();
-                    
+
                     // 检查用户的 is_init 状态并获取消息
-                    if let Err(e) = check_user_init_and_fetch_messages(&client, db_conn.deref(), &payload.uid).await {
+                    if let Err(e) =
+                        check_user_init_and_fetch_messages(&client, db_conn.deref(), &payload.uid)
+                            .await
+                    {
                         log::error!("检查用户初始化状态并获取消息失败: {}", e);
                     }
                 }
@@ -175,7 +188,9 @@ pub struct UserInfo {
 }
 
 pub async fn build_request_client() -> Result<reqwest::Client, CommonError> {
-    let client = reqwest::Client::builder().build().with_context(|| "Reqwest client 异常")?;
+    let client = reqwest::Client::builder()
+        .build()
+        .with_context(|| "Reqwest client 异常")?;
     Ok(client)
 }
 

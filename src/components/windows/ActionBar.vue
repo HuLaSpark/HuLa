@@ -151,9 +151,9 @@ watchEffect(() => {
     appWindow.setAlwaysOnTop(alwaysOnTopStatus.value as boolean)
   }
 
-  // 添加 macOS 关闭按钮拦截逻辑 - 只拦截 home 窗口
-  if (type() === 'macos' && appWindow.label === 'home' && !unlistenCloseRequested) {
-    // 监听 macOS 原生关闭按钮事件
+  // 添加关闭事件拦截逻辑 - 只拦截 home 窗口
+  if (appWindow.label === 'home' && !unlistenCloseRequested) {
+    // 监听原生关闭事件
     appWindow
       .onCloseRequested((event) => {
         // 如果是程序内部触发的关闭操作，不拦截

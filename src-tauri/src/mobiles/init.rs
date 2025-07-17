@@ -17,6 +17,5 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
             .plugin(tauri_plugin_clipboard_manager::init())
             .plugin(tauri_plugin_opener::init())
             .plugin(tauri_plugin_sql::Builder::new().build())
-            .plugin(tauri_plugin_mic_recorder::init())
     }
 }

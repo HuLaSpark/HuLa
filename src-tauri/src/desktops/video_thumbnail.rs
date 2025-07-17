@@ -1,7 +1,7 @@
 use base64::{Engine as _, engine::general_purpose};
-use image::{ImageFormat};
+use image::ImageFormat;
 #[cfg(target_os = "macos")]
-use image::{ImageReader};
+use image::ImageReader;
 use serde::Serialize;
 use std::path::Path;
 #[cfg(target_os = "macos")]
@@ -221,9 +221,11 @@ async fn get_video_duration_macos(video_path: &str) -> Option<f64> {
 }
 
 #[cfg(target_os = "windows")]
-unsafe fn convert_hbitmap_to_image_data(hbitmap: windows::Win32::Graphics::Gdi::HBITMAP) -> TauriResult<(u32, u32, Vec<u8>)> {
-    use windows::Win32::Graphics::Gdi::*;
+unsafe fn convert_hbitmap_to_image_data(
+    hbitmap: windows::Win32::Graphics::Gdi::HBITMAP,
+) -> TauriResult<(u32, u32, Vec<u8>)> {
     use windows::Win32::Foundation::HWND;
+    use windows::Win32::Graphics::Gdi::*;
 
     unsafe {
         // 获取位图信息
@@ -233,7 +235,7 @@ unsafe fn convert_hbitmap_to_image_data(hbitmap: windows::Win32::Graphics::Gdi::
             std::mem::size_of::<BITMAP>() as i32,
             Some(&mut bitmap as *mut _ as *mut _),
         );
-        
+
         if result == 0 {
             return Err(tauri::Error::Io(std::io::Error::new(
                 std::io::ErrorKind::Other,
@@ -320,7 +322,7 @@ unsafe fn convert_hbitmap_to_image_data(hbitmap: windows::Win32::Graphics::Gdi::
                     // BGR 转 RGB
                     rgb_data.push(image_data[offset + 2]); // R
                     rgb_data.push(image_data[offset + 1]); // G
-                    rgb_data.push(image_data[offset]);     // B
+                    rgb_data.push(image_data[offset]); // B
                 }
             }
         }
@@ -334,12 +336,7 @@ async fn generate_thumbnail_windows(
     video_path: &str,
     _target_time: Option<f64>,
 ) -> TauriResult<VideoThumbnailInfo> {
-    use windows::{
-        core::*,
-        Win32::Foundation::*,
-        Win32::System::Com::*,
-        Win32::UI::Shell::*,
-    };
+    use windows::{Win32::Foundation::*, Win32::System::Com::*, Win32::UI::Shell::*, core::*};
 
     // 检查视频文件是否存在
     if !Path::new(video_path).exists() {
@@ -361,19 +358,20 @@ async fn generate_thumbnail_windows(
 
     let result = unsafe {
         // 将文件路径转换为宽字符
-        let video_path_wide: Vec<u16> = video_path.encode_utf16().chain(std::iter::once(0)).collect();
+        let video_path_wide: Vec<u16> = video_path
+            .encode_utf16()
+            .chain(std::iter::once(0))
+            .collect();
         let video_path_pcwstr = PCWSTR(video_path_wide.as_ptr());
 
         // 创建 ShellItem
-        let shell_item: IShellItem = SHCreateItemFromParsingName(
-            video_path_pcwstr,
-            None,
-        ).map_err(|e| {
-            tauri::Error::Io(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("创建 ShellItem 失败: {:?}", e),
-            ))
-        })?;
+        let shell_item: IShellItem =
+            SHCreateItemFromParsingName(video_path_pcwstr, None).map_err(|e| {
+                tauri::Error::Io(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    format!("创建 ShellItem 失败: {:?}", e),
+                ))
+            })?;
 
         // 获取缩略图
         let image_factory: IShellItemImageFactory = shell_item.cast().map_err(|e| {
@@ -387,12 +385,14 @@ async fn generate_thumbnail_windows(
         let size = SIZE { cx: 300, cy: 300 };
 
         // 获取缩略图 HBITMAP
-        let hbitmap = image_factory.GetImage(size, SIIGBF_RESIZETOFIT).map_err(|e| {
-            tauri::Error::Io(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("获取缩略图失败，可能是视频格式不支持: {:?}", e),
-            ))
-        })?;
+        let hbitmap = image_factory
+            .GetImage(size, SIIGBF_RESIZETOFIT)
+            .map_err(|e| {
+                tauri::Error::Io(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    format!("获取缩略图失败，可能是视频格式不支持: {:?}", e),
+                ))
+            })?;
 
         // 将 HBITMAP 转换为图像数据
         convert_hbitmap_to_image_data(hbitmap)
@@ -406,13 +406,12 @@ async fn generate_thumbnail_windows(
     let (width, height, image_data) = result?;
 
     // 创建图像并转换为 JPEG
-    let img = image::RgbImage::from_raw(width, height, image_data)
-        .ok_or_else(|| {
-            tauri::Error::Io(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "创建图像失败",
-            ))
-        })?;
+    let img = image::RgbImage::from_raw(width, height, image_data).ok_or_else(|| {
+        tauri::Error::Io(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "创建图像失败",
+        ))
+    })?;
 
     let mut jpeg_data = Vec::new();
     image::DynamicImage::ImageRgb8(img)

@@ -222,6 +222,25 @@ export const useMessage = () => {
 
   const specialMenuList = ref<OPT.RightMenu[]>([
     {
+      label: (item: SessionItem) => (item.shield ? '取消屏蔽消息' : '屏蔽此人消息'),
+      icon: (item: SessionItem) => (item.shield ? 'message-success' : 'people-unknown'),
+      click: async (item: SessionItem) => {
+        await apis.shield({
+          roomId: item.roomId,
+          state: !item.shield
+        })
+
+        // 更新本地会话状态
+        chatStore.updateSession(item.roomId, {
+          shield: !item.shield
+        })
+
+        window.$message.success(item.shield ? '已取消屏蔽' : '已屏蔽消息')
+      },
+      // 只在单聊时显示
+      visible: (item: SessionItem) => item.type === RoomTypeEnum.SINGLE
+    },
+    {
       label: '从消息列表中移除',
       icon: 'delete',
       click: async (item: SessionItem) => {
@@ -236,7 +255,7 @@ export const useMessage = () => {
       },
       icon: (item: SessionItem) => {
         if (item.type === RoomTypeEnum.SINGLE) return 'forbid'
-        if (item.operate === SessionOperateEnum.DISSOLUTION_GROUP) return 'delete'
+        if (item.operate === SessionOperateEnum.DISSOLUTION_GROUP) return 'logout'
         return 'logout'
       },
       click: async (item: SessionItem) => {
@@ -273,25 +292,6 @@ export const useMessage = () => {
         // 群聊：始终显示退出选项，如果是群主则显示解散选项
         return true
       }
-    },
-    {
-      label: (item: SessionItem) => (item.shield ? '取消屏蔽消息' : '屏蔽此人消息'),
-      icon: (item: SessionItem) => (item.shield ? 'message-success' : 'people-unknown'),
-      click: async (item: SessionItem) => {
-        await apis.shield({
-          roomId: item.roomId,
-          state: !item.shield
-        })
-
-        // 更新本地会话状态
-        chatStore.updateSession(item.roomId, {
-          shield: !item.shield
-        })
-
-        window.$message.success(item.shield ? '已取消屏蔽' : '已屏蔽消息')
-      },
-      // 只在单聊时显示
-      visible: (item: SessionItem) => item.type === RoomTypeEnum.SINGLE
     }
   ])
 

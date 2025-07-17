@@ -42,7 +42,7 @@
       {
         "title": "登录",
         "label": "login",
-        "url": "/mobile/login",
+        "url": "/mobile/launch",
         "width": 800,
         "height": 600,
         "resizable": false,
@@ -51,6 +51,12 @@
     ],
     "security": {
       "csp": null
+    }
+  },
+  "plugins": {
+    "statusBar": {
+      "backgroundColor": "transparent",
+      "style": "light"
     }
   }
 }

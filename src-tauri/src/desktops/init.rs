@@ -30,8 +30,9 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
             ))
             .plugin(tauri_plugin_single_instance::init(|app, _args, _cmd| {
                 let windows = app.webview_windows();
+                // 优先显示已存在的home窗口
                 for (name, window) in windows {
-                    if name == "login" || name == "home" {
+                    if name == "home" {
                         window.show().unwrap();
                         window.unminimize().unwrap();
                         window.set_focus().unwrap();
@@ -102,6 +103,20 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
                 #[cfg(target_os = "windows")]
                 if window.label().eq("notify") && !flag {
                     window.hide().unwrap();
+                }
+            }
+            WindowEvent::CloseRequested { .. } => {
+                // 如果是login窗口被用户关闭，直接退出程序
+                if window.label().eq("login") {
+                    // 检查是否有其他窗口存在，如果有home窗口，说明是登录成功后的正常关闭
+                    let windows = window.app_handle().webview_windows();
+                    let has_home_window = windows.iter().any(|(name, _)| name == "home");
+
+                    if !has_home_window {
+                        // 没有home窗口，说明是用户直接关闭login窗口，退出程序
+                        window.app_handle().exit(0);
+                    }
+                    // 如果有home窗口，说明是登录成功后的正常关闭，允许关闭
                 }
             }
             WindowEvent::Resized(_ps) => {}

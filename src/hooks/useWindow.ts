@@ -3,6 +3,8 @@ import { EventEnum } from '@/enums'
 import { LogicalSize } from '@tauri-apps/api/dpi'
 import { type } from '@tauri-apps/plugin-os'
 import { UserAttentionType } from '@tauri-apps/api/window'
+import { invoke } from '@tauri-apps/api/core'
+import { listen } from '@tauri-apps/api/event'
 
 /** 判断是兼容的系统 */
 const isCompatibility = computed(() => type() === 'windows' || type() === 'linux')
@@ -71,6 +73,65 @@ export const useWindow = () => {
     })
 
     return webview
+  }
+
+  /**
+   * 向指定标签的窗口发送载荷（payload），可用于窗口之间通信。
+   *
+   * @param windowLabel - 要发送载荷的窗口标签，通常是在创建窗口时指定的 label。
+   * @param payload - 要发送的 JSON 数据对象，不限制字段内容。
+   * @returns 返回一个 Promise，表示调用 Rust 后端命令的完成情况。
+   */
+  const sendWindowPayload = async (windowLabel: string, payload: any) => {
+    console.log('新窗口的载荷：', payload)
+    return invoke<void>('push_window_payload', {
+      label: windowLabel,
+      // 这个payload只要是json就能传，不限制字段
+      payload
+    })
+  }
+
+  /**
+   * 获取指定窗口的当前载荷（payload），用于初始化窗口时获取传递的数据。
+   *
+   * @param windowLabel - 要获取载荷的窗口标签。
+   * @returns 返回一个 Promise，解析后为泛型 T，表示窗口中保存的 payload 数据。
+   * 可以通过泛型指定返回的结构类型。
+   *
+   * @example
+   * interface MyPayload {
+   *   userId: string;
+   *   token: string;
+   * }
+   *
+   * const payload = await getWindowPayload<MyPayload>('my-window')
+   */
+  const getWindowPayload = async <T>(windowLabel: string) => {
+    return invoke<T>('get_window_payload', { label: windowLabel })
+  }
+
+  /**
+   * 注册指定窗口的载荷更新事件监听器。当该窗口的 payload 被更新时触发回调。
+   *
+   * @param this - 可选的绑定上下文对象，内部通过 `Function.prototype.call` 使用。
+   * @param windowLabel - 窗口标签，用于构造监听的事件名称 `${label}:update`。
+   * @param callback - 在 payload 更新时调用的函数，回调参数为 `TauriEvent<T>`。
+   * @returns 返回一个 Promise，解析后为 `UnlistenFn`（一个函数），调用它可以注销监听器。
+   *
+   * @example
+   * const unlisten = await getWindowPayloadListener<MyPayload>('my-window', (event) => {
+   *   console.log('收到 payload 更新：', event.payload)
+   * })
+   *
+   * // 需要时手动取消监听
+   * unlisten()
+   */
+  async function getWindowPayloadListener<T>(this: any, windowLabel: string, callback: (event: any) => void) {
+    const listenLabel = `${windowLabel}:update`
+
+    return listen<T>(listenLabel, (event) => {
+      callback.call(this, event)
+    })
   }
 
   /**
@@ -193,6 +254,9 @@ export const useWindow = () => {
     createModalWindow,
     resizeWindow,
     checkWinExist,
-    setResizable
+    setResizable,
+    sendWindowPayload,
+    getWindowPayload,
+    getWindowPayloadListener
   }
 }

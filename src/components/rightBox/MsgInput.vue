@@ -254,6 +254,7 @@ const showFileModalCallback = (files: File[]) => {
 }
 
 const onPaste = async (e: ClipboardEvent) => {
+  console.log('粘贴：', e)
   if (messageInputDom.value) await handlePaste(e, messageInputDom.value, showFileModalCallback)
 }
 

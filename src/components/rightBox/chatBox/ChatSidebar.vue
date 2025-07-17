@@ -170,7 +170,7 @@
                 <div
                   v-if="item.groupRole === RoleEnum.ADMIN"
                   class="flex px-4px bg-#1a7d6b30 py-3px rounded-4px size-fit select-none">
-                  <p class="text-(10px #1a7d6b)">管理员</p>
+                  <p class="text-(10px #008080)">管理员</p>
                 </div>
               </n-flex>
             </ContextMenu>

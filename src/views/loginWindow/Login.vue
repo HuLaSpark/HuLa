@@ -92,9 +92,10 @@
         <n-button
           :loading="loading"
           :disabled="loginDisabled"
-          class="w-full mt-8px mb-50px"
-          @click="normalLogin()"
-          color="#13987f">
+          tertiary
+          style="color: #fff"
+          class="gradient-button w-full mt-8px mb-50px"
+          @click="normalLogin()">
           <span>{{ loginText }}</span>
         </n-button>
       </n-flex>
@@ -125,10 +126,11 @@
         <n-button
           :loading="loading"
           :disabled="loginDisabled"
-          class="w-200px mt-12px mb-40px"
-          @click="normalLogin(true)"
-          color="#13987f">
-          {{ loginText }}
+          tertiary
+          style="color: #fff"
+          class="gradient-button w-200px mt-12px mb-40px"
+          @click="normalLogin(true)">
+          <span>{{ loginText }}</span>
         </n-button>
       </n-flex>
     </n-flex>

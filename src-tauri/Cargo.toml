@@ -36,35 +36,47 @@ tauri-build = { version = "2.3.0", features = [] }
 
 [dependencies]
 # Tauri 官方依赖
-tauri = { version = "2.6.2", features = [ "protocol-asset",
+tauri = { version = "2.6.2", features = [
+    "protocol-asset",
     "macos-private-api",
     "tray-icon",
     "image-png",
     "rustls-tls",
 ] }
-tauri-plugin-os = "2.3.0"
-tauri-plugin-shell = "2.3.0"
-tauri-plugin-http = { version = "2.5.0", features = [
+tauri-plugin-os = "2"
+tauri-plugin-shell = "2"
+tauri-plugin-http = { version = "2", features = [
     "unsafe-headers",
     "rustls-tls",
 ] }
-tauri-plugin-process = "2.3.0"
-tauri-plugin-fs = "2.3.0"
-tauri-plugin-dialog = "2.3.0"
-tauri-plugin-upload = "2.3.0"
-tauri-plugin-global-shortcut = "2.3.0"
-tauri-plugin-clipboard-manager = "2.3.0"
-tauri-plugin-updater = "2.9.0"
-tauri-plugin-sql = { version = "2.3.0", features = ["sqlite"] }
-tauri-plugin-single-instance = "2.3.0"
-tauri-plugin-notification = "2.3.0"
-tauri-plugin-opener = "2.3.0"
-moka = { version = "0.12.10", features = ["future"] }
-# 其他依赖
-serde = { version = "1", features = ["derive"] }
+tauri-plugin-process = "2"
+tauri-plugin-fs = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-upload = "2"
+tauri-plugin-global-shortcut = "2"
+tauri-plugin-clipboard-manager = "2"
+tauri-plugin-sql = { version = "2", features = ["sqlite"] }
+tauri-plugin-notification = "2"
+tauri-plugin-opener = "2"
+
+# Tauri 非官方依赖
+tauri-plugin-mic-recorder = "2"
 serde_json = "1"
+sysinfo = "0.32.0"
+async-walkdir = "2.0.0"
+moka = { version = "0.12.10", features = ["future"] }
+serde = { version = "1", features = ["derive"] }
+
+# 不兼容移动端的依赖
+[target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]
+tauri-plugin-autostart = "2"
+tauri-plugin-single-instance = "2"
+tauri-plugin-updater = "2"
+mime_guess = "2.0.5"
+
+serde = { version = "1", features = ["derive"] }
 lazy_static = "1.4"
-screenshots = "0.5.4"
+screenshots = "0.8.10"
 base64 = "0.22.1"
 rodio = "0.17.3"
 image = { version = "0.25", features = ["jpeg", "png"] }
@@ -76,6 +88,7 @@ reqwest = { version = "0.11", features = [
 ] }
 tungstenite = { version = "0.26.2", features = ["rustls-tls-webpki-roots"] }
 tokio = { version = "1", features = ["full"] }
+futures = "0.3"
 surge-ping = "0.8.0"
 rand = "0.8.5"
 sea-orm = { version = "1.1.0", features = [ "sqlx-sqlite", "runtime-tokio-rustls", "macros" ] }
@@ -90,11 +103,6 @@ config = { version = "0.15.11", default-features = false, features = ["yaml"] }
 http = "0.2"
 tauri-plugin-log = { version = "2.6.0", features = ["colored"] }
 log = "0.4"  # 基础日志接口
-
-[target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]
-tauri-plugin-autostart = "2.5.0"
-# Tauri 非官方依赖
-tauri-plugin-mic-recorder = "2.0.0"
 
 # mac平台需要依赖
 [target."cfg(target_os =\"macos\")".dependencies]

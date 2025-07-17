@@ -75,11 +75,17 @@
     "@tauri-apps/plugin-shell": "^2.3.0",
     "@tauri-apps/plugin-sql": "^2.3.0",
     "@tauri-apps/plugin-updater": "2.9.0",
+    "@vue-office/docx": "^1.6.3",
+    "@vue-office/excel": "^1.7.14",
+    "@vue-office/pdf": "^2.0.10",
+    "@vue-office/pptx": "^1.0.1",
+    "base64url": "^3.0.1",
     "colorthief": "^2.6.0",
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.11",
     "digest-wasm": "^0.1.4",
     "dompurify": "^3.2.4",
+    "file-type": "^21.0.0",
     "grapheme-splitter": "^1.0.4",
     "hula-emojis": "^1.2.22",
     "lodash-es": "^4.17.21",
@@ -92,6 +98,7 @@
     "tauri-plugin-mic-recorder-api": "^2.0.0",
     "vue": "^3.5.17",
     "vue-cropper": "1.1.4",
+    "vue-demi": "0.14.6",
     "vue-draggable-plus": "^0.6.0",
     "vue-router": "^4.5.1"
   },
@@ -137,7 +144,7 @@
     "typescript": "^5.8.3",
     "unplugin-auto-import": "^19.3.0",
     "unplugin-vue-components": "^28.8.0",
-    "vite": "7.0.2",
+    "vite": "7.0.4",
     "vite-plugin-vue-setup-extend": "^0.4.0",
     "vitest": "^3.0.5",
     "vue-tsc": "^3.0.1"
@@ -146,5 +153,11 @@
     "commitizen": {
       "path": "node_modules/cz-git"
     }
+  },
+  "pnpm": {
+    "ignoredBuiltDependencies": [
+      "esbuild",
+      "vue-demi"
+    ]
   }
 }

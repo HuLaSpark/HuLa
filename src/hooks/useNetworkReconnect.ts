@@ -6,7 +6,7 @@ import { useCachedStore } from '@/stores/cached'
 import { useContactStore } from '@/stores/contacts'
 import { type } from '@tauri-apps/plugin-os'
 import webSocket from '@/services/webSocket'
-import { RoomTypeEnum } from '../enums'
+import { RoomTypeEnum } from '@/enums'
 
 /**
  * 网络重连Hook，监测网络恢复并自动刷新数据

@@ -2,7 +2,7 @@
   <div
     class="file-container select-none"
     :class="{ downloading: isDownloading, uploading: isUploading }"
-    @click="handleFileClick">
+    @dblclick="handleFileClick">
     <!-- 文件信息 -->
     <div class="file-info select-none">
       <div class="file-name" :title="body?.fileName">
@@ -96,12 +96,19 @@
 </template>
 
 <script setup lang="ts">
-import type { FileBody } from '@/services/types'
+import type { FileBody, FilesMeta } from '@/services/types'
 import { MessageStatusEnum } from '@/enums'
 import { formatBytes, getFileSuffix } from '@/utils/Formatting'
 import { useDownload } from '@/hooks/useDownload'
 import { useFileDownloadStore } from '@/stores/fileDownload'
 import { openPath, revealItemInDir } from '@tauri-apps/plugin-opener'
+import { useGlobalStore } from '@/stores/global'
+import { useUserStore } from '@/stores/user'
+import { getFilesMeta, getUserAbsoluteVideosDir } from '@/utils/PathUtil'
+import { join } from '@tauri-apps/api/path'
+
+const userStore = useUserStore()?.userInfo
+const globalStore = useGlobalStore()
 
 const { isDownloading: legacyIsDownloading } = useDownload()
 const fileDownloadStore = useFileDownloadStore()
@@ -263,6 +270,22 @@ const handleFileClick = async () => {
     } else {
       console.error(`打开文件失败: ${errorMessage}`)
     }
+  } finally {
+    const currentChatRoomId = globalStore.currentSession.roomId // 这个id可能为群id可能为用户uid，所以不能只用用户uid
+    const currentUserUid = userStore.uid as string
+
+    const resourceDirPath = await getUserAbsoluteVideosDir(currentUserUid, currentChatRoomId)
+    let absolutePath = await join(resourceDirPath, props.body.fileName)
+
+    const [fileMeta] = await getFilesMeta<FilesMeta>([absolutePath || props.body.url])
+
+    await fileDownloadStore.refreshFileDownloadStatus({
+      fileUrl: props.body.url,
+      roomId: currentChatRoomId,
+      userId: currentUserUid,
+      fileName: props.body.fileName,
+      exists: fileMeta.exists
+    })
   }
 }
 

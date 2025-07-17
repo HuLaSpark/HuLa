@@ -1,0 +1,5 @@
+/* 移动端特定样式 */
+/* Naive UI 消息组件安全区域适配 */
+.n-message-container.n-message-container--top {
+  top: env(safe-area-inset-top);
+}

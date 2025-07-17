@@ -11,7 +11,7 @@
 
       <n-flex align="center" justify="space-between">
         <span>电脑开机后自动启动HuLa程序</span>
-        <n-switch size="small" v-model:value="autoStartup" @change="handleStartUp" />
+        <n-switch size="small" v-model:value="autoStartup" />
       </n-flex>
     </n-flex>
 
@@ -38,9 +38,10 @@ watchEffect(() => {
   settingStore.toggleLogin(autoLogin.value, autoStartup.value)
 })
 
-const handleStartUp = async (val: boolean) => {
+// 监听开机启动状态变化
+watch(autoStartup, async (val: boolean) => {
   await (val ? enable() : disable())
-}
+})
 
 onMounted(async () => {
   // 检查是否开启了开机启动
