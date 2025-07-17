@@ -153,7 +153,7 @@ export const useChatStore = defineStore(
 
     // 监听当前房间ID的变化
     watch(currentRoomId, (val, oldVal) => {
-      if (oldVal !== undefined && val !== oldVal) {
+      if (val !== oldVal) {
         // 1. 立即清空当前消息列表
         if (currentMessageMap.value) {
           currentMessageMap.value.clear()
