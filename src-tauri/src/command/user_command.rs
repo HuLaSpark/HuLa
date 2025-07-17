@@ -32,7 +32,8 @@ pub async fn save_user_info(user_info: UserInfo, state: State<'_, AppData>) -> R
 
         let user = im_user::ActiveModel {
             id: Set(user_info.uid.clone()),
-            is_init: Set(false),
+            // TODO 这里先设置为 true，后续需要根据配置调整
+            is_init: Set(true),
             ..Default::default()
         };
         
