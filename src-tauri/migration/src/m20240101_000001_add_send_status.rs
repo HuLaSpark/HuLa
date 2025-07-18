@@ -15,7 +15,7 @@ impl MigrationTrait for Migration {
                         ColumnDef::new(ImMessage::SendStatus)
                             .string()
                             .not_null()
-                            .default("pending")
+                            .default("pending"),
                     )
                     .to_owned(),
             )

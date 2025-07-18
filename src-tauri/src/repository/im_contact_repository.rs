@@ -1,7 +1,9 @@
 use crate::error::CommonError;
-use entity::im_contact;
-use sea_orm::{DatabaseConnection, EntityTrait, TransactionTrait, IntoActiveModel, QueryFilter, ColumnTrait};
 use anyhow::Context;
+use entity::im_contact;
+use sea_orm::{
+    ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter, TransactionTrait,
+};
 
 pub async fn list_contact(
     db: &DatabaseConnection,

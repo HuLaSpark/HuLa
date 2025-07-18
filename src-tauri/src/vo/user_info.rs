@@ -15,5 +15,5 @@ pub struct UserInfoVO {
     pub update_time: Option<i64>,
     pub create_time: Option<i64>,
     pub token: String,
-    pub client: String
+    pub client: String,
 }

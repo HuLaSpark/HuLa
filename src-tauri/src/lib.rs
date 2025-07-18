@@ -46,7 +46,7 @@ use mobiles::init;
 #[cfg(mobile)]
 mod mobiles;
 
-struct AppData {
+pub struct AppData {
     db_conn: Arc<DatabaseConnection>,
     request_client: Arc<Mutex<ImRequestClient>>,
     user_info: Arc<Mutex<UserInfo>>,
@@ -93,6 +93,7 @@ async fn setup_desktop() -> Result<(), CommonError> {
     let client = Arc::new(Mutex::new(im_request_client));
     let user_info = Arc::new(Mutex::new(user_info));
     tauri::Builder::default()
+        .plugin(tauri_plugin_websocket::init())
         .init_plugin()
         .init_webwindow_event()
         .init_window_event()

@@ -1,7 +1,7 @@
 use tauri::{Manager, Runtime, WindowEvent};
 use tauri_plugin_autostart::MacosLauncher;
+use tauri_plugin_log::fern::colors::{Color, ColoredLevelConfig};
 use tauri_plugin_log::{Target, TargetKind};
-use tauri_plugin_log::fern::colors::{ColoredLevelConfig, Color};
 
 pub trait CustomInit {
     fn init_plugin(self) -> Self;
@@ -60,7 +60,7 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
                             .debug(Color::Cyan)
                             .info(Color::Green)
                             .warn(Color::Yellow)
-                            .error(Color::Red)
+                            .error(Color::Red),
                     )
                     .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
                     .build(),

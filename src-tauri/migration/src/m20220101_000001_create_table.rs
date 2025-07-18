@@ -1,4 +1,4 @@
-use sea_orm_migration::{prelude::*};
+use sea_orm_migration::prelude::*;
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -12,12 +12,7 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(ImUser::Table)
                     .if_not_exists()
-                    .col(
-                        ColumnDef::new(ImUser::Id)
-                            .string()
-                            .not_null()
-                            .primary_key(),
-                    )
+                    .col(ColumnDef::new(ImUser::Id).string().not_null().primary_key())
                     .col(ColumnDef::new(ImUser::UserId).big_integer())
                     .col(ColumnDef::new(ImUser::Name).string())
                     .col(ColumnDef::new(ImUser::Avatar).string())
@@ -38,7 +33,12 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(ImUser::Num).integer())
                     .col(ColumnDef::new(ImUser::Context).boolean())
                     .col(ColumnDef::new(ImUser::UserType).integer())
-                    .col(ColumnDef::new(ImUser::IsInit).boolean().not_null().default(false))
+                    .col(
+                        ColumnDef::new(ImUser::IsInit)
+                            .boolean()
+                            .not_null()
+                            .default(false),
+                    )
                     .to_owned(),
             )
             .await?;
@@ -120,7 +120,11 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(ImRoomMember::ActiveStatus).tiny_unsigned())
                     .col(ColumnDef::new(ImRoomMember::GroupRole).big_integer())
                     .col(ColumnDef::new(ImRoomMember::LocPlace).string())
-                    .col(ColumnDef::new(ImRoomMember::LastOptTime).big_integer().not_null())
+                    .col(
+                        ColumnDef::new(ImRoomMember::LastOptTime)
+                            .big_integer()
+                            .not_null(),
+                    )
                     .col(ColumnDef::new(ImRoomMember::CreateTime).big_integer())
                     .col(ColumnDef::new(ImRoomMember::Name).string().not_null())
                     .col(ColumnDef::new(ImRoomMember::Avatar).string())

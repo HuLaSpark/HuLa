@@ -17,7 +17,7 @@ pub struct Model {
     pub active_status: Option<i32>,
     pub user_state_id: Option<i64>,
     pub last_opt_time: Option<DateTime>,
-    pub ip_info: Option<Json>,  
+    pub ip_info: Option<Json>,
     pub item_id: Option<i64>,
     pub state: Option<i32>,
     pub create_time: Option<DateTime>,

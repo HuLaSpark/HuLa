@@ -6,7 +6,7 @@ pub struct MyRoomInfoReq {
     // 我的群昵称
     pub my_name: String,
     // 群备注
-    pub remark: String
+    pub remark: String,
 }
 
 #[derive(Serialize, Deserialize, Clone)]

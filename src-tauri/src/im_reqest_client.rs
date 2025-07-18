@@ -1,8 +1,8 @@
 use crate::error::CommonError;
 use crate::pojo::common::ApiResult;
 use anyhow::Context;
-use reqwest::{Client, Method, RequestBuilder, header};
 use log::{debug, error, warn};
+use reqwest::{Client, Method, RequestBuilder, header};
 
 /// 智能 HTTP 客户端，支持自动 token 管理和过期重试
 pub struct ImRequestClient {
@@ -138,7 +138,8 @@ impl<'a> RequestBuilderWrapper<'a> {
                 error!("JSON 解析错误: {}", e);
                 error!("响应内容: {}", response_text);
                 return Err(CommonError::UnexpectedError(anyhow::anyhow!(
-                    "解析 JSON 失败: {}", e
+                    "解析 JSON 失败: {}",
+                    e
                 )));
             }
         };

@@ -1,14 +1,14 @@
 use crate::AppData;
 use entity::im_user;
 use entity::prelude::ImUserEntity;
+use log::{debug, info};
 use sea_orm::ActiveValue::Set;
 use sea_orm::ColumnTrait;
 use sea_orm::EntityTrait;
 use sea_orm::QueryFilter;
-use std::ops::Deref;
 use serde::{Deserialize, Serialize};
+use std::ops::Deref;
 use tauri::State;
-use log::{debug, info};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -36,8 +36,11 @@ pub async fn save_user_info(user_info: UserInfo, state: State<'_, AppData>) -> R
             is_init: Set(true),
             ..Default::default()
         };
-        
-        im_user::Entity::insert(user).exec(db.deref()).await.map_err(|err| format!("插入用户失败: {}", err))?;
+
+        im_user::Entity::insert(user)
+            .exec(db.deref())
+            .await
+            .map_err(|err| format!("插入用户失败: {}", err))?;
     } else {
         debug!("用户已存在，无需插入");
     }

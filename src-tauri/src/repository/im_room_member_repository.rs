@@ -1,5 +1,6 @@
 use anyhow::Context;
 use entity::{im_room, im_room_member};
+use log::{debug, info};
 use sea_orm::EntityTrait;
 use sea_orm::IntoActiveModel;
 use sea_orm::PaginatorTrait;
@@ -7,7 +8,6 @@ use sea_orm::QuerySelect;
 use sea_orm::TransactionTrait;
 use sea_orm::{ActiveModelTrait, Set};
 use sea_orm::{ColumnTrait, DatabaseConnection, NotSet, QueryFilter, QueryOrder};
-use log::{debug, info};
 
 use crate::pojo::common::{CursorPageParam, CursorPageResp};
 use crate::{
@@ -176,7 +176,7 @@ pub async fn save_room_member_batch(
                 member_active
             })
             .collect();
-        
+
         im_room_member::Entity::insert_many(active_models)
             .exec(&txn)
             .await?;

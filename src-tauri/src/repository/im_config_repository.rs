@@ -1,8 +1,8 @@
 use crate::error::CommonError;
 use anyhow::Context;
 use entity::im_config;
-use sea_orm::{ActiveModelTrait, ColumnTrait, IntoActiveModel, Set};
 use sea_orm::QueryFilter;
+use sea_orm::{ActiveModelTrait, ColumnTrait, IntoActiveModel, Set};
 use sea_orm::{DatabaseConnection, EntityTrait, TransactionTrait};
 
 /// 获取配置列表
@@ -41,7 +41,7 @@ pub async fn save_or_update_config(
 ) -> Result<(), CommonError> {
     // 查找现有配置
     let existing_config = get_config_by_key(db, config_key, login_uid).await?;
-    
+
     if let Some(config) = existing_config {
         // 更新现有配置
         let mut config_active = config.into_active_model();
@@ -119,4 +119,3 @@ pub async fn delete_config(
         .with_context(|| "删除配置失败")?;
     Ok(())
 }
-

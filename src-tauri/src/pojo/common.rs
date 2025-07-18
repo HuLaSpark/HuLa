@@ -38,7 +38,7 @@ pub struct LoginParam {
 #[serde(rename_all = "camelCase")]
 pub struct ApiResult<T> {
     pub success: bool,
-    pub code: Option<i16>,
+    pub code: Option<i32>,
     pub msg: Option<String>,
     pub tid: String,
     pub version: String,
