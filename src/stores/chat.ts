@@ -14,6 +14,7 @@ import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
 import { sendNotification } from '@tauri-apps/plugin-notification'
 import { invokeWithErrorHandler, invokeSilently } from '@/utils/TauriInvokeHandler'
 import { ErrorType } from '@/common/exception'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 
 type RecalledMessage = {
   messageId: string
@@ -46,6 +47,7 @@ export const useChatStore = defineStore(
   StoresEnum.CHAT,
   () => {
     const route = useRoute()
+    // const router = useRouter()
     const cachedStore = useCachedStore()
     const userStore = useUserStore()
     const globalStore = useGlobalStore()
@@ -153,7 +155,11 @@ export const useChatStore = defineStore(
     })
 
     // 监听当前房间ID的变化
-    watch(currentRoomId, (val, oldVal) => {
+    watch(currentRoomId, async (val, oldVal) => {
+      if (WebviewWindow.getCurrent().label === 'login') {
+        return
+      }
+
       if (val !== oldVal) {
         // 1. 立即清空当前消息列表
         if (currentMessageMap.value) {
