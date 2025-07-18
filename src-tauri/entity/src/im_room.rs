@@ -7,12 +7,13 @@ use serde::{Deserialize, Serialize};
 pub struct Model {
     #[sea_orm(primary_key)]
     #[serde(default)]
-    pub id: i64,
+    pub id: String,
     pub room_id: String,
     pub group_id: Option<String>,
     pub room_name: String,
     pub avatar: Option<String>,
     #[serde(skip)]
+    #[sea_orm(primary_key)]
     pub login_uid: String,
 }
 

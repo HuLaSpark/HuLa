@@ -65,6 +65,7 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
                     .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
                     .build(),
             )
+            .plugin(tauri_plugin_websocket::init())
     }
 
     // 初始化web窗口事件

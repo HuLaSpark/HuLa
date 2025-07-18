@@ -49,12 +49,7 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(ImContact::Table)
                     .if_not_exists()
-                    .col(
-                        ColumnDef::new(ImContact::Id)
-                            .string()
-                            .not_null()
-                            .primary_key(),
-                    )
+                    .col(ColumnDef::new(ImContact::Id).string().not_null())
                     .col(ColumnDef::new(ImContact::DetailId).string().not_null())
                     .col(ColumnDef::new(ImContact::RoomId).string().not_null())
                     .col(ColumnDef::new(ImContact::ContactType).tiny_unsigned())
@@ -75,6 +70,11 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(ImContact::CreateTime).big_integer())
                     .col(ColumnDef::new(ImContact::UpdateTime).big_integer())
                     .col(ColumnDef::new(ImContact::LoginUid).string().not_null())
+                    .primary_key(
+                        Index::create()
+                            .col(ImContact::Id)
+                            .col(ImContact::LoginUid),
+                    )
                     .to_owned(),
             )
             .await?;
@@ -85,18 +85,17 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(ImRoom::Table)
                     .if_not_exists()
-                    .col(
-                        ColumnDef::new(ImRoom::Id)
-                            .big_integer()
-                            .not_null()
-                            .auto_increment()
-                            .primary_key(),
-                    )
+                    .col(ColumnDef::new(ImRoom::Id).string().not_null())
                     .col(ColumnDef::new(ImRoom::RoomId).string().not_null())
                     .col(ColumnDef::new(ImRoom::GroupId).string())
                     .col(ColumnDef::new(ImRoom::RoomName).string().not_null())
                     .col(ColumnDef::new(ImRoom::Avatar).string())
                     .col(ColumnDef::new(ImRoom::LoginUid).string().not_null())
+                    .primary_key(
+                        Index::create()
+                            .col(ImRoom::Id)
+                            .col(ImRoom::LoginUid),
+                    )
                     .to_owned(),
             )
             .await?;
@@ -107,12 +106,7 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(ImRoomMember::Table)
                     .if_not_exists()
-                    .col(
-                        ColumnDef::new(ImRoomMember::Id)
-                            .string()
-                            .not_null()
-                            .primary_key(),
-                    )
+                    .col(ColumnDef::new(ImRoomMember::Id).string().not_null())
                     .col(ColumnDef::new(ImRoomMember::RoomId).string())
                     .col(ColumnDef::new(ImRoomMember::Uid).string())
                     .col(ColumnDef::new(ImRoomMember::Account).string())
@@ -130,6 +124,11 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(ImRoomMember::Avatar).string())
                     .col(ColumnDef::new(ImRoomMember::UserStateId).string())
                     .col(ColumnDef::new(ImRoomMember::LoginUid).string().not_null())
+                    .primary_key(
+                        Index::create()
+                            .col(ImRoomMember::Id)
+                            .col(ImRoomMember::LoginUid),
+                    )
                     .to_owned(),
             )
             .await?;
@@ -140,12 +139,7 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(ImMessage::Table)
                     .if_not_exists()
-                    .col(
-                        ColumnDef::new(ImMessage::Id)
-                            .string()
-                            .not_null()
-                            .primary_key(),
-                    )
+                    .col(ColumnDef::new(ImMessage::Id).string().not_null())
                     .col(ColumnDef::new(ImMessage::Uid).string().not_null())
                     .col(ColumnDef::new(ImMessage::Nickname).string())
                     .col(ColumnDef::new(ImMessage::RoomId).string().not_null())
@@ -156,6 +150,17 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(ImMessage::CreateTime).big_integer())
                     .col(ColumnDef::new(ImMessage::UpdateTime).big_integer())
                     .col(ColumnDef::new(ImMessage::LoginUid).string().not_null())
+                    .col(
+                        ColumnDef::new(ImMessage::SendStatus)
+                            .string()
+                            .not_null()
+                            .default("pending"),
+                    )
+                    .primary_key(
+                        Index::create()
+                            .col(ImMessage::Id)
+                            .col(ImMessage::LoginUid),
+                    )
                     .to_owned(),
             )
             .await?;
@@ -166,16 +171,15 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(ImConfig::Table)
                     .if_not_exists()
-                    .col(
-                        ColumnDef::new(ImConfig::Id)
-                            .big_integer()
-                            .not_null()
-                            .auto_increment()
-                            .primary_key(),
-                    )
+                    .col(ColumnDef::new(ImConfig::Id).big_integer().not_null())
                     .col(ColumnDef::new(ImConfig::ConfigKey).string().not_null())
                     .col(ColumnDef::new(ImConfig::ConfigValue).string())
                     .col(ColumnDef::new(ImConfig::LoginUid).string().not_null())
+                    .primary_key(
+                        Index::create()
+                            .col(ImConfig::Id)
+                            .col(ImConfig::LoginUid),
+                    )
                     .to_owned(),
             )
             .await?;
@@ -184,7 +188,6 @@ impl MigrationTrait for Migration {
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        // 删除所有表
         manager
             .drop_table(Table::drop().table(ImConfig::Table).to_owned())
             .await?;
@@ -306,6 +309,7 @@ enum ImMessage {
     CreateTime,
     UpdateTime,
     LoginUid,
+    SendStatus,
 }
 
 #[derive(DeriveIden)]

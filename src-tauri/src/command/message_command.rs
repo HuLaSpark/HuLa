@@ -2,16 +2,17 @@ use crate::AppData;
 use crate::error::CommonError;
 use crate::im_reqest_client::ImRequestClient;
 use crate::pojo::common::{CursorPageParam, CursorPageResp};
-use crate::repository::im_message_repository;
+use crate::repository::{im_message_repository, im_user_repository};
 use crate::vo::vo::ChatMessageReq;
 use entity::im_user::Entity as ImUserEntity;
 use entity::{im_message, im_user};
 use log::{debug, error, info};
-use sea_orm::DatabaseConnection;
+use sea_orm::{DatabaseConnection, TransactionTrait};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::ops::Deref;
+use anyhow::Context;
 use tauri::{AppHandle, Emitter, State};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -197,15 +198,18 @@ pub async fn fetch_all_messages(
         .get("/chat/msg/list")
         .send_json::<Vec<MessageResp>>()
         .await?;
-
+    
     if let Some(messages) = messages.data {
+        // 开启事务
+        let tx = db_conn.begin().await?;
+        
         // 转换 MessageResp 为 im_message::Model
         let db_messages: Vec<im_message::Model> = messages
             .into_iter()
-            .map(|msg_resp| convert_resp_to_model_for_fetch(msg_resp))
+            .map(|msg_resp| convert_resp_to_model_for_fetch(msg_resp, uid.to_string()))
             .collect();
         // 保存到本地数据库
-        match im_message_repository::save_all(db_conn, db_messages, uid).await {
+        match im_message_repository::save_all(&tx, db_messages).await {
             Ok(_) => {
                 info!("消息保存到数据库成功");
             }
@@ -214,13 +218,21 @@ pub async fn fetch_all_messages(
                 return Err(e.into());
             }
         }
+
+        // 消息保存完成后，将用户的 is_init 状态设置为 false
+        im_user_repository::update_user_init_status(&tx, uid, false)
+            .await
+            .with_context(|| "更新用户 is_init 状态失败")?;
+        
+        // 提交事务
+        tx.commit().await?;
     }
 
     Ok(())
 }
 
 /// 将 MessageResp 转换为数据库模型（用于 fetch_all_messages）
-fn convert_resp_to_model_for_fetch(msg_resp: MessageResp) -> im_message::Model {
+fn convert_resp_to_model_for_fetch(msg_resp: MessageResp, uid: String) -> im_message::Model {
     use serde_json;
 
     // 序列化消息体为 JSON 字符串
@@ -248,7 +260,7 @@ fn convert_resp_to_model_for_fetch(msg_resp: MessageResp) -> im_message::Model {
         send_time: msg_resp.message.send_time,
         create_time: msg_resp.create_time,
         update_time: msg_resp.update_time,
-        login_uid: String::new(), // 这里暂时设为空字符串，实际使用时会在 save_all 中设置
+        login_uid: uid.to_string(), // 这里暂时设为空字符串，实际使用时会在 save_all 中设置
         send_status: "success".to_string(), // 从后端获取的消息默认为成功状态
     }
 }
@@ -295,13 +307,15 @@ pub async fn send_msg(
         send_status: "pending".to_string(), // 初始状态为pending
     };
 
+    let tx = state.db_conn.begin().await.map_err(|e| CommonError::DatabaseError(e))?;
     // 先保存到本地数据库
     if let Err(e) =
-        im_message_repository::save_message(state.db_conn.deref(), message.clone()).await
+        im_message_repository::save_message(&tx, message.clone()).await
     {
         error!("保存消息到数据库失败: {}", e);
         return Err(e.to_string());
     }
+    tx.commit().await.map_err(|e| CommonError::DatabaseError(e))?;
 
     info!("消息已保存到本地数据库，ID: {}", message.id.clone());
 
@@ -343,11 +357,28 @@ pub async fn send_msg(
 
         // 更新消息状态
         if let Err(e) =
-            im_message_repository::update_message_status(db_conn.deref(), &msg_id, status, id).await
+            im_message_repository::update_message_status(db_conn.deref(), &msg_id, status, id, login_uid.clone()).await
         {
             error!("更新消息状态失败: {}", e);
         }
     });
 
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn save_msg(data: MessageResp, state: State<'_, AppData>) -> Result<(), String> {
+    info!("收到消息保存到本地, data: {:?}", data);
+    // 创建 im_message::Model
+    let message = convert_resp_to_model_for_fetch(data, state.user_info.lock().await.uid.clone());
+    
+    async {
+        let tx = state.db_conn.clone().begin().await?;
+        // 保存到数据库
+        im_message_repository::save_message(&tx, message).await?;
+        tx.commit().await?;
+        Ok::<(), CommonError>(())
+    }.await?;
+    
     Ok(())
 }

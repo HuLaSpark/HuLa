@@ -21,6 +21,7 @@ pub struct Model {
     pub avatar: Option<String>,
     pub user_state_id: Option<String>,
     #[serde(skip)]
+    #[sea_orm(primary_key)]
     pub login_uid: String,
 }
 

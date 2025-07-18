@@ -12,6 +12,7 @@ pub struct Model {
     pub config_key: String,
     pub config_value: Option<String>,
     #[serde(skip)]
+    #[sea_orm(primary_key)]
     pub login_uid: String,
 }
 

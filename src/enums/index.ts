@@ -473,5 +473,7 @@ export enum TauriCommand {
   /** 保存用户信息 */
   SAVE_USER_INFO = 'save_user_info',
   /** 发送消息 */
-  SEND_MSG = 'send_msg'
+  SEND_MSG = 'send_msg',
+  /** 保存消息 */
+  SAVE_MSG = 'save_msg'
 }

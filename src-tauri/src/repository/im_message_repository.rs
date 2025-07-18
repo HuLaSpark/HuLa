@@ -1,41 +1,35 @@
 use crate::error::CommonError;
 use crate::pojo::common::{CursorPageParam, CursorPageResp};
-use crate::repository::im_user_repository;
 use anyhow::Context;
 use entity::im_message;
 use log::{debug, info};
-use sea_orm::{
-    ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, PaginatorTrait, QueryFilter,
-    QueryOrder, QuerySelect, Set, TransactionTrait,
-};
+use sea_orm::{ColumnTrait, ConnectionTrait, DatabaseConnection, DatabaseTransaction, EntityTrait, IntoActiveModel, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set};
 
-pub async fn save_all(
-    db: &DatabaseConnection,
+pub async fn save_all<C>(
+    db: &C,
     messages: Vec<im_message::Model>,
-    login_uid: &str,
-) -> Result<(), CommonError> {
+) -> Result<(), CommonError>
+where
+    C: ConnectionTrait,
+{
     // SQLite 的变量限制通常是 999，为了安全起见，我们设置批次大小为 100
     // 每个消息大约有 10-15 个字段，所以 100 条消息大约使用 1000-1500 个变量
     const BATCH_SIZE: usize = 100;
 
     let active_models: Vec<im_message::ActiveModel> = messages
         .into_iter()
-        .map(|mut message| {
-            message.login_uid = login_uid.to_string();
+        .map(|message| {
             let msg_active = message.into_active_model();
             msg_active
         })
         .collect();
-
-    // 使用事务确保消息插入和用户状态更新的原子性
-    let txn = db.begin().await.with_context(|| "开始事务失败")?;
-
+    
     // 如果数据量小于批次大小，直接插入
     if active_models.len() <= BATCH_SIZE {
         if !active_models.is_empty() {
             let count = active_models.len();
             im_message::Entity::insert_many(active_models)
-                .exec(&txn)
+                .exec(db)
                 .await
                 .with_context(|| "批量插入消息失败")?;
             info!("消息插入完成，共 {} 条", count);
@@ -50,22 +44,13 @@ pub async fn save_all(
             );
 
             im_message::Entity::insert_many(chunk.to_vec())
-                .exec(&txn)
+                .exec(db)
                 .await
                 .with_context(|| format!("插入第 {} 批消息失败", batch_index + 1))?;
         }
 
         info!("所有消息批量插入完成，总计 {} 条", active_models.len());
     }
-
-    // 消息保存完成后，将用户的 is_init 状态设置为 false
-    im_user_repository::update_user_init_status(&txn, login_uid, false)
-        .await
-        .with_context(|| "更新用户 is_init 状态失败")?;
-
-    // 提交事务
-    txn.commit().await.with_context(|| "提交事务失败")?;
-
     Ok(())
 }
 
@@ -120,7 +105,7 @@ pub async fn cursor_page_messages(
 
 /// 保存单个消息到数据库
 pub async fn save_message(
-    db: &DatabaseConnection,
+    db: &DatabaseTransaction,
     message: im_message::Model,
 ) -> Result<(), CommonError> {
     let active_model = message.into_active_model();
@@ -134,8 +119,9 @@ pub async fn update_message_status(
     message_id: &str,
     status: &str,
     id: Option<String>,
+    login_uid: String,
 ) -> Result<(), CommonError> {
-    let mut active_model: im_message::ActiveModel = im_message::Entity::find_by_id(message_id)
+    let mut active_model: im_message::ActiveModel = im_message::Entity::find_by_id((message_id.to_string(), login_uid))
         .one(db)
         .await
         .with_context(|| "查找消息失败")?

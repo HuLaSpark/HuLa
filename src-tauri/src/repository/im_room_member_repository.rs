@@ -7,7 +7,7 @@ use sea_orm::PaginatorTrait;
 use sea_orm::QuerySelect;
 use sea_orm::TransactionTrait;
 use sea_orm::{ActiveModelTrait, Set};
-use sea_orm::{ColumnTrait, DatabaseConnection, NotSet, QueryFilter, QueryOrder};
+use sea_orm::{ColumnTrait, DatabaseConnection, QueryFilter, QueryOrder};
 
 use crate::pojo::common::{CursorPageParam, CursorPageResp};
 use crate::{
@@ -111,11 +111,20 @@ pub async fn save_room_batch(
     for mut member in room_members {
         // 设置 login_uid
         member.login_uid = login_uid.to_string();
-        // 转换为 ActiveModel
-        let mut member_active = member.into_active_model();
-        member_active.id = NotSet;
-        // 如果记录不存在，执行插入
-        member_active.insert(&txn).await?;
+        
+        // 检查记录是否已存在
+        let existing = im_room::Entity::find()
+            .filter(im_room::Column::Id.eq(member.id.clone()))
+            .filter(im_room::Column::LoginUid.eq(member.login_uid.clone()))
+            .one(&txn)
+            .await?;
+        
+        if existing.is_none() {
+            // 如果记录不存在，执行插入
+            let member_active = member.into_active_model();
+            member_active.insert(&txn).await?;
+        }
+        // 如果记录已存在，跳过插入
     }
 
     // 提交事务

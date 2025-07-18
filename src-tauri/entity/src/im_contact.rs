@@ -32,6 +32,7 @@ pub struct Model {
     pub create_time: Option<i64>,
     pub update_time: Option<i64>,
     #[serde(skip)]
+    #[sea_orm(primary_key)]
     pub login_uid: String,
 }
 

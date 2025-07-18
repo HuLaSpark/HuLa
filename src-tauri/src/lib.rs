@@ -54,7 +54,7 @@ pub struct AppData {
 }
 
 use crate::command::contact_command::list_contacts_command;
-use crate::command::message_command::{check_user_init_and_fetch_messages, page_msg, send_msg};
+use crate::command::message_command::{check_user_init_and_fetch_messages, page_msg, save_msg, send_msg};
 use tauri::Listener;
 use tokio::sync::Mutex;
 
@@ -93,7 +93,6 @@ async fn setup_desktop() -> Result<(), CommonError> {
     let client = Arc::new(Mutex::new(im_request_client));
     let user_info = Arc::new(Mutex::new(user_info));
     tauri::Builder::default()
-        .plugin(tauri_plugin_websocket::init())
         .init_plugin()
         .init_webwindow_event()
         .init_window_event()
@@ -126,6 +125,7 @@ async fn setup_desktop() -> Result<(), CommonError> {
             list_contacts_command,
             page_msg,
             send_msg,
+            save_msg,
             push_window_payload,
             get_window_payload,
             get_files_meta,
