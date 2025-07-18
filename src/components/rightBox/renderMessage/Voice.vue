@@ -55,6 +55,7 @@ import { FilesMeta, VoiceBody } from '@/services/types'
 import { getFilesMeta, getImageCache } from '@/utils/PathUtil'
 import { BaseDirectory, create, exists, mkdir, readFile } from '@tauri-apps/plugin-fs'
 import { join } from '@tauri-apps/api/path'
+import { type } from '@tauri-apps/plugin-os'
 
 const props = defineProps<{
   body: VoiceBody
@@ -80,6 +81,7 @@ const audioElement = ref<HTMLAudioElement | null>(null)
 const waveformCanvas = ref<HTMLCanvasElement | null>(null)
 const waveformData = ref<number[]>([])
 const audioContext = ref<AudioContext | null>(null)
+const isMacOS = ref(false)
 
 // 判断是否为深色模式
 const isDarkMode = computed(() => {
@@ -145,6 +147,15 @@ const formatTime = (seconds: number) => {
   const mins = Math.floor(seconds / 60)
   const secs = Math.floor(seconds % 60)
   return `${mins}:${secs.toString().padStart(2, '0')}`
+}
+
+/**
+ * 检查音频格式支持
+ */
+const checkAudioSupport = (mimeType: string): string => {
+  const audio = document.createElement('audio')
+  const support = audio.canPlayType(mimeType)
+  return support
 }
 
 /**
@@ -389,7 +400,19 @@ const createAudioElement = async () => {
   if (existsData.exists) {
     console.log('找到音频文件：', existsData)
     const fileData = await getLocalAudioFile(existsData.fileMeta.name)
-    playableUrl = URL.createObjectURL(new Blob([fileData.fileBuffer]))
+
+    // Mac系统优化：设置正确的MIME类型
+    const mimeType = existsData.fileMeta.mime_type || 'audio/mpeg'
+
+    // 检查音频格式支持(mac)
+    const support = checkAudioSupport(mimeType)
+    if (!support && isMacOS.value) {
+      console.warn(`Mac系统可能不支持此音频格式: ${mimeType}`)
+      // 降级到远程URL
+      playableUrl = props.body.url
+    } else {
+      playableUrl = URL.createObjectURL(new Blob([fileData.fileBuffer], { type: mimeType }))
+    }
   }
 
   console.log('完成后的路径：', playableUrl)
@@ -467,7 +490,6 @@ const togglePlayback = async () => {
     if (!audioElement.value) return
 
     await audioManager.play(audioElement.value, audioId.value)
-    console.log('play')
     isPlaying.value = true
   } catch (error) {
     isPlaying.value = false
@@ -488,8 +510,8 @@ const handleAudioStateChange = () => {
 }
 
 // 组件挂载时加载波形并添加监听器
-onMounted(() => {
-  console.log('加载完成,props：', props)
+onMounted(async () => {
+  isMacOS.value = (await type()) === 'macos'
   loadAudioWaveform()
   audioManager.addListener(handleAudioStateChange)
 })

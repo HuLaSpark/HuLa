@@ -15,7 +15,7 @@
           :percentage="
             showDiskUsage
               ? [Number(diskInfo?.disk_usage_percentage.toFixed(2)), scanFilesUsagePercentage]
-              : [scanningProgress]
+              : [Number(scanningProgress.toFixed(0))]
           "
           :processing="scanning"
           :offset-degree="180"
@@ -23,7 +23,7 @@
           :stroke-width="16">
           <n-flex vertical align="center" justify="center" :size="4">
             <span class="text-(18px [--text-color]) font-bold">
-              {{ showDiskUsage ? scanFilesUsagePercentage.toFixed(2) : scanningProgress.toFixed(1) }}%
+              {{ showDiskUsage ? scanFilesUsagePercentage.toFixed(2) : scanningProgress.toFixed(0) }}%
             </span>
             <span class="text-(12px #666)">
               {{ showDiskUsage ? '扫描文件占比' : '扫描进度' }}
@@ -59,7 +59,7 @@
 
         <n-flex v-if="scanning" justify="space-between">
           <span class="text-(12px #666)">扫描进度:</span>
-          <span class="text-(12px #666)">{{ scanningProgress.toFixed(1) }}%</span>
+          <span class="text-(12px #666)">{{ scanningProgress.toFixed(2) }}%</span>
         </n-flex>
 
         <n-flex justify="space-between">

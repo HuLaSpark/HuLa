@@ -187,6 +187,8 @@ export enum MsgEnum {
   MERGE,
   /** 公告 */
   NOTICE,
+  /** 机器人 */
+  BOT,
   /** 混合 */
   MIXED,
   /** 艾特 */
