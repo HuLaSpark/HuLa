@@ -7,7 +7,7 @@ import { RoleEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
 import { useCachedStore } from '@/stores/cached'
 import { useUserStore } from '@/stores/user'
 import { OnStatusChangeType } from '@/services/wsType'
-import { invoke } from '@tauri-apps/api/core'
+import { invokeWithErrorHandler, ErrorType } from '@/utils/TauriInvokeHandler.ts'
 
 export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
   // 初始化需要使用的store
@@ -90,9 +90,16 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
    * 获取群成员列表
    */
   const getGroupUserList = async () => {
-    const data: any = await invoke(TauriCommand.GET_ROOM_MEMBERS, {
-      roomId: currentRoomId.value
-    })
+    const data: any = await invokeWithErrorHandler(
+      TauriCommand.GET_ROOM_MEMBERS,
+      {
+        roomId: currentRoomId.value
+      },
+      {
+        customErrorMessage: '获取群成员列表失败',
+        errorType: ErrorType.Network
+      }
+    )
     if (!data) return
     userList.value = data
     userListOptions.cursor = data.cursor

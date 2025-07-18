@@ -56,7 +56,7 @@ import { useConfigStore } from '@/stores/config'
 import { useCheckUpdate } from '@/hooks/useCheckUpdate'
 import { UserAttentionType } from '@tauri-apps/api/window'
 import { LogicalSize } from '@tauri-apps/api/dpi'
-import { invoke } from '@tauri-apps/api/core'
+import { invokeSilently } from '@/utils/TauriInvokeHandler'
 
 const loadingPercentage = ref(10)
 const loadingText = ref('正在加载应用...')
@@ -243,7 +243,7 @@ useMitt.on(WsResponseMessageType.MY_ROOM_INFO_CHANGE, (data: { myName: string; r
 useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   chatStore.pushMsg(data)
   console.log('监听到接收消息', data)
-  await invoke(TauriCommand.SAVE_MSG, {
+  await invokeSilently(TauriCommand.SAVE_MSG, {
     data
   })
   const username = useUserInfo(data.fromUser.uid).value.name!

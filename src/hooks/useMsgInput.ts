@@ -18,7 +18,8 @@ import type { AIModel } from '@/services/types.ts'
 import { UploadProviderEnum, useUpload } from './useUpload.ts'
 import { getReplyContent } from '@/utils/MessageReply.ts'
 import { fixFileMimeType, getMessageTypeByFile } from '@/utils/FileType.ts'
-import { invoke } from '@tauri-apps/api/core'
+import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
+import { ErrorType } from '@/common/exception'
 /**
  * 光标管理器
  */
@@ -464,14 +465,21 @@ export const useMsgInput = (messageInputDom: Ref) => {
         console.log('视频上传完成,更新为服务器URL:', messageBody.url)
       }
       // 发送消息到服务器
-      await invoke(TauriCommand.SEND_MSG, {
-        data: {
-          id: tempMsgId,
-          roomId: globalStore.currentSession.roomId,
-          msgType: msg.type,
-          body: messageBody
+      await invokeWithErrorHandler(
+        TauriCommand.SEND_MSG,
+        {
+          data: {
+            id: tempMsgId,
+            roomId: globalStore.currentSession.roomId,
+            msgType: msg.type,
+            body: messageBody
+          }
+        },
+        {
+          customErrorMessage: '消息发送失败',
+          errorType: ErrorType.Network
         }
-      })
+      )
 
       // 停止发送状态的定时器
       clearTimeout(statusTimer)
@@ -936,24 +944,31 @@ export const useMsgInput = (messageInputDom: Ref) => {
             thumbnailUploadResponse?.downloadUrl || `${qiniuConfig.domain}/${thumbnailUploadResponse?.key}`
 
           // 发送消息到服务器保存
-          await invoke(TauriCommand.SEND_MSG, {
-            data: {
-              id: tempMsgId,
-              roomId: globalStore.currentSession.roomId,
-              msgType: MsgEnum.VIDEO,
-              body: {
-                url: finalVideoUrl,
-                size: processedFile.size,
-                fileName: processedFile.name,
-                thumbUrl: finalThumbnailUrl,
-                thumbWidth: 300,
-                thumbHeight: 150,
-                thumbSize: thumbnailFile.size,
-                localPath: videoPath, // 保存本地缓存路径
-                senderUid: userUid.value // 保存发送者UID
+          await invokeWithErrorHandler(
+            TauriCommand.SEND_MSG,
+            {
+              data: {
+                id: tempMsgId,
+                roomId: globalStore.currentSession.roomId,
+                msgType: MsgEnum.VIDEO,
+                body: {
+                  url: finalVideoUrl,
+                  size: processedFile.size,
+                  fileName: processedFile.name,
+                  thumbUrl: finalThumbnailUrl,
+                  thumbWidth: 300,
+                  thumbHeight: 150,
+                  thumbSize: thumbnailFile.size,
+                  localPath: videoPath, // 保存本地缓存路径
+                  senderUid: userUid.value // 保存发送者UID
+                }
               }
+            },
+            {
+              customErrorMessage: '视频消息发送失败',
+              errorType: ErrorType.Network
             }
-          })
+          )
           // 清理本地URL
           URL.revokeObjectURL(tempMsg.message.body.url)
           URL.revokeObjectURL(localThumbUrl)
@@ -997,14 +1012,21 @@ export const useMsgInput = (messageInputDom: Ref) => {
           console.log('🖼️ 图片上传完成，更新为服务器URL:', messageBody.url)
 
           // 发送消息到服务器
-          await invoke(TauriCommand.SEND_MSG, {
-            data: {
-              id: tempMsgId,
-              roomId: globalStore.currentSession.roomId,
-              msgType: MsgEnum.IMAGE,
-              body: messageBody
+          await invokeWithErrorHandler(
+            TauriCommand.SEND_MSG,
+            {
+              data: {
+                id: tempMsgId,
+                roomId: globalStore.currentSession.roomId,
+                msgType: MsgEnum.IMAGE,
+                body: messageBody
+              }
+            },
+            {
+              customErrorMessage: '图片消息发送失败',
+              errorType: ErrorType.Network
             }
-          })
+          )
 
           // 更新会话最后活动时间
           chatStore.updateSessionLastActiveTime(globalStore.currentSession.roomId)
@@ -1084,14 +1106,21 @@ export const useMsgInput = (messageInputDom: Ref) => {
           console.log('📎 文件上传完成，更新为服务器URL:', messageBody.url)
 
           // 发送消息到服务器
-          await invoke(TauriCommand.SEND_MSG, {
-            data: {
-              id: tempMsgId,
-              roomId: globalStore.currentSession.roomId,
-              msgType: MsgEnum.FILE,
-              body: messageBody
+          await invokeWithErrorHandler(
+            TauriCommand.SEND_MSG,
+            {
+              data: {
+                id: tempMsgId,
+                roomId: globalStore.currentSession.roomId,
+                msgType: MsgEnum.FILE,
+                body: messageBody
+              }
+            },
+            {
+              customErrorMessage: '文件消息发送失败',
+              errorType: ErrorType.Network
             }
-          })
+          )
 
           // 更新会话最后活动时间
           chatStore.updateSessionLastActiveTime(globalStore.currentSession.roomId)
@@ -1219,9 +1248,16 @@ export const useMsgInput = (messageInputDom: Ref) => {
         }
 
         try {
-          await invoke(TauriCommand.SEND_MSG, {
-            data: sendData
-          })
+          await invokeWithErrorHandler(
+            TauriCommand.SEND_MSG,
+            {
+              data: sendData
+            },
+            {
+              customErrorMessage: '语音消息发送失败',
+              errorType: ErrorType.Network
+            }
+          )
           // 停止发送状态的定时器
           clearTimeout(statusTimer)
 

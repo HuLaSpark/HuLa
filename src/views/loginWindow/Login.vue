@@ -194,7 +194,8 @@ import { type } from '@tauri-apps/plugin-os'
 import { useCheckUpdate } from '@/hooks/useCheckUpdate'
 import { emit } from '@tauri-apps/api/event'
 import { TauriCommand } from '~/src/enums'
-import { invoke } from '@tauri-apps/api/core'
+import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
+import { ErrorType } from '@/common/exception'
 
 const isCompatibility = computed(() => type() === 'windows' || type() === 'linux')
 const settingStore = useSettingStore()
@@ -395,9 +396,16 @@ const normalLogin = async (auto = false) => {
       userStore.userInfo = account
       loginHistoriesStore.addLoginHistory(account)
 
-      await invoke(TauriCommand.SAVE_USER_INFO, {
-        userInfo: account
-      })
+      await invokeWithErrorHandler(
+        TauriCommand.SAVE_USER_INFO,
+        {
+          userInfo: account
+        },
+        {
+          customErrorMessage: '保存用户信息失败',
+          errorType: ErrorType.Client
+        }
+      )
 
       await emit('set_user_info', {
         token: res.token,

@@ -12,7 +12,8 @@ import { cloneDeep } from 'lodash-es'
 import { useUserStore } from '@/stores/user.ts'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
 import { sendNotification } from '@tauri-apps/plugin-notification'
-import { invoke } from '@tauri-apps/api/core'
+import { invokeWithErrorHandler, invokeSilently } from '@/utils/TauriInvokeHandler'
+import { ErrorType } from '@/common/exception'
 
 type RecalledMessage = {
   messageId: string
@@ -218,13 +219,20 @@ export const useChatStore = defineStore(
       const requestRoomId = currentRoomId.value
 
       currentMessageOptions.value && (currentMessageOptions.value.isLoading = true)
-      const data: any = await invoke(TauriCommand.PAGE_MSG, {
-        param: {
-          pageSize: size,
-          cursor: currentMessageOptions.value?.cursor,
-          roomId: requestRoomId
+      const data: any = await invokeWithErrorHandler(
+        TauriCommand.PAGE_MSG,
+        {
+          param: {
+            pageSize: size,
+            cursor: currentMessageOptions.value?.cursor,
+            roomId: requestRoomId
+          }
+        },
+        {
+          customErrorMessage: '获取消息列表失败',
+          errorType: ErrorType.Network
         }
-      }).finally(() => {
+      ).finally(() => {
         // 只有当当前房间ID仍然是请求时的房间ID时，才更新加载状态
         if (requestRoomId === currentRoomId.value && currentMessageOptions.value) {
           currentMessageOptions.value.isLoading = false
@@ -274,8 +282,12 @@ export const useChatStore = defineStore(
     const getSessionList = async (isFresh = false) => {
       if (sessionOptions.isLoading) return
       sessionOptions.isLoading = true
-      const response: any = await invoke(TauriCommand.LIST_CONTACTS).catch(() => {
+      const response: any = await invokeWithErrorHandler(TauriCommand.LIST_CONTACTS, undefined, {
+        customErrorMessage: '获取会话列表失败',
+        errorType: ErrorType.Network
+      }).catch(() => {
         sessionOptions.isLoading = false
+        return null
       })
       if (!response) return
       const data = response
@@ -680,7 +692,7 @@ export const useChatStore = defineStore(
       // 更新全局 store 中的未读计数
       globalStore.unReadMark.newMsgUnreadCount = totalUnread
       // 更新系统托盘图标上的未读数
-      invoke('set_badge_count', { count: totalUnread > 0 ? totalUnread : null })
+      invokeSilently('set_badge_count', { count: totalUnread > 0 ? totalUnread : null })
     }
 
     // 清空所有会话的未读数
