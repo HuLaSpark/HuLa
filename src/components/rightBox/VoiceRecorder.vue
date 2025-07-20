@@ -4,18 +4,29 @@
     <div class="voice-recorder-main">
       <!-- 录音状态文字 -->
       <div class="voice-status">
-        <div v-if="!isRecording && !audioBlob" class="status-idle">
-          <span>按住说话</span>
+        <div v-if="!isRecording && !audioBlob && !isProcessing">
+          <span class="text-#909090 flex-y-center gap-6px select-none">
+            点击
+            <svg class="size-14px color-#13987f"><use href="#voice"></use></svg>
+            说话
+          </span>
         </div>
 
         <div v-if="isRecording" class="status-recording">
           <div class="recording-animation">
             <div class="pulse-dot"></div>
           </div>
-          <span>{{ formatTime(recordingTime) }} 正在录音...</span>
+          <span>{{ formatTime(recordingTime) }} 正在录音</span>
         </div>
 
-        <div v-if="!isRecording && audioBlob" class="status-completed">
+        <div v-if="!isRecording && isProcessing" class="status-processing">
+          <div class="processing-animation">
+            <div class="loading-spinner"></div>
+          </div>
+          <span>正在处理音频</span>
+        </div>
+
+        <div v-if="!isRecording && audioBlob && !isProcessing" class="status-completed">
           <div class="playback-controls">
             <button @click="togglePlayback" class="play-btn">
               <svg v-if="!isPlaying" viewBox="0 0 24 24">
@@ -33,67 +44,52 @@
       <!-- 录音控制按钮 -->
       <div class="voice-controls">
         <!-- 未录音状态 -->
-        <div v-if="!isRecording && !audioBlob" class="controls-idle">
-          <button
+        <div v-if="!isRecording && !audioBlob && !isProcessing" class="controls-idle">
+          <div
             @mousedown="startRecording"
             @mouseup="stopRecording"
             @mouseleave="stopRecording"
             @touchstart="startRecording"
             @touchend="stopRecording"
             class="record-btn">
-            <svg viewBox="0 0 24 24">
-              <path
-                fill="currentColor"
-                d="M12,2A3,3 0 0,1 15,5V11A3,3 0 0,1 12,14A3,3 0 0,1 9,11V5A3,3 0 0,1 12,2M19,11C19,14.53 16.39,17.44 13,17.93V21H11V17.93C7.61,17.44 5,14.53 5,11H7A5,5 0 0,0 12,16A5,5 0 0,0 17,11H19Z" />
-            </svg>
-          </button>
-          <button @click="handleCancel" class="cancel-btn">
-            <svg viewBox="0 0 24 24">
-              <path
-                fill="currentColor"
-                d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" />
-            </svg>
-          </button>
+            <svg><use href="#voice"></use></svg>
+          </div>
+          <div @click="handleCancel" class="cancel-btn">
+            <svg><use href="#close"></use></svg>
+          </div>
         </div>
 
         <!-- 录音中状态 -->
         <div v-if="isRecording" class="controls-recording">
-          <button @click="stopRecording" class="stop-btn">
+          <div @click="stopRecording" class="stop-btn">
             <svg viewBox="0 0 24 24">
               <path fill="currentColor" d="M18,18H6V6H18V18Z" />
             </svg>
-          </button>
-          <button @click="cancelRecording" class="cancel-record-btn">
-            <svg viewBox="0 0 24 24">
-              <path
-                fill="currentColor"
-                d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" />
-            </svg>
-          </button>
+          </div>
+          <div @click="cancelRecording" class="cancel-record-btn">
+            <svg><use href="#close"></use></svg>
+          </div>
+        </div>
+
+        <!-- 处理中状态 -->
+        <div v-if="!isRecording && isProcessing" class="controls-processing">
+          <!-- <div @click="handleCancel" class="cancel-btn">
+            <svg><use href="#close"></use></svg>
+          </div> -->
         </div>
 
         <!-- 录音完成状态 -->
-        <div v-if="!isRecording && audioBlob" class="controls-completed">
-          <button @click="reRecord" class="re-record-btn">
-            <svg viewBox="0 0 24 24">
-              <path
-                fill="currentColor"
-                d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z" />
-            </svg>
-          </button>
-          <button @click="handleSend" class="send-btn" :disabled="sending">
-            <svg v-if="!sending" viewBox="0 0 24 24">
-              <path fill="currentColor" d="M2,21L23,12L2,3V10L17,12L2,14V21Z" />
-            </svg>
+        <div v-if="!isRecording && audioBlob && !isProcessing" class="controls-completed">
+          <div @click="reRecord" class="refresh-btn">
+            <svg><use href="#refresh"></use></svg>
+          </div>
+          <div @click="handleSend" class="send-btn" :disabled="sending">
+            <svg v-if="!sending"><use href="#send"></use></svg>
             <div v-else class="loading-spinner"></div>
-          </button>
-          <button @click="handleCancel" class="cancel-btn">
-            <svg viewBox="0 0 24 24">
-              <path
-                fill="currentColor"
-                d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" />
-            </svg>
-          </button>
+          </div>
+          <div @click="handleCancel" class="cancel-btn">
+            <svg><use href="#close"></use></svg>
+          </div>
         </div>
       </div>
     </div>
@@ -117,6 +113,7 @@ const localAudioPath = ref<string>('')
 
 // 播放状态
 const isPlaying = ref(false)
+const isProcessing = ref(false)
 const audioElement = ref<HTMLAudioElement | null>(null)
 
 // 语音录制功能
@@ -136,10 +133,12 @@ const {
     audioBlob.value = blob
     recordingDuration.value = duration
     localAudioPath.value = localPath
+    isProcessing.value = false
     createAudioElement()
   },
   onError: () => {
     window.$message?.error('录音失败')
+    isProcessing.value = false
   }
 })
 
@@ -150,6 +149,9 @@ const startRecording = async () => {
 
 // 停止录音
 const stopRecording = async () => {
+  if (isRecording.value) {
+    isProcessing.value = true
+  }
   await stopRecord()
 }
 
@@ -158,6 +160,7 @@ const cancelRecording = () => {
   cancelRecord()
   audioBlob.value = null
   recordingDuration.value = 0
+  isProcessing.value = false
 }
 
 // 重新录制
@@ -165,6 +168,7 @@ const reRecord = () => {
   audioBlob.value = null
   recordingDuration.value = 0
   localAudioPath.value = ''
+  isProcessing.value = false
   if (audioElement.value) {
     audioElement.value.pause()
     audioElement.value = null
@@ -245,76 +249,60 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
+@mixin base-control-button($dark-bg, $bg) {
+  @apply flex-center size-36px text-#fff cursor-pointer rounded-full;
+  background-color: $bg;
+  [data-theme='dark'] & {
+    background-color: $dark-bg;
+  }
+}
+
 .voice-recorder-container {
-  width: 100%;
-  height: 110px;
-  background: var(--bg-color);
-  border-radius: 8px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  position: relative;
+  @apply flex flex-col relative w-full h-110px bg-[--bg-color] rounded-8px p-16px;
 }
 
 .voice-recorder-main {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  gap: 12px;
+  @apply flex flex-col items-center justify-center h-full gap-22px;
 }
 
 .voice-status {
-  text-align: center;
-  color: var(--text-color);
-  font-size: 14px;
-  min-height: 24px;
-
-  .status-idle span {
-    color: var(--text-color-secondary, #666);
-  }
+  @apply text-(14px [--text-color] center) max-h-24px;
 
   .status-recording {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #13987f;
-    font-weight: 500;
+    @apply flex-y-center gap-8px text-#13987f select-none;
 
     .recording-animation {
       position: relative;
-
       .pulse-dot {
-        width: 8px;
-        height: 8px;
-        background: #13987f;
-        border-radius: 50%;
+        @apply size-8px bg-#13987f rounded-full;
         animation: pulse 1.5s infinite;
+      }
+    }
+  }
+
+  .status-processing {
+    @apply flex-y-center gap-8px text-[--chat-text-color] select-none;
+
+    .processing-animation {
+      position: relative;
+      .loading-spinner {
+        @apply size-12px rounded-full;
+        border: 2px solid transparent;
+        border-top: 2px solid var(--chat-text-color);
+        animation: spin 1s linear infinite;
       }
     }
   }
 
   .status-completed {
     .playback-controls {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      @apply flex-y-center gap-8px;
 
       .play-btn {
-        background: none;
-        border: none;
-        cursor: pointer;
-        color: #13987f;
-        width: 30px;
-        height: 30px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        @apply flex-center size-30px bg-inherit border-none cursor-pointer text-#13987f;
 
         svg {
-          width: 16px;
-          height: 16px;
+          @apply size-16px;
         }
 
         &:hover {
@@ -326,110 +314,50 @@ onUnmounted(() => {
 }
 
 .voice-controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
+  @apply flex-center gap-16px;
 
   .controls-idle,
   .controls-recording,
+  .controls-processing,
   .controls-completed {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    @apply flex-y-center gap-12px;
   }
 
-  button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
+  svg {
+    @apply size-18px;
+  }
 
-    svg {
-      width: 20px;
-      height: 20px;
-    }
-
-    &:hover:not(:disabled) {
-      transform: scale(1.05);
-    }
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 
   .record-btn {
-    background: #13987f;
-    color: white;
-    width: 36px;
-    height: 36px;
-
-    svg {
-      width: 24px;
-      height: 24px;
-    }
-
-    &:hover {
-      background: #117a65;
-    }
-
-    &:active {
-      transform: scale(0.95);
-    }
+    @include base-control-button(#13987f80, #13987f);
   }
 
   .stop-btn {
-    background: #e74c3c;
-    color: white;
+    @include base-control-button(#e74c3c96, #e74c3c);
+  }
 
-    &:hover {
-      background: #c0392b;
-    }
+  .refresh-btn {
+    @include base-control-button(#f39c1280, #f39c12);
   }
 
   .send-btn {
-    background: #13987f;
-    color: white;
-
-    &:hover:not(:disabled) {
-      background: #117a65;
-    }
+    @include base-control-button(#13987f80, #13987f);
 
     .loading-spinner {
-      width: 16px;
-      height: 16px;
+      @apply size-16px rounded-full;
       border: 2px solid transparent;
       border-top: 2px solid currentColor;
-      border-radius: 50%;
       animation: spin 1s linear infinite;
-    }
-  }
-
-  .re-record-btn {
-    background: #f39c12;
-    color: white;
-
-    &:hover {
-      background: #e67e22;
     }
   }
 
   .cancel-btn,
   .cancel-record-btn {
-    background: #95a5a6;
-    color: white;
-
-    &:hover {
-      background: #7f8c8d;
-    }
+    @include base-control-button(#95a5a640, #95a5a690);
   }
 }
 
@@ -451,24 +379,6 @@ onUnmounted(() => {
   }
   100% {
     transform: rotate(360deg);
-  }
-}
-
-// 深色主题适配
-.dark {
-  .voice-recorder-container {
-    --bg-color: #2a2a2a;
-    --text-color: #fff;
-    --text-color-secondary: #aaa;
-  }
-}
-
-// 浅色主题
-.light {
-  .voice-recorder-container {
-    --bg-color: #f8f9fa;
-    --text-color: #24292e;
-    --text-color-secondary: #666;
   }
 }
 </style>
