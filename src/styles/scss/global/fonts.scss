@@ -1,11 +1,13 @@
 @font-face {
   font-family: 'AliFangYuan';
-  src: url('/src/assets/fonts/AlimamaFangYuanTiVF-Thin.ttf');
+  src: url('/src/assets/fonts/AlimamaFangYuanTiVF-Thin.woff2') format('woff2');
+  font-style: normal;
   font-display: swap;
 }
 
 @font-face {
   font-family: 'PingFang';
-  src: url('/src/assets/fonts/PingFang Medium.ttf');
+  src: url('/src/assets/fonts/PingFang-Medium.woff2') format('woff2');
+  font-style: normal;
   font-display: swap;
 }

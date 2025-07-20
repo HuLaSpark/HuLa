@@ -6,7 +6,7 @@
 
     <n-flex vertical justify="center" :size="25" class="pt-70px w-full">
       <n-flex justify="center" align="center">
-        <span class="text-(24px #70938c) font-bold textFont">欢迎注册</span>
+        <span class="text-(24px #70938c) textFont">欢迎注册</span>
         <img class="w-100px h-40px" src="@/assets/logo/hula.png" alt="" />
       </n-flex>
 
@@ -188,7 +188,7 @@
         <n-flex vertical class="w-full h-fit">
           <video class="w-full h-240px rounded-t-8px object-cover" src="@/assets/video/star.mp4" autoplay loop />
           <n-flex vertical :size="10" class="p-14px">
-            <p class="text-(16px [--text-color] font-bold)">在 GitHub 为我们点亮星标</p>
+            <p class="text-(16px [--text-color] )">在 GitHub 为我们点亮星标</p>
             <p class="text-(12px [--chat-text-color]) leading-5">
               如果您喜爱我们的产品，并希望支持我们，可以去 GitHub
               给我们点一颗星吗？这个小小的动作对我们来说意义重大，能激励我们为您持续提供特性体验。
@@ -214,7 +214,7 @@
       <div class="bg-#f0f0f0 w-380px h-fit box-border flex flex-col">
         <n-flex vertical class="w-full h-fit">
           <n-flex vertical :size="10" class="p-20px">
-            <p class="text-(16px [--text-color] font-bold) mb-10px">请输入邮箱验证码</p>
+            <p class="text-(16px [--text-color] ) mb-10px">请输入邮箱验证码</p>
             <p class="text-(12px [--chat-text-color]) leading-5 mb-10px">
               验证码已发送至 {{ info.email }}，请查收并输入验证码完成注册
             </p>

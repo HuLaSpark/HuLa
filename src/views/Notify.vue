@@ -1,6 +1,6 @@
 <template>
   <n-flex vertical :size="6" class="notify" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
-    <n-flex align="center" :size="4" class="m-[8px_0_0_0] text-(12px) font-bold">
+    <n-flex align="center" :size="4" class="m-[8px_0_0_0] text-(12px)">
       <p>新消息</p>
       <p>·</p>
       <p>{{ msgCount }}</p>
@@ -17,7 +17,7 @@
         <n-avatar round :size="44" :src="AvatarUtils.getAvatarUrl(group.avatar)" />
 
         <n-flex class="flex-1" vertical justify="center" :size="8">
-          <span class="text-(16px [--text-color]) font-bold">{{ group.name }}</span>
+          <span class="text-(16px [--text-color])">{{ group.name }}</span>
 
           <n-flex class="w-full" align="center" justify="space-between" :size="10">
             <span class="max-w-150px truncate text-(12px [--text-color])">

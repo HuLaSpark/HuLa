@@ -37,60 +37,58 @@
       </n-flex>
       <!-- 会话列表 -->
       <n-scrollbar ref="scrollbar" style="max-height: calc(100vh - 266px); padding-right: 8px">
-        <VueDraggable dragClass="outline-none" v-model="chatList" :animation="150" target=".sort-target">
-          <TransitionGroup name="list" tag="div" style="padding: 4px" class="sort-target flex flex-col-center gap-12px">
-            <n-flex
-              vertical
-              :size="12"
-              v-for="(item, index) in chatList"
-              :key="item.id"
-              @click="handleActive(item)"
-              :class="{ 'outline-dashed outline-2 outline-#13987f outline-offset-1': activeItem === item.id }"
-              class="chat-item">
-              <ContextMenu
-                :menu="menuList"
-                :special-menu="specialMenuList"
-                class="msg-box w-full h-75px mb-5px"
-                @select="$event.click(item)">
-                <div class="absolute flex flex-col gap-14px w-full p-[8px_14px] box-border">
-                  <n-flex justify="space-between" align="center" :size="0" class="leading-22px">
-                    <n-ellipsis
-                      v-if="editingItemId !== item.id"
-                      style="width: calc(100% - 20px)"
-                      class="text-(14px [--chat-text-color]) truncate font-500 select-none">
-                      {{ item.title || `新的聊天${index + 1}` }}
-                    </n-ellipsis>
-                    <n-input
-                      v-else
-                      @blur="handleBlur(item, index)"
-                      ref="inputInstRef"
-                      v-model:value="item.title"
-                      clearable
-                      placeholder="输入标题"
-                      type="text"
-                      size="tiny"
-                      spellCheck="false"
-                      autoComplete="off"
-                      autoCorrect="off"
-                      autoCapitalize="off"
-                      style="width: 200px"
-                      class="h-22px lh-22px rounded-6px">
-                    </n-input>
-                    <svg
-                      @click.stop="deleteChat(item)"
-                      class="color-[--chat-text-color] size-20px opacity-0 absolute right-0px top-4px">
-                      <use href="#squareClose"></use>
-                    </svg>
-                  </n-flex>
-                  <n-flex justify="space-between" align="center" :size="0" class="text-(12px #909090)">
-                    <p>0条对话</p>
-                    <p>{{ item.time }}</p>
-                  </n-flex>
-                </div>
-              </ContextMenu>
-            </n-flex>
-          </TransitionGroup>
-        </VueDraggable>
+        <TransitionGroup name="list" tag="div" style="padding: 4px" class="sort-target flex flex-col-center gap-12px">
+          <n-flex
+            vertical
+            :size="12"
+            v-for="(item, index) in chatList"
+            :key="item.id"
+            @click="handleActive(item)"
+            :class="{ 'outline-dashed outline-2 outline-#13987f outline-offset-1': activeItem === item.id }"
+            class="chat-item">
+            <ContextMenu
+              :menu="menuList"
+              :special-menu="specialMenuList"
+              class="msg-box w-full h-75px mb-5px"
+              @select="$event.click(item)">
+              <div class="absolute flex flex-col gap-14px w-full p-[8px_14px] box-border">
+                <n-flex justify="space-between" align="center" :size="0" class="leading-22px">
+                  <n-ellipsis
+                    v-if="editingItemId !== item.id"
+                    style="width: calc(100% - 20px)"
+                    class="text-(14px [--chat-text-color]) truncate font-500 select-none">
+                    {{ item.title || `新的聊天${index + 1}` }}
+                  </n-ellipsis>
+                  <n-input
+                    v-else
+                    @blur="handleBlur(item, index)"
+                    ref="inputInstRef"
+                    v-model:value="item.title"
+                    clearable
+                    placeholder="输入标题"
+                    type="text"
+                    size="tiny"
+                    spellCheck="false"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    style="width: 200px"
+                    class="h-22px lh-22px rounded-6px">
+                  </n-input>
+                  <svg
+                    @click.stop="deleteChat(item)"
+                    class="color-[--chat-text-color] size-20px opacity-0 absolute right-0px top-4px">
+                    <use href="#squareClose"></use>
+                  </svg>
+                </n-flex>
+                <n-flex justify="space-between" align="center" :size="0" class="text-(12px #909090)">
+                  <p>0条对话</p>
+                  <p>{{ item.time }}</p>
+                </n-flex>
+              </div>
+            </ContextMenu>
+          </n-flex>
+        </TransitionGroup>
       </n-scrollbar>
     </n-flex>
 
@@ -142,7 +140,6 @@
 <script setup lang="ts">
 import { NIcon, VirtualListInst, InputInst } from 'naive-ui'
 import { useMitt } from '@/hooks/useMitt.ts'
-import { VueDraggable } from 'vue-draggable-plus'
 import router from '@/router'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'

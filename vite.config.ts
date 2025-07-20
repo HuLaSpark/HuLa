@@ -8,6 +8,12 @@ import vueJsx from '@vitejs/plugin-vue-jsx'
 import UnoCSS from '@unocss/vite'
 import terser from '@rollup/plugin-terser'
 import VueSetupExtend from 'vite-plugin-vue-setup-extend'
+import { readFileSync } from 'fs'
+import { join } from 'path'
+
+// 读取 package.json 依赖
+const packageJson = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf-8'))
+const dependencies = Object.keys(packageJson.dependencies || {})
 
 // https://vitejs.dev/config/
 /**! 不需要优化前端打包(如开启gzip) */
@@ -78,10 +84,16 @@ export default defineConfig(({ mode }: ConfigEnv) => {
           chunkFileNames: 'static/js/[name]-[hash].js', // 引入文件名的名称
           entryFileNames: 'static/js/[name]-[hash].js', // 包的入口文件名称
           assetFileNames: 'static/[ext]/[name]-[hash].[ext]', // 资源文件像 字体，图片等
-          // 最小化拆分包
+          // 每个依赖单独分割
           manualChunks(id) {
             if (id.includes('node_modules')) {
-              return 'invariable'
+              // 找到匹配的依赖包名
+              const matchedDep = dependencies.find((dep) => id.includes(`node_modules/${dep}`))
+              if (matchedDep) {
+                // 清理包名，移除特殊字符
+                return matchedDep.replace(/[@/]/g, '-')
+              }
+              return 'vendor'
             }
           }
         }

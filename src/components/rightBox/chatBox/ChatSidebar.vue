@@ -25,7 +25,7 @@
         justify="space-between"
         class="cursor-pointer"
         @click="handleOpenAnnoun(announNum === 0 && isAddAnnoun)">
-        <p class="text-(14px --text-color) font-bold">群公告须知</p>
+        <p class="text-(14px --text-color)">群公告须知</p>
         <svg class="size-16px rotate-270 color-[--text-color]">
           <use v-if="announNum === 0 && isAddAnnoun && !isLoadingAnnouncement" href="#plus"></use>
           <use v-else href="#down"></use>

@@ -6,7 +6,7 @@ const { systemNotice } = storeToRefs(useNoticeStore())
 const SysNTF = null
 if (!systemNotice.value) {
   const SysNTF = window.$notification.create({
-    title: () => <p class="text-14px font-bold pl-10px">系统提示</p>,
+    title: () => <p class="text-14px pl-10px">系统提示</p>,
     content: () => <p class="text-12px pl-10px">当前系统尚未完善，请不要把重要信息保存在这里</p>,
     meta: () => <p class="text-12px pl-10px">{handRelativeTime('2024/11/28 16:48:32')}</p>,
     closable: false,

@@ -22,7 +22,7 @@
           style="width: 160px; height: 160px"
           :stroke-width="16">
           <n-flex vertical align="center" justify="center" :size="4">
-            <span class="text-(18px [--text-color]) font-bold">
+            <span class="text-(18px [--text-color])">
               {{ showDiskUsage ? scanFilesUsagePercentage.toFixed(2) : scanningProgress.toFixed(0) }}%
             </span>
             <span class="text-(12px #666)">

@@ -15,6 +15,13 @@
   margin-left: 22px;
 }
 
+/** 自定义密码输入框圆点样式 */
+:deep(.n-input .n-input__input-el[type="password"]) {
+  font-size: 22px !important; /* 增大圆点大小 */
+  font-family: 'Courier New', monospace !important; /* 使用等宽字体 */
+  line-height: 22px;
+}
+
 /** 隐藏naive UI的滚动条 */
 :deep(
     .n-scrollbar > .n-scrollbar-rail.n-scrollbar-rail--vertical > .n-scrollbar-rail__scrollbar,
