@@ -157,7 +157,9 @@ export enum StoresEnum {
   /** 视频查看器数据 */
   VIDEOVIEWER = 'videoViewer',
   /** 文件下载管理 */
-  FILE_DOWNLOAD = 'fileDownload'
+  FILE_DOWNLOAD = 'fileDownload',
+  /** 移动端状态 */
+  MOBILE = 'mobile'
 }
 
 /**

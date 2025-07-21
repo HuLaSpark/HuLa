@@ -95,6 +95,7 @@
     "pinia-shared-state": "^1.0.1",
     "seemly": "^0.3.10",
     "tauri-plugin-mic-recorder-api": "^2.0.0",
+    "tauri-plugin-safe-area-insets": "^0.1.0",
     "vue": "^3.5.17",
     "vue-cropper": "1.1.4",
     "vue-demi": "0.14.6",

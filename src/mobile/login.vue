@@ -118,7 +118,11 @@
       </n-button>
 
       <!-- 协议 -->
-      <n-flex justify="center" :size="6" class="absolute bottom-0 w-[80%]">
+      <n-flex
+        justify="center"
+        :style="envType === 'android' ? { bottom: safeArea.bottom + 10 + 'px' } : {}"
+        :size="6"
+        class="absolute bottom-0 w-[80%]">
         <n-checkbox v-model:checked="protocol" />
         <div class="text-12px color-#909090 cursor-default lh-14px">
           <span>已阅读并同意</span>
@@ -314,6 +318,7 @@ import { lightTheme } from 'naive-ui'
 import router from '../router'
 import Validation from '@/components/common/Validation.vue'
 import PinInput from '@/components/common/PinInput.vue'
+import { useMobileStore } from '@/stores/mobile'
 
 // 本地注册信息类型，扩展API类型以包含确认密码
 interface LocalRegisterInfo extends RegisterUserReq {
@@ -324,6 +329,10 @@ const loginHistoriesStore = useLoginHistoriesStore()
 const userStore = useUserStore()
 const { setLoginState } = useLogin()
 const { loginHistories } = loginHistoriesStore
+const mobileStore = useMobileStore()
+
+const envType = ref(mobileStore.envType)
+const safeArea = computed(() => mobileStore.safeArea)
 
 /** 当前激活的选项卡 */
 const activeTab = ref<'login' | 'register'>('login')

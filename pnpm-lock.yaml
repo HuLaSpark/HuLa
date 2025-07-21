@@ -119,6 +119,9 @@ importers:
       tauri-plugin-mic-recorder-api:
         specifier: ^2.0.0
         version: 2.0.0
+      tauri-plugin-safe-area-insets:
+        specifier: ^0.1.0
+        version: 0.1.0
       vue:
         specifier: ^3.5.17
         version: 3.5.17(typescript@5.8.3)
@@ -4964,6 +4967,9 @@ packages:
 
   tauri-plugin-mic-recorder-api@2.0.0:
     resolution: {integrity: sha512-04wqYCX4WIlYd6KUY7aS3+W4B5RtnSoVczaQCBSXKpQkEx9XdaaBN05XCee2unxGva0btSXBItFqQSdosnS4jQ==}
+
+  tauri-plugin-safe-area-insets@0.1.0:
+    resolution: {integrity: sha512-NhtxSQdU7+laTJiO4WZFlTB1CBzRlNE5EuHflGAGXS55fiwOkkaWztfNishFQO+eZtb9i5jLHX3Yho48lnqcRQ==}
 
   terser@5.37.0:
     resolution: {integrity: sha512-B8wRRkmre4ERucLM/uXx4MOV5cbnOlVAqUst+1+iLKPI0dOgFO28f84ptoQt9HEI537PMzfYa/d+GEPKTRXmYA==}
@@ -10401,6 +10407,10 @@ snapshots:
       tslib: 2.8.1
 
   tauri-plugin-mic-recorder-api@2.0.0:
+    dependencies:
+      '@tauri-apps/api': 2.6.0
+
+  tauri-plugin-safe-area-insets@0.1.0:
     dependencies:
       '@tauri-apps/api': 2.6.0
 
