@@ -26,7 +26,7 @@
 <script setup lang="ts"></script>
 <style scoped lang="scss">
 .safe-area-nav {
-  @apply z-99999 fixed top-0 w-full bg-#e3e3e396 backdrop-blur-md;
+  @apply z-99999 fixed top-0 w-full  backdrop-blur-md;
   padding-top: env(safe-area-inset-top);
   height: 44px;
 }
