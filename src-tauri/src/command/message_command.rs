@@ -177,8 +177,15 @@ pub async fn check_user_init_and_fetch_messages(
             // 如果 is_init 为 true，调用后端接口获取所有消息
             if user_model.is_init {
                 info!("用户 {} 需要初始化，开始获取所有消息", uid);
-                if let Err(e) = fetch_all_messages(client, db_conn, uid).await {
+                // 传递用户的 last_opt_time 参数
+                if let Err(e) = fetch_all_messages(client, db_conn, uid, None).await {
                     error!("获取所有消息失败: {}", e);
+                    return Err(e);
+                }
+            }else {
+                info!("用户 {} 离线消息更新, last_opt_time: {:?}", uid, user_model.last_opt_time);
+                if let Err(e) = fetch_all_messages(client, db_conn, uid, user_model.last_opt_time).await {
+                    error!("离线消息更新失败: {}", e);
                     return Err(e);
                 }
             }
@@ -192,10 +199,17 @@ pub async fn fetch_all_messages(
     client: &ImRequestClient,
     db_conn: &DatabaseConnection,
     uid: &str,
+    last_opt_time: Option<i64>,
 ) -> Result<(), CommonError> {
-    // 调用后端接口 /chat/msg/list 获取所有消息
-    let messages = client
-        .get("/chat/msg/list")
+    // 调用后端接口 /chat/msg/list 获取所有消息，传递 last_opt_time 参数
+    let mut request = client.get("/chat/msg/list");
+    
+    // 如果有 last_opt_time 参数，添加到查询参数中
+    if let Some(time) = last_opt_time {
+        request = request.query(&[("lastOptTime", time.to_string())]);
+    }
+    
+    let messages = request
         .send_json::<Vec<MessageResp>>()
         .await?;
 

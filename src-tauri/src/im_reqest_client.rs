@@ -84,6 +84,7 @@ impl ImRequestClient {
             method,
             json_body: None,
             headers: Vec::new(),
+            query_params: None,
         }
     }
 
@@ -178,13 +179,16 @@ pub struct RequestBuilderWrapper<'a> {
     method: Method,
     json_body: Option<String>,
     headers: Vec<(String, String)>,
+    query_params: Option<String>,
 }
 
 impl<'a> RequestBuilderWrapper<'a> {
     /// 添加查询参数
     pub fn query<T: serde::Serialize + ?Sized>(mut self, query: &T) -> Self {
-        // 序列化查询参数以便重试时使用
-        // 注意：这里简化处理，实际项目中可能需要更复杂的序列化逻辑
+        // 序列化查询参数以便重试时使用和日志记录
+        if let Ok(query_string) = serde_json::to_string(query) {
+            self.query_params = Some(query_string);
+        }
         self.request_builder = self.request_builder.query(query);
         self
     }
@@ -228,7 +232,19 @@ impl<'a> RequestBuilderWrapper<'a> {
         mut self,
     ) -> Result<ApiResult<T>, CommonError> {
         // 记录请求信息
-        debug!("发送请求到: {}", self.url);
+        let mut log_message = format!("发送请求到: {} [{}]", self.url, self.method);
+        
+        // 添加查询参数信息
+        if let Some(ref query_params) = self.query_params {
+            log_message.push_str(&format!(" 查询参数: {}", query_params));
+        }
+        
+        // 添加请求体信息
+        if let Some(ref json_body) = self.json_body {
+            log_message.push_str(&format!(" 请求体: {}", json_body));
+        }
+        
+        debug!("{}", log_message);
 
         // 获取 token 并添加到请求头
         let current_token = {
@@ -265,7 +281,7 @@ impl<'a> RequestBuilderWrapper<'a> {
             Ok(result) => result,
             Err(e) => {
                 error!("JSON 解析错误: {}", e);
-                error!("响应内容: {}", response_text);
+                // error!("响应内容: {}", response_text);
                 return Err(CommonError::UnexpectedError(anyhow::anyhow!(
                     "解析 JSON 失败: {}",
                     e
@@ -329,7 +345,7 @@ impl<'a> RequestBuilderWrapper<'a> {
                             Ok(result) => result,
                             Err(e) => {
                                 error!("重试请求 JSON 解析错误: {}", e);
-                                error!("响应内容: {}", retry_response_text);
+                                // error!("响应内容: {}", retry_response_text);
                                 return Err(CommonError::UnexpectedError(anyhow::anyhow!(
                                     "解析重试请求 JSON 失败: {}",
                                     e

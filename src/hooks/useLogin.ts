@@ -1,5 +1,5 @@
 import { emit } from '@tauri-apps/api/event'
-import { EventEnum, RoomTypeEnum } from '@/enums'
+import { EventEnum, RoomTypeEnum, TauriCommand } from '@/enums'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { type } from '@tauri-apps/plugin-os'
@@ -44,6 +44,7 @@ export const useLogin = () => {
       await resizeWindow('tray', 130, 44)
       // 发送登出事件
       await emit(EventEnum.LOGOUT)
+      await invokeSilently(TauriCommand.UPDATE_USER_LAST_OPT_TIME)
     } catch (error) {
       console.error('创建登录窗口失败:', error)
     }

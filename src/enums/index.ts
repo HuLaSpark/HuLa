@@ -472,6 +472,8 @@ export enum TauriCommand {
   PAGE_MSG = 'page_msg',
   /** 保存用户信息 */
   SAVE_USER_INFO = 'save_user_info',
+  /** 更新用户最后操作时间 */
+  UPDATE_USER_LAST_OPT_TIME = 'update_user_last_opt_time',
   /** 发送消息 */
   SEND_MSG = 'send_msg',
   /** 保存消息 */

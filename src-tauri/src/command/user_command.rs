@@ -1,10 +1,12 @@
 use crate::AppData;
+use chrono::{Local};
 use entity::im_user;
 use entity::prelude::ImUserEntity;
 use log::{debug, info};
 use sea_orm::ActiveValue::Set;
 use sea_orm::ColumnTrait;
 use sea_orm::EntityTrait;
+use sea_orm::IntoActiveModel;
 use sea_orm::QueryFilter;
 use serde::{Deserialize, Serialize};
 use std::ops::Deref;
@@ -44,5 +46,35 @@ pub async fn save_user_info(user_info: UserInfo, state: State<'_, AppData>) -> R
     } else {
         debug!("用户已存在，无需插入");
     }
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn update_user_last_opt_time(
+    state: State<'_, AppData>,
+) -> Result<(), String> {
+    info!("更新用户最后操作时间");
+    let db = state.db_conn.clone();
+
+    let uid = state.user_info.lock().await.uid.clone();
+    
+    // 检查用户是否存在
+    let user = ImUserEntity::find()
+        .filter(im_user::Column::Id.eq(uid.clone()))
+        .one(db.deref())
+        .await
+        .map_err(|err| format!("查询用户失败: {}", err))?;
+    
+    if let Some(user) = user {
+        let mut active_model = user.into_active_model();
+        active_model.last_opt_time = Set(Some(Local::now().timestamp_millis()));
+        
+        ImUserEntity::update(active_model)
+            .exec(db.deref())
+            .await
+            .map_err(|err| format!("更新用户最后操作时间失败: {}", err))?;
+        
+    }
+    
     Ok(())
 }

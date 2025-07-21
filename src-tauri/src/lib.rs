@@ -73,7 +73,7 @@ pub async fn run() {
 
 #[cfg(desktop)]
 async fn setup_desktop() -> Result<(), CommonError> {
-    use crate::command::user_command::save_user_info;
+    use crate::command::user_command::{save_user_info, update_user_last_opt_time};
 
     let configuration = Arc::new(get_configuration().expect("加载配置文件失败"));
     let db = Arc::new(configuration.database.connection_string().await?);
@@ -129,6 +129,7 @@ async fn setup_desktop() -> Result<(), CommonError> {
             #[cfg(target_os = "macos")]
             hide_title_bar_buttons,
             save_user_info,
+            update_user_last_opt_time,
             page_room,
             get_room_members,
             update_my_room_info,
