@@ -111,14 +111,14 @@ pub async fn save_room_batch(
     for mut member in room_members {
         // 设置 login_uid
         member.login_uid = login_uid.to_string();
-        
+
         // 检查记录是否已存在
         let existing = im_room::Entity::find()
             .filter(im_room::Column::Id.eq(member.id.clone()))
             .filter(im_room::Column::LoginUid.eq(member.login_uid.clone()))
             .one(&txn)
             .await?;
-        
+
         if existing.is_none() {
             // 如果记录不存在，执行插入
             let member_active = member.into_active_model();
@@ -178,9 +178,9 @@ pub async fn save_room_member_batch(
     if !room_members.is_empty() {
         let active_models: Vec<im_room_member::ActiveModel> = room_members
             .into_iter()
-            .map(|mut member| {
-                member.login_uid = login_uid.to_string();
+            .map(|member| {
                 let mut member_active = member.into_active_model();
+                member_active.login_uid = Set(login_uid.to_string());
                 member_active.room_id = Set(Some(room_id.to_string()));
                 member_active
             })

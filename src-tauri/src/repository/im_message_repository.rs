@@ -3,12 +3,12 @@ use crate::pojo::common::{CursorPageParam, CursorPageResp};
 use anyhow::Context;
 use entity::im_message;
 use log::{debug, info};
-use sea_orm::{ColumnTrait, ConnectionTrait, DatabaseConnection, DatabaseTransaction, EntityTrait, IntoActiveModel, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set};
+use sea_orm::{
+    ColumnTrait, ConnectionTrait, DatabaseConnection, DatabaseTransaction, EntityTrait,
+    IntoActiveModel, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set,
+};
 
-pub async fn save_all<C>(
-    db: &C,
-    messages: Vec<im_message::Model>,
-) -> Result<(), CommonError>
+pub async fn save_all<C>(db: &C, messages: Vec<im_message::Model>) -> Result<(), CommonError>
 where
     C: ConnectionTrait,
 {
@@ -23,7 +23,7 @@ where
             msg_active
         })
         .collect();
-    
+
     // 如果数据量小于批次大小，直接插入
     if active_models.len() <= BATCH_SIZE {
         if !active_models.is_empty() {
@@ -121,12 +121,13 @@ pub async fn update_message_status(
     id: Option<String>,
     login_uid: String,
 ) -> Result<(), CommonError> {
-    let mut active_model: im_message::ActiveModel = im_message::Entity::find_by_id((message_id.to_string(), login_uid))
-        .one(db)
-        .await
-        .with_context(|| "查找消息失败")?
-        .ok_or_else(|| CommonError::UnexpectedError(anyhow::anyhow!("消息不存在")))?
-        .into_active_model();
+    let mut active_model: im_message::ActiveModel =
+        im_message::Entity::find_by_id((message_id.to_string(), login_uid))
+            .one(db)
+            .await
+            .with_context(|| "查找消息失败")?
+            .ok_or_else(|| CommonError::UnexpectedError(anyhow::anyhow!("消息不存在")))?
+            .into_active_model();
 
     active_model.send_status = Set(status.to_string());
 

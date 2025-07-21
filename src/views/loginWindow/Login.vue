@@ -391,6 +391,7 @@ const normalLogin = async (auto = false) => {
       const account = {
         ...userDetail,
         token: res.token,
+        refreshToken: res.refreshToken,
         client: res.client
       }
       userStore.userInfo = account
@@ -409,6 +410,7 @@ const normalLogin = async (auto = false) => {
 
       await emit('set_user_info', {
         token: res.token,
+        refreshToken: res.refreshToken,
         uid: account.uid
       })
 

@@ -54,7 +54,9 @@ pub struct AppData {
 }
 
 use crate::command::contact_command::list_contacts_command;
-use crate::command::message_command::{check_user_init_and_fetch_messages, page_msg, save_msg, send_msg};
+use crate::command::message_command::{
+    check_user_init_and_fetch_messages, page_msg, save_msg, send_msg,
+};
 use tauri::Listener;
 use tokio::sync::Mutex;
 
@@ -80,6 +82,7 @@ async fn setup_desktop() -> Result<(), CommonError> {
         ImRequestClient::new(configuration.clone().backend.base_url.clone()).await?;
     let user_info = UserInfo {
         token: Default::default(),
+        refresh_token: Default::default(),
         uid: Default::default(),
     };
 
@@ -103,6 +106,14 @@ async fn setup_desktop() -> Result<(), CommonError> {
             cache,
         })
         .setup(move |app| {
+            // 设置 AppHandle 到 ImRequestClient（使用 spawn 避免运行时嵌套）
+            let client_clone = client.clone();
+            let app_handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                let client_guard = client_clone.lock().await;
+                client_guard.set_app_handle(app_handle);
+            });
+
             // 监听前端事件，保存登录用户信息
             setup_user_info_listener(app, client.clone(), user_info.clone(), db.clone());
             tray::create_tray(app.handle())?;
@@ -162,12 +173,23 @@ fn setup_user_info_listener(
             let db_conn = db_conn.clone();
             tauri::async_runtime::spawn(async move {
                 if let Ok(payload) = serde_json::from_str::<UserInfo>(&event.payload()) {
-                    let mut client = client.lock().await;
-                    client.token = Some(payload.token.clone());
+                    let client = client.lock().await;
 
+                    // 更新 client 的 token
+                    if let Ok(mut token_guard) = client.token.lock() {
+                        *token_guard = Some(payload.token.clone());
+                    }
+
+                    if let Ok(mut refresh_token_guard) = client.refresh_token.lock() {
+                        *refresh_token_guard = Some(payload.refresh_token.clone());
+                    }
+
+                    // 更新 client 的 refresh_token（如果有的话）
+                    // 这里假设 UserInfo 可能包含 refresh_token，如果没有则保持原值
                     let mut user_info = user_info.lock().await;
                     user_info.uid = payload.uid.clone();
                     user_info.token = payload.token.clone();
+                    user_info.refresh_token = payload.refresh_token.clone();
 
                     // 检查用户的 is_init 状态并获取消息
                     if let Err(e) =
@@ -183,8 +205,10 @@ fn setup_user_info_listener(
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UserInfo {
     pub token: String,
+    pub refresh_token: String,
     pub uid: String,
 }
 

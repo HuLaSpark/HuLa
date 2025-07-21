@@ -70,11 +70,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(ImContact::CreateTime).big_integer())
                     .col(ColumnDef::new(ImContact::UpdateTime).big_integer())
                     .col(ColumnDef::new(ImContact::LoginUid).string().not_null())
-                    .primary_key(
-                        Index::create()
-                            .col(ImContact::Id)
-                            .col(ImContact::LoginUid),
-                    )
+                    .primary_key(Index::create().col(ImContact::Id).col(ImContact::LoginUid))
                     .to_owned(),
             )
             .await?;
@@ -91,11 +87,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(ImRoom::RoomName).string().not_null())
                     .col(ColumnDef::new(ImRoom::Avatar).string())
                     .col(ColumnDef::new(ImRoom::LoginUid).string().not_null())
-                    .primary_key(
-                        Index::create()
-                            .col(ImRoom::Id)
-                            .col(ImRoom::LoginUid),
-                    )
+                    .primary_key(Index::create().col(ImRoom::Id).col(ImRoom::LoginUid))
                     .to_owned(),
             )
             .await?;
@@ -156,11 +148,7 @@ impl MigrationTrait for Migration {
                             .not_null()
                             .default("pending"),
                     )
-                    .primary_key(
-                        Index::create()
-                            .col(ImMessage::Id)
-                            .col(ImMessage::LoginUid),
-                    )
+                    .primary_key(Index::create().col(ImMessage::Id).col(ImMessage::LoginUid))
                     .to_owned(),
             )
             .await?;
@@ -175,11 +163,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(ImConfig::ConfigKey).string().not_null())
                     .col(ColumnDef::new(ImConfig::ConfigValue).string())
                     .col(ColumnDef::new(ImConfig::LoginUid).string().not_null())
-                    .primary_key(
-                        Index::create()
-                            .col(ImConfig::Id)
-                            .col(ImConfig::LoginUid),
-                    )
+                    .primary_key(Index::create().col(ImConfig::Id).col(ImConfig::LoginUid))
                     .to_owned(),
             )
             .await?;

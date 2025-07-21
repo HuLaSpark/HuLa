@@ -8,7 +8,7 @@ use crate::repository::im_room_member_repository::{
 use crate::vo::vo::MyRoomInfoReq;
 use anyhow::Context;
 use entity::{im_room, im_room_member};
-use log::error;
+use log::{error, info};
 
 use crate::im_reqest_client::ImRequestClient;
 use crate::repository::im_room_member_repository;
@@ -70,6 +70,7 @@ pub async fn get_room_members(
     room_id: String,
     state: State<'_, AppData>,
 ) -> Result<Vec<im_room_member::Model>, String> {
+    info!("调用获取room_id的房间的所有成员列表");
     let result: Result<Vec<im_room_member::Model>, CommonError> = async {
         // 检查缓存中是否存在该room_id
         let cache_key = format!("room_members_{}", room_id);
