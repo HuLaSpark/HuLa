@@ -35,7 +35,7 @@
     "========= 初始化 android =========": "",
     "tauri:android:init": "tauri android init",
     "========= 生成icon =========": "",
-    "tauri:icon": "tauri icon public/logo.png",
+    "tauri:icon": "tauri icon public/light.png",
     "========= 安装依赖前执行 =========": "",
     "preinstall": "npx only-allow pnpm && node scripts/check-all.js",
     "========= 使用commit来进行代码提交 =========": "",

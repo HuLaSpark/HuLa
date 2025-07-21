@@ -31,12 +31,15 @@ const envType = type()
 
 // 判断是移动环境时才做
 if (envType === 'android') {
-  try {
-    const mobileStore = useMobileStore()
-    const insets = await getInsets()
-    mobileStore.updateSafeArea(insets)
-    console.log('插件中获取的安全区域参数：', insets)
-  } catch (error) {
-    console.log('获取安全区域出错：', error)
-  }
+  // 使用立即执行的异步函数来处理 await
+  ;(async () => {
+    try {
+      const mobileStore = useMobileStore()
+      const insets = await getInsets()
+      mobileStore.updateSafeArea(insets)
+      console.log('插件中获取的安全区域参数：', insets)
+    } catch (error) {
+      console.log('获取安全区域出错：', error)
+    }
+  })()
 }

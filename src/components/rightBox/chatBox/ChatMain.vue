@@ -93,41 +93,18 @@
             {{ item.timeBlock }}
           </span>
 
-          <!--  消息为撤回消息  -->
-          <div v-if="item.message.type === MsgEnum.RECALL">
-            <template v-if="isGroup">
-              <n-flex align="center" :size="6" v-if="item.fromUser.uid === userUid">
-                <p class="text-(12px #909090) select-none cursor-default">你撤回了一条消息</p>
-                <p
-                  v-if="canReEdit(item.message.id)"
-                  class="text-(12px #13987f) select-none cursor-pointer"
-                  @click="handleReEdit(item.message.id)">
-                  重新编辑
-                </p>
-              </n-flex>
-              <span v-else class="text-12px color-#909090 select-none" v-html="item.message.body"></span>
-            </template>
-            <template v-else>
-              <n-flex align="center" :size="6">
-                <p class="text-(12px #909090) select-none cursor-default">
-                  {{ item.fromUser.uid === userUid ? '你撤回了一条消息' : '对方撤回了一条消息' }}
-                </p>
-                <p
-                  v-if="canReEdit(item.message.id)"
-                  class="text-(12px #13987f) select-none cursor-pointer"
-                  @click="handleReEdit(item.message.id)">
-                  重新编辑
-                </p>
-              </n-flex>
-            </template>
-          </div>
+          <!-- 消息为撤回消息 -->
+          <RecallMessage
+            v-if="item.message.type === MsgEnum.RECALL"
+            :message="item.message"
+            :from-user-uid="item.fromUser.uid"
+            :is-group="isGroup" />
 
-          <!-- 消息为系统消息时 -->
-          <div v-else-if="item.message.type === MsgEnum.SYSTEM">
-            <p class="text-(12px #909090) select-none cursor-default">
-              {{ item.message.body }}
-            </p>
-          </div>
+          <!-- 消息为机器人消息时 -->
+          <BotMessage
+            v-else-if="item.message.type === MsgEnum.BOT"
+            :message="item.message"
+            :from-user-uid="item.fromUser.uid" />
 
           <!-- 好友或者群聊的信息 -->
           <div
@@ -939,22 +916,6 @@ const closeMenu = (event: any) => {
 const handleRetry = (item: any) => {
   // TODO: 实现重试发送逻辑
   console.log('重试发送消息:', item)
-}
-
-const canReEdit = computed(() => (msgId: string) => {
-  const recalledMsg = chatStore.getRecalledMessage(msgId)
-  const message = chatStore.getMessage(msgId)
-  if (!recalledMsg || !message) return false
-
-  // 只需要判断是否是当前用户的消息，时间检查已经在 getRecalledMessage 中处理
-  return message.fromUser.uid === userUid.value
-})
-
-const handleReEdit = (msgId: string) => {
-  const recalledMsg = chatStore.getRecalledMessage(msgId)
-  if (recalledMsg) {
-    useMitt.emit(MittEnum.RE_EDIT, recalledMsg.content)
-  }
 }
 
 // 处理加载更多

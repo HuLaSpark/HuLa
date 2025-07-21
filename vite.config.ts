@@ -74,6 +74,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       })
     ],
     build: {
+      target: ['chrome87', 'edge88', 'firefox78', 'safari14'], // 兼容低版本浏览器
       cssCodeSplit: true, // 启用 CSS 代码拆分
       minify: 'terser', // 指定使用哪种混淆器
       // chunk 大小警告的限制(kb)
