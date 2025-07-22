@@ -73,10 +73,17 @@ pub async fn run() {
 
 #[cfg(desktop)]
 async fn setup_desktop() -> Result<(), CommonError> {
+    use log::info;
+    use migration::{Migrator, MigratorTrait};
+
     use crate::command::user_command::{save_user_info, update_user_last_opt_time};
 
     let configuration = Arc::new(get_configuration().expect("加载配置文件失败"));
     let db = Arc::new(configuration.database.connection_string().await?);
+
+    // 数据库迁移
+    Migrator::up(db.as_ref(), None).await?;
+    info!("数据库迁移完成");
 
     let im_request_client =
         ImRequestClient::new(configuration.clone().backend.base_url.clone()).await?;
