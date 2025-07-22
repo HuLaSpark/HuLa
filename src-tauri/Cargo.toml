@@ -63,6 +63,10 @@ tauri-plugin-mic-recorder = "2"
 serde_json = "1"
 sysinfo = "0.32.0"
 async-walkdir = "2.0.0"
+moka = { version = "0.12.10", features = ["future"] }
+serde = { version = "1", features = ["derive"] }
+tokio = { version = "1.0.0", features = ["rt", "rt-multi-thread", "macros"] }
+tauri-plugin-devtools = "2.0.0"
 
 moka = { version = "0.12.10", features = ["future"] }
 serde = { version = "1", features = ["derive"] }
