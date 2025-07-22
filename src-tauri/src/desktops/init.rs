@@ -1,7 +1,10 @@
+use std::path::PathBuf;
+
+use tauri::plugin::TauriPlugin;
 use tauri::{Manager, Runtime, WindowEvent};
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_log::fern::colors::{Color, ColoredLevelConfig};
-use tauri_plugin_log::{Target, TargetKind};
+use tauri_plugin_log::{Target, TargetKind, WEBVIEW_TARGET};
 
 pub trait CustomInit {
     fn init_plugin(self) -> Self;
@@ -44,27 +47,7 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
             .plugin(tauri_plugin_global_shortcut::Builder::new().build())
             .plugin(tauri_plugin_updater::Builder::new().build())
             .plugin(tauri_plugin_mic_recorder::init())
-            .plugin(
-                tauri_plugin_log::Builder::new()
-                    .targets([
-                        Target::new(TargetKind::Stdout),
-                        Target::new(TargetKind::LogDir { file_name: None }),
-                        Target::new(TargetKind::Webview),
-                    ])
-                    .level(log::LevelFilter::Info)
-                    .level_for("sqlx::query", log::LevelFilter::Warn)
-                    .level_for("hula_app_lib", log::LevelFilter::Debug)
-                    .with_colors(
-                        ColoredLevelConfig::new()
-                            .trace(Color::Magenta)
-                            .debug(Color::Cyan)
-                            .info(Color::Green)
-                            .warn(Color::Yellow)
-                            .error(Color::Red),
-                    )
-                    .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
-                    .build(),
-            )
+            .plugin(build_log_plugin())
             .plugin(tauri_plugin_websocket::init())
     }
 
@@ -125,3 +108,42 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
         })
     }
 }
+
+fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
+    // 获取当前工作目录并创建 logs 子目录
+    let mut log_dir = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+    log_dir.push("logs");
+    
+    // 确保 logs 目录存在
+    if !log_dir.exists() {
+        std::fs::create_dir_all(&log_dir).unwrap_or_else(|e| {
+            eprintln!("Failed to create logs directory: {}", e);
+        });
+    }
+    
+    tauri_plugin_log::Builder::new()
+        .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
+        .level(log::LevelFilter::Info)
+        .level_for("sqlx::query", log::LevelFilter::Warn)
+        .level_for("hula_app_lib", log::LevelFilter::Debug)
+        .targets([
+            Target::new(TargetKind::Stdout),
+            // 将 rust 日志打印到 webview的 devtool 中
+            Target::new(TargetKind::Webview),
+            // 将日志保存到项目的 logs 目录下
+            Target::new(TargetKind::Folder {
+                path: log_dir,
+                file_name: Some("app".into()),
+            })
+            .filter(|metadata| !metadata.target().starts_with(WEBVIEW_TARGET)),
+        ])
+        .with_colors(ColoredLevelConfig {
+            error: Color::Red,
+            warn: Color::Yellow,
+            debug: Color::White,
+            info: Color::Green,
+            trace: Color::White,
+        })
+        .build()
+}
+
