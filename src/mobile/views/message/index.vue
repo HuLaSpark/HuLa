@@ -25,7 +25,7 @@
           <div
             v-for="item in messageItems"
             :key="item.id"
-            class="grid grid-cols-[38px_1fr_55px] items-start px-2 py-3 gap-1 hover:bg-#DEEDE7 hover:rounded-10px transition-colors cursor-pointer">
+            class="grid grid-cols-[2.2rem_1fr_4rem] items-start px-2 py-3 gap-1 hover:bg-#DEEDE7 hover:rounded-10px transition-colors cursor-pointer">
             <!-- 头像：单独居中 -->
             <div class="self-center h-38px">
               <n-badge :value="item.unreadCount">
@@ -42,7 +42,7 @@
             </div>
 
             <!-- 时间：靠顶 -->
-            <div class="text-12px text-right flex gap-2 items-center justify-right">
+            <div class="text-12px text-right flex gap-1 items-center justify-right">
               <span v-if="item.hotFlag === IsAllUserEnum.Yes">
                 <svg class="size-20px select-none outline-none cursor-pointer color-#13987f">
                   <use href="#auth"></use>

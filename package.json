@@ -30,6 +30,8 @@
     "tauri:ios:dev": "tauri ios dev",
     "========= 启动HuLa android 程序 =========": "",
     "tauri:android:dev": "tauri android dev",
+    "========= 启动安卓程序 =========": "",
+    "adev": "tauri android dev",
     "========= 初始化 ios =========": "",
     "tauri:ios:init": "tauri ios init",
     "========= 初始化 android =========": "",

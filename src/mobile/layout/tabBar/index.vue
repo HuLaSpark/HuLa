@@ -33,8 +33,14 @@ const navItems: NavItem[] = [
     actionIcon: 'message-action'
   },
   {
-    label: '社区',
+    label: '联系人',
     path: '/mobile/friends',
+    icon: 'avatar',
+    actionIcon: 'avatar-action'
+  },
+  {
+    label: '社区',
+    path: '/mobile/community',
     icon: 'fire',
     actionIcon: 'fire-action'
   },

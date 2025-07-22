@@ -48,6 +48,11 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/mobile/views/friends/index.vue')
       },
       {
+        path: '/mobile/community',
+        name: 'mobileCommunity',
+        component: () => import('@/mobile/views/community/index.vue')
+      },
+      {
         path: '/mobile/my',
         name: 'mobileMy',
         component: () => import('@/mobile/views/my/index.vue')
