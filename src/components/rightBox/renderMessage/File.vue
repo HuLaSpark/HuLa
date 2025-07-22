@@ -17,7 +17,7 @@
     </div>
 
     <!-- 文件图标区域 -->
-    <div :title="body?.fileName" class="file-icon-wrapper select-none cursor-pointer">
+    <div :title="body?.fileName" class="file-icon-wrapper select-none cursor-pointer" @click="handleIconClick">
       <!-- 文件图标 -->
       <img
         :src="`/file/${getFileSuffix(body?.fileName || '')}.svg`"
@@ -314,6 +314,54 @@ const downloadAndOpenFile = async () => {
     } else {
       window.$message?.error(`下载文件失败: ${errorMessage}`)
     }
+  }
+}
+
+// 下载文件但不打开
+const downloadFileOnly = async () => {
+  if (!props.body?.url || !props.body?.fileName) return
+
+  try {
+    const fileName = props.body.fileName
+    await fileDownloadStore.downloadFile(props.body.url, fileName)
+  } catch (error) {
+    console.error('下载文件失败:', error)
+  } finally {
+    // 刷新文件状态
+    const currentChatRoomId = globalStore.currentSession.roomId
+    const currentUserUid = userStore.uid as string
+
+    const resourceDirPath = await getUserAbsoluteVideosDir(currentUserUid, currentChatRoomId)
+    let absolutePath = await join(resourceDirPath, props.body.fileName)
+
+    const [fileMeta] = await getFilesMeta<FilesMeta>([absolutePath || props.body.url])
+
+    await fileDownloadStore.refreshFileDownloadStatus({
+      fileUrl: props.body.url,
+      roomId: currentChatRoomId,
+      userId: currentUserUid,
+      fileName: props.body.fileName,
+      exists: fileMeta.exists
+    })
+  }
+}
+
+// 处理图标单击（下载文件）
+const handleIconClick = async (event: Event) => {
+  event.stopPropagation() // 阻止事件冒泡，防止触发双击事件
+
+  if (!props.body?.url || !props.body?.fileName || isUploading.value || isDownloading.value) return
+
+  const status = fileStatus.value
+
+  // 如果文件已下载，显示提示
+  if (status?.isDownloaded) {
+    return
+  }
+
+  // 如果需要下载，执行下载
+  if (needsDownload.value) {
+    await downloadFileOnly()
   }
 }
 

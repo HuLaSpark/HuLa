@@ -157,7 +157,9 @@ export enum StoresEnum {
   /** 视频查看器数据 */
   VIDEOVIEWER = 'videoViewer',
   /** 文件下载管理 */
-  FILE_DOWNLOAD = 'fileDownload'
+  FILE_DOWNLOAD = 'fileDownload',
+  /** 移动端状态 */
+  MOBILE = 'mobile'
 }
 
 /**
@@ -187,6 +189,8 @@ export enum MsgEnum {
   MERGE,
   /** 公告 */
   NOTICE,
+  /** 机器人 */
+  BOT,
   /** 混合 */
   MIXED,
   /** 艾特 */

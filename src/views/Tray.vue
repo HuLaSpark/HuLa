@@ -60,10 +60,13 @@ import { TrayIcon } from '@tauri-apps/api/tray'
 import { type } from '@tauri-apps/plugin-os'
 import { useTauriListener } from '@/hooks/useTauriListener'
 import { UserState } from '@/services/types'
+import apis from '@/services/apis.ts'
+import { useUserStore } from '@/stores/user'
 
 const appWindow = WebviewWindow.getCurrent()
 const { checkWinExist, createWebviewWindow } = useWindow()
 const userStatusStore = useUserStatusStore()
+const userStore = useUserStore()
 const settingStore = useSettingStore()
 const globalStore = useGlobalStore()
 const { lockScreen } = storeToRefs(settingStore)
@@ -93,9 +96,17 @@ const handleExit = () => {
   exit(0)
 }
 
-const toggleStatus = (item: UserState) => {
-  stateId.value = item.id
-  appWindow.hide()
+const toggleStatus = async (item: UserState) => {
+  try {
+    await apis.changeUserState(item.id)
+
+    stateId.value = item.id
+    userStore.userInfo.userStateId = item.id
+    appWindow.hide()
+  } catch (error) {
+    console.error('更新状态失败:', error)
+    appWindow.hide()
+  }
 }
 
 // 初始化Timer Worker

@@ -35,6 +35,7 @@
     "notification:allow-delete-channel",
     "notification:allow-create-channel",
     "notification:allow-permission-state",
+    "safe-area-insets:default",
     {
       "identifier": "shell:allow-execute",
       "allow": [

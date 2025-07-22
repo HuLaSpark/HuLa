@@ -1,7 +1,6 @@
 @use 'fonts';
 * {
   font-family: var(--font-family), sans-serif !important;
-  font-weight: 500 !important;
   caret-color: #13987f !important; /* 改变输入框光标的颜色 */
 }
 html,
@@ -272,7 +271,7 @@ html[data-theme='dark'] {
 }
 
 // 使用CSS变量来控制模糊效果
-html[data-blur="1"] {
+html[data-blur='1'] {
   .n-modal-mask,
   .n-drawer-mask {
     background-color: rgba(255, 255, 255, 0.1);
@@ -299,9 +298,9 @@ html[data-blur="1"] {
 
 /**! 修改naive-ui滚动条的间距 */
 :deep(
-    .n-scrollbar > .n-scrollbar-rail.n-scrollbar-rail--vertical,
-    .n-scrollbar + .n-scrollbar-rail.n-scrollbar-rail--vertical
-  ) {
+  .n-scrollbar > .n-scrollbar-rail.n-scrollbar-rail--vertical,
+  .n-scrollbar + .n-scrollbar-rail.n-scrollbar-rail--vertical
+) {
   right: 0;
 }
 

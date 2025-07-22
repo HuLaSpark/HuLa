@@ -6,7 +6,7 @@
     <n-flex vertical class="w-full size-full">
       <!-- 标题 -->
       <n-flex justify="center" class="w-full">
-        <p class="text-18px font-bold select-none">找回密码</p>
+        <p class="text-18px select-none">找回密码</p>
       </n-flex>
 
       <!-- 步骤条 -->
@@ -178,7 +178,7 @@
         </n-icon> -->
         <img class="size-98px" src="/emoji/party-popper.webp" alt="" />
 
-        <div class="mt-16px text-18px font-bold">密码修改成功</div>
+        <div class="mt-16px text-18px">密码修改成功</div>
         <div class="mt-16px text-14px text-#666">您已成功重置密码，可以使用新密码登录</div>
       </div>
     </n-flex>

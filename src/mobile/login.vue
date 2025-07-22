@@ -1,7 +1,7 @@
 <template>
   <n-config-provider :theme="lightTheme" class="login-bg flex-col-center gap-40px h-100vh">
     <div class="absolute top-13vh left-36px flex-center">
-      <p class="text-(20px #333) font-bold">HI, 欢迎来到</p>
+      <p class="text-(20px #333)">HI, 欢迎来到</p>
       <img src="@/assets/mobile/2.svg" alt="" class="w-80px h-20px" />
     </div>
 
@@ -11,7 +11,7 @@
         <div
           @click="activeTab = 'login'"
           :class="[
-            'z-999 w-100px text-center transition-all duration-300 font-bold',
+            'z-999 w-100px text-center transition-all duration-300 ',
             activeTab === 'login' ? 'text-(18px #000)' : 'text-(16px #666)'
           ]">
           登录
@@ -19,7 +19,7 @@
         <div
           @click="activeTab = 'register'"
           :class="[
-            'z-999 w-100px text-center transition-all duration-300 font-bold',
+            'z-999 w-100px text-center transition-all duration-300 ',
             activeTab === 'register' ? 'text-(18px #000)' : 'text-(16px #666)'
           ]">
           注册
@@ -118,7 +118,11 @@
       </n-button>
 
       <!-- 协议 -->
-      <n-flex justify="center" :size="6" class="absolute bottom-0 w-[80%]">
+      <n-flex
+        justify="center"
+        :style="envType === 'android' ? { bottom: safeArea.bottom + 10 + 'px' } : {}"
+        :size="6"
+        class="absolute bottom-0 w-[80%]">
         <n-checkbox v-model:checked="protocol" />
         <div class="text-12px color-#909090 cursor-default lh-14px">
           <span>已阅读并同意</span>
@@ -272,7 +276,7 @@
       <div class="bg-#fdfdfd w-320px h-fit box-border flex flex-col rounded-8px">
         <n-flex vertical class="w-full h-fit">
           <n-flex vertical :size="10" class="p-20px">
-            <p class="text-(16px #333) font-bold mb-10px">请输入邮箱验证码</p>
+            <p class="text-(16px #333) mb-10px">请输入邮箱验证码</p>
             <p class="text-(12px #666) leading-5 mb-10px">
               验证码已发送至 {{ registerInfo.email }}，请查收并输入验证码完成注册
             </p>
@@ -314,6 +318,7 @@ import { lightTheme } from 'naive-ui'
 import router from '../router'
 import Validation from '@/components/common/Validation.vue'
 import PinInput from '@/components/common/PinInput.vue'
+import { useMobileStore } from '@/stores/mobile'
 
 // 本地注册信息类型，扩展API类型以包含确认密码
 interface LocalRegisterInfo extends RegisterUserReq {
@@ -324,6 +329,10 @@ const loginHistoriesStore = useLoginHistoriesStore()
 const userStore = useUserStore()
 const { setLoginState } = useLogin()
 const { loginHistories } = loginHistoriesStore
+const mobileStore = useMobileStore()
+
+const envType = ref(mobileStore.envType)
+const safeArea = computed(() => mobileStore.safeArea)
 
 /** 当前激活的选项卡 */
 const activeTab = ref<'login' | 'register'>('login')

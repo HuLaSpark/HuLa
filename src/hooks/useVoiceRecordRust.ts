@@ -3,6 +3,8 @@ import { BaseDirectory, create, exists, mkdir, readFile, remove } from '@tauri-a
 import { getImageCache } from '@/utils/PathUtil.ts'
 import { useUserStore } from '@/stores/user'
 import { compressAudioToMp3, getAudioInfo, calculateCompressionRatio } from '@/utils/AudioCompression'
+import { useUpload } from './useUpload'
+import { UploadSceneEnum } from '../enums'
 
 // 导入worker计时器
 let timerWorker: Worker | null = null
@@ -22,6 +24,7 @@ export const useVoiceRecordRust = (options: VoiceRecordRustOptions = {}) => {
   const startTime = ref(0)
   const audioMonitor = ref<NodeJS.Timeout | null>(null)
   const timerMsgId = 'voiceRecordTimer' // worker计时器的消息ID
+  const { generateHashKey } = useUpload()
 
   /** 开始录音 */
   const startRecordingAudio = async () => {
@@ -214,6 +217,18 @@ export const useVoiceRecordRust = (options: VoiceRecordRustOptions = {}) => {
 
   /** 保存音频到本地缓存 */
   const saveAudioToCache = async (audioBlob: Blob, duration: number) => {
+    const getFileHashName = async (tempFileName: string) => {
+      const audioFile = new File([audioBlob], tempFileName)
+      // 计算文件真正的资源哈希文件名
+      const resourceFileName = await generateHashKey(
+        { scene: UploadSceneEnum.CHAT, enableDeduplication: true }, // 这里的UploadSceneEnum随便选，反正只需要哈希值文件名
+        audioFile,
+        tempFileName
+      )
+
+      return resourceFileName.split('/').pop() as string
+    }
+
     try {
       const userUid = userStore.userInfo.uid
       if (!userUid) {
@@ -227,7 +242,9 @@ export const useVoiceRecordRust = (options: VoiceRecordRustOptions = {}) => {
       // 获取缓存路径
       const audioFolder = 'audio'
       const cachePath = getImageCache(audioFolder, userUid.toString())
-      const fullPath = cachePath + fileName
+
+      const fileHashName = await getFileHashName(fileName)
+      const fullPath = cachePath + fileHashName
 
       // 确保目录存在
       const dirExists = await exists(cachePath, { baseDir: BaseDirectory.AppCache })

@@ -18,10 +18,10 @@ async function runScript(scriptPath, description) {
   try {
     execSync(`node ${scriptPath}`, { stdio: 'inherit' })
     const duration = ((performance.now() - startTime) / 1000).toFixed(2)
-    console.log(chalk.green(`\n✓ ${description}完成 (${duration}s)\n`))
+    console.log(chalk.green(`\n✅ ${description}完成 (${duration}s)\n`))
     return true
   } catch (error) {
-    console.error(chalk.red(`\n✗ ${description}失败`))
+    console.error(chalk.red(`\n❌ ${description}失败`))
     return false
   }
 }
