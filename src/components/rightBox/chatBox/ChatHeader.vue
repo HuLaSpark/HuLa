@@ -386,6 +386,7 @@ import AvatarCropper from '@/components/common/AvatarCropper.vue'
 import { useAvatarUpload } from '@/hooks/useAvatarUpload'
 import { useWindow } from '@/hooks/useWindow'
 import { useGlobalStore } from '@/stores/global'
+import { useCachedStore } from '~/src/stores/cached'
 
 const appWindow = WebviewWindow.getCurrent()
 const { activeItem } = defineProps<{
@@ -408,6 +409,7 @@ const modalShow = ref(false)
 const sidebarShow = ref(false)
 const showLoading = ref(true)
 const isLoading = ref(false)
+const cacheStore = useCachedStore()
 // 群组详情数据
 const groupDetail = ref({
   myNickname: '', // 我在本群的昵称
@@ -471,14 +473,14 @@ const MIN_LOADING_TIME = 300 // 最小加载时间（毫秒）
 const isOnline = computed(() => {
   if (activeItem.type === RoomTypeEnum.GROUP) return false
 
-  const contact = contactStore.contactsList.find((item) => item.uid === activeItem.id)
+  const contact = contactStore.contactsList.find((item) => item.uid === activeItem.detailId)
 
   return contact?.activeStatus === OnlineEnum.ONLINE
 })
 /** 是否还是好友 */
 const shouldShowDeleteFriend = computed(() => {
   if (activeItem.type === RoomTypeEnum.GROUP) return false
-  return contactStore.contactsList.some((item) => item.uid === activeItem.id)
+  return contactStore.contactsList.some((item) => item.uid === activeItem.detailId)
 })
 const groupUserList = computed(() => groupStore.userList)
 const messageOptions = computed(() => chatStore.currentMessageOptions)
@@ -504,8 +506,8 @@ const currentUserStatus = computed(() => {
   if (activeItem.type === RoomTypeEnum.GROUP) return null
 
   // 使用 useUserInfo 获取用户信息
-  if (!activeItem.id) return null
-  const userInfo = useUserInfo(activeItem.id).value
+  if (!activeItem.detailId) return null
+  const userInfo = useUserInfo(activeItem.detailId).value
 
   // 从状态列表中找到对应的状态
   return userStatusStore.stateList.find((state: { id: string }) => state.id === userInfo.userStateId)
@@ -526,8 +528,8 @@ const statusTitle = computed(() => {
 const currentUserAvatar = computed(() => {
   if (activeItem.type === RoomTypeEnum.GROUP) {
     return AvatarUtils.getAvatarUrl(activeItem.avatar)
-  } else if (activeItem.id) {
-    return AvatarUtils.getAvatarUrl(useUserInfo(activeItem.id).value.avatar || activeItem.avatar)
+  } else if (activeItem.detailId) {
+    return AvatarUtils.getAvatarUrl(useUserInfo(activeItem.detailId).value.avatar || activeItem.avatar)
   }
   return AvatarUtils.getAvatarUrl(activeItem.avatar)
 })
@@ -632,7 +634,7 @@ const handleCreateGroupOrInvite = () => {
 
 /** 处理创建群聊 */
 const handleCreateGroup = () => {
-  useMitt.emit(MittEnum.CREATE_GROUP, activeItem.id)
+  useMitt.emit(MittEnum.CREATE_GROUP, activeItem.detailId)
 }
 
 /** 处理邀请进群 */
@@ -684,7 +686,7 @@ const saveGroupInfo = async () => {
   // 只有当数据发生变化时才发送请求
   if (nicknameChanged || remarkChanged) {
     // 使用updateMyRoomInfo接口更新我在群里的昵称和群备注
-    await apis.updateMyRoomInfo({
+    await cacheStore.updateMyRoomInfo({
       id: activeItem.roomId,
       myName: groupDetail.value.myNickname,
       remark: groupDetail.value.groupRemark
@@ -852,8 +854,8 @@ const handleDelete = (label: RoomActEnum) => {
 }
 
 const handleConfirm = () => {
-  if (optionsType.value === RoomActEnum.DELETE_FRIEND && activeItem.id) {
-    contactStore.onDeleteContact(activeItem.id).then(() => {
+  if (optionsType.value === RoomActEnum.DELETE_FRIEND && activeItem.detailId) {
+    contactStore.onDeleteContact(activeItem.detailId).then(() => {
       modalShow.value = false
       sidebarShow.value = false
       window.$message.success('已删除好友')

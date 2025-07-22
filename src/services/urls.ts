@@ -25,7 +25,7 @@ export default {
   getBadgesBatch: `${prefix + URLEnum.USER}/badges/batch`,
   getAllUserBaseInfo: `${prefix + URLEnum.ROOM}/group/member/list`, // 房间内的所有群成员列表-@专用
   getMsgList: `${prefix + URLEnum.CHAT}/msg/page`,
-  sendMsg: `${prefix + URLEnum.CHAT}/msg`,
+  // sendMsg: `${prefix + URLEnum.CHAT}/msg`,
   getUserInfoDetail: `${prefix + URLEnum.USER}/userInfo`, // 获取用户信息详情
   modifyUserName: `${prefix + URLEnum.USER}/name`, // 修改用户名
   setUserBadge: `${prefix + URLEnum.USER}/badge`, // 设置用户徽章
@@ -51,7 +51,7 @@ export default {
   modifyFriendRemark: `${prefix + URLEnum.USER}/friend/updateRemark`, // 修改好友备注
 
   // -------------- 聊天室相关 ---------------
-  getSessionList: `${prefix + URLEnum.CHAT}/contact/page`, // 会话列表
+  // getSessionList: `${prefix + URLEnum.CHAT}/contact/page`, // 会话列表
   getMsgReadList: `${prefix + URLEnum.CHAT}/msg/read/page`, // 消息的已读未读列表
   getMsgReadCount: `${prefix + URLEnum.CHAT}/msg/read`, // 消息已读未读数
   sessionDetail: `${prefix + URLEnum.CHAT}/contact/detail`, // 会话详情
@@ -63,7 +63,7 @@ export default {
   shield: `${prefix + URLEnum.CHAT}/setShield`, // 屏蔽消息
   // -------------- 群聊相关 ---------------
   createGroup: `${prefix + URLEnum.ROOM}/group`, // 新增群组
-  getGroupUserList: `${prefix + URLEnum.ROOM}/group/member/page`, // 群成员列表
+  // getGroupUserList: `${prefix + URLEnum.ROOM}/group/member/page`, // 群成员列表
   inviteGroupMember: `${prefix + URLEnum.ROOM}/group/member`, // 邀请群成员 和 移出群成员(post 和 delete)
   exitGroup: `${prefix + URLEnum.ROOM}/group/member/exit`, // 退群
   addAdmin: `${prefix + URLEnum.ROOM}/group/admin`, // 添加管理员
@@ -71,7 +71,7 @@ export default {
   groupDetail: `${prefix + URLEnum.ROOM}/group`, // 群组详情
   groupList: `${prefix + URLEnum.ROOM}/group/list`, // 群聊列表
   updateRoomInfo: `${prefix + URLEnum.ROOM}/updateRoomInfo`, // 修改群信息(群主)
-  updateMyRoomInfo: `${prefix + URLEnum.ROOM}/updateMyRoomInfo`, // 修改“我”的群聊名称
+  // updateMyRoomInfo: `${prefix + URLEnum.ROOM}/updateMyRoomInfo`, // 修改“我”的群聊名称
   searchGroup: `${prefix + URLEnum.ROOM}/search`, // 搜索群聊
   applyGroup: `${prefix + URLEnum.ROOM}/applyGroup`, // 申请加群
   getAnnouncementList: `${prefix + URLEnum.ROOM}/announcement/list`, // 获取群公告

@@ -459,3 +459,27 @@ export enum NotificationTypeEnum {
   /** 接收但不提醒[免打扰] */
   NOT_DISTURB = 1
 }
+
+/** Tauri 命令 */
+export enum TauriCommand {
+  /** 更新我的群聊信息 */
+  UPDATE_MY_ROOM_INFO = 'update_my_room_info',
+  /** 获取房间成员 */
+  GET_ROOM_MEMBERS = 'get_room_members',
+  /** 分页查询所有房间 */
+  PAGE_ROOM = 'page_room',
+  /** 分页查询房间成员 */
+  CURSOR_PAGE_ROOM_MEMBERS = 'cursor_page_room_members',
+  /** 列出所有会话列表 */
+  LIST_CONTACTS = 'list_contacts_command',
+  /** 分页查询会话消息 */
+  PAGE_MSG = 'page_msg',
+  /** 保存用户信息 */
+  SAVE_USER_INFO = 'save_user_info',
+  /** 更新用户最后操作时间 */
+  UPDATE_USER_LAST_OPT_TIME = 'update_user_last_opt_time',
+  /** 发送消息 */
+  SEND_MSG = 'send_msg',
+  /** 保存消息 */
+  SAVE_MSG = 'save_msg'
+}

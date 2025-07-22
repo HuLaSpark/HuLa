@@ -112,7 +112,7 @@ import { useSettingStore } from '@/stores/setting.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { currentMonitor, PhysicalPosition } from '@tauri-apps/api/window'
 import { type } from '@tauri-apps/plugin-os'
-import { invoke } from '@tauri-apps/api/core'
+import { invokeSilently } from '@/utils/TauriInvokeHandler.ts'
 
 const settingStore = useSettingStore()
 const { createWebviewWindow, resizeWindow, setResizable } = useWindow()
@@ -293,7 +293,7 @@ const init = async () => {
   if (osType === 'macos') {
     // 隐藏标题栏按钮
     try {
-      await invoke('hide_title_bar_buttons', { windowLabel: 'checkupdate' })
+      await invokeSilently('hide_title_bar_buttons', { windowLabel: 'checkupdate' })
     } catch (error) {
       console.error('隐藏标题栏按钮失败:', error)
     }

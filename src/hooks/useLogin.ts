@@ -1,9 +1,9 @@
 import { emit } from '@tauri-apps/api/event'
-import { EventEnum, RoomTypeEnum } from '@/enums'
+import { EventEnum, RoomTypeEnum, TauriCommand } from '@/enums'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { type } from '@tauri-apps/plugin-os'
-import { invoke } from '@tauri-apps/api/core'
+import { invokeSilently } from '@/utils/TauriInvokeHandler.ts'
 import { LoginStatus, useWsLoginStore } from '@/stores/ws'
 import { useUserStore } from '@/stores/user'
 import { useChatStore } from '@/stores/chat'
@@ -44,6 +44,7 @@ export const useLogin = () => {
       await resizeWindow('tray', 130, 44)
       // 发送登出事件
       await emit(EventEnum.LOGOUT)
+      await invokeSilently(TauriCommand.UPDATE_USER_LAST_OPT_TIME)
     } catch (error) {
       console.error('创建登录窗口失败:', error)
     }
@@ -71,7 +72,7 @@ export const useLogin = () => {
     chatStore.clearUnreadCount()
     // 5. 清除系统托盘图标上的未读数
     try {
-      await invoke('set_badge_count', { count: null })
+      await invokeSilently('set_badge_count', { count: null })
     } catch (error) {
       console.error('清除系统托盘图标上的未读数失败:', error)
     }

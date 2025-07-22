@@ -27,7 +27,15 @@
 <script setup lang="ts">
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useMitt } from '@/hooks/useMitt.ts'
-import { ChangeTypeEnum, MittEnum, ModalEnum, NotificationTypeEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
+import {
+  ChangeTypeEnum,
+  MittEnum,
+  ModalEnum,
+  NotificationTypeEnum,
+  OnlineEnum,
+  RoomTypeEnum,
+  TauriCommand
+} from '@/enums'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useContactStore } from '@/stores/contacts.ts'
@@ -48,6 +56,7 @@ import { useConfigStore } from '@/stores/config'
 import { useCheckUpdate } from '@/hooks/useCheckUpdate'
 import { UserAttentionType } from '@tauri-apps/api/window'
 import { LogicalSize } from '@tauri-apps/api/dpi'
+import { invokeSilently } from '@/utils/TauriInvokeHandler'
 
 const loadingPercentage = ref(10)
 const loadingText = ref('正在加载应用...')
@@ -233,6 +242,10 @@ useMitt.on(WsResponseMessageType.MY_ROOM_INFO_CHANGE, (data: { myName: string; r
 })
 useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   chatStore.pushMsg(data)
+  console.log('监听到接收消息', data)
+  await invokeSilently(TauriCommand.SAVE_MSG, {
+    data
+  })
   const username = useUserInfo(data.fromUser.uid).value.name!
   const home = await WebviewWindow.getByLabel('home')
   // 当home窗口不显示并且home窗口不是最小化的时候并且不是聚焦窗口的时候

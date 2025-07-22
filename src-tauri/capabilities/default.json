@@ -95,6 +95,7 @@
     "opener:allow-reveal-item-in-dir",
     "opener:allow-open-path",
     "mic-recorder:default",
+    "log:default",
     {
       "identifier": "shell:allow-execute",
       "allow": [
