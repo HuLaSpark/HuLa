@@ -52,22 +52,25 @@ async fn get_directory_size_with_progress(
 
     // 创建取消接收器
     let mut cancel_receiver = CANCEL_SENDER.subscribe();
-    
+
     let start_time = Instant::now();
-    
+
     // 1.快速预扫描计算总文件数
     let mut total_files = 0u64;
     let mut entries = AsyncWalkDir::new(&path);
-    
-    let _ = handle.emit("directory-scan-progress", &DirectoryScanProgress {
-        current_path: "正在统计文件数量...".to_string(),
-        files_processed: 0,
-        total_size: 0,
-        elapsed_time: 0,
-        elapsed_seconds: 0.0,
-        progress_percentage: 0.0,
-    });
-    
+
+    let _ = handle.emit(
+        "directory-scan-progress",
+        &DirectoryScanProgress {
+            current_path: "正在统计文件数量...".to_string(),
+            files_processed: 0,
+            total_size: 0,
+            elapsed_time: 0,
+            elapsed_seconds: 0.0,
+            progress_percentage: 0.0,
+        },
+    );
+
     loop {
         tokio::select! {
             // 检查取消信号
@@ -89,12 +92,12 @@ async fn get_directory_size_with_progress(
             }
         }
     }
-    
+
     // 2.实际扫描并计算准确进度
     let mut total_size = 0u64;
     let mut files_processed = 0u64;
     let mut last_progress_time = Instant::now();
-    
+
     let mut entries = AsyncWalkDir::new(&path);
 
     loop {
@@ -133,7 +136,7 @@ async fn get_directory_size_with_progress(
                                         } else {
                                             0.0
                                         };
-                                        
+
                                         let progress = DirectoryScanProgress {
                                             current_path: current_path.clone(),
                                             files_processed,

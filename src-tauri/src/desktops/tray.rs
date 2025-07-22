@@ -40,8 +40,8 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
         let _ = TrayIconBuilder::with_id("tray")
             .tooltip("HuLa")
             .icon(app.default_window_icon().unwrap().clone())
-            .menu(&tray_menu)  // 直接设置菜单，让系统处理右键显示
-            .show_menu_on_left_click(false)  // 禁用左键显示菜单
+            .menu(&tray_menu) // 直接设置菜单，让系统处理右键显示
+            .show_menu_on_left_click(false) // 禁用左键显示菜单
             .on_menu_event(move |app, event| {
                 let id = event.id();
                 if id == &open_id {

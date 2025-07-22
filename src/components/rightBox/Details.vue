@@ -195,7 +195,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { RoomTypeEnum } from '@/enums'
+import { RoomTypeEnum, TauriCommand } from '@/enums'
 import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
@@ -203,6 +203,9 @@ import apis from '@/services/apis.ts'
 import { useWindow } from '@/hooks/useWindow'
 import { useImageViewer } from '@/stores/imageViewer'
 import type { UserItem } from '@/services/types'
+import { useCachedStore } from '~/src/stores/cached'
+import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
+import { ErrorType } from '@/common/exception'
 
 const { openMsgSession } = useCommon()
 const { createWebviewWindow } = useWindow()
@@ -223,6 +226,7 @@ const remarkInputRef = useTemplateRef('remarkInputRef')
 const isEditingNickname = ref(false)
 const nicknameValue = ref('')
 const nicknameInputRef = useTemplateRef('nicknameInputRef')
+const cacheStore = useCachedStore()
 
 watchEffect(() => {
   if (content.type === RoomTypeEnum.SINGLE) {
@@ -255,7 +259,7 @@ const startEditRemark = () => {
 // 处理群备注更新
 const handleRemarkUpdate = async () => {
   if (remarkValue.value !== item.value.remark) {
-    await apis.updateMyRoomInfo({
+    await cacheStore.updateMyRoomInfo({
       id: item.value.roomId,
       remark: remarkValue.value,
       myName: item.value.myName || ''
@@ -278,10 +282,10 @@ const startEditNickname = () => {
 // 处理本群昵称更新
 const handleNicknameUpdate = async () => {
   if (nicknameValue.value !== item.value.myName) {
-    await apis.updateMyRoomInfo({
+    await cacheStore.updateMyRoomInfo({
       id: item.value.roomId,
-      myName: nicknameValue.value,
-      remark: item.value.remark || ''
+      remark: remarkValue.value,
+      myName: item.value.myName || ''
     })
     item.value.myName = nicknameValue.value
     window.$message.success('本群昵称更新成功')
@@ -300,12 +304,16 @@ const handleCopy = (account: string) => {
 // 获取群组详情和成员信息
 const fetchGroupMembers = async (roomId: string) => {
   try {
-    const params = {
-      roomId: roomId,
-      current: 1,
-      size: 10 // 获取前10个成员
-    }
-    const response = await apis.getGroupList(params)
+    const response: any = await invokeWithErrorHandler(
+      TauriCommand.GET_ROOM_MEMBERS,
+      {
+        roomId: roomId
+      },
+      {
+        customErrorMessage: '获取群成员失败',
+        errorType: ErrorType.Network
+      }
+    )
     if (response && response.list) {
       // 使用每个成员的uid获取详细信息
       const memberDetails = response.list.map((member: UserItem) => {

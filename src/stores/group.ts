@@ -2,32 +2,12 @@ import apis from '@/services/apis'
 import { defineStore } from 'pinia'
 import { useGlobalStore } from '@/stores/global'
 import type { GroupDetailReq, UserItem } from '@/services/types'
-import { pageSize, useChatStore } from './chat'
-import { OnlineEnum, RoleEnum, RoomTypeEnum, StoresEnum } from '@/enums'
-import { uniqueUserList } from '@/utils/Unique.ts'
+import { useChatStore } from './chat'
+import { RoleEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
 import { useCachedStore } from '@/stores/cached'
 import { useUserStore } from '@/stores/user'
 import { OnStatusChangeType } from '@/services/wsType'
-
-/**
- * 用户排序函数
- * 排序规则：
- * 1. 在线用户优先显示
- * 2. 同为在线或离线状态时，按最后操作时间倒序排序
- */
-const sorAction = (pre: UserItem, next: UserItem) => {
-  if (pre.activeStatus === OnlineEnum.ONLINE && next.activeStatus === OnlineEnum.ONLINE) {
-    return next.lastOptTime < pre.lastOptTime ? -1 : 1
-  } else if (pre.activeStatus !== OnlineEnum.ONLINE && next.activeStatus !== OnlineEnum.ONLINE) {
-    return next.lastOptTime < pre.lastOptTime ? -1 : 1
-  } else if (pre.activeStatus === OnlineEnum.ONLINE && next.activeStatus !== OnlineEnum.ONLINE) {
-    return -1
-  } else if (pre.activeStatus !== OnlineEnum.ONLINE && next.activeStatus === OnlineEnum.ONLINE) {
-    return 1
-  } else {
-    return next.lastOptTime < pre.lastOptTime ? -1 : 1
-  }
-}
+import { invokeWithErrorHandler, ErrorType } from '@/utils/TauriInvokeHandler.ts'
 
 export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
   // 初始化需要使用的store
@@ -108,19 +88,20 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
 
   /**
    * 获取群成员列表
-   * @param refresh 是否刷新（重新加载）
    */
-  const getGroupUserList = async (refresh = false, specifiedRoomId?: string) => {
-    const data = await apis.getGroupList({
-      pageSize: pageSize,
-      cursor: refresh ? '' : userListOptions.cursor,
-      roomId: specifiedRoomId || currentRoomId.value
-    })
+  const getGroupUserList = async () => {
+    const data: any = await invokeWithErrorHandler(
+      TauriCommand.GET_ROOM_MEMBERS,
+      {
+        roomId: currentRoomId.value
+      },
+      {
+        customErrorMessage: '获取群成员列表失败',
+        errorType: ErrorType.Network
+      }
+    )
     if (!data) return
-    // 合并并去重用户列表，然后按在线状态和时间排序
-    const newUserList = uniqueUserList(refresh ? data.list : [...data.list, ...userList.value])
-    newUserList.sort(sorAction)
-    userList.value = newUserList
+    userList.value = data
     userListOptions.cursor = data.cursor
     userListOptions.isLast = data.isLast
     userListOptions.loading = false
@@ -220,11 +201,11 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
    */
   const refreshGroupMembers = async () => {
     // 始终刷新频道成员列表
-    await getGroupUserList(true, '1')
+    await getGroupUserList()
 
     // 如果当前选中的是群聊且不是频道，则同时刷新当前群聊的成员列表
     if (globalStore.currentSession?.type === RoomTypeEnum.GROUP && currentRoomId.value !== '1') {
-      await getGroupUserList(true, currentRoomId.value)
+      await getGroupUserList()
     }
   }
 
