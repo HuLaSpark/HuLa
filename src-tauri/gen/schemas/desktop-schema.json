@@ -4509,6 +4509,48 @@
           "markdownDescription": "Denies the unminimize command without any pre-configured scope."
         },
         {
+          "description": "Default permissions\n#### This default permission set includes:\n\n- `allow-toggle`\n- `allow-set-display-mode`\n- `allow-show-context-menu`",
+          "type": "string",
+          "const": "devtools-app:default",
+          "markdownDescription": "Default permissions\n#### This default permission set includes:\n\n- `allow-toggle`\n- `allow-set-display-mode`\n- `allow-show-context-menu`"
+        },
+        {
+          "description": "Enables the set_display_mode command without any pre-configured scope.",
+          "type": "string",
+          "const": "devtools-app:allow-set-display-mode",
+          "markdownDescription": "Enables the set_display_mode command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the show_context_menu command without any pre-configured scope.",
+          "type": "string",
+          "const": "devtools-app:allow-show-context-menu",
+          "markdownDescription": "Enables the show_context_menu command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the toggle command without any pre-configured scope.",
+          "type": "string",
+          "const": "devtools-app:allow-toggle",
+          "markdownDescription": "Enables the toggle command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the set_display_mode command without any pre-configured scope.",
+          "type": "string",
+          "const": "devtools-app:deny-set-display-mode",
+          "markdownDescription": "Denies the set_display_mode command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the show_context_menu command without any pre-configured scope.",
+          "type": "string",
+          "const": "devtools-app:deny-show-context-menu",
+          "markdownDescription": "Denies the show_context_menu command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the toggle command without any pre-configured scope.",
+          "type": "string",
+          "const": "devtools-app:deny-toggle",
+          "markdownDescription": "Denies the toggle command without any pre-configured scope."
+        },
+        {
           "description": "This permission set configures the types of dialogs\navailable from the dialog plugin.\n\n#### Granted Permissions\n\nAll dialog types are enabled.\n\n\n\n#### This default permission set includes:\n\n- `allow-ask`\n- `allow-confirm`\n- `allow-message`\n- `allow-save`\n- `allow-open`",
           "type": "string",
           "const": "dialog:default",

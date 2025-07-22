@@ -17,7 +17,7 @@ pub trait CustomInit {
 impl<R: Runtime> CustomInit for tauri::Builder<R> {
     // 初始化插件
     fn init_plugin(self) -> Self {
-        self.plugin(tauri_plugin_os::init())
+        let mut builder = self.plugin(tauri_plugin_os::init())
             .plugin(tauri_plugin_notification::init())
             .plugin(tauri_plugin_process::init())
             .plugin(tauri_plugin_http::init())
@@ -48,7 +48,15 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
             .plugin(tauri_plugin_updater::Builder::new().build())
             .plugin(tauri_plugin_mic_recorder::init())
             .plugin(build_log_plugin())
-            .plugin(tauri_plugin_websocket::init())
+            .plugin(tauri_plugin_websocket::init());
+
+        #[cfg(debug_assertions)]
+        {
+            builder = builder.plugin(tauri_plugin_devtools::init())
+                .plugin(tauri_plugin_devtools_app::init());
+        }
+
+        builder
     }
 
     // 初始化web窗口事件
@@ -123,6 +131,7 @@ fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
     
     tauri_plugin_log::Builder::new()
         .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
+        .skip_logger()
         .level(log::LevelFilter::Info)
         .level_for("sqlx::query", log::LevelFilter::Warn)
         .level_for("hula_app_lib", log::LevelFilter::Debug)
