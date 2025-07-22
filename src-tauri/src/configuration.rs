@@ -3,13 +3,13 @@ use anyhow::Context;
 use sea_orm::{Database, DatabaseConnection};
 use std::path::PathBuf;
 
-#[derive(serde::Deserialize, Clone)]
+#[derive(serde::Deserialize, Clone, Debug)]
 pub struct Settings {
     pub database: DatabaseSettings,
     pub backend: BackendSettings,
 }
 
-#[derive(serde::Deserialize, Clone)]
+#[derive(serde::Deserialize, Clone, Debug)]
 pub struct DatabaseSettings {
     pub sqlite_file: String,
 }
@@ -26,7 +26,7 @@ impl DatabaseSettings {
     }
 }
 
-#[derive(serde::Deserialize, Clone)]
+#[derive(serde::Deserialize, Clone, Debug)]
 pub struct BackendSettings {
     pub base_url: String,
 }
@@ -61,6 +61,7 @@ pub fn get_configuration() -> Result<Settings, config::ConfigError> {
 }
 
 /// The possible runtime environment for our application.
+#[derive(Debug)]
 pub enum Environment {
     Local,
     Production,

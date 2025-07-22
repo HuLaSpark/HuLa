@@ -75,7 +75,6 @@
     "@tauri-apps/plugin-shell": "^2.3.0",
     "@tauri-apps/plugin-sql": "^2.3.0",
     "@tauri-apps/plugin-updater": "2.9.0",
-    "@tauri-apps/plugin-websocket": "~2.4.0",
     "@vue-office/docx": "^1.6.3",
     "@vue-office/excel": "^1.7.14",
     "@vue-office/pdf": "^2.0.10",

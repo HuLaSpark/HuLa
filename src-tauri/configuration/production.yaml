@@ -1,6 +1,4 @@
 application:
-  host: 0.0.0.0
-database:
-  require_ssl: true
-email_client:
-  base_url: "https://api.postmarkapp.com"
+  host: 127.0.0.1
+backend:
+  base_url: http://localhost:9190

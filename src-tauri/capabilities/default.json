@@ -96,7 +96,6 @@
     "opener:allow-open-path",
     "mic-recorder:default",
     "log:default",
-    "websocket:default",
     {
       "identifier": "shell:allow-execute",
       "allow": [

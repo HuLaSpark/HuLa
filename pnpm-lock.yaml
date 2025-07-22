@@ -59,9 +59,6 @@ importers:
       '@tauri-apps/plugin-updater':
         specifier: 2.9.0
         version: 2.9.0
-      '@tauri-apps/plugin-websocket':
-        specifier: ~2.4.0
-        version: 2.4.0
       '@vue-office/docx':
         specifier: ^1.6.3
         version: 1.6.3(vue-demi@0.14.6(vue@3.5.17(typescript@5.8.3)))(vue@3.5.17(typescript@5.8.3))
@@ -1861,9 +1858,6 @@ packages:
 
   '@tauri-apps/plugin-updater@2.9.0':
     resolution: {integrity: sha512-j++sgY8XpeDvzImTrzWA08OqqGqgkNyxczLD7FjNJJx/uXxMZFz5nDcfkyoI/rCjYuj2101Tci/r/HFmOmoxCg==}
-
-  '@tauri-apps/plugin-websocket@2.4.0':
-    resolution: {integrity: sha512-0TpWqPBb5G3I1qPE/rPnPUmMyAQTWsw2B75Ab6SQ6X4EcypPGyqTyvt3OXymG6PzJeZ+D9wE614Fnf0wXnj1mg==}
 
   '@tokenizer/inflate@0.2.7':
     resolution: {integrity: sha512-MADQgmZT1eKjp06jpI2yozxaU9uVs4GzzgSL+uEq7bVcJ9V1ZXQkeGNql1fsSI0gMy1vhvNTNbUqrx+pZfJVmg==}
@@ -6820,10 +6814,6 @@ snapshots:
       '@tauri-apps/api': 2.6.0
 
   '@tauri-apps/plugin-updater@2.9.0':
-    dependencies:
-      '@tauri-apps/api': 2.6.0
-
-  '@tauri-apps/plugin-websocket@2.4.0':
     dependencies:
       '@tauri-apps/api': 2.6.0
 

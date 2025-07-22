@@ -47,13 +47,11 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
             .plugin(tauri_plugin_global_shortcut::Builder::new().build())
             .plugin(tauri_plugin_updater::Builder::new().build())
             .plugin(tauri_plugin_mic_recorder::init())
-            .plugin(build_log_plugin())
-            .plugin(tauri_plugin_websocket::init());
+            .plugin(build_log_plugin());
 
         #[cfg(debug_assertions)]
         {
-            builder = builder.plugin(tauri_plugin_devtools::init())
-                .plugin(tauri_plugin_devtools_app::init());
+            builder = builder.plugin(tauri_plugin_devtools::init());
         }
 
         builder
