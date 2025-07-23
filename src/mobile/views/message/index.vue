@@ -43,6 +43,7 @@
           @on-clickoutside="addIconHandler.clickOutside"
           @select="addIconHandler.select"
           trigger="click"
+          :show-arrow="true"
           :options="uiViewsData.addOptions">
           <svg @click="addIconHandler.open" class="size-22px bg-white p-5px rounded-8px">
             <use href="#plus"></use>
@@ -174,7 +175,7 @@ const renderImgIcon = (src: string) => {
   return () =>
     h('img', {
       src,
-      style: 'width: 32px; height: 32px; margin: 0 10px 0 10px; vertical-align: middle'
+      style: 'display:block; width: 24px; height: 24px; vertical-align: middle'
     })
 }
 

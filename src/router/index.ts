@@ -9,7 +9,10 @@ import { type } from '@tauri-apps/plugin-os'
 import MobileLogin from '../mobile/login.vue'
 import MobileHome from '../mobile/layout/index.vue'
 import MobileLaunch from '../mobile/launch.vue'
-import MessagePage from '@/mobile/views/message/index.vue'
+import MobileMessagePage from '@/mobile/views/message/index.vue'
+import MobileFriendPage from '@/mobile/views/friends/index.vue'
+import MobileCommunity from '@/mobile/views/community/index.vue'
+import MobileMy from '@/mobile/views/my/index.vue'
 
 const isDesktop = computed(() => {
   return type() === 'windows' || type() === 'linux' || type() === 'macos'
@@ -41,22 +44,22 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: '/mobile/message',
         name: 'mobileMessage',
-        component: MessagePage
+        component: MobileMessagePage
       },
       {
         path: '/mobile/friends',
         name: 'mobileFriends',
-        component: () => import('@/mobile/views/friends/index.vue')
+        component: () => MobileFriendPage
       },
       {
         path: '/mobile/community',
         name: 'mobileCommunity',
-        component: () => import('@/mobile/views/community/index.vue')
+        component: MobileCommunity
       },
       {
         path: '/mobile/my',
         name: 'mobileMy',
-        component: () => import('@/mobile/views/my/index.vue')
+        component: MobileMy
       }
     ]
   },
