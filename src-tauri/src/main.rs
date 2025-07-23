@@ -3,9 +3,8 @@
 
 use dotenv::dotenv;
 
-#[tokio::main]
-async fn main() -> std::io::Result<()> {
+fn main() -> std::io::Result<()> {
     dotenv().ok();
-    hula_app_lib::run().await;
+    hula_app_lib::run();
     Ok(())
 }

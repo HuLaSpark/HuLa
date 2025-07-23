@@ -61,10 +61,10 @@ use crate::command::message_mark_command::save_message_mark;
 use tauri::{Listener, Manager};
 use tokio::sync::Mutex;
 
-pub async fn run() {
+pub fn run() {
     #[cfg(desktop)]
     {
-        setup_desktop().await.unwrap();
+        setup_desktop().unwrap();
     }
     #[cfg(mobile)]
     {
@@ -73,7 +73,7 @@ pub async fn run() {
 }
 
 #[cfg(desktop)]
-async fn setup_desktop() -> Result<(), CommonError> {
+fn setup_desktop() -> Result<(), CommonError> {
     use crate::command::user_command::{save_user_info, update_user_last_opt_time};
 
     // 创建一个缓存实例
@@ -89,25 +89,24 @@ async fn setup_desktop() -> Result<(), CommonError> {
         .setup(move |app| {
             let app_handle = app.handle().clone();
             setup_user_info_listener_early(app.handle().clone());
-            tauri::async_runtime::spawn(async move {
-                match initialize_app_data(app_handle.clone()).await {
-                    Ok((db, client, user_info)) => {
-                        // 使用 manage 方法在运行时添加状态
-                        app_handle.manage(AppData {
-                            db_conn: db.clone(),
-                            request_client: client.clone(),
-                            user_info: user_info.clone(),
-                            cache,
-                        });
-                        let client_guard = client.lock().await;
-                        client_guard.set_app_handle(app_handle.clone());
-                        drop(client_guard);
-                    }
-                    Err(e) => {
-                        log::error!("初始化应用数据失败: {}", e);
-                    }
+
+            match tauri::async_runtime::block_on(initialize_app_data(app_handle.clone())){
+                Ok((db, client, user_info)) => {
+                    // 使用 manage 方法在运行时添加状态
+                    app_handle.manage(AppData {
+                        db_conn: db.clone(),
+                        request_client: client.clone(),
+                        user_info: user_info.clone(),
+                        cache,
+                    });
+                    let client_guard = tauri::async_runtime::block_on(client.lock());
+                    client_guard.set_app_handle(app_handle.clone());
+                    drop(client_guard);
                 }
-            });
+                Err(e) => {
+                    log::error!("初始化应用数据失败: {}", e);
+                }
+            }
 
             tray::create_tray(app.handle())?;
             Ok(())
