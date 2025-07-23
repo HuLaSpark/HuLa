@@ -108,6 +108,21 @@ pub async fn save_message(
     db: &DatabaseTransaction,
     message: im_message::Model,
 ) -> Result<(), CommonError> {
+    // 根据消息主键查找是否已存在
+    let existing_message = im_message::Entity::find_by_id((message.id.clone(), message.login_uid.clone()))
+        .one(db)
+        .await
+        .with_context(|| "查找消息失败")?;
+    
+    // 如果已存在，则先删除
+    if existing_message.is_some() {
+        im_message::Entity::delete_by_id((message.id.clone(), message.login_uid.clone()))
+            .exec(db)
+            .await
+            .with_context(|| "删除已存在消息失败")?;
+    }
+    
+    // 插入新消息
     let active_model = message.into_active_model();
     im_message::Entity::insert(active_model).exec(db).await?;
     Ok(())

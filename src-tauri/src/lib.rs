@@ -85,12 +85,6 @@ async fn setup_desktop() -> Result<(), CommonError> {
         .init_plugin()
         .init_webwindow_event()
         .init_window_event()
-        .manage(AppData {
-            db_conn: db.clone(),
-            request_client: client.clone(),
-            user_info: user_info.clone(),
-            cache,
-        })
         .setup(move |app| {
             let app_handle = app.handle().clone();
             setup_user_info_listener_early(app.handle().clone());

@@ -392,7 +392,6 @@ pub async fn send_msg(
 
 #[tauri::command]
 pub async fn save_msg(data: MessageResp, state: State<'_, AppData>) -> Result<(), String> {
-    info!("收到消息保存到本地, data: {:?}", data);
     // 创建 im_message::Model
     let message = convert_resp_to_model_for_fetch(data, state.user_info.lock().await.uid.clone());
 
