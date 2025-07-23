@@ -420,7 +420,7 @@
   </footer>
 </template>
 <script setup lang="ts">
-import { EventEnum, MittEnum, MsgEnum, MessageStatusEnum } from '@/enums'
+import { EventEnum, MittEnum, MsgEnum, MessageStatusEnum, TauriCommand } from '@/enums'
 import { MessageType, SessionItem } from '@/services/types.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { usePopover } from '@/hooks/usePopover.ts'
@@ -443,6 +443,7 @@ import { useCachedStore } from '@/stores/cached'
 import apis from '@/services/apis'
 import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 import { audioManager } from '@/utils/AudioManager'
+import { ErrorType, invokeWithErrorHandler } from '~/src/utils/TauriInvokeHandler'
 
 const appWindow = WebviewWindow.getCurrent()
 const { addListener } = useTauriListener()
@@ -732,11 +733,23 @@ const cancelReplyEmoji = async (item: any, type: number) => {
   // 只有当用户已标记时才发送取消请求
   if (userMarked) {
     try {
-      await apis.markMsg({
+      let data = {
         msgId: item.message.id,
         markType: type, // 使用对应的MarkEnum类型
         actType: 2 // 使用Confirm作为操作类型
-      })
+      }
+      await apis.markMsg(data)
+
+      await invokeWithErrorHandler(
+        TauriCommand.SAVE_MESSAGE_MARK,
+        {
+          data: data
+        },
+        {
+          customErrorMessage: '保存消息标记',
+          errorType: ErrorType.Client
+        }
+      )
 
       const currentCount = item.message.messageMarks[String(type)]?.count || 0
       chatStore.updateMarkCount([
@@ -780,6 +793,21 @@ const handleEmojiSelect = async (context: { label: string; value: number; title:
         markType: context.value,
         actType: 1
       })
+
+      await invokeWithErrorHandler(
+        TauriCommand.SAVE_MESSAGE_MARK,
+        {
+          data: {
+            msgId: item.message.id,
+            markType: context.value,
+            actType: 1
+          }
+        },
+        {
+          customErrorMessage: '保存消息标记',
+          errorType: ErrorType.Client
+        }
+      )
 
       const currentCount = item.message.messageMarks[String(context.value)]?.count || 0
       chatStore.updateMarkCount([

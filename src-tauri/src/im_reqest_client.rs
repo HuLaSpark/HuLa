@@ -233,17 +233,17 @@ impl<'a> RequestBuilderWrapper<'a> {
     ) -> Result<ApiResult<T>, CommonError> {
         // 记录请求信息
         let mut log_message = format!("发送请求到: {} [{}]", self.url, self.method);
-        
+
         // 添加查询参数信息
         if let Some(ref query_params) = self.query_params {
             log_message.push_str(&format!(" 查询参数: {}", query_params));
         }
-        
+
         // 添加请求体信息
         if let Some(ref json_body) = self.json_body {
             log_message.push_str(&format!(" 请求体: {}", json_body));
         }
-        
+
         debug!("{}", log_message);
 
         // 获取 token 并添加到请求头

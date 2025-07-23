@@ -57,6 +57,7 @@ use crate::command::contact_command::list_contacts_command;
 use crate::command::message_command::{
     check_user_init_and_fetch_messages, page_msg, save_msg, send_msg,
 };
+use crate::command::message_mark_command::save_message_mark;
 use tauri::{Listener, Manager};
 use tokio::sync::Mutex;
 
@@ -130,6 +131,7 @@ async fn setup_desktop() -> Result<(), CommonError> {
             page_msg,
             send_msg,
             save_msg,
+            save_message_mark,
             push_window_payload,
             get_window_payload,
             get_files_meta,
@@ -152,7 +154,14 @@ async fn setup_desktop() -> Result<(), CommonError> {
 // 异步初始化应用数据
 async fn initialize_app_data(
     app_handle: tauri::AppHandle,
-) -> Result<(Arc<DatabaseConnection>,Arc<Mutex<ImRequestClient>>,Arc<Mutex<UserInfo>>,),CommonError,> {
+) -> Result<
+    (
+        Arc<DatabaseConnection>,
+        Arc<Mutex<ImRequestClient>>,
+        Arc<Mutex<UserInfo>>,
+    ),
+    CommonError,
+> {
     use log::info;
     use migration::{Migrator, MigratorTrait};
 
