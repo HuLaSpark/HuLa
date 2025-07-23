@@ -44,8 +44,8 @@ export type LoginUserReq = {
   account: string
   /** 密码 */
   password: string
-  /** 登录方式 pc/mobile */
-  source: 'pc' | 'mobile'
+  /** 登录方式 PC/MOBILE */
+  deviceType: 'PC' | 'MOBILE'
   systemType: number
   grantType: 'CAPTCHA' | 'REFRESH_TOKEN' | 'PASSWORD' | 'MOBILE'
   key?: string

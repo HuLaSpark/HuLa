@@ -33,7 +33,9 @@ export enum URLEnum {
   /**系统*/
   SYSTEM = '/im/system',
   /**验证码*/
-  CAPTCHA = '/im/captcha'
+  CAPTCHA = '/im/captcha',
+  /**消息推送服务前缀*/
+  WEBSOCKET = '/ws'
 }
 
 /** tauri原生跨窗口通信时传输的类型 */

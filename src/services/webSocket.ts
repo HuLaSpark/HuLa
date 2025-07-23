@@ -15,6 +15,7 @@ import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useTauriListener } from '@/hooks/useTauriListener'
 import { listen } from '@tauri-apps/api/event'
 import { useDebounceFn } from '@vueuse/core'
+import { URLEnum } from '@/enums'
 // 使用类型导入避免直接执行代码
 import type { useNetworkReconnect as UseNetworkReconnectType } from '@/hooks/useNetworkReconnect'
 
@@ -264,7 +265,7 @@ class WS {
     let serverUrl = import.meta.env.VITE_WEBSOCKET_URL
     if (savedProxy) {
       const settings = JSON.parse(savedProxy)
-      const suffix = settings.wsIp + ':' + settings.wsPort + '/' + settings.wsSuffix
+      const suffix = settings.wsIp + ':' + settings.wsPort + URLEnum.WEBSOCKET + '/' + settings.wsSuffix
       if (settings.wsType === 'ws' || settings.wsType === 'wss') {
         serverUrl = settings.wsType + '://' + suffix
       }
@@ -276,6 +277,7 @@ class WS {
   }
 
   onWorkerMsg = async (e: MessageEvent<any>) => {
+    console.log('e.data ---> ', e.data)
     const params: { type: string; value: unknown } = JSON.parse(e.data)
     switch (params.type) {
       case WorkerMsgEnum.MESSAGE: {
@@ -436,6 +438,7 @@ class WS {
   onMessage = async (value: string) => {
     try {
       const params: { type: WsResponseMessageType; data: unknown } = JSON.parse(value)
+      console.log('val --->', value)
       switch (params.type) {
         // 获取登录二维码
         case WsResponseMessageType.LOGIN_QR_CODE: {
