@@ -51,7 +51,11 @@ import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user'
 import { ThemeEnum } from '@/enums'
 import { storeToRefs } from 'pinia'
-import { VoiceBody } from '@/services/types'
+import { FilesMeta, VoiceBody } from '@/services/types'
+import { getFilesMeta, getImageCache } from '@/utils/PathUtil'
+import { BaseDirectory, create, exists, mkdir, readFile } from '@tauri-apps/plugin-fs'
+import { join } from '@tauri-apps/api/path'
+import { type } from '@tauri-apps/plugin-os'
 
 const props = defineProps<{
   body: VoiceBody
@@ -77,6 +81,7 @@ const audioElement = ref<HTMLAudioElement | null>(null)
 const waveformCanvas = ref<HTMLCanvasElement | null>(null)
 const waveformData = ref<number[]>([])
 const audioContext = ref<AudioContext | null>(null)
+const isMacOS = ref(false)
 
 // 判断是否为深色模式
 const isDarkMode = computed(() => {
@@ -144,16 +149,34 @@ const formatTime = (seconds: number) => {
   return `${mins}:${secs.toString().padStart(2, '0')}`
 }
 
-// 生成音频波形数据
-const generateWaveformData = async (audioBuffer: ArrayBuffer) => {
+/**
+ * 检查音频格式支持
+ */
+const checkAudioSupport = (mimeType: string): string => {
+  const audio = document.createElement('audio')
+  const support = audio.canPlayType(mimeType)
+  return support
+}
+
+/**
+ * 生成音频波形数据
+ * @param input 可以是 ArrayBuffer 或 Uint8Array
+ */
+const generateWaveformData = async (input: ArrayBuffer | Uint8Array) => {
   try {
+    // 创建 AudioContext
     if (!audioContext.value) {
       audioContext.value = new (window.AudioContext || window.AudioContext)()
     }
 
-    const buffer = await audioContext.value.decodeAudioData(audioBuffer.slice(0))
+    // 如果是 Uint8Array，先取出其 buffer
+    const arrayBuffer =
+      input instanceof Uint8Array ? input.buffer.slice(input.byteOffset, input.byteOffset + input.byteLength) : input
+
+    // 解码音频数据
+    const buffer = await audioContext.value.decodeAudioData(arrayBuffer)
     const channelData = buffer.getChannelData(0)
-    const samples = waveformSamples.value // 根据音频时长计算的波形条数
+    const samples = waveformSamples.value
     const blockSize = Math.floor(channelData.length / samples)
     const waveform: number[] = []
 
@@ -169,7 +192,6 @@ const generateWaveformData = async (audioBuffer: ArrayBuffer) => {
         max = Math.max(max, value)
       }
 
-      // 使用RMS和峰值的组合来获得更好的视觉效果
       const rms = Math.sqrt(sum / blockSize)
       const intensity = Math.min(1, (rms + max) / 2)
       waveform.push(intensity)
@@ -179,7 +201,6 @@ const generateWaveformData = async (audioBuffer: ArrayBuffer) => {
     drawWaveform()
   } catch (error) {
     console.error('生成波形数据失败:', error)
-    // 生成默认波形数据
     waveformData.value = Array.from({ length: waveformSamples.value }, () => Math.random() * 0.8 + 0.2)
     drawWaveform()
   }
@@ -228,12 +249,99 @@ const drawWaveform = () => {
   })
 }
 
-// 获取音频文件并生成波形
+/**
+ * 尝试从本地缓存中读取音频文件。
+ *
+ * @param fileName 音频文件名（如 voice_1234.mp3）
+ * @returns 包含文件 buffer、完整路径、缓存路径和是否存在标志的对象
+ */
+const getLocalAudioFile = async (fileName: string) => {
+  const audioFolder = 'audio'
+  // 拼接缓存路径（如 cache\46022457888256\audio）
+  const cachePath = getImageCache(audioFolder, userStore.userInfo.uid as string)
+  const fullPath = await join(cachePath, fileName)
+
+  // 检查文件是否存在于本地缓存文件夹中
+  const fileExists = await exists(fullPath, { baseDir: BaseDirectory.AppCache })
+  if (!fileExists) {
+    console.log('找不到该音频文件，即将使用在线资源')
+    return {
+      cachePath,
+      fullPath,
+      fileBuffer: new ArrayBuffer(),
+      fileExists
+    }
+  }
+
+  // 读取音频文件内容
+  const fileBuffer = await readFile(fullPath, { baseDir: BaseDirectory.AppCache })
+
+  // 如果是 Uint8Array，手动转成ArrayBuffer
+  const arrayBuffer =
+    fileBuffer instanceof Uint8Array
+      ? fileBuffer.buffer.slice(fileBuffer.byteOffset, fileBuffer.byteOffset + fileBuffer.byteLength)
+      : fileBuffer
+
+  console.log('找到文件：', fileName, fileBuffer)
+
+  return {
+    fileBuffer: arrayBuffer,
+    cachePath,
+    fullPath,
+    fileExists
+  }
+}
+
+/**
+ * 加载音频波形数据并绘制波形。
+ *
+ * 优先尝试从本地缓存中读取音频文件，若不存在则从远程 URL 下载，
+ * 并保存到本地缓存中以供后续使用。支持错误回退生成默认波形。
+ */
 const loadAudioWaveform = async () => {
-  try {
+  /**
+   * 从远程下载音频文件并保存到本地缓存目录。
+   *
+   * @param cachePath 要保存的目录路径
+   * @param fileName 要保存的文件名
+   * @returns 下载的 ArrayBuffer 数据
+   */
+  const fetchAndDownloadAudioFile = async (cachePath: string, fileName: string) => {
     const response = await fetch(props.body.url)
     const arrayBuffer = await response.arrayBuffer()
-    await generateWaveformData(arrayBuffer)
+    const dirExists = await exists(cachePath, { baseDir: BaseDirectory.AppCache })
+
+    // 若目录不存在，则创建缓存目录
+    if (!dirExists) {
+      await mkdir(cachePath, { baseDir: BaseDirectory.AppCache, recursive: true })
+    }
+
+    // 拼接完整路径并保存文件
+    const fullPath = await join(cachePath, fileName)
+    const file = await create(fullPath, { baseDir: BaseDirectory.AppCache })
+    await file.write(new Uint8Array(arrayBuffer))
+    await file.close()
+
+    return arrayBuffer
+  }
+
+  try {
+    // 从url中提取文件基本信息
+    const [fileMeta] = await getFilesMeta<FilesMeta>([props.body.url])
+
+    // 尝试获取本地音频文件
+    const localAudioFile = await getLocalAudioFile(fileMeta.name)
+
+    // 判断本地音频文件是否存在
+    if (localAudioFile.fileExists) {
+      // 本地音频存在，则读取它的Buffer格式为Uint8Array<ArrayBufferLike>
+      await generateWaveformData(localAudioFile.fileBuffer)
+    } else {
+      // 本地音频不存在，读取在线资源文件，格式为Uint8Array<ArrayBufferLike>
+      const arrayBuffer = await fetchAndDownloadAudioFile(localAudioFile.cachePath, fileMeta.name)
+      await generateWaveformData(arrayBuffer)
+      // console.log('获取音频buffer', response.url, arrayBuffer)
+    }
   } catch (error) {
     console.error('加载音频波形失败:', error)
     // 生成默认波形
@@ -256,11 +364,60 @@ const seekToPosition = (event: MouseEvent) => {
   }
 }
 
+const existsAudioFile = async (): Promise<{
+  exists: boolean
+  fullPath: string
+  fileMeta: {
+    name: string
+    path: string
+    file_type: string
+    mime_type: string
+    exists: boolean
+  }
+}> => {
+  const [fileMeta] = await getFilesMeta<FilesMeta>([props.body.url])
+  const audioFolder = 'audio'
+  const cachePath = getImageCache(audioFolder, userStore.userInfo.uid as string)
+  const fullPath = await join(cachePath, fileMeta.name)
+
+  const fileExists = await exists(fullPath, { baseDir: BaseDirectory.AppCache })
+  console.log('文件是否存在本地：', fileExists, fullPath)
+  return {
+    exists: fileExists,
+    fullPath: fullPath,
+    fileMeta: fileMeta
+  }
+}
+
 // 创建音频元素
-const createAudioElement = () => {
+const createAudioElement = async () => {
   if (audioElement.value) return
 
-  audioElement.value = new Audio(props.body.url)
+  const existsData = await existsAudioFile()
+
+  let playableUrl = props.body.url // 默认使用远程地址
+
+  if (existsData.exists) {
+    console.log('找到音频文件：', existsData)
+    const fileData = await getLocalAudioFile(existsData.fileMeta.name)
+
+    // Mac系统优化：设置正确的MIME类型
+    const mimeType = existsData.fileMeta.mime_type || 'audio/mpeg'
+
+    // 检查音频格式支持(mac)
+    const support = checkAudioSupport(mimeType)
+    if (!support && isMacOS.value) {
+      console.warn(`Mac系统可能不支持此音频格式: ${mimeType}`)
+      // 降级到远程URL
+      playableUrl = props.body.url
+    } else {
+      playableUrl = URL.createObjectURL(new Blob([fileData.fileBuffer], { type: mimeType }))
+    }
+  }
+
+  console.log('完成后的路径：', playableUrl)
+
+  audioElement.value = new Audio(playableUrl)
 
   // 设置事件监听
   audioElement.value.addEventListener('loadstart', () => {
@@ -328,7 +485,7 @@ const togglePlayback = async () => {
     drawWaveform()
 
     // 创建新的音频元素
-    createAudioElement()
+    await createAudioElement()
 
     if (!audioElement.value) return
 
@@ -353,7 +510,8 @@ const handleAudioStateChange = () => {
 }
 
 // 组件挂载时加载波形并添加监听器
-onMounted(() => {
+onMounted(async () => {
+  isMacOS.value = (await type()) === 'macos'
   loadAudioWaveform()
   audioManager.addListener(handleAudioStateChange)
 })

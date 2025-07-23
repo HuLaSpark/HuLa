@@ -908,6 +908,7 @@ export const useUpload = () => {
     uploadToQiniu,
     getUploadAndDownloadUrl,
     doUpload,
-    UploadProviderEnum
+    UploadProviderEnum,
+    generateHashKey
   }
 }

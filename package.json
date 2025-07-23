@@ -30,12 +30,14 @@
     "tauri:ios:dev": "tauri ios dev",
     "========= 启动HuLa android 程序 =========": "",
     "tauri:android:dev": "tauri android dev",
+    "========= 启动安卓程序 =========": "",
+    "adev": "tauri android dev",
     "========= 初始化 ios =========": "",
     "tauri:ios:init": "tauri ios init",
     "========= 初始化 android =========": "",
     "tauri:android:init": "tauri android init",
     "========= 生成icon =========": "",
-    "tauri:icon": "tauri icon public/logo.png",
+    "tauri:icon": "tauri icon public/light.png",
     "========= 安装依赖前执行 =========": "",
     "preinstall": "npx only-allow pnpm && node scripts/check-all.js",
     "========= 使用commit来进行代码提交 =========": "",
@@ -92,14 +94,14 @@
     "mitt": "^3.0.1",
     "naive-ui": "^2.42.0",
     "pinia": "^3.0.3",
-    "pinia-plugin-persistedstate": "^4.3.0",
+    "pinia-plugin-persistedstate": "^4.4.1",
     "pinia-shared-state": "^1.0.1",
     "seemly": "^0.3.10",
     "tauri-plugin-mic-recorder-api": "^2.0.0",
+    "tauri-plugin-safe-area-insets": "^0.1.0",
     "vue": "^3.5.17",
     "vue-cropper": "1.1.4",
     "vue-demi": "0.14.6",
-    "vue-draggable-plus": "^0.6.0",
     "vue-router": "^4.5.1"
   },
   "devDependencies": {
@@ -144,7 +146,7 @@
     "typescript": "^5.8.3",
     "unplugin-auto-import": "^19.3.0",
     "unplugin-vue-components": "^28.8.0",
-    "vite": "7.0.4",
+    "vite": "7.0.5",
     "vite-plugin-vue-setup-extend": "^0.4.0",
     "vitest": "^3.0.5",
     "vue-tsc": "^3.0.1"
@@ -157,7 +159,9 @@
   "pnpm": {
     "ignoredBuiltDependencies": [
       "esbuild",
-      "vue-demi"
+      "vue-demi",
+      "@parcel/watcher",
+      "sharp"
     ]
   }
 }

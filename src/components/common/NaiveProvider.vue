@@ -23,12 +23,20 @@
 import { useSettingStore } from '@/stores/setting.ts'
 import { dateZhCN, darkTheme, lightTheme, GlobalThemeOverrides, zhCN } from 'naive-ui'
 import { ThemeEnum } from '@/enums'
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 
+const { notificMax, messageMax } = defineProps<{
+  notificMax?: number
+  messageMax?: number
+}>()
+defineOptions({ name: 'NaiveProvider' })
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
 /**监听深色主题颜色变化*/
 const globalTheme = ref<any>(themes.value.content)
 const prefers = matchMedia('(prefers-color-scheme: dark)')
+// 定义不需要显示消息提示的窗口
+const noMessageWindows = ['tray', 'notify', 'capture', 'update', 'checkupdate']
 
 /** 跟随系统主题模式切换主题 */
 const followOS = () => {
@@ -148,19 +156,40 @@ const darkThemeOverrides: GlobalThemeOverrides = {
   }
 }
 
-const { notificMax, messageMax } = defineProps<{
-  notificMax?: number
-  messageMax?: number
-}>()
-defineOptions({ name: 'NaiveProvider' })
-
 // 挂载naive组件的方法至window, 以便在路由钩子函数和请求函数里面调用
 const registerNaiveTools = () => {
   window.$loadingBar = useLoadingBar()
   window.$dialog = useDialog()
-  window.$message = useMessage()
   window.$notification = useNotification()
   window.$modal = useModal()
+
+  // 获取原始的消息对象
+  const originalMessage = useMessage()
+
+  // 创建一个空的消息对象，用于禁用消息的窗口
+  const noOpMessage = {
+    info: () => {},
+    success: () => {},
+    warning: () => {},
+    error: () => {},
+    loading: () => ({
+      destroy: () => {},
+      type: 'loading'
+    }),
+    create: () => ({
+      destroy: () => {},
+      type: 'info'
+    }),
+    destroyAll: () => {}
+  } as unknown as ReturnType<typeof useMessage>
+
+  // 检查当前路由是否需要禁用消息
+  const shouldDisableMessage = () => {
+    return noMessageWindows.includes(getCurrentWebviewWindow().label)
+  }
+
+  // 设置消息对象
+  window.$message = shouldDisableMessage() ? noOpMessage : originalMessage
 }
 
 const NaiveProviderContent = defineComponent({

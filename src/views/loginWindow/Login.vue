@@ -433,6 +433,8 @@ const normalLogin = async (auto = false) => {
 
 const openHomeWindow = async () => {
   await createWebviewWindow('HuLa', 'home', 960, 720, 'login', true, undefined, 480, undefined, false)
+  // 只有在成功创建home窗口并且已登录的情况下才显示托盘菜单
+  isTrayMenuShow.value = true
 }
 
 /** 移除已登录账号 */
@@ -462,11 +464,13 @@ onBeforeMount(async () => {
   const token = localStorage.getItem('TOKEN')
   const refreshToken = localStorage.getItem('REFRESH_TOKEN')
 
+  // 始终初始化托盘菜单状态为false
+  isTrayMenuShow.value = false
+
   if (!login.value.autoLogin) {
     localStorage.removeItem('TOKEN')
     localStorage.removeItem('REFRESH_TOKEN')
     clearListener()
-    isTrayMenuShow.value = false
     return
   }
 

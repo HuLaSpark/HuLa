@@ -1,6 +1,6 @@
 [package]
 name = "hula"
-version = "2.6.13"
+version = "2.6.14"
 description = "hula"
 authors = ["nongyehong"]
 license = ""
@@ -92,6 +92,10 @@ reqwest = { version = "0.11", features = [
 ] }
 futures = "0.3"
 dotenv = "0.15.0"
+
+# 安卓的依赖
+[target."cfg(target_os = \"android\")".dependencies]
+tauri-plugin-safe-area-insets = "0.1.0"
 
 # 不兼容移动端的依赖
 [target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]

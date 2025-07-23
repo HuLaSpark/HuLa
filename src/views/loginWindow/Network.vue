@@ -4,7 +4,7 @@
     <ActionBar :max-w="false" :shrink="false" proxy data-tauri-drag-region />
 
     <n-flex vertical :size="12" align="center" class="pt-10px">
-      <span class="text-(16px #70938c) font-bold textFont">网络设置</span>
+      <span class="text-(16px #70938c) textFont">网络设置</span>
 
       <n-tabs type="line" animated justify-content="center" @update:value="handleTab">
         <n-tab-pane name="api" tab="API">

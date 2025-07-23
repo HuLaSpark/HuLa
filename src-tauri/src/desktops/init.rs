@@ -1,10 +1,8 @@
-use std::path::PathBuf;
-
 use tauri::plugin::TauriPlugin;
 use tauri::{Manager, Runtime, WindowEvent};
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_log::fern::colors::{Color, ColoredLevelConfig};
-use tauri_plugin_log::{Target, TargetKind, WEBVIEW_TARGET};
+use tauri_plugin_log::{Target, TargetKind};
 
 pub trait CustomInit {
     fn init_plugin(self) -> Self;
@@ -50,9 +48,7 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
             .plugin(build_log_plugin());
 
         #[cfg(debug_assertions)]
-        {
-            builder = builder.plugin(tauri_plugin_devtools::init());
-        }
+        let builder = builder.plugin(tauri_plugin_devtools::init());
 
         builder
     }
@@ -116,17 +112,6 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
 }
 
 fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
-    // 获取当前工作目录并创建 logs 子目录
-    let mut log_dir = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
-    log_dir.push("logs");
-    
-    // 确保 logs 目录存在
-    if !log_dir.exists() {
-        std::fs::create_dir_all(&log_dir).unwrap_or_else(|e| {
-            eprintln!("Failed to create logs directory: {}", e);
-        });
-    }
-    
     tauri_plugin_log::Builder::new()
         .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
         .skip_logger()
@@ -137,12 +122,6 @@ fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
             Target::new(TargetKind::Stdout),
             // 将 rust 日志打印到 webview的 devtool 中
             Target::new(TargetKind::Webview),
-            // 将日志保存到项目的 logs 目录下
-            Target::new(TargetKind::Folder {
-                path: log_dir,
-                file_name: Some("app".into()),
-            })
-            .filter(|metadata| !metadata.target().starts_with(WEBVIEW_TARGET)),
         ])
         .with_colors(ColoredLevelConfig {
             error: Color::Red,

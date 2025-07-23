@@ -98,13 +98,15 @@ async function resampleAudio(audioBuffer: AudioBuffer, targetSampleRate: number)
 function convertToInt16Array(audioBuffer: AudioBuffer, targetChannels: number): Int16Array {
   const length = audioBuffer.length
   const samples = new Int16Array(length * targetChannels)
+  const AMPLIFY = 10 // 10倍响度
 
   if (targetChannels === 1) {
     // 转换为单声道
     const channelData = audioBuffer.numberOfChannels > 1 ? mixToMono(audioBuffer) : audioBuffer.getChannelData(0)
 
     for (let i = 0; i < length; i++) {
-      samples[i] = Math.max(-1, Math.min(1, channelData[i])) * 0x7fff
+      const sample = channelData[i] * AMPLIFY
+      samples[i] = Math.max(-1, Math.min(1, sample)) * 0x7fff
     }
   } else {
     // 保持立体声
@@ -112,8 +114,10 @@ function convertToInt16Array(audioBuffer: AudioBuffer, targetChannels: number): 
     const rightChannel = audioBuffer.numberOfChannels > 1 ? audioBuffer.getChannelData(1) : leftChannel
 
     for (let i = 0; i < length; i++) {
-      samples[i * 2] = Math.max(-1, Math.min(1, leftChannel[i])) * 0x7fff
-      samples[i * 2 + 1] = Math.max(-1, Math.min(1, rightChannel[i])) * 0x7fff
+      const l = leftChannel[i] * AMPLIFY
+      const r = rightChannel[i] * AMPLIFY
+      samples[i * 2] = Math.max(-1, Math.min(1, l)) * 0x7fff
+      samples[i * 2 + 1] = Math.max(-1, Math.min(1, r)) * 0x7fff
     }
   }
 

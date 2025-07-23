@@ -10,7 +10,7 @@
         <n-flex vertical class="w-360px h-fit">
           <video class="w-full h-240px rounded-t-8px object-cover" src="../../../assets/video/star.mp4" autoplay loop />
           <n-flex vertical :size="10" class="p-14px">
-            <p class="text-(16px [--text-color] font-bold)">在 GitHub 为我们点亮星标</p>
+            <p class="text-(16px [--text-color] )">在 GitHub 为我们点亮星标</p>
             <p class="text-(12px [--chat-text-color]) leading-5">
               如果您喜爱我们的产品，并希望支持我们，可以去 GitHub
               给我们点一颗星吗？这个小小的动作对我们来说意义重大，能激励我们为您持续提供特性体验。
@@ -46,7 +46,7 @@
             autoplay
             loop />
           <n-flex vertical :size="10" class="p-14px">
-            <p class="text-(16px [--text-color] font-bold)">在 GitHub 分享您宝贵的反馈</p>
+            <p class="text-(16px [--text-color] )">在 GitHub 分享您宝贵的反馈</p>
             <p class="text-(12px [--chat-text-color]) leading-5">
               您的每一个想法和建议对我们来说都弥足珍贵，我们迫不及待地想知道您的看法！欢迎联系我们提供产品功能和使用体验反馈。
             </p>

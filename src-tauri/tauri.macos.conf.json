@@ -11,7 +11,8 @@
   },
   "bundle": {
     "resources": [
-      "tray"
+      "tray",
+      "configuration"
     ],
     "active": true,
     "targets": [
@@ -19,22 +20,22 @@
       "dmg"
     ],
     "icon": [
-      "icons/macos/32x32.png",
-      "icons/macos/128x128.png",
-      "icons/macos/128x128@2x.png",
-      "icons/macos/icon.icns",
-      "icons/macos/icon.ico",
-      "icons/macos/icon.png",
-      "icons/macos/Square30x30Logo.png",
-      "icons/macos/Square44x44Logo.png",
-      "icons/macos/Square71x71Logo.png",
-      "icons/macos/Square89x89Logo.png",
-      "icons/macos/Square107x107Logo.png",
-      "icons/macos/Square142x142Logo.png",
-      "icons/macos/Square150x150Logo.png",
-      "icons/macos/Square284x284Logo.png",
-      "icons/macos/Square310x310Logo.png",
-      "icons/macos/StoreLogo.png"
+      "icons/macos/light/32x32.png",
+      "icons/macos/light/128x128.png",
+      "icons/macos/light/128x128@2x.png",
+      "icons/macos/light/icon.icns",
+      "icons/macos/light/icon.ico",
+      "icons/macos/light/icon.png",
+      "icons/macos/light/Square30x30Logo.png",
+      "icons/macos/light/Square44x44Logo.png",
+      "icons/macos/light/Square71x71Logo.png",
+      "icons/macos/light/Square89x89Logo.png",
+      "icons/macos/light/Square107x107Logo.png",
+      "icons/macos/light/Square142x142Logo.png",
+      "icons/macos/light/Square150x150Logo.png",
+      "icons/macos/light/Square284x284Logo.png",
+      "icons/macos/light/Square310x310Logo.png",
+      "icons/macos/light/StoreLogo.png"
     ],
     "macOS": {
       "dmg": {

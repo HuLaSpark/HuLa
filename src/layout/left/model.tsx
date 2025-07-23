@@ -89,7 +89,7 @@ export const LockScreen = defineComponent(() => {
           <div
             onClick={() => (modalShow.value = false)}
             class="mac-close relative size-13px shadow-inner bg-#ed6a5eff rounded-50% select-none">
-            <svg class="hidden size-7px color-#000 font-bold select-none absolute top-3px left-3px">
+            <svg class="hidden size-7px color-#000 select-none absolute top-3px left-3px">
               <use href="#close"></use>
             </svg>
           </div>
@@ -291,7 +291,7 @@ export const CheckUpdate = defineComponent(() => {
           <div
             onClick={() => (modalShow.value = false)}
             class="mac-close relative size-13px shadow-inner bg-#ed6a5eff rounded-50% select-none">
-            <svg class="hidden size-7px color-#000 font-bold select-none absolute top-3px left-3px">
+            <svg class="hidden size-7px color-#000  select-none absolute top-3px left-3px">
               <use href="#close"></use>
             </svg>
           </div>
@@ -446,7 +446,7 @@ export const RemoteLogin = defineComponent({
             <div
               onClick={remotelogin.value.logout}
               class="mac-close relative size-13px shadow-inner bg-#ed6a5eff rounded-50% select-none">
-              <svg class="hidden size-7px color-#000 font-bold select-none absolute top-3px left-3px">
+              <svg class="hidden size-7px color-#000  select-none absolute top-3px left-3px">
                 <use href="#close"></use>
               </svg>
             </div>

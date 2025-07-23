@@ -1,5 +1,3 @@
-
-
 ## [2.6.13](https://github.com/HuLaSpark/HuLa/compare/v2.6.12...v2.6.13) (2025-07-04)
 
 

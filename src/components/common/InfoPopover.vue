@@ -53,7 +53,7 @@
 
         <div
           v-if="useUserInfo(uid).value.wearingItemId === '6'"
-          class="absolute top-72px left-142px bg-[--bate-bg] border-(1px solid [--bate-color]) text-(12px [--bate-color] center) font-bold p-8px rounded-full">
+          class="absolute top-72px left-142px bg-[--bate-bg] border-(1px solid [--bate-color]) text-(12px [--bate-color] center) p-8px rounded-full">
           HuLa开发工程师
         </div>
 
