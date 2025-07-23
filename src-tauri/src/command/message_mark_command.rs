@@ -38,7 +38,11 @@ pub async fn save_message_mark(
             uid: login_uid, // 当前用户的uid
             msg_id: data.msg_id.clone(),
             mark_type: data.mark_type,
-            status: data.act_type,
+            status: match data.act_type {
+                1 => 0,
+                2 => 1,
+                _ => 0,
+            },
             create_time: Some(current_time),
             update_time: Some(current_time),
         };
