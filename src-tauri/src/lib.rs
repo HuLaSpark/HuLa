@@ -90,7 +90,7 @@ fn setup_desktop() -> Result<(), CommonError> {
             let app_handle = app.handle().clone();
             setup_user_info_listener_early(app.handle().clone());
 
-            match tauri::async_runtime::block_on(initialize_app_data(app_handle.clone())){
+            match tauri::async_runtime::block_on(initialize_app_data(app_handle.clone())) {
                 Ok((db, client, user_info)) => {
                     // 使用 manage 方法在运行时添加状态
                     app_handle.manage(AppData {

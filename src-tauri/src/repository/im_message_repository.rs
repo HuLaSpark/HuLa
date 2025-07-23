@@ -167,7 +167,7 @@ pub async fn cursor_page_messages(
         .filter(mark_condition)
         .filter(im_message_mark::Column::LoginUid.eq(login_uid));
     
-    let marks = marks_query.all(db).await.with_context(|| "查询消息标记失败")?;
+    let marks = marks_query.all(db).await?;
     
     // 将标记按消息ID分组
     let mut marks_map: HashMap<String, Vec<im_message_mark::Model>> = HashMap::new();

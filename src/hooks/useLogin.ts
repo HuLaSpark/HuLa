@@ -38,13 +38,14 @@ export const useLogin = () => {
     const { createWebviewWindow } = useWindow()
     isTrayMenuShow.value = false
     try {
-      // 创建登录窗口
-      await createWebviewWindow('登录', 'login', 320, 448, 'home', false, 320, 448)
-      // 调整托盘大小
-      await resizeWindow('tray', 130, 44)
+      clearListener()
+      await invokeSilently(TauriCommand.UPDATE_USER_LAST_OPT_TIME)
       // 发送登出事件
       await emit(EventEnum.LOGOUT)
-      await invokeSilently(TauriCommand.UPDATE_USER_LAST_OPT_TIME)
+      // 创建登录窗口
+      await createWebviewWindow('登录', 'login', 320, 448, undefined, false, 320, 448)
+      // 调整托盘大小
+      await resizeWindow('tray', 130, 44)
     } catch (error) {
       console.error('创建登录窗口失败:', error)
     }

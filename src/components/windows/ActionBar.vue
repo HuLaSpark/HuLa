@@ -193,16 +193,7 @@ watchEffect(() => {
         // 设置程序内部关闭标志
         isProgrammaticClose = true
         // 针对不同系统采用不同关闭策略
-        if (type() === 'macos') {
-          // macOS 上先隐藏窗口，然后延迟关闭
-          await appWindow.hide()
-          setTimeout(async () => {
-            await appWindow.close()
-          }, 300)
-        } else {
-          // Windows/Linux 直接关闭
-          await appWindow.close()
-        }
+        await appWindow.close()
       }
     }),
     appWindow.listen(EventEnum.EXIT, async () => {

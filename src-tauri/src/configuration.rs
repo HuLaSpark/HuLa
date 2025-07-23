@@ -20,13 +20,13 @@ impl DatabaseSettings {
         &self,
         app_handle: &AppHandle,
     ) -> Result<DatabaseConnection, CommonError> {
-        let mut db_path = get_database_path(app_handle)?;
-
-        #[cfg(debug_assertions)]
-        {
-            db_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-            db_path.push("db.sqlite")
-        }
+        let db_path = if cfg!(debug_assertions) {
+            let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+            path.push("db.sqlite");
+            path
+        } else {
+            get_database_path(app_handle)?
+        };
         let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
         let db: DatabaseConnection = Database::connect(db_url)
             .await
