@@ -134,15 +134,11 @@ pub async fn cursor_page_messages(
         .order_by_desc(im_message::Column::Id)
         .limit(cursor_page_param.page_size as u64);
     
-    // 打印消息查询的 SQL 语句
-    println!("[SQL Debug] 查询消息的 SQL: {}", message_query.build(sea_orm::DatabaseBackend::Sqlite).to_string());
 
     // 如果提供了游标，添加过滤条件
     if !cursor_page_param.cursor.is_empty() {
         // 使用游标值过滤，获取小于该ID的记录（因为是降序排列）
         message_query = message_query.filter(im_message::Column::Id.lt(&cursor_page_param.cursor));
-        // 打印添加游标条件后的 SQL 语句
-        println!("[SQL Debug] 添加游标条件后的消息 SQL: {}", message_query.build(sea_orm::DatabaseBackend::Sqlite).to_string());
     }
 
     // 先查询消息列表
@@ -170,9 +166,6 @@ pub async fn cursor_page_messages(
     let marks_query = im_message_mark::Entity::find()
         .filter(mark_condition)
         .filter(im_message_mark::Column::LoginUid.eq(login_uid));
-    
-    // 打印标记查询的 SQL 语句
-    println!("[SQL Debug] 查询消息标记的 SQL: {}", marks_query.build(sea_orm::DatabaseBackend::Sqlite).to_string());
     
     let marks = marks_query.all(db).await.with_context(|| "查询消息标记失败")?;
     
