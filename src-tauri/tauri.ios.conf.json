@@ -11,6 +11,9 @@
   },
   "bundle": {
     "active": true,
+    "resources": [
+      "configuration"
+    ],
     "targets": "all",
     "iOS": {
       "minimumSystemVersion": "13.0"

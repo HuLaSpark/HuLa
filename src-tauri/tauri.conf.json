@@ -14,7 +14,8 @@
     "copyright": "HuLaSpark",
     "licenseFile": "./copyright/License.rtf",
     "resources": [
-      "tray"
+      "tray",
+      "configuration"
     ],
     "createUpdaterArtifacts": true,
     "active": true,
