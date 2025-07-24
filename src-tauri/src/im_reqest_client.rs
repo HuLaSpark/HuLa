@@ -97,6 +97,18 @@ impl ImRequestClient {
                 .expect("获取 refresh_token 锁失败");
             refresh_token_guard.clone()
         };
+        
+        // 检查 refresh_token 是否为 None
+        let refresh_token_value = match current_refresh_token {
+            Some(token) => token,
+            None => {
+                error!("尝试刷新token但refresh_token为空");
+                return Err(CommonError::UnexpectedError(anyhow::anyhow!(
+                    "refresh_token 为空，无法刷新token"
+                )));
+            }
+        };
+        
         info!("开始刷新 token...");
         // 构建刷新 token 的请求
         let refresh_url = format!("{}/token/refreshToken", self.base_url);
@@ -106,7 +118,7 @@ impl ImRequestClient {
         let response = request_builder
             .json(&HashMap::from([(
                 "refreshToken",
-                current_refresh_token.unwrap(),
+                refresh_token_value,
             )]))
             .send()
             .await
