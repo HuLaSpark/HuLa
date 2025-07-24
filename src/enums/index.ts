@@ -31,7 +31,7 @@ export enum URLEnum {
   /**oss*/
   OSS = '/oss',
   /**系统*/
-  SYSTEM = '/im/system',
+  SYSTEM = '/system',
   /**验证码*/
   CAPTCHA = '/im/captcha',
   /**消息推送服务前缀*/

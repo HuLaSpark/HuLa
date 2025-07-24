@@ -277,7 +277,6 @@ class WS {
   }
 
   onWorkerMsg = async (e: MessageEvent<any>) => {
-    console.log('e.data ---> ', e.data)
     const params: { type: string; value: unknown } = JSON.parse(e.data)
     switch (params.type) {
       case WorkerMsgEnum.MESSAGE: {
@@ -438,7 +437,6 @@ class WS {
   onMessage = async (value: string) => {
     try {
       const params: { type: WsResponseMessageType; data: unknown } = JSON.parse(value)
-      console.log('val --->', value)
       switch (params.type) {
         // 获取登录二维码
         case WsResponseMessageType.LOGIN_QR_CODE: {

@@ -65,8 +65,9 @@ export type RegisterUserReq = {
   code: string
   /** 识别码 */
   uuid: string
-  key: string
+  key?: string
   confirmPassword: string
+  systemType: number
 }
 
 /** 分页翻页 */

@@ -3,6 +3,7 @@ use crate::pojo::common::ApiResult;
 use anyhow::Context;
 use log::{debug, error, info, warn};
 use reqwest::{Client, Method, RequestBuilder, header};
+use base64::{Engine as _, engine::general_purpose};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Emitter};
@@ -97,7 +98,7 @@ impl ImRequestClient {
                 .expect("获取 refresh_token 锁失败");
             refresh_token_guard.clone()
         };
-        
+
         // 检查 refresh_token 是否为 None
         let refresh_token_value = match current_refresh_token {
             Some(token) => token,
@@ -108,18 +109,17 @@ impl ImRequestClient {
                 )));
             }
         };
-        
+
         info!("开始刷新 token...");
         // 构建刷新 token 的请求
         let refresh_url = format!("{}/token/refreshToken", self.base_url);
         let request_builder = self.client.request(Method::POST, &refresh_url);
 
         // 发送请求
+        let basic_auth = general_purpose::STANDARD.encode("luohuo_web_pro:luohuo_web_pro_secret");
         let response = request_builder
-            .json(&HashMap::from([(
-                "refreshToken",
-                refresh_token_value,
-            )]))
+            .header("Authorization", basic_auth)
+            .json(&HashMap::from([("refreshToken", refresh_token_value)]))
             .send()
             .await
             .with_context(|| "刷新 token 请求失败")?;
@@ -268,10 +268,12 @@ impl<'a> RequestBuilderWrapper<'a> {
             }
         };
 
+        // 添加基础认证头
+        let basic_auth = general_purpose::STANDARD.encode("luohuo_web_pro:luohuo_web_pro_secret");
+        self.request_builder = self.request_builder.header("Authorization", basic_auth);
+
         if let Some(token) = &current_token {
-            self.request_builder = self
-                .request_builder
-                .header(header::AUTHORIZATION, format!("Bearer {}", token));
+            self.request_builder = self.request_builder.header("token", token);
         } else {
             warn!("没有设置 token");
         }
@@ -335,9 +337,12 @@ impl<'a> RequestBuilderWrapper<'a> {
                         }
                     };
 
+                    // 添加基础认证头
+                    let basic_auth = general_purpose::STANDARD.encode("luohuo_web_pro:luohuo_web_pro_secret");
+                    new_request_builder = new_request_builder.header("Authorization", basic_auth);
+
                     if let Some(token) = &new_token {
-                        new_request_builder = new_request_builder
-                            .header(header::AUTHORIZATION, format!("Bearer {}", token));
+                        new_request_builder = new_request_builder.header("token", token);
                     }
 
                     // 重新发送请求

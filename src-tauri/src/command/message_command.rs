@@ -238,7 +238,7 @@ pub async fn fetch_all_messages(
     last_opt_time: Option<i64>,
 ) -> Result<(), CommonError> {
     // 调用后端接口 /chat/msg/list 获取所有消息，传递 last_opt_time 参数
-    let mut request = client.get("/chat/msg/list");
+    let mut request = client.get("/im/chat/msg/list");
 
     // 如果有 last_opt_time 参数，添加到查询参数中
     if let Some(time) = last_opt_time {
@@ -381,7 +381,7 @@ pub async fn send_msg(
         let result = {
             let client = request_client.lock().await;
             client
-                .post("/chat/msg")
+                .post("/im/chat/msg")
                 .json(&send_data)
                 .send_json::<MessageResp>()
                 .await

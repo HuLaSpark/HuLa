@@ -28,9 +28,9 @@
                 autoCorrect="off"
                 autoCapitalize="off"
                 :allow-input="noSideSpace"
-                :placeholder="showNamePrefix ? '' : placeholders.name"
-                @focus="handleInputState($event, 'name')"
-                @blur="handleInputState($event, 'name')"
+                :placeholder="showNamePrefix ? '' : placeholders.nickName"
+                @focus="handleInputState($event, 'nickName')"
+                @blur="handleInputState($event, 'nickName')"
                 clearable>
                 <template #prefix v-if="showNamePrefix || info.nickName">
                   <p class="text-12px">昵称</p>
@@ -250,7 +250,7 @@ import Validation from '@/components/common/Validation.vue'
 import PinInput from '@/components/common/PinInput.vue'
 
 // 输入框类型定义
-type InputType = 'name' | 'email' | 'password' | 'code' | 'confirmPassword'
+type InputType = 'nickName' | 'email' | 'password' | 'code' | 'confirmPassword'
 
 /** 注册信息 */
 const info = unref(
@@ -262,7 +262,8 @@ const info = unref(
     code: '',
     uuid: '',
     key: 'REGISTER_EMAIL',
-    confirmPassword: ''
+    confirmPassword: '',
+    systemType: 2
   })
 )
 
@@ -280,7 +281,7 @@ const registerLoading = ref(false)
 
 // 占位符
 const placeholders: Record<InputType, string> = {
-  name: '输入HuLa昵称',
+  nickName: '输入HuLa昵称',
   email: '输入邮箱',
   password: '输入HuLa密码',
   code: '验证码',
@@ -328,7 +329,7 @@ const isEmailCodeComplete = computed(() => emailCode.value.length === 6)
 
 // 校验规则
 const rules = {
-  name: {
+  nickName: {
     required: true,
     message: '请输入昵称',
     trigger: 'blur'
@@ -415,7 +416,7 @@ watchEffect(() => {
  */
 const handleInputState = (event: FocusEvent, type: InputType): void => {
   const prefixMap: Record<InputType, Ref<boolean>> = {
-    name: showNamePrefix,
+    nickName: showNamePrefix,
     email: showemailPrefix,
     password: showPasswordPrefix,
     code: showCodePrefix,

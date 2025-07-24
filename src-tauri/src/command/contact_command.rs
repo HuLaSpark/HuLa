@@ -79,7 +79,7 @@ async fn fetch_and_update_contacts(
     let resp = request_client
         .lock()
         .await
-        .get("/chat/contact/list")
+        .get("/im/chat/contact/list")
         .send_json::<Vec<im_contact::Model>>()
         .await?;
 

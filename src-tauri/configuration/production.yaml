@@ -1,4 +1,4 @@
 application:
   host: 127.0.0.1
 backend:
-  base_url: https://hulaspark.com/api
+  base_url: http://192.168.1.37:18760

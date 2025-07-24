@@ -31,11 +31,11 @@ name = "hula_app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2.3.0", features = [] }
+tauri-build = { version = "2.3.1", features = [] }
 
 [dependencies]
 # Tauri 官方依赖
-tauri = { version = "2.6.2", features = [
+tauri = { version = "2.7.0", features = [
     "protocol-asset",
     "macos-private-api",
     "tray-icon",

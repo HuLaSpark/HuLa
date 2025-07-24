@@ -139,7 +139,7 @@
         size="large"
         maxlength="8"
         minlength="1"
-        v-model:value="registerInfo.name"
+        v-model:value="registerInfo.nickName"
         type="text"
         spellCheck="false"
         autoComplete="off"
@@ -321,9 +321,7 @@ import PinInput from '@/components/common/PinInput.vue'
 import { useMobileStore } from '@/stores/mobile'
 
 // 本地注册信息类型，扩展API类型以包含确认密码
-interface LocalRegisterInfo extends RegisterUserReq {
-  confirmPassword: string
-}
+interface LocalRegisterInfo extends RegisterUserReq {}
 
 const loginHistoriesStore = useLoginHistoriesStore()
 const userStore = useUserStore()
@@ -345,19 +343,21 @@ const info = ref({
   account: '',
   password: '',
   avatar: '',
-  name: '',
+  nickName: '',
   uid: ''
 })
 
 /** 注册账号信息 */
 const registerInfo = ref<LocalRegisterInfo>({
-  name: '',
+  nickName: '',
   email: '',
   password: '',
   confirmPassword: '',
   code: '',
   uuid: '',
-  avatar: ''
+  avatar: '',
+  key: '',
+  systemType: 2
 })
 
 // 登录相关的占位符和状态
@@ -422,7 +422,7 @@ const isPasswordValid = computed(() => {
 /** 检查第一步是否可以继续 */
 const isStep1Valid = computed(() => {
   return (
-    registerInfo.value.name &&
+    registerInfo.value.nickName &&
     isPasswordValid.value &&
     registerInfo.value.confirmPassword === registerInfo.value.password &&
     registerProtocol.value
@@ -470,7 +470,7 @@ const resetLoginForm = () => {
     account: '',
     password: '',
     avatar: '',
-    name: '',
+    nickName: '',
     uid: ''
   }
   accountPH.value = '输入HuLa账号'
@@ -481,7 +481,7 @@ const resetLoginForm = () => {
 /** 重置注册表单 */
 const resetRegisterForm = () => {
   registerInfo.value = {
-    name: '',
+    nickName: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -525,7 +525,8 @@ const handleRegisterStep = async () => {
       await apis.sendCaptcha({
         email: registerInfo.value.email,
         code: registerInfo.value.code.toString(),
-        uuid: captcha.value.uuid.toString()
+        uuid: captcha.value.uuid.toString(),
+        templateCode: 'REGISTER_EMAIL'
       })
 
       registerLoading.value = false
@@ -566,7 +567,7 @@ const handleRegisterComplete = async () => {
     // 关闭弹窗并切换到登录页面
     emailCodeModal.value = false
     activeTab.value = 'login'
-    info.value.account = registerInfo.value.name || registerInfo.value.email
+    info.value.account = registerInfo.value.nickName || registerInfo.value.email
 
     // 重置注册表单
     resetRegisterForm()
@@ -627,7 +628,7 @@ const giveAccount = (item: UserInfoType) => {
   const { account, avatar, name, uid } = item
   info.value.account = account || ''
   info.value.avatar = avatar
-  info.value.name = name
+  info.value.nickName = name
   info.value.uid = uid
   arrowStatus.value = false
 }

@@ -35,7 +35,7 @@ pub async fn update_my_room_info(
             .request_client
             .lock()
             .await
-            .post("/room/updateMyRoomInfo")
+            .post("/im/room/updateMyRoomInfo")
             .json(&my_room_info)
             .send_json::<bool>()
             .await
@@ -277,7 +277,7 @@ async fn fetch_and_update_room_members(
     let resp = request_client
         .lock()
         .await
-        .get("/room/group/listMember")
+        .get("/im/room/group/listMember")
         .query(&[("roomId", &room_id)])
         .send_json::<Vec<im_room_member::Model>>()
         .await?;
@@ -313,7 +313,7 @@ async fn fetch_and_update_rooms(
     let resp = request_client
         .lock()
         .await
-        .get("/room/group/list")
+        .get("/im/room/group/list")
         .query(&page_param)
         .send_json::<Page<im_room::Model>>()
         .await?;
