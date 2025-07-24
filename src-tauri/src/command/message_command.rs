@@ -237,6 +237,7 @@ pub async fn fetch_all_messages(
     uid: &str,
     last_opt_time: Option<i64>,
 ) -> Result<(), CommonError> {
+    info!("开始获取所有消息, uid: {}, last_opt_time: {:?}", uid, last_opt_time);
     // 调用后端接口 /chat/msg/list 获取所有消息，传递 last_opt_time 参数
     let mut request = client.get("/im/chat/msg/list");
 

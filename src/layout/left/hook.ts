@@ -13,6 +13,7 @@ import { useMenuTopStore } from '@/stores/menuTop.ts'
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import { useTauriListener } from '@/hooks/useTauriListener'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { info } from '@tauri-apps/plugin-log'
 
 export const leftHook = () => {
   const appWindow = WebviewWindow.getCurrent()
@@ -147,7 +148,8 @@ export const leftHook = () => {
   ) => {
     if (window) {
       delay(async () => {
-        await createWebviewWindow(
+        info(`打开窗口: ${title}`)
+        const webview = await createWebviewWindow(
           title!,
           url,
           <number>size?.width,
@@ -156,6 +158,12 @@ export const leftHook = () => {
           window?.resizable,
           <number>size?.minWidth
         )
+        openWindowsList.value.add(url)
+
+        const unlisten = await webview.onCloseRequested(() => {
+          openWindowsList.value.delete(url)
+          unlisten()
+        })
       }, 300)
     } else {
       activeUrl.value = url

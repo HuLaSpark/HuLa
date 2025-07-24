@@ -116,8 +116,11 @@ fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
     tauri_plugin_log::Builder::new()
         .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
         .skip_logger()
-        .level(log::LevelFilter::Info)
-        .level_for("sqlx::query", log::LevelFilter::Warn)
+        .level(log::LevelFilter::Debug)
+        .level_for("sqlx", log::LevelFilter::Debug)
+        .level_for("sqlx::query", log::LevelFilter::Debug)
+        .level_for("sea_orm", log::LevelFilter::Debug)
+        .level_for("sea_orm::query", log::LevelFilter::Debug)
         .level_for("hula_app_lib", log::LevelFilter::Debug)
         .targets([
             Target::new(TargetKind::Stdout),

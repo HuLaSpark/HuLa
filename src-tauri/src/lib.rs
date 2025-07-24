@@ -269,29 +269,29 @@ fn setup_logout_listener(app_handle: tauri::AppHandle) {
         let app_handle = app_handle_clone.clone();
         tauri::async_runtime::spawn(async move {
             log::info!("[LOGOUT] 开始关闭所有非login窗口");
-            
+
             let all_windows = app_handle.webview_windows();
             log::info!("[LOGOUT] 获取到 {} 个窗口", all_windows.len());
-            
+
             // 收集需要关闭的窗口
             let mut windows_to_close = Vec::new();
             for (label, window) in all_windows {
                 // 跳过 login 窗口，不关闭它
-                if label != "login" {
+                if label != "login" && label != "tray" {
                     windows_to_close.push((label, window));
                 }
             }
-            
+
             // 逐个关闭窗口，添加小延迟以避免并发关闭导致的错误
             for (label, window) in windows_to_close {
                 log::info!("[LOGOUT] 正在关闭窗口: {}", label);
-                
+
                 // 先隐藏窗口，减少用户感知的延迟
                 let _ = window.hide();
-                
+
                 // 添加小延迟，让窗口有时间处理正在进行的操作
                 // tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
-                
+
                 match window.destroy() {
                     Ok(_) => {
                         log::info!("[LOGOUT] 成功关闭窗口: {}", label);
@@ -301,12 +301,16 @@ fn setup_logout_listener(app_handle: tauri::AppHandle) {
                         if app_handle.get_webview_window(&label).is_none() {
                             log::info!("[LOGOUT] 窗口 {} 已不存在，跳过关闭", label);
                         } else {
-                            log::warn!("[LOGOUT] 关闭窗口 {} 时出现警告: {} (这通常是正常的)", label, error);
+                            log::warn!(
+                                "[LOGOUT] 关闭窗口 {} 时出现警告: {} (这通常是正常的)",
+                                label,
+                                error
+                            );
                         }
                     }
                 }
             }
-            
+
             log::info!("[LOGOUT] 所有非login窗口关闭完成");
         });
     });
