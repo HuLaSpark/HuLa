@@ -1,7 +1,7 @@
 use crate::AppData;
 use crate::error::CommonError;
 use crate::im_reqest_client::ImRequestClient;
-use crate::repository::im_contact_repository::{list_contact, save_contact_batch};
+use crate::repository::im_contact_repository::save_contact_batch;
 use anyhow::Context;
 use entity::im_contact;
 use log::{error, info};
