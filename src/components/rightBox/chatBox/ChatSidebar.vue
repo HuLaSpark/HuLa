@@ -110,7 +110,7 @@
       item-resizable
       @scroll="handleScroll($event)"
       :item-size="46"
-      :items="groupStore.userList">
+      :items="filteredUserList">
       <template #default="{ item }">
         <n-popover
           :ref="(el) => (infoPopoverRefs[item.uid] = el)"
@@ -281,17 +281,18 @@ const mergedUserList = computed(() => {
   return Array.from(userMap.values()).sort((a, b) => a.activeStatus - b.activeStatus)
 })
 
-// 修改watch监听器
+// 创建过滤后的用户列表计算属性
+const filteredUserList = computed(() => {
+  if (!searchRef.value) {
+    return mergedUserList.value
+  }
+  return mergedUserList.value.filter((user) => user.name.toLowerCase().includes(searchRef.value.toLowerCase()))
+})
+
+// 修改watch监听器 - 移除搜索逻辑避免递归
 watch(
   [() => groupStore.userList, () => cachedStore.currentAtUsersList],
   () => {
-    // 如果正在搜索，则应用搜索过滤
-    if (searchRef.value) {
-      groupStore.userList = mergedUserList.value.filter((user) =>
-        user.name.toLowerCase().includes(searchRef.value.toLowerCase())
-      )
-    }
-
     // 判断成员列表是否已加载完成
     if (groupStore.userList.length > 0 && currentLoadingRoomId.value === globalStore.currentSession?.roomId) {
       isLoadingMembers.value = false
@@ -305,8 +306,8 @@ watch(
  * @param value 输入值
  */
 const handleSearch = useDebounceFn((value: string) => {
-  // 从合并后的用户列表中搜索
-  groupStore.userList = mergedUserList.value.filter((user) => user.name.toLowerCase().includes(value.toLowerCase()))
+  // 直接更新 searchRef，让计算属性处理过滤逻辑
+  searchRef.value = value
 }, 10)
 
 /**
