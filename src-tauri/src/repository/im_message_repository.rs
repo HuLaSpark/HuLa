@@ -27,7 +27,7 @@ where
     } else {
         // 分批处理
         for (batch_index, chunk) in messages.chunks(BATCH_SIZE).enumerate() {
-            debug!(
+            info!(
                 "正在处理第 {} 批消息，共 {} 条",
                 batch_index + 1,
                 chunk.len()
