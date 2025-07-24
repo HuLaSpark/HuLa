@@ -10,15 +10,15 @@ pub struct Model {
     pub detail_id: String,
     pub room_id: String,
     #[serde(rename = "type")]
-    pub contact_type: Option<u8>,
-    pub hot_flag: Option<u8>,
+    pub contact_type: Option<u32>,
+    pub hot_flag: Option<u32>,
     pub top: Option<bool>,
     pub account: Option<String>,
-    pub operate: Option<u8>,
+    pub operate: Option<u32>,
     pub remark: Option<String>,
     pub my_name: Option<String>,
     // "通知类型 0 -> 允许接受消息 1 -> 接收但不提醒[免打扰] 4 -> 已退出群聊"
-    pub mute_notification: Option<u8>,
+    pub mute_notification: Option<u32>,
     // 删除会话
     pub hide: Option<bool>,
     pub active_time: Option<i64>,
@@ -28,7 +28,7 @@ pub struct Model {
     #[serde(rename = "name")]
     pub contact_name: Option<String>,
     pub text: Option<String>,
-    pub unread_count: Option<u8>,
+    pub unread_count: Option<u32>,
     pub create_time: Option<i64>,
     pub update_time: Option<i64>,
     #[serde(skip)]
