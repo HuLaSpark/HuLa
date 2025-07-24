@@ -586,7 +586,7 @@ const normalLogin = async () => {
   loading.value = true
   const { account, password } = info.value
   apis
-    .login({ account, password, source: 'mobile' })
+    .login({ account, password, deviceType: 'MOBILE', systemType: 2, grantType: 'PASSWORD' })
     .then(async (res) => {
       loginDisabled.value = true
       loginText.value = '登录成功, 正在跳转'

@@ -149,9 +149,12 @@ async function Http<T = any>(
     httpHeaders.set('Content-Type', 'application/json')
   }
 
-  // 设置Authorization
+  // 统一设置基础认证头
+  const basicAuth = btoa('luohuo_web_pro:luohuo_web_pro_secret')
+  httpHeaders.set('Authorization', `${basicAuth}`)
+
   if (token) {
-    httpHeaders.set('Authorization', `Bearer ${token}`)
+    httpHeaders.set('token', `${token}`)
   }
 
   // 设置浏览器指纹
@@ -276,7 +279,7 @@ async function Http<T = any>(
     } catch (error: any) {
       // 优化错误日志，仅在开发环境打印详细信息
       if (import.meta.env.DEV) {
-        console.error(`尝试 ${currentAttempt + 1} 失败 →`, error)
+        console.error(`${options.method} ${url} 尝试 ${currentAttempt + 1} 失败 →`, error)
       }
 
       // 处理网络相关错误
