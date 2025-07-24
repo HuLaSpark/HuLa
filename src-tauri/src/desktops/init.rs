@@ -68,24 +68,18 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
                 // 自定义系统托盘-实现托盘菜单失去焦点时隐藏
                 #[cfg(not(target_os = "macos"))]
                 if !window.label().eq("tray") && *flag {
-                    window
-                        .app_handle()
-                        .get_webview_window("tray")
-                        .unwrap()
-                        .hide()
-                        .unwrap();
+                    if let Some(tray_window) = window.app_handle().get_webview_window("tray") {
+                        let _ = tray_window.hide();
+                    }
                 }
                 if window.label().eq("tray") && !flag {
                     window.hide().unwrap();
                 }
                 #[cfg(target_os = "windows")]
                 if !window.label().eq("notify") && *flag {
-                    window
-                        .app_handle()
-                        .get_webview_window("notify")
-                        .unwrap()
-                        .hide()
-                        .unwrap();
+                    if let Some(notify_window) = window.app_handle().get_webview_window("notify") {
+                        let _ = notify_window.hide();
+                    }
                 }
                 #[cfg(target_os = "windows")]
                 if window.label().eq("notify") && !flag {
