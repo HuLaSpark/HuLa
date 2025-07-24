@@ -68,7 +68,7 @@ serde = { version = "1", features = ["derive"] }
 tokio = { version = "1.0.0", features = ["rt", "rt-multi-thread", "macros"] }
 tauri-plugin-devtools = "2.0.0"
 
-sea-orm = { version = "1.1.0", features = [ "sqlx-sqlite", "runtime-tokio-rustls", "macros" ] }
+sea-orm = { version = "1.1.0", features = [ "sqlx-sqlite", "runtime-tokio-rustls", "macros", "debug-print" ] }
 chrono = "0.4.41"
 
 entity = { path = "entity" }

@@ -1,8 +1,10 @@
 use crate::error::CommonError;
 use anyhow::Context;
-use sea_orm::{Database, DatabaseConnection};
+use sea_orm::{Database, DatabaseConnection, ConnectOptions};
 use std::path::PathBuf;
+use std::time::Duration;
 use tauri::{AppHandle, Manager};
+use log::LevelFilter;
 
 #[derive(serde::Deserialize, Clone, Debug)]
 pub struct Settings {
@@ -28,7 +30,20 @@ impl DatabaseSettings {
             get_database_path(app_handle)?
         };
         let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
-        let db: DatabaseConnection = Database::connect(db_url)
+        
+        // 配置数据库连接选项，启用 SQL 日志记录
+        let mut opt = ConnectOptions::new(db_url);
+        opt.max_connections(100)
+            .min_connections(5)
+            .connect_timeout(Duration::from_secs(8))
+            .acquire_timeout(Duration::from_secs(8))
+            .idle_timeout(Duration::from_secs(8))
+            .max_lifetime(Duration::from_secs(8))
+            // 启用 SQL 日志记录
+            .sqlx_logging(true)
+            .sqlx_logging_level(LevelFilter::Info);
+        
+        let db: DatabaseConnection = Database::connect(opt)
             .await
             .with_context(|| "连接数据库异常")?;
         Ok(db)

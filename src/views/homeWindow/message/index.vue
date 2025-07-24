@@ -1,7 +1,7 @@
 <template>
-  <!-- 消息列表 // TODO 使用虚拟列表组件就用不了动画和拖动了 (nyh -> 2024-03-28 06:01:00) -->
+  <!-- 会话列表 // TODO 使用虚拟列表组件就用不了动画和拖动了 (nyh -> 2024-03-28 06:01:00) -->
   <n-scrollbar ref="msg-scrollbar" style="max-height: calc(100vh - 70px)">
-    <!--  右键菜单组件  -->
+    <!--  会话列表  -->
     <div v-if="sessionList.length > 0" class="p-[4px_10px_0px_8px]">
       <ContextMenu
         v-for="item in sessionList"
