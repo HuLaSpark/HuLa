@@ -596,7 +596,7 @@ export const useChatMain = () => {
         // 如果item中没有roleId，则通过uid从群成员列表中查找
         if (targetRoleId === void 0) {
           const targetUser = groupStore.userList.find((user) => user.uid === targetUid)
-          targetRoleId = targetUser?.roleId
+          targetRoleId = targetUser?.groupRole
         }
 
         // 检查目标用户是否已经是管理员或群主
@@ -604,7 +604,7 @@ export const useChatMain = () => {
 
         // 5. 检查当前用户是否是群主
         const currentUser = groupStore.userList.find((user) => user.uid === userUid.value)
-        return currentUser?.roleId === RoleEnum.LORD
+        return currentUser?.groupRole === RoleEnum.LORD
       }
     },
     {
@@ -641,7 +641,7 @@ export const useChatMain = () => {
         // 如果item中没有roleId，则通过uid从群成员列表中查找
         if (targetRoleId === void 0) {
           const targetUser = groupStore.userList.find((user) => user.uid === targetUid)
-          targetRoleId = targetUser?.roleId
+          targetRoleId = targetUser?.groupRole
         }
 
         // 检查目标用户是否是管理员(只能撤销管理员,不能撤销群主)
@@ -649,7 +649,7 @@ export const useChatMain = () => {
 
         // 5. 检查当前用户是否是群主
         const currentUser = groupStore.userList.find((user) => user.uid === userUid.value)
-        return currentUser?.roleId === RoleEnum.LORD
+        return currentUser?.groupRole === RoleEnum.LORD
       }
     }
   ])
@@ -691,7 +691,7 @@ export const useChatMain = () => {
         // 如果item中没有roleId，则通过uid从群成员列表中查找
         if (targetRoleId === void 0) {
           const targetUser = groupStore.userList.find((user) => user.uid === targetUid)
-          targetRoleId = targetUser?.roleId
+          targetRoleId = targetUser?.groupRole
         }
 
         // 检查目标用户是否是群主(群主不能被移出)
@@ -699,8 +699,8 @@ export const useChatMain = () => {
 
         // 5. 检查当前用户是否有权限(群主或管理员)
         const currentUser = groupStore.userList.find((user) => user.uid === userUid.value)
-        const isLord = currentUser?.roleId === RoleEnum.LORD
-        const isAdmin = currentUser?.roleId === RoleEnum.ADMIN
+        const isLord = currentUser?.groupRole === RoleEnum.LORD
+        const isAdmin = currentUser?.groupRole === RoleEnum.ADMIN
 
         // 6. 如果当前用户是管理员,则不能移出其他管理员
         if (isAdmin && targetRoleId === RoleEnum.ADMIN) return false

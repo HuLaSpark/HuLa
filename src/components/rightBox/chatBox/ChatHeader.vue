@@ -433,7 +433,7 @@ const isGroupOwner = computed(() => {
 
   // 如果能在userList找到用户信息并确认角色，优先使用这个判断
   if (currentUser) {
-    return currentUser.roleId === RoleEnum.LORD
+    return currentUser.groupRole === RoleEnum.LORD
   }
 
   // 否则回退到countInfo中的角色信息
@@ -598,8 +598,8 @@ watch(
     // 当群成员列表更新时，重新检查当前用户的权限
     if (activeItem.type === RoomTypeEnum.GROUP) {
       const currentUser = groupStore.userList.find((user) => user.uid === userStore.userInfo.uid)
-      if (currentUser && currentUser.roleId) {
-        groupDetail.value.role = currentUser.roleId
+      if (currentUser && currentUser.groupRole) {
+        groupDetail.value.role = currentUser.groupRole
       }
     }
   },
@@ -654,7 +654,7 @@ const fetchGroupDetail = async () => {
     myNickname: groupStore.countInfo?.myName || '',
     groupRemark: groupStore.countInfo?.remark || '',
     // 优先使用userList中找到的角色信息，没有则使用countInfo中的role或默认值
-    role: currentUser?.roleId || groupStore.countInfo?.role || RoleEnum.NORMAL
+    role: currentUser?.groupRole || groupStore.countInfo?.role || RoleEnum.NORMAL
   }
   // 保存原始值，用于后续比较
   originalGroupDetail.value = {

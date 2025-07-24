@@ -231,11 +231,11 @@ provide('popoverControls', { enableScroll })
 
 const isLord = computed(() => {
   const currentUser = groupStore.userList.find((user) => user.uid === useUserStore().userInfo?.uid)
-  return currentUser?.roleId === RoleEnum.LORD
+  return currentUser?.groupRole === RoleEnum.LORD
 })
 const isAdmin = computed(() => {
   const currentUser = groupStore.userList.find((user) => user.uid === useUserStore().userInfo?.uid)
-  return currentUser?.roleId === RoleEnum.ADMIN
+  return currentUser?.groupRole === RoleEnum.ADMIN
 })
 
 /** 判断当前用户是否拥有id为6的徽章 并且是频道 */
