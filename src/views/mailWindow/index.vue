@@ -7,9 +7,6 @@
 </template>
 <script setup lang="ts">
 import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { useWindowState } from '@/hooks/useWindowState.ts'
-
-useWindowState(WebviewWindow.getCurrent().label)
 
 onMounted(async () => {
   await getCurrentWebviewWindow().show()
