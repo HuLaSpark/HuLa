@@ -186,16 +186,17 @@ watchEffect(() => {
   }
 
   pushListeners([
-    appWindow.listen(EventEnum.LOGOUT, async () => {
-      /** 退出账号前把窗口全部关闭 */
-      if (appWindow.label !== 'login') {
-        await nextTick()
-        // 设置程序内部关闭标志
-        isProgrammaticClose = true
-        // 针对不同系统采用不同关闭策略
-        await appWindow.close()
-      }
-    }),
+    // appWindow.listen(EventEnum.LOGOUT, async () => {
+    //   /** 退出账号前把窗口全部关闭 */
+    //   if (appWindow.label !== 'login') {
+    //     info('退出账号前把窗口全部关闭1111')
+    //     await nextTick()
+    //     // 设置程序内部关闭标志
+    //     isProgrammaticClose = true
+    //     // 针对不同系统采用不同关闭策略
+    //     await appWindow.close()
+    //   }
+    // }),
     appWindow.listen(EventEnum.EXIT, async () => {
       // 设置程序内部关闭标志
       isProgrammaticClose = true

@@ -38,12 +38,11 @@ export const useLogin = () => {
     const { createWebviewWindow } = useWindow()
     isTrayMenuShow.value = false
     try {
-      clearListener()
       await invokeSilently(TauriCommand.UPDATE_USER_LAST_OPT_TIME)
-      // 发送登出事件
-      await emit(EventEnum.LOGOUT)
       // 创建登录窗口
       await createWebviewWindow('登录', 'login', 320, 448, undefined, false, 320, 448)
+      // 发送登出事件
+      await emit(EventEnum.LOGOUT)
       // 调整托盘大小
       await resizeWindow('tray', 130, 44)
     } catch (error) {
