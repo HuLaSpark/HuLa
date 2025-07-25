@@ -805,9 +805,6 @@ const handleShield = (value: boolean) => {
       // 1. 先保存当前聊天室ID
       const tempRoomId = globalStore.currentSession.roomId
 
-      // 2. 设置为空值，触发清除当前消息
-      globalStore.currentSession.roomId = ''
-
       // 3. 在下一个tick中恢复原来的聊天室ID，触发重新加载消息
       nextTick(() => {
         globalStore.currentSession.roomId = tempRoomId

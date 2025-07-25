@@ -256,7 +256,7 @@ impl<'a> RequestBuilderWrapper<'a> {
             log_message.push_str(&format!(" 请求体: {}", json_body));
         }
 
-        debug!("{}", log_message);
+        info!("{}", log_message);
 
         // 获取 token 并添加到请求头
         let current_token = {

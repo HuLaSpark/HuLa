@@ -113,8 +113,7 @@ fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
         .level(log::LevelFilter::Debug)
         .level_for("sqlx", log::LevelFilter::Debug)
         .level_for("sqlx::query", log::LevelFilter::Debug)
-        .level_for("sea_orm", log::LevelFilter::Debug)
-        .level_for("sea_orm::query", log::LevelFilter::Debug)
+        .level_for("sea_orm", log::LevelFilter::Info)
         .level_for("hula_app_lib", log::LevelFilter::Debug)
         .targets([
             Target::new(TargetKind::Stdout),

@@ -183,7 +183,7 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
    * 如果是大厅（roomId=1）则不执行
    */
   const getGroupAtUserBaseInfo = async () => {
-    if (currentRoomId.value === '1' || currentRoomId.value == null) return
+    if (!currentRoomId.value || currentRoomId.value === '1') return
     const data: any = await invokeWithErrorHandler(
       TauriCommand.GET_ROOM_MEMBERS,
       {
