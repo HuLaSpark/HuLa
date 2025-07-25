@@ -5,6 +5,7 @@ import { type } from '@tauri-apps/plugin-os'
 import { UserAttentionType } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
+import { info } from '@tauri-apps/plugin-log'
 
 /** 判断是兼容的系统 */
 const isCompatibility = computed(() => type() === 'windows' || type() === 'linux')
@@ -68,6 +69,7 @@ export const useWindow = () => {
     })
 
     await webview.once('tauri://error', async () => {
+      info('窗口创建失败')
       // TODO 这里利用错误处理的方式来查询是否是已经创建了窗口,如果一开始就使用WebviewWindow.getByLabel来查询在刷新的时候就会出现问题 (nyh -> 2024-03-06 23:54:17)
       await checkWinExist(label)
     })

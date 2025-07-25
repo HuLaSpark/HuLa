@@ -18,6 +18,7 @@ import { useDebounceFn } from '@vueuse/core'
 import { URLEnum } from '@/enums'
 // 使用类型导入避免直接执行代码
 import type { useNetworkReconnect as UseNetworkReconnectType } from '@/hooks/useNetworkReconnect'
+import { info } from '@tauri-apps/plugin-log'
 
 // 创建 webSocket worker
 const worker: Worker = new Worker(new URL('../workers/webSocket.worker.ts', import.meta.url), {
@@ -91,6 +92,7 @@ class WS {
   #unwatchFunctions: (() => void)[] = []
 
   constructor() {
+    info('[ws] webSocket 服务初始化')
     this.initWindowType()
     if (isMainWindow) {
       this.initConnect()
@@ -182,6 +184,7 @@ class WS {
     }
 
     try {
+      info('[ws] 创建Tauri窗口事件监听')
       // 设置各种Tauri窗口事件监听器
       // 窗口失去焦点 - 隐藏状态
       await listen('tauri://blur', createStateChangeHandler(false))
@@ -683,4 +686,5 @@ class WS {
   }
 }
 
-export default new WS()
+const ws = new WS()
+export default ws
