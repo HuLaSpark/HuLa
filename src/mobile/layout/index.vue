@@ -17,7 +17,7 @@
     </div>
 
     <!-- 底部安全区域占位元素 -->
-    <SafeAreaPlaceholder direction="bottom" />
+    <SafeAreaPlaceholder v-if="uiViewData.isShowSafeArea" direction="bottom" />
   </div>
 </template>
 
@@ -30,35 +30,82 @@ import { calculateElementPosition } from '@/utils/DomCalculate'
 
 const mobileStore = useMobileStore()
 
+const envType = mobileStore.envType
+const safeArea = computed(() => mobileStore.safeArea)
+const uiViewData = ref({
+  isShowSafeArea: true
+})
+
 const tabBarElement = ref<InstanceType<typeof TabBar>>()
 
-/**
- * 更新TabBar位置信息，用于可能出现的组件位置计算需求
- */
-const updateTabBarPositionStore = async () => {
+const initTabBarPositionStore = async () => {
   try {
     const rect = await calculateElementPosition(tabBarElement)
-    if (rect) {
-      console.log('TabBar位置:', rect)
-      mobileStore.updateBottomTabBarPosition(rect)
+
+    if (!rect) {
+      return
     }
+
+    mobileStore.updateTabBarPosition({
+      newPosition: rect,
+      isInit: true
+    })
+
+    // console.log('初始化位置：', rect)
+    // console.log('初始位置状态：', mobileStore.initBottomTabBarPosition.top)
+    // console.log('当前位置状态：', mobileStore.bottomTabBarPosition.top)
   } catch (error) {
     console.error(error)
   }
 }
 
-const debouncedCalculate = debounce(updateTabBarPositionStore, 200)
+const updateSafeAreaState = (initTopPosition: number, newTopPosition: number) => {
+  // console.log('初始位置：', initTopPosition)
+  // console.log('新位置：', newTopPosition)
+  // console.log('位置计算结果：', Math.abs(initTopPosition - newTopPosition))
+
+  // 这个判断程序可能是以小窗口启动，然后放大到全屏，这时差距变化会非常的大
+
+  if (newTopPosition > initTopPosition) {
+    uiViewData.value.isShowSafeArea = true
+  } else {
+    uiViewData.value.isShowSafeArea = false
+  }
+}
+
+const updateTabBarPositionStore = async () => {
+  try {
+    const rect = await calculateElementPosition(tabBarElement)
+
+    if (!rect) {
+      return
+    }
+
+    updateSafeAreaState(mobileStore.initBottomTabBarPosition.top, rect.top)
+
+    mobileStore.updateTabBarPosition({
+      newPosition: rect,
+      isInit: false
+    })
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+const debouncedUpdateCalculate = debounce(updateTabBarPositionStore, 150)
 
 /**
  * 启动TabBar组件的位置监听，并且首次加载时计算其所在位置，并保存到缓存中
  */
 const startTabBarPositionListener = () => {
-  updateTabBarPositionStore()
-  window.addEventListener('resize', debouncedCalculate)
+  initTabBarPositionStore()
+  window.addEventListener('resize', debouncedUpdateCalculate)
+  window.visualViewport?.addEventListener('resize', debouncedUpdateCalculate)
 }
 
 const stopTabBarPositionListener = () => {
-  window.removeEventListener('resize', debouncedCalculate)
+  debouncedUpdateCalculate.cancel()
+  window.removeEventListener('resize', debouncedUpdateCalculate)
 }
 
 onMounted(() => {
@@ -68,9 +115,6 @@ onMounted(() => {
 onUnmounted(() => {
   stopTabBarPositionListener()
 })
-
-const envType = mobileStore.envType
-const safeArea = computed(() => mobileStore.safeArea)
 </script>
 
 <style lang="scss"></style>

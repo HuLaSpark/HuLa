@@ -88,7 +88,6 @@ import { ref } from 'vue'
 import SafeAreaPlaceholder from '@/mobile/components/placeholders/SafeAreaPlaceholder.vue'
 import { calculateElementPosition } from '@/utils/DomCalculate'
 import { useMobileStore } from '@/stores/mobile'
-import { debounce } from 'lodash-es'
 
 const mobileStore = useMobileStore()
 
@@ -115,45 +114,34 @@ const adjustDynamicArea = async () => {
   const offset = 0 // 视觉贴边偏移
   const diff = tabBarTop - targetBottom
 
-  console.log('[adjustDynamicArea] 元素 rect:', rect)
-  console.log('[adjustDynamicArea] TabBar top:', tabBarTop)
-  console.log('[adjustDynamicArea] 元素 bottom:', targetBottom)
-  console.log('[adjustDynamicArea] 计算差值 diff:', diff)
+  // console.log('[adjustDynamicArea] 元素 rect:', rect)
+  // console.log('[adjustDynamicArea] TabBar top:', tabBarTop)
+  // console.log('[adjustDynamicArea] 元素 bottom:', targetBottom)
+  // console.log('[adjustDynamicArea] 计算差值 diff:', diff)
 
   if (diff > offset) {
     const newHeight = rect.height + diff - offset
-    console.log(`[adjustDynamicArea] 底部未贴合，增加高度 → ${newHeight}px`)
+    // console.log(`[adjustDynamicArea] 底部未贴合，增加高度 → ${newHeight}px`)
     dynamicAreaRef.value!.style.height = `${newHeight}px`
   } else if (diff < 0) {
     const newHeight = rect.height + diff - offset
-    console.log(`[adjustDynamicArea] 内容被遮挡，缩小高度 → ${newHeight}px`)
+    // console.log(`[adjustDynamicArea] 内容被遮挡，缩小高度 → ${newHeight}px`)
     dynamicAreaRef.value!.style.height = `${newHeight}px`
   } else {
     console.log('[adjustDynamicArea] 高度无需调整，当前已贴合')
   }
 }
 
-const debouncedCalculate = debounce(adjustDynamicArea, 200)
-
-/**
- * 启动TabBar组件的位置监听，并且首次加载时计算其所在位置，并保存到缓存中
- */
-const startTabBarPositionListener = () => {
-  adjustDynamicArea()
-  window.addEventListener('resize', debouncedCalculate)
-}
-
-const stopTabBarPositionListener = () => {
-  window.removeEventListener('resize', debouncedCalculate)
-}
-
 onMounted(() => {
-  startTabBarPositionListener()
+  adjustDynamicArea()
 })
 
-onUnmounted(() => {
-  stopTabBarPositionListener()
-})
+watch(
+  () => mobileStore.bottomTabBarPosition,
+  () => {
+    adjustDynamicArea()
+  }
+)
 </script>
 
 <style scoped>

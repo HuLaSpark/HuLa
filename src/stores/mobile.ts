@@ -14,6 +14,18 @@ export const useMobileStore = defineStore(StoresEnum.MOBILE, () => {
 
   const envType = _envType
 
+  const initBottomTabBarPosition = ref<DOMRect>({
+    height: 0,
+    width: 0,
+    x: 0,
+    y: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    top: 0,
+    toJSON: function () {}
+  })
+
   const bottomTabBarPosition = ref<DOMRect>({
     height: 0,
     width: 0,
@@ -35,13 +47,23 @@ export const useMobileStore = defineStore(StoresEnum.MOBILE, () => {
 
   const updateSafeArea = (newSafeArea: SafeArea) => {
     safeArea.value = newSafeArea
-    console.log('写入缓存：', safeArea.value)
+    console.log('安全区域更新：', safeArea.value)
   }
 
-  const updateBottomTabBarPosition = (newPosition: DOMRect) => {
-    bottomTabBarPosition.value = newPosition
-    console.log('位置更新：', bottomTabBarPosition.value)
+  const updateTabBarPosition = (options: { newPosition: DOMRect; isInit: boolean }) => {
+    bottomTabBarPosition.value = options.newPosition
+    if (options.isInit) {
+      console.log('位置状态初始化')
+      initBottomTabBarPosition.value = options.newPosition
+    }
   }
 
-  return { safeArea, envType, updateSafeArea, updateBottomTabBarPosition, bottomTabBarPosition }
+  return {
+    safeArea,
+    envType,
+    updateSafeArea,
+    updateTabBarPosition,
+    bottomTabBarPosition,
+    initBottomTabBarPosition
+  }
 })
