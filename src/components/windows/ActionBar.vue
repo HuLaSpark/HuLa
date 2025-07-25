@@ -3,6 +3,7 @@
   <div
     :data-tauri-drag-region="isDrag"
     :class="isCompatibility ? 'flex justify-end select-none' : 'h-24px select-none w-full'">
+    <!-- win 和 linux 的DOM -->
     <template v-if="isCompatibility">
       <!--  登录窗口的代理按钮  -->
       <div v-if="proxy" @click="router.push('/network')" class="w-30px h-24px flex-center">
@@ -96,6 +97,7 @@ import { type } from '@tauri-apps/plugin-os'
 import router from '@/router'
 import { exit } from '@tauri-apps/plugin-process'
 import { useTauriListener } from '@/hooks/useTauriListener'
+import { info } from '@tauri-apps/plugin-log'
 
 const appWindow = WebviewWindow.getCurrent()
 const {
@@ -119,7 +121,7 @@ const {
   isDrag?: boolean
 }>()
 const { getWindowTop, setWindowTop } = useAlwaysOnTopStore()
-const { pushListeners } = useTauriListener()
+const { pushListeners, cleanup } = useTauriListener()
 const settingStore = useSettingStore()
 const { tips, escClose } = storeToRefs(settingStore)
 const { resizeWindow } = useWindow()
@@ -186,17 +188,6 @@ watchEffect(() => {
   }
 
   pushListeners([
-    // appWindow.listen(EventEnum.LOGOUT, async () => {
-    //   /** 退出账号前把窗口全部关闭 */
-    //   if (appWindow.label !== 'login') {
-    //     info('退出账号前把窗口全部关闭1111')
-    //     await nextTick()
-    //     // 设置程序内部关闭标志
-    //     isProgrammaticClose = true
-    //     // 针对不同系统采用不同关闭策略
-    //     await appWindow.close()
-    //   }
-    // }),
     appWindow.listen(EventEnum.EXIT, async () => {
       // 设置程序内部关闭标志
       isProgrammaticClose = true
@@ -301,8 +292,27 @@ const handleCloseWin = async () => {
 useMitt.on('handleCloseWin', handleCloseWin)
 // 添加和移除resize事件监听器
 onMounted(async () => {
+  // info('ActionBar 组件已挂载')
   window.addEventListener('resize', handleResize)
   osType.value = type()
+
+  info('ActionBar 组件已挂载 当前窗口为: ' + appWindow.label)
+  // 监听 home 窗口的关闭事件
+  if (appWindow.label == 'home') {
+    appWindow.onCloseRequested((event) => {
+      info('监听[home]窗口关闭事件')
+
+      if (isProgrammaticClose) {
+        // 清理监听器
+        info('清理[home]窗口的监听器')
+        cleanup()
+        exit(0)
+      }
+      info('阻止[home]窗口关闭事件')
+      tipsRef.show = true
+      event.preventDefault()
+    })
+  }
 })
 
 onUnmounted(() => {
