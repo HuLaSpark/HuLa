@@ -110,7 +110,7 @@
       item-resizable
       @scroll="handleScroll($event)"
       :item-size="46"
-      :items="filteredUserList">
+      :items="groupStore.userList">
       <template #default="{ item }">
         <n-popover
           :ref="(el) => (infoPopoverRefs[item.uid] = el)"
@@ -146,7 +146,9 @@
                       @error="userLoadedMap[item.uid] = true" />
                   </div>
                   <n-flex vertical :size="2" class="flex-1 truncate">
-                    <p :title="item.name" class="text-12px truncate flex-1">{{ item.name }}</p>
+                    <p :title="item.name" class="text-12px truncate flex-1">
+                      {{ item.myName ? item.myName : item.name }}
+                    </p>
                     <n-flex
                       v-if="item.userStateId && getUserState(item.userStateId)"
                       align="center"
@@ -161,12 +163,12 @@
                 </n-flex>
 
                 <div
-                  v-if="item.roleId === RoleEnum.LORD"
+                  v-if="item.groupRole === RoleEnum.LORD"
                   class="flex px-4px bg-#d5304f30 py-3px rounded-4px size-fit select-none">
                   <p class="text-(10px #d5304f)">群主</p>
                 </div>
                 <div
-                  v-if="item.roleId === RoleEnum.ADMIN"
+                  v-if="item.groupRole === RoleEnum.ADMIN"
                   class="flex px-4px bg-#1a7d6b30 py-3px rounded-4px size-fit select-none">
                   <p class="text-(10px #008080)">管理员</p>
                 </div>
@@ -189,7 +191,6 @@ import { useMitt } from '@/hooks/useMitt.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { useGlobalStore } from '@/stores/global.ts'
-import type { UserItem } from '@/services/types.ts'
 import { useDebounceFn } from '@vueuse/core'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { useCachedStore } from '@/stores/cached.ts'
@@ -216,42 +217,6 @@ const isLoadingMembers = ref(true)
 const isLoadingAnnouncement = ref(true)
 // 在线人数加载状态
 const isLoadingOnlineCount = ref(true)
-const groupUserList = computed(() => groupStore.userList)
-const userList = computed(() => {
-  // 先获取所有需要的用户ID
-  const userIds = groupUserList.value.map((item) => item.uid)
-
-  // 确保所有用户信息都被加载
-  if (userIds.length > 0) {
-    cachedStore.getBatchUserInfo(userIds)
-  }
-
-  return groupUserList.value
-    .map((item: UserItem) => {
-      const cachedUser = useUserInfo(item.uid).value
-      // 合并数据时保留所有需要的字段
-      return {
-        ...item, // 保留原始数据
-        ...cachedUser, // 合并缓存的用户数据
-        account: cachedUser.account || item.account, // 确保accountCode被保留
-        uid: item.uid // 确保uid被保留
-      }
-    })
-    .sort((a, b) => {
-      // roleId === 1 的排在最前面
-      // 首先按照roleId排序
-      if (a.roleId !== b.roleId) {
-        // roleId === 2 的排在第二位
-        if (a.roleId === RoleEnum.LORD) return -1
-        if (b.roleId === RoleEnum.LORD) return 1
-        if (a.roleId === RoleEnum.ADMIN) return -1
-        if (b.roleId === RoleEnum.ADMIN) return 1
-      }
-      // roleId相同时，按照activeStatus升序排序
-      return a.activeStatus - b.activeStatus
-    })
-})
-const filteredUserList = shallowRef(userList.value)
 const isGroup = computed(() => globalStore.currentSession?.type === RoomTypeEnum.GROUP)
 /** 是否是搜索模式 */
 const isSearch = ref(false)
@@ -265,11 +230,11 @@ const { handlePopoverUpdate, enableScroll } = usePopover(selectKey, 'image-chat-
 provide('popoverControls', { enableScroll })
 
 const isLord = computed(() => {
-  const currentUser = groupUserList.value.find((user) => user.uid === useUserStore().userInfo?.uid)
+  const currentUser = groupStore.userList.find((user) => user.uid === useUserStore().userInfo?.uid)
   return currentUser?.roleId === RoleEnum.LORD
 })
 const isAdmin = computed(() => {
-  const currentUser = groupUserList.value.find((user) => user.uid === useUserStore().userInfo?.uid)
+  const currentUser = groupStore.userList.find((user) => user.uid === useUserStore().userInfo?.uid)
   return currentUser?.roleId === RoleEnum.ADMIN
 })
 
@@ -296,7 +261,7 @@ const mergedUserList = computed(() => {
   const userMap = new Map()
 
   // 首先添加在线用户列表
-  userList.value.forEach((user) => {
+  groupStore.userList.forEach((user) => {
     userMap.set(user.uid, user)
   })
 
@@ -318,19 +283,17 @@ const mergedUserList = computed(() => {
 
 // 修改watch监听器
 watch(
-  [userList, () => cachedStore.currentAtUsersList],
+  [() => groupStore.userList, () => cachedStore.currentAtUsersList],
   () => {
     // 如果正在搜索，则应用搜索过滤
     if (searchRef.value) {
-      filteredUserList.value = mergedUserList.value.filter((user) =>
+      groupStore.userList = mergedUserList.value.filter((user) =>
         user.name.toLowerCase().includes(searchRef.value.toLowerCase())
       )
-    } else {
-      filteredUserList.value = userList.value
     }
 
     // 判断成员列表是否已加载完成
-    if (userList.value.length > 0 && currentLoadingRoomId.value === globalStore.currentSession?.roomId) {
+    if (groupStore.userList.length > 0 && currentLoadingRoomId.value === globalStore.currentSession?.roomId) {
       isLoadingMembers.value = false
     }
   },
@@ -342,14 +305,8 @@ watch(
  * @param value 输入值
  */
 const handleSearch = useDebounceFn((value: string) => {
-  if (!value) {
-    // 如果搜索框为空，只显示在线用户列表
-    filteredUserList.value = userList.value
-    return
-  }
-
   // 从合并后的用户列表中搜索
-  filteredUserList.value = mergedUserList.value.filter((user) => user.name.toLowerCase().includes(value.toLowerCase()))
+  groupStore.userList = mergedUserList.value.filter((user) => user.name.toLowerCase().includes(value.toLowerCase()))
 }, 10)
 
 /**
@@ -359,8 +316,6 @@ const handleBlur = () => {
   if (searchRef.value) return
   isSearch.value = false
   searchRef.value = ''
-  // 重置为只显示在线用户列表
-  filteredUserList.value = userList.value
 }
 
 /**
@@ -481,7 +436,7 @@ onMounted(async () => {
           currentLoadingRoomId.value = newSession.roomId
           // 重置群组数据后再加载新的群成员数据
           groupStore.resetGroupData()
-          await groupStore.getGroupUserList(true, newSession.roomId)
+          await groupStore.getGroupUserList()
           // 获取群组统计信息（包括在线人数）
           await groupStore.getCountStatistic()
           isLoadingOnlineCount.value = false
@@ -494,8 +449,8 @@ onMounted(async () => {
   )
 
   // 初始化时获取当前群组用户的信息
-  if (groupUserList.value.length > 0) {
-    await cachedStore.getBatchUserInfo(groupUserList.value.map((item) => item.uid))
+  if (groupStore.userList.length > 0) {
+    await cachedStore.getBatchUserInfo(groupStore.userList.map((item) => item.uid))
     const handleAnnounInitOnEvent = (shouldReload: boolean) => {
       return async (event: any) => {
         if (shouldReload || event) {

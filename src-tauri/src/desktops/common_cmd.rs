@@ -6,9 +6,7 @@ use screenshots::Screen;
 use serde::Serialize;
 use std::cmp;
 use std::path::PathBuf;
-use std::sync::{
-    Arc, RwLock,
-};
+use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::Duration;
 use tauri::path::BaseDirectory;
@@ -22,7 +20,6 @@ pub struct DiskInfo {
     used_space: u64,
     usage_percentage: f64,
 }
-
 
 #[cfg(target_os = "macos")]
 #[allow(deprecated)]
@@ -283,9 +280,3 @@ pub async fn get_files_meta(files_path: Vec<String>) -> Result<Vec<FileMeta>, St
 
     Ok(files_meta)
 }
-
-
-
-
-
-

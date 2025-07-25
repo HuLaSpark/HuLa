@@ -4,7 +4,9 @@ import { useGlobalStore } from '@/stores/global'
 import type { CacheBadgeItem, CacheUserItem } from '@/services/types'
 import { isDiffNow10Min } from '@/utils/ComputedTime.ts'
 import { useDebounceFn } from '@vueuse/core'
-import { StoresEnum } from '@/enums'
+import { StoresEnum, TauriCommand } from '@/enums'
+import { invokeWithErrorHandler, invokeSilently, ErrorType } from '@/utils/TauriInvokeHandler.ts'
+import { useGroupStore } from './group'
 
 // 定义基础用户信息类型，只包含uid、头像和名称
 export type BaseUserItem = Pick<CacheUserItem, 'uid' | 'avatar' | 'name' | 'account'>
@@ -157,7 +159,17 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
   const initAllUserBaseInfo = async () => {
     // 这里获取的是全员群的全部用户信息，所以取1作为roomId
     if (localStorage.getItem('IS_INIT_USER_BASE') === null) {
-      const data = await apis.getAllUserBaseInfo({ roomId: 1 })
+      // const data = await apis.getAllUserBaseInfo({ roomId: 1 })
+      const data: any = await invokeWithErrorHandler(
+        TauriCommand.GET_ROOM_MEMBERS,
+        {
+          roomId: '1'
+        },
+        {
+          customErrorMessage: '获取房间成员失败',
+          errorType: ErrorType.Network
+        }
+      )
       for (const item of data || []) {
         userCachedList[item.uid] = item
       }
@@ -165,12 +177,26 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
     }
   }
 
+  const groupStore = useGroupStore()
+
   /** 获取群组内可@的用户基本信息
    * 如果是大厅（roomId=1）则不执行
    */
   const getGroupAtUserBaseInfo = async () => {
-    if (currentRoomId.value === '1') return
-    currentAtUsersList.value = await apis.getAllUserBaseInfo({ roomId: currentRoomId.value })
+    if (currentRoomId.value === '1' || currentRoomId.value == null) return
+    const data: any = await invokeWithErrorHandler(
+      TauriCommand.GET_ROOM_MEMBERS,
+      {
+        roomId: currentRoomId.value.toString()
+      },
+      {
+        customErrorMessage: '获取群组成员失败',
+        errorType: ErrorType.Network
+      }
+    )
+    // 更新 groupStore 中的 userList
+    groupStore.userList = data
+    currentAtUsersList.value = data
   }
 
   /**
@@ -272,6 +298,13 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
     }
   }
 
+  const updateMyRoomInfo = async (data: any) => {
+    await invokeSilently(TauriCommand.UPDATE_MY_ROOM_INFO, {
+      myRoomInfo: data
+    })
+    await getGroupAtUserBaseInfo()
+  }
+
   return {
     userCachedList,
     badgeCachedList,
@@ -287,6 +320,7 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
     updateUserGroupNickname,
     getUserGroupNickname,
     userGroupNicknameMap,
-    getGroupAnnouncementList
+    getGroupAnnouncementList,
+    updateMyRoomInfo
   }
 })

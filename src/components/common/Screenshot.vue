@@ -20,8 +20,8 @@
 </template>
 
 <script setup>
-import { invoke } from '@tauri-apps/api/core'
 import { writeImage } from '@tauri-apps/plugin-clipboard-manager'
+import { invokeWithErrorHandler, ErrorType } from '@/utils/TauriInvokeHandler.ts'
 import { useCanvasTool } from '@/hooks/useCanvasTool'
 import { useTauriListener } from '@/hooks/useTauriListener'
 
@@ -112,7 +112,10 @@ async function initCanvas() {
     height: `${canvasHeight}`
   }
 
-  const screenshotData = await invoke('screenshot', config)
+  const screenshotData = await invokeWithErrorHandler('screenshot', config, {
+    errorMessage: '截图失败',
+    errorType: ErrorType.Client
+  })
 
   if (imgCanvas.value && maskCanvas.value) {
     imgCanvas.value.width = canvasWidth

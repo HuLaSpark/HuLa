@@ -192,6 +192,10 @@ import { clearListener } from '@/utils/ReadCountQueue'
 import { useGlobalStore } from '@/stores/global'
 import { type } from '@tauri-apps/plugin-os'
 import { useCheckUpdate } from '@/hooks/useCheckUpdate'
+import { emit } from '@tauri-apps/api/event'
+import { TauriCommand } from '~/src/enums'
+import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
+import { ErrorType } from '@/common/exception'
 
 const isCompatibility = computed(() => type() === 'windows' || type() === 'linux')
 const settingStore = useSettingStore()
@@ -364,6 +368,7 @@ const normalLogin = async (auto = false) => {
       // 存储双token
       localStorage.setItem('TOKEN', res.token)
       localStorage.setItem('REFRESH_TOKEN', res.refreshToken)
+
       // 需要删除二维码，因为用户可能先跳转到二维码界面再回到登录界面，会导致二维码一直保持在内存中
       if (localStorage.getItem('wsLogin')) {
         localStorage.removeItem('wsLogin')
@@ -386,16 +391,35 @@ const normalLogin = async (auto = false) => {
       const account = {
         ...userDetail,
         token: res.token,
+        refreshToken: res.refreshToken,
         client: res.client
       }
       userStore.userInfo = account
       loginHistoriesStore.addLoginHistory(account)
 
+      await invokeWithErrorHandler(
+        TauriCommand.SAVE_USER_INFO,
+        {
+          userInfo: account
+        },
+        {
+          customErrorMessage: '保存用户信息失败',
+          errorType: ErrorType.Client
+        }
+      )
+
+      await emit('set_user_info', {
+        token: res.token,
+        refreshToken: res.refreshToken,
+        uid: account.uid
+      })
+
       await setLoginState()
       await openHomeWindow()
       loading.value = false
     })
-    .catch(() => {
+    .catch((e) => {
+      console.error('登录异常：', e)
       loading.value = false
       loginDisabled.value = false
       loginText.value = '登录'

@@ -146,7 +146,7 @@
 </template>
 
 <script setup lang="ts">
-import { invoke } from '@tauri-apps/api/core'
+import { invokeWithErrorHandler, invokeSilently, ErrorType } from '@/utils/TauriInvokeHandler.ts'
 import { listen } from '@tauri-apps/api/event'
 import { open } from '@tauri-apps/plugin-dialog'
 import { appCacheDir } from '@tauri-apps/api/path'
@@ -273,9 +273,16 @@ const startScan = async () => {
   }
 
   try {
-    const result = await invoke<DirectoryInfo>('get_directory_usage_info_with_progress', {
-      directoryPath: currentDirectory.value
-    })
+    const result = await invokeWithErrorHandler<DirectoryInfo>(
+      'get_directory_usage_info_with_progress',
+      {
+        directoryPath: currentDirectory.value
+      },
+      {
+        customErrorMessage: '获取目录信息失败',
+        errorType: ErrorType.Client
+      }
+    )
 
     diskInfo.value = result
     totalSize.value = result.total_size
@@ -290,7 +297,7 @@ const startScan = async () => {
 // 取消扫描的方法
 const cancelScan = async () => {
   try {
-    await invoke('cancel_directory_scan')
+    await invokeSilently('cancel_directory_scan')
     console.log('扫描已取消')
   } catch (error) {
     console.error('取消扫描失败:', error)
