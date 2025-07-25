@@ -154,47 +154,38 @@ watchEffect(() => {
   }
 
   // 添加关闭事件拦截逻辑 - 只拦截 home 窗口
-  if (appWindow.label === 'home' && !unlistenCloseRequested) {
-    // 监听原生关闭事件
-    appWindow
-      .onCloseRequested((event) => {
-        // 如果是程序内部触发的关闭操作，不拦截
-        if (isProgrammaticClose) {
-          return
-        }
-        // 阻止默认关闭行为
-        event.preventDefault()
-        if (!tips.value.notTips) {
-          tipsRef.show = true
-        } else {
-          if (tips.value.type === CloseBxEnum.CLOSE) {
-            // 用户选择直接退出
-            console.log('用户设置为直接退出应用')
-            emit(EventEnum.EXIT)
-          } else {
-            // 用户选择最小化到托盘
-            console.log('用户设置为最小化到托盘')
-            appWindow.hide()
-          }
-        }
-      })
-      .then((unlisten) => {
-        console.log('macOS home窗口关闭按钮事件监听器已设置')
-        unlistenCloseRequested = unlisten
-      })
-      .catch((error) => {
-        console.error('设置 macOS home窗口关闭按钮监听器失败:', error)
-      })
-  }
-
-  addListener(
-    appWindow.listen(EventEnum.EXIT, async () => {
-      // 设置程序内部关闭标志
-      isProgrammaticClose = true
-      await exit(0)
-    })
-  )
-
+  // if (appWindow.label === 'home' && !unlistenCloseRequested) {
+  //   // 监听原生关闭事件
+  //   appWindow
+  //     .onCloseRequested((event) => {
+  //       // 如果是程序内部触发的关闭操作，不拦截
+  //       if (isProgrammaticClose) {
+  //         return
+  //       }
+  //       // 阻止默认关闭行为
+  //       event.preventDefault()
+  //       if (!tips.value.notTips) {
+  //         tipsRef.show = true
+  //       } else {
+  //         if (tips.value.type === CloseBxEnum.CLOSE) {
+  //           // 用户选择直接退出
+  //           console.log('用户设置为直接退出应用')
+  //           emit(EventEnum.EXIT)
+  //         } else {
+  //           // 用户选择最小化到托盘
+  //           console.log('用户设置为最小化到托盘')
+  //           appWindow.hide()
+  //         }
+  //       }
+  //     })
+  //     .then((unlisten) => {
+  //       console.log('macOS home窗口关闭按钮事件监听器已设置')
+  //       unlistenCloseRequested = unlisten
+  //     })
+  //     .catch((error) => {
+  //       console.error('设置 macOS home窗口关闭按钮监听器失败:', error)
+  //     })
+  // }
   if (escClose.value && type() === 'windows') {
     window.addEventListener('keydown', (e) => isEsc(e))
   } else {
@@ -296,11 +287,16 @@ onMounted(async () => {
   window.addEventListener('resize', handleResize)
   osType.value = type()
 
+  addListener(
+    appWindow.listen(EventEnum.EXIT, async () => {
+      await exit(0)
+    })
+  )
+
   // 监听 home 窗口的关闭事件
   if (appWindow.label == 'home') {
     appWindow.onCloseRequested((event) => {
       info('[ActionBar]监听[home]窗口关闭事件')
-
       if (isProgrammaticClose) {
         // 清理监听器
         info('[ActionBar]清理[home]窗口的监听器')
