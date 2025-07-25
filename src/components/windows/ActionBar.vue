@@ -121,7 +121,7 @@ const {
   isDrag?: boolean
 }>()
 const { getWindowTop, setWindowTop } = useAlwaysOnTopStore()
-const { pushListeners, cleanup } = useTauriListener()
+const { addListener, cleanup } = useTauriListener()
 const settingStore = useSettingStore()
 const { tips, escClose } = storeToRefs(settingStore)
 const { resizeWindow } = useWindow()
@@ -187,13 +187,13 @@ watchEffect(() => {
       })
   }
 
-  pushListeners([
+  addListener(
     appWindow.listen(EventEnum.EXIT, async () => {
       // 设置程序内部关闭标志
       isProgrammaticClose = true
       await exit(0)
     })
-  ])
+  )
 
   if (escClose.value && type() === 'windows') {
     window.addEventListener('keydown', (e) => isEsc(e))
@@ -296,19 +296,18 @@ onMounted(async () => {
   window.addEventListener('resize', handleResize)
   osType.value = type()
 
-  info('ActionBar 组件已挂载 当前窗口为: ' + appWindow.label)
   // 监听 home 窗口的关闭事件
   if (appWindow.label == 'home') {
     appWindow.onCloseRequested((event) => {
-      info('监听[home]窗口关闭事件')
+      info('[ActionBar]监听[home]窗口关闭事件')
 
       if (isProgrammaticClose) {
         // 清理监听器
-        info('清理[home]窗口的监听器')
+        info('[ActionBar]清理[home]窗口的监听器')
         cleanup()
         exit(0)
       }
-      info('阻止[home]窗口关闭事件')
+      info('[ActionBar]阻止[home]窗口关闭事件')
       tipsRef.show = true
       event.preventDefault()
     })

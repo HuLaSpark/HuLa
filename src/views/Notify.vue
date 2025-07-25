@@ -180,7 +180,7 @@ onMounted(async () => {
   resizeWindow('notify', 280, 140)
 
   // 监听全局事件，以及本地窗口事件
-  await pushListeners([
+  pushListeners([
     // 监听托盘鼠标进入事件
     appWindow.listen('notify_enter', async (event: Event<any>) => {
       await showWindow(event)
@@ -276,7 +276,7 @@ onMounted(async () => {
   })
 
   // 添加到监听器列表以便在组件卸载时自动清理
-  await pushListeners([contentEventUnlisten])
+  pushListeners([contentEventUnlisten])
 })
 </script>
 <style scoped lang="scss">

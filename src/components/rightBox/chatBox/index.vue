@@ -35,35 +35,34 @@ watchEffect(() => {
   activeItemRef.value = { ...activeItem! }
 })
 
-// 注册 Tauri 事件监听器
-const unlistenSuccess = await listen('send_msg_success', async (event) => {
-  let msg = event.payload as any
-  chatStore.updateMsg({
-    msgId: msg.oldMsgId,
-    status: MessageStatusEnum.SUCCESS,
-    newMsgId: msg.message.id,
-    body: msg.message.body
-  })
-})
+onMounted(() => {
+  addListener(
+    listen('send_msg_success', async (event) => {
+      let msg = event.payload as any
+      chatStore.updateMsg({
+        msgId: msg.oldMsgId,
+        status: MessageStatusEnum.SUCCESS,
+        newMsgId: msg.message.id,
+        body: msg.message.body
+      })
+    })
+  )
 
-const unlistenError = await listen('send_msg_error', (event) => {
-  let msgId = event.payload as any
-  chatStore.updateMsg({
-    msgId: msgId,
-    status: MessageStatusEnum.FAILED
-  })
-})
+  addListener(
+    listen('send_msg_error', (event) => {
+      let msgId = event.payload as any
+      chatStore.updateMsg({
+        msgId: msgId,
+        status: MessageStatusEnum.FAILED
+      })
+    })
+  )
 
-addListener(
-  appWindow.listen(appWindow.label, (e: { payload: SessionItem }) => {
-    activeItemRef.value = e.payload
-  })
-)
-
-// 在组件卸载时清理监听器
-onUnmounted(() => {
-  unlistenSuccess()
-  unlistenError()
+  addListener(
+    appWindow.listen(appWindow.label, (e: { payload: SessionItem }) => {
+      activeItemRef.value = e.payload
+    })
+  )
 })
 </script>
 <style scoped lang="scss">

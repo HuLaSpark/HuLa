@@ -31,7 +31,7 @@ export const useTauriListener = () => {
    * 清理所有监听器
    */
   const cleanup = async () => {
-    info('清除所有的Tauri 监听器')
+    info(`[useTauriListener]清除所有的Tauri 监听器，监听器数量:[${listeners.length}]`)
     try {
       // 等待所有的 unlisten 函数 resolve
       const unlistenFns = await Promise.all(listeners)
@@ -61,6 +61,7 @@ export const useTauriListener = () => {
       const appWindow = WebviewWindow.getCurrent()
       // 监听窗口关闭请求事件
       if (appWindow.label !== 'home') {
+        info(`[useTauriListener]当前窗口标签设置关闭监听: ${appWindow.label}`)
         windowCloseUnlisten = await appWindow.onCloseRequested(async () => {
           info(`监听[${appWindow.label}]窗口关闭事件-清理所有监听器`)
           await cleanup()

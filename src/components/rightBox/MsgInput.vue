@@ -386,7 +386,7 @@ onMounted(async () => {
     isVoiceMode.value = !isVoiceMode.value
   })
   /** 这里使用的是窗口之间的通信来监听信息对话的变化 */
-  await addListener(
+  addListener(
     appWindow.listen('aloneData', (event: any) => {
       activeItem.value = { ...event.payload.item }
     })
