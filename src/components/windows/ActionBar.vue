@@ -306,6 +306,7 @@ onMounted(async () => {
       info('[ActionBar]阻止[home]窗口关闭事件')
       tipsRef.show = true
       event.preventDefault()
+      appWindow.hide()
     })
   }
 })
