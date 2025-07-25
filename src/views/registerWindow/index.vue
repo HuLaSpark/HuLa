@@ -147,8 +147,7 @@
                 :placeholder="showCodePrefix ? '' : placeholders.code"
                 @focus="handleInputState($event, 'code')"
                 @blur="handleInputState($event, 'code')"
-                clearable>
-              </n-input>
+                clearable></n-input>
 
               <n-image
                 width="120"
@@ -241,13 +240,13 @@
 </template>
 
 <script setup lang="ts">
-import { lightTheme } from 'naive-ui'
-import apis from '@/services/apis.ts'
 import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import dayjs from 'dayjs'
-import { RegisterUserReq } from '@/services/types.ts'
-import Validation from '@/components/common/Validation.vue'
+import { lightTheme } from 'naive-ui'
 import PinInput from '@/components/common/PinInput.vue'
+import Validation from '@/components/common/Validation.vue'
+import apis from '@/services/apis.ts'
+import { RegisterUserReq } from '@/services/types.ts'
 
 // 输入框类型定义
 type InputType = 'name' | 'email' | 'password' | 'code' | 'confirmPassword'

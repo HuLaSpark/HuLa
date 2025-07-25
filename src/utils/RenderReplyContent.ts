@@ -1,5 +1,5 @@
-import { MsgEnum, RoomTypeEnum } from '@/enums'
 import { MSG_REPLY_TEXT_MAP } from '@/common/message'
+import { MsgEnum, RoomTypeEnum } from '@/enums'
 
 // 计算展示的回复消息的内容
 export const renderReplyContent = (name?: string, type?: MsgEnum, content?: string, roomType?: RoomTypeEnum) => {

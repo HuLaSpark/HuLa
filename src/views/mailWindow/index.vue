@@ -2,7 +2,7 @@
   <div class="size-full rounded-8px bg-[--right-bg-color]">
     <ActionBar :shrink="false" :current-label="WebviewWindow.getCurrent().label" />
 
-    <n-alert title="公告" type="warning"> 此功能有待开发中，请联系开发者 </n-alert>
+    <n-alert title="公告" type="warning">此功能有待开发中，请联系开发者</n-alert>
   </div>
 </template>
 <script setup lang="ts">

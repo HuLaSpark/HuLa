@@ -2,9 +2,9 @@
 
 root = true
 
-[*] # 表示所有文件适用
-charset = utf-8 # 设置文件字符集为 utf-8
-indent_size = 2 # 缩进大小
-end_of_line = lf # 控制换行类型(lf | cr | crlf)
-trim_trailing_whitespace = true # 末尾空格修剪
-insert_final_newline = true # 始终在文件末尾插入一个新行
+[*]
+charset = utf-8
+indent_size = 2
+end_of_line = lf
+trim_trailing_whitespace = true
+insert_final_newline = true

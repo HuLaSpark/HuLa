@@ -65,15 +65,15 @@
             <span
               class="text-(12px #64a29c)"
               :class="{ 'text-(12px #c14053)': item.status === RequestFriendAgreeStatus.Reject }"
-              v-else-if="isCurrentUser(item.uid)"
-              >{{
+              v-else-if="isCurrentUser(item.uid)">
+              {{
                 isAccepted(item.targetId)
                   ? '已同意'
                   : item.status === RequestFriendAgreeStatus.Reject
                     ? '对方已拒绝'
                     : '等待验证'
-              }}</span
-            >
+              }}
+            </span>
             <span class="text-(12px #64a29c)" v-else-if="item.status === RequestFriendAgreeStatus.Agree">已同意</span>
             <span class="text-(12px #c14053)" v-else-if="item.status === RequestFriendAgreeStatus.Reject">已拒绝</span>
             <span class="text-(12px #909090)" v-else-if="item.status === RequestFriendAgreeStatus.Ignore">已忽略</span>
@@ -108,11 +108,11 @@
   </n-flex>
 </template>
 <script setup lang="ts">
-import { useContactStore } from '@/stores/contacts.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { RequestFriendAgreeStatus } from '@/services/types.ts'
-import { AvatarUtils } from '@/utils/AvatarUtils'
+import { useContactStore } from '@/stores/contacts.ts'
 import { useUserStore } from '@/stores/user'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
 
 const userStore = useUserStore()

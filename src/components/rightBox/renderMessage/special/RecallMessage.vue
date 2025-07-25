@@ -30,10 +30,10 @@
 </template>
 
 <script setup lang="ts">
-import { MsgEnum, MittEnum } from '@/enums'
+import { MittEnum, MsgEnum } from '@/enums'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useUserStore } from '@/stores/user.ts'
-import { useMitt } from '@/hooks/useMitt.ts'
 
 interface Props {
   message: any

@@ -7,8 +7,8 @@
   </div>
 </template>
 <script setup lang="ts">
-import { useLogin } from '@/hooks/useLogin.ts'
 import { useRouter } from 'vue-router'
+import { useLogin } from '@/hooks/useLogin.ts'
 
 const router = useRouter()
 const { resetLoginState } = useLogin()

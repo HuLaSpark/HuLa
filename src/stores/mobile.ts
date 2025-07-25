@@ -1,6 +1,6 @@
+import { type } from '@tauri-apps/plugin-os'
 import { defineStore } from 'pinia'
 import { StoresEnum } from '@/enums'
-import { type } from '@tauri-apps/plugin-os'
 
 type SafeArea = {
   bottom: number

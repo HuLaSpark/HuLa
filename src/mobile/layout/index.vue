@@ -57,13 +57,13 @@
 </template>
 
 <script setup lang="ts">
-import TabBar from './tabBar/index.vue'
-import NavBar from './navBar/index.vue'
+import addFriendIcon from '@/assets/mobile/chat-home/add-friend.webp'
+import groupChatIcon from '@/assets/mobile/chat-home/group-chat.webp'
+import { useMobileStore } from '@/stores/mobile'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { useMobileStore } from '@/stores/mobile'
-import groupChatIcon from '@/assets/mobile/chat-home/group-chat.webp'
-import addFriendIcon from '@/assets/mobile/chat-home/add-friend.webp'
+import NavBar from './navBar/index.vue'
+import TabBar from './tabBar/index.vue'
 
 const mobileStore = useMobileStore()
 

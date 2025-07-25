@@ -186,10 +186,10 @@
 </template>
 
 <script setup lang="ts">
-import { lightTheme } from 'naive-ui'
-import apis from '@/services/apis'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { lightTheme } from 'naive-ui'
 import Validation from '@/components/common/Validation.vue'
+import apis from '@/services/apis'
 
 // 导入Web Worker
 const timerWorker = new Worker(new URL('../../workers/timer.worker.ts', import.meta.url))

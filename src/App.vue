@@ -8,17 +8,17 @@
   </NaiveProvider>
 </template>
 <script setup lang="ts">
-import { useSettingStore } from '@/stores/setting.ts'
-import { MittEnum, StoresEnum, ThemeEnum } from '@/enums'
-import LockScreen from '@/views/LockScreen.vue'
-import router from '@/router'
-import { type } from '@tauri-apps/plugin-os'
-import { useLogin } from '@/hooks/useLogin.ts'
-import { useStorage } from '@vueuse/core'
+import { listen } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { type } from '@tauri-apps/plugin-os'
+import { useStorage } from '@vueuse/core'
+import { MittEnum, StoresEnum, ThemeEnum } from '@/enums'
+import { useLogin } from '@/hooks/useLogin.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
-import { listen } from '@tauri-apps/api/event'
+import router from '@/router'
+import { useSettingStore } from '@/stores/setting.ts'
+import LockScreen from '@/views/LockScreen.vue'
 import { useTauriListener } from './hooks/useTauriListener'
 
 const appWindow = WebviewWindow.getCurrent()

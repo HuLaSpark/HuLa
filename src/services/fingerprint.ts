@@ -1,5 +1,5 @@
-import { type } from '@tauri-apps/plugin-os'
 import FingerprintJS from '@fingerprintjs/fingerprintjs'
+import { type } from '@tauri-apps/plugin-os'
 
 const CACHE_DURATION = 24 * 60 * 60 * 1000 // 24小时缓存
 

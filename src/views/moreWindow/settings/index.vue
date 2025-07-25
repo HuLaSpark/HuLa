@@ -59,11 +59,11 @@
   </main>
 </template>
 <script setup lang="ts">
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import router from '@/router'
-import { sideOptions } from './config.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import Foot from '@/views/moreWindow/settings/Foot.vue'
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { sideOptions } from './config.ts'
 
 const settingStore = useSettingStore()
 const skeleton = ref(true)

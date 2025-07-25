@@ -1,11 +1,11 @@
-import { defineStore } from 'pinia'
-import apis from '@/services/apis'
-import { useGlobalStore } from '@/stores/global'
-import type { CacheBadgeItem, CacheUserItem } from '@/services/types'
-import { isDiffNow10Min } from '@/utils/ComputedTime.ts'
 import { useDebounceFn } from '@vueuse/core'
+import { defineStore } from 'pinia'
 import { StoresEnum, TauriCommand } from '@/enums'
-import { invokeWithErrorHandler, invokeSilently, ErrorType } from '@/utils/TauriInvokeHandler.ts'
+import apis from '@/services/apis'
+import type { CacheBadgeItem, CacheUserItem } from '@/services/types'
+import { useGlobalStore } from '@/stores/global'
+import { isDiffNow10Min } from '@/utils/ComputedTime.ts'
+import { ErrorType, invokeSilently, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler.ts'
 import { useGroupStore } from './group'
 
 // 定义基础用户信息类型，只包含uid、头像和名称

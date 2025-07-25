@@ -1,13 +1,13 @@
-import apis from '@/services/apis'
 import { defineStore } from 'pinia'
-import { useGlobalStore } from '@/stores/global'
-import type { GroupDetailReq, UserItem } from '@/services/types'
-import { useChatStore } from './chat'
 import { RoleEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
-import { useCachedStore } from '@/stores/cached'
-import { useUserStore } from '@/stores/user'
+import apis from '@/services/apis'
+import type { GroupDetailReq, UserItem } from '@/services/types'
 import { OnStatusChangeType } from '@/services/wsType'
-import { invokeWithErrorHandler, ErrorType } from '@/utils/TauriInvokeHandler.ts'
+import { useCachedStore } from '@/stores/cached'
+import { useGlobalStore } from '@/stores/global'
+import { useUserStore } from '@/stores/user'
+import { ErrorType, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler.ts'
+import { useChatStore } from './chat'
 
 export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
   // 初始化需要使用的store

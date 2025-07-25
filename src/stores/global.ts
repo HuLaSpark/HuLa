@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia'
 import { NotificationTypeEnum, RoomTypeEnum, StoresEnum } from '@/enums'
-import { useChatStore } from '@/stores/chat'
-import type { ContactItem, RequestFriendItem } from '@/services/types'
-import { clearQueue, readCountQueue } from '@/utils/ReadCountQueue.ts'
 import apis from '@/services/apis'
+import type { ContactItem, RequestFriendItem } from '@/services/types'
+import { useChatStore } from '@/stores/chat'
+import { clearQueue, readCountQueue } from '@/utils/ReadCountQueue.ts'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
 
 export const useGlobalStore = defineStore(

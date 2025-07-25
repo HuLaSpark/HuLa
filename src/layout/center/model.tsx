@@ -1,11 +1,11 @@
-import type { TransferRenderTargetLabel, TransferRenderSourceList } from 'naive-ui'
+import type { TransferRenderSourceList, TransferRenderTargetLabel } from 'naive-ui'
 import { NAvatar, NCheckbox } from 'naive-ui'
-import { useContactStore } from '@/stores/contacts.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
-import { AvatarUtils } from '@/utils/AvatarUtils'
 import apis from '@/services/apis'
-import { useGroupStore } from '@/stores/group.ts'
+import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
+import { useGroupStore } from '@/stores/group.ts'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 
 const contactStore = useContactStore()
 const groupStore = useGroupStore()

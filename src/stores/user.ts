@@ -1,7 +1,7 @@
-import apis from '@/services/apis'
 import { defineStore } from 'pinia'
-import type { UserInfoType } from '@/services/types'
 import { StoresEnum } from '@/enums'
+import apis from '@/services/apis'
+import type { UserInfoType } from '@/services/types'
 
 export const useUserStore = defineStore(StoresEnum.USER, () => {
   const userInfo = ref<Partial<UserInfoType>>({})

@@ -146,12 +146,12 @@
 </template>
 
 <script setup lang="ts">
-import { invokeWithErrorHandler, invokeSilently, ErrorType } from '@/utils/TauriInvokeHandler.ts'
 import { listen } from '@tauri-apps/api/event'
-import { open } from '@tauri-apps/plugin-dialog'
 import { appCacheDir } from '@tauri-apps/api/path'
-import { formatBytes } from '@/utils/Formatting.ts'
+import { open } from '@tauri-apps/plugin-dialog'
 import { useTauriListener } from '@/hooks/useTauriListener'
+import { formatBytes } from '@/utils/Formatting.ts'
+import { ErrorType, invokeSilently, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler.ts'
 
 type DirectoryScanProgress = {
   current_path: string

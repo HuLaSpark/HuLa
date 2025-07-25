@@ -46,17 +46,17 @@
   </n-flex>
 </template>
 <script setup lang="tsx">
-import { useGlobalStore } from '@/stores/global.ts'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { emitTo, Event, listen } from '@tauri-apps/api/event'
 import { PhysicalPosition } from '@tauri-apps/api/dpi'
+import { Event, emitTo, listen } from '@tauri-apps/api/event'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { RoomTypeEnum } from '@/enums'
-import { useWindow } from '@/hooks/useWindow.ts'
+import { useReplaceMsg } from '@/hooks/useReplaceMsg.ts'
 import { useTauriListener } from '@/hooks/useTauriListener'
+import { useWindow } from '@/hooks/useWindow.ts'
 import type { MessageType } from '@/services/types.ts'
 import { useChatStore } from '@/stores/chat.ts'
+import { useGlobalStore } from '@/stores/global.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { useReplaceMsg } from '@/hooks/useReplaceMsg.ts'
 
 // 定义分组消息的类型
 type GroupedMessage = {

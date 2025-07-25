@@ -136,10 +136,10 @@
 </template>
 
 <script setup lang="ts">
-import { getAllTypeEmojis } from '@/utils/Emoji.ts'
-import { useHistoryStore } from '@/stores/history.ts'
-import { useEmojiStore } from '@/stores/emoji'
 import HulaEmojis from 'hula-emojis'
+import { useEmojiStore } from '@/stores/emoji'
+import { useHistoryStore } from '@/stores/history.ts'
+import { getAllTypeEmojis } from '@/utils/Emoji.ts'
 
 type EmojiType = {
   expressionEmojis: EmojiItem

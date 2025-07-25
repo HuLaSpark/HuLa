@@ -50,18 +50,18 @@
   </n-flex>
 </template>
 <script setup lang="tsx">
-import { useWindow } from '@/hooks/useWindow.ts'
-import { exit } from '@tauri-apps/plugin-process'
-import { useUserStatusStore } from '@/stores/userStatus'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { useSettingStore } from '@/stores/setting.ts'
-import { useGlobalStore } from '@/stores/global.ts'
 import { TrayIcon } from '@tauri-apps/api/tray'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { type } from '@tauri-apps/plugin-os'
+import { exit } from '@tauri-apps/plugin-process'
 import { useTauriListener } from '@/hooks/useTauriListener'
-import { UserState } from '@/services/types'
+import { useWindow } from '@/hooks/useWindow.ts'
 import apis from '@/services/apis.ts'
+import { UserState } from '@/services/types'
+import { useGlobalStore } from '@/stores/global.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user'
+import { useUserStatusStore } from '@/stores/userStatus'
 
 const appWindow = WebviewWindow.getCurrent()
 const { checkWinExist, createWebviewWindow } = useWindow()

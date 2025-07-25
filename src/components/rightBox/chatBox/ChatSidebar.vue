@@ -183,24 +183,24 @@
   </main>
 </template>
 <script setup lang="ts">
-import { MittEnum, OnlineEnum, RoleEnum, RoomTypeEnum } from '@/enums'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { useDebounceFn } from '@vueuse/core'
 import { InputInst } from 'naive-ui'
-import { usePopover } from '@/hooks/usePopover.ts'
+import { storeToRefs } from 'pinia'
+import { MittEnum, OnlineEnum, RoleEnum, RoomTypeEnum } from '@/enums'
+import { useUserInfo } from '@/hooks/useCached.ts'
 import { useChatMain } from '@/hooks/useChatMain.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
-import { useGroupStore } from '@/stores/group.ts'
-import { useUserInfo } from '@/hooks/useCached.ts'
-import { useGlobalStore } from '@/stores/global.ts'
-import { useDebounceFn } from '@vueuse/core'
-import { AvatarUtils } from '@/utils/AvatarUtils'
-import { useCachedStore } from '@/stores/cached.ts'
-import { useUserStatusStore } from '@/stores/userStatus'
-import { storeToRefs } from 'pinia'
-import { useWindow } from '@/hooks/useWindow.ts'
-import { useUserStore } from '@/stores/user'
-import { WsResponseMessageType } from '@/services/wsType.ts'
+import { usePopover } from '@/hooks/usePopover.ts'
 import { useTauriListener } from '@/hooks/useTauriListener'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { useWindow } from '@/hooks/useWindow.ts'
+import { WsResponseMessageType } from '@/services/wsType.ts'
+import { useCachedStore } from '@/stores/cached.ts'
+import { useGlobalStore } from '@/stores/global.ts'
+import { useGroupStore } from '@/stores/group.ts'
+import { useUserStore } from '@/stores/user'
+import { useUserStatusStore } from '@/stores/userStatus'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 
 const appWindow = WebviewWindow.getCurrent()
 const { createWebviewWindow } = useWindow()

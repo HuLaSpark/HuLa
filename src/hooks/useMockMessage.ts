@@ -1,8 +1,8 @@
-import type { MessageType } from '@/services/types'
 import { computed } from 'vue'
-import { useGlobalStore } from '@/stores/global'
 import { MessageStatusEnum } from '@/enums'
 import { useUserInfo } from '@/hooks/useCached.ts'
+import type { MessageType } from '@/services/types'
+import { useGlobalStore } from '@/stores/global'
 
 /**
  * Mock 消息 Hook

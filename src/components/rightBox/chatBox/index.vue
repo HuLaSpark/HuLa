@@ -12,13 +12,13 @@
   </n-flex>
 </template>
 <script setup lang="ts">
-import type { SessionItem } from '@/services/types.ts'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { useSettingStore } from '@/stores/setting.ts'
-import { useTauriListener } from '@/hooks/useTauriListener'
 import { listen } from '@tauri-apps/api/event'
-import { useChatStore } from '~/src/stores/chat'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { useTauriListener } from '@/hooks/useTauriListener'
+import type { SessionItem } from '@/services/types.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 import { MessageStatusEnum } from '~/src/enums'
+import { useChatStore } from '~/src/stores/chat'
 
 const { addListener } = useTauriListener()
 const settingStore = useSettingStore()
@@ -38,7 +38,7 @@ watchEffect(() => {
 onMounted(() => {
   addListener(
     listen('send_msg_success', async (event) => {
-      let msg = event.payload as any
+      const msg = event.payload as any
       chatStore.updateMsg({
         msgId: msg.oldMsgId,
         status: MessageStatusEnum.SUCCESS,
@@ -50,7 +50,7 @@ onMounted(() => {
 
   addListener(
     listen('send_msg_error', (event) => {
-      let msgId = event.payload as any
+      const msgId = event.payload as any
       chatStore.updateMsg({
         msgId: msgId,
         status: MessageStatusEnum.FAILED

@@ -131,20 +131,20 @@
 </template>
 
 <script setup lang="ts">
-import { WebviewWindow, getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { useWindow } from '@/hooks/useWindow'
-import { debounce } from 'lodash-es'
-import { AvatarUtils } from '@/utils/AvatarUtils'
 import { emitTo } from '@tauri-apps/api/event'
-import { RoomTypeEnum } from '@/enums/index.ts'
-import { useCachedStore } from '@/stores/cached'
-import { useBadgeInfo } from '@/hooks/useCached.ts'
+import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { debounce } from 'lodash-es'
 import FloatBlockList from '@/components/common/FloatBlockList.vue'
-import { useContactStore } from '@/stores/contacts'
-import { ContactItem, GroupListReq } from '@/services/types'
-import { useUserStore } from '@/stores/user'
-import { useGlobalStore } from '@/stores/global'
+import { RoomTypeEnum } from '@/enums/index.ts'
+import { useBadgeInfo } from '@/hooks/useCached.ts'
+import { useWindow } from '@/hooks/useWindow'
 import apis from '@/services/apis'
+import { ContactItem, GroupListReq } from '@/services/types'
+import { useCachedStore } from '@/stores/cached'
+import { useContactStore } from '@/stores/contacts'
+import { useGlobalStore } from '@/stores/global'
+import { useUserStore } from '@/stores/user'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 
 const { createWebviewWindow } = useWindow()
 const cachedStore = useCachedStore()

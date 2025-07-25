@@ -199,9 +199,9 @@
                             :src="useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.img"
                             alt="badge" />
                         </template>
-                        <span>{{
-                          useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.describe
-                        }}</span>
+                        <span>
+                          {{ useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.describe }}
+                        </span>
                       </n-popover>
                       <!-- 用户名 -->
                       <span class="text-12px select-none color-#909090 inline-block align-top">
@@ -420,29 +420,29 @@
   </footer>
 </template>
 <script setup lang="ts">
-import { EventEnum, MittEnum, MsgEnum, MessageStatusEnum, TauriCommand } from '@/enums'
-import { MessageType, SessionItem } from '@/services/types.ts'
-import { useMitt } from '@/hooks/useMitt.ts'
-import { usePopover } from '@/hooks/usePopover.ts'
-import { useWindow } from '@/hooks/useWindow.ts'
-import { useChatMain } from '@/hooks/useChatMain.ts'
-import { delay } from 'lodash-es'
-import { formatTimestamp } from '@/utils/ComputedTime.ts'
-import { useUserInfo, useBadgeInfo } from '@/hooks/useCached.ts'
-import { useChatStore } from '@/stores/chat.ts'
-import { type } from '@tauri-apps/plugin-os'
-import { useUserStore } from '@/stores/user.ts'
-import { AvatarUtils } from '@/utils/AvatarUtils'
-import VirtualList, { type VirtualListExpose } from '@/components/common/VirtualList.vue'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { useTauriListener } from '@/hooks/useTauriListener'
-import { useGroupStore } from '@/stores/group.ts'
-import { useGlobalStore } from '@/stores/global'
+import { type } from '@tauri-apps/plugin-os'
 import { useDebounceFn } from '@vueuse/core'
-import { useCachedStore } from '@/stores/cached'
-import apis from '@/services/apis'
+import { delay } from 'lodash-es'
+import VirtualList, { type VirtualListExpose } from '@/components/common/VirtualList.vue'
+import { EventEnum, MessageStatusEnum, MittEnum, MsgEnum, TauriCommand } from '@/enums'
+import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
+import { useChatMain } from '@/hooks/useChatMain.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { useNetworkStatus } from '@/hooks/useNetworkStatus'
+import { usePopover } from '@/hooks/usePopover.ts'
+import { useTauriListener } from '@/hooks/useTauriListener'
+import { useWindow } from '@/hooks/useWindow.ts'
+import apis from '@/services/apis'
+import { MessageType, SessionItem } from '@/services/types.ts'
+import { useCachedStore } from '@/stores/cached'
+import { useChatStore } from '@/stores/chat.ts'
+import { useGlobalStore } from '@/stores/global'
+import { useGroupStore } from '@/stores/group.ts'
+import { useUserStore } from '@/stores/user.ts'
 import { audioManager } from '@/utils/AudioManager'
+import { AvatarUtils } from '@/utils/AvatarUtils'
+import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { ErrorType, invokeWithErrorHandler } from '~/src/utils/TauriInvokeHandler'
 
 const appWindow = WebviewWindow.getCurrent()
@@ -733,7 +733,7 @@ const cancelReplyEmoji = async (item: any, type: number) => {
   // 只有当用户已标记时才发送取消请求
   if (userMarked) {
     try {
-      let data = {
+      const data = {
         msgId: item.message.id,
         markType: type, // 使用对应的MarkEnum类型
         actType: 2 // 使用Confirm作为操作类型

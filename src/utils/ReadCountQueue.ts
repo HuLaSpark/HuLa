@@ -1,7 +1,7 @@
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useMitt } from '@/hooks/useMitt.ts'
 import apis from '@/services/apis'
 import type { MsgReadUnReadCountType } from '@/services/types'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 
 /**
  * 消息已读计数队列模块

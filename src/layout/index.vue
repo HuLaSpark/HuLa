@@ -25,8 +25,14 @@
 </template>
 
 <script setup lang="ts">
+import { LogicalSize } from '@tauri-apps/api/dpi'
+import { emitTo } from '@tauri-apps/api/event'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { UserAttentionType } from '@tauri-apps/api/window'
+import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification'
+import { type } from '@tauri-apps/plugin-os'
+import { useThrottleFn } from '@vueuse/core'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
-import { useMitt } from '@/hooks/useMitt.ts'
 import {
   ChangeTypeEnum,
   MittEnum,
@@ -36,26 +42,20 @@ import {
   RoomTypeEnum,
   TauriCommand
 } from '@/enums'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { useGlobalStore } from '@/stores/global.ts'
+import { useUserInfo } from '@/hooks/useCached.ts'
+import { useCheckUpdate } from '@/hooks/useCheckUpdate'
+import { useMitt } from '@/hooks/useMitt.ts'
+import { computedToken } from '@/services/request'
+import type { MarkItemType, MessageType, RevokedMsgType } from '@/services/types.ts'
+import { LoginSuccessResType, OnStatusChangeType, WsResponseMessageType, WsTokenExpire } from '@/services/wsType.ts'
+import { useCachedStore } from '@/stores/cached'
+import { useChatStore } from '@/stores/chat'
+import { useConfigStore } from '@/stores/config'
 import { useContactStore } from '@/stores/contacts.ts'
+import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user'
-import { useChatStore } from '@/stores/chat'
-import { LoginSuccessResType, OnStatusChangeType, WsResponseMessageType, WsTokenExpire } from '@/services/wsType.ts'
-import type { MarkItemType, MessageType, RevokedMsgType } from '@/services/types.ts'
-import { computedToken } from '@/services/request'
-import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification'
-import { useUserInfo } from '@/hooks/useCached.ts'
-import { emitTo } from '@tauri-apps/api/event'
-import { useThrottleFn } from '@vueuse/core'
-import { useCachedStore } from '@/stores/cached'
 import { clearListener, initListener, readCountQueue } from '@/utils/ReadCountQueue'
-import { type } from '@tauri-apps/plugin-os'
-import { useConfigStore } from '@/stores/config'
-import { useCheckUpdate } from '@/hooks/useCheckUpdate'
-import { UserAttentionType } from '@tauri-apps/api/window'
-import { LogicalSize } from '@tauri-apps/api/dpi'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
 
 const loadingPercentage = ref(10)

@@ -364,28 +364,35 @@
 </template>
 
 <script setup lang="ts">
-import { IsAllUserEnum, SessionItem, UserItem } from '@/services/types.ts'
-import { useDisplayMedia } from '@vueuse/core'
-import { EventEnum, MittEnum, RoomActEnum, NotificationTypeEnum } from '@/enums'
 import { emit } from '@tauri-apps/api/event'
-import { type } from '@tauri-apps/plugin-os'
-import { useChatStore } from '@/stores/chat.ts'
-import { useGroupStore } from '@/stores/group.ts'
-import { useUserInfo } from '@/hooks/useCached'
-import { useContactStore } from '@/stores/contacts.ts'
-import { AvatarUtils } from '@/utils/AvatarUtils'
-import { OnlineEnum } from '@/enums'
-import { useTauriListener } from '@/hooks/useTauriListener'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { RoomTypeEnum, SessionOperateEnum, RoleEnum } from '@/enums'
-import { useMitt } from '@/hooks/useMitt.ts'
-import { useUserStatusStore } from '@/stores/userStatus'
-import { useUserStore } from '@/stores/user.ts'
-import apis from '@/services/apis'
+import { type } from '@tauri-apps/plugin-os'
+import { useDisplayMedia } from '@vueuse/core'
 import AvatarCropper from '@/components/common/AvatarCropper.vue'
+import {
+  EventEnum,
+  MittEnum,
+  NotificationTypeEnum,
+  OnlineEnum,
+  RoleEnum,
+  RoomActEnum,
+  RoomTypeEnum,
+  SessionOperateEnum
+} from '@/enums'
 import { useAvatarUpload } from '@/hooks/useAvatarUpload'
+import { useUserInfo } from '@/hooks/useCached'
+import { useMitt } from '@/hooks/useMitt.ts'
+import { useTauriListener } from '@/hooks/useTauriListener'
 import { useWindow } from '@/hooks/useWindow'
+import apis from '@/services/apis'
+import { IsAllUserEnum, SessionItem, UserItem } from '@/services/types.ts'
+import { useChatStore } from '@/stores/chat.ts'
+import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global'
+import { useGroupStore } from '@/stores/group.ts'
+import { useUserStore } from '@/stores/user.ts'
+import { useUserStatusStore } from '@/stores/userStatus'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 import { useCachedStore } from '~/src/stores/cached'
 
 const appWindow = WebviewWindow.getCurrent()

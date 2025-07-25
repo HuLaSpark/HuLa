@@ -1,8 +1,8 @@
-import { MsgEnum } from '@/enums'
-import { useImageViewer as useImageViewerStore } from '@/stores/imageViewer'
-import { useChatStore } from '@/stores/chat'
-import { useWindow } from '@/hooks/useWindow'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { MsgEnum } from '@/enums'
+import { useWindow } from '@/hooks/useWindow'
+import { useChatStore } from '@/stores/chat'
+import { useImageViewer as useImageViewerStore } from '@/stores/imageViewer'
 
 /**
  * 图片查看器Hook，用于处理图片和表情包的查看功能

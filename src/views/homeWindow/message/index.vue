@@ -108,21 +108,21 @@
   </n-scrollbar>
 </template>
 <script lang="ts" setup name="message">
-import { useMessage } from '@/hooks/useMessage.ts'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import SysNTF from '@/components/common/SystemNotification.tsx'
 import { MittEnum, RoomTypeEnum } from '@/enums'
+import { useUserInfo } from '@/hooks/useCached.ts'
+import { useCommon } from '@/hooks/useCommon.ts'
+import { useMessage } from '@/hooks/useMessage.ts'
+import { useMitt } from '@/hooks/useMitt'
+import { useReplaceMsg } from '@/hooks/useReplaceMsg.ts'
+import { useTauriListener } from '@/hooks/useTauriListener'
 import { IsAllUserEnum, SessionItem } from '@/services/types.ts'
-import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global.ts'
-import { useUserInfo } from '@/hooks/useCached.ts'
-import { useReplaceMsg } from '@/hooks/useReplaceMsg.ts'
-import { useCommon } from '@/hooks/useCommon.ts'
-import SysNTF from '@/components/common/SystemNotification.tsx'
-import { AvatarUtils } from '@/utils/AvatarUtils'
 import { useGroupStore } from '@/stores/group.ts'
-import { useMitt } from '@/hooks/useMitt'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { useTauriListener } from '@/hooks/useTauriListener'
+import { AvatarUtils } from '@/utils/AvatarUtils'
+import { formatTimestamp } from '@/utils/ComputedTime.ts'
 
 const appWindow = WebviewWindow.getCurrent()
 const { addListener } = useTauriListener()

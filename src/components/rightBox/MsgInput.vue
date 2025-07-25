@@ -54,7 +54,7 @@
             :intersection-observer-options="{
               root: '#image-chat-ait'
             }" />
-          <span> {{ item.name }}</span>
+          <span>{{ item.name }}</span>
         </n-flex>
       </template>
     </n-virtual-list>
@@ -99,7 +99,7 @@
   <n-flex v-if="!isVoiceMode" align="center" justify="space-between" :size="12">
     <n-config-provider :theme="lightTheme">
       <n-button-group size="small" class="pr-20px">
-        <n-button color="#13987f" :disabled="disabledSend" class="w-65px" @click="send"> 发送 </n-button>
+        <n-button color="#13987f" :disabled="disabledSend" class="w-65px" @click="send">发送</n-button>
         <n-button color="#13987f" class="p-[0_6px]">
           <template #icon>
             <n-config-provider :theme="themes.content === ThemeEnum.DARK ? darkTheme : lightTheme">
@@ -159,23 +159,23 @@
     @cancel="handleFileCancel" />
 </template>
 <script setup lang="ts">
-import { type Ref } from 'vue'
-import { storeToRefs } from 'pinia'
-import { lightTheme, darkTheme, VirtualListInst } from 'naive-ui'
-import { MacOsKeyEnum, MittEnum, RoomTypeEnum, ThemeEnum, WinKeyEnum } from '@/enums'
-import { CacheUserItem, SessionItem } from '@/services/types.ts'
 import { emit } from '@tauri-apps/api/event'
-import { useSettingStore } from '@/stores/setting.ts'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { sendOptions } from '@/views/moreWindow/settings/config.ts'
-import { useMsgInput } from '@/hooks/useMsgInput.ts'
-import { useCommon } from '@/hooks/useCommon.ts'
-import { onKeyStroke } from '@vueuse/core'
 import { type } from '@tauri-apps/plugin-os'
+import { onKeyStroke } from '@vueuse/core'
+import { darkTheme, lightTheme, VirtualListInst } from 'naive-ui'
+import { storeToRefs } from 'pinia'
+import { type Ref } from 'vue'
+import { MacOsKeyEnum, MittEnum, RoomTypeEnum, ThemeEnum, WinKeyEnum } from '@/enums'
 import { useUserInfo } from '@/hooks/useCached.ts'
+import { useCommon } from '@/hooks/useCommon.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
-import { AvatarUtils } from '@/utils/AvatarUtils'
+import { useMsgInput } from '@/hooks/useMsgInput.ts'
 import { useTauriListener } from '@/hooks/useTauriListener'
+import { CacheUserItem, SessionItem } from '@/services/types.ts'
+import { useSettingStore } from '@/stores/setting.ts'
+import { AvatarUtils } from '@/utils/AvatarUtils'
+import { sendOptions } from '@/views/moreWindow/settings/config.ts'
 
 const appWindow = WebviewWindow.getCurrent()
 const { addListener } = useTauriListener()
