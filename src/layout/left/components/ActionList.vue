@@ -352,7 +352,7 @@ onMounted(async () => {
   startResize()
 
   // 监听自定义事件，处理设置中菜单显示模式切换和添加插件后，导致高度变化，需重新调整插件菜单显示
-  await addListener(
+  addListener(
     appWindow.listen('startResize', () => {
       startResize()
     })

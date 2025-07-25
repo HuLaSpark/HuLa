@@ -250,16 +250,21 @@ onMounted(async () => {
 
   if (home) {
     // 监听窗口焦点变化
-    home.listen('tauri://focus', () => {
-      isFocused.value = true
-    })
-    home.listen('tauri://blur', () => {
-      isFocused.value = false
-    })
+    addListener(
+      home.listen('tauri://focus', () => {
+        isFocused.value = true
+      })
+    )
+
+    addListener(
+      home.listen('tauri://blur', () => {
+        isFocused.value = false
+      })
+    )
   }
 
   // 将监听器添加到pushListeners中以便于组件卸载时自动移除
-  await addListener(
+  addListener(
     appWindow.listen('show_tip', async () => {
       globalStore.setTipVisible(true)
     })

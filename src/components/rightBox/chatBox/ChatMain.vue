@@ -1072,7 +1072,7 @@ onMounted(async () => {
   })
 
   // 监听公告更新事件
-  await addListener(
+  addListener(
     appWindow.listen('announcementUpdated', async (event: any) => {
       if (event.payload) {
         const { hasAnnouncements, topAnnouncement: newTopAnnouncement } = event.payload
@@ -1093,13 +1093,13 @@ onMounted(async () => {
   )
 
   // 监听公告清空事件
-  await addListener(
+  addListener(
     appWindow.listen('announcementClear', () => {
       topAnnouncement.value = null
     })
   )
 
-  await addListener(
+  addListener(
     appWindow.listen(EventEnum.SHARE_SCREEN, async () => {
       await createWebviewWindow('共享屏幕', 'sharedScreen', 840, 840)
     })

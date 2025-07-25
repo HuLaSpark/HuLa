@@ -41,11 +41,6 @@ export const useLogin = () => {
       await invokeSilently(TauriCommand.UPDATE_USER_LAST_OPT_TIME)
       // 创建登录窗口
       await createWebviewWindow('登录', 'login', 320, 448, undefined, false, 320, 448)
-      await new Promise((resolve) => {
-        setTimeout(() => {
-          resolve(null)
-        }, 200)
-      })
       // 发送登出事件
       await emit(EventEnum.LOGOUT)
       // 调整托盘大小

@@ -4,7 +4,6 @@ import { LogicalSize } from '@tauri-apps/api/dpi'
 import { type } from '@tauri-apps/plugin-os'
 import { UserAttentionType } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/core'
-import { listen } from '@tauri-apps/api/event'
 import { info } from '@tauri-apps/plugin-log'
 
 /** 判断是兼容的系统 */
@@ -128,13 +127,15 @@ export const useWindow = () => {
    * // 需要时手动取消监听
    * unlisten()
    */
-  async function getWindowPayloadListener<T>(this: any, windowLabel: string, callback: (event: any) => void) {
-    const listenLabel = `${windowLabel}:update`
+  // async function getWindowPayloadListener<T>(this: any, windowLabel: string, callback: (event: any) => void) {
+  //   const listenLabel = `${windowLabel}:update`
 
-    return listen<T>(listenLabel, (event) => {
-      callback.call(this, event)
-    })
-  }
+  //   return addListener(
+  //     listen<T>(listenLabel, (event) => {
+  //       callback.call(this, event)
+  //     })
+  //   )
+  // }
 
   /**
    * 创建模态子窗口
@@ -258,7 +259,6 @@ export const useWindow = () => {
     checkWinExist,
     setResizable,
     sendWindowPayload,
-    getWindowPayload,
-    getWindowPayloadListener
+    getWindowPayload
   }
 }

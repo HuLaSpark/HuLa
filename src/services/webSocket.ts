@@ -20,6 +20,8 @@ import { URLEnum } from '@/enums'
 import type { useNetworkReconnect as UseNetworkReconnectType } from '@/hooks/useNetworkReconnect'
 import { info } from '@tauri-apps/plugin-log'
 
+const { addListener } = useTauriListener()
+
 // 创建 webSocket worker
 const worker: Worker = new Worker(new URL('../workers/webSocket.worker.ts', import.meta.url), {
   type: 'module'
@@ -187,22 +189,22 @@ class WS {
       info('[ws] 创建Tauri窗口事件监听')
       // 设置各种Tauri窗口事件监听器
       // 窗口失去焦点 - 隐藏状态
-      await listen('tauri://blur', createStateChangeHandler(false))
+      addListener(listen('tauri://blur', createStateChangeHandler(false)))
 
       // 窗口获得焦点 - 可见状态
-      await listen('tauri://focus', createStateChangeHandler(true))
+      addListener(listen('tauri://focus', createStateChangeHandler(true)))
 
       // 窗口最小化 - 隐藏状态
-      await listen('tauri://window-minimized', createStateChangeHandler(false))
+      addListener(listen('tauri://window-minimized', createStateChangeHandler(false)))
 
       // 窗口恢复 - 可见状态
-      await listen('tauri://window-restored', createStateChangeHandler(true))
+      addListener(listen('tauri://window-restored', createStateChangeHandler(true)))
 
       // 窗口隐藏 - 隐藏状态
-      await listen('tauri://window-hidden', createStateChangeHandler(false))
+      addListener(listen('tauri://window-hidden', createStateChangeHandler(false)))
 
       // 窗口显示 - 可见状态
-      await listen('tauri://window-shown', createStateChangeHandler(true))
+      addListener(listen('tauri://window-shown', createStateChangeHandler(true)))
     } catch (error) {
       console.error('无法设置Tauri Window事件监听:', error)
     }

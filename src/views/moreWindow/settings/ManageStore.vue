@@ -151,6 +151,7 @@ import { listen } from '@tauri-apps/api/event'
 import { open } from '@tauri-apps/plugin-dialog'
 import { appCacheDir } from '@tauri-apps/api/path'
 import { formatBytes } from '@/utils/Formatting.ts'
+import { useTauriListener } from '@/hooks/useTauriListener'
 
 type DirectoryScanProgress = {
   current_path: string
@@ -171,6 +172,7 @@ type DirectoryInfo = {
   usage_percentage: number
 }
 
+const { addListener } = useTauriListener()
 const pathType = ref<'default' | 'custom'>('default')
 const defaultDirectory = ref<string>('')
 const customDirectory = ref<string>('')
@@ -310,29 +312,35 @@ onMounted(async () => {
   await getDefaultDirectory()
 
   // 监听进度更新
-  listen<DirectoryScanProgress>('directory-scan-progress', (event) => {
-    scanProgress.value = event.payload
-  })
+  addListener(
+    listen<DirectoryScanProgress>('directory-scan-progress', (event) => {
+      scanProgress.value = event.payload
+    })
+  )
 
   // 监听扫描完成
-  listen<DirectoryScanProgress>('directory-scan-complete', (event) => {
-    scanProgress.value = event.payload
-    scanComplete.value = true
-    scanning.value = false
+  addListener(
+    listen<DirectoryScanProgress>('directory-scan-complete', (event) => {
+      scanProgress.value = event.payload
+      scanComplete.value = true
+      scanning.value = false
 
-    // 扫描完成后直接切换到磁盘占比
-    setTimeout(() => {
-      showDiskUsage.value = true
-    }, 300)
-  })
+      // 扫描完成后直接切换到磁盘占比
+      setTimeout(() => {
+        showDiskUsage.value = true
+      }, 300)
+    })
+  )
 
   // 监听扫描取消
-  listen('directory-scan-cancelled', () => {
-    console.log('收到扫描取消事件')
-    scanning.value = false
-    scanComplete.value = false
-    showDiskUsage.value = false
-  })
+  addListener(
+    listen('directory-scan-cancelled', () => {
+      console.log('收到扫描取消事件')
+      scanning.value = false
+      scanComplete.value = false
+      showDiskUsage.value = false
+    })
+  )
 
   // 自动开始扫描
   if (currentDirectory.value) {

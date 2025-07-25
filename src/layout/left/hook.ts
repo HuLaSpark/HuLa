@@ -205,7 +205,7 @@ export const leftHook = () => {
     useMitt.on(MittEnum.TO_SEND_MSG, (event: any) => {
       activeUrl.value = event.url
     })
-    await pushListeners([
+    pushListeners([
       appWindow.listen(EventEnum.WIN_SHOW, (e) => {
         // 如果已经存在就不添加
         if (openWindowsList.value.has(e.payload)) return

@@ -26,7 +26,7 @@ import { useCanvasTool } from '@/hooks/useCanvasTool'
 import { useTauriListener } from '@/hooks/useTauriListener'
 
 const appWindow = WebviewWindow.getCurrent()
-const { addEventListener } = useTauriListener()
+const { addListener } = useTauriListener()
 const canvasbox = ref(null)
 
 // 图像层
@@ -419,7 +419,7 @@ function cancelSelection() {
 }
 
 onMounted(async () => {
-  addEventListener(
+  addListener(
     appWindow.listen('capture', () => {
       initCanvas()
       initMagnifier()
