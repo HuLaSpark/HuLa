@@ -21,9 +21,6 @@ let heartbeatLoggingEnabled = false
 
 // ws instance
 let connection: WebSocket
-
-// 重连次数上限
-const reconnectCountMax = 5
 let reconnectCount = 0
 // 重连锁
 let lockReconnect = false
@@ -276,16 +273,6 @@ const onCloseHandler = () => {
   clearHeartPackTimer()
   if (lockReconnect) return
 
-  // 重连次数限制检查
-  if (reconnectCount >= reconnectCountMax) {
-    console.log('达到最大重连次数，停止重连')
-    postMsg({
-      type: WorkerMsgEnum.WS_ERROR,
-      value: { msg: '连接失败次数过多，请刷新页面重试' }
-    })
-    return
-  }
-
   updateConnectionState(ConnectionState.RECONNECTING)
   lockReconnect = true
 
@@ -450,18 +437,9 @@ self.onmessage = (e: MessageEvent<string>) => {
     case 'reconnectTimeout': {
       console.log('重试次数: ', value.reconnectCount)
       reconnectCount = value.reconnectCount + 1
-      // 如果没有超过最大重连次数才继续重连
-      if (reconnectCount < reconnectCountMax) {
-        console.log('重连中，当前clientId:', clientId, '当前token状态:', token ? '存在' : '不存在')
-        initConnection()
-        lockReconnect = false
-      } else {
-        console.log('达到最大重连次数，停止重连')
-        postMsg({
-          type: WorkerMsgEnum.WS_ERROR,
-          value: { msg: '连接失败次数过多，请刷新页面重试' }
-        })
-      }
+      console.log('重连中，当前clientId:', clientId, '当前token状态:', token ? '存在' : '不存在')
+      initConnection()
+      lockReconnect = false
       break
     }
     // 心跳定时器触发

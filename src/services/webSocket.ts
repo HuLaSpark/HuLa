@@ -241,7 +241,6 @@ class WS {
       }
       case 'reconnectTimeout': {
         // timer上报重连超时事件，转发给WebSocket worker
-        console.log('重试次数: ', data.reconnectCount)
         worker.postMessage(
           JSON.stringify({
             type: 'reconnectTimeout',
