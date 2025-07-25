@@ -376,6 +376,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     const tempMsg = await messageStrategy.buildMessageType(tempMsgId, messageBody, globalStore, userUid)
     resetInput()
 
+    tempMsg.message.status = MessageStatusEnum.SENDING
     // 先添加到消息列表
     chatStore.pushMsg(tempMsg)
     useMitt.emit(MittEnum.MESSAGE_ANIMATION, tempMsg)
