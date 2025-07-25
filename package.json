@@ -42,6 +42,8 @@
     "preinstall": "npx only-allow pnpm && node scripts/check-all.js",
     "========= 使用commit来进行代码提交 =========": "",
     "commit": "git add . && git-cz",
+    "========= 校验代码 =========": "",
+    "lint": "lint-staged && vue-tsc --noEmit",
     "========= 校验代码规范 =========": "",
     "lint:staged": "lint-staged && vue-tsc --noEmit",
     "========= 安装husky =========": "",
