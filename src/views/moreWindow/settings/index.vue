@@ -61,11 +61,13 @@
 <script setup lang="ts">
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import router from '@/router'
+import { useScannerStore } from '@/stores/scanner.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import Foot from '@/views/moreWindow/settings/Foot.vue'
 import { sideOptions } from './config.ts'
 
 const settingStore = useSettingStore()
+const scannerStore = useScannerStore()
 const skeleton = ref(true)
 const { page } = storeToRefs(settingStore)
 /**当前选中的元素 默认选中itemsTop的第一项*/
@@ -85,10 +87,19 @@ const pageJumps = (url: string, label: string) => {
 
 onMounted(async () => {
   await getCurrentWebviewWindow().show()
+
+  // 重置扫描器状态
+  scannerStore.resetState()
+
   setTimeout(() => {
     skeleton.value = false
   }, 300)
   pageJumps(activeItem.value, title.value)
+})
+
+// 设置窗口关闭时清理扫描器资源
+onUnmounted(async () => {
+  await scannerStore.cleanup()
 })
 </script>
 

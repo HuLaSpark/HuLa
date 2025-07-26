@@ -159,7 +159,9 @@ export enum StoresEnum {
   /** 文件下载管理 */
   FILE_DOWNLOAD = 'fileDownload',
   /** 移动端状态 */
-  MOBILE = 'mobile'
+  MOBILE = 'mobile',
+  /** 目录扫描器 */
+  SCANNER = 'scanner'
 }
 
 /**
