@@ -37,9 +37,20 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
             .build()?;
 
         let tray_handler = app.clone();
+        let default_icon = match app.default_window_icon() {
+            Some(icon) => icon.clone(),
+            None => {
+                log::error!("未找到默认窗口图标");
+                return Err(tauri::Error::Io(std::io::Error::new(
+                    std::io::ErrorKind::NotFound,
+                    "未找到默认窗口图标"
+                )));
+            }
+        };
+            
         let _ = TrayIconBuilder::with_id("tray")
             .tooltip("HuLa")
-            .icon(app.default_window_icon().unwrap().clone())
+            .icon(default_icon)
             .menu(&tray_menu) // 直接设置菜单，让系统处理右键显示
             .show_menu_on_left_click(false) // 禁用左键显示菜单
             .on_menu_event(move |app, event| {
@@ -93,9 +104,20 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
     #[cfg(not(target_os = "macos"))]
     {
         // 为其他系统（非 macOS）创建托盘图标
+        let default_icon = match app.default_window_icon() {
+            Some(icon) => icon.clone(),
+            None => {
+                log::error!("未找到默认窗口图标");
+                return Err(tauri::Error::Io(std::io::Error::new(
+                    std::io::ErrorKind::NotFound,
+                    "未找到默认窗口图标"
+                )));
+            }
+        };
+            
         let _ = TrayIconBuilder::with_id("tray")
             .tooltip("HuLa")
-            .icon(app.default_window_icon().unwrap().clone())
+            .icon(default_icon)
             .on_tray_icon_event(|tray, event| match event {
                 TrayIconEvent::Click {
                     id: _,
@@ -108,26 +130,37 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
                         let windows = tray.app_handle().webview_windows();
                         for (name, window) in windows {
                             if name == "login" || name == "home" {
-                                window.show().unwrap();
-                                window.unminimize().unwrap();
-                                window.set_focus().unwrap();
+                                if let Err(e) = window.show() {
+                                    log::warn!("显示窗口 {} 失败: {}", name, e);
+                                }
+                                if let Err(e) = window.unminimize() {
+                                    log::warn!("取消最小化窗口 {} 失败: {}", name, e);
+                                }
+                                if let Err(e) = window.set_focus() {
+                                    log::warn!("设置窗口 {} 焦点失败: {}", name, e);
+                                }
                                 break;
                             }
                         }
                     }
                     MouseButton::Right if MouseButtonState::Down == button_state => {
                         // 状态栏图标按下右键时显示状态栏菜单
-                        let tray_window = tray.app_handle().get_webview_window("tray").unwrap();
-                        if let Ok(outer_size) = tray_window.outer_size() {
-                            tray_window
-                                .set_position(PhysicalPosition::new(
+                        if let Some(tray_window) = tray.app_handle().get_webview_window("tray") {
+                            if let Ok(outer_size) = tray_window.outer_size() {
+                                if let Err(e) = tray_window.set_position(PhysicalPosition::new(
                                     position.x,
                                     position.y - outer_size.height as f64,
-                                ))
-                                .unwrap();
-                            tray_window.set_always_on_top(true).unwrap();
-                            tray_window.show().unwrap();
-                            tray_window.set_focus().unwrap();
+                                )) {
+                                    log::warn!("设置托盘窗口位置失败: {}", e);
+                                    return;
+                                }
+                                
+                                let _ = tray_window.set_always_on_top(true);
+                                let _ = tray_window.show();
+                                let _ = tray_window.set_focus();
+                            }
+                        } else {
+                            log::warn!("未找到托盘窗口");
                         }
                     }
                     _ => {}

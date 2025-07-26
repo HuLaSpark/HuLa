@@ -90,52 +90,89 @@ pub fn default_window_icon<R: Runtime>(
 }
 
 #[tauri::command]
-pub fn screenshot(x: &str, y: &str, width: &str, height: &str) -> String {
-    let screen = Screen::from_point(100, 100).unwrap();
+pub fn screenshot(x: &str, y: &str, width: &str, height: &str) -> Result<String, String> {
+    let screen = Screen::from_point(100, 100)
+        .map_err(|e| format!("获取屏幕信息失败: {}", e))?;
+    
+    let x = x.parse::<i32>()
+        .map_err(|_| "无效的 x 坐标参数".to_string())?;
+    let y = y.parse::<i32>()
+        .map_err(|_| "无效的 y 坐标参数".to_string())?;
+    let width = width.parse::<u32>()
+        .map_err(|_| "无效的宽度参数".to_string())?;
+    let height = height.parse::<u32>()
+        .map_err(|_| "无效的高度参数".to_string())?;
+    
     let image = screen
-        .capture_area(
-            x.parse::<i32>().unwrap(),
-            y.parse::<i32>().unwrap(),
-            width.parse::<u32>().unwrap(),
-            height.parse::<u32>().unwrap(),
-        )
-        .unwrap();
+        .capture_area(x, y, width, height)
+        .map_err(|e| format!("截图失败: {}", e))?;
+    
     let buffer = image.as_raw();
     let base64_str = general_purpose::STANDARD_NO_PAD.encode(buffer);
-    base64_str
+    Ok(base64_str)
 }
 
 #[tauri::command]
-pub fn audio(filename: &str, handle: AppHandle) {
+pub fn audio(filename: &str, handle: AppHandle) -> Result<(), String> {
+    
+    let path = "audio/".to_string() + filename;
+    let handle_clone = handle.clone();
+    
+    thread::spawn(move || {
+        if let Err(e) = play_audio_internal(&path, &handle_clone) {
+            log::error!("播放音频失败: {}", e);
+        }
+    });
+    
+    Ok(())
+}
+
+fn play_audio_internal(path: &str, handle: &AppHandle) -> Result<(), String> {
     use rodio::{Decoder, Source};
     use std::fs::File;
     use std::io::BufReader;
-    let path = "audio/".to_string() + filename;
-    thread::spawn(move || {
-        let audio_path = handle
-            .path()
-            .resolve(path, BaseDirectory::Resource)
-            .unwrap();
-        let audio = File::open(audio_path).unwrap();
-        let file = BufReader::new(audio);
-        let (_stream, stream_handle) = rodio::OutputStream::try_default().unwrap();
-        let source = Decoder::new(file).unwrap();
-        stream_handle.play_raw(source.convert_samples()).unwrap();
-        thread::sleep(Duration::from_millis(3000));
-    });
+    
+    let audio_path = handle
+        .path()
+        .resolve(path, BaseDirectory::Resource)
+        .map_err(|e| format!("解析音频路径失败: {}", e))?;
+        
+    let audio = File::open(audio_path)
+        .map_err(|e| format!("打开音频文件失败: {}", e))?;
+        
+    let file = BufReader::new(audio);
+    let (_stream, stream_handle) = rodio::OutputStream::try_default()
+        .map_err(|e| format!("创建音频输出流失败: {}", e))?;
+        
+    let source = Decoder::new(file)
+        .map_err(|e| format!("解码音频文件失败: {}", e))?;
+        
+    stream_handle.play_raw(source.convert_samples())
+        .map_err(|e| format!("播放音频失败: {}", e))?;
+        
+    thread::sleep(Duration::from_millis(3000));
+    Ok(())
 }
 
 #[tauri::command]
-pub fn set_height(height: u32, handle: AppHandle) {
-    let home_window = handle.get_webview_window("home").unwrap();
-    let sf = home_window.scale_factor().unwrap();
-    let out_size = home_window.inner_size().unwrap();
+pub fn set_height(height: u32, handle: AppHandle) -> Result<(), String> {
+    let home_window = handle.get_webview_window("home")
+        .ok_or("未找到 home 窗口")?;
+        
+    let sf = home_window.scale_factor()
+        .map_err(|e| format!("获取窗口缩放因子失败: {}", e))?;
+        
+    let out_size = home_window.inner_size()
+        .map_err(|e| format!("获取窗口尺寸失败: {}", e))?;
+        
     home_window
         .set_size(LogicalSize::new(
             out_size.to_logical(sf).width,
             cmp::max(out_size.to_logical(sf).height, height),
         ))
-        .unwrap();
+        .map_err(|e| format!("设置窗口高度失败: {}", e))?;
+        
+    Ok(())
 }
 
 #[tauri::command]

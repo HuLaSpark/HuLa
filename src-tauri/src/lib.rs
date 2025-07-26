@@ -25,6 +25,7 @@ pub mod error;
 pub mod im_reqest_client;
 pub mod pojo;
 pub mod repository;
+pub mod timeout_config;
 mod vo;
 
 use crate::command::room_member_command::{
@@ -91,23 +92,38 @@ fn setup_desktop() -> Result<(), CommonError> {
             setup_user_info_listener_early(app.handle().clone());
             setup_logout_listener(app.handle().clone());
 
-            match tauri::async_runtime::block_on(initialize_app_data(app_handle.clone())) {
-                Ok((db, client, user_info)) => {
-                    // 使用 manage 方法在运行时添加状态
-                    app_handle.manage(AppData {
-                        db_conn: db.clone(),
-                        request_client: client.clone(),
-                        user_info: user_info.clone(),
-                        cache,
-                    });
-                    let client_guard = tauri::async_runtime::block_on(client.lock());
-                    client_guard.set_app_handle(app_handle.clone());
-                    drop(client_guard);
+            // 异步初始化应用数据，避免阻塞主线程
+            let app_handle_clone = app_handle.clone();
+            let cache_clone = cache.clone();
+            tauri::async_runtime::spawn(async move {
+                match initialize_app_data(app_handle_clone.clone()).await {
+                    Ok((db, client, user_info)) => {
+                        // 使用 manage 方法在运行时添加状态
+                        app_handle_clone.manage(AppData {
+                            db_conn: db.clone(),
+                            request_client: client.clone(),
+                            user_info: user_info.clone(),
+                            cache: cache_clone,
+                        });
+
+                        // 安全地设置 app_handle，避免阻塞
+                        if let Ok(client_guard) = client.try_lock() {
+                            client_guard.set_app_handle(app_handle_clone.clone());
+                        } else {
+                            // 如果无法立即获取锁，异步等待
+                            let client_guard = client.lock().await;
+                            client_guard.set_app_handle(app_handle_clone.clone());
+                        }
+
+                        log::info!("应用数据初始化完成");
+                    }
+                    Err(e) => {
+                        log::error!("初始化应用数据失败: {}", e);
+                        // 可以发送事件通知前端初始化失败
+                        // let _ = app_handle_clone.emit("app_init_failed", e.to_string());
+                    }
                 }
-                Err(e) => {
-                    log::error!("初始化应用数据失败: {}", e);
-                }
-            }
+            });
 
             tray::create_tray(app.handle())?;
             Ok(())
@@ -214,32 +230,45 @@ fn setup_user_info_listener_early(app_handle: tauri::AppHandle) {
             // 等待AppData状态可用
             if let Some(app_data) = app_handle.try_state::<AppData>() {
                 if let Ok(payload) = serde_json::from_str::<UserInfo>(&event.payload()) {
-                    let client = app_data.request_client.lock().await;
+                    // 避免多重锁，分别获取和释放锁
 
-                    // 更新 client 的 token
-                    if let Ok(mut token_guard) = client.token.lock() {
-                        *token_guard = Some(payload.token.clone());
-                    }
+                    // 1. 先更新 client 的 token 信息
+                    {
+                        let client = app_data.request_client.lock().await;
+                        // 使用 try_lock 避免阻塞，如果获取不到锁则跳过更新
+                        if let Ok(mut token_guard) = client.token.try_lock() {
+                            *token_guard = Some(payload.token.clone());
+                        } else {
+                            log::warn!("无法获取 token 锁，跳过 token 更新");
+                        }
 
-                    if let Ok(mut refresh_token_guard) = client.refresh_token.lock() {
-                        *refresh_token_guard = Some(payload.refresh_token.clone());
-                    }
+                        if let Ok(mut refresh_token_guard) = client.refresh_token.try_lock() {
+                            *refresh_token_guard = Some(payload.refresh_token.clone());
+                        } else {
+                            log::warn!("无法获取 refresh_token 锁，跳过 refresh_token 更新");
+                        }
+                    } // client 锁在这里释放
 
-                    // 更新用户信息
-                    let mut user_info = app_data.user_info.lock().await;
-                    user_info.uid = payload.uid.clone();
-                    user_info.token = payload.token.clone();
-                    user_info.refresh_token = payload.refresh_token.clone();
+                    // 2. 然后更新用户信息
+                    {
+                        let mut user_info = app_data.user_info.lock().await;
+                        user_info.uid = payload.uid.clone();
+                        user_info.token = payload.token.clone();
+                        user_info.refresh_token = payload.refresh_token.clone();
+                    } // user_info 锁在这里释放
 
                     // 检查用户的 is_init 状态并获取消息
-                    if let Err(e) = check_user_init_and_fetch_messages(
-                        &client,
-                        app_data.db_conn.deref(),
-                        &payload.uid,
-                    )
-                    .await
                     {
-                        log::error!("检查用户初始化状态并获取消息失败: {}", e);
+                        let client = app_data.request_client.lock().await;
+                        if let Err(e) = check_user_init_and_fetch_messages(
+                            &*client,
+                            app_data.db_conn.deref(),
+                            &payload.uid,
+                        )
+                        .await
+                        {
+                            log::error!("检查用户初始化状态并获取消息失败: {}", e);
+                        }
                     }
                 }
             }

@@ -13,6 +13,24 @@ pub async fn save_all<C>(db: &C, messages: Vec<im_message::Model>) -> Result<(),
 where
     C: ConnectionTrait,
 {
+    // 为批量数据库操作添加超时机制
+    let timeout_duration = tokio::time::Duration::from_secs(120); // 2分钟超时
+    
+    match tokio::time::timeout(timeout_duration, save_all_internal(db, messages)).await {
+        Ok(result) => result,
+        Err(_) => {
+            log::error!("批量保存消息超时");
+            Err(CommonError::UnexpectedError(anyhow::anyhow!(
+                "批量保存消息操作超时，请检查数据库连接状态"
+            )))
+        }
+    }
+}
+
+async fn save_all_internal<C>(db: &C, messages: Vec<im_message::Model>) -> Result<(), CommonError>
+where
+    C: ConnectionTrait,
+{
     // SQLite 的变量限制通常是 999，为了安全起见，我们设置批次大小为 50
     // 考虑到需要先查询再删除再插入，减少批次大小以避免变量限制
     const BATCH_SIZE: usize = 50;
