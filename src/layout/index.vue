@@ -382,9 +382,12 @@ onMounted(async () => {
     await homeWindow.onFocusChanged(({ payload: focused }) => {
       // 当窗口获得焦点时，关闭通知提示
       if (focused) {
-        globalStore.setTipVisible(false)
-        // 同时通知通知窗口隐藏
-        emitTo('notify', 'hide_notify')
+        // 只有在tipVisible为true时才需要发送hide_notify事件
+        if (globalStore.tipVisible) {
+          globalStore.setTipVisible(false)
+          // 同时通知通知窗口隐藏
+          emitTo('notify', 'hide_notify')
+        }
       }
     })
   }

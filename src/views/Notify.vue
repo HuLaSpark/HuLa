@@ -49,6 +49,7 @@
 import { PhysicalPosition } from '@tauri-apps/api/dpi'
 import { Event, emitTo, listen } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { useDebounceFn } from '@vueuse/core'
 import { RoomTypeEnum } from '@/enums'
 import { useReplaceMsg } from '@/hooks/useReplaceMsg.ts'
 import { useTauriListener } from '@/hooks/useTauriListener'
@@ -118,7 +119,7 @@ const handleClickMsg = async (group: any) => {
       roomType: group.roomType
     })
     // 收起通知面板
-    await handleTip()
+    await debouncedHandleTip()
   } else {
     console.error('找不到对应的会话信息')
   }
@@ -129,6 +130,8 @@ const handleTip = async () => {
   globalStore.setTipVisible(false)
   await WebviewWindow.getCurrent().hide()
 }
+
+const debouncedHandleTip = useDebounceFn(handleTip, 100)
 
 // 处理窗口显示和隐藏的逻辑
 const showWindow = async (event: Event<any>) => {
@@ -195,8 +198,10 @@ onMounted(async () => {
 
     // 监听隐藏通知的事件，当主窗口获得焦点时触发
     appWindow.listen('hide_notify', async () => {
-      // 隐藏所有通知并关闭窗口
-      await handleTip()
+      // 只有在tipVisible为true时才需要处理
+      if (tipVisible.value) {
+        debouncedHandleTip()
+      }
     })
   ])
 
