@@ -1,4 +1,4 @@
-application:
-  host: 127.0.0.1
+database:
+  sqlite_file: db.sqlite
 backend:
   base_url: https://hulaspark.com/api
