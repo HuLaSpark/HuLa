@@ -4,6 +4,8 @@ pub enum CommonError {
     UnexpectedError(#[from] anyhow::Error),
     #[error("Database error: {0}")]
     DatabaseError(#[from] sea_orm::DbErr),
+    #[error("Request error: {0}")]
+    RequestError(String),
     #[error("token过期")]
     TokenExpired,
 }

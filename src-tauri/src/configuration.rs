@@ -93,7 +93,7 @@ pub fn get_configuration(app_handle: &AppHandle) -> Result<Settings, config::Con
     let environment: Environment = std::env::var("APP_ENVIRONMENT")
         .unwrap_or_else(|_| "local".into())
         .try_into()
-        .expect("解析APP_ENVIRONMENT失败");
+        .map_err(|e| config::ConfigError::Message(format!("解析APP_ENVIRONMENT失败: {:?}", e)))?;
 
     let environment_filename = format!("{}.yaml", environment.as_str());
     let settings = config::Config::builder()

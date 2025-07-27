@@ -65,7 +65,10 @@ use tokio::sync::Mutex;
 pub fn run() {
     #[cfg(desktop)]
     {
-        setup_desktop().unwrap();
+        if let Err(e) = setup_desktop() {
+            log::error!("Failed to setup desktop application: {}", e);
+            std::process::exit(1);
+        }
     }
     #[cfg(mobile)]
     {
@@ -155,7 +158,7 @@ fn setup_desktop() -> Result<(), CommonError> {
             cancel_directory_scan
         ])
         .build(tauri::generate_context!())
-        .expect("error while building tauri application")
+        .map_err(|e| CommonError::RequestError(format!("Failed to build tauri application: {}", e)))?
         .run(|app_handle, event| {
             #[cfg(target_os = "macos")]
             app_event::handle_app_event(&app_handle, event);
@@ -348,8 +351,10 @@ fn setup_logout_listener(app_handle: tauri::AppHandle) {
 #[cfg(mobile)]
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 fn setup_mobile() {
-    tauri::Builder::default()
+    if let Err(e) = tauri::Builder::default()
         .init_plugin()
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .run(tauri::generate_context!()) {
+        log::error!("Failed to run mobile application: {}", e);
+        std::process::exit(1);
+    }
 }

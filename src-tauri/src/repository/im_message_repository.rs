@@ -267,7 +267,11 @@ pub async fn update_message_status(
     active_model.send_status = Set(status.to_string());
 
     if status == "success" {
-        active_model.id = Set(id.unwrap());
+        if let Some(message_id) = id {
+            active_model.id = Set(message_id);
+        } else {
+            return Err(CommonError::RequestError("Message ID is None for successful status".to_string()));
+        }
     }
 
     im_message::Entity::update_many()

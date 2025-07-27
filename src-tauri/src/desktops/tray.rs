@@ -171,9 +171,13 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
                     position: _,
                     rect: _,
                 } => {
-                    tray.app_handle()
-                        .emit_to("notify", "notify_enter", &tray.rect().unwrap())
-                        .unwrap();
+                    if let Ok(rect) = tray.rect() {
+                        if let Err(e) = tray.app_handle().emit_to("notify", "notify_enter", &rect) {
+                            log::warn!("Failed to emit notify_enter event: {}", e);
+                        }
+                    } else {
+                        log::warn!("Failed to get tray rect");
+                    }
                 }
                 #[cfg(target_os = "windows")]
                 TrayIconEvent::Leave {
@@ -181,9 +185,9 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
                     position: _,
                     rect: _,
                 } => {
-                    tray.app_handle()
-                        .emit_to("notify", "notify_leave", ())
-                        .unwrap();
+                    if let Err(e) = tray.app_handle().emit_to("notify", "notify_leave", ()) {
+                        log::warn!("Failed to emit notify_leave event: {}", e);
+                    }
                 }
                 _ => {}
             })

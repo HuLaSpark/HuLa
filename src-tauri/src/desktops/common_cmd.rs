@@ -207,11 +207,13 @@ pub fn hide_title_bar_buttons(window_label: &str, handle: AppHandle) -> Result<(
         use cocoa::base::{NO, YES, id};
         use objc::{msg_send, sel, sel_impl};
 
-        let ns_window = handle
+        let webview_window = handle
             .get_webview_window(window_label)
-            .unwrap()
+            .ok_or_else(|| format!("Window '{}' not found", window_label))?;
+            
+        let ns_window = webview_window
             .ns_window()
-            .unwrap() as id;
+            .map_err(|e| format!("Failed to get NSWindow: {}", e))? as id;
 
         unsafe {
             // 隐藏标题栏按钮的辅助函数

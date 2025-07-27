@@ -394,7 +394,13 @@ pub async fn send_msg(
         let status = match result {
             Ok(resp) => {
                 info!("消息发送成功，ID: {}", msg_id);
-                let mut result = resp.data.clone().unwrap();
+                let mut result = match resp.data.clone() {
+                    Some(data) => data,
+                    None => {
+                        error!("Response data is None");
+                        return;
+                    }
+                };
                 result.old_msg_id = Some(msg_id.clone());
                 id = result.message.id.clone();
 

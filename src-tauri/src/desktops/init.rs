@@ -35,9 +35,15 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
                 // 优先显示已存在的home窗口
                 for (name, window) in windows {
                     if name == "home" {
-                        window.show().unwrap();
-                        window.unminimize().unwrap();
-                        window.set_focus().unwrap();
+                        if let Err(e) = window.show() {
+                            log::warn!("Failed to show home window: {}", e);
+                        }
+                        if let Err(e) = window.unminimize() {
+                            log::warn!("Failed to unminimize home window: {}", e);
+                        }
+                        if let Err(e) = window.set_focus() {
+                            log::warn!("Failed to focus home window: {}", e);
+                        }
                         break;
                     }
                 }
@@ -73,7 +79,9 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
                     }
                 }
                 if window.label().eq("tray") && !flag {
-                    window.hide().unwrap();
+                    if let Err(e) = window.hide() {
+                        log::warn!("Failed to hide tray window: {}", e);
+                    }
                 }
                 #[cfg(target_os = "windows")]
                 if !window.label().eq("notify") && *flag {
@@ -83,7 +91,9 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
                 }
                 #[cfg(target_os = "windows")]
                 if window.label().eq("notify") && !flag {
-                    window.hide().unwrap();
+                    if let Err(e) = window.hide() {
+                        log::warn!("Failed to hide notify window: {}", e);
+                    }
                 }
             }
             WindowEvent::CloseRequested { .. } => {
