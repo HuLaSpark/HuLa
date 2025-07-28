@@ -98,8 +98,6 @@ fn setup_desktop() -> Result<(), CommonError> {
             setup_logout_listener(app.handle().clone());
 
             // 异步初始化应用数据，避免阻塞主线程
-            let app_handle_clone = app_handle.clone();
-            let cache_clone = cache.clone();
             match tauri::async_runtime::block_on(initialize_app_data(app_handle.clone())) {
                 Ok((db, client, user_info)) => {
                     // 使用 manage 方法在运行时添加状态

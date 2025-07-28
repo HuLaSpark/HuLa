@@ -78,10 +78,11 @@ pub async fn update_user_last_opt_time(state: State<'_, AppData>) -> Result<(), 
 
 #[cfg(target_os = "macos")]
 use cocoa::{appkit::NSApp, base::nil, foundation::NSString};
+#[cfg(target_os = "macos")]
 use objc::{msg_send, sel, sel_impl};
 
 #[tauri::command]
-pub fn set_badge(count: i32) {
+pub fn set_badge(#[allow(unused_variables)] count: i32) {
     #[cfg(target_os = "macos")]
     unsafe {
         let label = if count == 0 {
