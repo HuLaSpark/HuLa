@@ -61,6 +61,8 @@ use crate::command::message_command::{
 use crate::command::message_mark_command::save_message_mark;
 use tauri::{Listener, Manager};
 use tokio::sync::Mutex;
+#[cfg(target_os = "macos")]
+use crate::command::user_command::set_badge;
 
 pub fn run() {
     #[cfg(desktop)]
@@ -142,7 +144,9 @@ fn setup_desktop() -> Result<(), CommonError> {
             get_window_payload,
             get_files_meta,
             get_directory_usage_info_with_progress,
-            cancel_directory_scan
+            cancel_directory_scan,
+            #[cfg(target_os = "macos")]
+            set_badge
         ])
         .build(tauri::generate_context!())
         .map_err(|e| {

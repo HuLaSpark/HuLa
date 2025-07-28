@@ -156,7 +156,7 @@ export const useNetworkReconnect = () => {
     // 刷新联系人列表
     await contactStore.getContactList(true)
     // 更新未读消息计数
-    globalStore.updateGlobalUnreadCount()
+    await globalStore.updateGlobalUnreadCount()
     // 刷新在线用户列表
     await groupStore.refreshGroupMembers()
 

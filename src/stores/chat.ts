@@ -1,5 +1,7 @@
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { info } from '@tauri-apps/plugin-log'
 import { sendNotification } from '@tauri-apps/plugin-notification'
+import { type } from '@tauri-apps/plugin-os'
 import { cloneDeep } from 'lodash-es'
 import { defineStore } from 'pinia'
 import { useRoute } from 'vue-router'
@@ -683,7 +685,8 @@ export const useChatStore = defineStore(
     }
 
     // 更新未读消息计数
-    const updateTotalUnreadCount = () => {
+    const updateTotalUnreadCount = async () => {
+      info('[chat]更新全局未读消息计数')
       // 使用 Array.from 确保遍历的是最新的 sessionList
       const totalUnread = Array.from(sessionList.value).reduce((total, session) => {
         // 免打扰的会话不计入全局未读数
@@ -698,7 +701,10 @@ export const useChatStore = defineStore(
       // 更新全局 store 中的未读计数
       globalStore.unReadMark.newMsgUnreadCount = totalUnread
       // 更新系统托盘图标上的未读数
-      // invokeWithErrorHandler('set_badge_count', { count: totalUnread > 0 ? totalUnread : null })
+      if (type() === 'macos') {
+        const count = totalUnread > 0 ? totalUnread : 0
+        await invokeWithErrorHandler('set_badge', { count })
+      }
     }
 
     // 清空所有会话的未读数

@@ -42,10 +42,10 @@ export const useMessage = () => {
 
     // 只有在消息页面且有未读消息时，才标记为已读
     if (route.path === '/message' && item.unreadCount > 0) {
-      apis.markMsgRead({ roomId: item.roomId || '1' }).then(() => {
+      apis.markMsgRead({ roomId: item.roomId || '1' }).then(async () => {
         chatStore.markSessionRead(item.roomId || '1')
         // 更新全局未读计数
-        globalStore.updateGlobalUnreadCount()
+        await globalStore.updateGlobalUnreadCount()
       })
     }
   }
