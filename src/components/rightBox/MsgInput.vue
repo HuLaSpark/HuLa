@@ -1,9 +1,9 @@
 <template>
   <!-- 录音模式 -->
-  <VoiceRecorder v-if="isVoiceMode" @cancel="handleVoiceCancel" @send="handleVoiceSend" />
+  <VoiceRecorder v-show="isVoiceMode" @cancel="handleVoiceCancel" @send="handleVoiceSend" />
 
   <!-- 输入框 -->
-  <ContextMenu v-else class="w-full h-110px" @select="$event.click()" :menu="menuList">
+  <ContextMenu v-show="!isVoiceMode" class="w-full h-110px" @select="$event.click()" :menu="menuList">
     <n-scrollbar style="max-height: 100px">
       <div
         id="message-input"
