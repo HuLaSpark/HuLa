@@ -47,8 +47,8 @@ const navItems: NavItem[] = [
   {
     label: '我的',
     path: '/mobile/my',
-    icon: 'avatar',
-    actionIcon: 'avatar-action'
+    icon: 'wode',
+    actionIcon: 'wode-action'
   }
 ]
 </script>
