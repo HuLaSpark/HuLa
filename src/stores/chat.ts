@@ -702,8 +702,8 @@ export const useChatStore = defineStore(
       globalStore.unReadMark.newMsgUnreadCount = totalUnread
       // 更新系统托盘图标上的未读数
       if (type() === 'macos') {
-        const count = totalUnread > 0 ? totalUnread : 0
-        await invokeWithErrorHandler('set_badge', { count })
+        const count = totalUnread > 0 ? totalUnread : undefined
+        await invokeWithErrorHandler('set_badge_count', { count })
       }
     }
 

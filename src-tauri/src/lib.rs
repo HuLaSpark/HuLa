@@ -61,8 +61,6 @@ use crate::command::message_command::{
 use crate::command::message_mark_command::save_message_mark;
 use tauri::{Listener, Manager};
 use tokio::sync::Mutex;
-#[cfg(target_os = "macos")]
-use crate::command::user_command::set_badge;
 
 pub fn run() {
     #[cfg(desktop)]
@@ -80,7 +78,7 @@ pub fn run() {
 
 #[cfg(desktop)]
 fn setup_desktop() -> Result<(), CommonError> {
-    use crate::command::user_command::{save_user_info, update_user_last_opt_time};
+    use crate::{command::user_command::{save_user_info, update_user_last_opt_time}, desktops::common_cmd::set_badge_count};
 
     // 创建一个缓存实例
     let cache: Cache<String, String> = Cache::builder()
@@ -143,8 +141,7 @@ fn setup_desktop() -> Result<(), CommonError> {
             get_files_meta,
             get_directory_usage_info_with_progress,
             cancel_directory_scan,
-            #[cfg(target_os = "macos")]
-            set_badge
+            set_badge_count
         ])
         .build(tauri::generate_context!())
         .map_err(|e| {

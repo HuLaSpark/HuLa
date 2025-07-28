@@ -75,22 +75,3 @@ pub async fn update_user_last_opt_time(state: State<'_, AppData>) -> Result<(), 
 
     Ok(())
 }
-
-#[cfg(target_os = "macos")]
-use cocoa::{appkit::NSApp, base::nil, foundation::NSString};
-#[cfg(target_os = "macos")]
-use objc::{msg_send, sel, sel_impl};
-
-#[tauri::command]
-pub fn set_badge(#[allow(unused_variables)] count: i32) {
-    #[cfg(target_os = "macos")]
-    unsafe {
-        let label = if count == 0 {
-            nil
-        } else {
-            NSString::alloc(nil).init_str(&format!("{}", count))
-        };
-        let dock_tile: cocoa::base::id = msg_send![NSApp(), dockTile];
-        let _: cocoa::base::id = msg_send![dock_tile, setBadgeLabel: label];
-    }
-}

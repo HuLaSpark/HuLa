@@ -72,7 +72,7 @@ export const useLogin = () => {
     chatStore.clearUnreadCount()
     // 5. 清除系统托盘图标上的未读数
     if (type() === 'macos') {
-      await invokeWithErrorHandler('set_badge', { count: 0 })
+      await invokeWithErrorHandler('set_badge_count', { count: undefined })
     }
   }
 

@@ -80,8 +80,8 @@ export const useGlobalStore = defineStore(
       }, 0)
       unReadMark.newMsgUnreadCount = totalUnread
       if (type() === 'macos') {
-        const count = totalUnread > 0 ? totalUnread : 0
-        await invokeWithErrorHandler('set_badge', { count })
+        const count = totalUnread > 0 ? totalUnread : undefined
+        await invokeWithErrorHandler('set_badge_count', { count })
       }
     }
 
