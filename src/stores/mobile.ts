@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { StoresEnum } from '@/enums'
 import { type } from '@tauri-apps/plugin-os'
 
-type SafeArea = {
+export type SafeArea = {
   bottom: number
   left: number
   right: number

@@ -28,7 +28,7 @@ const computedStyle = computed(() => {
 
   return {
     height: isAndroid ? `${safeAreaValue}px` : `env(safe-area-inset-${props.direction})`,
-    width: '100%',
+    width: '100vw',
     backgroundColor: props.bgColor // 直接应用背景色
   }
 })
