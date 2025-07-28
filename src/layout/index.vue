@@ -266,7 +266,7 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
       useMitt.emit(MittEnum.MESSAGE_ANIMATION, data)
       // 在windows系统下才发送通知
       if (type() === 'windows') {
-        await emitTo('tray', 'show_tip')
+        globalStore.setTipVisible(true)
         // 请求用户注意窗口
         home?.requestUserAttention(UserAttentionType.Critical)
       }
@@ -379,17 +379,6 @@ onMounted(async () => {
     // 居中
     await homeWindow.center()
     await homeWindow.show()
-    await homeWindow.onFocusChanged(({ payload: focused }) => {
-      // 当窗口获得焦点时，关闭通知提示
-      if (focused) {
-        // 只有在tipVisible为true时才需要发送hide_notify事件
-        if (globalStore.tipVisible) {
-          globalStore.setTipVisible(false)
-          // 同时通知通知窗口隐藏
-          emitTo('notify', 'hide_notify')
-        }
-      }
-    })
   }
 })
 

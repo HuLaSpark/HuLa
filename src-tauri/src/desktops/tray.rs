@@ -43,7 +43,7 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
                 log::error!("未找到默认窗口图标");
                 return Err(tauri::Error::Io(std::io::Error::new(
                     std::io::ErrorKind::NotFound,
-                    "未找到默认窗口图标"
+                    "未找到默认窗口图标",
                 )));
             }
         };
@@ -110,7 +110,7 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
                 log::error!("未找到默认窗口图标");
                 return Err(tauri::Error::Io(std::io::Error::new(
                     std::io::ErrorKind::NotFound,
-                    "未找到默认窗口图标"
+                    "未找到默认窗口图标",
                 )));
             }
         };
@@ -174,10 +174,10 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
                     if let Ok(rect) = tray.rect() {
                         match tray.app_handle().emit_to("notify", "notify_enter", &rect) {
                             Ok(_) => {
-                              log::info!("notify_enter事件发送成功");
+                                log::info!("notify_enter事件发送成功");
                             }
                             Err(e) => {
-                              log::warn!("Failed to emit notify_enter event: {}", e);
+                                log::warn!("Failed to emit notify_enter event: {}", e);
                             }
                         }
                     } else {

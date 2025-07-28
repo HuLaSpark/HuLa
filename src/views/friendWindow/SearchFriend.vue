@@ -405,18 +405,11 @@ const handleEditProfile = async () => {
 
 // 处理发送消息
 const handleSendMessage = async (item: any) => {
-  // 获取主窗口
-  const homeWindow = await WebviewWindow.getByLabel('home')
-
-  // 激活主窗口
-  await homeWindow?.setFocus()
   emitTo('home', 'search_to_msg', { uid: item.uid, roomType: RoomTypeEnum.SINGLE })
 }
 
 // 处理发送群消息
 const handleSendGroupMessage = async (item: any) => {
-  const homeWindow = await WebviewWindow.getByLabel('home')
-  await homeWindow?.setFocus()
   emitTo('home', 'search_to_msg', {
     uid: item.roomId,
     roomType: RoomTypeEnum.GROUP

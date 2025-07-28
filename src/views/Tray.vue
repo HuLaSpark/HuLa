@@ -54,7 +54,6 @@ import { TrayIcon } from '@tauri-apps/api/tray'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { type } from '@tauri-apps/plugin-os'
 import { exit } from '@tauri-apps/plugin-process'
-import { useTauriListener } from '@/hooks/useTauriListener'
 import { useWindow } from '@/hooks/useWindow.ts'
 import apis from '@/services/apis.ts'
 import { UserState } from '@/services/types'
@@ -72,9 +71,7 @@ const globalStore = useGlobalStore()
 const { lockScreen } = storeToRefs(settingStore)
 const { stateList, stateId } = storeToRefs(userStatusStore)
 const { tipVisible, isTrayMenuShow } = storeToRefs(globalStore)
-const { addListener } = useTauriListener()
 const isFocused = ref(false)
-let home: WebviewWindow | null = null
 // 状态栏图标是否显示
 const iconVisible = ref(false)
 // 创建Timer Worker实例
@@ -222,53 +219,12 @@ watchEffect(async () => {
       startBlinkTimer() // 启动图标闪烁
     } else {
       stopBlinkTimer() // 停止图标闪烁
-      const tray = await TrayIcon.getById('tray')
-      if (tray) {
-        // 确保图标可见并恢复默认状态
-        await tray.setVisible(true)
-        await tray.setIcon('tray/icon.png')
-        iconVisible.value = false
-      }
-      isFocused.value = false
-      tipVisible.value = false
     }
   }
 })
 
-// 可以使用 watch 来观察焦点状态的变化
-watch([isFocused, () => tipVisible.value], ([newFocused, newTipVisible]) => {
-  console.log('Focus or tip state changed:', { focused: newFocused, tipVisible: newTipVisible })
-})
-
 onBeforeMount(() => {
   globalStore.setTipVisible(false)
-})
-
-onMounted(async () => {
-  home = await WebviewWindow.getByLabel('home')
-  isFocused.value = (await home?.isFocused()) || false
-
-  if (home) {
-    // 监听窗口焦点变化
-    addListener(
-      home.listen('tauri://focus', () => {
-        isFocused.value = true
-      })
-    )
-
-    addListener(
-      home.listen('tauri://blur', () => {
-        isFocused.value = false
-      })
-    )
-  }
-
-  // 将监听器添加到pushListeners中以便于组件卸载时自动移除
-  addListener(
-    appWindow.listen('show_tip', async () => {
-      globalStore.setTipVisible(true)
-    })
-  )
 })
 
 onUnmounted(async () => {

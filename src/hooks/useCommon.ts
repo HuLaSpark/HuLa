@@ -812,7 +812,7 @@ export const useCommon = () => {
    */
   const openMsgSession = async (uid: string, type: number = 2) => {
     // 获取home窗口实例
-    const label = await WebviewWindow.getCurrent().label
+    const label = WebviewWindow.getCurrent().label
     if (route.name !== '/message' && label === 'home') {
       router.push('/message')
     }
