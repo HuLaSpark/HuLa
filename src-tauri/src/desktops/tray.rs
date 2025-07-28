@@ -47,7 +47,7 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
                 )));
             }
         };
-            
+
         let _ = TrayIconBuilder::with_id("tray")
             .tooltip("HuLa")
             .icon(default_icon)
@@ -114,7 +114,7 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
                 )));
             }
         };
-            
+
         let _ = TrayIconBuilder::with_id("tray")
             .tooltip("HuLa")
             .icon(default_icon)
@@ -154,7 +154,7 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
                                     log::warn!("设置托盘窗口位置失败: {}", e);
                                     return;
                                 }
-                                
+
                                 let _ = tray_window.set_always_on_top(true);
                                 let _ = tray_window.show();
                                 let _ = tray_window.set_focus();
@@ -172,8 +172,13 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
                     rect: _,
                 } => {
                     if let Ok(rect) = tray.rect() {
-                        if let Err(e) = tray.app_handle().emit_to("notify", "notify_enter", &rect) {
-                            log::warn!("Failed to emit notify_enter event: {}", e);
+                        match tray.app_handle().emit_to("notify", "notify_enter", &rect) {
+                            Ok(_) => {
+                              log::info!("notify_enter事件发送成功");
+                            }
+                            Err(e) => {
+                              log::warn!("Failed to emit notify_enter event: {}", e);
+                            }
                         }
                     } else {
                         log::warn!("Failed to get tray rect");

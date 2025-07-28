@@ -98,35 +98,23 @@ fn setup_desktop() -> Result<(), CommonError> {
             // 异步初始化应用数据，避免阻塞主线程
             let app_handle_clone = app_handle.clone();
             let cache_clone = cache.clone();
-            tauri::async_runtime::spawn(async move {
-                match initialize_app_data(app_handle_clone.clone()).await {
-                    Ok((db, client, user_info)) => {
-                        // 使用 manage 方法在运行时添加状态
-                        app_handle_clone.manage(AppData {
-                            db_conn: db.clone(),
-                            request_client: client.clone(),
-                            user_info: user_info.clone(),
-                            cache: cache_clone,
-                        });
-
-                        // 安全地设置 app_handle，避免阻塞
-                        if let Ok(client_guard) = client.try_lock() {
-                            client_guard.set_app_handle(app_handle_clone.clone());
-                        } else {
-                            // 如果无法立即获取锁，异步等待
-                            let client_guard = client.lock().await;
-                            client_guard.set_app_handle(app_handle_clone.clone());
-                        }
-
-                        log::info!("应用数据初始化完成");
-                    }
-                    Err(e) => {
-                        log::error!("初始化应用数据失败: {}", e);
-                        // 可以发送事件通知前端初始化失败
-                        // let _ = app_handle_clone.emit("app_init_failed", e.to_string());
-                    }
+            match tauri::async_runtime::block_on(initialize_app_data(app_handle.clone())) {
+                Ok((db, client, user_info)) => {
+                    // 使用 manage 方法在运行时添加状态
+                    app_handle.manage(AppData {
+                        db_conn: db.clone(),
+                        request_client: client.clone(),
+                        user_info: user_info.clone(),
+                        cache,
+                    });
+                    let client_guard = tauri::async_runtime::block_on(client.lock());
+                    client_guard.set_app_handle(app_handle.clone());
+                    drop(client_guard);
                 }
-            });
+                Err(e) => {
+                    log::error!("初始化应用数据失败: {}", e);
+                }
+            }
 
             tray::create_tray(app.handle())?;
             Ok(())
@@ -158,7 +146,9 @@ fn setup_desktop() -> Result<(), CommonError> {
             cancel_directory_scan
         ])
         .build(tauri::generate_context!())
-        .map_err(|e| CommonError::RequestError(format!("Failed to build tauri application: {}", e)))?
+        .map_err(|e| {
+            CommonError::RequestError(format!("Failed to build tauri application: {}", e))
+        })?
         .run(|app_handle, event| {
             #[cfg(target_os = "macos")]
             app_event::handle_app_event(&app_handle, event);
@@ -353,7 +343,8 @@ fn setup_logout_listener(app_handle: tauri::AppHandle) {
 fn setup_mobile() {
     if let Err(e) = tauri::Builder::default()
         .init_plugin()
-        .run(tauri::generate_context!()) {
+        .run(tauri::generate_context!())
+    {
         log::error!("Failed to run mobile application: {}", e);
         std::process::exit(1);
     }

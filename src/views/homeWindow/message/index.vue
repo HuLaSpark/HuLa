@@ -116,7 +116,6 @@ import { useCommon } from '@/hooks/useCommon.ts'
 import { useMessage } from '@/hooks/useMessage.ts'
 import { useMitt } from '@/hooks/useMitt'
 import { useReplaceMsg } from '@/hooks/useReplaceMsg.ts'
-import { useTauriListener } from '@/hooks/useTauriListener'
 import { IsAllUserEnum, SessionItem } from '@/services/types.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global.ts'
@@ -125,7 +124,6 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
 
 const appWindow = WebviewWindow.getCurrent()
-const { addListener } = useTauriListener()
 const chatStore = useChatStore()
 const globalStore = useGlobalStore()
 const groupStore = useGroupStore()
@@ -231,15 +229,14 @@ onBeforeMount(async () => {
   useMitt.emit(MittEnum.LOCATE_SESSION, { roomId: currentSession.value.roomId })
 })
 
-onMounted(() => {
+onMounted(async () => {
   SysNTF
   // 监听其他窗口发来的WebSocket发送请求
   // TODO：频繁切换会话会导致频繁请求，切换的时候也会有点卡顿
-  addListener(
-    appWindow.listen('search_to_msg', (event: { payload: { uid: string; roomType: number } }) => {
-      openMsgSession(event.payload.uid, event.payload.roomType)
-    })
-  )
+  const unlisten = await appWindow.listen('search_to_msg', (event: { payload: { uid: string; roomType: number } }) => {
+    openMsgSession(event.payload.uid, event.payload.roomType)
+    unlisten()
+  })
   useMitt.on(MittEnum.DELETE_SESSION, async (roomId: string) => {
     await handleMsgDelete(roomId)
   })
