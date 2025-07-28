@@ -71,11 +71,11 @@ export const useLogin = () => {
     // 4. 清除未读数
     chatStore.clearUnreadCount()
     // 5. 清除系统托盘图标上的未读数
-    try {
-      await invokeSilently('set_badge_count', { count: null })
-    } catch (error) {
-      console.error('清除系统托盘图标上的未读数失败:', error)
-    }
+    // try {
+    //   await invokeSilently('set_badge_count', { count: null })
+    // } catch (error) {
+    //   console.error('清除系统托盘图标上的未读数失败:', error)
+    // }
   }
 
   return {

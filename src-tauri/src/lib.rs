@@ -6,7 +6,7 @@ use common_cmd::hide_title_bar_buttons;
 #[cfg(desktop)]
 use common_cmd::{
     audio, default_window_icon, get_files_meta, get_window_payload, push_window_payload,
-    screenshot, set_badge_count, set_height,
+    screenshot, set_height
 };
 #[cfg(target_os = "macos")]
 use desktops::app_event;
@@ -124,7 +124,6 @@ fn setup_desktop() -> Result<(), CommonError> {
             screenshot,
             audio,
             set_height,
-            set_badge_count,
             get_video_thumbnail,
             #[cfg(target_os = "macos")]
             hide_title_bar_buttons,

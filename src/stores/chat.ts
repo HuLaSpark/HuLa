@@ -14,7 +14,7 @@ import { useGroupStore } from '@/stores/group.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { computedTimeBlock } from '@/utils/ComputedTime.ts'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
-import { invokeSilently, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
+import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 
 type RecalledMessage = {
   messageId: string
@@ -698,7 +698,7 @@ export const useChatStore = defineStore(
       // 更新全局 store 中的未读计数
       globalStore.unReadMark.newMsgUnreadCount = totalUnread
       // 更新系统托盘图标上的未读数
-      invokeSilently('set_badge_count', { count: totalUnread > 0 ? totalUnread : null })
+      // invokeWithErrorHandler('set_badge_count', { count: totalUnread > 0 ? totalUnread : null })
     }
 
     // 清空所有会话的未读数

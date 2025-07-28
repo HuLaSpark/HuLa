@@ -28,7 +28,6 @@
 import { LogicalSize } from '@tauri-apps/api/dpi'
 import { emitTo } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { UserAttentionType } from '@tauri-apps/api/window'
 import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification'
 import { type } from '@tauri-apps/plugin-os'
 import { useThrottleFn } from '@vueuse/core'
@@ -248,12 +247,12 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
     data
   })
   const username = useUserInfo(data.fromUser.uid).value.name!
-  const home = await WebviewWindow.getByLabel('home')
+  // const home = await WebviewWindow.getByLabel('home')
   // 当home窗口不显示并且home窗口不是最小化的时候并且不是聚焦窗口的时候
-  const homeShow = await home?.isVisible()
-  const isHomeMinimized = await home?.isMinimized()
-  const isHomeFocused = await home?.isFocused()
-  if (homeShow && !isHomeMinimized && isHomeFocused) return
+  // const homeShow = await home?.isVisible()
+  // const isHomeMinimized = await home?.isMinimized()
+  // const isHomeFocused = await home?.isFocused()
+  // if (homeShow && !isHomeMinimized && isHomeFocused) return
 
   // 不是自己发的消息才通知
   if (data.fromUser.uid !== userUid.value) {
@@ -268,7 +267,7 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
       if (type() === 'windows') {
         globalStore.setTipVisible(true)
         // 请求用户注意窗口
-        home?.requestUserAttention(UserAttentionType.Critical)
+        // home?.requestUserAttention(UserAttentionType.Critical)
       }
 
       await emitTo('notify', 'notify_cotent', data)
