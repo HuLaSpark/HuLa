@@ -31,7 +31,7 @@
           <img class="text-card-image" :src="urlMap[item].image" @error="onImageLoadError" />
         </div>
         <div class="text-card-link-content">
-          <span class="text-14px line-clamp-1"> {{ urlMap[item].title }}</span>
+          <span class="text-14px line-clamp-1">{{ urlMap[item].title }}</span>
           <span class="text-(12px [--chat-text-color]) mt-4px line-clamp-2">{{ urlMap[item].description }}</span>
         </div>
       </div>
@@ -39,8 +39,8 @@
   </div>
 </template>
 <script setup lang="ts">
-import type { TextBody } from '@/services/types'
 import { open } from '@tauri-apps/plugin-shell'
+import type { TextBody } from '@/services/types'
 
 const props = defineProps<{ body: TextBody }>()
 // 获取所有匹配的字符串

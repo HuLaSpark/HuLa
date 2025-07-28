@@ -16,13 +16,13 @@
   </div>
 </template>
 <script lang="ts" setup>
-import LeftAvatar from './components/LeftAvatar.vue'
-import ActionList from './components/ActionList.vue'
-import InfoEdit from './components/InfoEdit.vue'
-import { useMitt } from '@/hooks/useMitt.ts'
-import { modalShow, LockScreen, CheckUpdate, RemoteLogin } from './model.tsx'
 import type { Component } from 'vue'
 import { MittEnum, ModalEnum } from '@/enums'
+import { useMitt } from '@/hooks/useMitt.ts'
+import ActionList from './components/ActionList.vue'
+import InfoEdit from './components/InfoEdit.vue'
+import LeftAvatar from './components/LeftAvatar.vue'
+import { CheckUpdate, LockScreen, modalShow, RemoteLogin } from './model.tsx'
 
 const componentMap = shallowRef<Component>()
 // 存储要传递给组件的props

@@ -6435,6 +6435,24 @@
           "markdownDescription": "Denies the fetch_send command without any pre-configured scope."
         },
         {
+          "description": "Allows the log command\n#### This default permission set includes:\n\n- `allow-log`",
+          "type": "string",
+          "const": "log:default",
+          "markdownDescription": "Allows the log command\n#### This default permission set includes:\n\n- `allow-log`"
+        },
+        {
+          "description": "Enables the log command without any pre-configured scope.",
+          "type": "string",
+          "const": "log:allow-log",
+          "markdownDescription": "Enables the log command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the log command without any pre-configured scope.",
+          "type": "string",
+          "const": "log:deny-log",
+          "markdownDescription": "Denies the log command without any pre-configured scope."
+        },
+        {
           "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-start-recording`\n- `allow-stop-recording`",
           "type": "string",
           "const": "mic-recorder:default",

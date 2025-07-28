@@ -73,8 +73,7 @@
                     autoCorrect="off"
                     autoCapitalize="off"
                     style="width: 200px"
-                    class="h-22px lh-22px rounded-6px">
-                  </n-input>
+                    class="h-22px lh-22px rounded-6px"></n-input>
                   <svg
                     @click.stop="deleteChat(item)"
                     class="color-[--chat-text-color] size-20px opacity-0 absolute right-0px top-4px">
@@ -138,7 +137,7 @@
   </n-flex>
 </template>
 <script setup lang="ts">
-import { NIcon, VirtualListInst, InputInst } from 'naive-ui'
+import { InputInst, NIcon, VirtualListInst } from 'naive-ui'
 import { useMitt } from '@/hooks/useMitt.ts'
 import router from '@/router'
 import { useUserStore } from '@/stores/user.ts'

@@ -1,36 +1,35 @@
-import urls from '@/services/urls'
+import { NotificationTypeEnum } from '@/enums'
+import request from '@/services/request'
 import {
+  AnnouncementItem,
   BadgeType,
   CacheBadgeItem,
   CacheBadgeReq,
   CacheUserItem,
   CacheUserReq,
+  ConfigType,
   ContactItem,
   EmojiItem,
   GroupDetailReq,
   GroupListReq,
   GroupStatisticType,
   ListResponse,
+  Login,
   LoginUserReq,
   MarkMsgReq,
   MessageType,
   MsgReadUnReadCountType,
   PageInfo,
+  PageResponse,
   RegisterUserReq,
   RequestFriendItem,
-  SessionItem,
-  UserInfoType,
-  UserState,
-  Login,
   SearchFriend,
   SearchGroup,
-  ConfigType,
-  AnnouncementItem,
-  PageResponse
+  SessionItem,
+  UserInfoType,
+  UserState
 } from '@/services/types'
-
-import request from '@/services/request'
-import { NotificationTypeEnum } from '@/enums'
+import urls from '@/services/urls'
 
 const GET = <T>(url: string, params?: any, abort?: AbortController) => request.get<T>(url, params, abort)
 const POST = <T>(url: string, params?: any, abort?: AbortController) => request.post<T>(url, params, abort)

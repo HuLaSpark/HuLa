@@ -1,20 +1,20 @@
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { sendNotification } from '@tauri-apps/plugin-notification'
+import { cloneDeep } from 'lodash-es'
 import { defineStore } from 'pinia'
 import { useRoute } from 'vue-router'
+import { ErrorType } from '@/common/exception'
+import { MessageStatusEnum, MsgEnum, NotificationTypeEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
 import apis from '@/services/apis'
 import type { MarkItemType, MessageType, RevokedMsgType, SessionItem } from '@/services/types'
-import { MessageStatusEnum, MsgEnum, NotificationTypeEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
-import { computedTimeBlock } from '@/utils/ComputedTime.ts'
 import { useCachedStore } from '@/stores/cached.ts'
+import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group.ts'
-import { useContactStore } from '@/stores/contacts.ts'
-import { cloneDeep } from 'lodash-es'
 import { useUserStore } from '@/stores/user.ts'
+import { computedTimeBlock } from '@/utils/ComputedTime.ts'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
-import { sendNotification } from '@tauri-apps/plugin-notification'
-import { invokeWithErrorHandler, invokeSilently } from '@/utils/TauriInvokeHandler'
-import { ErrorType } from '@/common/exception'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 
 type RecalledMessage = {
   messageId: string
@@ -156,7 +156,7 @@ export const useChatStore = defineStore(
 
     // 监听当前房间ID的变化
     watch(currentRoomId, async (val, oldVal) => {
-      if (WebviewWindow.getCurrent().label === 'login') {
+      if (WebviewWindow.getCurrent().label !== 'home') {
         return
       }
 
@@ -315,8 +315,8 @@ export const useChatStore = defineStore(
         isFirstInit = true
         // 只有在没有当前选中会话时，才设置第一个会话为当前会话
         if (!currentSelectedRoomId || currentSelectedRoomId === '1') {
-          globalStore.currentSession.roomId = data.list[0].roomId
-          globalStore.currentSession.type = data.list[0].type
+          globalStore.currentSession.roomId = data[0].roomId
+          globalStore.currentSession.type = data[0].type
         }
 
         // 用会话列表第一个去请求消息列表
@@ -698,7 +698,7 @@ export const useChatStore = defineStore(
       // 更新全局 store 中的未读计数
       globalStore.unReadMark.newMsgUnreadCount = totalUnread
       // 更新系统托盘图标上的未读数
-      invokeSilently('set_badge_count', { count: totalUnread > 0 ? totalUnread : null })
+      // invokeWithErrorHandler('set_badge_count', { count: totalUnread > 0 ? totalUnread : null })
     }
 
     // 清空所有会话的未读数

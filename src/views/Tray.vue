@@ -50,18 +50,17 @@
   </n-flex>
 </template>
 <script setup lang="tsx">
-import { useWindow } from '@/hooks/useWindow.ts'
-import { exit } from '@tauri-apps/plugin-process'
-import { useUserStatusStore } from '@/stores/userStatus'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { useSettingStore } from '@/stores/setting.ts'
-import { useGlobalStore } from '@/stores/global.ts'
 import { TrayIcon } from '@tauri-apps/api/tray'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { type } from '@tauri-apps/plugin-os'
-import { useTauriListener } from '@/hooks/useTauriListener'
-import { UserState } from '@/services/types'
+import { exit } from '@tauri-apps/plugin-process'
+import { useWindow } from '@/hooks/useWindow.ts'
 import apis from '@/services/apis.ts'
+import { UserState } from '@/services/types'
+import { useGlobalStore } from '@/stores/global.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user'
+import { useUserStatusStore } from '@/stores/userStatus'
 
 const appWindow = WebviewWindow.getCurrent()
 const { checkWinExist, createWebviewWindow } = useWindow()
@@ -72,9 +71,7 @@ const globalStore = useGlobalStore()
 const { lockScreen } = storeToRefs(settingStore)
 const { stateList, stateId } = storeToRefs(userStatusStore)
 const { tipVisible, isTrayMenuShow } = storeToRefs(globalStore)
-const { addListener } = useTauriListener()
 const isFocused = ref(false)
-let home: WebviewWindow | null = null
 // 状态栏图标是否显示
 const iconVisible = ref(false)
 // 创建Timer Worker实例
@@ -222,48 +219,12 @@ watchEffect(async () => {
       startBlinkTimer() // 启动图标闪烁
     } else {
       stopBlinkTimer() // 停止图标闪烁
-      const tray = await TrayIcon.getById('tray')
-      if (tray) {
-        // 确保图标可见并恢复默认状态
-        await tray.setVisible(true)
-        await tray.setIcon('tray/icon.png')
-        iconVisible.value = false
-      }
-      isFocused.value = false
-      tipVisible.value = false
     }
   }
 })
 
-// 可以使用 watch 来观察焦点状态的变化
-watch([isFocused, () => tipVisible.value], ([newFocused, newTipVisible]) => {
-  console.log('Focus or tip state changed:', { focused: newFocused, tipVisible: newTipVisible })
-})
-
 onBeforeMount(() => {
   globalStore.setTipVisible(false)
-})
-
-onMounted(async () => {
-  home = await WebviewWindow.getByLabel('home')
-  isFocused.value = (await home?.isFocused()) || false
-
-  if (home) {
-    // 监听窗口焦点变化
-    home.listen('tauri://focus', () => {
-      isFocused.value = true
-    })
-    home.listen('tauri://blur', () => {
-      isFocused.value = false
-    })
-  }
-
-  // 将监听器添加到pushListeners中以便于组件卸载时自动移除
-  await addListener(
-    appWindow.listen('show_tip', async () => {
-      globalStore.setTipVisible(true)
-    })
-  )
 })
 
 onUnmounted(async () => {

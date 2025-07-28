@@ -1,7 +1,7 @@
 import dayjs from 'dayjs'
 import weekday from 'dayjs/plugin/weekday'
 import 'dayjs/locale/zh-cn' // 导入中文语言包
-import type { Dayjs, OpUnitType, ConfigType } from 'dayjs'
+import type { ConfigType, Dayjs, OpUnitType } from 'dayjs'
 import type { MessageType } from '@/services/types'
 
 // 全局使用语言包

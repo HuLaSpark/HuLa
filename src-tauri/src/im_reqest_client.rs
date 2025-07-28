@@ -20,7 +20,8 @@ impl ImRequestClient {
     /// 创建新的请求客户端
     pub async fn new(base_url: String) -> Result<Self, CommonError> {
         let client = Client::builder()
-            .timeout(std::time::Duration::from_secs(30))
+            .timeout(std::time::Duration::from_secs(60))
+            .connect_timeout(std::time::Duration::from_secs(10)) // 连接超时
             .build()
             .with_context(|| "创建 HTTP 客户端失败")?;
 
@@ -91,12 +92,29 @@ impl ImRequestClient {
     /// 刷新 token
     pub async fn refresh_token(&self) -> Result<(), CommonError> {
         let current_refresh_token = {
-            let refresh_token_guard = self
-                .refresh_token
-                .lock()
-                .expect("获取 refresh_token 锁失败");
-            refresh_token_guard.clone()
+            // 使用 try_lock 避免死锁，不跨 await 持有锁
+            match self.refresh_token.try_lock() {
+                Ok(guard) => guard.clone(),
+                Err(_) => {
+                    // 如果无法立即获取锁，则返回错误
+                    return Err(CommonError::UnexpectedError(anyhow::anyhow!(
+                        "无法获取 refresh_token 锁，可能存在锁竞争"
+                    )));
+                }
+            }
         };
+
+        // 检查 refresh_token 是否为 None
+        let refresh_token_value = match current_refresh_token {
+            Some(token) => token,
+            None => {
+                error!("尝试刷新token但refresh_token为空");
+                return Err(CommonError::UnexpectedError(anyhow::anyhow!(
+                    "refresh_token 为空，无法刷新token"
+                )));
+            }
+        };
+
         info!("开始刷新 token...");
         // 构建刷新 token 的请求
         let refresh_url = format!("{}/token/refreshToken", self.base_url);
@@ -106,7 +124,7 @@ impl ImRequestClient {
         let response = request_builder
             .json(&HashMap::from([(
                 "refreshToken",
-                current_refresh_token.unwrap(),
+                refresh_token_value,
             )]))
             .send()
             .await
@@ -151,14 +169,19 @@ impl ImRequestClient {
         if let Some(data) = result.data {
             info!("token 刷新成功");
 
+            // 分别更新 token 和 refresh_token，避免跨 await 持有锁
             // 更新 token
-            if let Ok(mut token_guard) = self.token.lock() {
-                *token_guard = Some(data.token);
+            if let Ok(mut token_guard) = self.token.try_lock() {
+                *token_guard = Some(data.token.clone());
+            } else {
+                warn!("更新 token 失败：无法获取锁");
             }
 
             // 更新 refresh_token
-            if let Ok(mut refresh_token_guard) = self.refresh_token.lock() {
+            if let Ok(mut refresh_token_guard) = self.refresh_token.try_lock() {
                 *refresh_token_guard = Some(data.refresh_token);
+            } else {
+                warn!("更新 refresh_token 失败：无法获取锁");
             }
 
             Ok(())
@@ -233,25 +256,24 @@ impl<'a> RequestBuilderWrapper<'a> {
     ) -> Result<ApiResult<T>, CommonError> {
         // 记录请求信息
         let mut log_message = format!("发送请求到: {} [{}]", self.url, self.method);
-        
+
         // 添加查询参数信息
         if let Some(ref query_params) = self.query_params {
             log_message.push_str(&format!(" 查询参数: {}", query_params));
         }
-        
+
         // 添加请求体信息
         if let Some(ref json_body) = self.json_body {
             log_message.push_str(&format!(" 请求体: {}", json_body));
         }
-        
-        debug!("{}", log_message);
 
-        // 获取 token 并添加到请求头
-        let current_token = {
-            if let Ok(token_guard) = self.client.token.lock() {
-                token_guard.clone()
-            } else {
-                warn!("获取 token 锁失败");
+        info!("{}", log_message);
+
+        // 获取 token 并添加到请求头，避免跨 await 持有锁
+        let current_token = match self.client.token.try_lock() {
+            Ok(token_guard) => token_guard.clone(),
+            Err(_) => {
+                warn!("无法立即获取 token 锁");
                 None
             }
         };

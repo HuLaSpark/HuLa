@@ -1,18 +1,18 @@
-import { LimitEnum, MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
-import { Ref } from 'vue'
-import GraphemeSplitter from 'grapheme-splitter'
-import router from '@/router'
-import apis from '@/services/apis.ts'
-import { useMitt } from '@/hooks/useMitt.ts'
-import { useGlobalStore } from '@/stores/global.ts'
-import { useChatStore } from '@/stores/chat.ts'
-import { useMessage } from '@/hooks/useMessage.ts'
-import { useUserStore } from '@/stores/user.ts'
-import { getImageCache } from '@/utils/PathUtil.ts'
-import { AvatarUtils } from '@/utils/AvatarUtils'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { BaseDirectory, create, exists, mkdir } from '@tauri-apps/plugin-fs'
+import GraphemeSplitter from 'grapheme-splitter'
+import { Ref } from 'vue'
+import { LimitEnum, MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
+import { useMessage } from '@/hooks/useMessage.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
+import router from '@/router'
+import apis from '@/services/apis.ts'
+import { useChatStore } from '@/stores/chat.ts'
+import { useGlobalStore } from '@/stores/global.ts'
+import { useUserStore } from '@/stores/user.ts'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 import { removeTag } from '@/utils/Formatting'
+import { getImageCache } from '@/utils/PathUtil.ts'
 
 export interface SelectionRange {
   range: Range
@@ -812,7 +812,7 @@ export const useCommon = () => {
    */
   const openMsgSession = async (uid: string, type: number = 2) => {
     // 获取home窗口实例
-    const label = await WebviewWindow.getCurrent().label
+    const label = WebviewWindow.getCurrent().label
     if (route.name !== '/message' && label === 'home') {
       router.push('/message')
     }

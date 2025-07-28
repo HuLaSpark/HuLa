@@ -110,7 +110,7 @@
       item-resizable
       @scroll="handleScroll($event)"
       :item-size="46"
-      :items="groupStore.userList">
+      :items="filteredUserList">
       <template #default="{ item }">
         <n-popover
           :ref="(el) => (infoPopoverRefs[item.uid] = el)"
@@ -183,24 +183,24 @@
   </main>
 </template>
 <script setup lang="ts">
-import { MittEnum, OnlineEnum, RoleEnum, RoomTypeEnum } from '@/enums'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { useDebounceFn } from '@vueuse/core'
 import { InputInst } from 'naive-ui'
-import { usePopover } from '@/hooks/usePopover.ts'
+import { storeToRefs } from 'pinia'
+import { MittEnum, OnlineEnum, RoleEnum, RoomTypeEnum } from '@/enums'
+import { useUserInfo } from '@/hooks/useCached.ts'
 import { useChatMain } from '@/hooks/useChatMain.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
-import { useGroupStore } from '@/stores/group.ts'
-import { useUserInfo } from '@/hooks/useCached.ts'
-import { useGlobalStore } from '@/stores/global.ts'
-import { useDebounceFn } from '@vueuse/core'
-import { AvatarUtils } from '@/utils/AvatarUtils'
-import { useCachedStore } from '@/stores/cached.ts'
-import { useUserStatusStore } from '@/stores/userStatus'
-import { storeToRefs } from 'pinia'
-import { useWindow } from '@/hooks/useWindow.ts'
-import { useUserStore } from '@/stores/user'
-import { WsResponseMessageType } from '@/services/wsType.ts'
+import { usePopover } from '@/hooks/usePopover.ts'
 import { useTauriListener } from '@/hooks/useTauriListener'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { useWindow } from '@/hooks/useWindow.ts'
+import { WsResponseMessageType } from '@/services/wsType.ts'
+import { useCachedStore } from '@/stores/cached.ts'
+import { useGlobalStore } from '@/stores/global.ts'
+import { useGroupStore } from '@/stores/group.ts'
+import { useUserStore } from '@/stores/user'
+import { useUserStatusStore } from '@/stores/userStatus'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 
 const appWindow = WebviewWindow.getCurrent()
 const { createWebviewWindow } = useWindow()
@@ -231,11 +231,11 @@ provide('popoverControls', { enableScroll })
 
 const isLord = computed(() => {
   const currentUser = groupStore.userList.find((user) => user.uid === useUserStore().userInfo?.uid)
-  return currentUser?.roleId === RoleEnum.LORD
+  return currentUser?.groupRole === RoleEnum.LORD
 })
 const isAdmin = computed(() => {
   const currentUser = groupStore.userList.find((user) => user.uid === useUserStore().userInfo?.uid)
-  return currentUser?.roleId === RoleEnum.ADMIN
+  return currentUser?.groupRole === RoleEnum.ADMIN
 })
 
 /** 判断当前用户是否拥有id为6的徽章 并且是频道 */
@@ -281,17 +281,18 @@ const mergedUserList = computed(() => {
   return Array.from(userMap.values()).sort((a, b) => a.activeStatus - b.activeStatus)
 })
 
-// 修改watch监听器
+// 创建过滤后的用户列表计算属性
+const filteredUserList = computed(() => {
+  if (!searchRef.value) {
+    return mergedUserList.value
+  }
+  return mergedUserList.value.filter((user) => user.name.toLowerCase().includes(searchRef.value.toLowerCase()))
+})
+
+// 修改watch监听器 - 移除搜索逻辑避免递归
 watch(
   [() => groupStore.userList, () => cachedStore.currentAtUsersList],
   () => {
-    // 如果正在搜索，则应用搜索过滤
-    if (searchRef.value) {
-      groupStore.userList = mergedUserList.value.filter((user) =>
-        user.name.toLowerCase().includes(searchRef.value.toLowerCase())
-      )
-    }
-
     // 判断成员列表是否已加载完成
     if (groupStore.userList.length > 0 && currentLoadingRoomId.value === globalStore.currentSession?.roomId) {
       isLoadingMembers.value = false
@@ -305,8 +306,8 @@ watch(
  * @param value 输入值
  */
 const handleSearch = useDebounceFn((value: string) => {
-  // 从合并后的用户列表中搜索
-  groupStore.userList = mergedUserList.value.filter((user) => user.name.toLowerCase().includes(value.toLowerCase()))
+  // 直接更新 searchRef，让计算属性处理过滤逻辑
+  searchRef.value = value
 }, 10)
 
 /**

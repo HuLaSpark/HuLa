@@ -74,15 +74,15 @@
       </n-flex>
 
       <n-flex :size="40" align="center" justify="center">
-        <n-button secondary @click="handleEditing"> 编辑资料 </n-button>
+        <n-button secondary @click="handleEditing">编辑资料</n-button>
       </n-flex>
     </n-flex>
   </n-popover>
 </template>
 <script setup lang="ts">
-import { leftHook } from '../hook.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '~/src/utils/AvatarUtils.ts'
+import { leftHook } from '../hook.ts'
 
 const userStore = useUserStore()
 const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(userStore.userInfo.avatar as string))

@@ -152,7 +152,7 @@ const savedProxy = reactive({
 
 // 从本地存储加载设置
 onMounted(() => {
-  let proxySettings = localStorage.getItem('proxySettings')
+  const proxySettings = localStorage.getItem('proxySettings')
   if (proxySettings) {
     const parse = JSON.parse(proxySettings)
     savedProxy.apiType = parse.apiType

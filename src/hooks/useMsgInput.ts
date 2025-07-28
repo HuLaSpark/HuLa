@@ -1,25 +1,25 @@
-import { LimitEnum, MittEnum, MsgEnum, MessageStatusEnum, RoomTypeEnum, UploadSceneEnum, TauriCommand } from '@/enums'
+import { readImage, readText } from '@tauri-apps/plugin-clipboard-manager'
+import { type } from '@tauri-apps/plugin-os'
+import { useDebounceFn } from '@vueuse/core'
+import { storeToRefs } from 'pinia'
+import { Ref } from 'vue'
+import { ErrorType } from '@/common/exception'
+import { LimitEnum, MessageStatusEnum, MittEnum, MsgEnum, RoomTypeEnum, TauriCommand, UploadSceneEnum } from '@/enums'
 import { useUserInfo } from '@/hooks/useCached.ts'
-import { useCachedStore, type BaseUserItem } from '@/stores/cached.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
+import type { AIModel } from '@/services/types.ts'
+import { type BaseUserItem, useCachedStore } from '@/stores/cached.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useSettingStore } from '@/stores/setting.ts'
-import { useMitt } from '@/hooks/useMitt.ts'
-import { type } from '@tauri-apps/plugin-os'
-import { useDebounceFn } from '@vueuse/core'
-import { Ref } from 'vue'
-import { storeToRefs } from 'pinia'
-import { SelectionRange, useCommon } from './useCommon.ts'
-import { readText, readImage } from '@tauri-apps/plugin-clipboard-manager'
-import { processClipboardImage } from '@/utils/ImageUtils.ts'
 import { messageStrategyMap } from '@/strategy/MessageStrategy.ts'
-import { useTrigger } from './useTrigger'
-import type { AIModel } from '@/services/types.ts'
-import { UploadProviderEnum, useUpload } from './useUpload.ts'
-import { getReplyContent } from '@/utils/MessageReply.ts'
 import { fixFileMimeType, getMessageTypeByFile } from '@/utils/FileType.ts'
+import { processClipboardImage } from '@/utils/ImageUtils.ts'
+import { getReplyContent } from '@/utils/MessageReply.ts'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
-import { ErrorType } from '@/common/exception'
+import { SelectionRange, useCommon } from './useCommon.ts'
+import { useTrigger } from './useTrigger'
+import { UploadProviderEnum, useUpload } from './useUpload.ts'
 /**
  * 光标管理器
  */
@@ -376,6 +376,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     const tempMsg = await messageStrategy.buildMessageType(tempMsgId, messageBody, globalStore, userUid)
     resetInput()
 
+    tempMsg.message.status = MessageStatusEnum.SENDING
     // 先添加到消息列表
     chatStore.pushMsg(tempMsg)
     useMitt.emit(MittEnum.MESSAGE_ANIMATION, tempMsg)

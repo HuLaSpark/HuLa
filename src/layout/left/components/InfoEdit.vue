@@ -134,25 +134,25 @@
   <AvatarCropper ref="cropperRef" v-model:show="showCropper" :image-url="localImageUrl" @crop="handleCrop" />
 </template>
 <script setup lang="ts">
-import { IsYesEnum, MittEnum } from '@/enums'
-import { leftHook } from '@/layout/left/hook.ts'
-import { useMitt } from '@/hooks/useMitt.ts'
-import apis from '@/services/apis.ts'
-import { type } from '@tauri-apps/plugin-os'
-import { useCommon } from '@/hooks/useCommon.ts'
-import { useUserStore } from '@/stores/user.ts'
-import { UserInfoType } from '@/services/types'
-import { AvatarUtils } from '@/utils/AvatarUtils'
-import AvatarCropper from '@/components/common/AvatarCropper.vue'
-import { useLoginHistoriesStore } from '@/stores/loginHistory'
-import { formatTimestamp, isDiffNow } from '@/utils/ComputedTime.ts'
-import dayjs from 'dayjs'
-import { useTauriListener } from '@/hooks/useTauriListener'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { type } from '@tauri-apps/plugin-os'
+import dayjs from 'dayjs'
+import AvatarCropper from '@/components/common/AvatarCropper.vue'
+import { IsYesEnum, MittEnum } from '@/enums'
 import { useAvatarUpload } from '@/hooks/useAvatarUpload'
+import { useCommon } from '@/hooks/useCommon.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
+import { useTauriListener } from '@/hooks/useTauriListener'
+import { leftHook } from '@/layout/left/hook.ts'
+import apis from '@/services/apis.ts'
+import { UserInfoType } from '@/services/types'
+import { useLoginHistoriesStore } from '@/stores/loginHistory'
+import { useUserStore } from '@/stores/user.ts'
+import { AvatarUtils } from '@/utils/AvatarUtils'
+import { formatTimestamp, isDiffNow } from '@/utils/ComputedTime.ts'
 
 const appWindow = WebviewWindow.getCurrent()
-let localUserInfo = ref<Partial<UserInfoType>>({})
+const localUserInfo = ref<Partial<UserInfoType>>({})
 const userStore = useUserStore()
 const { addListener } = useTauriListener()
 const loginHistoriesStore = useLoginHistoriesStore()

@@ -38,11 +38,11 @@
   </main>
 </template>
 <script setup lang="ts">
-import { useUserStatusStore } from '@/stores/userStatus'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import apis from '@/services/apis.ts'
-import { useUserStore } from '@/stores/user'
 import { UserState } from '@/services/types'
+import { useUserStore } from '@/stores/user'
+import { useUserStatusStore } from '@/stores/userStatus'
 
 const userStatusStore = useUserStatusStore()
 const userStore = useUserStore()

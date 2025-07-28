@@ -25,9 +25,9 @@
           v-for="(it, i) in list"
           :key="i"
           class="whitespace-nowrap align-middle text-(12px ellipsis) max-w-full box-border color-#909090"
-          :title="it"
-          >{{ it }}</NCarouselItem
-        >
+          :title="it">
+          {{ it }}
+        </NCarouselItem>
       </NCarousel>
 
       <p class="cursor-default color-#13987f text-center text-sm mt-4" data-tauri-drag-region>
@@ -37,10 +37,10 @@
   </n-flex>
 </template>
 <script setup lang="tsx">
-import { check } from '@tauri-apps/plugin-updater'
 import { relaunch } from '@tauri-apps/plugin-process'
-import { changeColor } from 'seemly'
+import { check } from '@tauri-apps/plugin-updater'
 import { NCarousel, NCarouselItem } from 'naive-ui'
+import { changeColor } from 'seemly'
 
 const list = ref<string[]>([])
 const updating = ref(false)

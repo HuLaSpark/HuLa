@@ -1,14 +1,14 @@
 import { emit } from '@tauri-apps/api/event'
-import { EventEnum, MittEnum, RoomTypeEnum, SessionOperateEnum, NotificationTypeEnum } from '@/enums'
-import { useMitt } from '@/hooks/useMitt.ts'
-import { SessionItem } from '@/services/types.ts'
-import { useSettingStore } from '@/stores/setting.ts'
-import { useGlobalStore } from '@/stores/global.ts'
-import { useChatStore } from '@/stores/chat.ts'
-import { useTauriListener } from './useTauriListener'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { EventEnum, MittEnum, NotificationTypeEnum, RoomTypeEnum, SessionOperateEnum } from '@/enums'
+import { useMitt } from '@/hooks/useMitt.ts'
 import apis from '@/services/apis'
+import { SessionItem } from '@/services/types.ts'
+import { useChatStore } from '@/stores/chat.ts'
 import { useContactStore } from '@/stores/contacts.ts'
+import { useGlobalStore } from '@/stores/global.ts'
+import { useSettingStore } from '@/stores/setting.ts'
+import { useTauriListener } from './useTauriListener'
 
 const msgBoxShow = ref(false)
 /** 独立窗口的集合 */
@@ -329,7 +329,7 @@ export const useMessage = () => {
 
   onMounted(async () => {
     const appWindow = WebviewWindow.getCurrent()
-    await pushListeners([
+    pushListeners([
       appWindow.listen(EventEnum.ALONE, () => {
         emit(EventEnum.ALONE + itemRef.value?.roomId, itemRef.value)
         if (aloneWin.value.has(EventEnum.ALONE + itemRef.value?.roomId)) return

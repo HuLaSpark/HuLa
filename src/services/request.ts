@@ -1,7 +1,6 @@
-import Http, { HttpParams } from './http.ts'
+import { AppException, ErrorType } from '@/common/exception'
 import { ServiceResponse } from '@/services/types.ts'
-import { AppException } from '@/common/exception'
-import { ErrorType } from '@/common/exception'
+import Http, { HttpParams } from './http.ts'
 
 /**
  * 获取 token 并更新

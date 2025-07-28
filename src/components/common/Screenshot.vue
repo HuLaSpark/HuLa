@@ -21,12 +21,12 @@
 
 <script setup>
 import { writeImage } from '@tauri-apps/plugin-clipboard-manager'
-import { invokeWithErrorHandler, ErrorType } from '@/utils/TauriInvokeHandler.ts'
 import { useCanvasTool } from '@/hooks/useCanvasTool'
 import { useTauriListener } from '@/hooks/useTauriListener'
+import { ErrorType, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler.ts'
 
 const appWindow = WebviewWindow.getCurrent()
-const { addEventListener } = useTauriListener()
+const { addListener } = useTauriListener()
 const canvasbox = ref(null)
 
 // 图像层
@@ -227,7 +227,7 @@ function updateButtonGroupPosition() {
   let topPosition = maxY + 10 + buttonGroupHeight > availableHeight ? minY - 10 - buttonGroupHeight : maxY + 10
 
   // 根据矩形的位置计算按钮组的水平位置
-  let leftPosition = maxX + buttonGroupWidth > availableWidth ? maxX - buttonGroupWidth : minX
+  const leftPosition = maxX + buttonGroupWidth > availableWidth ? maxX - buttonGroupWidth : minX
 
   // 判断矩形高度选取是否超过 屏幕高度，则放置在框选矩形内
   if (Math.abs(maxY - minY) + buttonGroupHeight + 10 > screen.height) {
@@ -419,7 +419,7 @@ function cancelSelection() {
 }
 
 onMounted(async () => {
-  addEventListener(
+  addListener(
     appWindow.listen('capture', () => {
       initCanvas()
       initMagnifier()

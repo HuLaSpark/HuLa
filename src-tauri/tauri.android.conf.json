@@ -12,7 +12,7 @@
   "bundle": {
     "active": true,
     "resources": [
-      "tray"
+      "configuration"
     ],
     "targets": "all",
     "icon": [

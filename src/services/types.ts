@@ -7,13 +7,13 @@ import {
   ActEnum,
   IsYesEnum,
   MarkEnum,
+  MessageStatusEnum,
   MsgEnum,
+  NotificationTypeEnum,
   OnlineEnum,
   RoomTypeEnum,
-  SexEnum,
-  MessageStatusEnum,
   SessionOperateEnum,
-  NotificationTypeEnum
+  SexEnum
 } from '@/enums'
 
 /**响应请求体*/
@@ -188,7 +188,7 @@ export type UserItem = {
   /** 归属地 */
   locPlace?: string
   /** 角色ID */
-  roleId?: number
+  groupRole?: number
   /** 账号 */
   account: string
   /** 我的群昵称 */

@@ -5,11 +5,13 @@ function createCommand(prefix, join) {
 }
 
 export default {
-  '*.{js,jsx,ts,tsx,vue}': [
-    'oxlint src',
-    createCommand('pnpm eslint --fix', ''),
-    createCommand('prettier --write', '--write'),
-    // () => 'pnpm test:run',
-    () => 'vue-tsc --noEmit'
+  // JavaScript/TypeScript 文件使用 Biome
+  '*.{js,jsx,ts,tsx,json}': [
+    createCommand('biome check --write', ''),
+  ],
+  // Vue 文件：Biome 处理 script，Prettier 处理 template
+  '*.vue': [
+    createCommand('biome check --write', ''), // 处理 <script> 部分
+    createCommand('prettier --write', ''), // 处理 <template> 部分
   ]
 }

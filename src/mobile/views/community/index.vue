@@ -77,7 +77,7 @@
             <div class="w-full h-1px bg-pink"></div>
           </div>
         </n-tab-pane>
-        <n-tab-pane name="follow" tab="关注"> 七里香 </n-tab-pane>
+        <n-tab-pane name="follow" tab="关注">七里香</n-tab-pane>
       </n-tabs>
     </div>
   </div>
@@ -86,8 +86,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import SafeAreaPlaceholder from '@/mobile/components/placeholders/SafeAreaPlaceholder.vue'
-import { calculateElementPosition } from '@/utils/DomCalculate'
 import { useMobileStore } from '@/stores/mobile'
+import { calculateElementPosition } from '@/utils/DomCalculate'
 
 const mobileStore = useMobileStore()
 

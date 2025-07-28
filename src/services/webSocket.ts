@@ -1,22 +1,25 @@
-import { WsResponseMessageType, WsTokenExpire } from '@/services/wsType.ts'
-import type {
-  LoginSuccessResType,
-  LoginInitResType,
-  WsReqMsgContentType,
-  OnStatusChangeType,
-  UserStateType
-} from '@/services/wsType.ts'
-import type { MessageType, MarkItemType, RevokedMsgType } from '@/services/types'
-import { OnlineEnum, ChangeTypeEnum, WorkerMsgEnum, ConnectionState } from '@/enums'
-import { useMitt } from '@/hooks/useMitt.ts'
-import { useUserStore } from '@/stores/user'
-import { getEnhancedFingerprint } from '@/services/fingerprint.ts'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { useTauriListener } from '@/hooks/useTauriListener'
 import { listen } from '@tauri-apps/api/event'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { info } from '@tauri-apps/plugin-log'
 import { useDebounceFn } from '@vueuse/core'
+import { ChangeTypeEnum, ConnectionState, OnlineEnum, WorkerMsgEnum } from '@/enums'
+import { useMitt } from '@/hooks/useMitt.ts'
 // 使用类型导入避免直接执行代码
 import type { useNetworkReconnect as UseNetworkReconnectType } from '@/hooks/useNetworkReconnect'
+import { useTauriListener } from '@/hooks/useTauriListener'
+import { getEnhancedFingerprint } from '@/services/fingerprint.ts'
+import type { MarkItemType, MessageType, RevokedMsgType } from '@/services/types'
+import type {
+  LoginInitResType,
+  LoginSuccessResType,
+  OnStatusChangeType,
+  UserStateType,
+  WsReqMsgContentType
+} from '@/services/wsType.ts'
+import { WsResponseMessageType, WsTokenExpire } from '@/services/wsType.ts'
+import { useUserStore } from '@/stores/user'
+
+const { addListener } = useTauriListener()
 
 // 创建 webSocket worker
 const worker: Worker = new Worker(new URL('../workers/webSocket.worker.ts', import.meta.url), {
@@ -90,6 +93,7 @@ class WS {
   #unwatchFunctions: (() => void)[] = []
 
   constructor() {
+    info('[ws] webSocket 服务初始化')
     this.initWindowType()
     if (isMainWindow) {
       this.initConnect()
@@ -181,24 +185,25 @@ class WS {
     }
 
     try {
+      info('[ws] 创建Tauri窗口事件监听')
       // 设置各种Tauri窗口事件监听器
       // 窗口失去焦点 - 隐藏状态
-      await listen('tauri://blur', createStateChangeHandler(false))
+      addListener(listen('tauri://blur', createStateChangeHandler(false)))
 
       // 窗口获得焦点 - 可见状态
-      await listen('tauri://focus', createStateChangeHandler(true))
+      addListener(listen('tauri://focus', createStateChangeHandler(true)))
 
       // 窗口最小化 - 隐藏状态
-      await listen('tauri://window-minimized', createStateChangeHandler(false))
+      addListener(listen('tauri://window-minimized', createStateChangeHandler(false)))
 
       // 窗口恢复 - 可见状态
-      await listen('tauri://window-restored', createStateChangeHandler(true))
+      addListener(listen('tauri://window-restored', createStateChangeHandler(true)))
 
       // 窗口隐藏 - 隐藏状态
-      await listen('tauri://window-hidden', createStateChangeHandler(false))
+      addListener(listen('tauri://window-hidden', createStateChangeHandler(false)))
 
       // 窗口显示 - 可见状态
-      await listen('tauri://window-shown', createStateChangeHandler(true))
+      addListener(listen('tauri://window-shown', createStateChangeHandler(true)))
     } catch (error) {
       console.error('无法设置Tauri Window事件监听:', error)
     }
@@ -682,4 +687,5 @@ class WS {
   }
 }
 
-export default new WS()
+const ws = new WS()
+export default ws

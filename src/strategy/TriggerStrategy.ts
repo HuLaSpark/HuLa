@@ -1,4 +1,4 @@
-import { Ref, nextTick } from 'vue'
+import { nextTick, Ref } from 'vue'
 import { TriggerEnum } from '@/enums/index'
 
 interface TriggerContext {

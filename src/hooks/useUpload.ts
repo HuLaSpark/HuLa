@@ -1,13 +1,13 @@
-import { createEventHook } from '@vueuse/core'
-import apis from '@/services/apis'
-import { UploadSceneEnum } from '@/enums'
-import { fetch } from '@tauri-apps/plugin-http'
 import { BaseDirectory, readFile } from '@tauri-apps/plugin-fs'
-import { useConfigStore } from '@/stores/config'
+import { fetch } from '@tauri-apps/plugin-http'
+import { createEventHook } from '@vueuse/core'
 import { Md5 } from 'digest-wasm'
+import { UploadSceneEnum } from '@/enums'
+import apis from '@/services/apis'
+import { useConfigStore } from '@/stores/config'
 import { useUserStore } from '@/stores/user'
-import { getImageDimensions } from '@/utils/ImageUtils'
 import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
+import { getImageDimensions } from '@/utils/ImageUtils'
 
 /** 文件信息类型 */
 export type FileInfoType = {

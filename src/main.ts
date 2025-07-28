@@ -1,15 +1,19 @@
 import 'uno.css'
 import '@unocss/reset/eric-meyer.css' // unocss提供的浏览器默认样式重置
-import '@/services/webSocket'
-import { pinia } from '@/stores'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { type } from '@tauri-apps/plugin-os'
+import { getInsets } from 'tauri-plugin-safe-area-insets'
+import App from '@/App.vue'
+import { AppException } from '@/common/exception.ts'
 import vResize from '@/directives/v-resize'
 import vSlide from '@/directives/v-slide.ts'
 import router from '@/router'
-import App from '@/App.vue'
-import { AppException } from '@/common/exception.ts'
-import { type } from '@tauri-apps/plugin-os'
+import { pinia } from '@/stores'
 import { SafeArea, useMobileStore } from '@/stores/mobile'
-import { getInsets } from 'tauri-plugin-safe-area-insets'
+
+if (WebviewWindow.getCurrent().label === 'home') {
+  import('@/services/webSocket')
+}
 
 const app = createApp(App)
 app.use(router).use(pinia).directive('resize', vResize).directive('slide', vSlide).mount('#app')

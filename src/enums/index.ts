@@ -159,7 +159,9 @@ export enum StoresEnum {
   /** 文件下载管理 */
   FILE_DOWNLOAD = 'fileDownload',
   /** 移动端状态 */
-  MOBILE = 'mobile'
+  MOBILE = 'mobile',
+  /** 目录扫描器 */
+  SCANNER = 'scanner'
 }
 
 /**
@@ -481,5 +483,7 @@ export enum TauriCommand {
   /** 发送消息 */
   SEND_MSG = 'send_msg',
   /** 保存消息 */
-  SAVE_MSG = 'save_msg'
+  SAVE_MSG = 'save_msg',
+  /** 保存消息标记 */
+  SAVE_MESSAGE_MARK = 'save_message_mark'
 }

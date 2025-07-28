@@ -1,33 +1,33 @@
+import { emit } from '@tauri-apps/api/event'
 import {
+  FormInst,
   NAvatar,
   NButton,
   NFlex,
+  NForm,
   NFormItem,
+  NIcon,
   NInput,
   NModal,
-  NForm,
-  NTimelineItem,
-  NTimeline,
+  NProgress,
   NScrollbar,
   NSkeleton,
-  NIcon,
-  NProgress
+  NTimeline,
+  NTimelineItem
 } from 'naive-ui'
-import { FormInst } from 'naive-ui'
-import { emit } from '@tauri-apps/api/event'
 import { EventEnum } from '@/enums'
 import { handRelativeTime } from '@/utils/Day.ts'
 import './style.scss'
-import { type } from '@tauri-apps/plugin-os'
-import { check } from '@tauri-apps/plugin-updater'
-import { relaunch } from '@tauri-apps/plugin-process'
-import { useUserStore } from '@/stores/user.ts'
-import { useSettingStore } from '@/stores/setting.ts'
-import { AvatarUtils } from '@/utils/AvatarUtils'
-import { confirm } from '@tauri-apps/plugin-dialog'
-import apis from '@/services/apis'
-import { useLogin } from '@/hooks/useLogin'
 import { getVersion } from '@tauri-apps/api/app'
+import { confirm } from '@tauri-apps/plugin-dialog'
+import { type } from '@tauri-apps/plugin-os'
+import { relaunch } from '@tauri-apps/plugin-process'
+import { check } from '@tauri-apps/plugin-updater'
+import { useLogin } from '@/hooks/useLogin'
+import apis from '@/services/apis'
+import { useSettingStore } from '@/stores/setting.ts'
+import { useUserStore } from '@/stores/user.ts'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 
 const { logout, resetLoginState } = useLogin()
 const formRef = ref<FormInst | null>()

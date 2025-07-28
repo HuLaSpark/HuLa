@@ -1,6 +1,7 @@
 use crate::error::CommonError;
 use anyhow::Context;
 use entity::im_contact;
+use log::info;
 use sea_orm::{
     ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter, TransactionTrait,
 };
@@ -9,6 +10,7 @@ pub async fn list_contact(
     db: &DatabaseConnection,
     login_uid: &str,
 ) -> Result<Vec<im_contact::Model>, CommonError> {
+    info!("查询数据库获取所有会话");
     let list = im_contact::Entity::find()
         .filter(im_contact::Column::LoginUid.eq(login_uid))
         .all(db)

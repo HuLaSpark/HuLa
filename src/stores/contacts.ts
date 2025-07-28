@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia'
+import { StoresEnum, TauriCommand } from '@/enums'
 import apis from '@/services/apis'
-import { useGlobalStore } from '@/stores/global'
 import type { ContactItem, GroupListReq, RequestFriendItem } from '@/services/types'
 import { RequestFriendAgreeStatus } from '@/services/types'
-import { StoresEnum, TauriCommand } from '@/enums'
-import { invokeWithErrorHandler, ErrorType } from '@/utils/TauriInvokeHandler.ts'
+import { useGlobalStore } from '@/stores/global'
+import { ErrorType, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler.ts'
 
 // 定义分页大小常量
 export const pageSize = 20
