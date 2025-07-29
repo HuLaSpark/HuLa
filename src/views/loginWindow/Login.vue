@@ -181,6 +181,7 @@ import { type } from '@tauri-apps/plugin-os'
 import { useNetwork } from '@vueuse/core'
 import { lightTheme } from 'naive-ui'
 import { ErrorType } from '@/common/exception'
+import { TauriCommand } from '@/enums'
 import { useCheckUpdate } from '@/hooks/useCheckUpdate'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { useMitt } from '@/hooks/useMitt'
@@ -197,7 +198,6 @@ import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { clearListener } from '@/utils/ReadCountQueue'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
-import { TauriCommand } from '~/src/enums'
 
 const isCompatibility = computed(() => type() === 'windows' || type() === 'linux')
 const settingStore = useSettingStore()

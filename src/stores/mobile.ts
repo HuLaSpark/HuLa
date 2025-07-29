@@ -1,8 +1,8 @@
-import { type } from '@tauri-apps/plugin-os'
 import { defineStore } from 'pinia'
 import { StoresEnum } from '@/enums'
+import { type } from '@tauri-apps/plugin-os'
 
-type SafeArea = {
+export type SafeArea = {
   bottom: number
   left: number
   right: number
@@ -14,6 +14,30 @@ export const useMobileStore = defineStore(StoresEnum.MOBILE, () => {
 
   const envType = _envType
 
+  const initBottomTabBarPosition = ref<DOMRect>({
+    height: 0,
+    width: 0,
+    x: 0,
+    y: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    top: 0,
+    toJSON: function () {}
+  })
+
+  const bottomTabBarPosition = ref<DOMRect>({
+    height: 0,
+    width: 0,
+    x: 0,
+    y: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    top: 0,
+    toJSON: function () {}
+  })
+
   const safeArea = ref<SafeArea>({
     bottom: -1,
     left: -1,
@@ -23,8 +47,23 @@ export const useMobileStore = defineStore(StoresEnum.MOBILE, () => {
 
   const updateSafeArea = (newSafeArea: SafeArea) => {
     safeArea.value = newSafeArea
-    console.log('写入缓存：', safeArea.value)
+    console.log('安全区域更新：', safeArea.value)
   }
 
-  return { safeArea, envType, updateSafeArea }
+  const updateTabBarPosition = (options: { newPosition: DOMRect; isInit: boolean }) => {
+    bottomTabBarPosition.value = options.newPosition
+    if (options.isInit) {
+      console.log('位置状态初始化')
+      initBottomTabBarPosition.value = options.newPosition
+    }
+  }
+
+  return {
+    safeArea,
+    envType,
+    updateSafeArea,
+    updateTabBarPosition,
+    bottomTabBarPosition,
+    initBottomTabBarPosition
+  }
 })

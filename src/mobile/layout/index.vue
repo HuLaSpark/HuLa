@@ -1,183 +1,120 @@
 <template>
-  <div class="h-100vh">
-    <!-- 背景图片 -->
-    <img src="@/assets/mobile/chat-home/background.webp" class="w-100% fixed top-0" alt="hula" />
-    <!-- 个人信息版块 -->
-    <NavBar :style="envType === 'android' ? { paddingTop: safeArea.top + 'px' } : {}">
-      <template #left>
-        <n-flex align="center" :size="6" class="w-full">
-          <n-avatar
-            :size="38"
-            :src="AvatarUtils.getAvatarUrl(userStore.userInfo.avatar!)"
-            fallback-src="/logo.png"
-            round />
+  <div class="h-100vh flex flex-col">
+    <!-- 考虑不需要这个元素，因为有些页面是占满顶部的，考虑按需引入 -->
+    <!-- 顶部安全区域占位元素 -->
+    <!-- <SafeAreaPlaceholder direction="top" /> -->
 
-          <n-flex vertical justify="center" :size="6">
-            <p
-              style="
-                font-weight: bold !important;
-                font-family:
-                  system-ui,
-                  -apple-system,
-                  sans-serif;
-              "
-              class="text-(16px [--text-color])">
-              {{ userStore.userInfo.name }}
-            </p>
-            <p class="text-(10px [--text-color])">☁️ 柳州鱼峰</p>
-          </n-flex>
-        </n-flex>
-      </template>
+    <!-- 页面全部内容 -->
+    <div class="flex-1 overflow-y-auto flex flex-col">
+      <div class="flex flex-1 overflow-y-auto">
+        <RouterView />
+      </div>
+      <div class="flex">
+        <TabBar
+          ref="tabBarElement"
+          :style="envType === 'android' ? { bottom: safeArea.bottom + 'px !important' } : {}" />
+      </div>
+    </div>
 
-      <template #right>
-        <n-dropdown
-          @on-clickoutside="addIconHandler.clickOutside"
-          @select="addIconHandler.select"
-          trigger="click"
-          :options="uiViewsData.addOptions">
-          <svg @click="addIconHandler.open" class="size-22px bg-white p-5px rounded-8px">
-            <use href="#plus"></use>
-          </svg>
-        </n-dropdown>
-      </template>
-    </NavBar>
-    <!-- 页面内容 -->
-    <RouterView
-      :style="envType === 'android' ? { paddingTop: safeArea.top + 44 + 'px !important' } : {}"
-      class="center" />
-    <!-- 选项菜单 -->
-    <TabBar :style="envType === 'android' ? { bottom: safeArea.bottom + 'px !important' } : {}" />
-    <!-- 页面蒙板 -->
-    <div
-      v-if="showMask"
-      @touchend="maskHandler.close"
-      @click="maskHandler.close"
-      class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[999] transition-all duration-3000 ease-in-out opacity-100"></div>
+    <!-- 底部安全区域占位元素 -->
+    <SafeAreaPlaceholder v-if="uiViewData.isShowSafeArea" direction="bottom" />
   </div>
 </template>
 
 <script setup lang="ts">
-import addFriendIcon from '@/assets/mobile/chat-home/add-friend.webp'
-import groupChatIcon from '@/assets/mobile/chat-home/group-chat.webp'
+import SafeAreaPlaceholder from '@/mobile/components/placeholders/SafeAreaPlaceholder.vue'
+import TabBar from '@/mobile/layout/tabBar/index.vue'
 import { useMobileStore } from '@/stores/mobile'
-import { useUserStore } from '@/stores/user.ts'
-import { AvatarUtils } from '@/utils/AvatarUtils'
-import NavBar from './navBar/index.vue'
-import TabBar from './tabBar/index.vue'
+import { debounce } from 'lodash-es'
+import { calculateElementPosition } from '@/utils/DomCalculate'
 
 const mobileStore = useMobileStore()
 
 const envType = mobileStore.envType
 const safeArea = computed(() => mobileStore.safeArea)
-
-const userStore = useUserStore()
-
-/**
- * 渲染图片图标的函数工厂
- * @param {string} src - 图标图片路径
- * @returns {() => import('vue').VNode} 返回一个渲染图片的函数组件
- */
-const renderImgIcon = (src: string) => {
-  return () =>
-    h('img', {
-      src,
-      style: 'width: 32px; height: 32px; margin: 0 10px 0 10px; vertical-align: middle'
-    })
-}
-
-/**
- * UI 视图数据，包含菜单选项及其图标
- * @type {import('vue').Ref<{ addOptions: { label: string; key: string; icon: () => import('vue').VNode }[] }>}
- */
-const uiViewsData = ref({
-  addOptions: [
-    {
-      label: '发起群聊',
-      key: 'profile',
-      icon: renderImgIcon(groupChatIcon)
-    },
-    {
-      label: '加好友/群',
-      key: 'editProfile',
-      icon: renderImgIcon(addFriendIcon)
-    }
-  ]
+const uiViewData = ref({
+  isShowSafeArea: true
 })
 
-/**
- * 页面蒙板显示状态
- * @type {import('vue').Ref<boolean>}
- */
-const showMask = ref(false)
+const tabBarElement = ref<InstanceType<typeof TabBar>>()
 
-/**
- * 当前页面滚动的纵向位置，避免打开蒙板时页面跳动
- * @type {number}
- */
-let scrollY = 0
+const initTabBarPositionStore = async () => {
+  try {
+    const rect = await calculateElementPosition(tabBarElement)
 
-/**
- * 控制页面蒙板的对象，包含打开和关闭方法
- */
-const maskHandler = {
-  /**
-   * 打开蒙板，并锁定滚动位置
-   */
-  open: () => {
-    scrollY = window.scrollY
-    showMask.value = true
-    document.body.style.overflow = 'hidden'
-    document.body.style.position = 'fixed'
-    document.body.style.top = `-${scrollY}px`
-    document.body.style.width = '100%'
-  },
+    if (!rect) {
+      return
+    }
 
-  /**
-   * 关闭蒙板，恢复滚动状态和位置
-   */
-  close: () => {
-    setTimeout(() => {
-      showMask.value = false
-      document.body.style.overflow = ''
-      document.body.style.position = ''
-      document.body.style.top = ''
-      document.body.style.width = ''
-      window.scrollTo(0, scrollY) // 恢复滚动位置
-    }, 200)
+    mobileStore.updateTabBarPosition({
+      newPosition: rect,
+      isInit: true
+    })
+
+    // console.log('初始化位置：', rect)
+    // console.log('初始位置状态：', mobileStore.initBottomTabBarPosition.top)
+    // console.log('当前位置状态：', mobileStore.bottomTabBarPosition.top)
+  } catch (error) {
+    console.error(error)
   }
 }
 
-/**
- * 添加按钮相关事件处理对象
- */
-const addIconHandler = {
-  /**
-   * 选项选择时关闭蒙板
-   */
-  select: () => {
-    maskHandler.close()
-  },
+const updateSafeAreaState = (initTopPosition: number, newTopPosition: number) => {
+  // console.log('初始位置：', initTopPosition)
+  // console.log('新位置：', newTopPosition)
+  // console.log('位置计算结果：', Math.abs(initTopPosition - newTopPosition))
 
-  /**
-   * 点击加号按钮打开蒙板
-   */
-  open: () => {
-    maskHandler.open()
-  },
+  // 这个判断程序可能是以小窗口启动，然后放大到全屏，这时差距变化会非常的大
 
-  /**
-   * 点击下拉菜单外部区域关闭蒙板
-   */
-  clickOutside: () => {
-    maskHandler.close()
+  if (newTopPosition > initTopPosition) {
+    uiViewData.value.isShowSafeArea = true
+  } else {
+    uiViewData.value.isShowSafeArea = false
   }
 }
+
+const updateTabBarPositionStore = async () => {
+  try {
+    const rect = await calculateElementPosition(tabBarElement)
+
+    if (!rect) {
+      return
+    }
+
+    updateSafeAreaState(mobileStore.initBottomTabBarPosition.top, rect.top)
+
+    mobileStore.updateTabBarPosition({
+      newPosition: rect,
+      isInit: false
+    })
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+const debouncedUpdateCalculate = debounce(updateTabBarPositionStore, 150)
+
+/**
+ * 启动TabBar组件的位置监听，并且首次加载时计算其所在位置，并保存到缓存中
+ */
+const startTabBarPositionListener = () => {
+  initTabBarPositionStore()
+  window.addEventListener('resize', debouncedUpdateCalculate)
+  window.visualViewport?.addEventListener('resize', debouncedUpdateCalculate)
+}
+
+const stopTabBarPositionListener = () => {
+  debouncedUpdateCalculate.cancel()
+  window.removeEventListener('resize', debouncedUpdateCalculate)
+}
+
+onMounted(() => {
+  startTabBarPositionListener()
+})
+
+onUnmounted(() => {
+  stopTabBarPositionListener()
+})
 </script>
 
-<style lang="scss">
-.center {
-  height: calc(100vh - calc(env(safe-area-inset-top) + 44px) - calc(50px + env(safe-area-inset-bottom)));
-  padding-top: calc(env(safe-area-inset-top) + 44px);
-  padding-bottom: calc(max(50px, 20px + env(safe-area-inset-bottom)));
-}
-</style>
+<style lang="scss"></style>

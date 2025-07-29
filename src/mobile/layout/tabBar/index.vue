@@ -55,9 +55,8 @@ const navItems: NavItem[] = [
 
 <style scoped lang="scss">
 .tab-bar {
-  @apply z-998 fixed bottom-0 w-full bg-#fefefe90 backdrop-blur-md min-h-50px;
+  @apply z-998 w-full bg-#fefefe90 backdrop-blur-md min-h-50px;
   height: calc(max(50px, 20px + env(safe-area-inset-bottom)));
-  padding-bottom: env(safe-area-inset-bottom, 0px);
   border-top: 1px solid rgba(0, 0, 0, 0.1);
   transform: translateZ(0);
   -webkit-transform: translateZ(0);

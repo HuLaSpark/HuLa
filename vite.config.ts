@@ -116,7 +116,11 @@ export default defineConfig(({ mode }: ConfigEnv) => {
           rewrite: (path) => path.replace(/^\/api/, '')
         }
       },
-      hmr: true, // 热更新
+      hmr: {
+        // 为移动端开发提供正确的HMR配置
+        port: 6130, // 使用不同的端口避免冲突
+        host: '0.0.0.0' // 明确指定host
+      },
       cors: true, // 配置 CORS
       host: '0.0.0.0',
       port: 6130,

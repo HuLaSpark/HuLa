@@ -78,10 +78,6 @@ pub fn run() {
 
 #[cfg(desktop)]
 fn setup_desktop() -> Result<(), CommonError> {
-    use crate::{
-        command::user_command::{save_user_info, update_user_last_opt_time},
-        desktops::common_cmd::set_badge_count,
-    };
 
     // 创建一个缓存实例
     let cache: Cache<String, String> = Cache::builder()
@@ -94,59 +90,9 @@ fn setup_desktop() -> Result<(), CommonError> {
         .init_webwindow_event()
         .init_window_event()
         .setup(move |app| {
-            let app_handle = app.handle().clone();
-            setup_user_info_listener_early(app.handle().clone());
-            setup_logout_listener(app.handle().clone());
-
-            // 异步初始化应用数据，避免阻塞主线程
-            match tauri::async_runtime::block_on(initialize_app_data(app_handle.clone())) {
-                Ok((db, client, user_info)) => {
-                    // 使用 manage 方法在运行时添加状态
-                    app_handle.manage(AppData {
-                        db_conn: db.clone(),
-                        request_client: client.clone(),
-                        user_info: user_info.clone(),
-                        cache,
-                    });
-                    let client_guard = tauri::async_runtime::block_on(client.lock());
-                    client_guard.set_app_handle(app_handle.clone());
-                    drop(client_guard);
-                }
-                Err(e) => {
-                    log::error!("初始化应用数据失败: {}", e);
-                }
-            }
-
-            tray::create_tray(app.handle())?;
-            Ok(())
+            common_setup(app, cache)
         })
-        .invoke_handler(tauri::generate_handler![
-            default_window_icon,
-            screenshot,
-            audio,
-            set_height,
-            get_video_thumbnail,
-            #[cfg(target_os = "macos")]
-            hide_title_bar_buttons,
-            save_user_info,
-            update_user_last_opt_time,
-            page_room,
-            get_room_members,
-            update_my_room_info,
-            cursor_page_room_members,
-            list_contacts_command,
-            hide_contact_command,
-            page_msg,
-            send_msg,
-            save_msg,
-            save_message_mark,
-            push_window_payload,
-            get_window_payload,
-            get_files_meta,
-            get_directory_usage_info_with_progress,
-            cancel_directory_scan,
-            set_badge_count
-        ])
+        .invoke_handler(get_invoke_handlers())
         .build(tauri::generate_context!())
         .map_err(|e| {
             CommonError::RequestError(format!("Failed to build tauri application: {}", e))
@@ -287,6 +233,7 @@ pub async fn build_request_client() -> Result<reqwest::Client, CommonError> {
 }
 
 // 设置登出事件监听器
+#[cfg(desktop)]
 fn setup_logout_listener(app_handle: tauri::AppHandle) {
     let app_handle_clone = app_handle.clone();
     app_handle.listen("logout", move |_event| {
@@ -343,11 +290,101 @@ fn setup_logout_listener(app_handle: tauri::AppHandle) {
 #[cfg(mobile)]
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 fn setup_mobile() {
+    // 创建一个缓存实例
+    let cache: Cache<String, String> = Cache::builder()
+        // Time to idle (TTI):  30 minutes
+        .time_to_idle(Duration::from_secs(30 * 60))
+        // Create the cache.
+        .build();
+
     if let Err(e) = tauri::Builder::default()
         .init_plugin()
+        .setup(move |app| {
+            common_setup(app, cache)
+        })
+        .invoke_handler(get_invoke_handlers())
         .run(tauri::generate_context!())
     {
         log::error!("Failed to run mobile application: {}", e);
         std::process::exit(1);
     }
+}
+
+// 公共的 setup 函数
+fn common_setup(app: &mut tauri::App, cache: Cache<String, String>) -> Result<(), Box<dyn std::error::Error>> {
+    let app_handle = app.handle().clone();
+    setup_user_info_listener_early(app.handle().clone());
+    #[cfg(desktop)]
+    setup_logout_listener(app.handle().clone());
+
+    // 异步初始化应用数据，避免阻塞主线程
+    match tauri::async_runtime::block_on(initialize_app_data(app_handle.clone())) {
+        Ok((db, client, user_info)) => {
+            // 使用 manage 方法在运行时添加状态
+            app_handle.manage(AppData {
+                db_conn: db.clone(),
+                request_client: client.clone(),
+                user_info: user_info.clone(),
+                cache,
+            });
+            let client_guard = tauri::async_runtime::block_on(client.lock());
+            client_guard.set_app_handle(app_handle.clone());
+            drop(client_guard);
+        }
+        Err(e) => {
+            log::error!("初始化应用数据失败: {}", e);
+        }
+    }
+
+    #[cfg(desktop)]
+    tray::create_tray(app.handle())?;
+    Ok(())
+}
+
+// 公共的命令处理器函数
+fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static {
+  use crate::command::user_command::{save_user_info, update_user_last_opt_time};
+  #[cfg(desktop)]
+  use crate::desktops::common_cmd::set_badge_count;
+
+  tauri::generate_handler![
+      // 桌面端特定命令
+      #[cfg(desktop)]
+      default_window_icon,
+      #[cfg(desktop)]
+      screenshot,
+      #[cfg(desktop)]
+      audio,
+      #[cfg(desktop)]
+      set_height,
+      #[cfg(desktop)]
+      get_video_thumbnail,
+      #[cfg(target_os = "macos")]
+      hide_title_bar_buttons,
+      #[cfg(desktop)]
+      push_window_payload,
+      #[cfg(desktop)]
+      get_window_payload,
+      #[cfg(desktop)]
+      get_files_meta,
+      #[cfg(desktop)]
+      get_directory_usage_info_with_progress,
+      #[cfg(desktop)]
+      cancel_directory_scan,
+      #[cfg(desktop)]
+      set_badge_count,
+      // 通用命令（桌面端和移动端都支持）
+      save_user_info,
+      update_user_last_opt_time,
+      page_room,
+      get_room_members,
+      update_my_room_info,
+      cursor_page_room_members,
+      list_contacts_command,
+      hide_contact_command,
+      page_msg,
+      send_msg,
+      save_msg,
+      save_message_mark
+  ]
 }
