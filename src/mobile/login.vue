@@ -308,9 +308,12 @@
 </template>
 
 <script setup lang="ts">
+import { emit } from '@tauri-apps/api/event'
 import { lightTheme } from 'naive-ui'
+import { ErrorType } from '@/common/exception'
 import PinInput from '@/components/common/PinInput.vue'
 import Validation from '@/components/common/Validation.vue'
+import { TauriCommand } from '@/enums'
 import { useLogin } from '@/hooks/useLogin'
 import apis from '@/services/apis'
 import { RegisterUserReq, UserInfoType } from '@/services/types'
@@ -318,6 +321,7 @@ import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import { useMobileStore } from '@/stores/mobile'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 import router from '../router'
 
 // 本地注册信息类型，扩展API类型以包含确认密码
@@ -608,14 +612,32 @@ const normalLogin = async () => {
         token: res.token,
         client: res.client
       }
+      await invokeWithErrorHandler(
+        TauriCommand.SAVE_USER_INFO,
+        {
+          userInfo: account
+        },
+        {
+          customErrorMessage: '保存用户信息失败',
+          errorType: ErrorType.Client
+        }
+      )
+
+      await emit('set_user_info', {
+        token: res.token,
+        refreshToken: res.refreshToken,
+        uid: account.uid
+      })
+
       loading.value = false
       userStore.userInfo = account
       loginHistoriesStore.addLoginHistory(account)
       router.push('/mobile/message')
       await setLoginState()
     })
-    .catch(() => {
+    .catch((e) => {
       loading.value = false
+      console.error(e)
     })
 }
 

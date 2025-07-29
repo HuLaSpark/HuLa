@@ -11,7 +11,8 @@
       "src/**/*.vue",
       "src/**/*.json",
       "!.vscode/**",
-      "!src/typings/*.d.ts"
+      "!src/typings/*.d.ts",
+      "!src-tauri/**"
     ]
   },
   "formatter": {

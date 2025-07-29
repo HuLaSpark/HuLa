@@ -6,6 +6,7 @@
   "windows": ["*"],
   "permissions": [
     "core:default",
+    "core:webview:allow-internal-toggle-devtools",
     "http:allow-fetch",
     "http:allow-fetch-cancel",
     "http:allow-fetch-read-body",
@@ -36,6 +37,8 @@
     "notification:allow-create-channel",
     "notification:allow-permission-state",
     "safe-area-insets:default",
+    "log:default",
+    "log:allow-log",
     {
       "identifier": "shell:allow-execute",
       "allow": [

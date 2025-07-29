@@ -1,0 +1,4 @@
+database:
+  sqlite_file: db.sqlite
+backend:
+  base_url: https://hulaspark.com/api

@@ -57,6 +57,8 @@ tauri-plugin-clipboard-manager = "2"
 tauri-plugin-sql = { version = "2", features = ["sqlite"] }
 tauri-plugin-notification = "2"
 tauri-plugin-opener = "2"
+tauri-plugin-devtools = "2"
+tauri-plugin-log = { version = "2", features = ["colored"] }
 
 # Tauri 非官方依赖
 tauri-plugin-mic-recorder = "2"
@@ -66,7 +68,6 @@ async-walkdir = "2.0.0"
 moka = { version = "0.12.10", features = ["future"] }
 serde = { version = "1", features = ["derive"] }
 tokio = { version = "1.0.0", features = ["rt", "rt-multi-thread", "macros"] }
-tauri-plugin-devtools = "2.0.0"
 
 sea-orm = { version = "1.1.0", features = [ "sqlx-sqlite", "runtime-tokio-rustls", "macros", "debug-print" ] }
 chrono = "0.4.41"
@@ -77,7 +78,6 @@ anyhow = "1.0.98"
 thiserror = "2.0.12"
 config = { version = "0.15.11", default-features = false, features = ["yaml"] }
 http = "0.2"
-tauri-plugin-log = { version = "2.6.0", features = ["colored"] }
 log = "0.4"  # 基础日志接口
 lazy_static = "1.4"
 mime_guess = "2.0.5"
