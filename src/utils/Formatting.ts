@@ -1,5 +1,5 @@
-import { MsgEnum } from '@/enums'
 import DOMPurify from 'dompurify'
+import { MsgEnum } from '@/enums'
 
 /**
  * 文件大小格式化

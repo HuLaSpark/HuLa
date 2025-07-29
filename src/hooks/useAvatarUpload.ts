@@ -1,5 +1,5 @@
 import { UploadSceneEnum } from '@/enums'
-import { useUpload, UploadProviderEnum } from './useUpload'
+import { UploadProviderEnum, useUpload } from './useUpload'
 
 export interface AvatarUploadOptions {
   // 上传成功后的回调函数，参数为下载URL

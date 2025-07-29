@@ -1,6 +1,6 @@
+import Colorthief from 'colorthief'
 import { defineStore } from 'pinia'
 import { StoresEnum } from '@/enums'
-import Colorthief from 'colorthief'
 
 const colorthief = new Colorthief()
 

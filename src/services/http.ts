@@ -1,9 +1,9 @@
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { fetch } from '@tauri-apps/plugin-http'
 import { AppException, ErrorType } from '@/common/exception'
+import { URLEnum } from '@/enums'
 import { RequestQueue } from '@/utils/RequestQueue'
 import urls from './urls'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { URLEnum } from '@/enums'
 
 // 错误信息常量
 const ERROR_MESSAGES = {

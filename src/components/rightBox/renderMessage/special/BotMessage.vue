@@ -18,8 +18,8 @@
 
 <script setup lang="ts">
 import { MsgEnum } from '@/enums'
-import { useUserStore } from '@/stores/user.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
+import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 
 interface Props {

@@ -1,7 +1,7 @@
 import { type UnlistenFn } from '@tauri-apps/api/event'
-import { onUnmounted, getCurrentInstance } from 'vue'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
+import { getCurrentInstance, onUnmounted } from 'vue'
 
 // 全局监听器管理
 const globalListeners = new Map<string, Promise<UnlistenFn>[]>()

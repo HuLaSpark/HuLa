@@ -1,20 +1,22 @@
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { info } from '@tauri-apps/plugin-log'
+import { sendNotification } from '@tauri-apps/plugin-notification'
+import { type } from '@tauri-apps/plugin-os'
+import { cloneDeep } from 'lodash-es'
 import { defineStore } from 'pinia'
 import { useRoute } from 'vue-router'
+import { ErrorType } from '@/common/exception'
+import { MessageStatusEnum, MsgEnum, NotificationTypeEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
 import apis from '@/services/apis'
 import type { MarkItemType, MessageType, RevokedMsgType, SessionItem } from '@/services/types'
-import { MessageStatusEnum, MsgEnum, NotificationTypeEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
-import { computedTimeBlock } from '@/utils/ComputedTime.ts'
 import { useCachedStore } from '@/stores/cached.ts'
+import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group.ts'
-import { useContactStore } from '@/stores/contacts.ts'
-import { cloneDeep } from 'lodash-es'
 import { useUserStore } from '@/stores/user.ts'
+import { computedTimeBlock } from '@/utils/ComputedTime.ts'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
-import { sendNotification } from '@tauri-apps/plugin-notification'
-import { invokeWithErrorHandler, invokeSilently } from '@/utils/TauriInvokeHandler'
-import { ErrorType } from '@/common/exception'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 
 type RecalledMessage = {
   messageId: string
@@ -683,7 +685,8 @@ export const useChatStore = defineStore(
     }
 
     // 更新未读消息计数
-    const updateTotalUnreadCount = () => {
+    const updateTotalUnreadCount = async () => {
+      info('[chat]更新全局未读消息计数')
       // 使用 Array.from 确保遍历的是最新的 sessionList
       const totalUnread = Array.from(sessionList.value).reduce((total, session) => {
         // 免打扰的会话不计入全局未读数
@@ -698,7 +701,10 @@ export const useChatStore = defineStore(
       // 更新全局 store 中的未读计数
       globalStore.unReadMark.newMsgUnreadCount = totalUnread
       // 更新系统托盘图标上的未读数
-      invokeSilently('set_badge_count', { count: totalUnread > 0 ? totalUnread : null })
+      if (type() === 'macos') {
+        const count = totalUnread > 0 ? totalUnread : undefined
+        await invokeWithErrorHandler('set_badge_count', { count })
+      }
     }
 
     // 清空所有会话的未读数

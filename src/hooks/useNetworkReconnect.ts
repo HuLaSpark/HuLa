@@ -1,12 +1,12 @@
-import { useNetwork, useEventListener, useTimeoutFn } from '@vueuse/core'
+import { type } from '@tauri-apps/plugin-os'
+import { useEventListener, useNetwork, useTimeoutFn } from '@vueuse/core'
+import { RoomTypeEnum } from '@/enums'
+import webSocket from '@/services/webSocket'
+import { useCachedStore } from '@/stores/cached'
 import { useChatStore } from '@/stores/chat'
+import { useContactStore } from '@/stores/contacts'
 import { useGlobalStore } from '@/stores/global'
 import { useGroupStore } from '@/stores/group'
-import { useCachedStore } from '@/stores/cached'
-import { useContactStore } from '@/stores/contacts'
-import { type } from '@tauri-apps/plugin-os'
-import webSocket from '@/services/webSocket'
-import { RoomTypeEnum } from '@/enums'
 
 /**
  * 网络重连Hook，监测网络恢复并自动刷新数据
@@ -150,13 +150,13 @@ export const useNetworkReconnect = () => {
     // 如果当前是群聊，刷新群组信息
     if (globalStore.currentSession?.type === RoomTypeEnum.GROUP) {
       await groupStore.getGroupUserList()
-      await groupStore.getCountStatistic()
+      await groupStore.getCountStatistic(globalStore.currentSession.roomId)
       await cachedStore.getGroupAtUserBaseInfo()
     }
     // 刷新联系人列表
     await contactStore.getContactList(true)
     // 更新未读消息计数
-    globalStore.updateGlobalUnreadCount()
+    await globalStore.updateGlobalUnreadCount()
     // 刷新在线用户列表
     await groupStore.refreshGroupMembers()
 

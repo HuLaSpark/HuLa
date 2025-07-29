@@ -108,24 +108,23 @@
   </n-scrollbar>
 </template>
 <script lang="ts" setup name="message">
-import { useMessage } from '@/hooks/useMessage.ts'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import SysNTF from '@/components/common/SystemNotification.tsx'
 import { MittEnum, RoomTypeEnum } from '@/enums'
+import { useUserInfo } from '@/hooks/useCached.ts'
+import { useCommon } from '@/hooks/useCommon.ts'
+import { useMessage } from '@/hooks/useMessage.ts'
+import { useMitt } from '@/hooks/useMitt'
+import { useReplaceMsg } from '@/hooks/useReplaceMsg.ts'
 import { IsAllUserEnum, SessionItem } from '@/services/types.ts'
-import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global.ts'
-import { useUserInfo } from '@/hooks/useCached.ts'
-import { useReplaceMsg } from '@/hooks/useReplaceMsg.ts'
-import { useCommon } from '@/hooks/useCommon.ts'
-import SysNTF from '@/components/common/SystemNotification.tsx'
-import { AvatarUtils } from '@/utils/AvatarUtils'
 import { useGroupStore } from '@/stores/group.ts'
-import { useMitt } from '@/hooks/useMitt'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { useTauriListener } from '@/hooks/useTauriListener'
+import { AvatarUtils } from '@/utils/AvatarUtils'
+import { formatTimestamp } from '@/utils/ComputedTime.ts'
+import { useTauriListener } from '~/src/hooks/useTauriListener'
 
 const appWindow = WebviewWindow.getCurrent()
-const { addListener } = useTauriListener()
 const chatStore = useChatStore()
 const globalStore = useGlobalStore()
 const groupStore = useGroupStore()
@@ -231,15 +230,18 @@ onBeforeMount(async () => {
   useMitt.emit(MittEnum.LOCATE_SESSION, { roomId: currentSession.value.roomId })
 })
 
-onMounted(() => {
+const { addListener } = useTauriListener()
+onMounted(async () => {
   SysNTF
   // 监听其他窗口发来的WebSocket发送请求
   // TODO：频繁切换会话会导致频繁请求，切换的时候也会有点卡顿
-  addListener(
-    appWindow.listen('search_to_msg', (event: { payload: { uid: string; roomType: number } }) => {
-      openMsgSession(event.payload.uid, event.payload.roomType)
-    })
-  )
+  if (appWindow.label === 'home') {
+    addListener(
+      appWindow.listen('search_to_msg', (event: { payload: { uid: string; roomType: number } }) => {
+        openMsgSession(event.payload.uid, event.payload.roomType)
+      })
+    )
+  }
   useMitt.on(MittEnum.DELETE_SESSION, async (roomId: string) => {
     await handleMsgDelete(roomId)
   })

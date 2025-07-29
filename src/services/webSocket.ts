@@ -1,24 +1,23 @@
-import { WsResponseMessageType, WsTokenExpire } from '@/services/wsType.ts'
-import type {
-  LoginSuccessResType,
-  LoginInitResType,
-  WsReqMsgContentType,
-  OnStatusChangeType,
-  UserStateType
-} from '@/services/wsType.ts'
-import type { MessageType, MarkItemType, RevokedMsgType } from '@/services/types'
-import { OnlineEnum, ChangeTypeEnum, WorkerMsgEnum, ConnectionState } from '@/enums'
-import { useMitt } from '@/hooks/useMitt.ts'
-import { useUserStore } from '@/stores/user'
-import { getEnhancedFingerprint } from '@/services/fingerprint.ts'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { useTauriListener } from '@/hooks/useTauriListener'
 import { listen } from '@tauri-apps/api/event'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { info } from '@tauri-apps/plugin-log'
 import { useDebounceFn } from '@vueuse/core'
-import { URLEnum } from '@/enums'
+import { ChangeTypeEnum, ConnectionState, OnlineEnum, URLEnum, WorkerMsgEnum } from '@/enums'
+import { useMitt } from '@/hooks/useMitt.ts'
 // 使用类型导入避免直接执行代码
 import type { useNetworkReconnect as UseNetworkReconnectType } from '@/hooks/useNetworkReconnect'
-import { info } from '@tauri-apps/plugin-log'
+import { useTauriListener } from '@/hooks/useTauriListener'
+import { getEnhancedFingerprint } from '@/services/fingerprint.ts'
+import type { MarkItemType, MessageType, RevokedMsgType } from '@/services/types'
+import type {
+  LoginInitResType,
+  LoginSuccessResType,
+  OnStatusChangeType,
+  UserStateType,
+  WsReqMsgContentType
+} from '@/services/wsType.ts'
+import { WsResponseMessageType, WsTokenExpire } from '@/services/wsType.ts'
+import { useUserStore } from '@/stores/user'
 
 const { addListener } = useTauriListener()
 
@@ -463,6 +462,7 @@ class WS {
         // 收到消息
         case WsResponseMessageType.RECEIVE_MESSAGE: {
           const message = params.data as MessageType
+          info(`[ws]收到消息: ${JSON.stringify(message)}`)
           useMitt.emit(WsResponseMessageType.RECEIVE_MESSAGE, message)
           break
         }

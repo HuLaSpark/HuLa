@@ -104,7 +104,7 @@
         clearable />
 
       <n-flex justify="flex-end" :size="6">
-        <n-button text color="#13987f" @click="handleForgetPassword"> 忘记密码 </n-button>
+        <n-button text color="#13987f" @click="handleForgetPassword">忘记密码</n-button>
       </n-flex>
 
       <n-button
@@ -308,17 +308,17 @@
 </template>
 
 <script setup lang="ts">
-import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
-import apis from '@/services/apis'
-import { useUserStore } from '@/stores/user'
-import { useLogin } from '@/hooks/useLogin'
-import { AvatarUtils } from '@/utils/AvatarUtils'
-import { UserInfoType, RegisterUserReq } from '@/services/types'
 import { lightTheme } from 'naive-ui'
-import router from '../router'
-import Validation from '@/components/common/Validation.vue'
 import PinInput from '@/components/common/PinInput.vue'
+import Validation from '@/components/common/Validation.vue'
+import { useLogin } from '@/hooks/useLogin'
+import apis from '@/services/apis'
+import { RegisterUserReq, UserInfoType } from '@/services/types'
+import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import { useMobileStore } from '@/stores/mobile'
+import { useUserStore } from '@/stores/user'
+import { AvatarUtils } from '@/utils/AvatarUtils'
+import router from '../router'
 
 // 本地注册信息类型，扩展API类型以包含确认密码
 interface LocalRegisterInfo extends RegisterUserReq {}

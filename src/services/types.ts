@@ -7,13 +7,13 @@ import {
   ActEnum,
   IsYesEnum,
   MarkEnum,
+  MessageStatusEnum,
   MsgEnum,
+  NotificationTypeEnum,
   OnlineEnum,
   RoomTypeEnum,
-  SexEnum,
-  MessageStatusEnum,
   SessionOperateEnum,
-  NotificationTypeEnum
+  SexEnum
 } from '@/enums'
 
 /**响应请求体*/

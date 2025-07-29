@@ -86,18 +86,18 @@
 </template>
 
 <script setup lang="ts">
+import { emit } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { info } from '@tauri-apps/plugin-log'
+import { type } from '@tauri-apps/plugin-os'
+import { exit } from '@tauri-apps/plugin-process'
+import { CloseBxEnum, EventEnum, MittEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
+import { useTauriListener } from '@/hooks/useTauriListener'
 import { useWindow } from '@/hooks/useWindow.ts'
+import router from '@/router'
 import { useAlwaysOnTopStore } from '@/stores/alwaysOnTop.ts'
 import { useSettingStore } from '@/stores/setting.ts'
-import { emit } from '@tauri-apps/api/event'
-import { CloseBxEnum, EventEnum, MittEnum } from '@/enums'
-import { type } from '@tauri-apps/plugin-os'
-import router from '@/router'
-import { exit } from '@tauri-apps/plugin-process'
-import { useTauriListener } from '@/hooks/useTauriListener'
-import { info } from '@tauri-apps/plugin-log'
 
 const appWindow = WebviewWindow.getCurrent()
 const {
@@ -304,8 +304,8 @@ onMounted(async () => {
         exit(0)
       }
       info('[ActionBar]阻止[home]窗口关闭事件')
-      tipsRef.show = true
       event.preventDefault()
+      appWindow.hide()
     })
   }
 })

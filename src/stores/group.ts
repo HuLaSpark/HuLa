@@ -1,13 +1,13 @@
-import apis from '@/services/apis'
 import { defineStore } from 'pinia'
-import { useGlobalStore } from '@/stores/global'
-import type { GroupDetailReq, UserItem } from '@/services/types'
-import { useChatStore } from './chat'
 import { RoleEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
-import { useCachedStore } from '@/stores/cached'
-import { useUserStore } from '@/stores/user'
+import apis from '@/services/apis'
+import type { GroupDetailReq, UserItem } from '@/services/types'
 import { OnStatusChangeType } from '@/services/wsType'
-import { invokeWithErrorHandler, ErrorType } from '@/utils/TauriInvokeHandler.ts'
+import { useCachedStore } from '@/stores/cached'
+import { useGlobalStore } from '@/stores/global'
+import { useUserStore } from '@/stores/user'
+import { ErrorType, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler.ts'
+import { useChatStore } from './chat'
 
 export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
   // 初始化需要使用的store
@@ -118,8 +118,8 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
    * 获取群组统计信息
    * 包括群名称、头像、在线人数等
    */
-  const getCountStatistic = async () => {
-    countInfo.value = await apis.groupDetail({ id: currentRoomId.value })
+  const getCountStatistic = async (currentRoomId: string) => {
+    countInfo.value = await apis.groupDetail({ id: currentRoomId })
   }
 
   /**

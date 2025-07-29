@@ -22,18 +22,18 @@
 <script setup lang="ts">
 import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import VueOfficeDocx from '@vue-office/docx/lib/v3/vue-office-docx.mjs'
-import VueOfficePdf from '@vue-office/pdf/lib/v3/vue-office-pdf.mjs'
 import VueOfficeExcel from '@vue-office/excel/lib/v3/vue-office-excel.mjs'
+import VueOfficePdf from '@vue-office/pdf/lib/v3/vue-office-pdf.mjs'
 import VueOfficePptx from '@vue-office/pptx/lib/v3/vue-office-pptx.mjs'
 import { FileTypeResult } from 'file-type'
 import '@vue-office/docx/lib/v3/index.css'
 import '@vue-office/excel/lib/v3/index.css'
-import { getFile } from '@/utils/PathUtil'
-import { useWindow } from '@/hooks/useWindow'
+import { listen } from '@tauri-apps/api/event'
 import merge from 'lodash-es/merge'
 import { computed } from 'vue'
 import { useTauriListener } from '@/hooks/useTauriListener'
-import { listen } from '@tauri-apps/api/event'
+import { useWindow } from '@/hooks/useWindow'
+import { getFile } from '@/utils/PathUtil'
 
 type PayloadData = {
   userId: string

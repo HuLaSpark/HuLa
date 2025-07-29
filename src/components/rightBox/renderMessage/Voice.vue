@@ -46,16 +46,16 @@
 </template>
 
 <script setup lang="ts">
-import { audioManager } from '@/utils/AudioManager'
+import { join } from '@tauri-apps/api/path'
+import { BaseDirectory, create, exists, mkdir, readFile } from '@tauri-apps/plugin-fs'
+import { type } from '@tauri-apps/plugin-os'
+import { storeToRefs } from 'pinia'
+import { ThemeEnum } from '@/enums'
+import { FilesMeta, VoiceBody } from '@/services/types'
 import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user'
-import { ThemeEnum } from '@/enums'
-import { storeToRefs } from 'pinia'
-import { FilesMeta, VoiceBody } from '@/services/types'
+import { audioManager } from '@/utils/AudioManager'
 import { getFilesMeta, getImageCache } from '@/utils/PathUtil'
-import { BaseDirectory, create, exists, mkdir, readFile } from '@tauri-apps/plugin-fs'
-import { join } from '@tauri-apps/api/path'
-import { type } from '@tauri-apps/plugin-os'
 
 const props = defineProps<{
   body: VoiceBody

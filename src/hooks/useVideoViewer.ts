@@ -1,14 +1,13 @@
-import { MsgEnum } from '@/enums'
-import { useVideoViewer as useVideoViewerStore } from '@/stores/videoViewer'
-import { useChatStore } from '@/stores/chat'
-import { useWindow } from '@/hooks/useWindow'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { getUserVideosDir } from '@/utils/PathUtil'
-import { exists } from '@tauri-apps/plugin-fs'
-import { BaseDirectory } from '@tauri-apps/plugin-fs'
 import { join, resourceDir } from '@tauri-apps/api/path'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { BaseDirectory, exists } from '@tauri-apps/plugin-fs'
+import { MsgEnum } from '@/enums'
 import { useCommon } from '@/hooks/useCommon.ts'
+import { useWindow } from '@/hooks/useWindow'
+import { useChatStore } from '@/stores/chat'
 import { useGlobalStore } from '@/stores/global'
+import { useVideoViewer as useVideoViewerStore } from '@/stores/videoViewer'
+import { getUserVideosDir } from '@/utils/PathUtil'
 
 /** 视频处理 */
 export const useVideoViewer = () => {

@@ -6,7 +6,7 @@ use common_cmd::hide_title_bar_buttons;
 #[cfg(desktop)]
 use common_cmd::{
     audio, default_window_icon, get_files_meta, get_window_payload, push_window_payload,
-    screenshot, set_badge_count, set_height,
+    screenshot, set_height,
 };
 #[cfg(target_os = "macos")]
 use desktops::app_event;
@@ -25,6 +25,7 @@ pub mod error;
 pub mod im_reqest_client;
 pub mod pojo;
 pub mod repository;
+pub mod timeout_config;
 mod vo;
 
 use crate::command::room_member_command::{
@@ -53,7 +54,7 @@ pub struct AppData {
     cache: Cache<String, String>,
 }
 
-use crate::command::contact_command::list_contacts_command;
+use crate::command::contact_command::{hide_contact_command, list_contacts_command};
 use crate::command::message_command::{
     check_user_init_and_fetch_messages, page_msg, save_msg, send_msg,
 };
@@ -64,7 +65,10 @@ use tokio::sync::Mutex;
 pub fn run() {
     #[cfg(desktop)]
     {
-        setup_desktop().unwrap();
+        if let Err(e) = setup_desktop() {
+            log::error!("Failed to setup desktop application: {}", e);
+            std::process::exit(1);
+        }
     }
     #[cfg(mobile)]
     {
@@ -74,7 +78,10 @@ pub fn run() {
 
 #[cfg(desktop)]
 fn setup_desktop() -> Result<(), CommonError> {
-    use crate::command::user_command::{save_user_info, update_user_last_opt_time};
+    use crate::{
+        command::user_command::{save_user_info, update_user_last_opt_time},
+        desktops::common_cmd::set_badge_count,
+    };
 
     // 创建一个缓存实例
     let cache: Cache<String, String> = Cache::builder()
@@ -91,6 +98,7 @@ fn setup_desktop() -> Result<(), CommonError> {
             setup_user_info_listener_early(app.handle().clone());
             setup_logout_listener(app.handle().clone());
 
+            // 异步初始化应用数据，避免阻塞主线程
             match tauri::async_runtime::block_on(initialize_app_data(app_handle.clone())) {
                 Ok((db, client, user_info)) => {
                     // 使用 manage 方法在运行时添加状态
@@ -117,7 +125,6 @@ fn setup_desktop() -> Result<(), CommonError> {
             screenshot,
             audio,
             set_height,
-            set_badge_count,
             get_video_thumbnail,
             #[cfg(target_os = "macos")]
             hide_title_bar_buttons,
@@ -128,6 +135,7 @@ fn setup_desktop() -> Result<(), CommonError> {
             update_my_room_info,
             cursor_page_room_members,
             list_contacts_command,
+            hide_contact_command,
             page_msg,
             send_msg,
             save_msg,
@@ -136,10 +144,13 @@ fn setup_desktop() -> Result<(), CommonError> {
             get_window_payload,
             get_files_meta,
             get_directory_usage_info_with_progress,
-            cancel_directory_scan
+            cancel_directory_scan,
+            set_badge_count
         ])
         .build(tauri::generate_context!())
-        .expect("error while building tauri application")
+        .map_err(|e| {
+            CommonError::RequestError(format!("Failed to build tauri application: {}", e))
+        })?
         .run(|app_handle, event| {
             #[cfg(target_os = "macos")]
             app_event::handle_app_event(&app_handle, event);
@@ -214,32 +225,45 @@ fn setup_user_info_listener_early(app_handle: tauri::AppHandle) {
             // 等待AppData状态可用
             if let Some(app_data) = app_handle.try_state::<AppData>() {
                 if let Ok(payload) = serde_json::from_str::<UserInfo>(&event.payload()) {
-                    let client = app_data.request_client.lock().await;
+                    // 避免多重锁，分别获取和释放锁
 
-                    // 更新 client 的 token
-                    if let Ok(mut token_guard) = client.token.lock() {
-                        *token_guard = Some(payload.token.clone());
-                    }
+                    // 1. 先更新 client 的 token 信息
+                    {
+                        let client = app_data.request_client.lock().await;
+                        // 使用 try_lock 避免阻塞，如果获取不到锁则跳过更新
+                        if let Ok(mut token_guard) = client.token.try_lock() {
+                            *token_guard = Some(payload.token.clone());
+                        } else {
+                            log::warn!("无法获取 token 锁，跳过 token 更新");
+                        }
 
-                    if let Ok(mut refresh_token_guard) = client.refresh_token.lock() {
-                        *refresh_token_guard = Some(payload.refresh_token.clone());
-                    }
+                        if let Ok(mut refresh_token_guard) = client.refresh_token.try_lock() {
+                            *refresh_token_guard = Some(payload.refresh_token.clone());
+                        } else {
+                            log::warn!("无法获取 refresh_token 锁，跳过 refresh_token 更新");
+                        }
+                    } // client 锁在这里释放
 
-                    // 更新用户信息
-                    let mut user_info = app_data.user_info.lock().await;
-                    user_info.uid = payload.uid.clone();
-                    user_info.token = payload.token.clone();
-                    user_info.refresh_token = payload.refresh_token.clone();
+                    // 2. 然后更新用户信息
+                    {
+                        let mut user_info = app_data.user_info.lock().await;
+                        user_info.uid = payload.uid.clone();
+                        user_info.token = payload.token.clone();
+                        user_info.refresh_token = payload.refresh_token.clone();
+                    } // user_info 锁在这里释放
 
                     // 检查用户的 is_init 状态并获取消息
-                    if let Err(e) = check_user_init_and_fetch_messages(
-                        &client,
-                        app_data.db_conn.deref(),
-                        &payload.uid,
-                    )
-                    .await
                     {
-                        log::error!("检查用户初始化状态并获取消息失败: {}", e);
+                        let client = app_data.request_client.lock().await;
+                        if let Err(e) = check_user_init_and_fetch_messages(
+                            &*client,
+                            app_data.db_conn.deref(),
+                            &payload.uid,
+                        )
+                        .await
+                        {
+                            log::error!("检查用户初始化状态并获取消息失败: {}", e);
+                        }
                     }
                 }
             }
@@ -319,8 +343,11 @@ fn setup_logout_listener(app_handle: tauri::AppHandle) {
 #[cfg(mobile)]
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 fn setup_mobile() {
-    tauri::Builder::default()
+    if let Err(e) = tauri::Builder::default()
         .init_plugin()
         .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+    {
+        log::error!("Failed to run mobile application: {}", e);
+        std::process::exit(1);
+    }
 }

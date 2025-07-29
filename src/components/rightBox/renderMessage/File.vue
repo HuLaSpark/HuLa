@@ -96,16 +96,16 @@
 </template>
 
 <script setup lang="ts">
-import type { FileBody, FilesMeta } from '@/services/types'
-import { MessageStatusEnum } from '@/enums'
-import { formatBytes, getFileSuffix } from '@/utils/Formatting'
-import { useDownload } from '@/hooks/useDownload'
-import { useFileDownloadStore } from '@/stores/fileDownload'
+import { join } from '@tauri-apps/api/path'
 import { openPath, revealItemInDir } from '@tauri-apps/plugin-opener'
+import { MessageStatusEnum } from '@/enums'
+import { useDownload } from '@/hooks/useDownload'
+import type { FileBody, FilesMeta } from '@/services/types'
+import { useFileDownloadStore } from '@/stores/fileDownload'
 import { useGlobalStore } from '@/stores/global'
 import { useUserStore } from '@/stores/user'
+import { formatBytes, getFileSuffix } from '@/utils/Formatting'
 import { getFilesMeta, getUserAbsoluteVideosDir } from '@/utils/PathUtil'
-import { join } from '@tauri-apps/api/path'
 
 const userStore = useUserStore()?.userInfo
 const globalStore = useGlobalStore()
@@ -275,7 +275,7 @@ const handleFileClick = async () => {
     const currentUserUid = userStore.uid as string
 
     const resourceDirPath = await getUserAbsoluteVideosDir(currentUserUid, currentChatRoomId)
-    let absolutePath = await join(resourceDirPath, props.body.fileName)
+    const absolutePath = await join(resourceDirPath, props.body.fileName)
 
     const [fileMeta] = await getFilesMeta<FilesMeta>([absolutePath || props.body.url])
 
@@ -332,7 +332,7 @@ const downloadFileOnly = async () => {
     const currentUserUid = userStore.uid as string
 
     const resourceDirPath = await getUserAbsoluteVideosDir(currentUserUid, currentChatRoomId)
-    let absolutePath = await join(resourceDirPath, props.body.fileName)
+    const absolutePath = await join(resourceDirPath, props.body.fileName)
 
     const [fileMeta] = await getFilesMeta<FilesMeta>([absolutePath || props.body.url])
 

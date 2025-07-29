@@ -1,10 +1,10 @@
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { EventEnum } from '@/enums'
-import { LogicalSize } from '@tauri-apps/api/dpi'
-import { type } from '@tauri-apps/plugin-os'
-import { UserAttentionType } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/core'
+import { LogicalSize } from '@tauri-apps/api/dpi'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { UserAttentionType } from '@tauri-apps/api/window'
 import { info } from '@tauri-apps/plugin-log'
+import { type } from '@tauri-apps/plugin-os'
+import { EventEnum } from '@/enums'
 
 /** 判断是兼容的系统 */
 const isCompatibility = computed(() => type() === 'windows' || type() === 'linux')

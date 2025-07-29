@@ -1,10 +1,10 @@
 use crate::error::CommonError;
 use anyhow::Context;
-use sea_orm::{Database, DatabaseConnection, ConnectOptions};
+use log::LevelFilter;
+use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use std::path::PathBuf;
 use std::time::Duration;
 use tauri::{AppHandle, Manager};
-use log::LevelFilter;
 
 #[derive(serde::Deserialize, Clone, Debug)]
 pub struct Settings {
@@ -30,19 +30,23 @@ impl DatabaseSettings {
             get_database_path(app_handle)?
         };
         let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
-        
-        // 配置数据库连接选项，启用 SQL 日志记录
+
+        // 配置数据库连接选项
         let mut opt = ConnectOptions::new(db_url);
-        opt.max_connections(100)
-            .min_connections(5)
-            .connect_timeout(Duration::from_secs(8))
-            .acquire_timeout(Duration::from_secs(8))
-            .idle_timeout(Duration::from_secs(8))
-            .max_lifetime(Duration::from_secs(8))
-            // 启用 SQL 日志记录
-            .sqlx_logging(true)
-            .sqlx_logging_level(LevelFilter::Info);
-        
+        opt.max_connections(20) // 降低最大连接数，避免资源浪费
+            .min_connections(2) // 降低最小连接数
+            .connect_timeout(Duration::from_secs(30)) // 增加连接超时时间
+            .acquire_timeout(Duration::from_secs(30)) // 增加获取连接超时时间
+            .idle_timeout(Duration::from_secs(600)) // 10分钟空闲超时
+            .max_lifetime(Duration::from_secs(1800)) // 30分钟连接生命周期，避免频繁重建
+            // 启用 SQL 日志记录，但只在 debug 模式下
+            .sqlx_logging(cfg!(debug_assertions))
+            .sqlx_logging_level(if cfg!(debug_assertions) {
+                LevelFilter::Debug
+            } else {
+                LevelFilter::Warn
+            });
+
         let db: DatabaseConnection = Database::connect(opt)
             .await
             .with_context(|| "连接数据库异常")?;
@@ -89,7 +93,7 @@ pub fn get_configuration(app_handle: &AppHandle) -> Result<Settings, config::Con
     let environment: Environment = std::env::var("APP_ENVIRONMENT")
         .unwrap_or_else(|_| "local".into())
         .try_into()
-        .expect("解析APP_ENVIRONMENT失败");
+        .map_err(|e| config::ConfigError::Message(format!("解析APP_ENVIRONMENT失败: {:?}", e)))?;
 
     let environment_filename = format!("{}.yaml", environment.as_str());
     let settings = config::Config::builder()
