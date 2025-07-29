@@ -7,7 +7,10 @@ function createCommand(prefix, join) {
 export default {
   // JavaScript/TypeScript 文件使用 Biome
   '*.{js,jsx,ts,tsx,json}': [
-    createCommand('biome check --write', ''),
+    (filenames) => {
+      const filteredFiles = filenames.filter(f => !f.includes('src-tauri/'))
+      return filteredFiles.length > 0 ? `biome check --write ${filteredFiles.map(f => path.relative(process.cwd(), f)).join(' ')}` : 'echo "No files to check"'
+    },
   ],
   // Vue 文件：Biome 处理 script，Prettier 处理 template
   '*.vue': [

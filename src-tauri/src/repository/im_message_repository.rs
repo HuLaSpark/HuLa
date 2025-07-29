@@ -7,6 +7,8 @@ use sea_orm::{
     ColumnTrait, ConnectionTrait, DatabaseConnection, DatabaseTransaction, EntityTrait,
     IntoActiveModel, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set,
 };
+use sea_orm::prelude::Expr;
+use sea_orm::sea_query::Alias;
 use std::collections::HashMap;
 
 pub async fn save_all<C>(db: &C, messages: Vec<im_message::Model>) -> Result<(), CommonError>
@@ -149,11 +151,11 @@ pub async fn cursor_page_messages(
         .await
         .with_context(|| "查询消息总数失败")?;
 
-    // 先查询消息主表，只按 id 降序排序
+    // 先查询消息主表，按 id 数值降序排序
     let mut message_query = im_message::Entity::find()
         .filter(im_message::Column::RoomId.eq(&room_id))
         .filter(im_message::Column::LoginUid.eq(login_uid))
-        .order_by_desc(im_message::Column::Id)
+        .order_by_desc(Expr::col(im_message::Column::Id).cast_as(Alias::new("INTEGER")))
         .limit(cursor_page_param.page_size as u64);
 
     // 如果提供了游标，添加过滤条件
