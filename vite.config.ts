@@ -119,7 +119,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       hmr: {
         // 为移动端开发提供正确的HMR配置
         port: 6130, // 使用不同的端口避免冲突
-        host: '127.0.0.1' // 明确指定host
+        host: '0.0.0.0' // 明确指定host
       },
       cors: true, // 配置 CORS
       host: '0.0.0.0',

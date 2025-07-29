@@ -16,16 +16,24 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
     // 初始化插件
     fn init_plugin(self) -> Self {
         let builder = self
+            // 移动端和桌面端都支持的插件
             .plugin(tauri_plugin_os::init())
+            .plugin(tauri_plugin_http::init())
+            .plugin(tauri_plugin_upload::init())
+            .plugin(tauri_plugin_sql::Builder::new().build())
             .plugin(tauri_plugin_notification::init())
             .plugin(tauri_plugin_process::init())
-            .plugin(tauri_plugin_http::init())
             .plugin(tauri_plugin_shell::init())
-            .plugin(tauri_plugin_fs::init())
-            .plugin(tauri_plugin_upload::init())
             .plugin(tauri_plugin_dialog::init())
-            .plugin(tauri_plugin_clipboard_manager::init())
             .plugin(tauri_plugin_opener::init())
+            .plugin(tauri_plugin_fs::init())
+            .plugin(tauri_plugin_clipboard_manager::init())
+            .plugin(tauri_plugin_mic_recorder::init())
+            .plugin(build_log_plugin());
+
+        // 桌面端特有的插件
+        #[cfg(desktop)]
+        let builder = builder
             .plugin(tauri_plugin_autostart::init(
                 MacosLauncher::LaunchAgent,
                 Some(vec!["--flag1", "--flag2"]),
@@ -48,11 +56,8 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
                     }
                 }
             }))
-            .plugin(tauri_plugin_sql::Builder::new().build())
             .plugin(tauri_plugin_global_shortcut::Builder::new().build())
-            .plugin(tauri_plugin_updater::Builder::new().build())
-            .plugin(tauri_plugin_mic_recorder::init())
-            .plugin(build_log_plugin());
+            .plugin(tauri_plugin_updater::Builder::new().build());
 
         #[cfg(debug_assertions)]
         let builder = builder.plugin(tauri_plugin_devtools::init());
@@ -116,7 +121,7 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
     }
 }
 
-fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
+pub fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
     tauri_plugin_log::Builder::new()
         .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
         .skip_logger()

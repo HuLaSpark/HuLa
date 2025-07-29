@@ -31,6 +31,8 @@ export const useLogin = () => {
     }
   }
 
+  const isDesktop = computed(() => type() === 'macos' || type() === 'windows')
+
   /**
    * 登出账号
    */
@@ -42,7 +44,9 @@ export const useLogin = () => {
       // 创建登录窗口
       await createWebviewWindow('登录', 'login', 320, 448, undefined, false, 320, 448)
       // 发送登出事件
-      await emit(EventEnum.LOGOUT)
+      if (isDesktop) {
+        await emit(EventEnum.LOGOUT)
+      }
       // 调整托盘大小
       await resizeWindow('tray', 130, 44)
     } catch (error) {
