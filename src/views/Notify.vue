@@ -47,7 +47,7 @@
 </template>
 <script setup lang="tsx">
 import { PhysicalPosition } from '@tauri-apps/api/dpi'
-import { Event, emitTo } from '@tauri-apps/api/event'
+import { type Event, emitTo } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
 import { useDebounceFn } from '@vueuse/core'

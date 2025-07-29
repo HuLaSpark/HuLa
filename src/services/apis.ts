@@ -1,6 +1,6 @@
-import { NotificationTypeEnum } from '@/enums'
+import type { NotificationTypeEnum } from '@/enums'
 import request from '@/services/request'
-import {
+import type {
   AnnouncementItem,
   BadgeType,
   CacheBadgeItem,

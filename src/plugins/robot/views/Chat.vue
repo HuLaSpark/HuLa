@@ -86,7 +86,7 @@
   </main>
 </template>
 <script setup lang="ts">
-import { InputInst, NIcon } from 'naive-ui'
+import { type InputInst, NIcon } from 'naive-ui'
 import MsgInput from '@/components/rightBox/MsgInput.vue'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useSettingStore } from '@/stores/setting.ts'

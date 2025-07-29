@@ -63,9 +63,7 @@ const props = withDefaults(defineProps<Props>(), {
   disabled: false
 })
 
-const emit = defineEmits<{
-  (e: 'refresh'): void
-}>()
+const emit = defineEmits<(e: 'refresh') => void>()
 
 const containerRef = ref<HTMLElement>()
 const contentRef = ref<HTMLElement>()

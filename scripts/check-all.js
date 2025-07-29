@@ -1,7 +1,7 @@
-import { execSync } from 'child_process'
+import { execSync } from 'node:child_process'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import chalk from 'chalk'
-import { fileURLToPath } from 'url'
-import { dirname, join } from 'path'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -20,7 +20,7 @@ async function runScript(scriptPath, description) {
     const duration = ((performance.now() - startTime) / 1000).toFixed(2)
     console.log(chalk.green(`\n✅ ${description}完成 (${duration}s)\n`))
     return true
-  } catch (error) {
+  } catch (_error) {
     console.error(chalk.red(`\n❌ ${description}失败`))
     return false
   }

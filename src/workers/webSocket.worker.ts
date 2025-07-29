@@ -263,7 +263,7 @@ const getBackoffDelay = (retryCount: number) => {
   const baseDelay = 1000 // 基础延迟1秒
   const maxDelay = 15000 // 减少最大延迟到15秒
   const multiplier = Math.min(1.5, 2 - retryCount * 0.1)
-  const delay = Math.min(baseDelay * Math.pow(multiplier, retryCount), maxDelay)
+  const delay = Math.min(baseDelay * multiplier ** retryCount, maxDelay)
 
   // 减少随机抖动范围
   return delay + Math.random() * 500

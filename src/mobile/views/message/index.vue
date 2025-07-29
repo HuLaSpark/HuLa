@@ -132,17 +132,16 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useChatStore } from '@/stores/chat.ts'
 import PullToRefresh from '#/components/PullToRefresh.vue'
-import { formatTimestamp } from '@/utils/ComputedTime.ts'
-import { IsAllUserEnum } from '@/services/types.ts'
+import addFriendIcon from '@/assets/mobile/chat-home/add-friend.webp'
+import groupChatIcon from '@/assets/mobile/chat-home/group-chat.webp'
 import SafeAreaPlaceholder from '@/mobile/components/placeholders/SafeAreaPlaceholder.vue'
-
 import NavBar from '@/mobile/layout/navBar/index.vue'
+import { IsAllUserEnum } from '@/services/types.ts'
+import { useChatStore } from '@/stores/chat.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import groupChatIcon from '@/assets/mobile/chat-home/group-chat.webp'
-import addFriendIcon from '@/assets/mobile/chat-home/add-friend.webp'
+import { formatTimestamp } from '@/utils/ComputedTime.ts'
 
 const chatStore = useChatStore()
 

@@ -21,7 +21,7 @@
 
 <script setup lang="ts">
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { darkTheme, dateZhCN, GlobalThemeOverrides, lightTheme, zhCN } from 'naive-ui'
+import { darkTheme, dateZhCN, type GlobalThemeOverrides, lightTheme, zhCN } from 'naive-ui'
 import { ThemeEnum } from '@/enums'
 import { useSettingStore } from '@/stores/setting.ts'
 

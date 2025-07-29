@@ -1,18 +1,18 @@
+import { type } from '@tauri-apps/plugin-os'
 import {
   createRouter,
   createWebHistory,
-  RouteRecordRaw,
-  NavigationGuardNext,
-  RouteLocationNormalized
+  type NavigationGuardNext,
+  type RouteLocationNormalized,
+  type RouteRecordRaw
 } from 'vue-router'
-import { type } from '@tauri-apps/plugin-os'
-import MobileLogin from '../mobile/login.vue'
-import MobileHome from '../mobile/layout/index.vue'
-import MobileLaunch from '../mobile/launch.vue'
-import MobileMessagePage from '@/mobile/views/message/index.vue'
-import MobileFriendPage from '@/mobile/views/friends/index.vue'
 import MobileCommunity from '@/mobile/views/community/index.vue'
+import MobileFriendPage from '@/mobile/views/friends/index.vue'
+import MobileMessagePage from '@/mobile/views/message/index.vue'
 import MobileMy from '@/mobile/views/my/index.vue'
+import MobileLaunch from '../mobile/launch.vue'
+import MobileHome from '../mobile/layout/index.vue'
+import MobileLogin from '../mobile/login.vue'
 
 const isDesktop = computed(() => {
   return type() === 'windows' || type() === 'linux' || type() === 'macos'

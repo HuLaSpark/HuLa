@@ -1,6 +1,6 @@
 import { emit } from '@tauri-apps/api/event'
 import {
-  FormInst,
+  type FormInst,
   NAvatar,
   NButton,
   NFlex,

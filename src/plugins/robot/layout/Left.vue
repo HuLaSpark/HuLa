@@ -137,7 +137,7 @@
   </n-flex>
 </template>
 <script setup lang="ts">
-import { InputInst, NIcon, VirtualListInst } from 'naive-ui'
+import { type InputInst, NIcon, type VirtualListInst } from 'naive-ui'
 import { useMitt } from '@/hooks/useMitt.ts'
 import router from '@/router'
 import { useUserStore } from '@/stores/user.ts'

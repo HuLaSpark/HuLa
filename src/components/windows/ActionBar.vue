@@ -294,7 +294,7 @@ onMounted(async () => {
   )
 
   // 监听 home 窗口的关闭事件
-  if (appWindow.label == 'home') {
+  if (appWindow.label === 'home') {
     appWindow.onCloseRequested((event) => {
       info('[ActionBar]监听[home]窗口关闭事件')
       if (isProgrammaticClose) {

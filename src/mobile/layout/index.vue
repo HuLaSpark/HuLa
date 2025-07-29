@@ -22,10 +22,10 @@
 </template>
 
 <script setup lang="ts">
-import SafeAreaPlaceholder from '@/mobile/components/placeholders/SafeAreaPlaceholder.vue'
-import TabBar from '@/mobile/layout/tabBar/index.vue'
-import { useMobileStore } from '@/stores/mobile'
 import { debounce } from 'lodash-es'
+import SafeAreaPlaceholder from '@/mobile/components/placeholders/SafeAreaPlaceholder.vue'
+import type TabBar from '@/mobile/layout/tabBar/index.vue'
+import { useMobileStore } from '@/stores/mobile'
 import { calculateElementPosition } from '@/utils/DomCalculate'
 
 const mobileStore = useMobileStore()

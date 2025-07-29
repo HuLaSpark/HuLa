@@ -31,7 +31,7 @@ addListener(
   })
 )
 
-peerConnection.ontrack = function (event) {
+peerConnection.ontrack = (event) => {
   if (video.value) {
     video.value.srcObject = event.streams[0]
   }

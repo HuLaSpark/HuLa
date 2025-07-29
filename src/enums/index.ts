@@ -420,7 +420,7 @@ export enum MessageStatusEnum {
 }
 
 /** 触发类型枚举 */
-export const enum TriggerEnum {
+export enum TriggerEnum {
   MENTION = '@',
   AI = '/',
   TOPIC = '#'

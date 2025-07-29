@@ -1,4 +1,4 @@
-import { MockItem } from '@/services/types.ts'
+import type { MockItem } from '@/services/types.ts'
 
 const avatars = 'https://picsum.photos/140'
 

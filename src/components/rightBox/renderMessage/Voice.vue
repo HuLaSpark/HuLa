@@ -51,7 +51,7 @@ import { BaseDirectory, create, exists, mkdir, readFile } from '@tauri-apps/plug
 import { type } from '@tauri-apps/plugin-os'
 import { storeToRefs } from 'pinia'
 import { ThemeEnum } from '@/enums'
-import { FilesMeta, VoiceBody } from '@/services/types'
+import type { FilesMeta, VoiceBody } from '@/services/types'
 import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user'
 import { audioManager } from '@/utils/AudioManager'

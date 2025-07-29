@@ -27,7 +27,7 @@
 </template>
 <script setup lang="tsx">
 import { NFlex, NImage, NSkeleton } from 'naive-ui'
-import { VNode } from 'vue'
+import type { VNode } from 'vue'
 
 type Example = {
   title: string

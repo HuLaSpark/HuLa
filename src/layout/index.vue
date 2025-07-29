@@ -46,7 +46,12 @@ import { useCheckUpdate } from '@/hooks/useCheckUpdate'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { computedToken } from '@/services/request'
 import type { MarkItemType, MessageType, RevokedMsgType } from '@/services/types.ts'
-import { LoginSuccessResType, OnStatusChangeType, WsResponseMessageType, WsTokenExpire } from '@/services/wsType.ts'
+import {
+  type LoginSuccessResType,
+  type OnStatusChangeType,
+  WsResponseMessageType,
+  type WsTokenExpire
+} from '@/services/wsType.ts'
 import { useCachedStore } from '@/stores/cached'
 import { useChatStore } from '@/stores/chat'
 import { useConfigStore } from '@/stores/config'

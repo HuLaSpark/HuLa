@@ -2,7 +2,7 @@ import { listen } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
 import { useDebounceFn } from '@vueuse/core'
-import { ChangeTypeEnum, ConnectionState, OnlineEnum, URLEnum, WorkerMsgEnum } from '@/enums'
+import { type ChangeTypeEnum, ConnectionState, type OnlineEnum, URLEnum, WorkerMsgEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
 // 使用类型导入避免直接执行代码
 import type { useNetworkReconnect as UseNetworkReconnectType } from '@/hooks/useNetworkReconnect'
@@ -16,7 +16,7 @@ import type {
   UserStateType,
   WsReqMsgContentType
 } from '@/services/wsType.ts'
-import { WsResponseMessageType, WsTokenExpire } from '@/services/wsType.ts'
+import { WsResponseMessageType, type WsTokenExpire } from '@/services/wsType.ts'
 import { useUserStore } from '@/stores/user'
 
 const { addListener } = useTauriListener()

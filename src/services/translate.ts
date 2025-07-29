@@ -1,7 +1,7 @@
 import { fetch } from '@tauri-apps/plugin-http'
 import CryptoJS from 'crypto-js'
 import { AppException } from '@/common/exception.ts'
-import { TranslateProvider } from './types.ts'
+import type { TranslateProvider } from './types.ts'
 
 // 有道云翻译接口响应类型
 interface YoudaoResponse {

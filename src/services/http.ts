@@ -125,7 +125,7 @@ async function Http<T = any>(
   // 默认重试配置，在登录窗口时禁用重试
   const defaultRetryOptions: RetryOptions = {
     retries: 3,
-    retryDelay: (attempt) => Math.pow(2, attempt) * 1000,
+    retryDelay: (attempt) => 2 ** attempt * 1000,
     retryOn: [] // 状态码意味着已经连接到服务器
   }
 

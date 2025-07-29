@@ -1,4 +1,4 @@
-import { JSX } from 'vue/jsx-runtime'
+import type { JSX } from 'vue/jsx-runtime'
 import { ThemeEnum } from '@/enums'
 
 type Topic = {

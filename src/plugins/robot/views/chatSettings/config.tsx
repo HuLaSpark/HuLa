@@ -1,6 +1,6 @@
 import { type } from '@tauri-apps/plugin-os'
 import { NFlex } from 'naive-ui'
-import { VNode } from 'vue'
+import type { VNode } from 'vue'
 import { MacOsKeyEnum, WinKeyEnum } from '@/enums'
 import pkg from '~/package.json'
 import { Button, Input, InputNumber, Select, Slider, Switch } from './model.tsx'

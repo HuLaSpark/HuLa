@@ -185,7 +185,7 @@
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useDebounceFn } from '@vueuse/core'
-import { InputInst } from 'naive-ui'
+import type { InputInst } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { MittEnum, OnlineEnum, RoleEnum, RoomTypeEnum } from '@/enums'
 import { useUserInfo } from '@/hooks/useCached.ts'

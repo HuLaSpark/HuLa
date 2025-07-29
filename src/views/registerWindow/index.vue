@@ -246,7 +246,7 @@ import { lightTheme } from 'naive-ui'
 import PinInput from '@/components/common/PinInput.vue'
 import Validation from '@/components/common/Validation.vue'
 import apis from '@/services/apis.ts'
-import { RegisterUserReq } from '@/services/types.ts'
+import type { RegisterUserReq } from '@/services/types.ts'
 
 // 输入框类型定义
 type InputType = 'nickName' | 'email' | 'password' | 'code' | 'confirmPassword'

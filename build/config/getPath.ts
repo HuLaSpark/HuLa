@@ -1,5 +1,5 @@
 //使用path需要按照@types/node依赖
-import path from 'path'
+import path from 'node:path'
 
 /**
  * 获取项目根路径

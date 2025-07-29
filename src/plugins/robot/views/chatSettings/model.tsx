@@ -1,5 +1,5 @@
 import {
-  GlobalThemeOverrides,
+  type GlobalThemeOverrides,
   NButton,
   NConfigProvider,
   NFlex,

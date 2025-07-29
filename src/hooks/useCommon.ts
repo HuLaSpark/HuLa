@@ -1,7 +1,7 @@
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { BaseDirectory, create, exists, mkdir } from '@tauri-apps/plugin-fs'
 import GraphemeSplitter from 'grapheme-splitter'
-import { Ref } from 'vue'
+import type { Ref } from 'vue'
 import { LimitEnum, MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import { useMessage } from '@/hooks/useMessage.ts'
 import { useMitt } from '@/hooks/useMitt.ts'

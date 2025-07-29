@@ -9,7 +9,7 @@ import vResize from '@/directives/v-resize'
 import vSlide from '@/directives/v-slide.ts'
 import router from '@/router'
 import { pinia } from '@/stores'
-import { SafeArea, useMobileStore } from '@/stores/mobile'
+import { type SafeArea, useMobileStore } from '@/stores/mobile'
 
 if (WebviewWindow.getCurrent().label === 'home') {
   import('@/services/webSocket')

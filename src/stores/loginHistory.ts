@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { StoresEnum } from '@/enums'
-import { UserInfoType } from '@/services/types.ts'
+import type { UserInfoType } from '@/services/types.ts'
 
 export const useLoginHistoriesStore = defineStore(
   StoresEnum.LOGIN_HISTORY,

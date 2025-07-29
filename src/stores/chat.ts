@@ -6,7 +6,7 @@ import { cloneDeep } from 'lodash-es'
 import { defineStore } from 'pinia'
 import { useRoute } from 'vue-router'
 import { ErrorType } from '@/common/exception'
-import { MessageStatusEnum, MsgEnum, NotificationTypeEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
+import { type MessageStatusEnum, MsgEnum, NotificationTypeEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
 import apis from '@/services/apis'
 import type { MarkItemType, MessageType, RevokedMsgType, SessionItem } from '@/services/types'
 import { useCachedStore } from '@/stores/cached.ts'
@@ -399,7 +399,7 @@ export const useChatStore = defineStore(
       await cachedStore.getBatchUserInfo([uid])
 
       // 发完消息就要刷新会话列表
-      let detailResponse = undefined
+      let detailResponse
       if (!current) {
         detailResponse = await apis.sessionDetail({ id: msg.message.roomId })
       }

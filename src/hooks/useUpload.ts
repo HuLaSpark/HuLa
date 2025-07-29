@@ -465,7 +465,7 @@ export const useUpload = () => {
         resolve({ second, tempUrl })
       }
       countAudioTime()
-      audio.onerror = function () {
+      audio.onerror = () => {
         reject({ second: 0, tempUrl })
       }
     })

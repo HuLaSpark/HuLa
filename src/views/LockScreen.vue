@@ -121,7 +121,7 @@
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { onKeyStroke } from '@vueuse/core'
 import dayjs from 'dayjs'
-import { InputInst, lightTheme } from 'naive-ui'
+import { type InputInst, lightTheme } from 'naive-ui'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'

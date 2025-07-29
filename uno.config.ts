@@ -1,7 +1,7 @@
-import { defineConfig } from '@unocss/vite'
 import { presetWind3 } from '@unocss/preset-wind3'
 import transformerDirectives from '@unocss/transformer-directives' // 设置指令
 import transformerVariantGroup from '@unocss/transformer-variant-group' // 解决繁琐的多次写前缀的情况
+import { defineConfig } from '@unocss/vite'
 
 export default defineConfig({
   content: {

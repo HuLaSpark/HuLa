@@ -12,7 +12,7 @@ export const formatBytes = (bytes: number): string => {
   const units = ['B', 'KB', 'MB', 'GB', 'TB']
   const base = 1024
   const unitIndex = Math.floor(Math.log(bytes) / Math.log(base))
-  const size = parseFloat((bytes / Math.pow(base, unitIndex)).toFixed(2))
+  const size = parseFloat((bytes / base ** unitIndex).toFixed(2))
 
   return size + ' ' + units[unitIndex]
 }
