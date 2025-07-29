@@ -122,10 +122,7 @@ impl ImRequestClient {
 
         // 发送请求
         let response = request_builder
-            .json(&HashMap::from([(
-                "refreshToken",
-                refresh_token_value,
-            )]))
+            .json(&HashMap::from([("refreshToken", refresh_token_value)]))
             .send()
             .await
             .with_context(|| "刷新 token 请求失败")?;

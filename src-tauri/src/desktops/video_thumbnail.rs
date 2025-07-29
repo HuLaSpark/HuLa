@@ -84,7 +84,7 @@ async fn generate_thumbnail_macos(
             temp_dir.to_str().ok_or_else(|| {
                 tauri::Error::Io(std::io::Error::new(
                     std::io::ErrorKind::InvalidData,
-                    "Invalid temp directory path"
+                    "Invalid temp directory path",
                 ))
             })?,
             video_path,

@@ -129,46 +129,55 @@ pub async fn page_msg(
 }
 
 /// 将数据库消息模型转换为响应模型
-fn convert_message_to_resp(msg: im_message::Model, marks: Vec<entity::im_message_mark::Model>) -> MessageResp {
+fn convert_message_to_resp(
+    msg: im_message::Model,
+    marks: Vec<entity::im_message_mark::Model>,
+) -> MessageResp {
     // 解析消息体
     let body = msg.body.as_ref().and_then(|b| serde_json::from_str(b).ok());
 
     // 将数据库中的消息标记转换为 HashMap
     let mut message_marks: HashMap<String, MessageMark> = HashMap::new();
-    
+
     // 按标记类型分组统计
     let mut mark_stats: HashMap<String, (u32, bool)> = HashMap::new();
     let current_login_uid = &msg.login_uid;
-    
+
     for mark in marks {
-        let (count, user_marked) = mark_stats.entry(mark.mark_type.to_string()).or_insert((0, false));
-        if mark.status == 0 { // 假设 status=1 表示有效标记
+        let (count, user_marked) = mark_stats
+            .entry(mark.mark_type.to_string())
+            .or_insert((0, false));
+        if mark.status == 0 {
+            // 假设 status=1 表示有效标记
             *count += 1;
             if mark.uid == *current_login_uid {
                 *user_marked = true;
             }
         }
     }
-    
+
     // 转换为最终的 MessageMark 格式
     for (mark_type, (count, user_marked)) in mark_stats {
         let mark_key = format!("{}", mark_type);
-        message_marks.insert(mark_key, MessageMark {
-            count,
-            user_marked,
-        });
+        message_marks.insert(mark_key, MessageMark { count, user_marked });
     }
-    
+
     // 如果没有从关联表获取到标记，尝试从原有的 message_marks 字段解析
     if message_marks.is_empty() {
         if let Some(marks_str) = &msg.message_marks {
-            if let Ok(parsed_marks) = serde_json::from_str::<HashMap<String, MessageMark>>(marks_str) {
+            if let Ok(parsed_marks) =
+                serde_json::from_str::<HashMap<String, MessageMark>>(marks_str)
+            {
                 message_marks = parsed_marks;
             }
         }
     }
-    
-    let final_message_marks = if message_marks.is_empty() { None } else { Some(message_marks) };
+
+    let final_message_marks = if message_marks.is_empty() {
+        None
+    } else {
+        Some(message_marks)
+    };
 
     MessageResp {
         create_id: Some(msg.id.clone()),
@@ -237,7 +246,10 @@ pub async fn fetch_all_messages(
     uid: &str,
     last_opt_time: Option<i64>,
 ) -> Result<(), CommonError> {
-    info!("开始获取所有消息, uid: {}, last_opt_time: {:?}", uid, last_opt_time);
+    info!(
+        "开始获取所有消息, uid: {}, last_opt_time: {:?}",
+        uid, last_opt_time
+    );
     // 调用后端接口 /chat/msg/list 获取所有消息，传递 last_opt_time 参数
     let mut request = client.get("/chat/msg/list");
 

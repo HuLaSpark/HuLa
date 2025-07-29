@@ -6,7 +6,7 @@ use common_cmd::hide_title_bar_buttons;
 #[cfg(desktop)]
 use common_cmd::{
     audio, default_window_icon, get_files_meta, get_window_payload, push_window_payload,
-    screenshot, set_height
+    screenshot, set_height,
 };
 #[cfg(target_os = "macos")]
 use desktops::app_event;
@@ -54,7 +54,7 @@ pub struct AppData {
     cache: Cache<String, String>,
 }
 
-use crate::command::contact_command::list_contacts_command;
+use crate::command::contact_command::{hide_contact_command, list_contacts_command};
 use crate::command::message_command::{
     check_user_init_and_fetch_messages, page_msg, save_msg, send_msg,
 };
@@ -78,7 +78,10 @@ pub fn run() {
 
 #[cfg(desktop)]
 fn setup_desktop() -> Result<(), CommonError> {
-    use crate::{command::user_command::{save_user_info, update_user_last_opt_time}, desktops::common_cmd::set_badge_count};
+    use crate::{
+        command::user_command::{save_user_info, update_user_last_opt_time},
+        desktops::common_cmd::set_badge_count,
+    };
 
     // 创建一个缓存实例
     let cache: Cache<String, String> = Cache::builder()
@@ -132,6 +135,7 @@ fn setup_desktop() -> Result<(), CommonError> {
             update_my_room_info,
             cursor_page_room_members,
             list_contacts_command,
+            hide_contact_command,
             page_msg,
             send_msg,
             save_msg,

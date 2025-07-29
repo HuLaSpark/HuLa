@@ -310,7 +310,6 @@ pub async fn get_files_meta(files_path: Vec<String>) -> Result<Vec<FileMeta>, St
     Ok(files_meta)
 }
 
-
 #[tauri::command]
 pub fn set_badge_count(count: Option<i64>, handle: AppHandle) -> Result<(), String> {
     match handle.get_webview_window("home") {

@@ -8,6 +8,7 @@ import { useChatStore } from '@/stores/chat.ts'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useSettingStore } from '@/stores/setting.ts'
+import { invokeWithErrorHandler } from '../utils/TauriInvokeHandler'
 import { useTauriListener } from './useTauriListener'
 
 const msgBoxShow = ref(false)
@@ -63,8 +64,9 @@ export const useMessage = () => {
 
     chatStore.removeContact(roomId)
     // TODO: 使用隐藏会话接口
-    const res = await apis.hideSession({ roomId, hide: true })
-    console.log(res, roomId)
+    // const res = await apis.hideSession({ roomId, hide: true })
+    await invokeWithErrorHandler('hide_contact_command', { data: { roomId, hide: true } })
+    // console.log(res, roomId)
 
     // 如果不是当前选中的会话，直接返回
     if (!isCurrentSession) {
