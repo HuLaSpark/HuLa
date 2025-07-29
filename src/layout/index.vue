@@ -236,7 +236,7 @@ useMitt.on(WsResponseMessageType.MY_ROOM_INFO_CHANGE, (data: { myName: string; r
   cachedStore.updateUserGroupNickname(data)
   // 如果当前正在查看的是该群聊，则更新群组信息
   if (globalStore.currentSession?.roomId === data.roomId) {
-    groupStore.getCountStatistic()
+    groupStore.getCountStatistic(globalStore.currentSession?.roomId)
   }
 })
 useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
@@ -337,7 +337,7 @@ useMitt.on(WsResponseMessageType.ROOM_INFO_CHANGE, async (data: { roomId: string
   // 如果当前正在查看的是该群聊，则需要刷新群组详情
   if (globalStore.currentSession?.roomId === roomId && globalStore.currentSession.type === RoomTypeEnum.GROUP) {
     // 重新获取群组信息统计
-    await groupStore.getCountStatistic()
+    await groupStore.getCountStatistic(globalStore.currentSession?.roomId)
   }
 })
 useMitt.on(WsResponseMessageType.ROOM_DISSOLUTION, async () => {

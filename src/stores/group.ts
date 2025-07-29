@@ -118,8 +118,8 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
    * 获取群组统计信息
    * 包括群名称、头像、在线人数等
    */
-  const getCountStatistic = async () => {
-    countInfo.value = await apis.groupDetail({ id: currentRoomId.value })
+  const getCountStatistic = async (currentRoomId: string) => {
+    countInfo.value = await apis.groupDetail({ id: currentRoomId })
   }
 
   /**
