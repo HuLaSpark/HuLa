@@ -12,9 +12,8 @@ export default {
       return filteredFiles.length > 0 ? `biome check --write ${filteredFiles.map(f => path.relative(process.cwd(), f)).join(' ')}` : 'echo "No files to check"'
     },
   ],
-  // Vue 文件：Biome 处理 script，Prettier 处理 template
+  // Vue 文件：只使用 Prettier 处理（Biome 对 Vue 文件支持有限）
   '*.vue': [
-    createCommand('biome check --write', ''), // 处理 <script> 部分
-    createCommand('prettier --write', ''), // 处理 <template> 部分
+    createCommand('prettier --write', ''), // 处理整个 Vue 文件
   ]
 }

@@ -43,17 +43,17 @@
     "========= 使用commit来进行代码提交 =========": "",
     "commit": "git add . && git-cz",
     "========= 校验代码规范 =========": "",
-    "lint": "npx @biomejs/biome lint ./src",
+    "lint": "npx @biomejs/biome lint ./",
     "========= 修复代码问题 =========": "",
-    "lint:fix": "npx @biomejs/biome lint --write ./src",
+    "lint:fix": "npx @biomejs/biome lint --write ./",
     "========= 预览代码格式化 =========": "",
-    "format": "npx @biomejs/biome format ./src",
+    "format": "npx @biomejs/biome format ./",
     "========= 执行代码格式化 =========": "",
-    "format:write": "npx @biomejs/biome format --write ./src",
+    "format:write": "npx @biomejs/biome format --write ./",
     "========= 检查代码问题和格式 =========": "",
-    "check": "npx @biomejs/biome check ./src",
+    "check": "npx @biomejs/biome check ./",
     "========= 修复代码问题和格式 =========": "",
-    "check:write": "npx @biomejs/biome check --write ./src",
+    "check:write": "npx @biomejs/biome check --write ./",
     "========= 格式化Vue文件模板 =========": "",
     "format:vue": "npx prettier --write \"src/**/*.vue\"",
     "========= 完整格式化(JS+Vue) =========": "",
@@ -165,11 +165,6 @@
     }
   },
   "pnpm": {
-    "ignoredBuiltDependencies": [
-      "esbuild",
-      "vue-demi",
-      "@parcel/watcher",
-      "sharp"
-    ]
+    "ignoredBuiltDependencies": ["esbuild", "vue-demi", "@parcel/watcher", "sharp"]
   }
 }

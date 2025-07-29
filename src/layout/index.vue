@@ -262,7 +262,7 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
     if (session && session.muteNotification !== NotificationTypeEnum.NOT_DISTURB) {
       // 设置图标闪烁
       useMitt.emit(MittEnum.MESSAGE_ANIMATION, data)
-      session.unreadCount++
+      // session.unreadCount++
       // 在windows系统下才发送通知
       if (type() === 'windows') {
         globalStore.setTipVisible(true)

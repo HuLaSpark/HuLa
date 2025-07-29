@@ -4,18 +4,17 @@
   "files": {
     "ignoreUnknown": true,
     "includes": [
-      "src/**/*.js",
-      "src/**/*.jsx",
-      "src/**/*.ts",
-      "src/**/*.tsx",
-      "src/**/*.vue",
-      "src/**/*.json",
-      "*.ts",
       "*.js",
+      "*.jsx",
+      "*.ts",
+      "*.tsx",
+      "*.vue",
       "*.json",
       "!.vscode/**",
       "!src/typings/*.d.ts",
-      "!src-tauri/**"
+      "!src-tauri/**",
+      "!node_modules/**",
+      "!dist/**"
     ]
   },
   "formatter": {
