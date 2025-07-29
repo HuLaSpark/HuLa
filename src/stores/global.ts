@@ -1,9 +1,12 @@
+import { info } from '@tauri-apps/plugin-log'
+import { type } from '@tauri-apps/plugin-os'
 import { defineStore } from 'pinia'
 import { NotificationTypeEnum, RoomTypeEnum, StoresEnum } from '@/enums'
 import apis from '@/services/apis'
 import type { ContactItem, RequestFriendItem } from '@/services/types'
 import { useChatStore } from '@/stores/chat'
 import { clearQueue, readCountQueue } from '@/utils/ReadCountQueue.ts'
+import { invokeWithErrorHandler } from '../utils/TauriInvokeHandler'
 
 export const useGlobalStore = defineStore(
   StoresEnum.GLOBAL,
@@ -66,6 +69,7 @@ export const useGlobalStore = defineStore(
 
     // 更新全局未读消息计数
     const updateGlobalUnreadCount = async () => {
+      info('[global]更新全局未读消息计数')
       // 计算所有会话的未读消息总数，排除免打扰的会话
       const totalUnread = chatStore.sessionList.reduce((total, session) => {
         // 如果是免打扰的会话，不计入总数
@@ -75,11 +79,14 @@ export const useGlobalStore = defineStore(
         return total + (session.unreadCount || 0)
       }, 0)
       unReadMark.newMsgUnreadCount = totalUnread
-      // await invokeWithErrorHandler('set_badge_count', { count: totalUnread > 0 ? totalUnread : null })
+      if (type() === 'macos') {
+        const count = totalUnread > 0 ? totalUnread : undefined
+        await invokeWithErrorHandler('set_badge_count', { count })
+      }
     }
 
     // 监听当前会话变化
-    watch(currentSession, (val) => {
+    watch(currentSession, async (val) => {
       // 清理已读数查询队列
       clearQueue()
       // 延迟1秒后开始查询已读数
@@ -89,7 +96,7 @@ export const useGlobalStore = defineStore(
       // 更新会话的已读状态
       chatStore.markSessionRead(val.roomId || '1')
       // 更新全局未读计数
-      updateGlobalUnreadCount()
+      await updateGlobalUnreadCount()
     })
 
     // 设置提示框显示状态

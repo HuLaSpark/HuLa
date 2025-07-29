@@ -6,7 +6,7 @@ use common_cmd::hide_title_bar_buttons;
 #[cfg(desktop)]
 use common_cmd::{
     audio, default_window_icon, get_files_meta, get_window_payload, push_window_payload,
-    screenshot, set_height
+    screenshot, set_height,
 };
 #[cfg(target_os = "macos")]
 use desktops::app_event;
@@ -54,7 +54,7 @@ pub struct AppData {
     cache: Cache<String, String>,
 }
 
-use crate::command::contact_command::list_contacts_command;
+use crate::command::contact_command::{hide_contact_command, list_contacts_command};
 use crate::command::message_command::{
     check_user_init_and_fetch_messages, page_msg, save_msg, send_msg,
 };
@@ -78,7 +78,10 @@ pub fn run() {
 
 #[cfg(desktop)]
 fn setup_desktop() -> Result<(), CommonError> {
-    use crate::command::user_command::{save_user_info, update_user_last_opt_time};
+    use crate::{
+        command::user_command::{save_user_info, update_user_last_opt_time},
+        desktops::common_cmd::set_badge_count,
+    };
 
     // 创建一个缓存实例
     let cache: Cache<String, String> = Cache::builder()
@@ -96,8 +99,6 @@ fn setup_desktop() -> Result<(), CommonError> {
             setup_logout_listener(app.handle().clone());
 
             // 异步初始化应用数据，避免阻塞主线程
-            let app_handle_clone = app_handle.clone();
-            let cache_clone = cache.clone();
             match tauri::async_runtime::block_on(initialize_app_data(app_handle.clone())) {
                 Ok((db, client, user_info)) => {
                     // 使用 manage 方法在运行时添加状态
@@ -134,6 +135,7 @@ fn setup_desktop() -> Result<(), CommonError> {
             update_my_room_info,
             cursor_page_room_members,
             list_contacts_command,
+            hide_contact_command,
             page_msg,
             send_msg,
             save_msg,
@@ -142,7 +144,8 @@ fn setup_desktop() -> Result<(), CommonError> {
             get_window_payload,
             get_files_meta,
             get_directory_usage_info_with_progress,
-            cancel_directory_scan
+            cancel_directory_scan,
+            set_badge_count
         ])
         .build(tauri::generate_context!())
         .map_err(|e| {

@@ -326,20 +326,8 @@ const normalLogin = async (auto = false) => {
     await new Promise((resolve) => setTimeout(resolve, 1200))
 
     try {
-      // 直接获取用户详情，如果token过期会自动续签，如果续签失败就回到登录页面
-      const userDetail = await apis.getUserDetail()
-      // 设置用户状态id
-      stateId.value = userDetail.userStateId
-      const account = {
-        ...userDetail
-      }
-      userStore.userInfo = account
-      loginHistoriesStore.addLoginHistory(account)
-
-      loginText.value = '登录成功正在跳转...'
-      await setLoginState()
-      await openHomeWindow()
-      loading.value = false
+      // 登录处理
+      loginProcess(null)
     } catch (error) {
       console.error('自动登录失败', error)
       // 如果是网络异常，不删除token
@@ -363,7 +351,6 @@ const normalLogin = async (auto = false) => {
     .login({ account: account, password: info.value.password, source: 'pc' })
     .then(async (res) => {
       loginDisabled.value = true
-      loginText.value = '登录成功, 正在跳转'
       userStore.isSign = true
       // 存储双token
       localStorage.setItem('TOKEN', res.token)
@@ -373,50 +360,8 @@ const normalLogin = async (auto = false) => {
       if (localStorage.getItem('wsLogin')) {
         localStorage.removeItem('wsLogin')
       }
-      // 获取用户状态列表
-      if (userStatusStore.stateList.length === 0) {
-        try {
-          userStatusStore.stateList = await apis.getAllUserState()
-        } catch (error) {
-          console.error('获取用户状态列表失败', error)
-        }
-      }
-      // 获取用户详情
-      const userDetail = await apis.getUserDetail()
-
-      // 设置用户状态id
-      stateId.value = userDetail.userStateId
-      // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取
-      // await emojiStore.getEmojiList()
-      const account = {
-        ...userDetail,
-        token: res.token,
-        refreshToken: res.refreshToken,
-        client: res.client
-      }
-      userStore.userInfo = account
-      loginHistoriesStore.addLoginHistory(account)
-
-      await invokeWithErrorHandler(
-        TauriCommand.SAVE_USER_INFO,
-        {
-          userInfo: account
-        },
-        {
-          customErrorMessage: '保存用户信息失败',
-          errorType: ErrorType.Client
-        }
-      )
-
-      await emit('set_user_info', {
-        token: res.token,
-        refreshToken: res.refreshToken,
-        uid: account.uid
-      })
-
-      await setLoginState()
-      await openHomeWindow()
-      loading.value = false
+      // 登录处理
+      await loginProcess(res.client)
     })
     .catch((e) => {
       console.error('登录异常：', e)
@@ -429,6 +374,57 @@ const normalLogin = async (auto = false) => {
         loginText.value = '登录'
       }
     })
+}
+
+const loginProcess = async (client: any) => {
+  loading.value = false
+  // 获取用户状态列表
+  if (userStatusStore.stateList.length === 0) {
+    try {
+      userStatusStore.stateList = await apis.getAllUserState()
+    } catch (error) {
+      console.error('获取用户状态列表失败', error)
+    }
+  }
+  // 获取用户详情
+  const userDetail = await apis.getUserDetail()
+
+  // 设置用户状态id
+  stateId.value = userDetail.userStateId
+  const token = localStorage.getItem('TOKEN')
+  const refreshToken = localStorage.getItem('REFRESH_TOKEN')
+  // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取
+  // await emojiStore.getEmojiList()
+  const account = {
+    ...userDetail,
+    token,
+    refreshToken,
+    client
+  }
+  userStore.userInfo = account
+  loginHistoriesStore.addLoginHistory(account)
+  // 在 sqlite 中存储用户信息
+  await invokeWithErrorHandler(
+    TauriCommand.SAVE_USER_INFO,
+    {
+      userInfo: userDetail
+    },
+    {
+      customErrorMessage: '保存用户信息失败',
+      errorType: ErrorType.Client
+    }
+  )
+
+  // 在 rust 部分设置 token
+  await emit('set_user_info', {
+    token,
+    refreshToken,
+    uid: userDetail.uid
+  })
+
+  loginText.value = '登录成功正在跳转...'
+  await setLoginState()
+  await openHomeWindow()
 }
 
 const openHomeWindow = async () => {

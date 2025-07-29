@@ -1,10 +1,10 @@
 use crate::error::CommonError;
 use anyhow::Context;
-use sea_orm::{Database, DatabaseConnection, ConnectOptions};
+use log::LevelFilter;
+use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use std::path::PathBuf;
 use std::time::Duration;
 use tauri::{AppHandle, Manager};
-use log::LevelFilter;
 
 #[derive(serde::Deserialize, Clone, Debug)]
 pub struct Settings {

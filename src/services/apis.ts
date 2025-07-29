@@ -129,7 +129,7 @@ export default {
   /** 删除会话 */
   deleteSession: (params: { roomId: string }) => DELETE<void>(urls.deleteSession, params),
   /** 隐藏会话 */
-  hideSession: (params: { roomId: string; hide: boolean }) => POST<void>(urls.hideSession, params),
+  // hideSession: (params: { roomId: string; hide: boolean }) => POST<void>(urls.hideSession, params),
   /** 修改群信息(群主) */
   updateRoomInfo: (params: { id: string; name: string; avatar: string }) => POST<void>(urls.updateRoomInfo, params),
   /** 修改“我”的群聊名称 */

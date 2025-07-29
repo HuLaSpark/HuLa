@@ -150,13 +150,13 @@ export const useNetworkReconnect = () => {
     // 如果当前是群聊，刷新群组信息
     if (globalStore.currentSession?.type === RoomTypeEnum.GROUP) {
       await groupStore.getGroupUserList()
-      await groupStore.getCountStatistic()
+      await groupStore.getCountStatistic(globalStore.currentSession.roomId)
       await cachedStore.getGroupAtUserBaseInfo()
     }
     // 刷新联系人列表
     await contactStore.getContactList(true)
     // 更新未读消息计数
-    globalStore.updateGlobalUnreadCount()
+    await globalStore.updateGlobalUnreadCount()
     // 刷新在线用户列表
     await groupStore.refreshGroupMembers()
 

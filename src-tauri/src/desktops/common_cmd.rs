@@ -309,3 +309,17 @@ pub async fn get_files_meta(files_path: Vec<String>) -> Result<Vec<FileMeta>, St
 
     Ok(files_meta)
 }
+
+#[tauri::command]
+pub fn set_badge_count(count: Option<i64>, handle: AppHandle) -> Result<(), String> {
+    match handle.get_webview_window("home") {
+        Some(window) => {
+            window.set_badge_count(count).map_err(|e| e.to_string())?;
+            Ok(())
+        }
+        None => {
+            // 如果找不到 home 窗口，直接返回成功，不抛出错误
+            Ok(())
+        }
+    }
+}

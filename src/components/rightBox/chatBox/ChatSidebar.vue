@@ -428,8 +428,8 @@ onMounted(async () => {
   watch(
     () => globalStore.currentSession,
     async (newSession, oldSession) => {
+      const currentSession = { ...newSession }
       if (newSession?.type === RoomTypeEnum.GROUP) {
-        // 如果切换到不同的群聊会话，重置加载状态
         if (newSession?.roomId !== oldSession?.roomId) {
           isLoadingMembers.value = true
           isLoadingAnnouncement.value = true
@@ -439,7 +439,7 @@ onMounted(async () => {
           groupStore.resetGroupData()
           await groupStore.getGroupUserList()
           // 获取群组统计信息（包括在线人数）
-          await groupStore.getCountStatistic()
+          await groupStore.getCountStatistic(currentSession.roomId)
           isLoadingOnlineCount.value = false
           // 初始化群公告
           await handleInitAnnoun()

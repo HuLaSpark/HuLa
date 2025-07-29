@@ -13,6 +13,7 @@ import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { removeTag } from '@/utils/Formatting'
 import { getImageCache } from '@/utils/PathUtil.ts'
+import { invokeWithErrorHandler } from '../utils/TauriInvokeHandler'
 
 export interface SelectionRange {
   range: Range
@@ -820,7 +821,8 @@ export const useCommon = () => {
     const res = await apis.sessionDetailWithFriends({ id: uid, roomType: type })
     // 把隐藏的会话先显示
     try {
-      await apis.hideSession({ roomId: res.roomId, hide: false })
+      // await apis.hideSession({ roomId: res.roomId, hide: false })
+      await invokeWithErrorHandler('hide_contact_command', { data: { roomId: res.roomId, hide: false } })
     } catch (error) {
       window.$message.error('显示会话失败')
     }

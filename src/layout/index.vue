@@ -236,12 +236,11 @@ useMitt.on(WsResponseMessageType.MY_ROOM_INFO_CHANGE, (data: { myName: string; r
   cachedStore.updateUserGroupNickname(data)
   // 如果当前正在查看的是该群聊，则更新群组信息
   if (globalStore.currentSession?.roomId === data.roomId) {
-    groupStore.getCountStatistic()
+    groupStore.getCountStatistic(globalStore.currentSession?.roomId)
   }
 })
 useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   chatStore.pushMsg(data)
-  console.log('监听到接收消息', data)
   data.message.sendTime = new Date(data.message.sendTime).getTime()
   await invokeSilently(TauriCommand.SAVE_MSG, {
     data
@@ -263,6 +262,7 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
     if (session && session.muteNotification !== NotificationTypeEnum.NOT_DISTURB) {
       // 设置图标闪烁
       useMitt.emit(MittEnum.MESSAGE_ANIMATION, data)
+      session.unreadCount++
       // 在windows系统下才发送通知
       if (type() === 'windows') {
         globalStore.setTipVisible(true)
@@ -280,6 +280,8 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
       throttleSendNotification()
     }
   }
+
+  await globalStore.updateGlobalUnreadCount()
 })
 useMitt.on(WsResponseMessageType.REQUEST_NEW_FRIEND, async (data: { uid: number; unreadCount: number }) => {
   console.log('收到好友申请', data.unreadCount)
@@ -335,7 +337,7 @@ useMitt.on(WsResponseMessageType.ROOM_INFO_CHANGE, async (data: { roomId: string
   // 如果当前正在查看的是该群聊，则需要刷新群组详情
   if (globalStore.currentSession?.roomId === roomId && globalStore.currentSession.type === RoomTypeEnum.GROUP) {
     // 重新获取群组信息统计
-    await groupStore.getCountStatistic()
+    await groupStore.getCountStatistic(globalStore.currentSession?.roomId)
   }
 })
 useMitt.on(WsResponseMessageType.ROOM_DISSOLUTION, async () => {

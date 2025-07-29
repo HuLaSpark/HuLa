@@ -463,6 +463,7 @@ class WS {
         // 收到消息
         case WsResponseMessageType.RECEIVE_MESSAGE: {
           const message = params.data as MessageType
+          info(`[ws]收到消息: ${JSON.stringify(message)}`)
           useMitt.emit(WsResponseMessageType.RECEIVE_MESSAGE, message)
           break
         }
