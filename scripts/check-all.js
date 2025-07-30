@@ -1,6 +1,6 @@
-import { execSync } from 'node:child_process'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { execSync } from 'child_process'
+import { dirname, join } from 'path'
+import { fileURLToPath } from 'url'
 import chalk from 'chalk'
 
 const __filename = fileURLToPath(import.meta.url)

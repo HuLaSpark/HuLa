@@ -1,6 +1,6 @@
-import { execSync } from 'node:child_process'
-import { existsSync } from 'node:fs'
-import { platform } from 'node:os'
+import { execSync } from 'child_process'
+import { existsSync } from 'fs'
+import { platform } from 'os'
 import chalk from 'chalk'
 
 // 环境安装指南

@@ -1,6 +1,6 @@
-import chalk from 'node:chalk'
-import { existsSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
+import chalk from 'chalk'
+import { existsSync, writeFileSync } from 'fs'
+import { join } from 'path'
 
 // 用于写入.env.local配置文件，该文件默认不会被git管理，所以不必担心会提交到远程仓库
 const envPath = join(process.cwd(), '.env.local')

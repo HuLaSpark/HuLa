@@ -47,6 +47,7 @@
         "noUnusedImports": "off"
       },
       "style": {
+        "useNodejsImportProtocol": "off",
         "noNonNullAssertion": "off",
         "useNamingConvention": "off",
         "useTemplate": "off"
@@ -81,7 +82,7 @@
   },
   "assist": {
     "enabled": true,
-    "actions": { "source": { "organizeImports": "on" } }
+    "actions": { "source": { "organizeImports": "off" } }
   },
   "overrides": [
     {
