@@ -40,7 +40,7 @@ pub struct ApiResult<T> {
     pub success: bool,
     pub code: Option<i32>,
     pub msg: Option<String>,
-    pub version: String,
+    pub version: Option<String>,
     pub data: Option<T>,
 }
 
