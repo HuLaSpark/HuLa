@@ -19,6 +19,7 @@ const isDesktop = computed(() => {
 })
 /**! 创建窗口后再跳转页面就会导致样式没有生效所以不能使用懒加载路由的方式，有些页面需要快速响应的就不需要懒加载 */
 const { BASE_URL } = import.meta.env
+
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/mobile/login',
@@ -29,6 +30,22 @@ const routes: Array<RouteRecordRaw> = [
     path: '/mobile/launch',
     name: 'mobileLaunch',
     component: MobileLaunch
+  },
+  {
+    path: '/mobile/chatRoom',
+    name: 'mobileChatRoom',
+    component: () => import('@/mobile/layout/chat-room/ChatRoomLayout.vue'),
+    children: [
+      {
+        path: '',
+        redirect: '/mobile/chatRoom/chatMain' // 👈 默认页面地址
+      },
+      {
+        path: 'chatMain',
+        name: 'mobileChatMain',
+        component: () => import('@/mobile/views/chat-room/ChatMain.vue')
+      }
+    ]
   },
   {
     path: '/mobile/home',

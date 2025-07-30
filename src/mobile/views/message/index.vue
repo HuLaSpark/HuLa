@@ -52,6 +52,8 @@
       </template>
     </NavBar>
 
+    <n-button @click="intoRoom">点击进入 </n-button>
+
     <PullToRefresh class="flex-1 overflow-auto" @refresh="handleRefresh" ref="pullRefreshRef">
       <div class="flex flex-col h-full px-18px">
         <div class="py-8px shrink-0">
@@ -265,6 +267,13 @@ const addIconHandler = {
   clickOutside: () => {
     maskHandler.close()
   }
+}
+
+const router = useRouter()
+
+const intoRoom = () => {
+  router.push('/mobile/chatRoom')
+  console.log('进入页面')
 }
 </script>
 
