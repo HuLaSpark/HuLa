@@ -58,7 +58,9 @@ tauri-plugin-sql = { version = "2", features = ["sqlite"] }
 tauri-plugin-notification = "2"
 tauri-plugin-opener = "2"
 tauri-plugin-devtools = "2"
-tauri-plugin-log = { version = "2", features = ["colored"] }
+tauri-plugin-log = { version = "2", features = ["colored", "tracing"] }
+tracing = "0.1"
+tracing-subscriber = "0.3.0"
 
 # Tauri 非官方依赖
 tauri-plugin-mic-recorder = "2"
@@ -78,7 +80,6 @@ anyhow = "1.0.98"
 thiserror = "2.0.12"
 config = { version = "0.15.11", default-features = false, features = ["yaml"] }
 http = "0.2"
-log = "0.4"  # 基础日志接口
 lazy_static = "1.4"
 mime_guess = "2.0.5"
 base64 = "0.22.1"

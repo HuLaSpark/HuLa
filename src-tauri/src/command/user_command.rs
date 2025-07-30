@@ -2,7 +2,6 @@ use crate::AppData;
 use chrono::Local;
 use entity::im_user;
 use entity::prelude::ImUserEntity;
-use log::{debug, info};
 use sea_orm::ActiveValue::Set;
 use sea_orm::ColumnTrait;
 use sea_orm::EntityTrait;
@@ -11,6 +10,7 @@ use sea_orm::QueryFilter;
 use serde::{Deserialize, Serialize};
 use std::ops::Deref;
 use tauri::State;
+use tracing::{debug, info};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]

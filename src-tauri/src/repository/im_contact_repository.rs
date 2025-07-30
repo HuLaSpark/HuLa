@@ -1,11 +1,11 @@
 use crate::error::CommonError;
 use anyhow::Context;
 use entity::im_contact;
-use log::info;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter,
     Set, TransactionTrait,
 };
+use tracing::info;
 
 pub async fn list_contact(
     db: &DatabaseConnection,

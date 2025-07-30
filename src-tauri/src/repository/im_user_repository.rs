@@ -1,8 +1,8 @@
 use crate::error::CommonError;
 use entity::im_user;
 use entity::prelude::ImUserEntity;
-use log::{error, info};
 use sea_orm::{ActiveValue::Set, ConnectionTrait, EntityTrait};
+use tracing::{error, info};
 
 /// 更新用户的 is_init 状态
 pub async fn update_user_init_status<C>(

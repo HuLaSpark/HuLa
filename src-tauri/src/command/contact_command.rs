@@ -4,13 +4,13 @@ use crate::im_reqest_client::ImRequestClient;
 use crate::repository::im_contact_repository::{save_contact_batch, update_contact_hide};
 use anyhow::Context;
 use entity::im_contact;
-use log::{error, info};
 use sea_orm::DatabaseConnection;
 use serde::{Deserialize, Serialize};
 use std::ops::Deref;
 use std::sync::Arc;
 use tauri::State;
 use tokio::sync::Mutex;
+use tracing::{error, info};
 
 #[tauri::command]
 pub async fn list_contacts_command(

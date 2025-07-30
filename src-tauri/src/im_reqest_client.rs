@@ -1,12 +1,12 @@
 use crate::error::CommonError;
 use crate::pojo::common::ApiResult;
 use anyhow::Context;
-use log::{debug, error, info, warn};
-use reqwest::{Client, Method, RequestBuilder, header};
 use base64::{Engine as _, engine::general_purpose};
+use reqwest::{Client, Method, RequestBuilder, header};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Emitter};
+use tracing::{debug, error, info, warn};
 
 /// 智能 HTTP 客户端，支持自动 token 管理和过期重试
 pub struct ImRequestClient {
@@ -348,7 +348,8 @@ impl<'a> RequestBuilderWrapper<'a> {
                     };
 
                     // 添加基础认证头
-                    let basic_auth = general_purpose::STANDARD.encode("luohuo_web_pro:luohuo_web_pro_secret");
+                    let basic_auth =
+                        general_purpose::STANDARD.encode("luohuo_web_pro:luohuo_web_pro_secret");
                     new_request_builder = new_request_builder.header("Authorization", basic_auth);
 
                     if let Some(token) = &new_token {

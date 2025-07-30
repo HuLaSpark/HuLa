@@ -66,7 +66,7 @@ pub fn run() {
     #[cfg(desktop)]
     {
         if let Err(e) = setup_desktop() {
-            log::error!("Failed to setup desktop application: {}", e);
+            tracing::error!("Failed to setup desktop application: {}", e);
             std::process::exit(1);
         }
     }
@@ -78,7 +78,6 @@ pub fn run() {
 
 #[cfg(desktop)]
 fn setup_desktop() -> Result<(), CommonError> {
-
     // 创建一个缓存实例
     let cache: Cache<String, String> = Cache::builder()
         // Time to idle (TTI):  30 minutes
@@ -89,9 +88,7 @@ fn setup_desktop() -> Result<(), CommonError> {
         .init_plugin()
         .init_webwindow_event()
         .init_window_event()
-        .setup(move |app| {
-            common_setup(app, cache)
-        })
+        .setup(move |app| common_setup(app, cache))
         .invoke_handler(get_invoke_handlers())
         .build(tauri::generate_context!())
         .map_err(|e| {
@@ -119,8 +116,8 @@ async fn initialize_app_data(
     ),
     CommonError,
 > {
-    use log::info;
     use migration::{Migrator, MigratorTrait};
+    use tracing::info;
 
     // 加载配置
     let configuration = Arc::new(
@@ -129,7 +126,7 @@ async fn initialize_app_data(
     );
 
     // 初始化数据库连接
-    let db = Arc::new(
+    let db: Arc<DatabaseConnection> = Arc::new(
         configuration
             .database
             .connection_string(&app_handle)
@@ -180,13 +177,13 @@ fn setup_user_info_listener_early(app_handle: tauri::AppHandle) {
                         if let Ok(mut token_guard) = client.token.try_lock() {
                             *token_guard = Some(payload.token.clone());
                         } else {
-                            log::warn!("无法获取 token 锁，跳过 token 更新");
+                            tracing::warn!("无法获取 token 锁，跳过 token 更新");
                         }
 
                         if let Ok(mut refresh_token_guard) = client.refresh_token.try_lock() {
                             *refresh_token_guard = Some(payload.refresh_token.clone());
                         } else {
-                            log::warn!("无法获取 refresh_token 锁，跳过 refresh_token 更新");
+                            tracing::warn!("无法获取 refresh_token 锁，跳过 refresh_token 更新");
                         }
                     } // client 锁在这里释放
 
@@ -208,7 +205,7 @@ fn setup_user_info_listener_early(app_handle: tauri::AppHandle) {
                         )
                         .await
                         {
-                            log::error!("检查用户初始化状态并获取消息失败: {}", e);
+                            tracing::error!("检查用户初始化状态并获取消息失败: {}", e);
                         }
                     }
                 }
@@ -239,10 +236,10 @@ fn setup_logout_listener(app_handle: tauri::AppHandle) {
     app_handle.listen("logout", move |_event| {
         let app_handle = app_handle_clone.clone();
         tauri::async_runtime::spawn(async move {
-            log::info!("[LOGOUT] 开始关闭所有非login窗口");
+            tracing::info!("[LOGOUT] 开始关闭所有非login窗口");
 
             let all_windows = app_handle.webview_windows();
-            log::info!("[LOGOUT] 获取到 {} 个窗口", all_windows.len());
+            tracing::info!("[LOGOUT] 获取到 {} 个窗口", all_windows.len());
 
             // 收集需要关闭的窗口
             let mut windows_to_close = Vec::new();
@@ -255,7 +252,7 @@ fn setup_logout_listener(app_handle: tauri::AppHandle) {
 
             // 逐个关闭窗口，添加小延迟以避免并发关闭导致的错误
             for (label, window) in windows_to_close {
-                log::info!("[LOGOUT] 正在关闭窗口: {}", label);
+                tracing::info!("[LOGOUT] 正在关闭窗口: {}", label);
 
                 // 先隐藏窗口，减少用户感知的延迟
                 let _ = window.hide();
@@ -265,14 +262,14 @@ fn setup_logout_listener(app_handle: tauri::AppHandle) {
 
                 match window.destroy() {
                     Ok(_) => {
-                        log::info!("[LOGOUT] 成功关闭窗口: {}", label);
+                        tracing::info!("[LOGOUT] 成功关闭窗口: {}", label);
                     }
                     Err(error) => {
                         // 检查窗口是否还存在
                         if app_handle.get_webview_window(&label).is_none() {
-                            log::info!("[LOGOUT] 窗口 {} 已不存在，跳过关闭", label);
+                            tracing::info!("[LOGOUT] 窗口 {} 已不存在，跳过关闭", label);
                         } else {
-                            log::warn!(
+                            tracing::warn!(
                                 "[LOGOUT] 关闭窗口 {} 时出现警告: {} (这通常是正常的)",
                                 label,
                                 error
@@ -282,7 +279,7 @@ fn setup_logout_listener(app_handle: tauri::AppHandle) {
                 }
             }
 
-            log::info!("[LOGOUT] 所有非login窗口关闭完成");
+            tracing::info!("[LOGOUT] 所有非login窗口关闭完成");
         });
     });
 }
@@ -299,9 +296,7 @@ fn setup_mobile() {
 
     if let Err(e) = tauri::Builder::default()
         .init_plugin()
-        .setup(move |app| {
-            common_setup(app, cache)
-        })
+        .setup(move |app| common_setup(app, cache))
         .invoke_handler(get_invoke_handlers())
         .run(tauri::generate_context!())
     {
@@ -311,7 +306,10 @@ fn setup_mobile() {
 }
 
 // 公共的 setup 函数
-fn common_setup(app: &mut tauri::App, cache: Cache<String, String>) -> Result<(), Box<dyn std::error::Error>> {
+fn common_setup(
+    app: &mut tauri::App,
+    cache: Cache<String, String>,
+) -> Result<(), Box<dyn std::error::Error>> {
     let app_handle = app.handle().clone();
     setup_user_info_listener_early(app.handle().clone());
     #[cfg(desktop)]
@@ -332,7 +330,7 @@ fn common_setup(app: &mut tauri::App, cache: Cache<String, String>) -> Result<()
             drop(client_guard);
         }
         Err(e) => {
-            log::error!("初始化应用数据失败: {}", e);
+            tracing::error!("初始化应用数据失败: {}", e);
         }
     }
 
@@ -342,49 +340,50 @@ fn common_setup(app: &mut tauri::App, cache: Cache<String, String>) -> Result<()
 }
 
 // 公共的命令处理器函数
-fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static {
-  use crate::command::user_command::{save_user_info, update_user_last_opt_time};
-  #[cfg(desktop)]
-  use crate::desktops::common_cmd::set_badge_count;
+fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static
+{
+    use crate::command::user_command::{save_user_info, update_user_last_opt_time};
+    #[cfg(desktop)]
+    use crate::desktops::common_cmd::set_badge_count;
 
-  tauri::generate_handler![
-      // 桌面端特定命令
-      #[cfg(desktop)]
-      default_window_icon,
-      #[cfg(desktop)]
-      screenshot,
-      #[cfg(desktop)]
-      audio,
-      #[cfg(desktop)]
-      set_height,
-      #[cfg(desktop)]
-      get_video_thumbnail,
-      #[cfg(target_os = "macos")]
-      hide_title_bar_buttons,
-      #[cfg(desktop)]
-      push_window_payload,
-      #[cfg(desktop)]
-      get_window_payload,
-      #[cfg(desktop)]
-      get_files_meta,
-      #[cfg(desktop)]
-      get_directory_usage_info_with_progress,
-      #[cfg(desktop)]
-      cancel_directory_scan,
-      #[cfg(desktop)]
-      set_badge_count,
-      // 通用命令（桌面端和移动端都支持）
-      save_user_info,
-      update_user_last_opt_time,
-      page_room,
-      get_room_members,
-      update_my_room_info,
-      cursor_page_room_members,
-      list_contacts_command,
-      hide_contact_command,
-      page_msg,
-      send_msg,
-      save_msg,
-      save_message_mark
-  ]
+    tauri::generate_handler![
+        // 桌面端特定命令
+        #[cfg(desktop)]
+        default_window_icon,
+        #[cfg(desktop)]
+        screenshot,
+        #[cfg(desktop)]
+        audio,
+        #[cfg(desktop)]
+        set_height,
+        #[cfg(desktop)]
+        get_video_thumbnail,
+        #[cfg(target_os = "macos")]
+        hide_title_bar_buttons,
+        #[cfg(desktop)]
+        push_window_payload,
+        #[cfg(desktop)]
+        get_window_payload,
+        #[cfg(desktop)]
+        get_files_meta,
+        #[cfg(desktop)]
+        get_directory_usage_info_with_progress,
+        #[cfg(desktop)]
+        cancel_directory_scan,
+        #[cfg(desktop)]
+        set_badge_count,
+        // 通用命令（桌面端和移动端都支持）
+        save_user_info,
+        update_user_last_opt_time,
+        page_room,
+        get_room_members,
+        update_my_room_info,
+        cursor_page_room_members,
+        list_contacts_command,
+        hide_contact_command,
+        page_msg,
+        send_msg,
+        save_msg,
+        save_message_mark
+    ]
 }

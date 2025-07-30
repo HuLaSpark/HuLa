@@ -1,6 +1,5 @@
 use crate::error::CommonError;
 use anyhow::Context;
-use log::LevelFilter;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use std::path::PathBuf;
 use std::time::Duration;
@@ -41,11 +40,7 @@ impl DatabaseSettings {
             .max_lifetime(Duration::from_secs(1800)) // 30分钟连接生命周期，避免频繁重建
             // 启用 SQL 日志记录，但只在 debug 模式下
             .sqlx_logging(cfg!(debug_assertions))
-            .sqlx_logging_level(if cfg!(debug_assertions) {
-                LevelFilter::Debug
-            } else {
-                LevelFilter::Warn
-            });
+            .sqlx_logging_level(tracing::log::LevelFilter::Info);
 
         let db: DatabaseConnection = Database::connect(opt)
             .await

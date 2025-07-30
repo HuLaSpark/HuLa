@@ -40,7 +40,7 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
         let default_icon = match app.default_window_icon() {
             Some(icon) => icon.clone(),
             None => {
-                log::error!("未找到默认窗口图标");
+                tracing::error!("未找到默认窗口图标");
                 return Err(tauri::Error::Io(std::io::Error::new(
                     std::io::ErrorKind::NotFound,
                     "未找到默认窗口图标",

@@ -8,7 +8,7 @@ use crate::repository::im_room_member_repository::{
 use crate::vo::vo::MyRoomInfoReq;
 use anyhow::Context;
 use entity::{im_room, im_room_member};
-use log::{error, info};
+use tracing::{error, info};
 
 use crate::im_reqest_client::ImRequestClient;
 use crate::repository::im_room_member_repository;

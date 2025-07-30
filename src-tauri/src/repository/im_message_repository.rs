@@ -2,14 +2,14 @@ use crate::error::CommonError;
 use crate::pojo::common::{CursorPageParam, CursorPageResp};
 use anyhow::Context;
 use entity::{im_message, im_message_mark};
-use log::{debug, info};
+use sea_orm::prelude::Expr;
+use sea_orm::sea_query::Alias;
 use sea_orm::{
     ColumnTrait, ConnectionTrait, DatabaseConnection, DatabaseTransaction, EntityTrait,
     IntoActiveModel, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set,
 };
-use sea_orm::prelude::Expr;
-use sea_orm::sea_query::Alias;
 use std::collections::HashMap;
+use tracing::{debug, error, info};
 
 pub async fn save_all<C>(db: &C, messages: Vec<im_message::Model>) -> Result<(), CommonError>
 where
@@ -21,7 +21,7 @@ where
     match tokio::time::timeout(timeout_duration, save_all_internal(db, messages)).await {
         Ok(result) => result,
         Err(_) => {
-            log::error!("批量保存消息超时");
+            error!("批量保存消息超时");
             Err(CommonError::UnexpectedError(anyhow::anyhow!(
                 "批量保存消息操作超时，请检查数据库连接状态"
             )))

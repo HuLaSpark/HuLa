@@ -44,13 +44,13 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
                 for (name, window) in windows {
                     if name == "home" {
                         if let Err(e) = window.show() {
-                            log::warn!("Failed to show home window: {}", e);
+                            tracing::warn!("Failed to show home window: {}", e);
                         }
                         if let Err(e) = window.unminimize() {
-                            log::warn!("Failed to unminimize home window: {}", e);
+                            tracing::warn!("Failed to unminimize home window: {}", e);
                         }
                         if let Err(e) = window.set_focus() {
-                            log::warn!("Failed to focus home window: {}", e);
+                            tracing::warn!("Failed to focus home window: {}", e);
                         }
                         break;
                     }
@@ -85,7 +85,7 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
                 }
                 if window.label().eq("tray") && !flag {
                     if let Err(e) = window.hide() {
-                        log::warn!("Failed to hide tray window: {}", e);
+                        tracing::warn!("Failed to hide tray window: {}", e);
                     }
                 }
                 #[cfg(target_os = "windows")]
@@ -125,11 +125,11 @@ pub fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
     tauri_plugin_log::Builder::new()
         .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
         .skip_logger()
-        .level(log::LevelFilter::Debug)
-        .level_for("sqlx", log::LevelFilter::Debug)
-        .level_for("sqlx::query", log::LevelFilter::Debug)
-        .level_for("sea_orm", log::LevelFilter::Info)
-        .level_for("hula_app_lib", log::LevelFilter::Debug)
+        .level(tracing::log::LevelFilter::Debug)
+        .level_for("sqlx", tracing::log::LevelFilter::Debug)
+        .level_for("sqlx::query", tracing::log::LevelFilter::Debug)
+        .level_for("sea_orm", tracing::log::LevelFilter::Info)
+        .level_for("hula_app_lib", tracing::log::LevelFilter::Debug)
         .targets([
             Target::new(TargetKind::Stdout),
             // 将 rust 日志打印到 webview的 devtool 中

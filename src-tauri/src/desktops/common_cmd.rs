@@ -122,7 +122,7 @@ pub fn audio(filename: &str, handle: AppHandle) -> Result<(), String> {
 
     thread::spawn(move || {
         if let Err(e) = play_audio_internal(&path, &handle_clone) {
-            log::error!("播放音频失败: {}", e);
+            tracing::error!("播放音频失败: {}", e);
         }
     });
 

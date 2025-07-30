@@ -51,7 +51,7 @@ async fn get_directory_size_with_progress(
     {
         Ok(result) => result,
         Err(_) => {
-            log::warn!("目录扫描超时，已自动取消");
+            tracing::warn!("目录扫描超时，已自动取消");
             Err("目录扫描超时，请尝试扫描较小的目录".to_string())
         }
     }

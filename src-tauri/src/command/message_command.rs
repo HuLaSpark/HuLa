@@ -7,13 +7,13 @@ use crate::vo::vo::ChatMessageReq;
 use anyhow::Context;
 use entity::im_user::Entity as ImUserEntity;
 use entity::{im_message, im_user};
-use log::{debug, error, info};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use sea_orm::{DatabaseConnection, TransactionTrait};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::ops::Deref;
 use tauri::{AppHandle, Emitter, State};
+use tracing::{debug, error, info};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]

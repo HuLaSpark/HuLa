@@ -41,7 +41,7 @@ where
     match tokio::time::timeout(timeout, future).await {
         Ok(result) => result,
         Err(_) => {
-            log::error!("{} 操作超时", operation_name);
+            tracing::error!("{} 操作超时", operation_name);
             Err(crate::error::CommonError::UnexpectedError(anyhow::anyhow!(
                 "{} 操作超时",
                 operation_name

@@ -2,10 +2,10 @@ use crate::AppData;
 use crate::error::CommonError;
 use crate::repository::im_message_mark_repository;
 use entity::im_message_mark;
-use log::{error, info};
 use sea_orm::TransactionTrait;
 use serde::{Deserialize, Serialize};
 use tauri::State;
+use tracing::{error, info};
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

@@ -1,6 +1,5 @@
 use anyhow::Context;
 use entity::{im_room, im_room_member};
-use log::{debug, info};
 use sea_orm::EntityTrait;
 use sea_orm::IntoActiveModel;
 use sea_orm::PaginatorTrait;
@@ -8,6 +7,7 @@ use sea_orm::QuerySelect;
 use sea_orm::TransactionTrait;
 use sea_orm::{ActiveModelTrait, Set};
 use sea_orm::{ColumnTrait, DatabaseConnection, QueryFilter, QueryOrder};
+use tracing::{debug, info};
 
 use crate::pojo::common::{CursorPageParam, CursorPageResp};
 use crate::{

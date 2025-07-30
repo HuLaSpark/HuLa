@@ -1,15 +1,15 @@
-import { ConfigEnv, defineConfig, loadEnv } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import AutoImport from 'unplugin-auto-import/vite' //自动导入
-import Components from 'unplugin-vue-components/vite' //组件注册
-import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
-import { getRootPath, getSrcPath } from './build/config/getPath'
-import vueJsx from '@vitejs/plugin-vue-jsx'
-import UnoCSS from '@unocss/vite'
 import terser from '@rollup/plugin-terser'
-import VueSetupExtend from 'vite-plugin-vue-setup-extend'
+import UnoCSS from '@unocss/vite'
+import vue from '@vitejs/plugin-vue'
+import vueJsx from '@vitejs/plugin-vue-jsx'
 import { readFileSync } from 'fs'
 import { join } from 'path'
+import AutoImport from 'unplugin-auto-import/vite' //自动导入
+import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
+import Components from 'unplugin-vue-components/vite' //组件注册
+import { ConfigEnv, defineConfig, loadEnv } from 'vite'
+import VueSetupExtend from 'vite-plugin-vue-setup-extend'
+import { getRootPath, getSrcPath } from './build/config/getPath'
 
 // 读取 package.json 依赖
 const packageJson = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf-8'))
@@ -119,7 +119,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       hmr: {
         // 为移动端开发提供正确的HMR配置
         port: 6130, // 使用不同的端口避免冲突
-        host: '0.0.0.0' // 明确指定host
+        host: '127.0.0.1' // 明确指定host
       },
       cors: true, // 配置 CORS
       host: '0.0.0.0',

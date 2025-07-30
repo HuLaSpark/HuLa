@@ -10,6 +10,9 @@
       "src/**/*.tsx",
       "src/**/*.vue",
       "src/**/*.json",
+      "*.ts",
+      "*.js",
+      "*.json",
       "!.vscode/**",
       "!src/typings/*.d.ts",
       "!src-tauri/**"
