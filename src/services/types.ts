@@ -402,9 +402,9 @@ export type TextBody = {
 /** 公告消息体 */
 export type AnnouncementBody = TextBody & {
   /** 创建时间 */
-  createdTime: number
+  createTime: number
   /** 更新时间 */
-  updatedTime: number
+  updateTime: number
 }
 /** 表情消息 */
 export type EmojiBody = {
