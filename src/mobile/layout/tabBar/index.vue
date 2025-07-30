@@ -5,7 +5,8 @@
         v-for="item in navItems"
         :key="item.path"
         :to="item.path"
-        class="tab-item flex flex-col items-center no-underline relative"
+        :style="{ height: tabHeight }"
+        class="tab-item flex flex-col flex-1 items-center no-underline relative"
         :class="route.path === item.path ? 'color-[--tab-bar-icon-color] is-active' : 'text-#000'">
         <svg class="w-22px h-22px">
           <use :href="`#${route.path === item.path ? item.actionIcon : item.icon}`"></use>
@@ -17,6 +18,10 @@
 </template>
 
 <script setup lang="ts">
+import { useMobileStore } from '@/stores/mobile'
+
+const mobileStore = useMobileStore()
+
 type NavItem = {
   label: string
   path: string
@@ -51,12 +56,21 @@ const navItems: NavItem[] = [
     actionIcon: 'wode-action'
   }
 ]
+
+const customHeight = ref(50)
+
+if (mobileStore.envType === 'android') {
+  customHeight.value = mobileStore.safeArea.bottom
+} else if (mobileStore.envType === 'ios') {
+  customHeight.value = mobileStore.safeArea.bottom + 20
+}
+
+const tabHeight = computed(() => customHeight + 'px')
 </script>
 
 <style scoped lang="scss">
 .tab-bar {
   @apply z-998 w-full bg-#fefefe90 backdrop-blur-md min-h-50px;
-  height: calc(max(50px, 20px + env(safe-area-inset-bottom)));
   border-top: 1px solid rgba(0, 0, 0, 0.1);
   transform: translateZ(0);
   -webkit-transform: translateZ(0);

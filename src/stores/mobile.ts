@@ -45,17 +45,21 @@ export const useMobileStore = defineStore(StoresEnum.MOBILE, () => {
     top: -1
   })
 
+  const isFullScreen = ref<boolean>(true)
+
   const updateSafeArea = (newSafeArea: SafeArea) => {
     safeArea.value = newSafeArea
-    console.log('安全区域更新：', safeArea.value)
   }
 
   const updateTabBarPosition = (options: { newPosition: DOMRect; isInit: boolean }) => {
     bottomTabBarPosition.value = options.newPosition
     if (options.isInit) {
-      console.log('位置状态初始化')
       initBottomTabBarPosition.value = options.newPosition
     }
+  }
+
+  const updateFullScreenState = (newState: boolean) => {
+    isFullScreen.value = newState
   }
 
   return {
@@ -64,6 +68,8 @@ export const useMobileStore = defineStore(StoresEnum.MOBILE, () => {
     updateSafeArea,
     updateTabBarPosition,
     bottomTabBarPosition,
-    initBottomTabBarPosition
+    initBottomTabBarPosition,
+    isFullScreen,
+    updateFullScreenState
   }
 })
