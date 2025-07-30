@@ -44,7 +44,7 @@
       },
       "correctness": {
         "noUnusedVariables": "off",
-        "noUnusedImports": "off"
+        "noUnusedImports": "warn"
       },
       "style": {
         "useNodejsImportProtocol": "off",
