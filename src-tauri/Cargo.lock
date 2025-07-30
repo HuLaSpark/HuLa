@@ -2912,6 +2912,7 @@ dependencies = [
  "http 0.2.12",
  "image 0.25.6",
  "lazy_static",
+ "log",
  "migration",
  "mime_guess",
  "moka",
