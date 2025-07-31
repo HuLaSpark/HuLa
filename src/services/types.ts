@@ -521,7 +521,7 @@ export type SessionItem = {
   activeTime: number
   /** 会话头像 */
   avatar: string
-  /** 如果是单聊，则是对方的uid，如果是群聊，则是群id */
+  /** 会话id */
   id: string
   /** 如果是单聊，则是对方的uid，如果是群聊，则是群id */
   detailId: string
