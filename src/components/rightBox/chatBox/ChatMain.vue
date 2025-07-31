@@ -1089,20 +1089,23 @@ onMounted(async () => {
           topAnnouncement.value = null
         }
       }
-    })
+    }),
+    'announcementUpdated'
   )
 
   // 监听公告清空事件
   addListener(
     appWindow.listen('announcementClear', () => {
       topAnnouncement.value = null
-    })
+    }),
+    'announcementClear'
   )
 
   addListener(
     appWindow.listen(EventEnum.SHARE_SCREEN, async () => {
       await createWebviewWindow('共享屏幕', 'sharedScreen', 840, 840)
-    })
+    }),
+    'shareScreen'
   )
   window.addEventListener('click', closeMenu, true)
 })

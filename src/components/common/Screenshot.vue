@@ -423,7 +423,8 @@ onMounted(async () => {
     appWindow.listen('capture', () => {
       initCanvas()
       initMagnifier()
-    })
+    }),
+    'capture'
   )
 })
 </script>

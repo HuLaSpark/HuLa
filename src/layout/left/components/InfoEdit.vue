@@ -220,7 +220,8 @@ onMounted(() => {
   addListener(
     appWindow.listen('open_edit_info', async () => {
       openEditInfo()
-    })
+    }),
+    'open_edit_info'
   )
   useMitt.on(MittEnum.OPEN_EDIT_INFO, () => {
     useMitt.emit(MittEnum.CLOSE_INFO_SHOW)

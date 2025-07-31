@@ -290,7 +290,8 @@ onMounted(async () => {
   addListener(
     appWindow.listen(EventEnum.EXIT, async () => {
       await exit(0)
-    })
+    }),
+    EventEnum.EXIT
   )
 
   // 监听 home 窗口的关闭事件

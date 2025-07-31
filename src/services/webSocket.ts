@@ -188,22 +188,22 @@ class WS {
       info('[ws] 创建Tauri窗口事件监听')
       // 设置各种Tauri窗口事件监听器
       // 窗口失去焦点 - 隐藏状态
-      addListener(listen('tauri://blur', createStateChangeHandler(false)))
+      addListener(listen('tauri://blur', createStateChangeHandler(false)), 'tauri://blur')
 
       // 窗口获得焦点 - 可见状态
-      addListener(listen('tauri://focus', createStateChangeHandler(true)))
+      addListener(listen('tauri://focus', createStateChangeHandler(true)), 'tauri://focus')
 
       // 窗口最小化 - 隐藏状态
-      addListener(listen('tauri://window-minimized', createStateChangeHandler(false)))
+      addListener(listen('tauri://window-minimized', createStateChangeHandler(false)), 'tauri://window-minimized')
 
       // 窗口恢复 - 可见状态
-      addListener(listen('tauri://window-restored', createStateChangeHandler(true)))
+      addListener(listen('tauri://window-restored', createStateChangeHandler(true)), 'tauri://window-restored')
 
       // 窗口隐藏 - 隐藏状态
-      addListener(listen('tauri://window-hidden', createStateChangeHandler(false)))
+      addListener(listen('tauri://window-hidden', createStateChangeHandler(false)), 'tauri://window-hidden')
 
       // 窗口显示 - 可见状态
-      addListener(listen('tauri://window-shown', createStateChangeHandler(true)))
+      addListener(listen('tauri://window-shown', createStateChangeHandler(true)), 'tauri://window-shown')
     } catch (error) {
       console.error('无法设置Tauri Window事件监听:', error)
     }

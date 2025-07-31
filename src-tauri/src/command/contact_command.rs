@@ -97,7 +97,7 @@ pub async fn hide_contact_command(
             .request_client
             .lock()
             .await
-            .post("/chat/setHide")
+            .post("/im/chat/setHide")
             .json(&data)
             .send_json::<bool>()
             .await?;

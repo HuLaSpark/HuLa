@@ -409,7 +409,8 @@ onMounted(async () => {
   addListener(
     appWindow.listen('announcementClear', async () => {
       announNum.value = 0
-    })
+    }),
+    'announcementClear'
   )
 
   addListener(
@@ -421,7 +422,8 @@ onMounted(async () => {
           await handleInitAnnoun()
         }
       }
-    })
+    }),
+    'announcementUpdated'
   )
 
   // 监听会话变化
