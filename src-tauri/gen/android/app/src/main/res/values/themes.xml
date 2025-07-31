@@ -2,16 +2,5 @@
     <!-- Base application theme. -->
     <style name="Theme.hula" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Customize your theme here. -->
-        
-        <!-- Enable edge-to-edge display for SafeArea support -->
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowLightStatusBar">true</item>
-        <item name="android:windowLightNavigationBar">true</item>
-        
-        <!-- Enable drawing behind system bars -->
-        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
-        <item name="android:enforceStatusBarContrast">false</item>
-        <item name="android:enforceNavigationBarContrast">false</item>
     </style>
 </resources>
