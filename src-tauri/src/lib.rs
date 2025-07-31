@@ -1,6 +1,8 @@
 // 桌面端依赖
 #[cfg(desktop)]
 mod desktops;
+#[cfg(desktop)]
+use common::init::CustomInit;
 #[cfg(target_os = "macos")]
 use common_cmd::hide_title_bar_buttons;
 #[cfg(desktop)]
@@ -15,11 +17,12 @@ use desktops::{common_cmd, directory_scanner, init, tray, video_thumbnail::get_v
 #[cfg(desktop)]
 use directory_scanner::{cancel_directory_scan, get_directory_usage_info_with_progress};
 #[cfg(desktop)]
-use init::CustomInit;
+use init::DesktopCustomInit;
 use moka::future::Cache;
 use std::sync::Arc;
 use std::time::Duration;
 pub mod command;
+pub mod common;
 pub mod configuration;
 pub mod error;
 pub mod im_reqest_client;
@@ -41,9 +44,7 @@ use std::ops::Deref;
 
 // 移动端依赖
 #[cfg(mobile)]
-use init::CustomInit;
-#[cfg(mobile)]
-use mobiles::init;
+use common::init::CustomInit;
 #[cfg(mobile)]
 mod mobiles;
 

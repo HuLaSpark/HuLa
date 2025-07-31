@@ -38,6 +38,7 @@ const routes: Array<RouteRecordRaw> = [
     children: [
       {
         path: '',
+        name: 'mobileChatRoomDefault',
         redirect: '/mobile/chatRoom/chatMain' // 👈 默认页面地址
       },
       {

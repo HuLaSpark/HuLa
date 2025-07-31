@@ -140,6 +140,8 @@ const listenWindowResize = (envType: OsType) => {
   try {
     const envType = type()
 
+    if (envType !== 'ios' && envType !== 'android') return
+
     const mobileStore = useMobileStore()
 
     const insets = await getSafeArea(envType)
