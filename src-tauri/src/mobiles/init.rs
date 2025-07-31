@@ -54,7 +54,6 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
             .plugin(tauri_plugin_global_shortcut::Builder::new().build())
             .plugin(tauri_plugin_updater::Builder::new().build());
 
-        #[cfg(debug_assertions)]
         let builder = builder.plugin(tauri_plugin_devtools::init());
 
         builder

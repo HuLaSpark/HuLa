@@ -51,28 +51,67 @@ impl DatabaseSettings {
 
 // 获取数据库文件路径
 fn get_database_path(app_handle: &AppHandle) -> Result<PathBuf, CommonError> {
-    // 优先使用应用数据目录
-    if let Ok(app_data_dir) = app_handle.path().app_data_dir() {
-        let mut db_path = app_data_dir;
-        std::fs::create_dir_all(&db_path).with_context(|| "创建应用数据目录失败")?;
-        db_path.push("db.sqlite");
-        return Ok(db_path);
+    // iOS平台特殊处理
+    #[cfg(target_os = "ios")]
+    {
+        // iOS优先使用Documents目录，这是iOS推荐的用户数据存储位置
+        if let Ok(document_dir) = app_handle.path().document_dir() {
+            let mut db_path = document_dir;
+            std::fs::create_dir_all(&db_path).with_context(|| "创建Documents目录失败")?;
+            db_path.push("db.sqlite");
+            return Ok(db_path);
+        }
+
+        // 备选：使用应用数据目录（Library/Application Support）
+        if let Ok(app_data_dir) = app_handle.path().app_data_dir() {
+            let mut db_path = app_data_dir;
+            std::fs::create_dir_all(&db_path).with_context(|| "创建应用数据目录失败")?;
+            db_path.push("db.sqlite");
+            return Ok(db_path);
+        }
+
+        // iOS最后备选：使用缓存目录
+        if let Ok(cache_dir) = app_handle.path().app_cache_dir() {
+            let mut db_path = cache_dir;
+            std::fs::create_dir_all(&db_path).with_context(|| "创建缓存目录失败")?;
+            db_path.push("db.sqlite");
+            return Ok(db_path);
+        }
+
+        // iOS最终备选：使用临时目录
+        let mut temp_path = std::env::temp_dir();
+        temp_path.push("hula_app");
+        std::fs::create_dir_all(&temp_path).with_context(|| "创建临时数据目录失败")?;
+        temp_path.push("db.sqlite");
+        return Ok(temp_path);
     }
 
-    // 备选：使用用户数据目录
-    if let Ok(app_local_data_dir) = app_handle.path().app_local_data_dir() {
-        let mut db_path = app_local_data_dir;
-        std::fs::create_dir_all(&db_path).with_context(|| "创建本地数据目录失败")?;
-        db_path.push("db.sqlite");
-        return Ok(db_path);
-    }
+    // 其他平台的处理逻辑
+    #[cfg(not(target_os = "ios"))]
+    {
+        // 优先使用应用数据目录
+        if let Ok(app_data_dir) = app_handle.path().app_data_dir() {
+            let mut db_path = app_data_dir;
+            std::fs::create_dir_all(&db_path).with_context(|| "创建应用数据目录失败")?;
+            db_path.push("db.sqlite");
+            return Ok(db_path);
+        }
 
-    // 最后备选：使用临时目录
-    let mut temp_path = std::env::temp_dir();
-    temp_path.push("hula_app");
-    std::fs::create_dir_all(&temp_path).with_context(|| "创建临时数据目录失败")?;
-    temp_path.push("db.sqlite");
-    Ok(temp_path)
+        // 备选：使用用户数据目录
+        if let Ok(app_local_data_dir) = app_handle.path().app_local_data_dir() {
+            let mut db_path = app_local_data_dir;
+            std::fs::create_dir_all(&db_path).with_context(|| "创建本地数据目录失败")?;
+            db_path.push("db.sqlite");
+            return Ok(db_path);
+        }
+
+        // 最后备选：使用临时目录
+        let mut temp_path = std::env::temp_dir();
+        temp_path.push("hula_app");
+        std::fs::create_dir_all(&temp_path).with_context(|| "创建临时数据目录失败")?;
+        temp_path.push("db.sqlite");
+        return Ok(temp_path);
+    }
 }
 
 #[derive(serde::Deserialize, Clone, Debug)]
