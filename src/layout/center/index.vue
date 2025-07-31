@@ -125,16 +125,16 @@
 </template>
 
 <script setup lang="ts">
-import { useMitt } from '@/hooks/useMitt.ts'
-import router from '@/router'
-import { MittEnum } from '@/enums'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { useWindowSize } from '@vueuse/core'
-import { useSettingStore } from '@/stores/setting.ts'
 import { type } from '@tauri-apps/plugin-os'
-import { renderLabel, renderSourceList, options, createGroup } from './model.tsx'
+import { useWindowSize } from '@vueuse/core'
+import { MittEnum } from '@/enums'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { useWindow } from '@/hooks/useWindow'
+import router from '@/router'
 import { useGlobalStore } from '@/stores/global.ts'
+import { useSettingStore } from '@/stores/setting.ts'
+import { createGroup, options, renderLabel, renderSourceList } from './model.tsx'
 
 const { createWebviewWindow } = useWindow()
 

@@ -7,13 +7,13 @@ use crate::vo::vo::ChatMessageReq;
 use anyhow::Context;
 use entity::im_user::Entity as ImUserEntity;
 use entity::{im_message, im_user};
-use log::{debug, error, info};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use sea_orm::{DatabaseConnection, TransactionTrait};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::ops::Deref;
 use tauri::{AppHandle, Emitter, State};
+use tracing::{debug, error, info};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -116,7 +116,7 @@ pub async fn page_msg(
         .list
         .unwrap_or_default()
         .into_iter()
-        .map(|msg| convert_message_to_resp(msg))
+        .map(|(msg, marks)| convert_message_to_resp(msg, marks))
         .rev()
         .collect();
 
@@ -129,15 +129,55 @@ pub async fn page_msg(
 }
 
 /// 将数据库消息模型转换为响应模型
-fn convert_message_to_resp(msg: im_message::Model) -> MessageResp {
+fn convert_message_to_resp(
+    msg: im_message::Model,
+    marks: Vec<entity::im_message_mark::Model>,
+) -> MessageResp {
     // 解析消息体
     let body = msg.body.as_ref().and_then(|b| serde_json::from_str(b).ok());
 
-    // 解析消息标记
-    let message_marks = msg
-        .message_marks
-        .as_ref()
-        .and_then(|marks| serde_json::from_str::<HashMap<String, MessageMark>>(marks).ok());
+    // 将数据库中的消息标记转换为 HashMap
+    let mut message_marks: HashMap<String, MessageMark> = HashMap::new();
+
+    // 按标记类型分组统计
+    let mut mark_stats: HashMap<String, (u32, bool)> = HashMap::new();
+    let current_login_uid = &msg.login_uid;
+
+    for mark in marks {
+        let (count, user_marked) = mark_stats
+            .entry(mark.mark_type.to_string())
+            .or_insert((0, false));
+        if mark.status == 0 {
+            // 假设 status=1 表示有效标记
+            *count += 1;
+            if mark.uid == *current_login_uid {
+                *user_marked = true;
+            }
+        }
+    }
+
+    // 转换为最终的 MessageMark 格式
+    for (mark_type, (count, user_marked)) in mark_stats {
+        let mark_key = format!("{}", mark_type);
+        message_marks.insert(mark_key, MessageMark { count, user_marked });
+    }
+
+    // 如果没有从关联表获取到标记，尝试从原有的 message_marks 字段解析
+    if message_marks.is_empty() {
+        if let Some(marks_str) = &msg.message_marks {
+            if let Ok(parsed_marks) =
+                serde_json::from_str::<HashMap<String, MessageMark>>(marks_str)
+            {
+                message_marks = parsed_marks;
+            }
+        }
+    }
+
+    let final_message_marks = if message_marks.is_empty() {
+        None
+    } else {
+        Some(message_marks)
+    };
 
     MessageResp {
         create_id: Some(msg.id.clone()),
@@ -153,7 +193,7 @@ fn convert_message_to_resp(msg: im_message::Model) -> MessageResp {
             room_id: Some(msg.room_id),
             message_type: msg.message_type,
             body,
-            message_marks,
+            message_marks: final_message_marks,
             send_time: msg.send_time,
         },
         old_msg_id: None,
@@ -182,9 +222,14 @@ pub async fn check_user_init_and_fetch_messages(
                     error!("获取所有消息失败: {}", e);
                     return Err(e);
                 }
-            }else {
-                info!("用户 {} 离线消息更新, last_opt_time: {:?}", uid, user_model.last_opt_time);
-                if let Err(e) = fetch_all_messages(client, db_conn, uid, user_model.last_opt_time).await {
+            } else {
+                info!(
+                    "用户 {} 离线消息更新, last_opt_time: {:?}",
+                    uid, user_model.last_opt_time
+                );
+                if let Err(e) =
+                    fetch_all_messages(client, db_conn, uid, user_model.last_opt_time).await
+                {
                     error!("离线消息更新失败: {}", e);
                     return Err(e);
                 }
@@ -201,17 +246,19 @@ pub async fn fetch_all_messages(
     uid: &str,
     last_opt_time: Option<i64>,
 ) -> Result<(), CommonError> {
+    info!(
+        "开始获取所有消息, uid: {}, last_opt_time: {:?}",
+        uid, last_opt_time
+    );
     // 调用后端接口 /chat/msg/list 获取所有消息，传递 last_opt_time 参数
-    let mut request = client.get("/chat/msg/list");
-    
+    let mut request = client.get("/im/chat/msg/list");
+
     // 如果有 last_opt_time 参数，添加到查询参数中
     if let Some(time) = last_opt_time {
         request = request.query(&[("lastOptTime", time.to_string())]);
     }
-    
-    let messages = request
-        .send_json::<Vec<MessageResp>>()
-        .await?;
+
+    let messages = request.send_json::<Vec<MessageResp>>().await?;
 
     if let Some(messages) = messages.data {
         // 开启事务
@@ -347,7 +394,7 @@ pub async fn send_msg(
         let result = {
             let client = request_client.lock().await;
             client
-                .post("/chat/msg")
+                .post("/im/chat/msg")
                 .json(&send_data)
                 .send_json::<MessageResp>()
                 .await
@@ -359,7 +406,13 @@ pub async fn send_msg(
         let status = match result {
             Ok(resp) => {
                 info!("消息发送成功，ID: {}", msg_id);
-                let mut result = resp.data.clone().unwrap();
+                let mut result = match resp.data.clone() {
+                    Some(data) => data,
+                    None => {
+                        error!("Response data is None");
+                        return;
+                    }
+                };
                 result.old_msg_id = Some(msg_id.clone());
                 id = result.message.id.clone();
 
@@ -392,7 +445,6 @@ pub async fn send_msg(
 
 #[tauri::command]
 pub async fn save_msg(data: MessageResp, state: State<'_, AppData>) -> Result<(), String> {
-    info!("收到消息保存到本地, data: {:?}", data);
     // 创建 im_message::Model
     let message = convert_resp_to_model_for_fetch(data, state.user_info.lock().await.uid.clone());
 

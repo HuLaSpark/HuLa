@@ -121,16 +121,16 @@
 </template>
 
 <script setup lang="ts">
-import type { VideoBody } from '@/services/types'
-import { MsgEnum, MittEnum } from '@/enums/index'
-import { useVideoViewer } from '@/hooks/useVideoViewer'
-import { useVideoViewer as useVideoViewerStore } from '@/stores/videoViewer'
-import { useDownload } from '@/hooks/useDownload'
-import { BaseDirectory } from '@tauri-apps/plugin-fs'
 import { join, resourceDir } from '@tauri-apps/api/path'
-import { formatBytes } from '@/utils/Formatting.ts'
-import { useMitt } from '@/hooks/useMitt'
+import { BaseDirectory } from '@tauri-apps/plugin-fs'
 import { MessageStatusEnum } from '@/enums'
+import { MittEnum, MsgEnum } from '@/enums/index'
+import { useDownload } from '@/hooks/useDownload'
+import { useMitt } from '@/hooks/useMitt'
+import { useVideoViewer } from '@/hooks/useVideoViewer'
+import type { VideoBody } from '@/services/types'
+import { useVideoViewer as useVideoViewerStore } from '@/stores/videoViewer'
+import { formatBytes } from '@/utils/Formatting.ts'
 
 const { openVideoViewer, getLocalVideoPath, checkVideoDownloaded, getVideoFilenameEllipsis } = useVideoViewer()
 const videoViewerStore = useVideoViewerStore()

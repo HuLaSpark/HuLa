@@ -96,6 +96,7 @@
     "opener:allow-open-path",
     "mic-recorder:default",
     "log:default",
+    "log:allow-log",
     {
       "identifier": "shell:allow-execute",
       "allow": [

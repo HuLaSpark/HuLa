@@ -1,32 +1,31 @@
-import { useCommon } from '@/hooks/useCommon.ts'
-import { MittEnum, MsgEnum, PowerEnum, RoleEnum, RoomTypeEnum } from '@/enums'
-import { FilesMeta, MessageType, RightMouseMessageItem } from '@/services/types.ts'
-import { useMitt } from '@/hooks/useMitt.ts'
-import { useChatStore } from '@/stores/chat.ts'
-import apis from '@/services/apis.ts'
-import { useContactStore } from '@/stores/contacts'
-import { useUserStore } from '@/stores/user'
-import { useGlobalStore } from '@/stores/global.ts'
-import { isDiffNow } from '@/utils/ComputedTime.ts'
-import { writeText, writeImage } from '@tauri-apps/plugin-clipboard-manager'
-import { detectImageFormat, imageUrlToUint8Array, isImageUrl } from '@/utils/ImageUtils'
-import { translateText } from '@/services/translate'
-import { useSettingStore } from '@/stores/setting.ts'
+import { join, resourceDir } from '@tauri-apps/api/path'
+import { writeImage, writeText } from '@tauri-apps/plugin-clipboard-manager'
 import { save } from '@tauri-apps/plugin-dialog'
+import { BaseDirectory } from '@tauri-apps/plugin-fs'
 import { revealItemInDir } from '@tauri-apps/plugin-opener'
 import { type } from '@tauri-apps/plugin-os'
-import { BaseDirectory } from '@tauri-apps/plugin-fs'
-import { resourceDir } from '@tauri-apps/api/path'
-import { join } from '@tauri-apps/api/path'
+import type { FileTypeResult } from 'file-type'
+import { MittEnum, MsgEnum, PowerEnum, RoleEnum, RoomTypeEnum } from '@/enums'
+import { useCommon } from '@/hooks/useCommon.ts'
 import { useDownload } from '@/hooks/useDownload'
-import { useGroupStore } from '@/stores/group'
-import { useWindow } from './useWindow'
-import { useEmojiStore } from '@/stores/emoji'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { useVideoViewer } from '@/hooks/useVideoViewer'
-import { FileDownloadStatus, useFileDownloadStore } from '@/stores/fileDownload'
+import apis from '@/services/apis.ts'
+import { translateText } from '@/services/translate'
+import type { FilesMeta, MessageType, RightMouseMessageItem } from '@/services/types.ts'
+import { useChatStore } from '@/stores/chat.ts'
+import { useContactStore } from '@/stores/contacts'
+import { useEmojiStore } from '@/stores/emoji'
+import { type FileDownloadStatus, useFileDownloadStore } from '@/stores/fileDownload'
+import { useGlobalStore } from '@/stores/global.ts'
+import { useGroupStore } from '@/stores/group'
+import { useSettingStore } from '@/stores/setting.ts'
+import { useUserStore } from '@/stores/user'
+import { isDiffNow } from '@/utils/ComputedTime.ts'
 import { extractFileName, removeTag } from '@/utils/Formatting'
+import { detectImageFormat, imageUrlToUint8Array, isImageUrl } from '@/utils/ImageUtils'
 import { detectRemoteFileType, getFilesMeta, getUserAbsoluteVideosDir } from '@/utils/PathUtil'
-import { FileTypeResult } from 'file-type'
+import { useWindow } from './useWindow'
 
 export const useChatMain = () => {
   const { openMsgSession, userUid } = useCommon()
@@ -596,7 +595,7 @@ export const useChatMain = () => {
         // 如果item中没有roleId，则通过uid从群成员列表中查找
         if (targetRoleId === void 0) {
           const targetUser = groupStore.userList.find((user) => user.uid === targetUid)
-          targetRoleId = targetUser?.roleId
+          targetRoleId = targetUser?.groupRole
         }
 
         // 检查目标用户是否已经是管理员或群主
@@ -604,7 +603,7 @@ export const useChatMain = () => {
 
         // 5. 检查当前用户是否是群主
         const currentUser = groupStore.userList.find((user) => user.uid === userUid.value)
-        return currentUser?.roleId === RoleEnum.LORD
+        return currentUser?.groupRole === RoleEnum.LORD
       }
     },
     {
@@ -641,7 +640,7 @@ export const useChatMain = () => {
         // 如果item中没有roleId，则通过uid从群成员列表中查找
         if (targetRoleId === void 0) {
           const targetUser = groupStore.userList.find((user) => user.uid === targetUid)
-          targetRoleId = targetUser?.roleId
+          targetRoleId = targetUser?.groupRole
         }
 
         // 检查目标用户是否是管理员(只能撤销管理员,不能撤销群主)
@@ -649,7 +648,7 @@ export const useChatMain = () => {
 
         // 5. 检查当前用户是否是群主
         const currentUser = groupStore.userList.find((user) => user.uid === userUid.value)
-        return currentUser?.roleId === RoleEnum.LORD
+        return currentUser?.groupRole === RoleEnum.LORD
       }
     }
   ])
@@ -691,7 +690,7 @@ export const useChatMain = () => {
         // 如果item中没有roleId，则通过uid从群成员列表中查找
         if (targetRoleId === void 0) {
           const targetUser = groupStore.userList.find((user) => user.uid === targetUid)
-          targetRoleId = targetUser?.roleId
+          targetRoleId = targetUser?.groupRole
         }
 
         // 检查目标用户是否是群主(群主不能被移出)
@@ -699,8 +698,8 @@ export const useChatMain = () => {
 
         // 5. 检查当前用户是否有权限(群主或管理员)
         const currentUser = groupStore.userList.find((user) => user.uid === userUid.value)
-        const isLord = currentUser?.roleId === RoleEnum.LORD
-        const isAdmin = currentUser?.roleId === RoleEnum.ADMIN
+        const isLord = currentUser?.groupRole === RoleEnum.LORD
+        const isAdmin = currentUser?.groupRole === RoleEnum.ADMIN
 
         // 6. 如果当前用户是管理员,则不能移出其他管理员
         if (isAdmin && targetRoleId === RoleEnum.ADMIN) return false

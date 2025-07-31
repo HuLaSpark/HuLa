@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
+import { StoresEnum } from '@/enums'
 import apis from '@/services/apis'
 import type { EmojiItem } from '@/services/types'
 import { useUserStore } from '@/stores/user'
-import { StoresEnum } from '@/enums'
 
 export const useEmojiStore = defineStore(StoresEnum.EMOJI, () => {
   const isLoading = ref(false) // 是否正在加载

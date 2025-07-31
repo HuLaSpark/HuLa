@@ -58,7 +58,7 @@ export default {
   sessionDetailWithFriends: `${prefix + URLEnum.CHAT}/contact/detail/friend`, // 会话详情(联系人列表发消息用)
   setSessionTop: `${prefix + URLEnum.CHAT}/setTop`, // 设置会话置顶
   deleteSession: `${prefix + URLEnum.CHAT}/delete`, // 删除会话
-  hideSession: `${prefix + URLEnum.CHAT}/setHide`, // 隐藏会话
+  // hideSession: `${prefix + URLEnum.CHAT}/setHide`, // 隐藏会话
   notification: `${prefix + URLEnum.CHAT}/notification`, // 免打扰
   shield: `${prefix + URLEnum.CHAT}/setShield`, // 屏蔽消息
   // -------------- 群聊相关 ---------------
@@ -80,19 +80,19 @@ export default {
   editAnnouncement: `${prefix + URLEnum.ROOM}/announcement/edit`, // 编辑群公告
 
   // -------------- 验证码 ---------------
-  getCaptcha: `${prefix + URLEnum.CAPTCHA}/captcha`, // 获取图片验证码
-  sendCaptcha: `${prefix + URLEnum.CAPTCHA}/sendCode`, // 发送验证码到用户邮箱
+  getCaptcha: `${prefix + URLEnum.TOKEN}/anyTenant/captcha`, // 获取图片验证码
+  sendCaptcha: `${prefix + URLEnum.TOKEN}/anyTenant/sendEmailCode`, // 发送验证码到用户邮箱
 
   // -------------- 系统相关 ---------------
   fileUpload: `${prefix + URLEnum.SYSTEM + URLEnum.OSS}/upload/url`, // 文件上传
-  initConfig: `${prefix + URLEnum.SYSTEM}/config/init`, // 获取配置文件
-  getQiniuToken: `${prefix + URLEnum.SYSTEM}/ossToken`, // 获取七牛云上传token
+  initConfig: `${prefix + URLEnum.SYSTEM}/anyTenant/config/init`, // 获取配置文件
+  getQiniuToken: `${prefix + URLEnum.TOKEN}/anyTenant/ossToken`, // 获取七牛云上传token
 
   // -------------- token相关 ---------------
-  register: `${prefix + URLEnum.TOKEN}/register`, // 注册
-  login: `${prefix + URLEnum.TOKEN}/login`, // 登录
+  register: `${prefix + URLEnum.TOKEN}/anyTenant/registerByEmail`, // 注册
+  login: `${prefix + URLEnum.TOKEN}/anyTenant/login`, // 登录
   refreshToken: `${prefix + URLEnum.TOKEN}/refreshToken`, // 续签
-  logout: `${prefix + URLEnum.TOKEN}/logout`, // 退出登录
+  logout: `${prefix + URLEnum.TOKEN}/anyUser/logout`, // 退出登录
   checkToken: `${prefix + URLEnum.TOKEN}/check`, // 检查token是否有效
-  forgetPassword: `${prefix + URLEnum.TOKEN}/forgotPassword` // 忘记密码
+  forgetPassword: `${prefix + URLEnum.TOKEN}/anyTenant/password` // 忘记密码
 }

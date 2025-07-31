@@ -144,22 +144,22 @@
         <n-flex align="center" justify="space-between">
           <span>临时功能: 清除localstorage缓存</span>
 
-          <n-button size="small" secondary type="error" @click="clearLocalstorage"> 清除缓存 </n-button>
+          <n-button size="small" secondary type="error" @click="clearLocalstorage">清除缓存</n-button>
         </n-flex>
       </n-flex>
     </n-flex>
   </n-flex>
 </template>
 <script setup lang="tsx">
-import { useSettingStore } from '@/stores/setting.ts'
-import { CloseBxEnum, ShowModeEnum } from '@/enums'
-import { topicsList } from './model.tsx'
-import { sendOptions, fontOptions, translateOptions } from './config.ts'
-import { type } from '@tauri-apps/plugin-os'
-import { NSwitch } from 'naive-ui'
 import { invoke } from '@tauri-apps/api/core'
 import { emitTo } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { type } from '@tauri-apps/plugin-os'
+import { NSwitch } from 'naive-ui'
+import { CloseBxEnum, ShowModeEnum } from '@/enums'
+import { useSettingStore } from '@/stores/setting.ts'
+import { fontOptions, sendOptions, translateOptions } from './config.ts'
+import { topicsList } from './model.tsx'
 
 const appWindow = WebviewWindow.getCurrent()
 const settingStore = useSettingStore()

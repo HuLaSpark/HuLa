@@ -1,13 +1,13 @@
-import apis from '@/services/apis'
 import { defineStore } from 'pinia'
-import { useGlobalStore } from '@/stores/global'
-import type { GroupDetailReq, UserItem } from '@/services/types'
-import { useChatStore } from './chat'
 import { RoleEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
+import apis from '@/services/apis'
+import type { GroupDetailReq, UserItem } from '@/services/types'
+import type { OnStatusChangeType } from '@/services/wsType'
 import { useCachedStore } from '@/stores/cached'
+import { useGlobalStore } from '@/stores/global'
 import { useUserStore } from '@/stores/user'
-import { OnStatusChangeType } from '@/services/wsType'
-import { invokeWithErrorHandler, ErrorType } from '@/utils/TauriInvokeHandler.ts'
+import { ErrorType, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler.ts'
+import { useChatStore } from './chat'
 
 export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
   // 初始化需要使用的store
@@ -26,7 +26,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
    * 从成员列表中筛选出角色为群主的用户
    */
   const currentLordId = computed(() => {
-    const list = userList.value.filter((member) => member.roleId === RoleEnum.LORD)
+    const list = userList.value.filter((member) => member.groupRole === RoleEnum.LORD)
     if (list.length) {
       return list[0]?.uid
     }
@@ -38,7 +38,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
    * 从成员列表中筛选出所有管理员的uid
    */
   const adminUidList = computed(() => {
-    return userList.value.filter((member) => member.roleId === RoleEnum.ADMIN).map((member) => member.uid)
+    return userList.value.filter((member) => member.groupRole === RoleEnum.ADMIN).map((member) => member.uid)
   })
 
   /**
@@ -118,8 +118,8 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
    * 获取群组统计信息
    * 包括群名称、头像、在线人数等
    */
-  const getCountStatistic = async () => {
-    countInfo.value = await apis.groupDetail({ id: currentRoomId.value })
+  const getCountStatistic = async (currentRoomId: string) => {
+    countInfo.value = await apis.groupDetail({ id: currentRoomId })
   }
 
   /**
@@ -162,7 +162,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
     // 更新本地群成员列表中的角色信息
     for (const user of userList.value) {
       if (uidList.includes(user.uid)) {
-        user.roleId = RoleEnum.ADMIN
+        user.groupRole = RoleEnum.ADMIN
       }
     }
   }
@@ -176,7 +176,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
     // 更新本地群成员列表中的角色信息
     for (const user of userList.value) {
       if (uidList.includes(user.uid)) {
-        user.roleId = RoleEnum.NORMAL
+        user.groupRole = RoleEnum.NORMAL
       }
     }
   }

@@ -3,6 +3,7 @@
   <div
     :data-tauri-drag-region="isDrag"
     :class="isCompatibility ? 'flex justify-end select-none' : 'h-24px select-none w-full'">
+    <!-- win 和 linux 的DOM -->
     <template v-if="isCompatibility">
       <!--  登录窗口的代理按钮  -->
       <div v-if="proxy" @click="router.push('/network')" class="w-30px h-24px flex-center">
@@ -85,17 +86,18 @@
 </template>
 
 <script setup lang="ts">
+import { emit } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { info } from '@tauri-apps/plugin-log'
+import { type } from '@tauri-apps/plugin-os'
+import { exit } from '@tauri-apps/plugin-process'
+import { CloseBxEnum, EventEnum, MittEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
+import { useTauriListener } from '@/hooks/useTauriListener'
 import { useWindow } from '@/hooks/useWindow.ts'
+import router from '@/router'
 import { useAlwaysOnTopStore } from '@/stores/alwaysOnTop.ts'
 import { useSettingStore } from '@/stores/setting.ts'
-import { emit } from '@tauri-apps/api/event'
-import { CloseBxEnum, EventEnum, MittEnum } from '@/enums'
-import { type } from '@tauri-apps/plugin-os'
-import router from '@/router'
-import { exit } from '@tauri-apps/plugin-process'
-import { useTauriListener } from '@/hooks/useTauriListener'
 
 const appWindow = WebviewWindow.getCurrent()
 const {
@@ -119,7 +121,7 @@ const {
   isDrag?: boolean
 }>()
 const { getWindowTop, setWindowTop } = useAlwaysOnTopStore()
-const { pushListeners } = useTauriListener()
+const { addListener, cleanup } = useTauriListener()
 const settingStore = useSettingStore()
 const { tips, escClose } = storeToRefs(settingStore)
 const { resizeWindow } = useWindow()
@@ -152,66 +154,38 @@ watchEffect(() => {
   }
 
   // 添加关闭事件拦截逻辑 - 只拦截 home 窗口
-  if (appWindow.label === 'home' && !unlistenCloseRequested) {
-    // 监听原生关闭事件
-    appWindow
-      .onCloseRequested((event) => {
-        // 如果是程序内部触发的关闭操作，不拦截
-        if (isProgrammaticClose) {
-          return
-        }
-        // 阻止默认关闭行为
-        event.preventDefault()
-        if (!tips.value.notTips) {
-          tipsRef.show = true
-        } else {
-          if (tips.value.type === CloseBxEnum.CLOSE) {
-            // 用户选择直接退出
-            console.log('用户设置为直接退出应用')
-            emit(EventEnum.EXIT)
-          } else {
-            // 用户选择最小化到托盘
-            console.log('用户设置为最小化到托盘')
-            appWindow.hide()
-          }
-        }
-      })
-      .then((unlisten) => {
-        console.log('macOS home窗口关闭按钮事件监听器已设置')
-        unlistenCloseRequested = unlisten
-      })
-      .catch((error) => {
-        console.error('设置 macOS home窗口关闭按钮监听器失败:', error)
-      })
-  }
-
-  pushListeners([
-    appWindow.listen(EventEnum.LOGOUT, async () => {
-      /** 退出账号前把窗口全部关闭 */
-      if (appWindow.label !== 'login') {
-        await nextTick()
-        // 设置程序内部关闭标志
-        isProgrammaticClose = true
-        // 针对不同系统采用不同关闭策略
-        if (type() === 'macos') {
-          // macOS 上先隐藏窗口，然后延迟关闭
-          await appWindow.hide()
-          setTimeout(async () => {
-            await appWindow.close()
-          }, 300)
-        } else {
-          // Windows/Linux 直接关闭
-          await appWindow.close()
-        }
-      }
-    }),
-    appWindow.listen(EventEnum.EXIT, async () => {
-      // 设置程序内部关闭标志
-      isProgrammaticClose = true
-      await exit(0)
-    })
-  ])
-
+  // if (appWindow.label === 'home' && !unlistenCloseRequested) {
+  //   // 监听原生关闭事件
+  //   appWindow
+  //     .onCloseRequested((event) => {
+  //       // 如果是程序内部触发的关闭操作，不拦截
+  //       if (isProgrammaticClose) {
+  //         return
+  //       }
+  //       // 阻止默认关闭行为
+  //       event.preventDefault()
+  //       if (!tips.value.notTips) {
+  //         tipsRef.show = true
+  //       } else {
+  //         if (tips.value.type === CloseBxEnum.CLOSE) {
+  //           // 用户选择直接退出
+  //           console.log('用户设置为直接退出应用')
+  //           emit(EventEnum.EXIT)
+  //         } else {
+  //           // 用户选择最小化到托盘
+  //           console.log('用户设置为最小化到托盘')
+  //           appWindow.hide()
+  //         }
+  //       }
+  //     })
+  //     .then((unlisten) => {
+  //       console.log('macOS home窗口关闭按钮事件监听器已设置')
+  //       unlistenCloseRequested = unlisten
+  //     })
+  //     .catch((error) => {
+  //       console.error('设置 macOS home窗口关闭按钮监听器失败:', error)
+  //     })
+  // }
   if (escClose.value && type() === 'windows') {
     window.addEventListener('keydown', (e) => isEsc(e))
   } else {
@@ -309,8 +283,31 @@ const handleCloseWin = async () => {
 useMitt.on('handleCloseWin', handleCloseWin)
 // 添加和移除resize事件监听器
 onMounted(async () => {
+  // info('ActionBar 组件已挂载')
   window.addEventListener('resize', handleResize)
   osType.value = type()
+
+  addListener(
+    appWindow.listen(EventEnum.EXIT, async () => {
+      await exit(0)
+    })
+  )
+
+  // 监听 home 窗口的关闭事件
+  if (appWindow.label === 'home') {
+    appWindow.onCloseRequested((event) => {
+      info('[ActionBar]监听[home]窗口关闭事件')
+      if (isProgrammaticClose) {
+        // 清理监听器
+        info('[ActionBar]清理[home]窗口的监听器')
+        cleanup()
+        exit(0)
+      }
+      info('[ActionBar]阻止[home]窗口关闭事件')
+      event.preventDefault()
+      appWindow.hide()
+    })
+  }
 })
 
 onUnmounted(() => {

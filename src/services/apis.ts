@@ -1,36 +1,35 @@
-import urls from '@/services/urls'
-import {
+import type { NotificationTypeEnum } from '@/enums'
+import request from '@/services/request'
+import type {
+  AnnouncementItem,
   BadgeType,
   CacheBadgeItem,
   CacheBadgeReq,
   CacheUserItem,
   CacheUserReq,
+  ConfigType,
   ContactItem,
   EmojiItem,
   GroupDetailReq,
   GroupListReq,
   GroupStatisticType,
   ListResponse,
+  Login,
   LoginUserReq,
   MarkMsgReq,
   MessageType,
   MsgReadUnReadCountType,
   PageInfo,
+  PageResponse,
   RegisterUserReq,
   RequestFriendItem,
-  SessionItem,
-  UserInfoType,
-  UserState,
-  Login,
   SearchFriend,
   SearchGroup,
-  ConfigType,
-  AnnouncementItem,
-  PageResponse
+  SessionItem,
+  UserInfoType,
+  UserState
 } from '@/services/types'
-
-import request from '@/services/request'
-import { NotificationTypeEnum } from '@/enums'
+import urls from '@/services/urls'
 
 const GET = <T>(url: string, params?: any, abort?: AbortController) => request.get<T>(url, params, abort)
 const POST = <T>(url: string, params?: any, abort?: AbortController) => request.post<T>(url, params, abort)
@@ -130,7 +129,7 @@ export default {
   /** 删除会话 */
   deleteSession: (params: { roomId: string }) => DELETE<void>(urls.deleteSession, params),
   /** 隐藏会话 */
-  hideSession: (params: { roomId: string; hide: boolean }) => POST<void>(urls.hideSession, params),
+  // hideSession: (params: { roomId: string; hide: boolean }) => POST<void>(urls.hideSession, params),
   /** 修改群信息(群主) */
   updateRoomInfo: (params: { id: string; name: string; avatar: string }) => POST<void>(urls.updateRoomInfo, params),
   /** 修改“我”的群聊名称 */
@@ -159,8 +158,13 @@ export default {
   /** 获取验证码 */
   getCaptcha: () => GET<{ img: string; uuid: string }>(urls.getCaptcha),
   /** 发送验证码 */
-  sendCaptcha: (params: { email: string; code: string; uuid?: string; operationType?: 'register' | 'forgot' }) =>
-    POST<void>(urls.sendCaptcha, params),
+  sendCaptcha: (params: {
+    email: string
+    code: string
+    uuid?: string
+    operationType?: 'register' | 'forgot'
+    templateCode: 'REGISTER_EMAIL' | 'REGISTER_SMS' | 'MOBILE_LOGIN' | 'MOBILE_EDIT' | 'EMAIL_EDIT' | 'PASSWORD_EDIT'
+  }) => POST<void>(urls.sendCaptcha, params),
   /** 检查token是否有效 */
   checkToken: () => POST<string>(urls.checkToken),
   /** 获取所有用户状态 */
@@ -168,8 +172,14 @@ export default {
   /** 用户状态改变 */
   changeUserState: (userStateId: string) => POST(`${urls.changeUserState}/${userStateId}`),
   /** 忘记密码 */
-  forgetPassword: (params: { email: string; code: string; uuid: string; password: string }) =>
-    POST<void>(urls.forgetPassword, params),
+  forgetPassword: (params: {
+    email: string
+    code: string
+    uuid: string
+    password: string
+    confirmPassword: string
+    key: string
+  }) => PUT<void>(urls.forgetPassword, params),
   /** 初始化配置 */
   initConfig: () => GET<ConfigType>(urls.initConfig),
   /** 获取七牛token */

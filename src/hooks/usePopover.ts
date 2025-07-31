@@ -1,4 +1,4 @@
-import { Ref } from 'vue'
+import type { Ref } from 'vue'
 
 /**! 这个是暂时用来解决在n-scrollbar中使用n-virtual-list使用n-popover时候滚动出现原生滚动条的方法 */
 export const usePopover = (selectKey: Ref<string>, id: string) => {

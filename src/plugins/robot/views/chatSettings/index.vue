@@ -37,10 +37,10 @@
   </n-scrollbar>
 </template>
 <script setup lang="tsx">
-import router from '@/router'
 import { useMitt } from '@/hooks/useMitt.ts'
-import { content } from './config.tsx'
+import router from '@/router'
 import { useSettingStore } from '@/stores/setting.ts'
+import { content } from './config.tsx'
 
 const settingStore = useSettingStore()
 const { page } = storeToRefs(settingStore)

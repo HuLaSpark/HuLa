@@ -35,8 +35,8 @@
   </n-flex>
 </template>
 <script setup lang="ts">
-import { versatileModel } from './model.tsx'
 import { useSettingStore } from '@/stores/setting.ts'
+import { versatileModel } from './model.tsx'
 
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)

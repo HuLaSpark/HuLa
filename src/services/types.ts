@@ -3,17 +3,17 @@
  * 注意：请使用TSDoc规范进行注释，以便在使用时能够获得良好提示。
  * @see TSDoc规范https://tsdoc.org/
  **/
-import {
+import type {
   ActEnum,
   IsYesEnum,
   MarkEnum,
+  MessageStatusEnum,
   MsgEnum,
+  NotificationTypeEnum,
   OnlineEnum,
   RoomTypeEnum,
-  SexEnum,
-  MessageStatusEnum,
   SessionOperateEnum,
-  NotificationTypeEnum
+  SexEnum
 } from '@/enums'
 
 /**响应请求体*/
@@ -44,15 +44,19 @@ export type LoginUserReq = {
   account: string
   /** 密码 */
   password: string
-  /** 登录方式 pc/mobile */
-  source: 'pc' | 'mobile'
+  /** 登录方式 PC/MOBILE */
+  deviceType: 'PC' | 'MOBILE'
+  systemType: number
+  grantType: 'CAPTCHA' | 'REFRESH_TOKEN' | 'PASSWORD' | 'MOBILE'
+  key?: string
+  code?: string
 }
 
 export type RegisterUserReq = {
   /** 默认随机头像 */
   avatar: string
   /** 昵称 */
-  name: string
+  nickName: string
   /** 邮箱 */
   email: string
   /** 密码 */
@@ -61,6 +65,9 @@ export type RegisterUserReq = {
   code: string
   /** 识别码 */
   uuid: string
+  key?: string
+  confirmPassword: string
+  systemType: number
 }
 
 /** 分页翻页 */
@@ -188,7 +195,7 @@ export type UserItem = {
   /** 归属地 */
   locPlace?: string
   /** 角色ID */
-  roleId?: number
+  groupRole?: number
   /** 账号 */
   account: string
   /** 我的群昵称 */
@@ -395,9 +402,9 @@ export type TextBody = {
 /** 公告消息体 */
 export type AnnouncementBody = TextBody & {
   /** 创建时间 */
-  createdTime: number
+  createTime: number
   /** 更新时间 */
-  updatedTime: number
+  updateTime: number
 }
 /** 表情消息 */
 export type EmojiBody = {

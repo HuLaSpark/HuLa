@@ -1,5 +1,4 @@
-import { nextTick, Ref } from 'vue'
-import { ComponentPublicInstance } from 'vue'
+import { type ComponentPublicInstance, nextTick, type Ref } from 'vue'
 
 /**
  * 计算DOM元素的位置信息

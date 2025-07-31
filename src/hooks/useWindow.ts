@@ -1,10 +1,10 @@
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { EventEnum } from '@/enums'
-import { LogicalSize } from '@tauri-apps/api/dpi'
-import { type } from '@tauri-apps/plugin-os'
-import { UserAttentionType } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/core'
-import { listen } from '@tauri-apps/api/event'
+import { LogicalSize } from '@tauri-apps/api/dpi'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { UserAttentionType } from '@tauri-apps/api/window'
+import { info } from '@tauri-apps/plugin-log'
+import { type } from '@tauri-apps/plugin-os'
+import { EventEnum } from '@/enums'
 
 /** 判断是兼容的系统 */
 const isCompatibility = computed(() => type() === 'windows' || type() === 'linux')
@@ -68,6 +68,7 @@ export const useWindow = () => {
     })
 
     await webview.once('tauri://error', async () => {
+      info('窗口创建失败')
       // TODO 这里利用错误处理的方式来查询是否是已经创建了窗口,如果一开始就使用WebviewWindow.getByLabel来查询在刷新的时候就会出现问题 (nyh -> 2024-03-06 23:54:17)
       await checkWinExist(label)
     })
@@ -126,13 +127,15 @@ export const useWindow = () => {
    * // 需要时手动取消监听
    * unlisten()
    */
-  async function getWindowPayloadListener<T>(this: any, windowLabel: string, callback: (event: any) => void) {
-    const listenLabel = `${windowLabel}:update`
+  // async function getWindowPayloadListener<T>(this: any, windowLabel: string, callback: (event: any) => void) {
+  //   const listenLabel = `${windowLabel}:update`
 
-    return listen<T>(listenLabel, (event) => {
-      callback.call(this, event)
-    })
-  }
+  //   return addListener(
+  //     listen<T>(listenLabel, (event) => {
+  //       callback.call(this, event)
+  //     })
+  //   )
+  // }
 
   /**
    * 创建模态子窗口
@@ -256,7 +259,6 @@ export const useWindow = () => {
     checkWinExist,
     setResizable,
     sendWindowPayload,
-    getWindowPayload,
-    getWindowPayloadListener
+    getWindowPayload
   }
 }

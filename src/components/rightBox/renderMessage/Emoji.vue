@@ -38,9 +38,9 @@
 </template>
 
 <script setup lang="ts">
-import type { EmojiBody } from '@/services/types'
 import { MsgEnum } from '@/enums/index'
 import { useImageViewer } from '@/hooks/useImageViewer'
+import type { EmojiBody } from '@/services/types'
 
 const props = defineProps<{ body: EmojiBody }>()
 const isError = ref(false)

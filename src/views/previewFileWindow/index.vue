@@ -22,16 +22,18 @@
 <script setup lang="ts">
 import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import VueOfficeDocx from '@vue-office/docx/lib/v3/vue-office-docx.mjs'
-import VueOfficePdf from '@vue-office/pdf/lib/v3/vue-office-pdf.mjs'
 import VueOfficeExcel from '@vue-office/excel/lib/v3/vue-office-excel.mjs'
+import VueOfficePdf from '@vue-office/pdf/lib/v3/vue-office-pdf.mjs'
 import VueOfficePptx from '@vue-office/pptx/lib/v3/vue-office-pptx.mjs'
-import { FileTypeResult } from 'file-type'
+import type { FileTypeResult } from 'file-type'
 import '@vue-office/docx/lib/v3/index.css'
 import '@vue-office/excel/lib/v3/index.css'
-import { getFile } from '@/utils/PathUtil'
-import { useWindow } from '@/hooks/useWindow'
+import { listen } from '@tauri-apps/api/event'
 import merge from 'lodash-es/merge'
 import { computed } from 'vue'
+import { useTauriListener } from '@/hooks/useTauriListener'
+import { useWindow } from '@/hooks/useWindow'
+import { getFile } from '@/utils/PathUtil'
 
 type PayloadData = {
   userId: string
@@ -130,22 +132,23 @@ const updateFile = async (absolutePath: string, exists: boolean) => {
   }
 }
 
-const { getWindowPayload, getWindowPayloadListener } = useWindow()
-
-let unListen: (() => void) | null = null
+const { getWindowPayload } = useWindow()
+const { addListener } = useTauriListener()
 
 onMounted(async () => {
   const webviewWindow = getCurrentWebviewWindow()
   const label = webviewWindow.label
 
-  unListen = await getWindowPayloadListener(label, (event: any) => {
-    const payload: PayloadData = event.payload.payload
-    console.log('payload更新：', payload)
+  addListener(
+    listen(`${label}:update`, (event: any) => {
+      const payload: PayloadData = event.payload.payload
+      console.log('payload更新：', payload)
 
-    merge(uiData.payload, payload)
+      merge(uiData.payload, payload)
 
-    updateFile(payload.resourceFile.absolutePath || '', payload.resourceFile.localExists)
-  })
+      updateFile(payload.resourceFile.absolutePath || '', payload.resourceFile.localExists)
+    })
+  )
 
   try {
     const payload = await getWindowPayload<PayloadData>(label)
@@ -159,12 +162,6 @@ onMounted(async () => {
   }
 
   await webviewWindow.show()
-})
-
-onBeforeUnmount(async () => {
-  if (unListen) {
-    unListen()
-  }
 })
 </script>
 

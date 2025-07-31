@@ -8,17 +8,18 @@
   </NaiveProvider>
 </template>
 <script setup lang="ts">
-import { useSettingStore } from '@/stores/setting.ts'
-import { MittEnum, StoresEnum, ThemeEnum } from '@/enums'
-import LockScreen from '@/views/LockScreen.vue'
-import router from '@/router'
-import { type } from '@tauri-apps/plugin-os'
-import { useLogin } from '@/hooks/useLogin.ts'
-import { useStorage } from '@vueuse/core'
+import { listen } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { type } from '@tauri-apps/plugin-os'
+import { useStorage } from '@vueuse/core'
+import { MittEnum, StoresEnum, ThemeEnum } from '@/enums'
+import { useLogin } from '@/hooks/useLogin.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
-import { listen } from '@tauri-apps/api/event'
+import router from '@/router'
+import { useSettingStore } from '@/stores/setting.ts'
+import LockScreen from '@/views/LockScreen.vue'
+import { useTauriListener } from './hooks/useTauriListener'
 
 const appWindow = WebviewWindow.getCurrent()
 const { createWebviewWindow } = useWindow()
@@ -27,6 +28,7 @@ const { themes, lockScreen, page } = storeToRefs(settingStore)
 const { resetLoginState, logout } = useLogin()
 const token = useStorage<string | null>('TOKEN', null)
 const refreshToken = useStorage<string | null>('REFRESH_TOKEN', null)
+const { addListener } = useTauriListener()
 
 /** 不需要锁屏的页面 */
 const LockExclusion = new Set(['/login', '/tray', '/qrCode', '/about', '/onlineStatus'])
@@ -109,21 +111,6 @@ watch(
   { immediate: true }
 )
 
-listen('refresh_token_event', (event) => {
-  console.log('🔄 收到 refresh_token 事件')
-
-  // 从 event.payload 中获取 token 和 refreshToken
-  const payload: any = event.payload
-
-  if (payload.token) {
-    token.value = payload.token
-  }
-
-  if (payload.refreshToken) {
-    refreshToken.value = payload.refreshToken
-  }
-})
-
 onMounted(async () => {
   // 判断是否是桌面端，桌面端需要调整样式
   isDesktop.value && (await import('@/styles/scss/global/desktop.scss'))
@@ -164,6 +151,23 @@ onMounted(async () => {
     const closeWindow = await WebviewWindow.getByLabel(event.close)
     closeWindow?.close()
   })
+
+  addListener(
+    listen('refresh_token_event', (event) => {
+      console.log('🔄 收到 refresh_token 事件')
+
+      // 从 event.payload 中获取 token 和 refreshToken
+      const payload: any = event.payload
+
+      if (payload.token) {
+        token.value = payload.token
+      }
+
+      if (payload.refreshToken) {
+        refreshToken.value = payload.refreshToken
+      }
+    })
+  )
 })
 
 onUnmounted(() => {

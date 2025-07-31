@@ -199,9 +199,9 @@
                             :src="useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.img"
                             alt="badge" />
                         </template>
-                        <span>{{
-                          useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.describe
-                        }}</span>
+                        <span>
+                          {{ useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.describe }}
+                        </span>
                       </n-popover>
                       <!-- 用户名 -->
                       <span class="text-12px select-none color-#909090 inline-block align-top">
@@ -420,29 +420,30 @@
   </footer>
 </template>
 <script setup lang="ts">
-import { EventEnum, MittEnum, MsgEnum, MessageStatusEnum } from '@/enums'
-import { MessageType, SessionItem } from '@/services/types.ts'
-import { useMitt } from '@/hooks/useMitt.ts'
-import { usePopover } from '@/hooks/usePopover.ts'
-import { useWindow } from '@/hooks/useWindow.ts'
-import { useChatMain } from '@/hooks/useChatMain.ts'
-import { delay } from 'lodash-es'
-import { formatTimestamp } from '@/utils/ComputedTime.ts'
-import { useUserInfo, useBadgeInfo } from '@/hooks/useCached.ts'
-import { useChatStore } from '@/stores/chat.ts'
-import { type } from '@tauri-apps/plugin-os'
-import { useUserStore } from '@/stores/user.ts'
-import { AvatarUtils } from '@/utils/AvatarUtils'
-import VirtualList, { type VirtualListExpose } from '@/components/common/VirtualList.vue'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { useTauriListener } from '@/hooks/useTauriListener'
-import { useGroupStore } from '@/stores/group.ts'
-import { useGlobalStore } from '@/stores/global'
+import { type } from '@tauri-apps/plugin-os'
 import { useDebounceFn } from '@vueuse/core'
-import { useCachedStore } from '@/stores/cached'
-import apis from '@/services/apis'
+import { delay } from 'lodash-es'
+import VirtualList, { type VirtualListExpose } from '@/components/common/VirtualList.vue'
+import { EventEnum, MessageStatusEnum, MittEnum, MsgEnum, TauriCommand } from '@/enums'
+import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
+import { useChatMain } from '@/hooks/useChatMain.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { useNetworkStatus } from '@/hooks/useNetworkStatus'
+import { usePopover } from '@/hooks/usePopover.ts'
+import { useTauriListener } from '@/hooks/useTauriListener'
+import { useWindow } from '@/hooks/useWindow.ts'
+import apis from '@/services/apis'
+import type { MessageType, SessionItem } from '@/services/types.ts'
+import { useCachedStore } from '@/stores/cached'
+import { useChatStore } from '@/stores/chat.ts'
+import { useGlobalStore } from '@/stores/global'
+import { useGroupStore } from '@/stores/group.ts'
+import { useUserStore } from '@/stores/user.ts'
 import { audioManager } from '@/utils/AudioManager'
+import { AvatarUtils } from '@/utils/AvatarUtils'
+import { formatTimestamp } from '@/utils/ComputedTime.ts'
+import { ErrorType, invokeWithErrorHandler } from '~/src/utils/TauriInvokeHandler'
 
 const appWindow = WebviewWindow.getCurrent()
 const { addListener } = useTauriListener()
@@ -732,11 +733,23 @@ const cancelReplyEmoji = async (item: any, type: number) => {
   // 只有当用户已标记时才发送取消请求
   if (userMarked) {
     try {
-      await apis.markMsg({
+      const data = {
         msgId: item.message.id,
         markType: type, // 使用对应的MarkEnum类型
         actType: 2 // 使用Confirm作为操作类型
-      })
+      }
+      await apis.markMsg(data)
+
+      await invokeWithErrorHandler(
+        TauriCommand.SAVE_MESSAGE_MARK,
+        {
+          data: data
+        },
+        {
+          customErrorMessage: '保存消息标记',
+          errorType: ErrorType.Client
+        }
+      )
 
       const currentCount = item.message.messageMarks[String(type)]?.count || 0
       chatStore.updateMarkCount([
@@ -780,6 +793,21 @@ const handleEmojiSelect = async (context: { label: string; value: number; title:
         markType: context.value,
         actType: 1
       })
+
+      await invokeWithErrorHandler(
+        TauriCommand.SAVE_MESSAGE_MARK,
+        {
+          data: {
+            msgId: item.message.id,
+            markType: context.value,
+            actType: 1
+          }
+        },
+        {
+          customErrorMessage: '保存消息标记',
+          errorType: ErrorType.Client
+        }
+      )
 
       const currentCount = item.message.messageMarks[String(context.value)]?.count || 0
       chatStore.updateMarkCount([
@@ -1044,7 +1072,7 @@ onMounted(async () => {
   })
 
   // 监听公告更新事件
-  await addListener(
+  addListener(
     appWindow.listen('announcementUpdated', async (event: any) => {
       if (event.payload) {
         const { hasAnnouncements, topAnnouncement: newTopAnnouncement } = event.payload
@@ -1065,13 +1093,13 @@ onMounted(async () => {
   )
 
   // 监听公告清空事件
-  await addListener(
+  addListener(
     appWindow.listen('announcementClear', () => {
       topAnnouncement.value = null
     })
   )
 
-  await addListener(
+  addListener(
     appWindow.listen(EventEnum.SHARE_SCREEN, async () => {
       await createWebviewWindow('共享屏幕', 'sharedScreen', 840, 840)
     })

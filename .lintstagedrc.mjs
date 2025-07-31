@@ -5,11 +5,15 @@ function createCommand(prefix, join) {
 }
 
 export default {
-  '*.{js,jsx,ts,tsx,vue}': [
-    'oxlint src',
-    createCommand('pnpm eslint --fix', ''),
-    createCommand('prettier --write', '--write'),
-    // () => 'pnpm test:run',
-    () => 'vue-tsc --noEmit'
+  // JavaScript/TypeScript 文件使用 Biome
+  '*.{js,jsx,ts,tsx,json}': [
+    (filenames) => {
+      const filteredFiles = filenames.filter(f => !f.includes('src-tauri/'))
+      return filteredFiles.length > 0 ? `biome check --write ${filteredFiles.map(f => path.relative(process.cwd(), f)).join(' ')}` : 'echo "No files to check"'
+    },
+  ],
+  // Vue 文件：只使用 Prettier 处理（Biome 对 Vue 文件支持有限）
+  '*.vue': [
+    createCommand('prettier --write', ''), // 处理整个 Vue 文件
   ]
 }

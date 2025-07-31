@@ -1,4 +1,4 @@
-import { Ref, nextTick } from 'vue'
+import { nextTick, type Ref } from 'vue'
 import { TriggerEnum } from '@/enums'
 
 // 添加选择器常量

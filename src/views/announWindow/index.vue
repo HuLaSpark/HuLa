@@ -103,9 +103,9 @@
                       <n-button
                         size="small"
                         tertiary
-                        @click.stop="announcementStates[announcement.id].showDeleteConfirm = false"
-                        >取消</n-button
-                      >
+                        @click.stop="announcementStates[announcement.id].showDeleteConfirm = false">
+                        取消
+                      </n-button>
                       <n-button
                         size="small"
                         type="error"
@@ -161,16 +161,16 @@
   </main>
 </template>
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue'
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
-import apis from '@/services/apis'
-import { useRoute } from 'vue-router'
-import { useGroupStore } from '@/stores/group.ts'
-import { useCachedStore } from '@/stores/cached'
-import { useUserStore } from '@/stores/user'
-import { useUserInfo } from '@/hooks/useCached.ts'
-import { AvatarUtils } from '@/utils/AvatarUtils'
 import { emitTo } from '@tauri-apps/api/event'
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { nextTick, onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
+import { useUserInfo } from '@/hooks/useCached.ts'
+import apis from '@/services/apis'
+import { useCachedStore } from '@/stores/cached'
+import { useGroupStore } from '@/stores/group.ts'
+import { useUserStore } from '@/stores/user'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 
 // 定义响应式变量
 const title = ref('')
@@ -204,9 +204,9 @@ const hasBadge6 = computed(() => {
   return currentUser?.itemIds?.includes('6')
 })
 const isAdmin = computed(() => {
-  let LordId = groupStore.currentLordId
-  let adminUserTds = groupStore.adminUidList
-  let uid = useUserStore().userInfo?.uid
+  const LordId = groupStore.currentLordId
+  const adminUserTds = groupStore.adminUidList
+  const uid = useUserStore().userInfo?.uid
   // 由于 uid 可能为 undefined，需要进行类型检查，确保其为 string 类型
   if (uid && (uid === LordId || adminUserTds.includes(uid) || hasBadge6.value)) {
     return true

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { PluginEnum, StoresEnum } from '@/enums'
+import { type PluginEnum, StoresEnum } from '@/enums'
 
 export const useMenuTopStore = defineStore(
   StoresEnum.MENUTOP,

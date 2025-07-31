@@ -14,7 +14,7 @@
 
     <!-- 导航条 -->
     <NavBar>
-      <template #center> 通讯录 </template>
+      <template #center>通讯录</template>
       <template #right>
         <n-dropdown
           @on-clickoutside="addIconHandler.clickOutside"
@@ -83,7 +83,7 @@
             <ContextMenu @contextmenu="showMenu($event)" @select="handleSelect($event.label)" :menu="menuList">
               <n-collapse-item title="我的好友" name="1">
                 <template #header-extra>
-                  <span class="text-(10px #707070)"> {{ onlineCount }}/{{ contactStore.contactsList.length }} </span>
+                  <span class="text-(10px #707070)">{{ onlineCount }}/{{ contactStore.contactsList.length }}</span>
                 </template>
                 <n-scrollbar style="max-height: calc(100vh - 220px)">
                   <!-- 用户框 多套一层div来移除默认的右键事件然后覆盖掉因为margin空隙而导致右键可用 -->
@@ -106,9 +106,9 @@
                           fallback-src="/logo.png" />
 
                         <n-flex vertical justify="space-between" class="h-fit flex-1 truncate">
-                          <span class="text-14px leading-tight flex-1 truncate">{{
-                            useUserInfo(item.uid).value.name
-                          }}</span>
+                          <span class="text-14px leading-tight flex-1 truncate">
+                            {{ useUserInfo(item.uid).value.name }}
+                          </span>
 
                           <div class="text leading-tight text-12px flex-y-center gap-4px flex-1 truncate">
                             [
@@ -135,7 +135,7 @@
           <n-collapse :display-directive="'show'" accordion :default-expanded-names="['1']">
             <n-collapse-item title="我的群聊" name="1">
               <template #header-extra>
-                <span class="text-(10px #707070)">{{ groupChatList.length }} </span>
+                <span class="text-(10px #707070)">{{ groupChatList.length }}</span>
               </template>
               <n-scrollbar style="max-height: calc(100vh - 220px)">
                 <div
@@ -172,21 +172,20 @@
 }
 </style>
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
-import { useChatStore } from '@/stores/chat.ts'
-import SafeAreaPlaceholder from '@/mobile/components/placeholders/SafeAreaPlaceholder.vue'
-
-import NavBar from '@/mobile/layout/navBar/index.vue'
-import groupChatIcon from '@/assets/mobile/chat-home/group-chat.webp'
 import addFriendIcon from '@/assets/mobile/chat-home/add-friend.webp'
+import groupChatIcon from '@/assets/mobile/chat-home/group-chat.webp'
+import { MittEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
+import { useUserInfo } from '@/hooks/useCached.ts'
 
 import { useMitt } from '@/hooks/useMitt.ts'
-import { MittEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
+import SafeAreaPlaceholder from '@/mobile/components/placeholders/SafeAreaPlaceholder.vue'
+import NavBar from '@/mobile/layout/navBar/index.vue'
+import { useChatStore } from '@/stores/chat.ts'
 import { useContactStore } from '@/stores/contacts.ts'
-import { useUserInfo } from '@/hooks/useCached.ts'
-import { AvatarUtils } from '@/utils/AvatarUtils'
 import { useUserStatusStore } from '@/stores/userStatus'
-import { storeToRefs } from 'pinia'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 
 /**
  * 渲染图片图标的函数工厂

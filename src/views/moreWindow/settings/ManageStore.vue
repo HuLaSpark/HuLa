@@ -146,59 +146,21 @@
 </template>
 
 <script setup lang="ts">
-import { invokeWithErrorHandler, invokeSilently, ErrorType } from '@/utils/TauriInvokeHandler.ts'
-import { listen } from '@tauri-apps/api/event'
 import { open } from '@tauri-apps/plugin-dialog'
-import { appCacheDir } from '@tauri-apps/api/path'
+import { useScannerStore } from '@/stores/scanner.ts'
 import { formatBytes } from '@/utils/Formatting.ts'
 
-type DirectoryScanProgress = {
-  current_path: string
-  files_processed: number
-  total_size: number
-  elapsed_time: number
-  elapsed_seconds: number
-  progress_percentage: number
-}
-
-type DirectoryInfo = {
-  path: string
-  total_size: number
-  disk_mount_point: string
-  disk_total_space: number
-  disk_used_space: number
-  disk_usage_percentage: number
-  usage_percentage: number
-}
-
-const pathType = ref<'default' | 'custom'>('default')
-const defaultDirectory = ref<string>('')
-const customDirectory = ref<string>('')
-const currentDirectory = computed(() => {
-  return pathType.value === 'default' ? defaultDirectory.value : customDirectory.value
-})
-const scanning = ref<boolean>(false)
-const scanComplete = ref<boolean>(false)
-const showDiskUsage = ref<boolean>(false)
-const totalSize = ref<number>(0)
-const diskInfo = ref<DirectoryInfo | null>(null)
-const scanProgress = ref<DirectoryScanProgress>({
-  current_path: '',
-  files_processed: 0,
-  total_size: 0,
-  elapsed_time: 0,
-  elapsed_seconds: 0,
-  progress_percentage: 0
-})
-
-// 计算扫描文件占比百分比
-const scanFilesUsagePercentage = computed(() => {
-  if (!diskInfo.value || !scanProgress.value.total_size) return 0
-
-  // 计算当前扫描文件相对于磁盘总容量的占比
-  const percentage = (scanProgress.value.total_size / diskInfo.value.disk_total_space) * 100
-  return Math.min(percentage, 1000)
-})
+const scannerStore = useScannerStore()
+const {
+  pathType,
+  currentDirectory,
+  scanning,
+  showDiskUsage,
+  diskInfo,
+  scanProgress,
+  scanFilesUsagePercentage,
+  scanningProgress
+} = storeToRefs(scannerStore)
 
 // 获取占比严重程度颜色
 const getUsageColor = (usage: number) => {
@@ -212,26 +174,6 @@ const getUsageColor = (usage: number) => {
   }
 }
 
-// 扫描进度百分比（用于显示扫描进度，不是磁盘占比）
-const scanningProgress = computed(() => {
-  if (!scanning.value && !scanComplete.value) return 0
-  if (scanComplete.value && !showDiskUsage.value) return 100
-
-  // 直接使用后端返回的实际进度
-  return scanProgress.value.progress_percentage || 0
-})
-
-// 获取默认目录
-const getDefaultDirectory = async () => {
-  try {
-    const cacheDir = await appCacheDir()
-    defaultDirectory.value = cacheDir
-  } catch (error) {
-    console.error('获取默认目录失败:', error)
-    window.$message?.error('获取默认目录失败')
-  }
-}
-
 // 选择自定义目录
 const selectCustomDirectory = async () => {
   try {
@@ -241,7 +183,7 @@ const selectCustomDirectory = async () => {
     })
 
     if (result) {
-      customDirectory.value = result
+      scannerStore.setCustomDirectory(result)
     }
   } catch (error) {
     console.error('选择目录失败:', error)
@@ -251,98 +193,17 @@ const selectCustomDirectory = async () => {
 
 // 开始扫描
 const startScan = async () => {
-  if (!currentDirectory.value) {
-    window.$message?.warning('请先选择目录')
-    return
-  }
-
-  scanning.value = true
-  scanComplete.value = false
-  showDiskUsage.value = false
-  totalSize.value = 0
-  diskInfo.value = null
-
-  // 重置进度
-  scanProgress.value = {
-    current_path: '开始扫描...',
-    files_processed: 0,
-    total_size: 0,
-    elapsed_time: 0,
-    elapsed_seconds: 0,
-    progress_percentage: 0
-  }
-
-  try {
-    const result = await invokeWithErrorHandler<DirectoryInfo>(
-      'get_directory_usage_info_with_progress',
-      {
-        directoryPath: currentDirectory.value
-      },
-      {
-        customErrorMessage: '获取目录信息失败',
-        errorType: ErrorType.Client
-      }
-    )
-
-    diskInfo.value = result
-    totalSize.value = result.total_size
-    scanComplete.value = true
-    scanning.value = false
-  } catch (error) {
-    console.error('扫描失败:', error)
-    scanning.value = false
-  }
+  await scannerStore.startScan()
 }
 
-// 取消扫描的方法
-const cancelScan = async () => {
-  try {
-    await invokeSilently('cancel_directory_scan')
-    console.log('扫描已取消')
-  } catch (error) {
-    console.error('取消扫描失败:', error)
-  }
-}
-
-// 监听进度事件
+// 组件挂载时初始化扫描器
 onMounted(async () => {
-  // 获取默认目录
-  await getDefaultDirectory()
-
-  // 监听进度更新
-  listen<DirectoryScanProgress>('directory-scan-progress', (event) => {
-    scanProgress.value = event.payload
-  })
-
-  // 监听扫描完成
-  listen<DirectoryScanProgress>('directory-scan-complete', (event) => {
-    scanProgress.value = event.payload
-    scanComplete.value = true
-    scanning.value = false
-
-    // 扫描完成后直接切换到磁盘占比
-    setTimeout(() => {
-      showDiskUsage.value = true
-    }, 300)
-  })
-
-  // 监听扫描取消
-  listen('directory-scan-cancelled', () => {
-    console.log('收到扫描取消事件')
-    scanning.value = false
-    scanComplete.value = false
-    showDiskUsage.value = false
-  })
-
-  // 自动开始扫描
-  if (currentDirectory.value) {
-    await startScan()
-  }
+  await scannerStore.initializeScanner()
 })
 
-// 组件卸载时取消扫描
-onUnmounted(async () => {
-  await cancelScan()
+// 路径类型改变处理
+watch(pathType, (newType) => {
+  scannerStore.setPathType(newType)
 })
 </script>
 

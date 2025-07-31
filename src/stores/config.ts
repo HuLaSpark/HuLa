@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { StoresEnum } from '@/enums'
 import apis from '@/services/apis'
-import { ConfigType } from '@/services/types'
+import type { ConfigType } from '@/services/types'
 
 export const useConfigStore = defineStore(StoresEnum.CONFIG, () => {
   const config = ref<ConfigType>({} as any)

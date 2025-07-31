@@ -1,9 +1,9 @@
-import pkg from '~/package.json'
-import { Button, Select, Slider, Switch, Input, InputNumber } from './model.tsx'
-import { NFlex } from 'naive-ui'
-import { VNode } from 'vue'
 import { type } from '@tauri-apps/plugin-os'
+import { NFlex } from 'naive-ui'
+import type { VNode } from 'vue'
 import { MacOsKeyEnum, WinKeyEnum } from '@/enums'
+import pkg from '~/package.json'
+import { Button, Input, InputNumber, Select, Slider, Switch } from './model.tsx'
 
 const key = computed(() => {
   return `${type() === 'windows' ? WinKeyEnum.CTRL : MacOsKeyEnum['⌘']}`

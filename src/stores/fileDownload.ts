@@ -1,12 +1,11 @@
+import { join, resourceDir } from '@tauri-apps/api/path'
+import { BaseDirectory, exists, writeFile } from '@tauri-apps/plugin-fs'
 import { defineStore } from 'pinia'
 import { StoresEnum } from '@/enums'
-import { getFilesMeta, getUserAbsoluteVideosDir, getUserVideosDir } from '@/utils/PathUtil'
-import { useUserStore } from '@/stores/user'
+import type { FilesMeta } from '@/services/types'
 import { useGlobalStore } from '@/stores/global'
-import { join, resourceDir } from '@tauri-apps/api/path'
-import { writeFile, exists } from '@tauri-apps/plugin-fs'
-import { BaseDirectory } from '@tauri-apps/plugin-fs'
-import { FilesMeta } from '@/services/types'
+import { useUserStore } from '@/stores/user'
+import { getFilesMeta, getUserAbsoluteVideosDir, getUserVideosDir } from '@/utils/PathUtil'
 
 export interface FileDownloadStatus {
   /** 文件是否已下载 */
@@ -99,7 +98,7 @@ export const useFileDownloadStore = defineStore(
       const absolutePath = await join(resourceDirPath, options.fileName)
 
       // 如果直接知道文件不存在，那就直接刷新，如果不知道则再做处理
-      if (Object.prototype.hasOwnProperty.call(options, 'exists')) {
+      if (Object.hasOwn(options, 'exists')) {
         if (options.exists && fileStatus?.isDownloaded) {
           console.log('匹配1')
           return

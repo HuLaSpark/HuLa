@@ -1,10 +1,8 @@
-use std::path::PathBuf;
-
 use tauri::plugin::TauriPlugin;
 use tauri::{Manager, Runtime, WindowEvent};
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_log::fern::colors::{Color, ColoredLevelConfig};
-use tauri_plugin_log::{Target, TargetKind, WEBVIEW_TARGET};
+use tauri_plugin_log::{Target, TargetKind};
 
 pub trait CustomInit {
     fn init_plugin(self) -> Self;
@@ -17,16 +15,25 @@ pub trait CustomInit {
 impl<R: Runtime> CustomInit for tauri::Builder<R> {
     // 初始化插件
     fn init_plugin(self) -> Self {
-        let mut builder = self.plugin(tauri_plugin_os::init())
+        let builder = self
+            // 移动端和桌面端都支持的插件
+            .plugin(tauri_plugin_os::init())
+            .plugin(tauri_plugin_http::init())
+            .plugin(tauri_plugin_upload::init())
+            .plugin(tauri_plugin_sql::Builder::new().build())
             .plugin(tauri_plugin_notification::init())
             .plugin(tauri_plugin_process::init())
-            .plugin(tauri_plugin_http::init())
             .plugin(tauri_plugin_shell::init())
-            .plugin(tauri_plugin_fs::init())
-            .plugin(tauri_plugin_upload::init())
             .plugin(tauri_plugin_dialog::init())
-            .plugin(tauri_plugin_clipboard_manager::init())
             .plugin(tauri_plugin_opener::init())
+            .plugin(tauri_plugin_fs::init())
+            .plugin(tauri_plugin_clipboard_manager::init())
+            .plugin(tauri_plugin_mic_recorder::init())
+            .plugin(build_log_plugin());
+
+        // 桌面端特有的插件
+        #[cfg(desktop)]
+        let builder = builder
             .plugin(tauri_plugin_autostart::init(
                 MacosLauncher::LaunchAgent,
                 Some(vec!["--flag1", "--flag2"]),
@@ -36,23 +43,24 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
                 // 优先显示已存在的home窗口
                 for (name, window) in windows {
                     if name == "home" {
-                        window.show().unwrap();
-                        window.unminimize().unwrap();
-                        window.set_focus().unwrap();
+                        if let Err(e) = window.show() {
+                            tracing::warn!("Failed to show home window: {}", e);
+                        }
+                        if let Err(e) = window.unminimize() {
+                            tracing::warn!("Failed to unminimize home window: {}", e);
+                        }
+                        if let Err(e) = window.set_focus() {
+                            tracing::warn!("Failed to focus home window: {}", e);
+                        }
                         break;
                     }
                 }
             }))
-            .plugin(tauri_plugin_sql::Builder::new().build())
             .plugin(tauri_plugin_global_shortcut::Builder::new().build())
-            .plugin(tauri_plugin_updater::Builder::new().build())
-            .plugin(tauri_plugin_mic_recorder::init())
-            .plugin(build_log_plugin());
+            .plugin(tauri_plugin_updater::Builder::new().build());
 
         #[cfg(debug_assertions)]
-        {
-            builder = builder.plugin(tauri_plugin_devtools::init());
-        }
+        let builder = builder.plugin(tauri_plugin_devtools::init());
 
         builder
     }
@@ -71,28 +79,26 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
                 // 自定义系统托盘-实现托盘菜单失去焦点时隐藏
                 #[cfg(not(target_os = "macos"))]
                 if !window.label().eq("tray") && *flag {
-                    window
-                        .app_handle()
-                        .get_webview_window("tray")
-                        .unwrap()
-                        .hide()
-                        .unwrap();
+                    if let Some(tray_window) = window.app_handle().get_webview_window("tray") {
+                        let _ = tray_window.hide();
+                    }
                 }
                 if window.label().eq("tray") && !flag {
-                    window.hide().unwrap();
+                    if let Err(e) = window.hide() {
+                        tracing::warn!("Failed to hide tray window: {}", e);
+                    }
                 }
                 #[cfg(target_os = "windows")]
                 if !window.label().eq("notify") && *flag {
-                    window
-                        .app_handle()
-                        .get_webview_window("notify")
-                        .unwrap()
-                        .hide()
-                        .unwrap();
+                    if let Some(notify_window) = window.app_handle().get_webview_window("notify") {
+                        let _ = notify_window.hide();
+                    }
                 }
                 #[cfg(target_os = "windows")]
                 if window.label().eq("notify") && !flag {
-                    window.hide().unwrap();
+                    if let Err(e) = window.hide() {
+                        log::warn!("Failed to hide notify window: {}", e);
+                    }
                 }
             }
             WindowEvent::CloseRequested { .. } => {
@@ -115,34 +121,19 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
     }
 }
 
-fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
-    // 获取当前工作目录并创建 logs 子目录
-    let mut log_dir = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
-    log_dir.push("logs");
-    
-    // 确保 logs 目录存在
-    if !log_dir.exists() {
-        std::fs::create_dir_all(&log_dir).unwrap_or_else(|e| {
-            eprintln!("Failed to create logs directory: {}", e);
-        });
-    }
-    
+pub fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
     tauri_plugin_log::Builder::new()
         .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
         .skip_logger()
-        .level(log::LevelFilter::Info)
-        .level_for("sqlx::query", log::LevelFilter::Warn)
-        .level_for("hula_app_lib", log::LevelFilter::Debug)
+        .level(tracing::log::LevelFilter::Debug)
+        .level_for("sqlx", tracing::log::LevelFilter::Debug)
+        .level_for("sqlx::query", tracing::log::LevelFilter::Debug)
+        .level_for("sea_orm", tracing::log::LevelFilter::Info)
+        .level_for("hula_app_lib", tracing::log::LevelFilter::Debug)
         .targets([
             Target::new(TargetKind::Stdout),
             // 将 rust 日志打印到 webview的 devtool 中
             Target::new(TargetKind::Webview),
-            // 将日志保存到项目的 logs 目录下
-            Target::new(TargetKind::Folder {
-                path: log_dir,
-                file_name: Some("app".into()),
-            })
-            .filter(|metadata| !metadata.target().starts_with(WEBVIEW_TARGET)),
         ])
         .with_colors(ColoredLevelConfig {
             error: Color::Red,
@@ -153,4 +144,3 @@ fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
         })
         .build()
 }
-

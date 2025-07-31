@@ -87,13 +87,13 @@
 </template>
 
 <script setup lang="ts">
-import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { convertFileSrc } from '@tauri-apps/api/core'
+import { dirname, join } from '@tauri-apps/api/path'
+import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { readDir } from '@tauri-apps/plugin-fs'
-import { join, dirname } from '@tauri-apps/api/path'
 import ActionBar from '@/components/windows/ActionBar.vue'
-import { useVideoViewer } from '@/stores/videoViewer.ts'
 import { useTauriListener } from '@/hooks/useTauriListener'
+import { useVideoViewer } from '@/stores/videoViewer.ts'
 
 const { addListener } = useTauriListener()
 const videoViewerStore = useVideoViewer()
@@ -368,7 +368,7 @@ onMounted(async () => {
   await getCurrentWebviewWindow().show()
 
   // 修改事件名称与发送端保持一致
-  await addListener(
+  addListener(
     appWindow.listen('video-updated', (event: any) => {
       const { list, index } = event.payload
       videoList.value = list

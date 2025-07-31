@@ -1,9 +1,9 @@
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { fetch } from '@tauri-apps/plugin-http'
 import { AppException, ErrorType } from '@/common/exception'
+import { URLEnum } from '@/enums'
 import { RequestQueue } from '@/utils/RequestQueue'
 import urls from './urls'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { URLEnum } from '@/enums'
 
 // 错误信息常量
 const ERROR_MESSAGES = {
@@ -125,7 +125,7 @@ async function Http<T = any>(
   // 默认重试配置，在登录窗口时禁用重试
   const defaultRetryOptions: RetryOptions = {
     retries: 3,
-    retryDelay: (attempt) => Math.pow(2, attempt) * 1000,
+    retryDelay: (attempt) => 2 ** attempt * 1000,
     retryOn: [] // 状态码意味着已经连接到服务器
   }
 
@@ -149,9 +149,12 @@ async function Http<T = any>(
     httpHeaders.set('Content-Type', 'application/json')
   }
 
-  // 设置Authorization
+  // 统一设置基础认证头
+  const basicAuth = btoa('luohuo_web_pro:luohuo_web_pro_secret')
+  httpHeaders.set('Authorization', `${basicAuth}`)
+
   if (token) {
-    httpHeaders.set('Authorization', `Bearer ${token}`)
+    httpHeaders.set('token', `${token}`)
   }
 
   // 设置浏览器指纹
@@ -276,7 +279,7 @@ async function Http<T = any>(
     } catch (error: any) {
       // 优化错误日志，仅在开发环境打印详细信息
       if (import.meta.env.DEV) {
-        console.error(`尝试 ${currentAttempt + 1} 失败 →`, error)
+        console.error(`${options.method} ${url} 尝试 ${currentAttempt + 1} 失败 →`, error)
       }
 
       // 处理网络相关错误

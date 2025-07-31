@@ -24,7 +24,7 @@ export class AvatarUtils {
     if (isNaN(num)) return false
 
     // 数字范围检查 (001-021)
-    return num >= this.RANGE_START && num <= this.RANGE_END
+    return num >= AvatarUtils.RANGE_START && num <= AvatarUtils.RANGE_END
   }
 
   /**
@@ -33,7 +33,7 @@ export class AvatarUtils {
    * @returns 头像字符串或URL
    */
   public static getAvatarUrl(avatar: string): string {
-    if (this.isDefaultAvatar(avatar)) {
+    if (AvatarUtils.isDefaultAvatar(avatar)) {
       return `/avatar/${avatar}.png`
     }
     return avatar

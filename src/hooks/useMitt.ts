@@ -1,6 +1,6 @@
-import mitt from 'mitt'
 import type { Emitter, Handler } from 'mitt'
-import { MittEnum } from '@/enums'
+import mitt from 'mitt'
+import type { MittEnum } from '@/enums'
 
 const mittInstance: Emitter<any> = mitt()
 

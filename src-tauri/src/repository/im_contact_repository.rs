@@ -2,13 +2,16 @@ use crate::error::CommonError;
 use anyhow::Context;
 use entity::im_contact;
 use sea_orm::{
-    ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter, TransactionTrait,
+    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter,
+    Set, TransactionTrait,
 };
+use tracing::info;
 
 pub async fn list_contact(
     db: &DatabaseConnection,
     login_uid: &str,
 ) -> Result<Vec<im_contact::Model>, CommonError> {
+    info!("查询数据库获取所有会话");
     let list = im_contact::Entity::find()
         .filter(im_contact::Column::LoginUid.eq(login_uid))
         .all(db)
@@ -56,4 +59,42 @@ pub async fn save_contact_batch(
     // 提交事务
     txn.commit().await?;
     Ok(())
+}
+
+/// 更新联系人隐藏状态
+pub async fn update_contact_hide(
+    db: &DatabaseConnection,
+    room_id: &str,
+    hide: bool,
+    login_uid: &str,
+) -> Result<(), CommonError> {
+    info!(
+        "更新联系人隐藏状态: room_id={}, hide={}, login_uid={}",
+        room_id, hide, login_uid
+    );
+
+    // 查找对应的联系人记录
+    let contact = im_contact::Entity::find()
+        .filter(im_contact::Column::RoomId.eq(room_id))
+        .filter(im_contact::Column::LoginUid.eq(login_uid))
+        .one(db)
+        .await
+        .with_context(|| "查找联系人记录失败")?;
+
+    if let Some(contact) = contact {
+        let mut active_model: im_contact::ActiveModel = contact.into_active_model();
+        active_model.hide = Set(Some(hide));
+
+        active_model
+            .update(db)
+            .await
+            .with_context(|| "更新联系人隐藏状态失败")?;
+
+        info!("成功更新联系人隐藏状态");
+        Ok(())
+    } else {
+        Err(CommonError::UnexpectedError(anyhow::anyhow!(
+            "未找到对应的联系人记录"
+        )))
+    }
 }

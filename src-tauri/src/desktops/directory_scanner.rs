@@ -40,6 +40,24 @@ async fn get_directory_size_with_progress(
     directory_path: String,
     handle: AppHandle,
 ) -> Result<u64, String> {
+    // 添加总体超时机制，防止扫描过大目录时无限期运行
+    let timeout_duration = tokio::time::Duration::from_secs(300); // 5分钟超时
+
+    match tokio::time::timeout(
+        timeout_duration,
+        scan_directory_internal(directory_path, handle),
+    )
+    .await
+    {
+        Ok(result) => result,
+        Err(_) => {
+            tracing::warn!("目录扫描超时，已自动取消");
+            Err("目录扫描超时，请尝试扫描较小的目录".to_string())
+        }
+    }
+}
+
+async fn scan_directory_internal(directory_path: String, handle: AppHandle) -> Result<u64, String> {
     let path = PathBuf::from(&directory_path);
 
     if !path.exists() {

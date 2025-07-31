@@ -123,21 +123,21 @@
 </template>
 
 <script setup lang="ts">
+import { emitTo } from '@tauri-apps/api/event'
+import { join } from '@tauri-apps/api/path'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { open } from '@tauri-apps/plugin-dialog'
 import { copyFile, readFile } from '@tauri-apps/plugin-fs'
 import { MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
-import { SelectionRange, useCommon } from '@/hooks/useCommon.ts'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { emitTo } from '@tauri-apps/api/event'
-import { useGlobalStore } from '@/stores/global.ts'
+import { type SelectionRange, useCommon } from '@/hooks/useCommon.ts'
+import { useMitt } from '@/hooks/useMitt'
 import type { ContactItem, FilesMeta, SessionItem } from '@/services/types'
 import { useContactStore } from '@/stores/contacts'
+import { useGlobalStore } from '@/stores/global.ts'
 import { useHistoryStore } from '@/stores/history'
-import { useMitt } from '@/hooks/useMitt'
+import { useUserStore } from '@/stores/user'
 import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
 import { getFilesMeta, getUserAbsoluteVideosDir } from '@/utils/PathUtil'
-import { useUserStore } from '@/stores/user'
-import { join } from '@tauri-apps/api/path'
 
 const { detailId } = defineProps<{
   detailId: SessionItem['detailId']
@@ -419,7 +419,7 @@ const updateRecentEmojis = (emoji: string) => {
 }
 
 const handleCap = async () => {
-  let captureWindow = await WebviewWindow.getByLabel('capture')
+  const captureWindow = await WebviewWindow.getByLabel('capture')
   captureWindow?.show()
   await emitTo('capture', 'capture', true)
 }

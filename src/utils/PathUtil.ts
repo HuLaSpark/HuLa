@@ -1,9 +1,8 @@
-import { join, appCacheDir, resourceDir } from '@tauri-apps/api/path'
-import { mkdir, exists, readFile } from '@tauri-apps/plugin-fs'
-import { BaseDirectory } from '@tauri-apps/plugin-fs'
-import { fileTypeFromBuffer, type FileTypeResult } from 'file-type'
-import { FilesMeta } from '@/services/types'
 import { invoke } from '@tauri-apps/api/core'
+import { appCacheDir, join, resourceDir } from '@tauri-apps/api/path'
+import { BaseDirectory, exists, mkdir, readFile } from '@tauri-apps/plugin-fs'
+import { type FileTypeResult, fileTypeFromBuffer } from 'file-type'
+import type { FilesMeta } from '@/services/types'
 
 // 用户数据
 const USER_DATA = 'userData'

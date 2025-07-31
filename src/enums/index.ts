@@ -21,19 +21,21 @@ export enum RCodeEnum {
 /**URL*/
 export enum URLEnum {
   /**用户*/
-  USER = '/user',
+  USER = '/im/user',
   /**Token*/
-  TOKEN = '/token',
+  TOKEN = '/oauth',
   /**聊天*/
-  CHAT = '/chat',
+  CHAT = '/im/chat',
   /**房间*/
-  ROOM = '/room',
+  ROOM = '/im/room',
   /**oss*/
   OSS = '/oss',
   /**系统*/
   SYSTEM = '/system',
   /**验证码*/
-  CAPTCHA = '/captcha'
+  CAPTCHA = '/im/captcha',
+  /**消息推送服务前缀*/
+  WEBSOCKET = '/ws'
 }
 
 /** tauri原生跨窗口通信时传输的类型 */
@@ -159,7 +161,9 @@ export enum StoresEnum {
   /** 文件下载管理 */
   FILE_DOWNLOAD = 'fileDownload',
   /** 移动端状态 */
-  MOBILE = 'mobile'
+  MOBILE = 'mobile',
+  /** 目录扫描器 */
+  SCANNER = 'scanner'
 }
 
 /**
@@ -416,7 +420,7 @@ export enum MessageStatusEnum {
 }
 
 /** 触发类型枚举 */
-export const enum TriggerEnum {
+export enum TriggerEnum {
   MENTION = '@',
   AI = '/',
   TOPIC = '#'
@@ -481,5 +485,7 @@ export enum TauriCommand {
   /** 发送消息 */
   SEND_MSG = 'send_msg',
   /** 保存消息 */
-  SAVE_MSG = 'save_msg'
+  SAVE_MSG = 'save_msg',
+  /** 保存消息标记 */
+  SAVE_MESSAGE_MARK = 'save_message_mark'
 }

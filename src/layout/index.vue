@@ -25,8 +25,13 @@
 </template>
 
 <script setup lang="ts">
+import { LogicalSize } from '@tauri-apps/api/dpi'
+import { emitTo } from '@tauri-apps/api/event'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification'
+import { type } from '@tauri-apps/plugin-os'
+import { useThrottleFn } from '@vueuse/core'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
-import { useMitt } from '@/hooks/useMitt.ts'
 import {
   ChangeTypeEnum,
   MittEnum,
@@ -36,26 +41,25 @@ import {
   RoomTypeEnum,
   TauriCommand
 } from '@/enums'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { useGlobalStore } from '@/stores/global.ts'
+import { useUserInfo } from '@/hooks/useCached.ts'
+import { useCheckUpdate } from '@/hooks/useCheckUpdate'
+import { useMitt } from '@/hooks/useMitt.ts'
+import { computedToken } from '@/services/request'
+import type { MarkItemType, MessageType, RevokedMsgType } from '@/services/types.ts'
+import {
+  type LoginSuccessResType,
+  type OnStatusChangeType,
+  WsResponseMessageType,
+  type WsTokenExpire
+} from '@/services/wsType.ts'
+import { useCachedStore } from '@/stores/cached'
+import { useChatStore } from '@/stores/chat'
+import { useConfigStore } from '@/stores/config'
 import { useContactStore } from '@/stores/contacts.ts'
+import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user'
-import { useChatStore } from '@/stores/chat'
-import { LoginSuccessResType, OnStatusChangeType, WsResponseMessageType, WsTokenExpire } from '@/services/wsType.ts'
-import type { MarkItemType, MessageType, RevokedMsgType } from '@/services/types.ts'
-import { computedToken } from '@/services/request'
-import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification'
-import { useUserInfo } from '@/hooks/useCached.ts'
-import { emitTo } from '@tauri-apps/api/event'
-import { useThrottleFn } from '@vueuse/core'
-import { useCachedStore } from '@/stores/cached'
 import { clearListener, initListener, readCountQueue } from '@/utils/ReadCountQueue'
-import { type } from '@tauri-apps/plugin-os'
-import { useConfigStore } from '@/stores/config'
-import { useCheckUpdate } from '@/hooks/useCheckUpdate'
-import { UserAttentionType } from '@tauri-apps/api/window'
-import { LogicalSize } from '@tauri-apps/api/dpi'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
 
 const loadingPercentage = ref(10)
@@ -237,22 +241,22 @@ useMitt.on(WsResponseMessageType.MY_ROOM_INFO_CHANGE, (data: { myName: string; r
   cachedStore.updateUserGroupNickname(data)
   // 如果当前正在查看的是该群聊，则更新群组信息
   if (globalStore.currentSession?.roomId === data.roomId) {
-    groupStore.getCountStatistic()
+    groupStore.getCountStatistic(globalStore.currentSession?.roomId)
   }
 })
 useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   chatStore.pushMsg(data)
-  console.log('监听到接收消息', data)
+  data.message.sendTime = new Date(data.message.sendTime).getTime()
   await invokeSilently(TauriCommand.SAVE_MSG, {
     data
   })
   const username = useUserInfo(data.fromUser.uid).value.name!
-  const home = await WebviewWindow.getByLabel('home')
+  // const home = await WebviewWindow.getByLabel('home')
   // 当home窗口不显示并且home窗口不是最小化的时候并且不是聚焦窗口的时候
-  const homeShow = await home?.isVisible()
-  const isHomeMinimized = await home?.isMinimized()
-  const isHomeFocused = await home?.isFocused()
-  if (homeShow && !isHomeMinimized && isHomeFocused) return
+  // const homeShow = await home?.isVisible()
+  // const isHomeMinimized = await home?.isMinimized()
+  // const isHomeFocused = await home?.isFocused()
+  // if (homeShow && !isHomeMinimized && isHomeFocused) return
 
   // 不是自己发的消息才通知
   if (data.fromUser.uid !== userUid.value) {
@@ -263,11 +267,12 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
     if (session && session.muteNotification !== NotificationTypeEnum.NOT_DISTURB) {
       // 设置图标闪烁
       useMitt.emit(MittEnum.MESSAGE_ANIMATION, data)
+      // session.unreadCount++
       // 在windows系统下才发送通知
       if (type() === 'windows') {
-        await emitTo('tray', 'show_tip')
+        globalStore.setTipVisible(true)
         // 请求用户注意窗口
-        home?.requestUserAttention(UserAttentionType.Critical)
+        // home?.requestUserAttention(UserAttentionType.Critical)
       }
 
       await emitTo('notify', 'notify_cotent', data)
@@ -280,6 +285,8 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
       throttleSendNotification()
     }
   }
+
+  await globalStore.updateGlobalUnreadCount()
 })
 useMitt.on(WsResponseMessageType.REQUEST_NEW_FRIEND, async (data: { uid: number; unreadCount: number }) => {
   console.log('收到好友申请', data.unreadCount)
@@ -335,7 +342,7 @@ useMitt.on(WsResponseMessageType.ROOM_INFO_CHANGE, async (data: { roomId: string
   // 如果当前正在查看的是该群聊，则需要刷新群组详情
   if (globalStore.currentSession?.roomId === roomId && globalStore.currentSession.type === RoomTypeEnum.GROUP) {
     // 重新获取群组信息统计
-    await groupStore.getCountStatistic()
+    await groupStore.getCountStatistic(globalStore.currentSession?.roomId)
   }
 })
 useMitt.on(WsResponseMessageType.ROOM_DISSOLUTION, async () => {
@@ -378,14 +385,6 @@ onMounted(async () => {
     // 居中
     await homeWindow.center()
     await homeWindow.show()
-    await homeWindow.onFocusChanged(({ payload: focused }) => {
-      // 当窗口获得焦点时，关闭通知提示
-      if (focused) {
-        globalStore.setTipVisible(false)
-        // 同时通知通知窗口隐藏
-        emitTo('notify', 'hide_notify')
-      }
-    })
   }
 })
 

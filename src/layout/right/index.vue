@@ -25,11 +25,11 @@
   </main>
 </template>
 <script setup lang="ts">
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { MittEnum, ThemeEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
 import router from '@/router'
 import { useSettingStore } from '@/stores/setting.ts'
-import { MittEnum, ThemeEnum } from '@/enums'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 
 const appWindow = WebviewWindow.getCurrent()
 const settingStore = useSettingStore()

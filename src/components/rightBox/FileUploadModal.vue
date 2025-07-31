@@ -68,8 +68,8 @@
 </template>
 
 <script setup lang="ts">
-import { formatBytes } from '@/utils/Formatting'
 import { type } from '@tauri-apps/plugin-os'
+import { formatBytes } from '@/utils/Formatting'
 
 const props = withDefaults(
   defineProps<{

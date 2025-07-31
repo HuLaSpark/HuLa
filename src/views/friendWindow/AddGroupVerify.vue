@@ -49,10 +49,10 @@
   </div>
 </template>
 <script setup lang="ts">
-import { WebviewWindow, getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { useGlobalStore } from '@/stores/global.ts'
-import apis from '@/services/apis.ts'
+import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useCommon } from '@/hooks/useCommon.ts'
+import apis from '@/services/apis.ts'
+import { useGlobalStore } from '@/stores/global.ts'
 import { useUserStore } from '@/stores/user.ts'
 
 const globalStore = useGlobalStore()

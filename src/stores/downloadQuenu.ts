@@ -1,6 +1,6 @@
+import { save } from '@tauri-apps/plugin-dialog'
 import { defineStore } from 'pinia'
 import { useDownload } from '@/hooks/useDownload.ts'
-import { save } from '@tauri-apps/plugin-dialog'
 
 type DownloadObjType = {
   url: string

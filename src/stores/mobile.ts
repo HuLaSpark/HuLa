@@ -1,6 +1,6 @@
+import { type } from '@tauri-apps/plugin-os'
 import { defineStore } from 'pinia'
 import { StoresEnum } from '@/enums'
-import { type } from '@tauri-apps/plugin-os'
 
 export type SafeArea = {
   bottom: number
@@ -23,7 +23,7 @@ export const useMobileStore = defineStore(StoresEnum.MOBILE, () => {
     left: 0,
     right: 0,
     top: 0,
-    toJSON: function () {}
+    toJSON: () => {}
   })
 
   const bottomTabBarPosition = ref<DOMRect>({
@@ -35,7 +35,7 @@ export const useMobileStore = defineStore(StoresEnum.MOBILE, () => {
     left: 0,
     right: 0,
     top: 0,
-    toJSON: function () {}
+    toJSON: () => {}
   })
 
   const safeArea = ref<SafeArea>({

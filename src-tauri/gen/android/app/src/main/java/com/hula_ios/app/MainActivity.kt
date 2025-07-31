@@ -1,4 +1,4 @@
-package com.hula_app.app
+package com.hula_ios.app
 
 import android.os.Bundle
 import android.webkit.WebView
