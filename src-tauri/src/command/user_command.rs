@@ -14,12 +14,12 @@ use tracing::{debug, info};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct UserInfo {
+pub struct SaveUserInfoRequest {
     uid: String,
 }
 
 #[tauri::command]
-pub async fn save_user_info(user_info: UserInfo, state: State<'_, AppData>) -> Result<(), String> {
+pub async fn save_user_info(user_info: SaveUserInfoRequest, state: State<'_, AppData>) -> Result<(), String> {
     let db = state.db_conn.clone();
 
     // 检查用户是否存在

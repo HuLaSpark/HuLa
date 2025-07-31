@@ -331,6 +331,7 @@ fn common_setup(
         }
         Err(e) => {
             tracing::error!("初始化应用数据失败: {}", e);
+            return Err(format!("Failed to initialize app data: {}", e).into());
         }
     }
 

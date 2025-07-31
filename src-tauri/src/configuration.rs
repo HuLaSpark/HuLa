@@ -1,6 +1,7 @@
 use crate::error::CommonError;
 use anyhow::Context;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
+use tracing::info;
 use std::path::PathBuf;
 use std::time::Duration;
 use tauri::{AppHandle, Manager};
@@ -21,13 +22,15 @@ impl DatabaseSettings {
         &self,
         app_handle: &AppHandle,
     ) -> Result<DatabaseConnection, CommonError> {
-        let db_path = if cfg!(debug_assertions) {
-            let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-            path.push("db.sqlite");
-            path
-        } else {
-            get_database_path(app_handle)?
-        };
+        // let db_path = if cfg!(debug_assertions) {
+        //     let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        //     path.push("db.sqlite");
+        //     path
+        // } else {
+        //     get_database_path(app_handle)?
+        // };
+        let db_path = app_handle.path().resolve("db.sqlite", tauri::path::BaseDirectory::Resource).unwrap();
+        info!("数据库路径: {:?}", db_path);
         let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
 
         // 配置数据库连接选项

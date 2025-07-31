@@ -12,7 +12,8 @@
   "bundle": {
     "active": true,
     "resources": [
-      "configuration"
+      "configuration",
+      "db.sqlite"
     ],
     "targets": "all",
     "iOS": {

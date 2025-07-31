@@ -54,7 +54,8 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
             .plugin(tauri_plugin_global_shortcut::Builder::new().build())
             .plugin(tauri_plugin_updater::Builder::new().build());
 
-        let builder = builder.plugin(tauri_plugin_devtools::init());
+        // #[cfg(debug_assertions)]
+        // let builder = builder.plugin(tauri_plugin_devtools::init());
 
         builder
     }
@@ -63,8 +64,7 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
 pub fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
     tauri_plugin_log::Builder::new()
         .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
-        .skip_logger()
-        .level(log::LevelFilter::Debug)
+        .level(log::LevelFilter::Info)
         .level_for("sqlx", log::LevelFilter::Debug)
         .level_for("sqlx::query", log::LevelFilter::Debug)
         .level_for("sea_orm", log::LevelFilter::Info)
