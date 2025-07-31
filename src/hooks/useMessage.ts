@@ -18,7 +18,7 @@ const shrinkStatus = ref(false)
 const itemRef = ref<SessionItem>()
 export const useMessage = () => {
   const route = useRoute()
-  const { pushListeners } = useTauriListener()
+  const { addListener } = useTauriListener()
   const globalStore = useGlobalStore()
   const chatStore = useChatStore()
   const settingStore = useSettingStore()
@@ -331,16 +331,20 @@ export const useMessage = () => {
 
   onMounted(async () => {
     const appWindow = WebviewWindow.getCurrent()
-    pushListeners([
+    addListener(
       appWindow.listen(EventEnum.ALONE, () => {
         emit(EventEnum.ALONE + itemRef.value?.roomId, itemRef.value)
         if (aloneWin.value.has(EventEnum.ALONE + itemRef.value?.roomId)) return
         aloneWin.value.add(EventEnum.ALONE + itemRef.value?.roomId)
       }),
+      EventEnum.ALONE
+    )
+    addListener(
       appWindow.listen(EventEnum.WIN_CLOSE, (e) => {
         aloneWin.value.delete(e.payload)
-      })
-    ])
+      }),
+      EventEnum.WIN_CLOSE
+    )
   })
 
   onBeforeUnmount(() => {

@@ -389,7 +389,8 @@ onMounted(async () => {
   addListener(
     appWindow.listen('aloneData', (event: any) => {
       activeItem.value = { ...event.payload.item }
-    })
+    }),
+    'aloneData'
   )
   window.addEventListener('click', closeMenu, true)
   window.addEventListener('keydown', disableSelectAll)

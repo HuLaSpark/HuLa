@@ -97,7 +97,7 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
                 #[cfg(target_os = "windows")]
                 if window.label().eq("notify") && !flag {
                     if let Err(e) = window.hide() {
-                        log::warn!("Failed to hide notify window: {}", e);
+                        tracing::warn!("Failed to hide notify window: {}", e);
                     }
                 }
             }

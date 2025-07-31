@@ -355,7 +355,8 @@ onMounted(async () => {
   addListener(
     appWindow.listen('startResize', () => {
       startResize()
-    })
+    }),
+    'startResize'
   )
 
   if (tipShow.value) {

@@ -20,6 +20,8 @@ import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 import { type SelectionRange, useCommon } from './useCommon.ts'
 import { useTrigger } from './useTrigger'
 import { UploadProviderEnum, useUpload } from './useUpload.ts'
+import { invoke } from '@tauri-apps/api/core'
+import { Channel } from '@tauri-apps/api/core'
 /**
  * 光标管理器
  */
@@ -465,22 +467,40 @@ export const useMsgInput = (messageInputDom: Ref) => {
         })
         console.log('视频上传完成,更新为服务器URL:', messageBody.url)
       }
-      // 发送消息到服务器
-      await invokeWithErrorHandler(
-        TauriCommand.SEND_MSG,
-        {
-          data: {
-            id: tempMsgId,
-            roomId: globalStore.currentSession.roomId,
-            msgType: msg.type,
-            body: messageBody
-          }
+      // 发送消息到服务器 - 使用 channel 方式
+      const successChannel = new Channel<any>()
+      const errorChannel = new Channel<string>()
+
+      // 监听成功响应
+      successChannel.onmessage = (message) => {
+        console.log('[跟踪] 收到 send_msg_success 响应:', message)
+        chatStore.updateMsg({
+          msgId: message.oldMsgId,
+          status: MessageStatusEnum.SUCCESS,
+          newMsgId: message.message.id,
+          body: message.message.body
+        })
+      }
+
+      // 监听错误响应
+      errorChannel.onmessage = (msgId) => {
+        console.log('[跟踪] 收到 send_msg_error 响应:', msgId)
+        chatStore.updateMsg({
+          msgId: msgId,
+          status: MessageStatusEnum.FAILED
+        })
+      }
+
+      await invoke(TauriCommand.SEND_MSG, {
+        data: {
+          id: tempMsgId,
+          roomId: globalStore.currentSession.roomId,
+          msgType: msg.type,
+          body: messageBody
         },
-        {
-          customErrorMessage: '消息发送失败',
-          errorType: ErrorType.Network
-        }
-      )
+        successChannel,
+        errorChannel
+      })
 
       // 停止发送状态的定时器
       clearTimeout(statusTimer)

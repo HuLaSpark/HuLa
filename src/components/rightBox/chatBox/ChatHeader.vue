@@ -732,7 +732,8 @@ const handleMedia = () => {
       addListener(
         appWindow.listen('SharedScreenWin', async () => {
           await emit('offer', offer)
-        })
+        }),
+        'SharedScreenWin'
       )
       // 在这里，你需要将offer发送给对方
       // 对方需要调用peerConnection.setRemoteDescription(offer)来接受屏幕共享

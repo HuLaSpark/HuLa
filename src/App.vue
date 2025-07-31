@@ -166,7 +166,8 @@ onMounted(async () => {
       if (payload.refreshToken) {
         refreshToken.value = payload.refreshToken
       }
-    })
+    }),
+    'refresh_token_event'
   )
 })
 

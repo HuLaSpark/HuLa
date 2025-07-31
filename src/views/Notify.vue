@@ -173,31 +173,38 @@ onBeforeMount(async () => {
 
 import { useTauriListener } from '../hooks/useTauriListener'
 
-const { pushListeners } = useTauriListener()
+const { addListener } = useTauriListener()
 
 onMounted(async () => {
   // 初始化窗口高度
   resizeWindow('notify', 280, 140)
 
   if (appWindow.label === 'notify') {
-    pushListeners([
+    addListener(
       appWindow.listen('notify_enter', async (event: Event<any>) => {
         info('监听到enter事件，打开notify窗口')
         await showWindow(event)
       }),
+      'notify_enter'
+    )
+    addListener(
       appWindow.listen('notify_leave', async () => {
         setTimeout(async () => {
           await hideWindow()
         }, 300)
       }),
-      // 监听隐藏通知的事件，当主窗口获得焦点时触发
+      'notify_leave'
+    )
+    addListener(
       appWindow.listen('hide_notify', async () => {
         // 只有在tipVisible为true时才需要处理
         if (tipVisible.value) {
           await handleTip()
         }
       }),
-      // 使用全局事件监听器接收通知消息
+      'hide_notify'
+    )
+    addListener(
       appWindow.listen('notify_cotent', async (event: Event<MessageType>) => {
         if (event.payload) {
           // 窗口显示将由notify_enter事件触发
@@ -270,8 +277,9 @@ onMounted(async () => {
 
           msgCount.value = content.value.reduce((acc, group) => acc + group.messageCount, 0)
         }
-      })
-    ])
+      }),
+      'notify_cotent'
+    )
   }
 })
 </script>

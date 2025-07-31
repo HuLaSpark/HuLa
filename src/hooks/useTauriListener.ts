@@ -1,11 +1,12 @@
 import type { UnlistenFn } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { info } from '@tauri-apps/plugin-log'
+import { error, info } from '@tauri-apps/plugin-log'
 import { getCurrentInstance, onUnmounted } from 'vue'
 
 // 全局监听器管理
 const globalListeners = new Map<string, Promise<UnlistenFn>[]>()
 const windowCloseListenerSetup = new Map<string, UnlistenFn>()
+const listenerIdMap = new Map<string, Promise<UnlistenFn>>()
 
 /** 自动管理tauri Listener事件监听器的hooks */
 export const useTauriListener = () => {
@@ -17,16 +18,25 @@ export const useTauriListener = () => {
    * 添加事件监听器
    * @param listener Promise<UnlistenFn>
    */
-  const addListener = (listener: Promise<UnlistenFn>) => {
-    listeners.push(listener)
-
-    // 同时添加到全局监听器管理中
-    if (!globalListeners.has(windowLabel)) {
-      globalListeners.set(windowLabel, [])
+  const addListener = async (listener: Promise<UnlistenFn>, id?: string) => {
+    const listenerId = id || `listener_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    if (listenerIdMap.has(listenerId)) {
+      try {
+        const unlisten = await listener
+        unlisten()
+      } catch (e) {
+        error(`[跟踪] 取消新监听器失败:${listenerId}, 错误:${e}`)
+      }
+    } else {
+      // 添加新的监听器
+      listenerIdMap.set(listenerId, listener)
+      listeners.push(listener)
+      // 同时添加到全局监听器管理中
+      if (!globalListeners.has(windowLabel)) {
+        globalListeners.set(windowLabel, [])
+      }
+      globalListeners.get(windowLabel)!.push(listener)
     }
-    globalListeners.get(windowLabel)!.push(listener)
-
-    return listener
   }
 
   /**

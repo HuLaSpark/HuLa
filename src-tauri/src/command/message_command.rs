@@ -12,7 +12,7 @@ use sea_orm::{DatabaseConnection, TransactionTrait};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::ops::Deref;
-use tauri::{AppHandle, Emitter, State};
+use tauri::{State, ipc::Channel};
 use tracing::{debug, error, info};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -330,7 +330,8 @@ fn convert_resp_to_model_for_fetch(msg_resp: MessageResp, uid: String) -> im_mes
 pub async fn send_msg(
     data: ChatMessageReq,
     state: State<'_, AppData>,
-    app: AppHandle,
+    success_channel: Channel<MessageResp>,
+    error_channel: Channel<String>,
 ) -> Result<(), String> {
     use std::ops::Deref;
 
@@ -405,7 +406,6 @@ pub async fn send_msg(
         // 根据发送结果更新消息状态
         let status = match result {
             Ok(resp) => {
-                info!("消息发送成功，ID: {}", msg_id);
                 let mut result = match resp.data.clone() {
                     Some(data) => data,
                     None => {
@@ -415,13 +415,13 @@ pub async fn send_msg(
                 };
                 result.old_msg_id = Some(msg_id.clone());
                 id = result.message.id.clone();
-
-                let _ = app.emit::<MessageResp>("send_msg_success", result);
+                // 尝试克隆数据以避免所有权问题
+                let event_data = result.clone();
+                success_channel.send(event_data).unwrap();
                 "success"
             }
-            Err(e) => {
-                error!("消息发送失败，ID: {}, 错误: {}", msg_id, e);
-                let _ = app.emit::<String>("send_msg_error", msg_id.clone());
+            Err(_e) => {
+                error_channel.send(msg_id.clone()).unwrap();
                 "fail"
             }
         };
