@@ -12,8 +12,7 @@
   "bundle": {
     "active": true,
     "resources": [
-      "configuration",
-      "db.sqlite"
+      "configuration"
     ],
     "targets": "all",
     "icon": [
@@ -43,7 +42,7 @@
       {
         "title": "登录",
         "label": "login",
-        "url": "/mobile/launch",
+        "url": "/mobile/login",
         "width": 800,
         "height": 600,
         "resizable": false,
