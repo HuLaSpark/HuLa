@@ -275,7 +275,9 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
         // home?.requestUserAttention(UserAttentionType.Critical)
       }
 
-      await emitTo('notify', 'notify_cotent', data)
+      if (WebviewWindow.getCurrent().label === 'home') {
+        await emitTo('notify', 'notify_cotent', data)
+      }
       const throttleSendNotification = useThrottleFn(() => {
         sendNotification({
           title: username,
