@@ -15,8 +15,7 @@
     "licenseFile": "./copyright/License.rtf",
     "resources": [
       "tray",
-      "configuration",
-      "db.sqlite"
+      "configuration"
     ],
     "createUpdaterArtifacts": true,
     "active": true,

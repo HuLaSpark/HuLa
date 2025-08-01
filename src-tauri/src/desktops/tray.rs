@@ -40,7 +40,7 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
         let default_icon = match app.default_window_icon() {
             Some(icon) => icon.clone(),
             None => {
-                tracing::error!("未找到默认窗口图标");
+                tracing::error!("Default window icon not found");
                 return Err(tauri::Error::Io(std::io::Error::new(
                     std::io::ErrorKind::NotFound,
                     "未找到默认窗口图标",
@@ -107,7 +107,7 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
         let default_icon = match app.default_window_icon() {
             Some(icon) => icon.clone(),
             None => {
-                tracing::error!("未找到默认窗口图标");
+                tracing::error!("Default window icon not found");
                 return Err(tauri::Error::Io(std::io::Error::new(
                     std::io::ErrorKind::NotFound,
                     "未找到默认窗口图标",
@@ -131,13 +131,13 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
                         for (name, window) in windows {
                             if name == "login" || name == "home" {
                                 if let Err(e) = window.show() {
-                                    tracing::warn!("显示窗口 {} 失败: {}", name, e);
+                                    tracing::warn!("Failed to show window {}: {}", name, e);
                                 }
                                 if let Err(e) = window.unminimize() {
-                                    tracing::warn!("取消最小化窗口 {} 失败: {}", name, e);
+                                    tracing::warn!("Failed to unminimize window {}: {}", name, e);
                                 }
                                 if let Err(e) = window.set_focus() {
-                                    tracing::warn!("设置窗口 {} 焦点失败: {}", name, e);
+                                    tracing::warn!("Failed to set focus on window {}: {}", name, e);
                                 }
                                 break;
                             }
@@ -151,7 +151,7 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
                                     position.x,
                                     position.y - outer_size.height as f64,
                                 )) {
-                                    tracing::warn!("设置托盘窗口位置失败: {}", e);
+                                    tracing::warn!("Failed to set tray window position: {}", e);
                                     return;
                                 }
 
@@ -160,7 +160,7 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
                                 let _ = tray_window.set_focus();
                             }
                         } else {
-                            tracing::warn!("未找到托盘窗口");
+                            tracing::warn!("Tray window not found");
                         }
                     }
                     _ => {}
@@ -174,7 +174,7 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
                     if let Ok(rect) = tray.rect() {
                         match tray.app_handle().emit_to("notify", "notify_enter", &rect) {
                             Ok(_) => {
-                                tracing::info!("notify_enter事件发送成功");
+                                tracing::info!("notify_enter event sent successfully");
                             }
                             Err(e) => {
                                 tracing::warn!("Failed to emit notify_enter event: {}", e);

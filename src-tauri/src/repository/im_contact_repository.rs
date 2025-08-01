@@ -11,7 +11,7 @@ pub async fn list_contact(
     db: &DatabaseConnection,
     login_uid: &str,
 ) -> Result<Vec<im_contact::Model>, CommonError> {
-    info!("查询数据库获取所有会话");
+    info!("Querying database to get all conversations");
     let list = im_contact::Entity::find()
         .filter(im_contact::Column::LoginUid.eq(login_uid))
         .all(db)
@@ -37,7 +37,7 @@ pub async fn save_contact_batch(
         .filter(im_contact::Column::LoginUid.eq(login_uid))
         .exec(&txn)
         .await
-        .with_context(|| "删除现有会话数据失败")?;
+        .with_context(|| "Failed to delete existing contact data")?;
 
     // 批量插入新的会话数据
     let active_models: Vec<im_contact::ActiveModel> = contacts
@@ -53,7 +53,7 @@ pub async fn save_contact_batch(
         im_contact::Entity::insert_many(active_models)
             .exec(&txn)
             .await
-            .with_context(|| "批量插入会话数据失败")?;
+            .with_context(|| "Failed to batch insert contact data")?;
     }
 
     // 提交事务
@@ -69,7 +69,7 @@ pub async fn update_contact_hide(
     login_uid: &str,
 ) -> Result<(), CommonError> {
     info!(
-        "更新联系人隐藏状态: room_id={}, hide={}, login_uid={}",
+        "Updating contact hide status: room_id={}, hide={}, login_uid={}",
         room_id, hide, login_uid
     );
 
@@ -79,7 +79,7 @@ pub async fn update_contact_hide(
         .filter(im_contact::Column::LoginUid.eq(login_uid))
         .one(db)
         .await
-        .with_context(|| "查找联系人记录失败")?;
+        .with_context(|| "Failed to find contact record")?;
 
     if let Some(contact) = contact {
         let mut active_model: im_contact::ActiveModel = contact.into_active_model();
@@ -88,13 +88,13 @@ pub async fn update_contact_hide(
         active_model
             .update(db)
             .await
-            .with_context(|| "更新联系人隐藏状态失败")?;
+            .with_context(|| "Failed to update contact hide status")?;
 
-        info!("成功更新联系人隐藏状态");
+        info!("Successfully updated contact hide status");
         Ok(())
     } else {
         Err(CommonError::UnexpectedError(anyhow::anyhow!(
-            "未找到对应的联系人记录"
+            "Failed to find corresponding contact record"
         )))
     }
 }
