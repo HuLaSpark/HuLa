@@ -38,8 +38,7 @@ pub async fn update_my_room_info(
             .post("/im/room/updateMyRoomInfo")
             .json(&my_room_info)
             .send_json::<bool>()
-            .await
-            .with_context(|| format!("[{}:{}] 调用后端接口更新房间信息失败", file!(), line!()))?;
+            .await?;
 
         // 更新本地数据库
         update_my_room_info_db(
@@ -50,7 +49,7 @@ pub async fn update_my_room_info(
             &uid,
         )
         .await
-        .with_context(|| format!("[{}:{}] 更新本地数据库失败", file!(), line!()))?;
+        .with_context(|| format!("[{}:{}] Failed to update local database", file!(), line!()))?;
         Ok(())
     }
     .await;
@@ -58,7 +57,7 @@ pub async fn update_my_room_info(
     match result {
         Ok(members) => Ok(members),
         Err(e) => {
-            error!("更新房间信息失败: {:?}", e);
+            error!("Failed to update room information: {:?}", e);
             Err(e.to_string())
         }
     }
@@ -70,7 +69,7 @@ pub async fn get_room_members(
     room_id: String,
     state: State<'_, AppData>,
 ) -> Result<Vec<im_room_member::Model>, String> {
-    info!("调用获取room_id的房间的所有成员列表");
+    info!("Calling to get all member list of room with room_id");
     let result: Result<Vec<im_room_member::Model>, CommonError> = async {
         // 检查缓存中是否存在该room_id
         let cache_key = format!("room_members_{}", room_id);
@@ -107,7 +106,7 @@ pub async fn get_room_members(
                 get_room_members_by_room_id(&room_id, state.db_conn.deref(), &login_uid)
                     .await
                     .with_context(|| {
-                        format!("[{}:{}] 本地数据库查询房间成员失败", file!(), line!())
+                        format!("[{}:{}] Failed to query room members from local database", file!(), line!())
                     })?;
 
             // 对查询结果进行排序
@@ -127,7 +126,7 @@ pub async fn get_room_members(
                 )
                 .await
                 {
-                    error!("异步更新房间成员数据失败: {:?}", e);
+                    error!("Failed to asynchronously update room member data: {:?}", e);
                 }
             });
 
@@ -139,7 +138,7 @@ pub async fn get_room_members(
     match result {
         Ok(members) => Ok(members),
         Err(e) => {
-            error!("获取房间全部成员数据失败: {:?}", e);
+            error!("Failed to get all room member data: {:?}", e);
             Err(e.to_string())
         }
     }
@@ -215,7 +214,7 @@ pub async fn page_room(
             // 有缓存：从本地数据库获取数据
             let local_result = get_room_page(page_param.clone(), state.db_conn.deref(), &login_uid)
                 .await
-                .with_context(|| format!("[{}:{}] 本地数据库查询失败", file!(), line!()))?;
+                .with_context(|| format!("[{}:{}] Failed to query local database", file!(), line!()))?;
 
             // 异步调用后端接口更新本地数据库
             let db_conn = state.db_conn.clone();
@@ -231,7 +230,7 @@ pub async fn page_room(
                 )
                 .await
                 {
-                    error!("异步更新房间数据失败: {:?}", e);
+                    error!("Failed to asynchronously update room data: {:?}", e);
                 }
             });
 
@@ -243,7 +242,7 @@ pub async fn page_room(
     match result {
         Ok(page_data) => Ok(page_data),
         Err(e) => {
-            error!("分页获取房间数据失败: {:?}", e);
+            error!("Failed to get paginated room data: {:?}", e);
             Err(e.to_string())
         }
     }
@@ -322,7 +321,7 @@ async fn fetch_and_update_rooms(
         // 保存到本地数据库
         save_room_batch(db_conn.deref(), data.records.clone(), &login_uid)
             .await
-            .with_context(|| format!("[{}:{}] 保存房间数据到本地数据库失败", file!(), line!()))?;
+            .with_context(|| format!("[{}:{}] Failed to save room data to local database", file!(), line!()))?;
 
         Ok(data)
     } else {

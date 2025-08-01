@@ -206,7 +206,7 @@ pub async fn check_user_init_and_fetch_messages(
     db_conn: &DatabaseConnection,
     uid: &str,
 ) -> Result<(), CommonError> {
-    debug!("检查用户初始化状态并获取消息, uid: {}", uid);
+    debug!("Checking user initialization status and fetching messages, uid: {}", uid);
     // 检查用户的 is_init 状态
     if let Ok(user) = ImUserEntity::find()
         .filter(im_user::Column::Id.eq(uid))
@@ -216,21 +216,21 @@ pub async fn check_user_init_and_fetch_messages(
         if let Some(user_model) = user {
             // 如果 is_init 为 true，调用后端接口获取所有消息
             if user_model.is_init {
-                info!("用户 {} 需要初始化，开始获取所有消息", uid);
+                info!("User {} needs initialization, starting to fetch all messages", uid);
                 // 传递用户的 last_opt_time 参数
                 if let Err(e) = fetch_all_messages(client, db_conn, uid, None).await {
-                    error!("获取所有消息失败: {}", e);
+                    error!("Failed to fetch all messages: {}", e);
                     return Err(e);
                 }
             } else {
                 info!(
-                    "用户 {} 离线消息更新, last_opt_time: {:?}",
+                    "User {} offline message update, last_opt_time: {:?}",
                     uid, user_model.last_opt_time
                 );
                 if let Err(e) =
                     fetch_all_messages(client, db_conn, uid, user_model.last_opt_time).await
                 {
-                    error!("离线消息更新失败: {}", e);
+                    error!("Failed to update offline messages: {}", e);
                     return Err(e);
                 }
             }
@@ -247,7 +247,7 @@ pub async fn fetch_all_messages(
     last_opt_time: Option<i64>,
 ) -> Result<(), CommonError> {
     info!(
-        "开始获取所有消息, uid: {}, last_opt_time: {:?}",
+        "Starting to fetch all messages, uid: {}, last_opt_time: {:?}",
         uid, last_opt_time
     );
     // 调用后端接口 /chat/msg/list 获取所有消息，传递 last_opt_time 参数
@@ -272,10 +272,10 @@ pub async fn fetch_all_messages(
         // 保存到本地数据库
         match im_message_repository::save_all(&tx, db_messages).await {
             Ok(_) => {
-                info!("消息保存到数据库成功");
+                info!("Messages saved to database successfully");
             }
             Err(e) => {
-                error!("保存消息到数据库失败，详细错误: {:?}", e);
+                error!("Failed to save messages to database, detailed error: {:?}", e);
                 return Err(e.into());
             }
         }
@@ -283,7 +283,7 @@ pub async fn fetch_all_messages(
         // 消息保存完成后，将用户的 is_init 状态设置为 false
         im_user_repository::update_user_init_status(&tx, uid, false)
             .await
-            .with_context(|| "更新用户 is_init 状态失败")?;
+            .with_context(|| "Failed to update user is_init status")?;
 
         // 提交事务
         tx.commit().await?;
@@ -376,14 +376,14 @@ pub async fn send_msg(
         .map_err(|e| CommonError::DatabaseError(e))?;
     // 先保存到本地数据库
     if let Err(e) = im_message_repository::save_message(&tx, message.clone()).await {
-        error!("保存消息到数据库失败: {}", e);
+        error!("Failed to save message to database: {}", e);
         return Err(e.to_string());
     }
     tx.commit()
         .await
         .map_err(|e| CommonError::DatabaseError(e))?;
 
-    info!("消息已保存到本地数据库，ID: {}", message.id.clone());
+    info!("Message saved to local database, ID: {}", message.id.clone());
 
     // 异步发送到后端接口
     let db_conn = state.db_conn.clone();
@@ -436,7 +436,7 @@ pub async fn send_msg(
         )
         .await
         {
-            error!("更新消息状态失败: {}", e);
+            error!("Failed to update message status: {}", e);
         }
     });
 

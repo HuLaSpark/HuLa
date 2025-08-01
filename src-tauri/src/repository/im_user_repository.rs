@@ -21,11 +21,11 @@ where
 
     match ImUserEntity::update(user_update).exec(db).await {
         Ok(_) => {
-            info!("用户 {} 的 is_init 状态已更新为 {}", login_uid, is_init);
+            info!("User {} is_init status updated to {}", login_uid, is_init);
             Ok(())
         }
         Err(e) => {
-            error!("更新用户 is_init 状态失败: {:?}", e);
+            error!("Failed to update user is_init status: {:?}", e);
             Err(e.into())
         }
     }

@@ -6,35 +6,29 @@
 import { computed } from 'vue'
 import { useMobileStore } from '@/stores/mobile'
 
-const props = defineProps({
-  direction: {
-    type: String,
-    required: true,
-    validator: (value: string) => ['top', 'bottom'].includes(value)
-  },
-  bgColor: {
-    type: String,
-    default: 'transparent' // 默认透明背景
-  }
-})
+const props = defineProps<{
+  direction: 'top' | 'bottom' | 'left' | 'right'
+  bgColor?: string
+}>()
 
 const mobileStore = useMobileStore()
-const envType = mobileStore.envType
-const safeArea = computed(() => mobileStore.safeArea)
 
 const computedStyle = computed(() => {
-  const isAndroid = envType === 'android'
-  const safeAreaValue = props.direction === 'top' ? safeArea.value.top : safeArea.value.bottom
+  const direction = props.direction
+
+  const safeAreaDirectionValue = mobileStore.safeArea[direction]
+  const height = direction === 'top' || direction === 'bottom' ? safeAreaDirectionValue + 'px' : '100vh'
+  const width = direction === 'top' || direction === 'bottom' ? '100vw' : safeAreaDirectionValue + 'px'
 
   return {
-    height: isAndroid ? `${safeAreaValue}px` : `env(safe-area-inset-${props.direction})`,
-    width: '100vw',
+    height,
+    width,
     backgroundColor: props.bgColor // 直接应用背景色
   }
 })
 </script>
 
-<style scoped>
+<style>
 .safe-area-placeholder {
   flex-shrink: 0;
 }

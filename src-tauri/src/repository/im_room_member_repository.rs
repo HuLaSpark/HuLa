@@ -27,7 +27,7 @@ pub async fn cursor_page_room_members(
         .filter(im_room_member::Column::LoginUid.eq(login_uid))
         .count(db)
         .await
-        .with_context(|| "查询房间成员总数失败")?;
+        .with_context(|| "Failed to query room member count")?;
 
     let mut query = im_room_member::Entity::find()
         .filter(im_room_member::Column::RoomId.eq(room_id))
@@ -47,7 +47,7 @@ pub async fn cursor_page_room_members(
         }
     }
 
-    let members = query.all(db).await.with_context(|| "查询房间成员失败")?;
+    let members = query.all(db).await.with_context(|| "Failed to query room members")?;
 
     // 构建下一页游标和判断是否为最后一页
     let (next_cursor, is_last) = if members.len() < cursor_page_param.page_size as usize {
@@ -82,7 +82,7 @@ pub async fn get_room_page(
         .filter(im_room::Column::LoginUid.eq(login_uid))
         .count(db)
         .await
-        .with_context(|| "查询房间成员总数失败")?;
+        .with_context(|| "Failed to query room count")?;
 
     // 分页查询数据
     let records = im_room::Entity::find()
@@ -91,7 +91,7 @@ pub async fn get_room_page(
         .limit(page_param.size as u64)
         .all(db)
         .await
-        .with_context(|| "分页查询房间成员失败")?;
+        .with_context(|| "Failed to query room data")?;
 
     Ok(Page {
         records,
@@ -142,7 +142,7 @@ pub async fn get_room_members_by_room_id(
         .filter(im_room_member::Column::LoginUid.eq(login_uid))
         .all(db)
         .await
-        .with_context(|| "查询房间成员失败")?;
+        .with_context(|| "Failed to query room members")?;
 
     Ok(members)
 }
@@ -162,7 +162,7 @@ pub async fn save_room_member_batch(
         .filter(im_room_member::Column::LoginUid.eq(login_uid))
         .all(&txn)
         .await
-        .with_context(|| "查询房间成员失败")?;
+        .with_context(|| "Failed to query existing room members")?;
 
     if !existing_members.is_empty() {
         // 如果有数据，则删除当前用户的现有数据
@@ -171,7 +171,7 @@ pub async fn save_room_member_batch(
             .filter(im_room_member::Column::LoginUid.eq(login_uid))
             .exec(&txn)
             .await
-            .with_context(|| "删除房间成员失败")?;
+            .with_context(|| "Failed to delete existing room members")?;
     }
 
     // 保存新的room_members数据（批量插入）
@@ -210,10 +210,10 @@ pub async fn update_my_room_info(
         .filter(im_room_member::Column::LoginUid.eq(login_uid))
         .one(db)
         .await
-        .with_context(|| "查询房间成员失败")?;
+        .with_context(|| "Failed to query room member record")?;
 
     if let Some(member) = member {
-        debug!("找到房间成员记录: {:?}", member);
+        debug!("Found room member record: {:?}", member);
         // 如果找到记录，更新 nickname 字段
         let mut member_active = member.into_active_model();
         member_active.my_name = Set(Some(my_name.to_string()));
@@ -221,13 +221,13 @@ pub async fn update_my_room_info(
         member_active
             .update(db)
             .await
-            .with_context(|| "更新房间成员昵称失败")?;
-        info!("更新成员房间成员信息成功");
+            .with_context(|| "Failed to update room member record")?;
+        info!("Successfully updated member room member information");
         Ok(())
     } else {
         // 如果没有找到记录，返回错误
         Err(CommonError::UnexpectedError(anyhow::anyhow!(
-            "未找到指定的房间成员记录: room_id={}, uid={}",
+            "Failed to find specified room member record: room_id={}, uid={}",
             room_id,
             uid
         )))

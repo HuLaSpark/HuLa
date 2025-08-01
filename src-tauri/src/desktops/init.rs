@@ -1,12 +1,8 @@
-use tauri::plugin::TauriPlugin;
+use crate::common::init::{CustomInit, init_common_plugins};
 use tauri::{Manager, Runtime, WindowEvent};
 use tauri_plugin_autostart::MacosLauncher;
-use tauri_plugin_log::fern::colors::{Color, ColoredLevelConfig};
-use tauri_plugin_log::{Target, TargetKind};
 
-pub trait CustomInit {
-    fn init_plugin(self) -> Self;
-
+pub trait DesktopCustomInit {
     fn init_webwindow_event(self) -> Self;
 
     fn init_window_event(self) -> Self;
@@ -15,21 +11,7 @@ pub trait CustomInit {
 impl<R: Runtime> CustomInit for tauri::Builder<R> {
     // 初始化插件
     fn init_plugin(self) -> Self {
-        let builder = self
-            // 移动端和桌面端都支持的插件
-            .plugin(tauri_plugin_os::init())
-            .plugin(tauri_plugin_http::init())
-            .plugin(tauri_plugin_upload::init())
-            .plugin(tauri_plugin_sql::Builder::new().build())
-            .plugin(tauri_plugin_notification::init())
-            .plugin(tauri_plugin_process::init())
-            .plugin(tauri_plugin_shell::init())
-            .plugin(tauri_plugin_dialog::init())
-            .plugin(tauri_plugin_opener::init())
-            .plugin(tauri_plugin_fs::init())
-            .plugin(tauri_plugin_clipboard_manager::init())
-            .plugin(tauri_plugin_mic_recorder::init())
-            .plugin(build_log_plugin());
+        let builder = init_common_plugins(self);
 
         // 桌面端特有的插件
         #[cfg(desktop)]
@@ -64,7 +46,9 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
 
         builder
     }
+}
 
+impl<R: Runtime> DesktopCustomInit for tauri::Builder<R> {
     // 初始化web窗口事件
     fn init_webwindow_event(self) -> Self {
         self.on_webview_event(|_, event| match event {
@@ -119,28 +103,4 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
             _ => (),
         })
     }
-}
-
-pub fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
-    tauri_plugin_log::Builder::new()
-        .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
-        .skip_logger()
-        .level(tracing::log::LevelFilter::Debug)
-        .level_for("sqlx", tracing::log::LevelFilter::Debug)
-        .level_for("sqlx::query", tracing::log::LevelFilter::Debug)
-        .level_for("sea_orm", tracing::log::LevelFilter::Info)
-        .level_for("hula_app_lib", tracing::log::LevelFilter::Debug)
-        .targets([
-            Target::new(TargetKind::Stdout),
-            // 将 rust 日志打印到 webview的 devtool 中
-            Target::new(TargetKind::Webview),
-        ])
-        .with_colors(ColoredLevelConfig {
-            error: Color::Red,
-            warn: Color::Yellow,
-            debug: Color::White,
-            info: Color::Green,
-            trace: Color::White,
-        })
-        .build()
 }

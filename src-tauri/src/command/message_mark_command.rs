@@ -63,7 +63,7 @@ pub async fn save_message_mark(
     match result {
         Ok(()) => Ok(()),
         Err(e) => {
-            error!("保存消息标记失败: {:?}", e);
+            error!("Failed to save message mark: {:?}", e);
             Err(e.to_string())
         }
     }

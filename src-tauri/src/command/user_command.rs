@@ -14,12 +14,12 @@ use tracing::{debug, info};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct UserInfo {
+pub struct SaveUserInfoRequest {
     uid: String,
 }
 
 #[tauri::command]
-pub async fn save_user_info(user_info: UserInfo, state: State<'_, AppData>) -> Result<(), String> {
+pub async fn save_user_info(user_info: SaveUserInfoRequest, state: State<'_, AppData>) -> Result<(), String> {
     let db = state.db_conn.clone();
 
     // 检查用户是否存在
@@ -27,10 +27,10 @@ pub async fn save_user_info(user_info: UserInfo, state: State<'_, AppData>) -> R
         .filter(im_user::Column::Id.eq(&user_info.uid))
         .one(db.deref())
         .await
-        .map_err(|err| format!("查询用户失败: {}", err))?;
+        .map_err(|err| format!("Failed to query user: {}", err))?;
 
     if exists.is_none() {
-        info!("用户不存在，准备插入新用户");
+        info!("User does not exist, preparing to insert new user");
 
         let user = im_user::ActiveModel {
             id: Set(user_info.uid.clone()),
@@ -42,16 +42,16 @@ pub async fn save_user_info(user_info: UserInfo, state: State<'_, AppData>) -> R
         im_user::Entity::insert(user)
             .exec(db.deref())
             .await
-            .map_err(|err| format!("插入用户失败: {}", err))?;
+            .map_err(|err| format!("Failed to insert user: {}", err))?;
     } else {
-        debug!("用户已存在，无需插入");
+        debug!("User already exists, no need to insert");
     }
     Ok(())
 }
 
 #[tauri::command]
 pub async fn update_user_last_opt_time(state: State<'_, AppData>) -> Result<(), String> {
-    info!("更新用户最后操作时间");
+    info!("Updating user last operation time");
     let db = state.db_conn.clone();
 
     let uid = state.user_info.lock().await.uid.clone();
@@ -61,7 +61,7 @@ pub async fn update_user_last_opt_time(state: State<'_, AppData>) -> Result<(), 
         .filter(im_user::Column::Id.eq(uid.clone()))
         .one(db.deref())
         .await
-        .map_err(|err| format!("查询用户失败: {}", err))?;
+        .map_err(|err| format!("Failed to query user: {}", err))?;
 
     if let Some(user) = user {
         let mut active_model = user.into_active_model();
@@ -70,7 +70,7 @@ pub async fn update_user_last_opt_time(state: State<'_, AppData>) -> Result<(), 
         ImUserEntity::update(active_model)
             .exec(db.deref())
             .await
-            .map_err(|err| format!("更新用户最后操作时间失败: {}", err))?;
+            .map_err(|err| format!("Failed to update user last operation time: {}", err))?;
     }
 
     Ok(())

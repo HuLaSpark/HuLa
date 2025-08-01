@@ -2,16 +2,123 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no viewport-fit=cover" />
     <title>HuLa</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no viewport-fit=cover" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
 
-    <!--引入iconpark图标库-->
-    <script defer src="/icon.js"></script>
+    <!-- 🎯 预加载图片资源 -->
+    <link rel="preload" as="image" href="/Mobile/4.png" />
+    <link rel="preload" as="image" href="/Mobile/3.png" />
+    <link rel="preload" as="image" href="/Mobile/1.png" />
+    <link rel="preload" as="image" href="/Mobile/2.png" />
+
+    <!-- iconpark图标库 -->
+    <script async src="/icon.js"></script>
+
+    <!-- 🧩 加载页样式 -->
+    <style id="loading-css">
+      #loading-page {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background-image: url('/Mobile/2.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        transition: opacity 0.4s ease-out;
+        opacity: 1;
+      }
+
+      .bottom-bar {
+        position: absolute;
+        bottom: 40px;
+        display: flex;
+        gap: 16px;
+        align-items: center;
+      }
+
+      .rounded-14px {
+        border-radius: 14px;
+      }
+
+      .size-50px {
+        width: 50px;
+        height: 50px;
+      }
+
+      .w-300px {
+        width: 300px;
+      }
+
+      .h-200px {
+        height: 200px;
+      }
+
+      .w-78px {
+        width: 78px;
+      }
+
+      .h-40px {
+        height: 40px;
+      }
+
+      .mb-140px {
+        margin-bottom: 140px;
+      }
+    </style>
   </head>
 
   <body>
+    <!-- 🚀 加载页 DOM -->
+    <div id="loading-page">
+      <img src="/Mobile/4.png" alt="hula" class="w-300px h-200px mb-140px" />
+      <div class="bottom-bar">
+        <img src="/Mobile/3.png" alt="hula" class="size-50px rounded-14px" />
+        <img src="/Mobile/1.png" alt="hula" class="w-78px h-40px" />
+      </div>
+    </div>
+
+    <!-- Vue 应用挂载点 -->
     <div id="app"></div>
+
+    <!-- 🎯 加载页逻辑控制（淡出 + 清理） -->
+    <script>
+      function isMobileDevice() {
+        return /Mobi|Android|iPhone/i.test(navigator.userAgent)
+      }
+
+      if (!isMobileDevice()) {
+        document.getElementById('loading-page')?.remove()
+        document.getElementById('loading-css')?.remove()
+      }
+
+      window.addEventListener('DOMContentLoaded', () => {
+        const interval = setInterval(() => {
+          const isMounted = document.getElementById('app')?.children.length > 0
+          if (isMounted) {
+            const loader = document.getElementById('loading-page')
+            if (loader) {
+              loader.style.opacity = '0'
+              setTimeout(() => {
+                loader.remove()
+                document.getElementById('loading-css')?.remove()
+              }, 450) // 等待 transition 完成后再移除
+            }
+            clearInterval(interval)
+          }
+        }, 100)
+      })
+    </script>
+
+    <!-- 🚀 Vue 应用入口 -->
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
