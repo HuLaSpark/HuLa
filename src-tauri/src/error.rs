@@ -6,7 +6,7 @@ pub enum CommonError {
     DatabaseError(#[from] sea_orm::DbErr),
     #[error("Request error: {0}")]
     RequestError(String),
-    #[error("token过期")]
+    #[error("Token expired")]
     TokenExpired,
 }
 

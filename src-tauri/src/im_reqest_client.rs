@@ -24,7 +24,7 @@ impl ImRequestClient {
             .timeout(std::time::Duration::from_secs(60))
             .connect_timeout(std::time::Duration::from_secs(10)) // 连接超时
             .build()
-            .with_context(|| "创建 HTTP 客户端失败")?;
+            .with_context(|| "Failed to create HTTP client")?;
 
         Ok(Self {
             client,
@@ -99,7 +99,7 @@ impl ImRequestClient {
                 Err(_) => {
                     // 如果无法立即获取锁，则返回错误
                     return Err(CommonError::UnexpectedError(anyhow::anyhow!(
-                        "无法获取 refresh_token 锁，可能存在锁竞争"
+                        "Unable to acquire refresh_token lock, possible lock contention"
                     )));
                 }
             }
@@ -109,14 +109,14 @@ impl ImRequestClient {
         let refresh_token_value = match current_refresh_token {
             Some(token) => token,
             None => {
-                error!("尝试刷新token但refresh_token为空");
+                error!("Attempting to refresh token but refresh_token is empty");
                 return Err(CommonError::UnexpectedError(anyhow::anyhow!(
-                    "refresh_token 为空，无法刷新token"
+                    "refresh_token is empty, unable to refresh token"
                 )));
             }
         };
 
-        info!("开始刷新 token...");
+        info!("Starting to refresh token...");
         // 构建刷新 token 的请求
         let refresh_url = format!("{}/token/refreshToken", self.base_url);
         let request_builder = self.client.request(Method::POST, &refresh_url);
@@ -128,12 +128,12 @@ impl ImRequestClient {
             .json(&HashMap::from([("refreshToken", refresh_token_value)]))
             .send()
             .await
-            .with_context(|| "刷新 token 请求失败")?;
+            .with_context(|| "Failed to send refresh token request")?;
 
         let response_text = response
             .text()
             .await
-            .with_context(|| "读取刷新 token 响应体失败")?;
+            .with_context(|| "Failed to read refresh token response body")?;
 
         // 解析响应
         #[derive(serde::Deserialize)]
@@ -146,8 +146,8 @@ impl ImRequestClient {
         let result: ApiResult<RefreshTokenResponse> = match serde_json::from_str(&response_text) {
             Ok(result) => result,
             Err(e) => {
-                error!("刷新 token JSON 解析错误: {}", e);
-                error!("响应内容: {}", response_text);
+                error!("Refresh token JSON parsing error: {}", e);
+                error!("Response content: {}", response_text);
                 return Err(CommonError::UnexpectedError(anyhow::anyhow!(
                     "解析刷新 token 响应失败: {}",
                     e
@@ -167,26 +167,26 @@ impl ImRequestClient {
 
         // 更新 token 和 refresh_token
         if let Some(data) = result.data {
-            info!("token 刷新成功");
+            info!("Token refresh successful");
 
             // 分别更新 token 和 refresh_token，避免跨 await 持有锁
             // 更新 token
             if let Ok(mut token_guard) = self.token.try_lock() {
                 *token_guard = Some(data.token.clone());
             } else {
-                warn!("更新 token 失败：无法获取锁");
+                warn!("Failed to update token: unable to acquire lock");
             }
 
             // 更新 refresh_token
             if let Ok(mut refresh_token_guard) = self.refresh_token.try_lock() {
                 *refresh_token_guard = Some(data.refresh_token);
             } else {
-                warn!("更新 refresh_token 失败：无法获取锁");
+                warn!("Failed to update refresh_token: unable to acquire lock");
             }
 
             Ok(())
         } else {
-            error!("刷新 token 响应数据为空");
+            error!("Refresh token response data is empty");
             Err(CommonError::UnexpectedError(anyhow::anyhow!(
                 "刷新 token 响应数据为空"
             )))
@@ -255,16 +255,16 @@ impl<'a> RequestBuilderWrapper<'a> {
         mut self,
     ) -> Result<ApiResult<T>, CommonError> {
         // 记录请求信息
-        let mut log_message = format!("发送请求到: {} [{}]", self.url, self.method);
+        let mut log_message = format!("Sending request to: {} [{}]", self.url, self.method);
 
         // 添加查询参数信息
         if let Some(ref query_params) = self.query_params {
-            log_message.push_str(&format!(" 查询参数: {}", query_params));
+            log_message.push_str(&format!(" Query params: {}", query_params));
         }
 
         // 添加请求体信息
         if let Some(ref json_body) = self.json_body {
-            log_message.push_str(&format!(" 请求体: {}", json_body));
+            log_message.push_str(&format!(" Request body: {}", json_body));
         }
 
         info!("{}", log_message);
@@ -273,7 +273,7 @@ impl<'a> RequestBuilderWrapper<'a> {
         let current_token = match self.client.token.try_lock() {
             Ok(token_guard) => token_guard.clone(),
             Err(_) => {
-                warn!("无法立即获取 token 锁");
+                warn!("Unable to immediately acquire token lock");
                 None
             }
         };
@@ -285,29 +285,29 @@ impl<'a> RequestBuilderWrapper<'a> {
         if let Some(token) = &current_token {
             self.request_builder = self.request_builder.header("token", token);
         } else {
-            warn!("没有设置 token");
+            warn!("No token set");
         }
 
         let response = self
             .request_builder
             .send()
             .await
-            .with_context(|| format!("[{}:{}] 发送请求失败: {}", file!(), line!(), self.url))?;
+            .with_context(|| format!("[{}:{}] Failed to send request: {}", file!(), line!(), self.url))?;
 
         let response_text = response
             .text()
             .await
-            .with_context(|| format!("[{}:{}] 读取响应体失败", file!(), line!()))?;
+            .with_context(|| format!("[{}:{}] Failed to read response body", file!(), line!()))?;
 
-        debug!("开始解析响应");
+        debug!("Starting to parse response");
         // 解析为目标类型
         let result: ApiResult<T> = match serde_json::from_str(&response_text) {
             Ok(result) => result,
             Err(e) => {
-                error!("JSON 解析错误: {}", e);
+                error!("JSON parsing error: {}", e);
                 // error!("响应内容: {}", response_text);
                 return Err(CommonError::UnexpectedError(anyhow::anyhow!(
-                    "解析 JSON 失败: {}",
+                    "Failed to parse JSON: {}",
                     e
                 )));
             }
@@ -315,12 +315,12 @@ impl<'a> RequestBuilderWrapper<'a> {
 
         // token 过期，尝试刷新 token 并重试
         if result.code == Some(40004) {
-            info!("检测到 token 过期，尝试刷新 token");
+            info!("Detected token expiration, attempting to refresh token");
 
             // 尝试刷新 token
             match self.client.refresh_token().await {
                 Ok(()) => {
-                    info!("token 刷新成功，重新发送请求");
+                    info!("Token refresh successful, resending request");
 
                     // 重新构建请求（因为原来的 request_builder 已经被消费了）
                     let mut new_request_builder =
@@ -357,25 +357,25 @@ impl<'a> RequestBuilderWrapper<'a> {
                     }
 
                     // 重新发送请求
-                    info!("重试请求到: {}", self.url);
+                    info!("Retrying request to: {}", self.url);
                     let retry_response = new_request_builder.send().await.with_context(|| {
-                        format!("[{}:{}] 重试请求失败: {}", file!(), line!(), self.url)
+                        format!("[{}:{}] Failed to retry request: {}", file!(), line!(), self.url)
                     })?;
 
                     let retry_response_text = retry_response
                         .text()
                         .await
-                        .with_context(|| format!("[{}:{}] 读取重试响应体失败", file!(), line!()))?;
+                        .with_context(|| format!("[{}:{}] Failed to read retry response body", file!(), line!()))?;
 
                     // 解析重试响应
                     let retry_result: ApiResult<T> =
                         match serde_json::from_str(&retry_response_text) {
                             Ok(result) => result,
                             Err(e) => {
-                                error!("重试请求 JSON 解析错误: {}", e);
+                                error!("Retry request JSON parsing error: {}", e);
                                 // error!("响应内容: {}", retry_response_text);
                                 return Err(CommonError::UnexpectedError(anyhow::anyhow!(
-                                    "解析重试请求 JSON 失败: {}",
+                                    "Failed to parse retry request JSON: {}",
                                     e
                                 )));
                             }
@@ -383,15 +383,15 @@ impl<'a> RequestBuilderWrapper<'a> {
 
                     if !&retry_result.success {
                         error!(
-                            "重试请求失败: {}",
+                            "Retry request failed: {}",
                             &retry_result.msg.clone().unwrap_or_default()
                         );
                         return Err(CommonError::UnexpectedError(anyhow::anyhow!(
-                            "重试请求失败！"
+                            "Retry request failed!"
                         )));
                     }
 
-                    debug!("重试请求成功");
+                    debug!("Retry request successful");
 
                     // 发送 token_expired 事件到前端，包含当前的 token 和 refreshToken
                     if let Ok(app_handle_guard) = self.client.app_handle.lock() {
@@ -401,7 +401,7 @@ impl<'a> RequestBuilderWrapper<'a> {
                                     if let Ok(token_guard) = self.client.token.lock() {
                                         token_guard.clone()
                                     } else {
-                                        warn!("获取 token 锁失败");
+                                        warn!("Failed to acquire token lock");
                                         None
                                     };
                                 let current_refresh_token = if let Ok(refresh_token_guard) =
@@ -409,7 +409,7 @@ impl<'a> RequestBuilderWrapper<'a> {
                                 {
                                     refresh_token_guard.clone()
                                 } else {
-                                    warn!("获取 refresh_token 锁失败");
+                                    warn!("Failed to acquire refresh_token lock");
                                     None
                                 };
                                 serde_json::json!({
@@ -421,7 +421,7 @@ impl<'a> RequestBuilderWrapper<'a> {
                             if let Err(emit_err) =
                                 app_handle.emit("refresh_token_event", token_info)
                             {
-                                error!("发送 refresh_token 事件失败: {:?}", emit_err);
+                                error!("Failed to send refresh_token event: {:?}", emit_err);
                             }
                         }
                     }
@@ -429,18 +429,18 @@ impl<'a> RequestBuilderWrapper<'a> {
                     return Ok(retry_result);
                 }
                 Err(e) => {
-                    error!("刷新 token 失败: {:?}", e);
+                    error!("Failed to refresh token: {:?}", e);
                     return Err(CommonError::TokenExpired);
                 }
             }
         }
 
         if !&result.success {
-            error!("请求失败: {}", &result.msg.clone().unwrap_or_default());
-            return Err(CommonError::UnexpectedError(anyhow::anyhow!("请求失败！")));
+            error!("Request failed: {}", &result.msg.clone().unwrap_or_default());
+            return Err(CommonError::UnexpectedError(anyhow::anyhow!("Request failed!")));
         }
 
-        debug!("解析完成");
+        debug!("Parsing completed");
         Ok(result)
     }
 }

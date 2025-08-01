@@ -16,7 +16,7 @@ use tracing::{error, info};
 pub async fn list_contacts_command(
     state: State<'_, AppData>,
 ) -> Result<Vec<im_contact::Model>, String> {
-    info!("获取所有会话");
+    info!("Getting all conversations");
     let result: Result<Vec<im_contact::Model>, CommonError> = async {
         // 获取当前登录用户的 uid
         let login_uid = {
@@ -31,7 +31,7 @@ pub async fn list_contacts_command(
         )
         .await?;
         // 设置缓存标记
-        info!("查询联系人列表数据成功：{:?}", data);
+        info!("Successfully queried contact list data: {:?}", data);
         return Ok(data);
     }
     .await;
@@ -39,7 +39,7 @@ pub async fn list_contacts_command(
     match result {
         Ok(contacts) => Ok(contacts),
         Err(e) => {
-            error!("获取联系人列表失败: {:?}", e);
+            error!("Failed to get contact list: {:?}", e);
             Err(e.to_string())
         }
     }
@@ -63,12 +63,12 @@ async fn fetch_and_update_contacts(
         // 保存到本地数据库
         save_contact_batch(db_conn.deref(), data.clone(), &login_uid)
             .await
-            .with_context(|| format!("[{}:{}] 保存联系人数据到本地数据库失败", file!(), line!()))?;
+            .with_context(|| format!("[{}:{}] Failed to save contact data to local database", file!(), line!()))?;
 
         Ok(data)
     } else {
         Err(CommonError::UnexpectedError(anyhow::anyhow!(
-            "获取联系人数据失败"
+            "Failed to get contact data"
         )))
     }
 }
@@ -85,7 +85,7 @@ pub async fn hide_contact_command(
     state: State<'_, AppData>,
     data: HideContactRequest,
 ) -> Result<(), String> {
-    info!("隐藏联系人: room_id={}, hide={}", data.room_id, data.hide);
+    info!("Hide contact: room_id={}, hide={}", data.room_id, data.hide);
     let result: Result<(), CommonError> = async {
         // 获取当前登录用户的 uid
         let login_uid = {
@@ -112,11 +112,11 @@ pub async fn hide_contact_command(
             )
             .await?;
 
-            info!("成功隐藏联系人: room_id={}", &data.room_id.clone());
+            info!("Successfully hid contact: room_id={}", &data.room_id.clone());
             Ok(())
         } else {
             Err(CommonError::UnexpectedError(anyhow::anyhow!(
-                "隐藏联系人失败: {}",
+                "Failed to hide contact: {}",
                 resp.msg.unwrap_or_default()
             )))
         }
@@ -126,7 +126,7 @@ pub async fn hide_contact_command(
     match result {
         Ok(_) => Ok(()),
         Err(e) => {
-            error!("隐藏联系人失败: {:?}", e);
+            error!("Failed to hide contact: {:?}", e);
             Err(e.to_string())
         }
     }

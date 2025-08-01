@@ -21,9 +21,9 @@ where
     match tokio::time::timeout(timeout_duration, save_all_internal(db, messages)).await {
         Ok(result) => result,
         Err(_) => {
-            error!("批量保存消息超时");
+            error!("Batch save messages timeout");
             Err(CommonError::UnexpectedError(anyhow::anyhow!(
-                "批量保存消息操作超时，请检查数据库连接状态"
+                "Batch save messages operation timeout, please check database connection status"
             )))
         }
     }
@@ -42,23 +42,23 @@ where
         if !messages.is_empty() {
             let count = messages.len();
             process_message_batch(db, messages).await?;
-            info!("消息处理完成，共 {} 条", count);
+            info!("Message processing completed, total {} items", count);
         }
     } else {
         // 分批处理
         for (batch_index, chunk) in messages.chunks(BATCH_SIZE).enumerate() {
             info!(
-                "正在处理第 {} 批消息，共 {} 条",
+                "Processing batch {} of messages, total {} items",
                 batch_index + 1,
                 chunk.len()
             );
 
             process_message_batch(db, chunk.to_vec())
                 .await
-                .with_context(|| format!("处理第 {} 批消息失败", batch_index + 1))?;
+                .with_context(|| format!("Failed to process batch {} of messages", batch_index + 1))?;
         }
 
-        info!("所有消息批量处理完成，总计 {} 条", messages.len());
+        info!("All message batch processing completed, total {} items", messages.len());
     }
     Ok(())
 }
@@ -95,7 +95,7 @@ where
         .filter(condition)
         .all(db)
         .await
-        .with_context(|| "查询已存在消息失败")?;
+        .with_context(|| "Failed to query existing messages")?;
 
     // 如果有已存在的消息，先删除它们
     if !existing_messages.is_empty() {
@@ -117,9 +117,9 @@ where
             .filter(delete_condition)
             .exec(db)
             .await
-            .with_context(|| "删除已存在消息失败")?;
+            .with_context(|| "Failed to delete existing messages")?;
 
-        debug!("删除了 {} 条已存在的消息", existing_messages.len());
+        debug!("Deleted {} existing messages", existing_messages.len());
     }
 
     // 插入新消息
@@ -131,7 +131,7 @@ where
     im_message::Entity::insert_many(active_models)
         .exec(db)
         .await
-        .with_context(|| "批量插入消息失败")?;
+        .with_context(|| "Failed to batch insert messages")?;
 
     Ok(())
 }
@@ -149,7 +149,7 @@ pub async fn cursor_page_messages(
         .filter(im_message::Column::LoginUid.eq(login_uid))
         .count(db)
         .await
-        .with_context(|| "查询消息总数失败")?;
+        .with_context(|| "Failed to query message count")?;
 
     // 先查询消息主表，按 id 数值降序排序
     let mut message_query = im_message::Entity::find()
@@ -168,7 +168,7 @@ pub async fn cursor_page_messages(
     let messages = message_query
         .all(db)
         .await
-        .with_context(|| "查询消息列表失败")?;
+        .with_context(|| "Failed to query message list")?;
 
     // 如果没有消息，直接返回空结果
     if messages.is_empty() {
@@ -243,14 +243,14 @@ pub async fn save_message(
         im_message::Entity::find_by_id((message.id.clone(), message.login_uid.clone()))
             .one(db)
             .await
-            .with_context(|| "查找消息失败")?;
+            .with_context(|| "Failed to find message")?;
 
     // 如果已存在，则先删除
     if existing_message.is_some() {
         im_message::Entity::delete_by_id((message.id.clone(), message.login_uid.clone()))
             .exec(db)
             .await
-            .with_context(|| "删除已存在消息失败")?;
+            .with_context(|| "Failed to delete existing message")?;
     }
 
     // 插入新消息
@@ -271,8 +271,8 @@ pub async fn update_message_status(
         im_message::Entity::find_by_id((message_id.to_string(), login_uid))
             .one(db)
             .await
-            .with_context(|| "查找消息失败")?
-            .ok_or_else(|| CommonError::UnexpectedError(anyhow::anyhow!("消息不存在")))?
+            .with_context(|| "Failed to find message")?
+            .ok_or_else(|| CommonError::UnexpectedError(anyhow::anyhow!("Message not found")))?
             .into_active_model();
 
     active_model.send_status = Set(status.to_string());

@@ -9,12 +9,14 @@ pub trait CustomInit {
 /// 构建平台特定的日志插件
 fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
     let mut builder = tauri_plugin_log::Builder::new()
+        .level(tracing::log::LevelFilter::Info)
         .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
-        .level_for("sqlx", tracing::log::LevelFilter::Debug)
-        .level_for("sqlx::query", tracing::log::LevelFilter::Debug)
-        .level_for("sea_orm", tracing::log::LevelFilter::Info)
-        .level_for("hula_app_lib", tracing::log::LevelFilter::Debug)
+        .level_for("sqlx", tracing::log::LevelFilter::Warn)
+        .level_for("sqlx::query", tracing::log::LevelFilter::Warn)
+        .level_for("sea_orm", tracing::log::LevelFilter::Warn)
+        .level_for("hula_app_lib", tracing::log::LevelFilter::Info)
         // 过滤掉无用的 tauri 内部日志
+        .level_for("tauri", tracing::log::LevelFilter::Warn)
         .level_for("tauri::manager", tracing::log::LevelFilter::Warn)
         .level_for("tauri::event", tracing::log::LevelFilter::Warn)
         .level_for("tauri::plugin", tracing::log::LevelFilter::Warn)
@@ -35,14 +37,12 @@ fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
 
     #[cfg(desktop)]
     {
-        builder = builder
-            .skip_logger()
-            .level(tracing::log::LevelFilter::Debug);
+        builder = builder.skip_logger();
     }
 
     #[cfg(mobile)]
     {
-        builder = builder.level(tracing::log::LevelFilter::Info);
+        builder = builder.level(tracing::log::LevelFilter::Warn);
     }
 
     builder.build()

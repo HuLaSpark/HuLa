@@ -137,7 +137,7 @@ async fn initialize_app_data(
     // 数据库迁移
     match Migrator::up(db.as_ref(), None).await {
         Ok(_) => {
-            info!("数据库迁移完成");
+            info!("Database migration completed");
         }
         Err(e) => {
             eprintln!("Warning: Database migration failed: {}", e);
@@ -178,13 +178,13 @@ fn setup_user_info_listener_early(app_handle: tauri::AppHandle) {
                         if let Ok(mut token_guard) = client.token.try_lock() {
                             *token_guard = Some(payload.token.clone());
                         } else {
-                            tracing::warn!("无法获取 token 锁，跳过 token 更新");
+                            tracing::warn!("Unable to acquire token lock, skipping token update");
                         }
 
                         if let Ok(mut refresh_token_guard) = client.refresh_token.try_lock() {
                             *refresh_token_guard = Some(payload.refresh_token.clone());
                         } else {
-                            tracing::warn!("无法获取 refresh_token 锁，跳过 refresh_token 更新");
+                            tracing::warn!("Unable to acquire refresh_token lock, skipping refresh_token update");
                         }
                     } // client 锁在这里释放
 
@@ -206,7 +206,7 @@ fn setup_user_info_listener_early(app_handle: tauri::AppHandle) {
                         )
                         .await
                         {
-                            tracing::error!("检查用户初始化状态并获取消息失败: {}", e);
+                            tracing::error!("Failed to check user initialization status and fetch messages: {}", e);
                         }
                     }
                 }
@@ -226,7 +226,7 @@ pub struct UserInfo {
 pub async fn build_request_client() -> Result<reqwest::Client, CommonError> {
     let client = reqwest::Client::builder()
         .build()
-        .with_context(|| "Reqwest client 异常")?;
+        .with_context(|| "Reqwest client error")?;
     Ok(client)
 }
 
@@ -237,10 +237,10 @@ fn setup_logout_listener(app_handle: tauri::AppHandle) {
     app_handle.listen("logout", move |_event| {
         let app_handle = app_handle_clone.clone();
         tauri::async_runtime::spawn(async move {
-            tracing::info!("[LOGOUT] 开始关闭所有非login窗口");
+            tracing::info!("[LOGOUT] Starting to close all non-login windows");
 
             let all_windows = app_handle.webview_windows();
-            tracing::info!("[LOGOUT] 获取到 {} 个窗口", all_windows.len());
+            tracing::info!("[LOGOUT] Found {} windows", all_windows.len());
 
             // 收集需要关闭的窗口
             let mut windows_to_close = Vec::new();
@@ -253,7 +253,7 @@ fn setup_logout_listener(app_handle: tauri::AppHandle) {
 
             // 逐个关闭窗口，添加小延迟以避免并发关闭导致的错误
             for (label, window) in windows_to_close {
-                tracing::info!("[LOGOUT] 正在关闭窗口: {}", label);
+                tracing::info!("[LOGOUT] Closing window: {}", label);
 
                 // 先隐藏窗口，减少用户感知的延迟
                 let _ = window.hide();
@@ -263,15 +263,15 @@ fn setup_logout_listener(app_handle: tauri::AppHandle) {
 
                 match window.destroy() {
                     Ok(_) => {
-                        tracing::info!("[LOGOUT] 成功关闭窗口: {}", label);
+                        tracing::info!("[LOGOUT] Successfully closed window: {}", label);
                     }
                     Err(error) => {
                         // 检查窗口是否还存在
                         if app_handle.get_webview_window(&label).is_none() {
-                            tracing::info!("[LOGOUT] 窗口 {} 已不存在，跳过关闭", label);
+                            tracing::info!("[LOGOUT] Window {} no longer exists, skipping closure", label);
                         } else {
                             tracing::warn!(
-                                "[LOGOUT] 关闭窗口 {} 时出现警告: {} (这通常是正常的)",
+                                "[LOGOUT] Warning when closing window {}: {} (this is usually normal)",
                                 label,
                                 error
                             );
@@ -280,7 +280,7 @@ fn setup_logout_listener(app_handle: tauri::AppHandle) {
                 }
             }
 
-            tracing::info!("[LOGOUT] 所有非login窗口关闭完成");
+            tracing::info!("[LOGOUT] All non-login windows closed successfully");
         });
     });
 }
@@ -301,7 +301,7 @@ fn setup_mobile() {
         .invoke_handler(get_invoke_handlers())
         .run(tauri::generate_context!())
     {
-        log::error!("Failed to run mobile application: {}", e);
+        tracing::log::error!("Failed to run mobile application: {}", e);
         std::process::exit(1);
     }
 }
@@ -331,7 +331,7 @@ fn common_setup(
             drop(client_guard);
         }
         Err(e) => {
-            tracing::error!("初始化应用数据失败: {}", e);
+            tracing::error!("Failed to initialize application data: {}", e);
             return Err(format!("Failed to initialize app data: {}", e).into());
         }
     }

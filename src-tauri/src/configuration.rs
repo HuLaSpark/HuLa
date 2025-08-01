@@ -60,36 +60,25 @@ impl DatabaseSettings {
             let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
             path.push("db.sqlite");
             path
-        } else if cfg!(mobile) {
+        } else {
             // SQLite 无法连接 asset://localhost/ 这样的虚拟协议，必须使用真实文件系统路径
             match app_handle.path().app_data_dir() {
                 Ok(app_data_dir) => {
                     if let Err(create_err) = std::fs::create_dir_all(&app_data_dir) {
-                        tracing::warn!("创建app_data_dir失败: {}", create_err);
+                        tracing::warn!("Failed to create app_data_dir: {}", create_err);
                     }
                     let db_path = app_data_dir.join("db.sqlite");
-                    info!("✅ 移动端使用app_data_dir数据库路径: {:?}", db_path);
+                    info!("Mobile: Using app_data_dir database path: {:?}", db_path);
                     db_path
                 }
                 Err(e) => {
-                    let error_msg = format!("❌ 移动端无法获取app_data_dir: {}", e);
+                    let error_msg = format!("Mobile: Failed to get app_data_dir: {}", e);
                     tracing::error!("{}", error_msg);
                     return Err(CommonError::RequestError(error_msg).into());
                 }
             }
-        } else {
-            // 桌面端生产环境：使用应用数据目录
-            let app_data_dir = app_handle
-                .path()
-                .app_data_dir()
-                .with_context(|| "无法获取应用数据目录")?;
-
-            std::fs::create_dir_all(&app_data_dir)
-                .with_context(|| format!("创建应用数据目录失败: {:?}", app_data_dir))?;
-
-            app_data_dir.join("db.sqlite")
         };
-        info!("数据库路径: {:?}", db_path);
+        info!("Database path: {:?}", db_path);
         let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
 
         // 配置数据库连接选项
@@ -106,7 +95,7 @@ impl DatabaseSettings {
 
         let db: DatabaseConnection = Database::connect(opt)
             .await
-            .with_context(|| "连接数据库异常")?;
+            .with_context(|| "Database connection failed")?;
         Ok(db)
     }
 }
@@ -165,30 +154,26 @@ pub fn get_configuration(app_handle: &AppHandle) -> Result<Settings, config::Con
     let environment: Environment = std::env::var("APP_ENVIRONMENT")
         .unwrap_or_else(|_| "local".into())
         .try_into()
-        .map_err(|e| config::ConfigError::Message(format!("解析APP_ENVIRONMENT失败: {:?}", e)))?;
+        .map_err(|e| config::ConfigError::Message(format!("Failed to parse APP_ENVIRONMENT: {:?}", e)))?;
 
     let environment_filename = format!("{}.yaml", environment.as_str());
     let is_desktop_dev = cfg!(debug_assertions) && cfg!(desktop);
 
     match load_config_source(app_handle, &environment_filename, is_desktop_dev) {
         ConfigSource::FileSystem(base_path, env_path) => {
-            tracing::info!("✅ 使用文件系统配置文件");
+            tracing::info!("Using filesystem configuration files");
             build_config_from_files(base_path, env_path)
         }
         ConfigSource::Resource(base_path, env_path) => {
-            tracing::info!("✅ 使用Resource目录的配置文件");
+            tracing::info!("Using Resource directory configuration files");
             build_config_from_files(base_path, env_path)
         }
         ConfigSource::Embedded => {
-            tracing::info!("✅ 使用编译时嵌入的配置");
+            tracing::info!("Using embedded configuration");
             build_config_from_embedded(&environment)
         }
     }
 }
-
-// ================================
-// 私有辅助方法
-// ================================
 
 /// 加载配置文件来源
 /// 根据运行环境和配置文件可用性确定配置来源
@@ -224,10 +209,10 @@ fn load_config_source(
         if base_path.exists() && env_path.exists() {
             return ConfigSource::Resource(base_path, env_path);
         } else {
-            tracing::warn!("❌ Resource目录配置文件不存在，回退到嵌入配置");
+            tracing::warn!("Resource directory configuration files do not exist, falling back to embedded config");
         }
     } else {
-        tracing::warn!("❌ 无法获取Resource目录，回退到嵌入配置");
+        tracing::warn!("Failed to get Resource directory, falling back to embedded config");
     }
 
     ConfigSource::Embedded
@@ -275,7 +260,7 @@ fn build_config_from_embedded(environment: &Environment) -> Result<Settings, con
         "production" => include_str!("../configuration/production.yaml"),
         _ => {
             return Err(config::ConfigError::Message(format!(
-                "不支持的环境: {}",
+                "Unsupported environment: {}",
                 environment.as_str()
             )));
         }
@@ -322,24 +307,24 @@ fn get_configuration_directory(app_handle: &AppHandle) -> Result<PathBuf, config
             .resolve("configuration", tauri::path::BaseDirectory::Resource)
         {
             Ok(path) => {
-                info!("✅ 使用Resource配置目录: {:?}", path);
+                info!("Using Resource configuration directory: {:?}", path);
                 path
             }
             Err(e) => {
-                tracing::warn!("❌ 无法获取Resource配置目录: {}，尝试使用app_data_dir", e);
+                tracing::warn!("Failed to get Resource configuration directory: {}, trying app_data_dir", e);
 
                 match app_handle.path().app_data_dir() {
                     Ok(app_data_dir) => {
                         let config_dir = app_data_dir.join("configuration");
                         if let Err(create_err) = std::fs::create_dir_all(&config_dir) {
-                            tracing::warn!("创建app_data_dir配置目录失败: {}", create_err);
+                            tracing::warn!("Failed to create app_data_dir configuration directory: {}", create_err);
                         }
-                        info!("✅ 使用备用app_data_dir配置目录: {:?}", config_dir);
+                        info!("Using backup app_data_dir configuration directory: {:?}", config_dir);
                         config_dir
                     }
                     Err(app_data_err) => {
                         let error_msg = format!(
-                            "❌ Resource和app_data_dir配置目录都无法获取: Resource错误={}, app_data_dir错误={}",
+                            "Failed to get both Resource and app_data_dir configuration directories: Resource error={}, app_data_dir error={}",
                             e, app_data_err
                         );
                         tracing::error!("{}", error_msg);
@@ -350,6 +335,6 @@ fn get_configuration_directory(app_handle: &AppHandle) -> Result<PathBuf, config
         }
     };
 
-    info!("配置文件目录: {:?}", config_path);
+    info!("Configuration file directory: {:?}", config_path);
     Ok(config_path)
 }
