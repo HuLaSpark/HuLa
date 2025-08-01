@@ -12,8 +12,7 @@
   "bundle": {
     "resources": [
       "tray",
-      "configuration",
-      "db.sqlite"
+      "configuration"
     ],
     "active": true,
     "targets": [
