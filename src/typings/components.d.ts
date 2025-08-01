@@ -34,6 +34,7 @@ declare module 'vue' {
     InfoPopover: typeof import('./../components/common/InfoPopover.vue')['default']
     LoadingSpinner: typeof import('./../components/common/LoadingSpinner.vue')['default']
     MeasuredItem: typeof import('./../mobile/components/virtual-scroll/MeasuredItem.vue')['default']
+    MessageContainer: typeof import('./../mobile/components/chat-room/MessageContainer.vue')['default']
     MsgInput: typeof import('./../components/rightBox/MsgInput.vue')['default']
     NaiveProvider: typeof import('./../components/common/NaiveProvider.vue')['default']
     NAlert: typeof import('naive-ui')['NAlert']

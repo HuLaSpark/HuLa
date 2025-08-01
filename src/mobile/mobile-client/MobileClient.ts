@@ -7,7 +7,7 @@ import mitt from 'mitt'
 
 const RESIZE_UPDATE = 'resize-update'
 
-type ResizeEvent = { isFullScreen: boolean; safeArea: SafeArea }
+export type ResizeEvent = { isFullScreen: boolean; safeArea: SafeArea }
 
 type Events = {
   [RESIZE_UPDATE]: ResizeEvent

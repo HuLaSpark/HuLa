@@ -13,6 +13,7 @@ import MobileMy from '@/mobile/views/my/index.vue'
 import MobileLaunch from '../mobile/launch.vue'
 import MobileHome from '../mobile/layout/index.vue'
 import MobileLogin from '../mobile/login.vue'
+import ChatRoomLayout from '@/mobile/layout/chat-room/ChatRoomLayout.vue'
 
 const isDesktop = computed(() => {
   return type() === 'windows' || type() === 'linux' || type() === 'macos'
@@ -34,7 +35,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/mobile/chatRoom',
     name: 'mobileChatRoom',
-    component: () => import('@/mobile/layout/chat-room/ChatRoomLayout.vue'),
+    component: ChatRoomLayout, //这里不能懒加载，不然会出现布局问题
     children: [
       {
         path: '',
