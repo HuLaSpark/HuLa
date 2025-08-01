@@ -167,6 +167,29 @@ export interface SignalData {
   mediaType: 'AudioSignal' | 'VideoSignal' // 语音通话、视频通话
 }
 
+export interface SignalSdp {
+  /** SDP 会话描述字符串 */
+  sdp: string
+  /** SDP 消息类型（如 offer/answer） */
+  type: string
+}
+
+/** 通话信令消息整体类型 */
+export interface CallSignalMessage {
+  /** 呼叫方用户 ID */
+  callerUid: string
+  /** 房间 ID */
+  roomId: string
+  /** 信令内容（JSON 字符串形式的 SDP 信息） */
+  signal: string
+  /** 信令类型（如 offer/answer/candidate 等） */
+  signalType: string
+  /** 目标用户 ID */
+  targetUid: string
+  /** 是否为视频通话 */
+  video: boolean
+}
+
 // 加入/离开房间数据类型
 export interface RoomActionData {
   roomId: string

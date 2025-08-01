@@ -118,6 +118,7 @@
       :remoteUserId="activeItem.detailId"
       :remoteUserName="activeItem.name"
       :roomId="activeItem.roomId"
+      :offer="offer"
       @call-ended="handleCallEnded" />
 
     <!-- 侧边选项栏 -->
@@ -418,6 +419,7 @@ import { useUserStore } from '@/stores/user.ts'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { useCachedStore } from '~/src/stores/cached'
+import { WsResponseMessageType, CallSignalMessage } from '@/services/wsType'
 
 const appWindow = WebviewWindow.getCurrent()
 const { activeItem } = defineProps<{
@@ -443,6 +445,15 @@ const isLoading = ref(false)
 const cacheStore = useCachedStore()
 // 语音通话状态
 const voiceCallActive = ref(false)
+const offer = ref<CallSignalMessage>({
+  callerUid: '',
+  roomId: '',
+  signal: '',
+  signalType: '',
+  targetUid: '',
+  video: false
+})
+
 // 群组详情数据
 const groupDetail = ref({
   myNickname: '', // 我在本群的昵称
@@ -925,15 +936,6 @@ const handleConfirm = () => {
 // 发起语音通话
 const startVoiceCall = () => {
   voiceCallActive.value = true
-  // ws.send({
-  //   type: WsRequestMsgType.VIDEO_CALL_REQUEST,
-  //   data: {
-  //     // 私聊传对方uid
-  //     targetUid: activeItem.detailId,
-  //     roomId: activeItem.roomId,
-  //     isVideo: false // true=视频, false=语音
-  //   }
-  // })
 }
 
 const handleCallEnded = (isNormalEnd: boolean) => {
@@ -944,6 +946,14 @@ const handleCallEnded = (isNormalEnd: boolean) => {
   }
   // 完全移除通话组件
   voiceCallActive.value = false
+  offer.value = {
+    callerUid: '',
+    roomId: '',
+    signal: '',
+    signalType: '',
+    targetUid: '',
+    video: false
+  }
 }
 
 // 开始编辑群名称
@@ -1034,10 +1044,21 @@ onMounted(() => {
   if (activeItem.type === RoomTypeEnum.GROUP) {
     fetchGroupDetail()
   }
+
+  // 监听通话请求消息
+  useMitt.on(WsResponseMessageType.VideoCallRequest, (data: CallSignalMessage) => {
+    // 检查是否是当前聊天的通话请求
+    if (data.roomId === activeItem.roomId) {
+      console.log('收到通话请求，自动打开通话界面', data)
+      offer.value = data
+      voiceCallActive.value = true
+    }
+  })
 })
 
 onUnmounted(() => {
   window.removeEventListener('click', closeMenu, true)
+  useMitt.off(WsResponseMessageType.VideoCallRequest, () => {})
 })
 </script>
 

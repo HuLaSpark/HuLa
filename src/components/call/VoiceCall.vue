@@ -45,6 +45,7 @@ import ws from '@/services/webSocket'
 import { WsRequestMsgType, WsResponseMessageType } from '@/services/wsType'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useUserStore } from '@/stores/user'
+import type { CallSignalMessage } from '@/services/wsType'
 
 const props = defineProps({
   remoteUserId: {
@@ -58,6 +59,10 @@ const props = defineProps({
   roomId: {
     type: String,
     required: true
+  },
+  offer: {
+    type: Object as PropType<CallSignalMessage>,
+    required: true
   }
 })
 
@@ -65,6 +70,9 @@ const emit = defineEmits<{
   'call-ended': [value: boolean]
 }>()
 
+const isHangingUp = ref(false)
+const oscillatorRef = ref<OscillatorNode | null>(null)
+const audioContextRef = ref<AudioContext | null>(null)
 const userStore = useUserStore()?.userInfo
 // 通话状态：idle, calling, ringing, in_call, ended
 const callState = ref<'idle' | 'calling' | 'ringing' | 'in_call' | 'ended' | 'destroyed'>('idle')
@@ -73,23 +81,23 @@ const peerConnection = ref<RTCPeerConnection | null>(null)
 const callTimer = ref<ReturnType<typeof setInterval> | null>(null)
 const callDuration = ref(0) // 通话时长（秒）
 
-// const createDummyAudioStream = () => {
-//   const audioContext = new AudioContext()
-//   const oscillator = audioContext.createOscillator()
-//   const destination = oscillator.connect(audioContext.createMediaStreamDestination())
-//   oscillator.start()
-//   return destination.stream
-// }
+const createDummyAudioStream = () => {
+  audioContextRef.value = new AudioContext()
+  oscillatorRef.value = audioContextRef.value.createOscillator()
+  const destination: any = oscillatorRef.value.connect(audioContextRef.value.createMediaStreamDestination())
+  oscillatorRef.value.start()
+  return destination.stream
+}
 
 // 初始化语音通话
 const initCall = async () => {
   try {
-    // 获取麦克风权限
-    // localStream.value = createDummyAudioStream()
-    localStream.value = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-      video: false
-    })
+    try {
+      localStream.value = await navigator.mediaDevices.getUserMedia({ audio: true })
+    } catch (error) {
+      console.log('无法获取麦克风，使用模拟音频流', error)
+      localStream.value = createDummyAudioStream()
+    }
 
     // 创建RTCPeerConnection
     peerConnection.value = new RTCPeerConnection({
@@ -97,7 +105,7 @@ const initCall = async () => {
     })
 
     // 添加音频轨道
-    localStream.value.getTracks().forEach((track) => {
+    localStream.value!.getTracks().forEach((track) => {
       peerConnection.value!.addTrack(track, localStream.value!)
     })
 
@@ -109,7 +117,7 @@ const initCall = async () => {
     const offer = await peerConnection.value.createOffer()
     await peerConnection.value.setLocalDescription(offer)
 
-    sendSignal(offer)
+    callRequest()
 
     callState.value = 'calling'
 
@@ -129,7 +137,7 @@ const initCall = async () => {
   }
 }
 
-const sendWebRtcSignal = (signal: any, signalType: 'offer' | 'answer' | 'candidate') => {
+const sendWebRtcSignal = (signal: any, signalType: 'offer' | 'answer' | 'candidate' | 'hangup') => {
   ws.send({
     type: WsRequestMsgType.WEBRTC_SIGNAL,
     data: {
@@ -152,22 +160,20 @@ const handleOffer = async (offer: RTCSessionDescriptionInit) => {
   await peerConnection.value!.setLocalDescription(answer)
 
   // 发送Answer
-  // sendSignal(answer, 'answer')
   sendWebRtcSignal(answer, 'answer')
 
   startCall()
 }
 
-const sendSignal = (signal: RTCSessionDescriptionInit) => {
+// 发送呼叫请求
+const callRequest = () => {
   console.log('发送呼叫请求（含Offer）：对方id', props.remoteUserId)
   ws.send({
     type: WsRequestMsgType.VIDEO_CALL_REQUEST,
     data: {
       targetUid: props.remoteUserId,
       roomId: props.roomId,
-      isVideo: false,
-      signal,
-      signalType: 'offer'
+      isVideo: false
     }
   })
 }
@@ -177,8 +183,7 @@ const handleICECandidate = (event: RTCPeerConnectionIceEvent) => {
   if (event.candidate) {
     sendWebRtcSignal(event.candidate, 'candidate')
   } else {
-    console.log('ICE收集完成')
-    sendWebRtcSignal(null, 'candidate')
+    sendWebRtcSignal({ type: 'end-of-candidates' }, 'candidate')
   }
 }
 
@@ -204,8 +209,16 @@ const startCall = () => {
 
 // 接听电话
 const answerCall = async () => {
+  if (peerConnection.value?.connectionState === 'closed') {
+    console.error('连接已关闭')
+    return
+  }
   if (!pendingOffer.value) {
     console.error('无待处理的Offer')
+    return
+  }
+  if (callState.value !== 'ringing') {
+    console.warn('非法状态接听')
     return
   }
 
@@ -250,10 +263,11 @@ const rejectCall = () => {
 const destroyCall = () => {
   console.log('销毁通话资源')
   callState.value = 'destroyed'
-
   // 清理计时器
-  if (callTimer.value) clearInterval(callTimer.value)
-
+  if (callTimer.value) {
+    clearInterval(callTimer.value)
+    callTimer.value = null
+  }
   // 关闭PeerConnection
   if (peerConnection.value) {
     peerConnection.value.close()
@@ -266,8 +280,17 @@ const destroyCall = () => {
     localStream.value = null
   }
 
+  if (oscillatorRef.value) {
+    oscillatorRef.value.stop()
+    oscillatorRef.value = null
+  }
+
+  if (audioContextRef.value) {
+    audioContextRef.value.close()
+    audioContextRef.value = null
+  }
+
   // 移除所有事件监听
-  useMitt.off(WsResponseMessageType.VideoCallRequest, handleIncomingCall)
   useMitt.off(WsResponseMessageType.CallAccepted, handleCallAccepted)
   useMitt.off(WsResponseMessageType.CallRejected, handleCallRejected)
   useMitt.off(WsResponseMessageType.RoomClosed, handleRoomClosed)
@@ -280,6 +303,10 @@ const destroyCall = () => {
 // 挂断电话
 const hangup = () => {
   console.log('前端已经挂断')
+  if (isHangingUp.value) return
+  isHangingUp.value = true
+  sendWebRtcSignal({ reason: 'user_hangup' }, 'hangup')
+
   ws.send({
     type: WsRequestMsgType.VIDEO_CALL_RESPONSE,
     data: {
@@ -287,28 +314,17 @@ const hangup = () => {
       accepted: 2
     }
   })
-  destroyCall()
+  setTimeout(() => {
+    destroyCall()
+    isHangingUp.value = false
+  }, 1000)
 }
 
 // 结束通话
 const endCall = () => {
   callState.value = 'ended'
-  // 清理资源
-  if (callTimer.value) {
-    clearInterval(callTimer.value)
-    callTimer.value = null
-  }
-
-  if (peerConnection.value) {
-    peerConnection.value.close()
-    peerConnection.value = null
-  }
-
-  if (localStream.value) {
-    localStream.value.getTracks().forEach((track) => track.stop())
-    localStream.value = null
-  }
-
+  if (callTimer.value) clearInterval(callTimer.value)
+  callTimer.value = null
   // 3秒后关闭组件
   setTimeout(() => {
     callState.value = 'idle'
@@ -322,32 +338,6 @@ const formatDuration = (seconds: number) => {
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
 }
 
-onMounted(() => {
-  // 监听信令消息
-  useMitt.on(WsResponseMessageType.VideoCallRequest, handleIncomingCall)
-  useMitt.on(WsResponseMessageType.CallAccepted, handleCallAccepted)
-  useMitt.on(WsResponseMessageType.CallRejected, handleCallRejected)
-  useMitt.on(WsResponseMessageType.RoomClosed, handleRoomClosed)
-  useMitt.on(WsResponseMessageType.WEBRTC_SIGNAL, handleSignalingMessage)
-
-  // 如果是从主动呼叫进入，初始化呼叫流程
-  if (callState.value === 'idle') {
-    initCall()
-  }
-})
-
-onBeforeUnmount(() => {
-  // 清理事件监听
-  useMitt.off(WsResponseMessageType.VideoCallRequest, handleIncomingCall)
-  useMitt.off(WsResponseMessageType.CallAccepted, handleCallAccepted)
-  useMitt.off(WsResponseMessageType.CallRejected, handleCallRejected)
-  useMitt.off(WsResponseMessageType.RoomClosed, handleRoomClosed)
-  useMitt.off(WsResponseMessageType.WEBRTC_SIGNAL, handleSignalingMessage)
-
-  // 确保清理资源
-  endCall()
-})
-
 // 收到对方的来电后
 const createPeerConnectionAsCallee = async () => {
   peerConnection.value = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] })
@@ -356,25 +346,32 @@ const createPeerConnectionAsCallee = async () => {
   peerConnection.value.ontrack = handleRemoteStream
 
   // 获取本地媒体流
-  localStream.value = await navigator.mediaDevices.getUserMedia({ audio: true })
-  localStream.value.getTracks().forEach((track) => peerConnection.value!.addTrack(track))
+  try {
+    localStream.value = await navigator.mediaDevices.getUserMedia({ audio: true })
+  } catch (error) {
+    console.log('无法获取麦克风，使用模拟音频流', error)
+    localStream.value = createDummyAudioStream()
+  }
+
+  localStream.value!.getTracks().forEach((track) => peerConnection.value!.addTrack(track))
 }
 const pendingOffer = ref<RTCSessionDescriptionInit | null>(null)
 
 // 处理来电
-const handleIncomingCall = (data: any) => {
-  if (data.signalType === 'offer') {
+const handleIncomingCall = (data: CallSignalMessage) => {
+  console.log('offer --> ', data)
+  if (typeof data.signal === 'string') {
+    try {
+      pendingOffer.value = JSON.parse(data.signal) as RTCSessionDescriptionInit
+    } catch (e) {
+      console.error('SDP解析失败', e)
+    }
+  } else {
     pendingOffer.value = data.signal
-    createPeerConnectionAsCallee()
-    callState.value = 'ringing'
   }
-
-  // console.log("处理来电", userStore.uid, "来电数据包", data)
-  // if (callState.value === 'destroyed') return
-  // // 这里 targetUid 是被叫方id，如果群聊的话判断roomId即可，这里用&&，如果人数很多的话后端需要生成很多对象，有点耗费带宽
-  // if (data.targetUid !== userStore.uid && data.roomId !== props.roomId) return;
-  // createPeerConnectionAsCallee();
-  // callState.value = 'ringing'; // 进入响铃状态
+  console.log('pendingOffer --> ', pendingOffer)
+  createPeerConnectionAsCallee()
+  callState.value = 'ringing' // 进入响铃状态
 }
 
 // 处理对方接受通话
@@ -401,26 +398,84 @@ const handleRoomClosed = (data: any) => {
   }
 }
 
+// 校验信令是否有效
+const isValidIceCandidate = (candidate: any): boolean => {
+  return (
+    candidate !== null &&
+    typeof candidate === 'object' &&
+    'candidate' in candidate && // 候选描述字符串
+    'sdpMid' in candidate && // 媒体流标识
+    'sdpMLineIndex' in candidate // 媒体行索引
+  )
+}
+
 // 处理信令消息
 const handleSignalingMessage = (data: any) => {
-  if (callState.value === 'destroyed') return
+  console.log('发起方接收信令: ', data)
+  if (callState.value === 'destroyed' || isHangingUp.value) return
 
-  // 校验信令是否针对当前用户和房间
+  // 校验信令是否针对当前用户和房间; 这里 to 是被叫方id，如果群聊的话判断roomId即可，这里用&&，如果人数很多的话后端需要生成很多对象，有点耗费带宽
   if (data.to !== userStore.uid && data.roomId !== props.roomId) return
+
+  const signal = typeof data.signal === 'string' ? JSON.parse(data.signal) : data.signal
+
+  console.log('signal值 -> ', signal)
 
   switch (data.signalType) {
     case 'offer':
       // 被叫方仅在接听后处理offer
-      if (callState.value === 'in_call') handleOffer(data.signal)
+      if (callState.value === 'ringing' || callState.value === 'in_call') {
+        handleOffer(signal)
+      }
       break
     case 'answer':
-      peerConnection.value?.setRemoteDescription(data.signal)
+      peerConnection.value?.setRemoteDescription(signal)
       break
     case 'candidate':
-      peerConnection.value?.addIceCandidate(data.signal)
+      if (signal?.type === 'end-of-candidates') {
+        console.log('ICE收集完成')
+      } else {
+        // 校验候选对象的有效性
+        if (isValidIceCandidate(signal)) {
+          peerConnection.value?.addIceCandidate(signal).catch((e) => {
+            console.error('添加ICE候选失败:', e)
+          })
+        } else {
+          console.warn('收到无效ICE候选:', signal)
+        }
+      }
       break
   }
 }
+
+onMounted(() => {
+  // 监听信令消息
+  useMitt.on(WsResponseMessageType.CallAccepted, handleCallAccepted)
+  useMitt.on(WsResponseMessageType.CallRejected, handleCallRejected)
+  useMitt.on(WsResponseMessageType.RoomClosed, handleRoomClosed)
+  useMitt.on(WsResponseMessageType.WEBRTC_SIGNAL, handleSignalingMessage)
+
+  // 如果是从主动呼叫进入，初始化呼叫流程
+  if (props.offer.signalType === '') {
+    if (callState.value === 'idle') {
+      initCall()
+    }
+  } else {
+    console.log('被动进入呼叫状态')
+    handleIncomingCall(props.offer)
+  }
+})
+
+onBeforeUnmount(() => {
+  // 清理事件监听
+  useMitt.off(WsResponseMessageType.CallAccepted, handleCallAccepted)
+  useMitt.off(WsResponseMessageType.CallRejected, handleCallRejected)
+  useMitt.off(WsResponseMessageType.RoomClosed, handleRoomClosed)
+  useMitt.off(WsResponseMessageType.WEBRTC_SIGNAL, handleSignalingMessage)
+
+  // 确保清理资源
+  endCall()
+})
 </script>
 
 <style scoped>
