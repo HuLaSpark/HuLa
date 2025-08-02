@@ -26,6 +26,8 @@
 </template>
 
 <script setup lang="ts">
+import { invoke } from '@tauri-apps/api/core'
+
 const props = defineProps({
   roomName: {
     type: String,
@@ -50,6 +52,10 @@ const formattedMsgCount = computed(() => {
 })
 
 const handleBack = async () => {
+  const result = await invoke('plugin:hula|ping', {
+    payload: { value: 'hello world' }
+  })
+  console.log('插件测试结果：', result)
   console.log('返回')
 }
 </script>

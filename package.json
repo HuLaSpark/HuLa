@@ -50,6 +50,8 @@
     "format:vue": "npx prettier --write \"src/**/*.vue\"",
     "========= 完整格式化(JS+Vue) =========": "",
     "format:all": "pnpm check:write && pnpm format:vue",
+    "========= Git提交前的代码检查(简化命令) =========": "",
+    "lint:s": "lint-staged && vue-tsc --noEmit",
     "========= Git提交前的代码检查 =========": "",
     "lint:staged": "lint-staged && vue-tsc --noEmit",
     "========= 安装husky =========": "",
