@@ -5,16 +5,20 @@ import { useDebounceFn } from '@vueuse/core'
 import { type ChangeTypeEnum, ConnectionState, type OnlineEnum, URLEnum, WorkerMsgEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
 // 使用类型导入避免直接执行代码
+import type { MessageType, MarkItemType, RevokedMsgType } from '@/services/types'
 import type { useNetworkReconnect as UseNetworkReconnectType } from '@/hooks/useNetworkReconnect'
 import { useTauriListener } from '@/hooks/useTauriListener'
 import { getEnhancedFingerprint } from '@/services/fingerprint.ts'
-import type { MarkItemType, MessageType, RevokedMsgType } from '@/services/types'
 import type {
   LoginInitResType,
   LoginSuccessResType,
+  WsReqMsgContentType,
   OnStatusChangeType,
   UserStateType,
-  WsReqMsgContentType
+  SignalData,
+  RoomActionData,
+  CallResponseData,
+  VideoCallRequestData
 } from '@/services/wsType.ts'
 import { WsResponseMessageType, type WsTokenExpire } from '@/services/wsType.ts'
 import { useUserStore } from '@/stores/user'
@@ -591,6 +595,48 @@ class WS {
         case WsResponseMessageType.ROOM_DISSOLUTION: {
           console.log('群解散', params.data)
           useMitt.emit(WsResponseMessageType.ROOM_DISSOLUTION, params.data)
+          break
+        }
+        case WsResponseMessageType.VideoCallRequest: {
+          const data = params.data as VideoCallRequestData
+          console.log('收到通话请求', data)
+          useMitt.emit(WsResponseMessageType.VideoCallRequest, data)
+          break
+        }
+        case WsResponseMessageType.CallAccepted: {
+          const data = params.data as CallResponseData
+          console.log('通话被接受', data)
+          useMitt.emit(WsResponseMessageType.CallAccepted, data)
+          break
+        }
+        case WsResponseMessageType.CallRejected: {
+          const data = params.data as CallResponseData
+          console.log('通话被拒绝', data)
+          useMitt.emit(WsResponseMessageType.CallRejected, data)
+          break
+        }
+        case WsResponseMessageType.RoomClosed: {
+          const data = params.data as { roomId: string }
+          console.log('房间已关闭', data)
+          useMitt.emit(WsResponseMessageType.RoomClosed, data)
+          break
+        }
+        case WsResponseMessageType.WEBRTC_SIGNAL: {
+          const data = params.data as SignalData
+          console.log('收到信令消息', data)
+          useMitt.emit(WsResponseMessageType.WEBRTC_SIGNAL, data)
+          break
+        }
+        case WsResponseMessageType.JoinVideo: {
+          const data = params.data as RoomActionData
+          console.log('用户加入房间', data)
+          useMitt.emit(WsResponseMessageType.JoinVideo, data)
+          break
+        }
+        case WsResponseMessageType.LeaveVideo: {
+          const data = params.data as RoomActionData
+          console.log('用户离开房间', data)
+          useMitt.emit(WsResponseMessageType.LeaveVideo, data)
           break
         }
         default: {
