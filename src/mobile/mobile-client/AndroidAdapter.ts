@@ -3,8 +3,6 @@ import type { MobileClientInterface } from './interface/adapter'
 import { getInsets } from 'tauri-plugin-safe-area-insets'
 
 export class AndroidAdapter implements MobileClientInterface {
-  constructor() {}
-
   async getSafeArea(): Promise<SafeArea> {
     try {
       return await getInsets()

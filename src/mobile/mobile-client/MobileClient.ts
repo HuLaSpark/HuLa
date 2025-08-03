@@ -22,10 +22,7 @@ export class MobileClient {
   constructor() {
     this.envType = type()
 
-    if (this.envType !== 'ios' && this.envType !== 'android') {
-      throw new Error('非ios或android系统无法创建移动端对象')
-    }
-    // 这里用立即执行函数，避免出现ios死机问题
+    if (this.envType !== 'ios' && this.envType !== 'android') return // 这里用立即执行函数，避免出现ios死机问题
     ;(async () => {
       try {
         await this.init()

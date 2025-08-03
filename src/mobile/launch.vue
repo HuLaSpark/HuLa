@@ -14,18 +14,16 @@ import { lightTheme } from 'naive-ui'
 import router from '../router'
 
 onMounted(() => {
-  setTimeout(() => {
-    const token = localStorage.getItem('TOKEN')
-    // 已登录用户访问登录页时重定向到首页
-    if (token) {
-      router.replace('/mobile/home')
-      nextTick(() => {
-        router.replace('/mobile/message')
-      })
-    } else {
-      router.replace('/mobile/login')
-    }
-  }, 2000)
+  const token = localStorage.getItem('TOKEN')
+  // 已登录用户访问登录页时重定向到首页
+  if (token) {
+    router.replace('/mobile/home')
+    nextTick(() => {
+      router.replace('/mobile/message')
+    })
+  } else {
+    router.replace('/mobile/login')
+  }
 })
 </script>
 

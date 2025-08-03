@@ -7,7 +7,7 @@ import vResize from '@/directives/v-resize'
 import vSlide from '@/directives/v-slide.ts'
 import router from '@/router'
 import { pinia } from '@/stores'
-import { initMobileClient } from '@/mobile/mobile-client/MobileClient'
+import { type } from '@tauri-apps/plugin-os'
 
 if (WebviewWindow.getCurrent().label === 'home') {
   import('@/services/webSocket')
@@ -30,6 +30,9 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 export const forceUpdateMessageTop = (topValue: number) => {
+  // 只在移动端(iOS和Android)执行
+  if (type() !== 'ios' && type() !== 'android') return
+
   // 获取所有符合条件的元素
   const messages = document.querySelectorAll('.n-message-container.n-message-container--top')
 
@@ -47,4 +50,8 @@ window.addEventListener('keyboardDidHide', () => {
   console.log('键盘隐藏')
 })
 
-initMobileClient()
+if (type() === 'ios' || type() === 'android') {
+  import('@/mobile/mobile-client/MobileClient').then((module) => {
+    module.initMobileClient()
+  })
+}

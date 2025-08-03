@@ -8,11 +8,19 @@
       content="width=device-width, initial-scale=1, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no viewport-fit=cover" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
 
-    <!-- 🎯 预加载图片资源 -->
-    <link rel="preload" as="image" href="/Mobile/4.png" />
-    <link rel="preload" as="image" href="/Mobile/3.png" />
-    <link rel="preload" as="image" href="/Mobile/1.png" />
-    <link rel="preload" as="image" href="/Mobile/2.png" />
+    <!-- 🎯 预加载图片资源（仅移动端） -->
+    <script>
+      if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
+        const images = ['/Mobile/4.png', '/Mobile/3.png', '/Mobile/1.png', '/Mobile/2.png']
+        images.forEach(src => {
+          const link = document.createElement('link')
+          link.rel = 'preload'
+          link.as = 'image'
+          link.href = src
+          document.head.appendChild(link)
+        })
+      }
+    </script>
 
     <!-- iconpark图标库 -->
     <script async src="/icon.js"></script>

@@ -2,8 +2,6 @@ import type { SafeArea } from '~/src/stores/mobile'
 import type { MobileClientInterface } from './interface/adapter'
 
 export class IosAdapter implements MobileClientInterface {
-  constructor() {}
-
   async getSafeArea(): Promise<SafeArea> {
     try {
       // 判断环境是安卓时才覆盖安全区域的自定义样式，如果是ios则在global/mobile.scss里已经全局覆盖了
