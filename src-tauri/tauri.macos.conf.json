@@ -12,7 +12,8 @@
   "bundle": {
     "resources": [
       "tray",
-      "configuration"
+      "configuration",
+      "Info.plist"
     ],
     "active": true,
     "targets": [

@@ -100,7 +100,6 @@ class WS {
     info('[ws] webSocket 服务初始化')
     this.initWindowType()
     if (isMainWindow) {
-      this.initConnect()
       // 收到WebSocket worker消息
       worker.addEventListener('message', this.onWorkerMsg)
       // 收到Timer worker消息
@@ -258,7 +257,7 @@ class WS {
   // 初始化窗口类型
   private async initWindowType() {
     const currentWindow = WebviewWindow.getCurrent()
-    isMainWindow = currentWindow.label === 'home'
+    isMainWindow = currentWindow.label === 'home' || currentWindow.label === 'rtcCall'
   }
 
   initConnect = async () => {
@@ -412,6 +411,8 @@ class WS {
   }
 
   #send(msg: WsReqMsgContentType) {
+    console.log(worker)
+    console.log('ws 发送消息', msg)
     worker.postMessage(`{"type":"message","value":${typeof msg === 'string' ? msg : JSON.stringify(msg)}}`)
   }
 
@@ -734,4 +735,5 @@ class WS {
 }
 
 const ws = new WS()
+await ws.initConnect()
 export default ws

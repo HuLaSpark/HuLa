@@ -63,7 +63,7 @@
       <div class="options-box">
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
-            <svg>
+            <svg @click="startVideoCall">
               <use href="#video-one"></use>
             </svg>
           </template>
@@ -111,15 +111,6 @@
         </svg>
       </div>
     </nav>
-
-    <!-- 语音通话组件 -->
-    <VoiceCall
-      v-if="voiceCallActive"
-      :remoteUserId="activeItem.detailId"
-      :remoteUserName="activeItem.name"
-      :roomId="activeItem.roomId"
-      :offer="offer"
-      @call-ended="handleCallEnded" />
 
     <!-- 侧边选项栏 -->
     <Transition v-if="shouldShowDeleteFriend || chatStore.isGroup" name="sidebar">
@@ -419,13 +410,13 @@ import { useUserStore } from '@/stores/user.ts'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { useCachedStore } from '~/src/stores/cached'
-import { WsResponseMessageType, CallSignalMessage } from '@/services/wsType'
+import { WsResponseMessageType } from '@/services/wsType'
 
 const appWindow = WebviewWindow.getCurrent()
 const { activeItem } = defineProps<{
   activeItem: SessionItem
 }>()
-const { createModalWindow } = useWindow()
+const { createModalWindow, createWebviewWindow } = useWindow()
 const { addListener } = useTauriListener()
 // 使用useDisplayMedia获取屏幕共享的媒体流
 const { stream, start, stop } = useDisplayMedia()
@@ -443,16 +434,6 @@ const sidebarShow = ref(false)
 const showLoading = ref(true)
 const isLoading = ref(false)
 const cacheStore = useCachedStore()
-// 语音通话状态
-const voiceCallActive = ref(false)
-const offer = ref<CallSignalMessage>({
-  callerUid: '',
-  roomId: '',
-  signal: '',
-  signalType: '',
-  targetUid: '',
-  video: false
-})
 
 // 群组详情数据
 const groupDetail = ref({
@@ -933,26 +914,59 @@ const handleConfirm = () => {
   }
 }
 
-// 发起语音通话
-const startVoiceCall = () => {
-  voiceCallActive.value = true
+const startVoiceCall = async () => {
+  try {
+    // 获取对方用户ID（单聊时使用，群聊时可能需要其他逻辑）
+    const remoteUserId = activeItem.type === RoomTypeEnum.SINGLE ? activeItem.detailId : ''
+
+    await createWebviewWindow(
+      '语音通话', // 窗口标题
+      'rtcCall', // 窗口标签
+      400, // 宽度
+      600, // 高度
+      undefined, // 不需要关闭其他窗口
+      false, // 不可调整大小
+      400, // 最小宽度
+      600, // 最小高度
+      false, // 不透明
+      false, // 显示窗口
+      {
+        remoteUserId: remoteUserId,
+        roomId: activeItem.roomId,
+        callType: 'voice',
+        isIncoming: false
+      }
+    )
+  } catch (error) {
+    console.error('创建语音通话窗口失败:', error)
+  }
 }
 
-const handleCallEnded = (isNormalEnd: boolean) => {
-  if (isNormalEnd) {
-    console.log('通话正常结束')
-  } else {
-    console.log('通话异常终止')
-  }
-  // 完全移除通话组件
-  voiceCallActive.value = false
-  offer.value = {
-    callerUid: '',
-    roomId: '',
-    signal: '',
-    signalType: '',
-    targetUid: '',
-    video: false
+const startVideoCall = async () => {
+  try {
+    // 获取对方用户ID（单聊时使用，群聊时可能需要其他逻辑）
+    const remoteUserId = activeItem.type === RoomTypeEnum.SINGLE ? activeItem.detailId : ''
+
+    await createWebviewWindow(
+      '视频通话', // 窗口标题
+      'rtcCall', // 窗口标签
+      600, // 宽度
+      800, // 高度
+      undefined, // 不需要关闭其他窗口
+      false, // 不可调整大小
+      600, // 最小宽度
+      800, // 最小高度
+      false, // 不透明
+      false, // 显示窗口
+      {
+        remoteUserId: remoteUserId,
+        roomId: activeItem.roomId,
+        callType: 'video',
+        isIncoming: false
+      }
+    )
+  } catch (error) {
+    console.error('创建视频通话窗口失败:', error)
   }
 }
 
@@ -1044,16 +1058,6 @@ onMounted(() => {
   if (activeItem.type === RoomTypeEnum.GROUP) {
     fetchGroupDetail()
   }
-
-  // 监听通话请求消息
-  useMitt.on(WsResponseMessageType.VideoCallRequest, (data: CallSignalMessage) => {
-    // 检查是否是当前聊天的通话请求
-    if (data.roomId === activeItem.roomId) {
-      console.log('收到通话请求，自动打开通话界面', data)
-      offer.value = data
-      voiceCallActive.value = true
-    }
-  })
 })
 
 onUnmounted(() => {
