@@ -1047,6 +1047,26 @@ const closeMenu = (event: any) => {
   }
 }
 
+const handleVideoCall = async () => {
+  await createWebviewWindow(
+    '视频通话', // 窗口标题
+    'rtcCall', // 窗口标签
+    600, // 宽度
+    800, // 高度
+    undefined, // 不需要关闭其他窗口
+    false, // 不可调整大小
+    600, // 最小宽度
+    800, // 最小高度
+    false, // 不透明
+    false, // 显示窗口
+    {
+      roomId: activeItem.roomId,
+      callType: 'video',
+      isIncoming: true
+    }
+  )
+}
+
 onMounted(() => {
   window.addEventListener('click', closeMenu, true)
   if (!messageOptions.value?.isLoading) {
@@ -1058,6 +1078,8 @@ onMounted(() => {
   if (activeItem.type === RoomTypeEnum.GROUP) {
     fetchGroupDetail()
   }
+
+  useMitt.on(WsResponseMessageType.VideoCallRequest, handleVideoCall)
 })
 
 onUnmounted(() => {

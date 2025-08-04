@@ -244,7 +244,6 @@ const createPeerConnection = () => {
   // 监听ICE候选者
   pc.onicecandidate = (event) => {
     if (event.candidate) {
-      console.log('New ICE candidate:', JSON.stringify(event.candidate))
       iceCandidates.value.push(event.candidate)
       // 通过WebSocket发送ICE candidate给对方
       sendIceCandidate(event.candidate)
@@ -315,6 +314,7 @@ const createOffer = async () => {
 
     // 通过WebSocket发送offer给对方
     await sendOffer(offer)
+    sendCall()
 
     return offer
   } catch (error) {
@@ -350,8 +350,8 @@ const createAnswer = async (offer: RTCSessionDescriptionInit) => {
 // 处理接收到的answer
 const handleAnswer = async (answer: RTCSessionDescriptionInit) => {
   try {
+    console.log('设置 answer')
     await peerConnection.value!.setRemoteDescription(answer)
-    console.log('Set remote description (answer)')
   } catch (error) {
     console.error('Error handling answer:', error)
   }
@@ -390,8 +390,6 @@ const sendIceCandidate = (candidate: RTCIceCandidate) => {
       type: WsRequestMsgType.WEBRTC_SIGNAL,
       data: signalData
     })
-
-    console.log('ICE candidate sent via WebSocket:', candidate)
   } catch (error) {
     console.error('Failed to send ICE candidate:', error)
   }
@@ -450,17 +448,22 @@ const sendAnswer = async (answer: RTCSessionDescriptionInit) => {
   }
 }
 
+// 发送通话请求
+const sendCall = () => {
+  ws.send({
+    type: WsRequestMsgType.VIDEO_CALL_REQUEST,
+    data: {
+      roomId: roomId,
+      targetUid: remoteUserId,
+      isVideo: true
+    }
+  })
+}
+
 // 处理接收到的信令消息
 const handleSignalMessage = async (data: CallSignalMessage) => {
   try {
     console.log('Received signal message:', data)
-
-    // 检查消息是否是发给当前用户的
-    if (data.targetUid !== currentUserId) {
-      console.log('Signal message not for current user, ignoring')
-      return
-    }
-
     const signal = JSON.parse(data.signal)
 
     switch (data.signalType) {
@@ -471,7 +474,7 @@ const handleSignalMessage = async (data: CallSignalMessage) => {
         break
 
       case 'answer':
-        console.log('Received SDP answer:', signal)
+        console.log('收到 Answer', signal)
         // 接收到answer，设置远程描述
         await handleAnswer(signal)
         break

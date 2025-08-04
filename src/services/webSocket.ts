@@ -411,8 +411,6 @@ class WS {
   }
 
   #send(msg: WsReqMsgContentType) {
-    console.log(worker)
-    console.log('ws 发送消息', msg)
     worker.postMessage(`{"type":"message","value":${typeof msg === 'string' ? msg : JSON.stringify(msg)}}`)
   }
 

@@ -430,7 +430,6 @@ self.onmessage = (e: MessageEvent<string>) => {
       break
     }
     case 'message': {
-      console.log('worker 发送消息', connection?.readyState, value)
       if (connection?.readyState !== 1) return
       connectionSend(value)
       break
