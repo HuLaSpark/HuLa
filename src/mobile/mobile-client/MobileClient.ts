@@ -2,7 +2,13 @@ import { type OsType, type } from '@tauri-apps/plugin-os'
 import { type SafeArea, useMobileStore } from '@/stores/mobile'
 import { AndroidAdapter } from './AndroidAdapter'
 import { IosAdapter } from './IosAdapter'
-import type { MobileClientInterface } from './interface/adapter'
+import type {
+  IMobileClientAdapter,
+  KeyboardListenerResult,
+  TKeyboardHideCallback,
+  TKeyboardShowCallback
+} from './interface/adapter'
+import type { IMobileClient } from './interface/client'
 import mitt from 'mitt'
 
 const RESIZE_UPDATE = 'resize-update'
@@ -13,29 +19,30 @@ type Events = {
   [RESIZE_UPDATE]: ResizeEvent
 }
 
-export class MobileClient {
+export class MobileClient implements IMobileClient {
   public envType!: OsType
   public mobileStore = useMobileStore()
-  private clientAdapter!: MobileClientInterface
+  private clientAdapter!: IMobileClientAdapter
   public mitt = mitt<Events>()
 
-  constructor() {
-    this.envType = type()
+  constructor() {}
 
-    if (this.envType !== 'ios' && this.envType !== 'android') return // 这里用立即执行函数，避免出现ios死机问题
-    ;(async () => {
-      try {
-        await this.init()
-      } catch (error) {
-        console.error('[MobileClient] 初始化失败:', error)
-      }
-    })()
+  getSafeArea(): Promise<SafeArea> {
+    return this.clientAdapter.getSafeArea()
   }
 
-  private async init() {
-    await this.initAdapter()
-    await this.initState()
-    await this.listenWindowResize()
+  public async init() {
+    this.envType = type()
+
+    if (this.envType !== 'ios' && this.envType !== 'android') return
+
+    try {
+      await this.initAdapter()
+      await this.initState()
+      await this.listenWindowResize()
+    } catch (error) {
+      console.error('[MobileClient] 初始化失败:', error)
+    }
   }
 
   private async initAdapter(): Promise<void> {
@@ -57,7 +64,7 @@ export class MobileClient {
    *
    * @param {SafeArea} insets - 安全区域边距，包括 top/bottom/left/right 四个方向的数值（单位：px）
    */
-  private updateSafeAreaStyle(insets: SafeArea) {
+  public updateSafeAreaStyle(insets: SafeArea) {
     const root = document.documentElement
 
     root.style.setProperty('--safe-area-inset-top', `${insets.top}px`)
@@ -71,7 +78,7 @@ export class MobileClient {
   /**
    * 监听窗口大小变化并更新状态
    */
-  private async listenWindowResize() {
+  public async listenWindowResize() {
     this.clientAdapter.listenWindowResize((safeArea) => {
       this.mobileStore.updateSafeArea(safeArea)
       this.mitt.emit(RESIZE_UPDATE, {
@@ -83,7 +90,7 @@ export class MobileClient {
 
   private async initState() {
     try {
-      const insets = await this.clientAdapter.getSafeArea()
+      const insets = await this.getSafeArea()
 
       if (this.envType === 'android') {
         // 更新安全区域状态
@@ -105,10 +112,22 @@ export class MobileClient {
   public destroyResizeListener(callback: (data: ResizeEvent) => void) {
     this.mitt.off(RESIZE_UPDATE, callback)
   }
+
+  public keyboardListener(
+    showCallback: TKeyboardShowCallback,
+    hideCallback: TKeyboardHideCallback
+  ): KeyboardListenerResult {
+    if (!this.clientAdapter || typeof this.clientAdapter.keyboardListener !== 'function') {
+      throw new Error('[MobileClient] keyboardListener 无法初始化，未找到有效的适配器')
+    }
+
+    return this.clientAdapter.keyboardListener(showCallback, hideCallback)
+  }
 }
 
 export let mobileClient!: MobileClient
 
-export const initMobileClient = () => {
+export const initMobileClient = async () => {
   mobileClient = new MobileClient()
+  await mobileClient.init()
 }

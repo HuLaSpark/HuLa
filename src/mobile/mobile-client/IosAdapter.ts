@@ -1,7 +1,43 @@
 import type { SafeArea } from '~/src/stores/mobile'
-import type { MobileClientInterface } from './interface/adapter'
+import type {
+  IKeyboardDidShowDetail,
+  IMobileClientAdapter,
+  KeyboardListenerResult,
+  TKeyboardHideCallback,
+  TKeyboardShowCallback
+} from './interface/adapter'
 
-export class IosAdapter implements MobileClientInterface {
+export class IosAdapter implements IMobileClientAdapter {
+  // TODO 着个没测试过，需要测试才行
+  keyboardListener(showCallback: TKeyboardShowCallback, hideCallback: TKeyboardHideCallback): KeyboardListenerResult {
+    const showHandler = (e: Event) => {
+      const detail = (e as CustomEvent<IKeyboardDidShowDetail>).detail
+      showCallback(detail)
+      console.log('[IosAdapter] 键盘弹出:', detail)
+    }
+
+    const hideHandler = () => {
+      hideCallback()
+      console.log('[IosAdapter] 键盘隐藏')
+    }
+
+    window.addEventListener('keyboardDidShow', showHandler)
+    window.addEventListener('keyboardDidHide', hideHandler)
+
+    const removeShowFunction = () => {
+      window.removeEventListener('keyboardDidShow', showHandler)
+    }
+
+    const removeHideFunction = () => {
+      window.removeEventListener('keyboardDidHide', hideHandler)
+    }
+
+    return {
+      removeShowFunction,
+      removeHideFunction
+    }
+  }
+
   async getSafeArea(): Promise<SafeArea> {
     try {
       // 判断环境是安卓时才覆盖安全区域的自定义样式，如果是ios则在global/mobile.scss里已经全局覆盖了

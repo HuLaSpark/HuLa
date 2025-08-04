@@ -10,10 +10,11 @@ import MobileCommunity from '@/mobile/views/community/index.vue'
 import MobileFriendPage from '@/mobile/views/friends/index.vue'
 import MobileMessagePage from '@/mobile/views/message/index.vue'
 import MobileMy from '@/mobile/views/my/index.vue'
-import MobileLaunch from '../mobile/launch.vue'
-import MobileHome from '../mobile/layout/index.vue'
-import MobileLogin from '../mobile/login.vue'
+import MobileLaunch from '@/mobile/launch.vue'
+import MobileHome from '@/mobile/layout/index.vue'
+import MobileLogin from '@/mobile/login.vue'
 import ChatRoomLayout from '@/mobile/layout/chat-room/ChatRoomLayout.vue'
+import ChatMain from '@/mobile/views/chat-room/ChatMain.vue'
 
 const isDesktop = computed(() => {
   return type() === 'windows' || type() === 'linux' || type() === 'macos'
@@ -45,7 +46,7 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: 'chatMain',
         name: 'mobileChatMain',
-        component: () => import('@/mobile/views/chat-room/ChatMain.vue')
+        component: ChatMain
       }
     ]
   },

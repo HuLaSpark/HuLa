@@ -15,7 +15,7 @@
     </div>
 
     <!-- 底部安全区域占位元素 -->
-    <SafeAreaPlaceholder direction="bottom" />
+    <SafeAreaPlaceholder type="layout" direction="bottom" />
   </div>
 </template>
 

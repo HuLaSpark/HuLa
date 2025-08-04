@@ -6,6 +6,7 @@
       </div>
     </div>
   </div>
+  <SafeAreaPlaceholder type="keyboard" class="" direction="bottom" />
 </template>
 
 <script setup lang="ts">

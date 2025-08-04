@@ -41,17 +41,3 @@ export const forceUpdateMessageTop = (topValue: number) => {
     dom.style.top = `${topValue}px`
   })
 }
-
-window.addEventListener('keyboardDidShow', (e) => {
-  console.log('键盘弹出，高度：', e)
-})
-
-window.addEventListener('keyboardDidHide', () => {
-  console.log('键盘隐藏')
-})
-
-if (type() === 'ios' || type() === 'android') {
-  import('@/mobile/mobile-client/MobileClient').then((module) => {
-    module.initMobileClient()
-  })
-}

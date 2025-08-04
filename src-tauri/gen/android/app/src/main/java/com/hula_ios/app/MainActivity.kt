@@ -7,6 +7,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import android.graphics.Rect
 import android.view.ViewTreeObserver
+import kotlin.math.roundToInt
 
 class MainActivity : TauriActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,24 +64,31 @@ class MainActivity : TauriActivity() {
         }
 
         // Add keyboard visibility listener
-        webView.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+       webView.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
             private var lastHeightDiff = 0
             private var isKeyboardVisible = false
 
             override fun onGlobalLayout() {
                 val rect = Rect()
                 webView.getWindowVisibleDisplayFrame(rect)
-
-                val screenHeight = webView.rootView.height
-                val visibleHeight = rect.bottom
-                val heightDiff = screenHeight - visibleHeight
+            
+                val screenHeightPx = webView.rootView.height
+                val visibleHeightPx = rect.bottom
+                val heightDiffPx = screenHeightPx - visibleHeightPx
+            
+                val density = webView.resources.displayMetrics.density
+            
+                val screenHeight = (screenHeightPx / density).roundToInt()
+                val visibleHeight = (visibleHeightPx / density).roundToInt()
+                val heightDiff = (heightDiffPx / density).roundToInt()
+            
                 val now = System.currentTimeMillis()
-
-                if (heightDiff > screenHeight * 0.15) {
-                    if (!isKeyboardVisible || heightDiff != lastHeightDiff) {
+            
+                if (heightDiffPx > screenHeightPx * 0.15) {
+                    if (!isKeyboardVisible || heightDiffPx != lastHeightDiff) {
                         isKeyboardVisible = true
-                        lastHeightDiff = heightDiff
-
+                        lastHeightDiff = heightDiffPx
+                    
                         val script = """
                             window.dispatchEvent(new CustomEvent('keyboardDidShow', {
                                 detail: {
@@ -93,13 +101,13 @@ class MainActivity : TauriActivity() {
                                 }
                             }));
                         """.trimIndent()
-
+                    
                         webView.evaluateJavascript(script, null)
                     }
                 } else {
                     if (isKeyboardVisible) {
                         isKeyboardVisible = false
-
+                    
                         val script = """
                             window.dispatchEvent(new CustomEvent('keyboardDidHide', {
                                 detail: {
@@ -112,11 +120,11 @@ class MainActivity : TauriActivity() {
                                 }
                             }));
                         """.trimIndent()
-
+                    
                         webView.evaluateJavascript(script, null)
                     }
                 }
             }
-        })
+})
     }
 }

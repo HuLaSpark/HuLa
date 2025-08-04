@@ -1,8 +1,43 @@
 import type { SafeArea } from '~/src/stores/mobile'
-import type { MobileClientInterface } from './interface/adapter'
+import type {
+  IKeyboardDidShowDetail,
+  IMobileClientAdapter,
+  KeyboardListenerResult,
+  TKeyboardHideCallback,
+  TKeyboardShowCallback
+} from './interface/adapter'
 import { getInsets } from 'tauri-plugin-safe-area-insets'
 
-export class AndroidAdapter implements MobileClientInterface {
+export class AndroidAdapter implements IMobileClientAdapter {
+  keyboardListener(showCallback: TKeyboardShowCallback, hideCallback: TKeyboardHideCallback): KeyboardListenerResult {
+    const showHandler = (e: Event) => {
+      const detail = (e as CustomEvent<IKeyboardDidShowDetail>).detail
+      showCallback(detail)
+      console.log('[AndroidAdapter] 键盘弹出:', detail)
+    }
+
+    const hideHandler = () => {
+      hideCallback()
+      console.log('[AndroidAdapter] 键盘隐藏')
+    }
+
+    window.addEventListener('keyboardDidShow', showHandler)
+    window.addEventListener('keyboardDidHide', hideHandler)
+
+    const removeShowFunction = () => {
+      window.removeEventListener('keyboardDidShow', showHandler)
+    }
+
+    const removeHideFunction = () => {
+      window.removeEventListener('keyboardDidHide', hideHandler)
+    }
+
+    return {
+      removeShowFunction,
+      removeHideFunction
+    }
+  }
+
   async getSafeArea(): Promise<SafeArea> {
     try {
       return await getInsets()

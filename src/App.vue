@@ -20,6 +20,7 @@ import router from '@/router'
 import { useSettingStore } from '@/stores/setting.ts'
 import LockScreen from '@/views/LockScreen.vue'
 import { useTauriListener } from './hooks/useTauriListener'
+import type { IKeyboardDidShowDetail } from './mobile/mobile-client/interface/adapter'
 
 const appWindow = WebviewWindow.getCurrent()
 const { createWebviewWindow } = useWindow()
@@ -175,6 +176,32 @@ onUnmounted(() => {
   window.removeEventListener('contextmenu', (e) => e.preventDefault(), false)
   window.removeEventListener('dragstart', preventDrag)
 })
+
+if (type() === 'ios' || type() === 'android') {
+  import('@/mobile/mobile-client/MobileClient').then(async (module) => {
+    const { useMobileStore } = await import('@/stores/mobile')
+
+    const mobileStore = useMobileStore()
+
+    await module.initMobileClient()
+
+    const showKeyboard = (detail: IKeyboardDidShowDetail) => {
+      mobileStore.updateKeyboardDetail(detail)
+      mobileStore.updateKeyboardState(true)
+    }
+
+    const hideKeyboard = () => {
+      mobileStore.updateKeyboardState(false)
+    }
+
+    const { removeHideFunction, removeShowFunction } = module.mobileClient.keyboardListener(showKeyboard, hideKeyboard)
+
+    onUnmounted(() => {
+      removeShowFunction()
+      removeHideFunction()
+    })
+  })
+}
 </script>
 <style lang="scss">
 /* 修改naive-ui select 组件的样式 */

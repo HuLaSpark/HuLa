@@ -2,7 +2,7 @@
   <div class="h-100vh flex flex-col">
     <!-- 考虑不需要这个元素，因为有些页面是占满顶部的，考虑按需引入 -->
     <!-- 顶部安全区域占位元素 -->
-    <SafeAreaPlaceholder class="" direction="top" />
+    <SafeAreaPlaceholder type="layout" class="" direction="top" />
 
     <!-- 页面全部内容 -->
     <div class="flex flex-col flex-1">
@@ -10,7 +10,7 @@
     </div>
 
     <!-- 底部安全区域占位元素 -->
-    <SafeAreaPlaceholder class="" direction="bottom" />
+    <SafeAreaPlaceholder type="layout" class="" direction="bottom" />
   </div>
 </template>
 

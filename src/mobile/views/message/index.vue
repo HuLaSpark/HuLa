@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col h-full">
     <!-- 顶部安全区域占位元素 -->
-    <SafeAreaPlaceholder direction="top" />
+    <SafeAreaPlaceholder type="layout" direction="top" />
 
     <img src="@/assets/mobile/chat-home/background.webp" class="w-100% fixed top-0" alt="hula" />
 
