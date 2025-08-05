@@ -18,6 +18,7 @@
         <div class="absolute top-8px right-8px group">
           <video
             ref="pipVideoRef"
+            v-if="isPipVideoVisible"
             autoplay
             playsinline
             class="w-120px h-90px rounded-4px bg-black object-cover border-2 border-white cursor-pointer hover:border-blue-400 transition-colors"
@@ -36,7 +37,7 @@
 
         <!-- 用户名 -->
         <div class="text-20px font-medium text-white mb-8px text-center">
-          {{ remoteUserInfo?.name || '李盛良 -Hula' }}
+          {{ remoteUserInfo?.name }}
         </div>
 
         <!-- 状态文本 -->
@@ -186,6 +187,10 @@ const callStatusText = computed(() => {
   }
 })
 
+const isPipVideoVisible = computed(() => {
+  return isVideoOn.value && !!remoteStream.value
+})
+
 // WebRTC相关方法
 const createPeerConnection = async () => {
   console.log('开始交换SDP')
@@ -238,7 +243,7 @@ const createPeerConnection = async () => {
   pc.ontrack = (event) => {
     console.log('Received remote stream:', event.streams[0])
     if (event.streams && event.streams[0]) {
-      setRemoteStream(event.streams[0])
+      remoteStream.value = event.streams[0]
     }
   }
 
@@ -503,19 +508,18 @@ const toggleVideo = async () => {
       await nextTick()
       if (isLocalVideoMain.value) {
         mainVideoRef.value!.srcObject = localStream.value
+        pipVideoRef.value!.srcObject = remoteStream.value
       } else {
         pipVideoRef.value!.srcObject = localStream.value
+        mainVideoRef.value!.srcObject = remoteStream.value
       }
     } catch (error) {
       console.error('开启摄像头失败:', error)
       isVideoOn.value = false
     }
   } else {
-    if (isLocalVideoMain.value) {
-      mainVideoRef.value!.srcObject = null
-    } else {
-      pipVideoRef.value!.srcObject = null
-    }
+    mainVideoRef.value!.srcObject = null
+    pipVideoRef.value!.srcObject = null
   }
 }
 
@@ -587,21 +591,6 @@ const initMediaStream = async () => {
   }
 }
 
-// 设置远程视频流
-const setRemoteStream = async (stream: MediaStream) => {
-  console.log('设置远程流')
-  remoteStream.value = stream
-  await nextTick()
-
-  if (callType === 'video') {
-    if (isLocalVideoMain.value) {
-      pipVideoRef.value!.srcObject = stream
-    } else {
-      mainVideoRef.value!.srcObject = stream
-    }
-  }
-}
-
 // 切换视频布局
 const toggleVideoLayout = async () => {
   isLocalVideoMain.value = !isLocalVideoMain.value
@@ -643,7 +632,7 @@ const cleanupMediaStream = () => {
 onMounted(async () => {
   await WebviewWindow.getCurrent().show()
   await initMediaStream()
-  initCall()
+  await initCall()
   // 监听 WebRTC 信令消息
   useMitt.on(WsResponseMessageType.WEBRTC_SIGNAL, handleSignalMessage)
   if (isIncoming) {
