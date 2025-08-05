@@ -1,41 +1,18 @@
 <template>
-  <div data-tauri-drag-region class="rtc-call-container h-full bg-[--bg-color] flex flex-col select-none">
+  <div data-tauri-drag-region class="rtc-call-container h-full bg-gray-800 flex flex-col select-none">
     <!-- 窗口控制栏 -->
     <ActionBar class="absolute right-0 w-full z-999" :shrink="false" :min-w="false" :max-w="false" />
 
-    <!-- 顶部操作栏 -->
-    <div class="call-header flex items-center justify-between p-16px pt-32px border-b border-[--border-color]">
-      <n-flex align="center" :size="12">
-        <n-avatar :size="40" :src="remoteUserInfo?.avatar" :fallback-src="''" class="rounded-8px">
-          {{ remoteUserInfo?.name?.charAt(0) || 'U' }}
-        </n-avatar>
-        <div>
-          <div class="text-16px font-medium text-[--text-color]">
-            {{ remoteUserInfo?.name || '未知用户' }}
-          </div>
-          <div class="text-12px text-[--text-color-3]">
-            {{ callStatusText }}
-          </div>
-        </div>
-      </n-flex>
-
-      <!-- 通话时长 -->
-      <div v-if="callState === 'in_call'" class="text-14px text-[--text-color-2]">
-        {{ formatDuration(callDuration) }}
-      </div>
-    </div>
-
     <!-- 主要内容区域 -->
-    <div class="call-content flex-1 flex flex-col items-center justify-center p-32px">
+    <div class="call-content flex-1 flex flex-col items-center justify-center px-32px pt-60px">
       <!-- 视频通话时显示视频 -->
-      <div v-if="callType === 'video' && localStream" class="video-container mb-32px relative">
+      <div v-if="callType === 'video' && localStream && isVideoOn" class="video-container mb-32px relative">
         <!-- 主视频 -->
         <video
           ref="mainVideoRef"
           autoplay
           playsinline
-          class="w-320px h-240px rounded-8px bg-black object-cover"
-          :muted="isLocalVideoMain"></video>
+          class="w-320px h-240px rounded-8px bg-black object-cover"></video>
 
         <!-- 画中画视频 -->
         <div class="absolute top-8px right-8px group">
@@ -43,7 +20,6 @@
             ref="pipVideoRef"
             autoplay
             playsinline
-            :muted="!isLocalVideoMain"
             class="w-120px h-90px rounded-4px bg-black object-cover border-2 border-white cursor-pointer hover:border-blue-400 transition-colors"
             @click="toggleVideoLayout"></video>
           <!-- 切换提示 -->
@@ -54,104 +30,88 @@
         </div>
       </div>
 
-      <!-- 调试用：显示本地视频流状态 -->
-      <div v-if="callType === 'video'" class="debug-info mb-16px text-center">
-        <p class="text-sm text-gray-500">本地视频流状态: {{ localStream ? '已获取' : '未获取' }}</p>
-        <p class="text-sm text-gray-500">视频轨道数: {{ localStream?.getVideoTracks().length || 0 }}</p>
-      </div>
-
       <!-- 语音通话或其他状态时显示头像 -->
-      <div v-else class="user-avatar mb-32px relative">
-        <n-avatar :size="120" :src="remoteUserInfo?.avatar" :fallback-src="''" class="rounded-full">
-          <span class="text-48px font-bold">{{ remoteUserInfo?.name?.charAt(0) || 'U' }}</span>
+      <div v-else class="user-avatar mb-24px relative flex flex-col items-center">
+        <n-avatar :size="120" :src="remoteUserInfo?.avatar" :fallback-src="''" class="rounded-12px mb-16px">
+          <span class="text-48px font-bold text-white">{{ remoteUserInfo?.name?.charAt(0) || 'U' }}</span>
         </n-avatar>
+
+        <!-- 用户名 -->
+        <div class="text-20px font-medium text-white mb-8px text-center">
+          {{ remoteUserInfo?.name || '李盛良 -Hula' }}
+        </div>
+
+        <!-- 状态文本 -->
+        <div class="text-14px text-gray-300 text-center">
+          {{ callStatusText }}
+        </div>
 
         <!-- 通话状态指示器 -->
         <div
           v-if="callState === 'calling' || callState === 'ringing'"
-          class="absolute -bottom-4px -right-4px w-24px h-24px rounded-full bg-[--primary-color] flex items-center justify-center animate-pulse">
+          class="absolute -bottom-4px -right-4px w-24px h-24px rounded-full bg-green-500 flex items-center justify-center animate-pulse">
           <div class="w-8px h-8px rounded-full bg-white"></div>
         </div>
       </div>
 
-      <!-- 状态文本 -->
-      <div class="text-18px text-[--text-color] mb-8px text-center">
-        {{ callStatusText }}
-      </div>
-
-      <!-- 通话质量指示 -->
-      <div v-if="callState === 'in_call'" class="flex items-center gap-8px mb-32px">
-        <div class="flex gap-2px">
-          <div
-            v-for="i in 4"
-            :key="i"
-            class="w-3px h-12px rounded-full transition-colors duration-300"
-            :class="networkQuality >= i ? 'bg-[--success-color]' : 'bg-[--border-color]'"></div>
-        </div>
-        <span class="text-12px text-[--text-color-3]">网络质量</span>
+      <!-- 通话时长 -->
+      <div v-if="callState === 'in_call'" class="text-16px text-gray-300 mb-32px text-center">
+        {{ formatDuration(callDuration) }}
       </div>
     </div>
 
     <!-- 底部控制按钮 -->
-    <div class="call-controls flex items-center justify-center gap-24px p-32px">
-      <!-- 静音按钮 -->
-      <n-button
-        v-if="callState === 'in_call'"
-        circle
-        :type="isMuted ? 'error' : 'default'"
-        :size="'large'"
-        @click="toggleMute"
-        class="w-56px h-56px">
-        <template #icon>
-          <Icon :icon="isMuted ? 'material-symbols:mic-off' : 'material-symbols:mic'" :size="24" />
-        </template>
-      </n-button>
+    <div class="call-controls flex flex-col items-center pb-40px">
+      <!-- 上排按钮：静音、扬声器、摄像头 -->
+      <div class="flex items-start justify-center gap-40px mb-32px">
+        <!-- 静音按钮 -->
+        <div class="flex flex-col items-center">
+          <div
+            @click="toggleMute"
+            class="control-btn w-60px h-60px rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 mb-8px"
+            :class="isMuted ? 'bg-red-500 hover:bg-red-400' : 'bg-gray-600 hover:bg-gray-500'">
+            <Icon :icon="isMuted ? 'material-symbols:mic-off' : 'material-symbols:mic'" :size="24" class="text-white" />
+          </div>
+          <div class="text-12px text-gray-400 whitespace-nowrap">{{ isMuted ? '无麦克风' : '麦克风' }}</div>
+        </div>
 
-      <!-- 接听按钮 -->
-      <n-button
-        v-if="callState === 'ringing'"
-        circle
-        type="success"
-        :size="'large'"
-        @click="answerCall"
-        class="w-64px h-64px">
-        <template #icon>
-          <Icon icon="material-symbols:call" :size="28" />
-        </template>
-      </n-button>
+        <!-- 扬声器按钮 -->
+        <div class="flex flex-col items-center">
+          <div
+            @click="toggleSpeaker"
+            class="control-btn w-60px h-60px rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 mb-8px"
+            :class="isSpeakerOn ? 'bg-blue-500 hover:bg-blue-400' : 'bg-gray-600 hover:bg-gray-500'">
+            <Icon
+              :icon="isSpeakerOn ? 'material-symbols:volume-up' : 'material-symbols:volume-down'"
+              :size="24"
+              class="text-white" />
+          </div>
+          <div class="text-12px text-gray-400 whitespace-nowrap">{{ isSpeakerOn ? '扬声器已开' : '扬声器' }}</div>
+        </div>
 
-      <!-- 挂断按钮 -->
-      <n-button circle type="error" :size="'large'" @click="hangupCall" class="w-64px h-64px">
-        <template #icon>
-          <Icon icon="material-symbols:call-end" :size="28" />
-        </template>
-      </n-button>
+        <!-- 摄像头按钮 -->
+        <div class="flex flex-col items-center">
+          <div
+            @click="toggleVideo"
+            class="control-btn w-60px h-60px rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 mb-8px"
+            :class="isVideoOn ? 'bg-blue-500 hover:bg-blue-400' : 'bg-red-500 hover:bg-red-400'">
+            <Icon
+              :icon="isVideoOn ? 'material-symbols:videocam' : 'material-symbols:videocam-off'"
+              :size="24"
+              class="text-white" />
+          </div>
+          <div class="text-12px text-gray-400 whitespace-nowrap">{{ isVideoOn ? '关闭摄像头' : '开启摄像头' }}</div>
+        </div>
+      </div>
 
-      <!-- 拒绝按钮 -->
-      <n-button
-        v-if="callState === 'ringing'"
-        circle
-        type="default"
-        :size="'large'"
-        @click="rejectCall"
-        class="w-56px h-56px">
-        <template #icon>
-          <Icon icon="material-symbols:call-end" :size="24" />
-        </template>
-      </n-button>
-
-      <!-- 扬声器按钮 -->
-      <n-button
-        v-if="callState === 'in_call'"
-        circle
-        :type="isSpeakerOn ? 'primary' : 'default'"
-        :size="'large'"
-        @click="toggleSpeaker"
-        class="w-56px h-56px">
-        <template #icon>
-          <Icon :icon="isSpeakerOn ? 'material-symbols:volume-up' : 'material-symbols:volume-down'" :size="24" />
-        </template>
-      </n-button>
+      <!-- 下排按钮：挂断 -->
+      <div class="flex justify-center">
+        <div
+          @click="hangupCall"
+          class="control-btn w-70px h-70px rounded-full bg-red-500 hover:bg-red-400 flex items-center justify-center cursor-pointer transition-all duration-200">
+          <Icon icon="material-symbols:call-end" :size="32" class="text-white" />
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -168,6 +128,7 @@ import type { CacheUserItem } from '@/services/types'
 import { WsRequestMsgType, WsResponseMessageType, type CallSignalMessage } from '@/services/wsType'
 import ws from '@/services/webSocket'
 import { useMitt } from '@/hooks/useMitt'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 
 // 通过路由参数获取数据
 const route = useRoute()
@@ -189,13 +150,12 @@ const callState = ref<'idle' | 'calling' | 'ringing' | 'in_call' | 'ended'>('idl
 const callDuration = ref(0)
 const isMuted = ref(false)
 const isSpeakerOn = ref(false)
-const networkQuality = ref(4)
+const isVideoOn = ref(false)
+// const networkQuality = ref(4)
 const remoteUserInfo = ref<Partial<CacheUserItem> | null>(null)
 const callTimer = ref<ReturnType<typeof setInterval> | null>(null)
 
 // 视频元素引用
-const localVideoRef = ref<HTMLVideoElement | null>(null)
-const remoteVideoRef = ref<HTMLVideoElement | null>(null)
 const mainVideoRef = ref<HTMLVideoElement | null>(null)
 const pipVideoRef = ref<HTMLVideoElement | null>(null)
 
@@ -228,6 +188,7 @@ const callStatusText = computed(() => {
 
 // WebRTC相关方法
 const createPeerConnection = async () => {
+  console.log('开始交换SDP')
   // 如果已经存在连接，先关闭
   if (peerConnection.value) {
     peerConnection.value.close()
@@ -509,6 +470,8 @@ const closePeerConnection = () => {
     iceCandidates.value = []
     console.log('Peer connection closed')
   }
+  // 关闭窗口
+  getCurrentWindow().close()
 }
 
 // 方法
@@ -530,18 +493,44 @@ const toggleSpeaker = () => {
   console.log('切换扬声器状态:', isSpeakerOn.value)
 }
 
-const answerCall = () => {
-  callState.value = 'in_call'
-  startCallTimer()
-  // TODO: 实现实际的接听逻辑
-  console.log('接听通话')
+const toggleVideo = async () => {
+  isVideoOn.value = !isVideoOn.value
+
+  if (isVideoOn.value) {
+    // 开启摄像头，重新获取视频流
+    try {
+      // 等待下一个事件循环，确保视频元素已加载
+      await nextTick()
+      if (isLocalVideoMain.value) {
+        mainVideoRef.value!.srcObject = localStream.value
+      } else {
+        pipVideoRef.value!.srcObject = localStream.value
+      }
+    } catch (error) {
+      console.error('开启摄像头失败:', error)
+      isVideoOn.value = false
+    }
+  } else {
+    if (isLocalVideoMain.value) {
+      mainVideoRef.value!.srcObject = null
+    } else {
+      pipVideoRef.value!.srcObject = null
+    }
+  }
 }
 
-const rejectCall = () => {
-  callState.value = 'ended'
-  // TODO: 实现实际的拒绝逻辑
-  console.log('拒绝通话')
-}
+// const answerCall = () => {
+//   callState.value = 'in_call'
+//   startCallTimer()
+//   // TODO: 实现实际的接听逻辑
+//   console.log('接听通话')
+// }
+
+// const rejectCall = () => {
+//   callState.value = 'ended'
+//   // TODO: 实现实际的拒绝逻辑
+//   console.log('拒绝通话')
+// }
 
 const startCallTimer = () => {
   callTimer.value = setInterval(() => {
@@ -577,6 +566,11 @@ const initCall = async () => {
   } else {
     callState.value = 'calling'
   }
+
+  // 初始化isLocalVideoMain
+  if (!remoteStream.value) {
+    isLocalVideoMain.value = callType === 'video'
+  }
 }
 
 const initMediaStream = async () => {
@@ -587,24 +581,6 @@ const initMediaStream = async () => {
     }
     const stream = await navigator.mediaDevices.getUserMedia(constraints)
     localStream.value = stream
-
-    // 等待 DOM 更新后设置本地视频流
-    await nextTick()
-    console.log('callType:', callType, 'localVideoRef:', localVideoRef.value)
-    if (localVideoRef.value && callType === 'video') {
-      localVideoRef.value.srcObject = stream
-      console.log('Local video stream set successfully')
-    } else {
-      console.log('Failed to set local video stream - localVideoRef:', localVideoRef.value, 'callType:', callType)
-    }
-
-    // 设置到画中画视频（默认本地视频在画中画位置）
-    if (pipVideoRef.value && callType === 'video') {
-      pipVideoRef.value.srcObject = stream
-      console.log('PiP video stream set successfully')
-    }
-
-    console.log('Got MediaStream:', stream)
   } catch (error: any) {
     console.error('Error accessing media devices.', error)
   }
@@ -612,17 +588,16 @@ const initMediaStream = async () => {
 
 // 设置远程视频流
 const setRemoteStream = async (stream: MediaStream) => {
+  console.log('设置远程流')
   remoteStream.value = stream
   await nextTick()
-  if (remoteVideoRef.value && callType === 'video') {
-    remoteVideoRef.value.srcObject = stream
-    console.log('Remote video stream set successfully')
-  }
 
-  // 设置到主视频位置（默认远程视频在主视频位置）
-  if (mainVideoRef.value && callType === 'video') {
-    mainVideoRef.value.srcObject = stream
-    console.log('Main video stream set successfully')
+  if (callType === 'video') {
+    if (isLocalVideoMain.value) {
+      pipVideoRef.value!.srcObject = stream
+    } else {
+      mainVideoRef.value!.srcObject = stream
+    }
   }
 }
 
@@ -665,6 +640,7 @@ const cleanupMediaStream = () => {
 
 // 生命周期
 onMounted(async () => {
+  // 初始化视频状态
   await WebviewWindow.getCurrent().show()
   await initMediaStream()
   initCall()
@@ -675,9 +651,19 @@ onMounted(async () => {
     ws.send({
       type: WsRequestMsgType.VIDEO_CALL_RESPONSE,
       data: {
-        callUid: remoteUserId,
+        callerUid: remoteUserId,
         roomId: roomId,
         accepted: 1
+      }
+    })
+  } else {
+    console.log('调用方发送视频通话请求')
+    ws.send({
+      type: WsRequestMsgType.VIDEO_CALL_REQUEST,
+      data: {
+        targetUid: remoteUserId,
+        roomId: roomId,
+        isVideo: true
       }
     })
   }
