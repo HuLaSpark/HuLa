@@ -944,17 +944,26 @@ const startVoiceCall = async () => {
 
 const startVideoCall = async () => {
   try {
-    await createRtcCallWindow(false)
+    // 判断是否为群聊，如果是群聊则跳过
+    if (activeItem.type === RoomTypeEnum.GROUP) {
+      window.$message.warning('群聊暂不支持视频通话')
+      return
+    }
+
+    // 获取当前房间好友的ID（单聊时使用detailId作为remoteUid）
+    const remoteUid = activeItem.detailId
+    if (!remoteUid) {
+      window.$message.error('无法获取对方用户信息')
+      return
+    }
+    await createRtcCallWindow(false, remoteUid)
   } catch (error) {
     console.error('创建视频通话窗口失败:', error)
   }
 }
 
-const createRtcCallWindow = async (isIncoming: boolean, remoteUserId?: string) => {
+const createRtcCallWindow = async (isIncoming: boolean, remoteUserId: string) => {
   // 获取对方用户ID（单聊时使用，群聊时可能需要其他逻辑）
-  if (!remoteUserId) {
-    remoteUserId = activeItem.type === RoomTypeEnum.SINGLE ? activeItem.detailId : ''
-  }
   await createWebviewWindow(
     '视频通话', // 窗口标题
     'rtcCall', // 窗口标签

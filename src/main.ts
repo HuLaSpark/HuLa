@@ -7,7 +7,11 @@ import vSlide from '@/directives/v-slide.ts'
 import router from '@/router'
 import { pinia } from '@/stores'
 import { initMobileClient } from '@/mobile/mobile-client/MobileClient'
-import '@/services/webSocket'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+
+if (WebviewWindow.getCurrent().label === 'home' || WebviewWindow.getCurrent().label === 'rtcCall') {
+  import('@/services/webSocket')
+}
 
 const app = createApp(App)
 app.use(router).use(pinia).directive('resize', vResize).directive('slide', vSlide).mount('#app')

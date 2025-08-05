@@ -32,9 +32,7 @@
 
       <!-- 语音通话或其他状态时显示头像 -->
       <div v-else class="user-avatar mb-24px relative flex flex-col items-center">
-        <n-avatar :size="120" :src="remoteUserInfo?.avatar" :fallback-src="''" class="rounded-12px mb-16px">
-          <span class="text-48px font-bold text-white">{{ remoteUserInfo?.name?.charAt(0) || 'U' }}</span>
-        </n-avatar>
+        <n-avatar :size="120" :src="avatarSrc" :fallback-src="''" class="rounded-12px mb-16px" />
 
         <!-- 用户名 -->
         <div class="text-20px font-medium text-white mb-8px text-center">
@@ -129,7 +127,9 @@ import { WsRequestMsgType, WsResponseMessageType, type CallSignalMessage } from 
 import ws from '@/services/webSocket'
 import { useMitt } from '@/hooks/useMitt'
 import { getCurrentWindow } from '@tauri-apps/api/window'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 
+const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(remoteUserInfo.value?.avatar as string))
 // 通过路由参数获取数据
 const route = useRoute()
 const remoteUserId = route.query.remoteUserId as string
@@ -558,6 +558,7 @@ const initCall = async () => {
   if (remoteUserId) {
     await cachedStore.getBatchUserInfo([remoteUserId])
     remoteUserInfo.value = cachedStore.userCachedList[remoteUserId] || null
+    avatarSrc.value
   }
 
   // 设置初始状态
@@ -640,7 +641,6 @@ const cleanupMediaStream = () => {
 
 // 生命周期
 onMounted(async () => {
-  // 初始化视频状态
   await WebviewWindow.getCurrent().show()
   await initMediaStream()
   initCall()
