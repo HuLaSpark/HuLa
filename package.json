@@ -142,7 +142,7 @@
     "cz-git": "^1.11.0",
     "happy-dom": "^15.11.7",
     "husky": "^9.0.11",
-    "lint-staged": "^15.2.7",
+    "lint-staged": "^16.1.4",
     "prettier": "^3.6.2",
     "release-it": "^17.11.0",
     "sass": "1.89.2",
