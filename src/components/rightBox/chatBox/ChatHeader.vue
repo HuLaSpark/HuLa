@@ -950,9 +950,11 @@ const startVideoCall = async () => {
   }
 }
 
-const createRtcCallWindow = async (isIncoming: boolean) => {
+const createRtcCallWindow = async (isIncoming: boolean, remoteUserId?: string) => {
   // 获取对方用户ID（单聊时使用，群聊时可能需要其他逻辑）
-  const remoteUserId = activeItem.type === RoomTypeEnum.SINGLE ? activeItem.detailId : ''
+  if (!remoteUserId) {
+    remoteUserId = activeItem.type === RoomTypeEnum.SINGLE ? activeItem.detailId : ''
+  }
   await createWebviewWindow(
     '视频通话', // 窗口标题
     'rtcCall', // 窗口标签
@@ -965,7 +967,7 @@ const createRtcCallWindow = async (isIncoming: boolean) => {
     false, // 不透明
     false, // 显示窗口
     {
-      remoteUserId: remoteUserId,
+      remoteUserId,
       roomId: activeItem.roomId,
       callType: 'video',
       isIncoming
@@ -1050,8 +1052,9 @@ const closeMenu = (event: any) => {
   }
 }
 
-const handleVideoCall = async () => {
-  await createRtcCallWindow(true)
+const handleVideoCall = async (remotedUid: string) => {
+  console.log('监听到视频通话调用')
+  await createRtcCallWindow(true, remotedUid)
 }
 
 onMounted(() => {
@@ -1066,7 +1069,10 @@ onMounted(() => {
     fetchGroupDetail()
   }
 
-  useMitt.on(WsResponseMessageType.VideoCallRequest, handleVideoCall)
+  useMitt.on(WsResponseMessageType.VideoCallRequest, (event) => {
+    const remoteUid = event.callerUid
+    handleVideoCall(remoteUid)
+  })
 })
 
 onUnmounted(() => {
