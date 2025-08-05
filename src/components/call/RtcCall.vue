@@ -174,6 +174,7 @@ const route = useRoute()
 const remoteUserId = route.query.remoteUserId as string
 const roomId = route.query.roomId as string
 const callType = (route.query.callType as 'voice' | 'video') || 'voice'
+// 是否是接受方，true 代表接受方
 const isIncoming = route.query.isIncoming === 'true'
 
 // Stores
@@ -226,7 +227,7 @@ const callStatusText = computed(() => {
 })
 
 // WebRTC相关方法
-const createPeerConnection = () => {
+const createPeerConnection = async () => {
   // 如果已经存在连接，先关闭
   if (peerConnection.value) {
     peerConnection.value.close()
@@ -291,6 +292,11 @@ const createPeerConnection = () => {
       console.log('Adding track to peer connection:', track.kind)
       pc.addTrack(track, localStream.value!)
     })
+  }
+
+  // 如果是发起方，创建offer
+  if (!isIncoming) {
+    await createOffer()
   }
 
   return pc
@@ -598,14 +604,6 @@ const initMediaStream = async () => {
       console.log('PiP video stream set successfully')
     }
 
-    // 创建WebRTC连接
-    createPeerConnection()
-
-    // 如果是发起方，创建offer
-    if (!isIncoming) {
-      await createOffer()
-    }
-
     console.log('Got MediaStream:', stream)
   } catch (error: any) {
     console.error('Error accessing media devices.', error)
@@ -672,6 +670,19 @@ onMounted(async () => {
   initCall()
   // 监听 WebRTC 信令消息
   useMitt.on(WsResponseMessageType.WEBRTC_SIGNAL, handleSignalMessage)
+  if (isIncoming) {
+    // 接受方，发送是否接受
+    ws.send({
+      type: WsRequestMsgType.VIDEO_CALL_RESPONSE,
+      data: {
+        callUid: remoteUserId,
+        roomId: roomId,
+        accepted: 1
+      }
+    })
+  }
+  // 调用方监听，接收方是否接受
+  useMitt.on(WsResponseMessageType.CallAccepted, createPeerConnection)
 })
 
 onUnmounted(() => {

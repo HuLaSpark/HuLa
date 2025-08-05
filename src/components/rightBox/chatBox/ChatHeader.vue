@@ -944,30 +944,33 @@ const startVoiceCall = async () => {
 
 const startVideoCall = async () => {
   try {
-    // 获取对方用户ID（单聊时使用，群聊时可能需要其他逻辑）
-    const remoteUserId = activeItem.type === RoomTypeEnum.SINGLE ? activeItem.detailId : ''
-
-    await createWebviewWindow(
-      '视频通话', // 窗口标题
-      'rtcCall', // 窗口标签
-      600, // 宽度
-      800, // 高度
-      undefined, // 不需要关闭其他窗口
-      false, // 不可调整大小
-      600, // 最小宽度
-      800, // 最小高度
-      false, // 不透明
-      false, // 显示窗口
-      {
-        remoteUserId: remoteUserId,
-        roomId: activeItem.roomId,
-        callType: 'video',
-        isIncoming: false
-      }
-    )
+    await createRtcCallWindow(false)
   } catch (error) {
     console.error('创建视频通话窗口失败:', error)
   }
+}
+
+const createRtcCallWindow = async (isIncoming: boolean) => {
+  // 获取对方用户ID（单聊时使用，群聊时可能需要其他逻辑）
+  const remoteUserId = activeItem.type === RoomTypeEnum.SINGLE ? activeItem.detailId : ''
+  await createWebviewWindow(
+    '视频通话', // 窗口标题
+    'rtcCall', // 窗口标签
+    600, // 宽度
+    800, // 高度
+    undefined, // 不需要关闭其他窗口
+    false, // 不可调整大小
+    600, // 最小宽度
+    800, // 最小高度
+    false, // 不透明
+    false, // 显示窗口
+    {
+      remoteUserId: remoteUserId,
+      roomId: activeItem.roomId,
+      callType: 'video',
+      isIncoming
+    }
+  )
 }
 
 // 开始编辑群名称
@@ -1048,23 +1051,7 @@ const closeMenu = (event: any) => {
 }
 
 const handleVideoCall = async () => {
-  await createWebviewWindow(
-    '视频通话', // 窗口标题
-    'rtcCall', // 窗口标签
-    600, // 宽度
-    800, // 高度
-    undefined, // 不需要关闭其他窗口
-    false, // 不可调整大小
-    600, // 最小宽度
-    800, // 最小高度
-    false, // 不透明
-    false, // 显示窗口
-    {
-      roomId: activeItem.roomId,
-      callType: 'video',
-      isIncoming: true
-    }
-  )
+  await createRtcCallWindow(true)
 }
 
 onMounted(() => {
