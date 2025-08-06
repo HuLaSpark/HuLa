@@ -386,6 +386,7 @@ import { type } from '@tauri-apps/plugin-os'
 import { useDisplayMedia } from '@vueuse/core'
 import AvatarCropper from '@/components/common/AvatarCropper.vue'
 import {
+  CallTypeEnum,
   EventEnum,
   MittEnum,
   NotificationTypeEnum,
@@ -933,7 +934,7 @@ const startVoiceCall = async () => {
       {
         remoteUserId: remoteUserId,
         roomId: activeItem.roomId,
-        callType: 'voice',
+        callType: CallTypeEnum.AUDIO,
         isIncoming: false
       }
     )
@@ -978,7 +979,7 @@ const createRtcCallWindow = async (isIncoming: boolean, remoteUserId: string) =>
     {
       remoteUserId,
       roomId: activeItem.roomId,
-      callType: 'video',
+      callType: CallTypeEnum.VIDEO,
       isIncoming
     }
   )

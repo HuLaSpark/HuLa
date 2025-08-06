@@ -6,7 +6,7 @@
     <!-- 主要内容区域 -->
     <div class="call-content flex-1 flex flex-col items-center justify-center px-32px pt-60px">
       <!-- 视频通话时显示视频 -->
-      <div v-if="callType === 'video' && localStream && isVideoOn" class="video-container mb-32px relative">
+      <div v-if="callType === CallTypeEnum.VIDEO && localStream && isVideoOn" class="video-container mb-32px relative">
         <!-- 主视频 -->
         <video
           ref="mainVideoRef"
@@ -47,15 +47,15 @@
 
         <!-- 通话状态指示器 -->
         <div
-          v-if="callState === 'calling' || callState === 'ringing'"
+          v-if="connectionStatus === RTCCallStatus.CALLING"
           class="absolute -bottom-4px -right-4px w-24px h-24px rounded-full bg-green-500 flex items-center justify-center animate-pulse">
           <div class="w-8px h-8px rounded-full bg-white"></div>
         </div>
       </div>
 
       <!-- 通话时长 -->
-      <div v-if="callState === 'in_call'" class="text-16px text-gray-300 mb-32px text-center">
-        {{ formatDuration(callDuration) }}
+      <div v-if="connectionStatus === RTCCallStatus.ACCEPT" class="text-16px text-gray-300 mb-32px text-center">
+        {{ callDuration }}
       </div>
     </div>
 
@@ -106,7 +106,7 @@
       <!-- 下排按钮：挂断 -->
       <div class="flex justify-center">
         <div
-          @click="hangupCall"
+          @click="endCall"
           class="control-btn w-70px h-70px rounded-full bg-red-500 hover:bg-red-400 flex items-center justify-center cursor-pointer transition-all duration-200">
           <Icon icon="material-symbols:call-end" :size="32" class="text-white" />
         </div>
@@ -116,71 +116,48 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { Icon } from '@iconify/vue'
-import { useCachedStore } from '@/stores/cached'
-import { useUserStore } from '@/stores/user'
 import ActionBar from '@/components/windows/ActionBar.vue'
 import type { CacheUserItem } from '@/services/types'
-import { WsRequestMsgType, WsResponseMessageType, type CallSignalMessage } from '@/services/wsType'
-import ws from '@/services/webSocket'
-import { useMitt } from '@/hooks/useMitt'
-import { getCurrentWindow } from '@tauri-apps/api/window'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { useWebRtc } from '@/hooks/useWebRtc'
+import { CallTypeEnum, RTCCallStatus } from '@/enums'
 
 const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(remoteUserInfo.value?.avatar as string))
 // 通过路由参数获取数据
 const route = useRoute()
 const remoteUserId = route.query.remoteUserId as string
 const roomId = route.query.roomId as string
-const callType = (route.query.callType as 'voice' | 'video') || 'voice'
+const callType = (route.query.callType as string) === '1' ? CallTypeEnum.AUDIO : CallTypeEnum.VIDEO
 // 是否是接受方，true 代表接受方
-const isIncoming = route.query.isIncoming === 'true'
-
-// Stores
-const cachedStore = useCachedStore()
-const userStore = useUserStore()
-
-// 当前用户ID
-const currentUserId = userStore.userInfo.uid?.toString() || ''
-
-// 响应式数据
-const callState = ref<'idle' | 'calling' | 'ringing' | 'in_call' | 'ended'>('idle')
-const callDuration = ref(0)
+const isReceiver = route.query.isIncoming === 'true'
+const { localStream, remoteStream, endCall, callDuration, connectionStatus } = useWebRtc(
+  roomId,
+  remoteUserId,
+  callType,
+  isReceiver
+)
 const isMuted = ref(false)
 const isSpeakerOn = ref(false)
 const isVideoOn = ref(false)
-// const networkQuality = ref(4)
 const remoteUserInfo = ref<Partial<CacheUserItem> | null>(null)
-const callTimer = ref<ReturnType<typeof setInterval> | null>(null)
-
 // 视频元素引用
 const mainVideoRef = ref<HTMLVideoElement | null>(null)
 const pipVideoRef = ref<HTMLVideoElement | null>(null)
-
-// 媒体流
-const localStream = ref<MediaStream | null>(null)
-const remoteStream = ref<MediaStream | null>(null)
-
-// WebRTC连接
-const peerConnection = ref<RTCPeerConnection | null>(null)
-const iceCandidates = ref<RTCIceCandidate[]>([])
-
 // 视频布局状态：false=远程视频主画面，true=本地视频主画面
 const isLocalVideoMain = ref(false)
 
 // 计算属性
 const callStatusText = computed(() => {
-  switch (callState.value) {
-    case 'calling':
+  switch (connectionStatus.value) {
+    case RTCCallStatus.CALLING:
       return '正在呼叫...'
-    case 'ringing':
-      return '来电'
-    case 'in_call':
+    case RTCCallStatus.ACCEPT:
       return '通话中'
-    case 'ended':
+    case RTCCallStatus.END:
       return '通话已结束'
     default:
       return '准备中...'
@@ -190,299 +167,6 @@ const callStatusText = computed(() => {
 const isPipVideoVisible = computed(() => {
   return isVideoOn.value && !!remoteStream.value
 })
-
-// WebRTC相关方法
-const createPeerConnection = async () => {
-  console.log('开始交换SDP')
-  // 如果已经存在连接，先关闭
-  if (peerConnection.value) {
-    peerConnection.value.close()
-  }
-
-  // ICE服务器配置
-  const configuration: RTCConfiguration = {
-    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }],
-    iceCandidatePoolSize: 10
-  }
-
-  const pc = new RTCPeerConnection(configuration)
-  peerConnection.value = pc
-
-  // 监听ICE候选者
-  pc.onicecandidate = (event) => {
-    if (event.candidate) {
-      iceCandidates.value.push(event.candidate)
-      // 通过WebSocket发送ICE candidate给对方
-      sendIceCandidate(event.candidate)
-    }
-  }
-
-  // 监听ICE连接状态变化
-  pc.oniceconnectionstatechange = () => {
-    console.log('ICE connection state:', pc.iceConnectionState)
-    switch (pc.iceConnectionState) {
-      case 'connected':
-      case 'completed':
-        console.log('WebRTC连接已建立')
-        if (callState.value !== 'in_call') {
-          callState.value = 'in_call'
-          startCallTimer()
-        }
-        break
-      case 'disconnected':
-      case 'failed':
-      case 'closed':
-        console.log('WebRTC连接已断开')
-        callState.value = 'ended'
-        stopCallTimer()
-        break
-    }
-  }
-
-  // 监听远程媒体流
-  pc.ontrack = (event) => {
-    console.log('Received remote stream:', event.streams[0])
-    if (event.streams && event.streams[0]) {
-      remoteStream.value = event.streams[0]
-    }
-  }
-
-  // 监听连接状态变化
-  pc.onconnectionstatechange = () => {
-    console.log('Connection state:', pc.connectionState)
-  }
-
-  // 添加本地媒体流到连接
-  if (localStream.value) {
-    localStream.value.getTracks().forEach((track) => {
-      console.log('Adding track to peer connection:', track.kind)
-      pc.addTrack(track, localStream.value!)
-    })
-  }
-
-  // 如果是发起方，创建offer
-  if (!isIncoming) {
-    await createOffer()
-  }
-
-  return pc
-}
-
-// 创建offer
-const createOffer = async () => {
-  if (!peerConnection.value) {
-    createPeerConnection()
-  }
-
-  try {
-    const offer = await peerConnection.value!.createOffer({
-      offerToReceiveAudio: true,
-      offerToReceiveVideo: callType === 'video'
-    })
-
-    await peerConnection.value!.setLocalDescription(offer)
-    console.log('Created offer:', JSON.stringify(offer))
-    console.log('Offer SDP:', offer.sdp)
-
-    // 通过WebSocket发送offer给对方
-    await sendOffer(offer)
-    sendCall()
-
-    return offer
-  } catch (error) {
-    console.error('Error creating offer:', error)
-    throw error
-  }
-}
-
-// 创建answer
-const createAnswer = async (offer: RTCSessionDescriptionInit) => {
-  if (!peerConnection.value) {
-    createPeerConnection()
-  }
-
-  try {
-    await peerConnection.value!.setRemoteDescription(offer)
-
-    const answer = await peerConnection.value!.createAnswer()
-    await peerConnection.value!.setLocalDescription(answer)
-
-    console.log('Created answer:', answer)
-
-    // 通过WebSocket发送answer给对方
-    await sendAnswer(answer)
-
-    return answer
-  } catch (error) {
-    console.error('Error creating answer:', error)
-    throw error
-  }
-}
-
-// 处理接收到的answer
-const handleAnswer = async (answer: RTCSessionDescriptionInit) => {
-  try {
-    console.log('设置 answer')
-    await peerConnection.value!.setRemoteDescription(answer)
-  } catch (error) {
-    console.error('Error handling answer:', error)
-  }
-}
-
-// 添加ICE候选者
-const addIceCandidate = async (candidate: RTCIceCandidateInit) => {
-  try {
-    if (peerConnection.value && peerConnection.value.remoteDescription) {
-      await peerConnection.value.addIceCandidate(candidate)
-      console.log('Added ICE candidate')
-    } else {
-      // 如果还没有设置远程描述，先缓存候选者
-      iceCandidates.value.push(candidate as RTCIceCandidate)
-    }
-  } catch (error) {
-    console.error('Error adding ICE candidate:', error)
-  }
-}
-
-// 发送ICE候选者
-const sendIceCandidate = (candidate: RTCIceCandidate) => {
-  try {
-    const signalData = {
-      roomId: roomId,
-      signal: JSON.stringify({
-        type: 'candidate',
-        candidate: candidate.toJSON()
-      }),
-      signalType: 'candidate',
-      targetUid: remoteUserId,
-      mediaType: callType === 'video' ? 'VideoSignal' : 'AudioSignal'
-    }
-
-    ws.send({
-      type: WsRequestMsgType.WEBRTC_SIGNAL,
-      data: signalData
-    })
-  } catch (error) {
-    console.error('Failed to send ICE candidate:', error)
-  }
-}
-
-// 发送SDP offer
-const sendOffer = async (offer: RTCSessionDescriptionInit) => {
-  try {
-    const signalData = {
-      callerUid: currentUserId,
-      roomId: roomId,
-      signal: JSON.stringify({
-        type: offer.type,
-        sdp: offer.sdp
-      }),
-      signalType: 'offer',
-      targetUid: remoteUserId,
-      video: callType === 'video'
-    }
-
-    console.log('ws发送 offer')
-    ws.send({
-      type: WsRequestMsgType.WEBRTC_SIGNAL,
-      data: signalData
-    })
-
-    console.log('SDP offer sent via WebSocket:', offer)
-  } catch (error) {
-    console.error('Failed to send SDP offer:', error)
-  }
-}
-
-// 发送SDP answer
-const sendAnswer = async (answer: RTCSessionDescriptionInit) => {
-  try {
-    const signalData = {
-      callerUid: currentUserId,
-      roomId: roomId,
-      signal: JSON.stringify({
-        type: answer.type,
-        sdp: answer.sdp
-      }),
-      signalType: 'answer',
-      targetUid: remoteUserId,
-      video: callType === 'video'
-    }
-
-    ws.send({
-      type: WsRequestMsgType.WEBRTC_SIGNAL,
-      data: signalData
-    })
-
-    console.log('SDP answer sent via WebSocket:', answer)
-  } catch (error) {
-    console.error('Failed to send SDP answer:', error)
-  }
-}
-
-// 发送通话请求
-const sendCall = () => {
-  ws.send({
-    type: WsRequestMsgType.VIDEO_CALL_REQUEST,
-    data: {
-      roomId: roomId,
-      targetUid: remoteUserId,
-      isVideo: true
-    }
-  })
-}
-
-// 处理接收到的信令消息
-const handleSignalMessage = async (data: CallSignalMessage) => {
-  try {
-    console.log('Received signal message:', data)
-    const signal = JSON.parse(data.signal)
-
-    switch (data.signalType) {
-      case 'offer':
-        console.log('Received SDP offer:', signal)
-        // 接收到offer，创建answer
-        await createAnswer(signal)
-        break
-
-      case 'answer':
-        console.log('收到 Answer', signal)
-        // 接收到answer，设置远程描述
-        await handleAnswer(signal)
-        break
-
-      case 'candidate':
-        console.log('Received ICE candidate:', signal)
-        // 接收到ICE candidate，添加到连接中
-        if (signal.candidate) {
-          await addIceCandidate(signal.candidate)
-        }
-        break
-
-      default:
-        console.log('Unknown signal type:', data.signalType)
-    }
-  } catch (error) {
-    console.error('Error handling signal message:', error)
-  }
-}
-
-// 关闭WebRTC连接
-const closePeerConnection = () => {
-  if (peerConnection.value) {
-    peerConnection.value.close()
-    peerConnection.value = null
-    iceCandidates.value = []
-    console.log('Peer connection closed')
-  }
-}
-
-// 方法
-const formatDuration = (seconds: number): string => {
-  const mins = Math.floor(seconds / 60)
-  const secs = seconds % 60
-  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-}
 
 const toggleMute = () => {
   isMuted.value = !isMuted.value
@@ -525,215 +209,6 @@ const toggleVideo = async () => {
   }
 }
 
-// const answerCall = () => {
-//   callState.value = 'in_call'
-//   startCallTimer()
-//   // TODO: 实现实际的接听逻辑
-//   console.log('接听通话')
-// }
-
-// const rejectCall = () => {
-//   callState.value = 'ended'
-//   // TODO: 实现实际的拒绝逻辑
-//   console.log('拒绝通话')
-// }
-
-const startCallTimer = () => {
-  callTimer.value = setInterval(() => {
-    callDuration.value++
-  }, 1000)
-}
-
-const stopCallTimer = () => {
-  if (callTimer.value) {
-    clearInterval(callTimer.value)
-    callTimer.value = null
-  }
-}
-
-const hangupCall = () => {
-  callState.value = 'ended'
-  stopCallTimer()
-  closePeerConnection()
-  // 发送挂断请求
-  sendRtcCall2VideoCallResponse(2)
-  // 关闭窗口
-  getCurrentWindow().close()
-}
-
-// 发送 ws 请求，通知双方通话状态
-// -1 = 超时 0 = 拒绝 1 = 接通 2 = 挂断
-const sendRtcCall2VideoCallResponse = (status: number) => {
-  ws.send({
-    type: WsRequestMsgType.VIDEO_CALL_RESPONSE,
-    data: {
-      callerUid: remoteUserId,
-      roomId: roomId,
-      accepted: status
-    }
-  })
-}
-
-const initCall = async () => {
-  // 获取远程用户信息
-  if (remoteUserId) {
-    await cachedStore.getBatchUserInfo([remoteUserId])
-    remoteUserInfo.value = cachedStore.userCachedList[remoteUserId] || null
-    avatarSrc.value
-  }
-
-  // 设置初始状态
-  if (isIncoming) {
-    callState.value = 'ringing'
-  } else {
-    callState.value = 'calling'
-  }
-
-  // 初始化isLocalVideoMain
-  if (!remoteStream.value) {
-    isLocalVideoMain.value = callType === 'video'
-  }
-}
-
-// 检查系统音量是否大于0
-const checkSystemVolume = async (): Promise<boolean> => {
-  try {
-    // 获取音频流进行音量检测
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-
-    // 创建音频上下文
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
-    const source = audioContext.createMediaStreamSource(stream)
-    const analyser = audioContext.createAnalyser()
-
-    // 配置分析器
-    analyser.fftSize = 256
-    analyser.smoothingTimeConstant = 0.8
-    source.connect(analyser)
-
-    const bufferLength = analyser.frequencyBinCount
-    const dataArray = new Uint8Array(bufferLength)
-
-    return new Promise((resolve) => {
-      let checkCount = 0
-      const maxChecks = 30 // 检测3秒（每100ms检测一次）
-      let hasValidVolume = false
-
-      const checkVolume = () => {
-        analyser.getByteFrequencyData(dataArray)
-
-        // 计算平均音量
-        let sum = 0
-        for (let i = 0; i < bufferLength; i++) {
-          sum += dataArray[i]
-        }
-        const average = sum / bufferLength
-
-        // 如果检测到音量大于阈值（通常静音时为0-5，有声音时会明显增大）
-        if (average > 10) {
-          hasValidVolume = true
-        }
-
-        checkCount++
-
-        if (hasValidVolume || checkCount >= maxChecks) {
-          // 清理资源
-          stream.getTracks().forEach((track) => track.stop())
-          audioContext.close()
-          resolve(hasValidVolume)
-        } else {
-          // 继续检测
-          setTimeout(checkVolume, 100)
-        }
-      }
-
-      // 开始检测
-      checkVolume()
-    })
-  } catch (error) {
-    console.error('音量检测失败:', error)
-    // 如果无法获取音频流，返回false
-    return false
-  }
-}
-
-// 检查设备媒体能力
-const checkMediaCapabilities = async () => {
-  const capabilities = {
-    hasCamera: false,
-    hasMicrophone: false,
-    hasSpeaker: false,
-    hasValidVolume: false,
-    supportedConstraints: navigator.mediaDevices.getSupportedConstraints()
-  }
-
-  try {
-    // 检查是否有可用的媒体设备
-    const devices = await navigator.mediaDevices.enumerateDevices()
-    capabilities.hasCamera = devices.some((device) => device.kind === 'videoinput')
-    capabilities.hasMicrophone = devices.some((device) => device.kind === 'audioinput')
-    capabilities.hasSpeaker = devices.some((device) => device.kind === 'audiooutput')
-
-    // 检查系统音量
-    capabilities.hasValidVolume = await checkSystemVolume()
-  } catch (error) {
-    console.warn('无法枚举媒体设备:', error)
-  }
-
-  return capabilities
-}
-
-const initMediaStream = async () => {
-  try {
-    // 先检查设备能力
-    const capabilities = await checkMediaCapabilities()
-
-    // 根据设备能力和通话类型动态设置约束
-    const constraints: MediaStreamConstraints = {}
-
-    // 检查音频能力（检测麦克风、音量和音频设备）
-    if (capabilities.hasMicrophone && capabilities.hasValidVolume) {
-      constraints.audio = true
-      // 如果没有独立的音响设备，提示用户可能需要使用耳机或一体化设备
-      if (!capabilities.hasSpeaker) {
-        console.warn('未检测到独立的音响设备，请确保使用耳机或一体化音频设备')
-      }
-    } else {
-      if (!capabilities.hasMicrophone) {
-        window.$message.warning('未检测到麦克风设备')
-      }
-      if (!capabilities.hasValidVolume) {
-        window.$message.warning('系统音量过低或音频输出不可用，请检查音量设置')
-      }
-      constraints.audio = false
-    }
-
-    // 检查视频能力（仅在视频通话时需要）
-    if (callType === 'video') {
-      if (capabilities.hasCamera) {
-        constraints.video = true
-      } else {
-        window.$message.warning('未检测到摄像头设备，将切换为语音通话')
-        constraints.video = false
-        // 可以在这里触发切换到语音通话的逻辑
-      }
-    } else {
-      constraints.video = false
-    }
-
-    // 如果没有任何可用的媒体设备，显示错误
-    if (!constraints.audio && !constraints.video) {
-      throw new Error('没有可用的媒体设备')
-    }
-
-    const stream = await navigator.mediaDevices.getUserMedia(constraints)
-    localStream.value = stream
-  } catch (error: any) {
-    console.error('Error accessing media devices.', error)
-    window.$message.error('媒体设备访问失败，请检查设备连接')
-  }
-}
-
 // 切换视频布局
 const toggleVideoLayout = async () => {
   isLocalVideoMain.value = !isLocalVideoMain.value
@@ -759,52 +234,9 @@ const toggleVideoLayout = async () => {
   }
 }
 
-// 清理媒体流
-const cleanupMediaStream = () => {
-  if (localStream.value) {
-    localStream.value.getTracks().forEach((track) => track.stop())
-    localStream.value = null
-  }
-  if (remoteStream.value) {
-    remoteStream.value.getTracks().forEach((track) => track.stop())
-    remoteStream.value = null
-  }
-}
-
 // 生命周期
 onMounted(async () => {
   await WebviewWindow.getCurrent().show()
-  await initMediaStream()
-  await initCall()
-  // 监听 WebRTC 信令消息
-  useMitt.on(WsResponseMessageType.WEBRTC_SIGNAL, handleSignalMessage)
-  if (isIncoming) {
-    // 接受方，发送是否接受
-    sendRtcCall2VideoCallResponse(1)
-  } else {
-    console.log('调用方发送视频通话请求')
-    ws.send({
-      type: WsRequestMsgType.VIDEO_CALL_REQUEST,
-      data: {
-        targetUid: remoteUserId,
-        roomId: roomId,
-        isVideo: true
-      }
-    })
-  }
-  // 调用方监听，接收方是否接受
-  useMitt.on(WsResponseMessageType.CallAccepted, createPeerConnection)
-  useMitt.on(WsResponseMessageType.DROPPED, hangupCall)
-  useMitt.on(WsResponseMessageType.CallRejected, hangupCall)
-})
-
-onUnmounted(() => {
-  // 清理资源
-  cleanupMediaStream()
-  closePeerConnection()
-  stopCallTimer()
-  // 移除 WebRTC 信令消息监听器
-  useMitt.off(WsResponseMessageType.WEBRTC_SIGNAL, handleSignalMessage)
 })
 </script>
 
