@@ -598,39 +598,61 @@ const initCall = async () => {
 // 检查系统音量是否大于0
 const checkSystemVolume = async (): Promise<boolean> => {
   try {
-    // 创建一个临时的音频上下文来检查音量
+    // 获取音频流进行音量检测
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+
+    // 创建音频上下文
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+    const source = audioContext.createMediaStreamSource(stream)
+    const analyser = audioContext.createAnalyser()
 
-    // 获取音频输出目标的音量信息
-    const destination = audioContext.destination
+    // 配置分析器
+    analyser.fftSize = 256
+    analyser.smoothingTimeConstant = 0.8
+    source.connect(analyser)
 
-    // 检查音频上下文状态
-    if (audioContext.state === 'suspended') {
-      await audioContext.resume()
-    }
+    const bufferLength = analyser.frequencyBinCount
+    const dataArray = new Uint8Array(bufferLength)
 
-    // 简单的音量检查：创建一个振荡器测试音频输出
-    const oscillator = audioContext.createOscillator()
-    const gainNode = audioContext.createGain()
+    return new Promise((resolve) => {
+      let checkCount = 0
+      const maxChecks = 30 // 检测3秒（每100ms检测一次）
+      let hasValidVolume = false
 
-    oscillator.connect(gainNode)
-    gainNode.connect(destination)
+      const checkVolume = () => {
+        analyser.getByteFrequencyData(dataArray)
 
-    // 设置很低的音量进行测试
-    gainNode.gain.setValueAtTime(0.001, audioContext.currentTime)
-    oscillator.frequency.setValueAtTime(440, audioContext.currentTime)
+        // 计算平均音量
+        let sum = 0
+        for (let i = 0; i < bufferLength; i++) {
+          sum += dataArray[i]
+        }
+        const average = sum / bufferLength
 
-    // 短暂播放测试音
-    oscillator.start(audioContext.currentTime)
-    oscillator.stop(audioContext.currentTime + 0.01)
+        // 如果检测到音量大于阈值（通常静音时为0-5，有声音时会明显增大）
+        if (average > 10) {
+          hasValidVolume = true
+        }
 
-    // 清理资源
-    // await new Promise(resolve => setTimeout(resolve, 100))
-    audioContext.close()
+        checkCount++
 
-    return true
+        if (hasValidVolume || checkCount >= maxChecks) {
+          // 清理资源
+          stream.getTracks().forEach((track) => track.stop())
+          audioContext.close()
+          resolve(hasValidVolume)
+        } else {
+          // 继续检测
+          setTimeout(checkVolume, 100)
+        }
+      }
+
+      // 开始检测
+      checkVolume()
+    })
   } catch (error) {
-    console.warn('无法检查系统音量:', error)
+    console.error('音量检测失败:', error)
+    // 如果无法获取音频流，返回false
     return false
   }
 }
