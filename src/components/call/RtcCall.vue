@@ -600,6 +600,7 @@ const checkMediaCapabilities = async () => {
   const capabilities = {
     hasCamera: false,
     hasMicrophone: false,
+    hasSpeaker: false,
     supportedConstraints: navigator.mediaDevices.getSupportedConstraints()
   }
 
@@ -608,6 +609,7 @@ const checkMediaCapabilities = async () => {
     const devices = await navigator.mediaDevices.enumerateDevices()
     capabilities.hasCamera = devices.some((device) => device.kind === 'videoinput')
     capabilities.hasMicrophone = devices.some((device) => device.kind === 'audioinput')
+    capabilities.hasSpeaker = devices.some((device) => device.kind === 'audiooutput')
   } catch (error) {
     console.warn('无法枚举媒体设备:', error)
   }
@@ -623,11 +625,16 @@ const initMediaStream = async () => {
     // 根据设备能力和通话类型动态设置约束
     const constraints: MediaStreamConstraints = {}
 
-    // 检查音频能力
-    if (capabilities.hasMicrophone) {
+    // 检查音频能力（需要同时有麦克风和音响）
+    if (capabilities.hasMicrophone && capabilities.hasSpeaker) {
       constraints.audio = true
     } else {
-      window.$message.warning('未检测到麦克风设备')
+      if (!capabilities.hasMicrophone) {
+        window.$message.warning('未检测到声音输入设备')
+      }
+      if (!capabilities.hasSpeaker) {
+        window.$message.warning('未检测到声音输出设备')
+      }
       constraints.audio = false
     }
 
