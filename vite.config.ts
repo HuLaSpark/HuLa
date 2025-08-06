@@ -10,6 +10,7 @@ import Components from 'unplugin-vue-components/vite' //组件注册
 import { type ConfigEnv, defineConfig, loadEnv } from 'vite'
 import VueSetupExtend from 'vite-plugin-vue-setup-extend'
 import { getRootPath, getSrcPath } from './build/config/getPath'
+import postcsspxtorem from 'postcss-pxtorem'
 
 // 读取 package.json 依赖
 const packageJson = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf-8'))
@@ -37,6 +38,19 @@ export default defineConfig(({ mode }: ConfigEnv) => {
           api: 'modern-compiler',
           additionalData: '@use "@/styles/scss/global/variable.scss" as *;' // 加载全局样式，使用scss特性
         }
+      },
+      postcss: {
+        plugins: [
+          postcsspxtorem({
+            rootValue: 16, // 1rem = 16px，可根据设计稿调整
+            propList: ['*'], // 所有属性都转换
+            unitPrecision: 5, // 保留小数位数
+            selectorBlackList: [], // 不转换的类名（可选）
+            replace: true, // 替换原来的 px
+            mediaQuery: false, // 是否在媒体查询中转换
+            minPixelValue: 0 // 最小转换单位
+          })
+        ]
       }
     },
     plugins: [
