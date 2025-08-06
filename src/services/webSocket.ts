@@ -638,6 +638,11 @@ class WS {
           useMitt.emit(WsResponseMessageType.LeaveVideo, data)
           break
         }
+        case WsResponseMessageType.DROPPED: {
+          const data = params.data
+          useMitt.emit(WsResponseMessageType.DROPPED, data)
+          break
+        }
         default: {
           console.log('接收到未处理类型的消息:', params)
           break
