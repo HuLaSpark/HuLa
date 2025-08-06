@@ -91,7 +91,7 @@ export default {
   // -------------- token相关 ---------------
   register: `${prefix + URLEnum.TOKEN}/anyTenant/registerByEmail`, // 注册
   login: `${prefix + URLEnum.TOKEN}/anyTenant/login`, // 登录
-  refreshToken: `${prefix + URLEnum.TOKEN}/refreshToken`, // 续签
+  refreshToken: `${prefix + URLEnum.TOKEN}/anyTenant/refresh`, // 续签
   logout: `${prefix + URLEnum.TOKEN}/anyUser/logout`, // 退出登录
   checkToken: `${prefix + URLEnum.TOKEN}/check`, // 检查token是否有效
   forgetPassword: `${prefix + URLEnum.TOKEN}/anyTenant/password` // 忘记密码
