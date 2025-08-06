@@ -240,6 +240,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
         window.$message.error('没有可用的设备!')
         return false
       }
+      console.log('11111', constraints, type)
       localStream.value = await navigator.mediaDevices.getUserMedia(constraints)
       console.log('获取本地媒体流成功', localStream.value)
       return true
@@ -257,7 +258,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
 
       // 监听远程流
       pc.ontrack = (event) => {
-        console.log('pc 监听到 ontrack 事件')
+        console.log('pc 监听到 ontrack 事件', event.streams)
         if (event.streams[0]) {
           console.log('收到远程流:', event.streams[0])
           remoteStream.value = event.streams[0]
@@ -277,15 +278,19 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
         console.log('RTC 连接状态变化: ', pc.connectionState)
         switch (pc.connectionState) {
           case 'new':
+            console.log('RTC 连接新建')
             break
           case 'connecting':
+            console.log('RTC 连接中')
             connectionStatus.value = RTCCallStatus.CALLING
             break
           case 'connected':
+            console.log('RTC 连接成功')
             connectionStatus.value = RTCCallStatus.ACCEPT
             startCallTimer() // 开始计时
             break
           case 'disconnected':
+            console.log('RTC 连接断开')
             connectionStatus.value = RTCCallStatus.END
             window.$message.error('RTC通讯连接失败!')
             setTimeout(async () => {
@@ -293,6 +298,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
             }, 500)
             break
           case 'closed':
+            console.log('RTC 连接关闭')
             connectionStatus.value = RTCCallStatus.END
             setTimeout(async () => {
               await endCall()
@@ -300,12 +306,14 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
             break
           case 'failed':
             connectionStatus.value = RTCCallStatus.ERROR
+            console.error('RTC 连接失败')
             window.$message.error('RTC通讯连接失败!')
             setTimeout(async () => {
               // await endCall()
             }, 500)
             break
           default:
+            console.log('RTC 连接状态变化: ', pc.connectionState)
             break
         }
         // @ts-expect-error
@@ -329,6 +337,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
         if (event.candidate && roomId) {
           try {
             pendingCandidates.value.push(event.candidate)
+            sendIceCandidate(event.candidate)
           } catch (err) {
             console.error('发送ICE候选者出错:', err)
           }
@@ -466,27 +475,6 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
     }
   }
 
-  // 监听 ICE 连接
-  const lisenIceCandidate = async () => {
-    if (!peerConnection.value || !isLinker.value) {
-      return
-    }
-    // 交换信令后，发送 ICE candidate 信令
-    if (pendingCandidates.value.length > 0) {
-      pendingCandidates.value = []
-      // 监听收到的 candidate 信令
-      peerConnection.value.onicecandidate = async (event) => {
-        // console.log(user.userInfo.username, "接收端 - 收到 ICE candidate 信令:", event.candidate);
-        if (event.candidate) {
-          pendingCandidates.value.push(event.candidate)
-          // 通过WebSocket发送ICE candidate给对方
-          console.log('交换 ICE candidate')
-          sendIceCandidate(event.candidate)
-        }
-      }
-    }
-  }
-
   // 发送ICE候选者
   const sendIceCandidate = (candidate: RTCIceCandidate) => {
     try {
@@ -580,8 +568,8 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
       isLinker.value = true // 标记是会话人
       // 6. 发送 answer 信令到远端
       await sendAnswer(answer)
-      lisenIceCandidate()
       connectionStatus.value = RTCCallStatus.ACCEPT
+      console.log('处理 offer 结束')
     } catch (error) {
       console.error('处理 offer 失败:', error)
       endCall()
@@ -634,8 +622,6 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
           // 4. 发起者 - 设置远程描述
           console.log('发起者 - 设置远程描述')
           await peerConnection.value.setRemoteDescription(answer)
-
-          lisenIceCandidate()
         }
       }
     } catch (error) {
@@ -844,7 +830,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
 
       switch (data.signalType) {
         case SignalTypeEnum.OFFER:
-          await handleOffer(signal, data.video, roomId)
+          await handleOffer(signal, true, roomId)
           break
 
         case SignalTypeEnum.ANSWER:
