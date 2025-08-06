@@ -506,9 +506,13 @@ const toggleVideo = async () => {
       await nextTick()
       if (isLocalVideoMain.value) {
         mainVideoRef.value!.srcObject = localStream.value
-        pipVideoRef.value!.srcObject = remoteStream.value
+        if (pipVideoRef.value) {
+          pipVideoRef.value.srcObject = remoteStream.value
+        }
       } else {
-        pipVideoRef.value!.srcObject = localStream.value
+        if (pipVideoRef.value) {
+          pipVideoRef.value.srcObject = remoteStream.value
+        }
         mainVideoRef.value!.srcObject = remoteStream.value
       }
     } catch (error) {
@@ -663,14 +667,9 @@ onMounted(async () => {
     })
   }
   // 调用方监听，接收方是否接受
-  useMitt.on(WsResponseMessageType.CallAccepted, (event) => {
-    // VideoCallRequest 接听；CallRejected 拒绝接听；DROPPED 挂断；CallTimeout 超时
-    if (event.type === WsResponseMessageType.VideoCallRequest) {
-      createPeerConnection()
-    } else {
-      hangupCall()
-    }
-  })
+  useMitt.on(WsResponseMessageType.CallAccepted, createPeerConnection)
+  useMitt.on(WsResponseMessageType.DROPPED, hangupCall)
+  useMitt.on(WsResponseMessageType.CallRejected, hangupCall)
 })
 
 onUnmounted(() => {
