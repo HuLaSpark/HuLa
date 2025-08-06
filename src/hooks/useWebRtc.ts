@@ -268,7 +268,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
 
       // 添加本地流
       console.log('添加本地流到 PC', localStream.value)
-      localStream.value?.getTracks().forEach((track) => {
+      localStream.value!.getTracks().forEach((track) => {
         localStream.value && pc.addTrack(track, localStream.value)
       })
 
@@ -517,10 +517,9 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
       startBell()
       // 用户接受通话，继续原有流程
       // let isLocalStreamOk = true
-      getDevices().then(async () => {
-        await getLocalStream(video ? CallTypeEnum.VIDEO : CallTypeEnum.AUDIO)
-        // isLocalStreamOk = true
-      })
+      await getDevices()
+      await getLocalStream(video ? CallTypeEnum.VIDEO : CallTypeEnum.AUDIO)
+
       // 停止铃声
       stopBell()
       // 等待用户确认接听
@@ -557,9 +556,9 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
       //   await getDevices()
       //   isLocalStreamOk = await getLocalStream(video ? CallTypeEnum.VIDEO : CallTypeEnum.AUDIO)
       // }
-      await getDevices()
-      await getLocalStream(video ? CallTypeEnum.VIDEO : CallTypeEnum.AUDIO)
-      await nextTick()
+      // await getDevices()
+      // await getLocalStream(video ? CallTypeEnum.VIDEO : CallTypeEnum.AUDIO)
+      // await nextTick()
 
       // 2. 创建 RTCPeerConnection
       createPeerConnection(roomId)

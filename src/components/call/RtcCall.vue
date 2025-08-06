@@ -145,10 +145,10 @@ const isSpeakerOn = ref(false)
 const isVideoOn = ref(false)
 const remoteUserInfo = ref<Partial<CacheUserItem> | null>(null)
 // 视频元素引用
-const mainVideoRef = ref<HTMLVideoElement | null>(null)
-const pipVideoRef = ref<HTMLVideoElement | null>(null)
+const mainVideoRef = ref<HTMLVideoElement>()
+const pipVideoRef = ref<HTMLVideoElement>()
 // 视频布局状态：false=远程视频主画面，true=本地视频主画面
-const isLocalVideoMain = ref(false)
+const isLocalVideoMain = ref(true)
 
 // 计算属性
 const callStatusText = computed(() => {
@@ -188,14 +188,19 @@ const toggleVideo = async () => {
     try {
       // 等待下一个事件循环，确保视频元素已加载
       await nextTick()
+      console.log('远程流：', remoteStream.value)
+      console.log('本地流：', localStream.value)
+      console.log('mainVideoRef.value：', mainVideoRef.value)
+      console.log('pipVideoRef.value：', pipVideoRef.value)
       if (isLocalVideoMain.value) {
         mainVideoRef.value!.srcObject = localStream.value
-        if (pipVideoRef.value) {
+        if (pipVideoRef.value && remoteStream.value) {
+          console.log('设置远程流')
           pipVideoRef.value.srcObject = remoteStream.value
         }
       } else {
         if (pipVideoRef.value) {
-          pipVideoRef.value.srcObject = remoteStream.value
+          pipVideoRef.value.srcObject = localStream.value
         }
         mainVideoRef.value!.srcObject = remoteStream.value
       }
@@ -217,20 +222,12 @@ const toggleVideoLayout = async () => {
   await nextTick()
   if (isLocalVideoMain.value) {
     // 本地视频作为主视频
-    if (mainVideoRef.value && localStream.value) {
-      mainVideoRef.value.srcObject = localStream.value
-    }
-    if (pipVideoRef.value && remoteStream.value) {
-      pipVideoRef.value.srcObject = remoteStream.value
-    }
+    mainVideoRef.value!.srcObject = localStream.value
+    pipVideoRef.value!.srcObject = remoteStream.value
   } else {
     // 远程视频作为主视频
-    if (mainVideoRef.value && remoteStream.value) {
-      mainVideoRef.value.srcObject = remoteStream.value
-    }
-    if (pipVideoRef.value && localStream.value) {
-      pipVideoRef.value.srcObject = localStream.value
-    }
+    mainVideoRef.value!.srcObject = remoteStream.value
+    pipVideoRef.value!.srcObject = localStream.value
   }
 }
 
