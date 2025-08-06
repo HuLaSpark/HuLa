@@ -595,16 +595,65 @@ const initCall = async () => {
   }
 }
 
+// 检查设备媒体能力
+const checkMediaCapabilities = async () => {
+  const capabilities = {
+    hasCamera: false,
+    hasMicrophone: false,
+    supportedConstraints: navigator.mediaDevices.getSupportedConstraints()
+  }
+
+  try {
+    // 检查是否有可用的媒体设备
+    const devices = await navigator.mediaDevices.enumerateDevices()
+    capabilities.hasCamera = devices.some((device) => device.kind === 'videoinput')
+    capabilities.hasMicrophone = devices.some((device) => device.kind === 'audioinput')
+  } catch (error) {
+    console.warn('无法枚举媒体设备:', error)
+  }
+
+  return capabilities
+}
+
 const initMediaStream = async () => {
   try {
-    const constraints = {
-      video: callType === 'video',
-      audio: true
+    // 先检查设备能力
+    const capabilities = await checkMediaCapabilities()
+
+    // 根据设备能力和通话类型动态设置约束
+    const constraints: MediaStreamConstraints = {}
+
+    // 检查音频能力
+    if (capabilities.hasMicrophone) {
+      constraints.audio = true
+    } else {
+      window.$message.warning('未检测到麦克风设备')
+      constraints.audio = false
     }
+
+    // 检查视频能力（仅在视频通话时需要）
+    if (callType === 'video') {
+      if (capabilities.hasCamera) {
+        constraints.video = true
+      } else {
+        window.$message.warning('未检测到摄像头设备，将切换为语音通话')
+        constraints.video = false
+        // 可以在这里触发切换到语音通话的逻辑
+      }
+    } else {
+      constraints.video = false
+    }
+
+    // 如果没有任何可用的媒体设备，显示错误
+    if (!constraints.audio && !constraints.video) {
+      throw new Error('没有可用的媒体设备')
+    }
+
     const stream = await navigator.mediaDevices.getUserMedia(constraints)
     localStream.value = stream
   } catch (error: any) {
     console.error('Error accessing media devices.', error)
+    window.$message.error('媒体设备访问失败，请检查设备连接')
   }
 }
 
