@@ -475,8 +475,6 @@ const closePeerConnection = () => {
     iceCandidates.value = []
     console.log('Peer connection closed')
   }
-  // 关闭窗口
-  getCurrentWindow().close()
 }
 
 // 方法
@@ -553,8 +551,23 @@ const hangupCall = () => {
   callState.value = 'ended'
   stopCallTimer()
   closePeerConnection()
-  // TODO: 实现实际的挂断逻辑
-  console.log('挂断通话')
+  // 发送挂断请求
+  sendRtcCall2VideoCallResponse(2)
+  // 关闭窗口
+  getCurrentWindow().close()
+}
+
+// 发送 ws 请求，通知双方通话状态
+// -1 = 超时 0 = 拒绝 1 = 接通 2 = 挂断
+const sendRtcCall2VideoCallResponse = (status: number) => {
+  ws.send({
+    type: WsRequestMsgType.VIDEO_CALL_RESPONSE,
+    data: {
+      callerUid: remoteUserId,
+      roomId: roomId,
+      accepted: status
+    }
+  })
 }
 
 const initCall = async () => {
@@ -637,14 +650,7 @@ onMounted(async () => {
   useMitt.on(WsResponseMessageType.WEBRTC_SIGNAL, handleSignalMessage)
   if (isIncoming) {
     // 接受方，发送是否接受
-    ws.send({
-      type: WsRequestMsgType.VIDEO_CALL_RESPONSE,
-      data: {
-        callerUid: remoteUserId,
-        roomId: roomId,
-        accepted: 1
-      }
-    })
+    sendRtcCall2VideoCallResponse(1)
   } else {
     console.log('调用方发送视频通话请求')
     ws.send({
@@ -657,7 +663,14 @@ onMounted(async () => {
     })
   }
   // 调用方监听，接收方是否接受
-  useMitt.on(WsResponseMessageType.CallAccepted, createPeerConnection)
+  useMitt.on(WsResponseMessageType.CallAccepted, (event) => {
+    // VideoCallRequest 接听；CallRejected 拒绝接听；DROPPED 挂断；CallTimeout 超时
+    if (event.type === WsResponseMessageType.VideoCallRequest) {
+      createPeerConnection()
+    } else {
+      hangupCall()
+    }
+  })
 })
 
 onUnmounted(() => {
