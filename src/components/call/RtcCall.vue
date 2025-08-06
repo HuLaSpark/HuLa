@@ -595,12 +595,53 @@ const initCall = async () => {
   }
 }
 
+// 检查系统音量是否大于0
+const checkSystemVolume = async (): Promise<boolean> => {
+  try {
+    // 创建一个临时的音频上下文来检查音量
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+
+    // 获取音频输出目标的音量信息
+    const destination = audioContext.destination
+
+    // 检查音频上下文状态
+    if (audioContext.state === 'suspended') {
+      await audioContext.resume()
+    }
+
+    // 简单的音量检查：创建一个振荡器测试音频输出
+    const oscillator = audioContext.createOscillator()
+    const gainNode = audioContext.createGain()
+
+    oscillator.connect(gainNode)
+    gainNode.connect(destination)
+
+    // 设置很低的音量进行测试
+    gainNode.gain.setValueAtTime(0.001, audioContext.currentTime)
+    oscillator.frequency.setValueAtTime(440, audioContext.currentTime)
+
+    // 短暂播放测试音
+    oscillator.start(audioContext.currentTime)
+    oscillator.stop(audioContext.currentTime + 0.01)
+
+    // 清理资源
+    // await new Promise(resolve => setTimeout(resolve, 100))
+    audioContext.close()
+
+    return true
+  } catch (error) {
+    console.warn('无法检查系统音量:', error)
+    return false
+  }
+}
+
 // 检查设备媒体能力
 const checkMediaCapabilities = async () => {
   const capabilities = {
     hasCamera: false,
     hasMicrophone: false,
     hasSpeaker: false,
+    hasValidVolume: false,
     supportedConstraints: navigator.mediaDevices.getSupportedConstraints()
   }
 
@@ -610,6 +651,9 @@ const checkMediaCapabilities = async () => {
     capabilities.hasCamera = devices.some((device) => device.kind === 'videoinput')
     capabilities.hasMicrophone = devices.some((device) => device.kind === 'audioinput')
     capabilities.hasSpeaker = devices.some((device) => device.kind === 'audiooutput')
+
+    // 检查系统音量
+    capabilities.hasValidVolume = await checkSystemVolume()
   } catch (error) {
     console.warn('无法枚举媒体设备:', error)
   }
@@ -625,15 +669,19 @@ const initMediaStream = async () => {
     // 根据设备能力和通话类型动态设置约束
     const constraints: MediaStreamConstraints = {}
 
-    // 检查音频能力（需要同时有麦克风和音响）
-    if (capabilities.hasMicrophone && capabilities.hasSpeaker) {
+    // 检查音频能力（检测麦克风、音量和音频设备）
+    if (capabilities.hasMicrophone && capabilities.hasValidVolume) {
       constraints.audio = true
+      // 如果没有独立的音响设备，提示用户可能需要使用耳机或一体化设备
+      if (!capabilities.hasSpeaker) {
+        console.warn('未检测到独立的音响设备，请确保使用耳机或一体化音频设备')
+      }
     } else {
       if (!capabilities.hasMicrophone) {
-        window.$message.warning('未检测到声音输入设备')
+        window.$message.warning('未检测到麦克风设备')
       }
-      if (!capabilities.hasSpeaker) {
-        window.$message.warning('未检测到声音输出设备')
+      if (!capabilities.hasValidVolume) {
+        window.$message.warning('系统音量过低或音频输出不可用，请检查音量设置')
       }
       constraints.audio = false
     }
