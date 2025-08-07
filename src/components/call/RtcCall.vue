@@ -244,8 +244,21 @@ const toggleMute = () => {
 
 const toggleSpeaker = () => {
   isSpeakerOn.value = !isSpeakerOn.value
-  // TODO: 实现实际的扬声器切换逻辑
-  console.log('切换扬声器状态:', isSpeakerOn.value)
+
+  // 控制远程视频的音频输出
+  const setVideoMuted = (muted: boolean) => {
+    if (mainVideoRef.value && mainVideoRef.value.srcObject === remoteStream.value) {
+      mainVideoRef.value.muted = muted
+    }
+    if (pipVideoRef.value && pipVideoRef.value.srcObject === remoteStream.value) {
+      pipVideoRef.value.muted = muted
+    }
+  }
+
+  // 当扬声器关闭时，静音远程视频；开启时，取消静音
+  setVideoMuted(!isSpeakerOn.value)
+
+  console.log('切换扬声器状态:', isSpeakerOn.value, '远程视频静音:', !isSpeakerOn.value)
 }
 
 const toggleVideo = async () => {
@@ -265,12 +278,18 @@ const toggleVideo = async () => {
         if (pipVideoRef.value && remoteStream.value) {
           console.log('设置远程流')
           pipVideoRef.value.srcObject = remoteStream.value
+          // 应用扬声器状态到远程视频
+          pipVideoRef.value.muted = !isSpeakerOn.value
         }
       } else {
         if (pipVideoRef.value) {
           pipVideoRef.value.srcObject = localStream.value
         }
         mainVideoRef.value!.srcObject = remoteStream.value
+        // 应用扬声器状态到远程视频
+        if (mainVideoRef.value) {
+          mainVideoRef.value.muted = !isSpeakerOn.value
+        }
       }
     } catch (error) {
       console.error('开启摄像头失败:', error)
@@ -292,10 +311,18 @@ const toggleVideoLayout = async () => {
     // 本地视频作为主视频
     mainVideoRef.value!.srcObject = localStream.value
     pipVideoRef.value!.srcObject = remoteStream.value
+    // 应用扬声器状态到远程视频
+    if (pipVideoRef.value) {
+      pipVideoRef.value.muted = !isSpeakerOn.value
+    }
   } else {
     // 远程视频作为主视频
     mainVideoRef.value!.srcObject = remoteStream.value
     pipVideoRef.value!.srcObject = localStream.value
+    // 应用扬声器状态到远程视频
+    if (mainVideoRef.value) {
+      mainVideoRef.value.muted = !isSpeakerOn.value
+    }
   }
 }
 
