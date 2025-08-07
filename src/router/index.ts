@@ -279,6 +279,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/previewFile',
     name: 'previewFile',
     component: () => import('@/views/previewFileWindow/index.vue')
+  },
+  {
+    path: '/rtcCall',
+    name: 'rtcCall',
+    component: () => import('@/components/call/RtcCall.vue')
   }
 ]
 

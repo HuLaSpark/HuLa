@@ -100,7 +100,6 @@ class WS {
     info('[ws] webSocket 服务初始化')
     this.initWindowType()
     if (isMainWindow) {
-      this.initConnect()
       // 收到WebSocket worker消息
       worker.addEventListener('message', this.onWorkerMsg)
       // 收到Timer worker消息
@@ -258,7 +257,7 @@ class WS {
   // 初始化窗口类型
   private async initWindowType() {
     const currentWindow = WebviewWindow.getCurrent()
-    isMainWindow = currentWindow.label === 'home'
+    isMainWindow = currentWindow.label === 'home' || currentWindow.label === 'rtcCall'
   }
 
   initConnect = async () => {
@@ -639,6 +638,11 @@ class WS {
           useMitt.emit(WsResponseMessageType.LeaveVideo, data)
           break
         }
+        case WsResponseMessageType.DROPPED: {
+          const data = params.data
+          useMitt.emit(WsResponseMessageType.DROPPED, data)
+          break
+        }
         default: {
           console.log('接收到未处理类型的消息:', params)
           break
@@ -734,4 +738,5 @@ class WS {
 }
 
 const ws = new WS()
+await ws.initConnect()
 export default ws

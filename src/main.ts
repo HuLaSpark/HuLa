@@ -1,6 +1,5 @@
 import 'uno.css'
 import '@unocss/reset/eric-meyer.css' // unocss提供的浏览器默认样式重置
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import App from '@/App.vue'
 import { AppException } from '@/common/exception.ts'
 import vResize from '@/directives/v-resize'
@@ -8,8 +7,9 @@ import vSlide from '@/directives/v-slide.ts'
 import router from '@/router'
 import { pinia } from '@/stores'
 import { initMobileClient } from '@/mobile/mobile-client/MobileClient'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 
-if (WebviewWindow.getCurrent().label === 'home') {
+if (WebviewWindow.getCurrent().label === 'home' || WebviewWindow.getCurrent().label === 'rtcCall') {
   import('@/services/webSocket')
 }
 
