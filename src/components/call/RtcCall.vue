@@ -166,8 +166,9 @@
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { LogicalSize, LogicalPosition, PhysicalSize } from '@tauri-apps/api/dpi'
+import { LogicalSize, LogicalPosition, PhysicalSize, PhysicalPosition } from '@tauri-apps/api/dpi'
 import { primaryMonitor } from '@tauri-apps/api/window'
+import { type } from '@tauri-apps/plugin-os'
 import { Icon } from '@iconify/vue'
 import ActionBar from '@/components/windows/ActionBar.vue'
 import { AvatarUtils } from '@/utils/AvatarUtils'
@@ -204,8 +205,24 @@ const pipVideoRef = ref<HTMLVideoElement>()
 const isLocalVideoMain = ref(true)
 // 通话接听状态
 const isCallAccepted = ref(!isReceiver)
-const normalSize = new PhysicalSize(500, 650)
-const notificationSize = new PhysicalSize(360, 100)
+
+// 根据操作系统选择合适的Size类型
+// Windows使用LogicalSize，Mac使用PhysicalSize
+const currentOS = type()
+console.log('当前操作系统:', currentOS)
+
+const createSize = (width: number, height: number) => {
+  const size = currentOS === 'windows' ? new LogicalSize(width, height) : new PhysicalSize(width, height)
+  console.log(
+    `创建窗口大小 ${width}x${height}:`,
+    size,
+    `类型: ${currentOS === 'windows' ? 'LogicalSize' : 'PhysicalSize'}`
+  )
+  return size
+}
+
+const normalSize = createSize(500, 650)
+const notificationSize = createSize(360, 100)
 
 // 计算属性
 const callStatusText = computed(() => {
@@ -333,10 +350,22 @@ const acceptCall = async () => {
   isCallAccepted.value = true
   // 调用接听响应函数
   sendRtcCall2VideoCallResponse(1)
+
   // 调整窗口大小为正常大小
-  const currentWindow = WebviewWindow.getCurrent()
-  await currentWindow.setSize(new LogicalSize(500, 600))
-  await currentWindow.center()
+  try {
+    const currentWindow = WebviewWindow.getCurrent()
+    await currentWindow.setSize(normalSize)
+    await currentWindow.center()
+
+    // 确保窗口获得焦点
+    try {
+      await currentWindow.setFocus()
+    } catch (error) {
+      console.warn('Failed to set window focus after accepting call:', error)
+    }
+  } catch (error) {
+    console.error('Failed to resize window after accepting call:', error)
+  }
 }
 
 // 拒绝通话
@@ -349,35 +378,71 @@ const rejectCall = async () => {
 onMounted(async () => {
   const currentWindow = WebviewWindow.getCurrent()
 
-  if (isReceiver && !isCallAccepted.value) {
-    await currentWindow.setSize(notificationSize)
-    // 获取屏幕尺寸并定位到右下角
-    try {
-      const monitor = await primaryMonitor()
-      if (monitor) {
-        const screenWidth = monitor.size.width
-        const screenHeight = monitor.size.height
-        const margin = 20
+  try {
+    if (isReceiver && !isCallAccepted.value) {
+      // 设置通知窗口大小
+      await currentWindow.setSize(notificationSize)
 
-        await currentWindow.setPosition(
-          new LogicalPosition(
-            screenWidth - notificationSize.width - margin,
-            screenHeight - notificationSize.height - margin - 100
-          )
-        )
+      // 获取屏幕尺寸并定位到右下角
+      try {
+        const monitor = await primaryMonitor()
+        if (monitor) {
+          const margin = 20
+          const taskbarHeight = currentOS === 'windows' ? 40 : 0 // Windows任务栏高度
+
+          let screenWidth: number
+          let screenHeight: number
+          let x: number
+          let y: number
+
+          if (currentOS === 'windows') {
+            // Windows使用逻辑像素进行计算
+            screenWidth = monitor.size.width / (monitor.scaleFactor || 1)
+            screenHeight = monitor.size.height / (monitor.scaleFactor || 1)
+            x = Math.max(0, screenWidth - notificationSize.width - margin)
+            y = Math.max(0, screenHeight - notificationSize.height - margin - taskbarHeight)
+            await currentWindow.setPosition(new LogicalPosition(x, y))
+          } else {
+            // Mac使用物理像素进行计算
+            screenWidth = monitor.size.width
+            screenHeight = monitor.size.height
+            x = Math.max(0, screenWidth - notificationSize.width - margin)
+            y = Math.max(0, screenHeight - notificationSize.height - margin - taskbarHeight)
+            await currentWindow.setPosition(new PhysicalPosition(x, y))
+          }
+        } else {
+          // 如果无法获取主显示器信息，使用屏幕右下角的估算位置
+          await currentWindow.setPosition(new LogicalPosition(800, 600))
+        }
+      } catch (error) {
+        console.error('Failed to get monitor info:', error)
+        // 如果获取屏幕信息失败，使用更安全的默认位置
+        await currentWindow.setPosition(new LogicalPosition(800, 600))
       }
-    } catch (error) {
-      console.error('Failed to get monitor info:', error)
-      // 如果获取屏幕信息失败，使用默认位置
-      await currentWindow.setPosition(new LogicalPosition(100, 100))
+    } else {
+      // 正常大小窗口
+      await currentWindow.setSize(normalSize)
+      await currentWindow.center()
     }
-  } else {
-    // 正常大小窗口
-    await currentWindow.setSize(normalSize)
-    await currentWindow.center()
-  }
 
-  await currentWindow.show()
+    // 确保窗口显示
+    await currentWindow.show()
+
+    // 在Windows上，有时需要额外的焦点设置
+    try {
+      await currentWindow.setFocus()
+    } catch (error) {
+      console.warn('Failed to set window focus:', error)
+    }
+  } catch (error) {
+    console.error('Failed to setup window:', error)
+    // 最后的fallback：至少尝试显示窗口
+    try {
+      await currentWindow.show()
+    } catch (showError) {
+      console.error('Failed to show window:', showError)
+    }
+  }
 })
 </script>
 
