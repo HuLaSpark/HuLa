@@ -15,7 +15,7 @@ const RESIZE_UPDATE = 'resize-update'
 
 export type ResizeEvent = { isFullScreen: boolean; safeArea: SafeArea }
 
-type Events = {
+export type MobileClientEvents = {
   [RESIZE_UPDATE]: ResizeEvent
 }
 
@@ -23,7 +23,7 @@ export class MobileClient implements IMobileClient {
   public envType!: OsType
   public mobileStore = useMobileStore()
   private clientAdapter!: IMobileClientAdapter
-  public mitt = mitt<Events>()
+  public mitt = mitt<MobileClientEvents>()
 
   constructor() {}
 

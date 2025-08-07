@@ -79,7 +79,8 @@
           <div
             v-for="item in messageItems"
             :key="item.id"
-            class="grid grid-cols-[2.2rem_1fr_4rem] items-start px-2 py-3 gap-1 hover:bg-#DEEDE7 hover:rounded-10px transition-colors cursor-pointer">
+            @click="intoRoom(item)"
+            class="grid grid-cols-[2.2rem_1fr_4rem] items-start px-2 py-3 gap-1 active:bg-#DEEDE7 active:rounded-10px transition-colors cursor-pointer">
             <!-- 头像：单独居中 -->
             <div class="self-center h-38px">
               <n-badge :value="item.unreadCount">
@@ -144,6 +145,7 @@ import { useChatStore } from '@/stores/chat.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
+import { useMessage } from '@/hooks/useMessage.ts'
 
 const chatStore = useChatStore()
 
@@ -270,9 +272,12 @@ const addIconHandler = {
 
 const router = useRouter()
 
-const intoRoom = () => {
+const { handleMsgClick } = useMessage()
+
+const intoRoom = (item: any) => {
+  handleMsgClick(item)
   router.push('/mobile/chatRoom')
-  console.log('进入页面')
+  console.log('进入页面', item)
 }
 </script>
 

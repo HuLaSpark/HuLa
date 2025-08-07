@@ -11,6 +11,7 @@ declare module 'vue' {
     ActionBar: typeof import('./../components/windows/ActionBar.vue')['default']
     Announcement: typeof import('./../components/rightBox/renderMessage/Announcement.vue')['default']
     ApplyList: typeof import('./../components/rightBox/ApplyList.vue')['default']
+    AutoFixHeightPage: typeof import('./../mobile/components/chat-room/AutoFixHeightPage.vue')['default']
     AvatarCropper: typeof import('./../components/common/AvatarCropper.vue')['default']
     BotMessage: typeof import('./../components/rightBox/renderMessage/special/BotMessage.vue')['default']
     ChatBox: typeof import('./../components/rightBox/chatBox/index.vue')['default']

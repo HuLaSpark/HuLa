@@ -1,49 +1,55 @@
 <template>
-  <div class="w-full min-h-92px bg-#FAFAFA flex flex-col z-2 footer-bar-shadow">
-    <div class="flex flex-1">
-      <div class="pt-10px ms-25px max-h-40px w-full flex items-center">
-        <n-input placeholder="输入/唤醒AI助手" />
+  <div ref="root">
+    <div class="w-full min-h-92px bg-#FAFAFA flex flex-col z-2 footer-bar-shadow">
+      <div class="flex flex-1">
+        <div class="pt-10px ms-25px max-h-40px w-full flex items-center">
+          <n-input ref="footerBarInput" @focus="handleFocus" @blur="handleBlur" placeholder="输入/唤醒AI助手" />
 
-        <n-button type="primary" size="small" class="ms-10px me-25px flex items-center">
-          发送
-          <svg class="h-15px w-15px iconpark-icon color-#white"><use href="#send"></use></svg>
-        </n-button>
+          <n-button type="primary" size="small" class="ms-10px me-25px flex items-center">
+            发送
+            <svg class="h-15px w-15px iconpark-icon color-#white"><use href="#send"></use></svg>
+          </n-button>
+        </div>
       </div>
+
+      <div class="flex justify-between px-25px flex-1 items-center py-10px">
+        <div v-for="item in options" class="flex flex-wrap items-center" @click="clickItem(item.icon)">
+          <svg class="h-24px w-24px iconpark-icon"><use :href="`#${item.icon}`"></use></svg>
+          <svg
+            v-if="item.showArrow"
+            :class="['h-15px w-15px iconpark-icon transition-transform duration-300', item.isRotate ? 'rotate' : '']">
+            <use href="#down" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- 展开面板 -->
+      <Transition @before-enter="beforeEnter" @enter="enter" @leave="leave">
+        <div v-show="isPanelVisible" class="w-full overflow-hidden bg-green flex flex-col">
+          <div style="height: 180px"><!-- 模拟内容高度 --></div>
+        </div>
+      </Transition>
     </div>
 
-    <div class="flex justify-between px-25px flex-1 items-center py-10px">
-      <div v-for="item in options" class="flex flex-wrap items-center" @click="clickItem(item.icon)">
-        <svg class="h-24px w-24px iconpark-icon"><use :href="`#${item.icon}`"></use></svg>
-        <svg
-          v-if="item.showArrow"
-          :class="['h-15px w-15px iconpark-icon transition-transform duration-300', item.isRotate ? 'rotate' : '']">
-          <use href="#down" />
-        </svg>
-      </div>
-    </div>
-
-    <!-- 展开面板 -->
-    <Transition @before-enter="beforeEnter" @enter="enter" @leave="leave">
-      <div v-show="isPanelVisible" class="w-full overflow-hidden bg-green flex flex-col">
-        <div style="height: 180px"><!-- 模拟内容高度 --></div>
-      </div>
-    </Transition>
+    <SafeAreaPlaceholder ref="keyBoardRef" type="keyboard" direction="bottom" />
   </div>
-
-  <SafeAreaPlaceholder type="keyboard" direction="bottom" />
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useMobileStore } from '@/stores/mobile'
+import SafeAreaPlaceholder from '@/mobile/components/placeholders/SafeAreaPlaceholder.vue'
 
-const emit = defineEmits(['focus'])
+const emit = defineEmits(['focus', 'blur'])
+
+const root = ref()
 
 const options = ref([
-  { icon: 'smiling-face', showArrow: true, isRotate: false },
+  { icon: 'smiling-face', showArrow: false, isRotate: false },
   { icon: 'screenshot', showArrow: true, isRotate: false },
   { icon: 'file2', showArrow: true, isRotate: false },
-  { icon: 'photo', showArrow: true, isRotate: false },
-  { icon: 'voice', showArrow: true, isRotate: false },
+  { icon: 'photo', showArrow: false, isRotate: false },
+  { icon: 'voice', showArrow: false, isRotate: false },
   { icon: 'history', showArrow: true, isRotate: false }
 ])
 
@@ -83,6 +89,29 @@ const leave = (el: Element, done: () => void) => {
   dom.style.opacity = '0'
   dom.addEventListener('transitionend', done, { once: true })
 }
+
+const mobileStore = useMobileStore()
+
+const handleFocus = async () => {
+  await nextTick()
+  const keyboard = mobileStore.keyboardDetail
+  requestAnimationFrame(() => {
+    emit('focus', { keyboard })
+  })
+}
+
+const handleBlur = async () => {
+  await nextTick()
+  const keyboard = mobileStore.keyboardDetail
+  requestAnimationFrame(() => {
+    console.log('键盘失焦了')
+    emit('blur', { keyboard })
+  })
+}
+
+const footerBarInput = ref()
+
+defineExpose({ root, footerBarInput })
 </script>
 
 <style lang="scss" scoped>

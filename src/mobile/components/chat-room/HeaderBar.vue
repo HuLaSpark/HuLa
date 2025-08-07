@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full h-[56px] grid grid-cols-[100px_1fr_100px] z-2 header-bar-shadow">
+  <div class="bg-white w-full h-[56px] grid grid-cols-[100px_1fr_100px] z-2 header-bar-shadow">
     <div @click="handleBack" class="w-full h-full flex items-center">
       <svg class="iconpark-icon w-24px h-24px ms-16px p-5px"><use href="#fanhui"></use></svg>
       <div

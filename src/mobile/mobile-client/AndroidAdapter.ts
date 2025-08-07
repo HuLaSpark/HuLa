@@ -55,7 +55,7 @@ export class AndroidAdapter implements IMobileClientAdapter {
   public async listenWindowResize(callback: (safeArea: SafeArea) => void) {
     if (typeof window.ResizeObserver === 'function') {
       const resizeObserver = new ResizeObserver(async () => {
-        console.log('[IosAdapter] 窗口大小更新')
+        console.log('[AndroidAdapter] 窗口大小更新')
         // 这里不需要监听整个窗口的大小，只需要监听它改变了就行
         const insets = await this.getSafeArea()
         callback.call(this, insets)
@@ -65,7 +65,7 @@ export class AndroidAdapter implements IMobileClientAdapter {
     } else {
       // 这里是在找不到ResizeObserver时的向下兼容操作
       window.addEventListener('resize', async () => {
-        console.log('[IosAdapter] 窗口大小更新')
+        console.log('[AndroidAdapter] 窗口大小更新')
         const insets = await this.getSafeArea()
         callback.call(this, insets)
       })
