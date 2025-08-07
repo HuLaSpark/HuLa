@@ -153,7 +153,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
       data: {
         roomId: roomId,
         targetUid: remoteUserId,
-        isVideo: true
+        isVideo: callType === CallTypeEnum.VIDEO
       }
     })
   }
@@ -867,14 +867,14 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
 
   onMounted(() => {
     if (!isReceiver) {
-      console.log('调用方发送视频通话请求')
+      console.log(`调用方发送${callType === CallTypeEnum.VIDEO ? '视频' : '语音'}通话请求`)
       startCall(roomId, callType, [remoteUserId])
       ws.send({
         type: WsRequestMsgType.VIDEO_CALL_REQUEST,
         data: {
           targetUid: remoteUserId,
           roomId: roomId,
-          isVideo: true
+          isVideo: callType === CallTypeEnum.VIDEO
         }
       })
     }

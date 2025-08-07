@@ -135,8 +135,8 @@
           <div class="text-12px text-gray-400 whitespace-nowrap">{{ isSpeakerOn ? '扬声器已开' : '扬声器' }}</div>
         </div>
 
-        <!-- 摄像头按钮 -->
-        <div class="flex flex-col items-center">
+        <!-- 摄像头按钮 (仅视频通话时显示) -->
+        <div v-if="callType === CallTypeEnum.VIDEO" class="flex flex-col items-center">
           <div
             @click="toggleVideo"
             class="control-btn w-60px h-60px rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 mb-8px"
