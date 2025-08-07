@@ -50,6 +50,16 @@ export const renderReplyContent = (name?: string, type?: MsgEnum, content?: stri
         ? `${name}:${MSG_REPLY_TEXT_MAP[MsgEnum.MERGE]}`
         : MSG_REPLY_TEXT_MAP[MsgEnum.MERGE]
     }
+    case MsgEnum.VIDEO_CALL: {
+      return roomType === RoomTypeEnum.GROUP
+        ? `${name}:${MSG_REPLY_TEXT_MAP[MsgEnum.VIDEO_CALL]}`
+        : MSG_REPLY_TEXT_MAP[MsgEnum.VIDEO_CALL]
+    }
+    case MsgEnum.AUDIO_CALL: {
+      return roomType === RoomTypeEnum.GROUP
+        ? `${name}:${MSG_REPLY_TEXT_MAP[MsgEnum.AUDIO_CALL]}`
+        : MSG_REPLY_TEXT_MAP[MsgEnum.AUDIO_CALL]
+    }
     default: {
       return ''
     }
