@@ -334,9 +334,11 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
         // console.log("信道已关闭");
       }
       pc.onicecandidate = async (event) => {
+        console.log('pc 监听到 onicecandidate 事件', event)
         if (event.candidate && roomId) {
           try {
             pendingCandidates.value.push(event.candidate)
+            console.log('发送 candidate 事件')
             sendIceCandidate(event.candidate)
           } catch (err) {
             console.error('发送ICE候选者出错:', err)
@@ -620,7 +622,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
             return
           }
           // 4. 发起者 - 设置远程描述
-          console.log('发起者 - 设置远程描述')
+          console.log('发起者 - 设置远程描述', answer)
           await peerConnection.value.setRemoteDescription(answer)
         }
       }
@@ -840,7 +842,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
         case SignalTypeEnum.CANDIDATE:
           if (signal.candidate) {
             console.log('收到 candidate 信令')
-            await handleCandidate(signal.candidate)
+            await handleCandidate(signal)
           }
           break
 
