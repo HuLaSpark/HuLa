@@ -30,15 +30,12 @@
         </div>
       </Transition>
     </div>
-
-    <SafeAreaPlaceholder ref="keyBoardRef" type="keyboard" direction="bottom" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useMobileStore } from '@/stores/mobile'
-import SafeAreaPlaceholder from '@/mobile/components/placeholders/SafeAreaPlaceholder.vue'
 
 const emit = defineEmits(['focus', 'blur'])
 
@@ -54,14 +51,28 @@ const options = ref([
 ])
 
 const isPanelVisible = ref(false)
+const isInputFocused = ref(false)
 
-const clickItem = (icon: string) => {
-  for (let item of options.value) {
-    if (item.icon === icon && item.showArrow) {
-      item.isRotate = !item.isRotate
-      isPanelVisible.value = item.isRotate
-    } else {
-      item.isRotate = false
+const clickItem = async (icon: string) => {
+  const clickedItem = options.value.find((item) => item.icon === icon)
+
+  if (!clickedItem || !clickedItem.showArrow) return
+
+  if (isInputFocused.value) {
+    // 输入框聚焦时点击图标 → 失焦 → 展开绿色块
+    footerBarInput.value?.blur()
+    await nextTick()
+    isPanelVisible.value = true
+    clickedItem.isRotate = true
+  } else {
+    // 输入框未聚焦时 → 切换绿色块显示状态
+    for (let item of options.value) {
+      if (item.icon === icon) {
+        item.isRotate = !item.isRotate
+        isPanelVisible.value = item.isRotate
+      } else {
+        item.isRotate = false
+      }
     }
   }
 }
@@ -72,10 +83,12 @@ const beforeEnter = (el: Element) => {
   dom.style.opacity = '0'
 }
 
+const duration = 0.15
+
 const enter = (el: Element, done: () => void) => {
   const dom = el as HTMLElement
   requestAnimationFrame(() => {
-    dom.style.transition = 'height 0.3s ease, opacity 0.3s ease'
+    dom.style.transition = `height ${duration}s ease, opacity ${duration}s ease`
     dom.style.height = '180px'
     dom.style.opacity = '1'
     dom.addEventListener('transitionend', done, { once: true })
@@ -84,7 +97,7 @@ const enter = (el: Element, done: () => void) => {
 
 const leave = (el: Element, done: () => void) => {
   const dom = el as HTMLElement
-  dom.style.transition = 'height 0.3s ease, opacity 0.3s ease'
+  dom.style.transition = `height ${duration}s ease, opacity ${duration}s ease`
   dom.style.height = '0px'
   dom.style.opacity = '0'
   dom.addEventListener('transitionend', done, { once: true })
@@ -93,14 +106,22 @@ const leave = (el: Element, done: () => void) => {
 const mobileStore = useMobileStore()
 
 const handleFocus = async () => {
+  isInputFocused.value = true
   await nextTick()
   const keyboard = mobileStore.keyboardDetail
   requestAnimationFrame(() => {
     emit('focus', { keyboard })
   })
+
+  // 如果绿色块已展开，收起它
+  if (isPanelVisible.value) {
+    isPanelVisible.value = false
+    options.value.forEach((item) => (item.isRotate = false))
+  }
 }
 
 const handleBlur = async () => {
+  isInputFocused.value = false
   await nextTick()
   const keyboard = mobileStore.keyboardDetail
   requestAnimationFrame(() => {
@@ -124,6 +145,6 @@ defineExpose({ root, footerBarInput })
 }
 
 .transition-transform {
-  transition: transform 0.3s ease;
+  transition: transform 0.15s ease;
 }
 </style>

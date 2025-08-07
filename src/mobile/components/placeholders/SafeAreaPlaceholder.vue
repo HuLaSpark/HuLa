@@ -74,6 +74,6 @@ defineExpose({
 
 .safe-area-placeholder-keyboard {
   flex-shrink: 0;
-  transition: height 0.2s ease;
+  transition: height 0.15s ease;
 }
 </style>

@@ -4,12 +4,14 @@ import { useMobileStore } from '@/stores/mobile'
 import type { IKeyboardDidShowDetail } from '@/mobile/mobile-client/interface/adapter'
 
 export function useMobile() {
-  console.log('即将初始化')
+  const mobileStore = useMobileStore()
+
+  let removeShowFunction: () => void = () => {}
+  let removeHideFunction: () => void = () => {}
+
   onMounted(async () => {
     if (type() === 'ios' || type() === 'android') {
-      const module = await import('@/mobile/mobile-client/MobileClient') // 这个module不能直接解构，否则会找不到模块中的方法
-
-      const mobileStore = useMobileStore()
+      const module = await import('@/mobile/mobile-client/MobileClient')
 
       await module.initMobileClient()
 
@@ -25,15 +27,14 @@ export function useMobile() {
         mobileStore.updateKeyboardState(false)
       }
 
-      const { removeHideFunction, removeShowFunction } = module.mobileClient.keyboardListener(
-        showKeyboard,
-        hideKeyboard
-      )
-
-      onUnmounted(() => {
-        removeShowFunction()
-        removeHideFunction()
-      })
+      const result = module.mobileClient.keyboardListener(showKeyboard, hideKeyboard)
+      removeShowFunction = result.removeShowFunction
+      removeHideFunction = result.removeHideFunction
     }
+  })
+
+  onUnmounted(() => {
+    removeShowFunction?.()
+    removeHideFunction?.()
   })
 }
