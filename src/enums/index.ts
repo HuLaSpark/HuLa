@@ -195,6 +195,10 @@ export enum MsgEnum {
   NOTICE,
   /** 机器人 */
   BOT,
+  /** 视频通话 */
+  VIDEO_CALL,
+  /** 语音通话 */
+  AUDIO_CALL,
   /** 混合 */
   MIXED,
   /** 艾特 */

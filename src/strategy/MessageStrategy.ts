@@ -1210,6 +1210,102 @@ class VoiceMessageStrategyImpl extends AbstractMessageStrategy {
   }
 }
 
+/**
+ * 处理视频通话系统消息
+ * 消息结构
+ */
+class VideoCallMessageStrategyImpl extends AbstractMessageStrategy {
+  constructor() {
+    super(MsgEnum.VIDEO_CALL)
+  }
+
+  getMsg(_msgInputValue: string, callInfo: any): any {
+    return {
+      type: this.msgType,
+      duration: callInfo.duration, // 通话时长（秒）
+      reason: callInfo.reason, // 结束原因：超时/挂断/异常
+      startTime: callInfo.startTime, // 通话开始时间（时间戳）
+      endTime: callInfo.endTime, // 通话结束时间（时间戳）
+      creator: callInfo.creator, // 发起人 UID
+      isGroup: callInfo.isGroup // 是否为群聊通话
+    }
+  }
+
+  buildMessageBody(msg: any): any {
+    return {
+      duration: msg.duration,
+      reason: msg.reason,
+      startTime: msg.startTime,
+      endTime: msg.endTime,
+      creator: msg.creator,
+      isGroup: msg.isGroup
+    }
+  }
+
+  // 系统消息无需上传操作
+  async uploadFile() {
+    return { uploadUrl: '', downloadUrl: '' }
+  }
+
+  async doUpload() {}
+}
+
+/**
+ * 处理音频通话系统消息
+ * 消息结构
+ */
+class AudioCallMessageStrategyImpl extends AbstractMessageStrategy {
+  constructor() {
+    super(MsgEnum.AUDIO_CALL)
+  }
+
+  /**
+   * 构建音频通话消息
+   * @param callInfo 通话元数据
+   * @returns 音频通话消息对象
+   */
+  getMsg(_msgInputValue: string, callInfo: any): any {
+    return {
+      type: this.msgType,
+      duration: callInfo.duration, // 通话时长（秒）
+      reason: callInfo.reason, // 结束原因：超时/挂断/异常
+      startTime: callInfo.startTime, // 通话开始时间（毫秒时间戳）
+      endTime: callInfo.endTime, // 通话结束时间（毫秒时间戳）
+      creator: callInfo.creator, // 发起人 UID
+      isGroup: callInfo.isGroup // 是否为群聊通话
+    }
+  }
+
+  buildMessageBody(msg: any): any {
+    return {
+      duration: msg.duration, // 通话时长（秒）
+      reason: msg.reason, // 结束原因
+      startTime: msg.startTime, // 开始时间戳
+      endTime: msg.endTime, // 结束时间戳
+      creator: msg.creator, // 发起人UID
+      isGroup: msg.isGroup // 群聊标识
+    }
+  }
+
+  /**
+   * 空实现（系统消息无需文件上传）
+   * @returns 固定返回空上传信息
+   */
+  async uploadFile(): Promise<{ uploadUrl: string; downloadUrl: string }> {
+    return {
+      uploadUrl: '',
+      downloadUrl: ''
+    }
+  }
+
+  /**
+   * 空实现（系统消息无需上传操作）
+   */
+  async doUpload(): Promise<void> {
+    return Promise.resolve()
+  }
+}
+
 const textMessageStrategy = new TextMessageStrategyImpl()
 const fileMessageStrategy = new FileMessageStrategyImpl()
 const imageMessageStrategy = new ImageMessageStrategyImpl()
@@ -1217,6 +1313,8 @@ const emojiMessageStrategy = new EmojiMessageStrategyImpl()
 const unsupportedMessageStrategy = new UnsupportedMessageStrategyImpl()
 const videoMessageStrategy = new VideoMessageStrategyImpl()
 const voiceMessageStrategy = new VoiceMessageStrategyImpl()
+const videoCallMessageStrategy = new VideoCallMessageStrategyImpl()
+const audioCallMessageStrategy = new AudioCallMessageStrategyImpl()
 
 export const messageStrategyMap: Record<MsgEnum, MessageStrategy> = {
   [MsgEnum.FILE]: fileMessageStrategy,
@@ -1234,5 +1332,7 @@ export const messageStrategyMap: Record<MsgEnum, MessageStrategy> = {
   [MsgEnum.AIT]: unsupportedMessageStrategy,
   [MsgEnum.REPLY]: unsupportedMessageStrategy,
   [MsgEnum.AI]: unsupportedMessageStrategy,
-  [MsgEnum.BOT]: unsupportedMessageStrategy
+  [MsgEnum.BOT]: unsupportedMessageStrategy,
+  [MsgEnum.VIDEO_CALL]: videoCallMessageStrategy,
+  [MsgEnum.AUDIO_CALL]: audioCallMessageStrategy
 }
