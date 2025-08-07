@@ -388,7 +388,7 @@ onMounted(async () => {
         const monitor = await primaryMonitor()
         if (monitor) {
           const margin = 20
-          const taskbarHeight = currentOS === 'windows' ? 40 : 0 // Windows任务栏高度
+          const taskbarHeight = 80 // Windows任务栏高度
 
           let screenWidth: number
           let screenHeight: number
