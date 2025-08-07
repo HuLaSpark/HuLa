@@ -1,17 +1,13 @@
 <template>
   <!-- 视频通话消息 -->
-  <div
-    class="dark:bg-[#13987f20] bg-[#13987f30] dark:border-(1px solid #13987f20) border-(1px solid #13987f40) flex items-center gap-8px px-12px py-8px rounded-8px max-w-280px"
-    :class="isCurrentUser ? 'flex-row-reverse' : 'flex-row'">
+  <div class="flex-y-center gap-6px" :class="isCurrentUser ? 'flex-row-reverse' : 'flex-row'">
     <!-- 视频通话图标 -->
-    <div class="flex-shrink-0">
-      <svg class="size-18px color-#13987f">
-        <use href="#video-one"></use>
-      </svg>
-    </div>
+    <svg class="iconpark-icon size-1.2em" :class="isCurrentUser ? 'scale-x-[-1]' : ''">
+      <use href="#video-one"></use>
+    </svg>
 
     <!-- 消息内容 -->
-    <div class="flex-1 text-(12px #13987f) select-none cursor-default">
+    <div class="select-none cursor-default">
       {{ props.body }}
     </div>
   </div>

@@ -288,53 +288,60 @@ export const useChatStore = defineStore(
 
     // 获取会话列表
     const getSessionList = async (isFresh = false) => {
-      if (sessionOptions.isLoading) return
-      sessionOptions.isLoading = true
-      console.log('获取会话列表')
-      const response: any = await invokeWithErrorHandler(TauriCommand.LIST_CONTACTS, undefined, {
-        customErrorMessage: '获取会话列表失败',
-        errorType: ErrorType.Network
-      }).catch(() => {
-        sessionOptions.isLoading = false
-        return null
-      })
-      if (!response) return
-      const data = response
-      if (!data) {
-        return
-      }
-
-      // 保存当前选中的会话ID
-      const currentSelectedRoomId = globalStore.currentSession.roomId
-
-      sessionList.value = []
-      sessionList.value.push(...data)
-      sessionOptions.isLoading = false
-
-      sortAndUniqueSessionList()
-
-      // sessionList[0].unreadCount = 0
-      if (!isFirstInit || isFresh) {
-        isFirstInit = true
-        // 只有在没有当前选中会话时，才设置第一个会话为当前会话
-        if (!currentSelectedRoomId || currentSelectedRoomId === '1') {
-          globalStore.currentSession.roomId = data[0].roomId
-          globalStore.currentSession.type = data[0].type
+      try {
+        if (sessionOptions.isLoading) return
+        sessionOptions.isLoading = true
+        console.log('获取会话列表')
+        const response: any = await invokeWithErrorHandler(TauriCommand.LIST_CONTACTS, undefined, {
+          customErrorMessage: '获取会话列表失败',
+          errorType: ErrorType.Network
+        }).catch(() => {
+          sessionOptions.isLoading = false
+          return null
+        })
+        if (!response) return
+        const data = response
+        if (!data) {
+          return
         }
 
-        // 用会话列表第一个去请求消息列表
-        await getMsgList()
-        // 请求第一个群成员列表
-        currentRoomType.value === RoomTypeEnum.GROUP && (await groupStore.getGroupUserList())
-        // 初始化所有用户基本信息
-        userStore.isSign && (await cachedStore.initAllUserBaseInfo())
-        // 联系人列表
-        await contactStore.getContactList(true)
+        // 保存当前选中的会话ID
+        const currentSelectedRoomId = globalStore.currentSession.roomId
 
-        // 确保在会话列表加载完成后更新总未读数
-        await nextTick(() => {
-          updateTotalUnreadCount()
-        })
+        sessionList.value = []
+        sessionList.value.push(...data)
+        sessionOptions.isLoading = false
+
+        sortAndUniqueSessionList()
+
+        // sessionList[0].unreadCount = 0
+        if (!isFirstInit || isFresh) {
+          isFirstInit = true
+          // 只有在没有当前选中会话时，才设置第一个会话为当前会话
+          if (!currentSelectedRoomId || currentSelectedRoomId === '1') {
+            globalStore.currentSession.roomId = data[0].roomId
+            globalStore.currentSession.type = data[0].type
+          }
+
+          // 用会话列表第一个去请求消息列表
+          await getMsgList()
+          // 请求第一个群成员列表
+          currentRoomType.value === RoomTypeEnum.GROUP && (await groupStore.getGroupUserList())
+          // 初始化所有用户基本信息
+          userStore.isSign && (await cachedStore.initAllUserBaseInfo())
+          // 联系人列表
+          await contactStore.getContactList(true)
+
+          // 确保在会话列表加载完成后更新总未读数
+          await nextTick(() => {
+            updateTotalUnreadCount()
+          })
+        }
+      } catch (e) {
+        console.error('获取会话列表失败:', e)
+        sessionOptions.isLoading = false
+      } finally {
+        sessionOptions.isLoading = false
       }
     }
 

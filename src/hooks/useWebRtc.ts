@@ -171,6 +171,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
    */
   const endCall = async (status: number) => {
     try {
+      console.log('结束通话')
       clear()
       // 发送挂断消息
       sendRtcCall2VideoCallResponse(status)
