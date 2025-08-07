@@ -18,6 +18,13 @@ pub struct SaveUserInfoRequest {
     uid: String,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateTokenRequest {
+    token: String,
+    refresh_token: String,
+}
+
 #[tauri::command]
 pub async fn save_user_info(user_info: SaveUserInfoRequest, state: State<'_, AppData>) -> Result<(), String> {
     let db = state.db_conn.clone();
@@ -46,6 +53,34 @@ pub async fn save_user_info(user_info: SaveUserInfoRequest, state: State<'_, App
     } else {
         debug!("User already exists, no need to insert");
     }
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn update_token(token_info: UpdateTokenRequest, state: State<'_, AppData>) -> Result<(), String> {
+    info!("Updating token in im_request_client");
+    
+    let request_client = state.request_client.clone();
+    
+    // 获取 ImRequestClient 的锁并更新 token
+    let client = request_client.lock().await;
+    
+    // 更新 token
+    if let Ok(mut token_guard) = client.token.try_lock() {
+        *token_guard = Some(token_info.token.clone());
+        info!("Token updated successfully");
+    } else {
+        return Err("Failed to acquire token lock".to_string());
+    }
+    
+    // 更新 refresh_token
+    if let Ok(mut refresh_token_guard) = client.refresh_token.try_lock() {
+        *refresh_token_guard = Some(token_info.refresh_token.clone());
+        info!("Refresh token updated successfully");
+    } else {
+        return Err("Failed to acquire refresh_token lock".to_string());
+    }
+    
     Ok(())
 }
 

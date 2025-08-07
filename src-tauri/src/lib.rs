@@ -344,7 +344,7 @@ fn common_setup(
 // 公共的命令处理器函数
 fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static
 {
-    use crate::command::user_command::{save_user_info, update_user_last_opt_time};
+    use crate::command::user_command::{save_user_info, update_user_last_opt_time, update_token};
     #[cfg(desktop)]
     use crate::desktops::common_cmd::set_badge_count;
 
@@ -377,6 +377,7 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         // 通用命令（桌面端和移动端都支持）
         save_user_info,
         update_user_last_opt_time,
+        update_token,
         page_room,
         get_room_members,
         update_my_room_info,

@@ -118,7 +118,7 @@ impl ImRequestClient {
 
         info!("Starting to refresh token...");
         // 构建刷新 token 的请求
-        let refresh_url = format!("{}/token/refreshToken", self.base_url);
+        let refresh_url = format!("{}/oauth/anyTenant/refresh", self.base_url);
         let request_builder = self.client.request(Method::POST, &refresh_url);
 
         // 发送请求
@@ -314,7 +314,7 @@ impl<'a> RequestBuilderWrapper<'a> {
         };
 
         // token 过期，尝试刷新 token 并重试
-        if result.code == Some(40004) {
+        if result.code == Some(406) {
             info!("Detected token expiration, attempting to refresh token");
 
             // 尝试刷新 token

@@ -4,6 +4,7 @@ import { AppException, ErrorType } from '@/common/exception'
 import { URLEnum } from '@/enums'
 import { RequestQueue } from '@/utils/RequestQueue'
 import urls from './urls'
+import { updateTokenSilently } from '../utils/TokenManager'
 
 // 错误信息常量
 const ERROR_MESSAGES = {
@@ -382,6 +383,9 @@ async function refreshTokenAndRetry(): Promise<string> {
     // 更新本地存储的token 知道
     localStorage.setItem('TOKEN', token)
     localStorage.setItem('REFRESH_TOKEN', newRefreshToken)
+
+    // 更新 rust端中的 token
+    await updateTokenSilently(token, newRefreshToken)
 
     // 使用队列处理方式
     await requestQueue.processQueue(token)
