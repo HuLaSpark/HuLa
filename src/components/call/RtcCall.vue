@@ -102,7 +102,7 @@
 
       <!-- 通话时长 -->
       <div v-if="connectionStatus === RTCCallStatus.ACCEPT" class="text-16px text-gray-300 mb-32px text-center">
-        {{ callDuration }}
+        {{ formattedCallDuration }}
       </div>
     </div>
 
@@ -170,9 +170,9 @@ import { LogicalSize, LogicalPosition, PhysicalSize } from '@tauri-apps/api/dpi'
 import { primaryMonitor } from '@tauri-apps/api/window'
 import { Icon } from '@iconify/vue'
 import ActionBar from '@/components/windows/ActionBar.vue'
-import type { CacheUserItem } from '@/services/types'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { useWebRtc } from '@/hooks/useWebRtc'
+import { useUserInfo } from '@/hooks/useCached'
 import { CallTypeEnum, RTCCallStatus } from '@/enums'
 
 const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(remoteUserInfo.value?.avatar as string))
@@ -192,7 +192,8 @@ const { localStream, remoteStream, endCall, callDuration, connectionStatus, send
 const isMuted = ref(false)
 const isSpeakerOn = ref(false)
 const isVideoOn = ref(false)
-const remoteUserInfo = ref<Partial<CacheUserItem> | null>(null)
+// 获取远程用户信息
+const remoteUserInfo = useUserInfo(remoteUserId)
 // 视频元素引用
 const mainVideoRef = ref<HTMLVideoElement>()
 const pipVideoRef = ref<HTMLVideoElement>()
@@ -214,6 +215,20 @@ const callStatusText = computed(() => {
       return '通话已结束'
     default:
       return '准备中...'
+  }
+})
+
+// 格式化通话时长
+const formattedCallDuration = computed(() => {
+  const duration = callDuration.value
+  const hours = Math.floor(duration / 3600)
+  const minutes = Math.floor((duration % 3600) / 60)
+  const seconds = duration % 60
+
+  if (hours > 0) {
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+  } else {
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
   }
 })
 
