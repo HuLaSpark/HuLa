@@ -183,12 +183,15 @@ const roomId = route.query.roomId as string
 const callType = (route.query.callType as string) === '1' ? CallTypeEnum.AUDIO : CallTypeEnum.VIDEO
 // 是否是接受方，true 代表接受方
 const isReceiver = route.query.isIncoming === 'true'
-const { localStream, remoteStream, endCall, callDuration, connectionStatus, sendRtcCall2VideoCallResponse } = useWebRtc(
-  roomId,
-  remoteUserId,
-  callType,
-  isReceiver
-)
+const {
+  localStream,
+  remoteStream,
+  endCall,
+  callDuration,
+  connectionStatus,
+  sendRtcCall2VideoCallResponse,
+  toggleMute: toggleMuteWebRtc
+} = useWebRtc(roomId, remoteUserId, callType, isReceiver)
 const isMuted = ref(false)
 const isSpeakerOn = ref(false)
 const isVideoOn = ref(false)
@@ -238,8 +241,7 @@ const isPipVideoVisible = computed(() => {
 
 const toggleMute = () => {
   isMuted.value = !isMuted.value
-  // TODO: 实现实际的静音逻辑
-  console.log('切换静音状态:', isMuted.value)
+  toggleMuteWebRtc()
 }
 
 const toggleSpeaker = () => {
