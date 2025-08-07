@@ -169,11 +169,11 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
   /**
    * 结束通话
    */
-  const endCall = async () => {
+  const endCall = async (status: number) => {
     try {
       clear()
       // 发送挂断消息
-      sendRtcCall2VideoCallResponse(2)
+      sendRtcCall2VideoCallResponse(status)
       await getCurrentWebviewWindow().close()
       return true
     } catch (err) {
@@ -294,14 +294,14 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
             connectionStatus.value = RTCCallStatus.END
             window.$message.error('RTC通讯连接失败!')
             setTimeout(async () => {
-              await endCall()
+              await endCall(2)
             }, 500)
             break
           case 'closed':
             console.log('RTC 连接关闭')
             connectionStatus.value = RTCCallStatus.END
             setTimeout(async () => {
-              await endCall()
+              await endCall(2)
             }, 500)
             break
           case 'failed':
@@ -574,7 +574,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
       console.log('处理 offer 结束')
     } catch (error) {
       console.error('处理 offer 失败:', error)
-      endCall()
+      endCall(2)
     }
   }
 
@@ -618,7 +618,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
         if (!isReceiver) {
           if (!roomId) {
             window.$message.error('房间号不存在，请重新连接！')
-            endCall()
+            endCall(2)
             return
           }
           // 4. 发起者 - 设置远程描述
@@ -629,7 +629,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
     } catch (error) {
       console.error('处理 answer 失败:', error)
       connectionStatus.value = RTCCallStatus.ERROR
-      endCall()
+      endCall(2)
     }
   }
 
@@ -862,13 +862,11 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
       sendOffer(offer.value!)
     }
   })
-  useMitt.on(WsResponseMessageType.DROPPED, endCall)
+  useMitt.on(WsResponseMessageType.DROPPED, () => endCall(2))
+  useMitt.on(WsResponseMessageType.CallRejected, () => endCall(0))
 
   onMounted(() => {
-    if (isReceiver) {
-      // 接受方，发送是否接受
-      sendRtcCall2VideoCallResponse(1)
-    } else {
+    if (!isReceiver) {
       console.log('调用方发送视频通话请求')
       startCall(roomId, callType, [remoteUserId])
       ws.send({
@@ -907,6 +905,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
     endCall,
     callDuration,
     connectionStatus,
-    toggleMute
+    toggleMute,
+    sendRtcCall2VideoCallResponse
   }
 }

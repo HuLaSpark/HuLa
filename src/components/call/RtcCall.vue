@@ -1,5 +1,52 @@
 <template>
-  <div data-tauri-drag-region class="rtc-call-container h-full bg-gray-800 flex flex-col select-none">
+  <!-- 通知样式窗口 (接收方且未接听) -->
+  <div
+    v-if="isReceiver && !isCallAccepted"
+    data-tauri-drag-region
+    class="notification-container w-360px h-100px bg-white dark:bg-gray-900 rounded-12px shadow-2xl border border-gray-200 dark:border-gray-700 flex items-center p-12px select-none backdrop-blur-md">
+    <!-- 用户头像 -->
+    <div class="relative mr-12px">
+      <n-avatar :size="56" :src="avatarSrc" :fallback-src="''" class="rounded-12px shadow-md" />
+      <!-- 通话类型指示器 -->
+      <div
+        class="absolute -bottom-2px -right-2px w-20px h-20px rounded-full bg-blue-500 flex items-center justify-center shadow-lg">
+        <Icon
+          :icon="callType === CallTypeEnum.VIDEO ? 'material-symbols:videocam' : 'material-symbols:call'"
+          :size="12"
+          class="text-white" />
+      </div>
+    </div>
+
+    <!-- 用户信息和状态 -->
+    <div class="flex-1 min-w-0">
+      <div class="text-15px font-semibold text-gray-900 dark:text-white mb-2px truncate">
+        {{ remoteUserInfo?.name || '未知用户' }}
+      </div>
+      <div class="text-12px text-gray-500 dark:text-gray-400 flex items-center">
+        <div class="w-6px h-6px rounded-full bg-green-500 mr-6px animate-pulse"></div>
+        来电 · {{ callType === CallTypeEnum.VIDEO ? '视频通话' : '语音通话' }}
+      </div>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div class="flex gap-6px mr-7">
+      <!-- 拒绝按钮 -->
+      <div
+        @click="rejectCall"
+        class="w-44px h-44px rounded-full bg-red-500 hover:bg-red-600 active:bg-red-700 flex items-center justify-center cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95">
+        <Icon icon="material-symbols:call-end" :size="20" class="text-white" />
+      </div>
+      <!-- 接听按钮 -->
+      <div
+        @click="acceptCall"
+        class="w-44px h-44px rounded-full bg-green-500 hover:bg-green-600 active:bg-green-700 flex items-center justify-center cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95">
+        <Icon icon="material-symbols:call" :size="20" class="text-white" />
+      </div>
+    </div>
+  </div>
+
+  <!-- 正常通话窗口 -->
+  <div v-else data-tauri-drag-region class="rtc-call-container h-full bg-gray-800 flex flex-col select-none">
     <!-- 窗口控制栏 -->
     <ActionBar class="absolute right-0 w-full z-999" :shrink="false" :min-w="false" :max-w="false" />
 
@@ -106,7 +153,7 @@
       <!-- 下排按钮：挂断 -->
       <div class="flex justify-center">
         <div
-          @click="endCall"
+          @click="endCall(2)"
           class="control-btn w-70px h-70px rounded-full bg-red-500 hover:bg-red-400 flex items-center justify-center cursor-pointer transition-all duration-200">
           <Icon icon="material-symbols:call-end" :size="32" class="text-white" />
         </div>
@@ -119,6 +166,8 @@
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { LogicalSize, LogicalPosition, PhysicalSize } from '@tauri-apps/api/dpi'
+import { primaryMonitor } from '@tauri-apps/api/window'
 import { Icon } from '@iconify/vue'
 import ActionBar from '@/components/windows/ActionBar.vue'
 import type { CacheUserItem } from '@/services/types'
@@ -134,7 +183,7 @@ const roomId = route.query.roomId as string
 const callType = (route.query.callType as string) === '1' ? CallTypeEnum.AUDIO : CallTypeEnum.VIDEO
 // 是否是接受方，true 代表接受方
 const isReceiver = route.query.isIncoming === 'true'
-const { localStream, remoteStream, endCall, callDuration, connectionStatus } = useWebRtc(
+const { localStream, remoteStream, endCall, callDuration, connectionStatus, sendRtcCall2VideoCallResponse } = useWebRtc(
   roomId,
   remoteUserId,
   callType,
@@ -149,6 +198,10 @@ const mainVideoRef = ref<HTMLVideoElement>()
 const pipVideoRef = ref<HTMLVideoElement>()
 // 视频布局状态：false=远程视频主画面，true=本地视频主画面
 const isLocalVideoMain = ref(true)
+// 通话接听状态
+const isCallAccepted = ref(!isReceiver)
+const normalSize = new PhysicalSize(500, 650)
+const notificationSize = new PhysicalSize(360, 100)
 
 // 计算属性
 const callStatusText = computed(() => {
@@ -231,9 +284,56 @@ const toggleVideoLayout = async () => {
   }
 }
 
+// 接听通话
+const acceptCall = async () => {
+  isCallAccepted.value = true
+  // 调用接听响应函数
+  sendRtcCall2VideoCallResponse(1)
+  // 调整窗口大小为正常大小
+  const currentWindow = WebviewWindow.getCurrent()
+  await currentWindow.setSize(new LogicalSize(500, 600))
+  await currentWindow.center()
+}
+
+// 拒绝通话
+const rejectCall = async () => {
+  // 调用拒绝响应函数
+  endCall(0)
+}
+
 // 生命周期
 onMounted(async () => {
-  await WebviewWindow.getCurrent().show()
+  const currentWindow = WebviewWindow.getCurrent()
+
+  if (isReceiver && !isCallAccepted.value) {
+    await currentWindow.setSize(notificationSize)
+    // 获取屏幕尺寸并定位到右下角
+    try {
+      const monitor = await primaryMonitor()
+      if (monitor) {
+        const screenWidth = monitor.size.width
+        const screenHeight = monitor.size.height
+        const margin = 20
+
+        await currentWindow.setPosition(
+          new LogicalPosition(
+            screenWidth - notificationSize.width - margin,
+            screenHeight - notificationSize.height - margin - 100
+          )
+        )
+      }
+    } catch (error) {
+      console.error('Failed to get monitor info:', error)
+      // 如果获取屏幕信息失败，使用默认位置
+      await currentWindow.setPosition(new LogicalPosition(100, 100))
+    }
+  } else {
+    // 正常大小窗口
+    await currentWindow.setSize(normalSize)
+    await currentWindow.center()
+  }
+
+  await currentWindow.show()
 })
 </script>
 
