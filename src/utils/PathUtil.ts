@@ -115,7 +115,7 @@ export async function getFile(absolutePath: string) {
 
   const fileData = await readFile(absolutePath)
   const fileName = fileMeta.name
-  const blob = new Blob([fileData])
+  const blob = new Blob([new Uint8Array(fileData)])
 
   const fileType = fileMeta?.mime_type || fileMeta?.file_type
 

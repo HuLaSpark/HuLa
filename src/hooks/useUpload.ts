@@ -864,7 +864,7 @@ export const useUpload = () => {
         if (file.length > CHUNK_THRESHOLD) {
           // 转换file的类型
           // TODO：本地上传还需要测试
-          const fileObj = new File([file], __filename, { type: 'application/octet-stream' })
+          const fileObj = new File([new Uint8Array(file)], __filename, { type: 'application/octet-stream' })
           await uploadToDefaultWithChunks(uploadUrl, fileObj)
         } else {
           const response = await fetch(uploadUrl, {

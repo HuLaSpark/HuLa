@@ -219,7 +219,7 @@ const handleFileOpen = async () => {
       selected.map(async (path) => {
         const fileData = await readFile(path)
         const fileName = extractFileName(path)
-        const blob = new Blob([fileData])
+        const blob = new Blob([new Uint8Array(fileData)])
 
         // 找到对应路径的文件，并且获取其类型
         const fileMeta = filesMeta.find((f) => f.path === path)
@@ -253,7 +253,7 @@ const handleImageOpen = async () => {
       const fileName = extractFileName(path)
       const mimeType = getMimeTypeFromExtension(fileName)
 
-      const blob = new Blob([fileData], { type: mimeType })
+      const blob = new Blob([new Uint8Array(fileData)], { type: mimeType })
       return new File([blob], fileName, { type: mimeType })
     })
 
