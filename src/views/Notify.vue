@@ -203,7 +203,7 @@ onMounted(async () => {
       'hide_notify'
     )
     addListener(
-      appWindow.listen('notify_cotent', async (event: Event<MessageType>) => {
+      appWindow.listen('notify_content', async (event: Event<MessageType>) => {
         if (event.payload) {
           // 窗口显示将由notify_enter事件触发
 
@@ -276,7 +276,7 @@ onMounted(async () => {
           msgCount.value = content.value.reduce((acc, group) => acc + group.messageCount, 0)
         }
       }),
-      'notify_cotent'
+      'notify_content'
     )
   }
 })

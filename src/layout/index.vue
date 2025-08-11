@@ -28,9 +28,7 @@
 import { LogicalSize } from '@tauri-apps/api/dpi'
 import { emitTo } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification'
 import { type } from '@tauri-apps/plugin-os'
-import { useThrottleFn } from '@vueuse/core'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import {
   ChangeTypeEnum,
@@ -41,7 +39,6 @@ import {
   RoomTypeEnum,
   TauriCommand
 } from '@/enums'
-import { useUserInfo } from '@/hooks/useCached.ts'
 import { useCheckUpdate } from '@/hooks/useCheckUpdate'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { computedToken } from '@/services/request'
@@ -250,7 +247,6 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   await invokeSilently(TauriCommand.SAVE_MSG, {
     data
   })
-  const username = useUserInfo(data.fromUser.uid).value.name!
   // const home = await WebviewWindow.getByLabel('home')
   // 当home窗口不显示并且home窗口不是最小化的时候并且不是聚焦窗口的时候
   // const homeShow = await home?.isVisible()
@@ -271,20 +267,11 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
       // 在windows系统下才发送通知
       if (type() === 'windows') {
         globalStore.setTipVisible(true)
-        // 请求用户注意窗口
-        // home?.requestUserAttention(UserAttentionType.Critical)
       }
 
       if (WebviewWindow.getCurrent().label === 'home') {
-        await emitTo('notify', 'notify_cotent', data)
+        await emitTo('notify', 'notify_content', data)
       }
-      const throttleSendNotification = useThrottleFn(() => {
-        sendNotification({
-          title: username,
-          body: data.message.body.content
-        })
-      }, 3000)
-      throttleSendNotification()
     }
   }
 
@@ -296,14 +283,6 @@ useMitt.on(WsResponseMessageType.REQUEST_NEW_FRIEND, async (data: { uid: number;
   globalStore.unReadMark.newFriendUnreadCount += data.unreadCount
   // 刷新好友申请列表
   await contactStore.getRequestFriendsList(true)
-
-  const throttleSendNotification = useThrottleFn(() => {
-    sendNotification({
-      title: '新好友',
-      body: `您有${data.unreadCount}条好友申请`
-    })
-  }, 3000)
-  throttleSendNotification()
 })
 useMitt.on(
   WsResponseMessageType.NEW_FRIEND_SESSION,
@@ -363,13 +342,6 @@ onMounted(async () => {
   // 初始化配置
   if (!localStorage.getItem('config')) {
     await configStore.initConfig()
-  }
-  let permissionGranted = await isPermissionGranted()
-
-  // 如果没有授权，则请求授权系统通知
-  if (!permissionGranted) {
-    const permission = await requestPermission()
-    permissionGranted = permission === 'granted'
   }
   timerWorker.postMessage({
     type: 'startTimer',
