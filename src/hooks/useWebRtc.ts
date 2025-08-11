@@ -1,6 +1,6 @@
 import { CallTypeEnum, RTCCallStatus } from '@/enums'
 import { useUserStore } from '@/stores/user'
-import ws from '@/services/webSocket'
+import ws from '@/services/webSocketAdapter'
 import { WsRequestMsgType, WsResponseMessageType } from '../services/wsType'
 import { useMitt } from './useMitt'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'

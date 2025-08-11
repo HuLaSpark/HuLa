@@ -57,8 +57,8 @@ tauri-plugin-clipboard-manager = "2"
 tauri-plugin-sql = { version = "2", features = ["sqlite"] }
 tauri-plugin-notification = "2"
 tauri-plugin-opener = "2"
-tauri-plugin-devtools = "2"
-tauri-plugin-log = { version = "2", features = ["colored", "tracing"] }
+# tauri-plugin-devtools = "2"
+tauri-plugin-log = { version = "2", features = ["colored"] }
 tracing = "0.1"
 tracing-subscriber = "0.3.0"
 
@@ -93,6 +93,12 @@ reqwest = { version = "0.11", default-features = false, features = [
 ] }
 futures = "0.3"
 dotenv = "0.15.0"
+
+# WebSocket 相关依赖
+tokio-tungstenite = { version = "0.23", features = ["rustls-tls-webpki-roots"] }
+futures-util = "0.3"
+url = "2.5"
+uuid = { version = "1.10", features = ["v4"] }
 
 # 移动端的依赖 (iOS 和 Android)
 [target."cfg(any(target_os = \"android\", target_os = \"ios\"))".dependencies]

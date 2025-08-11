@@ -29,6 +29,7 @@ pub mod im_reqest_client;
 pub mod pojo;
 pub mod repository;
 pub mod timeout_config;
+pub mod websocket;
 mod vo;
 
 use crate::command::room_member_command::{
@@ -60,6 +61,7 @@ use crate::command::message_command::{
     check_user_init_and_fetch_messages, page_msg, save_msg, send_msg,
 };
 use crate::command::message_mark_command::save_message_mark;
+use crate::websocket::manager::WebSocketManager;
 use tauri::{Listener, Manager};
 use tokio::sync::Mutex;
 
@@ -329,6 +331,10 @@ fn common_setup(
             let client_guard = tauri::async_runtime::block_on(client.lock());
             client_guard.set_app_handle(app_handle.clone());
             drop(client_guard);
+
+            // 初始化 WebSocket 管理器
+            let ws_manager = std::sync::Arc::new(WebSocketManager::new(app_handle.clone()));
+            app_handle.manage(ws_manager);
         }
         Err(e) => {
             tracing::error!("Failed to initialize application data: {}", e);
@@ -345,6 +351,10 @@ fn common_setup(
 fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static
 {
     use crate::command::user_command::{save_user_info, update_user_last_opt_time, update_token};
+    use crate::websocket::commands::{
+        ws_init_connection, ws_disconnect, ws_send_message, ws_get_state,
+        ws_get_health, ws_force_reconnect, ws_update_config, ws_is_connected
+    };
     #[cfg(desktop)]
     use crate::desktops::common_cmd::set_badge_count;
 
@@ -387,6 +397,15 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         page_msg,
         send_msg,
         save_msg,
-        save_message_mark
+        save_message_mark,
+        // WebSocket 相关命令
+        ws_init_connection,
+        ws_disconnect,
+        ws_send_message,
+        ws_get_state,
+        ws_get_health,
+        ws_force_reconnect,
+        ws_update_config,
+        ws_is_connected
     ]
 }

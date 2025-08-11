@@ -1,7 +1,7 @@
 import { type } from '@tauri-apps/plugin-os'
 import { useEventListener, useNetwork, useTimeoutFn } from '@vueuse/core'
 import { RoomTypeEnum } from '@/enums'
-import webSocket from '@/services/webSocket'
+import webSocket from '@/services/webSocketAdapter'
 import { useCachedStore } from '@/stores/cached'
 import { useChatStore } from '@/stores/chat'
 import { useContactStore } from '@/stores/contacts'
