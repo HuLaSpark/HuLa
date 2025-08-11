@@ -182,12 +182,11 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
   /** 获取群组内可@的用户基本信息
    * 如果是大厅（roomId=1）则不执行
    */
-  const getGroupAtUserBaseInfo = async () => {
-    if (!currentRoomId.value || currentRoomId.value === '1') return
+  const getGroupAtUserBaseInfo = async (roomId: string) => {
     const data: any = await invokeWithErrorHandler(
       TauriCommand.GET_ROOM_MEMBERS,
       {
-        roomId: currentRoomId.value.toString()
+        roomId: roomId
       },
       {
         customErrorMessage: '获取群组成员失败',
@@ -302,7 +301,7 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
     await invokeSilently(TauriCommand.UPDATE_MY_ROOM_INFO, {
       myRoomInfo: data
     })
-    await getGroupAtUserBaseInfo()
+    await getGroupAtUserBaseInfo(data.roomId)
   }
 
   return {

@@ -151,7 +151,7 @@ export const useNetworkReconnect = () => {
     if (globalStore.currentSession?.type === RoomTypeEnum.GROUP) {
       await groupStore.getGroupUserList(globalStore.currentSession.roomId)
       await groupStore.getCountStatistic(globalStore.currentSession.roomId)
-      await cachedStore.getGroupAtUserBaseInfo()
+      await cachedStore.getGroupAtUserBaseInfo(globalStore.currentSession.roomId)
     }
     // 刷新联系人列表
     await contactStore.getContactList(true)

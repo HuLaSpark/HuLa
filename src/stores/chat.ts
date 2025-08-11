@@ -158,6 +158,7 @@ export const useChatStore = defineStore(
 
     // 监听当前房间ID的变化
     watch(currentRoomId, async (val, oldVal) => {
+      const roomId = val
       if (WebviewWindow.getCurrent().label !== 'home') {
         return
       }
@@ -198,7 +199,7 @@ export const useChatStore = defineStore(
         // 群组的时候去请求
         if (currentRoomType.value === RoomTypeEnum.GROUP) {
           // 放到和公告一起加载
-          cachedStore.getGroupAtUserBaseInfo()
+          cachedStore.getGroupAtUserBaseInfo(roomId)
         }
 
         // 标记当前会话已读

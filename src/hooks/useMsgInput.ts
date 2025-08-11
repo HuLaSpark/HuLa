@@ -600,7 +600,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       text.includes('@')
     ) {
       // 如果当前群聊没有加载用户列表，尝试加载
-      await cachedStore.getGroupAtUserBaseInfo()
+      await cachedStore.getGroupAtUserBaseInfo(globalStore.currentSession.roomId)
     }
 
     await handleTrigger(text, cursorPosition, { range, selection, keyword: '' })
