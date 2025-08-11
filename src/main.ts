@@ -9,7 +9,8 @@ import router from '@/router'
 import { pinia } from '@/stores'
 import { type } from '@tauri-apps/plugin-os'
 
-if (WebviewWindow.getCurrent().label === 'home') {
+if (WebviewWindow.getCurrent().label === 'home' || type() === 'ios' || type() === 'android') {
+  console.log('启动websocket')
   import('@/services/webSocket')
 }
 

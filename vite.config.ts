@@ -133,7 +133,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       hmr: {
         // 为移动端开发提供正确的HMR配置
         port: 6130, // 使用不同的端口避免冲突
-        host: '127.0.0.1' // 允许外部访问，支持Android模拟器连接
+        host: '0.0.0.0' // 允许外部访问，支持Android模拟器连接
       },
       cors: true, // 配置 CORS
       host: '0.0.0.0',

@@ -5,7 +5,7 @@
       ref="pageContainer"
       :style="{ height: pageContainerHeight + 'px', maxHeight: pageContainerMaxHeight + 'px' }"
       class="flex fixed w-full items-start flex-col overflow-y-auto z-1">
-      <div class="bg-white w-full">
+      <div ref="headerRef" class="bg-white w-full">
         <slot name="header"></slot>
       </div>
       <!-- 消息内容区 -->
@@ -31,6 +31,7 @@ import { onMounted, ref, nextTick } from 'vue'
 
 const pageContainer = ref<HTMLElement | null>(null)
 const measureRef = ref<HTMLElement>()
+const headerRef = ref<HTMLElement | null>(null)
 const msgContainer = ref()
 
 const pageContainerHeight = ref(100)
@@ -49,14 +50,17 @@ const setPageContainerHeight = async () => {
 }
 
 const listenerMeasureRef = () => {
+  const headerHeight = headerRef.value?.offsetHeight || 0
+
   const setPageContainerHeight = debounce((newHeight) => {
-    console.log('防抖触发')
     changedMsgContainerHeight.value = newHeight
   }, 30)
 
   const handler = (entries: ResizeObserverEntry[]) => {
-    const newHeight = entries[0].contentRect.height
+    const newHeight = entries[0].contentRect.height - headerHeight
     // pageContainerHeight.value = newHeight
+    console.log('高度变化：', newHeight)
+    msgContainerHeight.value = newHeight
     setPageContainerHeight(newHeight)
   }
 

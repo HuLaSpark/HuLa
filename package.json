@@ -72,6 +72,7 @@
     "@actions/github": "^6.0.0",
     "@breezystack/lamejs": "^1.2.7",
     "@fingerprintjs/fingerprintjs": "^4.6.2",
+    "@tanstack/vue-virtual": "^3.13.12",
     "@tauri-apps/api": "2.6.0",
     "@tauri-apps/plugin-autostart": "2.5.0",
     "@tauri-apps/plugin-clipboard-manager": "2.3.0",

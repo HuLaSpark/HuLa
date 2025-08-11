@@ -43,6 +43,7 @@ const emit = defineEmits<{
   loadMore: []
   mouseenter: []
   mouseleave: []
+  visibleItemsChange: [ids: string[]]
 }>()
 
 // 常量定义
@@ -388,6 +389,7 @@ const updateFrame = () => {
 // 使用防抖处理滚动事件
 const debouncedEmitScroll = useDebounceFn((event: Event) => {
   emit('scroll', event)
+  emitVisibleItems()
 }, 16) // 约60fps的频率
 
 // 滚动事件处理
@@ -403,6 +405,12 @@ const handleScroll = (event: Event) => {
       rafId.value = requestAnimationFrame(updateFrame)
     }
   }
+}
+
+const emitVisibleItems = () => {
+  const visibleIds = visibleData.value.map((item) => item.message?.id?.toString()).filter(Boolean) as string[]
+
+  emit('visibleItemsChange', visibleIds)
 }
 
 onMounted(() => {

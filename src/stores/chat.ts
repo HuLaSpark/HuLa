@@ -158,7 +158,7 @@ export const useChatStore = defineStore(
 
     // 监听当前房间ID的变化
     watch(currentRoomId, async (val, oldVal) => {
-      if (WebviewWindow.getCurrent().label !== 'home') {
+      if (WebviewWindow.getCurrent().label !== 'home' && type() !== 'android' && type() !== 'ios') {
         return
       }
 
@@ -246,6 +246,8 @@ export const useChatStore = defineStore(
           currentMessageOptions.value.isLoading = false
         }
       })
+
+      console.log('获取到的列表数据：', data)
       // 如果没有数据或者房间ID已经变化，则不处理响应
       if (!data || requestRoomId !== currentRoomId.value) return
 

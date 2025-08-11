@@ -22,6 +22,7 @@ import type {
 } from '@/services/wsType.ts'
 import { WsResponseMessageType, type WsTokenExpire } from '@/services/wsType.ts'
 import { useUserStore } from '@/stores/user'
+import { type } from '@tauri-apps/plugin-os'
 
 const { addListener } = useTauriListener()
 
@@ -97,6 +98,7 @@ class WS {
   #unwatchFunctions: (() => void)[] = []
 
   constructor() {
+    console.log('websocket对象初始化')
     info('[ws] webSocket 服务初始化')
     this.initWindowType()
     if (isMainWindow) {
@@ -109,6 +111,7 @@ class WS {
       this.initVisibilityListener()
 
       this.initNetworkReconnect()
+      console.log('始化完成')
     }
   }
 
@@ -258,7 +261,12 @@ class WS {
   // 初始化窗口类型
   private async initWindowType() {
     const currentWindow = WebviewWindow.getCurrent()
-    isMainWindow = currentWindow.label === 'home'
+
+    if (currentWindow.label === 'home' || type() === 'ios' || type() === 'android') {
+      isMainWindow = true
+    } else {
+      isMainWindow = false
+    }
   }
 
   initConnect = async () => {
@@ -277,6 +285,7 @@ class WS {
         serverUrl = settings.wsType + '://' + suffix
       }
     }
+
     // 初始化 ws
     worker.postMessage(
       `{"type":"initWS","value":{"token":${token ? `"${token}"` : null},"clientId":${clientId ? `"${clientId}", "serverUrl":"${serverUrl}"` : null}}}`

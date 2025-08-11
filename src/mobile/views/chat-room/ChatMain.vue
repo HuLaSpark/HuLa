@@ -3,21 +3,88 @@
     <template #header>
       <HeaderBar ref="header" room-name="官方1群" :msg-count="1002" />
     </template>
-    <template #container="{ changedHeight }">
-      <DynamicScroller
-        :items="msgList"
-        :min-item-size="80"
-        :buffer="700"
-        key-field="id"
-        :style="{ height: changedHeight + 'px' }"
-        class="w-full scroller">
-        <template class="flex flex-col" v-slot="{ item, index, active }">
-          <DynamicScrollerItem
-            class="flex"
-            :item="item"
-            :active="active"
-            :size-dependencies="[item.message.body.content, item.message.body.reply, item.message.messageMarks]"
-            :data-index="index">
+    <template #container>
+      <!-- 网络状态提示 -->
+      <n-flex
+        v-if="!networkStatus.isOnline.value"
+        align="center"
+        justify="center"
+        class="z-999 absolute w-full h-40px rounded-4px text-(12px [--danger-text]) bg-[--danger-bg]">
+        <svg class="size-16px">
+          <use href="#cloudError"></use>
+        </svg>
+        当前网络不可用，请检查你的网络设置
+      </n-flex>
+
+      <!-- 置顶公告提示 -->
+      <div
+        v-if="isGroup && topAnnouncement"
+        class="feishu-announcement"
+        :class="{ 'announcement-hover': isAnnouncementHover }"
+        @mouseenter="isAnnouncementHover = true"
+        @mouseleave="isAnnouncementHover = false">
+        <n-flex :wrap="false" class="w-full" align="center" justify="space-between">
+          <n-flex :wrap="false" align="center" class="pl-12px select-none" :size="6">
+            <svg class="size-16px flex-shrink-0"><use href="#Loudspeaker"></use></svg>
+            <div style="max-width: calc(100vw - 70vw)" class="line-clamp-1 text-(12px [--chat-text-color])">
+              {{ topAnnouncement.content }}
+            </div>
+          </n-flex>
+          <div class="flex-shrink-0 w-60px select-none" @click="handleViewAnnouncement">
+            <p class="text-(12px #13987f) cursor-pointer">查看全部</p>
+          </div>
+        </n-flex>
+      </div>
+
+      <Transition name="chat-init" appear mode="out-in" @after-leave="handleTransitionComplete">
+        <!-- 初次加载的骨架屏 -->
+        <n-flex
+          v-if="messageOptions?.isLoading && !messageOptions?.cursor"
+          vertical
+          :size="18"
+          :style="{ 'max-height': `calc(100vh - ${announcementHeight}px)` }"
+          class="relative h-100vh box-border p-20px">
+          <n-flex justify="end">
+            <n-skeleton style="border-radius: 14px" height="40px" width="46%" :sharp="false" />
+            <n-skeleton height="40px" circle />
+          </n-flex>
+
+          <n-flex>
+            <n-skeleton height="40px" circle />
+            <n-skeleton style="border-radius: 14px" height="60px" width="58%" :sharp="false" />
+          </n-flex>
+
+          <n-flex>
+            <n-skeleton height="40px" circle />
+            <n-skeleton style="border-radius: 14px" height="40px" width="26%" :sharp="false" />
+          </n-flex>
+
+          <n-flex justify="end">
+            <n-skeleton style="border-radius: 14px" height="40px" width="60%" :sharp="false" />
+            <n-skeleton height="40px" circle />
+          </n-flex>
+        </n-flex>
+
+        <!-- 聊天内容 -->
+        <VirtualList
+          v-else
+          id="image-chat-main"
+          ref="virtualListInst"
+          :items="chatMessageList"
+          :estimatedItemHeight="itemSize"
+          :buffer="5"
+          :is-loading-more="isLoadingMore"
+          :is-last="messageOptions?.isLast"
+          @scroll="handleScroll"
+          @scroll-direction-change="handleScrollDirectionChange"
+          @load-more="handleLoadMore"
+          class="scrollbar-container"
+          :class="{ 'hide-scrollbar': !showScrollbar }"
+          :style="{ 'max-height': `calc(100vh - ${announcementHeight}px)` }"
+          @mouseenter="showScrollbar = true"
+          @mouseleave="showScrollbar = false"
+          @visible-items-change="handleVisibleItemsChange">
+          <template #default="{ item, index }">
             <n-flex
               vertical
               :key="index"
@@ -314,9 +381,60 @@
                 </div>
               </div>
             </n-flex>
-          </DynamicScrollerItem>
-        </template>
-      </DynamicScroller>
+          </template>
+        </VirtualList>
+      </Transition>
+
+      <!-- 弹出框 -->
+      <n-modal v-model:show="modalShow" class="w-350px border-rd-8px">
+        <div class="bg-[--bg-popover] w-360px h-full p-6px box-border flex flex-col">
+          <div
+            v-if="type() === 'macos'"
+            @click="modalShow = false"
+            class="mac-close z-999 size-13px shadow-inner bg-#ed6a5eff rounded-50% select-none absolute left-6px">
+            <svg class="hidden size-7px color-#000 select-none absolute top-3px left-3px">
+              <use href="#close"></use>
+            </svg>
+          </div>
+
+          <svg
+            v-if="type() === 'windows'"
+            @click="modalShow = false"
+            class="w-12px h-12px ml-a cursor-pointer select-none">
+            <use href="#close"></use>
+          </svg>
+          <div class="flex flex-col gap-30px p-[22px_10px_10px_22px] select-none">
+            <span class="text-14px">{{ tips }}</span>
+
+            <n-flex justify="end">
+              <n-button @click="handleConfirm" class="w-78px" color="#13987f">确定</n-button>
+              <n-button @click="modalShow = false" class="w-78px" secondary>取消</n-button>
+            </n-flex>
+          </div>
+        </div>
+      </n-modal>
+
+      <!--  悬浮按钮提示(底部悬浮) -->
+      <footer
+        class="float-footer"
+        v-if="shouldShowFloatFooter && currentNewMsgCount"
+        :class="isGroup ? 'right-220px' : 'right-50px'">
+        <div class="float-box" :class="{ max: currentNewMsgCount?.count > 99 }" @click="scrollToBottom">
+          <n-flex justify="space-between" align="center">
+            <n-icon :color="currentNewMsgCount?.count > 99 ? '#ce304f' : '#13987f'">
+              <svg>
+                <use href="#double-down"></use>
+              </svg>
+            </n-icon>
+            <span
+              v-if="currentNewMsgCount?.count && currentNewMsgCount.count > 0"
+              class="text-12px"
+              :class="{ 'color-#ce304f': currentNewMsgCount?.count > 99 }">
+              {{ currentNewMsgCount?.count > 99 ? '99+' : currentNewMsgCount?.count }}条新消息
+            </span>
+          </n-flex>
+        </div>
+      </footer>
     </template>
     <template #footer>
       <FooterBar></FooterBar>
@@ -335,7 +453,7 @@ const header = ref()
 
 /** 新增的列表事件 start */
 import { ref, computed } from 'vue'
-import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller'
+// import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 
 /**
@@ -392,12 +510,12 @@ import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { type } from '@tauri-apps/plugin-os'
 import { useDebounceFn } from '@vueuse/core'
 import { delay } from 'lodash-es'
-import { type VirtualListExpose } from '@/components/common/VirtualList.vue'
+import VirtualList, { type VirtualListExpose } from '@/components/common/VirtualList.vue'
 import { EventEnum, MessageStatusEnum, MittEnum, MsgEnum, TauriCommand } from '@/enums'
 import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
 import { useChatMain } from '@/hooks/useChatMain.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
-// import { useNetworkStatus } from '@/hooks/useNetworkStatus'
+import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 import { usePopover } from '@/hooks/usePopover.ts'
 import { useTauriListener } from '@/hooks/useTauriListener'
 import { useWindow } from '@/hooks/useWindow.ts'
@@ -424,15 +542,15 @@ const userStore = useUserStore()
 const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
 const cachedStore = useCachedStore()
-// const networkStatus = useNetworkStatus()
+const networkStatus = useNetworkStatus()
 
 // 记录当前滚动位置相关信息
-// const isAutoScrolling = ref(false)
+const isAutoScrolling = ref(false)
 
 /** 记录是否正在向上滚动 */
-// const isScrollingUp = ref(false)
+const isScrollingUp = ref(false)
 /** 记录是否正在向下滚动 */
-// const isScrollingDown = ref(false)
+const isScrollingDown = ref(false)
 // 添加标记，用于识别是否正在加载历史消息
 const isLoadingMore = ref(false)
 
@@ -440,7 +558,7 @@ const isLoadingMore = ref(false)
 const isGroup = computed(() => chatStore.isGroup)
 const userUid = computed(() => userStore.userInfo.uid)
 const chatMessageList = computed(() => chatStore.chatMessageList)
-// const currentNewMsgCount = computed(() => chatStore.currentNewMsgCount)
+const currentNewMsgCount = computed(() => chatStore.currentNewMsgCount)
 const messageOptions = computed(() => chatStore.currentMessageOptions)
 const { createWebviewWindow } = useWindow()
 const currentRoomId = computed(() => globalStore.currentSession?.roomId)
@@ -455,13 +573,13 @@ const currentRoomId = computed(() => globalStore.currentSession?.roomId)
 /** 跳转回复消息后选中效果 */
 const activeReply = ref('')
 /** item最小高度，用于计算滚动大小和位置 */
-// const itemSize = computed(() => (isGroup.value ? 90 : 76))
+const itemSize = computed(() => (isGroup.value ? 90 : 76))
 /** 虚拟列表 */
 const virtualListInst = useTemplateRef<VirtualListExpose>('virtualListInst')
 /** List中的Popover组件实例 */
 const infoPopoverRefs = ref<Record<string, any>>([])
 // 是否显示滚动条
-// const showScrollbar = ref(false)
+const showScrollbar = ref(false)
 // 记录 requestAnimationFrame 的返回值
 const rafId = ref<number>()
 // 缓存消息ID到索引的映射，提高查找效率
@@ -477,40 +595,40 @@ const hoverBubble = ref<{
 const recordEL = ref()
 const isMac = computed(() => type() === 'macos')
 // 公告展示时需要减去的高度
-// const announcementHeight = computed(() => (isGroup.value && topAnnouncement.value ? 300 : 260))
+const announcementHeight = computed(() => (isGroup.value && topAnnouncement.value ? 300 : 260))
 // 置顶公告hover状态
-// const isAnnouncementHover = ref(false)
+const isAnnouncementHover = ref(false)
 // 置顶公告相关
 const topAnnouncement = ref<any>(null)
 // 是否显示悬浮页脚
-// const shouldShowFloatFooter = computed(() => {
-//   const container = virtualListInst.value?.getContainer()
-//   if (!container) return false
+const shouldShowFloatFooter = computed(() => {
+  const container = virtualListInst.value?.getContainer()
+  if (!container) return false
 
-//   const scrollHeight = container.scrollHeight
-//   const clientHeight = container.clientHeight
-//   const distanceFromBottom = scrollHeight - scrollTop.value - clientHeight
+  const scrollHeight = container.scrollHeight
+  const clientHeight = container.clientHeight
+  const distanceFromBottom = scrollHeight - scrollTop.value - clientHeight
 
-//   // 如果有新消息，优先显示新消息提示
-//   if (currentNewMsgCount.value?.count && currentNewMsgCount.value.count > 0) {
-//     return true
-//   }
+  // 如果有新消息，优先显示新消息提示
+  if (currentNewMsgCount.value?.count && currentNewMsgCount.value.count > 0) {
+    return true
+  }
 
-//   // 只在向下滚动时显示按钮
-//   if (!isScrollingDown.value) {
-//     return false
-//   }
+  // 只在向下滚动时显示按钮
+  if (!isScrollingDown.value) {
+    return false
+  }
 
-//   // 当距离底部超过一个屏幕高度时显示向下箭头
-//   return distanceFromBottom > clientHeight
-// })
+  // 当距离底部超过一个屏幕高度时显示向下箭头
+  return distanceFromBottom > clientHeight
+})
 const {
   handleMsgClick,
-  // handleConfirm,
+  handleConfirm,
   handleItemType,
   activeBubble,
-  // tips,
-  // modalShow,
+  tips,
+  modalShow,
   specialMenuList,
   optionsList,
   report,
@@ -536,40 +654,40 @@ const updateMessageIndexMap = () => {
 }
 
 // 处理滚动事件(用于页脚显示功能)
-// const handleScroll = () => {
-//   if (isAutoScrolling.value) return // 如果是自动滚动，不处理
-//   const container = virtualListInst.value?.getContainer()
-//   if (!container) return
+const handleScroll = () => {
+  if (isAutoScrolling.value) return // 如果是自动滚动，不处理
+  const container = virtualListInst.value?.getContainer()
+  if (!container) return
 
-//   // 获取已滚动的距离
-//   scrollTop.value = container.scrollTop
-//   // 获取整个滚动容器的高度
-//   const scrollHeight = container.scrollHeight
-//   // 获取容器的可视区域高度
-//   const clientHeight = container.clientHeight
-//   // 计算距离底部的距离
-//   const distanceFromBottom = scrollHeight - scrollTop.value - clientHeight
+  // 获取已滚动的距离
+  scrollTop.value = container.scrollTop
+  // 获取整个滚动容器的高度
+  const scrollHeight = container.scrollHeight
+  // 获取容器的可视区域高度
+  const clientHeight = container.clientHeight
+  // 计算距离底部的距离
+  const distanceFromBottom = scrollHeight - scrollTop.value - clientHeight
 
-//   // 存储 requestAnimationFrame 的返回值
-//   if (rafId.value) {
-//     cancelAnimationFrame(rafId.value)
-//   }
+  // 存储 requestAnimationFrame 的返回值
+  if (rafId.value) {
+    cancelAnimationFrame(rafId.value)
+  }
 
-//   rafId.value = requestAnimationFrame(async () => {
-//     // 处理触顶加载更多
-//     if (scrollTop.value < 26) {
-//       // 如果正在加载或已经触发了加载，则不重复触发
-//       if (messageOptions.value?.isLoading || isLoadingMore.value) return
+  rafId.value = requestAnimationFrame(async () => {
+    // 处理触顶加载更多
+    if (scrollTop.value < 26) {
+      // 如果正在加载或已经触发了加载，则不重复触发
+      if (messageOptions.value?.isLoading || isLoadingMore.value) return
 
-//       await handleLoadMore()
-//     }
+      await handleLoadMore()
+    }
 
-//     // 处理底部滚动和新消息提示
-//     if (distanceFromBottom <= 20) {
-//       chatStore.clearNewMsgCount()
-//     }
-//   })
-// }
+    // 处理底部滚动和新消息提示
+    if (distanceFromBottom <= 20) {
+      chatStore.clearNewMsgCount()
+    }
+  })
+}
 
 // 添加防抖的鼠标事件处理
 const debouncedMouseEnter = useDebounceFn((key: any) => {
@@ -678,20 +796,20 @@ watch(
   { deep: false }
 )
 
-// // 处理过渡动画完成后的滚动
-// const handleTransitionComplete = () => {
-//   if (!messageOptions.value?.isLoading) {
-//     nextTick(() => {
-//       scrollToBottom()
-//     })
-//   }
-// }
+// 处理过渡动画完成后的滚动
+const handleTransitionComplete = () => {
+  if (!messageOptions.value?.isLoading) {
+    nextTick(() => {
+      scrollToBottom()
+    })
+  }
+}
 
-// // 处理滚动方向变化
-// const handleScrollDirectionChange = (direction: 'up' | 'down') => {
-//   isScrollingUp.value = direction === 'up'
-//   isScrollingDown.value = direction === 'down'
-// }
+// 处理滚动方向变化
+const handleScrollDirectionChange = (direction: 'up' | 'down') => {
+  isScrollingUp.value = direction === 'up'
+  isScrollingDown.value = direction === 'down'
+}
 
 // 取消表情反应
 const cancelReplyEmoji = async (item: any, type: number) => {
@@ -914,44 +1032,44 @@ const handleRetry = (item: any) => {
   console.log('重试发送消息:', item)
 }
 
-// // 处理加载更多
-// const handleLoadMore = async () => {
-//   // 如果正在加载或已经触发了加载，则不重复触发
-//   if (messageOptions.value?.isLoading || isLoadingMore.value) return
+// 处理加载更多
+const handleLoadMore = async () => {
+  // 如果正在加载或已经触发了加载，则不重复触发
+  if (messageOptions.value?.isLoading || isLoadingMore.value) return
 
-//   // 记录当前的内容高度
-//   const container = virtualListInst.value?.getContainer()
-//   if (!container) return
-//   const oldScrollHeight = container.scrollHeight
+  // 记录当前的内容高度
+  const container = virtualListInst.value?.getContainer()
+  if (!container) return
+  const oldScrollHeight = container.scrollHeight
 
-//   isLoadingMore.value = true
+  isLoadingMore.value = true
 
-//   // 使用CSS变量控制滚动行为，避免直接操作DOM样式
-//   container.classList.add('loading-history')
+  // 使用CSS变量控制滚动行为，避免直接操作DOM样式
+  container.classList.add('loading-history')
 
-//   try {
-//     await chatStore.loadMore()
+  try {
+    await chatStore.loadMore()
 
-//     // 加载完成后，计算新增内容的高度差，并设置滚动位置
-//     await nextTick()
-//     const newScrollHeight = container.scrollHeight
-//     const heightDiff = newScrollHeight - oldScrollHeight
-//     if (heightDiff > 0) {
-//       container.scrollTop = heightDiff
-//     }
+    // 加载完成后，计算新增内容的高度差，并设置滚动位置
+    await nextTick()
+    const newScrollHeight = container.scrollHeight
+    const heightDiff = newScrollHeight - oldScrollHeight
+    if (heightDiff > 0) {
+      container.scrollTop = heightDiff
+    }
 
-//     // 更新消息索引映射
-//     updateMessageIndexMap()
-//   } catch (error) {
-//     console.error('加载历史消息失败:', error)
-//   } finally {
-//     // 恢复滚动交互
-//     setTimeout(() => {
-//       container.classList.remove('loading-history')
-//       isLoadingMore.value = false
-//     }, 100)
-//   }
-// }
+    // 更新消息索引映射
+    updateMessageIndexMap()
+  } catch (error) {
+    console.error('加载历史消息失败:', error)
+  } finally {
+    // 恢复滚动交互
+    setTimeout(() => {
+      container.classList.remove('loading-history')
+      isLoadingMore.value = false
+    }, 100)
+  }
+}
 
 // 获取置顶公告
 const loadTopAnnouncement = async () => {
@@ -978,13 +1096,13 @@ const getAvatarSrc = (uid: string) => {
   return AvatarUtils.getAvatarUrl(avatar as string)
 }
 
-// // 处理点击查看公告
-// const handleViewAnnouncement = () => {
-//   nextTick(async () => {
-//     if (!currentRoomId.value) return
-//     await createWebviewWindow('查看群公告', `announList/${currentRoomId.value}/1`, 420, 620)
-//   })
-// }
+// 处理点击查看公告
+const handleViewAnnouncement = () => {
+  nextTick(async () => {
+    if (!currentRoomId.value) return
+    await createWebviewWindow('查看群公告', `announList/${currentRoomId.value}/1`, 420, 620)
+  })
+}
 
 const isSpecialMsgType = (type: number) => {
   return (
@@ -1012,9 +1130,6 @@ const isSingleLineEmojis = (item: any) => {
 }
 
 onMounted(async () => {
-  setTimeout(() => {
-    console.log('获取到的列表数据：', chatMessageList)
-  }, 2000)
   nextTick(() => {
     scrollToBottom()
     // 初始化消息索引映射
@@ -1093,1667 +1208,9 @@ onUnmounted(() => {
   window.removeEventListener('click', closeMenu, true)
 })
 
-const testData = [
-  {
-    createId: '58258647828992',
-    createTime: 1754389144044,
-    updateId: null,
-    updateTime: null,
-    fromUser: {
-      uid: '1950483451811299329',
-      nickname: '1046762075'
-    },
-    message: {
-      id: '58258647828992',
-      roomId: '1',
-      type: 1,
-      body: {
-        atUidList: null,
-        content: '23',
-        reply: null,
-        urlContentMap: {}
-      },
-      messageMarks: {
-        '1': {
-          count: 0,
-          userMarked: false
-        },
-        '2': {
-          count: 0,
-          userMarked: false
-        },
-        '3': {
-          count: 0,
-          userMarked: false
-        },
-        '4': {
-          count: 0,
-          userMarked: false
-        },
-        '5': {
-          count: 0,
-          userMarked: false
-        },
-        '6': {
-          count: 0,
-          userMarked: false
-        },
-        '7': {
-          count: 0,
-          userMarked: false
-        },
-        '8': {
-          count: 0,
-          userMarked: false
-        },
-        '9': {
-          count: 0,
-          userMarked: false
-        },
-        '10': {
-          count: 0,
-          userMarked: false
-        },
-        '11': {
-          count: 0,
-          userMarked: false
-        },
-        '12': {
-          count: 0,
-          userMarked: false
-        },
-        '13': {
-          count: 0,
-          userMarked: false
-        },
-        '14': {
-          count: 0,
-          userMarked: false
-        }
-      },
-      sendTime: 1754389144044
-    },
-    oldMsgId: null
-  },
-  {
-    createId: '58258647828994',
-    createTime: 1754389144230,
-    updateId: null,
-    updateTime: null,
-    fromUser: {
-      uid: '1950483451811299329',
-      nickname: '1046762075'
-    },
-    message: {
-      id: '58258647828994',
-      roomId: '1',
-      type: 1,
-      body: {
-        atUidList: null,
-        content: '4',
-        reply: null,
-        urlContentMap: {}
-      },
-      messageMarks: {
-        '1': {
-          count: 0,
-          userMarked: false
-        },
-        '2': {
-          count: 0,
-          userMarked: false
-        },
-        '3': {
-          count: 0,
-          userMarked: false
-        },
-        '4': {
-          count: 0,
-          userMarked: false
-        },
-        '5': {
-          count: 0,
-          userMarked: false
-        },
-        '6': {
-          count: 0,
-          userMarked: false
-        },
-        '7': {
-          count: 0,
-          userMarked: false
-        },
-        '8': {
-          count: 0,
-          userMarked: false
-        },
-        '9': {
-          count: 0,
-          userMarked: false
-        },
-        '10': {
-          count: 0,
-          userMarked: false
-        },
-        '11': {
-          count: 0,
-          userMarked: false
-        },
-        '12': {
-          count: 0,
-          userMarked: false
-        },
-        '13': {
-          count: 0,
-          userMarked: false
-        },
-        '14': {
-          count: 0,
-          userMarked: false
-        }
-      },
-      sendTime: 1754389144230
-    },
-    oldMsgId: null
-  },
-  {
-    createId: '58258727520768',
-    createTime: 1754389163493,
-    updateId: null,
-    updateTime: null,
-    fromUser: {
-      uid: '1950483451811299329',
-      nickname: '1046762075'
-    },
-    message: {
-      id: '58258727520768',
-      roomId: '1',
-      type: 1,
-      body: {
-        atUidList: null,
-        content: '0000000000000',
-        reply: null,
-        urlContentMap: {}
-      },
-      messageMarks: {
-        '1': {
-          count: 0,
-          userMarked: false
-        },
-        '2': {
-          count: 0,
-          userMarked: false
-        },
-        '3': {
-          count: 0,
-          userMarked: false
-        },
-        '4': {
-          count: 0,
-          userMarked: false
-        },
-        '5': {
-          count: 0,
-          userMarked: false
-        },
-        '6': {
-          count: 0,
-          userMarked: false
-        },
-        '7': {
-          count: 0,
-          userMarked: false
-        },
-        '8': {
-          count: 0,
-          userMarked: false
-        },
-        '9': {
-          count: 0,
-          userMarked: false
-        },
-        '10': {
-          count: 0,
-          userMarked: false
-        },
-        '11': {
-          count: 0,
-          userMarked: false
-        },
-        '12': {
-          count: 0,
-          userMarked: false
-        },
-        '13': {
-          count: 0,
-          userMarked: false
-        },
-        '14': {
-          count: 0,
-          userMarked: false
-        }
-      },
-      sendTime: 1754389163493
-    },
-    oldMsgId: null
-  },
-  {
-    createId: '58264884761088',
-    createTime: 1754390631002,
-    updateId: null,
-    updateTime: null,
-    fromUser: {
-      uid: '11013365735936',
-      nickname: 'Martin'
-    },
-    message: {
-      id: '58264884761088',
-      roomId: '1',
-      type: 1,
-      body: {
-        atUidList: null,
-        content: '1',
-        reply: null,
-        urlContentMap: {}
-      },
-      messageMarks: {
-        '1': {
-          count: 0,
-          userMarked: false
-        },
-        '2': {
-          count: 0,
-          userMarked: false
-        },
-        '3': {
-          count: 0,
-          userMarked: false
-        },
-        '4': {
-          count: 0,
-          userMarked: false
-        },
-        '5': {
-          count: 0,
-          userMarked: false
-        },
-        '6': {
-          count: 0,
-          userMarked: false
-        },
-        '7': {
-          count: 0,
-          userMarked: false
-        },
-        '8': {
-          count: 0,
-          userMarked: false
-        },
-        '9': {
-          count: 0,
-          userMarked: false
-        },
-        '10': {
-          count: 0,
-          userMarked: false
-        },
-        '11': {
-          count: 0,
-          userMarked: false
-        },
-        '12': {
-          count: 0,
-          userMarked: false
-        },
-        '13': {
-          count: 0,
-          userMarked: false
-        },
-        '14': {
-          count: 0,
-          userMarked: false
-        }
-      },
-      sendTime: 1754390631002
-    },
-    oldMsgId: null,
-    timeBlock: '星期二 18:43'
-  },
-  {
-    createId: '58264888955392',
-    createTime: 1754390632739,
-    updateId: null,
-    updateTime: null,
-    fromUser: {
-      uid: '1950483451811299329',
-      nickname: '1046762075'
-    },
-    message: {
-      id: '58264888955392',
-      roomId: '1',
-      type: 1,
-      body: {
-        atUidList: null,
-        content: '23',
-        reply: null,
-        urlContentMap: {}
-      },
-      messageMarks: {
-        '1': {
-          count: 0,
-          userMarked: false
-        },
-        '2': {
-          count: 0,
-          userMarked: false
-        },
-        '3': {
-          count: 0,
-          userMarked: false
-        },
-        '4': {
-          count: 0,
-          userMarked: false
-        },
-        '5': {
-          count: 0,
-          userMarked: false
-        },
-        '6': {
-          count: 0,
-          userMarked: false
-        },
-        '7': {
-          count: 0,
-          userMarked: false
-        },
-        '8': {
-          count: 0,
-          userMarked: false
-        },
-        '9': {
-          count: 0,
-          userMarked: false
-        },
-        '10': {
-          count: 0,
-          userMarked: false
-        },
-        '11': {
-          count: 0,
-          userMarked: false
-        },
-        '12': {
-          count: 0,
-          userMarked: false
-        },
-        '13': {
-          count: 0,
-          userMarked: false
-        },
-        '14': {
-          count: 0,
-          userMarked: false
-        }
-      },
-      sendTime: 1754390632739
-    },
-    oldMsgId: null
-  },
-  {
-    createId: '58264998007296',
-    createTime: 1754390658063,
-    updateId: null,
-    updateTime: null,
-    fromUser: {
-      uid: '1950483451811299329',
-      nickname: '1046762075'
-    },
-    message: {
-      id: '58264998007296',
-      roomId: '1',
-      type: 1,
-      body: {
-        atUidList: null,
-        content: '234',
-        reply: null,
-        urlContentMap: {}
-      },
-      messageMarks: {
-        '1': {
-          count: 0,
-          userMarked: false
-        },
-        '2': {
-          count: 0,
-          userMarked: false
-        },
-        '3': {
-          count: 0,
-          userMarked: false
-        },
-        '4': {
-          count: 0,
-          userMarked: false
-        },
-        '5': {
-          count: 0,
-          userMarked: false
-        },
-        '6': {
-          count: 0,
-          userMarked: false
-        },
-        '7': {
-          count: 0,
-          userMarked: false
-        },
-        '8': {
-          count: 0,
-          userMarked: false
-        },
-        '9': {
-          count: 0,
-          userMarked: false
-        },
-        '10': {
-          count: 0,
-          userMarked: false
-        },
-        '11': {
-          count: 0,
-          userMarked: false
-        },
-        '12': {
-          count: 0,
-          userMarked: false
-        },
-        '13': {
-          count: 0,
-          userMarked: false
-        },
-        '14': {
-          count: 0,
-          userMarked: false
-        }
-      },
-      sendTime: 1754390658063
-    },
-    oldMsgId: null
-  },
-  {
-    createId: '58265010590208',
-    createTime: 1754390661576,
-    updateId: null,
-    updateTime: null,
-    fromUser: {
-      uid: '11013365735936',
-      nickname: 'Martin'
-    },
-    message: {
-      id: '58265010590208',
-      roomId: '1',
-      type: 1,
-      body: {
-        atUidList: null,
-        content: '1',
-        reply: null,
-        urlContentMap: {}
-      },
-      messageMarks: {
-        '1': {
-          count: 0,
-          userMarked: false
-        },
-        '2': {
-          count: 0,
-          userMarked: false
-        },
-        '3': {
-          count: 0,
-          userMarked: false
-        },
-        '4': {
-          count: 0,
-          userMarked: false
-        },
-        '5': {
-          count: 0,
-          userMarked: false
-        },
-        '6': {
-          count: 0,
-          userMarked: false
-        },
-        '7': {
-          count: 0,
-          userMarked: false
-        },
-        '8': {
-          count: 0,
-          userMarked: false
-        },
-        '9': {
-          count: 0,
-          userMarked: false
-        },
-        '10': {
-          count: 0,
-          userMarked: false
-        },
-        '11': {
-          count: 0,
-          userMarked: false
-        },
-        '12': {
-          count: 0,
-          userMarked: false
-        },
-        '13': {
-          count: 0,
-          userMarked: false
-        },
-        '14': {
-          count: 0,
-          userMarked: false
-        }
-      },
-      sendTime: 1754390661576
-    },
-    oldMsgId: null
-  },
-  {
-    createId: '58265014784512',
-    createTime: 1754390662840,
-    updateId: null,
-    updateTime: null,
-    fromUser: {
-      uid: '1950483451811299329',
-      nickname: '1046762075'
-    },
-    message: {
-      id: '58265014784512',
-      roomId: '1',
-      type: 1,
-      body: {
-        atUidList: null,
-        content: '2343245',
-        reply: null,
-        urlContentMap: {}
-      },
-      messageMarks: {
-        '1': {
-          count: 0,
-          userMarked: false
-        },
-        '2': {
-          count: 0,
-          userMarked: false
-        },
-        '3': {
-          count: 0,
-          userMarked: false
-        },
-        '4': {
-          count: 0,
-          userMarked: false
-        },
-        '5': {
-          count: 0,
-          userMarked: false
-        },
-        '6': {
-          count: 0,
-          userMarked: false
-        },
-        '7': {
-          count: 0,
-          userMarked: false
-        },
-        '8': {
-          count: 0,
-          userMarked: false
-        },
-        '9': {
-          count: 0,
-          userMarked: false
-        },
-        '10': {
-          count: 0,
-          userMarked: false
-        },
-        '11': {
-          count: 0,
-          userMarked: false
-        },
-        '12': {
-          count: 0,
-          userMarked: false
-        },
-        '13': {
-          count: 0,
-          userMarked: false
-        },
-        '14': {
-          count: 0,
-          userMarked: false
-        }
-      },
-      sendTime: 1754390662840
-    },
-    oldMsgId: null
-  },
-  {
-    createId: '58265018978816',
-    createTime: 1754390663485,
-    updateId: null,
-    updateTime: null,
-    fromUser: {
-      uid: '1950483451811299329',
-      nickname: '1046762075'
-    },
-    message: {
-      id: '58265018978816',
-      roomId: '1',
-      type: 1,
-      body: {
-        atUidList: null,
-        content: '234',
-        reply: null,
-        urlContentMap: {}
-      },
-      messageMarks: {
-        '1': {
-          count: 0,
-          userMarked: false
-        },
-        '2': {
-          count: 0,
-          userMarked: false
-        },
-        '3': {
-          count: 0,
-          userMarked: false
-        },
-        '4': {
-          count: 0,
-          userMarked: false
-        },
-        '5': {
-          count: 0,
-          userMarked: false
-        },
-        '6': {
-          count: 0,
-          userMarked: false
-        },
-        '7': {
-          count: 0,
-          userMarked: false
-        },
-        '8': {
-          count: 0,
-          userMarked: false
-        },
-        '9': {
-          count: 0,
-          userMarked: false
-        },
-        '10': {
-          count: 0,
-          userMarked: false
-        },
-        '11': {
-          count: 0,
-          userMarked: false
-        },
-        '12': {
-          count: 0,
-          userMarked: false
-        },
-        '13': {
-          count: 0,
-          userMarked: false
-        },
-        '14': {
-          count: 0,
-          userMarked: false
-        }
-      },
-      sendTime: 1754390663485
-    },
-    oldMsgId: null
-  },
-  {
-    createId: '58265023173120',
-    createTime: 1754390664175,
-    updateId: null,
-    updateTime: null,
-    fromUser: {
-      uid: '1950483451811299329',
-      nickname: '1046762075'
-    },
-    message: {
-      id: '58265023173120',
-      roomId: '1',
-      type: 1,
-      body: {
-        atUidList: null,
-        content: '234',
-        reply: null,
-        urlContentMap: {}
-      },
-      messageMarks: {
-        '1': {
-          count: 0,
-          userMarked: false
-        },
-        '2': {
-          count: 0,
-          userMarked: false
-        },
-        '3': {
-          count: 0,
-          userMarked: false
-        },
-        '4': {
-          count: 0,
-          userMarked: false
-        },
-        '5': {
-          count: 0,
-          userMarked: false
-        },
-        '6': {
-          count: 0,
-          userMarked: false
-        },
-        '7': {
-          count: 0,
-          userMarked: false
-        },
-        '8': {
-          count: 0,
-          userMarked: false
-        },
-        '9': {
-          count: 0,
-          userMarked: false
-        },
-        '10': {
-          count: 0,
-          userMarked: false
-        },
-        '11': {
-          count: 0,
-          userMarked: false
-        },
-        '12': {
-          count: 0,
-          userMarked: false
-        },
-        '13': {
-          count: 0,
-          userMarked: false
-        },
-        '14': {
-          count: 0,
-          userMarked: false
-        }
-      },
-      sendTime: 1754390664175
-    },
-    oldMsgId: null
-  },
-  {
-    createId: '58265522295296',
-    createTime: 1754390783618,
-    updateId: null,
-    updateTime: null,
-    fromUser: {
-      uid: '11008177381888',
-      nickname: 'xxx123'
-    },
-    message: {
-      id: '58265522295296',
-      roomId: '1',
-      type: 1,
-      body: {
-        atUidList: null,
-        content: '11',
-        reply: null,
-        urlContentMap: {}
-      },
-      messageMarks: {
-        '1': {
-          count: 0,
-          userMarked: false
-        },
-        '2': {
-          count: 0,
-          userMarked: false
-        },
-        '3': {
-          count: 0,
-          userMarked: false
-        },
-        '4': {
-          count: 0,
-          userMarked: false
-        },
-        '5': {
-          count: 0,
-          userMarked: false
-        },
-        '6': {
-          count: 0,
-          userMarked: false
-        },
-        '7': {
-          count: 0,
-          userMarked: false
-        },
-        '8': {
-          count: 0,
-          userMarked: false
-        },
-        '9': {
-          count: 0,
-          userMarked: false
-        },
-        '10': {
-          count: 0,
-          userMarked: false
-        },
-        '11': {
-          count: 0,
-          userMarked: false
-        },
-        '12': {
-          count: 0,
-          userMarked: false
-        },
-        '13': {
-          count: 0,
-          userMarked: false
-        },
-        '14': {
-          count: 0,
-          userMarked: false
-        }
-      },
-      sendTime: 1754390783618
-    },
-    oldMsgId: null
-  },
-  {
-    createId: '58266918998528',
-    createTime: 1754391116314,
-    updateId: null,
-    updateTime: null,
-    fromUser: {
-      uid: '1950483451811299329',
-      nickname: '1046762075'
-    },
-    message: {
-      id: '58266918998528',
-      roomId: '1',
-      type: 1,
-      body: {
-        atUidList: null,
-        content: '123',
-        reply: null,
-        urlContentMap: {}
-      },
-      messageMarks: {
-        '1': {
-          count: 0,
-          userMarked: false
-        },
-        '2': {
-          count: 0,
-          userMarked: false
-        },
-        '3': {
-          count: 0,
-          userMarked: false
-        },
-        '4': {
-          count: 0,
-          userMarked: false
-        },
-        '5': {
-          count: 0,
-          userMarked: false
-        },
-        '6': {
-          count: 0,
-          userMarked: false
-        },
-        '7': {
-          count: 0,
-          userMarked: false
-        },
-        '8': {
-          count: 0,
-          userMarked: false
-        },
-        '9': {
-          count: 0,
-          userMarked: false
-        },
-        '10': {
-          count: 0,
-          userMarked: false
-        },
-        '11': {
-          count: 0,
-          userMarked: false
-        },
-        '12': {
-          count: 0,
-          userMarked: false
-        },
-        '13': {
-          count: 0,
-          userMarked: false
-        },
-        '14': {
-          count: 0,
-          userMarked: false
-        }
-      },
-      sendTime: 1754391116314
-    },
-    oldMsgId: null,
-    timeBlock: '星期二 18:51'
-  },
-  {
-    createId: '58272530977280',
-    createTime: 1754392454273,
-    updateId: null,
-    updateTime: null,
-    fromUser: {
-      uid: '1950483451811299329',
-      nickname: '1046762075'
-    },
-    message: {
-      id: '58272530977280',
-      roomId: '1',
-      type: 1,
-      body: {
-        atUidList: null,
-        content: '1111',
-        reply: null,
-        urlContentMap: {}
-      },
-      messageMarks: {
-        '1': {
-          count: 0,
-          userMarked: false
-        },
-        '2': {
-          count: 0,
-          userMarked: false
-        },
-        '3': {
-          count: 0,
-          userMarked: false
-        },
-        '4': {
-          count: 0,
-          userMarked: false
-        },
-        '5': {
-          count: 0,
-          userMarked: false
-        },
-        '6': {
-          count: 0,
-          userMarked: false
-        },
-        '7': {
-          count: 0,
-          userMarked: false
-        },
-        '8': {
-          count: 0,
-          userMarked: false
-        },
-        '9': {
-          count: 0,
-          userMarked: false
-        },
-        '10': {
-          count: 0,
-          userMarked: false
-        },
-        '11': {
-          count: 0,
-          userMarked: false
-        },
-        '12': {
-          count: 0,
-          userMarked: false
-        },
-        '13': {
-          count: 0,
-          userMarked: false
-        },
-        '14': {
-          count: 0,
-          userMarked: false
-        }
-      },
-      sendTime: 1754392454273
-    },
-    oldMsgId: null,
-    timeBlock: '星期二 19:14'
-  },
-  {
-    createId: '58272535171584',
-    createTime: 1754392455570,
-    updateId: null,
-    updateTime: null,
-    fromUser: {
-      uid: '1950483451811299329',
-      nickname: '1046762075'
-    },
-    message: {
-      id: '58272535171584',
-      roomId: '1',
-      type: 1,
-      body: {
-        atUidList: null,
-        content: '1234',
-        reply: null,
-        urlContentMap: {}
-      },
-      messageMarks: {
-        '1': {
-          count: 0,
-          userMarked: false
-        },
-        '2': {
-          count: 0,
-          userMarked: false
-        },
-        '3': {
-          count: 0,
-          userMarked: false
-        },
-        '4': {
-          count: 0,
-          userMarked: false
-        },
-        '5': {
-          count: 0,
-          userMarked: false
-        },
-        '6': {
-          count: 0,
-          userMarked: false
-        },
-        '7': {
-          count: 0,
-          userMarked: false
-        },
-        '8': {
-          count: 0,
-          userMarked: false
-        },
-        '9': {
-          count: 0,
-          userMarked: false
-        },
-        '10': {
-          count: 0,
-          userMarked: false
-        },
-        '11': {
-          count: 0,
-          userMarked: false
-        },
-        '12': {
-          count: 0,
-          userMarked: false
-        },
-        '13': {
-          count: 0,
-          userMarked: false
-        },
-        '14': {
-          count: 0,
-          userMarked: false
-        }
-      },
-      sendTime: 1754392455570
-    },
-    oldMsgId: null
-  },
-  {
-    createId: '58272539365888',
-    createTime: 1754392456437,
-    updateId: null,
-    updateTime: null,
-    fromUser: {
-      uid: '1950483451811299329',
-      nickname: '1046762075'
-    },
-    message: {
-      id: '58272539365888',
-      roomId: '1',
-      type: 1,
-      body: {
-        atUidList: null,
-        content: '234',
-        reply: null,
-        urlContentMap: {}
-      },
-      messageMarks: {
-        '1': {
-          count: 0,
-          userMarked: false
-        },
-        '2': {
-          count: 0,
-          userMarked: false
-        },
-        '3': {
-          count: 0,
-          userMarked: false
-        },
-        '4': {
-          count: 0,
-          userMarked: false
-        },
-        '5': {
-          count: 0,
-          userMarked: false
-        },
-        '6': {
-          count: 0,
-          userMarked: false
-        },
-        '7': {
-          count: 0,
-          userMarked: false
-        },
-        '8': {
-          count: 0,
-          userMarked: false
-        },
-        '9': {
-          count: 0,
-          userMarked: false
-        },
-        '10': {
-          count: 0,
-          userMarked: false
-        },
-        '11': {
-          count: 0,
-          userMarked: false
-        },
-        '12': {
-          count: 0,
-          userMarked: false
-        },
-        '13': {
-          count: 0,
-          userMarked: false
-        },
-        '14': {
-          count: 0,
-          userMarked: false
-        }
-      },
-      sendTime: 1754392456437
-    },
-    oldMsgId: null
-  },
-  {
-    createId: '58273604719104',
-    createTime: 1754392710147,
-    updateId: null,
-    updateTime: null,
-    fromUser: {
-      uid: '1950483451811299329',
-      nickname: '1046762075'
-    },
-    message: {
-      id: '58273604719104',
-      roomId: '1',
-      type: 1,
-      body: {
-        atUidList: null,
-        content: '234',
-        reply: null,
-        urlContentMap: {}
-      },
-      messageMarks: {
-        '1': {
-          count: 0,
-          userMarked: false
-        },
-        '2': {
-          count: 0,
-          userMarked: false
-        },
-        '3': {
-          count: 0,
-          userMarked: false
-        },
-        '4': {
-          count: 0,
-          userMarked: false
-        },
-        '5': {
-          count: 0,
-          userMarked: false
-        },
-        '6': {
-          count: 0,
-          userMarked: false
-        },
-        '7': {
-          count: 0,
-          userMarked: false
-        },
-        '8': {
-          count: 0,
-          userMarked: false
-        },
-        '9': {
-          count: 0,
-          userMarked: false
-        },
-        '10': {
-          count: 0,
-          userMarked: false
-        },
-        '11': {
-          count: 0,
-          userMarked: false
-        },
-        '12': {
-          count: 0,
-          userMarked: false
-        },
-        '13': {
-          count: 0,
-          userMarked: false
-        },
-        '14': {
-          count: 0,
-          userMarked: false
-        }
-      },
-      sendTime: 1754392710147
-    },
-    oldMsgId: null
-  },
-  {
-    createId: '58521366453248',
-    createTime: 1754451781812,
-    updateId: null,
-    updateTime: null,
-    fromUser: {
-      uid: '1950483451811299329',
-      nickname: '1046762075'
-    },
-    message: {
-      id: '58521366453248',
-      roomId: '1',
-      type: 1,
-      body: {
-        atUidList: null,
-        content: '234',
-        reply: null,
-        urlContentMap: {}
-      },
-      messageMarks: {
-        '1': {
-          count: 0,
-          userMarked: false
-        },
-        '2': {
-          count: 0,
-          userMarked: false
-        },
-        '3': {
-          count: 0,
-          userMarked: false
-        },
-        '4': {
-          count: 0,
-          userMarked: false
-        },
-        '5': {
-          count: 0,
-          userMarked: false
-        },
-        '6': {
-          count: 0,
-          userMarked: false
-        },
-        '7': {
-          count: 0,
-          userMarked: false
-        },
-        '8': {
-          count: 0,
-          userMarked: false
-        },
-        '9': {
-          count: 0,
-          userMarked: false
-        },
-        '10': {
-          count: 0,
-          userMarked: false
-        },
-        '11': {
-          count: 0,
-          userMarked: false
-        },
-        '12': {
-          count: 0,
-          userMarked: false
-        },
-        '13': {
-          count: 0,
-          userMarked: false
-        },
-        '14': {
-          count: 0,
-          userMarked: false
-        }
-      },
-      sendTime: 1754451781812
-    },
-    oldMsgId: null,
-    timeBlock: '昨天 11:43'
-  },
-  {
-    createId: '58522972871680',
-    createTime: 1754452164394,
-    updateId: null,
-    updateTime: null,
-    fromUser: {
-      uid: '1950483451811299329',
-      nickname: '1046762075'
-    },
-    message: {
-      id: '58522972871680',
-      roomId: '1',
-      type: 1,
-      body: {
-        atUidList: null,
-        content: '2345',
-        reply: null,
-        urlContentMap: {}
-      },
-      messageMarks: {
-        '1': {
-          count: 0,
-          userMarked: false
-        },
-        '2': {
-          count: 0,
-          userMarked: false
-        },
-        '3': {
-          count: 0,
-          userMarked: false
-        },
-        '4': {
-          count: 0,
-          userMarked: false
-        },
-        '5': {
-          count: 0,
-          userMarked: false
-        },
-        '6': {
-          count: 0,
-          userMarked: false
-        },
-        '7': {
-          count: 0,
-          userMarked: false
-        },
-        '8': {
-          count: 0,
-          userMarked: false
-        },
-        '9': {
-          count: 0,
-          userMarked: false
-        },
-        '10': {
-          count: 0,
-          userMarked: false
-        },
-        '11': {
-          count: 0,
-          userMarked: false
-        },
-        '12': {
-          count: 0,
-          userMarked: false
-        },
-        '13': {
-          count: 0,
-          userMarked: false
-        },
-        '14': {
-          count: 0,
-          userMarked: false
-        }
-      },
-      sendTime: 1754452164394
-    },
-    oldMsgId: null,
-    timeBlock: '昨天 11:49'
-  },
-  {
-    createId: '58951278431744',
-    createTime: 1754554280485,
-    updateId: null,
-    updateTime: null,
-    fromUser: {
-      uid: '11013365735936',
-      nickname: 'Martin'
-    },
-    message: {
-      id: '58951278431744',
-      roomId: '1',
-      type: 1,
-      body: {
-        atUidList: null,
-        content: 'sf',
-        reply: null,
-        urlContentMap: {}
-      },
-      messageMarks: {
-        '1': {
-          count: 0,
-          userMarked: false
-        },
-        '2': {
-          count: 0,
-          userMarked: false
-        },
-        '3': {
-          count: 0,
-          userMarked: false
-        },
-        '4': {
-          count: 0,
-          userMarked: false
-        },
-        '5': {
-          count: 0,
-          userMarked: false
-        },
-        '6': {
-          count: 0,
-          userMarked: false
-        },
-        '7': {
-          count: 0,
-          userMarked: false
-        },
-        '8': {
-          count: 0,
-          userMarked: false
-        },
-        '9': {
-          count: 0,
-          userMarked: false
-        },
-        '10': {
-          count: 0,
-          userMarked: false
-        },
-        '11': {
-          count: 0,
-          userMarked: false
-        },
-        '12': {
-          count: 0,
-          userMarked: false
-        },
-        '13': {
-          count: 0,
-          userMarked: false
-        },
-        '14': {
-          count: 0,
-          userMarked: false
-        }
-      },
-      sendTime: 1754554280485
-    },
-    oldMsgId: null,
-    timeBlock: '16:11'
-  },
-  {
-    createId: '58968085008896',
-    createTime: 1754558287582,
-    updateId: null,
-    updateTime: null,
-    fromUser: {
-      uid: '1950483451811299329',
-      nickname: '1046762075'
-    },
-    message: {
-      id: '58968085008896',
-      roomId: '1',
-      type: 1,
-      body: {
-        atUidList: null,
-        content:
-          '你好三三安分玩儿珐而非斤斤计较斤斤计较斤斤计较斤斤计较斤斤计较斤斤计较斤斤计较斤斤计较斤斤计较斤斤计较斤斤计较斤斤计较斤斤计较斤斤计较斤斤计较斤斤计较斤斤计较斤斤计较斤斤计较斤斤计较斤斤计较斤斤计较斤斤计较斤斤计较斤斤计较斤斤计较斤斤计较斤斤计较斤斤计较斤斤计较斤斤计较斤斤计较解决',
-        reply: null,
-        urlContentMap: {}
-      },
-      messageMarks: {
-        '1': {
-          count: 0,
-          userMarked: false
-        },
-        '2': {
-          count: 0,
-          userMarked: false
-        },
-        '3': {
-          count: 0,
-          userMarked: false
-        },
-        '4': {
-          count: 0,
-          userMarked: false
-        },
-        '5': {
-          count: 0,
-          userMarked: false
-        },
-        '6': {
-          count: 0,
-          userMarked: false
-        },
-        '7': {
-          count: 0,
-          userMarked: false
-        },
-        '8': {
-          count: 0,
-          userMarked: false
-        },
-        '9': {
-          count: 0,
-          userMarked: false
-        },
-        '10': {
-          count: 0,
-          userMarked: false
-        },
-        '11': {
-          count: 0,
-          userMarked: false
-        },
-        '12': {
-          count: 0,
-          userMarked: false
-        },
-        '13': {
-          count: 0,
-          userMarked: false
-        },
-        '14': {
-          count: 0,
-          userMarked: false
-        }
-      },
-      sendTime: 1754558287582
-    },
-    oldMsgId: null,
-    timeBlock: '17:18'
-  }
-]
-
-const msgList = computed(() => {
-  const item: any[] = []
-
-  const baseTime = Date.now()
-
-  // 造假数据数量倍数
-  const multiplier = 100
-
-  for (let k = 0; k < multiplier; k++) {
-    testData.forEach((i, index) => {
-      // 生成新的唯一 id，比如拼接 k 和 index 和原 id
-      const newId = `${i.message.id}-${k}-${index}`
-      // 生成新的 sendTime，比如 baseTime + k * 1000 + index * 10 保证递增
-      const newSendTime = baseTime + k * 1000 + index * 10
-
-      item.push({
-        ...i,
-        size: 90,
-        id: newId,
-        message: {
-          ...i.message,
-          id: newId,
-          sendTime: newSendTime
-        }
-      })
-    })
-  }
-
-  return item
-})
+const handleVisibleItemsChange = (data: any) => {
+  console.log('更新：', data)
+}
 /** 新增的动作1结束 */
 </script>
 
