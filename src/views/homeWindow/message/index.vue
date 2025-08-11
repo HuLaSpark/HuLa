@@ -22,8 +22,9 @@
           <n-avatar
             style="border: 1px solid var(--avatar-border-color)"
             :size="44"
+            :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+            :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
             :src="AvatarUtils.getAvatarUrl(item.avatar)"
-            fallback-src="/logo.png"
             round />
 
           <n-flex class="h-fit flex-1 truncate" justify="space-between" vertical>
@@ -122,12 +123,16 @@ import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
-import { useTauriListener } from '~/src/hooks/useTauriListener'
+import { useTauriListener } from '@/hooks/useTauriListener'
+import { useSettingStore } from '@/stores/setting'
+import { ThemeEnum } from '@/enums'
 
 const appWindow = WebviewWindow.getCurrent()
 const chatStore = useChatStore()
 const globalStore = useGlobalStore()
 const groupStore = useGroupStore()
+const settingStore = useSettingStore()
+const { themes } = storeToRefs(settingStore)
 const { openMsgSession } = useCommon()
 const msgScrollbar = useTemplateRef<HTMLElement>('msg-scrollbar')
 const { handleMsgClick, handleMsgDelete, menuList, specialMenuList, handleMsgDblclick } = useMessage()

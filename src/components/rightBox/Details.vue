@@ -205,7 +205,7 @@ import type { UserItem } from '@/services/types'
 import { useImageViewer } from '@/stores/imageViewer'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
-import { useCachedStore } from '~/src/stores/cached'
+import { useCachedStore } from '@/stores/cached'
 
 const { openMsgSession } = useCommon()
 const { createWebviewWindow } = useWindow()

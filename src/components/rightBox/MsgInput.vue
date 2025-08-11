@@ -49,7 +49,8 @@
             round
             :size="22"
             :src="AvatarUtils.getAvatarUrl(item.avatar)"
-            fallback-src="/logo.png"
+            :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+            :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
             :render-placeholder="() => null"
             :intersection-observer-options="{
               root: '#image-chat-ait'
