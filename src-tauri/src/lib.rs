@@ -29,8 +29,8 @@ pub mod im_reqest_client;
 pub mod pojo;
 pub mod repository;
 pub mod timeout_config;
-pub mod websocket;
 mod vo;
+pub mod websocket;
 
 use crate::command::room_member_command::{
     cursor_page_room_members, get_room_members, page_room, update_my_room_info,
@@ -348,13 +348,14 @@ fn common_setup(
 // 公共的命令处理器函数
 fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static
 {
-    use crate::command::user_command::{save_user_info, update_user_last_opt_time, update_token};
-    use crate::websocket::commands::{
-        ws_init_connection, ws_disconnect, ws_send_message, ws_get_state,
-        ws_get_health, ws_force_reconnect, ws_update_config, ws_is_connected
-    };
+    use crate::command::user_command::{save_user_info, update_token, update_user_last_opt_time};
     #[cfg(desktop)]
     use crate::desktops::common_cmd::set_badge_count;
+    use crate::websocket::commands::{
+        ws_disconnect, ws_force_reconnect, ws_get_app_background_state, ws_get_health,
+        ws_get_state, ws_init_connection, ws_is_connected, ws_send_message,
+        ws_set_app_background_state, ws_update_config,
+    };
 
     tauri::generate_handler![
         // 桌面端特定命令
@@ -404,6 +405,8 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         ws_get_health,
         ws_force_reconnect,
         ws_update_config,
-        ws_is_connected
+        ws_is_connected,
+        ws_set_app_background_state,
+        ws_get_app_background_state
     ]
 }

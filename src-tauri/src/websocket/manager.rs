@@ -61,7 +61,10 @@ impl WebSocketManager {
 
     /// 发送消息
     pub async fn send_message(&self, data: serde_json::Value) -> Result<()> {
-        info!("📤 尝试发送消息: {}", data.to_string().chars().take(100).collect::<String>());
+        info!(
+            "📤 尝试发送消息: {}",
+            data.to_string().chars().take(100).collect::<String>()
+        );
 
         let client_guard = self.client.read().await;
         if let Some(client) = client_guard.as_ref() {
@@ -76,7 +79,10 @@ impl WebSocketManager {
                 }
                 _ => {
                     warn!("⚠️ WebSocket 状态为 {:?}，无法发送消息", state);
-                    Err(anyhow::anyhow!("WebSocket not in connected state: {:?}", state))
+                    Err(anyhow::anyhow!(
+                        "WebSocket not in connected state: {:?}",
+                        state
+                    ))
                 }
             }
         } else {
@@ -132,19 +138,43 @@ impl WebSocketManager {
     pub async fn is_connected(&self) -> bool {
         matches!(self.get_state().await, ConnectionState::Connected)
     }
+
+    /// 设置应用后台状态
+    pub async fn set_app_background_state(&self, is_background: bool) {
+        let client_guard = self.client.read().await;
+        if let Some(client) = client_guard.as_ref() {
+            client.set_app_background_state(is_background);
+            info!(
+                "📱 WebSocket 管理器设置应用状态: {}",
+                if is_background { "后台" } else { "前台" }
+            );
+        }
+    }
+
+    /// 获取应用后台状态
+    pub async fn is_app_in_background(&self) -> bool {
+        let client_guard = self.client.read().await;
+        if let Some(client) = client_guard.as_ref() {
+            client.is_app_in_background()
+        } else {
+            false
+        }
+    }
 }
 
 /// 获取全局 WebSocket 管理器
 pub fn get_websocket_manager(app_handle: &AppHandle) -> Arc<WebSocketManager> {
-    GLOBAL_WS_MANAGER.get_or_init(|| {
-        info!("🚀 创建全局 WebSocket 管理器实例");
-        let manager = Arc::new(WebSocketManager::new(app_handle.clone()));
+    GLOBAL_WS_MANAGER
+        .get_or_init(|| {
+            info!("🚀 创建全局 WebSocket 管理器实例");
+            let manager = Arc::new(WebSocketManager::new(app_handle.clone()));
 
-        // 同时在 Tauri 状态中管理，保持兼容性
-        app_handle.manage(manager.clone());
+            // 同时在 Tauri 状态中管理，保持兼容性
+            app_handle.manage(manager.clone());
 
-        manager
-    }).clone()
+            manager
+        })
+        .clone()
 }
 
 /// 初始化全局 WebSocket 管理器

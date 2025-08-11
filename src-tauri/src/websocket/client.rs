@@ -1,15 +1,14 @@
 use super::types::*;
 use anyhow::Result;
 use futures_util::{sink::SinkExt, stream::StreamExt};
-use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
 use tauri::{AppHandle, Emitter};
-use tokio::sync::{mpsc, RwLock};
-use tokio::time::{interval, sleep, Duration};
+use tokio::sync::{RwLock, mpsc};
+use tokio::time::{Duration, interval, sleep};
 use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 use tracing::{debug, error, info, warn};
 use url::Url;
-
 
 /// WebSocket 客户端
 pub struct WebSocketClient {
@@ -32,6 +31,11 @@ pub struct WebSocketClient {
 
     // 连接控制
     should_stop: Arc<AtomicBool>,
+
+    // 应用状态跟踪
+    is_app_in_background: Arc<AtomicBool>,
+    last_foreground_time: Arc<AtomicU64>,
+    background_heartbeat_failures: Arc<AtomicU32>,
 }
 
 impl WebSocketClient {
@@ -48,6 +52,11 @@ impl WebSocketClient {
             message_sender: Arc::new(RwLock::new(None)),
             pending_messages: Arc::new(RwLock::new(Vec::new())),
             should_stop: Arc::new(AtomicBool::new(false)),
+            is_app_in_background: Arc::new(AtomicBool::new(false)),
+            last_foreground_time: Arc::new(AtomicU64::new(
+                chrono::Utc::now().timestamp_millis() as u64
+            )),
+            background_heartbeat_failures: Arc::new(AtomicU32::new(0)),
         }
     }
 
@@ -75,7 +84,8 @@ impl WebSocketClient {
         *self.message_sender.write().await = None;
 
         // 更新状态
-        self.update_state(ConnectionState::Disconnected, false).await;
+        self.update_state(ConnectionState::Disconnected, false)
+            .await;
 
         // 重置计数器
         self.consecutive_failures.store(0, Ordering::SeqCst);
@@ -94,8 +104,9 @@ impl WebSocketClient {
 
                 if let Some(sender) = sender.as_ref() {
                     let message = Message::Text(data.to_string());
-                    sender.send(message)
-                        .map_err(|e| anyhow::anyhow!("Failed to queue message for sending: {}", e))?;
+                    sender.send(message).map_err(|e| {
+                        anyhow::anyhow!("Failed to queue message for sending: {}", e)
+                    })?;
                     debug!("📤 消息已发送");
                     Ok(())
                 } else {
@@ -111,14 +122,19 @@ impl WebSocketClient {
                     }
 
                     // 返回错误，让上层知道消息没有立即发送
-                    Err(anyhow::anyhow!("Connection not fully established, message queued"))
+                    Err(anyhow::anyhow!(
+                        "Connection not fully established, message queued"
+                    ))
                 }
             }
             ConnectionState::Connecting | ConnectionState::Reconnecting => {
                 // 连接中，将消息加入待发队列
                 let mut pending = self.pending_messages.write().await;
                 pending.push(data);
-                warn!("📤 正在连接中，消息已加入待发队列 (队列长度: {})", pending.len());
+                warn!(
+                    "📤 正在连接中，消息已加入待发队列 (队列长度: {})",
+                    pending.len()
+                );
 
                 // 限制队列长度
                 if pending.len() > 100 {
@@ -129,8 +145,14 @@ impl WebSocketClient {
                 Err(anyhow::anyhow!("WebSocket is connecting, message queued"))
             }
             _ => {
-                warn!("📤 WebSocket 未连接 (状态: {:?})，无法发送消息", current_state);
-                Err(anyhow::anyhow!("WebSocket not connected (state: {:?})", current_state))
+                warn!(
+                    "📤 WebSocket 未连接 (状态: {:?})，无法发送消息",
+                    current_state
+                );
+                Err(anyhow::anyhow!(
+                    "WebSocket not connected (state: {:?})",
+                    current_state
+                ))
             }
         }
     }
@@ -150,7 +172,11 @@ impl WebSocketClient {
 
         ConnectionHealth {
             is_healthy,
-            last_pong_time: if last_pong == 0 { None } else { Some(last_pong) },
+            last_pong_time: if last_pong == 0 {
+                None
+            } else {
+                Some(last_pong)
+            },
             consecutive_failures: failures,
             round_trip_time: None, // 可以在心跳时计算
         }
@@ -180,11 +206,14 @@ impl WebSocketClient {
                     let attempts = self.reconnect_attempts.fetch_add(1, Ordering::SeqCst) + 1;
                     let config = self.config.read().await;
 
-                    error!("❌ WebSocket 连接失败 (尝试 {}/{}): {}",
-                           attempts, config.max_reconnect_attempts, e);
+                    error!(
+                        "❌ WebSocket 连接失败 (尝试 {}/{}): {}",
+                        attempts, config.max_reconnect_attempts, e
+                    );
 
                     if attempts >= config.max_reconnect_attempts {
-                        self.emit_error("连接失败次数过多，停止重试".to_string(), None).await;
+                        self.emit_error("连接失败次数过多，停止重试".to_string(), None)
+                            .await;
                         self.update_state(ConnectionState::Error, false).await;
                         return Err(anyhow::anyhow!("Max reconnection attempts reached"));
                     }
@@ -192,7 +221,7 @@ impl WebSocketClient {
                     // 指数退避延迟
                     let delay = std::cmp::min(
                         config.reconnect_delay_ms * (2_u64.pow(attempts.saturating_sub(1))),
-                        15000 // 最大15秒
+                        15000, // 最大15秒
                     );
 
                     info!("🔄 {}ms 后重试连接...", delay);
@@ -217,8 +246,7 @@ impl WebSocketClient {
             .append_pair("clientId", &config.client_id);
 
         if let Some(ref token) = config.token {
-            url.query_pairs_mut()
-                .append_pair("Token", token);
+            url.query_pairs_mut().append_pair("Token", token);
         }
 
         let url_str = url.as_str();
@@ -226,7 +254,8 @@ impl WebSocketClient {
         self.update_state(ConnectionState::Connecting, false).await;
 
         // 建立连接
-        let (ws_stream, _) = connect_async(url_str).await
+        let (ws_stream, _) = connect_async(url_str)
+            .await
             .map_err(|e| anyhow::anyhow!("Failed to connect to WebSocket '{}': {}", url_str, e))?;
 
         let (mut ws_sender, mut ws_receiver) = ws_stream.split();
@@ -236,7 +265,11 @@ impl WebSocketClient {
         *self.message_sender.write().await = Some(msg_sender);
 
         // 更新连接状态
-        self.update_state(ConnectionState::Connected, self.is_reconnecting.load(Ordering::SeqCst)).await;
+        self.update_state(
+            ConnectionState::Connected,
+            self.is_reconnecting.load(Ordering::SeqCst),
+        )
+        .await;
 
         // 发送待发消息
         self.send_pending_messages().await?;
@@ -272,11 +305,23 @@ impl WebSocketClient {
                 while let Some(msg) = ws_receiver.next().await {
                     match msg {
                         Ok(Message::Text(text)) => {
-                            Self::handle_message_static(text, &app_handle, &last_pong_time, &consecutive_failures).await;
+                            Self::handle_message_static(
+                                text,
+                                &app_handle,
+                                &last_pong_time,
+                                &consecutive_failures,
+                            )
+                            .await;
                         }
                         Ok(Message::Binary(data)) => {
                             if let Ok(text) = String::from_utf8(data) {
-                                Self::handle_message_static(text, &app_handle, &last_pong_time, &consecutive_failures).await;
+                                Self::handle_message_static(
+                                    text,
+                                    &app_handle,
+                                    &last_pong_time,
+                                    &consecutive_failures,
+                                )
+                                .await;
                             }
                         }
                         Ok(Message::Close(_)) => {
@@ -337,7 +382,7 @@ impl WebSocketClient {
         // 尝试解析心跳响应
         if let Ok(ws_msg) = serde_json::from_str::<WsMessage>(&text) {
             match ws_msg {
-                                WsMessage::HeartbeatResponse { timestamp: _ } => {
+                WsMessage::HeartbeatResponse { timestamp: _ } => {
                     let now = chrono::Utc::now().timestamp_millis() as u64;
                     last_pong_time.store(now, Ordering::SeqCst);
                     consecutive_failures.store(0, Ordering::SeqCst);
@@ -351,8 +396,10 @@ impl WebSocketClient {
                         round_trip_time: None,
                     };
 
-                    let _ = app_handle.emit("websocket-event",
-                        &WebSocketEvent::HeartbeatStatusChanged { health });
+                    let _ = app_handle.emit(
+                        "websocket-event",
+                        &WebSocketEvent::HeartbeatStatusChanged { health },
+                    );
                     return;
                 }
                 _ => {}
@@ -365,23 +412,27 @@ impl WebSocketClient {
             Self::process_business_message(&json_value, app_handle).await;
 
             // 同时发送原始消息事件（保持兼容性）
-            let _ = app_handle.emit("websocket-event",
-                &WebSocketEvent::MessageReceived { message: json_value });
+            let _ = app_handle.emit(
+                "websocket-event",
+                &WebSocketEvent::MessageReceived {
+                    message: json_value,
+                },
+            );
         } else {
             // 非JSON消息，直接转发
-            let _ = app_handle.emit("websocket-event",
+            let _ = app_handle.emit(
+                "websocket-event",
                 &WebSocketEvent::MessageReceived {
-                    message: serde_json::Value::String(text)
-                });
+                    message: serde_json::Value::String(text),
+                },
+            );
         }
     }
 
     /// 处理业务消息类型
     async fn process_business_message(message: &serde_json::Value, app_handle: &AppHandle) {
         // 提取消息类型
-        let message_type = message.get("type")
-            .and_then(|t| t.as_str())
-            .unwrap_or("");
+        let message_type = message.get("type").and_then(|t| t.as_str()).unwrap_or("");
 
         // 提取消息数据
         let data = message.get("data");
@@ -537,13 +588,14 @@ impl WebSocketClient {
             let last_pong_time = self.last_pong_time.clone();
             let consecutive_failures = self.consecutive_failures.clone();
             let message_sender = self.message_sender.clone();
+            let is_app_in_background = self.is_app_in_background.clone();
+            let background_heartbeat_failures = self.background_heartbeat_failures.clone();
 
             tokio::spawn(async move {
                 let mut heartbeat_interval = interval(Duration::from_millis(interval_ms));
 
-                                while heartbeat_active.load(Ordering::SeqCst) &&
-                      !should_stop.load(Ordering::SeqCst) {
-
+                while heartbeat_active.load(Ordering::SeqCst) && !should_stop.load(Ordering::SeqCst)
+                {
                     heartbeat_interval.tick().await;
 
                     // 发送心跳
@@ -566,11 +618,34 @@ impl WebSocketClient {
                     let last_pong = last_pong_time.load(Ordering::SeqCst);
                     if last_pong > 0 {
                         let now = chrono::Utc::now().timestamp_millis() as u64;
-                        if now - last_pong > timeout_ms {
-                            let failures = consecutive_failures.fetch_add(1, Ordering::SeqCst) + 1;
-                            warn!("⚠️ 心跳超时 (连续失败: {})", failures);
+                        let time_since_pong = now - last_pong;
 
-                            if failures >= 3 {
+                        // 根据应用状态调整超时策略
+                        let is_background = is_app_in_background.load(Ordering::SeqCst);
+                        let effective_timeout = if is_background {
+                            // 后台模式下更宽松的超时时间（2分钟）
+                            120000
+                        } else {
+                            timeout_ms
+                        };
+
+                        if time_since_pong > effective_timeout {
+                            let failures = if is_background {
+                                background_heartbeat_failures.fetch_add(1, Ordering::SeqCst) + 1
+                            } else {
+                                consecutive_failures.fetch_add(1, Ordering::SeqCst) + 1
+                            };
+
+                            warn!(
+                                "⚠️ 心跳超时 ({}模式, 连续失败: {}, {}ms前收到最后心跳)",
+                                if is_background { "后台" } else { "前台" },
+                                failures,
+                                time_since_pong
+                            );
+
+                            // 后台模式下更宽松的重连策略
+                            let max_failures = if is_background { 5 } else { 3 };
+                            if failures >= max_failures {
                                 error!("💔 心跳连续超时，触发重连");
                                 break;
                             }
@@ -646,7 +721,8 @@ impl WebSocketClient {
             self.emit_event(WebSocketEvent::ConnectionStateChanged {
                 state: new_state,
                 is_reconnection,
-            }).await;
+            })
+            .await;
         }
     }
 
@@ -658,8 +734,13 @@ impl WebSocketClient {
     }
 
     /// 发送错误事件
-    async fn emit_error(&self, message: String, details: Option<std::collections::HashMap<String, serde_json::Value>>) {
-        self.emit_event(WebSocketEvent::Error { message, details }).await;
+    async fn emit_error(
+        &self,
+        message: String,
+        details: Option<std::collections::HashMap<String, serde_json::Value>>,
+    ) {
+        self.emit_event(WebSocketEvent::Error { message, details })
+            .await;
     }
 
     /// 获取当前状态
@@ -670,5 +751,99 @@ impl WebSocketClient {
     /// 更新配置
     pub async fn update_config(&self, new_config: WebSocketConfig) {
         *self.config.write().await = new_config;
+    }
+
+    /// 设置应用后台状态
+    pub fn set_app_background_state(&self, is_background: bool) {
+        let was_background = self
+            .is_app_in_background
+            .swap(is_background, Ordering::SeqCst);
+
+        if is_background && !was_background {
+            info!("📱 应用进入后台模式");
+            // 重置后台心跳失败计数
+            self.background_heartbeat_failures
+                .store(0, Ordering::SeqCst);
+        } else if !is_background && was_background {
+            let now = chrono::Utc::now().timestamp_millis() as u64;
+            self.last_foreground_time.store(now, Ordering::SeqCst);
+            info!("📱 应用从后台恢复到前台");
+
+            // 检查是否需要重连
+            tokio::spawn({
+                let client = self.clone_for_spawn();
+                async move {
+                    client.check_and_recover_connection().await;
+                }
+            });
+        }
+    }
+
+    /// 检查并恢复连接（从后台恢复时调用）
+    async fn check_and_recover_connection(&self) {
+        let current_state = self.get_state().await;
+        let last_pong = self.last_pong_time.load(Ordering::SeqCst);
+        let now = chrono::Utc::now().timestamp_millis() as u64;
+
+        info!(
+            "🔍 检查连接状态: {:?}, 最后心跳: {}ms前",
+            current_state,
+            if last_pong > 0 { now - last_pong } else { 0 }
+        );
+
+        match current_state {
+            ConnectionState::Connected => {
+                // 检查心跳是否过期
+                if last_pong > 0 && now - last_pong > 60000 {
+                    // 60秒无心跳
+                    warn!("💔 连接可能已断开，强制重连");
+                    let _ = self.force_reconnect().await;
+                } else {
+                    // 发送一个心跳来测试连接
+                    self.send_test_heartbeat().await;
+                }
+            }
+            ConnectionState::Disconnected | ConnectionState::Error => {
+                info!("🔄 连接已断开，尝试重新连接");
+                let _ = self.force_reconnect().await;
+            }
+            _ => {
+                info!("🔄 连接状态: {:?}，等待连接完成", current_state);
+            }
+        }
+    }
+
+    /// 发送测试心跳
+    async fn send_test_heartbeat(&self) {
+        let heartbeat_msg = WsMessage::Heartbeat;
+        if let Ok(json) = serde_json::to_value(&heartbeat_msg) {
+            let _ = self.send_message(json).await;
+            info!("💓 发送测试心跳");
+        }
+    }
+
+    /// 获取应用后台状态
+    pub fn is_app_in_background(&self) -> bool {
+        self.is_app_in_background.load(Ordering::SeqCst)
+    }
+
+    /// 克隆用于异步任务
+    fn clone_for_spawn(&self) -> Self {
+        Self {
+            config: self.config.clone(),
+            state: self.state.clone(),
+            app_handle: self.app_handle.clone(),
+            last_pong_time: self.last_pong_time.clone(),
+            consecutive_failures: self.consecutive_failures.clone(),
+            heartbeat_active: self.heartbeat_active.clone(),
+            reconnect_attempts: self.reconnect_attempts.clone(),
+            is_reconnecting: self.is_reconnecting.clone(),
+            message_sender: self.message_sender.clone(),
+            pending_messages: self.pending_messages.clone(),
+            should_stop: self.should_stop.clone(),
+            is_app_in_background: self.is_app_in_background.clone(),
+            last_foreground_time: self.last_foreground_time.clone(),
+            background_heartbeat_failures: self.background_heartbeat_failures.clone(),
+        }
     }
 }
