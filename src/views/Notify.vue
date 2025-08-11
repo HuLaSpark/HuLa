@@ -131,7 +131,7 @@ const debouncedHandleTip = useDebounceFn(handleTip, 100)
 // 处理窗口显示和隐藏的逻辑
 const showWindow = async (event: Event<any>) => {
   if (tipVisible.value) {
-    const notifyWindow = await WebviewWindow.getCurrent()
+    const notifyWindow = WebviewWindow.getCurrent()
     const outerSize = await notifyWindow?.outerSize()
     if (outerSize) {
       await notifyWindow?.setPosition(
