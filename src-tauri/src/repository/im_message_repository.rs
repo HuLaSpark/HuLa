@@ -1,6 +1,5 @@
 use crate::error::CommonError;
 use crate::pojo::common::{CursorPageParam, CursorPageResp};
-use anyhow::Context;
 use entity::{im_message, im_message_mark};
 use sea_orm::prelude::Expr;
 use sea_orm::sea_query::Alias;
@@ -55,7 +54,7 @@ where
 
             process_message_batch(db, chunk.to_vec())
                 .await
-                .with_context(|| format!("Failed to process batch {} of messages", batch_index + 1))?;
+                .map_err(|e| anyhow::anyhow!("Failed to process batch {} of messages: {}", batch_index + 1, e))?;
         }
 
         info!("All message batch processing completed, total {} items", messages.len());
@@ -95,7 +94,7 @@ where
         .filter(condition)
         .all(db)
         .await
-        .with_context(|| "Failed to query existing messages")?;
+        .map_err(|e| anyhow::anyhow!("Failed to query existing messages: {}", e))?;
 
     // 如果有已存在的消息，先删除它们
     if !existing_messages.is_empty() {
@@ -117,7 +116,7 @@ where
             .filter(delete_condition)
             .exec(db)
             .await
-            .with_context(|| "Failed to delete existing messages")?;
+            .map_err(|e| anyhow::anyhow!("Failed to delete existing messages: {}", e))?;
 
         debug!("Deleted {} existing messages", existing_messages.len());
     }
@@ -131,7 +130,7 @@ where
     im_message::Entity::insert_many(active_models)
         .exec(db)
         .await
-        .with_context(|| "Failed to batch insert messages")?;
+        .map_err(|e| anyhow::anyhow!("Failed to batch insert messages: {}", e))?;
 
     Ok(())
 }
@@ -149,7 +148,7 @@ pub async fn cursor_page_messages(
         .filter(im_message::Column::LoginUid.eq(login_uid))
         .count(db)
         .await
-        .with_context(|| "Failed to query message count")?;
+        .map_err(|e| anyhow::anyhow!("Failed to query message count: {}", e))?;
 
     // 先查询消息主表，按 id 数值降序排序
     let mut message_query = im_message::Entity::find()
@@ -168,7 +167,7 @@ pub async fn cursor_page_messages(
     let messages = message_query
         .all(db)
         .await
-        .with_context(|| "Failed to query message list")?;
+        .map_err(|e| anyhow::anyhow!("Failed to query message list: {}", e))?;
 
     // 如果没有消息，直接返回空结果
     if messages.is_empty() {
@@ -243,14 +242,14 @@ pub async fn save_message(
         im_message::Entity::find_by_id((message.id.clone(), message.login_uid.clone()))
             .one(db)
             .await
-            .with_context(|| "Failed to find message")?;
+            .map_err(|e| anyhow::anyhow!("Failed to find message: {}", e))?;
 
     // 如果已存在，则先删除
     if existing_message.is_some() {
         im_message::Entity::delete_by_id((message.id.clone(), message.login_uid.clone()))
             .exec(db)
             .await
-            .with_context(|| "Failed to delete existing message")?;
+            .map_err(|e| anyhow::anyhow!("Failed to delete existing message: {}", e))?;
     }
 
     // 插入新消息
@@ -271,7 +270,7 @@ pub async fn update_message_status(
         im_message::Entity::find_by_id((message_id.to_string(), login_uid))
             .one(db)
             .await
-            .with_context(|| "Failed to find message")?
+            .map_err(|e| anyhow::anyhow!("Failed to find message: {}", e))?
             .ok_or_else(|| CommonError::UnexpectedError(anyhow::anyhow!("Message not found")))?
             .into_active_model();
 

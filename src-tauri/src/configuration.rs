@@ -1,5 +1,4 @@
 use crate::error::CommonError;
-use anyhow::Context;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use std::path::PathBuf;
 use std::time::Duration;
@@ -95,7 +94,7 @@ impl DatabaseSettings {
 
         let db: DatabaseConnection = Database::connect(opt)
             .await
-            .with_context(|| "Database connection failed")?;
+            .map_err(|e| anyhow::anyhow!("Database connection failed: {}", e))?;
         Ok(db)
     }
 }

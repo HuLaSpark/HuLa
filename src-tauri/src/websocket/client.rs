@@ -1,5 +1,5 @@
 use super::types::*;
-use anyhow::{Context, Result};
+use anyhow::Result;
 use futures_util::{sink::SinkExt, stream::StreamExt};
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
 use std::sync::Arc;
@@ -95,7 +95,7 @@ impl WebSocketClient {
                 if let Some(sender) = sender.as_ref() {
                     let message = Message::Text(data.to_string());
                     sender.send(message)
-                        .with_context(|| "Failed to queue message for sending")?;
+                        .map_err(|e| anyhow::anyhow!("Failed to queue message for sending: {}", e))?;
                     debug!("📤 消息已发送");
                     Ok(())
                 } else {
@@ -211,7 +211,7 @@ impl WebSocketClient {
 
         // 构建连接URL
         let mut url = Url::parse(&config.server_url)
-            .with_context(|| format!("Invalid WebSocket URL: {}", config.server_url))?;
+            .map_err(|e| anyhow::anyhow!("Invalid WebSocket URL '{}': {}", config.server_url, e))?;
 
         url.query_pairs_mut()
             .append_pair("clientId", &config.client_id);
@@ -227,7 +227,7 @@ impl WebSocketClient {
 
         // 建立连接
         let (ws_stream, _) = connect_async(url_str).await
-            .with_context(|| "Failed to connect to WebSocket")?;
+            .map_err(|e| anyhow::anyhow!("Failed to connect to WebSocket '{}': {}", url_str, e))?;
 
         let (mut ws_sender, mut ws_receiver) = ws_stream.split();
 
@@ -633,13 +633,6 @@ impl WebSocketClient {
         }
 
         Ok(())
-    }
-
-    /// 等待停止信号
-    async fn wait_for_stop(&self) {
-        while !self.should_stop.load(Ordering::SeqCst) {
-            sleep(Duration::from_millis(100)).await;
-        }
     }
 
     /// 更新连接状态

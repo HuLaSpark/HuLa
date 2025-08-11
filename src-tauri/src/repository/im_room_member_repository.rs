@@ -1,4 +1,4 @@
-use anyhow::Context;
+
 use entity::{im_room, im_room_member};
 use sea_orm::EntityTrait;
 use sea_orm::IntoActiveModel;
@@ -27,7 +27,7 @@ pub async fn cursor_page_room_members(
         .filter(im_room_member::Column::LoginUid.eq(login_uid))
         .count(db)
         .await
-        .with_context(|| "Failed to query room member count")?;
+        .map_err(|e| anyhow::anyhow!("Failed to query room member count: {}", e))?;
 
     let mut query = im_room_member::Entity::find()
         .filter(im_room_member::Column::RoomId.eq(room_id))
@@ -47,7 +47,7 @@ pub async fn cursor_page_room_members(
         }
     }
 
-    let members = query.all(db).await.with_context(|| "Failed to query room members")?;
+    let members = query.all(db).await.map_err(|e| anyhow::anyhow!("Failed to query room members: {}", e))?;
 
     // 构建下一页游标和判断是否为最后一页
     let (next_cursor, is_last) = if members.len() < cursor_page_param.page_size as usize {
@@ -82,7 +82,7 @@ pub async fn get_room_page(
         .filter(im_room::Column::LoginUid.eq(login_uid))
         .count(db)
         .await
-        .with_context(|| "Failed to query room count")?;
+        .map_err(|e| anyhow::anyhow!("Failed to query room count: {}", e))?;
 
     // 分页查询数据
     let records = im_room::Entity::find()
@@ -91,7 +91,7 @@ pub async fn get_room_page(
         .limit(page_param.size as u64)
         .all(db)
         .await
-        .with_context(|| "Failed to query room data")?;
+        .map_err(|e| anyhow::anyhow!("Failed to query room data: {}", e))?;
 
     Ok(Page {
         records,
@@ -142,7 +142,7 @@ pub async fn get_room_members_by_room_id(
         .filter(im_room_member::Column::LoginUid.eq(login_uid))
         .all(db)
         .await
-        .with_context(|| "Failed to query room members")?;
+        .map_err(|e| anyhow::anyhow!("Failed to query room members: {}", e))?;
 
     Ok(members)
 }
@@ -162,7 +162,7 @@ pub async fn save_room_member_batch(
         .filter(im_room_member::Column::LoginUid.eq(login_uid))
         .all(&txn)
         .await
-        .with_context(|| "Failed to query existing room members")?;
+        .map_err(|e| anyhow::anyhow!("Failed to query existing room members: {}", e))?;
 
     if !existing_members.is_empty() {
         // 如果有数据，则删除当前用户的现有数据
@@ -171,7 +171,7 @@ pub async fn save_room_member_batch(
             .filter(im_room_member::Column::LoginUid.eq(login_uid))
             .exec(&txn)
             .await
-            .with_context(|| "Failed to delete existing room members")?;
+            .map_err(|e| anyhow::anyhow!("Failed to delete existing room members: {}", e))?;
     }
 
     // 保存新的room_members数据（批量插入）
@@ -210,7 +210,7 @@ pub async fn update_my_room_info(
         .filter(im_room_member::Column::LoginUid.eq(login_uid))
         .one(db)
         .await
-        .with_context(|| "Failed to query room member record")?;
+        .map_err(|e| anyhow::anyhow!("Failed to query room member record: {}", e))?;
 
     if let Some(member) = member {
         debug!("Found room member record: {:?}", member);
@@ -221,7 +221,7 @@ pub async fn update_my_room_info(
         member_active
             .update(db)
             .await
-            .with_context(|| "Failed to update room member record")?;
+            .map_err(|e| anyhow::anyhow!("Failed to update room member record: {}", e))?;
         info!("Successfully updated member room member information");
         Ok(())
     } else {

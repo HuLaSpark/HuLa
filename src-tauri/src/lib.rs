@@ -38,7 +38,6 @@ use crate::command::room_member_command::{
 use crate::configuration::get_configuration;
 use crate::error::CommonError;
 use crate::im_reqest_client::ImRequestClient;
-use anyhow::Context;
 use sea_orm::DatabaseConnection;
 use serde::{Deserialize, Serialize};
 use std::ops::Deref;
@@ -228,7 +227,7 @@ pub struct UserInfo {
 pub async fn build_request_client() -> Result<reqwest::Client, CommonError> {
     let client = reqwest::Client::builder()
         .build()
-        .with_context(|| "Reqwest client error")?;
+        .map_err(|e| anyhow::anyhow!("Reqwest client error: {}", e))?;
     Ok(client)
 }
 

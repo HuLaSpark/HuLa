@@ -2,7 +2,7 @@ use crate::AppData;
 use crate::error::CommonError;
 use crate::im_reqest_client::ImRequestClient;
 use crate::repository::im_contact_repository::{save_contact_batch, update_contact_hide};
-use anyhow::Context;
+
 use entity::im_contact;
 use sea_orm::DatabaseConnection;
 use serde::{Deserialize, Serialize};
@@ -63,7 +63,7 @@ async fn fetch_and_update_contacts(
         // 保存到本地数据库
         save_contact_batch(db_conn.deref(), data.clone(), &login_uid)
             .await
-            .with_context(|| format!("[{}:{}] Failed to save contact data to local database", file!(), line!()))?;
+            .map_err(|e| anyhow::anyhow!("[{}:{}] Failed to save contact data to local database: {}", file!(), line!(), e))?;
 
         Ok(data)
     } else {

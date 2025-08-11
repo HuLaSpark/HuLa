@@ -1,6 +1,6 @@
 use crate::error::CommonError;
 use crate::pojo::common::ApiResult;
-use anyhow::Context;
+
 use base64::{Engine as _, engine::general_purpose};
 use reqwest::{Client, Method, RequestBuilder, header};
 use std::collections::HashMap;
@@ -24,7 +24,7 @@ impl ImRequestClient {
             .timeout(std::time::Duration::from_secs(60))
             .connect_timeout(std::time::Duration::from_secs(10)) // 连接超时
             .build()
-            .with_context(|| "Failed to create HTTP client")?;
+            .map_err(|e| anyhow::anyhow!("Failed to create HTTP client: {}", e))?;
 
         Ok(Self {
             client,
@@ -128,12 +128,12 @@ impl ImRequestClient {
             .json(&HashMap::from([("refreshToken", refresh_token_value)]))
             .send()
             .await
-            .with_context(|| "Failed to send refresh token request")?;
+            .map_err(|e| anyhow::anyhow!("Failed to send refresh token request: {}", e))?;
 
         let response_text = response
             .text()
             .await
-            .with_context(|| "Failed to read refresh token response body")?;
+            .map_err(|e| anyhow::anyhow!("Failed to read refresh token response body: {}", e))?;
 
         // 解析响应
         #[derive(serde::Deserialize)]
@@ -292,12 +292,12 @@ impl<'a> RequestBuilderWrapper<'a> {
             .request_builder
             .send()
             .await
-            .with_context(|| format!("[{}:{}] Failed to send request: {}", file!(), line!(), self.url))?;
+            .map_err(|e| anyhow::anyhow!("[{}:{}] Failed to send request '{}': {}", file!(), line!(), self.url, e))?;
 
         let response_text = response
             .text()
             .await
-            .with_context(|| format!("[{}:{}] Failed to read response body", file!(), line!()))?;
+            .map_err(|e| anyhow::anyhow!("[{}:{}] Failed to read response body: {}", file!(), line!(), e))?;
 
         debug!("Starting to parse response");
         // 解析为目标类型
@@ -358,14 +358,13 @@ impl<'a> RequestBuilderWrapper<'a> {
 
                     // 重新发送请求
                     info!("Retrying request to: {}", self.url);
-                    let retry_response = new_request_builder.send().await.with_context(|| {
-                        format!("[{}:{}] Failed to retry request: {}", file!(), line!(), self.url)
-                    })?;
+                    let retry_response = new_request_builder.send().await
+                        .map_err(|e| anyhow::anyhow!("[{}:{}] Failed to retry request '{}': {}", file!(), line!(), self.url, e))?;
 
                     let retry_response_text = retry_response
                         .text()
                         .await
-                        .with_context(|| format!("[{}:{}] Failed to read retry response body", file!(), line!()))?;
+                        .map_err(|e| anyhow::anyhow!("[{}:{}] Failed to read retry response body: {}", file!(), line!(), e))?;
 
                     // 解析重试响应
                     let retry_result: ApiResult<T> =

@@ -4,7 +4,7 @@ use crate::im_reqest_client::ImRequestClient;
 use crate::pojo::common::{CursorPageParam, CursorPageResp};
 use crate::repository::{im_message_repository, im_user_repository};
 use crate::vo::vo::ChatMessageReq;
-use anyhow::Context;
+
 use entity::im_user::Entity as ImUserEntity;
 use entity::{im_message, im_user};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
@@ -283,7 +283,7 @@ pub async fn fetch_all_messages(
         // 消息保存完成后，将用户的 is_init 状态设置为 false
         im_user_repository::update_user_init_status(&tx, uid, false)
             .await
-            .with_context(|| "Failed to update user is_init status")?;
+            .map_err(|e| anyhow::anyhow!("Failed to update user is_init status: {}", e))?;
 
         // 提交事务
         tx.commit().await?;
