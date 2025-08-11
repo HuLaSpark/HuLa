@@ -449,7 +449,7 @@ const cacheStore = useCachedStore()
 const groupDetail = ref({
   myNickname: '', // 我在本群的昵称
   groupRemark: '', // 群备注
-  role: 3 // 默认为普通成员
+  roleId: 3 // 默认为普通成员
 })
 // 保存原始群组详情数据，用于比较是否有变化
 const originalGroupDetail = ref({
@@ -466,16 +466,21 @@ const isGroupOwner = computed(() => {
   // 检查groupStore.userList中当前用户的角色
   const currentUser = groupStore.userList.find((user) => user.uid === userStore.userInfo.uid)
 
+  console.log('currentUser ---> ', currentUser)
   // 如果能在userList找到用户信息并确认角色，优先使用这个判断
   if (currentUser) {
-    return currentUser.groupRole === RoleEnum.LORD
+    return currentUser.roleId === RoleEnum.LORD
   }
+  console.log('groupDetail --> ', groupDetail)
+  groupDetail.value.roleId = 1
 
   // 否则回退到countInfo中的角色信息
-  return groupDetail.value.role === RoleEnum.LORD
+  return groupDetail.value.roleId === RoleEnum.LORD
 })
+
 // 我的群备注
 const myGroupRemark = computed(() => {
+  console.log('isGroupOwner --> ', isGroupOwner)
   if (activeItem.type === RoomTypeEnum.GROUP) {
     return groupStore.countInfo?.remark || ''
   }
@@ -633,8 +638,8 @@ watch(
     // 当群成员列表更新时，重新检查当前用户的权限
     if (activeItem.type === RoomTypeEnum.GROUP) {
       const currentUser = groupStore.userList.find((user) => user.uid === userStore.userInfo.uid)
-      if (currentUser && currentUser.groupRole) {
-        groupDetail.value.role = currentUser.groupRole
+      if (currentUser && currentUser.roleId) {
+        groupDetail.value.roleId = currentUser.roleId
       }
     }
   },
@@ -688,8 +693,8 @@ const fetchGroupDetail = async () => {
   groupDetail.value = {
     myNickname: groupStore.countInfo?.myName || '',
     groupRemark: groupStore.countInfo?.remark || '',
-    // 优先使用userList中找到的角色信息，没有则使用countInfo中的role或默认值
-    role: currentUser?.groupRole || groupStore.countInfo?.role || RoleEnum.NORMAL
+    // 优先使用userList中找到的角色信息，没有则使用countInfo中的roleId或默认值
+    roleId: currentUser?.roleId || groupStore.countInfo?.roleId || RoleEnum.NORMAL
   }
   // 保存原始值，用于后续比较
   originalGroupDetail.value = {

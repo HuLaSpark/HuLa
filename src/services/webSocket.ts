@@ -614,6 +614,12 @@ class WS {
           useMitt.emit(WsResponseMessageType.CallRejected, data)
           break
         }
+        case WsResponseMessageType.TIMEOUT: {
+          const data = params.data as CallResponseData
+          console.log('通话超时未接通', data)
+          useMitt.emit(WsResponseMessageType.TIMEOUT, data)
+          break
+        }
         case WsResponseMessageType.RoomClosed: {
           const data = params.data as { roomId: string }
           console.log('房间已关闭', data)
@@ -640,6 +646,7 @@ class WS {
         }
         case WsResponseMessageType.DROPPED: {
           const data = params.data
+          console.log('用户已挂断', data)
           useMitt.emit(WsResponseMessageType.DROPPED, data)
           break
         }

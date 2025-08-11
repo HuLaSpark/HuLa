@@ -26,7 +26,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
    * 从成员列表中筛选出角色为群主的用户
    */
   const currentLordId = computed(() => {
-    const list = userList.value.filter((member) => member.groupRole === RoleEnum.LORD)
+    const list = userList.value.filter((member) => member.roleId === RoleEnum.LORD)
     if (list.length) {
       return list[0]?.uid
     }
@@ -38,7 +38,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
    * 从成员列表中筛选出所有管理员的uid
    */
   const adminUidList = computed(() => {
-    return userList.value.filter((member) => member.groupRole === RoleEnum.ADMIN).map((member) => member.uid)
+    return userList.value.filter((member) => member.roleId === RoleEnum.ADMIN).map((member) => member.uid)
   })
 
   /**
@@ -78,7 +78,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
     avatar: '',
     groupName: '',
     onlineNum: 0,
-    role: 0,
+    roleId: 0,
     account: '',
     memberNum: 0,
     remark: '',
@@ -102,6 +102,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
     )
     if (!data) return
     userList.value = data
+    console.log('getGroupUserList --> ', userList.value)
     userListOptions.cursor = data.cursor
     userListOptions.isLast = data.isLast
     userListOptions.loading = false
@@ -162,7 +163,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
     // 更新本地群成员列表中的角色信息
     for (const user of userList.value) {
       if (uidList.includes(user.uid)) {
-        user.groupRole = RoleEnum.ADMIN
+        user.roleId = RoleEnum.ADMIN
       }
     }
   }
@@ -176,7 +177,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
     // 更新本地群成员列表中的角色信息
     for (const user of userList.value) {
       if (uidList.includes(user.uid)) {
-        user.groupRole = RoleEnum.NORMAL
+        user.roleId = RoleEnum.NORMAL
       }
     }
   }
@@ -222,7 +223,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
       avatar: '',
       groupName: '',
       onlineNum: 0,
-      role: 0,
+      roleId: 0,
       roomId: '',
       account: '',
       memberNum: 0,

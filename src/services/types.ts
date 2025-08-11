@@ -110,7 +110,7 @@ export type GroupDetailReq = {
   /** 在线人数 */
   onlineNum: number
   /** 成员角色 1群主 2管理员 3普通成员 4踢出群聊 */
-  role: number
+  roleId: number
   /** 房间id */
   roomId: string
   /** 群号 */
@@ -195,7 +195,7 @@ export type UserItem = {
   /** 归属地 */
   locPlace?: string
   /** 角色ID */
-  groupRole?: number
+  roleId?: number
   /** 账号 */
   account: string
   /** 我的群昵称 */

@@ -71,7 +71,7 @@ watch(
 const addFriend = async () => {
   await apis.applyGroup({
     msg: requestMsg.value,
-    targetGroupId: String(globalStore.addGroupModalInfo.account)
+    account: String(globalStore.addGroupModalInfo.account)
   })
   window.$message.success('已发送群聊申请')
   setTimeout(async () => {

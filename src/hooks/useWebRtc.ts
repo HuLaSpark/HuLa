@@ -1,7 +1,12 @@
 import { CallTypeEnum, RTCCallStatus } from '@/enums'
 import { useUserStore } from '@/stores/user'
 import rustWebSocketClient from '@/services/webSocketRust'
-import { WsRequestMsgType, WsResponseMessageType } from '../services/wsType'
+import {
+  WsRequestMsgType,
+  WsResponseMessageType,
+  CallResponseStatus,
+  getCallResponseStatusDesc
+} from '../services/wsType'
 import { useMitt } from './useMitt'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 
@@ -171,19 +176,27 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
   }
 
   /**
+   * 接听电话响应事件
+   */
+  const handleCallResponse = async (status: number) => {
+    try {
+      // 发送挂断消息
+      sendRtcCall2VideoCallResponse(status)
+      await getCurrentWebviewWindow().close()
+    } finally {
+      clear()
+    }
+  }
+
+  /**
    * 结束通话
    */
   const endCall = async (status: number) => {
     try {
-      console.log('结束通话')
-      clear()
-      // 发送挂断消息
-      await sendRtcCall2VideoCallResponse(status)
+      console.log('[收到通知] 结束通话', getCallResponseStatusDesc(status))
       await getCurrentWebviewWindow().close()
-      return true
-    } catch (err) {
+    } finally {
       clear()
-      console.error('结束通话失败:', err)
     }
   }
 
@@ -303,14 +316,14 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
             connectionStatus.value = RTCCallStatus.END
             window.$message.error('RTC通讯连接失败!')
             setTimeout(async () => {
-              await endCall(2)
+              await endCall(CallResponseStatus.DROPPED)
             }, 500)
             break
           case 'closed':
             console.log('RTC 连接关闭')
             connectionStatus.value = RTCCallStatus.END
             setTimeout(async () => {
-              await endCall(2)
+              await endCall(CallResponseStatus.DROPPED)
             }, 500)
             break
           case 'failed':
@@ -318,7 +331,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
             console.error('RTC 连接失败')
             window.$message.error('RTC通讯连接失败!')
             setTimeout(async () => {
-              // await endCall()
+              await endCall(CallResponseStatus.DROPPED)
             }, 500)
             break
           default:
@@ -385,7 +398,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
       callTimer.value = setTimeout(() => {
         if (connectionStatus.value === RTCCallStatus.CALLING) {
           window.$message.warning('通话无人接听，自动挂断')
-          // endCall()
+          endCall(CallResponseStatus.TIMEOUT)
         }
       }, MAX_TIME_OUT_SECONDS * 1000)
 
@@ -583,7 +596,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
       console.log('处理 offer 结束')
     } catch (error) {
       console.error('处理 offer 失败:', error)
-      endCall(2)
+      await endCall(CallResponseStatus.DROPPED)
     }
   }
 
@@ -627,7 +640,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
         if (!isReceiver) {
           if (!roomId) {
             window.$message.error('房间号不存在，请重新连接！')
-            endCall(2)
+            await endCall(CallResponseStatus.DROPPED)
             return
           }
           // 4. 发起者 - 设置远程描述
@@ -638,7 +651,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
     } catch (error) {
       console.error('处理 answer 失败:', error)
       connectionStatus.value = RTCCallStatus.ERROR
-      endCall(2)
+      await endCall(CallResponseStatus.DROPPED)
     }
   }
 
@@ -871,8 +884,10 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
       sendOffer(offer.value!)
     }
   })
-  useMitt.on(WsResponseMessageType.DROPPED, () => endCall(2))
-  useMitt.on(WsResponseMessageType.CallRejected, () => endCall(0))
+  useMitt.on(WsResponseMessageType.RoomClosed, () => endCall(CallResponseStatus.DROPPED))
+  useMitt.on(WsResponseMessageType.DROPPED, () => endCall(CallResponseStatus.DROPPED))
+  useMitt.on(WsResponseMessageType.TIMEOUT, () => endCall(CallResponseStatus.TIMEOUT))
+  useMitt.on(WsResponseMessageType.CallRejected, () => endCall(CallResponseStatus.REJECTED))
 
   onMounted(async () => {
     if (!isReceiver) {
@@ -915,7 +930,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
     peerConnection,
     getLocalStream,
     startCall,
-    endCall,
+    handleCallResponse,
     callDuration,
     connectionStatus,
     toggleMute,

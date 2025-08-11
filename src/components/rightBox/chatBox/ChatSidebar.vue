@@ -165,12 +165,12 @@
                 </n-flex>
 
                 <div
-                  v-if="item.groupRole === RoleEnum.LORD"
+                  v-if="item.roleId === RoleEnum.LORD"
                   class="flex px-4px bg-#d5304f30 py-3px rounded-4px size-fit select-none">
                   <p class="text-(10px #d5304f)">群主</p>
                 </div>
                 <div
-                  v-if="item.groupRole === RoleEnum.ADMIN"
+                  v-if="item.roleId === RoleEnum.ADMIN"
                   class="flex px-4px bg-#1a7d6b30 py-3px rounded-4px size-fit select-none">
                   <p class="text-(10px #008080)">管理员</p>
                 </div>
@@ -236,11 +236,11 @@ provide('popoverControls', { enableScroll })
 
 const isLord = computed(() => {
   const currentUser = groupStore.userList.find((user) => user.uid === useUserStore().userInfo?.uid)
-  return currentUser?.groupRole === RoleEnum.LORD
+  return currentUser?.roleId === RoleEnum.LORD
 })
 const isAdmin = computed(() => {
   const currentUser = groupStore.userList.find((user) => user.uid === useUserStore().userInfo?.uid)
-  return currentUser?.groupRole === RoleEnum.ADMIN
+  return currentUser?.roleId === RoleEnum.ADMIN
 })
 
 /** 判断当前用户是否拥有id为6的徽章 并且是频道 */

@@ -163,7 +163,7 @@
       <!-- 下排按钮：挂断 -->
       <div class="flex justify-center">
         <div
-          @click="endCall(2)"
+          @click="handleCallResponse(CallResponseStatus.DROPPED)"
           class="control-btn w-70px h-70px rounded-full bg-red-500 hover:bg-red-400 flex items-center justify-center cursor-pointer transition-all duration-200">
           <Icon icon="material-symbols:call-end" :size="32" class="text-white" />
         </div>
@@ -186,6 +186,7 @@ import { useWebRtc } from '@/hooks/useWebRtc'
 import { useUserInfo } from '@/hooks/useCached'
 import { CallTypeEnum, RTCCallStatus, ThemeEnum } from '@/enums'
 import { useSettingStore } from '@/stores/setting'
+import { CallResponseStatus } from '../../services/wsType'
 
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
@@ -200,7 +201,7 @@ const isReceiver = route.query.isIncoming === 'true'
 const {
   localStream,
   remoteStream,
-  endCall,
+  handleCallResponse,
   callDuration,
   connectionStatus,
   sendRtcCall2VideoCallResponse,
@@ -384,7 +385,7 @@ const acceptCall = async () => {
 // 拒绝通话
 const rejectCall = async () => {
   // 调用拒绝响应函数
-  endCall(0)
+  handleCallResponse(CallResponseStatus.REJECTED)
 }
 
 // 生命周期
