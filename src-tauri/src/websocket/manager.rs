@@ -1,9 +1,12 @@
 use super::{client::WebSocketClient, types::*};
 use anyhow::Result;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 use tauri::{AppHandle, Manager};
 use tokio::sync::RwLock;
 use tracing::{error, info, warn};
+
+// 全局 WebSocket 管理器实例
+static GLOBAL_WS_MANAGER: OnceLock<Arc<WebSocketManager>> = OnceLock::new();
 
 /// WebSocket 管理器
 /// 负责管理 WebSocket 客户端实例的生命周期
@@ -37,7 +40,11 @@ impl WebSocketManager {
         }
 
         // 存储客户端实例
-        *self.client.write().await = Some(client);
+        {
+            let mut client_guard = self.client.write().await;
+            *client_guard = Some(client);
+            info!("✅ WebSocket 客户端实例已存储到管理器");
+        }
 
         info!("✅ WebSocket 管理器初始化完成");
         Ok(())
@@ -54,12 +61,27 @@ impl WebSocketManager {
 
     /// 发送消息
     pub async fn send_message(&self, data: serde_json::Value) -> Result<()> {
+        info!("📤 尝试发送消息: {}", data.to_string().chars().take(100).collect::<String>());
+
         let client_guard = self.client.read().await;
         if let Some(client) = client_guard.as_ref() {
-            client.send_message(data).await
+            // 检查实际连接状态
+            let state = client.get_state().await;
+            info!("🔍 当前 WebSocket 状态: {:?}", state);
+
+            match state {
+                ConnectionState::Connected => {
+                    info!("✅ WebSocket 已连接，发送消息");
+                    client.send_message(data).await
+                }
+                _ => {
+                    warn!("⚠️ WebSocket 状态为 {:?}，无法发送消息", state);
+                    Err(anyhow::anyhow!("WebSocket not in connected state: {:?}", state))
+                }
+            }
         } else {
-            warn!("⚠️ WebSocket 未连接，无法发送消息");
-            Err(anyhow::anyhow!("WebSocket not connected"))
+            warn!("⚠️ WebSocket 客户端实例不存在，未初始化");
+            Err(anyhow::anyhow!("WebSocket client not initialized"))
         }
     }
 
@@ -114,13 +136,21 @@ impl WebSocketManager {
 
 /// 获取全局 WebSocket 管理器
 pub fn get_websocket_manager(app_handle: &AppHandle) -> Arc<WebSocketManager> {
-    app_handle
-        .try_state::<Arc<WebSocketManager>>()
-        .map(|state| state.inner().clone())
-        .unwrap_or_else(|| {
-            // 如果不存在，创建新实例并存储
-            let manager = Arc::new(WebSocketManager::new(app_handle.clone()));
-            app_handle.manage(manager.clone());
-            manager
-        })
+    GLOBAL_WS_MANAGER.get_or_init(|| {
+        info!("🚀 创建全局 WebSocket 管理器实例");
+        let manager = Arc::new(WebSocketManager::new(app_handle.clone()));
+
+        // 同时在 Tauri 状态中管理，保持兼容性
+        app_handle.manage(manager.clone());
+
+        manager
+    }).clone()
+}
+
+/// 初始化全局 WebSocket 管理器
+/// 应该在应用启动时调用
+pub fn init_global_websocket_manager(app_handle: &AppHandle) -> Arc<WebSocketManager> {
+    let manager = get_websocket_manager(app_handle);
+    info!("✅ 全局 WebSocket 管理器已初始化");
+    manager
 }

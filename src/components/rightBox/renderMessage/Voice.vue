@@ -428,12 +428,12 @@ const createAudioElement = async () => {
       playableUrl = props.body.url
     } else {
       // 确保 fileBuffer 是 ArrayBuffer 类型
-      const arrayBuffer =
-        fileData.fileBuffer instanceof ArrayBuffer
-          ? fileData.fileBuffer
-          : new ArrayBuffer(fileData.fileBuffer.byteLength)
-      if (!(fileData.fileBuffer instanceof ArrayBuffer)) {
-        new Uint8Array(arrayBuffer).set(new Uint8Array(fileData.fileBuffer))
+      let arrayBuffer: ArrayBuffer
+      if (fileData.fileBuffer instanceof ArrayBuffer) {
+        arrayBuffer = fileData.fileBuffer
+      } else {
+        arrayBuffer = new ArrayBuffer((fileData.fileBuffer as any).byteLength)
+        new Uint8Array(arrayBuffer).set(new Uint8Array(fileData.fileBuffer as any))
       }
       playableUrl = URL.createObjectURL(new Blob([new Uint8Array(arrayBuffer)], { type: mimeType }))
     }

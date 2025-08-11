@@ -85,27 +85,54 @@ impl WebSocketClient {
 
     /// 发送消息
     pub async fn send_message(&self, data: serde_json::Value) -> Result<()> {
-        let sender = self.message_sender.read().await;
+        // 首先检查连接状态
+        let current_state = self.get_state().await;
 
-        if let Some(sender) = sender.as_ref() {
-            let message = Message::Text(data.to_string());
-            sender.send(message)
-                .with_context(|| "Failed to queue message for sending")?;
-            debug!("📤 消息已加入发送队列");
-        } else {
-            // 连接未建立，将消息加入待发队列
-            let mut pending = self.pending_messages.write().await;
-            pending.push(data);
-            warn!("📤 连接未建立，消息已加入待发队列 (队列长度: {})", pending.len());
+        match current_state {
+            ConnectionState::Connected => {
+                let sender = self.message_sender.read().await;
 
-            // 限制队列长度
-            if pending.len() > 100 {
-                pending.remove(0);
-                warn!("📤 待发队列已满，丢弃最旧消息");
+                if let Some(sender) = sender.as_ref() {
+                    let message = Message::Text(data.to_string());
+                    sender.send(message)
+                        .with_context(|| "Failed to queue message for sending")?;
+                    debug!("📤 消息已发送");
+                    Ok(())
+                } else {
+                    warn!("📤 连接状态为 Connected 但 sender 未就绪，消息加入待发队列");
+                    // 连接未完全建立，将消息加入待发队列
+                    let mut pending = self.pending_messages.write().await;
+                    pending.push(data);
+
+                    // 限制队列长度
+                    if pending.len() > 100 {
+                        pending.remove(0);
+                        warn!("📤 待发队列已满，丢弃最旧消息");
+                    }
+
+                    // 返回错误，让上层知道消息没有立即发送
+                    Err(anyhow::anyhow!("Connection not fully established, message queued"))
+                }
+            }
+            ConnectionState::Connecting | ConnectionState::Reconnecting => {
+                // 连接中，将消息加入待发队列
+                let mut pending = self.pending_messages.write().await;
+                pending.push(data);
+                warn!("📤 正在连接中，消息已加入待发队列 (队列长度: {})", pending.len());
+
+                // 限制队列长度
+                if pending.len() > 100 {
+                    pending.remove(0);
+                    warn!("📤 待发队列已满，丢弃最旧消息");
+                }
+
+                Err(anyhow::anyhow!("WebSocket is connecting, message queued"))
+            }
+            _ => {
+                warn!("📤 WebSocket 未连接 (状态: {:?})，无法发送消息", current_state);
+                Err(anyhow::anyhow!("WebSocket not connected (state: {:?})", current_state))
             }
         }
-
-        Ok(())
     }
 
     /// 获取连接健康状态
@@ -266,23 +293,35 @@ impl WebSocketClient {
             })
         };
 
-        // 等待任务完成或停止信号
-        tokio::select! {
-            _ = message_sender_task => {
-                info!("📤 消息发送任务结束");
-            }
-            _ = message_receiver_task => {
-                info!("📥 消息接收任务结束");
-            }
-            _ = self.wait_for_stop() => {
-                info!("🛑 收到停止信号");
-            }
-        }
+        // 启动后台任务监控
+        let should_stop = self.should_stop.clone();
+        let heartbeat_active = self.heartbeat_active.clone();
+        let message_sender_ref = self.message_sender.clone();
 
-        // 清理
-        self.heartbeat_active.store(false, Ordering::SeqCst);
-        *self.message_sender.write().await = None;
+        tokio::spawn(async move {
+            // 等待任务完成或停止信号
+            tokio::select! {
+                _ = message_sender_task => {
+                    info!("📤 消息发送任务结束");
+                }
+                _ = message_receiver_task => {
+                    info!("📥 消息接收任务结束");
+                }
+                _ = async {
+                    while !should_stop.load(Ordering::SeqCst) {
+                        sleep(Duration::from_millis(100)).await;
+                    }
+                } => {
+                    info!("🛑 收到停止信号");
+                }
+            }
 
+            // 清理
+            heartbeat_active.store(false, Ordering::SeqCst);
+            *message_sender_ref.write().await = None;
+        });
+
+        info!("✅ WebSocket 连接和后台任务已启动");
         Ok(())
     }
 
@@ -548,15 +587,49 @@ impl WebSocketClient {
 
     /// 发送待发消息
     async fn send_pending_messages(&self) -> Result<()> {
-        let mut pending = self.pending_messages.write().await;
-        if pending.is_empty() {
-            return Ok(());
-        }
+        // 先取出所有待发消息
+        let messages_to_send = {
+            let mut pending = self.pending_messages.write().await;
+            if pending.is_empty() {
+                return Ok(());
+            }
 
-        info!("📤 发送 {} 条待发消息", pending.len());
+            info!("📤 准备发送 {} 条待发消息", pending.len());
+            pending.drain(..).collect::<Vec<_>>()
+        };
 
-        for message in pending.drain(..) {
-            self.send_message(message).await?;
+        // 获取发送器
+        let sender = self.message_sender.read().await;
+        if let Some(sender) = sender.as_ref() {
+            let mut failed_messages = Vec::new();
+
+            // 尝试发送每条消息
+            for message in messages_to_send {
+                let text_message = Message::Text(message.to_string());
+                if let Err(e) = sender.send(text_message) {
+                    error!("❌ 发送待发消息失败: {}", e);
+                    failed_messages.push(message);
+                }
+            }
+
+            // 如果有失败的消息，重新加入队列
+            if !failed_messages.is_empty() {
+                let mut pending = self.pending_messages.write().await;
+                for msg in failed_messages.into_iter().rev() {
+                    pending.insert(0, msg); // 插入到队列前面
+                }
+                return Err(anyhow::anyhow!("Some pending messages failed to send"));
+            }
+
+            info!("✅ 所有待发消息已发送");
+        } else {
+            // 发送器未就绪，将消息重新加入队列
+            let mut pending = self.pending_messages.write().await;
+            for msg in messages_to_send.into_iter().rev() {
+                pending.insert(0, msg);
+            }
+            warn!("⚠️ 发送器未就绪，消息已重新加入队列");
+            return Err(anyhow::anyhow!("Message sender not ready"));
         }
 
         Ok(())

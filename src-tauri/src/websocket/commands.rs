@@ -91,7 +91,7 @@ pub async fn ws_send_message(
     app_handle: AppHandle,
     params: SendMessageParams,
 ) -> Result<SuccessResponse, String> {
-    let manager = get_websocket_manager(&app_handle);
+    let manager: std::sync::Arc<super::WebSocketManager> = get_websocket_manager(&app_handle);
 
     match manager.send_message(params.data).await {
         Ok(_) => Ok(SuccessResponse::new()),

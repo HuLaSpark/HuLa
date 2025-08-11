@@ -34,13 +34,6 @@ export interface WebSocketEvent {
   details?: Record<string, any>
 }
 
-/// API 响应结构
-interface ApiResponse<T = any> {
-  success: boolean
-  data?: T
-  message?: string
-}
-
 /**
  * Rust WebSocket 客户端封装
  * 提供与原始 WebSocket Worker 兼容的接口
@@ -82,11 +75,7 @@ class RustWebSocketClient {
 
       info(`[RustWS] 初始化连接参数: ${JSON.stringify(params)}`)
 
-      const response = await invoke<ApiResponse>('ws_init_connection', { params })
-
-      if (!response.success) {
-        throw new Error(response.message || '连接初始化失败')
-      }
+      await invoke('ws_init_connection', { params })
 
       this.isInitialized = true
       info('[RustWS] WebSocket 连接初始化成功')
@@ -101,7 +90,7 @@ class RustWebSocketClient {
    */
   async disconnect(): Promise<void> {
     try {
-      await invoke<ApiResponse>('ws_disconnect')
+      await invoke('ws_disconnect')
       this.isInitialized = false
       info('[RustWS] WebSocket 连接已断开')
     } catch (error) {
@@ -114,13 +103,9 @@ class RustWebSocketClient {
    */
   async sendMessage(data: any): Promise<void> {
     try {
-      const response = await invoke<ApiResponse>('ws_send_message', {
+      await invoke('ws_send_message', {
         params: { data }
       })
-
-      if (!response.success) {
-        throw new Error(response.message || '消息发送失败')
-      }
     } catch (error) {
       console.error('[RustWS] 发送消息失败:', error)
       throw error
@@ -132,8 +117,8 @@ class RustWebSocketClient {
    */
   async getState(): Promise<ConnectionState> {
     try {
-      const response = await invoke<ApiResponse<ConnectionState>>('ws_get_state')
-      return response.data || ConnectionState.DISCONNECTED
+      const state = await invoke<ConnectionState>('ws_get_state')
+      return state
     } catch (error) {
       console.error('[RustWS] 获取连接状态失败:', error)
       return ConnectionState.ERROR
@@ -145,8 +130,8 @@ class RustWebSocketClient {
    */
   async getHealthStatus(): Promise<ConnectionHealth | null> {
     try {
-      const response = await invoke<ApiResponse<ConnectionHealth>>('ws_get_health')
-      return response.data || null
+      const health = await invoke<ConnectionHealth>('ws_get_health')
+      return health
     } catch (error) {
       console.error('[RustWS] 获取健康状态失败:', error)
       return null
@@ -158,12 +143,7 @@ class RustWebSocketClient {
    */
   async forceReconnect(): Promise<void> {
     try {
-      const response = await invoke<ApiResponse>('ws_force_reconnect')
-
-      if (!response.success) {
-        throw new Error(response.message || '重连失败')
-      }
-
+      await invoke('ws_force_reconnect')
       info('[RustWS] 强制重连成功')
     } catch (error) {
       console.error('[RustWS] 强制重连失败:', error)
@@ -176,8 +156,8 @@ class RustWebSocketClient {
    */
   async isConnected(): Promise<boolean> {
     try {
-      const response = await invoke<ApiResponse<boolean>>('ws_is_connected')
-      return response.data || false
+      const connected = await invoke<boolean>('ws_is_connected')
+      return connected
     } catch (error) {
       console.error('[RustWS] 检查连接状态失败:', error)
       return false
@@ -194,14 +174,9 @@ class RustWebSocketClient {
     reconnectDelayMs?: number
   }): Promise<void> {
     try {
-      const response = await invoke<ApiResponse>('ws_update_config', {
+      await invoke('ws_update_config', {
         params: config
       })
-
-      if (!response.success) {
-        throw new Error(response.message || '配置更新失败')
-      }
-
       info('[RustWS] 配置更新成功')
     } catch (error) {
       console.error('[RustWS] 配置更新失败:', error)
@@ -478,6 +453,43 @@ class RustWebSocketClient {
   }
 
   /**
+   * 智能初始化连接
+   * 检查连接状态，只有在断开时才重新连接
+   */
+  async smartInitConnect(): Promise<void> {
+    try {
+      // 检查当前窗口是否为主窗口
+      const currentWindow = getCurrentWebviewWindow()
+      const windowLabel = currentWindow.label
+
+      // 只在主窗口（home 或 rtcCall）中初始化 WebSocket
+      if (windowLabel !== 'home' && windowLabel !== 'rtcCall') {
+        info(`[RustWS] 当前窗口 [${windowLabel}] 不需要 WebSocket 连接`)
+        return
+      }
+
+      info(`[RustWS] 当前窗口 [${windowLabel}] 需要 WebSocket 连接`)
+
+      // 检查当前连接状态
+      const isConnected = await this.isConnected()
+
+      if (!isConnected) {
+        info('[RustWS] WebSocket 未连接，开始初始化连接...')
+        await this.initConnect()
+      } else {
+        info('[RustWS] WebSocket 已连接，跳过初始化')
+      }
+    } catch (error) {
+      console.warn('[RustWS] 检查连接状态失败，尝试重新连接:', error)
+      try {
+        await this.initConnect()
+      } catch (initError) {
+        console.error('[RustWS] WebSocket 初始化失败:', initError)
+      }
+    }
+  }
+
+  /**
    * 清理资源
    */
   destroy(): void {
@@ -497,8 +509,9 @@ class RustWebSocketClient {
 // 创建全局实例
 const rustWebSocketClient = new RustWebSocketClient()
 
-if (getCurrentWebviewWindow().label === 'home' || getCurrentWebviewWindow().label === 'rtcCall') {
-  rustWebSocketClient.initConnect()
-}
+// 延迟执行智能初始化，确保页面加载完成
+setTimeout(() => {
+  rustWebSocketClient.smartInitConnect()
+}, 100)
 
 export default rustWebSocketClient

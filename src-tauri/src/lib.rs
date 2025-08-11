@@ -61,7 +61,7 @@ use crate::command::message_command::{
     check_user_init_and_fetch_messages, page_msg, save_msg, send_msg,
 };
 use crate::command::message_mark_command::save_message_mark;
-use crate::websocket::manager::WebSocketManager;
+use crate::websocket::manager::init_global_websocket_manager;
 use tauri::{Listener, Manager};
 use tokio::sync::Mutex;
 
@@ -332,9 +332,8 @@ fn common_setup(
             client_guard.set_app_handle(app_handle.clone());
             drop(client_guard);
 
-            // 初始化 WebSocket 管理器
-            let ws_manager = std::sync::Arc::new(WebSocketManager::new(app_handle.clone()));
-            app_handle.manage(ws_manager);
+            // 初始化全局 WebSocket 管理器
+            let _ws_manager = init_global_websocket_manager(&app_handle);
         }
         Err(e) => {
             tracing::error!("Failed to initialize application data: {}", e);

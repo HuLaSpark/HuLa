@@ -1,6 +1,6 @@
 import { CallTypeEnum, RTCCallStatus } from '@/enums'
 import { useUserStore } from '@/stores/user'
-import ws from '@/services/webSocketAdapter'
+import rustWebSocketClient from '@/services/webSocketRust'
 import { WsRequestMsgType, WsResponseMessageType } from '../services/wsType'
 import { useMitt } from './useMitt'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
@@ -147,15 +147,19 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
   /**
    * 发送通话请求
    */
-  const sendCall = () => {
-    ws.send({
-      type: WsRequestMsgType.VIDEO_CALL_REQUEST,
-      data: {
-        roomId: roomId,
-        targetUid: remoteUserId,
-        isVideo: callType === CallTypeEnum.VIDEO
-      }
-    })
+  const sendCall = async () => {
+    try {
+      await rustWebSocketClient.sendMessage({
+        type: WsRequestMsgType.VIDEO_CALL_REQUEST,
+        data: {
+          roomId: roomId,
+          targetUid: remoteUserId,
+          isVideo: callType === CallTypeEnum.VIDEO
+        }
+      })
+    } catch (error) {
+      console.error('发送通话请求失败:', error)
+    }
   }
 
   /**
@@ -174,7 +178,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
       console.log('结束通话')
       clear()
       // 发送挂断消息
-      sendRtcCall2VideoCallResponse(status)
+      await sendRtcCall2VideoCallResponse(status)
       await getCurrentWebviewWindow().close()
       return true
     } catch (err) {
@@ -185,15 +189,19 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
 
   // 发送 ws 请求，通知双方通话状态
   // -1 = 超时 0 = 拒绝 1 = 接通 2 = 挂断
-  const sendRtcCall2VideoCallResponse = (status: number) => {
-    ws.send({
-      type: WsRequestMsgType.VIDEO_CALL_RESPONSE,
-      data: {
-        callerUid: remoteUserId,
-        roomId: roomId,
-        accepted: status
-      }
-    })
+  const sendRtcCall2VideoCallResponse = async (status: number) => {
+    try {
+      await rustWebSocketClient.sendMessage({
+        type: WsRequestMsgType.VIDEO_CALL_RESPONSE,
+        data: {
+          callerUid: remoteUserId,
+          roomId: roomId,
+          accepted: status
+        }
+      })
+    } catch (error) {
+      console.error('发送通话响应失败:', error)
+    }
   }
 
   // 获取设备列表
@@ -340,7 +348,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
           try {
             pendingCandidates.value.push(event.candidate)
             console.log('发送 candidate 事件')
-            sendIceCandidate(event.candidate)
+            await sendIceCandidate(event.candidate)
           } catch (err) {
             console.error('发送ICE候选者出错:', err)
           }
@@ -393,7 +401,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
       offer.value = rtcOffer
       await peerConnection.value!.setLocalDescription(rtcOffer)
       // 发起通话请求
-      sendCall()
+      await sendCall()
       // 播放铃声
       startBell()
 
@@ -421,7 +429,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
       }
 
       console.log('ws发送 offer')
-      ws.send({
+      await rustWebSocketClient.sendMessage({
         type: WsRequestMsgType.WEBRTC_SIGNAL,
         data: signalData
       })
@@ -479,7 +487,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
   }
 
   // 发送ICE候选者
-  const sendIceCandidate = (candidate: RTCIceCandidate) => {
+  const sendIceCandidate = async (candidate: RTCIceCandidate) => {
     try {
       const signalData = {
         roomId: roomId,
@@ -489,7 +497,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
         mediaType: callType === CallTypeEnum.VIDEO ? 'VideoSignal' : 'AudioSignal'
       }
 
-      ws.send({
+      await rustWebSocketClient.sendMessage({
         type: WsRequestMsgType.WEBRTC_SIGNAL,
         data: signalData
       })
@@ -591,7 +599,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
         video: callType === CallTypeEnum.VIDEO
       }
 
-      ws.send({
+      await rustWebSocketClient.sendMessage({
         type: WsRequestMsgType.WEBRTC_SIGNAL,
         data: signalData
       })
@@ -866,18 +874,22 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
   useMitt.on(WsResponseMessageType.DROPPED, () => endCall(2))
   useMitt.on(WsResponseMessageType.CallRejected, () => endCall(0))
 
-  onMounted(() => {
+  onMounted(async () => {
     if (!isReceiver) {
       console.log(`调用方发送${callType === CallTypeEnum.VIDEO ? '视频' : '语音'}通话请求`)
       startCall(roomId, callType, [remoteUserId])
-      ws.send({
-        type: WsRequestMsgType.VIDEO_CALL_REQUEST,
-        data: {
-          targetUid: remoteUserId,
-          roomId: roomId,
-          isVideo: callType === CallTypeEnum.VIDEO
-        }
-      })
+      try {
+        await rustWebSocketClient.sendMessage({
+          type: WsRequestMsgType.VIDEO_CALL_REQUEST,
+          data: {
+            targetUid: remoteUserId,
+            roomId: roomId,
+            isVideo: callType === CallTypeEnum.VIDEO
+          }
+        })
+      } catch (error) {
+        console.error('发送通话请求失败:', error)
+      }
     }
   })
 
