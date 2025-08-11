@@ -55,7 +55,7 @@ const filteredOptions = computed(() => getFilteredOptions())
 // 初始化群成员数据
 const initGroupMembers = async () => {
   if (globalStore.currentSession?.roomId) {
-    await groupStore.getGroupUserList()
+    await groupStore.getGroupUserList(globalStore.currentSession.roomId)
   }
 }
 

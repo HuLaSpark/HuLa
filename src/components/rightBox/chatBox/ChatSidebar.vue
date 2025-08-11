@@ -444,7 +444,7 @@ onMounted(async () => {
           currentLoadingRoomId.value = newSession.roomId
           // 重置群组数据后再加载新的群成员数据
           groupStore.resetGroupData()
-          await groupStore.getGroupUserList()
+          await groupStore.getGroupUserList(currentSession.roomId)
           // 获取群组统计信息（包括在线人数）
           await groupStore.getCountStatistic(currentSession.roomId)
           isLoadingOnlineCount.value = false

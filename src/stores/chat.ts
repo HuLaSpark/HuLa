@@ -326,7 +326,7 @@ export const useChatStore = defineStore(
           // 用会话列表第一个去请求消息列表
           await getMsgList()
           // 请求第一个群成员列表
-          currentRoomType.value === RoomTypeEnum.GROUP && (await groupStore.getGroupUserList())
+          currentRoomType.value === RoomTypeEnum.GROUP && (await groupStore.getGroupUserList(data[0].roomId))
           // 初始化所有用户基本信息
           userStore.isSign && (await cachedStore.initAllUserBaseInfo())
           // 联系人列表
