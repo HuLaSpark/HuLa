@@ -487,7 +487,16 @@ const isGroup = computed(() => chatStore.isGroup)
 const userUid = computed(() => userStore.userInfo.uid)
 const chatMessageList = computed(() => chatStore.chatMessageList)
 const currentNewMsgCount = computed(() => chatStore.currentNewMsgCount)
-const messageOptions = computed(() => chatStore.currentMessageOptions)
+const messageOptions = computed(() => {
+  const options = chatStore.currentMessageOptions
+  console.log('🔍 messageOptions 状态:', {
+    isLoading: options?.isLoading,
+    cursor: options?.cursor,
+    isLast: options?.isLast,
+    showSkeleton: options?.isLoading && !options?.cursor
+  })
+  return options
+})
 const { createWebviewWindow } = useWindow()
 const currentRoomId = computed(() => globalStore.currentSession?.roomId)
 // 我的群昵称

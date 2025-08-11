@@ -159,7 +159,7 @@ export const useChatStore = defineStore(
     // 监听当前房间ID的变化
     watch(
       () => globalStore.currentSession,
-      async (val, oldVal) => {
+      async (val, _) => {
         const currentSession = {
           ...val
         }
@@ -167,56 +167,57 @@ export const useChatStore = defineStore(
           return
         }
 
-        if (val !== oldVal) {
-          // 1. 立即清空当前消息列表
-          if (currentMessageMap.value) {
-            currentMessageMap.value.clear()
-          }
+        // 1. 立即清空当前消息列表
+        if (currentMessageMap.value) {
+          currentMessageMap.value.clear()
+        }
 
-          // 2. 重置消息加载状态
-          currentMessageOptions.value = {
-            isLast: false,
-            isLoading: true,
-            cursor: ''
-          }
+        // 2. 重置消息加载状态
+        currentMessageOptions.value = {
+          isLast: false,
+          isLoading: true,
+          cursor: ''
+        }
 
-          // 3. 清空回复映射
-          if (currentReplyMap.value) {
-            currentReplyMap.value.clear()
-          }
+        // 3. 清空回复映射
+        if (currentReplyMap.value) {
+          currentReplyMap.value.clear()
+        }
 
-          // 4. 尝试从服务器加载新房间的消息
-          nextTick(async () => {
-            try {
-              // 从服务器加载消息
-              await getMsgList()
-            } catch (error) {
-              console.error('无法加载消息:', error)
-              currentMessageOptions.value = {
-                isLast: false,
-                isLoading: false,
-                cursor: ''
-              }
+        // 4. 尝试从服务器加载新房间的消息
+        nextTick(async () => {
+          try {
+            // 从服务器加载消息
+            await getMsgList()
+          } catch (error) {
+            console.error('无法加载消息:', error)
+            currentMessageOptions.value = {
+              isLast: false,
+              isLoading: false,
+              cursor: ''
             }
-          })
-
-          // 群组的时候去请求
-          if (currentSession.type === RoomTypeEnum.GROUP) {
-            cachedStore.getGroupAtUserBaseInfo(currentSession.roomId)
           }
+        })
 
-          // 标记当前会话已读
-          if (val) {
-            const session = sessionList.value.find((s) => s.roomId === currentSession.roomId)
-            if (session?.unreadCount) {
-              markSessionRead(currentSession.roomId)
-              updateTotalUnreadCount()
-            }
+        // 群组的时候去请求
+        if (currentSession.type === RoomTypeEnum.GROUP) {
+          cachedStore.getGroupAtUserBaseInfo(currentSession.roomId)
+        }
+
+        // 标记当前会话已读
+        if (val) {
+          const session = sessionList.value.find((s) => s.roomId === currentSession.roomId)
+          if (session?.unreadCount) {
+            markSessionRead(currentSession.roomId)
+            updateTotalUnreadCount()
           }
         }
 
         // 重置当前回复的消息
         currentMsgReply.value = {}
+      },
+      {
+        deep: true
       }
     )
 

@@ -480,7 +480,6 @@ const isGroupOwner = computed(() => {
 
 // 我的群备注
 const myGroupRemark = computed(() => {
-  console.log('isGroupOwner --> ', isGroupOwner)
   if (activeItem.type === RoomTypeEnum.GROUP) {
     return groupStore.countInfo?.remark || ''
   }

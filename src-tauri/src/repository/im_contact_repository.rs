@@ -91,10 +91,7 @@ pub async fn update_contact_hide(
             .map_err(|e| anyhow::anyhow!("Failed to update contact hide status: {}", e))?;
 
         info!("Successfully updated contact hide status");
-        Ok(())
-    } else {
-        Err(CommonError::UnexpectedError(anyhow::anyhow!(
-            "Failed to find corresponding contact record"
-        )))
     }
+
+    Ok(())
 }
