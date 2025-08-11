@@ -33,3 +33,4 @@ target
 .claude/
 *.sqlite
 db.sqlite
+.idea
