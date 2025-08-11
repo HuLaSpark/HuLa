@@ -67,7 +67,7 @@ export const useNetworkReconnect = () => {
    * 在挂起/恢复时可能会改变网络状态
    * 对所有平台处理可见性变化和潜在的连接问题
    */
-  useEventListener(window, 'visibilitychange', () => {
+  useEventListener(window, 'visibilitychange', async () => {
     const currentTime = Date.now()
     const idleTime = currentTime - lastActivityTimestamp
 
@@ -75,6 +75,15 @@ export const useNetworkReconnect = () => {
     if (document.visibilityState === 'visible') {
       console.log(`[Network] 应用从后台恢复，已离线 ${idleTime / 1000} 秒`)
       lastActivityTimestamp = currentTime
+
+      // 通知WebSocket应用恢复到前台
+      try {
+        if (typeof webSocket.setAppBackgroundState === 'function') {
+          await webSocket.setAppBackgroundState(false)
+        }
+      } catch (error) {
+        console.warn('[Network] 通知WebSocket前台状态失败:', error)
+      }
 
       // 在移动设备上的恢复逻辑
       if (isMobile.value && isOnline.value) {
@@ -94,6 +103,15 @@ export const useNetworkReconnect = () => {
     } else {
       // 页面变为不可见时，记录时间戳
       lastActivityTimestamp = currentTime
+
+      // 通知WebSocket应用进入后台
+      try {
+        if (typeof webSocket.setAppBackgroundState === 'function') {
+          await webSocket.setAppBackgroundState(true)
+        }
+      } catch (error) {
+        console.warn('[Network] 通知WebSocket后台状态失败:', error)
+      }
     }
   })
 

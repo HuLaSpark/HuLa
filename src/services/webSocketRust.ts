@@ -490,6 +490,31 @@ class RustWebSocketClient {
   }
 
   /**
+   * 设置应用后台状态
+   */
+  async setAppBackgroundState(isBackground: boolean): Promise<void> {
+    try {
+      await invoke('ws_set_app_background_state', { isBackground })
+      info(`[RustWS] 设置应用状态: ${isBackground ? '后台' : '前台'}`)
+    } catch (error) {
+      console.error('[RustWS] 设置应用状态失败:', error)
+    }
+  }
+
+  /**
+   * 获取应用后台状态
+   */
+  async getAppBackgroundState(): Promise<boolean> {
+    try {
+      const isBackground = await invoke<boolean>('ws_get_app_background_state')
+      return isBackground
+    } catch (error) {
+      console.error('[RustWS] 获取应用状态失败:', error)
+      return false
+    }
+  }
+
+  /**
    * 清理资源
    */
   destroy(): void {

@@ -104,9 +104,7 @@ pub async fn ws_send_message(
 
 /// 获取连接状态
 #[tauri::command]
-pub async fn ws_get_state(
-    app_handle: AppHandle,
-) -> Result<ConnectionState, String> {
+pub async fn ws_get_state(app_handle: AppHandle) -> Result<ConnectionState, String> {
     let manager = get_websocket_manager(&app_handle);
     let state = manager.get_state().await;
 
@@ -115,9 +113,7 @@ pub async fn ws_get_state(
 
 /// 获取连接健康状态
 #[tauri::command]
-pub async fn ws_get_health(
-    app_handle: AppHandle,
-) -> Result<ConnectionHealth, String> {
+pub async fn ws_get_health(app_handle: AppHandle) -> Result<ConnectionHealth, String> {
     let manager = get_websocket_manager(&app_handle);
 
     match manager.get_health_status().await {
@@ -128,9 +124,7 @@ pub async fn ws_get_health(
 
 /// 强制重连
 #[tauri::command]
-pub async fn ws_force_reconnect(
-    app_handle: AppHandle,
-) -> Result<SuccessResponse, String> {
+pub async fn ws_force_reconnect(app_handle: AppHandle) -> Result<SuccessResponse, String> {
     info!("🔄 收到强制重连请求");
 
     let manager = get_websocket_manager(&app_handle);
@@ -188,11 +182,35 @@ pub async fn ws_update_config(
 
 /// 检查连接状态
 #[tauri::command]
-pub async fn ws_is_connected(
-    app_handle: AppHandle,
-) -> Result<bool, String> {
+pub async fn ws_is_connected(app_handle: AppHandle) -> Result<bool, String> {
     let manager = get_websocket_manager(&app_handle);
     let is_connected = manager.is_connected().await;
 
     Ok(is_connected)
+}
+
+/// 设置应用后台状态
+#[tauri::command]
+pub async fn ws_set_app_background_state(
+    app_handle: AppHandle,
+    is_background: bool,
+) -> Result<SuccessResponse, String> {
+    info!(
+        "📱 收到应用状态变更请求: {}",
+        if is_background { "后台" } else { "前台" }
+    );
+
+    let manager = get_websocket_manager(&app_handle);
+    manager.set_app_background_state(is_background).await;
+
+    Ok(SuccessResponse::new())
+}
+
+/// 获取应用后台状态
+#[tauri::command]
+pub async fn ws_get_app_background_state(app_handle: AppHandle) -> Result<bool, String> {
+    let manager = get_websocket_manager(&app_handle);
+    let is_background = manager.is_app_in_background().await;
+
+    Ok(is_background)
 }
