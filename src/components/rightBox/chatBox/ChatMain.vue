@@ -12,24 +12,27 @@
   </n-flex>
 
   <!-- 置顶公告提示 -->
-  <div
-    v-if="isGroup && topAnnouncement"
-    class="feishu-announcement"
-    :class="{ 'announcement-hover': isAnnouncementHover }"
-    @mouseenter="isAnnouncementHover = true"
-    @mouseleave="isAnnouncementHover = false">
-    <n-flex :wrap="false" class="w-full" align="center" justify="space-between">
-      <n-flex :wrap="false" align="center" class="pl-12px select-none" :size="6">
-        <svg class="size-16px flex-shrink-0"><use href="#Loudspeaker"></use></svg>
-        <div style="max-width: calc(100vw - 70vw)" class="line-clamp-1 text-(12px [--chat-text-color])">
-          {{ topAnnouncement.content }}
+  <Transition name="announcement" mode="out-in">
+    <div
+      v-if="isGroup && topAnnouncement"
+      key="announcement"
+      class="feishu-announcement"
+      :class="{ 'announcement-hover': isAnnouncementHover }"
+      @mouseenter="isAnnouncementHover = true"
+      @mouseleave="isAnnouncementHover = false">
+      <n-flex :wrap="false" class="w-full" align="center" justify="space-between">
+        <n-flex :wrap="false" align="center" class="pl-12px select-none" :size="6">
+          <svg class="size-16px flex-shrink-0"><use href="#Loudspeaker"></use></svg>
+          <div style="max-width: calc(100vw - 70vw)" class="line-clamp-1 text-(12px [--chat-text-color])">
+            {{ topAnnouncement.content }}
+          </div>
+        </n-flex>
+        <div class="flex-shrink-0 w-60px select-none" @click="handleViewAnnouncement">
+          <p class="text-(12px #13987f) cursor-pointer">查看全部</p>
         </div>
       </n-flex>
-      <div class="flex-shrink-0 w-60px select-none" @click="handleViewAnnouncement">
-        <p class="text-(12px #13987f) cursor-pointer">查看全部</p>
-      </div>
-    </n-flex>
-  </div>
+    </div>
+  </Transition>
 
   <Transition name="chat-init" appear mode="out-in" @after-leave="handleTransitionComplete">
     <!-- 初次加载的骨架屏 -->
@@ -200,7 +203,6 @@
                             class="select-none"
                             :size="18"
                             round
-                            :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
                             :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
                             :src="useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.img" />
                         </template>
@@ -412,7 +414,8 @@
   <footer
     class="float-footer"
     v-if="shouldShowFloatFooter && currentNewMsgCount"
-    :class="isGroup ? 'right-220px' : 'right-50px'">
+    :class="isGroup ? 'right-220px' : 'right-50px'"
+    :style="{ bottom: `${footerHeight + 16}px` }">
     <div class="float-box" :class="{ max: currentNewMsgCount?.count > 99 }" @click="scrollToBottom">
       <n-flex justify="space-between" align="center">
         <n-icon :color="currentNewMsgCount?.count > 99 ? '#ce304f' : '#13987f'">
@@ -456,6 +459,8 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { ErrorType, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 import { useSettingStore } from '@/stores/setting'
+import { useChatLayoutGlobal } from '@/hooks/useChatLayout'
+import { CHAT_HEADER_HEIGHT, ANNOUNCEMENT_HEIGHT } from '@/common/constants'
 
 const appWindow = WebviewWindow.getCurrent()
 const { addListener } = useTauriListener()
@@ -471,6 +476,7 @@ const cachedStore = useCachedStore()
 const networkStatus = useNetworkStatus()
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
+const { footerHeight } = useChatLayoutGlobal()
 
 // 记录当前滚动位置相关信息
 const isAutoScrolling = ref(false)
@@ -489,12 +495,6 @@ const chatMessageList = computed(() => chatStore.chatMessageList)
 const currentNewMsgCount = computed(() => chatStore.currentNewMsgCount)
 const messageOptions = computed(() => {
   const options = chatStore.currentMessageOptions
-  console.log('🔍 messageOptions 状态:', {
-    isLoading: options?.isLoading,
-    cursor: options?.cursor,
-    isLast: options?.isLast,
-    showSkeleton: options?.isLoading && !options?.cursor
-  })
   return options
 })
 const { createWebviewWindow } = useWindow()
@@ -531,8 +531,12 @@ const hoverBubble = ref<{
 /** 记录右键菜单时选中的气泡的元素(用于处理mac右键会选中文本的问题) */
 const recordEL = ref()
 const isMac = computed(() => type() === 'macos')
-// 公告展示时需要减去的高度
-const announcementHeight = computed(() => (isGroup.value && topAnnouncement.value ? 300 : 260))
+// 公告展示时需要减去的高度 - 考虑footer动态高度
+const announcementHeight = computed(() => {
+  const baseHeight =
+    CHAT_HEADER_HEIGHT + footerHeight.value + (isGroup.value && topAnnouncement.value ? ANNOUNCEMENT_HEIGHT : 0)
+  return baseHeight
+})
 // 置顶公告hover状态
 const isAnnouncementHover = ref(false)
 // 置顶公告相关

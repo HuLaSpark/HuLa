@@ -109,7 +109,6 @@ declare module 'vue' {
     VideoCall: typeof import('./../components/rightBox/renderMessage/VideoCall.vue')['default']
     VirtualList: typeof import('./../components/common/VirtualList.vue')['default']
     Voice: typeof import('./../components/rightBox/renderMessage/Voice.vue')['default']
-    VoiceCall: typeof import('./../components/call/VoiceCall.vue')['default']
     VoiceRecorder: typeof import('./../components/rightBox/VoiceRecorder.vue')['default']
   }
 }
