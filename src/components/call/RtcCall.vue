@@ -6,7 +6,12 @@
     class="notification-container w-360px h-100px bg-white dark:bg-gray-900 rounded-12px shadow-2xl border border-gray-200 dark:border-gray-700 flex items-center p-12px select-none backdrop-blur-md">
     <!-- 用户头像 -->
     <div class="relative mr-12px">
-      <n-avatar :size="56" :src="avatarSrc" :fallback-src="''" class="rounded-12px shadow-md" />
+      <n-avatar
+        :size="56"
+        :src="avatarSrc"
+        :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+        :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
+        class="rounded-12px shadow-md" />
       <!-- 通话类型指示器 -->
       <div
         class="absolute -bottom-2px -right-2px w-20px h-20px rounded-full bg-blue-500 flex items-center justify-center shadow-lg">
@@ -80,7 +85,12 @@
 
       <!-- 语音通话或其他状态时显示头像 -->
       <div v-else class="user-avatar mb-24px relative flex flex-col items-center">
-        <n-avatar :size="120" :src="avatarSrc" :fallback-src="''" class="rounded-12px mb-16px" />
+        <n-avatar
+          :size="120"
+          :src="avatarSrc"
+          :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+          :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
+          class="rounded-12px mb-16px" />
 
         <!-- 用户名 -->
         <div class="text-20px font-medium text-white mb-8px text-center">
@@ -174,8 +184,11 @@ import ActionBar from '@/components/windows/ActionBar.vue'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { useWebRtc } from '@/hooks/useWebRtc'
 import { useUserInfo } from '@/hooks/useCached'
-import { CallTypeEnum, RTCCallStatus } from '@/enums'
+import { CallTypeEnum, RTCCallStatus, ThemeEnum } from '@/enums'
+import { useSettingStore } from '@/stores/setting'
 
+const settingStore = useSettingStore()
+const { themes } = storeToRefs(settingStore)
 const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(remoteUserInfo.value?.avatar as string))
 // 通过路由参数获取数据
 const route = useRoute()

@@ -74,7 +74,12 @@
               <div class="size-full flex-between-center">
                 <n-flex align="center" :size="16" class="pl-4px pt-4px">
                   <n-flex align="center" :size="6">
-                    <n-avatar round :size="28" :src="avatarSrc(announcement.uid)" fallback-src="/logo.png" />
+                    <n-avatar
+                      round
+                      :size="28"
+                      :src="avatarSrc(announcement.uid)"
+                      :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+                      :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'" />
                     <n-flex vertical :size="4">
                       <div class="text-(12px [--chat-text-color])">{{ useUserInfo(announcement.uid).value.name }}</div>
                       <div class="text-(12px [#909090])">{{ announcement?.publishTime }}</div>
@@ -163,7 +168,6 @@
 <script setup lang="ts">
 import { emitTo } from '@tauri-apps/api/event'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { nextTick, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import apis from '@/services/apis'
@@ -171,6 +175,8 @@ import { useCachedStore } from '@/stores/cached'
 import { useGroupStore } from '@/stores/group.ts'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { ThemeEnum } from '@/enums'
+import { useSettingStore } from '@/stores/setting'
 
 // 定义响应式变量
 const title = ref('')
@@ -195,6 +201,8 @@ const announcementStates = ref<Record<string, { showDeleteConfirm: boolean; dele
 const groupStore = useGroupStore()
 const cachedStore = useCachedStore()
 const userStore = useUserStore()
+const settingStore = useSettingStore()
+const { themes } = storeToRefs(settingStore)
 /** 判断当前用户是否拥有id为6的徽章 并且是频道 */
 const hasBadge6 = computed(() => {
   // 只有当 roomId 为 "1" 时才进行徽章判断（频道）

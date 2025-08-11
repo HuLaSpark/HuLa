@@ -7,7 +7,12 @@
       <Transition name="loading" mode="out-in">
         <img v-if="showLoading" class="size-22px py-3px" src="@/assets/img/loading.svg" alt="" />
         <n-flex v-else align="center">
-          <n-avatar class="rounded-8px select-none" :size="28" :src="currentUserAvatar" />
+          <n-avatar
+            class="rounded-8px select-none"
+            :size="28"
+            :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+            :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
+            :src="currentUserAvatar" />
           <label class="flex-y-center gap-6px">
             <p class="text-(16px [--text-color])">{{ myGroupRemark || activeItem.name }}</p>
             <p
@@ -394,7 +399,8 @@ import {
   RoleEnum,
   RoomActEnum,
   RoomTypeEnum,
-  SessionOperateEnum
+  SessionOperateEnum,
+  ThemeEnum
 } from '@/enums'
 import { useAvatarUpload } from '@/hooks/useAvatarUpload'
 import { useUserInfo } from '@/hooks/useCached'
@@ -410,8 +416,9 @@ import { useGroupStore } from '@/stores/group.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { useCachedStore } from '~/src/stores/cached'
+import { useCachedStore } from '@/stores/cached'
 import { WsResponseMessageType } from '@/services/wsType'
+import { useSettingStore } from '@/stores/setting'
 
 const appWindow = WebviewWindow.getCurrent()
 const { activeItem } = defineProps<{
@@ -427,6 +434,8 @@ const globalStore = useGlobalStore()
 const contactStore = useContactStore()
 const userStatusStore = useUserStatusStore()
 const userStore = useUserStore()
+const settingStore = useSettingStore()
+const { themes } = storeToRefs(settingStore)
 /** 提醒框标题 */
 const tips = ref()
 const optionsType = ref<RoomActEnum>()

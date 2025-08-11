@@ -8,7 +8,12 @@
     <template #trigger>
       <!-- 头像 -->
       <div class="relative size-34px rounded-50% cursor-pointer">
-        <n-avatar :color="'#909090'" :size="34" :src="avatarSrc" fallback-src="/logo.png" round />
+        <n-avatar
+          :size="34"
+          :src="avatarSrc"
+          :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+          :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
+          round />
 
         <div
           class="bg-[--left-bg-color] text-10px rounded-50% size-12px absolute bottom--2px right--2px border-(2px solid [--left-bg-color])"
@@ -27,10 +32,10 @@
       <n-flex :size="25" align="center" justify="space-between" class="select-none cursor-default">
         <n-flex>
           <n-avatar
-            :color="'#909090'"
             :src="avatarSrc"
             round
-            fallback-src="/logo.png"
+            :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+            :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
             class="size-68px text-20px select-none cursor-default" />
 
           <n-flex :size="10" class="text-[--text-color]" justify="center" vertical>
@@ -80,11 +85,15 @@
   </n-popover>
 </template>
 <script setup lang="ts">
+import { ThemeEnum } from '@/enums'
+import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user.ts'
-import { AvatarUtils } from '~/src/utils/AvatarUtils.ts'
+import { AvatarUtils } from '@/utils/AvatarUtils.ts'
 import { leftHook } from '../hook.ts'
 
 const userStore = useUserStore()
+const settingStore = useSettingStore()
+const { themes } = storeToRefs(settingStore)
 const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(userStore.userInfo.avatar as string))
 const { shrinkStatus, currentState, infoShow, themeColor, openContent, handleEditing } = leftHook()
 </script>

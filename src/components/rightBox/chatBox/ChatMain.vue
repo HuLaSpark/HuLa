@@ -158,6 +158,8 @@
                       :size="34"
                       @click="selectKey = item.message.id"
                       class="select-none"
+                      :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+                      :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
                       :src="getAvatarSrc(item.fromUser.uid)"
                       :class="item.fromUser.uid === userUid ? '' : 'mr-10px'" />
                   </ContextMenu>
@@ -194,10 +196,13 @@
                         "
                         trigger="hover">
                         <template #trigger>
-                          <img
-                            class="size-18px"
-                            :src="useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.img"
-                            alt="badge" />
+                          <n-avatar
+                            class="select-none"
+                            :size="18"
+                            round
+                            :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+                            :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
+                            :src="useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.img" />
                         </template>
                         <span>
                           {{ useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.describe }}
@@ -339,7 +344,13 @@
                   <svg class="size-14px">
                     <use href="#to-top"></use>
                   </svg>
-                  <n-avatar class="reply-avatar" round :size="20" :src="getAvatarSrc(item.message.body.reply.uid)" />
+                  <n-avatar
+                    class="reply-avatar"
+                    round
+                    :size="20"
+                    :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+                    :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
+                    :src="getAvatarSrc(item.message.body.reply.uid)" />
                   <span>{{ `${item.message.body.reply.username}：` }}</span>
                   <span class="content-span">
                     {{ item.message.body.reply.body }}
@@ -425,7 +436,7 @@ import { type } from '@tauri-apps/plugin-os'
 import { useDebounceFn } from '@vueuse/core'
 import { delay } from 'lodash-es'
 import VirtualList, { type VirtualListExpose } from '@/components/common/VirtualList.vue'
-import { EventEnum, MessageStatusEnum, MittEnum, MsgEnum, TauriCommand } from '@/enums'
+import { EventEnum, MessageStatusEnum, MittEnum, MsgEnum, TauriCommand, ThemeEnum } from '@/enums'
 import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
 import { useChatMain } from '@/hooks/useChatMain.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
@@ -443,7 +454,8 @@ import { useUserStore } from '@/stores/user.ts'
 import { audioManager } from '@/utils/AudioManager'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
-import { ErrorType, invokeWithErrorHandler } from '~/src/utils/TauriInvokeHandler'
+import { ErrorType, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
+import { useSettingStore } from '@/stores/setting'
 
 const appWindow = WebviewWindow.getCurrent()
 const { addListener } = useTauriListener()
@@ -457,6 +469,8 @@ const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
 const cachedStore = useCachedStore()
 const networkStatus = useNetworkStatus()
+const settingStore = useSettingStore()
+const { themes } = storeToRefs(settingStore)
 
 // 记录当前滚动位置相关信息
 const isAutoScrolling = ref(false)
