@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, PropType, VNodeRef } from 'vue'
+import { ref, type PropType, type VNodeRef } from 'vue'
 import { calculateElementPosition } from '@/utils/DomCalculate'
 import { useMobileStore } from '@/stores/mobile'
 

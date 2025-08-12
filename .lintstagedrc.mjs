@@ -10,7 +10,7 @@ export default {
     (filenames) => {
       const filteredFiles = filenames.filter((f) => !f.includes('src-tauri/') && !f.endsWith('.d.ts'))
       return filteredFiles.length > 0
-        ? `biome check --write ${filteredFiles.map((f) => path.relative(process.cwd(), f)).join(' ')}`
+        ? `biome check --write --unsafe ${filteredFiles.map((f) => path.relative(process.cwd(), f)).join(' ')}`
         : 'echo "No files to check"'
     }
   ],

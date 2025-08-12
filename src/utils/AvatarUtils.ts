@@ -34,7 +34,7 @@ export class AvatarUtils {
    */
   public static getAvatarUrl(avatar: string): string {
     if (AvatarUtils.isDefaultAvatar(avatar)) {
-      return `/avatar/${avatar}.png`
+      return `/avatar/${avatar}.webp`
     }
     return avatar
   }

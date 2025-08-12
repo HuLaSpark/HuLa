@@ -82,7 +82,7 @@
                       :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'" />
                     <n-flex vertical :size="4">
                       <div class="text-(12px [--chat-text-color])">{{ useUserInfo(announcement.uid).value.name }}</div>
-                      <div class="text-(12px [#909090])">{{ announcement?.publishTime }}</div>
+                      <div class="text-(12px [#909090])">{{ announcement?.createTime }}</div>
                     </n-flex>
                   </n-flex>
                   <div
