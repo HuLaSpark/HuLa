@@ -103,6 +103,11 @@
             :from-user-uid="item.fromUser.uid"
             :is-group="isGroup" />
 
+          <SystemMessage
+            v-if="item.message.type === MsgEnum.SYSTEM"
+            :body="item.message.body"
+            :from-user-uid="item.fromUser.uid" />
+
           <!-- 消息为机器人消息时 -->
           <BotMessage
             v-else-if="item.message.type === MsgEnum.BOT"

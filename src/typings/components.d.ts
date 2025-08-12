@@ -103,6 +103,7 @@ declare module 'vue' {
     Screenshot: typeof import('./../components/common/Screenshot.vue')['default']
     Settings: typeof import('./../mobile/components/my/Settings.vue')['default']
     SmartVirtualList: typeof import('./../mobile/components/virtual-scroll/SmartVirtualList.vue')['default']
+    SystemMessage: typeof import('./../components/rightBox/renderMessage/special/SystemMessage.vue')['default']
     Text: typeof import('./../components/rightBox/renderMessage/Text.vue')['default']
     Validation: typeof import('./../components/common/Validation.vue')['default']
     Video: typeof import('./../components/rightBox/renderMessage/Video.vue')['default']

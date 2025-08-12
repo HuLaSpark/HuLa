@@ -20,6 +20,7 @@ import Video from './Video.vue'
 import Voice from './Voice.vue'
 import VideoCall from './VideoCall.vue'
 import AudioCall from './AudioCall.vue'
+import SystemMessage from './special/SystemMessage.vue'
 
 const componentMap: Partial<Record<MsgEnum, Component>> = {
   [MsgEnum.TEXT]: Text,
@@ -30,7 +31,8 @@ const componentMap: Partial<Record<MsgEnum, Component>> = {
   [MsgEnum.FILE]: File,
   [MsgEnum.NOTICE]: Announcement,
   [MsgEnum.VIDEO_CALL]: VideoCall,
-  [MsgEnum.AUDIO_CALL]: AudioCall
+  [MsgEnum.AUDIO_CALL]: AudioCall,
+  [MsgEnum.SYSTEM]: SystemMessage
 }
 
 defineProps<{
