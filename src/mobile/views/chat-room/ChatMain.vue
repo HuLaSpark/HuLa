@@ -1,7 +1,7 @@
 <template>
   <AutoFixHeightPage>
     <template #header>
-      <HeaderBar ref="header" room-name="官方1群" :msg-count="1002" />
+      <HeaderBar ref="header" :room-name="roomName" :msg-count="1002" />
     </template>
     <template #container>
       <!-- 网络状态提示 -->
@@ -449,12 +449,13 @@ import AutoFixHeightPage from '@/mobile/components/chat-room/AutoFixHeightPage.v
 import HeaderBar from '@/mobile/components/chat-room/HeaderBar.vue'
 import FooterBar from '@/mobile/components/chat-room/FooterBar.vue'
 
+const route = useRoute()
+const roomName = ref(route.params.roomName as string)
+
 const header = ref()
 
 /** 新增的列表事件 start */
 import { ref, computed } from 'vue'
-// import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller'
-import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 
 /**
  * 单条动态消息数据结构

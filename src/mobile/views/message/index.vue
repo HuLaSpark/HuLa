@@ -276,7 +276,7 @@ const { handleMsgClick } = useMessage()
 
 const intoRoom = (item: any) => {
   handleMsgClick(item)
-  router.push('/mobile/chatRoom')
+  router.push(`/mobile/chatRoom/chatMain/${encodeURIComponent(item.name)}`)
   console.log('进入页面', item)
 }
 </script>

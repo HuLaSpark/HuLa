@@ -15,6 +15,7 @@ import MobileHome from '@/mobile/layout/index.vue'
 import MobileLogin from '@/mobile/login.vue'
 import ChatRoomLayout from '@/mobile/layout/chat-room/ChatRoomLayout.vue'
 import ChatMain from '@/mobile/views/chat-room/ChatMain.vue'
+import ChatSetting from '@/mobile/views/chat-room/ChatSetting.vue'
 
 const isDesktop = computed(() => {
   return type() === 'windows' || type() === 'linux' || type() === 'macos'
@@ -44,9 +45,14 @@ const routes: Array<RouteRecordRaw> = [
         redirect: '/mobile/chatRoom/chatMain' // 👈 默认页面地址
       },
       {
-        path: 'chatMain',
+        path: 'chatMain/:roomName',
         name: 'mobileChatMain',
         component: ChatMain
+      },
+      {
+        path: 'setting',
+        name: 'mobileChatSetting',
+        component: ChatSetting
       }
     ]
   },

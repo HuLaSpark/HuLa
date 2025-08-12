@@ -17,16 +17,17 @@
       </div>
     </div>
     <div class="w-full h-full flex items-center">
-      <div class="w-full justify-end flex pe-16px">
+      <div v-if="!hiddenRight" class="w-full justify-end flex pe-16px">
         <svg class="w-24px h-24px iconpark-icon p-5px"><use href="#diannao"></use></svg>
-        <svg class="w-24px h-24px iconpark-icon p-5px"><use href="#more"></use></svg>
+        <svg @click="handleMoreClick" class="w-24px h-24px iconpark-icon p-5px"><use href="#more"></use></svg>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { invoke } from '@tauri-apps/api/core'
+// import { invoke } from '@tauri-apps/api/core'
+import router from '@/router'
 
 const props = defineProps({
   roomName: {
@@ -40,6 +41,10 @@ const props = defineProps({
   isOfficial: {
     type: Boolean,
     default: true
+  },
+  hiddenRight: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -52,11 +57,20 @@ const formattedMsgCount = computed(() => {
 })
 
 const handleBack = async () => {
-  const result = await invoke('plugin:hula|ping', {
-    payload: { value: 'hello world' }
-  })
-  console.log('插件测试结果：', result)
+  // const result = await invoke('plugin:hula|ping', {
+  //   payload: { value: 'hello world' }
+  // })
+  // console.log('插件测试结果：', result)
+
+  // TODO 返回上一页
+  router.back()
   console.log('返回')
+}
+
+const handleMoreClick = () => {
+  console.log('更多操作')
+
+  router.push(`/mobile/chatRoom/setting`)
 }
 </script>
 

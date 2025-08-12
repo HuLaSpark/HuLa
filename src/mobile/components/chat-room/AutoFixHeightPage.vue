@@ -19,7 +19,7 @@
     <!-- 测量容器 -->
     <div ref="measureRef" class="flex flex-1 z-0"></div>
 
-    <div class="w-full min-h-92px bg-#FAFAFA flex flex-col z-2">
+    <div v-if="props.showFooter" class="w-full min-h-92px bg-#FAFAFA flex flex-col z-2">
       <slot name="footer"></slot>
     </div>
   </div>
@@ -28,6 +28,13 @@
 <script setup lang="ts">
 import { debounce } from 'lodash-es'
 import { onMounted, ref, nextTick } from 'vue'
+
+const props = defineProps({
+  showFooter: {
+    type: Boolean,
+    default: true
+  }
+})
 
 const pageContainer = ref<HTMLElement | null>(null)
 const measureRef = ref<HTMLElement>()
