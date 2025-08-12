@@ -58,6 +58,7 @@ import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user'
 import { clearListener, initListener, readCountQueue } from '@/utils/ReadCountQueue'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
+import { audioManager } from '@/utils/AudioManager'
 
 const loadingPercentage = ref(10)
 const loadingText = ref('正在加载应用...')
@@ -117,6 +118,16 @@ const userUid = computed(() => userStore.userInfo.uid)
 // 清空未读消息
 // globalStore.unReadMark.newMsgUnreadCount = 0
 const shrinkStatus = ref(false)
+
+// 播放消息音效
+const playMessageSound = async () => {
+  try {
+    const audio = new Audio('/sound/message.mp3')
+    await audioManager.play(audio, 'message-notification')
+  } catch (error) {
+    console.warn('播放消息音效失败:', error)
+  }
+}
 
 // 导入Web Worker
 const timerWorker = new Worker(new URL('../workers/timer.worker.ts', import.meta.url))
@@ -247,12 +258,6 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   await invokeSilently(TauriCommand.SAVE_MSG, {
     data
   })
-  // const home = await WebviewWindow.getByLabel('home')
-  // 当home窗口不显示并且home窗口不是最小化的时候并且不是聚焦窗口的时候
-  // const homeShow = await home?.isVisible()
-  // const isHomeMinimized = await home?.isMinimized()
-  // const isHomeFocused = await home?.isFocused()
-  // if (homeShow && !isHomeMinimized && isHomeFocused) return
 
   // 不是自己发的消息才通知
   if (data.fromUser.uid !== userUid.value) {
@@ -261,6 +266,33 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
 
     // 只有非免打扰的会话才发送通知和触发图标闪烁
     if (session && session.muteNotification !== NotificationTypeEnum.NOT_DISTURB) {
+      // 检查 home 窗口状态
+      const home = await WebviewWindow.getByLabel('home')
+      let shouldPlaySound = false
+
+      if (home) {
+        try {
+          const isVisible = await home.isVisible()
+          const isMinimized = await home.isMinimized()
+          const isFocused = await home.isFocused()
+
+          // 如果窗口不可见、被最小化或未聚焦，则播放音效
+          shouldPlaySound = !isVisible || isMinimized || !isFocused
+        } catch (error) {
+          console.warn('检查窗口状态失败:', error)
+          // 如果检查失败，默认播放音效
+          shouldPlaySound = true
+        }
+      } else {
+        // 如果找不到 home 窗口，播放音效
+        shouldPlaySound = true
+      }
+
+      // 播放消息音效
+      if (shouldPlaySound) {
+        await playMessageSound()
+      }
+
       // 设置图标闪烁
       useMitt.emit(MittEnum.MESSAGE_ANIMATION, data)
       // session.unreadCount++
