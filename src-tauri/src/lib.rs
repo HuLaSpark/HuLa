@@ -29,6 +29,7 @@ pub mod im_reqest_client;
 pub mod pojo;
 pub mod repository;
 pub mod timeout_config;
+pub mod utils;
 mod vo;
 pub mod websocket;
 

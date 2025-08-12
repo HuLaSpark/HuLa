@@ -153,7 +153,9 @@ pub fn get_configuration(app_handle: &AppHandle) -> Result<Settings, config::Con
     let environment: Environment = std::env::var("APP_ENVIRONMENT")
         .unwrap_or_else(|_| "local".into())
         .try_into()
-        .map_err(|e| config::ConfigError::Message(format!("Failed to parse APP_ENVIRONMENT: {:?}", e)))?;
+        .map_err(|e| {
+            config::ConfigError::Message(format!("Failed to parse APP_ENVIRONMENT: {:?}", e))
+        })?;
 
     let environment_filename = format!("{}.yaml", environment.as_str());
     let is_desktop_dev = cfg!(debug_assertions) && cfg!(desktop);
@@ -208,7 +210,9 @@ fn load_config_source(
         if base_path.exists() && env_path.exists() {
             return ConfigSource::Resource(base_path, env_path);
         } else {
-            tracing::warn!("Resource directory configuration files do not exist, falling back to embedded config");
+            tracing::warn!(
+                "Resource directory configuration files do not exist, falling back to embedded config"
+            );
         }
     } else {
         tracing::warn!("Failed to get Resource directory, falling back to embedded config");
@@ -310,15 +314,24 @@ fn get_configuration_directory(app_handle: &AppHandle) -> Result<PathBuf, config
                 path
             }
             Err(e) => {
-                tracing::warn!("Failed to get Resource configuration directory: {}, trying app_data_dir", e);
+                tracing::warn!(
+                    "Failed to get Resource configuration directory: {}, trying app_data_dir",
+                    e
+                );
 
                 match app_handle.path().app_data_dir() {
                     Ok(app_data_dir) => {
                         let config_dir = app_data_dir.join("configuration");
                         if let Err(create_err) = std::fs::create_dir_all(&config_dir) {
-                            tracing::warn!("Failed to create app_data_dir configuration directory: {}", create_err);
+                            tracing::warn!(
+                                "Failed to create app_data_dir configuration directory: {}",
+                                create_err
+                            );
                         }
-                        info!("Using backup app_data_dir configuration directory: {:?}", config_dir);
+                        info!(
+                            "Using backup app_data_dir configuration directory: {:?}",
+                            config_dir
+                        );
                         config_dir
                     }
                     Err(app_data_err) => {

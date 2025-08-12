@@ -288,16 +288,24 @@ impl<'a> RequestBuilderWrapper<'a> {
             warn!("No token set");
         }
 
-        let response = self
-            .request_builder
-            .send()
-            .await
-            .map_err(|e| anyhow::anyhow!("[{}:{}] Failed to send request '{}': {}", file!(), line!(), self.url, e))?;
+        let response = self.request_builder.send().await.map_err(|e| {
+            anyhow::anyhow!(
+                "[{}:{}] Failed to send request '{}': {}",
+                file!(),
+                line!(),
+                self.url,
+                e
+            )
+        })?;
 
-        let response_text = response
-            .text()
-            .await
-            .map_err(|e| anyhow::anyhow!("[{}:{}] Failed to read response body: {}", file!(), line!(), e))?;
+        let response_text = response.text().await.map_err(|e| {
+            anyhow::anyhow!(
+                "[{}:{}] Failed to read response body: {}",
+                file!(),
+                line!(),
+                e
+            )
+        })?;
 
         debug!("Starting to parse response");
         // 解析为目标类型
@@ -358,13 +366,24 @@ impl<'a> RequestBuilderWrapper<'a> {
 
                     // 重新发送请求
                     info!("Retrying request to: {}", self.url);
-                    let retry_response = new_request_builder.send().await
-                        .map_err(|e| anyhow::anyhow!("[{}:{}] Failed to retry request '{}': {}", file!(), line!(), self.url, e))?;
+                    let retry_response = new_request_builder.send().await.map_err(|e| {
+                        anyhow::anyhow!(
+                            "[{}:{}] Failed to retry request '{}': {}",
+                            file!(),
+                            line!(),
+                            self.url,
+                            e
+                        )
+                    })?;
 
-                    let retry_response_text = retry_response
-                        .text()
-                        .await
-                        .map_err(|e| anyhow::anyhow!("[{}:{}] Failed to read retry response body: {}", file!(), line!(), e))?;
+                    let retry_response_text = retry_response.text().await.map_err(|e| {
+                        anyhow::anyhow!(
+                            "[{}:{}] Failed to read retry response body: {}",
+                            file!(),
+                            line!(),
+                            e
+                        )
+                    })?;
 
                     // 解析重试响应
                     let retry_result: ApiResult<T> =
@@ -435,8 +454,13 @@ impl<'a> RequestBuilderWrapper<'a> {
         }
 
         if !&result.success {
-            error!("Request failed: {}", &result.msg.clone().unwrap_or_default());
-            return Err(CommonError::UnexpectedError(anyhow::anyhow!("Request failed!")));
+            error!(
+                "Request failed: {}",
+                &result.msg.clone().unwrap_or_default()
+            );
+            return Err(CommonError::UnexpectedError(anyhow::anyhow!(
+                "Request failed!"
+            )));
         }
 
         debug!("Parsing completed");

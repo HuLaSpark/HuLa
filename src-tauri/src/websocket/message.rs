@@ -1,4 +1,3 @@
-
 use serde_json::Value;
 use std::collections::HashMap;
 use tracing::debug;
@@ -21,7 +20,8 @@ impl MessageProcessor {
     where
         F: Fn(&Value) + Send + Sync + 'static,
     {
-        self.message_handlers.insert(message_type, Box::new(handler));
+        self.message_handlers
+            .insert(message_type, Box::new(handler));
     }
 
     /// 处理接收到的消息
@@ -44,17 +44,15 @@ impl MessageProcessor {
 
     /// 提取消息类型
     fn extract_message_type(&self, message: &Value) -> Option<String> {
-        message
-            .get("type")
-            .and_then(|t| {
-                if let Some(s) = t.as_str() {
-                    Some(s.to_string())
-                } else if let Some(n) = t.as_u64() {
-                    Some(n.to_string())
-                } else {
-                    None
-                }
-            })
+        message.get("type").and_then(|t| {
+            if let Some(s) = t.as_str() {
+                Some(s.to_string())
+            } else if let Some(n) = t.as_u64() {
+                Some(n.to_string())
+            } else {
+                None
+            }
+        })
     }
 
     /// 验证消息格式
@@ -165,17 +163,26 @@ mod tests {
             "type": "test",
             "data": "some data"
         });
-        assert_eq!(processor.validate_message(&valid_msg), ValidationResult::Valid);
+        assert_eq!(
+            processor.validate_message(&valid_msg),
+            ValidationResult::Valid
+        );
 
         // 无效消息 - 缺少 type
         let invalid_msg = json!({
             "data": "some data"
         });
-        assert!(matches!(processor.validate_message(&invalid_msg), ValidationResult::Invalid(_)));
+        assert!(matches!(
+            processor.validate_message(&invalid_msg),
+            ValidationResult::Invalid(_)
+        ));
 
         // 无效消息 - 不是对象
         let invalid_msg2 = json!("not an object");
-        assert!(matches!(processor.validate_message(&invalid_msg2), ValidationResult::Invalid(_)));
+        assert!(matches!(
+            processor.validate_message(&invalid_msg2),
+            ValidationResult::Invalid(_)
+        ));
     }
 
     #[test]

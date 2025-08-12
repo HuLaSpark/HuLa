@@ -63,7 +63,14 @@ async fn fetch_and_update_contacts(
         // 保存到本地数据库
         save_contact_batch(db_conn.deref(), data.clone(), &login_uid)
             .await
-            .map_err(|e| anyhow::anyhow!("[{}:{}] Failed to save contact data to local database: {}", file!(), line!(), e))?;
+            .map_err(|e| {
+                anyhow::anyhow!(
+                    "[{}:{}] Failed to save contact data to local database: {}",
+                    file!(),
+                    line!(),
+                    e
+                )
+            })?;
 
         Ok(data)
     } else {
@@ -112,7 +119,10 @@ pub async fn hide_contact_command(
             )
             .await?;
 
-            info!("Successfully hid contact: room_id={}", &data.room_id.clone());
+            info!(
+                "Successfully hid contact: room_id={}",
+                &data.room_id.clone()
+            );
             Ok(())
         } else {
             Err(CommonError::UnexpectedError(anyhow::anyhow!(

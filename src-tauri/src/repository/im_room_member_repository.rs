@@ -1,4 +1,3 @@
-
 use entity::{im_room, im_room_member};
 use sea_orm::EntityTrait;
 use sea_orm::IntoActiveModel;
@@ -47,7 +46,10 @@ pub async fn cursor_page_room_members(
         }
     }
 
-    let members = query.all(db).await.map_err(|e| anyhow::anyhow!("Failed to query room members: {}", e))?;
+    let members = query
+        .all(db)
+        .await
+        .map_err(|e| anyhow::anyhow!("Failed to query room members: {}", e))?;
 
     // 构建下一页游标和判断是否为最后一页
     let (next_cursor, is_last) = if members.len() < cursor_page_param.page_size as usize {

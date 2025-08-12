@@ -1,8 +1,10 @@
-use crate::AppData;
+use std::collections::HashMap;
+use std::collections::hash_map::Entry;
+
 use crate::error::CommonError;
-use crate::repository::im_message_mark_repository;
-use entity::im_message_mark;
-use sea_orm::TransactionTrait;
+use crate::{AppData, command::message_command::MessageMark};
+use entity::im_message;
+use sea_orm::{EntityTrait, IntoActiveModel, Set, TransactionTrait};
 use serde::{Deserialize, Serialize};
 use tauri::State;
 use tracing::{error, info};
@@ -27,29 +29,51 @@ pub async fn save_message_mark(
             user_info.uid.clone()
         };
 
-        // 生成消息标记ID
-        let current_time = chrono::Utc::now().timestamp_millis();
-        let mark_id = format!("{}_{}_{}", data.msg_id, data.mark_type, current_time);
+        let message = im_message::Entity::find_by_id((data.msg_id.clone(), login_uid.clone()))
+            .one(state.db_conn.as_ref())
+            .await?;
 
-        // 创建消息标记模型
-        let message_mark = im_message_mark::Model {
-            id: mark_id,
-            login_uid: login_uid.clone(),
-            uid: login_uid, // 当前用户的uid
-            msg_id: data.msg_id.clone(),
-            mark_type: data.mark_type,
-            status: match data.act_type {
-                1 => 0,
-                2 => 1,
-                _ => 0,
-            },
-            create_time: Some(current_time),
-            update_time: Some(current_time),
-        };
+        if let Some(message) = message {
+            let message_marks = message.message_marks.clone();
+            if let Some(message_marks) = message_marks {
+                let mut message_marks: HashMap<String, MessageMark> =
+                    serde_json::from_str::<HashMap<String, MessageMark>>(&message_marks)
+                        .map_err(|e| anyhow::anyhow!("Failed to parse message marks: {}", e))?;
+                match message_marks.entry(data.mark_type.to_string()) {
+                    Entry::Occupied(entry) => {
+                        let message_mark = entry.into_mut();
+                        match data.act_type {
+                            1 => {
+                                message_mark.count += 1;
+                                message_mark.user_marked = true;
+                            }
+                            2 => {
+                                message_mark.count -= 1;
+                                message_mark.user_marked = false;
+                            }
+                            _ => {}
+                        }
+                    }
+                    Entry::Vacant(_) => {}
+                }
+
+                let new_message_marks = serde_json::to_string(&message_marks)
+                    .map_err(|e| anyhow::anyhow!("Failed to serialize message marks: {}", e))?;
+
+                // 创建ActiveModel，只设置需要更新的字段
+                let mut active_message = message.into_active_model();
+                active_message.message_marks = Set(Some(new_message_marks));
+
+                // 更新数据库
+                im_message::Entity::update(active_message)
+                    .exec(state.db_conn.as_ref())
+                    .await?;
+            }
+        }
 
         // 开启事务保存到数据库
         let tx = state.db_conn.begin().await?;
-        im_message_mark_repository::save_msg_mark(&tx, message_mark).await?;
+        // im_message_mark_repository::save_msg_mark(&tx, message_mark).await?;
         tx.commit().await?;
 
         info!(

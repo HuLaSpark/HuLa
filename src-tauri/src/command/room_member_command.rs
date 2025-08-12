@@ -49,7 +49,14 @@ pub async fn update_my_room_info(
             &uid,
         )
         .await
-        .map_err(|e| anyhow::anyhow!("[{}:{}] Failed to update local database: {}", file!(), line!(), e))?;
+        .map_err(|e| {
+            anyhow::anyhow!(
+                "[{}:{}] Failed to update local database: {}",
+                file!(),
+                line!(),
+                e
+            )
+        })?;
         Ok(())
     }
     .await;
@@ -105,7 +112,14 @@ pub async fn get_room_members(
             let mut local_members =
                 get_room_members_by_room_id(&room_id, state.db_conn.deref(), &login_uid)
                     .await
-                    .map_err(|e| anyhow::anyhow!("[{}:{}] Failed to query room members from local database: {}", file!(), line!(), e))?;
+                    .map_err(|e| {
+                        anyhow::anyhow!(
+                            "[{}:{}] Failed to query room members from local database: {}",
+                            file!(),
+                            line!(),
+                            e
+                        )
+                    })?;
 
             // 对查询结果进行排序
             sort_room_members(&mut local_members);
@@ -212,7 +226,14 @@ pub async fn page_room(
             // 有缓存：从本地数据库获取数据
             let local_result = get_room_page(page_param.clone(), state.db_conn.deref(), &login_uid)
                 .await
-                .map_err(|e| anyhow::anyhow!("[{}:{}] Failed to query local database: {}", file!(), line!(), e))?;
+                .map_err(|e| {
+                    anyhow::anyhow!(
+                        "[{}:{}] Failed to query local database: {}",
+                        file!(),
+                        line!(),
+                        e
+                    )
+                })?;
 
             // 异步调用后端接口更新本地数据库
             let db_conn = state.db_conn.clone();
@@ -285,7 +306,14 @@ async fn fetch_and_update_room_members(
             let room_id_i64 = room_id.parse::<i64>().unwrap_or(0);
             save_room_member_batch(db_conn.deref(), data.clone(), room_id_i64, &login_uid)
                 .await
-                .map_err(|e| anyhow::anyhow!("[{}:{}] 异步更新房间成员数据到本地数据库失败: {}", file!(), line!(), e))?;
+                .map_err(|e| {
+                    anyhow::anyhow!(
+                        "[{}:{}] 异步更新房间成员数据到本地数据库失败: {}",
+                        file!(),
+                        line!(),
+                        e
+                    )
+                })?;
             return Ok(data.clone());
         }
     }
@@ -313,7 +341,14 @@ async fn fetch_and_update_rooms(
         // 保存到本地数据库
         save_room_batch(db_conn.deref(), data.records.clone(), &login_uid)
             .await
-            .map_err(|e| anyhow::anyhow!("[{}:{}] Failed to save room data to local database: {}", file!(), line!(), e))?;
+            .map_err(|e| {
+                anyhow::anyhow!(
+                    "[{}:{}] Failed to save room data to local database: {}",
+                    file!(),
+                    line!(),
+                    e
+                )
+            })?;
 
         Ok(data)
     } else {
