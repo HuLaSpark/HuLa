@@ -255,9 +255,6 @@ const doDrag = (e: MouseEvent) => {
     const newWidth = startWidth.value + e.clientX - startX.value
     // 如果新宽度不等于最大宽度，则更新宽度值
     if (newWidth !== maxWidth) {
-      // 给聊天框添加 select-none 样式，防止在拖动改变布局时选中文本
-      const chatMain = document.querySelector('#image-chat-main')
-      chatMain?.classList.add('select-none')
       initWidth.value = clamp(newWidth, minWidth, maxWidth) // 使用 clamp 函数限制宽度值在最小值和最大值之间
     }
   })
@@ -275,12 +272,14 @@ const initDrag = (e: MouseEvent) => {
   isDragging.value = true
   document.addEventListener('mousemove', doDrag, false)
   document.addEventListener('mouseup', stopDrag, false)
+  // 防止拖拽时选中文本
+  document.body.style.userSelect = 'none'
+  e.preventDefault()
 }
 
 const stopDrag = () => {
-  // 松开鼠标后，移除聊天框的 select-none 样式
-  const chatMain = document.querySelector('#image-chat-main')
-  chatMain?.classList.remove('select-none')
+  // 恢复文本选择功能
+  document.body.style.userSelect = ''
   document.removeEventListener('mousemove', doDrag, false)
   document.removeEventListener('mouseup', stopDrag, false)
   isDragging.value = false
@@ -309,6 +308,13 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener('click', closeMenu, true)
+  // 清理拖拽相关的事件监听器和样式
+  if (isDragging.value) {
+    document.removeEventListener('mousemove', doDrag, false)
+    document.removeEventListener('mouseup', stopDrag, false)
+    document.body.style.userSelect = ''
+    isDragging.value = false
+  }
 })
 </script>
 

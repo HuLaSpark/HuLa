@@ -8,7 +8,7 @@
         <img v-if="showLoading" class="size-22px py-3px" src="@/assets/img/loading.svg" alt="" />
         <n-flex v-else align="center">
           <n-avatar
-            class="rounded-8px select-none"
+            :class="['rounded-8px select-none grayscale', { 'grayscale-0': isOnline }]"
             :size="28"
             :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
             :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
@@ -510,10 +510,8 @@ const messageSettingOptions = ref([
 const MIN_LOADING_TIME = 300 // 最小加载时间（毫秒）
 /** 是否在线 */
 const isOnline = computed(() => {
-  if (activeItem.type === RoomTypeEnum.GROUP) return false
-
+  if (activeItem.type === RoomTypeEnum.GROUP) return true
   const contact = contactStore.contactsList.find((item) => item.uid === activeItem.detailId)
-
   return contact?.activeStatus === OnlineEnum.ONLINE
 })
 /** 是否还是好友 */
