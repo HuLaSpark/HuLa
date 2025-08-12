@@ -495,9 +495,26 @@ export const useChatStore = defineStore(
     }
 
     // 更新所有标记类型的数量
-    const updateMarkCount = (markList: MarkItemType[]) => {
+    const updateMarkCount = async (markList: MarkItemType[]) => {
       for (const mark of markList) {
         const { msgId, markType, markCount, actType, uid } = mark
+
+        await invokeWithErrorHandler(
+          TauriCommand.SAVE_MESSAGE_MARK,
+          {
+            data: {
+              msgId: msgId.toString(),
+              markType,
+              markCount,
+              actType,
+              uid: uid.toString()
+            }
+          },
+          {
+            customErrorMessage: '保存消息标记',
+            errorType: ErrorType.Client
+          }
+        )
 
         const msgItem = currentMessageMap.value?.get(String(msgId))
         if (msgItem && msgItem.message.messageMarks) {
@@ -512,7 +529,7 @@ export const useChatStore = defineStore(
           if (actType === 1) {
             // 添加标记
             // 如果是当前用户的操作，设置userMarked为true
-            if (String(uid) === userStore.userInfo.uid) {
+            if (uid === userStore.userInfo.uid) {
               currentMarkStat.userMarked = true
             }
             // 更新计数
@@ -520,7 +537,7 @@ export const useChatStore = defineStore(
           } else if (actType === 2) {
             // 取消标记
             // 如果是当前用户的操作，设置userMarked为false
-            if (String(uid) === userStore.userInfo.uid) {
+            if (uid === userStore.userInfo.uid) {
               currentMarkStat.userMarked = false
             }
             // 更新计数

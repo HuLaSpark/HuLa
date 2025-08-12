@@ -15,6 +15,8 @@ pub struct ChatMessageMarkReq {
     msg_id: String,
     mark_type: i32,
     act_type: u8,
+    uid: String,
+    mark_count: u32,
 }
 
 #[tauri::command]
@@ -42,16 +44,9 @@ pub async fn save_message_mark(
                 match message_marks.entry(data.mark_type.to_string()) {
                     Entry::Occupied(entry) => {
                         let message_mark = entry.into_mut();
-                        match data.act_type {
-                            1 => {
-                                message_mark.count += 1;
-                                message_mark.user_marked = true;
-                            }
-                            2 => {
-                                message_mark.count -= 1;
-                                message_mark.user_marked = false;
-                            }
-                            _ => {}
+                        message_mark.count = data.mark_count;
+                        if data.uid == message.login_uid {
+                          message_mark.user_marked = true
                         }
                     }
                     Entry::Vacant(_) => {}

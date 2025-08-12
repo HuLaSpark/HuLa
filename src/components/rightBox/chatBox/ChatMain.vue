@@ -364,14 +364,15 @@
 
                 <!-- 动态渲染所有回复表情反应 -->
                 <div
+                  v-if="item && item.message"
                   class="flex-y-center gap-6px flex-wrap w-270px"
                   :class="{ 'justify-end': isSingleLineEmojis(item) }">
                   <template v-for="emoji in emojiList" :key="emoji.value">
                     <!-- 根据表情类型获取对应的计数属性名 -->
-                    <div class="flex-y-center" v-if="getEmojiCount(item, emoji.value) > 0">
-                      <div class="emoji-reply-bubble" @click.stop="cancelReplyEmoji(item, emoji.value)">
+                    <div class="flex-y-center" v-if="item && getEmojiCount(item, emoji.value) > 0">
+                      <div class="emoji-reply-bubble" @click.stop="item && cancelReplyEmoji(item, emoji.value)">
                         <img :title="emoji.title" class="size-18px" :src="emoji.url" :alt="emoji.title" />
-                        <span class="text-(12px #eee)">{{ getEmojiCount(item, emoji.value) }}</span>
+                        <span class="text-(12px #eee)">{{ item ? getEmojiCount(item, emoji.value) : 0 }}</span>
                       </div>
                     </div>
                   </template>
@@ -439,7 +440,7 @@ import { type } from '@tauri-apps/plugin-os'
 import { useDebounceFn } from '@vueuse/core'
 import { delay } from 'lodash-es'
 import VirtualList, { type VirtualListExpose } from '@/components/common/VirtualList.vue'
-import { EventEnum, MessageStatusEnum, MittEnum, MsgEnum, TauriCommand, ThemeEnum } from '@/enums'
+import { EventEnum, MessageStatusEnum, MittEnum, MsgEnum, ThemeEnum } from '@/enums'
 import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
 import { useChatMain } from '@/hooks/useChatMain.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
@@ -457,7 +458,6 @@ import { useUserStore } from '@/stores/user.ts'
 import { audioManager } from '@/utils/AudioManager'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
-import { ErrorType, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 import { useSettingStore } from '@/stores/setting'
 import { useChatLayoutGlobal } from '@/hooks/useChatLayout'
 import { CHAT_HEADER_HEIGHT, ANNOUNCEMENT_HEIGHT } from '@/common/constants'
@@ -754,6 +754,8 @@ const handleScrollDirectionChange = (direction: 'up' | 'down') => {
 
 // 取消表情反应
 const cancelReplyEmoji = async (item: any, type: number) => {
+  if (!item || !item.message || !item.message.messageMarks) return
+
   // 检查该表情是否已被当前用户标记
   const userMarked = item.message.messageMarks[String(type)]?.userMarked
 
@@ -766,28 +768,6 @@ const cancelReplyEmoji = async (item: any, type: number) => {
         actType: 2 // 使用Confirm作为操作类型
       }
       await apis.markMsg(data)
-
-      await invokeWithErrorHandler(
-        TauriCommand.SAVE_MESSAGE_MARK,
-        {
-          data: data
-        },
-        {
-          customErrorMessage: '保存消息标记',
-          errorType: ErrorType.Client
-        }
-      )
-
-      const currentCount = item.message.messageMarks[String(type)]?.count || 0
-      chatStore.updateMarkCount([
-        {
-          msgId: Number(item.message.id),
-          markType: type,
-          markCount: Math.max(0, currentCount - 1), // 确保计数不会为负数
-          actType: 2,
-          uid: Number(userStore.userInfo.uid)
-        }
-      ])
     } catch (error) {
       console.error('取消表情标记失败:', error)
     }
@@ -801,7 +781,7 @@ const cancelReplyEmoji = async (item: any, type: number) => {
  * @returns 计数值
  */
 const getEmojiCount = (item: any, emojiType: number): number => {
-  if (!item?.message?.messageMarks) return 0
+  if (!item || !item.message || !item.message.messageMarks) return 0
 
   // messageMarks 是一个对象，键是表情类型，值是包含 count 和 userMarked 的对象
   // 如果存在该表情类型的统计数据，返回其计数值，否则返回0
@@ -810,6 +790,8 @@ const getEmojiCount = (item: any, emojiType: number): number => {
 
 // 处理表情回应
 const handleEmojiSelect = async (context: { label: string; value: number; title: string }, item: any) => {
+  if (!item || !item.message || !item.message.messageMarks) return
+
   // 检查该表情是否已被当前用户标记
   const userMarked = item.message.messageMarks[String(context.value)]?.userMarked
   // 只给没有标记过的图标标记
@@ -820,32 +802,6 @@ const handleEmojiSelect = async (context: { label: string; value: number; title:
         markType: context.value,
         actType: 1
       })
-
-      await invokeWithErrorHandler(
-        TauriCommand.SAVE_MESSAGE_MARK,
-        {
-          data: {
-            msgId: item.message.id,
-            markType: context.value,
-            actType: 1
-          }
-        },
-        {
-          customErrorMessage: '保存消息标记',
-          errorType: ErrorType.Client
-        }
-      )
-
-      const currentCount = item.message.messageMarks[String(context.value)]?.count || 0
-      chatStore.updateMarkCount([
-        {
-          msgId: Number(item.message.id),
-          markType: context.value,
-          markCount: currentCount + 1,
-          actType: 1,
-          uid: Number(userStore.userInfo.uid)
-        }
-      ])
     } catch (error) {
       console.error('标记表情失败:', error)
     }
@@ -1057,6 +1013,8 @@ const isSpecialMsgType = (type: number) => {
 
 // 判断表情反应是否只有一行
 const isSingleLineEmojis = (item: any) => {
+  if (!item || !item.fromUser || !item.message) return false
+
   // 计算有多少个表情反应
   let emojiCount = 0
   for (const emoji of emojiList.value) {

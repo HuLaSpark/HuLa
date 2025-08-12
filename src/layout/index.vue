@@ -219,15 +219,15 @@ useMitt.on(WsResponseMessageType.INVALID_USER, (param: { uid: string }) => {
   // 群成员列表删掉拉黑的用户
   groupStore.filterUser(data.uid)
 })
-useMitt.on(WsResponseMessageType.MSG_MARK_ITEM, (data: { markList: MarkItemType[] }) => {
+useMitt.on(WsResponseMessageType.MSG_MARK_ITEM, async (data: { markList: MarkItemType[] }) => {
   console.log('收到消息标记更新:', data)
 
   // 确保data.markList是一个数组再传递给updateMarkCount
   if (data && data.markList && Array.isArray(data.markList)) {
-    chatStore.updateMarkCount(data.markList)
+    await chatStore.updateMarkCount(data.markList)
   } else if (data && !Array.isArray(data)) {
     // 兼容处理：如果直接收到了单个MarkItemType对象
-    chatStore.updateMarkCount([data as unknown as MarkItemType])
+    await chatStore.updateMarkCount([data as unknown as MarkItemType])
   }
 })
 useMitt.on(WsResponseMessageType.MSG_RECALL, (data: RevokedMsgType) => {

@@ -304,6 +304,7 @@ class RustWebSocketClient {
     })
 
     await listen('ws-msg-mark-item', (event: any) => {
+      console.log('消息标记', event.payload)
       useMitt.emit(WsResponseMessageType.MSG_MARK_ITEM, event.payload)
     })
 
