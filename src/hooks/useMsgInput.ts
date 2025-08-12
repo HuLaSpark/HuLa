@@ -649,7 +649,11 @@ export const useMsgInput = (messageInputDom: Ref) => {
     }
     if ((sendKeyIsEnter && isEnterKey && !isCtrlOrMetaKey) || (sendKeyIsCtrlEnter && isCtrlOrMetaKey && isEnterKey)) {
       e?.preventDefault()
-      await send()
+      // 触发form提交而不是直接调用send
+      const form = document.getElementById('message-form') as HTMLFormElement
+      if (form) {
+        form.requestSubmit()
+      }
       resetAllStates()
     }
   }

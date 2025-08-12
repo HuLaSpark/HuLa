@@ -16,9 +16,6 @@ export default {
   ],
   // Vue 文件：只使用 Prettier 处理（Biome 对 Vue 文件支持有限）
   '*.vue': [
-    (filenames) => {
-      // 分别处理每个文件，避免命令行过长
-      return filenames.map((filename) => `prettier --write ${path.relative(process.cwd(), filename)}`)
-    }
+    createCommand('prettier --write', ''), // 处理整个 Vue 文件
   ]
 }

@@ -7,32 +7,34 @@
     v-show="!isVoiceMode"
     class="w-full flex flex-col"
     :style="{ height: `${Math.max(props.height || 110, 110)}px` }">
-    <!-- 输入框 -->
-    <ContextMenu
+    <!-- 输入框表单 -->
+    <form
+      id="message-form"
+      @submit.prevent="handleFormSubmit"
       class="flex-shrink-0"
-      :style="{ height: `${inputScrollAreaHeight}px` }"
-      @select="$event.click()"
-      :menu="menuList">
-      <n-scrollbar :style="{ height: `${inputScrollAreaHeight}px` }">
-        <div
-          id="message-input"
-          ref="messageInputDom"
-          style="outline: none; min-height: 36px"
-          contenteditable
-          spellcheck="false"
-          @paste="onPaste($event)"
-          @input="handleInput"
-          @keydown.exact.enter="inputKeyDown"
-          @keydown.exact.meta.enter="inputKeyDown"
-          @keydown="updateSelectionRange"
-          @keyup="updateSelectionRange"
-          @click="updateSelectionRange"
-          @compositionend="updateSelectionRange"
-          @keydown.exact.ctrl.enter="inputKeyDown"
-          data-placeholder="善言一句暖人心，恶语一句伤人心"
-          class="empty:before:content-[attr(data-placeholder)] before:text-(12px #777) p-2"></div>
-      </n-scrollbar>
-    </ContextMenu>
+      :style="{ height: `${inputScrollAreaHeight}px` }">
+      <ContextMenu class="w-full h-full" @select="$event.click()" :menu="menuList">
+        <n-scrollbar :style="{ height: `${inputScrollAreaHeight}px` }" @click="focusInput">
+          <div
+            id="message-input"
+            ref="messageInputDom"
+            style="outline: none; min-height: 36px"
+            contenteditable
+            spellcheck="false"
+            @paste="onPaste($event)"
+            @input="handleInput"
+            @keydown.exact.enter="inputKeyDown"
+            @keydown.exact.meta.enter="inputKeyDown"
+            @keydown="updateSelectionRange"
+            @keyup="updateSelectionRange"
+            @click="updateSelectionRange"
+            @compositionend="updateSelectionRange"
+            @keydown.exact.ctrl.enter="inputKeyDown"
+            data-placeholder="善言一句暖人心，恶语一句伤人心"
+            class="empty:before:content-[attr(data-placeholder)] before:text-(12px #777) p-2"></div>
+        </n-scrollbar>
+      </ContextMenu>
+    </form>
 
     <!-- @提及框  -->
     <div v-if="ait && activeItem?.type === RoomTypeEnum.GROUP && personList.length > 0" class="ait-options">
@@ -182,7 +184,7 @@ import { useMitt } from '@/hooks/useMitt.ts'
 import { useMsgInput } from '@/hooks/useMsgInput.ts'
 import { useTauriListener } from '@/hooks/useTauriListener'
 import { SEND_BUTTON_AREA_HEIGHT, MIN_INPUT_HEIGHT } from '@/common/constants'
-import type { CacheUserItem, SessionItem } from '@/services/types.ts'
+import type { SessionItem } from '@/services/types.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { sendOptions } from '@/views/moreWindow/settings/config.ts'
@@ -242,6 +244,19 @@ const {
   updateSelectionRange,
   focusOn
 } = useMsgInput(messageInputDom)
+
+/** 表单提交处理函数 */
+const handleFormSubmit = async (e: Event) => {
+  e.preventDefault()
+  await send()
+}
+
+/** 聚焦输入框函数 */
+const focusInput = () => {
+  if (messageInputDom.value) {
+    focusOn(messageInputDom.value)
+  }
+}
 
 /** 当切换聊天对象时，重新获取焦点 */
 watch(activeItem, () => {
@@ -363,12 +378,16 @@ defineExpose({
 onMounted(async () => {
   activeItem.value = inject('activeItem') as SessionItem
   onKeyStroke('Enter', () => {
-    if (ait.value && Number(selectedAIKey.value) > -1) {
-      const item = personList.value.find((item) => item.uid === selectedAitKey.value) as CacheUserItem
-      handleAit(item)
+    if (ait.value && Number(selectedAitKey.value) > -1) {
+      const item = personList.value.find((item) => item.uid === selectedAitKey.value)
+      if (item) {
+        handleAit(item)
+      }
     } else if (aiDialogVisible.value && Number(selectedAIKey.value) > -1) {
       const item = groupedAIModels.value.find((item) => item.uid === selectedAIKey.value)
-      handleAI(item)
+      if (item) {
+        handleAI(item)
+      }
     }
   })
   onKeyStroke('ArrowUp', (e) => {

@@ -175,6 +175,8 @@ const { footerHeight, setFooterHeight } = useChatLayoutGlobal()
 const isDragging = ref(false)
 const startY = ref(0)
 const startHeight = ref(0)
+// 性能优化相关
+let rafId: number | null = null
 
 // 容器高度响应式状态
 const containerHeight = ref(600) // 默认高度
@@ -249,7 +251,17 @@ const onDrag = (e: MouseEvent) => {
   const deltaY = startY.value - e.clientY
   const newHeight = Math.min(Math.max(startHeight.value + deltaY, MIN_FOOTER_HEIGHT), maxHeight.value)
 
-  setFooterHeight(newHeight)
+  // 取消之前的动画帧
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId)
+  }
+
+  // 使用 requestAnimationFrame 优化DOM更新
+  rafId = requestAnimationFrame(() => {
+    setFooterHeight(newHeight)
+
+    rafId = null
+  })
 }
 
 const endDrag = () => {
@@ -257,6 +269,12 @@ const endDrag = () => {
   document.removeEventListener('mousemove', onDrag)
   document.removeEventListener('mouseup', endDrag)
   document.body.style.userSelect = ''
+
+  // 清理性能优化相关状态
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId)
+    rafId = null
+  }
 }
 
 /**
@@ -556,6 +574,12 @@ onUnmounted(() => {
     document.removeEventListener('mousemove', onDrag)
     document.removeEventListener('mouseup', endDrag)
     document.body.style.userSelect = ''
+  }
+
+  // 清理性能优化相关
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId)
+    rafId = null
   }
 
   // 清理ResizeObserver

@@ -6,7 +6,7 @@
     class="resizable select-none flex flex-col border-r-(1px solid [--right-chat-footer-line-color])"
     :style="{ width: `${initWidth}px` }">
     <!-- 分隔条 -->
-    <div v-if="!shrinkStatus" class="resize-handle transition-all duration-600 ease-in-out" @mousedown="initDrag">
+    <div v-show="!shrinkStatus" class="resize-handle transition-all duration-600 ease-in-out" @mousedown="initDrag">
       <div :class="{ 'opacity-100': isDragging }" class="transition-all duration-600 ease-in-out opacity-0 drag-icon">
         <div style="border-radius: 8px 0 0 8px" class="bg-#c8c8c833 h-60px w-14px absolute top-40% right-0 drag-icon">
           <svg class="size-16px absolute top-1/2 right--2px transform -translate-y-1/2 color-#909090">
@@ -18,7 +18,7 @@
 
     <ActionBar
       class="absolute right-0 w-full"
-      v-if="shrinkStatus"
+      v-show="shrinkStatus"
       :shrink-status="!shrinkStatus"
       :max-w="false"
       :current-label="appWindow.label" />

@@ -282,8 +282,8 @@ const mergedUserList = computed(() => {
     }
   })
 
-  // 转换回数组并按在线状态排序
-  return Array.from(userMap.values()).sort((a, b) => a.activeStatus - b.activeStatus)
+  // rust已排序
+  return Array.from(userMap.values())
 })
 
 // 创建过滤后的用户列表计算属性
