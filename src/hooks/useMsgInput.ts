@@ -1,3 +1,4 @@
+import { Channel, invoke } from '@tauri-apps/api/core'
 import { readImage, readText } from '@tauri-apps/plugin-clipboard-manager'
 import { type } from '@tauri-apps/plugin-os'
 import { useDebounceFn } from '@vueuse/core'
@@ -20,8 +21,6 @@ import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 import { type SelectionRange, useCommon } from './useCommon.ts'
 import { useTrigger } from './useTrigger'
 import { UploadProviderEnum, useUpload } from './useUpload.ts'
-import { invoke } from '@tauri-apps/api/core'
-import { Channel } from '@tauri-apps/api/core'
 /**
  * 光标管理器
  */

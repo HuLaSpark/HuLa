@@ -4,21 +4,21 @@ import { info } from '@tauri-apps/plugin-log'
 import { useDebounceFn } from '@vueuse/core'
 import { type ChangeTypeEnum, ConnectionState, type OnlineEnum, URLEnum, WorkerMsgEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
-// 使用类型导入避免直接执行代码
-import type { MessageType, MarkItemType, RevokedMsgType } from '@/services/types'
 import type { useNetworkReconnect as UseNetworkReconnectType } from '@/hooks/useNetworkReconnect'
 import { useTauriListener } from '@/hooks/useTauriListener'
 import { getEnhancedFingerprint } from '@/services/fingerprint.ts'
+// 使用类型导入避免直接执行代码
+import type { MarkItemType, MessageType, RevokedMsgType } from '@/services/types'
 import type {
+  CallResponseData,
   LoginInitResType,
   LoginSuccessResType,
-  WsReqMsgContentType,
   OnStatusChangeType,
-  UserStateType,
-  SignalData,
   RoomActionData,
-  CallResponseData,
-  VideoCallRequestData
+  SignalData,
+  UserStateType,
+  VideoCallRequestData,
+  WsReqMsgContentType
 } from '@/services/wsType.ts'
 import { WsResponseMessageType, type WsTokenExpire } from '@/services/wsType.ts'
 import { useUserStore } from '@/stores/user'

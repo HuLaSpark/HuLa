@@ -43,7 +43,7 @@
         "noStaticOnlyClass": "off"
       },
       "correctness": {
-        "noUnusedVariables": "off",
+        "noUnusedVariables": "warn",
         "noUnusedImports": "warn"
       },
       "style": {
@@ -82,7 +82,7 @@
   },
   "assist": {
     "enabled": true,
-    "actions": { "source": { "organizeImports": "off" } }
+    "actions": { "source": { "organizeImports": "on" } }
   },
   "overrides": [
     {

@@ -132,7 +132,16 @@ import { join } from '@tauri-apps/api/path'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { open } from '@tauri-apps/plugin-dialog'
 import { copyFile, readFile } from '@tauri-apps/plugin-fs'
+import {
+  CHAT_HEADER_HEIGHT,
+  CHAT_MAIN_MIN_HEIGHT,
+  MIN_FOOTER_HEIGHT,
+  MIN_INPUT_HEIGHT,
+  SEND_BUTTON_AREA_HEIGHT,
+  TOOLBAR_HEIGHT
+} from '@/common/constants'
 import { MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
+import { useChatLayoutGlobal } from '@/hooks/useChatLayout'
 import { type SelectionRange, useCommon } from '@/hooks/useCommon.ts'
 import { useMitt } from '@/hooks/useMitt'
 import type { ContactItem, FilesMeta, SessionItem } from '@/services/types'
@@ -142,15 +151,6 @@ import { useHistoryStore } from '@/stores/history'
 import { useUserStore } from '@/stores/user'
 import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
 import { getFilesMeta, getUserAbsoluteVideosDir } from '@/utils/PathUtil'
-import { useChatLayoutGlobal } from '@/hooks/useChatLayout'
-import {
-  CHAT_MAIN_MIN_HEIGHT,
-  CHAT_HEADER_HEIGHT,
-  TOOLBAR_HEIGHT,
-  SEND_BUTTON_AREA_HEIGHT,
-  MIN_INPUT_HEIGHT,
-  MIN_FOOTER_HEIGHT
-} from '@/common/constants'
 
 const { detailId } = defineProps<{
   detailId: SessionItem['detailId']

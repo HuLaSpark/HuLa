@@ -823,7 +823,7 @@ export const useCommon = () => {
     try {
       // await apis.hideSession({ roomId: res.roomId, hide: false })
       await invokeWithErrorHandler('hide_contact_command', { data: { roomId: res.roomId, hide: false } })
-    } catch (error) {
+    } catch (_error) {
       window.$message.error('显示会话失败')
     }
     globalStore.currentSession.roomId = res.roomId

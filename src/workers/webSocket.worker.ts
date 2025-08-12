@@ -388,7 +388,7 @@ const initConnection = () => {
   // 本地配置到 .env 里面修改。生产配置在 .env.production 里面
   try {
     connection = new WebSocket(`${serverUrl}?clientId=${clientId}${token ? `&Token=${token}` : ''}`)
-  } catch (err) {
+  } catch (_err) {
     console.log('🚀 创建 WebSocket 链接失败')
     postMsg({ type: WorkerMsgEnum.WS_ERROR, value: { msg: '创建 WebSocket 链接失败' } })
   }

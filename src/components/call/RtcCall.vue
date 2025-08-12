@@ -177,19 +177,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue'
-import { useRoute } from 'vue-router'
+import { Icon } from '@iconify/vue'
+import { LogicalPosition, LogicalSize, PhysicalPosition, PhysicalSize } from '@tauri-apps/api/dpi'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { LogicalSize, LogicalPosition, PhysicalSize, PhysicalPosition } from '@tauri-apps/api/dpi'
 import { primaryMonitor } from '@tauri-apps/api/window'
 import { type } from '@tauri-apps/plugin-os'
-import { Icon } from '@iconify/vue'
+import { useRoute } from 'vue-router'
 import ActionBar from '@/components/windows/ActionBar.vue'
-import { AvatarUtils } from '@/utils/AvatarUtils'
-import { useWebRtc } from '@/hooks/useWebRtc'
-import { useUserInfo } from '@/hooks/useCached'
 import { CallTypeEnum, RTCCallStatus, ThemeEnum } from '@/enums'
+import { useUserInfo } from '@/hooks/useCached'
+import { useWebRtc } from '@/hooks/useWebRtc'
 import { useSettingStore } from '@/stores/setting'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 import { CallResponseStatus } from '../../services/wsType'
 
 const settingStore = useSettingStore()

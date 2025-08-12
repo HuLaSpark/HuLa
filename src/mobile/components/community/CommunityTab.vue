@@ -16,9 +16,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, type PropType, type VNodeRef } from 'vue'
-import { calculateElementPosition } from '@/utils/DomCalculate'
+import { type PropType, ref, type VNodeRef } from 'vue'
 import { useMobileStore } from '@/stores/mobile'
+import { calculateElementPosition } from '@/utils/DomCalculate'
 
 const emit = defineEmits(['update'])
 

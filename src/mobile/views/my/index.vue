@@ -23,9 +23,9 @@
   </div>
 </template>
 <script setup lang="ts">
-import SafeAreaPlaceholder from '@/mobile/components/placeholders/SafeAreaPlaceholder.vue'
-import Settings from '@/mobile/components/my/Settings.vue'
 import PersonalInfo from '@/mobile/components/my/PersonalInfo.vue'
+import Settings from '@/mobile/components/my/Settings.vue'
+import SafeAreaPlaceholder from '@/mobile/components/placeholders/SafeAreaPlaceholder.vue'
 
 const a = ref<number[]>([1, 2, 3, 4, 5, 6, 4, 7, 8, 6, 4, 51, 6, 15, 1, 156, 156, 65])
 

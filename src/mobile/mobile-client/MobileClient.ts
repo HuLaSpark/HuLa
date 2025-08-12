@@ -1,9 +1,9 @@
 import { type OsType, type } from '@tauri-apps/plugin-os'
+import mitt from 'mitt'
 import { type SafeArea, useMobileStore } from '@/stores/mobile'
 import { AndroidAdapter } from './AndroidAdapter'
 import { IosAdapter } from './IosAdapter'
 import type { MobileClientInterface } from './interface/adapter'
-import mitt from 'mitt'
 
 const RESIZE_UPDATE = 'resize-update'
 
