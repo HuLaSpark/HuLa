@@ -124,12 +124,15 @@ pub async fn get_room_members(
             // 对查询结果进行排序
             sort_room_members(&mut local_members);
 
-            // 异步调用后端接口更新本地数据库
+            // 异步调用后端接口更新本地数据库（添加延迟避免立即冲突）
             let db_conn = state.db_conn.clone();
             let request_client = state.request_client.clone();
             let room_id_clone = room_id.clone();
             let login_uid_clone = login_uid.clone();
             tokio::spawn(async move {
+                // 添加小延迟，避免与当前数据库操作冲突
+                tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+
                 if let Err(e) = fetch_and_update_room_members(
                     room_id_clone,
                     db_conn,
@@ -138,7 +141,7 @@ pub async fn get_room_members(
                 )
                 .await
                 {
-                    error!("Failed to asynchronously update room member data: {:?}", e);
+                    error!("异步更新房间成员数据到本地数据库失败: {:?}", e);
                 }
             });
 
@@ -300,21 +303,61 @@ async fn fetch_and_update_room_members(
         .send_json::<Vec<im_room_member::Model>>()
         .await?;
 
-    // 更新本地数据库
+    // 更新本地数据库（添加重试机制）
     if let Some(data) = resp.data {
         if !data.is_empty() {
             let room_id_i64 = room_id.parse::<i64>().unwrap_or(0);
-            save_room_member_batch(db_conn.deref(), data.clone(), room_id_i64, &login_uid)
-                .await
-                .map_err(|e| {
-                    anyhow::anyhow!(
-                        "[{}:{}] 异步更新房间成员数据到本地数据库失败: {}",
-                        file!(),
-                        line!(),
-                        e
-                    )
-                })?;
-            return Ok(data.clone());
+
+            // 添加重试机制处理数据库锁定问题
+            let mut retry_count = 0;
+            const MAX_RETRIES: u32 = 3;
+
+            while retry_count < MAX_RETRIES {
+                match save_room_member_batch(db_conn.deref(), data.clone(), room_id_i64, &login_uid)
+                    .await
+                {
+                    Ok(_) => {
+                        info!(
+                            "Successfully updated room member data for room_id: {}",
+                            room_id
+                        );
+                        return Ok(data.clone());
+                    }
+                    Err(e) => {
+                        retry_count += 1;
+                        let error_msg = e.to_string();
+
+                        if error_msg.contains("database is locked") && retry_count < MAX_RETRIES {
+                            // 如果是数据库锁定错误，等待一段时间后重试
+                            let delay =
+                                tokio::time::Duration::from_millis(500 * retry_count as u64);
+                            tokio::time::sleep(delay).await;
+                            info!(
+                                "Database locked, retrying ({}/{}) after {}ms delay",
+                                retry_count,
+                                MAX_RETRIES,
+                                delay.as_millis()
+                            );
+                        } else {
+                            // 其他错误或重试次数用完，直接返回错误
+                            return Err(CommonError::UnexpectedError(anyhow::anyhow!(
+                                "[{}:{}] 异步更新房间成员数据到本地数据库失败: {}",
+                                file!(),
+                                line!(),
+                                e
+                            )));
+                        }
+                    }
+                }
+            }
+
+            // 如果所有重试都失败了
+            return Err(CommonError::UnexpectedError(anyhow::anyhow!(
+                "[{}:{}] 异步更新房间成员数据到本地数据库失败: 重试 {} 次后仍然失败",
+                file!(),
+                line!(),
+                MAX_RETRIES
+            )));
         }
     }
 
