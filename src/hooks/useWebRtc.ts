@@ -667,12 +667,59 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
     }
   }
 
+  // 视频轨道状态
+  const isVideoEnabled = ref(callType === CallTypeEnum.VIDEO)
+
   // 切换静音
   const toggleMute = () => {
     if (localStream.value) {
       const audioTrack = localStream.value.getAudioTracks()[0]
       if (audioTrack) {
         audioTrack.enabled = !audioTrack.enabled
+      }
+    }
+  }
+
+  // 切换视频
+  const toggleVideo = async () => {
+    if (localStream.value) {
+      const videoTrack = localStream.value.getVideoTracks()[0]
+      if (videoTrack) {
+        // 切换视频轨道的启用状态
+        videoTrack.enabled = !videoTrack.enabled
+        isVideoEnabled.value = videoTrack.enabled
+
+        console.log(`视频轨道${videoTrack.enabled ? '开启' : '关闭'}`)
+
+        // 如果是关闭视频，通知对方
+        if (!videoTrack.enabled) {
+          console.log('本地视频已关闭，对方将看不到视频')
+        } else {
+          console.log('本地视频已开启，对方可以看到视频')
+        }
+      } else if (callType === CallTypeEnum.VIDEO) {
+        // 如果没有视频轨道但是视频通话，尝试重新获取
+        try {
+          const constraints = {
+            audio: false,
+            video: videoDevices.value.length > 0 ? { deviceId: selectedVideoDevice.value || undefined } : true
+          }
+
+          const newStream = await navigator.mediaDevices.getUserMedia(constraints)
+          const newVideoTrack = newStream.getVideoTracks()[0]
+
+          if (newVideoTrack && peerConnection.value) {
+            // 添加新的视频轨道
+            peerConnection.value.addTrack(newVideoTrack, localStream.value!)
+            localStream.value!.addTrack(newVideoTrack)
+            isVideoEnabled.value = true
+
+            console.log('重新获取视频轨道成功')
+          }
+        } catch (error) {
+          console.error('重新获取视频轨道失败:', error)
+          window.$message.error('无法开启摄像头')
+        }
       }
     }
   }
@@ -754,16 +801,6 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
     } catch (error) {
       window.$message.error('切换视频设备失败！')
       console.error('切换视频设备失败:', error)
-    }
-  }
-
-  // 切换视频开关
-  const toggleVideo = () => {
-    if (localStream.value) {
-      const videoTrack = localStream.value.getVideoTracks()[0]
-      if (videoTrack) {
-        videoTrack.enabled = !videoTrack.enabled
-      }
     }
   }
 
@@ -934,6 +971,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
     callDuration,
     connectionStatus,
     toggleMute,
-    sendRtcCall2VideoCallResponse
+    sendRtcCall2VideoCallResponse,
+    isVideoEnabled
   }
 }

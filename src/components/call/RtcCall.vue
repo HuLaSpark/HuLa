@@ -57,8 +57,10 @@
 
     <!-- 主要内容区域 -->
     <div class="call-content flex-1 flex flex-col items-center justify-center px-32px pt-60px">
-      <!-- 视频通话时显示视频 -->
-      <div v-if="callType === CallTypeEnum.VIDEO && localStream && isVideoOn" class="video-container mb-32px relative">
+      <!-- 视频通话时显示视频 (只有在双方都开启视频时才显示) -->
+      <div
+        v-if="callType === CallTypeEnum.VIDEO && localStream && (isVideoEnabled || hasRemoteVideo)"
+        class="video-container mb-32px relative">
         <!-- 主视频 -->
         <video
           ref="mainVideoRef"
@@ -150,13 +152,15 @@
           <div
             @click="toggleVideo"
             class="control-btn w-60px h-60px rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 mb-8px"
-            :class="isVideoOn ? 'bg-blue-500 hover:bg-blue-400' : 'bg-red-500 hover:bg-red-400'">
+            :class="isVideoEnabled ? 'bg-blue-500 hover:bg-blue-400' : 'bg-red-500 hover:bg-red-400'">
             <Icon
-              :icon="isVideoOn ? 'material-symbols:videocam' : 'material-symbols:videocam-off'"
+              :icon="isVideoEnabled ? 'material-symbols:videocam' : 'material-symbols:videocam-off'"
               :size="24"
               class="text-white" />
           </div>
-          <div class="text-12px text-gray-400 whitespace-nowrap">{{ isVideoOn ? '关闭摄像头' : '开启摄像头' }}</div>
+          <div class="text-12px text-gray-400 whitespace-nowrap">
+            {{ isVideoEnabled ? '关闭摄像头' : '开启摄像头' }}
+          </div>
         </div>
       </div>
 
@@ -205,11 +209,14 @@ const {
   callDuration,
   connectionStatus,
   sendRtcCall2VideoCallResponse,
-  toggleMute: toggleMuteWebRtc
+  toggleMute: toggleMuteWebRtc,
+  toggleVideo: toggleVideoWebRtc,
+  isVideoEnabled
 } = useWebRtc(roomId, remoteUserId, callType, isReceiver)
 const isMuted = ref(false)
 const isSpeakerOn = ref(false)
-const isVideoOn = ref(false)
+// 视频通话时默认开启视频，语音通话时默认关闭
+const isVideoOn = ref(callType === CallTypeEnum.VIDEO)
 // 获取远程用户信息
 const remoteUserInfo = useUserInfo(remoteUserId)
 // 视频元素引用
@@ -266,97 +273,127 @@ const formattedCallDuration = computed(() => {
   }
 })
 
-const isPipVideoVisible = computed(() => {
-  return isVideoOn.value && !!remoteStream.value
+// 检测远程流是否有视频轨道且启用
+const hasRemoteVideo = computed(() => {
+  if (!remoteStream.value) return false
+  const videoTracks = remoteStream.value.getVideoTracks()
+  return videoTracks.length > 0 && videoTracks.some((track) => track.enabled)
 })
+
+// 检测本地视频是否启用
+const hasLocalVideo = computed(() => {
+  return isVideoEnabled.value && !!localStream.value
+})
+
+const isPipVideoVisible = computed(() => {
+  return (hasLocalVideo.value || hasRemoteVideo.value) && !!remoteStream.value
+})
+
+// 视频流分配工具函数
+const assignVideoStreams = async () => {
+  await nextTick()
+
+  if (!hasLocalVideo.value && !hasRemoteVideo.value) {
+    // 双方都没有视频，清空所有视频元素
+    clearVideoElements()
+    return
+  }
+
+  if (hasLocalVideo.value && hasRemoteVideo.value) {
+    // 双方都有视频，按布局分配
+    assignDualVideoStreams()
+  } else if (hasLocalVideo.value) {
+    // 只有本地视频
+    assignSingleVideoStream(localStream.value)
+  } else if (hasRemoteVideo.value) {
+    // 只有远程视频
+    assignSingleVideoStream(remoteStream.value)
+  }
+}
+
+// 清空视频元素
+const clearVideoElements = () => {
+  if (mainVideoRef.value) mainVideoRef.value.srcObject = null
+  if (pipVideoRef.value) pipVideoRef.value.srcObject = null
+}
+
+// 分配双视频流
+const assignDualVideoStreams = () => {
+  if (isLocalVideoMain.value) {
+    // 本地视频作为主视频
+    setVideoElement(mainVideoRef.value, localStream.value)
+    setVideoElement(pipVideoRef.value, remoteStream.value)
+  } else {
+    // 远程视频作为主视频
+    setVideoElement(mainVideoRef.value, remoteStream.value)
+    setVideoElement(pipVideoRef.value, localStream.value)
+  }
+}
+
+// 分配单视频流
+const assignSingleVideoStream = (stream: MediaStream | null) => {
+  setVideoElement(mainVideoRef.value, stream)
+  setVideoElement(pipVideoRef.value, null)
+}
+
+// 设置视频元素
+const setVideoElement = (videoElement: HTMLVideoElement | undefined, stream: MediaStream | null) => {
+  if (!videoElement) return
+
+  videoElement.srcObject = stream
+
+  // 设置完成后统一更新音频状态
+  if (stream) {
+    nextTick(() => updateRemoteVideoAudio())
+  }
+}
 
 const toggleMute = () => {
   isMuted.value = !isMuted.value
   toggleMuteWebRtc()
 }
 
-const toggleSpeaker = () => {
-  isSpeakerOn.value = !isSpeakerOn.value
+// 更新所有远程视频元素的音频状态
+const updateRemoteVideoAudio = () => {
+  const shouldMute = !isSpeakerOn.value
 
-  // 控制远程视频的音频输出
-  const setVideoMuted = (muted: boolean) => {
-    if (mainVideoRef.value && mainVideoRef.value.srcObject === remoteStream.value) {
-      mainVideoRef.value.muted = muted
-    }
-    if (pipVideoRef.value && pipVideoRef.value.srcObject === remoteStream.value) {
-      pipVideoRef.value.muted = muted
-    }
+  // 检查主视频是否是远程流
+  if (mainVideoRef.value && mainVideoRef.value.srcObject === remoteStream.value) {
+    mainVideoRef.value.muted = shouldMute
   }
 
-  // 当扬声器关闭时，静音远程视频；开启时，取消静音
-  setVideoMuted(!isSpeakerOn.value)
+  // 检查画中画视频是否是远程流
+  if (pipVideoRef.value && pipVideoRef.value.srcObject === remoteStream.value) {
+    pipVideoRef.value.muted = shouldMute
+  }
+}
 
+const toggleSpeaker = () => {
+  isSpeakerOn.value = !isSpeakerOn.value
+  updateRemoteVideoAudio()
   console.log('切换扬声器状态:', isSpeakerOn.value, '远程视频静音:', !isSpeakerOn.value)
 }
 
 const toggleVideo = async () => {
-  isVideoOn.value = !isVideoOn.value
+  try {
+    // 调用WebRTC层面的视频开关
+    await toggleVideoWebRtc()
 
-  if (isVideoOn.value) {
-    // 开启摄像头，重新获取视频流
-    try {
-      // 等待下一个事件循环，确保视频元素已加载
-      await nextTick()
-      console.log('远程流：', remoteStream.value)
-      console.log('本地流：', localStream.value)
-      console.log('mainVideoRef.value：', mainVideoRef.value)
-      console.log('pipVideoRef.value：', pipVideoRef.value)
-      if (isLocalVideoMain.value) {
-        mainVideoRef.value!.srcObject = localStream.value
-        if (pipVideoRef.value && remoteStream.value) {
-          console.log('设置远程流')
-          pipVideoRef.value.srcObject = remoteStream.value
-          // 应用扬声器状态到远程视频
-          pipVideoRef.value.muted = !isSpeakerOn.value
-        }
-      } else {
-        if (pipVideoRef.value) {
-          pipVideoRef.value.srcObject = localStream.value
-        }
-        mainVideoRef.value!.srcObject = remoteStream.value
-        // 应用扬声器状态到远程视频
-        if (mainVideoRef.value) {
-          mainVideoRef.value.muted = !isSpeakerOn.value
-        }
-      }
-    } catch (error) {
-      console.error('开启摄像头失败:', error)
-      isVideoOn.value = false
-    }
-  } else {
-    mainVideoRef.value!.srcObject = null
-    pipVideoRef.value!.srcObject = null
+    // 同步UI状态
+    isVideoOn.value = isVideoEnabled.value
+
+    // 重新分配视频流
+    await assignVideoStreams()
+  } catch (error) {
+    console.error('切换视频失败:', error)
   }
 }
 
 // 切换视频布局
 const toggleVideoLayout = async () => {
   isLocalVideoMain.value = !isLocalVideoMain.value
-
   // 重新分配视频流
-  await nextTick()
-  if (isLocalVideoMain.value) {
-    // 本地视频作为主视频
-    mainVideoRef.value!.srcObject = localStream.value
-    pipVideoRef.value!.srcObject = remoteStream.value
-    // 应用扬声器状态到远程视频
-    if (pipVideoRef.value) {
-      pipVideoRef.value.muted = !isSpeakerOn.value
-    }
-  } else {
-    // 远程视频作为主视频
-    mainVideoRef.value!.srcObject = remoteStream.value
-    pipVideoRef.value!.srcObject = localStream.value
-    // 应用扬声器状态到远程视频
-    if (mainVideoRef.value) {
-      mainVideoRef.value.muted = !isSpeakerOn.value
-    }
-  }
+  await assignVideoStreams()
 }
 
 // 接听通话
@@ -387,6 +424,18 @@ const rejectCall = async () => {
   // 调用拒绝响应函数
   handleCallResponse(CallResponseStatus.REJECTED)
 }
+
+// 监听视频状态变化，自动更新视频显示
+watch([hasLocalVideo, hasRemoteVideo, localStream, remoteStream], assignVideoStreams, { deep: true })
+
+// 同步初始视频状态
+watch(
+  isVideoEnabled,
+  (newVal) => {
+    isVideoOn.value = newVal
+  },
+  { immediate: true }
+)
 
 // 生命周期
 onMounted(async () => {
