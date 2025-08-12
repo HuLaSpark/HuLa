@@ -8,13 +8,13 @@ pub trait CustomInit {
 
 /// 构建平台特定的日志插件
 fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
-    let mut builder = tauri_plugin_log::Builder::new()
+    let builder = tauri_plugin_log::Builder::new()
         .level(tracing::log::LevelFilter::Info)
         .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
         .level_for("sqlx", tracing::log::LevelFilter::Warn)
         .level_for("sqlx::query", tracing::log::LevelFilter::Warn)
         .level_for("sea_orm", tracing::log::LevelFilter::Warn)
-        .level_for("hula_app_lib", tracing::log::LevelFilter::Info)
+        .level_for("hula_app_lib", tracing::log::LevelFilter::Debug)
         // 过滤掉无用的 tauri 内部日志
         .level_for("tauri", tracing::log::LevelFilter::Warn)
         .level_for("tauri::manager", tracing::log::LevelFilter::Warn)
@@ -23,6 +23,7 @@ fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
         .level_for("tauri::ipc", tracing::log::LevelFilter::Warn)
         .level_for("tao", tracing::log::LevelFilter::Warn)
         .level_for("wry", tracing::log::LevelFilter::Warn)
+        .level_for("tracing::span", tracing::log::LevelFilter::Warn)
         .targets([
             Target::new(TargetKind::Stdout),
             Target::new(TargetKind::Webview),
@@ -35,10 +36,10 @@ fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
             trace: Color::White,
         });
 
-    #[cfg(desktop)]
-    {
-        builder = builder.skip_logger();
-    }
+    // #[cfg(desktop)]
+    // {
+    //     builder = builder.skip_logger();
+    // }
 
     #[cfg(mobile)]
     {

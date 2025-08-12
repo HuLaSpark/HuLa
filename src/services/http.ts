@@ -3,6 +3,7 @@ import { fetch } from '@tauri-apps/plugin-http'
 import { AppException, ErrorType } from '@/common/exception'
 import { URLEnum } from '@/enums'
 import { RequestQueue } from '@/utils/RequestQueue'
+import { updateTokenSilently } from '../utils/TokenManager'
 import urls from './urls'
 
 // 错误信息常量
@@ -224,10 +225,7 @@ async function Http<T = any>(
           console.log('🤯 权限不足')
           break
         }
-        case 422: {
-          break
-        }
-        case 40004: {
+        case 406: {
           // 限制token刷新重试次数，最多重试一次
           if (tokenRefreshCount >= 1) {
             console.log('🚫 Token刷新重试次数超过限制，退出重试')
@@ -252,6 +250,9 @@ async function Http<T = any>(
             window.dispatchEvent(new Event('needReLogin'))
             throw refreshError
           }
+        }
+        case 422: {
+          break
         }
       }
 
@@ -364,8 +365,7 @@ async function refreshTokenAndRetry(): Promise<string> {
     const response = await fetch(urls.refreshToken, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${refreshToken}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({ refreshToken })
     })
@@ -379,10 +379,13 @@ async function refreshTokenAndRetry(): Promise<string> {
     }
     const { token, refreshToken: newRefreshToken } = data.data
 
-    console.log('🔑 Token刷新成功，更新存储', data)
+    console.log('🔑 Token刷新成功，更新存储', token, newRefreshToken)
     // 更新本地存储的token 知道
     localStorage.setItem('TOKEN', token)
     localStorage.setItem('REFRESH_TOKEN', newRefreshToken)
+
+    // 更新 rust端中的 token
+    await updateTokenSilently(token, newRefreshToken)
 
     // 使用队列处理方式
     await requestQueue.processQueue(token)

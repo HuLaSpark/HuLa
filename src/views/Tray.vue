@@ -182,7 +182,7 @@ const startBlinkTimer = () => {
 }
 
 // 停止图标闪烁定时器
-const stopBlinkTimer = () => {
+const stopBlinkTimer = async () => {
   if (timerWorker) {
     timerWorker.postMessage({
       type: 'clearTimer',
@@ -195,6 +195,15 @@ const stopBlinkTimer = () => {
     clearInterval(workerHealthTimer)
     workerHealthTimer = null
   }
+
+  // 恢复托盘图标为默认状态，防止图标消失
+  try {
+    const tray = await TrayIcon.getById('tray')
+    await tray?.setIcon('tray/icon.png')
+  } catch (e) {
+    console.warn('[Tray] 恢复托盘图标失败:', e)
+  }
+  iconVisible.value = false
 }
 
 // 终止Worker
@@ -215,7 +224,6 @@ const terminateWorker = () => {
 watchEffect(async () => {
   if (type() === 'windows') {
     if (tipVisible.value && !isFocused.value) {
-      initWorker() // 确保Worker已初始化
       startBlinkTimer() // 启动图标闪烁
     } else {
       stopBlinkTimer() // 停止图标闪烁

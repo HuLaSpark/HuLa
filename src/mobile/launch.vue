@@ -1,10 +1,10 @@
 <template>
   <n-config-provider :theme="lightTheme" class="launch-page h-100vh">
-    <img src="/Mobile/4.png" class="w-300px h-200px mb-140px" alt="hula" />
+    <img src="/Mobile/4.webp" class="w-300px h-200px mb-140px" alt="hula" />
 
     <div class="flex-center gap-16px absolute bottom--40px">
-      <img src="/Mobile/3.png" class="size-50px rounded-14px" alt="hula" />
-      <img src="/Mobile/1.png" class="w-78px h-40px" alt="hula" />
+      <img src="/Mobile/3.webp" class="size-50px rounded-14px" alt="hula" />
+      <img src="/Mobile/1.webp" class="w-78px h-40px" alt="hula" />
     </div>
   </n-config-provider>
 </template>
@@ -29,7 +29,7 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .launch-page {
-  background-image: url('/Mobile/2.png');
+  background-image: url('/Mobile/2.webp');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

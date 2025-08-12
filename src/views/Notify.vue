@@ -58,6 +58,7 @@ import type { MessageType } from '@/services/types.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { useTauriListener } from '../hooks/useTauriListener'
 
 // 定义分组消息的类型
 type GroupedMessage = {
@@ -75,6 +76,7 @@ type GroupedMessage = {
 
 const appWindow = WebviewWindow.getCurrent()
 const { checkWinExist, resizeWindow } = useWindow()
+const { addListener } = useTauriListener()
 const { checkMessageAtMe } = useReplaceMsg()
 const globalStore = useGlobalStore()
 const chatStore = useChatStore()
@@ -129,7 +131,7 @@ const debouncedHandleTip = useDebounceFn(handleTip, 100)
 // 处理窗口显示和隐藏的逻辑
 const showWindow = async (event: Event<any>) => {
   if (tipVisible.value) {
-    const notifyWindow = await WebviewWindow.getCurrent()
+    const notifyWindow = WebviewWindow.getCurrent()
     const outerSize = await notifyWindow?.outerSize()
     if (outerSize) {
       await notifyWindow?.setPosition(
@@ -171,10 +173,6 @@ onBeforeMount(async () => {
   await chatStore.getSessionList(true)
 })
 
-import { useTauriListener } from '../hooks/useTauriListener'
-
-const { addListener } = useTauriListener()
-
 onMounted(async () => {
   // 初始化窗口高度
   resizeWindow('notify', 280, 140)
@@ -205,7 +203,7 @@ onMounted(async () => {
       'hide_notify'
     )
     addListener(
-      appWindow.listen('notify_cotent', async (event: Event<MessageType>) => {
+      appWindow.listen('notify_content', async (event: Event<MessageType>) => {
         if (event.payload) {
           // 窗口显示将由notify_enter事件触发
 
@@ -278,7 +276,7 @@ onMounted(async () => {
           msgCount.value = content.value.reduce((acc, group) => acc + group.messageCount, 0)
         }
       }),
-      'notify_cotent'
+      'notify_content'
     )
   }
 })

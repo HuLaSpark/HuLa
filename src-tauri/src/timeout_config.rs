@@ -41,7 +41,11 @@ where
     match tokio::time::timeout(timeout, future).await {
         Ok(result) => result,
         Err(_) => {
-            tracing::error!("Operation '{}' timed out after {:?}", operation_name, timeout);
+            tracing::error!(
+                "Operation '{}' timed out after {:?}",
+                operation_name,
+                timeout
+            );
             Err(crate::error::CommonError::UnexpectedError(anyhow::anyhow!(
                 "Operation '{}' timed out after {:?}",
                 operation_name,

@@ -572,7 +572,7 @@ export const useChatMain = () => {
         try {
           await groupStore.addAdmin([targetUid])
           window.$message.success('设置管理员成功')
-        } catch (error) {
+        } catch (_error) {
           window.$message.error('设置管理员失败')
         }
       },
@@ -595,7 +595,7 @@ export const useChatMain = () => {
         // 如果item中没有roleId，则通过uid从群成员列表中查找
         if (targetRoleId === void 0) {
           const targetUser = groupStore.userList.find((user) => user.uid === targetUid)
-          targetRoleId = targetUser?.groupRole
+          targetRoleId = targetUser?.roleId
         }
 
         // 检查目标用户是否已经是管理员或群主
@@ -603,7 +603,7 @@ export const useChatMain = () => {
 
         // 5. 检查当前用户是否是群主
         const currentUser = groupStore.userList.find((user) => user.uid === userUid.value)
-        return currentUser?.groupRole === RoleEnum.LORD
+        return currentUser?.roleId === RoleEnum.LORD
       }
     },
     {
@@ -617,7 +617,7 @@ export const useChatMain = () => {
         try {
           await groupStore.revokeAdmin([targetUid])
           window.$message.success('撤销管理员成功')
-        } catch (error) {
+        } catch (_error) {
           window.$message.error('撤销管理员失败')
         }
       },
@@ -640,7 +640,7 @@ export const useChatMain = () => {
         // 如果item中没有roleId，则通过uid从群成员列表中查找
         if (targetRoleId === void 0) {
           const targetUser = groupStore.userList.find((user) => user.uid === targetUid)
-          targetRoleId = targetUser?.groupRole
+          targetRoleId = targetUser?.roleId
         }
 
         // 检查目标用户是否是管理员(只能撤销管理员,不能撤销群主)
@@ -648,7 +648,7 @@ export const useChatMain = () => {
 
         // 5. 检查当前用户是否是群主
         const currentUser = groupStore.userList.find((user) => user.uid === userUid.value)
-        return currentUser?.groupRole === RoleEnum.LORD
+        return currentUser?.roleId === RoleEnum.LORD
       }
     }
   ])
@@ -667,7 +667,7 @@ export const useChatMain = () => {
           // 从群成员列表中移除该用户
           groupStore.filterUser(targetUid)
           window.$message.success('移出群聊成功')
-        } catch (error) {
+        } catch (_error) {
           window.$message.error('移出群聊失败')
         }
       },
@@ -690,7 +690,7 @@ export const useChatMain = () => {
         // 如果item中没有roleId，则通过uid从群成员列表中查找
         if (targetRoleId === void 0) {
           const targetUser = groupStore.userList.find((user) => user.uid === targetUid)
-          targetRoleId = targetUser?.groupRole
+          targetRoleId = targetUser?.roleId
         }
 
         // 检查目标用户是否是群主(群主不能被移出)
@@ -698,8 +698,8 @@ export const useChatMain = () => {
 
         // 5. 检查当前用户是否有权限(群主或管理员)
         const currentUser = groupStore.userList.find((user) => user.uid === userUid.value)
-        const isLord = currentUser?.groupRole === RoleEnum.LORD
-        const isAdmin = currentUser?.groupRole === RoleEnum.ADMIN
+        const isLord = currentUser?.roleId === RoleEnum.LORD
+        const isAdmin = currentUser?.roleId === RoleEnum.ADMIN
 
         // 6. 如果当前用户是管理员,则不能移出其他管理员
         if (isAdmin && targetRoleId === RoleEnum.ADMIN) return false

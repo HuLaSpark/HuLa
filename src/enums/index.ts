@@ -195,6 +195,10 @@ export enum MsgEnum {
   NOTICE,
   /** 机器人 */
   BOT,
+  /** 视频通话 */
+  VIDEO_CALL,
+  /** 语音通话 */
+  AUDIO_CALL,
   /** 混合 */
   MIXED,
   /** 艾特 */
@@ -487,5 +491,24 @@ export enum TauriCommand {
   /** 保存消息 */
   SAVE_MSG = 'save_msg',
   /** 保存消息标记 */
-  SAVE_MESSAGE_MARK = 'save_message_mark'
+  SAVE_MESSAGE_MARK = 'save_message_mark',
+  /** 更新 token */
+  UPDATE_TOKEN = 'update_token'
+}
+
+// 通话状态枚举
+export enum RTCCallStatus {
+  CALLING = 1, // 呼叫
+  ACCEPT = 2, // 接听
+  END = 3, // 结束
+  REJECT = 4, // 拒绝
+  ERROR = 5, // 错误中断
+  BUSY = 6, // 忙线中
+  CANCEL = 7 // 取消
+}
+
+// 通话类型枚举
+export enum CallTypeEnum {
+  AUDIO = 1, // 语音通话
+  VIDEO = 2 // 视频通话
 }

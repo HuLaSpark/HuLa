@@ -439,7 +439,7 @@ export const useUpload = () => {
         height: result.height,
         tempUrl: result.previewUrl!
       }
-    } catch (error) {
+    } catch (_error) {
       return { width: 0, height: 0, url: null }
     }
   }
@@ -610,7 +610,7 @@ export const useUpload = () => {
           downloadUrl: qiniuConfig.domain, // 下载URL会在实际上传后生成
           config: config
         }
-      } catch (error) {
+      } catch (_error) {
         throw new Error('获取七牛云token失败，请重试')
       }
     } else {
@@ -630,7 +630,7 @@ export const useUpload = () => {
 
         console.log('获取上传链接成功:', res)
         return res
-      } catch (error) {
+      } catch (_error) {
         throw new Error('获取上传链接失败，请重试')
       }
     }
@@ -864,7 +864,7 @@ export const useUpload = () => {
         if (file.length > CHUNK_THRESHOLD) {
           // 转换file的类型
           // TODO：本地上传还需要测试
-          const fileObj = new File([file], __filename, { type: 'application/octet-stream' })
+          const fileObj = new File([new Uint8Array(file)], __filename, { type: 'application/octet-stream' })
           await uploadToDefaultWithChunks(uploadUrl, fileObj)
         } else {
           const response = await fetch(uploadUrl, {

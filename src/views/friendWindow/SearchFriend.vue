@@ -66,7 +66,12 @@
               <template #item="{ item }">
                 <div class="p-[0_20px] box-border">
                   <n-flex align="center" :size="12" class="p-[8px_0] rounded-lg">
-                    <n-avatar :size="48" :src="AvatarUtils.getAvatarUrl(item.avatar)" fallback-src="/logo.png" round />
+                    <n-avatar
+                      :size="48"
+                      :src="AvatarUtils.getAvatarUrl(item.avatar)"
+                      :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+                      :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
+                      round />
                     <n-flex vertical justify="center" :size="10" class="flex-1">
                       <n-space align="center" :size="10">
                         <span class="text-(14px [--text-color])">{{ item.name }}</span>
@@ -135,6 +140,7 @@ import { emitTo } from '@tauri-apps/api/event'
 import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { debounce } from 'lodash-es'
 import FloatBlockList from '@/components/common/FloatBlockList.vue'
+import { ThemeEnum } from '@/enums'
 import { RoomTypeEnum } from '@/enums/index.ts'
 import { useBadgeInfo } from '@/hooks/useCached.ts'
 import { useWindow } from '@/hooks/useWindow'
@@ -143,6 +149,7 @@ import type { ContactItem, GroupListReq } from '@/services/types'
 import { useCachedStore } from '@/stores/cached'
 import { useContactStore } from '@/stores/contacts'
 import { useGlobalStore } from '@/stores/global'
+import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 
@@ -151,6 +158,8 @@ const cachedStore = useCachedStore()
 const contactStore = useContactStore()
 const userStore = useUserStore()
 const globalStore = useGlobalStore()
+const settingStore = useSettingStore()
+const { themes } = storeToRefs(settingStore)
 
 // 定义标签页
 const tabs = ref([

@@ -14,6 +14,7 @@
 <script setup lang="ts">
 import type { SessionItem } from '@/services/types.ts'
 import { useSettingStore } from '@/stores/setting.ts'
+
 const settingStore = useSettingStore()
 const { page } = storeToRefs(settingStore)
 const { activeItem } = defineProps<{

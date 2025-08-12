@@ -2,7 +2,7 @@ use crate::AppData;
 use crate::error::CommonError;
 use crate::im_reqest_client::ImRequestClient;
 use crate::repository::im_contact_repository::{save_contact_batch, update_contact_hide};
-use anyhow::Context;
+
 use entity::im_contact;
 use sea_orm::DatabaseConnection;
 use serde::{Deserialize, Serialize};
@@ -16,7 +16,7 @@ use tracing::{error, info};
 pub async fn list_contacts_command(
     state: State<'_, AppData>,
 ) -> Result<Vec<im_contact::Model>, String> {
-    info!("Getting all conversations");
+    info!("查询所有会话列表:");
     let result: Result<Vec<im_contact::Model>, CommonError> = async {
         // 获取当前登录用户的 uid
         let login_uid = {
@@ -63,7 +63,14 @@ async fn fetch_and_update_contacts(
         // 保存到本地数据库
         save_contact_batch(db_conn.deref(), data.clone(), &login_uid)
             .await
-            .with_context(|| format!("[{}:{}] Failed to save contact data to local database", file!(), line!()))?;
+            .map_err(|e| {
+                anyhow::anyhow!(
+                    "[{}:{}] Failed to save contact data to local database: {}",
+                    file!(),
+                    line!(),
+                    e
+                )
+            })?;
 
         Ok(data)
     } else {
@@ -112,7 +119,10 @@ pub async fn hide_contact_command(
             )
             .await?;
 
-            info!("Successfully hid contact: room_id={}", &data.room_id.clone());
+            info!(
+                "Successfully hid contact: room_id={}",
+                &data.room_id.clone()
+            );
             Ok(())
         } else {
             Err(CommonError::UnexpectedError(anyhow::anyhow!(

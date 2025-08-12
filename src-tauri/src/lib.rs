@@ -29,7 +29,9 @@ pub mod im_reqest_client;
 pub mod pojo;
 pub mod repository;
 pub mod timeout_config;
+pub mod utils;
 mod vo;
+pub mod websocket;
 
 use crate::command::room_member_command::{
     cursor_page_room_members, get_room_members, page_room, update_my_room_info,
@@ -37,7 +39,6 @@ use crate::command::room_member_command::{
 use crate::configuration::get_configuration;
 use crate::error::CommonError;
 use crate::im_reqest_client::ImRequestClient;
-use anyhow::Context;
 use sea_orm::DatabaseConnection;
 use serde::{Deserialize, Serialize};
 use std::ops::Deref;
@@ -60,6 +61,7 @@ use crate::command::message_command::{
     check_user_init_and_fetch_messages, page_msg, save_msg, send_msg,
 };
 use crate::command::message_mark_command::save_message_mark;
+use crate::websocket::manager::init_global_websocket_manager;
 use tauri::{Listener, Manager};
 use tokio::sync::Mutex;
 
@@ -226,7 +228,7 @@ pub struct UserInfo {
 pub async fn build_request_client() -> Result<reqwest::Client, CommonError> {
     let client = reqwest::Client::builder()
         .build()
-        .with_context(|| "Reqwest client error")?;
+        .map_err(|e| anyhow::anyhow!("Reqwest client error: {}", e))?;
     Ok(client)
 }
 
@@ -329,6 +331,9 @@ fn common_setup(
             let client_guard = tauri::async_runtime::block_on(client.lock());
             client_guard.set_app_handle(app_handle.clone());
             drop(client_guard);
+
+            // 初始化全局 WebSocket 管理器
+            let _ws_manager = init_global_websocket_manager(&app_handle);
         }
         Err(e) => {
             tracing::error!("Failed to initialize application data: {}", e);
@@ -344,9 +349,14 @@ fn common_setup(
 // 公共的命令处理器函数
 fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static
 {
-    use crate::command::user_command::{save_user_info, update_user_last_opt_time};
+    use crate::command::user_command::{save_user_info, update_token, update_user_last_opt_time};
     #[cfg(desktop)]
     use crate::desktops::common_cmd::set_badge_count;
+    use crate::websocket::commands::{
+        ws_disconnect, ws_force_reconnect, ws_get_app_background_state, ws_get_health,
+        ws_get_state, ws_init_connection, ws_is_connected, ws_send_message,
+        ws_set_app_background_state, ws_update_config,
+    };
 
     tauri::generate_handler![
         // 桌面端特定命令
@@ -377,6 +387,7 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         // 通用命令（桌面端和移动端都支持）
         save_user_info,
         update_user_last_opt_time,
+        update_token,
         page_room,
         get_room_members,
         update_my_room_info,
@@ -386,6 +397,17 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         page_msg,
         send_msg,
         save_msg,
-        save_message_mark
+        save_message_mark,
+        // WebSocket 相关命令
+        ws_init_connection,
+        ws_disconnect,
+        ws_send_message,
+        ws_get_state,
+        ws_get_health,
+        ws_force_reconnect,
+        ws_update_config,
+        ws_is_connected,
+        ws_set_app_background_state,
+        ws_get_app_background_state
     ]
 }

@@ -40,7 +40,8 @@
                       class="grayscale"
                       :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
                       :src="AvatarUtils.getAvatarUrl(useUserInfo(item.uid).value.avatar!)"
-                      fallback-src="/logo.png" />
+                      :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+                      :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'" />
 
                     <n-flex vertical justify="space-between" class="h-fit flex-1 truncate">
                       <span class="text-14px leading-tight flex-1 truncate">
@@ -88,7 +89,8 @@
                   bordered
                   :size="44"
                   :src="AvatarUtils.getAvatarUrl(item.avatar)"
-                  fallback-src="/logo.png" />
+                  :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+                  :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'" />
 
                 <span class="text-14px leading-tight flex-1 truncate">{{ item.remark || item.roomName }}</span>
               </n-flex>
@@ -101,12 +103,13 @@
 </template>
 <script setup lang="ts" name="friendsList">
 import { storeToRefs } from 'pinia'
-import { MittEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
+import { MittEnum, OnlineEnum, RoomTypeEnum, ThemeEnum } from '@/enums'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { RequestFriendAgreeStatus } from '@/services/types'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
+import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
@@ -124,6 +127,8 @@ const contactStore = useContactStore()
 const globalStore = useGlobalStore()
 const userStatusStore = useUserStatusStore()
 const userStore = useUserStore()
+const settingStore = useSettingStore()
+const { themes } = storeToRefs(settingStore)
 const { stateList } = storeToRefs(userStatusStore)
 
 /** 是否有待处理的好友申请 */

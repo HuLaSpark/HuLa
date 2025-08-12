@@ -23,7 +23,7 @@
 }
 @mixin float($position: top) {
   @if $position == bottom {
-    @apply fixed z-10 bottom-210px w-fit select-none text-#13987f cursor-pointer;
+    @apply fixed z-10 w-fit select-none text-#13987f cursor-pointer;
   } @else {
     @apply fixed z-10 top-80px w-fit select-none text-#13987f cursor-pointer;
   }
@@ -200,6 +200,23 @@
 .fade-translate-enter-from,
 .fade-translate-leave-to {
   opacity: 0;
+}
+
+/** 公告显示/隐藏动画 */
+.announcement-enter-active,
+.announcement-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: top;
+}
+.announcement-enter-from,
+.announcement-leave-to {
+  opacity: 0;
+  transform: scaleY(0.8) translateY(-10px);
+}
+.announcement-enter-to,
+.announcement-leave-from {
+  opacity: 1;
+  transform: scaleY(1) translateY(0);
 }
 
 // 置顶公告样式

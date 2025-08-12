@@ -1,5 +1,5 @@
 use crate::error::CommonError;
-use anyhow::Context;
+
 use entity::im_contact;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter,
@@ -37,7 +37,7 @@ pub async fn save_contact_batch(
         .filter(im_contact::Column::LoginUid.eq(login_uid))
         .exec(&txn)
         .await
-        .with_context(|| "Failed to delete existing contact data")?;
+        .map_err(|e| anyhow::anyhow!("Failed to delete existing contact data: {}", e))?;
 
     // 批量插入新的会话数据
     let active_models: Vec<im_contact::ActiveModel> = contacts
@@ -53,7 +53,7 @@ pub async fn save_contact_batch(
         im_contact::Entity::insert_many(active_models)
             .exec(&txn)
             .await
-            .with_context(|| "Failed to batch insert contact data")?;
+            .map_err(|e| anyhow::anyhow!("Failed to batch insert contact data: {}", e))?;
     }
 
     // 提交事务
@@ -79,7 +79,7 @@ pub async fn update_contact_hide(
         .filter(im_contact::Column::LoginUid.eq(login_uid))
         .one(db)
         .await
-        .with_context(|| "Failed to find contact record")?;
+        .map_err(|e| anyhow::anyhow!("Failed to find contact record: {}", e))?;
 
     if let Some(contact) = contact {
         let mut active_model: im_contact::ActiveModel = contact.into_active_model();
@@ -88,13 +88,10 @@ pub async fn update_contact_hide(
         active_model
             .update(db)
             .await
-            .with_context(|| "Failed to update contact hide status")?;
+            .map_err(|e| anyhow::anyhow!("Failed to update contact hide status: {}", e))?;
 
         info!("Successfully updated contact hide status");
-        Ok(())
-    } else {
-        Err(CommonError::UnexpectedError(anyhow::anyhow!(
-            "Failed to find corresponding contact record"
-        )))
     }
+
+    Ok(())
 }

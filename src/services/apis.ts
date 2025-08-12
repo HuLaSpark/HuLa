@@ -120,7 +120,7 @@ export default {
   /** 屏蔽消息 */
   shield: (params: { roomId: string; state: boolean }) => POST<void>(urls.shield, params),
   /** 申请加群 */
-  applyGroup: (params: { targetGroupId: string; msg: string }) => POST(urls.applyGroup, params),
+  applyGroup: (params: { account: string; msg: string }) => POST(urls.applyGroup, params),
   /** 会话详情(联系人列表发消息用) */
   sessionDetailWithFriends: (params: { id: string; roomType: number }) =>
     GET<SessionItem>(urls.sessionDetailWithFriends, params),

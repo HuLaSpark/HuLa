@@ -162,7 +162,7 @@ const checkAudioSupport = (mimeType: string): string => {
  * 生成音频波形数据
  * @param input 可以是 ArrayBuffer 或 Uint8Array
  */
-const generateWaveformData = async (input: ArrayBuffer | Uint8Array) => {
+const generateWaveformData = async (input: ArrayBuffer | Uint8Array | SharedArrayBuffer) => {
   try {
     // 创建 AudioContext
     if (!audioContext.value) {
@@ -170,8 +170,24 @@ const generateWaveformData = async (input: ArrayBuffer | Uint8Array) => {
     }
 
     // 如果是 Uint8Array，先取出其 buffer
-    const arrayBuffer =
-      input instanceof Uint8Array ? input.buffer.slice(input.byteOffset, input.byteOffset + input.byteLength) : input
+    // 确保 arrayBuffer 是 ArrayBuffer 类型
+    let arrayBuffer: ArrayBuffer
+    if (input instanceof Uint8Array) {
+      // 如果 buffer 是 ArrayBuffer，直接使用；否则创建新的 ArrayBuffer
+      if (input.buffer instanceof ArrayBuffer) {
+        arrayBuffer = input.buffer.slice(input.byteOffset, input.byteOffset + input.byteLength)
+      } else {
+        // 如果是 SharedArrayBuffer，转换为 ArrayBuffer
+        arrayBuffer = new ArrayBuffer(input.byteLength)
+        new Uint8Array(arrayBuffer).set(input)
+      }
+    } else if (input instanceof ArrayBuffer) {
+      arrayBuffer = input
+    } else {
+      // 如果是 SharedArrayBuffer，转换为 ArrayBuffer
+      arrayBuffer = new ArrayBuffer(input.byteLength)
+      new Uint8Array(arrayBuffer).set(new Uint8Array(input))
+    }
 
     // 解码音频数据
     const buffer = await audioContext.value.decodeAudioData(arrayBuffer)
@@ -282,8 +298,6 @@ const getLocalAudioFile = async (fileName: string) => {
       ? fileBuffer.buffer.slice(fileBuffer.byteOffset, fileBuffer.byteOffset + fileBuffer.byteLength)
       : fileBuffer
 
-  console.log('找到文件：', fileName, fileBuffer)
-
   return {
     fileBuffer: arrayBuffer,
     cachePath,
@@ -335,7 +349,7 @@ const loadAudioWaveform = async () => {
     // 判断本地音频文件是否存在
     if (localAudioFile.fileExists) {
       // 本地音频存在，则读取它的Buffer格式为Uint8Array<ArrayBufferLike>
-      await generateWaveformData(localAudioFile.fileBuffer)
+      await generateWaveformData(localAudioFile.fileBuffer as ArrayBuffer)
     } else {
       // 本地音频不存在，读取在线资源文件，格式为Uint8Array<ArrayBufferLike>
       const arrayBuffer = await fetchAndDownloadAudioFile(localAudioFile.cachePath, fileMeta.name)
@@ -411,7 +425,15 @@ const createAudioElement = async () => {
       // 降级到远程URL
       playableUrl = props.body.url
     } else {
-      playableUrl = URL.createObjectURL(new Blob([fileData.fileBuffer], { type: mimeType }))
+      // 确保 fileBuffer 是 ArrayBuffer 类型
+      let arrayBuffer: ArrayBuffer
+      if (fileData.fileBuffer instanceof ArrayBuffer) {
+        arrayBuffer = fileData.fileBuffer
+      } else {
+        arrayBuffer = new ArrayBuffer((fileData.fileBuffer as any).byteLength)
+        new Uint8Array(arrayBuffer).set(new Uint8Array(fileData.fileBuffer as any))
+      }
+      playableUrl = URL.createObjectURL(new Blob([new Uint8Array(arrayBuffer)], { type: mimeType }))
     }
   }
 

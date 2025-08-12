@@ -12,24 +12,27 @@
   </n-flex>
 
   <!-- 置顶公告提示 -->
-  <div
-    v-if="isGroup && topAnnouncement"
-    class="feishu-announcement"
-    :class="{ 'announcement-hover': isAnnouncementHover }"
-    @mouseenter="isAnnouncementHover = true"
-    @mouseleave="isAnnouncementHover = false">
-    <n-flex :wrap="false" class="w-full" align="center" justify="space-between">
-      <n-flex :wrap="false" align="center" class="pl-12px select-none" :size="6">
-        <svg class="size-16px flex-shrink-0"><use href="#Loudspeaker"></use></svg>
-        <div style="max-width: calc(100vw - 70vw)" class="line-clamp-1 text-(12px [--chat-text-color])">
-          {{ topAnnouncement.content }}
+  <Transition name="announcement" mode="out-in">
+    <div
+      v-if="isGroup && topAnnouncement"
+      key="announcement"
+      class="feishu-announcement"
+      :class="{ 'announcement-hover': isAnnouncementHover }"
+      @mouseenter="isAnnouncementHover = true"
+      @mouseleave="isAnnouncementHover = false">
+      <n-flex :wrap="false" class="w-full" align="center" justify="space-between">
+        <n-flex :wrap="false" align="center" class="pl-12px select-none" :size="6">
+          <svg class="size-16px flex-shrink-0"><use href="#Loudspeaker"></use></svg>
+          <div style="max-width: calc(100vw - 70vw)" class="line-clamp-1 text-(12px [--chat-text-color])">
+            {{ topAnnouncement.content }}
+          </div>
+        </n-flex>
+        <div class="flex-shrink-0 w-60px select-none" @click="handleViewAnnouncement">
+          <p class="text-(12px #13987f) cursor-pointer">查看全部</p>
         </div>
       </n-flex>
-      <div class="flex-shrink-0 w-60px select-none" @click="handleViewAnnouncement">
-        <p class="text-(12px #13987f) cursor-pointer">查看全部</p>
-      </div>
-    </n-flex>
-  </div>
+    </div>
+  </Transition>
 
   <Transition name="chat-init" appear mode="out-in" @after-leave="handleTransitionComplete">
     <!-- 初次加载的骨架屏 -->
@@ -100,6 +103,11 @@
             :from-user-uid="item.fromUser.uid"
             :is-group="isGroup" />
 
+          <SystemMessage
+            v-if="item.message.type === MsgEnum.SYSTEM"
+            :body="item.message.body"
+            :from-user-uid="item.fromUser.uid" />
+
           <!-- 消息为机器人消息时 -->
           <BotMessage
             v-else-if="item.message.type === MsgEnum.BOT"
@@ -158,6 +166,8 @@
                       :size="34"
                       @click="selectKey = item.message.id"
                       class="select-none"
+                      :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+                      :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
                       :src="getAvatarSrc(item.fromUser.uid)"
                       :class="item.fromUser.uid === userUid ? '' : 'mr-10px'" />
                   </ContextMenu>
@@ -194,10 +204,12 @@
                         "
                         trigger="hover">
                         <template #trigger>
-                          <img
-                            class="size-18px"
-                            :src="useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.img"
-                            alt="badge" />
+                          <n-avatar
+                            class="select-none"
+                            :size="18"
+                            round
+                            :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
+                            :src="useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.img" />
                         </template>
                         <span>
                           {{ useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.describe }}
@@ -339,7 +351,13 @@
                   <svg class="size-14px">
                     <use href="#to-top"></use>
                   </svg>
-                  <n-avatar class="reply-avatar" round :size="20" :src="getAvatarSrc(item.message.body.reply.uid)" />
+                  <n-avatar
+                    class="reply-avatar"
+                    round
+                    :size="20"
+                    :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+                    :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
+                    :src="getAvatarSrc(item.message.body.reply.uid)" />
                   <span>{{ `${item.message.body.reply.username}：` }}</span>
                   <span class="content-span">
                     {{ item.message.body.reply.body }}
@@ -351,14 +369,15 @@
 
                 <!-- 动态渲染所有回复表情反应 -->
                 <div
+                  v-if="item && item.message"
                   class="flex-y-center gap-6px flex-wrap w-270px"
                   :class="{ 'justify-end': isSingleLineEmojis(item) }">
                   <template v-for="emoji in emojiList" :key="emoji.value">
                     <!-- 根据表情类型获取对应的计数属性名 -->
-                    <div class="flex-y-center" v-if="getEmojiCount(item, emoji.value) > 0">
-                      <div class="emoji-reply-bubble" @click.stop="cancelReplyEmoji(item, emoji.value)">
+                    <div class="flex-y-center" v-if="item && getEmojiCount(item, emoji.value) > 0">
+                      <div class="emoji-reply-bubble" @click.stop="item && cancelReplyEmoji(item, emoji.value)">
                         <img :title="emoji.title" class="size-18px" :src="emoji.url" :alt="emoji.title" />
-                        <span class="text-(12px #eee)">{{ getEmojiCount(item, emoji.value) }}</span>
+                        <span class="text-(12px #eee)">{{ item ? getEmojiCount(item, emoji.value) : 0 }}</span>
                       </div>
                     </div>
                   </template>
@@ -401,7 +420,8 @@
   <footer
     class="float-footer"
     v-if="shouldShowFloatFooter && currentNewMsgCount"
-    :class="isGroup ? 'right-220px' : 'right-50px'">
+    :class="isGroup ? 'right-220px' : 'right-50px'"
+    :style="{ bottom: `${footerHeight + 16}px` }">
     <div class="float-box" :class="{ max: currentNewMsgCount?.count > 99 }" @click="scrollToBottom">
       <n-flex justify="space-between" align="center">
         <n-icon :color="currentNewMsgCount?.count > 99 ? '#ce304f' : '#13987f'">
@@ -424,9 +444,11 @@ import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { type } from '@tauri-apps/plugin-os'
 import { useDebounceFn } from '@vueuse/core'
 import { delay } from 'lodash-es'
+import { ANNOUNCEMENT_HEIGHT, CHAT_HEADER_HEIGHT } from '@/common/constants'
 import VirtualList, { type VirtualListExpose } from '@/components/common/VirtualList.vue'
-import { EventEnum, MessageStatusEnum, MittEnum, MsgEnum, TauriCommand } from '@/enums'
+import { EventEnum, MessageStatusEnum, MittEnum, MsgEnum, ThemeEnum } from '@/enums'
 import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
+import { useChatLayoutGlobal } from '@/hooks/useChatLayout'
 import { useChatMain } from '@/hooks/useChatMain.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useNetworkStatus } from '@/hooks/useNetworkStatus'
@@ -439,11 +461,11 @@ import { useCachedStore } from '@/stores/cached'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global'
 import { useGroupStore } from '@/stores/group.ts'
+import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user.ts'
 import { audioManager } from '@/utils/AudioManager'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
-import { ErrorType, invokeWithErrorHandler } from '~/src/utils/TauriInvokeHandler'
 
 const appWindow = WebviewWindow.getCurrent()
 const { addListener } = useTauriListener()
@@ -457,6 +479,9 @@ const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
 const cachedStore = useCachedStore()
 const networkStatus = useNetworkStatus()
+const settingStore = useSettingStore()
+const { themes } = storeToRefs(settingStore)
+const { footerHeight } = useChatLayoutGlobal()
 
 // 记录当前滚动位置相关信息
 const isAutoScrolling = ref(false)
@@ -473,7 +498,10 @@ const isGroup = computed(() => chatStore.isGroup)
 const userUid = computed(() => userStore.userInfo.uid)
 const chatMessageList = computed(() => chatStore.chatMessageList)
 const currentNewMsgCount = computed(() => chatStore.currentNewMsgCount)
-const messageOptions = computed(() => chatStore.currentMessageOptions)
+const messageOptions = computed(() => {
+  const options = chatStore.currentMessageOptions
+  return options
+})
 const { createWebviewWindow } = useWindow()
 const currentRoomId = computed(() => globalStore.currentSession?.roomId)
 // 我的群昵称
@@ -508,8 +536,12 @@ const hoverBubble = ref<{
 /** 记录右键菜单时选中的气泡的元素(用于处理mac右键会选中文本的问题) */
 const recordEL = ref()
 const isMac = computed(() => type() === 'macos')
-// 公告展示时需要减去的高度
-const announcementHeight = computed(() => (isGroup.value && topAnnouncement.value ? 300 : 260))
+// 公告展示时需要减去的高度 - 考虑footer动态高度
+const announcementHeight = computed(() => {
+  const baseHeight =
+    CHAT_HEADER_HEIGHT + footerHeight.value + (isGroup.value && topAnnouncement.value ? ANNOUNCEMENT_HEIGHT : 0)
+  return baseHeight
+})
 // 置顶公告hover状态
 const isAnnouncementHover = ref(false)
 // 置顶公告相关
@@ -727,6 +759,8 @@ const handleScrollDirectionChange = (direction: 'up' | 'down') => {
 
 // 取消表情反应
 const cancelReplyEmoji = async (item: any, type: number) => {
+  if (!item || !item.message || !item.message.messageMarks) return
+
   // 检查该表情是否已被当前用户标记
   const userMarked = item.message.messageMarks[String(type)]?.userMarked
 
@@ -739,28 +773,6 @@ const cancelReplyEmoji = async (item: any, type: number) => {
         actType: 2 // 使用Confirm作为操作类型
       }
       await apis.markMsg(data)
-
-      await invokeWithErrorHandler(
-        TauriCommand.SAVE_MESSAGE_MARK,
-        {
-          data: data
-        },
-        {
-          customErrorMessage: '保存消息标记',
-          errorType: ErrorType.Client
-        }
-      )
-
-      const currentCount = item.message.messageMarks[String(type)]?.count || 0
-      chatStore.updateMarkCount([
-        {
-          msgId: Number(item.message.id),
-          markType: type,
-          markCount: Math.max(0, currentCount - 1), // 确保计数不会为负数
-          actType: 2,
-          uid: Number(userStore.userInfo.uid)
-        }
-      ])
     } catch (error) {
       console.error('取消表情标记失败:', error)
     }
@@ -774,7 +786,7 @@ const cancelReplyEmoji = async (item: any, type: number) => {
  * @returns 计数值
  */
 const getEmojiCount = (item: any, emojiType: number): number => {
-  if (!item?.message?.messageMarks) return 0
+  if (!item || !item.message || !item.message.messageMarks) return 0
 
   // messageMarks 是一个对象，键是表情类型，值是包含 count 和 userMarked 的对象
   // 如果存在该表情类型的统计数据，返回其计数值，否则返回0
@@ -783,6 +795,8 @@ const getEmojiCount = (item: any, emojiType: number): number => {
 
 // 处理表情回应
 const handleEmojiSelect = async (context: { label: string; value: number; title: string }, item: any) => {
+  if (!item || !item.message || !item.message.messageMarks) return
+
   // 检查该表情是否已被当前用户标记
   const userMarked = item.message.messageMarks[String(context.value)]?.userMarked
   // 只给没有标记过的图标标记
@@ -793,32 +807,6 @@ const handleEmojiSelect = async (context: { label: string; value: number; title:
         markType: context.value,
         actType: 1
       })
-
-      await invokeWithErrorHandler(
-        TauriCommand.SAVE_MESSAGE_MARK,
-        {
-          data: {
-            msgId: item.message.id,
-            markType: context.value,
-            actType: 1
-          }
-        },
-        {
-          customErrorMessage: '保存消息标记',
-          errorType: ErrorType.Client
-        }
-      )
-
-      const currentCount = item.message.messageMarks[String(context.value)]?.count || 0
-      chatStore.updateMarkCount([
-        {
-          msgId: Number(item.message.id),
-          markType: context.value,
-          markCount: currentCount + 1,
-          actType: 1,
-          uid: Number(userStore.userInfo.uid)
-        }
-      ])
     } catch (error) {
       console.error('标记表情失败:', error)
     }
@@ -1030,6 +1018,8 @@ const isSpecialMsgType = (type: number) => {
 
 // 判断表情反应是否只有一行
 const isSingleLineEmojis = (item: any) => {
+  if (!item || !item.fromUser || !item.message) return false
+
   // 计算有多少个表情反应
   let emojiCount = 0
   for (const emoji of emojiList.value) {

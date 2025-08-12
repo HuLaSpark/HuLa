@@ -65,6 +65,8 @@ export default {
   createGroup: `${prefix + URLEnum.ROOM}/group`, // 新增群组
   // getGroupUserList: `${prefix + URLEnum.ROOM}/group/member/page`, // 群成员列表
   inviteGroupMember: `${prefix + URLEnum.ROOM}/group/member`, // 邀请群成员 和 移出群成员(post 和 delete)
+  inviteList: `${prefix + URLEnum.ROOM}/group/invite/list`, // 我的审批群邀请列表
+  acceptInvite: `${prefix + URLEnum.ROOM}/group/invite/accept`, // 审批别人邀请的进群
   exitGroup: `${prefix + URLEnum.ROOM}/group/member/exit`, // 退群
   addAdmin: `${prefix + URLEnum.ROOM}/group/admin`, // 添加管理员
   revokeAdmin: `${prefix + URLEnum.ROOM}/group/admin`, // 删除管理员
@@ -74,6 +76,8 @@ export default {
   // updateMyRoomInfo: `${prefix + URLEnum.ROOM}/updateMyRoomInfo`, // 修改“我”的群聊名称
   searchGroup: `${prefix + URLEnum.ROOM}/search`, // 搜索群聊
   applyGroup: `${prefix + URLEnum.ROOM}/applyGroup`, // 申请加群
+  applyHandle: `${prefix + URLEnum.ROOM}/apply/handle`, // 处理加群申请 [仅仅管理员、群主可调用]
+  applyGroupList: `${prefix + URLEnum.ROOM}/apply/group/list`, // 申请加群列表 [仅仅管理员、群主可见]
   getAnnouncementList: `${prefix + URLEnum.ROOM}/announcement/list`, // 获取群公告
   pushAnnouncement: `${prefix + URLEnum.ROOM}/announcement/push`, // 发布群公告
   deleteAnnouncement: `${prefix + URLEnum.ROOM}/announcement/delete`, // 删除群公告
@@ -91,7 +95,7 @@ export default {
   // -------------- token相关 ---------------
   register: `${prefix + URLEnum.TOKEN}/anyTenant/registerByEmail`, // 注册
   login: `${prefix + URLEnum.TOKEN}/anyTenant/login`, // 登录
-  refreshToken: `${prefix + URLEnum.TOKEN}/refreshToken`, // 续签
+  refreshToken: `${prefix + URLEnum.TOKEN}/anyTenant/refresh`, // 续签
   logout: `${prefix + URLEnum.TOKEN}/anyUser/logout`, // 退出登录
   checkToken: `${prefix + URLEnum.TOKEN}/check`, // 检查token是否有效
   forgetPassword: `${prefix + URLEnum.TOKEN}/anyTenant/password` // 忘记密码

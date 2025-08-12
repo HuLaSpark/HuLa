@@ -153,29 +153,6 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
-        // 创建 im_message_mark 表
-        manager
-            .create_table(
-                Table::create()
-                    .table(ImMessageMark::Table)
-                    .if_not_exists()
-                    .col(ColumnDef::new(ImMessageMark::Id).string().not_null())
-                    .col(ColumnDef::new(ImMessageMark::LoginUid).string().not_null())
-                    .col(ColumnDef::new(ImMessageMark::Uid).string())
-                    .col(ColumnDef::new(ImMessageMark::MsgId).string())
-                    .col(ColumnDef::new(ImMessageMark::MarkType).integer())
-                    .col(ColumnDef::new(ImMessageMark::Status).tiny_unsigned())
-                    .col(ColumnDef::new(ImMessageMark::CreateTime).big_integer())
-                    .col(ColumnDef::new(ImMessageMark::UpdateTime).big_integer())
-                    .primary_key(
-                        Index::create()
-                            .col(ImMessageMark::Id)
-                            .col(ImMessageMark::LoginUid),
-                    )
-                    .to_owned(),
-            )
-            .await?;
-
         // 创建 im_config 表
         manager
             .create_table(
@@ -197,9 +174,6 @@ impl MigrationTrait for Migration {
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
             .drop_table(Table::drop().table(ImConfig::Table).to_owned())
-            .await?;
-        manager
-            .drop_table(Table::drop().table(ImMessageMark::Table).to_owned())
             .await?;
         manager
             .drop_table(Table::drop().table(ImMessage::Table).to_owned())
@@ -320,19 +294,6 @@ enum ImMessage {
     UpdateTime,
     LoginUid,
     SendStatus,
-}
-
-#[derive(DeriveIden)]
-enum ImMessageMark {
-    Table,
-    Id,
-    LoginUid,
-    Uid,
-    MsgId,
-    MarkType,
-    Status,
-    CreateTime,
-    UpdateTime,
 }
 
 #[derive(DeriveIden)]

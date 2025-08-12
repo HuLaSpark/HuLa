@@ -1,14 +1,13 @@
 use crate::error::CommonError;
 use crate::pojo::common::{CursorPageParam, CursorPageResp};
-use anyhow::Context;
-use entity::{im_message, im_message_mark};
+use entity::im_message;
 use sea_orm::prelude::Expr;
 use sea_orm::sea_query::Alias;
 use sea_orm::{
     ColumnTrait, ConnectionTrait, DatabaseConnection, DatabaseTransaction, EntityTrait,
     IntoActiveModel, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set,
 };
-use std::collections::HashMap;
+
 use tracing::{debug, error, info};
 
 pub async fn save_all<C>(db: &C, messages: Vec<im_message::Model>) -> Result<(), CommonError>
@@ -55,10 +54,19 @@ where
 
             process_message_batch(db, chunk.to_vec())
                 .await
-                .with_context(|| format!("Failed to process batch {} of messages", batch_index + 1))?;
+                .map_err(|e| {
+                    anyhow::anyhow!(
+                        "Failed to process batch {} of messages: {}",
+                        batch_index + 1,
+                        e
+                    )
+                })?;
         }
 
-        info!("All message batch processing completed, total {} items", messages.len());
+        info!(
+            "All message batch processing completed, total {} items",
+            messages.len()
+        );
     }
     Ok(())
 }
@@ -95,7 +103,7 @@ where
         .filter(condition)
         .all(db)
         .await
-        .with_context(|| "Failed to query existing messages")?;
+        .map_err(|e| anyhow::anyhow!("Failed to query existing messages: {}", e))?;
 
     // 如果有已存在的消息，先删除它们
     if !existing_messages.is_empty() {
@@ -117,7 +125,7 @@ where
             .filter(delete_condition)
             .exec(db)
             .await
-            .with_context(|| "Failed to delete existing messages")?;
+            .map_err(|e| anyhow::anyhow!("Failed to delete existing messages: {}", e))?;
 
         debug!("Deleted {} existing messages", existing_messages.len());
     }
@@ -131,7 +139,7 @@ where
     im_message::Entity::insert_many(active_models)
         .exec(db)
         .await
-        .with_context(|| "Failed to batch insert messages")?;
+        .map_err(|e| anyhow::anyhow!("Failed to batch insert messages: {}", e))?;
 
     Ok(())
 }
@@ -142,14 +150,14 @@ pub async fn cursor_page_messages(
     room_id: String,
     cursor_page_param: CursorPageParam,
     login_uid: &str,
-) -> Result<CursorPageResp<Vec<(im_message::Model, Vec<im_message_mark::Model>)>>, CommonError> {
+) -> Result<CursorPageResp<Vec<im_message::Model>>, CommonError> {
     // 查询总数
     let total = im_message::Entity::find()
         .filter(im_message::Column::RoomId.eq(&room_id))
         .filter(im_message::Column::LoginUid.eq(login_uid))
         .count(db)
         .await
-        .with_context(|| "Failed to query message count")?;
+        .map_err(|e| anyhow::anyhow!("Failed to query message count: {}", e))?;
 
     // 先查询消息主表，按 id 数值降序排序
     let mut message_query = im_message::Entity::find()
@@ -168,7 +176,7 @@ pub async fn cursor_page_messages(
     let messages = message_query
         .all(db)
         .await
-        .with_context(|| "Failed to query message list")?;
+        .map_err(|e| anyhow::anyhow!("Failed to query message list: {}", e))?;
 
     // 如果没有消息，直接返回空结果
     if messages.is_empty() {
@@ -180,55 +188,22 @@ pub async fn cursor_page_messages(
         });
     }
 
-    // 收集消息ID用于查询消息标记
-    let message_ids: Vec<String> = messages.iter().map(|msg| msg.id.clone()).collect();
-
-    // 查询这些消息的标记
-    let mut mark_condition = sea_orm::Condition::any();
-    for msg_id in &message_ids {
-        mark_condition = mark_condition.add(im_message_mark::Column::MsgId.eq(msg_id.clone()));
-    }
-
-    let marks_query = im_message_mark::Entity::find()
-        .filter(mark_condition)
-        .filter(im_message_mark::Column::LoginUid.eq(login_uid));
-
-    let marks = marks_query.all(db).await?;
-
-    // 将标记按消息ID分组
-    let mut marks_map: HashMap<String, Vec<im_message_mark::Model>> = HashMap::new();
-    for mark in marks {
-        marks_map
-            .entry(mark.msg_id.clone())
-            .or_insert_with(Vec::new)
-            .push(mark);
-    }
-
-    // 组合消息和标记
-    let messages_with_marks: Vec<(im_message::Model, Vec<im_message_mark::Model>)> = messages
-        .into_iter()
-        .map(|msg| {
-            let msg_marks = marks_map.remove(&msg.id).unwrap_or_default();
-            (msg, msg_marks)
-        })
-        .collect();
-
     // 生成下一页的游标
-    let next_cursor = if messages_with_marks.len() < cursor_page_param.page_size as usize {
+    let next_cursor = if messages.len() < cursor_page_param.page_size as usize {
         String::new() // 已经是最后一页
     } else {
-        messages_with_marks
+        messages
             .last()
-            .map(|(msg, _)| msg.id.clone())
+            .map(|msg| msg.id.clone())
             .unwrap_or_default()
     };
 
-    let is_last = messages_with_marks.len() < cursor_page_param.page_size as usize;
+    let is_last = messages.len() < cursor_page_param.page_size as usize;
 
     Ok(CursorPageResp {
         cursor: next_cursor,
         is_last,
-        list: Some(messages_with_marks),
+        list: Some(messages),
         total,
     })
 }
@@ -243,14 +218,14 @@ pub async fn save_message(
         im_message::Entity::find_by_id((message.id.clone(), message.login_uid.clone()))
             .one(db)
             .await
-            .with_context(|| "Failed to find message")?;
+            .map_err(|e| anyhow::anyhow!("Failed to find message: {}", e))?;
 
     // 如果已存在，则先删除
     if existing_message.is_some() {
         im_message::Entity::delete_by_id((message.id.clone(), message.login_uid.clone()))
             .exec(db)
             .await
-            .with_context(|| "Failed to delete existing message")?;
+            .map_err(|e| anyhow::anyhow!("Failed to delete existing message: {}", e))?;
     }
 
     // 插入新消息
@@ -271,7 +246,7 @@ pub async fn update_message_status(
         im_message::Entity::find_by_id((message_id.to_string(), login_uid))
             .one(db)
             .await
-            .with_context(|| "Failed to find message")?
+            .map_err(|e| anyhow::anyhow!("Failed to find message: {}", e))?
             .ok_or_else(|| CommonError::UnexpectedError(anyhow::anyhow!("Message not found")))?
             .into_active_model();
 

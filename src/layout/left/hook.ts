@@ -122,7 +122,7 @@ export const leftHook = () => {
       nextTick(() => {
         window.$message.success('佩戴成功')
       })
-    } catch (error) {
+    } catch (_error) {
       window.$message.error('佩戴失败，请稍后重试')
     }
   }

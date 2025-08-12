@@ -22,8 +22,9 @@
           <n-avatar
             style="border: 1px solid var(--avatar-border-color)"
             :size="44"
+            :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+            :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
             :src="AvatarUtils.getAvatarUrl(item.avatar)"
-            fallback-src="/logo.png"
             round />
 
           <n-flex class="h-fit flex-1 truncate" justify="space-between" vertical>
@@ -110,24 +111,27 @@
 <script lang="ts" setup name="message">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import SysNTF from '@/components/common/SystemNotification.tsx'
-import { MittEnum, RoomTypeEnum } from '@/enums'
+import { MittEnum, RoomTypeEnum, ThemeEnum } from '@/enums'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useMessage } from '@/hooks/useMessage.ts'
 import { useMitt } from '@/hooks/useMitt'
 import { useReplaceMsg } from '@/hooks/useReplaceMsg.ts'
+import { useTauriListener } from '@/hooks/useTauriListener'
 import { IsAllUserEnum, type SessionItem } from '@/services/types.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group.ts'
+import { useSettingStore } from '@/stores/setting'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
-import { useTauriListener } from '~/src/hooks/useTauriListener'
 
 const appWindow = WebviewWindow.getCurrent()
 const chatStore = useChatStore()
 const globalStore = useGlobalStore()
 const groupStore = useGroupStore()
+const settingStore = useSettingStore()
+const { themes } = storeToRefs(settingStore)
 const { openMsgSession } = useCommon()
 const msgScrollbar = useTemplateRef<HTMLElement>('msg-scrollbar')
 const { handleMsgClick, handleMsgDelete, menuList, specialMenuList, handleMsgDblclick } = useMessage()

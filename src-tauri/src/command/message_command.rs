@@ -4,7 +4,7 @@ use crate::im_reqest_client::ImRequestClient;
 use crate::pojo::common::{CursorPageParam, CursorPageResp};
 use crate::repository::{im_message_repository, im_user_repository};
 use crate::vo::vo::ChatMessageReq;
-use anyhow::Context;
+
 use entity::im_user::Entity as ImUserEntity;
 use entity::{im_message, im_user};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
@@ -116,7 +116,7 @@ pub async fn page_msg(
         .list
         .unwrap_or_default()
         .into_iter()
-        .map(|(msg, marks)| convert_message_to_resp(msg, marks))
+        .map(|msg| convert_message_to_resp(msg))
         .rev()
         .collect();
 
@@ -129,56 +129,53 @@ pub async fn page_msg(
 }
 
 /// 将数据库消息模型转换为响应模型
-fn convert_message_to_resp(
-    msg: im_message::Model,
-    marks: Vec<entity::im_message_mark::Model>,
-) -> MessageResp {
-    // 解析消息体
-    let body = msg.body.as_ref().and_then(|b| serde_json::from_str(b).ok());
-
-    // 将数据库中的消息标记转换为 HashMap
-    let mut message_marks: HashMap<String, MessageMark> = HashMap::new();
-
-    // 按标记类型分组统计
-    let mut mark_stats: HashMap<String, (u32, bool)> = HashMap::new();
-    let current_login_uid = &msg.login_uid;
-
-    for mark in marks {
-        let (count, user_marked) = mark_stats
-            .entry(mark.mark_type.to_string())
-            .or_insert((0, false));
-        if mark.status == 0 {
-            // 假设 status=1 表示有效标记
-            *count += 1;
-            if mark.uid == *current_login_uid {
-                *user_marked = true;
+fn convert_message_to_resp(msg: im_message::Model) -> MessageResp {
+    // 解析消息体 - 安全地处理 JSON 解析
+    let body = msg.body.as_ref().and_then(|body_str| {
+        if body_str.trim().is_empty() {
+            None
+        } else {
+            match serde_json::from_str(body_str) {
+                Ok(parsed) => Some(parsed),
+                Err(e) => {
+                    debug!(
+                        "Failed to parse message body JSON for message {}: {}",
+                        msg.id, e
+                    );
+                    // 如果解析失败，将原始字符串作为文本消息处理
+                    Some(serde_json::json!({
+                        "content": body_str
+                    }))
+                }
             }
         }
-    }
+    });
 
-    // 转换为最终的 MessageMark 格式
-    for (mark_type, (count, user_marked)) in mark_stats {
-        let mark_key = format!("{}", mark_type);
-        message_marks.insert(mark_key, MessageMark { count, user_marked });
-    }
+    // 解析消息标记 - 支持从 message_marks 字段解析
+    let message_marks = msg.message_marks.as_ref().and_then(|marks_str| {
+        if marks_str.trim().is_empty() {
+            return None;
+        }
 
-    // 如果没有从关联表获取到标记，尝试从原有的 message_marks 字段解析
-    if message_marks.is_empty() {
-        if let Some(marks_str) = &msg.message_marks {
-            if let Ok(parsed_marks) =
-                serde_json::from_str::<HashMap<String, MessageMark>>(marks_str)
-            {
-                message_marks = parsed_marks;
+        match serde_json::from_str::<HashMap<String, MessageMark>>(marks_str) {
+            Ok(parsed_marks) => {
+                if parsed_marks.is_empty() {
+                    None
+                } else {
+                    Some(parsed_marks)
+                }
+            }
+            Err(e) => {
+                debug!(
+                    "Failed to parse message marks JSON for message {}: {}",
+                    msg.id, e
+                );
+                None
             }
         }
-    }
+    });
 
-    let final_message_marks = if message_marks.is_empty() {
-        None
-    } else {
-        Some(message_marks)
-    };
-
+    // 构建响应对象
     MessageResp {
         create_id: Some(msg.id.clone()),
         create_time: msg.send_time,
@@ -193,7 +190,7 @@ fn convert_message_to_resp(
             room_id: Some(msg.room_id),
             message_type: msg.message_type,
             body,
-            message_marks: final_message_marks,
+            message_marks,
             send_time: msg.send_time,
         },
         old_msg_id: None,
@@ -206,7 +203,10 @@ pub async fn check_user_init_and_fetch_messages(
     db_conn: &DatabaseConnection,
     uid: &str,
 ) -> Result<(), CommonError> {
-    debug!("Checking user initialization status and fetching messages, uid: {}", uid);
+    debug!(
+        "Checking user initialization status and fetching messages, uid: {}",
+        uid
+    );
     // 检查用户的 is_init 状态
     if let Ok(user) = ImUserEntity::find()
         .filter(im_user::Column::Id.eq(uid))
@@ -216,7 +216,10 @@ pub async fn check_user_init_and_fetch_messages(
         if let Some(user_model) = user {
             // 如果 is_init 为 true，调用后端接口获取所有消息
             if user_model.is_init {
-                info!("User {} needs initialization, starting to fetch all messages", uid);
+                info!(
+                    "User {} needs initialization, starting to fetch all messages",
+                    uid
+                );
                 // 传递用户的 last_opt_time 参数
                 if let Err(e) = fetch_all_messages(client, db_conn, uid, None).await {
                     error!("Failed to fetch all messages: {}", e);
@@ -275,7 +278,10 @@ pub async fn fetch_all_messages(
                 info!("Messages saved to database successfully");
             }
             Err(e) => {
-                error!("Failed to save messages to database, detailed error: {:?}", e);
+                error!(
+                    "Failed to save messages to database, detailed error: {:?}",
+                    e
+                );
                 return Err(e.into());
             }
         }
@@ -283,7 +289,7 @@ pub async fn fetch_all_messages(
         // 消息保存完成后，将用户的 is_init 状态设置为 false
         im_user_repository::update_user_init_status(&tx, uid, false)
             .await
-            .with_context(|| "Failed to update user is_init status")?;
+            .map_err(|e| anyhow::anyhow!("Failed to update user is_init status: {}", e))?;
 
         // 提交事务
         tx.commit().await?;
@@ -383,7 +389,10 @@ pub async fn send_msg(
         .await
         .map_err(|e| CommonError::DatabaseError(e))?;
 
-    info!("Message saved to local database, ID: {}", message.id.clone());
+    info!(
+        "Message saved to local database, ID: {}",
+        message.id.clone()
+    );
 
     // 异步发送到后端接口
     let db_conn = state.db_conn.clone();

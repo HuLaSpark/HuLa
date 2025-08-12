@@ -44,8 +44,9 @@ export async function compressAudioToMp3(audioBuffer: ArrayBuffer, config: Audio
     // 使用lamejs进行MP3编码
     const mp3Data = encodeToMp3(samples, finalConfig)
 
-    // 创建MP3 Blob
-    const blob = new Blob(mp3Data, { type: 'audio/mp3' })
+    // 创建MP3 Blob - 将 Int8Array 转换为 Uint8Array
+    const uint8Arrays = mp3Data.map((data) => new Uint8Array(data))
+    const blob = new Blob(uint8Arrays, { type: 'audio/mp3' })
 
     // 清理AudioContext
     await audioContext.close()

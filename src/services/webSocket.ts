@@ -4,25 +4,24 @@ import { info } from '@tauri-apps/plugin-log'
 import { useDebounceFn } from '@vueuse/core'
 import { type ChangeTypeEnum, ConnectionState, type OnlineEnum, URLEnum, WorkerMsgEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
-// 使用类型导入避免直接执行代码
-import type { MessageType, MarkItemType, RevokedMsgType } from '@/services/types'
 import type { useNetworkReconnect as UseNetworkReconnectType } from '@/hooks/useNetworkReconnect'
 import { useTauriListener } from '@/hooks/useTauriListener'
 import { getEnhancedFingerprint } from '@/services/fingerprint.ts'
+// 使用类型导入避免直接执行代码
+import type { MarkItemType, MessageType, RevokedMsgType } from '@/services/types'
 import type {
+  CallResponseData,
   LoginInitResType,
   LoginSuccessResType,
-  WsReqMsgContentType,
   OnStatusChangeType,
-  UserStateType,
-  SignalData,
   RoomActionData,
-  CallResponseData,
-  VideoCallRequestData
+  SignalData,
+  UserStateType,
+  VideoCallRequestData,
+  WsReqMsgContentType
 } from '@/services/wsType.ts'
 import { WsResponseMessageType, type WsTokenExpire } from '@/services/wsType.ts'
 import { useUserStore } from '@/stores/user'
-import { type } from '@tauri-apps/plugin-os'
 
 const { addListener } = useTauriListener()
 
@@ -98,11 +97,9 @@ class WS {
   #unwatchFunctions: (() => void)[] = []
 
   constructor() {
-    console.log('websocket对象初始化')
     info('[ws] webSocket 服务初始化')
     this.initWindowType()
     if (isMainWindow) {
-      this.initConnect()
       // 收到WebSocket worker消息
       worker.addEventListener('message', this.onWorkerMsg)
       // 收到Timer worker消息
@@ -111,7 +108,6 @@ class WS {
       this.initVisibilityListener()
 
       this.initNetworkReconnect()
-      console.log('始化完成')
     }
   }
 
@@ -261,12 +257,7 @@ class WS {
   // 初始化窗口类型
   private async initWindowType() {
     const currentWindow = WebviewWindow.getCurrent()
-
-    if (currentWindow.label === 'home' || type() === 'ios' || type() === 'android') {
-      isMainWindow = true
-    } else {
-      isMainWindow = false
-    }
+    isMainWindow = currentWindow.label === 'home' || currentWindow.label === 'rtcCall'
   }
 
   initConnect = async () => {
@@ -285,7 +276,6 @@ class WS {
         serverUrl = settings.wsType + '://' + suffix
       }
     }
-
     // 初始化 ws
     worker.postMessage(
       `{"type":"initWS","value":{"token":${token ? `"${token}"` : null},"clientId":${clientId ? `"${clientId}", "serverUrl":"${serverUrl}"` : null}}}`
@@ -624,6 +614,12 @@ class WS {
           useMitt.emit(WsResponseMessageType.CallRejected, data)
           break
         }
+        case WsResponseMessageType.TIMEOUT: {
+          const data = params.data as CallResponseData
+          console.log('通话超时未接通', data)
+          useMitt.emit(WsResponseMessageType.TIMEOUT, data)
+          break
+        }
         case WsResponseMessageType.RoomClosed: {
           const data = params.data as { roomId: string }
           console.log('房间已关闭', data)
@@ -646,6 +642,12 @@ class WS {
           const data = params.data as RoomActionData
           console.log('用户离开房间', data)
           useMitt.emit(WsResponseMessageType.LeaveVideo, data)
+          break
+        }
+        case WsResponseMessageType.DROPPED: {
+          const data = params.data
+          console.log('用户已挂断', data)
+          useMitt.emit(WsResponseMessageType.DROPPED, data)
           break
         }
         default: {
@@ -743,4 +745,5 @@ class WS {
 }
 
 const ws = new WS()
+await ws.initConnect()
 export default ws

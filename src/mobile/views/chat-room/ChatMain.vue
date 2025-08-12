@@ -446,8 +446,8 @@
 
 <script setup lang="ts">
 import AutoFixHeightPage from '@/mobile/components/chat-room/AutoFixHeightPage.vue'
-import HeaderBar from '@/mobile/components/chat-room/HeaderBar.vue'
 import FooterBar from '@/mobile/components/chat-room/FooterBar.vue'
+import HeaderBar from '@/mobile/components/chat-room/HeaderBar.vue'
 
 const route = useRoute()
 const roomName = ref(route.params.roomName as string)
@@ -455,7 +455,7 @@ const roomName = ref(route.params.roomName as string)
 const header = ref()
 
 /** 新增的列表事件 start */
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 
 /**
  * 单条动态消息数据结构
@@ -841,11 +841,11 @@ const cancelReplyEmoji = async (item: any, type: number) => {
       const currentCount = item.message.messageMarks[String(type)]?.count || 0
       chatStore.updateMarkCount([
         {
-          msgId: Number(item.message.id),
+          msgId: item.message.id,
           markType: type,
           markCount: Math.max(0, currentCount - 1), // 确保计数不会为负数
           actType: 2,
-          uid: Number(userStore.userInfo.uid)
+          uid: String(userStore.userInfo.uid)
         }
       ])
     } catch (error) {
@@ -899,11 +899,11 @@ const handleEmojiSelect = async (context: { label: string; value: number; title:
       const currentCount = item.message.messageMarks[String(context.value)]?.count || 0
       chatStore.updateMarkCount([
         {
-          msgId: Number(item.message.id),
+          msgId: item.message.id,
           markType: context.value,
           markCount: currentCount + 1,
           actType: 1,
-          uid: Number(userStore.userInfo.uid)
+          uid: String(userStore.userInfo.uid)
         }
       ])
     } catch (error) {

@@ -61,7 +61,7 @@ export enum WsResponseMessageType {
   /** 媒体组件改变 */
   MediaControl = 'MediaControl',
   /** 通话超时 */
-  CallTimeout = 'CallTimeout',
+  TIMEOUT = 'TIMEOUT',
   /** 挂断 */
   DROPPED = 'DROPPED',
   /** 离开视频会议 */
@@ -194,4 +194,44 @@ export interface CallSignalMessage {
 export interface RoomActionData {
   roomId: string
   uid: string
+}
+
+export enum CallResponseStatus {
+  /** 超时未接听 */
+  TIMEOUT = -1,
+  /** 已拒绝 */
+  REJECTED = 0,
+  /** 已接听 */
+  ACCEPTED = 1,
+  /** 已挂断 */
+  DROPPED = 2
+}
+
+/**
+ * 通话状态描述映射
+ */
+export const CallResponseStatusDesc: Record<CallResponseStatus, string> = {
+  [CallResponseStatus.TIMEOUT]: '超时未接听',
+  [CallResponseStatus.REJECTED]: '已拒绝',
+  [CallResponseStatus.ACCEPTED]: '已接听',
+  [CallResponseStatus.DROPPED]: '已挂断'
+}
+
+/**
+ * 根据状态码获取通话状态
+ * @param code 状态码
+ * @returns 对应的通话状态
+ */
+export function getCallResponseStatus(code: number): CallResponseStatus | undefined {
+  return Object.values(CallResponseStatus).includes(code) ? (code as CallResponseStatus) : undefined
+}
+
+/**
+ * 根据状态码获取状态描述
+ * @param code 状态码
+ * @returns 对应的状态描述文本
+ */
+export function getCallResponseStatusDesc(code: number): string {
+  const status = getCallResponseStatus(code)
+  return status !== undefined ? CallResponseStatusDesc[status] : '未知状态'
 }

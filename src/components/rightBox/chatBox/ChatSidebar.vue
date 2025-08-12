@@ -141,6 +141,8 @@
                       class="grayscale"
                       :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
                       :size="26"
+                      :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+                      :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
                       :src="AvatarUtils.getAvatarUrl(item.avatar)"
                       @load="userLoadedMap[item.uid] = true"
                       @error="userLoadedMap[item.uid] = true" />
@@ -163,12 +165,12 @@
                 </n-flex>
 
                 <div
-                  v-if="item.groupRole === RoleEnum.LORD"
+                  v-if="item.roleId === RoleEnum.LORD"
                   class="flex px-4px bg-#d5304f30 py-3px rounded-4px size-fit select-none">
                   <p class="text-(10px #d5304f)">群主</p>
                 </div>
                 <div
-                  v-if="item.groupRole === RoleEnum.ADMIN"
+                  v-if="item.roleId === RoleEnum.ADMIN"
                   class="flex px-4px bg-#1a7d6b30 py-3px rounded-4px size-fit select-none">
                   <p class="text-(10px #008080)">管理员</p>
                 </div>
@@ -187,7 +189,7 @@ import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useDebounceFn } from '@vueuse/core'
 import type { InputInst } from 'naive-ui'
 import { storeToRefs } from 'pinia'
-import { MittEnum, OnlineEnum, RoleEnum, RoomTypeEnum } from '@/enums'
+import { MittEnum, OnlineEnum, RoleEnum, RoomTypeEnum, ThemeEnum } from '@/enums'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { useChatMain } from '@/hooks/useChatMain.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
@@ -198,6 +200,7 @@ import { WsResponseMessageType } from '@/services/wsType.ts'
 import { useCachedStore } from '@/stores/cached.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group.ts'
+import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
@@ -208,6 +211,8 @@ const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
 const cachedStore = useCachedStore()
 const userStore = useUserStore()
+const settingStore = useSettingStore()
+const { themes } = storeToRefs(settingStore)
 const { addListener } = useTauriListener()
 // 当前加载的群聊ID
 const currentLoadingRoomId = ref('')
@@ -231,11 +236,11 @@ provide('popoverControls', { enableScroll })
 
 const isLord = computed(() => {
   const currentUser = groupStore.userList.find((user) => user.uid === useUserStore().userInfo?.uid)
-  return currentUser?.groupRole === RoleEnum.LORD
+  return currentUser?.roleId === RoleEnum.LORD
 })
 const isAdmin = computed(() => {
   const currentUser = groupStore.userList.find((user) => user.uid === useUserStore().userInfo?.uid)
-  return currentUser?.groupRole === RoleEnum.ADMIN
+  return currentUser?.roleId === RoleEnum.ADMIN
 })
 
 /** 判断当前用户是否拥有id为6的徽章 并且是频道 */
@@ -277,8 +282,8 @@ const mergedUserList = computed(() => {
     }
   })
 
-  // 转换回数组并按在线状态排序
-  return Array.from(userMap.values()).sort((a, b) => a.activeStatus - b.activeStatus)
+  // rust已排序
+  return Array.from(userMap.values())
 })
 
 // 创建过滤后的用户列表计算属性
@@ -439,7 +444,7 @@ onMounted(async () => {
           currentLoadingRoomId.value = newSession.roomId
           // 重置群组数据后再加载新的群成员数据
           groupStore.resetGroupData()
-          await groupStore.getGroupUserList()
+          await groupStore.getGroupUserList(currentSession.roomId)
           // 获取群组统计信息（包括在线人数）
           await groupStore.getCountStatistic(currentSession.roomId)
           isLoadingOnlineCount.value = false

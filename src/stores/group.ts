@@ -26,7 +26,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
    * 从成员列表中筛选出角色为群主的用户
    */
   const currentLordId = computed(() => {
-    const list = userList.value.filter((member) => member.groupRole === RoleEnum.LORD)
+    const list = userList.value.filter((member) => member.roleId === RoleEnum.LORD)
     if (list.length) {
       return list[0]?.uid
     }
@@ -38,7 +38,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
    * 从成员列表中筛选出所有管理员的uid
    */
   const adminUidList = computed(() => {
-    return userList.value.filter((member) => member.groupRole === RoleEnum.ADMIN).map((member) => member.uid)
+    return userList.value.filter((member) => member.roleId === RoleEnum.ADMIN).map((member) => member.uid)
   })
 
   /**
@@ -78,7 +78,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
     avatar: '',
     groupName: '',
     onlineNum: 0,
-    role: 0,
+    roleId: 0,
     account: '',
     memberNum: 0,
     remark: '',
@@ -89,11 +89,11 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
   /**
    * 获取群成员列表
    */
-  const getGroupUserList = async () => {
+  const getGroupUserList = async (currentRoomId: string) => {
     const data: any = await invokeWithErrorHandler(
       TauriCommand.GET_ROOM_MEMBERS,
       {
-        roomId: currentRoomId.value
+        roomId: currentRoomId
       },
       {
         customErrorMessage: '获取群成员列表失败',
@@ -102,6 +102,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
     )
     if (!data) return
     userList.value = data
+    console.log('getGroupUserList --> ', userList.value)
     userListOptions.cursor = data.cursor
     userListOptions.isLast = data.isLast
     userListOptions.loading = false
@@ -129,7 +130,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
   const loadMoreGroupMembers = async () => {
     if (userListOptions.isLast || userListOptions.loading) return
     userListOptions.loading = true
-    await getGroupUserList()
+    await getGroupUserList(currentRoomId.value)
     userListOptions.loading = false
   }
 
@@ -162,7 +163,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
     // 更新本地群成员列表中的角色信息
     for (const user of userList.value) {
       if (uidList.includes(user.uid)) {
-        user.groupRole = RoleEnum.ADMIN
+        user.roleId = RoleEnum.ADMIN
       }
     }
   }
@@ -176,7 +177,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
     // 更新本地群成员列表中的角色信息
     for (const user of userList.value) {
       if (uidList.includes(user.uid)) {
-        user.groupRole = RoleEnum.NORMAL
+        user.roleId = RoleEnum.NORMAL
       }
     }
   }
@@ -201,11 +202,11 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
    */
   const refreshGroupMembers = async () => {
     // 始终刷新频道成员列表
-    await getGroupUserList()
+    await getGroupUserList(currentRoomId.value)
 
     // 如果当前选中的是群聊且不是频道，则同时刷新当前群聊的成员列表
     if (globalStore.currentSession?.type === RoomTypeEnum.GROUP && currentRoomId.value !== '1') {
-      await getGroupUserList()
+      await getGroupUserList(currentRoomId.value)
     }
   }
 
@@ -222,7 +223,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
       avatar: '',
       groupName: '',
       onlineNum: 0,
-      role: 0,
+      roleId: 0,
       roomId: '',
       account: '',
       memberNum: 0,

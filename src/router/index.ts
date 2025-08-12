@@ -6,16 +6,16 @@ import {
   type RouteLocationNormalized,
   type RouteRecordRaw
 } from 'vue-router'
+import MobileLaunch from '@/mobile/launch.vue'
+import ChatRoomLayout from '@/mobile/layout/chat-room/ChatRoomLayout.vue'
+import MobileHome from '@/mobile/layout/index.vue'
+import MobileLogin from '@/mobile/login.vue'
+import ChatMain from '@/mobile/views/chat-room/ChatMain.vue'
+import ChatSetting from '@/mobile/views/chat-room/ChatSetting.vue'
 import MobileCommunity from '@/mobile/views/community/index.vue'
 import MobileFriendPage from '@/mobile/views/friends/index.vue'
 import MobileMessagePage from '@/mobile/views/message/index.vue'
 import MobileMy from '@/mobile/views/my/index.vue'
-import MobileLaunch from '@/mobile/launch.vue'
-import MobileHome from '@/mobile/layout/index.vue'
-import MobileLogin from '@/mobile/login.vue'
-import ChatRoomLayout from '@/mobile/layout/chat-room/ChatRoomLayout.vue'
-import ChatMain from '@/mobile/views/chat-room/ChatMain.vue'
-import ChatSetting from '@/mobile/views/chat-room/ChatSetting.vue'
 
 const isDesktop = computed(() => {
   return type() === 'windows' || type() === 'linux' || type() === 'macos'
@@ -287,6 +287,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/previewFile',
     name: 'previewFile',
     component: () => import('@/views/previewFileWindow/index.vue')
+  },
+  {
+    path: '/rtcCall',
+    name: 'rtcCall',
+    component: () => import('@/components/call/RtcCall.vue')
   }
 ]
 

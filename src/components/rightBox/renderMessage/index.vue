@@ -12,11 +12,14 @@ import type { Component } from 'vue'
 import { MsgEnum } from '@/enums'
 import type { MsgType } from '@/services/types'
 import Announcement from './Announcement.vue'
+import AudioCall from './AudioCall.vue'
 import Emoji from './Emoji.vue'
 import File from './File.vue'
 import Image from './Image.vue'
+import SystemMessage from './special/SystemMessage.vue'
 import Text from './Text.vue'
 import Video from './Video.vue'
+import VideoCall from './VideoCall.vue'
 import Voice from './Voice.vue'
 
 const componentMap: Partial<Record<MsgEnum, Component>> = {
@@ -26,7 +29,10 @@ const componentMap: Partial<Record<MsgEnum, Component>> = {
   [MsgEnum.VIDEO]: Video,
   [MsgEnum.VOICE]: Voice,
   [MsgEnum.FILE]: File,
-  [MsgEnum.NOTICE]: Announcement
+  [MsgEnum.NOTICE]: Announcement,
+  [MsgEnum.VIDEO_CALL]: VideoCall,
+  [MsgEnum.AUDIO_CALL]: AudioCall,
+  [MsgEnum.SYSTEM]: SystemMessage
 }
 
 defineProps<{

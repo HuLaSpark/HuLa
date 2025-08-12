@@ -202,10 +202,10 @@ import { useCommon } from '@/hooks/useCommon.ts'
 import { useWindow } from '@/hooks/useWindow'
 import apis from '@/services/apis.ts'
 import type { UserItem } from '@/services/types'
+import { useCachedStore } from '@/stores/cached'
 import { useImageViewer } from '@/stores/imageViewer'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
-import { useCachedStore } from '~/src/stores/cached'
 
 const { openMsgSession } = useCommon()
 const { createWebviewWindow } = useWindow()

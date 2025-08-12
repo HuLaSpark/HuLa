@@ -5,14 +5,14 @@
     <title>HuLa</title>
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no viewport-fit=cover, interactive-widget=resizes-content" />
+      content="width=device-width, initial-scale=1, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no viewport-fit=cover" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
 
     <!-- 🎯 预加载图片资源（仅移动端） -->
     <script>
       if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
-        const images = ['/Mobile/4.png', '/Mobile/3.png', '/Mobile/1.png', '/Mobile/2.png']
-        images.forEach(src => {
+        const preloadImages = ['/Mobile/1.png', '/Mobile/2.png', '/Mobile/3.png', '/Mobile/4.png']
+        preloadImages.forEach(src => {
           const link = document.createElement('link')
           link.rel = 'preload'
           link.as = 'image'
