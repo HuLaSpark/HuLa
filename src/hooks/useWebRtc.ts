@@ -182,7 +182,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
     try {
       // 发送挂断消息
       sendRtcCall2VideoCallResponse(status)
-      await getCurrentWebviewWindow().close()
+      await endCall(status)
     } finally {
       clear()
     }
@@ -925,6 +925,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
   useMitt.on(WsResponseMessageType.DROPPED, () => endCall(CallResponseStatus.DROPPED))
   useMitt.on(WsResponseMessageType.TIMEOUT, () => endCall(CallResponseStatus.TIMEOUT))
   useMitt.on(WsResponseMessageType.CallRejected, () => endCall(CallResponseStatus.REJECTED))
+  useMitt.on(WsResponseMessageType.CANCEL, () => endCall(CallResponseStatus.CANCEL))
 
   onMounted(async () => {
     if (!isReceiver) {

@@ -77,7 +77,8 @@ export enum WsResponseMessageType {
   /** 信令消息 */
   WEBRTC_SIGNAL = 'WEBRTC_SIGNAL',
   /** 全局静音 */
-  AllMuted = 'AllMuted'
+  AllMuted = 'AllMuted',
+  CANCEL = 'CANCEL'
 }
 
 /**
@@ -204,7 +205,9 @@ export enum CallResponseStatus {
   /** 已接听 */
   ACCEPTED = 1,
   /** 已挂断 */
-  DROPPED = 2
+  DROPPED = 2,
+  /** 已取消 */
+  CANCEL = 3
 }
 
 /**
@@ -214,7 +217,8 @@ export const CallResponseStatusDesc: Record<CallResponseStatus, string> = {
   [CallResponseStatus.TIMEOUT]: '超时未接听',
   [CallResponseStatus.REJECTED]: '已拒绝',
   [CallResponseStatus.ACCEPTED]: '已接听',
-  [CallResponseStatus.DROPPED]: '已挂断'
+  [CallResponseStatus.DROPPED]: '已挂断',
+  [CallResponseStatus.CANCEL]: '已取消'
 }
 
 /**

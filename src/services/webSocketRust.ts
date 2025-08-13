@@ -2,7 +2,6 @@ import { invoke } from '@tauri-apps/api/core'
 import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
-import { useEventListener } from '@vueuse/core'
 import { WorkerMsgEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt'
 import { getEnhancedFingerprint } from '@/services/fingerprint'
@@ -560,14 +559,27 @@ setTimeout(() => {
   rustWebSocketClient.smartInitConnect()
 }, 100)
 
-useEventListener(window, 'visibilitychange', () => {
-  if (document.visibilityState === 'visible') {
-    info('[RustWS] 页面可见，设置应用状态为前台')
-    rustWebSocketClient.setAppBackgroundState(false)
-  } else {
-    info('[RustWS] 页面不可见，设置应用状态为后台')
-    rustWebSocketClient.setAppBackgroundState(true)
+// 使用 Tauri 原生事件监听窗口焦点变化（跨平台兼容）
+;(async () => {
+  try {
+    const currentWindow = getCurrentWebviewWindow()
+
+    // 监听窗口获得焦点事件
+    await currentWindow.listen('tauri://focus', () => {
+      info('[RustWS] 窗口获得焦点，设置应用状态为前台')
+      rustWebSocketClient.setAppBackgroundState(false)
+    })
+
+    // 监听窗口失去焦点事件
+    await currentWindow.listen('tauri://blur', () => {
+      info('[RustWS] 窗口失去焦点，设置应用状态为后台')
+      rustWebSocketClient.setAppBackgroundState(true)
+    })
+
+    info('[RustWS] 窗口焦点事件监听器已设置')
+  } catch (error) {
+    console.error('[RustWS] 设置窗口焦点监听器失败:', error)
   }
-})
+})()
 
 export default rustWebSocketClient
