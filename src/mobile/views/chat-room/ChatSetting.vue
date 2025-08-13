@@ -6,13 +6,14 @@
         class="bg-#FAFAFA"
         style="border-bottom: 1px solid; border-color: #dfdfdf"
         :hidden-right="true"
-        room-name="你干嘛哎哟" />
+        room-name="群设置" />
     </template>
 
     <template #container="{ changedHeight }">
-      <div :style="{ height: changedHeight + 'px' }" class="flex flex-col overflow-auto min-h-70vh w-full">
-        <div class="flex flex-col gap-15px py-15px px-20px bg-#F2F2F2">
-          <div class="flex bg-white rounded-10px w-full h-60px items-center gap-10px">
+      <img src="@/assets/mobile/chat-home/background.webp" class="w-100% relative top-0 z-1" alt="hula" />
+      <div :style="{ height: changedHeight + 'px' }" class="z-2 absolute flex flex-col overflow-auto min-h-70vh w-full">
+        <div class="flex flex-col gap-15px py-15px px-20px">
+          <div class="flex shadow bg-white rounded-10px w-full h-60px items-center gap-10px">
             <!-- 群头像 -->
             <div class="ms-15px self-center h-38px bg-gray-100 rounded-full flex items-center justify-center">
               <n-badge>
@@ -27,7 +28,7 @@
             </div>
           </div>
           <!-- 群成员  -->
-          <div class="bg-white rounded-10px w-full h-180px">
+          <div class="bg-white rounded-10px w-full h-180px shadow">
             <div class="p-[15px_15px_0px_15px] flex flex-col">
               <!-- 群号 -->
               <div class="flex justify-between items-center">
@@ -113,7 +114,7 @@
             </div>
           </div>
           <!-- 群公告 -->
-          <div class="flex bg-white rounded-10px w-full h-auto">
+          <div class="flex bg-white rounded-10px w-full h-auto shadow">
             <div class="px-15px flex flex-col w-full">
               <!-- 群号 -->
               <div
@@ -129,7 +130,7 @@
               </div>
 
               <!-- 公告内容 -->
-              <div class="pt-15px flex flex-col text-14px gap-10px">
+              <div @click="goToNotice" class="pt-15px flex flex-col text-14px gap-10px">
                 <div>群公告</div>
                 <div class="text-#707070 line-clamp-2 text-12px line-height-20px">
                   静夜思·李白 床前明月光，疑是地上霜。 举头望明月，低头思故乡。静夜思·李白 床前明月光，疑是地上霜。
@@ -155,12 +156,12 @@
             </div>
           </div>
           <!-- 群备注 -->
-          <div class="w-full flex flex-col gap-15px">
+          <div class="w-full flex flex-col gap-15px rounded-10px">
             <div class="ps-15px text-14px">
               <span>群备注</span>
               <span class="text-#6E6E6E">（仅自己可见）</span>
             </div>
-            <div class="rounded-10px flex w-full bg-white">
+            <div class="rounded-10px flex w-full bg-white shadow">
               <div class="w-full px-15px">
                 <input
                   class="h-50px w-full"
@@ -169,7 +170,7 @@
               </div>
             </div>
           </div>
-          <div class="flex bg-white rounded-10px w-full h-auto">
+          <div class="flex bg-white rounded-10px w-full h-auto shadow">
             <div class="px-15px flex flex-col w-full">
               <div class="pt-15px text-14px text-#6E6E6E">群设置</div>
               <!-- 群号 -->
@@ -187,7 +188,7 @@
               </div>
             </div>
           </div>
-          <div class="flex bg-white cursor-pointer text-red text-14px rounded-10px w-full">
+          <div class="flex shadow bg-white cursor-pointer text-red text-14px rounded-10px w-full">
             <div class="p-15px">删除聊天记录</div>
           </div>
         </div>
@@ -197,8 +198,14 @@
 </template>
 
 <script setup lang="ts">
+import router from '@/router'
+
 const active1 = ref(false)
 const active2 = ref(false)
+
+const goToNotice = () => {
+  router.push('/mobile/chatRoom/notice')
+}
 </script>
 
 <style scoped></style>

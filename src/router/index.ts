@@ -6,12 +6,15 @@ import {
   type RouteLocationNormalized,
   type RouteRecordRaw
 } from 'vue-router'
-import MobileLaunch from '@/mobile/launch.vue'
 import ChatRoomLayout from '@/mobile/layout/chat-room/ChatRoomLayout.vue'
+import NoticeLayout from '@/mobile/layout/chat-room/NoticeLayout.vue'
 import MobileHome from '@/mobile/layout/index.vue'
 import MobileLogin from '@/mobile/login.vue'
 import ChatMain from '@/mobile/views/chat-room/ChatMain.vue'
 import ChatSetting from '@/mobile/views/chat-room/ChatSetting.vue'
+import NoticeDetail from '@/mobile/views/chat-room/notice/NoticeDetail.vue'
+import NoticeEdit from '@/mobile/views/chat-room/notice/NoticeEdit.vue'
+import NoticeList from '@/mobile/views/chat-room/notice/NoticeList.vue'
 import MobileCommunity from '@/mobile/views/community/index.vue'
 import MobileFriendPage from '@/mobile/views/friends/index.vue'
 import MobileMessagePage from '@/mobile/views/message/index.vue'
@@ -28,11 +31,6 @@ const routes: Array<RouteRecordRaw> = [
     path: '/mobile/login',
     name: 'mobileLogin',
     component: MobileLogin
-  },
-  {
-    path: '/mobile/launch',
-    name: 'mobileLaunch',
-    component: MobileLaunch
   },
   {
     path: '/mobile/chatRoom',
@@ -53,6 +51,28 @@ const routes: Array<RouteRecordRaw> = [
         path: 'setting',
         name: 'mobileChatSetting',
         component: ChatSetting
+      },
+      {
+        path: 'notice',
+        name: 'mobileChatNotice',
+        component: () => NoticeLayout,
+        children: [
+          {
+            path: '',
+            name: 'mobileChatNoticeList',
+            component: () => NoticeList
+          },
+          {
+            path: 'edit/:noticeId',
+            name: 'mobileChatNoticeEdit',
+            component: () => NoticeEdit
+          },
+          {
+            path: 'detail/:noticeId',
+            name: 'mobileChatNoticeDetail',
+            component: () => NoticeDetail
+          }
+        ]
       }
     ]
   },
