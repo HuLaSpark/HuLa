@@ -399,6 +399,11 @@ class RustWebSocketClient {
       useMitt.emit(WsResponseMessageType.DROPPED, event.payload)
     })
 
+    await listen('ws-cancel', (event: any) => {
+      console.log('已取消通话', event.payload)
+      useMitt.emit(WsResponseMessageType.CANCEL, event.payload)
+    })
+
     // 系统相关事件
     await listen('ws-token-expired', (event: any) => {
       console.log('账号在其他设备登录')

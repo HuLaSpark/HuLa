@@ -600,6 +600,11 @@ impl WebSocketClient {
                 let _ = app_handle.emit("ws-dropped", data);
             }
 
+            "CANCEL" => {
+                info!("📞 通话取消");
+                let _ = app_handle.emit("ws-cancel", data);
+            }
+
             // 系统相关
             "tokenExpired" => {
                 warn!("🔑 Token 过期");
