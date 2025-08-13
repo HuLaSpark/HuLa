@@ -109,35 +109,6 @@ class RustWebSocketClient {
       })
     } catch (error: any) {
       console.error('[RustWS] 发送消息失败:', error)
-
-      // 检查是否是连接未完全建立的错误
-      if (
-        error &&
-        typeof error === 'string' &&
-        (error.includes('Connection not fully established') ||
-          error.includes('WebSocket not in connected state') ||
-          error.includes('WebSocket client not initialized'))
-      ) {
-        console.warn('[RustWS] 检测到连接问题，尝试重新建立连接...')
-
-        try {
-          // 使用智能重连
-          await this.smartReconnect(2)
-
-          // 重试发送消息
-          console.info('[RustWS] 连接重建成功，重试发送消息...')
-          await invoke('ws_send_message', {
-            params: { data }
-          })
-
-          console.info('[RustWS] 消息重发成功')
-          return
-        } catch (retryError) {
-          console.error('[RustWS] 智能重连和重发失败:', retryError)
-          throw new Error(`WebSocket 连接失败，无法发送消息: ${retryError}`)
-        }
-      }
-
       throw error
     }
   }
@@ -152,19 +123,6 @@ class RustWebSocketClient {
     } catch (error) {
       console.error('[RustWS] 获取连接状态失败:', error)
       return ConnectionState.ERROR
-    }
-  }
-
-  /**
-   * 获取健康状态
-   */
-  async getHealthStatus(): Promise<ConnectionHealth | null> {
-    try {
-      const health = await invoke<ConnectionHealth>('ws_get_health')
-      return health
-    } catch (error) {
-      console.error('[RustWS] 获取健康状态失败:', error)
-      return null
     }
   }
 
@@ -498,8 +456,8 @@ class RustWebSocketClient {
     console.warn(`[RustWS] 连接丢失 - 原因: ${reason}, 错误: ${error}, 时间: ${new Date(timestamp).toLocaleString()}`)
 
     try {
-      // 使用智能重连
-      await this.smartReconnect(3)
+      // 重新建立连接
+      await this.initConnect()
       console.info('[RustWS] 连接丢失后重连成功')
     } catch (reconnectError) {
       console.error('[RustWS] 连接丢失后重连失败:', reconnectError)
@@ -511,41 +469,6 @@ class RustWebSocketClient {
         originalError: error,
         reconnectError: reconnectError
       })
-    }
-  }
-
-  /**
-   * 智能重连 - 处理连接问题的核心方法
-   */
-  private async smartReconnect(maxRetries: number = 3): Promise<void> {
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        console.info(`[RustWS] 开始第 ${attempt} 次重连尝试...`)
-
-        // 先断开现有连接
-        await this.disconnect()
-
-        // 等待递增时间 (1s, 2s, 3s)
-        await new Promise((resolve) => setTimeout(resolve, attempt * 1000))
-
-        // 重新建立连接
-        await this.initConnect()
-
-        // 验证连接是否成功
-        const isConnected = await this.isConnected()
-        if (isConnected) {
-          console.info(`[RustWS] 第 ${attempt} 次重连成功！`)
-          return
-        } else {
-          throw new Error('连接验证失败')
-        }
-      } catch (error) {
-        console.error(`[RustWS] 第 ${attempt} 次重连失败:`, error)
-
-        if (attempt === maxRetries) {
-          throw new Error(`重连失败，已尝试 ${maxRetries} 次: ${error}`)
-        }
-      }
     }
   }
 
@@ -579,7 +502,7 @@ class RustWebSocketClient {
     } catch (error) {
       console.warn('[RustWS] 检查连接状态失败，尝试智能重连:', error)
       try {
-        await this.smartReconnect(2) // 最多重试2次
+        await this.initConnect()
       } catch (reconnectError) {
         console.error('[RustWS] 智能重连失败:', reconnectError)
         throw reconnectError
