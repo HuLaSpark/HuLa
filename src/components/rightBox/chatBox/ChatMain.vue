@@ -441,19 +441,19 @@
 </template>
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { info } from '@tauri-apps/plugin-log'
 import { type } from '@tauri-apps/plugin-os'
 import { useDebounceFn } from '@vueuse/core'
 import { delay } from 'lodash-es'
 import { ANNOUNCEMENT_HEIGHT, CHAT_HEADER_HEIGHT } from '@/common/constants'
 import VirtualList, { type VirtualListExpose } from '@/components/common/VirtualList.vue'
-import { EventEnum, MessageStatusEnum, MittEnum, MsgEnum, ThemeEnum } from '@/enums'
+import { MessageStatusEnum, MittEnum, MsgEnum, ThemeEnum } from '@/enums'
 import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
 import { useChatLayoutGlobal } from '@/hooks/useChatLayout'
 import { useChatMain } from '@/hooks/useChatMain.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 import { usePopover } from '@/hooks/usePopover.ts'
-import { useTauriListener } from '@/hooks/useTauriListener'
 import { useWindow } from '@/hooks/useWindow.ts'
 import apis from '@/services/apis'
 import type { MessageType, SessionItem } from '@/services/types.ts'
@@ -468,7 +468,6 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
 
 const appWindow = WebviewWindow.getCurrent()
-const { addListener } = useTauriListener()
 const props = defineProps<{
   activeItem: SessionItem
 }>()
@@ -1062,42 +1061,29 @@ onMounted(async () => {
   })
 
   // 监听公告更新事件
-  addListener(
-    appWindow.listen('announcementUpdated', async (event: any) => {
-      if (event.payload) {
-        const { hasAnnouncements, topAnnouncement: newTopAnnouncement } = event.payload
-        if (hasAnnouncements && newTopAnnouncement) {
-          // 只有置顶公告才更新顶部提示
-          if (newTopAnnouncement.top) {
-            topAnnouncement.value = newTopAnnouncement
-          } else if (topAnnouncement.value) {
-            // 如果当前有显示置顶公告，但新公告不是置顶的，保持不变
-            await loadTopAnnouncement() // 重新获取置顶公告
-          }
-        } else {
-          // 如果没有公告，清空显示
-          topAnnouncement.value = null
+  appWindow.listen('announcementUpdated', async (event: any) => {
+    info(`公告更新事件: ${event.payload}`)
+    if (event.payload) {
+      const { hasAnnouncements, topAnnouncement: newTopAnnouncement } = event.payload
+      if (hasAnnouncements && newTopAnnouncement) {
+        // 只有置顶公告才更新顶部提示
+        if (newTopAnnouncement.top) {
+          topAnnouncement.value = newTopAnnouncement
+        } else if (topAnnouncement.value) {
+          // 如果当前有显示置顶公告，但新公告不是置顶的，保持不变
+          await loadTopAnnouncement() // 重新获取置顶公告
         }
+      } else {
+        // 如果没有公告，清空显示
+        topAnnouncement.value = null
       }
-    }),
-    'announcementUpdated'
-  )
+    }
+  })
 
   // 监听公告清空事件
-  addListener(
-    appWindow.listen('announcementClear', () => {
-      topAnnouncement.value = null
-    }),
-    'announcementClear'
-  )
-
-  addListener(
-    appWindow.listen(EventEnum.SHARE_SCREEN, async () => {
-      await createWebviewWindow('共享屏幕', 'sharedScreen', 840, 840)
-    }),
-    'shareScreen'
-  )
-  window.addEventListener('click', closeMenu, true)
+  appWindow.listen('announcementClear', () => {
+    topAnnouncement.value = null
+  })
 })
 
 onUnmounted(() => {
