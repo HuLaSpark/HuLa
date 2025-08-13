@@ -1,7 +1,20 @@
-use super::{manager::get_websocket_manager, types::*};
+use super::{client::WebSocketClient, types::*};
 use serde::{Deserialize, Serialize};
+use std::sync::{Arc, OnceLock};
 use tauri::AppHandle;
+use tokio::sync::RwLock;
 use tracing::{error, info};
+
+// 全局 WebSocket 客户端实例
+static GLOBAL_WS_CLIENT: OnceLock<Arc<RwLock<Option<WebSocketClient>>>> = OnceLock::new();
+
+/// 获取全局 WebSocket 客户端容器
+fn get_websocket_client_container() -> &'static Arc<RwLock<Option<WebSocketClient>>> {
+    GLOBAL_WS_CLIENT.get_or_init(|| {
+        info!("🚀 创建全局 WebSocket 客户端容器");
+        Arc::new(RwLock::new(None))
+    })
+}
 
 /// WebSocket 初始化参数
 #[derive(Debug, Deserialize)]
@@ -52,7 +65,7 @@ pub async fn ws_init_connection(
 ) -> Result<SuccessResponse, String> {
     info!("🚀 收到 WebSocket 初始化请求");
 
-    let manager = get_websocket_manager(&app_handle);
+    let client_container = get_websocket_client_container();
 
     let config = WebSocketConfig {
         server_url: params.server_url,
@@ -61,7 +74,32 @@ pub async fn ws_init_connection(
         ..Default::default()
     };
 
-    match manager.init_connection(config).await {
+    // 获取或创建客户端实例
+    let client = {
+        let mut client_guard = client_container.write().await;
+
+        // 检查是否已有客户端实例
+        if let Some(existing_client) = client_guard.as_ref() {
+            // 如果已有客户端且已连接，直接返回成功
+            if existing_client.is_connected() {
+                info!("✅ WebSocket 已连接，跳过重复连接");
+                return Ok(SuccessResponse::new());
+            }
+
+            // 如果已有客户端但未连接，使用现有客户端
+            info!("🔄 使用现有 WebSocket 客户端实例重新连接");
+            existing_client.clone()
+        } else {
+            // 如果没有客户端，创建新实例
+            info!("🆕 创建新的 WebSocket 客户端实例");
+            let new_client = WebSocketClient::new(app_handle);
+            *client_guard = Some(new_client.clone());
+            new_client
+        }
+    };
+
+    // 尝试连接
+    match client.connect(config).await {
         Ok(_) => {
             info!("✅ WebSocket 连接初始化成功");
             Ok(SuccessResponse::new())
@@ -75,11 +113,15 @@ pub async fn ws_init_connection(
 
 /// 断开 WebSocket 连接
 #[tauri::command]
-pub async fn ws_disconnect(app_handle: AppHandle) -> Result<SuccessResponse, String> {
+pub async fn ws_disconnect(_app_handle: AppHandle) -> Result<SuccessResponse, String> {
     info!("📡 收到 WebSocket 断开请求");
 
-    let manager = get_websocket_manager(&app_handle);
-    manager.disconnect().await;
+    let client_container = get_websocket_client_container();
+    let mut client_guard = client_container.write().await;
+
+    if let Some(client) = client_guard.take() {
+        client.disconnect().await;
+    }
 
     info!("✅ WebSocket 连接已断开");
     Ok(SuccessResponse::new())
@@ -88,111 +130,132 @@ pub async fn ws_disconnect(app_handle: AppHandle) -> Result<SuccessResponse, Str
 /// 发送 WebSocket 消息
 #[tauri::command]
 pub async fn ws_send_message(
-    app_handle: AppHandle,
+    _app_handle: AppHandle,
     params: SendMessageParams,
 ) -> Result<SuccessResponse, String> {
-    let manager: std::sync::Arc<super::WebSocketManager> = get_websocket_manager(&app_handle);
+    let client_container = get_websocket_client_container();
+    let client_guard = client_container.read().await;
 
-    match manager.send_message(params.data).await {
-        Ok(_) => Ok(SuccessResponse::new()),
-        Err(e) => {
-            error!("❌ 发送消息失败: {}", e);
-            Err(format!("发送失败: {}", e))
+    if let Some(client) = client_guard.as_ref() {
+        match client.send_message(params.data).await {
+            Ok(_) => Ok(SuccessResponse::new()),
+            Err(e) => {
+                error!("❌ 发送消息失败: {}", e);
+                Err(format!("发送失败: {}", e))
+            }
         }
+    } else {
+        error!("❌ WebSocket 未初始化");
+        Err("WebSocket 未初始化".to_string())
     }
 }
 
 /// 获取连接状态
 #[tauri::command]
-pub async fn ws_get_state(app_handle: AppHandle) -> Result<ConnectionState, String> {
-    let manager = get_websocket_manager(&app_handle);
-    let state = manager.get_state().await;
+pub async fn ws_get_state(_app_handle: AppHandle) -> Result<ConnectionState, String> {
+    let client_container = get_websocket_client_container();
+    let client_guard = client_container.read().await;
 
-    Ok(state)
+    if let Some(client) = client_guard.as_ref() {
+        Ok(client.get_state().await)
+    } else {
+        Ok(ConnectionState::Disconnected)
+    }
 }
 
 /// 获取连接健康状态
 #[tauri::command]
-pub async fn ws_get_health(app_handle: AppHandle) -> Result<ConnectionHealth, String> {
-    let manager = get_websocket_manager(&app_handle);
+pub async fn ws_get_health(_app_handle: AppHandle) -> Result<ConnectionHealth, String> {
+    let client_container = get_websocket_client_container();
+    let client_guard = client_container.read().await;
 
-    match manager.get_health_status().await {
-        Some(health) => Ok(health),
-        None => Err("WebSocket 未初始化".to_string()),
+    if let Some(client) = client_guard.as_ref() {
+        Ok(client.get_health_status().await)
+    } else {
+        Err("WebSocket 未初始化".to_string())
     }
 }
 
 /// 强制重连
 #[tauri::command]
-pub async fn ws_force_reconnect(app_handle: AppHandle) -> Result<SuccessResponse, String> {
+pub async fn ws_force_reconnect(_app_handle: AppHandle) -> Result<SuccessResponse, String> {
     info!("🔄 收到强制重连请求");
 
-    let manager = get_websocket_manager(&app_handle);
+    let client_container = get_websocket_client_container();
+    let client_guard = client_container.read().await;
 
-    match manager.force_reconnect().await {
-        Ok(_) => {
-            info!("✅ WebSocket 重连成功");
-            Ok(SuccessResponse::new())
+    if let Some(client) = client_guard.as_ref() {
+        match client.force_reconnect().await {
+            Ok(_) => {
+                info!("✅ WebSocket 重连成功");
+                Ok(SuccessResponse::new())
+            }
+            Err(e) => {
+                error!("❌ WebSocket 重连失败: {}", e);
+                Err(format!("重连失败: {}", e))
+            }
         }
-        Err(e) => {
-            error!("❌ WebSocket 重连失败: {}", e);
-            Err(format!("重连失败: {}", e))
-        }
+    } else {
+        error!("❌ WebSocket 未初始化，无法重连");
+        Err("WebSocket 未初始化".to_string())
     }
 }
 
 /// 更新 WebSocket 配置
 #[tauri::command]
 pub async fn ws_update_config(
-    app_handle: AppHandle,
+    _app_handle: AppHandle,
     params: UpdateConfigParams,
 ) -> Result<SuccessResponse, String> {
     info!("⚙️ 更新 WebSocket 配置");
 
-    let manager = get_websocket_manager(&app_handle);
+    let client_container = get_websocket_client_container();
+    let client_guard = client_container.read().await;
 
-    // 获取当前配置（这里需要添加获取当前配置的方法）
-    let mut config = WebSocketConfig::default();
+    if let Some(client) = client_guard.as_ref() {
+        // 获取当前配置（这里需要添加获取当前配置的方法）
+        let mut config = WebSocketConfig::default();
 
-    // 更新配置
-    if let Some(interval) = params.heartbeat_interval {
-        config.heartbeat_interval = interval;
-    }
-    if let Some(timeout) = params.heartbeat_timeout {
-        config.heartbeat_timeout = timeout;
-    }
-    if let Some(attempts) = params.max_reconnect_attempts {
-        config.max_reconnect_attempts = attempts;
-    }
-    if let Some(delay) = params.reconnect_delay_ms {
-        config.reconnect_delay_ms = delay;
-    }
-
-    match manager.update_config(config).await {
-        Ok(_) => {
-            info!("✅ WebSocket 配置更新成功");
-            Ok(SuccessResponse::new())
+        // 更新配置
+        if let Some(interval) = params.heartbeat_interval {
+            config.heartbeat_interval = interval;
         }
-        Err(e) => {
-            error!("❌ WebSocket 配置更新失败: {}", e);
-            Err(format!("配置更新失败: {}", e))
+        if let Some(timeout) = params.heartbeat_timeout {
+            config.heartbeat_timeout = timeout;
         }
+        if let Some(attempts) = params.max_reconnect_attempts {
+            config.max_reconnect_attempts = attempts;
+        }
+        if let Some(delay) = params.reconnect_delay_ms {
+            config.reconnect_delay_ms = delay;
+        }
+
+        client.update_config(config).await;
+        info!("✅ WebSocket 配置更新成功");
+        Ok(SuccessResponse::new())
+    } else {
+        error!("❌ WebSocket 未初始化，无法更新配置");
+        Err("WebSocket 未初始化".to_string())
     }
 }
 
 /// 检查连接状态
 #[tauri::command]
-pub async fn ws_is_connected(app_handle: AppHandle) -> Result<bool, String> {
-    let manager = get_websocket_manager(&app_handle);
-    let is_connected = manager.is_connected().await;
+pub async fn ws_is_connected(_app_handle: AppHandle) -> Result<bool, String> {
+    let client_container = get_websocket_client_container();
+    let client_guard = client_container.read().await;
 
-    Ok(is_connected)
+    if let Some(client) = client_guard.as_ref() {
+        Ok(client.is_connected())
+    } else {
+        Ok(false)
+    }
 }
 
 /// 设置应用后台状态
 #[tauri::command]
 pub async fn ws_set_app_background_state(
-    app_handle: AppHandle,
+    _app_handle: AppHandle,
     is_background: bool,
 ) -> Result<SuccessResponse, String> {
     info!(
@@ -200,17 +263,25 @@ pub async fn ws_set_app_background_state(
         if is_background { "后台" } else { "前台" }
     );
 
-    let manager = get_websocket_manager(&app_handle);
-    manager.set_app_background_state(is_background).await;
+    let client_container = get_websocket_client_container();
+    let client_guard = client_container.read().await;
+
+    if let Some(client) = client_guard.as_ref() {
+        client.set_app_background_state(is_background);
+    }
 
     Ok(SuccessResponse::new())
 }
 
 /// 获取应用后台状态
 #[tauri::command]
-pub async fn ws_get_app_background_state(app_handle: AppHandle) -> Result<bool, String> {
-    let manager = get_websocket_manager(&app_handle);
-    let is_background = manager.is_app_in_background().await;
+pub async fn ws_get_app_background_state(_app_handle: AppHandle) -> Result<bool, String> {
+    let client_container = get_websocket_client_container();
+    let client_guard = client_container.read().await;
 
-    Ok(is_background)
+    if let Some(client) = client_guard.as_ref() {
+        Ok(client.is_app_in_background())
+    } else {
+        Ok(false)
+    }
 }

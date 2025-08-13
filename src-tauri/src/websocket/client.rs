@@ -4,13 +4,14 @@ use futures_util::{sink::SinkExt, stream::StreamExt};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
 use tauri::{AppHandle, Emitter};
-use tokio::sync::{RwLock, mpsc};
+use tokio::sync::{Mutex, RwLock, mpsc};
 use tokio::time::{Duration, interval, sleep};
 use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 use tracing::{debug, error, info, warn};
 use url::Url;
 
 /// WebSocket 客户端
+#[derive(Clone)]
 pub struct WebSocketClient {
     config: Arc<RwLock<WebSocketConfig>>,
     state: Arc<RwLock<ConnectionState>>,
@@ -36,6 +37,12 @@ pub struct WebSocketClient {
     is_app_in_background: Arc<AtomicBool>,
     last_foreground_time: Arc<AtomicU64>,
     background_heartbeat_failures: Arc<AtomicU32>,
+
+    // 连接状态标记
+    is_ws_connected: Arc<AtomicBool>,
+
+    // 连接互斥锁，防止并发连接
+    connection_mutex: Arc<Mutex<()>>,
 }
 
 impl WebSocketClient {
@@ -57,28 +64,46 @@ impl WebSocketClient {
                 chrono::Utc::now().timestamp_millis() as u64
             )),
             background_heartbeat_failures: Arc::new(AtomicU32::new(0)),
+            is_ws_connected: Arc::new(AtomicBool::new(false)),
+            connection_mutex: Arc::new(Mutex::new(())),
         }
     }
 
     /// 初始化连接
     pub async fn connect(&self, config: WebSocketConfig) -> Result<()> {
+        // 获取连接锁，确保同时只有一个连接操作
+        let _lock: tokio::sync::MutexGuard<'_, ()> = self.connection_mutex.lock().await;
         info!("🚀 初始化 WebSocket 连接到: {}", config.server_url);
 
-        // 停止当前连接（如果有）
-        self.disconnect().await;
+        // 在锁保护下再次检查连接状态
+        if self.is_ws_connected.load(Ordering::SeqCst) {
+            warn!("⚠️ WebSocket 已连接，忽略重复连接请求");
+            return Ok(());
+        }
 
         // 更新配置
         *self.config.write().await = config;
         self.should_stop.store(false, Ordering::SeqCst);
 
         // 开始连接循环
-        self.connection_loop().await
+        self.connection_loop().await?;
+
+        Ok(())
     }
 
     /// 断开连接
     pub async fn disconnect(&self) {
+        let _lock = self.connection_mutex.lock().await;
+        self.internal_disconnect().await;
+    }
+
+    /// 内部断开连接方法（不获取锁）
+    async fn internal_disconnect(&self) {
         info!("📡 断开 WebSocket 连接");
         self.should_stop.store(true, Ordering::SeqCst);
+
+        // 更新连接状态
+        self.is_ws_connected.store(false, Ordering::SeqCst);
 
         // 清理消息发送器
         *self.message_sender.write().await = None;
@@ -185,11 +210,24 @@ impl WebSocketClient {
     /// 强制重连
     pub async fn force_reconnect(&self) -> Result<()> {
         info!("🔄 强制重新连接");
+
+        // 获取连接锁
+        let _lock = self.connection_mutex.lock().await;
+
         self.reconnect_attempts.store(0, Ordering::SeqCst);
+
+        // 先断开当前连接
+        self.internal_disconnect().await;
 
         // 重新连接
         let config = self.config.read().await.clone();
-        self.connect(config).await
+
+        // 更新配置
+        *self.config.write().await = config.clone();
+        self.should_stop.store(false, Ordering::SeqCst);
+
+        // 开始连接循环
+        self.connection_loop().await
     }
 
     /// 主连接循环
@@ -214,6 +252,7 @@ impl WebSocketClient {
                     if attempts >= config.max_reconnect_attempts {
                         self.emit_error("连接失败次数过多，停止重试".to_string(), None)
                             .await;
+                        self.is_ws_connected.store(false, Ordering::SeqCst);
                         self.update_state(ConnectionState::Error, false).await;
                         return Err(anyhow::anyhow!("Max reconnection attempts reached"));
                     }
@@ -271,6 +310,9 @@ impl WebSocketClient {
         )
         .await;
 
+        // 标记为已连接
+        self.is_ws_connected.store(true, Ordering::SeqCst);
+
         // 发送待发消息
         self.send_pending_messages().await?;
 
@@ -280,12 +322,14 @@ impl WebSocketClient {
         // 处理消息发送
         let message_sender_task = {
             let should_stop = self.should_stop.clone();
+            let is_ws_connected = self.is_ws_connected.clone();
             tokio::spawn(async move {
                 while !should_stop.load(Ordering::SeqCst) {
                     tokio::select! {
                         Some(message) = msg_receiver.recv() => {
                             if let Err(e) = ws_sender.send(message).await {
                                 error!("❌ 发送消息失败: {}", e);
+                                is_ws_connected.store(false, Ordering::SeqCst);
                                 break;
                             }
                         }
@@ -300,6 +344,7 @@ impl WebSocketClient {
             let app_handle = self.app_handle.clone();
             let last_pong_time = self.last_pong_time.clone();
             let consecutive_failures = self.consecutive_failures.clone();
+            let is_ws_connected = self.is_ws_connected.clone();
 
             tokio::spawn(async move {
                 while let Some(msg) = ws_receiver.next().await {
@@ -326,10 +371,12 @@ impl WebSocketClient {
                         }
                         Ok(Message::Close(_)) => {
                             info!("📡 WebSocket 连接已关闭");
+                            is_ws_connected.store(false, Ordering::SeqCst);
                             break;
                         }
                         Err(e) => {
                             error!("❌ WebSocket 接收消息错误: {}", e);
+                            is_ws_connected.store(false, Ordering::SeqCst);
                             break;
                         }
                         _ => {}
@@ -590,6 +637,7 @@ impl WebSocketClient {
             let message_sender = self.message_sender.clone();
             let is_app_in_background = self.is_app_in_background.clone();
             let background_heartbeat_failures = self.background_heartbeat_failures.clone();
+            let is_ws_connected = self.is_ws_connected.clone();
 
             tokio::spawn(async move {
                 let mut heartbeat_interval = interval(Duration::from_millis(interval_ms));
@@ -647,6 +695,8 @@ impl WebSocketClient {
                             let max_failures = if is_background { 5 } else { 3 };
                             if failures >= max_failures {
                                 error!("💔 心跳连续超时，触发重连");
+                                // 心跳失败时标记连接断开
+                                is_ws_connected.store(false, Ordering::SeqCst);
                                 break;
                             }
                         }
@@ -771,7 +821,7 @@ impl WebSocketClient {
 
             // 检查是否需要重连
             tokio::spawn({
-                let client = self.clone_for_spawn();
+                let client = self.clone();
                 async move {
                     client.check_and_recover_connection().await;
                 }
@@ -870,23 +920,8 @@ impl WebSocketClient {
         self.is_app_in_background.load(Ordering::SeqCst)
     }
 
-    /// 克隆用于异步任务
-    fn clone_for_spawn(&self) -> Self {
-        Self {
-            config: self.config.clone(),
-            state: self.state.clone(),
-            app_handle: self.app_handle.clone(),
-            last_pong_time: self.last_pong_time.clone(),
-            consecutive_failures: self.consecutive_failures.clone(),
-            heartbeat_active: self.heartbeat_active.clone(),
-            reconnect_attempts: self.reconnect_attempts.clone(),
-            is_reconnecting: self.is_reconnecting.clone(),
-            message_sender: self.message_sender.clone(),
-            pending_messages: self.pending_messages.clone(),
-            should_stop: self.should_stop.clone(),
-            is_app_in_background: self.is_app_in_background.clone(),
-            last_foreground_time: self.last_foreground_time.clone(),
-            background_heartbeat_failures: self.background_heartbeat_failures.clone(),
-        }
+    /// 检查 WebSocket 是否已连接
+    pub fn is_connected(&self) -> bool {
+        self.is_ws_connected.load(Ordering::SeqCst)
     }
 }
