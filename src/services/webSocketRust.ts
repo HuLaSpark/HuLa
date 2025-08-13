@@ -6,6 +6,7 @@ import { useMitt } from '@/hooks/useMitt'
 import { getEnhancedFingerprint } from '@/services/fingerprint'
 import { WsResponseMessageType } from '@/services/wsType'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { useEventListener } from '@vueuse/core'
 
 /// WebSocket 连接状态
 export enum ConnectionState {
@@ -106,8 +107,37 @@ class RustWebSocketClient {
       await invoke('ws_send_message', {
         params: { data }
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error('[RustWS] 发送消息失败:', error)
+
+      // 检查是否是连接未完全建立的错误
+      if (
+        error &&
+        typeof error === 'string' &&
+        (error.includes('Connection not fully established') ||
+          error.includes('WebSocket not in connected state') ||
+          error.includes('WebSocket client not initialized'))
+      ) {
+        console.warn('[RustWS] 检测到连接问题，尝试重新建立连接...')
+
+        try {
+          // 使用智能重连
+          await this.smartReconnect(2)
+
+          // 重试发送消息
+          console.info('[RustWS] 连接重建成功，重试发送消息...')
+          await invoke('ws_send_message', {
+            params: { data }
+          })
+
+          console.info('[RustWS] 消息重发成功')
+          return
+        } catch (retryError) {
+          console.error('[RustWS] 智能重连和重发失败:', retryError)
+          throw new Error(`WebSocket 连接失败，无法发送消息: ${retryError}`)
+        }
+      }
+
       throw error
     }
   }
@@ -276,6 +306,12 @@ class RustWebSocketClient {
    * 监听 Rust 端发送的具体业务消息事件
    */
   private async setupBusinessMessageListeners(): Promise<void> {
+    // 连接状态相关事件
+    await listen('ws-connection-lost', (event: any) => {
+      console.warn('[RustWS] 收到连接丢失事件:', event.payload)
+      this.handleConnectionLost(event.payload)
+    })
+
     // 登录相关事件
     await listen('ws-login-qr-code', (event: any) => {
       console.log('获取二维码')
@@ -454,6 +490,66 @@ class RustWebSocketClient {
   }
 
   /**
+   * 处理连接丢失事件
+   */
+  private async handleConnectionLost(payload: any): Promise<void> {
+    const { reason, error, timestamp } = payload
+
+    console.warn(`[RustWS] 连接丢失 - 原因: ${reason}, 错误: ${error}, 时间: ${new Date(timestamp).toLocaleString()}`)
+
+    try {
+      // 使用智能重连
+      await this.smartReconnect(3)
+      console.info('[RustWS] 连接丢失后重连成功')
+    } catch (reconnectError) {
+      console.error('[RustWS] 连接丢失后重连失败:', reconnectError)
+
+      // 可以在这里添加用户通知，比如显示重连失败的提示
+      // 或者发送一个全局事件让UI层处理
+      useMitt.emit('ws-reconnect-failed', {
+        originalReason: reason,
+        originalError: error,
+        reconnectError: reconnectError
+      })
+    }
+  }
+
+  /**
+   * 智能重连 - 处理连接问题的核心方法
+   */
+  private async smartReconnect(maxRetries: number = 3): Promise<void> {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.info(`[RustWS] 开始第 ${attempt} 次重连尝试...`)
+
+        // 先断开现有连接
+        await this.disconnect()
+
+        // 等待递增时间 (1s, 2s, 3s)
+        await new Promise((resolve) => setTimeout(resolve, attempt * 1000))
+
+        // 重新建立连接
+        await this.initConnect()
+
+        // 验证连接是否成功
+        const isConnected = await this.isConnected()
+        if (isConnected) {
+          console.info(`[RustWS] 第 ${attempt} 次重连成功！`)
+          return
+        } else {
+          throw new Error('连接验证失败')
+        }
+      } catch (error) {
+        console.error(`[RustWS] 第 ${attempt} 次重连失败:`, error)
+
+        if (attempt === maxRetries) {
+          throw new Error(`重连失败，已尝试 ${maxRetries} 次: ${error}`)
+        }
+      }
+    }
+  }
+
+  /**
    * 智能初始化连接
    * 检查连接状态，只有在断开时才重新连接
    */
@@ -481,11 +577,12 @@ class RustWebSocketClient {
         info('[RustWS] WebSocket 已连接，跳过初始化')
       }
     } catch (error) {
-      console.warn('[RustWS] 检查连接状态失败，尝试重新连接:', error)
+      console.warn('[RustWS] 检查连接状态失败，尝试智能重连:', error)
       try {
-        await this.initConnect()
-      } catch (initError) {
-        console.error('[RustWS] WebSocket 初始化失败:', initError)
+        await this.smartReconnect(2) // 最多重试2次
+      } catch (reconnectError) {
+        console.error('[RustWS] 智能重连失败:', reconnectError)
+        throw reconnectError
       }
     }
   }
@@ -539,5 +636,15 @@ const rustWebSocketClient = new RustWebSocketClient()
 setTimeout(() => {
   rustWebSocketClient.smartInitConnect()
 }, 100)
+
+useEventListener(window, 'visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    info('[RustWS] 页面可见，设置应用状态为前台')
+    rustWebSocketClient.setAppBackgroundState(false)
+  } else {
+    info('[RustWS] 页面不可见，设置应用状态为后台')
+    rustWebSocketClient.setAppBackgroundState(true)
+  }
+})
 
 export default rustWebSocketClient

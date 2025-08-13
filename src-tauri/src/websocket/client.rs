@@ -797,7 +797,20 @@ impl WebSocketClient {
                 if last_pong > 0 && now - last_pong > 60000 {
                     // 60秒无心跳
                     warn!("💔 连接可能已断开，强制重连");
-                    let _ = self.force_reconnect().await;
+                    if let Err(e) = self.force_reconnect().await {
+                        warn!("💔 自动重连失败: {}", e);
+                        // 通知前端需要重连
+                        if let Err(emit_err) = self.app_handle.emit(
+                            "ws-connection-lost",
+                            serde_json::json!({
+                                "reason": "auto_reconnect_failed",
+                                "error": e.to_string(),
+                                "timestamp": chrono::Utc::now().timestamp_millis()
+                            }),
+                        ) {
+                            error!("发送连接丢失事件失败: {}", emit_err);
+                        }
+                    }
                 } else {
                     // 发送一个心跳来测试连接
                     self.send_test_heartbeat().await;
@@ -805,7 +818,20 @@ impl WebSocketClient {
             }
             ConnectionState::Disconnected | ConnectionState::Error => {
                 info!("🔄 连接已断开，尝试重新连接");
-                let _ = self.force_reconnect().await;
+                if let Err(e) = self.force_reconnect().await {
+                    warn!("💔 自动重连失败: {}", e);
+                    // 通知前端需要重连
+                    if let Err(emit_err) = self.app_handle.emit(
+                        "ws-connection-lost",
+                        serde_json::json!({
+                            "reason": "auto_reconnect_failed",
+                            "error": e.to_string(),
+                            "timestamp": chrono::Utc::now().timestamp_millis()
+                        }),
+                    ) {
+                        error!("发送连接丢失事件失败: {}", emit_err);
+                    }
+                }
             }
             _ => {
                 info!("🔄 连接状态: {:?}，等待连接完成", current_state);
@@ -817,8 +843,25 @@ impl WebSocketClient {
     async fn send_test_heartbeat(&self) {
         let heartbeat_msg = WsMessage::Heartbeat;
         if let Ok(json) = serde_json::to_value(&heartbeat_msg) {
-            let _ = self.send_message(json).await;
-            info!("💓 发送测试心跳");
+            match self.send_message(json).await {
+                Ok(_) => {
+                    info!("💓 发送测试心跳成功");
+                }
+                Err(e) => {
+                    warn!("💔 测试心跳发送失败: {}", e);
+                    // 通过事件通知前端需要重连
+                    if let Err(emit_err) = self.app_handle.emit(
+                        "ws-connection-lost",
+                        serde_json::json!({
+                            "reason": "test_heartbeat_failed",
+                            "error": e.to_string(),
+                            "timestamp": chrono::Utc::now().timestamp_millis()
+                        }),
+                    ) {
+                        error!("发送连接丢失事件失败: {}", emit_err);
+                    }
+                }
+            }
         }
     }
 
