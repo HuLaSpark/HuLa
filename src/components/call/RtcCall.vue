@@ -3,7 +3,7 @@
   <div
     v-if="isReceiver && !isCallAccepted"
     data-tauri-drag-region
-    class="notification-container w-360px h-100px bg-white dark:bg-gray-900 rounded-12px shadow-2xl border border-gray-200 dark:border-gray-700 flex items-center p-12px select-none backdrop-blur-md">
+    class="w-360px h-100px bg-white dark:bg-gray-900 rounded-12px shadow-2xl border border-gray-200 dark:border-gray-700 flex items-center p-12px select-none backdrop-blur-md">
     <!-- 用户头像 -->
     <div class="relative mr-12px">
       <n-avatar
@@ -51,16 +51,33 @@
   </div>
 
   <!-- 正常通话窗口 -->
-  <div v-else data-tauri-drag-region class="rtc-call-container h-full bg-gray-800 flex flex-col select-none">
+  <div v-else data-tauri-drag-region class="h-full flex flex-col select-none relative bg-#161616">
+    <!-- 背景羽化模糊层 -->
+    <div
+      :style="{
+        backgroundImage: `url(${avatarSrc})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }"
+      class="absolute inset-0 blur-xl opacity-40"></div>
+    <!-- 深色遮罩 -->
+    <div class="absolute inset-0 bg-black/20"></div>
+
     <!-- 窗口控制栏 -->
-    <ActionBar class="absolute right-0 w-full z-999" :shrink="false" :min-w="false" :max-w="false" />
+    <ActionBar
+      class="relative z-10"
+      :top-win-label="WebviewWindow.getCurrent().label"
+      :shrink="false"
+      :min-w="false"
+      :max-w="false" />
 
     <!-- 主要内容区域 -->
-    <div class="call-content flex-1 flex flex-col items-center justify-center px-32px pt-60px">
+    <div class="flex-1 flex flex-col items-center justify-center px-32px pt-60px relative z-10">
       <!-- 视频通话时显示视频 (只有在双方都开启视频时才显示) -->
       <div
         v-if="callType === CallTypeEnum.VIDEO && localStream && (isVideoEnabled || hasRemoteVideo)"
-        class="video-container mb-32px relative">
+        class="mb-32px relative">
         <!-- 主视频 -->
         <video
           ref="mainVideoRef"
@@ -88,11 +105,11 @@
       <!-- 语音通话或其他状态时显示头像 -->
       <div v-else class="user-avatar mb-24px relative flex flex-col items-center">
         <n-avatar
-          :size="120"
+          :size="140"
           :src="avatarSrc"
           :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
           :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
-          class="rounded-12px mb-16px" />
+          class="rounded-22px mb-16px" />
 
         <!-- 用户名 -->
         <div class="text-20px font-medium text-white mb-8px text-center">
@@ -103,13 +120,6 @@
         <div class="text-14px text-gray-300 text-center">
           {{ callStatusText }}
         </div>
-
-        <!-- 通话状态指示器 -->
-        <div
-          v-if="connectionStatus === RTCCallStatus.CALLING"
-          class="absolute -bottom-4px -right-4px w-24px h-24px rounded-full bg-green-500 flex items-center justify-center animate-pulse">
-          <div class="w-8px h-8px rounded-full bg-white"></div>
-        </div>
       </div>
 
       <!-- 通话时长 -->
@@ -119,7 +129,7 @@
     </div>
 
     <!-- 底部控制按钮 -->
-    <div class="call-controls flex flex-col items-center pb-40px">
+    <div class="call-controls flex flex-col items-center pb-40px relative z-10">
       <!-- 上排按钮：静音、扬声器、摄像头 -->
       <div class="flex items-start justify-center gap-40px mb-32px">
         <!-- 静音按钮 -->
@@ -127,7 +137,7 @@
           <div
             @click="toggleMute"
             class="control-btn w-60px h-60px rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 mb-8px"
-            :class="isMuted ? 'bg-red-500 hover:bg-red-400' : 'bg-gray-600 hover:bg-gray-500'">
+            :class="isMuted ? 'bg-#d5304f60 hover:bg-#d5304f80' : 'bg-gray-600 hover:bg-gray-500'">
             <Icon :icon="isMuted ? 'material-symbols:mic-off' : 'material-symbols:mic'" :size="24" class="text-white" />
           </div>
           <div class="text-12px text-gray-400 whitespace-nowrap">{{ isMuted ? '无麦克风' : '麦克风' }}</div>
@@ -152,7 +162,7 @@
           <div
             @click="toggleVideo"
             class="control-btn w-60px h-60px rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 mb-8px"
-            :class="isVideoEnabled ? 'bg-blue-500 hover:bg-blue-400' : 'bg-red-500 hover:bg-red-400'">
+            :class="isVideoEnabled ? 'bg-blue-500 hover:bg-blue-400' : 'bg-#d5304f60 hover:bg-#d5304f80'">
             <Icon
               :icon="isVideoEnabled ? 'material-symbols:videocam' : 'material-symbols:videocam-off'"
               :size="24"
@@ -168,7 +178,7 @@
       <div class="flex justify-center">
         <div
           @click="handleCallResponse(CallResponseStatus.DROPPED)"
-          class="control-btn w-70px h-70px rounded-full bg-red-500 hover:bg-red-400 flex items-center justify-center cursor-pointer transition-all duration-200">
+          class="control-btn w-70px h-70px rounded-full bg-#d5304f60 hover:bg-#d5304f80 flex items-center justify-center cursor-pointer transition-all duration-200">
           <Icon icon="material-symbols:call-end" :size="32" class="text-white" />
         </div>
       </div>
@@ -177,19 +187,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue'
-import { useRoute } from 'vue-router'
+import { Icon } from '@iconify/vue'
+import { LogicalPosition, LogicalSize, PhysicalPosition, PhysicalSize } from '@tauri-apps/api/dpi'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { LogicalSize, LogicalPosition, PhysicalSize, PhysicalPosition } from '@tauri-apps/api/dpi'
 import { primaryMonitor } from '@tauri-apps/api/window'
 import { type } from '@tauri-apps/plugin-os'
-import { Icon } from '@iconify/vue'
+import { useRoute } from 'vue-router'
 import ActionBar from '@/components/windows/ActionBar.vue'
-import { AvatarUtils } from '@/utils/AvatarUtils'
-import { useWebRtc } from '@/hooks/useWebRtc'
-import { useUserInfo } from '@/hooks/useCached'
 import { CallTypeEnum, RTCCallStatus, ThemeEnum } from '@/enums'
+import { useUserInfo } from '@/hooks/useCached'
+import { useWebRtc } from '@/hooks/useWebRtc'
 import { useSettingStore } from '@/stores/setting'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 import { CallResponseStatus } from '../../services/wsType'
 
 const settingStore = useSettingStore()
@@ -441,6 +450,19 @@ watch(
 onMounted(async () => {
   const currentWindow = WebviewWindow.getCurrent()
 
+  // 监听窗口关闭事件，确保关闭窗口时挂断通话
+  const unlistenCloseRequested = await currentWindow.onCloseRequested(async (_event) => {
+    try {
+      // 如果是通话状态，先发送挂断消息
+      if (connectionStatus.value === RTCCallStatus.CALLING || connectionStatus.value === RTCCallStatus.ACCEPT) {
+        await sendRtcCall2VideoCallResponse(CallResponseStatus.DROPPED)
+        unlistenCloseRequested()
+      }
+    } catch (error) {
+      console.error('发送挂断消息失败:', error)
+    }
+  })
+
   try {
     if (isReceiver && !isCallAccepted.value) {
       // 设置通知窗口大小
@@ -510,10 +532,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.rtc-call-container {
-  user-select: none;
-}
-
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }

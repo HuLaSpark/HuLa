@@ -132,7 +132,16 @@ import { join } from '@tauri-apps/api/path'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { open } from '@tauri-apps/plugin-dialog'
 import { copyFile, readFile } from '@tauri-apps/plugin-fs'
+import {
+  CHAT_HEADER_HEIGHT,
+  CHAT_MAIN_MIN_HEIGHT,
+  MIN_FOOTER_HEIGHT,
+  MIN_INPUT_HEIGHT,
+  SEND_BUTTON_AREA_HEIGHT,
+  TOOLBAR_HEIGHT
+} from '@/common/constants'
 import { MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
+import { useChatLayoutGlobal } from '@/hooks/useChatLayout'
 import { type SelectionRange, useCommon } from '@/hooks/useCommon.ts'
 import { useMitt } from '@/hooks/useMitt'
 import type { ContactItem, FilesMeta, SessionItem } from '@/services/types'
@@ -142,15 +151,6 @@ import { useHistoryStore } from '@/stores/history'
 import { useUserStore } from '@/stores/user'
 import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
 import { getFilesMeta, getUserAbsoluteVideosDir } from '@/utils/PathUtil'
-import { useChatLayoutGlobal } from '@/hooks/useChatLayout'
-import {
-  CHAT_MAIN_MIN_HEIGHT,
-  CHAT_HEADER_HEIGHT,
-  TOOLBAR_HEIGHT,
-  SEND_BUTTON_AREA_HEIGHT,
-  MIN_INPUT_HEIGHT,
-  MIN_FOOTER_HEIGHT
-} from '@/common/constants'
 
 const { detailId } = defineProps<{
   detailId: SessionItem['detailId']
@@ -175,6 +175,8 @@ const { footerHeight, setFooterHeight } = useChatLayoutGlobal()
 const isDragging = ref(false)
 const startY = ref(0)
 const startHeight = ref(0)
+// 性能优化相关
+let rafId: number | null = null
 
 // 容器高度响应式状态
 const containerHeight = ref(600) // 默认高度
@@ -249,7 +251,17 @@ const onDrag = (e: MouseEvent) => {
   const deltaY = startY.value - e.clientY
   const newHeight = Math.min(Math.max(startHeight.value + deltaY, MIN_FOOTER_HEIGHT), maxHeight.value)
 
-  setFooterHeight(newHeight)
+  // 取消之前的动画帧
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId)
+  }
+
+  // 使用 requestAnimationFrame 优化DOM更新
+  rafId = requestAnimationFrame(() => {
+    setFooterHeight(newHeight)
+
+    rafId = null
+  })
 }
 
 const endDrag = () => {
@@ -257,6 +269,12 @@ const endDrag = () => {
   document.removeEventListener('mousemove', onDrag)
   document.removeEventListener('mouseup', endDrag)
   document.body.style.userSelect = ''
+
+  // 清理性能优化相关状态
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId)
+    rafId = null
+  }
 }
 
 /**
@@ -556,6 +574,12 @@ onUnmounted(() => {
     document.removeEventListener('mousemove', onDrag)
     document.removeEventListener('mouseup', endDrag)
     document.body.style.userSelect = ''
+  }
+
+  // 清理性能优化相关
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId)
+    rafId = null
   }
 
   // 清理ResizeObserver

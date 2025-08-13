@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.1.2/schema.json",
+  "$schema": "https://biomejs.dev/schemas/latest/schema.json",
   "vcs": { "enabled": false, "clientKind": "git", "useIgnoreFile": false },
   "files": {
     "ignoreUnknown": false,
@@ -43,7 +43,7 @@
         "noStaticOnlyClass": "off"
       },
       "correctness": {
-        "noUnusedVariables": "off",
+        "noUnusedVariables": "warn",
         "noUnusedImports": "warn"
       },
       "style": {
@@ -82,7 +82,7 @@
   },
   "assist": {
     "enabled": true,
-    "actions": { "source": { "organizeImports": "off" } }
+    "actions": { "source": { "organizeImports": "on" } }
   },
   "overrides": [
     {

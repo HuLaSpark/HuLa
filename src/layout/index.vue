@@ -56,9 +56,9 @@ import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user'
+import { audioManager } from '@/utils/AudioManager'
 import { clearListener, initListener, readCountQueue } from '@/utils/ReadCountQueue'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
-import { audioManager } from '@/utils/AudioManager'
 
 const loadingPercentage = ref(10)
 const loadingText = ref('正在加载应用...')

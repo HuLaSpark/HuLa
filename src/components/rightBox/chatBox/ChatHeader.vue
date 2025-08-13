@@ -2,7 +2,7 @@
   <!-- 顶部操作栏和显示用户名 -->
   <main
     data-tauri-drag-region
-    class="relative z-30 flex-y-center border-b-(1px solid [--right-chat-footer-line-color]) select-none cursor-default justify-between p-[6px_22px_10px]">
+    class="relative z-999 flex-y-center border-b-(1px solid [--right-chat-footer-line-color]) select-none cursor-default justify-between p-[6px_22px_10px]">
     <n-flex align="center">
       <Transition name="loading" mode="out-in">
         <img v-if="showLoading" class="size-22px py-3px" src="@/assets/img/loading.svg" alt="" />
@@ -54,7 +54,7 @@
     </n-flex>
     <!-- 顶部右边选项栏 -->
     <nav v-if="shouldShowDeleteFriend || chatStore.isGroup" class="options flex-y-center gap-20px color-[--icon-color]">
-      <div class="options-box">
+      <div v-if="!isChannel" class="options-box">
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
             <svg @click="startVoiceCall">
@@ -65,7 +65,7 @@
         </n-popover>
       </div>
 
-      <div class="options-box">
+      <div v-if="!isChannel" class="options-box">
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
             <svg @click="startVideoCall">
@@ -76,7 +76,7 @@
         </n-popover>
       </div>
 
-      <div class="options-box">
+      <div v-if="!isChannel" class="options-box">
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
             <svg @click="handleMedia">
@@ -87,10 +87,10 @@
         </n-popover>
       </div>
 
-      <div class="options-box">
+      <div v-if="!isChannel" class="options-box">
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
-            <svg>
+            <svg @click="handleAssist">
               <use href="#remote-control"></use>
             </svg>
           </template>
@@ -98,7 +98,7 @@
         </n-popover>
       </div>
 
-      <div v-if="activeItem.roomId !== '1'" class="options-box" @click="handleCreateGroupOrInvite">
+      <div v-if="!isChannel && activeItem.roomId !== '1'" class="options-box" @click="handleCreateGroupOrInvite">
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
             <svg>
@@ -385,14 +385,11 @@
 </template>
 
 <script setup lang="ts">
-import { emit } from '@tauri-apps/api/event'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { type } from '@tauri-apps/plugin-os'
 import { useDisplayMedia } from '@vueuse/core'
 import AvatarCropper from '@/components/common/AvatarCropper.vue'
 import {
   CallTypeEnum,
-  EventEnum,
   MittEnum,
   NotificationTypeEnum,
   OnlineEnum,
@@ -405,29 +402,26 @@ import {
 import { useAvatarUpload } from '@/hooks/useAvatarUpload'
 import { useUserInfo } from '@/hooks/useCached'
 import { useMitt } from '@/hooks/useMitt.ts'
-import { useTauriListener } from '@/hooks/useTauriListener'
 import { useWindow } from '@/hooks/useWindow'
 import apis from '@/services/apis'
 import { IsAllUserEnum, type SessionItem, type UserItem } from '@/services/types.ts'
+import { WsResponseMessageType } from '@/services/wsType'
+import { useCachedStore } from '@/stores/cached'
 import { useChatStore } from '@/stores/chat.ts'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global'
 import { useGroupStore } from '@/stores/group.ts'
+import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user.ts'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { useCachedStore } from '@/stores/cached'
-import { WsResponseMessageType } from '@/services/wsType'
-import { useSettingStore } from '@/stores/setting'
 
-const appWindow = WebviewWindow.getCurrent()
 const { activeItem } = defineProps<{
   activeItem: SessionItem
 }>()
 const { createModalWindow, createWebviewWindow } = useWindow()
-const { addListener } = useTauriListener()
 // 使用useDisplayMedia获取屏幕共享的媒体流
-const { stream, start, stop } = useDisplayMedia()
+const { stream, stop } = useDisplayMedia()
 const chatStore = useChatStore()
 const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
@@ -456,6 +450,9 @@ const originalGroupDetail = ref({
   myNickname: '',
   groupRemark: ''
 })
+
+// 是否为频道（仅显示 more 按钮）
+const isChannel = computed(() => activeItem.hotFlag === IsAllUserEnum.Yes || activeItem.roomId === '1')
 // 是否为群主
 const isGroupOwner = computed(() => {
   // 频道不能修改群头像和群名称
@@ -491,10 +488,10 @@ const editingGroupName = ref('')
 // 群名称输入框引用
 const groupNameInputRef = useTemplateRef('groupNameInputRef')
 // 创建一个RTCPeerConnection实例
-let peerConnection: RTCPeerConnection
-if (type() !== 'linux') {
-  peerConnection = new RTCPeerConnection()
-}
+// let peerConnection: RTCPeerConnection
+// if (type() !== 'linux') {
+//   peerConnection = new RTCPeerConnection()
+// }
 
 const messageSettingType = ref(
   activeItem.shield
@@ -746,29 +743,34 @@ const saveGroupInfo = async () => {
   }
 }
 
-const handleMedia = () => {
-  start().then(() => {
-    // 将媒体流添加到RTCPeerConnection
-    stream.value?.getTracks().forEach((track) => {
-      peerConnection.addTrack(track, stream.value!)
-    })
+const handleAssist = () => {
+  window.$message.warning('暂未实现')
+}
 
-    // 创建一个offer
-    peerConnection.createOffer().then((offer) => {
-      // 设置本地描述
-      peerConnection.setLocalDescription(offer)
-      emit(EventEnum.SHARE_SCREEN)
-      /** 当需要给独立窗口传输数据的时候需要先监听窗口的创建完毕事件 */
-      addListener(
-        appWindow.listen('SharedScreenWin', async () => {
-          await emit('offer', offer)
-        }),
-        'SharedScreenWin'
-      )
-      // 在这里，你需要将offer发送给对方
-      // 对方需要调用peerConnection.setRemoteDescription(offer)来接受屏幕共享
-    })
-  })
+const handleMedia = () => {
+  window.$message.warning('暂未实现')
+  // start().then(() => {
+  //   // 将媒体流添加到RTCPeerConnection
+  //   stream.value?.getTracks().forEach((track) => {
+  //     peerConnection.addTrack(track, stream.value!)
+  //   })
+
+  //   // 创建一个offer
+  //   peerConnection.createOffer().then((offer) => {
+  //     // 设置本地描述
+  //     peerConnection.setLocalDescription(offer)
+  //     emit(EventEnum.SHARE_SCREEN)
+  //     /** 当需要给独立窗口传输数据的时候需要先监听窗口的创建完毕事件 */
+  //     addListener(
+  //       appWindow.listen('SharedScreenWin', async () => {
+  //         await emit('offer', offer)
+  //       }),
+  //       'SharedScreenWin'
+  //     )
+  //     // 在这里，你需要将offer发送给对方
+  //     // 对方需要调用peerConnection.setRemoteDescription(offer)来接受屏幕共享
+  //   })
+  // })
 }
 
 /** 置顶 */
@@ -931,24 +933,12 @@ const startVoiceCall = async () => {
     // 获取对方用户ID（单聊时使用，群聊时可能需要其他逻辑）
     const remoteUserId = activeItem.type === RoomTypeEnum.SINGLE ? activeItem.detailId : ''
 
-    await createWebviewWindow(
-      '语音通话', // 窗口标题
-      'rtcCall', // 窗口标签
-      400, // 宽度
-      600, // 高度
-      undefined, // 不需要关闭其他窗口
-      false, // 不可调整大小
-      400, // 最小宽度
-      600, // 最小高度
-      false, // 不透明
-      false, // 显示窗口
-      {
-        remoteUserId: remoteUserId,
-        roomId: activeItem.roomId,
-        callType: CallTypeEnum.AUDIO,
-        isIncoming: false
-      }
-    )
+    await createWebviewWindow('语音通话', 'rtcCall', 400, 600, undefined, false, 400, 600, false, false, {
+      remoteUserId: remoteUserId,
+      roomId: activeItem.roomId,
+      callType: CallTypeEnum.AUDIO,
+      isIncoming: false
+    })
   } catch (error) {
     console.error('创建语音通话窗口失败:', error)
   }

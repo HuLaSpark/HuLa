@@ -252,7 +252,7 @@ export const useChatStore = defineStore(
           currentMessageOptions.value.isLoading = false
         }
       })
-      console.log('🔄 请求响应数据111', data)
+      console.log('🔄 请求响应数据', data)
       // 如果没有数据或者房间ID已经变化，则不处理响应
       if (!data || requestRoomId !== currentRoomId.value) return
 

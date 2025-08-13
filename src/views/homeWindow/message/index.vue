@@ -111,21 +111,20 @@
 <script lang="ts" setup name="message">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import SysNTF from '@/components/common/SystemNotification.tsx'
-import { MittEnum, RoomTypeEnum } from '@/enums'
+import { MittEnum, RoomTypeEnum, ThemeEnum } from '@/enums'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useMessage } from '@/hooks/useMessage.ts'
 import { useMitt } from '@/hooks/useMitt'
 import { useReplaceMsg } from '@/hooks/useReplaceMsg.ts'
+import { useTauriListener } from '@/hooks/useTauriListener'
 import { IsAllUserEnum, type SessionItem } from '@/services/types.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group.ts'
+import { useSettingStore } from '@/stores/setting'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
-import { useTauriListener } from '@/hooks/useTauriListener'
-import { useSettingStore } from '@/stores/setting'
-import { ThemeEnum } from '@/enums'
 
 const appWindow = WebviewWindow.getCurrent()
 const chatStore = useChatStore()

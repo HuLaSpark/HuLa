@@ -298,8 +298,6 @@ const getLocalAudioFile = async (fileName: string) => {
       ? fileBuffer.buffer.slice(fileBuffer.byteOffset, fileBuffer.byteOffset + fileBuffer.byteLength)
       : fileBuffer
 
-  console.log('找到文件：', fileName, fileBuffer)
-
   return {
     fileBuffer: arrayBuffer,
     cachePath,

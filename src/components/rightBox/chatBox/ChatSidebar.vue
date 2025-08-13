@@ -200,10 +200,10 @@ import { WsResponseMessageType } from '@/services/wsType.ts'
 import { useCachedStore } from '@/stores/cached.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group.ts'
+import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { useSettingStore } from '@/stores/setting'
 
 const appWindow = WebviewWindow.getCurrent()
 const { createWebviewWindow } = useWindow()
@@ -282,8 +282,8 @@ const mergedUserList = computed(() => {
     }
   })
 
-  // 转换回数组并按在线状态排序
-  return Array.from(userMap.values()).sort((a, b) => a.activeStatus - b.activeStatus)
+  // rust已排序
+  return Array.from(userMap.values())
 })
 
 // 创建过滤后的用户列表计算属性

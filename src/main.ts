@@ -4,9 +4,10 @@ import App from '@/App.vue'
 import { AppException } from '@/common/exception.ts'
 import vResize from '@/directives/v-resize'
 import vSlide from '@/directives/v-slide.ts'
+import { initMobileClient } from '@/mobile/mobile-client/MobileClient'
 import router from '@/router'
 import { pinia } from '@/stores'
-import { initMobileClient } from '@/mobile/mobile-client/MobileClient'
+
 import('@/services/webSocketAdapter')
 
 const app = createApp(App)

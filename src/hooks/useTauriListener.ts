@@ -59,22 +59,25 @@ export const useTauriListener = () => {
    * 清理当前组件的监听器
    */
   const cleanup = async () => {
-    const componentName = instance?.type?.name || instance?.type?.__name || '未知组件'
-    info(`[useTauriListener]清除组件[${componentName}]的Tauri 监听器，监听器数量:[${listeners.length}]`)
-    try {
-      // 等待所有的 unlisten 函数 resolve
-      const unlistenFns = await Promise.all(listeners)
-      // 执行所有的 unlisten 函数
-      unlistenFns.forEach((unlisten) => {
-        try {
-          unlisten()
-        } catch (error) {
-          console.warn('清理监听器时出错:', error)
-        }
-      })
-      listeners.length = 0
-    } catch (error) {
-      console.error('清理监听器失败:', error)
+    // 只有当存在监听器时才打印日志和执行清理
+    if (listeners.length > 0) {
+      const componentName = instance?.type?.name || instance?.type?.__name || '未知组件'
+      info(`[useTauriListener]清除组件[${componentName}]的Tauri 监听器，监听器数量:[${listeners.length}]`)
+      try {
+        // 等待所有的 unlisten 函数 resolve
+        const unlistenFns = await Promise.all(listeners)
+        // 执行所有的 unlisten 函数
+        unlistenFns.forEach((unlisten) => {
+          try {
+            unlisten()
+          } catch (error) {
+            console.warn('清理监听器时出错:', error)
+          }
+        })
+        listeners.length = 0
+      } catch (error) {
+        console.error('清理监听器失败:', error)
+      }
     }
   }
 

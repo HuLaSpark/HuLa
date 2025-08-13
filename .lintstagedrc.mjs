@@ -10,15 +10,13 @@ export default {
     (filenames) => {
       const filteredFiles = filenames.filter((f) => !f.includes('src-tauri/') && !f.endsWith('.d.ts'))
       return filteredFiles.length > 0
-        ? `biome check --write ${filteredFiles.map((f) => path.relative(process.cwd(), f)).join(' ')}`
+        ? `biome check --write --unsafe ${filteredFiles.map((f) => path.relative(process.cwd(), f)).join(' ')}`
         : 'echo "No files to check"'
     }
   ],
-  // Vue 文件：只使用 Prettier 处理（Biome 对 Vue 文件支持有限）
+  // Vue 文件：使用 Biome 检查和修复，然后用 Prettier 格式化
   '*.vue': [
-    (filenames) => {
-      // 分别处理每个文件，避免命令行过长
-      return filenames.map((filename) => `prettier --write ${path.relative(process.cwd(), filename)}`)
-    }
+    createCommand('biome check --write --unsafe', ''),
+    createCommand('prettier --write', '')
   ]
 }

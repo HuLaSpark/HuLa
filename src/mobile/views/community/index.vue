@@ -41,10 +41,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
-import SafeAreaPlaceholder from '@/mobile/components/placeholders/SafeAreaPlaceholder.vue'
 import CommunityContent from '@/mobile/components/community/CommunityContent.vue'
 import CommunityTab from '@/mobile/components/community/CommunityTab.vue'
+import SafeAreaPlaceholder from '@/mobile/components/placeholders/SafeAreaPlaceholder.vue'
 
 const onUpdate = (newTab: string) => {
   console.log('已更新：', newTab)

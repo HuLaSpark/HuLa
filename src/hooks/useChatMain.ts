@@ -572,7 +572,7 @@ export const useChatMain = () => {
         try {
           await groupStore.addAdmin([targetUid])
           window.$message.success('设置管理员成功')
-        } catch (error) {
+        } catch (_error) {
           window.$message.error('设置管理员失败')
         }
       },
@@ -617,7 +617,7 @@ export const useChatMain = () => {
         try {
           await groupStore.revokeAdmin([targetUid])
           window.$message.success('撤销管理员成功')
-        } catch (error) {
+        } catch (_error) {
           window.$message.error('撤销管理员失败')
         }
       },
@@ -667,7 +667,7 @@ export const useChatMain = () => {
           // 从群成员列表中移除该用户
           groupStore.filterUser(targetUid)
           window.$message.success('移出群聊成功')
-        } catch (error) {
+        } catch (_error) {
           window.$message.error('移出群聊失败')
         }
       },

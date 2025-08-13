@@ -109,10 +109,10 @@ import { useMitt } from '@/hooks/useMitt.ts'
 import { RequestFriendAgreeStatus } from '@/services/types'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
+import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { useSettingStore } from '@/stores/setting'
 
 const menuList = ref([
   { label: '添加分组', icon: 'plus' },

@@ -82,7 +82,7 @@
                       :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'" />
                     <n-flex vertical :size="4">
                       <div class="text-(12px [--chat-text-color])">{{ useUserInfo(announcement.uid).value.name }}</div>
-                      <div class="text-(12px [#909090])">{{ announcement?.publishTime }}</div>
+                      <div class="text-(12px [#909090])">{{ announcement?.createTime }}</div>
                     </n-flex>
                   </n-flex>
                   <div
@@ -169,14 +169,14 @@
 import { emitTo } from '@tauri-apps/api/event'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useRoute } from 'vue-router'
+import { ThemeEnum } from '@/enums'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import apis from '@/services/apis'
 import { useCachedStore } from '@/stores/cached'
 import { useGroupStore } from '@/stores/group.ts'
+import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { ThemeEnum } from '@/enums'
-import { useSettingStore } from '@/stores/setting'
 
 // 定义响应式变量
 const title = ref('')

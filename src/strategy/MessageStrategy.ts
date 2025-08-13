@@ -189,7 +189,7 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
         height: result.height,
         previewUrl: result.previewUrl!
       }
-    } catch (error) {
+    } catch (_error) {
       throw new AppException('图片加载失败')
     }
   }
@@ -223,7 +223,7 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
         height: result.height,
         size: result.size || 0
       }
-    } catch (error) {
+    } catch (_error) {
       throw new AppException('图片加载失败')
     }
   }
@@ -1076,7 +1076,7 @@ class VideoMessageStrategyImpl extends AbstractMessageStrategy {
         scene: UploadSceneEnum.CHAT
       })
       return result
-    } catch (error) {
+    } catch (_error) {
       throw new AppException('获取视频上传链接失败')
     }
   }
@@ -1188,7 +1188,7 @@ class VoiceMessageStrategyImpl extends AbstractMessageStrategy {
 
       const result = await uploadHook.getUploadAndDownloadUrl(path, uploadOptions)
       return result
-    } catch (error) {
+    } catch (_error) {
       throw new AppException('获取语音上传链接失败，请重试')
     }
   }
@@ -1204,7 +1204,7 @@ class VoiceMessageStrategyImpl extends AbstractMessageStrategy {
       if (options?.provider === UploadProviderEnum.QINIU) {
         return { qiniuUrl: result as string }
       }
-    } catch (error) {
+    } catch (_error) {
       throw new AppException('语音文件上传失败，请重试')
     }
   }

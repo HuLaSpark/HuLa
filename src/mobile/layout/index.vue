@@ -21,8 +21,8 @@
 
 <script setup lang="ts">
 import SafeAreaPlaceholder from '@/mobile/components/placeholders/SafeAreaPlaceholder.vue'
-import TabBar from '@/mobile/layout/tabBar/index.vue'
 import type { default as TabBarType } from '@/mobile/layout/tabBar/index.vue'
+import TabBar from '@/mobile/layout/tabBar/index.vue'
 import { useMobileStore } from '@/stores/mobile'
 import { calculateElementPosition } from '@/utils/DomCalculate'
 

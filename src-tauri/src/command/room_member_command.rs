@@ -270,19 +270,37 @@ pub async fn page_room(
     }
 }
 
-/// 对房间成员列表进行排序：在线用户优先(active_status=1)，相同状态下按last_opt_time降序
+/// 对房间成员列表进行排序：群主优先，管理员按在线时间排序，其他用户按在线状态和时间排序
 fn sort_room_members(members: &mut Vec<im_room_member::Model>) {
-    members.sort_by(|a, b| {
-        let a_status = a.active_status.unwrap_or(0);
-        let b_status = b.active_status.unwrap_or(0);
+    // 对于小数据集使用不稳定排序
+    members.sort_unstable_by(|a, b| {
+        use std::cmp::Ordering;
 
-        // 先按active_status升序排序（在线用户优先）
-        match a_status.cmp(&b_status) {
-            std::cmp::Ordering::Equal => {
-                // active_status相同时，按last_opt_time降序排序
-                b.last_opt_time.cmp(&a.last_opt_time)
+        let a_role = a.group_role.unwrap_or(0);
+        let b_role = b.group_role.unwrap_or(0);
+
+        // 三层排序逻辑，单次遍历
+        match (a_role, b_role) {
+            // 群主(1)优先级最高
+            (1, 1) => Ordering::Equal,
+            (1, _) => Ordering::Less,
+            (_, 1) => Ordering::Greater,
+
+            // 管理员(2)排在群主后面，按在线时间排序（最近在线的在前）
+            (2, 2) => b.last_opt_time.cmp(&a.last_opt_time),
+            (2, _) => Ordering::Less,
+            (_, 2) => Ordering::Greater,
+
+            // 其他用户：先按在线状态排序，再按最新在线时间排序
+            _ => {
+                let a_status = a.active_status.unwrap_or(0);
+                let b_status = b.active_status.unwrap_or(0);
+
+                match a_status.cmp(&b_status) {
+                    Ordering::Equal => b.last_opt_time.cmp(&a.last_opt_time),
+                    other => other,
+                }
             }
-            other => other,
         }
     });
 }

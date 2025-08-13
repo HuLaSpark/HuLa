@@ -155,9 +155,9 @@ import { useWindow } from '@/hooks/useWindow'
 import { leftHook } from '@/layout/left/hook'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global'
+import { useSettingStore } from '@/stores/setting'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { useSettingStore } from '@/stores/setting'
 
 const { uid, activeStatus } = defineProps<{
   uid: string
