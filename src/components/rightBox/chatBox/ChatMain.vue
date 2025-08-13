@@ -1032,6 +1032,31 @@ const isSingleLineEmojis = (item: any) => {
   return emojiCount <= 5 && item.fromUser.uid === userUid.value
 }
 
+// 监听公告更新事件
+const announcementUpdatedListener = await appWindow.listen('announcementUpdated', async (event: any) => {
+  info(`公告更新事件: ${event.payload}`)
+  if (event.payload) {
+    const { hasAnnouncements, topAnnouncement: newTopAnnouncement } = event.payload
+    if (hasAnnouncements && newTopAnnouncement) {
+      // 只有置顶公告才更新顶部提示
+      if (newTopAnnouncement.top) {
+        topAnnouncement.value = newTopAnnouncement
+      } else if (topAnnouncement.value) {
+        // 如果当前有显示置顶公告，但新公告不是置顶的，保持不变
+        await loadTopAnnouncement() // 重新获取置顶公告
+      }
+    } else {
+      // 如果没有公告，清空显示
+      topAnnouncement.value = null
+    }
+  }
+})
+
+// 监听公告清空事件
+const announcementClearListener = await appWindow.listen('announcementClear', () => {
+  topAnnouncement.value = null
+})
+
 onMounted(async () => {
   nextTick(() => {
     scrollToBottom()
@@ -1059,31 +1084,6 @@ onMounted(async () => {
       })
     }
   })
-
-  // 监听公告更新事件
-  appWindow.listen('announcementUpdated', async (event: any) => {
-    info(`公告更新事件: ${event.payload}`)
-    if (event.payload) {
-      const { hasAnnouncements, topAnnouncement: newTopAnnouncement } = event.payload
-      if (hasAnnouncements && newTopAnnouncement) {
-        // 只有置顶公告才更新顶部提示
-        if (newTopAnnouncement.top) {
-          topAnnouncement.value = newTopAnnouncement
-        } else if (topAnnouncement.value) {
-          // 如果当前有显示置顶公告，但新公告不是置顶的，保持不变
-          await loadTopAnnouncement() // 重新获取置顶公告
-        }
-      } else {
-        // 如果没有公告，清空显示
-        topAnnouncement.value = null
-      }
-    }
-  })
-
-  // 监听公告清空事件
-  appWindow.listen('announcementClear', () => {
-    topAnnouncement.value = null
-  })
 })
 
 onUnmounted(() => {
@@ -1096,6 +1096,9 @@ onUnmounted(() => {
   }
   hoverBubble.value.key = -1
   window.removeEventListener('click', closeMenu, true)
+
+  announcementUpdatedListener()
+  announcementClearListener()
 })
 </script>
 
