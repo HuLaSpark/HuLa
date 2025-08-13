@@ -348,7 +348,7 @@ Execute **pnpm run commit** to invoke _git commit_ interaction, complete informa
 | 2025-05-27 | **临安居士** | `¥188` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-04-20 | **姜兴(Simon)** | `¥188` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-02-17 | **禾硕** | `¥168` | ![Alipay](https://img.shields.io/badge/Alipay-1677FF?style=flat&logo=alipay&logoColor=white) |
-| 2025-07-15 | **zhongjing** | `¥100` | ![WeChat](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
+| 2025-08-13 | **zhongjing** | `¥100` | ![WeChat](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-07-15 | **粉兔** | `¥100` | ![WeChat](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-02-8 | **Boom....** | `¥100` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
 
@@ -366,7 +366,7 @@ Execute **pnpm run commit** to invoke _git commit_ interaction, complete informa
 ### 🥉 Bronze Sponsors ($3-7)
 | 💝 Date | 👤 Sponsor | 💰 Amount | 🏷️ Platform |
 |---------|----------|--------|---------|
-| 2025-06-03 | ***持** | `¥20` | ![Alipay](https://img.shields.io/badge/支付宝赞赏-1677FF?style=flat&logo=alipay&logoColor=white) |
+| 2025-08-12 | ***持** | `¥20` | ![Alipay](https://img.shields.io/badge/支付宝赞赏-1677FF?style=flat&logo=alipay&logoColor=white) |
 | 2025-06-03 | **洪流** | `¥20` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-05-27 | **刘启成** | `¥20` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-05-20 | **匿名赞助者** | `¥20` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
