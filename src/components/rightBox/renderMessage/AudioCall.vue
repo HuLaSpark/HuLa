@@ -8,7 +8,7 @@
 
     <!-- 消息内容 -->
     <div class="select-none cursor-default">
-      {{ callMessage }}
+      {{ body }}
     </div>
   </div>
 </template>
@@ -26,16 +26,5 @@ const userStore = useUserStore()
 // 判断是否是当前用户发送的消息
 const isCurrentUser = computed(() => {
   return userStore.userInfo.uid === props.fromUserUid
-})
-
-// 根据挂断者显示不同的消息内容
-const callMessage = computed(() => {
-  if (isCurrentUser.value) {
-    // 当前用户挂断的
-    return '你挂断了语音通话'
-  } else {
-    // 对方挂断的
-    return '对方挂断了语音通话'
-  }
 })
 </script>
