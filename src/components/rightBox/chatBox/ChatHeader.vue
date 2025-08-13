@@ -57,7 +57,7 @@
       <div v-if="!isChannel" class="options-box">
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
-            <svg @click="startVoiceCall">
+            <svg @click="startRtcCall(CallTypeEnum.AUDIO)">
               <use href="#phone-telephone"></use>
             </svg>
           </template>
@@ -68,7 +68,7 @@
       <div v-if="!isChannel" class="options-box">
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
-            <svg @click="startVideoCall">
+            <svg @click="startRtcCall(CallTypeEnum.VIDEO)">
               <use href="#video-one"></use>
             </svg>
           </template>
@@ -928,27 +928,11 @@ const handleConfirm = () => {
   }
 }
 
-const startVoiceCall = async () => {
-  try {
-    // 获取对方用户ID（单聊时使用，群聊时可能需要其他逻辑）
-    const remoteUserId = activeItem.type === RoomTypeEnum.SINGLE ? activeItem.detailId : ''
-
-    await createWebviewWindow('语音通话', 'rtcCall', 400, 600, undefined, false, 400, 600, false, false, {
-      remoteUserId: remoteUserId,
-      roomId: activeItem.roomId,
-      callType: CallTypeEnum.AUDIO,
-      isIncoming: false
-    })
-  } catch (error) {
-    console.error('创建语音通话窗口失败:', error)
-  }
-}
-
-const startVideoCall = async () => {
+const startRtcCall = async (callType: CallTypeEnum) => {
   try {
     // 判断是否为群聊，如果是群聊则跳过
     if (activeItem.type === RoomTypeEnum.GROUP) {
-      window.$message.warning('群聊暂不支持视频通话')
+      window.$message.warning('群聊暂不支持音视频通话')
       return
     }
 
@@ -958,13 +942,13 @@ const startVideoCall = async () => {
       window.$message.error('无法获取对方用户信息')
       return
     }
-    await createRtcCallWindow(false, remoteUid)
+    await createRtcCallWindow(false, remoteUid, callType)
   } catch (error) {
     console.error('创建视频通话窗口失败:', error)
   }
 }
 
-const createRtcCallWindow = async (isIncoming: boolean, remoteUserId: string) => {
+const createRtcCallWindow = async (isIncoming: boolean, remoteUserId: string, callType: CallTypeEnum) => {
   // 获取对方用户ID（单聊时使用，群聊时可能需要其他逻辑）
   await createWebviewWindow(
     '视频通话', // 窗口标题
@@ -980,7 +964,7 @@ const createRtcCallWindow = async (isIncoming: boolean, remoteUserId: string) =>
     {
       remoteUserId,
       roomId: activeItem.roomId,
-      callType: CallTypeEnum.VIDEO,
+      callType,
       isIncoming
     }
   )
@@ -1065,7 +1049,7 @@ const closeMenu = (event: any) => {
 
 const handleVideoCall = async (remotedUid: string) => {
   console.log('监听到视频通话调用')
-  await createRtcCallWindow(true, remotedUid)
+  await createRtcCallWindow(true, remotedUid, CallTypeEnum.VIDEO)
 }
 
 onMounted(() => {

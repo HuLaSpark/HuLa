@@ -262,12 +262,11 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
         window.$message.error('没有可用的设备!')
         return false
       }
-      console.log('11111', constraints, type)
       localStream.value = await navigator.mediaDevices.getUserMedia(constraints)
       console.log('获取本地媒体流成功', localStream.value)
       return true
     } catch (err) {
-      console.warn('获取本地流失败:', err)
+      console.error('获取本地流失败:', err)
       window.$message.error('获取本地媒体流失败，请检查设备!')
       return false
     }
