@@ -11,8 +11,16 @@
 
     <div ref="scrollContainer" class="h-[calc(100vh-var(--safe-area-inset-bottom)-32px)] z-1 overflow-y-auto mt-2">
       <!-- 动态内容区 -->
-      <div class="bg-pink custom-rounded flex flex-col gap-4 min-h-1000px z-1 mt-4 shadow-inner">
-        <div v-for="i in a" :key="i" class="w-100vw h-250px bg-yellow"></div>
+      <div class="custom-rounded flex flex-col gap-4 min-h-1000px z-1 p-10px mt-4 shadow">
+        <CommunityTab @update="onUpdate" :options="tabOptions" active-tab-name="find">
+          <template #find>
+            <CommunityContent v-for="i in uiViewsData.testList" :key="i"></CommunityContent>
+          </template>
+
+          <template #follow>
+            <CommunityContent v-for="i in uiViewsData.testList" :key="i"></CommunityContent>
+          </template>
+        </CommunityTab>
       </div>
     </div>
 
@@ -23,9 +31,34 @@
   </div>
 </template>
 <script setup lang="ts">
+import CommunityContent from '@/mobile/components/community/CommunityContent.vue'
+import CommunityTab from '@/mobile/components/community/CommunityTab.vue'
 import PersonalInfo from '@/mobile/components/my/PersonalInfo.vue'
 import Settings from '@/mobile/components/my/Settings.vue'
 import SafeAreaPlaceholder from '@/mobile/components/placeholders/SafeAreaPlaceholder.vue'
+
+const onUpdate = (newTab: string) => {
+  console.log('已更新：', newTab)
+}
+
+const tabOptions = reactive([
+  {
+    tab: '动态',
+    name: 'find'
+  },
+  {
+    tab: '赞过',
+    name: 'follow'
+  }
+])
+
+const uiViewsData = ref({
+  testList: [] as string[]
+})
+
+for (let i = 0; i < 10; i++) {
+  uiViewsData.value.testList.push('1')
+}
 
 const a = ref<number[]>([1, 2, 3, 4, 5, 6, 4, 7, 8, 6, 4, 51, 6, 15, 1, 156, 156, 65])
 
