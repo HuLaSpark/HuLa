@@ -720,11 +720,12 @@ const saveGroupInfo = async () => {
   // 只有当数据发生变化时才发送请求
   if (nicknameChanged || remarkChanged) {
     // 使用updateMyRoomInfo接口更新我在群里的昵称和群备注
-    await cacheStore.updateMyRoomInfo({
+    const myRoomInfo = {
       id: activeItem.roomId,
       myName: groupDetail.value.myNickname,
       remark: groupDetail.value.groupRemark
-    })
+    }
+    await cacheStore.updateMyRoomInfo(myRoomInfo)
 
     // 更新原始值为当前值
     originalGroupDetail.value = {
@@ -738,6 +739,11 @@ const saveGroupInfo = async () => {
       myName: groupDetail.value.myNickname,
       remark: groupDetail.value.groupRemark
     }
+
+    // 发送更新请求
+    await apis.updateMyRoomInfo(myRoomInfo)
+    // 更新群成员列表
+    await groupStore.getGroupUserList(activeItem.roomId)
 
     window.$message.success('群聊信息已更新')
   }

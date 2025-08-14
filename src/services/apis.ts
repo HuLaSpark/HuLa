@@ -133,8 +133,8 @@ export default {
   /** 修改群信息(群主) */
   updateRoomInfo: (params: { id: string; name: string; avatar: string }) => POST<void>(urls.updateRoomInfo, params),
   /** 修改“我”的群聊名称 */
-  // updateMyRoomInfo: (params: { id: string; myName: string; remark: string }) =>
-  //   POST<void>(urls.updateMyRoomInfo, params),
+  updateMyRoomInfo: (params: { id: string; myName: string; remark: string }) =>
+    POST<void>(urls.updateMyRoomInfo, params),
   /** 添加群管理 */
   addAdmin: ({ roomId, uidList }: { roomId: string; uidList: string[] }) =>
     PUT<boolean>(urls.addAdmin, {
