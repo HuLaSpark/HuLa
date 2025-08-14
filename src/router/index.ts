@@ -283,7 +283,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/rtcCall',
     name: 'rtcCall',
-    component: () => import('@/components/call/RtcCall.vue')
+    component: () => import('@/views/callWindow/index.vue')
   }
 ]
 
