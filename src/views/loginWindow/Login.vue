@@ -10,9 +10,8 @@
       <n-flex justify="center" class="w-full pt-35px" data-tauri-drag-region>
         <n-avatar
           class="size-80px rounded-50% border-(2px solid #fff)"
-          :src="AvatarUtils.getAvatarUrl(info.avatar)"
-          color="#fff"
-          fallback-src="/logoD.png" />
+          :src="AvatarUtils.getAvatarUrl(info.avatar || '/logoD.png')"
+          color="#fff" />
       </n-flex>
 
       <!-- 登录菜单 -->
@@ -56,9 +55,8 @@
               class="p-8px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px">
               <div class="flex-between-center">
                 <n-avatar
-                  :src="AvatarUtils.getAvatarUrl(item.avatar)"
+                  :src="AvatarUtils.getAvatarUrl(item.avatar || '/logoD.png')"
                   color="#fff"
-                  fallback-src="/logoD.png"
                   class="size-28px rounded-50%" />
                 <p class="text-14px color-#505050">{{ item.account }}</p>
                 <svg @click.stop="delAccount(item)" class="w-12px h-12px">
@@ -275,7 +273,7 @@ watch(
   () => info.value.account,
   (newAccount) => {
     if (!newAccount) {
-      info.value.avatar = '/logo.png'
+      info.value.avatar = '/logoD.png'
       return
     }
 
@@ -286,7 +284,7 @@ watch(
     if (matchedAccount) {
       info.value.avatar = matchedAccount.avatar
     } else {
-      info.value.avatar = '/logo.png'
+      info.value.avatar = '/logoD.png'
     }
   }
 )
@@ -302,7 +300,7 @@ const delAccount = (item: UserInfoType) => {
   }
   info.value.account = ''
   info.value.password = ''
-  info.value.avatar = '/logo.png'
+  info.value.avatar = '/logoD.png'
 }
 
 /**

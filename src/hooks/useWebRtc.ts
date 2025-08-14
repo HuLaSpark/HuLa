@@ -258,6 +258,16 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
       }
       if (!constraints.audio && !constraints.video) {
         window.$message.error('没有可用的设备!')
+        // 没有可用设备时自动挂断并关闭窗口
+        setTimeout(async () => {
+          if (isReceiver) {
+            // 接听方：发送拒绝响应
+            await handleCallResponse(0)
+          } else {
+            // 发起方：直接结束通话
+            await endCall()
+          }
+        }, 1000)
         return false
       }
       localStream.value = await navigator.mediaDevices.getUserMedia(constraints)
@@ -385,6 +395,10 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
       clear() // 清理资源
       if (!(await getDevices())) {
         window.$message.error('获取设备失败!')
+        // 获取设备失败时自动关闭窗口
+        setTimeout(async () => {
+          await endCall()
+        }, 1000)
         return
       }
       // 保存通话信息
@@ -405,6 +419,10 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
 
       if (!(await getLocalStream(type))) {
         clear()
+        // 获取本地媒体流失败时自动关闭窗口
+        setTimeout(async () => {
+          await endCall()
+        }, 1000)
         return false
       }
 

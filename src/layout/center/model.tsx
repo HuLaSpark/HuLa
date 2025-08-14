@@ -70,10 +70,10 @@ export const createGroup = async (selectedUids: string[]) => {
 }
 
 // 统一的源列表渲染函数，通过参数控制是否使用过滤后的选项
-export const renderSourceList = (useFiltered = false): TransferRenderSourceList => {
+export const renderSourceList = (preSelectedFriendId = '', enablePreSelection = true): TransferRenderSourceList => {
   return ({ onCheck, checkedOptions, pattern }) => {
-    // 根据参数决定使用哪个选项列表
-    const baseOptions = useFiltered ? getFilteredOptions() : options.value
+    // 使用过滤后的选项列表，确保已在群内的好友被正确标记为禁用
+    const baseOptions = getFilteredOptions()
 
     // 根据搜索模式进一步过滤
     const displayOptions = pattern
@@ -81,12 +81,14 @@ export const renderSourceList = (useFiltered = false): TransferRenderSourceList 
       : baseOptions
 
     return (
-      <div>
+      <div class="select-none">
         {displayOptions.map((option: any) => {
-          // 判断是否被禁用(已在群内)
-          const isDisabled = option.disabled === true
-          // 如果被禁用(已在群内)或已被选中，则显示为选中状态
-          const checked = isDisabled || checkedOptions.some((o) => o.value === option.value)
+          // 判断是否是预选中的好友（仅在启用预选中时生效）
+          const isPreSelected = enablePreSelection && option.value === preSelectedFriendId
+          // 判断是否被禁用(已在群内)（仅在启用预选中时生效）
+          const isDisabled = enablePreSelection && option.disabled === true
+          // 如果是预选中的好友或已被选中，则显示为选中状态
+          const checked = isPreSelected || checkedOptions.some((o) => o.value === option.value)
 
           return (
             <div
@@ -100,7 +102,8 @@ export const renderSourceList = (useFiltered = false): TransferRenderSourceList 
                 alignItems: 'center',
                 borderRadius: '3px',
                 fontSize: '14px',
-                opacity: isDisabled ? 0.5 : 1,
+                opacity: isDisabled && !isPreSelected ? 0.5 : 1,
+                backgroundColor: isPreSelected ? 'var(--n-item-color-pending)' : '',
                 transition: 'background-color .3s var(--n-bezier)'
               }}
               class={isDisabled ? '' : 'hover:bg-[var(--n-item-color-pending)]'}
@@ -111,15 +114,21 @@ export const renderSourceList = (useFiltered = false): TransferRenderSourceList 
                 if (index === -1) {
                   onCheck([...checkedOptions.map((o) => o.value), option.value])
                 } else {
+                  // 如果是预选中的好友且启用了预选中，不允许取消选中
+                  if (enablePreSelection && isPreSelected) return
                   const newCheckedOptions = [...checkedOptions]
                   newCheckedOptions.splice(index, 1)
                   onCheck(newCheckedOptions.map((o) => o.value))
                 }
               }}>
-              <NCheckbox checked={checked} disabled={isDisabled} style={{ marginRight: '12px' }} />
+              <NCheckbox
+                checked={checked}
+                disabled={isDisabled || (enablePreSelection && isPreSelected && checked)}
+                style={{ marginRight: '12px' }}
+              />
               <div style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
                 {option.avatar ? (
-                  <NAvatar round src={option.avatar} size={24} fallbackSrc="/logo.png" />
+                  <NAvatar round src={option.avatar || '/logoD.png'} size={24} fallbackSrc="/logoD.png" />
                 ) : (
                   <NAvatar round size={24}>
                     {option.label?.slice(0, 1)}
@@ -137,9 +146,9 @@ export const renderSourceList = (useFiltered = false): TransferRenderSourceList 
 
 export const renderLabel: TransferRenderTargetLabel = ({ option }: { option: any }) => {
   return (
-    <div style={{ display: 'flex', margin: '6px 0' }}>
+    <div class="select-none" style={{ display: 'flex', margin: '6px 0' }}>
       {option.avatar ? (
-        <NAvatar round src={option.avatar} size={24} fallbackSrc="/logo.png" />
+        <NAvatar round src={option.avatar || '/logoD.png'} size={24} fallbackSrc="/logoD.png" />
       ) : (
         <NAvatar round size={24}>
           {option.label.slice(0, 1)}
@@ -148,4 +157,87 @@ export const renderLabel: TransferRenderTargetLabel = ({ option }: { option: any
       <div style={{ display: 'flex', marginLeft: '12px', alignSelf: 'center', fontSize: '14px' }}>{option.label}</div>
     </div>
   )
+}
+
+// 创建自定义的目标列表渲染函数
+export const renderTargetList = (preSelectedFriendId = '', enablePreSelection = true) => {
+  return ({
+    onCheck,
+    checkedOptions,
+    pattern
+  }: {
+    onCheck: (checkedValueList: Array<string | number>) => void
+    checkedOptions: any[]
+    pattern: string
+  }) => {
+    // 根据搜索模式过滤选项
+    const displayOptions = pattern
+      ? checkedOptions.filter((option: { label: string }) =>
+          option.label?.toLowerCase().includes(pattern.toLowerCase())
+        )
+      : checkedOptions
+
+    return (
+      <div>
+        {displayOptions.map((option: any) => {
+          const isPreSelected = enablePreSelection && option.value === preSelectedFriendId
+
+          return (
+            <div
+              key={option.value}
+              style={{
+                userSelect: 'none',
+                display: 'flex',
+                margin: '4px 0',
+                padding: '4px 8px',
+                alignItems: 'center',
+                borderRadius: '3px',
+                fontSize: '14px',
+                backgroundColor: isPreSelected ? 'var(--n-item-color-pending)' : '',
+                position: 'relative'
+              }}>
+              <div style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
+                {option.avatar ? (
+                  <NAvatar round src={option.avatar || '/logoD.png'} size={24} fallbackSrc="/logoD.png" />
+                ) : (
+                  <NAvatar round size={24}>
+                    {option.label?.slice(0, 1)}
+                  </NAvatar>
+                )}
+                <div style={{ marginLeft: '12px', fontSize: '14px' }}>{option.label}</div>
+              </div>
+
+              {!isPreSelected && (
+                <svg
+                  style={{
+                    width: '12px',
+                    height: '12px',
+                    cursor: 'pointer',
+                    marginLeft: '8px',
+                    color: '#909090'
+                  }}
+                  onClick={() => {
+                    const newCheckedOptions = checkedOptions.filter((o: any) => o.value !== option.value)
+                    onCheck(newCheckedOptions.map((o: any) => o.value))
+                  }}>
+                  <use href="#close"></use>
+                </svg>
+              )}
+
+              {isPreSelected && (
+                <div
+                  style={{
+                    fontSize: '10px',
+                    color: '#909090',
+                    marginLeft: '8px'
+                  }}>
+                  必选
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
 }

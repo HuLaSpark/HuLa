@@ -91,7 +91,7 @@
         <n-flex :size="6" vertical>
           <div
             v-if="type() === 'macos'"
-            @click="createGroupModal = false"
+            @click="resetCreateGroupState"
             class="mac-close size-13px shadow-inner bg-#ed6a5eff rounded-50% mt-6px select-none absolute left-6px">
             <svg class="hidden size-7px color-#000 select-none absolute top-3px left-3px">
               <use href="#close"></use>
@@ -103,16 +103,18 @@
           <svg
             v-if="type() === 'windows'"
             class="size-14px cursor-pointer pt-6px select-none absolute right-6px"
-            @click="createGroupModal = false">
+            @click="resetCreateGroupState">
             <use href="#close"></use>
           </svg>
 
           <n-transfer
+            :key="`${isFromChatbox}-${preSelectedFriendId}`"
             source-filterable
             target-filterable
             v-model:value="selectedValue"
             :options="options"
-            :render-source-list="renderSourceList()"
+            :render-source-list="renderSourceList(isFromChatbox ? preSelectedFriendId : '', isFromChatbox)"
+            :render-target-list="renderTargetList(isFromChatbox ? preSelectedFriendId : '', isFromChatbox)"
             :render-target-label="renderLabel" />
 
           <n-flex align="center" justify="center" class="p-16px">
@@ -134,7 +136,7 @@ import { useWindow } from '@/hooks/useWindow'
 import router from '@/router'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useSettingStore } from '@/stores/setting.ts'
-import { createGroup, options, renderLabel, renderSourceList } from './model.tsx'
+import { createGroup, options, renderLabel, renderSourceList, renderTargetList } from './model.tsx'
 
 const { createWebviewWindow } = useWindow()
 
@@ -142,8 +144,10 @@ const settingStore = useSettingStore()
 const globalStore = useGlobalStore()
 const { page } = storeToRefs(settingStore)
 const appWindow = WebviewWindow.getCurrent()
-const selectedValue = ref([])
+const selectedValue = ref<string[]>([])
 const createGroupModal = ref(false)
+const preSelectedFriendId = ref('')
+const isFromChatbox = ref(false) // 标记是否来自聊天框
 /** 设置最小宽度 */
 const minWidth = 160
 /** 设置最大宽度 */
@@ -168,6 +172,9 @@ const addPanels = ref({
       label: '发起群聊',
       icon: 'launch',
       click: () => {
+        isFromChatbox.value = false
+        preSelectedFriendId.value = ''
+        selectedValue.value = []
         createGroupModal.value = true
       }
     },
@@ -206,12 +213,29 @@ watchEffect(() => {
   globalStore.setHomeWindowState({ width: width.value, height: height.value })
 })
 
+// 监听选中值的变化，确保必选项不会被清除
+watch(selectedValue, (newValue) => {
+  if (isFromChatbox.value && preSelectedFriendId.value && newValue) {
+    // 如果是从聊天框触发且有预选中好友，确保该好友始终在选中列表中
+    if (!newValue.includes(preSelectedFriendId.value)) {
+      // 如果预选中好友被移除了，重新加回去
+      selectedValue.value = [...newValue, preSelectedFriendId.value]
+    }
+  }
+})
+
+const resetCreateGroupState = () => {
+  selectedValue.value = []
+  preSelectedFriendId.value = ''
+  isFromChatbox.value = false
+  createGroupModal.value = false
+}
+
 const handleCreateGroup = async () => {
   if (selectedValue.value.length < 2) return
   try {
     await createGroup(selectedValue.value)
-    createGroupModal.value = false
-    selectedValue.value = []
+    resetCreateGroupState()
     window.$message.success('创建群聊成功')
   } catch (error) {
     window.$message.error('创建群聊失败')
@@ -295,9 +319,12 @@ onMounted(async () => {
     shrinkStatus.value = event
   })
   useMitt.on(MittEnum.CREATE_GROUP, (event: { id: string }) => {
+    isFromChatbox.value = true
+    preSelectedFriendId.value = event.id
     createGroupModal.value = true
-    console.log(event)
-    // TODO: 选用并且禁用当前 event.id 对应的uid的用户
+    nextTick(() => {
+      selectedValue.value = [event.id]
+    })
   })
   useMitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
     if (!event) return

@@ -76,6 +76,7 @@
       @scroll="handleScroll"
       @scroll-direction-change="handleScrollDirectionChange"
       @load-more="handleLoadMore"
+      @click="handleChatAreaClick"
       class="scrollbar-container"
       :class="{ 'hide-scrollbar': !showScrollbar }"
       :style="{ 'max-height': `calc(100vh - ${announcementHeight}px)` }"
@@ -117,7 +118,7 @@
           <!-- 好友或者群聊的信息 -->
           <div
             v-else
-            class="flex flex-col w-full"
+            class="flex flex-col w-full select-none"
             :class="[{ 'items-end': item.fromUser.uid === userUid }, isGroup ? 'gap-18px' : 'gap-2px']">
             <!-- 信息时间(单聊) -->
             <div
@@ -138,7 +139,9 @@
                 </span>
               </Transition>
             </div>
-            <div class="flex items-start flex-1" :class="item.fromUser.uid === userUid ? 'flex-row-reverse' : ''">
+            <div
+              class="flex items-start flex-1 select-none"
+              :class="item.fromUser.uid === userUid ? 'flex-row-reverse' : ''">
               <!-- 回复消息提示的箭头 -->
               <svg
                 v-if="activeReply === item.message.id"
@@ -179,7 +182,7 @@
                 vertical
                 justify="center"
                 :size="6"
-                class="color-[--text-color] flex-1"
+                class="color-[--text-color] flex-1 select-none"
                 :class="item.fromUser.uid === userUid ? 'items-end mr-10px' : ''">
                 <n-flex
                   :size="6"
@@ -315,16 +318,6 @@
                         :src="src"></n-image>
                     </n-flex>
                   </n-image-group> -->
-
-                  <!-- 消息为文件 -->
-                  <!-- <n-image
-                    class="select-none"
-                    v-if="typeof item.message.body.url === 'string' && item.message.type === MsgEnum.FILE"
-                    :img-props="{ style: { maxWidth: '325px', maxHeight: '165px' } }"
-                    show-toolbar-tooltip
-                    preview-disabled
-                    style="border-radius: 8px"
-                    :src="item.message.body.url"></n-image> -->
                   <!-- 消息状态指示器 -->
                   <div v-if="item.fromUser.uid === userUid" class="absolute -left-6 top-2">
                     <n-icon v-if="item.message.status === MessageStatusEnum.SENDING" class="text-gray-400">
@@ -347,7 +340,7 @@
                   :size="6"
                   v-if="item.message.body.reply"
                   @click="jumpToReplyMsg(item.message.body.reply.id)"
-                  class="reply-bubble relative w-fit custom-shadow">
+                  class="reply-bubble relative w-fit custom-shadow select-none">
                   <svg class="size-14px">
                     <use href="#to-top"></use>
                   </svg>
@@ -903,28 +896,26 @@ const handleMacSelect = (event: any) => {
   }
 }
 
-const closeMenu = (event: any) => {
-  if (!event.target.matches('.bubble', 'bubble-oneself')) {
-    activeBubble.value = ''
-    // 解决mac右键会选中文本的问题
-    if (isMac.value && recordEL.value) {
-      recordEL.value.classList.remove('select-none')
-    }
-  }
-  if (!event.target.matches('.active-reply')) {
-    /** 解决更替交换回复气泡时候没有触发动画的问题 */
-    if (!event.target.matches('.reply-bubble *')) {
-      nextTick(() => {
-        const activeReplyElement = document.querySelector('.active-reply') as HTMLElement
-        if (activeReplyElement) {
-          activeReplyElement.classList.add('reply-exit')
-          delay(() => {
-            activeReplyElement.classList.remove('reply-exit')
-            activeReply.value = ''
-          }, 300)
-        }
-      })
-    }
+// 处理聊天区域点击事件，用于清除回复样式
+const handleChatAreaClick = (event: any) => {
+  // 检查点击目标是否为回复相关元素
+  const isReplyElement =
+    event.target.closest('.reply-bubble') ||
+    event.target.matches('.active-reply') ||
+    event.target.closest('.active-reply')
+
+  // 如果点击的不是回复相关元素，清除activeReply样式
+  if (!isReplyElement && activeReply.value) {
+    nextTick(() => {
+      const activeReplyElement = document.querySelector('.active-reply') as HTMLElement
+      if (activeReplyElement) {
+        activeReplyElement.classList.add('reply-exit')
+        delay(() => {
+          activeReplyElement.classList.remove('reply-exit')
+          activeReply.value = ''
+        }, 300)
+      }
+    })
   }
 }
 
@@ -1095,7 +1086,6 @@ onUnmounted(() => {
     hoverBubble.value.timer = void 0
   }
   hoverBubble.value.key = -1
-  window.removeEventListener('click', closeMenu, true)
 
   announcementUpdatedListener()
   announcementClearListener()

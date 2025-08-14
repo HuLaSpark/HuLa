@@ -669,7 +669,7 @@ const handleCreateGroupOrInvite = () => {
 
 /** 处理创建群聊 */
 const handleCreateGroup = () => {
-  useMitt.emit(MittEnum.CREATE_GROUP, activeItem.detailId)
+  useMitt.emit(MittEnum.CREATE_GROUP, { id: activeItem.detailId })
 }
 
 /** 处理邀请进群 */

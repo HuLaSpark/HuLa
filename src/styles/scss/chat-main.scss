@@ -19,6 +19,9 @@
   &.active {
     background-color: var(--bg-bubble-active);
     color: var(--text-color);
+    &::selection {
+      background: var(--select-bg-color, rgba(19, 152, 127, 0.3)); /* 设置选中背景颜色 */
+    }
   }
 }
 @mixin float($position: top) {
@@ -33,18 +36,6 @@
     background: var(--select-bg-color, rgba(19, 152, 127, 0.3)); /* 设置选中背景颜色 */
   }
   @include bubble;
-
-  /* 确保子元素中非文本元素不可选 */
-  img,
-  svg,
-  .emoji,
-  button,
-  [role='button'] {
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-  }
 }
 .bubble-oneself {
   @include bubble;
@@ -53,18 +44,6 @@
 
   &::selection {
     background: var(--select-bg-color-self, rgba(255, 255, 255, 0.3)); /* 自己消息选中背景颜色 */
-  }
-
-  /* 确保子元素中非文本元素不可选 */
-  img,
-  svg,
-  .emoji,
-  button,
-  [role='button'] {
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
   }
 }
 /**! 气泡动画 */
