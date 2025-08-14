@@ -41,7 +41,7 @@
       vertical
       :size="18"
       :style="{ 'max-height': `calc(100vh - ${announcementHeight}px)` }"
-      class="relative h-100vh box-border p-20px">
+      class="relative box-border p-20px">
       <n-flex justify="end">
         <n-skeleton style="border-radius: 14px" height="40px" width="46%" :sharp="false" />
         <n-skeleton height="40px" circle />
@@ -118,7 +118,7 @@
           <!-- 好友或者群聊的信息 -->
           <div
             v-else
-            class="flex flex-col w-full select-none"
+            class="flex flex-col w-full"
             :class="[{ 'items-end': item.fromUser.uid === userUid }, isGroup ? 'gap-18px' : 'gap-2px']">
             <!-- 信息时间(单聊) -->
             <div
@@ -266,7 +266,7 @@
                   <!-- 渲染消息内容体 TODO: 等完善消息类型后逐渐替换使用RenderMessage -->
                   <RenderMessage
                     :class="[
-                      item.message.type === MsgEnum.VOICE ? 'select-none cursor-pointer' : '!select-auto !cursor-text',
+                      item.message.type === MsgEnum.VOICE ? 'select-none cursor-pointer' : 'select-text cursor-text',
                       {
                         active:
                           activeBubble === item.message.id &&

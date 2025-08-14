@@ -90,18 +90,6 @@
             </template>
             <span>图片</span>
           </n-popover>
-          <!--        <n-popover trigger="hover" :show-arrow="false" placement="bottom">-->
-          <!--          <template #trigger>-->
-          <!--            <svg class="mr-18px"><use href="#shake"></use></svg>-->
-          <!--          </template>
-          <!--          <span>窗口抖动</span>-->
-          <!--        </n-popover>-->
-          <!--        <n-popover trigger="hover" :show-arrow="false" placement="bottom">-->
-          <!--          <template #trigger>-->
-          <!--            <svg class="mr-18px"><use href="#red-packet"></use></svg>-->
-          <!--          </template>
-          <!--          <span>红包</span>-->
-          <!--        </n-popover>-->
           <n-popover trigger="hover" :show-arrow="false" placement="bottom">
             <template #trigger>
               <svg @click="handleVoiceRecord" class="mr-18px"><use href="#voice"></use></svg>
