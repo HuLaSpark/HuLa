@@ -1053,9 +1053,9 @@ const closeMenu = (event: any) => {
   }
 }
 
-const handleVideoCall = async (remotedUid: string) => {
+const handleVideoCall = async (remotedUid: string, callType: CallTypeEnum) => {
   console.log('监听到视频通话调用')
-  await createRtcCallWindow(true, remotedUid, CallTypeEnum.VIDEO)
+  await createRtcCallWindow(true, remotedUid, callType)
 }
 
 onMounted(() => {
@@ -1072,7 +1072,7 @@ onMounted(() => {
 
   useMitt.on(WsResponseMessageType.VideoCallRequest, (event) => {
     const remoteUid = event.callerUid
-    handleVideoCall(remoteUid)
+    handleVideoCall(remoteUid, event.isVideo ? CallTypeEnum.VIDEO : CallTypeEnum.AUDIO)
   })
 })
 
