@@ -62,6 +62,7 @@ const rtcCallBellUrl = '/sound/hula_bell.mp3'
  * @returns rtc 相关的状态和方法
  */
 export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTypeEnum, isReceiver: boolean) => {
+  info(`useWebRtc, roomId: ${roomId}, remoteUserId: ${remoteUserId}, callType: ${callType}, isReceiver: ${isReceiver}`)
   const rtcMsg = ref<Partial<RtcMsgVO>>({
     roomId: undefined,
     callType: undefined,

@@ -385,6 +385,7 @@
 </template>
 
 <script setup lang="ts">
+import { info } from '@tauri-apps/plugin-log'
 import { type } from '@tauri-apps/plugin-os'
 import { useDisplayMedia } from '@vueuse/core'
 import AvatarCropper from '@/components/common/AvatarCropper.vue'
@@ -1054,7 +1055,7 @@ const closeMenu = (event: any) => {
 }
 
 const handleVideoCall = async (remotedUid: string, callType: CallTypeEnum) => {
-  console.log('监听到视频通话调用')
+  info(`监听到视频通话调用，remotedUid: ${remotedUid}, callType: ${callType}`)
   await createRtcCallWindow(true, remotedUid, callType)
 }
 
@@ -1072,7 +1073,7 @@ onMounted(() => {
 
   useMitt.on(WsResponseMessageType.VideoCallRequest, (event) => {
     const remoteUid = event.callerUid
-    handleVideoCall(remoteUid, event.isVideo ? CallTypeEnum.VIDEO : CallTypeEnum.AUDIO)
+    handleVideoCall(remoteUid, event.video ? CallTypeEnum.VIDEO : CallTypeEnum.AUDIO)
   })
 })
 
