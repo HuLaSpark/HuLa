@@ -428,7 +428,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
         window.$message.error('获取设备失败!')
         // 获取设备失败时自动关闭窗口
         setTimeout(async () => {
-          await endCall()
+          await handleCallResponse(0)
         }, 1000)
         return
       }
