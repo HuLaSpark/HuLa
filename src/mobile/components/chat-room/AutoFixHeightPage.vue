@@ -5,7 +5,7 @@
       ref="pageContainer"
       :style="{ height: pageContainerHeight + 'px', maxHeight: pageContainerMaxHeight + 'px' }"
       class="flex fixed w-full items-start flex-col overflow-y-auto z-1">
-      <div ref="headerRef" class="bg-white w-full">
+      <div ref="headerRef" class="w-full">
         <slot name="header"></slot>
       </div>
       <!-- 消息内容区 -->
@@ -27,7 +27,7 @@
 
 <script setup lang="ts">
 import { debounce } from 'lodash-es'
-import { onMounted, ref, nextTick } from 'vue'
+import { nextTick, onMounted, ref } from 'vue'
 
 const props = defineProps({
   showFooter: {

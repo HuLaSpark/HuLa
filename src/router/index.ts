@@ -9,6 +9,7 @@ import {
 import ChatRoomLayout from '@/mobile/layout/chat-room/ChatRoomLayout.vue'
 import NoticeLayout from '@/mobile/layout/chat-room/NoticeLayout.vue'
 import MobileHome from '@/mobile/layout/index.vue'
+import MyLayout from '@/mobile/layout/my/MyLayout.vue'
 import MobileLogin from '@/mobile/login.vue'
 import ChatMain from '@/mobile/views/chat-room/ChatMain.vue'
 import ChatSetting from '@/mobile/views/chat-room/ChatSetting.vue'
@@ -18,7 +19,12 @@ import NoticeList from '@/mobile/views/chat-room/notice/NoticeList.vue'
 import MobileCommunity from '@/mobile/views/community/index.vue'
 import MobileFriendPage from '@/mobile/views/friends/index.vue'
 import MobileMessagePage from '@/mobile/views/message/index.vue'
+import EditBio from '@/mobile/views/my/EditBio.vue'
+import EditBirthday from '@/mobile/views/my/EditBirthday.vue'
+import EditProfile from '@/mobile/views/my/EditProfile.vue'
 import MobileMy from '@/mobile/views/my/index.vue'
+import MyMessages from '@/mobile/views/my/MyMessages.vue'
+import PublishCommunity from '@/mobile/views/my/PublishCommunity.vue'
 
 const isDesktop = computed(() => {
   return type() === 'windows' || type() === 'linux' || type() === 'macos'
@@ -106,6 +112,43 @@ const routes: Array<RouteRecordRaw> = [
         path: '/mobile/my',
         name: 'mobileMy',
         component: MobileMy
+      }
+    ]
+  },
+  {
+    path: '/mobile/mobileMy',
+    name: 'mobileMyLayout',
+    component: MyLayout,
+    children: [
+      {
+        path: '',
+        name: 'mobileMyDefault',
+        redirect: '/mobile/mobileMy/editProfile' // 👈 默认页面地址
+      },
+      {
+        path: 'editProfile',
+        name: 'mobileEditProfile',
+        component: EditProfile
+      },
+      {
+        path: 'myMessages',
+        name: 'mobileMyMessages',
+        component: MyMessages
+      },
+      {
+        path: 'editBio',
+        name: 'mobileEditBio',
+        component: EditBio
+      },
+      {
+        path: 'editBirthday',
+        name: 'mobileEditBirthday',
+        component: EditBirthday
+      },
+      {
+        path: 'publishCommunity',
+        name: 'mobilePublishCommunity',
+        component: PublishCommunity
       }
     ]
   },

@@ -1,5 +1,7 @@
 <template>
-  <div class="bg-white w-full h-[56px] grid grid-cols-[100px_1fr_100px] z-2 header-bar-shadow">
+  <div
+    :class="[props.enableDefaultBackground ? 'bg-white' : '', props.enableShadow ? 'header-bar-shadow' : '']"
+    class="w-full h-[56px] grid grid-cols-[100px_1fr_100px] z-2">
     <div @click="handleBack" class="w-full h-full flex items-center">
       <svg class="iconpark-icon w-24px h-24px ms-16px p-5px"><use href="#fanhui"></use></svg>
       <div
@@ -45,6 +47,14 @@ const props = defineProps({
   hiddenRight: {
     type: Boolean,
     default: false
+  },
+  enableDefaultBackground: {
+    type: Boolean,
+    default: true
+  },
+  enableShadow: {
+    type: Boolean,
+    default: true
   }
 })
 
