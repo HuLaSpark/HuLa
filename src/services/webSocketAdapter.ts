@@ -5,6 +5,7 @@
  * 可以通过环境变量或配置来控制使用哪种实现
  */
 
+import { info } from '@tauri-apps/plugin-log'
 import { type } from '@tauri-apps/plugin-os'
 
 // 根据平台和环境变量决定使用哪种实现
@@ -20,11 +21,11 @@ let webSocketService: any
 
 if (USE_RUST_WEBSOCKET) {
   // 使用 Rust WebSocket 实现
-  console.log('🦀 使用 Rust WebSocket 实现')
+  info('🦀 使用 Rust WebSocket 实现')
   webSocketService = import('./webSocketRust').then((module) => module.default)
 } else {
   // 使用原始的 JavaScript Worker 实现
-  console.log('🌐 使用 JavaScript WebSocket Worker 实现')
+  info('🌐 使用 JavaScript WebSocket Worker 实现')
   webSocketService = import('./webSocket').then((module) => module.default)
 }
 

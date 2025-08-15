@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core'
 import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { info } from '@tauri-apps/plugin-log'
+import { error, info, warn } from '@tauri-apps/plugin-log'
 import { WorkerMsgEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt'
 import { getEnhancedFingerprint } from '@/services/fingerprint'
@@ -79,9 +79,9 @@ class RustWebSocketClient {
 
       this.isInitialized = true
       info('[RustWS] WebSocket 连接初始化成功')
-    } catch (error) {
-      console.error('[RustWS] 连接初始化失败:', error)
-      throw error
+    } catch (err) {
+      error(`[RustWS] 连接初始化失败: ${err}`)
+      throw err
     }
   }
 
@@ -93,8 +93,8 @@ class RustWebSocketClient {
       await invoke('ws_disconnect')
       this.isInitialized = false
       info('[RustWS] WebSocket 连接已断开')
-    } catch (error) {
-      console.error('[RustWS] 断开连接失败:', error)
+    } catch (err) {
+      error(`[RustWS] 断开连接失败: ${err}`)
     }
   }
 
@@ -106,9 +106,9 @@ class RustWebSocketClient {
       await invoke('ws_send_message', {
         params: { data }
       })
-    } catch (error: any) {
-      console.error('[RustWS] 发送消息失败:', error)
-      throw error
+    } catch (err: any) {
+      error(`[RustWS] 发送消息失败: ${err}`)
+      throw err
     }
   }
 
@@ -119,8 +119,8 @@ class RustWebSocketClient {
     try {
       const state = await invoke<ConnectionState>('ws_get_state')
       return state
-    } catch (error) {
-      console.error('[RustWS] 获取连接状态失败:', error)
+    } catch (err) {
+      error(`[RustWS] 获取连接状态失败: ${err}`)
       return ConnectionState.ERROR
     }
   }
@@ -132,9 +132,9 @@ class RustWebSocketClient {
     try {
       await invoke('ws_force_reconnect')
       info('[RustWS] 强制重连成功')
-    } catch (error) {
-      console.error('[RustWS] 强制重连失败:', error)
-      throw error
+    } catch (err) {
+      error(`[RustWS] 强制重连失败: ${err}`)
+      throw err
     }
   }
 
@@ -145,8 +145,8 @@ class RustWebSocketClient {
     try {
       const connected = await invoke<boolean>('ws_is_connected')
       return connected
-    } catch (error) {
-      console.error('[RustWS] 检查连接状态失败:', error)
+    } catch (err) {
+      error(`[RustWS] 检查连接状态失败: ${err}`)
       return false
     }
   }
@@ -165,8 +165,8 @@ class RustWebSocketClient {
         params: config
       })
       info('[RustWS] 配置更新成功')
-    } catch (error) {
-      console.error('[RustWS] 配置更新失败:', error)
+    } catch (err) {
+      error(`[RustWS] 配置更新失败: ${err}`)
       throw error
     }
   }
@@ -190,8 +190,8 @@ class RustWebSocketClient {
       await this.setupBusinessMessageListeners()
 
       info('[RustWS] 事件监听器设置完成')
-    } catch (error) {
-      console.error('[RustWS] 设置事件监听器失败:', error)
+    } catch (err) {
+      error(`[RustWS] 设置事件监听器失败: ${err}`)
     }
   }
 
@@ -265,133 +265,133 @@ class RustWebSocketClient {
   private async setupBusinessMessageListeners(): Promise<void> {
     // 连接状态相关事件
     await listen('ws-connection-lost', (event: any) => {
-      console.warn('[RustWS] 收到连接丢失事件:', event.payload)
+      warn(`[RustWS] 收到连接丢失事件: ${JSON.stringify(event.payload)}`)
       this.handleConnectionLost(event.payload)
     })
 
     // 登录相关事件
     await listen('ws-login-qr-code', (event: any) => {
-      console.log('获取二维码')
+      info('获取二维码')
       useMitt.emit(WsResponseMessageType.LOGIN_QR_CODE, event.payload)
     })
 
     await listen('ws-waiting-authorize', () => {
-      console.log('等待授权')
+      info('等待授权')
       useMitt.emit(WsResponseMessageType.WAITING_AUTHORIZE)
     })
 
     await listen('ws-login-success', (event: any) => {
-      console.log('登录成功')
+      info('登录成功')
       useMitt.emit(WsResponseMessageType.LOGIN_SUCCESS, event.payload)
     })
 
     // 消息相关事件
     await listen('ws-receive-message', (event: any) => {
-      console.log(`[ws]收到消息: ${JSON.stringify(event.payload)}`)
+      info(`[ws]收到消息: ${JSON.stringify(event.payload)}`)
       useMitt.emit(WsResponseMessageType.RECEIVE_MESSAGE, event.payload)
     })
 
     await listen('ws-msg-recall', (event: any) => {
-      console.log('撤回')
+      info('撤回')
       useMitt.emit(WsResponseMessageType.MSG_RECALL, event.payload)
     })
 
     await listen('ws-msg-mark-item', (event: any) => {
-      console.log('消息标记', event.payload)
+      info(`消息标记: ${JSON.stringify(event.payload)}`)
       useMitt.emit(WsResponseMessageType.MSG_MARK_ITEM, event.payload)
     })
 
     // 用户状态相关事件
     await listen('ws-online', (event: any) => {
-      console.log('上线', event.payload)
+      info(`上线: ${JSON.stringify(event.payload)}`)
       useMitt.emit(WsResponseMessageType.ONLINE, event.payload)
     })
 
     await listen('ws-offline', () => {
-      console.log('下线')
+      info('下线')
       useMitt.emit(WsResponseMessageType.OFFLINE)
     })
 
     await listen('ws-user-state-change', (event: any) => {
-      console.log('用户状态改变', event.payload)
+      info(`用户状态改变: ${JSON.stringify(event.payload)}`)
       useMitt.emit(WsResponseMessageType.USER_STATE_CHANGE, event.payload)
     })
 
     // 好友相关事件
     await listen('ws-request-new-friend', (event: any) => {
-      console.log('好友申请')
+      info('好友申请')
       useMitt.emit(WsResponseMessageType.REQUEST_NEW_FRIEND, event.payload)
     })
 
     await listen('ws-request-approval-friend', (event: any) => {
-      console.log('同意好友申请', event.payload)
+      info(`同意好友申请: ${JSON.stringify(event.payload)}`)
       useMitt.emit(WsResponseMessageType.REQUEST_APPROVAL_FRIEND, event.payload)
     })
 
     await listen('ws-new-friend-session', (event: any) => {
-      console.log('成员变动')
+      info('成员变动')
       useMitt.emit(WsResponseMessageType.NEW_FRIEND_SESSION, event.payload)
     })
 
     // 房间/群聊相关事件
     await listen('ws-room-info-change', (event: any) => {
-      console.log('群主修改群聊信息', event.payload)
+      info(`群主修改群聊信息: ${JSON.stringify(event.payload)}`)
       useMitt.emit(WsResponseMessageType.ROOM_INFO_CHANGE, event.payload)
     })
 
     await listen('ws-my-room-info-change', (event: any) => {
-      console.log('自己修改我在群里的信息', event.payload)
+      info(`自己修改我在群里的信息: ${JSON.stringify(event.payload)}`)
       useMitt.emit(WsResponseMessageType.MY_ROOM_INFO_CHANGE, event.payload)
     })
 
     await listen('ws-room-group-notice-msg', (event: any) => {
-      console.log('发布群公告', event.payload)
+      info(`发布群公告: ${JSON.stringify(event.payload)}`)
       useMitt.emit(WsResponseMessageType.ROOM_GROUP_NOTICE_MSG, event.payload)
     })
 
     await listen('ws-room-edit-group-notice-msg', (event: any) => {
-      console.log('编辑群公告', event.payload)
+      info(`编辑群公告: ${JSON.stringify(event.payload)}`)
       useMitt.emit(WsResponseMessageType.ROOM_EDIT_GROUP_NOTICE_MSG, event.payload)
     })
 
     await listen('ws-room-dissolution', (event: any) => {
-      console.log('群解散', event.payload)
+      info(`群解散: ${JSON.stringify(event.payload)}`)
       useMitt.emit(WsResponseMessageType.ROOM_DISSOLUTION, event.payload)
     })
 
     // 视频通话相关事件
     await listen('ws-video-call-request', (event: any) => {
-      console.log('收到通话请求', event.payload)
+      info(`收到通话请求: ${JSON.stringify(event.payload)}`)
       useMitt.emit(WsResponseMessageType.VideoCallRequest, event.payload)
     })
 
     await listen('ws-call-accepted', (event: any) => {
-      console.log('通话被接受', event.payload)
+      info(`通话被接受: ${JSON.stringify(event.payload)}`)
       useMitt.emit(WsResponseMessageType.CallAccepted, event.payload)
     })
 
     await listen('ws-call-rejected', (event: any) => {
-      console.log('通话被拒绝', event.payload)
+      info(`通话被拒绝: ${JSON.stringify(event.payload)}`)
       useMitt.emit(WsResponseMessageType.CallRejected, event.payload)
     })
 
     await listen('ws-room-closed', (event: any) => {
-      console.log('房间已关闭', event.payload)
+      info(`房间已关闭: ${JSON.stringify(event.payload)}`)
       useMitt.emit(WsResponseMessageType.RoomClosed, event.payload)
     })
 
     await listen('ws-webrtc-signal', (event: any) => {
-      console.log('收到信令消息', event.payload)
+      info(`收到信令消息: ${JSON.stringify(event.payload)}`)
       useMitt.emit(WsResponseMessageType.WEBRTC_SIGNAL, event.payload)
     })
 
     await listen('ws-join-video', (event: any) => {
-      console.log('用户加入房间', event.payload)
+      info(`用户加入房间: ${JSON.stringify(event.payload)}`)
       useMitt.emit(WsResponseMessageType.JoinVideo, event.payload)
     })
 
     await listen('ws-leave-video', (event: any) => {
-      console.log('用户离开房间', event.payload)
+      info(`用户离开房间: ${JSON.stringify(event.payload)}`)
       useMitt.emit(WsResponseMessageType.LeaveVideo, event.payload)
     })
 
@@ -400,24 +400,24 @@ class RustWebSocketClient {
     })
 
     await listen('ws-cancel', (event: any) => {
-      console.log('已取消通话', event.payload)
+      info(`已取消通话: ${JSON.stringify(event.payload)}`)
       useMitt.emit(WsResponseMessageType.CANCEL, event.payload)
     })
 
     // 系统相关事件
     await listen('ws-token-expired', (event: any) => {
-      console.log('账号在其他设备登录')
+      info('账号在其他设备登录')
       useMitt.emit(WsResponseMessageType.TOKEN_EXPIRED, event.payload)
     })
 
     await listen('ws-invalid-user', (event: any) => {
-      console.log('无效用户')
+      info('无效用户')
       useMitt.emit(WsResponseMessageType.INVALID_USER, event.payload)
     })
 
     // 未知消息类型
     await listen('ws-unknown-message', (event: any) => {
-      console.log('接收到未处理类型的消息:', event.payload)
+      info(`接收到未处理类型的消息: ${JSON.stringify(event.payload)}`)
     })
   }
 
@@ -443,7 +443,7 @@ class RustWebSocketClient {
    * 处理错误
    */
   private handleError(message: string, details?: Record<string, any>): void {
-    console.error('[RustWS] WebSocket 错误:', message, details)
+    error(`[RustWS] WebSocket 错误: ${message}, 详情: ${JSON.stringify(details)}`)
 
     useMitt.emit(WorkerMsgEnum.WS_ERROR, {
       msg: message,
@@ -457,14 +457,13 @@ class RustWebSocketClient {
   private async handleConnectionLost(payload: any): Promise<void> {
     const { reason, error, timestamp } = payload
 
-    console.warn(`[RustWS] 连接丢失 - 原因: ${reason}, 错误: ${error}, 时间: ${new Date(timestamp).toLocaleString()}`)
+    warn(`[RustWS] 连接丢失 - 原因: ${reason}, 错误: ${error}, 时间: ${new Date(timestamp).toLocaleString()}`)
 
     try {
       // 重新建立连接
       await this.initConnect()
-      console.info('[RustWS] 连接丢失后重连成功')
     } catch (reconnectError) {
-      console.error('[RustWS] 连接丢失后重连失败:', reconnectError)
+      error(`[RustWS] 连接丢失后重连失败: ${reconnectError}`)
 
       // 可以在这里添加用户通知，比如显示重连失败的提示
       // 或者发送一个全局事件让UI层处理
@@ -503,12 +502,12 @@ class RustWebSocketClient {
       } else {
         info('[RustWS] WebSocket 已连接，跳过初始化')
       }
-    } catch (error) {
-      console.warn('[RustWS] 检查连接状态失败，尝试智能重连:', error)
+    } catch (err) {
+      warn(`[RustWS] 检查连接状态失败，尝试智能重连: ${err}`)
       try {
         await this.initConnect()
       } catch (reconnectError) {
-        console.error('[RustWS] 智能重连失败:', reconnectError)
+        error(`[RustWS] 智能重连失败: ${reconnectError}`)
         throw reconnectError
       }
     }
@@ -521,8 +520,8 @@ class RustWebSocketClient {
     try {
       await invoke('ws_set_app_background_state', { isBackground })
       info(`[RustWS] 设置应用状态: ${isBackground ? '后台' : '前台'}`)
-    } catch (error) {
-      console.error('[RustWS] 设置应用状态失败:', error)
+    } catch (err) {
+      error(`[RustWS] 设置应用状态失败: ${err}`)
     }
   }
 
@@ -533,8 +532,8 @@ class RustWebSocketClient {
     try {
       const isBackground = await invoke<boolean>('ws_get_app_background_state')
       return isBackground
-    } catch (error) {
-      console.error('[RustWS] 获取应用状态失败:', error)
+    } catch (err) {
+      error(`[RustWS] 获取应用状态失败: ${err}`)
       return false
     }
   }
@@ -582,8 +581,8 @@ setTimeout(() => {
     })
 
     info('[RustWS] 窗口焦点事件监听器已设置')
-  } catch (error) {
-    console.error('[RustWS] 设置窗口焦点监听器失败:', error)
+  } catch (err) {
+    error(`[RustWS] 设置窗口焦点监听器失败: ${err}`)
   }
 })()
 
