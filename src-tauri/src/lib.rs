@@ -4,7 +4,7 @@ mod desktops;
 #[cfg(desktop)]
 use common::init::CustomInit;
 #[cfg(target_os = "macos")]
-use common_cmd::hide_title_bar_buttons;
+use common_cmd::{hide_title_bar_buttons, show_title_bar_buttons};
 #[cfg(desktop)]
 use common_cmd::{
     audio, default_window_icon, get_files_meta, get_window_payload, push_window_payload,
@@ -369,6 +369,8 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         get_video_thumbnail,
         #[cfg(target_os = "macos")]
         hide_title_bar_buttons,
+        #[cfg(target_os = "macos")]
+        show_title_bar_buttons,
         #[cfg(desktop)]
         push_window_payload,
         #[cfg(desktop)]

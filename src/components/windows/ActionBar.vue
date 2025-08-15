@@ -254,11 +254,6 @@ onMounted(async () => {
   window.addEventListener('resize', handleResize)
   osType.value = type()
 
-  // 初始化窗口最大化状态
-  const isMaximized = await appWindow.isMaximized()
-  console.log('ActionBar 初始化时窗口最大化状态:', isMaximized)
-  windowMaximized.value = isMaximized
-
   addListener(
     appWindow.listen(EventEnum.EXIT, async () => {
       await exit(0)

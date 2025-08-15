@@ -183,13 +183,18 @@ pub fn set_height(height: u32, handle: AppHandle) -> Result<(), String> {
 ///
 /// # 参数
 /// * `window_label` - 窗口的标签名称
+/// * `hide_close_button` - 可选参数，是否隐藏关闭按钮，默认为false（不隐藏）
 /// * `handle` - Tauri应用句柄
 ///
 /// # 返回
 /// * `Result<(), String>` - 成功返回Ok(()), 失败返回错误信息
 #[tauri::command]
 #[cfg(target_os = "macos")]
-pub fn hide_title_bar_buttons(window_label: &str, handle: AppHandle) -> Result<(), String> {
+pub fn hide_title_bar_buttons(
+    window_label: &str,
+    hide_close_button: Option<bool>,
+    handle: AppHandle,
+) -> Result<(), String> {
     #[cfg(target_os = "macos")]
     #[allow(deprecated)]
     {
@@ -219,8 +224,61 @@ pub fn hide_title_bar_buttons(window_label: &str, handle: AppHandle) -> Result<(
             hide_button(ns_window, NSWindowButton::NSWindowMiniaturizeButton);
             hide_button(ns_window, NSWindowButton::NSWindowZoomButton);
 
+            // 根据参数决定是否隐藏关闭按钮
+            if hide_close_button.unwrap_or(false) {
+                hide_button(ns_window, NSWindowButton::NSWindowCloseButton);
+            }
+
             // 设置窗口不可拖动
             let _: () = msg_send![ns_window, setMovable: NO];
+        }
+    }
+    Ok(())
+}
+
+/// 恢复Mac窗口的标题栏按钮显示
+///
+/// # 参数
+/// * `window_label` - 窗口的标签名称
+/// * `handle` - Tauri应用句柄
+///
+/// # 返回
+/// * `Result<(), String>` - 成功返回Ok(()), 失败返回错误信息
+#[tauri::command]
+#[cfg(target_os = "macos")]
+pub fn show_title_bar_buttons(window_label: &str, handle: AppHandle) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    #[allow(deprecated)]
+    {
+        use cocoa::appkit::NSWindowButton;
+        use cocoa::base::{NO, YES, id};
+        use objc::{msg_send, sel, sel_impl};
+
+        let webview_window = handle
+            .get_webview_window(window_label)
+            .ok_or_else(|| format!("Window '{}' not found", window_label))?;
+
+        let ns_window = webview_window
+            .ns_window()
+            .map_err(|e| format!("Failed to get NSWindow: {}", e))? as id;
+
+        unsafe {
+            // 显示标题栏按钮的辅助函数
+            let show_button = |window: id, button_type: NSWindowButton| {
+                let btn = window.standardWindowButton_(button_type);
+                if !btn.is_null() {
+                    let _: () = msg_send![btn, setHidden: NO];
+                }
+            };
+
+            // 显示所有标题栏按钮
+            show_button(ns_window, NSWindowButton::NSWindowCloseButton);
+            show_button(ns_window, NSWindowButton::NSWindowMiniaturizeButton);
+            show_button(ns_window, NSWindowButton::NSWindowZoomButton);
+            show_button(ns_window, NSWindowButton::NSWindowFullScreenButton);
+
+            // 恢复窗口可拖动
+            let _: () = msg_send![ns_window, setMovable: YES];
         }
     }
     Ok(())

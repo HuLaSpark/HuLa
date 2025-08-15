@@ -495,6 +495,11 @@ const acceptCall = async () => {
     // 取消窗口置顶
     await currentWindow.setAlwaysOnTop(false)
 
+    // 恢复标题栏按钮显示
+    if (currentOS === 'macos') {
+      await invokeSilently('show_title_bar_buttons', { windowLabel: currentWindow.label })
+    }
+
     // 确保窗口获得焦点
     try {
       await currentWindow.setFocus()
@@ -564,7 +569,7 @@ onMounted(async () => {
 
     // 隐藏标题栏和设置窗口不可移动
     if (currentOS === 'macos') {
-      await invokeSilently('hide_title_bar_buttons', { windowLabel: currentWindow.label })
+      await invokeSilently('hide_title_bar_buttons', { windowLabel: currentWindow.label, hideCloseButton: true })
     }
 
     // 获取屏幕尺寸并定位
@@ -602,6 +607,11 @@ onMounted(async () => {
     // 正常通话窗口设置
     await currentWindow.center()
     await currentWindow.setAlwaysOnTop(false)
+
+    // 确保标题栏按钮显示（非来电通知状态）
+    if (currentOS === 'macos') {
+      await invokeSilently('show_title_bar_buttons', { windowLabel: currentWindow.label })
+    }
   }
 
   // 确保窗口显示
