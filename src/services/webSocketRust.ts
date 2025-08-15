@@ -6,6 +6,9 @@ import { WorkerMsgEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt'
 import { getEnhancedFingerprint } from '@/services/fingerprint'
 import { WsResponseMessageType } from '@/services/wsType'
+import { useContactStore } from '@/stores/contacts'
+
+const contactStore = useContactStore()
 
 /// WebSocket 连接状态
 export enum ConnectionState {
@@ -289,6 +292,13 @@ class RustWebSocketClient {
     await listen('ws-receive-message', (event: any) => {
       info(`[ws]收到消息: ${JSON.stringify(event.payload)}`)
       useMitt.emit(WsResponseMessageType.RECEIVE_MESSAGE, event.payload)
+    })
+
+    // 消息相关事件
+    await listen('ws-join-group', async (event: any) => {
+      info(`[ws]收到消息: ${JSON.stringify(event.payload)}`)
+      //  更新群聊列表
+      await contactStore.getGroupChatList()
     })
 
     await listen('ws-msg-recall', (event: any) => {
