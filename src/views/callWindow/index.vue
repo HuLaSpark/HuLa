@@ -184,6 +184,8 @@
       </div>
     </div>
   </div>
+
+  <audio ref="remoteAudioRef" autoplay playsinline style="display: none"></audio>
 </template>
 
 <script setup lang="ts">
@@ -192,6 +194,7 @@ import { LogicalPosition, LogicalSize, PhysicalPosition, PhysicalSize } from '@t
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { primaryMonitor } from '@tauri-apps/api/window'
 import { type } from '@tauri-apps/plugin-os'
+import { info } from 'console'
 import { useRoute } from 'vue-router'
 import ActionBar from '@/components/windows/ActionBar.vue'
 import { CallTypeEnum, RTCCallStatus, ThemeEnum } from '@/enums'
@@ -222,8 +225,9 @@ const {
   toggleVideo: toggleVideoWebRtc,
   isVideoEnabled
 } = useWebRtc(roomId, remoteUserId, callType, isReceiver)
+const remoteAudioRef = ref<HTMLAudioElement>()
 const isMuted = ref(false)
-const isSpeakerOn = ref(false)
+const isSpeakerOn = ref(true)
 // 视频通话时默认开启视频，语音通话时默认关闭
 const isVideoOn = ref(callType === CallTypeEnum.VIDEO)
 // 获取远程用户信息
@@ -365,6 +369,13 @@ const toggleMute = () => {
 // 更新所有远程视频元素的音频状态
 const updateRemoteVideoAudio = () => {
   const shouldMute = !isSpeakerOn.value
+  info(`updateRemoteVideoAudio, shouldMute: ${shouldMute}`)
+
+  // 更新专用的音频元素
+  if (remoteAudioRef.value && remoteStream.value) {
+    remoteAudioRef.value.srcObject = remoteStream.value
+    remoteAudioRef.value.muted = shouldMute
+  }
 
   // 检查主视频是否是远程流
   if (mainVideoRef.value && mainVideoRef.value.srcObject === remoteStream.value) {
@@ -436,6 +447,18 @@ const rejectCall = async () => {
 
 // 监听视频状态变化，自动更新视频显示
 watch([hasLocalVideo, hasRemoteVideo, localStream, remoteStream], assignVideoStreams, { deep: true })
+
+// 监听远程流变化，自动设置音频
+watch(
+  remoteStream,
+  (newStream) => {
+    if (remoteAudioRef.value && newStream) {
+      remoteAudioRef.value.srcObject = newStream
+      remoteAudioRef.value.muted = !isSpeakerOn.value
+    }
+  },
+  { immediate: true }
+)
 
 // 同步初始视频状态
 watch(

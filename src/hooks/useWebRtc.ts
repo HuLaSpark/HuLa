@@ -218,8 +218,19 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
   // 获取设备列表
   const getDevices = async () => {
     try {
+      info('start getDevices')
       isDeviceLoad.value = true
+
+      // 先请求权限以获取完整的设备信息
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+        stream.getTracks().forEach((track) => track.stop()) // 立即停止流
+      } catch (_permissionError) {
+        error('Permission denied, will get limited device info')
+      }
+
       const devices = (await navigator.mediaDevices.enumerateDevices()) || []
+      info(`getDevices, devices: ${JSON.stringify(devices)}`)
       if (devices.length === 0) {
         return false
       }
@@ -236,7 +247,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
       return true
     } catch (err) {
       window.$message.error('获取设备失败!')
-      console.error('获取设备失败:', err)
+      error(`获取设备失败: ${err}`)
       // 默认没有设备
       selectedAudioDevice.value = selectedAudioDevice.value || null
       selectedVideoDevice.value = selectedVideoDevice.value || null
@@ -248,7 +259,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
   // 获取本地媒体流
   const getLocalStream = async (type: CallTypeEnum) => {
     try {
-      console.log('获取本地媒体流')
+      info('获取本地媒体流')
       const constraints = {
         audio: audioDevices.value.length > 0 ? { deviceId: selectedAudioDevice.value || undefined } : false,
         video:
@@ -271,7 +282,27 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
         return false
       }
       localStream.value = await navigator.mediaDevices.getUserMedia(constraints)
-      console.log('获取本地媒体流成功', localStream.value)
+      // 打印 localStream 的信息（不能直接序列号 stream，不然会返回null）
+      info(`get localStream success`)
+      info(`localStream.id: ${localStream.value?.id}`)
+      info(`localStream.active: ${localStream.value?.active}`)
+      info(`localStream.getTracks().length: ${localStream.value?.getTracks()?.length}`)
+      // 打印每个轨道的信息
+      localStream.value?.getTracks()?.forEach((track, index) => {
+        info(`Track ${index}: kind=${track.kind}, label=${track.label}, enabled=${track.enabled}`)
+      })
+
+      const audioTrack = localStream.value.getAudioTracks()[0]
+      if (audioTrack) {
+        // 检查音频轨道是否真的在工作
+        info(`Audio track enabled: ${audioTrack.enabled}`)
+        info(`Audio track muted: ${audioTrack.muted}`)
+        info(`Audio track readyState: ${audioTrack.readyState}`)
+
+        // 强制启用音频轨道
+        audioTrack.enabled = true
+      }
+
       return true
     } catch (err) {
       console.error('获取本地流失败:', err)
@@ -562,6 +593,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
       }
 
       // 2. 创建 RTCPeerConnection
+      await nextTick() // 等待一帧
       createPeerConnection(roomId)
       rtcStatus.value = 'new'
 
