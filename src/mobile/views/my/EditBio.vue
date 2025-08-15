@@ -6,7 +6,7 @@
         class="bg-white"
         style="border-bottom: 1px solid; border-color: #dfdfdf"
         :hidden-right="true"
-        room-name="编辑个人简介" />
+        room-name="编辑简介" />
     </template>
 
     <template #container="{ height }">

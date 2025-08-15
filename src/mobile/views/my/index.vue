@@ -24,6 +24,17 @@
       </div>
     </div>
 
+    <div
+      @click="toPublishCommunity"
+      class="w-52px h-52px rounded-full absolute bottom-120px right-20px z-3 flex items-center justify-center bg-[linear-gradient(145deg,#ACD7DA,#13987F)] shadow-[0_4px_12px_rgba(0,0,0,0.25),0_0_12px_rgba(172,215,218,0.8)]">
+      <div class="relative w-20px h-20px">
+        <!-- 竖线 -->
+        <div class="absolute left-1/2 top-0 h-full w-2px bg-white -translate-x-1/2"></div>
+        <!-- 横线 -->
+        <div class="absolute top-1/2 left-0 w-full h-2px bg-white -translate-y-1/2"></div>
+      </div>
+    </div>
+
     <!--退出登录-->
     <!-- <div class="flex-center size-full">
       <n-button type="primary" @click="handleLogout">退出登录</n-button>
@@ -36,6 +47,11 @@ import CommunityTab from '@/mobile/components/community/CommunityTab.vue'
 import PersonalInfo from '@/mobile/components/my/PersonalInfo.vue'
 import Settings from '@/mobile/components/my/Settings.vue'
 import SafeAreaPlaceholder from '@/mobile/components/placeholders/SafeAreaPlaceholder.vue'
+import router from '@/router'
+
+const toPublishCommunity = () => {
+  router.push('/mobile/mobileMy/publishCommunity')
+}
 
 const onUpdate = (newTab: string) => {
   console.log('已更新：', newTab)
