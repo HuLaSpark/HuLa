@@ -1,5 +1,7 @@
 # Auto detect text files and perform LF normalization
 * text=auto eol=lf
+
+# 行尾符设置
 "*.rs" eol=lf
 "Cargo.toml" eol=lf
 "Cargo.lock" eol=lf
@@ -20,3 +22,35 @@
 "*.sass"   eol=lf
 "*.styl"   eol=lf
 "*.md"   eol=lf
+
+# 代码统计设置 - 只统计 Vue、TypeScript 和 Rust 文件
+# 排除 JavaScript 文件
+"*.js" linguist-vendored
+"*.jsx" linguist-vendored
+"*.cjs" linguist-vendored
+"*.mjs" linguist-vendored
+
+# 排除样式文件
+"*.css" linguist-vendored
+"*.scss" linguist-vendored
+"*.sass" linguist-vendored
+"*.less" linguist-vendored
+"*.styl" linguist-vendored
+
+# 排除配置和文档文件
+"*.json" linguist-vendored
+"*.html" linguist-vendored
+"*.md" linguist-documentation
+"*.yml" linguist-vendored
+"*.yaml" linguist-vendored
+
+# 排除其他语言文件
+"*.kt" linguist-vendored
+"*.java" linguist-vendored
+"*.py" linguist-vendored
+
+# 确保构建目录和依赖目录不被统计
+"**/target/**" linguist-vendored
+"/node_modules/**" linguist-vendored
+"/scripts/**" linguist-vendored
+"/build/**" linguist-vendored

@@ -28,7 +28,7 @@
         {{ remoteUserInfo?.name || '未知用户' }}
       </div>
       <div class="text-12px text-gray-500 dark:text-gray-400 flex items-center">
-        <div class="w-6px h-6px rounded-full bg-green-500 mr-6px animate-pulse"></div>
+        <div class="w-6px h-6px rounded-full bg-#13987f mr-6px animate-pulse"></div>
         来电 · {{ callType === CallTypeEnum.VIDEO ? '视频通话' : '语音通话' }}
       </div>
     </div>
@@ -38,13 +38,13 @@
       <!-- 拒绝按钮 -->
       <div
         @click="rejectCall"
-        class="w-44px h-44px rounded-full bg-red-500 hover:bg-red-600 active:bg-red-700 flex items-center justify-center cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95">
+        class="w-44px h-44px rounded-full bg-#d5304f hover:bg-#d5304f active:bg-#d5304f flex items-center justify-center cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95">
         <Icon icon="material-symbols:call-end" :size="20" class="text-white" />
       </div>
       <!-- 接听按钮 -->
       <div
         @click="acceptCall"
-        class="w-44px h-44px rounded-full bg-green-500 hover:bg-green-600 active:bg-green-700 flex items-center justify-center cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95">
+        class="w-44px h-44px rounded-full bg-#13987f hover:bg-#13987f active:bg-#13987f flex items-center justify-center cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95">
         <Icon icon="material-symbols:call" :size="20" class="text-white" />
       </div>
     </div>
