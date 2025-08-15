@@ -317,10 +317,10 @@ const assignVideoStreams = async () => {
     assignDualVideoStreams()
   } else if (hasLocalVideo.value) {
     // 只有本地视频
-    assignSingleVideoStream(localStream.value)
+    assignSingleVideoStream(localStream.value, true)
   } else if (hasRemoteVideo.value) {
     // 只有远程视频
-    assignSingleVideoStream(remoteStream.value)
+    assignSingleVideoStream(remoteStream.value, false)
   }
 }
 
@@ -334,26 +334,31 @@ const clearVideoElements = () => {
 const assignDualVideoStreams = () => {
   if (isLocalVideoMain.value) {
     // 本地视频作为主视频
-    setVideoElement(mainVideoRef.value, localStream.value)
+    setVideoElement(mainVideoRef.value, localStream.value, true)
     setVideoElement(pipVideoRef.value, remoteStream.value)
   } else {
     // 远程视频作为主视频
     setVideoElement(mainVideoRef.value, remoteStream.value)
-    setVideoElement(pipVideoRef.value, localStream.value)
+    setVideoElement(pipVideoRef.value, localStream.value, true)
   }
 }
 
 // 分配单视频流
-const assignSingleVideoStream = (stream: MediaStream | null) => {
-  setVideoElement(mainVideoRef.value, stream)
-  setVideoElement(pipVideoRef.value, null)
+const assignSingleVideoStream = (stream: MediaStream | null, isMuted: boolean) => {
+  setVideoElement(mainVideoRef.value, stream, isMuted)
+  setVideoElement(pipVideoRef.value, null, isMuted)
 }
 
 // 设置视频元素
-const setVideoElement = (videoElement: HTMLVideoElement | undefined, stream: MediaStream | null) => {
+const setVideoElement = (
+  videoElement: HTMLVideoElement | undefined,
+  stream: MediaStream | null,
+  isMuted: boolean = false
+) => {
   if (!videoElement) return
 
   videoElement.srcObject = stream
+  videoElement.muted = isMuted
 
   // 设置完成后统一更新音频状态
   if (stream) {
