@@ -152,40 +152,6 @@ watchEffect(() => {
   if (alwaysOnTopStatus.value) {
     appWindow.setAlwaysOnTop(alwaysOnTopStatus.value as boolean)
   }
-
-  // 添加关闭事件拦截逻辑 - 只拦截 home 窗口
-  // if (appWindow.label === 'home' && !unlistenCloseRequested) {
-  //   // 监听原生关闭事件
-  //   appWindow
-  //     .onCloseRequested((event) => {
-  //       // 如果是程序内部触发的关闭操作，不拦截
-  //       if (isProgrammaticClose) {
-  //         return
-  //       }
-  //       // 阻止默认关闭行为
-  //       event.preventDefault()
-  //       if (!tips.value.notTips) {
-  //         tipsRef.show = true
-  //       } else {
-  //         if (tips.value.type === CloseBxEnum.CLOSE) {
-  //           // 用户选择直接退出
-  //           console.log('用户设置为直接退出应用')
-  //           emit(EventEnum.EXIT)
-  //         } else {
-  //           // 用户选择最小化到托盘
-  //           console.log('用户设置为最小化到托盘')
-  //           appWindow.hide()
-  //         }
-  //       }
-  //     })
-  //     .then((unlisten) => {
-  //       console.log('macOS home窗口关闭按钮事件监听器已设置')
-  //       unlistenCloseRequested = unlisten
-  //     })
-  //     .catch((error) => {
-  //       console.error('设置 macOS home窗口关闭按钮监听器失败:', error)
-  //     })
-  // }
   if (escClose.value && type() === 'windows') {
     window.addEventListener('keydown', (e) => isEsc(e))
   } else {
@@ -249,6 +215,7 @@ const isEsc = (e: KeyboardEvent) => {
 // 判断当前是否是最大化
 const handleResize = () => {
   appWindow.isMaximized().then((res) => {
+    console.log('ActionBar 检测到窗口最大化状态:', res)
     windowMaximized.value = res
   })
 }
@@ -287,6 +254,11 @@ onMounted(async () => {
   window.addEventListener('resize', handleResize)
   osType.value = type()
 
+  // 初始化窗口最大化状态
+  const isMaximized = await appWindow.isMaximized()
+  console.log('ActionBar 初始化时窗口最大化状态:', isMaximized)
+  windowMaximized.value = isMaximized
+
   addListener(
     appWindow.listen(EventEnum.EXIT, async () => {
       await exit(0)
@@ -320,6 +292,11 @@ onUnmounted(() => {
     unlistenCloseRequested()
     unlistenCloseRequested = null
   }
+})
+
+// 暴露 windowMaximized 状态
+defineExpose({
+  windowMaximized
 })
 </script>
 

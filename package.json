@@ -116,7 +116,6 @@
     "@biomejs/biome": "^2.1.4",
     "@commitlint/cli": "^19.6.0",
     "@commitlint/config-conventional": "^19.6.0",
-    "@iconify/vue": "^5.0.0",
     "@release-it/bumper": "^6.0.1",
     "@release-it/conventional-changelog": "8.0.2",
     "@rollup/plugin-terser": "^0.4.4",

@@ -123,6 +123,18 @@ const handleClickMsg = async (group: any) => {
 // 取消状态栏闪烁
 const handleTip = async () => {
   globalStore.setTipVisible(false)
+  // 取消窗口置顶
+  await appWindow?.setAlwaysOnTop(false)
+
+  // 隐藏窗口
+  await appWindow?.hide()
+
+  // 清空消息内容
+  content.value = []
+  msgCount.value = 0
+
+  // 重置窗口高度
+  resizeWindow('notify', 280, 140)
 }
 
 const debouncedHandleTip = useDebounceFn(handleTip, 100)
