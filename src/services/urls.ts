@@ -42,12 +42,14 @@ export default {
 
   // -------------- 好友相关 ---------------
   getContactList: `${prefix + URLEnum.USER}/friend/page`, // 联系人列表
-  requestFriendList: `${prefix + URLEnum.USER}/friend/apply/page`, // 好友申请列表
-  sendAddFriendRequest: `${prefix + URLEnum.USER}/friend/apply`, // 申请好友\同意申请
-  rejectFriendRequest: `${prefix + URLEnum.USER}/friend/reject`, // 拒绝好友申请
-  ignoreFriendRequest: `${prefix + URLEnum.USER}/friend/ignore`, // 忽略好友申请
+  requestFriendList: `${prefix + URLEnum.ROOM}/apply/page`, // 好友申请、群聊邀请列表
+  newFriendCount: `${prefix + URLEnum.ROOM}/apply/unread`, // 申请未读数
+  acceptInvite: `${prefix + URLEnum.ROOM}/apply/accept`, // 审批别人邀请的进群
+  sendAddFriendRequest: `${prefix + URLEnum.ROOM}/apply/apply`, // 申请好友\同意申请
+  rejectFriendRequest: `${prefix + URLEnum.ROOM}/apply/reject`, // 拒绝好友申请
+  ignoreFriendRequest: `${prefix + URLEnum.ROOM}/apply/ignore`, // 忽略好友申请
+  deleteFriendRequest: `${prefix + URLEnum.ROOM}/apply/delete`, // 删除好友、群聊申请
   deleteFriend: `${prefix + URLEnum.USER}/friend`, // 删除好友
-  newFriendCount: `${prefix + URLEnum.USER}/friend/apply/unread`, // 申请未读数
   modifyFriendRemark: `${prefix + URLEnum.USER}/friend/updateRemark`, // 修改好友备注
 
   // -------------- 聊天室相关 ---------------
@@ -66,7 +68,6 @@ export default {
   // getGroupUserList: `${prefix + URLEnum.ROOM}/group/member/page`, // 群成员列表
   inviteGroupMember: `${prefix + URLEnum.ROOM}/group/member`, // 邀请群成员 和 移出群成员(post 和 delete)
   inviteList: `${prefix + URLEnum.ROOM}/group/invite/list`, // 我的审批群邀请列表
-  acceptInvite: `${prefix + URLEnum.ROOM}/group/invite/accept`, // 审批别人邀请的进群
   exitGroup: `${prefix + URLEnum.ROOM}/group/member/exit`, // 退群
   addAdmin: `${prefix + URLEnum.ROOM}/group/admin`, // 添加管理员
   revokeAdmin: `${prefix + URLEnum.ROOM}/group/admin`, // 删除管理员
@@ -75,7 +76,7 @@ export default {
   updateRoomInfo: `${prefix + URLEnum.ROOM}/updateRoomInfo`, // 修改群信息(群主)
   updateMyRoomInfo: `${prefix + URLEnum.ROOM}/updateMyRoomInfo`, // 修改“我”的群聊名称
   searchGroup: `${prefix + URLEnum.ROOM}/search`, // 搜索群聊
-  applyGroup: `${prefix + URLEnum.ROOM}/applyGroup`, // 申请加群
+  applyGroup: `${prefix + URLEnum.ROOM}/apply/group`, // 申请加群
   applyHandle: `${prefix + URLEnum.ROOM}/apply/handle`, // 处理加群申请 [仅仅管理员、群主可调用]
   applyGroupList: `${prefix + URLEnum.ROOM}/apply/group/list`, // 申请加群列表 [仅仅管理员、群主可见]
   getAnnouncementList: `${prefix + URLEnum.ROOM}/announcement/list`, // 获取群公告
