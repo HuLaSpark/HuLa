@@ -1,10 +1,26 @@
 <template>
   <n-flex
-    @click="handleApply"
+    @click="handleApply('friend')"
     align="center"
     justify="space-between"
     class="my-10px p-12px hover:(bg-[--list-hover-color] cursor-pointer)">
     <div class="text-(14px [--text-color])">好友通知</div>
+    <n-flex align="center" :size="4">
+      <n-badge :value="globalStore.unReadMark.newFriendUnreadCount" :max="15" />
+      <n-badge
+        v-if="hasPendingFriendRequests && globalStore.unReadMark.newFriendUnreadCount === 0"
+        dot
+        color="#d5304f" />
+      <svg class="size-16px rotate-270 color-[--text-color]"><use href="#down"></use></svg>
+    </n-flex>
+  </n-flex>
+
+  <n-flex
+    @click="handleApply('group')"
+    align="center"
+    justify="space-between"
+    class="my-10px p-12px hover:(bg-[--list-hover-color] cursor-pointer)">
+    <div class="text-(14px [--text-color])">群通知</div>
     <n-flex align="center" :size="4">
       <n-badge :value="globalStore.unReadMark.newFriendUnreadCount" :max="15" />
       <n-badge
@@ -106,7 +122,7 @@ import { storeToRefs } from 'pinia'
 import { MittEnum, OnlineEnum, RoomTypeEnum, ThemeEnum } from '@/enums'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
-import { RequestFriendAgreeStatus } from '@/services/types'
+import { type DetailsContent, RequestFriendAgreeStatus } from '@/services/types'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useSettingStore } from '@/stores/setting'
@@ -189,11 +205,12 @@ const handleSelect = (event: MouseEvent) => {
   console.log(event)
 }
 
-const handleApply = () => {
+const handleApply = (applyType: 'friend' | 'group') => {
   useMitt.emit(MittEnum.APPLY_SHOW, {
     context: {
-      type: 'apply'
-    }
+      type: 'apply',
+      applyType
+    } as DetailsContent
   })
   activeItem.value = ''
 }

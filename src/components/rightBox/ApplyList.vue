@@ -1,7 +1,7 @@
 <template>
   <n-flex vertical class="select-none">
     <n-flex align="center" justify="space-between" class="color-[--text-color] px-20px py-10px">
-      <p class="text-16px">好友通知</p>
+      <p class="text-16px">{{ props.type === 'friend' ? '好友通知' : '群通知' }}</p>
       <svg class="size-18px cursor-pointer"><use href="#delete"></use></svg>
     </n-flex>
 
@@ -121,6 +121,9 @@ const currentUserId = ref('0')
 const loadingMap = ref<Record<string, boolean>>({})
 const virtualListRef = ref()
 const isLoadingMore = ref(false)
+const props = defineProps<{
+  type: 'friend' | 'group'
+}>()
 
 // 检查好友申请是否已被接受
 const isAccepted = (targetId: string) => {
