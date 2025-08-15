@@ -1,6 +1,6 @@
 <template>
   <div class="grid grid-cols-[32px_32px_32px_32px] px-16px gap-12px z-1 h-32px items-center justify-end mt-10px">
-    <div class="h-32px w-32px flex items-center justify-center">
+    <div @click="toMyMessages" class="h-32px w-32px flex items-center justify-center">
       <n-badge value="61">
         <svg class="iconpark-icon h-24px w-24px block"><use href="#remind"></use></svg>
       </n-badge>
@@ -25,11 +25,17 @@
 </template>
 
 <script setup lang="ts">
+import router from '~/src/router'
+
 const active = ref(false)
 
 // 点击按钮打开底部抽屉
 const activate = () => {
   // active.value = true
+}
+
+const toMyMessages = () => {
+  router.push('/mobile/mobileMy/myMessages')
 }
 </script>
 

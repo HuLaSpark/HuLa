@@ -38,6 +38,7 @@ declare module 'vue' {
     MeasuredItem: typeof import('./../mobile/components/virtual-scroll/MeasuredItem.vue')['default']
     MessageContainer: typeof import('./../mobile/components/chat-room/MessageContainer.vue')['default']
     MsgInput: typeof import('./../components/rightBox/MsgInput.vue')['default']
+    MyMessageItem: typeof import('./../mobile/components/my/MyMessageItem.vue')['default']
     NaiveProvider: typeof import('./../components/common/NaiveProvider.vue')['default']
     NAutoComplete: typeof import('naive-ui')['NAutoComplete']
     NAvatar: typeof import('naive-ui')['NAvatar']
