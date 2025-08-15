@@ -7,7 +7,7 @@
 
     <n-virtual-list
       style="max-height: calc(100vh - 80px)"
-      :items="contactStore.requestFriendsList"
+      :items="applyList"
       :item-size="102"
       :item-resizable="true"
       @scroll="handleScroll"
@@ -33,13 +33,7 @@
                   </p>
 
                   <p class="text-(14px [--text-color])">
-                    {{
-                      isCurrentUser(item.uid)
-                        ? isAccepted(item.targetId)
-                          ? '已同意你的请求'
-                          : '正在验证你的邀请'
-                        : '请求加为好友'
-                    }}
+                    {{ applyMsg(item) }}
                   </p>
 
                   <p class="text-(10px #909090)">{{ formatTimestamp(item.createTime) }}</p>
@@ -130,6 +124,28 @@ const isAccepted = (targetId: string) => {
   // 使用缓存集合快速检查目标用户是否在联系人列表中
   return contactStore.contactsList.some((contact) => contact.uid === targetId)
 }
+
+const applyList = computed(() => {
+  return contactStore.requestFriendsList.filter((item) => {
+    if (props.type === 'friend') {
+      return item.type === 1
+    } else {
+      return item.type === 2
+    }
+  })
+})
+
+const applyMsg = computed(() => (item: any) => {
+  if (props.type === 'friend') {
+    return isCurrentUser(item.uid)
+      ? isAccepted(item.targetId)
+        ? '已同意你的请求'
+        : '正在验证你的邀请'
+      : '请求加为好友'
+  } else {
+    return isCurrentUser(item.uid) ? '已同意你的邀请' : '请求邀请进入群聊'
+  }
+})
 
 // 下拉菜单选项
 const dropdownOptions = [
