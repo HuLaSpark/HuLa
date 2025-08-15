@@ -223,7 +223,9 @@ const {
   sendRtcCall2VideoCallResponse,
   toggleMute: toggleMuteWebRtc,
   toggleVideo: toggleVideoWebRtc,
-  isVideoEnabled
+  isVideoEnabled,
+  pauseBell,
+  playBell
 } = useWebRtc(roomId, remoteUserId, callType, isReceiver)
 const remoteAudioRef = ref<HTMLAudioElement>()
 const isMuted = ref(false)
@@ -397,6 +399,12 @@ const toggleSpeaker = () => {
   isSpeakerOn.value = !isSpeakerOn.value
   updateRemoteVideoAudio()
   console.log('切换扬声器状态:', isSpeakerOn.value, '远程视频静音:', !isSpeakerOn.value)
+
+  if (connectionStatus.value === RTCCallStatus.CALLING && !isSpeakerOn.value) {
+    pauseBell()
+  } else if (connectionStatus.value === RTCCallStatus.CALLING && isSpeakerOn.value) {
+    playBell()
+  }
 }
 
 const toggleVideo = async () => {

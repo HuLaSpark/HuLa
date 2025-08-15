@@ -172,6 +172,14 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
     bellAudio.value = null
   }
 
+  const pauseBell = () => {
+    bellAudio.value?.pause?.()
+  }
+
+  const playBell = () => {
+    bellAudio.value?.play?.()
+  }
+
   /**
    * 接听电话响应事件
    */
@@ -994,6 +1002,10 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
     connectionStatus,
     toggleMute,
     sendRtcCall2VideoCallResponse,
-    isVideoEnabled
+    isVideoEnabled,
+    stopBell,
+    startBell,
+    pauseBell,
+    playBell
   }
 }
