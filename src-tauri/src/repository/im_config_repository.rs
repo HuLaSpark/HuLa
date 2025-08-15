@@ -1,5 +1,4 @@
 use crate::error::CommonError;
-use anyhow::Context;
 use entity::im_config;
 use sea_orm::QueryFilter;
 use sea_orm::{ActiveModelTrait, ColumnTrait, IntoActiveModel, Set};
@@ -28,7 +27,7 @@ pub async fn get_config_by_key(
         .filter(im_config::Column::LoginUid.eq(login_uid))
         .one(db)
         .await
-        .with_context(|| "查询配置失败")?;
+        .map_err(|e| anyhow::anyhow!("查询配置失败: {}", e))?;
     Ok(config)
 }
 
@@ -80,7 +79,7 @@ pub async fn save_config_batch(
         .filter(im_config::Column::LoginUid.eq(login_uid))
         .exec(&txn)
         .await
-        .with_context(|| "删除现有配置数据失败")?;
+        .map_err(|e| anyhow::anyhow!("删除现有配置数据失败: {}", e))?;
 
     // 批量插入新的配置数据
     let active_models: Vec<im_config::ActiveModel> = configs
@@ -97,7 +96,7 @@ pub async fn save_config_batch(
         im_config::Entity::insert_many(active_models)
             .exec(&txn)
             .await
-            .with_context(|| "批量插入配置数据失败")?;
+            .map_err(|e| anyhow::anyhow!("批量插入配置数据失败: {}", e))?;
     }
 
     // 提交事务
@@ -116,6 +115,6 @@ pub async fn delete_config(
         .filter(im_config::Column::LoginUid.eq(login_uid))
         .exec(db)
         .await
-        .with_context(|| "删除配置失败")?;
+        .map_err(|e| anyhow::anyhow!("删除配置失败: {}", e))?;
     Ok(())
 }

@@ -104,7 +104,7 @@
         clearable />
 
       <n-flex justify="flex-end" :size="6">
-        <n-button text color="#13987f" @click="handleForgetPassword"> 忘记密码 </n-button>
+        <n-button text color="#13987f" @click="handleForgetPassword">忘记密码</n-button>
       </n-flex>
 
       <n-button
@@ -139,7 +139,7 @@
         size="large"
         maxlength="8"
         minlength="1"
-        v-model:value="registerInfo.name"
+        v-model:value="registerInfo.nickName"
         type="text"
         spellCheck="false"
         autoComplete="off"
@@ -308,22 +308,24 @@
 </template>
 
 <script setup lang="ts">
-import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
-import apis from '@/services/apis'
-import { useUserStore } from '@/stores/user'
-import { useLogin } from '@/hooks/useLogin'
-import { AvatarUtils } from '@/utils/AvatarUtils'
-import { UserInfoType, RegisterUserReq } from '@/services/types'
+import { emit } from '@tauri-apps/api/event'
 import { lightTheme } from 'naive-ui'
-import router from '../router'
-import Validation from '@/components/common/Validation.vue'
+import { ErrorType } from '@/common/exception'
 import PinInput from '@/components/common/PinInput.vue'
+import Validation from '@/components/common/Validation.vue'
+import { TauriCommand } from '@/enums'
+import { useLogin } from '@/hooks/useLogin'
+import apis from '@/services/apis'
+import type { RegisterUserReq, UserInfoType } from '@/services/types'
+import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import { useMobileStore } from '@/stores/mobile'
+import { useUserStore } from '@/stores/user'
+import { AvatarUtils } from '@/utils/AvatarUtils'
+import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
+import router from '../router'
 
 // 本地注册信息类型，扩展API类型以包含确认密码
-interface LocalRegisterInfo extends RegisterUserReq {
-  confirmPassword: string
-}
+interface LocalRegisterInfo extends RegisterUserReq {}
 
 const loginHistoriesStore = useLoginHistoriesStore()
 const userStore = useUserStore()
@@ -345,19 +347,21 @@ const info = ref({
   account: '',
   password: '',
   avatar: '',
-  name: '',
+  nickName: '',
   uid: ''
 })
 
 /** 注册账号信息 */
 const registerInfo = ref<LocalRegisterInfo>({
-  name: '',
+  nickName: '',
   email: '',
   password: '',
   confirmPassword: '',
   code: '',
   uuid: '',
-  avatar: ''
+  avatar: '',
+  key: '',
+  systemType: 2
 })
 
 // 登录相关的占位符和状态
@@ -422,7 +426,7 @@ const isPasswordValid = computed(() => {
 /** 检查第一步是否可以继续 */
 const isStep1Valid = computed(() => {
   return (
-    registerInfo.value.name &&
+    registerInfo.value.nickName &&
     isPasswordValid.value &&
     registerInfo.value.confirmPassword === registerInfo.value.password &&
     registerProtocol.value
@@ -470,7 +474,7 @@ const resetLoginForm = () => {
     account: '',
     password: '',
     avatar: '',
-    name: '',
+    nickName: '',
     uid: ''
   }
   accountPH.value = '输入HuLa账号'
@@ -481,7 +485,7 @@ const resetLoginForm = () => {
 /** 重置注册表单 */
 const resetRegisterForm = () => {
   registerInfo.value = {
-    name: '',
+    nickName: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -525,7 +529,8 @@ const handleRegisterStep = async () => {
       await apis.sendCaptcha({
         email: registerInfo.value.email,
         code: registerInfo.value.code.toString(),
-        uuid: captcha.value.uuid.toString()
+        uuid: captcha.value.uuid.toString(),
+        templateCode: 'REGISTER_EMAIL'
       })
 
       registerLoading.value = false
@@ -566,7 +571,7 @@ const handleRegisterComplete = async () => {
     // 关闭弹窗并切换到登录页面
     emailCodeModal.value = false
     activeTab.value = 'login'
-    info.value.account = registerInfo.value.name || registerInfo.value.email
+    info.value.account = registerInfo.value.nickName || registerInfo.value.email
 
     // 重置注册表单
     resetRegisterForm()
@@ -586,7 +591,7 @@ const normalLogin = async () => {
   loading.value = true
   const { account, password } = info.value
   apis
-    .login({ account, password, source: 'mobile' })
+    .login({ account, password, deviceType: 'MOBILE', systemType: 2, grantType: 'PASSWORD' })
     .then(async (res) => {
       loginDisabled.value = true
       loginText.value = '登录成功, 正在跳转'
@@ -608,14 +613,32 @@ const normalLogin = async () => {
         token: res.token,
         client: res.client
       }
+      await invokeWithErrorHandler(
+        TauriCommand.SAVE_USER_INFO,
+        {
+          userInfo: account
+        },
+        {
+          customErrorMessage: '保存用户信息失败',
+          errorType: ErrorType.Client
+        }
+      )
+
+      await emit('set_user_info', {
+        token: res.token,
+        refreshToken: res.refreshToken,
+        uid: account.uid
+      })
+
       loading.value = false
       userStore.userInfo = account
       loginHistoriesStore.addLoginHistory(account)
       router.push('/mobile/message')
       await setLoginState()
     })
-    .catch(() => {
+    .catch((e) => {
       loading.value = false
+      console.error(e)
     })
 }
 
@@ -627,7 +650,7 @@ const giveAccount = (item: UserInfoType) => {
   const { account, avatar, name, uid } = item
   info.value.account = account || ''
   info.value.avatar = avatar
-  info.value.name = name
+  info.value.nickName = name
   info.value.uid = uid
   arrowStatus.value = false
 }

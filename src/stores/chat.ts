@@ -1,20 +1,22 @@
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { info } from '@tauri-apps/plugin-log'
+import { sendNotification } from '@tauri-apps/plugin-notification'
+import { type } from '@tauri-apps/plugin-os'
+import { cloneDeep } from 'lodash-es'
 import { defineStore } from 'pinia'
 import { useRoute } from 'vue-router'
+import { ErrorType } from '@/common/exception'
+import { type MessageStatusEnum, MsgEnum, NotificationTypeEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
 import apis from '@/services/apis'
 import type { MarkItemType, MessageType, RevokedMsgType, SessionItem } from '@/services/types'
-import { MessageStatusEnum, MsgEnum, NotificationTypeEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
-import { computedTimeBlock } from '@/utils/ComputedTime.ts'
 import { useCachedStore } from '@/stores/cached.ts'
+import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group.ts'
-import { useContactStore } from '@/stores/contacts.ts'
-import { cloneDeep } from 'lodash-es'
 import { useUserStore } from '@/stores/user.ts'
+import { computedTimeBlock } from '@/utils/ComputedTime.ts'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
-import { sendNotification } from '@tauri-apps/plugin-notification'
-import { invokeWithErrorHandler, invokeSilently } from '@/utils/TauriInvokeHandler'
-import { ErrorType } from '@/common/exception'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 
 type RecalledMessage = {
   messageId: string
@@ -155,12 +157,16 @@ export const useChatStore = defineStore(
     })
 
     // 监听当前房间ID的变化
-    watch(currentRoomId, async (val, oldVal) => {
-      if (WebviewWindow.getCurrent().label === 'login') {
-        return
-      }
+    watch(
+      () => globalStore.currentSession,
+      async (val, _) => {
+        const currentSession = {
+          ...val
+        }
+        if (WebviewWindow.getCurrent().label !== 'home') {
+          return
+        }
 
-      if (val !== oldVal) {
         // 1. 立即清空当前消息列表
         if (currentMessageMap.value) {
           currentMessageMap.value.clear()
@@ -194,24 +200,26 @@ export const useChatStore = defineStore(
         })
 
         // 群组的时候去请求
-        if (currentRoomType.value === RoomTypeEnum.GROUP) {
-          // 放到和公告一起加载
-          cachedStore.getGroupAtUserBaseInfo()
+        if (currentSession.type === RoomTypeEnum.GROUP) {
+          cachedStore.getGroupAtUserBaseInfo(currentSession.roomId)
         }
 
         // 标记当前会话已读
         if (val) {
-          const session = sessionList.value.find((s) => s.roomId === val)
+          const session = sessionList.value.find((s) => s.roomId === currentSession.roomId)
           if (session?.unreadCount) {
-            markSessionRead(val)
+            markSessionRead(currentSession.roomId)
             updateTotalUnreadCount()
           }
         }
-      }
 
-      // 重置当前回复的消息
-      currentMsgReply.value = {}
-    })
+        // 重置当前回复的消息
+        currentMsgReply.value = {}
+      },
+      {
+        deep: true
+      }
+    )
 
     // 当前消息回复
     const currentMsgReply = ref<Partial<MessageType>>({})
@@ -244,6 +252,7 @@ export const useChatStore = defineStore(
           currentMessageOptions.value.isLoading = false
         }
       })
+      console.log('🔄 请求响应数据', data)
       // 如果没有数据或者房间ID已经变化，则不处理响应
       if (!data || requestRoomId !== currentRoomId.value) return
 
@@ -286,52 +295,60 @@ export const useChatStore = defineStore(
 
     // 获取会话列表
     const getSessionList = async (isFresh = false) => {
-      if (sessionOptions.isLoading) return
-      sessionOptions.isLoading = true
-      const response: any = await invokeWithErrorHandler(TauriCommand.LIST_CONTACTS, undefined, {
-        customErrorMessage: '获取会话列表失败',
-        errorType: ErrorType.Network
-      }).catch(() => {
-        sessionOptions.isLoading = false
-        return null
-      })
-      if (!response) return
-      const data = response
-      if (!data) {
-        return
-      }
-
-      // 保存当前选中的会话ID
-      const currentSelectedRoomId = globalStore.currentSession.roomId
-
-      sessionList.value = []
-      sessionList.value.push(...data)
-      sessionOptions.isLoading = false
-
-      sortAndUniqueSessionList()
-
-      // sessionList[0].unreadCount = 0
-      if (!isFirstInit || isFresh) {
-        isFirstInit = true
-        // 只有在没有当前选中会话时，才设置第一个会话为当前会话
-        if (!currentSelectedRoomId || currentSelectedRoomId === '1') {
-          globalStore.currentSession.roomId = data.list[0].roomId
-          globalStore.currentSession.type = data.list[0].type
+      try {
+        if (sessionOptions.isLoading) return
+        sessionOptions.isLoading = true
+        console.log('获取会话列表')
+        const response: any = await invokeWithErrorHandler(TauriCommand.LIST_CONTACTS, undefined, {
+          customErrorMessage: '获取会话列表失败',
+          errorType: ErrorType.Network
+        }).catch(() => {
+          sessionOptions.isLoading = false
+          return null
+        })
+        if (!response) return
+        const data = response
+        if (!data) {
+          return
         }
 
-        // 用会话列表第一个去请求消息列表
-        await getMsgList()
-        // 请求第一个群成员列表
-        currentRoomType.value === RoomTypeEnum.GROUP && (await groupStore.getGroupUserList())
-        // 初始化所有用户基本信息
-        userStore.isSign && (await cachedStore.initAllUserBaseInfo())
-        // 联系人列表
-        await contactStore.getContactList(true)
+        // 保存当前选中的会话ID
+        const currentSelectedRoomId = globalStore.currentSession.roomId
 
-        // 确保在会话列表加载完成后更新总未读数
-        await nextTick(() => {
-          updateTotalUnreadCount()
-        })
+        sessionList.value = []
+        sessionList.value.push(...data)
+        sessionOptions.isLoading = false
+
+        sortAndUniqueSessionList()
+
+        // sessionList[0].unreadCount = 0
+        if (!isFirstInit || isFresh) {
+          isFirstInit = true
+          // 只有在没有当前选中会话时，才设置第一个会话为当前会话
+          if (!currentSelectedRoomId || currentSelectedRoomId === '1') {
+            globalStore.currentSession.roomId = data[0].roomId
+            globalStore.currentSession.type = data[0].type
+          }
+
+          // 用会话列表第一个去请求消息列表
+          await getMsgList()
+          // 请求第一个群成员列表
+          currentRoomType.value === RoomTypeEnum.GROUP && (await groupStore.getGroupUserList(data[0].roomId))
+          // 初始化所有用户基本信息
+          userStore.isSign && (await cachedStore.initAllUserBaseInfo())
+          // 联系人列表
+          await contactStore.getContactList(true)
+
+          // 确保在会话列表加载完成后更新总未读数
+          await nextTick(() => {
+            updateTotalUnreadCount()
+          })
+        }
+      } catch (e) {
+        console.error('获取会话列表失败:', e)
+        sessionOptions.isLoading = false
+      } finally {
+        sessionOptions.isLoading = false
       }
     }
 
@@ -397,7 +414,7 @@ export const useChatStore = defineStore(
       await cachedStore.getBatchUserInfo([uid])
 
       // 发完消息就要刷新会话列表
-      let detailResponse = undefined
+      let detailResponse
       if (!current) {
         detailResponse = await apis.sessionDetail({ id: msg.message.roomId })
       }
@@ -478,9 +495,26 @@ export const useChatStore = defineStore(
     }
 
     // 更新所有标记类型的数量
-    const updateMarkCount = (markList: MarkItemType[]) => {
+    const updateMarkCount = async (markList: MarkItemType[]) => {
       for (const mark of markList) {
         const { msgId, markType, markCount, actType, uid } = mark
+
+        await invokeWithErrorHandler(
+          TauriCommand.SAVE_MESSAGE_MARK,
+          {
+            data: {
+              msgId: msgId.toString(),
+              markType,
+              markCount,
+              actType,
+              uid: uid.toString()
+            }
+          },
+          {
+            customErrorMessage: '保存消息标记',
+            errorType: ErrorType.Client
+          }
+        )
 
         const msgItem = currentMessageMap.value?.get(String(msgId))
         if (msgItem && msgItem.message.messageMarks) {
@@ -495,7 +529,7 @@ export const useChatStore = defineStore(
           if (actType === 1) {
             // 添加标记
             // 如果是当前用户的操作，设置userMarked为true
-            if (String(uid) === userStore.userInfo.uid) {
+            if (uid === userStore.userInfo.uid) {
               currentMarkStat.userMarked = true
             }
             // 更新计数
@@ -503,7 +537,7 @@ export const useChatStore = defineStore(
           } else if (actType === 2) {
             // 取消标记
             // 如果是当前用户的操作，设置userMarked为false
-            if (String(uid) === userStore.userInfo.uid) {
+            if (uid === userStore.userInfo.uid) {
               currentMarkStat.userMarked = false
             }
             // 更新计数
@@ -683,7 +717,8 @@ export const useChatStore = defineStore(
     }
 
     // 更新未读消息计数
-    const updateTotalUnreadCount = () => {
+    const updateTotalUnreadCount = async () => {
+      info('[chat]更新全局未读消息计数')
       // 使用 Array.from 确保遍历的是最新的 sessionList
       const totalUnread = Array.from(sessionList.value).reduce((total, session) => {
         // 免打扰的会话不计入全局未读数
@@ -698,7 +733,10 @@ export const useChatStore = defineStore(
       // 更新全局 store 中的未读计数
       globalStore.unReadMark.newMsgUnreadCount = totalUnread
       // 更新系统托盘图标上的未读数
-      invokeSilently('set_badge_count', { count: totalUnread > 0 ? totalUnread : null })
+      if (type() === 'macos') {
+        const count = totalUnread > 0 ? totalUnread : undefined
+        await invokeWithErrorHandler('set_badge_count', { count })
+      }
     }
 
     // 清空所有会话的未读数

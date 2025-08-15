@@ -1,8 +1,8 @@
 import { getVersion } from '@tauri-apps/api/app'
 import { check } from '@tauri-apps/plugin-updater'
+import { useSettingStore } from '@/stores/setting.ts'
 import { MittEnum } from '../enums'
 import { useMitt } from './useMitt'
-import { useSettingStore } from '@/stores/setting.ts'
 
 /**
  * 检查更新

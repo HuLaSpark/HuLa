@@ -1,12 +1,12 @@
-import { existsSync, writeFileSync } from 'fs'
-import { join } from 'path'
 import chalk from 'chalk'
+import { existsSync, readFileSync, writeFileSync } from 'fs'
+import { join } from 'path'
 
-// 用于写入.env.local配置文件，该文件默认不会被git管理，所以不必担心会提交到远程仓库
-const envPath = join(process.cwd(), '.env.local')
+// 用于写入 .env.development.local 配置文件
+const devEnvPath = join(process.cwd(), '.env.development')
+const devLocalEnvPath = join(process.cwd(), '.env.development.local')
 
-if (!existsSync(envPath)) {
-  const defaultEnvContent = `# 有道云翻译key
+const defaultEnvContent = `# 有道云翻译key
 VITE_YOUDAO_APP_KEY=
 VITE_YOUDAO_APP_SECRET=
 # 腾讯云翻译key
@@ -14,13 +14,25 @@ VITE_TENCENT_API_KEY=
 VITE_TENCENT_SECRET_ID=
 `
 
-  try {
-    writeFileSync(envPath, defaultEnvContent, 'utf8')
-    console.log(chalk.green('✨ 成功创建.env.local文件'))
-  } catch (error) {
-    console.log(chalk.red('\n❌ 创建.env.local文件失败。'))
-    process.exit(1)
+try {
+  if (existsSync(devLocalEnvPath)) {
+    console.log(chalk.green('✅ 检测到 .env.development.local 已存在，跳过创建'))
+    process.exit(0)
   }
-} else {
-  console.log(chalk.green('✅ .env.local文件已创建'))
+
+  let content = defaultEnvContent
+  if (existsSync(devEnvPath)) {
+    const devContent = readFileSync(devEnvPath, 'utf8')
+    content += (content.endsWith('\n') ? '' : '\n') + devContent
+  }
+
+  writeFileSync(devLocalEnvPath, content, 'utf8')
+  if (existsSync(devEnvPath)) {
+    console.log(chalk.green('✨ 已创建 .env.development.local'))
+  } else {
+    console.log(chalk.yellow('⚠️ 未找到 .env.development，仅创建默认模板的 .env.development.local'))
+  }
+} catch (_error) {
+  console.log(chalk.red('\n❌ 处理 .env.development.local 文件失败。'))
+  process.exit(1)
 }

@@ -1,22 +1,23 @@
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { info } from '@tauri-apps/plugin-log'
+import { delay } from 'lodash-es'
+import { EventEnum, IsYesEnum, MittEnum, ThemeEnum } from '@/enums'
+import { useMitt } from '@/hooks/useMitt.ts'
+import { useTauriListener } from '@/hooks/useTauriListener'
 import { useWindow } from '@/hooks/useWindow.ts'
+import router from '@/router'
+import apis from '@/services/apis.ts'
+import type { BadgeType, UserInfoType } from '@/services/types.ts'
+import { useCachedStore } from '@/stores/cached.ts'
+import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
+import { useMenuTopStore } from '@/stores/menuTop.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
-import { useCachedStore } from '@/stores/cached.ts'
 import { useUserStatusStore } from '@/stores/userStatus.ts'
-import { EventEnum, IsYesEnum, MittEnum, ThemeEnum } from '@/enums'
-import { BadgeType, UserInfoType } from '@/services/types.ts'
-import { useMitt } from '@/hooks/useMitt.ts'
-import apis from '@/services/apis.ts'
-import { delay } from 'lodash-es'
-import router from '@/router'
-import { useMenuTopStore } from '@/stores/menuTop.ts'
-import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
-import { useTauriListener } from '@/hooks/useTauriListener'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 
 export const leftHook = () => {
   const appWindow = WebviewWindow.getCurrent()
-  const { pushListeners } = useTauriListener()
+  const { addListener } = useTauriListener()
   const prefers = matchMedia('(prefers-color-scheme: dark)')
   const { createWebviewWindow } = useWindow()
   const settingStore = useSettingStore()
@@ -121,7 +122,7 @@ export const leftHook = () => {
       nextTick(() => {
         window.$message.success('佩戴成功')
       })
-    } catch (error) {
+    } catch (_error) {
       window.$message.error('佩戴失败，请稍后重试')
     }
   }
@@ -147,7 +148,8 @@ export const leftHook = () => {
   ) => {
     if (window) {
       delay(async () => {
-        await createWebviewWindow(
+        info(`打开窗口: ${title}`)
+        const webview = await createWebviewWindow(
           title!,
           url,
           <number>size?.width,
@@ -156,6 +158,12 @@ export const leftHook = () => {
           window?.resizable,
           <number>size?.minWidth
         )
+        openWindowsList.value.add(url)
+
+        const unlisten = await webview.onCloseRequested(() => {
+          openWindowsList.value.delete(url)
+          unlisten()
+        })
       }, 300)
     } else {
       activeUrl.value = url
@@ -197,16 +205,20 @@ export const leftHook = () => {
     useMitt.on(MittEnum.TO_SEND_MSG, (event: any) => {
       activeUrl.value = event.url
     })
-    await pushListeners([
+    addListener(
       appWindow.listen(EventEnum.WIN_SHOW, (e) => {
         // 如果已经存在就不添加
         if (openWindowsList.value.has(e.payload)) return
         openWindowsList.value.add(e.payload)
       }),
+      EventEnum.WIN_SHOW
+    )
+    addListener(
       appWindow.listen(EventEnum.WIN_CLOSE, (e) => {
         openWindowsList.value.delete(e.payload)
-      })
-    ])
+      }),
+      EventEnum.WIN_CLOSE
+    )
   })
 
   onUnmounted(() => {

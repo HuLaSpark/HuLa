@@ -1,14 +1,15 @@
 import { emit } from '@tauri-apps/api/event'
-import { EventEnum, MittEnum, RoomTypeEnum, SessionOperateEnum, NotificationTypeEnum } from '@/enums'
-import { useMitt } from '@/hooks/useMitt.ts'
-import { SessionItem } from '@/services/types.ts'
-import { useSettingStore } from '@/stores/setting.ts'
-import { useGlobalStore } from '@/stores/global.ts'
-import { useChatStore } from '@/stores/chat.ts'
-import { useTauriListener } from './useTauriListener'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { EventEnum, MittEnum, NotificationTypeEnum, RoomTypeEnum, SessionOperateEnum } from '@/enums'
+import { useMitt } from '@/hooks/useMitt.ts'
 import apis from '@/services/apis'
+import type { SessionItem } from '@/services/types.ts'
+import { useChatStore } from '@/stores/chat.ts'
 import { useContactStore } from '@/stores/contacts.ts'
+import { useGlobalStore } from '@/stores/global.ts'
+import { useSettingStore } from '@/stores/setting.ts'
+import { invokeWithErrorHandler } from '../utils/TauriInvokeHandler'
+import { useTauriListener } from './useTauriListener'
 
 const msgBoxShow = ref(false)
 /** 独立窗口的集合 */
@@ -17,7 +18,7 @@ const shrinkStatus = ref(false)
 const itemRef = ref<SessionItem>()
 export const useMessage = () => {
   const route = useRoute()
-  const { pushListeners } = useTauriListener()
+  const { addListener } = useTauriListener()
   const globalStore = useGlobalStore()
   const chatStore = useChatStore()
   const settingStore = useSettingStore()
@@ -42,10 +43,10 @@ export const useMessage = () => {
 
     // 只有在消息页面且有未读消息时，才标记为已读
     if (route.path === '/message' && item.unreadCount > 0) {
-      apis.markMsgRead({ roomId: item.roomId || '1' }).then(() => {
+      apis.markMsgRead({ roomId: item.roomId || '1' }).then(async () => {
         chatStore.markSessionRead(item.roomId || '1')
         // 更新全局未读计数
-        globalStore.updateGlobalUnreadCount()
+        await globalStore.updateGlobalUnreadCount()
       })
     }
   }
@@ -63,8 +64,9 @@ export const useMessage = () => {
 
     chatStore.removeContact(roomId)
     // TODO: 使用隐藏会话接口
-    const res = await apis.hideSession({ roomId, hide: true })
-    console.log(res, roomId)
+    // const res = await apis.hideSession({ roomId, hide: true })
+    await invokeWithErrorHandler('hide_contact_command', { data: { roomId, hide: true } })
+    // console.log(res, roomId)
 
     // 如果不是当前选中的会话，直接返回
     if (!isCurrentSession) {
@@ -329,16 +331,20 @@ export const useMessage = () => {
 
   onMounted(async () => {
     const appWindow = WebviewWindow.getCurrent()
-    await pushListeners([
+    addListener(
       appWindow.listen(EventEnum.ALONE, () => {
         emit(EventEnum.ALONE + itemRef.value?.roomId, itemRef.value)
         if (aloneWin.value.has(EventEnum.ALONE + itemRef.value?.roomId)) return
         aloneWin.value.add(EventEnum.ALONE + itemRef.value?.roomId)
       }),
+      EventEnum.ALONE
+    )
+    addListener(
       appWindow.listen(EventEnum.WIN_CLOSE, (e) => {
         aloneWin.value.delete(e.payload)
-      })
-    ])
+      }),
+      EventEnum.WIN_CLOSE
+    )
   })
 
   onBeforeUnmount(() => {

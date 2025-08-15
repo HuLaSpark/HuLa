@@ -37,9 +37,9 @@
 </template>
 
 <script setup lang="ts">
-import type { ImageBody } from '@/services/types'
 import { MsgEnum } from '@/enums/index'
 import { useImageViewer } from '@/hooks/useImageViewer'
+import type { ImageBody } from '@/services/types'
 
 const props = defineProps<{ body: ImageBody }>()
 // 图片显示相关常量

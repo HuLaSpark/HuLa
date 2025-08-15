@@ -1,7 +1,7 @@
 <template>
-  <!-- 消息列表 // TODO 使用虚拟列表组件就用不了动画和拖动了 (nyh -> 2024-03-28 06:01:00) -->
+  <!-- 会话列表 // TODO 使用虚拟列表组件就用不了动画和拖动了 (nyh -> 2024-03-28 06:01:00) -->
   <n-scrollbar ref="msg-scrollbar" style="max-height: calc(100vh - 70px)">
-    <!--  右键菜单组件  -->
+    <!--  会话列表  -->
     <div v-if="sessionList.length > 0" class="p-[4px_10px_0px_8px]">
       <ContextMenu
         v-for="item in sessionList"
@@ -22,8 +22,9 @@
           <n-avatar
             style="border: 1px solid var(--avatar-border-color)"
             :size="44"
+            :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+            :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
             :src="AvatarUtils.getAvatarUrl(item.avatar)"
-            fallback-src="/logo.png"
             round />
 
           <n-flex class="h-fit flex-1 truncate" justify="space-between" vertical>
@@ -108,27 +109,29 @@
   </n-scrollbar>
 </template>
 <script lang="ts" setup name="message">
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import SysNTF from '@/components/common/SystemNotification.tsx'
+import { MittEnum, RoomTypeEnum, ThemeEnum } from '@/enums'
+import { useUserInfo } from '@/hooks/useCached.ts'
+import { useCommon } from '@/hooks/useCommon.ts'
 import { useMessage } from '@/hooks/useMessage.ts'
-import { MittEnum, RoomTypeEnum } from '@/enums'
-import { IsAllUserEnum, SessionItem } from '@/services/types.ts'
-import { formatTimestamp } from '@/utils/ComputedTime.ts'
+import { useMitt } from '@/hooks/useMitt'
+import { useReplaceMsg } from '@/hooks/useReplaceMsg.ts'
+import { useTauriListener } from '@/hooks/useTauriListener'
+import { IsAllUserEnum, type SessionItem } from '@/services/types.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global.ts'
-import { useUserInfo } from '@/hooks/useCached.ts'
-import { useReplaceMsg } from '@/hooks/useReplaceMsg.ts'
-import { useCommon } from '@/hooks/useCommon.ts'
-import SysNTF from '@/components/common/SystemNotification.tsx'
-import { AvatarUtils } from '@/utils/AvatarUtils'
 import { useGroupStore } from '@/stores/group.ts'
-import { useMitt } from '@/hooks/useMitt'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { useTauriListener } from '@/hooks/useTauriListener'
+import { useSettingStore } from '@/stores/setting'
+import { AvatarUtils } from '@/utils/AvatarUtils'
+import { formatTimestamp } from '@/utils/ComputedTime.ts'
 
 const appWindow = WebviewWindow.getCurrent()
-const { addListener } = useTauriListener()
 const chatStore = useChatStore()
 const globalStore = useGlobalStore()
 const groupStore = useGroupStore()
+const settingStore = useSettingStore()
+const { themes } = storeToRefs(settingStore)
 const { openMsgSession } = useCommon()
 const msgScrollbar = useTemplateRef<HTMLElement>('msg-scrollbar')
 const { handleMsgClick, handleMsgDelete, menuList, specialMenuList, handleMsgDblclick } = useMessage()
@@ -231,15 +234,18 @@ onBeforeMount(async () => {
   useMitt.emit(MittEnum.LOCATE_SESSION, { roomId: currentSession.value.roomId })
 })
 
-onMounted(() => {
+const { addListener } = useTauriListener()
+onMounted(async () => {
   SysNTF
   // 监听其他窗口发来的WebSocket发送请求
   // TODO：频繁切换会话会导致频繁请求，切换的时候也会有点卡顿
-  addListener(
-    appWindow.listen('search_to_msg', (event: { payload: { uid: string; roomType: number } }) => {
-      openMsgSession(event.payload.uid, event.payload.roomType)
-    })
-  )
+  if (appWindow.label === 'home') {
+    addListener(
+      appWindow.listen('search_to_msg', (event: { payload: { uid: string; roomType: number } }) => {
+        openMsgSession(event.payload.uid, event.payload.roomType)
+      })
+    )
+  }
   useMitt.on(MittEnum.DELETE_SESSION, async (roomId: string) => {
     await handleMsgDelete(roomId)
   })

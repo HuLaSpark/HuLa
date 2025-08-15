@@ -142,12 +142,12 @@
   </div>
 </template>
 <script setup lang="ts">
-import { PluginEnum } from '@/enums'
-import { pluginsList } from '@/layout/left/config.tsx'
-import { useSettingStore } from '@/stores/setting.ts'
-import { usePluginsStore } from '@/stores/plugins.ts'
 import { emitTo } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { PluginEnum } from '@/enums'
+import { pluginsList } from '@/layout/left/config.tsx'
+import { usePluginsStore } from '@/stores/plugins.ts'
+import { useSettingStore } from '@/stores/setting.ts'
 
 const appWindow = WebviewWindow.getCurrent()
 const settingStore = useSettingStore()
@@ -184,7 +184,7 @@ const handleUnload = (plugin: STO.Plugins<PluginEnum>) => {
 }
 
 const handleDelete = (p: STO.Plugins<PluginEnum>) => {
-  let plugin = plugins.value.find((i) => i.title === p.title)
+  const plugin = plugins.value.find((i) => i.title === p.title)
   if (plugin) {
     setTimeout(() => {
       pluginsStore.updatePlugin({ ...plugin, isAdd: false })
@@ -195,7 +195,7 @@ const handleDelete = (p: STO.Plugins<PluginEnum>) => {
 }
 
 const handleAdd = (p: STO.Plugins<PluginEnum>) => {
-  let plugin = plugins.value.find((i) => i.title === p.title)
+  const plugin = plugins.value.find((i) => i.title === p.title)
   if (plugin) {
     setTimeout(() => {
       pluginsStore.updatePlugin({ ...plugin, isAdd: true })

@@ -21,19 +21,21 @@ export enum RCodeEnum {
 /**URL*/
 export enum URLEnum {
   /**用户*/
-  USER = '/user',
+  USER = '/im/user',
   /**Token*/
-  TOKEN = '/token',
+  TOKEN = '/oauth',
   /**聊天*/
-  CHAT = '/chat',
+  CHAT = '/im/chat',
   /**房间*/
-  ROOM = '/room',
+  ROOM = '/im/room',
   /**oss*/
   OSS = '/oss',
   /**系统*/
   SYSTEM = '/system',
   /**验证码*/
-  CAPTCHA = '/captcha'
+  CAPTCHA = '/im/captcha',
+  /**消息推送服务前缀*/
+  WEBSOCKET = '/ws'
 }
 
 /** tauri原生跨窗口通信时传输的类型 */
@@ -159,7 +161,9 @@ export enum StoresEnum {
   /** 文件下载管理 */
   FILE_DOWNLOAD = 'fileDownload',
   /** 移动端状态 */
-  MOBILE = 'mobile'
+  MOBILE = 'mobile',
+  /** 目录扫描器 */
+  SCANNER = 'scanner'
 }
 
 /**
@@ -167,37 +171,41 @@ export enum StoresEnum {
  * todo: 后续需要补充
  */
 export enum MsgEnum {
-  /** 未知 */
+  /** 未知 0*/
   UNKNOWN,
-  /** 文本 */
+  /** 文本 1*/
   TEXT,
-  /** 撤回 */
+  /** 撤回 2*/
   RECALL,
-  /** 图片 */
+  /** 图片 3*/
   IMAGE,
-  /** 文件 */
+  /** 文件 4*/
   FILE,
-  /** 语音 */
+  /** 语音 5*/
   VOICE,
-  /** 视频 */
+  /** 视频 6*/
   VIDEO,
-  /** 表情包 */
+  /** 表情包 7*/
   EMOJI,
-  /** 系统消息 */
+  /** 系统消息 8*/
   SYSTEM,
-  /** 合并消息 */
+  /** 合并消息 9*/
   MERGE,
-  /** 公告 */
+  /** 公告 10*/
   NOTICE,
-  /** 机器人 */
+  /** 机器人 11*/
   BOT,
-  /** 混合 */
+  /** 视频通话 12*/
+  VIDEO_CALL,
+  /** 语音通话 13*/
+  AUDIO_CALL,
+  /** 混合 14*/
   MIXED,
-  /** 艾特 */
+  /** 艾特 15*/
   AIT,
-  /** 回复 */
+  /** 回复 16*/
   REPLY,
-  /** AI */
+  /** AI 17*/
   AI
 }
 
@@ -416,7 +424,7 @@ export enum MessageStatusEnum {
 }
 
 /** 触发类型枚举 */
-export const enum TriggerEnum {
+export enum TriggerEnum {
   MENTION = '@',
   AI = '/',
   TOPIC = '#'
@@ -481,5 +489,26 @@ export enum TauriCommand {
   /** 发送消息 */
   SEND_MSG = 'send_msg',
   /** 保存消息 */
-  SAVE_MSG = 'save_msg'
+  SAVE_MSG = 'save_msg',
+  /** 保存消息标记 */
+  SAVE_MESSAGE_MARK = 'save_message_mark',
+  /** 更新 token */
+  UPDATE_TOKEN = 'update_token'
+}
+
+// 通话状态枚举
+export enum RTCCallStatus {
+  CALLING = 1, // 呼叫
+  ACCEPT = 2, // 接听
+  END = 3, // 结束
+  REJECT = 4, // 拒绝
+  ERROR = 5, // 错误中断
+  BUSY = 6, // 忙线中
+  CANCEL = 7 // 取消
+}
+
+// 通话类型枚举
+export enum CallTypeEnum {
+  AUDIO = 1, // 语音通话
+  VIDEO = 2 // 视频通话
 }

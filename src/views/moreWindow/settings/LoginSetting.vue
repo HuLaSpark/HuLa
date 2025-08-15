@@ -26,8 +26,8 @@
 </template>
 
 <script setup lang="ts">
+import { disable, enable, isEnabled } from '@tauri-apps/plugin-autostart'
 import { useSettingStore } from '@/stores/setting.ts'
-import { enable, isEnabled, disable } from '@tauri-apps/plugin-autostart'
 
 const settingStore = useSettingStore()
 const { login } = storeToRefs(settingStore)

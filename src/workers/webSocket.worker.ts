@@ -21,9 +21,6 @@ let heartbeatLoggingEnabled = false
 
 // ws instance
 let connection: WebSocket
-
-// 重连次数上限
-const reconnectCountMax = 5
 let reconnectCount = 0
 // 重连锁
 let lockReconnect = false
@@ -266,7 +263,7 @@ const getBackoffDelay = (retryCount: number) => {
   const baseDelay = 1000 // 基础延迟1秒
   const maxDelay = 15000 // 减少最大延迟到15秒
   const multiplier = Math.min(1.5, 2 - retryCount * 0.1)
-  const delay = Math.min(baseDelay * Math.pow(multiplier, retryCount), maxDelay)
+  const delay = Math.min(baseDelay * multiplier ** retryCount, maxDelay)
 
   // 减少随机抖动范围
   return delay + Math.random() * 500
@@ -275,16 +272,6 @@ const getBackoffDelay = (retryCount: number) => {
 const onCloseHandler = () => {
   clearHeartPackTimer()
   if (lockReconnect) return
-
-  // 重连次数限制检查
-  if (reconnectCount >= reconnectCountMax) {
-    console.log('达到最大重连次数，停止重连')
-    postMsg({
-      type: WorkerMsgEnum.WS_ERROR,
-      value: { msg: '连接失败次数过多，请刷新页面重试' }
-    })
-    return
-  }
 
   updateConnectionState(ConnectionState.RECONNECTING)
   lockReconnect = true
@@ -400,8 +387,8 @@ const initConnection = () => {
   // 建立链接
   // 本地配置到 .env 里面修改。生产配置在 .env.production 里面
   try {
-    connection = new WebSocket(`${serverUrl}?clientId=${clientId}${token ? `&token=${token}` : ''}`)
-  } catch (err) {
+    connection = new WebSocket(`${serverUrl}?clientId=${clientId}${token ? `&Token=${token}` : ''}`)
+  } catch (_err) {
     console.log('🚀 创建 WebSocket 链接失败')
     postMsg({ type: WorkerMsgEnum.WS_ERROR, value: { msg: '创建 WebSocket 链接失败' } })
   }
@@ -450,18 +437,9 @@ self.onmessage = (e: MessageEvent<string>) => {
     case 'reconnectTimeout': {
       console.log('重试次数: ', value.reconnectCount)
       reconnectCount = value.reconnectCount + 1
-      // 如果没有超过最大重连次数才继续重连
-      if (reconnectCount < reconnectCountMax) {
-        console.log('重连中，当前clientId:', clientId, '当前token状态:', token ? '存在' : '不存在')
-        initConnection()
-        lockReconnect = false
-      } else {
-        console.log('达到最大重连次数，停止重连')
-        postMsg({
-          type: WorkerMsgEnum.WS_ERROR,
-          value: { msg: '连接失败次数过多，请刷新页面重试' }
-        })
-      }
+      console.log('重连中，当前clientId:', clientId, '当前token状态:', token ? '存在' : '不存在')
+      initConnection()
+      lockReconnect = false
       break
     }
     // 心跳定时器触发

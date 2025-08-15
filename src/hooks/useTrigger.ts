@@ -1,4 +1,4 @@
-import { Ref, nextTick } from 'vue'
+import { nextTick, type Ref } from 'vue'
 import { TriggerEnum } from '@/enums'
 
 // 添加选择器常量
@@ -48,6 +48,7 @@ export const useTrigger = (
     const res = context.range.getBoundingClientRect()
     await nextTick(() => {
       const dom = document.querySelector(SELECTORS.MENTION) as HTMLElement
+      if (!dom) return
       dom.style.position = 'fixed'
       dom.style.height = 'auto'
       dom.style.maxHeight = '190px'
@@ -69,6 +70,7 @@ export const useTrigger = (
     const res = context.range.getBoundingClientRect()
     await nextTick(() => {
       const dom = document.querySelector(SELECTORS.AI) as HTMLElement
+      if (!dom) return
       dom.style.position = 'fixed'
       dom.style.height = 'auto'
       dom.style.maxHeight = '190px'
@@ -90,6 +92,7 @@ export const useTrigger = (
     const res = context.range.getBoundingClientRect()
     await nextTick(() => {
       const dom = document.querySelector(SELECTORS.TOPIC) as HTMLElement
+      if (!dom) return
       dom.style.position = 'fixed'
       dom.style.height = 'auto'
       dom.style.maxHeight = '190px'

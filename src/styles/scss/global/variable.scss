@@ -9,6 +9,10 @@ svg {
   outline: none;
   overscroll-behavior: none; // 禁止mac的"触底反弹"效果
 }
+
+::selection {
+  background: rgba(19, 152, 127, 0.3); /** 输入框选中文本背景色 */
+}
 /**! 主题变量 */
 /* todo: 这里只需要定义单个颜色的变量即可无需重复定义组件的颜色 */
 :root {
@@ -117,6 +121,11 @@ svg {
   --group-notice-list-bg: #ffffffb6;
   // 文件文本的背景颜色
   --file-bg-color: #fdfdfd;
+  // 安全区域默认预设
+  --safe-area-inset-top: 16px;
+  --safe-area-inset-right: 0px;
+  --safe-area-inset-bottom: 16px;
+  --safe-area-inset-left: 0px;
 }
 
 html[data-theme='dark'] {

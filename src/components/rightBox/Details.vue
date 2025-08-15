@@ -195,17 +195,17 @@
   </div>
 </template>
 <script setup lang="ts">
+import { ErrorType } from '@/common/exception'
 import { RoomTypeEnum, TauriCommand } from '@/enums'
 import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
-import { AvatarUtils } from '@/utils/AvatarUtils'
-import apis from '@/services/apis.ts'
 import { useWindow } from '@/hooks/useWindow'
-import { useImageViewer } from '@/stores/imageViewer'
+import apis from '@/services/apis.ts'
 import type { UserItem } from '@/services/types'
-import { useCachedStore } from '~/src/stores/cached'
+import { useCachedStore } from '@/stores/cached'
+import { useImageViewer } from '@/stores/imageViewer'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
-import { ErrorType } from '@/common/exception'
 
 const { openMsgSession } = useCommon()
 const { createWebviewWindow } = useWindow()

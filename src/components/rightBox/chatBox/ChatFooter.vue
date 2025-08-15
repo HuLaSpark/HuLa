@@ -1,6 +1,10 @@
 <template>
   <!-- 底部栏 -->
-  <main class="border-t-(1px solid [--right-chat-footer-line-color]) relative">
+  <main class="border-t-(1px solid [--right-chat-footer-line-color]) relative" :style="{ height: `${footerHeight}px` }">
+    <!-- 拖拽手柄 -->
+    <div class="resize-handle" :class="{ dragging: isDragging }" @mousedown="startDrag">
+      <div class="resize-indicator"></div>
+    </div>
     <!-- 添加遮罩层 -->
     <div
       v-if="isSingleChat && !isFriend"
@@ -11,9 +15,9 @@
       </n-flex>
     </div>
 
-    <div class="size-full relative z-10 color-[--icon-color]">
+    <div class="size-full relative z-60 color-[--icon-color] flex flex-col">
       <!-- 输入框顶部选项栏 -->
-      <n-flex align="center" justify="space-between" class="p-[10px_22px_5px] select-none">
+      <n-flex align="center" justify="space-between" class="p-[10px_22px_5px] select-none flex-shrink-0">
         <n-flex align="center" :size="0" class="input-options">
           <!-- emoji表情 -->
           <n-popover
@@ -86,18 +90,6 @@
             </template>
             <span>图片</span>
           </n-popover>
-          <!--        <n-popover trigger="hover" :show-arrow="false" placement="bottom">-->
-          <!--          <template #trigger>-->
-          <!--            <svg class="mr-18px"><use href="#shake"></use></svg>-->
-          <!--          </template>-->
-          <!--          <span>窗口抖动</span>-->
-          <!--        </n-popover>-->
-          <!--        <n-popover trigger="hover" :show-arrow="false" placement="bottom">-->
-          <!--          <template #trigger>-->
-          <!--            <svg class="mr-18px"><use href="#red-packet"></use></svg>-->
-          <!--          </template>-->
-          <!--          <span>红包</span>-->
-          <!--        </n-popover>-->
           <n-popover trigger="hover" :show-arrow="false" placement="bottom">
             <template #trigger>
               <svg @click="handleVoiceRecord" class="mr-18px"><use href="#voice"></use></svg>
@@ -114,30 +106,39 @@
         </n-popover>
       </n-flex>
 
-      <!-- 输入框及其发送按钮 -->
-      <div class="pl-20px flex flex-col items-end gap-6px">
-        <MsgInput ref="MsgInputRef" />
+      <!-- 输入框区域 -->
+      <div class="flex-1 pl-20px flex flex-col">
+        <MsgInput ref="MsgInputRef" :height="inputAreaHeight" />
       </div>
     </div>
   </main>
 </template>
 
 <script setup lang="ts">
+import { emitTo } from '@tauri-apps/api/event'
+import { join } from '@tauri-apps/api/path'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { open } from '@tauri-apps/plugin-dialog'
 import { copyFile, readFile } from '@tauri-apps/plugin-fs'
+import {
+  CHAT_HEADER_HEIGHT,
+  CHAT_MAIN_MIN_HEIGHT,
+  MIN_FOOTER_HEIGHT,
+  MIN_INPUT_HEIGHT,
+  SEND_BUTTON_AREA_HEIGHT,
+  TOOLBAR_HEIGHT
+} from '@/common/constants'
 import { MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
-import { SelectionRange, useCommon } from '@/hooks/useCommon.ts'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { emitTo } from '@tauri-apps/api/event'
-import { useGlobalStore } from '@/stores/global.ts'
+import { useChatLayoutGlobal } from '@/hooks/useChatLayout'
+import { type SelectionRange, useCommon } from '@/hooks/useCommon.ts'
+import { useMitt } from '@/hooks/useMitt'
 import type { ContactItem, FilesMeta, SessionItem } from '@/services/types'
 import { useContactStore } from '@/stores/contacts'
+import { useGlobalStore } from '@/stores/global.ts'
 import { useHistoryStore } from '@/stores/history'
-import { useMitt } from '@/hooks/useMitt'
+import { useUserStore } from '@/stores/user'
 import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
 import { getFilesMeta, getUserAbsoluteVideosDir } from '@/utils/PathUtil'
-import { useUserStore } from '@/stores/user'
-import { join } from '@tauri-apps/api/path'
 
 const { detailId } = defineProps<{
   detailId: SessionItem['detailId']
@@ -154,6 +155,115 @@ const recentEmojis = computed(() => {
 })
 const { insertNodeAtRange, triggerInputEvent, processFiles, imgPaste } = useCommon()
 const userStore = useUserStore()?.userInfo
+
+// 使用全局布局状态
+const { footerHeight, setFooterHeight } = useChatLayoutGlobal()
+
+// 拖拽调整高度相关
+const isDragging = ref(false)
+const startY = ref(0)
+const startHeight = ref(0)
+// 性能优化相关
+let rafId: number | null = null
+
+// 容器高度响应式状态
+const containerHeight = ref(600) // 默认高度
+
+// 动态计算最大高度，确保ChatMain不小于230px
+const maxHeight = computed(() => {
+  // 最大footer高度 = 总高度 - ChatHeader高度 - ChatMain最小高度
+  const calculatedMaxHeight = containerHeight.value - CHAT_HEADER_HEIGHT - CHAT_MAIN_MIN_HEIGHT
+
+  // 确保最大高度不超过合理范围，也不小于最小高度
+  return Math.max(Math.min(calculatedMaxHeight, 400), MIN_FOOTER_HEIGHT)
+})
+
+// 输入框区域高度计算（总高度减去顶部选项栏高度）
+const inputAreaHeight = computed(() => {
+  return Math.max(footerHeight.value - TOOLBAR_HEIGHT, SEND_BUTTON_AREA_HEIGHT + MIN_INPUT_HEIGHT)
+})
+
+// 监听maxHeight变化，确保footerHeight不超过最大值（即时响应）
+watch(
+  maxHeight,
+  (newMaxHeight) => {
+    if (footerHeight.value > newMaxHeight) {
+      setFooterHeight(newMaxHeight)
+    }
+  },
+  {
+    immediate: true,
+    flush: 'sync' // 同步执行，确保最快响应速度
+  }
+)
+
+// ResizeObserver实例
+let resizeObserver: ResizeObserver | null = null
+// 高效的尺寸变化监听
+const observeContainerResize = () => {
+  const chatContainer = document.querySelector('.h-full') || document.querySelector('[data-chat-container]')
+  if (!chatContainer) return
+
+  // 创建ResizeObserver实例
+  resizeObserver = new ResizeObserver((entries) => {
+    for (const entry of entries) {
+      // 使用contentRect获取更精确的尺寸
+      const newHeight = entry.contentRect.height || entry.target.clientHeight
+      if (newHeight !== containerHeight.value) {
+        containerHeight.value = newHeight
+      }
+    }
+  })
+
+  // 开始观察容器尺寸变化
+  resizeObserver.observe(chatContainer)
+
+  // 设置初始高度
+  containerHeight.value = (chatContainer as HTMLElement).clientHeight
+}
+
+const startDrag = (e: MouseEvent) => {
+  isDragging.value = true
+  startY.value = e.clientY
+  startHeight.value = footerHeight.value
+
+  document.addEventListener('mousemove', onDrag)
+  document.addEventListener('mouseup', endDrag)
+  document.body.style.userSelect = 'none'
+  e.preventDefault()
+}
+
+const onDrag = (e: MouseEvent) => {
+  if (!isDragging.value) return
+
+  const deltaY = startY.value - e.clientY
+  const newHeight = Math.min(Math.max(startHeight.value + deltaY, MIN_FOOTER_HEIGHT), maxHeight.value)
+
+  // 取消之前的动画帧
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId)
+  }
+
+  // 使用 requestAnimationFrame 优化DOM更新
+  rafId = requestAnimationFrame(() => {
+    setFooterHeight(newHeight)
+
+    rafId = null
+  })
+}
+
+const endDrag = () => {
+  isDragging.value = false
+  document.removeEventListener('mousemove', onDrag)
+  document.removeEventListener('mouseup', endDrag)
+  document.body.style.userSelect = ''
+
+  // 清理性能优化相关状态
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId)
+    rafId = null
+  }
+}
 
 /**
  * 检查字符串是否为URL
@@ -219,7 +329,7 @@ const handleFileOpen = async () => {
       selected.map(async (path) => {
         const fileData = await readFile(path)
         const fileName = extractFileName(path)
-        const blob = new Blob([fileData])
+        const blob = new Blob([new Uint8Array(fileData)])
 
         // 找到对应路径的文件，并且获取其类型
         const fileMeta = filesMeta.find((f) => f.path === path)
@@ -253,7 +363,7 @@ const handleImageOpen = async () => {
       const fileName = extractFileName(path)
       const mimeType = getMimeTypeFromExtension(fileName)
 
-      const blob = new Blob([fileData], { type: mimeType })
+      const blob = new Blob([new Uint8Array(fileData)], { type: mimeType })
       return new File([blob], fileName, { type: mimeType })
     })
 
@@ -419,7 +529,7 @@ const updateRecentEmojis = (emoji: string) => {
 }
 
 const handleCap = async () => {
-  let captureWindow = await WebviewWindow.getByLabel('capture')
+  const captureWindow = await WebviewWindow.getByLabel('capture')
   captureWindow?.show()
   await emitTo('capture', 'capture', true)
 }
@@ -430,8 +540,40 @@ const handleVoiceRecord = () => {
 }
 
 onMounted(async () => {
+  await nextTick()
+  // 启动高效的容器尺寸监听
+  observeContainerResize()
+
+  // 确保初始化时全局状态有正确的footer高度
+  if (footerHeight.value < 200) {
+    // 设置初始高度为200px，但不能小于最小高度要求
+    const initialHeight = Math.max(200, MIN_FOOTER_HEIGHT)
+    setFooterHeight(initialHeight)
+  }
+
   if (MsgInputRef.value) {
     msgInputDom.value = MsgInputRef.value.messageInputDom
+  }
+})
+
+onUnmounted(() => {
+  // 清理拖拽相关监听器
+  if (isDragging.value) {
+    document.removeEventListener('mousemove', onDrag)
+    document.removeEventListener('mouseup', endDrag)
+    document.body.style.userSelect = ''
+  }
+
+  // 清理性能优化相关
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId)
+    rafId = null
+  }
+
+  // 清理ResizeObserver
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+    resizeObserver = null
   }
 })
 </script>
@@ -445,6 +587,76 @@ onMounted(async () => {
     &:hover {
       color: #13987f;
     }
+  }
+}
+
+.resize-handle {
+  position: absolute;
+  top: -8px;
+  left: 0;
+  right: 0;
+  height: 16px;
+  cursor: ns-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+
+  &:hover {
+    .resize-indicator {
+      opacity: 0.8;
+      transform: scaleY(1.2);
+    }
+  }
+
+  &.dragging {
+    .resize-indicator {
+      opacity: 1;
+      transform: scaleY(1.2);
+      background: #13987f80;
+
+      &::before,
+      &::after {
+        opacity: 1;
+        background: #13987f80;
+      }
+    }
+  }
+}
+
+.resize-indicator {
+  width: 40px;
+  height: 3px;
+  background: #909090;
+  border-radius: 2px;
+  opacity: 0.3;
+  transition: all 0.2s ease;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 1px;
+    background: var(--icon-color, #666);
+    border-radius: 1px;
+    opacity: 0.5;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 1px;
+    background: var(--icon-color, #666);
+    border-radius: 1px;
+    opacity: 0.5;
   }
 }
 

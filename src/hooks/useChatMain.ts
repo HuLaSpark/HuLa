@@ -1,32 +1,31 @@
-import { useCommon } from '@/hooks/useCommon.ts'
-import { MittEnum, MsgEnum, PowerEnum, RoleEnum, RoomTypeEnum } from '@/enums'
-import { FilesMeta, MessageType, RightMouseMessageItem } from '@/services/types.ts'
-import { useMitt } from '@/hooks/useMitt.ts'
-import { useChatStore } from '@/stores/chat.ts'
-import apis from '@/services/apis.ts'
-import { useContactStore } from '@/stores/contacts'
-import { useUserStore } from '@/stores/user'
-import { useGlobalStore } from '@/stores/global.ts'
-import { isDiffNow } from '@/utils/ComputedTime.ts'
-import { writeText, writeImage } from '@tauri-apps/plugin-clipboard-manager'
-import { detectImageFormat, imageUrlToUint8Array, isImageUrl } from '@/utils/ImageUtils'
-import { translateText } from '@/services/translate'
-import { useSettingStore } from '@/stores/setting.ts'
+import { join, resourceDir } from '@tauri-apps/api/path'
+import { writeImage, writeText } from '@tauri-apps/plugin-clipboard-manager'
 import { save } from '@tauri-apps/plugin-dialog'
+import { BaseDirectory } from '@tauri-apps/plugin-fs'
 import { revealItemInDir } from '@tauri-apps/plugin-opener'
 import { type } from '@tauri-apps/plugin-os'
-import { BaseDirectory } from '@tauri-apps/plugin-fs'
-import { resourceDir } from '@tauri-apps/api/path'
-import { join } from '@tauri-apps/api/path'
+import type { FileTypeResult } from 'file-type'
+import { MittEnum, MsgEnum, PowerEnum, RoleEnum, RoomTypeEnum } from '@/enums'
+import { useCommon } from '@/hooks/useCommon.ts'
 import { useDownload } from '@/hooks/useDownload'
-import { useGroupStore } from '@/stores/group'
-import { useWindow } from './useWindow'
-import { useEmojiStore } from '@/stores/emoji'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { useVideoViewer } from '@/hooks/useVideoViewer'
-import { FileDownloadStatus, useFileDownloadStore } from '@/stores/fileDownload'
+import apis from '@/services/apis.ts'
+import { translateText } from '@/services/translate'
+import type { FilesMeta, MessageType, RightMouseMessageItem } from '@/services/types.ts'
+import { useChatStore } from '@/stores/chat.ts'
+import { useContactStore } from '@/stores/contacts'
+import { useEmojiStore } from '@/stores/emoji'
+import { type FileDownloadStatus, useFileDownloadStore } from '@/stores/fileDownload'
+import { useGlobalStore } from '@/stores/global.ts'
+import { useGroupStore } from '@/stores/group'
+import { useSettingStore } from '@/stores/setting.ts'
+import { useUserStore } from '@/stores/user'
+import { isDiffNow } from '@/utils/ComputedTime.ts'
 import { extractFileName, removeTag } from '@/utils/Formatting'
+import { detectImageFormat, imageUrlToUint8Array, isImageUrl } from '@/utils/ImageUtils'
 import { detectRemoteFileType, getFilesMeta, getUserAbsoluteVideosDir } from '@/utils/PathUtil'
-import { FileTypeResult } from 'file-type'
+import { useWindow } from './useWindow'
 
 export const useChatMain = () => {
   const { openMsgSession, userUid } = useCommon()
@@ -573,7 +572,7 @@ export const useChatMain = () => {
         try {
           await groupStore.addAdmin([targetUid])
           window.$message.success('设置管理员成功')
-        } catch (error) {
+        } catch (_error) {
           window.$message.error('设置管理员失败')
         }
       },
@@ -618,7 +617,7 @@ export const useChatMain = () => {
         try {
           await groupStore.revokeAdmin([targetUid])
           window.$message.success('撤销管理员成功')
-        } catch (error) {
+        } catch (_error) {
           window.$message.error('撤销管理员失败')
         }
       },
@@ -668,7 +667,7 @@ export const useChatMain = () => {
           // 从群成员列表中移除该用户
           groupStore.filterUser(targetUid)
           window.$message.success('移出群聊成功')
-        } catch (error) {
+        } catch (_error) {
           window.$message.error('移出群聊失败')
         }
       },

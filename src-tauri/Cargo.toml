@@ -31,11 +31,11 @@ name = "hula_app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2.3.0", features = [] }
+tauri-build = { version = "2.3.1", features = [] }
 
 [dependencies]
 # Tauri 官方依赖
-tauri = { version = "2.6.2", features = [
+tauri = { version = "2.7.0", features = [
     "protocol-asset",
     "macos-private-api",
     "tray-icon",
@@ -57,6 +57,10 @@ tauri-plugin-clipboard-manager = "2"
 tauri-plugin-sql = { version = "2", features = ["sqlite"] }
 tauri-plugin-notification = "2"
 tauri-plugin-opener = "2"
+# tauri-plugin-devtools = "2"
+tauri-plugin-log = { version = "2", features = ["colored"] }
+tracing = "0.1"
+tracing-subscriber = "0.3.0"
 
 # Tauri 非官方依赖
 tauri-plugin-mic-recorder = "2"
@@ -66,9 +70,8 @@ async-walkdir = "2.0.0"
 moka = { version = "0.12.10", features = ["future"] }
 serde = { version = "1", features = ["derive"] }
 tokio = { version = "1.0.0", features = ["rt", "rt-multi-thread", "macros"] }
-tauri-plugin-devtools = "2.0.0"
 
-sea-orm = { version = "1.1.0", features = [ "sqlx-sqlite", "runtime-tokio-rustls", "macros" ] }
+sea-orm = { version = "1.1.0", features = [ "sqlx-sqlite", "runtime-tokio-rustls", "macros", "debug-print" ] }
 chrono = "0.4.41"
 
 entity = { path = "entity" }
@@ -77,23 +80,28 @@ anyhow = "1.0.98"
 thiserror = "2.0.12"
 config = { version = "0.15.11", default-features = false, features = ["yaml"] }
 http = "0.2"
-tauri-plugin-log = { version = "2.6.0", features = ["colored"] }
-log = "0.4"  # 基础日志接口
 lazy_static = "1.4"
 mime_guess = "2.0.5"
 base64 = "0.22.1"
 rodio = "0.17.3"
 image = { version = "0.25", features = ["jpeg", "png"] }
-reqwest = { version = "0.11", features = [
+reqwest = { version = "0.11", default-features = false, features = [
     "json",
     "socks",
     "rustls-tls",
     "blocking",
 ] }
 futures = "0.3"
+dotenv = "0.15.0"
 
-# 安卓的依赖
-[target."cfg(target_os = \"android\")".dependencies]
+# WebSocket 相关依赖
+tokio-tungstenite = { version = "0.23", features = ["rustls-tls-webpki-roots"] }
+futures-util = "0.3"
+url = "2.5"
+uuid = { version = "1.10", features = ["v4"] }
+
+# 移动端的依赖 (iOS 和 Android)
+[target."cfg(any(target_os = \"android\", target_os = \"ios\"))".dependencies]
 tauri-plugin-safe-area-insets = "0.1.0"
 
 # 不兼容移动端的依赖

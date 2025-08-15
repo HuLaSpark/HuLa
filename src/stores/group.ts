@@ -1,13 +1,13 @@
-import apis from '@/services/apis'
 import { defineStore } from 'pinia'
-import { useGlobalStore } from '@/stores/global'
-import type { GroupDetailReq, UserItem } from '@/services/types'
-import { useChatStore } from './chat'
 import { RoleEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
+import apis from '@/services/apis'
+import type { GroupDetailReq, UserItem } from '@/services/types'
+import type { OnStatusChangeType } from '@/services/wsType'
 import { useCachedStore } from '@/stores/cached'
+import { useGlobalStore } from '@/stores/global'
 import { useUserStore } from '@/stores/user'
-import { OnStatusChangeType } from '@/services/wsType'
-import { invokeWithErrorHandler, ErrorType } from '@/utils/TauriInvokeHandler.ts'
+import { ErrorType, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler.ts'
+import { useChatStore } from './chat'
 
 export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
   // 初始化需要使用的store
@@ -78,7 +78,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
     avatar: '',
     groupName: '',
     onlineNum: 0,
-    role: 0,
+    roleId: 0,
     account: '',
     memberNum: 0,
     remark: '',
@@ -89,11 +89,11 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
   /**
    * 获取群成员列表
    */
-  const getGroupUserList = async () => {
+  const getGroupUserList = async (currentRoomId: string) => {
     const data: any = await invokeWithErrorHandler(
       TauriCommand.GET_ROOM_MEMBERS,
       {
-        roomId: currentRoomId.value
+        roomId: currentRoomId
       },
       {
         customErrorMessage: '获取群成员列表失败',
@@ -102,6 +102,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
     )
     if (!data) return
     userList.value = data
+    console.log('getGroupUserList --> ', userList.value)
     userListOptions.cursor = data.cursor
     userListOptions.isLast = data.isLast
     userListOptions.loading = false
@@ -118,8 +119,8 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
    * 获取群组统计信息
    * 包括群名称、头像、在线人数等
    */
-  const getCountStatistic = async () => {
-    countInfo.value = await apis.groupDetail({ id: currentRoomId.value })
+  const getCountStatistic = async (currentRoomId: string) => {
+    countInfo.value = await apis.groupDetail({ id: currentRoomId })
   }
 
   /**
@@ -129,7 +130,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
   const loadMoreGroupMembers = async () => {
     if (userListOptions.isLast || userListOptions.loading) return
     userListOptions.loading = true
-    await getGroupUserList()
+    await getGroupUserList(currentRoomId.value)
     userListOptions.loading = false
   }
 
@@ -201,11 +202,11 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
    */
   const refreshGroupMembers = async () => {
     // 始终刷新频道成员列表
-    await getGroupUserList()
+    await getGroupUserList(currentRoomId.value)
 
     // 如果当前选中的是群聊且不是频道，则同时刷新当前群聊的成员列表
     if (globalStore.currentSession?.type === RoomTypeEnum.GROUP && currentRoomId.value !== '1') {
-      await getGroupUserList()
+      await getGroupUserList(currentRoomId.value)
     }
   }
 
@@ -222,7 +223,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
       avatar: '',
       groupName: '',
       onlineNum: 0,
-      role: 0,
+      roleId: 0,
       roomId: '',
       account: '',
       memberNum: 0,

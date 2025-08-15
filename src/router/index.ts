@@ -1,21 +1,25 @@
+import { type } from '@tauri-apps/plugin-os'
 import {
   createRouter,
   createWebHistory,
-  RouteRecordRaw,
-  NavigationGuardNext,
-  RouteLocationNormalized
+  type NavigationGuardNext,
+  type RouteLocationNormalized,
+  type RouteRecordRaw
 } from 'vue-router'
-import { type } from '@tauri-apps/plugin-os'
-import MobileLogin from '../mobile/login.vue'
-import MobileHome from '../mobile/layout/index.vue'
+import MobileCommunity from '@/mobile/views/community/index.vue'
+import MobileFriendPage from '@/mobile/views/friends/index.vue'
+import MobileMessagePage from '@/mobile/views/message/index.vue'
+import MobileMy from '@/mobile/views/my/index.vue'
 import MobileLaunch from '../mobile/launch.vue'
-import MessagePage from '@/mobile/views/message/index.vue'
+import MobileHome from '../mobile/layout/index.vue'
+import MobileLogin from '../mobile/login.vue'
 
 const isDesktop = computed(() => {
   return type() === 'windows' || type() === 'linux' || type() === 'macos'
 })
 /**! 创建窗口后再跳转页面就会导致样式没有生效所以不能使用懒加载路由的方式，有些页面需要快速响应的就不需要懒加载 */
 const { BASE_URL } = import.meta.env
+
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/mobile/login',
@@ -26,6 +30,23 @@ const routes: Array<RouteRecordRaw> = [
     path: '/mobile/launch',
     name: 'mobileLaunch',
     component: MobileLaunch
+  },
+  {
+    path: '/mobile/chatRoom',
+    name: 'mobileChatRoom',
+    component: () => import('@/mobile/layout/chat-room/ChatRoomLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'mobileChatRoomDefault',
+        redirect: '/mobile/chatRoom/chatMain' // 👈 默认页面地址
+      },
+      {
+        path: 'chatMain',
+        name: 'mobileChatMain',
+        component: () => import('@/mobile/views/chat-room/ChatMain.vue')
+      }
+    ]
   },
   {
     path: '/mobile/home',
@@ -41,22 +62,22 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: '/mobile/message',
         name: 'mobileMessage',
-        component: MessagePage
+        component: MobileMessagePage
       },
       {
         path: '/mobile/friends',
         name: 'mobileFriends',
-        component: () => import('@/mobile/views/friends/index.vue')
+        component: () => MobileFriendPage
       },
       {
         path: '/mobile/community',
         name: 'mobileCommunity',
-        component: () => import('@/mobile/views/community/index.vue')
+        component: MobileCommunity
       },
       {
         path: '/mobile/my',
         name: 'mobileMy',
-        component: () => import('@/mobile/views/my/index.vue')
+        component: MobileMy
       }
     ]
   },
@@ -258,6 +279,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/previewFile',
     name: 'previewFile',
     component: () => import('@/views/previewFileWindow/index.vue')
+  },
+  {
+    path: '/rtcCall',
+    name: 'rtcCall',
+    component: () => import('@/views/callWindow/index.vue')
   }
 ]
 

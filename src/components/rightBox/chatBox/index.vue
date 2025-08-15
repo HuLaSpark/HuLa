@@ -13,21 +13,13 @@
 </template>
 <script setup lang="ts">
 import type { SessionItem } from '@/services/types.ts'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useSettingStore } from '@/stores/setting.ts'
-import { useTauriListener } from '@/hooks/useTauriListener'
-import { listen } from '@tauri-apps/api/event'
-import { useChatStore } from '~/src/stores/chat'
-import { MessageStatusEnum } from '~/src/enums'
 
-const { addListener } = useTauriListener()
 const settingStore = useSettingStore()
 const { page } = storeToRefs(settingStore)
-const appWindow = WebviewWindow.getCurrent()
 const { activeItem } = defineProps<{
   activeItem?: SessionItem
 }>()
-const chatStore = useChatStore()
 provide('activeItem', { ...activeItem! })
 const activeItemRef = ref({ ...activeItem! })
 
@@ -35,35 +27,13 @@ watchEffect(() => {
   activeItemRef.value = { ...activeItem! }
 })
 
-// 注册 Tauri 事件监听器
-const unlistenSuccess = await listen('send_msg_success', async (event) => {
-  let msg = event.payload as any
-  chatStore.updateMsg({
-    msgId: msg.oldMsgId,
-    status: MessageStatusEnum.SUCCESS,
-    newMsgId: msg.message.id,
-    body: msg.message.body
-  })
-})
-
-const unlistenError = await listen('send_msg_error', (event) => {
-  let msgId = event.payload as any
-  chatStore.updateMsg({
-    msgId: msgId,
-    status: MessageStatusEnum.FAILED
-  })
-})
-
-addListener(
-  appWindow.listen(appWindow.label, (e: { payload: SessionItem }) => {
-    activeItemRef.value = e.payload
-  })
-)
-
-// 在组件卸载时清理监听器
-onUnmounted(() => {
-  unlistenSuccess()
-  unlistenError()
+onMounted(() => {
+  // 事件监听已移除，现在使用 channel 方式在 useMsgInput.ts 中直接处理响应
+  // addListener(
+  //   appWindow.listen(appWindow.label, (e: { payload: SessionItem }) => {
+  //     activeItemRef.value = e.payload
+  //   })
+  // )
 })
 </script>
 <style scoped lang="scss">

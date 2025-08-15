@@ -25,8 +25,11 @@
 </template>
 
 <script setup lang="ts">
+import { LogicalSize } from '@tauri-apps/api/dpi'
+import { emitTo } from '@tauri-apps/api/event'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { type } from '@tauri-apps/plugin-os'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
-import { useMitt } from '@/hooks/useMitt.ts'
 import {
   ChangeTypeEnum,
   MittEnum,
@@ -36,26 +39,25 @@ import {
   RoomTypeEnum,
   TauriCommand
 } from '@/enums'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { useGlobalStore } from '@/stores/global.ts'
+import { useCheckUpdate } from '@/hooks/useCheckUpdate'
+import { useMitt } from '@/hooks/useMitt.ts'
+import { computedToken } from '@/services/request'
+import type { MarkItemType, MessageType, RevokedMsgType } from '@/services/types.ts'
+import {
+  type LoginSuccessResType,
+  type OnStatusChangeType,
+  WsResponseMessageType,
+  type WsTokenExpire
+} from '@/services/wsType.ts'
+import { useCachedStore } from '@/stores/cached'
+import { useChatStore } from '@/stores/chat'
+import { useConfigStore } from '@/stores/config'
 import { useContactStore } from '@/stores/contacts.ts'
+import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user'
-import { useChatStore } from '@/stores/chat'
-import { LoginSuccessResType, OnStatusChangeType, WsResponseMessageType, WsTokenExpire } from '@/services/wsType.ts'
-import type { MarkItemType, MessageType, RevokedMsgType } from '@/services/types.ts'
-import { computedToken } from '@/services/request'
-import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification'
-import { useUserInfo } from '@/hooks/useCached.ts'
-import { emitTo } from '@tauri-apps/api/event'
-import { useThrottleFn } from '@vueuse/core'
-import { useCachedStore } from '@/stores/cached'
+import { audioManager } from '@/utils/AudioManager'
 import { clearListener, initListener, readCountQueue } from '@/utils/ReadCountQueue'
-import { type } from '@tauri-apps/plugin-os'
-import { useConfigStore } from '@/stores/config'
-import { useCheckUpdate } from '@/hooks/useCheckUpdate'
-import { UserAttentionType } from '@tauri-apps/api/window'
-import { LogicalSize } from '@tauri-apps/api/dpi'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
 
 const loadingPercentage = ref(10)
@@ -116,6 +118,16 @@ const userUid = computed(() => userStore.userInfo.uid)
 // 清空未读消息
 // globalStore.unReadMark.newMsgUnreadCount = 0
 const shrinkStatus = ref(false)
+
+// 播放消息音效
+const playMessageSound = async () => {
+  try {
+    const audio = new Audio('/sound/message.mp3')
+    await audioManager.play(audio, 'message-notification')
+  } catch (error) {
+    console.warn('播放消息音效失败:', error)
+  }
+}
 
 // 导入Web Worker
 const timerWorker = new Worker(new URL('../workers/timer.worker.ts', import.meta.url))
@@ -218,15 +230,15 @@ useMitt.on(WsResponseMessageType.INVALID_USER, (param: { uid: string }) => {
   // 群成员列表删掉拉黑的用户
   groupStore.filterUser(data.uid)
 })
-useMitt.on(WsResponseMessageType.MSG_MARK_ITEM, (data: { markList: MarkItemType[] }) => {
+useMitt.on(WsResponseMessageType.MSG_MARK_ITEM, async (data: { markList: MarkItemType[] }) => {
   console.log('收到消息标记更新:', data)
 
   // 确保data.markList是一个数组再传递给updateMarkCount
   if (data && data.markList && Array.isArray(data.markList)) {
-    chatStore.updateMarkCount(data.markList)
+    await chatStore.updateMarkCount(data.markList)
   } else if (data && !Array.isArray(data)) {
     // 兼容处理：如果直接收到了单个MarkItemType对象
-    chatStore.updateMarkCount([data as unknown as MarkItemType])
+    await chatStore.updateMarkCount([data as unknown as MarkItemType])
   }
 })
 useMitt.on(WsResponseMessageType.MSG_RECALL, (data: RevokedMsgType) => {
@@ -237,22 +249,15 @@ useMitt.on(WsResponseMessageType.MY_ROOM_INFO_CHANGE, (data: { myName: string; r
   cachedStore.updateUserGroupNickname(data)
   // 如果当前正在查看的是该群聊，则更新群组信息
   if (globalStore.currentSession?.roomId === data.roomId) {
-    groupStore.getCountStatistic()
+    groupStore.getCountStatistic(globalStore.currentSession?.roomId)
   }
 })
 useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   chatStore.pushMsg(data)
-  console.log('监听到接收消息', data)
+  data.message.sendTime = new Date(data.message.sendTime).getTime()
   await invokeSilently(TauriCommand.SAVE_MSG, {
     data
   })
-  const username = useUserInfo(data.fromUser.uid).value.name!
-  const home = await WebviewWindow.getByLabel('home')
-  // 当home窗口不显示并且home窗口不是最小化的时候并且不是聚焦窗口的时候
-  const homeShow = await home?.isVisible()
-  const isHomeMinimized = await home?.isMinimized()
-  const isHomeFocused = await home?.isFocused()
-  if (homeShow && !isHomeMinimized && isHomeFocused) return
 
   // 不是自己发的消息才通知
   if (data.fromUser.uid !== userUid.value) {
@@ -261,25 +266,48 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
 
     // 只有非免打扰的会话才发送通知和触发图标闪烁
     if (session && session.muteNotification !== NotificationTypeEnum.NOT_DISTURB) {
-      // 设置图标闪烁
-      useMitt.emit(MittEnum.MESSAGE_ANIMATION, data)
-      // 在windows系统下才发送通知
-      if (type() === 'windows') {
-        await emitTo('tray', 'show_tip')
-        // 请求用户注意窗口
-        home?.requestUserAttention(UserAttentionType.Critical)
+      // 检查 home 窗口状态
+      const home = await WebviewWindow.getByLabel('home')
+      let shouldPlaySound = false
+
+      if (home) {
+        try {
+          const isVisible = await home.isVisible()
+          const isMinimized = await home.isMinimized()
+          const isFocused = await home.isFocused()
+
+          // 如果窗口不可见、被最小化或未聚焦，则播放音效
+          shouldPlaySound = !isVisible || isMinimized || !isFocused
+        } catch (error) {
+          console.warn('检查窗口状态失败:', error)
+          // 如果检查失败，默认播放音效
+          shouldPlaySound = true
+        }
+      } else {
+        // 如果找不到 home 窗口，播放音效
+        shouldPlaySound = true
       }
 
-      await emitTo('notify', 'notify_cotent', data)
-      const throttleSendNotification = useThrottleFn(() => {
-        sendNotification({
-          title: username,
-          body: data.message.body.content
-        })
-      }, 3000)
-      throttleSendNotification()
+      // 播放消息音效
+      if (shouldPlaySound) {
+        await playMessageSound()
+      }
+
+      // 设置图标闪烁
+      useMitt.emit(MittEnum.MESSAGE_ANIMATION, data)
+      // session.unreadCount++
+      // 在windows系统下才发送通知
+      if (type() === 'windows') {
+        globalStore.setTipVisible(true)
+      }
+
+      if (WebviewWindow.getCurrent().label === 'home') {
+        await emitTo('notify', 'notify_content', data)
+      }
     }
   }
+
+  await globalStore.updateGlobalUnreadCount()
 })
 useMitt.on(WsResponseMessageType.REQUEST_NEW_FRIEND, async (data: { uid: number; unreadCount: number }) => {
   console.log('收到好友申请', data.unreadCount)
@@ -287,14 +315,6 @@ useMitt.on(WsResponseMessageType.REQUEST_NEW_FRIEND, async (data: { uid: number;
   globalStore.unReadMark.newFriendUnreadCount += data.unreadCount
   // 刷新好友申请列表
   await contactStore.getRequestFriendsList(true)
-
-  const throttleSendNotification = useThrottleFn(() => {
-    sendNotification({
-      title: '新好友',
-      body: `您有${data.unreadCount}条好友申请`
-    })
-  }, 3000)
-  throttleSendNotification()
 })
 useMitt.on(
   WsResponseMessageType.NEW_FRIEND_SESSION,
@@ -335,7 +355,7 @@ useMitt.on(WsResponseMessageType.ROOM_INFO_CHANGE, async (data: { roomId: string
   // 如果当前正在查看的是该群聊，则需要刷新群组详情
   if (globalStore.currentSession?.roomId === roomId && globalStore.currentSession.type === RoomTypeEnum.GROUP) {
     // 重新获取群组信息统计
-    await groupStore.getCountStatistic()
+    await groupStore.getCountStatistic(globalStore.currentSession?.roomId)
   }
 })
 useMitt.on(WsResponseMessageType.ROOM_DISSOLUTION, async () => {
@@ -355,13 +375,6 @@ onMounted(async () => {
   if (!localStorage.getItem('config')) {
     await configStore.initConfig()
   }
-  let permissionGranted = await isPermissionGranted()
-
-  // 如果没有授权，则请求授权系统通知
-  if (!permissionGranted) {
-    const permission = await requestPermission()
-    permissionGranted = permission === 'granted'
-  }
   timerWorker.postMessage({
     type: 'startTimer',
     msgId: 'checkUpdate',
@@ -378,14 +391,6 @@ onMounted(async () => {
     // 居中
     await homeWindow.center()
     await homeWindow.show()
-    await homeWindow.onFocusChanged(({ payload: focused }) => {
-      // 当窗口获得焦点时，关闭通知提示
-      if (focused) {
-        globalStore.setTipVisible(false)
-        // 同时通知通知窗口隐藏
-        emitTo('notify', 'hide_notify')
-      }
-    })
   }
 })
 

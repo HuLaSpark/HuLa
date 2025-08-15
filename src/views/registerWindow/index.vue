@@ -17,22 +17,22 @@
           <div v-if="currentStep === 1">
             <n-form-item path="name">
               <n-input
-                :class="[{ 'pr-20px': info.name }, { 'pr-16px': showNamePrefix && !info.name }]"
+                :class="[{ 'pr-20px': info.nickName }, { 'pr-16px': showNamePrefix && !info.nickName }]"
                 maxlength="8"
                 minlength="1"
                 size="large"
-                v-model:value="info.name"
+                v-model:value="info.nickName"
                 type="text"
                 spellCheck="false"
                 autoComplete="off"
                 autoCorrect="off"
                 autoCapitalize="off"
                 :allow-input="noSideSpace"
-                :placeholder="showNamePrefix ? '' : placeholders.name"
-                @focus="handleInputState($event, 'name')"
-                @blur="handleInputState($event, 'name')"
+                :placeholder="showNamePrefix ? '' : placeholders.nickName"
+                @focus="handleInputState($event, 'nickName')"
+                @blur="handleInputState($event, 'nickName')"
                 clearable>
-                <template #prefix v-if="showNamePrefix || info.name">
+                <template #prefix v-if="showNamePrefix || info.nickName">
                   <p class="text-12px">昵称</p>
                 </template>
               </n-input>
@@ -147,8 +147,7 @@
                 :placeholder="showCodePrefix ? '' : placeholders.code"
                 @focus="handleInputState($event, 'code')"
                 @blur="handleInputState($event, 'code')"
-                clearable>
-              </n-input>
+                clearable></n-input>
 
               <n-image
                 width="120"
@@ -241,16 +240,16 @@
 </template>
 
 <script setup lang="ts">
-import { lightTheme } from 'naive-ui'
-import apis from '@/services/apis.ts'
 import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import dayjs from 'dayjs'
-import { RegisterUserReq } from '@/services/types.ts'
-import Validation from '@/components/common/Validation.vue'
+import { lightTheme } from 'naive-ui'
 import PinInput from '@/components/common/PinInput.vue'
+import Validation from '@/components/common/Validation.vue'
+import apis from '@/services/apis.ts'
+import type { RegisterUserReq } from '@/services/types.ts'
 
 // 输入框类型定义
-type InputType = 'name' | 'email' | 'password' | 'code' | 'confirmPassword'
+type InputType = 'nickName' | 'email' | 'password' | 'code' | 'confirmPassword'
 
 /** 注册信息 */
 const info = unref(
@@ -258,9 +257,12 @@ const info = unref(
     avatar: '',
     email: '',
     password: '',
-    name: '',
+    nickName: '',
     code: '',
-    uuid: ''
+    uuid: '',
+    key: 'REGISTER_EMAIL',
+    confirmPassword: '',
+    systemType: 2
   })
 )
 
@@ -278,7 +280,7 @@ const registerLoading = ref(false)
 
 // 占位符
 const placeholders: Record<InputType, string> = {
-  name: '输入HuLa昵称',
+  nickName: '输入HuLa昵称',
   email: '输入邮箱',
   password: '输入HuLa密码',
   code: '验证码',
@@ -326,7 +328,7 @@ const isEmailCodeComplete = computed(() => emailCode.value.length === 6)
 
 // 校验规则
 const rules = {
-  name: {
+  nickName: {
     required: true,
     message: '请输入昵称',
     trigger: 'blur'
@@ -390,7 +392,7 @@ const isPasswordValid = computed(() => {
 
 /** 检查第一步是否可以继续 */
 const isStep1Valid = computed(() => {
-  return info.name && isPasswordValid.value && confirmPassword.value === info.password && protocol.value
+  return info.nickName && isPasswordValid.value && confirmPassword.value === info.password && protocol.value
 })
 
 /** 检查第二步是否可以继续 */
@@ -413,7 +415,7 @@ watchEffect(() => {
  */
 const handleInputState = (event: FocusEvent, type: InputType): void => {
   const prefixMap: Record<InputType, Ref<boolean>> = {
-    name: showNamePrefix,
+    nickName: showNamePrefix,
     email: showemailPrefix,
     password: showPasswordPrefix,
     code: showCodePrefix,
@@ -461,7 +463,12 @@ const handleStepAction = async () => {
     loading.value = true
     try {
       // 发送邮箱验证码
-      await apis.sendCaptcha({ email: info.email, code: info.code.toString(), uuid: captcha.value.uuid.toString() })
+      await apis.sendCaptcha({
+        email: info.email,
+        code: info.code.toString(),
+        uuid: captcha.value.uuid.toString(),
+        templateCode: 'REGISTER_EMAIL'
+      })
       window.$message.success('验证码已发送')
       loading.value = false
       // 显示邮箱验证码输入弹窗
@@ -493,6 +500,8 @@ const register = async () => {
     const avatarNum = Math.floor(Math.random() * 21) + 1
     const avatarId = avatarNum.toString().padStart(3, '0')
     info.avatar = avatarId
+
+    info.confirmPassword = confirmPassword.value
 
     // 注册
     await apis.register({ ...info })

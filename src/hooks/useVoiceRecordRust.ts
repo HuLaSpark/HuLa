@@ -1,10 +1,10 @@
-import { startRecording, stopRecording } from 'tauri-plugin-mic-recorder-api'
 import { BaseDirectory, create, exists, mkdir, readFile, remove } from '@tauri-apps/plugin-fs'
-import { getImageCache } from '@/utils/PathUtil.ts'
+import { startRecording, stopRecording } from 'tauri-plugin-mic-recorder-api'
 import { useUserStore } from '@/stores/user'
-import { compressAudioToMp3, getAudioInfo, calculateCompressionRatio } from '@/utils/AudioCompression'
-import { useUpload } from './useUpload'
+import { calculateCompressionRatio, compressAudioToMp3, getAudioInfo } from '@/utils/AudioCompression'
+import { getImageCache } from '@/utils/PathUtil.ts'
 import { UploadSceneEnum } from '../enums'
+import { useUpload } from './useUpload'
 
 // 导入worker计时器
 let timerWorker: Worker | null = null

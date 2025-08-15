@@ -19,7 +19,8 @@
             round
             :size="80"
             :src="avatarSrc"
-            fallback-src="/logo.png" />
+            :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+            :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'" />
         </div>
 
         <!-- 在线状态点 -->
@@ -112,6 +113,8 @@
               :width="38"
               :height="38"
               :src="useBadgeInfo(id).value.img"
+              :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+              :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
               @load="badgeLoadedMap[id] = true"
               @error="badgeLoadedMap[id] = true" />
           </template>
@@ -134,26 +137,27 @@
       </n-flex>
 
       <n-flex justify="center" align="center" :size="40">
-        <n-button v-if="isCurrentUserUid" secondary type="info" @click="openEditInfo"> 编辑资料 </n-button>
-        <n-button v-else-if="isMyFriend" secondary type="primary" @click="handleOpenMsgSession(uid)"> 发信息 </n-button>
-        <n-button v-else secondary @click="addFriend"> 加好友 </n-button>
+        <n-button v-if="isCurrentUserUid" secondary type="info" @click="openEditInfo">编辑资料</n-button>
+        <n-button v-else-if="isMyFriend" secondary type="primary" @click="handleOpenMsgSession(uid)">发信息</n-button>
+        <n-button v-else secondary @click="addFriend">加好友</n-button>
       </n-flex>
     </n-flex>
   </n-flex>
 </template>
 
 <script setup lang="ts">
-import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
-import { AvatarUtils } from '@/utils/AvatarUtils'
-import { MittEnum, OnlineEnum } from '@/enums/index.ts'
-import { useCommon } from '@/hooks/useCommon.ts'
-import { useContactStore } from '@/stores/contacts.ts'
-import { leftHook } from '@/layout/left/hook'
-import { useMitt } from '@/hooks/useMitt'
-import { useGlobalStore } from '@/stores/global'
-import { useUserStatusStore } from '@/stores/userStatus'
 import { storeToRefs } from 'pinia'
+import { MittEnum, OnlineEnum, ThemeEnum } from '@/enums/index.ts'
+import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
+import { useCommon } from '@/hooks/useCommon.ts'
+import { useMitt } from '@/hooks/useMitt'
 import { useWindow } from '@/hooks/useWindow'
+import { leftHook } from '@/layout/left/hook'
+import { useContactStore } from '@/stores/contacts.ts'
+import { useGlobalStore } from '@/stores/global'
+import { useSettingStore } from '@/stores/setting'
+import { useUserStatusStore } from '@/stores/userStatus'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 
 const { uid, activeStatus } = defineProps<{
   uid: string
@@ -161,6 +165,8 @@ const { uid, activeStatus } = defineProps<{
 }>()
 const { createWebviewWindow } = useWindow()
 const { userUid, openMsgSession } = useCommon()
+const settingStore = useSettingStore()
+const { themes } = storeToRefs(settingStore)
 const globalStore = useGlobalStore()
 const { openContent } = leftHook()
 const contactStore = useContactStore()

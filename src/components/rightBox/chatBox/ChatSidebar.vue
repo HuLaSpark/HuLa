@@ -110,7 +110,7 @@
       item-resizable
       @scroll="handleScroll($event)"
       :item-size="46"
-      :items="groupStore.userList">
+      :items="filteredUserList">
       <template #default="{ item }">
         <n-popover
           :ref="(el) => (infoPopoverRefs[item.uid] = el)"
@@ -141,6 +141,8 @@
                       class="grayscale"
                       :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
                       :size="26"
+                      :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+                      :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
                       :src="AvatarUtils.getAvatarUrl(item.avatar)"
                       @load="userLoadedMap[item.uid] = true"
                       @error="userLoadedMap[item.uid] = true" />
@@ -163,12 +165,12 @@
                 </n-flex>
 
                 <div
-                  v-if="item.groupRole === RoleEnum.LORD"
+                  v-if="item.roleId === RoleEnum.LORD"
                   class="flex px-4px bg-#d5304f30 py-3px rounded-4px size-fit select-none">
                   <p class="text-(10px #d5304f)">群主</p>
                 </div>
                 <div
-                  v-if="item.groupRole === RoleEnum.ADMIN"
+                  v-if="item.roleId === RoleEnum.ADMIN"
                   class="flex px-4px bg-#1a7d6b30 py-3px rounded-4px size-fit select-none">
                   <p class="text-(10px #008080)">管理员</p>
                 </div>
@@ -183,24 +185,26 @@
   </main>
 </template>
 <script setup lang="ts">
-import { MittEnum, OnlineEnum, RoleEnum, RoomTypeEnum } from '@/enums'
-import { InputInst } from 'naive-ui'
-import { usePopover } from '@/hooks/usePopover.ts'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { info } from '@tauri-apps/plugin-log'
+import { useDebounceFn } from '@vueuse/core'
+import type { InputInst } from 'naive-ui'
+import { storeToRefs } from 'pinia'
+import { MittEnum, OnlineEnum, RoleEnum, RoomTypeEnum, ThemeEnum } from '@/enums'
+import { useUserInfo } from '@/hooks/useCached.ts'
 import { useChatMain } from '@/hooks/useChatMain.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
-import { useGroupStore } from '@/stores/group.ts'
-import { useUserInfo } from '@/hooks/useCached.ts'
-import { useGlobalStore } from '@/stores/global.ts'
-import { useDebounceFn } from '@vueuse/core'
-import { AvatarUtils } from '@/utils/AvatarUtils'
-import { useCachedStore } from '@/stores/cached.ts'
-import { useUserStatusStore } from '@/stores/userStatus'
-import { storeToRefs } from 'pinia'
-import { useWindow } from '@/hooks/useWindow.ts'
-import { useUserStore } from '@/stores/user'
-import { WsResponseMessageType } from '@/services/wsType.ts'
+import { usePopover } from '@/hooks/usePopover.ts'
 import { useTauriListener } from '@/hooks/useTauriListener'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { useWindow } from '@/hooks/useWindow.ts'
+import { WsResponseMessageType } from '@/services/wsType.ts'
+import { useCachedStore } from '@/stores/cached.ts'
+import { useGlobalStore } from '@/stores/global.ts'
+import { useGroupStore } from '@/stores/group.ts'
+import { useSettingStore } from '@/stores/setting'
+import { useUserStore } from '@/stores/user'
+import { useUserStatusStore } from '@/stores/userStatus'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 
 const appWindow = WebviewWindow.getCurrent()
 const { createWebviewWindow } = useWindow()
@@ -208,6 +212,8 @@ const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
 const cachedStore = useCachedStore()
 const userStore = useUserStore()
+const settingStore = useSettingStore()
+const { themes } = storeToRefs(settingStore)
 const { addListener } = useTauriListener()
 // 当前加载的群聊ID
 const currentLoadingRoomId = ref('')
@@ -277,21 +283,22 @@ const mergedUserList = computed(() => {
     }
   })
 
-  // 转换回数组并按在线状态排序
-  return Array.from(userMap.values()).sort((a, b) => a.activeStatus - b.activeStatus)
+  // rust已排序
+  return Array.from(userMap.values())
 })
 
-// 修改watch监听器
+// 创建过滤后的用户列表计算属性
+const filteredUserList = computed(() => {
+  if (!searchRef.value) {
+    return mergedUserList.value
+  }
+  return mergedUserList.value.filter((user) => user.name.toLowerCase().includes(searchRef.value.toLowerCase()))
+})
+
+// 修改watch监听器 - 移除搜索逻辑避免递归
 watch(
   [() => groupStore.userList, () => cachedStore.currentAtUsersList],
   () => {
-    // 如果正在搜索，则应用搜索过滤
-    if (searchRef.value) {
-      groupStore.userList = mergedUserList.value.filter((user) =>
-        user.name.toLowerCase().includes(searchRef.value.toLowerCase())
-      )
-    }
-
     // 判断成员列表是否已加载完成
     if (groupStore.userList.length > 0 && currentLoadingRoomId.value === globalStore.currentSession?.roomId) {
       isLoadingMembers.value = false
@@ -305,8 +312,8 @@ watch(
  * @param value 输入值
  */
 const handleSearch = useDebounceFn((value: string) => {
-  // 从合并后的用户列表中搜索
-  groupStore.userList = mergedUserList.value.filter((user) => user.name.toLowerCase().includes(value.toLowerCase()))
+  // 直接更新 searchRef，让计算属性处理过滤逻辑
+  searchRef.value = value
 }, 10)
 
 /**
@@ -355,6 +362,7 @@ const handleOpenAnnoun = (isAdd: boolean) => {
  * 加载群公告
  */
 const handleLoadGroupAnnoun = async (roomId: string) => {
+  info(`加载群公告: ${roomId}`)
   // 设置公告加载状态为加载中
   isLoadingAnnouncement.value = true
 
@@ -398,6 +406,17 @@ const getUserState = (stateId: string) => {
   return stateList.value.find((state: { id: string }) => state.id === stateId)
 }
 
+const announcementUpdatedListener = await appWindow.listen('announcementUpdated', async (event: any) => {
+  if (event.payload) {
+    const { hasAnnouncements } = event.payload
+    if (hasAnnouncements) {
+      // 初始化群公告
+      await handleInitAnnoun()
+      await nextTick()
+    }
+  }
+})
+
 onMounted(async () => {
   useMitt.on(`${MittEnum.INFO_POPOVER}-Sidebar`, (event: any) => {
     selectKey.value = event.uid
@@ -408,27 +427,16 @@ onMounted(async () => {
   addListener(
     appWindow.listen('announcementClear', async () => {
       announNum.value = 0
-    })
-  )
-
-  addListener(
-    appWindow.listen('announcementUpdated', async (event: any) => {
-      if (event.payload) {
-        const { hasAnnouncements } = event.payload
-        if (hasAnnouncements) {
-          // 初始化群公告
-          await handleInitAnnoun()
-        }
-      }
-    })
+    }),
+    'announcementClear'
   )
 
   // 监听会话变化
   watch(
     () => globalStore.currentSession,
     async (newSession, oldSession) => {
+      const currentSession = { ...newSession }
       if (newSession?.type === RoomTypeEnum.GROUP) {
-        // 如果切换到不同的群聊会话，重置加载状态
         if (newSession?.roomId !== oldSession?.roomId) {
           isLoadingMembers.value = true
           isLoadingAnnouncement.value = true
@@ -436,9 +444,9 @@ onMounted(async () => {
           currentLoadingRoomId.value = newSession.roomId
           // 重置群组数据后再加载新的群成员数据
           groupStore.resetGroupData()
-          await groupStore.getGroupUserList()
+          await groupStore.getGroupUserList(currentSession.roomId)
           // 获取群组统计信息（包括在线人数）
-          await groupStore.getCountStatistic()
+          await groupStore.getCountStatistic(currentSession.roomId)
           isLoadingOnlineCount.value = false
           // 初始化群公告
           await handleInitAnnoun()
@@ -467,6 +475,10 @@ onMounted(async () => {
 
     await handleInitAnnoun()
   }
+})
+
+onUnmounted(() => {
+  announcementUpdatedListener()
 })
 </script>
 

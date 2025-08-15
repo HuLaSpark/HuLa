@@ -186,10 +186,10 @@
 </template>
 
 <script setup lang="ts">
-import { lightTheme } from 'naive-ui'
-import apis from '@/services/apis'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { lightTheme } from 'naive-ui'
 import Validation from '@/components/common/Validation.vue'
+import apis from '@/services/apis'
 
 // 导入Web Worker
 const timerWorker = new Worker(new URL('../../workers/timer.worker.ts', import.meta.url))
@@ -240,7 +240,7 @@ const emailRules = {
   ],
   imgCode: [
     { required: true, message: '请输入图片验证码', trigger: 'blur' },
-    { min: 4, max: 5, message: '验证码长度为4-5位', trigger: 'blur' }
+    { min: 1, max: 5, message: '验证码长度为4-5位', trigger: 'blur' }
   ],
   emailCode: [
     { required: true, message: '请输入邮箱验证码', trigger: 'input' },
@@ -352,7 +352,8 @@ const sendEmailCode = async () => {
       email: formData.value.email,
       code: formData.value.imgCode,
       uuid: formData.value.uuid,
-      operationType: 'forgot'
+      operationType: 'forgot',
+      templateCode: 'PASSWORD_EDIT'
     })
 
     window.$message.success('验证码已发送至您的邮箱')
@@ -414,7 +415,9 @@ const submitNewPassword = async () => {
       email: formData.value.email,
       code: formData.value.emailCode,
       uuid: formData.value.uuid,
-      password: passwordForm.value.password
+      password: passwordForm.value.password,
+      confirmPassword: passwordForm.value.confirmPassword,
+      key: 'PASSWORD_EDIT'
     })
 
     currentStep.value = 3

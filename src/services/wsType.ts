@@ -45,7 +45,40 @@ export enum WsResponseMessageType {
   /** 群解散 */
   ROOM_DISSOLUTION = 'roomDissolution',
   /** 编辑群公告 */
-  ROOM_EDIT_GROUP_NOTICE_MSG = 'roomEditGroupNoticeMsg'
+  ROOM_EDIT_GROUP_NOTICE_MSG = 'roomEditGroupNoticeMsg',
+  /** 加入视频会议 */
+  JoinVideo = 'JoinVideo',
+  /** 发起视频通话请求 */
+  VideoCallRequest = 'VideoCallRequest',
+  /** 开始呼叫 */
+  StartSignaling = 'StartSignaling',
+  /** 通话已接通 */
+  CallAccepted = 'CallAccepted',
+  /** 呼叫被拒绝 */
+  CallRejected = 'CallRejected',
+  /** 会议已关闭 */
+  RoomClosed = 'RoomClosed',
+  /** 媒体组件改变 */
+  MediaControl = 'MediaControl',
+  /** 通话超时 */
+  TIMEOUT = 'TIMEOUT',
+  /** 挂断 */
+  DROPPED = 'DROPPED',
+  /** 离开视频会议 */
+  LeaveVideo = 'LeaveVideo',
+  /** 启动屏幕共享 */
+  ScreenSharingStarted = 'ScreenSharingStarted',
+  /** 关闭屏幕共享 */
+  ScreenSharingStopped = 'ScreenSharingStopped',
+  /** 网络状况不佳 */
+  NetworkPoor = 'NetworkPoor',
+  /** 踢出用户 */
+  UserKicked = 'UserKicked',
+  /** 信令消息 */
+  WEBRTC_SIGNAL = 'WEBRTC_SIGNAL',
+  /** 全局静音 */
+  AllMuted = 'AllMuted',
+  CANCEL = 'CANCEL'
 }
 
 /**
@@ -54,10 +87,32 @@ export enum WsResponseMessageType {
 export enum WsRequestMsgType {
   /** 1.请求登录二维码 */
   RequestLoginQrCode = 1,
-  /** 2心跳检测 */
+  /** 2.消息心跳检测 */
   HeartBeatDetection,
-  /** 3用户认证 */
-  Authorization
+  /** 3.用户认证 */
+  Authorization,
+  /** 4.视频心跳 */
+  VIDEO_HEARTBEAT,
+  /** 5.视频通话请求 */
+  VIDEO_CALL_REQUEST,
+  /** 6.视频通话响应 */
+  VIDEO_CALL_RESPONSE,
+  /** 7.媒体静音音频 */
+  MEDIA_MUTE_AUDIO,
+  /** 8.静音视频 */
+  MEDIA_MUTE_VIDEO,
+  /** 9.静音全部用户 */
+  MEDIA_MUTE_ALL,
+  /** 10.屏幕共享 */
+  SCREEN_SHARING,
+  /** 11.关闭房间 */
+  CLOSE_ROOM,
+  /** 12.踢出用户 */
+  KICK_USER,
+  /** 13.通话质量监控 */
+  NETWORK_REPORT,
+  /** 14.信令消息 */
+  WEBRTC_SIGNAL
 }
 
 export type WsReqMsgContentType = {
@@ -86,7 +141,101 @@ export type WsTokenExpire = {
 
 /** 用户状态 */
 export type UserStateType = {
-  id: number
+  id: string
   title: string
   url: string
+}
+
+// 通话请求数据类型
+export interface VideoCallRequestData {
+  targetUid: string
+  roomId: string
+  mediaType: 'AudioSignal' | 'VideoSignal' // 通话类型
+}
+
+// 通话响应数据类型
+export interface CallResponseData {
+  callerUid: string
+  targetUid: string
+  roomId: string
+  accepted: boolean
+}
+
+// 信令数据类型
+export interface SignalData {
+  roomId: string
+  signal: any // WebRTC信令
+  mediaType: 'AudioSignal' | 'VideoSignal' // 语音通话、视频通话
+}
+
+export interface SignalSdp {
+  /** SDP 会话描述字符串 */
+  sdp: string
+  /** SDP 消息类型（如 offer/answer） */
+  type: string
+}
+
+/** 通话信令消息整体类型 */
+export interface CallSignalMessage {
+  /** 呼叫方用户 ID */
+  callerUid: string
+  /** 房间 ID */
+  roomId: string
+  /** 信令内容（JSON 字符串形式的 SDP 信息） */
+  signal: string
+  /** 信令类型（如 offer/answer/candidate 等） */
+  signalType: string
+  /** 目标用户 ID */
+  targetUid: string
+  /** 是否为视频通话 */
+  video: boolean
+}
+
+// 加入/离开房间数据类型
+export interface RoomActionData {
+  roomId: string
+  uid: string
+}
+
+export enum CallResponseStatus {
+  /** 超时未接听 */
+  TIMEOUT = -1,
+  /** 已拒绝 */
+  REJECTED = 0,
+  /** 已接听 */
+  ACCEPTED = 1,
+  /** 已挂断 */
+  DROPPED = 2,
+  /** 已取消 */
+  CANCEL = 3
+}
+
+/**
+ * 通话状态描述映射
+ */
+export const CallResponseStatusDesc: Record<CallResponseStatus, string> = {
+  [CallResponseStatus.TIMEOUT]: '超时未接听',
+  [CallResponseStatus.REJECTED]: '已拒绝',
+  [CallResponseStatus.ACCEPTED]: '已接听',
+  [CallResponseStatus.DROPPED]: '已挂断',
+  [CallResponseStatus.CANCEL]: '已取消'
+}
+
+/**
+ * 根据状态码获取通话状态
+ * @param code 状态码
+ * @returns 对应的通话状态
+ */
+export function getCallResponseStatus(code: number): CallResponseStatus | undefined {
+  return Object.values(CallResponseStatus).includes(code) ? (code as CallResponseStatus) : undefined
+}
+
+/**
+ * 根据状态码获取状态描述
+ * @param code 状态码
+ * @returns 对应的状态描述文本
+ */
+export function getCallResponseStatusDesc(code: number): string {
+  const status = getCallResponseStatus(code)
+  return status !== undefined ? CallResponseStatusDesc[status] : '未知状态'
 }

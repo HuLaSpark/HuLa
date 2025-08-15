@@ -1,9 +1,8 @@
-import { join, appCacheDir, resourceDir } from '@tauri-apps/api/path'
-import { mkdir, exists, readFile } from '@tauri-apps/plugin-fs'
-import { BaseDirectory } from '@tauri-apps/plugin-fs'
-import { fileTypeFromBuffer, type FileTypeResult } from 'file-type'
-import { FilesMeta } from '@/services/types'
 import { invoke } from '@tauri-apps/api/core'
+import { appCacheDir, join, resourceDir } from '@tauri-apps/api/path'
+import { BaseDirectory, exists, mkdir, readFile } from '@tauri-apps/plugin-fs'
+import { type FileTypeResult, fileTypeFromBuffer } from 'file-type'
+import type { FilesMeta } from '@/services/types'
 
 // 用户数据
 const USER_DATA = 'userData'
@@ -85,7 +84,7 @@ export async function detectRemoteFileType(options: {
           ext: meta.file_type,
           mime: meta.mime_type
         }
-      } catch (error) {
+      } catch (_error) {
         console.warn(`该资源无法识别类型：${url}`)
         return void 0
       }
@@ -116,7 +115,7 @@ export async function getFile(absolutePath: string) {
 
   const fileData = await readFile(absolutePath)
   const fileName = fileMeta.name
-  const blob = new Blob([fileData])
+  const blob = new Blob([new Uint8Array(fileData)])
 
   const fileType = fileMeta?.mime_type || fileMeta?.file_type
 

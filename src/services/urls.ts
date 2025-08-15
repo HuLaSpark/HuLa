@@ -42,12 +42,14 @@ export default {
 
   // -------------- 好友相关 ---------------
   getContactList: `${prefix + URLEnum.USER}/friend/page`, // 联系人列表
-  requestFriendList: `${prefix + URLEnum.USER}/friend/apply/page`, // 好友申请列表
-  sendAddFriendRequest: `${prefix + URLEnum.USER}/friend/apply`, // 申请好友\同意申请
-  rejectFriendRequest: `${prefix + URLEnum.USER}/friend/reject`, // 拒绝好友申请
-  ignoreFriendRequest: `${prefix + URLEnum.USER}/friend/ignore`, // 忽略好友申请
+  requestFriendList: `${prefix + URLEnum.ROOM}/apply/page`, // 好友申请、群聊邀请列表
+  newFriendCount: `${prefix + URLEnum.ROOM}/apply/unread`, // 申请未读数
+  acceptInvite: `${prefix + URLEnum.ROOM}/apply/accept`, // 审批别人邀请的进群
+  sendAddFriendRequest: `${prefix + URLEnum.ROOM}/apply/apply`, // 申请好友\同意申请
+  rejectFriendRequest: `${prefix + URLEnum.ROOM}/apply/reject`, // 拒绝好友申请
+  ignoreFriendRequest: `${prefix + URLEnum.ROOM}/apply/ignore`, // 忽略好友申请
+  deleteFriendRequest: `${prefix + URLEnum.ROOM}/apply/delete`, // 删除好友、群聊申请
   deleteFriend: `${prefix + URLEnum.USER}/friend`, // 删除好友
-  newFriendCount: `${prefix + URLEnum.USER}/friend/apply/unread`, // 申请未读数
   modifyFriendRemark: `${prefix + URLEnum.USER}/friend/updateRemark`, // 修改好友备注
 
   // -------------- 聊天室相关 ---------------
@@ -58,7 +60,7 @@ export default {
   sessionDetailWithFriends: `${prefix + URLEnum.CHAT}/contact/detail/friend`, // 会话详情(联系人列表发消息用)
   setSessionTop: `${prefix + URLEnum.CHAT}/setTop`, // 设置会话置顶
   deleteSession: `${prefix + URLEnum.CHAT}/delete`, // 删除会话
-  hideSession: `${prefix + URLEnum.CHAT}/setHide`, // 隐藏会话
+  // hideSession: `${prefix + URLEnum.CHAT}/setHide`, // 隐藏会话
   notification: `${prefix + URLEnum.CHAT}/notification`, // 免打扰
   shield: `${prefix + URLEnum.CHAT}/setShield`, // 屏蔽消息
   // -------------- 群聊相关 ---------------
@@ -71,28 +73,30 @@ export default {
   groupDetail: `${prefix + URLEnum.ROOM}/group`, // 群组详情
   groupList: `${prefix + URLEnum.ROOM}/group/list`, // 群聊列表
   updateRoomInfo: `${prefix + URLEnum.ROOM}/updateRoomInfo`, // 修改群信息(群主)
-  // updateMyRoomInfo: `${prefix + URLEnum.ROOM}/updateMyRoomInfo`, // 修改“我”的群聊名称
+  updateMyRoomInfo: `${prefix + URLEnum.ROOM}/updateMyRoomInfo`, // 修改“我”的群聊名称
   searchGroup: `${prefix + URLEnum.ROOM}/search`, // 搜索群聊
-  applyGroup: `${prefix + URLEnum.ROOM}/applyGroup`, // 申请加群
+  applyGroup: `${prefix + URLEnum.ROOM}/apply/group`, // 申请加群
+  applyHandle: `${prefix + URLEnum.ROOM}/apply/handle`, // 处理加群申请 [仅仅管理员、群主可调用]
+  applyGroupList: `${prefix + URLEnum.ROOM}/apply/group/list`, // 申请加群列表 [仅仅管理员、群主可见]
   getAnnouncementList: `${prefix + URLEnum.ROOM}/announcement/list`, // 获取群公告
   pushAnnouncement: `${prefix + URLEnum.ROOM}/announcement/push`, // 发布群公告
   deleteAnnouncement: `${prefix + URLEnum.ROOM}/announcement/delete`, // 删除群公告
   editAnnouncement: `${prefix + URLEnum.ROOM}/announcement/edit`, // 编辑群公告
 
   // -------------- 验证码 ---------------
-  getCaptcha: `${prefix + URLEnum.CAPTCHA}/captcha`, // 获取图片验证码
-  sendCaptcha: `${prefix + URLEnum.CAPTCHA}/sendCode`, // 发送验证码到用户邮箱
+  getCaptcha: `${prefix + URLEnum.TOKEN}/anyTenant/captcha`, // 获取图片验证码
+  sendCaptcha: `${prefix + URLEnum.TOKEN}/anyTenant/sendEmailCode`, // 发送验证码到用户邮箱
 
   // -------------- 系统相关 ---------------
   fileUpload: `${prefix + URLEnum.SYSTEM + URLEnum.OSS}/upload/url`, // 文件上传
-  initConfig: `${prefix + URLEnum.SYSTEM}/config/init`, // 获取配置文件
-  getQiniuToken: `${prefix + URLEnum.SYSTEM}/ossToken`, // 获取七牛云上传token
+  initConfig: `${prefix + URLEnum.SYSTEM}/anyTenant/config/init`, // 获取配置文件
+  getQiniuToken: `${prefix + URLEnum.TOKEN}/anyTenant/ossToken`, // 获取七牛云上传token
 
   // -------------- token相关 ---------------
-  register: `${prefix + URLEnum.TOKEN}/register`, // 注册
-  login: `${prefix + URLEnum.TOKEN}/login`, // 登录
-  refreshToken: `${prefix + URLEnum.TOKEN}/refreshToken`, // 续签
-  logout: `${prefix + URLEnum.TOKEN}/logout`, // 退出登录
+  register: `${prefix + URLEnum.TOKEN}/anyTenant/registerByEmail`, // 注册
+  login: `${prefix + URLEnum.TOKEN}/anyTenant/login`, // 登录
+  refreshToken: `${prefix + URLEnum.TOKEN}/anyTenant/refresh`, // 续签
+  logout: `${prefix + URLEnum.TOKEN}/anyUser/logout`, // 退出登录
   checkToken: `${prefix + URLEnum.TOKEN}/check`, // 检查token是否有效
-  forgetPassword: `${prefix + URLEnum.TOKEN}/forgotPassword` // 忘记密码
+  forgetPassword: `${prefix + URLEnum.TOKEN}/anyTenant/password` // 忘记密码
 }

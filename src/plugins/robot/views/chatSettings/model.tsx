@@ -1,13 +1,13 @@
 import {
+  type GlobalThemeOverrides,
   NButton,
+  NConfigProvider,
   NFlex,
-  NSelect,
-  NSlider,
-  NSwitch,
   NInput,
   NInputNumber,
-  NConfigProvider,
-  GlobalThemeOverrides
+  NSelect,
+  NSlider,
+  NSwitch
 } from 'naive-ui'
 
 /** 单独设置数字输入框的主题 */

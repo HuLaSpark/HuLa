@@ -1,15 +1,14 @@
 import 'uno.css'
 import '@unocss/reset/eric-meyer.css' // unocss提供的浏览器默认样式重置
-import '@/services/webSocket'
-import { pinia } from '@/stores'
-import vResize from '@/directives/v-resize'
-import vSlide from '@/directives/v-slide.ts'
-import router from '@/router'
 import App from '@/App.vue'
 import { AppException } from '@/common/exception.ts'
-import { type } from '@tauri-apps/plugin-os'
-import { useMobileStore } from '@/stores/mobile'
-import { getInsets } from 'tauri-plugin-safe-area-insets'
+import vResize from '@/directives/v-resize'
+import vSlide from '@/directives/v-slide.ts'
+import { initMobileClient } from '@/mobile/mobile-client/MobileClient'
+import router from '@/router'
+import { pinia } from '@/stores'
+
+import('@/services/webSocketAdapter')
 
 const app = createApp(App)
 app.use(router).use(pinia).directive('resize', vResize).directive('slide', vSlide).mount('#app')
@@ -27,19 +26,14 @@ if (process.env.NODE_ENV === 'development') {
   })
 }
 
-const envType = type()
+export const forceUpdateMessageTop = (topValue: number) => {
+  // 获取所有符合条件的元素
+  const messages = document.querySelectorAll('.n-message-container.n-message-container--top')
 
-// 判断是移动环境时才做
-if (envType === 'android') {
-  // 使用立即执行的异步函数来处理 await
-  ;(async () => {
-    try {
-      const mobileStore = useMobileStore()
-      const insets = await getInsets()
-      mobileStore.updateSafeArea(insets)
-      console.log('插件中获取的安全区域参数：', insets)
-    } catch (error) {
-      console.log('获取安全区域出错：', error)
-    }
-  })()
+  messages.forEach((el) => {
+    const dom = el as HTMLElement
+    dom.style.top = `${topValue}px`
+  })
 }
+
+initMobileClient()

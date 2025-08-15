@@ -68,12 +68,12 @@
 </template>
 
 <script setup lang="ts">
-import { AvatarUtils } from '@/utils/AvatarUtils'
-import { useChatStore } from '@/stores/chat.ts'
 import { useRouter } from 'vue-router'
-import { useCommon } from '@/hooks/useCommon.ts'
 import { MittEnum, RoomTypeEnum } from '@/enums'
+import { useCommon } from '@/hooks/useCommon.ts'
 import { useMitt } from '@/hooks/useMitt'
+import { useChatStore } from '@/stores/chat.ts'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 
 type SessionItem = {
   avatar: string

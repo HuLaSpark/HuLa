@@ -1,10 +1,12 @@
+import { info } from '@tauri-apps/plugin-log'
+import { type } from '@tauri-apps/plugin-os'
 import { defineStore } from 'pinia'
 import { NotificationTypeEnum, RoomTypeEnum, StoresEnum } from '@/enums'
-import { useChatStore } from '@/stores/chat'
-import type { ContactItem, RequestFriendItem } from '@/services/types'
-import { clearQueue, readCountQueue } from '@/utils/ReadCountQueue.ts'
 import apis from '@/services/apis'
-import { invokeSilently } from '@/utils/TauriInvokeHandler'
+import type { ContactItem, RequestFriendItem } from '@/services/types'
+import { useChatStore } from '@/stores/chat'
+import { clearQueue, readCountQueue } from '@/utils/ReadCountQueue.ts'
+import { invokeWithErrorHandler } from '../utils/TauriInvokeHandler'
 
 export const useGlobalStore = defineStore(
   StoresEnum.GLOBAL,
@@ -67,6 +69,7 @@ export const useGlobalStore = defineStore(
 
     // 更新全局未读消息计数
     const updateGlobalUnreadCount = async () => {
+      info('[global]更新全局未读消息计数')
       // 计算所有会话的未读消息总数，排除免打扰的会话
       const totalUnread = chatStore.sessionList.reduce((total, session) => {
         // 如果是免打扰的会话，不计入总数
@@ -76,21 +79,28 @@ export const useGlobalStore = defineStore(
         return total + (session.unreadCount || 0)
       }, 0)
       unReadMark.newMsgUnreadCount = totalUnread
-      await invokeSilently('set_badge_count', { count: totalUnread > 0 ? totalUnread : null })
+      if (type() === 'macos') {
+        const count = totalUnread > 0 ? totalUnread : undefined
+        await invokeWithErrorHandler('set_badge_count', { count })
+      }
     }
 
-    // 监听当前会话变化
-    watch(currentSession, (val) => {
-      // 清理已读数查询队列
-      clearQueue()
-      // 延迟1秒后开始查询已读数
-      setTimeout(readCountQueue, 1000)
-      // 标记该房间的消息为已读
-      apis.markMsgRead({ roomId: val.roomId || '1' })
-      // 更新会话的已读状态
-      chatStore.markSessionRead(val.roomId || '1')
-      // 更新全局未读计数
-      updateGlobalUnreadCount()
+    // 监听当前会话变化，添加防重复触发逻辑
+    watch(currentSession, async (val, oldVal) => {
+      // 只有当房间ID真正发生变化时才执行操作
+      if (!oldVal || val.roomId !== oldVal.roomId) {
+        info(`[global]当前会话发生实际变化: ${oldVal?.roomId} -> ${val.roomId}`)
+        // 清理已读数查询队列
+        clearQueue()
+        // 延迟1秒后开始查询已读数
+        setTimeout(readCountQueue, 1000)
+        // 标记该房间的消息为已读
+        apis.markMsgRead({ roomId: val.roomId || '1' })
+        // 更新会话的已读状态
+        chatStore.markSessionRead(val.roomId || '1')
+        // 更新全局未读计数
+        await updateGlobalUnreadCount()
+      }
     })
 
     // 设置提示框显示状态

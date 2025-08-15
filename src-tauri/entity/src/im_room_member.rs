@@ -13,6 +13,7 @@ pub struct Model {
     pub account: Option<String>,
     pub my_name: Option<String>,
     pub active_status: Option<u8>,
+    #[serde(rename = "roleId")]
     pub group_role: Option<i64>,
     pub loc_place: Option<String>,
     pub last_opt_time: i64,

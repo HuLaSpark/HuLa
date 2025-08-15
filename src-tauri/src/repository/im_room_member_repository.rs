@@ -1,6 +1,4 @@
-use anyhow::Context;
 use entity::{im_room, im_room_member};
-use log::{debug, info};
 use sea_orm::EntityTrait;
 use sea_orm::IntoActiveModel;
 use sea_orm::PaginatorTrait;
@@ -8,6 +6,7 @@ use sea_orm::QuerySelect;
 use sea_orm::TransactionTrait;
 use sea_orm::{ActiveModelTrait, Set};
 use sea_orm::{ColumnTrait, DatabaseConnection, QueryFilter, QueryOrder};
+use tracing::{debug, info};
 
 use crate::pojo::common::{CursorPageParam, CursorPageResp};
 use crate::{
@@ -27,7 +26,7 @@ pub async fn cursor_page_room_members(
         .filter(im_room_member::Column::LoginUid.eq(login_uid))
         .count(db)
         .await
-        .with_context(|| "查询房间成员总数失败")?;
+        .map_err(|e| anyhow::anyhow!("Failed to query room member count: {}", e))?;
 
     let mut query = im_room_member::Entity::find()
         .filter(im_room_member::Column::RoomId.eq(room_id))
@@ -47,7 +46,10 @@ pub async fn cursor_page_room_members(
         }
     }
 
-    let members = query.all(db).await.with_context(|| "查询房间成员失败")?;
+    let members = query
+        .all(db)
+        .await
+        .map_err(|e| anyhow::anyhow!("Failed to query room members: {}", e))?;
 
     // 构建下一页游标和判断是否为最后一页
     let (next_cursor, is_last) = if members.len() < cursor_page_param.page_size as usize {
@@ -82,7 +84,7 @@ pub async fn get_room_page(
         .filter(im_room::Column::LoginUid.eq(login_uid))
         .count(db)
         .await
-        .with_context(|| "查询房间成员总数失败")?;
+        .map_err(|e| anyhow::anyhow!("Failed to query room count: {}", e))?;
 
     // 分页查询数据
     let records = im_room::Entity::find()
@@ -91,7 +93,7 @@ pub async fn get_room_page(
         .limit(page_param.size as u64)
         .all(db)
         .await
-        .with_context(|| "分页查询房间成员失败")?;
+        .map_err(|e| anyhow::anyhow!("Failed to query room data: {}", e))?;
 
     Ok(Page {
         records,
@@ -105,31 +107,50 @@ pub async fn save_room_batch(
     room_members: Vec<im_room::Model>,
     login_uid: &str,
 ) -> Result<(), CommonError> {
-    // 使用事务确保批量操作的原子性
-    let txn = db.begin().await?;
+    use tokio::time::{Duration, timeout};
 
-    for mut member in room_members {
-        // 设置 login_uid
-        member.login_uid = login_uid.to_string();
+    // 添加超时保护，避免长时间锁定
+    let operation = async {
+        // 使用事务确保批量操作的原子性
+        let txn = db.begin().await?;
 
-        // 检查记录是否已存在
-        let existing = im_room::Entity::find()
-            .filter(im_room::Column::Id.eq(member.id.clone()))
-            .filter(im_room::Column::LoginUid.eq(member.login_uid.clone()))
-            .one(&txn)
-            .await?;
+        for mut member in room_members {
+            // 设置 login_uid
+            member.login_uid = login_uid.to_string();
 
-        if existing.is_none() {
-            // 如果记录不存在，执行插入
-            let member_active = member.into_active_model();
-            member_active.insert(&txn).await?;
+            // 检查记录是否已存在
+            let existing = im_room::Entity::find()
+                .filter(im_room::Column::Id.eq(member.id.clone()))
+                .filter(im_room::Column::LoginUid.eq(member.login_uid.clone()))
+                .one(&txn)
+                .await?;
+
+            if existing.is_none() {
+                // 如果记录不存在，执行插入
+                let member_active = member.into_active_model();
+                member_active
+                    .insert(&txn)
+                    .await
+                    .map_err(|e| anyhow::anyhow!("Failed to insert room record: {}", e))?;
+            }
+            // 如果记录已存在，跳过插入
         }
-        // 如果记录已存在，跳过插入
-    }
 
-    // 提交事务
-    txn.commit().await?;
-    Ok(())
+        // 提交事务
+        txn.commit()
+            .await
+            .map_err(|e| anyhow::anyhow!("Failed to commit room batch transaction: {}", e))?;
+
+        Ok(())
+    };
+
+    // 设置30秒超时
+    match timeout(Duration::from_secs(30), operation).await {
+        Ok(result) => result.map_err(CommonError::UnexpectedError),
+        Err(_) => Err(CommonError::UnexpectedError(anyhow::anyhow!(
+            "Room batch operation timed out after 30 seconds"
+        ))),
+    }
 }
 
 pub async fn get_room_members_by_room_id(
@@ -142,7 +163,7 @@ pub async fn get_room_members_by_room_id(
         .filter(im_room_member::Column::LoginUid.eq(login_uid))
         .all(db)
         .await
-        .with_context(|| "查询房间成员失败")?;
+        .map_err(|e| anyhow::anyhow!("Failed to query room members: {}", e))?;
 
     Ok(members)
 }
@@ -153,47 +174,84 @@ pub async fn save_room_member_batch(
     room_id: i64,
     login_uid: &str,
 ) -> Result<(), CommonError> {
-    // 使用事务确保操作的原子性
-    let txn = db.begin().await?;
+    use tokio::time::{Duration, timeout};
 
-    // 根据room_id和login_uid查询现有数据
-    let existing_members = im_room_member::Entity::find()
-        .filter(im_room_member::Column::RoomId.eq(room_id.to_string()))
-        .filter(im_room_member::Column::LoginUid.eq(login_uid))
-        .all(&txn)
-        .await
-        .with_context(|| "查询房间成员失败")?;
+    // 添加超时保护，避免长时间锁定
+    let operation = async {
+        // 使用事务确保操作的原子性
+        let txn: sea_orm::DatabaseTransaction = db.begin().await?;
 
-    if !existing_members.is_empty() {
-        // 如果有数据，则删除当前用户的现有数据
-        im_room_member::Entity::delete_many()
+        // 先删除现有数据（使用更高效的方式）
+        let delete_result = im_room_member::Entity::delete_many()
             .filter(im_room_member::Column::RoomId.eq(room_id.to_string()))
             .filter(im_room_member::Column::LoginUid.eq(login_uid))
             .exec(&txn)
+            .await;
+
+        match delete_result {
+            Ok(_) => {
+                debug!(
+                    "Successfully deleted existing room members for room_id: {}, login_uid: {}",
+                    room_id, login_uid
+                );
+            }
+            Err(e) => {
+                // 如果删除失败，回滚事务
+                let _ = txn.rollback().await;
+                return Err(anyhow::anyhow!(
+                    "Failed to delete existing room members: {}",
+                    e
+                ));
+            }
+        }
+
+        // 保存新的room_members数据（批量插入）
+        if !room_members.is_empty() {
+            let room_members_count = room_members.len(); // 在移动之前保存长度
+            let active_models: Vec<im_room_member::ActiveModel> = room_members
+                .into_iter()
+                .map(|member| {
+                    let mut member_active = member.into_active_model();
+                    member_active.login_uid = Set(login_uid.to_string());
+                    member_active.room_id = Set(Some(room_id.to_string()));
+                    member_active
+                })
+                .collect();
+
+            let insert_result = im_room_member::Entity::insert_many(active_models)
+                .exec(&txn)
+                .await;
+
+            match insert_result {
+                Ok(_) => {
+                    debug!(
+                        "Successfully inserted {} room members for room_id: {}",
+                        room_members_count, room_id
+                    );
+                }
+                Err(e) => {
+                    // 如果插入失败，回滚事务
+                    let _ = txn.rollback().await;
+                    return Err(anyhow::anyhow!("Failed to insert room members: {}", e));
+                }
+            }
+        }
+
+        // 提交事务
+        txn.commit()
             .await
-            .with_context(|| "删除房间成员失败")?;
+            .map_err(|e| anyhow::anyhow!("Failed to commit transaction: {}", e))?;
+
+        Ok(())
+    };
+
+    // 设置5秒超时
+    match timeout(Duration::from_secs(5), operation).await {
+        Ok(result) => result.map_err(CommonError::UnexpectedError),
+        Err(_) => Err(CommonError::UnexpectedError(anyhow::anyhow!(
+            "Database operation timed out after 5 seconds"
+        ))),
     }
-
-    // 保存新的room_members数据（批量插入）
-    if !room_members.is_empty() {
-        let active_models: Vec<im_room_member::ActiveModel> = room_members
-            .into_iter()
-            .map(|member| {
-                let mut member_active = member.into_active_model();
-                member_active.login_uid = Set(login_uid.to_string());
-                member_active.room_id = Set(Some(room_id.to_string()));
-                member_active
-            })
-            .collect();
-
-        im_room_member::Entity::insert_many(active_models)
-            .exec(&txn)
-            .await?;
-    }
-
-    // 提交事务
-    txn.commit().await?;
-    Ok(())
 }
 
 pub async fn update_my_room_info(
@@ -210,10 +268,10 @@ pub async fn update_my_room_info(
         .filter(im_room_member::Column::LoginUid.eq(login_uid))
         .one(db)
         .await
-        .with_context(|| "查询房间成员失败")?;
+        .map_err(|e| anyhow::anyhow!("Failed to query room member record: {}", e))?;
 
     if let Some(member) = member {
-        debug!("找到房间成员记录: {:?}", member);
+        debug!("Found room member record: {:?}", member);
         // 如果找到记录，更新 nickname 字段
         let mut member_active = member.into_active_model();
         member_active.my_name = Set(Some(my_name.to_string()));
@@ -221,13 +279,13 @@ pub async fn update_my_room_info(
         member_active
             .update(db)
             .await
-            .with_context(|| "更新房间成员昵称失败")?;
-        info!("更新成员房间成员信息成功");
+            .map_err(|e| anyhow::anyhow!("Failed to update room member record: {}", e))?;
+        info!("Successfully updated member room member information");
         Ok(())
     } else {
         // 如果没有找到记录，返回错误
         Err(CommonError::UnexpectedError(anyhow::anyhow!(
-            "未找到指定的房间成员记录: room_id={}, uid={}",
+            "Failed to find specified room member record: room_id={}, uid={}",
             room_id,
             uid
         )))

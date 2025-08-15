@@ -1,13 +1,13 @@
 <template>
   <n-flex vertical class="select-none">
     <n-flex align="center" justify="space-between" class="color-[--text-color] px-20px py-10px">
-      <p class="text-16px">好友通知</p>
+      <p class="text-16px">{{ props.type === 'friend' ? '好友通知' : '群通知' }}</p>
       <svg class="size-18px cursor-pointer"><use href="#delete"></use></svg>
     </n-flex>
 
     <n-virtual-list
       style="max-height: calc(100vh - 80px)"
-      :items="contactStore.requestFriendsList"
+      :items="applyList"
       :item-size="102"
       :item-resizable="true"
       @scroll="handleScroll"
@@ -33,13 +33,7 @@
                   </p>
 
                   <p class="text-(14px [--text-color])">
-                    {{
-                      isCurrentUser(item.uid)
-                        ? isAccepted(item.targetId)
-                          ? '已同意你的请求'
-                          : '正在验证你的邀请'
-                        : '请求加为好友'
-                    }}
+                    {{ applyMsg(item) }}
                   </p>
 
                   <p class="text-(10px #909090)">{{ formatTimestamp(item.createTime) }}</p>
@@ -65,15 +59,15 @@
             <span
               class="text-(12px #64a29c)"
               :class="{ 'text-(12px #c14053)': item.status === RequestFriendAgreeStatus.Reject }"
-              v-else-if="isCurrentUser(item.uid)"
-              >{{
+              v-else-if="isCurrentUser(item.uid)">
+              {{
                 isAccepted(item.targetId)
                   ? '已同意'
                   : item.status === RequestFriendAgreeStatus.Reject
                     ? '对方已拒绝'
                     : '等待验证'
-              }}</span
-            >
+              }}
+            </span>
             <span class="text-(12px #64a29c)" v-else-if="item.status === RequestFriendAgreeStatus.Agree">已同意</span>
             <span class="text-(12px #c14053)" v-else-if="item.status === RequestFriendAgreeStatus.Reject">已拒绝</span>
             <span class="text-(12px #909090)" v-else-if="item.status === RequestFriendAgreeStatus.Ignore">已忽略</span>
@@ -108,11 +102,11 @@
   </n-flex>
 </template>
 <script setup lang="ts">
-import { useContactStore } from '@/stores/contacts.ts'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { RequestFriendAgreeStatus } from '@/services/types.ts'
-import { AvatarUtils } from '@/utils/AvatarUtils'
+import { useContactStore } from '@/stores/contacts.ts'
 import { useUserStore } from '@/stores/user'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
 
 const userStore = useUserStore()
@@ -121,12 +115,37 @@ const currentUserId = ref('0')
 const loadingMap = ref<Record<string, boolean>>({})
 const virtualListRef = ref()
 const isLoadingMore = ref(false)
+const props = defineProps<{
+  type: 'friend' | 'group'
+}>()
 
 // 检查好友申请是否已被接受
 const isAccepted = (targetId: string) => {
   // 使用缓存集合快速检查目标用户是否在联系人列表中
   return contactStore.contactsList.some((contact) => contact.uid === targetId)
 }
+
+const applyList = computed(() => {
+  return contactStore.requestFriendsList.filter((item) => {
+    if (props.type === 'friend') {
+      return item.type === 1
+    } else {
+      return item.type === 2
+    }
+  })
+})
+
+const applyMsg = computed(() => (item: any) => {
+  if (props.type === 'friend') {
+    return isCurrentUser(item.uid)
+      ? isAccepted(item.targetId)
+        ? '已同意你的请求'
+        : '正在验证你的邀请'
+      : '请求加为好友'
+  } else {
+    return isCurrentUser(item.uid) ? '已同意你的邀请' : '请求邀请进入群聊'
+  }
+})
 
 // 下拉菜单选项
 const dropdownOptions = [

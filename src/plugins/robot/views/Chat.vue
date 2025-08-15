@@ -24,8 +24,7 @@
           autoCorrect="off"
           autoCapitalize="off"
           style="width: 200px"
-          class="leading-7 text-14px rounded-6px">
-        </n-input>
+          class="leading-7 text-14px rounded-6px"></n-input>
         <p class="text-(14px #707070)">共0条对话</p>
       </n-flex>
 
@@ -87,9 +86,9 @@
   </main>
 </template>
 <script setup lang="ts">
+import { type InputInst, NIcon } from 'naive-ui'
 import MsgInput from '@/components/rightBox/MsgInput.vue'
 import { useMitt } from '@/hooks/useMitt.ts'
-import { InputInst, NIcon } from 'naive-ui'
 import { useSettingStore } from '@/stores/setting.ts'
 
 const settingStore = useSettingStore()

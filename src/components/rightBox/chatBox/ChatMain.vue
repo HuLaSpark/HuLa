@@ -12,24 +12,27 @@
   </n-flex>
 
   <!-- 置顶公告提示 -->
-  <div
-    v-if="isGroup && topAnnouncement"
-    class="feishu-announcement"
-    :class="{ 'announcement-hover': isAnnouncementHover }"
-    @mouseenter="isAnnouncementHover = true"
-    @mouseleave="isAnnouncementHover = false">
-    <n-flex :wrap="false" class="w-full" align="center" justify="space-between">
-      <n-flex :wrap="false" align="center" class="pl-12px select-none" :size="6">
-        <svg class="size-16px flex-shrink-0"><use href="#Loudspeaker"></use></svg>
-        <div style="max-width: calc(100vw - 70vw)" class="line-clamp-1 text-(12px [--chat-text-color])">
-          {{ topAnnouncement.content }}
+  <Transition name="announcement" mode="out-in">
+    <div
+      v-if="isGroup && topAnnouncement"
+      key="announcement"
+      class="feishu-announcement"
+      :class="{ 'announcement-hover': isAnnouncementHover }"
+      @mouseenter="isAnnouncementHover = true"
+      @mouseleave="isAnnouncementHover = false">
+      <n-flex :wrap="false" class="w-full" align="center" justify="space-between">
+        <n-flex :wrap="false" align="center" class="pl-12px select-none flex-1 min-w-0" :size="6">
+          <svg class="size-16px flex-shrink-0"><use href="#Loudspeaker"></use></svg>
+          <div class="flex-1 min-w-0 line-clamp-1 text-(12px [--chat-text-color])">
+            {{ topAnnouncement.content }}
+          </div>
+        </n-flex>
+        <div class="flex-shrink-0 w-60px select-none" @click="handleViewAnnouncement">
+          <p class="text-(12px #13987f) cursor-pointer">查看全部</p>
         </div>
       </n-flex>
-      <div class="flex-shrink-0 w-60px select-none" @click="handleViewAnnouncement">
-        <p class="text-(12px #13987f) cursor-pointer">查看全部</p>
-      </div>
-    </n-flex>
-  </div>
+    </div>
+  </Transition>
 
   <Transition name="chat-init" appear mode="out-in" @after-leave="handleTransitionComplete">
     <!-- 初次加载的骨架屏 -->
@@ -38,7 +41,7 @@
       vertical
       :size="18"
       :style="{ 'max-height': `calc(100vh - ${announcementHeight}px)` }"
-      class="relative h-100vh box-border p-20px">
+      class="relative box-border p-20px">
       <n-flex justify="end">
         <n-skeleton style="border-radius: 14px" height="40px" width="46%" :sharp="false" />
         <n-skeleton height="40px" circle />
@@ -73,6 +76,7 @@
       @scroll="handleScroll"
       @scroll-direction-change="handleScrollDirectionChange"
       @load-more="handleLoadMore"
+      @click="handleChatAreaClick"
       class="scrollbar-container"
       :class="{ 'hide-scrollbar': !showScrollbar }"
       :style="{ 'max-height': `calc(100vh - ${announcementHeight}px)` }"
@@ -99,6 +103,11 @@
             :message="item.message"
             :from-user-uid="item.fromUser.uid"
             :is-group="isGroup" />
+
+          <SystemMessage
+            v-if="item.message.type === MsgEnum.SYSTEM"
+            :body="item.message.body"
+            :from-user-uid="item.fromUser.uid" />
 
           <!-- 消息为机器人消息时 -->
           <BotMessage
@@ -130,7 +139,9 @@
                 </span>
               </Transition>
             </div>
-            <div class="flex items-start flex-1" :class="item.fromUser.uid === userUid ? 'flex-row-reverse' : ''">
+            <div
+              class="flex items-start flex-1 select-none"
+              :class="item.fromUser.uid === userUid ? 'flex-row-reverse' : ''">
               <!-- 回复消息提示的箭头 -->
               <svg
                 v-if="activeReply === item.message.id"
@@ -158,6 +169,8 @@
                       :size="34"
                       @click="selectKey = item.message.id"
                       class="select-none"
+                      :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+                      :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
                       :src="getAvatarSrc(item.fromUser.uid)"
                       :class="item.fromUser.uid === userUid ? '' : 'mr-10px'" />
                   </ContextMenu>
@@ -169,7 +182,7 @@
                 vertical
                 justify="center"
                 :size="6"
-                class="color-[--text-color] flex-1"
+                class="color-[--text-color] flex-1 select-none"
                 :class="item.fromUser.uid === userUid ? 'items-end mr-10px' : ''">
                 <n-flex
                   :size="6"
@@ -194,14 +207,16 @@
                         "
                         trigger="hover">
                         <template #trigger>
-                          <img
-                            class="size-18px"
-                            :src="useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.img"
-                            alt="badge" />
+                          <n-avatar
+                            class="select-none"
+                            :size="18"
+                            round
+                            :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
+                            :src="useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.img" />
                         </template>
-                        <span>{{
-                          useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.describe
-                        }}</span>
+                        <span>
+                          {{ useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.describe }}
+                        </span>
                       </n-popover>
                       <!-- 用户名 -->
                       <span class="text-12px select-none color-#909090 inline-block align-top">
@@ -251,7 +266,7 @@
                   <!-- 渲染消息内容体 TODO: 等完善消息类型后逐渐替换使用RenderMessage -->
                   <RenderMessage
                     :class="[
-                      item.message.type === MsgEnum.VOICE ? 'select-none cursor-pointer' : '!select-auto !cursor-text',
+                      item.message.type === MsgEnum.VOICE ? 'select-none cursor-pointer' : 'select-text cursor-text',
                       {
                         active:
                           activeBubble === item.message.id &&
@@ -303,16 +318,6 @@
                         :src="src"></n-image>
                     </n-flex>
                   </n-image-group> -->
-
-                  <!-- 消息为文件 -->
-                  <!-- <n-image
-                    class="select-none"
-                    v-if="typeof item.message.body.url === 'string' && item.message.type === MsgEnum.FILE"
-                    :img-props="{ style: { maxWidth: '325px', maxHeight: '165px' } }"
-                    show-toolbar-tooltip
-                    preview-disabled
-                    style="border-radius: 8px"
-                    :src="item.message.body.url"></n-image> -->
                   <!-- 消息状态指示器 -->
                   <div v-if="item.fromUser.uid === userUid" class="absolute -left-6 top-2">
                     <n-icon v-if="item.message.status === MessageStatusEnum.SENDING" class="text-gray-400">
@@ -335,11 +340,17 @@
                   :size="6"
                   v-if="item.message.body.reply"
                   @click="jumpToReplyMsg(item.message.body.reply.id)"
-                  class="reply-bubble relative w-fit custom-shadow">
+                  class="reply-bubble relative w-fit custom-shadow select-none">
                   <svg class="size-14px">
                     <use href="#to-top"></use>
                   </svg>
-                  <n-avatar class="reply-avatar" round :size="20" :src="getAvatarSrc(item.message.body.reply.uid)" />
+                  <n-avatar
+                    class="reply-avatar"
+                    round
+                    :size="20"
+                    :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+                    :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
+                    :src="getAvatarSrc(item.message.body.reply.uid)" />
                   <span>{{ `${item.message.body.reply.username}：` }}</span>
                   <span class="content-span">
                     {{ item.message.body.reply.body }}
@@ -351,14 +362,15 @@
 
                 <!-- 动态渲染所有回复表情反应 -->
                 <div
+                  v-if="item && item.message"
                   class="flex-y-center gap-6px flex-wrap w-270px"
                   :class="{ 'justify-end': isSingleLineEmojis(item) }">
                   <template v-for="emoji in emojiList" :key="emoji.value">
                     <!-- 根据表情类型获取对应的计数属性名 -->
-                    <div class="flex-y-center" v-if="getEmojiCount(item, emoji.value) > 0">
-                      <div class="emoji-reply-bubble" @click.stop="cancelReplyEmoji(item, emoji.value)">
+                    <div class="flex-y-center" v-if="item && getEmojiCount(item, emoji.value) > 0">
+                      <div class="emoji-reply-bubble" @click.stop="item && cancelReplyEmoji(item, emoji.value)">
                         <img :title="emoji.title" class="size-18px" :src="emoji.url" :alt="emoji.title" />
-                        <span class="text-(12px #eee)">{{ getEmojiCount(item, emoji.value) }}</span>
+                        <span class="text-(12px #eee)">{{ item ? getEmojiCount(item, emoji.value) : 0 }}</span>
                       </div>
                     </div>
                   </template>
@@ -401,7 +413,8 @@
   <footer
     class="float-footer"
     v-if="shouldShowFloatFooter && currentNewMsgCount"
-    :class="isGroup ? 'right-220px' : 'right-50px'">
+    :class="isGroup ? 'right-220px' : 'right-50px'"
+    :style="{ bottom: `${footerHeight + 16}px` }">
     <div class="float-box" :class="{ max: currentNewMsgCount?.count > 99 }" @click="scrollToBottom">
       <n-flex justify="space-between" align="center">
         <n-icon :color="currentNewMsgCount?.count > 99 ? '#ce304f' : '#13987f'">
@@ -420,32 +433,34 @@
   </footer>
 </template>
 <script setup lang="ts">
-import { EventEnum, MittEnum, MsgEnum, MessageStatusEnum } from '@/enums'
-import { MessageType, SessionItem } from '@/services/types.ts'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { info } from '@tauri-apps/plugin-log'
+import { type } from '@tauri-apps/plugin-os'
+import { useDebounceFn } from '@vueuse/core'
+import { delay } from 'lodash-es'
+import { ANNOUNCEMENT_HEIGHT, CHAT_HEADER_HEIGHT } from '@/common/constants'
+import VirtualList, { type VirtualListExpose } from '@/components/common/VirtualList.vue'
+import { MessageStatusEnum, MittEnum, MsgEnum, ThemeEnum } from '@/enums'
+import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
+import { useChatLayoutGlobal } from '@/hooks/useChatLayout'
+import { useChatMain } from '@/hooks/useChatMain.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
+import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 import { usePopover } from '@/hooks/usePopover.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
-import { useChatMain } from '@/hooks/useChatMain.ts'
-import { delay } from 'lodash-es'
-import { formatTimestamp } from '@/utils/ComputedTime.ts'
-import { useUserInfo, useBadgeInfo } from '@/hooks/useCached.ts'
-import { useChatStore } from '@/stores/chat.ts'
-import { type } from '@tauri-apps/plugin-os'
-import { useUserStore } from '@/stores/user.ts'
-import { AvatarUtils } from '@/utils/AvatarUtils'
-import VirtualList, { type VirtualListExpose } from '@/components/common/VirtualList.vue'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { useTauriListener } from '@/hooks/useTauriListener'
-import { useGroupStore } from '@/stores/group.ts'
-import { useGlobalStore } from '@/stores/global'
-import { useDebounceFn } from '@vueuse/core'
-import { useCachedStore } from '@/stores/cached'
 import apis from '@/services/apis'
-import { useNetworkStatus } from '@/hooks/useNetworkStatus'
+import type { MessageType, SessionItem } from '@/services/types.ts'
+import { useCachedStore } from '@/stores/cached'
+import { useChatStore } from '@/stores/chat.ts'
+import { useGlobalStore } from '@/stores/global'
+import { useGroupStore } from '@/stores/group.ts'
+import { useSettingStore } from '@/stores/setting'
+import { useUserStore } from '@/stores/user.ts'
 import { audioManager } from '@/utils/AudioManager'
+import { AvatarUtils } from '@/utils/AvatarUtils'
+import { formatTimestamp } from '@/utils/ComputedTime.ts'
 
 const appWindow = WebviewWindow.getCurrent()
-const { addListener } = useTauriListener()
 const props = defineProps<{
   activeItem: SessionItem
 }>()
@@ -456,6 +471,9 @@ const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
 const cachedStore = useCachedStore()
 const networkStatus = useNetworkStatus()
+const settingStore = useSettingStore()
+const { themes } = storeToRefs(settingStore)
+const { footerHeight } = useChatLayoutGlobal()
 
 // 记录当前滚动位置相关信息
 const isAutoScrolling = ref(false)
@@ -472,7 +490,10 @@ const isGroup = computed(() => chatStore.isGroup)
 const userUid = computed(() => userStore.userInfo.uid)
 const chatMessageList = computed(() => chatStore.chatMessageList)
 const currentNewMsgCount = computed(() => chatStore.currentNewMsgCount)
-const messageOptions = computed(() => chatStore.currentMessageOptions)
+const messageOptions = computed(() => {
+  const options = chatStore.currentMessageOptions
+  return options
+})
 const { createWebviewWindow } = useWindow()
 const currentRoomId = computed(() => globalStore.currentSession?.roomId)
 // 我的群昵称
@@ -507,8 +528,12 @@ const hoverBubble = ref<{
 /** 记录右键菜单时选中的气泡的元素(用于处理mac右键会选中文本的问题) */
 const recordEL = ref()
 const isMac = computed(() => type() === 'macos')
-// 公告展示时需要减去的高度
-const announcementHeight = computed(() => (isGroup.value && topAnnouncement.value ? 300 : 260))
+// 公告展示时需要减去的高度 - 考虑footer动态高度
+const announcementHeight = computed(() => {
+  const baseHeight =
+    CHAT_HEADER_HEIGHT + footerHeight.value + (isGroup.value && topAnnouncement.value ? ANNOUNCEMENT_HEIGHT : 0)
+  return baseHeight
+})
 // 置顶公告hover状态
 const isAnnouncementHover = ref(false)
 // 置顶公告相关
@@ -726,28 +751,20 @@ const handleScrollDirectionChange = (direction: 'up' | 'down') => {
 
 // 取消表情反应
 const cancelReplyEmoji = async (item: any, type: number) => {
+  if (!item || !item.message || !item.message.messageMarks) return
+
   // 检查该表情是否已被当前用户标记
   const userMarked = item.message.messageMarks[String(type)]?.userMarked
 
   // 只有当用户已标记时才发送取消请求
   if (userMarked) {
     try {
-      await apis.markMsg({
+      const data = {
         msgId: item.message.id,
         markType: type, // 使用对应的MarkEnum类型
         actType: 2 // 使用Confirm作为操作类型
-      })
-
-      const currentCount = item.message.messageMarks[String(type)]?.count || 0
-      chatStore.updateMarkCount([
-        {
-          msgId: Number(item.message.id),
-          markType: type,
-          markCount: Math.max(0, currentCount - 1), // 确保计数不会为负数
-          actType: 2,
-          uid: Number(userStore.userInfo.uid)
-        }
-      ])
+      }
+      await apis.markMsg(data)
     } catch (error) {
       console.error('取消表情标记失败:', error)
     }
@@ -761,7 +778,7 @@ const cancelReplyEmoji = async (item: any, type: number) => {
  * @returns 计数值
  */
 const getEmojiCount = (item: any, emojiType: number): number => {
-  if (!item?.message?.messageMarks) return 0
+  if (!item || !item.message || !item.message.messageMarks) return 0
 
   // messageMarks 是一个对象，键是表情类型，值是包含 count 和 userMarked 的对象
   // 如果存在该表情类型的统计数据，返回其计数值，否则返回0
@@ -770,6 +787,8 @@ const getEmojiCount = (item: any, emojiType: number): number => {
 
 // 处理表情回应
 const handleEmojiSelect = async (context: { label: string; value: number; title: string }, item: any) => {
+  if (!item || !item.message || !item.message.messageMarks) return
+
   // 检查该表情是否已被当前用户标记
   const userMarked = item.message.messageMarks[String(context.value)]?.userMarked
   // 只给没有标记过的图标标记
@@ -780,17 +799,6 @@ const handleEmojiSelect = async (context: { label: string; value: number; title:
         markType: context.value,
         actType: 1
       })
-
-      const currentCount = item.message.messageMarks[String(context.value)]?.count || 0
-      chatStore.updateMarkCount([
-        {
-          msgId: Number(item.message.id),
-          markType: context.value,
-          markCount: currentCount + 1,
-          actType: 1,
-          uid: Number(userStore.userInfo.uid)
-        }
-      ])
     } catch (error) {
       console.error('标记表情失败:', error)
     }
@@ -888,28 +896,26 @@ const handleMacSelect = (event: any) => {
   }
 }
 
-const closeMenu = (event: any) => {
-  if (!event.target.matches('.bubble', 'bubble-oneself')) {
-    activeBubble.value = ''
-    // 解决mac右键会选中文本的问题
-    if (isMac.value && recordEL.value) {
-      recordEL.value.classList.remove('select-none')
-    }
-  }
-  if (!event.target.matches('.active-reply')) {
-    /** 解决更替交换回复气泡时候没有触发动画的问题 */
-    if (!event.target.matches('.reply-bubble *')) {
-      nextTick(() => {
-        const activeReplyElement = document.querySelector('.active-reply') as HTMLElement
-        if (activeReplyElement) {
-          activeReplyElement.classList.add('reply-exit')
-          delay(() => {
-            activeReplyElement.classList.remove('reply-exit')
-            activeReply.value = ''
-          }, 300)
-        }
-      })
-    }
+// 处理聊天区域点击事件，用于清除回复样式
+const handleChatAreaClick = (event: any) => {
+  // 检查点击目标是否为回复相关元素
+  const isReplyElement =
+    event.target.closest('.reply-bubble') ||
+    event.target.matches('.active-reply') ||
+    event.target.closest('.active-reply')
+
+  // 如果点击的不是回复相关元素，清除activeReply样式
+  if (!isReplyElement && activeReply.value) {
+    nextTick(() => {
+      const activeReplyElement = document.querySelector('.active-reply') as HTMLElement
+      if (activeReplyElement) {
+        activeReplyElement.classList.add('reply-exit')
+        delay(() => {
+          activeReplyElement.classList.remove('reply-exit')
+          activeReply.value = ''
+        }, 300)
+      }
+    })
   }
 }
 
@@ -1002,6 +1008,8 @@ const isSpecialMsgType = (type: number) => {
 
 // 判断表情反应是否只有一行
 const isSingleLineEmojis = (item: any) => {
+  if (!item || !item.fromUser || !item.message) return false
+
   // 计算有多少个表情反应
   let emojiCount = 0
   for (const emoji of emojiList.value) {
@@ -1014,6 +1022,31 @@ const isSingleLineEmojis = (item: any) => {
   // 这个阈值可以根据实际UI调整
   return emojiCount <= 5 && item.fromUser.uid === userUid.value
 }
+
+// 监听公告更新事件
+const announcementUpdatedListener = await appWindow.listen('announcementUpdated', async (event: any) => {
+  info(`公告更新事件: ${event.payload}`)
+  if (event.payload) {
+    const { hasAnnouncements, topAnnouncement: newTopAnnouncement } = event.payload
+    if (hasAnnouncements && newTopAnnouncement) {
+      // 只有置顶公告才更新顶部提示
+      if (newTopAnnouncement.top) {
+        topAnnouncement.value = newTopAnnouncement
+      } else if (topAnnouncement.value) {
+        // 如果当前有显示置顶公告，但新公告不是置顶的，保持不变
+        await loadTopAnnouncement() // 重新获取置顶公告
+      }
+    } else {
+      // 如果没有公告，清空显示
+      topAnnouncement.value = null
+    }
+  }
+})
+
+// 监听公告清空事件
+const announcementClearListener = await appWindow.listen('announcementClear', () => {
+  topAnnouncement.value = null
+})
 
 onMounted(async () => {
   nextTick(() => {
@@ -1042,41 +1075,6 @@ onMounted(async () => {
       })
     }
   })
-
-  // 监听公告更新事件
-  await addListener(
-    appWindow.listen('announcementUpdated', async (event: any) => {
-      if (event.payload) {
-        const { hasAnnouncements, topAnnouncement: newTopAnnouncement } = event.payload
-        if (hasAnnouncements && newTopAnnouncement) {
-          // 只有置顶公告才更新顶部提示
-          if (newTopAnnouncement.top) {
-            topAnnouncement.value = newTopAnnouncement
-          } else if (topAnnouncement.value) {
-            // 如果当前有显示置顶公告，但新公告不是置顶的，保持不变
-            await loadTopAnnouncement() // 重新获取置顶公告
-          }
-        } else {
-          // 如果没有公告，清空显示
-          topAnnouncement.value = null
-        }
-      }
-    })
-  )
-
-  // 监听公告清空事件
-  await addListener(
-    appWindow.listen('announcementClear', () => {
-      topAnnouncement.value = null
-    })
-  )
-
-  await addListener(
-    appWindow.listen(EventEnum.SHARE_SCREEN, async () => {
-      await createWebviewWindow('共享屏幕', 'sharedScreen', 840, 840)
-    })
-  )
-  window.addEventListener('click', closeMenu, true)
 })
 
 onUnmounted(() => {
@@ -1088,7 +1086,9 @@ onUnmounted(() => {
     hoverBubble.value.timer = void 0
   }
   hoverBubble.value.key = -1
-  window.removeEventListener('click', closeMenu, true)
+
+  announcementUpdatedListener()
+  announcementClearListener()
 })
 </script>
 

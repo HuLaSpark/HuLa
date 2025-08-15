@@ -1,5 +1,23 @@
+@supports (top: env(safe-area-inset-top)) {
+  :root {
+    --safe-area-inset-top: env(safe-area-inset-top);
+    --safe-area-inset-bottom: env(safe-area-inset-bottom);
+    --safe-area-inset-left: env(safe-area-inset-left);
+    --safe-area-inset-right: env(safe-area-inset-right);
+  }
+}
+
+@supports (top: constant(safe-area-inset-top)) {
+  :root {
+    --safe-area-inset-top: constant(safe-area-inset-top);
+    --safe-area-inset-bottom: constant(safe-area-inset-bottom);
+    --safe-area-inset-left: constant(safe-area-inset-left);
+    --safe-area-inset-right: constant(safe-area-inset-right);
+  }
+}
+
 /* 移动端特定样式 */
 /* Naive UI 消息组件安全区域适配 */
 .n-message-container.n-message-container--top {
-  top: env(safe-area-inset-top);
+  top: var(--safe-area-inset-top);
 }

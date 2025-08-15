@@ -2,12 +2,17 @@
   <!-- 顶部操作栏和显示用户名 -->
   <main
     data-tauri-drag-region
-    class="relative z-30 flex-y-center border-b-(1px solid [--right-chat-footer-line-color]) select-none cursor-default justify-between p-[6px_22px_10px]">
+    class="relative z-999 flex-y-center border-b-(1px solid [--right-chat-footer-line-color]) select-none cursor-default justify-between p-[6px_22px_10px]">
     <n-flex align="center">
       <Transition name="loading" mode="out-in">
         <img v-if="showLoading" class="size-22px py-3px" src="@/assets/img/loading.svg" alt="" />
         <n-flex v-else align="center">
-          <n-avatar class="rounded-8px select-none" :size="28" :src="currentUserAvatar" />
+          <n-avatar
+            :class="['rounded-8px select-none grayscale', { 'grayscale-0': isOnline }]"
+            :size="28"
+            :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+            :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
+            :src="currentUserAvatar" />
           <label class="flex-y-center gap-6px">
             <p class="text-(16px [--text-color])">{{ myGroupRemark || activeItem.name }}</p>
             <p
@@ -37,7 +42,9 @@
 
             <template v-else>
               <n-flex align="center" :size="4">
-                <svg class="size-16px color-#d03553"><use href="#close"></use></svg>
+                <svg class="size-16px color-#d03553">
+                  <use href="#close"></use>
+                </svg>
                 <p class="text-(12px [--text-color])">好友状态异常</p>
               </n-flex>
             </template>
@@ -47,46 +54,56 @@
     </n-flex>
     <!-- 顶部右边选项栏 -->
     <nav v-if="shouldShowDeleteFriend || chatStore.isGroup" class="options flex-y-center gap-20px color-[--icon-color]">
-      <div class="options-box">
+      <div v-if="!isChannel" class="options-box">
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
-            <svg @click="handleClick"><use href="#phone-telephone"></use></svg>
+            <svg @click="startRtcCall(CallTypeEnum.AUDIO)">
+              <use href="#phone-telephone"></use>
+            </svg>
           </template>
-          <span>语言通话</span>
+          <span>语音通话</span>
         </n-popover>
       </div>
 
-      <div class="options-box">
+      <div v-if="!isChannel" class="options-box">
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
-            <svg><use href="#video-one"></use></svg>
+            <svg @click="startRtcCall(CallTypeEnum.VIDEO)">
+              <use href="#video-one"></use>
+            </svg>
           </template>
           <span>视频通话</span>
         </n-popover>
       </div>
 
-      <div class="options-box">
+      <div v-if="!isChannel" class="options-box">
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
-            <svg @click="handleMedia"><use href="#screen-sharing"></use></svg>
+            <svg @click="handleMedia">
+              <use href="#screen-sharing"></use>
+            </svg>
           </template>
           <span>屏幕共享</span>
         </n-popover>
       </div>
 
-      <div class="options-box">
+      <div v-if="!isChannel" class="options-box">
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
-            <svg><use href="#remote-control"></use></svg>
+            <svg @click="handleAssist">
+              <use href="#remote-control"></use>
+            </svg>
           </template>
           <span>远程协助</span>
         </n-popover>
       </div>
 
-      <div v-if="activeItem.roomId !== '1'" class="options-box" @click="handleCreateGroupOrInvite">
+      <div v-if="!isChannel && activeItem.roomId !== '1'" class="options-box" @click="handleCreateGroupOrInvite">
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
-            <svg><use href="#launch"></use></svg>
+            <svg>
+              <use href="#launch"></use>
+            </svg>
           </template>
           <span v-if="activeItem.type === RoomTypeEnum.GROUP">邀请进群</span>
           <span v-else>发起群聊</span>
@@ -94,7 +111,9 @@
       </div>
 
       <div class="options-box" @click="sidebarShow = !sidebarShow">
-        <svg><use href="#more"></use></svg>
+        <svg>
+          <use href="#more"></use>
+        </svg>
       </div>
     </nav>
 
@@ -147,7 +166,9 @@
                   <div v-if="isGroupOwner" class="avatar-wrapper relative" @click="handleUploadAvatar">
                     <n-avatar round :size="40" :src="AvatarUtils.getAvatarUrl(activeItem.avatar)" />
                     <div class="avatar-hover absolute size-full rounded-50% flex-center">
-                      <svg class="size-14px color-#fefefe"><use href="#Export"></use></svg>
+                      <svg class="size-14px color-#fefefe">
+                        <use href="#Export"></use>
+                      </svg>
                     </div>
                   </div>
 
@@ -364,44 +385,52 @@
 </template>
 
 <script setup lang="ts">
-import { IsAllUserEnum, SessionItem, UserItem } from '@/services/types.ts'
-import { useDisplayMedia } from '@vueuse/core'
-import { EventEnum, MittEnum, RoomActEnum, NotificationTypeEnum } from '@/enums'
-import { emit } from '@tauri-apps/api/event'
+import { info } from '@tauri-apps/plugin-log'
 import { type } from '@tauri-apps/plugin-os'
-import { useChatStore } from '@/stores/chat.ts'
-import { useGroupStore } from '@/stores/group.ts'
-import { useUserInfo } from '@/hooks/useCached'
-import { useContactStore } from '@/stores/contacts.ts'
-import { AvatarUtils } from '@/utils/AvatarUtils'
-import { OnlineEnum } from '@/enums'
-import { useTauriListener } from '@/hooks/useTauriListener'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { RoomTypeEnum, SessionOperateEnum, RoleEnum } from '@/enums'
-import { useMitt } from '@/hooks/useMitt.ts'
-import { useUserStatusStore } from '@/stores/userStatus'
-import { useUserStore } from '@/stores/user.ts'
-import apis from '@/services/apis'
+import { useDisplayMedia } from '@vueuse/core'
 import AvatarCropper from '@/components/common/AvatarCropper.vue'
+import {
+  CallTypeEnum,
+  MittEnum,
+  NotificationTypeEnum,
+  OnlineEnum,
+  RoleEnum,
+  RoomActEnum,
+  RoomTypeEnum,
+  SessionOperateEnum,
+  ThemeEnum
+} from '@/enums'
 import { useAvatarUpload } from '@/hooks/useAvatarUpload'
+import { useUserInfo } from '@/hooks/useCached'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { useWindow } from '@/hooks/useWindow'
+import apis from '@/services/apis'
+import { IsAllUserEnum, type SessionItem, type UserItem } from '@/services/types.ts'
+import { WsResponseMessageType } from '@/services/wsType'
+import { useCachedStore } from '@/stores/cached'
+import { useChatStore } from '@/stores/chat.ts'
+import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global'
-import { useCachedStore } from '~/src/stores/cached'
+import { useGroupStore } from '@/stores/group.ts'
+import { useSettingStore } from '@/stores/setting'
+import { useUserStore } from '@/stores/user.ts'
+import { useUserStatusStore } from '@/stores/userStatus'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 
-const appWindow = WebviewWindow.getCurrent()
 const { activeItem } = defineProps<{
   activeItem: SessionItem
 }>()
-const { createModalWindow } = useWindow()
-const { addListener } = useTauriListener()
+const { createModalWindow, createWebviewWindow } = useWindow()
 // 使用useDisplayMedia获取屏幕共享的媒体流
-const { stream, start, stop } = useDisplayMedia()
+const { stream, stop } = useDisplayMedia()
 const chatStore = useChatStore()
 const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
 const contactStore = useContactStore()
 const userStatusStore = useUserStatusStore()
 const userStore = useUserStore()
+const settingStore = useSettingStore()
+const { themes } = storeToRefs(settingStore)
 /** 提醒框标题 */
 const tips = ref()
 const optionsType = ref<RoomActEnum>()
@@ -410,17 +439,21 @@ const sidebarShow = ref(false)
 const showLoading = ref(true)
 const isLoading = ref(false)
 const cacheStore = useCachedStore()
+
 // 群组详情数据
 const groupDetail = ref({
   myNickname: '', // 我在本群的昵称
   groupRemark: '', // 群备注
-  role: 3 // 默认为普通成员
+  roleId: 3 // 默认为普通成员
 })
 // 保存原始群组详情数据，用于比较是否有变化
 const originalGroupDetail = ref({
   myNickname: '',
   groupRemark: ''
 })
+
+// 是否为频道（仅显示 more 按钮）
+const isChannel = computed(() => activeItem.hotFlag === IsAllUserEnum.Yes || activeItem.roomId === '1')
 // 是否为群主
 const isGroupOwner = computed(() => {
   // 频道不能修改群头像和群名称
@@ -431,14 +464,18 @@ const isGroupOwner = computed(() => {
   // 检查groupStore.userList中当前用户的角色
   const currentUser = groupStore.userList.find((user) => user.uid === userStore.userInfo.uid)
 
+  console.log('currentUser ---> ', currentUser)
   // 如果能在userList找到用户信息并确认角色，优先使用这个判断
   if (currentUser) {
     return currentUser.roleId === RoleEnum.LORD
   }
+  console.log('groupDetail --> ', groupDetail)
+  groupDetail.value.roleId = 1
 
   // 否则回退到countInfo中的角色信息
-  return groupDetail.value.role === RoleEnum.LORD
+  return groupDetail.value.roleId === RoleEnum.LORD
 })
+
 // 我的群备注
 const myGroupRemark = computed(() => {
   if (activeItem.type === RoomTypeEnum.GROUP) {
@@ -452,10 +489,10 @@ const editingGroupName = ref('')
 // 群名称输入框引用
 const groupNameInputRef = useTemplateRef('groupNameInputRef')
 // 创建一个RTCPeerConnection实例
-let peerConnection: RTCPeerConnection
-if (type() !== 'linux') {
-  peerConnection = new RTCPeerConnection()
-}
+// let peerConnection: RTCPeerConnection
+// if (type() !== 'linux') {
+//   peerConnection = new RTCPeerConnection()
+// }
 
 const messageSettingType = ref(
   activeItem.shield
@@ -471,10 +508,8 @@ const messageSettingOptions = ref([
 const MIN_LOADING_TIME = 300 // 最小加载时间（毫秒）
 /** 是否在线 */
 const isOnline = computed(() => {
-  if (activeItem.type === RoomTypeEnum.GROUP) return false
-
+  if (activeItem.type === RoomTypeEnum.GROUP) return true
   const contact = contactStore.contactsList.find((item) => item.uid === activeItem.detailId)
-
   return contact?.activeStatus === OnlineEnum.ONLINE
 })
 /** 是否还是好友 */
@@ -599,7 +634,7 @@ watch(
     if (activeItem.type === RoomTypeEnum.GROUP) {
       const currentUser = groupStore.userList.find((user) => user.uid === userStore.userInfo.uid)
       if (currentUser && currentUser.roleId) {
-        groupDetail.value.role = currentUser.roleId
+        groupDetail.value.roleId = currentUser.roleId
       }
     }
   },
@@ -634,7 +669,7 @@ const handleCreateGroupOrInvite = () => {
 
 /** 处理创建群聊 */
 const handleCreateGroup = () => {
-  useMitt.emit(MittEnum.CREATE_GROUP, activeItem.detailId)
+  useMitt.emit(MittEnum.CREATE_GROUP, { id: activeItem.detailId })
 }
 
 /** 处理邀请进群 */
@@ -653,8 +688,8 @@ const fetchGroupDetail = async () => {
   groupDetail.value = {
     myNickname: groupStore.countInfo?.myName || '',
     groupRemark: groupStore.countInfo?.remark || '',
-    // 优先使用userList中找到的角色信息，没有则使用countInfo中的role或默认值
-    role: currentUser?.roleId || groupStore.countInfo?.role || RoleEnum.NORMAL
+    // 优先使用userList中找到的角色信息，没有则使用countInfo中的roleId或默认值
+    roleId: currentUser?.roleId || groupStore.countInfo?.roleId || RoleEnum.NORMAL
   }
   // 保存原始值，用于后续比较
   originalGroupDetail.value = {
@@ -686,11 +721,12 @@ const saveGroupInfo = async () => {
   // 只有当数据发生变化时才发送请求
   if (nicknameChanged || remarkChanged) {
     // 使用updateMyRoomInfo接口更新我在群里的昵称和群备注
-    await cacheStore.updateMyRoomInfo({
+    const myRoomInfo = {
       id: activeItem.roomId,
       myName: groupDetail.value.myNickname,
       remark: groupDetail.value.groupRemark
-    })
+    }
+    await cacheStore.updateMyRoomInfo(myRoomInfo)
 
     // 更新原始值为当前值
     originalGroupDetail.value = {
@@ -705,32 +741,43 @@ const saveGroupInfo = async () => {
       remark: groupDetail.value.groupRemark
     }
 
+    // 发送更新请求
+    await apis.updateMyRoomInfo(myRoomInfo)
+    // 更新群成员列表
+    await groupStore.getGroupUserList(activeItem.roomId)
+
     window.$message.success('群聊信息已更新')
   }
 }
 
-const handleMedia = () => {
-  start().then(() => {
-    // 将媒体流添加到RTCPeerConnection
-    stream.value?.getTracks().forEach((track) => {
-      peerConnection.addTrack(track, stream.value!)
-    })
+const handleAssist = () => {
+  window.$message.warning('暂未实现')
+}
 
-    // 创建一个offer
-    peerConnection.createOffer().then((offer) => {
-      // 设置本地描述
-      peerConnection.setLocalDescription(offer)
-      emit(EventEnum.SHARE_SCREEN)
-      /** 当需要给独立窗口传输数据的时候需要先监听窗口的创建完毕事件 */
-      addListener(
-        appWindow.listen('SharedScreenWin', async () => {
-          await emit('offer', offer)
-        })
-      )
-      // 在这里，你需要将offer发送给对方
-      // 对方需要调用peerConnection.setRemoteDescription(offer)来接受屏幕共享
-    })
-  })
+const handleMedia = () => {
+  window.$message.warning('暂未实现')
+  // start().then(() => {
+  //   // 将媒体流添加到RTCPeerConnection
+  //   stream.value?.getTracks().forEach((track) => {
+  //     peerConnection.addTrack(track, stream.value!)
+  //   })
+
+  //   // 创建一个offer
+  //   peerConnection.createOffer().then((offer) => {
+  //     // 设置本地描述
+  //     peerConnection.setLocalDescription(offer)
+  //     emit(EventEnum.SHARE_SCREEN)
+  //     /** 当需要给独立窗口传输数据的时候需要先监听窗口的创建完毕事件 */
+  //     addListener(
+  //       appWindow.listen('SharedScreenWin', async () => {
+  //         await emit('offer', offer)
+  //       }),
+  //       'SharedScreenWin'
+  //     )
+  //     // 在这里，你需要将offer发送给对方
+  //     // 对方需要调用peerConnection.setRemoteDescription(offer)来接受屏幕共享
+  //   })
+  // })
 }
 
 /** 置顶 */
@@ -804,9 +851,6 @@ const handleShield = (value: boolean) => {
 
       // 1. 先保存当前聊天室ID
       const tempRoomId = globalStore.currentSession.roomId
-
-      // 2. 设置为空值，触发清除当前消息
-      globalStore.currentSession.roomId = ''
 
       // 3. 在下一个tick中恢复原来的聊天室ID，触发重新加载消息
       nextTick(() => {
@@ -891,8 +935,46 @@ const handleConfirm = () => {
   }
 }
 
-const handleClick = () => {
-  console.log(111)
+const startRtcCall = async (callType: CallTypeEnum) => {
+  try {
+    // 判断是否为群聊，如果是群聊则跳过
+    if (activeItem.type === RoomTypeEnum.GROUP) {
+      window.$message.warning('群聊暂不支持音视频通话')
+      return
+    }
+
+    // 获取当前房间好友的ID（单聊时使用detailId作为remoteUid）
+    const remoteUid = activeItem.detailId
+    if (!remoteUid) {
+      window.$message.error('无法获取对方用户信息')
+      return
+    }
+    await createRtcCallWindow(false, remoteUid, callType)
+  } catch (error) {
+    console.error('创建视频通话窗口失败:', error)
+  }
+}
+
+const createRtcCallWindow = async (isIncoming: boolean, remoteUserId: string, callType: CallTypeEnum) => {
+  // 获取对方用户ID（单聊时使用，群聊时可能需要其他逻辑）
+  await createWebviewWindow(
+    '视频通话', // 窗口标题
+    'rtcCall', // 窗口标签
+    500, // 宽度
+    650, // 高度
+    undefined, // 不需要关闭其他窗口
+    false, // 不可调整大小
+    500, // 最小宽度
+    650, // 最小高度
+    false, // 不透明
+    false, // 显示窗口
+    {
+      remoteUserId,
+      roomId: activeItem.roomId,
+      callType,
+      isIncoming
+    }
+  )
 }
 
 // 开始编辑群名称
@@ -972,6 +1054,11 @@ const closeMenu = (event: any) => {
   }
 }
 
+const handleVideoCall = async (remotedUid: string, callType: CallTypeEnum) => {
+  info(`监听到视频通话调用，remotedUid: ${remotedUid}, callType: ${callType}`)
+  await createRtcCallWindow(true, remotedUid, callType)
+}
+
 onMounted(() => {
   window.addEventListener('click', closeMenu, true)
   if (!messageOptions.value?.isLoading) {
@@ -983,10 +1070,16 @@ onMounted(() => {
   if (activeItem.type === RoomTypeEnum.GROUP) {
     fetchGroupDetail()
   }
+
+  useMitt.on(WsResponseMessageType.VideoCallRequest, (event) => {
+    const remoteUid = event.callerUid
+    handleVideoCall(remoteUid, event.video ? CallTypeEnum.VIDEO : CallTypeEnum.AUDIO)
+  })
 })
 
 onUnmounted(() => {
   window.removeEventListener('click', closeMenu, true)
+  useMitt.off(WsResponseMessageType.VideoCallRequest, () => {})
 })
 </script>
 

@@ -1,5 +1,5 @@
-import { MsgEnum, RoomTypeEnum } from '@/enums'
 import { MSG_REPLY_TEXT_MAP } from '@/common/message'
+import { MsgEnum, RoomTypeEnum } from '@/enums'
 
 // 计算展示的回复消息的内容
 export const renderReplyContent = (name?: string, type?: MsgEnum, content?: string, roomType?: RoomTypeEnum) => {
@@ -49,6 +49,16 @@ export const renderReplyContent = (name?: string, type?: MsgEnum, content?: stri
       return roomType === RoomTypeEnum.GROUP
         ? `${name}:${MSG_REPLY_TEXT_MAP[MsgEnum.MERGE]}`
         : MSG_REPLY_TEXT_MAP[MsgEnum.MERGE]
+    }
+    case MsgEnum.VIDEO_CALL: {
+      return roomType === RoomTypeEnum.GROUP
+        ? `${name}:${MSG_REPLY_TEXT_MAP[MsgEnum.VIDEO_CALL]}`
+        : MSG_REPLY_TEXT_MAP[MsgEnum.VIDEO_CALL]
+    }
+    case MsgEnum.AUDIO_CALL: {
+      return roomType === RoomTypeEnum.GROUP
+        ? `${name}:${MSG_REPLY_TEXT_MAP[MsgEnum.AUDIO_CALL]}`
+        : MSG_REPLY_TEXT_MAP[MsgEnum.AUDIO_CALL]
     }
     default: {
       return ''

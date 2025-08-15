@@ -23,7 +23,7 @@
         target-filterable
         v-model:value="selectedValue"
         :options="filteredOptions"
-        :render-source-list="renderSourceList(true)"
+        :render-source-list="renderSourceList()"
         :render-target-label="renderLabel"
         :disabled-options="disabledOptions" />
 
@@ -35,12 +35,12 @@
   </div>
 </template>
 <script setup lang="ts">
-import { renderLabel, getDisabledOptions, getFilteredOptions, renderSourceList } from '@/layout/center/model.tsx'
-import { WebviewWindow, getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useMitt } from '@/hooks/useMitt'
+import { getDisabledOptions, getFilteredOptions, renderLabel, renderSourceList } from '@/layout/center/model.tsx'
+import apis from '@/services/apis'
 import { useGlobalStore } from '@/stores/global'
 import { useGroupStore } from '@/stores/group'
-import apis from '@/services/apis'
 
 const globalStore = useGlobalStore()
 const groupStore = useGroupStore()
@@ -55,7 +55,7 @@ const filteredOptions = computed(() => getFilteredOptions())
 // 初始化群成员数据
 const initGroupMembers = async () => {
   if (globalStore.currentSession?.roomId) {
-    await groupStore.getGroupUserList()
+    await groupStore.getGroupUserList(globalStore.currentSession.roomId)
   }
 }
 

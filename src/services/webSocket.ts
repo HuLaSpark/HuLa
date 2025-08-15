@@ -1,22 +1,29 @@
-import { WsResponseMessageType, WsTokenExpire } from '@/services/wsType.ts'
-import type {
-  LoginSuccessResType,
-  LoginInitResType,
-  WsReqMsgContentType,
-  OnStatusChangeType,
-  UserStateType
-} from '@/services/wsType.ts'
-import type { MessageType, MarkItemType, RevokedMsgType } from '@/services/types'
-import { OnlineEnum, ChangeTypeEnum, WorkerMsgEnum, ConnectionState } from '@/enums'
-import { useMitt } from '@/hooks/useMitt.ts'
-import { useUserStore } from '@/stores/user'
-import { getEnhancedFingerprint } from '@/services/fingerprint.ts'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { useTauriListener } from '@/hooks/useTauriListener'
 import { listen } from '@tauri-apps/api/event'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { info } from '@tauri-apps/plugin-log'
 import { useDebounceFn } from '@vueuse/core'
-// 使用类型导入避免直接执行代码
+import { type ChangeTypeEnum, ConnectionState, type OnlineEnum, URLEnum, WorkerMsgEnum } from '@/enums'
+import { useMitt } from '@/hooks/useMitt.ts'
 import type { useNetworkReconnect as UseNetworkReconnectType } from '@/hooks/useNetworkReconnect'
+import { useTauriListener } from '@/hooks/useTauriListener'
+import { getEnhancedFingerprint } from '@/services/fingerprint.ts'
+// 使用类型导入避免直接执行代码
+import type { MarkItemType, MessageType, RevokedMsgType } from '@/services/types'
+import type {
+  CallResponseData,
+  LoginInitResType,
+  LoginSuccessResType,
+  OnStatusChangeType,
+  RoomActionData,
+  SignalData,
+  UserStateType,
+  VideoCallRequestData,
+  WsReqMsgContentType
+} from '@/services/wsType.ts'
+import { WsResponseMessageType, type WsTokenExpire } from '@/services/wsType.ts'
+import { useUserStore } from '@/stores/user'
+
+const { addListener } = useTauriListener()
 
 // 创建 webSocket worker
 const worker: Worker = new Worker(new URL('../workers/webSocket.worker.ts', import.meta.url), {
@@ -90,9 +97,9 @@ class WS {
   #unwatchFunctions: (() => void)[] = []
 
   constructor() {
+    info('[ws] webSocket 服务初始化')
     this.initWindowType()
     if (isMainWindow) {
-      this.initConnect()
       // 收到WebSocket worker消息
       worker.addEventListener('message', this.onWorkerMsg)
       // 收到Timer worker消息
@@ -181,24 +188,25 @@ class WS {
     }
 
     try {
+      info('[ws] 创建Tauri窗口事件监听')
       // 设置各种Tauri窗口事件监听器
       // 窗口失去焦点 - 隐藏状态
-      await listen('tauri://blur', createStateChangeHandler(false))
+      addListener(listen('tauri://blur', createStateChangeHandler(false)), 'tauri://blur')
 
       // 窗口获得焦点 - 可见状态
-      await listen('tauri://focus', createStateChangeHandler(true))
+      addListener(listen('tauri://focus', createStateChangeHandler(true)), 'tauri://focus')
 
       // 窗口最小化 - 隐藏状态
-      await listen('tauri://window-minimized', createStateChangeHandler(false))
+      addListener(listen('tauri://window-minimized', createStateChangeHandler(false)), 'tauri://window-minimized')
 
       // 窗口恢复 - 可见状态
-      await listen('tauri://window-restored', createStateChangeHandler(true))
+      addListener(listen('tauri://window-restored', createStateChangeHandler(true)), 'tauri://window-restored')
 
       // 窗口隐藏 - 隐藏状态
-      await listen('tauri://window-hidden', createStateChangeHandler(false))
+      addListener(listen('tauri://window-hidden', createStateChangeHandler(false)), 'tauri://window-hidden')
 
       // 窗口显示 - 可见状态
-      await listen('tauri://window-shown', createStateChangeHandler(true))
+      addListener(listen('tauri://window-shown', createStateChangeHandler(true)), 'tauri://window-shown')
     } catch (error) {
       console.error('无法设置Tauri Window事件监听:', error)
     }
@@ -235,7 +243,6 @@ class WS {
       }
       case 'reconnectTimeout': {
         // timer上报重连超时事件，转发给WebSocket worker
-        console.log('重试次数: ', data.reconnectCount)
         worker.postMessage(
           JSON.stringify({
             type: 'reconnectTimeout',
@@ -250,7 +257,7 @@ class WS {
   // 初始化窗口类型
   private async initWindowType() {
     const currentWindow = WebviewWindow.getCurrent()
-    isMainWindow = currentWindow.label === 'home'
+    isMainWindow = currentWindow.label === 'home' || currentWindow.label === 'rtcCall'
   }
 
   initConnect = async () => {
@@ -264,7 +271,7 @@ class WS {
     let serverUrl = import.meta.env.VITE_WEBSOCKET_URL
     if (savedProxy) {
       const settings = JSON.parse(savedProxy)
-      const suffix = settings.wsIp + ':' + settings.wsPort + '/' + settings.wsSuffix
+      const suffix = settings.wsIp + ':' + settings.wsPort + URLEnum.WEBSOCKET + '/' + settings.wsSuffix
       if (settings.wsType === 'ws' || settings.wsType === 'wss') {
         serverUrl = settings.wsType + '://' + suffix
       }
@@ -458,6 +465,7 @@ class WS {
         // 收到消息
         case WsResponseMessageType.RECEIVE_MESSAGE: {
           const message = params.data as MessageType
+          info(`[ws]收到消息: ${JSON.stringify(message)}`)
           useMitt.emit(WsResponseMessageType.RECEIVE_MESSAGE, message)
           break
         }
@@ -588,6 +596,60 @@ class WS {
           useMitt.emit(WsResponseMessageType.ROOM_DISSOLUTION, params.data)
           break
         }
+        case WsResponseMessageType.VideoCallRequest: {
+          const data = params.data as VideoCallRequestData
+          console.log('收到通话请求', data)
+          useMitt.emit(WsResponseMessageType.VideoCallRequest, data)
+          break
+        }
+        case WsResponseMessageType.CallAccepted: {
+          const data = params.data as CallResponseData
+          console.log('通话被接受', data)
+          useMitt.emit(WsResponseMessageType.CallAccepted, data)
+          break
+        }
+        case WsResponseMessageType.CallRejected: {
+          const data = params.data as CallResponseData
+          console.log('通话被拒绝', data)
+          useMitt.emit(WsResponseMessageType.CallRejected, data)
+          break
+        }
+        case WsResponseMessageType.TIMEOUT: {
+          const data = params.data as CallResponseData
+          console.log('通话超时未接通', data)
+          useMitt.emit(WsResponseMessageType.TIMEOUT, data)
+          break
+        }
+        case WsResponseMessageType.RoomClosed: {
+          const data = params.data as { roomId: string }
+          console.log('房间已关闭', data)
+          useMitt.emit(WsResponseMessageType.RoomClosed, data)
+          break
+        }
+        case WsResponseMessageType.WEBRTC_SIGNAL: {
+          const data = params.data as SignalData
+          console.log('收到信令消息', data)
+          useMitt.emit(WsResponseMessageType.WEBRTC_SIGNAL, data)
+          break
+        }
+        case WsResponseMessageType.JoinVideo: {
+          const data = params.data as RoomActionData
+          console.log('用户加入房间', data)
+          useMitt.emit(WsResponseMessageType.JoinVideo, data)
+          break
+        }
+        case WsResponseMessageType.LeaveVideo: {
+          const data = params.data as RoomActionData
+          console.log('用户离开房间', data)
+          useMitt.emit(WsResponseMessageType.LeaveVideo, data)
+          break
+        }
+        case WsResponseMessageType.DROPPED: {
+          const data = params.data
+          console.log('用户已挂断', data)
+          useMitt.emit(WsResponseMessageType.DROPPED, data)
+          break
+        }
         default: {
           console.log('接收到未处理类型的消息:', params)
           break
@@ -682,4 +744,6 @@ class WS {
   }
 }
 
-export default new WS()
+const ws = new WS()
+await ws.initConnect()
+export default ws

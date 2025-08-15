@@ -1,6 +1,6 @@
-import { defineStore } from 'pinia'
-import { CloseBxEnum, StoresEnum, ShowModeEnum, ThemeEnum } from '@/enums'
 import { type } from '@tauri-apps/plugin-os'
+import { defineStore } from 'pinia'
+import { CloseBxEnum, ShowModeEnum, StoresEnum, ThemeEnum } from '@/enums'
 
 // TODO 使用indexDB或sqlite缓存数据，还需要根据每个账号来进行配置 (nyh -> 2024-03-26 01:22:12)
 const isDesktop = computed(() => {

@@ -3,17 +3,17 @@
  * 注意：请使用TSDoc规范进行注释，以便在使用时能够获得良好提示。
  * @see TSDoc规范https://tsdoc.org/
  **/
-import {
+import type {
   ActEnum,
   IsYesEnum,
   MarkEnum,
+  MessageStatusEnum,
   MsgEnum,
+  NotificationTypeEnum,
   OnlineEnum,
   RoomTypeEnum,
-  SexEnum,
-  MessageStatusEnum,
   SessionOperateEnum,
-  NotificationTypeEnum
+  SexEnum
 } from '@/enums'
 
 /**响应请求体*/
@@ -44,15 +44,19 @@ export type LoginUserReq = {
   account: string
   /** 密码 */
   password: string
-  /** 登录方式 pc/mobile */
-  source: 'pc' | 'mobile'
+  /** 登录方式 PC/MOBILE */
+  deviceType: 'PC' | 'MOBILE'
+  systemType: number
+  grantType: 'CAPTCHA' | 'REFRESH_TOKEN' | 'PASSWORD' | 'MOBILE'
+  key?: string
+  code?: string
 }
 
 export type RegisterUserReq = {
   /** 默认随机头像 */
   avatar: string
   /** 昵称 */
-  name: string
+  nickName: string
   /** 邮箱 */
   email: string
   /** 密码 */
@@ -61,6 +65,9 @@ export type RegisterUserReq = {
   code: string
   /** 识别码 */
   uuid: string
+  key?: string
+  confirmPassword: string
+  systemType: number
 }
 
 /** 分页翻页 */
@@ -103,7 +110,7 @@ export type GroupDetailReq = {
   /** 在线人数 */
   onlineNum: number
   /** 成员角色 1群主 2管理员 3普通成员 4踢出群聊 */
-  role: number
+  roleId: number
   /** 房间id */
   roomId: string
   /** 群号 */
@@ -268,9 +275,9 @@ export type BadgeType = {
 
 export type MarkItemType = {
   /** 操作用户 */
-  uid: number
+  uid: string
   /** 消息id */
-  msgId: number
+  msgId: string
   /** 操作类型 */
   markType: MarkEnum
   /** 数量 */
@@ -395,9 +402,9 @@ export type TextBody = {
 /** 公告消息体 */
 export type AnnouncementBody = TextBody & {
   /** 创建时间 */
-  createdTime: number
+  createTime: number
   /** 更新时间 */
-  updatedTime: number
+  updateTime: number
 }
 /** 表情消息 */
 export type EmojiBody = {
@@ -514,7 +521,7 @@ export type SessionItem = {
   activeTime: number
   /** 会话头像 */
   avatar: string
-  /** 如果是单聊，则是对方的uid，如果是群聊，则是群id */
+  /** 会话id */
   id: string
   /** 如果是单聊，则是对方的uid，如果是群聊，则是群id */
   detailId: string
@@ -705,4 +712,9 @@ export type RightMouseMessageItem = {
   createTime: number | null
   updateTime: number | null
   _index: number
+}
+
+export type DetailsContent = {
+  type: 'apply'
+  applyType: 'friend' | 'group'
 }

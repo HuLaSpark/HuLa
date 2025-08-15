@@ -1,9 +1,10 @@
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { fetch } from '@tauri-apps/plugin-http'
 import { AppException, ErrorType } from '@/common/exception'
-import { RequestQueue } from '@/utils/RequestQueue'
-import urls from './urls'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { URLEnum } from '@/enums'
+import { RequestQueue } from '@/utils/RequestQueue'
+import { updateTokenSilently } from '../utils/TokenManager'
+import urls from './urls'
 
 // 错误信息常量
 const ERROR_MESSAGES = {
@@ -125,7 +126,7 @@ async function Http<T = any>(
   // 默认重试配置，在登录窗口时禁用重试
   const defaultRetryOptions: RetryOptions = {
     retries: 3,
-    retryDelay: (attempt) => Math.pow(2, attempt) * 1000,
+    retryDelay: (attempt) => 2 ** attempt * 1000,
     retryOn: [] // 状态码意味着已经连接到服务器
   }
 
@@ -149,9 +150,12 @@ async function Http<T = any>(
     httpHeaders.set('Content-Type', 'application/json')
   }
 
-  // 设置Authorization
+  // 统一设置基础认证头
+  const basicAuth = btoa('luohuo_web_pro:luohuo_web_pro_secret')
+  httpHeaders.set('Authorization', `${basicAuth}`)
+
   if (token) {
-    httpHeaders.set('Authorization', `Bearer ${token}`)
+    httpHeaders.set('token', `${token}`)
   }
 
   // 设置浏览器指纹
@@ -221,10 +225,7 @@ async function Http<T = any>(
           console.log('🤯 权限不足')
           break
         }
-        case 422: {
-          break
-        }
-        case 40004: {
+        case 406: {
           // 限制token刷新重试次数，最多重试一次
           if (tokenRefreshCount >= 1) {
             console.log('🚫 Token刷新重试次数超过限制，退出重试')
@@ -249,6 +250,9 @@ async function Http<T = any>(
             window.dispatchEvent(new Event('needReLogin'))
             throw refreshError
           }
+        }
+        case 422: {
+          break
         }
       }
 
@@ -276,7 +280,7 @@ async function Http<T = any>(
     } catch (error: any) {
       // 优化错误日志，仅在开发环境打印详细信息
       if (import.meta.env.DEV) {
-        console.error(`尝试 ${currentAttempt + 1} 失败 →`, error)
+        console.error(`${options.method} ${url} 尝试 ${currentAttempt + 1} 失败 →`, error)
       }
 
       // 处理网络相关错误
@@ -361,8 +365,7 @@ async function refreshTokenAndRetry(): Promise<string> {
     const response = await fetch(urls.refreshToken, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${refreshToken}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({ refreshToken })
     })
@@ -376,10 +379,13 @@ async function refreshTokenAndRetry(): Promise<string> {
     }
     const { token, refreshToken: newRefreshToken } = data.data
 
-    console.log('🔑 Token刷新成功，更新存储', data)
+    console.log('🔑 Token刷新成功，更新存储', token, newRefreshToken)
     // 更新本地存储的token 知道
     localStorage.setItem('TOKEN', token)
     localStorage.setItem('REFRESH_TOKEN', newRefreshToken)
+
+    // 更新 rust端中的 token
+    await updateTokenSilently(token, newRefreshToken)
 
     // 使用队列处理方式
     await requestQueue.processQueue(token)

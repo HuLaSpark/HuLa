@@ -49,11 +49,11 @@
   </div>
 </template>
 <script setup lang="ts">
-import { WebviewWindow, getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { useGlobalStore } from '@/stores/global.ts'
+import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useUserInfo } from '@/hooks/useCached.ts'
-import apis from '@/services/apis.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
+import apis from '@/services/apis.ts'
+import { useGlobalStore } from '@/stores/global.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 

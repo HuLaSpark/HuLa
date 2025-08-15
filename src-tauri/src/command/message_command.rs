@@ -4,16 +4,16 @@ use crate::im_reqest_client::ImRequestClient;
 use crate::pojo::common::{CursorPageParam, CursorPageResp};
 use crate::repository::{im_message_repository, im_user_repository};
 use crate::vo::vo::ChatMessageReq;
-use anyhow::Context;
+
 use entity::im_user::Entity as ImUserEntity;
 use entity::{im_message, im_user};
-use log::{debug, error, info};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use sea_orm::{DatabaseConnection, TransactionTrait};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::ops::Deref;
-use tauri::{AppHandle, Emitter, State};
+use tauri::{State, ipc::Channel};
+use tracing::{debug, error, info};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -130,15 +130,52 @@ pub async fn page_msg(
 
 /// 将数据库消息模型转换为响应模型
 fn convert_message_to_resp(msg: im_message::Model) -> MessageResp {
-    // 解析消息体
-    let body = msg.body.as_ref().and_then(|b| serde_json::from_str(b).ok());
+    // 解析消息体 - 安全地处理 JSON 解析
+    let body = msg.body.as_ref().and_then(|body_str| {
+        if body_str.trim().is_empty() {
+            None
+        } else {
+            match serde_json::from_str(body_str) {
+                Ok(parsed) => Some(parsed),
+                Err(e) => {
+                    debug!(
+                        "Failed to parse message body JSON for message {}: {}",
+                        msg.id, e
+                    );
+                    // 如果解析失败，将原始字符串作为文本消息处理
+                    Some(serde_json::json!({
+                        "content": body_str
+                    }))
+                }
+            }
+        }
+    });
 
-    // 解析消息标记
-    let message_marks = msg
-        .message_marks
-        .as_ref()
-        .and_then(|marks| serde_json::from_str::<HashMap<String, MessageMark>>(marks).ok());
+    // 解析消息标记 - 支持从 message_marks 字段解析
+    let message_marks = msg.message_marks.as_ref().and_then(|marks_str| {
+        if marks_str.trim().is_empty() {
+            return None;
+        }
 
+        match serde_json::from_str::<HashMap<String, MessageMark>>(marks_str) {
+            Ok(parsed_marks) => {
+                if parsed_marks.is_empty() {
+                    None
+                } else {
+                    Some(parsed_marks)
+                }
+            }
+            Err(e) => {
+                debug!(
+                    "Failed to parse message marks JSON for message {}: {}",
+                    msg.id, e
+                );
+                None
+            }
+        }
+    });
+
+    // 构建响应对象
     MessageResp {
         create_id: Some(msg.id.clone()),
         create_time: msg.send_time,
@@ -166,7 +203,10 @@ pub async fn check_user_init_and_fetch_messages(
     db_conn: &DatabaseConnection,
     uid: &str,
 ) -> Result<(), CommonError> {
-    debug!("检查用户初始化状态并获取消息, uid: {}", uid);
+    debug!(
+        "Checking user initialization status and fetching messages, uid: {}",
+        uid
+    );
     // 检查用户的 is_init 状态
     if let Ok(user) = ImUserEntity::find()
         .filter(im_user::Column::Id.eq(uid))
@@ -176,16 +216,24 @@ pub async fn check_user_init_and_fetch_messages(
         if let Some(user_model) = user {
             // 如果 is_init 为 true，调用后端接口获取所有消息
             if user_model.is_init {
-                info!("用户 {} 需要初始化，开始获取所有消息", uid);
+                info!(
+                    "User {} needs initialization, starting to fetch all messages",
+                    uid
+                );
                 // 传递用户的 last_opt_time 参数
                 if let Err(e) = fetch_all_messages(client, db_conn, uid, None).await {
-                    error!("获取所有消息失败: {}", e);
+                    error!("Failed to fetch all messages: {}", e);
                     return Err(e);
                 }
-            }else {
-                info!("用户 {} 离线消息更新, last_opt_time: {:?}", uid, user_model.last_opt_time);
-                if let Err(e) = fetch_all_messages(client, db_conn, uid, user_model.last_opt_time).await {
-                    error!("离线消息更新失败: {}", e);
+            } else {
+                info!(
+                    "User {} offline message update, last_opt_time: {:?}",
+                    uid, user_model.last_opt_time
+                );
+                if let Err(e) =
+                    fetch_all_messages(client, db_conn, uid, user_model.last_opt_time).await
+                {
+                    error!("Failed to update offline messages: {}", e);
                     return Err(e);
                 }
             }
@@ -201,17 +249,19 @@ pub async fn fetch_all_messages(
     uid: &str,
     last_opt_time: Option<i64>,
 ) -> Result<(), CommonError> {
+    info!(
+        "Starting to fetch all messages, uid: {}, last_opt_time: {:?}",
+        uid, last_opt_time
+    );
     // 调用后端接口 /chat/msg/list 获取所有消息，传递 last_opt_time 参数
-    let mut request = client.get("/chat/msg/list");
-    
+    let mut request = client.get("/im/chat/msg/list");
+
     // 如果有 last_opt_time 参数，添加到查询参数中
     if let Some(time) = last_opt_time {
         request = request.query(&[("lastOptTime", time.to_string())]);
     }
-    
-    let messages = request
-        .send_json::<Vec<MessageResp>>()
-        .await?;
+
+    let messages = request.send_json::<Vec<MessageResp>>().await?;
 
     if let Some(messages) = messages.data {
         // 开启事务
@@ -225,10 +275,13 @@ pub async fn fetch_all_messages(
         // 保存到本地数据库
         match im_message_repository::save_all(&tx, db_messages).await {
             Ok(_) => {
-                info!("消息保存到数据库成功");
+                info!("Messages saved to database successfully");
             }
             Err(e) => {
-                error!("保存消息到数据库失败，详细错误: {:?}", e);
+                error!(
+                    "Failed to save messages to database, detailed error: {:?}",
+                    e
+                );
                 return Err(e.into());
             }
         }
@@ -236,7 +289,7 @@ pub async fn fetch_all_messages(
         // 消息保存完成后，将用户的 is_init 状态设置为 false
         im_user_repository::update_user_init_status(&tx, uid, false)
             .await
-            .with_context(|| "更新用户 is_init 状态失败")?;
+            .map_err(|e| anyhow::anyhow!("Failed to update user is_init status: {}", e))?;
 
         // 提交事务
         tx.commit().await?;
@@ -283,7 +336,8 @@ fn convert_resp_to_model_for_fetch(msg_resp: MessageResp, uid: String) -> im_mes
 pub async fn send_msg(
     data: ChatMessageReq,
     state: State<'_, AppData>,
-    app: AppHandle,
+    success_channel: Channel<MessageResp>,
+    error_channel: Channel<String>,
 ) -> Result<(), String> {
     use std::ops::Deref;
 
@@ -328,14 +382,17 @@ pub async fn send_msg(
         .map_err(|e| CommonError::DatabaseError(e))?;
     // 先保存到本地数据库
     if let Err(e) = im_message_repository::save_message(&tx, message.clone()).await {
-        error!("保存消息到数据库失败: {}", e);
+        error!("Failed to save message to database: {}", e);
         return Err(e.to_string());
     }
     tx.commit()
         .await
         .map_err(|e| CommonError::DatabaseError(e))?;
 
-    info!("消息已保存到本地数据库，ID: {}", message.id.clone());
+    info!(
+        "Message saved to local database, ID: {}",
+        message.id.clone()
+    );
 
     // 异步发送到后端接口
     let db_conn = state.db_conn.clone();
@@ -347,7 +404,7 @@ pub async fn send_msg(
         let result = {
             let client = request_client.lock().await;
             client
-                .post("/chat/msg")
+                .post("/im/chat/msg")
                 .json(&send_data)
                 .send_json::<MessageResp>()
                 .await
@@ -358,17 +415,22 @@ pub async fn send_msg(
         // 根据发送结果更新消息状态
         let status = match result {
             Ok(resp) => {
-                info!("消息发送成功，ID: {}", msg_id);
-                let mut result = resp.data.clone().unwrap();
+                let mut result = match resp.data.clone() {
+                    Some(data) => data,
+                    None => {
+                        error!("Response data is None");
+                        return;
+                    }
+                };
                 result.old_msg_id = Some(msg_id.clone());
                 id = result.message.id.clone();
-
-                let _ = app.emit::<MessageResp>("send_msg_success", result);
+                // 尝试克隆数据以避免所有权问题
+                let event_data = result.clone();
+                success_channel.send(event_data).unwrap();
                 "success"
             }
-            Err(e) => {
-                error!("消息发送失败，ID: {}, 错误: {}", msg_id, e);
-                let _ = app.emit::<String>("send_msg_error", msg_id.clone());
+            Err(_e) => {
+                error_channel.send(msg_id.clone()).unwrap();
                 "fail"
             }
         };
@@ -383,7 +445,7 @@ pub async fn send_msg(
         )
         .await
         {
-            error!("更新消息状态失败: {}", e);
+            error!("Failed to update message status: {}", e);
         }
     });
 
@@ -392,7 +454,6 @@ pub async fn send_msg(
 
 #[tauri::command]
 pub async fn save_msg(data: MessageResp, state: State<'_, AppData>) -> Result<(), String> {
-    info!("收到消息保存到本地, data: {:?}", data);
     // 创建 im_message::Model
     let message = convert_resp_to_model_for_fetch(data, state.user_info.lock().await.uid.clone());
 

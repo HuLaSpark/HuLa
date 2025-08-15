@@ -14,7 +14,4 @@
 </template>
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { useWindowState } from '@/hooks/useWindowState.ts'
-
-useWindowState(WebviewWindow.getCurrent().label)
 </script>

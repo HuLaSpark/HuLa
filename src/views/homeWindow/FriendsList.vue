@@ -1,10 +1,26 @@
 <template>
   <n-flex
-    @click="handleApply"
+    @click="handleApply('friend')"
     align="center"
     justify="space-between"
     class="my-10px p-12px hover:(bg-[--list-hover-color] cursor-pointer)">
     <div class="text-(14px [--text-color])">好友通知</div>
+    <n-flex align="center" :size="4">
+      <n-badge :value="globalStore.unReadMark.newFriendUnreadCount" :max="15" />
+      <n-badge
+        v-if="hasPendingFriendRequests && globalStore.unReadMark.newFriendUnreadCount === 0"
+        dot
+        color="#d5304f" />
+      <svg class="size-16px rotate-270 color-[--text-color]"><use href="#down"></use></svg>
+    </n-flex>
+  </n-flex>
+
+  <n-flex
+    @click="handleApply('group')"
+    align="center"
+    justify="space-between"
+    class="my-10px p-12px hover:(bg-[--list-hover-color] cursor-pointer)">
+    <div class="text-(14px [--text-color])">群通知</div>
     <n-flex align="center" :size="4">
       <n-badge :value="globalStore.unReadMark.newFriendUnreadCount" :max="15" />
       <n-badge
@@ -20,7 +36,7 @@
         <ContextMenu @contextmenu="showMenu($event)" @select="handleSelect($event.label)" :menu="menuList">
           <n-collapse-item title="我的好友" name="1">
             <template #header-extra>
-              <span class="text-(10px #707070)"> {{ onlineCount }}/{{ contactStore.contactsList.length }} </span>
+              <span class="text-(10px #707070)">{{ onlineCount }}/{{ contactStore.contactsList.length }}</span>
             </template>
             <n-scrollbar style="max-height: calc(100vh - 220px)">
               <!-- 用户框 多套一层div来移除默认的右键事件然后覆盖掉因为margin空隙而导致右键可用 -->
@@ -40,12 +56,13 @@
                       class="grayscale"
                       :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
                       :src="AvatarUtils.getAvatarUrl(useUserInfo(item.uid).value.avatar!)"
-                      fallback-src="/logo.png" />
+                      :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+                      :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'" />
 
                     <n-flex vertical justify="space-between" class="h-fit flex-1 truncate">
-                      <span class="text-14px leading-tight flex-1 truncate">{{
-                        useUserInfo(item.uid).value.name
-                      }}</span>
+                      <span class="text-14px leading-tight flex-1 truncate">
+                        {{ useUserInfo(item.uid).value.name }}
+                      </span>
 
                       <div class="text leading-tight text-12px flex-y-center gap-4px flex-1 truncate">
                         [
@@ -72,7 +89,7 @@
       <n-collapse :display-directive="'show'" accordion :default-expanded-names="['1']">
         <n-collapse-item title="我的群聊" name="1">
           <template #header-extra>
-            <span class="text-(10px #707070)">{{ groupChatList.length }} </span>
+            <span class="text-(10px #707070)">{{ groupChatList.length }}</span>
           </template>
           <n-scrollbar style="max-height: calc(100vh - 220px)">
             <div
@@ -88,7 +105,8 @@
                   bordered
                   :size="44"
                   :src="AvatarUtils.getAvatarUrl(item.avatar)"
-                  fallback-src="/logo.png" />
+                  :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+                  :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'" />
 
                 <span class="text-14px leading-tight flex-1 truncate">{{ item.remark || item.roomName }}</span>
               </n-flex>
@@ -100,16 +118,17 @@
   </n-tabs>
 </template>
 <script setup lang="ts" name="friendsList">
-import { useMitt } from '@/hooks/useMitt.ts'
-import { MittEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
-import { useContactStore } from '@/stores/contacts.ts'
-import { useUserInfo } from '@/hooks/useCached.ts'
-import { AvatarUtils } from '@/utils/AvatarUtils'
-import { useGlobalStore } from '@/stores/global.ts'
-import { useUserStatusStore } from '@/stores/userStatus'
 import { storeToRefs } from 'pinia'
-import { RequestFriendAgreeStatus } from '@/services/types'
+import { MittEnum, OnlineEnum, RoomTypeEnum, ThemeEnum } from '@/enums'
+import { useUserInfo } from '@/hooks/useCached.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
+import { type DetailsContent, RequestFriendAgreeStatus } from '@/services/types'
+import { useContactStore } from '@/stores/contacts.ts'
+import { useGlobalStore } from '@/stores/global.ts'
+import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user'
+import { useUserStatusStore } from '@/stores/userStatus'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 
 const menuList = ref([
   { label: '添加分组', icon: 'plus' },
@@ -124,6 +143,8 @@ const contactStore = useContactStore()
 const globalStore = useGlobalStore()
 const userStatusStore = useUserStatusStore()
 const userStore = useUserStore()
+const settingStore = useSettingStore()
+const { themes } = storeToRefs(settingStore)
 const { stateList } = storeToRefs(userStatusStore)
 
 /** 是否有待处理的好友申请 */
@@ -184,11 +205,12 @@ const handleSelect = (event: MouseEvent) => {
   console.log(event)
 }
 
-const handleApply = () => {
+const handleApply = (applyType: 'friend' | 'group') => {
   useMitt.emit(MittEnum.APPLY_SHOW, {
     context: {
-      type: 'apply'
-    }
+      type: 'apply',
+      applyType
+    } as DetailsContent
   })
   activeItem.value = ''
 }

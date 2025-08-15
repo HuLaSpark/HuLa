@@ -1,25 +1,26 @@
-import { LimitEnum, MittEnum, MsgEnum, MessageStatusEnum, RoomTypeEnum, UploadSceneEnum, TauriCommand } from '@/enums'
+import { Channel, invoke } from '@tauri-apps/api/core'
+import { readImage, readText } from '@tauri-apps/plugin-clipboard-manager'
+import { type } from '@tauri-apps/plugin-os'
+import { useDebounceFn } from '@vueuse/core'
+import { storeToRefs } from 'pinia'
+import type { Ref } from 'vue'
+import { ErrorType } from '@/common/exception'
+import { LimitEnum, MessageStatusEnum, MittEnum, MsgEnum, RoomTypeEnum, TauriCommand, UploadSceneEnum } from '@/enums'
 import { useUserInfo } from '@/hooks/useCached.ts'
-import { useCachedStore, type BaseUserItem } from '@/stores/cached.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
+import type { AIModel } from '@/services/types.ts'
+import { type BaseUserItem, useCachedStore } from '@/stores/cached.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useSettingStore } from '@/stores/setting.ts'
-import { useMitt } from '@/hooks/useMitt.ts'
-import { type } from '@tauri-apps/plugin-os'
-import { useDebounceFn } from '@vueuse/core'
-import { Ref } from 'vue'
-import { storeToRefs } from 'pinia'
-import { SelectionRange, useCommon } from './useCommon.ts'
-import { readText, readImage } from '@tauri-apps/plugin-clipboard-manager'
-import { processClipboardImage } from '@/utils/ImageUtils.ts'
 import { messageStrategyMap } from '@/strategy/MessageStrategy.ts'
-import { useTrigger } from './useTrigger'
-import type { AIModel } from '@/services/types.ts'
-import { UploadProviderEnum, useUpload } from './useUpload.ts'
-import { getReplyContent } from '@/utils/MessageReply.ts'
 import { fixFileMimeType, getMessageTypeByFile } from '@/utils/FileType.ts'
+import { processClipboardImage } from '@/utils/ImageUtils.ts'
+import { getReplyContent } from '@/utils/MessageReply.ts'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
-import { ErrorType } from '@/common/exception'
+import { type SelectionRange, useCommon } from './useCommon.ts'
+import { useTrigger } from './useTrigger'
+import { UploadProviderEnum, useUpload } from './useUpload.ts'
 /**
  * 光标管理器
  */
@@ -376,6 +377,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     const tempMsg = await messageStrategy.buildMessageType(tempMsgId, messageBody, globalStore, userUid)
     resetInput()
 
+    tempMsg.message.status = MessageStatusEnum.SENDING
     // 先添加到消息列表
     chatStore.pushMsg(tempMsg)
     useMitt.emit(MittEnum.MESSAGE_ANIMATION, tempMsg)
@@ -464,22 +466,40 @@ export const useMsgInput = (messageInputDom: Ref) => {
         })
         console.log('视频上传完成,更新为服务器URL:', messageBody.url)
       }
-      // 发送消息到服务器
-      await invokeWithErrorHandler(
-        TauriCommand.SEND_MSG,
-        {
-          data: {
-            id: tempMsgId,
-            roomId: globalStore.currentSession.roomId,
-            msgType: msg.type,
-            body: messageBody
-          }
+      // 发送消息到服务器 - 使用 channel 方式
+      const successChannel = new Channel<any>()
+      const errorChannel = new Channel<string>()
+
+      // 监听成功响应
+      successChannel.onmessage = (message) => {
+        console.log('[跟踪] 收到 send_msg_success 响应:', message)
+        chatStore.updateMsg({
+          msgId: message.oldMsgId,
+          status: MessageStatusEnum.SUCCESS,
+          newMsgId: message.message.id,
+          body: message.message.body
+        })
+      }
+
+      // 监听错误响应
+      errorChannel.onmessage = (msgId) => {
+        console.log('[跟踪] 收到 send_msg_error 响应:', msgId)
+        chatStore.updateMsg({
+          msgId: msgId,
+          status: MessageStatusEnum.FAILED
+        })
+      }
+
+      await invoke(TauriCommand.SEND_MSG, {
+        data: {
+          id: tempMsgId,
+          roomId: globalStore.currentSession.roomId,
+          msgType: msg.type,
+          body: messageBody
         },
-        {
-          customErrorMessage: '消息发送失败',
-          errorType: ErrorType.Network
-        }
-      )
+        successChannel,
+        errorChannel
+      })
 
       // 停止发送状态的定时器
       clearTimeout(statusTimer)
@@ -579,7 +599,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       text.includes('@')
     ) {
       // 如果当前群聊没有加载用户列表，尝试加载
-      await cachedStore.getGroupAtUserBaseInfo()
+      await cachedStore.getGroupAtUserBaseInfo(globalStore.currentSession.roomId)
     }
 
     await handleTrigger(text, cursorPosition, { range, selection, keyword: '' })
@@ -628,7 +648,11 @@ export const useMsgInput = (messageInputDom: Ref) => {
     }
     if ((sendKeyIsEnter && isEnterKey && !isCtrlOrMetaKey) || (sendKeyIsCtrlEnter && isCtrlOrMetaKey && isEnterKey)) {
       e?.preventDefault()
-      await send()
+      // 触发form提交而不是直接调用send
+      const form = document.getElementById('message-form') as HTMLFormElement
+      if (form) {
+        form.requestSubmit()
+      }
       resetAllStates()
     }
   }
