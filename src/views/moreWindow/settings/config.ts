@@ -17,6 +17,11 @@ const sideOptions = ref<OPT.L.SettingSide[]>([
     icon: 'mini-sd-card'
   },
   {
+    url: '/shortcut',
+    label: '快捷键管理',
+    icon: 'enter-the-keyboard'
+  },
+  {
     url: '/loginSetting',
     label: '登录设置',
     icon: 'settings'

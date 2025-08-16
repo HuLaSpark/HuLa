@@ -79,12 +79,13 @@
       {
         "label": "capture",
         "url": "/capture",
-        "fullscreen": false,
+        "fullscreen": true,
         "transparent": true,
         "resizable": false,
-        "skipTaskbar": false,
+        "skipTaskbar": true,
         "decorations": false,
-        "visible": false
+        "visible": false,
+        "hiddenTitle": true
       },
       {
         "label": "checkupdate",
