@@ -21,6 +21,7 @@ let webSocketService: any
 
 if (USE_RUST_WEBSOCKET) {
   // 使用 Rust WebSocket 实现
+  // TODO: 这里会初始化多次，会根据窗口来初始化，需要实现单例模式
   info('🦀 使用 Rust WebSocket 实现')
   webSocketService = import('./webSocketRust').then((module) => module.default)
 } else {
