@@ -379,7 +379,7 @@ const handleLoadGroupAnnoun = async (roomId: string) => {
         announList.value = [topAnnouncement, ...announList.value.filter((item: any) => !item.top)]
       }
     }
-    announNum.value = parseInt(data.total)
+    announNum.value = parseInt(data.total, 10)
   }
 
   // 加载完成后，关闭骨架屏

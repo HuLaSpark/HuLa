@@ -55,7 +55,7 @@ const signUtils = {
    */
   getTencentSign(text: string, secretId: string, secretKey: string, timestamp: string): string {
     // 根据时间戳生成UTC日期字符串
-    const date = new Date(parseInt(timestamp) * 1000)
+    const date = new Date(parseInt(timestamp, 10) * 1000)
     const dateStr = date.toISOString().split('T')[0]
     const service = 'tmt' // 服务名称
 

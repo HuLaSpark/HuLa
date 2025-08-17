@@ -70,7 +70,7 @@ export const useVideoViewer = defineStore(
 
     // 更新视频列表中的特定视频路径（用于下载完成后更新为本地路径）
     const updateVideoPath = (originalUrl: string, newPath: string) => {
-      const index = videoList.value.findIndex((url) => url === originalUrl)
+      const index = videoList.value.indexOf(originalUrl)
       if (index !== -1) {
         videoList.value[index] = newPath
       }

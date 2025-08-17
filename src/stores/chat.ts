@@ -491,7 +491,7 @@ export const useChatStore = defineStore(
     const getMsgIndex = (msgId: string) => {
       if (!msgId) return -1
       const keys = currentMessageMap.value ? Array.from(currentMessageMap.value.keys()) : []
-      return keys.findIndex((key) => key === msgId)
+      return keys.indexOf(msgId)
     }
 
     // 更新所有标记类型的数量

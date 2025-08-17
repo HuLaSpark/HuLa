@@ -1144,7 +1144,7 @@ class VoiceMessageStrategyImpl extends AbstractMessageStrategy {
     return {
       type: MsgEnum.VOICE,
       url: assetUrl,
-      size: parseInt(lastVoiceDiv.dataset.size || '0'),
+      size: parseInt(lastVoiceDiv.dataset.size || '0', 10),
       duration: parseFloat(lastVoiceDiv.dataset.duration || '0'),
       filename: lastVoiceDiv.dataset.filename || 'voice.mp3'
     }

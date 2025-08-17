@@ -11,10 +11,10 @@ export class IosAdapter implements MobileClientInterface {
 
       // 手动获取其安全区域值
       const insets: SafeArea = {
-        top: parseInt(rootStyle.getPropertyValue('--safe-area-inset-top') || '0'),
-        bottom: parseInt(rootStyle.getPropertyValue('--safe-area-inset-bottom') || '0'),
-        left: parseInt(rootStyle.getPropertyValue('--safe-area-inset-left') || '0'),
-        right: parseInt(rootStyle.getPropertyValue('--safe-area-inset-right') || '0')
+        top: parseInt(rootStyle.getPropertyValue('--safe-area-inset-top') || '0', 10),
+        bottom: parseInt(rootStyle.getPropertyValue('--safe-area-inset-bottom') || '0', 10),
+        left: parseInt(rootStyle.getPropertyValue('--safe-area-inset-left') || '0', 10),
+        right: parseInt(rootStyle.getPropertyValue('--safe-area-inset-right') || '0', 10)
       }
 
       return insets
