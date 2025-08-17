@@ -4,12 +4,31 @@ import { register, unregister } from '@tauri-apps/plugin-global-shortcut'
 import { useTauriListener } from '@/hooks/useTauriListener'
 import { useSettingStore } from '@/stores/setting.ts'
 
-// 全局快捷键状态 - 跨实例共享
-let globalCurrentShortcut = ''
+// 快捷键配置接口
+type ShortcutConfig = {
+  /** 配置键名，用于从 store 中读取设置 */
+  key: keyof NonNullable<ReturnType<typeof useSettingStore>['shortcuts']>
+  /** 默认快捷键值 */
+  defaultValue: string
+  /** 快捷键处理函数 */
+  handler: () => Promise<void>
+  /** 监听的更新事件名 */
+  updateEventName: string
+  /** 发送注册状态的事件名 */
+  registrationEventName: string
+}
+
+// 全局快捷键状态管理
+const globalShortcutStates = new Map<string, string>()
+
+// 防抖状态管理
+let togglePanelTimeout: NodeJS.Timeout | null = null
+let lastToggleTime = 0
 
 /**
  * 全局快捷键管理 Hook
  * 负责注册、取消注册和管理全局快捷键
+ * 使用配置驱动的方式，方便扩展新快捷键
  */
 export const useGlobalShortcut = () => {
   const settingStore = useSettingStore()
@@ -41,28 +60,18 @@ export const useGlobalShortcut = () => {
   }
 
   /**
-   * 截图处理函数 - 简化版本
-   * capture窗口始终存在，只需显示和聚焦
+   * 截图处理函数
    */
   const handleScreenshot = async () => {
     try {
-      // 检查home窗口是否存在，只有在home窗口存在时才允许截图
       const homeWindow = await WebviewWindow.getByLabel('home')
-      if (!homeWindow) {
-        return
-      }
+      if (!homeWindow) return
 
-      // capture窗口必须存在，直接获取
       const captureWindow = await WebviewWindow.getByLabel('capture')
-      if (!captureWindow) {
-        return
-      }
+      if (!captureWindow) return
 
-      // 显示并聚焦窗口
       await captureWindow.show()
       await captureWindow.setFocus()
-
-      // 触发capture事件，让Screenshot组件初始化
       await captureWindow.emit('capture', {})
       console.log('📷 截图窗口已启动')
     } catch (error) {
@@ -71,42 +80,117 @@ export const useGlobalShortcut = () => {
   }
 
   /**
-   * 注册全局快捷键
-   * @param shortcut 快捷键字符串，如 'CmdOrCtrl+Alt+H'
+   * 智能切换主面板显示状态（防抖版本）
+   * - 如果窗口已显示，则隐藏
+   * - 如果窗口隐藏或最小化，则显示并聚焦
    */
-  const registerShortcut = async (shortcut: string) => {
+  const handleOpenMainPanel = async () => {
+    const currentTime = Date.now()
+
+    // 防抖：如果距离上次操作少于500ms，则忽略
+    if (currentTime - lastToggleTime < 500) {
+      return
+    }
+
+    // 清除之前的延时操作
+    if (togglePanelTimeout) {
+      clearTimeout(togglePanelTimeout)
+      togglePanelTimeout = null
+    }
+
+    lastToggleTime = currentTime
+
     try {
-      // 先尝试清理全局当前快捷键
-      if (globalCurrentShortcut) {
-        await unregister(globalCurrentShortcut)
-        console.log(`🗑️ 清理全局快捷键: ${globalCurrentShortcut}`)
+      const homeWindow = await WebviewWindow.getByLabel('home')
+      if (!homeWindow) {
+        console.warn('Home window not found')
+        return
       }
 
-      // 只有在初始化时（globalCurrentShortcut为空）才进行预防性清理
-      // 避免在快捷键切换过程中的重复清理导致状态混乱
-      if (!globalCurrentShortcut) {
+      // 获取当前窗口状态
+      const isVisible = await homeWindow.isVisible()
+      const isMinimized = await homeWindow.isMinimized()
+
+      console.log(`🏠 快捷键触发 - 窗口状态: 可见=${isVisible}, 最小化=${isMinimized}`)
+
+      if (isVisible && !isMinimized) {
+        // 窗口当前可见且未最小化，直接隐藏
+        await homeWindow.hide()
+      } else {
+        // 处理最小化状态
+        if (isMinimized) {
+          await homeWindow.unminimize()
+        }
+
+        // 显示窗口
+        await homeWindow.show()
+
+        // 延迟设置焦点，确保窗口已完全显示
+        togglePanelTimeout = setTimeout(async () => {
+          await homeWindow.setFocus()
+        }, 50)
+      }
+    } catch (error) {
+      console.error('Failed to toggle main panel:', error)
+    }
+  }
+
+  // 快捷键配置数组 - 新增快捷键只需在此处添加配置即可
+  const shortcutConfigs: ShortcutConfig[] = [
+    {
+      key: 'screenshot',
+      defaultValue: 'CmdOrCtrl+Alt+H',
+      handler: handleScreenshot,
+      updateEventName: 'shortcut-updated',
+      registrationEventName: 'shortcut-registration-updated'
+    },
+    {
+      key: 'openMainPanel',
+      defaultValue: 'CmdOrCtrl+Alt+P',
+      handler: handleOpenMainPanel,
+      updateEventName: 'open-main-panel-shortcut-updated',
+      registrationEventName: 'open-main-panel-shortcut-registration-updated'
+    }
+  ]
+
+  /**
+   * 通用快捷键注册函数
+   * @param config 快捷键配置
+   * @param shortcut 快捷键字符串
+   */
+  const registerShortcut = async (config: ShortcutConfig, shortcut: string): Promise<boolean> => {
+    try {
+      const currentShortcut = globalShortcutStates.get(config.key)
+
+      // 清理当前快捷键
+      if (currentShortcut) {
+        await unregister(currentShortcut)
+        console.log(`🗑️ 清理快捷键 [${config.key}]: ${currentShortcut}`)
+      }
+
+      // 预防性清理目标快捷键
+      if (!currentShortcut) {
         try {
           await unregister(shortcut)
-          console.log(`🗑️ 初始化预清理目标快捷键: ${shortcut}`)
+          console.log(`🗑️ 预清理快捷键 [${config.key}]: ${shortcut}`)
         } catch (_e) {
-          console.log(`ℹ️ 初始化时目标快捷键未注册: ${shortcut}`)
+          console.log(`ℹ️ 快捷键 [${config.key}] 未注册: ${shortcut}`)
         }
       }
 
-      await register(shortcut, handleScreenshot)
-      // 只有注册成功才更新全局状态
-      globalCurrentShortcut = shortcut
-      console.log(`✅ 全局快捷键已注册: ${shortcut}`)
+      // 注册新快捷键
+      await register(shortcut, config.handler)
+      globalShortcutStates.set(config.key, shortcut)
+      console.log(`✅ 快捷键已注册 [${config.key}]: ${shortcut}`)
       return true
     } catch (error) {
-      console.error('❌ Failed to register global shortcut:', error)
-      // 注册失败时不更新 globalCurrentShortcut
+      console.error(`❌ 注册快捷键失败 [${config.key}]:`, error)
       return false
     }
   }
 
   /**
-   * 取消注册全局快捷键
+   * 取消注册快捷键
    * @param shortcut 要取消注册的快捷键字符串
    */
   const unregisterShortcut = async (shortcut: string) => {
@@ -114,110 +198,120 @@ export const useGlobalShortcut = () => {
       await unregister(shortcut)
       console.log(`✅ 成功取消注册快捷键: ${shortcut}`)
     } catch (error) {
-      console.error(`❌ Failed to unregister global shortcut: ${shortcut}`, error)
+      console.error(`❌ 取消注册快捷键失败: ${shortcut}`, error)
     }
   }
 
   /**
-   * 强制清理所有可能的快捷键残留
-   * 用于处理状态不一致的情况
+   * 强制清理快捷键残留
    */
   const forceCleanupShortcuts = async (shortcuts: string[]) => {
     for (const shortcut of shortcuts) {
       try {
         await unregister(shortcut)
       } catch (_e) {
-        console.log(`🧹 强制清理 ${shortcut} (可能未注册):`)
+        console.log(`🧹 强制清理 ${shortcut} (可能未注册)`)
       }
     }
   }
 
   /**
-   * 处理快捷键更新事件
-   * 当用户在设置页面修改快捷键时触发
+   * 通用快捷键更新处理函数
+   * @param config 快捷键配置
+   * @param newShortcut 新快捷键
    */
-  const handleShortcutUpdate = async (newShortcut: string) => {
-    // 保存旧快捷键用于回滚
-    const oldShortcut = globalCurrentShortcut
-    let success = true
+  const handleShortcutUpdate = async (config: ShortcutConfig, newShortcut: string) => {
+    const oldShortcut = globalShortcutStates.get(config.key)
 
-    // 先进行强制清理，确保没有残留状态
-    const shortcutsToClean = [oldShortcut, newShortcut].filter(Boolean)
+    // 强制清理旧快捷键
+    const shortcutsToClean = [oldShortcut, newShortcut].filter(Boolean) as string[]
     await forceCleanupShortcuts(shortcutsToClean)
 
-    // 重置全局状态，准备重新注册
-    globalCurrentShortcut = ''
+    // 清除状态，准备重新注册
+    globalShortcutStates.delete(config.key)
 
     // 尝试注册新快捷键
-    console.log(`🔧 [Home] 开始注册新快捷键: ${newShortcut}`)
-    success = await registerShortcut(newShortcut)
+    console.log(`🔧 [Home] 开始注册新快捷键 [${config.key}]: ${newShortcut}`)
+    const success = await registerShortcut(config, newShortcut)
 
+    // 如果注册失败且有旧快捷键，尝试回滚
     if (!success && oldShortcut) {
-      // 重置状态后回滚到原快捷键
-      globalCurrentShortcut = ''
-      const rollbackSuccess = await registerShortcut(oldShortcut)
-      console.log(`🔄 [Home] 回滚结果: ${rollbackSuccess ? '成功' : '失败'}`)
+      globalShortcutStates.delete(config.key)
+      const rollbackSuccess = await registerShortcut(config, oldShortcut)
+      console.log(`🔄 [Home] 快捷键回滚结果 [${config.key}]: ${rollbackSuccess ? '成功' : '失败'}`)
     }
 
-    // 通知设置页面快捷键注册状态已更新
-    // 尝试向 settings 窗口发送事件
-    await emitTo('settings', 'shortcut-registration-updated', {
+    // 通知设置页面注册状态更新
+    await emitTo('settings', config.registrationEventName, {
       shortcut: newShortcut,
       registered: success
     })
-    console.log(`📡 [Home] 已通知 settings 窗口快捷键状态更新: ${success ? '已注册' : '未注册'}`)
+    console.log(`📡 [Home] 已通知 settings 窗口快捷键状态更新 [${config.key}]: ${success ? '已注册' : '未注册'}`)
   }
 
   /**
    * 初始化全局快捷键
-   * 从设置中读取快捷键并注册
+   * 根据配置自动注册所有快捷键并监听更新事件
    */
   const initializeGlobalShortcut = async () => {
-    // 首先确保capture窗口存在
+    // 确保capture窗口存在
     await ensureCaptureWindow()
 
-    // 从settingStore读取快捷键设置
-    const savedShortcut = settingStore.shortcuts?.screenshot || 'CmdOrCtrl+Alt+H'
+    // 批量注册所有配置的快捷键
+    for (const config of shortcutConfigs) {
+      const savedShortcut = settingStore.shortcuts?.[config.key] || config.defaultValue
+      await registerShortcut(config, savedShortcut)
 
-    // 注册全局快捷键
-    await registerShortcut(savedShortcut)
-
-    // 监听跨窗口的快捷键更新事件
-    addListener(
-      listen('shortcut-updated', (event) => {
-        const newShortcut = (event.payload as any)?.shortcut
-        if (newShortcut) {
-          console.log(`📡 [Home] 收到快捷键更新事件: ${newShortcut}`)
-          console.log(`📡 [Home] 当前全局快捷键状态: ${globalCurrentShortcut}`)
-          handleShortcutUpdate(newShortcut)
-        } else {
-          console.warn(`📡 [Home] 收到无效的快捷键更新事件:`, event.payload)
-        }
-      }),
-      'shortcut-updated'
-    )
+      // 监听每个快捷键的更新事件
+      addListener(
+        listen(config.updateEventName, (event) => {
+          const newShortcut = (event.payload as any)?.shortcut
+          if (newShortcut) {
+            console.log(`📡 [Home] 收到快捷键更新事件 [${config.key}]: ${newShortcut}`)
+            handleShortcutUpdate(config, newShortcut)
+          } else {
+            console.warn(`📡 [Home] 收到无效的快捷键更新事件 [${config.key}]:`, event.payload)
+          }
+        }),
+        config.updateEventName
+      )
+    }
   }
 
   /**
    * 清理全局快捷键
-   * 取消注册快捷键并移除事件监听
+   * 取消注册所有快捷键并清理状态
    */
   const cleanupGlobalShortcut = async () => {
-    // 取消注册全局快捷键
-    if (globalCurrentShortcut) {
-      await unregisterShortcut(globalCurrentShortcut)
+    // 清理防抖定时器
+    if (togglePanelTimeout) {
+      clearTimeout(togglePanelTimeout)
+      togglePanelTimeout = null
     }
-    // 重置状态，确保下次重新初始化时状态干净
-    globalCurrentShortcut = ''
+
+    // 取消注册所有已注册的快捷键
+    for (const shortcut of globalShortcutStates.values()) {
+      await unregisterShortcut(shortcut)
+    }
+    // 清理状态
+    globalShortcutStates.clear()
   }
 
   return {
+    // 处理函数
     handleScreenshot,
-    registerShortcut,
-    unregisterShortcut,
-    handleShortcutUpdate,
+    handleOpenMainPanel,
+
+    // 核心功能
     initializeGlobalShortcut,
     cleanupGlobalShortcut,
-    ensureCaptureWindow
+    ensureCaptureWindow,
+
+    // 工具函数（主要用于测试和调试）
+    registerShortcut: (config: ShortcutConfig, shortcut: string) => registerShortcut(config, shortcut),
+    unregisterShortcut,
+
+    // 配置信息（用于外部访问）
+    shortcutConfigs
   }
 }

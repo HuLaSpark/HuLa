@@ -6,11 +6,11 @@
     "includes": [
       "**/*.{js,jsx,ts,tsx,vue,json}",
       "!.*",
-      "!public",
+      "!public/*",
       "!src/typings/*.d.ts",
-      "!src-tauri",
-      "!node_modules",
-      "!dist"
+      "!src-tauri/*",
+      "!node_modules/*",
+      "!dist/*"
     ]
   },
   "formatter": {

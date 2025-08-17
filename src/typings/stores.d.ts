@@ -56,6 +56,8 @@ declare namespace STO {
     shortcuts: {
       /** 截图快捷键 */
       screenshot: string
+      /** 打开主面板快捷键 */
+      openMainPanel: string
     }
     /** 界面设置 */
     page: {

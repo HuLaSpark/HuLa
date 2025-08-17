@@ -7,38 +7,84 @@
       <n-flex class="item" :size="12" vertical>
         <!-- 截图快捷键 -->
         <n-flex align="center" justify="space-between">
-          <n-flex vertical :size="4">
-            <span>截图快捷键</span>
+          <n-flex vertical :size="8">
+            <span>{{ shortcutConfigs.screenshot.displayName }}</span>
             <span class="text-(12px #909090)">按下快捷键即可开始截图</span>
           </n-flex>
 
           <n-flex align="center" :size="12">
             <n-tag v-if="shortcutRegistered !== null" :type="shortcutRegistered ? 'success' : 'error'" size="small">
-              {{ shortcutRegistered ? '已注册' : '未注册' }}
+              {{ shortcutRegistered ? '已绑定' : '未绑定' }}
             </n-tag>
             <n-input
               :value="screenshotShortcutDisplay"
               :placeholder="screenshotShortcutDisplay"
-              style="width: 120px"
+              style="width: 130px"
               class="border-(1px solid #90909080)"
               readonly
+              size="small"
               @keydown="handleShortcutInput"
               @focus="handleScreenshotFocus"
-              @blur="handleScreenshotBlur" />
-            <n-button @click="resetScreenshotShortcut" size="small" secondary>重置</n-button>
+              @blur="handleScreenshotBlur">
+              <template #suffix>
+                <n-tooltip trigger="hover">
+                  <template #trigger>
+                    <svg @click="resetScreenshotShortcut" class="size-14px cursor-pointer">
+                      <use href="#return"></use>
+                    </svg>
+                  </template>
+                  <span>重置</span>
+                </n-tooltip>
+              </template>
+            </n-input>
           </n-flex>
         </n-flex>
-      </n-flex>
-    </n-flex>
 
-    <!-- 聊天快捷键设置 -->
-    <n-flex vertical class="text-(14px [--text-color])" :size="16">
-      <span class="pl-10px">聊天快捷键</span>
+        <span class="w-full h-1px bg-[--line-color]"></span>
 
-      <n-flex class="item" :size="12" vertical>
+        <!-- 打开主面板快捷键 -->
+        <n-flex align="center" justify="space-between">
+          <n-flex vertical :size="8">
+            <span>{{ shortcutConfigs.openMainPanel.displayName }}</span>
+            <span class="text-(12px #909090)">按下快捷键即可切换主面板显示状态</span>
+          </n-flex>
+
+          <n-flex align="center" :size="12">
+            <n-tag
+              v-if="openMainPanelShortcutRegistered !== null"
+              :type="openMainPanelShortcutRegistered ? 'success' : 'error'"
+              size="small">
+              {{ openMainPanelShortcutRegistered ? '已绑定' : '未绑定' }}
+            </n-tag>
+            <n-input
+              :value="openMainPanelShortcutDisplay"
+              :placeholder="openMainPanelShortcutDisplay"
+              style="width: 130px"
+              class="border-(1px solid #90909080)"
+              readonly
+              size="small"
+              @keydown="handleOpenMainPanelShortcutInput"
+              @focus="handleOpenMainPanelFocus"
+              @blur="handleOpenMainPanelBlur">
+              <template #suffix>
+                <n-tooltip trigger="hover">
+                  <template #trigger>
+                    <svg @click="resetOpenMainPanelShortcut" class="size-14px cursor-pointer">
+                      <use href="#return"></use>
+                    </svg>
+                  </template>
+                  <span>重置</span>
+                </n-tooltip>
+              </template>
+            </n-input>
+          </n-flex>
+        </n-flex>
+
+        <span class="w-full h-1px bg-[--line-color]"></span>
+
         <!-- 发送消息快捷键 -->
         <n-flex align="center" justify="space-between">
-          <n-flex vertical :size="4">
+          <n-flex vertical :size="8">
             <span>发送消息快捷键</span>
             <span class="text-(12px #909090)">在聊天输入框中按下快捷键发送消息</span>
           </n-flex>
@@ -69,14 +115,53 @@ import { sendOptions } from './config.ts'
 const message = useMessage()
 const settingStore = useSettingStore()
 
-// 从 store 获取设置，添加防护性检查
-const screenshotShortcut = ref(settingStore.shortcuts?.screenshot)
-const sendMessageShortcut = ref(settingStore.chat?.sendKey)
+// 快捷键配置管理
+type ShortcutConfig = {
+  key: 'screenshot' | 'openMainPanel'
+  value: Ref<string>
+  isCapturing: Ref<boolean>
+  isRegistered: Ref<boolean | null>
+  original: Ref<string>
+  defaultValue: string
+  eventName: string
+  registrationEventName: string
+  displayName: string
+}
 
-// 状态变量
-const isCapturingShortcut = ref(false)
-const shortcutRegistered = ref<boolean | null>(null) // null 表示未知状态，避免初始化闪烁
-const originalScreenshotShortcut = ref(settingStore.shortcuts?.screenshot)
+// 统一的快捷键配置
+const shortcutConfigs: Record<string, ShortcutConfig> = {
+  screenshot: {
+    key: 'screenshot',
+    value: ref(settingStore.shortcuts?.screenshot),
+    isCapturing: ref(false),
+    isRegistered: ref<boolean | null>(null),
+    original: ref(settingStore.shortcuts?.screenshot),
+    defaultValue: 'CmdOrCtrl+Alt+H',
+    eventName: 'shortcut-updated',
+    registrationEventName: 'shortcut-registration-updated',
+    displayName: '截图快捷键'
+  },
+  openMainPanel: {
+    key: 'openMainPanel',
+    value: ref(settingStore.shortcuts?.openMainPanel),
+    isCapturing: ref(false),
+    isRegistered: ref<boolean | null>(null),
+    original: ref(settingStore.shortcuts?.openMainPanel),
+    defaultValue: 'CmdOrCtrl+Alt+P',
+    eventName: 'open-main-panel-shortcut-updated',
+    registrationEventName: 'open-main-panel-shortcut-registration-updated',
+    displayName: '切换主面板快捷键'
+  }
+}
+
+// 向后兼容的别名（仅保留模板中使用的）
+const screenshotShortcut = shortcutConfigs.screenshot.value
+const openMainPanelShortcut = shortcutConfigs.openMainPanel.value
+const shortcutRegistered = shortcutConfigs.screenshot.isRegistered
+const openMainPanelShortcutRegistered = shortcutConfigs.openMainPanel.isRegistered
+
+// 发送消息快捷键单独处理
+const sendMessageShortcut = ref(settingStore.chat?.sendKey)
 
 // 将快捷键转换为平台对应的显示文本
 const formatShortcutDisplay = (shortcut: string) => {
@@ -101,65 +186,106 @@ const screenshotShortcutDisplay = computed(() => {
   return formatShortcutDisplay(screenshotShortcut.value)
 })
 
-// 检查快捷键是否已注册
-const checkShortcutRegistration = async () => {
-  shortcutRegistered.value = await isRegistered(screenshotShortcut.value)
+const openMainPanelShortcutDisplay = computed(() => {
+  return formatShortcutDisplay(openMainPanelShortcut.value)
+})
+
+// 通用的store变化监听
+const createShortcutWatcher = (config: ShortcutConfig, storeGetter: () => string | undefined) => {
+  return watch(
+    storeGetter,
+    (newValue) => {
+      if (newValue && !config.isCapturing.value) {
+        config.value.value = newValue
+        config.original.value = newValue
+      }
+    },
+    { immediate: true }
+  )
 }
 
-// 处理快捷键输入
-const handleShortcutInput = (event: KeyboardEvent) => {
-  if (!isCapturingShortcut.value) return
+// 监听 store 变化，确保数据同步
+createShortcutWatcher(shortcutConfigs.screenshot, () => settingStore.shortcuts?.screenshot)
+createShortcutWatcher(shortcutConfigs.openMainPanel, () => settingStore.shortcuts?.openMainPanel)
 
-  event.preventDefault()
-  event.stopPropagation()
+watch(
+  () => settingStore.chat?.sendKey,
+  (newValue) => {
+    if (newValue) {
+      sendMessageShortcut.value = newValue
+    }
+  },
+  { immediate: true }
+)
 
-  const keys: string[] = []
+// 通用的快捷键绑定检查
+const checkShortcutRegistration = async (config: ShortcutConfig) => {
+  config.isRegistered.value = await isRegistered(config.value.value)
+}
 
-  // 检查修饰键 - 统一使用CmdOrCtrl以保证跨平台兼容性
-  if (event.ctrlKey || event.metaKey) {
-    keys.push('CmdOrCtrl')
-  }
-  if (event.altKey) {
-    keys.push('Alt')
-  }
-  if (event.shiftKey) {
-    keys.push('Shift')
-  }
+// 通用的快捷键输入处理
+const createShortcutInputHandler = (config: ShortcutConfig) => {
+  return (event: KeyboardEvent) => {
+    if (!config.isCapturing.value) return
 
-  // 获取主键
-  const mainKey = event.key
-  if (mainKey && !['Control', 'Alt', 'Shift', 'Meta', 'Cmd'].includes(mainKey)) {
-    keys.push(mainKey.toUpperCase())
-  }
+    event.preventDefault()
+    event.stopPropagation()
 
-  // 至少需要一个修饰键和一个主键
-  if (keys.length >= 2) {
-    // 更新内部存储值（使用CmdOrCtrl格式，显示会通过computed自动格式化）
-    screenshotShortcut.value = keys.join('+')
+    const keys: string[] = []
+
+    // 检查修饰键 - 统一使用CmdOrCtrl以保证跨平台兼容性
+    if (event.ctrlKey || event.metaKey) {
+      keys.push('CmdOrCtrl')
+    }
+    if (event.altKey) {
+      keys.push('Alt')
+    }
+    if (event.shiftKey) {
+      keys.push('Shift')
+    }
+
+    // 获取主键
+    const mainKey = event.key
+    if (mainKey && !['Control', 'Alt', 'Shift', 'Meta', 'Cmd'].includes(mainKey)) {
+      keys.push(mainKey.toUpperCase())
+    }
+
+    // 至少需要一个修饰键和一个主键
+    if (keys.length >= 2) {
+      // 更新内部存储值（使用CmdOrCtrl格式，显示会通过computed自动格式化）
+      config.value.value = keys.join('+')
+    }
   }
 }
 
-// 处理截图快捷键焦点事件
-const handleScreenshotFocus = async () => {
-  isCapturingShortcut.value = true
-  originalScreenshotShortcut.value = screenshotShortcut.value
+// 创建具体的处理函数
+const handleShortcutInput = createShortcutInputHandler(shortcutConfigs.screenshot)
+const handleOpenMainPanelShortcutInput = createShortcutInputHandler(shortcutConfigs.openMainPanel)
 
-  console.log('🎯 开始编辑截图快捷键')
-  // 注意：快捷键的注册/取消注册由主窗口负责，这里只处理UI状态
-}
-
-// 处理截图快捷键失去焦点事件（自动保存）
-const handleScreenshotBlur = async () => {
-  isCapturingShortcut.value = false
-
-  console.log('✅ 结束编辑截图快捷键')
-
-  // 如果快捷键有变化，则保存
-  if (screenshotShortcut.value !== originalScreenshotShortcut.value) {
-    await saveScreenshotShortcut()
+// 通用的焦点处理
+const createFocusHandler = (config: ShortcutConfig) => {
+  return async () => {
+    config.isCapturing.value = true
+    config.original.value = config.value.value
+    console.log(`🎯 开始编辑${config.displayName}`)
   }
-  // 注意：快捷键的重新注册由主窗口负责，这里只处理保存逻辑
 }
+
+const createBlurHandler = (config: ShortcutConfig, saveFunction: () => Promise<void>) => {
+  return async () => {
+    config.isCapturing.value = false
+    console.log(`✅ 结束编辑${config.displayName}`)
+
+    // 如果快捷键有变化，则保存
+    if (config.value.value !== config.original.value) {
+      await saveFunction()
+    }
+  }
+}
+
+// 创建具体的焦点处理函数
+const handleScreenshotFocus = createFocusHandler(shortcutConfigs.screenshot)
+const handleOpenMainPanelFocus = createFocusHandler(shortcutConfigs.openMainPanel)
 
 // 处理发送消息快捷键失去焦点事件（自动保存）
 const handleSendMessageBlur = async () => {
@@ -170,40 +296,57 @@ const handleSendMessageBlur = async () => {
   }
 }
 
-// 重置截图快捷键
-const resetScreenshotShortcut = async () => {
-  screenshotShortcut.value = 'CmdOrCtrl+Alt+H'
-  // 重置后自动保存
-  await saveScreenshotShortcut()
-}
+// 通用的保存快捷键方法
+const createSaveShortcutFunction = (config: ShortcutConfig) => {
+  return async () => {
+    try {
+      console.log(`💾 [Settings] 开始保存${config.displayName}: ${config.value.value}`)
 
-// 保存截图快捷键设置
-const saveScreenshotShortcut = async () => {
-  try {
-    console.log(`💾 [Settings] 开始保存截图快捷键: ${screenshotShortcut.value}`)
+      // 根据快捷键类型调用对应的store方法
+      if (config.key === 'screenshot') {
+        settingStore.setScreenshotShortcut(config.value.value)
+      } else if (config.key === 'openMainPanel') {
+        settingStore.setOpenMainPanelShortcut(config.value.value)
+      }
 
-    // 保存到 pinia store
-    settingStore.setScreenshotShortcut(screenshotShortcut.value)
-    originalScreenshotShortcut.value = screenshotShortcut.value
-    console.log(`💾 [Settings] 已保存到 Pinia store`)
+      config.original.value = config.value.value
+      console.log(`💾 [Settings] 已保存到 Pinia store`)
 
-    // 通知主窗口更新快捷键（跨窗口事件）
-    console.log(`📡 [Settings] 发送 shortcut-updated 事件到主窗口`)
-    await emit('shortcut-updated', { shortcut: screenshotShortcut.value })
-    console.log(`📡 [Settings] shortcut-updated 事件已发送`)
+      // 通知主窗口更新快捷键（跨窗口事件）
+      console.log(`📡 [Settings] 发送 ${config.eventName} 事件到主窗口`)
+      await emit(config.eventName, { shortcut: config.value.value })
+      console.log(`📡 [Settings] ${config.eventName} 事件已发送`)
 
-    // 不再使用固定延迟，而是等待主窗口的反馈事件
-    // 主窗口处理完成后会发送 'shortcut-registration-updated' 事件
+      message.success(`${config.displayName}已更新`)
+    } catch (error) {
+      console.error(`Failed to save ${config.key} shortcut:`, error)
+      message.error(`${config.displayName}设置失败`)
 
-    message.success('截图快捷键已更新')
-  } catch (error) {
-    console.error('Failed to save shortcut:', error)
-    message.error('快捷键设置失败')
-
-    // 恢复原来的快捷键
-    screenshotShortcut.value = originalScreenshotShortcut.value
+      // 恢复原来的快捷键
+      config.value.value = config.original.value
+    }
   }
 }
+
+// 通用的重置快捷键方法
+const createResetShortcutFunction = (config: ShortcutConfig, saveFunction: () => Promise<void>) => {
+  return async () => {
+    config.value.value = config.defaultValue
+    await saveFunction()
+  }
+}
+
+// 创建具体的保存函数
+const saveScreenshotShortcut = createSaveShortcutFunction(shortcutConfigs.screenshot)
+const saveOpenMainPanelShortcut = createSaveShortcutFunction(shortcutConfigs.openMainPanel)
+
+// 创建具体的重置函数
+const resetScreenshotShortcut = createResetShortcutFunction(shortcutConfigs.screenshot, saveScreenshotShortcut)
+const resetOpenMainPanelShortcut = createResetShortcutFunction(shortcutConfigs.openMainPanel, saveOpenMainPanelShortcut)
+
+// 创建失焦处理函数
+const handleScreenshotBlur = createBlurHandler(shortcutConfigs.screenshot, saveScreenshotShortcut)
+const handleOpenMainPanelBlur = createBlurHandler(shortcutConfigs.openMainPanel, saveOpenMainPanelShortcut)
 
 // 保存发送消息快捷键设置
 const saveSendMessageShortcut = async () => {
@@ -221,49 +364,37 @@ const saveSendMessageShortcut = async () => {
   }
 }
 
-// 监听 store 变化，确保数据同步
-watch(
-  () => settingStore.shortcuts?.screenshot,
-  (newValue) => {
-    if (newValue && !isCapturingShortcut.value) {
-      screenshotShortcut.value = newValue
-      originalScreenshotShortcut.value = newValue
-    }
-  },
-  { immediate: true }
-)
-
-watch(
-  () => settingStore.chat?.sendKey,
-  (newValue) => {
-    if (newValue) {
-      sendMessageShortcut.value = newValue
-    }
-  },
-  { immediate: true }
-)
-
-onMounted(async () => {
-  await checkShortcutRegistration()
-
-  // 监听主窗口的快捷键注册状态更新事件
-  const unlisten = await listen('shortcut-registration-updated', (event: any) => {
+// 通用的事件监听器创建
+const createRegistrationListener = (config: ShortcutConfig) => {
+  return listen(config.registrationEventName, (event: any) => {
     const { shortcut, registered } = event.payload
-    console.log(`📡 [Settings] 收到快捷键状态更新: ${shortcut} -> ${registered ? '已注册' : '未注册'}`)
-    console.log(`📡 [Settings] 当前快捷键值: ${screenshotShortcut.value}`)
+    console.log(`📡 [Settings] 收到${config.displayName}状态更新: ${shortcut} -> ${registered ? '已绑定' : '未绑定'}`)
 
     // 只有当前快捷键匹配时才更新状态
-    if (shortcut === screenshotShortcut.value) {
-      console.log(`📡 [Settings] 快捷键匹配，更新状态为: ${registered ? '已注册' : '未注册'}`)
-      shortcutRegistered.value = registered
+    if (shortcut === config.value.value) {
+      console.log(`📡 [Settings] ${config.displayName}匹配，更新状态为: ${registered ? '已绑定' : '未绑定'}`)
+      config.isRegistered.value = registered
     } else {
-      console.log(`📡 [Settings] 快捷键不匹配，忽略状态更新`)
+      console.log(`📡 [Settings] ${config.displayName}不匹配，忽略状态更新`)
     }
   })
+}
+
+onMounted(async () => {
+  // 检查所有快捷键的绑定状态
+  await Promise.all([
+    checkShortcutRegistration(shortcutConfigs.screenshot),
+    checkShortcutRegistration(shortcutConfigs.openMainPanel)
+  ])
+
+  // 创建事件监听器
+  const unlistenScreenshot = await createRegistrationListener(shortcutConfigs.screenshot)
+  const unlistenOpenMainPanel = await createRegistrationListener(shortcutConfigs.openMainPanel)
 
   // 组件卸载时取消监听
   onUnmounted(() => {
-    unlisten()
+    unlistenScreenshot()
+    unlistenOpenMainPanel()
   })
 })
 </script>
@@ -271,5 +402,10 @@ onMounted(async () => {
 <style scoped lang="scss">
 .item {
   @apply bg-[--bg-setting-item] rounded-12px size-full p-12px box-border border-(solid 1px [--line-color]) custom-shadow;
+}
+
+:deep(.n-input.n-input--focus) {
+  border-width: 2px;
+  border-color: #13987f !important;
 }
 </style>

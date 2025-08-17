@@ -15,13 +15,7 @@
 
       <!-- 聊天界面背景图标 -->
       <div v-else class="flex-center size-full select-none">
-        <img
-          v-if="imgTheme === ThemeEnum.DARK && themes.versatile === 'default' && !isDetails"
-          class="w-110px h-100px"
-          src="@/assets/img/hula_bg_d.svg"
-          alt="" />
-        <img v-else-if="imgTheme === ThemeEnum.DARK" class="w-110px h-100px" src="@/assets/img/hula-bg-h.png" alt="" />
-        <img v-else class="svg-icon w-110px h-100px" src="@/assets/img/hula_bg_l.png" alt="" />
+        <img class="w-150px h-140px" src="/logoD.png" alt="" />
       </div>
     </div>
   </main>
