@@ -85,9 +85,9 @@ export default {
   sendCaptcha: `${prefix + URLEnum.TOKEN}/anyTenant/sendEmailCode`, // 发送验证码到用户邮箱
 
   // -------------- 系统相关 ---------------
-  fileUpload: `${prefix + URLEnum.SYSTEM + URLEnum.OSS}/upload/url`, // 文件上传
+  fileUpload: `${prefix + URLEnum.SYSTEM}/upload/url`, // 文件上传
   initConfig: `${prefix + URLEnum.SYSTEM}/anyTenant/config/init`, // 获取配置文件
-  getQiniuToken: `${prefix + URLEnum.TOKEN}/anyTenant/ossToken`, // 获取七牛云上传token
+  getQiniuToken: `${prefix + URLEnum.SYSTEM}/anyTenant/ossToken`, // 获取七牛云上传token
 
   // -------------- token相关 ---------------
   register: `${prefix + URLEnum.TOKEN}/anyTenant/registerByEmail`, // 注册
