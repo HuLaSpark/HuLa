@@ -183,15 +183,8 @@ const drawImgCanvas = (type: string) => {
   const drawableTypes = ['rect', 'circle', 'arrow', 'mosaic']
 
   if (drawableTypes.includes(type)) {
-    // 如果点击的是当前已激活的工具，则取消选择
+    // 如果点击的是当前已激活的工具，保持选中，不进行任何操作（不可取消，只能切换其他选项）
     if (currentDrawTool.value === type) {
-      currentDrawTool.value = null
-      drawTools.stopDrawing && drawTools.stopDrawing()
-      // 取消工具时禁用绘图Canvas事件，让事件穿透到选区
-      if (drawCanvas.value) {
-        drawCanvas.value.style.pointerEvents = 'none'
-      }
-      console.log(`🎨 绘图工具已取消: ${type}`)
       return
     }
 
@@ -1173,32 +1166,12 @@ const resetScreenshot = async () => {
 
 // 全局鼠标点击处理，用于取消绘图工具
 const handleGlobalMouseDown = (event: MouseEvent) => {
-  // 只有在绘图工具激活时才处理
+  // 只有在绘图工具激活且按钮组显示时才考虑处理
   if (!currentDrawTool.value || !showButtonGroup.value) return
 
-  // 获取点击位置
-  const clickX = event.clientX
-  const clickY = event.clientY
-
-  // 获取选区边界
-  const selectionRect = selectionArea.value?.getBoundingClientRect()
-  if (!selectionRect) return
-
-  // 检查点击是否在选区外
-  const isOutsideSelection =
-    clickX < selectionRect.left ||
-    clickX > selectionRect.right ||
-    clickY < selectionRect.top ||
-    clickY > selectionRect.bottom
-
-  // 如果点击在选区外，取消绘图工具
-  if (isOutsideSelection) {
-    currentDrawTool.value = null
-    drawTools?.stopDrawing && drawTools.stopDrawing()
-    if (drawCanvas.value) {
-      drawCanvas.value.style.pointerEvents = 'none'
-    }
-    console.log('🎨 点击选区外，绘图工具已取消')
+  // 如果点击发生在按钮组内，直接返回，避免误操作
+  if (buttonGroup.value && buttonGroup.value.contains(event.target as Node)) {
+    return
   }
 }
 
@@ -1475,7 +1448,8 @@ canvas {
   border: 1px solid #ccc;
   border-radius: 5px;
   padding: 5px;
-  z-index: 3;
+  z-index: 100;
+  pointer-events: auto;
 
   button {
     padding: 5px 10px;
