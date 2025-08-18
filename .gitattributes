@@ -83,6 +83,10 @@ src-tauri/gen/android/** linguist-vendored
 src-tauri/gen/apple/** linguist-vendored
 tauri-plugin-hula/ios/** linguist-vendored
 
+# tauri-plugin-hula：仅统计 src 目录，其他子目录全部排除
+tauri-plugin-hula/*/** linguist-vendored
+tauri-plugin-hula/src/** -linguist-vendored
+
 # 如果需要把上面这些都算作 Rust，而不是排除，可改用如下（示例）：
 # *.rb linguist-language=Rust
 # *.sh linguist-language=Rust
