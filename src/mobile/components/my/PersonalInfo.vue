@@ -17,7 +17,7 @@
           <span class="font-bold text-20px text-#373838">苏小研</span>
           <div class="bg-#E7EFE6 flex flex-wrap ps-2 items-center rounded-full gap-1 w-50px h-24px">
             <span class="w-12px h-12px rounded-15px bg-#079669"></span>
-            <span class="text-bold-style" style="font-size: 12px; color: #373838"> 在线 </span>
+            <span class="text-bold-style" style="font-size: 12px; color: #373838">在线</span>
           </div>
         </div>
         <!-- 账号 -->
@@ -37,7 +37,7 @@
             <div class="text-10px absolute inset-0 flex ps-2 items-center justify-start text-white font-medium">
               <span class="flex items-center">
                 <span class="font-bold">已点亮</span>
-                <span class="medal-number"> 1 </span>
+                <span class="medal-number">1</span>
                 <span class="font-bold">枚勋章</span>
               </span>
               <span class="flex ms-3">
@@ -73,7 +73,10 @@
           </div>
         </div>
         <div class="flex-1 justify-end flex items-center gap-3">
-          <div v-if="props.isMyPage" class="font-bold px-4 py-10px bg-#EEF4F3 text-#373838 rounded-full text-12px">
+          <div
+            @click="toEditProfile"
+            v-if="props.isMyPage"
+            class="font-bold px-4 py-10px bg-#EEF4F3 text-#373838 rounded-full text-12px">
             编辑资料
           </div>
           <div
@@ -93,6 +96,15 @@
 </template>
 
 <script setup lang="ts">
+// import router from '@/router'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+const toEditProfile = () => {
+  router.push('/mobile/mobileMy/editProfile')
+}
+
 const props = defineProps({
   isShow: {
     type: Boolean,

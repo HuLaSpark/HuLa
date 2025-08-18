@@ -6,6 +6,9 @@
 html,
 body,
 svg {
+  &::selection {
+    background: rgba(19, 152, 127, 0.3); /** 输入框选中文本背景色 */
+  }
   outline: none;
   overscroll-behavior: none; // 禁止mac的"触底反弹"效果
 }

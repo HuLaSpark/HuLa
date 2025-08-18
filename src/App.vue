@@ -16,6 +16,7 @@ import { MittEnum, StoresEnum, ThemeEnum } from '@/enums'
 import { useGlobalShortcut } from '@/hooks/useGlobalShortcut.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
+import { useMobile } from '@/hooks/useMobile.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
 import { useSettingStore } from '@/stores/setting.ts'
@@ -188,6 +189,8 @@ onUnmounted(async () => {
     await cleanupGlobalShortcut()
   }
 })
+
+useMobile()
 </script>
 <style lang="scss">
 /* 修改naive-ui select 组件的样式 */

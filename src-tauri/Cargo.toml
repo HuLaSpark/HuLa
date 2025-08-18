@@ -103,11 +103,12 @@ uuid = { version = "1.10", features = ["v4"] }
 # 移动端的依赖 (iOS 和 Android)
 [target."cfg(any(target_os = \"android\", target_os = \"ios\"))".dependencies]
 tauri-plugin-safe-area-insets = "0.1.0"
+tauri-plugin-hula = { path="../tauri-plugin-hula"}
 
 # 不兼容移动端的依赖
 [target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]
 tauri-plugin-autostart = "2"
-tauri-plugin-single-instance = "2"
+tauri-plugin-single-instance = "2.3.2"
 tauri-plugin-updater = "2"
 screenshots = "0.8.10"
 

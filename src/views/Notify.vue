@@ -59,6 +59,8 @@ import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 
+// import { useTauriListener } from '../hooks/useTauriListener'
+
 // 定义分组消息的类型
 type GroupedMessage = {
   id: string
@@ -75,6 +77,7 @@ type GroupedMessage = {
 
 const appWindow = WebviewWindow.getCurrent()
 const { checkWinExist, resizeWindow } = useWindow()
+// const { addListener } = useTauriListener()
 const { checkMessageAtMe } = useReplaceMsg()
 const globalStore = useGlobalStore()
 const chatStore = useChatStore()

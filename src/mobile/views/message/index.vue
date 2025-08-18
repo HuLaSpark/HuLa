@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col h-full">
     <!-- 顶部安全区域占位元素 -->
-    <SafeAreaPlaceholder direction="top" />
+    <SafeAreaPlaceholder type="layout" direction="top" />
 
     <img src="@/assets/mobile/chat-home/background.webp" class="w-100% fixed top-0" alt="hula" />
 
@@ -52,8 +52,6 @@
       </template>
     </NavBar>
 
-    <n-button @click="intoRoom">点击进入</n-button>
-
     <PullToRefresh class="flex-1 overflow-auto" @refresh="handleRefresh" ref="pullRefreshRef">
       <div class="flex flex-col h-full px-18px">
         <div class="py-8px shrink-0">
@@ -79,13 +77,16 @@
           <div
             v-for="item in messageItems"
             :key="item.id"
-            class="grid grid-cols-[2.2rem_1fr_4rem] items-start px-2 py-3 gap-1 hover:bg-#DEEDE7 hover:rounded-10px transition-colors cursor-pointer">
+            @click="intoRoom(item)"
+            class="grid grid-cols-[2.2rem_1fr_4rem] items-start px-2 py-3 gap-1 active:bg-#DEEDE7 active:rounded-10px transition-colors cursor-pointer">
             <!-- 头像：单独居中 -->
             <div class="self-center h-38px">
               <n-badge :value="item.unreadCount">
-                <n-avatar :size="40" :src="item.avatar" fallback-src="/logo.png" round />
+                <n-avatar :size="40" :src="AvatarUtils.getAvatarUrl(item.avatar)" fallback-src="/logo.png" round />
               </n-badge>
             </div>
+
+            <!-- {{ item }} -->
 
             <!-- 中间：两行内容 -->
             <div class="truncate pl-4 flex gap-10px flex-col">
@@ -144,6 +145,7 @@ import { useChatStore } from '@/stores/chat.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
+import { useMessage } from '@/hooks/useMessage.ts'
 
 const chatStore = useChatStore()
 
@@ -270,9 +272,12 @@ const addIconHandler = {
 
 const router = useRouter()
 
-const intoRoom = () => {
-  router.push('/mobile/chatRoom')
-  console.log('进入页面')
+const { handleMsgClick } = useMessage()
+
+const intoRoom = (item: any) => {
+  handleMsgClick(item)
+  router.push(`/mobile/chatRoom/chatMain/${encodeURIComponent(item.name)}`)
+  console.log('进入页面', item)
 }
 </script>
 

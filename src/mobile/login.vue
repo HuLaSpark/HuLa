@@ -573,12 +573,10 @@ const handleRegisterComplete = async () => {
     activeTab.value = 'login'
     info.value.account = registerInfo.value.nickName || registerInfo.value.email
 
+    window.$message.success('注册成功')
+
     // 重置注册表单
     resetRegisterForm()
-
-    setTimeout(() => {
-      // 可以添加成功提示
-    }, 500)
   } catch (error) {
     // 处理注册失败
   } finally {
