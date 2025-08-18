@@ -44,7 +44,7 @@ export default {
   getContactList: `${prefix + URLEnum.USER}/friend/page`, // 联系人列表
   requestFriendList: `${prefix + URLEnum.ROOM}/apply/page`, // 好友申请、群聊邀请列表
   newFriendCount: `${prefix + URLEnum.ROOM}/apply/unread`, // 申请未读数
-  handleInvite: `${prefix + URLEnum.ROOM}/handler/apply`, // 审批别人邀请的进群
+  handleInvite: `${prefix + URLEnum.ROOM}/apply/handler/apply`, // 审批别人邀请的进群
   sendAddFriendRequest: `${prefix + URLEnum.ROOM}/apply/apply`, // 申请好友\同意申请
   deleteFriend: `${prefix + URLEnum.USER}/friend`, // 删除好友
   modifyFriendRemark: `${prefix + URLEnum.USER}/friend/updateRemark`, // 修改好友备注

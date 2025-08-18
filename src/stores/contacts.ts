@@ -138,7 +138,7 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
   /**
    * 处理好友/群申请
    * @param apply 好友申请信息
-   * @param state 处理状态 1同意 2拒绝 3忽略
+   * @param state 处理状态 0拒绝 2同意 3忽略
    */
   const onHandleInvite = async (apply: { applyId: string; state: number }) => {
     // 同意好友申请

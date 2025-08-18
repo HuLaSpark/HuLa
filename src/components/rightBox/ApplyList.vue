@@ -197,7 +197,7 @@ const handleAgree = async (applyId: string) => {
   contactStore
     .onHandleInvite({
       applyId,
-      state: 1
+      state: 2
     })
     .then(() => {
       setTimeout(() => {
@@ -213,7 +213,7 @@ const handleFriendAction = async (action: string, applyId: string) => {
     if (action === 'reject') {
       await contactStore.onHandleInvite({
         applyId,
-        state: 2
+        state: 0
       })
     } else if (action === 'ignore') {
       await contactStore.onHandleInvite({
