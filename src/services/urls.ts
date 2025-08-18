@@ -44,11 +44,8 @@ export default {
   getContactList: `${prefix + URLEnum.USER}/friend/page`, // 联系人列表
   requestFriendList: `${prefix + URLEnum.ROOM}/apply/page`, // 好友申请、群聊邀请列表
   newFriendCount: `${prefix + URLEnum.ROOM}/apply/unread`, // 申请未读数
-  acceptInvite: `${prefix + URLEnum.ROOM}/apply/accept`, // 审批别人邀请的进群
+  handleInvite: `${prefix + URLEnum.ROOM}/handler/apply`, // 审批别人邀请的进群
   sendAddFriendRequest: `${prefix + URLEnum.ROOM}/apply/apply`, // 申请好友\同意申请
-  rejectFriendRequest: `${prefix + URLEnum.ROOM}/apply/reject`, // 拒绝好友申请
-  ignoreFriendRequest: `${prefix + URLEnum.ROOM}/apply/ignore`, // 忽略好友申请
-  deleteFriendRequest: `${prefix + URLEnum.ROOM}/apply/delete`, // 删除好友、群聊申请
   deleteFriend: `${prefix + URLEnum.USER}/friend`, // 删除好友
   modifyFriendRemark: `${prefix + URLEnum.USER}/friend/updateRemark`, // 修改好友备注
 
@@ -76,7 +73,7 @@ export default {
   updateMyRoomInfo: `${prefix + URLEnum.ROOM}/updateMyRoomInfo`, // 修改“我”的群聊名称
   searchGroup: `${prefix + URLEnum.ROOM}/search`, // 搜索群聊
   applyGroup: `${prefix + URLEnum.ROOM}/apply/group`, // 申请加群
-  applyHandle: `${prefix + URLEnum.ROOM}/apply/handle`, // 处理加群申请 [仅仅管理员、群主可调用]
+  applyHandle: `${prefix + URLEnum.ROOM}/apply/adminHandleApply`, // 处理加群申请 [仅仅管理员、群主可调用]
   applyGroupList: `${prefix + URLEnum.ROOM}/apply/group/list`, // 申请加群列表 [仅仅管理员、群主可见]
   getAnnouncementList: `${prefix + URLEnum.ROOM}/announcement/list`, // 获取群公告
   pushAnnouncement: `${prefix + URLEnum.ROOM}/announcement/push`, // 发布群公告

@@ -194,11 +194,16 @@ const loadMoreFriendRequests = async () => {
 
 const handleAgree = async (applyId: string) => {
   loadingMap.value[applyId] = true
-  contactStore.onAcceptFriend(applyId).then(() => {
-    setTimeout(() => {
-      loadingMap.value[applyId] = false
-    }, 600)
-  })
+  contactStore
+    .onHandleInvite({
+      applyId,
+      state: 1
+    })
+    .then(() => {
+      setTimeout(() => {
+        loadingMap.value[applyId] = false
+      }, 600)
+    })
 }
 
 // 处理好友请求操作（拒绝或忽略）
@@ -206,9 +211,15 @@ const handleFriendAction = async (action: string, applyId: string) => {
   loadingMap.value[applyId] = true
   try {
     if (action === 'reject') {
-      await contactStore.onRejectFriend(applyId)
+      await contactStore.onHandleInvite({
+        applyId,
+        state: 2
+      })
     } else if (action === 'ignore') {
-      await contactStore.onIgnoreFriend(applyId)
+      await contactStore.onHandleInvite({
+        applyId,
+        state: 3
+      })
     }
   } finally {
     setTimeout(() => {

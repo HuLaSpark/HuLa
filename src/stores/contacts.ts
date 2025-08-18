@@ -135,69 +135,26 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
     }
   }
 
-  // 初始化时默认执行一次加载
-  // getContactList()
-  // getRequestFriendsList()
-
   /**
-   * 接受好友请求
-   * @param applyId 好友申请ID
-   * 处理流程：
-   * 1. 调用接口同意好友申请
-   * 2. 刷新好友申请列表
-   * 3. 刷新好友列表
-   * 4. 更新当前选中联系人的状态
-   * 5. 更新未读数
+   * 处理好友/群申请
+   * @param apply 好友申请信息
+   * @param state 处理状态 1同意 2拒绝 3忽略
    */
-  const onAcceptFriend = async (applyId: string) => {
+  const onHandleInvite = async (apply: { applyId: string; state: number }) => {
     // 同意好友申请
-    apis.applyFriendRequest({ applyId }).then(async () => {
+    apis.handleInviteApi(apply).then(async () => {
       // 刷新好友申请列表
       await getRequestFriendsList(true)
       // 刷新好友列表
       await getContactList(true)
+      // 获取最新的未读数
+      await getNewFriendCount()
       // 更新当前选中联系人的状态
       if (globalStore.currentSelectedContact) {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         globalStore.currentSelectedContact.status = RequestFriendAgreeStatus.Agree
       }
-      // 获取最新的未读数
-      await getNewFriendCount()
-    })
-  }
-
-  /**
-   * 拒绝好友请求
-   * @param applyId 好友申请ID
-   * 处理流程：
-   * 1. 调用接口拒绝好友申请
-   * 2. 刷新好友申请列表
-   * 3. 更新未读数
-   */
-  const onRejectFriend = async (applyId: string) => {
-    // 拒绝好友申请
-    apis.rejectFriendRequest({ applyId }).then(async () => {
-      // 刷新好友申请列表
-      await getRequestFriendsList(true)
-      // 获取最新的未读数
-      await getNewFriendCount()
-    })
-  }
-
-  /**
-   * 忽略好友请求
-   * @param applyId 好友申请ID
-   * 处理流程：
-   * 1. 调用接口忽略好友申请
-   * 2. 刷新好友申请列表
-   * 3. 更新未读数
-   */
-  const onIgnoreFriend = async (applyId: string) => {
-    // 忽略好友申请
-    apis.ignoreFriendRequest({ applyId }).then(async () => {
-      // 刷新好友申请列表
-      await getRequestFriendsList(true)
       // 获取最新的未读数
       await getNewFriendCount()
     })
@@ -230,9 +187,7 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
     requestFriendsList,
     contactsOptions,
     requestFriendsOptions,
-    onAcceptFriend,
-    onRejectFriend,
-    onIgnoreFriend,
-    onDeleteContact
+    onDeleteContact,
+    onHandleInvite
   }
 })
