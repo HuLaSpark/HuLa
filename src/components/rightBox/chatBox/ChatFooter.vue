@@ -115,7 +115,8 @@
 </template>
 
 <script setup lang="ts">
-import { emitTo } from '@tauri-apps/api/event'
+import { invoke } from '@tauri-apps/api/core'
+import { LogicalPosition, LogicalSize } from '@tauri-apps/api/dpi'
 import { join } from '@tauri-apps/api/path'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { open } from '@tauri-apps/plugin-dialog'
@@ -530,8 +531,28 @@ const updateRecentEmojis = (emoji: string) => {
 
 const handleCap = async () => {
   const captureWindow = await WebviewWindow.getByLabel('capture')
-  captureWindow?.show()
-  await emitTo('capture', 'capture', true)
+  if (!captureWindow) return
+
+  // 设置窗口覆盖整个屏幕（包括菜单栏）
+  // 使用 JavaScript screen API 获取屏幕尺寸
+  const screenWidth = window.screen.width * window.devicePixelRatio
+  const screenHeight = window.screen.height * window.devicePixelRatio
+
+  // 设置窗口覆盖整个屏幕（包括菜单栏），不使用负坐标
+  // 依靠窗口级别设置来确保覆盖菜单栏
+  await captureWindow.setSize(new LogicalSize(screenWidth, screenHeight))
+  await captureWindow.setPosition(new LogicalPosition(0, 0))
+
+  // 在 macOS 上设置窗口级别以覆盖菜单栏
+  try {
+    await invoke('set_window_level_above_menubar', { windowLabel: 'capture' })
+  } catch (error) {
+    console.warn('设置窗口级别失败，但继续执行:', error)
+  }
+
+  await captureWindow.show()
+  await captureWindow.setFocus()
+  await captureWindow.emit('capture', true)
 }
 
 const handleVoiceRecord = () => {

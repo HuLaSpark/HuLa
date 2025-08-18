@@ -1,6 +1,16 @@
 {
   "identifier": "desktop-capability",
   "platforms": ["macOS", "windows", "linux"],
-  "windows": ["home", "login", "update", "checkupdate"],
-  "permissions": ["updater:default", "updater:allow-check", "updater:allow-download", "updater:allow-install"]
+  "windows": ["home", "login", "update", "checkupdate", "capture", "settings", "tray"],
+  "permissions": [
+    "updater:default",
+    "updater:allow-check",
+    "updater:allow-download",
+    "updater:allow-install",
+    "global-shortcut:allow-is-registered",
+    "global-shortcut:allow-register",
+    "global-shortcut:allow-register-all",
+    "global-shortcut:allow-unregister",
+    "global-shortcut:allow-unregister-all"
+  ]
 }

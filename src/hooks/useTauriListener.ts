@@ -13,6 +13,7 @@ export const useTauriListener = () => {
   const listeners: Promise<UnlistenFn>[] = []
   const instance = getCurrentInstance()
   const windowLabel = WebviewWindow.getCurrent().label
+  let isComponentMounted = true
 
   /**
    * 添加事件监听器
@@ -59,6 +60,9 @@ export const useTauriListener = () => {
    * 清理当前组件的监听器
    */
   const cleanup = async () => {
+    // 标记组件为未挂载状态
+    isComponentMounted = false
+
     // 只有当存在监听器时才打印日志和执行清理
     if (listeners.length > 0) {
       const componentName = instance?.type?.name || instance?.type?.__name || '未知组件'
@@ -143,7 +147,12 @@ export const useTauriListener = () => {
 
   // 只在组件实例存在时才注册 onUnmounted 钩子
   if (instance) {
-    onUnmounted(cleanup)
+    onUnmounted(() => {
+      // 检查组件是否仍然挂载，避免重复执行清理
+      if (isComponentMounted) {
+        cleanup()
+      }
+    })
   }
 
   return {

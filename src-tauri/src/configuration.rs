@@ -157,6 +157,7 @@ pub fn get_configuration(app_handle: &AppHandle) -> Result<Settings, config::Con
             config::ConfigError::Message(format!("Failed to parse APP_ENVIRONMENT: {:?}", e))
         })?;
 
+    info!("APP_ENVIRONMENT: {}", environment.as_str());
     let environment_filename = format!("{}.yaml", environment.as_str());
     let is_desktop_dev = cfg!(debug_assertions) && cfg!(desktop);
 

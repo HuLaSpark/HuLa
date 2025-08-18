@@ -104,8 +104,9 @@
             :from-user-uid="item.fromUser.uid"
             :is-group="isGroup" />
 
+          <!-- 消息为系统消息 -->
           <SystemMessage
-            v-if="item.message.type === MsgEnum.SYSTEM"
+            v-else-if="item.message.type === MsgEnum.SYSTEM"
             :body="item.message.body"
             :from-user-uid="item.fromUser.uid" />
 
@@ -896,13 +897,17 @@ const handleMacSelect = (event: any) => {
   }
 }
 
-// 处理聊天区域点击事件，用于清除回复样式
+// 处理聊天区域点击事件，用于清除回复样式和气泡激活状态
 const handleChatAreaClick = (event: any) => {
   // 检查点击目标是否为回复相关元素
   const isReplyElement =
     event.target.closest('.reply-bubble') ||
     event.target.matches('.active-reply') ||
     event.target.closest('.active-reply')
+
+  // 检查点击目标是否为气泡相关元素
+  const isBubbleElement =
+    event.target.closest('.bubble') || event.target.closest('.bubble-oneself') || event.target.closest('[data-key]')
 
   // 如果点击的不是回复相关元素，清除activeReply样式
   if (!isReplyElement && activeReply.value) {
@@ -916,6 +921,11 @@ const handleChatAreaClick = (event: any) => {
         }, 300)
       }
     })
+  }
+
+  // 如果点击的不是气泡相关元素，清除activeBubble状态
+  if (!isBubbleElement && activeBubble.value) {
+    activeBubble.value = ''
   }
 }
 

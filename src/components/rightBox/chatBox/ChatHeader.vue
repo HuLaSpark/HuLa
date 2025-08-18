@@ -956,16 +956,20 @@ const startRtcCall = async (callType: CallTypeEnum) => {
 }
 
 const createRtcCallWindow = async (isIncoming: boolean, remoteUserId: string, callType: CallTypeEnum) => {
-  // 获取对方用户ID（单聊时使用，群聊时可能需要其他逻辑）
+  // 根据是否来电决定窗口尺寸
+  const windowConfig = isIncoming
+    ? { width: 360, height: 90, minWidth: 360, minHeight: 90 } // 来电通知尺寸
+    : { width: 500, height: 650, minWidth: 500, minHeight: 650 } // 正常通话尺寸
+
   await createWebviewWindow(
     '视频通话', // 窗口标题
     'rtcCall', // 窗口标签
-    500, // 宽度
-    650, // 高度
+    windowConfig.width, // 宽度
+    windowConfig.height, // 高度
     undefined, // 不需要关闭其他窗口
     false, // 不可调整大小
-    500, // 最小宽度
-    650, // 最小高度
+    windowConfig.minWidth, // 最小宽度
+    windowConfig.minHeight, // 最小高度
     false, // 不透明
     false, // 显示窗口
     {

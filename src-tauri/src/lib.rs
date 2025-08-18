@@ -3,13 +3,13 @@
 mod desktops;
 #[cfg(desktop)]
 use common::init::CustomInit;
-#[cfg(target_os = "macos")]
-use common_cmd::hide_title_bar_buttons;
 #[cfg(desktop)]
 use common_cmd::{
     audio, default_window_icon, get_files_meta, get_window_payload, push_window_payload,
     screenshot, set_height,
 };
+#[cfg(target_os = "macos")]
+use common_cmd::{hide_title_bar_buttons, set_window_level_above_menubar, show_title_bar_buttons};
 #[cfg(target_os = "macos")]
 use desktops::app_event;
 #[cfg(desktop)]
@@ -239,18 +239,33 @@ fn setup_logout_listener(app_handle: tauri::AppHandle) {
     app_handle.listen("logout", move |_event| {
         let app_handle = app_handle_clone.clone();
         tauri::async_runtime::spawn(async move {
-            tracing::info!("[LOGOUT] Starting to close all non-login windows");
+            tracing::info!("[LOGOUT] Starting to close windows and preserve capture/checkupdate windows");
 
             let all_windows = app_handle.webview_windows();
             tracing::info!("[LOGOUT] Found {} windows", all_windows.len());
 
-            // 收集需要关闭的窗口
+            // 收集需要关闭的窗口和需要隐藏的窗口
             let mut windows_to_close = Vec::new();
+            let mut windows_to_hide = Vec::new();
             for (label, window) in all_windows {
-                // 跳过 login 窗口，不关闭它
-                if label != "login" && label != "tray" {
-                    windows_to_close.push((label, window));
+                match label.as_str() {
+                    // 这些窗口完全不处理
+                    "login" | "tray" => {},
+                    // 这些窗口只隐藏，不销毁
+                    "capture" | "checkupdate" => {
+                        windows_to_hide.push((label, window));
+                    },
+                    // 其他窗口需要关闭
+                    _ => {
+                        windows_to_close.push((label, window));
+                    }
                 }
+            }
+
+            // 先隐藏需要保持的窗口
+            for (label, window) in windows_to_hide {
+                tracing::info!("[LOGOUT] Hiding window (preserving): {}", label);
+                let _ = window.hide();
             }
 
             // 逐个关闭窗口，添加小延迟以避免并发关闭导致的错误
@@ -282,7 +297,7 @@ fn setup_logout_listener(app_handle: tauri::AppHandle) {
                 }
             }
 
-            tracing::info!("[LOGOUT] All non-login windows closed successfully");
+            tracing::info!("[LOGOUT] Logout completed - windows closed and capture/checkupdate windows preserved");
         });
     });
 }
@@ -369,6 +384,10 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         get_video_thumbnail,
         #[cfg(target_os = "macos")]
         hide_title_bar_buttons,
+        #[cfg(target_os = "macos")]
+        show_title_bar_buttons,
+        #[cfg(target_os = "macos")]
+        set_window_level_above_menubar,
         #[cfg(desktop)]
         push_window_payload,
         #[cfg(desktop)]

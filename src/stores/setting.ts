@@ -32,6 +32,10 @@ export const useSettingStore = defineStore(StoresEnum.SETTING, {
       isDouble: true,
       translate: 'tencent'
     },
+    shortcuts: {
+      screenshot: 'CmdOrCtrl+Alt+H',
+      openMainPanel: 'CmdOrCtrl+Alt+P'
+    },
     page: {
       shadow: true,
       fonts: 'PingFang',
@@ -69,6 +73,27 @@ export const useSettingStore = defineStore(StoresEnum.SETTING, {
     /** 设置菜单显示模式 */
     setShowMode(showMode: ShowModeEnum): void {
       this.showMode = showMode
+    },
+    /** 设置截图快捷键 */
+    setScreenshotShortcut(shortcut: string) {
+      if (!this.shortcuts) {
+        this.shortcuts = { screenshot: 'CmdOrCtrl+Alt+H', openMainPanel: 'CmdOrCtrl+Alt+P' }
+      }
+      this.shortcuts.screenshot = shortcut
+    },
+    /** 设置打开主面板快捷键 */
+    setOpenMainPanelShortcut(shortcut: string) {
+      if (!this.shortcuts) {
+        this.shortcuts = { screenshot: 'CmdOrCtrl+Alt+H', openMainPanel: 'CmdOrCtrl+Alt+P' }
+      }
+      this.shortcuts.openMainPanel = shortcut
+    },
+    /** 设置发送消息快捷键 */
+    setSendMessageShortcut(shortcut: string): void {
+      if (!this.chat) {
+        this.chat = { sendKey: 'Enter', isDouble: true, translate: 'tencent' }
+      }
+      this.chat.sendKey = shortcut
     }
   },
   share: {

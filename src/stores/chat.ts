@@ -333,7 +333,8 @@ export const useChatStore = defineStore(
           // 用会话列表第一个去请求消息列表
           await getMsgList()
           // 请求第一个群成员列表
-          currentRoomType.value === RoomTypeEnum.GROUP && (await groupStore.getGroupUserList(data[0].roomId))
+          currentRoomType.value === RoomTypeEnum.GROUP &&
+            (await groupStore.getGroupUserList(globalStore.currentSession.roomId))
           // 初始化所有用户基本信息
           userStore.isSign && (await cachedStore.initAllUserBaseInfo())
           // 联系人列表
@@ -491,7 +492,7 @@ export const useChatStore = defineStore(
     const getMsgIndex = (msgId: string) => {
       if (!msgId) return -1
       const keys = currentMessageMap.value ? Array.from(currentMessageMap.value.keys()) : []
-      return keys.findIndex((key) => key === msgId)
+      return keys.indexOf(msgId)
     }
 
     // 更新所有标记类型的数量

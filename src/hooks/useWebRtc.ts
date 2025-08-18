@@ -583,8 +583,6 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
       info('收到 offer')
       connectionStatus.value = RTCCallStatus.CALLING
       await nextTick()
-      // 开启铃声
-      startBell()
 
       await getDevices()
       const hasLocalStream = await getLocalStream(video ? CallTypeEnum.VIDEO : CallTypeEnum.AUDIO)
