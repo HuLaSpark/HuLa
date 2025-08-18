@@ -28,8 +28,6 @@ export enum URLEnum {
   CHAT = '/im/chat',
   /**房间*/
   ROOM = '/im/room',
-  /**oss*/
-  OSS = '/oss',
   /**系统*/
   SYSTEM = '/system',
   /**验证码*/
