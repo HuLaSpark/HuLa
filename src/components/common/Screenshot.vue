@@ -68,6 +68,7 @@
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { writeImage } from '@tauri-apps/plugin-clipboard-manager'
+import { type } from '@tauri-apps/plugin-os'
 import type { Ref } from 'vue'
 import { useCanvasTool } from '@/hooks/useCanvasTool'
 import { useTauriListener } from '@/hooks/useTauriListener'
@@ -91,6 +92,7 @@ type ButtonGroupStyle = {
   [key: `--${string}`]: any
 }
 
+// 获取当前窗口实例
 const appWindow = WebviewWindow.getCurrent()
 const { addListener } = useTauriListener()
 const canvasbox: Ref<HTMLDivElement | null> = ref(null)
@@ -169,6 +171,18 @@ let isImageLoaded: boolean = false
 
 // 当前选择的绘图工具
 const currentDrawTool: Ref<string | null> = ref(null)
+
+// 性能优化：鼠标移动事件节流（仅 macOS）
+let mouseMoveThrottleId: number | null = null
+const mouseMoveThrottleDelay = 16 // 约60FPS，在菜单栏区域降低频率
+
+// 平台检测：只在 macOS 上应用性能优化
+const isMacOS = computed(() => type() === 'macos')
+
+// 窗口状态恢复函数
+const restoreWindowState = async () => {
+  await appWindow.hide()
+}
 
 /**
  * 绘制图形
@@ -418,22 +432,63 @@ const handleMaskMouseMove = (event: MouseEvent) => {
   if (!screenConfig.value.isDrawing || !maskCtx.value || !maskCanvas.value) return
 
   const offsetEvent = event as any
-  const mouseX = offsetEvent.offsetX * screenConfig.value.scaleX
-  const mouseY = offsetEvent.offsetY * screenConfig.value.scaleY
-  const width = mouseX - screenConfig.value.startX
-  const height = mouseY - screenConfig.value.startY
 
-  // 清除之前的矩形区域
-  maskCtx.value.clearRect(0, 0, maskCanvas.value.width, maskCanvas.value.height)
+  // 只在 macOS 上应用性能优化
+  if (isMacOS) {
+    // 在菜单栏区域（y < 30）使用更强的节流来减少卡顿
+    const currentY = offsetEvent.offsetY * screenConfig.value.scaleY
+    const isInMenuBar = currentY < 30 // 菜单栏区域
+    const throttleDelay = isInMenuBar ? 32 : mouseMoveThrottleDelay // 菜单栏区域降低到30FPS
 
-  // 重新绘制整个遮罩层
-  drawMask()
+    if (mouseMoveThrottleId) {
+      return
+    }
 
-  // 清除矩形区域内的遮罩，实现透明效果
-  maskCtx.value.clearRect(screenConfig.value.startX, screenConfig.value.startY, width, height)
+    mouseMoveThrottleId = window.setTimeout(() => {
+      mouseMoveThrottleId = null
 
-  // 绘制矩形边框
-  drawRectangle(maskCtx.value, screenConfig.value.startX, screenConfig.value.startY, width, height)
+      if (!screenConfig.value.isDrawing || !maskCtx.value || !maskCanvas.value) return
+
+      const mouseX = offsetEvent.offsetX * screenConfig.value.scaleX
+      const mouseY = offsetEvent.offsetY * screenConfig.value.scaleY
+      const width = mouseX - screenConfig.value.startX
+      const height = mouseY - screenConfig.value.startY
+
+      // 优化：使用 save/restore 来减少重绘开销
+      maskCtx.value.save()
+
+      // 清除之前的矩形区域
+      maskCtx.value.clearRect(0, 0, maskCanvas.value.width, maskCanvas.value.height)
+
+      // 重新绘制整个遮罩层
+      drawMask()
+
+      // 清除矩形区域内的遮罩，实现透明效果
+      maskCtx.value.clearRect(screenConfig.value.startX, screenConfig.value.startY, width, height)
+
+      // 绘制矩形边框
+      drawRectangle(maskCtx.value, screenConfig.value.startX, screenConfig.value.startY, width, height)
+
+      maskCtx.value.restore()
+    }, throttleDelay)
+  } else {
+    const mouseX = offsetEvent.offsetX * screenConfig.value.scaleX
+    const mouseY = offsetEvent.offsetY * screenConfig.value.scaleY
+    const width = mouseX - screenConfig.value.startX
+    const height = mouseY - screenConfig.value.startY
+
+    // 清除之前的矩形区域
+    maskCtx.value.clearRect(0, 0, maskCanvas.value.width, maskCanvas.value.height)
+
+    // 重新绘制整个遮罩层
+    drawMask()
+
+    // 清除矩形区域内的遮罩，实现透明效果
+    maskCtx.value.clearRect(screenConfig.value.startX, screenConfig.value.startY, width, height)
+
+    // 绘制矩形边框
+    drawRectangle(maskCtx.value, screenConfig.value.startX, screenConfig.value.startY, width, height)
+  }
 }
 
 const handleMaskMouseUp = (event: MouseEvent) => {
@@ -1116,6 +1171,12 @@ const confirmSelection = async () => {
 
 const resetScreenshot = async () => {
   try {
+    // 清理性能优化相关的定时器（仅 macOS）
+    if (isMacOS && mouseMoveThrottleId) {
+      clearTimeout(mouseMoveThrottleId)
+      mouseMoveThrottleId = null
+    }
+
     // 重置绘图工具状态
     resetDrawTools()
 
@@ -1156,11 +1217,11 @@ const resetScreenshot = async () => {
       magnifier.value.style.display = 'none'
     }
 
-    // 隐藏截图窗口而不是关闭
-    await appWindow.hide()
+    // 恢复窗口状态（macOS需要退出全屏）
+    await restoreWindowState()
   } catch (error) {
-    // 即使出错也要尝试隐藏窗口
-    await appWindow.hide()
+    // 即使出错也要尝试恢复窗口状态
+    await restoreWindowState()
   }
 }
 
@@ -1225,6 +1286,12 @@ onMounted(async () => {
 })
 
 onUnmounted(async () => {
+  // 清理性能优化相关的定时器（仅 macOS）
+  if (isMacOS && mouseMoveThrottleId) {
+    clearTimeout(mouseMoveThrottleId)
+    mouseMoveThrottleId = null
+  }
+
   // 清理键盘监听事件
   document.removeEventListener('keydown', handleKeyDown)
 

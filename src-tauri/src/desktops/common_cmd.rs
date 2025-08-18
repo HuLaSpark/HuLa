@@ -381,3 +381,30 @@ pub fn set_badge_count(count: Option<i64>, handle: AppHandle) -> Result<(), Stri
         }
     }
 }
+
+/// 设置 macOS 窗口级别为屏幕保护程序级别，以覆盖菜单栏
+#[tauri::command]
+#[cfg(target_os = "macos")]
+pub fn set_window_level_above_menubar(window_label: &str, handle: AppHandle) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    #[allow(deprecated)]
+    {
+        use cocoa::base::id;
+        use objc::{msg_send, sel, sel_impl};
+
+        let webview_window = handle
+            .get_webview_window(window_label)
+            .ok_or_else(|| format!("Window '{}' not found", window_label))?;
+
+        let ns_window = webview_window
+            .ns_window()
+            .map_err(|e| format!("Failed to get NSWindow: {}", e))? as id;
+
+        unsafe {
+            // 设置窗口级别为屏幕保护程序级别 (1000)，高于菜单栏
+            let screen_saver_level: i32 = 1000;
+            let _: () = msg_send![ns_window, setLevel: screen_saver_level];
+        }
+    }
+    Ok(())
+}

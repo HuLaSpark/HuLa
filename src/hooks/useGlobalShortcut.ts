@@ -1,3 +1,5 @@
+import { invoke } from '@tauri-apps/api/core'
+import { LogicalPosition, LogicalSize } from '@tauri-apps/api/dpi'
 import { emitTo, listen } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { register, unregister } from '@tauri-apps/plugin-global-shortcut'
@@ -70,9 +72,21 @@ export const useGlobalShortcut = () => {
       const captureWindow = await WebviewWindow.getByLabel('capture')
       if (!captureWindow) return
 
+      // 设置窗口覆盖整个屏幕（包括菜单栏）
+      const screenWidth = window.screen.width * window.devicePixelRatio
+      const screenHeight = window.screen.height * window.devicePixelRatio
+
+      // 依靠窗口级别设置来确保覆盖菜单栏
+      await captureWindow.setSize(new LogicalSize(screenWidth, screenHeight))
+      await captureWindow.setPosition(new LogicalPosition(0, 0))
+
+      // 在 macOS 上设置窗口级别以覆盖菜单栏
+      await invoke('set_window_level_above_menubar', { windowLabel: 'capture' })
+
       await captureWindow.show()
       await captureWindow.setFocus()
-      await captureWindow.emit('capture', {})
+      await captureWindow.emit('capture', true)
+
       console.log('📷 截图窗口已启动')
     } catch (error) {
       console.error('Failed to open screenshot window:', error)

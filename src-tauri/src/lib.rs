@@ -3,13 +3,13 @@
 mod desktops;
 #[cfg(desktop)]
 use common::init::CustomInit;
-#[cfg(target_os = "macos")]
-use common_cmd::{hide_title_bar_buttons, show_title_bar_buttons};
 #[cfg(desktop)]
 use common_cmd::{
     audio, default_window_icon, get_files_meta, get_window_payload, push_window_payload,
     screenshot, set_height,
 };
+#[cfg(target_os = "macos")]
+use common_cmd::{hide_title_bar_buttons, set_window_level_above_menubar, show_title_bar_buttons};
 #[cfg(target_os = "macos")]
 use desktops::app_event;
 #[cfg(desktop)]
@@ -386,6 +386,8 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         hide_title_bar_buttons,
         #[cfg(target_os = "macos")]
         show_title_bar_buttons,
+        #[cfg(target_os = "macos")]
+        set_window_level_above_menubar,
         #[cfg(desktop)]
         push_window_payload,
         #[cfg(desktop)]

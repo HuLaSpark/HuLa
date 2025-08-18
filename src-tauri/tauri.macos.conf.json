@@ -10,16 +10,9 @@
     "devUrl": "http://127.0.0.1:6130"
   },
   "bundle": {
-    "resources": [
-      "tray",
-      "configuration",
-      "Info.plist"
-    ],
+    "resources": ["tray", "configuration", "Info.plist"],
     "active": true,
-    "targets": [
-      "app",
-      "dmg"
-    ],
+    "targets": ["app", "dmg"],
     "icon": [
       "icons/macos/light/32x32.png",
       "icons/macos/light/128x128.png",
@@ -79,13 +72,17 @@
       {
         "label": "capture",
         "url": "/capture",
-        "fullscreen": true,
+        "fullscreen": false,
         "transparent": true,
         "resizable": false,
         "skipTaskbar": true,
         "decorations": false,
         "visible": false,
-        "hiddenTitle": true
+        "hiddenTitle": true,
+        "alwaysOnTop": true,
+        "focus": true,
+        "titleBarStyle": "Overlay",
+        "visibleOnAllWorkspaces": true
       },
       {
         "label": "checkupdate",
