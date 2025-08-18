@@ -1,7 +1,7 @@
-import { onMounted, onUnmounted } from 'vue'
 import { type } from '@tauri-apps/plugin-os'
-import { useMobileStore } from '@/stores/mobile'
+import { onMounted, onUnmounted } from 'vue'
 import type { IKeyboardDidShowDetail } from '@/mobile/mobile-client/interface/adapter'
+import { useMobileStore } from '@/stores/mobile'
 
 export function useMobile() {
   const mobileStore = useMobileStore()

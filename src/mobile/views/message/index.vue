@@ -138,6 +138,7 @@ import { ref } from 'vue'
 import PullToRefresh from '#/components/PullToRefresh.vue'
 import addFriendIcon from '@/assets/mobile/chat-home/add-friend.webp'
 import groupChatIcon from '@/assets/mobile/chat-home/group-chat.webp'
+import { useMessage } from '@/hooks/useMessage.ts'
 import SafeAreaPlaceholder from '@/mobile/components/placeholders/SafeAreaPlaceholder.vue'
 import NavBar from '@/mobile/layout/navBar/index.vue'
 import { IsAllUserEnum } from '@/services/types.ts'
@@ -145,7 +146,6 @@ import { useChatStore } from '@/stores/chat.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
-import { useMessage } from '@/hooks/useMessage.ts'
 
 const chatStore = useChatStore()
 

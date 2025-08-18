@@ -250,7 +250,7 @@ function getDebugOptions() {
 }
 
 // 执行打包命令
-async function executeBuild(command, description, isDebug = false) {
+async function executeBuild(command, isDebug = false) {
   // 如果是调试模式，添加 --debug 参数
   const finalCommand = isDebug ? `${command} --debug` : command
   const [cmd, ...args] = finalCommand.split(' ')
@@ -324,7 +324,7 @@ async function selectDebugMode() {
 }
 
 // 选择包格式的函数
-async function selectBundle(selectedPlatform, platformOptions) {
+async function selectBundle(selectedPlatform) {
   const bundleOptions = getBundleOptions(selectedPlatform)
 
   if (bundleOptions.length === 0) {
@@ -360,16 +360,14 @@ async function selectBundle(selectedPlatform, platformOptions) {
 
 async function main() {
   try {
-    const currentPlatform = getCurrentPlatform()
-
     // 主循环
     while (true) {
       // 第一步：选择平台
-      const { selectedPlatform, platformOptions } = await selectPlatform()
+      const { selectedPlatform } = await selectPlatform()
 
       // 第二步：选择包格式
       while (true) {
-        const bundleResult = await selectBundle(selectedPlatform, platformOptions)
+        const bundleResult = await selectBundle(selectedPlatform)
 
         // 如果返回 'back'，返回平台选择
         if (bundleResult === 'back') {
@@ -387,7 +385,7 @@ async function main() {
 
           // 执行打包命令
           try {
-            const exitCode = await executeBuild(bundleResult.command, bundleResult.name, debugResult)
+            const exitCode = await executeBuild(bundleResult.command, debugResult)
             process.exit(exitCode)
           } catch (error) {
             console.error(`\n❌ 执行错误: ${error.message}`)
