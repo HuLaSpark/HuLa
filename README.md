@@ -230,7 +230,7 @@ HuLa 是一款基于 Tauri、Vite 7、Vue 3 和 TypeScript 构建的即时通讯
 | 🪟 | 多窗口管理 | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
 | 🔔 | 系统托盘通知 | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
 | 📷 | 图片查看器 | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
-| ✂️ | 截图功能 | ![进行中](https://img.shields.io/badge/✅-完成-ee9f20?style=flat&labelColor=fef7e6&color=ee9f20) |
+| ✂️ | 截图功能 | ![进行中](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=fef7e6&color=ee9f20) |
 | 📁 | 文件上传(七牛云) | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
 | 🔄 | 自动更新系统 | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
 
