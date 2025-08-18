@@ -251,6 +251,29 @@ export function useCanvasTool(drawCanvas: any, drawCtx: any, imgCtx: any, screen
     }
   }
 
+  // 重置绘图状态，清除所有绘制历史
+  const resetState = () => {
+    drawConfig.value.actions = []
+    drawConfig.value.undoStack = []
+    drawConfig.value.isDrawing = false
+    currentTool.value = ''
+    console.log('🔄 绘图状态已重置，历史记录已清除')
+  }
+
+  // 停止当前绘图操作
+  const stopDrawing = () => {
+    drawConfig.value.isDrawing = false
+    currentTool.value = ''
+    closeListen()
+    console.log('⏹️ 绘图操作已停止')
+  }
+
+  // 清除事件监听
+  const clearEvents = () => {
+    closeListen()
+    console.log('🧹 绘图事件监听已清除')
+  }
+
   const startListen = () => {
     document.addEventListener('mousedown', handleMouseDown)
     document.addEventListener('mousemove', handleMouseMove)
@@ -270,6 +293,9 @@ export function useCanvasTool(drawCanvas: any, drawCtx: any, imgCtx: any, screen
     drawCircle,
     drawArrow,
     undo,
-    redo
+    redo,
+    resetState,
+    stopDrawing,
+    clearEvents
   }
 }

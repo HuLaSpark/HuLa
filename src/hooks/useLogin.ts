@@ -1,4 +1,5 @@
 import { emit } from '@tauri-apps/api/event'
+import { info } from '@tauri-apps/plugin-log'
 import { type } from '@tauri-apps/plugin-os'
 import { EventEnum, RoomTypeEnum, TauriCommand } from '@/enums'
 import { useWindow } from '@/hooks/useWindow.ts'
@@ -37,9 +38,12 @@ export const useLogin = () => {
    * 登出账号
    */
   const logout = async () => {
+    info('登出账号')
     const { createWebviewWindow } = useWindow()
     isTrayMenuShow.value = false
     try {
+      // ws 退出连接
+      await invokeSilently('ws_disconnect')
       await invokeSilently(TauriCommand.UPDATE_USER_LAST_OPT_TIME)
       // 创建登录窗口
       await createWebviewWindow('登录', 'login', 320, 448, undefined, false, 320, 448)

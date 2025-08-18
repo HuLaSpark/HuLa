@@ -63,19 +63,6 @@
       <span class="pl-10px">聊天</span>
 
       <n-flex class="item" :size="12" vertical>
-        <!-- 发送信息 -->
-        <n-flex align="center" justify="space-between">
-          <span>发送信息快捷键</span>
-          <n-select
-            class="w-140px"
-            size="small"
-            label-field="value"
-            v-model:value="chat.sendKey"
-            :options="sendOptions" />
-        </n-flex>
-
-        <span class="w-full h-1px bg-[--line-color]"></span>
-
         <!-- 双击打开独立会话 -->
         <!-- <n-flex align="center" justify="space-between">
           <span>双击会话列表打开独立聊天窗口</span>
@@ -158,7 +145,7 @@ import { type } from '@tauri-apps/plugin-os'
 import { NSwitch } from 'naive-ui'
 import { CloseBxEnum, ShowModeEnum } from '@/enums'
 import { useSettingStore } from '@/stores/setting.ts'
-import { fontOptions, sendOptions, translateOptions } from './config.ts'
+import { fontOptions, translateOptions } from './config.ts'
 import { topicsList } from './model.tsx'
 
 const appWindow = WebviewWindow.getCurrent()

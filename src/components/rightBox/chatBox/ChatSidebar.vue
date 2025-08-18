@@ -186,6 +186,7 @@
 </template>
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { info } from '@tauri-apps/plugin-log'
 import { useDebounceFn } from '@vueuse/core'
 import type { InputInst } from 'naive-ui'
 import { storeToRefs } from 'pinia'
@@ -361,6 +362,7 @@ const handleOpenAnnoun = (isAdd: boolean) => {
  * 加载群公告
  */
 const handleLoadGroupAnnoun = async (roomId: string) => {
+  info(`加载群公告: ${roomId}`)
   // 设置公告加载状态为加载中
   isLoadingAnnouncement.value = true
 
@@ -377,7 +379,7 @@ const handleLoadGroupAnnoun = async (roomId: string) => {
         announList.value = [topAnnouncement, ...announList.value.filter((item: any) => !item.top)]
       }
     }
-    announNum.value = parseInt(data.total)
+    announNum.value = parseInt(data.total, 10)
   }
 
   // 加载完成后，关闭骨架屏
@@ -404,6 +406,17 @@ const getUserState = (stateId: string) => {
   return stateList.value.find((state: { id: string }) => state.id === stateId)
 }
 
+const announcementUpdatedListener = await appWindow.listen('announcementUpdated', async (event: any) => {
+  if (event.payload) {
+    const { hasAnnouncements } = event.payload
+    if (hasAnnouncements) {
+      // 初始化群公告
+      await handleInitAnnoun()
+      await nextTick()
+    }
+  }
+})
+
 onMounted(async () => {
   useMitt.on(`${MittEnum.INFO_POPOVER}-Sidebar`, (event: any) => {
     selectKey.value = event.uid
@@ -416,19 +429,6 @@ onMounted(async () => {
       announNum.value = 0
     }),
     'announcementClear'
-  )
-
-  addListener(
-    appWindow.listen('announcementUpdated', async (event: any) => {
-      if (event.payload) {
-        const { hasAnnouncements } = event.payload
-        if (hasAnnouncements) {
-          // 初始化群公告
-          await handleInitAnnoun()
-        }
-      }
-    }),
-    'announcementUpdated'
   )
 
   // 监听会话变化
@@ -475,6 +475,10 @@ onMounted(async () => {
 
     await handleInitAnnoun()
   }
+})
+
+onUnmounted(() => {
+  announcementUpdatedListener()
 })
 </script>
 

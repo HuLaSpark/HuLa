@@ -713,3 +713,8 @@ export type RightMouseMessageItem = {
   updateTime: number | null
   _index: number
 }
+
+export type DetailsContent = {
+  type: 'apply'
+  applyType: 'friend' | 'group'
+}

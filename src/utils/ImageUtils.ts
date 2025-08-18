@@ -284,7 +284,7 @@ export const getImageDimensions = async (
           try {
             // 获取远程图片大小
             const response = await fetch(input, { method: 'HEAD' })
-            result.size = parseInt(response.headers.get('content-length') || '0')
+            result.size = parseInt(response.headers.get('content-length') || '0', 10)
           } catch (_error) {
             // 如果无法获取大小，使用默认值
             result.size = 0

@@ -21,9 +21,9 @@
       @mouseenter="isAnnouncementHover = true"
       @mouseleave="isAnnouncementHover = false">
       <n-flex :wrap="false" class="w-full" align="center" justify="space-between">
-        <n-flex :wrap="false" align="center" class="pl-12px select-none" :size="6">
+        <n-flex :wrap="false" align="center" class="pl-12px select-none flex-1 min-w-0" :size="6">
           <svg class="size-16px flex-shrink-0"><use href="#Loudspeaker"></use></svg>
-          <div style="max-width: calc(100vw - 70vw)" class="line-clamp-1 text-(12px [--chat-text-color])">
+          <div class="flex-1 min-w-0 line-clamp-1 text-(12px [--chat-text-color])">
             {{ topAnnouncement.content }}
           </div>
         </n-flex>
@@ -41,7 +41,7 @@
       vertical
       :size="18"
       :style="{ 'max-height': `calc(100vh - ${announcementHeight}px)` }"
-      class="relative h-100vh box-border p-20px">
+      class="relative box-border p-20px">
       <n-flex justify="end">
         <n-skeleton style="border-radius: 14px" height="40px" width="46%" :sharp="false" />
         <n-skeleton height="40px" circle />
@@ -76,6 +76,7 @@
       @scroll="handleScroll"
       @scroll-direction-change="handleScrollDirectionChange"
       @load-more="handleLoadMore"
+      @click="handleChatAreaClick"
       class="scrollbar-container"
       :class="{ 'hide-scrollbar': !showScrollbar }"
       :style="{ 'max-height': `calc(100vh - ${announcementHeight}px)` }"
@@ -103,8 +104,9 @@
             :from-user-uid="item.fromUser.uid"
             :is-group="isGroup" />
 
+          <!-- 消息为系统消息 -->
           <SystemMessage
-            v-if="item.message.type === MsgEnum.SYSTEM"
+            v-else-if="item.message.type === MsgEnum.SYSTEM"
             :body="item.message.body"
             :from-user-uid="item.fromUser.uid" />
 
@@ -138,7 +140,9 @@
                 </span>
               </Transition>
             </div>
-            <div class="flex items-start flex-1" :class="item.fromUser.uid === userUid ? 'flex-row-reverse' : ''">
+            <div
+              class="flex items-start flex-1 select-none"
+              :class="item.fromUser.uid === userUid ? 'flex-row-reverse' : ''">
               <!-- 回复消息提示的箭头 -->
               <svg
                 v-if="activeReply === item.message.id"
@@ -179,7 +183,7 @@
                 vertical
                 justify="center"
                 :size="6"
-                class="color-[--text-color] flex-1"
+                class="color-[--text-color] flex-1 select-none"
                 :class="item.fromUser.uid === userUid ? 'items-end mr-10px' : ''">
                 <n-flex
                   :size="6"
@@ -263,7 +267,7 @@
                   <!-- 渲染消息内容体 TODO: 等完善消息类型后逐渐替换使用RenderMessage -->
                   <RenderMessage
                     :class="[
-                      item.message.type === MsgEnum.VOICE ? 'select-none cursor-pointer' : '!select-auto !cursor-text',
+                      item.message.type === MsgEnum.VOICE ? 'select-none cursor-pointer' : 'select-text cursor-text',
                       {
                         active:
                           activeBubble === item.message.id &&
@@ -315,16 +319,6 @@
                         :src="src"></n-image>
                     </n-flex>
                   </n-image-group> -->
-
-                  <!-- 消息为文件 -->
-                  <!-- <n-image
-                    class="select-none"
-                    v-if="typeof item.message.body.url === 'string' && item.message.type === MsgEnum.FILE"
-                    :img-props="{ style: { maxWidth: '325px', maxHeight: '165px' } }"
-                    show-toolbar-tooltip
-                    preview-disabled
-                    style="border-radius: 8px"
-                    :src="item.message.body.url"></n-image> -->
                   <!-- 消息状态指示器 -->
                   <div v-if="item.fromUser.uid === userUid" class="absolute -left-6 top-2">
                     <n-icon v-if="item.message.status === MessageStatusEnum.SENDING" class="text-gray-400">
@@ -347,7 +341,7 @@
                   :size="6"
                   v-if="item.message.body.reply"
                   @click="jumpToReplyMsg(item.message.body.reply.id)"
-                  class="reply-bubble relative w-fit custom-shadow">
+                  class="reply-bubble relative w-fit custom-shadow select-none">
                   <svg class="size-14px">
                     <use href="#to-top"></use>
                   </svg>
@@ -441,19 +435,19 @@
 </template>
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { info } from '@tauri-apps/plugin-log'
 import { type } from '@tauri-apps/plugin-os'
 import { useDebounceFn } from '@vueuse/core'
 import { delay } from 'lodash-es'
 import { ANNOUNCEMENT_HEIGHT, CHAT_HEADER_HEIGHT } from '@/common/constants'
 import VirtualList, { type VirtualListExpose } from '@/components/common/VirtualList.vue'
-import { EventEnum, MessageStatusEnum, MittEnum, MsgEnum, ThemeEnum } from '@/enums'
+import { MessageStatusEnum, MittEnum, MsgEnum, ThemeEnum } from '@/enums'
 import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
 import { useChatLayoutGlobal } from '@/hooks/useChatLayout'
 import { useChatMain } from '@/hooks/useChatMain.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 import { usePopover } from '@/hooks/usePopover.ts'
-import { useTauriListener } from '@/hooks/useTauriListener'
 import { useWindow } from '@/hooks/useWindow.ts'
 import apis from '@/services/apis'
 import type { MessageType, SessionItem } from '@/services/types.ts'
@@ -468,7 +462,6 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
 
 const appWindow = WebviewWindow.getCurrent()
-const { addListener } = useTauriListener()
 const props = defineProps<{
   activeItem: SessionItem
 }>()
@@ -904,28 +897,35 @@ const handleMacSelect = (event: any) => {
   }
 }
 
-const closeMenu = (event: any) => {
-  if (!event.target.matches('.bubble', 'bubble-oneself')) {
-    activeBubble.value = ''
-    // 解决mac右键会选中文本的问题
-    if (isMac.value && recordEL.value) {
-      recordEL.value.classList.remove('select-none')
-    }
+// 处理聊天区域点击事件，用于清除回复样式和气泡激活状态
+const handleChatAreaClick = (event: any) => {
+  // 检查点击目标是否为回复相关元素
+  const isReplyElement =
+    event.target.closest('.reply-bubble') ||
+    event.target.matches('.active-reply') ||
+    event.target.closest('.active-reply')
+
+  // 检查点击目标是否为气泡相关元素
+  const isBubbleElement =
+    event.target.closest('.bubble') || event.target.closest('.bubble-oneself') || event.target.closest('[data-key]')
+
+  // 如果点击的不是回复相关元素，清除activeReply样式
+  if (!isReplyElement && activeReply.value) {
+    nextTick(() => {
+      const activeReplyElement = document.querySelector('.active-reply') as HTMLElement
+      if (activeReplyElement) {
+        activeReplyElement.classList.add('reply-exit')
+        delay(() => {
+          activeReplyElement.classList.remove('reply-exit')
+          activeReply.value = ''
+        }, 300)
+      }
+    })
   }
-  if (!event.target.matches('.active-reply')) {
-    /** 解决更替交换回复气泡时候没有触发动画的问题 */
-    if (!event.target.matches('.reply-bubble *')) {
-      nextTick(() => {
-        const activeReplyElement = document.querySelector('.active-reply') as HTMLElement
-        if (activeReplyElement) {
-          activeReplyElement.classList.add('reply-exit')
-          delay(() => {
-            activeReplyElement.classList.remove('reply-exit')
-            activeReply.value = ''
-          }, 300)
-        }
-      })
-    }
+
+  // 如果点击的不是气泡相关元素，清除activeBubble状态
+  if (!isBubbleElement && activeBubble.value) {
+    activeBubble.value = ''
   }
 }
 
@@ -1033,6 +1033,31 @@ const isSingleLineEmojis = (item: any) => {
   return emojiCount <= 5 && item.fromUser.uid === userUid.value
 }
 
+// 监听公告更新事件
+const announcementUpdatedListener = await appWindow.listen('announcementUpdated', async (event: any) => {
+  info(`公告更新事件: ${event.payload}`)
+  if (event.payload) {
+    const { hasAnnouncements, topAnnouncement: newTopAnnouncement } = event.payload
+    if (hasAnnouncements && newTopAnnouncement) {
+      // 只有置顶公告才更新顶部提示
+      if (newTopAnnouncement.top) {
+        topAnnouncement.value = newTopAnnouncement
+      } else if (topAnnouncement.value) {
+        // 如果当前有显示置顶公告，但新公告不是置顶的，保持不变
+        await loadTopAnnouncement() // 重新获取置顶公告
+      }
+    } else {
+      // 如果没有公告，清空显示
+      topAnnouncement.value = null
+    }
+  }
+})
+
+// 监听公告清空事件
+const announcementClearListener = await appWindow.listen('announcementClear', () => {
+  topAnnouncement.value = null
+})
+
 onMounted(async () => {
   nextTick(() => {
     scrollToBottom()
@@ -1060,44 +1085,6 @@ onMounted(async () => {
       })
     }
   })
-
-  // 监听公告更新事件
-  addListener(
-    appWindow.listen('announcementUpdated', async (event: any) => {
-      if (event.payload) {
-        const { hasAnnouncements, topAnnouncement: newTopAnnouncement } = event.payload
-        if (hasAnnouncements && newTopAnnouncement) {
-          // 只有置顶公告才更新顶部提示
-          if (newTopAnnouncement.top) {
-            topAnnouncement.value = newTopAnnouncement
-          } else if (topAnnouncement.value) {
-            // 如果当前有显示置顶公告，但新公告不是置顶的，保持不变
-            await loadTopAnnouncement() // 重新获取置顶公告
-          }
-        } else {
-          // 如果没有公告，清空显示
-          topAnnouncement.value = null
-        }
-      }
-    }),
-    'announcementUpdated'
-  )
-
-  // 监听公告清空事件
-  addListener(
-    appWindow.listen('announcementClear', () => {
-      topAnnouncement.value = null
-    }),
-    'announcementClear'
-  )
-
-  addListener(
-    appWindow.listen(EventEnum.SHARE_SCREEN, async () => {
-      await createWebviewWindow('共享屏幕', 'sharedScreen', 840, 840)
-    }),
-    'shareScreen'
-  )
-  window.addEventListener('click', closeMenu, true)
 })
 
 onUnmounted(() => {
@@ -1109,7 +1096,9 @@ onUnmounted(() => {
     hoverBubble.value.timer = void 0
   }
   hoverBubble.value.key = -1
-  window.removeEventListener('click', closeMenu, true)
+
+  announcementUpdatedListener()
+  announcementClearListener()
 })
 </script>
 

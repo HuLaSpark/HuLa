@@ -1,3 +1,4 @@
+import { getInsets } from 'tauri-plugin-safe-area-insets'
 import type { SafeArea } from '~/src/stores/mobile'
 import type {
   IKeyboardDidShowDetail,
@@ -6,7 +7,6 @@ import type {
   TKeyboardHideCallback,
   TKeyboardShowCallback
 } from './interface/adapter'
-import { getInsets } from 'tauri-plugin-safe-area-insets'
 
 export class AndroidAdapter implements IMobileClientAdapter {
   keyboardListener(showCallback: TKeyboardShowCallback, hideCallback: TKeyboardHideCallback): KeyboardListenerResult {

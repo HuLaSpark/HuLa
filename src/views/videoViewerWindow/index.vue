@@ -275,7 +275,7 @@ const previousVideo = async () => {
     // 如果是本地视频，从文件夹获取视频列表
     const folderVideos = await getVideosFromCurrentFolder(currentVideoPath)
     if (folderVideos.length > 0) {
-      const currentVideoIndex = folderVideos.findIndex((path) => path === currentVideoPath)
+      const currentVideoIndex = folderVideos.indexOf(currentVideoPath)
       if (currentVideoIndex > 0) {
         const previousVideoPath = folderVideos[currentVideoIndex - 1]
         videoList.value[currentIndex.value] = previousVideoPath
@@ -323,7 +323,7 @@ const nextVideo = async () => {
     // 如果是本地视频，从文件夹获取视频列表
     const folderVideos = await getVideosFromCurrentFolder(currentVideoPath)
     if (folderVideos.length > 0) {
-      const currentVideoIndex = folderVideos.findIndex((path) => path === currentVideoPath)
+      const currentVideoIndex = folderVideos.indexOf(currentVideoPath)
       if (currentVideoIndex < folderVideos.length - 1) {
         const nextVideoPath = folderVideos[currentVideoIndex + 1]
         videoList.value[currentIndex.value] = nextVideoPath

@@ -23,7 +23,7 @@
         target-filterable
         v-model:value="selectedValue"
         :options="filteredOptions"
-        :render-source-list="renderSourceList(true)"
+        :render-source-list="renderSourceList()"
         :render-target-label="renderLabel"
         :disabled-options="disabledOptions" />
 

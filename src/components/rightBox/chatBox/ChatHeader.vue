@@ -57,7 +57,7 @@
       <div v-if="!isChannel" class="options-box">
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
-            <svg @click="startVoiceCall">
+            <svg @click="startRtcCall(CallTypeEnum.AUDIO)">
               <use href="#phone-telephone"></use>
             </svg>
           </template>
@@ -68,7 +68,7 @@
       <div v-if="!isChannel" class="options-box">
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
-            <svg @click="startVideoCall">
+            <svg @click="startRtcCall(CallTypeEnum.VIDEO)">
               <use href="#video-one"></use>
             </svg>
           </template>
@@ -385,6 +385,7 @@
 </template>
 
 <script setup lang="ts">
+import { info } from '@tauri-apps/plugin-log'
 import { type } from '@tauri-apps/plugin-os'
 import { useDisplayMedia } from '@vueuse/core'
 import AvatarCropper from '@/components/common/AvatarCropper.vue'
@@ -668,7 +669,7 @@ const handleCreateGroupOrInvite = () => {
 
 /** 处理创建群聊 */
 const handleCreateGroup = () => {
-  useMitt.emit(MittEnum.CREATE_GROUP, activeItem.detailId)
+  useMitt.emit(MittEnum.CREATE_GROUP, { id: activeItem.detailId })
 }
 
 /** 处理邀请进群 */
@@ -720,11 +721,12 @@ const saveGroupInfo = async () => {
   // 只有当数据发生变化时才发送请求
   if (nicknameChanged || remarkChanged) {
     // 使用updateMyRoomInfo接口更新我在群里的昵称和群备注
-    await cacheStore.updateMyRoomInfo({
+    const myRoomInfo = {
       id: activeItem.roomId,
       myName: groupDetail.value.myNickname,
       remark: groupDetail.value.groupRemark
-    })
+    }
+    await cacheStore.updateMyRoomInfo(myRoomInfo)
 
     // 更新原始值为当前值
     originalGroupDetail.value = {
@@ -738,6 +740,11 @@ const saveGroupInfo = async () => {
       myName: groupDetail.value.myNickname,
       remark: groupDetail.value.groupRemark
     }
+
+    // 发送更新请求
+    await apis.updateMyRoomInfo(myRoomInfo)
+    // 更新群成员列表
+    await groupStore.getGroupUserList(activeItem.roomId)
 
     window.$message.success('群聊信息已更新')
   }
@@ -928,27 +935,11 @@ const handleConfirm = () => {
   }
 }
 
-const startVoiceCall = async () => {
-  try {
-    // 获取对方用户ID（单聊时使用，群聊时可能需要其他逻辑）
-    const remoteUserId = activeItem.type === RoomTypeEnum.SINGLE ? activeItem.detailId : ''
-
-    await createWebviewWindow('语音通话', 'rtcCall', 400, 600, undefined, false, 400, 600, false, false, {
-      remoteUserId: remoteUserId,
-      roomId: activeItem.roomId,
-      callType: CallTypeEnum.AUDIO,
-      isIncoming: false
-    })
-  } catch (error) {
-    console.error('创建语音通话窗口失败:', error)
-  }
-}
-
-const startVideoCall = async () => {
+const startRtcCall = async (callType: CallTypeEnum) => {
   try {
     // 判断是否为群聊，如果是群聊则跳过
     if (activeItem.type === RoomTypeEnum.GROUP) {
-      window.$message.warning('群聊暂不支持视频通话')
+      window.$message.warning('群聊暂不支持音视频通话')
       return
     }
 
@@ -958,29 +949,33 @@ const startVideoCall = async () => {
       window.$message.error('无法获取对方用户信息')
       return
     }
-    await createRtcCallWindow(false, remoteUid)
+    await createRtcCallWindow(false, remoteUid, callType)
   } catch (error) {
     console.error('创建视频通话窗口失败:', error)
   }
 }
 
-const createRtcCallWindow = async (isIncoming: boolean, remoteUserId: string) => {
-  // 获取对方用户ID（单聊时使用，群聊时可能需要其他逻辑）
+const createRtcCallWindow = async (isIncoming: boolean, remoteUserId: string, callType: CallTypeEnum) => {
+  // 根据是否来电决定窗口尺寸
+  const windowConfig = isIncoming
+    ? { width: 360, height: 90, minWidth: 360, minHeight: 90 } // 来电通知尺寸
+    : { width: 500, height: 650, minWidth: 500, minHeight: 650 } // 正常通话尺寸
+
   await createWebviewWindow(
     '视频通话', // 窗口标题
     'rtcCall', // 窗口标签
-    500, // 宽度
-    650, // 高度
+    windowConfig.width, // 宽度
+    windowConfig.height, // 高度
     undefined, // 不需要关闭其他窗口
     false, // 不可调整大小
-    500, // 最小宽度
-    650, // 最小高度
+    windowConfig.minWidth, // 最小宽度
+    windowConfig.minHeight, // 最小高度
     false, // 不透明
     false, // 显示窗口
     {
       remoteUserId,
       roomId: activeItem.roomId,
-      callType: CallTypeEnum.VIDEO,
+      callType,
       isIncoming
     }
   )
@@ -1063,9 +1058,9 @@ const closeMenu = (event: any) => {
   }
 }
 
-const handleVideoCall = async (remotedUid: string) => {
-  console.log('监听到视频通话调用')
-  await createRtcCallWindow(true, remotedUid)
+const handleVideoCall = async (remotedUid: string, callType: CallTypeEnum) => {
+  info(`监听到视频通话调用，remotedUid: ${remotedUid}, callType: ${callType}`)
+  await createRtcCallWindow(true, remotedUid, callType)
 }
 
 onMounted(() => {
@@ -1082,7 +1077,7 @@ onMounted(() => {
 
   useMitt.on(WsResponseMessageType.VideoCallRequest, (event) => {
     const remoteUid = event.callerUid
-    handleVideoCall(remoteUid)
+    handleVideoCall(remoteUid, event.video ? CallTypeEnum.VIDEO : CallTypeEnum.AUDIO)
   })
 })
 

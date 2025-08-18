@@ -349,6 +349,7 @@ sudo xattr -r -d com.apple.quarantine /Applications/应用名称.app
 | 2025-05-27 | **临安居士** | `¥188` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-04-20 | **姜兴(Simon)** | `¥188` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-02-17 | **禾硕** | `¥168` | ![支付宝赞赏](https://img.shields.io/badge/支付宝赞赏-1677FF?style=flat&logo=alipay&logoColor=white) |
+| 2025-08-13 | **zhongjing** | `¥100` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-07-15 | **粉兔** | `¥100` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-02-8 | **Boom....** | `¥100` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 
@@ -366,6 +367,7 @@ sudo xattr -r -d com.apple.quarantine /Applications/应用名称.app
 ### 🥉 铜牌赞助者 (￥20-49)
 | 💝 日期 | 👤 赞助者 | 💰 金额 | 🏷️ 平台 |
 |---------|----------|--------|---------|
+| 2025-08-12 | ***持** | `¥20` | ![支付宝赞赏](https://img.shields.io/badge/支付宝赞赏-1677FF?style=flat&logo=alipay&logoColor=white) |
 | 2025-06-03 | **洪流** | `¥20` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-05-27 | **刘启成** | `¥20` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-05-20 | **匿名赞助者** | `¥20` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |

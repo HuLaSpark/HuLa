@@ -81,12 +81,8 @@ export default {
   requestFriendList: (params?: any) => GET<ListResponse<RequestFriendItem>>(urls.requestFriendList, params),
   /** 发送添加好友请求 */
   sendAddFriendRequest: (params: { targetUid: string; msg: string }) => POST(urls.sendAddFriendRequest, params),
-  /** 同意好友申请 */
-  applyFriendRequest: (params: { applyId: string }) => PUT(urls.sendAddFriendRequest, params),
-  /** 忽略好友申请 */
-  ignoreFriendRequest: (params: { applyId: string }) => PUT(urls.ignoreFriendRequest, params),
-  /** 拒绝好友申请 */
-  rejectFriendRequest: (params: { applyId: string }) => PUT(urls.rejectFriendRequest, params),
+  /** 同意邀请进群或好友申请，1 同意 2 拒绝 */
+  handleInviteApi: (body: { applyId: string; state: number }) => POST(urls.handleInvite, body),
   /** 删除好友 */
   deleteFriend: (params: { targetUid: string }) => DELETE(urls.deleteFriend, params),
   /** 好友申请未读数 */
@@ -133,8 +129,8 @@ export default {
   /** 修改群信息(群主) */
   updateRoomInfo: (params: { id: string; name: string; avatar: string }) => POST<void>(urls.updateRoomInfo, params),
   /** 修改“我”的群聊名称 */
-  // updateMyRoomInfo: (params: { id: string; myName: string; remark: string }) =>
-  //   POST<void>(urls.updateMyRoomInfo, params),
+  updateMyRoomInfo: (params: { id: string; myName: string; remark: string }) =>
+    POST<void>(urls.updateMyRoomInfo, params),
   /** 添加群管理 */
   addAdmin: ({ roomId, uidList }: { roomId: string; uidList: string[] }) =>
     PUT<boolean>(urls.addAdmin, {

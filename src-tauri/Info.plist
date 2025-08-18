@@ -6,5 +6,9 @@
   <string>Request camera access for WebRTC</string>
   <key>NSMicrophoneUsageDescription</key>
   <string>Request microphone access for WebRTC</string>
+  <key>NSScreenCaptureUsageDescription</key>
+  <string>HuLa needs screen recording permission to enable screenshot functionality</string>
+  <key>NSAccessibilityUsageDescription</key>
+  <string>HuLa needs accessibility permission to capture screen content</string>
 </dict>
 </plist>

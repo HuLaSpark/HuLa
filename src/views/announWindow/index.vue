@@ -168,6 +168,7 @@
 <script setup lang="ts">
 import { emitTo } from '@tauri-apps/api/event'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { info } from '@tauri-apps/plugin-log'
 import { useRoute } from 'vue-router'
 import { ThemeEnum } from '@/enums'
 import { useUserInfo } from '@/hooks/useCached.ts'
@@ -384,11 +385,11 @@ const handleDel = async (announcement: any) => {
     // 发送刷新消息通知其他组件
     if (announList.value.length === 0) {
       // 如果没有公告了，发送清空事件
-      emitTo('home', 'announcementClear')
+      await emitTo('home', 'announcementClear')
     }
 
     // 无论如何都要发送更新事件，携带最新状态
-    emitTo('home', 'announcementUpdated', {
+    await emitTo('home', 'announcementUpdated', {
       hasAnnouncements: announList.value.length > 0,
       topAnnouncement: newTopAnnouncement
     })
@@ -459,8 +460,9 @@ const handlePushAnnouncement = async () => {
       newTopAnnouncement = announList.value.find((item: any) => item.top)
     }
 
+    info(`发送更新事件通知home: `)
     // 发送更新事件通知其他组件
-    emitTo('home', 'announcementUpdated', {
+    await emitTo('home', 'announcementUpdated', {
       hasAnnouncements: announList.value.length > 0,
       topAnnouncement: newTopAnnouncement
     })

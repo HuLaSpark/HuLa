@@ -13,14 +13,15 @@ import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { type } from '@tauri-apps/plugin-os'
 import { useStorage } from '@vueuse/core'
 import { MittEnum, StoresEnum, ThemeEnum } from '@/enums'
+import { useGlobalShortcut } from '@/hooks/useGlobalShortcut.ts'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
+import { useMobile } from '@/hooks/useMobile.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
 import { useSettingStore } from '@/stores/setting.ts'
 import LockScreen from '@/views/LockScreen.vue'
 import { useTauriListener } from './hooks/useTauriListener'
-import { useMobile } from '@/hooks/useMobile.ts'
 
 const appWindow = WebviewWindow.getCurrent()
 const { createWebviewWindow } = useWindow()
@@ -30,6 +31,8 @@ const { resetLoginState, logout } = useLogin()
 const token = useStorage<string | null>('TOKEN', null)
 const refreshToken = useStorage<string | null>('REFRESH_TOKEN', null)
 const { addListener } = useTauriListener()
+// 全局快捷键管理
+const { initializeGlobalShortcut, cleanupGlobalShortcut } = useGlobalShortcut()
 
 /** 不需要锁屏的页面 */
 const LockExclusion = new Set(['/login', '/tray', '/qrCode', '/about', '/onlineStatus'])
@@ -124,6 +127,11 @@ onMounted(async () => {
   }
   document.documentElement.dataset.theme = themes.value.content
   window.addEventListener('dragstart', preventDrag)
+
+  // 只在主窗口中初始化全局快捷键
+  if (appWindow.label === 'home') {
+    await initializeGlobalShortcut()
+  }
   /** 开发环境不禁止 */
   if (process.env.NODE_ENV !== 'development') {
     /** 禁用浏览器默认的快捷键 */
@@ -172,9 +180,14 @@ onMounted(async () => {
   )
 })
 
-onUnmounted(() => {
+onUnmounted(async () => {
   window.removeEventListener('contextmenu', (e) => e.preventDefault(), false)
   window.removeEventListener('dragstart', preventDrag)
+
+  // 只在主窗口中清理全局快捷键
+  if (appWindow.label === 'home') {
+    await cleanupGlobalShortcut()
+  }
 })
 
 useMobile()

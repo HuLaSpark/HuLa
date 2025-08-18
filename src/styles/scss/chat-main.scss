@@ -12,13 +12,12 @@
   hyphens: auto; /** 行尾自动断开长单词 */
   -webkit-hyphens: auto;
   line-break: anywhere; /** 支持任意位置换行，包括特殊字符和符号 */
-  user-select: text; /** 只允许选中文本 */
-  -webkit-user-select: text;
-  -moz-user-select: text;
-  -ms-user-select: text;
   &.active {
     background-color: var(--bg-bubble-active);
     color: var(--text-color);
+    &::selection {
+      background: var(--select-bg-color, rgba(19, 152, 127, 0.3)); /* 设置选中背景颜色 */
+    }
   }
 }
 @mixin float($position: top) {
@@ -33,18 +32,6 @@
     background: var(--select-bg-color, rgba(19, 152, 127, 0.3)); /* 设置选中背景颜色 */
   }
   @include bubble;
-
-  /* 确保子元素中非文本元素不可选 */
-  img,
-  svg,
-  .emoji,
-  button,
-  [role='button'] {
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-  }
 }
 .bubble-oneself {
   @include bubble;
@@ -53,18 +40,6 @@
 
   &::selection {
     background: var(--select-bg-color-self, rgba(255, 255, 255, 0.3)); /* 自己消息选中背景颜色 */
-  }
-
-  /* 确保子元素中非文本元素不可选 */
-  img,
-  svg,
-  .emoji,
-  button,
-  [role='button'] {
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
   }
 }
 /**! 气泡动画 */
@@ -230,6 +205,7 @@
   border: 1px solid var(--bg-notice, rgba(19, 152, 127, 0.2));
   margin: 6px 12px 0 12px;
   height: 34px;
+  line-height: 36px;
   transition: all 0.3s ease-in-out;
   z-index: 10;
 }
@@ -241,4 +217,13 @@
 /**! 替换ait的字体颜色 */
 :deep(#aitSpan) {
   @apply text-inherit cursor-pointer;
+}
+
+/** 确保文本可选中的通用类 */
+.select-text {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  -khtml-user-select: text !important;
 }

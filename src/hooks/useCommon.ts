@@ -1,5 +1,6 @@
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { BaseDirectory, create, exists, mkdir } from '@tauri-apps/plugin-fs'
+import { info } from '@tauri-apps/plugin-log'
 import GraphemeSplitter from 'grapheme-splitter'
 import type { Ref } from 'vue'
 import { LimitEnum, MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
@@ -818,6 +819,7 @@ export const useCommon = () => {
       router.push('/message')
     }
 
+    info('打开消息会话')
     const res = await apis.sessionDetailWithFriends({ id: uid, roomType: type })
     // 把隐藏的会话先显示
     try {

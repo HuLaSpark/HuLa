@@ -338,6 +338,11 @@ const routes: Array<RouteRecordRaw> = [
         path: '/manageStore',
         name: 'manageStore',
         component: () => import('@/views/moreWindow/settings/ManageStore.vue')
+      },
+      {
+        path: '/shortcut',
+        name: 'shortcut',
+        component: () => import('@/views/moreWindow/settings/Shortcut.vue')
       }
     ]
   },
@@ -354,7 +359,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/rtcCall',
     name: 'rtcCall',
-    component: () => import('@/components/call/RtcCall.vue')
+    component: () => import('@/views/callWindow/index.vue')
   }
 ]
 

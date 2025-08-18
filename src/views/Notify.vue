@@ -58,7 +58,8 @@ import type { MessageType } from '@/services/types.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { useTauriListener } from '../hooks/useTauriListener'
+
+// import { useTauriListener } from '../hooks/useTauriListener'
 
 // 定义分组消息的类型
 type GroupedMessage = {
@@ -76,7 +77,7 @@ type GroupedMessage = {
 
 const appWindow = WebviewWindow.getCurrent()
 const { checkWinExist, resizeWindow } = useWindow()
-const { addListener } = useTauriListener()
+// const { addListener } = useTauriListener()
 const { checkMessageAtMe } = useReplaceMsg()
 const globalStore = useGlobalStore()
 const chatStore = useChatStore()
@@ -110,8 +111,9 @@ const handleClickMsg = async (group: any) => {
   // 找到对应的会话 - 根据roomId而不是消息ID
   const session = chatStore.sessionList.find((s) => s.roomId === group.roomId)
   if (session) {
+    info(`点击消息，打开会话：${JSON.stringify(session)}`)
     emitTo('home', 'search_to_msg', {
-      uid: group.roomType === RoomTypeEnum.SINGLE ? session.id : session.roomId,
+      uid: group.roomType === RoomTypeEnum.SINGLE ? session.detailId : session.roomId,
       roomType: group.roomType
     })
     // 收起通知面板
@@ -124,6 +126,18 @@ const handleClickMsg = async (group: any) => {
 // 取消状态栏闪烁
 const handleTip = async () => {
   globalStore.setTipVisible(false)
+  // 取消窗口置顶
+  await appWindow?.setAlwaysOnTop(false)
+
+  // 隐藏窗口
+  await appWindow?.hide()
+
+  // 清空消息内容
+  content.value = []
+  msgCount.value = 0
+
+  // 重置窗口高度
+  resizeWindow('notify', 280, 140)
 }
 
 const debouncedHandleTip = useDebounceFn(handleTip, 100)
@@ -177,108 +191,97 @@ onMounted(async () => {
   // 初始化窗口高度
   resizeWindow('notify', 280, 140)
 
-  if (appWindow.label === 'notify') {
-    addListener(
-      appWindow.listen('notify_enter', async (event: Event<any>) => {
-        info('监听到enter事件，打开notify窗口')
-        await showWindow(event)
-      }),
-      'notify_enter'
-    )
-    addListener(
-      appWindow.listen('notify_leave', async () => {
-        setTimeout(async () => {
-          await hideWindow()
-        }, 300)
-      }),
-      'notify_leave'
-    )
-    addListener(
-      appWindow.listen('hide_notify', async () => {
-        // 只有在tipVisible为true时才需要处理
-        if (tipVisible.value) {
-          await handleTip()
+  appWindow.listen('notify_enter', async (event: Event<any>) => {
+    info('监听到enter事件，打开notify窗口')
+    await showWindow(event)
+  })
+
+  appWindow.listen('notify_leave', async () => {
+    setTimeout(async () => {
+      await hideWindow()
+    }, 300)
+  })
+
+  appWindow.listen('hide_notify', async () => {
+    // 只有在tipVisible为true时才需要处理
+    if (tipVisible.value) {
+      await handleTip()
+    }
+  })
+
+  appWindow.listen('notify_content', async (event: Event<MessageType>) => {
+    if (event.payload) {
+      // 窗口显示将由notify_enter事件触发
+
+      // 处理消息内容
+      const msg = event.payload
+      const session = chatStore.sessionList.find((s) => s.roomId === msg.message.roomId)
+      const existingGroup = content.value.find((group) => group.roomId === msg.message.roomId)
+
+      // 使用useReplaceMsg处理消息内容
+      const { formatMessageContent, getMessageSenderName } = useReplaceMsg()
+      const isAtMe = checkMessageAtMe(msg)
+      const currentTime = Date.now()
+
+      // 获取发送者信息
+      const senderName = getMessageSenderName(msg, session?.name || '')
+
+      // 格式化消息内容
+      const formattedContent = formatMessageContent(msg, session?.type || RoomTypeEnum.GROUP, senderName, isAtMe)
+
+      // 获取会话中已有的未读消息数量（排除已在通知中计算过的）
+      let unreadCount = 0
+      if (session && !existingGroup) {
+        unreadCount = session.unreadCount || 0
+      }
+
+      if (existingGroup) {
+        // 如果该房间的消息已存在，更新最新内容和计数
+        existingGroup.id = msg.message.id
+        existingGroup.latestContent = formattedContent
+        existingGroup.messageCount++
+        existingGroup.timestamp = currentTime
+        existingGroup.isAtMe = isAtMe
+        if (session) {
+          existingGroup.avatar = session.avatar
+          existingGroup.name = session.name
         }
-      }),
-      'hide_notify'
-    )
-    addListener(
-      appWindow.listen('notify_content', async (event: Event<MessageType>) => {
-        if (event.payload) {
-          // 窗口显示将由notify_enter事件触发
+      } else {
+        // 如果是新的房间，创建新的分组
+        content.value.push({
+          id: msg.message.id,
+          roomId: msg.message.roomId,
+          latestContent: formattedContent,
+          messageCount: 1 + unreadCount, // 加上已有的未读消息数量
+          avatar: session?.avatar || '',
+          name: session?.name || '',
+          timestamp: currentTime,
+          isAtMe: isAtMe,
+          // 添加房间类型，从session中获取，如果没有则默认为私聊类型
+          roomType: session?.type || RoomTypeEnum.SINGLE
+        })
 
-          // 处理消息内容
-          const msg = event.payload
-          const session = chatStore.sessionList.find((s) => s.roomId === msg.message.roomId)
-          const existingGroup = content.value.find((group) => group.roomId === msg.message.roomId)
+        // 调整窗口高度，基础高度140，从第二个分组开始每组增加60px，最多4个分组
+        // const baseHeight = 140
+        // const groupCount = content.value.length
+        // const additionalHeight = Math.min(Math.max(groupCount - 1, 0), 3) * 60
+        // const newHeight = baseHeight + additionalHeight
+        // resizeWindow('notify', 280, newHeight)
+      }
 
-          // 使用useReplaceMsg处理消息内容
-          const { formatMessageContent, getMessageSenderName } = useReplaceMsg()
-          const isAtMe = checkMessageAtMe(msg)
-          const currentTime = Date.now()
+      // 对消息进行排序 - 先按置顶状态排序，再按活跃时间排序
+      content.value.sort((a, b) => {
+        // 1. 先按置顶状态排序（置顶的排在前面）
+        if (a.top && !b.top) return -1
+        if (!a.top && b.top) return 1
 
-          // 获取发送者信息
-          const senderName = getMessageSenderName(msg, session?.name || '')
+        // 2. 在相同置顶状态下，按时间戳降序排序（最新的排在前面）
+        return b.timestamp - a.timestamp
+      })
 
-          // 格式化消息内容
-          const formattedContent = formatMessageContent(msg, session?.type || RoomTypeEnum.GROUP, senderName, isAtMe)
-
-          // 获取会话中已有的未读消息数量（排除已在通知中计算过的）
-          let unreadCount = 0
-          if (session && !existingGroup) {
-            unreadCount = session.unreadCount || 0
-          }
-
-          if (existingGroup) {
-            // 如果该房间的消息已存在，更新最新内容和计数
-            existingGroup.id = msg.message.id
-            existingGroup.latestContent = formattedContent
-            existingGroup.messageCount++
-            existingGroup.timestamp = currentTime
-            existingGroup.isAtMe = isAtMe
-            if (session) {
-              existingGroup.avatar = session.avatar
-              existingGroup.name = session.name
-            }
-          } else {
-            // 如果是新的房间，创建新的分组
-            content.value.push({
-              id: msg.message.id,
-              roomId: msg.message.roomId,
-              latestContent: formattedContent,
-              messageCount: 1 + unreadCount, // 加上已有的未读消息数量
-              avatar: session?.avatar || '',
-              name: session?.name || '',
-              timestamp: currentTime,
-              isAtMe: isAtMe,
-              // 添加房间类型，从session中获取，如果没有则默认为私聊类型
-              roomType: session?.type || RoomTypeEnum.SINGLE
-            })
-
-            // 调整窗口高度，基础高度140，从第二个分组开始每组增加60px，最多4个分组
-            // const baseHeight = 140
-            // const groupCount = content.value.length
-            // const additionalHeight = Math.min(Math.max(groupCount - 1, 0), 3) * 60
-            // const newHeight = baseHeight + additionalHeight
-            // resizeWindow('notify', 280, newHeight)
-          }
-
-          // 对消息进行排序 - 先按置顶状态排序，再按活跃时间排序
-          content.value.sort((a, b) => {
-            // 1. 先按置顶状态排序（置顶的排在前面）
-            if (a.top && !b.top) return -1
-            if (!a.top && b.top) return 1
-
-            // 2. 在相同置顶状态下，按时间戳降序排序（最新的排在前面）
-            return b.timestamp - a.timestamp
-          })
-
-          msgCount.value = content.value.reduce((acc, group) => acc + group.messageCount, 0)
-        }
-      }),
-      'notify_content'
-    )
-  }
+      msgCount.value = content.value.reduce((acc, group) => acc + group.messageCount, 0)
+    }
+  })
 })
 </script>
 <style scoped lang="scss">

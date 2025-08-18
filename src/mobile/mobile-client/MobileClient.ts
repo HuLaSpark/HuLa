@@ -1,4 +1,5 @@
 import { type OsType, type } from '@tauri-apps/plugin-os'
+import mitt from 'mitt'
 import { type SafeArea, useMobileStore } from '@/stores/mobile'
 import { AndroidAdapter } from './AndroidAdapter'
 import { IosAdapter } from './IosAdapter'
@@ -9,7 +10,6 @@ import type {
   TKeyboardShowCallback
 } from './interface/adapter'
 import type { IMobileClient } from './interface/client'
-import mitt from 'mitt'
 
 const RESIZE_UPDATE = 'resize-update'
 
@@ -24,8 +24,6 @@ export class MobileClient implements IMobileClient {
   public mobileStore = useMobileStore()
   private clientAdapter!: IMobileClientAdapter
   public mitt = mitt<MobileClientEvents>()
-
-  constructor() {}
 
   getSafeArea(): Promise<SafeArea> {
     return this.clientAdapter.getSafeArea()

@@ -52,6 +52,13 @@ declare namespace STO {
       /** 翻译提供商 */
       translate: 'youdao' | 'tencent'
     }
+    /** 快捷键设置 */
+    shortcuts: {
+      /** 截图快捷键 */
+      screenshot: string
+      /** 打开主面板快捷键 */
+      openMainPanel: string
+    }
     /** 界面设置 */
     page: {
       /** 是否开启阴影 */
