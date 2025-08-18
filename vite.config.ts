@@ -4,17 +4,19 @@ import terser from '@rollup/plugin-terser'
 import UnoCSS from '@unocss/vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
+import postcsspxtorem from 'postcss-pxtorem'
 import AutoImport from 'unplugin-auto-import/vite' //自动导入
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import Components from 'unplugin-vue-components/vite' //组件注册
 import { type ConfigEnv, defineConfig, loadEnv } from 'vite'
 import VueSetupExtend from 'vite-plugin-vue-setup-extend'
 import { getRootPath, getSrcPath } from './build/config/getPath'
-import postcsspxtorem from 'postcss-pxtorem'
 
 // 读取 package.json 依赖
 const packageJson = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf-8'))
 const dependencies = Object.keys(packageJson.dependencies || {})
+
+const host = process.env.TAURI_DEV_HOST
 
 // https://vitejs.dev/config/
 /**! 不需要优化前端打包(如开启gzip) */
@@ -130,11 +132,17 @@ export default defineConfig(({ mode }: ConfigEnv) => {
           rewrite: (path) => path.replace(/^\/api/, '')
         }
       },
-      hmr: {
-        // 为移动端开发提供正确的HMR配置
-        port: 6130, // 使用不同的端口避免冲突
-        host: '0.0.0.0' // 允许外部访问，支持Android模拟器连接
-      },
+      hmr: host
+        ? {
+            protocol: 'ws',
+            host: '0.0.0.0',
+            port: 6130
+          }
+        : {
+            protocol: 'ws',
+            host: '127.0.0.1',
+            port: 6130
+          },
       cors: true, // 配置 CORS
       host: '0.0.0.0',
       port: 6130,

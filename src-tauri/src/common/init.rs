@@ -8,7 +8,7 @@ pub trait CustomInit {
 
 /// 构建平台特定的日志插件
 fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
-    let mut builder = tauri_plugin_log::Builder::new()
+    let builder = tauri_plugin_log::Builder::new()
         .level(tracing::log::LevelFilter::Info)
         .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
         .level_for("sqlx", tracing::log::LevelFilter::Warn)
