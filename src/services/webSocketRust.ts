@@ -705,7 +705,7 @@ class RustWebSocketClient {
     info('[RustWS] WebSocket 客户端已销毁')
   }
 }
-
+info('创建RustWebSocketClient')
 // 创建全局实例
 const rustWebSocketClient = new RustWebSocketClient()
 

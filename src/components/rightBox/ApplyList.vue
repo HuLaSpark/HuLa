@@ -128,9 +128,9 @@ const isAccepted = (targetId: string) => {
 const applyList = computed(() => {
   return contactStore.requestFriendsList.filter((item) => {
     if (props.type === 'friend') {
-      return item.type === 1
-    } else {
       return item.type === 2
+    } else {
+      return item.type === 1
     }
   })
 })
