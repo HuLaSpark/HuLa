@@ -405,7 +405,7 @@ class RustWebSocketClient {
 
     // 好友相关事件
     this.listenerController.add(
-      await listen('ws-request-new-friend', (event: any) => {
+      await listen('ws-request-new-apply', (event: any) => {
         info('好友申请')
         useMitt.emit(WsResponseMessageType.REQUEST_NEW_FRIEND, event.payload)
       })

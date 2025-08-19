@@ -314,8 +314,9 @@ useMitt.on(
   async (data: { uid: number; unReadCount4Friend: number; unReadCount4Group: number }) => {
     console.log('收到好友申请')
     // 更新未读数
-    globalStore.unReadMark.newFriendUnreadCount = data.unReadCount4Friend
-    globalStore.unReadMark.newGroupUnreadCount = data.unReadCount4Group
+    globalStore.unReadMark.newFriendUnreadCount = data.unReadCount4Friend || 0
+    globalStore.unReadMark.newGroupUnreadCount = data.unReadCount4Group || 0
+
     // 刷新好友申请列表
     await contactStore.getApplyPage(true)
   }

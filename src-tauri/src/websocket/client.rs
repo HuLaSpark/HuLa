@@ -578,9 +578,9 @@ impl WebSocketClient {
             }
 
             // 好友相关
-            "requestNewFriend" => {
-                info!("👥 新好友申请");
-                let _ = app_handle.emit("ws-request-new-friend", data);
+            "newApply" => {
+                info!("👥 新的Apply申请");
+                let _ = app_handle.emit("ws-request-new-apply", data);
             }
             "requestApprovalFriend" => {
                 info!("✅ 同意好友申请");

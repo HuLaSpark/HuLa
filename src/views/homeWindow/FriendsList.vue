@@ -7,7 +7,7 @@
     <div class="text-(14px [--text-color])">好友通知</div>
     <n-flex align="center" :size="4">
       <n-badge :value="globalStore.unReadMark.newFriendUnreadCount" :max="15" />
-      <n-badge v-if="globalStore.unReadMark.newFriendUnreadCount === 0" dot color="#d5304f" />
+      <!-- <n-badge v-if="globalStore.unReadMark.newFriendUnreadCount > 0" dot color="#d5304f" /> -->
       <svg class="size-16px rotate-270 color-[--text-color]"><use href="#down"></use></svg>
     </n-flex>
   </n-flex>
@@ -20,7 +20,7 @@
     <div class="text-(14px [--text-color])">群通知</div>
     <n-flex align="center" :size="4">
       <n-badge :value="globalStore.unReadMark.newGroupUnreadCount" :max="15" />
-      <n-badge v-if="globalStore.unReadMark.newGroupUnreadCount === 0" dot color="#d5304f" />
+      <!-- <n-badge v-if="globalStore.unReadMark.newGroupUnreadCount === 0" dot color="#d5304f" /> -->
       <svg class="size-16px rotate-270 color-[--text-color]"><use href="#down"></use></svg>
     </n-flex>
   </n-flex>
@@ -192,7 +192,17 @@ const handleSelect = (event: MouseEvent) => {
   console.log(event)
 }
 
-const handleApply = (applyType: 'friend' | 'group') => {
+const handleApply = async (applyType: 'friend' | 'group') => {
+  // 刷新好友申请列表
+  await contactStore.getApplyPage(true)
+
+  // 更新未读数
+  if (applyType === 'friend') {
+    globalStore.unReadMark.newFriendUnreadCount = 0
+  } else {
+    globalStore.unReadMark.newGroupUnreadCount = 0
+  }
+
   useMitt.emit(MittEnum.APPLY_SHOW, {
     context: {
       type: 'apply',
