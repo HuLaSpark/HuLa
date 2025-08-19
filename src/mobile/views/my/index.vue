@@ -11,7 +11,7 @@
 
     <div ref="scrollContainer" class="h-[calc(100vh-var(--safe-area-inset-bottom)-32px)] z-1 overflow-y-auto mt-2">
       <!-- 动态内容区 -->
-      <div class="custom-rounded flex flex-col gap-4 min-h-1000px z-1 p-10px mt-4 shadow">
+      <div class="custom-rounded flex px-24px flex-col gap-4 min-h-1000px z-1 p-10px mt-4 shadow">
         <CommunityTab @update="onUpdate" :options="tabOptions" active-tab-name="find">
           <template #find>
             <CommunityContent v-for="i in uiViewsData.testList" :key="i"></CommunityContent>

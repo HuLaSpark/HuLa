@@ -7,7 +7,11 @@
     <!-- 页面全部内容 -->
     <div class="flex-1 overflow-y-auto flex flex-col">
       <div class="flex flex-1 overflow-y-auto">
-        <RouterView />
+        <RouterView v-slot="{ Component }">
+          <Transition name="slide" appear>
+            <component :is="Component" :key="route.fullPath" />
+          </Transition>
+        </RouterView>
       </div>
       <div class="flex">
         <TabBar ref="tabBarElement" />
@@ -20,12 +24,14 @@
 </template>
 
 <script setup lang="ts">
+import { useRoute } from 'vue-router'
 import SafeAreaPlaceholder from '@/mobile/components/placeholders/SafeAreaPlaceholder.vue'
 import type { default as TabBarType } from '@/mobile/layout/tabBar/index.vue'
 import TabBar from '@/mobile/layout/tabBar/index.vue'
 import { useMobileStore } from '@/stores/mobile'
 import { calculateElementPosition } from '@/utils/DomCalculate'
 
+const route = useRoute()
 const mobileStore = useMobileStore()
 const tabBarElement = ref<InstanceType<typeof TabBarType>>()
 
@@ -65,4 +71,20 @@ watch(
 )
 </script>
 
-<style lang="scss"></style>
+<style lang="scss">
+/* 侧滑切换动画 */
+.slide-enter-active,
+.slide-leave-active {
+  transition: all 0.15s ease;
+}
+
+.slide-enter-from {
+  transform: translateX(30px);
+  opacity: 0;
+}
+
+.slide-leave-to {
+  transform: translateX(-30px);
+  opacity: 0;
+}
+</style>

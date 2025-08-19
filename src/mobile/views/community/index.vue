@@ -22,11 +22,11 @@
         </template>
       </n-input>
 
-      <img class="block w-32px h-32px" src="@/assets/mobile/community/scanner.webp" alt="" />
+      <img @click="toScanQRCode" class="block w-32px h-32px" src="@/assets/mobile/community/scanner.webp" alt="" />
     </div>
 
     <!-- tab组件 -->
-    <div class="flex px-16px flex-1 gap-2 flex-col z-1">
+    <div class="flex px-20px flex-1 gap-2 flex-col z-1">
       <CommunityTab @update="onUpdate" :options="tabOptions" active-tab-name="find">
         <template #find>
           <CommunityContent v-for="i in uiViewsData.testList" :key="i"></CommunityContent>
@@ -44,6 +44,9 @@
 import CommunityContent from '@/mobile/components/community/CommunityContent.vue'
 import CommunityTab from '@/mobile/components/community/CommunityTab.vue'
 import SafeAreaPlaceholder from '@/mobile/components/placeholders/SafeAreaPlaceholder.vue'
+import router from '@/router'
+
+const toScanQRCode = () => [router.push('/mobile/mobileMy/scanQRcode')]
 
 const onUpdate = (newTab: string) => {
   console.log('已更新：', newTab)

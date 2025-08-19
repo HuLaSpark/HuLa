@@ -23,7 +23,7 @@
         <!-- 账号 -->
         <div class="flex flex-warp gap-2 items-center">
           <span class="text-bold-style">账号：123456789</span>
-          <span>
+          <span @click="toMyQRCode" class="pe-15px">
             <img class="w-14px h-14px" src="@/assets/mobile/my/qr-code.webp" alt="" />
           </span>
         </div>
@@ -103,6 +103,10 @@ const router = useRouter()
 
 const toEditProfile = () => {
   router.push('/mobile/mobileMy/editProfile')
+}
+
+const toMyQRCode = () => {
+  router.push('/mobile/mobileMy/myQRCode')
 }
 
 const props = defineProps({

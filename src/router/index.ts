@@ -23,8 +23,12 @@ import EditBio from '@/mobile/views/my/EditBio.vue'
 import EditBirthday from '@/mobile/views/my/EditBirthday.vue'
 import EditProfile from '@/mobile/views/my/EditProfile.vue'
 import MobileMy from '@/mobile/views/my/index.vue'
+import MobileQRCode from '@/mobile/views/my/MobileQRCode.vue'
+import MobileSettings from '@/mobile/views/my/MobileSettings.vue'
 import MyMessages from '@/mobile/views/my/MyMessages.vue'
+import MyQRCode from '@/mobile/views/my/MyQRCode.vue'
 import PublishCommunity from '@/mobile/views/my/PublishCommunity.vue'
+import Share from '@/mobile/views/my/Share.vue'
 
 const isDesktop = computed(() => {
   return type() === 'windows' || type() === 'linux' || type() === 'macos'
@@ -149,6 +153,26 @@ const routes: Array<RouteRecordRaw> = [
         path: 'publishCommunity',
         name: 'mobilePublishCommunity',
         component: PublishCommunity
+      },
+      {
+        path: 'settings',
+        name: 'MobileSettings',
+        component: MobileSettings
+      },
+      {
+        path: 'scanQRCode',
+        name: 'mobileQRCode',
+        component: MobileQRCode
+      },
+      {
+        path: 'share',
+        name: 'mobileShare',
+        component: Share
+      },
+      {
+        path: 'myQRCode',
+        name: 'mobileShare',
+        component: MyQRCode
       }
     ]
   },
