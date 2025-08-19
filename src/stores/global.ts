@@ -14,8 +14,13 @@ export const useGlobalStore = defineStore(
     const chatStore = useChatStore()
 
     // 未读消息标记：好友请求未读数和新消息未读数
-    const unReadMark = reactive<{ newFriendUnreadCount: number; newMsgUnreadCount: number }>({
+    const unReadMark = reactive<{
+      newFriendUnreadCount: number
+      newMsgUnreadCount: number
+      newGroupUnreadCount: number
+    }>({
       newFriendUnreadCount: 0,
+      newGroupUnreadCount: 0,
       newMsgUnreadCount: 0
     })
 

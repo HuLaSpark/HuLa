@@ -55,11 +55,7 @@
           </svg>
         </n-badge>
         <!-- 好友提示 -->
-        <n-badge
-          v-if="item.url === 'friendsList'"
-          :max="99"
-          :value="unReadMark.newFriendUnreadCount"
-          :show="unReadMark.newFriendUnreadCount > 0">
+        <n-badge v-if="item.url === 'friendsList'" :max="99" :value="unreadApplyCount" :show="unreadApplyCount > 0">
           <svg class="size-22px">
             <use
               :href="`#${activeUrl === item.url || openWindowsList.has(item.url) ? item.iconAction : item.icon}`"></use>
@@ -298,6 +294,10 @@ const handleTipShow = (item: any) => {
   tipShow.value = false
   item.dot = false
 }
+
+const unreadApplyCount = computed(() => {
+  return globalStore.unReadMark.newFriendUnreadCount + globalStore.unReadMark.newGroupUnreadCount
+})
 
 const startResize = () => {
   window.dispatchEvent(new Event('resize'))
