@@ -109,11 +109,10 @@ import { emit, listen } from '@tauri-apps/api/event'
 import { isRegistered } from '@tauri-apps/plugin-global-shortcut'
 import { type } from '@tauri-apps/plugin-os'
 import { useMessage } from 'naive-ui'
+import { MacOsKeyEnum } from '@/enums'
+import { useGlobalShortcut } from '@/hooks/useGlobalShortcut.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { sendOptions } from './config.ts'
-
-const message = useMessage()
-const settingStore = useSettingStore()
 
 // 快捷键配置管理
 type ShortcutConfig = {
@@ -128,6 +127,11 @@ type ShortcutConfig = {
   displayName: string
 }
 
+const message = useMessage()
+const settingStore = useSettingStore()
+const { getDefaultShortcuts } = useGlobalShortcut()
+const isMac = type() === 'macos'
+
 // 统一的快捷键配置
 const shortcutConfigs: Record<string, ShortcutConfig> = {
   screenshot: {
@@ -136,7 +140,7 @@ const shortcutConfigs: Record<string, ShortcutConfig> = {
     isCapturing: ref(false),
     isRegistered: ref<boolean | null>(null),
     original: ref(settingStore.shortcuts?.screenshot),
-    defaultValue: 'CmdOrCtrl+Alt+H',
+    defaultValue: getDefaultShortcuts().screenshot,
     eventName: 'shortcut-updated',
     registrationEventName: 'shortcut-registration-updated',
     displayName: '截图快捷键'
@@ -147,7 +151,7 @@ const shortcutConfigs: Record<string, ShortcutConfig> = {
     isCapturing: ref(false),
     isRegistered: ref<boolean | null>(null),
     original: ref(settingStore.shortcuts?.openMainPanel),
-    defaultValue: 'CmdOrCtrl+Alt+P',
+    defaultValue: getDefaultShortcuts().openMainPanel,
     eventName: 'open-main-panel-shortcut-updated',
     registrationEventName: 'open-main-panel-shortcut-registration-updated',
     displayName: '切换主面板快捷键'
@@ -165,14 +169,46 @@ const sendMessageShortcut = ref(settingStore.chat?.sendKey)
 
 // 将快捷键转换为平台对应的显示文本
 const formatShortcutDisplay = (shortcut: string) => {
-  const isWindows = type() === 'windows'
+  if (isMac) {
+    // Mac 平台特殊处理：按照标准顺序排列修饰键
+    const keys = shortcut.split('+').map((key) => key.trim())
+
+    const displayKeys: string[] = []
+    const mainKeys: string[] = []
+
+    // 解析按键类型
+    keys.forEach((key) => {
+      if (['Cmd', 'Command'].includes(key)) {
+        displayKeys.push(MacOsKeyEnum['⌘'])
+      } else if (key === 'Ctrl') {
+        displayKeys.push(MacOsKeyEnum['^'])
+      } else if (key === 'Alt') {
+        displayKeys.push(MacOsKeyEnum['⌥'])
+      } else if (key === 'Shift') {
+        displayKeys.push(MacOsKeyEnum['⇧'])
+      } else {
+        mainKeys.push(key.toLowerCase())
+      }
+    })
+
+    // Mac 标准顺序：⌘ -> ^ -> ⌥ -> ⇧
+    const orderedKeys: string[] = []
+    if (displayKeys.includes(MacOsKeyEnum['⌘'])) orderedKeys.push(MacOsKeyEnum['⌘'])
+    if (displayKeys.includes(MacOsKeyEnum['^'])) orderedKeys.push(MacOsKeyEnum['^'])
+    if (displayKeys.includes(MacOsKeyEnum['⌥'])) orderedKeys.push(MacOsKeyEnum['⌥'])
+    if (displayKeys.includes(MacOsKeyEnum['⇧'])) orderedKeys.push(MacOsKeyEnum['⇧'])
+
+    // 添加主键
+    orderedKeys.push(...mainKeys)
+
+    return orderedKeys.join(' + ')
+  }
+
+  // 其他平台的处理
   return shortcut
-    .replace('CmdOrCtrl', isWindows ? 'Ctrl' : 'Command')
-    .replace('Cmd', 'Command')
     .split('+')
     .map((key) => key.trim())
     .map((key) => {
-      // 将按键名称格式化为小写（除了特殊键）
       if (['Ctrl', 'Command', 'Alt', 'Shift'].includes(key)) {
         return key.toLowerCase()
       }
@@ -233,10 +269,22 @@ const createShortcutInputHandler = (config: ShortcutConfig) => {
 
     const keys: string[] = []
 
-    // 检查修饰键 - 统一使用CmdOrCtrl以保证跨平台兼容性
-    if (event.ctrlKey || event.metaKey) {
-      keys.push('CmdOrCtrl')
+    // 检查修饰键
+    if (isMac) {
+      // Mac 上区分 Control 键和 Command 键
+      if (event.ctrlKey) {
+        keys.push('Ctrl')
+      }
+      if (event.metaKey) {
+        keys.push('Cmd')
+      }
+    } else {
+      // 其他平台只使用 Ctrl 键
+      if (event.ctrlKey) {
+        keys.push('Ctrl')
+      }
     }
+
     if (event.altKey) {
       keys.push('Alt')
     }
@@ -252,7 +300,6 @@ const createShortcutInputHandler = (config: ShortcutConfig) => {
 
     // 至少需要一个修饰键和一个主键
     if (keys.length >= 2) {
-      // 更新内部存储值（使用CmdOrCtrl格式，显示会通过computed自动格式化）
       config.value.value = keys.join('+')
     }
   }

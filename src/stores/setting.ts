@@ -2,6 +2,15 @@ import { type } from '@tauri-apps/plugin-os'
 import { defineStore } from 'pinia'
 import { CloseBxEnum, ShowModeEnum, StoresEnum, ThemeEnum } from '@/enums'
 
+// 获取平台对应的默认快捷键
+const getDefaultShortcuts = () => {
+  const isMac = type() === 'macos'
+  return {
+    screenshot: isMac ? 'Cmd+Ctrl+H' : 'Ctrl+Alt+H',
+    openMainPanel: isMac ? 'Cmd+Ctrl+P' : 'Ctrl+Alt+P'
+  }
+}
+
 // TODO 使用indexDB或sqlite缓存数据，还需要根据每个账号来进行配置 (nyh -> 2024-03-26 01:22:12)
 const isDesktop = computed(() => {
   return type() === 'windows' || type() === 'linux' || type() === 'macos'
@@ -32,10 +41,7 @@ export const useSettingStore = defineStore(StoresEnum.SETTING, {
       isDouble: true,
       translate: 'tencent'
     },
-    shortcuts: {
-      screenshot: 'CmdOrCtrl+Alt+H',
-      openMainPanel: 'CmdOrCtrl+Alt+P'
-    },
+    shortcuts: getDefaultShortcuts(),
     page: {
       shadow: true,
       fonts: 'PingFang',
@@ -77,14 +83,14 @@ export const useSettingStore = defineStore(StoresEnum.SETTING, {
     /** 设置截图快捷键 */
     setScreenshotShortcut(shortcut: string) {
       if (!this.shortcuts) {
-        this.shortcuts = { screenshot: 'CmdOrCtrl+Alt+H', openMainPanel: 'CmdOrCtrl+Alt+P' }
+        this.shortcuts = getDefaultShortcuts()
       }
       this.shortcuts.screenshot = shortcut
     },
     /** 设置打开主面板快捷键 */
     setOpenMainPanelShortcut(shortcut: string) {
       if (!this.shortcuts) {
-        this.shortcuts = { screenshot: 'CmdOrCtrl+Alt+H', openMainPanel: 'CmdOrCtrl+Alt+P' }
+        this.shortcuts = getDefaultShortcuts()
       }
       this.shortcuts.openMainPanel = shortcut
     },

@@ -25,8 +25,9 @@ type ShortcutConfig = {
 const globalShortcutStates = new Map<string, string>()
 
 // 防抖状态管理
-let togglePanelTimeout: NodeJS.Timeout | null = null
+let togglePanelTimeout: ReturnType<typeof setTimeout> | null = null
 let lastToggleTime = 0
+const isMac = type() === 'macos'
 
 /**
  * 全局快捷键管理 Hook
@@ -36,6 +37,14 @@ let lastToggleTime = 0
 export const useGlobalShortcut = () => {
   const settingStore = useSettingStore()
   const { addListener } = useTauriListener()
+
+  // 获取平台对应的默认快捷键
+  const getDefaultShortcuts = () => {
+    return {
+      screenshot: isMac ? 'Cmd+Ctrl+H' : 'Ctrl+Alt+H',
+      openMainPanel: isMac ? 'Cmd+Ctrl+P' : 'Ctrl+Alt+P'
+    }
+  }
 
   /**
    * 确保capture窗口存在
@@ -97,7 +106,7 @@ export const useGlobalShortcut = () => {
   }
 
   /**
-   * 智能切换主面板显示状态（防抖版本）
+   * 切换主面板显示状态
    * - 如果窗口已显示，则隐藏
    * - 如果窗口隐藏或最小化，则显示并聚焦
    */
@@ -156,14 +165,14 @@ export const useGlobalShortcut = () => {
   const shortcutConfigs: ShortcutConfig[] = [
     {
       key: 'screenshot',
-      defaultValue: 'CmdOrCtrl+Alt+H',
+      defaultValue: getDefaultShortcuts().screenshot,
       handler: handleScreenshot,
       updateEventName: 'shortcut-updated',
       registrationEventName: 'shortcut-registration-updated'
     },
     {
       key: 'openMainPanel',
-      defaultValue: 'CmdOrCtrl+Alt+P',
+      defaultValue: getDefaultShortcuts().openMainPanel,
       handler: handleOpenMainPanel,
       updateEventName: 'open-main-panel-shortcut-updated',
       registrationEventName: 'open-main-panel-shortcut-registration-updated'
@@ -324,9 +333,10 @@ export const useGlobalShortcut = () => {
     cleanupGlobalShortcut,
     ensureCaptureWindow,
 
-    // 工具函数（主要用于测试和调试）
+    // 工具函数
     registerShortcut: (config: ShortcutConfig, shortcut: string) => registerShortcut(config, shortcut),
     unregisterShortcut,
+    getDefaultShortcuts,
 
     // 配置信息（用于外部访问）
     shortcutConfigs

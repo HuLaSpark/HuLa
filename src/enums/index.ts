@@ -376,7 +376,8 @@ export enum ModalEnum {
 export enum MacOsKeyEnum {
   '⌘' = '⌘',
   '⌥' = '⌥',
-  '⇧' = '⇧'
+  '⇧' = '⇧',
+  '^' = '^'
 }
 
 /** Windows键盘映射 */
