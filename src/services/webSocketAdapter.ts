@@ -7,9 +7,7 @@
 
 import { info } from '@tauri-apps/plugin-log'
 
-let webSocketService: any
-
 info('🦀 使用 Rust WebSocket 实现')
-webSocketService = import('./webSocketRust').then((module) => module.default)
+const webSocketService: any = import('./webSocketRust').then((module) => module.default)
 
 export default webSocketService

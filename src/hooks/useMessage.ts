@@ -191,11 +191,6 @@ export const useMessage = () => {
             label: '屏蔽群消息',
             icon: item.shield ? 'check-small' : '',
             click: async () => {
-              // 如果当前是免打扰状态，需要先恢复为允许提醒
-              if (item.muteNotification === NotificationTypeEnum.NOT_DISTURB) {
-                await handleNotificationChange(item, NotificationTypeEnum.RECEPTION)
-              }
-
               await apis.shield({
                 roomId: item.roomId,
                 state: !item.shield

@@ -494,13 +494,14 @@ const groupNameInputRef = useTemplateRef('groupNameInputRef')
 //   peerConnection = new RTCPeerConnection()
 // }
 
-const messageSettingType = ref(
-  activeItem.shield
-    ? 'shield'
-    : activeItem.muteNotification === NotificationTypeEnum.NOT_DISTURB
-      ? 'notification'
-      : 'shield'
-)
+const messageSettingType = computed(() => {
+  // 群消息设置只在免打扰模式下有意义
+  if (activeItem.muteNotification === NotificationTypeEnum.NOT_DISTURB) {
+    return activeItem.shield ? 'shield' : 'notification'
+  }
+  // 非免打扰模式下，默认返回 notification
+  return 'notification'
+})
 const messageSettingOptions = ref([
   { label: '接收消息但不提醒', value: 'notification' },
   { label: '屏蔽消息', value: 'shield' }
@@ -801,10 +802,6 @@ const handleNotification = (value: boolean) => {
   if (activeItem.shield) {
     handleShield(false)
   }
-  // 设置为消息免打扰时初始化为接收消息但不提醒
-  if (value) {
-    messageSettingType.value = 'notification'
-  }
   apis
     .notification({
       roomId: activeItem.roomId,
@@ -866,18 +863,15 @@ const handleShield = (value: boolean) => {
 
 const handleMessageSetting = (value: string) => {
   if (value === 'shield') {
-    if (activeItem.shield) return
-    handleShield(true)
+    // 设置为屏蔽消息
+    if (!activeItem.shield) {
+      handleShield(true)
+    }
   } else if (value === 'notification') {
-    // 检查当前的消息提醒状态是否已经是免打扰
-    const isCurrentlyMuted = activeItem.muteNotification === NotificationTypeEnum.NOT_DISTURB
-
-    // 如果当前是屏蔽状态，需要先取消屏蔽
+    // 设置为接收消息但不提醒
     if (activeItem.shield) {
       handleShield(false)
     }
-    if (isCurrentlyMuted) return
-    handleNotification(true)
   }
 }
 
