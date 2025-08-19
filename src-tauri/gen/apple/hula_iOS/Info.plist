@@ -48,5 +48,7 @@
 	<string>HuLa needs screen recording permission to enable screenshot functionality</string>
 	<key>NSAccessibilityUsageDescription</key>
 	<string>HuLa needs accessibility permission to capture screen content</string>
+	<key>NSCameraUsageDescription</key>
+	<string>HuLa使用摄像头</string>
 </dict>
 </plist>
