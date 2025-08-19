@@ -121,6 +121,7 @@ import { join } from '@tauri-apps/api/path'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { open } from '@tauri-apps/plugin-dialog'
 import { copyFile, readFile } from '@tauri-apps/plugin-fs'
+import { type } from '@tauri-apps/plugin-os'
 import {
   CHAT_HEADER_HEIGHT,
   CHAT_MAIN_MIN_HEIGHT,
@@ -544,10 +545,8 @@ const handleCap = async () => {
   await captureWindow.setPosition(new LogicalPosition(0, 0))
 
   // 在 macOS 上设置窗口级别以覆盖菜单栏
-  try {
+  if (type() === 'macos') {
     await invoke('set_window_level_above_menubar', { windowLabel: 'capture' })
-  } catch (error) {
-    console.warn('设置窗口级别失败，但继续执行:', error)
   }
 
   await captureWindow.show()

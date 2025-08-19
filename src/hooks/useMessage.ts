@@ -41,8 +41,10 @@ export const useMessage = () => {
     console.log('handleMsgClick:', item)
     useMitt.emit(MittEnum.MSG_BOX_SHOW, data)
 
+    console.log('已点击', route.path)
+
     // 只有在消息页面且有未读消息时，才标记为已读
-    if (route.path === '/message' && item.unreadCount > 0) {
+    if ((route.path === '/message' || route.path === '/mobile/message') && item.unreadCount > 0) {
       apis.markMsgRead({ roomId: item.roomId || '1' }).then(async () => {
         chatStore.markSessionRead(item.roomId || '1')
         // 更新全局未读计数

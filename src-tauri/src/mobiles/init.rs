@@ -1,4 +1,4 @@
-use crate::common::init::{CustomInit, init_common_plugins};
+use crate::common::init::{init_common_plugins, CustomInit};
 use tauri::Runtime;
 
 impl<R: Runtime> CustomInit for tauri::Builder<R> {
@@ -8,7 +8,9 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
 
         // 移动端特有的插件
         #[cfg(mobile)]
-        let builder = builder.plugin(tauri_plugin_safe_area_insets::init());
+        let builder = builder
+            .plugin(tauri_plugin_safe_area_insets::init())
+            .plugin(tauri_plugin_hula::init());
 
         builder
     }

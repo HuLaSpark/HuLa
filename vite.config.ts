@@ -4,6 +4,7 @@ import terser from '@rollup/plugin-terser'
 import UnoCSS from '@unocss/vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
+import postcsspxtorem from 'postcss-pxtorem'
 import AutoImport from 'unplugin-auto-import/vite' //自动导入
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import Components from 'unplugin-vue-components/vite' //组件注册
@@ -14,6 +15,8 @@ import { getRootPath, getSrcPath } from './build/config/getPath'
 // 读取 package.json 依赖
 const packageJson = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf-8'))
 const dependencies = Object.keys(packageJson.dependencies || {})
+
+const host = process.env.TAURI_DEV_HOST
 
 // https://vitejs.dev/config/
 /**! 不需要优化前端打包(如开启gzip) */
@@ -37,6 +40,19 @@ export default defineConfig(({ mode }: ConfigEnv) => {
           api: 'modern-compiler',
           additionalData: '@use "@/styles/scss/global/variable.scss" as *;' // 加载全局样式，使用scss特性
         }
+      },
+      postcss: {
+        plugins: [
+          postcsspxtorem({
+            rootValue: 16, // 1rem = 16px，可根据设计稿调整
+            propList: ['*'], // 所有属性都转换
+            unitPrecision: 5, // 保留小数位数
+            selectorBlackList: [], // 不转换的类名（可选）
+            replace: true, // 替换原来的 px
+            mediaQuery: false, // 是否在媒体查询中转换
+            minPixelValue: 0 // 最小转换单位
+          })
+        ]
       }
     },
     plugins: [
@@ -116,11 +132,17 @@ export default defineConfig(({ mode }: ConfigEnv) => {
           rewrite: (path) => path.replace(/^\/api/, '')
         }
       },
-      hmr: {
-        // 为移动端开发提供正确的HMR配置
-        port: 6130, // 使用不同的端口避免冲突
-        host: '127.0.0.1' // 允许外部访问，支持Android模拟器连接
-      },
+      hmr: host
+        ? {
+            protocol: 'ws',
+            host: '0.0.0.0',
+            port: 6130
+          }
+        : {
+            protocol: 'ws',
+            host: '127.0.0.1',
+            port: 6130
+          },
       cors: true, // 配置 CORS
       host: '0.0.0.0',
       port: 6130,

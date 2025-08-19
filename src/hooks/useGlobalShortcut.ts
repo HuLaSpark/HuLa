@@ -3,6 +3,7 @@ import { LogicalPosition, LogicalSize } from '@tauri-apps/api/dpi'
 import { emitTo, listen } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { register, unregister } from '@tauri-apps/plugin-global-shortcut'
+import { type } from '@tauri-apps/plugin-os'
 import { useTauriListener } from '@/hooks/useTauriListener'
 import { useSettingStore } from '@/stores/setting.ts'
 
@@ -81,7 +82,9 @@ export const useGlobalShortcut = () => {
       await captureWindow.setPosition(new LogicalPosition(0, 0))
 
       // 在 macOS 上设置窗口级别以覆盖菜单栏
-      await invoke('set_window_level_above_menubar', { windowLabel: 'capture' })
+      if (type() === 'macos') {
+        await invoke('set_window_level_above_menubar', { windowLabel: 'capture' })
+      }
 
       await captureWindow.show()
       await captureWindow.setFocus()

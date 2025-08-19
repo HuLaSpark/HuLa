@@ -49,7 +49,7 @@
 <!-- 🛠️ 技术栈 -->
 <div align="center">
   <h3>🛠️ 技术栈</h3>
-  
+
   <p>
     <img src="https://img.shields.io/badge/Vue3-35495E?logo=vue.js&logoColor=4FC08D">
     <img src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=fff">
@@ -230,7 +230,7 @@ HuLa 是一款基于 Tauri、Vite 7、Vue 3 和 TypeScript 构建的即时通讯
 | 🪟 | 多窗口管理 | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
 | 🔔 | 系统托盘通知 | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
 | 📷 | 图片查看器 | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
-| ✂️ | 截图功能 | ![进行中](https://img.shields.io/badge/🐣-进行中-ee9f20?style=flat&labelColor=fef7e6&color=ee9f20) |
+| ✂️ | 截图功能 | ![进行中](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=fef7e6&color=ee9f20) |
 | 📁 | 文件上传(七牛云) | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
 | 🔄 | 自动更新系统 | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
 
@@ -238,7 +238,7 @@ HuLa 是一款基于 Tauri、Vite 7、Vue 3 和 TypeScript 构建的即时通讯
 | 功能 | 描述 | 状态 |
 |------|------|------|
 | 💻 | Windows/macOS/Linux | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
-| 📱 | iOS/Android 适配 | ![进行中](https://img.shields.io/badge/🐣-进行中-ee9f20?style=flat&labelColor=fef7e6&color=ee9f20) |
+| 📱 | iOS/Android 适配 | ![进行中](https://img.shields.io/badge/🐣-完成(60%)-ee9f20?style=flat&labelColor=fef7e6&color=ee9f20) |
 
 ### 🤖 AI 集成
 | 功能 | 描述 | 状态 |
