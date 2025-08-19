@@ -77,14 +77,14 @@
     </n-virtual-list>
 
     <!-- 加载更多提示 -->
-    <n-flex v-if="contactStore.requestFriendsOptions.isLoading" justify="center" class="py-10px">
+    <n-flex v-if="contactStore.applyPageOptions.isLoading" justify="center" class="py-10px">
       <n-spin size="small" />
       <span class="text-(12px [--text-color]) ml-8px">加载中...</span>
     </n-flex>
 
     <!-- 没有更多数据提示 -->
     <n-flex
-      v-else-if="contactStore.requestFriendsOptions.isLast && contactStore.requestFriendsList.length > 0"
+      v-else-if="contactStore.applyPageOptions.isLast && contactStore.requestFriendsList.length > 0"
       justify="center"
       class="py-10px">
       <span class="text-(12px [--text-color])">没有更多好友申请了</span>
@@ -180,13 +180,13 @@ const handleScroll = (e: Event) => {
 // 加载更多好友申请
 const loadMoreFriendRequests = async () => {
   // 如果已经是最后一页或正在加载中，则不再加载
-  if (contactStore.requestFriendsOptions.isLast || contactStore.requestFriendsOptions.isLoading) {
+  if (contactStore.applyPageOptions.isLast || contactStore.applyPageOptions.isLoading) {
     return
   }
 
   isLoadingMore.value = true
   try {
-    await contactStore.getRequestFriendsList(false)
+    await contactStore.getApplyPage(false)
   } finally {
     isLoadingMore.value = false
   }
@@ -230,7 +230,7 @@ const handleFriendAction = async (action: string, applyId: string) => {
 
 onMounted(() => {
   // 组件挂载时刷新一次列表
-  contactStore.getRequestFriendsList(true)
+  contactStore.getApplyPage(true)
 })
 </script>
 

@@ -309,13 +309,17 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
 
   await globalStore.updateGlobalUnreadCount()
 })
-useMitt.on(WsResponseMessageType.REQUEST_NEW_FRIEND, async (data: { uid: number; unreadCount: number }) => {
-  console.log('收到好友申请', data.unreadCount)
-  // 更新未读数
-  globalStore.unReadMark.newFriendUnreadCount += data.unreadCount
-  // 刷新好友申请列表
-  await contactStore.getRequestFriendsList(true)
-})
+useMitt.on(
+  WsResponseMessageType.REQUEST_NEW_FRIEND,
+  async (data: { uid: number; unReadCount4Friend: number; unReadCount4Group: number }) => {
+    console.log('收到好友申请')
+    // 更新未读数
+    globalStore.unReadMark.newFriendUnreadCount = data.unReadCount4Friend
+    globalStore.unReadMark.newGroupUnreadCount = data.unReadCount4Group
+    // 刷新好友申请列表
+    await contactStore.getApplyPage(true)
+  }
+)
 useMitt.on(
   WsResponseMessageType.NEW_FRIEND_SESSION,
   (param: {
@@ -366,7 +370,7 @@ useMitt.on(WsResponseMessageType.ROOM_DISSOLUTION, async () => {
 onBeforeMount(async () => {
   // 默认执行一次
   await contactStore.getContactList(true)
-  await contactStore.getRequestFriendsList(true)
+  await contactStore.getApplyPage(true)
   await contactStore.getGroupChatList()
 })
 

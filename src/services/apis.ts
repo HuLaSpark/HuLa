@@ -78,7 +78,7 @@ export default {
   /** 获取联系人列表 */
   getContactList: (params?: any) => GET<ListResponse<ContactItem>>(urls.getContactList, params),
   /** 获取好友申请列表 */
-  requestFriendList: (params?: any) => GET<ListResponse<RequestFriendItem>>(urls.requestFriendList, params),
+  getApplyPage: (params?: any) => GET<ListResponse<RequestFriendItem>>(urls.requestApplyPage, params),
   /** 发送添加好友请求 */
   sendAddFriendRequest: (params: { targetUid: string; msg: string }) => POST(urls.sendAddFriendRequest, params),
   /** 同意邀请进群或好友申请，1 同意 2 拒绝 */
@@ -86,7 +86,7 @@ export default {
   /** 删除好友 */
   deleteFriend: (params: { targetUid: string }) => DELETE(urls.deleteFriend, params),
   /** 好友申请未读数 */
-  newFriendCount: () => GET<{ unReadCount: number }>(urls.newFriendCount),
+  applyUnReadCount: () => GET<{ unReadCount4Friend: number; unReadCount4Group: number }>(urls.applyUnReadCount),
   /** 会话列表 */
   // getSessionList: (params?: any) => GET<ListResponse<SessionItem>>(urls.getSessionList, params),
   /** 消息的已读未读列表 */
