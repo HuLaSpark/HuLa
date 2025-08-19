@@ -10,11 +10,11 @@
       <svg class="iconpark-icon h-24px w-24px block"><use href="#share"></use></svg>
     </div>
 
-    <div class="h-32px w-32px flex items-center justify-center">
+    <div @click="toScanQRCode" class="h-32px w-32px flex items-center justify-center">
       <svg class="iconpark-icon h-30px w-30px block"><use href="#saoma"></use></svg>
     </div>
 
-    <div class="h-32px w-32px flex items-center justify-center">
+    <div @click="toSettings" class="h-32px w-32px flex items-center justify-center">
       <svg class="iconpark-icon h-30px w-30px block"><use href="#wode-shezhi"></use></svg>
     </div>
 
@@ -32,6 +32,12 @@ const active = ref(false)
 // 点击按钮打开底部抽屉
 const activate = () => {
   // active.value = true
+}
+
+const toScanQRCode = () => [router.push('/mobile/mobileMy/scanQRcode')]
+
+const toSettings = () => {
+  router.push('/mobile/mobileMy/settings')
 }
 
 const toMyMessages = () => {

@@ -9,7 +9,7 @@
         <!-- 动态消息 -->
         <slot :name="i.name"></slot>
         <!-- 占位元素，避免最后一个动态消息紧贴tabbar -->
-        <div class="w-full bg-pink" style="height: 1px"></div>
+        <div class="w-full" style="height: 1px"></div>
       </div>
     </n-tab-pane>
   </n-tabs>
