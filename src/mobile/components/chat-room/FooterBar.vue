@@ -46,7 +46,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, onMounted } from 'vue'
 import { useMobileStore } from '@/stores/mobile'
 
 // ==== 类型声明（让 send 有类型提示）====
@@ -96,7 +95,7 @@ const handleSend = async () => {
 
   // 关键：同步 useMsgInput 的 msgInput.value
   if ('msgInput' in msgInput) {
-    // @ts-ignore
+    // @ts-expect-error
     msgInput.msgInput.value = messageInputDom.value.innerHTML
   }
 

@@ -121,6 +121,7 @@
     "@commitlint/cli": "^19.6.0",
     "@commitlint/config-conventional": "^19.6.0",
     "@iconify/vue": "^5.0.0",
+    "@inquirer/prompts": "^7.8.3",
     "@release-it/bumper": "^6.0.1",
     "@release-it/conventional-changelog": "8.0.2",
     "@rollup/plugin-terser": "^0.4.4",

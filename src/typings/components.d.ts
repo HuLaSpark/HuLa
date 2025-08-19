@@ -75,6 +75,7 @@ declare module 'vue' {
     NPopselect: typeof import('naive-ui')['NPopselect']
     NProgress: typeof import('naive-ui')['NProgress']
     NRadio: typeof import('naive-ui')['NRadio']
+    NResult: typeof import('naive-ui')['NResult']
     NScrollbar: typeof import('naive-ui')['NScrollbar']
     NSelect: typeof import('naive-ui')['NSelect']
     NSelectItem: typeof import('naive-ui')['NSelectItem']

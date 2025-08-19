@@ -8,8 +8,20 @@ pub trait CustomInit {
 
 /// 构建平台特定的日志插件
 fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
-    let mut builder = tauri_plugin_log::Builder::new()
-        .level(tracing::log::LevelFilter::Info)
+    // 根据平台确定默认日志级别，移动端使用 Warn，其他平台使用 Info
+    let default_level = {
+        #[cfg(mobile)]
+        {
+            tracing::log::LevelFilter::Warn
+        }
+        #[cfg(not(mobile))]
+        {
+            tracing::log::LevelFilter::Info
+        }
+    };
+
+    let builder = tauri_plugin_log::Builder::new()
+        .level(default_level)
         .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
         .level_for("sqlx", tracing::log::LevelFilter::Warn)
         .level_for("sqlx::query", tracing::log::LevelFilter::Warn)
@@ -40,11 +52,6 @@ fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
     // {
     //     builder = builder.skip_logger();
     // }
-
-    #[cfg(mobile)]
-    {
-        builder = builder.level(tracing::log::LevelFilter::Warn);
-    }
 
     builder.build()
 }

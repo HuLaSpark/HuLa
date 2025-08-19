@@ -61,3 +61,35 @@ scripts/** linguist-vendored
 *.ts linguist-detectable
 *.tsx linguist-detectable
 *.rs linguist-detectable
+
+## 语言统计控制：排除 Ruby / Shell / Objective-C++
+# Ruby（例如 CocoaPods 的 Podfile 等）
+*.rb linguist-vendored
+**/Podfile linguist-vendored
+**/Podfile.lock linguist-vendored
+*.podspec* linguist-vendored
+
+# Shell（包括 Android 的 gradlew）
+*.sh linguist-vendored
+**/gradlew linguist-vendored
+
+# Objective-C++ / Objective-C（若仓库中存在 .m 可按需启用）
+*.mm linguist-vendored
+# *.m linguist-vendored
+
+# 生成产物与平台工程整体排除，避免引入非 Rust 语言统计
+src-tauri/gen/** linguist-vendored
+src-tauri/gen/android/** linguist-vendored
+src-tauri/gen/apple/** linguist-vendored
+tauri-plugin-hula/ios/** linguist-vendored
+
+# tauri-plugin-hula：仅统计 src 目录，其他子目录全部排除
+tauri-plugin-hula/*/** linguist-vendored
+tauri-plugin-hula/src/** -linguist-vendored
+
+# 如果需要把上面这些都算作 Rust，而不是排除，可改用如下（示例）：
+# *.rb linguist-language=Rust
+# *.sh linguist-language=Rust
+# *.mm linguist-language=Rust
+# **/Podfile linguist-language=Rust
+# **/gradlew linguist-language=Rust
