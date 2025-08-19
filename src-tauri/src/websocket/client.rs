@@ -4,8 +4,11 @@ use futures_util::{sink::SinkExt, stream::StreamExt};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
 use tauri::{AppHandle, Emitter};
+
 use tokio::sync::{Mutex, RwLock, mpsc};
+use tokio::task::JoinHandle;
 use tokio::time::{Duration, interval, sleep};
+
 use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 use tracing::{debug, error, info, warn};
 use url::Url;
@@ -43,6 +46,12 @@ pub struct WebSocketClient {
 
     // 连接互斥锁，防止并发连接
     connection_mutex: Arc<Mutex<()>>,
+
+    // 任务句柄管理
+    task_handles: Arc<RwLock<Vec<JoinHandle<()>>>>,
+
+    // 关闭信号发送器
+    close_sender: Arc<RwLock<Option<mpsc::UnboundedSender<()>>>>,
 }
 
 impl WebSocketClient {
@@ -66,6 +75,8 @@ impl WebSocketClient {
             background_heartbeat_failures: Arc::new(AtomicU32::new(0)),
             is_ws_connected: Arc::new(AtomicBool::new(false)),
             connection_mutex: Arc::new(Mutex::new(())),
+            task_handles: Arc::new(RwLock::new(Vec::new())),
+            close_sender: Arc::new(RwLock::new(None)),
         }
     }
 
@@ -105,6 +116,23 @@ impl WebSocketClient {
         // 更新连接状态
         self.is_ws_connected.store(false, Ordering::SeqCst);
 
+        // 取消所有任务
+        let mut handles = self.task_handles.write().await;
+        let task_count = handles.len();
+        for handle in handles.drain(..) {
+            handle.abort();
+        }
+        info!("🛑 已取消 {} 个异步任务", task_count);
+
+        // 发送关闭信号以主动关闭 WebSocket 连接
+        if let Some(close_sender) = self.close_sender.write().await.take() {
+            if let Err(_) = close_sender.send(()) {
+                warn!("⚠️ 发送关闭信号失败，连接可能已经关闭");
+            } else {
+                info!("📤 已发送 WebSocket 关闭信号");
+            }
+        }
+
         // 清理消息发送器
         *self.message_sender.write().await = None;
 
@@ -116,6 +144,8 @@ impl WebSocketClient {
         self.consecutive_failures.store(0, Ordering::SeqCst);
         self.reconnect_attempts.store(0, Ordering::SeqCst);
         self.heartbeat_active.store(false, Ordering::SeqCst);
+
+        info!("✅ WebSocket 连接已完全断开");
     }
 
     /// 发送消息
@@ -303,6 +333,10 @@ impl WebSocketClient {
         let (msg_sender, mut msg_receiver) = mpsc::unbounded_channel();
         *self.message_sender.write().await = Some(msg_sender);
 
+        // 创建关闭信号通道
+        let (close_sender, mut close_receiver) = mpsc::unbounded_channel();
+        *self.close_sender.write().await = Some(close_sender);
+
         // 更新连接状态
         self.update_state(
             ConnectionState::Connected,
@@ -332,6 +366,15 @@ impl WebSocketClient {
                                 is_ws_connected.store(false, Ordering::SeqCst);
                                 break;
                             }
+                        }
+                        Some(_) = close_receiver.recv() => {
+                            info!("🔒 收到关闭信号，主动关闭 WebSocket 连接");
+                            if let Err(e) = ws_sender.close().await {
+                                warn!("⚠️ 关闭 WebSocket 连接时出错: {}", e);
+                            } else {
+                                info!("✅ WebSocket 连接已主动关闭");
+                            }
+                            break;
                         }
                         else => break,
                     }
@@ -390,7 +433,7 @@ impl WebSocketClient {
         let heartbeat_active = self.heartbeat_active.clone();
         let message_sender_ref = self.message_sender.clone();
 
-        tokio::spawn(async move {
+        let monitor_task = tokio::spawn(async move {
             // 等待任务完成或停止信号
             tokio::select! {
                 _ = message_sender_task => {
@@ -412,6 +455,10 @@ impl WebSocketClient {
             heartbeat_active.store(false, Ordering::SeqCst);
             *message_sender_ref.write().await = None;
         });
+
+        // 保存监控任务句柄
+        let mut handles = self.task_handles.write().await;
+        handles.push(monitor_task);
 
         info!("✅ WebSocket 连接和后台任务已启动");
         Ok(())
@@ -507,10 +554,6 @@ impl WebSocketClient {
                 info!("💬 收到消息");
                 let _ = app_handle.emit("ws-receive-message", data);
             }
-            "joinGroup" => {
-                info!("🔄 加入群聊");
-                let _ = app_handle.emit("ws-join-group", data);
-            }
             "msgRecall" => {
                 info!("🔄 消息撤回");
                 let _ = app_handle.emit("ws-msg-recall", data);
@@ -535,9 +578,9 @@ impl WebSocketClient {
             }
 
             // 好友相关
-            "requestNewFriend" => {
-                info!("👥 新好友申请");
-                let _ = app_handle.emit("ws-request-new-friend", data);
+            "newApply" => {
+                info!("👥 新的Apply申请");
+                let _ = app_handle.emit("ws-request-new-apply", data);
             }
             "requestApprovalFriend" => {
                 info!("✅ 同意好友申请");
@@ -716,7 +759,9 @@ impl WebSocketClient {
             })
         };
 
-        tokio::spawn(heartbeat_task);
+        // 保存心跳任务句柄
+        let mut handles = self.task_handles.write().await;
+        handles.push(heartbeat_task);
     }
 
     /// 发送待发消息
