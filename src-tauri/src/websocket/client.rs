@@ -507,10 +507,6 @@ impl WebSocketClient {
                 info!("💬 收到消息");
                 let _ = app_handle.emit("ws-receive-message", data);
             }
-            "joinGroup" => {
-                info!("🔄 加入群聊");
-                let _ = app_handle.emit("ws-join-group", data);
-            }
             "msgRecall" => {
                 info!("🔄 消息撤回");
                 let _ = app_handle.emit("ws-msg-recall", data);

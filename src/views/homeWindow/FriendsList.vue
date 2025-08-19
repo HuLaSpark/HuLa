@@ -119,6 +119,7 @@
 </template>
 <script setup lang="ts" name="friendsList">
 import { storeToRefs } from 'pinia'
+import { useRoute } from 'vue-router'
 import { MittEnum, OnlineEnum, RoomTypeEnum, ThemeEnum } from '@/enums'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
@@ -130,6 +131,7 @@ import { useUserStore } from '@/stores/user'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 
+const route = useRoute()
 const menuList = ref([
   { label: '添加分组', icon: 'plus' },
   { label: '重命名该组', icon: 'edit' },
@@ -215,6 +217,16 @@ const handleApply = (applyType: 'friend' | 'group') => {
   activeItem.value = ''
 }
 
+/** 获取联系人数据 */
+const fetchContactData = async () => {
+  try {
+    // 同时获取好友列表和群聊列表
+    await Promise.all([contactStore.getContactList(), contactStore.getGroupChatList()])
+  } catch (error) {
+    console.error('获取联系人数据失败:', error)
+  }
+}
+
 /** 获取用户状态 */
 const getUserState = (uid: string) => {
   const userInfo = useUserInfo(uid).value
@@ -225,6 +237,23 @@ const getUserState = (uid: string) => {
   }
   return null
 }
+
+/** 组件挂载时获取数据 */
+onMounted(async () => {
+  await fetchContactData()
+})
+
+/** 监听路由变化，当路由变化到当前组件时重新获取数据 */
+watch(
+  () => route.path,
+  async (newPath) => {
+    // 当路由变化且包含 FriendsList 相关路径时，重新获取数据
+    if (newPath.includes('friendsList')) {
+      await fetchContactData()
+    }
+  },
+  { immediate: false }
+)
 
 onUnmounted(() => {
   detailsShow.value = false
