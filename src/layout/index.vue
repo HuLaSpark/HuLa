@@ -371,8 +371,9 @@ useMitt.on(WsResponseMessageType.ROOM_DISSOLUTION, async () => {
 onBeforeMount(async () => {
   // 默认执行一次
   await contactStore.getContactList(true)
-  await contactStore.getApplyPage(true)
   await contactStore.getGroupChatList()
+  // 获取最新的未读数
+  await contactStore.getApplyUnReadCount()
 })
 
 onMounted(async () => {
