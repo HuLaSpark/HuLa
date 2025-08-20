@@ -8,7 +8,7 @@
     <div class="flex-1 overflow-y-auto flex flex-col">
       <div class="flex flex-1 overflow-y-auto">
         <RouterView v-slot="{ Component }">
-          <Transition name="slide" appear>
+          <Transition name="slide" appear mode="out-in">
             <component :is="Component" :key="route.fullPath" />
           </Transition>
         </RouterView>
@@ -75,16 +75,16 @@ watch(
 /* 侧滑切换动画 */
 .slide-enter-active,
 .slide-leave-active {
-  transition: all 0.15s ease;
+  transition: all 0.1s ease;
 }
 
 .slide-enter-from {
-  transform: translateX(30px);
+  transform: translateX(-30px);
   opacity: 0;
 }
 
 .slide-leave-to {
-  transform: translateX(-30px);
+  transform: translateX(30px);
   opacity: 0;
 }
 </style>

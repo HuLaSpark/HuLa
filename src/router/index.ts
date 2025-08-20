@@ -29,6 +29,7 @@ import MyMessages from '@/mobile/views/my/MyMessages.vue'
 import MyQRCode from '@/mobile/views/my/MyQRCode.vue'
 import PublishCommunity from '@/mobile/views/my/PublishCommunity.vue'
 import Share from '@/mobile/views/my/Share.vue'
+import SimpleBio from '@/mobile/views/my/SimpleBio.vue'
 
 const isDesktop = computed(() => {
   return type() === 'windows' || type() === 'linux' || type() === 'macos'
@@ -173,6 +174,11 @@ const routes: Array<RouteRecordRaw> = [
         path: 'myQRCode',
         name: 'mobileShare',
         component: MyQRCode
+      },
+      {
+        path: 'SimpleBio',
+        name: 'mobileSimpleBio',
+        component: SimpleBio
       }
     ]
   },

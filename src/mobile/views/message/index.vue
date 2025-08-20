@@ -14,7 +14,7 @@
 
     <NavBar>
       <template #left>
-        <n-flex align="center" :size="6" class="w-full">
+        <n-flex @click="toSimpleBio" align="center" :size="6" class="w-full">
           <n-avatar
             :size="38"
             :src="AvatarUtils.getAvatarUrl(userStore.userInfo.avatar!)"
@@ -278,6 +278,10 @@ const intoRoom = (item: any) => {
   handleMsgClick(item)
   router.push(`/mobile/chatRoom/chatMain/${encodeURIComponent(item.name)}`)
   console.log('进入页面', item)
+}
+const toSimpleBio = () => {
+  // 切成你想要的离场动画
+  router.push('/mobile/mobileMy/simpleBio')
 }
 </script>
 
