@@ -24,19 +24,18 @@ pub struct ChatMessageReq {
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct LoginReq {
-  pub grant_type: String,
-  pub system_type: String,
-  pub device_type: String,
-  pub account: String,
-  pub password: String,
+    pub grant_type: String,
+    pub system_type: String,
+    pub device_type: String,
+    pub account: String,
+    pub password: String,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct LoginResp {
-  pub token: String,
-  pub client: String,
-  pub refresh_token: String,
-  pub expire: String,
+    pub token: String,
+    pub client: String,
+    pub refresh_token: String,
+    pub expire: String,
 }
-

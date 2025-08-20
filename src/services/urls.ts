@@ -21,12 +21,12 @@ export default {
   // 用户相关
   getBadgeList: `${prefix + URLEnum.USER}/badges`, // 获取徽章列表
   getMemberStatistic: `${prefix + URLEnum.CHAT}/member/statistic`,
-  getUserInfoBatch: `${prefix + URLEnum.USER}/summary/userInfo/batch`,
+  // getUserInfoBatch: `${prefix + URLEnum.USER}/summary/userInfo/batch`,
   getBadgesBatch: `${prefix + URLEnum.USER}/badges/batch`,
   getAllUserBaseInfo: `${prefix + URLEnum.ROOM}/group/member/list`, // 房间内的所有群成员列表-@专用
   getMsgList: `${prefix + URLEnum.CHAT}/msg/page`,
   // sendMsg: `${prefix + URLEnum.CHAT}/msg`,
-  getUserInfoDetail: `${prefix + URLEnum.USER}/userInfo`, // 获取用户信息详情
+  // getUserInfoDetail: `${prefix + URLEnum.USER}/userInfo`, // 获取用户信息详情
   modifyUserName: `${prefix + URLEnum.USER}/name`, // 修改用户名
   setUserBadge: `${prefix + URLEnum.USER}/badge`, // 设置用户徽章
   markMsg: `${prefix + URLEnum.CHAT}/msg/mark`, // 消息标记
@@ -41,9 +41,9 @@ export default {
   searchFriend: `${prefix + URLEnum.USER}/friend/search`, // 搜索好友
 
   // -------------- 好友相关 ---------------
-  getContactList: `${prefix + URLEnum.USER}/friend/page`, // 联系人列表
+  // getContactList: `${prefix + URLEnum.USER}/friend/page`, // 联系人列表
   requestApplyPage: `${prefix + URLEnum.ROOM}/apply/page`, // 好友申请、群聊邀请列表
-  applyUnReadCount: `${prefix + URLEnum.ROOM}/apply/unread`, // 申请未读数
+  // applyUnReadCount: `${prefix + URLEnum.ROOM}/apply/unread`, // 申请未读数
   handleInvite: `${prefix + URLEnum.ROOM}/apply/handler/apply`, // 审批别人邀请的进群
   sendAddFriendRequest: `${prefix + URLEnum.ROOM}/apply/apply`, // 申请好友\同意申请
   deleteFriend: `${prefix + URLEnum.USER}/friend`, // 删除好友
@@ -69,7 +69,7 @@ export default {
   exitGroup: `${prefix + URLEnum.ROOM}/group/member/exit`, // 退群
   addAdmin: `${prefix + URLEnum.ROOM}/group/admin`, // 添加管理员
   revokeAdmin: `${prefix + URLEnum.ROOM}/group/admin`, // 删除管理员
-  groupDetail: `${prefix + URLEnum.ROOM}/group`, // 群组详情
+  // groupDetail: `${prefix + URLEnum.ROOM}/group`, // 群组详情
   groupList: `${prefix + URLEnum.ROOM}/group/list`, // 群聊列表
   updateRoomInfo: `${prefix + URLEnum.ROOM}/updateRoomInfo`, // 修改群信息(群主)
   updateMyRoomInfo: `${prefix + URLEnum.ROOM}/updateMyRoomInfo`, // 修改“我”的群聊名称
@@ -77,7 +77,7 @@ export default {
   applyGroup: `${prefix + URLEnum.ROOM}/apply/group`, // 申请加群
   applyHandle: `${prefix + URLEnum.ROOM}/apply/adminHandleApply`, // 处理加群申请 [仅仅管理员、群主可调用]
   applyGroupList: `${prefix + URLEnum.ROOM}/apply/group/list`, // 申请加群列表 [仅仅管理员、群主可见]
-  getAnnouncementList: `${prefix + URLEnum.ROOM}/announcement/list`, // 获取群公告
+  // getAnnouncementList: `${prefix + URLEnum.ROOM}/announcement/list`, // 获取群公告
   pushAnnouncement: `${prefix + URLEnum.ROOM}/announcement/push`, // 发布群公告
   deleteAnnouncement: `${prefix + URLEnum.ROOM}/announcement/delete`, // 删除群公告
   editAnnouncement: `${prefix + URLEnum.ROOM}/announcement/edit`, // 编辑群公告

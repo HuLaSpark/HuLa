@@ -1,4 +1,4 @@
-use crate::common::init::{init_common_plugins, CustomInit};
+use crate::common::init::{CustomInit, init_common_plugins};
 use tauri::Runtime;
 
 impl<R: Runtime> CustomInit for tauri::Builder<R> {

@@ -179,13 +179,14 @@
   </n-config-provider>
 </template>
 <script setup lang="ts">
+import { invoke } from '@tauri-apps/api/core'
 import { emit } from '@tauri-apps/api/event'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { type } from '@tauri-apps/plugin-os'
 import { useNetwork } from '@vueuse/core'
 import { lightTheme } from 'naive-ui'
 import { ErrorType } from '@/common/exception'
-import { TauriCommand } from '@/enums'
+import { ImUrlEnum, TauriCommand } from '@/enums'
 import { useCheckUpdate } from '@/hooks/useCheckUpdate'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { useMitt } from '@/hooks/useMitt'
@@ -331,43 +332,45 @@ const normalLogin = async (auto = false) => {
     // 添加2秒延迟
     await new Promise((resolve) => setTimeout(resolve, 1200))
 
-    try {
-      // 登录处理
-      loginProcess(null)
-    } catch (error) {
-      console.error('自动登录失败', error)
-      // 如果是网络异常，不删除token
-      if (!isOnline.value) {
-        loginDisabled.value = true
-        loginText.value = '网络异常'
-        loading.value = false
-      } else {
-        // 其他错误才清除token并重置状态
-        localStorage.removeItem('TOKEN')
-        isAutoLogin.value = false
-        loginDisabled.value = true
-        loginText.value = '登录'
-        loading.value = false
-      }
-    }
+    // TODO 自动登录
+    // try {
+    //   // 登录处理
+    //
+    //   loginProcess(null, null, null)
+    // } catch (error) {
+    //   console.error('自动登录失败', error)
+    //   // 如果是网络异常，不删除token
+    //   if (!isOnline.value) {
+    //     loginDisabled.value = true
+    //     loginText.value = '网络异常'
+    //     loading.value = false
+    //   } else {
+    //     // 其他错误才清除token并重置状态
+    //     localStorage.removeItem('TOKEN')
+    //     isAutoLogin.value = false
+    //     loginDisabled.value = true
+    //     loginText.value = '登录'
+    //     loading.value = false
+    //   }
+    // }
     return
   }
 
-  apis
-    .login({ account: account, password: info.value.password, deviceType: 'PC', systemType: 2, grantType: 'PASSWORD' })
-    .then(async (res) => {
+  invoke('login_command', {
+    data: {
+      account: account,
+      password: info.value.password,
+      deviceType: 'PC',
+      systemType: '2',
+      grantType: 'PASSWORD'
+    }
+  })
+    .then(async (res: any) => {
       loginDisabled.value = true
       userStore.isSign = true
-      // 存储双token
-      localStorage.setItem('TOKEN', res.token)
-      localStorage.setItem('REFRESH_TOKEN', res.refreshToken)
 
-      // 需要删除二维码，因为用户可能先跳转到二维码界面再回到登录界面，会导致二维码一直保持在内存中
-      if (localStorage.getItem('wsLogin')) {
-        localStorage.removeItem('wsLogin')
-      }
       // 登录处理
-      await loginProcess(res.client)
+      await loginProcess(res.token, res.refreshToken, res.client)
     })
     .catch((e) => {
       console.error('登录异常：', e)
@@ -382,7 +385,7 @@ const normalLogin = async (auto = false) => {
     })
 }
 
-const loginProcess = async (client: any) => {
+const loginProcess = async (token: string, refreshToken: string, client: string) => {
   loading.value = false
   // 获取用户状态列表
   if (userStatusStore.stateList.length === 0) {
@@ -393,12 +396,16 @@ const loginProcess = async (client: any) => {
     }
   }
   // 获取用户详情
-  const userDetail = await apis.getUserDetail()
+  // const userDetail = await apis.getUserDetail()
+  const userDetail: any = await invoke('im_request_command', {
+    url: ImUrlEnum.GET_USER_INFO_DETAIL,
+    method: 'GET'
+  })
 
   // 设置用户状态id
   stateId.value = userDetail.userStateId
-  const token = localStorage.getItem('TOKEN')
-  const refreshToken = localStorage.getItem('REFRESH_TOKEN')
+  // const token = localStorage.getItem('TOKEN')
+  // const refreshToken = localStorage.getItem('REFRESH_TOKEN')
   // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取
   // await emojiStore.getEmojiList()
   const account = {

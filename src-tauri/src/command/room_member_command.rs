@@ -198,11 +198,7 @@ pub async fn page_room(
 ) -> Result<Page<im_room::Model>, String> {
     let result: Result<Page<im_room::Model>, CommonError> = async {
         // 直接调用后端接口获取数据，不保存到数据库
-        let data = fetch_rooms_from_backend(
-            page_param,
-            state.request_client.clone(),
-        )
-        .await?;
+        let data = fetch_rooms_from_backend(page_param, state.request_client.clone()).await?;
 
         Ok(data)
     }

@@ -46,7 +46,7 @@ pub async fn save_message_mark(
                         let message_mark = entry.into_mut();
                         message_mark.count = data.mark_count;
                         if data.uid == message.login_uid {
-                          message_mark.user_marked = true
+                            message_mark.user_marked = true
                         }
                     }
                     Entry::Vacant(_) => {}

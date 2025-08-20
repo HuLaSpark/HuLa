@@ -26,14 +26,15 @@ pub mod common;
 pub mod configuration;
 pub mod error;
 pub mod im_reqest_client;
+mod im_request_client;
 pub mod pojo;
 pub mod repository;
 pub mod timeout_config;
 pub mod utils;
 mod vo;
 pub mod websocket;
-mod im_request_client;
 
+use crate::command::request_command::{im_request_command, login_command};
 use crate::command::room_member_command::{
     cursor_page_room_members, get_room_members, page_room, update_my_room_info,
 };
@@ -55,6 +56,7 @@ pub struct AppData {
     request_client: Arc<Mutex<ImRequestClient>>,
     user_info: Arc<Mutex<UserInfo>>,
     cache: Cache<String, String>,
+    rc: Arc<Mutex<im_request_client::ImRequestClient>>,
 }
 
 use crate::command::contact_command::{hide_contact_command, list_contacts_command};
@@ -117,6 +119,7 @@ async fn initialize_app_data(
         Arc<DatabaseConnection>,
         Arc<Mutex<ImRequestClient>>,
         Arc<Mutex<UserInfo>>,
+        Arc<Mutex<im_request_client::ImRequestClient>>,
     ),
     CommonError,
 > {
@@ -150,6 +153,9 @@ async fn initialize_app_data(
     // 创建 HTTP 客户端
     let im_request_client = ImRequestClient::new(configuration.backend.base_url.clone()).await?;
 
+    let rc: im_request_client::ImRequestClient =
+        im_request_client::ImRequestClient::new(configuration.backend.base_url.clone()).unwrap();
+
     // 创建用户信息
     let user_info = UserInfo {
         token: Default::default(),
@@ -160,7 +166,7 @@ async fn initialize_app_data(
     let client = Arc::new(Mutex::new(im_request_client));
     let user_info = Arc::new(Mutex::new(user_info));
 
-    Ok((db, client, user_info))
+    Ok((db, client, user_info, Arc::new(Mutex::new(rc))))
 }
 
 // 设置用户信息监听器
@@ -336,13 +342,14 @@ fn common_setup(
 
     // 异步初始化应用数据，避免阻塞主线程
     match tauri::async_runtime::block_on(initialize_app_data(app_handle.clone())) {
-        Ok((db, client, user_info)) => {
+        Ok((db, client, user_info, rc)) => {
             // 使用 manage 方法在运行时添加状态
             app_handle.manage(AppData {
                 db_conn: db.clone(),
                 request_client: client.clone(),
                 user_info: user_info.clone(),
                 cache,
+                rc: rc,
             });
             let client_guard = tauri::async_runtime::block_on(client.lock());
             client_guard.set_app_handle(app_handle.clone());
@@ -425,6 +432,8 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         ws_update_config,
         ws_is_connected,
         ws_set_app_background_state,
-        ws_get_app_background_state
+        ws_get_app_background_state,
+        login_command,
+        im_request_command,
     ]
 }

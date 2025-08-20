@@ -97,23 +97,24 @@ watch(
   { immediate: true }
 )
 
-watch(
-  [token, refreshToken],
-  async ([newToken, newRefreshToken]) => {
-    // 如果不在主窗口下，则不执行token检查和重新登录逻辑
-    if (appWindow.label !== 'home') {
-      return
-    }
+// TODO 暂时不使用，因为rust端已经处理了token的刷新
+// watch(
+//   [token, refreshToken],
+//   async ([newToken, newRefreshToken]) => {
+//     // 如果不在主窗口下，则不执行token检查和重新登录逻辑
+//     if (appWindow.label !== 'home') {
+//       return
+//     }
 
-    // 非登录页面才执行 token 检查和重新登录逻辑
-    if (!newToken || !newRefreshToken) {
-      console.log('🔑 Token 或 RefreshToken 丢失，需要重新登录')
-      await resetLoginState()
-      await logout()
-    }
-  },
-  { immediate: true }
-)
+//     // 非登录页面才执行 token 检查和重新登录逻辑
+//     if (!newToken || !newRefreshToken) {
+//       console.log('🔑 Token 或 RefreshToken 丢失，需要重新登录')
+//       await resetLoginState()
+//       await logout()
+//     }
+//   },
+//   { immediate: true }
+// )
 
 onMounted(async () => {
   // 判断是否是桌面端，桌面端需要调整样式

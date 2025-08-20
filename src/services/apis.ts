@@ -1,16 +1,11 @@
 import type { NotificationTypeEnum } from '@/enums'
 import request from '@/services/request'
 import type {
-  AnnouncementItem,
   BadgeType,
   CacheBadgeItem,
   CacheBadgeReq,
-  CacheUserItem,
-  CacheUserReq,
   ConfigType,
-  ContactItem,
   EmojiItem,
-  GroupDetailReq,
   GroupListReq,
   GroupStatisticType,
   ListResponse,
@@ -20,13 +15,11 @@ import type {
   MessageType,
   MsgReadUnReadCountType,
   PageInfo,
-  PageResponse,
   RegisterUserReq,
   RequestFriendItem,
   SearchFriend,
   SearchGroup,
   SessionItem,
-  UserInfoType,
   UserState
 } from '@/services/types'
 import urls from '@/services/urls'
@@ -42,7 +35,7 @@ export default {
   /** 房间内的所有群成员列表-@专用 */
   // getAllUserBaseInfo: (params?: any) => GET<CacheUserItem[]>(urls.getAllUserBaseInfo, params),
   /** 批量获取成员详细信息 */
-  getUserInfoBatch: (users: CacheUserReq[]) => POST<CacheUserItem[]>(urls.getUserInfoBatch, { reqList: users }),
+  // getUserInfoBatch: (users: CacheUserReq[]) => POST<CacheUserItem[]>(urls.getUserInfoBatch, { reqList: users }),
   /** 批量获取徽章信息 */
   getBadgesBatch: (badges: CacheBadgeReq[]) => POST<CacheBadgeItem[]>(urls.getBadgesBatch, { reqList: badges }),
   /** 获取消息列表 */
@@ -52,7 +45,7 @@ export default {
   /** 标记消息，点赞等 */
   markMsg: (data?: MarkMsgReq) => PUT<void>(urls.markMsg, data),
   /** 获取用户详细信息 */
-  getUserDetail: () => GET<UserInfoType>(urls.getUserInfoDetail),
+  // getUserDetail: () => GET<UserInfoType>(urls.getUserInfoDetail),
   /** 获取徽章列表 */
   getBadgeList: () => GET<BadgeType>(urls.getBadgeList),
   /** 设置用户勋章 */
@@ -76,7 +69,7 @@ export default {
   /** 删除Emoji */
   deleteEmoji: (params: { id: string }) => DELETE<EmojiItem[]>(urls.deleteEmoji, params),
   /** 获取联系人列表 */
-  getContactList: (params?: any) => GET<ListResponse<ContactItem>>(urls.getContactList, params),
+  // getContactList: (params?: any) => GET<ListResponse<ContactItem>>(urls.getContactList, params),
   /** 获取好友申请列表 */
   getApplyPage: (params?: any) => GET<ListResponse<RequestFriendItem>>(urls.requestApplyPage, params),
   /** 发送添加好友请求 */
@@ -86,7 +79,7 @@ export default {
   /** 删除好友 */
   deleteFriend: (params: { targetUid: string }) => DELETE(urls.deleteFriend, params),
   /** 好友申请未读数 */
-  applyUnReadCount: () => GET<{ unReadCount4Friend: number; unReadCount4Group: number }>(urls.applyUnReadCount),
+  // applyUnReadCount: () => GET<{ unReadCount4Friend: number; unReadCount4Group: number }>(urls.applyUnReadCount),
   /** 会话列表 */
   // getSessionList: (params?: any) => GET<ListResponse<SessionItem>>(urls.getSessionList, params),
   /** 消息的已读未读列表 */
@@ -102,7 +95,7 @@ export default {
   /** 删除群成员 */
   removeGroupMember: (params: { roomId: string; uid: string }) => DELETE(urls.inviteGroupMember, params),
   /** 群组详情 */
-  groupDetail: (params: { id: string }) => GET<GroupDetailReq>(urls.groupDetail, params),
+  // groupDetail: (params: { id: string }) => GET<GroupDetailReq>(urls.groupDetail, params),
   /** 群聊列表 */
   groupList: (params: { current: number; size: number }) => GET<PageInfo<GroupListReq>>(urls.groupList, params),
   /** 会话详情 */
@@ -187,8 +180,8 @@ export default {
       region?: string
     }>(urls.getQiniuToken),
   /** 获取群公告列表 */
-  getAnnouncementList: (roomId: string, params: { current: number; size: number }) =>
-    GET<PageResponse<AnnouncementItem[]>>(`${urls.getAnnouncementList}/${roomId}`, params),
+  // getAnnouncementList: (roomId: string, params: { current: number; size: number }) =>
+  //   GET<PageResponse<AnnouncementItem[]>>(`${urls.getAnnouncementList}/${roomId}`, params),
   /** 发布群公告 */
   pushAnnouncement: (params: { roomId: string; content: string; top: boolean }) =>
     POST<{ msg: string; data: boolean }>(urls.pushAnnouncement, params),

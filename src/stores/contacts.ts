@@ -1,5 +1,6 @@
+import { invoke } from '@tauri-apps/api/core'
 import { defineStore } from 'pinia'
-import { StoresEnum, TauriCommand } from '@/enums'
+import { ImUrlEnum, StoresEnum, TauriCommand } from '@/enums'
 import apis from '@/services/apis'
 import type { ContactItem, GroupListReq, RequestFriendItem } from '@/services/types'
 import { RequestFriendAgreeStatus } from '@/services/types'
@@ -34,15 +35,19 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
       if (contactsOptions.value.isLast || contactsOptions.value.isLoading) return
     }
     contactsOptions.value.isLoading = true
-    const res = await apis
-      .getContactList({
-        // TODO 先写 100，稍后优化
+
+    const res: any = await invoke('im_request_command', {
+      url: ImUrlEnum.GET_CONTACT_LIST,
+      method: 'GET',
+      body: null,
+      params: {
         pageSize: 100,
         cursor: isFresh || !contactsOptions.value.cursor ? '' : contactsOptions.value.cursor
-      })
-      .catch(() => {
-        contactsOptions.value.isLoading = false
-      })
+      }
+    }).catch(() => {
+      contactsOptions.value.isLoading = false
+    })
+
     if (!res) return
     const data = res
     // 刷新模式下替换整个列表，否则追加到列表末尾
@@ -79,7 +84,10 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
    * 更新全局store中的未读计数
    */
   const getApplyUnReadCount = async () => {
-    const res = await apis.applyUnReadCount()
+    const res: any = await invoke('im_request_command', {
+      url: ImUrlEnum.APPLY_UN_READ_COUNT,
+      method: 'GET'
+    })
     if (!res) return
     // 更新全局store中的未读计数
     globalStore.unReadMark.newFriendUnreadCount = res.unReadCount4Friend

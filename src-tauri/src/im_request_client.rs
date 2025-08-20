@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use anyhow::Ok;
 use base64::{Engine, prelude::BASE64_STANDARD};
 use reqwest::header;
@@ -41,14 +43,6 @@ impl ImRequestClient {
         })
     }
 
-    pub fn set_token(&mut self, token: &str) {
-        self.token = Some(token.to_string());
-    }
-
-    pub fn set_refresh_token(&mut self, refresh_token: &str) {
-        self.refresh_token = Some(refresh_token.to_string());
-    }
-
     pub async fn request<T: serde::de::DeserializeOwned, B: serde::Serialize>(
         &mut self,
         method: http::Method,
@@ -61,6 +55,8 @@ impl ImRequestClient {
 
         loop {
             let url = format!("{}/{}", self.base_url, path);
+            info!("请求地址: {}", &url);
+
             let mut request_builder = self.client.request(method.clone(), &url);
 
             // 设置请求头
@@ -94,6 +90,7 @@ impl ImRequestClient {
                 continue;
             }
 
+            info!("请求成功: {}", &url);
             return Ok(result);
         }
     }
@@ -136,13 +133,13 @@ impl ImRequestClient {
         Ok(())
     }
 
-    pub async fn get<T: serde::de::DeserializeOwned, B: serde::Serialize>(
-        &mut self,
-        path: &str,
-        params: Option<B>,
-    ) -> Result<ApiResult<T>, anyhow::Error> {
-        self.request(http::Method::GET, path, None, params).await
-    }
+    // pub async fn get<T: serde::de::DeserializeOwned, B: serde::Serialize>(
+    //     &mut self,
+    //     path: &str,
+    //     params: Option<B>,
+    // ) -> Result<ApiResult<T>, anyhow::Error> {
+    //     self.request(http::Method::GET, path, None, params).await
+    // }
 
     pub async fn post<T: serde::de::DeserializeOwned, B: serde::Serialize>(
         &mut self,
@@ -152,11 +149,18 @@ impl ImRequestClient {
         self.request(http::Method::POST, path, body, None).await
     }
 
-    pub async fn im_request(&mut self, url: ImUrl, method: http::Method, body: Option<serde_json::Value>, params: Option<serde_json::Value>) -> Result<ApiResult<serde_json::Value>, anyhow::Error>{
-      let result: ApiResult<serde_json::Value> = self.request(method, url.get_url(), body, params).await?;
-      Ok(result)
+    pub async fn im_request(
+        &mut self,
+        url: ImUrl,
+        method: http::Method,
+        body: Option<serde_json::Value>,
+        params: Option<serde_json::Value>,
+    ) -> Result<ApiResult<serde_json::Value>, anyhow::Error> {
+        let result: ApiResult<serde_json::Value> =
+            self.request(method, url.get_url(), body, params).await?;
+        Ok(result)
     }
-  }
+}
 
 impl ImRequest for ImRequestClient {
     async fn login(&mut self, login_req: LoginReq) -> Result<ApiResult<LoginResp>, anyhow::Error> {
@@ -175,7 +179,7 @@ impl ImRequest for ImRequestClient {
     }
 }
 
-enum ImUrl {
+pub enum ImUrl {
     Login,
     RefreshToken,
     ForgetPassword,
@@ -340,38 +344,144 @@ impl ImUrl {
             ImUrl::GetAllUserBaseInfo => "im/room/group/member/list",
         }
     }
+
+    fn from_str(s: &str) -> Result<Self, anyhow::Error> {
+        match s {
+            // Token 相关
+            "login" => Ok(ImUrl::Login),
+            "refreshToken" => Ok(ImUrl::RefreshToken),
+            "forgetPassword" => Ok(ImUrl::ForgetPassword),
+            "checkToken" => Ok(ImUrl::CheckToken),
+            "logout" => Ok(ImUrl::Logout),
+            "register" => Ok(ImUrl::Register),
+
+            // 系统相关
+            "getQiniuToken" => Ok(ImUrl::GetQiniuToken),
+            "initConfig" => Ok(ImUrl::InitConfig),
+            "fileUpload" => Ok(ImUrl::FileUpload),
+
+            // 验证码相关
+            "sendCaptcha" => Ok(ImUrl::SendCaptcha),
+            "getCaptcha" => Ok(ImUrl::GetCaptcha),
+
+            // 群公告相关
+            "editAnnouncement" => Ok(ImUrl::EditAnnouncement),
+            "deleteAnnouncement" => Ok(ImUrl::DeleteAnnouncement),
+            "pushAnnouncement" => Ok(ImUrl::PushAnnouncement),
+            "getAnnouncementList" => Ok(ImUrl::GetAnnouncementList),
+
+            // 群聊申请相关
+            "applyGroupList" => Ok(ImUrl::ApplyGroupList),
+            "applyHandle" => Ok(ImUrl::ApplyHandle),
+            "applyGroup" => Ok(ImUrl::ApplyGroup),
+
+            // 群聊搜索和管理
+            "searchGroup" => Ok(ImUrl::SearchGroup),
+            "updateMyRoomInfo" => Ok(ImUrl::UpdateMyRoomInfo),
+            "updateRoomInfo" => Ok(ImUrl::UpdateRoomInfo),
+            "groupList" => Ok(ImUrl::GroupList),
+            "groupDetail" => Ok(ImUrl::GroupDetail),
+
+            // 群聊管理员
+            "revokeAdmin" => Ok(ImUrl::RevokeAdmin),
+            "addAdmin" => Ok(ImUrl::AddAdmin),
+
+            // 群聊成员管理
+            "exitGroup" => Ok(ImUrl::ExitGroup),
+            "acceptInvite" => Ok(ImUrl::AcceptInvite),
+            "inviteList" => Ok(ImUrl::InviteList),
+            "inviteGroupMember" => Ok(ImUrl::InviteGroupMember),
+            "createGroup" => Ok(ImUrl::CreateGroup),
+
+            // 聊天会话相关
+            "shield" => Ok(ImUrl::Shield),
+            "notification" => Ok(ImUrl::Notification),
+            "deleteSession" => Ok(ImUrl::DeleteSession),
+            "setSessionTop" => Ok(ImUrl::SetSessionTop),
+            "sessionDetailWithFriends" => Ok(ImUrl::SessionDetailWithFriends),
+            "sessionDetail" => Ok(ImUrl::SessionDetail),
+
+            // 消息已读未读
+            "getMsgReadCount" => Ok(ImUrl::GetMsgReadCount),
+            "getMsgReadList" => Ok(ImUrl::GetMsgReadList),
+
+            // 好友相关
+            "modifyFriendRemark" => Ok(ImUrl::ModifyFriendRemark),
+            "deleteFriend" => Ok(ImUrl::DeleteFriend),
+            "sendAddFriendRequest" => Ok(ImUrl::SendAddFriendRequest),
+            "handleInvite" => Ok(ImUrl::HandleInvite),
+            "applyUnReadCount" => Ok(ImUrl::ApplyUnReadCount),
+            "requestApplyPage" => Ok(ImUrl::RequestApplyPage),
+            "getContactList" => Ok(ImUrl::GetContactList),
+            "searchFriend" => Ok(ImUrl::SearchFriend),
+
+            // 用户状态相关
+            "changeUserState" => Ok(ImUrl::ChangeUserState),
+            "getAllUserState" => Ok(ImUrl::GetAllUserState),
+
+            // 用户信息相关
+            "uploadAvatar" => Ok(ImUrl::UploadAvatar),
+            "getEmoji" => Ok(ImUrl::GetEmoji),
+            "deleteEmoji" => Ok(ImUrl::DeleteEmoji),
+            "addEmoji" => Ok(ImUrl::AddEmoji),
+            "setUserBadge" => Ok(ImUrl::SetUserBadge),
+            "modifyUserName" => Ok(ImUrl::ModifyUserName),
+            "getUserInfoDetail" => Ok(ImUrl::GetUserInfoDetail),
+            "getUserInfoBatch" => Ok(ImUrl::GetUserInfoBatch),
+            "getBadgesBatch" => Ok(ImUrl::GetBadgesBatch),
+            "getBadgeList" => Ok(ImUrl::GetBadgeList),
+            "blockUser" => Ok(ImUrl::BlockUser),
+
+            // 消息相关
+            "recallMsg" => Ok(ImUrl::RecallMsg),
+            "markMsg" => Ok(ImUrl::MarkMsg),
+            "getMsgList" => Ok(ImUrl::GetMsgList),
+            "getMemberStatistic" => Ok(ImUrl::GetMemberStatistic),
+
+            // 群成员信息
+            "getAllUserBaseInfo" => Ok(ImUrl::GetAllUserBaseInfo),
+
+            // 未匹配的字符串
+            _ => Err(anyhow::anyhow!("未知的URL类型: {}", s)),
+        }
+    }
 }
 
-trait ImRequest {
+impl FromStr for ImUrl {
+    type Err = anyhow::Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::from_str(s)
+    }
+}
+
+pub trait ImRequest {
     async fn login(&mut self, login_req: LoginReq) -> Result<ApiResult<LoginResp>, anyhow::Error>;
 }
 
 // 测试
+#[cfg(test)]
 mod test {
-    use crate::im_request_client::ImRequest;
     use serde_json::json;
-    use tracing::info;
 
     use crate::{
-        im_request_client::ImRequestClient,
+        im_request_client::{ImRequest, ImRequestClient},
         pojo::common::ApiResult,
         vo::vo::{LoginReq, LoginResp},
     };
+    // #[tokio::test]
+    // async fn test_get() -> Result<(), anyhow::Error> {
+    //     let mut request_client = ImRequestClient::new("http://192.168.1.14:18760".to_string())?;
+    //     request_client.set_token("1c40166d-e077-4581-a287-46cfeb942dec");
+    //     request_client.set_refresh_token("e8fd2e8a64424a53a3f089482d6fad9e");
 
-    #[tokio::test]
-    async fn test_get() -> Result<(), anyhow::Error> {
-        let mut request_client = ImRequestClient::new("http://192.168.1.14:18760".to_string())?;
-        request_client.set_token("1c40166d-e077-4581-a287-46cfeb942dec");
-        request_client.set_refresh_token("e8fd2e8a64424a53a3f089482d6fad9e");
+    //     let params = Some([("pageSize", "50"), ("cursor", "")]);
 
-        let params = Some([("pageSize", "50"), ("cursor", "")]);
+    //     let result: ApiResult<serde_json::Value> =
+    //         request_client.get("im/user/friend/page", params).await?;
 
-        let result: ApiResult<serde_json::Value> =
-            request_client.get("im/user/friend/page", params).await?;
-
-        info!("{:?}", serde_json::json!(result).to_string());
-        Ok(())
-    }
+    //     info!("{:?}", serde_json::json!(result).to_string());
+    //     Ok(())
+    // }
 
     #[tokio::test]
     async fn test_login() -> Result<(), anyhow::Error> {

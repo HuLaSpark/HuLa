@@ -1,7 +1,5 @@
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { fetch } from '@tauri-apps/plugin-http'
 import { AppException, ErrorType } from '@/common/exception'
-import { URLEnum } from '@/enums'
 import { RequestQueue } from '@/utils/RequestQueue'
 import { updateTokenSilently } from '../utils/TokenManager'
 import urls from './urls'
@@ -68,30 +66,30 @@ function shouldRetry(attempt: number, maxRetries: number, abort?: AbortControlle
  * @param url 请求地址
  * @returns 是否需要阻止请求
  */
-const shouldBlockRequest = async (url: string) => {
-  try {
-    const currentWindow = WebviewWindow.getCurrent()
-    // TODO: 这里如果后续不需要token就可以发送请求还有在没有登录下的窗口都不需要阻止
-    const isLoginWindow = currentWindow.label === 'login' || 'register' || 'forgetPassword' || 'tray'
+// const shouldBlockRequest = async (url: string) => {
+//   try {
+//     const currentWindow = WebviewWindow.getCurrent()
+//     // TODO: 这里如果后续不需要token就可以发送请求还有在没有登录下的窗口都不需要阻止
+//     const isLoginWindow = currentWindow.label === 'login' || 'register' || 'forgetPassword' || 'tray'
 
-    // 如果不是登录窗口,不阻止请求
-    if (!isLoginWindow) return false
+//     // 如果不是登录窗口,不阻止请求
+//     if (!isLoginWindow) return false
 
-    // 登录相关的接口永远不阻止
-    if (url.includes(URLEnum.TOKEN) || url.includes(URLEnum.CAPTCHA)) return false
+//     // 登录相关的接口永远不阻止
+//     if (url.includes(URLEnum.TOKEN) || url.includes(URLEnum.CAPTCHA)) return false
 
-    // 检查是否已登录成功(有双token)
-    const hasToken = localStorage.getItem('TOKEN')
-    const hasRefreshToken = localStorage.getItem('REFRESH_TOKEN')
-    const isLoggedIn = hasToken && hasRefreshToken
+//     // 检查是否已登录成功(有双token)
+//     const hasToken = localStorage.getItem('TOKEN')
+//     const hasRefreshToken = localStorage.getItem('REFRESH_TOKEN')
+//     const isLoggedIn = hasToken && hasRefreshToken
 
-    // 在登录窗口但已登录成功的情况下不阻止请求
-    return !isLoggedIn
-  } catch (error) {
-    console.error('检查请求状态失败:', error)
-    return false
-  }
-}
+//     // 在登录窗口但已登录成功的情况下不阻止请求
+//     return !isLoggedIn
+//   } catch (error) {
+//     console.error('检查请求状态失败:', error)
+//     return false
+//   }
+// }
 
 /**
  * @description HTTP 请求实现
@@ -109,13 +107,13 @@ async function Http<T = any>(
   abort?: AbortController
 ): Promise<{ data: T; resp: Response } | T> {
   // 检查是否需要阻止请求
-  const shouldBlock = await shouldBlockRequest(url)
-  if (shouldBlock) {
-    throw new AppException('在登录窗口中，取消非登录相关请求', {
-      type: ErrorType.Network,
-      showError: false
-    })
-  }
+  // const _shouldBlock = await shouldBlockRequest(url)
+  // if (shouldBlock) {
+  //   throw new AppException('在登录窗口中，取消非登录相关请求', {
+  //     type: ErrorType.Network,
+  //     showError: false
+  //   })
+  // }
 
   // 打印请求信息
   console.log(`🚀 发起请求 → ${options.method} ${url}`, {
