@@ -32,6 +32,7 @@ pub mod timeout_config;
 pub mod utils;
 mod vo;
 pub mod websocket;
+mod im_request_client;
 
 use crate::command::room_member_command::{
     cursor_page_room_members, get_room_members, page_room, update_my_room_info,
