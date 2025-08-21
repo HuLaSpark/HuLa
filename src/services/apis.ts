@@ -13,7 +13,7 @@ import type {
   LoginUserReq,
   MarkMsgReq,
   MessageType,
-  MsgReadUnReadCountType,
+  // MsgReadUnReadCountType,
   PageInfo,
   RegisterUserReq,
   RequestFriendItem,
@@ -85,9 +85,9 @@ export default {
   /** 消息的已读未读列表 */
   getMsgReadList: (params?: any) => GET<ListResponse<{ uid: string }>>(urls.getMsgReadList, params),
   /** 消息已读未读数 */
-  getMsgReadCount: (params?: any) => GET<MsgReadUnReadCountType[]>(urls.getMsgReadCount, params),
+  // getMsgReadCount: (params?: any) => GET<MsgReadUnReadCountType[]>(urls.getMsgReadCount, params),
   /** 消息阅读上报 */
-  markMsgRead: (params?: any) => PUT<MsgReadUnReadCountType[]>(urls.getMsgReadCount, params),
+  // markMsgRead: (params?: any) => PUT<MsgReadUnReadCountType[]>(urls.getMsgReadCount, params),
   /** 新增群组 */
   createGroup: (params: { uidList: string[] }) => POST<{ id: number }>(urls.createGroup, params),
   /** 邀请群成员 */

@@ -14,8 +14,8 @@ use crate::{
 pub struct ImRequestClient {
     client: reqwest::Client,
     base_url: String,
-    token: Option<String>,
-    refresh_token: Option<String>,
+    pub token: Option<String>,
+    pub refresh_token: Option<String>,
 }
 
 impl ImRequestClient {
@@ -237,6 +237,7 @@ pub enum ImUrl {
     SendMsg,
     SetHide,
     GetFriendPage,
+    MarkMsgRead,
 }
 
 impl ImUrl {
@@ -300,6 +301,7 @@ impl ImUrl {
 
             // 消息已读未读
             ImUrl::GetMsgReadCount => (http::Method::GET, "im/chat/msg/read"),
+            ImUrl::MarkMsgRead => (http::Method::PUT, "im/chat/msg/read"),
             ImUrl::SendMsg => (http::Method::POST, "im/chat/msg"),
             ImUrl::GetMsgReadList => (http::Method::GET, "im/chat/msg/read/page"),
 
@@ -437,6 +439,11 @@ impl ImUrl {
 
             // 群成员信息
             "getAllUserBaseInfo" => Ok(ImUrl::GetAllUserBaseInfo),
+            "sendMsg" => Ok(ImUrl::SendMsg),
+            "setHide" => Ok(ImUrl::SetHide),
+            "getFriendPage" => Ok(ImUrl::GetFriendPage),
+            "markMsgRead" => Ok(ImUrl::MarkMsgRead),
+            "groupListMember" => Ok(ImUrl::GroupListMember),
 
             // 未匹配的字符串
             _ => Err(anyhow::anyhow!("未知的URL类型: {}", s)),

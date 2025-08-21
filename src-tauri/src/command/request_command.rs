@@ -38,6 +38,7 @@ pub async fn im_request_command(
 
         return Ok(result);
     } else {
+        tracing::error!("Invalid URL: {}", url);
         return Err(format!("Invalid URL: {}", url));
     }
 }

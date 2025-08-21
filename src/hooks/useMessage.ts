@@ -8,6 +8,7 @@ import { useChatStore } from '@/stores/chat.ts'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useSettingStore } from '@/stores/setting.ts'
+import { markMsgRead } from '../utils/ImRequestUtils'
 import { invokeWithErrorHandler } from '../utils/TauriInvokeHandler'
 import { useTauriListener } from './useTauriListener'
 
@@ -45,7 +46,7 @@ export const useMessage = () => {
 
     // 只有在消息页面且有未读消息时，才标记为已读
     if ((route.path === '/message' || route.path === '/mobile/message') && item.unreadCount > 0) {
-      apis.markMsgRead({ roomId: item.roomId || '1' }).then(async () => {
+      markMsgRead(item.roomId || '1').then(async () => {
         chatStore.markSessionRead(item.roomId || '1')
         // 更新全局未读计数
         await globalStore.updateGlobalUnreadCount()

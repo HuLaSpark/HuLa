@@ -53,7 +53,7 @@ pub struct AppData {
     db_conn: Arc<DatabaseConnection>,
     user_info: Arc<Mutex<UserInfo>>,
     cache: Cache<String, String>,
-    rc: Arc<Mutex<im_request_client::ImRequestClient>>,
+    pub rc: Arc<Mutex<im_request_client::ImRequestClient>>,
 }
 
 use crate::command::contact_command::{hide_contact_command, list_contacts_command};

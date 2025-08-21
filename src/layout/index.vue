@@ -43,6 +43,7 @@ import { useCheckUpdate } from '@/hooks/useCheckUpdate'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { computedToken } from '@/services/request'
 import type { MarkItemType, MessageType, RevokedMsgType } from '@/services/types.ts'
+import rustWebSocketClient from '@/services/webSocketRust'
 import {
   type LoginSuccessResType,
   type OnStatusChangeType,
@@ -390,6 +391,8 @@ onMounted(async () => {
   // 监听home窗口被聚焦的事件，当窗口被聚焦时自动关闭状态栏通知
   const homeWindow = await WebviewWindow.getByLabel('home')
   if (homeWindow) {
+    // 设置业务消息监听器
+    await rustWebSocketClient.setupBusinessMessageListeners()
     // 恢复大小
     if (globalStore.homeWindowState.width && globalStore.homeWindowState.height) {
       await homeWindow.setSize(new LogicalSize(globalStore.homeWindowState.width, globalStore.homeWindowState.height))

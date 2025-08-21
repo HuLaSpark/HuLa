@@ -194,6 +194,7 @@ import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
 import apis from '@/services/apis.ts'
 import type { UserInfoType } from '@/services/types.ts'
+import rustWebSocketClient from '@/services/webSocketRust'
 import { WsResponseMessageType } from '@/services/wsType'
 import { useGlobalStore } from '@/stores/global'
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
@@ -370,6 +371,8 @@ const normalLogin = async (auto = false) => {
       loginDisabled.value = true
       userStore.isSign = true
 
+      // 开启 ws 连接
+      await rustWebSocketClient.initConnect()
       // 登录处理
       await loginProcess(res.token, res.refreshToken, res.client)
     })

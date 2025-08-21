@@ -37,27 +37,14 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
     contactsOptions.value.isLoading = true
 
     const res: any = await imRequest({
-      url: ImUrlEnum.GET_CONTACT_LIST,
-      params: {
-        pageSize: 100,
-        cursor: isFresh || !contactsOptions.value.cursor ? '' : contactsOptions.value.cursor
-      }
+      url: ImUrlEnum.GET_CONTACT_LIST
     }).catch(() => {
       contactsOptions.value.isLoading = false
     })
 
     if (!res) return
-    const data = res
-    // 刷新模式下替换整个列表，否则追加到列表末尾
-    isFresh
-      ? contactsList.value.splice(0, contactsList.value.length, ...data.list)
-      : contactsList.value.push(...data.list)
-    contactsOptions.value.cursor = data.cursor
-    contactsOptions.value.isLast = data.isLast
-    contactsOptions.value.isLoading = false
-
     // 获取数据后更新联系人列表
-    contactsList.value.splice(0, contactsList.value.length, ...contactsList.value)
+    contactsList.value.splice(0, contactsList.value.length, ...res)
   }
 
   /**

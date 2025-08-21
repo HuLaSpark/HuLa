@@ -252,7 +252,6 @@ export const useChatStore = defineStore(
           currentMessageOptions.value.isLoading = false
         }
       })
-      console.log('🔄 请求响应数据', data)
       // 如果没有数据或者房间ID已经变化，则不处理响应
       if (!data || requestRoomId !== currentRoomId.value) return
 
@@ -300,7 +299,7 @@ export const useChatStore = defineStore(
         sessionOptions.isLoading = true
         console.log('获取会话列表')
         const response: any = await invokeWithErrorHandler(TauriCommand.LIST_CONTACTS, undefined, {
-          customErrorMessage: '获取会话列表失败',
+          customErrorMessage: '获取会话列表失败22',
           errorType: ErrorType.Network
         }).catch(() => {
           sessionOptions.isLoading = false
@@ -346,7 +345,7 @@ export const useChatStore = defineStore(
           })
         }
       } catch (e) {
-        console.error('获取会话列表失败:', e)
+        console.error('获取会话列表失败11:', e)
         sessionOptions.isLoading = false
       } finally {
         sessionOptions.isLoading = false

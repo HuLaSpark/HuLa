@@ -1,8 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
 import { listen, type UnlistenFn } from '@tauri-apps/api/event'
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { error, info, warn } from '@tauri-apps/plugin-log'
-import { WorkerMsgEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt'
 import { getEnhancedFingerprint } from '@/services/fingerprint'
 import { WsResponseMessageType } from '@/services/wsType'
@@ -95,9 +93,7 @@ class ListenerController {
 }
 
 class RustWebSocketClient {
-  private eventListener: UnlistenFn | null = null
   private listenerController: ListenerController = new ListenerController()
-  private isInitialized = false
 
   constructor() {
     info('[RustWS] Rust WebSocket 客户端初始化')
@@ -108,7 +104,6 @@ class RustWebSocketClient {
    */
   async initConnect(): Promise<void> {
     try {
-      const token = localStorage.getItem('TOKEN')
       const clientId = await getEnhancedFingerprint()
       const savedProxy = localStorage.getItem('proxySettings')
 
@@ -125,7 +120,6 @@ class RustWebSocketClient {
 
       const params = {
         serverUrl,
-        token,
         clientId: clientId || ''
       }
 
@@ -133,7 +127,9 @@ class RustWebSocketClient {
 
       await invoke('ws_init_connection', { params })
 
-      this.isInitialized = true
+      // await this.setupEventListener()
+
+      // this.isInitialized = true
       info('[RustWS] WebSocket 连接初始化成功')
     } catch (err) {
       error(`[RustWS] 连接初始化失败: ${err}`)
@@ -147,7 +143,6 @@ class RustWebSocketClient {
   async disconnect(): Promise<void> {
     try {
       await invoke('ws_disconnect')
-      this.isInitialized = false
       info('[RustWS] WebSocket 连接已断开')
     } catch (err) {
       error(`[RustWS] 断开连接失败: ${err}`)
@@ -230,112 +225,41 @@ class RustWebSocketClient {
   /**
    * 设置事件监听器
    */
-  private async setupEventListener(): Promise<void> {
-    try {
-      info(`[RustWS] 开始设置事件监听器，当前业务监听器数量: ${this.listenerController.size}`)
+  // private async setupEventListener(): Promise<void> {
+  //   try {
+  //     info(`[RustWS] 开始设置事件监听器，当前业务监听器数量: ${this.listenerController.size}`)
 
-      // 清理旧的监听器
-      if (this.eventListener) {
-        this.eventListener()
-        info('[RustWS] 已清理主事件监听器')
-      }
+  //     // 清理旧的监听器
+  //     if (this.eventListener) {
+  //       this.eventListener()
+  //       info('[RustWS] 已清理主事件监听器')
+  //     }
 
-      // 高效清理所有业务监听器（并行 + 超时）
-      const oldListenerCount = this.listenerController.size
-      await this.listenerController.abort()
-      this.listenerController = new ListenerController()
-      info(`[RustWS] 已高效清理 ${oldListenerCount} 个业务监听器`)
+  //     // 高效清理所有业务监听器（并行 + 超时）
+  //     const oldListenerCount = this.listenerController.size
+  //     await this.listenerController.abort()
+  //     this.listenerController = new ListenerController()
+  //     info(`[RustWS] 已高效清理 ${oldListenerCount} 个业务监听器`)
 
-      // 监听 WebSocket 事件
-      this.eventListener = await listen<WebSocketEvent>('websocket-event', (event) => {
-        this.handleWebSocketEvent(event.payload)
-      })
+  //     // 监听 WebSocket 事件
+  //     this.eventListener = await listen<WebSocketEvent>('websocket-event', (event) => {
+  //       this.handleWebSocketEvent(event.payload)
+  //     })
 
-      // 设置业务消息监听器
-      await this.setupBusinessMessageListeners()
+  //     // 设置业务消息监听器
+  //     await this.setupBusinessMessageListeners()
 
-      info(`[RustWS] 事件监听器设置完成，新的业务监听器数量: ${this.listenerController.size}`)
-    } catch (err) {
-      error(`[RustWS] 设置事件监听器失败: ${err}`)
-    }
-  }
-
-  /**
-   * 处理 WebSocket 事件
-   */
-  private handleWebSocketEvent(event: WebSocketEvent): void {
-    switch (event.type) {
-      case 'ConnectionStateChanged':
-        this.handleConnectionStateChange(event.state!, event.isReconnection!)
-        break
-
-      case 'MessageReceived':
-        this.handleMessageReceived(event.message!)
-        break
-
-      case 'HeartbeatStatusChanged':
-        this.handleHeartbeatStatusChange(event.health!)
-        break
-
-      case 'Error':
-        this.handleError(event.message!, event.details)
-        break
-    }
-  }
-
-  /**
-   * 处理连接状态变化
-   */
-  private handleConnectionStateChange(state: ConnectionState, isReconnection: boolean): void {
-    info(`[RustWS] 连接状态变化: ${state}, 是否重连: ${isReconnection}`)
-
-    // 发送兼容的事件给原有的处理逻辑
-    switch (state) {
-      case ConnectionState.CONNECTED:
-        useMitt.emit(WorkerMsgEnum.OPEN)
-
-        if (isReconnection) {
-          // 重连成功，刷新数据
-          useMitt.emit('connectionStateChange', {
-            state: 'CONNECTED',
-            isReconnection: true
-          })
-        }
-        break
-
-      case ConnectionState.DISCONNECTED:
-      case ConnectionState.ERROR:
-        useMitt.emit(WorkerMsgEnum.CLOSE)
-        break
-
-      case ConnectionState.CONNECTING:
-      case ConnectionState.RECONNECTING:
-        // 连接中状态，暂不处理
-        break
-    }
-  }
-
-  /**
-   * 处理接收到的消息
-   */
-  private handleMessageReceived(message: any): void {
-    // 转发消息给现有的处理逻辑
-    useMitt.emit(WorkerMsgEnum.MESSAGE, message)
-  }
+  //     info(`[RustWS] 事件监听器设置完成，新的业务监听器数量: ${this.listenerController.size}`)
+  //   } catch (err) {
+  //     error(`[RustWS] 设置事件监听器失败: ${err}`)
+  //   }
+  // }
 
   /**
    * 设置业务消息监听器
    * 监听 Rust 端发送的具体业务消息事件
    */
-  private async setupBusinessMessageListeners(): Promise<void> {
-    // 连接状态相关事件
-    this.listenerController.add(
-      await listen('ws-connection-lost', (event: any) => {
-        warn(`[RustWS] 收到连接丢失事件: ${JSON.stringify(event.payload)}`)
-        this.handleConnectionLost(event.payload)
-      })
-    )
-
+  public async setupBusinessMessageListeners(): Promise<void> {
     // 登录相关事件
     this.listenerController.add(
       await listen('ws-login-qr-code', (event: any) => {
@@ -546,196 +470,38 @@ class RustWebSocketClient {
       })
     )
   }
-
-  /**
-   * 处理心跳状态变化
-   */
-  private handleHeartbeatStatusChange(health: ConnectionHealth): void {
-    // 发送心跳健康状态事件
-    useMitt.emit('pongReceived', {
-      timestamp: health.lastPongTime,
-      roundTripTime: health.roundTripTime,
-      consecutiveFailures: health.consecutiveFailures
-    })
-
-    useMitt.emit('wsConnectionHealthChange', {
-      isHealthy: health.isHealthy,
-      lastPongTime: health.lastPongTime,
-      timeSinceLastPong: health.lastPongTime ? Date.now() - health.lastPongTime : null
-    })
-  }
-
-  /**
-   * 处理错误
-   */
-  private handleError(message: string, details?: Record<string, any>): void {
-    error(`[RustWS] WebSocket 错误: ${message}, 详情: ${JSON.stringify(details)}`)
-
-    useMitt.emit(WorkerMsgEnum.WS_ERROR, {
-      msg: message,
-      details
-    })
-  }
-
-  /**
-   * 处理连接丢失事件
-   */
-  private async handleConnectionLost(payload: any): Promise<void> {
-    const { reason, error, timestamp } = payload
-
-    warn(`[RustWS] 连接丢失 - 原因: ${reason}, 错误: ${error}, 时间: ${new Date(timestamp).toLocaleString()}`)
-
-    try {
-      // 重新建立连接
-      await this.initConnect()
-    } catch (reconnectError) {
-      error(`[RustWS] 连接丢失后重连失败: ${reconnectError}`)
-
-      // 可以在这里添加用户通知，比如显示重连失败的提示
-      // 或者发送一个全局事件让UI层处理
-      useMitt.emit('ws-reconnect-failed', {
-        originalReason: reason,
-        originalError: error,
-        reconnectError: reconnectError
-      })
-    }
-  }
-
-  /**
-   * 智能初始化连接
-   * 检查连接状态，只有在断开时才重新连接
-   */
-  async smartInitConnect(): Promise<void> {
-    try {
-      // 检查当前窗口是否为主窗口
-      const currentWindow = getCurrentWebviewWindow()
-      const windowLabel = currentWindow.label
-
-      // 只在主窗口（home 或 rtcCall）中初始化 WebSocket
-      if (windowLabel !== 'home' && windowLabel !== 'rtcCall') {
-        info(`[RustWS] 当前窗口 [${windowLabel}] 不需要 WebSocket 连接`)
-        return
-      }
-
-      info(`[RustWS] 当前窗口 [${windowLabel}] 需要 WebSocket 连接`)
-
-      // 首次初始化时设置事件监听器
-      if (this.listenerController.size === 0) {
-        info('[RustWS] 首次初始化，设置事件监听器')
-        await this.setupEventListener()
-      }
-
-      // 检查当前连接状态
-      const isConnected = await this.isConnected()
-
-      if (!isConnected) {
-        info('[RustWS] WebSocket 未连接，开始初始化连接...')
-        await this.initConnect()
-      } else {
-        info('[RustWS] WebSocket 已连接，跳过初始化')
-      }
-    } catch (err) {
-      warn(`[RustWS] 检查连接状态失败，尝试智能重连: ${err}`)
-      try {
-        // 确保事件监听器已设置
-        if (this.listenerController.size === 0) {
-          await this.setupEventListener()
-        }
-        await this.initConnect()
-      } catch (reconnectError) {
-        error(`[RustWS] 智能重连失败: ${reconnectError}`)
-        throw reconnectError
-      }
-    }
-  }
-
-  /**
-   * 设置应用后台状态
-   */
-  async setAppBackgroundState(isBackground: boolean): Promise<void> {
-    try {
-      await invoke('ws_set_app_background_state', { isBackground })
-      info(`[RustWS] 设置应用状态: ${isBackground ? '后台' : '前台'}`)
-    } catch (err) {
-      error(`[RustWS] 设置应用状态失败: ${err}`)
-    }
-  }
-
-  /**
-   * 获取应用后台状态
-   */
-  async getAppBackgroundState(): Promise<boolean> {
-    try {
-      const isBackground = await invoke<boolean>('ws_get_app_background_state')
-      return isBackground
-    } catch (err) {
-      error(`[RustWS] 获取应用状态失败: ${err}`)
-      return false
-    }
-  }
-
-  /**
-   * 清理资源
-   */
-  async destroy(): Promise<void> {
-    if (this.eventListener) {
-      this.eventListener()
-      this.eventListener = null
-    }
-
-    // 高效清理所有业务监听器（并行 + 超时）
-    await this.listenerController.abort()
-
-    if (this.isInitialized) {
-      await this.disconnect()
-    }
-
-    info('[RustWS] WebSocket 客户端已销毁')
-  }
 }
 info('创建RustWebSocketClient')
 // 创建全局实例
 const rustWebSocketClient = new RustWebSocketClient()
 
-// 防止重复初始化
-let isModuleInitialized = false
-
-// 延迟执行智能初始化，确保页面加载完成
-if (!isModuleInitialized) {
-  isModuleInitialized = true
-  setTimeout(() => {
-    info('[RustWS] 模块级别智能初始化开始')
-    rustWebSocketClient.smartInitConnect()
-  }, 100)
-}
-
 // 使用 Tauri 原生事件监听窗口焦点变化（跨平台兼容）
 // 防止重复设置窗口焦点监听器
-let isWindowListenerInitialized = false
+// let isWindowListenerInitialized = false
 
-if (!isWindowListenerInitialized) {
-  isWindowListenerInitialized = true
-  ;(async () => {
-    try {
-      const currentWindow = getCurrentWebviewWindow()
+// if (!isWindowListenerInitialized) {
+//   isWindowListenerInitialized = true
+//   ;(async () => {
+//     try {
+//       const currentWindow = getCurrentWebviewWindow()
 
-      // 监听窗口获得焦点事件
-      await currentWindow.listen('tauri://focus', () => {
-        info('[RustWS] 窗口获得焦点，设置应用状态为前台')
-        rustWebSocketClient.setAppBackgroundState(false)
-      })
+//       // 监听窗口获得焦点事件
+//       await currentWindow.listen('tauri://focus', () => {
+//         info('[RustWS] 窗口获得焦点，设置应用状态为前台')
+//         rustWebSocketClient.setAppBackgroundState(false)
+//       })
 
-      // 监听窗口失去焦点事件
-      await currentWindow.listen('tauri://blur', () => {
-        info('[RustWS] 窗口失去焦点，设置应用状态为后台')
-        rustWebSocketClient.setAppBackgroundState(true)
-      })
+//       // 监听窗口失去焦点事件
+//       await currentWindow.listen('tauri://blur', () => {
+//         info('[RustWS] 窗口失去焦点，设置应用状态为后台')
+//         rustWebSocketClient.setAppBackgroundState(true)
+//       })
 
-      info('[RustWS] 窗口焦点事件监听器已设置')
-    } catch (err) {
-      error(`[RustWS] 设置窗口焦点监听器失败: ${err}`)
-    }
-  })()
-}
+//       info('[RustWS] 窗口焦点事件监听器已设置')
+//     } catch (err) {
+//       error(`[RustWS] 设置窗口焦点监听器失败: ${err}`)
+//     }
+//   })()
+// }
 
 export default rustWebSocketClient

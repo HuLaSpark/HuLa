@@ -671,8 +671,9 @@ export enum ImUrlEnum {
   /** 获取所有用户基础信息 */
   GET_ALL_USER_BASE_INFO = 'getAllUserBaseInfo',
 
-  GROUP_LIST_MEMBER = 'GroupListMember',
-  SEND_MSG = 'SendMsg',
-  SET_HIDE = 'SetHide',
-  GET_FRIEND_PAGE = 'GetFriendPage'
+  GROUP_LIST_MEMBER = 'groupListMember',
+  SEND_MSG = 'sendMsg',
+  SET_HIDE = 'setHide',
+  GET_FRIEND_PAGE = 'getFriendPage',
+  MARK_MSG_READ = 'markMsgRead'
 }

@@ -211,3 +211,21 @@ export async function getAnnouncementList(roomId: string, page: number, pageSize
     }
   })
 }
+
+export async function getMsgReadCount(msgIds: number[]) {
+  return await imRequest({
+    url: ImUrlEnum.GET_MSG_READ_COUNT,
+    params: {
+      msgIds
+    }
+  })
+}
+
+export async function markMsgRead(roomId: string) {
+  return await imRequest({
+    url: ImUrlEnum.MARK_MSG_READ,
+    body: {
+      roomId
+    }
+  })
+}

@@ -2,10 +2,10 @@ import { info } from '@tauri-apps/plugin-log'
 import { type } from '@tauri-apps/plugin-os'
 import { defineStore } from 'pinia'
 import { NotificationTypeEnum, RoomTypeEnum, StoresEnum } from '@/enums'
-import apis from '@/services/apis'
 import type { ContactItem, RequestFriendItem } from '@/services/types'
 import { useChatStore } from '@/stores/chat'
 import { clearQueue, readCountQueue } from '@/utils/ReadCountQueue.ts'
+import { markMsgRead } from '../utils/ImRequestUtils'
 import { invokeWithErrorHandler } from '../utils/TauriInvokeHandler'
 
 export const useGlobalStore = defineStore(
@@ -100,7 +100,8 @@ export const useGlobalStore = defineStore(
         // 延迟1秒后开始查询已读数
         setTimeout(readCountQueue, 1000)
         // 标记该房间的消息为已读
-        apis.markMsgRead({ roomId: val.roomId || '1' })
+        // apis.markMsgRead({ roomId: val.roomId || '1' })
+        markMsgRead(val.roomId || '1')
         // 更新会话的已读状态
         chatStore.markSessionRead(val.roomId || '1')
         // 更新全局未读计数
