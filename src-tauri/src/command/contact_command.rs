@@ -1,6 +1,6 @@
 use crate::AppData;
 use crate::error::CommonError;
-use crate::im_reqest_client::ImRequestClient;
+use crate::im_request_client::{ImRequestClient, ImUrl};
 use crate::repository::im_contact_repository::{save_contact_batch, update_contact_hide};
 
 use entity::im_contact;
@@ -24,12 +24,9 @@ pub async fn list_contacts_command(
             user_info.uid.clone()
         };
 
-        let data = fetch_and_update_contacts(
-            state.db_conn.clone(),
-            state.request_client.clone(),
-            login_uid.clone(),
-        )
-        .await?;
+        let data =
+            fetch_and_update_contacts(state.db_conn.clone(), state.rc.clone(), login_uid.clone())
+                .await?;
         // 设置缓存标记
         info!("Successfully queried contact list data: {:?}", data);
         return Ok(data);
@@ -52,14 +49,17 @@ async fn fetch_and_update_contacts(
     login_uid: String,
 ) -> Result<Vec<im_contact::Model>, CommonError> {
     // 从后端API获取联系人数据
-    let resp = request_client
+    let resp: Option<Vec<im_contact::Model>> = request_client
         .lock()
         .await
-        .get("/im/chat/contact/list")
-        .send_json::<Vec<im_contact::Model>>()
+        .im_request(
+            ImUrl::GetContactList,
+            None::<serde_json::Value>,
+            None::<serde_json::Value>,
+        )
         .await?;
 
-    if let Some(data) = resp.data {
+    if let Some(data) = resp {
         // 保存到本地数据库
         save_contact_batch(db_conn.deref(), data.clone(), &login_uid)
             .await
@@ -80,7 +80,7 @@ async fn fetch_and_update_contacts(
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct HideContactRequest {
     room_id: String,
@@ -100,16 +100,18 @@ pub async fn hide_contact_command(
             user_info.uid.clone()
         };
 
-        let resp = state
-            .request_client
+        let resp: Option<bool> = state
+            .rc
             .lock()
             .await
-            .post("/im/chat/setHide")
-            .json(&data)
-            .send_json::<bool>()
+            .im_request(
+                ImUrl::SetHide,
+                Some(data.clone()),
+                None::<serde_json::Value>,
+            )
             .await?;
 
-        if resp.success {
+        if let Some(_) = resp {
             // 更新本地数据库
             update_contact_hide(
                 state.db_conn.deref(),
@@ -118,16 +120,10 @@ pub async fn hide_contact_command(
                 &login_uid,
             )
             .await?;
-
-            info!(
-                "Successfully hid contact: room_id={}",
-                &data.room_id.clone()
-            );
             Ok(())
         } else {
             Err(CommonError::UnexpectedError(anyhow::anyhow!(
-                "Failed to hide contact: {}",
-                resp.msg.unwrap_or_default()
+                "Failed to hide contact"
             )))
         }
     }

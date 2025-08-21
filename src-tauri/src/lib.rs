@@ -25,7 +25,6 @@ pub mod command;
 pub mod common;
 pub mod configuration;
 pub mod error;
-pub mod im_reqest_client;
 mod im_request_client;
 pub mod pojo;
 pub mod repository;
@@ -40,7 +39,6 @@ use crate::command::room_member_command::{
 };
 use crate::configuration::get_configuration;
 use crate::error::CommonError;
-use crate::im_reqest_client::ImRequestClient;
 use sea_orm::DatabaseConnection;
 use serde::{Deserialize, Serialize};
 use std::ops::Deref;
@@ -53,7 +51,6 @@ mod mobiles;
 
 pub struct AppData {
     db_conn: Arc<DatabaseConnection>,
-    request_client: Arc<Mutex<ImRequestClient>>,
     user_info: Arc<Mutex<UserInfo>>,
     cache: Cache<String, String>,
     rc: Arc<Mutex<im_request_client::ImRequestClient>>,
@@ -117,7 +114,6 @@ async fn initialize_app_data(
 ) -> Result<
     (
         Arc<DatabaseConnection>,
-        Arc<Mutex<ImRequestClient>>,
         Arc<Mutex<UserInfo>>,
         Arc<Mutex<im_request_client::ImRequestClient>>,
     ),
@@ -150,9 +146,6 @@ async fn initialize_app_data(
         }
     }
 
-    // 创建 HTTP 客户端
-    let im_request_client = ImRequestClient::new(configuration.backend.base_url.clone()).await?;
-
     let rc: im_request_client::ImRequestClient =
         im_request_client::ImRequestClient::new(configuration.backend.base_url.clone()).unwrap();
 
@@ -162,11 +155,9 @@ async fn initialize_app_data(
         refresh_token: Default::default(),
         uid: Default::default(),
     };
-
-    let client = Arc::new(Mutex::new(im_request_client));
     let user_info = Arc::new(Mutex::new(user_info));
 
-    Ok((db, client, user_info, Arc::new(Mutex::new(rc))))
+    Ok((db, user_info, Arc::new(Mutex::new(rc))))
 }
 
 // 设置用户信息监听器
@@ -179,24 +170,6 @@ fn setup_user_info_listener_early(app_handle: tauri::AppHandle) {
             if let Some(app_data) = app_handle.try_state::<AppData>() {
                 if let Ok(payload) = serde_json::from_str::<UserInfo>(&event.payload()) {
                     // 避免多重锁，分别获取和释放锁
-
-                    // 1. 先更新 client 的 token 信息
-                    {
-                        let client = app_data.request_client.lock().await;
-                        // 使用 try_lock 避免阻塞，如果获取不到锁则跳过更新
-                        if let Ok(mut token_guard) = client.token.try_lock() {
-                            *token_guard = Some(payload.token.clone());
-                        } else {
-                            tracing::warn!("Unable to acquire token lock, skipping token update");
-                        }
-
-                        if let Ok(mut refresh_token_guard) = client.refresh_token.try_lock() {
-                            *refresh_token_guard = Some(payload.refresh_token.clone());
-                        } else {
-                            tracing::warn!("Unable to acquire refresh_token lock, skipping refresh_token update");
-                        }
-                    } // client 锁在这里释放
-
                     // 2. 然后更新用户信息
                     {
                         let mut user_info = app_data.user_info.lock().await;
@@ -207,15 +180,18 @@ fn setup_user_info_listener_early(app_handle: tauri::AppHandle) {
 
                     // 检查用户的 is_init 状态并获取消息
                     {
-                        let client = app_data.request_client.lock().await;
+                        let mut client = app_data.rc.lock().await;
                         if let Err(e) = check_user_init_and_fetch_messages(
-                            &*client,
+                            &mut client,
                             app_data.db_conn.deref(),
                             &payload.uid,
                         )
                         .await
                         {
-                            tracing::error!("Failed to check user initialization status and fetch messages: {}", e);
+                            tracing::error!(
+                                "Failed to check user initialization status and fetch messages: {}",
+                                e
+                            );
                         }
                     }
                 }
@@ -342,18 +318,14 @@ fn common_setup(
 
     // 异步初始化应用数据，避免阻塞主线程
     match tauri::async_runtime::block_on(initialize_app_data(app_handle.clone())) {
-        Ok((db, client, user_info, rc)) => {
+        Ok((db, user_info, rc)) => {
             // 使用 manage 方法在运行时添加状态
             app_handle.manage(AppData {
                 db_conn: db.clone(),
-                request_client: client.clone(),
                 user_info: user_info.clone(),
                 cache,
                 rc: rc,
             });
-            let client_guard = tauri::async_runtime::block_on(client.lock());
-            client_guard.set_app_handle(app_handle.clone());
-            drop(client_guard);
         }
         Err(e) => {
             tracing::error!("Failed to initialize application data: {}", e);
@@ -369,7 +341,7 @@ fn common_setup(
 // 公共的命令处理器函数
 fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static
 {
-    use crate::command::user_command::{save_user_info, update_token, update_user_last_opt_time};
+    use crate::command::user_command::{save_user_info, update_user_last_opt_time};
     #[cfg(desktop)]
     use crate::desktops::common_cmd::set_badge_count;
     use crate::websocket::commands::{
@@ -411,7 +383,6 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         // 通用命令（桌面端和移动端都支持）
         save_user_info,
         update_user_last_opt_time,
-        update_token,
         page_room,
         get_room_members,
         update_my_room_info,

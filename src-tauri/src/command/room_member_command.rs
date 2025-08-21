@@ -10,7 +10,7 @@ use crate::vo::vo::MyRoomInfoReq;
 use entity::{im_room, im_room_member};
 use tracing::{error, info};
 
-use crate::im_reqest_client::ImRequestClient;
+use crate::im_request_client::{ImRequestClient, ImUrl};
 use crate::repository::im_room_member_repository;
 use sea_orm::DatabaseConnection;
 use serde::{Deserialize, Serialize};
@@ -31,13 +31,15 @@ pub async fn update_my_room_info(
         drop(user_info);
 
         // 调用后端接口更新房间信息
-        let _resp = state
-            .request_client
+        let _resp: Option<bool> = state
+            .rc
             .lock()
             .await
-            .post("/im/room/updateMyRoomInfo")
-            .json(&my_room_info)
-            .send_json::<bool>()
+            .im_request(
+                ImUrl::UpdateMyRoomInfo,
+                Some(my_room_info.clone()),
+                None::<serde_json::Value>,
+            )
             .await?;
 
         // 更新本地数据库
@@ -92,7 +94,7 @@ pub async fn get_room_members(
             let mut data = fetch_and_update_room_members(
                 room_id.clone(),
                 state.db_conn.clone(),
-                state.request_client.clone(),
+                state.rc.clone(),
                 login_uid.clone(),
             )
             .await?;
@@ -126,7 +128,7 @@ pub async fn get_room_members(
 
             // 异步调用后端接口更新本地数据库（添加延迟避免立即冲突）
             let db_conn = state.db_conn.clone();
-            let request_client = state.request_client.clone();
+            let request_client = state.rc.clone();
             let room_id_clone = room_id.clone();
             let login_uid_clone = login_uid.clone();
             tokio::spawn(async move {
@@ -198,7 +200,7 @@ pub async fn page_room(
 ) -> Result<Page<im_room::Model>, String> {
     let result: Result<Page<im_room::Model>, CommonError> = async {
         // 直接调用后端接口获取数据，不保存到数据库
-        let data = fetch_rooms_from_backend(page_param, state.request_client.clone()).await?;
+        let data = fetch_rooms_from_backend(page_param, state.rc.clone()).await?;
 
         Ok(data)
     }
@@ -218,23 +220,17 @@ async fn fetch_rooms_from_backend(
     page_param: PageParam,
     request_client: Arc<Mutex<ImRequestClient>>,
 ) -> Result<Page<im_room::Model>, CommonError> {
-    let client = request_client.lock().await;
+    let mut client = request_client.lock().await;
 
-    let resp = client
-        .get("/im/room/group/list")
-        .query(&page_param)
-        .send_json::<Page<im_room::Model>>()
-        .await
-        .map_err(|e| {
-            anyhow::anyhow!(
-                "[{}:{}] Failed to fetch room data from backend: {}",
-                file!(),
-                line!(),
-                e
-            )
-        })?;
+    let resp: Option<Page<im_room::Model>> = client
+        .im_request(
+            ImUrl::GroupList,
+            None::<serde_json::Value>,
+            Some(page_param),
+        )
+        .await?;
 
-    if let Some(data) = resp.data {
+    if let Some(data) = resp {
         Ok(data)
     } else {
         Err(CommonError::UnexpectedError(anyhow::anyhow!(
@@ -286,16 +282,20 @@ async fn fetch_and_update_room_members(
     login_uid: String,
 ) -> Result<Vec<im_room_member::Model>, CommonError> {
     // 从后端API获取最新数据
-    let resp = request_client
+    let resp: Option<Vec<im_room_member::Model>> = request_client
         .lock()
         .await
-        .get("/im/room/group/listMember")
-        .query(&[("roomId", &room_id)])
-        .send_json::<Vec<im_room_member::Model>>()
+        .im_request(
+            ImUrl::GroupListMember,
+            None::<serde_json::Value>,
+            Some(serde_json::json!({
+                "roomId": room_id
+            })),
+        )
         .await?;
 
     // 更新本地数据库（添加重试机制）
-    if let Some(data) = resp.data {
+    if let Some(data) = resp {
         if !data.is_empty() {
             let room_id_i64 = room_id.parse::<i64>().unwrap_or(0);
 
@@ -354,40 +354,3 @@ async fn fetch_and_update_room_members(
 
     Ok(Vec::new())
 }
-
-// 获取并更新房间数据
-// async fn fetch_and_update_rooms(
-//     page_param: PageParam,
-//     db_conn: Arc<DatabaseConnection>,
-//     request_client: Arc<Mutex<ImRequestClient>>,
-//     login_uid: String,
-// ) -> Result<Page<im_room::Model>, CommonError> {
-//     // 从后端API获取数据
-//     let resp = request_client
-//         .lock()
-//         .await
-//         .get("/im/room/group/list")
-//         .query(&page_param)
-//         .send_json::<Page<im_room::Model>>()
-//         .await?;
-
-//     if let Some(data) = resp.data {
-//         // 保存到本地数据库
-//         save_room_batch(db_conn.deref(), data.records.clone(), &login_uid)
-//             .await
-//             .map_err(|e| {
-//                 anyhow::anyhow!(
-//                     "[{}:{}] Failed to save room data to local database: {}",
-//                     file!(),
-//                     line!(),
-//                     e
-//                 )
-//             })?;
-
-//         Ok(data)
-//     } else {
-//         Err(CommonError::UnexpectedError(anyhow::anyhow!(
-//             "获取房间数据失败"
-//         )))
-//     }
-// }

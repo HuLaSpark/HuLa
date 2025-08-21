@@ -669,5 +669,10 @@ export enum ImUrlEnum {
 
   // 群成员信息
   /** 获取所有用户基础信息 */
-  GET_ALL_USER_BASE_INFO = 'getAllUserBaseInfo'
+  GET_ALL_USER_BASE_INFO = 'getAllUserBaseInfo',
+
+  GROUP_LIST_MEMBER = 'GroupListMember',
+  SEND_MSG = 'SendMsg',
+  SET_HIDE = 'SetHide',
+  GET_FRIEND_PAGE = 'GetFriendPage'
 }

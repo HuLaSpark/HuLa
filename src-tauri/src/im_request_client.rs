@@ -43,12 +43,16 @@ impl ImRequestClient {
         })
     }
 
-    pub async fn request<T: serde::de::DeserializeOwned, B: serde::Serialize>(
+    pub async fn request<
+        T: serde::de::DeserializeOwned,
+        B: serde::Serialize,
+        C: serde::Serialize,
+    >(
         &mut self,
         method: http::Method,
         path: &str,
         body: Option<B>,
-        params: Option<B>,
+        params: Option<C>,
     ) -> Result<ApiResult<T>, anyhow::Error> {
         let mut retry_count = 0;
         const MAX_RETRY_COUNT: u8 = 2;
@@ -133,45 +137,31 @@ impl ImRequestClient {
         Ok(())
     }
 
-    // pub async fn get<T: serde::de::DeserializeOwned, B: serde::Serialize>(
-    //     &mut self,
-    //     path: &str,
-    //     params: Option<B>,
-    // ) -> Result<ApiResult<T>, anyhow::Error> {
-    //     self.request(http::Method::GET, path, None, params).await
-    // }
-
-    pub async fn post<T: serde::de::DeserializeOwned, B: serde::Serialize>(
-        &mut self,
-        path: &str,
-        body: Option<B>,
-    ) -> Result<ApiResult<T>, anyhow::Error> {
-        self.request(http::Method::POST, path, body, None).await
-    }
-
-    pub async fn im_request(
+    pub async fn im_request<
+        T: serde::de::DeserializeOwned,
+        B: serde::Serialize,
+        C: serde::Serialize,
+    >(
         &mut self,
         url: ImUrl,
-        body: Option<serde_json::Value>,
-        params: Option<serde_json::Value>,
-    ) -> Result<ApiResult<serde_json::Value>, anyhow::Error> {
+        body: Option<B>,
+        params: Option<C>,
+    ) -> Result<Option<T>, anyhow::Error> {
         let (method, path) = url.get_url();
-        let result: ApiResult<serde_json::Value> = self.request(method, path, body, params).await?;
-        Ok(result)
+        let result: ApiResult<T> = self.request(method, path, body, params).await?;
+        Ok(result.data)
     }
 }
 
 impl ImRequest for ImRequestClient {
-    async fn login(&mut self, login_req: LoginReq) -> Result<ApiResult<LoginResp>, anyhow::Error> {
-        let result: ApiResult<LoginResp> =
-            self.post(ImUrl::Login.get_url().1, Some(login_req)).await?;
+    async fn login(&mut self, login_req: LoginReq) -> Result<Option<LoginResp>, anyhow::Error> {
+        let result: Option<LoginResp> = self
+            .im_request(ImUrl::Login, Some(login_req), None::<serde_json::Value>)
+            .await?;
 
-        let login_resp = result.clone();
-        if login_resp.success {
-            if let Some(data) = login_resp.data {
-                self.token = Some(data.token.clone());
-                self.refresh_token = Some(data.refresh_token.clone());
-            }
+        if let Some(data) = result.clone() {
+            self.token = Some(data.token.clone());
+            self.refresh_token = Some(data.refresh_token.clone());
         }
 
         Ok(result)
@@ -201,6 +191,7 @@ pub enum ImUrl {
     UpdateMyRoomInfo,
     UpdateRoomInfo,
     GroupList,
+    GroupListMember,
     GroupDetail,
     RevokeAdmin,
     AddAdmin,
@@ -243,6 +234,9 @@ pub enum ImUrl {
     GetUserInfoBatch,
     GetMemberStatistic,
     GetBadgeList,
+    SendMsg,
+    SetHide,
+    GetFriendPage,
 }
 
 impl ImUrl {
@@ -281,6 +275,7 @@ impl ImUrl {
             ImUrl::UpdateMyRoomInfo => (http::Method::POST, "im/room/updateMyRoomInfo"),
             ImUrl::UpdateRoomInfo => (http::Method::POST, "im/room/updateRoomInfo"),
             ImUrl::GroupList => (http::Method::GET, "im/room/group/list"),
+            ImUrl::GroupListMember => (http::Method::GET, "im/room/group/listMember"),
             ImUrl::GroupDetail => (http::Method::GET, "im/room/group"),
 
             // 群聊管理员
@@ -301,9 +296,11 @@ impl ImUrl {
             ImUrl::SetSessionTop => (http::Method::POST, "im/chat/setTop"),
             ImUrl::SessionDetailWithFriends => (http::Method::GET, "im/chat/contact/detail/friend"),
             ImUrl::SessionDetail => (http::Method::GET, "im/chat/contact/detail"),
+            ImUrl::SetHide => (http::Method::POST, "im/chat/setHide"),
 
             // 消息已读未读
             ImUrl::GetMsgReadCount => (http::Method::GET, "im/chat/msg/read"),
+            ImUrl::SendMsg => (http::Method::POST, "im/chat/msg"),
             ImUrl::GetMsgReadList => (http::Method::GET, "im/chat/msg/read/page"),
 
             // 好友相关
@@ -313,7 +310,8 @@ impl ImUrl {
             ImUrl::HandleInvite => (http::Method::POST, "im/room/apply/handler/apply"),
             ImUrl::ApplyUnReadCount => (http::Method::GET, "im/room/apply/unread"),
             ImUrl::RequestApplyPage => (http::Method::GET, "im/room/apply/page"),
-            ImUrl::GetContactList => (http::Method::GET, "im/user/friend/page"),
+            ImUrl::GetFriendPage => (http::Method::GET, "im/user/friend/page"),
+            ImUrl::GetContactList => (http::Method::GET, "im/chat/contact/list"),
             ImUrl::SearchFriend => (http::Method::GET, "im/user/friend/search"),
 
             // 用户状态相关
@@ -454,7 +452,7 @@ impl FromStr for ImUrl {
 }
 
 pub trait ImRequest {
-    async fn login(&mut self, login_req: LoginReq) -> Result<ApiResult<LoginResp>, anyhow::Error>;
+    async fn login(&mut self, login_req: LoginReq) -> Result<Option<LoginResp>, anyhow::Error>;
 }
 
 // 测试
@@ -464,7 +462,6 @@ mod test {
 
     use crate::{
         im_request_client::{ImRequest, ImRequestClient},
-        pojo::common::ApiResult,
         vo::vo::{LoginReq, LoginResp},
     };
     // #[tokio::test]
@@ -493,7 +490,7 @@ mod test {
             "password": "123456"
         });
         let login_req: LoginReq = serde_json::from_value(login_req)?;
-        let result: ApiResult<LoginResp> = request_client.login(login_req).await?;
+        let result: Option<LoginResp> = request_client.login(login_req).await?;
         println!("{:?}", serde_json::json!(result).to_string());
         Ok(())
     }

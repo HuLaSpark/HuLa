@@ -18,7 +18,7 @@ pub async fn login_command(
         .login(data)
         .await
         .map_err(|e| e.to_string())?;
-    Ok(res.data)
+    Ok(res)
 }
 
 #[tauri::command]
@@ -36,7 +36,7 @@ pub async fn im_request_command(
             .await
             .map_err(|e| e.to_string())?;
 
-        return Ok(result.data);
+        return Ok(result);
     } else {
         return Err(format!("Invalid URL: {}", url));
     }
