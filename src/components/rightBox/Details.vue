@@ -195,9 +195,8 @@
   </div>
 </template>
 <script setup lang="ts">
-import { invoke } from '@tauri-apps/api/core'
 import { ErrorType } from '@/common/exception'
-import { ImUrlEnum, RoomTypeEnum, TauriCommand } from '@/enums'
+import { RoomTypeEnum, TauriCommand } from '@/enums'
 import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useWindow } from '@/hooks/useWindow'
@@ -205,6 +204,7 @@ import type { UserItem } from '@/services/types'
 import { useCachedStore } from '@/stores/cached'
 import { useImageViewer } from '@/stores/imageViewer'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { getGroupDetail } from '@/utils/ImRequestUtils'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 
 const { openMsgSession } = useCommon()
@@ -232,14 +232,7 @@ watchEffect(() => {
   if (content.type === RoomTypeEnum.SINGLE) {
     item.value = useUserInfo(content.uid).value
   } else {
-    invoke('im_request_command', {
-      url: ImUrlEnum.GROUP_DETAIL,
-      method: 'GET',
-      body: null,
-      params: {
-        id: content.uid
-      }
-    })
+    getGroupDetail(content.uid)
       .then((response: any) => {
         item.value = response
         remarkValue.value = response.remark || ''

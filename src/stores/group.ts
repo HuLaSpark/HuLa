@@ -1,12 +1,12 @@
-import { invoke } from '@tauri-apps/api/core'
 import { defineStore } from 'pinia'
-import { ImUrlEnum, RoleEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
+import { RoleEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
 import apis from '@/services/apis'
 import type { GroupDetailReq, UserItem } from '@/services/types'
 import type { OnStatusChangeType } from '@/services/wsType'
 import { useCachedStore } from '@/stores/cached'
 import { useGlobalStore } from '@/stores/global'
 import { useUserStore } from '@/stores/user'
+import { getGroupDetail } from '@/utils/ImRequestUtils'
 import { ErrorType, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler.ts'
 import { useChatStore } from './chat'
 
@@ -121,14 +121,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
    * 包括群名称、头像、在线人数等
    */
   const getCountStatistic = async (currentRoomId: string) => {
-    countInfo.value = await invoke('im_request_command', {
-      url: ImUrlEnum.GROUP_DETAIL,
-      method: 'GET',
-      body: null,
-      params: {
-        id: currentRoomId
-      }
-    })
+    countInfo.value = await getGroupDetail(currentRoomId)
   }
 
   /**

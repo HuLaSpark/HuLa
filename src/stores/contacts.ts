@@ -1,10 +1,10 @@
-import { invoke } from '@tauri-apps/api/core'
 import { defineStore } from 'pinia'
 import { ImUrlEnum, StoresEnum, TauriCommand } from '@/enums'
 import apis from '@/services/apis'
 import type { ContactItem, GroupListReq, RequestFriendItem } from '@/services/types'
 import { RequestFriendAgreeStatus } from '@/services/types'
 import { useGlobalStore } from '@/stores/global'
+import { getApplyUnreadCount, imRequest } from '@/utils/ImRequestUtils'
 import { ErrorType, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler.ts'
 
 // 定义分页大小常量
@@ -36,10 +36,8 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
     }
     contactsOptions.value.isLoading = true
 
-    const res: any = await invoke('im_request_command', {
+    const res: any = await imRequest({
       url: ImUrlEnum.GET_CONTACT_LIST,
-      method: 'GET',
-      body: null,
       params: {
         pageSize: 100,
         cursor: isFresh || !contactsOptions.value.cursor ? '' : contactsOptions.value.cursor
@@ -84,10 +82,7 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
    * 更新全局store中的未读计数
    */
   const getApplyUnReadCount = async () => {
-    const res: any = await invoke('im_request_command', {
-      url: ImUrlEnum.APPLY_UN_READ_COUNT,
-      method: 'GET'
-    })
+    const res: any = await getApplyUnreadCount()
     if (!res) return
     // 更新全局store中的未读计数
     globalStore.unReadMark.newFriendUnreadCount = res.unReadCount4Friend

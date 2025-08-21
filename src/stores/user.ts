@@ -1,17 +1,14 @@
-import { invoke } from '@tauri-apps/api/core'
 import { defineStore } from 'pinia'
-import { ImUrlEnum, StoresEnum } from '@/enums'
+import { StoresEnum } from '@/enums'
 import type { UserInfoType } from '@/services/types'
+import { getUserDetail } from '@/utils/ImRequestUtils'
 
 export const useUserStore = defineStore(StoresEnum.USER, () => {
   const userInfo = ref<Partial<UserInfoType>>({})
   const isSign = ref(false)
 
   const getUserDetailAction = () => {
-    invoke('im_request_command', {
-      url: ImUrlEnum.GET_USER_INFO_DETAIL,
-      method: 'GET'
-    })
+    getUserDetail()
       .then((res: any) => {
         userInfo.value = { ...userInfo.value, ...res }
       })

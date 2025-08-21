@@ -308,13 +308,12 @@
 </template>
 
 <script setup lang="ts">
-import { invoke } from '@tauri-apps/api/core'
 import { emit } from '@tauri-apps/api/event'
 import { lightTheme } from 'naive-ui'
 import { ErrorType } from '@/common/exception'
 import PinInput from '@/components/common/PinInput.vue'
 import Validation from '@/components/common/Validation.vue'
-import { ImUrlEnum, TauriCommand } from '@/enums'
+import { TauriCommand } from '@/enums'
 import { useLogin } from '@/hooks/useLogin'
 import apis from '@/services/apis'
 import type { RegisterUserReq, UserInfoType } from '@/services/types'
@@ -322,6 +321,7 @@ import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import { useMobileStore } from '@/stores/mobile'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { getUserDetail } from '@/utils/ImRequestUtils'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 import router from '../router'
 
@@ -603,10 +603,7 @@ const normalLogin = async () => {
         localStorage.removeItem('wsLogin')
       }
       // 获取用户详情
-      const userDetail: any = await invoke('im_request_command', {
-        url: ImUrlEnum.GET_USER_INFO_DETAIL,
-        method: 'GET'
-      })
+      const userDetail: any = await getUserDetail()
       // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取
       // await emojiStore.getEmojiList()
       // TODO 这里的id暂时赋值给uid，因为后端没有统一返回uid，待后端调整

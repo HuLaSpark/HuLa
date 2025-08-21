@@ -1,11 +1,11 @@
-import { invoke } from '@tauri-apps/api/core'
 import { useDebounceFn } from '@vueuse/core'
 import { defineStore } from 'pinia'
-import { ImUrlEnum, StoresEnum, TauriCommand } from '@/enums'
+import { StoresEnum, TauriCommand } from '@/enums'
 import apis from '@/services/apis'
 import type { CacheBadgeItem, CacheUserItem } from '@/services/types'
 import { useGlobalStore } from '@/stores/global'
 import { isDiffNow10Min } from '@/utils/ComputedTime.ts'
+import { getAnnouncementList, getUserInfoBatch } from '@/utils/ImRequestUtils'
 import { ErrorType, invokeSilently, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler.ts'
 import { useGroupStore } from './group'
 
@@ -93,11 +93,7 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
         const batchUsers = result.slice(startIndex, endIndex)
 
         // 批量获取当前批次的用户信息
-        const batchData: any = await invoke('im_request_command', {
-          url: ImUrlEnum.GET_USER_INFO_BATCH,
-          method: 'POST',
-          body: batchUsers
-        })
+        const batchData: any = await getUserInfoBatch(batchUsers)
 
         for (const item of batchData || []) {
           // 更新用户信息缓存
@@ -297,16 +293,7 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
    * @returns 群组公告列表
    */
   const getGroupAnnouncementList = async (roomId: string, page: number, size: number) => {
-    const data: any = await invoke('im_request_command', {
-      url: ImUrlEnum.GET_ANNOUNCEMENT_LIST,
-      method: 'GET',
-      body: null,
-      params: {
-        roomId,
-        current: page,
-        size: size
-      }
-    })
+    const data: any = await getAnnouncementList(roomId, page, size)
     if (data) {
       return data
     }

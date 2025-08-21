@@ -186,7 +186,7 @@ import { type } from '@tauri-apps/plugin-os'
 import { useNetwork } from '@vueuse/core'
 import { lightTheme } from 'naive-ui'
 import { ErrorType } from '@/common/exception'
-import { ImUrlEnum, TauriCommand } from '@/enums'
+import { TauriCommand } from '@/enums'
 import { useCheckUpdate } from '@/hooks/useCheckUpdate'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { useMitt } from '@/hooks/useMitt'
@@ -201,6 +201,7 @@ import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { getUserDetail } from '@/utils/ImRequestUtils'
 import { clearListener } from '@/utils/ReadCountQueue'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 
@@ -372,7 +373,7 @@ const normalLogin = async (auto = false) => {
       // 登录处理
       await loginProcess(res.token, res.refreshToken, res.client)
     })
-    .catch((e) => {
+    .catch((e: any) => {
       console.error('登录异常：', e)
       loading.value = false
       loginDisabled.value = false
@@ -397,10 +398,7 @@ const loginProcess = async (token: string, refreshToken: string, client: string)
   }
   // 获取用户详情
   // const userDetail = await apis.getUserDetail()
-  const userDetail: any = await invoke('im_request_command', {
-    url: ImUrlEnum.GET_USER_INFO_DETAIL,
-    method: 'GET'
-  })
+  const userDetail: any = await getUserDetail()
 
   // 设置用户状态id
   stateId.value = userDetail.userStateId

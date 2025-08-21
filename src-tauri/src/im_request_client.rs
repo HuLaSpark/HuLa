@@ -97,7 +97,7 @@ impl ImRequestClient {
 
     pub async fn start_refresh_token(&mut self) -> Result<(), anyhow::Error> {
         info!("开始刷新token");
-        let url = format!("{}/{}", self.base_url, ImUrl::RefreshToken.get_url());
+        let url = format!("{}/{}", self.base_url, ImUrl::RefreshToken.get_url().1);
 
         let body = json!({
           "refreshToken": self.refresh_token.clone().unwrap()
@@ -152,12 +152,11 @@ impl ImRequestClient {
     pub async fn im_request(
         &mut self,
         url: ImUrl,
-        method: http::Method,
         body: Option<serde_json::Value>,
         params: Option<serde_json::Value>,
     ) -> Result<ApiResult<serde_json::Value>, anyhow::Error> {
-        let result: ApiResult<serde_json::Value> =
-            self.request(method, url.get_url(), body, params).await?;
+        let (method, path) = url.get_url();
+        let result: ApiResult<serde_json::Value> = self.request(method, path, body, params).await?;
         Ok(result)
     }
 }
@@ -165,7 +164,7 @@ impl ImRequestClient {
 impl ImRequest for ImRequestClient {
     async fn login(&mut self, login_req: LoginReq) -> Result<ApiResult<LoginResp>, anyhow::Error> {
         let result: ApiResult<LoginResp> =
-            self.post(ImUrl::Login.get_url(), Some(login_req)).await?;
+            self.post(ImUrl::Login.get_url().1, Some(login_req)).await?;
 
         let login_resp = result.clone();
         if login_resp.success {
@@ -247,101 +246,101 @@ pub enum ImUrl {
 }
 
 impl ImUrl {
-    fn get_url(&self) -> &str {
+    fn get_url(&self) -> (http::Method, &str) {
         match self {
             // Token 相关
-            ImUrl::Login => "oauth/anyTenant/login",
-            ImUrl::RefreshToken => "oauth/anyTenant/refresh",
-            ImUrl::ForgetPassword => "oauth/anyTenant/password",
-            ImUrl::CheckToken => "oauth/check",
-            ImUrl::Logout => "oauth/anyUser/logout",
-            ImUrl::Register => "oauth/anyTenant/registerByEmail",
+            ImUrl::Login => (http::Method::POST, "oauth/anyTenant/login"),
+            ImUrl::RefreshToken => (http::Method::POST, "oauth/anyTenant/refresh"),
+            ImUrl::ForgetPassword => (http::Method::PUT, "oauth/anyTenant/password"),
+            ImUrl::CheckToken => (http::Method::POST, "oauth/check"),
+            ImUrl::Logout => (http::Method::POST, "oauth/anyUser/logout"),
+            ImUrl::Register => (http::Method::POST, "oauth/anyTenant/registerByEmail"),
 
             // 系统相关
-            ImUrl::GetQiniuToken => "system/anyTenant/ossToken",
-            ImUrl::InitConfig => "system/anyTenant/config/init",
-            ImUrl::FileUpload => "system/upload/url",
+            ImUrl::GetQiniuToken => (http::Method::GET, "system/anyTenant/ossToken"),
+            ImUrl::InitConfig => (http::Method::GET, "system/anyTenant/config/init"),
+            ImUrl::FileUpload => (http::Method::GET, "system/upload/url"),
 
             // 验证码相关
-            ImUrl::SendCaptcha => "oauth/anyTenant/sendEmailCode",
-            ImUrl::GetCaptcha => "oauth/anyTenant/captcha",
+            ImUrl::SendCaptcha => (http::Method::POST, "oauth/anyTenant/sendEmailCode"),
+            ImUrl::GetCaptcha => (http::Method::GET, "oauth/anyTenant/captcha"),
 
             // 群公告相关
-            ImUrl::EditAnnouncement => "im/room/announcement/edit",
-            ImUrl::DeleteAnnouncement => "im/room/announcement/delete",
-            ImUrl::PushAnnouncement => "im/room/announcement/push",
-            ImUrl::GetAnnouncementList => "im/room/announcement/list",
+            ImUrl::EditAnnouncement => (http::Method::POST, "im/room/announcement/edit"),
+            ImUrl::DeleteAnnouncement => (http::Method::POST, "im/room/announcement/delete"),
+            ImUrl::PushAnnouncement => (http::Method::POST, "im/room/announcement/push"),
+            ImUrl::GetAnnouncementList => (http::Method::GET, "im/room/announcement/list"),
 
             // 群聊申请相关
-            ImUrl::ApplyGroupList => "im/room/apply/group/list",
-            ImUrl::ApplyHandle => "im/room/apply/adminHandleApply",
-            ImUrl::ApplyGroup => "im/room/apply/group",
+            ImUrl::ApplyGroupList => (http::Method::GET, "im/room/apply/group/list"),
+            ImUrl::ApplyHandle => (http::Method::POST, "im/room/apply/adminHandleApply"),
+            ImUrl::ApplyGroup => (http::Method::POST, "im/room/apply/group"),
 
             // 群聊搜索和管理
-            ImUrl::SearchGroup => "im/room/search",
-            ImUrl::UpdateMyRoomInfo => "im/room/updateMyRoomInfo",
-            ImUrl::UpdateRoomInfo => "im/room/updateRoomInfo",
-            ImUrl::GroupList => "im/room/group/list",
-            ImUrl::GroupDetail => "im/room/group",
+            ImUrl::SearchGroup => (http::Method::GET, "im/room/search"),
+            ImUrl::UpdateMyRoomInfo => (http::Method::POST, "im/room/updateMyRoomInfo"),
+            ImUrl::UpdateRoomInfo => (http::Method::POST, "im/room/updateRoomInfo"),
+            ImUrl::GroupList => (http::Method::GET, "im/room/group/list"),
+            ImUrl::GroupDetail => (http::Method::GET, "im/room/group"),
 
             // 群聊管理员
-            ImUrl::RevokeAdmin => "im/room/group/admin",
-            ImUrl::AddAdmin => "im/room/group/admin",
+            ImUrl::RevokeAdmin => (http::Method::DELETE, "im/room/group/admin"),
+            ImUrl::AddAdmin => (http::Method::PUT, "im/room/group/admin"),
 
             // 群聊成员管理
-            ImUrl::ExitGroup => "im/room/group/member/exit",
-            ImUrl::AcceptInvite => "im/room/group/invite/accept",
-            ImUrl::InviteList => "im/room/group/invite/list",
-            ImUrl::InviteGroupMember => "im/room/group/member",
-            ImUrl::CreateGroup => "im/room/group",
+            ImUrl::ExitGroup => (http::Method::DELETE, "im/room/group/member/exit"),
+            ImUrl::AcceptInvite => (http::Method::POST, "im/room/group/invite/accept"),
+            ImUrl::InviteList => (http::Method::GET, "im/room/group/invite/list"),
+            ImUrl::InviteGroupMember => (http::Method::POST, "im/room/group/member"),
+            ImUrl::CreateGroup => (http::Method::POST, "im/room/group"),
 
             // 聊天会话相关
-            ImUrl::Shield => "im/chat/setShield",
-            ImUrl::Notification => "im/chat/notification",
-            ImUrl::DeleteSession => "im/chat/delete",
-            ImUrl::SetSessionTop => "im/chat/setTop",
-            ImUrl::SessionDetailWithFriends => "im/chat/contact/detail/friend",
-            ImUrl::SessionDetail => "im/chat/contact/detail",
+            ImUrl::Shield => (http::Method::POST, "im/chat/setShield"),
+            ImUrl::Notification => (http::Method::POST, "im/chat/notification"),
+            ImUrl::DeleteSession => (http::Method::DELETE, "im/chat/delete"),
+            ImUrl::SetSessionTop => (http::Method::POST, "im/chat/setTop"),
+            ImUrl::SessionDetailWithFriends => (http::Method::GET, "im/chat/contact/detail/friend"),
+            ImUrl::SessionDetail => (http::Method::GET, "im/chat/contact/detail"),
 
             // 消息已读未读
-            ImUrl::GetMsgReadCount => "im/chat/msg/read",
-            ImUrl::GetMsgReadList => "im/chat/msg/read/page",
+            ImUrl::GetMsgReadCount => (http::Method::GET, "im/chat/msg/read"),
+            ImUrl::GetMsgReadList => (http::Method::GET, "im/chat/msg/read/page"),
 
             // 好友相关
-            ImUrl::ModifyFriendRemark => "im/user/friend/updateRemark",
-            ImUrl::DeleteFriend => "im/user/friend",
-            ImUrl::SendAddFriendRequest => "im/room/apply/apply",
-            ImUrl::HandleInvite => "im/room/apply/handler/apply",
-            ImUrl::ApplyUnReadCount => "im/room/apply/unread",
-            ImUrl::RequestApplyPage => "im/room/apply/page",
-            ImUrl::GetContactList => "im/user/friend/page",
-            ImUrl::SearchFriend => "im/user/friend/search",
+            ImUrl::ModifyFriendRemark => (http::Method::POST, "im/user/friend/updateRemark"),
+            ImUrl::DeleteFriend => (http::Method::DELETE, "im/user/friend"),
+            ImUrl::SendAddFriendRequest => (http::Method::POST, "im/room/apply/apply"),
+            ImUrl::HandleInvite => (http::Method::POST, "im/room/apply/handler/apply"),
+            ImUrl::ApplyUnReadCount => (http::Method::GET, "im/room/apply/unread"),
+            ImUrl::RequestApplyPage => (http::Method::GET, "im/room/apply/page"),
+            ImUrl::GetContactList => (http::Method::GET, "im/user/friend/page"),
+            ImUrl::SearchFriend => (http::Method::GET, "im/user/friend/search"),
 
             // 用户状态相关
-            ImUrl::ChangeUserState => "im/user/state/changeState",
-            ImUrl::GetAllUserState => "im/user/state/list",
+            ImUrl::ChangeUserState => (http::Method::POST, "im/user/state/changeState"),
+            ImUrl::GetAllUserState => (http::Method::GET, "im/user/state/list"),
 
             // 用户信息相关
-            ImUrl::UploadAvatar => "im/user/avatar",
-            ImUrl::GetEmoji => "im/user/emoji/list",
-            ImUrl::DeleteEmoji => "im/user/emoji",
-            ImUrl::AddEmoji => "im/user/emoji",
-            ImUrl::SetUserBadge => "im/user/badge",
-            ImUrl::ModifyUserName => "im/user/name",
-            ImUrl::GetUserInfoDetail => "im/user/userInfo",
-            ImUrl::GetUserInfoBatch => "im/user/summary/userInfo/batch",
-            ImUrl::GetBadgesBatch => "im/user/badges/batch",
-            ImUrl::GetBadgeList => "im/user/badges",
-            ImUrl::BlockUser => "im/user/black",
+            ImUrl::UploadAvatar => (http::Method::POST, "im/user/avatar"),
+            ImUrl::GetEmoji => (http::Method::GET, "im/user/emoji/list"),
+            ImUrl::DeleteEmoji => (http::Method::DELETE, "im/user/emoji"),
+            ImUrl::AddEmoji => (http::Method::POST, "im/user/emoji"),
+            ImUrl::SetUserBadge => (http::Method::PUT, "im/user/badge"),
+            ImUrl::ModifyUserName => (http::Method::PUT, "im/user/name"),
+            ImUrl::GetUserInfoDetail => (http::Method::GET, "im/user/userInfo"),
+            ImUrl::GetUserInfoBatch => (http::Method::POST, "im/user/summary/userInfo/batch"),
+            ImUrl::GetBadgesBatch => (http::Method::POST, "im/user/badges/batch"),
+            ImUrl::GetBadgeList => (http::Method::GET, "im/user/badges"),
+            ImUrl::BlockUser => (http::Method::PUT, "im/user/black"),
 
             // 消息相关
-            ImUrl::RecallMsg => "im/chat/msg/recall",
-            ImUrl::MarkMsg => "im/chat/msg/mark",
-            ImUrl::GetMsgList => "im/chat/msg/page",
-            ImUrl::GetMemberStatistic => "im/chat/member/statistic",
+            ImUrl::RecallMsg => (http::Method::PUT, "im/chat/msg/recall"),
+            ImUrl::MarkMsg => (http::Method::PUT, "im/chat/msg/mark"),
+            ImUrl::GetMsgList => (http::Method::GET, "im/chat/msg/page"),
+            ImUrl::GetMemberStatistic => (http::Method::GET, "im/chat/member/statistic"),
 
             // 群成员信息
-            ImUrl::GetAllUserBaseInfo => "im/room/group/member/list",
+            ImUrl::GetAllUserBaseInfo => (http::Method::GET, "im/room/group/member/list"),
         }
     }
 

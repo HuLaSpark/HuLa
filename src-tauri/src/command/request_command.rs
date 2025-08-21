@@ -25,7 +25,6 @@ pub async fn login_command(
 pub async fn im_request_command(
     state: State<'_, AppData>,
     url: String,
-    method: String,
     body: Option<serde_json::Value>,
     params: Option<serde_json::Value>,
 ) -> Result<Option<serde_json::Value>, String> {
@@ -33,7 +32,7 @@ pub async fn im_request_command(
 
     if let Ok(url) = url.parse::<ImUrl>() {
         let result = rc
-            .im_request(url, method.parse::<http::Method>().unwrap(), body, params)
+            .im_request(url, body, params)
             .await
             .map_err(|e| e.to_string())?;
 
