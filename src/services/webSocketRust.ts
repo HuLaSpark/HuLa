@@ -2,6 +2,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { error, info, warn } from '@tauri-apps/plugin-log'
+import { type } from '@tauri-apps/plugin-os'
 import { WorkerMsgEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt'
 import { getEnhancedFingerprint } from '@/services/fingerprint'
@@ -362,7 +363,9 @@ class RustWebSocketClient {
     const listenerIndex = this.listenerController.size
     this.listenerController.add(
       await listen('ws-receive-message', (event: any) => {
+        console.log('[测试]收到消息：', event)
         info(`[ws]收到消息[监听器${listenerIndex}]: ${JSON.stringify(event.payload)}`)
+        // debugger
         useMitt.emit(WsResponseMessageType.RECEIVE_MESSAGE, event.payload)
       })
     )
@@ -610,9 +613,15 @@ class RustWebSocketClient {
       // 检查当前窗口是否为主窗口
       const currentWindow = getCurrentWebviewWindow()
       const windowLabel = currentWindow.label
+      const os_type = type()
+
+      const desktop_rule =
+        windowLabel !== 'home' && windowLabel !== 'rtcCall' && (os_type === 'macos' || os_type === 'windows')
+
+      const mobile_rule = windowLabel !== 'mobile-home' && (os_type === 'android' || os_type === 'ios')
 
       // 只在主窗口（home 或 rtcCall）中初始化 WebSocket
-      if (windowLabel !== 'home' && windowLabel !== 'rtcCall') {
+      if (desktop_rule && mobile_rule) {
         info(`[RustWS] 当前窗口 [${windowLabel}] 不需要 WebSocket 连接`)
         return
       }
