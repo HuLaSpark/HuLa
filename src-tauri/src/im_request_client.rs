@@ -230,6 +230,7 @@ pub enum ImUrl {
     ModifyUserName,
     GetUserInfoDetail,
     GetMsgList,
+    GetMsgPage,
     GetAllUserBaseInfo,
     GetBadgesBatch,
     GetUserInfoBatch,
@@ -338,7 +339,8 @@ impl ImUrl {
             // 消息相关
             ImUrl::RecallMsg => (http::Method::PUT, "im/chat/msg/recall"),
             ImUrl::MarkMsg => (http::Method::PUT, "im/chat/msg/mark"),
-            ImUrl::GetMsgList => (http::Method::GET, "im/chat/msg/page"),
+            ImUrl::GetMsgPage => (http::Method::GET, "im/chat/msg/page"),
+            ImUrl::GetMsgList => (http::Method::GET, "im/chat/msg/list"),
             ImUrl::GetMemberStatistic => (http::Method::GET, "im/chat/member/statistic"),
 
             // 群成员信息
@@ -438,6 +440,7 @@ impl ImUrl {
             "recallMsg" => Ok(ImUrl::RecallMsg),
             "markMsg" => Ok(ImUrl::MarkMsg),
             "getMsgList" => Ok(ImUrl::GetMsgList),
+            "getMsgPage" => Ok(ImUrl::GetMsgPage),
             "getMemberStatistic" => Ok(ImUrl::GetMemberStatistic),
 
             // 群成员信息
