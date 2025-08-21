@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia'
-import { ImUrlEnum, StoresEnum, TauriCommand } from '@/enums'
+import { StoresEnum, TauriCommand } from '@/enums'
 import apis from '@/services/apis'
 import type { ContactItem, GroupListReq, RequestFriendItem } from '@/services/types'
 import { RequestFriendAgreeStatus } from '@/services/types'
 import { useGlobalStore } from '@/stores/global'
-import { getApplyUnreadCount, imRequest } from '@/utils/ImRequestUtils'
+import { getApplyUnreadCount, getFriendPage } from '@/utils/ImRequestUtils'
 import { ErrorType, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler.ts'
 
 // 定义分页大小常量
@@ -35,16 +35,19 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
       if (contactsOptions.value.isLast || contactsOptions.value.isLoading) return
     }
     contactsOptions.value.isLoading = true
-
-    const res: any = await imRequest({
-      url: ImUrlEnum.GET_CONTACT_LIST
-    }).catch(() => {
-      contactsOptions.value.isLoading = false
-    })
-
+    const res = await getFriendPage()
     if (!res) return
+    const data = res
+    // 刷新模式下替换整个列表，否则追加到列表末尾
+    isFresh
+      ? contactsList.value.splice(0, contactsList.value.length, ...data.list)
+      : contactsList.value.push(...data.list)
+    contactsOptions.value.cursor = data.cursor
+    contactsOptions.value.isLast = data.isLast
+    contactsOptions.value.isLoading = false
+
     // 获取数据后更新联系人列表
-    contactsList.value.splice(0, contactsList.value.length, ...res)
+    contactsList.value.splice(0, contactsList.value.length, ...contactsList.value)
   }
 
   /**

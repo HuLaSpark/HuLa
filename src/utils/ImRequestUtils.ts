@@ -229,3 +229,13 @@ export async function markMsgRead(roomId: string) {
     }
   })
 }
+
+export async function getFriendPage(options?: { pageSize?: number; cursor?: string }) {
+  return await imRequest({
+    url: ImUrlEnum.GET_FRIEND_PAGE,
+    params: {
+      pageSize: options?.pageSize || 100,
+      cursor: options?.cursor || ''
+    }
+  })
+}
