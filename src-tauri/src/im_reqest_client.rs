@@ -43,27 +43,27 @@ impl ImRequestClient {
     }
 
     /// 发送 GET 请求
-    pub fn get(&self, path: &str) -> RequestBuilderWrapper {
+    pub fn get(&self, path: &str) -> RequestBuilderWrapper<'_> {
         self.request(Method::GET, path)
     }
 
     /// 发送 POST 请求
-    pub fn post(&self, path: &str) -> RequestBuilderWrapper {
+    pub fn post(&self, path: &str) -> RequestBuilderWrapper<'_> {
         self.request(Method::POST, path)
     }
 
     /// 发送 PUT 请求
-    pub fn put(&self, path: &str) -> RequestBuilderWrapper {
+    pub fn put(&self, path: &str) -> RequestBuilderWrapper<'_> {
         self.request(Method::PUT, path)
     }
 
     /// 发送 DELETE 请求
-    pub fn delete(&self, path: &str) -> RequestBuilderWrapper {
+    pub fn delete(&self, path: &str) -> RequestBuilderWrapper<'_> {
         self.request(Method::DELETE, path)
     }
 
     /// 创建请求构建器
-    fn request(&self, method: Method, path: &str) -> RequestBuilderWrapper {
+    fn request(&self, method: Method, path: &str) -> RequestBuilderWrapper<'_> {
         let url = if path.starts_with("http") {
             path.to_string()
         } else {
