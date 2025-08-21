@@ -115,8 +115,8 @@ screenshots = "0.8.10"
 
 # mac平台需要依赖
 [target."cfg(target_os =\"macos\")".dependencies]
-cocoa = "0.26.0"
-objc = "0.2.7"
+objc2-app-kit = "0.3.1"
+objc2 = "0.6.2"
 core-foundation = "0.10.1"
 core-graphics = "0.25.0"
 

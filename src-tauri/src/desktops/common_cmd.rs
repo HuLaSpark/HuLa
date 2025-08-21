@@ -23,7 +23,7 @@ pub struct DiskInfo {
 
 #[cfg(target_os = "macos")]
 #[allow(deprecated)]
-use cocoa::appkit::NSWindow;
+use objc2_app_kit::NSWindow;
 
 use crate::desktops::window_payload::{
     WindowPayload, get_window_payload as _get_window_payload,
@@ -198,9 +198,8 @@ pub fn hide_title_bar_buttons(
     #[cfg(target_os = "macos")]
     #[allow(deprecated)]
     {
-        use cocoa::appkit::NSWindowButton;
-        use cocoa::base::{NO, YES, id};
-        use objc::{msg_send, sel, sel_impl};
+        use objc2::ffi::{NO, YES};
+        use objc2::rc::Retained;
 
         let webview_window = handle
             .get_webview_window(window_label)
@@ -208,29 +207,33 @@ pub fn hide_title_bar_buttons(
 
         let ns_window = webview_window
             .ns_window()
-            .map_err(|e| format!("Failed to get NSWindow: {}", e))? as id;
+            .map_err(|e| format!("Failed to get NSWindow: {}", e))
+            .map(|ptr| unsafe { Retained::retain(ptr as *mut NSWindow) })?
+            .ok_or_else(|| "Failed to retain NSWindow".to_string())?;
 
         unsafe {
             // 隐藏标题栏按钮的辅助函数
-            let hide_button = |window: id, button_type: NSWindowButton| {
-                let btn = window.standardWindowButton_(button_type);
-                if !btn.is_null() {
-                    let _: () = msg_send![btn, setHidden: YES];
+
+            use objc2_app_kit::NSWindowButton;
+            let hide_button = |window: &NSWindow, button_type: NSWindowButton| {
+                if let Some(btn) = window.standardWindowButton(button_type) {
+                    btn.setHidden(YES.into());
                 }
             };
 
             // 隐藏各种标题栏按钮
-            hide_button(ns_window, NSWindowButton::NSWindowFullScreenButton);
-            hide_button(ns_window, NSWindowButton::NSWindowMiniaturizeButton);
-            hide_button(ns_window, NSWindowButton::NSWindowZoomButton);
+            // hide_button(&ns_window, NSWindowButton::NSWindowFullScreenButton);
+            hide_button(&ns_window, NSWindowButton::MiniaturizeButton);
+            // NSWindowFullScreenButton is deprecated in macOS 10.7–10.12. refer: https://developer.apple.com/documentation/appkit/nswindow/buttontype/fullscreenbutton?changes=__6_5&language=objc
+            hide_button(&ns_window, NSWindowButton::ZoomButton);
 
             // 根据参数决定是否隐藏关闭按钮
             if hide_close_button.unwrap_or(false) {
-                hide_button(ns_window, NSWindowButton::NSWindowCloseButton);
+                hide_button(&ns_window, NSWindowButton::CloseButton);
             }
 
             // 设置窗口不可拖动
-            let _: () = msg_send![ns_window, setMovable: NO];
+            ns_window.setMovable(NO.into());
         }
     }
     Ok(())
@@ -250,36 +253,37 @@ pub fn show_title_bar_buttons(window_label: &str, handle: AppHandle) -> Result<(
     #[cfg(target_os = "macos")]
     #[allow(deprecated)]
     {
-        use cocoa::appkit::NSWindowButton;
-        use cocoa::base::{NO, YES, id};
-        use objc::{msg_send, sel, sel_impl};
-
         let webview_window = handle
             .get_webview_window(window_label)
             .ok_or_else(|| format!("Window '{}' not found", window_label))?;
 
+        use objc2::ffi::{NO, YES};
+        use objc2::rc::Retained;
+        use objc2_app_kit::NSWindowButton;
+
         let ns_window = webview_window
             .ns_window()
-            .map_err(|e| format!("Failed to get NSWindow: {}", e))? as id;
+            .map_err(|e| format!("Failed to get NSWindow: {}", e))
+            .map(|ptr| unsafe { Retained::retain(ptr as *mut NSWindow) })?
+            .ok_or_else(|| "Failed to retain NSWindow".to_string())?;
 
-        unsafe {
-            // 显示标题栏按钮的辅助函数
-            let show_button = |window: id, button_type: NSWindowButton| {
-                let btn = window.standardWindowButton_(button_type);
-                if !btn.is_null() {
-                    let _: () = msg_send![btn, setHidden: NO];
-                }
-            };
+        // 显示标题栏按钮的辅助函数
 
-            // 显示所有标题栏按钮
-            show_button(ns_window, NSWindowButton::NSWindowCloseButton);
-            show_button(ns_window, NSWindowButton::NSWindowMiniaturizeButton);
-            show_button(ns_window, NSWindowButton::NSWindowZoomButton);
-            show_button(ns_window, NSWindowButton::NSWindowFullScreenButton);
+        let show_button = |window: &NSWindow, button_type: NSWindowButton| {
+            if let Some(btn) = window.standardWindowButton(button_type) {
+                btn.setHidden(NO.into());
+            }
+        };
 
-            // 恢复窗口可拖动
-            let _: () = msg_send![ns_window, setMovable: YES];
-        }
+        // 显示所有标题栏按钮
+        show_button(&ns_window, NSWindowButton::CloseButton);
+        show_button(&ns_window, NSWindowButton::MiniaturizeButton);
+        show_button(&ns_window, NSWindowButton::ZoomButton);
+        // NSWindowFullScreenButton is deprecated in macOS 10.7–10.12. refer: https://developer.apple.com/documentation/appkit/nswindow/buttontype/fullscreenbutton?changes=__6_5&language=objc
+        // show_button(ns_window, NSWindowButton::NSWindowFullScreenButton);
+
+        // 恢复窗口可拖动
+        ns_window.setMovable(YES.into());
     }
     Ok(())
 }
@@ -389,8 +393,7 @@ pub fn set_window_level_above_menubar(window_label: &str, handle: AppHandle) -> 
     #[cfg(target_os = "macos")]
     #[allow(deprecated)]
     {
-        use cocoa::base::id;
-        use objc::{msg_send, sel, sel_impl};
+        use objc2::rc::Retained;
 
         let webview_window = handle
             .get_webview_window(window_label)
@@ -398,13 +401,13 @@ pub fn set_window_level_above_menubar(window_label: &str, handle: AppHandle) -> 
 
         let ns_window = webview_window
             .ns_window()
-            .map_err(|e| format!("Failed to get NSWindow: {}", e))? as id;
+            .map_err(|e| format!("Failed to get NSWindow: {}", e))
+            .map(|ptr| unsafe { Retained::retain(ptr as *mut NSWindow) })?
+            .ok_or_else(|| "Failed to retain NSWindow".to_string())?;
 
-        unsafe {
-            // 设置窗口级别为屏幕保护程序级别 (1000)，高于菜单栏
-            let screen_saver_level: i32 = 1000;
-            let _: () = msg_send![ns_window, setLevel: screen_saver_level];
-        }
+        // 设置窗口级别为屏幕保护程序级别 (1000)，高于菜单栏
+        use objc2_app_kit::NSScreenSaverWindowLevel;
+        ns_window.setLevel(NSScreenSaverWindowLevel);
     }
     Ok(())
 }
