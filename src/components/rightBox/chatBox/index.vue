@@ -2,12 +2,14 @@
   <!-- 头部 -->
   <ChatHeader :active-item="activeItemRef" />
   <n-flex :class="{ 'shadow-inner': page.shadow }" :size="0" class="h-full">
-    <n-flex vertical :size="0" class="flex-1 relative">
+    <div class="flex flex-col flex-1 relative min-h-0">
       <!-- 中间聊天框内容  -->
-      <ChatMain :active-item="activeItemRef" />
+      <div class="flex-1 min-h-0 relative">
+        <ChatMain :active-item="activeItemRef" />
+      </div>
       <!-- 输入框和操作列表 -->
-      <ChatFooter class="flex-1" :detail-id="activeItemRef.detailId" />
-    </n-flex>
+      <ChatFooter :detail-id="activeItemRef.detailId" />
+    </div>
     <ChatSidebar />
   </n-flex>
 </template>
@@ -25,15 +27,6 @@ const activeItemRef = ref({ ...activeItem! })
 
 watchEffect(() => {
   activeItemRef.value = { ...activeItem! }
-})
-
-onMounted(() => {
-  // 事件监听已移除，现在使用 channel 方式在 useMsgInput.ts 中直接处理响应
-  // addListener(
-  //   appWindow.listen(appWindow.label, (e: { payload: SessionItem }) => {
-  //     activeItemRef.value = e.payload
-  //   })
-  // )
 })
 </script>
 <style scoped lang="scss">

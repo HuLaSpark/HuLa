@@ -5,7 +5,7 @@
     class="relative z-999 flex-y-center border-b-(1px solid [--right-chat-footer-line-color]) select-none cursor-default justify-between p-[6px_22px_10px]">
     <n-flex align="center">
       <Transition name="loading" mode="out-in">
-        <img v-if="showLoading" class="size-22px py-3px" src="@/assets/img/loading.svg" alt="" />
+        <img v-if="headerSkeleton.showSkeleton.value" class="size-22px py-3px" src="@/assets/img/loading.svg" alt="" />
         <n-flex v-else align="center">
           <n-avatar
             :class="['rounded-8px select-none grayscale', { 'grayscale-0': isOnline }]"
@@ -22,7 +22,7 @@
             </p>
           </label>
           <svg
-            v-if="activeItem.hotFlag === IsAllUserEnum.Yes && !showLoading"
+            v-if="activeItem.hotFlag === IsAllUserEnum.Yes && !headerSkeleton.showSkeleton.value"
             class="size-20px color-#13987f select-none outline-none">
             <use href="#auth"></use>
           </svg>
@@ -403,6 +403,7 @@ import {
 import { useAvatarUpload } from '@/hooks/useAvatarUpload'
 import { useUserInfo } from '@/hooks/useCached'
 import { useMitt } from '@/hooks/useMitt.ts'
+import { SkeletonPresets, useSkeleton } from '@/hooks/useSkeleton.ts'
 import { useWindow } from '@/hooks/useWindow'
 import apis from '@/services/apis'
 import { IsAllUserEnum, type SessionItem, type UserItem } from '@/services/types.ts'
@@ -436,8 +437,12 @@ const tips = ref()
 const optionsType = ref<RoomActEnum>()
 const modalShow = ref(false)
 const sidebarShow = ref(false)
-const showLoading = ref(true)
-const isLoading = ref(false)
+// 使用骨架屏控制器替代 showLoading 和 isLoading
+const headerSkeleton = useSkeleton({
+  ...SkeletonPresets.fast,
+  fallbackMessage: '用户信息加载失败',
+  enableFallback: false
+})
 const cacheStore = useCachedStore()
 
 // 群组详情数据
@@ -594,22 +599,18 @@ const {
   }
 })
 
-// 在数据加载完成后，确保loading动画至少显示一定时间
-const handleLoadingState = async (isDataLoading: boolean) => {
-  if (isDataLoading) {
-    showLoading.value = true
-  } else {
-    // 确保loading动画至少显示MIN_LOADING_TIME时间
-    await new Promise((resolve) => setTimeout(resolve, MIN_LOADING_TIME))
-    showLoading.value = false
-  }
-}
-
-// 监听 isLoading 的变化
+// 监听消息加载状态变化
 watch(
-  () => isLoading.value,
-  async (newValue) => {
-    await handleLoadingState(newValue)
+  () => messageOptions.value?.isLoading,
+  (isLoading) => {
+    if (isLoading && !headerSkeleton.isLoading.value) {
+      headerSkeleton.startLoading()
+    } else if (!isLoading && headerSkeleton.isLoading.value) {
+      // 确保最小显示时间
+      setTimeout(() => {
+        headerSkeleton.finishLoading()
+      }, MIN_LOADING_TIME)
+    }
   },
   { immediate: true }
 )
@@ -618,8 +619,7 @@ watch(
   () => activeItem.roomId,
   () => {
     if (messageOptions.value?.isLoading) {
-      isLoading.value = true
-      showLoading.value = true
+      headerSkeleton.startLoading()
     }
     // 当roomId变化时，如果是群聊，则获取群组详情
     if (activeItem.type === RoomTypeEnum.GROUP) {
@@ -643,12 +643,12 @@ watch(
 )
 
 watchEffect(() => {
-  if (!messageOptions.value?.isLoading) {
-    isLoading.value = false
-    stream.value?.getVideoTracks()[0].addEventListener('ended', () => {
-      stop()
-    })
+  if (!messageOptions.value?.isLoading && headerSkeleton.isLoading.value) {
+    headerSkeleton.finishLoading()
   }
+  stream.value?.getVideoTracks()[0]?.addEventListener('ended', () => {
+    stop()
+  })
 })
 
 // 处理复制账号
@@ -1060,8 +1060,7 @@ const handleVideoCall = async (remotedUid: string, callType: CallTypeEnum) => {
 onMounted(() => {
   window.addEventListener('click', closeMenu, true)
   if (!messageOptions.value?.isLoading) {
-    isLoading.value = false
-    showLoading.value = false
+    headerSkeleton.finishLoading()
   }
 
   // 如果是群聊，初始化时获取群组详情

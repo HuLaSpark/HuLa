@@ -494,9 +494,13 @@ defineExpose<VirtualListExpose>({
           }
           nextTick(() => {
             if (containerRef.value) {
-              // 使用 scrollTo 代替直接设置 scrollTop，提高兼容性
+              // 计算正确的滚动位置：scrollHeight - clientHeight
+              const scrollHeight = containerRef.value.scrollHeight
+              const clientHeight = containerRef.value.clientHeight
+              const targetScrollTop = Math.max(0, scrollHeight - clientHeight)
+
               containerRef.value.scrollTo({
-                top: totalHeight.value,
+                top: targetScrollTop,
                 behavior: options.behavior || 'auto'
               })
             }

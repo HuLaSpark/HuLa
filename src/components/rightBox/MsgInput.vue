@@ -2,40 +2,37 @@
   <!-- 录音模式 -->
   <VoiceRecorder v-show="isVoiceMode" @cancel="handleVoiceCancel" @send="handleVoiceSend" />
 
-  <!-- 输入框容器 -->
-  <div
+  <!-- 输入框表单 -->
+  <form
     v-show="!isVoiceMode"
-    class="w-full flex flex-col"
-    :style="{ height: `${Math.max(props.height || 110, 110)}px` }">
-    <!-- 输入框表单 -->
-    <form
-      id="message-form"
-      @submit.prevent="handleFormSubmit"
-      class="flex-shrink-0"
-      :style="{ height: `${inputScrollAreaHeight}px` }">
-      <ContextMenu class="w-full h-full" @select="$event.click()" :menu="menuList">
-        <n-scrollbar :style="{ height: `${inputScrollAreaHeight}px` }" @click="focusInput">
-          <div
-            id="message-input"
-            ref="messageInputDom"
-            style="outline: none; min-height: 36px"
-            contenteditable
-            spellcheck="false"
-            @paste="onPaste($event)"
-            @input="handleInput"
-            @keydown.exact.enter="inputKeyDown"
-            @keydown.exact.meta.enter="inputKeyDown"
-            @keydown="updateSelectionRange"
-            @keyup="updateSelectionRange"
-            @click="updateSelectionRange"
-            @compositionend="updateSelectionRange"
-            @keydown.exact.ctrl.enter="inputKeyDown"
-            data-placeholder="善言一句暖人心，恶语一句伤人心"
-            class="empty:before:content-[attr(data-placeholder)] before:text-(12px #777) p-2"></div>
-        </n-scrollbar>
-      </ContextMenu>
-    </form>
-
+    id="message-form"
+    @submit.prevent="handleFormSubmit"
+    class="w-full flex flex-col flex-1 min-h-0">
+    <ContextMenu
+      class="w-full"
+      :style="{ height: `${props.height - 108}px` }"
+      @select="$event.click()"
+      :menu="menuList">
+      <n-scrollbar @click="focusInput">
+        <div
+          id="message-input"
+          ref="messageInputDom"
+          style="outline: none; min-height: 36px"
+          contenteditable
+          spellcheck="false"
+          @paste="onPaste($event)"
+          @input="handleInput"
+          @keydown.exact.enter="inputKeyDown"
+          @keydown.exact.meta.enter="inputKeyDown"
+          @keydown="updateSelectionRange"
+          @keyup="updateSelectionRange"
+          @click="updateSelectionRange"
+          @compositionend="updateSelectionRange"
+          @keydown.exact.ctrl.enter="inputKeyDown"
+          data-placeholder="善言一句暖人心，恶语一句伤人心"
+          class="empty:before:content-[attr(data-placeholder)] before:text-(12px #777) p-2"></div>
+      </n-scrollbar>
+    </ContextMenu>
     <!-- @提及框  -->
     <div v-if="ait && activeItem?.type === RoomTypeEnum.GROUP && personList.length > 0" class="ait-options">
       <n-virtual-list
@@ -106,7 +103,7 @@
     </div>
 
     <!-- 发送按钮 -->
-    <div class="flex-shrink-0 h-52px px-4px border-t border-gray-200/50 flex items-center justify-end mb-4px">
+    <div class="flex-shrink-0 max-h-52px p-4px border-t border-gray-200/50 flex items-center justify-end">
       <n-config-provider :theme="lightTheme">
         <n-button-group size="small" class="pr-20px">
           <n-button color="#13987f" :disabled="disabledSend" class="w-65px" @click="send">发送</n-button>
@@ -160,7 +157,7 @@
         </n-button-group>
       </n-config-provider>
     </div>
-  </div>
+  </form>
 
   <!-- 文件上传弹窗 -->
   <FileUploadModal
@@ -177,7 +174,6 @@ import { onKeyStroke } from '@vueuse/core'
 import { darkTheme, lightTheme, type VirtualListInst } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import type { Ref } from 'vue'
-import { MIN_INPUT_HEIGHT, SEND_BUTTON_AREA_HEIGHT } from '@/common/constants'
 import { MacOsKeyEnum, MittEnum, RoomTypeEnum, ThemeEnum, WinKeyEnum } from '@/enums'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
@@ -212,15 +208,8 @@ const pendingFiles = ref<File[]>([])
 
 // 输入框滚动区域高度计算
 const props = defineProps<{
-  height?: number
+  height: number
 }>()
-
-const inputScrollAreaHeight = computed(() => {
-  const baseHeight = Math.max(props.height || 110, 110) // 确保最小基础高度
-  // 确保发送按钮区域不被挤压，只挤压输入框
-  const calculatedHeight = baseHeight - SEND_BUTTON_AREA_HEIGHT
-  return Math.max(calculatedHeight, MIN_INPUT_HEIGHT)
-})
 
 /** 引入useMsgInput的相关方法 */
 const {
@@ -311,6 +300,12 @@ const handleFileCancel = () => {
   pendingFiles.value = []
 }
 
+// 添加强制退出语音模式的方法
+const exitVoiceMode = () => {
+  isVoiceMode.value = false
+  console.log('强制退出语音模式')
+}
+
 /** 处理键盘上下键切换提及项 */
 const handleAitKeyChange = (
   direction: 1 | -1,
@@ -372,7 +367,10 @@ defineExpose({
   getLastEditRange: () => getCursorSelectionRange(),
   updateSelectionRange,
   focus,
-  showFileModal: showFileModalCallback
+  showFileModal: showFileModalCallback,
+  exitVoiceMode,
+  isVoiceMode: readonly(isVoiceMode),
+  handleVoiceCancel
 })
 
 onMounted(async () => {
@@ -424,6 +422,15 @@ onMounted(async () => {
   // 监听录音模式切换事件
   useMitt.on(MittEnum.VOICE_RECORD_TOGGLE, () => {
     isVoiceMode.value = !isVoiceMode.value
+    console.log('语音模式切换:', isVoiceMode.value ? '语音模式' : '文本模式')
+  })
+
+  // 添加ESC键退出语音模式
+  onKeyStroke('Escape', () => {
+    if (isVoiceMode.value) {
+      isVoiceMode.value = false
+      console.log('ESC键退出语音模式')
+    }
   })
   /** 这里使用的是窗口之间的通信来监听信息对话的变化 */
   addListener(
