@@ -448,6 +448,7 @@
 import AutoFixHeightPage from '@/mobile/components/chat-room/AutoFixHeightPage.vue'
 import FooterBar from '@/mobile/components/chat-room/FooterBar.vue'
 import HeaderBar from '@/mobile/components/chat-room/HeaderBar.vue'
+import { markMsg } from '@/utils/ImRequestUtils'
 
 const route = useRoute()
 const roomName = ref(route.params.roomName as string)
@@ -520,7 +521,6 @@ import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 import { usePopover } from '@/hooks/usePopover.ts'
 import { useTauriListener } from '@/hooks/useTauriListener'
 import { useWindow } from '@/hooks/useWindow.ts'
-import apis from '@/services/apis'
 import type { MessageType, SessionItem } from '@/services/types.ts'
 import { useCachedStore } from '@/stores/cached'
 import { useChatStore } from '@/stores/chat.ts'
@@ -825,7 +825,8 @@ const cancelReplyEmoji = async (item: any, type: number) => {
         markType: type, // 使用对应的MarkEnum类型
         actType: 2 // 使用Confirm作为操作类型
       }
-      await apis.markMsg(data)
+      // await apis.markMsg(data)
+      await markMsg(data)
 
       await invokeWithErrorHandler(
         TauriCommand.SAVE_MESSAGE_MARK,
@@ -875,7 +876,7 @@ const handleEmojiSelect = async (context: { label: string; value: number; title:
   // 只给没有标记过的图标标记
   if (!userMarked) {
     try {
-      await apis.markMsg({
+      await markMsg({
         msgId: item.message.id,
         markType: context.value,
         actType: 1

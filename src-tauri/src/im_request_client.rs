@@ -199,6 +199,7 @@ pub enum ImUrl {
     AcceptInvite,
     InviteList,
     InviteGroupMember,
+    RemoveGroupMember,
     CreateGroup,
     Shield,
     Notification,
@@ -288,6 +289,7 @@ impl ImUrl {
             ImUrl::AcceptInvite => (http::Method::POST, "im/room/group/invite/accept"),
             ImUrl::InviteList => (http::Method::GET, "im/room/group/invite/list"),
             ImUrl::InviteGroupMember => (http::Method::POST, "im/room/group/member"),
+            ImUrl::RemoveGroupMember => (http::Method::DELETE, "im/room/group/member"),
             ImUrl::CreateGroup => (http::Method::POST, "im/room/group"),
 
             // 聊天会话相关
@@ -390,6 +392,7 @@ impl ImUrl {
             "acceptInvite" => Ok(ImUrl::AcceptInvite),
             "inviteList" => Ok(ImUrl::InviteList),
             "inviteGroupMember" => Ok(ImUrl::InviteGroupMember),
+            "removeGroupMember" => Ok(ImUrl::RemoveGroupMember),
             "createGroup" => Ok(ImUrl::CreateGroup),
 
             // 聊天会话相关

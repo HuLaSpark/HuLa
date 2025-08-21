@@ -1,4 +1,5 @@
-import { ImUrlEnum } from '@/enums'
+import { ImUrlEnum, type NotificationTypeEnum } from '@/enums'
+import type { LoginUserReq, RegisterUserReq } from '@/services/types'
 import { ErrorType, invokeSilently, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 
 /**
@@ -237,5 +238,348 @@ export async function getFriendPage(options?: { pageSize?: number; cursor?: stri
       pageSize: options?.pageSize || 100,
       cursor: options?.cursor || ''
     }
+  })
+}
+
+export async function getBadgeList() {
+  return await imRequest({
+    url: ImUrlEnum.GET_BADGE_LIST
+  })
+}
+
+export async function getBadgesBatch(body: any) {
+  return await imRequest({
+    url: ImUrlEnum.GET_BADGES_BATCH,
+    body
+  })
+}
+
+export async function getMsgList(params: any) {
+  return await imRequest({
+    url: ImUrlEnum.GET_MSG_LIST,
+    params
+  })
+}
+
+export async function modifyUserName(body: { name: string }) {
+  return await imRequest({
+    url: ImUrlEnum.MODIFY_USER_NAME,
+    body
+  })
+}
+
+export async function setUserBadge(body: { badgeId: string }) {
+  return await imRequest({
+    url: ImUrlEnum.SET_USER_BADGE,
+    body
+  })
+}
+
+export async function markMsg(body: { msgId: string; markType: number; actType: number }) {
+  return await imRequest({
+    url: ImUrlEnum.MARK_MSG,
+    body
+  })
+}
+
+export async function blockUser(body: { uid: string; deadline: string }) {
+  return await imRequest({
+    url: ImUrlEnum.BLOCK_USER,
+    body
+  })
+}
+
+export async function recallMsg(body: { msgId: string; roomId: string }) {
+  return await imRequest({
+    url: ImUrlEnum.RECALL_MSG,
+    body
+  })
+}
+
+export async function addEmoji(body: { expressionUrl: string }) {
+  return await imRequest({
+    url: ImUrlEnum.ADD_EMOJI,
+    body
+  })
+}
+
+export async function deleteEmoji(body: { id: string }) {
+  return await imRequest({
+    url: ImUrlEnum.DELETE_EMOJI,
+    body
+  })
+}
+
+export async function getEmoji() {
+  return await imRequest({
+    url: ImUrlEnum.GET_EMOJI
+  })
+}
+
+export async function uploadAvatar(body: { avatar: string }) {
+  return await imRequest({
+    url: ImUrlEnum.UPLOAD_AVATAR,
+    body
+  })
+}
+
+export async function getAllUserState() {
+  return await imRequest({
+    url: ImUrlEnum.GET_ALL_USER_STATE
+  })
+}
+
+export async function changeUserState(params: { id: string }) {
+  return await imRequest({
+    url: ImUrlEnum.CHANGE_USER_STATE,
+    params
+  })
+}
+
+export async function searchFriend(params: { key: string }) {
+  return await imRequest({
+    url: ImUrlEnum.SEARCH_FRIEND,
+    params
+  })
+}
+
+export async function requestApplyPage(params: { pageSize: number; pageNo: number; cursor: string }) {
+  return await imRequest({
+    url: ImUrlEnum.REQUEST_APPLY_PAGE,
+    params
+  })
+}
+
+export async function sendAddFriendRequest(body: { targetUid: string; msg: string }) {
+  return await imRequest({
+    url: ImUrlEnum.SEND_ADD_FRIEND_REQUEST,
+    body
+  })
+}
+
+export async function handleInvite(body: { applyId: string; state: number }) {
+  return await imRequest({
+    url: ImUrlEnum.HANDLE_INVITE,
+    body
+  })
+}
+
+export async function deleteFriend(body: { targetUid: string }) {
+  return await imRequest({
+    url: ImUrlEnum.DELETE_FRIEND,
+    body
+  })
+}
+
+export async function modifyFriendRemark(body: { targetUid: string; remark: string }) {
+  return await imRequest({
+    url: ImUrlEnum.MODIFY_FRIEND_REMARK,
+    body
+  })
+}
+
+export async function createGroup(body: { uidList: string[] }) {
+  return await imRequest({
+    url: ImUrlEnum.CREATE_GROUP,
+    body
+  })
+}
+
+export async function inviteGroupMember(body: { roomId: string; uidList: string[] }) {
+  return await imRequest({
+    url: ImUrlEnum.INVITE_GROUP_MEMBER,
+    body
+  })
+}
+
+export async function removeGroupMember(body: { roomId: string; uid: string }) {
+  return await imRequest({
+    url: ImUrlEnum.INVITE_GROUP_MEMBER,
+    body
+  })
+}
+
+export async function getSessionDetail(params: { id: string }) {
+  return await imRequest({
+    url: ImUrlEnum.SESSION_DETAIL,
+    params
+  })
+}
+
+export async function getSessionDetailWithFriends(params: { id: string; roomType: number }) {
+  return await imRequest({
+    url: ImUrlEnum.SESSION_DETAIL_WITH_FRIENDS,
+    params
+  })
+}
+
+export async function setSessionTop(body: { roomId: string; top: boolean }) {
+  return await imRequest({
+    url: ImUrlEnum.SET_SESSION_TOP,
+    body
+  })
+}
+
+export async function deleteSession(body: { roomId: string }) {
+  return await imRequest({
+    url: ImUrlEnum.DELETE_SESSION,
+    body
+  })
+}
+
+export async function notification(body: { roomId: string; type: NotificationTypeEnum }) {
+  return await imRequest({
+    url: ImUrlEnum.NOTIFICATION,
+    body
+  })
+}
+
+export async function shield(body: { roomId: string; state: boolean }) {
+  return await imRequest({
+    url: ImUrlEnum.SHIELD,
+    body
+  })
+}
+
+export async function exitGroup(body: { roomId: string }) {
+  return await imRequest({
+    url: ImUrlEnum.EXIT_GROUP,
+    body
+  })
+}
+
+export async function addAdmin(body: { roomId: string; uidList: string[] }) {
+  return await imRequest({
+    url: ImUrlEnum.ADD_ADMIN,
+    body
+  })
+}
+
+export async function revokeAdmin(body: { roomId: string; uidList: string[] }) {
+  return await imRequest({
+    url: ImUrlEnum.REVOKE_ADMIN,
+    body
+  })
+}
+
+export async function groupList(params: { current: number; size: number }) {
+  return await imRequest({
+    url: ImUrlEnum.GROUP_LIST,
+    params
+  })
+}
+
+export async function updateRoomInfo(body: { id: string; name: string; avatar: string }) {
+  return await imRequest({
+    url: ImUrlEnum.UPDATE_ROOM_INFO,
+    body
+  })
+}
+
+export async function updateMyRoomInfo(body: { id: string; myName: string; remark: string }) {
+  return await imRequest({
+    url: ImUrlEnum.UPDATE_MY_ROOM_INFO,
+    body
+  })
+}
+
+export async function searchGroup(params: { account: string }) {
+  return await imRequest({
+    url: ImUrlEnum.SEARCH_GROUP,
+    params
+  })
+}
+
+export async function applyGroup(body: { account: string; msg: string }) {
+  return await imRequest({
+    url: ImUrlEnum.APPLY_GROUP,
+    body
+  })
+}
+
+export async function pushAnnouncement(body: { roomId: string; content: string; top: boolean }) {
+  return await imRequest({
+    url: ImUrlEnum.PUSH_ANNOUNCEMENT,
+    body
+  })
+}
+
+export async function deleteAnnouncement(params: { id: string }) {
+  return await imRequest({
+    url: ImUrlEnum.DELETE_ANNOUNCEMENT,
+    params
+  })
+}
+
+export async function editAnnouncement(body: { id: string; roomId: string; content: string; top: boolean }) {
+  return await imRequest({
+    url: ImUrlEnum.EDIT_ANNOUNCEMENT,
+    body
+  })
+}
+
+export async function getCaptcha() {
+  return await imRequest({
+    url: ImUrlEnum.GET_CAPTCHA
+  })
+}
+
+export async function sendCaptcha(body: {
+  email: string
+  code: string
+  uuid?: string
+  operationType?: 'register' | 'forgot'
+  templateCode: 'REGISTER_EMAIL' | 'REGISTER_SMS' | 'MOBILE_LOGIN' | 'MOBILE_EDIT' | 'EMAIL_EDIT' | 'PASSWORD_EDIT'
+}) {
+  return await imRequest({
+    url: ImUrlEnum.SEND_CAPTCHA,
+    body
+  })
+}
+
+export async function initConfig() {
+  return await imRequest({
+    url: ImUrlEnum.INIT_CONFIG
+  })
+}
+
+export async function getQiniuToken() {
+  return await imRequest({
+    url: ImUrlEnum.GET_QINIU_TOKEN
+  })
+}
+
+export async function register(body: RegisterUserReq) {
+  return await imRequest({
+    url: ImUrlEnum.REGISTER,
+    body
+  })
+}
+
+export async function login(body: LoginUserReq) {
+  return await imRequest({
+    url: ImUrlEnum.LOGIN,
+    body
+  })
+}
+
+export async function logout(body: { autoLogin: boolean }) {
+  return await imRequest({
+    url: ImUrlEnum.LOGOUT,
+    body
+  })
+}
+
+export async function forgetPassword(body: {
+  email: string
+  code: string
+  uuid: string
+  password: string
+  confirmPassword: string
+  key: string
+}) {
+  return await imRequest({
+    url: ImUrlEnum.FORGET_PASSWORD,
+    body
   })
 }

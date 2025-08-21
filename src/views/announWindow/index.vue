@@ -172,12 +172,12 @@ import { info } from '@tauri-apps/plugin-log'
 import { useRoute } from 'vue-router'
 import { ThemeEnum } from '@/enums'
 import { useUserInfo } from '@/hooks/useCached.ts'
-import apis from '@/services/apis'
 import { useCachedStore } from '@/stores/cached'
 import { useGroupStore } from '@/stores/group.ts'
 import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { deleteAnnouncement, editAnnouncement, pushAnnouncement } from '@/utils/ImRequestUtils'
 
 // 定义响应式变量
 const title = ref('')
@@ -367,7 +367,7 @@ const handleDel = async (announcement: any) => {
     announcementStates.value[announcement.id].deleteLoading = true
 
     // 同时处理删除请求和最小延迟时间
-    await Promise.all([apis.deleteAnnouncement(announcement.id), new Promise((resolve) => setTimeout(resolve, 600))])
+    await Promise.all([deleteAnnouncement(announcement.id), new Promise((resolve) => setTimeout(resolve, 600))])
 
     // 重置该公告的确认框状态
     announcementStates.value[announcement.id].showDeleteConfirm = false
@@ -431,14 +431,14 @@ const handlePushAnnouncement = async () => {
 
   const apiCall = isEdit.value
     ? () =>
-        apis.editAnnouncement({
+        editAnnouncement({
           id: editAnnoouncement.value.id,
           roomId: roomId.value,
           content: announContent.value,
           top: isTop.value
         })
     : () =>
-        apis.pushAnnouncement({
+        pushAnnouncement({
           roomId: roomId.value,
           content: announContent.value,
           top: isTop.value

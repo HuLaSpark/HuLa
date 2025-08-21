@@ -315,13 +315,12 @@ import PinInput from '@/components/common/PinInput.vue'
 import Validation from '@/components/common/Validation.vue'
 import { TauriCommand } from '@/enums'
 import { useLogin } from '@/hooks/useLogin'
-import apis from '@/services/apis'
 import type { RegisterUserReq, UserInfoType } from '@/services/types'
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import { useMobileStore } from '@/stores/mobile'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { getUserDetail } from '@/utils/ImRequestUtils'
+import { getCaptcha, getUserDetail, login, register, sendCaptcha } from '@/utils/ImRequestUtils'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 import router from '../router'
 
@@ -509,7 +508,7 @@ const resetRegisterForm = () => {
  */
 const getVerifyCode = async () => {
   try {
-    const { img, uuid } = await apis.getCaptcha()
+    const { img, uuid } = await getCaptcha()
     captcha.value = { base64: img, uuid }
   } catch (error) {
     // 处理错误
@@ -527,7 +526,7 @@ const handleRegisterStep = async () => {
     // 发送邮箱验证码
     registerLoading.value = true
     try {
-      await apis.sendCaptcha({
+      await sendCaptcha({
         email: registerInfo.value.email,
         code: registerInfo.value.code.toString(),
         uuid: captcha.value.uuid.toString(),
@@ -567,7 +566,7 @@ const handleRegisterComplete = async () => {
 
     // 注册 - 只传递API需要的字段
     const { ...apiRegisterInfo } = registerInfo.value
-    await apis.register(apiRegisterInfo)
+    await register(apiRegisterInfo)
 
     // 关闭弹窗并切换到登录页面
     emailCodeModal.value = false
@@ -589,8 +588,7 @@ const handleRegisterComplete = async () => {
 const normalLogin = async () => {
   loading.value = true
   const { account, password } = info.value
-  apis
-    .login({ account, password, deviceType: 'MOBILE', systemType: 2, grantType: 'PASSWORD' })
+  login({ account, password, deviceType: 'MOBILE', systemType: 2, grantType: 'PASSWORD' })
     .then(async (res) => {
       loginDisabled.value = true
       loginText.value = '登录成功, 正在跳转'

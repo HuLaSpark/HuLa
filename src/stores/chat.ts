@@ -7,7 +7,6 @@ import { defineStore } from 'pinia'
 import { useRoute } from 'vue-router'
 import { ErrorType } from '@/common/exception'
 import { type MessageStatusEnum, MsgEnum, NotificationTypeEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
-import apis from '@/services/apis'
 import type { MarkItemType, MessageType, RevokedMsgType, SessionItem } from '@/services/types'
 import { useCachedStore } from '@/stores/cached.ts'
 import { useContactStore } from '@/stores/contacts.ts'
@@ -15,6 +14,7 @@ import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { computedTimeBlock } from '@/utils/ComputedTime.ts'
+import { getSessionDetail } from '@/utils/ImRequestUtils'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 
@@ -416,7 +416,7 @@ export const useChatStore = defineStore(
       // 发完消息就要刷新会话列表
       let detailResponse
       if (!current) {
-        detailResponse = await apis.sessionDetail({ id: msg.message.roomId })
+        detailResponse = await getSessionDetail({ id: msg.message.roomId })
       }
 
       // 更新会话的文本属性和未读数

@@ -41,7 +41,6 @@ import {
 } from '@/enums'
 import { useCheckUpdate } from '@/hooks/useCheckUpdate'
 import { useMitt } from '@/hooks/useMitt.ts'
-import { computedToken } from '@/services/request'
 import type { MarkItemType, MessageType, RevokedMsgType } from '@/services/types.ts'
 import rustWebSocketClient from '@/services/webSocketRust'
 import {
@@ -179,9 +178,6 @@ useMitt.on(MittEnum.SHRINK_WINDOW, (event: boolean) => {
 
 useMitt.on(WsResponseMessageType.LOGIN_SUCCESS, async (data: LoginSuccessResType) => {
   const { ...rest } = data
-  // 更新一下请求里面的 token.
-  computedToken.value.clear()
-  computedToken.value.get()
   // 自己更新自己上线
   await groupStore.updateUserStatus({
     activeStatus: OnlineEnum.ONLINE,

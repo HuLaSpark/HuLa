@@ -2,8 +2,8 @@ import { MittEnum, ModalEnum, PluginEnum } from '@/enums'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
-import apis from '@/services/apis.ts'
 import { useSettingStore } from '@/stores/setting'
+import * as ImRequestUtils from '@/utils/ImRequestUtils'
 
 const { createWebviewWindow } = useWindow()
 const settingStore = useSettingStore()
@@ -97,7 +97,7 @@ const moreList = ref<OPT.L.MoreList[]>([
     click: async () => {
       try {
         // 1. 先调用后端退出接口
-        await apis.logout(login.value.autoLogin)
+        await ImRequestUtils.logout({ autoLogin: login.value.autoLogin })
         // 2. 重置登录状态
         await resetLoginState()
         // 3. 最后调用登出方法(这会创建登录窗口)

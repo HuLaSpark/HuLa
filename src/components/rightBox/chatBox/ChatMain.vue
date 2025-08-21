@@ -449,7 +449,6 @@ import { useMitt } from '@/hooks/useMitt.ts'
 import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 import { usePopover } from '@/hooks/usePopover.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
-import apis from '@/services/apis'
 import type { MessageType, SessionItem } from '@/services/types.ts'
 import { useCachedStore } from '@/stores/cached'
 import { useChatStore } from '@/stores/chat.ts'
@@ -460,6 +459,7 @@ import { useUserStore } from '@/stores/user.ts'
 import { audioManager } from '@/utils/AudioManager'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
+import { markMsg } from '@/utils/ImRequestUtils'
 
 const appWindow = WebviewWindow.getCurrent()
 const props = defineProps<{
@@ -765,7 +765,7 @@ const cancelReplyEmoji = async (item: any, type: number) => {
         markType: type, // 使用对应的MarkEnum类型
         actType: 2 // 使用Confirm作为操作类型
       }
-      await apis.markMsg(data)
+      await markMsg(data)
     } catch (error) {
       console.error('取消表情标记失败:', error)
     }
@@ -795,7 +795,7 @@ const handleEmojiSelect = async (context: { label: string; value: number; title:
   // 只给没有标记过的图标标记
   if (!userMarked) {
     try {
-      await apis.markMsg({
+      await markMsg({
         msgId: item.message.id,
         markType: context.value,
         actType: 1

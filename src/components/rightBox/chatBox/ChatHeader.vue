@@ -404,7 +404,6 @@ import { useAvatarUpload } from '@/hooks/useAvatarUpload'
 import { useUserInfo } from '@/hooks/useCached'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useWindow } from '@/hooks/useWindow'
-import apis from '@/services/apis'
 import { IsAllUserEnum, type SessionItem, type UserItem } from '@/services/types.ts'
 import { WsResponseMessageType } from '@/services/wsType'
 import { useCachedStore } from '@/stores/cached'
@@ -416,6 +415,7 @@ import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user.ts'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { notification, setSessionTop, shield, updateMyRoomInfo, updateRoomInfo } from '@/utils/ImRequestUtils'
 
 const { activeItem } = defineProps<{
   activeItem: SessionItem
@@ -581,7 +581,7 @@ const {
 } = useAvatarUpload({
   onSuccess: async (downloadUrl) => {
     // 调用更新群头像的API
-    await apis.updateRoomInfo({
+    await updateRoomInfo({
       id: activeItem.roomId,
       name: activeItem.name,
       avatar: downloadUrl
@@ -743,7 +743,7 @@ const saveGroupInfo = async () => {
     }
 
     // 发送更新请求
-    await apis.updateMyRoomInfo(myRoomInfo)
+    await updateMyRoomInfo(myRoomInfo)
     // 更新群成员列表
     await groupStore.getGroupUserList(activeItem.roomId)
 
@@ -783,8 +783,7 @@ const handleMedia = () => {
 
 /** 置顶 */
 const handleTop = (value: boolean) => {
-  apis
-    .setSessionTop({ roomId: activeItem.roomId, top: value })
+  setSessionTop({ roomId: activeItem.roomId, top: value })
     .then(() => {
       // 更新本地会话状态
       chatStore.updateSession(activeItem.roomId, { top: value })
@@ -802,11 +801,10 @@ const handleNotification = (value: boolean) => {
   if (activeItem.shield) {
     handleShield(false)
   }
-  apis
-    .notification({
-      roomId: activeItem.roomId,
-      type: newType
-    })
+  notification({
+    roomId: activeItem.roomId,
+    type: newType
+  })
     .then(() => {
       // 更新本地会话状态
       chatStore.updateSession(activeItem.roomId, {
@@ -835,11 +833,10 @@ const handleNotification = (value: boolean) => {
 
 /** 处理屏蔽消息 */
 const handleShield = (value: boolean) => {
-  apis
-    .shield({
-      roomId: activeItem.roomId,
-      state: value
-    })
+  shield({
+    roomId: activeItem.roomId,
+    state: value
+  })
     .then(() => {
       // 更新本地会话状态
       chatStore.updateSession(activeItem.roomId, {
@@ -1010,7 +1007,7 @@ const saveGroupName = async () => {
   if (trimmedName !== activeItem.name) {
     try {
       // 调用更新群信息的API
-      await apis.updateRoomInfo({
+      updateRoomInfo({
         id: activeItem.roomId,
         name: trimmedName,
         avatar: activeItem.avatar

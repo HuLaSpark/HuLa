@@ -1,10 +1,15 @@
 import { defineStore } from 'pinia'
 import { StoresEnum, TauriCommand } from '@/enums'
-import apis from '@/services/apis'
 import type { ContactItem, GroupListReq, RequestFriendItem } from '@/services/types'
 import { RequestFriendAgreeStatus } from '@/services/types'
 import { useGlobalStore } from '@/stores/global'
-import { getApplyUnreadCount, getFriendPage } from '@/utils/ImRequestUtils'
+import {
+  deleteFriend,
+  getApplyUnreadCount,
+  getFriendPage,
+  handleInvite,
+  requestApplyPage
+} from '@/utils/ImRequestUtils'
 import { ErrorType, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler.ts'
 
 // 定义分页大小常量
@@ -99,7 +104,7 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
     }
 
     try {
-      const res = await apis.getApplyPage({
+      const res = await requestApplyPage({
         pageNo: applyPageOptions.value.pageNo,
         pageSize: 30,
         cursor: isFresh ? '' : applyPageOptions.value.cursor
@@ -136,7 +141,7 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
    */
   const onHandleInvite = async (apply: { applyId: string; state: number }) => {
     // 同意好友申请
-    apis.handleInviteApi(apply).then(async () => {
+    handleInvite(apply).then(async () => {
       // 刷新好友申请列表
       await getApplyPage(true)
       // 刷新好友列表
@@ -164,7 +169,7 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
   const onDeleteContact = async (uid: string) => {
     if (!uid) return
     // 删除好友
-    await apis.deleteFriend({ targetUid: uid })
+    await deleteFriend({ targetUid: uid })
     // 刷新好友申请列表
     // getRequestFriendsList(true)
     // 刷新好友列表

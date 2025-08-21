@@ -52,10 +52,10 @@
 import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
-import apis from '@/services/apis.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { sendAddFriendRequest } from '@/utils/ImRequestUtils'
 
 const globalStore = useGlobalStore()
 const userStore = useUserStore()
@@ -72,7 +72,7 @@ watch(
 )
 
 const addFriend = async () => {
-  await apis.sendAddFriendRequest({
+  await sendAddFriendRequest({
     msg: requestMsg.value,
     targetUid: globalStore.addFriendModalInfo.uid as string
   })

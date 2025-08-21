@@ -1,12 +1,11 @@
 import { defineStore } from 'pinia'
 import { RoleEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
-import apis from '@/services/apis'
 import type { GroupDetailReq, UserItem } from '@/services/types'
 import type { OnStatusChangeType } from '@/services/wsType'
 import { useCachedStore } from '@/stores/cached'
 import { useGlobalStore } from '@/stores/global'
 import { useUserStore } from '@/stores/user'
-import { getGroupDetail } from '@/utils/ImRequestUtils'
+import * as ImRequestUtils from '@/utils/ImRequestUtils'
 import { ErrorType, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler.ts'
 import { useChatStore } from './chat'
 
@@ -121,7 +120,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
    * 包括群名称、头像、在线人数等
    */
   const getCountStatistic = async (currentRoomId: string) => {
-    countInfo.value = await getGroupDetail(currentRoomId)
+    countInfo.value = await ImRequestUtils.getGroupDetail(currentRoomId)
   }
 
   /**
@@ -160,7 +159,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
    * @param uidList 要添加为管理员的用户ID列表
    */
   const addAdmin = async (uidList: string[]) => {
-    await apis.addAdmin({ roomId: currentRoomId.value, uidList })
+    await ImRequestUtils.addAdmin({ roomId: currentRoomId.value, uidList })
     // 更新本地群成员列表中的角色信息
     for (const user of userList.value) {
       if (uidList.includes(user.uid)) {
@@ -174,7 +173,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
    * @param uidList 要撤销的管理员ID列表
    */
   const revokeAdmin = async (uidList: string[]) => {
-    await apis.revokeAdmin({ roomId: currentRoomId.value, uidList })
+    await ImRequestUtils.revokeAdmin({ roomId: currentRoomId.value, uidList })
     // 更新本地群成员列表中的角色信息
     for (const user of userList.value) {
       if (uidList.includes(user.uid)) {
@@ -188,7 +187,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
    * @param roomId 要退出的群聊ID
    */
   const exitGroup = async (roomId: string) => {
-    await apis.exitGroup({ roomId: roomId })
+    await ImRequestUtils.exitGroup({ roomId: roomId })
     // 从成员列表中移除自己
     const index = userList.value.findIndex((user) => user.uid === userStore.userInfo.uid)
     userList.value.splice(index, 1)

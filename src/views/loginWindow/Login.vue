@@ -192,7 +192,6 @@ import { useLogin } from '@/hooks/useLogin.ts'
 import { useMitt } from '@/hooks/useMitt'
 import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
-import apis from '@/services/apis.ts'
 import type { UserInfoType } from '@/services/types.ts'
 import rustWebSocketClient from '@/services/webSocketRust'
 import { WsResponseMessageType } from '@/services/wsType'
@@ -202,7 +201,7 @@ import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { getUserDetail } from '@/utils/ImRequestUtils'
+import { getAllUserState, getUserDetail } from '@/utils/ImRequestUtils'
 import { clearListener } from '@/utils/ReadCountQueue'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 
@@ -394,7 +393,7 @@ const loginProcess = async (token: string, refreshToken: string, client: string)
   // 获取用户状态列表
   if (userStatusStore.stateList.length === 0) {
     try {
-      userStatusStore.stateList = await apis.getAllUserState()
+      userStatusStore.stateList = await getAllUserState()
     } catch (error) {
       console.error('获取用户状态列表失败', error)
     }

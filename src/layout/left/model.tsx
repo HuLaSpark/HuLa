@@ -24,10 +24,10 @@ import { type } from '@tauri-apps/plugin-os'
 import { relaunch } from '@tauri-apps/plugin-process'
 import { check } from '@tauri-apps/plugin-updater'
 import { useLogin } from '@/hooks/useLogin'
-import apis from '@/services/apis'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import * as ImRequestUtils from '@/utils/ImRequestUtils'
 
 const { logout, resetLoginState } = useLogin()
 const formRef = ref<FormInst | null>()
@@ -42,7 +42,7 @@ export const remotelogin = ref({
     const settingStore = useSettingStore()
     const { login } = storeToRefs(settingStore)
     // token已在后端清空，只需要返回登录页
-    await apis.logout(login.value.autoLogin)
+    await ImRequestUtils.logout({ autoLogin: login.value.autoLogin })
     await resetLoginState()
     await logout()
     modalShow.value = false
