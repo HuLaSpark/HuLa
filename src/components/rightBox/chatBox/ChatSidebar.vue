@@ -1,15 +1,17 @@
 <template>
   <!--! 这里最好不要使用n-flex,滚动高度会有问题  -->
   <main
-    v-if="isGroup"
-    :class="
-      isCollapsed
-        ? 'w-180px border-l-(1px solid [--right-chat-footer-line-color]) p-[12px_0_12px_6px] custom-shadow'
-        : 'w-0 pr-1px'
-    "
-    class="item-box">
+    :class="[
+      isGroup
+        ? isCollapsed
+          ? 'w-180px border-l-(1px solid [--right-chat-footer-line-color]) p-[12px_0_12px_6px] custom-shadow'
+          : 'w-0 pr-1px'
+        : 'w-0 pr-1px',
+      'item-box'
+    ]">
     <!-- 收缩按钮 -->
     <div
+      v-show="isGroup"
       @click.stop="isCollapsed = !isCollapsed"
       style="border-radius: 18px 0 0 18px"
       class="contraction transition-all duration-600 ease-in-out absolute top-35% left--14px cursor-pointer opacity-0 bg-#c8c8c833 h-60px w-14px">
@@ -19,7 +21,7 @@
     </div>
 
     <!-- 群公告 -->
-    <n-flex vertical :size="14" class="px-4px py-10px">
+    <n-flex v-if="isGroup" vertical :size="14" class="px-4px py-10px">
       <n-flex
         align="center"
         justify="space-between"
@@ -27,28 +29,15 @@
         @click="handleOpenAnnoun(announNum === 0 && isAddAnnoun)">
         <p class="text-(14px --text-color)">群公告须知</p>
         <svg class="size-16px rotate-270 color-[--text-color]">
-          <use
-            v-if="announNum === 0 && isAddAnnoun && !skeletonControllers.announcement.showSkeleton.value"
-            href="#plus"></use>
+          <use v-if="announNum === 0 && isAddAnnoun" href="#plus"></use>
           <use v-else href="#down"></use>
         </svg>
       </n-flex>
 
-      <!-- 公告骨架屏 -->
-      <n-flex v-if="skeletonControllers.announcement.showSkeleton.value" class="h-74px">
-        <n-skeleton text class="rounded-4px" :repeat="1" :width="100" />
-        <n-skeleton text class="rounded-4px" :repeat="1" :width="60" />
-        <n-skeleton text class="rounded-4px" :repeat="1" :width="60" />
-      </n-flex>
-
       <!-- 公告加载失败提示 -->
-      <n-flex
-        v-else-if="skeletonControllers.announcement.showFallback.value"
-        class="h-74px"
-        align="center"
-        justify="center">
+      <n-flex v-if="announError" class="h-74px" align="center" justify="center">
         <div class="text-center">
-          <p class="text-(12px #909090) mb-8px">{{ skeletonControllers.announcement.fallbackMessage.value }}</p>
+          <p class="text-(12px #909090) mb-8px">公告加载失败，请重试</p>
           <n-button size="tiny" @click="handleRetryAnnouncement">重试</n-button>
         </div>
       </n-flex>
@@ -64,20 +53,14 @@
       </n-scrollbar>
     </n-flex>
 
-    <n-flex v-if="!isSearch" align="center" justify="space-between" class="pr-8px pl-8px h-42px">
-      <n-skeleton v-if="skeletonControllers.onlineCount.showSkeleton.value" text class="rounded-4px" :width="80" />
-      <template v-else>
-        <span class="text-14px">
-          在线成员&nbsp;
-          {{ skeletonControllers.onlineCount.showFallback.value ? '---' : groupStore.countInfo.onlineNum }}
-        </span>
-        <svg @click="handleSelect" class="size-14px">
-          <use href="#search"></use>
-        </svg>
-      </template>
+    <n-flex v-if="isGroup && !isSearch" align="center" justify="space-between" class="pr-8px pl-8px h-42px">
+      <span class="text-14px">在线成员&nbsp;{{ onlineCountDisplay }}</span>
+      <svg @click="handleSelect" class="size-14px">
+        <use href="#search"></use>
+      </svg>
     </n-flex>
     <!-- 搜索框 -->
-    <n-flex v-else align="center" class="pr-8px h-42px">
+    <n-flex v-else-if="isGroup" align="center" class="pr-8px h-42px">
       <n-input
         :on-input="handleSearch"
         @blur="handleBlur"
@@ -103,39 +86,18 @@
     <!--  // TODO popover显示的时候去改变窗口的大小、当点击了半个选项的时候也会出现原生滚动条 (nyh -> 2024-03-25 05:04:37)  -->
     <!-- // TODO 如果popover显示就先暂时不让滚动，因为在n-scrollbar和n-virtual-list中使用当我点击最后一个选项时候n-popover位置不够导致出现原生滚动条 (nyh -> 2024-03-24 22:46:38) -->
     <!-- // TODO 如果直接使用n-virtual-list的滚动配上n-popover乎也没有这个bug，但是当点击倒数第二个的时候还是会出现滚动条 (nyh -> 2024-03-25 00:30:53)   -->
-    <!-- 骨架屏加载中 -->
-    <div
-      v-if="skeletonControllers.members.showSkeleton.value"
-      style="max-height: calc(100vh - 260px); overflow-y: hidden">
-      <n-flex v-for="i in 6" :key="i" align="center" justify="space-between" class="item px-8px py-10px">
-        <n-flex align="center" :size="8" class="flex-1 truncate">
-          <n-skeleton text :repeat="1" :width="26" :height="26" circle />
-          <n-flex vertical :size="2" class="flex-1 truncate ml-8px">
-            <n-skeleton text class="rounded-4px" :width="80" />
-            <n-skeleton text class="rounded-4px" :width="60" />
-          </n-flex>
-        </n-flex>
-      </n-flex>
-    </div>
-
-    <!-- 成员加载失败提示 -->
-    <div v-else-if="skeletonControllers.members.showFallback.value" class="text-center p-20px">
-      <p class="text-(12px #909090) mb-12px">{{ skeletonControllers.members.fallbackMessage.value }}</p>
-      <n-button size="small" @click="handleRetryMembers">重新加载</n-button>
-    </div>
-
     <!-- 成员列表 -->
     <n-virtual-list
-      v-else
+      v-if="isGroup"
       id="image-chat-sidebar"
       style="max-height: calc(100vh - 260px)"
       item-resizable
       @scroll="handleScroll($event)"
       :item-size="46"
-      :items="filteredUserList">
+      :items="displayedUserList">
       <template #default="{ item }">
         <n-popover
-          :ref="(el) => (infoPopoverRefs[item.uid] = el)"
+          :ref="(el: any) => (infoPopoverRefs[item.uid] = el)"
           @update:show="handlePopoverUpdate(item.uid, $event)"
           trigger="click"
           placement="left"
@@ -156,9 +118,7 @@
                 class="item">
                 <n-flex align="center" :size="8" class="flex-1 truncate">
                   <div class="relative inline-flex items-center justify-center">
-                    <n-skeleton v-if="!userLoadedMap[item.uid]" text :repeat="1" :width="26" :height="26" circle />
                     <n-avatar
-                      v-show="userLoadedMap[item.uid]"
                       round
                       class="grayscale"
                       :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
@@ -217,7 +177,6 @@ import { useUserInfo } from '@/hooks/useCached.ts'
 import { useChatMain } from '@/hooks/useChatMain.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { usePopover } from '@/hooks/usePopover.ts'
-import { createSkeletonControllers, SkeletonPresets } from '@/hooks/useSkeleton.ts'
 import { useTauriListener } from '@/hooks/useTauriListener'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { WsResponseMessageType } from '@/services/wsType.ts'
@@ -230,6 +189,7 @@ import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 
 const appWindow = WebviewWindow.getCurrent()
+const emit = defineEmits<(e: 'ready') => void>()
 const { createWebviewWindow } = useWindow()
 const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
@@ -240,25 +200,8 @@ const { themes } = storeToRefs(settingStore)
 const { addListener } = useTauriListener()
 // 当前加载的群聊ID
 const currentLoadingRoomId = ref('')
-
-// 创建多个骨架屏控制器
-const skeletonControllers = createSkeletonControllers({
-  announcement: {
-    ...SkeletonPresets.fast,
-    fallbackMessage: '公告加载失败，请重试',
-    enableFallback: true
-  },
-  onlineCount: {
-    ...SkeletonPresets.fast,
-    fallbackMessage: '在线人数获取失败',
-    enableFallback: false
-  },
-  members: {
-    ...SkeletonPresets.standard,
-    fallbackMessage: '成员列表加载失败，请重试',
-    enableFallback: true
-  }
-})
+const announError = ref(false)
+const onlineCountDisplay = computed(() => groupStore.countInfo?.onlineNum ?? 0)
 const isGroup = computed(() => globalStore.currentSession?.type === RoomTypeEnum.GROUP)
 /** 是否是搜索模式 */
 const isSearch = ref(false)
@@ -293,7 +236,8 @@ const hasBadge6 = computed(() => {
 const announList = ref<any[]>([])
 const announNum = ref(0)
 const isAddAnnoun = ref(false)
-
+// 用于稳定展示的用户列表
+const displayedUserList = ref<any[]>([])
 /** 用户信息加载状态 */
 const userLoadedMap = ref<Record<string, boolean>>({})
 
@@ -331,13 +275,12 @@ const filteredUserList = computed(() => {
   return mergedUserList.value.filter((user) => user.name.toLowerCase().includes(searchRef.value.toLowerCase()))
 })
 
-// 修改watch监听器 - 移除搜索逻辑避免递归
+// 监听成员源列表变化
 watch(
   [() => groupStore.userList, () => cachedStore.currentAtUsersList],
   () => {
-    // 判断成员列表是否已加载完成
     if (groupStore.userList.length > 0 && currentLoadingRoomId.value === globalStore.currentSession?.roomId) {
-      skeletonControllers.members.finishLoading(groupStore.userList)
+      displayedUserList.value = filteredUserList.value
     }
   },
   { immediate: true }
@@ -399,8 +342,7 @@ const handleOpenAnnoun = (isAdd: boolean) => {
  */
 const handleLoadGroupAnnoun = async (roomId: string) => {
   info(`加载群公告: ${roomId}`)
-  // 开始加载公告
-  skeletonControllers.announcement.startLoading()
+  // 加载公告
 
   try {
     // 设置是否可以添加公告
@@ -417,13 +359,13 @@ const handleLoadGroupAnnoun = async (roomId: string) => {
         }
       }
       announNum.value = parseInt(data.total, 10)
-      skeletonControllers.announcement.finishLoading(data)
+      announError.value = false
     } else {
-      skeletonControllers.announcement.finishLoading([])
+      announError.value = false
     }
   } catch (error) {
     console.error('加载群公告失败:', error)
-    skeletonControllers.announcement.failLoading(error as Error)
+    announError.value = true
   }
 }
 
@@ -455,18 +397,16 @@ const handleRetryAnnouncement = () => {
 }
 
 // 重试加载成员列表
-const handleRetryMembers = async () => {
-  if (globalStore.currentSession?.roomId) {
-    try {
-      skeletonControllers.members.reset()
-      skeletonControllers.members.startLoading()
-      await groupStore.getGroupUserList(globalStore.currentSession.roomId)
-    } catch (error) {
-      console.error('重试加载成员列表失败:', error)
-      skeletonControllers.members.failLoading(error as Error)
-    }
-  }
-}
+// const handleRetryMembers = async () => {
+//   if (globalStore.currentSession?.roomId) {
+//     try {
+//       await groupStore.getGroupUserList(globalStore.currentSession.roomId)
+//       displayedUserList.value = filteredUserList.value
+//     } catch (error) {
+//       console.error('重试加载成员列表失败:', error)
+//     }
+//   }
+// }
 
 const announcementUpdatedListener = await appWindow.listen('announcementUpdated', async (event: any) => {
   if (event.payload) {
@@ -480,12 +420,11 @@ const announcementUpdatedListener = await appWindow.listen('announcementUpdated'
 })
 
 onMounted(async () => {
-  // 初始化骨架屏状态
   if (globalStore.currentSession?.type === RoomTypeEnum.GROUP) {
-    skeletonControllers.members.startLoading()
-    skeletonControllers.announcement.startLoading()
-    skeletonControllers.onlineCount.startLoading()
   }
+
+  // 通知父级：Sidebar 已挂载，可移除占位
+  emit('ready')
 
   useMitt.on(`${MittEnum.INFO_POPOVER}-Sidebar`, (event: any) => {
     selectKey.value = event.uid
@@ -507,15 +446,6 @@ onMounted(async () => {
       const currentSession = { ...newSession }
       if (newSession?.type === RoomTypeEnum.GROUP) {
         if (newSession?.roomId !== oldSession?.roomId) {
-          // 重置所有骨架屏并开始加载
-          skeletonControllers.members.reset()
-          skeletonControllers.announcement.reset()
-          skeletonControllers.onlineCount.reset()
-
-          skeletonControllers.members.startLoading()
-          skeletonControllers.announcement.startLoading()
-          skeletonControllers.onlineCount.startLoading()
-
           currentLoadingRoomId.value = newSession.roomId
           // 重置群组数据后再加载新的群成员数据
           groupStore.resetGroupData()
@@ -524,14 +454,13 @@ onMounted(async () => {
             await groupStore.getGroupUserList(currentSession.roomId)
             // 获取群组统计信息（包括在线人数）
             await groupStore.getCountStatistic(currentSession.roomId)
-            skeletonControllers.onlineCount.finishLoading(groupStore.countInfo)
 
             // 初始化群公告
             await handleInitAnnoun()
+            // 在数据完成后替换展示列表
+            displayedUserList.value = filteredUserList.value
           } catch (error) {
             console.error('加载群组信息失败:', error)
-            skeletonControllers.onlineCount.failLoading(error as Error)
-            skeletonControllers.members.failLoading(error as Error)
           }
         }
       }
@@ -541,6 +470,8 @@ onMounted(async () => {
 
   // 初始化时获取当前群组用户的信息
   if (groupStore.userList.length > 0) {
+    // 初始展示当前列表
+    displayedUserList.value = filteredUserList.value
     await cachedStore.getBatchUserInfo(groupStore.userList.map((item) => item.uid))
     const handleAnnounInitOnEvent = (shouldReload: boolean) => {
       return async (event: any) => {

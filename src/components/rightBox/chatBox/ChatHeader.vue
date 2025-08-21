@@ -5,7 +5,7 @@
     class="relative z-999 flex-y-center border-b-(1px solid [--right-chat-footer-line-color]) select-none cursor-default justify-between p-[6px_22px_10px]">
     <n-flex align="center">
       <Transition name="loading" mode="out-in">
-        <img v-if="headerSkeleton.showSkeleton.value" class="size-22px py-3px" src="@/assets/img/loading.svg" alt="" />
+        <img v-if="headerLoading" class="size-22px py-3px" src="@/assets/img/loading.svg" alt="" />
         <n-flex v-else align="center">
           <n-avatar
             :class="['rounded-8px select-none grayscale', { 'grayscale-0': isOnline }]"
@@ -22,7 +22,7 @@
             </p>
           </label>
           <svg
-            v-if="activeItem.hotFlag === IsAllUserEnum.Yes && !headerSkeleton.showSkeleton.value"
+            v-if="activeItem.hotFlag === IsAllUserEnum.Yes && !headerLoading"
             class="size-20px color-#13987f select-none outline-none">
             <use href="#auth"></use>
           </svg>
@@ -403,7 +403,6 @@ import {
 import { useAvatarUpload } from '@/hooks/useAvatarUpload'
 import { useUserInfo } from '@/hooks/useCached'
 import { useMitt } from '@/hooks/useMitt.ts'
-import { SkeletonPresets, useSkeleton } from '@/hooks/useSkeleton.ts'
 import { useWindow } from '@/hooks/useWindow'
 import apis from '@/services/apis'
 import { IsAllUserEnum, type SessionItem, type UserItem } from '@/services/types.ts'
@@ -437,12 +436,7 @@ const tips = ref()
 const optionsType = ref<RoomActEnum>()
 const modalShow = ref(false)
 const sidebarShow = ref(false)
-// 使用骨架屏控制器替代 showLoading 和 isLoading
-const headerSkeleton = useSkeleton({
-  ...SkeletonPresets.fast,
-  fallbackMessage: '用户信息加载失败',
-  enableFallback: false
-})
+const headerLoading = ref(false)
 const cacheStore = useCachedStore()
 
 // 群组详情数据
@@ -492,7 +486,7 @@ const isEditingGroupName = ref(false)
 // 编辑中的群名称
 const editingGroupName = ref('')
 // 群名称输入框引用
-const groupNameInputRef = useTemplateRef('groupNameInputRef')
+const groupNameInputRef = useTemplateRef<HTMLInputElement | null>('groupNameInputRef')
 // 创建一个RTCPeerConnection实例
 // let peerConnection: RTCPeerConnection
 // if (type() !== 'linux') {
@@ -603,13 +597,10 @@ const {
 watch(
   () => messageOptions.value?.isLoading,
   (isLoading) => {
-    if (isLoading && !headerSkeleton.isLoading.value) {
-      headerSkeleton.startLoading()
-    } else if (!isLoading && headerSkeleton.isLoading.value) {
-      // 确保最小显示时间
-      setTimeout(() => {
-        headerSkeleton.finishLoading()
-      }, MIN_LOADING_TIME)
+    if (isLoading) {
+      headerLoading.value = true
+    } else if (headerLoading.value) {
+      setTimeout(() => (headerLoading.value = false), MIN_LOADING_TIME)
     }
   },
   { immediate: true }
@@ -619,7 +610,7 @@ watch(
   () => activeItem.roomId,
   () => {
     if (messageOptions.value?.isLoading) {
-      headerSkeleton.startLoading()
+      headerLoading.value = true
     }
     // 当roomId变化时，如果是群聊，则获取群组详情
     if (activeItem.type === RoomTypeEnum.GROUP) {
@@ -643,8 +634,8 @@ watch(
 )
 
 watchEffect(() => {
-  if (!messageOptions.value?.isLoading && headerSkeleton.isLoading.value) {
-    headerSkeleton.finishLoading()
+  if (!messageOptions.value?.isLoading && headerLoading.value) {
+    headerLoading.value = false
   }
   stream.value?.getVideoTracks()[0]?.addEventListener('ended', () => {
     stop()
@@ -1059,9 +1050,7 @@ const handleVideoCall = async (remotedUid: string, callType: CallTypeEnum) => {
 
 onMounted(() => {
   window.addEventListener('click', closeMenu, true)
-  if (!messageOptions.value?.isLoading) {
-    headerSkeleton.finishLoading()
-  }
+  if (!messageOptions.value?.isLoading) headerLoading.value = false
 
   // 如果是群聊，初始化时获取群组详情
   if (activeItem.type === RoomTypeEnum.GROUP) {

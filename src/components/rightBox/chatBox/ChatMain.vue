@@ -35,48 +35,12 @@
       </div>
     </Transition>
 
-    <Transition name="chat-init" appear mode="out-in" @after-leave="handleTransitionComplete" class="flex-1 min-h-0">
-      <!-- 初次加载的骨架屏 -->
-      <n-flex v-if="chatSkeleton.showSkeleton.value" vertical :size="18" class="relative box-border p-20px h-full">
-        <n-flex justify="end">
-          <n-skeleton style="border-radius: 14px" height="40px" width="46%" :sharp="false" />
-          <n-skeleton height="40px" circle />
-        </n-flex>
-
-        <n-flex>
-          <n-skeleton height="40px" circle />
-          <n-skeleton style="border-radius: 14px" height="60px" width="58%" :sharp="false" />
-        </n-flex>
-
-        <n-flex>
-          <n-skeleton height="40px" circle />
-          <n-skeleton style="border-radius: 14px" height="40px" width="26%" :sharp="false" />
-        </n-flex>
-
-        <n-flex justify="end">
-          <n-skeleton style="border-radius: 14px" height="40px" width="60%" :sharp="false" />
-          <n-skeleton height="40px" circle />
-        </n-flex>
-      </n-flex>
-
-      <!-- 数据加载失败时的提示 -->
-      <n-result
-        v-else-if="chatSkeleton.showFallback.value"
-        status="500"
-        title="消息加载失败"
-        :description="chatSkeleton.fallbackMessage.value"
-        class="h-full">
-        <template #footer>
-          <n-button type="primary" @click="handleRetryLoad">重新加载</n-button>
-        </template>
-      </n-result>
-
-      <!-- 聊天内容 -->
+    <div class="flex-1 min-h-0 relative">
+      <!-- 聊天内容（始终挂载，保持结构稳定；数据平滑切换） -->
       <VirtualList
-        v-else
         id="image-chat-main"
         ref="virtualListInst"
-        :items="chatMessageList"
+        :items="displayedMessageList"
         :estimatedItemHeight="itemSize"
         :buffer="5"
         :is-loading-more="isLoadingMore"
@@ -84,6 +48,7 @@
         @scroll="handleScroll"
         @scroll-direction-change="handleScrollDirectionChange"
         @load-more="handleLoadMore"
+        @visible-items-change="(ids: string[]) => (visibleIds = ids)"
         @click="handleChatAreaClick"
         class="scrollbar-container h-full"
         :class="{ 'hide-scrollbar': !showScrollbar }"
@@ -391,7 +356,7 @@
           </n-flex>
         </template>
       </VirtualList>
-    </Transition>
+    </div>
   </div>
 
   <!-- 弹出框 -->
@@ -457,7 +422,6 @@ import { useChatMain } from '@/hooks/useChatMain.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 import { usePopover } from '@/hooks/usePopover.ts'
-import { SkeletonPresets, useSkeleton } from '@/hooks/useSkeleton.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import apis from '@/services/apis'
 import type { MessageType, SessionItem } from '@/services/types.ts'
@@ -485,13 +449,12 @@ const networkStatus = useNetworkStatus()
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
 const { footerHeight } = useChatLayoutGlobal()
-
-// 骨架屏控制器
-const chatSkeleton = useSkeleton({
-  ...SkeletonPresets.standard,
-  fallbackMessage: '消息加载失败，请刷新重试',
-  enableFallback: true
-})
+// 当前可见的消息ID（由 VirtualList 实时上报）
+const visibleIds = ref<string[]>([])
+// 保持旧内容，直到新会话数据就绪再替换
+const displayedMessageList = ref<any[]>([])
+// 待切换的会话，用于在新数据就绪前保持旧数据
+const pendingRoomId = ref<string | null>(null)
 
 // 记录当前滚动位置相关信息
 const isAutoScrolling = ref(false)
@@ -667,14 +630,13 @@ const handleMouseLeave = () => {
   hoverBubble.value.key = -1
 }
 
-// 监听会话切换
+// 监听会话切换（仅切换数据，不清空 DOM）
 watch(
   () => props.activeItem,
   (value, oldValue) => {
     if (oldValue.roomId !== value.roomId) {
-      // 重置骨架屏状态并开始加载
-      chatSkeleton.reset()
-      chatSkeleton.startLoading()
+      // 标记即将切换到的新会话，等待新数据就绪后再替换展示数据
+      pendingRoomId.value = value.roomId
 
       // 使用音频管理器停止所有音频
       audioManager.stopAll()
@@ -699,14 +661,25 @@ watch(
 watch(
   chatMessageList,
   (value, oldValue) => {
-    // 确保消息属于当前会话
-    if (!value.length || (value[0] && value[0].message.roomId !== props.activeItem.roomId)) {
-      return
+    // 非会话切换下，展示列表跟随真实列表，确保顶部加载更多不出现置底
+    if (!pendingRoomId.value) {
+      displayedMessageList.value = value
+    }
+    const currentRoomIdLocal = props.activeItem.roomId
+
+    // 当首条消息属于当前会话，或当前会话已停止加载（空列表也需要替换）
+    const dataBelongsToCurrent = value.length > 0 && value[0]?.message?.roomId === currentRoomIdLocal
+    const loadingFinished = messageOptions.value?.isLoading === false
+
+    if (pendingRoomId.value === currentRoomIdLocal && (dataBelongsToCurrent || loadingFinished)) {
+      displayedMessageList.value = value
+      pendingRoomId.value = null
+      nextTick(() => scrollToBottom())
     }
 
-    // 如果消息加载成功且骨架屏正在显示，则标记加载完成
-    if (value.length > 0 && (chatSkeleton.isLoading.value || chatSkeleton.showSkeleton.value)) {
-      chatSkeleton.finishLoading(value)
+    // 首次进入或没有待切换标记时，如果当前展示为空且数据已属于当前会话（或加载结束），也要填充一次
+    if (!pendingRoomId.value && displayedMessageList.value.length === 0 && (dataBelongsToCurrent || loadingFinished)) {
+      displayedMessageList.value = value
     }
 
     // 更新消息索引映射
@@ -759,26 +732,18 @@ watch(
   { deep: false }
 )
 
-// 监听消息加载状态，处理加载失败的情况
+// 监听加载游标变化
 watch(
-  () => messageOptions.value?.isLoading,
-  (isLoading, wasLoading) => {
-    // 如果从加载中变为非加载中，但没有消息数据，可能是加载失败
-    if (wasLoading && !isLoading && chatMessageList.value.length === 0 && chatSkeleton.isLoading.value) {
-      // 没有消息数据，可能是空会话或加载失败
-      chatSkeleton.finishLoading([])
+  () => messageOptions.value?.cursor,
+  () => {
+    const currentRoomIdLocal = props.activeItem.roomId
+    if (pendingRoomId.value === currentRoomIdLocal) {
+      displayedMessageList.value = chatMessageList.value
+      pendingRoomId.value = null
+      nextTick(() => scrollToBottom())
     }
   }
 )
-
-// 处理过渡动画完成后的滚动
-const handleTransitionComplete = () => {
-  if (!messageOptions.value?.isLoading) {
-    nextTick(() => {
-      scrollToBottom()
-    })
-  }
-}
 
 // 处理滚动方向变化
 const handleScrollDirectionChange = (direction: 'up' | 'down') => {
@@ -971,27 +936,20 @@ const handleRetry = (item: any) => {
 }
 
 // 重新加载消息
-const handleRetryLoad = async () => {
-  try {
-    chatSkeleton.reset()
-    chatSkeleton.startLoading()
-    // 重新请求消息列表
-    await chatStore.loadMore()
-  } catch (error) {
-    console.error('重新加载消息失败:', error)
-    chatSkeleton.failLoading(error as Error)
-  }
-}
 
 // 处理加载更多
 const handleLoadMore = async () => {
   // 如果正在加载或已经触发了加载，则不重复触发
   if (messageOptions.value?.isLoading || isLoadingMore.value) return
 
-  // 记录当前的内容高度
   const container = virtualListInst.value?.getContainer()
   if (!container) return
-  const oldScrollHeight = container.scrollHeight
+
+  // 使用“锚定第一个可见项”的方式保持滚动位置
+  const anchorId = visibleIds.value?.[0]
+  const containerRectTop = container.getBoundingClientRect().top
+  const anchorElBefore = anchorId ? document.getElementById(`item-${anchorId}`) : null
+  const anchorTopBefore = anchorElBefore ? anchorElBefore.getBoundingClientRect().top - containerRectTop : 0
 
   isLoadingMore.value = true
 
@@ -1000,13 +958,14 @@ const handleLoadMore = async () => {
 
   try {
     await chatStore.loadMore()
-
-    // 加载完成后，计算新增内容的高度差，并设置滚动位置
     await nextTick()
-    const newScrollHeight = container.scrollHeight
-    const heightDiff = newScrollHeight - oldScrollHeight
-    if (heightDiff > 0) {
-      container.scrollTop = heightDiff
+
+    // 恢复锚点相对位置
+    if (anchorId) {
+      const anchorElAfter = document.getElementById(`item-${anchorId}`)
+      const anchorTopAfter = anchorElAfter ? anchorElAfter.getBoundingClientRect().top - containerRectTop : 0
+      const delta = anchorTopAfter - anchorTopBefore
+      container.scrollTop += delta
     }
 
     // 更新消息索引映射
@@ -1122,6 +1081,8 @@ onMounted(async () => {
     updateMessageIndexMap()
     // 初始加载置顶公告
     loadTopAnnouncement()
+    // 初始显示当前会话数据
+    displayedMessageList.value = chatMessageList.value
   })
   useMitt.on(MittEnum.MESSAGE_ANIMATION, (messageType: MessageType) => {
     addToDomUpdateQueue(messageType.message.id, messageType.fromUser.uid)
