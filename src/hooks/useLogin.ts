@@ -1,6 +1,7 @@
+import { emit } from '@tauri-apps/api/event'
 import { info } from '@tauri-apps/plugin-log'
 import { type } from '@tauri-apps/plugin-os'
-import { RoomTypeEnum, TauriCommand } from '@/enums'
+import { EventEnum, RoomTypeEnum, TauriCommand } from '@/enums'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { useChatStore } from '@/stores/chat'
 import { useGlobalStore } from '@/stores/global.ts'
@@ -48,7 +49,7 @@ export const useLogin = () => {
       await createWebviewWindow('登录', 'login', 320, 448, undefined, false, 320, 448)
       // 发送登出事件
       if (isDesktop) {
-        // await emit(EventEnum.LOGOUT)
+        await emit(EventEnum.LOGOUT)
       }
       // 调整托盘大小
       await resizeWindow('tray', 130, 44)
