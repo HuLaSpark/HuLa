@@ -82,7 +82,7 @@
                       :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'" />
                     <n-flex vertical :size="4">
                       <div class="text-(12px [--chat-text-color])">{{ useUserInfo(announcement.uid).value.name }}</div>
-                      <div class="text-(12px [#909090])">{{ announcement?.createTime }}</div>
+                      <div class="text-(12px [#909090])">{{ formatTimestamp(announcement?.createTime) }}</div>
                     </n-flex>
                   </n-flex>
                   <div
@@ -177,6 +177,7 @@ import { useGroupStore } from '@/stores/group.ts'
 import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { deleteAnnouncement, editAnnouncement, pushAnnouncement } from '@/utils/ImRequestUtils'
 
 // 定义响应式变量
