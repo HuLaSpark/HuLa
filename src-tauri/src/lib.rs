@@ -37,6 +37,7 @@ use crate::command::request_command::{im_request_command, login_command};
 use crate::command::room_member_command::{
     cursor_page_room_members, get_room_members, page_room, update_my_room_info,
 };
+use crate::command::user_command::remove_tokens;
 use crate::configuration::get_configuration;
 use crate::error::CommonError;
 use sea_orm::DatabaseConnection;
@@ -365,7 +366,9 @@ fn common_setup(
 // 公共的命令处理器函数
 fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static
 {
-    use crate::command::user_command::{save_user_info, update_user_last_opt_time};
+    use crate::command::user_command::{
+        get_user_tokens, save_user_info, update_user_last_opt_time,
+    };
     #[cfg(desktop)]
     use crate::desktops::common_cmd::set_badge_count;
     use crate::websocket::commands::{
@@ -406,6 +409,8 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         set_badge_count,
         // 通用命令（桌面端和移动端都支持）
         save_user_info,
+        get_user_tokens,
+        remove_tokens,
         update_user_last_opt_time,
         page_room,
         get_room_members,

@@ -493,8 +493,12 @@ export enum TauriCommand {
   SAVE_MESSAGE_MARK = 'save_message_mark',
   /** 更新消息撤回状态 */
   UPDATE_MESSAGE_RECALL_STATUS = 'update_message_recall_status',
+  /** 获取用户 tokens */
+  GET_USER_TOKENS = 'get_user_tokens',
   /** 更新 token */
-  UPDATE_TOKEN = 'update_token'
+  UPDATE_TOKEN = 'update_token',
+  /** 移除 token */
+  REMOVE_TOKENS = 'remove_tokens'
 }
 
 // 通话状态枚举
