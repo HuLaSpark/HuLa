@@ -1,7 +1,6 @@
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
 import { sendNotification } from '@tauri-apps/plugin-notification'
-import { type } from '@tauri-apps/plugin-os'
 import { cloneDeep } from 'lodash-es'
 import { defineStore } from 'pinia'
 import { useRoute } from 'vue-router'
@@ -15,6 +14,7 @@ import { useGroupStore } from '@/stores/group.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { computedTimeBlock } from '@/utils/ComputedTime.ts'
 import { getSessionDetail } from '@/utils/ImRequestUtils'
+import { isMac } from '@/utils/PlatformConstants'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 
@@ -760,7 +760,7 @@ export const useChatStore = defineStore(
       // 更新全局 store 中的未读计数
       globalStore.unReadMark.newMsgUnreadCount = totalUnread
       // 更新系统托盘图标上的未读数
-      if (type() === 'macos') {
+      if (isMac()) {
         const count = totalUnread > 0 ? totalUnread : undefined
         await invokeWithErrorHandler('set_badge_count', { count })
       }

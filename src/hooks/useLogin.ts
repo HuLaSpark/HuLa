@@ -1,16 +1,15 @@
 import { emit } from '@tauri-apps/api/event'
 import { info } from '@tauri-apps/plugin-log'
-import { type } from '@tauri-apps/plugin-os'
 import { EventEnum, RoomTypeEnum, TauriCommand } from '@/enums'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { useChatStore } from '@/stores/chat'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useUserStore } from '@/stores/user'
 import { LoginStatus, useWsLoginStore } from '@/stores/ws'
+import { isDesktop, isMac, isMobile } from '@/utils/PlatformConstants'
 import { clearListener } from '@/utils/ReadCountQueue'
 import { invokeSilently, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler.ts'
 
-const isMobile = computed(() => type() === 'android' || type() === 'ios')
 export const useLogin = () => {
   const { resizeWindow } = useWindow()
   const globalStore = useGlobalStore()
@@ -27,12 +26,10 @@ export const useLogin = () => {
       localStorage.removeItem('wsLogin')
     }
     isTrayMenuShow.value = true
-    if (!isMobile.value) {
+    if (!isMobile()) {
       await resizeWindow('tray', 130, 356)
     }
   }
-
-  const isDesktop = computed(() => type() === 'macos' || type() === 'windows')
 
   /**
    * 登出账号
@@ -49,7 +46,7 @@ export const useLogin = () => {
       // 创建登录窗口
       await createWebviewWindow('登录', 'login', 320, 448, undefined, false, 320, 448)
       // 发送登出事件
-      if (isDesktop) {
+      if (isDesktop()) {
         await emit(EventEnum.LOGOUT)
       }
       // 调整托盘大小
@@ -80,7 +77,7 @@ export const useLogin = () => {
     // 4. 清除未读数
     chatStore.clearUnreadCount()
     // 5. 清除系统托盘图标上的未读数
-    if (type() === 'macos') {
+    if (isMac()) {
       await invokeWithErrorHandler('set_badge_count', { count: undefined })
     }
   }

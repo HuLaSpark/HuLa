@@ -1,9 +1,9 @@
 import { info } from '@tauri-apps/plugin-log'
-import { type } from '@tauri-apps/plugin-os'
 import { defineStore } from 'pinia'
 import { NotificationTypeEnum, RoomTypeEnum, StoresEnum } from '@/enums'
 import type { ContactItem, RequestFriendItem } from '@/services/types'
 import { useChatStore } from '@/stores/chat'
+import { isMac } from '@/utils/PlatformConstants'
 import { clearQueue, readCountQueue } from '@/utils/ReadCountQueue.ts'
 import { markMsgRead } from '../utils/ImRequestUtils'
 import { invokeWithErrorHandler } from '../utils/TauriInvokeHandler'
@@ -84,7 +84,7 @@ export const useGlobalStore = defineStore(
         return total + (session.unreadCount || 0)
       }, 0)
       unReadMark.newMsgUnreadCount = totalUnread
-      if (type() === 'macos') {
+      if (isMac()) {
         const count = totalUnread > 0 ? totalUnread : undefined
         await invokeWithErrorHandler('set_badge_count', { count })
       }

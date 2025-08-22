@@ -53,7 +53,7 @@ import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewW
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useUserStore } from '@/stores/user.ts'
-import { applyGroup } from '~/src/utils/ImRequestUtils'
+import { applyGroup } from '@/utils/ImRequestUtils'
 
 const globalStore = useGlobalStore()
 const userStore = useUserStore()

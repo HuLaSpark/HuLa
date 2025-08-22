@@ -102,7 +102,6 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
     )
     if (!data) return
     userList.value = data
-    console.log('getGroupUserList --> ', userList.value)
     userListOptions.cursor = data.cursor
     userListOptions.isLast = data.isLast
     userListOptions.loading = false

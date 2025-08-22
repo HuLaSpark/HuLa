@@ -89,7 +89,7 @@
       <div class="bg-[--bg-edit] w-540px h-fit box-border flex flex-col">
         <n-flex :size="6" vertical>
           <div
-            v-if="type() === 'macos'"
+            v-if="isMac()"
             @click="resetCreateGroupState"
             class="mac-close size-13px shadow-inner bg-#ed6a5eff rounded-50% mt-6px select-none absolute left-6px">
             <svg class="hidden size-7px color-#000 select-none absolute top-3px left-3px">
@@ -100,7 +100,7 @@
           <n-flex class="text-(14px [--text-color]) select-none pt-6px" justify="center">创建群聊</n-flex>
 
           <svg
-            v-if="type() === 'windows'"
+            v-if="isWindows()"
             class="size-14px cursor-pointer pt-6px select-none absolute right-6px"
             @click="resetCreateGroupState">
             <use href="#close"></use>
@@ -127,7 +127,6 @@
 
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { type } from '@tauri-apps/plugin-os'
 import { useWindowSize } from '@vueuse/core'
 import { MittEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
@@ -135,6 +134,7 @@ import { useWindow } from '@/hooks/useWindow'
 import router from '@/router'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useSettingStore } from '@/stores/setting.ts'
+import { isMac, isWindows } from '@/utils/PlatformConstants'
 import { createGroup, options, renderLabel, renderSourceList, renderTargetList } from './model.tsx'
 
 const { createWebviewWindow } = useWindow()

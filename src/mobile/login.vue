@@ -120,7 +120,7 @@
       <!-- 协议 -->
       <n-flex
         justify="center"
-        :style="envType === 'android' ? { bottom: safeArea.bottom + 10 + 'px' } : {}"
+        :style="isAndroid() ? { bottom: safeArea.bottom + 10 + 'px' } : {}"
         :size="6"
         class="absolute bottom-0 w-[80%]">
         <n-checkbox v-model:checked="protocol" />
@@ -321,6 +321,7 @@ import { useMobileStore } from '@/stores/mobile'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { getCaptcha, getUserDetail, login, register, sendCaptcha } from '@/utils/ImRequestUtils'
+import { isAndroid } from '@/utils/PlatformConstants'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 import router from '../router'
 
@@ -332,8 +333,6 @@ const userStore = useUserStore()
 const { setLoginState } = useLogin()
 const { loginHistories } = loginHistoriesStore
 const mobileStore = useMobileStore()
-
-const envType = ref(mobileStore.envType)
 const safeArea = computed(() => mobileStore.safeArea)
 
 /** 当前激活的选项卡 */

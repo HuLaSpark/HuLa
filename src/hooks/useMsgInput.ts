@@ -1,6 +1,5 @@
 import { Channel, invoke } from '@tauri-apps/api/core'
 import { readImage, readText } from '@tauri-apps/plugin-clipboard-manager'
-import { type } from '@tauri-apps/plugin-os'
 import { useDebounceFn } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import type { Ref } from 'vue'
@@ -16,6 +15,7 @@ import { messageStrategyMap } from '@/strategy/MessageStrategy.ts'
 import { fixFileMimeType, getMessageTypeByFile } from '@/utils/FileType.ts'
 import { processClipboardImage } from '@/utils/ImageUtils.ts'
 import { getReplyContent } from '@/utils/MessageReply.ts'
+import { isMac, isWindows } from '@/utils/PlatformConstants'
 import { type SelectionRange, useCommon } from './useCommon.ts'
 import { useTrigger } from './useTrigger'
 import { UploadProviderEnum, useUpload } from './useUpload.ts'
@@ -619,18 +619,18 @@ export const useMsgInput = (messageInputDom: Ref) => {
     }
 
     // 正在输入拼音，并且是macos系统
-    if (isChinese.value && type() === 'macos') {
+    if (isChinese.value && isMac()) {
       return
     }
-    const isWindows = type() === 'windows'
+    const isWindowsPlatform = isWindows()
     const isEnterKey = e.key === 'Enter'
-    const isCtrlOrMetaKey = isWindows ? e.ctrlKey : e.metaKey
+    const isCtrlOrMetaKey = isWindowsPlatform ? e.ctrlKey : e.metaKey
 
     const sendKeyIsEnter = chat.value.sendKey === 'Enter'
-    const sendKeyIsCtrlEnter = chat.value.sendKey === `${isWindows ? 'Ctrl' : '⌘'}+Enter`
+    const sendKeyIsCtrlEnter = chat.value.sendKey === `${isWindowsPlatform ? 'Ctrl' : '⌘'}+Enter`
 
     // 如果当前的系统是mac，我需要判断当前的chat.value.sendKey是否是Enter，再判断当前是否是按下⌘+Enter
-    if (!isWindows && chat.value.sendKey === 'Enter' && e.metaKey && e.key === 'Enter') {
+    if (!isWindowsPlatform && chat.value.sendKey === 'Enter' && e.metaKey && e.key === 'Enter') {
       // 就进行换行操作
       e.preventDefault()
       insertNode(MsgEnum.TEXT, '\n', {} as HTMLElement)
@@ -640,7 +640,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       e?.preventDefault()
       return
     }
-    if (!isWindows && e.ctrlKey && isEnterKey && sendKeyIsEnter) {
+    if (!isWindowsPlatform && e.ctrlKey && isEnterKey && sendKeyIsEnter) {
       e?.preventDefault()
       return
     }

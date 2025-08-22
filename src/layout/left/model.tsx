@@ -20,7 +20,6 @@ import { handRelativeTime } from '@/utils/Day.ts'
 import './style.scss'
 import { getVersion } from '@tauri-apps/api/app'
 import { confirm } from '@tauri-apps/plugin-dialog'
-import { type } from '@tauri-apps/plugin-os'
 import { relaunch } from '@tauri-apps/plugin-process'
 import { check } from '@tauri-apps/plugin-updater'
 import { useLogin } from '@/hooks/useLogin'
@@ -28,6 +27,7 @@ import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import * as ImRequestUtils from '@/utils/ImRequestUtils'
+import { isMac } from '@/utils/PlatformConstants'
 
 const { logout, resetLoginState } = useLogin()
 const formRef = ref<FormInst | null>()
@@ -85,7 +85,7 @@ export const LockScreen = defineComponent(() => {
   return () => (
     <NModal v-model:show={modalShow.value} maskClosable={false} class="w-350px border-rd-8px">
       <div class="bg-[--bg-popover] w-360px h-full p-6px box-border flex flex-col">
-        {type() === 'macos' ? (
+        {isMac() ? (
           <div
             onClick={() => (modalShow.value = false)}
             class="mac-close relative size-13px shadow-inner bg-#ed6a5eff rounded-50% select-none">
@@ -287,7 +287,7 @@ export const CheckUpdate = defineComponent(() => {
   return () => (
     <NModal v-model:show={modalShow.value} maskClosable={false} class="w-350px border-rd-8px">
       <div class="bg-[--bg-popover] w-500px h-full p-6px box-border flex flex-col">
-        {type() === 'macos' ? (
+        {isMac() ? (
           <div
             onClick={() => (modalShow.value = false)}
             class="mac-close relative size-13px shadow-inner bg-#ed6a5eff rounded-50% select-none">
@@ -442,7 +442,7 @@ export const RemoteLogin = defineComponent({
         maskClosable={false}
         class="w-350px border-rd-8px select-none cursor-default">
         <div class="bg-[--bg-popover] w-360px h-full p-6px box-border flex flex-col">
-          {type() === 'macos' ? (
+          {isMac() ? (
             <div
               onClick={remotelogin.value.logout}
               class="mac-close relative size-13px shadow-inner bg-#ed6a5eff rounded-50% select-none">

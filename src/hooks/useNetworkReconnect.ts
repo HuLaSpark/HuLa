@@ -1,4 +1,3 @@
-import { type } from '@tauri-apps/plugin-os'
 import { useEventListener, useNetwork, useTimeoutFn } from '@vueuse/core'
 import { RoomTypeEnum } from '@/enums'
 import webSocket from '@/services/webSocketAdapter'
@@ -7,6 +6,7 @@ import { useChatStore } from '@/stores/chat'
 import { useContactStore } from '@/stores/contacts'
 import { useGlobalStore } from '@/stores/global'
 import { useGroupStore } from '@/stores/group'
+import { isMobile } from '@/utils/PlatformConstants'
 
 /**
  * 网络重连Hook，监测网络恢复并自动刷新数据
@@ -25,7 +25,7 @@ export const useNetworkReconnect = () => {
   let lastActivityTimestamp = Date.now()
 
   // 判断是否是移动设备
-  const isMobile = computed(() => type() === 'android' || type() === 'ios')
+  const _isMobileDevice = isMobile()
 
   // 最长空闲时间，超过这个时间会检查连接（15分钟）
   const MAX_IDLE_TIME = 15 * 60 * 1000
@@ -86,7 +86,7 @@ export const useNetworkReconnect = () => {
       }
 
       // 在移动设备上的恢复逻辑
-      if (isMobile.value && isOnline.value) {
+      if (_isMobileDevice && isOnline.value) {
         // 如果离线超过30秒，则刷新数据
         if (lastOfflineTimestamp > 0 && currentTime - lastOfflineTimestamp > 30000) {
           console.log('[Network] 移动端应用从后台恢复，刷新数据')

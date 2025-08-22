@@ -363,7 +363,7 @@
   <n-modal v-model:show="modalShow" class="w-350px border-rd-8px">
     <div class="bg-[--bg-popover] w-360px h-full p-6px box-border flex flex-col">
       <div
-        v-if="type() === 'macos'"
+        v-if="isMac()"
         @click="modalShow = false"
         class="mac-close z-999 size-13px shadow-inner bg-#ed6a5eff rounded-50% select-none absolute left-6px">
         <svg class="hidden size-7px color-#000 select-none absolute top-3px left-3px">
@@ -371,7 +371,7 @@
         </svg>
       </div>
 
-      <svg v-if="type() === 'windows'" @click="modalShow = false" class="w-12px h-12px ml-a cursor-pointer select-none">
+      <svg v-if="isWindows()" @click="modalShow = false" class="w-12px h-12px ml-a cursor-pointer select-none">
         <use href="#close"></use>
       </svg>
       <div class="flex flex-col gap-30px p-[22px_10px_10px_22px] select-none">
@@ -411,7 +411,6 @@
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
-import { type } from '@tauri-apps/plugin-os'
 import { useDebounceFn } from '@vueuse/core'
 import { delay } from 'lodash-es'
 import VirtualList, { type VirtualListExpose } from '@/components/common/VirtualList.vue'
@@ -434,6 +433,7 @@ import { audioManager } from '@/utils/AudioManager'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { markMsg } from '@/utils/ImRequestUtils'
+import { isMac, isWindows } from '@/utils/PlatformConstants'
 
 const appWindow = WebviewWindow.getCurrent()
 const props = defineProps<{
@@ -508,7 +508,6 @@ const hoverBubble = ref<{
 })
 /** 记录右键菜单时选中的气泡的元素(用于处理mac右键会选中文本的问题) */
 const recordEL = ref()
-const isMac = computed(() => type() === 'macos')
 // 置顶公告hover状态
 const isAnnouncementHover = ref(false)
 // 置顶公告相关
@@ -892,7 +891,7 @@ const addToDomUpdateQueue = (index: string, id: string) => {
 
 // 解决mac右键会选中文本的问题
 const handleMacSelect = (event: any) => {
-  if (isMac.value) {
+  if (isMac()) {
     event.target.classList.add('select-none')
     recordEL.value = event.target
   }

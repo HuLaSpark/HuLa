@@ -28,7 +28,6 @@
 import { LogicalSize } from '@tauri-apps/api/dpi'
 import { emitTo } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { type } from '@tauri-apps/plugin-os'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import {
   ChangeTypeEnum,
@@ -57,6 +56,7 @@ import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user'
 import { audioManager } from '@/utils/AudioManager'
+import { isWindows } from '@/utils/PlatformConstants'
 import { clearListener, initListener, readCountQueue } from '@/utils/ReadCountQueue'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
 
@@ -294,7 +294,7 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
       useMitt.emit(MittEnum.MESSAGE_ANIMATION, data)
       // session.unreadCount++
       // 在windows系统下才发送通知
-      if (type() === 'windows') {
+      if (isWindows()) {
         globalStore.setTipVisible(true)
       }
 

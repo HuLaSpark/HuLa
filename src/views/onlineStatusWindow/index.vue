@@ -42,7 +42,7 @@ import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import type { UserState } from '@/services/types'
 import { useUserStore } from '@/stores/user'
 import { useUserStatusStore } from '@/stores/userStatus'
-import { changeUserState } from '~/src/utils/ImRequestUtils'
+import { changeUserState } from '@/utils/ImRequestUtils'
 
 const userStatusStore = useUserStatusStore()
 const userStore = useUserStore()

@@ -121,7 +121,6 @@ import { join } from '@tauri-apps/api/path'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { open } from '@tauri-apps/plugin-dialog'
 import { copyFile, readFile } from '@tauri-apps/plugin-fs'
-import { type } from '@tauri-apps/plugin-os'
 import { FOOTER_HEIGHT, MAX_FOOTER_HEIGHT, MIN_FOOTER_HEIGHT, TOOLBAR_HEIGHT } from '@/common/constants'
 import { MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import { useChatLayoutGlobal } from '@/hooks/useChatLayout'
@@ -134,6 +133,7 @@ import { useHistoryStore } from '@/stores/history'
 import { useUserStore } from '@/stores/user'
 import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
 import { getFilesMeta, getUserAbsoluteVideosDir } from '@/utils/PathUtil'
+import { isMac } from '@/utils/PlatformConstants'
 
 const { detailId } = defineProps<{
   detailId: SessionItem['detailId']
@@ -551,7 +551,7 @@ const handleCap = async () => {
   await captureWindow.setPosition(new LogicalPosition(0, 0))
 
   // 在 macOS 上设置窗口级别以覆盖菜单栏
-  if (type() === 'macos') {
+  if (isMac()) {
     await invoke('set_window_level_above_menubar', { windowLabel: 'capture' })
   }
 

@@ -1,5 +1,5 @@
 import FingerprintJS from '@fingerprintjs/fingerprintjs'
-import { type } from '@tauri-apps/plugin-os'
+import { getOSType } from '@/utils/PlatformConstants'
 
 const CACHE_DURATION = 24 * 60 * 60 * 1000 // 24小时缓存
 
@@ -39,7 +39,7 @@ export const getEnhancedFingerprint = async (): Promise<string> => {
       // 收集设备信息
       const deviceInfoStart = performance.now()
       const deviceInfo = {
-        platform: await type(),
+        platform: getOSType(),
         screenSize: `${window.screen.width}x${window.screen.height}`,
         pixelRatio: window.devicePixelRatio,
         colorDepth: window.screen.colorDepth,

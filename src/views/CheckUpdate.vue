@@ -107,11 +107,11 @@ import { getVersion } from '@tauri-apps/api/app'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { currentMonitor, PhysicalPosition } from '@tauri-apps/api/window'
 import { confirm } from '@tauri-apps/plugin-dialog'
-import { type } from '@tauri-apps/plugin-os'
 import { check } from '@tauri-apps/plugin-updater'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { handRelativeTime } from '@/utils/Day.ts'
+import { isMac } from '@/utils/PlatformConstants'
 import { invokeSilently } from '@/utils/TauriInvokeHandler.ts'
 
 const settingStore = useSettingStore()
@@ -128,8 +128,6 @@ const logVisible = ref(false)
 /** 版本更新日期 */
 const versionTime = ref('')
 const newVersionTime = ref('')
-// 获取操作系统类型
-const osType = type()
 
 const commitTypeMap: { [key: string]: string } = {
   feat: 'comet',
@@ -246,7 +244,7 @@ const moveWindowToBottomRight = async () => {
     let y = 0
     let x = 0
 
-    if (osType === 'macos') {
+    if (isMac()) {
       // macOS - 放置在右上角
       y = 50 // 为顶部菜单栏留出空间
       x = Math.floor(monitor.size.width - size.width - 10)
@@ -290,7 +288,7 @@ const init = async () => {
   await moveWindowToBottomRight()
   loading.value = true
   currentVersion.value = await getVersion()
-  if (osType === 'macos') {
+  if (isMac()) {
     // 隐藏标题栏按钮
     try {
       await invokeSilently('hide_title_bar_buttons', { windowLabel: 'checkupdate' })

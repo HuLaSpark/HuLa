@@ -7,6 +7,9 @@ import vSlide from '@/directives/v-slide.ts'
 import { initMobileClient } from '@/mobile/mobile-client/MobileClient'
 import router from '@/router'
 import { pinia } from '@/stores'
+import { initializePlatform } from '@/utils/PlatformConstants'
+
+initializePlatform()
 
 import('@/services/webSocketAdapter')
 

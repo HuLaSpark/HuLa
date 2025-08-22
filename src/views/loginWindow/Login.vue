@@ -168,7 +168,7 @@
             忘记密码
           </div>
           <div
-            v-if="!isCompatibility"
+            v-if="!isCompatibility()"
             @click="router.push('/network')"
             class="text-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px">
             网络设置
@@ -182,7 +182,6 @@
 import { invoke } from '@tauri-apps/api/core'
 import { emit } from '@tauri-apps/api/event'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { type } from '@tauri-apps/plugin-os'
 import { useNetwork } from '@vueuse/core'
 import { lightTheme } from 'naive-ui'
 import { ErrorType } from '@/common/exception'
@@ -202,10 +201,10 @@ import { useUserStore } from '@/stores/user.ts'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { getAllUserState, getUserDetail } from '@/utils/ImRequestUtils'
+import { isCompatibility } from '@/utils/PlatformConstants'
 import { clearListener } from '@/utils/ReadCountQueue'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 
-const isCompatibility = computed(() => type() === 'windows' || type() === 'linux')
 const settingStore = useSettingStore()
 const userStore = useUserStore()
 const userStatusStore = useUserStatusStore()

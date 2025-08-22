@@ -191,7 +191,6 @@ import { Icon } from '@iconify/vue'
 import { LogicalPosition, LogicalSize, PhysicalPosition, PhysicalSize } from '@tauri-apps/api/dpi'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { primaryMonitor } from '@tauri-apps/api/window'
-import { type } from '@tauri-apps/plugin-os'
 import { useRoute } from 'vue-router'
 import ActionBar from '@/components/windows/ActionBar.vue'
 import { CallTypeEnum, RTCCallStatus, ThemeEnum } from '@/enums'
@@ -199,6 +198,7 @@ import { useUserInfo } from '@/hooks/useCached'
 import { useWebRtc } from '@/hooks/useWebRtc'
 import { useSettingStore } from '@/stores/setting'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { isWindows } from '@/utils/PlatformConstants'
 import { CallResponseStatus } from '../../services/wsType'
 
 const settingStore = useSettingStore()
@@ -236,18 +236,9 @@ const isLocalVideoMain = ref(true)
 // 通话接听状态
 const isCallAccepted = ref(!isReceiver)
 
-// 根据操作系统选择合适的Size类型
-// Windows使用LogicalSize，Mac使用PhysicalSize
-const currentOS = type()
-console.log('当前操作系统:', currentOS)
-
 const createSize = (width: number, height: number) => {
-  const size = currentOS === 'windows' ? new LogicalSize(width, height) : new PhysicalSize(width, height)
-  console.log(
-    `创建窗口大小 ${width}x${height}:`,
-    size,
-    `类型: ${currentOS === 'windows' ? 'LogicalSize' : 'PhysicalSize'}`
-  )
+  const size = isWindows() ? new LogicalSize(width, height) : new PhysicalSize(width, height)
+  console.log(`创建窗口大小 ${width}x${height}:`, size, `类型: ${isWindows() ? 'LogicalSize' : 'PhysicalSize'}`)
   return size
 }
 
@@ -480,7 +471,7 @@ onMounted(async () => {
           let x: number
           let y: number
 
-          if (currentOS === 'windows') {
+          if (isWindows()) {
             // Windows使用逻辑像素进行计算
             screenWidth = monitor.size.width / (monitor.scaleFactor || 1)
             screenHeight = monitor.size.height / (monitor.scaleFactor || 1)

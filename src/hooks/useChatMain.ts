@@ -3,7 +3,6 @@ import { writeImage, writeText } from '@tauri-apps/plugin-clipboard-manager'
 import { save } from '@tauri-apps/plugin-dialog'
 import { BaseDirectory } from '@tauri-apps/plugin-fs'
 import { revealItemInDir } from '@tauri-apps/plugin-opener'
-import { type } from '@tauri-apps/plugin-os'
 import type { FileTypeResult } from 'file-type'
 import { MittEnum, MsgEnum, PowerEnum, RoleEnum, RoomTypeEnum } from '@/enums'
 import { useCommon } from '@/hooks/useCommon.ts'
@@ -25,6 +24,7 @@ import { extractFileName, removeTag } from '@/utils/Formatting'
 import { detectImageFormat, imageUrlToUint8Array, isImageUrl } from '@/utils/ImageUtils'
 import { recallMsg, removeGroupMember } from '@/utils/ImRequestUtils'
 import { detectRemoteFileType, getFilesMeta, getUserAbsoluteVideosDir } from '@/utils/PathUtil'
+import { isMac } from '@/utils/PlatformConstants'
 import { useWindow } from './useWindow'
 
 export const useChatMain = () => {
@@ -162,7 +162,7 @@ export const useChatMain = () => {
       }
     },
     {
-      label: type() === 'macos' ? '在Finder中显示' : '在文件夹中打开',
+      label: isMac() ? '在Finder中显示' : '在文件夹中打开',
       icon: 'file2',
       click: async (item: MessageType) => {
         try {
@@ -365,7 +365,7 @@ export const useChatMain = () => {
       }
     },
     {
-      label: type() === 'macos' ? '在Finder中显示' : '打开文件夹',
+      label: isMac() ? '在Finder中显示' : '打开文件夹',
       icon: 'file2',
       click: async (item: RightMouseMessageItem) => {
         // try {
@@ -489,7 +489,7 @@ export const useChatMain = () => {
       }
     },
     {
-      label: type() === 'macos' ? '在Finder中显示' : '打开文件夹',
+      label: isMac() ? '在Finder中显示' : '打开文件夹',
       icon: 'file2',
       click: async (item: MessageType) => {
         try {
