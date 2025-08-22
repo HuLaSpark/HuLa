@@ -27,8 +27,6 @@ pub async fn list_contacts_command(
         let data =
             fetch_and_update_contacts(state.db_conn.clone(), state.rc.clone(), login_uid.clone())
                 .await?;
-        // 设置缓存标记
-        info!("Successfully queried contact list data: {:?}", data);
         return Ok(data);
     }
     .await;

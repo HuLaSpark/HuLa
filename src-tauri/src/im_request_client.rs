@@ -59,13 +59,12 @@ impl ImRequestClient {
 
         loop {
             let url = format!("{}/{}", self.base_url, path);
-            info!("请求地址: {}", &url);
+            info!("📡 请求地址: {}", &url);
 
             let mut request_builder = self.client.request(method.clone(), &url);
 
             // 设置请求头
             if let Some(token) = self.token.clone() {
-                info!("使用token: {:?}", token);
                 request_builder = request_builder.header("token", token);
             }
 
@@ -88,19 +87,27 @@ impl ImRequestClient {
                     return Err(anyhow::anyhow!("token过期，刷新token失败"));
                 }
 
-                info!("token过期，开始刷新token");
+                info!("🔄 token过期，开始刷新token");
                 self.start_refresh_token().await?;
                 retry_count += 1;
                 continue;
             }
 
-            info!("请求成功: {}", &url);
+            if !result.success {
+                error!("❌ 请求失败: {}; 失败信息: {}", &url, result.msg.clone().unwrap_or_default());
+                return Err(anyhow::anyhow!(
+                    "请求失败: {}",
+                    result.msg.clone().unwrap_or_default()
+                ));
+            }
+
+            info!("✅ 请求成功: {}", &url);
             return Ok(result);
         }
     }
 
     pub async fn start_refresh_token(&mut self) -> Result<(), anyhow::Error> {
-        info!("开始刷新token");
+        info!("🔄 开始刷新token");
         let url = format!("{}/{}", self.base_url, ImUrl::RefreshToken.get_url().1);
 
         let body = json!({
@@ -112,7 +119,10 @@ impl ImRequestClient {
         let result: ApiResult<serde_json::Value> = response.json().await?;
 
         if !result.success {
-            error!("刷新token失败: {}", result.msg.clone().unwrap_or_default());
+            error!(
+                "❌ 刷新token失败: {}",
+                result.msg.clone().unwrap_or_default()
+            );
             return Err(anyhow::anyhow!(
                 "刷新token失败: {}",
                 result.msg.clone().unwrap_or_default()

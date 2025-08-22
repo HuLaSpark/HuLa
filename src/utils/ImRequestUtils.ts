@@ -1,5 +1,5 @@
 import { ImUrlEnum, type NotificationTypeEnum } from '@/enums'
-import type { LoginUserReq, RegisterUserReq } from '@/services/types'
+import type { CacheUserReq, LoginUserReq, RegisterUserReq } from '@/services/types'
 import { ErrorType, invokeSilently, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 
 /**
@@ -192,10 +192,12 @@ export async function getApplyUnreadCount() {
 /**
  * 快捷方法：批量获取用户信息
  */
-export async function getUserInfoBatch(batchUsers: any[]) {
+export async function getUserInfoBatch(batchUsers: CacheUserReq[]) {
   return await imRequest({
     url: ImUrlEnum.GET_USER_INFO_BATCH,
-    body: batchUsers
+    body: {
+      reqList: batchUsers
+    }
   })
 }
 
