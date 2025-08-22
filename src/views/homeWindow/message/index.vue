@@ -203,6 +203,11 @@ watch(
   () => chatStore.currentSessionInfo,
   async (newVal) => {
     if (newVal) {
+      // 避免重复调用：如果新会话与当前会话相同，跳过处理，不然会触发两次
+      if (newVal.roomId === globalStore.currentSession.roomId) {
+        return
+      }
+
       // 判断是否是群聊
       if (newVal.type === RoomTypeEnum.GROUP) {
         // 在这里请求是因为这里一开始选中就会触发，而在chat.ts中则需要切换会话才会触发

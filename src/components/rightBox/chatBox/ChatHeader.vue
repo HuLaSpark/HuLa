@@ -5,7 +5,7 @@
     class="relative z-999 flex-y-center border-b-(1px solid [--right-chat-footer-line-color]) select-none cursor-default justify-between p-[6px_22px_10px]">
     <n-flex align="center">
       <Transition name="loading" mode="out-in">
-        <img v-if="showLoading" class="size-22px py-3px" src="@/assets/img/loading.svg" alt="" />
+        <img v-if="headerLoading" class="size-22px py-3px" src="@/assets/img/loading.svg" alt="" />
         <n-flex v-else align="center">
           <n-avatar
             :class="['rounded-8px select-none grayscale', { 'grayscale-0': isOnline }]"
@@ -22,7 +22,7 @@
             </p>
           </label>
           <svg
-            v-if="activeItem.hotFlag === IsAllUserEnum.Yes && !showLoading"
+            v-if="activeItem.hotFlag === IsAllUserEnum.Yes && !headerLoading"
             class="size-20px color-#13987f select-none outline-none">
             <use href="#auth"></use>
           </svg>
@@ -404,7 +404,6 @@ import { useAvatarUpload } from '@/hooks/useAvatarUpload'
 import { useUserInfo } from '@/hooks/useCached'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useWindow } from '@/hooks/useWindow'
-import apis from '@/services/apis'
 import { IsAllUserEnum, type SessionItem, type UserItem } from '@/services/types.ts'
 import { WsResponseMessageType } from '@/services/wsType'
 import { useCachedStore } from '@/stores/cached'
@@ -416,6 +415,7 @@ import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user.ts'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { notification, setSessionTop, shield, updateMyRoomInfo, updateRoomInfo } from '@/utils/ImRequestUtils'
 
 const { activeItem } = defineProps<{
   activeItem: SessionItem
@@ -436,8 +436,7 @@ const tips = ref()
 const optionsType = ref<RoomActEnum>()
 const modalShow = ref(false)
 const sidebarShow = ref(false)
-const showLoading = ref(true)
-const isLoading = ref(false)
+const headerLoading = ref(false)
 const cacheStore = useCachedStore()
 
 // 群组详情数据
@@ -487,7 +486,7 @@ const isEditingGroupName = ref(false)
 // 编辑中的群名称
 const editingGroupName = ref('')
 // 群名称输入框引用
-const groupNameInputRef = useTemplateRef('groupNameInputRef')
+const groupNameInputRef = useTemplateRef<HTMLInputElement | null>('groupNameInputRef')
 // 创建一个RTCPeerConnection实例
 // let peerConnection: RTCPeerConnection
 // if (type() !== 'linux') {
@@ -581,7 +580,7 @@ const {
 } = useAvatarUpload({
   onSuccess: async (downloadUrl) => {
     // 调用更新群头像的API
-    await apis.updateRoomInfo({
+    await updateRoomInfo({
       id: activeItem.roomId,
       name: activeItem.name,
       avatar: downloadUrl
@@ -594,22 +593,15 @@ const {
   }
 })
 
-// 在数据加载完成后，确保loading动画至少显示一定时间
-const handleLoadingState = async (isDataLoading: boolean) => {
-  if (isDataLoading) {
-    showLoading.value = true
-  } else {
-    // 确保loading动画至少显示MIN_LOADING_TIME时间
-    await new Promise((resolve) => setTimeout(resolve, MIN_LOADING_TIME))
-    showLoading.value = false
-  }
-}
-
-// 监听 isLoading 的变化
+// 监听消息加载状态变化
 watch(
-  () => isLoading.value,
-  async (newValue) => {
-    await handleLoadingState(newValue)
+  () => messageOptions.value?.isLoading,
+  (isLoading) => {
+    if (isLoading) {
+      headerLoading.value = true
+    } else if (headerLoading.value) {
+      setTimeout(() => (headerLoading.value = false), MIN_LOADING_TIME)
+    }
   },
   { immediate: true }
 )
@@ -618,8 +610,7 @@ watch(
   () => activeItem.roomId,
   () => {
     if (messageOptions.value?.isLoading) {
-      isLoading.value = true
-      showLoading.value = true
+      headerLoading.value = true
     }
     // 当roomId变化时，如果是群聊，则获取群组详情
     if (activeItem.type === RoomTypeEnum.GROUP) {
@@ -643,12 +634,12 @@ watch(
 )
 
 watchEffect(() => {
-  if (!messageOptions.value?.isLoading) {
-    isLoading.value = false
-    stream.value?.getVideoTracks()[0].addEventListener('ended', () => {
-      stop()
-    })
+  if (!messageOptions.value?.isLoading && headerLoading.value) {
+    headerLoading.value = false
   }
+  stream.value?.getVideoTracks()[0]?.addEventListener('ended', () => {
+    stop()
+  })
 })
 
 // 处理复制账号
@@ -743,7 +734,7 @@ const saveGroupInfo = async () => {
     }
 
     // 发送更新请求
-    await apis.updateMyRoomInfo(myRoomInfo)
+    await updateMyRoomInfo(myRoomInfo)
     // 更新群成员列表
     await groupStore.getGroupUserList(activeItem.roomId)
 
@@ -783,8 +774,7 @@ const handleMedia = () => {
 
 /** 置顶 */
 const handleTop = (value: boolean) => {
-  apis
-    .setSessionTop({ roomId: activeItem.roomId, top: value })
+  setSessionTop({ roomId: activeItem.roomId, top: value })
     .then(() => {
       // 更新本地会话状态
       chatStore.updateSession(activeItem.roomId, { top: value })
@@ -802,11 +792,10 @@ const handleNotification = (value: boolean) => {
   if (activeItem.shield) {
     handleShield(false)
   }
-  apis
-    .notification({
-      roomId: activeItem.roomId,
-      type: newType
-    })
+  notification({
+    roomId: activeItem.roomId,
+    type: newType
+  })
     .then(() => {
       // 更新本地会话状态
       chatStore.updateSession(activeItem.roomId, {
@@ -835,11 +824,10 @@ const handleNotification = (value: boolean) => {
 
 /** 处理屏蔽消息 */
 const handleShield = (value: boolean) => {
-  apis
-    .shield({
-      roomId: activeItem.roomId,
-      state: value
-    })
+  shield({
+    roomId: activeItem.roomId,
+    state: value
+  })
     .then(() => {
       // 更新本地会话状态
       chatStore.updateSession(activeItem.roomId, {
@@ -1010,7 +998,7 @@ const saveGroupName = async () => {
   if (trimmedName !== activeItem.name) {
     try {
       // 调用更新群信息的API
-      await apis.updateRoomInfo({
+      updateRoomInfo({
         id: activeItem.roomId,
         name: trimmedName,
         avatar: activeItem.avatar
@@ -1059,10 +1047,7 @@ const handleVideoCall = async (remotedUid: string, callType: CallTypeEnum) => {
 
 onMounted(() => {
   window.addEventListener('click', closeMenu, true)
-  if (!messageOptions.value?.isLoading) {
-    isLoading.value = false
-    showLoading.value = false
-  }
+  if (!messageOptions.value?.isLoading) headerLoading.value = false
 
   // 如果是群聊，初始化时获取群组详情
   if (activeItem.type === RoomTypeEnum.GROUP) {

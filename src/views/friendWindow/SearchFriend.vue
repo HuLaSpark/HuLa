@@ -144,7 +144,6 @@ import { ThemeEnum } from '@/enums'
 import { RoomTypeEnum } from '@/enums/index.ts'
 import { useBadgeInfo } from '@/hooks/useCached.ts'
 import { useWindow } from '@/hooks/useWindow'
-import apis from '@/services/apis'
 import type { ContactItem, GroupListReq } from '@/services/types'
 import { useCachedStore } from '@/stores/cached'
 import { useContactStore } from '@/stores/contacts'
@@ -152,6 +151,7 @@ import { useGlobalStore } from '@/stores/global'
 import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { searchFriend, searchGroup } from '@/utils/ImRequestUtils'
 
 const { createWebviewWindow } = useWindow()
 const cachedStore = useCachedStore()
@@ -249,8 +249,8 @@ const handleSearch = debounce(async () => {
   try {
     if (searchType.value === 'group') {
       // 调用群聊搜索接口
-      const res = await apis.searchGroup({ account: searchValue.value })
-      searchResults.value = res.map((group) => ({
+      const res = await searchGroup({ account: searchValue.value })
+      searchResults.value = res.map((group: any) => ({
         account: group.account,
         name: group.name,
         avatar: group.avatar,
@@ -260,8 +260,8 @@ const handleSearch = debounce(async () => {
       }))
     } else if (searchType.value === 'user') {
       // 调用好友搜索接口
-      const res = await apis.searchFriend({ key: searchValue.value })
-      searchResults.value = res.map((user) => ({
+      const res = await searchFriend({ key: searchValue.value })
+      searchResults.value = res.map((user: any) => ({
         uid: user.uid,
         name: user.name,
         avatar: user.avatar,

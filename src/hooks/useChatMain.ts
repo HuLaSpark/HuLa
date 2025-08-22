@@ -10,7 +10,6 @@ import { useCommon } from '@/hooks/useCommon.ts'
 import { useDownload } from '@/hooks/useDownload'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useVideoViewer } from '@/hooks/useVideoViewer'
-import apis from '@/services/apis.ts'
 import { translateText } from '@/services/translate'
 import type { FilesMeta, MessageType, RightMouseMessageItem } from '@/services/types.ts'
 import { useChatStore } from '@/stores/chat.ts'
@@ -24,6 +23,7 @@ import { useUserStore } from '@/stores/user'
 import { isDiffNow } from '@/utils/ComputedTime.ts'
 import { extractFileName, removeTag } from '@/utils/Formatting'
 import { detectImageFormat, imageUrlToUint8Array, isImageUrl } from '@/utils/ImageUtils'
+import { recallMsg, removeGroupMember } from '@/utils/ImRequestUtils'
 import { detectRemoteFileType, getFilesMeta, getUserAbsoluteVideosDir } from '@/utils/PathUtil'
 import { useWindow } from './useWindow'
 
@@ -103,7 +103,7 @@ export const useChatMain = () => {
       label: '撤回',
       icon: 'corner-down-left',
       click: async (item: MessageType) => {
-        const res = (await apis.recallMsg({ roomId: '1', msgId: item.message.id })) as any
+        const res = await recallMsg({ roomId: '1', msgId: item.message.id })
         if (res) {
           window.$message.error(res)
           return
@@ -663,7 +663,7 @@ export const useChatMain = () => {
         if (!roomId) return
 
         try {
-          await apis.removeGroupMember({ roomId, uid: targetUid })
+          await removeGroupMember({ roomId, uid: targetUid })
           // 从群成员列表中移除该用户
           groupStore.filterUser(targetUid)
           window.$message.success('移出群聊成功')

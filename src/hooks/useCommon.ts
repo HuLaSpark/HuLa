@@ -7,12 +7,12 @@ import { LimitEnum, MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import { useMessage } from '@/hooks/useMessage.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import router from '@/router'
-import apis from '@/services/apis.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { removeTag } from '@/utils/Formatting'
+import { getSessionDetailWithFriends } from '@/utils/ImRequestUtils'
 import { getImageCache } from '@/utils/PathUtil.ts'
 import { invokeWithErrorHandler } from '../utils/TauriInvokeHandler'
 
@@ -820,7 +820,7 @@ export const useCommon = () => {
     }
 
     info('打开消息会话')
-    const res = await apis.sessionDetailWithFriends({ id: uid, roomType: type })
+    const res = await getSessionDetailWithFriends({ id: uid, roomType: type })
     // 把隐藏的会话先显示
     try {
       // await apis.hideSession({ roomId: res.roomId, hide: false })

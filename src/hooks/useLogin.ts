@@ -44,6 +44,7 @@ export const useLogin = () => {
     try {
       // ws 退出连接
       await invokeSilently('ws_disconnect')
+      await invokeSilently(TauriCommand.REMOVE_TOKENS)
       await invokeSilently(TauriCommand.UPDATE_USER_LAST_OPT_TIME)
       // 创建登录窗口
       await createWebviewWindow('登录', 'login', 320, 448, undefined, false, 320, 448)

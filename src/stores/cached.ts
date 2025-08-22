@@ -1,10 +1,10 @@
 import { useDebounceFn } from '@vueuse/core'
 import { defineStore } from 'pinia'
 import { StoresEnum, TauriCommand } from '@/enums'
-import apis from '@/services/apis'
 import type { CacheBadgeItem, CacheUserItem } from '@/services/types'
 import { useGlobalStore } from '@/stores/global'
 import { isDiffNow10Min } from '@/utils/ComputedTime.ts'
+import { getAnnouncementList, getBadgesBatch, getUserInfoBatch } from '@/utils/ImRequestUtils'
 import { ErrorType, invokeSilently, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler.ts'
 import { useGroupStore } from './group'
 
@@ -92,7 +92,7 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
         const batchUsers = result.slice(startIndex, endIndex)
 
         // 批量获取当前批次的用户信息
-        const batchData = await apis.getUserInfoBatch(batchUsers)
+        const batchData: any = await getUserInfoBatch(batchUsers)
 
         for (const item of batchData || []) {
           // 更新用户信息缓存
@@ -143,7 +143,7 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
     if (!result.length) return
 
     // 获取并更新徽章信息缓存
-    const data = await apis.getBadgesBatch(result)
+    const data = await getBadgesBatch(result)
     for (const item of data || []) {
       badgeCachedList[item.itemId] = {
         ...(item?.needRefresh ? item : badgeCachedList[item.itemId]),
@@ -292,7 +292,7 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
    * @returns 群组公告列表
    */
   const getGroupAnnouncementList = async (roomId: string, page: number, size: number) => {
-    const data = await apis.getAnnouncementList(roomId, { current: page, size: size })
+    const data: any = await getAnnouncementList(roomId, page, size)
     if (data) {
       return data
     }

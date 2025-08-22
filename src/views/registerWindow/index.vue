@@ -245,8 +245,8 @@ import dayjs from 'dayjs'
 import { lightTheme } from 'naive-ui'
 import PinInput from '@/components/common/PinInput.vue'
 import Validation from '@/components/common/Validation.vue'
-import apis from '@/services/apis.ts'
 import type { RegisterUserReq } from '@/services/types.ts'
+import * as ImRequestUtils from '@/utils/ImRequestUtils'
 
 // 输入框类型定义
 type InputType = 'nickName' | 'email' | 'password' | 'code' | 'confirmPassword'
@@ -448,7 +448,7 @@ const getVerifyCode = async () => {
     }
   }, 1000)
 
-  const { img, uuid } = await apis.getCaptcha()
+  const { img, uuid } = await ImRequestUtils.getCaptcha()
   captcha.value = { base64: img, uuid }
 }
 
@@ -463,7 +463,7 @@ const handleStepAction = async () => {
     loading.value = true
     try {
       // 发送邮箱验证码
-      await apis.sendCaptcha({
+      await ImRequestUtils.sendCaptcha({
         email: info.email,
         code: info.code.toString(),
         uuid: captcha.value.uuid.toString(),
@@ -504,7 +504,7 @@ const register = async () => {
     info.confirmPassword = confirmPassword.value
 
     // 注册
-    await apis.register({ ...info })
+    await ImRequestUtils.register({ ...info })
     window.$message.success('注册成功')
 
     // 关闭弹窗并跳转到登录页

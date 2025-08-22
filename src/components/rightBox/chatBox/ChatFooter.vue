@@ -107,7 +107,7 @@
       </n-flex>
 
       <!-- 输入框区域 -->
-      <div class="flex-1 pl-20px flex flex-col">
+      <div class="flex-1 pl-20px flex flex-col relative">
         <MsgInput ref="MsgInputRef" :height="inputAreaHeight" />
       </div>
     </div>
@@ -122,14 +122,7 @@ import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { open } from '@tauri-apps/plugin-dialog'
 import { copyFile, readFile } from '@tauri-apps/plugin-fs'
 import { type } from '@tauri-apps/plugin-os'
-import {
-  CHAT_HEADER_HEIGHT,
-  CHAT_MAIN_MIN_HEIGHT,
-  MIN_FOOTER_HEIGHT,
-  MIN_INPUT_HEIGHT,
-  SEND_BUTTON_AREA_HEIGHT,
-  TOOLBAR_HEIGHT
-} from '@/common/constants'
+import { FOOTER_HEIGHT, MAX_FOOTER_HEIGHT, MIN_FOOTER_HEIGHT, TOOLBAR_HEIGHT } from '@/common/constants'
 import { MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import { useChatLayoutGlobal } from '@/hooks/useChatLayout'
 import { type SelectionRange, useCommon } from '@/hooks/useCommon.ts'
@@ -171,18 +164,20 @@ let rafId: number | null = null
 // 容器高度响应式状态
 const containerHeight = ref(600) // 默认高度
 
-// 动态计算最大高度，确保ChatMain不小于230px
+// 动态计算最大高度
 const maxHeight = computed(() => {
-  // 最大footer高度 = 总高度 - ChatHeader高度 - ChatMain最小高度
-  const calculatedMaxHeight = containerHeight.value - CHAT_HEADER_HEIGHT - CHAT_MAIN_MIN_HEIGHT
+  // 确保最大高度不超过390px，也不小于最小高度200px
+  return Math.max(Math.min(MAX_FOOTER_HEIGHT), MIN_FOOTER_HEIGHT)
+})
 
-  // 确保最大高度不超过合理范围，也不小于最小高度
-  return Math.max(Math.min(calculatedMaxHeight, 400), MIN_FOOTER_HEIGHT)
+// 动态计算当前最小高度（根据录音模式状态）
+const currentMinHeight = computed(() => {
+  return MsgInputRef.value?.isVoiceMode ? FOOTER_HEIGHT : MIN_FOOTER_HEIGHT
 })
 
 // 输入框区域高度计算（总高度减去顶部选项栏高度）
 const inputAreaHeight = computed(() => {
-  return Math.max(footerHeight.value - TOOLBAR_HEIGHT, SEND_BUTTON_AREA_HEIGHT + MIN_INPUT_HEIGHT)
+  return Math.max(footerHeight.value - TOOLBAR_HEIGHT)
 })
 
 // 监听maxHeight变化，确保footerHeight不超过最大值（即时响应）
@@ -191,6 +186,20 @@ watch(
   (newMaxHeight) => {
     if (footerHeight.value > newMaxHeight) {
       setFooterHeight(newMaxHeight)
+    }
+  },
+  {
+    immediate: true,
+    flush: 'sync' // 同步执行，确保最快响应速度
+  }
+)
+
+// 监听最小高度变化，确保footerHeight不低于最小值
+watch(
+  currentMinHeight,
+  (newMinHeight) => {
+    if (footerHeight.value < newMinHeight) {
+      setFooterHeight(newMinHeight)
     }
   },
   {
@@ -237,19 +246,16 @@ const startDrag = (e: MouseEvent) => {
 
 const onDrag = (e: MouseEvent) => {
   if (!isDragging.value) return
-
-  const deltaY = startY.value - e.clientY
-  const newHeight = Math.min(Math.max(startHeight.value + deltaY, MIN_FOOTER_HEIGHT), maxHeight.value)
-
-  // 取消之前的动画帧
+  // 立即取消之前的帧，避免延迟
   if (rafId !== null) {
     cancelAnimationFrame(rafId)
   }
 
-  // 使用 requestAnimationFrame 优化DOM更新
   rafId = requestAnimationFrame(() => {
+    const deltaY = startY.value - e.clientY
+    // 使用计算属性获取当前最小高度
+    const newHeight = Math.min(Math.max(startHeight.value + deltaY, currentMinHeight.value), maxHeight.value)
     setFooterHeight(newHeight)
-
     rafId = null
   })
 }
@@ -563,13 +569,6 @@ onMounted(async () => {
   await nextTick()
   // 启动高效的容器尺寸监听
   observeContainerResize()
-
-  // 确保初始化时全局状态有正确的footer高度
-  if (footerHeight.value < 200) {
-    // 设置初始高度为200px，但不能小于最小高度要求
-    const initialHeight = Math.max(200, MIN_FOOTER_HEIGHT)
-    setFooterHeight(initialHeight)
-  }
 
   if (MsgInputRef.value) {
     msgInputDom.value = MsgInputRef.value.messageInputDom

@@ -144,12 +144,12 @@ import { useCommon } from '@/hooks/useCommon.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useTauriListener } from '@/hooks/useTauriListener'
 import { leftHook } from '@/layout/left/hook.ts'
-import apis from '@/services/apis.ts'
 import type { UserInfoType } from '@/services/types'
 import { useLoginHistoriesStore } from '@/stores/loginHistory'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp, isDiffNow } from '@/utils/ComputedTime.ts'
+import { getBadgeList, uploadAvatar } from '@/utils/ImRequestUtils'
 
 const appWindow = WebviewWindow.getCurrent()
 const localUserInfo = ref<Partial<UserInfoType>>({})
@@ -169,7 +169,7 @@ const {
 } = useAvatarUpload({
   onSuccess: async (downloadUrl) => {
     // 调用更新头像的API
-    await apis.uploadAvatar({ avatar: downloadUrl })
+    await uploadAvatar({ avatar: downloadUrl })
     // 更新编辑信息
     editInfo.value.content.avatar = downloadUrl
     // 更新用户信息
@@ -211,8 +211,8 @@ const openEditInfo = () => {
   editInfo.value.content = userStore.userInfo
   localUserInfo.value = { ...userStore.userInfo }
   /** 获取徽章列表 */
-  apis.getBadgeList().then((res) => {
-    editInfo.value.badgeList = res as any
+  getBadgeList().then((res: any) => {
+    editInfo.value.badgeList = res
   })
 }
 
