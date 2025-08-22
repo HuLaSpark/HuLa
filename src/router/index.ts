@@ -1,3 +1,4 @@
+import { invoke } from '@tauri-apps/api/core'
 import { type } from '@tauri-apps/plugin-os'
 import {
   createRouter,
@@ -30,6 +31,7 @@ import MyQRCode from '@/mobile/views/my/MyQRCode.vue'
 import PublishCommunity from '@/mobile/views/my/PublishCommunity.vue'
 import Share from '@/mobile/views/my/Share.vue'
 import SimpleBio from '@/mobile/views/my/SimpleBio.vue'
+import { TauriCommand } from '../enums'
 
 const isDesktop = computed(() => {
   return type() === 'windows' || type() === 'linux' || type() === 'macos'
@@ -401,27 +403,39 @@ const router: any = createRouter({
 
 // 在创建路由后，添加全局前置守卫
 // 为解决 “已声明‘to’，但从未读取其值” 的问题，将 to 参数改为下划线开头表示该参数不会被使用
-router.beforeEach((_to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
-  // 如果是桌面端，直接放行
+router.beforeEach(async (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
+  console.log('进入了路由：', from, to)
+  // 桌面端直接放行
   if (isDesktop.value) {
     return next()
   }
 
-  // const token = localStorage.getItem('TOKEN')
-  // const isLoginPage = to.path === '/mobile/login'
+  try {
+    const tokens = await invoke<{ token: string | null; refreshToken: string | null }>(TauriCommand.GET_USER_TOKENS)
+    const isLoginPage = to.path === '/mobile/login'
+    const isLoggedIn = !!(tokens.token && tokens.refreshToken)
 
-  // // 已登录用户访问登录页时重定向到首页
-  // if (isLoginPage && token) {
-  //   return next('/mobile/home')
-  // }
+    // 未登录且不是登录页 → 跳转登录
+    if (!isLoggedIn && !isLoginPage) {
+      console.error('没有登录')
+      return next('/mobile/login')
+    }
 
-  // // 未登录用户访问非登录页时重定向到登录页
-  // if (!isLoginPage && !token) {
-  //   return next('/mobile/login')
-  // }
+    // 已登录且访问登录页 → 跳转首页
+    if (isLoggedIn && isLoginPage) {
+      return next('/mobile/message')
+    }
 
-  // 其他情况正常放行
-  next()
+    // 其他情况直接放行
+    return next()
+  } catch (error) {
+    console.error('获取token错误:', error)
+    // 出错时也跳转登录页（避免死循环）
+    if (to.path !== '/mobile/login') {
+      return next('/mobile/login')
+    }
+    return next()
+  }
 })
 
 export default router

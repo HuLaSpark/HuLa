@@ -43,8 +43,15 @@
 </template>
 
 <script setup lang="ts">
+import { emit } from '@tauri-apps/api/event'
+import { info } from '@tauri-apps/plugin-log'
 import { NInput, NSelect, NSwitch } from 'naive-ui'
+
 import { reactive } from 'vue'
+import { EventEnum, TauriCommand } from '~/src/enums'
+import router from '~/src/router'
+import { useGlobalStore } from '~/src/stores/global'
+import { invokeSilently } from '~/src/utils/TauriInvokeHandler'
 
 // 定义设置项
 const settings = reactive([
@@ -82,9 +89,37 @@ const settings = reactive([
     ]
   }
 ])
-
+const globalStore = useGlobalStore()
+const { isTrayMenuShow } = storeToRefs(globalStore)
+const dialog = useDialog()
 // 退出登录逻辑
-function handleLogout() {}
+async function handleLogout() {
+  dialog.error({
+    title: '提示',
+    content: '确定要退出登录吗？',
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      info('登出账号')
+      isTrayMenuShow.value = false
+      try {
+        // ws 退出连接
+        await invokeSilently('ws_disconnect')
+        await invokeSilently(TauriCommand.REMOVE_TOKENS)
+        await invokeSilently(TauriCommand.UPDATE_USER_LAST_OPT_TIME)
+        // 发送登出事件
+
+        await emit(EventEnum.LOGOUT)
+        router.push('/mobile/login')
+      } catch (error) {
+        console.error('创建登录窗口失败:', error)
+      }
+    },
+    onNegativeClick: () => {
+      console.log('用户点击了取消')
+    }
+  })
+}
 
 // 你可以根据需要导出或操作 settings 数据
 </script>
