@@ -81,28 +81,41 @@ impl ImRequestClient {
             let response = request_builder.send().await?;
             let result: ApiResult<T> = response.json().await?;
 
-            // 如果code为406，则刷新token
-            if result.code == Some(406) {
-                if retry_count >= MAX_RETRY_COUNT {
-                    return Err(anyhow::anyhow!("token过期，刷新token失败"));
+            match result.code {
+                Some(406) => {
+                    if retry_count >= MAX_RETRY_COUNT {
+                        return Err(anyhow::anyhow!("token过期，刷新token失败"));
+                    }
+
+                    error!("🔄 token过期，开始刷新token");
+                    self.start_refresh_token().await?;
+                    retry_count += 1;
+                    continue;
                 }
-
-                info!("🔄 token过期，开始刷新token");
-                self.start_refresh_token().await?;
-                retry_count += 1;
-                continue;
+                Some(401) => {
+                    error!(
+                        "❌ 请求失败: {}; 失败信息: {}",
+                        &url,
+                        result.msg.clone().unwrap_or_default()
+                    );
+                    return Err(anyhow::anyhow!("请重新登录"));
+                }
+                Some(200) => {
+                    info!("✅ 请求成功: {}", &url);
+                    return Ok(result);
+                }
+                _ => {
+                    error!(
+                        "❌ 请求失败: {}; 失败信息: {}",
+                        &url,
+                        result.msg.clone().unwrap_or_default()
+                    );
+                    return Err(anyhow::anyhow!(
+                        "请求失败: {}",
+                        result.msg.clone().unwrap_or_default()
+                    ));
+                }
             }
-
-            if !result.success {
-                error!("❌ 请求失败: {}; 失败信息: {}", &url, result.msg.clone().unwrap_or_default());
-                return Err(anyhow::anyhow!(
-                    "请求失败: {}",
-                    result.msg.clone().unwrap_or_default()
-                ));
-            }
-
-            info!("✅ 请求成功: {}", &url);
-            return Ok(result);
         }
     }
 

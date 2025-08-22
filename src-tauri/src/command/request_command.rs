@@ -1,9 +1,7 @@
 use tauri::State;
 
 use crate::{
-    AppData,
-    im_request_client::{ImRequest, ImUrl},
-    vo::vo::{LoginReq, LoginResp},
+    handle_logout_windows, im_request_client::{ImRequest, ImUrl}, vo::vo::{LoginReq, LoginResp}, AppData
 };
 
 #[tauri::command]
@@ -27,16 +25,26 @@ pub async fn im_request_command(
     url: String,
     body: Option<serde_json::Value>,
     params: Option<serde_json::Value>,
+    app_handle: tauri::AppHandle
 ) -> Result<Option<serde_json::Value>, String> {
     let mut rc = state.rc.lock().await;
 
     if let Ok(url) = url.parse::<ImUrl>() {
-        let result = rc
+        let result: Result<Option<serde_json::Value>, anyhow::Error> = rc
             .im_request(url, body, params)
-            .await
-            .map_err(|e| e.to_string())?;
+            .await;
 
-        return Ok(result);
+        match result {
+          Ok(data) => {
+            return Ok(data);
+          }
+          Err(e) => {
+            if e.to_string().contains("请重新登录") {
+              handle_logout_windows(&app_handle).await;
+            }
+            return Err(e.to_string())
+          }
+        }
     } else {
         tracing::error!("Invalid URL: {}", url);
         return Err(format!("Invalid URL: {}", url));
