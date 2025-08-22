@@ -398,7 +398,7 @@ export async function inviteGroupMember(body: { roomId: string; uidList: string[
 
 export async function removeGroupMember(body: { roomId: string; uid: string }) {
   return await imRequest({
-    url: ImUrlEnum.INVITE_GROUP_MEMBER,
+    url: ImUrlEnum.REMOVE_GROUP_MEMBER,
     body
   })
 }

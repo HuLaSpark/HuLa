@@ -94,8 +94,9 @@ impl ImRequestClient {
                 }
                 Some(401) => {
                     error!(
-                        "❌ 请求失败: {}; 失败信息: {}",
+                        "❌ 请求失败: {}; 方法: {}; 失败信息: {}",
                         &url,
+                        method,
                         result.msg.clone().unwrap_or_default()
                     );
                     return Err(anyhow::anyhow!("请重新登录"));
@@ -106,8 +107,9 @@ impl ImRequestClient {
                 }
                 _ => {
                     error!(
-                        "❌ 请求失败: {}; 失败信息: {}",
+                        "❌ 请求失败: {}; 方法: {}; 失败信息: {}",
                         &url,
+                        method,
                         result.msg.clone().unwrap_or_default()
                     );
                     return Err(anyhow::anyhow!(

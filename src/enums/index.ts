@@ -683,5 +683,7 @@ export enum ImUrlEnum {
   SEND_MSG = 'sendMsg',
   SET_HIDE = 'setHide',
   GET_FRIEND_PAGE = 'getFriendPage',
-  MARK_MSG_READ = 'markMsgRead'
+  MARK_MSG_READ = 'markMsgRead',
+  /** 移出群成员 */
+  REMOVE_GROUP_MEMBER = 'removeGroupMember'
 }
