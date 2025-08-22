@@ -320,7 +320,7 @@ useMitt.on(
 )
 useMitt.on(
   WsResponseMessageType.NEW_FRIEND_SESSION,
-  (param: {
+  async (param: {
     roomId: string
     uid: string
     changeType: ChangeTypeEnum
@@ -329,6 +329,7 @@ useMitt.on(
   }) => {
     // changeType 1 加入群组，2： 移除群组
     if (param.roomId === globalStore.currentSession.roomId && globalStore.currentSession.type === RoomTypeEnum.GROUP) {
+      await cachedStore.getGroupAtUserBaseInfo(param.roomId)
       if (param.changeType === ChangeTypeEnum.REMOVE) {
         // 移除群成员
         groupStore.filterUser(param.uid)

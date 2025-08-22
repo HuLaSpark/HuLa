@@ -321,7 +321,9 @@ export enum ChangeTypeEnum {
   /** 1 加入群组 */
   JOIN = 1,
   /** 2 移除群组 */
-  REMOVE
+  REMOVE,
+  /** 3 退出群组 */
+  EXIT_GROUP
 }
 
 /** 关闭窗口的行为 */
