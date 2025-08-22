@@ -52,15 +52,15 @@
 <script setup lang="tsx">
 import { TrayIcon } from '@tauri-apps/api/tray'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { type } from '@tauri-apps/plugin-os'
 import { exit } from '@tauri-apps/plugin-process'
 import { useWindow } from '@/hooks/useWindow.ts'
-import apis from '@/services/apis.ts'
 import type { UserState } from '@/services/types'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user'
 import { useUserStatusStore } from '@/stores/userStatus'
+import { changeUserState } from '@/utils/ImRequestUtils'
+import { isWindows } from '@/utils/PlatformConstants'
 
 const appWindow = WebviewWindow.getCurrent()
 const { checkWinExist, createWebviewWindow } = useWindow()
@@ -95,7 +95,7 @@ const handleExit = () => {
 
 const toggleStatus = async (item: UserState) => {
   try {
-    await apis.changeUserState(item.id)
+    await changeUserState({ id: item.id })
 
     stateId.value = item.id
     userStore.userInfo.userStateId = item.id
@@ -222,7 +222,7 @@ const terminateWorker = () => {
 }
 
 watchEffect(async () => {
-  if (type() === 'windows') {
+  if (isWindows()) {
     if (tipVisible.value && !isFocused.value) {
       startBlinkTimer() // 启动图标闪烁
     } else {

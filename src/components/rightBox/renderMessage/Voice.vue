@@ -48,7 +48,6 @@
 <script setup lang="ts">
 import { join } from '@tauri-apps/api/path'
 import { BaseDirectory, create, exists, mkdir, readFile } from '@tauri-apps/plugin-fs'
-import { type } from '@tauri-apps/plugin-os'
 import { storeToRefs } from 'pinia'
 import { ThemeEnum } from '@/enums'
 import type { FilesMeta, VoiceBody } from '@/services/types'
@@ -56,6 +55,7 @@ import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user'
 import { audioManager } from '@/utils/AudioManager'
 import { getFilesMeta, getImageCache } from '@/utils/PathUtil'
+import { isMac } from '@/utils/PlatformConstants'
 
 const props = defineProps<{
   body: VoiceBody
@@ -533,7 +533,7 @@ const handleAudioStateChange = () => {
 
 // 组件挂载时加载波形并添加监听器
 onMounted(async () => {
-  isMacOS.value = (await type()) === 'macos'
+  isMacOS.value = isMac()
   loadAudioWaveform()
   audioManager.addListener(handleAudioStateChange)
 })

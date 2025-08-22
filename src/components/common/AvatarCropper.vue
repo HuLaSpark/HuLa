@@ -9,7 +9,7 @@
       <!-- 标题栏 -->
       <n-flex :size="6" vertical class="w-full">
         <div
-          v-if="type() === 'macos'"
+          v-if="isMac()"
           @click="closeWindow"
           class="mac-close size-13px shadow-inner bg-#ed6a5eff rounded-50% mt-6px select-none absolute left-6px">
           <svg class="hidden size-7px color-#000 select-none absolute top-3px left-3px">
@@ -20,7 +20,7 @@
         <n-flex class="text-(14px [--text-color]) select-none pt-6px" justify="center">裁剪头像</n-flex>
 
         <svg
-          v-if="type() === 'windows'"
+          v-if="isWindows()"
           class="size-14px cursor-pointer pt-6px select-none absolute right-6px"
           @click="closeWindow">
           <use href="#close"></use>
@@ -100,7 +100,7 @@
 </template>
 
 <script setup lang="ts">
-import { type } from '@tauri-apps/plugin-os'
+import { isMac, isWindows } from '@/utils/PlatformConstants'
 import 'vue-cropper/dist/index.css'
 import { VueCropper } from 'vue-cropper'
 

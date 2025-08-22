@@ -30,8 +30,9 @@
 
 <script setup lang="ts">
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { arch, type, version } from '@tauri-apps/plugin-os'
+import { arch, version } from '@tauri-apps/plugin-os'
 import dayjs from 'dayjs'
+import { getOSType, isWindows } from '@/utils/PlatformConstants'
 import pkg from '~/package.json'
 
 const _pkg = reactive({
@@ -73,10 +74,10 @@ const handleMouseLeave = () => {
 
 onMounted(async () => {
   await getCurrentWebviewWindow().show()
-  osType.value = type()
+  osType.value = getOSType()
   osArch.value = arch()
   osVersion.value = version()
-  if (osType.value === 'windows') {
+  if (isWindows()) {
     const parts = version().split('.')
     const build_number = Number(parts[2])
     osVersion.value = build_number > 22000 ? '11' : '10'

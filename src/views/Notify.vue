@@ -180,13 +180,6 @@ const handleMouseLeave = async () => {
   await hideWindow()
 }
 
-// 对消息进行排序的函数 - 现在直接写在事件处理中
-
-onBeforeMount(async () => {
-  // 确保用户已登录并初始化会话列表
-  await chatStore.getSessionList(true)
-})
-
 onMounted(async () => {
   // 初始化窗口高度
   resizeWindow('notify', 280, 140)

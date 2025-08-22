@@ -6,7 +6,6 @@ import { useMitt } from '@/hooks/useMitt.ts'
 import { useTauriListener } from '@/hooks/useTauriListener'
 import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
-import apis from '@/services/apis.ts'
 import type { BadgeType, UserInfoType } from '@/services/types.ts'
 import { useCachedStore } from '@/stores/cached.ts'
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
@@ -14,6 +13,7 @@ import { useMenuTopStore } from '@/stores/menuTop.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { useUserStatusStore } from '@/stores/userStatus.ts'
+import { modifyUserName, setUserBadge } from '@/utils/ImRequestUtils'
 
 export const leftHook = () => {
   const appWindow = WebviewWindow.getCurrent()
@@ -88,7 +88,7 @@ export const leftHook = () => {
       window.$message.error('改名次数不足')
       return
     }
-    apis.modifyUserName(localUserInfo.name).then(() => {
+    modifyUserName({ name: localUserInfo.name }).then(() => {
       // 更新本地缓存的用户信息
       userStore.userInfo.name = localUserInfo.name!
       loginHistoriesStore.updateLoginHistory(<UserInfoType>userStore.userInfo) // 更新登录历史记录
@@ -103,7 +103,7 @@ export const leftHook = () => {
   const toggleWarningBadge = async (badge: BadgeType) => {
     if (!badge?.id) return
     try {
-      await apis.setUserBadge(badge.id)
+      await setUserBadge({ badgeId: badge.id })
       // 更新本地缓存中的用户徽章信息
       const currentUser = userStore.userInfo.uid && cachedStore.userCachedList[userStore.userInfo.uid]
       if (currentUser) {

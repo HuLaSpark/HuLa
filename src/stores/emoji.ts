@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
 import { StoresEnum } from '@/enums'
-import apis from '@/services/apis'
 import type { EmojiItem } from '@/services/types'
 import { useUserStore } from '@/stores/user'
+import * as imRequestUtils from '@/utils/ImRequestUtils'
 
 export const useEmojiStore = defineStore(StoresEnum.EMOJI, () => {
   const isLoading = ref(false) // 是否正在加载
@@ -14,7 +14,7 @@ export const useEmojiStore = defineStore(StoresEnum.EMOJI, () => {
    */
   const getEmojiList = async () => {
     isLoading.value = true
-    const res = await apis.getEmoji({ uid: userStore.userInfo.uid! }).catch(() => {
+    const res = await imRequestUtils.getEmoji().catch(() => {
       isLoading.value = false
     })
     if (!res) return
@@ -27,7 +27,7 @@ export const useEmojiStore = defineStore(StoresEnum.EMOJI, () => {
   const addEmoji = async (emojiUrl: string) => {
     const { uid } = userStore.userInfo
     if (!uid || !emojiUrl) return
-    apis.addEmoji({ expressionUrl: emojiUrl }).then((res) => {
+    imRequestUtils.addEmoji({ expressionUrl: emojiUrl }).then((res) => {
       if (res) {
         window.$message.success('添加表情成功')
       }
@@ -40,7 +40,7 @@ export const useEmojiStore = defineStore(StoresEnum.EMOJI, () => {
    */
   const deleteEmoji = async (id: string) => {
     if (!id) return
-    await apis.deleteEmoji({ id })
+    await imRequestUtils.deleteEmoji({ id })
     await getEmojiList()
   }
 

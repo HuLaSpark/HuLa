@@ -98,7 +98,7 @@
     <n-modal v-model:show="infoTip.modalShow" class="w-450px border-rd-8px">
       <div class="bg-[--bg-popover] h-full p-6px box-border flex flex-col">
         <div
-          v-if="type() === 'macos'"
+          v-if="isMac()"
           @click="infoTip.modalShow = false"
           class="mac-close relative size-13px shadow-inner bg-#ed6a5eff rounded-50% select-none">
           <svg class="hidden size-7px color-#000 select-none absolute top-3px left-3px">
@@ -107,7 +107,7 @@
         </div>
 
         <svg
-          v-if="type() === 'windows'"
+          v-if="isWindows()"
           @click="infoTip.modalShow = false"
           class="w-12px h-12px ml-a cursor-pointer select-none">
           <use href="#close"></use>
@@ -134,10 +134,10 @@
 </template>
 <script setup lang="ts">
 import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { type } from '@tauri-apps/plugin-os'
 import { dynamicCommentList, dynamicList } from '@/mock'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { isMac, isWindows } from '@/utils/PlatformConstants'
 
 const userStore = useUserStore()
 const infoTip = ref({

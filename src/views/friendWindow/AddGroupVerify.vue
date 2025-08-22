@@ -51,9 +51,9 @@
 <script setup lang="ts">
 import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useCommon } from '@/hooks/useCommon.ts'
-import apis from '@/services/apis.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useUserStore } from '@/stores/user.ts'
+import { applyGroup } from '@/utils/ImRequestUtils'
 
 const globalStore = useGlobalStore()
 const userStore = useUserStore()
@@ -69,7 +69,7 @@ watch(
 )
 
 const addFriend = async () => {
-  await apis.applyGroup({
+  await applyGroup({
     msg: requestMsg.value,
     account: String(globalStore.addGroupModalInfo.account)
   })

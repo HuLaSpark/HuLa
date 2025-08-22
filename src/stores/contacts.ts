@@ -1,9 +1,15 @@
 import { defineStore } from 'pinia'
 import { StoresEnum, TauriCommand } from '@/enums'
-import apis from '@/services/apis'
 import type { ContactItem, GroupListReq, RequestFriendItem } from '@/services/types'
 import { RequestFriendAgreeStatus } from '@/services/types'
 import { useGlobalStore } from '@/stores/global'
+import {
+  deleteFriend,
+  getApplyUnreadCount,
+  getFriendPage,
+  handleInvite,
+  requestApplyPage
+} from '@/utils/ImRequestUtils'
 import { ErrorType, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler.ts'
 
 // 定义分页大小常量
@@ -34,15 +40,7 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
       if (contactsOptions.value.isLast || contactsOptions.value.isLoading) return
     }
     contactsOptions.value.isLoading = true
-    const res = await apis
-      .getContactList({
-        // TODO 先写 100，稍后优化
-        pageSize: 100,
-        cursor: isFresh || !contactsOptions.value.cursor ? '' : contactsOptions.value.cursor
-      })
-      .catch(() => {
-        contactsOptions.value.isLoading = false
-      })
+    const res = await getFriendPage()
     if (!res) return
     const data = res
     // 刷新模式下替换整个列表，否则追加到列表末尾
@@ -79,7 +77,7 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
    * 更新全局store中的未读计数
    */
   const getApplyUnReadCount = async () => {
-    const res = await apis.applyUnReadCount()
+    const res: any = await getApplyUnreadCount()
     if (!res) return
     // 更新全局store中的未读计数
     globalStore.unReadMark.newFriendUnreadCount = res.unReadCount4Friend
@@ -106,7 +104,7 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
     }
 
     try {
-      const res = await apis.getApplyPage({
+      const res = await requestApplyPage({
         pageNo: applyPageOptions.value.pageNo,
         pageSize: 30,
         cursor: isFresh ? '' : applyPageOptions.value.cursor
@@ -143,7 +141,7 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
    */
   const onHandleInvite = async (apply: { applyId: string; state: number }) => {
     // 同意好友申请
-    apis.handleInviteApi(apply).then(async () => {
+    handleInvite(apply).then(async () => {
       // 刷新好友申请列表
       await getApplyPage(true)
       // 刷新好友列表
@@ -171,7 +169,7 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
   const onDeleteContact = async (uid: string) => {
     if (!uid) return
     // 删除好友
-    await apis.deleteFriend({ targetUid: uid })
+    await deleteFriend({ targetUid: uid })
     // 刷新好友申请列表
     // getRequestFriendsList(true)
     // 刷新好友列表

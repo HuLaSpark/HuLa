@@ -241,7 +241,6 @@ import { LogicalPosition, LogicalSize, PhysicalPosition, PhysicalSize } from '@t
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { primaryMonitor } from '@tauri-apps/api/window'
 import { info } from '@tauri-apps/plugin-log'
-import { type } from '@tauri-apps/plugin-os'
 import { useRoute } from 'vue-router'
 import type ActionBar from '@/components/windows/ActionBar.vue'
 import { CallTypeEnum, RTCCallStatus, ThemeEnum } from '@/enums'
@@ -249,6 +248,7 @@ import { useUserInfo } from '@/hooks/useCached'
 import { useWebRtc } from '@/hooks/useWebRtc'
 import { useSettingStore } from '@/stores/setting'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { isMac, isWindows } from '@/utils/PlatformConstants'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
 import { CallResponseStatus } from '../../services/wsType'
 
@@ -293,13 +293,8 @@ const isLocalVideoMain = ref(true)
 // 通话接听状态
 const isCallAccepted = ref(!isReceiver)
 
-// 根据操作系统选择合适的Size类型
-// Windows使用LogicalSize，Mac使用PhysicalSize
-const currentOS = type()
-console.log('当前操作系统:', currentOS)
-
 const createSize = (width: number, height: number) => {
-  const size = currentOS === 'windows' ? new LogicalSize(width, height) : new PhysicalSize(width, height)
+  const size = isWindows() ? new LogicalSize(width, height) : new PhysicalSize(width, height)
   return size
 }
 
@@ -496,7 +491,7 @@ const acceptCall = async () => {
     await currentWindow.setAlwaysOnTop(false)
 
     // 恢复标题栏按钮显示
-    if (currentOS === 'macos') {
+    if (isMac()) {
       await invokeSilently('show_title_bar_buttons', { windowLabel: currentWindow.label })
     }
 
@@ -568,7 +563,7 @@ onMounted(async () => {
     await currentWindow.setSize(createSize(360, 90))
 
     // 隐藏标题栏和设置窗口不可移动
-    if (currentOS === 'macos') {
+    if (isMac()) {
       await invokeSilently('hide_title_bar_buttons', { windowLabel: currentWindow.label, hideCloseButton: true })
     }
 
@@ -583,7 +578,7 @@ onMounted(async () => {
       let x: number
       let y: number
 
-      if (currentOS === 'windows') {
+      if (isWindows()) {
         // Windows使用逻辑像素进行计算，窗口在右下角
         screenWidth = monitor.size.width / (monitor.scaleFactor || 1)
         screenHeight = monitor.size.height / (monitor.scaleFactor || 1)
@@ -609,7 +604,7 @@ onMounted(async () => {
     await currentWindow.setAlwaysOnTop(false)
 
     // 确保标题栏按钮显示（非来电通知状态）
-    if (currentOS === 'macos') {
+    if (isMac()) {
       await invokeSilently('show_title_bar_buttons', { windowLabel: currentWindow.label })
     }
   }

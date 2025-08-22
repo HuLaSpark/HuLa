@@ -1,7 +1,9 @@
+use crate::AppData;
+
 use super::{client::WebSocketClient, types::*};
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, OnceLock};
-use tauri::AppHandle;
+use tauri::{AppHandle, State};
 use tokio::sync::RwLock;
 use tracing::{error, info};
 
@@ -62,15 +64,17 @@ impl SuccessResponse {
 pub async fn ws_init_connection(
     app_handle: AppHandle,
     params: InitWsParams,
+    state: State<'_, AppData>,
 ) -> Result<SuccessResponse, String> {
     info!("🚀 收到 WebSocket 初始化请求");
 
     let client_container = get_websocket_client_container();
+    let rc = state.rc.lock().await;
 
     let config = WebSocketConfig {
         server_url: params.server_url,
-        token: params.token,
         client_id: params.client_id,
+        token: rc.token.clone(),
         ..Default::default()
     };
 

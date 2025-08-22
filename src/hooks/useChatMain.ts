@@ -3,14 +3,12 @@ import { writeImage, writeText } from '@tauri-apps/plugin-clipboard-manager'
 import { save } from '@tauri-apps/plugin-dialog'
 import { BaseDirectory } from '@tauri-apps/plugin-fs'
 import { revealItemInDir } from '@tauri-apps/plugin-opener'
-import { type } from '@tauri-apps/plugin-os'
 import type { FileTypeResult } from 'file-type'
 import { MittEnum, MsgEnum, PowerEnum, RoleEnum, RoomTypeEnum } from '@/enums'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useDownload } from '@/hooks/useDownload'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useVideoViewer } from '@/hooks/useVideoViewer'
-import apis from '@/services/apis.ts'
 import { translateText } from '@/services/translate'
 import type { FilesMeta, MessageType, RightMouseMessageItem } from '@/services/types.ts'
 import { useChatStore } from '@/stores/chat.ts'
@@ -24,7 +22,9 @@ import { useUserStore } from '@/stores/user'
 import { isDiffNow } from '@/utils/ComputedTime.ts'
 import { extractFileName, removeTag } from '@/utils/Formatting'
 import { detectImageFormat, imageUrlToUint8Array, isImageUrl } from '@/utils/ImageUtils'
+import { recallMsg, removeGroupMember } from '@/utils/ImRequestUtils'
 import { detectRemoteFileType, getFilesMeta, getUserAbsoluteVideosDir } from '@/utils/PathUtil'
+import { isMac } from '@/utils/PlatformConstants'
 import { useWindow } from './useWindow'
 
 export const useChatMain = () => {
@@ -103,7 +103,7 @@ export const useChatMain = () => {
       label: '撤回',
       icon: 'corner-down-left',
       click: async (item: MessageType) => {
-        const res = (await apis.recallMsg({ roomId: '1', msgId: item.message.id })) as any
+        const res = await recallMsg({ roomId: '1', msgId: item.message.id })
         if (res) {
           window.$message.error(res)
           return
@@ -162,7 +162,7 @@ export const useChatMain = () => {
       }
     },
     {
-      label: type() === 'macos' ? '在Finder中显示' : '在文件夹中打开',
+      label: isMac() ? '在Finder中显示' : '在文件夹中打开',
       icon: 'file2',
       click: async (item: MessageType) => {
         try {
@@ -365,7 +365,7 @@ export const useChatMain = () => {
       }
     },
     {
-      label: type() === 'macos' ? '在Finder中显示' : '打开文件夹',
+      label: isMac() ? '在Finder中显示' : '打开文件夹',
       icon: 'file2',
       click: async (item: RightMouseMessageItem) => {
         // try {
@@ -489,7 +489,7 @@ export const useChatMain = () => {
       }
     },
     {
-      label: type() === 'macos' ? '在Finder中显示' : '打开文件夹',
+      label: isMac() ? '在Finder中显示' : '打开文件夹',
       icon: 'file2',
       click: async (item: MessageType) => {
         try {
@@ -663,7 +663,7 @@ export const useChatMain = () => {
         if (!roomId) return
 
         try {
-          await apis.removeGroupMember({ roomId, uid: targetUid })
+          await removeGroupMember({ roomId, uid: targetUid })
           // 从群成员列表中移除该用户
           groupStore.filterUser(targetUid)
           window.$message.success('移出群聊成功')

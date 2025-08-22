@@ -3,9 +3,9 @@ import { LogicalPosition, LogicalSize } from '@tauri-apps/api/dpi'
 import { emitTo, listen } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { register, unregister } from '@tauri-apps/plugin-global-shortcut'
-import { type } from '@tauri-apps/plugin-os'
 import { useTauriListener } from '@/hooks/useTauriListener'
 import { useSettingStore } from '@/stores/setting.ts'
+import { isMac } from '@/utils/PlatformConstants'
 
 // 快捷键配置接口
 type ShortcutConfig = {
@@ -27,7 +27,7 @@ const globalShortcutStates = new Map<string, string>()
 // 防抖状态管理
 let togglePanelTimeout: ReturnType<typeof setTimeout> | null = null
 let lastToggleTime = 0
-const isMac = type() === 'macos'
+const isMacPlatform = isMac()
 
 /**
  * 全局快捷键管理 Hook
@@ -41,8 +41,8 @@ export const useGlobalShortcut = () => {
   // 获取平台对应的默认快捷键
   const getDefaultShortcuts = () => {
     return {
-      screenshot: isMac ? 'Cmd+Ctrl+H' : 'Ctrl+Alt+H',
-      openMainPanel: isMac ? 'Cmd+Ctrl+P' : 'Ctrl+Alt+P'
+      screenshot: isMac() ? 'Cmd+Ctrl+H' : 'Ctrl+Alt+H',
+      openMainPanel: isMac() ? 'Cmd+Ctrl+P' : 'Ctrl+Alt+P'
     }
   }
 
@@ -91,7 +91,7 @@ export const useGlobalShortcut = () => {
       await captureWindow.setPosition(new LogicalPosition(0, 0))
 
       // 在 macOS 上设置窗口级别以覆盖菜单栏
-      if (type() === 'macos') {
+      if (isMacPlatform) {
         await invoke('set_window_level_above_menubar', { windowLabel: 'capture' })
       }
 

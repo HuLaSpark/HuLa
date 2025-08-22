@@ -269,3 +269,48 @@ pub async fn update_message_status(
         .await?;
     Ok(())
 }
+
+/// 更新消息撤回状态
+pub async fn update_message_recall_status(
+    db: &DatabaseConnection,
+    message_id: &str,
+    message_type: u8,
+    message_body: &str,
+    login_uid: &str,
+) -> Result<(), CommonError> {
+    info!(
+        "🔄 [RECALL] Updating message recall status in database, message_id: {}",
+        message_id
+    );
+
+    // 查找要更新的消息
+    let existing_message = im_message::Entity::find()
+        .filter(im_message::Column::Id.eq(message_id))
+        .filter(im_message::Column::LoginUid.eq(login_uid))
+        .one(db)
+        .await
+        .map_err(|e| anyhow::anyhow!("Failed to find message: {}", e))?;
+
+    let message = existing_message
+        .ok_or_else(|| CommonError::UnexpectedError(anyhow::anyhow!("Message not found")))?;
+
+    // 创建更新模型
+    let mut active_model: im_message::ActiveModel = message.into_active_model();
+
+    // 更新消息类型和内容
+    active_model.message_type = Set(Some(message_type));
+    active_model.body = Set(Some(message_body.to_string()));
+    active_model.update_time = Set(Some(chrono::Utc::now().timestamp_millis()));
+
+    // 执行更新
+    im_message::Entity::update(active_model)
+        .exec(db)
+        .await
+        .map_err(|e| anyhow::anyhow!("Failed to update message recall status: {}", e))?;
+
+    info!(
+        "✅ [RECALL] Successfully updated message recall status in database, message_id: {}",
+        message_id
+    );
+    Ok(())
+}

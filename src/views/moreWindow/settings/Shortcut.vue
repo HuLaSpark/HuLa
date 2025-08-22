@@ -107,11 +107,11 @@
 <script setup lang="ts">
 import { emit, listen } from '@tauri-apps/api/event'
 import { isRegistered } from '@tauri-apps/plugin-global-shortcut'
-import { type } from '@tauri-apps/plugin-os'
 import { useMessage } from 'naive-ui'
 import { MacOsKeyEnum } from '@/enums'
 import { useGlobalShortcut } from '@/hooks/useGlobalShortcut.ts'
 import { useSettingStore } from '@/stores/setting.ts'
+import { isMac } from '@/utils/PlatformConstants'
 import { sendOptions } from './config.ts'
 
 // 快捷键配置管理
@@ -130,7 +130,7 @@ type ShortcutConfig = {
 const message = useMessage()
 const settingStore = useSettingStore()
 const { getDefaultShortcuts } = useGlobalShortcut()
-const isMac = type() === 'macos'
+const isMacPlatform = isMac()
 
 // 统一的快捷键配置
 const shortcutConfigs: Record<string, ShortcutConfig> = {
@@ -169,7 +169,7 @@ const sendMessageShortcut = ref(settingStore.chat?.sendKey)
 
 // 将快捷键转换为平台对应的显示文本
 const formatShortcutDisplay = (shortcut: string) => {
-  if (isMac) {
+  if (isMacPlatform) {
     // Mac 平台特殊处理：按照标准顺序排列修饰键
     const keys = shortcut.split('+').map((key) => key.trim())
 
@@ -270,7 +270,7 @@ const createShortcutInputHandler = (config: ShortcutConfig) => {
     const keys: string[] = []
 
     // 检查修饰键
-    if (isMac) {
+    if (isMacPlatform) {
       // Mac 上区分 Control 键和 Command 键
       if (event.ctrlKey) {
         keys.push('Ctrl')

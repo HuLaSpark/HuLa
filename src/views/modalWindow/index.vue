@@ -38,9 +38,9 @@
 import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useMitt } from '@/hooks/useMitt'
 import { getDisabledOptions, getFilteredOptions, renderLabel, renderSourceList } from '@/layout/center/model.tsx'
-import apis from '@/services/apis'
 import { useGlobalStore } from '@/stores/global'
 import { useGroupStore } from '@/stores/group'
+import { inviteGroupMember } from '@/utils/ImRequestUtils'
 
 const globalStore = useGlobalStore()
 const groupStore = useGroupStore()
@@ -64,7 +64,7 @@ const handleInvite = async () => {
 
   try {
     // 调用邀请群成员API
-    await apis.inviteGroupMember({
+    await inviteGroupMember({
       roomId: globalStore.currentSession?.roomId,
       uidList: selectedValue.value
     })

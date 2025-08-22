@@ -1,12 +1,12 @@
-import { type } from '@tauri-apps/plugin-os'
 import { NFlex } from 'naive-ui'
 import type { VNode } from 'vue'
 import { MacOsKeyEnum, WinKeyEnum } from '@/enums'
+import { isWindows } from '@/utils/PlatformConstants'
 import pkg from '~/package.json'
 import { Button, Input, InputNumber, Select, Slider, Switch } from './model.tsx'
 
 const key = computed(() => {
-  return `${type() === 'windows' ? WinKeyEnum.CTRL : MacOsKeyEnum['⌘']}`
+  return `${isWindows() ? WinKeyEnum.CTRL : MacOsKeyEnum['⌘']}`
 })
 
 type ConfigItemType = 'system' | 'record' | 'identity' | 'cueWords' | 'APIAddress' | 'model' | 'clear'

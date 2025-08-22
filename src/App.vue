@@ -10,7 +10,6 @@
 <script setup lang="ts">
 import { listen } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { type } from '@tauri-apps/plugin-os'
 import { useStorage } from '@vueuse/core'
 import { MittEnum, StoresEnum, ThemeEnum } from '@/enums'
 import { useGlobalShortcut } from '@/hooks/useGlobalShortcut.ts'
@@ -20,6 +19,7 @@ import { useMobile } from '@/hooks/useMobile.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
 import { useSettingStore } from '@/stores/setting.ts'
+import { isDesktop, isMobile } from '@/utils/PlatformConstants'
 import LockScreen from '@/views/LockScreen.vue'
 import { useTauriListener } from './hooks/useTauriListener'
 
@@ -38,12 +38,6 @@ const { initializeGlobalShortcut, cleanupGlobalShortcut } = useGlobalShortcut()
 const LockExclusion = new Set(['/login', '/tray', '/qrCode', '/about', '/onlineStatus'])
 const isLock = computed(() => {
   return !LockExclusion.has(router.currentRoute.value.path) && lockScreen.value.enable
-})
-const isDesktop = computed(() => {
-  return type() === 'windows' || type() === 'linux' || type() === 'macos'
-})
-const isMobile = computed(() => {
-  return type() === 'android' || type() === 'ios'
 })
 
 /** 禁止图片以及输入框的拖拽 */
@@ -97,29 +91,11 @@ watch(
   { immediate: true }
 )
 
-watch(
-  [token, refreshToken],
-  async ([newToken, newRefreshToken]) => {
-    // 如果不在主窗口下，则不执行token检查和重新登录逻辑
-    if (appWindow.label !== 'home') {
-      return
-    }
-
-    // 非登录页面才执行 token 检查和重新登录逻辑
-    if (!newToken || !newRefreshToken) {
-      console.log('🔑 Token 或 RefreshToken 丢失，需要重新登录')
-      await resetLoginState()
-      await logout()
-    }
-  },
-  { immediate: true }
-)
-
 onMounted(async () => {
   // 判断是否是桌面端，桌面端需要调整样式
-  isDesktop.value && (await import('@/styles/scss/global/desktop.scss'))
+  isDesktop() && (await import('@/styles/scss/global/desktop.scss'))
   // 判断是否是移动端，移动端需要加载安全区域适配样式
-  isMobile.value && (await import('@/styles/scss/global/mobile.scss'))
+  isMobile() && (await import('@/styles/scss/global/mobile.scss'))
   await import(`@/styles/scss/theme/${themes.value.versatile}.scss`)
   // 判断localStorage中是否有设置主题
   if (!localStorage.getItem(StoresEnum.SETTING)) {

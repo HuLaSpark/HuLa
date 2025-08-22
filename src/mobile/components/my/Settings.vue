@@ -25,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-import router from '~/src/router'
+import router from '@/router'
 
 const active = ref(false)
 
