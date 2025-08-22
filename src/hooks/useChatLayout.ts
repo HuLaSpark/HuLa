@@ -1,10 +1,10 @@
-import { MIN_FOOTER_HEIGHT } from '@/common/constants'
+import { FOOTER_HEIGHT } from '@/common/constants'
 
 /**
  * 聊天页面布局管理
  */
 export const useChatLayout = () => {
-  const footerHeight = ref(Math.max(200, MIN_FOOTER_HEIGHT))
+  const footerHeight = ref(FOOTER_HEIGHT)
 
   const setFooterHeight = (height: number) => {
     footerHeight.value = height

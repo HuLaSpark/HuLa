@@ -168,9 +168,9 @@ export const useChatStore = defineStore(
         }
 
         // 1. 立即清空当前消息列表
-        if (currentMessageMap.value) {
-          currentMessageMap.value.clear()
-        }
+        // if (currentMessageMap.value) {
+        //   currentMessageMap.value.clear()
+        // }
 
         // 2. 重置消息加载状态
         currentMessageOptions.value = {
@@ -188,7 +188,7 @@ export const useChatStore = defineStore(
         nextTick(async () => {
           try {
             // 从服务器加载消息
-            await getMsgList()
+            await getMsgList(pageSize, true)
           } catch (error) {
             console.error('无法加载消息:', error)
             currentMessageOptions.value = {
@@ -228,7 +228,7 @@ export const useChatStore = defineStore(
     const chatMessageList = computed(() => [...(currentMessageMap.value?.values() || [])])
 
     // 获取消息列表
-    const getMsgList = async (size = pageSize) => {
+    const getMsgList = async (size = pageSize, isSwitching = false) => {
       // 获取当前房间ID，用于后续比较
       const requestRoomId = currentRoomId.value
 
@@ -279,11 +279,13 @@ export const useChatStore = defineStore(
       if (requestRoomId !== currentRoomId.value) return
 
       // 为保证获取的历史消息在前面
-      const newList = [...computedList, ...chatMessageList.value]
-      currentMessageMap.value?.clear() // 清空Map
+      const newList = isSwitching ? computedList : [...computedList, ...chatMessageList.value]
+      // 构建新 Map 后一次性替换，避免清空帧导致 UI 闪烁
+      const nextMap = new Map<string, MessageType>()
       for (const msg of newList) {
-        currentMessageMap.value?.set(msg.message.id, msg)
+        nextMap.set(msg.message.id, msg)
       }
+      currentMessageMap.value = nextMap
 
       if (currentMessageOptions.value) {
         currentMessageOptions.value.cursor = data.cursor
