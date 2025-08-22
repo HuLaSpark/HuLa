@@ -1,5 +1,5 @@
 import { ImUrlEnum, type NotificationTypeEnum } from '@/enums'
-import type { CacheUserReq, LoginUserReq, RegisterUserReq } from '@/services/types'
+import type { CacheBadgeReq, CacheUserReq, LoginUserReq, RegisterUserReq } from '@/services/types'
 import { ErrorType, invokeSilently, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 
 /**
@@ -249,10 +249,12 @@ export async function getBadgeList() {
   })
 }
 
-export async function getBadgesBatch(body: any) {
+export async function getBadgesBatch(body: CacheBadgeReq[]) {
   return await imRequest({
     url: ImUrlEnum.GET_BADGES_BATCH,
-    body
+    body: {
+      reqList: body
+    }
   })
 }
 
