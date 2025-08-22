@@ -58,7 +58,7 @@ pub struct AppData {
 
 use crate::command::contact_command::{hide_contact_command, list_contacts_command};
 use crate::command::message_command::{
-    check_user_init_and_fetch_messages, page_msg, save_msg, send_msg,
+    check_user_init_and_fetch_messages, page_msg, save_msg, send_msg, update_message_recall_status,
 };
 use crate::command::message_mark_command::save_message_mark;
 
@@ -416,6 +416,7 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         page_msg,
         send_msg,
         save_msg,
+        update_message_recall_status,
         save_message_mark,
         // WebSocket 相关命令
         ws_init_connection,

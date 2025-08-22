@@ -462,3 +462,28 @@ pub async fn save_msg(data: MessageResp, state: State<'_, AppData>) -> Result<()
 
     Ok(())
 }
+
+#[tauri::command]
+pub async fn update_message_recall_status(
+    message_id: String,
+    message_type: u8,
+    message_body: String,
+    state: State<'_, AppData>,
+) -> Result<(), String> {
+    let login_uid = state.user_info.lock().await.uid.clone();
+
+    im_message_repository::update_message_recall_status(
+        state.db_conn.deref(),
+        &message_id,
+        message_type,
+        &message_body,
+        &login_uid,
+    )
+    .await
+    .map_err(|e| {
+        error!("❌ [RECALL] Failed to update message recall status: {}", e);
+        e.to_string()
+    })?;
+
+    Ok(())
+}

@@ -491,6 +491,8 @@ export enum TauriCommand {
   SAVE_MSG = 'save_msg',
   /** 保存消息标记 */
   SAVE_MESSAGE_MARK = 'save_message_mark',
+  /** 更新消息撤回状态 */
+  UPDATE_MESSAGE_RECALL_STATUS = 'update_message_recall_status',
   /** 更新 token */
   UPDATE_TOKEN = 'update_token'
 }

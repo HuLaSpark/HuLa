@@ -552,8 +552,8 @@ export const useChatStore = defineStore(
       }
     }
 
-    // 更新消息撤回状态 TODO: 撤回消息消息计数没有改变
-    const updateRecallStatus = (data: RevokedMsgType) => {
+    // 更新消息撤回状态
+    const updateRecallStatus = async (data: RevokedMsgType) => {
       const { msgId } = data
       const message = currentMessageMap.value?.get(msgId)
       if (message && typeof data.recallUid === 'string') {
@@ -577,16 +577,41 @@ export const useChatStore = defineStore(
         // 记录这个消息ID已经有了定时器
         expirationTimers.set(msgId, true)
 
-        message.message.type = MsgEnum.RECALL
         const cacheUser = cachedStore.userCachedList[data.recallUid]
+        let recallMessageBody: string
+
         // 如果撤回者的 id 不等于消息发送人的 id, 或者你本人就是管理员，那么显示管理员撤回的。
         if (data.recallUid !== message.fromUser.uid) {
-          message.message.body = `管理员"${cacheUser.name}"撤回了一条消息` // 后期根据本地用户数据修改
+          recallMessageBody = `管理员"${cacheUser.name}"撤回了一条消息` // 后期根据本地用户数据修改
         } else {
           // 如果被撤回的消息是消息发送者撤回，正常显示
-          message.message.body = `"${cacheUser.name}"撤回了一条消息` // 后期根据本地用户数据修改
+          recallMessageBody = `"${cacheUser.name}"撤回了一条消息` // 后期根据本地用户数据修改
+        }
+
+        // 更新前端缓存
+        message.message.type = MsgEnum.RECALL
+        message.message.body = recallMessageBody
+
+        // 同步更新 SQLite 数据库
+        try {
+          await invokeWithErrorHandler(
+            TauriCommand.UPDATE_MESSAGE_RECALL_STATUS,
+            {
+              messageId: msgId,
+              messageType: MsgEnum.RECALL,
+              messageBody: recallMessageBody
+            },
+            {
+              customErrorMessage: '更新撤回消息状态失败',
+              errorType: ErrorType.Client
+            }
+          )
+          info(`✅ [RECALL] Successfully updated message recall status in database, message_id: ${msgId}`)
+        } catch (error) {
+          console.error(`❌ [RECALL] Failed to update message recall status in database:`, error)
         }
       }
+
       // 更新与这条撤回消息有关的消息
       const messageList = currentReplyMap.value?.get(msgId)
       if (messageList) {
