@@ -61,7 +61,6 @@ pub struct FileMeta {
     exists: bool,
 }
 
-
 // 全局变量
 lazy_static! {
     static ref USER_INFO: Arc<RwLock<UserInfo>> = Arc::new(RwLock::new(UserInfo::default()));
@@ -200,30 +199,27 @@ pub fn hide_title_bar_buttons(
             .map(|ptr| unsafe { Retained::retain(ptr as *mut NSWindow) })?
             .ok_or_else(|| "Failed to retain NSWindow".to_string())?;
 
-        unsafe {
-            // 隐藏标题栏按钮的辅助函数
-
-            use objc2_app_kit::NSWindowButton;
-            let hide_button = |window: &NSWindow, button_type: NSWindowButton| {
-                if let Some(btn) = window.standardWindowButton(button_type) {
-                    btn.setHidden(YES.into());
-                }
-            };
-
-            // 隐藏各种标题栏按钮
-            // hide_button(&ns_window, NSWindowButton::NSWindowFullScreenButton);
-            hide_button(&ns_window, NSWindowButton::MiniaturizeButton);
-            // NSWindowFullScreenButton is deprecated in macOS 10.7–10.12. refer: https://developer.apple.com/documentation/appkit/nswindow/buttontype/fullscreenbutton?changes=__6_5&language=objc
-            hide_button(&ns_window, NSWindowButton::ZoomButton);
-
-            // 根据参数决定是否隐藏关闭按钮
-            if hide_close_button.unwrap_or(false) {
-                hide_button(&ns_window, NSWindowButton::CloseButton);
+        // 隐藏标题栏按钮的辅助函数
+        use objc2_app_kit::NSWindowButton;
+        let hide_button = |window: &NSWindow, button_type: NSWindowButton| {
+            if let Some(btn) = window.standardWindowButton(button_type) {
+                btn.setHidden(YES.into());
             }
+        };
 
-            // 设置窗口不可拖动
-            ns_window.setMovable(NO.into());
+        // 隐藏各种标题栏按钮
+        // hide_button(&ns_window, NSWindowButton::NSWindowFullScreenButton);
+        hide_button(&ns_window, NSWindowButton::MiniaturizeButton);
+        // NSWindowFullScreenButton is deprecated in macOS 10.7–10.12. refer: https://developer.apple.com/documentation/appkit/nswindow/buttontype/fullscreenbutton?changes=__6_5&language=objc
+        hide_button(&ns_window, NSWindowButton::ZoomButton);
+
+        // 根据参数决定是否隐藏关闭按钮
+        if hide_close_button.unwrap_or(false) {
+            hide_button(&ns_window, NSWindowButton::CloseButton);
         }
+
+        // 设置窗口不可拖动
+        ns_window.setMovable(NO.into());
     }
     Ok(())
 }
