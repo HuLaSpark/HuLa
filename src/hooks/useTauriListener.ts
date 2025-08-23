@@ -7,6 +7,18 @@ import { getCurrentInstance, onUnmounted } from 'vue'
 const globalListeners = new Map<string, Promise<UnlistenFn>[]>()
 const windowCloseListenerSetup = new Map<string, UnlistenFn>()
 const listenerIdMap = new Map<string, Promise<UnlistenFn>>()
+// 防止对同一个 unlisten 函数重复调用导致底层 listeners[eventId] 不存在
+const calledUnlisteners = new WeakSet<UnlistenFn>()
+
+const safeUnlisten = (unlisten: UnlistenFn) => {
+  try {
+    if (calledUnlisteners.has(unlisten)) return
+    unlisten()
+    calledUnlisteners.add(unlisten)
+  } catch (e) {
+    console.warn('safeUnlisten error:', e)
+  }
+}
 
 /** 自动管理tauri Listener事件监听器的hooks */
 export const useTauriListener = () => {
@@ -24,7 +36,7 @@ export const useTauriListener = () => {
     if (listenerIdMap.has(listenerId)) {
       try {
         const unlisten = await listener
-        unlisten()
+        safeUnlisten(unlisten)
       } catch (e) {
         error(`[跟踪] 取消新监听器失败:${listenerId}, 错误:${e}`)
       }
@@ -71,13 +83,7 @@ export const useTauriListener = () => {
         // 等待所有的 unlisten 函数 resolve
         const unlistenFns = await Promise.all(listeners)
         // 执行所有的 unlisten 函数
-        unlistenFns.forEach((unlisten) => {
-          try {
-            unlisten()
-          } catch (error) {
-            console.warn('清理监听器时出错:', error)
-          }
-        })
+        unlistenFns.forEach((unlisten) => safeUnlisten(unlisten))
         listeners.length = 0
       } catch (error) {
         console.error('清理监听器失败:', error)
@@ -97,13 +103,7 @@ export const useTauriListener = () => {
       // 等待所有的 unlisten 函数 resolve
       const unlistenFns = await Promise.all(windowListeners)
       // 执行所有的 unlisten 函数
-      unlistenFns.forEach((unlisten) => {
-        try {
-          unlisten()
-        } catch (error) {
-          console.warn('清理监听器时出错:', error)
-        }
-      })
+      unlistenFns.forEach((unlisten) => safeUnlisten(unlisten))
 
       // 清理全局状态
       globalListeners.delete(windowLabel)

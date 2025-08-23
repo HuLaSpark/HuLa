@@ -35,6 +35,7 @@ const props = defineProps<{
   buffer?: number
   isLoadingMore?: boolean
   isLast?: boolean
+  listKey?: string | number
 }>()
 
 const emit = defineEmits<{
@@ -68,6 +69,7 @@ let consecutiveStaticFrames = 0 // 连续静止帧计数
 let needsHeightRecalculation = true // 标记是否需要重新计算高度缓存
 let cleanupTimerId: number | null = null // 定时清理DOM的计时器ID
 let resizeObserver: ResizeObserver | null = null // ResizeObserver 实例
+let bottomLockRafId: number | null = null // 吸底稳定锁定的RAF ID
 
 // 响应式变量（需要响应式）
 const heights = ref<Map<string, number>>(new Map()) // 存储每个项目的实际高度，key为消息ID
@@ -89,6 +91,68 @@ const updateContentOffset = (offsetValue: number) => {
   if (contentRef.value) {
     contentRef.value.style.transform = `translateY(${offsetValue}px)`
   }
+}
+
+// 取消底部锁定
+const cancelBottomLock = () => {
+  if (bottomLockRafId !== null) {
+    cancelAnimationFrame(bottomLockRafId)
+    bottomLockRafId = null
+  }
+}
+
+// 启动底部锁定，直到高度与位置稳定
+const lockBottomUntilStable = (timeoutMs = 450, stableFrames = 3) => {
+  const container = containerRef.value
+  if (!container) return
+
+  cancelBottomLock()
+
+  let lastHeight = container.scrollHeight
+  let stable = 0
+  const start = performance.now()
+
+  const tick = () => {
+    if (!containerRef.value) {
+      cancelBottomLock()
+      return
+    }
+
+    const el = containerRef.value
+    const now = performance.now()
+    if (now - start > timeoutMs) {
+      cancelBottomLock()
+      return
+    }
+
+    // 强制吸底
+    const target = Math.max(0, el.scrollHeight - el.clientHeight)
+    if (el.scrollTop !== target) {
+      el.scrollTop = target
+    }
+
+    // 判断高度与位置是否稳定
+    const currentHeight = el.scrollHeight
+    const heightDelta = Math.abs(currentHeight - lastHeight)
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight
+
+    if (heightDelta <= 1 && distanceFromBottom <= 1) {
+      stable++
+    } else {
+      stable = 0
+    }
+
+    lastHeight = currentHeight
+
+    if (stable >= stableFrames) {
+      cancelBottomLock()
+      return
+    }
+
+    bottomLockRafId = requestAnimationFrame(tick)
+  }
+
+  bottomLockRafId = requestAnimationFrame(tick)
 }
 
 const handleMouseEnter = () => {
@@ -364,8 +428,8 @@ const updateVisibleRange = () => {
 
   // 更新可见范围和偏移量
   visibleRange.value = { start, end }
-  // 加上加载中需要的偏移量
-  const newOffset = getOffsetForIndex(start) + LOADING_OFFSET
+  // 仅在历史加载时加上顶部占位偏移，避免非加载场景的跳变
+  const newOffset = getOffsetForIndex(start) + (props.isLoadingMore && !props.isLast ? LOADING_OFFSET : 0)
   offset = newOffset
   updateContentOffset(newOffset)
 }
@@ -485,6 +549,12 @@ onUnmounted(() => {
     rafId = null
   }
 
+  // 清理底部锁定动画
+  if (bottomLockRafId !== null) {
+    cancelAnimationFrame(bottomLockRafId)
+    bottomLockRafId = null
+  }
+
   // 清理 ResizeObserver
   if (resizeObserver) {
     resizeObserver.disconnect()
@@ -537,6 +607,9 @@ defineExpose<VirtualListExpose>({
                 top: targetScrollTop,
                 behavior: options.behavior || 'auto'
               })
+
+              // 启用底部锁定，直到高度稳定
+              lockBottomUntilStable()
             }
           })
         })
@@ -561,9 +634,11 @@ defineExpose<VirtualListExpose>({
       }
     }
 
-    // 立即执行一次，并在短暂延迟后再次执行以确保内容已完全加载
+    // 立即执行一次；仅在平滑滚动时再补偿一次
     executeScroll()
-    setTimeout(executeScroll, 100)
+    if (options.behavior === 'smooth') {
+      setTimeout(executeScroll, 100)
+    }
   },
   getContainer: () => containerRef.value
 })

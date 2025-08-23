@@ -48,7 +48,7 @@
         @scroll="handleScroll"
         @scroll-direction-change="handleScrollDirectionChange"
         @load-more="handleLoadMore"
-        @visible-items-change="(ids: string[]) => (visibleIds = ids)"
+        @visible-items-change="handleVisibleItemsChange"
         @click="handleChatAreaClick"
         class="scrollbar-container h-full"
         :class="{ 'hide-scrollbar': !showScrollbar }"
@@ -390,7 +390,7 @@
     class="float-footer"
     v-if="shouldShowFloatFooter && currentNewMsgCount"
     :class="isGroup ? 'right-220px' : 'right-50px'"
-    :style="{ bottom: `${footerHeight + 16}px` }">
+    :style="{ bottom: `${footerHeight - 60}px` }">
     <div class="float-box" :class="{ max: currentNewMsgCount?.count > 99 }" @click="scrollToBottom">
       <n-flex justify="space-between" align="center">
         <n-icon :color="currentNewMsgCount?.count > 99 ? '#ce304f' : '#13987f'">
@@ -451,6 +451,10 @@ const { themes } = storeToRefs(settingStore)
 const { footerHeight } = useChatLayoutGlobal()
 // 当前可见的消息ID（由 VirtualList 实时上报）
 const visibleIds = ref<string[]>([])
+// 会话滚动位置缓存：roomId -> scrollTop
+const scrollPositions = ref<Map<string, number>>(new Map())
+// 会话消息列表缓存：roomId -> messages
+const messageCache = ref<Map<string, any[]>>(new Map())
 // 保持旧内容，直到新会话数据就绪再替换
 const displayedMessageList = ref<any[]>([])
 // 待切换的会话，用于在新数据就绪前保持旧数据
@@ -521,6 +525,11 @@ const shouldShowFloatFooter = computed(() => {
   const clientHeight = container.clientHeight
   const distanceFromBottom = scrollHeight - scrollTop.value - clientHeight
 
+  // 若已接近底部，任何情况下都不显示，避免切换会话瞬时闪现
+  if (distanceFromBottom <= 20) {
+    return false
+  }
+
   // 如果有新消息，优先显示新消息提示
   if (currentNewMsgCount.value?.count && currentNewMsgCount.value.count > 0) {
     return true
@@ -551,10 +560,41 @@ const {
 const { handlePopoverUpdate, enableScroll } = usePopover(selectKey, 'image-chat-main')
 provide('popoverControls', { enableScroll })
 
-// 滚动到底部
+// 可见项变更（用于锚点、加载更多时定位）
+const handleVisibleItemsChange = (ids: string[]) => {
+  visibleIds.value = ids
+}
+
+// 恢复指定会话的滚动位置，返回是否恢复成功
+const restoreScrollPosition = (roomId: string | undefined | null): boolean => {
+  if (!roomId) return false
+  const container = virtualListInst.value?.getContainer()
+  if (!container) return false
+  const target = scrollPositions.value.get(roomId)
+  if (typeof target !== 'number') return false
+
+  const doScroll = () => {
+    // 标记为自动滚动，避免被 handleScroll 误判
+    isAutoScrolling.value = true
+    container.scrollTo({ top: Math.max(0, target), behavior: 'auto' })
+    // 若偏差仍明显（>16px），再补偿一次
+    setTimeout(() => {
+      const delta = Math.abs(container.scrollTop - target)
+      if (delta > 16) {
+        container.scrollTo({ top: Math.max(0, target), behavior: 'auto' })
+      }
+      isAutoScrolling.value = false
+    }, 120)
+  }
+
+  nextTick(() => doScroll())
+  return true
+}
+
+// 滚动到底部（委托 VirtualList 实现底部锁定）
 const scrollToBottom = () => {
   if (!virtualListInst.value) return
-  virtualListInst.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
+  virtualListInst.value.scrollTo({ position: 'bottom', behavior: 'auto' })
 }
 
 // 更新消息索引映射
@@ -579,6 +619,11 @@ const handleScroll = () => {
   const clientHeight = container.clientHeight
   // 计算距离底部的距离
   const distanceFromBottom = scrollHeight - scrollTop.value - clientHeight
+
+  // 缓存当前会话的滚动位置
+  if (props.activeItem?.roomId) {
+    scrollPositions.value.set(props.activeItem.roomId, container.scrollTop)
+  }
 
   // 存储 requestAnimationFrame 的返回值
   if (rafId.value) {
@@ -634,16 +679,22 @@ watch(
   () => props.activeItem,
   (value, oldValue) => {
     if (oldValue.roomId !== value.roomId) {
+      // 切换前保存旧会话的滚动位置
+      const container = virtualListInst.value?.getContainer()
+      if (container && oldValue.roomId) {
+        scrollPositions.value.set(oldValue.roomId, container.scrollTop)
+      }
       // 标记即将切换到的新会话，等待新数据就绪后再替换展示数据
       pendingRoomId.value = value.roomId
 
       // 使用音频管理器停止所有音频
       audioManager.stopAll()
 
-      // 确保在DOM完全更新后再滚动
-      nextTick(() => {
-        scrollToBottom()
-      })
+      // 如果有目标会话的缓存，立即显示，避免空白或显示上个会话内容
+      const cached = messageCache.value.get(value.roomId)
+      if (cached && Array.isArray(cached)) {
+        displayedMessageList.value = cached
+      }
 
       // 在会话切换时加载新会话的置顶公告
       if (isGroup.value) {
@@ -672,13 +723,23 @@ watch(
 
     if (pendingRoomId.value === currentRoomIdLocal && (dataBelongsToCurrent || loadingFinished)) {
       displayedMessageList.value = value
+      // 更新目标会话缓存
+      messageCache.value.set(currentRoomIdLocal, value)
       pendingRoomId.value = null
-      nextTick(() => scrollToBottom())
+      nextTick(() => {
+        // 优先恢复该会话的滚动位置；若不存在则置底
+        const restored = restoreScrollPosition(currentRoomIdLocal)
+        if (!restored) {
+          scrollToBottom()
+        }
+      })
     }
 
     // 首次进入或没有待切换标记时，如果当前展示为空且数据已属于当前会话（或加载结束），也要填充一次
     if (!pendingRoomId.value && displayedMessageList.value.length === 0 && (dataBelongsToCurrent || loadingFinished)) {
       displayedMessageList.value = value
+      // 更新当前会话缓存
+      messageCache.value.set(currentRoomIdLocal, value)
     }
 
     // 更新消息索引映射
@@ -738,8 +799,15 @@ watch(
     const currentRoomIdLocal = props.activeItem.roomId
     if (pendingRoomId.value === currentRoomIdLocal) {
       displayedMessageList.value = chatMessageList.value
+      // 更新目标会话缓存
+      messageCache.value.set(currentRoomIdLocal, chatMessageList.value)
       pendingRoomId.value = null
-      nextTick(() => scrollToBottom())
+      nextTick(() => {
+        const restored = restoreScrollPosition(currentRoomIdLocal)
+        if (!restored) {
+          scrollToBottom()
+        }
+      })
     }
   }
 )
@@ -993,9 +1061,16 @@ const loadTopAnnouncement = async () => {
 
         // 如果公告状态发生变化，重新滚动到底部
         if (oldAnnouncement !== topAnnouncement.value) {
-          nextTick(() => {
-            scrollToBottom()
-          })
+          const container = virtualListInst.value?.getContainer()
+          if (container) {
+            const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight
+            // 仅当接近底部时保持吸底，避免远离底部时的抖动
+            if (distanceFromBottom <= 20) {
+              nextTick(() => {
+                scrollToBottom()
+              })
+            }
+          }
         }
       } else {
         topAnnouncement.value = null
@@ -1075,13 +1150,20 @@ const announcementClearListener = await appWindow.listen('announcementClear', ()
 
 onMounted(async () => {
   nextTick(() => {
-    scrollToBottom()
+    // 初始尽量恢复会话滚动位置，否则置底
+    const current = currentRoomId.value
+    if (!current || !restoreScrollPosition(current)) {
+      scrollToBottom()
+    }
     // 初始化消息索引映射
     updateMessageIndexMap()
     // 初始加载置顶公告
     loadTopAnnouncement()
     // 初始显示当前会话数据
     displayedMessageList.value = chatMessageList.value
+    if (current) {
+      messageCache.value.set(current, chatMessageList.value)
+    }
   })
   useMitt.on(MittEnum.MESSAGE_ANIMATION, (messageType: MessageType) => {
     addToDomUpdateQueue(messageType.message.id, messageType.fromUser.uid)

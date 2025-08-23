@@ -238,6 +238,8 @@ const announNum = ref(0)
 const isAddAnnoun = ref(false)
 // 用于稳定展示的用户列表
 const displayedUserList = ref<any[]>([])
+// 每群成员缓存：roomId -> members
+const memberCache = ref<Map<string, any[]>>(new Map())
 /** 用户信息加载状态 */
 const userLoadedMap = ref<Record<string, boolean>>({})
 
@@ -281,6 +283,11 @@ watch(
   () => {
     if (groupStore.userList.length > 0 && currentLoadingRoomId.value === globalStore.currentSession?.roomId) {
       displayedUserList.value = filteredUserList.value
+      // 缓存当前群成员
+      const roomId = globalStore.currentSession?.roomId
+      if (roomId) {
+        memberCache.value.set(roomId, displayedUserList.value)
+      }
     }
   },
   { immediate: true }
@@ -447,9 +454,14 @@ onMounted(async () => {
       if (newSession?.type === RoomTypeEnum.GROUP) {
         if (newSession?.roomId !== oldSession?.roomId) {
           currentLoadingRoomId.value = newSession.roomId
-          // 重置群组数据后再加载新的群成员数据
-          groupStore.resetGroupData()
+          // 切换时优先显示缓存，无缓存则保留旧内容，避免空白
+          const cached = memberCache.value.get(newSession.roomId)
+          if (cached && Array.isArray(cached)) {
+            displayedUserList.value = cached
+          }
 
+          // 重置群组数据后再加载新的群成员数据（不清空UI）
+          groupStore.resetGroupData()
           try {
             await groupStore.getGroupUserList(currentSession.roomId)
             // 获取群组统计信息（包括在线人数）
@@ -459,6 +471,8 @@ onMounted(async () => {
             await handleInitAnnoun()
             // 在数据完成后替换展示列表
             displayedUserList.value = filteredUserList.value
+            // 更新缓存
+            memberCache.value.set(currentSession.roomId, displayedUserList.value)
           } catch (error) {
             console.error('加载群组信息失败:', error)
           }
@@ -472,6 +486,10 @@ onMounted(async () => {
   if (groupStore.userList.length > 0) {
     // 初始展示当前列表
     displayedUserList.value = filteredUserList.value
+    const currentRoom = globalStore.currentSession?.roomId
+    if (currentRoom) {
+      memberCache.value.set(currentRoom, displayedUserList.value)
+    }
     await cachedStore.getBatchUserInfo(groupStore.userList.map((item) => item.uid))
     const handleAnnounInitOnEvent = (shouldReload: boolean) => {
       return async (event: any) => {
