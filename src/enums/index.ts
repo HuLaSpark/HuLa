@@ -321,7 +321,9 @@ export enum ChangeTypeEnum {
   /** 1 加入群组 */
   JOIN = 1,
   /** 2 移除群组 */
-  REMOVE
+  REMOVE,
+  /** 3 退出群组 */
+  EXIT_GROUP
 }
 
 /** 关闭窗口的行为 */
@@ -491,8 +493,14 @@ export enum TauriCommand {
   SAVE_MSG = 'save_msg',
   /** 保存消息标记 */
   SAVE_MESSAGE_MARK = 'save_message_mark',
+  /** 更新消息撤回状态 */
+  UPDATE_MESSAGE_RECALL_STATUS = 'update_message_recall_status',
+  /** 获取用户 tokens */
+  GET_USER_TOKENS = 'get_user_tokens',
   /** 更新 token */
-  UPDATE_TOKEN = 'update_token'
+  UPDATE_TOKEN = 'update_token',
+  /** 移除 token */
+  REMOVE_TOKENS = 'remove_tokens'
 }
 
 // 通话状态枚举
@@ -510,4 +518,172 @@ export enum RTCCallStatus {
 export enum CallTypeEnum {
   AUDIO = 1, // 语音通话
   VIDEO = 2 // 视频通话
+}
+
+export enum ImUrlEnum {
+  // Token 相关
+  /** 登录 */
+  LOGIN = 'login',
+  /** 刷新token */
+  REFRESH_TOKEN = 'refreshToken',
+  /** 忘记密码 */
+  FORGET_PASSWORD = 'forgetPassword',
+  /** 检查token */
+  CHECK_TOKEN = 'checkToken',
+  /** 退出登录 */
+  LOGOUT = 'logout',
+  /** 注册 */
+  REGISTER = 'register',
+
+  // 系统相关
+  /** 获取七牛云token */
+  GET_QINIU_TOKEN = 'getQiniuToken',
+  /** 初始化配置 */
+  INIT_CONFIG = 'initConfig',
+  /** 文件上传 */
+  FILE_UPLOAD = 'fileUpload',
+
+  // 验证码相关
+  /** 发送验证码 */
+  SEND_CAPTCHA = 'sendCaptcha',
+  /** 获取验证码 */
+  GET_CAPTCHA = 'getCaptcha',
+
+  // 群公告相关
+  /** 编辑群公告 */
+  EDIT_ANNOUNCEMENT = 'editAnnouncement',
+  /** 删除群公告 */
+  DELETE_ANNOUNCEMENT = 'deleteAnnouncement',
+  /** 发布群公告 */
+  PUSH_ANNOUNCEMENT = 'pushAnnouncement',
+  /** 获取群公告列表 */
+  GET_ANNOUNCEMENT_LIST = 'getAnnouncementList',
+
+  // 群聊申请相关
+  /** 申请加群列表 */
+  APPLY_GROUP_LIST = 'applyGroupList',
+  /** 处理加群申请 */
+  APPLY_HANDLE = 'applyHandle',
+  /** 申请加群 */
+  APPLY_GROUP = 'applyGroup',
+
+  // 群聊搜索和管理
+  /** 搜索群聊 */
+  SEARCH_GROUP = 'searchGroup',
+  /** 修改我的群聊信息 */
+  UPDATE_MY_ROOM_INFO = 'updateMyRoomInfo',
+  /** 修改群聊信息 */
+  UPDATE_ROOM_INFO = 'updateRoomInfo',
+  /** 群聊列表 */
+  GROUP_LIST = 'groupList',
+  /** 群聊详情 */
+  GROUP_DETAIL = 'groupDetail',
+
+  // 群聊管理员
+  /** 撤销管理员 */
+  REVOKE_ADMIN = 'revokeAdmin',
+  /** 添加管理员 */
+  ADD_ADMIN = 'addAdmin',
+
+  // 群聊成员管理
+  /** 退出群聊 */
+  EXIT_GROUP = 'exitGroup',
+  /** 接受邀请 */
+  ACCEPT_INVITE = 'acceptInvite',
+  /** 邀请列表 */
+  INVITE_LIST = 'inviteList',
+  /** 邀请群成员 */
+  INVITE_GROUP_MEMBER = 'inviteGroupMember',
+  /** 创建群聊 */
+  CREATE_GROUP = 'createGroup',
+
+  // 聊天会话相关
+  /** 屏蔽消息 */
+  SHIELD = 'shield',
+  /** 通知设置 */
+  NOTIFICATION = 'notification',
+  /** 删除会话 */
+  DELETE_SESSION = 'deleteSession',
+  /** 设置会话置顶 */
+  SET_SESSION_TOP = 'setSessionTop',
+  /** 会话详情（联系人） */
+  SESSION_DETAIL_WITH_FRIENDS = 'sessionDetailWithFriends',
+  /** 会话详情 */
+  SESSION_DETAIL = 'sessionDetail',
+
+  // 消息已读未读
+  /** 获取消息已读数 */
+  GET_MSG_READ_COUNT = 'getMsgReadCount',
+  /** 获取消息已读列表 */
+  GET_MSG_READ_LIST = 'getMsgReadList',
+
+  // 好友相关
+  /** 修改好友备注 */
+  MODIFY_FRIEND_REMARK = 'modifyFriendRemark',
+  /** 删除好友 */
+  DELETE_FRIEND = 'deleteFriend',
+  /** 发送添加好友请求 */
+  SEND_ADD_FRIEND_REQUEST = 'sendAddFriendRequest',
+  /** 处理邀请 */
+  HANDLE_INVITE = 'handleInvite',
+  /** 申请未读数 */
+  APPLY_UN_READ_COUNT = 'applyUnReadCount',
+  /** 请求申请页面 */
+  REQUEST_APPLY_PAGE = 'requestApplyPage',
+  /** 获取联系人列表 */
+  GET_CONTACT_LIST = 'getContactList',
+  /** 搜索好友 */
+  SEARCH_FRIEND = 'searchFriend',
+
+  // 用户状态相关
+  /** 改变用户状态 */
+  CHANGE_USER_STATE = 'changeUserState',
+  /** 获取所有用户状态 */
+  GET_ALL_USER_STATE = 'getAllUserState',
+
+  // 用户信息相关
+  /** 上传头像 */
+  UPLOAD_AVATAR = 'uploadAvatar',
+  /** 获取表情 */
+  GET_EMOJI = 'getEmoji',
+  /** 删除表情 */
+  DELETE_EMOJI = 'deleteEmoji',
+  /** 添加表情 */
+  ADD_EMOJI = 'addEmoji',
+  /** 设置用户徽章 */
+  SET_USER_BADGE = 'setUserBadge',
+  /** 修改用户名 */
+  MODIFY_USER_NAME = 'modifyUserName',
+  /** 获取用户信息详情 */
+  GET_USER_INFO_DETAIL = 'getUserInfoDetail',
+  /** 批量获取用户信息 */
+  GET_USER_INFO_BATCH = 'getUserInfoBatch',
+  /** 批量获取徽章 */
+  GET_BADGES_BATCH = 'getBadgesBatch',
+  /** 获取徽章列表 */
+  GET_BADGE_LIST = 'getBadgeList',
+  /** 拉黑用户 */
+  BLOCK_USER = 'blockUser',
+
+  // 消息相关
+  /** 撤回消息 */
+  RECALL_MSG = 'recallMsg',
+  /** 标记消息 */
+  MARK_MSG = 'markMsg',
+  /** 获取消息列表 */
+  GET_MSG_LIST = 'getMsgList',
+  /** 获取成员统计 */
+  GET_MEMBER_STATISTIC = 'getMemberStatistic',
+
+  // 群成员信息
+  /** 获取所有用户基础信息 */
+  GET_ALL_USER_BASE_INFO = 'getAllUserBaseInfo',
+
+  GROUP_LIST_MEMBER = 'groupListMember',
+  SEND_MSG = 'sendMsg',
+  SET_HIDE = 'setHide',
+  GET_FRIEND_PAGE = 'getFriendPage',
+  MARK_MSG_READ = 'markMsgRead',
+  /** 移出群成员 */
+  REMOVE_GROUP_MEMBER = 'removeGroupMember'
 }

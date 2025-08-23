@@ -25,6 +25,13 @@ pub struct UpdateTokenRequest {
     refresh_token: String,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct TokenResponse {
+    token: Option<String>,
+    refresh_token: Option<String>,
+}
+
 #[tauri::command]
 pub async fn save_user_info(
     user_info: SaveUserInfoRequest,
@@ -60,37 +67,6 @@ pub async fn save_user_info(
 }
 
 #[tauri::command]
-pub async fn update_token(
-    token_info: UpdateTokenRequest,
-    state: State<'_, AppData>,
-) -> Result<(), String> {
-    info!("Updating token in im_request_client");
-
-    let request_client = state.request_client.clone();
-
-    // 获取 ImRequestClient 的锁并更新 token
-    let client = request_client.lock().await;
-
-    // 更新 token
-    if let Ok(mut token_guard) = client.token.try_lock() {
-        *token_guard = Some(token_info.token.clone());
-        info!("Token updated successfully");
-    } else {
-        return Err("Failed to acquire token lock".to_string());
-    }
-
-    // 更新 refresh_token
-    if let Ok(mut refresh_token_guard) = client.refresh_token.try_lock() {
-        *refresh_token_guard = Some(token_info.refresh_token.clone());
-        info!("Refresh token updated successfully");
-    } else {
-        return Err("Failed to acquire refresh_token lock".to_string());
-    }
-
-    Ok(())
-}
-
-#[tauri::command]
 pub async fn update_user_last_opt_time(state: State<'_, AppData>) -> Result<(), String> {
     info!("Updating user last operation time");
     let db = state.db_conn.clone();
@@ -114,5 +90,34 @@ pub async fn update_user_last_opt_time(state: State<'_, AppData>) -> Result<(), 
             .map_err(|err| format!("Failed to update user last operation time: {}", err))?;
     }
 
+    Ok(())
+}
+
+/// 🔑 获取用户的 token 和 refreshToken
+#[tauri::command]
+pub async fn get_user_tokens(state: State<'_, AppData>) -> Result<TokenResponse, String> {
+    info!("📡 获取用户 token 信息");
+
+    let rc = state.rc.lock().await;
+
+    let response = TokenResponse {
+        token: rc.token.clone(),
+        refresh_token: rc.refresh_token.clone(),
+    };
+
+    info!("✅ 成功获取用户 token 信息");
+    Ok(response)
+}
+
+#[tauri::command]
+pub async fn remove_tokens(state: State<'_, AppData>) -> Result<(), String> {
+    info!("📡 移除用户 token 信息");
+
+    let mut rc = state.rc.lock().await;
+
+    rc.token = None;
+    rc.refresh_token = None;
+
+    info!("✅ 成功移除用户 token 信息");
     Ok(())
 }

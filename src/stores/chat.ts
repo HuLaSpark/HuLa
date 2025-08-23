@@ -1,13 +1,11 @@
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
 import { sendNotification } from '@tauri-apps/plugin-notification'
-import { type } from '@tauri-apps/plugin-os'
 import { cloneDeep } from 'lodash-es'
 import { defineStore } from 'pinia'
 import { useRoute } from 'vue-router'
 import { ErrorType } from '@/common/exception'
 import { type MessageStatusEnum, MsgEnum, NotificationTypeEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
-import apis from '@/services/apis'
 import type { MarkItemType, MessageType, RevokedMsgType, SessionItem } from '@/services/types'
 import { useCachedStore } from '@/stores/cached.ts'
 import { useContactStore } from '@/stores/contacts.ts'
@@ -15,6 +13,8 @@ import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { computedTimeBlock } from '@/utils/ComputedTime.ts'
+import { getSessionDetail } from '@/utils/ImRequestUtils'
+import { isMac } from '@/utils/PlatformConstants'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 
@@ -252,7 +252,6 @@ export const useChatStore = defineStore(
           currentMessageOptions.value.isLoading = false
         }
       })
-      console.log('🔄 请求响应数据', data)
       // 如果没有数据或者房间ID已经变化，则不处理响应
       if (!data || requestRoomId !== currentRoomId.value) return
 
@@ -302,7 +301,7 @@ export const useChatStore = defineStore(
         sessionOptions.isLoading = true
         console.log('获取会话列表')
         const response: any = await invokeWithErrorHandler(TauriCommand.LIST_CONTACTS, undefined, {
-          customErrorMessage: '获取会话列表失败',
+          customErrorMessage: '获取会话列表失败22',
           errorType: ErrorType.Network
         }).catch(() => {
           sessionOptions.isLoading = false
@@ -348,7 +347,7 @@ export const useChatStore = defineStore(
           })
         }
       } catch (e) {
-        console.error('获取会话列表失败:', e)
+        console.error('获取会话列表失败11:', e)
         sessionOptions.isLoading = false
       } finally {
         sessionOptions.isLoading = false
@@ -419,7 +418,7 @@ export const useChatStore = defineStore(
       // 发完消息就要刷新会话列表
       let detailResponse
       if (!current) {
-        detailResponse = await apis.sessionDetail({ id: msg.message.roomId })
+        detailResponse = await getSessionDetail({ id: msg.message.roomId })
       }
 
       // 更新会话的文本属性和未读数
@@ -553,8 +552,8 @@ export const useChatStore = defineStore(
       }
     }
 
-    // 更新消息撤回状态 TODO: 撤回消息消息计数没有改变
-    const updateRecallStatus = (data: RevokedMsgType) => {
+    // 更新消息撤回状态
+    const updateRecallStatus = async (data: RevokedMsgType) => {
       const { msgId } = data
       const message = currentMessageMap.value?.get(msgId)
       if (message && typeof data.recallUid === 'string') {
@@ -578,16 +577,41 @@ export const useChatStore = defineStore(
         // 记录这个消息ID已经有了定时器
         expirationTimers.set(msgId, true)
 
-        message.message.type = MsgEnum.RECALL
         const cacheUser = cachedStore.userCachedList[data.recallUid]
+        let recallMessageBody: string
+
         // 如果撤回者的 id 不等于消息发送人的 id, 或者你本人就是管理员，那么显示管理员撤回的。
         if (data.recallUid !== message.fromUser.uid) {
-          message.message.body = `管理员"${cacheUser.name}"撤回了一条消息` // 后期根据本地用户数据修改
+          recallMessageBody = `管理员"${cacheUser.name}"撤回了一条消息` // 后期根据本地用户数据修改
         } else {
           // 如果被撤回的消息是消息发送者撤回，正常显示
-          message.message.body = `"${cacheUser.name}"撤回了一条消息` // 后期根据本地用户数据修改
+          recallMessageBody = `"${cacheUser.name}"撤回了一条消息` // 后期根据本地用户数据修改
+        }
+
+        // 更新前端缓存
+        message.message.type = MsgEnum.RECALL
+        message.message.body = recallMessageBody
+
+        // 同步更新 SQLite 数据库
+        try {
+          await invokeWithErrorHandler(
+            TauriCommand.UPDATE_MESSAGE_RECALL_STATUS,
+            {
+              messageId: msgId,
+              messageType: MsgEnum.RECALL,
+              messageBody: recallMessageBody
+            },
+            {
+              customErrorMessage: '更新撤回消息状态失败',
+              errorType: ErrorType.Client
+            }
+          )
+          info(`✅ [RECALL] Successfully updated message recall status in database, message_id: ${msgId}`)
+        } catch (error) {
+          console.error(`❌ [RECALL] Failed to update message recall status in database:`, error)
         }
       }
+
       // 更新与这条撤回消息有关的消息
       const messageList = currentReplyMap.value?.get(msgId)
       if (messageList) {
@@ -736,7 +760,7 @@ export const useChatStore = defineStore(
       // 更新全局 store 中的未读计数
       globalStore.unReadMark.newMsgUnreadCount = totalUnread
       // 更新系统托盘图标上的未读数
-      if (type() === 'macos') {
+      if (isMac()) {
         const count = totalUnread > 0 ? totalUnread : undefined
         await invokeWithErrorHandler('set_badge_count', { count })
       }

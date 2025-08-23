@@ -3,7 +3,7 @@
     <div class="bg-[--bg-edit] w-480px h-fit box-border flex flex-col">
       <n-flex :size="6" vertical>
         <div
-          v-if="type() === 'macos'"
+          v-if="isMac()"
           @click="editInfo.show = false"
           class="mac-close size-13px shadow-inner bg-#ed6a5eff rounded-50% mt-6px select-none absolute left-6px">
           <svg class="hidden size-7px color-#000 select-none absolute top-3px left-3px">
@@ -14,7 +14,7 @@
         <n-flex class="text-(14px [--text-color]) select-none pt-6px" justify="center">编辑资料</n-flex>
 
         <svg
-          v-if="type() === 'windows'"
+          v-if="isWindows()"
           class="size-14px cursor-pointer pt-6px select-none absolute right-6px"
           @click="editInfo.show = false">
           <use href="#close"></use>
@@ -135,7 +135,6 @@
 </template>
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { type } from '@tauri-apps/plugin-os'
 import dayjs from 'dayjs'
 import AvatarCropper from '@/components/common/AvatarCropper.vue'
 import { IsYesEnum, MittEnum } from '@/enums'
@@ -144,12 +143,13 @@ import { useCommon } from '@/hooks/useCommon.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useTauriListener } from '@/hooks/useTauriListener'
 import { leftHook } from '@/layout/left/hook.ts'
-import apis from '@/services/apis.ts'
 import type { UserInfoType } from '@/services/types'
 import { useLoginHistoriesStore } from '@/stores/loginHistory'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp, isDiffNow } from '@/utils/ComputedTime.ts'
+import { getBadgeList, uploadAvatar } from '@/utils/ImRequestUtils'
+import { isMac, isWindows } from '@/utils/PlatformConstants'
 
 const appWindow = WebviewWindow.getCurrent()
 const localUserInfo = ref<Partial<UserInfoType>>({})
@@ -169,7 +169,7 @@ const {
 } = useAvatarUpload({
   onSuccess: async (downloadUrl) => {
     // 调用更新头像的API
-    await apis.uploadAvatar({ avatar: downloadUrl })
+    await uploadAvatar({ avatar: downloadUrl })
     // 更新编辑信息
     editInfo.value.content.avatar = downloadUrl
     // 更新用户信息
@@ -211,8 +211,8 @@ const openEditInfo = () => {
   editInfo.value.content = userStore.userInfo
   localUserInfo.value = { ...userStore.userInfo }
   /** 获取徽章列表 */
-  apis.getBadgeList().then((res) => {
-    editInfo.value.badgeList = res as any
+  getBadgeList().then((res: any) => {
+    editInfo.value.badgeList = res
   })
 }
 

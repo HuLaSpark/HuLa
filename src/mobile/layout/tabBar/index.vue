@@ -19,6 +19,7 @@
 
 <script setup lang="ts">
 import { useMobileStore } from '@/stores/mobile'
+import { isAndroid, isIOS } from '@/utils/PlatformConstants'
 
 const mobileStore = useMobileStore()
 
@@ -59,9 +60,9 @@ const navItems: NavItem[] = [
 
 const customHeight = ref(50)
 
-if (mobileStore.envType === 'android') {
+if (isAndroid()) {
   customHeight.value = mobileStore.safeArea.bottom
-} else if (mobileStore.envType === 'ios') {
+} else if (isIOS()) {
   customHeight.value = mobileStore.safeArea.bottom + 20
 }
 

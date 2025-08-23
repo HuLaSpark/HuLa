@@ -12,14 +12,14 @@ use std::time::Duration;
 use tauri::path::BaseDirectory;
 use tauri::{AppHandle, Emitter, LogicalSize, Manager, ResourceId, Runtime, Webview};
 
-#[derive(Serialize)]
-pub struct DiskInfo {
-    mount_point: String,
-    total_space: u64,
-    available_space: u64,
-    used_space: u64,
-    usage_percentage: f64,
-}
+// #[derive(Serialize)]
+// pub struct DiskInfo {
+//     mount_point: String,
+//     total_space: u64,
+//     available_space: u64,
+//     used_space: u64,
+//     usage_percentage: f64,
+// }
 
 #[cfg(target_os = "macos")]
 #[allow(deprecated)]
@@ -40,6 +40,18 @@ pub struct UserInfo {
     is_sign: bool,
 }
 
+impl Default for UserInfo {
+    fn default() -> Self {
+        UserInfo {
+            user_id: -1,
+            username: String::new(),
+            token: String::new(),
+            portrait: String::new(),
+            is_sign: false,
+        }
+    }
+}
+
 #[derive(Serialize)]
 pub struct FileMeta {
     name: String,
@@ -49,33 +61,10 @@ pub struct FileMeta {
     exists: bool,
 }
 
-impl UserInfo {
-    pub fn new(
-        user_id: i64,
-        username: String,
-        token: String,
-        portrait: String,
-        is_sign: bool,
-    ) -> Self {
-        UserInfo {
-            user_id,
-            username,
-            token,
-            portrait,
-            is_sign,
-        }
-    }
-}
 
 // 全局变量
 lazy_static! {
-    static ref USER_INFO: Arc<RwLock<UserInfo>> = Arc::new(RwLock::new(UserInfo::new(
-        -1,
-        String::new(),
-        String::new(),
-        String::new(),
-        false
-    )));
+    static ref USER_INFO: Arc<RwLock<UserInfo>> = Arc::new(RwLock::new(UserInfo::default()));
 }
 
 #[tauri::command]

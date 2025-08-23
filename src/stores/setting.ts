@@ -1,26 +1,23 @@
-import { type } from '@tauri-apps/plugin-os'
 import { defineStore } from 'pinia'
 import { CloseBxEnum, ShowModeEnum, StoresEnum, ThemeEnum } from '@/enums'
+import { isDesktop, isMac } from '@/utils/PlatformConstants'
 
 // 获取平台对应的默认快捷键
 const getDefaultShortcuts = () => {
-  const isMac = type() === 'macos'
   return {
-    screenshot: isMac ? 'Cmd+Ctrl+H' : 'Ctrl+Alt+H',
-    openMainPanel: isMac ? 'Cmd+Ctrl+P' : 'Ctrl+Alt+P'
+    screenshot: isMac() ? 'Cmd+Ctrl+H' : 'Ctrl+Alt+H',
+    openMainPanel: isMac() ? 'Cmd+Ctrl+P' : 'Ctrl+Alt+P'
   }
 }
 
 // TODO 使用indexDB或sqlite缓存数据，还需要根据每个账号来进行配置 (nyh -> 2024-03-26 01:22:12)
-const isDesktop = computed(() => {
-  return type() === 'windows' || type() === 'linux' || type() === 'macos'
-})
+const isDesktopComputed = computed(() => isDesktop())
 export const useSettingStore = defineStore(StoresEnum.SETTING, {
   state: (): STO.Setting => ({
     themes: {
       content: '',
       pattern: '',
-      versatile: isDesktop.value ? 'default' : 'simple'
+      versatile: isDesktopComputed.value ? 'default' : 'simple'
     },
     escClose: true,
     showMode: ShowModeEnum.ICON,

@@ -1,10 +1,8 @@
 import { Channel, invoke } from '@tauri-apps/api/core'
 import { readImage, readText } from '@tauri-apps/plugin-clipboard-manager'
-import { type } from '@tauri-apps/plugin-os'
 import { useDebounceFn } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import type { Ref } from 'vue'
-import { ErrorType } from '@/common/exception'
 import { LimitEnum, MessageStatusEnum, MittEnum, MsgEnum, RoomTypeEnum, TauriCommand, UploadSceneEnum } from '@/enums'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
@@ -17,7 +15,7 @@ import { messageStrategyMap } from '@/strategy/MessageStrategy.ts'
 import { fixFileMimeType, getMessageTypeByFile } from '@/utils/FileType.ts'
 import { processClipboardImage } from '@/utils/ImageUtils.ts'
 import { getReplyContent } from '@/utils/MessageReply.ts'
-import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
+import { isMac, isWindows } from '@/utils/PlatformConstants'
 import { type SelectionRange, useCommon } from './useCommon.ts'
 import { useTrigger } from './useTrigger'
 import { UploadProviderEnum, useUpload } from './useUpload.ts'
@@ -621,18 +619,18 @@ export const useMsgInput = (messageInputDom: Ref) => {
     }
 
     // 正在输入拼音，并且是macos系统
-    if (isChinese.value && type() === 'macos') {
+    if (isChinese.value && isMac()) {
       return
     }
-    const isWindows = type() === 'windows'
+    const isWindowsPlatform = isWindows()
     const isEnterKey = e.key === 'Enter'
-    const isCtrlOrMetaKey = isWindows ? e.ctrlKey : e.metaKey
+    const isCtrlOrMetaKey = isWindowsPlatform ? e.ctrlKey : e.metaKey
 
     const sendKeyIsEnter = chat.value.sendKey === 'Enter'
-    const sendKeyIsCtrlEnter = chat.value.sendKey === `${isWindows ? 'Ctrl' : '⌘'}+Enter`
+    const sendKeyIsCtrlEnter = chat.value.sendKey === `${isWindowsPlatform ? 'Ctrl' : '⌘'}+Enter`
 
     // 如果当前的系统是mac，我需要判断当前的chat.value.sendKey是否是Enter，再判断当前是否是按下⌘+Enter
-    if (!isWindows && chat.value.sendKey === 'Enter' && e.metaKey && e.key === 'Enter') {
+    if (!isWindowsPlatform && chat.value.sendKey === 'Enter' && e.metaKey && e.key === 'Enter') {
       // 就进行换行操作
       e.preventDefault()
       insertNode(MsgEnum.TEXT, '\n', {} as HTMLElement)
@@ -642,7 +640,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       e?.preventDefault()
       return
     }
-    if (!isWindows && e.ctrlKey && isEnterKey && sendKeyIsEnter) {
+    if (!isWindowsPlatform && e.ctrlKey && isEnterKey && sendKeyIsEnter) {
       e?.preventDefault()
       return
     }
@@ -967,32 +965,50 @@ export const useMsgInput = (messageInputDom: Ref) => {
           const finalThumbnailUrl =
             thumbnailUploadResponse?.downloadUrl || `${qiniuConfig.domain}/${thumbnailUploadResponse?.key}`
 
-          // 发送消息到服务器保存
-          await invokeWithErrorHandler(
-            TauriCommand.SEND_MSG,
-            {
-              data: {
-                id: tempMsgId,
-                roomId: globalStore.currentSession.roomId,
-                msgType: MsgEnum.VIDEO,
-                body: {
-                  url: finalVideoUrl,
-                  size: processedFile.size,
-                  fileName: processedFile.name,
-                  thumbUrl: finalThumbnailUrl,
-                  thumbWidth: 300,
-                  thumbHeight: 150,
-                  thumbSize: thumbnailFile.size,
-                  localPath: videoPath, // 保存本地缓存路径
-                  senderUid: userUid.value // 保存发送者UID
-                }
+          // 发送消息到服务器保存 - 使用 channel 方式
+          const videoSuccessChannel = new Channel<any>()
+          const videoErrorChannel = new Channel<string>()
+
+          // 监听成功响应
+          videoSuccessChannel.onmessage = (message) => {
+            console.log('[视频] 收到 send_msg_success 响应:', message)
+            chatStore.updateMsg({
+              msgId: message.oldMsgId,
+              status: MessageStatusEnum.SUCCESS,
+              newMsgId: message.message.id,
+              body: message.message.body
+            })
+          }
+
+          // 监听错误响应
+          videoErrorChannel.onmessage = (msgId) => {
+            console.log('[视频] 收到 send_msg_error 响应:', msgId)
+            chatStore.updateMsg({
+              msgId: msgId,
+              status: MessageStatusEnum.FAILED
+            })
+          }
+
+          await invoke(TauriCommand.SEND_MSG, {
+            data: {
+              id: tempMsgId,
+              roomId: globalStore.currentSession.roomId,
+              msgType: MsgEnum.VIDEO,
+              body: {
+                url: finalVideoUrl,
+                size: processedFile.size,
+                fileName: processedFile.name,
+                thumbUrl: finalThumbnailUrl,
+                thumbWidth: 300,
+                thumbHeight: 150,
+                thumbSize: thumbnailFile.size,
+                localPath: videoPath, // 保存本地缓存路径
+                senderUid: userUid.value // 保存发送者UID
               }
             },
-            {
-              customErrorMessage: '视频消息发送失败',
-              errorType: ErrorType.Network
-            }
-          )
+            successChannel: videoSuccessChannel,
+            errorChannel: videoErrorChannel
+          })
           // 清理本地URL
           URL.revokeObjectURL(tempMsg.message.body.url)
           URL.revokeObjectURL(localThumbUrl)
@@ -1035,22 +1051,40 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
           console.log('🖼️ 图片上传完成，更新为服务器URL:', messageBody.url)
 
-          // 发送消息到服务器
-          await invokeWithErrorHandler(
-            TauriCommand.SEND_MSG,
-            {
-              data: {
-                id: tempMsgId,
-                roomId: globalStore.currentSession.roomId,
-                msgType: MsgEnum.IMAGE,
-                body: messageBody
-              }
+          // 发送消息到服务器 - 使用 channel 方式
+          const imageSuccessChannel = new Channel<any>()
+          const imageErrorChannel = new Channel<string>()
+
+          // 监听成功响应
+          imageSuccessChannel.onmessage = (message) => {
+            console.log('[图片] 收到 send_msg_success 响应:', message)
+            chatStore.updateMsg({
+              msgId: message.oldMsgId,
+              status: MessageStatusEnum.SUCCESS,
+              newMsgId: message.message.id,
+              body: message.message.body
+            })
+          }
+
+          // 监听错误响应
+          imageErrorChannel.onmessage = (msgId) => {
+            console.log('[图片] 收到 send_msg_error 响应:', msgId)
+            chatStore.updateMsg({
+              msgId: msgId,
+              status: MessageStatusEnum.FAILED
+            })
+          }
+
+          await invoke(TauriCommand.SEND_MSG, {
+            data: {
+              id: tempMsgId,
+              roomId: globalStore.currentSession.roomId,
+              msgType: MsgEnum.IMAGE,
+              body: messageBody
             },
-            {
-              customErrorMessage: '图片消息发送失败',
-              errorType: ErrorType.Network
-            }
-          )
+            successChannel: imageSuccessChannel,
+            errorChannel: imageErrorChannel
+          })
 
           // 更新会话最后活动时间
           chatStore.updateSessionLastActiveTime(globalStore.currentSession.roomId)
@@ -1129,22 +1163,40 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
           console.log('📎 文件上传完成，更新为服务器URL:', messageBody.url)
 
-          // 发送消息到服务器
-          await invokeWithErrorHandler(
-            TauriCommand.SEND_MSG,
-            {
-              data: {
-                id: tempMsgId,
-                roomId: globalStore.currentSession.roomId,
-                msgType: MsgEnum.FILE,
-                body: messageBody
-              }
+          // 发送消息到服务器 - 使用 channel 方式
+          const fileSuccessChannel = new Channel<any>()
+          const fileErrorChannel = new Channel<string>()
+
+          // 监听成功响应
+          fileSuccessChannel.onmessage = (message) => {
+            console.log('[文件] 收到 send_msg_success 响应:', message)
+            chatStore.updateMsg({
+              msgId: message.oldMsgId,
+              status: MessageStatusEnum.SUCCESS,
+              newMsgId: message.message.id,
+              body: message.message.body
+            })
+          }
+
+          // 监听错误响应
+          fileErrorChannel.onmessage = (msgId) => {
+            console.log('[文件] 收到 send_msg_error 响应:', msgId)
+            chatStore.updateMsg({
+              msgId: msgId,
+              status: MessageStatusEnum.FAILED
+            })
+          }
+
+          await invoke(TauriCommand.SEND_MSG, {
+            data: {
+              id: tempMsgId,
+              roomId: globalStore.currentSession.roomId,
+              msgType: MsgEnum.FILE,
+              body: messageBody
             },
-            {
-              customErrorMessage: '文件消息发送失败',
-              errorType: ErrorType.Network
-            }
-          )
+            successChannel: fileSuccessChannel,
+            errorChannel: fileErrorChannel
+          })
 
           // 更新会话最后活动时间
           chatStore.updateSessionLastActiveTime(globalStore.currentSession.roomId)
@@ -1272,16 +1324,35 @@ export const useMsgInput = (messageInputDom: Ref) => {
         }
 
         try {
-          await invokeWithErrorHandler(
-            TauriCommand.SEND_MSG,
-            {
-              data: sendData
-            },
-            {
-              customErrorMessage: '语音消息发送失败',
-              errorType: ErrorType.Network
-            }
-          )
+          // 发送消息到服务器 - 使用 channel 方式
+          const voiceSuccessChannel = new Channel<any>()
+          const voiceErrorChannel = new Channel<string>()
+
+          // 监听成功响应
+          voiceSuccessChannel.onmessage = (message) => {
+            console.log('[语音] 收到 send_msg_success 响应:', message)
+            chatStore.updateMsg({
+              msgId: message.oldMsgId,
+              status: MessageStatusEnum.SUCCESS,
+              newMsgId: message.message.id,
+              body: message.message.body
+            })
+          }
+
+          // 监听错误响应
+          voiceErrorChannel.onmessage = (msgId) => {
+            console.log('[语音] 收到 send_msg_error 响应:', msgId)
+            chatStore.updateMsg({
+              msgId: msgId,
+              status: MessageStatusEnum.FAILED
+            })
+          }
+
+          await invoke(TauriCommand.SEND_MSG, {
+            data: sendData,
+            successChannel: voiceSuccessChannel,
+            errorChannel: voiceErrorChannel
+          })
           // 停止发送状态的定时器
           clearTimeout(statusTimer)
 

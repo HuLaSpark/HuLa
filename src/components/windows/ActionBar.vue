@@ -2,9 +2,9 @@
   <!--  user-select: none让元素不可以选中-->
   <div
     :data-tauri-drag-region="isDrag"
-    :class="isCompatibility ? 'flex justify-end select-none' : 'h-24px select-none w-full'">
+    :class="isCompatibility() ? 'flex justify-end select-none' : 'h-24px select-none w-full'">
     <!-- win 和 linux 的DOM -->
-    <template v-if="isCompatibility">
+    <template v-if="isCompatibility()">
       <!--  登录窗口的代理按钮  -->
       <div v-if="proxy" @click="router.push('/network')" class="w-30px h-24px flex-center">
         <svg class="size-16px color-#404040 cursor-pointer">
@@ -89,7 +89,6 @@
 import { emit } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
-import { type } from '@tauri-apps/plugin-os'
 import { exit } from '@tauri-apps/plugin-process'
 import { CloseBxEnum, EventEnum, MittEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
@@ -98,6 +97,7 @@ import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
 import { useAlwaysOnTopStore } from '@/stores/alwaysOnTop.ts'
 import { useSettingStore } from '@/stores/setting.ts'
+import { isCompatibility, isWindows } from '@/utils/PlatformConstants'
 
 const appWindow = WebviewWindow.getCurrent()
 const {
@@ -132,15 +132,11 @@ const tipsRef = reactive({
 })
 // 窗口是否最大化状态
 const windowMaximized = ref(false)
-/** 判断是兼容的系统 */
-const isCompatibility = computed(() => type() === 'windows' || type() === 'linux')
 // 窗口是否置顶状态
 const alwaysOnTopStatus = computed(() => {
   if (topWinLabel === void 0) return false
   return getWindowTop(topWinLabel)
 })
-/** 判断当前是windows还是mac系统 */
-const osType = ref()
 
 // macOS 关闭按钮拦截的 unlisten 函数
 let unlistenCloseRequested: (() => void) | null = null
@@ -152,7 +148,7 @@ watchEffect(() => {
   if (alwaysOnTopStatus.value) {
     appWindow.setAlwaysOnTop(alwaysOnTopStatus.value as boolean)
   }
-  if (escClose.value && type() === 'windows') {
+  if (escClose.value && isWindows()) {
     window.addEventListener('keydown', (e) => isEsc(e))
   } else {
     window.removeEventListener('keydown', (e) => isEsc(e))
@@ -252,7 +248,6 @@ useMitt.on('handleCloseWin', handleCloseWin)
 onMounted(async () => {
   // info('ActionBar 组件已挂载')
   window.addEventListener('resize', handleResize)
-  osType.value = type()
 
   addListener(
     appWindow.listen(EventEnum.EXIT, async () => {

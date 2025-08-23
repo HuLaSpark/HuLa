@@ -200,11 +200,11 @@ import { RoomTypeEnum, TauriCommand } from '@/enums'
 import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useWindow } from '@/hooks/useWindow'
-import apis from '@/services/apis.ts'
 import type { UserItem } from '@/services/types'
 import { useCachedStore } from '@/stores/cached'
 import { useImageViewer } from '@/stores/imageViewer'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { getGroupDetail } from '@/utils/ImRequestUtils'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 
 const { openMsgSession } = useCommon()
@@ -232,18 +232,18 @@ watchEffect(() => {
   if (content.type === RoomTypeEnum.SINGLE) {
     item.value = useUserInfo(content.uid).value
   } else {
-    apis.groupDetail({ id: content.uid }).then((response) => {
-      item.value = response
-
-      // 初始化备注和昵称值
-      remarkValue.value = response.remark || ''
-      nicknameValue.value = response.myName || ''
-
-      // 获取群成员列表
-      if (item.value && item.value.roomId) {
-        fetchGroupMembers(item.value.roomId)
-      }
-    })
+    getGroupDetail(content.uid)
+      .then((response: any) => {
+        item.value = response
+        remarkValue.value = response.remark || ''
+        nicknameValue.value = response.myName || ''
+        if (item.value && item.value.roomId) {
+          fetchGroupMembers(item.value.roomId)
+        }
+      })
+      .catch((e) => {
+        console.error('获取群组详情失败:', e)
+      })
   }
 })
 

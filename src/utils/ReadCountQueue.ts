@@ -1,7 +1,7 @@
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useMitt } from '@/hooks/useMitt.ts'
-import apis from '@/services/apis'
 import type { MsgReadUnReadCountType } from '@/services/types'
+import { getMsgReadCount } from './ImRequestUtils'
 
 /**
  * 消息已读计数队列模块
@@ -86,7 +86,8 @@ const task = async () => {
     }
 
     // 发起新的批量查询请求
-    request = apis.getMsgReadCount({ msgIds: Array.from(queue) }) as AbortableRequest
+    // request = apis.getMsgReadCount({ msgIds: Array.from(queue) }) as AbortableRequest
+    request = await getMsgReadCount(Array.from(queue))
     const res = await request
 
     // 验证响应数据格式

@@ -168,7 +168,7 @@
             忘记密码
           </div>
           <div
-            v-if="!isCompatibility"
+            v-if="!isCompatibility()"
             @click="router.push('/network')"
             class="text-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px">
             网络设置
@@ -179,9 +179,9 @@
   </n-config-provider>
 </template>
 <script setup lang="ts">
+import { invoke } from '@tauri-apps/api/core'
 import { emit } from '@tauri-apps/api/event'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { type } from '@tauri-apps/plugin-os'
 import { useNetwork } from '@vueuse/core'
 import { lightTheme } from 'naive-ui'
 import { ErrorType } from '@/common/exception'
@@ -191,8 +191,8 @@ import { useLogin } from '@/hooks/useLogin.ts'
 import { useMitt } from '@/hooks/useMitt'
 import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
-import apis from '@/services/apis.ts'
 import type { UserInfoType } from '@/services/types.ts'
+import rustWebSocketClient from '@/services/webSocketRust'
 import { WsResponseMessageType } from '@/services/wsType'
 import { useGlobalStore } from '@/stores/global'
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
@@ -200,10 +200,11 @@ import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { getAllUserState, getUserDetail } from '@/utils/ImRequestUtils'
+import { isCompatibility } from '@/utils/PlatformConstants'
 import { clearListener } from '@/utils/ReadCountQueue'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 
-const isCompatibility = computed(() => type() === 'windows' || type() === 'linux')
 const settingStore = useSettingStore()
 const userStore = useUserStore()
 const userStatusStore = useUserStatusStore()
@@ -331,45 +332,49 @@ const normalLogin = async (auto = false) => {
     // 添加2秒延迟
     await new Promise((resolve) => setTimeout(resolve, 1200))
 
-    try {
-      // 登录处理
-      loginProcess(null)
-    } catch (error) {
-      console.error('自动登录失败', error)
-      // 如果是网络异常，不删除token
-      if (!isOnline.value) {
-        loginDisabled.value = true
-        loginText.value = '网络异常'
-        loading.value = false
-      } else {
-        // 其他错误才清除token并重置状态
-        localStorage.removeItem('TOKEN')
-        isAutoLogin.value = false
-        loginDisabled.value = true
-        loginText.value = '登录'
-        loading.value = false
-      }
-    }
+    // TODO 自动登录
+    // try {
+    //   // 登录处理
+    //
+    //   loginProcess(null, null, null)
+    // } catch (error) {
+    //   console.error('自动登录失败', error)
+    //   // 如果是网络异常，不删除token
+    //   if (!isOnline.value) {
+    //     loginDisabled.value = true
+    //     loginText.value = '网络异常'
+    //     loading.value = false
+    //   } else {
+    //     // 其他错误才清除token并重置状态
+    //     localStorage.removeItem('TOKEN')
+    //     isAutoLogin.value = false
+    //     loginDisabled.value = true
+    //     loginText.value = '登录'
+    //     loading.value = false
+    //   }
+    // }
     return
   }
 
-  apis
-    .login({ account: account, password: info.value.password, deviceType: 'PC', systemType: 2, grantType: 'PASSWORD' })
-    .then(async (res) => {
+  invoke('login_command', {
+    data: {
+      account: account,
+      password: info.value.password,
+      deviceType: 'PC',
+      systemType: '2',
+      grantType: 'PASSWORD'
+    }
+  })
+    .then(async (res: any) => {
       loginDisabled.value = true
       userStore.isSign = true
-      // 存储双token
-      localStorage.setItem('TOKEN', res.token)
-      localStorage.setItem('REFRESH_TOKEN', res.refreshToken)
 
-      // 需要删除二维码，因为用户可能先跳转到二维码界面再回到登录界面，会导致二维码一直保持在内存中
-      if (localStorage.getItem('wsLogin')) {
-        localStorage.removeItem('wsLogin')
-      }
+      // 开启 ws 连接
+      await rustWebSocketClient.initConnect()
       // 登录处理
-      await loginProcess(res.client)
+      await loginProcess(res.token, res.refreshToken, res.client)
     })
-    .catch((e) => {
+    .catch((e: any) => {
       console.error('登录异常：', e)
       loading.value = false
       loginDisabled.value = false
@@ -382,23 +387,24 @@ const normalLogin = async (auto = false) => {
     })
 }
 
-const loginProcess = async (client: any) => {
+const loginProcess = async (token: string, refreshToken: string, client: string) => {
   loading.value = false
   // 获取用户状态列表
   if (userStatusStore.stateList.length === 0) {
     try {
-      userStatusStore.stateList = await apis.getAllUserState()
+      userStatusStore.stateList = await getAllUserState()
     } catch (error) {
       console.error('获取用户状态列表失败', error)
     }
   }
   // 获取用户详情
-  const userDetail = await apis.getUserDetail()
+  // const userDetail = await apis.getUserDetail()
+  const userDetail: any = await getUserDetail()
 
   // 设置用户状态id
   stateId.value = userDetail.userStateId
-  const token = localStorage.getItem('TOKEN')
-  const refreshToken = localStorage.getItem('REFRESH_TOKEN')
+  // const token = localStorage.getItem('TOKEN')
+  // const refreshToken = localStorage.getItem('REFRESH_TOKEN')
   // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取
   // await emojiStore.getEmojiList()
   const account = {

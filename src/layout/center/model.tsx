@@ -1,11 +1,11 @@
 import type { TransferRenderSourceList, TransferRenderTargetLabel } from 'naive-ui'
 import { NAvatar, NCheckbox } from 'naive-ui'
 import { useUserInfo } from '@/hooks/useCached.ts'
-import apis from '@/services/apis'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import * as ImRequestUtils from '@/utils/ImRequestUtils'
 
 const contactStore = useContactStore()
 const groupStore = useGroupStore()
@@ -61,7 +61,7 @@ export const getFilteredOptions = () => {
 export const createGroup = async (selectedUids: string[]) => {
   try {
     const uidList = selectedUids.map((uid) => uid)
-    const result = await apis.createGroup({ uidList })
+    const result = await ImRequestUtils.createGroup({ uidList })
     return result
   } catch (error) {
     console.error('创建群聊失败:', error)

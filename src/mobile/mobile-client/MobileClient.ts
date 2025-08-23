@@ -1,6 +1,6 @@
-import { type OsType, type } from '@tauri-apps/plugin-os'
 import mitt from 'mitt'
 import { type SafeArea, useMobileStore } from '@/stores/mobile'
+import { isAndroid, isIOS, isMobile } from '@/utils/PlatformConstants'
 import { AndroidAdapter } from './AndroidAdapter'
 import { IosAdapter } from './IosAdapter'
 import type {
@@ -20,7 +20,6 @@ export type MobileClientEvents = {
 }
 
 export class MobileClient implements IMobileClient {
-  public envType!: OsType
   public mobileStore = useMobileStore()
   private clientAdapter!: IMobileClientAdapter
   public mitt = mitt<MobileClientEvents>()
@@ -30,9 +29,7 @@ export class MobileClient implements IMobileClient {
   }
 
   public async init() {
-    this.envType = type()
-
-    if (this.envType !== 'ios' && this.envType !== 'android') return
+    if (!isMobile()) return
 
     try {
       await this.initAdapter()
@@ -44,11 +41,11 @@ export class MobileClient implements IMobileClient {
   }
 
   private async initAdapter(): Promise<void> {
-    if (this.envType === 'android') {
+    if (isAndroid()) {
       this.clientAdapter = new AndroidAdapter()
       return
     }
-    if (this.envType === 'ios') {
+    if (isIOS()) {
       this.clientAdapter = new IosAdapter()
       return
     }
@@ -90,7 +87,7 @@ export class MobileClient implements IMobileClient {
     try {
       const insets = await this.getSafeArea()
 
-      if (this.envType === 'android') {
+      if (isAndroid()) {
         // 更新安全区域状态
         this.updateSafeAreaStyle(insets)
       }

@@ -120,7 +120,7 @@
       <!-- 协议 -->
       <n-flex
         justify="center"
-        :style="envType === 'android' ? { bottom: safeArea.bottom + 10 + 'px' } : {}"
+        :style="isAndroid() ? { bottom: safeArea.bottom + 10 + 'px' } : {}"
         :size="6"
         class="absolute bottom-0 w-[80%]">
         <n-checkbox v-model:checked="protocol" />
@@ -315,12 +315,13 @@ import PinInput from '@/components/common/PinInput.vue'
 import Validation from '@/components/common/Validation.vue'
 import { TauriCommand } from '@/enums'
 import { useLogin } from '@/hooks/useLogin'
-import apis from '@/services/apis'
 import type { RegisterUserReq, UserInfoType } from '@/services/types'
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import { useMobileStore } from '@/stores/mobile'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { getCaptcha, getUserDetail, login, register, sendCaptcha } from '@/utils/ImRequestUtils'
+import { isAndroid } from '@/utils/PlatformConstants'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 import router from '../router'
 
@@ -332,8 +333,6 @@ const userStore = useUserStore()
 const { setLoginState } = useLogin()
 const { loginHistories } = loginHistoriesStore
 const mobileStore = useMobileStore()
-
-const envType = ref(mobileStore.envType)
 const safeArea = computed(() => mobileStore.safeArea)
 
 /** 当前激活的选项卡 */
@@ -508,7 +507,7 @@ const resetRegisterForm = () => {
  */
 const getVerifyCode = async () => {
   try {
-    const { img, uuid } = await apis.getCaptcha()
+    const { img, uuid } = await getCaptcha()
     captcha.value = { base64: img, uuid }
   } catch (error) {
     // 处理错误
@@ -526,7 +525,7 @@ const handleRegisterStep = async () => {
     // 发送邮箱验证码
     registerLoading.value = true
     try {
-      await apis.sendCaptcha({
+      await sendCaptcha({
         email: registerInfo.value.email,
         code: registerInfo.value.code.toString(),
         uuid: captcha.value.uuid.toString(),
@@ -566,7 +565,7 @@ const handleRegisterComplete = async () => {
 
     // 注册 - 只传递API需要的字段
     const { ...apiRegisterInfo } = registerInfo.value
-    await apis.register(apiRegisterInfo)
+    await register(apiRegisterInfo)
 
     // 关闭弹窗并切换到登录页面
     emailCodeModal.value = false
@@ -588,8 +587,7 @@ const handleRegisterComplete = async () => {
 const normalLogin = async () => {
   loading.value = true
   const { account, password } = info.value
-  apis
-    .login({ account, password, deviceType: 'MOBILE', systemType: 2, grantType: 'PASSWORD' })
+  login({ account, password, deviceType: 'MOBILE', systemType: 2, grantType: 'PASSWORD' })
     .then(async (res) => {
       loginDisabled.value = true
       loginText.value = '登录成功, 正在跳转'
@@ -602,7 +600,7 @@ const normalLogin = async () => {
         localStorage.removeItem('wsLogin')
       }
       // 获取用户详情
-      const userDetail = await apis.getUserDetail()
+      const userDetail: any = await getUserDetail()
       // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取
       // await emojiStore.getEmojiList()
       // TODO 这里的id暂时赋值给uid，因为后端没有统一返回uid，待后端调整

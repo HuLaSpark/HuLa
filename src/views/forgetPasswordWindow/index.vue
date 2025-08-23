@@ -189,7 +189,7 @@
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { lightTheme } from 'naive-ui'
 import Validation from '@/components/common/Validation.vue'
-import apis from '@/services/apis'
+import { forgetPassword, getCaptcha, sendCaptcha } from '@/utils/ImRequestUtils'
 
 // 导入Web Worker
 const timerWorker = new Worker(new URL('../../workers/timer.worker.ts', import.meta.url))
@@ -309,7 +309,7 @@ const getCaptchaImage = async () => {
     lastCaptchaTime.value = Date.now()
     captchaInCooldown.value = true
 
-    const result = await apis.getCaptcha()
+    const result = await getCaptcha()
     captchaImage.value = result.img
     formData.value.uuid = result.uuid
 
@@ -348,7 +348,7 @@ const sendEmailCode = async () => {
   sendingEmailCode.value = true
 
   try {
-    await apis.sendCaptcha({
+    await sendCaptcha({
       email: formData.value.email,
       code: formData.value.imgCode,
       uuid: formData.value.uuid,
@@ -411,7 +411,7 @@ const submitNewPassword = async () => {
     submitLoading.value = true
 
     // 调用忘记密码接口
-    await apis.forgetPassword({
+    await forgetPassword({
       email: formData.value.email,
       code: formData.value.emailCode,
       uuid: formData.value.uuid,

@@ -1,5 +1,5 @@
 import { getInsets } from 'tauri-plugin-safe-area-insets'
-import type { SafeArea } from '~/src/stores/mobile'
+import type { SafeArea } from '@/stores/mobile'
 import type {
   IKeyboardDidShowDetail,
   IMobileClientAdapter,

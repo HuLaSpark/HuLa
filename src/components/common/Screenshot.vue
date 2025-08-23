@@ -68,10 +68,10 @@
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { writeImage } from '@tauri-apps/plugin-clipboard-manager'
-import { type } from '@tauri-apps/plugin-os'
 import type { Ref } from 'vue'
 import { useCanvasTool } from '@/hooks/useCanvasTool'
 import { useTauriListener } from '@/hooks/useTauriListener'
+import { isMac } from '@/utils/PlatformConstants'
 import { ErrorType, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler.ts'
 
 type ScreenConfig = {
@@ -175,9 +175,6 @@ const currentDrawTool: Ref<string | null> = ref(null)
 // 性能优化：鼠标移动事件节流（仅 macOS）
 let mouseMoveThrottleId: number | null = null
 const mouseMoveThrottleDelay = 16 // 约60FPS，在菜单栏区域降低频率
-
-// 平台检测：只在 macOS 上应用性能优化
-const isMacOS = computed(() => type() === 'macos')
 
 // 窗口状态恢复函数
 const restoreWindowState = async () => {
@@ -434,7 +431,7 @@ const handleMaskMouseMove = (event: MouseEvent) => {
   const offsetEvent = event as any
 
   // 只在 macOS 上应用性能优化
-  if (isMacOS) {
+  if (isMac()) {
     // 在菜单栏区域（y < 30）使用更强的节流来减少卡顿
     const currentY = offsetEvent.offsetY * screenConfig.value.scaleY
     const isInMenuBar = currentY < 30 // 菜单栏区域
@@ -1172,7 +1169,7 @@ const confirmSelection = async () => {
 const resetScreenshot = async () => {
   try {
     // 清理性能优化相关的定时器（仅 macOS）
-    if (isMacOS && mouseMoveThrottleId) {
+    if (isMac() && mouseMoveThrottleId) {
       clearTimeout(mouseMoveThrottleId)
       mouseMoveThrottleId = null
     }
@@ -1287,7 +1284,7 @@ onMounted(async () => {
 
 onUnmounted(async () => {
   // 清理性能优化相关的定时器（仅 macOS）
-  if (isMacOS && mouseMoveThrottleId) {
+  if (isMac() && mouseMoveThrottleId) {
     clearTimeout(mouseMoveThrottleId)
     mouseMoveThrottleId = null
   }

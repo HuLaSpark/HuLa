@@ -1,7 +1,7 @@
-import { type } from '@tauri-apps/plugin-os'
 import { onMounted, onUnmounted } from 'vue'
 import type { IKeyboardDidShowDetail } from '@/mobile/mobile-client/interface/adapter'
 import { useMobileStore } from '@/stores/mobile'
+import { isMobile } from '@/utils/PlatformConstants'
 
 export function useMobile() {
   const mobileStore = useMobileStore()
@@ -10,7 +10,7 @@ export function useMobile() {
   let removeHideFunction: () => void = () => {}
 
   onMounted(async () => {
-    if (type() === 'ios' || type() === 'android') {
+    if (isMobile()) {
       const module = await import('@/mobile/mobile-client/MobileClient')
 
       await module.initMobileClient()

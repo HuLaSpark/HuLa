@@ -24,12 +24,12 @@
     </n-flex>
 
     <!-- 系统设置 -->
-    <n-flex v-if="type() === 'windows'" vertical class="text-(14px [--text-color])" :size="16">
+    <n-flex v-if="isWindows()" vertical class="text-(14px [--text-color])" :size="16">
       <span class="pl-10px">系统</span>
 
       <n-flex class="item" :size="12" vertical>
         <!-- 关闭面板 -->
-        <n-flex v-if="type() === 'windows'" align="center" justify="space-between">
+        <n-flex v-if="isWindows()" align="center" justify="space-between">
           <span>关闭主面板</span>
 
           <label class="text-(14px #707070) flex gap-6px lh-16px items-center">
@@ -47,10 +47,10 @@
           </label>
         </n-flex>
 
-        <span v-if="type() === 'windows'" class="w-full h-1px bg-[--line-color]"></span>
+        <span v-if="isWindows()" class="w-full h-1px bg-[--line-color]"></span>
 
         <!-- ESC关闭面板 -->
-        <n-flex v-if="type() === 'windows'" align="center" justify="space-between">
+        <n-flex v-if="isWindows()" align="center" justify="space-between">
           <span>是否启用ESC关闭窗口</span>
 
           <n-switch size="small" v-model:value="escClose" />
@@ -141,10 +141,10 @@
 import { invoke } from '@tauri-apps/api/core'
 import { emitTo } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { type } from '@tauri-apps/plugin-os'
 import { NSwitch } from 'naive-ui'
 import { CloseBxEnum, ShowModeEnum } from '@/enums'
 import { useSettingStore } from '@/stores/setting.ts'
+import { isWindows } from '@/utils/PlatformConstants'
 import { fontOptions, translateOptions } from './config.ts'
 import { topicsList } from './model.tsx'
 

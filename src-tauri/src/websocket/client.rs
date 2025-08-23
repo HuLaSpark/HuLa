@@ -586,9 +586,9 @@ impl WebSocketClient {
                 info!("✅ 同意好友申请");
                 let _ = app_handle.emit("ws-request-approval-friend", data);
             }
-            "newFriendSession" => {
+            "memberChange" => {
                 info!("🔄 成员变动");
-                let _ = app_handle.emit("ws-new-friend-session", data);
+                let _ = app_handle.emit("ws-member-change", data);
             }
 
             // 房间/群聊相关

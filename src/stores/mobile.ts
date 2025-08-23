@@ -1,4 +1,3 @@
-import { type } from '@tauri-apps/plugin-os'
 import { defineStore } from 'pinia'
 import { StoresEnum } from '@/enums'
 import type { IKeyboardDidShowDetail } from '../mobile/mobile-client/interface/adapter'
@@ -11,10 +10,6 @@ export type SafeArea = {
 }
 
 export const useMobileStore = defineStore(StoresEnum.MOBILE, () => {
-  const _envType = type()
-
-  const envType = _envType
-
   const initBottomTabBarPosition = ref<DOMRect>({
     height: 0,
     width: 0,
@@ -93,7 +88,6 @@ export const useMobileStore = defineStore(StoresEnum.MOBILE, () => {
 
   return {
     safeArea,
-    envType,
     updateSafeArea,
     updateTabBarPosition,
     bottomTabBarPosition,

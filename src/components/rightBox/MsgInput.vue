@@ -129,7 +129,7 @@
                       :size="4"
                       class="text-(12px #777) cursor-default tracking-1 select-none">
                       <span v-if="chatKey !== 'Enter'">
-                        {{ type() === 'macos' ? MacOsKeyEnum['⌘'] : WinKeyEnum.CTRL }}
+                        {{ isMac() ? MacOsKeyEnum['⌘'] : WinKeyEnum.CTRL }}
                       </span>
                       <svg class="size-12px">
                         <use href="#Enter"></use>
@@ -142,7 +142,7 @@
                         <p>或</p>
                       </n-flex>
                       <n-flex align="center" :size="0">
-                        {{ type() === 'macos' ? MacOsKeyEnum['⇧'] : WinKeyEnum.SHIFT }}
+                        {{ isMac() ? MacOsKeyEnum['⇧'] : WinKeyEnum.SHIFT }}
                         <svg class="size-12px">
                           <use href="#Enter"></use>
                         </svg>
@@ -169,7 +169,6 @@
 <script setup lang="ts">
 import { emit } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { type } from '@tauri-apps/plugin-os'
 import { onKeyStroke } from '@vueuse/core'
 import { darkTheme, lightTheme, type VirtualListInst } from 'naive-ui'
 import { storeToRefs } from 'pinia'
@@ -183,6 +182,7 @@ import { useTauriListener } from '@/hooks/useTauriListener'
 import type { SessionItem } from '@/services/types.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { isMac } from '@/utils/PlatformConstants'
 import { sendOptions } from '@/views/moreWindow/settings/config.ts'
 
 const appWindow = WebviewWindow.getCurrent()

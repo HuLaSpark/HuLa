@@ -1,6 +1,6 @@
 use crate::AppData;
 use crate::error::CommonError;
-use crate::im_reqest_client::ImRequestClient;
+use crate::im_request_client::{ImRequestClient, ImUrl};
 use crate::pojo::common::{CursorPageParam, CursorPageResp};
 use crate::repository::{im_message_repository, im_user_repository};
 use crate::vo::vo::ChatMessageReq;
@@ -199,7 +199,7 @@ fn convert_message_to_resp(msg: im_message::Model) -> MessageResp {
 
 /// 检查用户初始化状态并获取消息
 pub async fn check_user_init_and_fetch_messages(
-    client: &ImRequestClient,
+    client: &mut ImRequestClient,
     db_conn: &DatabaseConnection,
     uid: &str,
 ) -> Result<(), CommonError> {
@@ -244,7 +244,7 @@ pub async fn check_user_init_and_fetch_messages(
 
 /// 从后端获取所有消息并保存到数据库
 pub async fn fetch_all_messages(
-    client: &ImRequestClient,
+    client: &mut ImRequestClient,
     db_conn: &DatabaseConnection,
     uid: &str,
     last_opt_time: Option<i64>,
@@ -254,16 +254,19 @@ pub async fn fetch_all_messages(
         uid, last_opt_time
     );
     // 调用后端接口 /chat/msg/list 获取所有消息，传递 last_opt_time 参数
-    let mut request = client.get("/im/chat/msg/list");
+    let params = if let Some(time) = last_opt_time {
+        Some(serde_json::json!({
+            "lastOptTime": time
+        }))
+    } else {
+        None::<serde_json::Value>
+    };
 
-    // 如果有 last_opt_time 参数，添加到查询参数中
-    if let Some(time) = last_opt_time {
-        request = request.query(&[("lastOptTime", time.to_string())]);
-    }
+    let messages: Option<Vec<MessageResp>> = client
+        .im_request(ImUrl::GetMsgList, None::<serde_json::Value>, params)
+        .await?;
 
-    let messages = request.send_json::<Vec<MessageResp>>().await?;
-
-    if let Some(messages) = messages.data {
+    if let Some(messages) = messages {
         // 开启事务
         let tx = db_conn.begin().await?;
 
@@ -396,17 +399,15 @@ pub async fn send_msg(
 
     // 异步发送到后端接口
     let db_conn = state.db_conn.clone();
-    let request_client = state.request_client.clone();
+    let request_client = state.rc.clone();
     let msg_id = message.id.clone();
 
     tokio::spawn(async move {
         // 发送到后端接口
-        let result = {
-            let client = request_client.lock().await;
+        let result: Result<Option<MessageResp>, anyhow::Error> = {
+            let mut client = request_client.lock().await;
             client
-                .post("/im/chat/msg")
-                .json(&send_data)
-                .send_json::<MessageResp>()
+                .im_request(ImUrl::SendMsg, Some(send_data), None::<serde_json::Value>)
                 .await
         };
 
@@ -414,22 +415,15 @@ pub async fn send_msg(
 
         // 根据发送结果更新消息状态
         let status = match result {
-            Ok(resp) => {
-                let mut result = match resp.data.clone() {
-                    Some(data) => data,
-                    None => {
-                        error!("Response data is None");
-                        return;
-                    }
-                };
-                result.old_msg_id = Some(msg_id.clone());
-                id = result.message.id.clone();
+            Ok(Some(mut resp)) => {
+                resp.old_msg_id = Some(msg_id.clone());
+                id = resp.message.id.clone();
                 // 尝试克隆数据以避免所有权问题
-                let event_data = result.clone();
+                let event_data = resp.clone();
                 success_channel.send(event_data).unwrap();
                 "success"
             }
-            Err(_e) => {
+            _ => {
                 error_channel.send(msg_id.clone()).unwrap();
                 "fail"
             }
@@ -465,6 +459,31 @@ pub async fn save_msg(data: MessageResp, state: State<'_, AppData>) -> Result<()
         Ok::<(), CommonError>(())
     }
     .await?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn update_message_recall_status(
+    message_id: String,
+    message_type: u8,
+    message_body: String,
+    state: State<'_, AppData>,
+) -> Result<(), String> {
+    let login_uid = state.user_info.lock().await.uid.clone();
+
+    im_message_repository::update_message_recall_status(
+        state.db_conn.deref(),
+        &message_id,
+        message_type,
+        &message_body,
+        &login_uid,
+    )
+    .await
+    .map_err(|e| {
+        error!("❌ [RECALL] Failed to update message recall status: {}", e);
+        e.to_string()
+    })?;
 
     Ok(())
 }

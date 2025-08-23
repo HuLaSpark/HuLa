@@ -34,7 +34,7 @@ pub struct LoginParam {
     pub source: String,
 }
 
-#[derive(Deserialize, Debug, Serialize)]
+#[derive(Deserialize, Debug, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ApiResult<T> {
     pub success: bool,
