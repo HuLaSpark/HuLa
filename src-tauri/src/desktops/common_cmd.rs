@@ -10,7 +10,13 @@ use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::Duration;
 use tauri::path::BaseDirectory;
-use tauri::{AppHandle, Emitter, LogicalSize, Manager, ResourceId, Runtime, Webview};
+use tauri::{
+    AppHandle, Emitter, LogicalSize, Manager, ResourceId, Runtime, Webview, WebviewWindow,
+};
+
+#[cfg(target_os = "macos")]
+use objc2::rc::Retained;
+use objc2_app_kit::NSWindow;
 
 // #[derive(Serialize)]
 // pub struct DiskInfo {
@@ -20,10 +26,6 @@ use tauri::{AppHandle, Emitter, LogicalSize, Manager, ResourceId, Runtime, Webvi
 //     used_space: u64,
 //     usage_percentage: f64,
 // }
-
-#[cfg(target_os = "macos")]
-#[allow(deprecated)]
-use objc2_app_kit::NSWindow;
 
 use crate::desktops::window_payload::{
     WindowPayload, get_window_payload as _get_window_payload,
@@ -167,6 +169,18 @@ pub fn set_height(height: u32, handle: AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+/// 设置 macOS 交通灯按钮的可见性
+#[cfg(target_os = "macos")]
+fn set_traffic_lights_hidden(
+    ns_window: &NSWindow,
+    hidden: bool,
+    btn: objc2_app_kit::NSWindowButton,
+) {
+    if let Some(button) = ns_window.standardWindowButton(btn) {
+        button.setHidden(hidden);
+    }
+}
+
 /// 隐藏Mac窗口的标题栏按钮（红绿灯按钮）和标题
 ///
 /// # 参数
@@ -183,44 +197,21 @@ pub fn hide_title_bar_buttons(
     hide_close_button: Option<bool>,
     handle: AppHandle,
 ) -> Result<(), String> {
-    #[cfg(target_os = "macos")]
-    #[allow(deprecated)]
-    {
-        use objc2::ffi::{NO, YES};
-        use objc2::rc::Retained;
+    use objc2_app_kit::NSWindowButton;
 
-        let webview_window = handle
-            .get_webview_window(window_label)
-            .ok_or_else(|| format!("Window '{}' not found", window_label))?;
+    let webview_window = get_webview_window(&handle, window_label)?;
+    let ns_window = get_nswindow_from_webview_window(&webview_window)?;
 
-        let ns_window = webview_window
-            .ns_window()
-            .map_err(|e| format!("Failed to get NSWindow: {}", e))
-            .map(|ptr| unsafe { Retained::retain(ptr as *mut NSWindow) })?
-            .ok_or_else(|| "Failed to retain NSWindow".to_string())?;
-
-        // 隐藏标题栏按钮的辅助函数
-        use objc2_app_kit::NSWindowButton;
-        let hide_button = |window: &NSWindow, button_type: NSWindowButton| {
-            if let Some(btn) = window.standardWindowButton(button_type) {
-                btn.setHidden(YES.into());
-            }
-        };
-
-        // 隐藏各种标题栏按钮
-        // hide_button(&ns_window, NSWindowButton::NSWindowFullScreenButton);
-        hide_button(&ns_window, NSWindowButton::MiniaturizeButton);
-        // NSWindowFullScreenButton is deprecated in macOS 10.7–10.12. refer: https://developer.apple.com/documentation/appkit/nswindow/buttontype/fullscreenbutton?changes=__6_5&language=objc
-        hide_button(&ns_window, NSWindowButton::ZoomButton);
-
-        // 根据参数决定是否隐藏关闭按钮
-        if hide_close_button.unwrap_or(false) {
-            hide_button(&ns_window, NSWindowButton::CloseButton);
-        }
-
-        // 设置窗口不可拖动
-        ns_window.setMovable(NO.into());
+    // 隐藏标题栏按钮的辅助函数
+    set_traffic_lights_hidden(&ns_window, true, NSWindowButton::MiniaturizeButton);
+    set_traffic_lights_hidden(&ns_window, true, NSWindowButton::ZoomButton);
+    // 根据参数决定是否隐藏关闭按钮
+    if hide_close_button.unwrap_or(false) {
+        set_traffic_lights_hidden(&ns_window, true, NSWindowButton::CloseButton);
     }
+
+    // 设置窗口不可拖动
+    ns_window.setMovable(false);
     Ok(())
 }
 
@@ -235,41 +226,17 @@ pub fn hide_title_bar_buttons(
 #[tauri::command]
 #[cfg(target_os = "macos")]
 pub fn show_title_bar_buttons(window_label: &str, handle: AppHandle) -> Result<(), String> {
-    #[cfg(target_os = "macos")]
-    #[allow(deprecated)]
-    {
-        let webview_window = handle
-            .get_webview_window(window_label)
-            .ok_or_else(|| format!("Window '{}' not found", window_label))?;
+    use objc2_app_kit::NSWindowButton;
 
-        use objc2::ffi::{NO, YES};
-        use objc2::rc::Retained;
-        use objc2_app_kit::NSWindowButton;
+    let webview_window = get_webview_window(&handle, window_label)?;
+    let ns_window = get_nswindow_from_webview_window(&webview_window)?;
 
-        let ns_window = webview_window
-            .ns_window()
-            .map_err(|e| format!("Failed to get NSWindow: {}", e))
-            .map(|ptr| unsafe { Retained::retain(ptr as *mut NSWindow) })?
-            .ok_or_else(|| "Failed to retain NSWindow".to_string())?;
-
-        // 显示标题栏按钮的辅助函数
-
-        let show_button = |window: &NSWindow, button_type: NSWindowButton| {
-            if let Some(btn) = window.standardWindowButton(button_type) {
-                btn.setHidden(NO.into());
-            }
-        };
-
-        // 显示所有标题栏按钮
-        show_button(&ns_window, NSWindowButton::CloseButton);
-        show_button(&ns_window, NSWindowButton::MiniaturizeButton);
-        show_button(&ns_window, NSWindowButton::ZoomButton);
-        // NSWindowFullScreenButton is deprecated in macOS 10.7–10.12. refer: https://developer.apple.com/documentation/appkit/nswindow/buttontype/fullscreenbutton?changes=__6_5&language=objc
-        // show_button(ns_window, NSWindowButton::NSWindowFullScreenButton);
-
-        // 恢复窗口可拖动
-        ns_window.setMovable(YES.into());
-    }
+    // 显示所有标题栏按钮
+    set_traffic_lights_hidden(&ns_window, false, NSWindowButton::CloseButton);
+    set_traffic_lights_hidden(&ns_window, false, NSWindowButton::MiniaturizeButton);
+    set_traffic_lights_hidden(&ns_window, false, NSWindowButton::ZoomButton);
+    // 恢复窗口可拖动
+    ns_window.setMovable(false);
     Ok(())
 }
 
@@ -280,38 +247,25 @@ pub async fn push_window_payload(
     handle: AppHandle,
 ) -> Result<(), String> {
     let payload_entity = WindowPayload::new(payload);
-
-    let option_window = handle.get_webview_window(&label);
-
-    if let Some(window) = option_window {
-        // 找到了对应label的window说明已经打开了，就只需要提醒刷新就行了
-        let res = window.emit(&format!("{}:update", label), payload_entity);
-
-        if let Err(e) = res {
-            return Err(e.to_string());
-        }
-
-        return Ok(());
+    if let Some(window) = handle.get_webview_window(&label) {
+        window
+            // 找到了对应label的window说明已经打开了，就只需要提醒刷新就行了
+            .emit(&format!("{}:update", label), payload_entity)
+            .map_err(|e| e.to_string())
     } else {
-        let result = _push_window_payload(label, payload_entity).await;
-
-        // 这里是存在值的时候才算失败，不存在值则是插入成功
-        if let Some(_) = result {
-            Err("none".to_string())
-        } else {
-            Ok(())
-        }
+        _push_window_payload(label, payload_entity)
+            .await
+            // 这里是存在值的时候才算失败，不存在值则是插入成功
+            .map_or_else(|| Ok(()), |_| Err("none".to_string()))
     }
 }
 
 #[tauri::command]
 pub async fn get_window_payload(label: String) -> Result<serde_json::Value, ()> {
-    let result = _get_window_payload(label).await;
-    if let Some(payload_entity) = result {
-        Ok(payload_entity.payload)
-    } else {
-        Err(())
-    }
+    _get_window_payload(label)
+        .await
+        .map(|payload_entity| payload_entity.payload)
+        .ok_or(())
 }
 
 #[tauri::command]
@@ -359,40 +313,38 @@ pub async fn get_files_meta(files_path: Vec<String>) -> Result<Vec<FileMeta>, St
 
 #[tauri::command]
 pub fn set_badge_count(count: Option<i64>, handle: AppHandle) -> Result<(), String> {
-    match handle.get_webview_window("home") {
-        Some(window) => {
-            window.set_badge_count(count).map_err(|e| e.to_string())?;
-            Ok(())
-        }
-        None => {
-            // 如果找不到 home 窗口，直接返回成功，不抛出错误
-            Ok(())
-        }
+    // 如果找不到 home 窗口，直接返回成功，不抛出错误
+    if let Some(window) = handle.get_webview_window("home") {
+        window.set_badge_count(count).map_err(|e| e.to_string())?;
     }
+    Ok(())
 }
 
 /// 设置 macOS 窗口级别为屏幕保护程序级别，以覆盖菜单栏
 #[tauri::command]
 #[cfg(target_os = "macos")]
 pub fn set_window_level_above_menubar(window_label: &str, handle: AppHandle) -> Result<(), String> {
-    #[cfg(target_os = "macos")]
-    #[allow(deprecated)]
-    {
-        use objc2::rc::Retained;
+    let webview_window = get_webview_window(&handle, window_label)?;
+    let ns_window = get_nswindow_from_webview_window(&webview_window)?;
 
-        let webview_window = handle
-            .get_webview_window(window_label)
-            .ok_or_else(|| format!("Window '{}' not found", window_label))?;
-
-        let ns_window = webview_window
-            .ns_window()
-            .map_err(|e| format!("Failed to get NSWindow: {}", e))
-            .map(|ptr| unsafe { Retained::retain(ptr as *mut NSWindow) })?
-            .ok_or_else(|| "Failed to retain NSWindow".to_string())?;
-
-        // 设置窗口级别为屏幕保护程序级别 (1000)，高于菜单栏
-        use objc2_app_kit::NSScreenSaverWindowLevel;
-        ns_window.setLevel(NSScreenSaverWindowLevel);
-    }
+    // 设置窗口级别为屏幕保护程序级别 (1000)，高于菜单栏
+    ns_window.setLevel(objc2_app_kit::NSScreenSaverWindowLevel);
     Ok(())
+}
+
+fn get_webview_window(handle: &AppHandle, window_label: &str) -> Result<WebviewWindow, String> {
+    handle
+        .get_webview_window(window_label)
+        .ok_or_else(|| format!("Window '{}' not found", window_label))
+}
+
+#[cfg(target_os = "macos")]
+fn get_nswindow_from_webview_window(
+    webview_window: &WebviewWindow,
+) -> Result<Retained<NSWindow>, String> {
+    webview_window
+        .ns_window()
+        .map_err(|e| format!("Failed to get NSWindow: {}", e))
+        .map(|ptr| unsafe { Retained::retain(ptr as *mut NSWindow) })?
+        .ok_or_else(|| "Failed to retain NSWindow".to_string())
 }
