@@ -11,7 +11,8 @@
       "!src-tauri/*",
       "!node_modules/*",
       "!tauri-plugin-hula/*",
-      "!dist/*"
+      "!dist/*",
+      "!src-tauri/gen/schemas"
     ]
   },
   "formatter": {
