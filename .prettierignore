@@ -11,6 +11,7 @@ src-tauri/capabilities/**
 src-tauri/gen/**
 src-tauri/target/**
 src-tauri/Cargo.toml
+tauri-plugin-hula/**
 CHANGELOG.md
 auto-imports.d.ts
 .gitee/**

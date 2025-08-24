@@ -1,8 +1,8 @@
 use tauri::State;
 
-use crate::{
-    handle_logout_windows, im_request_client::{ImRequest, ImUrl}, vo::vo::{LoginReq, LoginResp}, AppData
-};
+use crate::{im_request_client::{ImRequest, ImUrl}, vo::vo::{LoginReq, LoginResp}, AppData};
+#[cfg(desktop)]
+use crate::handle_logout_windows;
 
 #[tauri::command]
 pub async fn login_command(
@@ -20,6 +20,7 @@ pub async fn login_command(
 }
 
 #[tauri::command]
+#[cfg_attr(mobile, allow(unused_variables))]
 pub async fn im_request_command(
     state: State<'_, AppData>,
     url: String,
@@ -40,6 +41,7 @@ pub async fn im_request_command(
           }
           Err(e) => {
             if e.to_string().contains("请重新登录") {
+              #[cfg(desktop)]
               handle_logout_windows(&app_handle).await;
             }
             return Err(e.to_string())

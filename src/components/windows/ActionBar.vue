@@ -211,7 +211,6 @@ const isEsc = (e: KeyboardEvent) => {
 // 判断当前是否是最大化
 const handleResize = () => {
   appWindow.isMaximized().then((res) => {
-    console.log('ActionBar 检测到窗口最大化状态:', res)
     windowMaximized.value = res
   })
 }

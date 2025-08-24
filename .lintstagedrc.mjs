@@ -5,10 +5,14 @@ function createCommand(prefix, join) {
 }
 
 export default {
-  // JavaScript/TypeScript 文件使用 Biome (排除 .d.ts 文件)
+  // JavaScript/TypeScript 文件使用 Biome (排除 .d.ts 文件和tauri-plugin-hula目录)
   '*.{js,jsx,ts,tsx,json}': [
     (filenames) => {
-      const filteredFiles = filenames.filter((f) => !f.includes('src-tauri/') && !f.endsWith('.d.ts'))
+      const filteredFiles = filenames.filter((f) =>
+        !f.includes('src-tauri/') &&
+        !f.includes('tauri-plugin-hula/') &&
+        !f.endsWith('.d.ts')
+      )
       return filteredFiles.length > 0
         ? `biome check --write --unsafe ${filteredFiles.map((f) => path.relative(process.cwd(), f)).join(' ')}`
         : 'echo "No files to check"'
