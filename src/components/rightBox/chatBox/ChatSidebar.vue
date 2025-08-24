@@ -293,6 +293,42 @@ watch(
   { immediate: true }
 )
 
+// 监听会话变化
+watch(
+  () => globalStore.currentSession,
+  async (newSession, oldSession) => {
+    const currentSession = { ...newSession }
+    if (newSession?.type === RoomTypeEnum.GROUP) {
+      if (newSession?.roomId !== oldSession?.roomId) {
+        currentLoadingRoomId.value = newSession.roomId
+        // 切换时优先显示缓存，无缓存则保留旧内容，避免空白
+        const cached = memberCache.value.get(newSession.roomId)
+        if (cached && Array.isArray(cached)) {
+          displayedUserList.value = cached
+        }
+
+        // 重置群组数据后再加载新的群成员数据（不清空UI）
+        groupStore.resetGroupData()
+        try {
+          await groupStore.getGroupUserList(currentSession.roomId)
+          // 获取群组统计信息（包括在线人数）
+          await groupStore.getCountStatistic(currentSession.roomId)
+
+          // 初始化群公告
+          await handleInitAnnoun()
+          // 在数据完成后替换展示列表
+          displayedUserList.value = filteredUserList.value
+          // 更新缓存
+          memberCache.value.set(currentSession.roomId, displayedUserList.value)
+        } catch (error) {
+          console.error('加载群组信息失败:', error)
+        }
+      }
+    }
+  },
+  { immediate: true }
+)
+
 /**
  * 监听搜索输入过滤用户
  * @param value 输入值
@@ -427,9 +463,6 @@ const announcementUpdatedListener = await appWindow.listen('announcementUpdated'
 })
 
 onMounted(async () => {
-  if (globalStore.currentSession?.type === RoomTypeEnum.GROUP) {
-  }
-
   // 通知父级：Sidebar 已挂载，可移除占位
   emit('ready')
 
@@ -444,42 +477,6 @@ onMounted(async () => {
       announNum.value = 0
     }),
     'announcementClear'
-  )
-
-  // 监听会话变化
-  watch(
-    () => globalStore.currentSession,
-    async (newSession, oldSession) => {
-      const currentSession = { ...newSession }
-      if (newSession?.type === RoomTypeEnum.GROUP) {
-        if (newSession?.roomId !== oldSession?.roomId) {
-          currentLoadingRoomId.value = newSession.roomId
-          // 切换时优先显示缓存，无缓存则保留旧内容，避免空白
-          const cached = memberCache.value.get(newSession.roomId)
-          if (cached && Array.isArray(cached)) {
-            displayedUserList.value = cached
-          }
-
-          // 重置群组数据后再加载新的群成员数据（不清空UI）
-          groupStore.resetGroupData()
-          try {
-            await groupStore.getGroupUserList(currentSession.roomId)
-            // 获取群组统计信息（包括在线人数）
-            await groupStore.getCountStatistic(currentSession.roomId)
-
-            // 初始化群公告
-            await handleInitAnnoun()
-            // 在数据完成后替换展示列表
-            displayedUserList.value = filteredUserList.value
-            // 更新缓存
-            memberCache.value.set(currentSession.roomId, displayedUserList.value)
-          } catch (error) {
-            console.error('加载群组信息失败:', error)
-          }
-        }
-      }
-    },
-    { immediate: true }
   )
 
   // 初始化时获取当前群组用户的信息

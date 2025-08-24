@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div ref="canvasbox" class="canvasbox">
     <canvas ref="drawCanvas" class="draw-canvas"></canvas>
     <canvas ref="maskCanvas" class="mask-canvas"></canvas>
@@ -47,20 +47,38 @@
       <!-- 圆角控制器 -->
       <div class="border-radius-controller" :style="borderRadiusControllerStyle" @click.stop>
         <label>圆角:</label>
-        <input type="range" :value="borderRadius" @input="handleBorderRadiusChange" min="0" max="50" step="1" />
+        <input type="range" :value="borderRadius" @input="handleBorderRadiusChange" min="0" max="100" step="1" />
         <span>{{ borderRadius }}px</span>
       </div>
     </div>
 
-    <div ref="buttonGroup" class="button-group" v-show="showButtonGroup && !isDragging" :style="buttonGroupStyle">
-      <button :class="{ active: currentDrawTool === 'rect' }" @click="drawImgCanvas('rect')">矩形</button>
-      <button :class="{ active: currentDrawTool === 'circle' }" @click="drawImgCanvas('circle')">圆形</button>
-      <button :class="{ active: currentDrawTool === 'arrow' }" @click="drawImgCanvas('arrow')">箭头</button>
-      <button :class="{ active: currentDrawTool === 'mosaic' }" @click="drawImgCanvas('mosaic')">马赛克</button>
-      <button @click="drawImgCanvas('redo')">重做</button>
-      <button @click="drawImgCanvas('undo')">撤销</button>
-      <button @click="confirmSelection">确定</button>
-      <button @click="cancelSelection">取消</button>
+    <div ref="buttonGroup" class="button-group" v-show="showButtonGroup && !isDragging && !isResizing">
+      <span :class="{ active: currentDrawTool === 'rect' }" @click="drawImgCanvas('rect')">
+        <svg><use href="#square"></use></svg>
+      </span>
+      <span :class="{ active: currentDrawTool === 'circle' }" @click="drawImgCanvas('circle')">
+        <svg><use href="#round"></use></svg>
+      </span>
+      <span :class="{ active: currentDrawTool === 'arrow' }" @click="drawImgCanvas('arrow')">
+        <svg><use href="#arrow-right-up"></use></svg>
+      </span>
+      <span :class="{ active: currentDrawTool === 'mosaic' }" @click="drawImgCanvas('mosaic')">
+        <svg><use href="#mosaic"></use></svg>
+      </span>
+      <!-- 重做 -->
+      <span @click="drawImgCanvas('redo')">
+        <svg><use href="#refresh"></use></svg>
+      </span>
+      <!-- 撤回：当没有涂鸦时禁用 -->
+      <span :class="{ disabled: !canUndo }" :aria-disabled="!canUndo" @click.stop="drawImgCanvas('undo')">
+        <svg><use href="#return"></use></svg>
+      </span>
+      <span @click="confirmSelection">
+        <svg><use href="#check-small"></use></svg>
+      </span>
+      <span @click="cancelSelection">
+        <svg><use href="#close"></use></svg>
+      </span>
     </div>
   </div>
 </template>
@@ -86,12 +104,6 @@ type ScreenConfig = {
   height: number
 }
 
-type ButtonGroupStyle = {
-  width: number
-  height: number
-  [key: `--${string}`]: any
-}
-
 // 获取当前窗口实例
 const appWindow = WebviewWindow.getCurrent()
 const { addListener } = useTauriListener()
@@ -109,23 +121,20 @@ const maskCtx: Ref<CanvasRenderingContext2D | null> = ref(null)
 const drawCanvas: Ref<HTMLCanvasElement | null> = ref(null)
 const drawCtx: Ref<CanvasRenderingContext2D | null> = ref(null)
 let drawTools: any
+// 是否可撤回
+const canUndo = ref(false)
 
 // 放大镜
 const magnifier: Ref<HTMLDivElement | null> = ref(null)
 const magnifierCanvas: Ref<HTMLCanvasElement | null> = ref(null)
 const magnifierCtx: Ref<CanvasRenderingContext2D | null> = ref(null)
-const magnifierWidth: number = 200 // 放大镜的宽度
+const magnifierWidth: number = 120 // 放大镜的宽度
 const magnifierHeight: number = 120 // 放大镜的高度
 const zoomFactor: number = 3 // 放大的倍数
 
 // 按钮组
 const buttonGroup: Ref<HTMLDivElement | null> = ref(null)
 const showButtonGroup: Ref<boolean> = ref(false) // 控制按钮组显示
-
-const buttonGroupStyle: Ref<ButtonGroupStyle> = ref({
-  width: 300,
-  height: 40
-})
 
 // 选区拖动区域
 const selectionArea: Ref<HTMLDivElement | null> = ref(null)
@@ -230,9 +239,24 @@ const drawImgCanvas = (type: string) => {
       }
     }
   } else if (type === 'redo') {
-    drawTools.redo && drawTools.redo()
-    console.log('🔄 执行重做')
+    // 需求：点击“重做”清空绘图画布的全部涂鸦
+    if (drawTools.clearAll) {
+      drawTools.clearAll()
+    }
+    // 清空后重置工具状态并禁用绘图事件穿透
+    currentDrawTool.value = null
+    drawTools.resetState && drawTools.resetState()
+    drawTools.clearEvents && drawTools.clearEvents()
+    if (drawCanvas.value) {
+      drawCanvas.value.style.pointerEvents = 'none'
+      drawCanvas.value.style.zIndex = '5'
+    }
+    console.log('🧹 已清空全部涂鸦 (通过重做按钮)')
   } else if (type === 'undo') {
+    // 没有可撤回的内容时直接忽略点击
+    if (!canUndo.value) return
+    // 先停止可能正在进行的绘制，确保一次点击立即生效
+    drawTools.stopDrawing && drawTools.stopDrawing()
     drawTools.undo && drawTools.undo()
     console.log('↩️ 执行撤销')
   }
@@ -269,6 +293,10 @@ const resetDrawTools = () => {
  * 初始化canvas
  */
 const initCanvas = async () => {
+  // 在截图前隐藏放大镜，避免被截进去
+  if (magnifier.value) {
+    magnifier.value.style.display = 'none'
+  }
   // 重置绘图工具状态
   resetDrawTools()
 
@@ -342,6 +370,10 @@ const initCanvas = async () => {
             // 初始化时禁用绘图canvas事件，让事件穿透到选区
             drawCanvas.value.style.pointerEvents = 'none'
             drawCanvas.value.style.zIndex = '5'
+            // 同步 canUndo 状态到本组件用于禁用撤回按钮
+            if (drawTools?.canUndo) {
+              watch(drawTools.canUndo, (val: boolean) => (canUndo.value = val), { immediate: true })
+            }
             console.log('🎨 绘图工具初始化完成 (备用方式)')
           }
           isImageLoaded = true
@@ -384,6 +416,10 @@ const initCanvas = async () => {
           // 初始化时禁用绘图canvas事件，让事件穿透到选区
           drawCanvas.value.style.pointerEvents = 'none'
           drawCanvas.value.style.zIndex = '5'
+          // 同步 canUndo 状态到本组件用于禁用撤回按钮
+          if (drawTools?.canUndo) {
+            watch(drawTools.canUndo, (val: boolean) => (canUndo.value = val), { immediate: true })
+          }
           console.log('🎨 绘图工具初始化完成')
         }
         isImageLoaded = true
@@ -410,6 +446,92 @@ const initCanvas = async () => {
 
   // 添加全局点击监听，用于取消绘图工具
   document.addEventListener('mousedown', handleGlobalMouseDown)
+}
+
+const handleMagnifierMouseMove = (event: MouseEvent) => {
+  if (!magnifier.value || !imgCanvas.value || !imgCtx.value) return
+
+  // 在拖动选区时隐藏放大镜，仅在调整大小和绘制时显示
+  if (isDragging.value) {
+    magnifier.value.style.display = 'none'
+    return
+  }
+
+  // 如果已经选择了区域，但当前不在拖动或调整大小，则隐藏放大镜
+  if (showButtonGroup.value && !isDragging.value && !isResizing.value) {
+    magnifier.value.style.display = 'none'
+    return
+  }
+
+  // 确保图像已加载
+  if (!isImageLoaded) {
+    magnifier.value.style.display = 'none'
+    return
+  }
+
+  // 初始化放大镜画布
+  if (magnifierCanvas.value && magnifierCtx.value === null) {
+    magnifierCanvas.value.width = magnifierWidth
+    magnifierCanvas.value.height = magnifierHeight
+    magnifierCtx.value = magnifierCanvas.value.getContext('2d')
+  }
+
+  if (!magnifierCtx.value) return
+
+  magnifier.value.style.display = 'block'
+
+  // 统一使用 clientX/clientY + canvas 的 boundingClientRect 计算相对画布的坐标
+  const clientX = (event as MouseEvent).clientX
+  const clientY = (event as MouseEvent).clientY
+  const rect = imgCanvas.value.getBoundingClientRect()
+  const mouseX = clientX - rect.left
+  const mouseY = clientY - rect.top
+
+  // 定位放大镜（使用视口坐标放置，避免偏移）
+  let magnifierTop = clientY + 20
+  let magnifierLeft = clientX + 20
+
+  if (magnifierTop + magnifierHeight > window.innerHeight) {
+    magnifierTop = clientY - magnifierHeight - 20
+  }
+  if (magnifierLeft + magnifierWidth > window.innerWidth) {
+    magnifierLeft = clientX - magnifierWidth - 20
+  }
+
+  magnifier.value.style.top = `${magnifierTop}px`
+  magnifier.value.style.left = `${magnifierLeft}px`
+
+  // 计算源图像中的采样区域（相对画布坐标再乘缩放因子）
+  const sourceX = mouseX * screenConfig.value.scaleX - magnifierWidth / zoomFactor / 2
+  const sourceY = mouseY * screenConfig.value.scaleY - magnifierHeight / zoomFactor / 2
+  const sourceWidth = magnifierWidth / zoomFactor
+  const sourceHeight = magnifierHeight / zoomFactor
+
+  // 清除放大镜画布
+  magnifierCtx.value.clearRect(0, 0, magnifierWidth, magnifierHeight)
+
+  // 绘制放大的图像
+  magnifierCtx.value.drawImage(
+    imgCanvas.value,
+    sourceX,
+    sourceY,
+    sourceWidth,
+    sourceHeight,
+    0,
+    0,
+    magnifierWidth,
+    magnifierHeight
+  )
+
+  // 在放大镜中心绘制十字线
+  magnifierCtx.value.strokeStyle = '#13987f'
+  magnifierCtx.value.lineWidth = 1
+  magnifierCtx.value.beginPath()
+  magnifierCtx.value.moveTo(magnifierWidth / 2, 0)
+  magnifierCtx.value.lineTo(magnifierWidth / 2, magnifierHeight)
+  magnifierCtx.value.moveTo(0, magnifierHeight / 2)
+  magnifierCtx.value.lineTo(magnifierWidth, magnifierHeight / 2)
+  magnifierCtx.value.stroke()
 }
 
 const handleMaskMouseDown = (event: MouseEvent) => {
@@ -506,9 +628,13 @@ const handleMaskMouseUp = (event: MouseEvent) => {
       magnifier.value.style.display = 'none'
     }
 
-    // 根据矩形位置计算按钮组位置
-    updateButtonGroupPosition()
+    // 重绘蒙版
+    redrawSelection()
+
     showButtonGroup.value = true // 显示按钮组
+    nextTick(() => {
+      updateButtonGroupPosition()
+    })
   }
 }
 
@@ -516,93 +642,65 @@ const handleMaskMouseUp = (event: MouseEvent) => {
 const updateButtonGroupPosition = () => {
   if (!buttonGroup.value) return
 
+  // 按钮组不可见、正在拖动或正在调整大小时，不进行尺寸测量和定位
+  if (!showButtonGroup.value || isDragging.value || isResizing.value) {
+    updateSelectionAreaPosition()
+    return
+  }
+
   const { scaleX, scaleY, startX, startY, endX, endY } = screenConfig.value
 
   // 矩形的边界
-  const minX = Math.min(startX, endX) / scaleX
   const minY = Math.min(startY, endY) / scaleY
   const maxX = Math.max(startX, endX) / scaleX
   const maxY = Math.max(startY, endY) / scaleY
-
-  // 选区尺寸
-  const selectionWidth = maxX - minX
-  // const selectionHeight = maxY - minY
-
-  // 按钮组尺寸
-  const buttonGroupHeight = buttonGroupStyle.value.height
-  const buttonGroupWidth = buttonGroupStyle.value.width
 
   // 可用屏幕尺寸
   const availableHeight = window.innerHeight
   const availableWidth = window.innerWidth
 
+  const el = buttonGroup.value
+  el.style.flexWrap = 'nowrap'
+  el.style.whiteSpace = 'nowrap'
+  el.style.width = 'max-content'
+  el.style.overflow = 'visible'
+
+  const rect = el.getBoundingClientRect()
+  const measuredHeight = rect.height
+  const contentWidth = el.scrollWidth || rect.width
+
+  const maxAllowedWidth = availableWidth - 20
+  const finalWidth = Math.min(contentWidth, maxAllowedWidth)
+
+  // 判断是否能放在选区下方
+  const spaceBelow = availableHeight - maxY
+  const canFitBelow = spaceBelow >= measuredHeight + 10 // 留10px缓冲
+
   let leftPosition: number
   let topPosition: number
 
-  // 首先检查选区下方是否有足够空间放置buttonGroup
-  const spaceBelow = availableHeight - maxY
-  const canFitBelow = spaceBelow >= buttonGroupHeight + 10 // 留10px缓冲
-
   if (canFitBelow) {
     // 优先放在选区下方
-    topPosition = maxY + 5
+    topPosition = maxY + 4
 
-    // 计算水平位置：优先右对齐，但确保在选区范围内且不超出屏幕
-    leftPosition = maxX - buttonGroupWidth
-
-    // 确保不超出选区左边界
-    if (leftPosition < minX) {
-      leftPosition = minX
-    }
-
-    // 限制buttonGroup宽度不超过选区宽度
-    if (buttonGroupWidth > selectionWidth) {
-      // 如果按钮组宽度超过选区宽度，以选区左边界为准
-      leftPosition = minX
-      // 可以考虑动态调整按钮组宽度或分行显示，这里先简单处理
-    }
-
-    // 确保不超出屏幕右边界
-    if (leftPosition + buttonGroupWidth > availableWidth) {
-      leftPosition = availableWidth - buttonGroupWidth - 10
-    }
-
-    // 确保不超出屏幕左边界
-    leftPosition = Math.max(10, leftPosition)
+    // 与选区右对齐
+    leftPosition = maxX - finalWidth
+    leftPosition = Math.max(10, Math.min(leftPosition, availableWidth - finalWidth - 10))
   } else {
-    // 选区下方空间不足，放在选区右上角
-    topPosition = minY - 5 // 稍微向上偏移
+    // 选区下方空间不足，放在选区上方
+    topPosition = minY - (measuredHeight + 4)
+    if (topPosition < 0) topPosition = 10
 
-    // 水平位置：尽量靠右，但不超出选区右边界
-    leftPosition = maxX - buttonGroupWidth
-
-    // 确保不超出选区左边界
-    if (leftPosition < minX) {
-      leftPosition = minX
-    }
-
-    // 限制buttonGroup宽度不超过选区宽度
-    if (buttonGroupWidth > selectionWidth) {
-      leftPosition = minX
-    }
-
-    // 确保不超出屏幕边界
-    if (leftPosition + buttonGroupWidth > availableWidth) {
-      leftPosition = availableWidth - buttonGroupWidth - 10
-    }
-
-    if (topPosition < 0) {
-      topPosition = 10 // 确保不超出屏幕上边界
-    }
-
-    // 确保不超出屏幕左边界
-    leftPosition = Math.max(10, leftPosition)
+    // 与选区右对齐
+    leftPosition = maxX - finalWidth
+    leftPosition = Math.max(10, Math.min(leftPosition, availableWidth - finalWidth - 10))
   }
 
-  buttonGroup.value.style.top = `${topPosition}px`
-  buttonGroup.value.style.left = `${leftPosition}px`
-
-  console.log(`🎯 ButtonGroup positioned at: left=${leftPosition}px, top=${topPosition}px, canFitBelow=${canFitBelow}`)
+  // 应用最终位置与宽度
+  el.style.top = `${topPosition}px`
+  el.style.left = `${leftPosition}px`
+  el.style.width = `${finalWidth}px`
+  el.style.boxSizing = 'border-box'
 
   // 更新选区拖动区域位置
   updateSelectionAreaPosition()
@@ -636,7 +734,7 @@ const updateSelectionAreaPosition = () => {
 // 更新圆角控制器位置
 const updateBorderRadiusControllerPosition = (selectionLeft: number, selectionTop: number) => {
   const controllerHeight = 35 // 控制器高度
-  const controllerWidth = 120 // 控制器宽度（估算）
+  const controllerWidth = 120 // 控制器宽度
 
   let left = selectionLeft
   let top = selectionTop - controllerHeight
@@ -653,7 +751,7 @@ const updateBorderRadiusControllerPosition = (selectionLeft: number, selectionTo
 
   // 确保控制器不超出屏幕上边界
   if (top < 0) {
-    top = selectionTop + 10 // 如果超出上边界，显示在选区内部
+    top = selectionTop + 4 // 如果超出上边界，显示在选区内部
   }
 
   borderRadiusControllerStyle.value = {
@@ -694,6 +792,7 @@ const handleSelectionDragMove = (event: MouseEvent) => {
 
   event.preventDefault()
 
+  // 拖动选区时不显示放大镜
   const newLeft = event.clientX - dragOffset.value.x
   const newTop = event.clientY - dragOffset.value.y
 
@@ -718,9 +817,12 @@ const handleSelectionDragMove = (event: MouseEvent) => {
   screenConfig.value.endX = (constrainedLeft + selectionWidth) * scaleX
   screenConfig.value.endY = (constrainedTop + selectionHeight) * scaleY
 
-  // 重新绘制矩形和更新按钮组位置
+  // 重新绘制矩形
   redrawSelection()
-  updateButtonGroupPosition()
+  // 拖动过程中不定位按钮组
+  if (!isDragging.value) {
+    updateButtonGroupPosition()
+  }
 }
 
 // 选区拖动结束
@@ -731,28 +833,16 @@ const handleSelectionDragEnd = () => {
   document.removeEventListener('mousemove', handleSelectionDragMove)
   document.removeEventListener('mouseup', handleSelectionDragEnd)
 
+  // 结束拖动后隐藏放大镜
+  if (magnifier.value) {
+    magnifier.value.style.display = 'none'
+  }
+
+  nextTick(() => {
+    updateButtonGroupPosition()
+  })
+
   console.log('🎯 拖动结束，显示按钮组')
-}
-
-// 重新绘制选区
-const redrawSelection = () => {
-  if (!maskCtx.value || !maskCanvas.value) return
-
-  const { startX, startY, endX, endY } = screenConfig.value
-  const width = endX - startX
-  const height = endY - startY
-
-  // 清除之前的矩形区域
-  maskCtx.value.clearRect(0, 0, maskCanvas.value.width, maskCanvas.value.height)
-
-  // 重新绘制整个遮罩层
-  drawMask()
-
-  // 清除矩形区域内的遮罩，实现透明效果
-  maskCtx.value.clearRect(startX, startY, width, height)
-
-  // 绘制矩形边框
-  drawRectangle(maskCtx.value, startX, startY, width, height)
 }
 
 // resize开始
@@ -789,6 +879,9 @@ const handleResizeMove = (event: MouseEvent) => {
   if (!isResizing.value) return
 
   event.preventDefault()
+
+  // 调整大小时也显示放大镜，辅助精确定位
+  handleMagnifierMouseMove(event)
 
   const deltaX = event.clientX - resizeStartPosition.value.x
   const deltaY = event.clientY - resizeStartPosition.value.y
@@ -872,9 +965,11 @@ const handleResizeMove = (event: MouseEvent) => {
   screenConfig.value.endX = (newLeft + newWidth) * scaleX
   screenConfig.value.endY = (newTop + newHeight) * scaleY
 
-  // 重新绘制选区和更新按钮组位置
+  // 重新绘制选区
   redrawSelection()
-  updateButtonGroupPosition()
+  if (showButtonGroup.value) {
+    updateButtonGroupPosition()
+  }
 }
 
 // resize结束
@@ -885,6 +980,18 @@ const handleResizeEnd = () => {
   // 移除全局鼠标事件监听
   document.removeEventListener('mousemove', handleResizeMove)
   document.removeEventListener('mouseup', handleResizeEnd)
+
+  // 结束调整后隐藏放大镜
+  if (magnifier.value) {
+    magnifier.value.style.display = 'none'
+  }
+
+  // 调整结束后再定位按钮组
+  nextTick(() => {
+    if (showButtonGroup.value) {
+      updateButtonGroupPosition()
+    }
+  })
 }
 
 // 圆角变化处理
@@ -983,6 +1090,23 @@ const drawMask = () => {
   }
 }
 
+// 重绘蒙版为透明选区 + 无描边，避免与 DOM 选区边框重复
+const redrawSelection = () => {
+  if (!maskCtx.value || !maskCanvas.value) return
+
+  const { startX, startY, endX, endY } = screenConfig.value
+  const x = Math.min(startX, endX)
+  const y = Math.min(startY, endY)
+  const width = Math.abs(endX - startX)
+  const height = Math.abs(endY - startY)
+
+  // 清空并重绘蒙版
+  maskCtx.value.clearRect(0, 0, maskCanvas.value.width, maskCanvas.value.height)
+  drawMask()
+
+  maskCtx.value.clearRect(x, y, width, height)
+}
+
 /**
  * 初始化放大镜
  */
@@ -992,85 +1116,6 @@ const initMagnifier = () => {
     magnifierCanvas.value.height = magnifierHeight
     magnifierCtx.value = magnifierCanvas.value.getContext('2d', { willReadFrequently: true })
   }
-}
-
-/**
- * 放大镜事件
- */
-const handleMagnifierMouseMove = (event: MouseEvent) => {
-  // 如果已经显示按钮组（选区完成），则隐藏放大镜
-  if (showButtonGroup.value) {
-    if (magnifier.value) {
-      magnifier.value.style.display = 'none'
-    }
-    return
-  }
-
-  const offsetEvent = event as any
-  const { offsetX, offsetY } = offsetEvent
-
-  // 可用屏幕尺寸
-  const winHeight = window.innerHeight
-  const winWidth = window.innerWidth
-
-  // 计算放大镜的位置，位于鼠标右下角
-  let magnifierLeft = offsetX + 15
-  let magnifierTop = offsetY + 15
-
-  // 防止放大镜超出屏幕边界，如果超出则显示在鼠标左上角
-  if (magnifierLeft + magnifierWidth > winWidth) {
-    magnifierLeft = offsetX - magnifierWidth - 15
-  }
-
-  if (magnifierTop + magnifierHeight > winHeight) {
-    magnifierTop = offsetY - magnifierHeight - 15
-  }
-
-  // 确保不会超出屏幕左边和上边
-  magnifierLeft = Math.max(0, magnifierLeft)
-  magnifierTop = Math.max(0, magnifierTop)
-
-  if (magnifier.value) {
-    magnifier.value.style.left = `${magnifierLeft}px`
-    magnifier.value.style.top = `${magnifierTop}px`
-    magnifier.value.style.display = 'block'
-  }
-
-  // 在放大镜中绘制放大内容
-  drawMagnifiedContent(offsetX, offsetY)
-}
-
-/**
- * 绘制放大镜内容
- */
-const drawMagnifiedContent = (mouseX: number, mouseY: number) => {
-  if (!imgCanvas.value || !magnifierCtx.value) return
-
-  const canvasWidth = imgCanvas.value.width
-  const canvasHeight = imgCanvas.value.height
-
-  // 计算放大镜区域的左上角坐标，确保放大区域以鼠标为中心
-  const magnifierX = Math.max(0, mouseX * window.devicePixelRatio - magnifierWidth / (2 * zoomFactor))
-  const magnifierY = Math.max(0, mouseY * window.devicePixelRatio - magnifierHeight / (2 * zoomFactor))
-
-  // 调整放大镜的位置，避免超出画布边界
-  const adjustedX = Math.min(magnifierX, canvasWidth - magnifierWidth / zoomFactor)
-  const adjustedY = Math.min(magnifierY, canvasHeight - magnifierHeight / zoomFactor)
-
-  magnifierCtx.value.clearRect(0, 0, magnifierWidth, magnifierHeight)
-
-  // 绘制放大区域，以鼠标位置为中心
-  magnifierCtx.value.drawImage(
-    imgCanvas.value!,
-    adjustedX,
-    adjustedY,
-    magnifierWidth / zoomFactor,
-    magnifierHeight / zoomFactor,
-    0,
-    0,
-    magnifierWidth,
-    magnifierHeight
-  )
 }
 
 const confirmSelection = async () => {
@@ -1327,10 +1372,10 @@ canvas {
 .magnifier {
   position: absolute;
   pointer-events: none;
-  width: 200px;
+  width: 120px;
   height: 120px;
-  border: 2px solid #ccc;
-  border-radius: 8px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
   overflow: hidden;
   display: none;
   background: white;
@@ -1424,36 +1469,80 @@ canvas {
 
 /* 四条边中间的控制点 */
 .resize-n {
-  top: -4px;
+  top: -6px;
   left: 50%;
   transform: translateX(-50%);
   cursor: n-resize;
 }
 
 .resize-e {
-  right: -4px;
+  right: -6px;
   top: 50%;
   transform: translateY(-50%);
   cursor: e-resize;
 }
 
 .resize-s {
-  bottom: -4px;
+  bottom: -6px;
   left: 50%;
   transform: translateX(-50%);
   cursor: s-resize;
 }
 
 .resize-w {
-  left: -4px;
+  left: -6px;
   top: 50%;
   transform: translateY(-50%);
   cursor: w-resize;
 }
 
+.button-group {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 5px 8px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  z-index: 999;
+  white-space: nowrap;
+  overflow: visible;
+
+  span {
+    cursor: pointer;
+    min-width: 30px;
+    height: 30px;
+    padding: 0 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    flex: 0 0 auto;
+
+    svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    &:hover svg {
+      color: #13987f;
+    }
+
+    &.active svg {
+      color: #13987f;
+    }
+
+    &.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+  }
+}
+
 .border-radius-controller {
   position: absolute;
-  top: -35px;
   left: 0;
   background: rgba(0, 0, 0, 0.8);
   color: white;
@@ -1463,7 +1552,7 @@ canvas {
   display: flex;
   align-items: center;
   gap: 5px;
-  z-index: 5;
+  z-index: 999;
   white-space: nowrap;
 
   label {
@@ -1500,38 +1589,6 @@ canvas {
   span {
     font-size: 11px;
     min-width: 25px;
-  }
-}
-
-.button-group {
-  position: absolute;
-  display: flex;
-  gap: 10px;
-  transform: translate(-50%, 0);
-  background: white;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  padding: 5px;
-  z-index: 100;
-  pointer-events: auto;
-
-  button {
-    padding: 5px 10px;
-    cursor: pointer;
-    background: white;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    transition: all 0.2s;
-
-    &:hover {
-      background: #f0f0f0;
-    }
-
-    &.active {
-      background: #13987f;
-      color: white;
-      border-color: #13987f;
-    }
   }
 }
 </style>

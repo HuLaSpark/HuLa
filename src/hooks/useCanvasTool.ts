@@ -15,6 +15,10 @@ export function useCanvasTool(drawCanvas: any, drawCtx: any, imgCtx: any, screen
   })
 
   const currentTool = ref('')
+  // 标记当前一次绘制过程中是否实际产生了绘制
+  const hasDrawn = ref(false)
+  // 是否可以撤回（当存在已保存的绘制动作时）
+  const canUndo = computed(() => drawConfig.value.actions.length > 0)
 
   const draw = (type: string) => {
     const { clientWidth: containerWidth, clientHeight: containerHeight } = drawCanvas.value
@@ -31,6 +35,7 @@ export function useCanvasTool(drawCanvas: any, drawCtx: any, imgCtx: any, screen
   const handleMouseDown = (event: MouseEvent) => {
     const { offsetX, offsetY } = event
     drawConfig.value.isDrawing = true
+    hasDrawn.value = false
 
     // 限制起点坐标在框选矩形区域内
     drawConfig.value.startX = Math.min(
@@ -77,6 +82,7 @@ export function useCanvasTool(drawCanvas: any, drawCtx: any, imgCtx: any, screen
     switch (currentTool.value) {
       case 'rect':
         drawRectangle(drawCtx.value, x, y, width, height)
+        hasDrawn.value = true
         break
       case 'circle':
         drawCircle(
@@ -86,6 +92,7 @@ export function useCanvasTool(drawCanvas: any, drawCtx: any, imgCtx: any, screen
           drawConfig.value.endX,
           drawConfig.value.endY
         )
+        hasDrawn.value = true
         break
       case 'arrow':
         drawArrow(
@@ -95,9 +102,11 @@ export function useCanvasTool(drawCanvas: any, drawCtx: any, imgCtx: any, screen
           drawConfig.value.endX,
           drawConfig.value.endY
         )
+        hasDrawn.value = true
         break
       case 'mosaic':
         drawMosaic(drawCtx.value, limitedX, limitedY, drawConfig.value.brushSize)
+        hasDrawn.value = true
         break
       default:
         break
@@ -107,6 +116,11 @@ export function useCanvasTool(drawCanvas: any, drawCtx: any, imgCtx: any, screen
   const handleMouseUp = () => {
     // const { offsetX, offsetY } = event;
     drawConfig.value.isDrawing = false
+
+    // 没有实际绘制时不保存动作，避免误触（例如点击工具栏按钮时）
+    if (!hasDrawn.value) {
+      return
+    }
 
     drawCtx.value.drawImage(drawCanvas.value!, 0, 0, drawCanvas.value.width, drawCanvas.value.height)
 
@@ -251,6 +265,16 @@ export function useCanvasTool(drawCanvas: any, drawCtx: any, imgCtx: any, screen
     }
   }
 
+  // 一键清空所有绘制内容
+  const clearAll = () => {
+    closeListen()
+    drawConfig.value.actions = []
+    drawConfig.value.undoStack = []
+    if (drawCtx.value && drawCanvas.value) {
+      drawCtx.value.clearRect(0, 0, drawCanvas.value.width, drawCanvas.value.height)
+    }
+  }
+
   // 重置绘图状态，清除所有绘制历史
   const resetState = () => {
     drawConfig.value.actions = []
@@ -275,14 +299,21 @@ export function useCanvasTool(drawCanvas: any, drawCtx: any, imgCtx: any, screen
   }
 
   const startListen = () => {
-    document.addEventListener('mousedown', handleMouseDown)
-    document.addEventListener('mousemove', handleMouseMove)
+    const el = drawCanvas.value
+    if (!el) return
+    // 仅在绘图画布上监听按下与移动，避免点击工具栏也触发绘图流程
+    el.addEventListener('mousedown', handleMouseDown)
+    el.addEventListener('mousemove', handleMouseMove)
+    // mouseup 放在 document 上，确保拖出画布后仍能结束一次绘制
     document.addEventListener('mouseup', handleMouseUp)
   }
 
   const closeListen = () => {
-    document.removeEventListener('mousedown', handleMouseDown)
-    document.removeEventListener('mousemove', handleMouseMove)
+    const el = drawCanvas.value
+    if (el) {
+      el.removeEventListener('mousedown', handleMouseDown)
+      el.removeEventListener('mousemove', handleMouseMove)
+    }
     document.removeEventListener('mouseup', handleMouseUp)
   }
 
@@ -294,8 +325,10 @@ export function useCanvasTool(drawCanvas: any, drawCtx: any, imgCtx: any, screen
     drawArrow,
     undo,
     redo,
+    clearAll,
     resetState,
     stopDrawing,
-    clearEvents
+    clearEvents,
+    canUndo
   }
 }

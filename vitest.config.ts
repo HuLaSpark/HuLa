@@ -17,12 +17,13 @@ export default defineConfig({
         'vue',
         'vue-router',
         'pinia',
-        { 'naive-ui': ['useDialog', 'useMessage', 'useNotification', 'useLoadingBar'] }
+        { 'naive-ui': ['useDialog', 'useMessage', 'useNotification', 'useLoadingBar', 'useModal'] }
       ],
       dts: 'src/typings/auto-imports.d.ts'
     }),
+    /**自动导入组件，但是不会自动导入jsx和tsx*/
     Components({
-      dirs: ['src/components/**'],
+      dirs: ['src/components/**', 'src/mobile/components/**'], // 设置需要扫描的目录
       resolvers: [NaiveUiResolver()],
       dts: 'src/typings/components.d.ts'
     })

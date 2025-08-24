@@ -222,6 +222,7 @@ pub async fn build_request_client() -> Result<reqwest::Client, CommonError> {
 /// - 关闭除 login/tray 外的大部分窗口
 /// - 隐藏但保留 capture/checkupdate 窗口
 /// - 优雅地处理窗口关闭过程中的错误
+#[cfg(desktop)]
 pub async fn handle_logout_windows(app_handle: &tauri::AppHandle) {
     tracing::info!(
         "🚪 [LOGOUT] Starting to close windows and preserve capture/checkupdate windows"
