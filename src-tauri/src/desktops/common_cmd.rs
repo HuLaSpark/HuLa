@@ -10,13 +10,14 @@ use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::Duration;
 use tauri::path::BaseDirectory;
-use tauri::{
-    AppHandle, Emitter, LogicalSize, Manager, ResourceId, Runtime, Webview, WebviewWindow,
-};
+use tauri::{AppHandle, Emitter, LogicalSize, Manager, ResourceId, Runtime, Webview};
 
 #[cfg(target_os = "macos")]
 use objc2::rc::Retained;
+#[cfg(target_os = "macos")]
 use objc2_app_kit::NSWindow;
+#[cfg(target_os = "macos")]
+use tauri::WebviewWindow;
 
 // #[derive(Serialize)]
 // pub struct DiskInfo {
@@ -332,6 +333,7 @@ pub fn set_window_level_above_menubar(window_label: &str, handle: AppHandle) -> 
     Ok(())
 }
 
+#[cfg(target_os = "macos")]
 fn get_webview_window(handle: &AppHandle, window_label: &str) -> Result<WebviewWindow, String> {
     handle
         .get_webview_window(window_label)
