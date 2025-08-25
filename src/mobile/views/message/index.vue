@@ -146,6 +146,7 @@ import { useChatStore } from '@/stores/chat.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
+import rustWebSocketClient from '~/src/services/webSocketRust'
 
 const chatStore = useChatStore()
 
@@ -157,7 +158,9 @@ const getSessionList = async () => {
   await chatStore.getSessionList(true)
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await rustWebSocketClient.setupBusinessMessageListeners()
+
   getSessionList()
 })
 
