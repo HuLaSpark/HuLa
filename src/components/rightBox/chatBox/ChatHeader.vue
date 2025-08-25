@@ -737,6 +737,8 @@ const saveGroupInfo = async () => {
     await updateMyRoomInfo(myRoomInfo)
     // 更新群成员列表
     groupStore.updateUserItem(userStore.userInfo.uid!, { myName: myRoomInfo.myName }, activeItem.roomId)
+    // 更新会话
+    chatStore.updateSession(activeItem.roomId, { remark: myRoomInfo.remark })
 
     window.$message.success('群聊信息已更新')
   }
