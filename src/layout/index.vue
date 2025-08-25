@@ -40,7 +40,7 @@ import {
 } from '@/enums'
 import { useCheckUpdate } from '@/hooks/useCheckUpdate'
 import { useMitt } from '@/hooks/useMitt.ts'
-import type { MarkItemType, MessageType, RevokedMsgType } from '@/services/types.ts'
+import type { MarkItemType, MessageType, RevokedMsgType, UserItem } from '@/services/types.ts'
 import rustWebSocketClient from '@/services/webSocketRust'
 import {
   type LoginSuccessResType,
@@ -225,7 +225,7 @@ useMitt.on(WsResponseMessageType.INVALID_USER, (param: { uid: string }) => {
   // 消息列表删掉拉黑的发言
   chatStore.filterUser(data.uid)
   // 群成员列表删掉拉黑的用户
-  groupStore.filterUser(data.uid)
+  groupStore.removeUserItem(data.uid)
 })
 useMitt.on(WsResponseMessageType.MSG_MARK_ITEM, async (data: { markList: MarkItemType[] }) => {
   console.log('收到消息标记更新:', data)
@@ -319,23 +319,20 @@ useMitt.on(
   }
 )
 useMitt.on(
-  WsResponseMessageType.NEW_FRIEND_SESSION,
-  async (param: {
-    roomId: string
-    uid: string
-    changeType: ChangeTypeEnum
-    activeStatus: OnlineEnum
-    lastOptTime: number
-  }) => {
+  WsResponseMessageType.WS_MEMBER_CHANGE,
+  async (param: { roomId: string; changeType: ChangeTypeEnum; userList: UserItem[] }) => {
     // changeType 1 加入群组，2： 移除群组
     if (param.roomId === globalStore.currentSession.roomId && globalStore.currentSession.type === RoomTypeEnum.GROUP) {
-      // TODO 更新某个群的群成员的数据
       if (param.changeType === ChangeTypeEnum.REMOVE) {
         // 移除群成员
-        groupStore.filterUser(param.uid)
+        param.userList.forEach((item) => {
+          groupStore.removeUserItem(item.uid, param.roomId)
+        })
         // TODO 添加一条退出群聊的消息
       } else {
-        // TODO 添加群成员
+        param.userList.forEach((item) => {
+          groupStore.addUserItem(item, param.roomId)
+        })
         // TODO 添加一条入群的消息
       }
     }

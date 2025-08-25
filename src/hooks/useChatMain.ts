@@ -665,7 +665,7 @@ export const useChatMain = () => {
         try {
           await removeGroupMember({ roomId, uid: targetUid })
           // 从群成员列表中移除该用户
-          groupStore.filterUser(targetUid)
+          groupStore.removeUserItem(targetUid, roomId)
           window.$message.success('移出群聊成功')
         } catch (_error) {
           window.$message.error('移出群聊失败')
