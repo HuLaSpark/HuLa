@@ -41,7 +41,7 @@
     "windows": [
       {
         "title": "登录",
-        "label": "login",
+        "label": "mobile-home",
         "url": "/mobile/login",
         "width": 800,
         "height": 600,

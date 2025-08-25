@@ -14,7 +14,7 @@
 
     <NavBar>
       <template #left>
-        <n-flex align="center" :size="6" class="w-full">
+        <n-flex @click="toSimpleBio" align="center" :size="6" class="w-full">
           <n-avatar
             :size="38"
             :src="AvatarUtils.getAvatarUrl(userStore.userInfo.avatar!)"
@@ -146,6 +146,7 @@ import { useChatStore } from '@/stores/chat.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
+import rustWebSocketClient from '~/src/services/webSocketRust'
 
 const chatStore = useChatStore()
 
@@ -157,7 +158,9 @@ const getSessionList = async () => {
   await chatStore.getSessionList(true)
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await rustWebSocketClient.setupBusinessMessageListeners()
+
   getSessionList()
 })
 
@@ -278,6 +281,10 @@ const intoRoom = (item: any) => {
   handleMsgClick(item)
   router.push(`/mobile/chatRoom/chatMain/${encodeURIComponent(item.name)}`)
   console.log('进入页面', item)
+}
+const toSimpleBio = () => {
+  // 切成你想要的离场动画
+  router.push('/mobile/mobileMy/simpleBio')
 }
 </script>
 
