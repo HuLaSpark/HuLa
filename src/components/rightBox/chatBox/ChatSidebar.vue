@@ -94,7 +94,7 @@
       item-resizable
       @scroll="handleScroll($event)"
       :item-size="46"
-      :items="displayedUserList">
+      :items="filteredUserList">
       <template #default="{ item }">
         <n-popover
           :ref="(el: any) => (infoPopoverRefs[item.uid] = el)"
@@ -243,26 +243,12 @@ const memberCache = ref<Map<string, any[]>>(new Map())
 /** 用户信息加载状态 */
 const userLoadedMap = ref<Record<string, boolean>>({})
 
-// 添加一个新的计算属性来合并用户列表
-const mergedUserList = computed(() => {
-  // 创建一个Map用于去重，使用uid作为key
-  const userMap = new Map()
-
-  // 首先添加在线用户列表
-  groupStore.userList.forEach((user) => {
-    userMap.set(user.uid, user)
-  })
-
-  // rust已排序
-  return Array.from(userMap.values())
-})
-
 // 创建过滤后的用户列表计算属性
 const filteredUserList = computed(() => {
   if (!searchRef.value) {
-    return mergedUserList.value
+    return groupStore.userList
   }
-  return mergedUserList.value.filter((user) => user.name.toLowerCase().includes(searchRef.value.toLowerCase()))
+  return groupStore.userList.filter((user) => user.name.toLowerCase().includes(searchRef.value.toLowerCase()))
 })
 
 // 监听成员源列表变化
