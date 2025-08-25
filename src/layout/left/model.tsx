@@ -29,7 +29,7 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import * as ImRequestUtils from '@/utils/ImRequestUtils'
 import { isMac } from '@/utils/PlatformConstants'
 
-const { logout, resetLoginState } = useLogin()
+const { logout: sysLogout, resetLoginState } = useLogin()
 const formRef = ref<FormInst | null>()
 const formValue = ref({
   lockPassword: ''
@@ -44,7 +44,7 @@ export const remotelogin = ref({
     // token已在后端清空，只需要返回登录页
     await ImRequestUtils.logout({ autoLogin: login.value.autoLogin })
     await resetLoginState()
-    await logout()
+    await sysLogout()
     modalShow.value = false
     remotelogin.value.loading = false
   }

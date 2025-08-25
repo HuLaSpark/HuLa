@@ -26,8 +26,9 @@
 
 <script setup lang="ts">
 import { LogicalSize } from '@tauri-apps/api/dpi'
-import { emitTo } from '@tauri-apps/api/event'
+import { emitTo, listen } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { info } from '@tauri-apps/plugin-log'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import {
   ChangeTypeEnum,
@@ -59,6 +60,7 @@ import { audioManager } from '@/utils/AudioManager'
 import { isWindows } from '@/utils/PlatformConstants'
 import { clearListener, initListener, readCountQueue } from '@/utils/ReadCountQueue'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
+import { useLogin } from '../hooks/useLogin'
 
 const loadingPercentage = ref(10)
 const loadingText = ref('正在加载应用...')
@@ -361,6 +363,13 @@ useMitt.on(WsResponseMessageType.ROOM_INFO_CHANGE, async (data: { roomId: string
 useMitt.on(WsResponseMessageType.ROOM_DISSOLUTION, async () => {
   // 刷新群聊列表
   await contactStore.getGroupChatList()
+})
+
+const { resetLoginState, logout } = useLogin()
+listen('relogin', async () => {
+  info('收到重新登录事件')
+  await resetLoginState()
+  await logout()
 })
 
 onBeforeMount(async () => {
