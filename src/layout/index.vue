@@ -329,7 +329,7 @@ useMitt.on(
   }) => {
     // changeType 1 加入群组，2： 移除群组
     if (param.roomId === globalStore.currentSession.roomId && globalStore.currentSession.type === RoomTypeEnum.GROUP) {
-      await cachedStore.getGroupAtUserBaseInfo(param.roomId)
+      // TODO 更新某个群的群成员的数据
       if (param.changeType === ChangeTypeEnum.REMOVE) {
         // 移除群成员
         groupStore.filterUser(param.uid)

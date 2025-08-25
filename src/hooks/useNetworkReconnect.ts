@@ -1,7 +1,6 @@
 import { useEventListener, useNetwork, useTimeoutFn } from '@vueuse/core'
 import { RoomTypeEnum } from '@/enums'
 import webSocket from '@/services/webSocketAdapter'
-import { useCachedStore } from '@/stores/cached'
 import { useChatStore } from '@/stores/chat'
 import { useContactStore } from '@/stores/contacts'
 import { useGlobalStore } from '@/stores/global'
@@ -155,7 +154,6 @@ export const useNetworkReconnect = () => {
     const chatStore = useChatStore()
     const globalStore = useGlobalStore()
     const groupStore = useGroupStore()
-    const cachedStore = useCachedStore()
     const contactStore = useContactStore()
 
     // 刷新会话列表
@@ -169,7 +167,6 @@ export const useNetworkReconnect = () => {
     if (globalStore.currentSession?.type === RoomTypeEnum.GROUP) {
       await groupStore.getGroupUserList(globalStore.currentSession.roomId)
       await groupStore.getCountStatistic(globalStore.currentSession.roomId)
-      await cachedStore.getGroupAtUserBaseInfo(globalStore.currentSession.roomId)
     }
     // 刷新联系人列表
     await contactStore.getContactList(true)

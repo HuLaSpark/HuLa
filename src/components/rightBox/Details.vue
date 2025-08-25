@@ -195,17 +195,16 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ErrorType } from '@/common/exception'
-import { RoomTypeEnum, TauriCommand } from '@/enums'
+import { RoomTypeEnum } from '@/enums'
 import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useWindow } from '@/hooks/useWindow'
 import type { UserItem } from '@/services/types'
 import { useCachedStore } from '@/stores/cached'
+import { useGroupStore } from '@/stores/group'
 import { useImageViewer } from '@/stores/imageViewer'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { getGroupDetail } from '@/utils/ImRequestUtils'
-import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 
 const { openMsgSession } = useCommon()
 const { createWebviewWindow } = useWindow()
@@ -227,6 +226,7 @@ const isEditingNickname = ref(false)
 const nicknameValue = ref('')
 const nicknameInputRef = useTemplateRef('nicknameInputRef')
 const cacheStore = useCachedStore()
+const groupStore = useGroupStore()
 
 watchEffect(() => {
   if (content.type === RoomTypeEnum.SINGLE) {
@@ -304,28 +304,17 @@ const handleCopy = (account: string) => {
 // 获取群组详情和成员信息
 const fetchGroupMembers = async (roomId: string) => {
   try {
-    const response: any = await invokeWithErrorHandler(
-      TauriCommand.GET_ROOM_MEMBERS,
-      {
-        roomId: roomId
-      },
-      {
-        customErrorMessage: '获取群成员失败',
-        errorType: ErrorType.Network
+    // 使用每个成员的uid获取详细信息
+    const userList = groupStore.getUserListByRoomId(roomId)
+    const memberDetails = userList.map((member: UserItem) => {
+      const userInfo = useUserInfo(member.uid).value
+      return {
+        name: userInfo.name || member.name || member.uid,
+        src: userInfo.avatar || member.avatar
       }
-    )
-    if (response && response.list) {
-      // 使用每个成员的uid获取详细信息
-      const memberDetails = response.list.map((member: UserItem) => {
-        const userInfo = useUserInfo(member.uid).value
-        return {
-          name: userInfo.name || member.name || member.uid,
-          src: userInfo.avatar || member.avatar
-        }
-      })
+    })
 
-      options.value = memberDetails
-    }
+    options.value = memberDetails
   } catch (error) {
     console.error('获取群成员失败:', error)
   }

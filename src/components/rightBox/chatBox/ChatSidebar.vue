@@ -253,18 +253,6 @@ const mergedUserList = computed(() => {
     userMap.set(user.uid, user)
   })
 
-  // 添加缓存的用户列表
-  cachedStore.currentAtUsersList.forEach((cachedUser) => {
-    if (!userMap.has(cachedUser.uid)) {
-      // 如果用户不在在线列表中，添加到Map中
-      // 为缓存用户添加默认的activeStatus
-      userMap.set(cachedUser.uid, {
-        ...cachedUser,
-        activeStatus: OnlineEnum.OFFLINE
-      })
-    }
-  })
-
   // rust已排序
   return Array.from(userMap.values())
 })
@@ -279,7 +267,7 @@ const filteredUserList = computed(() => {
 
 // 监听成员源列表变化
 watch(
-  [() => groupStore.userList, () => cachedStore.currentAtUsersList],
+  [() => groupStore.userList],
   () => {
     if (groupStore.userList.length > 0 && currentLoadingRoomId.value === globalStore.currentSession?.roomId) {
       displayedUserList.value = filteredUserList.value
