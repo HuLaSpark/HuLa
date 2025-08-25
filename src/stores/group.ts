@@ -17,9 +17,15 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
   const chatStore = useChatStore()
 
   // 群组相关状态
-  const userList = ref<UserItem[]>([]) // 群成员列表
+  const userListMap = ref<Map<string, UserItem[]>>(new Map()) // 群成员列表Map，key为roomId
   const userListOptions = reactive({ isLast: false, loading: true, cursor: '' }) // 分页加载相关状态
   const currentRoomId = computed(() => globalStore.currentSession?.roomId) // 当前聊天室ID
+
+  // 获取当前房间的用户列表的计算属性
+  const userList = computed(() => {
+    if (!currentRoomId.value) return []
+    return userListMap.value.get(currentRoomId.value) || []
+  })
 
   /**
    * 获取当前群主ID
@@ -88,12 +94,19 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
 
   /**
    * 获取群成员列表
+   * @param roomId 群聊房间ID
+   * @param forceRefresh 是否强制刷新，默认false
    */
-  const getGroupUserList = async (currentRoomId: string) => {
+  const getGroupUserList = async (roomId: string, forceRefresh = false) => {
+    // 如果已经有缓存且不需要强制刷新，则直接返回
+    if (!forceRefresh && userListMap.value.has(roomId) && userListMap.value.get(roomId)!.length > 0) {
+      return
+    }
+
     const data: any = await invokeWithErrorHandler(
       TauriCommand.GET_ROOM_MEMBERS,
       {
-        roomId: currentRoomId
+        roomId: roomId
       },
       {
         customErrorMessage: '获取群成员列表失败',
@@ -101,9 +114,9 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
       }
     )
     if (!data) return
-    userList.value = data
-    userListOptions.cursor = data.cursor
-    userListOptions.isLast = data.isLast
+
+    // 将数据存储到Map中
+    userListMap.value.set(roomId, data)
     userListOptions.loading = false
 
     // 收集并获取用户详细信息
@@ -136,21 +149,34 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
   /**
    * 更新用户在线状态
    * @param item 需要更新状态的用户
+   * @param roomId 群聊房间ID，可选，默认使用当前房间
    */
-  const updateUserStatus = async (item: UserItem | OnStatusChangeType['member']) => {
-    const findIndex = userList.value.findIndex((i) => i.uid === item.uid)
+  const updateUserStatus = async (item: UserItem | OnStatusChangeType['member'], roomId?: string) => {
+    const targetRoomId = roomId || currentRoomId.value
+    if (!targetRoomId) return
+
+    const currentUserList = userListMap.value.get(targetRoomId) || []
+    const findIndex = currentUserList.findIndex((i) => i.uid === item.uid)
     if (findIndex !== -1) {
-      userList.value[findIndex] = { ...userList.value[findIndex], ...item }
+      const updatedList = [...currentUserList]
+      updatedList[findIndex] = { ...updatedList[findIndex], ...item }
+      userListMap.value.set(targetRoomId, updatedList)
     }
   }
 
   /**
    * 从群成员列表中移除指定用户
    * @param uid 要移除的用户ID
+   * @param roomId 群聊房间ID，可选，默认使用当前房间
    */
-  const filterUser = (uid: string) => {
+  const filterUser = (uid: string, roomId?: string) => {
     if (typeof uid !== 'string') return
-    userList.value = userList.value.filter((item) => item.uid !== uid)
+    const targetRoomId = roomId || currentRoomId.value
+    if (!targetRoomId) return
+
+    const currentUserList = userListMap.value.get(targetRoomId) || []
+    const filteredList = currentUserList.filter((item) => item.uid !== uid)
+    userListMap.value.set(targetRoomId, filteredList)
   }
 
   /**
@@ -160,11 +186,17 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
   const addAdmin = async (uidList: string[]) => {
     await ImRequestUtils.addAdmin({ roomId: currentRoomId.value, uidList })
     // 更新本地群成员列表中的角色信息
-    for (const user of userList.value) {
+    const targetRoomId = currentRoomId.value
+    if (!targetRoomId) return
+
+    const currentUserList = userListMap.value.get(targetRoomId) || []
+    const updatedList = currentUserList.map((user) => {
       if (uidList.includes(user.uid)) {
-        user.roleId = RoleEnum.ADMIN
+        return { ...user, roleId: RoleEnum.ADMIN }
       }
-    }
+      return user
+    })
+    userListMap.value.set(targetRoomId, updatedList)
   }
 
   /**
@@ -174,11 +206,17 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
   const revokeAdmin = async (uidList: string[]) => {
     await ImRequestUtils.revokeAdmin({ roomId: currentRoomId.value, uidList })
     // 更新本地群成员列表中的角色信息
-    for (const user of userList.value) {
+    const targetRoomId = currentRoomId.value
+    if (!targetRoomId) return
+
+    const currentUserList = userListMap.value.get(targetRoomId) || []
+    const updatedList = currentUserList.map((user) => {
       if (uidList.includes(user.uid)) {
-        user.roleId = RoleEnum.NORMAL
+        return { ...user, roleId: RoleEnum.NORMAL }
       }
-    }
+      return user
+    })
+    userListMap.value.set(targetRoomId, updatedList)
   }
 
   /**
@@ -188,8 +226,9 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
   const exitGroup = async (roomId: string) => {
     await ImRequestUtils.exitGroup({ roomId: roomId })
     // 从成员列表中移除自己
-    const index = userList.value.findIndex((user) => user.uid === userStore.userInfo.uid)
-    userList.value.splice(index, 1)
+    const currentUserList = userListMap.value.get(roomId) || []
+    const updatedList = currentUserList.filter((user) => user.uid !== userStore.userInfo.uid)
+    userListMap.value.set(roomId, updatedList)
     // 更新会话列表
     chatStore.removeContact(currentRoomId.value)
     // 切换到第一个会话
@@ -201,20 +240,27 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
    */
   const refreshGroupMembers = async () => {
     // 始终刷新频道成员列表
-    await getGroupUserList(currentRoomId.value)
+    await getGroupUserList('1', true)
 
     // 如果当前选中的是群聊且不是频道，则同时刷新当前群聊的成员列表
     if (globalStore.currentSession?.type === RoomTypeEnum.GROUP && currentRoomId.value !== '1') {
-      await getGroupUserList(currentRoomId.value)
+      await getGroupUserList(currentRoomId.value, true)
     }
   }
 
   /**
    * 重置群组数据
    * 用于切换会话时清空当前群组的数据
+   * @param roomId 可选，指定要清理的房间ID，不传则清理所有
    */
-  const resetGroupData = () => {
-    userList.value = []
+  const resetGroupData = (roomId?: string) => {
+    if (roomId) {
+      // 清理指定房间的数据
+      userListMap.value.delete(roomId)
+    } else {
+      // 清理所有数据
+      userListMap.value.clear()
+    }
     userListOptions.cursor = ''
     userListOptions.isLast = false
     userListOptions.loading = false
@@ -231,8 +277,18 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
     }
   }
 
+  /**
+   * 获取指定房间的用户列表
+   * @param roomId 房间ID
+   * @returns 用户列表
+   */
+  const getUserListByRoomId = (roomId: string): UserItem[] => {
+    return userListMap.value.get(roomId) || []
+  }
+
   return {
     userList,
+    userListMap,
     userListOptions,
     loadMoreGroupMembers,
     getGroupUserList,
@@ -248,6 +304,7 @@ export const useGroupStore = defineStore(StoresEnum.GROUP, () => {
     exitGroup,
     refreshGroupMembers,
     resetGroupData,
+    getUserListByRoomId,
     countInfo
   }
 })

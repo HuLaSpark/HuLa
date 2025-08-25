@@ -180,7 +180,6 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
   const groupStore = useGroupStore()
 
   /** 获取群组内可@的用户基本信息
-   * 如果是大厅（roomId=1）则不执行
    */
   const getGroupAtUserBaseInfo = async (roomId: string) => {
     if (!roomId) return
@@ -194,8 +193,8 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
         errorType: ErrorType.Network
       }
     )
-    // 更新 groupStore 中的 userList
-    groupStore.userList = data
+    // 更新 groupStore 中的 userListMap
+    groupStore.userListMap.set(roomId, data)
     currentAtUsersList.value = data
   }
 
