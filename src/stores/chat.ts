@@ -199,11 +199,6 @@ export const useChatStore = defineStore(
           }
         })
 
-        // 群组的时候去请求
-        if (currentSession.type === RoomTypeEnum.GROUP) {
-          cachedStore.getGroupAtUserBaseInfo(currentSession.roomId)
-        }
-
         // 标记当前会话已读
         if (val) {
           const session = sessionList.value.find((s) => s.roomId === currentSession.roomId)
