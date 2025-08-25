@@ -626,8 +626,8 @@ const normalLogin = async (auto = false) => {
     data: {
       account: account,
       password: info.value.password,
-      deviceType: 'PC',
-      systemType: '2',
+      deviceType: 'MOBILE',
+      systemType: '2', // 2是im 1是后台
       grantType: 'PASSWORD'
     }
   })

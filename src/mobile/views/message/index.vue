@@ -33,7 +33,7 @@
               class="text-(16px [--text-color])">
               {{ userStore.userInfo.name }}
             </p>
-            <p class="text-(10px [--text-color])">☁️ 柳州鱼峰</p>
+            <p class="text-(10px [--text-color])">{{ useUserInfo(userStore.userInfo.uid).value.locPlace || '未知' }}</p>
           </n-flex>
         </n-flex>
       </template>
@@ -138,6 +138,7 @@ import { ref } from 'vue'
 import PullToRefresh from '#/components/PullToRefresh.vue'
 import addFriendIcon from '@/assets/mobile/chat-home/add-friend.webp'
 import groupChatIcon from '@/assets/mobile/chat-home/group-chat.webp'
+import { useUserInfo } from '@/hooks/useCached.ts'
 import { useMessage } from '@/hooks/useMessage.ts'
 import SafeAreaPlaceholder from '@/mobile/components/placeholders/SafeAreaPlaceholder.vue'
 import NavBar from '@/mobile/layout/navBar/index.vue'
@@ -158,9 +159,11 @@ const getSessionList = async () => {
   await chatStore.getSessionList(true)
 }
 
+const userStore = useUserStore()
+
 onMounted(async () => {
   await rustWebSocketClient.setupBusinessMessageListeners()
-
+  console.log('个人数据：', userStore.userInfo)
   getSessionList()
 })
 
@@ -169,8 +172,6 @@ const handleRefresh = async () => {
   // 完成刷新
   pullRefreshRef.value?.finishRefresh()
 }
-
-const userStore = useUserStore()
 
 /**
  * 渲染图片图标的函数工厂
