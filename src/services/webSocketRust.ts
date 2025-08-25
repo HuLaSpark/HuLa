@@ -344,7 +344,7 @@ class RustWebSocketClient {
 
     this.listenerController.add(
       await listen('ws-member-change', (event: any) => {
-        useMitt.emit(WsResponseMessageType.NEW_FRIEND_SESSION, event.payload)
+        useMitt.emit(WsResponseMessageType.WS_MEMBER_CHANGE, event.payload)
       })
     )
 

@@ -24,8 +24,7 @@ export enum WsResponseMessageType {
   MSG_RECALL = 'msgRecall',
   /** 新好友申请 */
   REQUEST_NEW_FRIEND = 'requestNewFriend',
-  /** 成员变动 */
-  NEW_FRIEND_SESSION = 'newFriendSession',
+  WS_MEMBER_CHANGE = 'ws-member-change',
   /** 下线通知 */
   OFFLINE = 'offline',
   /** 同意好友请求 */

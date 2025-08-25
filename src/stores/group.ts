@@ -168,18 +168,126 @@ export const useGroupStore = defineStore(
     }
 
     /**
-     * 从群成员列表中移除指定用户
-     * @param uid 要移除的用户ID
-     * @param roomId 群聊房间ID，可选，默认使用当前房间
+     * 更新 userListMap 中某个用户的信息
+     * @param uid 用户ID
+     * @param updates 要更新的用户信息（部分字段）
+     * @param roomId 群聊房间ID，可选，默认使用当前房间；如果传入 'all' 则更新所有房间中的该用户
+     * @returns 是否成功更新
      */
-    const filterUser = (uid: string, roomId?: string) => {
-      if (typeof uid !== 'string') return
+    const updateUserItem = (uid: string, updates: Partial<UserItem>, roomId?: string | 'all'): boolean => {
+      if (!uid || typeof uid !== 'string') {
+        console.warn('[updateUserItem] 无效的用户ID:', uid)
+        return false
+      }
+
+      if (!updates || typeof updates !== 'object') {
+        console.warn('[updateUserItem] 无效的更新数据:', updates)
+        return false
+      }
+
+      let updated = false
+
+      if (roomId === 'all') {
+        // 更新所有房间中的该用户
+        Object.keys(userListMap).forEach((room) => {
+          const userList = userListMap[room] || []
+          const userIndex = userList.findIndex((user: UserItem) => user.uid === uid)
+          if (userIndex !== -1) {
+            const updatedList = [...userList]
+            updatedList[userIndex] = { ...updatedList[userIndex], ...updates }
+            userListMap[room] = updatedList
+            updated = true
+          }
+        })
+      } else {
+        // 更新指定房间中的用户
+        const targetRoomId = roomId || currentRoomId.value
+        if (!targetRoomId) {
+          console.warn('[updateUserItem] 无法确定目标房间ID')
+          return false
+        }
+
+        const currentUserList = userListMap[targetRoomId] || []
+        const userIndex = currentUserList.findIndex((user: UserItem) => user.uid === uid)
+        if (userIndex !== -1) {
+          const updatedList = [...currentUserList]
+          updatedList[userIndex] = { ...updatedList[userIndex], ...updates }
+          userListMap[targetRoomId] = updatedList
+          updated = true
+        }
+      }
+
+      return updated
+    }
+
+    /**
+     * 向 userListMap 中添加新的用户
+     * @param userItem 要添加的用户信息
+     * @param roomId 群聊房间ID，可选，默认使用当前房间；如果传入 'all' 则添加到所有房间中
+     * @param allowDuplicate 是否允许重复添加，默认为 false
+     * @returns 是否成功添加
+     */
+    const addUserItem = (userItem: UserItem, roomId?: string): boolean => {
+      if (!userItem || typeof userItem !== 'object' || !userItem.uid) {
+        console.warn('[addUserItem] 无效的用户信息:', userItem)
+        return false
+      }
+
+      let added = false
+
+      // 添加到指定房间中
       const targetRoomId = roomId || currentRoomId.value
-      if (!targetRoomId) return
+      if (!targetRoomId) {
+        console.warn('[addUserItem] 无法确定目标房间ID')
+        return false
+      }
 
       const currentUserList = userListMap[targetRoomId] || []
-      const filteredList = currentUserList.filter((item: UserItem) => item.uid !== uid)
-      userListMap[targetRoomId] = filteredList
+
+      const existIndex = currentUserList.findIndex((user: UserItem) => user.uid === userItem.uid)
+
+      if (existIndex !== -1) {
+        currentUserList[existIndex] = userItem
+        added = true
+      } else {
+        currentUserList.push(userItem)
+        added = true
+      }
+
+      return added
+    }
+
+    /**
+     * 从 userListMap 中移除指定用户
+     * @param uid 要移除的用户ID
+     * @param roomId 群聊房间ID，可选，默认使用当前房间；如果传入 'all' 则从所有房间中移除
+     * @returns 是否成功移除
+     */
+    const removeUserItem = (uid: string, roomId?: string): boolean => {
+      if (!uid || typeof uid !== 'string') {
+        console.warn('[removeUserItem] 无效的用户ID:', uid)
+        return false
+      }
+
+      let removed = false
+
+      // 从指定房间中移除
+      const targetRoomId = roomId || currentRoomId.value
+      if (!targetRoomId) {
+        console.warn('[removeUserItem] 无法确定目标房间ID')
+        return false
+      }
+
+      const currentUserList = userListMap[targetRoomId] || []
+      const initialLength = currentUserList.length
+      const filteredList = currentUserList.filter((user: UserItem) => user.uid !== uid)
+
+      if (filteredList.length < initialLength) {
+        userListMap[targetRoomId] = filteredList
+        removed = true
+      }
+
+      return removed
     }
 
     /**
@@ -290,7 +398,9 @@ export const useGroupStore = defineStore(
       getGroupUserList,
       getCountStatistic,
       updateUserStatus,
-      filterUser,
+      updateUserItem,
+      addUserItem,
+      removeUserItem,
       currentLordId,
       adminUidList,
       adminList,
