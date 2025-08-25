@@ -193,7 +193,7 @@
                         </n-popover>
                         <!-- 用户名 -->
                         <span class="text-12px select-none color-#909090 inline-block align-top">
-                          {{ item.fromUser.nickname }}
+                          {{ getUserDisplayName(item.fromUser.uid) }}
                         </span>
                         <!-- 消息归属地 -->
                         <span class="text-(12px #909090)">
@@ -481,12 +481,13 @@ const messageOptions = computed(() => {
 })
 const { createWebviewWindow } = useWindow()
 const currentRoomId = computed(() => globalStore.currentSession?.roomId)
+
 // 我的群昵称
-// const myGroupNickname = (uid: string) => {
-//   if (props.activeItem.type === RoomTypeEnum.GROUP && userUid.value === uid) {
-//     return groupStore.countInfo?.myName || ''
-//   }
-// }
+const getUserDisplayName = (uid: string) => {
+  const user = groupStore.userList.find((user) => user.uid === uid)
+  return user?.myName || user?.name
+}
+
 /** 是否是超级管理员 */
 // const isAdmin = computed(() => userInfo?.power === PowerEnum.ADMIN)
 /** 跳转回复消息后选中效果 */

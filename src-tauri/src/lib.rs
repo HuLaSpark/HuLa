@@ -18,9 +18,7 @@ use desktops::{common_cmd, directory_scanner, init, tray, video_thumbnail::get_v
 use directory_scanner::{cancel_directory_scan, get_directory_usage_info_with_progress};
 #[cfg(desktop)]
 use init::DesktopCustomInit;
-use moka::future::Cache;
 use std::sync::Arc;
-use std::time::Duration;
 pub mod command;
 pub mod common;
 pub mod configuration;
@@ -53,7 +51,6 @@ mod mobiles;
 pub struct AppData {
     db_conn: Arc<DatabaseConnection>,
     user_info: Arc<Mutex<UserInfo>>,
-    cache: Cache<String, String>,
     pub rc: Arc<Mutex<im_request_client::ImRequestClient>>,
 }
 
@@ -83,16 +80,16 @@ pub fn run() {
 #[cfg(desktop)]
 fn setup_desktop() -> Result<(), CommonError> {
     // 创建一个缓存实例
-    let cache: Cache<String, String> = Cache::builder()
-        // Time to idle (TTI):  30 minutes
-        .time_to_idle(Duration::from_secs(30 * 60))
-        // Create the cache.
-        .build();
+    // let cache: Cache<String, String> = Cache::builder()
+    //     // Time to idle (TTI):  30 minutes
+    //     .time_to_idle(Duration::from_secs(30 * 60))
+    //     // Create the cache.
+    //     .build();
     tauri::Builder::default()
         .init_plugin()
         .init_webwindow_event()
         .init_window_event()
-        .setup(move |app| common_setup(app, cache))
+        .setup(move |app| common_setup(app))
         .invoke_handler(get_invoke_handlers())
         .build(tauri::generate_context!())
         .map_err(|e| {
@@ -315,15 +312,15 @@ fn setup_logout_listener(app_handle: tauri::AppHandle) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 fn setup_mobile() {
     // 创建一个缓存实例
-    let cache: Cache<String, String> = Cache::builder()
-        // Time to idle (TTI):  30 minutes
-        .time_to_idle(Duration::from_secs(30 * 60))
-        // Create the cache.
-        .build();
+    // let cache: Cache<String, String> = Cache::builder()
+    //     // Time to idle (TTI):  30 minutes
+    //     .time_to_idle(Duration::from_secs(30 * 60))
+    //     // Create the cache.
+    //     .build();
 
     if let Err(e) = tauri::Builder::default()
         .init_plugin()
-        .setup(move |app| common_setup(app, cache))
+        .setup(move |app| common_setup(app))
         .invoke_handler(get_invoke_handlers())
         .run(tauri::generate_context!())
     {
@@ -335,7 +332,6 @@ fn setup_mobile() {
 // 公共的 setup 函数
 fn common_setup(
     app: &mut tauri::App,
-    cache: Cache<String, String>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let app_handle = app.handle().clone();
     setup_user_info_listener_early(app.handle().clone());
@@ -349,7 +345,6 @@ fn common_setup(
             app_handle.manage(AppData {
                 db_conn: db.clone(),
                 user_info: user_info.clone(),
-                cache,
                 rc: rc,
             });
         }

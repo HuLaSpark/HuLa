@@ -2,8 +2,7 @@ use crate::AppData;
 use crate::error::CommonError;
 use crate::pojo::common::{CursorPageParam, CursorPageResp, Page, PageParam};
 use crate::repository::im_room_member_repository::{
-    get_room_members_by_room_id, save_room_member_batch,
-    update_my_room_info as update_my_room_info_db,
+    save_room_member_batch, update_my_room_info as update_my_room_info_db,
 };
 use crate::vo::vo::MyRoomInfoReq;
 
@@ -80,75 +79,22 @@ pub async fn get_room_members(
 ) -> Result<Vec<im_room_member::Model>, String> {
     info!("Calling to get all member list of room with room_id");
     let result: Result<Vec<im_room_member::Model>, CommonError> = async {
-        // 检查缓存中是否存在该room_id
-        let cache_key = format!("room_members_{}", room_id);
-        let is_cached = state.cache.get(&cache_key).await.is_some();
+        // 获取当前登录用户的 uid
+        let login_uid = {
+            let user_info = state.user_info.lock().await;
+            user_info.uid.clone()
+        };
 
-        if !is_cached {
-            // 获取当前登录用户的 uid
-            let login_uid = {
-                let user_info = state.user_info.lock().await;
-                user_info.uid.clone()
-            };
-
-            let mut data = fetch_and_update_room_members(
-                room_id.clone(),
-                state.db_conn.clone(),
-                state.rc.clone(),
-                login_uid.clone(),
-            )
-            .await?;
-            // 设置缓存标记
-            state.cache.insert(cache_key, "cached".to_string()).await;
-            // 对从后端获取的数据进行排序
-            sort_room_members(&mut data);
-            return Ok(data);
-        } else {
-            // 获取当前登录用户的 uid
-            let login_uid = {
-                let user_info = state.user_info.lock().await;
-                user_info.uid.clone()
-            };
-
-            // 有缓存：从本地数据库获取数据
-            let mut local_members =
-                get_room_members_by_room_id(&room_id, state.db_conn.deref(), &login_uid)
-                    .await
-                    .map_err(|e| {
-                        anyhow::anyhow!(
-                            "[{}:{}] Failed to query room members from local database: {}",
-                            file!(),
-                            line!(),
-                            e
-                        )
-                    })?;
-
-            // 对查询结果进行排序
-            sort_room_members(&mut local_members);
-
-            // 异步调用后端接口更新本地数据库（添加延迟避免立即冲突）
-            let db_conn = state.db_conn.clone();
-            let request_client = state.rc.clone();
-            let room_id_clone = room_id.clone();
-            let login_uid_clone = login_uid.clone();
-            tokio::spawn(async move {
-                // 添加小延迟，避免与当前数据库操作冲突
-                tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-
-                if let Err(e) = fetch_and_update_room_members(
-                    room_id_clone,
-                    db_conn,
-                    request_client,
-                    login_uid_clone,
-                )
-                .await
-                {
-                    error!("异步更新房间成员数据到本地数据库失败: {:?}", e);
-                }
-            });
-
-            Ok(local_members)
-        }
+        let mut data = fetch_and_update_room_members(
+            room_id.clone(),
+            state.db_conn.clone(),
+            state.rc.clone(),
+            login_uid.clone(),
+        )
+        .await?;
+        // 对从后端获取的数据进行排序
+        sort_room_members(&mut data);
+        return Ok(data);
     }
     .await;
 
