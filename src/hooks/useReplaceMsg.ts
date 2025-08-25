@@ -2,6 +2,8 @@ import { MsgEnum, RoomTypeEnum } from '@/enums'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import type { MessageType } from '@/services/types'
+import { useChatStore } from '@/stores/chat'
+import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
 
@@ -10,6 +12,8 @@ import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
  */
 export const useReplaceMsg = () => {
   const userStore = useUserStore()
+  const chatStore = useChatStore()
+  const groupStore = useGroupStore()
 
   /**
    * 检查单条消息是否@当前用户
@@ -89,9 +93,15 @@ export const useReplaceMsg = () => {
    * @param defaultName 默认名称（可选）
    * @returns 发送者用户名
    */
-  const getMessageSenderName = (message: MessageType, defaultName: string = '') => {
+  const getMessageSenderName = (message: MessageType, defaultName: string = '', roomId: string) => {
     if (!message?.fromUser?.uid) return defaultName
-    return useUserInfo(message.fromUser.uid).value.name || defaultName
+    const session = chatStore.getSession(roomId)
+    if (session.type === RoomTypeEnum.GROUP) {
+      const user = groupStore.getUser(roomId, message.fromUser.uid)
+      return user.myName || user.name
+    } else {
+      return useUserInfo(message.fromUser.uid).value.name || defaultName
+    }
   }
 
   /**
@@ -109,7 +119,7 @@ export const useReplaceMsg = () => {
     isAtMe: boolean
   ) => {
     // 如果没有提供用户名，自动从消息中获取
-    const senderName = userName || getMessageSenderName(message)
+    const senderName = userName
     // 判断是否是撤回消息
     if (message.message?.type === MsgEnum.RECALL) {
       return formatRecallMessage(message, roomType, senderName)

@@ -390,6 +390,10 @@ export const useGroupStore = defineStore(
       return userListMap[roomId] || []
     }
 
+    const getUser = (roomId: string, uid: string): UserItem => {
+      return userListMap[roomId].filter((item) => item.uid === uid)[0]
+    }
+
     return {
       userList,
       userListMap,
@@ -411,7 +415,8 @@ export const useGroupStore = defineStore(
       refreshGroupMembers,
       resetGroupData,
       getUserListByRoomId,
-      countInfo
+      countInfo,
+      getUser
     }
   },
   {

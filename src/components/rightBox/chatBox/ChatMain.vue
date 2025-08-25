@@ -483,10 +483,10 @@ const { createWebviewWindow } = useWindow()
 const currentRoomId = computed(() => globalStore.currentSession?.roomId)
 
 // 我的群昵称
-const getUserDisplayName = (uid: string) => {
+const getUserDisplayName = computed(() => (uid: string) => {
   const user = groupStore.userList.find((user) => user.uid === uid)
   return user?.myName || user?.name || ''
-}
+})
 
 /** 是否是超级管理员 */
 // const isAdmin = computed(() => userInfo?.power === PowerEnum.ADMIN)

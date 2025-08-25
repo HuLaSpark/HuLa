@@ -217,7 +217,7 @@ onMounted(async () => {
       const currentTime = Date.now()
 
       // 获取发送者信息
-      const senderName = getMessageSenderName(msg, session?.name || '')
+      const senderName = getMessageSenderName(msg, session?.name || '', session!.roomId)
 
       // 格式化消息内容
       const formattedContent = formatMessageContent(msg, session?.type || RoomTypeEnum.GROUP, senderName, isAtMe)

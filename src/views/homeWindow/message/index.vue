@@ -136,6 +136,7 @@ const { openMsgSession } = useCommon()
 const msgScrollbar = useTemplateRef<HTMLElement>('msg-scrollbar')
 const { handleMsgClick, handleMsgDelete, menuList, specialMenuList, handleMsgDblclick } = useMessage()
 const currentSession = computed(() => globalStore.currentSession)
+
 // 会话列表 TODO: 需要后端返回对应字段
 const sessionList = computed(() => {
   return (
@@ -154,30 +155,21 @@ const sessionList = computed(() => {
           displayName = item.remark
         }
 
+        const { checkRoomAtMe, getMessageSenderName, formatMessageContent } = useReplaceMsg()
         // 获取该会话的所有消息用于检查@我
         const messages = Array.from(chatStore.messageMap.get(item.roomId)?.values() || [])
-        const { checkRoomAtMe, getAtMeContent, getMessageSenderName, formatMessageContent } = useReplaceMsg()
         // 检查是否有@我的消息
         const isAtMe = checkRoomAtMe(item.roomId, item.type, currentSession.value.roomId, messages, item.unreadCount)
 
         // 处理显示消息
         let displayMsg = ''
 
-        // 优先使用session.text作为内容来源
-        if (item.text) {
-          // 如果有@我，对text应用[有人@我]的样式
-          displayMsg = isAtMe ? getAtMeContent(true, item.text) : item.text
-        }
-        // 如果没有text，则尝试从消息列表中获取
-        else if (messages.length > 0) {
-          const lastMsg = messages[messages.length - 1]
-          if (lastMsg) {
-            const senderName = getMessageSenderName(lastMsg)
-            displayMsg = formatMessageContent(lastMsg, item.type, senderName, isAtMe)
-          }
+        const lastMsg = messages[messages.length - 1]
+        if (lastMsg) {
+          const senderName = getMessageSenderName(lastMsg, '', item.roomId)
+          displayMsg = formatMessageContent(lastMsg, item.type, senderName, isAtMe)
         }
 
-        // 如果没有最后一条消息，则返回不带@标记的对象，但也包含修改后的名称
         return {
           ...item,
           avatar: latestAvatar,
