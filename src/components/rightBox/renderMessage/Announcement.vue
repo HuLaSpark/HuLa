@@ -13,7 +13,7 @@
     </p>
 
     <p class="select-none cursor-default pt-12px px-12px text-(12px [--chat-text-color])">
-      {{ formatTimestamp(body.createTime || body.updateTime, true) }}
+      {{ formatTimestamp(body.updateTime || body.createTime, true) }}
     </p>
   </n-flex>
 </template>
