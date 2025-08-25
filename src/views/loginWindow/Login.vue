@@ -376,6 +376,7 @@ const normalLogin = async (auto = false) => {
     })
     .catch((e: any) => {
       console.error('登录异常：', e)
+      window.$message.error(e)
       loading.value = false
       loginDisabled.value = false
       loginText.value = '登录'
