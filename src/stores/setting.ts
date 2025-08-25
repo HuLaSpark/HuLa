@@ -6,7 +6,8 @@ import { isDesktop, isMac } from '@/utils/PlatformConstants'
 const getDefaultShortcuts = () => {
   return {
     screenshot: isMac() ? 'Cmd+Ctrl+H' : 'Ctrl+Alt+H',
-    openMainPanel: isMac() ? 'Cmd+Ctrl+P' : 'Ctrl+Alt+P'
+    openMainPanel: isMac() ? 'Cmd+Ctrl+P' : 'Ctrl+Alt+P',
+    globalEnabled: false // 默认关闭全局快捷键
   }
 }
 
@@ -97,6 +98,13 @@ export const useSettingStore = defineStore(StoresEnum.SETTING, {
         this.chat = { sendKey: 'Enter', isDouble: true, translate: 'tencent' }
       }
       this.chat.sendKey = shortcut
+    },
+    /** 设置全局快捷键开关状态 */
+    setGlobalShortcutEnabled(enabled: boolean): void {
+      if (!this.shortcuts) {
+        this.shortcuts = getDefaultShortcuts()
+      }
+      this.shortcuts.globalEnabled = enabled
     }
   },
   share: {

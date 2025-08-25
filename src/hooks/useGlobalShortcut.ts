@@ -276,6 +276,40 @@ export const useGlobalShortcut = () => {
   }
 
   /**
+   * 处理全局快捷键开关状态变化
+   * @param enabled 是否启用全局快捷键
+   */
+  const handleGlobalShortcutToggle = async (enabled: boolean) => {
+    if (enabled) {
+      // 开启时重新注册所有快捷键并通知设置页面
+      for (const config of shortcutConfigs) {
+        const savedShortcut = settingStore.shortcuts?.[config.key] || config.defaultValue
+        const success = await registerShortcut(config, savedShortcut as string)
+
+        // 通知设置页面注册状态更新
+        await emitTo('settings', config.registrationEventName, {
+          shortcut: savedShortcut,
+          registered: success
+        })
+      }
+    } else {
+      // 关闭时取消注册所有快捷键并通知设置页面状态为未绑定
+      for (const config of shortcutConfigs) {
+        const savedShortcut = settingStore.shortcuts?.[config.key] || config.defaultValue
+
+        // 通知设置页面注册状态更新为未绑定
+        await emitTo('settings', config.registrationEventName, {
+          shortcut: savedShortcut,
+          registered: false
+        })
+      }
+
+      // 取消注册所有快捷键
+      await cleanupGlobalShortcut()
+    }
+  }
+
+  /**
    * 初始化全局快捷键
    * 根据配置自动注册所有快捷键并监听更新事件
    */
@@ -283,18 +317,44 @@ export const useGlobalShortcut = () => {
     // 确保capture窗口存在
     await ensureCaptureWindow()
 
-    // 批量注册所有配置的快捷键
-    for (const config of shortcutConfigs) {
-      const savedShortcut = settingStore.shortcuts?.[config.key] || config.defaultValue
-      await registerShortcut(config, savedShortcut)
+    // 检查全局快捷键是否开启，默认为关闭
+    const globalEnabled = settingStore.shortcuts?.globalEnabled ?? false
 
-      // 监听每个快捷键的更新事件
+    // 只有开启时才注册快捷键
+    if (globalEnabled) {
+      // 批量注册所有配置的快捷键
+      for (const config of shortcutConfigs) {
+        const savedShortcut = settingStore.shortcuts?.[config.key] || config.defaultValue
+        await registerShortcut(config, savedShortcut as string)
+      }
+    }
+
+    // 监听全局快捷键开关变化
+    addListener(
+      listen('global-shortcut-enabled-changed', (event) => {
+        const enabled = (event.payload as any)?.enabled
+        if (typeof enabled === 'boolean') {
+          handleGlobalShortcutToggle(enabled)
+        } else {
+          console.warn(`📡 [Home] 收到无效的全局快捷键开关事件:`, event.payload)
+        }
+      }),
+      'global-shortcut-enabled-changed'
+    )
+
+    // 监听每个快捷键的更新事件
+    for (const config of shortcutConfigs) {
       addListener(
         listen(config.updateEventName, (event) => {
           const newShortcut = (event.payload as any)?.shortcut
           if (newShortcut) {
-            console.log(`📡 [Home] 收到快捷键更新事件 [${config.key}]: ${newShortcut}`)
-            handleShortcutUpdate(config, newShortcut)
+            // 只有全局快捷键开启时才处理更新
+            const globalEnabled = settingStore.shortcuts?.globalEnabled ?? false
+            if (globalEnabled) {
+              handleShortcutUpdate(config, newShortcut)
+            } else {
+              console.log(`📡 [Home] 全局快捷键已关闭，跳过快捷键更新 [${config.key}]`)
+            }
           } else {
             console.warn(`📡 [Home] 收到无效的快捷键更新事件 [${config.key}]:`, event.payload)
           }

@@ -1,8 +1,22 @@
 <template>
   <n-flex vertical :size="40">
+    <!-- 全局快捷键总开关 -->
+    <n-flex vertical class="text-(14px [--text-color])" :size="16">
+      <span class="pl-10px">全局快捷键</span>
+
+      <n-flex class="item" align="center" justify="space-between">
+        <n-flex vertical :size="8">
+          <span>启用全局快捷键</span>
+          <span class="text-(12px #909090)">关闭后下方所有快捷键将失效</span>
+        </n-flex>
+
+        <n-switch v-model:value="globalShortcutEnabled" @update:value="handleGlobalShortcutToggle" size="small" />
+      </n-flex>
+    </n-flex>
+
     <!-- 截图快捷键设置 -->
     <n-flex vertical class="text-(14px [--text-color])" :size="16">
-      <span class="pl-10px">截图快捷键</span>
+      <span class="pl-10px">功能快捷键</span>
 
       <n-flex class="item" :size="12" vertical>
         <!-- 截图快捷键 -->
@@ -23,13 +37,17 @@
               class="border-(1px solid #90909080)"
               readonly
               size="small"
+              :disabled="!globalShortcutEnabled"
               @keydown="handleShortcutInput"
               @focus="handleScreenshotFocus"
               @blur="handleScreenshotBlur">
               <template #suffix>
                 <n-tooltip trigger="hover">
                   <template #trigger>
-                    <svg @click="resetScreenshotShortcut" class="size-14px cursor-pointer">
+                    <svg
+                      @click="resetScreenshotShortcut"
+                      class="size-14px"
+                      :class="globalShortcutEnabled ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'">
                       <use href="#return"></use>
                     </svg>
                   </template>
@@ -63,13 +81,17 @@
               class="border-(1px solid #90909080)"
               readonly
               size="small"
+              :disabled="!globalShortcutEnabled"
               @keydown="handleOpenMainPanelShortcutInput"
               @focus="handleOpenMainPanelFocus"
               @blur="handleOpenMainPanelBlur">
               <template #suffix>
                 <n-tooltip trigger="hover">
                   <template #trigger>
-                    <svg @click="resetOpenMainPanelShortcut" class="size-14px cursor-pointer">
+                    <svg
+                      @click="resetOpenMainPanelShortcut"
+                      class="size-14px"
+                      :class="globalShortcutEnabled ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'">
                       <use href="#return"></use>
                     </svg>
                   </template>
@@ -79,25 +101,27 @@
             </n-input>
           </n-flex>
         </n-flex>
+      </n-flex>
+    </n-flex>
 
-        <span class="w-full h-1px bg-[--line-color]"></span>
+    <!-- 消息快捷键设置 -->
+    <n-flex vertical class="text-(14px [--text-color])" :size="16">
+      <span class="pl-10px">消息快捷键</span>
 
-        <!-- 发送消息快捷键 -->
-        <n-flex align="center" justify="space-between">
-          <n-flex vertical :size="8">
-            <span>发送消息快捷键</span>
-            <span class="text-(12px #909090)">在聊天输入框中按下快捷键发送消息</span>
-          </n-flex>
+      <n-flex class="item" align="center" justify="space-between">
+        <n-flex vertical :size="8">
+          <span>发送消息快捷键</span>
+          <span class="text-(12px #909090)">在聊天输入框中按下快捷键发送消息</span>
+        </n-flex>
 
-          <n-flex align="center" :size="12">
-            <n-select
-              v-model:value="sendMessageShortcut"
-              class="w-200px"
-              size="small"
-              label-field="label"
-              :options="sendOptions"
-              @blur="handleSendMessageBlur" />
-          </n-flex>
+        <n-flex align="center" :size="12">
+          <n-select
+            v-model:value="sendMessageShortcut"
+            class="w-200px"
+            size="small"
+            label-field="label"
+            :options="sendOptions"
+            @blur="handleSendMessageBlur" />
         </n-flex>
       </n-flex>
     </n-flex>
@@ -107,7 +131,6 @@
 <script setup lang="ts">
 import { emit, listen } from '@tauri-apps/api/event'
 import { isRegistered } from '@tauri-apps/plugin-global-shortcut'
-import { useMessage } from 'naive-ui'
 import { MacOsKeyEnum } from '@/enums'
 import { useGlobalShortcut } from '@/hooks/useGlobalShortcut.ts'
 import { useSettingStore } from '@/stores/setting.ts'
@@ -127,7 +150,6 @@ type ShortcutConfig = {
   displayName: string
 }
 
-const message = useMessage()
 const settingStore = useSettingStore()
 const { getDefaultShortcuts } = useGlobalShortcut()
 const isMacPlatform = isMac()
@@ -163,6 +185,9 @@ const screenshotShortcut = shortcutConfigs.screenshot.value
 const openMainPanelShortcut = shortcutConfigs.openMainPanel.value
 const shortcutRegistered = shortcutConfigs.screenshot.isRegistered
 const openMainPanelShortcutRegistered = shortcutConfigs.openMainPanel.isRegistered
+
+// 全局快捷键开关状态
+const globalShortcutEnabled = ref(settingStore.shortcuts?.globalEnabled ?? false)
 
 // 发送消息快捷键单独处理
 const sendMessageShortcut = ref(settingStore.chat?.sendKey)
@@ -254,15 +279,32 @@ watch(
   { immediate: true }
 )
 
+// 监听 store 中全局快捷键开关状态变化
+watch(
+  () => settingStore.shortcuts?.globalEnabled,
+  (newValue) => {
+    if (newValue !== undefined) {
+      globalShortcutEnabled.value = newValue
+    }
+  },
+  { immediate: true }
+)
+
 // 通用的快捷键绑定检查
 const checkShortcutRegistration = async (config: ShortcutConfig) => {
+  // 如果全局快捷键被关闭，则显示为未绑定状态
+  if (!globalShortcutEnabled.value) {
+    config.isRegistered.value = false
+    return
+  }
+
   config.isRegistered.value = await isRegistered(config.value.value)
 }
 
 // 通用的快捷键输入处理
 const createShortcutInputHandler = (config: ShortcutConfig) => {
   return (event: KeyboardEvent) => {
-    if (!config.isCapturing.value) return
+    if (!config.isCapturing.value || !globalShortcutEnabled.value) return
 
     event.preventDefault()
     event.stopPropagation()
@@ -312,6 +354,11 @@ const handleOpenMainPanelShortcutInput = createShortcutInputHandler(shortcutConf
 // 通用的焦点处理
 const createFocusHandler = (config: ShortcutConfig) => {
   return async () => {
+    // 如果全局快捷键被关闭，则不允许进入编辑模式
+    if (!globalShortcutEnabled.value) {
+      return
+    }
+
     config.isCapturing.value = true
     config.original.value = config.value.value
     console.log(`🎯 开始编辑${config.displayName}`)
@@ -364,10 +411,10 @@ const createSaveShortcutFunction = (config: ShortcutConfig) => {
       await emit(config.eventName, { shortcut: config.value.value })
       console.log(`📡 [Settings] ${config.eventName} 事件已发送`)
 
-      message.success(`${config.displayName}已更新`)
+      window.$message.success(`${config.displayName}已更新`)
     } catch (error) {
       console.error(`Failed to save ${config.key} shortcut:`, error)
-      message.error(`${config.displayName}设置失败`)
+      window.$message.error(`${config.displayName}设置失败`)
 
       // 恢复原来的快捷键
       config.value.value = config.original.value
@@ -378,6 +425,11 @@ const createSaveShortcutFunction = (config: ShortcutConfig) => {
 // 通用的重置快捷键方法
 const createResetShortcutFunction = (config: ShortcutConfig, saveFunction: () => Promise<void>) => {
   return async () => {
+    // 如果全局快捷键被关闭，则不执行重置操作
+    if (!globalShortcutEnabled.value) {
+      return
+    }
+
     config.value.value = config.defaultValue
     await saveFunction()
   }
@@ -395,16 +447,37 @@ const resetOpenMainPanelShortcut = createResetShortcutFunction(shortcutConfigs.o
 const handleScreenshotBlur = createBlurHandler(shortcutConfigs.screenshot, saveScreenshotShortcut)
 const handleOpenMainPanelBlur = createBlurHandler(shortcutConfigs.openMainPanel, saveOpenMainPanelShortcut)
 
+// 处理全局快捷键开关切换
+const handleGlobalShortcutToggle = async (enabled: boolean) => {
+  try {
+    console.log(`🔧 [Settings] 全局快捷键开关切换为: ${enabled ? '开启' : '关闭'}`)
+
+    // 保存到 store
+    settingStore.setGlobalShortcutEnabled(enabled)
+
+    // 通知主窗口更新全局快捷键状态
+    await emit('global-shortcut-enabled-changed', { enabled })
+
+    window.$message.success(`全局快捷键已${enabled ? '开启' : '关闭'}`)
+  } catch (error) {
+    console.error('Failed to toggle global shortcut:', error)
+    window.$message.error('全局快捷键开关设置失败')
+
+    // 恢复原来的值
+    globalShortcutEnabled.value = !enabled
+  }
+}
+
 // 保存发送消息快捷键设置
 const saveSendMessageShortcut = async () => {
   try {
     // 保存到 pinia store
     settingStore.setSendMessageShortcut(sendMessageShortcut.value)
 
-    message.success('发送消息快捷键已更新')
+    window.$message.success('发送消息快捷键已更新')
   } catch (error) {
     console.error('Failed to save send message shortcut:', error)
-    message.error('发送消息快捷键设置失败')
+    window.$message.error('发送消息快捷键设置失败')
 
     // 恢复原来的值
     sendMessageShortcut.value = settingStore.chat?.sendKey || 'Enter'

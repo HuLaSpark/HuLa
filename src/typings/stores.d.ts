@@ -58,6 +58,8 @@ declare namespace STO {
       screenshot: string
       /** 打开主面板快捷键 */
       openMainPanel: string
+      /** 全局快捷键开关 */
+      globalEnabled: boolean
     }
     /** 界面设置 */
     page: {
