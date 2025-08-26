@@ -814,6 +814,11 @@ export const useChatStore = defineStore(
       }
     }
 
+    // 获取所有群组类型的会话
+    const getGroupSessions = () => {
+      return sessionList.value.filter((session) => session.type === RoomTypeEnum.GROUP)
+    }
+
     return {
       getMsgIndex,
       chatMessageList,
@@ -848,7 +853,8 @@ export const useChatStore = defineStore(
       clearAllExpirationTimers,
       updateTotalUnreadCount,
       clearUnreadCount,
-      resetAndRefreshCurrentRoomMessages
+      resetAndRefreshCurrentRoomMessages,
+      getGroupSessions
     }
   },
   {
