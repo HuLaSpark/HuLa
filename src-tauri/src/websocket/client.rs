@@ -546,71 +546,71 @@ impl WebSocketClient {
             }
             "loginSuccess" => {
                 info!("✅ 登录成功");
-                let _ = app_handle.emit("ws-login-success", data);
+                let _ = app_handle.emit_to("home","ws-login-success", data);
             }
 
             // 消息相关
             "receiveMessage" => {
                 info!("💬 收到消息");
-                let _ = app_handle.emit("ws-receive-message", data);
+                let _ = app_handle.emit_to("home","ws-receive-message", data);
             }
             "msgRecall" => {
                 info!("🔄 消息撤回");
-                let _ = app_handle.emit("ws-msg-recall", data);
+                let _ = app_handle.emit_to("home","ws-msg-recall", data);
             }
             "msgMarkItem" => {
                 info!("👍 消息点赞/倒赞");
-                let _ = app_handle.emit("ws-msg-mark-item", data);
+                let _ = app_handle.emit_to("home","ws-msg-mark-item", data);
             }
 
             // 用户状态相关
             "online" => {
                 info!("🟢 用户上线");
-                let _ = app_handle.emit("ws-online", data);
+                let _ = app_handle.emit_to("home","ws-online", data);
             }
             "offline" => {
                 info!("🔴 用户下线");
-                let _ = app_handle.emit("ws-offline", data);
+                let _ = app_handle.emit_to("home","ws-offline", data);
             }
             "userStateChange" => {
                 info!("🔄 用户状态改变");
-                let _ = app_handle.emit("ws-user-state-change", data);
+                let _ = app_handle.emit_to("home","ws-user-state-change", data);
             }
 
             // 好友相关
             "newApply" => {
                 info!("👥 新的Apply申请");
-                let _ = app_handle.emit("ws-request-new-apply", data);
+                let _ = app_handle.emit_to("home","ws-request-new-apply", data);
             }
             "requestApprovalFriend" => {
                 info!("✅ 同意好友申请");
-                let _ = app_handle.emit("ws-request-approval-friend", data);
+                let _ = app_handle.emit_to("home","ws-request-approval-friend", data);
             }
             "memberChange" => {
                 info!("🔄 成员变动");
-                let _ = app_handle.emit("ws-member-change", data);
+                let _ = app_handle.emit_to("home", "ws-member-change", data);
             }
 
             // 房间/群聊相关
             "roomInfoChange" => {
                 info!("🏠 群聊信息变更");
-                let _ = app_handle.emit("ws-room-info-change", data);
+                let _ = app_handle.emit_to("home","ws-room-info-change", data);
             }
             "myRoomInfoChange" => {
                 info!("👤 我在群里的信息变更");
-                let _ = app_handle.emit("ws-my-room-info-change", data);
+                let _ = app_handle.emit_to("home","ws-my-room-info-change", data);
             }
             "roomGroupNoticeMsg" => {
                 info!("📢 群公告发布");
-                let _ = app_handle.emit("ws-room-group-notice-msg", data);
+                let _ = app_handle.emit_to("home","ws-room-group-notice-msg", data);
             }
             "roomEditGroupNoticeMsg" => {
                 info!("✏️ 群公告编辑");
-                let _ = app_handle.emit("ws-room-edit-group-notice-msg", data);
+                let _ = app_handle.emit_to("home","ws-room-edit-group-notice-msg", data);
             }
             "roomDissolution" => {
                 info!("💥 群解散");
-                let _ = app_handle.emit("ws-room-dissolution", data);
+                let _ = app_handle.emit_to("home","ws-room-dissolution", data);
             }
 
             // 视频通话相关

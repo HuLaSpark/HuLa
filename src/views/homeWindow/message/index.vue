@@ -7,7 +7,7 @@
         v-for="item in sessionList"
         :key="item.roomId"
         :class="[
-          { active: currentSession.roomId === item.roomId },
+          { active: globalStore.currentSession.roomId === item.roomId },
           { 'bg-[--bg-msg-first-child] rounded-12px relative': item.top }
         ]"
         :data-key="item.roomId"
