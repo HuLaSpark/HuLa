@@ -344,6 +344,9 @@ useMitt.on(
             if (globalStore.currentSession?.roomId === param.roomId) {
               globalStore.updateCurrentSession(chatStore.sessionList[0])
             }
+
+            // 更新contact 群数据
+            contactStore.getGroupChatList()
           } else {
             info('群成员退出群聊，移除群内的成员数据')
             // 移除该群中的群成员数据
@@ -356,8 +359,8 @@ useMitt.on(
           // 如果是自己加入群聊，则需要添加新的会话
           if (item.uid === userStore.userInfo.uid) {
             info('本人加入群聊，加载该群聊的会话数据')
-            // 移除该群中的群成员数据
-            // groupStore.removeUserItem(item.uid, param.roomId)
+            // 更新contact 群数据
+            contactStore.getGroupChatList()
           } else {
             info('群成员加入群聊，添加群成员数据')
             groupStore.addUserItem(item, param.roomId)
