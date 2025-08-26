@@ -1,3 +1,4 @@
+import { listen } from '@tauri-apps/api/event'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { error, info } from '@tauri-apps/plugin-log'
 import { CallTypeEnum, RTCCallStatus } from '@/enums'
@@ -210,6 +211,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
   // -1 = 超时 0 = 拒绝 1 = 接通 2 = 挂断
   const sendRtcCall2VideoCallResponse = async (status: number) => {
     try {
+      info(`发送 ws 请求，通知双方通话状态 ${status}`)
       await rustWebSocketClient.sendMessage({
         type: WsRequestMsgType.VIDEO_CALL_RESPONSE,
         data: {
@@ -284,7 +286,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
             await handleCallResponse(0)
           } else {
             // 发起方：直接结束通话
-            await endCall()
+            await handleCallResponse(2)
           }
         }, 1000)
         return false
@@ -315,6 +317,8 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
     } catch (err) {
       console.error('获取本地流失败:', err)
       window.$message.error('获取本地媒体流失败，请检查设备!')
+      error(`获取本地媒体流失败，请检查设备! ${err}`)
+      await sendRtcCall2VideoCallResponse(2)
       return false
     }
   }
@@ -499,13 +503,11 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
         video: callType === CallTypeEnum.VIDEO
       }
 
-      console.log('ws发送 offer')
+      info('ws发送 offer')
       await rustWebSocketClient.sendMessage({
         type: WsRequestMsgType.WEBRTC_SIGNAL,
         data: signalData
       })
-
-      console.log('SDP offer sent via WebSocket:', offer)
     } catch (error) {
       console.error('Failed to send SDP offer:', error)
     }
@@ -941,18 +943,43 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
   }
 
   // 监听 WebRTC 信令消息
-  useMitt.on(WsResponseMessageType.WEBRTC_SIGNAL, handleSignalMessage)
-  useMitt.on(WsResponseMessageType.CallAccepted, () => {
-    // 接受方，发送是否接受
+  // useMitt.on(WsResponseMessageType.WEBRTC_SIGNAL, handleSignalMessage)
+  listen('ws-webrtc-signal', (event: any) => {
+    info(`收到信令消息: ${JSON.stringify(event.payload)}`)
+    handleSignalMessage(event.payload)
+  })
+  listen('ws-call-accepted', (event: any) => {
+    info(`通话被接受: ${JSON.stringify(event.payload)}`)
+    // // 接受方，发送是否接受
+    // info(`收到 CallAccepted'消息 ${isReceiver}`)
     if (!isReceiver) {
       sendOffer(offer.value!)
     }
   })
-  useMitt.on(WsResponseMessageType.RoomClosed, () => endCall())
-  useMitt.on(WsResponseMessageType.DROPPED, () => endCall())
-  useMitt.on(WsResponseMessageType.TIMEOUT, () => endCall())
-  useMitt.on(WsResponseMessageType.CallRejected, () => endCall())
-  useMitt.on(WsResponseMessageType.CANCEL, () => endCall())
+  listen('ws-room-closed', (event: any) => {
+    info(`房间已关闭: ${JSON.stringify(event.payload)}`)
+    endCall()
+  })
+  listen('ws-dropped', (_: any) => {
+    endCall()
+  })
+  listen('ws-call-rejected', (event: any) => {
+    info(`通话被拒绝: ${JSON.stringify(event.payload)}`)
+    endCall()
+  })
+  listen('ws-cancel', (event: any) => {
+    info(`已取消通话: ${JSON.stringify(event.payload)}`)
+    endCall()
+  })
+  listen('ws-timeout', (event: any) => {
+    info(`已取消通话: ${JSON.stringify(event.payload)}`)
+    endCall()
+  })
+  // useMitt.on(WsResponseMessageType.RoomClosed, () => endCall())
+  // useMitt.on(WsResponseMessageType.DROPPED, () => endCall())
+  // useMitt.on(WsResponseMessageType.TIMEOUT, () => endCall())
+  // useMitt.on(WsResponseMessageType.CallRejected, () => endCall())
+  // useMitt.on(WsResponseMessageType.CANCEL, () => endCall())
 
   onMounted(async () => {
     if (!isReceiver) {

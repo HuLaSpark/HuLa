@@ -652,6 +652,11 @@ impl WebSocketClient {
                 let _ = app_handle.emit("ws-cancel", data);
             }
 
+            "TIMEOUT" => {
+                info!("📞 通话超时");
+                let _ = app_handle.emit("ws-timeout", data);
+            }
+
             // 系统相关
             "tokenExpired" => {
                 warn!("🔑 Token 过期");
