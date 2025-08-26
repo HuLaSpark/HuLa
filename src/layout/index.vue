@@ -82,11 +82,17 @@ const AsyncCenter = defineAsyncComponent({
     await import('./left/index.vue')
     loadingText.value = '正在加载中间面板...'
     const comp = await import('./center/index.vue')
+
+    // 加载所有会话
+    await chatStore.getSessionList(true)
+
+    // 加载所有群的成员数据
+    const groupSessions = chatStore.getGroupSessions()
+    await Promise.all(groupSessions.map((session) => groupStore.getGroupUserList(session.roomId, true)))
+
     loadingPercentage.value = 66
     return comp
-  },
-  delay: 600,
-  timeout: 3000
+  }
 })
 
 const AsyncRight = defineAsyncComponent({
