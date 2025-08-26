@@ -34,7 +34,7 @@
           </n-form-item>
 
           <!-- 图片验证码 -->
-          <n-form-item path="imgCode" label="图片验证码">
+          <!-- <n-form-item path="imgCode" label="图片验证码">
             <n-flex :size="8">
               <n-input
                 :allow-input="noSideSpace"
@@ -58,7 +58,7 @@
                 </template>
               </n-image>
             </n-flex>
-          </n-form-item>
+          </n-form-item> -->
 
           <!-- 邮箱验证码 -->
           <n-form-item path="emailCode" label="邮箱验证码">
