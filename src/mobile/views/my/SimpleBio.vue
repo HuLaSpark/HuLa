@@ -21,11 +21,15 @@
                 <div
                   class="rounded-full shadow self-center h-auto transition-transform duration-300 ease-in-out origin-top"
                   style="transform: scale(1) translateY(0)">
-                  <n-avatar :size="74" src="#" fallback-src="/logo.png" round />
+                  <n-avatar
+                    :size="74"
+                    :src="AvatarUtils.getAvatarUrl(userStore.userInfo.avatar!)"
+                    fallback-src="/logo.png"
+                    round />
                 </div>
 
                 <div @click="toMyInfo" class="flex flex-col flex-1 py-10px">
-                  <div class="font-bold text-18px text-#373838">苏小研</div>
+                  <div class="font-bold text-18px text-#373838">{{ userStore.userInfo.name }}</div>
                   <div class="mt-2 text-bold-style line-height-22px line-clamp-2">
                     一段自我描述，添加性别/地区/工作或学校 不定期更新的日常不定期更新的日常不定期更新的日常
                   </div>
@@ -59,6 +63,10 @@
 
 <script setup lang="ts">
 import router from '@/router'
+import { useUserStore } from '@/stores/user'
+import { AvatarUtils } from '@/utils/AvatarUtils'
+
+const userStore = useUserStore()
 
 const options = ref([
   {
