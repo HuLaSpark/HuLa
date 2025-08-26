@@ -12,6 +12,13 @@
       @click="maskHandler.close"
       class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[999] transition-all duration-3000 ease-in-out opacity-100"></div>
 
+    <!-- 键盘蒙板 -->
+    <div
+      v-if="showKeyboardMask"
+      class="keyboard-mask flex-1"
+      @touchstart.stop.prevent="closeKeyboardMask"
+      @click.stop.prevent="closeKeyboardMask"></div>
+
     <NavBar>
       <template #left>
         <n-flex @click="toSimpleBio" align="center" :size="6" class="w-full">
@@ -52,27 +59,30 @@
       </template>
     </NavBar>
 
+    <div class="px-16px mt-5px">
+      <div class="py-5px shrink-0">
+        <n-input
+          id="search"
+          class="rounded-6px w-full bg-white relative text-12px"
+          :maxlength="20"
+          clearable
+          spellCheck="false"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          placeholder="搜索"
+          @focus="lockScroll"
+          @blur="unlockScroll">
+          <template #prefix>
+            <svg class="w-12px h-12px"><use href="#search"></use></svg>
+          </template>
+        </n-input>
+      </div>
+      <div class="border-b-1 border-solid color-gray-200 px-18px mt-5px"></div>
+    </div>
+
     <PullToRefresh class="flex-1 overflow-auto" @refresh="handleRefresh" ref="pullRefreshRef">
       <div class="flex flex-col h-full px-18px">
-        <div class="py-8px shrink-0">
-          <n-input
-            id="search"
-            class="rounded-6px w-full bg-white relative text-12px"
-            :maxlength="20"
-            clearable
-            spellCheck="false"
-            autoComplete="off"
-            autoCorrect="off"
-            autoCapitalize="off"
-            :placeholder="'搜索'">
-            <template #prefix>
-              <svg class="w-12px h-12px"><use href="#search"></use></svg>
-            </template>
-          </n-input>
-        </div>
-
-        <div class="border-b-1 border-solid color-gray-200 px-18px my-8px"></div>
-
         <div class="flex-1">
           <div
             v-for="item in messageItems"
@@ -148,12 +158,24 @@ import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import rustWebSocketClient from '~/src/services/webSocketRust'
+import type { IKeyboardDidShowDetail } from '../../mobile-client/interface/adapter'
+import { mobileClient } from '../../mobile-client/MobileClient'
 
 const chatStore = useChatStore()
 
 const pullRefreshRef = ref()
 
-const messageItems = computed(() => chatStore.sessionList)
+const messageItems = computed(() => {
+  const a: any[] = []
+
+  for (let i = 0; i < 10; i++) {
+    chatStore.sessionList.forEach((i) => {
+      a.push(i)
+    })
+  }
+
+  return a
+})
 
 const getSessionList = async () => {
   await chatStore.getSessionList(true)
@@ -161,10 +183,41 @@ const getSessionList = async () => {
 
 const userStore = useUserStore()
 
+/**
+ * export interface IKeyboardDidShowDetail {
+   bottomInset: number
+   height: number
+   keyboardVisible: boolean
+   screenHeight: number
+   timestamp: number
+   visibleHeight: number
+ }
+ 
+ */
+
 onMounted(async () => {
   await rustWebSocketClient.setupBusinessMessageListeners()
   console.log('个人数据：', userStore.userInfo)
   getSessionList()
+
+  const { removeHideFunction, removeShowFunction } = await mobileClient.keyboardListener(
+    // 键盘打开
+    (detail: IKeyboardDidShowDetail) => {
+      console.log('键盘打开', detail)
+      openKeyboardMask()
+    },
+    // 键盘关闭
+    () => {
+      console.log('键盘关闭')
+      closeKeyboardMask()
+    }
+  )
+
+  // 如果需要在组件卸载时移除监听
+  onBeforeUnmount(() => {
+    removeHideFunction()
+    removeShowFunction()
+  })
 })
 
 const handleRefresh = async () => {
@@ -287,10 +340,61 @@ const toSimpleBio = () => {
   // 切成你想要的离场动画
   router.push('/mobile/mobileMy/simpleBio')
 }
+
+// 锁滚动（和蒙板一样）
+const lockScroll = () => {
+  console.log('锁定触发')
+  const scrollEl = document.querySelector('.flex-1.overflow-auto') as HTMLElement
+  if (scrollEl) {
+    scrollEl.style.overflow = 'hidden'
+  }
+}
+
+const unlockScroll = () => {
+  console.log('锁定解除')
+  const scrollEl = document.querySelector('.flex-1.overflow-auto') as HTMLElement
+  if (scrollEl) {
+    scrollEl.style.overflow = 'auto'
+  }
+}
+
+// 键盘蒙板显示状态
+const showKeyboardMask = ref(false)
+
+const openKeyboardMask = () => {
+  showKeyboardMask.value = true
+  document.body.style.overflow = 'hidden'
+  document.body.style.position = 'fixed'
+}
+
+const closeKeyboardMask = () => {
+  showKeyboardMask.value = false
+  document.body.style.overflow = ''
+  document.body.style.position = ''
+  // 让 input 失焦
+  const activeEl = document.activeElement as HTMLElement
+  if (activeEl && typeof activeEl.blur === 'function') {
+    activeEl.blur()
+  }
+}
 </script>
 
 <style scoped lang="scss">
 // .message-item {
 //   @apply flex justify-around items-center p-3 hover:bg-#DEEDE7 hover:rounded-10px transition-colors cursor-pointer;
 // }
+
+.keyboard-mask {
+  position: fixed;
+  inset: 0;
+  background: transparent; // 透明背景
+  z-index: 9998; // 高于聊天列表
+  pointer-events: auto; // 确保能接收事件
+  touch-action: none; // 禁止滚动
+}
+
+:deep(#search) {
+  position: relative;
+  z-index: 9999; // 输入框比蒙板高
+}
 </style>
