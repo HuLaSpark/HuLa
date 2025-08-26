@@ -1,7 +1,7 @@
 import { info } from '@tauri-apps/plugin-log'
 import { defineStore } from 'pinia'
 import { NotificationTypeEnum, RoomTypeEnum, StoresEnum } from '@/enums'
-import type { ContactItem, RequestFriendItem } from '@/services/types'
+import type { ContactItem, RequestFriendItem, SessionItem } from '@/services/types'
 import { useChatStore } from '@/stores/chat'
 import { isMac } from '@/utils/PlatformConstants'
 import { clearQueue, readCountQueue } from '@/utils/ReadCountQueue.ts'
@@ -119,6 +119,10 @@ export const useGlobalStore = defineStore(
       homeWindowState.value = { ...homeWindowState.value, ...newState }
     }
 
+    const updateCurrentSession = (session: SessionItem) => {
+      currentSession.value = session
+    }
+
     return {
       unReadMark,
       currentSession,
@@ -132,7 +136,8 @@ export const useGlobalStore = defineStore(
       homeWindowState,
       setTipVisible,
       updateGlobalUnreadCount,
-      setHomeWindowState
+      setHomeWindowState,
+      updateCurrentSession
     }
   },
   {

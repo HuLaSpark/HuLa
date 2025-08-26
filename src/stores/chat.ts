@@ -819,6 +819,10 @@ export const useChatStore = defineStore(
       return sessionList.value.filter((session) => session.type === RoomTypeEnum.GROUP)
     }
 
+    const removeSession = (roomId: string) => {
+      sessionList.value = sessionList.value.filter((session) => session.roomId !== roomId)
+    }
+
     return {
       getMsgIndex,
       chatMessageList,
@@ -854,7 +858,8 @@ export const useChatStore = defineStore(
       updateTotalUnreadCount,
       clearUnreadCount,
       resetAndRefreshCurrentRoomMessages,
-      getGroupSessions
+      getGroupSessions,
+      removeSession
     }
   },
   {

@@ -291,6 +291,14 @@ export const useGroupStore = defineStore(
     }
 
     /**
+     * 移除 某个房间中的所有user 数据
+     * @param roomId
+     */
+    const removeAllUsers = (roomId: string) => {
+      userListMap[roomId] = []
+    }
+
+    /**
      * 添加群管理员
      * @param uidList 要添加为管理员的用户ID列表
      */
@@ -416,7 +424,8 @@ export const useGroupStore = defineStore(
       resetGroupData,
       getUserListByRoomId,
       countInfo,
-      getUser
+      getUser,
+      removeAllUsers
     }
   },
   {
