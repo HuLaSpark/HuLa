@@ -245,7 +245,7 @@ export const useChatMain = () => {
 
           const fileStatus: FileDownloadStatus = fileDownloadStore.getFileStatus(item.message.body.url)
 
-          const currentChatRoomId = globalStore.currentSession.roomId // 这个id可能为群id可能为用户uid，所以不能只用用户uid
+          const currentChatRoomId = globalStore.currentSession!.roomId // 这个id可能为群id可能为用户uid，所以不能只用用户uid
           const currentUserUid = userStore.uid as string
 
           /**
@@ -412,7 +412,7 @@ export const useChatMain = () => {
         const fileStatus = fileDownloadStore.getFileStatus(fileUrl)
 
         console.log('找到的文件状态：', fileStatus)
-        const currentChatRoomId = globalStore.currentSession.roomId // 这个id可能为群id可能为用户uid，所以不能只用用户uid
+        const currentChatRoomId = globalStore.currentSession!.roomId // 这个id可能为群id可能为用户uid，所以不能只用用户uid
         const currentUserUid = userStore.uid as string
 
         const resourceDirPath = await getUserAbsoluteVideosDir(currentUserUid, currentChatRoomId)

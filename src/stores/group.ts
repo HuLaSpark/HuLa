@@ -18,12 +18,11 @@ export const useGroupStore = defineStore(
     // 群组相关状态
     const userListMap = reactive<Record<string, UserItem[]>>({}) // 群成员列表Map，key为roomId
     const userListOptions = reactive({ isLast: false, loading: true, cursor: '' }) // 分页加载相关状态
-    const currentRoomId = computed(() => globalStore.currentSession?.roomId) // 当前聊天室ID
 
     // 获取当前房间的用户列表的计算属性
     const userList = computed(() => {
-      if (!currentRoomId.value) return []
-      return userListMap[currentRoomId.value] || []
+      if (!globalStore.currentSession?.roomId) return []
+      return userListMap[globalStore.currentSession.roomId] || []
     })
 
     /**
@@ -81,17 +80,7 @@ export const useGroupStore = defineStore(
     })
 
     // 群组基本信息
-    const countInfo = ref<GroupDetailReq>({
-      avatar: '',
-      groupName: '',
-      onlineNum: 0,
-      roleId: 0,
-      account: '',
-      memberNum: 0,
-      remark: '',
-      myName: '',
-      roomId: currentRoomId.value
-    })
+    const countInfo = ref<GroupDetailReq>()
 
     /**
      * 获取群成员列表
@@ -145,7 +134,7 @@ export const useGroupStore = defineStore(
     const loadMoreGroupMembers = async () => {
       if (userListOptions.isLast || userListOptions.loading) return
       userListOptions.loading = true
-      await getGroupUserList(currentRoomId.value)
+      await getGroupUserList(globalStore.currentSession!.roomId)
       userListOptions.loading = false
     }
 
@@ -155,7 +144,7 @@ export const useGroupStore = defineStore(
      * @param roomId 群聊房间ID，可选，默认使用当前房间
      */
     const updateUserStatus = async (item: UserItem | OnStatusChangeType['member'], roomId?: string) => {
-      const targetRoomId = roomId || currentRoomId.value
+      const targetRoomId = roomId || globalStore.currentSession!.roomId
       if (!targetRoomId) return
 
       const currentUserList = userListMap[targetRoomId] || []
@@ -201,7 +190,7 @@ export const useGroupStore = defineStore(
         })
       } else {
         // 更新指定房间中的用户
-        const targetRoomId = roomId || currentRoomId.value
+        const targetRoomId = roomId || globalStore.currentSession!.roomId
         if (!targetRoomId) {
           console.warn('[updateUserItem] 无法确定目标房间ID')
           return false
@@ -236,7 +225,7 @@ export const useGroupStore = defineStore(
       let added = false
 
       // 添加到指定房间中
-      const targetRoomId = roomId || currentRoomId.value
+      const targetRoomId = roomId || globalStore.currentSession!.roomId
       if (!targetRoomId) {
         console.warn('[addUserItem] 无法确定目标房间ID')
         return false
@@ -272,7 +261,7 @@ export const useGroupStore = defineStore(
       let removed = false
 
       // 从指定房间中移除
-      const targetRoomId = roomId || currentRoomId.value
+      const targetRoomId = roomId || globalStore.currentSession!.roomId
       if (!targetRoomId) {
         console.warn('[removeUserItem] 无法确定目标房间ID')
         return false
@@ -303,9 +292,9 @@ export const useGroupStore = defineStore(
      * @param uidList 要添加为管理员的用户ID列表
      */
     const addAdmin = async (uidList: string[]) => {
-      await ImRequestUtils.addAdmin({ roomId: currentRoomId.value, uidList })
+      await ImRequestUtils.addAdmin({ roomId: globalStore.currentSession!.roomId, uidList })
       // 更新本地群成员列表中的角色信息
-      const targetRoomId = currentRoomId.value
+      const targetRoomId = globalStore.currentSession!.roomId
       if (!targetRoomId) return
 
       const currentUserList = userListMap[targetRoomId] || []
@@ -323,9 +312,9 @@ export const useGroupStore = defineStore(
      * @param uidList 要撤销的管理员ID列表
      */
     const revokeAdmin = async (uidList: string[]) => {
-      await ImRequestUtils.revokeAdmin({ roomId: currentRoomId.value, uidList })
+      await ImRequestUtils.revokeAdmin({ roomId: globalStore.currentSession!.roomId, uidList })
       // 更新本地群成员列表中的角色信息
-      const targetRoomId = currentRoomId.value
+      const targetRoomId = globalStore.currentSession!.roomId
       if (!targetRoomId) return
 
       const currentUserList = userListMap[targetRoomId] || []
@@ -349,9 +338,9 @@ export const useGroupStore = defineStore(
       const updatedList = currentUserList.filter((user: UserItem) => user.uid !== userStore.userInfo.uid)
       userListMap[roomId] = updatedList
       // 更新会话列表
-      chatStore.removeContact(currentRoomId.value)
+      chatStore.removeSession(globalStore.currentSession!.roomId)
       // 切换到第一个会话
-      globalStore.currentSession.roomId = chatStore.sessionList[0].roomId
+      globalStore.currentSession!.roomId = chatStore.sessionList[0].roomId
     }
 
     /**
@@ -362,8 +351,8 @@ export const useGroupStore = defineStore(
       await getGroupUserList('1', true)
 
       // 如果当前选中的是群聊且不是频道，则同时刷新当前群聊的成员列表
-      if (globalStore.currentSession?.type === RoomTypeEnum.GROUP && currentRoomId.value !== '1') {
-        await getGroupUserList(currentRoomId.value, true)
+      if (globalStore.currentSession?.type === RoomTypeEnum.GROUP && globalStore.currentSession!.roomId !== '1') {
+        await getGroupUserList(globalStore.currentSession!.roomId, true)
       }
     }
 

@@ -1,6 +1,6 @@
 import { info } from '@tauri-apps/plugin-log'
 import { defineStore } from 'pinia'
-import { NotificationTypeEnum, RoomTypeEnum, StoresEnum } from '@/enums'
+import { NotificationTypeEnum, StoresEnum } from '@/enums'
 import type { ContactItem, RequestFriendItem, SessionItem } from '@/services/types'
 import { useChatStore } from '@/stores/chat'
 import { isMac } from '@/utils/PlatformConstants'
@@ -31,10 +31,7 @@ export const useGlobalStore = defineStore(
     })
 
     // 当前会话信息：包含房间ID和房间类型
-    const currentSession = ref<{ roomId: string; type: RoomTypeEnum }>({
-      roomId: '1',
-      type: RoomTypeEnum.GROUP
-    })
+    const currentSession = ref<SessionItem>()
 
     /** 当前选中的联系人信息 */
     const currentSelectedContact = ref<ContactItem | RequestFriendItem>()
@@ -93,17 +90,17 @@ export const useGlobalStore = defineStore(
     // 监听当前会话变化，添加防重复触发逻辑
     watch(currentSession, async (val, oldVal) => {
       // 只有当房间ID真正发生变化时才执行操作
-      if (!oldVal || val.roomId !== oldVal.roomId) {
-        info(`[global]当前会话发生实际变化: ${oldVal?.roomId} -> ${val.roomId}`)
+      if (!oldVal || val!.roomId !== oldVal.roomId) {
+        info(`[global]当前会话发生实际变化: ${oldVal?.roomId} -> ${val!.roomId}`)
         // 清理已读数查询队列
         clearQueue()
         // 延迟1秒后开始查询已读数
         setTimeout(readCountQueue, 1000)
         // 标记该房间的消息为已读
         // apis.markMsgRead({ roomId: val.roomId || '1' })
-        markMsgRead(val.roomId || '1')
+        markMsgRead(val!.roomId || '1')
         // 更新会话的已读状态
-        chatStore.markSessionRead(val.roomId || '1')
+        chatStore.markSessionRead(val!.roomId || '1')
         // 更新全局未读计数
         await updateGlobalUnreadCount()
       }
