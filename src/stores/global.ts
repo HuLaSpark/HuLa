@@ -1,3 +1,4 @@
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
 import { defineStore } from 'pinia'
 import { NotificationTypeEnum, StoresEnum } from '@/enums'
@@ -89,6 +90,9 @@ export const useGlobalStore = defineStore(
 
     // 监听当前会话变化，添加防重复触发逻辑
     watch(currentSession, async (val, oldVal) => {
+      if (WebviewWindow.getCurrent().label !== 'home') {
+        return
+      }
       // 只有当房间ID真正发生变化时才执行操作
       if (!oldVal || val!.roomId !== oldVal.roomId) {
         info(`[global]当前会话发生实际变化: ${oldVal?.roomId} -> ${val!.roomId}`)

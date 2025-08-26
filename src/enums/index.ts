@@ -685,5 +685,6 @@ export enum ImUrlEnum {
   GET_FRIEND_PAGE = 'getFriendPage',
   MARK_MSG_READ = 'markMsgRead',
   /** 移出群成员 */
-  REMOVE_GROUP_MEMBER = 'removeGroupMember'
+  REMOVE_GROUP_MEMBER = 'removeGroupMember',
+  CHECK_EMAIL = 'checkEmail'
 }
