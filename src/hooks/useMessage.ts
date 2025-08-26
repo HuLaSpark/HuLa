@@ -327,7 +327,7 @@ export const useMessage = () => {
 
   onMounted(async () => {
     const appWindow = WebviewWindow.getCurrent()
-    addListener(
+    await addListener(
       appWindow.listen(EventEnum.ALONE, () => {
         emit(EventEnum.ALONE + itemRef.value?.roomId, itemRef.value)
         if (aloneWin.value.has(EventEnum.ALONE + itemRef.value?.roomId)) return

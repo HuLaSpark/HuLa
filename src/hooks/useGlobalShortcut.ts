@@ -55,7 +55,7 @@ export const useGlobalShortcut = () => {
 
     if (captureWindow) {
       // 设置关闭拦截 - 将关闭转为隐藏
-      addListener(
+      await addListener(
         captureWindow.onCloseRequested(async (event) => {
           event.preventDefault()
           await captureWindow.hide()
@@ -330,7 +330,7 @@ export const useGlobalShortcut = () => {
     }
 
     // 监听全局快捷键开关变化
-    addListener(
+    await addListener(
       listen('global-shortcut-enabled-changed', (event) => {
         const enabled = (event.payload as any)?.enabled
         if (typeof enabled === 'boolean') {
@@ -344,7 +344,7 @@ export const useGlobalShortcut = () => {
 
     // 监听每个快捷键的更新事件
     for (const config of shortcutConfigs) {
-      addListener(
+      await addListener(
         listen(config.updateEventName, (event) => {
           const newShortcut = (event.payload as any)?.shortcut
           if (newShortcut) {

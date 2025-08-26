@@ -433,11 +433,37 @@ onMounted(async () => {
     }
   })
   /** 这里使用的是窗口之间的通信来监听信息对话的变化 */
-  addListener(
+  await addListener(
     appWindow.listen('aloneData', (event: any) => {
       activeItem.value = { ...event.payload.item }
     }),
     'aloneData'
+  )
+  await addListener(
+    appWindow.listen('screenshot', async (e: any) => {
+      // 确保输入框获得焦点
+      if (messageInputDom.value) {
+        messageInputDom.value.focus()
+        try {
+          // 从 ArrayBuffer 数组重建 Blob 对象
+          const buffer = new Uint8Array(e.payload.buffer)
+          const blob = new Blob([buffer], { type: e.payload.mimeType })
+          const file = new File([blob], 'screenshot.png', { type: e.payload.mimeType })
+
+          // 创建一个模拟的粘贴事件，包含File对象
+          const mockPasteEvent = {
+            preventDefault: () => {},
+            clipboardData: {
+              files: [file]
+            }
+          }
+          handlePaste(mockPasteEvent, messageInputDom.value, showFileModalCallback)
+        } catch (error) {
+          console.error('处理截图失败:', error)
+        }
+      }
+    }),
+    'screenshot'
   )
   window.addEventListener('click', closeMenu, true)
   window.addEventListener('keydown', disableSelectAll)

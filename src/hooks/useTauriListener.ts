@@ -32,7 +32,7 @@ export const useTauriListener = () => {
    * @param listener Promise<UnlistenFn>
    */
   const addListener = async (listener: Promise<UnlistenFn>, id?: string) => {
-    const listenerId = id || `listener_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    const listenerId = id || `listener_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
     if (listenerIdMap.has(listenerId)) {
       try {
         const unlisten = await listener

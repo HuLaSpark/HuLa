@@ -237,7 +237,7 @@ HuLa is an instant messaging system built with Tauri, Vite 7, Vue 3, and TypeScr
 | Feature | Description | Status |
 |---------|-------------|--------|
 | 💻 | Windows/macOS/Linux | ![Completed](https://img.shields.io/badge/✅-Completed-008080?style=flat&labelColor=e6f7f7&color=008080) |
-| 📱 | iOS/Android Adaptation | ![In Progress](https://img.shields.io/badge/🐣-Accomplish60%-ee9f20?style=flat&labelColor=fef7e6&color=ee9f20) |
+| 📱 | iOS/Android Adaptation | ![In Progress](https://img.shields.io/badge/🐣-In_Progress-ee9f20?style=flat&labelColor=fef7e6&color=ee9f20) |
 
 ### 🤖 AI Integration
 | Feature | Description | Status |
@@ -344,6 +344,7 @@ Execute **pnpm run commit** to invoke _git commit_ interaction, complete informa
 ### 🏆 Gold Sponsors ($15+)
 | 💝 Date | 👤 Sponsor | 💰 Amount | 🏷️ Platform |
 |---------|----------|--------|---------|
+| 2025-08-26 | **唐勇** | `¥200` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-04-25 | **上官俊斌** | `¥200` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-05-27 | **临安居士** | `¥188` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-04-20 | **姜兴(Simon)** | `¥188` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |

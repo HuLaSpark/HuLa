@@ -472,7 +472,7 @@ onMounted(async () => {
     handlePopoverUpdate(event.uid)
   })
 
-  addListener(
+  await addListener(
     appWindow.listen('announcementClear', async () => {
       announNum.value = 0
     }),

@@ -248,7 +248,7 @@ onMounted(async () => {
   // info('ActionBar 组件已挂载')
   window.addEventListener('resize', handleResize)
 
-  addListener(
+  await addListener(
     appWindow.listen(EventEnum.EXIT, async () => {
       await exit(0)
     }),

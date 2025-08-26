@@ -245,7 +245,7 @@ onMounted(async () => {
   // 监听其他窗口发来的WebSocket发送请求
   // TODO：频繁切换会话会导致频繁请求，切换的时候也会有点卡顿
   if (appWindow.label === 'home') {
-    addListener(
+    await addListener(
       appWindow.listen('search_to_msg', (event: { payload: { uid: string; roomType: number } }) => {
         openMsgSession(event.payload.uid, event.payload.roomType)
       })
