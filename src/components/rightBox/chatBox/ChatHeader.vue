@@ -728,7 +728,7 @@ const saveGroupInfo = async () => {
 
     // 更新群聊缓存信息
     groupStore.countInfo = {
-      ...groupStore.countInfo,
+      ...groupStore.countInfo!,
       myName: groupDetail.value.myNickname,
       remark: groupDetail.value.groupRemark
     }
@@ -837,11 +837,11 @@ const handleShield = (value: boolean) => {
       })
 
       // 1. 先保存当前聊天室ID
-      const tempRoomId = globalStore.currentSession.roomId
+      const tempRoomId = globalStore.currentSession!.roomId
 
       // 3. 在下一个tick中恢复原来的聊天室ID，触发重新加载消息
       nextTick(() => {
-        globalStore.currentSession.roomId = tempRoomId
+        globalStore.currentSession!.roomId = tempRoomId
       })
 
       window.$message.success(value ? '已屏蔽消息' : '已取消屏蔽')

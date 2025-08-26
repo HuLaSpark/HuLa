@@ -1,6 +1,6 @@
 import { emit } from '@tauri-apps/api/event'
 import { info } from '@tauri-apps/plugin-log'
-import { EventEnum, RoomTypeEnum, TauriCommand } from '@/enums'
+import { EventEnum, TauriCommand } from '@/enums'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { useChatStore } from '@/stores/chat'
 import { useGlobalStore } from '@/stores/global.ts'
@@ -71,9 +71,6 @@ export const useLogin = () => {
     userStore.isSign = false
     userStore.userInfo = {}
     loginStore.loginStatus = LoginStatus.Init
-    // 3. 重置当前会话为默认值
-    globalStore.currentSession.roomId = '1'
-    globalStore.currentSession.type = RoomTypeEnum.GROUP
     // 4. 清除未读数
     chatStore.clearUnreadCount()
     // 5. 清除系统托盘图标上的未读数

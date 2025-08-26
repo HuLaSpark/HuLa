@@ -65,7 +65,7 @@ const handleInvite = async () => {
   try {
     // 调用邀请群成员API
     await inviteGroupMember({
-      roomId: globalStore.currentSession?.roomId,
+      roomId: globalStore.currentSession!.roomId,
       uidList: selectedValue.value
     })
 

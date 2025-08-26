@@ -3,7 +3,7 @@ import { BaseDirectory, create, exists, mkdir } from '@tauri-apps/plugin-fs'
 import { info } from '@tauri-apps/plugin-log'
 import GraphemeSplitter from 'grapheme-splitter'
 import type { Ref } from 'vue'
-import { LimitEnum, MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
+import { LimitEnum, MittEnum, MsgEnum } from '@/enums'
 import { useMessage } from '@/hooks/useMessage.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import router from '@/router'
@@ -823,13 +823,11 @@ export const useCommon = () => {
     const res = await getSessionDetailWithFriends({ id: uid, roomType: type })
     // 把隐藏的会话先显示
     try {
-      // await apis.hideSession({ roomId: res.roomId, hide: false })
       await invokeWithErrorHandler('hide_contact_command', { data: { roomId: res.roomId, hide: false } })
     } catch (_error) {
       window.$message.error('显示会话失败')
     }
-    globalStore.currentSession.roomId = res.roomId
-    globalStore.currentSession.type = RoomTypeEnum.SINGLE
+    globalStore.updateCurrentSession(res)
 
     // 先检查会话是否已存在
     const existingSession = chatStore.getSession(res.roomId)

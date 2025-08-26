@@ -206,7 +206,7 @@ useMitt.on(WsResponseMessageType.OFFLINE, async () => {
 useMitt.on(WsResponseMessageType.ONLINE, async (onStatusChangeType: OnStatusChangeType) => {
   console.log('收到用户上线通知')
   if (onStatusChangeType && onStatusChangeType.onlineNum) {
-    groupStore.countInfo.onlineNum = onStatusChangeType.onlineNum
+    groupStore.countInfo!.onlineNum = onStatusChangeType.onlineNum
   }
   if (onStatusChangeType && onStatusChangeType.member) {
     await groupStore.updateUserStatus(onStatusChangeType.member)
@@ -331,7 +331,7 @@ useMitt.on(
   async (param: { roomId: string; changeType: ChangeTypeEnum; userList: UserItem[] }) => {
     info('监听到群成员变更消息')
     // changeType 1 加入群组，2： 移除群组
-    if (param.roomId === globalStore.currentSession.roomId && globalStore.currentSession.type === RoomTypeEnum.GROUP) {
+    if (param.roomId === globalStore.currentSession?.roomId && globalStore.currentSession.type === RoomTypeEnum.GROUP) {
       if (param.changeType === ChangeTypeEnum.REMOVE || param.changeType === ChangeTypeEnum.EXIT_GROUP) {
         // 移除群成员
         param.userList.forEach((item) => {
@@ -341,7 +341,7 @@ useMitt.on(
             chatStore.removeSession(param.roomId)
             groupStore.removeAllUsers(param.roomId)
 
-            if (globalStore.currentSession.roomId === param.roomId) {
+            if (globalStore.currentSession?.roomId === param.roomId) {
               globalStore.updateCurrentSession(chatStore.sessionList[0])
             }
           } else {

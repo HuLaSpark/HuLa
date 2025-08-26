@@ -35,8 +35,7 @@ export const useMessage = () => {
   const handleMsgClick = (item: SessionItem) => {
     msgBoxShow.value = true
     // 更新当前会话信息
-    globalStore.currentSession.roomId = item.roomId
-    globalStore.currentSession.type = item.type
+    globalStore.updateCurrentSession(item)
     const data = { msgBoxShow, item }
     console.log('handleMsgClick:', item)
     useMitt.emit(MittEnum.MSG_BOX_SHOW, data)
@@ -62,9 +61,9 @@ export const useMessage = () => {
     const currentIndex = currentSessions.findIndex((session) => session.roomId === roomId)
 
     // 检查是否是当前选中的会话
-    const isCurrentSession = roomId === globalStore.currentSession.roomId
+    const isCurrentSession = roomId === globalStore.currentSession!.roomId
 
-    chatStore.removeContact(roomId)
+    chatStore.removeSession(roomId)
     // TODO: 使用隐藏会话接口
     // const res = await apis.hideSession({ roomId, hide: true })
     await invokeWithErrorHandler('hide_contact_command', { data: { roomId, hide: true } })

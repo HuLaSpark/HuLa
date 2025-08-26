@@ -11,7 +11,6 @@ export const useMockMessage = () => {
   const globalStore = useGlobalStore()
   // 获取本地存储的用户信息
   const userInfo = computed(() => JSON.parse(localStorage.getItem('user') || '{}'))
-  const currentRoomId = computed(() => globalStore.currentSession.roomId)
 
   /**
    * 模拟消息生成
@@ -36,7 +35,7 @@ export const useMockMessage = () => {
       },
       message: {
         id: uniqueId,
-        roomId: currentRoomId.value,
+        roomId: globalStore.currentSession!.roomId,
         sendTime: Number(currentTimeStamp),
         type: type,
         body,

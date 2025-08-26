@@ -271,7 +271,7 @@ const handleFileClick = async () => {
       console.error(`打开文件失败: ${errorMessage}`)
     }
   } finally {
-    const currentChatRoomId = globalStore.currentSession.roomId // 这个id可能为群id可能为用户uid，所以不能只用用户uid
+    const currentChatRoomId = globalStore.currentSession!.roomId // 这个id可能为群id可能为用户uid，所以不能只用用户uid
     const currentUserUid = userStore.uid as string
 
     const resourceDirPath = await getUserAbsoluteVideosDir(currentUserUid, currentChatRoomId)
@@ -328,7 +328,7 @@ const downloadFileOnly = async () => {
     console.error('下载文件失败:', error)
   } finally {
     // 刷新文件状态
-    const currentChatRoomId = globalStore.currentSession.roomId
+    const currentChatRoomId = globalStore.currentSession!.roomId
     const currentUserUid = userStore.uid as string
 
     const resourceDirPath = await getUserAbsoluteVideosDir(currentUserUid, currentChatRoomId)

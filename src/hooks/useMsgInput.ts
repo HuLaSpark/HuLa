@@ -490,7 +490,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       await invoke(TauriCommand.SEND_MSG, {
         data: {
           id: tempMsgId,
-          roomId: globalStore.currentSession.roomId,
+          roomId: globalStore.currentSession!.roomId,
           msgType: msg.type,
           body: messageBody
         },
@@ -509,7 +509,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       // })
 
       // 更新会话最后活动时间
-      chatStore.updateSessionLastActiveTime(globalStore.currentSession.roomId)
+      chatStore.updateSessionLastActiveTime(globalStore.currentSession!.roomId)
 
       // 消息发送成功后释放预览URL
       if ((msg.type === MsgEnum.IMAGE || msg.type === MsgEnum.EMOJI) && msg.url.startsWith('blob:')) {
@@ -981,7 +981,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
           await invoke(TauriCommand.SEND_MSG, {
             data: {
               id: tempMsgId,
-              roomId: globalStore.currentSession.roomId,
+              roomId: globalStore.currentSession!.roomId,
               msgType: MsgEnum.VIDEO,
               body: {
                 url: finalVideoUrl,
@@ -1067,7 +1067,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
           await invoke(TauriCommand.SEND_MSG, {
             data: {
               id: tempMsgId,
-              roomId: globalStore.currentSession.roomId,
+              roomId: globalStore.currentSession!.roomId,
               msgType: MsgEnum.IMAGE,
               body: messageBody
             },
@@ -1076,7 +1076,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
           })
 
           // 更新会话最后活动时间
-          chatStore.updateSessionLastActiveTime(globalStore.currentSession.roomId)
+          chatStore.updateSessionLastActiveTime(globalStore.currentSession!.roomId)
 
           // 释放本地预览URL
           URL.revokeObjectURL(msg.url)
@@ -1179,7 +1179,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
           await invoke(TauriCommand.SEND_MSG, {
             data: {
               id: tempMsgId,
-              roomId: globalStore.currentSession.roomId,
+              roomId: globalStore.currentSession!.roomId,
               msgType: MsgEnum.FILE,
               body: messageBody
             },
@@ -1188,7 +1188,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
           })
 
           // 更新会话最后活动时间
-          chatStore.updateSessionLastActiveTime(globalStore.currentSession.roomId)
+          chatStore.updateSessionLastActiveTime(globalStore.currentSession!.roomId)
 
           // console.log('📎 文件消息发送成功:', serverResponse.message.id)
 
@@ -1258,7 +1258,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
         },
         message: {
           id: tempMsgId,
-          roomId: globalStore.currentSession.roomId,
+          roomId: globalStore.currentSession!.roomId,
           sendTime: Date.now(),
           status: MessageStatusEnum.PENDING,
           type: MsgEnum.VOICE,
@@ -1307,7 +1307,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
         const sendData = {
           id: tempMsgId,
-          roomId: globalStore.currentSession.roomId,
+          roomId: globalStore.currentSession!.roomId,
           msgType: MsgEnum.VOICE,
           body: messageBody
         }
@@ -1346,7 +1346,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
           clearTimeout(statusTimer)
 
           // 更新会话最后活动时间
-          chatStore.updateSessionLastActiveTime(globalStore.currentSession.roomId)
+          chatStore.updateSessionLastActiveTime(globalStore.currentSession!.roomId)
 
           // 释放本地预览URL
           if (msg.url.startsWith('asset://')) {
