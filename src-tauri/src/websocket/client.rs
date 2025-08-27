@@ -109,7 +109,7 @@ impl WebSocketClient {
     }
 
     /// 内部断开连接方法（不获取锁）
-    async fn internal_disconnect(&self) {
+    pub async fn internal_disconnect(&self) {
         info!("📡 断开 WebSocket 连接");
         self.should_stop.store(true, Ordering::SeqCst);
 

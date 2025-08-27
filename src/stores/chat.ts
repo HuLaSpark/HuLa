@@ -295,22 +295,21 @@ export const useChatStore = defineStore(
           return
         }
 
-        // 保存当前选中的会话ID
-        const currentSelectedRoomId = globalStore.currentSession!.roomId
-
         sessionList.value = []
         sessionList.value.push(...data)
         sessionOptions.isLoading = false
 
         sortAndUniqueSessionList()
 
+        // 保存当前选中的会话ID
+        const currentSelectedRoomId = globalStore.currentSession?.roomId
+
         // sessionList[0].unreadCount = 0
         if (!isFirstInit || isFresh) {
           isFirstInit = true
           // 只有在没有当前选中会话时，才设置第一个会话为当前会话
           if (!currentSelectedRoomId || currentSelectedRoomId === '1') {
-            globalStore.currentSession!.roomId = data[0].roomId
-            globalStore.currentSession!.type = data[0].type
+            globalStore.updateCurrentSession(data[0])
           }
 
           // 用会话列表第一个去请求消息列表

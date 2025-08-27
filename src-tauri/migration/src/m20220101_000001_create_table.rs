@@ -221,6 +221,8 @@ enum ImUser {
     Context,
     UserType,
     IsInit,
+    Token,
+    RefreshToken,
 }
 
 #[derive(DeriveIden)]

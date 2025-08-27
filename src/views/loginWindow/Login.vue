@@ -5,7 +5,7 @@
     <ActionBar :max-w="false" :shrink="false" proxy />
 
     <!--  手动登录样式  -->
-    <n-flex vertical :size="25" v-if="!login.autoLogin || !TOKEN || !isAutoLogin">
+    <n-flex vertical :size="25" v-if="!login.autoLogin">
       <!-- 头像 -->
       <n-flex justify="center" class="w-full pt-35px" data-tauri-drag-region>
         <n-avatar
@@ -145,7 +145,7 @@
     <n-flex justify="center" class="text-14px" id="bottomBar">
       <div class="color-#13987f cursor-pointer" @click="router.push('/qrCode')">扫码登录</div>
       <div class="w-1px h-14px bg-#ccc"></div>
-      <div v-if="login.autoLogin && TOKEN" class="color-#13987f cursor-pointer" @click="removeToken">移除账号</div>
+      <div v-if="login.autoLogin" class="color-#13987f cursor-pointer" @click="removeToken">移除账号</div>
       <n-popover
         v-else
         trigger="click"
@@ -216,8 +216,6 @@ const { isOnline } = useNetwork()
 const loginHistoriesStore = useLoginHistoriesStore()
 const { loginHistories } = loginHistoriesStore
 const { login } = storeToRefs(settingStore)
-const TOKEN = ref(localStorage.getItem('TOKEN'))
-const REFRESH_TOKEN = ref(localStorage.getItem('REFRESH_TOKEN'))
 /** 账号信息 */
 const info = ref({
   account: '',
@@ -232,7 +230,6 @@ const loginDisabled = ref(!isOnline.value)
 const loading = ref(false)
 const arrowStatus = ref(false)
 const moreShow = ref(false)
-const isAutoLogin = ref(login.value.autoLogin && TOKEN.value && REFRESH_TOKEN.value)
 const { setLoginState } = useLogin()
 const { createWebviewWindow } = useWindow()
 const { checkUpdate, CHECK_UPDATE_LOGIN_TIME } = useCheckUpdate()
@@ -240,7 +237,7 @@ const { checkUpdate, CHECK_UPDATE_LOGIN_TIME } = useCheckUpdate()
 const accountPH = ref('邮箱/HuLa账号')
 const passwordPH = ref('输入HuLa密码')
 /** 登录按钮的文本内容 */
-const loginText = ref(isOnline.value ? (isAutoLogin.value ? '登录' : '登录') : '网络异常')
+const loginText = ref(isOnline.value ? '登录' : '网络异常')
 /** 是否直接跳转 */
 const isJumpDirectly = ref(false)
 
@@ -266,7 +263,7 @@ watchEffect(() => {
 
 watch(isOnline, (v) => {
   loginDisabled.value = !v
-  loginText.value = v ? (isAutoLogin.value ? '登录' : '登录') : '网络异常'
+  loginText.value = v ? '登录' : '网络异常'
 })
 
 // 监听账号输入
@@ -327,42 +324,15 @@ const normalLogin = async (auto = false) => {
   const loginInfo = auto ? (userStore.userInfo as UserInfoType) : info.value
   const { account } = loginInfo
 
-  // 自动登录
-  if (auto) {
-    // 添加2秒延迟
-    await new Promise((resolve) => setTimeout(resolve, 1200))
-
-    // TODO 自动登录
-    // try {
-    //   // 登录处理
-    //
-    //   loginProcess(null, null, null)
-    // } catch (error) {
-    //   console.error('自动登录失败', error)
-    //   // 如果是网络异常，不删除token
-    //   if (!isOnline.value) {
-    //     loginDisabled.value = true
-    //     loginText.value = '网络异常'
-    //     loading.value = false
-    //   } else {
-    //     // 其他错误才清除token并重置状态
-    //     localStorage.removeItem('TOKEN')
-    //     isAutoLogin.value = false
-    //     loginDisabled.value = true
-    //     loginText.value = '登录'
-    //     loading.value = false
-    //   }
-    // }
-    return
-  }
-
   invoke('login_command', {
     data: {
       account: account,
       password: info.value.password,
       deviceType: 'PC',
       systemType: '2',
-      grantType: 'PASSWORD'
+      grantType: 'PASSWORD',
+      isAutoLogin: auto,
+      uid: auto ? userStore.userInfo.uid : null
     }
   })
     .then(async (res: any) => {
@@ -512,7 +482,7 @@ onMounted(async () => {
   })
 
   // 自动登录时直接触发登录
-  if (isAutoLogin.value) {
+  if (login.value.autoLogin) {
     normalLogin(true)
   } else {
     loginHistories.length > 0 && giveAccount(loginHistories[0])

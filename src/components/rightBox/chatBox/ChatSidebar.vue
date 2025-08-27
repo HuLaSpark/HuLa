@@ -245,10 +245,17 @@ const userLoadedMap = ref<Record<string, boolean>>({})
 
 // 创建过滤后的用户列表计算属性
 const filteredUserList = computed(() => {
-  if (!searchRef.value) {
-    return groupStore.userList
+  let userList = groupStore.userList
+  if (searchRef.value) {
+    userList = userList.filter((user) => user.name.toLowerCase().includes(searchRef.value.toLowerCase()))
   }
-  return groupStore.userList.filter((user) => user.name.toLowerCase().includes(searchRef.value.toLowerCase()))
+  return userList.sort((a, b) => {
+    if (a.activeStatus !== b.activeStatus) {
+      return a.activeStatus - b.activeStatus
+    }
+
+    return a.name.localeCompare(b.name)
+  })
 })
 
 // 监听成员源列表变化
