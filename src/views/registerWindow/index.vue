@@ -465,7 +465,6 @@ const handleStepAction = async () => {
       // 发送邮箱验证码
       await ImRequestUtils.sendCaptcha({
         email: info.email,
-        code: info.code.toString(),
         uuid: captcha.value.uuid.toString(),
         templateCode: 'REGISTER_EMAIL'
       })

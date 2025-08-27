@@ -530,7 +530,6 @@ export async function getCaptcha() {
 
 export async function sendCaptcha(body: {
   email: string
-  code: string
   uuid?: string
   operationType?: 'register' | 'forgot'
   templateCode: 'REGISTER_EMAIL' | 'REGISTER_SMS' | 'MOBILE_LOGIN' | 'MOBILE_EDIT' | 'EMAIL_EDIT' | 'PASSWORD_EDIT'
