@@ -150,7 +150,7 @@
             class="control-btn w-60px h-60px rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 mb-8px"
             :class="isSpeakerOn ? 'bg-blue-500 hover:bg-blue-400' : 'bg-gray-600 hover:bg-gray-500'">
             <Icon
-              :icon="isSpeakerOn ? 'material-symbols:volume-up' : 'material-symbols:volume-down'"
+              :icon="isSpeakerOn ? 'material-symbols:volume-down' : 'material-symbols:volume-up'"
               :size="24"
               class="text-white" />
           </div>

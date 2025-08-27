@@ -97,7 +97,7 @@ import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
 import { useAlwaysOnTopStore } from '@/stores/alwaysOnTop.ts'
 import { useSettingStore } from '@/stores/setting.ts'
-import { isCompatibility, isWindows } from '@/utils/PlatformConstants'
+import { isCompatibility, isMac, isWindows } from '@/utils/PlatformConstants'
 
 const appWindow = WebviewWindow.getCurrent()
 const {
@@ -243,10 +243,11 @@ const handleCloseWin = async () => {
 }
 
 useMitt.on('handleCloseWin', handleCloseWin)
-// 添加和移除resize事件监听器
+
 onMounted(async () => {
-  // info('ActionBar 组件已挂载')
-  window.addEventListener('resize', handleResize)
+  if (!isMac()) {
+    window.addEventListener('resize', handleResize)
+  }
 
   addListener(
     appWindow.listen(EventEnum.EXIT, async () => {
@@ -273,7 +274,9 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  window.removeEventListener('resize', handleResize)
+  if (!isMac()) {
+    window.removeEventListener('resize', handleResize)
+  }
   window.removeEventListener('keydown', (e) => isEsc(e))
 
   // 清理 macOS 关闭按钮事件监听器
