@@ -50,8 +50,14 @@ const configuration: RTCConfiguration = {
   // 默认配置
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
-    { urls: 'stun:stun2.l.google.com:19302' }
+    {
+      urls: [
+        'turn:117.72.67.248:3478?transport=udp', // UDP 协议
+        'turn:117.72.67.248:3478?transport=tcp' // TCP 协议
+      ],
+      username: 'chr', // 你的 TURN 用户名
+      credential: '123456' // 你的 TURN 密码
+    }
   ]
 }
 // const isSupportScreenSharing = !!navigator?.mediaDevices?.getDisplayMedia
@@ -1009,7 +1015,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
   onMounted(async () => {
     if (!isReceiver) {
       console.log(`调用方发送${callType === CallTypeEnum.VIDEO ? '视频' : '语音'}通话请求`)
-      startCall(roomId, callType, [remoteUserId])
+      await startCall(roomId, callType, [remoteUserId])
       try {
         await rustWebSocketClient.sendMessage({
           type: WsRequestMsgType.VIDEO_CALL_REQUEST,
