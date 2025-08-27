@@ -368,7 +368,7 @@ onMounted(async () => {
   await getCurrentWebviewWindow().show()
 
   // 修改事件名称与发送端保持一致
-  addListener(
+  await addListener(
     appWindow.listen('video-updated', (event: any) => {
       const { list, index } = event.payload
       videoList.value = list

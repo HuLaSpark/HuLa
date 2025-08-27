@@ -367,7 +367,7 @@ onMounted(async () => {
   // 显示窗口
   await getCurrentWebviewWindow().show()
 
-  addListener(
+  await addListener(
     appWindow.listen('update-image', (event: any) => {
       const { list, index } = event.payload
       imageList.value = list

@@ -249,7 +249,7 @@ onMounted(async () => {
     window.addEventListener('resize', handleResize)
   }
 
-  addListener(
+  await addListener(
     appWindow.listen(EventEnum.EXIT, async () => {
       await exit(0)
     }),

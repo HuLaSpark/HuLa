@@ -127,7 +127,7 @@ onMounted(async () => {
     closeWindow?.close()
   })
 
-  addListener(
+  await addListener(
     listen('refresh_token_event', (event) => {
       console.log('🔄 收到 refresh_token 事件')
 
