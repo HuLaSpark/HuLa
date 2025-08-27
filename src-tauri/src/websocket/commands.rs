@@ -112,7 +112,7 @@ pub async fn ws_init_connection(
             }
         }
     });
-    
+
     Ok(SuccessResponse::new())
 }
 
@@ -125,7 +125,7 @@ pub async fn ws_disconnect(_app_handle: AppHandle) -> Result<SuccessResponse, St
     let mut client_guard = client_container.write().await;
 
     if let Some(client) = client_guard.take() {
-        client.disconnect().await;
+        client.internal_disconnect().await;
     }
 
     info!("✅ WebSocket 连接已断开");

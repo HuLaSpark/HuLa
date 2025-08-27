@@ -8,7 +8,7 @@ use tracing::{error, info};
 
 use crate::{
     pojo::common::ApiResult,
-    vo::vo::{LoginReq, LoginResp},
+    vo::vo::{LoginReq, LoginResp, RefreshTokenReq, RefreshTokenResp},
 };
 
 pub struct ImRequestClient {
@@ -182,6 +182,26 @@ impl ImRequest for ImRequestClient {
     async fn login(&mut self, login_req: LoginReq) -> Result<Option<LoginResp>, anyhow::Error> {
         let result: Option<LoginResp> = self
             .im_request(ImUrl::Login, Some(login_req), None::<serde_json::Value>)
+            .await?;
+
+        if let Some(data) = result.clone() {
+            self.token = Some(data.token.clone());
+            self.refresh_token = Some(data.refresh_token.clone());
+        }
+
+        Ok(result)
+    }
+
+    async fn refresh_token(
+        &mut self,
+        refresh_token_req: RefreshTokenReq,
+    ) -> Result<Option<RefreshTokenResp>, anyhow::Error> {
+        let result: Option<RefreshTokenResp> = self
+            .im_request(
+                ImUrl::RefreshToken,
+                Some(refresh_token_req),
+                None::<serde_json::Value>,
+            )
             .await?;
 
         if let Some(data) = result.clone() {
@@ -371,7 +391,7 @@ impl ImUrl {
 
             // 群成员信息
             ImUrl::GetAllUserBaseInfo => (http::Method::GET, "im/room/group/member/list"),
-            ImUrl::CheckEmail => (http::Method::GET, "oauth/anyTenant/checkEmail")
+            ImUrl::CheckEmail => (http::Method::GET, "oauth/anyTenant/checkEmail"),
         }
     }
 
@@ -494,6 +514,10 @@ impl FromStr for ImUrl {
 
 pub trait ImRequest {
     async fn login(&mut self, login_req: LoginReq) -> Result<Option<LoginResp>, anyhow::Error>;
+    async fn refresh_token(
+        &mut self,
+        refresh_token_req: RefreshTokenReq,
+    ) -> Result<Option<RefreshTokenResp>, anyhow::Error>;
 }
 
 // 测试

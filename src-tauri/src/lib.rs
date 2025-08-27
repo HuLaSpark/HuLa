@@ -38,6 +38,7 @@ use crate::command::room_member_command::{
 use crate::command::user_command::remove_tokens;
 use crate::configuration::get_configuration;
 use crate::error::CommonError;
+use crate::repository::im_user_repository;
 use sea_orm::DatabaseConnection;
 use serde::{Deserialize, Serialize};
 use std::ops::Deref;
@@ -175,6 +176,23 @@ fn setup_user_info_listener_early(app_handle: tauri::AppHandle) {
                         user_info.token = payload.token.clone();
                         user_info.refresh_token = payload.refresh_token.clone();
                     } // user_info 锁在这里释放
+
+                    // 保存 token 信息到数据库
+                    if let Err(e) = im_user_repository::save_user_tokens(
+                        app_data.db_conn.deref(),
+                        &payload.uid,
+                        &payload.token,
+                        &payload.refresh_token,
+                    )
+                    .await
+                    {
+                        tracing::error!("Failed to save user tokens to database: {}", e);
+                    } else {
+                        tracing::info!(
+                            "Successfully saved user tokens to database for user: {}",
+                            payload.uid
+                        );
+                    }
 
                     // 检查用户的 is_init 状态并获取消息
                     {
@@ -330,9 +348,7 @@ fn setup_mobile() {
 }
 
 // 公共的 setup 函数
-fn common_setup(
-    app: &mut tauri::App,
-) -> Result<(), Box<dyn std::error::Error>> {
+fn common_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let app_handle = app.handle().clone();
     setup_user_info_listener_early(app.handle().clone());
     #[cfg(desktop)]

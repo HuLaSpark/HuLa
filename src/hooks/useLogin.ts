@@ -69,7 +69,7 @@ export const useLogin = () => {
     }
     // 2. 重置用户状态
     userStore.isSign = false
-    userStore.userInfo = {}
+    // userStore.userInfo = {}
     loginStore.loginStatus = LoginStatus.Init
     // 4. 清除未读数
     chatStore.clearUnreadCount()

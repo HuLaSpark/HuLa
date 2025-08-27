@@ -28,6 +28,8 @@ pub struct Model {
     pub context: Option<bool>,
     pub user_type: Option<i32>,
     pub is_init: bool,
+    pub token: Option<String>,
+    pub refresh_token: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
