@@ -727,6 +727,9 @@ export const useChatStore = defineStore(
 
     // 更新未读消息计数
     const updateTotalUnreadCount = async () => {
+      if (WebviewWindow.getCurrent().label !== 'home') {
+        return
+      }
       info('[chat]更新全局未读消息计数')
       // 使用 Array.from 确保遍历的是最新的 sessionList
       const totalUnread = Array.from(sessionList.value).reduce((total, session) => {

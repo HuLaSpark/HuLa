@@ -209,7 +209,7 @@
     </n-modal>
 
     <!-- 邮箱验证码输入弹窗 -->
-    <n-modal v-model:show="emailCodeModal" :mask-closable="false" class="rounded-8px" transform-origin="center">
+    <n-modal v-model:show="emailCodeModal" :mask-closable="true" class="rounded-8px" transform-origin="center">
       <div class="bg-#f0f0f0 w-380px h-fit box-border flex flex-col">
         <n-flex vertical class="w-full h-fit">
           <n-flex vertical :size="10" class="p-20px">

@@ -265,6 +265,7 @@ pub enum ImUrl {
     SetHide,
     GetFriendPage,
     MarkMsgRead,
+    CheckEmail,
 }
 
 impl ImUrl {
@@ -370,6 +371,7 @@ impl ImUrl {
 
             // 群成员信息
             ImUrl::GetAllUserBaseInfo => (http::Method::GET, "im/room/group/member/list"),
+            ImUrl::CheckEmail => (http::Method::GET, "oauth/anyTenant/checkEmail")
         }
     }
 
@@ -475,6 +477,7 @@ impl ImUrl {
             "getFriendPage" => Ok(ImUrl::GetFriendPage),
             "markMsgRead" => Ok(ImUrl::MarkMsgRead),
             "groupListMember" => Ok(ImUrl::GroupListMember),
+            "checkEmail" => Ok(ImUrl::CheckEmail),
 
             // 未匹配的字符串
             _ => Err(anyhow::anyhow!("未知的URL类型: {}", s)),
