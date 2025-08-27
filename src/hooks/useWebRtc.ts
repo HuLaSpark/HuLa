@@ -330,7 +330,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
 
       // 监听远程流
       pc.ontrack = (event) => {
-        console.log('pc 监听到 ontrack 事件', event.streams)
+        info('pc 监听到 ontrack 事件')
         if (event.streams[0]) {
           console.log('收到远程流:', event.streams[0])
           remoteStream.value = event.streams[0]
@@ -340,7 +340,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
       }
 
       // 添加本地流
-      console.log('添加本地流到 PC', localStream.value)
+      info('添加本地流到 PC')
       if (localStream.value) {
         localStream.value.getTracks().forEach((track) => {
           localStream.value && pc.addTrack(track, localStream.value)
@@ -351,7 +351,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
 
       // 连接状态变化 "closed" | "connected" | "connecting" | "disconnected" | "failed" | "new";
       pc.onconnectionstatechange = (e) => {
-        console.log('RTC 连接状态变化: ', pc.connectionState)
+        info(`RTC 连接状态变化: ${pc.connectionState}`)
         switch (pc.connectionState) {
           case 'new':
             info('RTC 连接新建')
@@ -410,11 +410,11 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
         // console.log("信道已关闭");
       }
       pc.onicecandidate = async (event) => {
-        console.log('pc 监听到 onicecandidate 事件', event)
+        info('pc 监听到 onicecandidate 事件')
         if (event.candidate && roomId) {
           try {
             pendingCandidates.value.push(event.candidate)
-            console.log('发送 candidate 事件')
+            info('发送 candidate 事件')
             await sendIceCandidate(event.candidate)
           } catch (err) {
             console.error('发送ICE候选者出错:', err)
@@ -641,6 +641,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
         video: callType === CallTypeEnum.VIDEO
       }
 
+      info('发送SDP answer')
       await rustWebSocketClient.sendMessage({
         type: WsRequestMsgType.WEBRTC_SIGNAL,
         data: signalData
