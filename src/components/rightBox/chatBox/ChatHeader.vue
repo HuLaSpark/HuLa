@@ -1057,8 +1057,9 @@ onMounted(() => {
   }
 
   useMitt.on(WsResponseMessageType.VideoCallRequest, (event) => {
+    info(`收到通话请求：${JSON.stringify(event)}`)
     const remoteUid = event.callerUid
-    handleVideoCall(remoteUid, event.video ? CallTypeEnum.VIDEO : CallTypeEnum.AUDIO)
+    handleVideoCall(remoteUid, event.isVideo ? CallTypeEnum.VIDEO : CallTypeEnum.AUDIO)
   })
 })
 

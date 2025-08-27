@@ -159,10 +159,10 @@ impl WebSocketClient {
 
                 if let Some(sender) = sender.as_ref() {
                     let message = Message::Text(data.to_string());
-                    sender.send(message).map_err(|e| {
+                    sender.send(message.clone()).map_err(|e| {
                         anyhow::anyhow!("Failed to queue message for sending: {}", e)
                     })?;
-                    debug!("📤 消息已发送");
+                    info!("📤 消息已发送 {:?}", message);
                     Ok(())
                 } else {
                     warn!("📤 连接状态为 Connected 但 sender 未就绪，消息加入待发队列");
