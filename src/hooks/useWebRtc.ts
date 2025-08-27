@@ -414,8 +414,6 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
         if (event.candidate && roomId) {
           try {
             pendingCandidates.value.push(event.candidate)
-            // info('发送 candidate 事件')
-            // await sendIceCandidate(event.candidate)
           } catch (err) {
             console.error('发送ICE候选者出错:', err)
           }
@@ -560,7 +558,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
   }
 
   // 发送ICE候选者
-  const sendIceCandidate = async (candidate: RTCIceCandidate[]) => {
+  const sendIceCandidate = async (candidate: RTCIceCandidate) => {
     try {
       info('发送ICE候选者')
       const signalData = {
@@ -687,13 +685,11 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
   }
 
   // 处理 ICE candidate
-  const handleCandidate = async (signal: RTCIceCandidateInit[]) => {
+  const handleCandidate = async (signal: RTCIceCandidateInit) => {
     try {
       if (peerConnection.value && peerConnection.value.remoteDescription) {
         info('添加 candidate')
-        signal.forEach(async (candidate) => {
-          await peerConnection.value!.addIceCandidate(candidate)
-        })
+        await peerConnection.value!.addIceCandidate(signal)
       }
     } catch (error) {
       console.error('处理 candidate 失败:', error)
@@ -916,6 +912,28 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
     }
   }
 
+  const lisendCandidate = async () => {
+    if (!peerConnection.value) {
+      return
+    }
+
+    info('第一次交换 ICE candidates...')
+    if (pendingCandidates.value.length > 0) {
+      pendingCandidates.value.forEach(async (candidate) => {
+        await sendIceCandidate(candidate)
+      })
+    }
+
+    pendingCandidates.value = []
+
+    peerConnection.value.onicecandidate = async (event) => {
+      if (event.candidate) {
+        info('第二次交换 ICE candidates...')
+        await sendIceCandidate(event.candidate)
+      }
+    }
+  }
+
   // 处理接收到的信令消息
   const handleSignalMessage = async (data: WSRtcCallMsg) => {
     try {
@@ -925,13 +943,13 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
       switch (data.signalType) {
         case SignalTypeEnum.OFFER:
           await handleOffer(signal, true, roomId)
-          await sendIceCandidate(pendingCandidates.value)
+          await lisendCandidate()
           break
 
         case SignalTypeEnum.ANSWER:
           await handleAnswer(signal, roomId)
           // offer 发送 candidate
-          await sendIceCandidate(pendingCandidates.value)
+          await lisendCandidate()
           break
 
         case SignalTypeEnum.CANDIDATE:
