@@ -11,7 +11,7 @@
         <div
           @click="activeTab = 'login'"
           :class="[
-            'z-999 w-100px text-center transition-all duration-300 ',
+            'z-999 w-100px text-center transition-all duration-300 ease-out',
             activeTab === 'login' ? 'text-(18px #000)' : 'text-(16px #666)'
           ]">
           登录
@@ -19,7 +19,7 @@
         <div
           @click="activeTab = 'register'"
           :class="[
-            'z-999 w-100px text-center transition-all duration-300 ',
+            'z-999 w-100px text-center transition-all duration-300 ease-out',
             activeTab === 'register' ? 'text-(18px #000)' : 'text-(16px #666)'
           ]">
           注册
@@ -360,7 +360,7 @@ const registerInfo = ref<LocalRegisterInfo>({
   code: '',
   uuid: '',
   avatar: '',
-  key: '',
+  key: 'REGISTER_EMAIL',
   systemType: 2
 })
 

@@ -436,15 +436,15 @@
     <template #footer>
       <FooterBar></FooterBar>
 
-      <SafeAreaPlaceholder ref="keyBoardRef" type="keyboard" direction="bottom" />
+      <!-- <SafeAreaPlaceholder ref="keyBoardRef" type="keyboard" direction="bottom" /> -->
     </template>
   </AutoFixHeightPage>
 </template>
 
 <script setup lang="ts">
-import AutoFixHeightPage from '@/mobile/components/chat-room/AutoFixHeightPage.vue'
-import FooterBar from '@/mobile/components/chat-room/FooterBar.vue'
-import HeaderBar from '@/mobile/components/chat-room/HeaderBar.vue'
+import AutoFixHeightPage from '#/components/chat-room/AutoFixHeightPage.vue'
+import FooterBar from '#/components/chat-room/FooterBar.vue'
+import HeaderBar from '#/components/chat-room/HeaderBar.vue'
 import { markMsg } from '@/utils/ImRequestUtils'
 
 const route = useRoute()

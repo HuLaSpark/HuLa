@@ -20,7 +20,7 @@
 
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import SafeAreaPlaceholder from '@/mobile/components/placeholders/SafeAreaPlaceholder.vue'
+import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.vue'
 
 const route = useRoute()
 </script>

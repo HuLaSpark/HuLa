@@ -7,38 +7,36 @@ import {
   type RouteLocationNormalized,
   type RouteRecordRaw
 } from 'vue-router'
+import ChatRoomLayout from '#/layout/chat-room/ChatRoomLayout.vue'
+import NoticeLayout from '#/layout/chat-room/NoticeLayout.vue'
+import MobileHome from '#/layout/index.vue'
+import MyLayout from '#/layout/my/MyLayout.vue'
+import MobileLogin from '#/login.vue'
+import ChatMain from '#/views/chat-room/ChatMain.vue'
+import ChatSetting from '#/views/chat-room/ChatSetting.vue'
+import NoticeDetail from '#/views/chat-room/notice/NoticeDetail.vue'
+import NoticeEdit from '#/views/chat-room/notice/NoticeEdit.vue'
+import NoticeList from '#/views/chat-room/notice/NoticeList.vue'
+import MobileCommunity from '#/views/community/index.vue'
+import MobileFriendPage from '#/views/friends/index.vue'
+import MobileMessagePage from '#/views/message/index.vue'
+import EditBio from '#/views/my/EditBio.vue'
+import EditBirthday from '#/views/my/EditBirthday.vue'
+import EditProfile from '#/views/my/EditProfile.vue'
+import MobileMy from '#/views/my/index.vue'
+import MobileQRCode from '#/views/my/MobileQRCode.vue'
+import MobileSettings from '#/views/my/MobileSettings.vue'
+import MyMessages from '#/views/my/MyMessages.vue'
+import MyQRCode from '#/views/my/MyQRCode.vue'
+import PublishCommunity from '#/views/my/PublishCommunity.vue'
+import Share from '#/views/my/Share.vue'
+import SimpleBio from '#/views/my/SimpleBio.vue'
+import { TauriCommand } from '@/enums'
 
 /**! 创建窗口后再跳转页面就会导致样式没有生效所以不能使用懒加载路由的方式，有些页面需要快速响应的就不需要懒加载 */
 const { BASE_URL } = import.meta.env
 
 const isMobile = type() === 'ios' || type() === 'android'
-
-import ChatRoomLayout from '@/mobile/layout/chat-room/ChatRoomLayout.vue'
-import NoticeLayout from '@/mobile/layout/chat-room/NoticeLayout.vue'
-import MobileHome from '@/mobile/layout/index.vue'
-import MyLayout from '@/mobile/layout/my/MyLayout.vue'
-import MobileLogin from '@/mobile/login.vue'
-import ChatMain from '@/mobile/views/chat-room/ChatMain.vue'
-import ChatSetting from '@/mobile/views/chat-room/ChatSetting.vue'
-import NoticeDetail from '@/mobile/views/chat-room/notice/NoticeDetail.vue'
-import NoticeEdit from '@/mobile/views/chat-room/notice/NoticeEdit.vue'
-import NoticeList from '@/mobile/views/chat-room/notice/NoticeList.vue'
-import MobileCommunity from '@/mobile/views/community/index.vue'
-import MobileFriendPage from '@/mobile/views/friends/index.vue'
-import MobileMessagePage from '@/mobile/views/message/index.vue'
-import EditBio from '@/mobile/views/my/EditBio.vue'
-import EditBirthday from '@/mobile/views/my/EditBirthday.vue'
-import EditProfile from '@/mobile/views/my/EditProfile.vue'
-import MobileMy from '@/mobile/views/my/index.vue'
-import MobileQRCode from '@/mobile/views/my/MobileQRCode.vue'
-import MobileSettings from '@/mobile/views/my/MobileSettings.vue'
-import MyMessages from '@/mobile/views/my/MyMessages.vue'
-import MyQRCode from '@/mobile/views/my/MyQRCode.vue'
-import PublishCommunity from '@/mobile/views/my/PublishCommunity.vue'
-import Share from '@/mobile/views/my/Share.vue'
-import SimpleBio from '@/mobile/views/my/SimpleBio.vue'
-import { TauriCommand } from '../enums'
-import { isDesktop } from '../utils/PlatformConstants'
 
 // 移动端路由配置 - 使用直接导入避免懒加载问题
 const getMobileRoutes = (): Array<RouteRecordRaw> => [
@@ -422,7 +420,7 @@ const router: any = createRouter({
 router.beforeEach(async (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
   console.log('进入了路由：', from, to)
   // 桌面端直接放行
-  if (isDesktop()) {
+  if (!isMobile) {
     return next()
   }
 

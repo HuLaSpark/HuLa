@@ -85,31 +85,28 @@
       <div class="flex flex-col h-full px-18px">
         <div class="flex-1">
           <div
-            v-for="item in messageItems"
-            :key="item.id"
+            v-for="(item, idx) in messageItems"
+            :key="`${item.id}-${idx}`"
             @click="intoRoom(item)"
-            class="grid grid-cols-[2.2rem_1fr_4rem] items-start px-2 py-3 gap-1 active:bg-#DEEDE7 active:rounded-10px transition-colors cursor-pointer">
+            class="grid grid-cols-[2.2rem_1fr_4rem] items-start px-2 py-3 gap-1">
             <!-- 头像：单独居中 -->
-            <div class="self-center h-38px">
-              <n-badge :value="item.unreadCount">
-                <n-avatar :size="40" :src="AvatarUtils.getAvatarUrl(item.avatar)" fallback-src="/logo.png" round />
+            <div class="flex-shrink-0">
+              <n-badge :offset="[-6, 6]" :value="item.unreadCount" :max="99">
+                <n-avatar :size="52" :src="AvatarUtils.getAvatarUrl(item.avatar)" fallback-src="/logo.png" round />
               </n-badge>
             </div>
-
-            <!-- {{ item }} -->
-
             <!-- 中间：两行内容 -->
-            <div class="truncate pl-4 flex gap-10px flex-col">
-              <div class="text-14px leading-tight font-bold flex-1 truncate text-#333 truncate">{{ item.name }}</div>
+            <div class="truncate pl-7 flex pt-5px gap-10px flex-col">
+              <div class="text-16px leading-tight font-bold flex-1 truncate text-#333 truncate">{{ item.name }}</div>
               <div class="text-12px text-#333 truncate">
                 {{ item.text }}
               </div>
             </div>
 
             <!-- 时间：靠顶 -->
-            <div class="text-12px text-right flex gap-1 items-center justify-right">
+            <div class="text-12px pt-9px text-right flex gap-1 items-center justify-right">
               <span v-if="item.hotFlag === IsAllUserEnum.Yes">
-                <svg class="size-20px select-none outline-none cursor-pointer color-#13987f">
+                <svg class="size-22px select-none outline-none cursor-pointer color-#13987f">
                   <use href="#auth"></use>
                 </svg>
               </span>
@@ -118,25 +115,6 @@
               </span>
             </div>
           </div>
-
-          <!-- <div v-for="item in messageItems" :key="item.id" class="message-item relative">
-            <div>
-              <n-badge :value="item.unreadCount">
-                <n-avatar :size="40" :src="item.avatar" fallback-src="/logo.png" round />
-              </n-badge>
-              <div class="flex flex-col ml-14px justify-between h-[35px]">
-                <span class="text-14px text-#333">{{ item.name }}</span>
-                <span class="text-12px text-#999">{{ item.text }}</span>
-              </div>
-            </div>
-            <div class="flex justify-right text text-12px w-fit truncate text-right">
-              {{ formatTimestamp(item?.activeTime) }}
-            </div>
-            未读数 悬浮到头像上
-            <div v-if="item.unreadCount > 0" class="flex flex-col justify-between h-[35px] absolute left-30px top-5px">
-              <span class="text-12px text-[#fff] bg-[red] rounded-full px-8px py-3px">{{ item.unreadCount }}</span>
-            </div>
-          </div> -->
         </div>
       </div>
     </PullToRefresh>
@@ -144,22 +122,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import PullToRefresh from '#/components/PullToRefresh.vue'
+import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.vue'
+import NavBar from '#/layout/navBar/index.vue'
+import type { IKeyboardDidShowDetail } from '#/mobile-client/interface/adapter'
+import { mobileClient } from '#/mobile-client/MobileClient'
 import addFriendIcon from '@/assets/mobile/chat-home/add-friend.webp'
 import groupChatIcon from '@/assets/mobile/chat-home/group-chat.webp'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { useMessage } from '@/hooks/useMessage.ts'
-import SafeAreaPlaceholder from '@/mobile/components/placeholders/SafeAreaPlaceholder.vue'
-import NavBar from '@/mobile/layout/navBar/index.vue'
 import { IsAllUserEnum } from '@/services/types.ts'
+import rustWebSocketClient from '@/services/webSocketRust'
 import { useChatStore } from '@/stores/chat.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
-import rustWebSocketClient from '~/src/services/webSocketRust'
-import type { IKeyboardDidShowDetail } from '../../mobile-client/interface/adapter'
-import { mobileClient } from '../../mobile-client/MobileClient'
 
 const chatStore = useChatStore()
 
@@ -235,7 +212,7 @@ const renderImgIcon = (src: string) => {
   return () =>
     h('img', {
       src,
-      style: 'display:block; width: 24px; height: 24px; vertical-align: middle'
+      style: 'display:block; width: 26px; height: 26px; vertical-align: middle;'
     })
 }
 
@@ -333,7 +310,7 @@ const { handleMsgClick } = useMessage()
 
 const intoRoom = (item: any) => {
   handleMsgClick(item)
-  router.push(`/mobile/chatRoom/chatMain/${encodeURIComponent(item.name)}`)
+  router.push(`/mobile/chatRoom/chatMain/${item.uid}`)
   console.log('进入页面', item)
 }
 const toSimpleBio = () => {
@@ -388,13 +365,13 @@ const closeKeyboardMask = () => {
   position: fixed;
   inset: 0;
   background: transparent; // 透明背景
-  z-index: 9998; // 高于聊天列表
+  z-index: 1400; // 低于 Naive 弹层，高于页面内容
   pointer-events: auto; // 确保能接收事件
   touch-action: none; // 禁止滚动
 }
 
-:deep(#search) {
+::deep(#search) {
   position: relative;
-  z-index: 9999; // 输入框比蒙板高
+  z-index: 1500; // 高于键盘蒙层，低于 Naive 弹层
 }
 </style>

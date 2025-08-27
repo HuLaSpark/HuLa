@@ -1,9 +1,9 @@
 import { onMounted, onUnmounted } from 'vue'
-import type { IKeyboardDidShowDetail } from '@/mobile/mobile-client/interface/adapter'
+import type { IKeyboardDidShowDetail } from '#/mobile-client/interface/adapter'
 import { useMobileStore } from '@/stores/mobile'
 import { isMobile } from '@/utils/PlatformConstants'
 
-export function useMobile() {
+export const useMobile = () => {
   const mobileStore = useMobileStore()
 
   let removeShowFunction: () => void = () => {}
@@ -11,7 +11,7 @@ export function useMobile() {
 
   onMounted(async () => {
     if (isMobile()) {
-      const module = await import('@/mobile/mobile-client/MobileClient')
+      const module = await import('#/mobile-client/MobileClient')
 
       await module.initMobileClient()
 
