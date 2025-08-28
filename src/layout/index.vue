@@ -251,7 +251,7 @@ useMitt.on(WsResponseMessageType.MSG_RECALL, (data: RevokedMsgType) => {
 })
 useMitt.on(WsResponseMessageType.MY_ROOM_INFO_CHANGE, (data: { myName: string; roomId: string; uid: string }) => {
   // 更新用户在群聊中的昵称
-  groupStore.updateUserItem(data.uid, { myName: data.myName })
+  groupStore.updateUserItem(data.uid, { myName: data.myName }, data.roomId)
   // 如果当前正在查看的是该群聊，则更新群组信息
   if (globalStore.currentSession?.roomId === data.roomId) {
     groupStore.getCountStatistic(globalStore.currentSession?.roomId)
@@ -351,6 +351,8 @@ useMitt.on(
             info('群成员退出群聊，移除群内的成员数据')
             // 移除该群中的群成员数据
             groupStore.removeUserItem(item.uid, param.roomId)
+            // 更新群的数据
+            groupStore.getCountStatistic(param.roomId)
           }
         })
         // TODO 添加一条退出群聊的消息
@@ -364,6 +366,8 @@ useMitt.on(
           } else {
             info('群成员加入群聊，添加群成员数据')
             groupStore.addUserItem(item, param.roomId)
+            // 更新群的数据, 群成员数
+            groupStore.getCountStatistic(param.roomId)
           }
         })
         // TODO 添加一条入群的消息
