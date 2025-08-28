@@ -9,6 +9,7 @@ import { LoginStatus, useWsLoginStore } from '@/stores/ws'
 import { isDesktop, isMac, isMobile } from '@/utils/PlatformConstants'
 import { clearListener } from '@/utils/ReadCountQueue'
 import { invokeSilently, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler.ts'
+import { useSettingStore } from '../stores/setting'
 
 export const useLogin = () => {
   const { resizeWindow } = useWindow()
@@ -16,6 +17,7 @@ export const useLogin = () => {
   const loginStore = useWsLoginStore()
   const userStore = useUserStore()
   const chatStore = useChatStore()
+  const settingStore = useSettingStore()
   const { isTrayMenuShow } = storeToRefs(globalStore)
   /**
    * 设置登录状态(系统托盘图标，系统托盘菜单选项)
@@ -69,7 +71,7 @@ export const useLogin = () => {
     }
     // 2. 重置用户状态
     userStore.isSign = false
-    // userStore.userInfo = {}
+    settingStore.closeAutoLogin()
     loginStore.loginStatus = LoginStatus.Init
     // 4. 清除未读数
     chatStore.clearUnreadCount()
