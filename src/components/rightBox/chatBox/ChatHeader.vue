@@ -265,7 +265,8 @@
               autoCorrect="off"
               autoCapitalize="off"
               v-model:value="groupDetail.myNickname"
-              @update:value="updateGroupInfo($event, 'nickname')" />
+              @update:value="updateGroupInfo($event, 'nickname')"
+              @blur="saveGroupInfo" />
             <!-- 群备注 -->
             <p class="flex-start-center gap-10px text-(12px [--chat-text-color]) mt-20px mb-10px">
               群备注
@@ -278,6 +279,7 @@
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
+              @blur="saveGroupInfo"
               @update:value="updateGroupInfo($event, 'remark')" />
 
             <!-- 群设置选项 -->
@@ -441,37 +443,9 @@ const cacheStore = useCachedStore()
 
 // 群组详情数据
 const groupDetail = ref({
-  myNickname: computed({
-    get() {
-      const user = groupStore.getCurrentUser()
-      return user!.myName || user!.name
-    },
-    set(value: string) {
-      // 这里可以添加设置昵称的逻辑
-      const user = groupStore.getCurrentUser()
-      if (user) {
-        user.myName = value
-      }
-    }
-  }), // 我在本群的昵称
-  groupRemark: '', // 群备注
-  roleId: computed({
-    get() {
-      return groupStore.getCurrentUser()!.roleId || RoleEnum.NORMAL
-    },
-    set(value: number) {
-      // 这里可以添加设置角色的逻辑
-      const user = groupStore.getCurrentUser()
-      if (user) {
-        user.roleId = value
-      }
-    }
-  }) // 默认为普通成员
-})
-// 保存原始群组详情数据，用于比较是否有变化
-const originalGroupDetail = ref({
-  myNickname: '',
-  groupRemark: ''
+  myNickname: groupStore.myNameInCurrentGroup, // 我在本群的昵称
+  groupRemark: groupStore.countInfo?.remark, // 群备注
+  roleId: groupStore.myRoleIdInCurrentGroup // 默认为普通成员
 })
 
 // 是否为频道（仅显示 more 按钮）
@@ -631,7 +605,6 @@ watch(
     }
   }
 )
-
 // watch(
 //   () => groupStore.userList,
 //   () => {
@@ -686,7 +659,9 @@ const handleInvite = async () => {
 // 获取群组详情
 const fetchGroupDetail = async () => {
   if (!activeItem.roomId || activeItem.type !== RoomTypeEnum.GROUP) return
-  groupDetail.value.groupRemark = groupStore.countInfo?.remark || ''
+  const data = await groupStore.getCountStatistic(globalStore.currentSession!.roomId)
+  console.log('群组详情', data)
+  groupDetail.value.groupRemark = data.remark
 }
 
 // 更新群聊信息（昵称或备注）
@@ -707,29 +682,17 @@ const saveGroupInfo = async () => {
   const myRoomInfo = {
     id: activeItem.roomId,
     myName: groupDetail.value.myNickname,
-    remark: groupDetail.value.groupRemark
+    remark: groupDetail.value.groupRemark!
   }
   await cacheStore.updateMyRoomInfo(myRoomInfo)
 
-  // 更新原始值为当前值
-  originalGroupDetail.value = {
-    myNickname: groupDetail.value.myNickname,
-    groupRemark: groupDetail.value.groupRemark
-  }
-
-  // 更新群聊缓存信息
-  groupStore.countInfo = {
-    ...groupStore.countInfo!,
-    myName: groupDetail.value.myNickname,
-    remark: groupDetail.value.groupRemark
-  }
-
-  // 发送更新请求
-  await updateMyRoomInfo(myRoomInfo)
   // 更新群成员列表
   groupStore.updateUserItem(userStore.userInfo.uid!, { myName: myRoomInfo.myName }, activeItem.roomId)
   // 更新会话
   chatStore.updateSession(activeItem.roomId, { remark: myRoomInfo.remark })
+
+  // 发送更新请求
+  await updateMyRoomInfo(myRoomInfo)
 
   window.$message.success('群聊信息已更新')
 }
@@ -1002,10 +965,6 @@ const handleCrop = async (cropBlob: Blob) => {
 const closeMenu = (event: any) => {
   /** 点击非侧边栏元素时，关闭侧边栏，但点击弹出框元素、侧边栏图标、还有侧边栏里面的元素时不关闭 */
   if (!event.target.matches('.sidebar, .sidebar *, .n-modal-mask, .options-box *, .n-modal *') && !modalShow.value) {
-    if (sidebarShow.value) {
-      // 如果侧边栏正在显示，则在关闭前保存群聊信息
-      saveGroupInfo()
-    }
     sidebarShow.value = false
   }
 }
