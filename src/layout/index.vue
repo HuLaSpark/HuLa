@@ -251,7 +251,7 @@ useMitt.on(WsResponseMessageType.MSG_RECALL, (data: RevokedMsgType) => {
 })
 useMitt.on(WsResponseMessageType.MY_ROOM_INFO_CHANGE, (data: { myName: string; roomId: string; uid: string }) => {
   // 更新用户在群聊中的昵称
-  cachedStore.updateUserGroupNickname(data)
+  groupStore.updateUserItem(data.uid, { myName: data.myName })
   // 如果当前正在查看的是该群聊，则更新群组信息
   if (globalStore.currentSession?.roomId === data.roomId) {
     groupStore.getCountStatistic(globalStore.currentSession?.roomId)

@@ -15,9 +15,6 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
   // 徽章信息缓存列表，key为徽章ID
   const badgeCachedList = reactive<Record<string, Partial<CacheBadgeItem>>>({})
 
-  // 用户在不同群聊中的昵称映射表，格式为 {uid: {roomId: myName}}
-  const userGroupNicknameMap = reactive<Record<string, Record<string, string>>>({})
-
   /** 用于存储正在请求的用户ID */
   const pendingUids = ref(new Set<string>())
 
@@ -183,50 +180,6 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
   }
 
   /**
-   * 更新用户在特定群聊中的昵称
-   * @param data 包含用户ID、群聊ID和新昵称的数据
-   */
-  const updateUserGroupNickname = (data: { uid: string; roomId: string; myName: string }) => {
-    const { uid, roomId, myName } = data
-
-    // 初始化用户的群聊昵称映射（如果不存在）
-    if (!userGroupNicknameMap[uid]) {
-      userGroupNicknameMap[uid] = {}
-    }
-
-    // 更新用户在特定群聊中的昵称
-    userGroupNicknameMap[uid][roomId] = myName
-
-    // 如果用户在缓存中存在，标记需要刷新
-    if (userCachedList[uid]) {
-      userCachedList[uid] = {
-        ...userCachedList[uid],
-        needRefresh: true,
-        lastModifyTime: 0 // 重置时间确保下次获取时能刷新
-      }
-    }
-
-    // 触发UI更新
-    userAvatarUpdated.value = !userAvatarUpdated.value
-  }
-
-  /**
-   * 获取用户在特定群聊中的昵称
-   * @param uid 用户ID
-   * @param roomId 群聊ID
-   * @returns 用户在群聊中的昵称，如果没有则返回用户的名称
-   */
-  const getUserGroupNickname = (uid: string, roomId: string): string => {
-    // 如果存在群聊昵称映射，则返回昵称
-    if (userGroupNicknameMap[uid]?.[roomId]) {
-      return userGroupNicknameMap[uid][roomId]
-    }
-
-    // 否则返回用户的名称
-    return userCachedList[uid]?.name || ''
-  }
-
-  /**
    * 获取群组公告
    * @roomId 群组ID
    * @reload 是否强制重新加载
@@ -255,9 +208,6 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
     updateUserState,
     userAvatarUpdated,
     updateUserCache,
-    updateUserGroupNickname,
-    getUserGroupNickname,
-    userGroupNicknameMap,
     getGroupAnnouncementList,
     updateMyRoomInfo
   }
