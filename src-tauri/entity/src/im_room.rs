@@ -15,6 +15,7 @@ pub struct Model {
     #[serde(skip)]
     #[sea_orm(primary_key)]
     pub login_uid: String,
+    pub remark: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
