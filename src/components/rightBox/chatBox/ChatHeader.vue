@@ -943,15 +943,18 @@ const createRtcCallWindow = async (isIncoming: boolean, remoteUserId: string, ca
   // 根据是否来电决定窗口尺寸
   const windowConfig = isIncoming
     ? { width: 360, height: 90, minWidth: 360, minHeight: 90 } // 来电通知尺寸
-    : { width: 500, height: 650, minWidth: 500, minHeight: 650 } // 正常通话尺寸
+    : callType === CallTypeEnum.VIDEO
+      ? { width: 850, height: 580, minWidth: 850, minHeight: 580 } // 视频通话尺寸
+      : { width: 500, height: 650, minWidth: 500, minHeight: 650 } // 语音通话尺寸
 
+  const type = callType === CallTypeEnum.VIDEO ? '视频通话' : '语音通话'
   await createWebviewWindow(
-    '视频通话', // 窗口标题
+    type, // 窗口标题
     'rtcCall', // 窗口标签
     windowConfig.width, // 宽度
     windowConfig.height, // 高度
     undefined, // 不需要关闭其他窗口
-    false, // 不可调整大小
+    true, // 可调整大小
     windowConfig.minWidth, // 最小宽度
     windowConfig.minHeight, // 最小高度
     false, // 不透明

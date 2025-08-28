@@ -105,6 +105,24 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
   const isScreenSharing = ref(false)
   const offer = ref<RTCSessionDescriptionInit>()
 
+  // 接通后确保窗口聚焦显示
+  const focusCurrentWindow = async () => {
+    try {
+      const currentWindow = getCurrentWebviewWindow()
+      const visible = await currentWindow.isVisible()
+      if (!visible) {
+        await currentWindow.show()
+      }
+      const minimized = await currentWindow.isMinimized()
+      if (minimized) {
+        await currentWindow.unminimize()
+      }
+      await currentWindow.setFocus()
+    } catch (e) {
+      console.warn('设置窗口聚焦失败:', e)
+    }
+  }
+
   // 开始计时
   const startCallTimer = () => {
     // 获取高精度时间戳
@@ -360,6 +378,8 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
             info('RTC 连接成功')
             connectionStatus.value = RTCCallStatus.ACCEPT
             startCallTimer() // 开始计时
+            // 接通后将窗口置顶展示并聚焦
+            void focusCurrentWindow()
             break
           case 'disconnected':
             info('RTC 连接断开')
@@ -975,6 +995,8 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
     // info(`收到 CallAccepted'消息 ${isReceiver}`)
     if (!isReceiver) {
       sendOffer(offer.value!)
+      // 对方接通后，主叫方窗口前置并聚焦
+      void focusCurrentWindow()
     }
   })
   listen('ws-room-closed', (event: any) => {
