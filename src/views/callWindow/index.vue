@@ -127,17 +127,17 @@
 
     <!-- 底部控制按钮 -->
     <div class="relative z-10">
-      <!-- 视频通话最大化时的一行布局 -->
-      <div v-if="callType === CallTypeEnum.VIDEO && isWindowMaximized" class="pb-10px flex-center gap-32px">
+      <!-- 视频接通后布局 -->
+      <div v-if="callType === CallTypeEnum.VIDEO" class="pb-10px flex-center gap-32px">
         <!-- 静音按钮 -->
         <div class="flex-col-x-center gap-8px w-80px">
           <div
             @click="toggleMute"
             class="size-44px rounded-full flex-center cursor-pointer"
-            :class="isMuted ? 'bg-#d5304f60 hover:bg-#d5304f80' : 'bg-gray-600 hover:bg-gray-500'">
-            <svg class="size-16px color-#fff"><use :href="isMuted ? '#voice-off' : '#voice'"></use></svg>
+            :class="!isMuted ? 'bg-gray-600 hover:bg-gray-500' : 'bg-#d5304f60 hover:bg-#d5304f80'">
+            <svg class="size-16px color-#fff"><use :href="!isMuted ? '#voice' : '#voice-off'"></use></svg>
           </div>
-          <div class="text-12px text-gray-400 text-center">{{ isMuted ? '无麦克风' : '麦克风' }}</div>
+          <div class="text-12px text-gray-400 text-center">{{ !isMuted ? '麦克风已开' : '麦克风已关' }}</div>
         </div>
 
         <!-- 扬声器按钮 -->
@@ -145,10 +145,10 @@
           <div
             @click="toggleSpeaker"
             class="size-44px rounded-full flex-center cursor-pointer"
-            :class="isSpeakerOn ? 'bg-#d5304f60 hover:bg-#d5304f80' : 'bg-gray-600 hover:bg-gray-500'">
-            <svg class="size-16px color-#fff"><use :href="isSpeakerOn ? '#volume-mute' : '#volume-notice'"></use></svg>
+            :class="isSpeakerOn ? 'bg-gray-600 hover:bg-gray-500' : 'bg-#d5304f60 hover:bg-#d5304f80'">
+            <svg class="size-16px color-#fff"><use :href="isSpeakerOn ? '#volume-notice' : '#volume-mute'"></use></svg>
           </div>
-          <div class="text-12px text-gray-400 text-center">{{ isSpeakerOn ? '扬声器已开' : '扬声器' }}</div>
+          <div class="text-12px text-gray-400 text-center">{{ isSpeakerOn ? '扬声器已开' : '扬声器已关' }}</div>
         </div>
 
         <!-- 摄像头按钮 -->
@@ -156,7 +156,7 @@
           <div
             @click="toggleVideo"
             class="size-44px rounded-full flex-center cursor-pointer"
-            :class="isVideoEnabled ? 'bg-#d5304f60 hover:bg-#d5304f80' : 'bg-gray-600 hover:bg-gray-500'">
+            :class="isVideoEnabled ? 'bg-gray-600 hover:bg-gray-500' : 'bg-#d5304f60 hover:bg-#d5304f80'">
             <svg class="size-16px color-#fff">
               <use :href="isVideoEnabled ? '#video-one' : '#monitor-off'"></use>
             </svg>
@@ -177,7 +177,7 @@
         </div>
       </div>
 
-      <!-- 非全屏时的两行布局 -->
+      <!-- 语音接通后布局 -->
       <div v-else class="pb-30px flex-col-x-center">
         <!-- 上排按钮：静音、扬声器、摄像头 -->
         <div class="flex-center gap-40px mb-32px">
@@ -186,10 +186,10 @@
             <div
               @click="toggleMute"
               class="size-44px rounded-full flex-center cursor-pointer"
-              :class="isMuted ? 'bg-#d5304f60 hover:bg-#d5304f80' : 'bg-gray-600 hover:bg-gray-500'">
-              <svg class="size-16px color-#fff"><use :href="isMuted ? '#voice-off' : '#voice'"></use></svg>
+              :class="!isMuted ? 'bg-gray-600 hover:bg-gray-500' : 'bg-#d5304f60 hover:bg-#d5304f80'">
+              <svg class="size-16px color-#fff"><use :href="!isMuted ? '#voice' : '#voice-off'"></use></svg>
             </div>
-            <div class="text-12px text-gray-400 text-center">{{ isMuted ? '无麦克风' : '麦克风' }}</div>
+            <div class="text-12px text-gray-400 text-center">{{ !isMuted ? '麦克风已开' : '麦克风已关' }}</div>
           </div>
 
           <!-- 扬声器按钮 -->
@@ -197,27 +197,12 @@
             <div
               @click="toggleSpeaker"
               class="size-44px rounded-full flex-center cursor-pointer"
-              :class="isSpeakerOn ? 'bg-#d5304f60 hover:bg-#d5304f80' : 'bg-gray-600 hover:bg-gray-500'">
+              :class="isSpeakerOn ? 'bg-gray-600 hover:bg-gray-500' : 'bg-#d5304f60 hover:bg-#d5304f80'">
               <svg class="size-16px color-#fff">
-                <use :href="isSpeakerOn ? '#volume-mute' : '#volume-notice'"></use>
+                <use :href="isSpeakerOn ? '#volume-notice' : '#volume-mute'"></use>
               </svg>
             </div>
-            <div class="text-12px text-gray-400 text-center">{{ isSpeakerOn ? '扬声器已开' : '扬声器' }}</div>
-          </div>
-
-          <!-- 摄像头按钮 (仅视频通话时显示) -->
-          <div v-if="callType === CallTypeEnum.VIDEO" class="flex-col-x-center gap-8px w-80px">
-            <div
-              @click="toggleVideo"
-              class="size-44px rounded-full flex-center cursor-pointer"
-              :class="isVideoEnabled ? 'bg-#d5304f60 hover:bg-#d5304f80' : 'bg-gray-600 hover:bg-gray-500'">
-              <svg class="size-16px color-#fff">
-                <use :href="isVideoEnabled ? '#video-one' : '#monitor-off'"></use>
-              </svg>
-            </div>
-            <div class="text-12px text-gray-400 text-center">
-              {{ isVideoEnabled ? '关闭摄像头' : '开启摄像头' }}
-            </div>
+            <div class="text-12px text-gray-400 text-center">{{ isSpeakerOn ? '扬声器已开' : '扬声器已关' }}</div>
           </div>
         </div>
 
@@ -484,7 +469,8 @@ const acceptCall = async () => {
   // 调整窗口大小为正常通话大小
   try {
     const currentWindow = WebviewWindow.getCurrent()
-    await currentWindow.setSize(createSize(500, 650))
+    const isVideo = callType === CallTypeEnum.VIDEO
+    await currentWindow.setSize(createSize(isVideo ? 850 : 500, isVideo ? 580 : 650))
     await currentWindow.center()
 
     // 取消窗口置顶
