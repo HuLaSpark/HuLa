@@ -441,9 +441,32 @@ const cacheStore = useCachedStore()
 
 // 群组详情数据
 const groupDetail = ref({
-  myNickname: '', // 我在本群的昵称
+  myNickname: computed({
+    get() {
+      const user = groupStore.getCurrentUser()
+      return user!.myName || user!.name
+    },
+    set(value: string) {
+      // 这里可以添加设置昵称的逻辑
+      const user = groupStore.getCurrentUser()
+      if (user) {
+        user.myName = value
+      }
+    }
+  }), // 我在本群的昵称
   groupRemark: '', // 群备注
-  roleId: 3 // 默认为普通成员
+  roleId: computed({
+    get() {
+      return groupStore.getCurrentUser()!.roleId || RoleEnum.NORMAL
+    },
+    set(value: number) {
+      // 这里可以添加设置角色的逻辑
+      const user = groupStore.getCurrentUser()
+      if (user) {
+        user.roleId = value
+      }
+    }
+  }) // 默认为普通成员
 })
 // 保存原始群组详情数据，用于比较是否有变化
 const originalGroupDetail = ref({
@@ -462,17 +485,7 @@ const isGroupOwner = computed(() => {
 
   // 检查groupStore.userList中当前用户的角色
   const currentUser = groupStore.userList.find((user) => user.uid === userStore.userInfo.uid)
-
-  console.log('currentUser ---> ', currentUser)
-  // 如果能在userList找到用户信息并确认角色，优先使用这个判断
-  if (currentUser) {
-    return currentUser.roleId === RoleEnum.LORD
-  }
-  console.log('groupDetail --> ', groupDetail)
-  groupDetail.value.roleId = 1
-
-  // 否则回退到countInfo中的角色信息
-  return groupDetail.value.roleId === RoleEnum.LORD
+  return currentUser!.roleId === RoleEnum.LORD
 })
 
 // 我的群备注
@@ -619,19 +632,19 @@ watch(
   }
 )
 
-watch(
-  () => groupStore.userList,
-  () => {
-    // 当群成员列表更新时，重新检查当前用户的权限
-    if (activeItem.type === RoomTypeEnum.GROUP) {
-      const currentUser = groupStore.userList.find((user) => user.uid === userStore.userInfo.uid)
-      if (currentUser && currentUser.roleId) {
-        groupDetail.value.roleId = currentUser.roleId
-      }
-    }
-  },
-  { deep: true }
-)
+// watch(
+//   () => groupStore.userList,
+//   () => {
+//     // 当群成员列表更新时，重新检查当前用户的权限
+//     if (activeItem.type === RoomTypeEnum.GROUP) {
+//       const currentUser = groupStore.userList.find((user) => user.uid === userStore.userInfo.uid)
+//       if (currentUser && currentUser.roleId) {
+//         groupDetail.value.roleId = currentUser.roleId
+//       }
+//     }
+//   },
+//   { deep: true }
+// )
 
 watchEffect(() => {
   if (!messageOptions.value?.isLoading && headerLoading.value) {
@@ -673,21 +686,7 @@ const handleInvite = async () => {
 // 获取群组详情
 const fetchGroupDetail = async () => {
   if (!activeItem.roomId || activeItem.type !== RoomTypeEnum.GROUP) return
-
-  // 检查当前用户在userList中的角色
-  const currentUser = groupStore.userList.find((user) => user.uid === userStore.userInfo.uid)
-
-  groupDetail.value = {
-    myNickname: groupStore.countInfo?.myName || '',
-    groupRemark: groupStore.countInfo?.remark || '',
-    // 优先使用userList中找到的角色信息，没有则使用countInfo中的roleId或默认值
-    roleId: currentUser?.roleId || groupStore.countInfo?.roleId || RoleEnum.NORMAL
-  }
-  // 保存原始值，用于后续比较
-  originalGroupDetail.value = {
-    myNickname: groupStore.countInfo?.myName || '',
-    groupRemark: groupStore.countInfo?.remark || ''
-  }
+  groupDetail.value.groupRemark = groupStore.countInfo?.remark || ''
 }
 
 // 更新群聊信息（昵称或备注）
@@ -695,9 +694,7 @@ const updateGroupInfo = (value: string, type: 'nickname' | 'remark') => {
   if (!activeItem.roomId || activeItem.type !== RoomTypeEnum.GROUP) return
 
   // 只更新本地值，不发送API请求
-  if (type === 'nickname') {
-    groupDetail.value.myNickname = value
-  } else {
+  if (type !== 'nickname') {
     groupDetail.value.groupRemark = value
   }
 }
@@ -706,42 +703,35 @@ const updateGroupInfo = (value: string, type: 'nickname' | 'remark') => {
 const saveGroupInfo = async () => {
   if (!activeItem.roomId || activeItem.type !== RoomTypeEnum.GROUP) return
 
-  // 检查数据是否发生变化
-  const nicknameChanged = groupDetail.value.myNickname !== originalGroupDetail.value.myNickname
-  const remarkChanged = groupDetail.value.groupRemark !== originalGroupDetail.value.groupRemark
-
-  // 只有当数据发生变化时才发送请求
-  if (nicknameChanged || remarkChanged) {
-    // 使用updateMyRoomInfo接口更新我在群里的昵称和群备注
-    const myRoomInfo = {
-      id: activeItem.roomId,
-      myName: groupDetail.value.myNickname,
-      remark: groupDetail.value.groupRemark
-    }
-    await cacheStore.updateMyRoomInfo(myRoomInfo)
-
-    // 更新原始值为当前值
-    originalGroupDetail.value = {
-      myNickname: groupDetail.value.myNickname,
-      groupRemark: groupDetail.value.groupRemark
-    }
-
-    // 更新群聊缓存信息
-    groupStore.countInfo = {
-      ...groupStore.countInfo!,
-      myName: groupDetail.value.myNickname,
-      remark: groupDetail.value.groupRemark
-    }
-
-    // 发送更新请求
-    await updateMyRoomInfo(myRoomInfo)
-    // 更新群成员列表
-    groupStore.updateUserItem(userStore.userInfo.uid!, { myName: myRoomInfo.myName }, activeItem.roomId)
-    // 更新会话
-    chatStore.updateSession(activeItem.roomId, { remark: myRoomInfo.remark })
-
-    window.$message.success('群聊信息已更新')
+  // 使用updateMyRoomInfo接口更新我在群里的昵称和群备注
+  const myRoomInfo = {
+    id: activeItem.roomId,
+    myName: groupDetail.value.myNickname,
+    remark: groupDetail.value.groupRemark
   }
+  await cacheStore.updateMyRoomInfo(myRoomInfo)
+
+  // 更新原始值为当前值
+  originalGroupDetail.value = {
+    myNickname: groupDetail.value.myNickname,
+    groupRemark: groupDetail.value.groupRemark
+  }
+
+  // 更新群聊缓存信息
+  groupStore.countInfo = {
+    ...groupStore.countInfo!,
+    myName: groupDetail.value.myNickname,
+    remark: groupDetail.value.groupRemark
+  }
+
+  // 发送更新请求
+  await updateMyRoomInfo(myRoomInfo)
+  // 更新群成员列表
+  groupStore.updateUserItem(userStore.userInfo.uid!, { myName: myRoomInfo.myName }, activeItem.roomId)
+  // 更新会话
+  chatStore.updateSession(activeItem.roomId, { remark: myRoomInfo.remark })
+
+  window.$message.success('群聊信息已更新')
 }
 
 const handleAssist = () => {
@@ -750,28 +740,6 @@ const handleAssist = () => {
 
 const handleMedia = () => {
   window.$message.warning('暂未实现')
-  // start().then(() => {
-  //   // 将媒体流添加到RTCPeerConnection
-  //   stream.value?.getTracks().forEach((track) => {
-  //     peerConnection.addTrack(track, stream.value!)
-  //   })
-
-  //   // 创建一个offer
-  //   peerConnection.createOffer().then((offer) => {
-  //     // 设置本地描述
-  //     peerConnection.setLocalDescription(offer)
-  //     emit(EventEnum.SHARE_SCREEN)
-  //     /** 当需要给独立窗口传输数据的时候需要先监听窗口的创建完毕事件 */
-  //     addListener(
-  //       appWindow.listen('SharedScreenWin', async () => {
-  //         await emit('offer', offer)
-  //       }),
-  //       'SharedScreenWin'
-  //     )
-  //     // 在这里，你需要将offer发送给对方
-  //     // 对方需要调用peerConnection.setRemoteDescription(offer)来接受屏幕共享
-  //   })
-  // })
 }
 
 /** 置顶 */

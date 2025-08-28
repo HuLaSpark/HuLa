@@ -55,6 +55,10 @@ export const useGroupStore = defineStore(
       return userList.value.filter((member: UserItem) => adminUidList.value.includes(member.uid))
     })
 
+    const getCurrentUser = (): UserItem => {
+      return userList.value.find((member: UserItem) => member.uid === userStore.userInfo.uid)!
+    }
+
     /**
      * 获取所有成员的基本信息列表
      * 包含角色信息（群主/管理员/普通成员）
@@ -414,7 +418,8 @@ export const useGroupStore = defineStore(
       getUserListByRoomId,
       countInfo,
       getUser,
-      removeAllUsers
+      removeAllUsers,
+      getCurrentUser
     }
   },
   {
