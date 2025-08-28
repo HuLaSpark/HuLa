@@ -105,6 +105,9 @@ export const useSettingStore = defineStore(StoresEnum.SETTING, {
         this.shortcuts = getDefaultShortcuts()
       }
       this.shortcuts.globalEnabled = enabled
+    },
+    closeAutoLogin() {
+      this.login.autoLogin = false
     }
   },
   share: {
