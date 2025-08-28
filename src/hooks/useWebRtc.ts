@@ -48,7 +48,17 @@ export interface WSRtcCallMsg {
 const MAX_TIME_OUT_SECONDS = 30 // 拨打 超时时间
 const configuration: RTCConfiguration = {
   // 默认配置
-  iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+  iceServers: [
+    { urls: 'stun:stun.l.google.com:19302' },
+    {
+      urls: [
+        'turn:117.72.67.248:3478?transport=udp', // UDP 协议
+        'turn:117.72.67.248:3478?transport=tcp' // TCP 协议
+      ],
+      username: 'chr', // 你的 TURN 用户名
+      credential: '123456' // 你的 TURN 密码
+    }
+  ]
 }
 // const isSupportScreenSharing = !!navigator?.mediaDevices?.getDisplayMedia
 // TODO 改成动态配置
