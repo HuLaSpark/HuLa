@@ -18,6 +18,32 @@ export const useGroupStore = defineStore(
     // 群组相关状态
     const userListMap = reactive<Record<string, UserItem[]>>({}) // 群成员列表Map，key为roomId
     const userListOptions = reactive({ isLast: false, loading: true, cursor: '' }) // 分页加载相关状态
+    const myNameInCurrentGroup = computed({
+      get() {
+        const user = getCurrentUser()
+        return user?.myName || user?.name
+      },
+      set(value: string) {
+        // 这里可以添加设置昵称的逻辑
+        const user = getCurrentUser()
+        if (user) {
+          user.myName = value
+        }
+      }
+    })
+
+    const myRoleIdInCurrentGroup = computed({
+      get() {
+        return getCurrentUser()?.roleId || RoleEnum.NORMAL
+      },
+      set(value: number) {
+        // 这里可以添加设置角色的逻辑
+        const user = getCurrentUser()
+        if (user) {
+          user.roleId = value
+        }
+      }
+    })
 
     // 获取当前房间的用户列表的计算属性
     const userList = computed(() => {
@@ -128,7 +154,9 @@ export const useGroupStore = defineStore(
      * 包括群名称、头像、在线人数等
      */
     const getCountStatistic = async (currentRoomId: string) => {
-      countInfo.value = await ImRequestUtils.getGroupDetail(currentRoomId)
+      const data = await ImRequestUtils.getGroupDetail(currentRoomId)
+      countInfo.value = data
+      return data
     }
 
     /**
@@ -419,7 +447,9 @@ export const useGroupStore = defineStore(
       countInfo,
       getUser,
       removeAllUsers,
-      getCurrentUser
+      getCurrentUser,
+      myNameInCurrentGroup,
+      myRoleIdInCurrentGroup
     }
   },
   {
