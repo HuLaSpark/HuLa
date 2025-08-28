@@ -283,7 +283,7 @@ export const useChatStore = defineStore(
         sessionOptions.isLoading = true
         console.log('获取会话列表')
         const response: any = await invokeWithErrorHandler(TauriCommand.LIST_CONTACTS, undefined, {
-          customErrorMessage: '获取会话列表失败22',
+          customErrorMessage: '获取会话列表失败',
           errorType: ErrorType.Network
         }).catch(() => {
           sessionOptions.isLoading = false

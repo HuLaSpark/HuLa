@@ -686,13 +686,14 @@ const saveGroupInfo = async () => {
   }
   await cacheStore.updateMyRoomInfo(myRoomInfo)
 
+  // 发送更新请求
+  await updateMyRoomInfo(myRoomInfo)
+
   // 更新群成员列表
   groupStore.updateUserItem(userStore.userInfo.uid!, { myName: myRoomInfo.myName }, activeItem.roomId)
   // 更新会话
   chatStore.updateSession(activeItem.roomId, { remark: myRoomInfo.remark })
-
-  // 发送更新请求
-  await updateMyRoomInfo(myRoomInfo)
+  contactStore.updateGroupChat(activeItem.roomId, { remark: myRoomInfo.remark })
 
   window.$message.success('群聊信息已更新')
 }

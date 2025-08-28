@@ -72,6 +72,14 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
     groupChatList.value = response.records
   }
 
+  const updateGroupChat = async (roomId: string, group: Partial<GroupListReq>) => {
+    let targetGroup = groupChatList.value.find((item) => item.roomId === roomId)!
+    targetGroup = {
+      ...targetGroup,
+      ...group
+    }
+  }
+
   /**
    * 获取好友申请未读数
    * 更新全局store中的未读计数
@@ -187,6 +195,7 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
     contactsOptions,
     applyPageOptions,
     onDeleteContact,
-    onHandleInvite
+    onHandleInvite,
+    updateGroupChat
   }
 })
