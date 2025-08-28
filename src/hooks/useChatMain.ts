@@ -103,15 +103,23 @@ export const useChatMain = () => {
       label: '撤回',
       icon: 'corner-down-left',
       click: async (item: MessageType) => {
-        const res = await recallMsg({ roomId: '1', msgId: item.message.id })
+        const msg = { ...item }
+        const res = await recallMsg({ roomId: globalStore.currentSession!.roomId, msgId: item.message.id })
         if (res) {
           window.$message.error(res)
           return
         }
-        chatStore.updateRecallStatus({
-          recallUid: item.fromUser.uid,
-          msgId: item.message.id,
-          roomId: item.message.roomId
+
+        // 记录撤回的消息，用于重新编辑
+        chatStore.recordRecallMsg({
+          recallUid: userStore.uid!,
+          msg
+        })
+        // 发送撤回消息请求，并修改缓存
+        await chatStore.updateRecallMsg({
+          recallUid: userStore.uid!,
+          roomId: msg.message.roomId,
+          msgId: msg.message.id
         })
       },
       visible: (item: MessageType) => {

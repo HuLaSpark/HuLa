@@ -533,36 +533,38 @@ export const useChatStore = defineStore(
       }
     }
 
-    // 更新消息撤回状态
-    const updateRecallStatus = async (data: RevokedMsgType) => {
-      const { msgId } = data
-      const message = currentMessageMap.value?.get(msgId)
-      if (message && typeof data.recallUid === 'string') {
-        // 存储撤回的消息内容和时间
-        const recallTime = Date.now()
-        recalledMessages.set(msgId, {
-          messageId: msgId,
-          content: message.message.body.content,
-          recallTime
+    const recordRecallMsg = (data: { recallUid: string; msg: MessageType }) => {
+      // 存储撤回的消息内容和时间
+      const recallTime = Date.now()
+      recalledMessages.set(data.msg.message.id, {
+        messageId: data.msg.message.id,
+        content: data.msg.message.body.content,
+        recallTime
+      })
+
+      if (data.recallUid === userStore.userInfo.uid) {
+        // 使用 Worker 来处理定时器
+        timerWorker.postMessage({
+          type: 'startTimer',
+          msgId: data.msg.message.id,
+          duration: RECALL_EXPIRATION_TIME
         })
+      }
 
-        if (message.fromUser.uid === userStore.userInfo.uid) {
-          // 使用 Worker 来处理定时器
-          timerWorker.postMessage({
-            type: 'startTimer',
-            msgId,
-            duration: RECALL_EXPIRATION_TIME
-          })
-        }
+      // 记录这个消息ID已经有了定时器
+      expirationTimers.set(data.msg.message.id, true)
+    }
 
-        // 记录这个消息ID已经有了定时器
-        expirationTimers.set(msgId, true)
-
+    // 更新消息撤回状态
+    const updateRecallMsg = async (data: RevokedMsgType) => {
+      const { msgId } = data
+      const message = currentMessageMap.value!.get(msgId)
+      if (message && typeof data.recallUid === 'string') {
         const cacheUser = cachedStore.userCachedList[data.recallUid]
         let recallMessageBody: string
 
         // 如果撤回者的 id 不等于消息发送人的 id, 或者你本人就是管理员，那么显示管理员撤回的。
-        if (data.recallUid !== message.fromUser.uid) {
+        if (data.recallUid !== userStore.userInfo.uid) {
           recallMessageBody = `管理员"${cacheUser.name}"撤回了一条消息` // 后期根据本地用户数据修改
         } else {
           // 如果被撤回的消息是消息发送者撤回，正常显示
@@ -578,7 +580,7 @@ export const useChatStore = defineStore(
           await invokeWithErrorHandler(
             TauriCommand.UPDATE_MESSAGE_RECALL_STATUS,
             {
-              messageId: msgId,
+              messageId: message.message.id,
               messageType: MsgEnum.RECALL,
               messageBody: recallMessageBody
             },
@@ -815,7 +817,8 @@ export const useChatStore = defineStore(
       deleteMsg,
       clearNewMsgCount,
       updateMarkCount,
-      updateRecallStatus,
+      updateRecallMsg,
+      recordRecallMsg,
       updateMsg,
       newMsgCount,
       messageMap,

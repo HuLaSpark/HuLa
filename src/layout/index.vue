@@ -247,7 +247,7 @@ useMitt.on(WsResponseMessageType.MSG_MARK_ITEM, async (data: { markList: MarkIte
   }
 })
 useMitt.on(WsResponseMessageType.MSG_RECALL, (data: RevokedMsgType) => {
-  chatStore.updateRecallStatus(data)
+  chatStore.updateRecallMsg(data)
 })
 useMitt.on(WsResponseMessageType.MY_ROOM_INFO_CHANGE, (data: { myName: string; roomId: string; uid: string }) => {
   // 更新用户在群聊中的昵称
