@@ -59,7 +59,7 @@ impl ImRequestClient {
 
         loop {
             let url = format!("{}/{}", self.base_url, path);
-            info!("📡 请求地址: {}", &url);
+            info!("📡 请求地址: {}, 方法：{}", &url, method.clone());
 
             let mut request_builder = self.client.request(method.clone(), &url);
 
@@ -102,7 +102,7 @@ impl ImRequestClient {
                     return Err(anyhow::anyhow!("请重新登录"));
                 }
                 Some(200) => {
-                    info!("✅ 请求成功: {}", &url);
+                    info!("✅ 请求成功: {}, 方法：{}", &url, method.clone());
                     return Ok(result);
                 }
                 _ => {

@@ -68,9 +68,9 @@
       </div>
 
       <!-- <n-tabs class="px-16px" default-value="mutual-attention" justify-content="start" type="line">
-        <n-tab-pane name="mutual-attention" tab="互相关注"> 
-          
-        
+        <n-tab-pane name="mutual-attention" tab="互相关注">
+
+
         </n-tab-pane>
         <n-tab-pane name="follow" tab="关注"> 关注 </n-tab-pane>
         <n-tab-pane name="fans" tab="粉丝"> 粉丝 </n-tab-pane>
@@ -153,7 +153,7 @@
                       :src="AvatarUtils.getAvatarUrl(item.avatar)"
                       fallback-src="/logo.png" />
 
-                    <span class="text-14px leading-tight flex-1 truncate">{{ item.remark || item.roomName }}</span>
+                    <span class="text-14px leading-tight flex-1 truncate">{{ item.remark || item.groupName }}</span>
                   </n-flex>
                 </div>
               </n-scrollbar>
@@ -186,6 +186,7 @@ import { useChatStore } from '@/stores/chat.ts'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { useGroupStore } from '~/src/stores/group'
 
 /**
  * 渲染图片图标的函数工厂
@@ -228,14 +229,14 @@ const menuList = ref([
 const activeItem = ref('')
 const detailsShow = ref(false)
 const shrinkStatus = ref(false)
+const groupStore = useGroupStore()
 const contactStore = useContactStore()
 const userStatusStore = useUserStatusStore()
 const { stateList } = storeToRefs(userStatusStore)
 
 /** 群聊列表 */
 const groupChatList = computed(() => {
-  console.log(contactStore.groupChatList)
-  return [...contactStore.groupChatList].sort((a, b) => {
+  return [...groupStore.groupDetails].sort((a, b) => {
     // 将roomId为'1'的群聊排在最前面
     if (a.roomId === '1' && b.roomId !== '1') return -1
     if (a.roomId !== '1' && b.roomId === '1') return 1

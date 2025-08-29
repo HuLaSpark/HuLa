@@ -17,6 +17,7 @@ export const useGroupStore = defineStore(
 
     // 群组相关状态
     const userListMap = reactive<Record<string, UserItem[]>>({}) // 群成员列表Map，key为roomId
+    const groupDetails = ref<GroupDetailReq[]>([])
     const userListOptions = reactive({ isLast: false, loading: true, cursor: '' }) // 分页加载相关状态
     const myNameInCurrentGroup = computed({
       get() {
@@ -50,6 +51,19 @@ export const useGroupStore = defineStore(
       if (!globalStore.currentSession?.roomId) return []
       return userListMap[globalStore.currentSession.roomId] || []
     })
+
+    const setGroupDetails = async () => {
+      const data = await ImRequestUtils.groupList()
+      groupDetails.value = data
+    }
+
+    const updateGroupDetail = async (roomId: string, detail: Partial<GroupDetailReq>) => {
+      let targetGroup = groupDetails.value.find((item) => item.roomId === roomId)!
+      targetGroup = {
+        ...targetGroup,
+        ...detail
+      }
+    }
 
     /**
      * 获取当前群主ID
@@ -110,7 +124,9 @@ export const useGroupStore = defineStore(
     })
 
     // 群组基本信息
-    const countInfo = ref<GroupDetailReq>()
+    const countInfo = computed(() => {
+      return groupDetails.value.find((item: GroupDetailReq) => item.roomId === globalStore.currentSession!.roomId)
+    })
 
     /**
      * 获取群成员列表
@@ -147,16 +163,6 @@ export const useGroupStore = defineStore(
       const { useCachedStore } = await import('./cached')
       const cachedStore = useCachedStore()
       await cachedStore.getBatchUserInfo([...uidCollectYet])
-    }
-
-    /**
-     * 获取群组统计信息
-     * 包括群名称、头像、在线人数等
-     */
-    const getCountStatistic = async (currentRoomId: string) => {
-      const data = await ImRequestUtils.getGroupDetail(currentRoomId)
-      countInfo.value = data
-      return data
     }
 
     /**
@@ -397,17 +403,6 @@ export const useGroupStore = defineStore(
       userListOptions.cursor = ''
       userListOptions.isLast = false
       userListOptions.loading = false
-      countInfo.value = {
-        avatar: '',
-        groupName: '',
-        onlineNum: 0,
-        roleId: 0,
-        roomId: '',
-        account: '',
-        memberNum: 0,
-        remark: '',
-        myName: ''
-      }
     }
 
     /**
@@ -429,7 +424,6 @@ export const useGroupStore = defineStore(
       userListOptions,
       loadMoreGroupMembers,
       getGroupUserList,
-      getCountStatistic,
       updateUserStatus,
       updateUserItem,
       addUserItem,
@@ -449,7 +443,10 @@ export const useGroupStore = defineStore(
       removeAllUsers,
       getCurrentUser,
       myNameInCurrentGroup,
-      myRoleIdInCurrentGroup
+      myRoleIdInCurrentGroup,
+      setGroupDetails,
+      updateGroupDetail,
+      groupDetails
     }
   },
   {

@@ -297,9 +297,6 @@ watch(
         groupStore.resetGroupData()
         try {
           await groupStore.getGroupUserList(currentSession.roomId!)
-          // 获取群组统计信息（包括在线人数）
-          await groupStore.getCountStatistic(currentSession.roomId!)
-
           // 初始化群公告
           await handleInitAnnoun()
           // 在数据完成后替换展示列表
