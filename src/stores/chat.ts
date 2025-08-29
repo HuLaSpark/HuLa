@@ -143,65 +143,44 @@ export const useChatStore = defineStore(
       }
     })
 
-    // 监听当前房间ID的变化
-    watch(
-      () => globalStore.currentSession,
-      async (val, _) => {
-        const currentSession = {
-          ...val
-        }
-        if (WebviewWindow.getCurrent().label !== 'home') {
-          return
-        }
+    const changeRoom = async () => {
+      if (WebviewWindow.getCurrent().label !== 'home') {
+        return
+      }
 
-        // 1. 立即清空当前消息列表
-        // if (currentMessageMap.value) {
-        //   currentMessageMap.value.clear()
-        // }
+      currentMessageOptions.value = {
+        isLast: false,
+        isLoading: true,
+        cursor: ''
+      }
 
-        // 2. 重置消息加载状态
+      // 3. 清空回复映射
+      if (currentReplyMap.value) {
+        currentReplyMap.value.clear()
+      }
+
+      try {
+        // 从服务器加载消息
+        await getMsgList(pageSize, true)
+      } catch (error) {
+        console.error('无法加载消息:', error)
         currentMessageOptions.value = {
           isLast: false,
-          isLoading: true,
+          isLoading: false,
           cursor: ''
         }
-
-        // 3. 清空回复映射
-        if (currentReplyMap.value) {
-          currentReplyMap.value.clear()
-        }
-
-        // 4. 尝试从服务器加载新房间的消息
-        nextTick(async () => {
-          try {
-            // 从服务器加载消息
-            await getMsgList(pageSize, true)
-          } catch (error) {
-            console.error('无法加载消息:', error)
-            currentMessageOptions.value = {
-              isLast: false,
-              isLoading: false,
-              cursor: ''
-            }
-          }
-        })
-
-        // 标记当前会话已读
-        if (val) {
-          const session = sessionList.value.find((s) => s.roomId === currentSession.roomId)
-          if (session?.unreadCount) {
-            markSessionRead(globalStore.currentSession!.roomId)
-            updateTotalUnreadCount()
-          }
-        }
-
-        // 重置当前回复的消息
-        currentMsgReply.value = {}
-      },
-      {
-        deep: true
       }
-    )
+
+      // 标记当前会话已读
+      const session = sessionList.value.find((s) => s.roomId === globalStore.currentSession!.roomId)
+      if (session?.unreadCount) {
+        markSessionRead(globalStore.currentSession!.roomId)
+        updateTotalUnreadCount()
+      }
+
+      // 重置当前回复的消息
+      currentMsgReply.value = {}
+    }
 
     // 当前消息回复
     const currentMsgReply = ref<Partial<MessageType>>({})
@@ -846,7 +825,8 @@ export const useChatStore = defineStore(
       clearUnreadCount,
       resetAndRefreshCurrentRoomMessages,
       getGroupSessions,
-      removeSession
+      removeSession,
+      changeRoom
     }
   },
   {
