@@ -157,8 +157,6 @@ const initWidth = ref(250)
 const { width, height } = useWindowSize()
 /** 是否拖拽 */
 const isDrag = ref(true)
-/** 当前消息 */
-const currentMsg = ref()
 /** 搜索框文字 */
 const searchText = ref('搜索')
 /** 是否处于搜索模式 */
@@ -324,10 +322,6 @@ onMounted(async () => {
     nextTick(() => {
       selectedValue.value = [event.id]
     })
-  })
-  useMitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
-    if (!event) return
-    currentMsg.value = event
   })
   window.addEventListener('click', closeMenu, true)
 })

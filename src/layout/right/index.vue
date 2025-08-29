@@ -4,7 +4,7 @@
       <ActionBar :current-label="appWindow.label" />
 
       <!-- 需要判断当前路由是否是信息详情界面 -->
-      <ChatBox :active-item="activeItem" :key="activeItem?.roomId" v-if="msgBoxShow && isChat && activeItem !== -1" />
+      <ChatBox v-if="msgBoxShow && isChat" />
 
       <Details :content="detailsContent" v-else-if="detailsShow && isDetails && detailsContent?.type !== 'apply'" />
 
