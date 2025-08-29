@@ -189,7 +189,7 @@ const appWindow = WebviewWindow.getCurrent()
 const { addListener } = useTauriListener()
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
-const { handlePaste } = useCommon()
+const { handlePaste, processFiles } = useCommon()
 /** 发送按钮旁的箭头 */
 const arrow = ref(false)
 /** 输入框dom元素 */
@@ -439,14 +439,7 @@ onMounted(async () => {
           const blob = new Blob([buffer], { type: e.payload.mimeType })
           const file = new File([blob], 'screenshot.png', { type: e.payload.mimeType })
 
-          // 创建一个模拟的粘贴事件，包含File对象
-          const mockPasteEvent = {
-            preventDefault: () => {},
-            clipboardData: {
-              files: [file]
-            }
-          }
-          handlePaste(mockPasteEvent, messageInputDom.value, showFileModalCallback)
+          await processFiles([file], messageInputDom.value, showFileModalCallback)
         } catch (error) {
           console.error('处理截图失败:', error)
         }

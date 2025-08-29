@@ -190,7 +190,7 @@ watch(
   },
   {
     immediate: true,
-    flush: 'sync' // 同步执行，确保最快响应速度
+    flush: 'sync'
   }
 )
 
@@ -204,7 +204,7 @@ watch(
   },
   {
     immediate: true,
-    flush: 'sync' // 同步执行，确保最快响应速度
+    flush: 'sync'
   }
 )
 

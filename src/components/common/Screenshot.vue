@@ -1133,10 +1133,14 @@ const confirmSelection = async () => {
   }
 
   const { startX, startY, endX, endY } = screenConfig.value
-
-  // 计算选区的宽高
   const width = Math.abs(endX - startX)
   const height = Math.abs(endY - startY)
+
+  if (width < 1 || height < 1) {
+    console.error('❌选区尺寸无效:', { width, height })
+    await resetScreenshot()
+    return
+  }
 
   // 计算选区的左上角位置
   const rectX = Math.min(startX, endX)
@@ -1232,8 +1236,12 @@ const confirmSelection = async () => {
                 console.warn('发送截图到主窗口失败:', e)
               }
 
-              // 复制到剪贴板
-              await writeImage(buffer)
+              try {
+                await writeImage(buffer)
+              } catch (clipboardError) {
+                console.error('复制到剪贴板失败:', clipboardError)
+              }
+
               await resetScreenshot()
             } catch (error) {
               await resetScreenshot()

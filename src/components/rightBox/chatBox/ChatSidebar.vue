@@ -15,7 +15,9 @@
       @click.stop="isCollapsed = !isCollapsed"
       style="border-radius: 18px 0 0 18px"
       class="contraction transition-all duration-600 ease-in-out absolute top-35% left--14px cursor-pointer opacity-0 bg-#c8c8c833 h-60px w-14px">
-      <svg :class="isCollapsed ? 'rotate-0' : 'rotate-180'" class="size-16px color-#909090 absolute top-38%">
+      <svg
+        :class="isCollapsed ? 'rotate-0' : 'rotate-180'"
+        class="size-16px color-#909090 dark:color-#303030 absolute top-38%">
         <use href="#left-arrow"></use>
       </svg>
     </div>
@@ -210,7 +212,7 @@ const searchRef = ref('')
 /** List中的Popover组件实例 */
 const infoPopoverRefs = ref<Record<string, any>>([])
 const inputInstRef = ref<InputInst | null>(null)
-const isCollapsed = ref(true)
+const isCollapsed = ref(false)
 const { optionsList, report, selectKey } = useChatMain()
 const { handlePopoverUpdate, enableScroll } = usePopover(selectKey, 'image-chat-sidebar')
 provide('popoverControls', { enableScroll })
