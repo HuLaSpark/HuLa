@@ -191,6 +191,7 @@ import { useLogin } from '@/hooks/useLogin.ts'
 import { useMitt } from '@/hooks/useMitt'
 import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
+import { getEnhancedFingerprint } from '@/services/fingerprint'
 import type { UserInfoType } from '@/services/types.ts'
 import rustWebSocketClient from '@/services/webSocketRust'
 import { WsResponseMessageType } from '@/services/wsType'
@@ -324,12 +325,17 @@ const normalLogin = async (auto = false) => {
   const loginInfo = auto ? (userStore.userInfo as UserInfoType) : info.value
   const { account } = loginInfo
 
+  // 存储此次登陆设备指纹
+  const clientId = await getEnhancedFingerprint()
+  localStorage.setItem('clientId', clientId)
+
   invoke('login_command', {
     data: {
       account: account,
       password: info.value.password,
       deviceType: 'PC',
       systemType: '2',
+      clientId: clientId,
       grantType: 'PASSWORD',
       isAutoLogin: auto,
       uid: auto ? userStore.userInfo.uid : null

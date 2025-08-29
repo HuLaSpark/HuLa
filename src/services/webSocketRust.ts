@@ -2,7 +2,6 @@ import { invoke } from '@tauri-apps/api/core'
 import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 import { error, info, warn } from '@tauri-apps/plugin-log'
 import { useMitt } from '@/hooks/useMitt'
-import { getEnhancedFingerprint } from '@/services/fingerprint'
 import { WsResponseMessageType } from '@/services/wsType'
 
 /// WebSocket 连接状态
@@ -104,7 +103,7 @@ class RustWebSocketClient {
    */
   async initConnect(): Promise<void> {
     try {
-      const clientId = await getEnhancedFingerprint()
+      const clientId = localStorage.getItem('clientId')
       const savedProxy = localStorage.getItem('proxySettings')
 
       let serverUrl = import.meta.env.VITE_WEBSOCKET_URL

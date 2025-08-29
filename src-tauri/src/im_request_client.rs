@@ -552,6 +552,7 @@ mod test {
             "systemType": "2",
             "deviceType": "MOBILE",
             "account": "ql",
+            "client_id": "testClientId",
             "password": "123456"
         });
         let login_req: LoginReq = serde_json::from_value(login_req)?;

@@ -27,6 +27,7 @@ pub struct LoginReq {
     pub grant_type: String,
     pub system_type: String,
     pub device_type: String,
+    pub client_id: String,
     pub account: String,
     pub password: String,
     #[serde(default)]
