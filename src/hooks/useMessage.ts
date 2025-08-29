@@ -91,23 +91,7 @@ export const useMessage = () => {
   const handleMsgDblclick = (item: SessionItem) => {
     if (!chat.value.isDouble) return
     console.log(item)
-
-    // delay(async () => {
-    //   await openAloneWin(item)
-    // }, 300)
   }
-
-  /** 打开独立窗口 */
-  // const openAloneWin = async (item: SessionItem) => {
-  //   itemRef.value = { ...item }
-  //   if (globalStore.currentSession.roomId === item.roomId) {
-  //     useMitt.emit(MittEnum.MSG_BOX_SHOW, { item: -1 })
-  //     await listen('aloneWin', () => {
-  //       emit('aloneData', { item: { ...item } })
-  //     })
-  //   }
-  //   await createWebviewWindow(item.name, EventEnum.ALONE + item.roomId, 720, 800, '', true, 580)
-  // }
 
   const menuList = ref<OPT.RightMenu[]>([
     {
