@@ -5,8 +5,7 @@
     class="relative z-999 flex-y-center border-b-(1px solid [--right-chat-footer-line-color]) select-none cursor-default justify-between p-[6px_22px_10px]">
     <n-flex align="center">
       <Transition name="loading" mode="out-in">
-        <img v-if="headerLoading" class="size-22px py-3px" src="@/assets/img/loading.svg" alt="" />
-        <n-flex v-else align="center">
+        <n-flex align="center">
           <n-avatar
             :class="['rounded-8px select-none grayscale', { 'grayscale-0': isOnline }]"
             :size="28"
@@ -474,11 +473,6 @@ const isEditingGroupName = ref(false)
 const editingGroupName = ref('')
 // 群名称输入框引用
 const groupNameInputRef = useTemplateRef<HTMLInputElement | null>('groupNameInputRef')
-// 创建一个RTCPeerConnection实例
-// let peerConnection: RTCPeerConnection
-// if (type() !== 'linux') {
-//   peerConnection = new RTCPeerConnection()
-// }
 
 const messageSettingType = computed(() => {
   // 群消息设置只在免打扰模式下有意义
@@ -492,7 +486,6 @@ const messageSettingOptions = ref([
   { label: '接收消息但不提醒', value: 'notification' },
   { label: '屏蔽消息', value: 'shield' }
 ])
-const MIN_LOADING_TIME = 300 // 最小加载时间（毫秒）
 /** 是否在线 */
 const isOnline = computed(() => {
   if (activeItem.type === RoomTypeEnum.GROUP) return true
@@ -505,7 +498,6 @@ const shouldShowDeleteFriend = computed(() => {
   return contactStore.contactsList.some((item) => item.uid === activeItem.detailId)
 })
 const groupUserList = computed(() => groupStore.userList)
-const messageOptions = computed(() => chatStore.currentMessageOptions)
 const userList = computed(() => {
   return groupUserList.value
     .map((item: UserItem) => {
@@ -582,47 +574,14 @@ const {
 
 // 监听消息加载状态变化
 watch(
-  () => messageOptions.value?.isLoading,
+  () => chatStore.currentMessageOptions?.isLoading,
   (isLoading) => {
-    if (isLoading) {
-      headerLoading.value = true
-    } else if (headerLoading.value) {
-      setTimeout(() => (headerLoading.value = false), MIN_LOADING_TIME)
-    }
+    headerLoading.value = isLoading!
   },
   { immediate: true }
 )
 
-watch(
-  () => activeItem.roomId,
-  () => {
-    if (messageOptions.value?.isLoading) {
-      headerLoading.value = true
-    }
-    // 当roomId变化时，如果是群聊，则获取群组详情
-    if (activeItem.type === RoomTypeEnum.GROUP) {
-      fetchGroupDetail()
-    }
-  }
-)
-// watch(
-//   () => groupStore.userList,
-//   () => {
-//     // 当群成员列表更新时，重新检查当前用户的权限
-//     if (activeItem.type === RoomTypeEnum.GROUP) {
-//       const currentUser = groupStore.userList.find((user) => user.uid === userStore.userInfo.uid)
-//       if (currentUser && currentUser.roleId) {
-//         groupDetail.value.roleId = currentUser.roleId
-//       }
-//     }
-//   },
-//   { deep: true }
-// )
-
 watchEffect(() => {
-  if (!messageOptions.value?.isLoading && headerLoading.value) {
-    headerLoading.value = false
-  }
   stream.value?.getVideoTracks()[0]?.addEventListener('ended', () => {
     stop()
   })
@@ -654,14 +613,6 @@ const handleCreateGroup = () => {
 const handleInvite = async () => {
   // 使用封装后的createModalWindow方法创建模态窗口
   await createModalWindow('邀请好友进群', 'modal-invite', 600, 500, 'home')
-}
-
-// 获取群组详情
-const fetchGroupDetail = async () => {
-  if (!activeItem.roomId || activeItem.type !== RoomTypeEnum.GROUP) return
-  const data = await groupStore.getCountStatistic(globalStore.currentSession!.roomId)
-  console.log('群组详情', data)
-  groupDetail.value.groupRemark = data.remark
 }
 
 // 更新群聊信息（昵称或备注）
@@ -980,12 +931,7 @@ const handleVideoCall = async (remotedUid: string, callType: CallTypeEnum) => {
 
 onMounted(() => {
   window.addEventListener('click', closeMenu, true)
-  if (!messageOptions.value?.isLoading) headerLoading.value = false
-
-  // 如果是群聊，初始化时获取群组详情
-  if (activeItem.type === RoomTypeEnum.GROUP) {
-    fetchGroupDetail()
-  }
+  if (!chatStore.currentMessageOptions?.isLoading) headerLoading.value = false
 
   useMitt.on(WsResponseMessageType.VideoCallRequest, (event) => {
     info(`收到通话请求：${JSON.stringify(event)}`)

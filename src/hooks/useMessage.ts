@@ -8,6 +8,7 @@ import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { exitGroup, markMsgRead, notification, setSessionTop, shield } from '@/utils/ImRequestUtils'
+import { useGroupStore } from '../stores/group'
 import { invokeWithErrorHandler } from '../utils/TauriInvokeHandler'
 import { useTauriListener } from './useTauriListener'
 
@@ -24,6 +25,7 @@ export const useMessage = () => {
   const settingStore = useSettingStore()
   const { chat } = storeToRefs(settingStore)
   const contactStore = useContactStore()
+  const groupStore = useGroupStore()
   /** 监听独立窗口关闭事件 */
   watchEffect(() => {
     useMitt.on(MittEnum.SHRINK_WINDOW, async (event: any) => {
@@ -32,15 +34,16 @@ export const useMessage = () => {
   })
 
   /** 处理点击选中消息 */
-  const handleMsgClick = (item: SessionItem) => {
+  const handleMsgClick = async (item: SessionItem) => {
     msgBoxShow.value = true
     // 更新当前会话信息
     globalStore.updateCurrentSession(item)
-    const data = { msgBoxShow, item }
+    if (item.type === RoomTypeEnum.GROUP) {
+      await groupStore.getCountStatistic(globalStore.currentSession!.roomId)
+    }
     console.log('handleMsgClick:', item)
-    useMitt.emit(MittEnum.MSG_BOX_SHOW, data)
-
     console.log('已点击', route.path)
+    await chatStore.changeRoom()
 
     // 只有在消息页面且有未读消息时，才标记为已读
     if ((route.path === '/message' || route.path === '/mobile/message') && item.unreadCount > 0) {
@@ -75,12 +78,6 @@ export const useMessage = () => {
     }
 
     const updatedSessions = chatStore.sessionList
-
-    // 如果没有会话就把右侧消息框关闭
-    if (updatedSessions.length === 0) {
-      useMitt.emit(MittEnum.MSG_BOX_SHOW, { item: -1 })
-      return
-    }
 
     // 选择下一个或上一个会话
     const nextIndex = Math.min(currentIndex, updatedSessions.length - 1)
@@ -327,8 +324,6 @@ export const useMessage = () => {
   })
 
   onBeforeUnmount(() => {
-    // 取消监听, 避免内存中还存在监听，导致请求次数过多
-    useMitt.off(MittEnum.MSG_BOX_SHOW, () => {})
     useMitt.off(MittEnum.SHRINK_WINDOW, () => {})
   })
 

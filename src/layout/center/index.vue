@@ -199,10 +199,6 @@ watchEffect(() => {
   }
   if (width.value >= 800) {
     useMitt.emit(MittEnum.SHRINK_WINDOW, false)
-    // TODO: 因为拖动后要重新加载所以这里会监听两次，后续优化
-    // if (currentMsg.value) {
-    //   useMitt.emit(MittEnum.MSG_BOX_SHOW, { msgBoxShow: true, ...currentMsg.value })
-    // }
     const center = document.querySelector('#center')
     center?.classList.remove('flex-1')
     isDrag.value = true

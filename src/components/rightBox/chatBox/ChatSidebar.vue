@@ -481,9 +481,6 @@ onMounted(async () => {
         }
       }
     }
-
-    // 为不同事件注册处理函数
-    // useMitt.on(MittEnum.MSG_BOX_SHOW, handleAnnounInitOnEvent(false))
     // 监听群公告消息
     useMitt.on(WsResponseMessageType.ROOM_GROUP_NOTICE_MSG, handleAnnounInitOnEvent(true))
     useMitt.on(WsResponseMessageType.ROOM_EDIT_GROUP_NOTICE_MSG, handleAnnounInitOnEvent(true))
