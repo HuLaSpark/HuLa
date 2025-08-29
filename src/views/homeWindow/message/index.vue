@@ -207,11 +207,6 @@ watch(
 
       // 判断是否是群聊
       if (newVal.type === RoomTypeEnum.GROUP) {
-        // 在这里请求是因为这里一开始选中就会触发，而在chat.ts中则需要切换会话才会触发
-        // await groupStore.getCountStatistic()
-        // 同时获取群成员列表，确保首次加载时也能显示群成员
-        // await groupStore.getGroupUserList(true, newVal.roomId)
-        // 将群组详情信息传递给handleMsgClick方法
         const sessionItem = {
           ...newVal,
           memberNum: groupStore.countInfo?.memberNum,
