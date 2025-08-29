@@ -62,16 +62,19 @@ export function useCanvasTool(drawCanvas: any, drawCtx: any, imgCtx: any, screen
       screenConfig.value.endY
     )
 
-    // 对于马赛克工具，需要考虑边框宽度偏移，避免涂抹到选区边框
+    // 对于马赛克工具，需要考虑边框宽度和画笔半径偏移，避免涂抹到选区边框
     if (currentTool.value === 'mosaic') {
-      const borderWidth = 3
+      const borderWidth = 2
+      const halfBrushSize = drawConfig.value.brushSize / 2
+      const safeMargin = borderWidth + halfBrushSize
+
       limitedX = Math.min(
-        Math.max(offsetX * drawConfig.value.scaleX, screenConfig.value.startX + borderWidth),
-        screenConfig.value.endX - borderWidth
+        Math.max(offsetX * drawConfig.value.scaleX, screenConfig.value.startX + safeMargin),
+        screenConfig.value.endX - safeMargin
       )
       limitedY = Math.min(
-        Math.max(offsetY * drawConfig.value.scaleY, screenConfig.value.startY + borderWidth),
-        screenConfig.value.endY - borderWidth
+        Math.max(offsetY * drawConfig.value.scaleY, screenConfig.value.startY + safeMargin),
+        screenConfig.value.endY - safeMargin
       )
     }
 
@@ -203,15 +206,18 @@ export function useCanvasTool(drawCanvas: any, drawCtx: any, imgCtx: any, screen
 
   // 实时马赛克涂抹
   const drawMosaic = (context: any, x: any, y: any, size: any) => {
-    // 确保马赛克绘制区域不会超出选区边界（考虑边框）
+    // 确保马赛克绘制区域不会超出选区边界（考虑边框和画笔半径）
     const borderWidth = 2
     const halfSize = size / 2
 
+    // 考虑画笔半径的安全边距，确保画笔边缘不会涂抹到边框
+    const safeMargin = borderWidth + halfSize
+
     // 计算实际绘制区域，确保完全在选区内容区域内
-    const drawX = Math.max(x - halfSize, screenConfig.value.startX + borderWidth)
-    const drawY = Math.max(y - halfSize, screenConfig.value.startY + borderWidth)
-    const maxDrawX = Math.min(x + halfSize, screenConfig.value.endX - borderWidth)
-    const maxDrawY = Math.min(y + halfSize, screenConfig.value.endY - borderWidth)
+    const drawX = Math.max(x - halfSize, screenConfig.value.startX + safeMargin)
+    const drawY = Math.max(y - halfSize, screenConfig.value.startY + safeMargin)
+    const maxDrawX = Math.min(x + halfSize, screenConfig.value.endX - safeMargin)
+    const maxDrawY = Math.min(y + halfSize, screenConfig.value.endY - safeMargin)
 
     // 计算实际绘制尺寸
     const drawWidth = Math.max(0, maxDrawX - drawX)
