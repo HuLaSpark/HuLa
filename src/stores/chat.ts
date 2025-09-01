@@ -458,6 +458,7 @@ export const useChatStore = defineStore(
 
     // 更新所有标记类型的数量
     const updateMarkCount = async (markList: MarkItemType[]) => {
+      info('保存消息标记到本地数据库')
       for (const mark of markList) {
         const { msgId, markType, markCount, actType, uid } = mark
 

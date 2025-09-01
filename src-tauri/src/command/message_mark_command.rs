@@ -49,7 +49,12 @@ pub async fn save_message_mark(
                             message_mark.user_marked = true
                         }
                     }
-                    Entry::Vacant(_) => {}
+                    Entry::Vacant(_) => {
+                      message_marks.insert(data.mark_type.to_string(), MessageMark {
+                        count: data.mark_count,
+                        user_marked: data.uid == message.login_uid,
+                      });
+                    }
                 }
 
                 let new_message_marks = serde_json::to_string(&message_marks)
