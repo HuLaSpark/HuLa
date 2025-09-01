@@ -120,7 +120,7 @@
         <div v-if="isEditingRemark" class="flex items-center">
           <n-input
             ref="remarkInputRef"
-            v-model:value="remarkValue"
+            v-model:value="item.remark"
             size="tiny"
             class="border-(1px solid #90909080)"
             placeholder="请输入群聊备注"
@@ -218,7 +218,6 @@ const options = ref<Array<{ name: string; src: string }>>([])
 
 // 编辑群备注相关状态
 const isEditingRemark = ref(false)
-const remarkValue = ref('')
 const remarkInputRef = useTemplateRef('remarkInputRef')
 
 // 编辑本群昵称相关状态
@@ -228,14 +227,13 @@ const nicknameInputRef = useTemplateRef('nicknameInputRef')
 const cacheStore = useCachedStore()
 const groupStore = useGroupStore()
 
-watchEffect(() => {
+watchEffect(async () => {
   if (content.type === RoomTypeEnum.SINGLE) {
     item.value = useUserInfo(content.uid).value
   } else {
-    getGroupDetail(content.uid)
+    await getGroupDetail(content.uid)
       .then((response: any) => {
         item.value = response
-        remarkValue.value = response.remark || ''
         nicknameValue.value = response.myName || ''
         if (item.value && item.value.roomId) {
           fetchGroupMembers(item.value.roomId)
@@ -249,7 +247,6 @@ watchEffect(() => {
 
 // 开始编辑群备注
 const startEditRemark = () => {
-  remarkValue.value = item.value.remark || ''
   isEditingRemark.value = true
   nextTick(() => {
     remarkInputRef.value?.focus()
@@ -258,15 +255,12 @@ const startEditRemark = () => {
 
 // 处理群备注更新
 const handleRemarkUpdate = async () => {
-  if (remarkValue.value !== item.value.remark) {
-    await cacheStore.updateMyRoomInfo({
-      id: item.value.roomId,
-      remark: remarkValue.value,
-      myName: item.value.myName || ''
-    })
-    item.value.remark = remarkValue.value
-    window.$message.success('群备注更新成功')
-  }
+  await cacheStore.updateMyRoomInfo({
+    id: item.value.roomId,
+    remark: item.value.remark,
+    myName: item.value.myName || ''
+  })
+  window.$message.success('群备注更新成功')
   isEditingRemark.value = false
 }
 
@@ -284,7 +278,7 @@ const handleNicknameUpdate = async () => {
   if (nicknameValue.value !== item.value.myName) {
     await cacheStore.updateMyRoomInfo({
       id: item.value.roomId,
-      remark: remarkValue.value,
+      remark: item.value.remark,
       myName: item.value.myName || ''
     })
     item.value.myName = nicknameValue.value
