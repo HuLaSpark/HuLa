@@ -436,7 +436,7 @@
     <template #footer>
       <FooterBar></FooterBar>
 
-      <!-- <SafeAreaPlaceholder ref="keyBoardRef" type="keyboard" direction="bottom" /> -->
+      <SafeAreaPlaceholder ref="keyBoardRef" type="keyboard" direction="bottom" />
     </template>
   </AutoFixHeightPage>
 </template>

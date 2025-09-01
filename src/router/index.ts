@@ -9,6 +9,7 @@ import {
 } from 'vue-router'
 import ChatRoomLayout from '#/layout/chat-room/ChatRoomLayout.vue'
 import NoticeLayout from '#/layout/chat-room/NoticeLayout.vue'
+import FriendsLayout from '#/layout/friends/FriendsLayout.vue'
 import MobileHome from '#/layout/index.vue'
 import MyLayout from '#/layout/my/MyLayout.vue'
 import MobileLogin from '#/login.vue'
@@ -18,7 +19,9 @@ import NoticeDetail from '#/views/chat-room/notice/NoticeDetail.vue'
 import NoticeEdit from '#/views/chat-room/notice/NoticeEdit.vue'
 import NoticeList from '#/views/chat-room/notice/NoticeList.vue'
 import MobileCommunity from '#/views/community/index.vue'
+import AddFriends from '#/views/friends/AddFriends.vue'
 import MobileFriendPage from '#/views/friends/index.vue'
+import StartGroupChat from '#/views/friends/StartGroupChat.vue'
 import MobileMessagePage from '#/views/message/index.vue'
 import EditBio from '#/views/my/EditBio.vue'
 import EditBirthday from '#/views/my/EditBirthday.vue'
@@ -185,6 +188,28 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
         path: 'SimpleBio',
         name: 'mobileSimpleBio',
         component: SimpleBio
+      }
+    ]
+  },
+  {
+    path: '/mobile/mobileFriends',
+    name: 'mobileMyLayout',
+    component: FriendsLayout,
+    children: [
+      {
+        path: '',
+        name: 'mobileMyDefault',
+        redirect: '/mobile/mobileFriends/addFriends'
+      },
+      {
+        path: 'addFriends',
+        name: 'mobileAddFriends',
+        component: AddFriends
+      },
+      {
+        path: 'startGroupChat',
+        name: 'mobileStartGroupChat',
+        component: StartGroupChat
       }
     ]
   }

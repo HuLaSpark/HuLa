@@ -14,7 +14,7 @@
     </div>
 
     <!-- 底部安全区域占位元素 -->
-    <SafeAreaPlaceholder type="layout" class="bg-#FAFAFA" direction="bottom" />
+    <SafeAreaPlaceholder type="layout" class="" direction="bottom" />
   </div>
 </template>
 
@@ -25,7 +25,7 @@ import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.v
 const route = useRoute()
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 /* 侧滑切换动画 */
 .slide-enter-active,
 .slide-leave-active {

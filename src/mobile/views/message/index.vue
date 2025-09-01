@@ -224,12 +224,12 @@ const uiViewsData = ref({
   addOptions: [
     {
       label: '发起群聊',
-      key: 'profile',
+      key: '/mobile/mobileFriends/startGroupChat',
       icon: renderImgIcon(groupChatIcon)
     },
     {
       label: '加好友/群',
-      key: 'editProfile',
+      key: '/mobile/mobileFriends/addFriends',
       icon: renderImgIcon(addFriendIcon)
     }
   ]
@@ -285,7 +285,9 @@ const addIconHandler = {
   /**
    * 选项选择时关闭蒙板
    */
-  select: () => {
+  select: (item: string) => {
+    console.log('选择的项：', item)
+    router.push(item)
     maskHandler.close()
   },
 

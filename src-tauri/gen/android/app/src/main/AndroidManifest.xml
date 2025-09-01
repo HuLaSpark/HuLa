@@ -17,9 +17,9 @@
             android:label="@string/main_activity_title"
             android:name=".MainActivity"
             android:exported="true"
-            android:windowSoftInputMode="adjustResize"
-            android:theme="@style/Theme.hula"
-            android:screenOrientation="portrait">
+            android:resizeableActivity="true"
+            android:windowSoftInputMode="adjustNothing"
+            android:theme="@style/Theme.hula">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
