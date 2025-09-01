@@ -128,6 +128,13 @@ export const useGroupStore = defineStore(
       return groupDetails.value.find((item: GroupDetailReq) => item.roomId === globalStore.currentSession!.roomId)
     })
 
+    const updateGroupTotalNum = (roomId: string, totalNum: number) => {
+      const group = groupDetails.value.find((item) => item.roomId === roomId)
+      if (group) {
+        group.memberNum = totalNum
+      }
+    }
+
     /**
      * 获取群成员列表
      * @param roomId 群聊房间ID
@@ -446,7 +453,8 @@ export const useGroupStore = defineStore(
       myRoleIdInCurrentGroup,
       setGroupDetails,
       updateGroupDetail,
-      groupDetails
+      groupDetails,
+      updateGroupTotalNum
     }
   },
   {
