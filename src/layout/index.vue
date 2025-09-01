@@ -30,15 +30,7 @@ import { emitTo, listen } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
-import {
-  ChangeTypeEnum,
-  MittEnum,
-  ModalEnum,
-  NotificationTypeEnum,
-  OnlineEnum,
-  RoomTypeEnum,
-  TauriCommand
-} from '@/enums'
+import { ChangeTypeEnum, MittEnum, ModalEnum, NotificationTypeEnum, OnlineEnum, TauriCommand } from '@/enums'
 import { useCheckUpdate } from '@/hooks/useCheckUpdate'
 import { useMitt } from '@/hooks/useMitt.ts'
 import type { MarkItemType, MessageType, RevokedMsgType, UserItem } from '@/services/types.ts'
@@ -325,44 +317,79 @@ useMitt.on(
 )
 useMitt.on(
   WsResponseMessageType.WS_MEMBER_CHANGE,
-  async (param: { roomId: string; changeType: ChangeTypeEnum; userList: UserItem[] }) => {
+  async (param: { roomId: string; changeType: ChangeTypeEnum; userList: UserItem[]; totalNum: number }) => {
     info('监听到群成员变更消息')
-    // changeType 1 加入群组，2： 移除群组
-    if (param.roomId === globalStore.currentSession?.roomId && globalStore.currentSession.type === RoomTypeEnum.GROUP) {
-      if (param.changeType === ChangeTypeEnum.REMOVE || param.changeType === ChangeTypeEnum.EXIT_GROUP) {
-        // 移除群成员
-        param.userList.forEach((item) => {
-          // 如果移除的是自己，则删除会话
-          if (item.uid === userStore.userInfo.uid) {
-            info('本人退出群聊，移除会话数据')
-            chatStore.removeSession(param.roomId)
-            groupStore.removeAllUsers(param.roomId)
-
-            if (globalStore.currentSession?.roomId === param.roomId) {
-              globalStore.updateCurrentSession(chatStore.sessionList[0])
-            }
-          } else {
-            info('群成员退出群聊，移除群内的成员数据')
-            // 移除该群中的群成员数据
-            groupStore.removeUserItem(item.uid, param.roomId)
-          }
-        })
-        // TODO 添加一条退出群聊的消息
-      } else {
-        param.userList.forEach((item) => {
-          // 如果是自己加入群聊，则需要添加新的会话
-          if (item.uid === userStore.userInfo.uid) {
-            info('本人加入群聊，加载该群聊的会话数据')
-          } else {
-            info('群成员加入群聊，添加群成员数据')
-            groupStore.addUserItem(item, param.roomId)
-          }
-        })
-        // TODO 添加一条入群的消息
-      }
+    const isRemoveAction = param.changeType === ChangeTypeEnum.REMOVE || param.changeType === ChangeTypeEnum.EXIT_GROUP
+    if (isRemoveAction) {
+      await handleMemberRemove(param.userList, param.roomId)
+    } else {
+      await handleMemberAdd(param.userList, param.roomId)
     }
+
+    // 更新群内的总人数
+    groupStore.updateGroupTotalNum(param.roomId, param.totalNum)
   }
 )
+
+// 处理群成员添加
+const handleMemberAdd = async (userList: UserItem[], roomId: string) => {
+  for (const user of userList) {
+    if (isSelfUser(user.uid)) {
+      await handleSelfAdd(roomId)
+    } else {
+      await handleOtherMemberAdd(user, roomId)
+    }
+  }
+}
+
+// 处理自己加入群聊
+const handleSelfAdd = async (_roomId: string) => {
+  info('本人加入群聊，加载该群聊的会话数据')
+  // TODO: 可以在这里添加加载会话数据的逻辑
+}
+
+// 处理其他成员加入群聊
+const handleOtherMemberAdd = async (user: UserItem, roomId: string) => {
+  info('群成员加入群聊，添加群成员数据')
+  groupStore.addUserItem(user, roomId)
+}
+
+// 处理群成员移除
+const handleMemberRemove = async (userList: UserItem[], roomId: string) => {
+  for (const user of userList) {
+    if (isSelfUser(user.uid)) {
+      await handleSelfRemove(roomId)
+    } else {
+      await handleOtherMemberRemove(user.uid, roomId)
+    }
+  }
+}
+
+// 检查是否为当前用户
+const isSelfUser = (uid: string): boolean => {
+  return uid === userStore.userInfo.uid
+}
+
+// 处理自己被移除
+const handleSelfRemove = async (roomId: string) => {
+  info('本人退出群聊，移除会话数据')
+
+  // 移除会话和群成员数据
+  chatStore.removeSession(roomId)
+  groupStore.removeAllUsers(roomId)
+
+  // 如果当前会话就是被移除的群聊，切换到其他会话
+  if (globalStore.currentSession?.roomId === roomId) {
+    globalStore.updateCurrentSession(chatStore.sessionList[0])
+  }
+}
+
+// 处理其他成员被移除
+const handleOtherMemberRemove = async (uid: string, roomId: string) => {
+  info('群成员退出群聊，移除群内的成员数据')
+  groupStore.removeUserItem(uid, roomId)
+}
+
 useMitt.on(WsResponseMessageType.REQUEST_APPROVAL_FRIEND, async () => {
   // 刷新好友列表以获取最新状态
   await contactStore.getContactList(true)
