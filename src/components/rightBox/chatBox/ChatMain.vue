@@ -844,7 +844,11 @@ const getEmojiCount = (item: any, emojiType: number): number => {
 
 // 处理表情回应
 const handleEmojiSelect = async (context: { label: string; value: number; title: string }, item: any) => {
-  if (!item || !item.message || !item.message.messageMarks) return
+  if (!item || !item.message) return
+
+  if (!item.message.messageMarks) {
+    item.message.messageMarks = {}
+  }
 
   // 检查该表情是否已被当前用户标记
   const userMarked = item.message.messageMarks[String(context.value)]?.userMarked
