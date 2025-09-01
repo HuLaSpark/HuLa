@@ -1,6 +1,6 @@
 <template>
-  <!-- 视频通话消息 -->
-  <div class="select-none cursor-default text-(12px #909090)">
+  <!-- 系统消息 -->
+  <div class="flex-col-y-center h-62px select-none cursor-default text-(12px #909090)">
     {{ props.body }}
   </div>
 </template>

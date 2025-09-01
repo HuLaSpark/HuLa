@@ -1,7 +1,6 @@
 <template>
   <!-- 消息为机器人消息时 -->
   <div
-    v-if="message.type === MsgEnum.BOT"
     class="dark:bg-[#fbb99020] bg-[#fbb99030] dark:border-(1px solid #fbb99020) border-(1px solid #fbb99040) flex-center gap-8px px-12px py-4px rounded-8px">
     <n-avatar class="select-none" round :size="22" :src="getAvatarSrc(fromUserUid)" />
     <div
@@ -17,7 +16,6 @@
 </template>
 
 <script setup lang="ts">
-import { MsgEnum } from '@/enums'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'

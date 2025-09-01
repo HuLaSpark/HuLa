@@ -1,6 +1,6 @@
 <template>
   <!--  消息为撤回消息  -->
-  <div v-if="message.type === MsgEnum.RECALL">
+  <div>
     <template v-if="isGroup">
       <n-flex align="center" :size="6" v-if="fromUserUid === userUid">
         <p class="text-(12px #909090) select-none cursor-default">你撤回了一条消息</p>
@@ -51,6 +51,9 @@ const canReEdit = computed(() => (msgId: string) => {
   const recalledMsg = chatStore.getRecalledMessage(msgId)
   const message = chatStore.getMessage(msgId)
   if (!recalledMsg || !message) return false
+
+  // 只有文本类型的撤回消息才能重新编辑
+  if (recalledMsg.originalType !== MsgEnum.TEXT) return false
 
   // 只需要判断是否是当前用户的消息，时间检查已经在 getRecalledMessage 中处理
   return message.fromUser.uid === userUid.value
