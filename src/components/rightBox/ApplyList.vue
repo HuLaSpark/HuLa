@@ -76,27 +76,8 @@
       </template>
     </n-virtual-list>
 
-    <!-- 加载更多提示 -->
-    <n-flex v-if="contactStore.applyPageOptions.isLoading" justify="center" class="py-10px">
-      <n-spin size="small" />
-      <span class="text-(12px [--text-color]) ml-8px">加载中...</span>
-    </n-flex>
-
-    <!-- 没有更多数据提示 -->
-    <n-flex
-      v-else-if="contactStore.applyPageOptions.isLast && contactStore.requestFriendsList.length > 0"
-      justify="center"
-      class="py-10px">
-      <span class="text-(12px [--text-color])">没有更多好友申请了</span>
-    </n-flex>
-
     <!-- 空数据提示 -->
-    <n-flex
-      v-else-if="contactStore.requestFriendsList.length === 0"
-      vertical
-      justify="center"
-      align="center"
-      class="py-40px">
+    <n-flex v-if="applyList.length === 0" vertical justify="center" align="center" class="py-40px">
       <n-empty description="暂无好友申请" />
     </n-flex>
   </n-flex>
@@ -180,7 +161,7 @@ const handleScroll = (e: Event) => {
 // 加载更多好友申请
 const loadMoreFriendRequests = async () => {
   // 如果已经是最后一页或正在加载中，则不再加载
-  if (contactStore.applyPageOptions.isLast || contactStore.applyPageOptions.isLoading) {
+  if (contactStore.applyPageOptions.isLast) {
     return
   }
 

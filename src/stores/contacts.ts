@@ -23,7 +23,7 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
   /** 联系人列表分页选项 */
   const contactsOptions = ref({ isLast: false, isLoading: false, cursor: '' })
   /** 好友请求列表分页选项 */
-  const applyPageOptions = ref({ isLast: false, isLoading: false, cursor: '', pageNo: 1 })
+  const applyPageOptions = ref({ isLast: false, cursor: '', pageNo: 1 })
 
   /**
    * 获取联系人列表
@@ -69,11 +69,8 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
   const getApplyPage = async (isFresh = false) => {
     // 非刷新模式下，如果已经加载完或正在加载中，则直接返回
     if (!isFresh) {
-      if (applyPageOptions.value.isLast || applyPageOptions.value.isLoading) return
+      if (applyPageOptions.value.isLast) return
     }
-
-    // 设置加载状态
-    applyPageOptions.value.isLoading = true
 
     // 刷新时重置页码
     if (isFresh) {
@@ -107,8 +104,6 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
       }
     } catch (error) {
       console.error('获取好友申请列表失败:', error)
-    } finally {
-      applyPageOptions.value.isLoading = false
     }
   }
 

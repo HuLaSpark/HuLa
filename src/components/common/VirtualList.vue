@@ -6,10 +6,16 @@
     @scroll.passive="handleScroll"
     @mouseenter="handleMouseEnter"
     @mouseleave="handleMouseLeave">
-    <n-flex v-if="!isLoadingMore && isLast" justify="center" class="box-border absolute-x-center pt-10px">
+    <n-flex
+      v-if="!isLoadingMore && isLast"
+      justify="center"
+      class="box-border absolute top-0 left-1/2 transform -translate-x-1/2 w-full h-fit pt-10px z-0">
       <span class="text-(12px #909090)">以下是全部消息内容</span>
     </n-flex>
-    <n-flex v-if="isLoadingMore && !isLast" justify="center" class="box-border absolute-x-center pt-10px">
+    <n-flex
+      v-if="isLoadingMore && !isLast"
+      justify="center"
+      class="box-border absolute top-0 left-1/2 transform -translate-x-1/2 w-full h-fit pt-10px z-0">
       <img class="size-16px" src="@/assets/img/loading.svg" alt="" />
       <span class="text-(14px #909090)">加载中</span>
     </n-flex>
@@ -428,8 +434,9 @@ const updateVisibleRange = () => {
 
   // 更新可见范围和偏移量
   visibleRange.value = { start, end }
-  // 仅在历史加载时加上顶部占位偏移，避免非加载场景的跳变
-  const newOffset = getOffsetForIndex(start) + (props.isLoadingMore && !props.isLast ? LOADING_OFFSET : 0)
+  // 计算偏移量，为顶部提示预留32px空间（当显示时）
+  const topOffset = (!props.isLoadingMore && props.isLast) || (props.isLoadingMore && !props.isLast) ? 32 : 0
+  const newOffset = getOffsetForIndex(start) + (props.isLoadingMore && !props.isLast ? LOADING_OFFSET : 0) + topOffset
   offset = newOffset
   updateContentOffset(newOffset)
 }
@@ -721,5 +728,6 @@ defineExpose<VirtualListExpose>({
   transform: translateZ(0); /* 启用GPU加速 */
   backface-visibility: hidden; /* 防止闪烁 */
   perspective: 1000; /* 增强3D效果 */
+  z-index: 1; /* 确保内容在提示文字之上 */
 }
 </style>

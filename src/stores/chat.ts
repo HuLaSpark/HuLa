@@ -22,6 +22,7 @@ type RecalledMessage = {
   messageId: string
   content: string
   recallTime: number
+  originalType: MsgEnum
 }
 
 // 定义每页加载的消息数量
@@ -519,7 +520,8 @@ export const useChatStore = defineStore(
       recalledMessages.set(data.msg.message.id, {
         messageId: data.msg.message.id,
         content: data.msg.message.body.content,
-        recallTime
+        recallTime,
+        originalType: data.msg.message.type
       })
 
       if (data.recallUid === userStore.userInfo.uid) {
