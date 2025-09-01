@@ -98,7 +98,7 @@ export const useReplaceMsg = () => {
     const session = chatStore.getSession(roomId)
     if (session.type === RoomTypeEnum.GROUP) {
       const user = groupStore.getUser(roomId, message.fromUser.uid)
-      return user?.name || user?.myName || ''
+      return user?.myName || user?.name || ''
     } else {
       return useUserInfo(message.fromUser.uid).value.name || defaultName
     }

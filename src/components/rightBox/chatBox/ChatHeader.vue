@@ -263,8 +263,7 @@
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
-              v-model:value="groupDetail.myNickname"
-              @update:value="updateGroupInfo($event, 'nickname')"
+              v-model:value="groupStore.myNameInCurrentGroup"
               @blur="saveGroupInfo" />
             <!-- 群备注 -->
             <p class="flex-start-center gap-10px text-(12px [--chat-text-color]) mt-20px mb-10px">
@@ -273,13 +272,12 @@
             </p>
             <n-input
               class="border-(solid 1px [--line-color]) custom-shadow"
-              v-model:value="groupDetail.groupRemark"
+              v-model:value="groupStore.countInfo!.remark"
               spellCheck="false"
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
-              @blur="saveGroupInfo"
-              @update:value="updateGroupInfo($event, 'remark')" />
+              @blur="saveGroupInfo" />
 
             <!-- 群设置选项 -->
             <div class="box-item cursor-default">
@@ -439,13 +437,6 @@ const modalShow = ref(false)
 const sidebarShow = ref(false)
 const headerLoading = ref(false)
 const cacheStore = useCachedStore()
-
-// 群组详情数据
-const groupDetail = ref({
-  myNickname: groupStore.myNameInCurrentGroup, // 我在本群的昵称
-  groupRemark: groupStore.countInfo?.remark, // 群备注
-  roleId: groupStore.myRoleIdInCurrentGroup // 默认为普通成员
-})
 
 // 是否为频道（仅显示 more 按钮）
 const isChannel = computed(() => activeItem.hotFlag === IsAllUserEnum.Yes || activeItem.roomId === '1')
@@ -615,16 +606,6 @@ const handleInvite = async () => {
   await createModalWindow('邀请好友进群', 'modal-invite', 600, 500, 'home')
 }
 
-// 更新群聊信息（昵称或备注）
-const updateGroupInfo = (value: string, type: 'nickname' | 'remark') => {
-  if (!activeItem.roomId || activeItem.type !== RoomTypeEnum.GROUP) return
-
-  // 只更新本地值，不发送API请求
-  if (type !== 'nickname') {
-    groupDetail.value.groupRemark = value
-  }
-}
-
 // 保存群聊信息
 const saveGroupInfo = async () => {
   if (!activeItem.roomId || activeItem.type !== RoomTypeEnum.GROUP) return
@@ -632,21 +613,16 @@ const saveGroupInfo = async () => {
   // 使用updateMyRoomInfo接口更新我在群里的昵称和群备注
   const myRoomInfo = {
     id: activeItem.roomId,
-    myName: groupDetail.value.myNickname,
-    remark: groupDetail.value.groupRemark!
+    myName: groupStore.myNameInCurrentGroup,
+    remark: groupStore.countInfo?.remark!
   }
   await cacheStore.updateMyRoomInfo(myRoomInfo)
 
   // 发送更新请求
   await updateMyRoomInfo(myRoomInfo)
 
-  // 更新群成员列表
-  groupStore.updateUserItem(userStore.userInfo.uid!, { myName: myRoomInfo.myName }, activeItem.roomId)
   // 更新会话
   chatStore.updateSession(activeItem.roomId, { remark: myRoomInfo.remark })
-  groupStore.updateGroupDetail(activeItem.roomId, {
-    myName: myRoomInfo.myName
-  })
 
   window.$message.success('群聊信息已更新')
 }
