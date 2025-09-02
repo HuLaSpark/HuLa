@@ -144,10 +144,11 @@ import { ThemeEnum } from '@/enums'
 import { RoomTypeEnum } from '@/enums/index.ts'
 import { useBadgeInfo } from '@/hooks/useCached.ts'
 import { useWindow } from '@/hooks/useWindow'
-import type { ContactItem, GroupListReq } from '@/services/types'
+import type { ContactItem, GroupDetailReq } from '@/services/types'
 import { useCachedStore } from '@/stores/cached'
 import { useContactStore } from '@/stores/contacts'
 import { useGlobalStore } from '@/stores/global'
+import { useGroupStore } from '@/stores/group'
 import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
@@ -293,10 +294,10 @@ const handleTypeChange = () => {
     searchResults.value = getCachedUsers()
   }
 }
-
+const groupStore = useGroupStore()
 // 判断是否已加入群聊
 const isInGroup = (roomId: string) => {
-  return contactStore.groupChatList.some((group: GroupListReq) => group.roomId === roomId)
+  return groupStore.groupDetails.some((group: GroupDetailReq) => group.roomId === roomId)
 }
 
 // 通用排序函数

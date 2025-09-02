@@ -238,7 +238,7 @@ HuLa 是一款基于 Tauri、Vite 7、Vue 3 和 TypeScript 构建的即时通讯
 | 功能 | 描述 | 状态 |
 |------|------|------|
 | 💻 | Windows/macOS/Linux | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
-| 📱 | iOS/Android 适配 | ![进行中](https://img.shields.io/badge/🐣-完成60%-ee9f20?style=flat&labelColor=fef7e6&color=ee9f20) |
+| 📱 | iOS/Android 适配 | ![进行中](https://img.shields.io/badge/🐣-进行中-ee9f20?style=flat&labelColor=fef7e6&color=ee9f20) |
 
 ### 🤖 AI 集成
 | 功能 | 描述 | 状态 |
@@ -345,6 +345,7 @@ sudo xattr -r -d com.apple.quarantine /Applications/应用名称.app
 ### 🏆 金牌赞助者 (￥100+)
 | 💝 日期 | 👤 赞助者 | 💰 金额 | 🏷️ 平台 |
 |---------|----------|--------|---------|
+| 2025-08-26 | **唐勇** | `¥200` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-04-25 | **上官俊斌** | `¥200` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-05-27 | **临安居士** | `¥188` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-04-20 | **姜兴(Simon)** | `¥188` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |

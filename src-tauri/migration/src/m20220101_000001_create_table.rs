@@ -220,7 +220,7 @@ enum ImUser {
     Num,
     Context,
     UserType,
-    IsInit,
+    IsInit
 }
 
 #[derive(DeriveIden)]

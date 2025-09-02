@@ -109,7 +109,7 @@ impl WebSocketClient {
     }
 
     /// 内部断开连接方法（不获取锁）
-    async fn internal_disconnect(&self) {
+    pub async fn internal_disconnect(&self) {
         info!("📡 断开 WebSocket 连接");
         self.should_stop.store(true, Ordering::SeqCst);
 
@@ -159,10 +159,10 @@ impl WebSocketClient {
 
                 if let Some(sender) = sender.as_ref() {
                     let message = Message::Text(data.to_string());
-                    sender.send(message).map_err(|e| {
+                    sender.send(message.clone()).map_err(|e| {
                         anyhow::anyhow!("Failed to queue message for sending: {}", e)
                     })?;
-                    debug!("📤 消息已发送");
+                    info!("📤 消息已发送 {:?}", message);
                     Ok(())
                 } else {
                     warn!("📤 连接状态为 Connected 但 sender 未就绪，消息加入待发队列");
@@ -262,13 +262,33 @@ impl WebSocketClient {
 
     /// 主连接循环
     async fn connection_loop(&self) -> Result<()> {
-        while !self.should_stop.load(Ordering::SeqCst) {
+        loop {
+            // 检查是否应该停止
+            if self.should_stop.load(Ordering::SeqCst) {
+                info!("🛑 收到停止信号，退出连接循环");
+                break;
+            }
+
             match self.try_connect().await {
                 Ok(_) => {
                     info!("✅ WebSocket 连接已建立");
                     self.reconnect_attempts.store(0, Ordering::SeqCst);
                     self.is_reconnecting.store(false, Ordering::SeqCst);
-                    break;
+
+                    // 监控连接状态，直到断开
+                    while self.is_ws_connected.load(Ordering::SeqCst)
+                        && !self.should_stop.load(Ordering::SeqCst)
+                    {
+                        sleep(Duration::from_millis(100)).await;
+                    }
+
+                    info!("🔄 连接已断开，准备重连...");
+                    self.is_reconnecting.store(true, Ordering::SeqCst);
+                    self.update_state(ConnectionState::Reconnecting, true).await;
+                    // 清理当前连接状态
+                    self.cleanup_connection_state().await;
+
+                    continue;
                 }
                 Err(e) => {
                     let attempts = self.reconnect_attempts.fetch_add(1, Ordering::SeqCst) + 1;
@@ -284,6 +304,9 @@ impl WebSocketClient {
                             .await;
                         self.is_ws_connected.store(false, Ordering::SeqCst);
                         self.update_state(ConnectionState::Error, false).await;
+
+                        // 重新登录
+                        self.app_handle.emit_to("home", "relogin", ()).unwrap();
                         return Err(anyhow::anyhow!("Max reconnection attempts reached"));
                     }
 
@@ -299,8 +322,24 @@ impl WebSocketClient {
                 }
             }
         }
-
         Ok(())
+    }
+
+    /// 清理连接状态
+    async fn cleanup_connection_state(&self) {
+        // 停止心跳
+        self.heartbeat_active.store(false, Ordering::SeqCst);
+
+        // 清理消息发送器
+        *self.message_sender.write().await = None;
+
+        // 清理关闭信号发送器
+        *self.close_sender.write().await = None;
+
+        // 重置连接状态
+        self.is_ws_connected.store(false, Ordering::SeqCst);
+
+        info!("🧹 连接状态已清理");
     }
 
     /// 尝试建立连接
@@ -546,71 +585,71 @@ impl WebSocketClient {
             }
             "loginSuccess" => {
                 info!("✅ 登录成功");
-                let _ = app_handle.emit("ws-login-success", data);
+                let _ = app_handle.emit_to("home", "ws-login-success", data);
             }
 
             // 消息相关
             "receiveMessage" => {
                 info!("💬 收到消息");
-                let _ = app_handle.emit("ws-receive-message", data);
+                let _ = app_handle.emit_to("home", "ws-receive-message", data);
             }
             "msgRecall" => {
                 info!("🔄 消息撤回");
-                let _ = app_handle.emit("ws-msg-recall", data);
+                let _ = app_handle.emit_to("home", "ws-msg-recall", data);
             }
             "msgMarkItem" => {
                 info!("👍 消息点赞/倒赞");
-                let _ = app_handle.emit("ws-msg-mark-item", data);
+                let _ = app_handle.emit_to("home", "ws-msg-mark-item", data);
             }
 
             // 用户状态相关
             "online" => {
                 info!("🟢 用户上线");
-                let _ = app_handle.emit("ws-online", data);
+                let _ = app_handle.emit_to("home", "ws-online", data);
             }
             "offline" => {
                 info!("🔴 用户下线");
-                let _ = app_handle.emit("ws-offline", data);
+                let _ = app_handle.emit_to("home", "ws-offline", data);
             }
             "userStateChange" => {
                 info!("🔄 用户状态改变");
-                let _ = app_handle.emit("ws-user-state-change", data);
+                let _ = app_handle.emit_to("home", "ws-user-state-change", data);
             }
 
             // 好友相关
             "newApply" => {
                 info!("👥 新的Apply申请");
-                let _ = app_handle.emit("ws-request-new-apply", data);
+                let _ = app_handle.emit_to("home", "ws-request-new-apply", data);
             }
             "requestApprovalFriend" => {
                 info!("✅ 同意好友申请");
-                let _ = app_handle.emit("ws-request-approval-friend", data);
+                let _ = app_handle.emit_to("home", "ws-request-approval-friend", data);
             }
             "memberChange" => {
                 info!("🔄 成员变动");
-                let _ = app_handle.emit("ws-member-change", data);
+                let _ = app_handle.emit_to("home", "ws-member-change", data);
             }
 
             // 房间/群聊相关
             "roomInfoChange" => {
                 info!("🏠 群聊信息变更");
-                let _ = app_handle.emit("ws-room-info-change", data);
+                let _ = app_handle.emit_to("home", "ws-room-info-change", data);
             }
             "myRoomInfoChange" => {
                 info!("👤 我在群里的信息变更");
-                let _ = app_handle.emit("ws-my-room-info-change", data);
+                let _ = app_handle.emit_to("home", "ws-my-room-info-change", data);
             }
             "roomGroupNoticeMsg" => {
                 info!("📢 群公告发布");
-                let _ = app_handle.emit("ws-room-group-notice-msg", data);
+                let _ = app_handle.emit_to("home", "ws-room-group-notice-msg", data);
             }
             "roomEditGroupNoticeMsg" => {
                 info!("✏️ 群公告编辑");
-                let _ = app_handle.emit("ws-room-edit-group-notice-msg", data);
+                let _ = app_handle.emit_to("home", "ws-room-edit-group-notice-msg", data);
             }
             "roomDissolution" => {
                 info!("💥 群解散");
-                let _ = app_handle.emit("ws-room-dissolution", data);
+                let _ = app_handle.emit_to("home", "ws-room-dissolution", data);
             }
 
             // 视频通话相关
@@ -650,6 +689,11 @@ impl WebSocketClient {
             "CANCEL" => {
                 info!("📞 通话取消");
                 let _ = app_handle.emit("ws-cancel", data);
+            }
+
+            "TIMEOUT" => {
+                info!("📞 通话超时");
+                let _ = app_handle.emit("ws-timeout", data);
             }
 
             // 系统相关

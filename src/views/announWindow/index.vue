@@ -251,7 +251,8 @@ const handleInit = async () => {
 
         // 处理公告的userName getUserGroupNickname
         announList.value.forEach((item) => {
-          item.userName = cachedStore.getUserGroupNickname(item.uid, roomId.value)
+          const user = groupStore.getUser(roomId.value, item.uid)
+          item.userName = user?.myName || user.name
           // 添加展开/收起状态控制
           item.expanded = false
           announcementStates.value[item.id] = {
@@ -312,7 +313,8 @@ const handleLoadMore = async () => {
             deleteLoading: false
           }
           // 处理公告的userName
-          item.userName = cachedStore.getUserGroupNickname(item.uid, roomId.value)
+          const user = groupStore.getUser(roomId.value, item.uid)
+          item.userName = user?.myName || user.name
         })
 
         // 添加新的非重复数据到列表中

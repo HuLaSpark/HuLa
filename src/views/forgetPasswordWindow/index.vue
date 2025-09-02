@@ -33,33 +33,6 @@
               clearable />
           </n-form-item>
 
-          <!-- 图片验证码 -->
-          <n-form-item path="imgCode" label="图片验证码">
-            <n-flex :size="8">
-              <n-input
-                :allow-input="noSideSpace"
-                class="border-(1px solid #90909080)"
-                v-model:value="formData.imgCode"
-                placeholder="请输入图片验证码"
-                spellCheck="false"
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
-                maxlength="5" />
-              <n-image
-                width="120"
-                height="40"
-                class="cursor-pointer"
-                :src="captchaImage"
-                preview-disabled
-                @click="getCaptchaImage">
-                <template #placeholder>
-                  <n-skeleton height="40px" width="120px" class="rounded-10px" />
-                </template>
-              </n-image>
-            </n-flex>
-          </n-form-item>
-
           <!-- 邮箱验证码 -->
           <n-form-item path="emailCode" label="邮箱验证码">
             <n-flex :size="8">
@@ -150,7 +123,7 @@
                 <Validation
                   :value="passwordForm.confirmPassword"
                   message="两次密码输入一致"
-                  :validator="(value) => value === passwordForm.password && value !== ''" />
+                  :validator="(value: string) => value === passwordForm.password && value !== ''" />
               </n-flex>
             </n-flex>
           </n-form-item>
@@ -202,7 +175,6 @@ const stepStatus = ref<'error' | 'finish' | 'process' | 'wait' | undefined>('pro
 const formRef = ref(null)
 const formData = ref({
   email: '',
-  imgCode: '',
   emailCode: '',
   uuid: '' // 图片验证码uuid
 })
@@ -238,10 +210,6 @@ const emailRules = {
       trigger: 'blur'
     }
   ],
-  imgCode: [
-    { required: true, message: '请输入图片验证码', trigger: 'blur' },
-    { min: 1, max: 5, message: '验证码长度为4-5位', trigger: 'blur' }
-  ],
   emailCode: [
     { required: true, message: '请输入邮箱验证码', trigger: 'input' },
     { min: 6, max: 6, message: '验证码长度为6位', trigger: 'blur' }
@@ -276,7 +244,7 @@ const passwordRules = {
 
 // 下一步按钮禁用状态
 const nextDisabled = computed(() => {
-  return !(formData.value.email && formData.value.imgCode && formData.value.emailCode)
+  return !(formData.value.email && formData.value.emailCode)
 })
 
 /** 不允许输入空格 */
@@ -339,18 +307,12 @@ const sendEmailCode = async () => {
     return
   }
 
-  if (!formData.value.imgCode) {
-    window.$message.warning('请先输入图片验证码')
-    return
-  }
-
   // 设置loading状态
   sendingEmailCode.value = true
 
   try {
     await sendCaptcha({
       email: formData.value.email,
-      code: formData.value.imgCode,
       uuid: formData.value.uuid,
       operationType: 'forgot',
       templateCode: 'PASSWORD_EDIT'

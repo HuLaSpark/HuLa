@@ -102,17 +102,18 @@ pub async fn ws_init_connection(
         }
     };
 
-    // 尝试连接
-    match client.connect(config).await {
-        Ok(_) => {
-            info!("✅ WebSocket 连接初始化成功");
-            Ok(SuccessResponse::new())
+    tokio::spawn(async move {
+        match client.connect(config).await {
+            Ok(_) => {
+                info!("✅ WebSocket 连接初始化成功");
+            }
+            Err(e) => {
+                error!("❌ WebSocket 连接初始化失败: {}", e);
+            }
         }
-        Err(e) => {
-            error!("❌ WebSocket 连接初始化失败: {}", e);
-            Err(format!("连接失败: {}", e))
-        }
-    }
+    });
+
+    Ok(SuccessResponse::new())
 }
 
 /// 断开 WebSocket 连接
@@ -124,7 +125,7 @@ pub async fn ws_disconnect(_app_handle: AppHandle) -> Result<SuccessResponse, St
     let mut client_guard = client_container.write().await;
 
     if let Some(client) = client_guard.take() {
-        client.disconnect().await;
+        client.internal_disconnect().await;
     }
 
     info!("✅ WebSocket 连接已断开");

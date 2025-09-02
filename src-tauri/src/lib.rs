@@ -18,9 +18,7 @@ use desktops::{common_cmd, directory_scanner, init, tray, video_thumbnail::get_v
 use directory_scanner::{cancel_directory_scan, get_directory_usage_info_with_progress};
 #[cfg(desktop)]
 use init::DesktopCustomInit;
-use moka::future::Cache;
 use std::sync::Arc;
-use std::time::Duration;
 pub mod command;
 pub mod common;
 pub mod configuration;
@@ -40,6 +38,7 @@ use crate::command::room_member_command::{
 use crate::command::user_command::remove_tokens;
 use crate::configuration::get_configuration;
 use crate::error::CommonError;
+use crate::repository::im_user_repository;
 use sea_orm::DatabaseConnection;
 use serde::{Deserialize, Serialize};
 use std::ops::Deref;
@@ -53,7 +52,6 @@ mod mobiles;
 pub struct AppData {
     db_conn: Arc<DatabaseConnection>,
     user_info: Arc<Mutex<UserInfo>>,
-    cache: Cache<String, String>,
     pub rc: Arc<Mutex<im_request_client::ImRequestClient>>,
 }
 
@@ -83,16 +81,16 @@ pub fn run() {
 #[cfg(desktop)]
 fn setup_desktop() -> Result<(), CommonError> {
     // 创建一个缓存实例
-    let cache: Cache<String, String> = Cache::builder()
-        // Time to idle (TTI):  30 minutes
-        .time_to_idle(Duration::from_secs(30 * 60))
-        // Create the cache.
-        .build();
+    // let cache: Cache<String, String> = Cache::builder()
+    //     // Time to idle (TTI):  30 minutes
+    //     .time_to_idle(Duration::from_secs(30 * 60))
+    //     // Create the cache.
+    //     .build();
     tauri::Builder::default()
         .init_plugin()
         .init_webwindow_event()
         .init_window_event()
-        .setup(move |app| common_setup(app, cache))
+        .setup(move |app| common_setup(app))
         .invoke_handler(get_invoke_handlers())
         .build(tauri::generate_context!())
         .map_err(|e| {
@@ -178,6 +176,23 @@ fn setup_user_info_listener_early(app_handle: tauri::AppHandle) {
                         user_info.token = payload.token.clone();
                         user_info.refresh_token = payload.refresh_token.clone();
                     } // user_info 锁在这里释放
+
+                    // 保存 token 信息到数据库
+                    if let Err(e) = im_user_repository::save_user_tokens(
+                        app_data.db_conn.deref(),
+                        &payload.uid,
+                        &payload.token,
+                        &payload.refresh_token,
+                    )
+                    .await
+                    {
+                        tracing::error!("Failed to save user tokens to database: {}", e);
+                    } else {
+                        tracing::info!(
+                            "Successfully saved user tokens to database for user: {}",
+                            payload.uid
+                        );
+                    }
 
                     // 检查用户的 is_init 状态并获取消息
                     {
@@ -315,15 +330,15 @@ fn setup_logout_listener(app_handle: tauri::AppHandle) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 fn setup_mobile() {
     // 创建一个缓存实例
-    let cache: Cache<String, String> = Cache::builder()
-        // Time to idle (TTI):  30 minutes
-        .time_to_idle(Duration::from_secs(30 * 60))
-        // Create the cache.
-        .build();
+    // let cache: Cache<String, String> = Cache::builder()
+    //     // Time to idle (TTI):  30 minutes
+    //     .time_to_idle(Duration::from_secs(30 * 60))
+    //     // Create the cache.
+    //     .build();
 
     if let Err(e) = tauri::Builder::default()
         .init_plugin()
-        .setup(move |app| common_setup(app, cache))
+        .setup(move |app| common_setup(app))
         .invoke_handler(get_invoke_handlers())
         .run(tauri::generate_context!())
     {
@@ -333,10 +348,7 @@ fn setup_mobile() {
 }
 
 // 公共的 setup 函数
-fn common_setup(
-    app: &mut tauri::App,
-    cache: Cache<String, String>,
-) -> Result<(), Box<dyn std::error::Error>> {
+fn common_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let app_handle = app.handle().clone();
     setup_user_info_listener_early(app.handle().clone());
     #[cfg(desktop)]
@@ -349,7 +361,6 @@ fn common_setup(
             app_handle.manage(AppData {
                 db_conn: db.clone(),
                 user_info: user_info.clone(),
-                cache,
                 rc: rc,
             });
         }

@@ -193,7 +193,7 @@
                         </n-popover>
                         <!-- 用户名 -->
                         <span class="text-12px select-none color-#909090 inline-block align-top">
-                          {{ item.fromUser.nickname }}
+                          {{ getUserDisplayName(item.fromUser.uid) }}
                         </span>
                         <!-- 消息归属地 -->
                         <span class="text-(12px #909090)">
@@ -422,7 +422,7 @@ import { useMitt } from '@/hooks/useMitt.ts'
 import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 import { usePopover } from '@/hooks/usePopover.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
-import type { MessageType, SessionItem } from '@/services/types.ts'
+import type { MessageType } from '@/services/types.ts'
 import { useCachedStore } from '@/stores/cached'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global'
@@ -436,14 +436,10 @@ import { markMsg } from '@/utils/ImRequestUtils'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
 
 const appWindow = WebviewWindow.getCurrent()
-const props = defineProps<{
-  activeItem: SessionItem
-}>()
-const activeItemRef = shallowRef<SessionItem>(props.activeItem)
+const globalStore = useGlobalStore()
 const chatStore = useChatStore()
 const userStore = useUserStore()
 const groupStore = useGroupStore()
-const globalStore = useGlobalStore()
 const cachedStore = useCachedStore()
 const networkStatus = useNetworkStatus()
 const settingStore = useSettingStore()
@@ -481,12 +477,13 @@ const messageOptions = computed(() => {
 })
 const { createWebviewWindow } = useWindow()
 const currentRoomId = computed(() => globalStore.currentSession?.roomId)
+
 // 我的群昵称
-// const myGroupNickname = (uid: string) => {
-//   if (props.activeItem.type === RoomTypeEnum.GROUP && userUid.value === uid) {
-//     return groupStore.countInfo?.myName || ''
-//   }
-// }
+const getUserDisplayName = computed(() => (uid: string) => {
+  const user = groupStore.userList.find((user) => user.uid === uid)
+  return user?.myName || user?.name || ''
+})
+
 /** 是否是超级管理员 */
 // const isAdmin = computed(() => userInfo?.power === PowerEnum.ADMIN)
 /** 跳转回复消息后选中效果 */
@@ -620,11 +617,6 @@ const handleScroll = () => {
   // 计算距离底部的距离
   const distanceFromBottom = scrollHeight - scrollTop.value - clientHeight
 
-  // 缓存当前会话的滚动位置
-  if (props.activeItem?.roomId) {
-    scrollPositions.value.set(props.activeItem.roomId, container.scrollTop)
-  }
-
   // 存储 requestAnimationFrame 的返回值
   if (rafId.value) {
     cancelAnimationFrame(rafId.value)
@@ -676,7 +668,7 @@ const handleMouseLeave = () => {
 
 // 监听会话切换（仅切换数据，不清空 DOM）
 watch(
-  () => props.activeItem,
+  () => globalStore.currentSession!,
   (value, oldValue) => {
     if (oldValue.roomId !== value.roomId) {
       // 切换前保存旧会话的滚动位置
@@ -715,7 +707,7 @@ watch(
     if (!pendingRoomId.value) {
       displayedMessageList.value = value
     }
-    const currentRoomIdLocal = props.activeItem.roomId
+    const currentRoomIdLocal = globalStore.currentSession!.roomId
 
     // 当首条消息属于当前会话，或当前会话已停止加载（空列表也需要替换）
     const dataBelongsToCurrent = value.length > 0 && value[0]?.message?.roomId === currentRoomIdLocal
@@ -727,11 +719,7 @@ watch(
       messageCache.value.set(currentRoomIdLocal, value)
       pendingRoomId.value = null
       nextTick(() => {
-        // 优先恢复该会话的滚动位置；若不存在则置底
-        const restored = restoreScrollPosition(currentRoomIdLocal)
-        if (!restored) {
-          scrollToBottom()
-        }
+        scrollToBottom()
       })
     }
 
@@ -776,9 +764,9 @@ watch(
 
         // 其他情况：如果是他人的消息且不在底部，增加新消息计数
         if (latestMessage?.fromUser?.uid !== userUid.value) {
-          const current = chatStore.newMsgCount.get(props.activeItem.roomId)
+          const current = chatStore.newMsgCount.get(globalStore.currentSession!.roomId)
           if (!current) {
-            chatStore.newMsgCount.set(props.activeItem.roomId, {
+            chatStore.newMsgCount.set(globalStore.currentSession!.roomId, {
               count: 1,
               isStart: true
             })
@@ -796,7 +784,7 @@ watch(
 watch(
   () => messageOptions.value?.cursor,
   () => {
-    const currentRoomIdLocal = props.activeItem.roomId
+    const currentRoomIdLocal = globalStore.currentSession!.roomId
     if (pendingRoomId.value === currentRoomIdLocal) {
       displayedMessageList.value = chatMessageList.value
       // 更新目标会话缓存
@@ -1172,9 +1160,6 @@ onMounted(async () => {
     selectKey.value = event.uid
     infoPopoverRefs.value[event.uid].setShow(true)
     handlePopoverUpdate(event.uid)
-  })
-  useMitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
-    activeItemRef.value = event.item
   })
   // 监听滚动到底部的事件
   useMitt.on(MittEnum.CHAT_SCROLL_BOTTOM, () => {

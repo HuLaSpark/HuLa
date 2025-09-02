@@ -1,3 +1,4 @@
+import { listen } from '@tauri-apps/api/event'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { error, info } from '@tauri-apps/plugin-log'
 import { CallTypeEnum, RTCCallStatus } from '@/enums'
@@ -49,8 +50,14 @@ const configuration: RTCConfiguration = {
   // 默认配置
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
-    { urls: 'stun:stun2.l.google.com:19302' }
+    {
+      urls: [
+        'turn:117.72.67.248:3478?transport=udp', // UDP 协议
+        'turn:117.72.67.248:3478?transport=tcp' // TCP 协议
+      ],
+      username: 'chr', // 你的 TURN 用户名
+      credential: '123456' // 你的 TURN 密码
+    }
   ]
 }
 // const isSupportScreenSharing = !!navigator?.mediaDevices?.getDisplayMedia
@@ -107,6 +114,24 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
   // 添加桌面共享相关状态
   const isScreenSharing = ref(false)
   const offer = ref<RTCSessionDescriptionInit>()
+
+  // 接通后确保窗口聚焦显示
+  const focusCurrentWindow = async () => {
+    try {
+      const currentWindow = getCurrentWebviewWindow()
+      const visible = await currentWindow.isVisible()
+      if (!visible) {
+        await currentWindow.show()
+      }
+      const minimized = await currentWindow.isMinimized()
+      if (minimized) {
+        await currentWindow.unminimize()
+      }
+      await currentWindow.setFocus()
+    } catch (e) {
+      console.warn('设置窗口聚焦失败:', e)
+    }
+  }
 
   // 开始计时
   const startCallTimer = () => {
@@ -210,6 +235,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
   // -1 = 超时 0 = 拒绝 1 = 接通 2 = 挂断
   const sendRtcCall2VideoCallResponse = async (status: number) => {
     try {
+      info(`发送 ws 请求，通知双方通话状态 ${status}`)
       await rustWebSocketClient.sendMessage({
         type: WsRequestMsgType.VIDEO_CALL_RESPONSE,
         data: {
@@ -284,7 +310,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
             await handleCallResponse(0)
           } else {
             // 发起方：直接结束通话
-            await endCall()
+            await handleCallResponse(2)
           }
         }, 1000)
         return false
@@ -315,6 +341,8 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
     } catch (err) {
       console.error('获取本地流失败:', err)
       window.$message.error('获取本地媒体流失败，请检查设备!')
+      error(`获取本地媒体流失败，请检查设备! ${err}`)
+      await sendRtcCall2VideoCallResponse(2)
       return false
     }
   }
@@ -326,7 +354,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
 
       // 监听远程流
       pc.ontrack = (event) => {
-        console.log('pc 监听到 ontrack 事件', event.streams)
+        info('pc 监听到 ontrack 事件')
         if (event.streams[0]) {
           console.log('收到远程流:', event.streams[0])
           remoteStream.value = event.streams[0]
@@ -336,7 +364,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
       }
 
       // 添加本地流
-      console.log('添加本地流到 PC', localStream.value)
+      info('添加本地流到 PC')
       if (localStream.value) {
         localStream.value.getTracks().forEach((track) => {
           localStream.value && pc.addTrack(track, localStream.value)
@@ -347,7 +375,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
 
       // 连接状态变化 "closed" | "connected" | "connecting" | "disconnected" | "failed" | "new";
       pc.onconnectionstatechange = (e) => {
-        console.log('RTC 连接状态变化: ', pc.connectionState)
+        info(`RTC 连接状态变化: ${pc.connectionState}`)
         switch (pc.connectionState) {
           case 'new':
             info('RTC 连接新建')
@@ -360,6 +388,8 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
             info('RTC 连接成功')
             connectionStatus.value = RTCCallStatus.ACCEPT
             startCallTimer() // 开始计时
+            // 接通后将窗口置顶展示并聚焦
+            void focusCurrentWindow()
             break
           case 'disconnected':
             info('RTC 连接断开')
@@ -406,12 +436,10 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
         // console.log("信道已关闭");
       }
       pc.onicecandidate = async (event) => {
-        console.log('pc 监听到 onicecandidate 事件', event)
+        info('pc 监听到 onicecandidate 事件')
         if (event.candidate && roomId) {
           try {
             pendingCandidates.value.push(event.candidate)
-            console.log('发送 candidate 事件')
-            await sendIceCandidate(event.candidate)
           } catch (err) {
             console.error('发送ICE候选者出错:', err)
           }
@@ -499,13 +527,11 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
         video: callType === CallTypeEnum.VIDEO
       }
 
-      console.log('ws发送 offer')
+      info('ws发送 offer')
       await rustWebSocketClient.sendMessage({
         type: WsRequestMsgType.WEBRTC_SIGNAL,
         data: signalData
       })
-
-      console.log('SDP offer sent via WebSocket:', offer)
     } catch (error) {
       console.error('Failed to send SDP offer:', error)
     }
@@ -560,6 +586,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
   // 发送ICE候选者
   const sendIceCandidate = async (candidate: RTCIceCandidate) => {
     try {
+      info('发送ICE候选者')
       const signalData = {
         roomId: roomId,
         signal: JSON.stringify(candidate),
@@ -639,6 +666,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
         video: callType === CallTypeEnum.VIDEO
       }
 
+      info('发送SDP answer')
       await rustWebSocketClient.sendMessage({
         type: WsRequestMsgType.WEBRTC_SIGNAL,
         data: signalData
@@ -686,8 +714,8 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
   const handleCandidate = async (signal: RTCIceCandidateInit) => {
     try {
       if (peerConnection.value && peerConnection.value.remoteDescription) {
-        console.log('添加 candidate', signal)
-        await peerConnection.value.addIceCandidate(signal)
+        info('添加 candidate')
+        await peerConnection.value!.addIceCandidate(signal)
       }
     } catch (error) {
       console.error('处理 candidate 失败:', error)
@@ -910,6 +938,28 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
     }
   }
 
+  const lisendCandidate = async () => {
+    if (!peerConnection.value) {
+      return
+    }
+
+    info('第一次交换 ICE candidates...')
+    if (pendingCandidates.value.length > 0) {
+      pendingCandidates.value.forEach(async (candidate) => {
+        await sendIceCandidate(candidate)
+      })
+    }
+
+    pendingCandidates.value = []
+
+    peerConnection.value.onicecandidate = async (event) => {
+      if (event.candidate) {
+        info('第二次交换 ICE candidates...')
+        await sendIceCandidate(event.candidate)
+      }
+    }
+  }
+
   // 处理接收到的信令消息
   const handleSignalMessage = async (data: WSRtcCallMsg) => {
     try {
@@ -919,10 +969,13 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
       switch (data.signalType) {
         case SignalTypeEnum.OFFER:
           await handleOffer(signal, true, roomId)
+          await lisendCandidate()
           break
 
         case SignalTypeEnum.ANSWER:
           await handleAnswer(signal, roomId)
+          // offer 发送 candidate
+          await lisendCandidate()
           break
 
         case SignalTypeEnum.CANDIDATE:
@@ -941,23 +994,50 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
   }
 
   // 监听 WebRTC 信令消息
-  useMitt.on(WsResponseMessageType.WEBRTC_SIGNAL, handleSignalMessage)
-  useMitt.on(WsResponseMessageType.CallAccepted, () => {
-    // 接受方，发送是否接受
+  // useMitt.on(WsResponseMessageType.WEBRTC_SIGNAL, handleSignalMessage)
+  listen('ws-webrtc-signal', (event: any) => {
+    info(`收到信令消息: ${JSON.stringify(event.payload)}`)
+    handleSignalMessage(event.payload)
+  })
+  listen('ws-call-accepted', (event: any) => {
+    info(`通话被接受: ${JSON.stringify(event.payload)}`)
+    // // 接受方，发送是否接受
+    // info(`收到 CallAccepted'消息 ${isReceiver}`)
     if (!isReceiver) {
       sendOffer(offer.value!)
+      // 对方接通后，主叫方窗口前置并聚焦
+      void focusCurrentWindow()
     }
   })
-  useMitt.on(WsResponseMessageType.RoomClosed, () => endCall())
-  useMitt.on(WsResponseMessageType.DROPPED, () => endCall())
-  useMitt.on(WsResponseMessageType.TIMEOUT, () => endCall())
-  useMitt.on(WsResponseMessageType.CallRejected, () => endCall())
-  useMitt.on(WsResponseMessageType.CANCEL, () => endCall())
+  listen('ws-room-closed', (event: any) => {
+    info(`房间已关闭: ${JSON.stringify(event.payload)}`)
+    endCall()
+  })
+  listen('ws-dropped', (_: any) => {
+    endCall()
+  })
+  listen('ws-call-rejected', (event: any) => {
+    info(`通话被拒绝: ${JSON.stringify(event.payload)}`)
+    endCall()
+  })
+  listen('ws-cancel', (event: any) => {
+    info(`已取消通话: ${JSON.stringify(event.payload)}`)
+    endCall()
+  })
+  listen('ws-timeout', (event: any) => {
+    info(`已取消通话: ${JSON.stringify(event.payload)}`)
+    endCall()
+  })
+  // useMitt.on(WsResponseMessageType.RoomClosed, () => endCall())
+  // useMitt.on(WsResponseMessageType.DROPPED, () => endCall())
+  // useMitt.on(WsResponseMessageType.TIMEOUT, () => endCall())
+  // useMitt.on(WsResponseMessageType.CallRejected, () => endCall())
+  // useMitt.on(WsResponseMessageType.CANCEL, () => endCall())
 
   onMounted(async () => {
     if (!isReceiver) {
       console.log(`调用方发送${callType === CallTypeEnum.VIDEO ? '视频' : '语音'}通话请求`)
-      startCall(roomId, callType, [remoteUserId])
+      await startCall(roomId, callType, [remoteUserId])
       try {
         await rustWebSocketClient.sendMessage({
           type: WsRequestMsgType.VIDEO_CALL_REQUEST,

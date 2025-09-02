@@ -53,14 +53,30 @@ export function useCanvasTool(drawCanvas: any, drawCtx: any, imgCtx: any, screen
     if (!drawConfig.value.isDrawing || !drawCtx.value) return
 
     // 限制绘制区域在框选矩形区域内
-    const limitedX = Math.min(
+    let limitedX = Math.min(
       Math.max(offsetX * drawConfig.value.scaleX, screenConfig.value.startX),
       screenConfig.value.endX
     )
-    const limitedY = Math.min(
+    let limitedY = Math.min(
       Math.max(offsetY * drawConfig.value.scaleY, screenConfig.value.startY),
       screenConfig.value.endY
     )
+
+    // 对于马赛克工具，需要考虑边框宽度和画笔半径偏移，避免涂抹到选区边框
+    if (currentTool.value === 'mosaic') {
+      const borderWidth = 2
+      const halfBrushSize = drawConfig.value.brushSize / 2
+      const safeMargin = borderWidth + halfBrushSize
+
+      limitedX = Math.min(
+        Math.max(offsetX * drawConfig.value.scaleX, screenConfig.value.startX + safeMargin),
+        screenConfig.value.endX - safeMargin
+      )
+      limitedY = Math.min(
+        Math.max(offsetY * drawConfig.value.scaleY, screenConfig.value.startY + safeMargin),
+        screenConfig.value.endY - safeMargin
+      )
+    }
 
     drawConfig.value.endX = limitedX
     drawConfig.value.endY = limitedY
@@ -190,9 +206,28 @@ export function useCanvasTool(drawCanvas: any, drawCtx: any, imgCtx: any, screen
 
   // 实时马赛克涂抹
   const drawMosaic = (context: any, x: any, y: any, size: any) => {
-    const imageData = imgCtx.value.getImageData(x - size, y - size, size, size)
-    const blurredData = blurImageData(imageData, size)
-    context.putImageData(blurredData, x - size, y - size)
+    // 确保马赛克绘制区域不会超出选区边界（考虑边框和画笔半径）
+    const borderWidth = 2
+    const halfSize = size / 2
+
+    // 考虑画笔半径的安全边距，确保画笔边缘不会涂抹到边框
+    const safeMargin = borderWidth + halfSize
+
+    // 计算实际绘制区域，确保完全在选区内容区域内
+    const drawX = Math.max(x - halfSize, screenConfig.value.startX + safeMargin)
+    const drawY = Math.max(y - halfSize, screenConfig.value.startY + safeMargin)
+    const maxDrawX = Math.min(x + halfSize, screenConfig.value.endX - safeMargin)
+    const maxDrawY = Math.min(y + halfSize, screenConfig.value.endY - safeMargin)
+
+    // 计算实际绘制尺寸
+    const drawWidth = Math.max(0, maxDrawX - drawX)
+    const drawHeight = Math.max(0, maxDrawY - drawY)
+
+    if (drawWidth > 0 && drawHeight > 0) {
+      const imageData = imgCtx.value.getImageData(drawX, drawY, drawWidth, drawHeight)
+      const blurredData = blurImageData(imageData, Math.min(drawWidth, drawHeight))
+      context.putImageData(blurredData, drawX, drawY)
+    }
   }
 
   const blurImageData = (imageData: ImageData, size: any): ImageData => {

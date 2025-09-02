@@ -102,7 +102,7 @@
                   :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
                   :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'" />
 
-                <span class="text-14px leading-tight flex-1 truncate">{{ item.remark || item.roomName }}</span>
+                <span class="text-14px leading-tight flex-1 truncate">{{ item.remark || item.groupName }}</span>
               </n-flex>
             </div>
           </n-scrollbar>
@@ -120,6 +120,7 @@ import { useMitt } from '@/hooks/useMitt.ts'
 import type { DetailsContent } from '@/services/types'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
+import { useGroupStore } from '@/stores/group'
 import { useSettingStore } from '@/stores/setting'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
@@ -135,6 +136,7 @@ const activeItem = ref('')
 const detailsShow = ref(false)
 const shrinkStatus = ref(false)
 const contactStore = useContactStore()
+const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
 const userStatusStore = useUserStatusStore()
 const settingStore = useSettingStore()
@@ -143,8 +145,7 @@ const { stateList } = storeToRefs(userStatusStore)
 
 /** 群聊列表 */
 const groupChatList = computed(() => {
-  console.log(contactStore.groupChatList)
-  return [...contactStore.groupChatList].sort((a, b) => {
+  return [...groupStore.groupDetails].sort((a, b) => {
     // 将roomId为'1'的群聊排在最前面
     if (a.roomId === '1' && b.roomId !== '1') return -1
     if (a.roomId !== '1' && b.roomId === '1') return 1
@@ -216,7 +217,7 @@ const handleApply = async (applyType: 'friend' | 'group') => {
 const fetchContactData = async () => {
   try {
     // 同时获取好友列表和群聊列表
-    await Promise.all([contactStore.getContactList(), contactStore.getGroupChatList()])
+    await Promise.all([contactStore.getContactList()])
   } catch (error) {
     console.error('获取联系人数据失败:', error)
   }

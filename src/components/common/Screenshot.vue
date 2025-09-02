@@ -84,6 +84,7 @@
 </template>
 
 <script setup lang="ts">
+import { emitTo } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { writeImage } from '@tauri-apps/plugin-clipboard-manager'
 import type { Ref } from 'vue'
@@ -1132,10 +1133,14 @@ const confirmSelection = async () => {
   }
 
   const { startX, startY, endX, endY } = screenConfig.value
-
-  // 计算选区的宽高
   const width = Math.abs(endX - startX)
   const height = Math.abs(endY - startY)
+
+  if (width < 1 || height < 1) {
+    console.error('❌选区尺寸无效:', { width, height })
+    await resetScreenshot()
+    return
+  }
 
   // 计算选区的左上角位置
   const rectX = Math.min(startX, endX)
@@ -1180,6 +1185,33 @@ const confirmSelection = async () => {
           height // 绘制到临时 canvas 的区域
         )
 
+        // 如果设置了圆角，则将裁剪结果应用圆角蒙版，导出带透明圆角的 PNG
+        if (borderRadius.value > 0) {
+          const scale = screenConfig.value.scaleX || 1
+          const r = Math.min(borderRadius.value * scale, width / 2, height / 2)
+          if (r > 0) {
+            offscreenCtx.save()
+            // 仅保留圆角矩形内的内容
+            offscreenCtx.globalCompositeOperation = 'destination-in'
+
+            offscreenCtx.beginPath()
+            // 在 (0,0,width,height) 上构建圆角矩形路径
+            offscreenCtx.moveTo(r, 0)
+            offscreenCtx.lineTo(width - r, 0)
+            offscreenCtx.quadraticCurveTo(width, 0, width, r)
+            offscreenCtx.lineTo(width, height - r)
+            offscreenCtx.quadraticCurveTo(width, height, width - r, height)
+            offscreenCtx.lineTo(r, height)
+            offscreenCtx.quadraticCurveTo(0, height, 0, height - r)
+            offscreenCtx.lineTo(0, r)
+            offscreenCtx.quadraticCurveTo(0, 0, r, 0)
+            offscreenCtx.closePath()
+            offscreenCtx.fill()
+
+            offscreenCtx.restore()
+          }
+        }
+
         // 测试：检查canvas数据是否有效
         try {
           offscreenCtx.getImageData(0, 0, Math.min(10, width), Math.min(10, height))
@@ -1187,14 +1219,29 @@ const confirmSelection = async () => {
           console.error('获取ImageData失败,可能是安全限制:', error)
         }
 
-        // 将裁剪后的图像转换为 Blob 并复制到剪贴板
         offscreenCanvas.toBlob(async (blob) => {
           if (blob && blob.size > 0) {
             try {
+              // 将 Blob 转换为 ArrayBuffer 以便通过 Tauri 事件传递
               const arrayBuffer = await blob.arrayBuffer()
               const buffer = new Uint8Array(arrayBuffer)
 
-              await writeImage(buffer)
+              try {
+                await emitTo('home', 'screenshot', {
+                  type: 'image',
+                  buffer: Array.from(buffer),
+                  mimeType: 'image/png'
+                })
+              } catch (e) {
+                console.warn('发送截图到主窗口失败:', e)
+              }
+
+              try {
+                await writeImage(buffer)
+              } catch (clipboardError) {
+                console.error('复制到剪贴板失败:', clipboardError)
+              }
+
               await resetScreenshot()
             } catch (error) {
               await resetScreenshot()
@@ -1304,7 +1351,7 @@ const handleScreenshot = () => {
 }
 
 onMounted(async () => {
-  addListener(
+  await addListener(
     appWindow.listen('capture', () => {
       resetDrawTools()
       initCanvas()
@@ -1314,7 +1361,7 @@ onMounted(async () => {
   )
 
   // 监听窗口隐藏时的重置事件
-  addListener(
+  await addListener(
     appWindow.listen('capture-reset', () => {
       resetDrawTools()
       resetScreenshot()

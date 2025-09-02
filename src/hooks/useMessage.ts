@@ -32,16 +32,11 @@ export const useMessage = () => {
   })
 
   /** 处理点击选中消息 */
-  const handleMsgClick = (item: SessionItem) => {
+  const handleMsgClick = async (item: SessionItem) => {
     msgBoxShow.value = true
     // 更新当前会话信息
-    globalStore.currentSession.roomId = item.roomId
-    globalStore.currentSession.type = item.type
-    const data = { msgBoxShow, item }
-    console.log('handleMsgClick:', item)
-    useMitt.emit(MittEnum.MSG_BOX_SHOW, data)
-
-    console.log('已点击', route.path)
+    globalStore.updateCurrentSession(item)
+    await chatStore.changeRoom()
 
     // 只有在消息页面且有未读消息时，才标记为已读
     if ((route.path === '/message' || route.path === '/mobile/message') && item.unreadCount > 0) {
@@ -62,9 +57,9 @@ export const useMessage = () => {
     const currentIndex = currentSessions.findIndex((session) => session.roomId === roomId)
 
     // 检查是否是当前选中的会话
-    const isCurrentSession = roomId === globalStore.currentSession.roomId
+    const isCurrentSession = roomId === globalStore.currentSession!.roomId
 
-    chatStore.removeContact(roomId)
+    chatStore.removeSession(roomId)
     // TODO: 使用隐藏会话接口
     // const res = await apis.hideSession({ roomId, hide: true })
     await invokeWithErrorHandler('hide_contact_command', { data: { roomId, hide: true } })
@@ -77,12 +72,6 @@ export const useMessage = () => {
 
     const updatedSessions = chatStore.sessionList
 
-    // 如果没有会话就把右侧消息框关闭
-    if (updatedSessions.length === 0) {
-      useMitt.emit(MittEnum.MSG_BOX_SHOW, { item: -1 })
-      return
-    }
-
     // 选择下一个或上一个会话
     const nextIndex = Math.min(currentIndex, updatedSessions.length - 1)
     handleMsgClick(updatedSessions[nextIndex])
@@ -92,23 +81,7 @@ export const useMessage = () => {
   const handleMsgDblclick = (item: SessionItem) => {
     if (!chat.value.isDouble) return
     console.log(item)
-
-    // delay(async () => {
-    //   await openAloneWin(item)
-    // }, 300)
   }
-
-  /** 打开独立窗口 */
-  // const openAloneWin = async (item: SessionItem) => {
-  //   itemRef.value = { ...item }
-  //   if (globalStore.currentSession.roomId === item.roomId) {
-  //     useMitt.emit(MittEnum.MSG_BOX_SHOW, { item: -1 })
-  //     await listen('aloneWin', () => {
-  //       emit('aloneData', { item: { ...item } })
-  //     })
-  //   }
-  //   await createWebviewWindow(item.name, EventEnum.ALONE + item.roomId, 720, 800, '', true, 580)
-  // }
 
   const menuList = ref<OPT.RightMenu[]>([
     {
@@ -327,7 +300,7 @@ export const useMessage = () => {
 
   onMounted(async () => {
     const appWindow = WebviewWindow.getCurrent()
-    addListener(
+    await addListener(
       appWindow.listen(EventEnum.ALONE, () => {
         emit(EventEnum.ALONE + itemRef.value?.roomId, itemRef.value)
         if (aloneWin.value.has(EventEnum.ALONE + itemRef.value?.roomId)) return
@@ -344,8 +317,6 @@ export const useMessage = () => {
   })
 
   onBeforeUnmount(() => {
-    // 取消监听, 避免内存中还存在监听，导致请求次数过多
-    useMitt.off(MittEnum.MSG_BOX_SHOW, () => {})
     useMitt.off(MittEnum.SHRINK_WINDOW, () => {})
   })
 

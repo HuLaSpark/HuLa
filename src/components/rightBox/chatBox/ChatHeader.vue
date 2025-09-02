@@ -5,8 +5,7 @@
     class="relative z-999 flex-y-center border-b-(1px solid [--right-chat-footer-line-color]) select-none cursor-default justify-between p-[6px_22px_10px]">
     <n-flex align="center">
       <Transition name="loading" mode="out-in">
-        <img v-if="headerLoading" class="size-22px py-3px" src="@/assets/img/loading.svg" alt="" />
-        <n-flex v-else align="center">
+        <n-flex align="center">
           <n-avatar
             :class="['rounded-8px select-none grayscale', { 'grayscale-0': isOnline }]"
             :size="28"
@@ -265,7 +264,8 @@
               autoCorrect="off"
               autoCapitalize="off"
               v-model:value="groupDetail.myNickname"
-              @update:value="updateGroupInfo($event, 'nickname')" />
+              @update:value="updateGroupInfo($event, 'nickname')"
+              @blur="saveGroupInfo" />
             <!-- 群备注 -->
             <p class="flex-start-center gap-10px text-(12px [--chat-text-color]) mt-20px mb-10px">
               群备注
@@ -278,6 +278,7 @@
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
+              @blur="saveGroupInfo"
               @update:value="updateGroupInfo($event, 'remark')" />
 
             <!-- 群设置选项 -->
@@ -441,14 +442,9 @@ const cacheStore = useCachedStore()
 
 // 群组详情数据
 const groupDetail = ref({
-  myNickname: '', // 我在本群的昵称
-  groupRemark: '', // 群备注
-  roleId: 3 // 默认为普通成员
-})
-// 保存原始群组详情数据，用于比较是否有变化
-const originalGroupDetail = ref({
-  myNickname: '',
-  groupRemark: ''
+  myNickname: groupStore.myNameInCurrentGroup, // 我在本群的昵称
+  groupRemark: groupStore.countInfo?.remark, // 群备注
+  roleId: groupStore.myRoleIdInCurrentGroup // 默认为普通成员
 })
 
 // 是否为频道（仅显示 more 按钮）
@@ -462,17 +458,7 @@ const isGroupOwner = computed(() => {
 
   // 检查groupStore.userList中当前用户的角色
   const currentUser = groupStore.userList.find((user) => user.uid === userStore.userInfo.uid)
-
-  console.log('currentUser ---> ', currentUser)
-  // 如果能在userList找到用户信息并确认角色，优先使用这个判断
-  if (currentUser) {
-    return currentUser.roleId === RoleEnum.LORD
-  }
-  console.log('groupDetail --> ', groupDetail)
-  groupDetail.value.roleId = 1
-
-  // 否则回退到countInfo中的角色信息
-  return groupDetail.value.roleId === RoleEnum.LORD
+  return currentUser!.roleId === RoleEnum.LORD
 })
 
 // 我的群备注
@@ -487,11 +473,6 @@ const isEditingGroupName = ref(false)
 const editingGroupName = ref('')
 // 群名称输入框引用
 const groupNameInputRef = useTemplateRef<HTMLInputElement | null>('groupNameInputRef')
-// 创建一个RTCPeerConnection实例
-// let peerConnection: RTCPeerConnection
-// if (type() !== 'linux') {
-//   peerConnection = new RTCPeerConnection()
-// }
 
 const messageSettingType = computed(() => {
   // 群消息设置只在免打扰模式下有意义
@@ -505,7 +486,6 @@ const messageSettingOptions = ref([
   { label: '接收消息但不提醒', value: 'notification' },
   { label: '屏蔽消息', value: 'shield' }
 ])
-const MIN_LOADING_TIME = 300 // 最小加载时间（毫秒）
 /** 是否在线 */
 const isOnline = computed(() => {
   if (activeItem.type === RoomTypeEnum.GROUP) return true
@@ -518,7 +498,6 @@ const shouldShowDeleteFriend = computed(() => {
   return contactStore.contactsList.some((item) => item.uid === activeItem.detailId)
 })
 const groupUserList = computed(() => groupStore.userList)
-const messageOptions = computed(() => chatStore.currentMessageOptions)
 const userList = computed(() => {
   return groupUserList.value
     .map((item: UserItem) => {
@@ -595,48 +574,14 @@ const {
 
 // 监听消息加载状态变化
 watch(
-  () => messageOptions.value?.isLoading,
+  () => chatStore.currentMessageOptions?.isLoading,
   (isLoading) => {
-    if (isLoading) {
-      headerLoading.value = true
-    } else if (headerLoading.value) {
-      setTimeout(() => (headerLoading.value = false), MIN_LOADING_TIME)
-    }
+    headerLoading.value = isLoading!
   },
   { immediate: true }
 )
 
-watch(
-  () => activeItem.roomId,
-  () => {
-    if (messageOptions.value?.isLoading) {
-      headerLoading.value = true
-    }
-    // 当roomId变化时，如果是群聊，则获取群组详情
-    if (activeItem.type === RoomTypeEnum.GROUP) {
-      fetchGroupDetail()
-    }
-  }
-)
-
-watch(
-  () => groupStore.userList,
-  () => {
-    // 当群成员列表更新时，重新检查当前用户的权限
-    if (activeItem.type === RoomTypeEnum.GROUP) {
-      const currentUser = groupStore.userList.find((user) => user.uid === userStore.userInfo.uid)
-      if (currentUser && currentUser.roleId) {
-        groupDetail.value.roleId = currentUser.roleId
-      }
-    }
-  },
-  { deep: true }
-)
-
 watchEffect(() => {
-  if (!messageOptions.value?.isLoading && headerLoading.value) {
-    headerLoading.value = false
-  }
   stream.value?.getVideoTracks()[0]?.addEventListener('ended', () => {
     stop()
   })
@@ -670,34 +615,12 @@ const handleInvite = async () => {
   await createModalWindow('邀请好友进群', 'modal-invite', 600, 500, 'home')
 }
 
-// 获取群组详情
-const fetchGroupDetail = async () => {
-  if (!activeItem.roomId || activeItem.type !== RoomTypeEnum.GROUP) return
-
-  // 检查当前用户在userList中的角色
-  const currentUser = groupStore.userList.find((user) => user.uid === userStore.userInfo.uid)
-
-  groupDetail.value = {
-    myNickname: groupStore.countInfo?.myName || '',
-    groupRemark: groupStore.countInfo?.remark || '',
-    // 优先使用userList中找到的角色信息，没有则使用countInfo中的roleId或默认值
-    roleId: currentUser?.roleId || groupStore.countInfo?.roleId || RoleEnum.NORMAL
-  }
-  // 保存原始值，用于后续比较
-  originalGroupDetail.value = {
-    myNickname: groupStore.countInfo?.myName || '',
-    groupRemark: groupStore.countInfo?.remark || ''
-  }
-}
-
 // 更新群聊信息（昵称或备注）
 const updateGroupInfo = (value: string, type: 'nickname' | 'remark') => {
   if (!activeItem.roomId || activeItem.type !== RoomTypeEnum.GROUP) return
 
   // 只更新本地值，不发送API请求
-  if (type === 'nickname') {
-    groupDetail.value.myNickname = value
-  } else {
+  if (type !== 'nickname') {
     groupDetail.value.groupRemark = value
   }
 }
@@ -706,40 +629,26 @@ const updateGroupInfo = (value: string, type: 'nickname' | 'remark') => {
 const saveGroupInfo = async () => {
   if (!activeItem.roomId || activeItem.type !== RoomTypeEnum.GROUP) return
 
-  // 检查数据是否发生变化
-  const nicknameChanged = groupDetail.value.myNickname !== originalGroupDetail.value.myNickname
-  const remarkChanged = groupDetail.value.groupRemark !== originalGroupDetail.value.groupRemark
-
-  // 只有当数据发生变化时才发送请求
-  if (nicknameChanged || remarkChanged) {
-    // 使用updateMyRoomInfo接口更新我在群里的昵称和群备注
-    const myRoomInfo = {
-      id: activeItem.roomId,
-      myName: groupDetail.value.myNickname,
-      remark: groupDetail.value.groupRemark
-    }
-    await cacheStore.updateMyRoomInfo(myRoomInfo)
-
-    // 更新原始值为当前值
-    originalGroupDetail.value = {
-      myNickname: groupDetail.value.myNickname,
-      groupRemark: groupDetail.value.groupRemark
-    }
-
-    // 更新群聊缓存信息
-    groupStore.countInfo = {
-      ...groupStore.countInfo,
-      myName: groupDetail.value.myNickname,
-      remark: groupDetail.value.groupRemark
-    }
-
-    // 发送更新请求
-    await updateMyRoomInfo(myRoomInfo)
-    // 更新群成员列表
-    await groupStore.getGroupUserList(activeItem.roomId)
-
-    window.$message.success('群聊信息已更新')
+  // 使用updateMyRoomInfo接口更新我在群里的昵称和群备注
+  const myRoomInfo = {
+    id: activeItem.roomId,
+    myName: groupDetail.value.myNickname,
+    remark: groupDetail.value.groupRemark!
   }
+  await cacheStore.updateMyRoomInfo(myRoomInfo)
+
+  // 发送更新请求
+  await updateMyRoomInfo(myRoomInfo)
+
+  // 更新群成员列表
+  groupStore.updateUserItem(userStore.userInfo.uid!, { myName: myRoomInfo.myName }, activeItem.roomId)
+  // 更新会话
+  chatStore.updateSession(activeItem.roomId, { remark: myRoomInfo.remark })
+  groupStore.updateGroupDetail(activeItem.roomId, {
+    myName: myRoomInfo.myName
+  })
+
+  window.$message.success('群聊信息已更新')
 }
 
 const handleAssist = () => {
@@ -748,28 +657,6 @@ const handleAssist = () => {
 
 const handleMedia = () => {
   window.$message.warning('暂未实现')
-  // start().then(() => {
-  //   // 将媒体流添加到RTCPeerConnection
-  //   stream.value?.getTracks().forEach((track) => {
-  //     peerConnection.addTrack(track, stream.value!)
-  //   })
-
-  //   // 创建一个offer
-  //   peerConnection.createOffer().then((offer) => {
-  //     // 设置本地描述
-  //     peerConnection.setLocalDescription(offer)
-  //     emit(EventEnum.SHARE_SCREEN)
-  //     /** 当需要给独立窗口传输数据的时候需要先监听窗口的创建完毕事件 */
-  //     addListener(
-  //       appWindow.listen('SharedScreenWin', async () => {
-  //         await emit('offer', offer)
-  //       }),
-  //       'SharedScreenWin'
-  //     )
-  //     // 在这里，你需要将offer发送给对方
-  //     // 对方需要调用peerConnection.setRemoteDescription(offer)来接受屏幕共享
-  //   })
-  // })
 }
 
 /** 置顶 */
@@ -835,11 +722,11 @@ const handleShield = (value: boolean) => {
       })
 
       // 1. 先保存当前聊天室ID
-      const tempRoomId = globalStore.currentSession.roomId
+      const tempRoomId = globalStore.currentSession!.roomId
 
       // 3. 在下一个tick中恢复原来的聊天室ID，触发重新加载消息
       nextTick(() => {
-        globalStore.currentSession.roomId = tempRoomId
+        globalStore.currentSession!.roomId = tempRoomId
       })
 
       window.$message.success(value ? '已屏蔽消息' : '已取消屏蔽')
@@ -941,15 +828,18 @@ const createRtcCallWindow = async (isIncoming: boolean, remoteUserId: string, ca
   // 根据是否来电决定窗口尺寸
   const windowConfig = isIncoming
     ? { width: 360, height: 90, minWidth: 360, minHeight: 90 } // 来电通知尺寸
-    : { width: 500, height: 650, minWidth: 500, minHeight: 650 } // 正常通话尺寸
+    : callType === CallTypeEnum.VIDEO
+      ? { width: 850, height: 580, minWidth: 850, minHeight: 580 } // 视频通话尺寸
+      : { width: 500, height: 650, minWidth: 500, minHeight: 650 } // 语音通话尺寸
 
+  const type = callType === CallTypeEnum.VIDEO ? '视频通话' : '语音通话'
   await createWebviewWindow(
-    '视频通话', // 窗口标题
+    type, // 窗口标题
     'rtcCall', // 窗口标签
     windowConfig.width, // 宽度
     windowConfig.height, // 高度
     undefined, // 不需要关闭其他窗口
-    false, // 不可调整大小
+    true, // 可调整大小
     windowConfig.minWidth, // 最小宽度
     windowConfig.minHeight, // 最小高度
     false, // 不透明
@@ -1032,10 +922,6 @@ const handleCrop = async (cropBlob: Blob) => {
 const closeMenu = (event: any) => {
   /** 点击非侧边栏元素时，关闭侧边栏，但点击弹出框元素、侧边栏图标、还有侧边栏里面的元素时不关闭 */
   if (!event.target.matches('.sidebar, .sidebar *, .n-modal-mask, .options-box *, .n-modal *') && !modalShow.value) {
-    if (sidebarShow.value) {
-      // 如果侧边栏正在显示，则在关闭前保存群聊信息
-      saveGroupInfo()
-    }
     sidebarShow.value = false
   }
 }
@@ -1047,16 +933,12 @@ const handleVideoCall = async (remotedUid: string, callType: CallTypeEnum) => {
 
 onMounted(() => {
   window.addEventListener('click', closeMenu, true)
-  if (!messageOptions.value?.isLoading) headerLoading.value = false
-
-  // 如果是群聊，初始化时获取群组详情
-  if (activeItem.type === RoomTypeEnum.GROUP) {
-    fetchGroupDetail()
-  }
+  if (!chatStore.currentMessageOptions?.isLoading) headerLoading.value = false
 
   useMitt.on(WsResponseMessageType.VideoCallRequest, (event) => {
+    info(`收到通话请求：${JSON.stringify(event)}`)
     const remoteUid = event.callerUid
-    handleVideoCall(remoteUid, event.video ? CallTypeEnum.VIDEO : CallTypeEnum.AUDIO)
+    handleVideoCall(remoteUid, event.isVideo ? CallTypeEnum.VIDEO : CallTypeEnum.AUDIO)
   })
 })
 

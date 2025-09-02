@@ -46,12 +46,10 @@
 import { emit } from '@tauri-apps/api/event'
 import { info } from '@tauri-apps/plugin-log'
 import { NInput, NSelect, NSwitch } from 'naive-ui'
-
-import { reactive } from 'vue'
-import { EventEnum, TauriCommand } from '~/src/enums'
-import router from '~/src/router'
-import { useGlobalStore } from '~/src/stores/global'
-import { invokeSilently } from '~/src/utils/TauriInvokeHandler'
+import { EventEnum, TauriCommand } from '@/enums'
+import router from '@/router'
+import { useGlobalStore } from '@/stores/global'
+import { invokeSilently } from '@/utils/TauriInvokeHandler'
 
 // 定义设置项
 const settings = reactive([

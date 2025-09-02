@@ -3,13 +3,14 @@ import { readImage, readText } from '@tauri-apps/plugin-clipboard-manager'
 import { useDebounceFn } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import type { Ref } from 'vue'
-import { LimitEnum, MessageStatusEnum, MittEnum, MsgEnum, RoomTypeEnum, TauriCommand, UploadSceneEnum } from '@/enums'
+import { LimitEnum, MessageStatusEnum, MittEnum, MsgEnum, TauriCommand, UploadSceneEnum } from '@/enums'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import type { AIModel } from '@/services/types.ts'
-import { type BaseUserItem, useCachedStore } from '@/stores/cached.ts'
+import type { BaseUserItem } from '@/stores/cached.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global.ts'
+import { useGroupStore } from '@/stores/group.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { messageStrategyMap } from '@/strategy/MessageStrategy.ts'
 import { fixFileMimeType, getMessageTypeByFile } from '@/utils/FileType.ts'
@@ -61,9 +62,9 @@ export function useCursorManager() {
 }
 
 export const useMsgInput = (messageInputDom: Ref) => {
+  const groupStore = useGroupStore()
   const chatStore = useChatStore()
   const globalStore = useGlobalStore()
-  const cachedStore = useCachedStore()
   const { uploadToQiniu } = useUpload()
   const { getCursorSelectionRange, updateSelectionRange, focusOn } = useCursorManager()
   const {
@@ -156,12 +157,10 @@ export const useMsgInput = (messageInputDom: Ref) => {
   /** @ 候选人列表 */
   const personList = computed(() => {
     if (aitKey.value && !isChinese.value) {
-      return cachedStore.currentAtUsersList.filter(
-        (user) => user.name?.startsWith(aitKey.value) && user.uid !== userUid.value
-      )
+      return groupStore.userList.filter((user) => user.name?.startsWith(aitKey.value) && user.uid !== userUid.value)
     } else {
       // 过滤当前登录的用户
-      return cachedStore.currentAtUsersList.filter((user) => user.uid !== userUid.value)
+      return groupStore.userList.filter((user) => user.uid !== userUid.value)
     }
   })
   /** 记录当前选中的提及项 key */
@@ -362,7 +361,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
         msgInput.value = messageInputDom.value.innerHTML.replace(replyDiv.outerHTML, '')
     }
     const msg = await messageStrategy.getMsg(msgInput.value, reply.value)
-    const atUidList = extractAtUserIds(msgInput.value, cachedStore.currentAtUsersList)
+    const atUidList = extractAtUserIds(msgInput.value, groupStore.userList)
     const tempMsgId = Date.now().toString()
 
     // 根据消息类型创建消息体
@@ -491,7 +490,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       await invoke(TauriCommand.SEND_MSG, {
         data: {
           id: tempMsgId,
-          roomId: globalStore.currentSession.roomId,
+          roomId: globalStore.currentSession!.roomId,
           msgType: msg.type,
           body: messageBody
         },
@@ -510,7 +509,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       // })
 
       // 更新会话最后活动时间
-      chatStore.updateSessionLastActiveTime(globalStore.currentSession.roomId)
+      chatStore.updateSessionLastActiveTime(globalStore.currentSession!.roomId)
 
       // 消息发送成功后释放预览URL
       if ((msg.type === MsgEnum.IMAGE || msg.type === MsgEnum.EMOJI) && msg.url.startsWith('blob:')) {
@@ -589,16 +588,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
     /** 获取当前光标位置和文本内容 */
     const cursorPosition = selection.focusOffset
     const text = curNode.textContent
-
-    // 判断是群聊并且有用户列表时才触发@提及
-    if (
-      globalStore.currentSession.type === RoomTypeEnum.GROUP &&
-      cachedStore.currentAtUsersList.length === 0 &&
-      text.includes('@')
-    ) {
-      // 如果当前群聊没有加载用户列表，尝试加载
-      await cachedStore.getGroupAtUserBaseInfo(globalStore.currentSession.roomId)
-    }
 
     await handleTrigger(text, cursorPosition, { range, selection, keyword: '' })
   }, 0)
@@ -992,7 +981,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
           await invoke(TauriCommand.SEND_MSG, {
             data: {
               id: tempMsgId,
-              roomId: globalStore.currentSession.roomId,
+              roomId: globalStore.currentSession!.roomId,
               msgType: MsgEnum.VIDEO,
               body: {
                 url: finalVideoUrl,
@@ -1078,7 +1067,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
           await invoke(TauriCommand.SEND_MSG, {
             data: {
               id: tempMsgId,
-              roomId: globalStore.currentSession.roomId,
+              roomId: globalStore.currentSession!.roomId,
               msgType: MsgEnum.IMAGE,
               body: messageBody
             },
@@ -1087,7 +1076,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
           })
 
           // 更新会话最后活动时间
-          chatStore.updateSessionLastActiveTime(globalStore.currentSession.roomId)
+          chatStore.updateSessionLastActiveTime(globalStore.currentSession!.roomId)
 
           // 释放本地预览URL
           URL.revokeObjectURL(msg.url)
@@ -1190,7 +1179,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
           await invoke(TauriCommand.SEND_MSG, {
             data: {
               id: tempMsgId,
-              roomId: globalStore.currentSession.roomId,
+              roomId: globalStore.currentSession!.roomId,
               msgType: MsgEnum.FILE,
               body: messageBody
             },
@@ -1199,7 +1188,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
           })
 
           // 更新会话最后活动时间
-          chatStore.updateSessionLastActiveTime(globalStore.currentSession.roomId)
+          chatStore.updateSessionLastActiveTime(globalStore.currentSession!.roomId)
 
           // console.log('📎 文件消息发送成功:', serverResponse.message.id)
 
@@ -1269,7 +1258,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
         },
         message: {
           id: tempMsgId,
-          roomId: globalStore.currentSession.roomId,
+          roomId: globalStore.currentSession!.roomId,
           sendTime: Date.now(),
           status: MessageStatusEnum.PENDING,
           type: MsgEnum.VOICE,
@@ -1318,7 +1307,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
         const sendData = {
           id: tempMsgId,
-          roomId: globalStore.currentSession.roomId,
+          roomId: globalStore.currentSession!.roomId,
           msgType: MsgEnum.VOICE,
           body: messageBody
         }
@@ -1357,7 +1346,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
           clearTimeout(statusTimer)
 
           // 更新会话最后活动时间
-          chatStore.updateSessionLastActiveTime(globalStore.currentSession.roomId)
+          chatStore.updateSessionLastActiveTime(globalStore.currentSession!.roomId)
 
           // 释放本地预览URL
           if (msg.url.startsWith('asset://')) {

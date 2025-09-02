@@ -211,8 +211,23 @@
     <!-- 邮箱验证码输入弹窗 -->
     <n-modal v-model:show="emailCodeModal" :mask-closable="false" class="rounded-8px" transform-origin="center">
       <div class="bg-#f0f0f0 w-380px h-fit box-border flex flex-col">
+        <div
+          v-if="isMac()"
+          @click="emailCodeModal = false"
+          class="mac-close z-999 size-13px shadow-inner bg-#ed6a5eff rounded-50% select-none absolute top-3px left-4px">
+          <svg class="hidden size-7px color-#000 select-none absolute top-3px left-3px">
+            <use href="#close"></use>
+          </svg>
+        </div>
+
+        <svg
+          v-if="isWindows()"
+          @click="emailCodeModal = false"
+          class="w-12px h-12px ml-a mr-4px mt-4px cursor-pointer select-none">
+          <use href="#close"></use>
+        </svg>
         <n-flex vertical class="w-full h-fit">
-          <n-flex vertical :size="10" class="p-20px">
+          <n-flex vertical :size="10" class="p-24px">
             <p class="text-(16px #303030) mb-10px">请输入邮箱验证码</p>
             <p class="text-(12px #808080) leading-5 mb-10px">
               验证码已发送至 {{ info.email }}，请查收并输入验证码完成注册
@@ -247,6 +262,7 @@ import PinInput from '@/components/common/PinInput.vue'
 import Validation from '@/components/common/Validation.vue'
 import type { RegisterUserReq } from '@/services/types.ts'
 import * as ImRequestUtils from '@/utils/ImRequestUtils'
+import { isMac, isWindows } from '@/utils/PlatformConstants'
 
 // 输入框类型定义
 type InputType = 'nickName' | 'email' | 'password' | 'code' | 'confirmPassword'
@@ -319,7 +335,7 @@ const captchaCooldownTimer = ref<NodeJS.Timeout>()
 const currentYear = dayjs().year()
 const registerForm = ref()
 const starTipsModal = ref(false)
-const emailCodeModal = ref(false)
+const emailCodeModal = ref(true)
 
 // 邮箱验证码PIN输入
 const emailCode = ref('')
@@ -465,7 +481,6 @@ const handleStepAction = async () => {
       // 发送邮箱验证码
       await ImRequestUtils.sendCaptcha({
         email: info.email,
-        code: info.code.toString(),
         uuid: captcha.value.uuid.toString(),
         templateCode: 'REGISTER_EMAIL'
       })

@@ -61,19 +61,13 @@ export const useChatStore = defineStore(
     // 会话列表的加载状态
     const sessionOptions = reactive({ isLast: false, isLoading: false, cursor: '' })
 
-    // 当前房间ID和类型的计算属性
-    const currentRoomId = computed(() => globalStore.currentSession?.roomId)
-    const currentRoomType = computed(() => globalStore.currentSession?.type)
-
     // 存储所有消息的Map
-    const messageMap = reactive<Map<string, Map<string, MessageType>>>(new Map([[currentRoomId.value, new Map()]]))
+    const messageMap = reactive<Map<string, Map<string, MessageType>>>(new Map())
     // 消息加载状态
-    const messageOptions = reactive<Map<string, { isLast: boolean; isLoading: boolean; cursor: string }>>(
-      new Map([[currentRoomId.value, { isLast: false, isLoading: false, cursor: '' }]])
-    )
+    const messageOptions = reactive<Map<string, { isLast: boolean; isLoading: boolean; cursor: string }>>(new Map())
 
     // 回复消息的映射关系
-    const replyMapping = reactive<Map<string, Map<string, string[]>>>(new Map([[currentRoomId.value, new Map()]]))
+    const replyMapping = reactive<Map<string, Map<string, string[]>>>(new Map())
     // 存储撤回的消息内容和时间
     const recalledMessages = reactive<Map<string, RecalledMessage>>(new Map())
     // 存储每条撤回消息的过期定时器
@@ -82,144 +76,111 @@ export const useChatStore = defineStore(
     // 当前聊天室的消息Map计算属性
     const currentMessageMap = computed({
       get: () => {
-        const current = messageMap.get(currentRoomId.value)
+        const current = messageMap.get(globalStore.currentSession!.roomId)
         if (current === undefined) {
-          messageMap.set(currentRoomId.value, new Map())
+          messageMap.set(globalStore.currentSession!.roomId, new Map())
         }
-        return messageMap.get(currentRoomId.value)
+        return messageMap.get(globalStore.currentSession!.roomId)
       },
       set: (val) => {
-        messageMap.set(currentRoomId.value, val as Map<string, MessageType>)
+        messageMap.set(globalStore.currentSession!.roomId, val as Map<string, MessageType>)
       }
     })
 
     // 当前聊天室的消息加载状态计算属性
     const currentMessageOptions = computed({
       get: () => {
-        const current = messageOptions.get(currentRoomId.value)
+        const current = messageOptions.get(globalStore.currentSession!.roomId)
         if (current === undefined) {
-          messageOptions.set(currentRoomId.value, { isLast: false, isLoading: true, cursor: '' })
+          messageOptions.set(globalStore.currentSession!.roomId, { isLast: false, isLoading: true, cursor: '' })
         }
-        return messageOptions.get(currentRoomId.value)
+        return messageOptions.get(globalStore.currentSession!.roomId)
       },
       set: (val) => {
-        messageOptions.set(currentRoomId.value, val as { isLast: boolean; isLoading: boolean; cursor: string })
+        messageOptions.set(
+          globalStore.currentSession!.roomId,
+          val as { isLast: boolean; isLoading: boolean; cursor: string }
+        )
       }
     })
 
     // 当前聊天室的回复消息映射计算属性
     const currentReplyMap = computed({
       get: () => {
-        const current = replyMapping.get(currentRoomId.value)
+        const current = replyMapping.get(globalStore.currentSession!.roomId)
         if (current === undefined) {
-          replyMapping.set(currentRoomId.value, new Map())
+          replyMapping.set(globalStore.currentSession!.roomId, new Map())
         }
-        return replyMapping.get(currentRoomId.value)
+        return replyMapping.get(globalStore.currentSession!.roomId)
       },
       set: (val) => {
-        replyMapping.set(currentRoomId.value, val as Map<string, string[]>)
+        replyMapping.set(globalStore.currentSession!.roomId, val as Map<string, string[]>)
       }
     })
 
     // 判断当前是否为群聊
-    const isGroup = computed(() => currentRoomType.value === RoomTypeEnum.GROUP)
+    const isGroup = computed(() => globalStore.currentSession?.type === RoomTypeEnum.GROUP)
 
     // 获取当前会话信息的计算属性
     const currentSessionInfo = computed(() =>
-      sessionList.value.find((session) => session.roomId === globalStore.currentSession.roomId)
+      sessionList.value.find((session) => session.roomId === globalStore.currentSession?.roomId)
     )
 
     // 新消息计数相关的响应式数据
-    const newMsgCount = reactive<Map<string, { count: number; isStart: boolean }>>(
-      new Map([
-        [
-          currentRoomId.value,
-          {
-            count: 0,
-            isStart: false
-          }
-        ]
-      ])
-    )
+    const newMsgCount = reactive<Map<string, { count: number; isStart: boolean }>>(new Map())
 
     // 当前聊天室的新消息计数计算属性
     const currentNewMsgCount = computed({
       get: () => {
-        const current = newMsgCount.get(currentRoomId.value)
+        const current = newMsgCount.get(globalStore.currentSession!.roomId)
         if (current === undefined) {
-          newMsgCount.set(currentRoomId.value, { count: 0, isStart: false })
+          newMsgCount.set(globalStore.currentSession!.roomId, { count: 0, isStart: false })
         }
-        return newMsgCount.get(currentRoomId.value)
+        return newMsgCount.get(globalStore.currentSession!.roomId)
       },
       set: (val) => {
-        newMsgCount.set(currentRoomId.value, val as { count: number; isStart: boolean })
+        newMsgCount.set(globalStore.currentSession!.roomId, val as { count: number; isStart: boolean })
       }
     })
 
-    // 监听当前房间ID的变化
-    watch(
-      () => globalStore.currentSession,
-      async (val, _) => {
-        const currentSession = {
-          ...val
-        }
-        if (WebviewWindow.getCurrent().label !== 'home') {
-          return
-        }
+    const changeRoom = async () => {
+      if (WebviewWindow.getCurrent().label !== 'home') {
+        return
+      }
 
-        // 1. 立即清空当前消息列表
-        // if (currentMessageMap.value) {
-        //   currentMessageMap.value.clear()
-        // }
+      currentMessageOptions.value = {
+        isLast: false,
+        isLoading: true,
+        cursor: ''
+      }
 
-        // 2. 重置消息加载状态
+      // 3. 清空回复映射
+      if (currentReplyMap.value) {
+        currentReplyMap.value.clear()
+      }
+
+      try {
+        // 从服务器加载消息
+        await getMsgList(pageSize, true)
+      } catch (error) {
+        console.error('无法加载消息:', error)
         currentMessageOptions.value = {
           isLast: false,
-          isLoading: true,
+          isLoading: false,
           cursor: ''
         }
-
-        // 3. 清空回复映射
-        if (currentReplyMap.value) {
-          currentReplyMap.value.clear()
-        }
-
-        // 4. 尝试从服务器加载新房间的消息
-        nextTick(async () => {
-          try {
-            // 从服务器加载消息
-            await getMsgList(pageSize, true)
-          } catch (error) {
-            console.error('无法加载消息:', error)
-            currentMessageOptions.value = {
-              isLast: false,
-              isLoading: false,
-              cursor: ''
-            }
-          }
-        })
-
-        // 群组的时候去请求
-        if (currentSession.type === RoomTypeEnum.GROUP) {
-          cachedStore.getGroupAtUserBaseInfo(currentSession.roomId)
-        }
-
-        // 标记当前会话已读
-        if (val) {
-          const session = sessionList.value.find((s) => s.roomId === currentSession.roomId)
-          if (session?.unreadCount) {
-            markSessionRead(currentSession.roomId)
-            updateTotalUnreadCount()
-          }
-        }
-
-        // 重置当前回复的消息
-        currentMsgReply.value = {}
-      },
-      {
-        deep: true
       }
-    )
+
+      // 标记当前会话已读
+      const session = sessionList.value.find((s) => s.roomId === globalStore.currentSession!.roomId)
+      if (session?.unreadCount) {
+        markSessionRead(globalStore.currentSession!.roomId)
+        updateTotalUnreadCount()
+      }
+
+      // 重置当前回复的消息
+      currentMsgReply.value = {}
+    }
 
     // 当前消息回复
     const currentMsgReply = ref<Partial<MessageType>>({})
@@ -230,7 +191,7 @@ export const useChatStore = defineStore(
     // 获取消息列表
     const getMsgList = async (size = pageSize, isSwitching = false) => {
       // 获取当前房间ID，用于后续比较
-      const requestRoomId = currentRoomId.value
+      const requestRoomId = globalStore.currentSession!.roomId
 
       currentMessageOptions.value && (currentMessageOptions.value.isLoading = true)
       const data: any = await invokeWithErrorHandler(
@@ -248,12 +209,12 @@ export const useChatStore = defineStore(
         }
       ).finally(() => {
         // 只有当当前房间ID仍然是请求时的房间ID时，才更新加载状态
-        if (requestRoomId === currentRoomId.value && currentMessageOptions.value) {
+        if (requestRoomId === globalStore.currentSession!.roomId && currentMessageOptions.value) {
           currentMessageOptions.value.isLoading = false
         }
       })
       // 如果没有数据或者房间ID已经变化，则不处理响应
-      if (!data || requestRoomId !== currentRoomId.value) return
+      if (!data || requestRoomId !== globalStore.currentSession!.roomId) return
 
       const computedList = computedTimeBlock(data.list)
 
@@ -276,7 +237,7 @@ export const useChatStore = defineStore(
       await cachedStore.getBatchUserInfo([...uidCollectYet])
 
       // 再次检查房间ID是否变化，防止在获取用户信息期间切换了房间
-      if (requestRoomId !== currentRoomId.value) return
+      if (requestRoomId !== globalStore.currentSession!.roomId) return
 
       // 为保证获取的历史消息在前面
       const newList = isSwitching ? computedList : [...computedList, ...chatMessageList.value]
@@ -313,29 +274,28 @@ export const useChatStore = defineStore(
           return
         }
 
-        // 保存当前选中的会话ID
-        const currentSelectedRoomId = globalStore.currentSession.roomId
-
         sessionList.value = []
         sessionList.value.push(...data)
         sessionOptions.isLoading = false
 
         sortAndUniqueSessionList()
 
+        // 保存当前选中的会话ID
+        const currentSelectedRoomId = globalStore.currentSession?.roomId
+
         // sessionList[0].unreadCount = 0
         if (!isFirstInit || isFresh) {
           isFirstInit = true
           // 只有在没有当前选中会话时，才设置第一个会话为当前会话
           if (!currentSelectedRoomId || currentSelectedRoomId === '1') {
-            globalStore.currentSession.roomId = data[0].roomId
-            globalStore.currentSession.type = data[0].type
+            globalStore.updateCurrentSession(data[0])
           }
 
           // 用会话列表第一个去请求消息列表
           await getMsgList()
           // 请求第一个群成员列表
-          currentRoomType.value === RoomTypeEnum.GROUP &&
-            (await groupStore.getGroupUserList(globalStore.currentSession.roomId))
+          globalStore.currentSession?.type === RoomTypeEnum.GROUP &&
+            (await groupStore.getGroupUserList(globalStore.currentSession!.roomId))
           // 初始化所有用户基本信息
           userStore.isSign && (await cachedStore.initAllUserBaseInfo())
           // 联系人列表
@@ -441,7 +401,7 @@ export const useChatStore = defineStore(
         session.text = formattedText!
         // 更新未读数
         if (msg.fromUser.uid !== userStore.userInfo.uid) {
-          if (route?.path !== '/message' || msg.message.roomId !== currentRoomId.value) {
+          if (route?.path !== '/message' || msg.message.roomId !== globalStore.currentSession!.roomId) {
             session.unreadCount = (session.unreadCount || 0) + 1
             await nextTick(() => {
               updateTotalUnreadCount()
@@ -552,36 +512,38 @@ export const useChatStore = defineStore(
       }
     }
 
-    // 更新消息撤回状态
-    const updateRecallStatus = async (data: RevokedMsgType) => {
-      const { msgId } = data
-      const message = currentMessageMap.value?.get(msgId)
-      if (message && typeof data.recallUid === 'string') {
-        // 存储撤回的消息内容和时间
-        const recallTime = Date.now()
-        recalledMessages.set(msgId, {
-          messageId: msgId,
-          content: message.message.body.content,
-          recallTime
+    const recordRecallMsg = (data: { recallUid: string; msg: MessageType }) => {
+      // 存储撤回的消息内容和时间
+      const recallTime = Date.now()
+      recalledMessages.set(data.msg.message.id, {
+        messageId: data.msg.message.id,
+        content: data.msg.message.body.content,
+        recallTime
+      })
+
+      if (data.recallUid === userStore.userInfo.uid) {
+        // 使用 Worker 来处理定时器
+        timerWorker.postMessage({
+          type: 'startTimer',
+          msgId: data.msg.message.id,
+          duration: RECALL_EXPIRATION_TIME
         })
+      }
 
-        if (message.fromUser.uid === userStore.userInfo.uid) {
-          // 使用 Worker 来处理定时器
-          timerWorker.postMessage({
-            type: 'startTimer',
-            msgId,
-            duration: RECALL_EXPIRATION_TIME
-          })
-        }
+      // 记录这个消息ID已经有了定时器
+      expirationTimers.set(data.msg.message.id, true)
+    }
 
-        // 记录这个消息ID已经有了定时器
-        expirationTimers.set(msgId, true)
-
+    // 更新消息撤回状态
+    const updateRecallMsg = async (data: RevokedMsgType) => {
+      const { msgId } = data
+      const message = currentMessageMap.value!.get(msgId)
+      if (message && typeof data.recallUid === 'string') {
         const cacheUser = cachedStore.userCachedList[data.recallUid]
         let recallMessageBody: string
 
         // 如果撤回者的 id 不等于消息发送人的 id, 或者你本人就是管理员，那么显示管理员撤回的。
-        if (data.recallUid !== message.fromUser.uid) {
+        if (data.recallUid !== userStore.userInfo.uid) {
           recallMessageBody = `管理员"${cacheUser.name}"撤回了一条消息` // 后期根据本地用户数据修改
         } else {
           // 如果被撤回的消息是消息发送者撤回，正常显示
@@ -597,7 +559,7 @@ export const useChatStore = defineStore(
           await invokeWithErrorHandler(
             TauriCommand.UPDATE_MESSAGE_RECALL_STATUS,
             {
-              messageId: msgId,
+              messageId: message.message.id,
               messageType: MsgEnum.RECALL,
               messageBody: recallMessageBody
             },
@@ -671,7 +633,7 @@ export const useChatStore = defineStore(
           const updatedMsg = { ...msg, uploadProgress }
           currentMessageMap.value?.set(msg.message.id, updatedMsg)
           // 强制触发响应式更新
-          messageMap.set(currentRoomId.value, new Map(currentMessageMap.value))
+          messageMap.set(globalStore.currentSession!.roomId, new Map(currentMessageMap.value))
         } else {
           currentMessageMap.value?.set(msg.message.id, msg)
         }
@@ -699,7 +661,7 @@ export const useChatStore = defineStore(
     }
 
     // 删除会话
-    const removeContact = (roomId: string) => {
+    const removeSession = (roomId: string) => {
       const index = sessionList.value.findIndex((session) => session.roomId === roomId)
       if (index !== -1) {
         sessionList.value.splice(index, 1)
@@ -745,6 +707,9 @@ export const useChatStore = defineStore(
 
     // 更新未读消息计数
     const updateTotalUnreadCount = async () => {
+      if (WebviewWindow.getCurrent().label !== 'home') {
+        return
+      }
       info('[chat]更新全局未读消息计数')
       // 使用 Array.from 确保遍历的是最新的 sessionList
       const totalUnread = Array.from(sessionList.value).reduce((total, session) => {
@@ -777,10 +742,10 @@ export const useChatStore = defineStore(
 
     // 重置当前聊天室的消息并刷新最新消息
     const resetAndRefreshCurrentRoomMessages = async () => {
-      if (!currentRoomId.value) return
+      if (!globalStore.currentSession!.roomId) return
 
       // 保存当前房间ID，用于后续比较
-      const requestRoomId = currentRoomId.value
+      const requestRoomId = globalStore.currentSession!.roomId
 
       try {
         // 1. 清空当前消息列表
@@ -809,7 +774,7 @@ export const useChatStore = defineStore(
       } catch (error) {
         console.error('[Network] 重置并刷新消息列表失败:', error)
         // 如果获取失败，确保重置加载状态
-        if (currentRoomId.value === requestRoomId && currentMessageOptions.value) {
+        if (globalStore.currentSession!.roomId === requestRoomId && currentMessageOptions.value) {
           currentMessageOptions.value = {
             isLast: false,
             isLoading: false,
@@ -819,6 +784,11 @@ export const useChatStore = defineStore(
       }
     }
 
+    // 获取所有群组类型的会话
+    const getGroupSessions = () => {
+      return sessionList.value.filter((session) => session.type === RoomTypeEnum.GROUP)
+    }
+
     return {
       getMsgIndex,
       chatMessageList,
@@ -826,7 +796,8 @@ export const useChatStore = defineStore(
       deleteMsg,
       clearNewMsgCount,
       updateMarkCount,
-      updateRecallStatus,
+      updateRecallMsg,
+      recordRecallMsg,
       updateMsg,
       newMsgCount,
       messageMap,
@@ -847,13 +818,15 @@ export const useChatStore = defineStore(
       isGroup,
       currentSessionInfo,
       getMessage,
-      removeContact,
       getRecalledMessage,
       recalledMessages,
       clearAllExpirationTimers,
       updateTotalUnreadCount,
       clearUnreadCount,
-      resetAndRefreshCurrentRoomMessages
+      resetAndRefreshCurrentRoomMessages,
+      getGroupSessions,
+      removeSession,
+      changeRoom
     }
   },
   {

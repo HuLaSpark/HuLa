@@ -466,10 +466,9 @@ export async function revokeAdmin(body: { roomId: string; uidList: string[] }) {
   })
 }
 
-export async function groupList(params: { current: number; size: number }) {
+export async function groupList() {
   return await imRequest({
-    url: ImUrlEnum.GROUP_LIST,
-    params
+    url: ImUrlEnum.GROUP_LIST
   })
 }
 
@@ -530,7 +529,6 @@ export async function getCaptcha() {
 
 export async function sendCaptcha(body: {
   email: string
-  code: string
   uuid?: string
   operationType?: 'register' | 'forgot'
   templateCode: 'REGISTER_EMAIL' | 'REGISTER_SMS' | 'MOBILE_LOGIN' | 'MOBILE_EDIT' | 'EMAIL_EDIT' | 'PASSWORD_EDIT'

@@ -4,8 +4,8 @@
     :class="[
       isGroup
         ? isCollapsed
-          ? 'w-180px border-l-(1px solid [--right-chat-footer-line-color]) p-[12px_0_12px_6px] custom-shadow'
-          : 'w-0 pr-1px'
+          ? 'w-0 pr-1px'
+          : 'w-180px border-l-(1px solid [--right-chat-footer-line-color]) p-[12px_0_12px_6px] custom-shadow'
         : 'w-0 pr-1px',
       'item-box'
     ]">
@@ -15,155 +15,158 @@
       @click.stop="isCollapsed = !isCollapsed"
       style="border-radius: 18px 0 0 18px"
       class="contraction transition-all duration-600 ease-in-out absolute top-35% left--14px cursor-pointer opacity-0 bg-#c8c8c833 h-60px w-14px">
-      <svg :class="isCollapsed ? 'rotate-180' : 'rotate-0'" class="size-16px color-#909090 absolute top-38%">
+      <svg
+        :class="isCollapsed ? 'rotate-0' : 'rotate-180'"
+        class="size-16px color-#909090 dark:color-#303030 absolute top-38%">
         <use href="#left-arrow"></use>
       </svg>
     </div>
 
-    <!-- 群公告 -->
-    <n-flex v-if="isGroup" vertical :size="14" class="px-4px py-10px">
-      <n-flex
-        align="center"
-        justify="space-between"
-        class="cursor-pointer"
-        @click="handleOpenAnnoun(announNum === 0 && isAddAnnoun)">
-        <p class="text-(14px --text-color)">群公告须知</p>
-        <svg class="size-16px rotate-270 color-[--text-color]">
-          <use v-if="announNum === 0 && isAddAnnoun" href="#plus"></use>
-          <use v-else href="#down"></use>
+    <div v-if="isGroup && !isCollapsed">
+      <!-- 群公告 -->
+      <n-flex vertical :size="14" class="px-4px py-10px">
+        <n-flex
+          align="center"
+          justify="space-between"
+          class="cursor-pointer"
+          @click="handleOpenAnnoun(announNum === 0 && isAddAnnoun)">
+          <p class="text-(14px --text-color)">群公告须知</p>
+          <svg class="size-16px rotate-270 color-[--text-color]">
+            <use v-if="announNum === 0 && isAddAnnoun" href="#plus"></use>
+            <use v-else href="#down"></use>
+          </svg>
+        </n-flex>
+
+        <!-- 公告加载失败提示 -->
+        <n-flex v-if="announError" class="h-74px" align="center" justify="center">
+          <div class="text-center">
+            <p class="text-(12px #909090) mb-8px">公告加载失败，请重试</p>
+            <n-button size="tiny" @click="handleRetryAnnouncement">重试</n-button>
+          </div>
+        </n-flex>
+
+        <!-- 公告内容 -->
+        <n-scrollbar v-else class="h-74px">
+          <p class="text-(12px #909090) leading-6 line-clamp-4 max-w-99%" v-if="announNum === 0">
+            请不要把重要信息发到该群，网络不是法外之地，请遵守网络规范，否则直接删除。
+          </p>
+          <p v-else class="announcement-text text-(12px #909090) leading-6 line-clamp-4 max-w-99% break-words">
+            {{ announList.length > 0 ? announList[0]?.content : '' }}
+          </p>
+        </n-scrollbar>
+      </n-flex>
+
+      <n-flex v-if="!isSearch" align="center" justify="space-between" class="pr-8px pl-8px h-42px">
+        <span class="text-14px">在线成员&nbsp;{{ onlineCountDisplay }}</span>
+        <svg @click="handleSelect" class="size-14px">
+          <use href="#search"></use>
         </svg>
       </n-flex>
-
-      <!-- 公告加载失败提示 -->
-      <n-flex v-if="announError" class="h-74px" align="center" justify="center">
-        <div class="text-center">
-          <p class="text-(12px #909090) mb-8px">公告加载失败，请重试</p>
-          <n-button size="tiny" @click="handleRetryAnnouncement">重试</n-button>
-        </div>
+      <!-- 搜索框 -->
+      <n-flex v-else align="center" class="pr-8px h-42px">
+        <n-input
+          :on-input="handleSearch"
+          @blur="handleBlur"
+          ref="inputInstRef"
+          v-model:value="searchRef"
+          clearable
+          placeholder="搜索"
+          type="text"
+          size="tiny"
+          spellCheck="false"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          class="h-26px w-95% lh-26px rounded-6px">
+          <template #prefix>
+            <svg class="w-12px h-12px">
+              <use href="#search"></use>
+            </svg>
+          </template>
+        </n-input>
       </n-flex>
 
-      <!-- 公告内容 -->
-      <n-scrollbar v-else class="h-74px">
-        <p class="text-(12px #909090) leading-6 line-clamp-4 max-w-99%" v-if="announNum === 0">
-          请不要把重要信息发到该群，网络不是法外之地，请遵守网络规范，否则直接删除。
-        </p>
-        <p v-else class="announcement-text text-(12px #909090) leading-6 line-clamp-4 max-w-99% break-words">
-          {{ announList.length > 0 ? announList[0]?.content : '' }}
-        </p>
-      </n-scrollbar>
-    </n-flex>
-
-    <n-flex v-if="isGroup && !isSearch" align="center" justify="space-between" class="pr-8px pl-8px h-42px">
-      <span class="text-14px">在线成员&nbsp;{{ onlineCountDisplay }}</span>
-      <svg @click="handleSelect" class="size-14px">
-        <use href="#search"></use>
-      </svg>
-    </n-flex>
-    <!-- 搜索框 -->
-    <n-flex v-else-if="isGroup" align="center" class="pr-8px h-42px">
-      <n-input
-        :on-input="handleSearch"
-        @blur="handleBlur"
-        ref="inputInstRef"
-        v-model:value="searchRef"
-        clearable
-        placeholder="搜索"
-        type="text"
-        size="tiny"
-        spellCheck="false"
-        autoComplete="off"
-        autoCorrect="off"
-        autoCapitalize="off"
-        class="h-26px w-95% lh-26px rounded-6px">
-        <template #prefix>
-          <svg class="w-12px h-12px">
-            <use href="#search"></use>
-          </svg>
-        </template>
-      </n-input>
-    </n-flex>
-
-    <!--  // TODO popover显示的时候去改变窗口的大小、当点击了半个选项的时候也会出现原生滚动条 (nyh -> 2024-03-25 05:04:37)  -->
-    <!-- // TODO 如果popover显示就先暂时不让滚动，因为在n-scrollbar和n-virtual-list中使用当我点击最后一个选项时候n-popover位置不够导致出现原生滚动条 (nyh -> 2024-03-24 22:46:38) -->
-    <!-- // TODO 如果直接使用n-virtual-list的滚动配上n-popover乎也没有这个bug，但是当点击倒数第二个的时候还是会出现滚动条 (nyh -> 2024-03-25 00:30:53)   -->
-    <!-- 成员列表 -->
-    <n-virtual-list
-      v-if="isGroup"
-      id="image-chat-sidebar"
-      style="max-height: calc(100vh - 260px)"
-      item-resizable
-      @scroll="handleScroll($event)"
-      :item-size="46"
-      :items="displayedUserList">
-      <template #default="{ item }">
-        <n-popover
-          :ref="(el: any) => (infoPopoverRefs[item.uid] = el)"
-          @update:show="handlePopoverUpdate(item.uid, $event)"
-          trigger="click"
-          placement="left"
-          :show-arrow="false"
-          style="padding: 0; background: var(--bg-info)">
-          <template #trigger>
-            <ContextMenu
-              :content="item"
-              @select="$event.click(item, 'Sidebar')"
-              :menu="optionsList"
-              :special-menu="report">
-              <n-flex
-                @click="selectKey = item.uid"
-                :key="item.uid"
-                :size="10"
-                align="center"
-                justify="space-between"
-                class="item">
-                <n-flex align="center" :size="8" class="flex-1 truncate">
-                  <div class="relative inline-flex items-center justify-center">
-                    <n-avatar
-                      round
-                      class="grayscale"
-                      :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
-                      :size="26"
-                      :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
-                      :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
-                      :src="AvatarUtils.getAvatarUrl(item.avatar)"
-                      @load="userLoadedMap[item.uid] = true"
-                      @error="userLoadedMap[item.uid] = true" />
-                  </div>
-                  <n-flex vertical :size="2" class="flex-1 truncate">
-                    <p :title="item.name" class="text-12px truncate flex-1">
-                      {{ item.myName ? item.myName : item.name }}
-                    </p>
-                    <n-flex
-                      v-if="item.userStateId && getUserState(item.userStateId)"
-                      align="center"
-                      :size="4"
-                      class="flex-1">
-                      <img class="size-12px" :src="getUserState(item.userStateId)?.url" alt="" />
-                      <span class="text-10px text-[--chat-text-color] truncate">
-                        {{ getUserState(item.userStateId)?.title }}
-                      </span>
+      <!--  // TODO popover显示的时候去改变窗口的大小、当点击了半个选项的时候也会出现原生滚动条 (nyh -> 2024-03-25 05:04:37)  -->
+      <!-- // TODO 如果popover显示就先暂时不让滚动，因为在n-scrollbar和n-virtual-list中使用当我点击最后一个选项时候n-popover位置不够导致出现原生滚动条 (nyh -> 2024-03-24 22:46:38) -->
+      <!-- // TODO 如果直接使用n-virtual-list的滚动配上n-popover乎也没有这个bug，但是当点击倒数第二个的时候还是会出现滚动条 (nyh -> 2024-03-25 00:30:53)   -->
+      <!-- 成员列表 -->
+      <n-virtual-list
+        id="image-chat-sidebar"
+        style="max-height: calc(100vh - 260px)"
+        item-resizable
+        @scroll="handleScroll($event)"
+        :item-size="46"
+        :items="filteredUserList">
+        <template #default="{ item }">
+          <n-popover
+            :ref="(el: any) => (infoPopoverRefs[item.uid] = el)"
+            @update:show="handlePopoverUpdate(item.uid, $event)"
+            trigger="click"
+            placement="left"
+            :show-arrow="false"
+            style="padding: 0; background: var(--bg-info)">
+            <template #trigger>
+              <ContextMenu
+                :content="item"
+                @select="$event.click(item, 'Sidebar')"
+                :menu="optionsList"
+                :special-menu="report">
+                <n-flex
+                  @click="selectKey = item.uid"
+                  :key="item.uid"
+                  :size="10"
+                  align="center"
+                  justify="space-between"
+                  class="item">
+                  <n-flex align="center" :size="8" class="flex-1 truncate">
+                    <div class="relative inline-flex items-center justify-center">
+                      <n-avatar
+                        round
+                        class="grayscale"
+                        :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
+                        :size="26"
+                        :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+                        :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
+                        :src="AvatarUtils.getAvatarUrl(item.avatar)"
+                        @load="userLoadedMap[item.uid] = true"
+                        @error="userLoadedMap[item.uid] = true" />
+                    </div>
+                    <n-flex vertical :size="2" class="flex-1 truncate">
+                      <p :title="item.name" class="text-12px truncate flex-1">
+                        {{ item.myName ? item.myName : item.name }}
+                      </p>
+                      <n-flex
+                        v-if="item.userStateId && getUserState(item.userStateId)"
+                        align="center"
+                        :size="4"
+                        class="flex-1">
+                        <img class="size-12px" :src="getUserState(item.userStateId)?.url" alt="" />
+                        <span class="text-10px text-[--chat-text-color] truncate">
+                          {{ getUserState(item.userStateId)?.title }}
+                        </span>
+                      </n-flex>
                     </n-flex>
                   </n-flex>
-                </n-flex>
 
-                <div
-                  v-if="item.roleId === RoleEnum.LORD"
-                  class="flex px-4px bg-#d5304f30 py-3px rounded-4px size-fit select-none">
-                  <p class="text-(10px #d5304f)">群主</p>
-                </div>
-                <div
-                  v-if="item.roleId === RoleEnum.ADMIN"
-                  class="flex px-4px bg-#1a7d6b30 py-3px rounded-4px size-fit select-none">
-                  <p class="text-(10px #008080)">管理员</p>
-                </div>
-              </n-flex>
-            </ContextMenu>
-          </template>
-          <!-- 用户个人信息框 -->
-          <InfoPopover v-if="selectKey === item.uid" :uid="item.uid" :activeStatus="item.activeStatus" />
-        </n-popover>
-      </template>
-    </n-virtual-list>
+                  <div
+                    v-if="item.roleId === RoleEnum.LORD"
+                    class="flex px-4px bg-#d5304f30 py-3px rounded-4px size-fit select-none">
+                    <p class="text-(10px #d5304f)">群主</p>
+                  </div>
+                  <div
+                    v-if="item.roleId === RoleEnum.ADMIN"
+                    class="flex px-4px bg-#1a7d6b30 py-3px rounded-4px size-fit select-none">
+                    <p class="text-(10px #008080)">管理员</p>
+                  </div>
+                </n-flex>
+              </ContextMenu>
+            </template>
+            <!-- 用户个人信息框 -->
+            <InfoPopover v-if="selectKey === item.uid" :uid="item.uid" :activeStatus="item.activeStatus" />
+          </n-popover>
+        </template>
+      </n-virtual-list>
+    </div>
   </main>
 </template>
 <script setup lang="ts">
@@ -209,7 +212,7 @@ const searchRef = ref('')
 /** List中的Popover组件实例 */
 const infoPopoverRefs = ref<Record<string, any>>([])
 const inputInstRef = ref<InputInst | null>(null)
-const isCollapsed = ref(true)
+const isCollapsed = ref(false)
 const { optionsList, report, selectKey } = useChatMain()
 const { handlePopoverUpdate, enableScroll } = usePopover(selectKey, 'image-chat-sidebar')
 provide('popoverControls', { enableScroll })
@@ -243,43 +246,28 @@ const memberCache = ref<Map<string, any[]>>(new Map())
 /** 用户信息加载状态 */
 const userLoadedMap = ref<Record<string, boolean>>({})
 
-// 添加一个新的计算属性来合并用户列表
-const mergedUserList = computed(() => {
-  // 创建一个Map用于去重，使用uid作为key
-  const userMap = new Map()
-
-  // 首先添加在线用户列表
-  groupStore.userList.forEach((user) => {
-    userMap.set(user.uid, user)
-  })
-
-  // 添加缓存的用户列表
-  cachedStore.currentAtUsersList.forEach((cachedUser) => {
-    if (!userMap.has(cachedUser.uid)) {
-      // 如果用户不在在线列表中，添加到Map中
-      // 为缓存用户添加默认的activeStatus
-      userMap.set(cachedUser.uid, {
-        ...cachedUser,
-        activeStatus: OnlineEnum.OFFLINE
-      })
-    }
-  })
-
-  // rust已排序
-  return Array.from(userMap.values())
-})
-
 // 创建过滤后的用户列表计算属性
 const filteredUserList = computed(() => {
-  if (!searchRef.value) {
-    return mergedUserList.value
+  let userList = groupStore.userList
+  if (searchRef.value) {
+    userList = userList.filter((user) => {
+      const flag1 = user.name.toLowerCase().includes(searchRef.value.toLowerCase())
+      const flag2 = user.myName?.toLowerCase().includes(searchRef.value.toLowerCase())
+      return flag1 || flag2
+    })
   }
-  return mergedUserList.value.filter((user) => user.name.toLowerCase().includes(searchRef.value.toLowerCase()))
+  return userList.sort((a, b) => {
+    if (a.activeStatus !== b.activeStatus) {
+      return a.activeStatus - b.activeStatus
+    }
+
+    return a.name.localeCompare(b.name)
+  })
 })
 
 // 监听成员源列表变化
 watch(
-  [() => groupStore.userList, () => cachedStore.currentAtUsersList],
+  [() => groupStore.userList],
   () => {
     if (groupStore.userList.length > 0 && currentLoadingRoomId.value === globalStore.currentSession?.roomId) {
       displayedUserList.value = filteredUserList.value
@@ -310,16 +298,13 @@ watch(
         // 重置群组数据后再加载新的群成员数据（不清空UI）
         groupStore.resetGroupData()
         try {
-          await groupStore.getGroupUserList(currentSession.roomId)
-          // 获取群组统计信息（包括在线人数）
-          await groupStore.getCountStatistic(currentSession.roomId)
-
+          await groupStore.getGroupUserList(currentSession.roomId!)
           // 初始化群公告
           await handleInitAnnoun()
           // 在数据完成后替换展示列表
           displayedUserList.value = filteredUserList.value
           // 更新缓存
-          memberCache.value.set(currentSession.roomId, displayedUserList.value)
+          memberCache.value.set(currentSession.roomId!, displayedUserList.value)
         } catch (error) {
           console.error('加载群组信息失败:', error)
         }
@@ -472,7 +457,7 @@ onMounted(async () => {
     handlePopoverUpdate(event.uid)
   })
 
-  addListener(
+  await addListener(
     appWindow.listen('announcementClear', async () => {
       announNum.value = 0
     }),
@@ -495,9 +480,6 @@ onMounted(async () => {
         }
       }
     }
-
-    // 为不同事件注册处理函数
-    // useMitt.on(MittEnum.MSG_BOX_SHOW, handleAnnounInitOnEvent(false))
     // 监听群公告消息
     useMitt.on(WsResponseMessageType.ROOM_GROUP_NOTICE_MSG, handleAnnounInitOnEvent(true))
     useMitt.on(WsResponseMessageType.ROOM_EDIT_GROUP_NOTICE_MSG, handleAnnounInitOnEvent(true))

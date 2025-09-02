@@ -13,7 +13,6 @@ import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useStorage } from '@vueuse/core'
 import { MittEnum, StoresEnum, ThemeEnum } from '@/enums'
 import { useGlobalShortcut } from '@/hooks/useGlobalShortcut.ts'
-import { useLogin } from '@/hooks/useLogin.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useMobile } from '@/hooks/useMobile.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
@@ -27,7 +26,6 @@ const appWindow = WebviewWindow.getCurrent()
 const { createWebviewWindow } = useWindow()
 const settingStore = useSettingStore()
 const { themes, lockScreen, page } = storeToRefs(settingStore)
-const { resetLoginState, logout } = useLogin()
 const token = useStorage<string | null>('TOKEN', null)
 const refreshToken = useStorage<string | null>('REFRESH_TOKEN', null)
 const { addListener } = useTauriListener()
@@ -119,14 +117,6 @@ onMounted(async () => {
     /** 禁止右键菜单 */
     window.addEventListener('contextmenu', (e) => e.preventDefault(), false)
   }
-  // 监听需要重新登录的事件
-  window.addEventListener('needReLogin', async () => {
-    console.log('👾 需要重新登录')
-    // 重置登录状态
-    await resetLoginState()
-    // 最后调用登出方法(这会创建登录窗口)
-    await logout()
-  })
   useMitt.on(MittEnum.CHECK_UPDATE, async () => {
     const checkUpdateWindow = await WebviewWindow.getByLabel('checkupdate')
     await checkUpdateWindow?.show()
@@ -137,7 +127,7 @@ onMounted(async () => {
     closeWindow?.close()
   })
 
-  addListener(
+  await addListener(
     listen('refresh_token_event', (event) => {
       console.log('🔄 收到 refresh_token 事件')
 

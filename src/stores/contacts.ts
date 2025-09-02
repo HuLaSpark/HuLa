@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
-import { StoresEnum, TauriCommand } from '@/enums'
-import type { ContactItem, GroupListReq, RequestFriendItem } from '@/services/types'
+import { StoresEnum } from '@/enums'
+import type { ContactItem, RequestFriendItem } from '@/services/types'
 import { RequestFriendAgreeStatus } from '@/services/types'
 import { useGlobalStore } from '@/stores/global'
 import {
@@ -10,8 +10,6 @@ import {
   handleInvite,
   requestApplyPage
 } from '@/utils/ImRequestUtils'
-import { ErrorType, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler.ts'
-
 // 定义分页大小常量
 export const pageSize = 20
 export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
@@ -26,9 +24,6 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
   const contactsOptions = ref({ isLast: false, isLoading: false, cursor: '' })
   /** 好友请求列表分页选项 */
   const applyPageOptions = ref({ isLast: false, isLoading: false, cursor: '', pageNo: 1 })
-
-  /** 群聊列表 */
-  const groupChatList = ref<GroupListReq[]>([])
 
   /**
    * 获取联系人列表
@@ -53,23 +48,6 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
 
     // 获取数据后更新联系人列表
     contactsList.value.splice(0, contactsList.value.length, ...contactsList.value)
-  }
-
-  /**
-   * 获取群聊列表
-   */
-  const getGroupChatList = async () => {
-    const response: any = await invokeWithErrorHandler(
-      TauriCommand.PAGE_ROOM,
-      {
-        pageParam: { current: 1, size: 50 }
-      },
-      {
-        customErrorMessage: '获取群聊列表失败',
-        errorType: ErrorType.Network
-      }
-    )
-    groupChatList.value = response.records
   }
 
   /**
@@ -178,11 +156,9 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
 
   return {
     getContactList,
-    getGroupChatList,
     getApplyPage,
     getApplyUnReadCount,
     contactsList,
-    groupChatList,
     requestFriendsList,
     contactsOptions,
     applyPageOptions,

@@ -26,8 +26,9 @@
 
 <script setup lang="ts">
 import { LogicalSize } from '@tauri-apps/api/dpi'
-import { emitTo } from '@tauri-apps/api/event'
+import { emitTo, listen } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { info } from '@tauri-apps/plugin-log'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import {
   ChangeTypeEnum,
@@ -40,7 +41,7 @@ import {
 } from '@/enums'
 import { useCheckUpdate } from '@/hooks/useCheckUpdate'
 import { useMitt } from '@/hooks/useMitt.ts'
-import type { MarkItemType, MessageType, RevokedMsgType } from '@/services/types.ts'
+import type { MarkItemType, MessageType, RevokedMsgType, UserItem } from '@/services/types.ts'
 import rustWebSocketClient from '@/services/webSocketRust'
 import {
   type LoginSuccessResType,
@@ -59,6 +60,7 @@ import { audioManager } from '@/utils/AudioManager'
 import { isWindows } from '@/utils/PlatformConstants'
 import { clearListener, initListener, readCountQueue } from '@/utils/ReadCountQueue'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
+import { useLogin } from '../hooks/useLogin'
 
 const loadingPercentage = ref(10)
 const loadingText = ref('正在加载应用...')
@@ -80,11 +82,20 @@ const AsyncCenter = defineAsyncComponent({
     await import('./left/index.vue')
     loadingText.value = '正在加载中间面板...'
     const comp = await import('./center/index.vue')
+
+    // 加载所有会话
+    await chatStore.getSessionList(true)
+
+    // 加载所有群的成员数据
+    const groupSessions = chatStore.getGroupSessions()
+    await Promise.all([
+      ...groupSessions.map((session) => groupStore.getGroupUserList(session.roomId, true)),
+      groupStore.setGroupDetails()
+    ])
+
     loadingPercentage.value = 66
     return comp
-  },
-  delay: 600,
-  timeout: 3000
+  }
 })
 
 const AsyncRight = defineAsyncComponent({
@@ -115,8 +126,6 @@ const cachedStore = useCachedStore()
 const configStore = useConfigStore()
 const { checkUpdate, CHECK_UPDATE_TIME } = useCheckUpdate()
 const userUid = computed(() => userStore.userInfo.uid)
-// 清空未读消息
-// globalStore.unReadMark.newMsgUnreadCount = 0
 const shrinkStatus = ref(false)
 
 // 播放消息音效
@@ -198,7 +207,7 @@ useMitt.on(WsResponseMessageType.OFFLINE, async () => {
 useMitt.on(WsResponseMessageType.ONLINE, async (onStatusChangeType: OnStatusChangeType) => {
   console.log('收到用户上线通知')
   if (onStatusChangeType && onStatusChangeType.onlineNum) {
-    groupStore.countInfo.onlineNum = onStatusChangeType.onlineNum
+    groupStore.countInfo!.onlineNum = onStatusChangeType.onlineNum
   }
   if (onStatusChangeType && onStatusChangeType.member) {
     await groupStore.updateUserStatus(onStatusChangeType.member)
@@ -225,7 +234,7 @@ useMitt.on(WsResponseMessageType.INVALID_USER, (param: { uid: string }) => {
   // 消息列表删掉拉黑的发言
   chatStore.filterUser(data.uid)
   // 群成员列表删掉拉黑的用户
-  groupStore.filterUser(data.uid)
+  groupStore.removeUserItem(data.uid)
 })
 useMitt.on(WsResponseMessageType.MSG_MARK_ITEM, async (data: { markList: MarkItemType[] }) => {
   console.log('收到消息标记更新:', data)
@@ -239,15 +248,11 @@ useMitt.on(WsResponseMessageType.MSG_MARK_ITEM, async (data: { markList: MarkIte
   }
 })
 useMitt.on(WsResponseMessageType.MSG_RECALL, (data: RevokedMsgType) => {
-  chatStore.updateRecallStatus(data)
+  chatStore.updateRecallMsg(data)
 })
 useMitt.on(WsResponseMessageType.MY_ROOM_INFO_CHANGE, (data: { myName: string; roomId: string; uid: string }) => {
   // 更新用户在群聊中的昵称
-  cachedStore.updateUserGroupNickname(data)
-  // 如果当前正在查看的是该群聊，则更新群组信息
-  if (globalStore.currentSession?.roomId === data.roomId) {
-    groupStore.getCountStatistic(globalStore.currentSession?.roomId)
-  }
+  groupStore.updateUserItem(data.uid, { myName: data.myName }, data.roomId)
 })
 useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   chatStore.pushMsg(data)
@@ -319,23 +324,40 @@ useMitt.on(
   }
 )
 useMitt.on(
-  WsResponseMessageType.NEW_FRIEND_SESSION,
-  async (param: {
-    roomId: string
-    uid: string
-    changeType: ChangeTypeEnum
-    activeStatus: OnlineEnum
-    lastOptTime: number
-  }) => {
+  WsResponseMessageType.WS_MEMBER_CHANGE,
+  async (param: { roomId: string; changeType: ChangeTypeEnum; userList: UserItem[] }) => {
+    info('监听到群成员变更消息')
     // changeType 1 加入群组，2： 移除群组
-    if (param.roomId === globalStore.currentSession.roomId && globalStore.currentSession.type === RoomTypeEnum.GROUP) {
-      await cachedStore.getGroupAtUserBaseInfo(param.roomId)
-      if (param.changeType === ChangeTypeEnum.REMOVE) {
+    if (param.roomId === globalStore.currentSession?.roomId && globalStore.currentSession.type === RoomTypeEnum.GROUP) {
+      if (param.changeType === ChangeTypeEnum.REMOVE || param.changeType === ChangeTypeEnum.EXIT_GROUP) {
         // 移除群成员
-        groupStore.filterUser(param.uid)
+        param.userList.forEach((item) => {
+          // 如果移除的是自己，则删除会话
+          if (item.uid === userStore.userInfo.uid) {
+            info('本人退出群聊，移除会话数据')
+            chatStore.removeSession(param.roomId)
+            groupStore.removeAllUsers(param.roomId)
+
+            if (globalStore.currentSession?.roomId === param.roomId) {
+              globalStore.updateCurrentSession(chatStore.sessionList[0])
+            }
+          } else {
+            info('群成员退出群聊，移除群内的成员数据')
+            // 移除该群中的群成员数据
+            groupStore.removeUserItem(item.uid, param.roomId)
+          }
+        })
         // TODO 添加一条退出群聊的消息
       } else {
-        // TODO 添加群成员
+        param.userList.forEach((item) => {
+          // 如果是自己加入群聊，则需要添加新的会话
+          if (item.uid === userStore.userInfo.uid) {
+            info('本人加入群聊，加载该群聊的会话数据')
+          } else {
+            info('群成员加入群聊，添加群成员数据')
+            groupStore.addUserItem(item, param.roomId)
+          }
+        })
         // TODO 添加一条入群的消息
       }
     }
@@ -354,22 +376,18 @@ useMitt.on(WsResponseMessageType.ROOM_INFO_CHANGE, async (data: { roomId: string
     name,
     avatar
   })
-
-  // 如果当前正在查看的是该群聊，则需要刷新群组详情
-  if (globalStore.currentSession?.roomId === roomId && globalStore.currentSession.type === RoomTypeEnum.GROUP) {
-    // 重新获取群组信息统计
-    await groupStore.getCountStatistic(globalStore.currentSession?.roomId)
-  }
 })
-useMitt.on(WsResponseMessageType.ROOM_DISSOLUTION, async () => {
-  // 刷新群聊列表
-  await contactStore.getGroupChatList()
+
+const { resetLoginState, logout } = useLogin()
+listen('relogin', async () => {
+  info('收到重新登录事件')
+  await resetLoginState()
+  await logout()
 })
 
 onBeforeMount(async () => {
   // 默认执行一次
   await contactStore.getContactList(true)
-  await contactStore.getGroupChatList()
   // 获取最新的未读数
   await contactStore.getApplyUnReadCount()
 })

@@ -4,7 +4,7 @@
       <ActionBar :current-label="appWindow.label" />
 
       <!-- 需要判断当前路由是否是信息详情界面 -->
-      <ChatBox :active-item="activeItem" :key="activeItem?.roomId" v-if="msgBoxShow && isChat && activeItem !== -1" />
+      <ChatBox v-if="isChat" />
 
       <Details :content="detailsContent" v-else-if="detailsShow && isDetails && detailsContent?.type !== 'apply'" />
 
@@ -31,9 +31,7 @@ import { useSettingStore } from '@/stores/setting.ts'
 const appWindow = WebviewWindow.getCurrent()
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
-const msgBoxShow = ref(false)
 const detailsShow = ref(false)
-const activeItem = ref()
 const detailsContent = ref<DetailsContent>()
 const imgTheme = ref<ThemeEnum>(themes.value.content)
 const prefers = matchMedia('(prefers-color-scheme: dark)')
@@ -62,13 +60,6 @@ watchEffect(() => {
 })
 
 onMounted(() => {
-  if (isChat) {
-    useMitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
-      msgBoxShow.value = event.msgBoxShow
-      activeItem.value = event.item
-    })
-  }
-
   if (isDetails) {
     useMitt.on(MittEnum.APPLY_SHOW, (event: { context: DetailsContent }) => {
       detailsContent.value = event.context

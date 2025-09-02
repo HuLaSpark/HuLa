@@ -528,7 +528,6 @@ const handleRegisterStep = async () => {
     try {
       await sendCaptcha({
         email: registerInfo.value.email,
-        code: registerInfo.value.code.toString(),
         uuid: captcha.value.uuid.toString(),
         templateCode: 'REGISTER_EMAIL'
       })

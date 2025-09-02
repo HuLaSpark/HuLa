@@ -7,7 +7,7 @@
         v-for="item in sessionList"
         :key="item.roomId"
         :class="[
-          { active: currentSession.roomId === item.roomId },
+          { active: globalStore.currentSession?.roomId === item.roomId },
           { 'bg-[--bg-msg-first-child] rounded-12px relative': item.top }
         ]"
         :data-key="item.roomId"
@@ -34,7 +34,7 @@
                 <n-popover trigger="hover" v-if="item.hotFlag === IsAllUserEnum.Yes">
                   <template #trigger>
                     <svg
-                      :class="[currentSession.roomId === item.roomId ? 'color-#33ceab' : 'color-#13987f']"
+                      :class="[globalStore.currentSession?.roomId === item.roomId ? 'color-#33ceab' : 'color-#13987f']"
                       class="size-20px select-none outline-none cursor-pointer">
                       <use href="#auth"></use>
                     </svg>
@@ -60,7 +60,7 @@
               <!-- 消息提示 -->
               <template v-if="item.muteNotification === 1 && !item.unreadCount">
                 <svg
-                  :class="[currentSession.roomId === item.roomId ? 'color-#fefefe' : 'color-#909090']"
+                  :class="[globalStore.currentSession?.roomId === item.roomId ? 'color-#fefefe' : 'color-#909090']"
                   class="size-14px">
                   <use href="#close-remind"></use>
                 </svg>
@@ -135,7 +135,7 @@ const { themes } = storeToRefs(settingStore)
 const { openMsgSession } = useCommon()
 const msgScrollbar = useTemplateRef<HTMLElement>('msg-scrollbar')
 const { handleMsgClick, handleMsgDelete, menuList, specialMenuList, handleMsgDblclick } = useMessage()
-const currentSession = computed(() => globalStore.currentSession)
+
 // 会话列表 TODO: 需要后端返回对应字段
 const sessionList = computed(() => {
   return (
@@ -154,30 +154,27 @@ const sessionList = computed(() => {
           displayName = item.remark
         }
 
+        const { checkRoomAtMe, getMessageSenderName, formatMessageContent } = useReplaceMsg()
         // 获取该会话的所有消息用于检查@我
         const messages = Array.from(chatStore.messageMap.get(item.roomId)?.values() || [])
-        const { checkRoomAtMe, getAtMeContent, getMessageSenderName, formatMessageContent } = useReplaceMsg()
         // 检查是否有@我的消息
-        const isAtMe = checkRoomAtMe(item.roomId, item.type, currentSession.value.roomId, messages, item.unreadCount)
+        const isAtMe = checkRoomAtMe(
+          item.roomId,
+          item.type,
+          globalStore.currentSession?.roomId!,
+          messages,
+          item.unreadCount
+        )
 
         // 处理显示消息
         let displayMsg = ''
 
-        // 优先使用session.text作为内容来源
-        if (item.text) {
-          // 如果有@我，对text应用[有人@我]的样式
-          displayMsg = isAtMe ? getAtMeContent(true, item.text) : item.text
-        }
-        // 如果没有text，则尝试从消息列表中获取
-        else if (messages.length > 0) {
-          const lastMsg = messages[messages.length - 1]
-          if (lastMsg) {
-            const senderName = getMessageSenderName(lastMsg)
-            displayMsg = formatMessageContent(lastMsg, item.type, senderName, isAtMe)
-          }
+        const lastMsg = messages[messages.length - 1]
+        if (lastMsg) {
+          const senderName = getMessageSenderName(lastMsg, '', item.roomId)
+          displayMsg = formatMessageContent(lastMsg, item.type, senderName, isAtMe)
         }
 
-        // 如果没有最后一条消息，则返回不带@标记的对象，但也包含修改后的名称
         return {
           ...item,
           avatar: latestAvatar,
@@ -204,17 +201,12 @@ watch(
   async (newVal) => {
     if (newVal) {
       // 避免重复调用：如果新会话与当前会话相同，跳过处理，不然会触发两次
-      if (newVal.roomId === globalStore.currentSession.roomId) {
+      if (newVal.roomId === globalStore.currentSession?.roomId) {
         return
       }
 
       // 判断是否是群聊
       if (newVal.type === RoomTypeEnum.GROUP) {
-        // 在这里请求是因为这里一开始选中就会触发，而在chat.ts中则需要切换会话才会触发
-        // await groupStore.getCountStatistic()
-        // 同时获取群成员列表，确保首次加载时也能显示群成员
-        // await groupStore.getGroupUserList(true, newVal.roomId)
-        // 将群组详情信息传递给handleMsgClick方法
         const sessionItem = {
           ...newVal,
           memberNum: groupStore.countInfo?.memberNum,
@@ -236,7 +228,7 @@ onBeforeMount(async () => {
   // 请求回话列表
   await chatStore.getSessionList(true)
   // 从联系人页面切换回消息页面的时候自动定位到选中的会话
-  useMitt.emit(MittEnum.LOCATE_SESSION, { roomId: currentSession.value.roomId })
+  useMitt.emit(MittEnum.LOCATE_SESSION, { roomId: globalStore.currentSession?.roomId })
 })
 
 const { addListener } = useTauriListener()
@@ -245,7 +237,7 @@ onMounted(async () => {
   // 监听其他窗口发来的WebSocket发送请求
   // TODO：频繁切换会话会导致频繁请求，切换的时候也会有点卡顿
   if (appWindow.label === 'home') {
-    addListener(
+    await addListener(
       appWindow.listen('search_to_msg', (event: { payload: { uid: string; roomType: number } }) => {
         openMsgSession(event.payload.uid, event.payload.roomType)
       })

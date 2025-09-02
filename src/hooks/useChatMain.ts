@@ -103,15 +103,23 @@ export const useChatMain = () => {
       label: '撤回',
       icon: 'corner-down-left',
       click: async (item: MessageType) => {
-        const res = await recallMsg({ roomId: '1', msgId: item.message.id })
+        const msg = { ...item }
+        const res = await recallMsg({ roomId: globalStore.currentSession!.roomId, msgId: item.message.id })
         if (res) {
           window.$message.error(res)
           return
         }
-        chatStore.updateRecallStatus({
-          recallUid: item.fromUser.uid,
-          msgId: item.message.id,
-          roomId: item.message.roomId
+
+        // 记录撤回的消息，用于重新编辑
+        chatStore.recordRecallMsg({
+          recallUid: userStore.uid!,
+          msg
+        })
+        // 发送撤回消息请求，并修改缓存
+        await chatStore.updateRecallMsg({
+          recallUid: userStore.uid!,
+          roomId: msg.message.roomId,
+          msgId: msg.message.id
         })
       },
       visible: (item: MessageType) => {
@@ -245,7 +253,7 @@ export const useChatMain = () => {
 
           const fileStatus: FileDownloadStatus = fileDownloadStore.getFileStatus(item.message.body.url)
 
-          const currentChatRoomId = globalStore.currentSession.roomId // 这个id可能为群id可能为用户uid，所以不能只用用户uid
+          const currentChatRoomId = globalStore.currentSession!.roomId // 这个id可能为群id可能为用户uid，所以不能只用用户uid
           const currentUserUid = userStore.uid as string
 
           /**
@@ -412,7 +420,7 @@ export const useChatMain = () => {
         const fileStatus = fileDownloadStore.getFileStatus(fileUrl)
 
         console.log('找到的文件状态：', fileStatus)
-        const currentChatRoomId = globalStore.currentSession.roomId // 这个id可能为群id可能为用户uid，所以不能只用用户uid
+        const currentChatRoomId = globalStore.currentSession!.roomId // 这个id可能为群id可能为用户uid，所以不能只用用户uid
         const currentUserUid = userStore.uid as string
 
         const resourceDirPath = await getUserAbsoluteVideosDir(currentUserUid, currentChatRoomId)
@@ -665,7 +673,7 @@ export const useChatMain = () => {
         try {
           await removeGroupMember({ roomId, uid: targetUid })
           // 从群成员列表中移除该用户
-          groupStore.filterUser(targetUid)
+          groupStore.removeUserItem(targetUid, roomId)
           window.$message.success('移出群聊成功')
         } catch (_error) {
           window.$message.error('移出群聊失败')

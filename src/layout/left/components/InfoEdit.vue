@@ -216,8 +216,8 @@ const openEditInfo = () => {
   })
 }
 
-onMounted(() => {
-  addListener(
+onMounted(async () => {
+  await addListener(
     appWindow.listen('open_edit_info', async () => {
       openEditInfo()
     }),

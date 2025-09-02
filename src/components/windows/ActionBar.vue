@@ -97,7 +97,7 @@ import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
 import { useAlwaysOnTopStore } from '@/stores/alwaysOnTop.ts'
 import { useSettingStore } from '@/stores/setting.ts'
-import { isCompatibility, isWindows } from '@/utils/PlatformConstants'
+import { isCompatibility, isMac, isWindows } from '@/utils/PlatformConstants'
 
 const appWindow = WebviewWindow.getCurrent()
 const {
@@ -140,6 +140,8 @@ const alwaysOnTopStatus = computed(() => {
 
 // macOS 关闭按钮拦截的 unlisten 函数
 let unlistenCloseRequested: (() => void) | null = null
+// resized 事件的 unlisten 函数
+let unlistenResized: (() => void) | null = null
 // 是否是程序内部触发的关闭操作
 let isProgrammaticClose = false
 
@@ -208,11 +210,15 @@ const isEsc = (e: KeyboardEvent) => {
   }
 }
 
-// 判断当前是否是最大化
-const handleResize = () => {
-  appWindow.isMaximized().then((res) => {
-    windowMaximized.value = res
-  })
+// 统一更新窗口放大状态（仅 macOS 视为“最大化或全屏”；其他平台仅“最大化”）
+const updateWindowMaximized = async () => {
+  const maximized = await appWindow.isMaximized()
+  if (isMac()) {
+    const fullscreen = await appWindow.isFullscreen()
+    windowMaximized.value = maximized || fullscreen
+  } else {
+    windowMaximized.value = maximized
+  }
 }
 
 /** 处理关闭窗口事件 */
@@ -243,12 +249,16 @@ const handleCloseWin = async () => {
 }
 
 useMitt.on('handleCloseWin', handleCloseWin)
-// 添加和移除resize事件监听器
-onMounted(async () => {
-  // info('ActionBar 组件已挂载')
-  window.addEventListener('resize', handleResize)
 
-  addListener(
+onMounted(async () => {
+  // 初始化状态
+  await updateWindowMaximized()
+
+  unlistenResized = await appWindow.onResized?.(() => {
+    updateWindowMaximized()
+  })
+
+  await addListener(
     appWindow.listen(EventEnum.EXIT, async () => {
       await exit(0)
     }),
@@ -273,8 +283,12 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  window.removeEventListener('resize', handleResize)
   window.removeEventListener('keydown', (e) => isEsc(e))
+
+  if (unlistenResized) {
+    unlistenResized()
+    unlistenResized = null
+  }
 
   // 清理 macOS 关闭按钮事件监听器
   if (unlistenCloseRequested) {

@@ -157,8 +157,6 @@ const initWidth = ref(250)
 const { width, height } = useWindowSize()
 /** 是否拖拽 */
 const isDrag = ref(true)
-/** 当前消息 */
-const currentMsg = ref()
 /** 搜索框文字 */
 const searchText = ref('搜索')
 /** 是否处于搜索模式 */
@@ -201,10 +199,6 @@ watchEffect(() => {
   }
   if (width.value >= 800) {
     useMitt.emit(MittEnum.SHRINK_WINDOW, false)
-    // TODO: 因为拖动后要重新加载所以这里会监听两次，后续优化
-    // if (currentMsg.value) {
-    //   useMitt.emit(MittEnum.MSG_BOX_SHOW, { msgBoxShow: true, ...currentMsg.value })
-    // }
     const center = document.querySelector('#center')
     center?.classList.remove('flex-1')
     isDrag.value = true
@@ -324,10 +318,6 @@ onMounted(async () => {
     nextTick(() => {
       selectedValue.value = [event.id]
     })
-  })
-  useMitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
-    if (!event) return
-    currentMsg.value = event
   })
   window.addEventListener('click', closeMenu, true)
 })

@@ -536,7 +536,6 @@ const { addListener } = useTauriListener()
 const props = defineProps<{
   activeItem: SessionItem
 }>()
-const activeItemRef = shallowRef<SessionItem>(props.activeItem)
 const chatStore = useChatStore()
 const userStore = useUserStore()
 const groupStore = useGroupStore()
@@ -562,12 +561,6 @@ const currentNewMsgCount = computed(() => chatStore.currentNewMsgCount)
 const messageOptions = computed(() => chatStore.currentMessageOptions)
 const { createWebviewWindow } = useWindow()
 const currentRoomId = computed(() => globalStore.currentSession?.roomId)
-// 我的群昵称
-// const myGroupNickname = (uid: string) => {
-//   if (props.activeItem.type === RoomTypeEnum.GROUP && userUid.value === uid) {
-//     return groupStore.countInfo?.myName || ''
-//   }
-// }
 /** 是否是超级管理员 */
 // const isAdmin = computed(() => userInfo?.power === PowerEnum.ADMIN)
 /** 跳转回复消息后选中效果 */
@@ -1145,9 +1138,6 @@ onMounted(async () => {
     infoPopoverRefs.value[event.uid].setShow(true)
     handlePopoverUpdate(event.uid)
   })
-  useMitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
-    activeItemRef.value = event.item
-  })
   // 监听滚动到底部的事件
   useMitt.on(MittEnum.CHAT_SCROLL_BOTTOM, () => {
     if (virtualListInst.value) {
@@ -1158,7 +1148,7 @@ onMounted(async () => {
   })
 
   // 监听公告更新事件
-  addListener(
+  await addListener(
     appWindow.listen('announcementUpdated', async (event: any) => {
       if (event.payload) {
         const { hasAnnouncements, topAnnouncement: newTopAnnouncement } = event.payload
@@ -1180,14 +1170,14 @@ onMounted(async () => {
   )
 
   // 监听公告清空事件
-  addListener(
+  await addListener(
     appWindow.listen('announcementClear', () => {
       topAnnouncement.value = null
     }),
     'announcementClear'
   )
 
-  addListener(
+  await addListener(
     appWindow.listen(EventEnum.SHARE_SCREEN, async () => {
       await createWebviewWindow('共享屏幕', 'sharedScreen', 840, 840)
     }),
