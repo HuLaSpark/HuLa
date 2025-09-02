@@ -7,6 +7,7 @@ import {
   type RouteLocationNormalized,
   type RouteRecordRaw
 } from 'vue-router'
+
 import ChatRoomLayout from '#/layout/chat-room/ChatRoomLayout.vue'
 import NoticeLayout from '#/layout/chat-room/NoticeLayout.vue'
 import FriendsLayout from '#/layout/friends/FriendsLayout.vue'
