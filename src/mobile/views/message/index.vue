@@ -12,9 +12,16 @@
       @click="maskHandler.close"
       class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[999] transition-all duration-3000 ease-in-out opacity-100"></div>
 
+    <!-- 键盘蒙板 -->
+    <div
+      v-if="showKeyboardMask"
+      class="keyboard-mask flex-1"
+      @touchstart.stop.prevent="closeKeyboardMask"
+      @click.stop.prevent="closeKeyboardMask"></div>
+
     <NavBar>
       <template #left>
-        <n-flex align="center" :size="6" class="w-full">
+        <n-flex @click="toSimpleBio" align="center" :size="6" class="w-full">
           <n-avatar
             :size="38"
             :src="AvatarUtils.getAvatarUrl(userStore.userInfo.avatar!)"
@@ -33,7 +40,7 @@
               class="text-(16px [--text-color])">
               {{ userStore.userInfo.name }}
             </p>
-            <p class="text-(10px [--text-color])">☁️ 柳州鱼峰</p>
+            <p class="text-(10px [--text-color])">{{ useUserInfo(userStore.userInfo.uid).value.locPlace || '未知' }}</p>
           </n-flex>
         </n-flex>
       </template>
@@ -52,54 +59,54 @@
       </template>
     </NavBar>
 
+    <div class="px-16px mt-5px">
+      <div class="py-5px shrink-0">
+        <n-input
+          id="search"
+          class="rounded-6px w-full bg-white relative text-12px"
+          :maxlength="20"
+          clearable
+          spellCheck="false"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          placeholder="搜索"
+          @focus="lockScroll"
+          @blur="unlockScroll">
+          <template #prefix>
+            <svg class="w-12px h-12px"><use href="#search"></use></svg>
+          </template>
+        </n-input>
+      </div>
+      <div class="border-b-1 border-solid color-gray-200 px-18px mt-5px"></div>
+    </div>
+
     <PullToRefresh class="flex-1 overflow-auto" @refresh="handleRefresh" ref="pullRefreshRef">
       <div class="flex flex-col h-full px-18px">
-        <div class="py-8px shrink-0">
-          <n-input
-            id="search"
-            class="rounded-6px w-full bg-white relative text-12px"
-            :maxlength="20"
-            clearable
-            spellCheck="false"
-            autoComplete="off"
-            autoCorrect="off"
-            autoCapitalize="off"
-            :placeholder="'搜索'">
-            <template #prefix>
-              <svg class="w-12px h-12px"><use href="#search"></use></svg>
-            </template>
-          </n-input>
-        </div>
-
-        <div class="border-b-1 border-solid color-gray-200 px-18px my-8px"></div>
-
         <div class="flex-1">
           <div
-            v-for="item in messageItems"
-            :key="item.id"
+            v-for="(item, idx) in messageItems"
+            :key="`${item.id}-${idx}`"
             @click="intoRoom(item)"
-            class="grid grid-cols-[2.2rem_1fr_4rem] items-start px-2 py-3 gap-1 active:bg-#DEEDE7 active:rounded-10px transition-colors cursor-pointer">
+            class="grid grid-cols-[2.2rem_1fr_4rem] items-start px-2 py-3 gap-1">
             <!-- 头像：单独居中 -->
-            <div class="self-center h-38px">
-              <n-badge :value="item.unreadCount">
-                <n-avatar :size="40" :src="AvatarUtils.getAvatarUrl(item.avatar)" fallback-src="/logo.png" round />
+            <div class="flex-shrink-0">
+              <n-badge :offset="[-6, 6]" :value="item.unreadCount" :max="99">
+                <n-avatar :size="52" :src="AvatarUtils.getAvatarUrl(item.avatar)" fallback-src="/logo.png" round />
               </n-badge>
             </div>
-
-            <!-- {{ item }} -->
-
             <!-- 中间：两行内容 -->
-            <div class="truncate pl-4 flex gap-10px flex-col">
-              <div class="text-14px leading-tight font-bold flex-1 truncate text-#333 truncate">{{ item.name }}</div>
+            <div class="truncate pl-7 flex pt-5px gap-10px flex-col">
+              <div class="text-16px leading-tight font-bold flex-1 truncate text-#333 truncate">{{ item.name }}</div>
               <div class="text-12px text-#333 truncate">
                 {{ item.text }}
               </div>
             </div>
 
             <!-- 时间：靠顶 -->
-            <div class="text-12px text-right flex gap-1 items-center justify-right">
+            <div class="text-12px pt-9px text-right flex gap-1 items-center justify-right">
               <span v-if="item.hotFlag === IsAllUserEnum.Yes">
-                <svg class="size-20px select-none outline-none cursor-pointer color-#13987f">
+                <svg class="size-22px select-none outline-none cursor-pointer color-#13987f">
                   <use href="#auth"></use>
                 </svg>
               </span>
@@ -108,25 +115,6 @@
               </span>
             </div>
           </div>
-
-          <!-- <div v-for="item in messageItems" :key="item.id" class="message-item relative">
-            <div>
-              <n-badge :value="item.unreadCount">
-                <n-avatar :size="40" :src="item.avatar" fallback-src="/logo.png" round />
-              </n-badge>
-              <div class="flex flex-col ml-14px justify-between h-[35px]">
-                <span class="text-14px text-#333">{{ item.name }}</span>
-                <span class="text-12px text-#999">{{ item.text }}</span>
-              </div>
-            </div>
-            <div class="flex justify-right text text-12px w-fit truncate text-right">
-              {{ formatTimestamp(item?.activeTime) }}
-            </div>
-            未读数 悬浮到头像上
-            <div v-if="item.unreadCount > 0" class="flex flex-col justify-between h-[35px] absolute left-30px top-5px">
-              <span class="text-12px text-[#fff] bg-[red] rounded-full px-8px py-3px">{{ item.unreadCount }}</span>
-            </div>
-          </div> -->
         </div>
       </div>
     </PullToRefresh>
@@ -134,15 +122,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import PullToRefresh from '#/components/PullToRefresh.vue'
+import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.vue'
+import NavBar from '#/layout/navBar/index.vue'
+import type { IKeyboardDidShowDetail } from '#/mobile-client/interface/adapter'
+import { mobileClient } from '#/mobile-client/MobileClient'
 import addFriendIcon from '@/assets/mobile/chat-home/add-friend.webp'
 import groupChatIcon from '@/assets/mobile/chat-home/group-chat.webp'
+import { MittEnum } from '@/enums'
+import { useUserInfo } from '@/hooks/useCached.ts'
 import { useMessage } from '@/hooks/useMessage.ts'
-import SafeAreaPlaceholder from '@/mobile/components/placeholders/SafeAreaPlaceholder.vue'
-import NavBar from '@/mobile/layout/navBar/index.vue'
+import { useMitt } from '@/hooks/useMitt'
 import { IsAllUserEnum } from '@/services/types.ts'
+import rustWebSocketClient from '@/services/webSocketRust'
 import { useChatStore } from '@/stores/chat.ts'
+import { useMobileStore } from '@/stores/mobile'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
@@ -157,8 +151,43 @@ const getSessionList = async () => {
   await chatStore.getSessionList(true)
 }
 
-onMounted(() => {
+const userStore = useUserStore()
+
+/**
+ * export interface IKeyboardDidShowDetail {
+   bottomInset: number
+   height: number
+   keyboardVisible: boolean
+   screenHeight: number
+   timestamp: number
+   visibleHeight: number
+ }
+ 
+ */
+
+onMounted(async () => {
+  await rustWebSocketClient.setupBusinessMessageListeners()
+  console.log('个人数据：', userStore.userInfo)
   getSessionList()
+
+  const { removeHideFunction, removeShowFunction } = await mobileClient.keyboardListener(
+    // 键盘打开
+    (detail: IKeyboardDidShowDetail) => {
+      console.log('键盘打开', detail)
+      openKeyboardMask()
+    },
+    // 键盘关闭
+    () => {
+      console.log('键盘关闭')
+      closeKeyboardMask()
+    }
+  )
+
+  // 如果需要在组件卸载时移除监听
+  onBeforeUnmount(() => {
+    removeHideFunction()
+    removeShowFunction()
+  })
 })
 
 const handleRefresh = async () => {
@@ -166,8 +195,6 @@ const handleRefresh = async () => {
   // 完成刷新
   pullRefreshRef.value?.finishRefresh()
 }
-
-const userStore = useUserStore()
 
 /**
  * 渲染图片图标的函数工厂
@@ -178,7 +205,7 @@ const renderImgIcon = (src: string) => {
   return () =>
     h('img', {
       src,
-      style: 'display:block; width: 24px; height: 24px; vertical-align: middle'
+      style: 'display:block; width: 26px; height: 26px; vertical-align: middle;'
     })
 }
 
@@ -190,12 +217,12 @@ const uiViewsData = ref({
   addOptions: [
     {
       label: '发起群聊',
-      key: 'profile',
+      key: '/mobile/mobileFriends/startGroupChat',
       icon: renderImgIcon(groupChatIcon)
     },
     {
       label: '加好友/群',
-      key: 'editProfile',
+      key: '/mobile/mobileFriends/addFriends',
       icon: renderImgIcon(addFriendIcon)
     }
   ]
@@ -251,7 +278,9 @@ const addIconHandler = {
   /**
    * 选项选择时关闭蒙板
    */
-  select: () => {
+  select: (item: string) => {
+    console.log('选择的项：', item)
+    router.push(item)
     maskHandler.close()
   },
 
@@ -272,12 +301,61 @@ const addIconHandler = {
 
 const router = useRouter()
 
+const mobileStore = useMobileStore()
+
+useMitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
+  mobileStore.updateCurrentChatRoom(event.item)
+})
+
 const { handleMsgClick } = useMessage()
 
 const intoRoom = (item: any) => {
   handleMsgClick(item)
-  router.push(`/mobile/chatRoom/chatMain/${encodeURIComponent(item.name)}`)
-  console.log('进入页面', item)
+  setTimeout(() => {
+    router.push(`/mobile/chatRoom/chatMain`)
+    console.log('进入页面', item)
+  }, 0)
+}
+const toSimpleBio = () => {
+  // 切成你想要的离场动画
+  router.push('/mobile/mobileMy/simpleBio')
+}
+
+// 锁滚动（和蒙板一样）
+const lockScroll = () => {
+  console.log('锁定触发')
+  const scrollEl = document.querySelector('.flex-1.overflow-auto') as HTMLElement
+  if (scrollEl) {
+    scrollEl.style.overflow = 'hidden'
+  }
+}
+
+const unlockScroll = () => {
+  console.log('锁定解除')
+  const scrollEl = document.querySelector('.flex-1.overflow-auto') as HTMLElement
+  if (scrollEl) {
+    scrollEl.style.overflow = 'auto'
+  }
+}
+
+// 键盘蒙板显示状态
+const showKeyboardMask = ref(false)
+
+const openKeyboardMask = () => {
+  showKeyboardMask.value = true
+  document.body.style.overflow = 'hidden'
+  document.body.style.position = 'fixed'
+}
+
+const closeKeyboardMask = () => {
+  showKeyboardMask.value = false
+  document.body.style.overflow = ''
+  document.body.style.position = ''
+  // 让 input 失焦
+  const activeEl = document.activeElement as HTMLElement
+  if (activeEl && typeof activeEl.blur === 'function') {
+    activeEl.blur()
+  }
 }
 </script>
 
@@ -285,4 +363,18 @@ const intoRoom = (item: any) => {
 // .message-item {
 //   @apply flex justify-around items-center p-3 hover:bg-#DEEDE7 hover:rounded-10px transition-colors cursor-pointer;
 // }
+
+.keyboard-mask {
+  position: fixed;
+  inset: 0;
+  background: transparent; // 透明背景
+  z-index: 1400; // 低于 Naive 弹层，高于页面内容
+  pointer-events: auto; // 确保能接收事件
+  touch-action: none; // 禁止滚动
+}
+
+::deep(#search) {
+  position: relative;
+  z-index: 1500; // 高于键盘蒙层，低于 Naive 弹层
+}
 </style>

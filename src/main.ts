@@ -1,10 +1,10 @@
 import 'uno.css'
 import '@unocss/reset/eric-meyer.css' // unocss提供的浏览器默认样式重置
+import { initMobileClient } from '#/mobile-client/MobileClient'
 import App from '@/App.vue'
 import { AppException } from '@/common/exception.ts'
 import vResize from '@/directives/v-resize'
 import vSlide from '@/directives/v-slide.ts'
-import { initMobileClient } from '@/mobile/mobile-client/MobileClient'
 import router from '@/router'
 import { pinia } from '@/stores'
 import { initializePlatform } from '@/utils/PlatformConstants'

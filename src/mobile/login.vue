@@ -11,7 +11,7 @@
         <div
           @click="activeTab = 'login'"
           :class="[
-            'z-999 w-100px text-center transition-all duration-300 ',
+            'z-999 w-100px text-center transition-all duration-300 ease-out',
             activeTab === 'login' ? 'text-(18px #000)' : 'text-(16px #666)'
           ]">
           登录
@@ -19,7 +19,7 @@
         <div
           @click="activeTab = 'register'"
           :class="[
-            'z-999 w-100px text-center transition-all duration-300 ',
+            'z-999 w-100px text-center transition-all duration-300 ease-out',
             activeTab === 'register' ? 'text-(18px #000)' : 'text-(16px #666)'
           ]">
           注册
@@ -113,7 +113,7 @@
         tertiary
         style="color: #fff"
         class="w-full mt-8px mb-50px gradient-button"
-        @click="normalLogin">
+        @click="normalLogin(false)">
         <span>{{ loginText }}</span>
       </n-button>
 
@@ -308,29 +308,30 @@
 </template>
 
 <script setup lang="ts">
+import { invoke } from '@tauri-apps/api/core'
 import { emit } from '@tauri-apps/api/event'
 import { lightTheme } from 'naive-ui'
 import { ErrorType } from '@/common/exception'
 import PinInput from '@/components/common/PinInput.vue'
 import Validation from '@/components/common/Validation.vue'
 import { TauriCommand } from '@/enums'
-import { useLogin } from '@/hooks/useLogin'
 import type { RegisterUserReq, UserInfoType } from '@/services/types'
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import { useMobileStore } from '@/stores/mobile'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { getCaptcha, getUserDetail, login, register, sendCaptcha } from '@/utils/ImRequestUtils'
+import { getAllUserState, getCaptcha, getUserDetail, register, sendCaptcha } from '@/utils/ImRequestUtils'
 import { isAndroid } from '@/utils/PlatformConstants'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 import router from '../router'
+import rustWebSocketClient from '../services/webSocketRust'
+import { useUserStatusStore } from '../stores/userStatus'
 
 // 本地注册信息类型，扩展API类型以包含确认密码
 interface LocalRegisterInfo extends RegisterUserReq {}
 
 const loginHistoriesStore = useLoginHistoriesStore()
 const userStore = useUserStore()
-const { setLoginState } = useLogin()
 const { loginHistories } = loginHistoriesStore
 const mobileStore = useMobileStore()
 const safeArea = computed(() => mobileStore.safeArea)
@@ -359,7 +360,7 @@ const registerInfo = ref<LocalRegisterInfo>({
   code: '',
   uuid: '',
   avatar: '',
-  key: '',
+  key: 'REGISTER_EMAIL',
   systemType: 2
 })
 
@@ -583,58 +584,128 @@ const handleRegisterComplete = async () => {
 }
 
 /**登录后创建主页窗口*/
-const normalLogin = async () => {
+const normalLogin = async (auto = false) => {
   loading.value = true
-  const { account, password } = info.value
-  login({ account, password, deviceType: 'MOBILE', systemType: 2, grantType: 'PASSWORD' })
-    .then(async (res) => {
+  loginText.value = '登录中...'
+  loginDisabled.value = true
+  // 根据auto参数决定从哪里获取登录信息
+  const loginInfo = auto ? (userStore.userInfo as UserInfoType) : info.value
+  const { account } = loginInfo
+
+  // 自动登录
+  if (auto) {
+    // 添加2秒延迟
+    await new Promise((resolve) => setTimeout(resolve, 1200))
+
+    // TODO 自动登录
+    // try {
+    //   // 登录处理
+    //
+    //   loginProcess(null, null, null)
+    // } catch (error) {
+    //   console.error('自动登录失败', error)
+    //   // 如果是网络异常，不删除token
+    //   if (!isOnline.value) {
+    //     loginDisabled.value = true
+    //     loginText.value = '网络异常'
+    //     loading.value = false
+    //   } else {
+    //     // 其他错误才清除token并重置状态
+    //     localStorage.removeItem('TOKEN')
+    //     isAutoLogin.value = false
+    //     loginDisabled.value = true
+    //     loginText.value = '登录'
+    //     loading.value = false
+    //   }
+    // }
+    return
+  }
+
+  invoke('login_command', {
+    data: {
+      account: account,
+      password: info.value.password,
+      deviceType: 'MOBILE',
+      systemType: '2', // 2是im 1是后台
+      grantType: 'PASSWORD'
+    }
+  })
+    .then(async (res: any) => {
       loginDisabled.value = true
-      loginText.value = '登录成功, 正在跳转'
       userStore.isSign = true
-      // 存储双token
-      localStorage.setItem('TOKEN', res.token)
-      localStorage.setItem('REFRESH_TOKEN', res.refreshToken)
-      // 需要删除二维码，因为用户可能先跳转到二维码界面再回到登录界面，会导致二维码一直保持在内存中
-      if (localStorage.getItem('wsLogin')) {
-        localStorage.removeItem('wsLogin')
-      }
-      // 获取用户详情
-      const userDetail: any = await getUserDetail()
-      // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取
-      // await emojiStore.getEmojiList()
-      // TODO 这里的id暂时赋值给uid，因为后端没有统一返回uid，待后端调整
-      const account = {
-        ...userDetail,
-        token: res.token,
-        client: res.client
-      }
-      await invokeWithErrorHandler(
-        TauriCommand.SAVE_USER_INFO,
-        {
-          userInfo: account
-        },
-        {
-          customErrorMessage: '保存用户信息失败',
-          errorType: ErrorType.Client
-        }
-      )
+      console.log('登录成功')
 
-      await emit('set_user_info', {
-        token: res.token,
-        refreshToken: res.refreshToken,
-        uid: account.uid
-      })
+      // 开启 ws 连接
+      await rustWebSocketClient.initConnect()
+      // 登录处理
+      await loginProcess(res.token, res.refreshToken, res.client)
+    })
+    .catch((e: any) => {
+      console.error('登录异常：', e)
+      loading.value = false
+      loginDisabled.value = false
+      loginText.value = '登录'
+      // 如果是自动登录失败，重置按钮状态允许手动登录
+      if (auto) {
+        loginDisabled.value = false
+        loginText.value = '登录'
+      }
+    })
+}
 
-      loading.value = false
-      userStore.userInfo = account
-      loginHistoriesStore.addLoginHistory(account)
-      router.push('/mobile/message')
-      await setLoginState()
-    })
-    .catch((e) => {
-      loading.value = false
-      console.error(e)
-    })
+const userStatusStore = useUserStatusStore()
+const { stateId } = storeToRefs(userStatusStore)
+
+const loginProcess = async (token: string, refreshToken: string, client: string) => {
+  loading.value = false
+  // 获取用户状态列表
+  if (userStatusStore.stateList.length === 0) {
+    try {
+      userStatusStore.stateList = await getAllUserState()
+    } catch (error) {
+      console.error('获取用户状态列表失败', error)
+    }
+  }
+  // 获取用户详情
+  // const userDetail = await apis.getUserDetail()
+  const userDetail: any = await getUserDetail()
+
+  // 设置用户状态id
+  stateId.value = userDetail.userStateId
+  // const token = localStorage.getItem('TOKEN')
+  // const refreshToken = localStorage.getItem('REFRESH_TOKEN')
+  // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取
+  // await emojiStore.getEmojiList()
+  const account = {
+    ...userDetail,
+    token,
+    refreshToken,
+    client
+  }
+  userStore.userInfo = account
+  loginHistoriesStore.addLoginHistory(account)
+  // 在 sqlite 中存储用户信息
+  await invokeWithErrorHandler(
+    TauriCommand.SAVE_USER_INFO,
+    {
+      userInfo: userDetail
+    },
+    {
+      customErrorMessage: '保存用户信息失败',
+      errorType: ErrorType.Client
+    }
+  )
+
+  // 在 rust 部分设置 token
+  await emit('set_user_info', {
+    token,
+    refreshToken,
+    uid: userDetail.uid
+  })
+
+  loginText.value = '登录成功正在跳转...'
+
+  router.push('/mobile/message')
 }
 
 /**

@@ -8,7 +8,6 @@ import type {
 } from './interface/adapter'
 
 export class IosAdapter implements IMobileClientAdapter {
-  // TODO 着个没测试过，需要测试才行
   keyboardListener(showCallback: TKeyboardShowCallback, hideCallback: TKeyboardHideCallback): KeyboardListenerResult {
     const showHandler = (e: Event) => {
       const detail = (e as CustomEvent<IKeyboardDidShowDetail>).detail

@@ -174,16 +174,17 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
+import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.vue'
+import NavBar from '#/layout/navBar/index.vue'
 import addFriendIcon from '@/assets/mobile/chat-home/add-friend.webp'
 import groupChatIcon from '@/assets/mobile/chat-home/group-chat.webp'
 import { MittEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
 import { useUserInfo } from '@/hooks/useCached.ts'
-
 import { useMitt } from '@/hooks/useMitt.ts'
-import SafeAreaPlaceholder from '@/mobile/components/placeholders/SafeAreaPlaceholder.vue'
-import NavBar from '@/mobile/layout/navBar/index.vue'
+import router from '@/router'
 import { useChatStore } from '@/stores/chat.ts'
 import { useContactStore } from '@/stores/contacts.ts'
+import { useGroupStore } from '@/stores/group'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { useGroupStore } from '~/src/stores/group'
@@ -209,12 +210,12 @@ const uiViewsData = ref({
   addOptions: [
     {
       label: '发起群聊',
-      key: 'profile',
+      key: '/mobile/mobileFriends/startGroupChat',
       icon: renderImgIcon(groupChatIcon)
     },
     {
       label: '加好友/群',
-      key: 'editProfile',
+      key: '/mobile/mobileFriends/addFriends',
       icon: renderImgIcon(addFriendIcon)
     }
   ]
@@ -360,7 +361,9 @@ const addIconHandler = {
   /**
    * 选项选择时关闭蒙板
    */
-  select: () => {
+  select: (item: string) => {
+    console.log('选择的项：', item)
+    router.push(item)
     maskHandler.close()
   },
 

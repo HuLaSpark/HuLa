@@ -42,11 +42,11 @@
   </div>
 </template>
 <script setup lang="ts">
-import CommunityContent from '@/mobile/components/community/CommunityContent.vue'
-import CommunityTab from '@/mobile/components/community/CommunityTab.vue'
-import PersonalInfo from '@/mobile/components/my/PersonalInfo.vue'
-import Settings from '@/mobile/components/my/Settings.vue'
-import SafeAreaPlaceholder from '@/mobile/components/placeholders/SafeAreaPlaceholder.vue'
+import CommunityContent from '#/components/community/CommunityContent.vue'
+import CommunityTab from '#/components/community/CommunityTab.vue'
+import PersonalInfo from '#/components/my/PersonalInfo.vue'
+import Settings from '#/components/my/Settings.vue'
+import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.vue'
 import router from '@/router'
 
 const toPublishCommunity = () => {

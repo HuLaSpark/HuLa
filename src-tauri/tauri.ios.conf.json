@@ -2,7 +2,7 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "HuLa",
   "version": "2.6.13",
-  "identifier": "com.hula-ios.app",
+  "identifier": "com.hula.ios",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "beforeBuildCommand": "pnpm build",
@@ -11,9 +11,7 @@
   },
   "bundle": {
     "active": true,
-    "resources": [
-      "configuration"
-    ],
+    "resources": ["configuration"],
     "targets": "all",
     "iOS": {
       "minimumSystemVersion": "13.0"
@@ -23,7 +21,7 @@
     "windows": [
       {
         "title": "登录",
-        "label": "login",
+        "label": "mobile-home",
         "url": "/mobile/login",
         "resizable": false,
         "fullscreen": true

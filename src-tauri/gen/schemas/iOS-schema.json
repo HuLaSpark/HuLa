@@ -2481,6 +2481,84 @@
       "description": "Permission identifier",
       "oneOf": [
         {
+          "description": "This permission set configures which\nbarcode scanning features are by default exposed.\n\n#### Granted Permissions\n\nIt allows all barcode related features.\n\n\n#### This default permission set includes:\n\n- `allow-cancel`\n- `allow-check-permissions`\n- `allow-open-app-settings`\n- `allow-request-permissions`\n- `allow-scan`\n- `allow-vibrate`",
+          "type": "string",
+          "const": "barcode-scanner:default",
+          "markdownDescription": "This permission set configures which\nbarcode scanning features are by default exposed.\n\n#### Granted Permissions\n\nIt allows all barcode related features.\n\n\n#### This default permission set includes:\n\n- `allow-cancel`\n- `allow-check-permissions`\n- `allow-open-app-settings`\n- `allow-request-permissions`\n- `allow-scan`\n- `allow-vibrate`"
+        },
+        {
+          "description": "Enables the cancel command without any pre-configured scope.",
+          "type": "string",
+          "const": "barcode-scanner:allow-cancel",
+          "markdownDescription": "Enables the cancel command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the check_permissions command without any pre-configured scope.",
+          "type": "string",
+          "const": "barcode-scanner:allow-check-permissions",
+          "markdownDescription": "Enables the check_permissions command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the open_app_settings command without any pre-configured scope.",
+          "type": "string",
+          "const": "barcode-scanner:allow-open-app-settings",
+          "markdownDescription": "Enables the open_app_settings command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the request_permissions command without any pre-configured scope.",
+          "type": "string",
+          "const": "barcode-scanner:allow-request-permissions",
+          "markdownDescription": "Enables the request_permissions command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the scan command without any pre-configured scope.",
+          "type": "string",
+          "const": "barcode-scanner:allow-scan",
+          "markdownDescription": "Enables the scan command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the vibrate command without any pre-configured scope.",
+          "type": "string",
+          "const": "barcode-scanner:allow-vibrate",
+          "markdownDescription": "Enables the vibrate command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the cancel command without any pre-configured scope.",
+          "type": "string",
+          "const": "barcode-scanner:deny-cancel",
+          "markdownDescription": "Denies the cancel command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the check_permissions command without any pre-configured scope.",
+          "type": "string",
+          "const": "barcode-scanner:deny-check-permissions",
+          "markdownDescription": "Denies the check_permissions command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the open_app_settings command without any pre-configured scope.",
+          "type": "string",
+          "const": "barcode-scanner:deny-open-app-settings",
+          "markdownDescription": "Denies the open_app_settings command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the request_permissions command without any pre-configured scope.",
+          "type": "string",
+          "const": "barcode-scanner:deny-request-permissions",
+          "markdownDescription": "Denies the request_permissions command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the scan command without any pre-configured scope.",
+          "type": "string",
+          "const": "barcode-scanner:deny-scan",
+          "markdownDescription": "Denies the scan command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the vibrate command without any pre-configured scope.",
+          "type": "string",
+          "const": "barcode-scanner:deny-vibrate",
+          "markdownDescription": "Denies the vibrate command without any pre-configured scope."
+        },
+        {
           "description": "No features are enabled by default, as we believe\nthe clipboard can be inherently dangerous and it is \napplication specific if read and/or write access is needed.\n\nClipboard interaction needs to be explicitly enabled.\n",
           "type": "string",
           "const": "clipboard-manager:default",
@@ -3873,6 +3951,12 @@
           "markdownDescription": "Enables the set_focus command without any pre-configured scope."
         },
         {
+          "description": "Enables the set_focusable command without any pre-configured scope.",
+          "type": "string",
+          "const": "core:window:allow-set-focusable",
+          "markdownDescription": "Enables the set_focusable command without any pre-configured scope."
+        },
+        {
           "description": "Enables the set_fullscreen command without any pre-configured scope.",
           "type": "string",
           "const": "core:window:allow-set-fullscreen",
@@ -3943,6 +4027,12 @@
           "type": "string",
           "const": "core:window:allow-set-shadow",
           "markdownDescription": "Enables the set_shadow command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the set_simple_fullscreen command without any pre-configured scope.",
+          "type": "string",
+          "const": "core:window:allow-set-simple-fullscreen",
+          "markdownDescription": "Enables the set_simple_fullscreen command without any pre-configured scope."
         },
         {
           "description": "Enables the set_size command without any pre-configured scope.",
@@ -4317,6 +4407,12 @@
           "markdownDescription": "Denies the set_focus command without any pre-configured scope."
         },
         {
+          "description": "Denies the set_focusable command without any pre-configured scope.",
+          "type": "string",
+          "const": "core:window:deny-set-focusable",
+          "markdownDescription": "Denies the set_focusable command without any pre-configured scope."
+        },
+        {
           "description": "Denies the set_fullscreen command without any pre-configured scope.",
           "type": "string",
           "const": "core:window:deny-set-fullscreen",
@@ -4387,6 +4483,12 @@
           "type": "string",
           "const": "core:window:deny-set-shadow",
           "markdownDescription": "Denies the set_shadow command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the set_simple_fullscreen command without any pre-configured scope.",
+          "type": "string",
+          "const": "core:window:deny-set-simple-fullscreen",
+          "markdownDescription": "Denies the set_simple_fullscreen command without any pre-configured scope."
         },
         {
           "description": "Denies the set_size command without any pre-configured scope.",
