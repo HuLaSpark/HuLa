@@ -198,6 +198,10 @@ useMitt.on(WsResponseMessageType.ROOM_DISSOLUTION, async (roomId: string) => {
   chatStore.removeSession(roomId)
   // 移除群聊的详情
   groupStore.removeGroupDetail(roomId)
+  // 如果当前会话为解散的群聊，切换到第一个会话
+  if (globalStore.currentSession?.roomId === roomId) {
+    globalStore.currentSession = chatStore.sessionList[0]
+  }
 })
 
 useMitt.on(WsResponseMessageType.USER_STATE_CHANGE, async (data: { uid: string; userStateId: string }) => {
