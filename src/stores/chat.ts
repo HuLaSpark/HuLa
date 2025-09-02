@@ -1,7 +1,6 @@
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
 import { sendNotification } from '@tauri-apps/plugin-notification'
-import { cloneDeep } from 'lodash-es'
 import { defineStore } from 'pinia'
 import { useRoute } from 'vue-router'
 import { ErrorType } from '@/common/exception'
@@ -339,15 +338,16 @@ export const useChatStore = defineStore(
     }
 
     // 更新会话最后活跃时间
-    const updateSessionLastActiveTime = (roomId: string, room?: SessionItem) => {
+    const updateSessionLastActiveTime = (roomId: string) => {
       const session = sessionList.value.find((item) => item.roomId === roomId)
       if (session) {
         Object.assign(session, { activeTime: Date.now() })
-      } else if (room) {
-        const newItem = cloneDeep(room)
-        newItem.activeTime = Date.now()
-        sessionList.value.unshift(newItem)
       }
+    }
+
+    const addSession = async (roomId: string) => {
+      const resp = await getSessionDetail({ id: roomId })
+      sessionList.value.unshift(resp)
       sortAndUniqueSessionList()
     }
 
@@ -375,12 +375,6 @@ export const useChatStore = defineStore(
       const uid = msg.fromUser.uid
       const cacheUser = cachedStore.userCachedList[uid]
       await cachedStore.getBatchUserInfo([uid])
-
-      // 发完消息就要刷新会话列表
-      let detailResponse
-      if (!current) {
-        detailResponse = await getSessionDetail({ id: msg.message.roomId })
-      }
 
       // 更新会话的文本属性和未读数
       const session = sessionList.value.find((item) => item.roomId === msg.message.roomId)
@@ -411,7 +405,7 @@ export const useChatStore = defineStore(
         }
       }
 
-      updateSessionLastActiveTime(msg.message.roomId, detailResponse)
+      updateSessionLastActiveTime(msg.message.roomId)
 
       // 如果收到的消息里面是艾特自己的就发送系统通知
       if (msg.message.body.atUidList?.includes(userStore.userInfo.uid) && cacheUser) {
@@ -421,11 +415,6 @@ export const useChatStore = defineStore(
           icon: cacheUser.avatar as string
         })
       }
-
-      // if (currentNewMsgCount.value) {
-      //   currentNewMsgCount.value.count++
-      //   return
-      // }
     }
 
     // 过滤掉拉黑用户的发言
@@ -829,7 +818,8 @@ export const useChatStore = defineStore(
       resetAndRefreshCurrentRoomMessages,
       getGroupSessions,
       removeSession,
-      changeRoom
+      changeRoom,
+      addSession
     }
   },
   {

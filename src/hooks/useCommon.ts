@@ -833,7 +833,7 @@ export const useCommon = () => {
     const existingSession = chatStore.getSession(res.roomId)
     if (!existingSession) {
       // 只有当会话不存在时才更新会话列表顺序
-      chatStore.updateSessionLastActiveTime(res.roomId, res)
+      chatStore.updateSessionLastActiveTime(res.roomId)
       // 如果会话不存在，需要重新获取会话列表，但保持当前选中的会话
       await chatStore.getSessionList(true)
     }
