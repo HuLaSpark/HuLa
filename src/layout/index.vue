@@ -77,6 +77,8 @@ const AsyncCenter = defineAsyncComponent({
 
     // 加载所有会话
     await chatStore.getSessionList(true)
+    // 设置全局会话为第一个
+    globalStore.currentSession = chatStore.sessionList[0]
 
     // 加载所有群的成员数据
     const groupSessions = chatStore.getGroupSessions()
@@ -189,6 +191,15 @@ useMitt.on(WsResponseMessageType.LOGIN_SUCCESS, async (data: LoginSuccessResType
     uid: rest.uid
   })
 })
+
+useMitt.on(WsResponseMessageType.ROOM_DISSOLUTION, async (roomId: string) => {
+  console.log('收到群解散通知', roomId)
+  // 移除群聊的会话
+  chatStore.removeSession(roomId)
+  // 移除群聊的详情
+  groupStore.removeGroupDetail(roomId)
+})
+
 useMitt.on(WsResponseMessageType.USER_STATE_CHANGE, async (data: { uid: string; userStateId: string }) => {
   console.log('收到用户状态改变', data)
   await cachedStore.updateUserState(data)

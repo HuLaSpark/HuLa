@@ -335,7 +335,7 @@ const captchaCooldownTimer = ref<NodeJS.Timeout>()
 const currentYear = dayjs().year()
 const registerForm = ref()
 const starTipsModal = ref(false)
-const emailCodeModal = ref(true)
+const emailCodeModal = ref(false)
 
 // 邮箱验证码PIN输入
 const emailCode = ref('')
