@@ -187,7 +187,6 @@ import { useContactStore } from '@/stores/contacts.ts'
 import { useGroupStore } from '@/stores/group'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { useGroupStore } from '~/src/stores/group'
 
 /**
  * 渲染图片图标的函数工厂

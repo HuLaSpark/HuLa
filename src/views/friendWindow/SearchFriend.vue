@@ -153,7 +153,6 @@ import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { searchFriend, searchGroup } from '@/utils/ImRequestUtils'
-import { useGroupStore } from '~/src/stores/group'
 
 const { createWebviewWindow } = useWindow()
 const cachedStore = useCachedStore()
