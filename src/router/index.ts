@@ -193,7 +193,7 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
   },
   {
     path: '/mobile/mobileFriends',
-    name: 'mobileMyLayout',
+    name: 'mobileFriendsLayout',
     component: FriendsLayout,
     children: [
       {
