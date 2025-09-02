@@ -1,3 +1,4 @@
+import { invoke } from '@tauri-apps/api/core'
 import { type } from '@tauri-apps/plugin-os'
 import {
   createRouter,
@@ -6,29 +7,35 @@ import {
   type RouteLocationNormalized,
   type RouteRecordRaw
 } from 'vue-router'
-import ChatRoomLayout from '@/mobile/layout/chat-room/ChatRoomLayout.vue'
-import NoticeLayout from '@/mobile/layout/chat-room/NoticeLayout.vue'
-import MobileHome from '@/mobile/layout/index.vue'
-import MyLayout from '@/mobile/layout/my/MyLayout.vue'
-import MobileLogin from '@/mobile/login.vue'
-import ChatMain from '@/mobile/views/chat-room/ChatMain.vue'
-import ChatSetting from '@/mobile/views/chat-room/ChatSetting.vue'
-import NoticeDetail from '@/mobile/views/chat-room/notice/NoticeDetail.vue'
-import NoticeEdit from '@/mobile/views/chat-room/notice/NoticeEdit.vue'
-import NoticeList from '@/mobile/views/chat-room/notice/NoticeList.vue'
-import MobileCommunity from '@/mobile/views/community/index.vue'
-import MobileFriendPage from '@/mobile/views/friends/index.vue'
-import MobileMessagePage from '@/mobile/views/message/index.vue'
-import EditBio from '@/mobile/views/my/EditBio.vue'
-import EditBirthday from '@/mobile/views/my/EditBirthday.vue'
-import EditProfile from '@/mobile/views/my/EditProfile.vue'
-import MobileMy from '@/mobile/views/my/index.vue'
-import MobileQRCode from '@/mobile/views/my/MobileQRCode.vue'
-import MobileSettings from '@/mobile/views/my/MobileSettings.vue'
-import MyMessages from '@/mobile/views/my/MyMessages.vue'
-import MyQRCode from '@/mobile/views/my/MyQRCode.vue'
-import PublishCommunity from '@/mobile/views/my/PublishCommunity.vue'
-import Share from '@/mobile/views/my/Share.vue'
+
+import ChatRoomLayout from '#/layout/chat-room/ChatRoomLayout.vue'
+import NoticeLayout from '#/layout/chat-room/NoticeLayout.vue'
+import FriendsLayout from '#/layout/friends/FriendsLayout.vue'
+import MobileHome from '#/layout/index.vue'
+import MyLayout from '#/layout/my/MyLayout.vue'
+import MobileLogin from '#/login.vue'
+import ChatMain from '#/views/chat-room/ChatMain.vue'
+import ChatSetting from '#/views/chat-room/ChatSetting.vue'
+import NoticeDetail from '#/views/chat-room/notice/NoticeDetail.vue'
+import NoticeEdit from '#/views/chat-room/notice/NoticeEdit.vue'
+import NoticeList from '#/views/chat-room/notice/NoticeList.vue'
+import MobileCommunity from '#/views/community/index.vue'
+import AddFriends from '#/views/friends/AddFriends.vue'
+import MobileFriendPage from '#/views/friends/index.vue'
+import StartGroupChat from '#/views/friends/StartGroupChat.vue'
+import MobileMessagePage from '#/views/message/index.vue'
+import EditBio from '#/views/my/EditBio.vue'
+import EditBirthday from '#/views/my/EditBirthday.vue'
+import EditProfile from '#/views/my/EditProfile.vue'
+import MobileMy from '#/views/my/index.vue'
+import MobileQRCode from '#/views/my/MobileQRCode.vue'
+import MobileSettings from '#/views/my/MobileSettings.vue'
+import MyMessages from '#/views/my/MyMessages.vue'
+import MyQRCode from '#/views/my/MyQRCode.vue'
+import PublishCommunity from '#/views/my/PublishCommunity.vue'
+import Share from '#/views/my/Share.vue'
+import SimpleBio from '#/views/my/SimpleBio.vue'
+import { TauriCommand } from '@/enums'
 
 /**! 创建窗口后再跳转页面就会导致样式没有生效所以不能使用懒加载路由的方式，有些页面需要快速响应的就不需要懒加载 */
 const { BASE_URL } = import.meta.env
@@ -58,7 +65,7 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
         redirect: '/mobile/chatRoom/chatMain'
       },
       {
-        path: 'chatMain/:roomName',
+        path: 'chatMain',
         name: 'mobileChatMain',
         component: ChatMain
       },
@@ -78,12 +85,12 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
             component: NoticeList
           },
           {
-            path: 'edit/:noticeId',
+            path: 'edit[NO]ticeId',
             name: 'mobileChatNoticeEdit',
             component: NoticeEdit
           },
           {
-            path: 'detail/:noticeId',
+            path: 'detail[NO]ticeId',
             name: 'mobileChatNoticeDetail',
             component: NoticeDetail
           }
@@ -177,6 +184,33 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
         path: 'myQRCode',
         name: 'mobileMyQRCode',
         component: MyQRCode
+      },
+      {
+        path: 'SimpleBio',
+        name: 'mobileSimpleBio',
+        component: SimpleBio
+      }
+    ]
+  },
+  {
+    path: '/mobile/mobileFriends',
+    name: 'mobileFriendsLayout',
+    component: FriendsLayout,
+    children: [
+      {
+        path: '',
+        name: 'mobileMyDefault',
+        redirect: '/mobile/mobileFriends/addFriends'
+      },
+      {
+        path: 'addFriends',
+        name: 'mobileAddFriends',
+        component: AddFriends
+      },
+      {
+        path: 'startGroupChat',
+        name: 'mobileStartGroupChat',
+        component: StartGroupChat
       }
     ]
   }
@@ -409,27 +443,39 @@ const router: any = createRouter({
 
 // 在创建路由后，添加全局前置守卫
 // 为解决 “已声明‘to’，但从未读取其值” 的问题，将 to 参数改为下划线开头表示该参数不会被使用
-router.beforeEach((_to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
-  // 如果是桌面端，直接放行
+router.beforeEach(async (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
+  console.log('进入了路由：', from, to)
+  // 桌面端直接放行
   if (!isMobile) {
     return next()
   }
 
-  // const token = localStorage.getItem('TOKEN')
-  // const isLoginPage = to.path === '/mobile/login'
+  try {
+    const tokens = await invoke<{ token: string | null; refreshToken: string | null }>(TauriCommand.GET_USER_TOKENS)
+    const isLoginPage = to.path === '/mobile/login'
+    const isLoggedIn = !!(tokens.token && tokens.refreshToken)
 
-  // // 已登录用户访问登录页时重定向到首页
-  // if (isLoginPage && token) {
-  //   return next('/mobile/home')
-  // }
+    // 未登录且不是登录页 → 跳转登录
+    if (!isLoggedIn && !isLoginPage) {
+      console.error('没有登录')
+      return next('/mobile/login')
+    }
 
-  // // 未登录用户访问非登录页时重定向到登录页
-  // if (!isLoginPage && !token) {
-  //   return next('/mobile/login')
-  // }
+    // 已登录且访问登录页 → 跳转首页
+    if (isLoggedIn && isLoginPage) {
+      return next('/mobile/message')
+    }
 
-  // 其他情况正常放行
-  next()
+    // 其他情况直接放行
+    return next()
+  } catch (error) {
+    console.error('获取token错误:', error)
+    // 出错时也跳转登录页（避免死循环）
+    if (to.path !== '/mobile/login') {
+      return next('/mobile/login')
+    }
+    return next()
+  }
 })
 
 export default router
