@@ -343,9 +343,9 @@ const handleMemberAdd = async (userList: UserItem[], roomId: string) => {
 }
 
 // 处理自己加入群聊
-const handleSelfAdd = async (_roomId: string) => {
+const handleSelfAdd = async (roomId: string) => {
   info('本人加入群聊，加载该群聊的会话数据')
-  // TODO: 可以在这里添加加载会话数据的逻辑
+  await chatStore.addSession(roomId)
 }
 
 // 处理其他成员加入群聊
