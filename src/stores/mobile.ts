@@ -86,6 +86,12 @@ export const useMobileStore = defineStore(StoresEnum.MOBILE, () => {
     })
   }
 
+  const currentChatRoom: any = ref({})
+
+  const updateCurrentChatRoom = (item: any) => {
+    currentChatRoom.value = item
+  }
+
   return {
     safeArea,
     updateSafeArea,
@@ -95,6 +101,8 @@ export const useMobileStore = defineStore(StoresEnum.MOBILE, () => {
     isFullScreen,
     keyboardDetail,
     updateKeyboardDetail,
-    updateKeyboardState
+    updateKeyboardState,
+    currentChatRoom,
+    updateCurrentChatRoom
   }
 })

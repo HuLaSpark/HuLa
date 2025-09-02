@@ -64,7 +64,7 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
         redirect: '/mobile/chatRoom/chatMain'
       },
       {
-        path: 'chatMain/:roomName',
+        path: 'chatMain',
         name: 'mobileChatMain',
         component: ChatMain
       },

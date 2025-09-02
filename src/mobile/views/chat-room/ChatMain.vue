@@ -1,7 +1,7 @@
 <template>
   <AutoFixHeightPage>
     <template #header>
-      <HeaderBar ref="header" :room-name="roomName" :msg-count="1002" />
+      <HeaderBar ref="header" :room-name="currentChatRoom.name" :msg-count="1002" />
     </template>
     <template #container>
       <!-- 网络状态提示 -->
@@ -445,10 +445,12 @@
 import AutoFixHeightPage from '#/components/chat-room/AutoFixHeightPage.vue'
 import FooterBar from '#/components/chat-room/FooterBar.vue'
 import HeaderBar from '#/components/chat-room/HeaderBar.vue'
+import { useMobileStore } from '@/stores/mobile'
 import { markMsg } from '@/utils/ImRequestUtils'
 
-const route = useRoute()
-const roomName = ref(route.params.roomName as string)
+const mobileStore = useMobileStore()
+
+const currentChatRoom = mobileStore.currentChatRoom
 
 const header = ref()
 

@@ -137,22 +137,15 @@ import { useChatStore } from '@/stores/chat.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
+import { MittEnum } from '~/src/enums'
+import { useMitt } from '~/src/hooks/useMitt'
+import { useMobileStore } from '~/src/stores/mobile'
 
 const chatStore = useChatStore()
 
 const pullRefreshRef = ref()
 
-const messageItems = computed(() => {
-  const a: any[] = []
-
-  for (let i = 0; i < 10; i++) {
-    chatStore.sessionList.forEach((i) => {
-      a.push(i)
-    })
-  }
-
-  return a
-})
+const messageItems = computed(() => chatStore.sessionList)
 
 const getSessionList = async () => {
   await chatStore.getSessionList(true)
@@ -308,12 +301,20 @@ const addIconHandler = {
 
 const router = useRouter()
 
+const mobileStore = useMobileStore()
+
+useMitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
+  mobileStore.updateCurrentChatRoom(event.item)
+})
+
 const { handleMsgClick } = useMessage()
 
 const intoRoom = (item: any) => {
   handleMsgClick(item)
-  router.push(`/mobile/chatRoom/chatMain/${item.uid}`)
-  console.log('进入页面', item)
+  setTimeout(() => {
+    router.push(`/mobile/chatRoom/chatMain`)
+    console.log('进入页面', item)
+  }, 0)
 }
 const toSimpleBio = () => {
   // 切成你想要的离场动画
