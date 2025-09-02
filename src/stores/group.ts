@@ -99,6 +99,10 @@ export const useGroupStore = defineStore(
       return userList.value.find((member: UserItem) => member.uid === userStore.userInfo.uid)!
     }
 
+    const removeGroupDetail = (roomId: string) => {
+      groupDetails.value = groupDetails.value.filter((item) => item.roomId !== roomId)
+    }
+
     /**
      * 获取所有成员的基本信息列表
      * 包含角色信息（群主/管理员/普通成员）
@@ -454,7 +458,8 @@ export const useGroupStore = defineStore(
       setGroupDetails,
       updateGroupDetail,
       groupDetails,
-      updateGroupTotalNum
+      updateGroupTotalNum,
+      removeGroupDetail
     }
   },
   {
