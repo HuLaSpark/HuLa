@@ -6,6 +6,7 @@
       :shrink="false"
       :min-w="false"
       :max-w="false"
+      :isDrag="false"
       :current-label="WebviewWindow.getCurrent().label" />
 
     <!-- 标题 -->

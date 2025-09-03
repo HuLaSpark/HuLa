@@ -422,6 +422,16 @@ const getCommonRoutes = (): Array<RouteRecordRaw> => [
     path: '/videoViewer',
     name: 'videoViewer',
     component: () => import('@/views/videoViewerWindow/index.vue')
+  },
+  {
+    path: '/modal-serviceAgreement',
+    name: 'modal-serviceAgreement',
+    component: () => import('@/views/agreementWindow/Server.vue')
+  },
+  {
+    path: '/modal-privacyAgreement',
+    name: 'modal-privacyAgreement',
+    component: () => import('@/views/agreementWindow/Privacy.vue')
   }
 ]
 

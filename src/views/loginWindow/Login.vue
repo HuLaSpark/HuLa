@@ -89,9 +89,9 @@
           <n-checkbox v-model:checked="protocol" />
           <div class="text-12px color-#909090 cursor-default lh-14px">
             <span>已阅读并同意</span>
-            <span class="color-#13987f cursor-pointer">服务协议</span>
+            <span class="color-#13987f cursor-pointer" @click.stop="openServiceAgreement">服务协议</span>
             <span>和</span>
-            <span class="color-#13987f cursor-pointer">HuLa隐私保护指引</span>
+            <span class="color-#13987f cursor-pointer" @click="openPrivacyAgreement">HuLa隐私保护指引</span>
           </div>
         </n-flex>
 
@@ -232,7 +232,7 @@ const loading = ref(false)
 const arrowStatus = ref(false)
 const moreShow = ref(false)
 const { setLoginState } = useLogin()
-const { createWebviewWindow } = useWindow()
+const { createWebviewWindow, createModalWindow } = useWindow()
 const { checkUpdate, CHECK_UPDATE_LOGIN_TIME } = useCheckUpdate()
 
 const accountPH = ref('邮箱/HuLa账号')
@@ -427,6 +427,18 @@ const removeToken = () => {
   localStorage.removeItem('TOKEN')
   localStorage.removeItem('REFRESH_TOKEN')
   userStore.userInfo = {}
+}
+
+/** 打开服务协议窗口 */
+const openServiceAgreement = async () => {
+  console.log(2222)
+
+  await createModalWindow('服务协议', 'modal-serviceAgreement', 600, 600, 'login')
+}
+
+/** 打开隐私保护协议窗口 */
+const openPrivacyAgreement = async () => {
+  await createModalWindow('隐私保护指引', 'modal-privacyAgreement', 600, 600, 'login')
 }
 
 const closeMenu = (event: MouseEvent) => {
