@@ -1,7 +1,7 @@
 <template>
   <AutoFixHeightPage>
     <template #header>
-      <HeaderBar ref="header" :room-name="currentChatRoom.name" :msg-count="1002" />
+      <HeaderBar ref="header" :room-name="globalStore.currentSession!.name" :msg-count="1002" />
     </template>
     <template #container>
       <!-- 网络状态提示 -->
@@ -445,12 +445,11 @@
 import AutoFixHeightPage from '#/components/chat-room/AutoFixHeightPage.vue'
 import FooterBar from '#/components/chat-room/FooterBar.vue'
 import HeaderBar from '#/components/chat-room/HeaderBar.vue'
-import { useMobileStore } from '@/stores/mobile'
+import { useGlobalStore } from '@/stores/global'
 import { markMsg } from '@/utils/ImRequestUtils'
 
-const mobileStore = useMobileStore()
-
-const currentChatRoom = mobileStore.currentChatRoom
+const globalStore = useGlobalStore()
+console.log('当前数据聊天数据：', globalStore.currentSession)
 
 const header = ref()
 
@@ -522,7 +521,6 @@ import { useWindow } from '@/hooks/useWindow.ts'
 import type { MessageType, SessionItem } from '@/services/types.ts'
 import { useCachedStore } from '@/stores/cached'
 import { useChatStore } from '@/stores/chat.ts'
-import { useGlobalStore } from '@/stores/global'
 import { useGroupStore } from '@/stores/group.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { audioManager } from '@/utils/AudioManager'
@@ -539,7 +537,6 @@ const props = defineProps<{
 const chatStore = useChatStore()
 const userStore = useUserStore()
 const groupStore = useGroupStore()
-const globalStore = useGlobalStore()
 const cachedStore = useCachedStore()
 const networkStatus = useNetworkStatus()
 

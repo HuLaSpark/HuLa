@@ -129,14 +129,11 @@ import type { IKeyboardDidShowDetail } from '#/mobile-client/interface/adapter'
 import { mobileClient } from '#/mobile-client/MobileClient'
 import addFriendIcon from '@/assets/mobile/chat-home/add-friend.webp'
 import groupChatIcon from '@/assets/mobile/chat-home/group-chat.webp'
-import { MittEnum } from '@/enums'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { useMessage } from '@/hooks/useMessage.ts'
-import { useMitt } from '@/hooks/useMitt'
 import { IsAllUserEnum } from '@/services/types.ts'
 import rustWebSocketClient from '@/services/webSocketRust'
 import { useChatStore } from '@/stores/chat.ts'
-import { useMobileStore } from '@/stores/mobile'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
@@ -300,12 +297,6 @@ const addIconHandler = {
 }
 
 const router = useRouter()
-
-const mobileStore = useMobileStore()
-
-useMitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
-  mobileStore.updateCurrentChatRoom(event.item)
-})
 
 const { handleMsgClick } = useMessage()
 
