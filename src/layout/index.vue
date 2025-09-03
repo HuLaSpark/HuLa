@@ -84,7 +84,8 @@ const AsyncCenter = defineAsyncComponent({
     const groupSessions = chatStore.getGroupSessions()
     await Promise.all([
       ...groupSessions.map((session) => groupStore.getGroupUserList(session.roomId, true)),
-      groupStore.setGroupDetails()
+      groupStore.setGroupDetails(),
+      chatStore.setAllSessionMsgList(1)
     ])
 
     loadingPercentage.value = 66

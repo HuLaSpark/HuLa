@@ -188,8 +188,45 @@ export const useChatStore = defineStore(
     // 将消息列表转换为数组
     const chatMessageList = computed(() => [...(currentMessageMap.value?.values() || [])])
 
+    // 登录之后，加载一次所有会话的消息
+    const setAllSessionMsgList = async (size = pageSize) => {
+      for (const session of sessionList.value) {
+        // 查询本地存储，获取消息数据
+        const data: any = await invokeWithErrorHandler(
+          TauriCommand.PAGE_MSG,
+          {
+            param: {
+              pageSize: size,
+              cursor: messageOptions.get(session.roomId)?.cursor || '',
+              roomId: session.roomId
+            }
+          },
+          {
+            customErrorMessage: '获取消息列表失败',
+            errorType: ErrorType.Network
+          }
+        )
+
+        // 更新 messageOptions
+        messageOptions.set(session.roomId, {
+          isLast: data.isLast,
+          isLoading: false,
+          cursor: data.cursor
+        })
+
+        // 构建新 Map 后一次性替换，避免清空帧导致 UI 闪烁
+        const nextMap = new Map<string, MessageType>()
+        for (const msg of data.list) {
+          nextMap.set(msg.message.id, msg)
+        }
+        // 设置消息
+        messageMap.set(session.roomId, nextMap)
+      }
+    }
+
     // 获取消息列表
     const getMsgList = async (size = pageSize, isSwitching = false) => {
+      console.log('获取消息列表')
       // 获取当前房间ID，用于后续比较
       const requestRoomId = globalStore.currentSession!.roomId
 
@@ -819,7 +856,8 @@ export const useChatStore = defineStore(
       getGroupSessions,
       removeSession,
       changeRoom,
-      addSession
+      addSession,
+      setAllSessionMsgList
     }
   },
   {
