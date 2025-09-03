@@ -333,7 +333,13 @@ useMitt.on(
 )
 useMitt.on(
   WsResponseMessageType.WS_MEMBER_CHANGE,
-  async (param: { roomId: string; changeType: ChangeTypeEnum; userList: UserItem[]; totalNum: number }) => {
+  async (param: {
+    roomId: string
+    changeType: ChangeTypeEnum
+    userList: UserItem[]
+    totalNum: number
+    onlineNum: number
+  }) => {
     info('监听到群成员变更消息')
     const isRemoveAction = param.changeType === ChangeTypeEnum.REMOVE || param.changeType === ChangeTypeEnum.EXIT_GROUP
     if (isRemoveAction) {
@@ -342,8 +348,9 @@ useMitt.on(
       await handleMemberAdd(param.userList, param.roomId)
     }
 
+    groupStore.addGroupDetail(param.roomId)
     // 更新群内的总人数
-    groupStore.updateGroupTotalNum(param.roomId, param.totalNum)
+    groupStore.updateGroupNumber(param.roomId, param.totalNum, param.onlineNum)
   }
 )
 

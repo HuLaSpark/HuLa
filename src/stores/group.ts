@@ -57,6 +57,14 @@ export const useGroupStore = defineStore(
       groupDetails.value = data
     }
 
+    const addGroupDetail = async (roomId: string) => {
+      if (groupDetails.value.find((item) => item.roomId === roomId)) {
+        return
+      }
+      const data = await ImRequestUtils.getGroupDetail(roomId)
+      groupDetails.value.push(data)
+    }
+
     const updateGroupDetail = async (roomId: string, detail: Partial<GroupDetailReq>) => {
       let targetGroup = groupDetails.value.find((item) => item.roomId === roomId)!
       targetGroup = {
@@ -132,11 +140,10 @@ export const useGroupStore = defineStore(
       return groupDetails.value.find((item: GroupDetailReq) => item.roomId === globalStore.currentSession!.roomId)
     })
 
-    const updateGroupTotalNum = (roomId: string, totalNum: number) => {
+    const updateGroupNumber = (roomId: string, totalNum: number, onlineNum: number) => {
       const group = groupDetails.value.find((item) => item.roomId === roomId)
-      if (group) {
-        group.memberNum = totalNum
-      }
+      group!.memberNum = totalNum
+      group!.onlineNum = onlineNum
     }
 
     /**
@@ -458,8 +465,9 @@ export const useGroupStore = defineStore(
       setGroupDetails,
       updateGroupDetail,
       groupDetails,
-      updateGroupTotalNum,
-      removeGroupDetail
+      updateGroupNumber,
+      removeGroupDetail,
+      addGroupDetail
     }
   },
   {
