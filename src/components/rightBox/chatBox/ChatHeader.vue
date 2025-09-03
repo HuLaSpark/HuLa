@@ -13,7 +13,7 @@
             :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
             :src="currentUserAvatar" />
           <label class="flex-y-center gap-6px">
-            <p class="text-(16px [--text-color])">{{ myGroupRemark || activeItem.name }}</p>
+            <p class="text-(16px [--text-color])">{{ groupStore.countInfo?.remark || activeItem.name }}</p>
             <p
               v-if="activeItem.type === RoomTypeEnum.GROUP && groupStore.countInfo?.memberNum"
               class="text-(11px #808080)">
@@ -452,12 +452,6 @@ const isGroupOwner = computed(() => {
   return currentUser!.roleId === RoleEnum.LORD
 })
 
-// 我的群备注
-const myGroupRemark = computed(() => {
-  if (activeItem.type === RoomTypeEnum.GROUP) {
-    return groupStore.countInfo?.remark || ''
-  }
-})
 // 是否正在编辑群名称
 const isEditingGroupName = ref(false)
 // 编辑中的群名称
@@ -608,6 +602,7 @@ const handleInvite = async () => {
 
 // 保存群聊信息
 const saveGroupInfo = async () => {
+  console.log('修改群聊信息')
   if (!activeItem.roomId || activeItem.type !== RoomTypeEnum.GROUP) return
 
   // 使用updateMyRoomInfo接口更新我在群里的昵称和群备注

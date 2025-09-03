@@ -60,6 +60,9 @@ export const renderReplyContent = (name?: string, type?: MsgEnum, content?: stri
         ? `${name}:${MSG_REPLY_TEXT_MAP[MsgEnum.AUDIO_CALL]}`
         : MSG_REPLY_TEXT_MAP[MsgEnum.AUDIO_CALL]
     }
+    case MsgEnum.BOT: {
+      return roomType === RoomTypeEnum.GROUP ? `${name}:${content}` : MSG_REPLY_TEXT_MAP[MsgEnum.BOT]
+    }
     default: {
       return ''
     }
