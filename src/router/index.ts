@@ -27,6 +27,7 @@ import MobileMessagePage from '#/views/message/index.vue'
 import EditBio from '#/views/my/EditBio.vue'
 import EditBirthday from '#/views/my/EditBirthday.vue'
 import EditProfile from '#/views/my/EditProfile.vue'
+import FriendInfo from '#/views/my/FriendInfo.vue'
 import MobileMy from '#/views/my/index.vue'
 import MobileQRCode from '#/views/my/MobileQRCode.vue'
 import MobileSettings from '#/views/my/MobileSettings.vue'
@@ -189,6 +190,11 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
         path: 'SimpleBio',
         name: 'mobileSimpleBio',
         component: SimpleBio
+      },
+      {
+        path: 'friendInfo',
+        name: 'mobileFriendInfo',
+        component: FriendInfo
       }
     ]
   },
