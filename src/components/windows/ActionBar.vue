@@ -239,9 +239,10 @@ const handleCloseWin = async () => {
     await exit(0)
   } else {
     if (appWindow.label.includes('modal-')) {
-      const home = await WebviewWindow.getByLabel('home')
-      await home?.setEnabled(true)
-      await home?.setFocus()
+      const webviews = await WebviewWindow.getAll()
+      const need = webviews.find((item) => item.label === 'home' || item.label === 'login')
+      await need?.setEnabled(true)
+      await need?.setFocus()
     }
     await emit(EventEnum.WIN_CLOSE, appWindow.label)
     await appWindow.close()

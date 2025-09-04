@@ -23,9 +23,9 @@
       <!-- 头像和插件 -->
       <n-flex align="center" justify="space-between" :size="0">
         <n-flex align="center">
-          <n-avatar bordered round :src="AvatarUtils.getAvatarUrl(userStore.userInfo.avatar!)" :size="48" />
+          <n-avatar bordered round :src="AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar!)" :size="48" />
           <n-flex vertical>
-            <p class="text-(14px [--chat-text-color]) font-500">{{ userStore.userInfo.name }}</p>
+            <p class="text-(14px [--chat-text-color]) font-500">{{ userStore.userInfo!.name }}</p>
             <p class="text-(12px #909090)">剩余：28天过期</p>
           </n-flex>
         </n-flex>

@@ -45,7 +45,7 @@ defineProps<Props>()
 const chatStore = useChatStore()
 const userStore = useUserStore()
 
-const userUid = computed(() => userStore.userInfo.uid)
+const userUid = computed(() => userStore.userInfo!.uid)
 
 const canReEdit = computed(() => (msgId: string) => {
   const recalledMsg = chatStore.getRecalledMessage(msgId)

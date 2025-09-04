@@ -38,7 +38,7 @@ export const useChatMain = () => {
   const groupStore = useGroupStore()
   const chatStore = useChatStore()
   const emojiStore = useEmojiStore()
-  const userStore = useUserStore()?.userInfo
+  const userStore = useUserStore()
   const { downloadFile } = useDownload()
   // const userInfo = useUserStore()?.userInfo
   // const chatMessageList = computed(() => chatStore.chatMessageList)
@@ -112,12 +112,12 @@ export const useChatMain = () => {
 
         // 记录撤回的消息，用于重新编辑
         chatStore.recordRecallMsg({
-          recallUid: userStore.uid!,
+          recallUid: userStore.userInfo!.uid,
           msg
         })
         // 发送撤回消息请求，并修改缓存
         await chatStore.updateRecallMsg({
-          recallUid: userStore.uid!,
+          recallUid: userStore.userInfo!.uid,
           roomId: msg.message.roomId,
           msgId: msg.message.id
         })
@@ -127,7 +127,7 @@ export const useChatMain = () => {
         if (isDiffNow({ time: item.message.sendTime, unit: 'minute', diff: 2 })) return
         // 判断自己是否是发送者或者是否是管理员
         const isCurrentUser = item.fromUser.uid === userUid.value
-        const isAdmin = userStore?.power === PowerEnum.ADMIN
+        const isAdmin = userStore.userInfo!.power === PowerEnum.ADMIN
         return isCurrentUser || isAdmin
       }
     }
@@ -254,7 +254,7 @@ export const useChatMain = () => {
           const fileStatus: FileDownloadStatus = fileDownloadStore.getFileStatus(item.message.body.url)
 
           const currentChatRoomId = globalStore.currentSession!.roomId // 这个id可能为群id可能为用户uid，所以不能只用用户uid
-          const currentUserUid = userStore.uid as string
+          const currentUserUid = userStore.userInfo!.uid as string
 
           /**
            * 构建窗口所需的 payload 数据，用于传递文件预览相关的信息。
@@ -421,7 +421,7 @@ export const useChatMain = () => {
 
         console.log('找到的文件状态：', fileStatus)
         const currentChatRoomId = globalStore.currentSession!.roomId // 这个id可能为群id可能为用户uid，所以不能只用用户uid
-        const currentUserUid = userStore.uid as string
+        const currentUserUid = userStore.userInfo!.uid as string
 
         const resourceDirPath = await getUserAbsoluteVideosDir(currentUserUid, currentChatRoomId)
         let absolutePath = await join(resourceDirPath, fileName)
@@ -803,7 +803,7 @@ export const useChatMain = () => {
   const checkFriendRelation = (uid: string, type: 'friend' | 'all' = 'all') => {
     const contactStore = useContactStore()
     const userStore = useUserStore()
-    const myUid = userStore.userInfo.uid
+    const myUid = userStore.userInfo!.uid
     const isFriend = contactStore.contactsList.some((item) => item.uid === uid)
     return type === 'friend' ? isFriend && uid !== myUid : isFriend || uid === myUid
   }

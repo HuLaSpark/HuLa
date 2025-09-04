@@ -5,13 +5,13 @@ import DOMPurify from 'dompurify'
 import type { Ref } from 'vue'
 import { AppException } from '@/common/exception.ts'
 import { MessageStatusEnum, MsgEnum, UploadSceneEnum } from '@/enums'
-import { useUserInfo } from '@/hooks/useCached.ts'
 import { parseInnerText } from '@/hooks/useCommon.ts'
 import { type UploadOptions, UploadProviderEnum, useUpload } from '@/hooks/useUpload'
 import type { MessageType } from '@/services/types.ts'
 import { fixFileMimeType, isVideoUrl } from '@/utils/FileType'
 import { getMimeTypeFromExtension, removeTag } from '@/utils/Formatting'
 import { getImageDimensions } from '@/utils/ImageUtils'
+import { useGroupStore } from '../stores/group'
 
 interface MessageStrategy {
   getMsg: (msgInputValue: string, replyValue: any, fileList?: File[]) => any
@@ -42,12 +42,13 @@ abstract class AbstractMessageStrategy implements MessageStrategy {
 
   buildMessageType(messageId: string, messageBody: any, globalStore: any, userUid: Ref<any>): MessageType {
     const currentTime = new Date().getTime()
+    const groupStore = useGroupStore()
     return {
       fromUser: {
         uid: userUid.value || 0,
-        username: useUserInfo(userUid.value)?.value?.name || '',
-        avatar: useUserInfo(userUid.value)?.value?.avatar || '',
-        locPlace: useUserInfo(userUid.value)?.value?.locPlace || ''
+        username: groupStore.getUserInfo(userUid.value)?.name || '',
+        avatar: groupStore.getUserInfo(userUid.value)?.avatar || '',
+        locPlace: groupStore.getUserInfo(userUid.value)?.locPlace || ''
       },
       message: {
         id: messageId,

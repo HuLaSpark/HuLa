@@ -89,9 +89,9 @@
           <n-checkbox v-model:checked="protocol" />
           <div class="text-12px color-#909090 cursor-default lh-14px">
             <span>已阅读并同意</span>
-            <span class="color-#13987f cursor-pointer">服务协议</span>
+            <span class="color-#13987f cursor-pointer" @click.stop="openServiceAgreement">服务协议</span>
             <span>和</span>
-            <span class="color-#13987f cursor-pointer">HuLa隐私保护指引</span>
+            <span class="color-#13987f cursor-pointer" @click="openPrivacyAgreement">HuLa隐私保护指引</span>
           </div>
         </n-flex>
 
@@ -120,11 +120,11 @@
             :size="110"
             color="#fff"
             class="border-(2px solid #fff)"
-            :src="AvatarUtils.getAvatarUrl(userStore.userInfo.avatar || '/logoD.png')" />
+            :src="AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar || '/logoD.png')" />
         </n-flex>
 
         <n-flex justify="center">
-          <n-ellipsis style="max-width: 200px" class="text-18px">{{ userStore.userInfo.name }}</n-ellipsis>
+          <n-ellipsis style="max-width: 200px" class="text-18px">{{ userStore.userInfo!.name }}</n-ellipsis>
         </n-flex>
       </n-flex>
 
@@ -232,7 +232,7 @@ const loading = ref(false)
 const arrowStatus = ref(false)
 const moreShow = ref(false)
 const { setLoginState } = useLogin()
-const { createWebviewWindow } = useWindow()
+const { createWebviewWindow, createModalWindow } = useWindow()
 const { checkUpdate, CHECK_UPDATE_LOGIN_TIME } = useCheckUpdate()
 
 const accountPH = ref('邮箱/HuLa账号')
@@ -338,7 +338,7 @@ const normalLogin = async (auto = false) => {
       clientId: clientId,
       grantType: 'PASSWORD',
       isAutoLogin: auto,
-      uid: auto ? userStore.userInfo.uid : null
+      uid: auto ? userStore.userInfo!.uid : null
     }
   })
     .then(async (res: any) => {
@@ -426,7 +426,19 @@ const openHomeWindow = async () => {
 const removeToken = () => {
   localStorage.removeItem('TOKEN')
   localStorage.removeItem('REFRESH_TOKEN')
-  userStore.userInfo = {}
+  userStore.userInfo = undefined
+}
+
+/** 打开服务协议窗口 */
+const openServiceAgreement = async () => {
+  console.log(2222)
+
+  await createModalWindow('服务协议', 'modal-serviceAgreement', 600, 600, 'login')
+}
+
+/** 打开隐私保护协议窗口 */
+const openPrivacyAgreement = async () => {
+  await createModalWindow('隐私保护指引', 'modal-privacyAgreement', 600, 600, 'login')
 }
 
 const closeMenu = (event: MouseEvent) => {
@@ -470,7 +482,7 @@ onBeforeMount(async () => {
       // token无效，清除token并重置状态
       localStorage.removeItem('TOKEN')
       localStorage.removeItem('REFRESH_TOKEN')
-      userStore.userInfo = {}
+      userStore.userInfo = undefined
       userStore.isSign = false
     }
   }

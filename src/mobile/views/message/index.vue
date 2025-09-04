@@ -24,7 +24,7 @@
         <n-flex @click="toSimpleBio" align="center" :size="6" class="w-full">
           <n-avatar
             :size="38"
-            :src="AvatarUtils.getAvatarUrl(userStore.userInfo.avatar!)"
+            :src="AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar!)"
             fallback-src="/logo.png"
             round />
 
@@ -38,9 +38,11 @@
                   sans-serif;
               "
               class="text-(16px [--text-color])">
-              {{ userStore.userInfo.name }}
+              {{ userStore.userInfo!.name }}
             </p>
-            <p class="text-(10px [--text-color])">{{ useUserInfo(userStore.userInfo.uid).value.locPlace || '未知' }}</p>
+            <p class="text-(10px [--text-color])">
+              {{ groupStore.getUserInfo(userStore.userInfo!.uid)?.locPlace || '未知' }}
+            </p>
           </n-flex>
         </n-flex>
       </template>
@@ -130,7 +132,6 @@ import { mobileClient } from '#/mobile-client/MobileClient'
 import addFriendIcon from '@/assets/mobile/chat-home/add-friend.webp'
 import groupChatIcon from '@/assets/mobile/chat-home/group-chat.webp'
 import { MittEnum } from '@/enums'
-import { useUserInfo } from '@/hooks/useCached.ts'
 import { useMessage } from '@/hooks/useMessage.ts'
 import { useMitt } from '@/hooks/useMitt'
 import { IsAllUserEnum } from '@/services/types.ts'
@@ -140,6 +141,7 @@ import { useMobileStore } from '@/stores/mobile'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
+import { useGroupStore } from '~/src/stores/group'
 
 const chatStore = useChatStore()
 
@@ -152,6 +154,7 @@ const getSessionList = async () => {
 }
 
 const userStore = useUserStore()
+const groupStore = useGroupStore()
 
 /**
  * export interface IKeyboardDidShowDetail {
@@ -162,7 +165,7 @@ const userStore = useUserStore()
    timestamp: number
    visibleHeight: number
  }
- 
+
  */
 
 onMounted(async () => {

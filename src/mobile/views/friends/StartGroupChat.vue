@@ -46,13 +46,13 @@
                   <n-avatar
                     round
                     :size="44"
-                    :src="AvatarUtils.getAvatarUrl(useUserInfo(item.uid).value.avatar!)"
+                    :src="AvatarUtils.getAvatarUrl(groupStore.getUserInfo(item.uid)!.avatar!)"
                     fallback-src="/logo.png"
                     style="border: 1px solid var(--avatar-border-color)" />
                   <!-- 文字信息 -->
                   <div class="flex flex-col leading-tight truncate">
                     <span class="text-14px font-medium truncate">
-                      {{ useUserInfo(item.uid).value.name }}
+                      {{ groupStore.getUserInfo(item.uid)!.name }}
                     </span>
                     <div class="text-12px text-gray-500 flex items-center gap-4px truncate">
                       <template v-if="getUserState(item.uid)">
@@ -85,17 +85,18 @@
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, ref } from 'vue'
 import { OnlineEnum } from '@/enums'
-import { useUserInfo } from '@/hooks/useCached.ts'
 import { useContactStore } from '@/stores/contacts'
+import { useGroupStore } from '@/stores/group'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 
 const userStatusStore = useUserStatusStore()
 const { stateList } = storeToRefs(userStatusStore)
+const groupStore = useGroupStore()
 
 /** 获取用户状态 */
 const getUserState = (uid: string) => {
-  const userInfo = useUserInfo(uid).value
+  const userInfo = groupStore.getUserInfo(uid)!
   const userStateId = userInfo.userStateId
 
   if (userStateId && userStateId !== '1') {
@@ -127,7 +128,7 @@ const doSearch = () => {
 const filteredContacts = computed(() => {
   if (!keyword.value) return contactStore.contactsList
   return contactStore.contactsList.filter((c) => {
-    const name = useUserInfo(c.uid).value.name
+    const name = groupStore.getUserInfo(c.uid)!.name
     if (name) {
       name.includes(keyword.value)
     } else {

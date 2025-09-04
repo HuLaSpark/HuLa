@@ -98,7 +98,7 @@ const toggleStatus = async (item: UserState) => {
     await changeUserState({ id: item.id })
 
     stateId.value = item.id
-    userStore.userInfo.userStateId = item.id
+    userStore.userInfo!.userStateId = item.id
     appWindow.hide()
   } catch (error) {
     console.error('更新状态失败:', error)

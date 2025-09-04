@@ -39,8 +39,8 @@
             class="size-68px text-20px select-none cursor-default" />
 
           <n-flex :size="10" class="text-[--text-color]" justify="center" vertical>
-            <span class="text-18px">{{ userStore.userInfo.name }}</span>
-            <span class="text-(12px [--info-text-color])">账号 {{ userStore.userInfo.account }}</span>
+            <span class="text-18px">{{ userStore.userInfo!.name }}</span>
+            <span class="text-(12px [--info-text-color])">账号 {{ userStore.userInfo!.account }}</span>
             <n-flex
               :size="5"
               align="center"
@@ -94,7 +94,7 @@ import { leftHook } from '../hook.ts'
 const userStore = useUserStore()
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
-const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(userStore.userInfo.avatar as string))
+const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar as string))
 const { shrinkStatus, currentState, infoShow, themeColor, openContent, handleEditing } = leftHook()
 </script>
 <style lang="scss" scoped>

@@ -6,7 +6,7 @@ import { getUserDetail } from '@/utils/ImRequestUtils'
 export const useUserStore = defineStore(
   StoresEnum.USER,
   () => {
-    const userInfo = ref<Partial<UserInfoType>>({})
+    const userInfo = ref<UserInfoType>()
     const isSign = ref(false)
 
     const getUserDetailAction = () => {

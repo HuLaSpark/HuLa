@@ -399,7 +399,6 @@ import {
   ThemeEnum
 } from '@/enums'
 import { useAvatarUpload } from '@/hooks/useAvatarUpload'
-import { useUserInfo } from '@/hooks/useCached'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useWindow } from '@/hooks/useWindow'
 import { IsAllUserEnum, type SessionItem, type UserItem } from '@/services/types.ts'
@@ -448,7 +447,7 @@ const isGroupOwner = computed(() => {
   }
 
   // 检查groupStore.userList中当前用户的角色
-  const currentUser = groupStore.userList.find((user) => user.uid === userStore.userInfo.uid)
+  const currentUser = groupStore.userList.find((user) => user.uid === userStore.userInfo!.uid)
   return currentUser!.roleId === RoleEnum.LORD
 })
 
@@ -486,11 +485,10 @@ const groupUserList = computed(() => groupStore.userList)
 const userList = computed(() => {
   return groupUserList.value
     .map((item: UserItem) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { uid, ...userInfo } = item // 排除uid，获取剩余内容
       return {
         ...userInfo,
-        ...useUserInfo(item.uid).value,
+        ...groupStore.getUserInfo(item.uid)!,
         uid
       }
     })
@@ -506,7 +504,7 @@ const currentUserStatus = computed(() => {
 
   // 使用 useUserInfo 获取用户信息
   if (!activeItem.detailId) return null
-  const userInfo = useUserInfo(activeItem.detailId).value
+  const userInfo = groupStore.getUserInfo(activeItem.detailId)!
 
   // 从状态列表中找到对应的状态
   return userStatusStore.stateList.find((state: { id: string }) => state.id === userInfo.userStateId)
@@ -528,7 +526,7 @@ const currentUserAvatar = computed(() => {
   if (activeItem.type === RoomTypeEnum.GROUP) {
     return AvatarUtils.getAvatarUrl(activeItem.avatar)
   } else if (activeItem.detailId) {
-    return AvatarUtils.getAvatarUrl(useUserInfo(activeItem.detailId).value.avatar || activeItem.avatar)
+    return AvatarUtils.getAvatarUrl(groupStore.getUserInfo(activeItem.detailId)!.avatar || activeItem.avatar)
   }
   return AvatarUtils.getAvatarUrl(activeItem.avatar)
 })
