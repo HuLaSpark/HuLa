@@ -507,10 +507,10 @@ export async function pushAnnouncement(body: { roomId: string; content: string; 
   })
 }
 
-export async function deleteAnnouncement(params: { id: string }) {
+export async function deleteAnnouncement(id: string) {
   return await imRequest({
     url: ImUrlEnum.DELETE_ANNOUNCEMENT,
-    params
+    params: { id: id }
   })
 }
 
