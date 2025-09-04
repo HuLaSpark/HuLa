@@ -196,17 +196,19 @@
                           <n-popover
                             v-if="
                               currentRoomId === '1' &&
-                              useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.img
+                              useBadgeInfo(groupStore.getUserInfo(item.fromUser.uid)!.wearingItemId).value.img
                             "
                             trigger="hover">
                             <template #trigger>
                               <img
                                 class="size-18px"
-                                :src="useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.img"
+                                :src="useBadgeInfo(groupStore.getUserInfo(item.fromUser.uid)!.wearingItemId).value.img"
                                 alt="badge" />
                             </template>
                             <span>
-                              {{ useBadgeInfo(useUserInfo(item.fromUser.uid).value.wearingItemId).value.describe }}
+                              {{
+                                useBadgeInfo(groupStore.getUserInfo(item.fromUser.uid)!.wearingItemId).value.describe
+                              }}
                             </span>
                           </n-popover>
                           <!-- 用户名 -->
@@ -215,7 +217,7 @@
                           </span>
                           <!-- 消息归属地 -->
                           <span class="text-(12px #909090)">
-                            ({{ useUserInfo(item.fromUser.uid).value.locPlace || '未知' }})
+                            ({{ groupStore.getUserInfo(item.fromUser.uid)!.locPlace || '未知' }})
                           </span>
                         </n-flex>
                       </ContextMenu>
@@ -512,7 +514,7 @@ import { useDebounceFn } from '@vueuse/core'
 import { delay } from 'lodash-es'
 import VirtualList, { type VirtualListExpose } from '@/components/common/VirtualList.vue'
 import { EventEnum, MessageStatusEnum, MittEnum, MsgEnum, TauriCommand } from '@/enums'
-import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
+import { useBadgeInfo } from '@/hooks/useCached.ts'
 import { useChatMain } from '@/hooks/useChatMain.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useNetworkStatus } from '@/hooks/useNetworkStatus'
@@ -555,7 +557,7 @@ const isLoadingMore = ref(false)
 
 // 是否是群聊
 const isGroup = computed(() => chatStore.isGroup)
-const userUid = computed(() => userStore.userInfo.uid)
+const userUid = computed(() => userStore.userInfo!.uid)
 const chatMessageList = computed(() => chatStore.chatMessageList)
 const currentNewMsgCount = computed(() => chatStore.currentNewMsgCount)
 const messageOptions = computed(() => chatStore.currentMessageOptions)
@@ -837,7 +839,7 @@ const cancelReplyEmoji = async (item: any, type: number) => {
           markType: type,
           markCount: Math.max(0, currentCount - 1), // 确保计数不会为负数
           actType: 2,
-          uid: String(userStore.userInfo.uid)
+          uid: String(userStore.userInfo!.uid)
         }
       ])
     } catch (error) {
@@ -895,7 +897,7 @@ const handleEmojiSelect = async (context: { label: string; value: number; title:
           markType: context.value,
           markCount: currentCount + 1,
           actType: 1,
-          uid: String(userStore.userInfo.uid)
+          uid: String(userStore.userInfo!.uid)
         }
       ])
     } catch (error) {
@@ -1085,7 +1087,7 @@ const loadTopAnnouncement = async () => {
 
 // 获取用户头像
 const getAvatarSrc = (uid: string) => {
-  const avatar = uid === userUid.value ? userStore.userInfo.avatar : useUserInfo(uid).value.avatar
+  const avatar = uid === userUid.value ? userStore.userInfo!.avatar : groupStore.getUserInfo(uid)!.avatar
   return AvatarUtils.getAvatarUrl(avatar as string)
 }
 

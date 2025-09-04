@@ -196,7 +196,7 @@
 </template>
 <script setup lang="ts">
 import { RoomTypeEnum } from '@/enums'
-import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
+import { useBadgeInfo } from '@/hooks/useCached.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useWindow } from '@/hooks/useWindow'
 import type { UserItem } from '@/services/types'
@@ -229,7 +229,7 @@ const groupStore = useGroupStore()
 
 watchEffect(async () => {
   if (content.type === RoomTypeEnum.SINGLE) {
-    item.value = useUserInfo(content.uid).value
+    item.value = groupStore.getUserInfo(content.uid)!
   } else {
     await getGroupDetail(content.uid)
       .then((response: any) => {
@@ -301,7 +301,7 @@ const fetchGroupMembers = async (roomId: string) => {
     // 使用每个成员的uid获取详细信息
     const userList = groupStore.getUserListByRoomId(roomId)
     const memberDetails = userList.map((member: UserItem) => {
-      const userInfo = useUserInfo(member.uid).value
+      const userInfo = groupStore.getUserInfo(member.uid)!
       return {
         name: userInfo.name || member.name || member.uid,
         src: userInfo.avatar || member.avatar

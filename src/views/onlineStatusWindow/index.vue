@@ -63,7 +63,7 @@ const handleActive = async (item: UserState) => {
     await changeUserState({ id: item.id })
 
     stateId.value = item.id
-    userStore.userInfo.userStateId = item.id
+    userStore.userInfo!.userStateId = item.id
 
     window.$message?.success('状态更新成功')
   } catch (error) {

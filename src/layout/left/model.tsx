@@ -102,9 +102,9 @@ export const LockScreen = defineComponent(() => {
           <NFlex vertical justify="center" align="center" size={20}>
             <span class="text-(14px center)">锁定屏幕</span>
 
-            <NAvatar bordered round size={80} src={AvatarUtils.getAvatarUrl(userStore.userInfo.avatar!)} />
+            <NAvatar bordered round size={80} src={AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar!)} />
 
-            <p class="text-(14px center [--text-color]) truncate w-200px">{userStore.userInfo.name}</p>
+            <p class="text-(14px center [--text-color]) truncate w-200px">{userStore.userInfo!.name}</p>
           </NFlex>
           <NForm ref={formRef} model={formValue.value} rules={lock.value.rules}>
             <NFormItem label-placement="left" label="锁屏密码" path={'lockPassword'} class="w-full">
@@ -460,7 +460,7 @@ export const RemoteLogin = defineComponent({
               <span class="text-(14px [--text-color])">下线通知</span>
 
               <div class="relative">
-                <img class="rounded-full size-72px" src={AvatarUtils.getAvatarUrl(userStore.userInfo.avatar!)} />
+                <img class="rounded-full size-72px" src={AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar!)} />
                 <div class="absolute inset-0 bg-[--avatar-hover-bg] backdrop-blur-[2px] rounded-full flex items-center justify-center">
                   <svg class="size-34px text-white animate-pulse">
                     <use href="#cloudError"></use>

@@ -1,8 +1,8 @@
 import { computed } from 'vue'
 import { MessageStatusEnum } from '@/enums'
-import { useUserInfo } from '@/hooks/useCached.ts'
 import type { MessageType } from '@/services/types'
 import { useGlobalStore } from '@/stores/global'
+import { useGroupStore } from '@/stores/group'
 
 /**
  * Mock 消息 Hook
@@ -25,13 +25,14 @@ export const useMockMessage = () => {
     // 唯一id 后五位时间戳+随机数
     const uniqueId: string = String(currentTimeStamp + random).slice(-7)
     const { uid = 0, name: username = '', avatar = '' } = userInfo.value || {}
+    const groupStore = useGroupStore()
 
     return {
       fromUser: {
         username,
         uid,
         avatar,
-        locPlace: useUserInfo(uid)?.value?.locPlace || 'xx'
+        locPlace: groupStore.getUserInfo(uid)?.locPlace || 'xx'
       },
       message: {
         id: uniqueId,

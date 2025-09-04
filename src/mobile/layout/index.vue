@@ -68,7 +68,7 @@ const updateTabBarPosition = async (isInit: boolean) => {
 const chatStore = useChatStore()
 const userStore = useUserStore()
 const globalStore = useGlobalStore()
-const userUid = computed(() => userStore.userInfo.uid)
+const userUid = computed(() => userStore.userInfo!.uid)
 const playMessageSound = async () => {
   try {
     const audio = new Audio('/sound/message.mp3')

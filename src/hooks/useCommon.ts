@@ -78,7 +78,7 @@ export const useCommon = () => {
   const userStore = useUserStore()
   const { handleMsgClick } = useMessage()
   /** 当前登录用户的uid */
-  const userUid = computed(() => userStore.userInfo.uid)
+  const userUid = computed(() => userStore.userInfo!.uid)
   /** 回复消息 */
   const reply = ref({
     avatar: '',

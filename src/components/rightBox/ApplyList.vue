@@ -22,14 +22,14 @@
               <n-avatar
                 round
                 size="large"
-                :src="avatarSrc(useUserInfo(isCurrentUser(item.uid) ? item.targetId : item.uid).value.avatar!)"
+                :src="avatarSrc(groupStore.getUserInfo(isCurrentUser(item.uid) ? item.targetId : item.uid)!.avatar!)"
                 class="mr-10px" />
               <n-flex vertical :size="12">
                 <n-flex align="center" :size="10">
                   <p
                     @click="isCurrentUser(item.uid) ? (currentUserId = item.targetId) : (currentUserId = item.uid)"
                     class="text-(14px #13987f) cursor-pointer">
-                    {{ useUserInfo(isCurrentUser(item.uid) ? item.targetId : item.uid).value.name }}
+                    {{ groupStore.getUserInfo(isCurrentUser(item.uid) ? item.targetId : item.uid)!.name }}
                   </p>
 
                   <p class="text-(14px [--text-color])">
@@ -83,15 +83,16 @@
   </n-flex>
 </template>
 <script setup lang="ts">
-import { useUserInfo } from '@/hooks/useCached.ts'
 import { RequestFriendAgreeStatus } from '@/services/types.ts'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
+import { useGroupStore } from '~/src/stores/group'
 
 const userStore = useUserStore()
 const contactStore = useContactStore()
+const groupStore = useGroupStore()
 const currentUserId = ref('0')
 const loadingMap = ref<Record<string, boolean>>({})
 const virtualListRef = ref()
@@ -144,7 +145,7 @@ const avatarSrc = (url: string) => AvatarUtils.getAvatarUrl(url)
 
 // 判断是否为当前登录用户
 const isCurrentUser = (uid: string) => {
-  return uid === userStore.userInfo.uid
+  return uid === userStore.userInfo!.uid
 }
 
 // 处理滚动事件

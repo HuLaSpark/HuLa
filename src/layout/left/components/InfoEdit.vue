@@ -173,11 +173,11 @@ const {
     // 更新编辑信息
     editInfo.value.content.avatar = downloadUrl
     // 更新用户信息
-    userStore.userInfo.avatar = downloadUrl
+    userStore.userInfo!.avatar = downloadUrl
     // 更新头像更新时间
-    userStore.userInfo.avatarUpdateTime = Date.now()
+    userStore.userInfo!.avatarUpdateTime = Date.now()
     // 更新登录历史记录
-    loginHistoriesStore.loginHistories.filter((item) => item.uid === userStore.userInfo.uid)[0].avatar = downloadUrl
+    loginHistoriesStore.loginHistories.filter((item) => item.uid === userStore.userInfo!.uid)[0].avatar = downloadUrl
     // 更新缓存里面的用户信息
     updateCurrentUserCache('avatar', downloadUrl)
     window.$message.success('头像更新成功')
@@ -193,7 +193,7 @@ const handleCrop = async (cropBlob: Blob) => {
 const noSideSpace = (value: string) => !value.startsWith(' ') && !value.endsWith(' ')
 
 const openAvatarCropper = () => {
-  const lastUpdateTime = userStore.userInfo.avatarUpdateTime
+  const lastUpdateTime = userStore.userInfo!.avatarUpdateTime
   // 计算30天的毫秒数
   if (lastUpdateTime && !isDiffNow({ time: lastUpdateTime, unit: 'day', diff: 30 })) {
     // 计算下次可更新时间
@@ -208,8 +208,8 @@ const openAvatarCropper = () => {
 
 const openEditInfo = () => {
   editInfo.value.show = true
-  editInfo.value.content = userStore.userInfo
-  localUserInfo.value = { ...userStore.userInfo }
+  editInfo.value.content = userStore.userInfo!
+  localUserInfo.value = { ...userStore.userInfo! }
   /** 获取徽章列表 */
   getBadgeList().then((res: any) => {
     editInfo.value.badgeList = res

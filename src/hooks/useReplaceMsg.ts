@@ -1,5 +1,4 @@
 import { MsgEnum, RoomTypeEnum } from '@/enums'
-import { useUserInfo } from '@/hooks/useCached.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import type { MessageType } from '@/services/types'
 import { useChatStore } from '@/stores/chat'
@@ -21,12 +20,12 @@ export const useReplaceMsg = () => {
    * @returns 是否@当前用户
    */
   const checkMessageAtMe = (message: MessageType) => {
-    if (!message?.message?.body?.atUidList || !userStore.userInfo.uid) {
+    if (!message?.message?.body?.atUidList || !userStore.userInfo!.uid) {
       return false
     }
 
     // 确保类型一致的比较
-    return message.message.body.atUidList.some((atUid: string) => String(atUid) === String(userStore.userInfo.uid))
+    return message.message.body.atUidList.some((atUid: string) => String(atUid) === String(userStore.userInfo!.uid))
   }
 
   /**
@@ -100,7 +99,7 @@ export const useReplaceMsg = () => {
       const user = groupStore.getUser(roomId, message.fromUser.uid)
       return user?.myName || user?.name || ''
     } else {
-      return useUserInfo(message.fromUser.uid).value.name || defaultName
+      return groupStore.getUserInfo(message.fromUser.uid)?.name || defaultName
     }
   }
 

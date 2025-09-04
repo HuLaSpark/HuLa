@@ -16,9 +16,9 @@
 </template>
 
 <script setup lang="ts">
-import { useUserInfo } from '@/hooks/useCached.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { useGroupStore } from '~/src/stores/group'
 
 interface Props {
   message: any
@@ -28,8 +28,9 @@ interface Props {
 defineProps<Props>()
 
 const userStore = useUserStore()
+const groupStore = useGroupStore()
 
-const userUid = computed(() => userStore.userInfo.uid)
+const userUid = computed(() => userStore.userInfo!.uid)
 
 // 处理机器人消息内容，高亮[]包裹的内容
 const parseMessage = (content: string) => {
@@ -51,7 +52,7 @@ const parseMessage = (content: string) => {
 
 // 获取用户头像
 const getAvatarSrc = (uid: string) => {
-  const avatar = uid === userUid.value ? userStore.userInfo.avatar : useUserInfo(uid).value.avatar
+  const avatar = uid === userUid.value ? userStore.userInfo!.avatar : groupStore.getUserInfo(uid)?.avatar
   return AvatarUtils.getAvatarUrl(avatar as string)
 }
 </script>

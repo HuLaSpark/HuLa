@@ -155,7 +155,7 @@ export const useFileDownloadStore = defineStore(
      */
     const checkFileExists = async (fileUrl: string, fileName: string): Promise<boolean> => {
       try {
-        const userUid = userStore.userInfo.uid
+        const userUid = userStore.userInfo!.uid
         const roomId = globalStore.currentSession!.roomId
 
         if (!userUid || !roomId) return false
@@ -197,7 +197,7 @@ export const useFileDownloadStore = defineStore(
      */
     const downloadFile = async (fileUrl: string, fileName: string): Promise<string | null> => {
       try {
-        const userUid = userStore.userInfo.uid
+        const userUid = userStore.userInfo!.uid
         const roomId = globalStore.currentSession!.roomId
 
         if (!userUid || !roomId) {

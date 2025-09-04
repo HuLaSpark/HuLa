@@ -274,7 +274,7 @@ const drawWaveform = () => {
 const getLocalAudioFile = async (fileName: string) => {
   const audioFolder = 'audio'
   // 拼接缓存路径（如 cache\46022457888256\audio）
-  const cachePath = getImageCache(audioFolder, userStore.userInfo.uid as string)
+  const cachePath = getImageCache(audioFolder, userStore.userInfo!.uid as string)
   const fullPath = await join(cachePath, fileName)
 
   // 检查文件是否存在于本地缓存文件夹中
@@ -391,7 +391,7 @@ const existsAudioFile = async (): Promise<{
 }> => {
   const [fileMeta] = await getFilesMeta<FilesMeta>([props.body.url])
   const audioFolder = 'audio'
-  const cachePath = getImageCache(audioFolder, userStore.userInfo.uid as string)
+  const cachePath = getImageCache(audioFolder, userStore.userInfo!.uid as string)
   const fullPath = await join(cachePath, fileMeta.name)
 
   const fileExists = await exists(fullPath, { baseDir: BaseDirectory.AppCache })

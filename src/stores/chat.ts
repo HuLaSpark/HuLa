@@ -6,7 +6,6 @@ import { useRoute } from 'vue-router'
 import { ErrorType } from '@/common/exception'
 import { type MessageStatusEnum, MsgEnum, NotificationTypeEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
 import type { MarkItemType, MessageType, RevokedMsgType, SessionItem } from '@/services/types'
-import { useCachedStore } from '@/stores/cached.ts'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group.ts'
@@ -50,7 +49,6 @@ export const useChatStore = defineStore(
   () => {
     const route = useRoute()
     // const router = useRouter()
-    const cachedStore = useCachedStore()
     const userStore = useUserStore()
     const globalStore = useGlobalStore()
     const groupStore = useGroupStore()
@@ -233,9 +231,6 @@ export const useChatStore = defineStore(
         // 查询消息发送者的信息
         uidCollectYet.add(msg.fromUser.uid)
       }
-      // 获取用户信息缓存
-      await cachedStore.getBatchUserInfo([...uidCollectYet])
-
       // 再次检查房间ID是否变化，防止在获取用户信息期间切换了房间
       if (requestRoomId !== globalStore.currentSession!.roomId) return
 
@@ -297,7 +292,7 @@ export const useChatStore = defineStore(
           globalStore.currentSession?.type === RoomTypeEnum.GROUP &&
             (await groupStore.getGroupUserList(globalStore.currentSession!.roomId))
           // 初始化所有用户基本信息
-          userStore.isSign && (await cachedStore.initAllUserBaseInfo())
+          userStore.isSign
           // 联系人列表
           await contactStore.getContactList(true)
 
@@ -373,18 +368,17 @@ export const useChatStore = defineStore(
 
       // 获取用户信息缓存
       const uid = msg.fromUser.uid
-      const cacheUser = cachedStore.userCachedList[uid]
-      await cachedStore.getBatchUserInfo([uid])
+      const cacheUser = groupStore.getUserInfo(uid)
 
       // 更新会话的文本属性和未读数
       const session = sessionList.value.find((item) => item.roomId === msg.message.roomId)
       if (session) {
-        const lastMsgUserName = cachedStore.userCachedList[uid]?.name
+        const lastMsgUserName = cacheUser?.name
         const formattedText =
           msg.message.type === MsgEnum.RECALL
             ? session.type === RoomTypeEnum.GROUP
               ? `${lastMsgUserName}:撤回了一条消息`
-              : msg.fromUser.uid === userStore.userInfo.uid
+              : msg.fromUser.uid === userStore.userInfo!.uid
                 ? '你撤回了一条消息'
                 : '对方撤回了一条消息'
             : renderReplyContent(
@@ -395,7 +389,7 @@ export const useChatStore = defineStore(
               )
         session.text = formattedText!
         // 更新未读数
-        if (msg.fromUser.uid !== userStore.userInfo.uid) {
+        if (msg.fromUser.uid !== userStore.userInfo!.uid) {
           if (route?.path !== '/message' || msg.message.roomId !== globalStore.currentSession!.roomId) {
             session.unreadCount = (session.unreadCount || 0) + 1
             await nextTick(() => {
@@ -408,7 +402,7 @@ export const useChatStore = defineStore(
       updateSessionLastActiveTime(msg.message.roomId)
 
       // 如果收到的消息里面是艾特自己的就发送系统通知
-      if (msg.message.body.atUidList?.includes(userStore.userInfo.uid) && cacheUser) {
+      if (msg.message.body.atUidList?.includes(userStore.userInfo!.uid) && cacheUser) {
         sendNotification({
           title: cacheUser.name as string,
           body: msg.message.body.content,
@@ -482,7 +476,7 @@ export const useChatStore = defineStore(
           if (actType === 1) {
             // 添加标记
             // 如果是当前用户的操作，设置userMarked为true
-            if (uid === userStore.userInfo.uid) {
+            if (uid === userStore.userInfo!.uid) {
               currentMarkStat.userMarked = true
             }
             // 更新计数
@@ -490,7 +484,7 @@ export const useChatStore = defineStore(
           } else if (actType === 2) {
             // 取消标记
             // 如果是当前用户的操作，设置userMarked为false
-            if (uid === userStore.userInfo.uid) {
+            if (uid === userStore.userInfo!.uid) {
               currentMarkStat.userMarked = false
             }
             // 更新计数
@@ -513,7 +507,7 @@ export const useChatStore = defineStore(
         originalType: data.msg.message.type
       })
 
-      if (data.recallUid === userStore.userInfo.uid) {
+      if (data.recallUid === userStore.userInfo!.uid) {
         // 使用 Worker 来处理定时器
         timerWorker.postMessage({
           type: 'startTimer',
@@ -531,11 +525,11 @@ export const useChatStore = defineStore(
       const { msgId } = data
       const message = currentMessageMap.value!.get(msgId)
       if (message && typeof data.recallUid === 'string') {
-        const cacheUser = cachedStore.userCachedList[data.recallUid]
+        const cacheUser = groupStore.getUserInfo(data.recallUid)!
         let recallMessageBody: string
 
         // 如果撤回者的 id 不等于消息发送人的 id, 或者你本人就是管理员，那么显示管理员撤回的。
-        if (data.recallUid !== userStore.userInfo.uid) {
+        if (data.recallUid !== userStore.userInfo!.uid) {
           recallMessageBody = `管理员"${cacheUser.name}"撤回了一条消息` // 后期根据本地用户数据修改
         } else {
           // 如果被撤回的消息是消息发送者撤回，正常显示

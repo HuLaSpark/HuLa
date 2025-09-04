@@ -25,7 +25,7 @@ export const useEmojiStore = defineStore(StoresEnum.EMOJI, () => {
    * 添加表情
    */
   const addEmoji = async (emojiUrl: string) => {
-    const { uid } = userStore.userInfo
+    const { uid } = userStore.userInfo!
     if (!uid || !emojiUrl) return
     imRequestUtils.addEmoji({ expressionUrl: emojiUrl }).then((res) => {
       if (res) {

@@ -120,11 +120,11 @@
             :size="110"
             color="#fff"
             class="border-(2px solid #fff)"
-            :src="AvatarUtils.getAvatarUrl(userStore.userInfo.avatar || '/logoD.png')" />
+            :src="AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar || '/logoD.png')" />
         </n-flex>
 
         <n-flex justify="center">
-          <n-ellipsis style="max-width: 200px" class="text-18px">{{ userStore.userInfo.name }}</n-ellipsis>
+          <n-ellipsis style="max-width: 200px" class="text-18px">{{ userStore.userInfo!.name }}</n-ellipsis>
         </n-flex>
       </n-flex>
 
@@ -338,7 +338,7 @@ const normalLogin = async (auto = false) => {
       clientId: clientId,
       grantType: 'PASSWORD',
       isAutoLogin: auto,
-      uid: auto ? userStore.userInfo.uid : null
+      uid: auto ? userStore.userInfo!.uid : null
     }
   })
     .then(async (res: any) => {
@@ -426,7 +426,7 @@ const openHomeWindow = async () => {
 const removeToken = () => {
   localStorage.removeItem('TOKEN')
   localStorage.removeItem('REFRESH_TOKEN')
-  userStore.userInfo = {}
+  userStore.userInfo = undefined
 }
 
 /** 打开服务协议窗口 */
@@ -482,7 +482,7 @@ onBeforeMount(async () => {
       // token无效，清除token并重置状态
       localStorage.removeItem('TOKEN')
       localStorage.removeItem('REFRESH_TOKEN')
-      userStore.userInfo = {}
+      userStore.userInfo = undefined
       userStore.isSign = false
     }
   }

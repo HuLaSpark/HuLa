@@ -9,7 +9,7 @@
         :style="{ transform: props.isShow ? 'scale(1) translateY(0)' : 'scale(0.62) translateY(0px)' }">
         <n-avatar
           :size="86"
-          :src="AvatarUtils.getAvatarUrl(userStore.userInfo.avatar!)"
+          :src="AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar)"
           fallback-src="/logo.png"
           round />
       </div>
@@ -18,7 +18,7 @@
       <div ref="infoBox" class="pl-2 flex gap-8px flex-col transition-transform duration-300 ease-in-out">
         <!-- 名字与在线状态 -->
         <div class="flex flex-warp gap-4 items-center">
-          <span class="font-bold text-20px text-#373838">{{ userStore.userInfo.name }}</span>
+          <span class="font-bold text-20px text-#373838">{{ userStore.userInfo!.name }}</span>
           <div class="bg-#E7EFE6 flex flex-wrap ps-2 items-center rounded-full gap-1 w-50px h-24px">
             <span class="w-12px h-12px rounded-15px bg-#079669"></span>
             <span class="text-bold-style" style="font-size: 12px; color: #373838">在线</span>
@@ -26,7 +26,7 @@
         </div>
         <!-- 账号 -->
         <div class="flex flex-warp gap-2 items-center">
-          <span class="text-bold-style">账号:{{ userStore.userInfo.account }}</span>
+          <span class="text-bold-style">账号:{{ userStore.userInfo!.account }}</span>
           <span @click="toMyQRCode" class="pe-15px">
             <img class="w-14px h-14px" src="@/assets/mobile/my/qr-code.webp" alt="" />
           </span>

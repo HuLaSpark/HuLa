@@ -41,7 +41,6 @@ import {
   WsResponseMessageType,
   type WsTokenExpire
 } from '@/services/wsType.ts'
-import { useCachedStore } from '@/stores/cached'
 import { useChatStore } from '@/stores/chat'
 import { useConfigStore } from '@/stores/config'
 import { useContactStore } from '@/stores/contacts.ts'
@@ -116,10 +115,9 @@ const contactStore = useContactStore()
 const groupStore = useGroupStore()
 const userStore = useUserStore()
 const chatStore = useChatStore()
-const cachedStore = useCachedStore()
 const configStore = useConfigStore()
 const { checkUpdate, CHECK_UPDATE_TIME } = useCheckUpdate()
-const userUid = computed(() => userStore.userInfo.uid)
+const userUid = computed(() => userStore.userInfo!.uid)
 const shrinkStatus = ref(false)
 
 // 播放消息音效
@@ -206,7 +204,7 @@ useMitt.on(WsResponseMessageType.ROOM_DISSOLUTION, async (roomId: string) => {
 
 useMitt.on(WsResponseMessageType.USER_STATE_CHANGE, async (data: { uid: string; userStateId: string }) => {
   console.log('收到用户状态改变', data)
-  await cachedStore.updateUserState(data)
+  // await cachedStore.updateUserState(data)
 })
 useMitt.on(WsResponseMessageType.OFFLINE, async () => {
   console.log('收到用户下线通知')
@@ -222,7 +220,7 @@ useMitt.on(WsResponseMessageType.ONLINE, async (onStatusChangeType: OnStatusChan
   }
 })
 useMitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExpire) => {
-  if (Number(userUid.value) === Number(wsTokenExpire.uid) && userStore.userInfo.client === wsTokenExpire.client) {
+  if (Number(userUid.value) === Number(wsTokenExpire.uid) && userStore.userInfo!.client === wsTokenExpire.client) {
     console.log('收到用户token过期通知', wsTokenExpire)
     // 聚焦主窗口
     const home = await WebviewWindow.getByLabel('home')
@@ -382,7 +380,7 @@ const handleMemberRemove = async (userList: UserItem[], roomId: string) => {
 
 // 检查是否为当前用户
 const isSelfUser = (uid: string): boolean => {
-  return uid === userStore.userInfo.uid
+  return uid === userStore.userInfo!.uid
 }
 
 // 处理自己被移除
