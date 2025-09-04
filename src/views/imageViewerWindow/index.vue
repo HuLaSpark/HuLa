@@ -9,7 +9,7 @@
     <!-- 主体内容区域 -->
     <div ref="contentRef" class="flex-1 overflow-auto">
       <!-- 图片展示区域 -->
-      <div ref="imgContainerRef" class="min-h-[calc(100vh-124px)] flex-center">
+      <div ref="imgContainerRef" style="min-height: calc(100vh / var(--page-scale, 1) - 124px)" class="flex-center">
         <img
           ref="imageRef"
           :src="currentImage"

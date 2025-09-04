@@ -52,7 +52,7 @@
 
           <!-- 初始加载状态 -->
           <template v-if="initialLoading">
-            <n-spin class="flex-center" style="height: calc(100vh - 200px)" size="large" />
+            <n-spin class="flex-center" style="height: calc(100vh / var(--page-scale, 1) - 200px)" size="large" />
           </template>
 
           <!-- 搜索结果 -->
@@ -61,7 +61,7 @@
               :data-source="searchResults"
               item-key="id"
               :item-height="64"
-              max-height="calc(100vh - 128px)"
+              max-height="calc(100vh / var(--page-scale, 1) - 128px)"
               style-id="search-hover-classes">
               <template #item="{ item }">
                 <div class="p-[0_20px] box-border">
@@ -111,17 +111,23 @@
 
           <!-- 搜索中状态 -->
           <template v-else-if="loading">
-            <n-spin class="flex-center" style="height: calc(100vh - 200px)" size="large" />
+            <n-spin class="flex-center" style="height: calc(100vh / var(--page-scale, 1) - 200px)" size="large" />
           </template>
 
           <!-- 搜索无结果状态 -->
           <template v-else-if="hasSearched">
-            <n-empty class="flex-center" style="height: calc(100vh - 200px)" description="未找到相关结果" />
+            <n-empty
+              class="flex-center"
+              style="height: calc(100vh / var(--page-scale, 1) - 200px)"
+              description="未找到相关结果" />
           </template>
 
           <!-- 默认空状态 -->
           <template v-else>
-            <n-empty style="height: calc(100vh - 200px)" class="flex-center" description="输入关键词搜索">
+            <n-empty
+              style="height: calc(100vh / var(--page-scale, 1) - 200px)"
+              class="flex-center"
+              description="输入关键词搜索">
               <template #icon>
                 <n-icon>
                   <svg><use href="#explosion"></use></svg>

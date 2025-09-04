@@ -8,14 +8,14 @@
     <!-- 添加遮罩层 -->
     <div
       v-if="isSingleChat && !isFriend"
-      class="absolute inset-0 z-20 backdrop-blur-md cursor-default flex-center select-none pointer-events-auto light:bg-[rgba(255,255,255,0.1)] dark:bg-[rgba(33,33,33,0.1)]">
+      class="absolute inset-0 z-997 backdrop-blur-md cursor-default flex-center select-none pointer-events-auto light:bg-[rgba(255,255,255,0.1)] dark:bg-[rgba(33,33,33,0.1)]">
       <n-flex align="center" justify="center" class="pb-60px">
         <svg class="size-24px"><use href="#cloudError"></use></svg>
         <span class="text-(14px [--chat-text-color])">你们当前已经不是好友关系</span>
       </n-flex>
     </div>
 
-    <div class="size-full relative z-60 color-[--icon-color] flex flex-col">
+    <div class="size-full relative color-[--icon-color] flex flex-col">
       <!-- 输入框顶部选项栏 -->
       <n-flex align="center" justify="space-between" class="p-[10px_22px_5px] select-none flex-shrink-0">
         <n-flex align="center" :size="0" class="input-options">
@@ -619,7 +619,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 50;
+  z-index: 998;
 
   &:hover {
     .resize-indicator {

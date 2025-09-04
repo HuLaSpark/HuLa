@@ -55,7 +55,7 @@ const props = defineProps({
   // 最大高度
   maxHeight: {
     type: String,
-    default: 'calc(100vh - 132px)'
+    default: 'calc(100vh / var(--page-scale, 1) - 132px)'
   },
   // 悬浮项的透明度
   hoverOpacity: {
@@ -82,7 +82,8 @@ const isHoverPositionValid = computed(() => {
 // 更新容器高度
 const updateContainerHeight = () => {
   if (virtualListRef.value?.$el) {
-    containerHeight.value = virtualListRef.value.$el.clientHeight
+    const pageScale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--page-scale') || '1')
+    containerHeight.value = virtualListRef.value.$el.clientHeight / pageScale
   }
 }
 
@@ -115,7 +116,8 @@ const handleItemMouseEnter = (index: number) => {
     const listRect = listEl.getBoundingClientRect()
 
     // 设置悬浮效果的位置
-    hoverPosition.value = itemRect.top - listRect.top
+    const pageScale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--page-scale') || '1')
+    hoverPosition.value = (itemRect.top - listRect.top) / pageScale
 
     // 更新容器高度
     updateContainerHeight()
@@ -159,7 +161,8 @@ const updateHoverPositionByIndex = (index: number) => {
   const listRect = listContainer.getBoundingClientRect()
 
   // 计算目标元素相对于列表容器的顶部偏移量
-  hoverPosition.value = targetRect.top - listRect.top
+  const pageScale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--page-scale') || '1')
+  hoverPosition.value = (targetRect.top - listRect.top) / pageScale
 
   // 更新容器高度
   updateContainerHeight()

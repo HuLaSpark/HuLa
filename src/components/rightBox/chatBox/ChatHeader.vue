@@ -119,7 +119,7 @@
     <!-- 侧边选项栏 -->
     <Transition v-if="shouldShowDeleteFriend || chatStore.isGroup" name="sidebar">
       <div v-if="sidebarShow" style="border: 1px solid rgba(90, 90, 90, 0.1)" class="sidebar">
-        <n-scrollbar style="height: calc(100vh - 50px)" class="p-22px box-border">
+        <n-scrollbar style="height: calc(100vh / var(--page-scale, 1) - 50px)" class="p-22px box-border">
           <!-- 单聊侧边栏选项 -->
           <template v-if="!chatStore.isGroup">
             <div class="box-item flex-col-y-center">

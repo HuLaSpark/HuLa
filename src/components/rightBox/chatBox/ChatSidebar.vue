@@ -1,6 +1,7 @@
 <template>
   <!--! 这里最好不要使用n-flex,滚动高度会有问题  -->
   <main
+    style="height: 100%"
     :class="[
       isGroup
         ? isCollapsed
@@ -92,7 +93,7 @@
       <!-- 成员列表 -->
       <n-virtual-list
         id="image-chat-sidebar"
-        style="max-height: calc(100vh - 260px)"
+        style="max-height: calc(100vh / var(--page-scale, 1) - 250px)"
         item-resizable
         @scroll="handleScroll($event)"
         :item-size="46"

@@ -32,7 +32,7 @@
             <template #header-extra>
               <span class="text-(10px #707070)">{{ onlineCount }}/{{ contactStore.contactsList.length }}</span>
             </template>
-            <n-scrollbar style="max-height: calc(100vh - 270px)">
+            <n-scrollbar style="max-height: calc(100vh / var(--page-scale, 1) - 270px)">
               <!-- 用户框 多套一层div来移除默认的右键事件然后覆盖掉因为margin空隙而导致右键可用 -->
               <div @contextmenu.stop="$event.preventDefault()">
                 <n-flex
@@ -85,7 +85,7 @@
           <template #header-extra>
             <span class="text-(10px #707070)">{{ groupChatList.length }}</span>
           </template>
-          <n-scrollbar style="max-height: calc(100vh - 270px)">
+          <n-scrollbar style="max-height: calc(100vh / var(--page-scale, 1) - 270px)">
             <div
               @click="handleClick(item.roomId, RoomTypeEnum.GROUP)"
               :class="{ active: activeItem === item.roomId }"

@@ -5,7 +5,7 @@
 
     <n-flex data-tauri-drag-region vertical justify="center" :size="16" class="p-[30px_20px]">
       <p class="text-(14px [--chat-text-color])">你可以尝试使用以下功能：</p>
-      <n-scrollbar style="max-height: calc(100vh - 210px)">
+      <n-scrollbar style="max-height: calc(100vh / var(--page-scale, 1) - 210px)">
         <n-flex style="padding: 6px" align="center" :size="[24, 16]">
           <n-flex
             vertical

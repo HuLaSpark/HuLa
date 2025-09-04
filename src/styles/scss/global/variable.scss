@@ -13,13 +13,6 @@ svg {
   overscroll-behavior: none; // 禁止mac的"触底反弹"效果
 }
 
-html,
-body {
-  overflow: hidden; // 防止窗口出现滚动条
-  height: 100%;
-  width: 100%;
-}
-
 ::selection {
   background: rgba(19, 152, 127, 0.3); /** 输入框选中文本背景色 */
 }

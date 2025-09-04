@@ -25,7 +25,7 @@
         <p class="text-(12px [--chat-text-color]) flex-1 truncate">在搜索框内搜索</p>
       </n-flex>
 
-      <n-scrollbar style="max-height: calc(100vh - 212px)">
+      <n-scrollbar style="max-height: calc(100vh / var(--page-scale, 1) - 212px)">
         <template v-for="(item, _index) in historyList" :key="_index">
           <n-flex
             align="center"
@@ -43,7 +43,7 @@
     <template v-else-if="searchResults.length > 0">
       <p class="text-(12px #909090) mb-6px">搜索结果</p>
 
-      <n-scrollbar style="max-height: calc(100vh - 142px)">
+      <n-scrollbar style="max-height: calc(100vh / var(--page-scale, 1) - 118px)">
         <template v-for="item in searchResults" :key="item.roomId">
           <n-flex
             align="center"
@@ -59,7 +59,7 @@
 
     <!-- 没有搜索结果时 -->
     <template v-else-if="searchQuery && searchResults.length === 0">
-      <div style="height: calc(100vh - 212px)" class="flex-col-center gap-12px">
+      <div style="height: calc(100vh / var(--page-scale, 1) - 212px)" class="flex-col-center gap-12px">
         <img class="size-64px" src="/msgAction/exploding-head.png" />
         <p class="text-(12px [--chat-text-color])">未找到相关结果</p>
       </div>

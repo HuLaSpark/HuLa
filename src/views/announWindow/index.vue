@@ -52,7 +52,7 @@
 
       <!--暂无数据-->
       <div v-if="!announList || announList.length === 0" class="flex-center">
-        <n-empty style="height: calc(100vh - 100px)" class="flex-center" description="暂无公告">
+        <n-empty style="height: calc(100vh / var(--page-scale, 1) - 100px)" class="flex-center" description="暂无公告">
           <template #icon>
             <n-icon>
               <svg>

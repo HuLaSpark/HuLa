@@ -44,7 +44,7 @@
     <div
       :class="{ 'shadow-inner': page.shadow }"
       class="w-full p-[28px_16px] box-border"
-      style="height: calc(100vh - 300px)">
+      style="height: calc(100vh / var(--page-scale, 1) - 300px)">
       <n-flex :size="6">
         <n-avatar
           class="rounded-8px"
