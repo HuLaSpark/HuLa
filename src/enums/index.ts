@@ -161,7 +161,9 @@ export enum StoresEnum {
   /** 移动端状态 */
   MOBILE = 'mobile',
   /** 目录扫描器 */
-  SCANNER = 'scanner'
+  SCANNER = 'scanner',
+  /** 引导状态 */
+  GUIDE = 'guide'
 }
 
 /**

@@ -64,15 +64,49 @@
             <Emoticon @emojiHandle="emojiHandle" :all="false" />
           </n-popover>
 
-          <n-popover trigger="hover" :show-arrow="false" placement="bottom">
-            <template #trigger>
-              <div class="flex-center gap-2px mr-12px">
-                <svg @click="handleCap()"><use href="#screenshot"></use></svg>
-                <svg style="width: 14px; height: 14px"><use href="#down"></use></svg>
+          <div class="flex-center gap-2px mr-12px">
+            <svg @click="handleScreenshot()"><use href="#screenshot"></use></svg>
+            <n-popover
+              style="
+                padding: 0;
+                background: var(--bg-emoji);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+                box-shadow: 2px 2px 12px 2px var(--box-shadow-color);
+                border: 1px solid var(--box-shadow-color);
+              "
+              trigger="hover"
+              :show-arrow="false"
+              placement="top">
+              <template #trigger>
+                <svg class="dropdown-arrow" style="width: 14px; height: 14px"><use href="#down"></use></svg>
+              </template>
+
+              <div class="footer-item">
+                <n-flex
+                  @click="handleScreenshot()"
+                  class="text-12px cursor-pointer group"
+                  align="center"
+                  justify="space-between">
+                  <n-flex align="center" :size="6">
+                    <svg class="size-14px"><use href="#screenshot"></use></svg>
+                    <p>截图</p>
+                  </n-flex>
+                  <p class="text-(12px #909090)">{{ settingStore.shortcuts.screenshot }}</p>
+                </n-flex>
+
+                <n-flex
+                  class="text-12px cursor-pointer group"
+                  align="center"
+                  justify="space-between"
+                  @click="isConceal = !isConceal">
+                  <n-checkbox v-model:checked="isConceal" @click.stop />
+                  <p class="text-(12px --chat-text-color)">截图时隐藏当前窗口</p>
+                </n-flex>
               </div>
-            </template>
-            <span>截图</span>
-          </n-popover>
+            </n-popover>
+          </div>
+
           <n-popover trigger="hover" :show-arrow="false" placement="bottom">
             <template #trigger>
               <div class="flex-center gap-2px mr-12px">
@@ -115,25 +149,23 @@
 </template>
 
 <script setup lang="ts">
-import { invoke } from '@tauri-apps/api/core'
-import { LogicalPosition, LogicalSize } from '@tauri-apps/api/dpi'
 import { join } from '@tauri-apps/api/path'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { open } from '@tauri-apps/plugin-dialog'
 import { copyFile, readFile } from '@tauri-apps/plugin-fs'
 import { FOOTER_HEIGHT, MAX_FOOTER_HEIGHT, MIN_FOOTER_HEIGHT, TOOLBAR_HEIGHT } from '@/common/constants'
 import { MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import { useChatLayoutGlobal } from '@/hooks/useChatLayout'
 import { type SelectionRange, useCommon } from '@/hooks/useCommon.ts'
+import { useGlobalShortcut } from '@/hooks/useGlobalShortcut.ts'
 import { useMitt } from '@/hooks/useMitt'
 import type { ContactItem, FilesMeta, SessionItem } from '@/services/types'
 import { useContactStore } from '@/stores/contacts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useHistoryStore } from '@/stores/history'
+import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user'
 import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
 import { getFilesMeta, getUserAbsoluteVideosDir } from '@/utils/PathUtil'
-import { isMac } from '@/utils/PlatformConstants'
 
 const { detailId } = defineProps<{
   detailId: SessionItem['detailId']
@@ -141,10 +173,16 @@ const { detailId } = defineProps<{
 const globalStore = useGlobalStore()
 const contactStore = useContactStore()
 const historyStore = useHistoryStore()
+const settingStore = useSettingStore()
+const { handleScreenshot } = useGlobalShortcut()
 const MsgInputRef = ref()
 const msgInputDom = ref<HTMLInputElement | null>(null)
 const emojiShow = ref(false)
 const recentlyTip = ref(false)
+const isConceal = computed({
+  get: () => settingStore.screenshot.isConceal,
+  set: (value: boolean) => settingStore.setScreenshotConceal(value)
+})
 const recentEmojis = computed(() => {
   return historyStore.emoji.slice(0, 15)
 })
@@ -536,30 +574,6 @@ const updateRecentEmojis = (emoji: string) => {
   historyStore.setEmoji(updatedEmojis)
 }
 
-const handleCap = async () => {
-  const captureWindow = await WebviewWindow.getByLabel('capture')
-  if (!captureWindow) return
-
-  // 设置窗口覆盖整个屏幕（包括菜单栏）
-  // 使用 JavaScript screen API 获取屏幕尺寸
-  const screenWidth = window.screen.width * window.devicePixelRatio
-  const screenHeight = window.screen.height * window.devicePixelRatio
-
-  // 设置窗口覆盖整个屏幕（包括菜单栏），不使用负坐标
-  // 依靠窗口级别设置来确保覆盖菜单栏
-  await captureWindow.setSize(new LogicalSize(screenWidth, screenHeight))
-  await captureWindow.setPosition(new LogicalPosition(0, 0))
-
-  // 在 macOS 上设置窗口级别以覆盖菜单栏
-  if (isMac()) {
-    await invoke('set_window_level_above_menubar', { windowLabel: 'capture' })
-  }
-
-  await captureWindow.show()
-  await captureWindow.setFocus()
-  await captureWindow.emit('capture', true)
-}
-
 const handleVoiceRecord = () => {
   // 触发录音模式切换事件
   useMitt.emit(MittEnum.VOICE_RECORD_TOGGLE)
@@ -605,6 +619,13 @@ onUnmounted(() => {
     cursor: pointer;
     &:hover {
       color: #13987f;
+    }
+  }
+
+  .dropdown-arrow {
+    transition: transform 0.3s ease;
+    &:hover {
+      transform: rotate(180deg);
     }
   }
 }
@@ -676,6 +697,19 @@ onUnmounted(() => {
     background: var(--icon-color, #666);
     border-radius: 1px;
     opacity: 0.5;
+  }
+}
+
+.footer-item {
+  @apply flex-col-y-center gap-4px px-6px py-8px min-w-160px box-border size-fit select-none;
+  .group {
+    @apply px-4px py-6px rounded-4px;
+    &:hover {
+      background-color: var(--emoji-hover);
+      svg {
+        animation: twinkle 0.3s ease-in-out;
+      }
+    }
   }
 }
 

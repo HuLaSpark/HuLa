@@ -207,4 +207,10 @@ onMounted(async () => {
 .agreement-content::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
 }
+
+:deep(.action-close) {
+  svg {
+    color: #303030;
+  }
+}
 </style>

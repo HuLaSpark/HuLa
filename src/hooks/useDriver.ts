@@ -1,4 +1,5 @@
 import { type Config, type Driver, type DriveStep, driver } from 'driver.js'
+import { useGuideStore } from '@/stores/guide'
 import 'driver.js/dist/driver.css'
 import '@/styles/scss/global/driver.scss'
 
@@ -7,6 +8,8 @@ import '@/styles/scss/global/driver.scss'
  */
 export interface DriverStepConfig extends Omit<DriveStep, 'popover'> {
   element: string
+  /** 是否禁用被聚焦元素的交互（步骤级别配置，会覆盖全局配置） */
+  disableActiveInteraction?: boolean
   popover?: {
     title?: string
     description?: string
@@ -15,6 +18,7 @@ export interface DriverStepConfig extends Omit<DriveStep, 'popover'> {
     onNextClick?: () => void
     onPrevClick?: () => void
     onCloseClick?: () => void
+    onDestroyed?: () => void
   }
 }
 
@@ -30,6 +34,8 @@ export interface DriverConfig extends Omit<Config, 'steps'> {
   allowClose?: boolean
   popoverClass?: string
   progressText?: string
+  /** 是否禁用被聚焦元素的交互（点击事件等） */
+  disableActiveInteraction?: boolean
 }
 
 /**
@@ -60,6 +66,7 @@ export interface UseDriverReturn {
  */
 export const useDriver = (steps: DriverStepConfig[], config: DriverConfig = {}): UseDriverReturn => {
   let driverInstance: Driver | null = null
+  const guideStore = useGuideStore()
 
   // 默认配置
   const defaultConfig: DriverConfig = {
@@ -70,11 +77,18 @@ export const useDriver = (steps: DriverStepConfig[], config: DriverConfig = {}):
     showButtons: ['next', 'previous'],
     showProgress: true,
     allowClose: false,
-    popoverClass: 'driverjs-theme'
+    popoverClass: 'driverjs-theme',
+    disableActiveInteraction: true // 默认禁用被聚焦元素的点击事件
   }
 
   // 合并配置
-  const mergedConfig = { ...defaultConfig, ...config }
+  const mergedConfig = {
+    ...defaultConfig,
+    ...config,
+    onDestroyed: () => {
+      guideStore.markGuideCompleted()
+    }
+  }
 
   /**
    * 处理步骤中的自定义点击事件
@@ -84,6 +98,7 @@ export const useDriver = (steps: DriverStepConfig[], config: DriverConfig = {}):
   const processStep = (step: DriverStepConfig): DriveStep => {
     const processedStep: DriveStep = {
       element: step.element,
+      disableActiveInteraction: step.disableActiveInteraction,
       popover: step.popover
         ? {
             title: step.popover.title,

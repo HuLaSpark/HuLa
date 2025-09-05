@@ -170,7 +170,8 @@
           <div
             v-if="!isCompatibility()"
             @click="router.push('/network')"
-            class="network text-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px">
+            :class="{ network: isMac() }"
+            class="text-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px">
             网络设置
           </div>
         </n-flex>
@@ -197,13 +198,14 @@ import type { UserInfoType } from '@/services/types.ts'
 import rustWebSocketClient from '@/services/webSocketRust'
 import { WsResponseMessageType } from '@/services/wsType'
 import { useGlobalStore } from '@/stores/global'
+import { useGuideStore } from '@/stores/guide'
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { getAllUserState, getUserDetail } from '@/utils/ImRequestUtils'
-import { isCompatibility } from '@/utils/PlatformConstants'
+import { isCompatibility, isMac } from '@/utils/PlatformConstants'
 import { clearListener } from '@/utils/ReadCountQueue'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 
@@ -224,7 +226,9 @@ const driverSteps: DriverStepConfig[] = [
       title: '🤔 关于 隐私条款 和 服务协议',
       description: '或许您需要查看 HuLa 的隐私条款和服务协议',
       onNextClick: () => {
-        moreShow.value = true
+        if (isMac()) {
+          moreShow.value = true
+        }
       }
     }
   },
@@ -251,7 +255,9 @@ const settingStore = useSettingStore()
 const userStore = useUserStore()
 const userStatusStore = useUserStatusStore()
 const globalStore = useGlobalStore()
+const guideStore = useGuideStore()
 const { isTrayMenuShow } = storeToRefs(globalStore)
+const { isGuideCompleted } = storeToRefs(guideStore)
 const { startTour } = useDriver(driverSteps)
 const { stateId } = storeToRefs(userStatusStore)
 /** 网络连接是否正常 */
@@ -529,8 +535,10 @@ onBeforeMount(async () => {
 })
 
 onMounted(async () => {
-  // 启动引导
-  startTour()
+  // 检查引导状态，只有未完成时才启动引导
+  if (!isGuideCompleted.value) {
+    startTour()
+  }
 
   // 只有在需要登录的情况下才显示登录窗口
   if (!isJumpDirectly.value) {
