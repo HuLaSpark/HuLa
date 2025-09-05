@@ -85,9 +85,10 @@
       <div class="flex flex-col h-full px-18px">
         <div class="flex-1">
           <div
-            v-for="(item, idx) in messageItems"
+            v-for="(item, idx) in sessionList"
             :key="`${item.id}-${idx}`"
             @click="intoRoom(item)"
+            @dblclick="handleMsgDblclick(item)"
             class="grid grid-cols-[2.2rem_1fr_4rem] items-start px-2 py-3 gap-1">
             <!-- 头像：单独居中 -->
             <div class="flex-shrink-0">
@@ -129,23 +130,86 @@ import type { IKeyboardDidShowDetail } from '#/mobile-client/interface/adapter'
 import { mobileClient } from '#/mobile-client/MobileClient'
 import addFriendIcon from '@/assets/mobile/chat-home/add-friend.webp'
 import groupChatIcon from '@/assets/mobile/chat-home/group-chat.webp'
-import { MittEnum } from '@/enums'
 import { useUserInfo } from '@/hooks/useCached.ts'
 import { useMessage } from '@/hooks/useMessage.ts'
-import { useMitt } from '@/hooks/useMitt'
 import { IsAllUserEnum } from '@/services/types.ts'
 import rustWebSocketClient from '@/services/webSocketRust'
 import { useChatStore } from '@/stores/chat.ts'
-import { useMobileStore } from '@/stores/mobile'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
+import { RoomTypeEnum } from '~/src/enums'
+import { useReplaceMsg } from '~/src/hooks/useReplaceMsg'
+import { useGlobalStore } from '~/src/stores/global'
+
+// 新代码
+
+const globalStore = useGlobalStore()
+
+// 会话列表 TODO: 需要后端返回对应字段
+const sessionList = computed(() => {
+  return (
+    chatStore.sessionList
+      .map((item) => {
+        // 获取最新的头像
+        let latestAvatar = item.avatar
+        if (item.type === RoomTypeEnum.SINGLE && item.id) {
+          latestAvatar = useUserInfo(item.id).value.avatar || item.avatar
+        }
+
+        // 获取群聊备注名称（如果有）
+        let displayName = item.name
+        if (item.type === RoomTypeEnum.GROUP && item.remark) {
+          // 使用群组备注（如果存在）
+          displayName = item.remark
+        }
+
+        const { checkRoomAtMe, getMessageSenderName, formatMessageContent } = useReplaceMsg()
+        // 获取该会话的所有消息用于检查@我
+        const messages = Array.from(chatStore.messageMap.get(item.roomId)?.values() || [])
+        // 检查是否有@我的消息
+        const isAtMe = checkRoomAtMe(
+          item.roomId,
+          item.type,
+          globalStore.currentSession?.roomId!,
+          messages,
+          item.unreadCount
+        )
+
+        // 处理显示消息
+        let displayMsg = ''
+
+        const lastMsg = messages[messages.length - 1]
+        if (lastMsg) {
+          const senderName = getMessageSenderName(lastMsg, '', item.roomId)
+          displayMsg = formatMessageContent(lastMsg, item.type, senderName, isAtMe)
+        }
+
+        return {
+          ...item,
+          avatar: latestAvatar,
+          name: displayName, // 使用可能修改过的显示名称
+          lastMsg: displayMsg || '欢迎使用HuLa',
+          lastMsgTime: formatTimestamp(item?.activeTime),
+          isAtMe
+        }
+      })
+      // 添加排序逻辑：先按置顶状态排序，再按活跃时间排序
+      .sort((a, b) => {
+        // 1. 先按置顶状态排序（置顶的排在前面）
+        if (a.top && !b.top) return -1
+        if (!a.top && b.top) return 1
+
+        // 2. 在相同置顶状态下，按最后活跃时间降序排序（最新的排在前面）
+        return b.activeTime - a.activeTime
+      })
+  )
+})
+// 新代码结束
 
 const chatStore = useChatStore()
 
 const pullRefreshRef = ref()
-
-const messageItems = computed(() => chatStore.sessionList)
 
 const getSessionList = async () => {
   await chatStore.getSessionList(true)
@@ -301,13 +365,7 @@ const addIconHandler = {
 
 const router = useRouter()
 
-const mobileStore = useMobileStore()
-
-useMitt.on(MittEnum.MSG_BOX_SHOW, (event: any) => {
-  mobileStore.updateCurrentChatRoom(event.item)
-})
-
-const { handleMsgClick } = useMessage()
+const { handleMsgClick, handleMsgDblclick } = useMessage()
 
 const intoRoom = (item: any) => {
   handleMsgClick(item)

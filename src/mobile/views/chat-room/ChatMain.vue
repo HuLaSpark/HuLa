@@ -1,7 +1,7 @@
 <template>
   <AutoFixHeightPage>
     <template #header>
-      <HeaderBar ref="header" :room-name="currentChatRoom.name" :msg-count="1002" />
+      <HeaderBar ref="header" :room-name="globalStore.currentSession!.name" :msg-count="1002" />
     </template>
     <template #container>
       <!-- 网络状态提示 -->
@@ -37,34 +37,11 @@
       </div>
 
       <Transition name="chat-init" appear mode="out-in" @after-leave="handleTransitionComplete">
-        <!-- 初次加载的骨架屏 -->
-        <n-flex
-          v-if="messageOptions?.isLoading && !messageOptions?.cursor"
-          vertical
-          :size="18"
-          :style="{ 'max-height': `calc(100vh - ${announcementHeight}px)` }"
-          class="relative h-100vh box-border p-20px">
-          <n-flex justify="end">
-            <n-skeleton style="border-radius: 14px" height="40px" width="46%" :sharp="false" />
-            <n-skeleton height="40px" circle />
-          </n-flex>
-
-          <n-flex>
-            <n-skeleton height="40px" circle />
-            <n-skeleton style="border-radius: 14px" height="60px" width="58%" :sharp="false" />
-          </n-flex>
-
-          <n-flex>
-            <n-skeleton height="40px" circle />
-            <n-skeleton style="border-radius: 14px" height="40px" width="26%" :sharp="false" />
-          </n-flex>
-
-          <n-flex justify="end">
-            <n-skeleton style="border-radius: 14px" height="40px" width="60%" :sharp="false" />
-            <n-skeleton height="40px" circle />
-          </n-flex>
-        </n-flex>
-
+        <div
+          class="text-center w-full flex items-center flex-1 justify-center text-gray-300"
+          v-if="messageOptions?.isLoading && !messageOptions?.cursor">
+          没有内容哦
+        </div>
         <!-- 聊天内容 -->
         <VirtualList
           v-else
@@ -445,33 +422,13 @@
 import AutoFixHeightPage from '#/components/chat-room/AutoFixHeightPage.vue'
 import FooterBar from '#/components/chat-room/FooterBar.vue'
 import HeaderBar from '#/components/chat-room/HeaderBar.vue'
-import { useMobileStore } from '@/stores/mobile'
+import { useGlobalStore } from '@/stores/global'
 import { markMsg } from '@/utils/ImRequestUtils'
 
-const mobileStore = useMobileStore()
-
-const currentChatRoom = mobileStore.currentChatRoom
-
-const header = ref()
+const globalStore = useGlobalStore()
 
 /** 新增的列表事件 start */
 import { computed, ref } from 'vue'
-
-/**
- * 单条动态消息数据结构
- */
-interface Item {
-  id: number
-  avatar: string
-  name: string
-  time: string
-  message: string
-  image?: string
-  likes: number
-  comments: number
-  footerText?: string
-  footerImages?: string[]
-}
 
 // /**
 //  * 生成一条随机消息文本
@@ -487,22 +444,6 @@ interface Item {
 //   }
 //   return result
 // }
-
-const items = ref<Item[]>([])
-
-const itemCount = 2000
-
-for (let i = 0; i < itemCount; i++) {
-  items.value.push({
-    id: i + 1,
-    avatar: `https://i.pravatar.cc/48?u=${i}`,
-    name: `小明${i + 1}`,
-    time: `发布于 ${new Date(Date.now() - i * 3600 * 1000).toLocaleString()}`,
-    message: `${i}`,
-    likes: Math.floor(Math.random() * 500),
-    comments: Math.floor(Math.random() * 100)
-  })
-}
 
 /** 新增的列表事件 end */
 
@@ -522,7 +463,6 @@ import { useWindow } from '@/hooks/useWindow.ts'
 import type { MessageType, SessionItem } from '@/services/types.ts'
 import { useCachedStore } from '@/stores/cached'
 import { useChatStore } from '@/stores/chat.ts'
-import { useGlobalStore } from '@/stores/global'
 import { useGroupStore } from '@/stores/group.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { audioManager } from '@/utils/AudioManager'
@@ -539,7 +479,6 @@ const props = defineProps<{
 const chatStore = useChatStore()
 const userStore = useUserStore()
 const groupStore = useGroupStore()
-const globalStore = useGlobalStore()
 const cachedStore = useCachedStore()
 const networkStatus = useNetworkStatus()
 
