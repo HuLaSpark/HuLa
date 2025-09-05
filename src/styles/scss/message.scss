@@ -7,6 +7,11 @@
   color: var(--text-color);
   transform: translateZ(0);
   will-change: background-color, color;
+  @apply cursor-pointer transition-all duration-300 ease-in-out;
+
+  &.context-menu-active {
+    box-shadow: inset 0 0 0 1px #909090;
+  }
 
   .text {
     color: #808080;

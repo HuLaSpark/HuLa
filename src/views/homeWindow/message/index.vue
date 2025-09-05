@@ -8,7 +8,8 @@
         :key="item.roomId"
         :class="[
           { active: globalStore.currentSession?.roomId === item.roomId },
-          { 'bg-[--bg-msg-first-child] rounded-12px relative': item.top }
+          { 'bg-[--bg-msg-first-child] rounded-12px relative': item.top },
+          { 'context-menu-active': activeContextMenuRoomId === item.roomId }
         ]"
         :data-key="item.roomId"
         :menu="menuList"
@@ -17,7 +18,8 @@
         class="msg-box w-full h-75px mb-5px"
         @click="handleMsgClick(item)"
         @dblclick="handleMsgDblclick(item)"
-        @select="$event.click(item)">
+        @select="$event.click(item)"
+        @menu-show="handleMenuShow(item.roomId, $event)">
         <n-flex :size="10" align="center" class="h-75px pl-6px pr-8px flex-1">
           <n-avatar
             style="border: 1px solid var(--avatar-border-color)"
@@ -135,6 +137,8 @@ const { themes } = storeToRefs(settingStore)
 const { openMsgSession } = useCommon()
 const msgScrollbar = useTemplateRef<HTMLElement>('msg-scrollbar')
 const { handleMsgClick, handleMsgDelete, menuList, specialMenuList, handleMsgDblclick } = useMessage()
+// 跟踪当前显示右键菜单的会话ID
+const activeContextMenuRoomId = ref<string | null>(null)
 
 // 会话列表 TODO: 需要后端返回对应字段
 const sessionList = computed(() => {
@@ -223,6 +227,11 @@ watch(
   },
   { immediate: true }
 )
+
+// 处理右键菜单显示状态变化
+const handleMenuShow = (roomId: string, isShow: boolean) => {
+  activeContextMenuRoomId.value = isShow ? roomId : null
+}
 
 onBeforeMount(async () => {
   // 请求回话列表
