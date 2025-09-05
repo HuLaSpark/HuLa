@@ -35,7 +35,7 @@ export const useMessage = () => {
   const handleMsgClick = async (item: SessionItem) => {
     msgBoxShow.value = true
     // 更新当前会话信息
-    globalStore.updateCurrentSession(item)
+    globalStore.updateCurrentSessionRoomId(item.roomId)
     await chatStore.changeRoom()
 
     // 只有在消息页面且有未读消息时，才标记为已读

@@ -77,7 +77,7 @@ const AsyncCenter = defineAsyncComponent({
     // 加载所有会话
     await chatStore.getSessionList(true)
     // 设置全局会话为第一个
-    globalStore.currentSession = chatStore.sessionList[0]
+    globalStore.currentSessionRoomId = chatStore.sessionList[0].roomId
 
     // 加载所有群的成员数据
     const groupSessions = chatStore.getGroupSessions()
@@ -199,7 +199,7 @@ useMitt.on(WsResponseMessageType.ROOM_DISSOLUTION, async (roomId: string) => {
   groupStore.removeGroupDetail(roomId)
   // 如果当前会话为解散的群聊，切换到第一个会话
   if (globalStore.currentSession?.roomId === roomId) {
-    globalStore.currentSession = chatStore.sessionList[0]
+    globalStore.currentSessionRoomId = chatStore.sessionList[0].roomId
   }
 })
 
@@ -401,7 +401,7 @@ const handleSelfRemove = async (roomId: string) => {
 
   // 如果当前会话就是被移除的群聊，切换到其他会话
   if (globalStore.currentSession?.roomId === roomId) {
-    globalStore.updateCurrentSession(chatStore.sessionList[0])
+    globalStore.updateCurrentSessionRoomId(chatStore.sessionList[0].roomId)
   }
 }
 

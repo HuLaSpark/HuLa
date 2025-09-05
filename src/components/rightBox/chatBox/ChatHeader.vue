@@ -401,7 +401,7 @@ import {
 import { useAvatarUpload } from '@/hooks/useAvatarUpload'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useWindow } from '@/hooks/useWindow'
-import { IsAllUserEnum, type SessionItem, type UserItem } from '@/services/types.ts'
+import { IsAllUserEnum, type UserItem } from '@/services/types.ts'
 import { WsResponseMessageType } from '@/services/wsType'
 import { useCachedStore } from '@/stores/cached'
 import { useChatStore } from '@/stores/chat.ts'
@@ -415,9 +415,6 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { notification, setSessionTop, shield, updateMyRoomInfo, updateRoomInfo } from '@/utils/ImRequestUtils'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
 
-const { activeItem } = defineProps<{
-  activeItem: SessionItem
-}>()
 const { createModalWindow, createWebviewWindow } = useWindow()
 // 使用useDisplayMedia获取屏幕共享的媒体流
 const { stream, stop } = useDisplayMedia()
@@ -436,13 +433,15 @@ const modalShow = ref(false)
 const sidebarShow = ref(false)
 const headerLoading = ref(false)
 const cacheStore = useCachedStore()
+const { currentSession: activeItem } = storeToRefs(globalStore)
+// const activeItem = globalStore.currentSession!
 
 // 是否为频道（仅显示 more 按钮）
-const isChannel = computed(() => activeItem.hotFlag === IsAllUserEnum.Yes || activeItem.roomId === '1')
+const isChannel = computed(() => activeItem.value.hotFlag === IsAllUserEnum.Yes || activeItem.value.roomId === '1')
 // 是否为群主
 const isGroupOwner = computed(() => {
   // 频道不能修改群头像和群名称
-  if (activeItem.roomId === '1' || activeItem.hotFlag === IsAllUserEnum.Yes) {
+  if (activeItem.value.roomId === '1' || activeItem.value.hotFlag === IsAllUserEnum.Yes) {
     return false
   }
 
@@ -460,8 +459,8 @@ const groupNameInputRef = useTemplateRef<HTMLInputElement | null>('groupNameInpu
 
 const messageSettingType = computed(() => {
   // 群消息设置只在免打扰模式下有意义
-  if (activeItem.muteNotification === NotificationTypeEnum.NOT_DISTURB) {
-    return activeItem.shield ? 'shield' : 'notification'
+  if (activeItem.value.muteNotification === NotificationTypeEnum.NOT_DISTURB) {
+    return activeItem.value.shield ? 'shield' : 'notification'
   }
   // 非免打扰模式下，默认返回 notification
   return 'notification'
@@ -472,14 +471,14 @@ const messageSettingOptions = ref([
 ])
 /** 是否在线 */
 const isOnline = computed(() => {
-  if (activeItem.type === RoomTypeEnum.GROUP) return true
-  const contact = contactStore.contactsList.find((item) => item.uid === activeItem.detailId)
+  if (activeItem.value.type === RoomTypeEnum.GROUP) return true
+  const contact = contactStore.contactsList.find((item) => item.uid === activeItem.value.detailId)
   return contact?.activeStatus === OnlineEnum.ONLINE
 })
 /** 是否还是好友 */
 const shouldShowDeleteFriend = computed(() => {
-  if (activeItem.type === RoomTypeEnum.GROUP) return false
-  return contactStore.contactsList.some((item) => item.uid === activeItem.detailId)
+  if (activeItem.value.type === RoomTypeEnum.GROUP) return false
+  return contactStore.contactsList.some((item) => item.uid === activeItem.value.detailId)
 })
 const groupUserList = computed(() => groupStore.userList)
 const userList = computed(() => {
@@ -500,11 +499,11 @@ const userList = computed(() => {
 })
 /** 获取当前用户的状态信息 */
 const currentUserStatus = computed(() => {
-  if (activeItem.type === RoomTypeEnum.GROUP) return null
+  if (activeItem.value.type === RoomTypeEnum.GROUP) return null
 
   // 使用 useUserInfo 获取用户信息
-  if (!activeItem.detailId) return null
-  const userInfo = groupStore.getUserInfo(activeItem.detailId)!
+  if (!activeItem.value.detailId) return null
+  const userInfo = groupStore.getUserInfo(activeItem.value.detailId)!
 
   // 从状态列表中找到对应的状态
   return userStatusStore.stateList.find((state: { id: string }) => state.id === userInfo.userStateId)
@@ -523,12 +522,14 @@ const statusTitle = computed(() => {
 
 // 获取用户的最新头像
 const currentUserAvatar = computed(() => {
-  if (activeItem.type === RoomTypeEnum.GROUP) {
-    return AvatarUtils.getAvatarUrl(activeItem.avatar)
-  } else if (activeItem.detailId) {
-    return AvatarUtils.getAvatarUrl(groupStore.getUserInfo(activeItem.detailId)!.avatar || activeItem.avatar)
+  if (activeItem.value.type === RoomTypeEnum.GROUP) {
+    return AvatarUtils.getAvatarUrl(activeItem.value.avatar)
+  } else if (activeItem.value.detailId) {
+    return AvatarUtils.getAvatarUrl(
+      groupStore.getUserInfo(activeItem.value.detailId)!.avatar || activeItem.value.avatar
+    )
   }
-  return AvatarUtils.getAvatarUrl(activeItem.avatar)
+  return AvatarUtils.getAvatarUrl(activeItem.value.avatar)
 })
 // 使用自定义hook处理头像上传
 const {
@@ -543,12 +544,12 @@ const {
   onSuccess: async (downloadUrl) => {
     // 调用更新群头像的API
     await updateRoomInfo({
-      id: activeItem.roomId,
-      name: activeItem.name,
+      id: activeItem.value.roomId,
+      name: activeItem.value.name,
       avatar: downloadUrl
     })
     // 更新本地会话状态
-    chatStore.updateSession(activeItem.roomId, {
+    chatStore.updateSession(activeItem.value.roomId, {
       avatar: downloadUrl
     })
     window.$message.success('群头像已更新')
@@ -572,15 +573,15 @@ watchEffect(() => {
 
 // 处理复制账号
 const handleCopy = () => {
-  if (activeItem.account) {
-    navigator.clipboard.writeText(activeItem.account)
-    window.$message.success(`复制成功 ${activeItem.account}`)
+  if (activeItem.value.account) {
+    navigator.clipboard.writeText(activeItem.value.account)
+    window.$message.success(`复制成功 ${activeItem.value.account}`)
   }
 }
 
 /** 处理创建群聊或邀请进群 */
 const handleCreateGroupOrInvite = () => {
-  if (activeItem.type === RoomTypeEnum.GROUP) {
+  if (activeItem.value.type === RoomTypeEnum.GROUP) {
     handleInvite()
   } else {
     handleCreateGroup()
@@ -589,7 +590,7 @@ const handleCreateGroupOrInvite = () => {
 
 /** 处理创建群聊 */
 const handleCreateGroup = () => {
-  useMitt.emit(MittEnum.CREATE_GROUP, { id: activeItem.detailId })
+  useMitt.emit(MittEnum.CREATE_GROUP, { id: activeItem.value.detailId })
 }
 
 /** 处理邀请进群 */
@@ -601,11 +602,11 @@ const handleInvite = async () => {
 // 保存群聊信息
 const saveGroupInfo = async () => {
   console.log('修改群聊信息')
-  if (!activeItem.roomId || activeItem.type !== RoomTypeEnum.GROUP) return
+  if (!activeItem.value.roomId || activeItem.value.type !== RoomTypeEnum.GROUP) return
 
   // 使用updateMyRoomInfo接口更新我在群里的昵称和群备注
   const myRoomInfo = {
-    id: activeItem.roomId,
+    id: activeItem.value.roomId,
     myName: groupStore.myNameInCurrentGroup,
     remark: groupStore.countInfo?.remark!
   }
@@ -615,7 +616,7 @@ const saveGroupInfo = async () => {
   await updateMyRoomInfo(myRoomInfo)
 
   // 更新会话
-  chatStore.updateSession(activeItem.roomId, { remark: myRoomInfo.remark })
+  chatStore.updateSession(activeItem.value.roomId, { remark: myRoomInfo.remark })
 
   window.$message.success('群聊信息已更新')
 }
@@ -630,10 +631,10 @@ const handleMedia = () => {
 
 /** 置顶 */
 const handleTop = (value: boolean) => {
-  setSessionTop({ roomId: activeItem.roomId, top: value })
+  setSessionTop({ roomId: activeItem.value.roomId, top: value })
     .then(() => {
       // 更新本地会话状态
-      chatStore.updateSession(activeItem.roomId, { top: value })
+      chatStore.updateSession(activeItem.value.roomId, { top: value })
       window.$message.success(value ? '已置顶' : '已取消置顶')
     })
     .catch(() => {
@@ -645,22 +646,22 @@ const handleTop = (value: boolean) => {
 const handleNotification = (value: boolean) => {
   const newType = value ? NotificationTypeEnum.NOT_DISTURB : NotificationTypeEnum.RECEPTION
   // 如果当前是屏蔽状态，需要先取消屏蔽
-  if (activeItem.shield) {
+  if (activeItem.value.shield) {
     handleShield(false)
   }
   notification({
-    roomId: activeItem.roomId,
+    roomId: activeItem.value.roomId,
     type: newType
   })
     .then(() => {
       // 更新本地会话状态
-      chatStore.updateSession(activeItem.roomId, {
+      chatStore.updateSession(activeItem.value.roomId, {
         muteNotification: newType
       })
 
       // 如果从免打扰切换到允许提醒，需要重新计算全局未读数
       if (
-        activeItem.muteNotification === NotificationTypeEnum.NOT_DISTURB &&
+        activeItem.value.muteNotification === NotificationTypeEnum.NOT_DISTURB &&
         newType === NotificationTypeEnum.RECEPTION
       ) {
         chatStore.updateTotalUnreadCount()
@@ -681,12 +682,12 @@ const handleNotification = (value: boolean) => {
 /** 处理屏蔽消息 */
 const handleShield = (value: boolean) => {
   shield({
-    roomId: activeItem.roomId,
+    roomId: activeItem.value.roomId,
     state: value
   })
     .then(() => {
       // 更新本地会话状态
-      chatStore.updateSession(activeItem.roomId, {
+      chatStore.updateSession(activeItem.value.roomId, {
         shield: value
       })
 
@@ -695,7 +696,7 @@ const handleShield = (value: boolean) => {
 
       // 3. 在下一个tick中恢复原来的聊天室ID，触发重新加载消息
       nextTick(() => {
-        globalStore.currentSession!.roomId = tempRoomId
+        globalStore.updateCurrentSessionRoomId(tempRoomId)
       })
 
       window.$message.success(value ? '已屏蔽消息' : '已取消屏蔽')
@@ -708,12 +709,12 @@ const handleShield = (value: boolean) => {
 const handleMessageSetting = (value: string) => {
   if (value === 'shield') {
     // 设置为屏蔽消息
-    if (!activeItem.shield) {
+    if (!activeItem.value.shield) {
       handleShield(true)
     }
   } else if (value === 'notification') {
     // 设置为接收消息但不提醒
-    if (activeItem.shield) {
+    if (activeItem.value.shield) {
       handleShield(false)
     }
   }
@@ -736,39 +737,39 @@ const handleDelete = (label: RoomActEnum) => {
 }
 
 const handleConfirm = () => {
-  if (optionsType.value === RoomActEnum.DELETE_FRIEND && activeItem.detailId) {
-    contactStore.onDeleteContact(activeItem.detailId).then(() => {
+  if (optionsType.value === RoomActEnum.DELETE_FRIEND && activeItem.value.detailId) {
+    contactStore.onDeleteContact(activeItem.value.detailId).then(() => {
       modalShow.value = false
       sidebarShow.value = false
       window.$message.success('已删除好友')
     })
   } else if (optionsType.value === RoomActEnum.DISSOLUTION_GROUP) {
-    if (activeItem.roomId === '1') {
+    if (activeItem.value.roomId === '1') {
       window.$message.warning('无法解散频道')
       modalShow.value = false
       return
     }
 
-    groupStore.exitGroup(activeItem.roomId).then(() => {
+    groupStore.exitGroup(activeItem.value.roomId).then(() => {
       modalShow.value = false
       sidebarShow.value = false
       window.$message.success('已解散群聊')
       // 删除当前的会话
-      useMitt.emit(MittEnum.DELETE_SESSION, activeItem.roomId)
+      useMitt.emit(MittEnum.DELETE_SESSION, activeItem.value.roomId)
     })
   } else if (optionsType.value === RoomActEnum.EXIT_GROUP) {
-    if (activeItem.roomId === '1') {
+    if (activeItem.value.roomId === '1') {
       window.$message.warning('无法退出频道')
       modalShow.value = false
       return
     }
 
-    groupStore.exitGroup(activeItem.roomId).then(() => {
+    groupStore.exitGroup(activeItem.value.roomId).then(() => {
       modalShow.value = false
       sidebarShow.value = false
       window.$message.success('已退出群聊')
       // 删除当前的会话
-      useMitt.emit(MittEnum.DELETE_SESSION, activeItem.roomId)
+      useMitt.emit(MittEnum.DELETE_SESSION, activeItem.value.roomId)
     })
   }
 }
@@ -776,13 +777,13 @@ const handleConfirm = () => {
 const startRtcCall = async (callType: CallTypeEnum) => {
   try {
     // 判断是否为群聊，如果是群聊则跳过
-    if (activeItem.type === RoomTypeEnum.GROUP) {
+    if (activeItem.value.type === RoomTypeEnum.GROUP) {
       window.$message.warning('群聊暂不支持音视频通话')
       return
     }
 
     // 获取当前房间好友的ID（单聊时使用detailId作为remoteUid）
-    const remoteUid = activeItem.detailId
+    const remoteUid = activeItem.value.detailId
     if (!remoteUid) {
       window.$message.error('无法获取对方用户信息')
       return
@@ -815,7 +816,7 @@ const createRtcCallWindow = async (isIncoming: boolean, remoteUserId: string, ca
     false, // 显示窗口
     {
       remoteUserId,
-      roomId: activeItem.roomId,
+      roomId: activeItem.value.roomId,
       callType,
       isIncoming
     }
@@ -826,7 +827,7 @@ const createRtcCallWindow = async (isIncoming: boolean, remoteUserId: string, ca
 const startEditGroupName = () => {
   if (!isGroupOwner.value) return
 
-  editingGroupName.value = activeItem.name
+  editingGroupName.value = activeItem.value.name
   isEditingGroupName.value = true
 
   // 在下一个事件循环中聚焦输入框
@@ -837,7 +838,7 @@ const startEditGroupName = () => {
 
 // 保存群名称
 const saveGroupName = async () => {
-  if (!isGroupOwner.value || !activeItem.roomId) return
+  if (!isGroupOwner.value || !activeItem.value.roomId) return
 
   isEditingGroupName.value = false
 
@@ -854,17 +855,17 @@ const saveGroupName = async () => {
   }
 
   // 检查名称是否有变化
-  if (trimmedName !== activeItem.name) {
+  if (trimmedName !== activeItem.value.name) {
     try {
       // 调用更新群信息的API
       updateRoomInfo({
-        id: activeItem.roomId,
+        id: activeItem.value.roomId,
         name: trimmedName,
-        avatar: activeItem.avatar
+        avatar: activeItem.value.avatar
       })
 
       // 更新本地会话状态
-      chatStore.updateSession(activeItem.roomId, {
+      chatStore.updateSession(activeItem.value.roomId, {
         name: trimmedName
       })
 
@@ -878,7 +879,7 @@ const saveGroupName = async () => {
 
 // 处理上传头像
 const handleUploadAvatar = () => {
-  if (!isGroupOwner.value || !activeItem.roomId) return
+  if (!isGroupOwner.value || !activeItem.value.roomId) return
 
   openFileSelector()
 }

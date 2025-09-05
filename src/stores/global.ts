@@ -31,8 +31,11 @@ export const useGlobalStore = defineStore(
       msgId: null
     })
 
+    const currentSessionRoomId = ref('')
     // 当前会话信息：包含房间ID和房间类型
-    const currentSession = ref<SessionItem>()
+    const currentSession = computed((): SessionItem => {
+      return chatStore.getSession(currentSessionRoomId.value)
+    })
 
     /** 当前选中的联系人信息 */
     const currentSelectedContact = ref<ContactItem | RequestFriendItem>()
@@ -89,22 +92,22 @@ export const useGlobalStore = defineStore(
     }
 
     // 监听当前会话变化，添加防重复触发逻辑
-    watch(currentSession, async (val, oldVal) => {
+    watch(currentSessionRoomId, async (val, oldVal) => {
       if (WebviewWindow.getCurrent().label !== 'home') {
         return
       }
       // 只有当房间ID真正发生变化时才执行操作
-      if (!oldVal || val!.roomId !== oldVal.roomId) {
-        info(`[global]当前会话发生实际变化: ${oldVal?.roomId} -> ${val!.roomId}`)
+      if (!oldVal || val! !== oldVal) {
+        info(`[global]当前会话发生实际变化: ${oldVal} -> ${val}`)
         // 清理已读数查询队列
         clearQueue()
         // 延迟1秒后开始查询已读数
         setTimeout(readCountQueue, 1000)
         // 标记该房间的消息为已读
         // apis.markMsgRead({ roomId: val.roomId || '1' })
-        markMsgRead(val!.roomId || '1')
+        markMsgRead(val! || '1')
         // 更新会话的已读状态
-        chatStore.markSessionRead(val!.roomId || '1')
+        chatStore.markSessionRead(val! || '1')
         // 更新全局未读计数
         await updateGlobalUnreadCount()
       }
@@ -120,8 +123,8 @@ export const useGlobalStore = defineStore(
       homeWindowState.value = { ...homeWindowState.value, ...newState }
     }
 
-    const updateCurrentSession = (session: SessionItem) => {
-      currentSession.value = session
+    const updateCurrentSessionRoomId = (id: string) => {
+      currentSessionRoomId.value = id
     }
 
     return {
@@ -138,7 +141,8 @@ export const useGlobalStore = defineStore(
       setTipVisible,
       updateGlobalUnreadCount,
       setHomeWindowState,
-      updateCurrentSession
+      updateCurrentSessionRoomId,
+      currentSessionRoomId
     }
   },
   {

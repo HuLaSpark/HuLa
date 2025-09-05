@@ -180,7 +180,7 @@
     <!-- 群成员 -->
     <n-flex vertical :size="10" class="px-30px box-border">
       <n-flex align="center" justify="space-between" class="text-(14px [--chat-text-color])">
-        <span>群成员 ({{ item.memberNum }}人)</span>
+        <span>({{ item.memberNum }}人)</span>
         <span class="flex items-center">在线 {{ item.onlineNum }}人</span>
       </n-flex>
 

@@ -320,7 +320,7 @@ export const useChatStore = defineStore(
           isFirstInit = true
           // 只有在没有当前选中会话时，才设置第一个会话为当前会话
           if (!currentSelectedRoomId || currentSelectedRoomId === '1') {
-            globalStore.updateCurrentSession(data[0])
+            globalStore.updateCurrentSessionRoomId(data[0].roomId)
           }
 
           // 用会话列表第一个去请求消息列表
