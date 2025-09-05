@@ -6,7 +6,7 @@
     </n-flex>
 
     <n-virtual-list
-      style="max-height: calc(100vh - 80px)"
+      style="max-height: calc(100vh / var(--page-scale, 1) - 80px)"
       :items="applyList"
       :item-size="102"
       :item-resizable="true"

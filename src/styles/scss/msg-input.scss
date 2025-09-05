@@ -23,7 +23,7 @@
   -webkit-hyphens: auto;
 }
 .ait-options {
-  @apply w-200px h-fit max-h-190px bg-[--center-bg-color] rounded-8px p-[5px_0_5px_5px] border-(1px solid [--box-shadow-color]);
+  @apply z-999 w-200px h-fit max-h-190px bg-[--center-bg-color] rounded-8px p-[5px_0_5px_5px] border-(1px solid [--box-shadow-color]);
   box-shadow: 2px 2px 12px 2px var(--box-shadow-color);
   .ait-item {
     @apply h-26px text-[--text-color] text-14px p-[5px_0_5px_10px] mr-5px rounded-6px cursor-pointer;
@@ -31,7 +31,7 @@
 }
 
 .AI-options {
-  @apply w-260px h-fit max-h-190px bg-[--center-bg-color] rounded-8px p-[5px_0_5px_5px] border-(1px solid [--box-shadow-color]);
+  @apply z-999 w-260px h-fit max-h-190px bg-[--center-bg-color] rounded-8px p-[5px_0_5px_5px] border-(1px solid [--box-shadow-color]);
   box-shadow: 2px 2px 12px 2px var(--box-shadow-color);
   .AI-item {
     @apply h-26px text-[--text-color] text-14px p-[5px_0_5px_10px] mr-7px rounded-6px cursor-pointer;

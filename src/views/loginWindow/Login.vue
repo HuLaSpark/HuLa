@@ -431,8 +431,6 @@ const removeToken = () => {
 
 /** 打开服务协议窗口 */
 const openServiceAgreement = async () => {
-  console.log(2222)
-
   await createModalWindow('服务协议', 'modal-serviceAgreement', 600, 600, 'login')
 }
 

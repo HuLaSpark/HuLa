@@ -12,6 +12,7 @@ import { listen } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useStorage } from '@vueuse/core'
 import { MittEnum, StoresEnum, ThemeEnum } from '@/enums'
+import { useFixedScale } from '@/hooks/useFixedScale'
 import { useGlobalShortcut } from '@/hooks/useGlobalShortcut.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useMobile } from '@/hooks/useMobile.ts'
@@ -31,6 +32,9 @@ const refreshToken = useStorage<string | null>('REFRESH_TOKEN', null)
 const { addListener } = useTauriListener()
 // 全局快捷键管理
 const { initializeGlobalShortcut, cleanupGlobalShortcut } = useGlobalShortcut()
+
+// 创建固定缩放控制器（使用 body 作为目标，确保 Teleport 到 body 的浮层也被缩放；默认 zoom 模式）
+const fixedScale = useFixedScale({ target: 'body', mode: 'zoom' })
 
 /** 不需要锁屏的页面 */
 const LockExclusion = new Set(['/login', '/tray', '/qrCode', '/about', '/onlineStatus'])
@@ -90,6 +94,10 @@ watch(
 )
 
 onMounted(async () => {
+  // 仅桌面端启用固定缩放
+  if (isDesktop()) {
+    fixedScale.enable()
+  }
   // 判断是否是桌面端，桌面端需要调整样式
   isDesktop() && (await import('@/styles/scss/global/desktop.scss'))
   // 判断是否是移动端，移动端需要加载安全区域适配样式
@@ -147,6 +155,9 @@ onMounted(async () => {
 })
 
 onUnmounted(async () => {
+  // 关闭固定缩放，恢复样式与监听
+  fixedScale.disable()
+
   window.removeEventListener('contextmenu', (e) => e.preventDefault(), false)
   window.removeEventListener('dragstart', preventDrag)
 

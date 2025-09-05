@@ -6,7 +6,7 @@
     <!-- 主体内容区域 -->
     <div class="flex-1 overflow-auto">
       <!-- 视频展示区域 -->
-      <div class="min-h-[calc(100vh-124px)] flex-center w-full h-full">
+      <div style="min-height: calc(100vh / var(--page-scale, 1) - 124px)" class="flex-center w-full h-full">
         <video
           ref="videoRef"
           :src="currentVideo"

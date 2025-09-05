@@ -41,7 +41,7 @@
       </header>
 
       <n-scrollbar
-        style="max-height: calc(100vh - 70px)"
+        style="max-height: calc(100vh / var(--page-scale, 1) - 70px)"
         :class="{ 'shadow-inner': page.shadow }"
         data-tauri-drag-region>
         <n-flex vertical class="p-24px" :size="12" justify="center" v-if="skeleton">

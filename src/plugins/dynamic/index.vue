@@ -37,7 +37,7 @@
     <!-- 动态列表 -->
     <div class="flex flex-col items-center text-[--text-color] bg-[--right-bg-color]">
       <n-scrollbar
-        style="max-height: calc(100vh - 180px)"
+        style="max-height: calc(100vh / var(--page-scale, 1) - 184px)"
         class="w-full rounded-b-8px bg-[--center-bg-color] border-(solid 1px [--line-color]) p-[10px_0] box-border">
         <n-flex justify="center">
           <!--  动态内容框   -->

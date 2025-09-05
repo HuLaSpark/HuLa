@@ -36,7 +36,7 @@
         </div>
       </n-flex>
       <!-- 会话列表 -->
-      <n-scrollbar ref="scrollbar" style="max-height: calc(100vh - 266px); padding-right: 8px">
+      <n-scrollbar ref="scrollbar" style="max-height: calc(100vh / var(--page-scale, 1) - 266px); padding-right: 8px">
         <TransitionGroup name="list" tag="div" style="padding: 4px" class="sort-target flex flex-col-center gap-12px">
           <n-flex
             vertical
