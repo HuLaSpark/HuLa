@@ -160,10 +160,10 @@ export async function getUserDetail() {
 /**
  * 快捷方法：获取群组详情
  */
-export async function getGroupDetail(roomId: string) {
+export async function getGroupDetail(groupId: string) {
   return await imRequest({
     url: ImUrlEnum.GROUP_DETAIL,
-    params: { id: roomId }
+    params: { id: groupId }
   })
 }
 

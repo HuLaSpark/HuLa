@@ -195,7 +195,7 @@ export const useChatStore = defineStore(
           {
             param: {
               pageSize: size,
-              cursor: messageOptions.get(session.roomId)?.cursor || '',
+              cursor: '',
               roomId: session.roomId
             }
           },

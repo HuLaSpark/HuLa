@@ -231,7 +231,7 @@ watchEffect(async () => {
   if (content.type === RoomTypeEnum.SINGLE) {
     item.value = groupStore.getUserInfo(content.uid)!
   } else {
-    await getGroupDetail(content.roomId)
+    await getGroupDetail(content.uid)
       .then((response: any) => {
         item.value = response
         nicknameValue.value = response.myName || ''
