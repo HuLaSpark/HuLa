@@ -96,7 +96,7 @@
           class="font-bold px-8 py-15px bg-#EEF4F3 text-#373838 rounded-full text-14px">
           编辑资料
         </div>
-        <div v-if="!isMy" class="px-8 py-15px font-bold text-center bg-green text-white rounded-full text-14px">
+        <div v-if="!isMy" class="px-8 py-15px font-bold text-center bg-#13987f text-white rounded-full text-14px">
           + 添加好友
         </div>
         <div v-if="!isMy" class="px-8 py-15px text-center font-bold bg-#EEF4F3 text-#373838 rounded-full text-14px">
