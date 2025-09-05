@@ -1,0 +1,50 @@
+.driver-popover.driverjs-theme {
+  background-color: #13987f;
+}
+
+#driver-popover-title {
+  font-size: 16px;
+  padding-bottom: 4px;
+  color: #101010;
+}
+
+#driver-popover-description {
+  font-size: 12px;
+  color: #303030;
+}
+
+driver-popover.driverjs-theme .driver-popover-title {
+  font-size: 12px;
+}
+
+.driver-popover.driverjs-theme .driver-popover-title,
+.driver-popover.driverjs-theme .driver-popover-description,
+.driver-popover.driverjs-theme .driver-popover-progress-text {
+  color: #000;
+}
+
+.driver-popover.driverjs-theme button {
+  text-align: center;
+  background-color: #000;
+  color: #ffffff;
+  border: 2px solid #000;
+  text-shadow: none;
+  font-size: 12px;
+  padding: 5px 8px;
+  border-radius: 8px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.driver-popover.driverjs-theme button:hover {
+  background-color: #000;
+  color: #ffffff;
+}
+
+.driver-popover.driverjs-theme .driver-popover-navigation-btns {
+  gap: 8px;
+}
+
+.driver-popover.driverjs-theme .driver-popover-arrow {
+  opacity: 0;
+}

@@ -9,7 +9,7 @@
       <!-- 头像 -->
       <n-flex justify="center" class="w-full pt-35px" data-tauri-drag-region>
         <n-avatar
-          class="size-80px rounded-50% border-(2px solid #fff)"
+          class="welcome size-80px rounded-50% border-(2px solid #fff)"
           :src="AvatarUtils.getAvatarUrl(info.avatar || '/logoD.png')"
           color="#fff" />
       </n-flex>
@@ -85,13 +85,13 @@
           clearable />
 
         <!-- 协议 -->
-        <n-flex justify="center" :size="6">
+        <n-flex align="center" justify="center" :size="6">
           <n-checkbox v-model:checked="protocol" />
-          <div class="text-12px color-#909090 cursor-default lh-14px">
+          <div class="text-12px color-#909090 cursor-default lh-14px agreement">
             <span>已阅读并同意</span>
             <span class="color-#13987f cursor-pointer" @click.stop="openServiceAgreement">服务协议</span>
             <span>和</span>
-            <span class="color-#13987f cursor-pointer" @click="openPrivacyAgreement">HuLa隐私保护指引</span>
+            <span class="color-#13987f cursor-pointer" @click.stop="openPrivacyAgreement">HuLa隐私保护指引</span>
           </div>
         </n-flex>
 
@@ -158,7 +158,7 @@
         </template>
         <n-flex vertical :size="2">
           <div
-            class="text-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px"
+            class="register text-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px"
             @click="createWebviewWindow('注册', 'register', 600, 600)">
             注册账号
           </div>
@@ -170,7 +170,7 @@
           <div
             v-if="!isCompatibility()"
             @click="router.push('/network')"
-            class="text-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px">
+            class="network text-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px">
             网络设置
           </div>
         </n-flex>
@@ -187,6 +187,7 @@ import { lightTheme } from 'naive-ui'
 import { ErrorType } from '@/common/exception'
 import { TauriCommand } from '@/enums'
 import { useCheckUpdate } from '@/hooks/useCheckUpdate'
+import { type DriverStepConfig, useDriver } from '@/hooks/useDriver'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { useMitt } from '@/hooks/useMitt'
 import { useWindow } from '@/hooks/useWindow.ts'
@@ -206,11 +207,52 @@ import { isCompatibility } from '@/utils/PlatformConstants'
 import { clearListener } from '@/utils/ReadCountQueue'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 
+// 定义引导步骤配置
+const driverSteps: DriverStepConfig[] = [
+  {
+    element: '.welcome',
+    popover: {
+      title: '🎉 欢迎使用HuLa',
+      description: 'HuLa是一款基于Tauri的聊天软件，支持Windows、macOS、Linux、IOS、Android',
+      side: 'bottom',
+      align: 'center'
+    }
+  },
+  {
+    element: '.agreement',
+    popover: {
+      title: '🤔 关于 隐私条款 和 服务协议',
+      description: '或许您需要查看 HuLa 的隐私条款和服务协议',
+      onNextClick: () => {
+        moreShow.value = true
+      }
+    }
+  },
+  {
+    element: '.network',
+    popover: {
+      title: '⚙️ 关于网络设置',
+      description: 'HuLa 支持自定义服务设置，您可以替换官方的服务地址',
+      onNextClick: () => {
+        moreShow.value = true
+      }
+    }
+  },
+  {
+    element: '.register',
+    popover: {
+      title: '🤓 如何登录HuLa',
+      description: '在使用HuLa之前您需要注册一个帐号'
+    }
+  }
+]
+
 const settingStore = useSettingStore()
 const userStore = useUserStore()
 const userStatusStore = useUserStatusStore()
 const globalStore = useGlobalStore()
 const { isTrayMenuShow } = storeToRefs(globalStore)
+const { startTour } = useDriver(driverSteps)
 const { stateId } = storeToRefs(userStatusStore)
 /** 网络连接是否正常 */
 const { isOnline } = useNetwork()
@@ -487,6 +529,9 @@ onBeforeMount(async () => {
 })
 
 onMounted(async () => {
+  // 启动引导
+  startTour()
+
   // 只有在需要登录的情况下才显示登录窗口
   if (!isJumpDirectly.value) {
     await getCurrentWebviewWindow().show()

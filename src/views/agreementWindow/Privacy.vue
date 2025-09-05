@@ -178,6 +178,7 @@ onMounted(async () => {
   flex-direction: column;
   background: #fff;
   user-select: none;
+  -webkit-user-select: none;
 }
 
 .agreement-content {

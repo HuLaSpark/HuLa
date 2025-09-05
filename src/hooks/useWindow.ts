@@ -180,6 +180,7 @@ export const useWindow = () => {
       minWidth: 500,
       minHeight: 500,
       focus: true,
+      minimizable: false,
       parent: parentWindow ? parentWindow : parent,
       decorations: !isCompatibilityMode.value,
       transparent: isCompatibilityMode.value,

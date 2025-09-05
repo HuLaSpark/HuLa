@@ -51,7 +51,10 @@
           <p class="text-(12px #909090) leading-6 line-clamp-4 max-w-99%" v-if="announNum === 0">
             请不要把重要信息发到该群，网络不是法外之地，请遵守网络规范，否则直接删除。
           </p>
-          <p v-else class="announcement-text text-(12px #909090) leading-6 line-clamp-4 max-w-99% break-words">
+          <p
+            v-else
+            style="user-select: text"
+            class="announcement-text text-(12px #909090) leading-6 line-clamp-4 max-w-99% break-words">
             {{ announList.length > 0 ? announList[0]?.content : '' }}
           </p>
         </n-scrollbar>
@@ -172,7 +175,6 @@
 </template>
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { info } from '@tauri-apps/plugin-log'
 import { useDebounceFn } from '@vueuse/core'
 import type { InputInst } from 'naive-ui'
 import { storeToRefs } from 'pinia'
@@ -370,9 +372,6 @@ const handleOpenAnnoun = (isAdd: boolean) => {
  * 加载群公告
  */
 const handleLoadGroupAnnoun = async (roomId: string) => {
-  info(`加载群公告: ${roomId}`)
-  // 加载公告
-
   try {
     // 设置是否可以添加公告
     isAddAnnoun.value = isLord.value || isAdmin.value || hasBadge6.value!
