@@ -9,18 +9,27 @@
 
     <PersonalInfo :is-show="isShow"></PersonalInfo>
 
-    <div ref="scrollContainer" class="h-[calc(100vh-var(--safe-area-inset-bottom)-32px)] z-1 overflow-y-auto mt-2">
-      <!-- 动态内容区 -->
-      <div class="custom-rounded flex px-24px flex-col gap-4 min-h-1000px z-1 p-10px mt-4 shadow">
-        <CommunityTab @update="onUpdate" :options="tabOptions" active-tab-name="find">
-          <template #find>
-            <CommunityContent v-for="i in uiViewsData.testList" :key="i"></CommunityContent>
-          </template>
+    <div class="relative top-0 flex-1 flex">
+      <div ref="measureRef" class="h-full w-full absolute top-0 z-0"></div>
+      <!-- 动态内容 -->
+      <div ref="scrollContainer" :style="{ height: tabHeight + 'px' }" class="z-1 overflow-y-auto mt-2 absolute z-3">
+        <div class="custom-rounded flex px-24px flex-col gap-4 z-1 p-10px mt-4 shadow">
+          <CommunityTab
+            :style="{ height: tabHeight + 'px' }"
+            :custom-height="tabHeight"
+            @scroll="handleScroll"
+            @update="onUpdate"
+            :options="tabOptions"
+            active-tab-name="find">
+            <template #find>
+              <CommunityContent v-for="i in testList" :key="i"></CommunityContent>
+            </template>
 
-          <template #follow>
-            <CommunityContent v-for="i in uiViewsData.testList" :key="i"></CommunityContent>
-          </template>
-        </CommunityTab>
+            <template #follow>
+              <CommunityContent v-for="i in testList" :key="i"></CommunityContent>
+            </template>
+          </CommunityTab>
+        </div>
       </div>
     </div>
 
@@ -34,11 +43,6 @@
         <div class="absolute top-1/2 left-0 w-full h-2px bg-white -translate-y-1/2"></div>
       </div>
     </div>
-
-    <!--退出登录-->
-    <!-- <div class="flex-center size-full">
-      <n-button type="primary" @click="handleLogout">退出登录</n-button>
-    </div> -->
   </div>
 </template>
 <script setup lang="ts">
@@ -48,6 +52,14 @@ import PersonalInfo from '#/components/my/PersonalInfo.vue'
 import Settings from '#/components/my/Settings.vue'
 import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.vue'
 import router from '@/router'
+
+const measureRef = ref<HTMLDivElement>()
+
+const tabHeight = ref(300)
+
+const bb = new ResizeObserver((event) => {
+  tabHeight.value = event[0].contentRect.height
+})
 
 const toPublishCommunity = () => {
   router.push('/mobile/mobileMy/publishCommunity')
@@ -68,21 +80,13 @@ const tabOptions = reactive([
   }
 ])
 
-const uiViewsData = ref({
-  testList: [] as string[]
+const testList = computed(() => {
+  const temp = []
+  for (let i = 0; i < 20; i++) {
+    temp.push(i)
+  }
+  return temp
 })
-
-for (let i = 0; i < 10; i++) {
-  uiViewsData.value.testList.push('1')
-}
-
-const a = ref<number[]>([1, 2, 3, 4, 5, 6, 4, 7, 8, 6, 4, 51, 6, 15, 1, 156, 156, 65])
-
-for (let i = 0; i < 1000; i++) {
-  a.value.push(i)
-}
-
-console.log(a)
 
 const isShow = ref(true)
 
@@ -135,53 +139,52 @@ watch(isShow, (show) => {
 })
 
 const scrollContainer = ref<HTMLElement | null>(null)
-let lastScrollTop = 0
-let hasTriggeredHide = false
+
+const lastScrollTop = ref(0)
+const hasTriggeredHide = ref(false)
 
 onMounted(() => {
-  const container = scrollContainer.value
-  if (!container) return
-
-  container.addEventListener('scroll', onScroll, { passive: true })
-})
-
-onUnmounted(() => {
-  const container = scrollContainer.value
-  if (container) {
-    container.removeEventListener('scroll', onScroll)
+  if (measureRef.value) {
+    bb.observe(measureRef.value)
   }
 })
 
-function onScroll() {
-  const container = scrollContainer.value
-  if (!container) return
+onUnmounted(() => {
+  if (measureRef.value) {
+    bb.unobserve(measureRef.value)
+  }
+})
 
-  const scrollTop = container.scrollTop
+const handleScroll = (event: Event) => {
+  const target = event.target as HTMLElement
+  if (!target) return
 
-  // 判断为“向上滑动”
-  if (scrollTop - lastScrollTop > 0) {
-    // 如果上滑超过300 且还没触发隐藏
-    if (scrollTop > 500 && isShow.value && !hasTriggeredHide) {
-      // 递归两帧，避免出现瞬间隐藏导致动画崩坏；递归一帧还可能会出现瞬间隐藏的问题。
+  const scrollTop = target.scrollTop
+
+  // 向上滑动
+  if (scrollTop - lastScrollTop.value > 0) {
+    if (scrollTop > 700 && isShow.value && !hasTriggeredHide.value) {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           isShow.value = false
-          hasTriggeredHide = true
+          hasTriggeredHide.value = true
         })
       })
     }
   }
 
-  // 当用户往下滑回顶部区域，可以考虑解锁，允许重新显示
-  if (scrollTop < 480) {
-    // 在动画执行前一帧前设置状态，两帧则会出现肉眼可见的动画卡顿效果，实际并不是性能卡顿
+  // 向下滑回顶部区域
+  if (scrollTop < 580) {
     requestAnimationFrame(() => {
       isShow.value = true
-      hasTriggeredHide = false
+      hasTriggeredHide.value = false
+      if (scrollContainer.value) {
+        scrollContainer.value.scrollTop = 0
+      }
     })
   }
 
-  lastScrollTop = scrollTop
+  lastScrollTop.value = scrollTop
 }
 </script>
 <style lang="scss" scoped>

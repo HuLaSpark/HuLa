@@ -84,9 +84,14 @@
             编辑资料
           </div>
           <div
-            v-if="!props.isMyPage"
-            class="px-4 py-10px font-bold text-center bg-green text-white rounded-full text-12px">
-            + 关注
+            v-if="!props.isMyPage && props.isMyFriend"
+            class="px-4 py-10px font-bold text-center bg-red text-white rounded-full text-12px">
+            -&nbsp;删除好友
+          </div>
+          <div
+            v-if="!props.isMyPage && !props.isMyFriend"
+            class="px-4 py-10px font-bold text-center bg-#13987f text-white rounded-full text-12px">
+            +&nbsp;添加好友
           </div>
           <div
             v-if="!props.isMyPage"
@@ -125,6 +130,10 @@ const props = defineProps({
   isMyPage: {
     type: Boolean,
     default: true
+  },
+  isMyFriend: {
+    type: Boolean,
+    default: false
   }
 })
 

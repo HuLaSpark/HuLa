@@ -1,232 +1,175 @@
 <template>
   <div class="flex flex-col h-full">
+    <SafeAreaPlaceholder type="layout" direction="top" />
+
     <img src="@/assets/mobile/chat-home/background.webp" class="w-100% fixed top-0" alt="hula" />
-    <div class="flex flex-col justify-between flex-1">
-      <div class="flex flex-col flex-1">
-        <div class="flex flex-col px-16px">
-          <!-- 头像基本信息 -->
-          <div
-            ref="avatarBox"
-            class="grid grid-cols-[86px_1fr] z-1 items-start mt-6 gap-2"
-            style="transform: translateZ(0)">
-            <!-- 头像 -->
-            <div
-              class="self-center h-auto transition-transform duration-300 ease-in-out origin-top"
-              :style="{ transform: isShow ? 'scale(1) translateY(0)' : 'scale(0.62) translateY(0px)' }">
-              <n-avatar
-                :size="86"
-                :src="AvatarUtils.getAvatarUrl(userStore.userInfo.avatar!)"
-                fallback-src="/logo.png"
-                round />
-            </div>
 
-            <!-- 基本信息栏 -->
-            <div ref="infoBox" class="pl-2 flex gap-8px flex-col transition-transform duration-300 ease-in-out">
-              <!-- 名字与在线状态 -->
-              <div class="flex flex-warp gap-4 items-center">
-                <span class="font-bold text-20px text-#373838">{{ userStore.userInfo.name }}</span>
-                <div class="bg-#E7EFE6 flex flex-wrap ps-2 items-center rounded-full gap-1 w-50px h-24px">
-                  <span class="w-12px h-12px rounded-15px bg-#079669"></span>
-                  <span class="text-bold-style" style="font-size: 12px; color: #373838">在线</span>
-                </div>
-              </div>
-              <!-- 账号 -->
-              <div class="flex flex-warp gap-2 items-center">
-                <span class="text-bold-style">账号:{{ userStore.userInfo.account }}</span>
-                <span @click="toMyQRCode" class="pe-15px">
-                  <img class="w-14px h-14px" src="@/assets/mobile/my/qr-code.webp" alt="" />
-                </span>
-              </div>
-              <Transition name="medal-fade">
-                <div
-                  v-if="isShow"
-                  ref="medalBox"
-                  style="transform: translateZ(0)"
-                  class="relative w-118px overflow-hidden">
-                  <img class="block w-full" src="@/assets/mobile/my/my-medal.webp" alt="" />
-                  <div class="text-10px absolute inset-0 flex ps-2 items-center justify-start text-white font-medium">
-                    <span class="flex items-center">
-                      <span class="font-bold">已点亮</span>
-                      <span class="medal-number">1</span>
-                      <span class="font-bold">枚勋章</span>
-                    </span>
-                    <span class="flex ms-3">
-                      <svg class="iconpark-icon block w-5 h-5"><use href="#right"></use></svg>
-                    </span>
-                  </div>
-                </div>
-              </Transition>
-            </div>
-          </div>
-        </div>
+    <!-- 设置区 -->
+    <Settings />
 
-        <Transition name="slide-fade" @before-enter="beforeEnter" @enter="enter" @leave="leave">
-          <div v-if="isShow" ref="animatedBox" style="transform: translateZ(0)" class="flex flex-col px-16px">
-            <!-- 个人描述 -->
-            <div class="mt-2 text-bold-style line-height-24px">
-              一段自我描述，添加性别/地区/工作或学校 不定期更新的日常
-            </div>
-            <!-- 点赞关注 -->
-            <div class="flex flex-wrap justify-around mt-4">
-              <div class="flex flex-warp gap-2 items-center">
-                <div class="min-w-10 flex flex-col items-center">
-                  <div class="fans-number">920.13W</div>
-                  <div class="mt-2 text-bold-style">粉丝</div>
-                </div>
-                <div class="h-20px w-1px bg-gray-300"></div>
-                <div class="min-w-10 flex flex-col items-center">
-                  <div class="fans-number">120</div>
-                  <div class="mt-2 text-bold-style">关注</div>
-                </div>
-                <div class="h-20px w-1px bg-gray-300"></div>
-                <div class="min-w-10 flex flex-col items-center">
-                  <div class="fans-number">43.15W</div>
-                  <div class="mt-2 text-bold-style">点赞</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Transition>
-      </div>
+    <PersonalInfo :is-my-friend="true" :is-my-page="false" :is-show="isShow"></PersonalInfo>
 
-      <div class="justify-center flex items-center gap-3 p-[10px_0px_20px_0px]">
-        <div
-          @click="toEditProfile"
-          v-if="isMy"
-          class="font-bold px-8 py-15px bg-#EEF4F3 text-#373838 rounded-full text-14px">
-          编辑资料
-        </div>
-        <div v-if="!isMy" class="px-8 py-15px font-bold text-center bg-#13987f text-white rounded-full text-14px">
-          + 添加好友
-        </div>
-        <div v-if="!isMy" class="px-8 py-15px text-center font-bold bg-#EEF4F3 text-#373838 rounded-full text-14px">
-          私聊
+    <div class="relative top-0 flex-1 flex">
+      <div ref="measureRef" class="h-full w-full absolute top-0 z-0"></div>
+      <!-- 动态内容 -->
+      <div ref="scrollContainer" :style="{ height: tabHeight + 'px' }" class="z-1 overflow-y-auto mt-2 absolute z-3">
+        <div class="custom-rounded flex px-24px flex-col gap-4 z-1 p-10px mt-4 shadow">
+          <CommunityTab
+            :style="{ height: tabHeight + 'px' }"
+            :custom-height="tabHeight"
+            @scroll="handleScroll"
+            @update="onUpdate"
+            :options="tabOptions"
+            active-tab-name="find">
+            <template #find>
+              <CommunityContent v-for="i in testList" :key="i"></CommunityContent>
+            </template>
+
+            <template #follow>
+              <CommunityContent v-for="i in testList" :key="i"></CommunityContent>
+            </template>
+          </CommunityTab>
         </div>
       </div>
     </div>
   </div>
 </template>
 <script setup lang="ts">
-// import router from '@/router'
-import { useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/user'
-import { AvatarUtils } from '@/utils/AvatarUtils'
+import CommunityContent from '#/components/community/CommunityContent.vue'
+import CommunityTab from '#/components/community/CommunityTab.vue'
+import PersonalInfo from '#/components/my/PersonalInfo.vue'
+import Settings from '#/components/my/Settings.vue'
+import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.vue'
+
+const measureRef = ref<HTMLDivElement>()
+
+const tabHeight = ref(300)
+
+const bb = new ResizeObserver((event) => {
+  tabHeight.value = event[0].contentRect.height
+})
+
+const onUpdate = (newTab: string) => {
+  console.log('已更新：', newTab)
+}
+
+const tabOptions = reactive([
+  {
+    tab: '动态',
+    name: 'find'
+  },
+  {
+    tab: '赞过',
+    name: 'follow'
+  }
+])
+
+const testList = computed(() => {
+  const temp = []
+  for (let i = 0; i < 20; i++) {
+    temp.push(i)
+  }
+  return temp
+})
 
 const isShow = ref(true)
-const isMy = ref(false)
-
-const userStore = useUserStore()
-
-const router = useRouter()
-
-const toEditProfile = () => {
-  router.push('/mobile/mobileMy/editProfile')
-}
-
-const toMyQRCode = () => {
-  router.push('/mobile/mobileMy/myQRCode')
-}
-
-const animatedBox = ref<HTMLElement | null>(null)
-
-function beforeEnter(el: Element) {
-  const box = el as HTMLElement
-  box.style.height = '0'
-  box.style.opacity = '0'
-  box.style.transform = 'translateY(-20px)'
-}
-
-function enter(el: Element, done: () => void) {
-  const box = el as HTMLElement
-  box.style.transition = 'all 0.3s ease'
-  requestAnimationFrame(() => {
-    box.style.height = box.scrollHeight + 'px'
-    box.style.opacity = '1'
-    box.style.transform = 'translateY(0)'
-  })
-
-  // 清理动画
-  box.addEventListener(
-    'transitionend',
-    () => {
-      box.style.height = 'auto' // 动画结束后设回 auto，避免影响布局
-      done()
-    },
-    { once: true }
-  )
-}
-
-function leave(el: Element, done: () => void) {
-  const box = el as HTMLElement
-  box.style.height = box.scrollHeight + 'px'
-  box.style.opacity = '1'
-  box.style.transform = 'translateY(0)'
-
-  requestAnimationFrame(() => {
-    box.style.transition = 'all 0.3s ease'
-    box.style.height = '0'
-    box.style.opacity = '0'
-    box.style.transform = 'translateY(-20px)'
-  })
-
-  box.addEventListener('transitionend', done, { once: true })
-}
-
-const medalBox = ref<HTMLElement | null>(null)
 
 const avatarBox = ref<HTMLElement | null>(null)
 
-watch(
-  () => isMy,
-  (show) => {
-    const box = avatarBox.value
-    if (!box) return
+watch(isShow, (show) => {
+  const box = avatarBox.value
+  if (!box) return
 
-    box.style.overflow = 'hidden'
-    box.style.transition = 'all 0.3s ease'
+  box.style.overflow = 'hidden'
+  box.style.transition = 'all 0.3s ease'
 
-    if (show) {
-      // 显示：从缩小恢复到原始高度
-      box.style.height = box.scrollHeight + 'px'
-      box.style.opacity = '1'
+  if (show) {
+    // 显示：从缩小恢复到原始高度
+    box.style.height = box.scrollHeight + 'px'
+    box.style.opacity = '1'
+    box.style.transform = 'scale(1) translateY(0)'
+
+    box.addEventListener(
+      'transitionend',
+      () => {
+        box.style.height = 'auto' // 回归自适应高度
+        box.style.overflow = ''
+      },
+      { once: true }
+    )
+  } else {
+    // 隐藏：缩小并收起高度
+    box.style.height = box.scrollHeight + 'px' // 先设置为当前高度
+    requestAnimationFrame(() => {
+      box.style.height = '58px' // 保持略小的高度（你原图是 86px，缩放 0.65 后约为 56px）
       box.style.transform = 'scale(1) translateY(0)'
+    })
+  }
+})
 
-      box.addEventListener(
-        'transitionend',
-        () => {
-          box.style.height = 'auto' // 回归自适应高度
-          box.style.overflow = ''
-        },
-        { once: true }
-      )
-    } else {
-      // 隐藏：缩小并收起高度
-      box.style.height = box.scrollHeight + 'px' // 先设置为当前高度
+const infoBox = ref<HTMLElement | null>(null)
+watch(isShow, (show) => {
+  const info = infoBox.value
+  if (!info) return
+
+  // 添加动画过渡（也可直接写在 class 里）
+  info.style.transition = 'transform 0.3s ease'
+
+  if (show) {
+    info.style.transform = 'translateX(0)'
+  } else {
+    info.style.transform = 'translateX(-20px)' // 👈 向左移动一点
+  }
+})
+
+const scrollContainer = ref<HTMLElement | null>(null)
+
+const lastScrollTop = ref(0)
+const hasTriggeredHide = ref(false)
+
+onMounted(() => {
+  if (measureRef.value) {
+    bb.observe(measureRef.value)
+  }
+})
+
+onUnmounted(() => {
+  if (measureRef.value) {
+    bb.unobserve(measureRef.value)
+  }
+})
+
+const handleScroll = (event: Event) => {
+  const target = event.target as HTMLElement
+  if (!target) return
+
+  const scrollTop = target.scrollTop
+
+  // 向上滑动
+  if (scrollTop - lastScrollTop.value > 0) {
+    if (scrollTop > 700 && isShow.value && !hasTriggeredHide.value) {
       requestAnimationFrame(() => {
-        box.style.height = '58px' // 保持略小的高度（你原图是 86px，缩放 0.65 后约为 56px）
-        box.style.transform = 'scale(1) translateY(0)'
+        requestAnimationFrame(() => {
+          isShow.value = false
+          hasTriggeredHide.value = true
+        })
       })
     }
   }
-)
 
-const infoBox = ref<HTMLElement | null>(null)
-watch(
-  () => isMy,
-  (show) => {
-    const info = infoBox.value
-    if (!info) return
-
-    // 添加动画过渡（也可直接写在 class 里）
-    info.style.transition = 'transform 0.3s ease'
-
-    if (show) {
-      info.style.transform = 'translateX(0)'
-    } else {
-      info.style.transform = 'translateX(-20px)' // 👈 向左移动一点
-    }
+  // 向下滑回顶部区域
+  if (scrollTop < 580) {
+    requestAnimationFrame(() => {
+      isShow.value = true
+      hasTriggeredHide.value = false
+      if (scrollContainer.value) {
+        scrollContainer.value.scrollTop = 0
+      }
+    })
   }
-)
+
+  lastScrollTop.value = scrollTop
+}
 </script>
 <style lang="scss" scoped>
 $text-font-size-base: 14px;
