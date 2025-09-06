@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col h-full">
+  <div class="chat-main-container" :style="cssVariables">
     <!-- 网络状态提示 -->
     <n-flex
       v-if="!networkStatus.isOnline.value"
@@ -17,7 +17,7 @@
       <div
         v-if="isGroup && topAnnouncement"
         key="announcement"
-        class="feishu-announcement flex-shrink-0"
+        class="custom-announcement"
         :class="{ 'announcement-hover': isAnnouncementHover }"
         @mouseenter="isAnnouncementHover = true"
         @mouseleave="isAnnouncementHover = false">
@@ -35,35 +35,40 @@
       </div>
     </Transition>
 
-    <div class="flex-1 min-h-0 relative">
-      <!-- 聊天内容（始终挂载，保持结构稳定；数据平滑切换） -->
-      <VirtualList
+    <!-- 聊天内容 -->
+    <div class="flex flex-col flex-1 min-h-0">
+      <div
         id="image-chat-main"
-        ref="virtualListInst"
-        :items="displayedMessageList"
-        :estimatedItemHeight="itemSize"
-        :buffer="5"
-        :is-loading-more="isLoadingMore"
-        :is-last="messageOptions?.isLast"
-        @scroll="handleScroll"
-        @scroll-direction-change="handleScrollDirectionChange"
-        @load-more="handleLoadMore"
-        @visible-items-change="handleVisibleItemsChange"
-        @click="handleChatAreaClick"
-        class="scrollbar-container h-full"
+        ref="scrollContainer"
+        class="scrollbar-container"
         :class="{ 'hide-scrollbar': !showScrollbar }"
+        role="log"
+        aria-live="polite"
+        tabindex="0"
+        @scroll="handleScroll"
+        @click="handleChatAreaClick"
         @mouseenter="showScrollbar = true"
         @mouseleave="showScrollbar = false">
-        <template #default="{ item, index }">
+        <!-- 加载中提示 -->
+        <div v-if="isLoadingMore" class="flex-center gap-6px h-42px">
+          <img class="size-16px" src="@/assets/img/loading.svg" alt="" />
+          <span class="text-(14px #909090)">加载中</span>
+        </div>
+
+        <!-- 消息列表 -->
+        <div class="message-list min-h-full flex flex-col">
           <n-flex
+            v-for="(item, index) in displayedMessageList"
+            :key="item.message.id"
             vertical
-            :key="index"
             class="flex-y-center"
             :class="[
               item.message.type === MsgEnum.RECALL ? 'min-h-22px' : 'min-h-62px',
               isGroup ? 'p-[14px_10px_14px_20px]' : 'chat-single p-[4px_10px_10px_20px]',
               { 'active-reply': activeReply === item.message.id }
-            ]">
+            ]"
+            :data-message-id="item.message.id"
+            :data-message-index="index">
             <!-- 信息间隔时间 -->
             <span class="text-(12px #909090) select-none p-4px" v-if="item.timeBlock">
               {{ item.timeBlock }}
@@ -79,7 +84,7 @@
             <!-- 消息为系统消息 -->
             <SystemMessage
               v-else-if="item.message.type === MsgEnum.SYSTEM"
-              :body="item.message.body"
+              :body="item.message.body as string"
               :from-user-uid="item.fromUser.uid" />
 
             <!-- 消息为机器人消息时 -->
@@ -107,7 +112,7 @@
                       : 'pl-42px'
                 ">
                 <Transition name="fade-single">
-                  <span v-if="hoverBubble.key === item.message.id">
+                  <span v-if="hoverBubble.key === Number(item.message.id)">
                     {{ formatTimestamp(item.message.sendTime, true) }}
                   </span>
                 </Transition>
@@ -216,7 +221,7 @@
                     <!-- 信息时间(群聊) -->
                     <Transition name="fade-group">
                       <span
-                        v-if="isGroup && hoverBubble.key === item.message.id"
+                        v-if="isGroup && hoverBubble.key === Number(item.message.id)"
                         class="text-(12px #909090) select-none">
                         {{ formatTimestamp(item.message.sendTime, true) }}
                       </span>
@@ -226,7 +231,7 @@
                   <ContextMenu
                     :content="item"
                     @contextmenu="handleMacSelect"
-                    @mouseenter="handleMouseEnter(item.message.id)"
+                    @mouseenter="handleMouseEnter(Number(item.message.id))"
                     @mouseleave="handleMouseLeave"
                     class="w-fit relative flex flex-col"
                     :data-key="item.fromUser.uid === userUid ? `U${item.message.id}` : `Q${item.message.id}`"
@@ -238,7 +243,6 @@
                     :special-menu="specialMenuList"
                     @reply-emoji="handleEmojiSelect($event, item)"
                     @click="handleMsgClick(item)">
-                    <!-- 渲染消息内容体 TODO: 等完善消息类型后逐渐替换使用RenderMessage -->
                     <RenderMessage
                       :class="[
                         item.message.type === MsgEnum.VOICE ? 'select-none cursor-pointer' : 'select-text cursor-text',
@@ -279,27 +283,13 @@
                       </div>
                     </Transition>
 
-                    <!--  消息为为图片类型(不固定宽度和高度), 多张图片时渲染  -->
-                    <!-- <n-image-group v-if="Array.isArray(item.message.body.url) && item.message.type === MsgEnum.IMAGE">
-                      <n-flex class="photo-wall" vertical>
-                        <n-image
-                          class="select-none"
-                          v-for="(src, index) in item.message.body.url"
-                          :key="index"
-                          :img-props="{ style: { maxWidth: '325px', maxHeight: '165px', width: '100%', height: 'auto' } }"
-                          show-toolbar-tooltip
-                          style="border-radius: 8px"
-                          :fallback-src="'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg'"
-                          :src="src"></n-image>
-                      </n-flex>
-                    </n-image-group> -->
                     <!-- 消息状态指示器 -->
                     <div v-if="item.fromUser.uid === userUid" class="absolute -left-6 top-2">
-                      <n-icon v-if="item.message.status === MessageStatusEnum.SENDING" class="text-gray-400">
+                      <n-icon v-if="item.message.status === Number(MessageStatusEnum.SENDING)" class="text-gray-400">
                         <img class="size-16px" src="@/assets/img/loading-one.svg" alt="" />
                       </n-icon>
                       <n-icon
-                        v-if="item.message.status === MessageStatusEnum.FAILED"
+                        v-if="item.message.status === Number(MessageStatusEnum.FAILED)"
                         class="text-#d5304f cursor-pointer"
                         @click.stop="handleRetry(item)">
                         <svg class="size-16px">
@@ -354,8 +344,8 @@
               </div>
             </div>
           </n-flex>
-        </template>
-      </VirtualList>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -408,12 +398,12 @@
     </div>
   </footer>
 </template>
+
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
 import { useDebounceFn } from '@vueuse/core'
 import { delay } from 'lodash-es'
-import VirtualList, { type VirtualListExpose } from '@/components/common/VirtualList.vue'
 import { MessageStatusEnum, MittEnum, MsgEnum, ThemeEnum } from '@/enums'
 import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
 import { useChatLayoutGlobal } from '@/hooks/useChatLayout'
@@ -435,6 +425,48 @@ import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { markMsg } from '@/utils/ImRequestUtils'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
 
+// TypeScript 类型定义
+interface ChatMessage {
+  message: {
+    id: string
+    type: number
+    status?: number
+    sendTime: number
+    roomId?: string
+    body: {
+      reply?: {
+        id: string
+        uid: string
+        username: string
+        body: string
+        imgCount?: number
+      }
+      translatedText?: {
+        provider: string
+        text: string
+      } | null
+    }
+    messageMarks?: Record<string, { count: number; userMarked: boolean }>
+  }
+  fromUser: {
+    uid: string
+    nickname?: string
+  }
+  timeBlock?: string
+  uploadProgress?: number
+}
+
+interface HoverBubbleState {
+  key: number
+  timer?: NodeJS.Timeout
+}
+
+interface AnnouncementData {
+  content: string
+  top?: boolean
+}
+
+// Store 实例
 const appWindow = WebviewWindow.getCurrent()
 const globalStore = useGlobalStore()
 const chatStore = useChatStore()
@@ -445,14 +477,16 @@ const networkStatus = useNetworkStatus()
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
 const { footerHeight } = useChatLayoutGlobal()
-// 当前可见的消息ID（由 VirtualList 实时上报）
-const visibleIds = ref<string[]>([])
-// 会话滚动位置缓存：roomId -> scrollTop
+
+// 响应式变量
+const visibleIds = shallowRef<string[]>([])
+const intersectionObserver = ref<IntersectionObserver | null>(null)
+const lastScrollTop = ref<number>(0)
 const scrollPositions = ref<Map<string, number>>(new Map())
 // 会话消息列表缓存：roomId -> messages
 const messageCache = ref<Map<string, any[]>>(new Map())
 // 保持旧内容，直到新会话数据就绪再替换
-const displayedMessageList = ref<any[]>([])
+const displayedMessageList = shallowRef<any[]>([])
 // 待切换的会话，用于在新数据就绪前保持旧数据
 const pendingRoomId = ref<string | null>(null)
 
@@ -466,17 +500,17 @@ const isScrollingDown = ref(false)
 // 添加标记，用于识别是否正在加载历史消息
 const isLoadingMore = ref(false)
 
-// 是否是群聊
-const isGroup = computed(() => chatStore.isGroup)
-const userUid = computed(() => userStore.userInfo.uid)
+// 计算属性
+const isGroup = computed<boolean>(() => chatStore.isGroup)
+const userUid = computed(() => userStore.userInfo.uid || '')
 const chatMessageList = computed(() => chatStore.chatMessageList)
-const currentNewMsgCount = computed(() => chatStore.currentNewMsgCount)
+const currentNewMsgCount = computed(() => chatStore.currentNewMsgCount || null)
 const messageOptions = computed(() => {
   const options = chatStore.currentMessageOptions
-  return options
+  return options || null
 })
 const { createWebviewWindow } = useWindow()
-const currentRoomId = computed(() => globalStore.currentSession?.roomId)
+const currentRoomId = computed(() => globalStore.currentSession?.roomId ?? null)
 
 // 我的群昵称
 const getUserDisplayName = computed(() => (uid: string) => {
@@ -484,39 +518,36 @@ const getUserDisplayName = computed(() => (uid: string) => {
   return user?.myName || user?.name || ''
 })
 
-/** 是否是超级管理员 */
-// const isAdmin = computed(() => userInfo?.power === PowerEnum.ADMIN)
-/** 跳转回复消息后选中效果 */
-const activeReply = ref('')
-/** item最小高度，用于计算滚动大小和位置 */
-const itemSize = computed(() => (isGroup.value ? 90 : 76))
-/** 虚拟列表 */
-const virtualListInst = useTemplateRef<VirtualListExpose>('virtualListInst')
-/** List中的Popover组件实例 */
-const infoPopoverRefs = ref<Record<string, any>>([])
-// 是否显示滚动条
-const showScrollbar = ref(false)
-// 记录 requestAnimationFrame 的返回值
+// 响应式状态变量
+const activeReply = ref<string>('')
+const scrollContainerRef = useTemplateRef<HTMLDivElement>('scrollContainer')
+const infoPopoverRefs = shallowRef<Record<string, any>>({})
+const showScrollbar = ref<boolean>(false)
 const rafId = ref<number>()
-// 缓存消息ID到索引的映射，提高查找效率
-const messageIdToIndexMap = ref(new Map<string, number>())
-/** 鼠标悬浮的气泡显示对应的时间 */
-const hoverBubble = ref<{
-  key: number
-  timer?: NodeJS.Timeout
-}>({
+const messageIdToIndexMap = shallowRef<Map<string, number>>(new Map())
+const hoverBubble = ref<HoverBubbleState>({
   key: -1
 })
-/** 记录右键菜单时选中的气泡的元素(用于处理mac右键会选中文本的问题) */
-const recordEL = ref()
-// 置顶公告hover状态
-const isAnnouncementHover = ref(false)
-// 置顶公告相关
-const topAnnouncement = ref<any>(null)
+const recordEL = ref<HTMLElement>()
+const isAnnouncementHover = ref<boolean>(false)
+const topAnnouncement = ref<AnnouncementData | null>(null)
+
+// CSS 变量计算，避免动态高度重排
+const cssVariables = computed(() => {
+  return {
+    '--footer-height': `${footerHeight.value}px`
+  }
+})
+
 // 是否显示悬浮页脚
-const shouldShowFloatFooter = computed(() => {
-  const container = virtualListInst.value?.getContainer()
+const shouldShowFloatFooter = computed<boolean>(() => {
+  const container = scrollContainerRef.value
   if (!container) return false
+
+  // 在自动滚动或加载更多消息时不显示
+  if (isAutoScrolling.value || isLoadingMore.value) {
+    return false
+  }
 
   const scrollHeight = container.scrollHeight
   const clientHeight = container.clientHeight
@@ -527,19 +558,19 @@ const shouldShowFloatFooter = computed(() => {
     return false
   }
 
-  // 如果有新消息，优先显示新消息提示
+  // 优先级1：如果有新消息，优先显示新消息提示
   if (currentNewMsgCount.value?.count && currentNewMsgCount.value.count > 0) {
     return true
   }
 
-  // 只在向下滚动时显示按钮
-  if (!isScrollingDown.value) {
-    return false
+  // 优先级2：只在向下滚动且距离底部较远时显示按钮
+  if (isScrollingDown.value && distanceFromBottom > clientHeight * 0.5) {
+    return true
   }
 
-  // 当距离底部超过一个屏幕高度时显示向下箭头
-  return distanceFromBottom > clientHeight
+  return false
 })
+
 const {
   handleMsgClick,
   handleConfirm,
@@ -557,20 +588,69 @@ const {
 const { handlePopoverUpdate, enableScroll } = usePopover(selectKey, 'image-chat-main')
 provide('popoverControls', { enableScroll })
 
-// 可见项变更（用于锚点、加载更多时定位）
-const handleVisibleItemsChange = (ids: string[]) => {
-  visibleIds.value = ids
+// 初始化 IntersectionObserver
+const initIntersectionObserver = (): void => {
+  if (intersectionObserver.value) {
+    intersectionObserver.value.disconnect()
+  }
+
+  const container = scrollContainerRef.value
+  if (!container) return
+
+  intersectionObserver.value = new IntersectionObserver(
+    (entries) => {
+      const visibleMessageIds: string[] = []
+
+      entries.forEach((entry) => {
+        const messageId = (entry.target as HTMLElement).dataset.messageId
+        if (messageId && entry.isIntersecting) {
+          visibleMessageIds.push(messageId)
+        }
+      })
+
+      // 更新可见项列表
+      visibleIds.value = visibleMessageIds
+    },
+    {
+      root: container,
+      rootMargin: '50px 0px',
+      threshold: [0, 0.1, 0.5, 1]
+    }
+  )
+
+  // 观察所有消息元素
+  const messageElements = container.querySelectorAll('[data-message-id]')
+  messageElements.forEach((el) => {
+    intersectionObserver.value?.observe(el)
+  })
+}
+
+// 更新 IntersectionObserver 观察的元素
+const updateIntersectionObserver = (): void => {
+  if (!intersectionObserver.value) return
+
+  const container = scrollContainerRef.value
+  if (!container) return
+
+  // Disconnect all to prevent memory leaks
+  intersectionObserver.value.disconnect()
+
+  // Re-observe all current message elements
+  const messageElements = container.querySelectorAll('[data-message-id]')
+  messageElements.forEach((el) => {
+    intersectionObserver.value?.observe(el)
+  })
 }
 
 // 恢复指定会话的滚动位置，返回是否恢复成功
 const restoreScrollPosition = (roomId: string | undefined | null): boolean => {
   if (!roomId) return false
-  const container = virtualListInst.value?.getContainer()
+  const container = scrollContainerRef.value
   if (!container) return false
   const target = scrollPositions.value.get(roomId)
   if (typeof target !== 'number') return false
 
-  const doScroll = () => {
+  const doScroll = (): void => {
     // 标记为自动滚动，避免被 handleScroll 误判
     isAutoScrolling.value = true
     container.scrollTo({ top: Math.max(0, target), behavior: 'auto' })
@@ -588,14 +668,48 @@ const restoreScrollPosition = (roomId: string | undefined | null): boolean => {
   return true
 }
 
-// 滚动到底部（委托 VirtualList 实现底部锁定）
-const scrollToBottom = () => {
-  if (!virtualListInst.value) return
-  virtualListInst.value.scrollTo({ position: 'bottom', behavior: 'auto' })
+// 滚动到底部
+const scrollToBottom = (): void => {
+  const container = scrollContainerRef.value
+  if (!container) return
+
+  // 立即清除滚动方向状态以隐藏悬浮按钮
+  isScrollingDown.value = false
+  isScrollingUp.value = false
+  // 立即清除新消息计数
+  chatStore.clearNewMsgCount()
+
+  isAutoScrolling.value = true
+  container.scrollTo({
+    top: Math.max(0, container.scrollHeight - container.clientHeight),
+    behavior: 'auto'
+  })
+
+  setTimeout(() => {
+    isAutoScrolling.value = false
+  }, 100)
+}
+
+// 滚动到指定索引位置
+const scrollToIndex = (index: number, behavior: ScrollBehavior = 'auto'): void => {
+  const container = scrollContainerRef.value
+  if (!container || index < 0) return
+
+  // 查找对应的消息元素
+  const messageElements = container.querySelectorAll('[data-message-index]')
+  const targetElement = messageElements[index] as HTMLElement
+
+  if (targetElement) {
+    isAutoScrolling.value = true
+    targetElement.scrollIntoView({ behavior, block: 'start' })
+    setTimeout(() => {
+      isAutoScrolling.value = false
+    }, 100)
+  }
 }
 
 // 更新消息索引映射
-const updateMessageIndexMap = () => {
+const updateMessageIndexMap = (): void => {
   messageIdToIndexMap.value.clear()
   chatMessageList.value.forEach((msg, index) => {
     messageIdToIndexMap.value.set(msg.message.id, index)
@@ -603,18 +717,34 @@ const updateMessageIndexMap = () => {
 }
 
 // 处理滚动事件(用于页脚显示功能)
-const handleScroll = () => {
+const handleScroll = (event: Event): void => {
   if (isAutoScrolling.value) return // 如果是自动滚动，不处理
-  const container = virtualListInst.value?.getContainer()
+  const container = event.target as HTMLElement
   if (!container) return
 
-  // 获取已滚动的距离
-  scrollTop.value = container.scrollTop
-  // 获取整个滚动容器的高度
+  const currentScrollTop = container.scrollTop
+
+  // 立即检测滚动方向
+  if (currentScrollTop > lastScrollTop.value + 2) {
+    // 添加小的阈值避免抖动
+    isScrollingDown.value = true
+    isScrollingUp.value = false
+  } else if (currentScrollTop < lastScrollTop.value - 2) {
+    isScrollingUp.value = true
+    isScrollingDown.value = false
+  }
+
+  lastScrollTop.value = currentScrollTop
+  scrollTop.value = currentScrollTop
+
+  // 防抖处理昂贵操作
+  debouncedScrollOperations(container)
+}
+
+// 将昂贵的滚动操作分离到防抖函数中
+const debouncedScrollOperations = useDebounceFn(async (container: HTMLElement) => {
   const scrollHeight = container.scrollHeight
-  // 获取容器的可视区域高度
   const clientHeight = container.clientHeight
-  // 计算距离底部的距离
   const distanceFromBottom = scrollHeight - scrollTop.value - clientHeight
 
   // 存储 requestAnimationFrame 的返回值
@@ -636,15 +766,15 @@ const handleScroll = () => {
       chatStore.clearNewMsgCount()
     }
   })
-}
+}, 16) // ~60fps throttling for better performance
 
 // 添加防抖的鼠标事件处理
-const debouncedMouseEnter = useDebounceFn((key: any) => {
+const debouncedMouseEnter = useDebounceFn((key: number) => {
   hoverBubble.value.key = key
 }, 300)
 
 // 当鼠标进入时触发的处理函数
-const handleMouseEnter = (key: any) => {
+const handleMouseEnter = (key: number): void => {
   // 清除之前的定时器
   if (hoverBubble.value.timer) {
     clearTimeout(hoverBubble.value.timer)
@@ -656,7 +786,7 @@ const handleMouseEnter = (key: any) => {
 }
 
 // 当鼠标离开时触发的处理函数
-const handleMouseLeave = () => {
+const handleMouseLeave = (): void => {
   // 如果定时器存在，则清除定时器并重置为undefined
   if (hoverBubble.value.timer) {
     clearTimeout(hoverBubble.value.timer)
@@ -672,7 +802,7 @@ watch(
   (value, oldValue) => {
     if (oldValue.roomId !== value.roomId) {
       // 切换前保存旧会话的滚动位置
-      const container = virtualListInst.value?.getContainer()
+      const container = scrollContainerRef.value
       if (container && oldValue.roomId) {
         scrollPositions.value.set(oldValue.roomId, container.scrollTop)
       }
@@ -706,6 +836,10 @@ watch(
     // 非会话切换下，展示列表跟随真实列表，确保顶部加载更多不出现置底
     if (!pendingRoomId.value) {
       displayedMessageList.value = value
+      // 更新 IntersectionObserver
+      nextTick(() => {
+        updateIntersectionObserver()
+      })
     }
     const currentRoomIdLocal = globalStore.currentSession!.roomId
 
@@ -719,6 +853,7 @@ watch(
       messageCache.value.set(currentRoomIdLocal, value)
       pendingRoomId.value = null
       nextTick(() => {
+        updateIntersectionObserver()
         scrollToBottom()
       })
     }
@@ -728,6 +863,9 @@ watch(
       displayedMessageList.value = value
       // 更新当前会话缓存
       messageCache.value.set(currentRoomIdLocal, value)
+      nextTick(() => {
+        updateIntersectionObserver()
+      })
     }
 
     // 更新消息索引映射
@@ -741,7 +879,7 @@ watch(
       if (isLoadingMore.value) {
         if (scrollTop.value < 26) {
           requestAnimationFrame(() => {
-            virtualListInst.value?.scrollTo({ index: value.length - oldValue.length })
+            scrollToIndex(value.length - oldValue.length)
           })
         }
         return
@@ -749,12 +887,14 @@ watch(
 
       // 优先级1：用户发送的消息，始终滚动到底部
       if (latestMessage?.fromUser?.uid === userUid.value) {
-        scrollToBottom()
+        nextTick(() => {
+          scrollToBottom()
+        })
         return
       }
 
       // 优先级2：已经在底部时的新消息
-      const container = virtualListInst.value?.getContainer()
+      const container = scrollContainerRef.value
       if (container) {
         const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight
         if (distanceFromBottom <= 300) {
@@ -763,7 +903,10 @@ watch(
         }
 
         // 其他情况：如果是他人的消息且不在底部，增加新消息计数
-        if (latestMessage?.fromUser?.uid !== userUid.value) {
+        const isOtherUserMessage =
+          latestMessage?.fromUser?.uid && String(latestMessage.fromUser.uid) !== String(userUid.value)
+
+        if (isOtherUserMessage) {
           const current = chatStore.newMsgCount.get(globalStore.currentSession!.roomId)
           if (!current) {
             chatStore.newMsgCount.set(globalStore.currentSession!.roomId, {
@@ -800,14 +943,8 @@ watch(
   }
 )
 
-// 处理滚动方向变化
-const handleScrollDirectionChange = (direction: 'up' | 'down') => {
-  isScrollingUp.value = direction === 'up'
-  isScrollingDown.value = direction === 'down'
-}
-
 // 取消表情反应
-const cancelReplyEmoji = async (item: any, type: number) => {
+const cancelReplyEmoji = async (item: ChatMessage, type: number): Promise<void> => {
   if (!item || !item.message || !item.message.messageMarks) return
 
   // 检查该表情是否已被当前用户标记
@@ -834,7 +971,7 @@ const cancelReplyEmoji = async (item: any, type: number) => {
  * @param emojiType 表情类型值
  * @returns 计数值
  */
-const getEmojiCount = (item: any, emojiType: number): number => {
+const getEmojiCount = (item: ChatMessage, emojiType: number): number => {
   if (!item || !item.message || !item.message.messageMarks) return 0
 
   // messageMarks 是一个对象，键是表情类型，值是包含 count 和 userMarked 的对象
@@ -843,7 +980,10 @@ const getEmojiCount = (item: any, emojiType: number): number => {
 }
 
 // 处理表情回应
-const handleEmojiSelect = async (context: { label: string; value: number; title: string }, item: any) => {
+const handleEmojiSelect = async (
+  context: { label: string; value: number; title: string },
+  item: ChatMessage
+): Promise<void> => {
   if (!item || !item.message) return
 
   if (!item.message.messageMarks) {
@@ -869,13 +1009,13 @@ const handleEmojiSelect = async (context: { label: string; value: number; title:
 }
 
 // 跳转到回复消息
-const jumpToReplyMsg = async (key: string) => {
+const jumpToReplyMsg = async (key: string): Promise<void> => {
   // 先在当前列表中尝试查找
   let messageIndex = chatMessageList.value.findIndex((msg) => msg.message.id === String(key))
 
   // 如果找到了，直接滚动到该消息
   if (messageIndex !== -1) {
-    virtualListInst.value?.scrollTo({ index: messageIndex, behavior: 'instant' })
+    scrollToIndex(messageIndex, 'instant')
     activeReply.value = String(key)
     return
   }
@@ -919,7 +1059,7 @@ const jumpToReplyMsg = async (key: string) => {
   // 如果找到了消息，滚动到该位置
   if (foundMessage) {
     nextTick(() => {
-      virtualListInst.value?.scrollTo({ index: messageIndex, behavior: 'instant' })
+      scrollToIndex(messageIndex, 'instant')
       activeReply.value = key
     })
   } else {
@@ -929,7 +1069,7 @@ const jumpToReplyMsg = async (key: string) => {
 }
 
 // 给气泡添加动画
-const addToDomUpdateQueue = (index: string, id: string) => {
+const addToDomUpdateQueue = (index: string, id: string): void => {
   // 使用 nextTick 确保虚拟列表渲染完最新的项目后进行滚动
   nextTick(() => {
     /** data-key标识的气泡,添加前缀用于区分用户消息，不然气泡动画会被覆盖 */
@@ -950,24 +1090,24 @@ const addToDomUpdateQueue = (index: string, id: string) => {
 }
 
 // 解决mac右键会选中文本的问题
-const handleMacSelect = (event: any) => {
+const handleMacSelect = (event: Event): void => {
   if (isMac()) {
-    event.target.classList.add('select-none')
-    recordEL.value = event.target
+    const target = event.target as HTMLElement
+    target.classList.add('select-none')
+    recordEL.value = target
   }
 }
 
 // 处理聊天区域点击事件，用于清除回复样式和气泡激活状态
-const handleChatAreaClick = (event: any) => {
+const handleChatAreaClick = (event: Event): void => {
+  const target = event.target as Element
+
   // 检查点击目标是否为回复相关元素
   const isReplyElement =
-    event.target.closest('.reply-bubble') ||
-    event.target.matches('.active-reply') ||
-    event.target.closest('.active-reply')
+    target.closest('.reply-bubble') || target.matches('.active-reply') || target.closest('.active-reply')
 
   // 检查点击目标是否为气泡相关元素
-  const isBubbleElement =
-    event.target.closest('.bubble') || event.target.closest('.bubble-oneself') || event.target.closest('[data-key]')
+  const isBubbleElement = target.closest('.bubble') || target.closest('.bubble-oneself') || target.closest('[data-key]')
 
   // 如果点击的不是回复相关元素，清除activeReply样式
   if (!isReplyElement && activeReply.value) {
@@ -989,22 +1129,20 @@ const handleChatAreaClick = (event: any) => {
   }
 }
 
-const handleRetry = (item: any) => {
+const handleRetry = (item: ChatMessage): void => {
   // TODO: 实现重试发送逻辑
   console.log('重试发送消息:', item)
 }
 
-// 重新加载消息
-
 // 处理加载更多
-const handleLoadMore = async () => {
+const handleLoadMore = async (): Promise<void> => {
   // 如果正在加载或已经触发了加载，则不重复触发
   if (messageOptions.value?.isLoading || isLoadingMore.value) return
 
-  const container = virtualListInst.value?.getContainer()
+  const container = scrollContainerRef.value
   if (!container) return
 
-  // 使用“锚定第一个可见项”的方式保持滚动位置
+  // 使用"锚定第一个可见项"的方式保持滚动位置
   const anchorId = visibleIds.value?.[0]
   const containerRectTop = container.getBoundingClientRect().top
   const anchorElBefore = anchorId ? document.getElementById(`item-${anchorId}`) : null
@@ -1031,17 +1169,22 @@ const handleLoadMore = async () => {
     updateMessageIndexMap()
   } catch (error) {
     console.error('加载历史消息失败:', error)
+    window.$message?.error('加载历史消息失败，请稍后重试')
   } finally {
     // 恢复滚动交互
     setTimeout(() => {
       container.classList.remove('loading-history')
       isLoadingMore.value = false
+
+      // 重置滚动方向状态，防止加载后悬浮按钮意外出现
+      isScrollingDown.value = false
+      isScrollingUp.value = false
     }, 100)
   }
 }
 
 // 获取置顶公告
-const loadTopAnnouncement = async () => {
+const loadTopAnnouncement = async (): Promise<void> => {
   if (currentRoomId.value && isGroup.value) {
     try {
       const data = await cachedStore.getGroupAnnouncementList(currentRoomId.value, 1, 1)
@@ -1053,7 +1196,7 @@ const loadTopAnnouncement = async () => {
 
         // 如果公告状态发生变化，重新滚动到底部
         if (oldAnnouncement !== topAnnouncement.value) {
-          const container = virtualListInst.value?.getContainer()
+          const container = scrollContainerRef.value
           if (container) {
             const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight
             // 仅当接近底部时保持吸底，避免远离底部时的抖动
@@ -1075,20 +1218,20 @@ const loadTopAnnouncement = async () => {
 }
 
 // 获取用户头像
-const getAvatarSrc = (uid: string) => {
+const getAvatarSrc = (uid: string): string => {
   const avatar = uid === userUid.value ? userStore.userInfo.avatar : useUserInfo(uid).value.avatar
   return AvatarUtils.getAvatarUrl(avatar as string)
 }
 
 // 处理点击查看公告
-const handleViewAnnouncement = () => {
+const handleViewAnnouncement = (): void => {
   nextTick(async () => {
     if (!currentRoomId.value) return
     await createWebviewWindow('查看群公告', `announList/${currentRoomId.value}/1`, 420, 620)
   })
 }
 
-const isSpecialMsgType = (type: number) => {
+const isSpecialMsgType = (type: number): boolean => {
   return (
     type === MsgEnum.IMAGE ||
     type === MsgEnum.EMOJI ||
@@ -1099,7 +1242,7 @@ const isSpecialMsgType = (type: number) => {
 }
 
 // 判断表情反应是否只有一行
-const isSingleLineEmojis = (item: any) => {
+const isSingleLineEmojis = (item: ChatMessage): boolean => {
   if (!item || !item.fromUser || !item.message) return false
 
   // 计算有多少个表情反应
@@ -1142,6 +1285,9 @@ const announcementClearListener = await appWindow.listen('announcementClear', ()
 
 onMounted(async () => {
   nextTick(() => {
+    // 初始化 IntersectionObserver
+    initIntersectionObserver()
+
     // 初始尽量恢复会话滚动位置，否则置底
     const current = currentRoomId.value
     if (!current || !restoreScrollPosition(current)) {
@@ -1167,11 +1313,9 @@ onMounted(async () => {
   })
   // 监听滚动到底部的事件
   useMitt.on(MittEnum.CHAT_SCROLL_BOTTOM, () => {
-    if (virtualListInst.value) {
-      nextTick(() => {
-        scrollToBottom()
-      })
-    }
+    nextTick(() => {
+      scrollToBottom()
+    })
   })
 })
 
@@ -1185,6 +1329,12 @@ onUnmounted(() => {
   }
   hoverBubble.value.key = -1
 
+  // 清理 IntersectionObserver
+  if (intersectionObserver.value) {
+    intersectionObserver.value.disconnect()
+    intersectionObserver.value = null
+  }
+
   announcementUpdatedListener()
   announcementClearListener()
 })
@@ -1192,4 +1342,79 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 @use '@/styles/scss/chat-main';
+
+.chat-main-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--footer-height));
+  overflow: hidden;
+  // 布局优化
+  contain: layout style;
+  will-change: auto;
+}
+
+// 原生滚动容器样式
+.scrollbar-container {
+  flex: 1;
+  overflow-y: auto;
+  // 滚动性能优化
+  -webkit-overflow-scrolling: touch;
+  will-change: scroll-position;
+  transform: translateZ(0);
+
+  /* 滚动条样式 */
+  &::-webkit-scrollbar {
+    width: 6px;
+    transition-property: opacity;
+    transition-duration: 0.3s;
+    transition-timing-function: ease;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(144, 144, 144, 0.3);
+    border-radius: 3px;
+    transition-property: opacity, background-color;
+    transition-duration: 0.3s;
+    transition-timing-function: ease;
+    min-height: 75px;
+    z-index: 999;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(144, 144, 144, 0.5);
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  /* 使用WebKit兼容的方式隐藏滚动条 */
+  &.hide-scrollbar {
+    /* 保持滚动功能但隐藏滚动条 */
+    &::-webkit-scrollbar {
+      background: transparent;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: transparent;
+    }
+    /* 为了保持布局稳定 */
+    margin-right: 0;
+  }
+
+  &.show-scrollbar {
+    scrollbar-gutter: auto;
+  }
+}
+
+// 加载历史消息时的样式
+.loading-history {
+  scroll-behavior: auto !important;
+  pointer-events: none;
+}
+
+// 性能优化相关样式
+.message-item {
+  contain: layout style;
+  will-change: auto;
+}
 </style>
