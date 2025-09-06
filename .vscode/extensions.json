@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "vue.volar",
+    "bradlc.vscode-tailwindcss",
+    "antfu.unocss",
+    "rust-lang.rust-analyzer",
+    "tauri-apps.tauri-vscode",
+    "1yib.rust-bundle",
+    "ms-vscode.vscode-typescript-next",
+    "biomejs.biome"
+  ]
+}
