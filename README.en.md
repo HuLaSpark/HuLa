@@ -70,7 +70,7 @@
 
   <p>
     💻 <strong>Website:</strong><a href="https://hulaspark.com">HuLaSpark</a> |
-    📝 <strong>document：</strong><a href="docs\project_guide.md">Configuration and Tutorials</a> |
+    📝 <strong>document：</strong><a href="docs/project_guide.md">Configuration and Tutorials</a> |
     ☕️ <strong>Server:</strong><a href="https://github.com/HulaSpark/HuLa-Server">GitHub</a> / <a href="https://gitee.com/HulaSpark/HuLa-Server">Gitee</a> |
     💬 <strong>WeChat:</strong><code>cy2439646234</code>
   </p>
