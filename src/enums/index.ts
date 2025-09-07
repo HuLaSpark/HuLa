@@ -690,3 +690,11 @@ export enum ImUrlEnum {
   REMOVE_GROUP_MEMBER = 'removeGroupMember',
   CHECK_EMAIL = 'checkEmail'
 }
+
+// 滚动意图管理枚举
+export enum ScrollIntentEnum {
+  NONE = 'none',
+  INITIAL = 'initial', // 初始化或切换房间
+  NEW_MESSAGE = 'new_message', // 新消息到达
+  LOAD_MORE = 'load_more' // 加载更多历史消息
+}

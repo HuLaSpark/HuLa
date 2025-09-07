@@ -409,7 +409,7 @@ import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
 import { useDebounceFn } from '@vueuse/core'
 import { delay } from 'lodash-es'
-import { MessageStatusEnum, MittEnum, MsgEnum, ThemeEnum } from '@/enums'
+import { MessageStatusEnum, MittEnum, MsgEnum, ScrollIntentEnum, ThemeEnum } from '@/enums'
 import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
 import { useChatLayoutGlobal } from '@/hooks/useChatLayout'
 import { useChatMain } from '@/hooks/useChatMain.ts'
@@ -430,8 +430,7 @@ import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { markMsg } from '@/utils/ImRequestUtils'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
 
-// TypeScript 类型定义
-interface ChatMessage {
+type ChatMessage = {
   message: {
     id: string
     type: number
@@ -461,12 +460,12 @@ interface ChatMessage {
   uploadProgress?: number
 }
 
-interface HoverBubbleState {
+type HoverBubbleState = {
   key: number
   timer?: NodeJS.Timeout
 }
 
-interface AnnouncementData {
+type AnnouncementData = {
   content: string
   top?: boolean
 }
@@ -502,8 +501,13 @@ const isAutoScrolling = ref(false)
 const isScrollingUp = ref(false)
 /** 记录是否正在向下滚动 */
 const isScrollingDown = ref(false)
+
 // 添加标记，用于识别是否正在加载历史消息
 const isLoadingMore = ref(false)
+// 滚动意图状态
+const scrollIntent = ref<ScrollIntentEnum>(ScrollIntentEnum.NONE)
+// 防止冲突的滚动锁
+const isScrollLocked = ref(false)
 
 // 计算属性
 const isGroup = computed<boolean>(() => chatStore.isGroup)
@@ -513,6 +517,23 @@ const currentNewMsgCount = computed(() => chatStore.currentNewMsgCount || null)
 const messageOptions = computed(() => {
   const options = chatStore.currentMessageOptions
   return options || null
+})
+
+// 数据和DOM就绪状态
+const isDataReady = computed(() => {
+  const hasMessages = displayedMessageList.value.length > 0
+  const isNotLoading = !messageOptions.value?.isLoading
+  const noPendingSwitch = !pendingRoomId.value
+  const hasContainer = !!scrollContainerRef.value
+
+  return hasMessages && isNotLoading && noPendingSwitch && hasContainer
+})
+
+const isDOMReady = computed(() => {
+  const container = scrollContainerRef.value
+  if (!container || !isDataReady.value) return false
+
+  return container.scrollHeight > container.clientHeight
 })
 const { createWebviewWindow } = useWindow()
 const currentRoomId = computed(() => globalStore.currentSession?.roomId ?? null)
@@ -602,6 +623,62 @@ const {
 const { handlePopoverUpdate, enableScroll } = usePopover(selectKey, 'image-chat-main')
 provide('popoverControls', { enableScroll })
 
+// 1. 监听房间切换，触发初始化滚动意图
+watch(
+  () => [currentRoomId.value, isDOMReady.value] as const,
+  ([newRoomId, domReady], [oldRoomId]) => {
+    // 只有在房间切换且DOM就绪时才触发初始化意图
+    if (newRoomId && domReady && newRoomId !== oldRoomId && !isScrollLocked.value) {
+      scrollIntent.value = ScrollIntentEnum.INITIAL
+    }
+  },
+  { flush: 'post' } // 确保DOM更新后执行
+)
+
+// 2. 监听新消息，但排除加载更多的情况
+watch(
+  displayedMessageList,
+  (newList, oldList) => {
+    if (!newList || !oldList || isScrollLocked.value) return
+
+    // 排除加载更多的情况
+    if (isLoadingMore.value || scrollIntent.value === ScrollIntentEnum.LOAD_MORE) {
+      return
+    }
+
+    // 检测到新消息
+    if (newList.length > oldList.length) {
+      const latestMessage = newList[newList.length - 1]
+
+      // 用户自己发送的消息，始终滚动到底部
+      if (latestMessage?.fromUser?.uid === userUid.value) {
+        scrollIntent.value = ScrollIntentEnum.NEW_MESSAGE
+      } else {
+        // 他人消息，只有在接近底部时才自动滚动
+        const container = scrollContainerRef.value
+        if (container) {
+          const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight
+          if (distanceFromBottom <= 300) {
+            scrollIntent.value = ScrollIntentEnum.NEW_MESSAGE
+          }
+        }
+      }
+    }
+  },
+  { flush: 'post' }
+)
+
+// 3. 执行具体的滚动操作 - 使用watchPostEffect确保DOM更新完成
+watchPostEffect(() => {
+  if (scrollIntent.value === ScrollIntentEnum.NONE || isScrollLocked.value) return
+
+  nextTick(() => {
+    handleScrollByIntent(scrollIntent.value)
+    // 重置意图状态
+    scrollIntent.value = ScrollIntentEnum.NONE
+  })
+})
+
 // 初始化 IntersectionObserver
 const initIntersectionObserver = (): void => {
   if (intersectionObserver.value) {
@@ -681,6 +758,35 @@ const restoreScrollPosition = (roomId: string | undefined | null): boolean => {
 
   nextTick(() => doScroll())
   return true
+}
+
+// 根据滚动意图执行相应操作
+const handleScrollByIntent = (intent: ScrollIntentEnum): void => {
+  const container = scrollContainerRef.value
+  if (!container) return
+
+  switch (intent) {
+    case ScrollIntentEnum.INITIAL: {
+      // 初始化滚动：优先恢复历史位置，失败则滚动到底部
+      const current = currentRoomId.value
+      if (!restoreScrollPosition(current)) {
+        scrollToBottom()
+      }
+      break
+    }
+
+    case ScrollIntentEnum.NEW_MESSAGE:
+      // 新消息滚动：直接滚动到底部
+      scrollToBottom()
+      break
+
+    case ScrollIntentEnum.LOAD_MORE:
+      // 加载更多：不执行任何滚动，由handleLoadMore管理
+      break
+
+    default:
+      break
+  }
 }
 
 // 滚动到底部
@@ -880,12 +986,14 @@ watch(
       messageCache.value.set(currentRoomIdLocal, value)
       nextTick(() => {
         updateIntersectionObserver()
+        scrollToBottom()
       })
     }
 
     // 更新消息索引映射
     updateMessageIndexMap()
 
+    // 简化消息列表监听，避免直接滚动操作
     if (value.length > oldValue.length) {
       // 获取最新消息
       const latestMessage = value[value.length - 1]
@@ -900,28 +1008,15 @@ watch(
         return
       }
 
-      // 优先级1：用户发送的消息，始终滚动到底部
-      if (latestMessage?.fromUser?.uid === userUid.value) {
-        nextTick(() => {
-          scrollToBottom()
-        })
-        return
-      }
-
-      // 优先级2：已经在底部时的新消息
+      // 新消息计数逻辑（不在底部时）
       const container = scrollContainerRef.value
       if (container) {
         const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight
-        if (distanceFromBottom <= 300) {
-          scrollToBottom()
-          return
-        }
-
-        // 其他情况：如果是他人的消息且不在底部，增加新消息计数
         const isOtherUserMessage =
           latestMessage?.fromUser?.uid && String(latestMessage.fromUser.uid) !== String(userUid.value)
 
-        if (isOtherUserMessage) {
+        // 只有当不在底部且是他人消息时才增加计数
+        if (distanceFromBottom > 300 && isOtherUserMessage) {
           const current = chatStore.newMsgCount.get(globalStore.currentSession!.roomId)
           if (!current) {
             chatStore.newMsgCount.set(globalStore.currentSession!.roomId, {
@@ -1149,13 +1244,17 @@ const handleRetry = (item: ChatMessage): void => {
   console.log('重试发送消息:', item)
 }
 
-// 处理加载更多
+// 防冲突的加载更多处理
 const handleLoadMore = async (): Promise<void> => {
   // 如果正在加载、已经触发了加载、或已到达最后一页，则不重复触发
   if (messageOptions.value?.isLoading || isLoadingMore.value || messageOptions.value?.isLast) return
 
   const container = scrollContainerRef.value
   if (!container) return
+
+  // 设置滚动锁，防止其他滚动操作干扰
+  isScrollLocked.value = true
+  scrollIntent.value = ScrollIntentEnum.LOAD_MORE
 
   // 使用"锚定第一个可见项"的方式保持滚动位置
   const anchorId = visibleIds.value?.[0]
@@ -1187,14 +1286,16 @@ const handleLoadMore = async (): Promise<void> => {
     window.$message?.error('加载历史消息失败，请稍后重试')
   } finally {
     // 恢复滚动交互
-    setTimeout(() => {
-      container.classList.remove('loading-history')
-      isLoadingMore.value = false
+    container.classList.remove('loading-history')
+    isLoadingMore.value = false
 
-      // 重置滚动方向状态，防止加载后悬浮按钮意外出现
-      isScrollingDown.value = false
-      isScrollingUp.value = false
-    }, 100)
+    // 释放滚动锁，重置意图状态
+    isScrollLocked.value = false
+    scrollIntent.value = ScrollIntentEnum.NONE
+
+    // 重置滚动方向状态，防止加载后悬浮按钮意外出现
+    isScrollingDown.value = false
+    isScrollingUp.value = false
   }
 }
 
@@ -1300,20 +1401,12 @@ const announcementClearListener = await appWindow.listen('announcementClear', ()
 
 onMounted(async () => {
   nextTick(() => {
-    // 初始化 IntersectionObserver
     initIntersectionObserver()
-
-    // 初始尽量恢复会话滚动位置，否则置底
-    const current = currentRoomId.value
-    if (!current || !restoreScrollPosition(current)) {
-      scrollToBottom()
-    }
-    // 初始化消息索引映射
     updateMessageIndexMap()
-    // 初始加载置顶公告
     loadTopAnnouncement()
     // 初始显示当前会话数据
     displayedMessageList.value = chatMessageList.value
+    const current = currentRoomId.value
     if (current) {
       messageCache.value.set(current, chatMessageList.value)
     }
@@ -1404,12 +1497,12 @@ onUnmounted(() => {
   /* 使用WebKit兼容的方式隐藏滚动条 */
   &.hide-scrollbar {
     /* 保持滚动功能但隐藏滚动条 */
-    &::-webkit-scrollbar {
-      background: transparent;
-    }
-    &::-webkit-scrollbar-thumb {
-      background: transparent;
-    }
+    // &::-webkit-scrollbar {
+    //   background: transparent;
+    // }
+    // &::-webkit-scrollbar-thumb {
+    //   background: transparent;
+    // }
     /* 为了保持布局稳定 */
     margin-right: 0;
   }
