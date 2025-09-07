@@ -50,9 +50,14 @@
         @mouseenter="showScrollbar = true"
         @mouseleave="showScrollbar = false">
         <!-- 加载中提示 -->
-        <div v-if="isLoadingMore" class="flex-center gap-6px h-42px">
+        <div v-if="isLoadingMore" class="flex-center gap-6px h-32px">
           <img class="size-16px" src="@/assets/img/loading.svg" alt="" />
-          <span class="text-(14px #909090)">加载中</span>
+          <span class="text-(12px #909090)">加载中</span>
+        </div>
+
+        <!-- 没有更多消息提示 -->
+        <div v-else-if="shouldShowNoMoreMessages" class="flex-center gap-6px h-32px">
+          <span class="text-(12px #909090)">没有更多消息</span>
         </div>
 
         <!-- 消息列表 -->
@@ -84,7 +89,7 @@
             <!-- 消息为系统消息 -->
             <SystemMessage
               v-else-if="item.message.type === MsgEnum.SYSTEM"
-              :body="item.message.body as string"
+              :body="item.message.body"
               :from-user-uid="item.fromUser.uid" />
 
             <!-- 消息为机器人消息时 -->
@@ -539,6 +544,15 @@ const cssVariables = computed(() => {
   }
 })
 
+// 是否显示"没有更多消息"提示
+const shouldShowNoMoreMessages = computed<boolean>(() => {
+  // 当到达最后一页且有消息时显示，或消息列表为空且未在加载时显示
+  return (
+    (messageOptions.value?.isLast && displayedMessageList.value.length > 0) ||
+    (displayedMessageList.value.length === 0 && !messageOptions.value?.isLoading && !isLoadingMore.value)
+  )
+})
+
 // 是否显示悬浮页脚
 const shouldShowFloatFooter = computed<boolean>(() => {
   const container = scrollContainerRef.value
@@ -627,18 +641,19 @@ const initIntersectionObserver = (): void => {
 
 // 更新 IntersectionObserver 观察的元素
 const updateIntersectionObserver = (): void => {
-  if (!intersectionObserver.value) return
+  const observer = intersectionObserver.value
+  if (!observer) return
 
   const container = scrollContainerRef.value
   if (!container) return
 
-  // Disconnect all to prevent memory leaks
-  intersectionObserver.value.disconnect()
+  // 断开所有连接以防止内存泄漏
+  observer.disconnect()
 
-  // Re-observe all current message elements
+  // 重新观察所有当前消息元素
   const messageElements = container.querySelectorAll('[data-message-id]')
   messageElements.forEach((el) => {
-    intersectionObserver.value?.observe(el)
+    observer.observe(el)
   })
 }
 
@@ -755,8 +770,8 @@ const debouncedScrollOperations = useDebounceFn(async (container: HTMLElement) =
   rafId.value = requestAnimationFrame(async () => {
     // 处理触顶加载更多
     if (scrollTop.value < 26) {
-      // 如果正在加载或已经触发了加载，则不重复触发
-      if (messageOptions.value?.isLoading || isLoadingMore.value) return
+      // 如果正在加载或已经触发了加载，或已到达最后一页，则不重复触发
+      if (messageOptions.value?.isLoading || isLoadingMore.value || messageOptions.value?.isLast) return
 
       await handleLoadMore()
     }
@@ -1136,8 +1151,8 @@ const handleRetry = (item: ChatMessage): void => {
 
 // 处理加载更多
 const handleLoadMore = async (): Promise<void> => {
-  // 如果正在加载或已经触发了加载，则不重复触发
-  if (messageOptions.value?.isLoading || isLoadingMore.value) return
+  // 如果正在加载、已经触发了加载、或已到达最后一页，则不重复触发
+  if (messageOptions.value?.isLoading || isLoadingMore.value || messageOptions.value?.isLast) return
 
   const container = scrollContainerRef.value
   if (!container) return
@@ -1145,7 +1160,7 @@ const handleLoadMore = async (): Promise<void> => {
   // 使用"锚定第一个可见项"的方式保持滚动位置
   const anchorId = visibleIds.value?.[0]
   const containerRectTop = container.getBoundingClientRect().top
-  const anchorElBefore = anchorId ? document.getElementById(`item-${anchorId}`) : null
+  const anchorElBefore = anchorId ? container.querySelector(`[data-message-id="${anchorId}"]`) : null
   const anchorTopBefore = anchorElBefore ? anchorElBefore.getBoundingClientRect().top - containerRectTop : 0
 
   isLoadingMore.value = true
@@ -1159,7 +1174,7 @@ const handleLoadMore = async (): Promise<void> => {
 
     // 恢复锚点相对位置
     if (anchorId) {
-      const anchorElAfter = document.getElementById(`item-${anchorId}`)
+      const anchorElAfter = container.querySelector(`[data-message-id="${anchorId}"]`)
       const anchorTopAfter = anchorElAfter ? anchorElAfter.getBoundingClientRect().top - containerRectTop : 0
       const delta = anchorTopAfter - anchorTopBefore
       container.scrollTop += delta
@@ -1327,13 +1342,11 @@ onUnmounted(() => {
     clearTimeout(hoverBubble.value.timer)
     hoverBubble.value.timer = void 0
   }
-  hoverBubble.value.key = -1
-
-  // 清理 IntersectionObserver
   if (intersectionObserver.value) {
     intersectionObserver.value.disconnect()
     intersectionObserver.value = null
   }
+  hoverBubble.value.key = -1
 
   announcementUpdatedListener()
   announcementClearListener()

@@ -97,7 +97,7 @@
                   :validator="validateAlphaNumeric" />
                 <Validation
                   :value="passwordForm.password"
-                  message="必须有一个特殊字符!@#¥%.&*"
+                  message="必须有一个特殊字符"
                   :validator="validateSpecialChar" />
               </n-flex>
             </n-flex>
@@ -261,7 +261,7 @@ const validateAlphaNumeric = (value: string) => {
 }
 
 /** 检查密码是否包含特殊字符 */
-const validateSpecialChar = (value: string) => /[!@#¥$%.&*]/.test(value)
+const validateSpecialChar = (value: string) => /[!@#¥$%.&*^()_+=-~]/.test(value)
 
 // 获取图片验证码
 const getCaptchaImage = async () => {

@@ -190,10 +190,7 @@
       <n-flex vertical v-if="registerInfo.password" :size="10" class="mt-8px">
         <Validation :value="registerInfo.password" message="最少6位" :validator="validateMinLength" />
         <Validation :value="registerInfo.password" message="由英文和数字构成" :validator="validateAlphaNumeric" />
-        <Validation
-          :value="registerInfo.password"
-          message="必须有一个特殊字符!@#¥%.&*"
-          :validator="validateSpecialChar" />
+        <Validation :value="registerInfo.password" message="必须有一个特殊字符" :validator="validateSpecialChar" />
       </n-flex>
 
       <!-- 协议 -->
@@ -416,7 +413,7 @@ const validateAlphaNumeric = (value: string) => {
 }
 
 /** 检查密码是否包含特殊字符 */
-const validateSpecialChar = (value: string) => /[!@#¥$%.&*]/.test(value)
+const validateSpecialChar = (value: string) => /[!@#¥$%.&*^()_+=-~]/.test(value)
 
 /** 检查密码是否满足所有条件 */
 const isPasswordValid = computed(() => {
