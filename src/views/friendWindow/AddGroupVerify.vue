@@ -83,7 +83,7 @@ onMounted(async () => {
   console.log(userInfo.value)
 
   await getCurrentWebviewWindow().show()
-  requestMsg.value = `我是${userStore.userInfo.name}`
+  requestMsg.value = `我是${userStore.userInfo!.name}`
 })
 </script>
 

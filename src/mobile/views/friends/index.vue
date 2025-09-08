@@ -102,12 +102,12 @@
                           :size="44"
                           class="grayscale"
                           :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
-                          :src="AvatarUtils.getAvatarUrl(useUserInfo(item.uid).value.avatar!)"
+                          :src="AvatarUtils.getAvatarUrl(groupStore.getUserInfo(item.uid)?.avatar!)"
                           fallback-src="/logo.png" />
 
                         <n-flex vertical justify="space-between" class="h-fit flex-1 truncate">
                           <span class="text-14px leading-tight flex-1 truncate">
-                            {{ useUserInfo(item.uid).value.name }}
+                            {{ groupStore.getUserInfo(item.uid)?.name }}
                           </span>
 
                           <div class="text leading-tight text-12px flex-y-center gap-4px flex-1 truncate">
@@ -179,7 +179,6 @@ import NavBar from '#/layout/navBar/index.vue'
 import addFriendIcon from '@/assets/mobile/chat-home/add-friend.webp'
 import groupChatIcon from '@/assets/mobile/chat-home/group-chat.webp'
 import { MittEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
-import { useUserInfo } from '@/hooks/useCached.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import router from '@/router'
 import { useChatStore } from '@/stores/chat.ts'
@@ -286,7 +285,7 @@ const handleSelect = (event: MouseEvent) => {
 
 /** 获取用户状态 */
 const getUserState = (uid: string) => {
-  const userInfo = useUserInfo(uid).value
+  const userInfo = groupStore.getUserInfo(uid)!
   const userStateId = userInfo.userStateId
 
   if (userStateId && userStateId !== '1') {

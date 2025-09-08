@@ -187,7 +187,7 @@ const recentEmojis = computed(() => {
   return historyStore.emoji.slice(0, 15)
 })
 const { insertNodeAtRange, triggerInputEvent, processFiles, imgPaste } = useCommon()
-const userStore = useUserStore()?.userInfo
+const userStore = useUserStore()
 
 // 使用全局布局状态
 const { footerHeight, setFooterHeight } = useChatLayoutGlobal()
@@ -355,7 +355,7 @@ const handleFileOpen = async () => {
     const copyUploadFile = async () => {
       console.log('复制上传文件')
       const currentChatRoomId = globalStore.currentSession!.roomId // 这个id可能为群id可能为用户uid，所以不能只用用户uid
-      const currentUserUid = userStore.uid as string
+      const currentUserUid = userStore.userInfo!.uid as string
 
       const userResourceDir = await getUserAbsoluteVideosDir(currentUserUid, currentChatRoomId)
 

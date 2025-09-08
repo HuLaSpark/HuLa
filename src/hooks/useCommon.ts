@@ -78,7 +78,7 @@ export const useCommon = () => {
   const userStore = useUserStore()
   const { handleMsgClick } = useMessage()
   /** 当前登录用户的uid */
-  const userUid = computed(() => userStore.userInfo.uid)
+  const userUid = computed(() => userStore.userInfo!.uid)
   /** 回复消息 */
   const reply = ref({
     avatar: '',
@@ -827,7 +827,7 @@ export const useCommon = () => {
     } catch (_error) {
       window.$message.error('显示会话失败')
     }
-    globalStore.updateCurrentSession(res)
+    globalStore.updateCurrentSessionRoomId(res.roomId)
 
     // 先检查会话是否已存在
     const existingSession = chatStore.getSession(res.roomId)

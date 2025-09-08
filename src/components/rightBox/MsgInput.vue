@@ -174,7 +174,6 @@ import { darkTheme, lightTheme, type VirtualListInst } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import type { Ref } from 'vue'
 import { MacOsKeyEnum, MittEnum, RoomTypeEnum, ThemeEnum, WinKeyEnum } from '@/enums'
-import { useUserInfo } from '@/hooks/useCached.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useMsgInput } from '@/hooks/useMsgInput.ts'
@@ -184,6 +183,7 @@ import { useSettingStore } from '@/stores/setting.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { isMac } from '@/utils/PlatformConstants'
 import { sendOptions } from '@/views/moreWindow/settings/config.ts'
+import { useGroupStore } from '~/src/stores/group'
 
 const appWindow = WebviewWindow.getCurrent()
 const { addListener } = useTauriListener()
@@ -202,6 +202,7 @@ const virtualListInstAit = useTemplateRef<VirtualListInst>('virtualListInst-ait'
 const virtualListInstAI = useTemplateRef<VirtualListInst>('virtualListInst-AI')
 // 录音模式状态
 const isVoiceMode = ref(false)
+const groupStore = useGroupStore()
 
 // 文件上传弹窗状态
 const showFileModal = ref(false)
@@ -413,7 +414,7 @@ onMounted(async () => {
   // TODO 应该把打开的窗口的item给存到set中，需要修改输入框和消息展示的搭配，输入框和消息展示模块应该是一体并且每个用户独立的，这样当我点击这个用户框输入消息的时候就可以暂存信息了并且可以判断每个消息框是什么类型是群聊还是单聊，不然会导致比如@框可以在单聊框中出现 (nyh -> 2024-04-09 01:03:59)
   /** 当不是独立窗口的时候也就是组件与组件之间进行通信然后监听信息对话的变化 */
   useMitt.on(MittEnum.AT, (event: any) => {
-    handleAit(useUserInfo(event).value as any)
+    handleAit(groupStore.getUserInfo(event)!)
   })
   // 监听录音模式切换事件
   useMitt.on(MittEnum.VOICE_RECORD_TOGGLE, () => {

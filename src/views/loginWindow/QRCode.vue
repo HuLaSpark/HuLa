@@ -146,7 +146,7 @@ onMounted(() => {
     userStore.isSign = true
     const { token, ...rest } = loginSuccessResType
     // FIXME 可以不需要赋值了，单独请求了接口。
-    userStore.userInfo = { ...userStore.userInfo, ...rest }
+    userStore.userInfo = { ...userStore.userInfo!, ...rest }
     localStorage.setItem('TOKEN', token)
     localStorage.removeItem('wsLogin')
     // 获取用户详情

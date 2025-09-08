@@ -230,7 +230,7 @@ export const useVoiceRecordRust = (options: VoiceRecordRustOptions = {}) => {
     }
 
     try {
-      const userUid = userStore.userInfo.uid
+      const userUid = userStore.userInfo!.uid
       if (!userUid) {
         throw new Error('用户未登录')
       }

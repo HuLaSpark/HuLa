@@ -1,6 +1,6 @@
 <template>
   <!-- 头部 -->
-  <ChatHeader :active-item="globalStore.currentSession!" />
+  <ChatHeader />
   <n-flex :class="{ 'shadow-inner': page.shadow }" :size="0" class="h-full">
     <div class="flex flex-col flex-1 relative min-h-0">
       <!-- 中间聊天框内容  -->

@@ -53,7 +53,7 @@
         </template>
 
         <div
-          v-if="useUserInfo(uid).value.wearingItemId === '6'"
+          v-if="groupStore.getUserInfo(uid)?.wearingItemId === '6'"
           class="absolute top-72px left-142px bg-[--bate-bg] border-(1px solid [--bate-color]) text-(12px [--bate-color] center) p-8px rounded-full">
           HuLa开发工程师
         </div>
@@ -68,7 +68,7 @@
                 -apple-system,
                 sans-serif;
             ">
-            {{ useUserInfo(uid).value.name }}
+            {{ groupStore.getUserInfo(uid)?.name }}
           </p>
 
           <n-popover trigger="hover" placement="top" :show-arrow="false">
@@ -83,7 +83,7 @@
         <n-flex align="center" :size="10">
           <n-flex align="center" :size="12">
             <p class="text-[--info-text-color]">账号</p>
-            <span class="text-(12px [--chat-text-color])">{{ `${useUserInfo(uid).value.account}` }}</span>
+            <span class="text-(12px [--chat-text-color])">{{ `${groupStore.getUserInfo(uid)?.account}` }}</span>
           </n-flex>
           <n-tooltip trigger="hover">
             <template #trigger>
@@ -99,13 +99,13 @@
       <!-- 地址 -->
       <n-flex align="center" :size="26" class="select-none">
         <span class="text-[--info-text-color]">所在地</span>
-        <span class="text-(13px [--chat-text-color])">{{ useUserInfo(uid).value.locPlace || '未知' }}</span>
+        <span class="text-(13px [--chat-text-color])">{{ groupStore.getUserInfo(uid)?.locPlace || '未知' }}</span>
       </n-flex>
       <!-- 获得的徽章 -->
-      <n-flex v-if="isCurrentUser.itemIds && isCurrentUser.itemIds.length > 0" :size="26" class="select-none">
+      <n-flex v-if="groupStore.getUserInfo(uid)?.itemIds" :size="26" class="select-none">
         <span class="text-[--info-text-color]">获得的徽章</span>
         <n-flex>
-          <template v-for="id in isCurrentUser.itemIds" :key="id">
+          <template v-for="id in groupStore.getUserInfo(uid)?.itemIds" :key="id">
             <n-skeleton v-if="!badgeLoadedMap[id]" text :repeat="1" :width="38" :height="38" circle />
             <n-avatar
               v-show="badgeLoadedMap[id]"
@@ -148,7 +148,7 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { MittEnum, OnlineEnum, ThemeEnum } from '@/enums/index.ts'
-import { useBadgeInfo, useUserInfo } from '@/hooks/useCached.ts'
+import { useBadgeInfo } from '@/hooks/useCached.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useMitt } from '@/hooks/useMitt'
 import { useWindow } from '@/hooks/useWindow'
@@ -158,6 +158,7 @@ import { useGlobalStore } from '@/stores/global'
 import { useSettingStore } from '@/stores/setting'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { useGroupStore } from '~/src/stores/group'
 
 const { uid, activeStatus } = defineProps<{
   uid: string
@@ -168,14 +169,14 @@ const { userUid, openMsgSession } = useCommon()
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
 const globalStore = useGlobalStore()
+const groupStore = useGroupStore()
 const { openContent } = leftHook()
 const contactStore = useContactStore()
 const userStatusStore = useUserStatusStore()
 const { stateList } = storeToRefs(userStatusStore)
-const isCurrentUser = computed(() => useUserInfo(uid).value)
 /** 头像加载状态 */
 const badgeLoadedMap = ref<Record<string, boolean>>({})
-const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(useUserInfo(uid).value.avatar as string))
+const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(groupStore.getUserInfo(uid)?.avatar as string))
 /** 是否是当前登录的用户 */
 const isCurrentUserUid = computed(() => userUid.value === uid)
 /** 是否是我的好友 */
@@ -183,7 +184,7 @@ const isMyFriend = computed(() => !!contactStore.contactsList.find((item) => ite
 
 // 计算当前用户状态图标
 const statusIcon = computed(() => {
-  const userInfo = useUserInfo(uid).value
+  const userInfo = groupStore.getUserInfo(uid)!
   const userStateId = userInfo.userStateId
 
   // 如果在线且有特殊状态
@@ -198,7 +199,7 @@ const statusIcon = computed(() => {
 
 // 计算当前状态的标题
 const currentStateTitle = computed(() => {
-  const userInfo = useUserInfo(uid).value
+  const userInfo = groupStore.getUserInfo(uid)!
   const userStateId = userInfo.userStateId
 
   if (userStateId && userStateId !== '1') {
@@ -216,7 +217,7 @@ const openEditInfo = () => {
 
 // 处理复制账号
 const handleCopy = () => {
-  const account = useUserInfo(uid).value.account
+  const account = groupStore.getUserInfo(uid)?.account
   if (account) {
     navigator.clipboard.writeText(account)
     window.$message.success(`复制成功 ${account}`)

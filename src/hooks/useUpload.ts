@@ -141,7 +141,7 @@ export const useUpload = () => {
       const fileHash = await calculateFileHash(fileObj)
       const fileSuffix = fileName.split('.').pop() || ''
       // 获取当前登录用户的account
-      const account = userStore.userInfo.account
+      const account = userStore.userInfo!.account
       key = `${options.scene}/${account}/${fileHash}.${fileSuffix}`
       console.log('使用文件去重模式，文件哈希:', fileHash)
     } else {

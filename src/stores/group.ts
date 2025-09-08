@@ -57,6 +57,28 @@ export const useGroupStore = defineStore(
       groupDetails.value = data
     }
 
+    const addGroupDetail = async (roomId: string) => {
+      if (groupDetails.value.find((item) => item.roomId === roomId)) {
+        return
+      }
+      const data = await ImRequestUtils.getGroupDetail(roomId)
+      groupDetails.value.push(data)
+    }
+
+    const getUserInfo = (uid: string) => {
+      return allUserInfo.value.find((item) => item.uid === uid)
+    }
+
+    const allUserInfo = computed(() => {
+      const set = new Set<UserItem>()
+      Object.values(userListMap)
+        .flat()
+        .forEach((user) => {
+          set.add(user)
+        })
+      return Array.from(set)
+    })
+
     const updateGroupDetail = async (roomId: string, detail: Partial<GroupDetailReq>) => {
       let targetGroup = groupDetails.value.find((item) => item.roomId === roomId)!
       targetGroup = {
@@ -96,7 +118,7 @@ export const useGroupStore = defineStore(
     })
 
     const getCurrentUser = (): UserItem => {
-      return userList.value.find((member: UserItem) => member.uid === userStore.userInfo.uid)!
+      return userList.value.find((member: UserItem) => member.uid === userStore.userInfo!.uid)!
     }
 
     const removeGroupDetail = (roomId: string) => {
@@ -132,11 +154,10 @@ export const useGroupStore = defineStore(
       return groupDetails.value.find((item: GroupDetailReq) => item.roomId === globalStore.currentSession!.roomId)
     })
 
-    const updateGroupTotalNum = (roomId: string, totalNum: number) => {
+    const updateGroupNumber = (roomId: string, totalNum: number, onlineNum: number) => {
       const group = groupDetails.value.find((item) => item.roomId === roomId)
-      if (group) {
-        group.memberNum = totalNum
-      }
+      group!.memberNum = totalNum
+      group!.onlineNum = onlineNum
     }
 
     /**
@@ -167,13 +188,13 @@ export const useGroupStore = defineStore(
       userListOptions.loading = false
 
       // 收集并获取用户详细信息
-      const uidCollectYet: Set<string> = new Set()
-      for (const user of data.list || []) {
-        uidCollectYet.add(user.uid)
-      }
-      const { useCachedStore } = await import('./cached')
-      const cachedStore = useCachedStore()
-      await cachedStore.getBatchUserInfo([...uidCollectYet])
+      // const uidCollectYet: Set<string> = new Set()
+      // for (const user of data.list || []) {
+      //   uidCollectYet.add(user.uid)
+      // }
+      // const { useCachedStore } = await import('./cached')
+      // const cachedStore = useCachedStore()
+      // await cachedStore.getBatchUserInfo([...uidCollectYet])
     }
 
     /**
@@ -384,7 +405,7 @@ export const useGroupStore = defineStore(
       await ImRequestUtils.exitGroup({ roomId: roomId })
       // 从成员列表中移除自己
       const currentUserList = userListMap[roomId] || []
-      const updatedList = currentUserList.filter((user: UserItem) => user.uid !== userStore.userInfo.uid)
+      const updatedList = currentUserList.filter((user: UserItem) => user.uid !== userStore.userInfo!.uid)
       userListMap[roomId] = updatedList
       // 更新会话列表
       chatStore.removeSession(globalStore.currentSession!.roomId)
@@ -458,8 +479,11 @@ export const useGroupStore = defineStore(
       setGroupDetails,
       updateGroupDetail,
       groupDetails,
-      updateGroupTotalNum,
-      removeGroupDetail
+      updateGroupNumber,
+      removeGroupDetail,
+      addGroupDetail,
+      getUserInfo,
+      allUserInfo
     }
   },
   {

@@ -49,13 +49,13 @@
                       :size="44"
                       class="grayscale"
                       :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
-                      :src="AvatarUtils.getAvatarUrl(useUserInfo(item.uid).value.avatar!)"
+                      :src="AvatarUtils.getAvatarUrl(groupStore.getUserInfo(item.uid)!.avatar!)"
                       :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
                       :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'" />
 
                     <n-flex vertical justify="space-between" class="h-fit flex-1 truncate">
                       <span class="text-14px leading-tight flex-1 truncate">
-                        {{ useUserInfo(item.uid).value.name }}
+                        {{ groupStore.getUserInfo(item.uid)!.name }}
                       </span>
 
                       <div class="text leading-tight text-12px flex-y-center gap-4px flex-1 truncate">
@@ -115,7 +115,6 @@
 import { storeToRefs } from 'pinia'
 import { useRoute } from 'vue-router'
 import { MittEnum, OnlineEnum, RoomTypeEnum, ThemeEnum } from '@/enums'
-import { useUserInfo } from '@/hooks/useCached.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import type { DetailsContent } from '@/services/types'
 import { useContactStore } from '@/stores/contacts.ts'
@@ -225,8 +224,8 @@ const fetchContactData = async () => {
 
 /** 获取用户状态 */
 const getUserState = (uid: string) => {
-  const userInfo = useUserInfo(uid).value
-  const userStateId = userInfo.userStateId
+  const userInfo = groupStore.getUserInfo(uid)
+  const userStateId = userInfo?.userStateId
 
   if (userStateId && userStateId !== '1') {
     return stateList.value.find((state: { id: string }) => state.id === userStateId)

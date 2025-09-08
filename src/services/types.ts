@@ -200,6 +200,9 @@ export type UserItem = {
   account: string
   /** 我的群昵称 */
   myName?: string
+  wearingItemId?: string
+  itemIds?: string[]
+  userStateId?: string
 }
 
 export type GroupStatisticType = {

@@ -7,7 +7,7 @@ import { useTauriListener } from '@/hooks/useTauriListener'
 import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
 import type { BadgeType, UserInfoType } from '@/services/types.ts'
-import { useCachedStore } from '@/stores/cached.ts'
+import { useGroupStore } from '@/stores/group'
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import { useMenuTopStore } from '@/stores/menuTop.ts'
 import { useSettingStore } from '@/stores/setting.ts'
@@ -24,13 +24,13 @@ export const leftHook = () => {
   const { menuTop } = useMenuTopStore()
   const loginHistoriesStore = useLoginHistoriesStore()
   const userStore = useUserStore()
-  const cachedStore = useCachedStore()
   const { themes } = settingStore
   const userStatusStore = useUserStatusStore()
   const { currentState } = storeToRefs(userStatusStore)
   const activeUrl = ref<string>(menuTop[0].url)
   const settingShow = ref(false)
   const shrinkStatus = ref(false)
+  const groupStore = useGroupStore()
   /** 是否展示个人信息浮窗 */
   const infoShow = ref(false)
   /** 是否显示上半部分操作栏中的提示 */
@@ -72,7 +72,7 @@ export const leftHook = () => {
 
   /** 更新缓存里面的用户信息 */
   const updateCurrentUserCache = (key: 'name' | 'wearingItemId' | 'avatar', value: any) => {
-    const currentUser = userStore.userInfo.uid && cachedStore.userCachedList[userStore.userInfo.uid]
+    const currentUser = userStore.userInfo!.uid && groupStore.getUserInfo(userStore.userInfo!.uid)
     if (currentUser) {
       currentUser[key] = value // 更新缓存里面的用户信息
     }
@@ -90,7 +90,7 @@ export const leftHook = () => {
     }
     modifyUserName({ name: localUserInfo.name }).then(() => {
       // 更新本地缓存的用户信息
-      userStore.userInfo.name = localUserInfo.name!
+      userStore.userInfo!.name = localUserInfo.name!
       loginHistoriesStore.updateLoginHistory(<UserInfoType>userStore.userInfo) // 更新登录历史记录
       updateCurrentUserCache('name', localUserInfo.name) // 更新缓存里面的用户信息
       if (!editInfo.value.content.modifyNameChance) return
@@ -105,12 +105,12 @@ export const leftHook = () => {
     try {
       await setUserBadge({ badgeId: badge.id })
       // 更新本地缓存中的用户徽章信息
-      const currentUser = userStore.userInfo.uid && cachedStore.userCachedList[userStore.userInfo.uid]
+      const currentUser = userStore.userInfo!.uid && groupStore.getUserInfo(userStore.userInfo!.uid)
       if (currentUser) {
         // 更新当前佩戴的徽章ID
         currentUser.wearingItemId = badge.id
         // 更新用户信息中的佩戴徽章ID
-        userStore.userInfo.wearingItemId = badge.id
+        userStore.userInfo!.wearingItemId = badge.id
         // 更新徽章列表中的佩戴状态
         editInfo.value.badgeList = editInfo.value.badgeList.map((item) => ({
           ...item,

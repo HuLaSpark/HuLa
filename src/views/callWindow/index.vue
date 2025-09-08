@@ -229,12 +229,12 @@ import { info } from '@tauri-apps/plugin-log'
 import { useRoute } from 'vue-router'
 import type ActionBar from '@/components/windows/ActionBar.vue'
 import { CallTypeEnum, RTCCallStatus, ThemeEnum } from '@/enums'
-import { useUserInfo } from '@/hooks/useCached'
 import { useWebRtc } from '@/hooks/useWebRtc'
 import { useSettingStore } from '@/stores/setting'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
+import { useGroupStore } from '~/src/stores/group'
 import { CallResponseStatus } from '../../services/wsType'
 
 const settingStore = useSettingStore()
@@ -266,8 +266,9 @@ const isMuted = ref(false)
 const isSpeakerOn = ref(true)
 // 视频通话时默认开启视频，语音通话时默认关闭
 const isVideoOn = ref(callType === CallTypeEnum.VIDEO)
+const groupStore = useGroupStore()
 // 获取远程用户信息
-const remoteUserInfo = useUserInfo(remoteUserId)
+const remoteUserInfo = groupStore.getUserInfo(remoteUserId)!
 // 视频元素引用
 const mainVideoRef = ref<HTMLVideoElement>()
 const pipVideoRef = ref<HTMLVideoElement>()
@@ -283,7 +284,7 @@ const createSize = (width: number, height: number) => {
   return size
 }
 
-const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(remoteUserInfo.value?.avatar as string))
+const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(remoteUserInfo.avatar as string))
 
 const callStatusText = computed(() => {
   switch (connectionStatus.value) {

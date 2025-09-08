@@ -114,7 +114,6 @@
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import SysNTF from '@/components/common/SystemNotification.tsx'
 import { MittEnum, RoomTypeEnum, ThemeEnum } from '@/enums'
-import { useUserInfo } from '@/hooks/useCached.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useMessage } from '@/hooks/useMessage.ts'
 import { useMitt } from '@/hooks/useMitt'
@@ -148,7 +147,7 @@ const sessionList = computed(() => {
         // 获取最新的头像
         let latestAvatar = item.avatar
         if (item.type === RoomTypeEnum.SINGLE && item.id) {
-          latestAvatar = useUserInfo(item.id).value.avatar || item.avatar
+          latestAvatar = groupStore.getUserInfo(item.id)?.avatar || item.avatar
         }
 
         // 获取群聊备注名称（如果有）

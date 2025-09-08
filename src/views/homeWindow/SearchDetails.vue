@@ -114,18 +114,10 @@ const handleSearch = (value: string) => {
     searchResults.value = []
     return
   }
-  // 从chatStore获取会话列表并根据关键字进行过滤
-  const sessionList = chatStore.sessionList
   // 根据名称和最后一条消息内容进行搜索匹配
-  searchResults.value = sessionList.filter((session) => {
+  searchResults.value = chatStore.sessionList.filter((session) => {
     // 在名称中搜索
     const nameMatch = session.name.toLowerCase().includes(value.toLowerCase())
-    // 在最后一条消息中搜索
-    // const lastMsgMatch = session.lastMsg && session.lastMsg.toLowerCase().includes(value.toLowerCase())
-
-    // 返回名称或最后一条消息匹配的结果
-    // return nameMatch || lastMsgMatch
-
     return nameMatch
   })
   // 如果有搜索关键词，这里可以保存到关键词历史记录（当前实现还不保存搜索关键词）

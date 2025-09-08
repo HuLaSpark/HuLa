@@ -179,7 +179,6 @@ import { useDebounceFn } from '@vueuse/core'
 import type { InputInst } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { MittEnum, OnlineEnum, RoleEnum, RoomTypeEnum, ThemeEnum } from '@/enums'
-import { useUserInfo } from '@/hooks/useCached.ts'
 import { useChatMain } from '@/hooks/useChatMain.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { usePopover } from '@/hooks/usePopover.ts'
@@ -234,7 +233,7 @@ const hasBadge6 = computed(() => {
   // 只有当 roomId 为 "1" 时才进行徽章判断（频道）
   if (globalStore.currentSession?.roomId !== '1') return false
 
-  const currentUser = useUserInfo(userStore.userInfo?.uid).value
+  const currentUser = groupStore.getUserInfo(userStore.userInfo!.uid!)!
   return currentUser?.itemIds?.includes('6')
 })
 
@@ -472,7 +471,6 @@ onMounted(async () => {
     if (currentRoom) {
       memberCache.value.set(currentRoom, displayedUserList.value)
     }
-    await cachedStore.getBatchUserInfo(groupStore.userList.map((item) => item.uid))
     const handleAnnounInitOnEvent = (shouldReload: boolean) => {
       return async (event: any) => {
         if (shouldReload || event) {

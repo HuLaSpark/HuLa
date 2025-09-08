@@ -151,7 +151,6 @@ import { RoomTypeEnum } from '@/enums/index.ts'
 import { useBadgeInfo } from '@/hooks/useCached.ts'
 import { useWindow } from '@/hooks/useWindow'
 import type { ContactItem, GroupDetailReq } from '@/services/types'
-import { useCachedStore } from '@/stores/cached'
 import { useContactStore } from '@/stores/contacts'
 import { useGlobalStore } from '@/stores/global'
 import { useGroupStore } from '@/stores/group'
@@ -161,7 +160,6 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { searchFriend, searchGroup } from '@/utils/ImRequestUtils'
 
 const { createWebviewWindow } = useWindow()
-const cachedStore = useCachedStore()
 const contactStore = useContactStore()
 const userStore = useUserStore()
 const globalStore = useGlobalStore()
@@ -196,7 +194,7 @@ const initialLoading = ref(true)
 // 从缓存存储中获取用户数据
 const getCachedUsers = () => {
   // 从缓存中获取所有用户
-  const users = Object.values(cachedStore.userCachedList)
+  const users = groupStore.allUserInfo
   console.log(users)
 
   // 筛选出需要显示的用户（ID在20016-20030之间的用户）
@@ -346,7 +344,7 @@ const isFriend = (uid: string) => {
 
 // 判断是否是当前登录用户
 const isCurrentUser = (uid: string) => {
-  return userStore.userInfo.uid === uid
+  return userStore.userInfo!.uid === uid
 }
 
 // 获取按钮文本

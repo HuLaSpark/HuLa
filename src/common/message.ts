@@ -12,5 +12,6 @@ export const MSG_REPLY_TEXT_MAP: Record<number, string> = {
   [MsgEnum.MERGE]: '[合并消息]',
   [MsgEnum.NOTICE]: '[公告]',
   [MsgEnum.VIDEO_CALL]: '[视频通话]',
-  [MsgEnum.AUDIO_CALL]: '[语音通话]'
+  [MsgEnum.AUDIO_CALL]: '[语音通话]',
+  [MsgEnum.BOT]: '[小管家]'
 }

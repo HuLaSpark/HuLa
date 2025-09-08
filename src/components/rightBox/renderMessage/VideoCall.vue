@@ -25,6 +25,6 @@ const userStore = useUserStore()
 
 // 判断是否是当前用户发送的消息
 const isCurrentUser = computed(() => {
-  return userStore.userInfo.uid === props.fromUserUid
+  return userStore.userInfo!.uid === props.fromUserUid
 })
 </script>

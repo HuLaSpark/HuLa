@@ -4,7 +4,6 @@ import { useDebounceFn } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import type { Ref } from 'vue'
 import { LimitEnum, MessageStatusEnum, MittEnum, MsgEnum, TauriCommand, UploadSceneEnum } from '@/enums'
-import { useUserInfo } from '@/hooks/useCached.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import type { AIModel } from '@/services/types.ts'
 import type { BaseUserItem } from '@/stores/cached.ts'
@@ -763,8 +762,9 @@ export const useMsgInput = (messageInputDom: Ref) => {
       if (!messageInputDom.value) return
 
       try {
-        const accountName = useUserInfo(event.fromUser.uid).value.name!
-        const avatar = useUserInfo(event.fromUser.uid).value.avatar!
+        const userInfo = groupStore.getUserInfo(event.fromUser.uid)!
+        const accountName = userInfo.name
+        const avatar = userInfo.avatar
 
         // 步骤1: 确保输入框先获得焦点
         focusOn(messageInputDom.value)
@@ -1248,7 +1248,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       }
 
       // 创建临时消息对象
-      const userInfo = useUserInfo(userUid.value)?.value
+      const userInfo = groupStore.getUserInfo(userUid.value)
       const tempMsg = {
         fromUser: {
           uid: String(userUid.value || 0),

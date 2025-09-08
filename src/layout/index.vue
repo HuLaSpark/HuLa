@@ -41,7 +41,6 @@ import {
   WsResponseMessageType,
   type WsTokenExpire
 } from '@/services/wsType.ts'
-import { useCachedStore } from '@/stores/cached'
 import { useChatStore } from '@/stores/chat'
 import { useConfigStore } from '@/stores/config'
 import { useContactStore } from '@/stores/contacts.ts'
@@ -78,13 +77,14 @@ const AsyncCenter = defineAsyncComponent({
     // 加载所有会话
     await chatStore.getSessionList(true)
     // 设置全局会话为第一个
-    globalStore.currentSession = chatStore.sessionList[0]
+    globalStore.currentSessionRoomId = chatStore.sessionList[0].roomId
 
     // 加载所有群的成员数据
     const groupSessions = chatStore.getGroupSessions()
     await Promise.all([
       ...groupSessions.map((session) => groupStore.getGroupUserList(session.roomId, true)),
-      groupStore.setGroupDetails()
+      groupStore.setGroupDetails(),
+      chatStore.setAllSessionMsgList(1)
     ])
 
     loadingPercentage.value = 66
@@ -116,10 +116,9 @@ const contactStore = useContactStore()
 const groupStore = useGroupStore()
 const userStore = useUserStore()
 const chatStore = useChatStore()
-const cachedStore = useCachedStore()
 const configStore = useConfigStore()
 const { checkUpdate, CHECK_UPDATE_TIME } = useCheckUpdate()
-const userUid = computed(() => userStore.userInfo.uid)
+const userUid = computed(() => userStore.userInfo!.uid)
 const shrinkStatus = ref(false)
 
 // 播放消息音效
@@ -200,13 +199,13 @@ useMitt.on(WsResponseMessageType.ROOM_DISSOLUTION, async (roomId: string) => {
   groupStore.removeGroupDetail(roomId)
   // 如果当前会话为解散的群聊，切换到第一个会话
   if (globalStore.currentSession?.roomId === roomId) {
-    globalStore.currentSession = chatStore.sessionList[0]
+    globalStore.currentSessionRoomId = chatStore.sessionList[0].roomId
   }
 })
 
 useMitt.on(WsResponseMessageType.USER_STATE_CHANGE, async (data: { uid: string; userStateId: string }) => {
   console.log('收到用户状态改变', data)
-  await cachedStore.updateUserState(data)
+  // await cachedStore.updateUserState(data)
 })
 useMitt.on(WsResponseMessageType.OFFLINE, async () => {
   console.log('收到用户下线通知')
@@ -222,7 +221,7 @@ useMitt.on(WsResponseMessageType.ONLINE, async (onStatusChangeType: OnStatusChan
   }
 })
 useMitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExpire) => {
-  if (Number(userUid.value) === Number(wsTokenExpire.uid) && userStore.userInfo.client === wsTokenExpire.client) {
+  if (Number(userUid.value) === Number(wsTokenExpire.uid) && userStore.userInfo!.client === wsTokenExpire.client) {
     console.log('收到用户token过期通知', wsTokenExpire)
     // 聚焦主窗口
     const home = await WebviewWindow.getByLabel('home')
@@ -332,7 +331,13 @@ useMitt.on(
 )
 useMitt.on(
   WsResponseMessageType.WS_MEMBER_CHANGE,
-  async (param: { roomId: string; changeType: ChangeTypeEnum; userList: UserItem[]; totalNum: number }) => {
+  async (param: {
+    roomId: string
+    changeType: ChangeTypeEnum
+    userList: UserItem[]
+    totalNum: number
+    onlineNum: number
+  }) => {
     info('监听到群成员变更消息')
     const isRemoveAction = param.changeType === ChangeTypeEnum.REMOVE || param.changeType === ChangeTypeEnum.EXIT_GROUP
     if (isRemoveAction) {
@@ -341,8 +346,9 @@ useMitt.on(
       await handleMemberAdd(param.userList, param.roomId)
     }
 
+    groupStore.addGroupDetail(param.roomId)
     // 更新群内的总人数
-    groupStore.updateGroupTotalNum(param.roomId, param.totalNum)
+    groupStore.updateGroupNumber(param.roomId, param.totalNum, param.onlineNum)
   }
 )
 
@@ -382,7 +388,7 @@ const handleMemberRemove = async (userList: UserItem[], roomId: string) => {
 
 // 检查是否为当前用户
 const isSelfUser = (uid: string): boolean => {
-  return uid === userStore.userInfo.uid
+  return uid === userStore.userInfo!.uid
 }
 
 // 处理自己被移除
@@ -395,7 +401,7 @@ const handleSelfRemove = async (roomId: string) => {
 
   // 如果当前会话就是被移除的群聊，切换到其他会话
   if (globalStore.currentSession?.roomId === roomId) {
-    globalStore.updateCurrentSession(chatStore.sessionList[0])
+    globalStore.updateCurrentSessionRoomId(chatStore.sessionList[0].roomId)
   }
 }
 

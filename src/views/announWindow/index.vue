@@ -81,7 +81,9 @@
                       :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
                       :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'" />
                     <n-flex vertical :size="4">
-                      <div class="text-(12px [--chat-text-color])">{{ useUserInfo(announcement.uid).value.name }}</div>
+                      <div class="text-(12px [--chat-text-color])">
+                        {{ groupStore.getUserInfo(announcement.uid)?.name }}
+                      </div>
                       <div class="text-(12px [#909090])">{{ formatTimestamp(announcement?.createTime) }}</div>
                     </n-flex>
                   </n-flex>
@@ -171,7 +173,6 @@ import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
 import { useRoute } from 'vue-router'
 import { ThemeEnum } from '@/enums'
-import { useUserInfo } from '@/hooks/useCached.ts'
 import { useCachedStore } from '@/stores/cached'
 import { useGroupStore } from '@/stores/group.ts'
 import { useSettingStore } from '@/stores/setting'
@@ -210,7 +211,7 @@ const hasBadge6 = computed(() => {
   // 只有当 roomId 为 "1" 时才进行徽章判断（频道）
   if (roomId.value !== '1') return false
 
-  const currentUser = useUserInfo(userStore.userInfo?.uid).value
+  const currentUser = groupStore.getUserInfo(userStore.userInfo!.uid)!
   return currentUser?.itemIds?.includes('6')
 })
 const isAdmin = computed(() => {
@@ -233,7 +234,7 @@ watch(
   }
 )
 
-const avatarSrc = (uid: string) => AvatarUtils.getAvatarUrl(useUserInfo(uid).value.avatar as string)
+const avatarSrc = (uid: string) => AvatarUtils.getAvatarUrl(groupStore.getUserInfo(uid)!.avatar as string)
 
 // 初始化函数，获取群公告列表
 const handleInit = async () => {

@@ -50,24 +50,25 @@
 </template>
 <script setup lang="ts">
 import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { useUserInfo } from '@/hooks/useCached.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { sendAddFriendRequest } from '@/utils/ImRequestUtils'
+import { useGroupStore } from '~/src/stores/group'
 
 const globalStore = useGlobalStore()
 const userStore = useUserStore()
+const groupStore = useGroupStore()
 const { countGraphemes } = useCommon()
-const userInfo = ref(useUserInfo(globalStore.addFriendModalInfo.uid).value)
-const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(userInfo.value.avatar as string))
+const userInfo = ref(groupStore.getUserInfo(globalStore.addFriendModalInfo.uid!)!)
+const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(userInfo.value!.avatar as string))
 const requestMsg = ref()
 
 watch(
   () => globalStore.addFriendModalInfo.uid,
   (newUid) => {
-    userInfo.value = useUserInfo(newUid).value
+    userInfo.value = groupStore.getUserInfo(newUid!)!
   }
 )
 
@@ -86,7 +87,7 @@ onMounted(async () => {
   console.log(userInfo.value)
 
   await getCurrentWebviewWindow().show()
-  requestMsg.value = `我是${userStore.userInfo.name}`
+  requestMsg.value = `我是${userStore.userInfo!.name}`
 })
 </script>
 

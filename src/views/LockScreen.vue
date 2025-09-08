@@ -51,8 +51,8 @@
             round
             style="border: 2px solid #f1f1f1"
             :size="120"
-            :src="AvatarUtils.getAvatarUrl(userStore.userInfo.avatar!)" />
-          <p class="text-(24px #f1f1f1) font-500">{{ userStore.userInfo.name }}</p>
+            :src="AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar!)" />
+          <p class="text-(24px #f1f1f1) font-500">{{ userStore.userInfo!.name }}</p>
 
           <!-- 密码输入框 -->
           <n-config-provider :theme="lightTheme">

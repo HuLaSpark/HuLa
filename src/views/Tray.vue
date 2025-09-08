@@ -74,11 +74,6 @@ const { tipVisible, isTrayMenuShow } = storeToRefs(globalStore)
 const isFocused = ref(false)
 // 状态栏图标是否显示
 const iconVisible = ref(false)
-// 创建Timer Worker实例
-let timerWorker: Worker | null = null
-// Worker健康检测
-let workerHealthTimer: NodeJS.Timeout | null = null
-let lastWorkerResponse = Date.now()
 
 const division = () => {
   return <div class={'h-1px bg-[--line-color] w-full'}></div>
@@ -98,7 +93,7 @@ const toggleStatus = async (item: UserState) => {
     await changeUserState({ id: item.id })
 
     stateId.value = item.id
-    userStore.userInfo.userStateId = item.id
+    userStore.userInfo!.userStateId = item.id
     appWindow.hide()
   } catch (error) {
     console.error('更新状态失败:', error)
@@ -106,137 +101,45 @@ const toggleStatus = async (item: UserState) => {
   }
 }
 
-// 初始化Timer Worker
-const initWorker = () => {
-  if (!timerWorker) {
-    timerWorker = new Worker(new URL('../workers/timer.worker.ts', import.meta.url))
+let blinkTask: NodeJS.Timeout | null = null
 
-    // 监听Worker消息
-    timerWorker.onmessage = async (e) => {
-      const { type, msgId } = e.data
-
-      // 处理定时器超时消息
-      if (type === 'timeout' && msgId === 'trayIconBlink') {
-        // 更新最后响应时间
-        lastWorkerResponse = Date.now()
-
-        // 定时器触发时，切换图标状态
-        const tray = await TrayIcon.getById('tray')
-        tray?.setIcon(iconVisible.value ? null : 'tray/icon.png')
-        iconVisible.value = !iconVisible.value
-
-        // 如果仍需闪烁，重新启动定时器
-        if (tipVisible.value && !isFocused.value) {
-          startBlinkTimer()
-        }
-      }
-    }
-
-    // 添加错误处理和重新初始化机制
-    timerWorker.onerror = (error) => {
-      console.error('[Tray Worker Error]', error)
-      // Worker出错时重新初始化
-      setTimeout(() => {
-        terminateWorker()
-        if (tipVisible.value && !isFocused.value) {
-          initWorker()
-          startBlinkTimer()
-        }
-      }, 1000)
-    }
-  }
-}
-
-// 启动图标闪烁定时器
-const startBlinkTimer = () => {
-  if (!timerWorker) {
-    initWorker()
-  }
-
-  // 确保timerWorker已初始化
-  if (timerWorker) {
-    // 重置健康检测时间
-    lastWorkerResponse = Date.now()
-
-    // 启动Worker健康检测
-    if (!workerHealthTimer) {
-      workerHealthTimer = setInterval(() => {
-        const timeSinceLastResponse = Date.now() - lastWorkerResponse
-        // 如果超过3秒没有响应，认为Worker可能已经停止工作
-        if (timeSinceLastResponse > 3000 && tipVisible.value && !isFocused.value) {
-          console.warn('[Tray] Worker可能已停止工作，重新初始化')
-          terminateWorker()
-          initWorker()
-          startBlinkTimer()
-        }
-      }, 2000)
-    }
-
-    // 启动新的定时器，500ms间隔
-    timerWorker.postMessage({
-      type: 'startTimer',
-      msgId: 'trayIconBlink',
-      duration: 500 // 闪烁间隔时间
-    })
-  }
-}
-
-// 停止图标闪烁定时器
-const stopBlinkTimer = async () => {
-  if (timerWorker) {
-    timerWorker.postMessage({
-      type: 'clearTimer',
-      msgId: 'trayIconBlink'
-    })
-  }
-
-  // 清理健康检测定时器
-  if (workerHealthTimer) {
-    clearInterval(workerHealthTimer)
-    workerHealthTimer = null
-  }
-
-  // 恢复托盘图标为默认状态，防止图标消失
-  try {
+const startBlinkTask = () => {
+  blinkTask = setInterval(async () => {
+    // 定时器触发时，切换图标状态
     const tray = await TrayIcon.getById('tray')
-    await tray?.setIcon('tray/icon.png')
-  } catch (e) {
-    console.warn('[Tray] 恢复托盘图标失败:', e)
-  }
-  iconVisible.value = false
+    tray?.setIcon(iconVisible.value ? 'tray/icon.png' : null)
+    iconVisible.value = !iconVisible.value
+  }, 500)
 }
 
-// 终止Worker
-const terminateWorker = () => {
-  if (timerWorker) {
-    stopBlinkTimer()
-    timerWorker.terminate()
-    timerWorker = null
-  }
+const stopBlinkTask = async () => {
+  if (blinkTask) {
+    clearInterval(blinkTask)
+    blinkTask = null
 
-  // 清理健康检测定时器
-  if (workerHealthTimer) {
-    clearInterval(workerHealthTimer)
-    workerHealthTimer = null
+    // 恢复托盘图标为默认状态，防止图标消失
+    try {
+      const tray = await TrayIcon.getById('tray')
+      await tray?.setIcon('tray/icon.png')
+    } catch (e) {
+      console.warn('[Tray] 恢复托盘图标失败:', e)
+    }
+    iconVisible.value = false
   }
 }
 
 watchEffect(async () => {
   if (isWindows()) {
     if (tipVisible.value && !isFocused.value) {
-      startBlinkTimer() // 启动图标闪烁
+      startBlinkTask()
     } else {
-      stopBlinkTimer() // 停止图标闪烁
+      stopBlinkTask() // 停止图标闪烁
     }
   }
 })
 
 onBeforeMount(() => {
   globalStore.setTipVisible(false)
-})
-
-onUnmounted(async () => {
-  terminateWorker() // 清理Worker资源
 })
 </script>
 
