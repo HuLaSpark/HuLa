@@ -10,7 +10,6 @@ import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { useUserStore } from '@/stores/user.ts'
-import { computedTimeBlock } from '@/utils/ComputedTime.ts'
 import { getSessionDetail } from '@/utils/ImRequestUtils'
 import { isMac } from '@/utils/PlatformConstants'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
@@ -159,7 +158,7 @@ export const useChatStore = defineStore(
 
       try {
         // 从服务器加载消息
-        await getMsgList(pageSize, true)
+        await getMsgList(pageSize)
       } catch (error) {
         console.error('无法加载消息:', error)
         currentMessageOptions.value = {
@@ -184,107 +183,63 @@ export const useChatStore = defineStore(
     const currentMsgReply = ref<Partial<MessageType>>({})
 
     // 将消息列表转换为数组
-    const chatMessageList = computed(() => [...(currentMessageMap.value?.values() || [])])
+    const chatMessageList = computed(() => {
+      return currentMessageMap.value
+        ? [...currentMessageMap.value.values()].sort((a, b) => Number(a.message.id) - Number(b.message.id))
+        : []
+    })
 
     // 登录之后，加载一次所有会话的消息
     const setAllSessionMsgList = async (size = pageSize) => {
+      await info('初始设置所有会话消息列表')
       for (const session of sessionList.value) {
-        // 查询本地存储，获取消息数据
-        const data: any = await invokeWithErrorHandler(
-          TauriCommand.PAGE_MSG,
-          {
-            param: {
-              pageSize: size,
-              cursor: '',
-              roomId: session.roomId
-            }
-          },
-          {
-            customErrorMessage: '获取消息列表失败',
-            errorType: ErrorType.Network
-          }
-        )
-
-        // 更新 messageOptions
-        messageOptions.set(session.roomId, {
-          isLast: data.isLast,
-          isLoading: false,
-          cursor: data.cursor
-        })
-
-        // 构建新 Map 后一次性替换，避免清空帧导致 UI 闪烁
-        const nextMap = new Map<string, MessageType>()
-        for (const msg of data.list) {
-          nextMap.set(msg.message.id, msg)
-        }
-        // 设置消息
-        messageMap.set(session.roomId, nextMap)
+        getPageMsg(size, session.roomId, '')
       }
     }
 
     // 获取消息列表
-    const getMsgList = async (size = pageSize, isSwitching = false) => {
-      console.log('获取消息列表')
+    const getMsgList = async (size = pageSize) => {
+      await info('获取消息列表')
       // 获取当前房间ID，用于后续比较
       const requestRoomId = globalStore.currentSession!.roomId
 
       currentMessageOptions.value && (currentMessageOptions.value.isLoading = true)
+      await getPageMsg(size, requestRoomId, currentMessageOptions.value?.cursor)
+    }
+
+    const getPageMsg = async (pageSize: number, roomId: string, cursor: string = '') => {
+      // 查询本地存储，获取消息数据
       const data: any = await invokeWithErrorHandler(
         TauriCommand.PAGE_MSG,
         {
           param: {
-            pageSize: size,
-            cursor: currentMessageOptions.value?.cursor,
-            roomId: requestRoomId
+            pageSize: pageSize,
+            cursor: cursor,
+            roomId: roomId
           }
         },
         {
           customErrorMessage: '获取消息列表失败',
           errorType: ErrorType.Network
         }
-      ).finally(() => {
-        // 只有当当前房间ID仍然是请求时的房间ID时，才更新加载状态
-        if (requestRoomId === globalStore.currentSession!.roomId && currentMessageOptions.value) {
-          currentMessageOptions.value.isLoading = false
-        }
+      )
+
+      // 更新 messageOptions
+      messageOptions.set(roomId, {
+        isLast: data.isLast,
+        isLoading: false,
+        cursor: data.cursor
       })
-      // 如果没有数据或者房间ID已经变化，则不处理响应
-      if (!data || requestRoomId !== globalStore.currentSession!.roomId) return
 
-      const computedList = computedTimeBlock(data.list)
-
-      /** 收集需要请求用户详情的 uid */
-      const uidCollectYet: Set<string> = new Set() // 去重用
-      for (const msg of computedList) {
-        const replyItem = msg.message.body?.reply
-        if (replyItem?.id) {
-          const messageIds = currentReplyMap.value?.get(replyItem.id) || []
-          messageIds.push(msg.message.id)
-          currentReplyMap.value?.set(replyItem.id, messageIds)
-
-          // 查询被回复用户的信息，被回复的用户信息里暂时无 uid
-          // collectUidItem(replyItem.uid)
-        }
-        // 查询消息发送者的信息
-        uidCollectYet.add(msg.fromUser.uid)
+      let map = messageMap.get(roomId)
+      if (!map) {
+        map = new Map<string, MessageType>()
       }
-      // 再次检查房间ID是否变化，防止在获取用户信息期间切换了房间
-      if (requestRoomId !== globalStore.currentSession!.roomId) return
-
-      // 为保证获取的历史消息在前面
-      const newList = isSwitching ? computedList : [...computedList, ...chatMessageList.value]
-      // 构建新 Map 后一次性替换，避免清空帧导致 UI 闪烁
-      const nextMap = new Map<string, MessageType>()
-      for (const msg of newList) {
-        nextMap.set(msg.message.id, msg)
+      for (const msg of data.list) {
+        map.set(msg.message.id, msg)
       }
-      currentMessageMap.value = nextMap
-
-      if (currentMessageOptions.value) {
-        currentMessageOptions.value.cursor = data.cursor
-        currentMessageOptions.value.isLast = data.isLast
-        currentMessageOptions.value.isLoading = false
-      }
+      // 设置消息
+      messageMap.set(roomId, map)
     }
 
     // 获取会话列表

@@ -1425,6 +1425,8 @@ onMounted(async () => {
       scrollToBottom()
     })
   })
+
+  scrollToBottom()
 })
 
 onUnmounted(() => {
