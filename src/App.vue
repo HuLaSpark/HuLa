@@ -33,8 +33,11 @@ const { addListener } = useTauriListener()
 // 全局快捷键管理
 const { initializeGlobalShortcut, cleanupGlobalShortcut } = useGlobalShortcut()
 
-// 创建固定缩放控制器（使用 body 作为目标，确保 Teleport 到 body 的浮层也被缩放；默认 zoom 模式）
-const fixedScale = useFixedScale({ target: 'body', mode: 'zoom' })
+// 创建固定缩放控制器（使用 #app-container 作为目标，避免影响浮层定位）
+const fixedScale = useFixedScale({
+  target: '#app-container',
+  mode: 'transform'
+})
 
 /** 不需要锁屏的页面 */
 const LockExclusion = new Set(['/login', '/tray', '/qrCode', '/about', '/onlineStatus'])
