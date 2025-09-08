@@ -6,7 +6,11 @@
     <!-- win 和 linux 的DOM -->
     <template v-if="isCompatibility()">
       <!--  登录窗口的代理按钮  -->
-      <div v-if="proxy" @click="router.push('/network')" class="w-30px h-24px flex-center">
+      <div
+        v-if="proxy"
+        @click="router.push('/network')"
+        :class="{ network: isWindows() }"
+        class="w-30px h-24px flex-center">
         <svg class="size-16px color-#404040 cursor-pointer">
           <use href="#settings"></use>
         </svg>

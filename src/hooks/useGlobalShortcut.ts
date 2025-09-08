@@ -82,6 +82,13 @@ export const useGlobalShortcut = () => {
       const captureWindow = await WebviewWindow.getByLabel('capture')
       if (!captureWindow) return
 
+      // 检查是否需要隐藏home窗口
+      if (settingStore.screenshot.isConceal) {
+        await homeWindow.hide()
+        // 等待窗口隐藏完成
+        await new Promise((resolve) => setTimeout(resolve, 100))
+      }
+
       // 设置窗口覆盖整个屏幕（包括菜单栏）
       const screenWidth = window.screen.width * window.devicePixelRatio
       const screenHeight = window.screen.height * window.devicePixelRatio

@@ -91,21 +91,18 @@
               <n-flex vertical :size="4">
                 <Validation :value="info.password" message="最少6位" :validator="validateMinLength" />
                 <Validation :value="info.password" message="由英文和数字构成" :validator="validateAlphaNumeric" />
-                <Validation
-                  :value="info.password"
-                  message="必须有一个特殊字符!@#¥%.&*"
-                  :validator="validateSpecialChar" />
+                <Validation :value="info.password" message="必须有一个特殊字符" :validator="validateSpecialChar" />
               </n-flex>
             </n-flex>
 
             <!-- 协议 -->
-            <n-flex justify="center" :size="6" class="mt-10px">
+            <n-flex align="center" justify="center" :size="6" class="mt-10px">
               <n-checkbox v-model:checked="protocol" />
               <div class="text-12px color-#909090 cursor-default lh-14px">
                 <span>已阅读并同意</span>
-                <span class="color-#13987f cursor-pointer">服务协议</span>
+                <span class="color-#13987f cursor-pointer" @click.stop="openServiceAgreement">服务协议</span>
                 <span>和</span>
-                <span class="color-#13987f cursor-pointer">HuLa隐私保护指引</span>
+                <span class="color-#13987f cursor-pointer" @click.stop="openPrivacyAgreement">HuLa隐私保护指引</span>
               </div>
             </n-flex>
           </div>
@@ -260,6 +257,7 @@ import dayjs from 'dayjs'
 import { lightTheme } from 'naive-ui'
 import PinInput from '@/components/common/PinInput.vue'
 import Validation from '@/components/common/Validation.vue'
+import { useWindow } from '@/hooks/useWindow'
 import type { RegisterUserReq } from '@/services/types.ts'
 import * as ImRequestUtils from '@/utils/ImRequestUtils'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
@@ -309,7 +307,7 @@ const showemailPrefix = ref(false)
 const showPasswordPrefix = ref(false)
 const showCodePrefix = ref(false)
 const showConfirmPasswordPrefix = ref(false)
-
+const { createModalWindow } = useWindow()
 // 常用邮箱后缀
 const commonEmailDomains = computed(() => {
   return ['gmail.com', '163.com', 'qq.com'].map((suffix) => {
@@ -384,6 +382,16 @@ const getShow = (value: string) => {
   return false
 }
 
+/** 打开服务协议窗口 */
+const openServiceAgreement = async () => {
+  await createModalWindow('服务协议', 'modal-serviceAgreement', 600, 600, 'login')
+}
+
+/** 打开隐私保护协议窗口 */
+const openPrivacyAgreement = async () => {
+  await createModalWindow('隐私保护指引', 'modal-privacyAgreement', 600, 600, 'login')
+}
+
 /** 不允许输入空格 */
 const noSideSpace = (value: string) => !value.startsWith(' ') && !value.endsWith(' ')
 
@@ -398,7 +406,7 @@ const validateAlphaNumeric = (value: string) => {
 }
 
 /** 检查密码是否包含特殊字符 */
-const validateSpecialChar = (value: string) => /[!@#¥$%.&*]/.test(value)
+const validateSpecialChar = (value: string) => /[!@#¥$%.&*^()_+=-~]/.test(value)
 
 /** 检查密码是否满足所有条件 */
 const isPasswordValid = computed(() => {

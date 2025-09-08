@@ -75,6 +75,11 @@ declare namespace STO {
       /** 忽略更新版本 */
       dismiss: string
     }
+    /** 截图设置 */
+    screenshot: {
+      /** 截图时是否隐藏窗口 */
+      isConceal: boolean
+    }
   }
 
   /**
@@ -117,4 +122,12 @@ declare namespace STO {
     progress: number
     miniShow: boolean
   } & OPT.L.Common
+
+  /**
+   * 引导状态
+   */
+  type Guide = {
+    /** 引导完成状态 */
+    isGuideCompleted: boolean
+  }
 }

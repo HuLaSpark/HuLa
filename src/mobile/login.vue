@@ -119,6 +119,7 @@
 
       <!-- 协议 -->
       <n-flex
+        align="center"
         justify="center"
         :style="isAndroid() ? { bottom: safeArea.bottom + 10 + 'px' } : {}"
         :size="6"
@@ -189,14 +190,11 @@
       <n-flex vertical v-if="registerInfo.password" :size="10" class="mt-8px">
         <Validation :value="registerInfo.password" message="最少6位" :validator="validateMinLength" />
         <Validation :value="registerInfo.password" message="由英文和数字构成" :validator="validateAlphaNumeric" />
-        <Validation
-          :value="registerInfo.password"
-          message="必须有一个特殊字符!@#¥%.&*"
-          :validator="validateSpecialChar" />
+        <Validation :value="registerInfo.password" message="必须有一个特殊字符" :validator="validateSpecialChar" />
       </n-flex>
 
       <!-- 协议 -->
-      <n-flex justify="center" :size="6" class="mt-10px">
+      <n-flex align="center" justify="center" :size="6" class="mt-10px">
         <n-checkbox v-model:checked="registerProtocol" />
         <div class="text-12px color-#909090 cursor-default lh-14px">
           <span>已阅读并同意</span>
@@ -415,7 +413,7 @@ const validateAlphaNumeric = (value: string) => {
 }
 
 /** 检查密码是否包含特殊字符 */
-const validateSpecialChar = (value: string) => /[!@#¥$%.&*]/.test(value)
+const validateSpecialChar = (value: string) => /[!@#¥$%.&*^()_+=-~]/.test(value)
 
 /** 检查密码是否满足所有条件 */
 const isPasswordValid = computed(() => {

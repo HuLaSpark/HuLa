@@ -47,6 +47,9 @@ export const useSettingStore = defineStore(StoresEnum.SETTING, {
     },
     update: {
       dismiss: ''
+    },
+    screenshot: {
+      isConceal: false
     }
   }),
   actions: {
@@ -75,7 +78,7 @@ export const useSettingStore = defineStore(StoresEnum.SETTING, {
       this.login.autoStartup = autoStartup
     },
     /** 设置菜单显示模式 */
-    setShowMode(showMode: ShowModeEnum): void {
+    setShowMode(showMode: ShowModeEnum) {
       this.showMode = showMode
     },
     /** 设置截图快捷键 */
@@ -93,14 +96,14 @@ export const useSettingStore = defineStore(StoresEnum.SETTING, {
       this.shortcuts.openMainPanel = shortcut
     },
     /** 设置发送消息快捷键 */
-    setSendMessageShortcut(shortcut: string): void {
+    setSendMessageShortcut(shortcut: string) {
       if (!this.chat) {
         this.chat = { sendKey: 'Enter', isDouble: true, translate: 'tencent' }
       }
       this.chat.sendKey = shortcut
     },
     /** 设置全局快捷键开关状态 */
-    setGlobalShortcutEnabled(enabled: boolean): void {
+    setGlobalShortcutEnabled(enabled: boolean) {
       if (!this.shortcuts) {
         this.shortcuts = getDefaultShortcuts()
       }
@@ -108,6 +111,13 @@ export const useSettingStore = defineStore(StoresEnum.SETTING, {
     },
     closeAutoLogin() {
       this.login.autoLogin = false
+    },
+    /** 设置截图时是否隐藏窗口 */
+    setScreenshotConceal(isConceal: boolean) {
+      if (!this.screenshot) {
+        this.screenshot = { isConceal: false }
+      }
+      this.screenshot.isConceal = isConceal
     }
   },
   share: {

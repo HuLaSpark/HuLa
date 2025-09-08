@@ -2,7 +2,7 @@
   <div ref="ContextMenuRef">
     <slot></slot>
     <Teleport to="body">
-      <transition-group @beforeEnter="handleBeforeEnter" @enter="handleEnter" @afterEnter="handleAfterEnter">
+      <transition-group @beforeEnter="handleBeforeEnter" @enter="handleEnter">
         <!-- emoji表情菜单 -->
         <div
           v-if="showMenu && emoji && emoji.length > 0"
@@ -147,9 +147,18 @@ const visibleSpecialMenu = computed(() => {
 /** 判断是否传入了menu */
 const isNull = computed(() => props.menu === void 0)
 const ContextMenuRef = useTemplateRef('ContextMenuRef')
-const emit = defineEmits(['select', 'reply-emoji'])
+const emit = defineEmits(['select', 'reply-emoji', 'menu-show'])
 /** 获取鼠标位置和是否显示右键菜单 */
 const { x, y, showMenu } = useContextMenu(ContextMenuRef, isNull)
+
+// 监听showMenu状态变化并向父组件发送事件
+watch(
+  () => showMenu.value,
+  (newVal) => {
+    emit('menu-show', newVal)
+  },
+  { immediate: true }
+)
 /** 获取视口的宽高 */
 const { vw, vh } = useViewport()
 /** 定义右键菜单尺寸 */
@@ -279,15 +288,8 @@ const handleEnter = (el: any) => {
   const h = el.clientHeight
   el.style.height = 0
   requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      el.style.height = `${h}px`
-      el.style.transition = '0.2s'
-    })
+    el.style.height = `${h}px`
   })
-}
-
-const handleAfterEnter = (el: any) => {
-  el.style.transition = 'none'
 }
 
 /**

@@ -19,7 +19,7 @@
       <!-- 置顶公告提示 -->
       <div
         v-if="isGroup && topAnnouncement"
-        class="feishu-announcement"
+        class="custom-announcement"
         :class="{ 'announcement-hover': isAnnouncementHover }"
         @mouseenter="isAnnouncementHover = true"
         @mouseleave="isAnnouncementHover = false">

@@ -178,6 +178,7 @@ onMounted(async () => {
   flex-direction: column;
   background: #fff;
   user-select: none;
+  -webkit-user-select: none;
 }
 
 .agreement-content {
@@ -254,5 +255,11 @@ onMounted(async () => {
 
 .agreement-content::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+:deep(.action-close) {
+  svg {
+    color: #303030;
+  }
 }
 </style>

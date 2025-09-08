@@ -369,12 +369,15 @@ export const useChatStore = defineStore(
       }
     }
 
-    // 更新会话最后活跃时间
+    // 更新会话最后活跃时间, 只要更新的过程中会话不存在，那么将会话刷新出来
     const updateSessionLastActiveTime = (roomId: string) => {
       const session = sessionList.value.find((item) => item.roomId === roomId)
       if (session) {
         Object.assign(session, { activeTime: Date.now() })
+      } else {
+        addSession(roomId)
       }
+      return session
     }
 
     const addSession = async (roomId: string) => {
@@ -408,7 +411,7 @@ export const useChatStore = defineStore(
       const cacheUser = groupStore.getUserInfo(uid)
 
       // 更新会话的文本属性和未读数
-      const session = sessionList.value.find((item) => item.roomId === msg.message.roomId)
+      const session = updateSessionLastActiveTime(msg.message.roomId)
       if (session) {
         const lastMsgUserName = cacheUser?.name
         const formattedText =
@@ -435,8 +438,6 @@ export const useChatStore = defineStore(
           }
         }
       }
-
-      updateSessionLastActiveTime(msg.message.roomId)
 
       // 如果收到的消息里面是艾特自己的就发送系统通知
       if (msg.message.body.atUidList?.includes(userStore.userInfo!.uid) && cacheUser) {
