@@ -4,9 +4,6 @@
 
     <img src="@/assets/mobile/chat-home/background.webp" class="w-100% fixed top-0" alt="hula" />
 
-    <!-- 设置区 -->
-    <Settings />
-
     <PersonalInfo :is-my-friend="true" :is-my-page="false" :is-show="isShow"></PersonalInfo>
 
     <div class="relative top-0 flex-1 flex">
@@ -38,7 +35,6 @@
 import CommunityContent from '#/components/community/CommunityContent.vue'
 import CommunityTab from '#/components/community/CommunityTab.vue'
 import PersonalInfo from '#/components/my/PersonalInfo.vue'
-import Settings from '#/components/my/Settings.vue'
 import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.vue'
 
 const measureRef = ref<HTMLDivElement>()

@@ -492,6 +492,8 @@ const isScrollingDown = ref(false)
 // 添加标记，用于识别是否正在加载历史消息
 const isLoadingMore = ref(false)
 
+console.log('初次加载的聊天信息：', chatStore.chatMessageList)
+
 // 是否是群聊
 const isGroup = computed(() => chatStore.isGroup)
 const userUid = computed(() => userStore.userInfo.uid)
@@ -673,7 +675,7 @@ watch(
   chatMessageList,
   (value, oldValue) => {
     // 确保消息属于当前会话
-    if (!value.length || (value[0] && value[0].message.roomId !== props.activeItem.roomId)) {
+    if (!value.length) {
       return
     }
 
