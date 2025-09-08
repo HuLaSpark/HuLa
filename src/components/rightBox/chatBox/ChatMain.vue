@@ -791,6 +791,7 @@ const handleScrollByIntent = (intent: ScrollIntentEnum): void => {
 
 // 滚动到底部
 const scrollToBottom = (): void => {
+  info('滚动到底部')
   const container = scrollContainerRef.value
   if (!container) return
 
@@ -954,6 +955,7 @@ watch(
 watch(
   chatMessageList,
   (value, oldValue) => {
+    scrollToBottom()
     // 非会话切换下，展示列表跟随真实列表，确保顶部加载更多不出现置底
     if (!pendingRoomId.value) {
       displayedMessageList.value = value
@@ -1426,7 +1428,7 @@ onMounted(async () => {
     })
   })
 
-  scrollToBottom()
+  // scrollToBottom()
 })
 
 onUnmounted(() => {
