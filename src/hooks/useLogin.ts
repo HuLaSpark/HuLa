@@ -1,10 +1,8 @@
 import { emit } from '@tauri-apps/api/event'
-import { info } from '@tauri-apps/plugin-log'
 import { EventEnum, TauriCommand } from '@/enums'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { useChatStore } from '@/stores/chat'
 import { useGlobalStore } from '@/stores/global.ts'
-import { useUserStore } from '@/stores/user'
 import { LoginStatus, useWsLoginStore } from '@/stores/ws'
 import { isDesktop, isMac, isMobile } from '@/utils/PlatformConstants'
 import { clearListener } from '@/utils/ReadCountQueue'
@@ -15,7 +13,6 @@ export const useLogin = () => {
   const { resizeWindow } = useWindow()
   const globalStore = useGlobalStore()
   const loginStore = useWsLoginStore()
-  const userStore = useUserStore()
   const chatStore = useChatStore()
   const settingStore = useSettingStore()
   const { isTrayMenuShow } = storeToRefs(globalStore)
@@ -37,7 +34,6 @@ export const useLogin = () => {
    * 登出账号
    */
   const logout = async () => {
-    info('登出账号')
     const { createWebviewWindow } = useWindow()
     isTrayMenuShow.value = false
     try {
@@ -69,8 +65,6 @@ export const useLogin = () => {
       localStorage.removeItem('TOKEN')
       localStorage.removeItem('REFRESH_TOKEN')
     }
-    // 2. 重置用户状态
-    userStore.isSign = false
     settingStore.closeAutoLogin()
     loginStore.loginStatus = LoginStatus.Init
     // 4. 清除未读数

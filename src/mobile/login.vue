@@ -630,7 +630,6 @@ const normalLogin = async (auto = false) => {
   })
     .then(async (res: any) => {
       loginDisabled.value = true
-      userStore.isSign = true
       console.log('登录成功')
 
       // 开启 ws 连接

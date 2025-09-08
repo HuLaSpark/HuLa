@@ -143,7 +143,6 @@ onMounted(() => {
     handleQRCodeLogin()
   })
   useMitt.on(WsResponseMessageType.LOGIN_SUCCESS, async (loginSuccessResType: LoginSuccessResType) => {
-    userStore.isSign = true
     const { token, ...rest } = loginSuccessResType
     // FIXME 可以不需要赋值了，单独请求了接口。
     userStore.userInfo = { ...userStore.userInfo!, ...rest }

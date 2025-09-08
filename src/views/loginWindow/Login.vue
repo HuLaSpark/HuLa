@@ -391,7 +391,6 @@ const normalLogin = async (auto = false) => {
   })
     .then(async (res: any) => {
       loginDisabled.value = true
-      userStore.isSign = true
 
       // 开启 ws 连接
       await rustWebSocketClient.initConnect()
@@ -529,7 +528,6 @@ onBeforeMount(async () => {
       localStorage.removeItem('TOKEN')
       localStorage.removeItem('REFRESH_TOKEN')
       userStore.userInfo = undefined
-      userStore.isSign = false
     }
   }
 })

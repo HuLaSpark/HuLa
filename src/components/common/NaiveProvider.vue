@@ -246,4 +246,16 @@ const NaiveProviderContent = defineComponent({
 .n-select-menu {
   zoom: var(--page-scale, 1);
 }
+
+.n-popselect {
+  zoom: var(--page-scale, 1);
+}
+
+.n-popselect-panel {
+  zoom: var(--page-scale, 1);
+}
+
+.n-base-select-menu {
+  zoom: var(--page-scale, 1);
+}
 </style>

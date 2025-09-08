@@ -141,6 +141,14 @@ export const useFixedScale = (options: UseFixedScaleOptions = {}): FixedScaleCon
     } else {
       applyTransform(scale)
     }
+
+    // 触发窗口尺寸调整事件
+    // 使用 CustomEvent 来需要重新定义DPR窗口需要调整尺寸
+    window.dispatchEvent(
+      new CustomEvent('resize-needed', {
+        detail: { scale, devicePixelRatio: currentDPR.value }
+      })
+    )
   }
 
   // 改进的 DPR 更新函数
