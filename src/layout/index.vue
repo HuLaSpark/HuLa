@@ -205,7 +205,9 @@ useMitt.on(WsResponseMessageType.ROOM_DISSOLUTION, async (roomId: string) => {
 
 useMitt.on(WsResponseMessageType.USER_STATE_CHANGE, async (data: { uid: string; userStateId: string }) => {
   console.log('收到用户状态改变', data)
-  // await cachedStore.updateUserState(data)
+  groupStore.updateUserItem(data.uid, {
+    userStateId: data.userStateId
+  })
 })
 useMitt.on(WsResponseMessageType.OFFLINE, async () => {
   console.log('收到用户下线通知')

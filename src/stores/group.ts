@@ -233,7 +233,7 @@ export const useGroupStore = defineStore(
      * @param roomId 群聊房间ID，可选，默认使用当前房间；如果传入 'all' 则更新所有房间中的该用户
      * @returns 是否成功更新
      */
-    const updateUserItem = (uid: string, updates: Partial<UserItem>, roomId?: string | 'all'): boolean => {
+    const updateUserItem = (uid: string, updates: Partial<UserItem>, roomId: string | 'all' = 'all'): boolean => {
       if (!uid || typeof uid !== 'string') {
         console.warn('[updateUserItem] 无效的用户ID:', uid)
         return false
