@@ -93,7 +93,8 @@ export const useGlobalStore = defineStore(
 
     // 监听当前会话变化，添加防重复触发逻辑
     watch(currentSessionRoomId, async (val, oldVal) => {
-      if (WebviewWindow.getCurrent().label !== 'home') {
+      const webviewWindowLabel = WebviewWindow.getCurrent()
+      if (webviewWindowLabel.label !== 'home' && webviewWindowLabel.label !== '/mobile/message') {
         return
       }
       // 只有当房间ID真正发生变化时才执行操作

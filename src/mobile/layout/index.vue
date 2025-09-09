@@ -60,6 +60,7 @@ const playMessageSound = async () => {
 
 /** 测试 */
 useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
+  console.log('[mobile/layout] 收到的消息：', data)
   chatStore.pushMsg(data)
   data.message.sendTime = new Date(data.message.sendTime).getTime()
   await invokeSilently(TauriCommand.SAVE_MSG, {
