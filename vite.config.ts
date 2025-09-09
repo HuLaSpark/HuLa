@@ -16,13 +16,13 @@ import { getRootPath, getSrcPath } from './build/config/getPath'
 const packageJson = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf-8'))
 const dependencies = Object.keys(packageJson.dependencies || {})
 
-const host = process.env.TAURI_DEV_HOST
-
 // https://vitejs.dev/config/
 /**! 不需要优化前端打包(如开启gzip) */
 export default defineConfig(({ mode }: ConfigEnv) => {
-  // 获取当前环境的配置,如何设置第三个参数则加载所有变量，而不是以“VITE_”前缀的变量
-  const config = loadEnv(mode, process.cwd())
+  // 获取当前环境的配置,如何设置第三个参数则加载所有变量，而不是以"VITE_"前缀的变量
+  const config = loadEnv(mode, process.cwd(), '')
+  const host = config.TAURI_DEV_HOST
+
   return {
     resolve: {
       alias: {
@@ -132,17 +132,11 @@ export default defineConfig(({ mode }: ConfigEnv) => {
           rewrite: (path) => path.replace(/^\/api/, '')
         }
       },
-      hmr: host
-        ? {
-            protocol: 'ws',
-            host: '0.0.0.0',
-            port: 6130
-          }
-        : {
-            protocol: 'ws',
-            host: '127.0.0.1',
-            port: 6130
-          },
+      hmr: {
+        protocol: 'ws',
+        host: host,
+        port: 6130
+      },
       cors: true, // 配置 CORS
       host: '0.0.0.0',
       port: 6130,

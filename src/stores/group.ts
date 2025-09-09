@@ -186,15 +186,6 @@ export const useGroupStore = defineStore(
       // 将数据存储到Record中
       userListMap[roomId] = data
       userListOptions.loading = false
-
-      // 收集并获取用户详细信息
-      // const uidCollectYet: Set<string> = new Set()
-      // for (const user of data.list || []) {
-      //   uidCollectYet.add(user.uid)
-      // }
-      // const { useCachedStore } = await import('./cached')
-      // const cachedStore = useCachedStore()
-      // await cachedStore.getBatchUserInfo([...uidCollectYet])
     }
 
     /**

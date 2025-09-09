@@ -37,33 +37,13 @@ import type { MessageType } from '@/services/types'
 import { WsResponseMessageType } from '@/services/wsType'
 import { useChatStore } from '@/stores/chat'
 import { useGlobalStore } from '@/stores/global'
-import { useMobileStore } from '@/stores/mobile'
+import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user'
 import { audioManager } from '@/utils/AudioManager'
-import { calculateElementPosition } from '@/utils/DomCalculate'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
 
 const route = useRoute()
-const mobileStore = useMobileStore()
 const tabBarElement = ref<InstanceType<typeof TabBarType>>()
-
-const updateTabBarPosition = async (isInit: boolean) => {
-  // 等待渲染完成
-  await nextTick()
-
-  // 渲染完成后下一帧开始前计算其位置信息
-  requestAnimationFrame(async () => {
-    const tabBarRect = await calculateElementPosition(tabBarElement)
-    if (!tabBarRect) {
-      throw new Error('[updateTabBarPosition] 无法获取tabBarRect位置和高度信息')
-    }
-
-    mobileStore.updateTabBarPosition({
-      newPosition: tabBarRect,
-      isInit: isInit
-    })
-  })
-}
 
 const chatStore = useChatStore()
 const userStore = useUserStore()
@@ -135,24 +115,24 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   await globalStore.updateGlobalUnreadCount()
 })
 
+const groupStore = useGroupStore()
+
 /** 测试-结束 */
 
-onMounted(async () => {
-  await updateTabBarPosition(true)
-})
+onBeforeMount(async () => {
+  // 加载所有会话
+  await chatStore.getSessionList(true)
+  // 设置全局会话为第一个
+  globalStore.currentSessionRoomId = chatStore.sessionList[0].roomId
 
-// 这里要明确等待加载后再监听，不能写在全局作用域，如果窗口大小改变，则该参数会改变，所以需要监听
-watch(
-  () => mobileStore.safeArea,
-  (newData) => {
-    // 改变后需要更新tabbar的位置
-    console.log('[layout watch] 安全区域改变了', newData)
-    updateTabBarPosition(false)
-  },
-  {
-    immediate: false
-  }
-)
+  // 加载所有群的成员数据
+  const groupSessions = chatStore.getGroupSessions()
+  await Promise.all([
+    ...groupSessions.map((session) => groupStore.getGroupUserList(session.roomId, true)),
+    groupStore.setGroupDetails(),
+    chatStore.setAllSessionMsgList(1)
+  ])
+})
 </script>
 
 <style lang="scss">

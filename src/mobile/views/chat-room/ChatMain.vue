@@ -59,8 +59,7 @@
           :class="{ 'hide-scrollbar': !showScrollbar }"
           :style="{ 'max-height': `calc(100vh - ${announcementHeight}px)` }"
           @mouseenter="showScrollbar = true"
-          @mouseleave="showScrollbar = false"
-          @visible-items-change="handleVisibleItemsChange">
+          @mouseleave="showScrollbar = false">
           <template #default="{ item, index }">
             <n-flex
               vertical
@@ -1141,9 +1140,6 @@ onUnmounted(() => {
   window.removeEventListener('click', closeMenu, true)
 })
 
-const handleVisibleItemsChange = (data: any) => {
-  console.log('更新：', data)
-}
 /** 新增的动作1结束 */
 </script>
 

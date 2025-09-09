@@ -6,11 +6,11 @@
     <img src="@/assets/mobile/chat-home/background.webp" class="w-100% fixed top-0" alt="hula" />
 
     <!-- 页面蒙板 -->
-    <div
+    <!-- <div
       v-if="showMask"
       @touchend="maskHandler.close"
       @click="maskHandler.close"
-      class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[999] transition-all duration-3000 ease-in-out opacity-100"></div>
+      class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[999] transition-all duration-3000 ease-in-out opacity-100"></div> -->
 
     <!-- 键盘蒙板 -->
     <div
