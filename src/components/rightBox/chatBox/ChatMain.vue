@@ -791,7 +791,6 @@ const handleScrollByIntent = (intent: ScrollIntentEnum): void => {
 
 // 滚动到底部
 const scrollToBottom = (): void => {
-  info('滚动到底部')
   const container = scrollContainerRef.value
   if (!container) return
 
