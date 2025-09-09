@@ -131,6 +131,8 @@ windows = { version = "0.52", features = [
     "Win32_System_Ole",
     "Win32_Storage_FileSystem",
     "Win32_UI_WindowsAndMessaging",
+    "Win32_UI_HiDpi",
+    "Win32_System_Registry",
 ] }
 
 [features]

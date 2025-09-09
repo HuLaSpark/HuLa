@@ -36,7 +36,8 @@ const { initializeGlobalShortcut, cleanupGlobalShortcut } = useGlobalShortcut()
 // 创建固定缩放控制器（使用 #app-container 作为目标，避免影响浮层定位）
 const fixedScale = useFixedScale({
   target: '#app-container',
-  mode: 'transform'
+  mode: 'transform',
+  enableWindowsTextScaleDetection: true
 })
 
 /** 不需要锁屏的页面 */
@@ -97,7 +98,7 @@ watch(
 )
 
 onMounted(async () => {
-  // 仅桌面端启用固定缩放
+  // 仅在桌面端启用缩放检测
   if (isDesktop()) {
     fixedScale.enable()
   }

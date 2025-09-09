@@ -1,3 +1,4 @@
+import { invoke } from '@tauri-apps/api/core'
 import { useDebounceFn } from '@vueuse/core'
 export type FixedScaleMode = 'zoom' | 'transform'
 
@@ -12,6 +13,8 @@ export type UseFixedScaleOptions = {
   minScale?: number
   /** 限制最大缩放 */
   maxScale?: number
+  /** 是否启用Windows文本缩放检测 */
+  enableWindowsTextScaleDetection?: boolean
 }
 
 type FixedScaleController = {
@@ -60,11 +63,26 @@ const supportsZoom = (() => {
  * @param options 配置选项
  */
 export const useFixedScale = (options: UseFixedScaleOptions = {}): FixedScaleController => {
-  const { target = '#app', mode = 'zoom', getScale, minScale = 0.1, maxScale = 3.0 } = options
+  const {
+    target = '#app',
+    mode = 'zoom',
+    getScale,
+    minScale = 0.1,
+    maxScale = 3.0,
+    enableWindowsTextScaleDetection = false
+  } = options
 
   const isEnabled = ref(false)
   const currentDPR = ref(window.devicePixelRatio || 1)
   const targetElement = ref<HTMLElement | null>(null)
+
+  // Windows缩放信息
+  const windowsScaleInfo = ref<{
+    system_dpi: number
+    system_scale: number
+    text_scale: number
+    has_text_scaling: boolean
+  } | null>(null)
 
   // 保存进入前的样式，便于恢复
   const originalStyles: Partial<CSSStyleDeclaration> = {}
@@ -73,12 +91,54 @@ export const useFixedScale = (options: UseFixedScaleOptions = {}): FixedScaleCon
   const eventListeners = new Map<string, () => void>()
   const mediaQueryListeners = new Set<MediaQueryList>()
 
+  // Windows缩放检测函数
+  const checkWindowsScale = async () => {
+    if (!enableWindowsTextScaleDetection) return
+
+    try {
+      const scaleInfo = (await invoke('get_windows_scale_info')) as {
+        system_dpi: number
+        system_scale: number
+        text_scale: number
+        has_text_scaling: boolean
+      }
+
+      // 检查是否有变化
+      const oldTextScale = windowsScaleInfo.value?.text_scale
+      const newTextScale = scaleInfo.text_scale
+
+      windowsScaleInfo.value = scaleInfo
+
+      // 如果text_scale发生变化，触发resize-needed事件
+      if (oldTextScale && Math.abs(newTextScale - oldTextScale) > 0.001) {
+        window.dispatchEvent(
+          new CustomEvent('resize-needed', {
+            detail: {
+              type: 'text-scale-change',
+              oldScale: oldTextScale,
+              newScale: newTextScale,
+              scaleInfo
+            }
+          })
+        )
+      }
+    } catch (error) {
+      console.warn('Failed to get Windows scale info:', error)
+    }
+  }
+
   // 改进的缩放计算逻辑 - 针对不同缩放比例的优化
   const calculateOptimalScale = (): number => {
     const dpr = currentDPR.value
 
     if (getScale) {
       return getScale()
+    }
+
+    // 如果启用了Windows文本缩放检测且有缩放信息
+    if (enableWindowsTextScaleDetection && windowsScaleInfo.value && windowsScaleInfo.value.has_text_scaling) {
+      const textScaleCompensation = 1 / windowsScaleInfo.value.text_scale
+      return textScaleCompensation
     }
 
     // 针对常见系统缩放的优化计算
@@ -143,7 +203,6 @@ export const useFixedScale = (options: UseFixedScaleOptions = {}): FixedScaleCon
     }
 
     // 触发窗口尺寸调整事件
-    // 使用 CustomEvent 来需要重新定义DPR窗口需要调整尺寸
     window.dispatchEvent(
       new CustomEvent('resize-needed', {
         detail: { scale, devicePixelRatio: currentDPR.value }
@@ -172,9 +231,31 @@ export const useFixedScale = (options: UseFixedScaleOptions = {}): FixedScaleCon
       updateDPR()
     }, 100)
 
+    const debounceCheckWindowsScale = useDebounceFn(() => {
+      checkWindowsScale()
+    }, 200)
+
+    // 监听自定义的resize-needed事件
+    const customResizeHandler = (e: CustomEvent) => {
+      if (e.detail?.type === 'text-scale-change') {
+        // 文本缩放变化时强制更新
+        nextTick(() => {
+          // 无论之前是否有文本缩放，现在都要应用新的缩放
+          apply()
+        })
+      }
+    }
+    eventListeners.set('resize-needed', () => {
+      window.removeEventListener('resize-needed', customResizeHandler as EventListener)
+    })
+    window.addEventListener('resize-needed', customResizeHandler as EventListener)
+
     // window.resize 监听器
     const resizeHandler = () => {
       debounceApply()
+      if (enableWindowsTextScaleDetection) {
+        debounceCheckWindowsScale()
+      }
     }
     eventListeners.set('resize', resizeHandler)
     window.addEventListener('resize', resizeHandler, { passive: true })
@@ -183,6 +264,9 @@ export const useFixedScale = (options: UseFixedScaleOptions = {}): FixedScaleCon
     if (window.visualViewport) {
       const viewportHandler = () => {
         debounceApply()
+        if (enableWindowsTextScaleDetection) {
+          debounceCheckWindowsScale()
+        }
       }
 
       window.visualViewport.addEventListener('resize', viewportHandler, { passive: true })
@@ -204,6 +288,9 @@ export const useFixedScale = (options: UseFixedScaleOptions = {}): FixedScaleCon
           const handler = (e: MediaQueryListEvent) => {
             if (e.matches) {
               debounceApply()
+              if (enableWindowsTextScaleDetection) {
+                debounceCheckWindowsScale()
+              }
             }
           }
 
@@ -227,6 +314,8 @@ export const useFixedScale = (options: UseFixedScaleOptions = {}): FixedScaleCon
       try {
         if (key === 'resize') {
           window.removeEventListener('resize', cleanup as EventListener)
+        } else if (key === 'resize-needed') {
+          window.removeEventListener('resize-needed', cleanup as EventListener)
         } else {
           cleanup()
         }
@@ -265,7 +354,7 @@ export const useFixedScale = (options: UseFixedScaleOptions = {}): FixedScaleCon
     if (originalStyles.height !== undefined) el.style.height = originalStyles.height
   }
 
-  const enable = () => {
+  const enable = async () => {
     if (isEnabled.value) {
       return
     }
@@ -278,9 +367,19 @@ export const useFixedScale = (options: UseFixedScaleOptions = {}): FixedScaleCon
     targetElement.value = el
     currentDPR.value = window.devicePixelRatio || 1
 
+    // 如果启用Windows文本缩放检测，先获取缩放信息
+    if (enableWindowsTextScaleDetection) {
+      await checkWindowsScale()
+    }
+
     saveOriginal()
     setupListeners()
-    apply()
+
+    // 只有当检测到文本缩放时才应用缩放，但监听器始终设置
+    if (!enableWindowsTextScaleDetection || windowsScaleInfo.value?.has_text_scaling) {
+      apply()
+    }
+
     isEnabled.value = true
   }
 
