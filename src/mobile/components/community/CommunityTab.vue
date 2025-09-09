@@ -4,7 +4,8 @@
       <!-- 这里高度写死并不影响下面的高度修正，写高度超过TabBar以防用户手机卡顿看到突然的高度修正的效果视差 -->
       <div
         :ref="bindDynamicAreaRef(i.name)"
-        :style="{ height: computedHeight }"
+        :style="{ height: props.customHeight ? customHeight + 'px' : computedHeight }"
+        @scroll="handleScroll"
         class="flex flex-col gap-4 overflow-y-auto">
         <!-- 动态消息 -->
         <slot :name="i.name"></slot>
@@ -20,13 +21,17 @@ import { type PropType, ref, type VNodeRef } from 'vue'
 import { useMobileStore } from '@/stores/mobile'
 import { calculateElementPosition } from '@/utils/DomCalculate'
 
-const emit = defineEmits(['update'])
+const emit = defineEmits(['update', 'scroll'])
 
-const defaultHeight = '90vh'
+const defaultHeight = '70vh'
 
 const computedHeight = computed(() => {
   return defaultHeight
 })
+
+const handleScroll = (event: any) => {
+  emit('scroll', event)
+}
 
 type DynamicRefs = Record<string, HTMLDivElement | null>
 const dynamicAreaRefs = ref<DynamicRefs>({})
@@ -50,6 +55,10 @@ const props = defineProps({
   activeTabName: {
     type: String,
     required: true
+  },
+  customHeight: {
+    type: Number,
+    required: false
   }
 })
 

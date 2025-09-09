@@ -141,7 +141,8 @@ export const useChatStore = defineStore(
     })
 
     const changeRoom = async () => {
-      if (WebviewWindow.getCurrent().label !== 'home') {
+      const currentWindowLabel = WebviewWindow.getCurrent()
+      if (currentWindowLabel.label !== 'home' && currentWindowLabel.label !== 'mobile-home') {
         return
       }
 
@@ -383,7 +384,10 @@ export const useChatStore = defineStore(
         session.text = formattedText!
         // 更新未读数
         if (msg.fromUser.uid !== userStore.userInfo!.uid) {
-          if (route?.path !== '/message' || msg.message.roomId !== globalStore.currentSession!.roomId) {
+          if (
+            (route?.path !== '/message' && route?.path !== '/mobile/message') ||
+            msg.message.roomId !== globalStore.currentSession!.roomId
+          ) {
             session.unreadCount = (session.unreadCount || 0) + 1
             await nextTick(() => {
               updateTotalUnreadCount()
@@ -684,7 +688,8 @@ export const useChatStore = defineStore(
 
     // 更新未读消息计数
     const updateTotalUnreadCount = async () => {
-      if (WebviewWindow.getCurrent().label !== 'home') {
+      const webviewWindowLabel = WebviewWindow.getCurrent()
+      if (webviewWindowLabel.label !== 'home' && webviewWindowLabel.label !== 'mobile-home') {
         return
       }
       info('[chat]更新全局未读消息计数')

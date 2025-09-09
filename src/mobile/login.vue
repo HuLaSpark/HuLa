@@ -313,17 +313,18 @@ import { ErrorType } from '@/common/exception'
 import PinInput from '@/components/common/PinInput.vue'
 import Validation from '@/components/common/Validation.vue'
 import { TauriCommand } from '@/enums'
+import router from '@/router'
+import { getEnhancedFingerprint } from '@/services/fingerprint'
 import type { RegisterUserReq, UserInfoType } from '@/services/types'
+import rustWebSocketClient from '@/services/webSocketRust'
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import { useMobileStore } from '@/stores/mobile'
 import { useUserStore } from '@/stores/user'
+import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { getAllUserState, getCaptcha, getUserDetail, register, sendCaptcha } from '@/utils/ImRequestUtils'
 import { isAndroid } from '@/utils/PlatformConstants'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
-import router from '../router'
-import rustWebSocketClient from '../services/webSocketRust'
-import { useUserStatusStore } from '../stores/userStatus'
 
 // 本地注册信息类型，扩展API类型以包含确认密码
 interface LocalRegisterInfo extends RegisterUserReq {}
@@ -619,12 +620,16 @@ const normalLogin = async (auto = false) => {
     return
   }
 
+  const clientId = await getEnhancedFingerprint()
+  localStorage.setItem('clientId', clientId)
+
   invoke('login_command', {
     data: {
       account: account,
       password: info.value.password,
       deviceType: 'MOBILE',
       systemType: '2', // 2是im 1是后台
+      clientId,
       grantType: 'PASSWORD'
     }
   })

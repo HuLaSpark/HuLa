@@ -4,10 +4,7 @@
 
     <img src="@/assets/mobile/chat-home/background.webp" class="w-100% fixed top-0" alt="hula" />
 
-    <!-- 设置区 -->
-    <Settings />
-
-    <PersonalInfo :is-show="isShow"></PersonalInfo>
+    <PersonalInfo :is-my-friend="true" :is-my-page="false" :is-show="isShow"></PersonalInfo>
 
     <div class="relative top-0 flex-1 flex">
       <div ref="measureRef" class="h-full w-full absolute top-0 z-0"></div>
@@ -32,26 +29,13 @@
         </div>
       </div>
     </div>
-
-    <div
-      @click="toPublishCommunity"
-      class="w-52px h-52px rounded-full absolute bottom-120px right-20px z-3 flex items-center justify-center bg-[linear-gradient(145deg,#ACD7DA,#13987F)] shadow-[0_4px_12px_rgba(0,0,0,0.25),0_0_12px_rgba(172,215,218,0.8)]">
-      <div class="relative w-20px h-20px">
-        <!-- 竖线 -->
-        <div class="absolute left-1/2 top-0 h-full w-2px bg-white -translate-x-1/2"></div>
-        <!-- 横线 -->
-        <div class="absolute top-1/2 left-0 w-full h-2px bg-white -translate-y-1/2"></div>
-      </div>
-    </div>
   </div>
 </template>
 <script setup lang="ts">
 import CommunityContent from '#/components/community/CommunityContent.vue'
 import CommunityTab from '#/components/community/CommunityTab.vue'
 import PersonalInfo from '#/components/my/PersonalInfo.vue'
-import Settings from '#/components/my/Settings.vue'
 import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.vue'
-import router from '@/router'
 
 const measureRef = ref<HTMLDivElement>()
 
@@ -60,10 +44,6 @@ const tabHeight = ref(300)
 const bb = new ResizeObserver((event) => {
   tabHeight.value = event[0].contentRect.height
 })
-
-const toPublishCommunity = () => {
-  router.push('/mobile/mobileMy/publishCommunity')
-}
 
 const onUpdate = (newTab: string) => {
   console.log('已更新：', newTab)

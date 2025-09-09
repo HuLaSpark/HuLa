@@ -66,7 +66,7 @@ const listenerMeasureRef = () => {
   const handler = (entries: ResizeObserverEntry[]) => {
     const newHeight = entries[0].contentRect.height - headerHeight
     // pageContainerHeight.value = newHeight
-    console.log('高度变化：', newHeight)
+    // console.log('高度变化：', newHeight)
     msgContainerHeight.value = newHeight
     setPageContainerHeight(newHeight)
   }
