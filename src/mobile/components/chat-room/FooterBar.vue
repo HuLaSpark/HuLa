@@ -17,7 +17,7 @@
             @blur="handleBlur"
             placeholder="输入/唤醒AI助手" />
 
-          <n-button @click="handleSend" type="primary" size="small" class="ms-10px me-25px flex items-center">
+          <n-button @click="handleSend" color="#13987f" size="small" class="ms-10px me-25px flex items-center">
             发送
             <svg class="h-15px w-15px iconpark-icon color-#white"><use href="#send"></use></svg>
           </n-button>
@@ -37,7 +37,7 @@
 
       <!-- 展开面板 -->
       <Transition @before-enter="beforeEnter" @enter="enter" @leave="leave">
-        <div v-show="isPanelVisible" class="w-full overflow-hidden bg-green flex flex-col">
+        <div v-show="isPanelVisible" class="w-full overflow-hidden bg-#13987f flex flex-col">
           <div style="height: 180px"><!-- 模拟内容高度 --></div>
         </div>
       </Transition>
