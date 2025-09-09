@@ -190,6 +190,12 @@ export const useChatStore = defineStore(
         : []
     })
 
+    const chatMessageListByRoomId = computed(() => (roomId: string) => {
+      return messageMap.get(roomId)
+        ? [...messageMap.get(roomId)!.values()].sort((a, b) => Number(a.message.id) - Number(b.message.id))
+        : []
+    })
+
     // 登录之后，加载一次所有会话的消息
     const setAllSessionMsgList = async (size = pageSize) => {
       await info('初始设置所有会话消息列表')
@@ -810,7 +816,8 @@ export const useChatStore = defineStore(
       removeSession,
       changeRoom,
       addSession,
-      setAllSessionMsgList
+      setAllSessionMsgList,
+      chatMessageListByRoomId
     }
   },
   {

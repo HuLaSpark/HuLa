@@ -3,6 +3,8 @@
 mod desktops;
 #[cfg(desktop)]
 use common::init::CustomInit;
+#[cfg(target_os = "windows")]
+use common_cmd::get_windows_scale_info;
 #[cfg(desktop)]
 use common_cmd::{
     audio, default_window_icon, get_files_meta, get_window_payload, push_window_payload,
@@ -419,6 +421,8 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         cancel_directory_scan,
         #[cfg(desktop)]
         set_badge_count,
+        #[cfg(target_os = "windows")]
+        get_windows_scale_info,
         // 通用命令（桌面端和移动端都支持）
         save_user_info,
         get_user_tokens,
