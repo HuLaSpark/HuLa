@@ -159,7 +159,7 @@ const sessionList = computed(() => {
 
         const { checkRoomAtMe, getMessageSenderName, formatMessageContent } = useReplaceMsg()
         // 获取该会话的所有消息用于检查@我
-        const messages = Array.from(chatStore.messageMap.get(item.roomId)?.values() || [])
+        const messages = chatStore.chatMessageListByRoomId(item.roomId)
         // 检查是否有@我的消息
         const isAtMe = checkRoomAtMe(
           item.roomId,
