@@ -289,8 +289,6 @@ export const useChatStore = defineStore(
           // 请求第一个群成员列表
           globalStore.currentSession?.type === RoomTypeEnum.GROUP &&
             (await groupStore.getGroupUserList(globalStore.currentSession!.roomId))
-          // 初始化所有用户基本信息
-          userStore.isSign
           // 联系人列表
           await contactStore.getContactList(true)
 

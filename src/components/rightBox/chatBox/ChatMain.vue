@@ -1456,7 +1456,7 @@ onUnmounted(() => {
 .chat-main-container {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - var(--footer-height));
+  height: calc(100vh / var(--page-scale, 1) - var(--footer-height));
   overflow: hidden;
   // 布局优化
   contain: layout style;

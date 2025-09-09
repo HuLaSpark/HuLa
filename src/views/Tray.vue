@@ -63,7 +63,7 @@ import { changeUserState } from '@/utils/ImRequestUtils'
 import { isWindows } from '@/utils/PlatformConstants'
 
 const appWindow = WebviewWindow.getCurrent()
-const { checkWinExist, createWebviewWindow } = useWindow()
+const { checkWinExist, createWebviewWindow, resizeWindow } = useWindow()
 const userStatusStore = useUserStatusStore()
 const userStore = useUserStore()
 const settingStore = useSettingStore()
@@ -138,8 +138,23 @@ watchEffect(async () => {
   }
 })
 
+// 监听托盘窗口尺寸调整事件
+const handleTrayResize = async () => {
+  const islogin = await WebviewWindow.getByLabel('home')
+  await resizeWindow('tray', 130, islogin ? 356 : 44)
+}
+
 onBeforeMount(() => {
   globalStore.setTipVisible(false)
+})
+
+onMounted(() => {
+  // 监听系统缩放变化事件，自动调整托盘窗口尺寸
+  window.addEventListener('resize-needed', handleTrayResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize-needed', handleTrayResize)
 })
 </script>
 

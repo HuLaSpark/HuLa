@@ -7,7 +7,6 @@ export const useUserStore = defineStore(
   StoresEnum.USER,
   () => {
     const userInfo = ref<UserInfoType>()
-    const isSign = ref(false)
 
     const getUserDetailAction = () => {
       getUserDetail()
@@ -19,7 +18,7 @@ export const useUserStore = defineStore(
         })
     }
 
-    return { userInfo, isSign, getUserDetailAction }
+    return { userInfo, getUserDetailAction }
   },
   {
     share: {

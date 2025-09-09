@@ -202,4 +202,60 @@ const NaiveProviderContent = defineComponent({
   }
 })
 </script>
-<style scoped></style>
+<style>
+.n-popover {
+  zoom: var(--page-scale, 1);
+}
+
+.n-dropdown-menu {
+  zoom: var(--page-scale, 1);
+}
+
+.n-tooltip {
+  zoom: var(--page-scale, 1);
+}
+
+.n-modal {
+  zoom: var(--page-scale, 1);
+}
+
+.n-drawer {
+  zoom: var(--page-scale, 1);
+}
+
+.n-notification {
+  zoom: var(--page-scale, 1);
+}
+
+.n-message {
+  zoom: var(--page-scale, 1);
+}
+
+.n-date-picker-panel {
+  zoom: var(--page-scale, 1);
+}
+
+.n-time-picker-panel {
+  zoom: var(--page-scale, 1);
+}
+
+.n-cascader-menu {
+  zoom: var(--page-scale, 1);
+}
+
+.n-select-menu {
+  zoom: var(--page-scale, 1);
+}
+
+.n-popselect {
+  zoom: var(--page-scale, 1);
+}
+
+.n-popselect-panel {
+  zoom: var(--page-scale, 1);
+}
+
+.n-base-select-menu {
+  zoom: var(--page-scale, 1);
+}
+</style>

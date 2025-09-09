@@ -4,7 +4,7 @@
     id="center"
     :class="{ 'rounded-r-8px': shrinkStatus }"
     class="resizable select-none flex flex-col border-r-(1px solid [--right-chat-footer-line-color])"
-    :style="{ width: `${initWidth}px` }">
+    :style="{ width: shrinkStatus ? '100%' : `${initWidth}px` }">
     <!-- 分隔条 -->
     <div v-show="!shrinkStatus" class="resize-handle transition-all duration-600 ease-in-out" @mousedown="initDrag">
       <div :class="{ 'opacity-100': isDragging }" class="transition-all duration-600 ease-in-out opacity-0 drag-icon">
@@ -191,13 +191,21 @@ const shrinkStatus = ref(false)
 const isDragging = ref(false)
 
 watchEffect(() => {
-  if (width.value >= 310 && width.value < 800) {
+  // 获取页面缩放因子来计算调整后的断点
+  // 由于使用了 useFixedScale 来抵消系统缩放，需要相应调整窗口布局断点
+  const pageScale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--page-scale') || '1')
+  const SHRINK_MIN_WIDTH = 310 * pageScale // 根据缩放因子调整断点
+  const SHRINK_MAX_WIDTH = 800 * pageScale // 根据缩放因子调整断点
+
+  const shouldShrink = width.value >= SHRINK_MIN_WIDTH && width.value < SHRINK_MAX_WIDTH
+  const shouldExpand = width.value >= SHRINK_MAX_WIDTH
+
+  if (shouldShrink) {
     useMitt.emit(MittEnum.SHRINK_WINDOW, true)
     const center = document.querySelector('#center')
     center?.classList.add('flex-1')
     isDrag.value = false
-  }
-  if (width.value >= 800) {
+  } else if (shouldExpand) {
     useMitt.emit(MittEnum.SHRINK_WINDOW, false)
     const center = document.querySelector('#center')
     center?.classList.remove('flex-1')

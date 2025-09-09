@@ -53,6 +53,7 @@ import { clearListener, initListener, readCountQueue } from '@/utils/ReadCountQu
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
 import { useLogin } from '../hooks/useLogin'
 
+const appWindow = WebviewWindow.getCurrent()
 const loadingPercentage = ref(10)
 const loadingText = ref('正在加载应用...')
 
@@ -148,7 +149,7 @@ timerWorker.onmessage = (e) => {
 }
 
 watch(
-  () => userStore.isSign,
+  () => appWindow.label === 'home',
   (newValue) => {
     if (newValue) {
       // 初始化监听器
