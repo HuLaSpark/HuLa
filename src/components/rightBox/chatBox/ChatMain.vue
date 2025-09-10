@@ -1469,4 +1469,9 @@ onUnmounted(() => {
   contain: layout style;
   will-change: auto;
 }
+
+// 拖拽时禁用鼠标事件，避免不必要的监听损耗
+:global(body.dragging-resize) .scrollbar-container {
+  pointer-events: none;
+}
 </style>
