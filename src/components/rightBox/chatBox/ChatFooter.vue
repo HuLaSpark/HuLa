@@ -279,6 +279,7 @@ const startDrag = (e: MouseEvent) => {
   document.addEventListener('mousemove', onDrag)
   document.addEventListener('mouseup', endDrag)
   document.body.style.userSelect = 'none'
+  document.body.classList.add('dragging-resize')
   e.preventDefault()
 }
 
@@ -303,6 +304,7 @@ const endDrag = () => {
   document.removeEventListener('mousemove', onDrag)
   document.removeEventListener('mouseup', endDrag)
   document.body.style.userSelect = ''
+  document.body.classList.remove('dragging-resize')
 
   // 清理性能优化相关状态
   if (rafId !== null) {

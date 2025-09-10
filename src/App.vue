@@ -19,7 +19,7 @@ import { useMobile } from '@/hooks/useMobile.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
 import { useSettingStore } from '@/stores/setting.ts'
-import { isDesktop, isMobile } from '@/utils/PlatformConstants'
+import { isDesktop, isMobile, isWindows } from '@/utils/PlatformConstants'
 import LockScreen from '@/views/LockScreen.vue'
 import { useTauriListener } from './hooks/useTauriListener'
 
@@ -98,8 +98,8 @@ watch(
 )
 
 onMounted(async () => {
-  // 仅在桌面端启用缩放检测
-  if (isDesktop()) {
+  // 仅在windows上使用
+  if (isWindows()) {
     fixedScale.enable()
   }
   // 判断是否是桌面端，桌面端需要调整样式
