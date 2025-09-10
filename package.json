@@ -29,7 +29,7 @@
     "adev": "tauri android dev",
     "========= 启动ios程序(简化命令) =========": "",
     "idev": "tauri ios dev",
-    "========= 打包安卓应用程序(简化命令) =========": "",
+    "========= 打包桌面应用程序(简化命令) =========": "",
     "tb": "node scripts/interactive-build-inquirer.js",
     "========= 打包桌面应用程序 =========": "",
     "tauri:build": "node scripts/interactive-build-inquirer.js",
@@ -160,7 +160,7 @@
     "typescript": "^5.9.2",
     "unplugin-auto-import": "^20.0.0",
     "unplugin-vue-components": "^29.0.0",
-    "vite": "7.1.2",
+    "vite": "7.1.5",
     "vite-plugin-vue-setup-extend": "^0.4.0",
     "vitest": "^3.2.4",
     "vue-tsc": "^3.0.5"

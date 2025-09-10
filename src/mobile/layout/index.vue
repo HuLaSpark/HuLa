@@ -31,7 +31,7 @@ import { useRoute } from 'vue-router'
 import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.vue'
 import type { default as TabBarType } from '#/layout/tabBar/index.vue'
 import TabBar from '#/layout/tabBar/index.vue'
-import { MittEnum, NotificationTypeEnum, TauriCommand } from '@/enums'
+import { NotificationTypeEnum, TauriCommand } from '@/enums'
 import { useMitt } from '@/hooks/useMitt'
 import type { MessageType } from '@/services/types'
 import { WsResponseMessageType } from '@/services/wsType'
@@ -98,9 +98,6 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
       if (shouldPlaySound) {
         await playMessageSound()
       }
-
-      // 设置图标闪烁
-      useMitt.emit(MittEnum.MESSAGE_ANIMATION, data)
       // session.unreadCount++
       // 在windows系统下才发送通知
       if (type() === 'windows') {

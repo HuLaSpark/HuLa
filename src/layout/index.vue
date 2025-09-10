@@ -303,9 +303,6 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
       if (shouldPlaySound) {
         await playMessageSound()
       }
-
-      // 设置图标闪烁
-      useMitt.emit(MittEnum.MESSAGE_ANIMATION, data)
       // session.unreadCount++
       // 在windows系统下才发送通知
       if (isWindows()) {

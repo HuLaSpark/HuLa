@@ -461,7 +461,7 @@ import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 import { usePopover } from '@/hooks/usePopover.ts'
 import { useTauriListener } from '@/hooks/useTauriListener'
 import { useWindow } from '@/hooks/useWindow.ts'
-import type { MessageType, SessionItem } from '@/services/types.ts'
+import type { SessionItem } from '@/services/types.ts'
 import { useCachedStore } from '@/stores/cached'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGroupStore } from '@/stores/group.ts'
@@ -908,27 +908,6 @@ const jumpToReplyMsg = async (key: string) => {
   }
 }
 
-// 给气泡添加动画
-const addToDomUpdateQueue = (index: string, id: string) => {
-  // 使用 nextTick 确保虚拟列表渲染完最新的项目后进行滚动
-  nextTick(() => {
-    /** data-key标识的气泡,添加前缀用于区分用户消息，不然气泡动画会被覆盖 */
-    const dataKey = id === userUid.value ? `U${index}` : `Q${index}`
-    const lastMessageElement = document.querySelector(`[data-key="${dataKey}"]`) as HTMLElement
-    if (lastMessageElement) {
-      console.log('触发气泡添加动画')
-      // 添加动画类
-      lastMessageElement.classList.add('bubble-animation')
-      // 监听动画结束事件
-      const handleAnimationEnd = () => {
-        lastMessageElement.classList.remove('bubble-animation')
-        lastMessageElement.removeEventListener('animationend', handleAnimationEnd)
-      }
-      lastMessageElement.addEventListener('animationend', handleAnimationEnd)
-    }
-  })
-}
-
 // 解决mac右键会选中文本的问题
 const handleMacSelect = (event: any) => {
   if (isMac()) {
@@ -1071,9 +1050,6 @@ onMounted(async () => {
     updateMessageIndexMap()
     // 初始加载置顶公告
     loadTopAnnouncement()
-  })
-  useMitt.on(MittEnum.MESSAGE_ANIMATION, (messageType: MessageType) => {
-    addToDomUpdateQueue(messageType.message.id, messageType.fromUser.uid)
   })
   useMitt.on(`${MittEnum.INFO_POPOVER}-Main`, (event: any) => {
     selectKey.value = event.uid
