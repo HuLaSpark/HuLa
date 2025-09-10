@@ -45,10 +45,6 @@ export const useChatMain = () => {
   // const messageOptions = computed(() => chatStore.currentMessageOptions)
   /** 滚动条位置 */
   const scrollTop = ref(-1)
-  /** 是否是超级管理员 */
-  // const isAdmin = computed(() => userInfo?.power === PowerEnum.ADMIN)
-  /** 选中的气泡消息 */
-  const activeBubble = ref('')
   /** 提醒框标题 */
   const tips = ref()
   /** 是否显示删除信息的弹窗 */
@@ -912,7 +908,6 @@ export const useChatMain = () => {
   /** 点击气泡消息时候监听用户是否按下ctrl+c来复制内容 */
   const handleMsgClick = (item: MessageType) => {
     console.log('点击的消息：', item)
-    activeBubble.value = item.message.id
     // 启用键盘监听
     const handleKeyPress = (e: KeyboardEvent) => {
       if ((e.ctrlKey && e.key === 'c') || (e.metaKey && e.key === 'c')) {
@@ -937,7 +932,6 @@ export const useChatMain = () => {
     getSelectedText,
     hasSelectedText,
     clearSelection,
-    activeBubble,
     historyIndex,
     tips,
     modalShow,

@@ -14,8 +14,8 @@ import FriendsLayout from '#/layout/friends/FriendsLayout.vue'
 import MobileHome from '#/layout/index.vue'
 import MyLayout from '#/layout/my/MyLayout.vue'
 import MobileLogin from '#/login.vue'
-import ChatMain from '#/views/chat-room/ChatMain.vue'
 import ChatSetting from '#/views/chat-room/ChatSetting.vue'
+import MobileChatMain from '#/views/chat-room/MobileChatMain.vue'
 import NoticeDetail from '#/views/chat-room/notice/NoticeDetail.vue'
 import NoticeEdit from '#/views/chat-room/notice/NoticeEdit.vue'
 import NoticeList from '#/views/chat-room/notice/NoticeList.vue'
@@ -68,7 +68,7 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
       {
         path: 'chatMain',
         name: 'mobileChatMain',
-        component: ChatMain
+        component: MobileChatMain
       },
       {
         path: 'setting',

@@ -432,16 +432,19 @@ const handleRetryAnnouncement = () => {
 //   }
 // }
 
-const announcementUpdatedListener = await appWindow.listen('announcementUpdated', async (event: any) => {
-  if (event.payload) {
-    const { hasAnnouncements } = event.payload
-    if (hasAnnouncements) {
-      // 初始化群公告
-      await handleInitAnnoun()
-      await nextTick()
+// 使用 addListener 管理 announcementUpdated 监听器
+addListener(
+  appWindow.listen('announcementUpdated', async (event: any) => {
+    if (event.payload) {
+      const { hasAnnouncements } = event.payload
+      if (hasAnnouncements) {
+        // 初始化群公告
+        await handleInitAnnoun()
+        await nextTick()
+      }
     }
-  }
-})
+  })
+)
 
 onMounted(async () => {
   // 通知父级：Sidebar 已挂载，可移除占位
@@ -483,9 +486,7 @@ onMounted(async () => {
   }
 })
 
-onUnmounted(() => {
-  announcementUpdatedListener()
-})
+// onUnmounted 钩子已由 useTauriListener 自动处理，无需手动清理
 </script>
 
 <style scoped lang="scss">

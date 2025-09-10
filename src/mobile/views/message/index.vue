@@ -368,7 +368,6 @@ const intoRoom = (item: any) => {
   handleMsgClick(item)
   setTimeout(() => {
     router.push(`/mobile/chatRoom/chatMain`)
-    console.log('进入页面', item)
   }, 0)
 }
 const toSimpleBio = () => {
