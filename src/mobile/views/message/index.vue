@@ -41,7 +41,7 @@
               {{ userStore.userInfo!.name }}
             </p>
             <p class="text-(10px [--text-color])">
-              {{ groupStore.getUserInfo(userStore.userInfo!.uid)?.locPlace || '未知' }}
+              {{ groupStore.getUserInfo(userStore.userInfo!.uid)?.locPlace || 'Unknown' }}
             </p>
           </n-flex>
         </n-flex>
@@ -220,10 +220,6 @@ const chatStore = useChatStore()
 
 const pullRefreshRef = ref()
 
-const getSessionList = async () => {
-  await chatStore.getSessionList(true)
-}
-
 const userStore = useUserStore()
 
 /**
@@ -241,7 +237,6 @@ const userStore = useUserStore()
 onMounted(async () => {
   await rustWebSocketClient.setupBusinessMessageListeners()
   console.log('个人数据：', userStore.userInfo)
-  getSessionList()
 
   const { removeHideFunction, removeShowFunction } = await mobileClient.keyboardListener(
     // 键盘打开
@@ -264,7 +259,6 @@ onMounted(async () => {
 })
 
 const handleRefresh = async () => {
-  await getSessionList()
   // 完成刷新
   pullRefreshRef.value?.finishRefresh()
 }
@@ -441,10 +435,6 @@ const closeKeyboardMask = () => {
 </script>
 
 <style scoped lang="scss">
-// .message-item {
-//   @apply flex justify-around items-center p-3 hover:bg-#DEEDE7 hover:rounded-10px transition-colors cursor-pointer;
-// }
-
 .keyboard-mask {
   position: fixed;
   inset: 0;

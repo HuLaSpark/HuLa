@@ -26,6 +26,7 @@
 <script setup lang="ts">
 import { emitTo } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { info } from '@tauri-apps/plugin-log'
 import { type } from '@tauri-apps/plugin-os'
 import { useRoute } from 'vue-router'
 import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.vue'
@@ -118,6 +119,7 @@ const groupStore = useGroupStore()
 /** 测试-结束 */
 
 onBeforeMount(async () => {
+  info('init all data')
   // 加载所有会话
   await chatStore.getSessionList(true)
   // 设置全局会话为第一个
@@ -130,6 +132,7 @@ onBeforeMount(async () => {
     groupStore.setGroupDetails(),
     chatStore.setAllSessionMsgList(1)
   ])
+  info('init all data complete')
 })
 </script>
 

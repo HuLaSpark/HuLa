@@ -13,7 +13,7 @@ static GLOBAL_WS_CLIENT: OnceLock<Arc<RwLock<Option<WebSocketClient>>>> = OnceLo
 /// 获取全局 WebSocket 客户端容器
 fn get_websocket_client_container() -> &'static Arc<RwLock<Option<WebSocketClient>>> {
     GLOBAL_WS_CLIENT.get_or_init(|| {
-        info!("🚀 创建全局 WebSocket 客户端容器");
+        info!("🚀 Creating global WebSocket client container");
         Arc::new(RwLock::new(None))
     })
 }
@@ -66,7 +66,7 @@ pub async fn ws_init_connection(
     params: InitWsParams,
     state: State<'_, AppData>,
 ) -> Result<SuccessResponse, String> {
-    info!("🚀 收到 WebSocket 初始化请求");
+    info!("🚀 Received WebSocket initialization request");
 
     let client_container = get_websocket_client_container();
     let rc = state.rc.lock().await;
@@ -86,16 +86,16 @@ pub async fn ws_init_connection(
         if let Some(existing_client) = client_guard.as_ref() {
             // 如果已有客户端且已连接，直接返回成功
             if existing_client.is_connected() {
-                info!("✅ WebSocket 已连接，跳过重复连接");
+                info!("✅ WebSocket already connected, skipping duplicate connection");
                 return Ok(SuccessResponse::new());
             }
 
             // 如果已有客户端但未连接，使用现有客户端
-            info!("🔄 使用现有 WebSocket 客户端实例重新连接");
+            info!("🔄 Reconnecting using existing WebSocket client instance");
             existing_client.clone()
         } else {
             // 如果没有客户端，创建新实例
-            info!("🆕 创建新的 WebSocket 客户端实例");
+            info!("🆕 Creating new WebSocket client instance");
             let new_client = WebSocketClient::new(app_handle);
             *client_guard = Some(new_client.clone());
             new_client
@@ -105,10 +105,10 @@ pub async fn ws_init_connection(
     tokio::spawn(async move {
         match client.connect(config).await {
             Ok(_) => {
-                info!("✅ WebSocket 连接初始化成功");
+                info!("✅ WebSocket connection initialized successfully");
             }
             Err(e) => {
-                error!("❌ WebSocket 连接初始化失败: {}", e);
+                error!("❌ WebSocket connection initialization failed: {}", e);
             }
         }
     });
@@ -119,7 +119,7 @@ pub async fn ws_init_connection(
 /// 断开 WebSocket 连接
 #[tauri::command]
 pub async fn ws_disconnect(_app_handle: AppHandle) -> Result<SuccessResponse, String> {
-    info!("📡 收到 WebSocket 断开请求");
+    info!("📡 Received WebSocket disconnect request");
 
     let client_container = get_websocket_client_container();
     let mut client_guard = client_container.write().await;
@@ -128,7 +128,7 @@ pub async fn ws_disconnect(_app_handle: AppHandle) -> Result<SuccessResponse, St
         client.internal_disconnect().await;
     }
 
-    info!("✅ WebSocket 连接已断开");
+    info!("✅ WebSocket connection disconnected");
     Ok(SuccessResponse::new())
 }
 
@@ -145,12 +145,12 @@ pub async fn ws_send_message(
         match client.send_message(params.data).await {
             Ok(_) => Ok(SuccessResponse::new()),
             Err(e) => {
-                error!("❌ 发送消息失败: {}", e);
+                error!("❌ Failed to send message: {}", e);
                 Err(format!("发送失败: {}", e))
             }
         }
     } else {
-        error!("❌ WebSocket 未初始化");
+        error!("❌ WebSocket not initialized");
         Err("WebSocket 未初始化".to_string())
     }
 }
@@ -184,7 +184,7 @@ pub async fn ws_get_health(_app_handle: AppHandle) -> Result<ConnectionHealth, S
 /// 强制重连
 #[tauri::command]
 pub async fn ws_force_reconnect(_app_handle: AppHandle) -> Result<SuccessResponse, String> {
-    info!("🔄 收到强制重连请求");
+    info!("🔄 Received force reconnect request");
 
     let client_container = get_websocket_client_container();
     let client_guard = client_container.read().await;
@@ -192,16 +192,16 @@ pub async fn ws_force_reconnect(_app_handle: AppHandle) -> Result<SuccessRespons
     if let Some(client) = client_guard.as_ref() {
         match client.force_reconnect().await {
             Ok(_) => {
-                info!("✅ WebSocket 重连成功");
+                info!("✅ WebSocket reconnected successfully");
                 Ok(SuccessResponse::new())
             }
             Err(e) => {
-                error!("❌ WebSocket 重连失败: {}", e);
+                error!("❌ WebSocket reconnection failed: {}", e);
                 Err(format!("重连失败: {}", e))
             }
         }
     } else {
-        error!("❌ WebSocket 未初始化，无法重连");
+        error!("❌ WebSocket not initialized, cannot reconnect");
         Err("WebSocket 未初始化".to_string())
     }
 }
@@ -212,7 +212,7 @@ pub async fn ws_update_config(
     _app_handle: AppHandle,
     params: UpdateConfigParams,
 ) -> Result<SuccessResponse, String> {
-    info!("⚙️ 更新 WebSocket 配置");
+    info!("⚙️ Updating WebSocket configuration");
 
     let client_container = get_websocket_client_container();
     let client_guard = client_container.read().await;
@@ -236,10 +236,10 @@ pub async fn ws_update_config(
         }
 
         client.update_config(config).await;
-        info!("✅ WebSocket 配置更新成功");
+        info!("✅ WebSocket configuration updated successfully");
         Ok(SuccessResponse::new())
     } else {
-        error!("❌ WebSocket 未初始化，无法更新配置");
+        error!("❌ WebSocket not initialized, cannot update configuration");
         Err("WebSocket 未初始化".to_string())
     }
 }

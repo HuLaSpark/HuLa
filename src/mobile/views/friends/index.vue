@@ -181,7 +181,6 @@ import groupChatIcon from '@/assets/mobile/chat-home/group-chat.webp'
 import { MittEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
 import router from '@/router'
-import { useChatStore } from '@/stores/chat.ts'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGroupStore } from '@/stores/group'
 import { useUserStatusStore } from '@/stores/userStatus'
@@ -298,16 +297,6 @@ const getUserState = (uid: string) => {
 onUnmounted(() => {
   detailsShow.value = false
   useMitt.emit(MittEnum.DETAILS_SHOW, detailsShow.value)
-})
-
-const chatStore = useChatStore()
-
-const getSessionList = async () => {
-  await chatStore.getSessionList(true)
-}
-
-onMounted(() => {
-  getSessionList()
 })
 
 /**

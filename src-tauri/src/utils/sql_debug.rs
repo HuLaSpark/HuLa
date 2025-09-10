@@ -14,13 +14,13 @@ impl SqlDebug {
 
         info!("📝 [{}] SQL: {}", label, statement.sql);
         if let Some(ref values) = statement.values {
-            info!("📋 [{}] 参数: {:?}", label, values);
+            info!("📋 [{}] Parameters: {:?}", label, values);
 
             // 打印格式化的完整SQL（参数已替换）
             let formatted_sql = Self::format_sql_with_values(&statement.sql, values);
-            info!("🔍 [{}] 完整SQL: {}", label, formatted_sql);
+            info!("🔍 [{}] Complete SQL: {}", label, formatted_sql);
         } else {
-            info!("🔍 [{}] 完整SQL: {}", label, statement.sql);
+            info!("🔍 [{}] Complete SQL: {}", label, statement.sql);
         }
     }
 
@@ -28,12 +28,12 @@ impl SqlDebug {
     pub fn log_statement(statement: &Statement, label: &str) {
         info!("📝 [{}] SQL: {}", label, statement.sql);
         if let Some(ref values) = statement.values {
-            info!("📋 [{}] 参数: {:?}", label, values);
+            info!("📋 [{}] Parameters: {:?}", label, values);
 
             let formatted_sql = Self::format_sql_with_values(&statement.sql, values);
-            info!("🔍 [{}] 完整SQL: {}", label, formatted_sql);
+            info!("🔍 [{}] Complete SQL: {}", label, formatted_sql);
         } else {
-            info!("🔍 [{}] 完整SQL: {}", label, statement.sql);
+            info!("🔍 [{}] Complete SQL: {}", label, statement.sql);
         }
     }
 
@@ -80,7 +80,7 @@ impl SqlDebug {
         info!("📝 [{}] {}", label, sql);
         if let Some(values) = values {
             if !values.0.is_empty() {
-                info!("📋 [{}] 参数: {:?}", label, values);
+                info!("📋 [{}] Parameters: {:?}", label, values);
             }
         }
     }

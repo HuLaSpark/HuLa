@@ -25,7 +25,7 @@ impl WebSocketManager {
 
     /// 初始化 WebSocket 连接
     pub async fn init_connection(&self, config: WebSocketConfig) -> Result<()> {
-        info!("🚀 初始化 WebSocket 管理器");
+        info!("🚀 Initializing WebSocket manager");
 
         // 停止现有连接
         self.disconnect().await;
@@ -35,7 +35,7 @@ impl WebSocketManager {
 
         // 启动连接
         if let Err(e) = client.connect(config).await {
-            error!("❌ WebSocket 连接失败: {}", e);
+            error!("❌ WebSocket connection failed: {}", e);
             return Err(e);
         }
 
@@ -43,10 +43,10 @@ impl WebSocketManager {
         {
             let mut client_guard = self.client.write().await;
             *client_guard = Some(client);
-            info!("✅ WebSocket 客户端实例已存储到管理器");
+            info!("✅ WebSocket client instance stored in manager");
         }
 
-        info!("✅ WebSocket 管理器初始化完成");
+        info!("✅ WebSocket manager initialization completed");
         Ok(())
     }
 
@@ -54,7 +54,7 @@ impl WebSocketManager {
     pub async fn disconnect(&self) {
         let mut client_guard = self.client.write().await;
         if let Some(client) = client_guard.take() {
-            info!("📡 断开 WebSocket 连接");
+            info!("📡 Disconnecting WebSocket connection");
             client.disconnect().await;
         }
     }
@@ -62,7 +62,7 @@ impl WebSocketManager {
     /// 发送消息
     pub async fn send_message(&self, data: serde_json::Value) -> Result<()> {
         info!(
-            "📤 尝试发送消息: {}",
+            "📤 Attempting to send message: {}",
             data.to_string().chars().take(100).collect::<String>()
         );
 
@@ -70,15 +70,15 @@ impl WebSocketManager {
         if let Some(client) = client_guard.as_ref() {
             // 检查实际连接状态
             let state = client.get_state().await;
-            info!("🔍 当前 WebSocket 状态: {:?}", state);
+            info!("🔍 Current WebSocket state: {:?}", state);
 
             match state {
                 ConnectionState::Connected => {
-                    info!("✅ WebSocket 已连接，发送消息");
+                    info!("✅ WebSocket connected, sending message");
                     client.send_message(data).await
                 }
                 _ => {
-                    warn!("⚠️ WebSocket 状态为 {:?}，无法发送消息", state);
+                    warn!("⚠️ WebSocket state is {:?}, cannot send message", state);
                     Err(anyhow::anyhow!(
                         "WebSocket not in connected state: {:?}",
                         state
@@ -86,7 +86,7 @@ impl WebSocketManager {
                 }
             }
         } else {
-            warn!("⚠️ WebSocket 客户端实例不存在，未初始化");
+            warn!("⚠️ WebSocket client instance does not exist, not initialized");
             Err(anyhow::anyhow!("WebSocket client not initialized"))
         }
     }
@@ -117,7 +117,7 @@ impl WebSocketManager {
         if let Some(client) = client_guard.as_ref() {
             client.force_reconnect().await
         } else {
-            warn!("⚠️ WebSocket 未初始化，无法重连");
+            warn!("⚠️ WebSocket not initialized, cannot reconnect");
             Err(anyhow::anyhow!("WebSocket not initialized"))
         }
     }
@@ -129,7 +129,7 @@ impl WebSocketManager {
             client.update_config(config).await;
             Ok(())
         } else {
-            warn!("⚠️ WebSocket 未初始化，无法更新配置");
+            warn!("⚠️ WebSocket not initialized, cannot update config");
             Err(anyhow::anyhow!("WebSocket not initialized"))
         }
     }
@@ -145,8 +145,8 @@ impl WebSocketManager {
         if let Some(client) = client_guard.as_ref() {
             client.set_app_background_state(is_background);
             info!(
-                "📱 WebSocket 管理器设置应用状态: {}",
-                if is_background { "后台" } else { "前台" }
+                "📱 WebSocket manager setting app state: {}",
+                if is_background { "background" } else { "foreground" }
             );
         }
     }
@@ -166,7 +166,7 @@ impl WebSocketManager {
 pub fn get_websocket_manager(app_handle: &AppHandle) -> Arc<WebSocketManager> {
     GLOBAL_WS_MANAGER
         .get_or_init(|| {
-            info!("🚀 创建全局 WebSocket 管理器实例");
+            info!("🚀 Creating global WebSocket manager instance");
             let manager = Arc::new(WebSocketManager::new(app_handle.clone()));
 
             // 同时在 Tauri 状态中管理，保持兼容性
@@ -181,6 +181,6 @@ pub fn get_websocket_manager(app_handle: &AppHandle) -> Arc<WebSocketManager> {
 /// 应该在应用启动时调用
 pub fn init_global_websocket_manager(app_handle: &AppHandle) -> Arc<WebSocketManager> {
     let manager = get_websocket_manager(app_handle);
-    info!("✅ 全局 WebSocket 管理器已初始化");
+    info!("✅ Global WebSocket manager initialized");
     manager
 }

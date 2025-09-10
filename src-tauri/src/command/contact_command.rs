@@ -16,7 +16,7 @@ use tracing::{error, info};
 pub async fn list_contacts_command(
     state: State<'_, AppData>,
 ) -> Result<Vec<im_contact::Model>, String> {
-    info!("查询所有会话列表:");
+    info!("Querying all conversation list:");
     let result: Result<Vec<im_contact::Model>, CommonError> = async {
         // 获取当前登录用户的 uid
         let login_uid = {
