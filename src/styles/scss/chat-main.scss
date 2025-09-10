@@ -42,11 +42,6 @@
     background: var(--select-bg-color-self, rgba(255, 255, 255, 0.3)); /* 自己消息选中背景颜色 */
   }
 }
-/**! 气泡动画 */
-.bubble-animation {
-  @apply transform-gpu;
-  animation: bubble-twinkle 0.4s ease-out forwards;
-}
 .photo-wall {
   @extend .bubble-oneself;
   @apply flex flex-col items-start gap-6px flex-1;

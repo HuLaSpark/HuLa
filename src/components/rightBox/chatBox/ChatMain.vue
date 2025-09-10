@@ -42,26 +42,16 @@
         ref="scrollContainer"
         class="scrollbar-container"
         :class="{ 'hide-scrollbar': !showScrollbar }"
-        role="log"
-        aria-live="polite"
-        tabindex="0"
         @scroll="handleScroll"
         @click="handleChatAreaClick"
         @mouseenter="showScrollbar = true"
         @mouseleave="showScrollbar = false">
-        <!-- 加载中提示 -->
-        <div v-if="isLoadingMore" class="flex-center gap-6px h-32px">
-          <img class="size-16px" src="@/assets/img/loading.svg" alt="" />
-          <span class="text-(12px #909090)">加载中</span>
-        </div>
-
-        <!-- 没有更多消息提示 -->
-        <div v-else-if="shouldShowNoMoreMessages" class="flex-center gap-6px h-32px">
-          <span class="text-(12px #909090)">没有更多消息</span>
-        </div>
-
         <!-- 消息列表 -->
         <div class="message-list min-h-full flex flex-col">
+          <!-- 没有更多消息提示 -->
+          <div v-show="shouldShowNoMoreMessages" class="flex-center gap-6px h-32px flex-shrink-0">
+            <span class="text-(12px #909090)">没有更多消息</span>
+          </div>
           <n-flex
             v-for="(item, index) in displayedMessageList"
             :key="item.message.id"
@@ -206,8 +196,8 @@
                           {{ getUserDisplayName(item.fromUser.uid) }}
                         </span>
                         <!-- 消息归属地 -->
-                        <span class="text-(12px #909090)">
-                          ({{ groupStore.getUserInfo(item.fromUser.uid)?.locPlace || '未知' }})
+                        <span v-if="groupStore.getUserInfo(item.fromUser.uid)?.locPlace" class="text-(12px #909090)">
+                          ({{ groupStore.getUserInfo(item.fromUser.uid)?.locPlace }})
                         </span>
                       </n-flex>
                     </ContextMenu>
@@ -417,7 +407,6 @@ import { useMitt } from '@/hooks/useMitt.ts'
 import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 import { usePopover } from '@/hooks/usePopover.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
-import type { MessageType } from '@/services/types.ts'
 import { useCachedStore } from '@/stores/cached'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global'
@@ -486,7 +475,6 @@ const { footerHeight } = useChatLayoutGlobal()
 const visibleIds = shallowRef<string[]>([])
 const intersectionObserver = ref<IntersectionObserver | null>(null)
 const lastScrollTop = ref<number>(0)
-const scrollPositions = ref<Map<string, number>>(new Map())
 // 会话消息列表缓存：roomId -> messages
 const messageCache = ref<Map<string, any[]>>(new Map())
 // 保持旧内容，直到新会话数据就绪再替换
@@ -734,46 +722,18 @@ const updateIntersectionObserver = (): void => {
   })
 }
 
-// 恢复指定会话的滚动位置，返回是否恢复成功
-const restoreScrollPosition = (roomId: string | undefined | null): boolean => {
-  if (!roomId) return false
-  const container = scrollContainerRef.value
-  if (!container) return false
-  const target = scrollPositions.value.get(roomId)
-  if (typeof target !== 'number') return false
-
-  const doScroll = (): void => {
-    // 标记为自动滚动，避免被 handleScroll 误判
-    isAutoScrolling.value = true
-    container.scrollTo({ top: Math.max(0, target), behavior: 'auto' })
-    // 若偏差仍明显（>16px），再补偿一次
-    setTimeout(() => {
-      const delta = Math.abs(container.scrollTop - target)
-      if (delta > 16) {
-        container.scrollTo({ top: Math.max(0, target), behavior: 'auto' })
-      }
-      isAutoScrolling.value = false
-    }, 120)
-  }
-
-  nextTick(() => doScroll())
-  return true
-}
-
 // 根据滚动意图执行相应操作
 const handleScrollByIntent = (intent: ScrollIntentEnum): void => {
   const container = scrollContainerRef.value
   if (!container) return
 
   switch (intent) {
-    case ScrollIntentEnum.INITIAL: {
-      // 初始化滚动：优先恢复历史位置，失败则滚动到底部
-      const current = currentRoomId.value
-      if (!restoreScrollPosition(current)) {
+    case ScrollIntentEnum.INITIAL:
+      // 初始化滚动：直接滚动到底部显示最新消息
+      nextTick(() => {
         scrollToBottom()
-      }
+      })
       break
-    }
 
     case ScrollIntentEnum.NEW_MESSAGE:
       // 新消息滚动：直接滚动到底部
@@ -838,8 +798,8 @@ const updateMessageIndexMap = (): void => {
 }
 
 // 处理滚动事件(用于页脚显示功能)
-const handleScroll = (event: Event): void => {
-  if (isAutoScrolling.value) return // 如果是自动滚动，不处理
+const handleScroll = (event: Event) => {
+  if (isAutoScrolling.value || isScrollLocked.value) return
   const container = event.target as HTMLElement
   if (!container) return
 
@@ -858,11 +818,10 @@ const handleScroll = (event: Event): void => {
   lastScrollTop.value = currentScrollTop
   scrollTop.value = currentScrollTop
 
-  // 防抖处理昂贵操作
   debouncedScrollOperations(container)
 }
 
-// 将昂贵的滚动操作分离到防抖函数中
+// 将滚动操作分离到防抖函数中
 const debouncedScrollOperations = useDebounceFn(async (container: HTMLElement) => {
   const scrollHeight = container.scrollHeight
   const clientHeight = container.clientHeight
@@ -875,7 +834,7 @@ const debouncedScrollOperations = useDebounceFn(async (container: HTMLElement) =
 
   rafId.value = requestAnimationFrame(async () => {
     // 处理触顶加载更多
-    if (scrollTop.value < 26) {
+    if (scrollTop.value < 60) {
       // 如果正在加载或已经触发了加载，或已到达最后一页，则不重复触发
       if (messageOptions.value?.isLoading || isLoadingMore.value || messageOptions.value?.isLast) return
 
@@ -887,7 +846,7 @@ const debouncedScrollOperations = useDebounceFn(async (container: HTMLElement) =
       chatStore.clearNewMsgCount()
     }
   })
-}, 16) // ~60fps throttling for better performance
+}, 16)
 
 // 添加防抖的鼠标事件处理
 const debouncedMouseEnter = useDebounceFn((key: number) => {
@@ -920,13 +879,8 @@ const handleMouseLeave = (): void => {
 // 监听会话切换（仅切换数据，不清空 DOM）
 watch(
   () => globalStore.currentSession!,
-  (value, oldValue) => {
+  async (value, oldValue) => {
     if (oldValue.roomId !== value.roomId) {
-      // 切换前保存旧会话的滚动位置
-      const container = scrollContainerRef.value
-      if (container && oldValue.roomId) {
-        scrollPositions.value.set(oldValue.roomId, container.scrollTop)
-      }
       // 标记即将切换到的新会话，等待新数据就绪后再替换展示数据
       pendingRoomId.value = value.roomId
 
@@ -937,7 +891,12 @@ watch(
       const cached = messageCache.value.get(value.roomId)
       if (cached && Array.isArray(cached)) {
         displayedMessageList.value = cached
+      } else {
+        displayedMessageList.value = []
       }
+
+      // 重置并刷新当前房间的消息
+      await chatStore.resetAndRefreshCurrentRoomMessages()
 
       // 在会话切换时加载新会话的置顶公告
       if (isGroup.value) {
@@ -1045,10 +1004,7 @@ watch(
       messageCache.value.set(currentRoomIdLocal, chatMessageList.value)
       pendingRoomId.value = null
       nextTick(() => {
-        const restored = restoreScrollPosition(currentRoomIdLocal)
-        if (!restored) {
-          scrollToBottom()
-        }
+        scrollToBottom()
       })
     }
   }
@@ -1179,27 +1135,6 @@ const jumpToReplyMsg = async (key: string): Promise<void> => {
   }
 }
 
-// 给气泡添加动画
-const addToDomUpdateQueue = (index: string, id: string): void => {
-  // 使用 nextTick 确保虚拟列表渲染完最新的项目后进行滚动
-  nextTick(() => {
-    /** data-key标识的气泡,添加前缀用于区分用户消息，不然气泡动画会被覆盖 */
-    const dataKey = id === userUid.value ? `U${index}` : `Q${index}`
-    const lastMessageElement = document.querySelector(`[data-key="${dataKey}"]`) as HTMLElement
-    if (lastMessageElement) {
-      console.log('触发气泡添加动画')
-      // 添加动画类
-      lastMessageElement.classList.add('bubble-animation')
-      // 监听动画结束事件
-      const handleAnimationEnd = () => {
-        lastMessageElement.classList.remove('bubble-animation')
-        lastMessageElement.removeEventListener('animationend', handleAnimationEnd)
-      }
-      lastMessageElement.addEventListener('animationend', handleAnimationEnd)
-    }
-  })
-}
-
 // 解决mac右键会选中文本的问题
 const handleMacSelect = (event: Event): void => {
   if (isMac()) {
@@ -1268,16 +1203,19 @@ const handleLoadMore = async (): Promise<void> => {
   // 使用CSS变量控制滚动行为，避免直接操作DOM样式
   container.classList.add('loading-history')
 
+  let scrollRestoreNeeded = false
+  let scrollDelta = 0
+
   try {
     await chatStore.loadMore()
     await nextTick()
 
-    // 恢复锚点相对位置
+    // 计算滚动位置恢复所需的偏移量
     if (anchorId) {
       const anchorElAfter = container.querySelector(`[data-message-id="${anchorId}"]`)
       const anchorTopAfter = anchorElAfter ? anchorElAfter.getBoundingClientRect().top - containerRectTop : 0
-      const delta = anchorTopAfter - anchorTopBefore
-      container.scrollTop += delta
+      scrollDelta = anchorTopAfter - anchorTopBefore
+      scrollRestoreNeeded = true
     }
 
     // 更新消息索引映射
@@ -1293,6 +1231,11 @@ const handleLoadMore = async (): Promise<void> => {
     // 释放滚动锁，重置意图状态
     isScrollLocked.value = false
     scrollIntent.value = ScrollIntentEnum.NONE
+
+    // 在锁释放后恢复滚动位置，避免触发被锁定的滚动事件
+    if (scrollRestoreNeeded) {
+      container.scrollTop += scrollDelta
+    }
 
     // 重置滚动方向状态，防止加载后悬浮按钮意外出现
     isScrollingDown.value = false
@@ -1412,9 +1355,6 @@ onMounted(async () => {
       messageCache.value.set(current, chatMessageList.value)
     }
   })
-  useMitt.on(MittEnum.MESSAGE_ANIMATION, (messageType: MessageType) => {
-    addToDomUpdateQueue(messageType.message.id, messageType.fromUser.uid)
-  })
   useMitt.on(`${MittEnum.INFO_POPOVER}-Main`, (event: any) => {
     selectKey.value = event.uid
     infoPopoverRefs.value[event.uid].setShow(true)
@@ -1426,8 +1366,6 @@ onMounted(async () => {
       scrollToBottom()
     })
   })
-
-  // scrollToBottom()
 })
 
 onUnmounted(() => {
@@ -1485,7 +1423,7 @@ onUnmounted(() => {
     transition-property: opacity, background-color;
     transition-duration: 0.3s;
     transition-timing-function: ease;
-    min-height: 75px;
+    // min-height: 42px;
     z-index: 999;
   }
 
@@ -1497,17 +1435,23 @@ onUnmounted(() => {
     background: transparent;
   }
 
-  /* 使用WebKit兼容的方式隐藏滚动条 */
   &.hide-scrollbar {
-    /* 保持滚动功能但隐藏滚动条 */
-    // &::-webkit-scrollbar {
-    //   background: transparent;
-    // }
-    // &::-webkit-scrollbar-thumb {
-    //   background: transparent;
-    // }
-    /* 为了保持布局稳定 */
-    margin-right: 0;
+    &::-webkit-scrollbar {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: transparent;
+      visibility: hidden;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-corner {
+      background: transparent;
+    }
   }
 
   &.show-scrollbar {
@@ -1518,7 +1462,6 @@ onUnmounted(() => {
 // 加载历史消息时的样式
 .loading-history {
   scroll-behavior: auto !important;
-  pointer-events: none;
 }
 
 // 性能优化相关样式

@@ -131,6 +131,7 @@ const chatStore = useChatStore()
 const globalStore = useGlobalStore()
 const groupStore = useGroupStore()
 const settingStore = useSettingStore()
+const { addListener } = useTauriListener()
 const { themes } = storeToRefs(settingStore)
 const { openMsgSession } = useCommon()
 const msgScrollbar = useTemplateRef<HTMLElement>('msg-scrollbar')
@@ -238,7 +239,6 @@ onBeforeMount(async () => {
   useMitt.emit(MittEnum.LOCATE_SESSION, { roomId: globalStore.currentSession?.roomId })
 })
 
-const { addListener } = useTauriListener()
 onMounted(async () => {
   SysNTF
   // 监听其他窗口发来的WebSocket发送请求

@@ -376,7 +376,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
     tempMsg.message.status = MessageStatusEnum.SENDING
     // 先添加到消息列表
     chatStore.pushMsg(tempMsg)
-    useMitt.emit(MittEnum.MESSAGE_ANIMATION, tempMsg)
     console.log('👾临时消息:', tempMsg)
 
     // 设置发送状态的定时器
@@ -860,7 +859,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
           tempMsg.message.status = MessageStatusEnum.SENDING
 
           chatStore.pushMsg(tempMsg)
-          useMitt.emit(MittEnum.MESSAGE_ANIMATION, tempMsg)
 
           // 异步处理上传
           const videoPath = await saveCacheFile(processedFile, 'video/')
@@ -1013,8 +1011,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
           // 添加到消息列表
           chatStore.pushMsg(tempMsg)
-          useMitt.emit(MittEnum.MESSAGE_ANIMATION, tempMsg)
-
           console.log('🖼️ 开始处理图片上传:', processedFile.name)
 
           // 上传图片
@@ -1099,7 +1095,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
           // 添加到消息列表
           chatStore.pushMsg(tempMsg)
-          useMitt.emit(MittEnum.MESSAGE_ANIMATION, tempMsg)
 
           // 获取上传进度监听
           const { progress, onChange } = (messageStrategy as any).getUploadProgress()
@@ -1271,7 +1266,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
       // 添加到消息列表（显示本地预览）
       chatStore.pushMsg(tempMsg)
-      useMitt.emit(MittEnum.MESSAGE_ANIMATION, tempMsg)
 
       // 设置发送状态的定时器
       const statusTimer = setTimeout(() => {
