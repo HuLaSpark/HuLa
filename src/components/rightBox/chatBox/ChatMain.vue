@@ -396,7 +396,6 @@
 
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { info } from '@tauri-apps/plugin-log'
 import { useDebounceFn } from '@vueuse/core'
 import { delay } from 'lodash-es'
 import { MessageStatusEnum, MittEnum, MsgEnum, ScrollIntentEnum, ThemeEnum } from '@/enums'
@@ -1320,7 +1319,6 @@ const isSingleLineEmojis = (item: ChatMessage): boolean => {
 
 // 监听公告更新事件
 const announcementUpdatedListener = await appWindow.listen('announcementUpdated', async (event: any) => {
-  info(`公告更新事件: ${event.payload}`)
   if (event.payload) {
     const { hasAnnouncements, topAnnouncement: newTopAnnouncement } = event.payload
     if (hasAnnouncements && newTopAnnouncement) {
@@ -1442,20 +1440,12 @@ onUnmounted(() => {
 
     &::-webkit-scrollbar-thumb {
       background: transparent;
-      visibility: hidden;
     }
-
     &::-webkit-scrollbar-track {
       background: transparent;
     }
-
-    &::-webkit-scrollbar-corner {
-      background: transparent;
-    }
-  }
-
-  &.show-scrollbar {
-    scrollbar-gutter: auto;
+    // 这里添加一个小的padding，防止mac上会不显示
+    padding-right: 0.01px;
   }
 }
 
