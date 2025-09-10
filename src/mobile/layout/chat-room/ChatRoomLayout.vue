@@ -24,7 +24,7 @@ import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { type } from '@tauri-apps/plugin-os'
 import { useRoute } from 'vue-router'
 import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.vue'
-import { MittEnum, NotificationTypeEnum, TauriCommand } from '@/enums'
+import { NotificationTypeEnum, TauriCommand } from '@/enums'
 import { useMitt } from '@/hooks/useMitt'
 import type { MessageType } from '@/services/types'
 import { WsResponseMessageType } from '@/services/wsType'
@@ -91,7 +91,7 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
       }
 
       // 设置图标闪烁
-      useMitt.emit(MittEnum.MESSAGE_ANIMATION, data)
+      // useMitt.emit(MittEnum.MESSAGE_ANIMATION, data)
       // session.unreadCount++
       // 在windows系统下才发送通知
       if (type() === 'windows') {

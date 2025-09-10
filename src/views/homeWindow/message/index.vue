@@ -233,8 +233,6 @@ const handleMenuShow = (roomId: string, isShow: boolean) => {
 }
 
 onBeforeMount(async () => {
-  // 请求回话列表
-  await chatStore.getSessionList(true)
   // 从联系人页面切换回消息页面的时候自动定位到选中的会话
   useMitt.emit(MittEnum.LOCATE_SESSION, { roomId: globalStore.currentSession?.roomId })
 })
