@@ -1,5 +1,5 @@
 import { ImUrlEnum, type NotificationTypeEnum } from '@/enums'
-import type { CacheBadgeReq, CacheUserReq, LoginUserReq, RegisterUserReq } from '@/services/types'
+import type { CacheBadgeReq, CacheUserReq, LoginUserReq, ModifyUserInfoType, RegisterUserReq } from '@/services/types'
 import { ErrorType, invokeSilently, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 
 /**
@@ -265,9 +265,9 @@ export async function getMsgList(params: any) {
   })
 }
 
-export async function modifyUserName(body: { name: string }) {
+export async function ModifyUserInfo(body: ModifyUserInfoType) {
   return await imRequest({
-    url: ImUrlEnum.MODIFY_USER_NAME,
+    url: ImUrlEnum.MODIFY_USER_INFO,
     body
   })
 }

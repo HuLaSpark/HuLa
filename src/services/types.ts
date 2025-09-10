@@ -253,6 +253,8 @@ export type UserInfoType = {
   sex: SexEnum
   /** 权限 */
   power?: number
+  /** 手机号 */
+  phone?: string
   /** 佩戴的徽章 */
   wearingItemId?: string
   /** 用户状态id */
@@ -261,6 +263,8 @@ export type UserInfoType = {
   avatarUpdateTime: number
   /** 客户端 */
   client: string
+  /** 个人简介 */
+  resume: string
 }
 
 export type BadgeType = {
@@ -580,6 +584,17 @@ export type AIModel = {
   name: string
   value: string
   avatar: string
+}
+
+/** 修改用户基础信息的类型 */
+export type ModifyUserInfoType = {
+  name: string
+  avatar: string
+  sex?: number
+  phone?: string
+  resume?: string
+  /** 昵称修改次数 */
+  modifyNameChance: number
 }
 
 /** 登录 */

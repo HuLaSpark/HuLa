@@ -442,7 +442,10 @@ onBeforeMount(async () => {
 
 onMounted(async () => {
   // 初始化配置
-  if (!localStorage.getItem('config')) {
+  const cachedConfig = localStorage.getItem('config')
+  if (cachedConfig) {
+    configStore.config = JSON.parse(cachedConfig).config
+  } else {
     await configStore.initConfig()
   }
   timerWorker.postMessage({

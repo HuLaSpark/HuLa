@@ -13,7 +13,7 @@ import { useMenuTopStore } from '@/stores/menuTop.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { useUserStatusStore } from '@/stores/userStatus.ts'
-import { modifyUserName, setUserBadge } from '@/utils/ImRequestUtils'
+import { ModifyUserInfo, setUserBadge } from '@/utils/ImRequestUtils'
 
 export const leftHook = () => {
   const appWindow = WebviewWindow.getCurrent()
@@ -88,7 +88,7 @@ export const leftHook = () => {
       window.$message.error('改名次数不足')
       return
     }
-    modifyUserName({ name: localUserInfo.name }).then(() => {
+    ModifyUserInfo(localUserInfo).then(() => {
       // 更新本地缓存的用户信息
       userStore.userInfo!.name = localUserInfo.name!
       loginHistoriesStore.updateLoginHistory(<UserInfoType>userStore.userInfo) // 更新登录历史记录
