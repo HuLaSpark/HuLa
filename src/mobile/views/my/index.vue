@@ -16,7 +16,7 @@
         <div class="custom-rounded flex px-24px flex-col gap-4 z-1 p-10px mt-4 shadow">
           <CommunityTab
             :style="{ height: tabHeight + 'px' }"
-            :custom-height="tabHeight"
+            :custom-height="tabHeight - 44"
             @scroll="handleScroll"
             @update="onUpdate"
             :options="tabOptions"
@@ -57,7 +57,7 @@ const measureRef = ref<HTMLDivElement>()
 
 const tabHeight = ref(300)
 
-const bb = new ResizeObserver((event) => {
+const measureElementObserver = new ResizeObserver((event) => {
   tabHeight.value = event[0].contentRect.height
 })
 
@@ -145,13 +145,13 @@ const hasTriggeredHide = ref(false)
 
 onMounted(() => {
   if (measureRef.value) {
-    bb.observe(measureRef.value)
+    measureElementObserver.observe(measureRef.value)
   }
 })
 
 onUnmounted(() => {
   if (measureRef.value) {
-    bb.unobserve(measureRef.value)
+    measureElementObserver.unobserve(measureRef.value)
   }
 })
 
