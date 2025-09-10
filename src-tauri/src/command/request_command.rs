@@ -17,12 +17,12 @@ pub async fn login_command(
     if data.is_auto_login {
         // 自动登录逻辑
         if let Some(uid) = &data.uid {
-            info!("尝试自动登录，用户ID: {}", uid);
+            info!("Attempting auto login, user ID: {}", uid);
 
             // 从数据库获取用户的 refresh_token
             match im_user_repository::get_user_tokens(state.db_conn.deref(), uid).await {
                 Ok(Some((_, refresh_token))) => {
-                    info!("找到用户 {} 的 refresh_token，尝试刷新登录", uid);
+                    info!("Found refresh_token for user {}, attempting to refresh login", uid);
 
                     // 使用 refresh_token 刷新登录
                     let refresh_req = RefreshTokenReq {
@@ -32,7 +32,7 @@ pub async fn login_command(
                     let mut rc = state.rc.lock().await;
                     match rc.refresh_token(refresh_req).await {
                         Ok(Some(refresh_resp)) => {
-                            info!("自动登录成功，用户ID: {}", uid);
+                            info!("Auto login successful, user ID: {}", uid);
 
                             // 保存新的 token 信息到数据库
                             if let Err(e) = im_user_repository::save_user_tokens(
@@ -43,7 +43,7 @@ pub async fn login_command(
                             )
                             .await
                             {
-                                error!("保存新的 token 信息失败: {}", e);
+                                error!("Failed to save new token info: {}", e);
                             }
 
                             // 转换为 LoginResp 格式返回
@@ -57,18 +57,18 @@ pub async fn login_command(
                             return Ok(Some(login_resp));
                         }
                         Ok(None) => {
-                            error!("自动登录失败：刷新 token 返回空结果");
+                            error!("Auto login failed: refresh token returned empty result");
                         }
                         Err(e) => {
-                            error!("自动登录失败：刷新 token 请求失败: {}", e);
+                            error!("Auto login failed: refresh token request failed: {}", e);
                         }
                     }
                 }
                 Ok(None) => {
-                    info!("用户 {} 没有保存的 token 信息，无法自动登录", uid);
+                    info!("User {} has no saved token info, cannot auto login", uid);
                 }
                 Err(e) => {
-                    error!("获取用户 {} 的 token 信息失败: {}", uid, e);
+                    error!("Failed to get token info for user {}: {}", uid, e);
                 }
             }
 
@@ -79,7 +79,7 @@ pub async fn login_command(
         }
     } else {
         // 手动登录逻辑
-        info!("进行手动登录");
+        info!("Performing manual login");
         let mut rc = state.rc.lock().await;
         let res = rc.login(data).await.map_err(|e| e.to_string())?;
         Ok(res)
