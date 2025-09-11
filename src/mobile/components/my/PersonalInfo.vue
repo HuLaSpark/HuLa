@@ -24,6 +24,36 @@
             <span class="text-bold-style" style="font-size: 12px; color: #373838">在线</span>
           </div>
         </div>
+
+        <!-- 在线状态点 -->
+        <template v-if="!statusIcon">
+          <n-popover trigger="hover" placement="top" :show-arrow="false">
+            <template #trigger>
+              <div
+                @click="openContent('在线状态', 'onlineStatus', 320, 480)"
+                class="z-30 absolute top-72px left-72px cursor-pointer border-(6px solid [--avatar-border-color]) rounded-full size-18px"
+                :class="[activeStatus === OnlineEnum.ONLINE ? 'bg-#1ab292' : 'bg-#909090']"></div>
+            </template>
+            <span>{{ activeStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}</span>
+          </n-popover>
+        </template>
+
+        <!-- 独立的状态图标 -->
+        <template v-if="statusIcon">
+          <n-popover trigger="hover" placement="top" :show-arrow="false">
+            <template #trigger>
+              <div class="z-30 absolute top-72px left-72px size-26px bg-[--avatar-border-color] rounded-full">
+                <img
+                  :src="statusIcon"
+                  @click="openContent('在线状态', 'onlineStatus', 320, 480)"
+                  class="p-4px cursor-pointer rounded-full size-18px"
+                  alt="" />
+              </div>
+            </template>
+            <span>{{ currentStateTitle }}</span>
+          </n-popover>
+        </template>
+
         <!-- 账号 -->
         <div class="flex flex-warp gap-2 items-center">
           <span class="text-bold-style">账号:{{ userStore.userInfo!.account }}</span>
@@ -40,12 +70,18 @@
             <img class="block w-full" src="@/assets/mobile/my/my-medal.webp" alt="" />
             <div class="text-10px absolute inset-0 flex ps-2 items-center justify-start text-white font-medium">
               <span class="flex items-center">
-                <span class="font-bold">已点亮</span>
-                <span class="medal-number">1</span>
-                <span class="font-bold">枚勋章</span>
+                <template v-if="(userStore.userInfo?.itemIds?.length ?? 0) > 0">
+                  <span class="font-bold">已点亮</span>
+                  <span class="medal-number">{{ userStore.userInfo?.itemIds?.length }}</span>
+                  <span class="font-bold">枚勋章</span>
+                </template>
+                <span v-else>还没获取任何勋章</span>
               </span>
+
               <span class="flex ms-3">
-                <svg class="iconpark-icon block w-5 h-5"><use href="#right"></use></svg>
+                <svg class="iconpark-icon block w-5 h-5">
+                  <use href="#right"></use>
+                </svg>
               </span>
             </div>
           </div>
@@ -57,7 +93,7 @@
   <Transition name="slide-fade" @before-enter="beforeEnter" @enter="enter" @leave="leave">
     <div v-if="props.isShow" ref="animatedBox" style="transform: translateZ(0)" class="flex flex-col px-16px">
       <!-- 个人描述 -->
-      <div class="mt-2 text-bold-style line-height-24px">一段自我描述，添加性别/地区/工作或学校 不定期更新的日常</div>
+      <div class="mt-2 text-bold-style line-height-24px">{{ userStore.userInfo!.resume }}</div>
       <!-- 点赞关注 -->
       <div class="flex flex-wrap justify-around mt-4">
         <div class="flex flex-warp gap-2 items-center">
@@ -105,14 +141,54 @@
 </template>
 
 <script setup lang="ts">
-// import router from '@/router'
 import { useRouter } from 'vue-router'
+import { OnlineEnum } from '@/enums/index.ts'
 import { useUserStore } from '@/stores/user'
+import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 
-const userStore = useUserStore()
-
 const router = useRouter()
+const userStore = useUserStore()
+const userStatusStore = useUserStatusStore()
+const { stateList } = storeToRefs(userStatusStore)
+const activeStatus = ref<OnlineEnum>(OnlineEnum.ONLINE)
+const animatedBox = ref<HTMLElement | null>(null)
+const statusIcon = computed(() => {
+  const userStateId = userStore.userInfo?.userStateId
+
+  // 如果在线且有特殊状态
+  if (userStateId && userStateId !== '1') {
+    const state = stateList.value.find((s: { id: string }) => s.id === userStateId)
+    if (state) {
+      return state.url
+    }
+  }
+  return null
+})
+
+// 计算当前状态的标题
+const currentStateTitle = computed(() => {
+  const userStateId = userStore.userInfo?.userStateId
+
+  if (userStateId && userStateId !== '1') {
+    const state = stateList.value.find((s: { id: string }) => s.id === userStateId)
+    if (state) {
+      return state.title
+    }
+  }
+  return activeStatus.value === OnlineEnum.ONLINE ? '在线' : '离线'
+})
+
+/**
+ * 打开内容对应窗口 [安卓版本]
+ * @param title 窗口的标题
+ * @param label 窗口的标识
+ * @param w 窗口的宽度
+ * @param h 窗口的高度
+ * */
+const openContent = (_title: string, _label: string, _w = 840, _h = 600) => {
+  console.log('安卓的弹窗')
+}
 
 const toEditProfile = () => {
   router.push('/mobile/mobileMy/editProfile')
@@ -136,8 +212,6 @@ const props = defineProps({
     default: false
   }
 })
-
-const animatedBox = ref<HTMLElement | null>(null)
 
 function beforeEnter(el: Element) {
   const box = el as HTMLElement
@@ -266,7 +340,8 @@ $font-family-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
 .custom-rounded {
-  border-top-left-radius: 20px; /* 左上角 */
+  border-top-left-radius: 20px;
+  /* 左上角 */
   border-top-right-radius: 20px;
   overflow: hidden;
 }
@@ -280,6 +355,7 @@ $font-family-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   opacity: 0;
   transform: translateY(-20px);
 }
+
 .slide-fade-enter-to {
   opacity: 1;
   transform: translateY(0);
@@ -289,6 +365,7 @@ $font-family-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   opacity: 1;
   transform: translateY(0);
 }
+
 .slide-fade-leave-to {
   opacity: 0;
   transform: translateY(-20px);

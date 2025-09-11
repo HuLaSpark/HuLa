@@ -1,4 +1,6 @@
+import dayjs from 'dayjs'
 import { UploadSceneEnum } from '@/enums'
+import { formatTimestamp, isDiffNow } from '@/utils/ComputedTime.ts'
 import { UploadProviderEnum, useUpload } from './useUpload'
 
 export interface AvatarUploadOptions {
@@ -9,9 +11,6 @@ export interface AvatarUploadOptions {
   // 文件大小限制（KB），默认为150KB
   sizeLimit?: number
 }
-
-import dayjs from 'dayjs'
-import { formatTimestamp, isDiffNow } from '@/utils/ComputedTime.ts'
 
 /**
  * 上传头像的hook

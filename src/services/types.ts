@@ -200,8 +200,11 @@ export type UserItem = {
   account: string
   /** 我的群昵称 */
   myName?: string
+  /** 当前佩戴的徽章 */
   wearingItemId?: string
+  /** 徽章集合 */
   itemIds?: string[]
+  /** 用户状态 */
   userStateId?: string
 }
 
@@ -257,6 +260,8 @@ export type UserInfoType = {
   phone?: string
   /** 佩戴的徽章 */
   wearingItemId?: string
+  /** 徽章集合 */
+  itemIds?: string[]
   /** 用户状态id */
   userStateId: string
   /** 头像更新时间 */
