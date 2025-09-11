@@ -96,7 +96,6 @@ import { info } from '@tauri-apps/plugin-log'
 import { exit } from '@tauri-apps/plugin-process'
 import { CloseBxEnum, EventEnum, MittEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
-import { useTauriListener } from '@/hooks/useTauriListener'
 import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
 import { useAlwaysOnTopStore } from '@/stores/alwaysOnTop.ts'
@@ -125,7 +124,6 @@ const {
   isDrag?: boolean
 }>()
 const { getWindowTop, setWindowTop } = useAlwaysOnTopStore()
-const { addListener, cleanup } = useTauriListener()
 const settingStore = useSettingStore()
 const { tips, escClose } = storeToRefs(settingStore)
 const { resizeWindow } = useWindow()
@@ -263,13 +261,6 @@ onMounted(async () => {
     updateWindowMaximized()
   })
 
-  await addListener(
-    appWindow.listen(EventEnum.EXIT, async () => {
-      await exit(0)
-    }),
-    EventEnum.EXIT
-  )
-
   // 监听 home 窗口的关闭事件
   if (appWindow.label === 'home') {
     appWindow.onCloseRequested((event) => {
@@ -277,7 +268,6 @@ onMounted(async () => {
       if (isProgrammaticClose) {
         // 清理监听器
         info('[ActionBar]清理[home]窗口的监听器')
-        cleanup()
         exit(0)
       }
       info('[ActionBar]阻止[home]窗口关闭事件')

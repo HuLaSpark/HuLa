@@ -200,8 +200,11 @@ export type UserItem = {
   account: string
   /** 我的群昵称 */
   myName?: string
+  /** 当前佩戴的徽章 */
   wearingItemId?: string
+  /** 徽章集合 */
   itemIds?: string[]
+  /** 用户状态 */
   userStateId?: string
 }
 
@@ -257,6 +260,8 @@ export type UserInfoType = {
   phone?: string
   /** 佩戴的徽章 */
   wearingItemId?: string
+  /** 徽章集合 */
+  itemIds?: string[]
   /** 用户状态id */
   userStateId: string
   /** 头像更新时间 */
@@ -323,6 +328,7 @@ export type MessageType = {
   timeBlock?: string
   /** 是否加载中 */
   loading?: boolean
+  uploadProgress?: number
 }
 
 /**
@@ -421,6 +427,7 @@ export type EmojiBody = {
 /**
  * 消息内容
  */
+export type MessageBody = TextBody | ImageBody | VoiceBody | VideoBody | FileBody | EmojiBody | any
 export type MsgType = {
   /** 消息ID */
   id: string
@@ -429,7 +436,7 @@ export type MsgType = {
   /** 消息类型 */
   type: MsgEnum
   /** 动态消息体-`根据消息类型变化` */
-  body: TextBody | ImageBody | VoiceBody | VideoBody | FileBody | EmojiBody | any
+  body: MessageBody
   /** 发送时间戳 */
   sendTime: number
   /** 消息互动信息 */

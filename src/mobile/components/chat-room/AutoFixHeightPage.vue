@@ -101,10 +101,10 @@ const listenerMsgContainer = () => {
 }
 
 // 加载完成后
-onMounted(async () => {
+onMounted(() => {
   // 等待渲染完成
-  await nextTick()
-  await setPageContainerHeight()
+  nextTick()
+  setPageContainerHeight()
   listenerMeasureRef()
   listenerMsgContainer()
 })

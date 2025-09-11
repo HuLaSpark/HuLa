@@ -41,7 +41,7 @@
               {{ userStore.userInfo!.name }}
             </p>
             <p class="text-(10px [--text-color])">
-              {{ groupStore.getUserInfo(userStore.userInfo!.uid)?.locPlace || '无地址' }}
+              {{ groupStore.getUserInfo(userStore.userInfo!.uid)?.locPlace || '中国' }}
             </p>
           </n-flex>
         </n-flex>
@@ -259,8 +259,14 @@ onMounted(async () => {
 })
 
 const handleRefresh = async () => {
-  // 完成刷新
-  pullRefreshRef.value?.finishRefresh()
+  try {
+    // 完成刷新
+    if (pullRefreshRef.value && typeof pullRefreshRef.value.finishRefresh === 'function') {
+      pullRefreshRef.value.finishRefresh()
+    }
+  } catch (error) {
+    console.error('刷新完成时出错:', error)
+  }
 }
 
 /**
@@ -388,7 +394,6 @@ const intoRoom = (item: any) => {
   handleMsgClick(item)
   setTimeout(() => {
     router.push(`/mobile/chatRoom/chatMain`)
-    console.log('进入页面', item)
   }, 0)
 }
 const toSimpleBio = () => {

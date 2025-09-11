@@ -22,7 +22,7 @@ export const useGroupStore = defineStore(
     const myNameInCurrentGroup = computed({
       get() {
         const user = getCurrentUser()
-        return user?.myName || user?.name
+        return user?.myName || user?.name || ''
       },
       set(value: string) {
         // 这里可以添加设置昵称的逻辑
@@ -65,9 +65,14 @@ export const useGroupStore = defineStore(
       groupDetails.value.push(data)
     }
 
-    const getUserInfo = (uid: string) => {
+    const getUserInfo = computed(() => (uid: string) => {
       return allUserInfo.value.find((item) => item.uid === uid)
-    }
+    })
+
+    const getUserDisplayName = computed(() => (uid: string) => {
+      const user = userList.value.find((item) => item.uid === uid)
+      return user?.myName || user?.name || ''
+    })
 
     const allUserInfo = computed(() => {
       const set = new Set<UserItem>()
@@ -99,6 +104,10 @@ export const useGroupStore = defineStore(
       return -99
     })
 
+    const isCurrentLord = computed(() => (uid: string) => {
+      return chatStore.isGroup && currentLordId.value === uid
+    })
+
     /**
      * 获取当前管理员ID列表
      * 从成员列表中筛选出所有管理员的uid
@@ -107,6 +116,15 @@ export const useGroupStore = defineStore(
       return userList.value
         .filter((member: UserItem) => member.roleId === RoleEnum.ADMIN)
         .map((member: UserItem) => member.uid)
+    })
+
+    /**
+     * 检查用户是否为管理员
+     * @param uid 用户ID
+     * @returns 是否为管理员
+     */
+    const isAdmin = computed(() => (uid: string) => {
+      return chatStore.isGroup && adminUidList.value.includes(uid)
     })
 
     /**
@@ -474,7 +492,10 @@ export const useGroupStore = defineStore(
       removeGroupDetail,
       addGroupDetail,
       getUserInfo,
-      allUserInfo
+      allUserInfo,
+      getUserDisplayName,
+      isCurrentLord,
+      isAdmin
     }
   },
   {

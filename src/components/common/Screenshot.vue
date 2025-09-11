@@ -89,7 +89,6 @@ import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { writeImage } from '@tauri-apps/plugin-clipboard-manager'
 import type { Ref } from 'vue'
 import { useCanvasTool } from '@/hooks/useCanvasTool'
-import { useTauriListener } from '@/hooks/useTauriListener'
 import { isMac } from '@/utils/PlatformConstants'
 import { ErrorType, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler.ts'
 
@@ -107,7 +106,6 @@ type ScreenConfig = {
 
 // 获取当前窗口实例
 const appWindow = WebviewWindow.getCurrent()
-const { addListener } = useTauriListener()
 const canvasbox: Ref<HTMLDivElement | null> = ref(null)
 
 // 图像层
@@ -1351,24 +1349,18 @@ const handleScreenshot = () => {
 }
 
 onMounted(async () => {
-  await addListener(
-    appWindow.listen('capture', () => {
-      resetDrawTools()
-      initCanvas()
-      initMagnifier()
-    }),
-    'capture'
-  )
+  appWindow.listen('capture', () => {
+    resetDrawTools()
+    initCanvas()
+    initMagnifier()
+  })
 
   // 监听窗口隐藏时的重置事件
-  await addListener(
-    appWindow.listen('capture-reset', () => {
-      resetDrawTools()
-      resetScreenshot()
-      console.log('📷 Screenshot组件已重置')
-    }),
-    'capture-reset'
-  )
+  appWindow.listen('capture-reset', () => {
+    resetDrawTools()
+    resetScreenshot()
+    console.log('📷 Screenshot组件已重置')
+  })
 
   // 监听自定义截图事件
   window.addEventListener('trigger-screenshot', handleScreenshot)

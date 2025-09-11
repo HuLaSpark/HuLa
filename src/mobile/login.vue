@@ -36,7 +36,7 @@
 
     <img
       v-if="activeTab === 'login'"
-      :src="AvatarUtils.getAvatarUrl(info.avatar || '/logo.png')"
+      :src="AvatarUtils.getAvatarUrl(userInfo.avatar || '/logo.png')"
       alt="logo"
       class="size-86px rounded-full" />
 
@@ -45,7 +45,7 @@
       <n-input
         :class="{ 'pl-22px': loginHistories.length > 0 }"
         size="large"
-        v-model:value="info.account"
+        v-model:value="userInfo.account"
         type="text"
         spellCheck="false"
         autoComplete="off"
@@ -92,7 +92,7 @@
         class="pl-22px mt-8px"
         size="large"
         show-password-on="click"
-        v-model:value="info.password"
+        v-model:value="userInfo.password"
         type="password"
         spellCheck="false"
         autoComplete="off"
@@ -308,6 +308,7 @@
 <script setup lang="ts">
 import { invoke } from '@tauri-apps/api/core'
 import { emit } from '@tauri-apps/api/event'
+import { info } from '@tauri-apps/plugin-log'
 import { lightTheme } from 'naive-ui'
 import { ErrorType } from '@/common/exception'
 import PinInput from '@/components/common/PinInput.vue'
@@ -325,6 +326,10 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { getAllUserState, getCaptcha, getUserDetail, register, sendCaptcha } from '@/utils/ImRequestUtils'
 import { isAndroid } from '@/utils/PlatformConstants'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
+import { useChatStore } from '../stores/chat'
+import { useConfigStore } from '../stores/config'
+import { useGlobalStore } from '../stores/global'
+import { useGroupStore } from '../stores/group'
 
 // 本地注册信息类型，扩展API类型以包含确认密码
 interface LocalRegisterInfo extends RegisterUserReq {}
@@ -342,7 +347,7 @@ const activeTab = ref<'login' | 'register'>('login')
 const currentStep = ref(1)
 
 /** 登录账号信息 */
-const info = ref({
+const userInfo = ref({
   account: '',
   password: '',
   avatar: '',
@@ -449,10 +454,10 @@ const getShow = (value: string) => {
 
 // 监听登录表单变化
 watchEffect(() => {
-  loginDisabled.value = !(info.value.account && info.value.password && protocol.value)
+  loginDisabled.value = !(userInfo.value.account && userInfo.value.password && protocol.value)
   // 清空账号的时候设置默认头像
-  if (!info.value.account) {
-    info.value.avatar = '/logo.png'
+  if (!userInfo.value.account) {
+    userInfo.value.avatar = '/logo.png'
   }
 })
 
@@ -469,7 +474,7 @@ watch(activeTab, (newTab) => {
 
 /** 重置登录表单 */
 const resetLoginForm = () => {
-  info.value = {
+  userInfo.value = {
     account: '',
     password: '',
     avatar: '',
@@ -569,7 +574,7 @@ const handleRegisterComplete = async () => {
     // 关闭弹窗并切换到登录页面
     emailCodeModal.value = false
     activeTab.value = 'login'
-    info.value.account = registerInfo.value.nickName || registerInfo.value.email
+    userInfo.value.account = registerInfo.value.nickName || registerInfo.value.email
 
     window.$message.success('注册成功')
 
@@ -582,51 +587,50 @@ const handleRegisterComplete = async () => {
   }
 }
 
+const configStore = useConfigStore()
+const chatStore = useChatStore()
+const groupStore = useGroupStore()
+const globalStore = useGlobalStore()
+
+const initData = async () => {
+  info('init all data')
+  const cachedConfig = localStorage.getItem('config')
+  if (cachedConfig) {
+    configStore.config = JSON.parse(cachedConfig).config
+  } else {
+    await configStore.initConfig()
+  }
+  // 加载所有会话
+  await chatStore.getSessionList(true)
+  // 设置全局会话为第一个
+  globalStore.currentSessionRoomId = chatStore.sessionList[0].roomId
+
+  // 加载所有群的成员数据
+  const groupSessions = chatStore.getGroupSessions()
+  await Promise.all([
+    ...groupSessions.map((session) => groupStore.getGroupUserList(session.roomId, true)),
+    groupStore.setGroupDetails(),
+    chatStore.setAllSessionMsgList(1)
+  ])
+  info('init all data complete')
+}
+
 /**登录后创建主页窗口*/
 const normalLogin = async (auto = false) => {
   loading.value = true
   loginText.value = '登录中...'
   loginDisabled.value = true
   // 根据auto参数决定从哪里获取登录信息
-  const loginInfo = auto ? (userStore.userInfo as UserInfoType) : info.value
+  const loginInfo = auto ? (userStore.userInfo as UserInfoType) : userInfo.value
   const { account } = loginInfo
-
-  // 自动登录
-  if (auto) {
-    // 添加2秒延迟
-    await new Promise((resolve) => setTimeout(resolve, 1200))
-
-    // TODO 自动登录
-    // try {
-    //   // 登录处理
-    //
-    //   loginProcess(null, null, null)
-    // } catch (error) {
-    //   console.error('自动登录失败', error)
-    //   // 如果是网络异常，不删除token
-    //   if (!isOnline.value) {
-    //     loginDisabled.value = true
-    //     loginText.value = '网络异常'
-    //     loading.value = false
-    //   } else {
-    //     // 其他错误才清除token并重置状态
-    //     localStorage.removeItem('TOKEN')
-    //     isAutoLogin.value = false
-    //     loginDisabled.value = true
-    //     loginText.value = '登录'
-    //     loading.value = false
-    //   }
-    // }
-    return
-  }
 
   const clientId = await getEnhancedFingerprint()
   localStorage.setItem('clientId', clientId)
 
-  invoke('login_command', {
+  await invoke('login_command', {
     data: {
       account: account,
-      password: info.value.password,
+      password: userInfo.value.password,
       deviceType: 'MOBILE',
       systemType: '2', // 2是im 1是后台
       clientId,
@@ -641,6 +645,8 @@ const normalLogin = async (auto = false) => {
       await rustWebSocketClient.initConnect()
       // 登录处理
       await loginProcess(res.token, res.refreshToken, res.client)
+      // 初始化数据
+      await initData()
     })
     .catch((e: any) => {
       console.error('登录异常：', e)
@@ -716,10 +722,10 @@ const loginProcess = async (token: string, refreshToken: string, client: string)
  * */
 const giveAccount = (item: UserInfoType) => {
   const { account, avatar, name, uid } = item
-  info.value.account = account || ''
-  info.value.avatar = avatar
-  info.value.nickName = name
-  info.value.uid = uid
+  userInfo.value.account = account || ''
+  userInfo.value.avatar = avatar
+  userInfo.value.nickName = name
+  userInfo.value.uid = uid
   arrowStatus.value = false
 }
 
@@ -732,9 +738,9 @@ const delAccount = (item: UserInfoType) => {
   if (lengthBeforeDelete === 1 && loginHistories.length === 0) {
     arrowStatus.value = false
   }
-  info.value.account = ''
-  info.value.password = ''
-  info.value.avatar = '/logo.png'
+  userInfo.value.account = ''
+  userInfo.value.password = ''
+  userInfo.value.avatar = '/logo.png'
 }
 
 const handleForgetPassword = () => {
