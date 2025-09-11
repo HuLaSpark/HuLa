@@ -19,7 +19,7 @@
               <n-badge>
                 <n-avatar
                   :size="40"
-                  :src="AvatarUtils.getAvatarUrl(gloabalStore.currentSession.avatar)"
+                  :src="AvatarUtils.getAvatarUrl(globalStore.currentSession.avatar)"
                   fallback-src="/logo.png"
                   round />
               </n-badge>
@@ -27,9 +27,9 @@
             <div class="text-14px flex items-center h-full gap-5px">
               <span>
                 {{
-                  gloabalStore.currentSession.remark
-                    ? gloabalStore.currentSession.remark
-                    : gloabalStore.currentSession.name
+                  globalStore.currentSession.remark
+                    ? globalStore.currentSession.remark
+                    : globalStore.currentSession.name
                 }}
               </span>
               <span>
@@ -46,7 +46,7 @@
               <div class="flex justify-between items-center">
                 <div class="text-14px">群聊成员</div>
                 <div class="text-12px text-#6E6E6E flex flex-wrap gap-10px items-center">
-                  <div>{{ gloabalStore.currentSession.memberNum || 0 }}</div>
+                  <div>{{ memberNum || 0 }}</div>
                   <div>
                     <svg class="w-14px h-14px iconpark-icon">
                       <use href="#right"></use>
@@ -135,11 +135,11 @@
               <!-- 群号 -->
               <div
                 style="border-bottom: 1px solid; border-color: #ebebeb"
-                @click="handleCopy(gloabalStore.currentSession.account)"
+                @click="handleCopy(globalStore.currentSession.account)"
                 class="flex justify-between py-15px items-center">
                 <div class="text-14px">群号/二维码</div>
                 <div class="text-12px text-#6E6E6E flex flex-wrap gap-10px items-center">
-                  <div>{{ gloabalStore.currentSession.account }}</div>
+                  <div>{{ globalStore.currentSession.account }}</div>
                   <div>
                     <svg class="w-14px h-14px iconpark-icon">
                       <use href="#saoma-i3589iic"></use>
@@ -177,8 +177,8 @@
           <!-- 群备注 -->
           <div class="w-full flex flex-col gap-15px rounded-10px">
             <div class="ps-15px text-14px">
-              <span>群备注</span>
-              <span class="text-#6E6E6E">（仅自己可见）</span>
+              <span v-if="isEditingRemark">群备注</span>
+              <span v-if="isEditingRemark" class="text-#6E6E6E">（仅自己可见）</span>
 
               <div v-if="isEditingRemark" class="flex items-center">
                 <n-input
@@ -195,8 +195,8 @@
                   @blur="handleRemarkUpdate"
                   @keydown.enter="handleRemarkUpdate" />
               </div>
-              <span v-else class="cursor-pointer" @click="startEditRemark">
-                {{ item.remark || '设置群聊备注' }} （仅自己可见）
+              <span v-else class="cursor-pointer text-gray-200 text-14px text-left" @click="startEditRemark">
+                {{ item?.remark || '设置群聊备注' }} （仅自己可见）
               </span>
             </div>
             <!-- <div class="rounded-10px flex w-full bg-white shadow">
@@ -243,9 +243,12 @@ import { useGroupStore } from '@/stores/group'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { getGroupDetail } from '@/utils/ImRequestUtils'
 
-const gloabalStore = useGlobalStore()
+const globalStore = useGlobalStore()
 const groupStore = useGroupStore()
 const cacheStore = useCachedStore()
+
+// TODO
+const memberNum = computed(() => globalStore.currentSession.memberNum)
 
 const item = ref<any>(null)
 const active1 = ref(false)
@@ -309,11 +312,11 @@ const fetchGroupMembers = async (roomId: string) => {
  * 这里直接监听状态的值
  */
 onMounted(async () => {
-  console.log('gloabalStore.currentSession --> ', gloabalStore.currentSession)
-  if (gloabalStore.currentSession.type === RoomTypeEnum.SINGLE) {
-    item.value = groupStore.getUserInfo(gloabalStore.currentSession.detailId)!
+  console.log('globalStore.currentSession --> ', globalStore.currentSession)
+  if (globalStore.currentSession.type === RoomTypeEnum.SINGLE) {
+    item.value = groupStore.getUserInfo(globalStore.currentSession.detailId)!
   } else {
-    await getGroupDetail(gloabalStore.currentSession.detailId)
+    await getGroupDetail(globalStore.currentSession.detailId)
       .then((response: any) => {
         item.value = response
         nicknameValue.value = response.myName || ''
