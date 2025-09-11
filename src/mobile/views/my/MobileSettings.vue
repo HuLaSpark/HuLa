@@ -46,10 +46,18 @@
 import { emit } from '@tauri-apps/api/event'
 import { info } from '@tauri-apps/plugin-log'
 import { NInput, NSelect, NSwitch } from 'naive-ui'
-import { EventEnum, TauriCommand } from '@/enums'
+import { EventEnum, TauriCommand, ThemeEnum } from '@/enums'
 import router from '@/router'
 import { useGlobalStore } from '@/stores/global'
+import { useSettingStore } from '@/stores/setting.ts'
+import { useUserStore } from '@/stores/user'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
+
+const globalStore = useGlobalStore()
+const { isTrayMenuShow } = storeToRefs(globalStore)
+const dialog = useDialog()
+const settingStore = useSettingStore()
+const userStore = useUserStore()
 
 // 定义设置项
 const settings = reactive([
@@ -57,29 +65,43 @@ const settings = reactive([
     key: 'notifications',
     label: '消息通知',
     type: 'switch',
-    value: true
+    value: computed({
+      get: () => true,
+      set: () => {
+        /* 更新通知设置 */
+      }
+    })
   },
   {
     key: 'username',
     label: '昵称',
     type: 'input',
-    value: ''
+    value: computed({
+      get: () => userStore.userInfo?.name || '',
+      set: () => {}
+    })
   },
   {
     key: 'theme',
     label: '界面主题',
     type: 'select',
-    value: 'light',
+    value: computed({
+      get: () => settingStore.themes.content,
+      set: (val) => settingStore.toggleTheme(val)
+    }),
     options: [
-      { label: '浅色', value: 'light' },
-      { label: '深色', value: 'dark' }
+      { label: '浅色', value: ThemeEnum.LIGHT },
+      { label: '深色', value: ThemeEnum.DARK }
     ]
   },
   {
     key: 'language',
     label: '应用语言',
     type: 'select',
-    value: 'zh',
+    value: computed({
+      get: () => 'zh',
+      set: () => {}
+    }),
     options: [
       { label: '中文', value: 'zh' },
       { label: 'English', value: 'en' },
@@ -87,9 +109,6 @@ const settings = reactive([
     ]
   }
 ])
-const globalStore = useGlobalStore()
-const { isTrayMenuShow } = storeToRefs(globalStore)
-const dialog = useDialog()
 // 退出登录逻辑
 async function handleLogout() {
   dialog.error({

@@ -343,8 +343,8 @@ const currentStep = ref(1)
 
 /** 登录账号信息 */
 const info = ref({
-  account: '1046762075',
-  password: '123456',
+  account: '',
+  password: '',
   avatar: '',
   nickName: '',
   uid: ''
