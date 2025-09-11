@@ -37,10 +37,14 @@ import CommunityTab from '#/components/community/CommunityTab.vue'
 import PersonalInfo from '#/components/my/PersonalInfo.vue'
 import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.vue'
 
+const isShow = ref(true)
+const avatarBox = ref<HTMLElement | null>(null)
+const lastScrollTop = ref(0)
+const hasTriggeredHide = ref(false)
+const infoBox = ref<HTMLElement | null>(null)
 const measureRef = ref<HTMLDivElement>()
-
+const scrollContainer = ref<HTMLElement | null>(null)
 const tabHeight = ref(300)
-
 const bb = new ResizeObserver((event) => {
   tabHeight.value = event[0].contentRect.height
 })
@@ -67,10 +71,6 @@ const testList = computed(() => {
   }
   return temp
 })
-
-const isShow = ref(true)
-
-const avatarBox = ref<HTMLElement | null>(null)
 
 watch(isShow, (show) => {
   const box = avatarBox.value
@@ -103,7 +103,6 @@ watch(isShow, (show) => {
   }
 })
 
-const infoBox = ref<HTMLElement | null>(null)
 watch(isShow, (show) => {
   const info = infoBox.value
   if (!info) return
@@ -117,11 +116,6 @@ watch(isShow, (show) => {
     info.style.transform = 'translateX(-20px)' // 👈 向左移动一点
   }
 })
-
-const scrollContainer = ref<HTMLElement | null>(null)
-
-const lastScrollTop = ref(0)
-const hasTriggeredHide = ref(false)
 
 onMounted(() => {
   if (measureRef.value) {

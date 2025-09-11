@@ -261,13 +261,18 @@ watchEffect(() => {
   })
 })
 
-const handleClick = (index: string, type: number) => {
+/**
+ *
+ * @param uid 群聊id或好友uid
+ * @param type 1 群聊 2 单聊
+ */
+const handleClick = (uid: string, type: number) => {
   detailsShow.value = true
-  activeItem.value = index
+  activeItem.value = uid
   const data = {
     context: {
       type: type,
-      uid: index
+      uid: uid
     },
     detailsShow: detailsShow.value
   }
