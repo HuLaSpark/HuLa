@@ -129,7 +129,7 @@ pub async fn page_msg(
 }
 
 /// 将数据库消息模型转换为响应模型
-fn convert_message_to_resp(msg: im_message::Model) -> MessageResp {
+pub fn convert_message_to_resp(msg: im_message::Model) -> MessageResp {
     // 解析消息体 - 安全地处理 JSON 解析
     let body = msg.body.as_ref().and_then(|body_str| {
         if body_str.trim().is_empty() {

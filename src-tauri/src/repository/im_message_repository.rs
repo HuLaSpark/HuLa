@@ -4,7 +4,7 @@ use entity::im_message;
 use sea_orm::prelude::Expr;
 use sea_orm::sea_query::Alias;
 use sea_orm::{
-    ColumnTrait, ConnectionTrait, DatabaseConnection, DatabaseTransaction, EntityTrait,
+    ColumnTrait, Condition, ConnectionTrait, DatabaseConnection, DatabaseTransaction, EntityTrait,
     IntoActiveModel, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set,
 };
 
@@ -313,4 +313,90 @@ pub async fn update_message_recall_status(
         message_id
     );
     Ok(())
+}
+
+// ===================== 聊天历史查询功能 =====================
+
+/// 查询聊天历史记录 - 专为聊天记录弹窗设计
+/// 支持消息类型筛选、关键词搜索、日期排序和分页
+pub async fn query_chat_history(
+    db: &DatabaseConnection,
+    condition: crate::command::chat_history_command::ChatHistoryQueryCondition,
+) -> Result<(Vec<im_message::Model>, u64), CommonError> {
+    info!(
+        "查询聊天历史记录 - 房间: {}, 类型: {:?}, 关键词: {:?}",
+        condition.room_id, condition.message_type, condition.search_keyword
+    );
+
+    // 构建基础查询条件
+    let mut conditions = Condition::all()
+        .add(im_message::Column::LoginUid.eq(&condition.login_uid))
+        .add(im_message::Column::RoomId.eq(&condition.room_id));
+
+    // 消息类型筛选
+    if let Some(ref message_types) = condition.message_type {
+        let type_condition = message_types.iter().fold(
+            Condition::any(),
+            |acc, &msg_type| acc.add(im_message::Column::MessageType.eq(msg_type))
+        );
+        conditions = conditions.add(type_condition);
+    }
+
+    // 关键词搜索（搜索消息内容和发送者昵称）
+    if let Some(ref keyword) = condition.search_keyword {
+        if !keyword.trim().is_empty() {
+            let keyword_pattern = format!("%{}%", keyword.trim());
+            let search_condition = Condition::any()
+                .add(im_message::Column::Body.like(&keyword_pattern))
+                .add(im_message::Column::Nickname.like(&keyword_pattern));
+            conditions = conditions.add(search_condition);
+        }
+    }
+
+    // 日期范围筛选
+    if let Some(ref date_range) = condition.date_range {
+        if let Some(start_time) = date_range.start_time {
+            conditions = conditions.add(im_message::Column::SendTime.gte(start_time));
+        }
+        if let Some(end_time) = date_range.end_time {
+            conditions = conditions.add(im_message::Column::SendTime.lte(end_time));
+        }
+    }
+
+    // 查询总数
+    let total_count = im_message::Entity::find()
+        .filter(conditions.clone())
+        .count(db)
+        .await
+        .map_err(|e| anyhow::anyhow!("统计聊天记录总数失败: {}", e))?;
+
+    // 构建分页查询
+    let mut query = im_message::Entity::find()
+        .filter(conditions);
+
+    // 应用排序
+    query = match condition.sort_order {
+        crate::command::chat_history_command::SortOrder::Asc => query.order_by_asc(im_message::Column::SendTime),
+        crate::command::chat_history_command::SortOrder::Desc => query.order_by_desc(im_message::Column::SendTime),
+    };
+
+    // 应用分页
+    let offset = (condition.pagination.page.saturating_sub(1)) * condition.pagination.page_size;
+    query = query
+        .offset(offset as u64)
+        .limit(condition.pagination.page_size as u64);
+
+    // 执行查询
+    let messages = query
+        .all(db)
+        .await
+        .map_err(|e| anyhow::anyhow!("查询聊天历史记录失败: {}", e))?;
+
+    info!(
+        "聊天历史记录查询完成 - 返回 {} 条记录，总共 {} 条",
+        messages.len(),
+        total_count
+    );
+
+    Ok((messages, total_count))
 }
