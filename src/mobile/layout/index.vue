@@ -26,7 +26,6 @@
 <script setup lang="ts">
 import { emitTo } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { info } from '@tauri-apps/plugin-log'
 import { type } from '@tauri-apps/plugin-os'
 import { useRoute } from 'vue-router'
 import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.vue'
@@ -37,16 +36,13 @@ import { useMitt } from '@/hooks/useMitt'
 import type { MessageType } from '@/services/types'
 import { WsResponseMessageType } from '@/services/wsType'
 import { useChatStore } from '@/stores/chat'
-import { useConfigStore } from '@/stores/config'
 import { useGlobalStore } from '@/stores/global'
-import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user'
 import { audioManager } from '@/utils/AudioManager'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
 
 const route = useRoute()
 const tabBarElement = ref<InstanceType<typeof TabBarType>>()
-const configStore = useConfigStore()
 const chatStore = useChatStore()
 const userStore = useUserStore()
 const globalStore = useGlobalStore()
@@ -113,32 +109,6 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   }
 
   await globalStore.updateGlobalUnreadCount()
-})
-
-const groupStore = useGroupStore()
-
-/** 测试-结束 */
-onBeforeMount(async () => {
-  info('init all data')
-  const cachedConfig = localStorage.getItem('config')
-  if (cachedConfig) {
-    configStore.config = JSON.parse(cachedConfig).config
-  } else {
-    await configStore.initConfig()
-  }
-  // 加载所有会话
-  await chatStore.getSessionList(true)
-  // 设置全局会话为第一个
-  globalStore.currentSessionRoomId = chatStore.sessionList[0].roomId
-
-  // 加载所有群的成员数据
-  const groupSessions = chatStore.getGroupSessions()
-  await Promise.all([
-    ...groupSessions.map((session) => groupStore.getGroupUserList(session.roomId, true)),
-    groupStore.setGroupDetails(),
-    chatStore.setAllSessionMsgList(1)
-  ])
-  info('init all data complete')
 })
 </script>
 
