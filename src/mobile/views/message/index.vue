@@ -41,7 +41,7 @@
               {{ userStore.userInfo!.name }}
             </p>
             <p class="text-(10px [--text-color])">
-              {{ groupStore.getUserInfo(userStore.userInfo!.uid)?.locPlace || 'Unknown' }}
+              {{ groupStore.getUserInfo(userStore.userInfo!.uid)?.locPlace || '无地址' }}
             </p>
           </n-flex>
         </n-flex>
