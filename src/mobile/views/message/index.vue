@@ -253,8 +253,14 @@ onMounted(async () => {
 })
 
 const handleRefresh = async () => {
-  // 完成刷新
-  pullRefreshRef.value?.finishRefresh()
+  try {
+    // 完成刷新
+    if (pullRefreshRef.value && typeof pullRefreshRef.value.finishRefresh === 'function') {
+      pullRefreshRef.value.finishRefresh()
+    }
+  } catch (error) {
+    console.error('刷新完成时出错:', error)
+  }
 }
 
 /**

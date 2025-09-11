@@ -179,7 +179,6 @@ import { MittEnum, OnlineEnum, RoleEnum, RoomTypeEnum, ThemeEnum } from '@/enums
 import { useChatMain } from '@/hooks/useChatMain.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { usePopover } from '@/hooks/usePopover.ts'
-import { useTauriListener } from '@/hooks/useTauriListener'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { WsResponseMessageType } from '@/services/wsType.ts'
 import { useCachedStore } from '@/stores/cached.ts'
@@ -199,7 +198,6 @@ const cachedStore = useCachedStore()
 const userStore = useUserStore()
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
-const { addListener } = useTauriListener()
 // 当前加载的群聊ID
 const currentLoadingRoomId = ref('')
 const announError = ref(false)
@@ -420,31 +418,16 @@ const handleRetryAnnouncement = () => {
   }
 }
 
-// 重试加载成员列表
-// const handleRetryMembers = async () => {
-//   if (globalStore.currentSession?.roomId) {
-//     try {
-//       await groupStore.getGroupUserList(globalStore.currentSession.roomId)
-//       displayedUserList.value = filteredUserList.value
-//     } catch (error) {
-//       console.error('重试加载成员列表失败:', error)
-//     }
-//   }
-// }
-
-// 使用 addListener 管理 announcementUpdated 监听器
-addListener(
-  appWindow.listen('announcementUpdated', async (event: any) => {
-    if (event.payload) {
-      const { hasAnnouncements } = event.payload
-      if (hasAnnouncements) {
-        // 初始化群公告
-        await handleInitAnnoun()
-        await nextTick()
-      }
+appWindow.listen('announcementUpdated', async (event: any) => {
+  if (event.payload) {
+    const { hasAnnouncements } = event.payload
+    if (hasAnnouncements) {
+      // 初始化群公告
+      await handleInitAnnoun()
+      await nextTick()
     }
-  })
-)
+  }
+})
 
 onMounted(async () => {
   // 通知父级：Sidebar 已挂载，可移除占位
@@ -456,12 +439,9 @@ onMounted(async () => {
     handlePopoverUpdate(event.uid)
   })
 
-  await addListener(
-    appWindow.listen('announcementClear', async () => {
-      announNum.value = 0
-    }),
-    'announcementClear'
-  )
+  appWindow.listen('announcementClear', async () => {
+    announNum.value = 0
+  })
 
   // 初始化时获取当前群组用户的信息
   if (groupStore.userList.length > 0) {
@@ -485,8 +465,6 @@ onMounted(async () => {
     await handleInitAnnoun()
   }
 })
-
-// onUnmounted 钩子已由 useTauriListener 自动处理，无需手动清理
 </script>
 
 <style scoped lang="scss">

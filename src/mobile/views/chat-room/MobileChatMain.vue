@@ -3,7 +3,9 @@
     <template #header>
       <HeaderBar ref="header" :room-name="globalStore.currentSession!.name" :msg-count="1002" />
     </template>
-    <template #container></template>
+    <template #container>
+      <ChatMain />
+    </template>
     <template #footer>
       <FooterBar></FooterBar>
 
