@@ -16,7 +16,7 @@
           <n-form class="bg-white rounded-15px p-10px shadow" label-placement="left" label-width="100px">
             <n-form-item>
               <n-input
-                v-model:value="noticeTitle"
+                v-model:value="localBio"
                 type="textarea"
                 placeholder="介绍一下你自己~"
                 class="w-full"
@@ -38,7 +38,8 @@
                 box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
                 text-align: center;
                 display: inline-block;
-              ">
+              "
+              @click="handleSave">
               保存
             </div>
           </div>
@@ -49,15 +50,24 @@
 </template>
 
 <script setup lang="ts">
-const noticeTitle = ref(
-  `这是一个简介这是一个简介这是一个
-  简介这是一个简介这是一个简介这是
-  一个简介这是一个简介这是一个简介这是一个简介这是一个简
-  介这是一个简介这是一个简介这是一个简介这是一个简介这是一
-  个简介这是一个简介这是一个简介这是一个简
-  介这是一个简介这是一个简介这是一个简介这是一
-  个简介这是一个简介这是一个简介`
-)
+import { useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/user.ts'
+
+const userStore = useUserStore()
+
+const router = useRouter()
+const localBio = ref(userStore.userInfo?.resume || '')
+
+// 保存个人简介
+const handleSave = () => {
+  userStore.userInfo!.resume = localBio.value
+
+  router.back()
+}
+
+onMounted(() => {
+  localBio.value = userStore.userInfo?.resume || ''
+})
 </script>
 
 <style lang="scss" scoped>

@@ -120,7 +120,7 @@ const handleTouchMove = (e: TouchEvent) => {
   const currentY = e.touches[0].clientY
   const diff = currentY - startY.value
 
-  if (diff > 0) {
+  if (diff > 0 && e.cancelable) {
     e.preventDefault()
     // 使用阻尼系数让下拉变得越来越困难
     const next = Math.round(Math.min(diff * 0.4, props.threshold * 1.5))
@@ -168,7 +168,7 @@ onMounted(() => {
     'touchmove',
     (e: TouchEvent) => {
       if (!containerRef.value) return
-      if (containerRef.value?.scrollTop <= 0 && e.touches[0].clientY > startY.value) {
+      if (e.cancelable && containerRef.value?.scrollTop <= 0 && e.touches[0].clientY > startY.value) {
         e.preventDefault()
       }
     },
