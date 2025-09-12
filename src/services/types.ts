@@ -200,8 +200,11 @@ export type UserItem = {
   account: string
   /** 我的群昵称 */
   myName?: string
+  /** 当前佩戴的徽章 */
   wearingItemId?: string
+  /** 徽章集合 */
   itemIds?: string[]
+  /** 用户状态 */
   userStateId?: string
 }
 
@@ -253,14 +256,20 @@ export type UserInfoType = {
   sex: SexEnum
   /** 权限 */
   power?: number
+  /** 手机号 */
+  phone?: string
   /** 佩戴的徽章 */
   wearingItemId?: string
+  /** 徽章集合 */
+  itemIds?: string[]
   /** 用户状态id */
   userStateId: string
   /** 头像更新时间 */
   avatarUpdateTime: number
   /** 客户端 */
   client: string
+  /** 个人简介 */
+  resume: string
 }
 
 export type BadgeType = {
@@ -319,6 +328,7 @@ export type MessageType = {
   timeBlock?: string
   /** 是否加载中 */
   loading?: boolean
+  uploadProgress?: number
 }
 
 /**
@@ -417,6 +427,7 @@ export type EmojiBody = {
 /**
  * 消息内容
  */
+export type MessageBody = TextBody | ImageBody | VoiceBody | VideoBody | FileBody | EmojiBody | any
 export type MsgType = {
   /** 消息ID */
   id: string
@@ -425,7 +436,7 @@ export type MsgType = {
   /** 消息类型 */
   type: MsgEnum
   /** 动态消息体-`根据消息类型变化` */
-  body: TextBody | ImageBody | VoiceBody | VideoBody | FileBody | EmojiBody | any
+  body: MessageBody
   /** 发送时间戳 */
   sendTime: number
   /** 消息互动信息 */
@@ -580,6 +591,17 @@ export type AIModel = {
   name: string
   value: string
   avatar: string
+}
+
+/** 修改用户基础信息的类型 */
+export type ModifyUserInfoType = {
+  name: string
+  avatar: string
+  sex?: number
+  phone?: string
+  resume?: string
+  /** 昵称修改次数 */
+  modifyNameChance: number
 }
 
 /** 登录 */

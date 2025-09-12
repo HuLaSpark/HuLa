@@ -60,11 +60,13 @@
                   :special-menu="specialMenuList(item.message.type)"
                   @select="$event.click(item)">
                   <RenderMessage
-                    :message="item.message"
-                    :from-user-uid="item.fromUser.uid"
+                    :message="item"
+                    :from-user="item.fromUser"
+                    :is-group="isGroup"
                     :on-image-click="handleImageClick"
                     :on-video-click="handleVideoClick"
-                    :search-keyword="searchKeyword" />
+                    :search-keyword="searchKeyword"
+                    :history-mode="true" />
                 </ContextMenu>
               </div>
             </template>
@@ -123,7 +125,7 @@ const roomId = computed(() => route.query.roomId as string)
 
 // 我的群昵称
 const getUserDisplayName = computed(() => (uid: string) => {
-  const user = groupStore.userList.find((user) => user.uid === uid)
+  const user = groupStore.getUserInfo(uid)
   return user?.myName || user?.name || ''
 })
 

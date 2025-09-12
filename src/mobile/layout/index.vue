@@ -37,34 +37,12 @@ import type { MessageType } from '@/services/types'
 import { WsResponseMessageType } from '@/services/wsType'
 import { useChatStore } from '@/stores/chat'
 import { useGlobalStore } from '@/stores/global'
-import { useMobileStore } from '@/stores/mobile'
 import { useUserStore } from '@/stores/user'
 import { audioManager } from '@/utils/AudioManager'
-import { calculateElementPosition } from '@/utils/DomCalculate'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
 
 const route = useRoute()
-const mobileStore = useMobileStore()
 const tabBarElement = ref<InstanceType<typeof TabBarType>>()
-
-const updateTabBarPosition = async (isInit: boolean) => {
-  // 等待渲染完成
-  await nextTick()
-
-  // 渲染完成后下一帧开始前计算其位置信息
-  requestAnimationFrame(async () => {
-    const tabBarRect = await calculateElementPosition(tabBarElement)
-    if (!tabBarRect) {
-      throw new Error('[updateTabBarPosition] 无法获取tabBarRect位置和高度信息')
-    }
-
-    mobileStore.updateTabBarPosition({
-      newPosition: tabBarRect,
-      isInit: isInit
-    })
-  })
-}
-
 const chatStore = useChatStore()
 const userStore = useUserStore()
 const globalStore = useGlobalStore()
@@ -80,6 +58,7 @@ const playMessageSound = async () => {
 
 /** 测试 */
 useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
+  console.log('[mobile/layout] 收到的消息：', data)
   chatStore.pushMsg(data)
   data.message.sendTime = new Date(data.message.sendTime).getTime()
   await invokeSilently(TauriCommand.SAVE_MSG, {
@@ -131,25 +110,6 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
 
   await globalStore.updateGlobalUnreadCount()
 })
-
-/** 测试-结束 */
-
-onMounted(async () => {
-  await updateTabBarPosition(true)
-})
-
-// 这里要明确等待加载后再监听，不能写在全局作用域，如果窗口大小改变，则该参数会改变，所以需要监听
-watch(
-  () => mobileStore.safeArea,
-  (newData) => {
-    // 改变后需要更新tabbar的位置
-    console.log('[layout watch] 安全区域改变了', newData)
-    updateTabBarPosition(false)
-  },
-  {
-    immediate: false
-  }
-)
 </script>
 
 <style lang="scss">

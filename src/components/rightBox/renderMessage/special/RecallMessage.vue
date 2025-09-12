@@ -11,7 +11,7 @@
           重新编辑
         </p>
       </n-flex>
-      <span v-else class="text-12px color-#909090 select-none" v-html="message.body"></span>
+      <span v-else class="text-12px color-#909090 select-none" v-html="body"></span>
     </template>
     <template v-else>
       <n-flex align="center" :size="6">
@@ -32,15 +32,16 @@
 <script setup lang="ts">
 import { MittEnum, MsgEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
+import type { MessageBody, MsgType } from '@/services/types'
 import { useChatStore } from '@/stores/chat.ts'
 import { useUserStore } from '@/stores/user.ts'
 
-interface Props {
-  message: any
+defineProps<{
+  message: MsgType
   fromUserUid: string
   isGroup?: boolean
-}
-defineProps<Props>()
+  body: MessageBody
+}>()
 
 const chatStore = useChatStore()
 const userStore = useUserStore()

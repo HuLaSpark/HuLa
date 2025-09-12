@@ -285,7 +285,6 @@ class RustWebSocketClient {
     const listenerIndex = this.listenerController.size
     this.listenerController.add(
       await listen('ws-receive-message', (event: any) => {
-        console.log('[测试]收到消息：', event)
         info(`[ws]收到消息[监听器${listenerIndex}]: ${JSON.stringify(event.payload)}`)
         // debugger
         useMitt.emit(WsResponseMessageType.RECEIVE_MESSAGE, event.payload)
@@ -315,9 +314,9 @@ class RustWebSocketClient {
     )
 
     this.listenerController.add(
-      await listen('ws-offline', () => {
-        info('下线')
-        useMitt.emit(WsResponseMessageType.OFFLINE)
+      await listen('ws-offline', (event: any) => {
+        info(`下线: ${JSON.stringify(event.payload)}`)
+        useMitt.emit(WsResponseMessageType.OFFLINE, event.payload)
       })
     )
 

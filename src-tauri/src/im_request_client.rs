@@ -59,7 +59,7 @@ impl ImRequestClient {
 
         loop {
             let url = format!("{}/{}", self.base_url, path);
-            info!("📡 请求地址: {}, 方法：{}", &url, method.clone());
+            info!("📡 Request URL: {}, Method: {}", &url, method.clone());
 
             let mut request_builder = self.client.request(method.clone(), &url);
 
@@ -87,7 +87,7 @@ impl ImRequestClient {
                         return Err(anyhow::anyhow!("token过期，刷新token失败"));
                     }
 
-                    error!("🔄 token过期，开始刷新token");
+                    error!("🔄 Token expired, starting token refresh");
                     self.start_refresh_token().await?;
                     retry_count += 1;
                     continue;
@@ -102,7 +102,7 @@ impl ImRequestClient {
                     return Err(anyhow::anyhow!("请重新登录"));
                 }
                 Some(200) => {
-                    info!("✅ 请求成功: {}, 方法：{}", &url, method.clone());
+                    info!("✅ Request successful: {}, Method: {}", &url, method.clone());
                     return Ok(result);
                 }
                 _ => {
@@ -122,7 +122,7 @@ impl ImRequestClient {
     }
 
     pub async fn start_refresh_token(&mut self) -> Result<(), anyhow::Error> {
-        info!("🔄 开始刷新token");
+        info!("🔄 Starting token refresh");
         let url = format!("{}/{}", self.base_url, ImUrl::RefreshToken.get_url().1);
 
         let body = json!({
@@ -272,13 +272,12 @@ pub enum ImUrl {
     BlockUser,
     MarkMsg,
     SetUserBadge,
-    ModifyUserName,
+    ModifyUserInfo,
     GetUserInfoDetail,
     GetMsgList,
     GetMsgPage,
     GetAllUserBaseInfo,
     GetBadgesBatch,
-    GetUserInfoBatch,
     GetMemberStatistic,
     GetBadgeList,
     SendMsg,
@@ -375,9 +374,8 @@ impl ImUrl {
             ImUrl::DeleteEmoji => (http::Method::DELETE, "im/user/emoji"),
             ImUrl::AddEmoji => (http::Method::POST, "im/user/emoji"),
             ImUrl::SetUserBadge => (http::Method::PUT, "im/user/badge"),
-            ImUrl::ModifyUserName => (http::Method::PUT, "im/user/name"),
+            ImUrl::ModifyUserInfo => (http::Method::PUT, "im/user/info"),
             ImUrl::GetUserInfoDetail => (http::Method::GET, "im/user/userInfo"),
-            ImUrl::GetUserInfoBatch => (http::Method::POST, "im/user/summary/userInfo/batch"),
             ImUrl::GetBadgesBatch => (http::Method::POST, "im/user/badges/batch"),
             ImUrl::GetBadgeList => (http::Method::GET, "im/user/badges"),
             ImUrl::BlockUser => (http::Method::PUT, "im/user/black"),
@@ -476,9 +474,8 @@ impl ImUrl {
             "deleteEmoji" => Ok(ImUrl::DeleteEmoji),
             "addEmoji" => Ok(ImUrl::AddEmoji),
             "setUserBadge" => Ok(ImUrl::SetUserBadge),
-            "modifyUserName" => Ok(ImUrl::ModifyUserName),
+            "ModifyUserInfo" => Ok(ImUrl::ModifyUserInfo),
             "getUserInfoDetail" => Ok(ImUrl::GetUserInfoDetail),
-            "getUserInfoBatch" => Ok(ImUrl::GetUserInfoBatch),
             "getBadgesBatch" => Ok(ImUrl::GetBadgesBatch),
             "getBadgeList" => Ok(ImUrl::GetBadgeList),
             "blockUser" => Ok(ImUrl::BlockUser),

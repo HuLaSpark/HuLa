@@ -96,7 +96,7 @@ pub async fn update_user_last_opt_time(state: State<'_, AppData>) -> Result<(), 
 /// 🔑 获取用户的 token 和 refreshToken
 #[tauri::command]
 pub async fn get_user_tokens(state: State<'_, AppData>) -> Result<TokenResponse, String> {
-    info!("📡 获取用户 token 信息");
+    info!("📡 Getting user token info");
 
     let rc = state.rc.lock().await;
 
@@ -105,19 +105,19 @@ pub async fn get_user_tokens(state: State<'_, AppData>) -> Result<TokenResponse,
         refresh_token: rc.refresh_token.clone(),
     };
 
-    info!("✅ 成功获取用户 token 信息");
+    info!("✅ Successfully retrieved user token info");
     Ok(response)
 }
 
 #[tauri::command]
 pub async fn remove_tokens(state: State<'_, AppData>) -> Result<(), String> {
-    info!("📡 移除用户 token 信息");
+    info!("📡 Removing user token info");
 
     let mut rc = state.rc.lock().await;
 
     rc.token = None;
     rc.refresh_token = None;
 
-    info!("✅ 成功移除用户 token 信息");
+    info!("✅ Successfully removed user token info");
     Ok(())
 }

@@ -3,7 +3,6 @@ import { LogicalPosition, LogicalSize } from '@tauri-apps/api/dpi'
 import { emitTo, listen } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { register, unregister } from '@tauri-apps/plugin-global-shortcut'
-import { useTauriListener } from '@/hooks/useTauriListener'
 import { useSettingStore } from '@/stores/setting.ts'
 import { isMac } from '@/utils/PlatformConstants'
 
@@ -36,8 +35,6 @@ const isMacPlatform = isMac()
  */
 export const useGlobalShortcut = () => {
   const settingStore = useSettingStore()
-  const { addListener } = useTauriListener()
-
   // 获取平台对应的默认快捷键
   const getDefaultShortcuts = () => {
     return {
@@ -55,15 +52,12 @@ export const useGlobalShortcut = () => {
 
     if (captureWindow) {
       // 设置关闭拦截 - 将关闭转为隐藏
-      await addListener(
-        captureWindow.onCloseRequested(async (event) => {
-          event.preventDefault()
-          await captureWindow.hide()
-          // 触发重置事件，让Screenshot组件重新初始化
-          await captureWindow.emit('capture-reset', {})
-        }),
-        'capture-close-intercept'
-      )
+      captureWindow.onCloseRequested(async (event) => {
+        event.preventDefault()
+        await captureWindow.hide()
+        // 触发重置事件，让Screenshot组件重新初始化
+        await captureWindow.emit('capture-reset', {})
+      })
       // 初始状态为隐藏
       await captureWindow.hide()
     }
@@ -337,37 +331,31 @@ export const useGlobalShortcut = () => {
     }
 
     // 监听全局快捷键开关变化
-    await addListener(
-      listen('global-shortcut-enabled-changed', (event) => {
-        const enabled = (event.payload as any)?.enabled
-        if (typeof enabled === 'boolean') {
-          handleGlobalShortcutToggle(enabled)
-        } else {
-          console.warn(`📡 [Home] 收到无效的全局快捷键开关事件:`, event.payload)
-        }
-      }),
-      'global-shortcut-enabled-changed'
-    )
+    listen('global-shortcut-enabled-changed', (event) => {
+      const enabled = (event.payload as any)?.enabled
+      if (typeof enabled === 'boolean') {
+        handleGlobalShortcutToggle(enabled)
+      } else {
+        console.warn(`📡 [Home] 收到无效的全局快捷键开关事件:`, event.payload)
+      }
+    })
 
     // 监听每个快捷键的更新事件
     for (const config of shortcutConfigs) {
-      await addListener(
-        listen(config.updateEventName, (event) => {
-          const newShortcut = (event.payload as any)?.shortcut
-          if (newShortcut) {
-            // 只有全局快捷键开启时才处理更新
-            const globalEnabled = settingStore.shortcuts?.globalEnabled ?? false
-            if (globalEnabled) {
-              handleShortcutUpdate(config, newShortcut)
-            } else {
-              console.log(`📡 [Home] 全局快捷键已关闭，跳过快捷键更新 [${config.key}]`)
-            }
+      listen(config.updateEventName, (event) => {
+        const newShortcut = (event.payload as any)?.shortcut
+        if (newShortcut) {
+          // 只有全局快捷键开启时才处理更新
+          const globalEnabled = settingStore.shortcuts?.globalEnabled ?? false
+          if (globalEnabled) {
+            handleShortcutUpdate(config, newShortcut)
           } else {
-            console.warn(`📡 [Home] 收到无效的快捷键更新事件 [${config.key}]:`, event.payload)
+            console.log(`📡 [Home] 全局快捷键已关闭，跳过快捷键更新 [${config.key}]`)
           }
-        }),
-        config.updateEventName
-      )
+        } else {
+          console.warn(`📡 [Home] 收到无效的快捷键更新事件 [${config.key}]:`, event.payload)
+        }
+      })
     }
   }
 

@@ -1,6 +1,4 @@
-import { emit } from '@tauri-apps/api/event'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { EventEnum, MittEnum, NotificationTypeEnum, RoomTypeEnum, SessionOperateEnum } from '@/enums'
+import { MittEnum, NotificationTypeEnum, RoomTypeEnum, SessionOperateEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
 import type { SessionItem } from '@/services/types.ts'
 import { useChatStore } from '@/stores/chat.ts'
@@ -9,16 +7,11 @@ import { useGlobalStore } from '@/stores/global.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { exitGroup, markMsgRead, notification, setSessionTop, shield } from '@/utils/ImRequestUtils'
 import { invokeWithErrorHandler } from '../utils/TauriInvokeHandler'
-import { useTauriListener } from './useTauriListener'
 
 const msgBoxShow = ref(false)
-/** 独立窗口的集合 */
-const aloneWin = ref(new Set())
 const shrinkStatus = ref(false)
-const itemRef = ref<SessionItem>()
 export const useMessage = () => {
   const route = useRoute()
-  const { addListener } = useTauriListener()
   const globalStore = useGlobalStore()
   const chatStore = useChatStore()
   const settingStore = useSettingStore()
@@ -297,24 +290,6 @@ export const useMessage = () => {
     }
     window.$message.success(message)
   }
-
-  onMounted(async () => {
-    const appWindow = WebviewWindow.getCurrent()
-    await addListener(
-      appWindow.listen(EventEnum.ALONE, () => {
-        emit(EventEnum.ALONE + itemRef.value?.roomId, itemRef.value)
-        if (aloneWin.value.has(EventEnum.ALONE + itemRef.value?.roomId)) return
-        aloneWin.value.add(EventEnum.ALONE + itemRef.value?.roomId)
-      }),
-      EventEnum.ALONE
-    )
-    addListener(
-      appWindow.listen(EventEnum.WIN_CLOSE, (e) => {
-        aloneWin.value.delete(e.payload)
-      }),
-      EventEnum.WIN_CLOSE
-    )
-  })
 
   onBeforeUnmount(() => {
     useMitt.off(MittEnum.SHRINK_WINDOW, () => {})

@@ -654,12 +654,10 @@ export enum ImUrlEnum {
   ADD_EMOJI = 'addEmoji',
   /** 设置用户徽章 */
   SET_USER_BADGE = 'setUserBadge',
-  /** 修改用户名 */
-  MODIFY_USER_NAME = 'modifyUserName',
+  /** 修改用户基础信息 */
+  MODIFY_USER_INFO = 'ModifyUserInfo',
   /** 获取用户信息详情 */
   GET_USER_INFO_DETAIL = 'getUserInfoDetail',
-  /** 批量获取用户信息 */
-  GET_USER_INFO_BATCH = 'getUserInfoBatch',
   /** 批量获取徽章 */
   GET_BADGES_BATCH = 'getBadgesBatch',
   /** 获取徽章列表 */

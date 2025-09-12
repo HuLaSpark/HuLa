@@ -31,7 +31,7 @@
                 <div @click="toMyInfo" class="flex flex-col flex-1 py-10px">
                   <div class="font-bold text-18px text-#373838">{{ userStore.userInfo!.name }}</div>
                   <div class="mt-2 text-bold-style line-height-22px line-clamp-2">
-                    一段自我描述，添加性别/地区/工作或学校 不定期更新的日常不定期更新的日常不定期更新的日常
+                    {{ userStore.userInfo!.resume }}
                   </div>
                 </div>
 

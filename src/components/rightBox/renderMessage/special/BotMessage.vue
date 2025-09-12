@@ -4,7 +4,7 @@
     class="dark:bg-[#fbb99020] bg-[#fbb99030] dark:border-(1px solid #fbb99020) border-(1px solid #fbb99040) flex-center gap-8px px-12px py-4px rounded-8px">
     <n-avatar class="select-none" round :size="22" :src="getAvatarSrc(fromUserUid)" />
     <div
-      v-for="(part, index) in parseMessage(message.body.content)"
+      v-for="(part, index) in parseMessage(body.content)"
       :key="index"
       class="text-(12px #fbb990) select-none cursor-default">
       <p v-if="part.type === 'text'">{{ part.text }}</p>
@@ -21,7 +21,7 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { useGroupStore } from '~/src/stores/group'
 
 interface Props {
-  message: any
+  body: any
   fromUserUid: string
 }
 

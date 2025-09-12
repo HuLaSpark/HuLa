@@ -8,10 +8,9 @@
   </NaiveProvider>
 </template>
 <script setup lang="ts">
-import { listen } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { useStorage } from '@vueuse/core'
-import { MittEnum, StoresEnum, ThemeEnum } from '@/enums'
+import { exit } from '@tauri-apps/plugin-process'
+import { EventEnum, MittEnum, StoresEnum, ThemeEnum } from '@/enums'
 import { useFixedScale } from '@/hooks/useFixedScale'
 import { useGlobalShortcut } from '@/hooks/useGlobalShortcut.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
@@ -21,15 +20,11 @@ import router from '@/router'
 import { useSettingStore } from '@/stores/setting.ts'
 import { isDesktop, isMobile, isWindows } from '@/utils/PlatformConstants'
 import LockScreen from '@/views/LockScreen.vue'
-import { useTauriListener } from './hooks/useTauriListener'
 
 const appWindow = WebviewWindow.getCurrent()
 const { createWebviewWindow } = useWindow()
 const settingStore = useSettingStore()
 const { themes, lockScreen, page } = storeToRefs(settingStore)
-const token = useStorage<string | null>('TOKEN', null)
-const refreshToken = useStorage<string | null>('REFRESH_TOKEN', null)
-const { addListener } = useTauriListener()
 // 全局快捷键管理
 const { initializeGlobalShortcut, cleanupGlobalShortcut } = useGlobalShortcut()
 
@@ -97,6 +92,10 @@ watch(
   { immediate: true }
 )
 
+appWindow.listen(EventEnum.EXIT, async () => {
+  await exit(0)
+})
+
 onMounted(async () => {
   // 仅在windows上使用
   if (isWindows()) {
@@ -138,24 +137,6 @@ onMounted(async () => {
     const closeWindow = await WebviewWindow.getByLabel(event.close)
     closeWindow?.close()
   })
-
-  await addListener(
-    listen('refresh_token_event', (event) => {
-      console.log('🔄 收到 refresh_token 事件')
-
-      // 从 event.payload 中获取 token 和 refreshToken
-      const payload: any = event.payload
-
-      if (payload.token) {
-        token.value = payload.token
-      }
-
-      if (payload.refreshToken) {
-        refreshToken.value = payload.refreshToken
-      }
-    }),
-    'refresh_token_event'
-  )
 })
 
 onUnmounted(async () => {

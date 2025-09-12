@@ -1,277 +1,480 @@
 <template>
-  <div class="flex w-full flex-col gap-3">
-    <!-- 键盘蒙板 -->
-    <div
-      v-if="showKeyboardMask"
-      class="keyboard-mask flex-1"
-      @touchstart.stop.prevent="closeKeyboardMask"
-      @click.stop.prevent="closeKeyboardMask"></div>
+  <div class="flex flex-1 flex-col">
+    <img src="@/assets/mobile/chat-home/background.webp" class="w-100% absolute top-0 z-1" alt="hula" />
+    <AutoFixHeightPage :show-footer="false">
+      <template #header>
+        <HeaderBar
+          :isOfficial="false"
+          :hidden-right="true"
+          :enable-default-background="false"
+          :enable-shadow="false"
+          room-name="编辑资料" />
+      </template>
 
-    <div class="px-16px mt-5px flex gap-3">
-      <div class="flex-1 py-5px shrink-0">
-        <n-input
-          id="search"
-          class="rounded-10px w-full bg-gray-100 relative text-14px"
-          :maxlength="20"
-          clearable
-          spellCheck="false"
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="off"
-          placeholder="输入用户名字/账号搜索~"
-          @focus="lockScroll"
-          @blur="unlockScroll">
-          <template #prefix>
-            <svg class="w-12px h-12px"><use href="#search"></use></svg>
-          </template>
-        </n-input>
-      </div>
-
-      <div class="flex justify-end items-center">
-        <n-button class="py-5px">搜索</n-button>
-      </div>
-    </div>
-
-    <div
-      ref="scrollArea"
-      id="scrollArea"
-      :style="{ height: scrollHeight + 'px' }"
-      class="px-16px overflow-y-auto scroll-auto h-100px">
-      <div class="flex flex-1 flex-col gap-2">
-        <n-tabs type="segment" animated class="mt-4px">
-          <!-- 用户 -->
-          <n-tab-pane name="1" tab="用户">
-            <div class="flex justify-between items-center mb-2">
-              <span class="font-bold"></span>
-              <span class="text-(10px #707070)">{{ onlineCount }}/{{ contactStore.contactsList.length }}</span>
+      <template #container="{ height }">
+        <div
+          :style="{ height: height + 'px' }"
+          class="z-2 absolute flex flex-col gap-1 overflow-auto min-h-70vh w-full">
+          <!-- 主要内容 -->
+          <n-flex vertical :size="14">
+            <!-- 搜索框 -->
+            <div class="px-16px">
+              <n-input
+                v-model:value="searchValue"
+                type="text"
+                size="small"
+                style="border-radius: 8px; border: 1px solid #ccc"
+                :placeholder="searchPlaceholder[searchType]"
+                :maxlength="20"
+                round
+                spellCheck="false"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                clearable
+                @keydown.enter="handleSearch"
+                @clear="handleClear">
+                <template #prefix>
+                  <n-icon>
+                    <svg class="icon" aria-hidden="true">
+                      <use href="#search" />
+                    </svg>
+                  </n-icon>
+                </template>
+              </n-input>
             </div>
-            <n-scrollbar style="max-height: calc(100vh - 220px)">
-              <div @contextmenu.stop="$event.preventDefault()">
-                <n-flex
-                  :size="10"
-                  @click="handleClick(item.uid, RoomTypeEnum.SINGLE)"
-                  :class="{ active: activeItem === item.uid }"
-                  class="item-box w-full h-75px mb-5px"
-                  v-for="item in sortedContacts"
-                  :key="item.uid">
-                  <n-flex
-                    align="center"
-                    justify="space-between"
-                    :size="10"
-                    class="h-75px pl-6px pr-8px flex-1 truncate">
-                    <!-- 左边用户信息 -->
-                    <n-flex align="center" :size="10" class="flex-1 truncate">
-                      <n-avatar
-                        round
-                        style="border: 1px solid var(--avatar-border-color)"
-                        :size="44"
-                        class="grayscale"
-                        :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
-                        :src="AvatarUtils.getAvatarUrl(groupStore.getUserInfo(item.uid)?.avatar!)"
-                        fallback-src="/logo.png" />
 
-                      <n-flex vertical justify="space-between" class="h-fit flex-1 truncate">
-                        <span class="text-14px leading-tight flex-1 truncate">
-                          {{ groupStore.getUserInfo(item.uid)?.name }}
-                        </span>
-                        <div class="text leading-tight text-12px flex-y-center gap-4px flex-1 truncate">
-                          [
-                          <template v-if="getUserState(item.uid)">
-                            <img class="size-12px rounded-50%" :src="getUserState(item.uid)?.url" alt="" />
-                            {{ getUserState(item.uid)?.title }}
-                          </template>
-                          <template v-else>
-                            <n-badge :color="item.activeStatus === OnlineEnum.ONLINE ? '#1ab292' : '#909090'" dot />
-                            {{ item.activeStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}
-                          </template>
-                          ]
-                        </div>
-                      </n-flex>
-                    </n-flex>
+            <!-- 搜索类型切换 -->
+            <n-tabs v-model:value="searchType" animated size="small" @update:value="handleTypeChange">
+              <n-tab-pane v-for="tab in tabs" :key="tab.name" :name="tab.name" :tab="tab.label">
+                <template>
+                  <span>{{ tab.label }}</span>
+                </template>
 
-                    <!-- 右边操作按钮 -->
-                    <n-button size="small" @click.stop="addFriend(item.uid)">添加</n-button>
-                  </n-flex>
-                </n-flex>
-              </div>
-            </n-scrollbar>
-          </n-tab-pane>
+                <!-- 初始加载状态 -->
+                <template v-if="initialLoading">
+                  <n-spin class="flex-center" style="height: calc(100vh / var(--page-scale, 1) - 200px)" size="large" />
+                </template>
 
-          <!-- 群聊 -->
-          <n-tab-pane name="2" tab="群聊">
-            <div class="flex justify-between items-center mb-2">
-              <span class="font-bold"></span>
-              <span class="text-(10px #707070)">{{ groupChatList.length }}</span>
-            </div>
-            <n-scrollbar style="max-height: calc(100vh - 220px)">
-              <div
-                @click="handleClick(item.roomId, RoomTypeEnum.GROUP)"
-                :class="{ active: activeItem === item.roomId }"
-                class="item-box w-full h-75px mb-5px"
-                v-for="item in groupChatList"
-                :key="item.roomId">
-                <n-flex align="center" justify="space-between" :size="10" class="h-75px pl-6px pr-8px flex-1 truncate">
-                  <!-- 左边群聊信息 -->
-                  <n-flex align="center" :size="10" class="flex-1 truncate">
-                    <n-avatar
-                      round
-                      style="border: 1px solid var(--avatar-border-color)"
-                      bordered
-                      :size="44"
-                      :src="AvatarUtils.getAvatarUrl(item.avatar)"
-                      fallback-src="/logo.png" />
-                    <span class="text-14px leading-tight flex-1 truncate">{{ item.remark }}</span>
-                  </n-flex>
+                <!-- 搜索结果 -->
+                <template v-else-if="searchResults.length">
+                  <FloatBlockList
+                    :data-source="searchResults"
+                    item-key="id"
+                    :item-height="64"
+                    max-height="calc(100vh / var(--page-scale, 1) - 128px)"
+                    style-id="search-hover-classes">
+                    <template #item="{ item }">
+                      <div class="p-[0_20px] box-border">
+                        <n-flex align="center" :size="12" class="p-[8px_0] rounded-lg">
+                          <n-avatar
+                            :size="48"
+                            :src="AvatarUtils.getAvatarUrl(item.avatar)"
+                            :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+                            :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
+                            round />
+                          <n-flex vertical justify="center" :size="10" class="flex-1">
+                            <n-space align="center" :size="10">
+                              <span class="text-(14px [--text-color])">{{ item.name }}</span>
+                              <template v-for="account in item.itemIds" :key="account">
+                                <img class="size-20px" :src="useBadgeInfo(account).value.img" alt="" />
+                              </template>
+                            </n-space>
+                            <n-flex align="center" :size="10">
+                              <span class="text-(12px [--chat-text-color])">{{ `账号：${item.account}` }}</span>
+                              <n-tooltip trigger="hover">
+                                <template #trigger>
+                                  <svg
+                                    class="size-12px hover:color-#909090 hover:transition-colors"
+                                    @click="handleCopy(item.account)">
+                                    <use href="#copy"></use>
+                                  </svg>
+                                </template>
+                                <span>复制账号</span>
+                              </n-tooltip>
+                            </n-flex>
+                          </n-flex>
 
-                  <!-- 右边操作按钮 -->
-                  <n-button size="small" @click.stop="joinGroup(item.roomId)">添加</n-button>
-                </n-flex>
-              </div>
-            </n-scrollbar>
-          </n-tab-pane>
-        </n-tabs>
-      </div>
-    </div>
+                          <!-- 三种状态的按钮 -->
+                          <n-button
+                            secondary
+                            :type="getButtonType(item.uid, item.roomId)"
+                            size="small"
+                            class="action-button"
+                            @click="handleButtonClick(item)">
+                            {{ getButtonText(item.uid, item.roomId) }}
+                          </n-button>
+                        </n-flex>
+                      </div>
+                    </template>
+                  </FloatBlockList>
+                </template>
+
+                <!-- 搜索中状态 -->
+                <template v-else-if="loading">
+                  <n-spin class="flex-center" style="height: calc(100vh / var(--page-scale, 1) - 200px)" size="large" />
+                </template>
+
+                <!-- 搜索无结果状态 -->
+                <template v-else-if="hasSearched">
+                  <n-empty
+                    class="flex-center"
+                    style="height: calc(100vh / var(--page-scale, 1) - 200px)"
+                    description="未找到相关结果" />
+                </template>
+
+                <!-- 默认空状态 -->
+                <template v-else>
+                  <n-empty
+                    style="height: calc(100vh / var(--page-scale, 1) - 200px)"
+                    class="flex-center"
+                    description="输入关键词搜索">
+                    <template #icon>
+                      <n-icon>
+                        <svg><use href="#explosion"></use></svg>
+                      </n-icon>
+                    </template>
+                  </n-empty>
+                </template>
+              </n-tab-pane>
+            </n-tabs>
+          </n-flex>
+        </div>
+      </template>
+    </AutoFixHeightPage>
   </div>
 </template>
 
 <script setup lang="ts">
-import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
-import { MittEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
-import { useMitt } from '@/hooks/useMitt.ts'
-import { useChatStore } from '@/stores/chat.ts'
-import { useContactStore } from '@/stores/contacts.ts'
+import { emitTo } from '@tauri-apps/api/event'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { debounce } from 'lodash-es'
+import FloatBlockList from '@/components/common/FloatBlockList.vue'
+import { ThemeEnum } from '@/enums'
+import { RoomTypeEnum } from '@/enums/index.ts'
+import { useBadgeInfo } from '@/hooks/useCached.ts'
+import type { ContactItem, GroupDetailReq } from '@/services/types'
+import { useContactStore } from '@/stores/contacts'
+import { useGlobalStore } from '@/stores/global'
 import { useGroupStore } from '@/stores/group'
-import { useMobileStore } from '@/stores/mobile'
-import { useUserStatusStore } from '@/stores/userStatus'
+import { useSettingStore } from '@/stores/setting'
+import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { calculateElementPosition } from '@/utils/DomCalculate'
+import { searchFriend, searchGroup } from '@/utils/ImRequestUtils'
 
-const scrollArea = ref<HTMLDivElement>()
+// const { createWebviewWindow } = useWindow()
+const contactStore = useContactStore()
+const userStore = useUserStore()
+const globalStore = useGlobalStore()
+const settingStore = useSettingStore()
+const { themes } = storeToRefs(settingStore)
 
-const mobileStore = useMobileStore()
+// 定义标签页
+const tabs = ref([
+  { name: 'recommend', label: '推荐' },
+  { name: 'user', label: '找好友' },
+  { name: 'group', label: '找群聊' }
+])
+// 搜索类型
+const searchType = ref<'recommend' | 'user' | 'group'>('recommend')
+// 搜索类型对应的placeholder映射
+const searchPlaceholder = {
+  recommend: '输入推荐关键词',
+  user: '输入昵称搜索好友',
+  group: '输入群号搜索群聊'
+}
+// 搜索值
+const searchValue = ref('')
+// 搜索结果
+const searchResults = ref<any[]>([])
+// 是否已经搜索过
+const hasSearched = ref(false)
+// 加载状态
+const loading = ref(false)
+// 初始加载状态
+const initialLoading = ref(true)
 
-const scrollHeight = ref(700) // 默认高度
+// 从缓存存储中获取用户数据
+const getCachedUsers = () => {
+  // 从缓存中获取所有用户
+  const users = groupStore.allUserInfo
+  console.log(users)
+
+  // 筛选出需要显示的用户（ID在20016-20030之间的用户）
+  return sortSearchResults(
+    users
+      .filter((user) => {
+        const uid = user.uid as string
+        return uid >= '20016' && uid <= '20030'
+      })
+      .map((user) => ({
+        uid: user.uid,
+        account: user.account,
+        name: user.name,
+        avatar: user.avatar,
+        itemIds: user.itemIds || null
+      })),
+    'recommend'
+  )
+}
+
+// 清空搜索结果
+const clearSearchResults = () => {
+  searchResults.value = []
+  hasSearched.value = false
+  searchValue.value = ''
+}
+
+// 处理复制账号
+const handleCopy = (account: string) => {
+  navigator.clipboard.writeText(account)
+  window.$message.success(`复制成功 ${account}`)
+}
+
+// 处理清空按钮点击
+const handleClear = () => {
+  clearSearchResults()
+
+  // 如果是推荐标签，重新加载推荐用户
+  if (searchType.value === 'recommend') {
+    searchResults.value = getCachedUsers()
+  }
+}
+
+// 处理搜索
+const handleSearch = debounce(async () => {
+  if (!searchValue.value.trim()) {
+    // 如果搜索框为空且是推荐标签，显示所有推荐用户
+    if (searchType.value === 'recommend') {
+      searchResults.value = getCachedUsers()
+    }
+    return
+  }
+
+  loading.value = true
+  hasSearched.value = true
+
+  try {
+    if (searchType.value === 'group') {
+      // 调用群聊搜索接口
+      const res = await searchGroup({ account: searchValue.value })
+      searchResults.value = res.map((group: any) => ({
+        account: group.account,
+        name: group.name,
+        avatar: group.avatar,
+        deleteStatus: group.deleteStatus,
+        extJson: group.extJson,
+        roomId: group.roomId
+      }))
+    } else if (searchType.value === 'user') {
+      // 调用好友搜索接口
+      const res = await searchFriend({ key: searchValue.value })
+      searchResults.value = res.map((user: any) => ({
+        uid: user.uid,
+        name: user.name,
+        avatar: user.avatar,
+        account: user.account
+      }))
+    } else {
+      // 推荐标签搜索结果
+      const cachedUsers = getCachedUsers()
+      searchResults.value = cachedUsers.filter(
+        (user) =>
+          user?.name?.includes(searchValue.value) || (user.uid && user.uid.toString().includes(searchValue.value))
+      )
+    }
+    // 通用排序函数
+    searchResults.value = sortSearchResults(searchResults.value, searchType.value)
+  } catch (error) {
+    window.$message.error('搜索失败')
+    searchResults.value = []
+  } finally {
+    loading.value = false
+  }
+}, 300)
+
+// 处理选项卡切换
+const handleTypeChange = () => {
+  clearSearchResults()
+
+  if (searchType.value === 'recommend') {
+    searchResults.value = getCachedUsers()
+  }
+}
+const groupStore = useGroupStore()
+// 判断是否已加入群聊
+const isInGroup = (roomId: string) => {
+  return groupStore.groupDetails.some((group: GroupDetailReq) => group.roomId === roomId)
+}
+
+// 通用排序函数
+const sortSearchResults = (items: any[], type: 'user' | 'group' | 'recommend') => {
+  if (type === 'group') {
+    // 群聊排序逻辑：已加入的群聊排在前面
+    return items.sort((a, b) => {
+      const aInGroup = isInGroup(a.roomId)
+      const bInGroup = isInGroup(b.roomId)
+      if (aInGroup && !bInGroup) return -1
+      if (!aInGroup && bInGroup) return 1
+      return 0
+    })
+  } else {
+    // 用户排序逻辑：自己排在最前面，好友排在第二位
+    return items.sort((a, b) => {
+      // 处理uid可能是string或number的情况
+      const aUid = String(a.uid)
+      const bUid = String(b.uid)
+
+      // 自己排在最前面
+      if (isCurrentUser(aUid)) return -1
+      if (isCurrentUser(bUid)) return 1
+
+      // 好友排在第二位
+      const aIsFriend = isFriend(aUid)
+      const bIsFriend = isFriend(bUid)
+      if (aIsFriend && !bIsFriend) return -1
+      if (!aIsFriend && bIsFriend) return 1
+
+      return 0
+    })
+  }
+}
+
+// 判断是否已经是好友
+const isFriend = (uid: string) => {
+  return contactStore.contactsList.some((contact: ContactItem) => contact.uid === uid)
+}
+
+// 判断是否是当前登录用户
+const isCurrentUser = (uid: string) => {
+  return userStore.userInfo!.uid === uid
+}
+
+// 获取按钮文本
+const getButtonText = (uid: string, roomId: string) => {
+  // 群聊逻辑
+  if (searchType.value === 'group') {
+    return isInGroup(roomId) ? '发消息' : '添加'
+  }
+  // 用户逻辑
+  if (isCurrentUser(uid)) return '编辑资料'
+  if (isFriend(uid)) return '发消息'
+  return '添加'
+}
+
+// 获取按钮类型
+const getButtonType = (uid: string, roomId: string) => {
+  // 群聊逻辑
+  if (searchType.value === 'group') {
+    return isInGroup(roomId) ? 'info' : 'primary'
+  }
+  // 用户逻辑
+  if (isCurrentUser(uid)) return 'default'
+  if (isFriend(uid)) return 'info'
+  return 'primary'
+}
+
+// 处理按钮点击
+const handleButtonClick = (item: any) => {
+  if (searchType.value === 'group') {
+    if (isInGroup(item.roomId)) {
+      handleSendGroupMessage(item)
+    } else {
+      handleAddFriend(item)
+    }
+    return
+  }
+
+  // 用户逻辑保持不变
+  if (isCurrentUser(item.uid)) {
+    handleEditProfile()
+  } else if (isFriend(item.uid)) {
+    handleSendMessage(item)
+  } else {
+    handleAddFriend(item)
+  }
+}
+
+// 处理添加好友或群聊
+const handleAddFriend = async (item: any) => {
+  if (searchType.value === 'user' || searchType.value === 'recommend') {
+    // await createWebviewWindow('申请加好友', 'addFriendVerify', 380, 300, '', false, 380, 300)
+    globalStore.addFriendModalInfo.show = true
+    globalStore.addFriendModalInfo.uid = item.uid
+  } else {
+    // await createWebviewWindow('申请加群', 'addGroupVerify', 380, 400, '', false, 380, 400)
+    globalStore.addGroupModalInfo.show = true
+    globalStore.addGroupModalInfo.account = item.account
+    globalStore.addGroupModalInfo.name = item.name
+    globalStore.addGroupModalInfo.avatar = item.avatar
+  }
+}
+
+// 处理编辑个人资料
+const handleEditProfile = async () => {
+  // 获取主窗口
+  const homeWindow = await WebviewWindow.getByLabel('home')
+  // 激活主窗口
+  await homeWindow?.setFocus()
+  // 打开个人资料编辑窗口
+  emitTo('home', 'open_edit_info')
+}
+
+// 处理发送消息
+const handleSendMessage = async (item: any) => {
+  emitTo('home', 'search_to_msg', { uid: item.uid, roomType: RoomTypeEnum.SINGLE })
+}
+
+// 处理发送群消息
+const handleSendGroupMessage = async (item: any) => {
+  emitTo('home', 'search_to_msg', {
+    uid: item.roomId,
+    roomType: RoomTypeEnum.GROUP
+  })
+}
 
 onMounted(async () => {
+  // await getCurrentWebviewWindow().show()
+
   try {
-    const scrollAreaRect = await calculateElementPosition(scrollArea)
-    scrollHeight.value = window.innerHeight - scrollAreaRect!.y - mobileStore.safeArea.bottom
-  } catch (error) {
-    console.log('计算[scrollArea]高度失败:', error)
+    // 初始化联系人列表
+    await contactStore.getContactList(true)
+
+    // 从缓存中获取推荐用户
+    const cachedUsers = getCachedUsers()
+
+    // 默认展示推荐用户
+    if (searchType.value === 'recommend') {
+      searchResults.value = cachedUsers
+    }
+  } finally {
+    initialLoading.value = false
   }
-})
-
-// 锁滚动（和蒙板一样）
-const lockScroll = () => {
-  const scrollEl = document.querySelector('#scrollArea') as HTMLElement
-  if (scrollEl) {
-    scrollEl.style.overflow = 'hidden'
-  }
-}
-
-const unlockScroll = () => {
-  const scrollEl = document.querySelector('#scrollArea') as HTMLElement
-  if (scrollEl) {
-    scrollEl.style.overflow = 'auto'
-  }
-}
-
-// 键盘蒙板显示状态
-const showKeyboardMask = ref(false)
-
-const closeKeyboardMask = () => {
-  showKeyboardMask.value = false
-  document.body.style.overflow = ''
-  document.body.style.position = ''
-  // 让 input 失焦
-  const activeEl = document.activeElement as HTMLElement
-  if (activeEl && typeof activeEl.blur === 'function') {
-    activeEl.blur()
-  }
-}
-
-const addFriend = (_item: any) => {}
-
-const joinGroup = (_item: any) => {}
-
-/** 建议把此状态存入localStorage中 */
-const activeItem = ref('')
-const detailsShow = ref(false)
-const shrinkStatus = ref(false)
-const contactStore = useContactStore()
-const groupStore = useGroupStore()
-const userStatusStore = useUserStatusStore()
-const { stateList } = storeToRefs(userStatusStore)
-
-/** 群聊列表 */
-const groupChatList = computed(() => {
-  return [...groupStore.groupDetails].sort((a, b) => {
-    // 将roomId为'1'的群聊排在最前面
-    if (a.roomId === '1' && b.roomId !== '1') return -1
-    if (a.roomId !== '1' && b.roomId === '1') return 1
-    return 0
-  })
-})
-/** 统计在线用户人数 */
-const onlineCount = computed(() => {
-  return contactStore.contactsList.filter((item) => item.activeStatus === OnlineEnum.ONLINE).length
-})
-/** 排序好友列表 */
-const sortedContacts = computed(() => {
-  return [...contactStore.contactsList].sort((a, b) => {
-    // 在线用户排在前面
-    if (a.activeStatus === OnlineEnum.ONLINE && b.activeStatus !== OnlineEnum.ONLINE) return -1
-    if (a.activeStatus !== OnlineEnum.ONLINE && b.activeStatus === OnlineEnum.ONLINE) return 1
-    return 0
-  })
-})
-/** 监听独立窗口关闭事件 */
-watchEffect(() => {
-  useMitt.on(MittEnum.SHRINK_WINDOW, async (event) => {
-    shrinkStatus.value = event as boolean
-  })
-})
-
-const handleClick = (index: string, type: number) => {
-  detailsShow.value = true
-  activeItem.value = index
-  const data = {
-    context: {
-      type: type,
-      uid: index
-    },
-    detailsShow: detailsShow.value
-  }
-  useMitt.emit(MittEnum.DETAILS_SHOW, data)
-}
-
-/** 获取用户状态 */
-const getUserState = (uid: string) => {
-  const userInfo = groupStore.getUserInfo(uid)!
-  const userStateId = userInfo.userStateId
-
-  if (userStateId && userStateId !== '1') {
-    return stateList.value.find((state: { id: string }) => state.id === userStateId)
-  }
-  return null
-}
-
-onUnmounted(() => {
-  detailsShow.value = false
-  useMitt.emit(MittEnum.DETAILS_SHOW, detailsShow.value)
-})
-
-const chatStore = useChatStore()
-
-const getSessionList = async () => {
-  await chatStore.getSessionList(true)
-}
-
-onMounted(() => {
-  getSessionList()
 })
 </script>
 
-<style lang="scss" scoped></style>
+<style scoped lang="scss">
+.action-button {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0.9;
+}
+
+.action-button:hover {
+  opacity: 1;
+  transform: scale(1.06);
+  box-shadow: 0 2px 8px rgba(var(--primary-color-rgb), 0.25);
+}
+
+.action-button:active {
+  transform: scale(0.98);
+}
+
+/* 移除标签内容的内边距 */
+:deep(.n-tab-pane) {
+  padding: 0 !important;
+}
+
+:deep(.n-tabs .n-tabs-nav-scroll-wrapper) {
+  padding: 0 20px 10px !important;
+}
+</style>

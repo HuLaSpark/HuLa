@@ -26,7 +26,7 @@
     </div>
 
     <!-- tab组件 -->
-    <div class="flex px-20px flex-1 gap-2 flex-col z-1">
+    <!-- <div class="flex px-20px flex-1 gap-2 flex-col z-1">
       <CommunityTab @update="onUpdate" :options="tabOptions" active-tab-name="find">
         <template #find>
           <CommunityContent v-for="i in uiViewsData.testList" :key="i"></CommunityContent>
@@ -36,6 +36,26 @@
           <CommunityContent v-for="i in uiViewsData.testList" :key="i"></CommunityContent>
         </template>
       </CommunityTab>
+    </div> -->
+    <div class="flex flex-1 z-1 relative">
+      <div ref="measureRef" class="flex flex-1"></div>
+      <div :style="{ height: communityTabHeight + 'px' }" class="absolute top-0 left-0 flex flex-col w-full">
+        <div class="flex flex-1 px-20px">
+          <CommunityTab
+            :customHeight="communityTabHeight - 44"
+            @update="onUpdate"
+            :options="tabOptions"
+            active-tab-name="find">
+            <template #find>
+              <CommunityContent v-for="i in uiViewsData.testList" :key="i"></CommunityContent>
+            </template>
+
+            <template #follow>
+              <CommunityContent v-for="i in uiViewsData.testList" :key="i"></CommunityContent>
+            </template>
+          </CommunityTab>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -45,6 +65,26 @@ import CommunityContent from '#/components/community/CommunityContent.vue'
 import CommunityTab from '#/components/community/CommunityTab.vue'
 import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.vue'
 import router from '@/router'
+
+const measureRef = ref<HTMLDivElement>()
+
+const communityTabHeight = ref(0)
+
+const measureElementObserver = new ResizeObserver((event) => {
+  communityTabHeight.value = event[0].contentRect.height
+})
+
+onMounted(() => {
+  if (measureRef.value) {
+    measureElementObserver.observe(measureRef.value)
+  }
+})
+
+onUnmounted(() => {
+  if (measureRef.value) {
+    measureElementObserver.unobserve(measureRef.value)
+  }
+})
 
 const toScanQRCode = () => [router.push('/mobile/mobileMy/scanQRcode')]
 

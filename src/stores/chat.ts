@@ -777,6 +777,10 @@ export const useChatStore = defineStore(
       return sessionList.value.filter((session) => session.type === RoomTypeEnum.GROUP)
     }
 
+    const shouldShowNoMoreMessage = computed(() => {
+      return currentMessageOptions.value?.isLast
+    })
+
     return {
       getMsgIndex,
       chatMessageList,
@@ -817,7 +821,8 @@ export const useChatStore = defineStore(
       changeRoom,
       addSession,
       setAllSessionMsgList,
-      chatMessageListByRoomId
+      chatMessageListByRoomId,
+      shouldShowNoMoreMessage
     }
   },
   {

@@ -1,4 +1,4 @@
-import type { UserInfoType, UserItem } from '@/services/types.ts'
+import type { UserInfoType } from '@/services/types.ts'
 
 // 1.登录返回二维码 2.用户扫描成功等待授权 3.用户登录成功返回用户信息 4.收到消息 5.上下线推送 6.前端token失效
 export enum WsResponseMessageType {
@@ -127,8 +127,11 @@ export type LoginSuccessResType = Pick<UserInfoType, 'avatar' | 'name' | 'uid' |
 
 /** 用户在线状态改变 */
 export type OnStatusChangeType = {
-  member: Omit<UserItem, 'name' | 'avatar'>
+  uid: string
+  type: number
+  roomId: string
   onlineNum: number
+  lastOptTime: number
 }
 
 /** token过期 */

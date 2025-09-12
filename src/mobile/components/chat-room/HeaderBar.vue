@@ -13,7 +13,9 @@
     <div class="w-full h-full overflow-hidden flex items-center justify-center">
       <div :class="props.isOfficial ? ['chat-room-name-official'] : ['chat-room-name']">
         <div class="truncate whitespace-nowrap overflow-hidden text-ellipsis w-full text-center">
-          {{ props.roomName }}
+          {{
+            gloabalStore.currentSession.remark ? gloabalStore.currentSession.remark : gloabalStore.currentSession.name
+          }}
         </div>
         <svg v-if="props.isOfficial" class="w-18px h-18px iconpark-icon text-#1A9B83"><use href="#auth"></use></svg>
       </div>
@@ -28,14 +30,11 @@
 </template>
 
 <script setup lang="ts">
-// import { invoke } from '@tauri-apps/api/core'
 import router from '@/router'
+import { useGlobalStore } from '@/stores/global'
 
+const gloabalStore = useGlobalStore()
 const props = defineProps({
-  roomName: {
-    type: String,
-    required: true
-  },
   msgCount: {
     type: Number,
     required: false

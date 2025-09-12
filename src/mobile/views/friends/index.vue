@@ -181,7 +181,6 @@ import groupChatIcon from '@/assets/mobile/chat-home/group-chat.webp'
 import { MittEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
 import router from '@/router'
-import { useChatStore } from '@/stores/chat.ts'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGroupStore } from '@/stores/group'
 import { useUserStatusStore } from '@/stores/userStatus'
@@ -262,13 +261,18 @@ watchEffect(() => {
   })
 })
 
-const handleClick = (index: string, type: number) => {
+/**
+ *
+ * @param uid 群聊id或好友uid
+ * @param type 1 群聊 2 单聊
+ */
+const handleClick = (uid: string, type: number) => {
   detailsShow.value = true
-  activeItem.value = index
+  activeItem.value = uid
   const data = {
     context: {
       type: type,
-      uid: index
+      uid: uid
     },
     detailsShow: detailsShow.value
   }
@@ -298,16 +302,6 @@ const getUserState = (uid: string) => {
 onUnmounted(() => {
   detailsShow.value = false
   useMitt.emit(MittEnum.DETAILS_SHOW, detailsShow.value)
-})
-
-const chatStore = useChatStore()
-
-const getSessionList = async () => {
-  await chatStore.getSessionList(true)
-}
-
-onMounted(() => {
-  getSessionList()
 })
 
 /**

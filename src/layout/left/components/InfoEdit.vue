@@ -26,7 +26,7 @@
         <n-flex justify="center">
           <n-popover trigger="hover" :delay="300" :duration="300" placement="bottom">
             <template #trigger>
-              <div class="avatar-wrapper relative" @click="openAvatarCropper">
+              <div class="avatar-wrapper relative" @click="openAvatarCropper(editInfo.content.avatarUpdateTime)">
                 <n-avatar :size="80" :src="AvatarUtils.getAvatarUrl(editInfo.content.avatar!)" round />
                 <div class="avatar-hover absolute size-full rounded-50% flex-center">
                   <span class="text-12px color-white">更换头像</span>
@@ -118,7 +118,7 @@
           style="color: #fff"
           :disabled="editInfo.content.name === localUserInfo.name"
           color="#13987f"
-          @click="saveEditInfo(localUserInfo)">
+          @click="saveEditInfo(localUserInfo as ModifyUserInfoType)">
           保存
         </n-button>
       </n-flex>
@@ -135,7 +135,6 @@
 </template>
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import dayjs from 'dayjs'
 import AvatarCropper from '@/components/common/AvatarCropper.vue'
 import { IsYesEnum, MittEnum } from '@/enums'
 import { useAvatarUpload } from '@/hooks/useAvatarUpload'
@@ -143,16 +142,15 @@ import { useCommon } from '@/hooks/useCommon.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useTauriListener } from '@/hooks/useTauriListener'
 import { leftHook } from '@/layout/left/hook.ts'
-import type { UserInfoType } from '@/services/types'
+import type { ModifyUserInfoType } from '@/services/types'
 import { useLoginHistoriesStore } from '@/stores/loginHistory'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { formatTimestamp, isDiffNow } from '@/utils/ComputedTime.ts'
 import { getBadgeList, uploadAvatar } from '@/utils/ImRequestUtils'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
 
 const appWindow = WebviewWindow.getCurrent()
-const localUserInfo = ref<Partial<UserInfoType>>({})
+const localUserInfo = ref<Partial<ModifyUserInfoType>>({})
 const userStore = useUserStore()
 const { addListener } = useTauriListener()
 const loginHistoriesStore = useLoginHistoriesStore()
@@ -164,11 +162,12 @@ const {
   localImageUrl,
   showCropper,
   cropperRef,
+  openAvatarCropper,
   handleFileChange,
   handleCrop: onCrop
 } = useAvatarUpload({
   onSuccess: async (downloadUrl) => {
-    // 调用更新头像的API
+    // 调用更新头像的API TODO 这里准备删除
     await uploadAvatar({ avatar: downloadUrl })
     // 更新编辑信息
     editInfo.value.content.avatar = downloadUrl
@@ -191,20 +190,6 @@ const handleCrop = async (cropBlob: Blob) => {
 
 /** 不允许输入空格 */
 const noSideSpace = (value: string) => !value.startsWith(' ') && !value.endsWith(' ')
-
-const openAvatarCropper = () => {
-  const lastUpdateTime = userStore.userInfo!.avatarUpdateTime
-  // 计算30天的毫秒数
-  if (lastUpdateTime && !isDiffNow({ time: lastUpdateTime, unit: 'day', diff: 30 })) {
-    // 计算下次可更新时间
-    const nextUpdateTime = dayjs(lastUpdateTime).add(30, 'day')
-    const formattedDate = formatTimestamp(nextUpdateTime.valueOf(), true)
-    window.$message.warning(`下一次更换头像的时间：${formattedDate}`)
-    return
-  }
-
-  fileInput.value?.click()
-}
 
 const openEditInfo = () => {
   editInfo.value.show = true

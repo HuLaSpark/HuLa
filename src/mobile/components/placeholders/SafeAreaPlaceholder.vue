@@ -8,7 +8,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useMobileStore } from '@/stores/mobile'
-import { calculateElementPosition } from '@/utils/DomCalculate'
 
 const props = defineProps<{
   type: 'layout' | 'keyboard'
@@ -39,25 +38,7 @@ const emit = defineEmits(['rectUpdate'])
 
 const safeAreaRef = ref()
 
-watch(
-  () => computedStyle.value,
-  async () => {
-    try {
-      const safeAreaRect = await calculateElementPosition(safeAreaRef)
-      emit('rectUpdate', safeAreaRect)
-    } catch (error) {
-      console.log('[SafeAreaPlaceholder] 渲染失败')
-    }
-  },
-  {
-    immediate: true
-  }
-)
-
 defineExpose({
-  getRect: async (): Promise<DOMRect | null> => {
-    return await calculateElementPosition(safeAreaRef)
-  },
   blurInput: () => {
     const activeElement = document.activeElement as HTMLElement | null
     if (activeElement && ['INPUT', 'TEXTAREA'].includes(activeElement.tagName)) {

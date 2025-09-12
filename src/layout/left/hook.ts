@@ -1,9 +1,7 @@
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
 import { delay } from 'lodash-es'
-import { EventEnum, IsYesEnum, MittEnum, ThemeEnum } from '@/enums'
+import { IsYesEnum, MittEnum, ThemeEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
-import { useTauriListener } from '@/hooks/useTauriListener'
 import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
 import type { BadgeType, UserInfoType } from '@/services/types.ts'
@@ -13,11 +11,9 @@ import { useMenuTopStore } from '@/stores/menuTop.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { useUserStatusStore } from '@/stores/userStatus.ts'
-import { modifyUserName, setUserBadge } from '@/utils/ImRequestUtils'
+import { ModifyUserInfo, setUserBadge } from '@/utils/ImRequestUtils'
 
 export const leftHook = () => {
-  const appWindow = WebviewWindow.getCurrent()
-  const { addListener } = useTauriListener()
   const prefers = matchMedia('(prefers-color-scheme: dark)')
   const { createWebviewWindow } = useWindow()
   const settingStore = useSettingStore()
@@ -88,7 +84,7 @@ export const leftHook = () => {
       window.$message.error('改名次数不足')
       return
     }
-    modifyUserName({ name: localUserInfo.name }).then(() => {
+    ModifyUserInfo(localUserInfo).then(() => {
       // 更新本地缓存的用户信息
       userStore.userInfo!.name = localUserInfo.name!
       loginHistoriesStore.updateLoginHistory(<UserInfoType>userStore.userInfo) // 更新登录历史记录
@@ -205,20 +201,6 @@ export const leftHook = () => {
     useMitt.on(MittEnum.TO_SEND_MSG, (event: any) => {
       activeUrl.value = event.url
     })
-    await addListener(
-      appWindow.listen(EventEnum.WIN_SHOW, (e) => {
-        // 如果已经存在就不添加
-        if (openWindowsList.value.has(e.payload)) return
-        openWindowsList.value.add(e.payload)
-      }),
-      EventEnum.WIN_SHOW
-    )
-    await addListener(
-      appWindow.listen(EventEnum.WIN_CLOSE, (e) => {
-        openWindowsList.value.delete(e.payload)
-      }),
-      EventEnum.WIN_CLOSE
-    )
   })
 
   onUnmounted(() => {

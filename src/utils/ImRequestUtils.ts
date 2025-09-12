@@ -1,5 +1,5 @@
 import { ImUrlEnum, type NotificationTypeEnum } from '@/enums'
-import type { CacheBadgeReq, CacheUserReq, LoginUserReq, RegisterUserReq } from '@/services/types'
+import type { CacheBadgeReq, LoginUserReq, ModifyUserInfoType, RegisterUserReq } from '@/services/types'
 import { ErrorType, invokeSilently, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 
 /**
@@ -37,37 +37,6 @@ interface ImRequestOptions {
 
 /**
  * 统一的 IM API 请求工具
- *
- * @example
- * ```typescript
- * // 简单的 GET 请求
- * const userDetail = await imRequest({ url: ImUrlEnum.GET_USER_INFO_DETAIL })
- *
- * // 带参数的请求
- * const groupDetail = await imRequest({
- *   url: ImUrlEnum.GROUP_DETAIL,
- *   params: { id: groupId }
- * })
- *
- * // 带请求体的 POST 请求
- * const result = await imRequest({
- *   url: ImUrlEnum.GET_USER_INFO_BATCH,
- *   body: batchUsers
- * })
- *
- * // 静默请求（不显示错误）
- * const result = await imRequestSilent({
- *   url: ImUrlEnum.APPLY_UN_READ_COUNT
- * })
- *
- * // 带重试的请求
- * const result = await imRequest({
- *   url: ImUrlEnum.GET_CONTACT_LIST,
- *   params: { pageSize: 100 }
- * }, {
- *   retry: { maxRetries: 5, retryDelay: 2000 }
- * })
- * ```
  */
 export async function imRequest<T = any>(
   requestParams: ImRequestParams,
@@ -190,18 +159,6 @@ export async function getApplyUnreadCount() {
 }
 
 /**
- * 快捷方法：批量获取用户信息
- */
-export async function getUserInfoBatch(batchUsers: CacheUserReq[]) {
-  return await imRequest({
-    url: ImUrlEnum.GET_USER_INFO_BATCH,
-    body: {
-      reqList: batchUsers
-    }
-  })
-}
-
-/**
  * 快捷方法：获取群公告列表
  */
 export async function getAnnouncementList(roomId: string, page: number, pageSize: number = 10) {
@@ -265,9 +222,9 @@ export async function getMsgList(params: any) {
   })
 }
 
-export async function modifyUserName(body: { name: string }) {
+export async function ModifyUserInfo(body: ModifyUserInfoType) {
   return await imRequest({
-    url: ImUrlEnum.MODIFY_USER_NAME,
+    url: ImUrlEnum.MODIFY_USER_INFO,
     body
   })
 }

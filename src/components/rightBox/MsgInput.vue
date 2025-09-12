@@ -177,7 +177,6 @@ import { MacOsKeyEnum, MittEnum, RoomTypeEnum, ThemeEnum, WinKeyEnum } from '@/e
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useMsgInput } from '@/hooks/useMsgInput.ts'
-import { useTauriListener } from '@/hooks/useTauriListener'
 import { useGlobalStore } from '@/stores/global'
 import { useSettingStore } from '@/stores/setting.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
@@ -186,7 +185,6 @@ import { sendOptions } from '@/views/moreWindow/settings/config.ts'
 import { useGroupStore } from '~/src/stores/group'
 
 const appWindow = WebviewWindow.getCurrent()
-const { addListener } = useTauriListener()
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
 const { handlePaste, processFiles } = useCommon()
@@ -429,25 +427,22 @@ onMounted(async () => {
       console.log('ESC键退出语音模式')
     }
   })
-  await addListener(
-    appWindow.listen('screenshot', async (e: any) => {
-      // 确保输入框获得焦点
-      if (messageInputDom.value) {
-        messageInputDom.value.focus()
-        try {
-          // 从 ArrayBuffer 数组重建 Blob 对象
-          const buffer = new Uint8Array(e.payload.buffer)
-          const blob = new Blob([buffer], { type: e.payload.mimeType })
-          const file = new File([blob], 'screenshot.png', { type: e.payload.mimeType })
+  appWindow.listen('screenshot', async (e: any) => {
+    // 确保输入框获得焦点
+    if (messageInputDom.value) {
+      messageInputDom.value.focus()
+      try {
+        // 从 ArrayBuffer 数组重建 Blob 对象
+        const buffer = new Uint8Array(e.payload.buffer)
+        const blob = new Blob([buffer], { type: e.payload.mimeType })
+        const file = new File([blob], 'screenshot.png', { type: e.payload.mimeType })
 
-          await processFiles([file], messageInputDom.value, showFileModalCallback)
-        } catch (error) {
-          console.error('处理截图失败:', error)
-        }
+        await processFiles([file], messageInputDom.value, showFileModalCallback)
+      } catch (error) {
+        console.error('处理截图失败:', error)
       }
-    }),
-    'screenshot'
-  )
+    }
+  })
   window.addEventListener('click', closeMenu, true)
   window.addEventListener('keydown', disableSelectAll)
 })

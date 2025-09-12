@@ -6,11 +6,11 @@
     <img src="@/assets/mobile/chat-home/background.webp" class="w-100% fixed top-0" alt="hula" />
 
     <!-- 页面蒙板 -->
-    <div
+    <!-- <div
       v-if="showMask"
       @touchend="maskHandler.close"
       @click="maskHandler.close"
-      class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[999] transition-all duration-3000 ease-in-out opacity-100"></div>
+      class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[999] transition-all duration-3000 ease-in-out opacity-100"></div> -->
 
     <!-- 键盘蒙板 -->
     <div
@@ -41,7 +41,7 @@
               {{ userStore.userInfo!.name }}
             </p>
             <p class="text-(10px [--text-color])">
-              {{ groupStore.getUserInfo(userStore.userInfo!.uid)?.locPlace || '未知' }}
+              {{ groupStore.getUserInfo(userStore.userInfo!.uid)?.locPlace || '中国' }}
             </p>
           </n-flex>
         </n-flex>
@@ -86,38 +86,44 @@
     <PullToRefresh class="flex-1 overflow-auto" @refresh="handleRefresh" ref="pullRefreshRef">
       <div class="flex flex-col h-full px-18px">
         <div class="flex-1">
-          <div
+          <van-swipe-cell
+            @open="handleSwipeOpen"
+            @close="handleSwipeClose"
             v-for="(item, idx) in sessionList"
-            :key="`${item.id}-${idx}`"
-            @click="intoRoom(item)"
-            @dblclick="handleMsgDblclick(item)"
-            class="grid grid-cols-[2.2rem_1fr_4rem] items-start px-2 py-3 gap-1">
-            <!-- 头像：单独居中 -->
-            <div class="flex-shrink-0">
-              <n-badge :offset="[-6, 6]" :value="item.unreadCount" :max="99">
-                <n-avatar :size="52" :src="AvatarUtils.getAvatarUrl(item.avatar)" fallback-src="/logo.png" round />
-              </n-badge>
-            </div>
-            <!-- 中间：两行内容 -->
-            <div class="truncate pl-7 flex pt-5px gap-10px flex-col">
-              <div class="text-16px leading-tight font-bold flex-1 truncate text-#333 truncate">{{ item.name }}</div>
-              <div class="text-12px text-#333 truncate">
-                {{ item.text }}
+            :key="`${item.id}-${idx}`">
+            <div @click="intoRoom(item)" class="grid grid-cols-[2.2rem_1fr_4rem] items-start px-2 py-3 gap-1">
+              <div class="flex-shrink-0">
+                <n-badge :offset="[-6, 6]" :value="item.unreadCount" :max="99">
+                  <n-avatar :size="52" :src="AvatarUtils.getAvatarUrl(item.avatar)" fallback-src="/logo.png" round />
+                </n-badge>
+              </div>
+              <!-- 中间：两行内容 -->
+              <div class="truncate pl-7 flex pt-5px gap-10px flex-col">
+                <div class="text-16px leading-tight font-bold flex-1 truncate text-#333 truncate">{{ item.name }}</div>
+                <div class="text-12px text-#333 truncate">
+                  {{ item.text }}
+                </div>
+              </div>
+
+              <!-- 时间：靠顶 -->
+              <div class="text-12px pt-9px text-right flex gap-1 items-center justify-right">
+                <span v-if="item.hotFlag === IsAllUserEnum.Yes">
+                  <svg class="size-22px select-none outline-none cursor-pointer color-#13987f">
+                    <use href="#auth"></use>
+                  </svg>
+                </span>
+                <span class="text-#555">
+                  {{ formatTimestamp(item?.activeTime) }}
+                </span>
               </div>
             </div>
-
-            <!-- 时间：靠顶 -->
-            <div class="text-12px pt-9px text-right flex gap-1 items-center justify-right">
-              <span v-if="item.hotFlag === IsAllUserEnum.Yes">
-                <svg class="size-22px select-none outline-none cursor-pointer color-#13987f">
-                  <use href="#auth"></use>
-                </svg>
-              </span>
-              <span class="text-#555">
-                {{ formatTimestamp(item?.activeTime) }}
-              </span>
-            </div>
-          </div>
+            <template #right>
+              <div class="flex w-auto flex-wrap h-full">
+                <div class="h-full text-14px w-80px bg-#13987f text-white flex items-center justify-center">置顶</div>
+                <div class="h-full text-14px w-80px bg-red text-white flex items-center justify-center">删除</div>
+              </div>
+            </template>
+          </van-swipe-cell>
         </div>
       </div>
     </PullToRefresh>
@@ -214,10 +220,6 @@ const chatStore = useChatStore()
 
 const pullRefreshRef = ref()
 
-const getSessionList = async () => {
-  await chatStore.getSessionList(true)
-}
-
 const userStore = useUserStore()
 
 /**
@@ -235,7 +237,6 @@ const userStore = useUserStore()
 onMounted(async () => {
   await rustWebSocketClient.setupBusinessMessageListeners()
   console.log('个人数据：', userStore.userInfo)
-  getSessionList()
 
   const { removeHideFunction, removeShowFunction } = await mobileClient.keyboardListener(
     // 键盘打开
@@ -258,9 +259,14 @@ onMounted(async () => {
 })
 
 const handleRefresh = async () => {
-  await getSessionList()
-  // 完成刷新
-  pullRefreshRef.value?.finishRefresh()
+  try {
+    // 完成刷新
+    if (pullRefreshRef.value && typeof pullRefreshRef.value.finishRefresh === 'function') {
+      pullRefreshRef.value.finishRefresh()
+    }
+  } catch (error) {
+    console.error('刷新完成时出错:', error)
+  }
 }
 
 /**
@@ -368,13 +374,26 @@ const addIconHandler = {
 
 const router = useRouter()
 
-const { handleMsgClick, handleMsgDblclick } = useMessage()
+const { handleMsgClick } = useMessage()
+
+// 阻止消息的点击事件，为false时不阻止
+let preventClick = false
+
+const handleSwipeOpen = () => {
+  preventClick = true
+}
+
+const handleSwipeClose = () => {
+  preventClick = false
+}
 
 const intoRoom = (item: any) => {
+  if (preventClick) {
+    return
+  }
   handleMsgClick(item)
   setTimeout(() => {
     router.push(`/mobile/chatRoom/chatMain`)
-    console.log('进入页面', item)
   }, 0)
 }
 const toSimpleBio = () => {
@@ -421,10 +440,6 @@ const closeKeyboardMask = () => {
 </script>
 
 <style scoped lang="scss">
-// .message-item {
-//   @apply flex justify-around items-center p-3 hover:bg-#DEEDE7 hover:rounded-10px transition-colors cursor-pointer;
-// }
-
 .keyboard-mask {
   position: fixed;
   inset: 0;
