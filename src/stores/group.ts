@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { RoleEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
 import type { GroupDetailReq, UserItem } from '@/services/types'
-import type { OnStatusChangeType } from '@/services/wsType'
 import { useGlobalStore } from '@/stores/global'
 import { useUserStore } from '@/stores/user'
 import * as ImRequestUtils from '@/utils/ImRequestUtils'
@@ -89,6 +88,41 @@ export const useGroupStore = defineStore(
       targetGroup = {
         ...targetGroup,
         ...detail
+      }
+    }
+
+    const updateOnlineNum = (options: { uid?: string; roomId?: string; onlineNum?: number; isAdd?: boolean }) => {
+      const { uid, roomId, onlineNum, isAdd } = options
+
+      if (roomId) {
+        // 如果传了 roomId，只修改该房间的 onlineNum
+        const groupDetail = groupDetails.value.find((detail) => detail.roomId === roomId)
+        if (groupDetail) {
+          if (onlineNum) {
+            groupDetail.onlineNum = onlineNum
+          } else {
+            if (isAdd) {
+              groupDetail.onlineNum++
+            } else {
+              groupDetail.onlineNum--
+            }
+          }
+        }
+      } else {
+        // 如果没有传 roomId, 说明是全局更新
+        const roomIds = getRoomIdsByUid(uid!)
+
+        // 遍历找到的所有房间ID，更新对应群组的在线人数
+        roomIds.forEach((roomId) => {
+          const groupDetail = groupDetails.value.find((detail) => detail.roomId === roomId)
+          if (groupDetail) {
+            if (isAdd) {
+              groupDetail.onlineNum++
+            } else {
+              groupDetail.onlineNum--
+            }
+          }
+        })
       }
     }
 
@@ -215,24 +249,6 @@ export const useGroupStore = defineStore(
       userListOptions.loading = true
       await getGroupUserList(globalStore.currentSession!.roomId)
       userListOptions.loading = false
-    }
-
-    /**
-     * 更新用户在线状态
-     * @param item 需要更新状态的用户
-     * @param roomId 群聊房间ID，可选，默认使用当前房间
-     */
-    const updateUserStatus = async (item: UserItem | OnStatusChangeType['member'], roomId?: string) => {
-      const targetRoomId = roomId || globalStore.currentSession!.roomId
-      if (!targetRoomId) return
-
-      const currentUserList = userListMap[targetRoomId] || []
-      const findIndex = currentUserList.findIndex((i: UserItem) => i.uid === item.uid)
-      if (findIndex !== -1) {
-        const updatedList = [...currentUserList]
-        updatedList[findIndex] = { ...updatedList[findIndex], ...item }
-        userListMap[targetRoomId] = updatedList
-      }
     }
 
     /**
@@ -459,13 +475,33 @@ export const useGroupStore = defineStore(
       return userListMap[roomId].filter((item) => item.uid === uid)[0]
     }
 
+    /**
+     * 根据用户ID查找该用户所在的所有房间ID
+     * @param uid 用户ID
+     * @returns 包含该用户的所有房间ID数组
+     */
+    const getRoomIdsByUid = (uid: string): string[] => {
+      const roomIds: string[] = []
+
+      // 遍历所有房间的用户列表
+      Object.keys(userListMap).forEach((roomId) => {
+        const userList = userListMap[roomId]
+        // 检查当前房间是否包含指定的用户
+        const hasUser = userList.some((user) => user.uid === uid)
+        if (hasUser) {
+          roomIds.push(roomId)
+        }
+      })
+
+      return roomIds
+    }
+
     return {
       userList,
       userListMap,
       userListOptions,
       loadMoreGroupMembers,
       getGroupUserList,
-      updateUserStatus,
       updateUserItem,
       addUserItem,
       removeUserItem,
@@ -481,6 +517,8 @@ export const useGroupStore = defineStore(
       getUserListByRoomId,
       countInfo,
       getUser,
+      getRoomIdsByUid,
+      updateOnlineNum,
       removeAllUsers,
       getCurrentUser,
       myNameInCurrentGroup,

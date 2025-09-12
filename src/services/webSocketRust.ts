@@ -314,9 +314,9 @@ class RustWebSocketClient {
     )
 
     this.listenerController.add(
-      await listen('ws-offline', () => {
-        info('下线')
-        useMitt.emit(WsResponseMessageType.OFFLINE)
+      await listen('ws-offline', (event: any) => {
+        info(`下线: ${JSON.stringify(event.payload)}`)
+        useMitt.emit(WsResponseMessageType.OFFLINE, event.payload)
       })
     )
 

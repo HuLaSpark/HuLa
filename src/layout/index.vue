@@ -182,7 +182,11 @@ useMitt.on(MittEnum.SHRINK_WINDOW, (event: boolean) => {
 useMitt.on(WsResponseMessageType.LOGIN_SUCCESS, async (data: LoginSuccessResType) => {
   const { ...rest } = data
   // 自己更新自己上线
-  await groupStore.updateUserStatus({
+  groupStore.updateOnlineNum({
+    uid: rest.uid,
+    isAdd: true
+  })
+  groupStore.updateUserItem(rest.uid, {
     activeStatus: OnlineEnum.ONLINE,
     avatar: rest.avatar,
     account: rest.account,
@@ -210,19 +214,51 @@ useMitt.on(WsResponseMessageType.USER_STATE_CHANGE, async (data: { uid: string; 
     userStateId: data.userStateId
   })
 })
-useMitt.on(WsResponseMessageType.OFFLINE, async () => {
-  console.log('收到用户下线通知')
+
+useMitt.on(WsResponseMessageType.OFFLINE, async (onStatusChangeType: OnStatusChangeType) => {
+  console.log('收到用户下线通知', onStatusChangeType)
+  // 群聊
+  if (onStatusChangeType.type === 1) {
+    groupStore.updateOnlineNum({
+      roomId: onStatusChangeType.roomId,
+      onlineNum: onStatusChangeType.onlineNum,
+      isAdd: false
+    })
+    if (onStatusChangeType) {
+      groupStore.updateUserItem(
+        onStatusChangeType.uid,
+        {
+          activeStatus: OnlineEnum.OFFLINE,
+          lastOptTime: onStatusChangeType.lastOptTime
+        },
+        onStatusChangeType.roomId
+      )
+    }
+  }
 })
+
 useMitt.on(WsResponseMessageType.ONLINE, async (onStatusChangeType: OnStatusChangeType) => {
   console.log('收到用户上线通知')
-  if (onStatusChangeType && onStatusChangeType.onlineNum) {
-    groupStore.countInfo!.onlineNum = onStatusChangeType.onlineNum
-  }
-  if (onStatusChangeType && onStatusChangeType.member) {
-    await groupStore.updateUserStatus(onStatusChangeType.member)
-    await groupStore.refreshGroupMembers()
+  // 群聊
+  if (onStatusChangeType.type === 1) {
+    groupStore.updateOnlineNum({
+      roomId: onStatusChangeType.roomId,
+      onlineNum: onStatusChangeType.onlineNum,
+      isAdd: true
+    })
+    if (onStatusChangeType) {
+      groupStore.updateUserItem(
+        onStatusChangeType.uid,
+        {
+          activeStatus: OnlineEnum.ONLINE,
+          lastOptTime: onStatusChangeType.lastOptTime
+        },
+        onStatusChangeType.roomId
+      )
+    }
   }
 })
+
 useMitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExpire) => {
   if (Number(userUid.value) === Number(wsTokenExpire.uid) && userStore.userInfo!.client === wsTokenExpire.client) {
     console.log('收到用户token过期通知', wsTokenExpire)
@@ -237,6 +273,7 @@ useMitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExp
     })
   }
 })
+
 useMitt.on(WsResponseMessageType.INVALID_USER, (param: { uid: string }) => {
   console.log('无效用户')
   const data = param
@@ -245,6 +282,7 @@ useMitt.on(WsResponseMessageType.INVALID_USER, (param: { uid: string }) => {
   // 群成员列表删掉拉黑的用户
   groupStore.removeUserItem(data.uid)
 })
+
 useMitt.on(WsResponseMessageType.MSG_MARK_ITEM, async (data: { markList: MarkItemType[] }) => {
   console.log('收到消息标记更新:', data)
 
@@ -256,13 +294,16 @@ useMitt.on(WsResponseMessageType.MSG_MARK_ITEM, async (data: { markList: MarkIte
     await chatStore.updateMarkCount([data as unknown as MarkItemType])
   }
 })
+
 useMitt.on(WsResponseMessageType.MSG_RECALL, (data: RevokedMsgType) => {
   chatStore.updateRecallMsg(data)
 })
+
 useMitt.on(WsResponseMessageType.MY_ROOM_INFO_CHANGE, (data: { myName: string; roomId: string; uid: string }) => {
   // 更新用户在群聊中的昵称
   groupStore.updateUserItem(data.uid, { myName: data.myName }, data.roomId)
 })
+
 useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   chatStore.pushMsg(data)
   data.message.sendTime = new Date(data.message.sendTime).getTime()
@@ -317,6 +358,7 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
 
   await globalStore.updateGlobalUnreadCount()
 })
+
 useMitt.on(
   WsResponseMessageType.REQUEST_NEW_FRIEND,
   async (data: { uid: number; unReadCount4Friend: number; unReadCount4Group: number }) => {
@@ -329,6 +371,7 @@ useMitt.on(
     await contactStore.getApplyPage(true)
   }
 )
+
 useMitt.on(
   WsResponseMessageType.WS_MEMBER_CHANGE,
   async (param: {

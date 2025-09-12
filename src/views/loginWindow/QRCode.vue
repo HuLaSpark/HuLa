@@ -45,19 +45,16 @@
 <script setup lang="ts">
 import { delay } from 'lodash-es'
 import { lightTheme } from 'naive-ui'
-import { OnlineEnum } from '@/enums'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
 import { type LoginInitResType, type LoginSuccessResType, WsResponseMessageType } from '@/services/wsType.ts'
-import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user'
 import { LoginStatus, useWsLoginStore } from '@/stores/ws.ts'
 
 const loginStore = useWsLoginStore()
 const userStore = useUserStore()
-const groupStore = useGroupStore()
 /** 获取登录二维码 */
 // const loginQrCode = computed(() => loginStore.loginQrCode)
 /** 登录状态 */
@@ -143,22 +140,13 @@ onMounted(() => {
     handleQRCodeLogin()
   })
   useMitt.on(WsResponseMessageType.LOGIN_SUCCESS, async (loginSuccessResType: LoginSuccessResType) => {
-    const { token, ...rest } = loginSuccessResType
+    const { token } = loginSuccessResType
     // FIXME 可以不需要赋值了，单独请求了接口。
-    userStore.userInfo = { ...userStore.userInfo!, ...rest }
+    userStore.userInfo = { ...userStore.userInfo! }
     localStorage.setItem('TOKEN', token)
     localStorage.removeItem('wsLogin')
     // 获取用户详情
     userStore.getUserDetailAction()
-    // 自己更新自己上线
-    await groupStore.updateUserStatus({
-      activeStatus: OnlineEnum.ONLINE,
-      avatar: rest.avatar,
-      account: rest.account,
-      name: rest.name,
-      uid: rest.uid,
-      lastOptTime: Date.now()
-    })
     // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取
     // await emojiStore.getEmojiList()
     await handleLoginSuccess()
