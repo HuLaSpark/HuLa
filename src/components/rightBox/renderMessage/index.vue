@@ -18,16 +18,11 @@
     <!-- 信息时间(单聊) -->
     <div
       v-if="!isGroup"
-      class="text-(12px #909090) h-12px w-fit select-none"
-      :class="
-        isMe
-          ? activeReply === message.message.id
-            ? 'pr-68px'
-            : 'pr-42px'
-          : activeReply === message.message.id
-            ? 'pl-68px'
-            : 'pl-42px'
-      ">
+      class="text-(12px #909090) h-12px flex select-none"
+      :class="{
+        'pr-48px justify-end': isMe,
+        'pl-42px justify-start': !isMe
+      }">
       <Transition name="fade-single">
         <span v-if="hoverMsgId === message.message.id">
           {{ formatTimestamp(message.message.sendTime, true) }}
