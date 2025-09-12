@@ -8,11 +8,7 @@
       :current-label="WebviewWindow.getCurrent().label" />
 
     <!-- 标题 -->
-    <p
-      class="absolute-x-center h-fit pt-6px text-(13px [--text-color]) select-none cursor-default"
-      data-tauri-drag-region>
-      申请加好友
-    </p>
+    <p class="absolute-x-center h-fit pt-6px text-(13px [--text-color]) select-none cursor-default">申请加好友</p>
 
     <!-- 内容区域 -->
     <div class="bg-[--bg-edit] w-380px h-full box-border flex flex-col">

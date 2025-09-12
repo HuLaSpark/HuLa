@@ -19,40 +19,13 @@
         <!-- 名字与在线状态 -->
         <div class="flex flex-warp gap-4 items-center">
           <span class="font-bold text-20px text-#373838">{{ userStore.userInfo!.name }}</span>
-          <div class="bg-#E7EFE6 flex flex-wrap ps-2 items-center rounded-full gap-1 w-50px h-24px">
-            <span class="w-12px h-12px rounded-15px bg-#079669"></span>
-            <span class="text-bold-style" style="font-size: 12px; color: #373838">在线</span>
+          <div class="bg-#E7EFE6 flex flex-wrap ps-2 px-8px items-center rounded-full gap-1 h-24px">
+            <span class="w-12px h-12px rounded-15px flex items-center">
+              <img :src="currentState?.url" alt="" class="rounded-50% size-14px" />
+            </span>
+            <span class="text-bold-style" style="font-size: 12px; color: #373838">{{ currentState?.title }}</span>
           </div>
         </div>
-
-        <!-- 在线状态点 -->
-        <template v-if="!statusIcon">
-          <n-popover trigger="hover" placement="top" :show-arrow="false">
-            <template #trigger>
-              <div
-                @click="openContent('在线状态', 'onlineStatus', 320, 480)"
-                class="z-30 absolute top-72px left-72px cursor-pointer border-(6px solid [--avatar-border-color]) rounded-full size-18px"
-                :class="[activeStatus === OnlineEnum.ONLINE ? 'bg-#1ab292' : 'bg-#909090']"></div>
-            </template>
-            <span>{{ activeStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}</span>
-          </n-popover>
-        </template>
-
-        <!-- 独立的状态图标 -->
-        <template v-if="statusIcon">
-          <n-popover trigger="hover" placement="top" :show-arrow="false">
-            <template #trigger>
-              <div class="z-30 absolute top-72px left-72px size-26px bg-[--avatar-border-color] rounded-full">
-                <img
-                  :src="statusIcon"
-                  @click="openContent('在线状态', 'onlineStatus', 320, 480)"
-                  class="p-4px cursor-pointer rounded-full size-18px"
-                  alt="" />
-              </div>
-            </template>
-            <span>{{ currentStateTitle }}</span>
-          </n-popover>
-        </template>
 
         <!-- 账号 -->
         <div class="flex flex-warp gap-2 items-center">
@@ -68,14 +41,14 @@
             style="transform: translateZ(0)"
             class="relative w-118px overflow-hidden">
             <img class="block w-full" src="@/assets/mobile/my/my-medal.webp" alt="" />
-            <div class="text-10px absolute inset-0 flex ps-2 items-center justify-start text-white font-medium">
+            <div class="text-10px absolute inset-0 flex ps-2 items-center justify-around text-white font-medium">
               <span class="flex items-center">
-                <template v-if="(userStore.userInfo?.itemIds?.length ?? 0) > 0">
+                <div v-if="(userStore.userInfo?.itemIds?.length ?? 0) > 0">
                   <span class="font-bold">已点亮</span>
                   <span class="medal-number">{{ userStore.userInfo?.itemIds?.length }}</span>
                   <span class="font-bold">枚勋章</span>
-                </template>
-                <span v-else>还没获取任何勋章</span>
+                </div>
+                <span v-else>还没勋章哦~</span>
               </span>
 
               <span class="flex ms-3">
@@ -99,17 +72,17 @@
         <div class="flex flex-warp gap-2 items-center">
           <div class="min-w-10 flex flex-col items-center">
             <div class="fans-number">920.13W</div>
-            <div class="mt-2 text-bold-style">粉丝</div>
+            <div class="fans-title">粉丝</div>
           </div>
           <div class="h-20px w-1px bg-gray-300"></div>
           <div class="min-w-10 flex flex-col items-center">
             <div class="fans-number">120</div>
-            <div class="mt-2 text-bold-style">关注</div>
+            <div class="fans-title">关注</div>
           </div>
           <div class="h-20px w-1px bg-gray-300"></div>
           <div class="min-w-10 flex flex-col items-center">
             <div class="fans-number">43.15W</div>
-            <div class="mt-2 text-bold-style">点赞</div>
+            <div class="fans-title">点赞</div>
           </div>
         </div>
         <div class="flex-1 justify-end flex items-center gap-3">
@@ -142,7 +115,6 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { OnlineEnum } from '@/enums/index.ts'
 import { useUserStore } from '@/stores/user'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
@@ -150,45 +122,10 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 const router = useRouter()
 const userStore = useUserStore()
 const userStatusStore = useUserStatusStore()
-const { stateList } = storeToRefs(userStatusStore)
-const activeStatus = ref<OnlineEnum>(OnlineEnum.ONLINE)
+
+const currentState = computed(() => userStatusStore.currentState)
+
 const animatedBox = ref<HTMLElement | null>(null)
-const statusIcon = computed(() => {
-  const userStateId = userStore.userInfo?.userStateId
-
-  // 如果在线且有特殊状态
-  if (userStateId && userStateId !== '1') {
-    const state = stateList.value.find((s: { id: string }) => s.id === userStateId)
-    if (state) {
-      return state.url
-    }
-  }
-  return null
-})
-
-// 计算当前状态的标题
-const currentStateTitle = computed(() => {
-  const userStateId = userStore.userInfo?.userStateId
-
-  if (userStateId && userStateId !== '1') {
-    const state = stateList.value.find((s: { id: string }) => s.id === userStateId)
-    if (state) {
-      return state.title
-    }
-  }
-  return activeStatus.value === OnlineEnum.ONLINE ? '在线' : '离线'
-})
-
-/**
- * 打开内容对应窗口 [安卓版本]
- * @param title 窗口的标题
- * @param label 窗口的标识
- * @param w 窗口的宽度
- * @param h 窗口的高度
- * */
-const openContent = (_title: string, _label: string, _w = 840, _h = 600) => {
-  console.log('安卓的弹窗')
-}
 
 const toEditProfile = () => {
   router.push('/mobile/mobileMy/editProfile')
@@ -337,6 +274,14 @@ $font-family-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 .fans-number {
   font-size: $text-font-size-base;
   font-family: $font-family-system, $font-family-windows, $font-family-chinese, $font-family-sans;
+  font-weight: 600;
+}
+
+.fans-title {
+  margin-top: 0.5rem;
+  font-size: 13px;
+  font-family: $font-family-system, $font-family-windows, $font-family-sans;
+  color: #757775;
 }
 
 .custom-rounded {

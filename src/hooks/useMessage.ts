@@ -225,7 +225,7 @@ export const useMessage = () => {
       click: async (item: SessionItem) => {
         // 单聊：删除好友
         if (item.type === RoomTypeEnum.SINGLE) {
-          await contactStore.onDeleteContact(item.id)
+          await contactStore.onDeleteContact(item.detailId)
           await handleMsgDelete(item.roomId)
           window.$message.success('已删除好友')
           return
