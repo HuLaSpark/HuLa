@@ -179,8 +179,6 @@ const activeReply = ref<string>('')
 const scrollContainerRef = useTemplateRef<HTMLDivElement>('scrollContainer')
 const infoPopoverRefs = shallowRef<Record<string, any>>({})
 const showScrollbar = ref<boolean>(true)
-// const rafId = ref<number>()
-const messageIdToIndexMap = shallowRef<Map<string, number>>(new Map())
 const isAnnouncementHover = ref<boolean>(false)
 const topAnnouncement = ref<AnnouncementData | null>(null)
 
@@ -251,7 +249,7 @@ watchPostEffect(() => {
 // 跳转到回复消息
 const jumpToReplyMsg = async (key: string): Promise<void> => {
   // 先在当前列表中尝试查找
-  let messageIndex = chatStore.chatMessageList.findIndex((msg) => msg.message.id === String(key))
+  let messageIndex = chatStore.chatMessageList.findIndex((msg: any) => msg.message.id === String(key))
 
   // 如果找到了，直接滚动到该消息
   if (messageIndex !== -1) {
@@ -350,8 +348,9 @@ const scrollToBottom = (): void => {
   if (!container) return
   // 立即清除新消息计数
   chatStore.clearNewMsgCount()
-  scrollContainerRef.value.scrollTo({
-    top: scrollContainerRef.value.scrollHeight,
+  // 使用requestAnimationFrame确保在下一帧执行，避免布局抖动
+  container.scrollTo({
+    top: container.scrollHeight,
     behavior: 'auto'
   })
 }
@@ -365,14 +364,6 @@ const handleFloatButtonClick = async () => {
     console.error('重置消息列表失败:', error)
     scrollToBottom()
   }
-}
-
-// 更新消息索引映射
-const updateMessageIndexMap = (): void => {
-  messageIdToIndexMap.value.clear()
-  chatStore.chatMessageList.forEach((msg, index) => {
-    messageIdToIndexMap.value.set(msg.message.id, index)
-  })
 }
 
 // 处理滚动事件(用于页脚显示功能)
@@ -431,11 +422,8 @@ watch(
 
 // 监听消息列表变化
 watch(
-  chatStore.chatMessageList,
-  (value, oldValue) => {
-    // 更新消息索引映射
-    updateMessageIndexMap()
-
+  () => chatStore.chatMessageList,
+  async (value, oldValue) => {
     // 简化消息列表监听，避免直接滚动操作
     if (value.length > oldValue.length) {
       // 获取最新消息
@@ -466,6 +454,9 @@ watch(
           }
         }
       }
+
+      await nextTick()
+      scrollToBottom()
     }
   },
   { deep: false }
@@ -511,9 +502,6 @@ const handleLoadMore = async (): Promise<void> => {
   const oldScrollTop = container.scrollTop
   try {
     await chatStore.loadMore()
-
-    // 更新消息索引映射
-    updateMessageIndexMap()
 
     // 计算新的滚动位置，保持用户在加载前的相对位置
     const newScrollHeight = container.scrollHeight
@@ -615,7 +603,6 @@ onMounted(() => {
   initListeners().catch(console.error)
 
   nextTick(() => {
-    updateMessageIndexMap()
     loadTopAnnouncement()
   })
 
@@ -627,9 +614,7 @@ onMounted(() => {
 
   // 监听滚动到底部的事件
   useMitt.on(MittEnum.CHAT_SCROLL_BOTTOM, () => {
-    nextTick(() => {
-      scrollToBottom()
-    })
+    scrollToBottom()
   })
   scrollToBottom()
 })
