@@ -376,7 +376,7 @@
     v-if="shouldShowFloatFooter && currentNewMsgCount"
     :class="isGroup ? 'right-220px' : 'right-50px'"
     :style="{ bottom: `${footerHeight - 60}px` }">
-    <div class="float-box" :class="{ max: currentNewMsgCount?.count > 99 }" @click="scrollToBottom">
+    <div class="float-box" :class="{ max: currentNewMsgCount?.count > 99 }" @click="handleFloatButtonClick">
       <n-flex justify="space-between" align="center">
         <n-icon :color="currentNewMsgCount?.count > 99 ? '#ce304f' : '#13987f'">
           <svg>
@@ -768,6 +768,17 @@ const scrollToBottom = (): void => {
   setTimeout(() => {
     isAutoScrolling.value = false
   }, 100)
+}
+
+// 处理悬浮按钮点击 - 重置消息列表并滚动到底部
+const handleFloatButtonClick = async () => {
+  try {
+    await chatStore.resetAndRefreshCurrentRoomMessages()
+    scrollToBottom()
+  } catch (error) {
+    console.error('重置消息列表失败:', error)
+    scrollToBottom()
+  }
 }
 
 // 滚动到指定索引位置

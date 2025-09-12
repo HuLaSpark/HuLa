@@ -5,7 +5,10 @@
     :message-status="message.status"
     :upload-progress="uploadProgress"
     :from-user-uid="fromUser?.uid"
-    :data-message-id="message.id" />
+    :data-message-id="message.id"
+    :on-image-click="onImageClick"
+    :on-video-click="onVideoClick"
+    :search-keyword="searchKeyword" />
 </template>
 <script setup lang="ts">
 import type { Component } from 'vue'
@@ -41,5 +44,8 @@ defineProps<{
   fromUser?: {
     uid: string
   }
+  onImageClick?: (url: string) => void
+  onVideoClick?: (url: string) => void
+  searchKeyword?: string
 }>()
 </script>

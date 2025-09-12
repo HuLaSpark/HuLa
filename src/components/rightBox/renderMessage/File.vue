@@ -6,7 +6,19 @@
     <!-- 文件信息 -->
     <div class="file-info select-none">
       <div class="file-name" :title="body?.fileName">
-        {{ truncateFileName(body?.fileName || '未知文件') }}
+        <n-highlight
+          v-if="props.searchKeyword"
+          :text="truncateFileName(body?.fileName || '未知文件')"
+          :patterns="[props.searchKeyword]"
+          :highlight-style="{
+            padding: '0 4px',
+            borderRadius: '6px',
+            color: '#000',
+            background: '#13987f'
+          }" />
+        <template v-else>
+          {{ truncateFileName(body?.fileName || '未知文件') }}
+        </template>
       </div>
       <div class="file-size">
         {{ formatBytes(body?.size != null && !isNaN(body.size) ? body.size : 0) }}
@@ -117,6 +129,7 @@ const props = defineProps<{
   body: FileBody
   messageStatus?: MessageStatusEnum
   uploadProgress?: number
+  searchKeyword?: string
 }>()
 
 // 图标尺寸状态
@@ -406,6 +419,7 @@ onMounted(async () => {
   line-height: 1.2;
   margin-bottom: 8px;
   white-space: nowrap;
+  padding: 2px 0;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 170px;

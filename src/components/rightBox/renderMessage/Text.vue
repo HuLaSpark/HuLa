@@ -19,6 +19,17 @@
         </n-tooltip>
         {{ item }}
       </template>
+      <n-highlight
+        v-else-if="props.searchKeyword"
+        :text="item"
+        :patterns="[props.searchKeyword]"
+        :highlight-style="{
+          userSelect: 'text',
+          padding: '2px 4px',
+          borderRadius: '6px',
+          color: '#000',
+          background: '#13987f'
+        }" />
       <template v-else>{{ item }}</template>
       <div
         v-if="keys.includes(item)"
@@ -42,7 +53,10 @@
 import { open } from '@tauri-apps/plugin-shell'
 import type { TextBody } from '@/services/types'
 
-const props = defineProps<{ body: TextBody }>()
+const props = defineProps<{
+  body: TextBody
+  searchKeyword?: string
+}>()
 // 获取所有匹配的字符串
 const urlMap = props.body.urlContentMap || {}
 const keys = Object.keys(urlMap)

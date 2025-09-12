@@ -43,12 +43,35 @@ export const useImageViewer = () => {
    * 打开图片查看器
    * @param url 要查看的URL
    * @param includeTypes 要包含在查看器中的消息类型
+   * @param customImageList 自定义图片列表，用于聊天历史等场景
    */
-  const openImageViewer = async (url: string, includeTypes: MsgEnum[] = [MsgEnum.IMAGE, MsgEnum.EMOJI]) => {
+  const openImageViewer = async (
+    url: string,
+    includeTypes: MsgEnum[] = [MsgEnum.IMAGE, MsgEnum.EMOJI],
+    customImageList?: string[]
+  ) => {
     if (!url) return
 
     try {
-      const { list, index } = getAllMediaFromChat(url, includeTypes)
+      let list: string[]
+      let index: number
+
+      if (customImageList && customImageList.length > 0) {
+        // 使用自定义图片列表
+        list = customImageList
+        index = customImageList.indexOf(url)
+        if (index === -1) {
+          // 如果当前图片不在列表中，将其添加到列表开头
+          list = [url, ...customImageList]
+          index = 0
+        }
+      } else {
+        // 使用默认逻辑从聊天中获取
+        const result = getAllMediaFromChat(url, includeTypes)
+        list = result.list
+        index = result.index
+      }
+
       // 使用重置方法，自动去重并保持顺序
       imageViewerStore.resetImageList(list, index)
 
