@@ -35,36 +35,38 @@
               {{ formatDateGroupLabel(group.timestamp) }}
             </n-tag>
 
-            <template v-for="message in group.messages" :key="message.message.id">
-              <div v-if="message.message.type !== MsgEnum.BOT" class="px-4px py-12px mb-16px">
+            <template v-for="item in group.messages" :key="item.message.id">
+              <div class="px-4px py-12px mb-16px">
                 <!-- 消息头像和信息 -->
                 <div class="flex">
                   <n-avatar
                     :size="32"
-                    :src="getAvatarSrc(message.fromUser.uid)"
+                    :src="getAvatarSrc(item.fromUser.uid)"
                     class="rounded-6px mr-8px"
                     fallback-src="/default-avatar.png" />
 
                   <div class="flex-y-center gap-12px h-fit">
-                    <p class="text-(14px #909090)">{{ getUserDisplayName(message.fromUser.uid) }}</p>
-                    <p class="text-(12px #909090)">{{ formatTime(message.message.sendTime) }}</p>
+                    <p class="text-(14px #909090)">{{ getUserDisplayName(item.fromUser.uid) }}</p>
+                    <p class="text-(12px #909090)">{{ formatTime(item.message.sendTime) }}</p>
                   </div>
                 </div>
 
                 <ContextMenu
-                  :content="message"
+                  :content="item"
                   style="user-select: text !important"
                   class="w-fit relative flex flex-col pl-44px text-(14px [--text-color]) leading-26px"
-                  :data-key="message.fromUser.uid === userUid ? `U${message.message.id}` : `Q${message.message.id}`"
+                  :data-key="item.fromUser.uid === userUid ? `U${item.message.id}` : `Q${item.message.id}`"
                   :style="{ '--bubble-max-width': isGroup ? '32vw' : '50vw' }"
-                  @select="$event.click(message)">
+                  :special-menu="specialMenuList(item.message.type)"
+                  @select="$event.click(item)">
                   <RenderMessage
-                    :message="message"
-                    :from-user="message.fromUser"
+                    :message="item"
+                    :from-user="item.fromUser"
                     :is-group="isGroup"
                     :on-image-click="handleImageClick"
                     :on-video-click="handleVideoClick"
-                    :search-keyword="searchKeyword" />
+                    :search-keyword="searchKeyword"
+                    :history-mode="true" />
                 </ContextMenu>
               </div>
             </template>
@@ -81,6 +83,7 @@ import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useDebounceFn } from '@vueuse/core'
 import { useRoute } from 'vue-router'
 import { MsgEnum, TauriCommand } from '@/enums'
+import { useChatMain } from '@/hooks/useChatMain'
 import { useImageViewer } from '@/hooks/useImageViewer'
 import { useVideoViewer } from '@/hooks/useVideoViewer'
 import type { MessageType } from '@/services/types'
@@ -102,6 +105,7 @@ const groupStore = useGroupStore()
 const chatStore = useChatStore()
 const { openImageViewer } = useImageViewer()
 const { openVideoViewer } = useVideoViewer()
+const { specialMenuList } = useChatMain(true)
 
 const isGroup = computed(() => chatStore.isGroup)
 const userUid = computed(() => userStore.userInfo!.uid)
@@ -121,7 +125,7 @@ const roomId = computed(() => route.query.roomId as string)
 
 // 我的群昵称
 const getUserDisplayName = computed(() => (uid: string) => {
-  const user = groupStore.userList.find((user) => user.uid === uid)
+  const user = groupStore.getUserInfo(uid)
   return user?.myName || user?.name || ''
 })
 
@@ -141,7 +145,13 @@ const groupedMessages = computed(() => {
   const groups: Record<string, { messages: MessageType[]; timestamp: number }> = {}
 
   messages.value.forEach((i) => {
-    if (i.message.sendTime) {
+    // 排除BOT、SYSTEM、RECALL类型的消息
+    if (
+      i.message.sendTime &&
+      i.message.type !== MsgEnum.BOT &&
+      i.message.type !== MsgEnum.SYSTEM &&
+      i.message.type !== MsgEnum.RECALL
+    ) {
       const date = new Date(i.message.sendTime).toDateString()
       if (!groups[date]) {
         groups[date] = {

@@ -1,6 +1,6 @@
 <template>
   <component
-    v-if="!hasBubble(message.message.type)"
+    v-if="historyMode || !hasBubble(message.message.type)"
     :is="componentMap[message.message.type]"
     :body="message.message.body"
     :message-status="message.message.status"
@@ -151,7 +151,7 @@
           @select="$event.click(message)"
           :menu="handleItemType(message.message.type)"
           :emoji="emojiList"
-          :special-menu="specialMenuList"
+          :special-menu="specialMenuList(message.message.type)"
           @reply-emoji="handleEmojiSelect($event, message)"
           @click="handleMsgClick(message)">
           <component
@@ -282,17 +282,23 @@ import Video from './Video.vue'
 import VideoCall from './VideoCall.vue'
 import Voice from './Voice.vue'
 
-const props = defineProps<{
-  message: MessageType
-  uploadProgress?: number
-  isGroup: boolean
-  fromUser: {
-    uid: string
+const props = withDefaults(
+  defineProps<{
+    message: MessageType
+    uploadProgress?: number
+    isGroup: boolean
+    fromUser: {
+      uid: string
+    }
+    onImageClick?: (url: string) => void
+    onVideoClick?: (url: string) => void
+    searchKeyword?: string
+    historyMode?: boolean
+  }>(),
+  {
+    historyMode: false
   }
-  onImageClick?: (url: string) => void
-  onVideoClick?: (url: string) => void
-  searchKeyword?: string
-}>()
+)
 
 const emit = defineEmits(['jump2Reply'])
 const globalStore = useGlobalStore()

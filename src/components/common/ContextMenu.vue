@@ -33,7 +33,10 @@
             left: `${pos.posX}px`,
             top: `${pos.posY}px`
           }">
-          <div v-resize="handleSize" v-if="visibleMenu && visibleMenu.length > 0" class="menu-list">
+          <div
+            v-resize="handleSize"
+            v-if="(visibleMenu && visibleMenu.length > 0) || (visibleSpecialMenu && visibleSpecialMenu.length > 0)"
+            class="menu-list">
             <div v-for="(item, index) in visibleMenu" :key="index">
               <!-- 禁止的菜单选项需要禁止点击事件  -->
               <div class="menu-item-disabled" v-if="item.disabled" @click.prevent="$event.preventDefault()">
@@ -60,8 +63,8 @@
             </div>
             <!-- 判断是否有特别的菜单项才需要分割线 -->
             <div v-if="visibleSpecialMenu.length > 0" class="flex-col-y-center gap-6px">
-              <!-- 分割线 -->
-              <div class="h-1px bg-[--line-color] m-[2px_8px]"></div>
+              <!-- 分割线（只有当常规菜单存在时才显示） -->
+              <div v-if="visibleMenu && visibleMenu.length > 0" class="h-1px bg-[--line-color] m-[2px_8px]"></div>
               <div
                 @click="handleClick(item)"
                 class="menu-item"
