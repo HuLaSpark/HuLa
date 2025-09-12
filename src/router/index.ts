@@ -346,6 +346,11 @@ const getDesktopRoutes = (): Array<RouteRecordRaw> => [
     component: () => import('@/views/previewFileWindow/index.vue')
   },
   {
+    path: '/chat-history',
+    name: 'chat-history',
+    component: () => import('@/views/chatHistory/index.vue')
+  },
+  {
     path: '/rtcCall',
     name: 'rtcCall',
     component: () => import('@/views/callWindow/index.vue')

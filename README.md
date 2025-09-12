@@ -5,7 +5,6 @@
 
 <p align="center">一款基于Tauri、Vite 7、Vue 3 和 TypeScript 构建的即时通讯系统</p>
 
-<!-- 🌟 特色推荐 -->
 <div align="center">
   <a href="https://hellogithub.com/repository/743b101346c54f6cb5c20eed2edbaa40" target="_blank">
     <img src="https://abroad.hellogithub.com/v1/widgets/recommend.svg?rid=743b101346c54f6cb5c20eed2edbaa40&claim_uid=WsQaY6SlnL7qxG3&theme=neutral" alt="Featured｜HelloGitHub" style="width: 250px; height: 54px;" width="250" height="54" />
@@ -14,9 +13,7 @@
 
 <br>
 
-<!-- 项目统计与认证 -->
 <div align="center">
-  <h3>📊 项目统计</h3>
   <p>
     <a href="https://gitee.com/HulaSpark/HuLa/stargazers">
       <img src="https://gitee.com/HulaSpark/HuLa/badge/star.svg?theme=gvp" alt="Gitee Stars">
@@ -28,9 +25,11 @@
       <img src="https://gitcode.com/HuLaSpark/HuLa/star/badge.svg" alt="GitCode Stars">
     </a>
   </p>
+</div>
 
-  <!-- 🔖 项目认证 -->
-  <h3>🔖 项目认证</h3>
+<br>
+
+<div align="center">
   <p>
     <a href="https://deepwiki.com/HuLaSpark/HuLa">
       <img src="https://deepwiki.com/badge.svg" alt="DeepWiki">
@@ -48,8 +47,6 @@
 
 <!-- 🛠️ 技术栈 -->
 <div align="center">
-  <h3>🛠️ 技术栈</h3>
-
   <p>
     <img src="https://img.shields.io/badge/Vue3-35495E?logo=vue.js&logoColor=4FC08D">
     <img src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=fff">
@@ -204,6 +201,7 @@ HuLa 是一款基于 Tauri、Vite 7、Vue 3 和 TypeScript 构建的即时通讯
 | 🖱️ | 消息右键菜单 | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
 | 🔗 | 链接预览卡片 | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
 | 👍 | 消息点赞互动 | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
+| 📔 | 历史记录管理 | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
 
 ### 🤝 社交管理
 | 功能 | 描述 | 状态 |
@@ -339,9 +337,14 @@ sudo xattr -r -d com.apple.quarantine /Applications/应用名称.app
 ## 🙏 感谢赞助者
 
 <div align="center">
-  <h3>💎 贡献者荣誉榜</h3>
+  <h3>贡献者荣誉榜</h3>
   <p><em>感谢以下朋友对 HuLa 项目的慷慨支持！</em></p>
 </div>
+
+### 💎 钻石赞助者 (￥1000+)
+| 💝 日期 | 👤 赞助者 | 💰 金额 | 🏷️ 平台 |
+|---------|----------|--------|---------|
+| 2025-09-12 | **翟可** | `¥1688` | ![微信转账](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 
 ### 🏆 金牌赞助者 (￥100+)
 | 💝 日期 | 👤 赞助者 | 💰 金额 | 🏷️ 平台 |

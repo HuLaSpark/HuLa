@@ -42,7 +42,10 @@ import { MsgEnum } from '@/enums/index'
 import { useImageViewer } from '@/hooks/useImageViewer'
 import type { EmojiBody } from '@/services/types'
 
-const props = defineProps<{ body: EmojiBody }>()
+const props = defineProps<{
+  body: EmojiBody
+  onImageClick?: (url: string) => void
+}>()
 const isError = ref(false)
 // 使用图片查看器hook
 const { openImageViewer } = useImageViewer()
@@ -56,7 +59,12 @@ const handleImageError = () => {
 // 处理打开图片查看器
 const handleOpenImageViewer = () => {
   if (props.body?.url) {
-    openImageViewer(props.body.url, [MsgEnum.IMAGE, MsgEnum.EMOJI])
+    // 如果有自定义点击处理函数，使用它；否则使用默认逻辑
+    if (props.onImageClick) {
+      props.onImageClick(props.body.url)
+    } else {
+      openImageViewer(props.body.url, [MsgEnum.IMAGE, MsgEnum.EMOJI])
+    }
   }
 }
 </script>

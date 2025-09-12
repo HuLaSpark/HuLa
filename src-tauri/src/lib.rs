@@ -57,6 +57,7 @@ pub struct AppData {
     pub rc: Arc<Mutex<im_request_client::ImRequestClient>>,
 }
 
+use crate::command::chat_history_command::query_chat_history;
 use crate::command::contact_command::{hide_contact_command, list_contacts_command};
 use crate::command::message_command::{
     check_user_init_and_fetch_messages, page_msg, save_msg, send_msg, update_message_recall_status,
@@ -439,6 +440,8 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         save_msg,
         update_message_recall_status,
         save_message_mark,
+        // 聊天历史相关命令
+        query_chat_history,
         // WebSocket 相关命令
         ws_init_connection,
         ws_disconnect,

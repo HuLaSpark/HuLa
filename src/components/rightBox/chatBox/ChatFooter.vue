@@ -134,7 +134,9 @@
 
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
-            <svg class="w-22px h-22px cursor-pointer outline-none"><use href="#history"></use></svg>
+            <svg class="w-22px h-22px cursor-pointer outline-none" @click="openChatHistory">
+              <use href="#history"></use>
+            </svg>
           </template>
           <span>聊天记录</span>
         </n-popover>
@@ -158,6 +160,7 @@ import { useChatLayoutGlobal } from '@/hooks/useChatLayout'
 import { type SelectionRange, useCommon } from '@/hooks/useCommon.ts'
 import { useGlobalShortcut } from '@/hooks/useGlobalShortcut.ts'
 import { useMitt } from '@/hooks/useMitt'
+import { useWindow } from '@/hooks/useWindow'
 import type { ContactItem, FilesMeta, SessionItem } from '@/services/types'
 import { useContactStore } from '@/stores/contacts'
 import { useGlobalStore } from '@/stores/global.ts'
@@ -191,6 +194,9 @@ const userStore = useUserStore()
 
 // 使用全局布局状态
 const { footerHeight, setFooterHeight } = useChatLayoutGlobal()
+
+// 使用窗口管理
+const { createWebviewWindow } = useWindow()
 
 // 拖拽调整高度相关
 const isDragging = ref(false)
@@ -519,34 +525,7 @@ const emojiHandle = (item: string, type: 'emoji' | 'emoji-url' = 'emoji') => {
       selection?.addRange(range)
     }
   } else {
-    // 如果是普通表情，作为文本插入
-    // 获取回复框
-    // const replyDiv = document.getElementById('replyDiv')
-
-    // // 如果有回复框，确保表情插入在回复框之后
-    // if (replyDiv && inp) {
-    // 创建一个范围，定位到回复框之后
-    //   const range = document.createRange()
-    //   range.setStartAfter(replyDiv)
-    //   range.collapse(true)
-
-    //   // 插入文本到回复框后面
-    //   const textNode = document.createTextNode(item)
-    //   range.insertNode(textNode)
-
-    //   // 移动光标到文本后面
-    //   const newRange = document.createRange()
-    //   newRange.setStartAfter(textNode)
-    //   newRange.collapse(true)
-    //   selection?.removeAllRanges()
-    //   selection?.addRange(newRange)
-
-    //   // 触发输入事件
-    //   triggerInputEvent(inp)
-    // } else {
-    // 没有回复框，按原来方式插入
     insertNodeAtRange(MsgEnum.TEXT, item, inp, lastEditRange)
-    // }
   }
 
   // 记录新的选区位置
@@ -579,6 +558,16 @@ const updateRecentEmojis = (emoji: string) => {
 const handleVoiceRecord = () => {
   // 触发录音模式切换事件
   useMitt.emit(MittEnum.VOICE_RECORD_TOGGLE)
+}
+
+// 打开聊天记录窗口
+const openChatHistory = async () => {
+  const currentRoomId = globalStore.currentSession?.roomId
+
+  // 创建聊天记录窗口
+  await createWebviewWindow('聊天记录', 'chat-history', 800, 600, undefined, true, 600, 400, false, false, {
+    roomId: currentRoomId
+  })
 }
 
 onMounted(async () => {

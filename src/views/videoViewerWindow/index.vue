@@ -117,7 +117,7 @@ const videoHeight = ref(0)
 // 当前显示的视频URL
 const currentVideo = computed(() => {
   let videoUrl = ''
-  if (videoViewerStore.isSingleMode) {
+  if (videoViewerStore.isSingleVideoMode) {
     videoUrl = videoViewerStore.singleVideo
   } else {
     videoUrl = videoList.value[currentIndex.value]
@@ -140,7 +140,7 @@ const videoClass = computed(() => {
 
 // 是否可以切换到上一个视频
 const canGoPrevious = computed(() => {
-  if (videoViewerStore.isSingleMode) return false
+  if (videoViewerStore.isSingleVideoMode) return false
 
   const currentVideoPath = videoList.value[currentIndex.value]
   if (!currentVideoPath || currentVideoPath.startsWith('http')) {
@@ -154,7 +154,7 @@ const canGoPrevious = computed(() => {
 
 // 是否可以切换到下一个视频
 const canGoNext = computed(() => {
-  if (videoViewerStore.isSingleMode) return false
+  if (videoViewerStore.isSingleVideoMode) return false
 
   const currentVideoPath = videoList.value[currentIndex.value]
   if (!currentVideoPath || currentVideoPath.startsWith('http')) {
@@ -264,7 +264,7 @@ const previousVideo = async () => {
   if (!canGoPrevious.value) return
 
   // 如果是单视频模式，不允许切换
-  if (videoViewerStore.isSingleMode) return
+  if (videoViewerStore.isSingleVideoMode) return
 
   const currentVideoPath = videoList.value[currentIndex.value]
   if (!currentVideoPath || currentVideoPath.startsWith('http')) {
@@ -312,7 +312,7 @@ const nextVideo = async () => {
   if (!canGoNext.value) return
 
   // 如果是单视频模式，不允许切换
-  if (videoViewerStore.isSingleMode) return
+  if (videoViewerStore.isSingleVideoMode) return
 
   const currentVideoPath = videoList.value[currentIndex.value]
   if (!currentVideoPath || currentVideoPath.startsWith('http')) {
@@ -385,12 +385,12 @@ onMounted(async () => {
     })
   )
 
-  if (videoViewerStore.isSingleMode) {
+  if (videoViewerStore.isSingleVideoMode) {
     videoList.value = [videoViewerStore.singleVideo]
     currentIndex.value = 0
   } else {
     // 添加数据有效性验证
-    const validIndex = Math.min(Math.max(videoViewerStore.currentIndex, 0), videoViewerStore.videoList.length - 1)
+    const validIndex = Math.min(Math.max(videoViewerStore.currentVideoIndex, 0), videoViewerStore.videoList.length - 1)
     videoList.value = [...videoViewerStore.videoList]
     currentIndex.value = validIndex
     console.log('Initial index:', validIndex)

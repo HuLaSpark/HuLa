@@ -500,7 +500,9 @@ export enum TauriCommand {
   /** 更新 token */
   UPDATE_TOKEN = 'update_token',
   /** 移除 token */
-  REMOVE_TOKENS = 'remove_tokens'
+  REMOVE_TOKENS = 'remove_tokens',
+  /** 查询聊天历史记录 */
+  QUERY_CHAT_HISTORY = 'query_chat_history'
 }
 
 // 通话状态枚举

@@ -139,6 +139,7 @@ const props = defineProps<{
   body: VideoBody
   messageStatus?: MessageStatusEnum
   uploadProgress?: number
+  onVideoClick?: (url: string) => void
 }>()
 const MAX_WIDTH = 300
 const MAX_HEIGHT = 150
@@ -257,6 +258,12 @@ const handlePlayButtonClick = async () => {
 // 处理打开视频查看器
 const handleOpenVideoViewer = async () => {
   if (props.body?.url && !isOpening.value) {
+    // 如果有自定义视频点击处理函数，使用它
+    if (props.onVideoClick) {
+      props.onVideoClick(props.body.url)
+      return
+    }
+
     try {
       isOpening.value = true
 

@@ -117,11 +117,33 @@ export const useVideoViewer = () => {
    * 视频加载处理
    * @param url 视频链接
    * @param includeTypes 支持类型
+   * @param customVideoList 自定义视频列表，用于聊天历史等场景
    */
-  const openVideoViewer = async (url: string, includeTypes: MsgEnum[] = [MsgEnum.VIDEO]) => {
+  const openVideoViewer = async (
+    url: string,
+    includeTypes: MsgEnum[] = [MsgEnum.VIDEO],
+    customVideoList?: string[]
+  ) => {
     if (!url) return
 
-    const { list, index } = getAllMediaFromChat(url, includeTypes)
+    let list: string[]
+    let index: number
+
+    if (customVideoList && customVideoList.length > 0) {
+      // 使用自定义视频列表
+      list = customVideoList
+      index = customVideoList.indexOf(url)
+      if (index === -1) {
+        // 如果当前视频不在列表中，将其添加到列表开头
+        list = [url, ...customVideoList]
+        index = 0
+      }
+    } else {
+      // 使用默认逻辑从聊天中获取
+      const result = getAllMediaFromChat(url, includeTypes)
+      list = result.list
+      index = result.index
+    }
 
     // 为每个视频URL检查本地下载状态，优先使用本地路径
     const processedList = await Promise.all(
@@ -138,8 +160,8 @@ export const useVideoViewer = () => {
     VideoViewerStore.resetVideoListOptimized(processedList, finalIndex)
     VideoViewerStore.$patch({
       videoList: [...processedList],
-      currentIndex: finalIndex,
-      isSingleMode: processedList.length <= 1
+      currentVideoIndex: finalIndex,
+      isSingleVideoMode: processedList.length <= 1
     })
 
     // 检查现有窗口

@@ -14,9 +14,7 @@
 
 <br>
 
-<!-- Project Statistics & Certification -->
 <div align="center">
-  <h3>📊 Project Statistics</h3>
   <p>
     <a href="https://gitee.com/HulaSpark/HuLa/stargazers">
       <img src="https://gitee.com/HulaSpark/HuLa/badge/star.svg?theme=gvp" alt="Gitee Stars">
@@ -28,9 +26,11 @@
       <img src="https://gitcode.com/HuLaSpark/HuLa/star/badge.svg" alt="GitCode Stars">
     </a>
   </p>
+</div>
 
-  <!-- 🔖 Project Certification -->
-  <h3>🔖 Project Certification</h3>
+<br>
+
+<div align="center">
   <p>
     <a href="https://deepwiki.com/HuLaSpark/HuLa">
       <img src="https://deepwiki.com/badge.svg" alt="DeepWiki">
@@ -46,10 +46,7 @@
 
 <br>
 
-<!-- 🛠️ Tech Stack -->
 <div align="center">
-  <h3>🛠️ Tech Stack</h3>
-
   <p>
     <img src="https://img.shields.io/badge/Vue3-35495E?logo=vue.js&logoColor=4FC08D">
     <img src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=fff">
@@ -203,6 +200,7 @@ HuLa is an instant messaging system built with Tauri, Vite 7, Vue 3, and TypeScr
 | 🖱️ | Message Right-click Menu | ![Completed](https://img.shields.io/badge/✅-Completed-008080?style=flat&labelColor=e6f7f7&color=008080) |
 | 🔗 | Link Preview Cards | ![Completed](https://img.shields.io/badge/✅-Completed-008080?style=flat&labelColor=e6f7f7&color=008080) |
 | 👍 | Message Like Interaction | ![Completed](https://img.shields.io/badge/✅-Completed-008080?style=flat&labelColor=e6f7f7&color=008080) |
+| 📔 | Chat History Management | ![Completed](https://img.shields.io/badge/✅-Completed-008080?style=flat&labelColor=e6f7f7&color=008080) |
 
 ### 🤝 Social Management
 | Feature | Description | Status |
@@ -341,6 +339,11 @@ Execute **pnpm run commit** to invoke _git commit_ interaction, complete informa
   <h3>💎 Contributors Hall of Fame</h3>
   <p><em>Thanks to the following friends for their generous support of the HuLa project!</em></p>
 </div>
+
+### 💎 Diamond Sponsors (￥1000+)
+| 💝 Date | 👤 Sponsor | 💰 Amount | 🏷️ Platform |
+|---------|----------|--------|---------|
+| 2025-09-12 | **翟可** | `¥1688` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
 
 ### 🏆 Gold Sponsors ($15+)
 | 💝 Date | 👤 Sponsor | 💰 Amount | 🏷️ Platform |

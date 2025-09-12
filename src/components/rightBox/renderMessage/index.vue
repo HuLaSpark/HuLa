@@ -8,7 +8,10 @@
     :from-user-uid="fromUser?.uid"
     :message="message.message"
     :data-message-id="message.message.id"
-    :is-group="isGroup" />
+    :is-group="isGroup"
+    :on-image-click="onImageClick"
+    :on-video-click="onVideoClick"
+    :search-keyword="searchKeyword" />
 
   <!-- 好友或者群聊的信息 -->
   <div v-else class="flex flex-col w-full" :class="{ 'justify-end': isMe }">
@@ -163,7 +166,10 @@
             :from-user-uid="fromUser?.uid"
             :message="message.message"
             :data-message-id="message.message.id"
-            :is-group="isGroup" />
+            :is-group="isGroup"
+            :on-image-click="onImageClick"
+            :on-video-click="onVideoClick"
+            :search-keyword="searchKeyword" />
 
           <!-- 显示翻译文本 -->
           <Transition name="fade-translate" appear mode="out-in">
@@ -283,7 +289,11 @@ const props = defineProps<{
   fromUser: {
     uid: string
   }
+  onImageClick?: (url: string) => void
+  onVideoClick?: (url: string) => void
+  searchKeyword?: string
 }>()
+
 const emit = defineEmits(['jump2Reply'])
 const globalStore = useGlobalStore()
 const selectKey = ref(props.fromUser!.uid)

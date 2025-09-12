@@ -340,7 +340,6 @@ export const useFileDownloadStore = defineStore(
     }
 
     return {
-      downloadStatusMap: readonly(downloadStatusMap),
       getFileStatus,
       updateFileStatus,
       checkFileExists,

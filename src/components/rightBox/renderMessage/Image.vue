@@ -41,7 +41,10 @@ import { MsgEnum } from '@/enums/index'
 import { useImageViewer } from '@/hooks/useImageViewer'
 import type { ImageBody } from '@/services/types'
 
-const props = defineProps<{ body: ImageBody }>()
+const props = defineProps<{
+  body: ImageBody
+  onImageClick?: (url: string) => void
+}>()
 // 图片显示相关常量
 const MAX_WIDTH = 320
 const MAX_HEIGHT = 240
@@ -60,7 +63,12 @@ const handleImageError = () => {
 // 处理打开图片查看器
 const handleOpenImageViewer = () => {
   if (props.body?.url) {
-    openImageViewer(props.body.url, [MsgEnum.IMAGE, MsgEnum.EMOJI])
+    // 如果有自定义点击处理函数，使用它；否则使用默认逻辑
+    if (props.onImageClick) {
+      props.onImageClick(props.body.url)
+    } else {
+      openImageViewer(props.body.url, [MsgEnum.IMAGE, MsgEnum.EMOJI])
+    }
   }
 }
 

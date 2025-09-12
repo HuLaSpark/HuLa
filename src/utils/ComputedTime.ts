@@ -107,3 +107,21 @@ export const isDiffNow = ({ time, unit, diff }: { unit: OpUnitType; time: Config
 export const isDiffNow10Min = (time: ConfigType): boolean => {
   return isDiffNow({ time, unit: 'minute', diff: 10 })
 }
+
+/**
+ * 格式化日期分组标签（用于聊天历史等场景）
+ * @param timestamp 时间戳
+ * @returns 格式化后的日期字符串（今天/昨天/MM-DD）
+ */
+export const formatDateGroupLabel = (timestamp: number): string => {
+  const date = dayjs(timestamp)
+  const now = dayjs()
+
+  if (now.isSame(date, 'day')) {
+    return '今天'
+  } else if (now.subtract(1, 'day').isSame(date, 'day')) {
+    return '昨天'
+  } else {
+    return date.format('MM-DD')
+  }
+}
