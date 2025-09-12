@@ -9,10 +9,21 @@
     <span class="w-full h-1px bg-[--line-color]"></span>
 
     <p class="flex-1 px-12px pt-12px box-border leading-22px break-words line-clamp-4 text-(14px [--text-color])">
-      {{ body.content }}
+      <n-highlight
+        v-if="searchKeyword"
+        :text="body.content"
+        :patterns="[searchKeyword]"
+        :highlight-style="{
+          userSelect: 'text',
+          padding: '2px 4px',
+          borderRadius: '6px',
+          color: '#000',
+          background: '#13987f'
+        }" />
+      <template v-else>{{ body.content }}</template>
     </p>
 
-    <p class="select-none cursor-default flex-shrink-0 flex-y-center h-34px px-12px text-(12px [--chat-text-color])">
+    <p class="select-none cursor-default flex-shrink-0 flex-y-center h-36px px-12px text-(12px [--chat-text-color])">
       {{ formatTimestamp(body.updateTime || body.createTime, true) }}
     </p>
   </n-flex>
@@ -22,5 +33,8 @@
 import type { AnnouncementBody } from '@/services/types'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
 
-defineProps<{ body: AnnouncementBody }>()
+defineProps<{
+  body: AnnouncementBody
+  searchKeyword?: string
+}>()
 </script>

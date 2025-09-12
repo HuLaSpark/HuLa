@@ -40,9 +40,6 @@ export const useChatMain = (isHistoryMode = false) => {
   const emojiStore = useEmojiStore()
   const userStore = useUserStore()
   const { downloadFile } = useDownload()
-  // const userInfo = useUserStore()?.userInfo
-  // const chatMessageList = computed(() => chatStore.chatMessageList)
-  // const messageOptions = computed(() => chatStore.currentMessageOptions)
   /** 滚动条位置 */
   const scrollTop = ref(-1)
   /** 提醒框标题 */
@@ -51,6 +48,8 @@ export const useChatMain = (isHistoryMode = false) => {
   const modalShow = ref(false)
   /** 需要删除信息的下标 */
   const delIndex = ref('')
+  /** 选中的气泡消息 */
+  const activeBubble = ref('')
   /** 记录历史消息下标 */
   const historyIndex = ref(0)
   /** 当前点击的用户的key */
@@ -571,35 +570,6 @@ export const useChatMain = (isHistoryMode = false) => {
           window.$message.error('保存图片失败')
         }
       }
-    },
-    {
-      label: isMac() ? '在Finder中显示' : '打开文件夹',
-      icon: 'file2',
-      click: async (item: MessageType) => {
-        try {
-          const imageUrl = item.message.body.url
-          const suggestedName = imageUrl || 'image.png'
-
-          const savePath = await save({
-            filters: [
-              {
-                name: '图片',
-                extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp']
-              }
-            ],
-            defaultPath: suggestedName
-          })
-
-          if (savePath) {
-            await downloadFile(imageUrl, savePath)
-            // 下载完成后在文件管理器中显示
-            await revealItemInDir(savePath)
-          }
-        } catch (error) {
-          console.error('显示图片失败:', error)
-          window.$message.error('显示图片失败')
-        }
-      }
     }
   ])
   /** 右键用户信息菜单(群聊的时候显示) */
@@ -987,7 +957,7 @@ export const useChatMain = (isHistoryMode = false) => {
 
   /** 点击气泡消息时候监听用户是否按下ctrl+c来复制内容 */
   const handleMsgClick = (item: MessageType) => {
-    console.log('点击的消息：', item)
+    activeBubble.value = item.message.id
     // 启用键盘监听
     const handleKeyPress = (e: KeyboardEvent) => {
       if ((e.ctrlKey && e.key === 'c') || (e.metaKey && e.key === 'c')) {
@@ -1021,6 +991,7 @@ export const useChatMain = (isHistoryMode = false) => {
     selectKey,
     emojiList,
     commonMenuList,
-    scrollTop
+    scrollTop,
+    activeBubble
   }
 }
