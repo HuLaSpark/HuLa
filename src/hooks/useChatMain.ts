@@ -27,7 +27,7 @@ import { detectRemoteFileType, getFilesMeta, getUserAbsoluteVideosDir } from '@/
 import { isMac } from '@/utils/PlatformConstants'
 import { useWindow } from './useWindow'
 
-export const useChatMain = () => {
+export const useChatMain = (isHistoryMode = false) => {
   const { openMsgSession, userUid } = useCommon()
   const { createWebviewWindow, sendWindowPayload } = useWindow()
   const { getLocalVideoPath, checkVideoDownloaded } = useVideoViewer()
@@ -229,17 +229,132 @@ export const useChatMain = () => {
     ...commonMenuList.value
   ])
   /** 右键菜单下划线后的列表 */
-  const specialMenuList = ref<OPT.RightMenu[]>([
-    {
-      label: '删除',
-      icon: 'delete',
-      click: (item: any) => {
-        tips.value = '删除后将不会出现在你的消息记录中，确定删除吗?'
-        modalShow.value = true
-        delIndex.value = item.message.id
+  const specialMenuList = computed(() => {
+    return (messageType?: MsgEnum): OPT.RightMenu[] => {
+      if (isHistoryMode) {
+        // 历史记录模式：基础菜单（复制、转发）
+        const baseMenus: OPT.RightMenu[] = [
+          {
+            label: '复制',
+            icon: 'copy',
+            click: (item: MessageType) => {
+              const content = item.message.body.url || item.message.body.content
+              handleCopy(content, true)
+            }
+          },
+          {
+            label: '转发',
+            icon: 'share',
+            click: () => {
+              window.$message.warning('暂未实现')
+            }
+          }
+        ]
+
+        // 媒体文件额外菜单（收藏、另存为、在文件中打开）
+        if (
+          messageType === MsgEnum.IMAGE ||
+          messageType === MsgEnum.EMOJI ||
+          messageType === MsgEnum.VIDEO ||
+          messageType === MsgEnum.FILE
+        ) {
+          const mediaMenus: OPT.RightMenu[] = [
+            {
+              label: '收藏',
+              icon: 'collection-files',
+              click: () => {
+                window.$message.warning('暂未实现')
+              }
+            },
+            {
+              label: '另存为',
+              icon: 'Importing',
+              click: async (item: any) => {
+                try {
+                  const fileUrl = item.message.body.url
+                  const filename = extractFileName(fileUrl)
+                  const savePath = await save({
+                    defaultPath: filename
+                  })
+                  if (savePath) {
+                    await downloadFile(fileUrl, savePath)
+                    window.$message.success('文件下载成功')
+                  }
+                } catch (error) {
+                  console.error('保存文件失败:', error)
+                  window.$message.error('保存文件失败')
+                }
+              }
+            },
+            {
+              label: isMac() ? '在Finder中显示' : '打开文件夹',
+              icon: 'file2',
+              click: async (item: RightMouseMessageItem) => {
+                console.log('打开文件夹的item项：', item)
+
+                const fileUrl = item.message.body.url
+                const fileName = item.message.body.fileName || extractFileName(fileUrl)
+
+                // 检查文件是否已下载
+                const fileStatus = fileDownloadStore.getFileStatus(fileUrl)
+
+                console.log('找到的文件状态：', fileStatus)
+                const currentChatRoomId = globalStore.currentSession!.roomId // 这个id可能为群id可能为用户uid，所以不能只用用户uid
+                const currentUserUid = userStore.userInfo!.uid as string
+
+                const resourceDirPath = await getUserAbsoluteVideosDir(currentUserUid, currentChatRoomId)
+                let absolutePath = await join(resourceDirPath, fileName)
+
+                const [fileMeta] = await getFilesMeta<FilesMeta>([fileStatus?.absolutePath || absolutePath || fileUrl])
+
+                // 最后判断文件不存在本地，那就下载它
+                if (!fileMeta.exists) {
+                  // 文件不存在本地
+                  const downloadMessage = window.$message.info('文件没下载哦~ 请下载文件后再打开🚀...')
+                  const _absolutePath = await fileDownloadStore.downloadFile(fileUrl, fileName)
+
+                  if (_absolutePath) {
+                    absolutePath = _absolutePath
+                    downloadMessage.destroy()
+                    window.$message.success('文件下载好啦！请查看~')
+                    await revealItemInDir(_absolutePath)
+                    await fileDownloadStore.refreshFileDownloadStatus({
+                      fileUrl: item.message.body.url,
+                      roomId: currentChatRoomId,
+                      userId: currentUserUid,
+                      fileName: item.message.body.fileName,
+                      exists: true
+                    })
+                  } else {
+                    absolutePath = ''
+                    window.$message.error('文件下载失败，请重试~')
+                  }
+                }
+
+                await revealItemInDir(absolutePath)
+              }
+            }
+          ]
+          return [...baseMenus, ...mediaMenus]
+        }
+
+        return baseMenus
+      } else {
+        // 正常聊天模式：只显示删除
+        return [
+          {
+            label: '删除',
+            icon: 'delete',
+            click: (item: any) => {
+              tips.value = '删除后将不会出现在你的消息记录中，确定删除吗?'
+              modalShow.value = true
+              delIndex.value = item.message.id
+            }
+          }
+        ]
       }
     }
-  ])
+  })
   /** 文件类型右键菜单 */
   const fileMenuList = ref<OPT.RightMenu[]>([
     {
@@ -376,41 +491,6 @@ export const useChatMain = () => {
       label: isMac() ? '在Finder中显示' : '打开文件夹',
       icon: 'file2',
       click: async (item: RightMouseMessageItem) => {
-        // try {
-        //   const fileUrl = item.message.body.url
-        //   const fileName = item.message.body.fileName || extractFileName(fileUrl)
-
-        //   // 检查文件是否已下载
-        //   const fileStatus = fileDownloadStore.getFileStatus(fileUrl)
-
-        //   console.log('找到的文件状态：', fileStatus)
-
-        //   if (fileStatus.isDownloaded && fileStatus.absolutePath) {
-        //     try {
-        //       // 尝试读取一次文件meta信息，不排除已下载但是用户又手动删除而保留发送消息的情况
-        //       await invoke<FilesMeta>('get_files_meta', { filesPath: [fileStatus.absolutePath] })
-        //       await revealItemInDir(fileStatus.absolutePath)
-        //     } catch (error) {
-        //       fileDownloadStore.refreshFileDownloadStatus(fileUrl)
-        //       window.$message.warning('文件不见了😞 请重新下载哦~')
-        //       console.error('获取文件失败：', error)
-        //     }
-
-        //     // 文件已下载，直接显示
-        //   } else {
-        //     // 文件未下载，先下载再显示
-        //     const downloadMessage = window.$message.info('文件没下载哦~ 正在下载文件🚀...')
-        //     const absolutePath = await fileDownloadStore.downloadFile(fileUrl, fileName)
-
-        //     if (absolutePath) {
-        //       downloadMessage.destroy()
-        //       window.$message.success('文件下载好啦！请查看~')
-        //       await revealItemInDir(absolutePath)
-        //     }
-        //   }
-        // } catch (error) {
-        //   console.error('显示文件失败:', error)
-        // }
         console.log('打开文件夹的item项：', item)
 
         const fileUrl = item.message.body.url

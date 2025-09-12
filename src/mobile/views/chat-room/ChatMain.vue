@@ -232,7 +232,7 @@
                       @select="$event.click(item)"
                       :menu="handleItemType(item.message.type)"
                       :emoji="emojiList"
-                      :special-menu="specialMenuList"
+                      :special-menu="specialMenuList()"
                       @reply-emoji="handleEmojiSelect($event, item)"
                       @click="handleMsgClick(item)">
                       <!-- 渲染消息内容体 TODO: 等完善消息类型后逐渐替换使用RenderMessage -->

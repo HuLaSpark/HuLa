@@ -235,7 +235,7 @@
                     @select="$event.click(item)"
                     :menu="handleItemType(item.message.type)"
                     :emoji="emojiList"
-                    :special-menu="specialMenuList"
+                    :special-menu="specialMenuList()"
                     @reply-emoji="handleEmojiSelect($event, item)"
                     @click="handleMsgClick(item)">
                     <RenderMessage
