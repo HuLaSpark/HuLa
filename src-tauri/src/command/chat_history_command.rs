@@ -36,7 +36,6 @@ pub struct PaginationParam {
 #[serde(rename_all = "camelCase")]
 pub struct ChatHistoryResponse {
     pub messages: Vec<MessageResp>,
-    pub total: u64,
     pub has_more: bool,
     pub current_page: u32,
 }
@@ -74,7 +73,7 @@ pub async fn query_chat_history(
     };
 
     // 查询数据库
-    let (messages, total_count) =
+    let messages =
         im_message_repository::query_chat_history(state.db_conn.deref(), query_condition)
             .await
             .map_err(|e| {
@@ -88,21 +87,14 @@ pub async fn query_chat_history(
         .map(|msg| crate::command::message_command::convert_message_to_resp(msg))
         .collect();
 
-    let has_more = (param.pagination.page * param.pagination.page_size) < total_count as u32;
+    // 根据返回的消息数量判断是否还有更多数据
+    let has_more = message_resps.len() >= param.pagination.page_size as usize;
 
     let response = ChatHistoryResponse {
         messages: message_resps,
-        total: total_count,
         has_more,
         current_page: param.pagination.page,
     };
-
-    info!(
-        "聊天历史记录查询完成 - 返回消息数: {}, 总数: {}, 还有更多: {}",
-        response.messages.len(),
-        response.total,
-        response.has_more
-    );
 
     Ok(response)
 }

@@ -81,7 +81,7 @@
             :special-menu="report">
             <n-flex
               :size="6"
-              class="select-none"
+              class="select-none cursor-default"
               align="center"
               v-if="isGroup"
               :style="isMe ? 'flex-direction: row-reverse' : ''">
@@ -152,7 +152,13 @@
           <component
             :class="[
               message.message.type === MsgEnum.VOICE ? 'select-none cursor-pointer' : 'select-text cursor-text',
-              !isSpecialMsgType(message.message.type) ? (isMe ? 'bubble-oneself' : 'bubble') : ''
+              !isSpecialMsgType(message.message.type) ? (isMe ? 'bubble-oneself' : 'bubble') : '',
+              {
+                active:
+                  activeBubble === message.message.id &&
+                  !isSpecialMsgType(message.message.type) &&
+                  message.message.type !== MsgEnum.VOICE
+              }
             ]"
             :is="componentMap[message.message.type]"
             :body="message.message.body"
@@ -307,7 +313,7 @@ const activeReply = ref<string>('')
 const hoverMsgId = ref<string>('')
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
-const { optionsList, report, handleItemType, emojiList, specialMenuList, handleMsgClick } = useChatMain()
+const { optionsList, report, activeBubble, handleItemType, emojiList, specialMenuList, handleMsgClick } = useChatMain()
 const groupStore = useGroupStore()
 const recordEL = ref<HTMLElement>()
 
@@ -338,8 +344,7 @@ const isSpecialMsgType = (type: number): boolean => {
     type === MsgEnum.EMOJI ||
     type === MsgEnum.NOTICE ||
     type === MsgEnum.VIDEO ||
-    type === MsgEnum.FILE ||
-    type === MsgEnum.VOICE
+    type === MsgEnum.FILE
   )
 }
 
@@ -418,6 +423,12 @@ const handleMacSelect = (event: Event): void => {
   }
 }
 
+const closeMenu = (event: any) => {
+  if (!event.target.matches('.bubble', 'bubble-oneself')) {
+    activeBubble.value = ''
+  }
+}
+
 // 处理表情回应
 const handleEmojiSelect = async (
   context: { label: string; value: number; title: string },
@@ -452,5 +463,15 @@ useMitt.on(`${MittEnum.INFO_POPOVER}-Main`, (event: any) => {
   infoPopoverRefs.value[event.uid].setShow(true)
   handlePopoverUpdate(event.uid)
 })
+
+onMounted(() => {
+  window.addEventListener('click', closeMenu, true)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('click', closeMenu, true)
+})
 </script>
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+@use '@/styles/scss/render-message';
+</style>

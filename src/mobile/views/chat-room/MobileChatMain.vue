@@ -26,5 +26,5 @@ const globalStore = useGlobalStore()
 </script>
 
 <style lang="scss">
-@use '@/styles/scss/chat-main';
+@use '@/styles/scss/render-message';
 </style>

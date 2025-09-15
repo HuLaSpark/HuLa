@@ -5,7 +5,16 @@
 
     <!-- 搜索栏 -->
     <div class="search-section select-none">
-      <n-input v-model:value="searchKeyword" placeholder="搜索" clearable @input="handleSearch">
+      <n-input
+        spellCheck="false"
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        v-model:value="searchKeyword"
+        size="small"
+        placeholder="搜索"
+        clearable
+        @input="handleSearch">
         <template #prefix>
           <svg class="search-icon"><use href="#search"></use></svg>
         </template>
@@ -19,6 +28,18 @@
         <n-tab-pane name="image" tab="图片/视频" />
         <n-tab-pane name="file" tab="文件" />
       </n-tabs>
+
+      <n-date-picker
+        v-model:value="dateRange"
+        type="daterange"
+        placeholder="选择日期范围"
+        clearable
+        size="small"
+        @update:value="handleDateChange"
+        start-placeholder="开始日期"
+        end-placeholder="结束日期"
+        format="yyyy-MM-dd"
+        value-format="timestamp" />
     </div>
 
     <!-- 消息列表 -->
@@ -38,11 +59,11 @@
             <template v-for="item in group.messages" :key="item.message.id">
               <div class="px-4px py-12px mb-16px">
                 <!-- 消息头像和信息 -->
-                <div class="flex">
+                <div class="flex cursor-default">
                   <n-avatar
                     :size="32"
                     :src="getAvatarSrc(item.fromUser.uid)"
-                    class="rounded-6px mr-8px"
+                    class="rounded-10px mr-12px"
                     fallback-src="/default-avatar.png" />
 
                   <div class="flex-y-center gap-12px h-fit">
@@ -53,10 +74,8 @@
 
                 <ContextMenu
                   :content="item"
-                  style="user-select: text !important"
-                  class="w-fit relative flex flex-col pl-44px text-(14px [--text-color]) leading-26px"
+                  class="w-fit relative flex flex-col pl-44px text-(14px [--text-color]) leading-26px user-select-text"
                   :data-key="item.fromUser.uid === userUid ? `U${item.message.id}` : `Q${item.message.id}`"
-                  :style="{ '--bubble-max-width': isGroup ? '32vw' : '50vw' }"
                   :special-menu="specialMenuList(item.message.type)"
                   @select="$event.click(item)">
                   <RenderMessage
@@ -119,6 +138,7 @@ const currentPage = ref(1)
 // 搜索和筛选
 const searchKeyword = ref('')
 const activeTab = ref<'all' | 'image' | 'file'>('all')
+const dateRange = ref<[number, number] | null>(null)
 
 // 从路由参数获取房间ID
 const roomId = computed(() => route.query.roomId as string)
@@ -169,7 +189,44 @@ const groupedMessages = computed(() => {
 // 防抖搜索
 const handleSearch = useDebounceFn(() => {
   resetAndReload()
-}, 500)
+}, 300)
+
+// 处理日期筛选变化
+const handleDateChange = useDebounceFn((value) => {
+  if (Array.isArray(value) && value.length === 2 && value[0] && value[1]) {
+    // 修复日期边界问题：如果选择同一天，结束时间应该是当天的23:59:59.999
+    let startTime = value[0]
+    let endTime = value[1]
+
+    const startDate = new Date(startTime)
+    const endDate = new Date(endTime)
+
+    // 检查是否是同一天（日期选择器可能返回同样的时间戳）
+    const isSameDay = startDate.toDateString() === endDate.toDateString()
+
+    if (isSameDay) {
+      // 如果是同一天，调整时间范围
+      const adjustedStart = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), 0, 0, 0, 0)
+      const adjustedEnd = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59, 999)
+
+      startTime = adjustedStart.getTime()
+      endTime = adjustedEnd.getTime()
+
+      // 更新 dateRange 的值
+      dateRange.value = [startTime, endTime]
+    } else {
+      // 如果是不同天，确保结束时间是当天的最后一刻
+      const adjustedEnd = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59, 999)
+      endTime = adjustedEnd.getTime()
+
+      if (endTime !== value[1]) {
+        dateRange.value = [startTime, endTime]
+      }
+    }
+  }
+
+  resetAndReload()
+}, 300)
 
 // 获取用户头像
 const getAvatarSrc = (uid: string) => {
@@ -221,7 +278,6 @@ const handleVideoClick = async (videoUrl: string) => {
   const currentIndex = videoList.indexOf(videoUrl)
 
   if (currentIndex === -1) {
-    console.warn('视频不在当前列表中，使用单视频模式')
     await openVideoViewer(videoUrl, [MsgEnum.VIDEO], [videoUrl])
   } else {
     // 使用多视频模式
@@ -241,6 +297,12 @@ const loadMessages = async () => {
       messageType: activeTab.value,
       searchKeyword: searchKeyword.value || undefined,
       sortOrder: 'desc',
+      dateRange: dateRange.value
+        ? {
+            startTime: dateRange.value[0],
+            endTime: dateRange.value[1]
+          }
+        : undefined,
       pagination: {
         page: currentPage.value,
         pageSize: 50
@@ -324,5 +386,26 @@ onMounted(async () => {
   padding: 6px 12px;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+}
+
+.user-select-text {
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
+}
+</style>
+<style lang="scss">
+.n-date-panel .n-date-panel-dates .n-date-panel-date.n-date-panel-date--selected::after {
+  background-color: #13987f;
+}
+.n-date-panel.n-date-panel--daterange {
+  border-radius: 14px;
+}
+
+.n-date-panel-actions .n-button {
+  background-color: rgba(19, 152, 127, 0.1) !important;
+  border: none !important;
+  color: #13987f !important;
 }
 </style>

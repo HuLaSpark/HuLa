@@ -17,7 +17,18 @@
           </template>
           <span>复制网址</span>
         </n-tooltip>
-        {{ item }}
+        <n-highlight
+          v-if="props.searchKeyword"
+          :text="item"
+          :patterns="[props.searchKeyword]"
+          :highlight-style="{
+            userSelect: 'text',
+            padding: '2px 4px',
+            borderRadius: '6px',
+            color: '#000',
+            background: '#13987f'
+          }" />
+        <p v-else>{{ item }}</p>
       </template>
       <n-highlight
         v-else-if="props.searchKeyword"

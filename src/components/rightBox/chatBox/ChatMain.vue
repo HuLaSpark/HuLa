@@ -343,7 +343,6 @@ const handleScrollByIntent = (intent: ScrollIntentEnum): void => {
 
 // 滚动到底部
 const scrollToBottom = (): void => {
-  console.log('scrollToBottom')
   const container = scrollContainerRef.value
   if (!container) return
   // 立即清除新消息计数
@@ -630,8 +629,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/scss/chat-main';
-
 .chat-main-container {
   display: flex;
   flex-direction: column;
