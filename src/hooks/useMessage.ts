@@ -223,6 +223,7 @@ export const useMessage = () => {
         return 'logout'
       },
       click: async (item: SessionItem) => {
+        console.log('删除好友或退出群聊执行')
         // 单聊：删除好友
         if (item.type === RoomTypeEnum.SINGLE) {
           await contactStore.onDeleteContact(item.detailId)

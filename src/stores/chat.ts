@@ -652,6 +652,10 @@ export const useChatStore = defineStore(
       const index = sessionList.value.findIndex((session) => session.roomId === roomId)
       if (index !== -1) {
         sessionList.value.splice(index, 1)
+        if (globalStore.currentSessionRoomId === roomId) {
+          globalStore.updateCurrentSessionRoomId(sessionList.value[0].roomId)
+        }
+
         // 删除会话后更新未读计数
         nextTick(() => {
           updateTotalUnreadCount()
