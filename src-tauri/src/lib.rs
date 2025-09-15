@@ -38,7 +38,7 @@ use crate::command::request_command::{im_request_command, login_command};
 use crate::command::room_member_command::{
     cursor_page_room_members, get_room_members, page_room, update_my_room_info,
 };
-use crate::command::setting_command::get_settings;
+use crate::command::setting_command::{get_settings, update_settings};
 use crate::command::user_command::remove_tokens;
 use crate::configuration::{get_configuration, Settings};
 use crate::error::CommonError;
@@ -57,7 +57,7 @@ pub struct AppData {
     db_conn: Arc<DatabaseConnection>,
     user_info: Arc<Mutex<UserInfo>>,
     pub rc: Arc<Mutex<im_request_client::ImRequestClient>>,
-    pub config: Arc<Settings>
+    pub config: Arc<Mutex<Settings>>
 }
 
 use crate::command::chat_history_command::query_chat_history;
@@ -121,7 +121,7 @@ async fn initialize_app_data(
         Arc<DatabaseConnection>,
         Arc<Mutex<UserInfo>>,
         Arc<Mutex<im_request_client::ImRequestClient>>,
-        Arc<Settings>
+        Arc<Mutex<Settings>>
     ),
     CommonError,
 > {
@@ -129,14 +129,16 @@ async fn initialize_app_data(
     use tracing::info;
 
     // 加载配置
-    let configuration = Arc::new(
+    let configuration = Arc::new(Mutex::new(
         get_configuration(&app_handle)
             .map_err(|e| anyhow::anyhow!("Failed to load configuration: {}", e))?,
-    );
+    ));
 
     // 初始化数据库连接
     let db: Arc<DatabaseConnection> = Arc::new(
         configuration
+            .lock()
+            .await
             .database
             .connection_string(&app_handle)
             .await?,
@@ -153,7 +155,7 @@ async fn initialize_app_data(
     }
 
     let rc: im_request_client::ImRequestClient =
-        im_request_client::ImRequestClient::new(configuration.backend.base_url.clone()).unwrap();
+        im_request_client::ImRequestClient::new(configuration.lock().await.backend.base_url.clone()).unwrap();
 
     // 创建用户信息
     let user_info = UserInfo {
@@ -464,5 +466,6 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         login_command,
         im_request_command,
         get_settings,
+        update_settings,
     ]
 }

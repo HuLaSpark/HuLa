@@ -70,7 +70,7 @@ pub async fn ws_init_connection(
     let rc = state.rc.lock().await;
 
     let config = WebSocketConfig {
-        server_url: state.config.backend.ws_url.clone(),
+        server_url: state.config.lock().await.backend.ws_url.clone(),
         client_id: params.client_id,
         token: rc.token.clone(),
         ..Default::default()

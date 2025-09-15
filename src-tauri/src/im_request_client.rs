@@ -43,6 +43,10 @@ impl ImRequestClient {
         })
     }
 
+    pub fn set_base_url(&mut self, base_url: String) {
+        self.base_url = base_url;
+    }
+
     pub async fn request<
         T: serde::de::DeserializeOwned,
         B: serde::Serialize,

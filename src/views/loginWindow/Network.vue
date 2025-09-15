@@ -107,6 +107,8 @@
 <script setup lang="ts">
 import { lightTheme } from 'naive-ui'
 import router from '@/router'
+import { updateSettings } from '@/services/tauriCommand'
+import type { ProxySettings } from '@/typings/global'
 
 const apiOptions = [
   {
@@ -192,7 +194,7 @@ const handleSave = async () => {
         apiType: savedProxy.apiType,
         apiIp: savedProxy.apiIp,
         apiPort: savedProxy.apiPort,
-        apiSuffix: savedProxy.apiSuffix
+        apiSuffix: savedProxy.apiSuffix ? '/' + savedProxy.apiSuffix : ''
       }
     } else {
       // 保存到本地存储
@@ -201,19 +203,28 @@ const handleSave = async () => {
         wsType: savedProxy.wsType,
         wsIp: savedProxy.wsIp,
         wsPort: savedProxy.wsPort,
-        wsSuffix: savedProxy.wsSuffix
+        wsSuffix: savedProxy.wsSuffix ? '/' + savedProxy.wsSuffix : ''
       }
     }
     const settings = JSON.stringify(proxySettings)
     localStorage.setItem('proxySettings', settings)
+    await updateTauriSettings(proxySettings)
+    console.log('settings', proxySettings)
 
     window.$message.success('网络设置保存成功')
-    setTimeout(() => {
-      location.reload()
-    }, 1000)
   } catch (error) {
     window.$message.error('网络设置失败：' + error)
   }
+}
+
+const updateTauriSettings = async (proxySettings: ProxySettings) => {
+  const baseUrl =
+    proxySettings.apiType + '://' + proxySettings.apiIp + ':' + proxySettings.apiPort + proxySettings.apiSuffix
+  const wsUrl = proxySettings.wsType + '://' + proxySettings.wsIp + ':' + proxySettings.wsPort + proxySettings.wsSuffix
+
+  await updateSettings({ baseUrl, wsUrl }).catch((err) => {
+    window.$message.error('网络设置失败：' + err)
+  })
 }
 </script>
 

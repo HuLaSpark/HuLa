@@ -18,6 +18,15 @@ export type Settings = {
   }
 }
 
+export type UpdateSettingsParams = {
+  baseUrl: string
+  wsUrl: string
+}
+
 export const getSettings = async (): Promise<Settings> => {
   return await invoke('get_settings')
+}
+
+export const updateSettings = async (settings: UpdateSettingsParams) => {
+  return await invoke('update_settings', { settings })
 }
