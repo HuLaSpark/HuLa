@@ -20,6 +20,7 @@ use desktops::{common_cmd, directory_scanner, init, tray, video_thumbnail::get_v
 use directory_scanner::{cancel_directory_scan, get_directory_usage_info_with_progress};
 #[cfg(desktop)]
 use init::DesktopCustomInit;
+use tauri_plugin_fs::FsExt;
 use std::sync::Arc;
 pub mod command;
 pub mod common;
@@ -38,7 +39,7 @@ use crate::command::room_member_command::{
     cursor_page_room_members, get_room_members, page_room, update_my_room_info,
 };
 use crate::command::user_command::remove_tokens;
-use crate::configuration::get_configuration;
+use crate::configuration::{get_configuration, Settings};
 use crate::error::CommonError;
 use crate::repository::im_user_repository;
 use sea_orm::DatabaseConnection;
@@ -55,6 +56,7 @@ pub struct AppData {
     db_conn: Arc<DatabaseConnection>,
     user_info: Arc<Mutex<UserInfo>>,
     pub rc: Arc<Mutex<im_request_client::ImRequestClient>>,
+    pub config: Arc<Settings>
 }
 
 use crate::command::chat_history_command::query_chat_history;
@@ -118,6 +120,7 @@ async fn initialize_app_data(
         Arc<DatabaseConnection>,
         Arc<Mutex<UserInfo>>,
         Arc<Mutex<im_request_client::ImRequestClient>>,
+        Arc<Settings>
     ),
     CommonError,
 > {
@@ -159,7 +162,7 @@ async fn initialize_app_data(
     };
     let user_info = Arc::new(Mutex::new(user_info));
 
-    Ok((db, user_info, Arc::new(Mutex::new(rc))))
+    Ok((db, user_info, Arc::new(Mutex::new(rc)), configuration))
 }
 
 // 设置用户信息监听器
@@ -352,6 +355,9 @@ fn setup_mobile() {
 
 // 公共的 setup 函数
 fn common_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+    let scope = app.fs_scope();
+    scope.allow_directory("configuration", false).unwrap();
+
     let app_handle = app.handle().clone();
     setup_user_info_listener_early(app.handle().clone());
     #[cfg(desktop)]
@@ -359,12 +365,13 @@ fn common_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> 
 
     // 异步初始化应用数据，避免阻塞主线程
     match tauri::async_runtime::block_on(initialize_app_data(app_handle.clone())) {
-        Ok((db, user_info, rc)) => {
+        Ok((db, user_info, rc, settings)) => {
             // 使用 manage 方法在运行时添加状态
             app_handle.manage(AppData {
                 db_conn: db.clone(),
                 user_info: user_info.clone(),
                 rc: rc,
+                config: settings
             });
         }
         Err(e) => {

@@ -104,21 +104,8 @@ class RustWebSocketClient {
   async initConnect(): Promise<void> {
     try {
       const clientId = localStorage.getItem('clientId')
-      const savedProxy = localStorage.getItem('proxySettings')
-
-      let serverUrl = import.meta.env.VITE_WEBSOCKET_URL
-
-      // 处理代理设置
-      if (savedProxy) {
-        const settings = JSON.parse(savedProxy)
-        const suffix = settings.wsIp + ':' + settings.wsPort + '/websocket/' + settings.wsSuffix
-        if (settings.wsType === 'ws' || settings.wsType === 'wss') {
-          serverUrl = settings.wsType + '://' + suffix
-        }
-      }
 
       const params = {
-        serverUrl,
         clientId: clientId || ''
       }
 
@@ -126,9 +113,6 @@ class RustWebSocketClient {
 
       await invoke('ws_init_connection', { params })
 
-      // await this.setupEventListener()
-
-      // this.isInitialized = true
       info('[RustWS] WebSocket 连接初始化成功')
     } catch (err) {
       error(`[RustWS] 连接初始化失败: ${err}`)

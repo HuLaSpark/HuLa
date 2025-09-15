@@ -124,14 +124,14 @@ export default defineConfig(({ mode }: ConfigEnv) => {
     // 2. tauri expects a fixed port, fail if that port is not available
     server: {
       //配置跨域
-      proxy: {
-        '/api': {
-          // “/api” 以及前置字符串会被替换为真正域名
-          target: config.VITE_SERVICE_URL, // 请求域名
-          changeOrigin: true, // 是否跨域
-          rewrite: (path) => path.replace(/^\/api/, '')
-        }
-      },
+      // proxy: {
+      //   '/api': {
+      //     // “/api” 以及前置字符串会被替换为真正域名
+      //     target: config.VITE_SERVICE_URL, // 请求域名
+      //     changeOrigin: true, // 是否跨域
+      //     rewrite: (path) => path.replace(/^\/api/, '')
+      //   }
+      // },
       hmr: {
         protocol: 'ws',
         host: host,
