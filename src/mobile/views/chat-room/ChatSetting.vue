@@ -244,6 +244,10 @@
           <div class="flex shadow bg-white cursor-pointer text-red text-14px rounded-10px w-full">
             <div class="p-15px">删除聊天记录</div>
           </div>
+          <!-- 解散群聊按钮 -->
+          <div class="mt-auto flex justify-center mb-20px">
+            <n-button type="error" @click="handleExit">{{ isGroup ? '解散群聊' : '退出群聊' }}</n-button>
+          </div>
         </div>
       </div>
     </template>
@@ -251,8 +255,9 @@
 </template>
 
 <script setup lang="ts">
-import { NotificationTypeEnum, RoleEnum, RoomTypeEnum } from '@/enums'
+import { MittEnum, NotificationTypeEnum, RoleEnum, RoomTypeEnum } from '@/enums'
 import { useAvatarUpload } from '@/hooks/useAvatarUpload'
+import { useMitt } from '@/hooks/useMitt.ts'
 import router from '@/router'
 import type { UserItem } from '@/services/types'
 import { useCachedStore } from '@/stores/cached'
@@ -263,6 +268,7 @@ import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { getGroupDetail, setSessionTop, updateRoomInfo } from '@/utils/ImRequestUtils'
 
+const dialog = useDialog()
 const userStore = useUserStore()
 const chatStore = useChatStore()
 const globalStore = useGlobalStore()
@@ -322,6 +328,52 @@ const goToNotice = () => {
     query: {
       announList: JSON.stringify(announList.value),
       roomId: globalStore.currentSession.roomId
+    }
+  })
+}
+
+// 退出登录逻辑
+async function handleExit() {
+  dialog.error({
+    title: '提示',
+    content: isGroup.value ? '确定要解散群聊吗？' : '确定要退出群聊吗？',
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      try {
+        if (isGroup.value) {
+          if (isLord.value) {
+            if (activeItem.value.roomId === '1') {
+              window.$message.warning('无法解散频道')
+              return
+            }
+
+            groupStore.exitGroup(activeItem.value.roomId).then(() => {
+              window.$message.success('已解散群聊')
+              // 删除当前的会话
+              useMitt.emit(MittEnum.DELETE_SESSION, activeItem.value.roomId)
+            })
+          } else {
+            if (activeItem.value.roomId === '1') {
+              window.$message.warning('无法退出频道')
+              return
+            }
+
+            groupStore.exitGroup(activeItem.value.roomId).then(() => {
+              window.$message.success('已退出群聊')
+              // 删除当前的会话
+              useMitt.emit(MittEnum.DELETE_SESSION, activeItem.value.roomId)
+            })
+          }
+        }
+
+        router.push('/mobile/login')
+      } catch (error) {
+        console.error('创建登录窗口失败:', error)
+      }
+    },
+    onNegativeClick: () => {
+      console.log('用户点击了取消')
     }
   })
 }
