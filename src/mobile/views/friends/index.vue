@@ -49,33 +49,22 @@
 
     <div class="flex flex-1 gap-2 flex-col bg-white z-1 custom-rounded">
       <!-- 我的消息条 -->
-      <div class="grid grid-cols-[4rem_1fr_24px] h-64px px-16px border-b-[1px] border-b-solid border-b-[#e5e7eb]">
-        <div class="h-full flex items-center">我的消息</div>
-        <div class="h-full flex items-center justify-end overflow-hidden">
-          <div class="rounded-full h-26px w-26px bg-purple-300 border-2 border-white"></div>
-          <div class="rounded-full h-26px w-26px bg-orange-300 border-2 border-white -ml-2"></div>
-          <div class="rounded-full h-26px w-26px bg-teal-300 border-2 border-white -ml-2"></div>
-          <div class="rounded-full h-26px w-26px bg-orange-300 border-2 border-white -ml-2"></div>
-          <div class="rounded-full h-26px w-26px bg-teal-300 border-2 border-white -ml-2"></div>
-          <div
-            class="rounded-full h-26px min-w-26px bg-gray-200 border-2 border-white -ml-2 flex items-center justify-center text-xs">
-            99+
-          </div>
+      <div class="grid grid-cols-[4rem_1fr_24px] py-15px px-16px border-b-[1px] border-b-solid border-b-[#e5e7eb]">
+        <div class="h-full flex items-center text-14px">我的消息</div>
+        <div @click="toMessage" class="h-full flex items-center justify-end overflow-hidden">
+          <n-avatar
+            v-if="applyList.length > 0"
+            :class="index > 0 ? '-ml-2' : ''"
+            v-for="(item, index) in applyList.splice(0, 6)"
+            :id="item.applyId"
+            round
+            size="small"
+            :src="avatarSrc(groupStore.getUserInfo(isCurrentUser(item.uid) ? item.targetId : item.uid)?.avatar!)" />
         </div>
-        <div class="h-full flex justify-end items-center">
+        <div @click="toMessage" class="h-full flex justify-end items-center">
           <img src="@/assets/mobile/friend/right-arrow.webp" class="block h-20px" alt="" />
         </div>
       </div>
-
-      <!-- <n-tabs class="px-16px" default-value="mutual-attention" justify-content="start" type="line">
-        <n-tab-pane name="mutual-attention" tab="互相关注">
-
-
-        </n-tab-pane>
-        <n-tab-pane name="follow" tab="关注"> 关注 </n-tab-pane>
-        <n-tab-pane name="fans" tab="粉丝"> 粉丝 </n-tab-pane>
-        <n-tab-pane name="group-chat" tab="群聊"> 群聊 </n-tab-pane>
-      </n-tabs> -->
 
       <n-tabs type="segment" animated class="mt-4px p-[4px_10px_0px_8px]">
         <n-tab-pane name="1" tab="好友">
@@ -183,6 +172,7 @@ import { useMitt } from '@/hooks/useMitt.ts'
 import router from '@/router'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGroupStore } from '@/stores/group'
+import { useUserStore } from '@/stores/user'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 
@@ -230,7 +220,23 @@ const shrinkStatus = ref(false)
 const groupStore = useGroupStore()
 const contactStore = useContactStore()
 const userStatusStore = useUserStatusStore()
+const userStore = useUserStore()
 const { stateList } = storeToRefs(userStatusStore)
+
+//好友申请列表（只筛选好友申请消息）
+const applyList = computed(() => {
+  return contactStore.requestFriendsList.filter((item) => item.type === 2)
+})
+
+const avatarSrc = (url: string) => AvatarUtils.getAvatarUrl(url)
+
+const isCurrentUser = (uid: string) => {
+  return uid === userStore.userInfo!.uid
+}
+
+const toMessage = () => {
+  router.push('/mobile/mobileMy/myMessages')
+}
 
 /** 群聊列表 */
 const groupChatList = computed(() => {
