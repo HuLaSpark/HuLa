@@ -331,6 +331,11 @@ const getDesktopRoutes = (): Array<RouteRecordRaw> => [
         component: () => import('@/views/moreWindow/settings/LoginSetting.vue')
       },
       {
+        path: '/notification',
+        name: 'notification',
+        component: () => import('@/views/moreWindow/settings/Notification.vue')
+      },
+      {
         path: '/versatile',
         name: 'versatile',
         component: () => import('@/views/moreWindow/settings/Versatile.vue')

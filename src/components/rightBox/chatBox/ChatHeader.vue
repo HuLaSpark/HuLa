@@ -20,9 +20,7 @@
               [{{ groupStore.countInfo?.memberNum }}]
             </p>
           </label>
-          <svg
-            v-if="activeItem.hotFlag === IsAllUserEnum.Yes && !headerLoading"
-            class="size-20px color-#13987f select-none outline-none">
+          <svg v-if="activeItem.hotFlag === IsAllUserEnum.Yes" class="size-20px color-#13987f select-none outline-none">
             <use href="#auth"></use>
           </svg>
           <n-flex v-else-if="activeItem.type === RoomTypeEnum.SINGLE" align="center">
@@ -431,7 +429,6 @@ const tips = ref()
 const optionsType = ref<RoomActEnum>()
 const modalShow = ref(false)
 const sidebarShow = ref(false)
-const headerLoading = ref(false)
 const cacheStore = useCachedStore()
 const { currentSession: activeItem } = storeToRefs(globalStore)
 // const activeItem = globalStore.currentSession!
@@ -555,15 +552,6 @@ const {
     window.$message.success('群头像已更新')
   }
 })
-
-// 监听消息加载状态变化
-watch(
-  () => chatStore.currentMessageOptions?.isLoading,
-  (isLoading) => {
-    headerLoading.value = isLoading!
-  },
-  { immediate: true }
-)
 
 watchEffect(() => {
   stream.value?.getVideoTracks()[0]?.addEventListener('ended', () => {
@@ -903,7 +891,6 @@ const handleVideoCall = async (remotedUid: string, callType: CallTypeEnum) => {
 
 onMounted(() => {
   window.addEventListener('click', closeMenu, true)
-  if (!chatStore.currentMessageOptions?.isLoading) headerLoading.value = false
 
   useMitt.on(WsResponseMessageType.VideoCallRequest, (event) => {
     info(`收到通话请求：${JSON.stringify(event)}`)

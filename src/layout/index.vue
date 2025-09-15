@@ -46,6 +46,7 @@ import { useConfigStore } from '@/stores/config'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group'
+import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user'
 import { audioManager } from '@/utils/AudioManager'
 import { isWindows } from '@/utils/PlatformConstants'
@@ -72,7 +73,7 @@ const AsyncLeft = defineAsyncComponent({
 const AsyncCenter = defineAsyncComponent({
   loader: async () => {
     await import('./left/index.vue')
-    loadingText.value = '正在加载中间面板...'
+    loadingText.value = '正在加载数据中...'
     const comp = await import('./center/index.vue')
 
     // 加载所有会话
@@ -118,12 +119,18 @@ const groupStore = useGroupStore()
 const userStore = useUserStore()
 const chatStore = useChatStore()
 const configStore = useConfigStore()
+const settingStore = useSettingStore()
 const { checkUpdate, CHECK_UPDATE_TIME } = useCheckUpdate()
 const userUid = computed(() => userStore.userInfo!.uid)
 const shrinkStatus = ref(false)
 
 // 播放消息音效
 const playMessageSound = async () => {
+  // 检查是否开启了消息提示音
+  if (!settingStore.notification?.messageSound) {
+    return
+  }
+
   try {
     const audio = new Audio('/sound/message.mp3')
     await audioManager.play(audio, 'message-notification')

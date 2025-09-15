@@ -30,6 +30,7 @@ import type { MessageType } from '@/services/types'
 import { WsResponseMessageType } from '@/services/wsType'
 import { useChatStore } from '@/stores/chat'
 import { useGlobalStore } from '@/stores/global'
+import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user'
 import { audioManager } from '@/utils/AudioManager'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
@@ -39,8 +40,14 @@ const route = useRoute()
 const chatStore = useChatStore()
 const userStore = useUserStore()
 const globalStore = useGlobalStore()
+const settingStore = useSettingStore()
 const userUid = computed(() => userStore.userInfo!.uid)
 const playMessageSound = async () => {
+  // 检查是否开启了消息提示音
+  if (!settingStore.notification?.messageSound) {
+    return
+  }
+
   try {
     const audio = new Audio('/sound/message.mp3')
     await audioManager.play(audio, 'message-notification')

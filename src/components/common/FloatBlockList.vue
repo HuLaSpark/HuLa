@@ -105,7 +105,7 @@ const handleItemMouseEnter = (index: number) => {
 
   // 获取当前悬停项的DOM元素
   const item =
-    document.activeElement?.closest('.float-block') || (event?.target as HTMLElement)?.closest('.float-block')
+    (event?.target as HTMLElement)?.closest('.float-block') || document.activeElement?.closest('.float-block')
 
   if (item) {
     // 获取元素相对于列表容器的位置

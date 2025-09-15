@@ -740,38 +740,34 @@ export const useChatStore = defineStore(
       const requestRoomId = globalStore.currentSession!.roomId
 
       try {
-        // 1. 清空当前消息列表
-        if (currentMessageMap.value) {
-          currentMessageMap.value.clear()
-        }
+        // 1. 清空消息数据 避免竞态条件
+        const currentMessages = messageMap.get(requestRoomId)
+        currentMessages?.clear() // 如果Map存在就清空，不存在getPageMsg会自动创建
 
-        // 2. 重置消息加载状态
-        if (currentMessageOptions.value) {
-          currentMessageOptions.value = {
-            isLast: false,
-            isLoading: true,
-            cursor: ''
-          }
-        }
+        // 2. 重置消息加载状态，强制cursor为空以获取最新消息
+        messageOptions.set(requestRoomId, {
+          isLast: false,
+          isLoading: true,
+          cursor: ''
+        })
 
         // 3. 清空回复映射
-        if (currentReplyMap.value) {
-          currentReplyMap.value.clear()
-        }
+        const currentReplyMapping = replyMapping.get(requestRoomId)
+        currentReplyMapping?.clear()
 
-        // 4. 从服务器获取最新的消息（默认20条）
-        await getMsgList(pageSize)
+        // 4. 直接调用getPageMsg获取最新消息，强制使用空cursor
+        await getPageMsg(pageSize, requestRoomId, '')
 
         console.log('[Network] 已重置并刷新当前聊天室的消息列表')
       } catch (error) {
         console.error('[Network] 重置并刷新消息列表失败:', error)
         // 如果获取失败，确保重置加载状态
-        if (globalStore.currentSession!.roomId === requestRoomId && currentMessageOptions.value) {
-          currentMessageOptions.value = {
+        if (globalStore.currentSession!.roomId === requestRoomId) {
+          messageOptions.set(requestRoomId, {
             isLast: false,
             isLoading: false,
             cursor: ''
-          }
+          })
         }
       }
     }
