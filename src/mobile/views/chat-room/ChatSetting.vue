@@ -15,22 +15,35 @@
         <div class="flex flex-col gap-15px py-15px px-20px">
           <div class="flex shadow bg-white rounded-10px w-full h-60px items-center gap-10px">
             <!-- 群头像 -->
-            <div class="ms-15px self-center h-38px bg-gray-100 rounded-full flex items-center justify-center">
-              <n-badge>
+            <div class="flex justify-center">
+              <div
+                class="rounded-full relative bg-white w-38px h-38px overflow-hidden"
+                @click="openAvatarCropper(userStore.userInfo?.avatarUpdateTime)">
                 <n-avatar
-                  :size="40"
-                  :src="AvatarUtils.getAvatarUrl(globalStore.currentSession.avatar)"
+                  class="absolute"
+                  :size="86"
+                  :src="AvatarUtils.getAvatarUrl(globalStore.currentSession.avatar!)"
                   fallback-src="/logo.png"
                   round />
-              </n-badge>
+                <div
+                  class="absolute h-50% w-full bottom-0 bg-[rgb(50,50,50)] bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-15 backdrop-saturate-100 backdrop-contrast-100"></div>
+              </div>
+              <input
+                ref="fileInput"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                class="hidden"
+                @change="handleFileChange" />
+              <AvatarCropper
+                ref="cropperRef"
+                v-model:show="showCropper"
+                :image-url="localImageUrl"
+                @crop="handleCrop" />
             </div>
+
             <div class="text-14px flex items-center h-full gap-5px">
               <span>
-                {{
-                  globalStore.currentSession.remark
-                    ? globalStore.currentSession.remark
-                    : globalStore.currentSession.name
-                }}
+                {{ globalStore.currentSession.name }}
               </span>
               <span>
                 <svg class="w-18px h-18px iconpark-icon text-#1A9B83">
@@ -156,6 +169,24 @@
                 </div>
               </div>
 
+              <div v-if="isLord || isAdmin" class="flex justify-between py-15px items-center">
+                <div class="text-14px">本群昵称</div>
+                <div class="text-12px text-#6E6E6E flex flex-wrap gap-10px items-center">
+                  <input
+                    style="
+                      height: 17px;
+                      border: none;
+                      text-align: right;
+                      outline: none;
+                      font-size: 14px;
+                      text-align: right;
+                    "
+                    v-model="nameValue"
+                    @blur="handleGroupInfoUpdate"
+                    placeholder="请输入群昵称" />
+                </div>
+              </div>
+
               <div class="flex justify-between py-15px items-center">
                 <div class="text-14px">我的群昵称</div>
                 <div class="text-12px text-#6E6E6E flex flex-wrap gap-10px items-center">
@@ -170,7 +201,7 @@
                     "
                     v-model="nicknameValue"
                     @blur="handleInfoUpdate"
-                    placeholder="请输入群昵称" />
+                    placeholder="请输入我的群昵称" />
                 </div>
               </div>
             </div>
@@ -221,6 +252,7 @@
 
 <script setup lang="ts">
 import { NotificationTypeEnum, RoleEnum, RoomTypeEnum } from '@/enums'
+import { useAvatarUpload } from '@/hooks/useAvatarUpload'
 import router from '@/router'
 import type { UserItem } from '@/services/types'
 import { useCachedStore } from '@/stores/cached'
@@ -229,7 +261,7 @@ import { useGlobalStore } from '@/stores/global'
 import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { getGroupDetail, setSessionTop } from '@/utils/ImRequestUtils'
+import { getGroupDetail, setSessionTop, updateRoomInfo } from '@/utils/ImRequestUtils'
 
 const userStore = useUserStore()
 const chatStore = useChatStore()
@@ -253,9 +285,29 @@ const isAddAnnoun = ref(false)
 const announList = ref<any[]>([])
 const remarkValue = ref('')
 const item = ref<any>(null)
+const nameValue = ref('')
+const avatarValue = ref('')
 const nicknameValue = ref('')
 const options = ref<Array<{ name: string; src: string }>>([])
 const { currentSession: activeItem } = storeToRefs(globalStore)
+
+const {
+  fileInput,
+  localImageUrl,
+  showCropper,
+  cropperRef,
+  openAvatarCropper,
+  handleFileChange,
+  handleCrop: onCrop
+} = useAvatarUpload({
+  onSuccess: async (downloadUrl) => {
+    avatarValue.value = downloadUrl
+  }
+})
+
+const handleCrop = async (cropBlob: Blob) => {
+  await onCrop(cropBlob)
+}
 
 const handleCopy = (val: string) => {
   if (val) {
@@ -348,6 +400,22 @@ const handleInfoUpdate = async () => {
   window.$message.success('群备注更新成功')
 }
 
+// 处理群名称更新
+const handleGroupInfoUpdate = async () => {
+  await updateRoomInfo({
+    id: activeItem.value.roomId,
+    name: nameValue.value,
+    avatar: avatarValue.value
+  })
+  // 更新本地会话状态
+  // chatStore.updateSession(activeItem.value.roomId, {
+  //   avatar: ''
+  // })
+
+  activeItem.value.avatar = avatarValue.value
+  window.$message.success('群信息已更新')
+}
+
 // 获取群组详情和成员信息
 const fetchGroupMembers = async (roomId: string) => {
   try {
@@ -373,9 +441,11 @@ const fetchGroupMembers = async (roomId: string) => {
 onMounted(async () => {
   await handleInitAnnoun()
   if (isGroup.value) {
-    await getGroupDetail(globalStore.currentSession.detailId)
+    await getGroupDetail(globalStore.currentSession.roomId)
       .then((response: any) => {
         item.value = response
+        nameValue.value = response.groupName || ''
+        avatarValue.value = response.avatar
         nicknameValue.value = response.myName || ''
         remarkValue.value = response.remark || ''
         if (item.value && item.value.roomId) {
