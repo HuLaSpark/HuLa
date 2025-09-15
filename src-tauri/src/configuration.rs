@@ -33,6 +33,12 @@ pub struct Youdao {
     pub app_secret: String,
 }
 
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+pub struct Tencent {
+    pub api_key: String,
+    pub secret_id: String,
+}
+
 // 应用程序运行环境枚举
 #[derive(Debug)]
 pub enum Environment {

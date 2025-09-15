@@ -12,6 +12,10 @@ export type Settings = {
     app_key: string
     app_secret: string
   }
+  tencent: {
+    api_key: string
+    secret_id: string
+  }
 }
 
 export const getSettings = async (): Promise<Settings> => {

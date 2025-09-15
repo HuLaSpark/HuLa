@@ -190,8 +190,9 @@ const youdaoTranslate = async (text: string): Promise<TranslateResult> => {
  */
 const tencentTranslate = async (text: string): Promise<TranslateResult> => {
   // 从环境变量获取密钥信息
-  const secretId = import.meta.env.VITE_TENCENT_SECRET_ID
-  const secretKey = import.meta.env.VITE_TENCENT_API_KEY
+  const settings: Settings = await getSettings()
+  const secretId = settings.tencent.secret_id
+  const secretKey = settings.tencent.api_key
 
   // 检查密钥是否为空
   if (!secretId || !secretKey) {

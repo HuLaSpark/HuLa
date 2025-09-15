@@ -7,3 +7,6 @@ backend:
 youdao:
   app_key: ''
   app_secret: ''
+tencent:
+  api_key: ''
+  secret_id: ''
