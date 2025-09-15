@@ -134,8 +134,9 @@ import { useWindow } from '@/hooks/useWindow'
 import router from '@/router'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useSettingStore } from '@/stores/setting.ts'
+import * as ImRequestUtils from '@/utils/ImRequestUtils'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
-import { createGroup, options, renderLabel, renderSourceList, renderTargetList } from './model.tsx'
+import { options, renderLabel, renderSourceList, renderTargetList } from './model.tsx'
 
 const { createWebviewWindow } = useWindow()
 
@@ -235,7 +236,7 @@ const resetCreateGroupState = () => {
 const handleCreateGroup = async () => {
   if (selectedValue.value.length < 2) return
   try {
-    await createGroup(selectedValue.value)
+    await ImRequestUtils.createGroup({ uidList: selectedValue.value })
     resetCreateGroupState()
     window.$message.success('创建群聊成功')
   } catch (error) {
