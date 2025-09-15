@@ -38,6 +38,7 @@ use crate::command::request_command::{im_request_command, login_command};
 use crate::command::room_member_command::{
     cursor_page_room_members, get_room_members, page_room, update_my_room_info,
 };
+use crate::command::setting_command::get_settings;
 use crate::command::user_command::remove_tokens;
 use crate::configuration::{get_configuration, Settings};
 use crate::error::CommonError;
@@ -462,5 +463,6 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         ws_get_app_background_state,
         login_command,
         im_request_command,
+        get_settings,
     ]
 }

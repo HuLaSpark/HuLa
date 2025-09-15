@@ -6,23 +6,31 @@ use tauri::{AppHandle, Manager};
 use tracing::info;
 
 // 应用程序设置结构体
-#[derive(serde::Deserialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct Settings {
     pub database: DatabaseSettings,
     pub backend: BackendSettings,
+    pub youdao: Youdao,
 }
 
 // 数据库配置设置
-#[derive(serde::Deserialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct DatabaseSettings {
     pub sqlite_file: String,
 }
 
 // 后端服务配置设置
-#[derive(serde::Deserialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct BackendSettings {
     pub base_url: String,
     pub ws_url: String,
+}
+
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+pub struct Youdao {
+    pub app_key: String,
+    pub app_secret: String,
 }
 
 // 应用程序运行环境枚举
