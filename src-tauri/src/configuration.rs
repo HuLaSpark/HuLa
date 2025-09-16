@@ -158,45 +158,92 @@ impl TryFrom<String> for Environment {
 /// * `Ok(Settings)` - 成功时返回配置设置
 /// * `Err(config::ConfigError)` - 失败时返回配置错误
 pub fn get_configuration(app_handle: &AppHandle) -> Result<Settings, config::ConfigError> {
-    let is_desktop_dev = cfg!(debug_assertions) && cfg!(desktop);
+    #[cfg(not(target_os = "android"))]
+    {
+        let is_desktop_dev = cfg!(debug_assertions) && cfg!(desktop);
 
-    let config_path_buf = get_config_path_buf(app_handle, is_desktop_dev)?;
+        let config_path_buf = get_config_path_buf(app_handle, is_desktop_dev)?;
 
-    let builder = if is_desktop_dev {
-        // 桌面开发环境：读取文件系统路径
-        config::Config::builder()
+        let settings = config::Config::builder()
             .add_source(config::File::from(config_path_buf.0))
             .add_source(config::File::from(config_path_buf.1))
-    } else {
-        // 移动端：使用嵌入式配置
+            .add_source(
+                config::Environment::with_prefix("APP")
+                    .prefix_separator("_")
+                    .separator("__"),
+            )
+            .build()?;
+
+        settings.try_deserialize::<Settings>()
+    }
+
+    #[cfg(target_os = "android")]
+    {
+        // 读取 base.yaml 内容
         let base_content = std::str::from_utf8(include_bytes!("../configuration/base.yaml"))
             .map_err(|e| config::ConfigError::Message(e.to_string()))?;
-        let active_content = std::str::from_utf8(include_bytes!("../configuration/production.yaml"))
+
+        // 构建 base 配置对象
+        let base_config = config::Config::builder()
+            .add_source(config::File::from_str(
+                base_content,
+                config::FileFormat::Yaml,
+            ))
+            .build()?;
+
+        // 获取 active_config 字段
+        let active_config = base_config.get_string("active_config").map_err(|_| {
+            config::ConfigError::Message(
+                "Missing or invalid 'active_config' in base.yaml".to_string(),
+            )
+        })?;
+
+        // 校验 active_config 合法性
+        if active_config != "local" && active_config != "production" {
+            return Err(config::ConfigError::Message(
+                "Only \"local\" or \"production\" can be specified in active_config".to_string(),
+            ));
+        }
+
+        // 加载对应的配置文件内容
+        let config_file_bytes: &[u8] = match active_config.as_str() {
+            "local" => include_bytes!("../configuration/local.yaml").as_ref(),
+            "production" => include_bytes!("../configuration/production.yaml").as_ref(),
+            _ => return Err(config::ConfigError::Message("Invalid active_config".into())),// 这里可以支持更多的环境配置
+        };
+
+        let active_content = std::str::from_utf8(config_file_bytes)
             .map_err(|e| config::ConfigError::Message(e.to_string()))?;
 
+        // 构建最终配置对象
         config::Config::builder()
-            .add_source(config::File::from_str(base_content, config::FileFormat::Yaml))
-            .add_source(config::File::from_str(active_content, config::FileFormat::Yaml))
-    };
-
-    let settings = builder
-        .add_source(
-            config::Environment::with_prefix("APP")
-                .prefix_separator("_")
-                .separator("__"),
-        )
-        .build()?;
-
-    settings.try_deserialize::<Settings>()
+            .add_source(config::File::from_str(
+                base_content,
+                config::FileFormat::Yaml,
+            ))
+            .add_source(config::File::from_str(
+                active_content,
+                config::FileFormat::Yaml,
+            ))
+            .add_source(
+                config::Environment::with_prefix("APP")
+                    .prefix_separator("_")
+                    .separator("__"),
+            )
+            .build()?
+            .try_deserialize::<Settings>()
+    }
 }
-
 
 fn get_config_path_buf(
     app_handle: &AppHandle,
     is_desktop_dev: bool,
 ) -> Result<(PathBuf, PathBuf), config::ConfigError> {
     let dir = if is_desktop_dev {
-        let base_path = std::env::current_dir().unwrap();
+        let base_path = std::env::current_dir().map_err(|e| {
+            config::ConfigError::Message(format!("Failed to get current dir: {}", e))
+        })?;
+
         base_path.join("configuration")
     } else {
         app_handle
@@ -208,26 +255,23 @@ fn get_config_path_buf(
 
     let base_path = dir.join("base.yaml");
 
-    let base_config = if is_desktop_dev {
-        // 桌面开发环境：读取文件
-        config::Config::builder()
-            .add_source(config::File::from(base_path.clone()))
-            .build()?
-    } else {
-        // 移动端或非桌面环境：使用打包的配置内容
+    #[cfg(not(target_os = "android"))]
+    let base_config = config::Config::builder()
+        .add_source(config::File::from(base_path.clone()))
+        .build()?;
+
+    #[cfg(target_os = "android")]
+    let base_config = {
         let content = std::str::from_utf8(include_bytes!("../configuration/base.yaml"))
             .map_err(|e| config::ConfigError::Message(e.to_string()))?;
+
         config::Config::builder()
             .add_source(config::File::from_str(content, config::FileFormat::Yaml))
             .build()?
     };
 
-    let active_config = base_config
-        .get_string("active_config")
-        .map_err(|e| config::ConfigError::Message(format!("active_config missing: {}", e)))?;
-
+    let active_config = base_config.get_string("active_config")?;
     println!("active_config: {:?}", active_config);
     let active_config_path_buf = dir.clone().join(active_config);
     Ok((base_path, active_config_path_buf))
 }
-
