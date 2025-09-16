@@ -1,14 +1,16 @@
 <template>
   <!-- 消息为机器人消息时 -->
   <div
-    class="dark:bg-[#fbb99020] bg-[#fbb99030] dark:border-(1px solid #fbb99020) border-(1px solid #fbb99040) flex-center gap-8px px-12px py-4px rounded-8px">
+    class="chat-message-max-width dark:bg-[#fbb99020] bg-[#fbb99030] dark:border-(1px solid #fbb99020) border-(1px solid #fbb99040) flex-center chat-bot-message-gap px-12px py-4px rounded-8px">
     <n-avatar class="select-none" round :size="22" :src="getAvatarSrc(fromUserUid)" />
     <div
       v-for="(part, index) in parseMessage(body.content)"
       :key="index"
       class="text-(12px #fbb990) select-none cursor-default">
       <p v-if="part.type === 'text'">{{ part.text }}</p>
-      <p v-else-if="part.type === 'bracket'" class="text-#13987f">{{ part.text }}</p>
+      <p v-else-if="part.type === 'bracket'" class="text-#13987f truncate max-w-20">
+        {{ part.text }}fwa156f1we561f65we1
+      </p>
       <p v-else-if="part.type === 'number'" class="text-#fbb160">{{ part.text }}</p>
     </div>
     <img class="size-18px" src="/emoji/party-popper.webp" alt="" />

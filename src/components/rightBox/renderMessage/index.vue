@@ -215,7 +215,7 @@
           :size="6"
           v-if="message.message.body.reply"
           @click="emit('jump2Reply', message.message.body.reply.id)"
-          class="reply-bubble relative w-fit custom-shadow select-none">
+          class="reply-bubble relative w-fit custom-shadow select-none chat-message-max-width">
           <svg class="size-14px">
             <use href="#to-top"></use>
           </svg>

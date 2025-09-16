@@ -17,3 +17,11 @@ body {
     transition: all 0.9s ease;
     border-radius: 10px;
 }
+
+.chat-message-max-width{
+  max-width: 100%;
+}
+
+.chat-bot-message-gap{
+  gap: 8px;
+}
