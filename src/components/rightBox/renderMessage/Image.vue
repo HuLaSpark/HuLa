@@ -40,13 +40,14 @@
 import { MsgEnum } from '@/enums/index'
 import { useImageViewer } from '@/hooks/useImageViewer'
 import type { ImageBody } from '@/services/types'
+import { isMobile } from '@/utils/PlatformConstants'
 
 const props = defineProps<{
   body: ImageBody
   onImageClick?: (url: string) => void
 }>()
 // 图片显示相关常量
-const MAX_WIDTH = 320
+const MAX_WIDTH = isMobile() ? 240 : 320
 const MAX_HEIGHT = 240
 const MIN_WIDTH = 60
 const MIN_HEIGHT = 60

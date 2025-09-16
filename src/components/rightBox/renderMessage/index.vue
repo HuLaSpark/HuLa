@@ -139,7 +139,7 @@
           @contextmenu="handleMacSelect"
           @mouseenter="() => (hoverMsgId = message.message.id)"
           @mouseleave="() => (hoverMsgId = '')"
-          class="w-fit relative flex flex-col"
+          class="w-fit relative flex flex-col chat-message-max-width"
           :data-key="isMe ? `U${message.message.id}` : `Q${message.message.id}`"
           :class="isMe ? 'items-end' : 'items-start'"
           :style="{ '--bubble-max-width': isGroup ? '32vw' : '50vw' }"
