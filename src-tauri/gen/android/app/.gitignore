@@ -4,3 +4,4 @@
 /tauri.build.gradle.kts
 /proguard-tauri.pro
 /tauri.properties
+/src/main/assets/configuration
