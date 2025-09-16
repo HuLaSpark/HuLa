@@ -1,6 +1,10 @@
 <template>
   <!-- 底部栏 -->
   <main class="border-t-(1px solid [--right-chat-footer-line-color]) relative flex justify-center items-center h-full">
+    <!-- 拖拽手柄 -->
+    <div class="resize-handle" :class="{ dragging: isDragging }" @mousedown="startDrag">
+      <div class="resize-indicator"></div>
+    </div>
     <!-- 添加遮罩层 -->
     <div
       v-if="isSingleChat && !isFriend"
@@ -11,7 +15,7 @@
       </n-flex>
     </div>
 
-    <ChatMsgMultiChoose v-if="chatStore.isMsgMultiChoose" class="h-20" />
+    <ChatMsgMultiChoose v-if="chatStore.isMsgMultiChoose" />
 
     <div v-else class="size-full relative color-[--icon-color] flex flex-col">
       <!-- 输入框顶部选项栏 -->
@@ -275,6 +279,18 @@ const observeContainerResize = () => {
 
   // 设置初始高度
   containerHeight.value = (chatContainer as HTMLElement).clientHeight
+}
+
+const startDrag = (e: MouseEvent) => {
+  isDragging.value = true
+  startY.value = e.clientY
+  startHeight.value = footerHeight.value
+
+  document.addEventListener('mousemove', onDrag)
+  document.addEventListener('mouseup', endDrag)
+  document.body.style.userSelect = 'none'
+  document.body.classList.add('dragging-resize')
+  e.preventDefault()
 }
 
 const onDrag = (e: MouseEvent) => {
@@ -610,10 +626,10 @@ onUnmounted(() => {
 }
 
 .resize-handle {
-  // position: absolute;
-  // top: -8px;
-  // left: 0;
-  // right: 0;
+  position: absolute;
+  top: -8px;
+  left: 0;
+  right: 0;
   height: 16px;
   cursor: ns-resize;
   display: flex;

@@ -56,27 +56,31 @@
             v-for="(item, index) in chatStore.chatMessageList"
             :key="item.message.id"
             vertical
-            class="flex-y-center"
-            @mouseenter="hoverId = item.message.id"
-            :class="[
-              item.message.type === MsgEnum.RECALL ? 'min-h-22px' : 'min-h-62px',
-              isGroup ? 'p-[14px_10px_14px_20px]' : 'chat-single p-[4px_10px_10px_20px]',
-              { 'active-reply': activeReply === item.message.id },
-              { 'bg-#DADADA': computeMsgHover(item.message.id) }
-            ]"
-            @click="item.isCheck = !item.isCheck"
+            class="flex-y-center mb-12px"
             :data-message-id="item.message.id"
             :data-message-index="index">
             <!-- 信息间隔时间 -->
-            <span class="text-(12px #909090) select-none p-4px" v-if="item.timeBlock">
+            <span class="text-(12px #909090) select-none p-4px" v-if="item.timeBlock" @click.stop>
               {{ item.timeBlock }}
             </span>
-            <RenderMessage
-              :message="item"
-              :is-group="isGroup"
-              :from-user="{ uid: item.fromUser.uid }"
-              :upload-progress="item.uploadProgress"
-              @jump2-reply="jumpToReplyMsg" />
+            <!-- 消息内容容器 -->
+            <div
+              @mouseenter="hoverId = item.message.id"
+              :class="[
+                'w-full box-border',
+                item.message.type === MsgEnum.RECALL ? 'min-h-22px' : 'min-h-62px',
+                isGroup ? 'p-[14px_10px_14px_20px]' : 'chat-single p-[4px_10px_10px_20px]',
+                { 'active-reply': activeReply === item.message.id },
+                { 'bg-#90909020': computeMsgHover(item.message.id) }
+              ]"
+              @click="item.isCheck = !item.isCheck">
+              <RenderMessage
+                :message="item"
+                :is-group="isGroup"
+                :from-user="{ uid: item.fromUser.uid }"
+                :upload-progress="item.uploadProgress"
+                @jump2-reply="jumpToReplyMsg" />
+            </div>
           </n-flex>
         </div>
       </div>
@@ -180,7 +184,10 @@ const userUid = computed(() => userStore.userInfo!.uid || '')
 const currentNewMsgCount = computed(() => chatStore.currentNewMsgCount || null)
 const currentRoomId = computed(() => globalStore.currentSession?.roomId ?? null)
 const computeMsgHover = computed(() => (id: string) => {
-  return chatStore.isMsgMultiChoose && hoverId.value === id
+  return (
+    chatStore.isMsgMultiChoose &&
+    (hoverId.value === id || chatStore.chatMessageList.find((msg) => msg.message.id === id)?.isCheck)
+  )
 })
 // CSS 变量计算，避免动态高度重排
 const cssVariables = computed(() => {
@@ -366,7 +373,10 @@ const scrollToBottom = (): void => {
 // 处理悬浮按钮点击 - 重置消息列表并滚动到底部
 const handleFloatButtonClick = async () => {
   try {
-    await chatStore.resetAndRefreshCurrentRoomMessages()
+    // 只有消息数量超过60条才进行重置和刷新
+    if (chatStore.chatMessageList.length > 60) {
+      await chatStore.resetAndRefreshCurrentRoomMessages()
+    }
     scrollToBottom()
   } catch (error) {
     console.error('重置消息列表失败:', error)
@@ -576,7 +586,11 @@ useMitt.on(`${MittEnum.INFO_POPOVER}-Main`, (event: any) => {
 })
 
 // 监听滚动到底部的事件
-useMitt.on(MittEnum.CHAT_SCROLL_BOTTOM, () => {
+useMitt.on(MittEnum.CHAT_SCROLL_BOTTOM, async () => {
+  // 只有消息数量超过60条才进行重置和刷新
+  if (chatStore.chatMessageList.length > 60) {
+    await chatStore.resetAndRefreshCurrentRoomMessages()
+  }
   scrollToBottom()
 })
 

@@ -8,12 +8,8 @@ import type { MessageType } from '@/services/types'
 dayjs.locale('zh-cn')
 // 设置一周起始位周一
 dayjs.extend(weekday)
-// 5 分钟 5 * 60 * 1000;
-const intervalTime = 300000
-// 计数上限 20 条，到达 20 重置
-const computedCountMax = 20
-// 计数
-let computedCount = 0
+// 15 分钟 15 * 60 * 1000;
+const intervalTime = 900000
 
 // 时间格式化为相对文本，仿微信风格
 const timeToStr = (time: number) => {
@@ -30,17 +26,13 @@ const timeToStr = (time: number) => {
       : dayjs(sendTime).format('dddd HH:mm')
 }
 
-// 超过5分钟，或者超过20条消息，就添加展示时间
+// 超过15分钟就添加展示时间
 const checkTimeInterval = (cur: MessageType, pre: MessageType) => {
-  // 如果有一个超过 5 分钟了或者计数达到 20 条了
-  if ((pre && cur.message.sendTime - pre.message.sendTime > intervalTime) || computedCount >= computedCountMax) {
-    // 重置计数
-    computedCount = 0
+  // 如果有一个超过 15 分钟了
+  if (pre && cur.message.sendTime - pre.message.sendTime > intervalTime) {
     // 返回时间标记
     return { ...cur, timeBlock: timeToStr(cur.message.sendTime) }
   } else {
-    // 时间间隔很短的就累计计数
-    computedCount += 1
     return cur
   }
 }
@@ -54,7 +46,7 @@ export const computedTimeBlock = (list: MessageType[], needFirst = true) => {
     const item = list[index]
     // 上个聊天记录
     const preItem = list[index - 1]
-    // 超过20分钟，或者超过50条评论，展示时间
+    // 超过15分钟展示时间
     temp.push(checkTimeInterval(item, preItem))
   }
   return temp

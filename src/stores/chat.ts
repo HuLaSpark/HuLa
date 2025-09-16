@@ -18,6 +18,7 @@ import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { useUserStore } from '@/stores/user.ts'
+import { computedTimeBlock } from '@/utils/ComputedTime.ts'
 import { getSessionDetail } from '@/utils/ImRequestUtils'
 import { isMac } from '@/utils/PlatformConstants'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
@@ -193,17 +194,27 @@ export const useChatStore = defineStore(
     // 当前消息回复
     const currentMsgReply = ref<Partial<MessageType>>({})
 
-    // 将消息列表转换为数组
+    // 将消息列表转换为数组并计算时间间隔
     const chatMessageList = computed(() => {
-      return currentMessageMap.value
-        ? [...currentMessageMap.value.values()].sort((a, b) => Number(a.message.id) - Number(b.message.id))
-        : []
+      if (!currentMessageMap.value) return []
+
+      const sortedMessages = [...currentMessageMap.value.values()].sort(
+        (a, b) => Number(a.message.id) - Number(b.message.id)
+      )
+
+      // 使用 computedTimeBlock 函数计算时间间隔，添加 timeBlock 属性
+      return computedTimeBlock(sortedMessages, true)
     })
 
     const chatMessageListByRoomId = computed(() => (roomId: string) => {
-      return messageMap.get(roomId)
-        ? [...messageMap.get(roomId)!.values()].sort((a, b) => Number(a.message.id) - Number(b.message.id))
-        : []
+      if (!messageMap.get(roomId)) return []
+
+      const sortedMessages = [...messageMap.get(roomId)!.values()].sort(
+        (a, b) => Number(a.message.id) - Number(b.message.id)
+      )
+
+      // 使用 computedTimeBlock 函数计算时间间隔，添加 timeBlock 属性
+      return computedTimeBlock(sortedMessages, true)
     })
 
     // 登录之后，加载一次所有会话的消息
@@ -420,6 +431,9 @@ export const useChatStore = defineStore(
           icon: cacheUser.avatar as string
         })
       }
+
+      // 发送消息后立即触发滚动到底部
+      useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
     }
 
     // 过滤掉拉黑用户的发言
