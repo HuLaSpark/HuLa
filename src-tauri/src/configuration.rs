@@ -162,17 +162,34 @@ pub fn get_configuration(app_handle: &AppHandle) -> Result<Settings, config::Con
 
     let config_path_buf = get_config_path_buf(app_handle, is_desktop_dev)?;
 
-    let settings = config::Config::builder()
-        .add_source(config::File::from(config_path_buf.0))
-        .add_source(config::File::from(config_path_buf.1))
+    let builder = if is_desktop_dev {
+        // 桌面开发环境：读取文件系统路径
+        config::Config::builder()
+            .add_source(config::File::from(config_path_buf.0))
+            .add_source(config::File::from(config_path_buf.1))
+    } else {
+        // 移动端：使用嵌入式配置
+        let base_content = std::str::from_utf8(include_bytes!("../configuration/base.yaml"))
+            .map_err(|e| config::ConfigError::Message(e.to_string()))?;
+        let active_content = std::str::from_utf8(include_bytes!("../configuration/production.yaml"))
+            .map_err(|e| config::ConfigError::Message(e.to_string()))?;
+
+        config::Config::builder()
+            .add_source(config::File::from_str(base_content, config::FileFormat::Yaml))
+            .add_source(config::File::from_str(active_content, config::FileFormat::Yaml))
+    };
+
+    let settings = builder
         .add_source(
             config::Environment::with_prefix("APP")
                 .prefix_separator("_")
                 .separator("__"),
         )
         .build()?;
+
     settings.try_deserialize::<Settings>()
 }
+
 
 fn get_config_path_buf(
     app_handle: &AppHandle,
@@ -190,12 +207,27 @@ fn get_config_path_buf(
     };
 
     let base_path = dir.join("base.yaml");
-    let base_config = config::Config::builder()
-        .add_source(config::File::from(base_path.clone()))
-        .build()?;
 
-    let active_config = base_config.get_string("active_config").unwrap();
+    let base_config = if is_desktop_dev {
+        // 桌面开发环境：读取文件
+        config::Config::builder()
+            .add_source(config::File::from(base_path.clone()))
+            .build()?
+    } else {
+        // 移动端或非桌面环境：使用打包的配置内容
+        let content = std::str::from_utf8(include_bytes!("../configuration/base.yaml"))
+            .map_err(|e| config::ConfigError::Message(e.to_string()))?;
+        config::Config::builder()
+            .add_source(config::File::from_str(content, config::FileFormat::Yaml))
+            .build()?
+    };
+
+    let active_config = base_config
+        .get_string("active_config")
+        .map_err(|e| config::ConfigError::Message(format!("active_config missing: {}", e)))?;
+
     println!("active_config: {:?}", active_config);
     let active_config_path_buf = dir.clone().join(active_config);
     Ok((base_path, active_config_path_buf))
 }
+
