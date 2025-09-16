@@ -4,7 +4,15 @@ import { sendNotification } from '@tauri-apps/plugin-notification'
 import { defineStore } from 'pinia'
 import { useRoute } from 'vue-router'
 import { ErrorType } from '@/common/exception'
-import { type MessageStatusEnum, MsgEnum, NotificationTypeEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
+import {
+  type MessageStatusEnum,
+  MittEnum,
+  MsgEnum,
+  NotificationTypeEnum,
+  RoomTypeEnum,
+  StoresEnum,
+  TauriCommand
+} from '@/enums'
 import type { MarkItemType, MessageType, RevokedMsgType, SessionItem } from '@/services/types'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
@@ -14,6 +22,7 @@ import { getSessionDetail } from '@/utils/ImRequestUtils'
 import { isMac } from '@/utils/PlatformConstants'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
+import { useMitt } from '../hooks/useMitt'
 
 type RecalledMessage = {
   messageId: string
@@ -69,6 +78,7 @@ export const useChatStore = defineStore(
     const recalledMessages = reactive<Map<string, RecalledMessage>>(new Map())
     // 存储每条撤回消息的过期定时器
     const expirationTimers = new Map<string, boolean>()
+    const isMsgMultiChoose = ref<boolean>(false)
 
     // 当前聊天室的消息Map计算属性
     const currentMessageMap = computed({
@@ -781,6 +791,8 @@ export const useChatStore = defineStore(
       return currentMessageOptions.value?.isLast
     })
 
+    useMitt.on(MittEnum.MSG_MULTI_CHOOSE, (event) => (isMsgMultiChoose.value = event))
+
     return {
       getMsgIndex,
       chatMessageList,
@@ -822,7 +834,8 @@ export const useChatStore = defineStore(
       addSession,
       setAllSessionMsgList,
       chatMessageListByRoomId,
-      shouldShowNoMoreMessage
+      shouldShowNoMoreMessage,
+      isMsgMultiChoose
     }
   },
   {

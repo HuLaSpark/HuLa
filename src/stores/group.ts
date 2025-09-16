@@ -206,6 +206,10 @@ export const useGroupStore = defineStore(
       return groupDetails.value.find((item: GroupDetailReq) => item.roomId === globalStore.currentSession!.roomId)
     })
 
+    const getGroupDetailByRoomId = computed(() => (roomId: string) => {
+      return groupDetails.value.find((item: GroupDetailReq) => item.roomId === roomId)
+    })
+
     const updateGroupNumber = (roomId: string, totalNum: number, onlineNum: number) => {
       const group = groupDetails.value.find((item) => item.roomId === roomId)
       group!.memberNum = totalNum
@@ -526,6 +530,7 @@ export const useGroupStore = defineStore(
       setGroupDetails,
       updateGroupDetail,
       groupDetails,
+      getGroupDetailByRoomId,
       updateGroupNumber,
       removeGroupDetail,
       addGroupDetail,

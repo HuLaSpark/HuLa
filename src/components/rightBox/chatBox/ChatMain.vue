@@ -57,11 +57,14 @@
             :key="item.message.id"
             vertical
             class="flex-y-center"
+            @mouseenter="hoverId = item.message.id"
             :class="[
               item.message.type === MsgEnum.RECALL ? 'min-h-22px' : 'min-h-62px',
               isGroup ? 'p-[14px_10px_14px_20px]' : 'chat-single p-[4px_10px_10px_20px]',
-              { 'active-reply': activeReply === item.message.id }
+              { 'active-reply': activeReply === item.message.id },
+              { 'bg-#DADADA': computeMsgHover(item.message.id) }
             ]"
+            @click="item.isCheck = !item.isCheck"
             :data-message-id="item.message.id"
             :data-message-index="index">
             <!-- 信息间隔时间 -->
@@ -162,8 +165,12 @@ const userStore = useUserStore()
 const cachedStore = useCachedStore()
 const networkStatus = useNetworkStatus()
 const { footerHeight } = useChatLayoutGlobal()
-// 添加标记，用于识别是否正在加载历史消息
-const isLoadingMore = ref(false)
+const { createWebviewWindow } = useWindow()
+const { handleConfirm, tips, modalShow, selectKey, scrollTop } = useChatMain()
+const { handlePopoverUpdate, enableScroll } = usePopover(selectKey, 'image-chat-main')
+
+provide('popoverControls', { enableScroll })
+
 // 滚动意图状态
 const scrollIntent = ref<ScrollIntentEnum>(ScrollIntentEnum.NONE)
 
@@ -171,24 +178,16 @@ const scrollIntent = ref<ScrollIntentEnum>(ScrollIntentEnum.NONE)
 const isGroup = computed<boolean>(() => chatStore.isGroup)
 const userUid = computed(() => userStore.userInfo!.uid || '')
 const currentNewMsgCount = computed(() => chatStore.currentNewMsgCount || null)
-const { createWebviewWindow } = useWindow()
 const currentRoomId = computed(() => globalStore.currentSession?.roomId ?? null)
-
-// 响应式状态变量
-const activeReply = ref<string>('')
-const scrollContainerRef = useTemplateRef<HTMLDivElement>('scrollContainer')
-const infoPopoverRefs = shallowRef<Record<string, any>>({})
-const showScrollbar = ref<boolean>(true)
-const isAnnouncementHover = ref<boolean>(false)
-const topAnnouncement = ref<AnnouncementData | null>(null)
-
+const computeMsgHover = computed(() => (id: string) => {
+  return chatStore.isMsgMultiChoose && hoverId.value === id
+})
 // CSS 变量计算，避免动态高度重排
 const cssVariables = computed(() => {
   return {
     '--footer-height': `${footerHeight.value}px`
   }
 })
-
 // 是否显示悬浮页脚
 const shouldShowFloatFooter = computed<boolean>(() => {
   const container = scrollContainerRef.value
@@ -221,9 +220,19 @@ const shouldShowFloatFooter = computed<boolean>(() => {
   return false
 })
 
-const { handleConfirm, tips, modalShow, selectKey, scrollTop } = useChatMain()
-const { handlePopoverUpdate, enableScroll } = usePopover(selectKey, 'image-chat-main')
-provide('popoverControls', { enableScroll })
+// 响应式状态变量
+const activeReply = ref<string>('')
+const scrollContainerRef = useTemplateRef<HTMLDivElement>('scrollContainer')
+const infoPopoverRefs = shallowRef<Record<string, any>>({})
+const showScrollbar = ref<boolean>(true)
+const isAnnouncementHover = ref<boolean>(false)
+const topAnnouncement = ref<AnnouncementData | null>(null)
+const hoverId = ref('')
+// 添加标记，用于识别是否正在加载历史消息
+const isLoadingMore = ref(false)
+// 监听公告更新和清空事件的变量
+let announcementUpdatedListener: any = null
+let announcementClearListener: any = null
 
 // 1. 监听房间切换，触发初始化滚动意图
 watch(
@@ -560,9 +569,16 @@ const handleViewAnnouncement = (): void => {
   })
 }
 
-// 监听公告更新和清空事件的变量
-let announcementUpdatedListener: any = null
-let announcementClearListener: any = null
+useMitt.on(`${MittEnum.INFO_POPOVER}-Main`, (event: any) => {
+  selectKey.value = event.uid
+  infoPopoverRefs.value[event.uid].setShow(true)
+  handlePopoverUpdate(event.uid)
+})
+
+// 监听滚动到底部的事件
+useMitt.on(MittEnum.CHAT_SCROLL_BOTTOM, () => {
+  scrollToBottom()
+})
 
 onMounted(() => {
   // 初始化监听器
@@ -602,17 +618,6 @@ onMounted(() => {
 
   nextTick(() => {
     loadTopAnnouncement()
-  })
-
-  useMitt.on(`${MittEnum.INFO_POPOVER}-Main`, (event: any) => {
-    selectKey.value = event.uid
-    infoPopoverRefs.value[event.uid].setShow(true)
-    handlePopoverUpdate(event.uid)
-  })
-
-  // 监听滚动到底部的事件
-  useMitt.on(MittEnum.CHAT_SCROLL_BOTTOM, () => {
-    scrollToBottom()
   })
   scrollToBottom()
 })

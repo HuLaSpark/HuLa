@@ -202,6 +202,13 @@ export const useChatMain = (isHistoryMode = false) => {
       }
     },
     {
+      label: '多选',
+      icon: 'copy',
+      click: () => {
+        useMitt.emit(MittEnum.MSG_MULTI_CHOOSE, true)
+      }
+    },
+    {
       label: '翻译',
       icon: 'translate',
       click: async (item: MessageType) => {
