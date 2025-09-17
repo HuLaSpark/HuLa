@@ -59,7 +59,7 @@ abstract class AbstractMessageStrategy implements MessageStrategy {
         body: messageBody,
         messageMarks: {}
       },
-      sendTime: new Date(currentTime).toISOString(),
+      sendTime: Date.now(),
       loading: false
     }
   }

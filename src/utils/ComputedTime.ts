@@ -2,17 +2,14 @@ import dayjs from 'dayjs'
 import weekday from 'dayjs/plugin/weekday'
 import 'dayjs/locale/zh-cn' // 导入中文语言包
 import type { ConfigType, Dayjs, OpUnitType } from 'dayjs'
-import type { MessageType } from '@/services/types'
 
 // 全局使用语言包
 dayjs.locale('zh-cn')
 // 设置一周起始位周一
 dayjs.extend(weekday)
-// 15 分钟 15 * 60 * 1000;
-const intervalTime = 900000
 
 // 时间格式化为相对文本，仿微信风格
-const timeToStr = (time: number) => {
+export const timeToStr = (time: number) => {
   const sendTime = dayjs(time)
   // 计算今天和消息的发送时间间隔多少天
   const gapDay = dayjs().endOf('day').diff(sendTime, 'day')
@@ -24,32 +21,6 @@ const timeToStr = (time: number) => {
     : isLastWeek
       ? sendTime.format('YYYY-MM-DD HH:mm')
       : dayjs(sendTime).format('dddd HH:mm')
-}
-
-// 超过15分钟就添加展示时间
-const checkTimeInterval = (cur: MessageType, pre: MessageType) => {
-  // 如果有一个超过 15 分钟了
-  if (pre && cur.message.sendTime - pre.message.sendTime > intervalTime) {
-    // 返回时间标记
-    return { ...cur, timeBlock: timeToStr(cur.message.sendTime) }
-  } else {
-    return cur
-  }
-}
-
-export const computedTimeBlock = (list: MessageType[], needFirst = true) => {
-  if (!list || list.length === 0) return []
-  // 是否需要保留 传入 list 第一个，如果是接口拉回来的消息列表就要保留，如果接收到新消息，需要拿当前消息列表最后一个拿来做时间间隔计算的话，就不需要保留第一个
-  const temp = needFirst ? [list[0]] : []
-  // 跳过第一个
-  for (let index = 1, len = list.length; index < len; index++) {
-    const item = list[index]
-    // 上个聊天记录
-    const preItem = list[index - 1]
-    // 超过15分钟展示时间
-    temp.push(checkTimeInterval(item, preItem))
-  }
-  return temp
 }
 
 /**

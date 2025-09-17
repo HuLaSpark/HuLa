@@ -27,7 +27,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
   const config = loadEnv(mode, process.cwd(), '')
   const isPC =
     config.TAURI_ENV_PLATFORM === 'windows' ||
-    config.TAURI_ENV_PLATFORM === 'macos' ||
+    config.TAURI_ENV_PLATFORM === 'darwin' ||
     config.TAURI_ENV_PLATFORM === 'linux'
 
   // 根据平台类型和配置决定host

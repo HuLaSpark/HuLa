@@ -470,7 +470,8 @@ export const useMsgInput = (messageInputDom: Ref) => {
           msgId: message.oldMsgId,
           status: MessageStatusEnum.SUCCESS,
           newMsgId: message.message.id,
-          body: message.message.body
+          body: message.message.body,
+          timeBlock: message.timeBlock
         })
       }
 
@@ -493,13 +494,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
         successChannel,
         errorChannel
       })
-
-      // 更新消息状态为成功,并使用服务器返回的消息体
-      // chatStore.updateMsg({
-      //   msgId: tempMsgId,
-      //   status: MessageStatusEnum.SUCCESS,
-      //   newMsgId: res,
-      // })
 
       // 更新会话最后活动时间
       chatStore.updateSessionLastActiveTime(globalStore.currentSession!.roomId)
@@ -957,7 +951,8 @@ export const useMsgInput = (messageInputDom: Ref) => {
               msgId: message.oldMsgId,
               status: MessageStatusEnum.SUCCESS,
               newMsgId: message.message.id,
-              body: message.message.body
+              body: message.message.body,
+              timeBlock: message.timeBlock
             })
           }
 
@@ -1041,7 +1036,8 @@ export const useMsgInput = (messageInputDom: Ref) => {
               msgId: message.oldMsgId,
               status: MessageStatusEnum.SUCCESS,
               newMsgId: message.message.id,
-              body: message.message.body
+              body: message.message.body,
+              timeBlock: message.timeBlock
             })
           }
 
@@ -1152,7 +1148,8 @@ export const useMsgInput = (messageInputDom: Ref) => {
               msgId: message.oldMsgId,
               status: MessageStatusEnum.SUCCESS,
               newMsgId: message.message.id,
-              body: message.message.body
+              body: message.message.body,
+              timeBlock: message.timeBlock
             })
           }
 
@@ -1254,7 +1251,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
           body: messageBody,
           messageMarks: {}
         },
-        sendTime: new Date().toISOString(),
+        sendTime: Date.now(),
         loading: false
       }
 
@@ -1310,7 +1307,8 @@ export const useMsgInput = (messageInputDom: Ref) => {
               msgId: message.oldMsgId,
               status: MessageStatusEnum.SUCCESS,
               newMsgId: message.message.id,
-              body: message.message.body
+              body: message.message.body,
+              timeBlock: message.timeBlock
             })
           }
 

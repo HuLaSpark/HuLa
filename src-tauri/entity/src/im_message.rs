@@ -22,6 +22,7 @@ pub struct Model {
     pub login_uid: String,
     /// 消息发送状态: pending, success, fail
     pub send_status: String,
+    pub time_block: Option<i64>,
 }
 
 impl ActiveModelBehavior for ActiveModel {}

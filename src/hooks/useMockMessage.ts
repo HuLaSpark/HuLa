@@ -49,7 +49,7 @@ export const useMockMessage = () => {
         },
         status: MessageStatusEnum.PENDING
       },
-      sendTime: String(currentTimeStamp),
+      sendTime: currentTimeStamp,
       loading: true
     }
   }

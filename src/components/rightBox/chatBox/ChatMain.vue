@@ -61,7 +61,7 @@
             :data-message-index="index">
             <!-- 信息间隔时间 -->
             <span class="text-(12px #909090) select-none p-4px" v-if="item.timeBlock" @click.stop>
-              {{ item.timeBlock }}
+              {{ timeToStr(item.message.sendTime) }}
             </span>
             <!-- 消息内容容器 -->
             <div
@@ -73,7 +73,11 @@
                 { 'active-reply': activeReply === item.message.id },
                 { 'bg-#90909020': computeMsgHover(item.message.id) }
               ]"
-              @click="item.isCheck = !item.isCheck">
+              @click="
+                () => {
+                  item.isCheck = !item.isCheck
+                }
+              ">
               <RenderMessage
                 :message="item"
                 :is-group="isGroup"
@@ -154,6 +158,7 @@ import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global'
 import { useUserStore } from '@/stores/user.ts'
 import { audioManager } from '@/utils/AudioManager'
+import { timeToStr } from '@/utils/ComputedTime'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
 
 type AnnouncementData = {

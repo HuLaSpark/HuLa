@@ -18,7 +18,11 @@ export const useUserStore = defineStore(
         })
     }
 
-    return { userInfo, getUserDetailAction }
+    const isMe = computed(() => (id: string) => {
+      return userInfo.value?.uid === id
+    })
+
+    return { userInfo, getUserDetailAction, isMe }
   },
   {
     share: {

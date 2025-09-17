@@ -3,6 +3,7 @@ pub use sea_orm_migration::prelude::*;
 mod m20220101_000001_create_table;
 mod m20241220_000002_add_token_field;
 mod m20241220_000003_add_refresh_token_field;
+mod m20250917_000001_update_msg_table;
 
 pub struct Migrator;
 
@@ -13,6 +14,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20220101_000001_create_table::Migration),
             Box::new(m20241220_000002_add_token_field::Migration),
             Box::new(m20241220_000003_add_refresh_token_field::Migration),
+            Box::new(m20250917_000001_update_msg_table::Migration),
         ]
     }
 }

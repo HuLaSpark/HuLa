@@ -18,7 +18,6 @@ import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { useUserStore } from '@/stores/user.ts'
-import { computedTimeBlock } from '@/utils/ComputedTime.ts'
 import { getSessionDetail } from '@/utils/ImRequestUtils'
 import { isMac } from '@/utils/PlatformConstants'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
@@ -198,23 +197,13 @@ export const useChatStore = defineStore(
     const chatMessageList = computed(() => {
       if (!currentMessageMap.value) return []
 
-      const sortedMessages = [...currentMessageMap.value.values()].sort(
-        (a, b) => Number(a.message.id) - Number(b.message.id)
-      )
-
-      // 使用 computedTimeBlock 函数计算时间间隔，添加 timeBlock 属性
-      return computedTimeBlock(sortedMessages, true)
+      return [...currentMessageMap.value.values()].sort((a, b) => Number(a.message.id) - Number(b.message.id))
     })
 
     const chatMessageListByRoomId = computed(() => (roomId: string) => {
       if (!messageMap.get(roomId)) return []
 
-      const sortedMessages = [...messageMap.get(roomId)!.values()].sort(
-        (a, b) => Number(a.message.id) - Number(b.message.id)
-      )
-
-      // 使用 computedTimeBlock 函数计算时间间隔，添加 timeBlock 属性
-      return computedTimeBlock(sortedMessages, true)
+      return [...messageMap.get(roomId)!.values()].sort((a, b) => Number(a.message.id) - Number(b.message.id))
     })
 
     // 登录之后，加载一次所有会话的消息
@@ -621,17 +610,20 @@ export const useChatStore = defineStore(
       status,
       newMsgId,
       body,
-      uploadProgress
+      uploadProgress,
+      timeBlock
     }: {
       msgId: string
       status: MessageStatusEnum
       newMsgId?: string
       body?: any
       uploadProgress?: number
+      timeBlock?: number
     }) => {
       const msg = currentMessageMap.value?.get(msgId)
       if (msg) {
         msg.message.status = status
+        msg.timeBlock = timeBlock
         if (newMsgId) {
           msg.message.id = newMsgId
         }
