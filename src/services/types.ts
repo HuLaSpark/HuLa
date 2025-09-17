@@ -323,12 +323,13 @@ export type MessageType = {
   /** 消息主体 */
   message: MsgType
   /** 发送时间 */
-  sendTime: string
+  sendTime: number
   /** 时间段（可选） */
-  timeBlock?: string
+  timeBlock?: number
   /** 是否加载中 */
   loading?: boolean
   uploadProgress?: number
+  isCheck?: boolean
 }
 
 /**
@@ -569,6 +570,8 @@ export type SessionItem = {
   remark?: string
   /** 我的群昵称 */
   myName?: string
+  /** 是否选中（非后端） */
+  isCheck?: boolean
 }
 
 /** 消息已读未读数列表项 */

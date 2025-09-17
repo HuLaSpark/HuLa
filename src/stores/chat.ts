@@ -4,7 +4,15 @@ import { sendNotification } from '@tauri-apps/plugin-notification'
 import { defineStore } from 'pinia'
 import { useRoute } from 'vue-router'
 import { ErrorType } from '@/common/exception'
-import { type MessageStatusEnum, MsgEnum, NotificationTypeEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
+import {
+  type MessageStatusEnum,
+  MittEnum,
+  MsgEnum,
+  NotificationTypeEnum,
+  RoomTypeEnum,
+  StoresEnum,
+  TauriCommand
+} from '@/enums'
 import type { MarkItemType, MessageType, RevokedMsgType, SessionItem } from '@/services/types'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
@@ -14,6 +22,7 @@ import { getSessionDetail } from '@/utils/ImRequestUtils'
 import { isMac } from '@/utils/PlatformConstants'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
+import { useMitt } from '../hooks/useMitt'
 
 type RecalledMessage = {
   messageId: string
@@ -69,6 +78,7 @@ export const useChatStore = defineStore(
     const recalledMessages = reactive<Map<string, RecalledMessage>>(new Map())
     // 存储每条撤回消息的过期定时器
     const expirationTimers = new Map<string, boolean>()
+    const isMsgMultiChoose = ref<boolean>(false)
 
     // 当前聊天室的消息Map计算属性
     const currentMessageMap = computed({
@@ -183,17 +193,17 @@ export const useChatStore = defineStore(
     // 当前消息回复
     const currentMsgReply = ref<Partial<MessageType>>({})
 
-    // 将消息列表转换为数组
+    // 将消息列表转换为数组并计算时间间隔
     const chatMessageList = computed(() => {
-      return currentMessageMap.value
-        ? [...currentMessageMap.value.values()].sort((a, b) => Number(a.message.id) - Number(b.message.id))
-        : []
+      if (!currentMessageMap.value) return []
+
+      return [...currentMessageMap.value.values()].sort((a, b) => Number(a.message.id) - Number(b.message.id))
     })
 
     const chatMessageListByRoomId = computed(() => (roomId: string) => {
-      return messageMap.get(roomId)
-        ? [...messageMap.get(roomId)!.values()].sort((a, b) => Number(a.message.id) - Number(b.message.id))
-        : []
+      if (!messageMap.get(roomId)) return []
+
+      return [...messageMap.get(roomId)!.values()].sort((a, b) => Number(a.message.id) - Number(b.message.id))
     })
 
     // 登录之后，加载一次所有会话的消息
@@ -410,6 +420,9 @@ export const useChatStore = defineStore(
           icon: cacheUser.avatar as string
         })
       }
+
+      // 发送消息后立即触发滚动到底部
+      useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
     }
 
     // 过滤掉拉黑用户的发言
@@ -597,17 +610,20 @@ export const useChatStore = defineStore(
       status,
       newMsgId,
       body,
-      uploadProgress
+      uploadProgress,
+      timeBlock
     }: {
       msgId: string
       status: MessageStatusEnum
       newMsgId?: string
       body?: any
       uploadProgress?: number
+      timeBlock?: number
     }) => {
       const msg = currentMessageMap.value?.get(msgId)
       if (msg) {
         msg.message.status = status
+        msg.timeBlock = timeBlock
         if (newMsgId) {
           msg.message.id = newMsgId
         }
@@ -781,6 +797,8 @@ export const useChatStore = defineStore(
       return currentMessageOptions.value?.isLast
     })
 
+    useMitt.on(MittEnum.MSG_MULTI_CHOOSE, (event) => (isMsgMultiChoose.value = event))
+
     return {
       getMsgIndex,
       chatMessageList,
@@ -822,7 +840,8 @@ export const useChatStore = defineStore(
       addSession,
       setAllSessionMsgList,
       chatMessageListByRoomId,
-      shouldShowNoMoreMessage
+      shouldShowNoMoreMessage,
+      isMsgMultiChoose
     }
   },
   {

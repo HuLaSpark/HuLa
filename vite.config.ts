@@ -4,6 +4,7 @@ import terser from '@rollup/plugin-terser'
 import UnoCSS from '@unocss/vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
+import { internalIpV4 } from 'internal-ip'
 import postcsspxtorem from 'postcss-pxtorem'
 import AutoImport from 'unplugin-auto-import/vite' //自动导入
 import { NaiveUiResolver, VantResolver } from 'unplugin-vue-components/resolvers'
@@ -16,12 +17,21 @@ import { getRootPath, getSrcPath } from './build/config/getPath'
 const packageJson = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf-8'))
 const dependencies = Object.keys(packageJson.dependencies || {})
 
+// 预先获取本地IP
+const localIP = await internalIpV4()
+
 // https://vitejs.dev/config/
 /**! 不需要优化前端打包(如开启gzip) */
 export default defineConfig(({ mode }: ConfigEnv) => {
   // 获取当前环境的配置,如何设置第三个参数则加载所有变量，而不是以"VITE_"前缀的变量
   const config = loadEnv(mode, process.cwd(), '')
-  const host = config.TAURI_DEV_HOST
+  const isPC =
+    config.TAURI_ENV_PLATFORM === 'windows' ||
+    config.TAURI_ENV_PLATFORM === 'darwin' ||
+    config.TAURI_ENV_PLATFORM === 'linux'
+
+  // 根据平台类型和配置决定host
+  const host = isPC ? '127.0.0.1' : localIP || '127.0.0.1'
 
   return {
     resolve: {
@@ -123,15 +133,6 @@ export default defineConfig(({ mode }: ConfigEnv) => {
     clearScreen: false,
     // 2. tauri expects a fixed port, fail if that port is not available
     server: {
-      //配置跨域
-      // proxy: {
-      //   '/api': {
-      //     // “/api” 以及前置字符串会被替换为真正域名
-      //     target: config.VITE_SERVICE_URL, // 请求域名
-      //     changeOrigin: true, // 是否跨域
-      //     rewrite: (path) => path.replace(/^\/api/, '')
-      //   }
-      // },
       hmr: {
         protocol: 'ws',
         host: host,

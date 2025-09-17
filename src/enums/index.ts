@@ -101,7 +101,8 @@ export enum MittEnum {
   /** 视频下载状态更新 */
   VIDEO_DOWNLOAD_STATUS_UPDATED = 'videoDownloadStatusUpdated',
   /** 切换语言页面 */
-  VOICE_RECORD_TOGGLE = 'voiceRecordToggle'
+  VOICE_RECORD_TOGGLE = 'voiceRecordToggle',
+  MSG_MULTI_CHOOSE = 'msgMultiChoose'
 }
 
 /** 主题类型 */
