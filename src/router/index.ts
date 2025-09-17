@@ -194,7 +194,7 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
         component: SimpleBio
       },
       {
-        path: 'friendInfo',
+        path: 'friendInfo/:uid',
         name: 'mobileFriendInfo',
         component: FriendInfo
       }

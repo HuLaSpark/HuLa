@@ -7,29 +7,30 @@
       <div
         class="self-center h-auto transition-transform duration-300 ease-in-out origin-top"
         :style="{ transform: props.isShow ? 'scale(1) translateY(0)' : 'scale(0.62) translateY(0px)' }">
-        <n-avatar
-          :size="86"
-          :src="AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar)"
-          fallback-src="/logo.png"
-          round />
+        <n-avatar :size="86" :src="AvatarUtils.getAvatarUrl(userDetailInfo!.avatar)" fallback-src="/logo.png" round />
       </div>
 
       <!-- 基本信息栏 -->
       <div ref="infoBox" class="pl-2 flex gap-8px flex-col transition-transform duration-300 ease-in-out">
         <!-- 名字与在线状态 -->
         <div class="flex flex-warp gap-4 items-center">
-          <span class="font-bold text-20px text-#373838">{{ userStore.userInfo!.name }}</span>
+          <span class="font-bold text-20px text-#373838">{{ userDetailInfo!.name }}</span>
           <div class="bg-#E7EFE6 flex flex-wrap ps-2 px-8px items-center rounded-full gap-1 h-24px">
             <span class="w-12px h-12px rounded-15px flex items-center">
-              <img :src="currentState?.url" alt="" class="rounded-50% size-14px" />
+              <img
+                :src="friendUserState.url ? friendUserState.url : currentState?.url"
+                alt=""
+                class="rounded-50% size-14px" />
             </span>
-            <span class="text-bold-style" style="font-size: 12px; color: #373838">{{ currentState?.title }}</span>
+            <span class="text-bold-style" style="font-size: 12px; color: #373838">
+              {{ friendUserState.title ? friendUserState.title : currentState.title }}
+            </span>
           </div>
         </div>
 
         <!-- 账号 -->
         <div class="flex flex-warp gap-2 items-center">
-          <span class="text-bold-style">账号:{{ userStore.userInfo!.account }}</span>
+          <span class="text-bold-style">账号:{{ userDetailInfo!.account }}</span>
           <span @click="toMyQRCode" class="pe-15px">
             <img class="w-14px h-14px" src="@/assets/mobile/my/qr-code.webp" alt="" />
           </span>
@@ -93,6 +94,7 @@
             编辑资料
           </div>
           <div
+            @click="handleDelete"
             v-if="!props.isMyPage && props.isMyFriend"
             class="px-4 py-10px font-bold text-center bg-red text-white rounded-full text-12px">
             -&nbsp;删除好友
@@ -114,18 +116,85 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
+import { showDialog } from 'vant'
+import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import 'vant/es/dialog/style'
+import { OnlineEnum } from '~/src/enums'
+import type { UserInfoType, UserItem } from '~/src/services/types'
+import { useGroupStore } from '~/src/stores/group'
 
 const router = useRouter()
 const userStore = useUserStore()
 const userStatusStore = useUserStatusStore()
+const groupStore = useGroupStore()
+const route = useRoute()
+
+// 用户详情信息，默认字段只写必要的，不加可能会报错undefined
+const userDetailInfo = ref<UserItem | UserInfoType | undefined>({
+  activeStatus: OnlineEnum.ONLINE,
+  avatar: '',
+  lastOptTime: 0,
+  name: '',
+  uid: '',
+  account: ''
+})
+
+// 这个值只有在查看好友详细信息时才用
+const friendUserState = ref<any>({
+  title: '',
+  url: ''
+})
+
+const uid = route.params.uid
+
+const { stateList } = storeToRefs(userStatusStore)
+
+const getUserState = (stateId: string) => {
+  return stateList.value.find((state: { id: string }) => state.id === stateId)
+}
+
+onMounted(() => {
+  console.log('userStatusStore = ', userStatusStore)
+
+  // 如果地址中的uid存在，那当前就是好友的页面，就从地址栏获取uid拿到好友的详情信息，如果没有就默认显示自己的信息
+  if (uid) {
+    const foundedUser = groupStore.allUserInfo.find((i) => i.uid === uid)
+    userDetailInfo.value = foundedUser
+    if (foundedUser?.userStateId) {
+      const state = getUserState(foundedUser.userStateId)
+      friendUserState.value = state
+    }
+  } else {
+    userDetailInfo.value = userStore.userInfo
+  }
+})
 
 const currentState = computed(() => userStatusStore.currentState)
 
 const animatedBox = ref<HTMLElement | null>(null)
+
+const handleDelete = () => {
+  showDialog({
+    title: '删除好友',
+    message: '确定删除该好友吗？',
+    showCancelButton: true,
+    confirmButtonText: '确定',
+    cancelButtonText: '取消'
+  })
+    .then(async () => {
+      // const res = await getSessionDetailWithFriends({ id: uid, roomType: type })
+      // globalStore.updateCurrentSessionRoomId(res.roomId)
+      // contactStore.onDeleteContact(activeItem.value.detailId).then(() => {
+      //   modalShow.value = false
+      //   sidebarShow.value = false
+      //   window.$message.success('已删除好友')
+      // })
+    })
+    .catch(() => {})
+}
 
 const toEditProfile = () => {
   router.push('/mobile/mobileMy/editProfile')

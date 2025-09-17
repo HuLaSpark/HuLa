@@ -283,7 +283,7 @@ const handleClick = (uid: string, type: number) => {
     detailsShow: detailsShow.value
   }
   useMitt.emit(MittEnum.DETAILS_SHOW, data)
-  router.push('/mobile/mobileMy/friendInfo')
+  router.push(`/mobile/mobileMy/friendInfo/${uid}`)
 }
 // todo 需要循环数组来展示分组
 const showMenu = (event: MouseEvent) => {
