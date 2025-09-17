@@ -87,28 +87,34 @@
           </div>
         </div>
         <div class="flex-1 justify-end flex items-center gap-3">
-          <div
+          <n-button
+            :disabled="loading"
             @click="toEditProfile"
             v-if="props.isMyPage"
             class="font-bold px-4 py-10px bg-#EEF4F3 text-#373838 rounded-full text-12px">
             编辑资料
-          </div>
-          <div
+          </n-button>
+          <n-button
+            :loading="loading"
+            :disabled="loading"
             @click="handleDelete"
             v-if="!props.isMyPage && props.isMyFriend"
             class="px-4 py-10px font-bold text-center bg-red text-white rounded-full text-12px">
-            -&nbsp;删除好友
-          </div>
-          <div
+            删除
+          </n-button>
+
+          <n-button
+            :disabled="loading"
             v-if="!props.isMyPage && !props.isMyFriend"
             class="px-4 py-10px font-bold text-center bg-#13987f text-white rounded-full text-12px">
             +&nbsp;添加好友
-          </div>
-          <div
+          </n-button>
+          <n-button
+            :disabled="loading"
             v-if="!props.isMyPage"
             class="px-4 py-10px text-center font-bold bg-#EEF4F3 text-#373838 rounded-full text-12px">
             私聊
-          </div>
+          </n-button>
         </div>
       </div>
     </div>
@@ -124,6 +130,7 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import 'vant/es/dialog/style'
 import { OnlineEnum } from '~/src/enums'
 import type { UserInfoType, UserItem } from '~/src/services/types'
+import { useContactStore } from '~/src/stores/contacts'
 import { useGroupStore } from '~/src/stores/group'
 
 const router = useRouter()
@@ -131,6 +138,7 @@ const userStore = useUserStore()
 const userStatusStore = useUserStatusStore()
 const groupStore = useGroupStore()
 const route = useRoute()
+const contactStore = useContactStore()
 
 // 用户详情信息，默认字段只写必要的，不加可能会报错undefined
 const userDetailInfo = ref<UserItem | UserInfoType | undefined>({
@@ -176,24 +184,34 @@ const currentState = computed(() => userStatusStore.currentState)
 
 const animatedBox = ref<HTMLElement | null>(null)
 
+const loading = ref(false)
+
 const handleDelete = () => {
   showDialog({
     title: '删除好友',
     message: '确定删除该好友吗？',
     showCancelButton: true,
-    confirmButtonText: '确定',
-    cancelButtonText: '取消'
+    confirmButtonText: '取消',
+    cancelButtonText: '确定'
   })
-    .then(async () => {
-      // const res = await getSessionDetailWithFriends({ id: uid, roomType: type })
-      // globalStore.updateCurrentSessionRoomId(res.roomId)
-      // contactStore.onDeleteContact(activeItem.value.detailId).then(() => {
-      //   modalShow.value = false
-      //   sidebarShow.value = false
-      //   window.$message.success('已删除好友')
-      // })
+    .then(() => {})
+    .catch(async () => {
+      if (userDetailInfo.value?.uid) {
+        try {
+          loading.value = true
+          await contactStore.onDeleteContact(userDetailInfo.value.uid)
+          window.$message.success('已删除好友')
+        } catch (error) {
+          window.$message.warning('删除失败')
+          console.error('删除好友失败：', error)
+        }
+      } else {
+        window.$message.warning('没有找到好友哦')
+      }
     })
-    .catch(() => {})
+    .finally(() => {
+      loading.value = false
+    })
 }
 
 const toEditProfile = () => {
