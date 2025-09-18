@@ -1,6 +1,11 @@
 <template>
   <div class="flex flex-col h-full">
-    <SafeAreaPlaceholder type="layout" direction="top" />
+    <HeaderBar
+      :isOfficial="false"
+      :hidden-right="true"
+      :enable-default-background="false"
+      :enable-shadow="false"
+      room-name="用户资料" />
 
     <img src="@/assets/mobile/chat-home/background.webp" class="w-100% fixed top-0" alt="hula" />
 
@@ -35,7 +40,6 @@
 import CommunityContent from '#/components/community/CommunityContent.vue'
 import CommunityTab from '#/components/community/CommunityTab.vue'
 import PersonalInfo from '#/components/my/PersonalInfo.vue'
-import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.vue'
 
 const isShow = ref(true)
 const avatarBox = ref<HTMLElement | null>(null)

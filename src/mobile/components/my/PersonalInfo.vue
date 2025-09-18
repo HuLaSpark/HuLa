@@ -110,6 +110,7 @@
             +&nbsp;添加好友
           </n-button>
           <n-button
+            @click="toChatRoom"
             :disabled="loading"
             v-if="!props.isMyPage"
             class="px-4 py-10px text-center font-bold bg-#EEF4F3 text-#373838 rounded-full text-12px">
@@ -128,10 +129,14 @@ import { useUserStore } from '@/stores/user'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import 'vant/es/dialog/style'
-import { OnlineEnum } from '~/src/enums'
-import type { UserInfoType, UserItem } from '~/src/services/types'
-import { useContactStore } from '~/src/stores/contacts'
-import { useGroupStore } from '~/src/stores/group'
+import { OnlineEnum } from '@/enums'
+import { useMessage } from '@/hooks/useMessage.ts'
+import type { UserInfoType, UserItem } from '@/services/types'
+import { useChatStore } from '@/stores/chat'
+import { useContactStore } from '@/stores/contacts'
+import { useGlobalStore } from '@/stores/global'
+import { useGroupStore } from '@/stores/group'
+import { getSessionDetailWithFriends } from '@/utils/ImRequestUtils'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -139,6 +144,41 @@ const userStatusStore = useUserStatusStore()
 const groupStore = useGroupStore()
 const route = useRoute()
 const contactStore = useContactStore()
+const globalStore = useGlobalStore()
+const chatStore = useChatStore()
+
+const { preloadChatRoom } = useMessage()
+
+const uid = route.params.uid as string
+
+const toChatRoom = async () => {
+  try {
+    const res = await getSessionDetailWithFriends({ id: uid, roomType: 2 })
+    globalStore.updateCurrentSessionRoomId(res.roomId)
+    // 先检查会话是否已存在
+    const existingSession = chatStore.getSession(res.roomId)
+    if (!existingSession) {
+      // 只有当会话不存在时才更新会话列表顺序
+      chatStore.updateSessionLastActiveTime(res.roomId)
+      // 如果会话不存在，需要重新获取会话列表，但保持当前选中的会话
+      await chatStore.getSessionList(true)
+    }
+    await preloadChatRoom(res.roomId)
+    router.push(`/mobile/chatRoom/chatMain`)
+  } catch (error) {
+    console.error('私聊尝试进入聊天室失败:', error)
+    window.$message.error('显示会话失败')
+  }
+}
+
+// const toChatRoom = async () => {
+//   try {
+//     // await preloadChatRoom(uid)
+//     // router.push(`/mobile/chatRoom/chatMain`)
+//   } catch (error) {
+//     console.error('尝试进入私聊错误：', error)
+//   }
+// }
 
 // 用户详情信息，默认字段只写必要的，不加可能会报错undefined
 const userDetailInfo = ref<UserItem | UserInfoType | undefined>({
@@ -155,8 +195,6 @@ const friendUserState = ref<any>({
   title: '',
   url: ''
 })
-
-const uid = route.params.uid
 
 const { stateList } = storeToRefs(userStatusStore)
 
