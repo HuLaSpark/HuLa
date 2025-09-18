@@ -32,6 +32,10 @@ async function main() {
   /** @type {CheckItem[]} */
   const checks = [
     {
+      script: join(__dirname, 'check-local.js'),
+      description: '配置文件检查'
+    },
+    {
       script: join(__dirname, 'check-dependencies.js'),
       description: '环境检查'
     }

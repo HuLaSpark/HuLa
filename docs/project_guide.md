@@ -465,106 +465,26 @@ HuLa/
 
 ## 🔧 服务地址配置
 
-### 修改服务地址的文件列表
+### 简化配置说明
 
-当您需要修改 HuLa 项目连接的后端服务地址时，需要修改以下文件：
+HuLa 项目现在使用统一配置方案，您只需要修改一个文件即可完成服务地址配置：
 
-| 文件路径 | 作用 | 修改内容 |
-|---------|------|----------|
-| **`.env.development`** | 开发环境配置 | `VITE_SERVICE_URL` 和 `VITE_WEBSOCKET_URL` |
-| **`.env.production`** | 生产环境配置 | `VITE_SERVICE_URL` 和 `VITE_WEBSOCKET_URL` |
-| **`.env.development.local`** | 本地开发环境配置 | 覆盖开发环境的配置 |
+**配置文件：** `src-tauri/configuration/local.yaml`
 
-### 具体配置说明
+### 配置步骤
 
-#### 1. 前端环境配置
+#### 1. 创建本地配置文件
 
-**开发环境配置 (`.env.development`)**
+首次启动项目时，运行以下脚本自动创建 `local.yaml` 配置文件：
 
 ```bash
-# 后端 API 服务地址
-VITE_SERVICE_URL="https://your-api-server.com/api"
-
-# WebSocket 服务地址
-VITE_WEBSOCKET_URL="wss://your-api-server.com/api/ws/ws"
-
-# 项目标题
-VITE_APP_TITLE="HuLa—IM"
-
-# 项目名称
-VITE_APP_NAME="HuLa"
-
-# Gitee Token (用于更新检查)
-VITE_GITEE_TOKEN="your_gitee_token_here"
-
-# TURN 信令服务器配置 (可选，用于 WebRTC 通话)
-VITE_TURN_SERVER_URL="turn:your-turn-server.com:3478"
-VITE_TURN_SERVER_USER="username"
-VITE_TURN_SERVER_PWD="password"
-
-# 是否使用 Rust WebSocket 实现
-VITE_USE_RUST_WEBSOCKET=true
+# 运行pnpm i 会自动创建 local.yaml 文件（使用 production.yaml 作为模板）
+pnpm i
 ```
 
-**生产环境配置 (`.env.production`)**
+#### 2. 修改服务地址
 
-```bash
-# 后端 API 服务地址 (生产环境)
-VITE_SERVICE_URL="https://hulaspark.com/api"
-
-# WebSocket 服务地址 (生产环境)
-VITE_WEBSOCKET_URL="wss://hulaspark.com/api/ws/ws"
-
-# 其他配置同开发环境
-```
-
-**本地开发配置 (`.env.development.local` - 可选)**
-
-如果您有本地后端服务，可以创建此文件来覆盖开发环境配置：
-
-```bash
-# 本地后端服务地址
-VITE_SERVICE_URL="http://localhost:8080/api"
-VITE_WEBSOCKET_URL="ws://localhost:8080/ws/ws"
-
-# 或者局域网地址
-# VITE_SERVICE_URL="http://192.168.1.100:8080/api"
-# VITE_WEBSOCKET_URL="ws://192.168.1.100:8080/ws/ws"
-```
-
-### 配置优先级
-
-环境变量文件的加载优先级（从高到低）：
-
-1. `.env.development.local` (开发环境，最高优先级)
-2. `.env.development` (开发环境默认)
-3. `.env.production` (生产环境)
-4. `.env` (全局默认)
-
-### 注意事项
-
-- ⚠️ **不要将** `.env.development.local` **提交到 Git**，该文件用于本地开发配置
-- 🔄 修改环境变量后需要**重启开发服务器**才能生效
-- 🌐 WebSocket 地址协议：开发环境通常用 `ws://`，生产环境用 `wss://`
-- 🔒 生产环境建议使用 HTTPS/WSS 协议确保安全性
-- ❗ **重要：`base_url` 和 `VITE_SERVICE_URL` 必须保持一致**，否则前后端请求会失败
-
-#### 2. Tauri 后端配置
-
-Tauri 后端有独立的配置系统，用于管理数据库连接和后端服务地址：
-
-**环境控制文件 (`src-tauri/.env`)**
-
-```bash
-# Rust 调试信息级别
-RUST_BACKTRACE=1
-
-# 应用运行环境 (local/production)
-# APP_ENVIRONMENT=local
-APP_ENVIRONMENT=production
-```
-
-**基础配置 (`src-tauri/configuration/base.yaml`)**
+编辑 `src-tauri/configuration/local.yaml` 文件，修改以下配置：
 
 ```yaml
 # 数据库配置
@@ -573,96 +493,49 @@ database:
 
 # 后端服务配置
 backend:
-  base_url: https://hulaspark.com/api
+  base_url: http://localhost:8080/api      # 修改为您的后端 API 地址
+  ws_url: ws://localhost:8080/api/ws/ws    # 修改为您的 WebSocket 地址
+
+# 翻译服务配置（可选）
+youdao:
+  app_key: ''
+  app_secret: ''
+tencent:
+  api_key: ''
+  secret_id: ''
 ```
 
-**本地环境配置 (`src-tauri/configuration/local.yaml`)**
+#### 3. 配置示例
 
+**本地开发环境：**
 ```yaml
-# 本地开发环境配置
-database:
-  sqlite_file: db.sqlite
-
 backend:
   base_url: http://localhost:8080/api
+  ws_url: ws://localhost:8080/api/ws/ws
 ```
 
-**生产环境配置 (`src-tauri/configuration/production.yaml`)**
-
+**局域网环境：**
 ```yaml
-# 生产环境配置
-database:
-  sqlite_file: db.sqlite
-
 backend:
-  base_url: https://hulaspark.com/api
-```
 
-#### 3. 配置文件详细说明
 
-| 配置文件 | 作用范围 | 主要配置项 | 优先级 |
-|---------|---------|-----------|--------|
-| **前端配置** |
-| `.env.development` | Vue 前端开发环境 | `VITE_SERVICE_URL`、`VITE_WEBSOCKET_URL` | 中 |
-| `.env.production` | Vue 前端生产环境 | 同上 | 中 |
-| `.env.development.local` | Vue 前端本地开发 | 同上，覆盖开发环境配置 | **高** |
-| **后端配置** |
-| `src-tauri/.env` | Tauri 后端环境控制 | `APP_ENVIRONMENT` | **最高** |
-| `src-tauri/configuration/base.yaml` | Tauri 后端基础配置 | `database`、`backend.base_url` | 低 |
-| `src-tauri/configuration/local.yaml` | Tauri 后端本地环境 | 同上，用于本地开发 | 中 |
-| `src-tauri/configuration/production.yaml` | Tauri 后端生产环境 | 同上，用于生产部署 | 中 |
+### 注意事项
 
-#### 4. 配置加载机制
-
-**前端配置加载顺序：**
-1. `.env.development.local` (最高优先级，不提交到 Git)
-2. `.env.development` 或 `.env.production` (根据构建模式)
-3. `.env` (全局默认，如果存在)
-
-**后端配置加载顺序：**
-1. `src-tauri/.env` 中的 `APP_ENVIRONMENT` 决定环境
-2. 加载 `base.yaml` 作为基础配置
-3. 根据环境加载对应的 `local.yaml` 或 `production.yaml`
-4. 环境变量 `APP_*` 可以覆盖 YAML 配置
-
-#### 5. 环境切换方法
-
-**切换到本地开发环境：**
-```bash
-# 修改 src-tauri/.env
-APP_ENVIRONMENT=local
-
-# 修改 .env.development.local (可选)
-VITE_SERVICE_URL="http://localhost:8080/api"
-VITE_WEBSOCKET_URL="ws://localhost:8080/ws/ws"
-```
-
-**切换到生产环境：**
-```bash
-# 修改 src-tauri/.env
-APP_ENVIRONMENT=production
-
-# 删除或注释 .env.development.local 中的本地配置
-```
+- ✅ **自动同步**：前后端会自动使用 `local.yaml` 中的配置，无需手动同步
+- 🔄 **重启生效**：修改配置后需要重启开发服务器 (`pnpm run td`)
+- 🌐 **协议选择**：
+  - 本地/HTTP：使用 `http://` 和 `ws://`
+  - 生产/HTTPS：使用 `https://` 和 `wss://`
+- 📁 **文件管理**：`local.yaml` 文件不会提交到 Git，仅用于本地开发
 
 ### 验证配置
 
-修改配置后，可以通过以下方式验证：
+修改配置后，重启开发服务器验证：
 
 ```bash
 # 重启开发服务器
 pnpm run td
 
-# 在浏览器控制台检查前端环境变量
-console.log('Frontend API URL:', import.meta.env.VITE_SERVICE_URL)
-console.log('Frontend WebSocket URL:', import.meta.env.VITE_WEBSOCKET_URL)
-
-# 查看 Tauri 后端配置日志
-# 启动应用后在终端查看日志输出：
-# APP_ENVIRONMENT: production
-# Database path: /path/to/db.sqlite
-# Backend URL: https://hulaspark.com/api
-```
 
 ---
 
