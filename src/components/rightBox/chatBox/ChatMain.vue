@@ -364,6 +364,7 @@ const handleScrollByIntent = (intent: ScrollIntentEnum): void => {
 
 // 滚动到底部
 const scrollToBottom = (): void => {
+  // console.log('触发滚动到底部')
   const container = scrollContainerRef.value
   if (!container) return
   // 立即清除新消息计数
@@ -593,7 +594,7 @@ useMitt.on(`${MittEnum.INFO_POPOVER}-Main`, (event: any) => {
 // 监听滚动到底部的事件
 useMitt.on(MittEnum.CHAT_SCROLL_BOTTOM, async () => {
   // 只有消息数量超过60条才进行重置和刷新
-  if (chatStore.chatMessageList.length > 60) {
+  if (chatStore.chatMessageList.length > 20) {
     await chatStore.resetAndRefreshCurrentRoomMessages()
   }
   scrollToBottom()

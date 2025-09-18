@@ -1,10 +1,5 @@
 import { useEventListener, useNetwork, useTimeoutFn } from '@vueuse/core'
-import { RoomTypeEnum } from '@/enums'
 import webSocket from '@/services/webSocketAdapter'
-import { useChatStore } from '@/stores/chat'
-import { useContactStore } from '@/stores/contacts'
-import { useGlobalStore } from '@/stores/global'
-import { useGroupStore } from '@/stores/group'
 import { isMobile } from '@/utils/PlatformConstants'
 
 /**
@@ -52,7 +47,7 @@ export const useNetworkReconnect = () => {
       }
 
       // 执行数据刷新
-      refreshAllData()
+      // refreshAllData()
     }
 
     // 网络变为离线时记录时间
@@ -89,7 +84,7 @@ export const useNetworkReconnect = () => {
         // 如果离线超过30秒，则刷新数据
         if (lastOfflineTimestamp > 0 && currentTime - lastOfflineTimestamp > 30000) {
           console.log('[Network] 移动端应用从后台恢复，刷新数据')
-          refreshAllData()
+          // refreshAllData()
           lastOfflineTimestamp = 0
         }
       }
@@ -143,45 +138,45 @@ export const useNetworkReconnect = () => {
       webSocket.forceReconnect()
 
       // 刷新数据
-      refreshAllData()
+      // refreshAllData()
     }
   }
 
   /**
    * 刷新所有重要数据
    */
-  const refreshAllData = async () => {
-    const chatStore = useChatStore()
-    const globalStore = useGlobalStore()
-    const groupStore = useGroupStore()
-    const contactStore = useContactStore()
+  // const refreshAllData = async () => {
+  //   const chatStore = useChatStore()
+  //   const globalStore = useGlobalStore()
+  //   const groupStore = useGroupStore()
+  //   const contactStore = useContactStore()
 
-    // 刷新会话列表
-    await chatStore.getSessionList(true)
-    // 如果当前有选中的聊天室，重置并刷新消息列表
-    if (globalStore.currentSession?.roomId) {
-      // 获取最新消息
-      await chatStore.resetAndRefreshCurrentRoomMessages()
-    }
-    // 如果当前是群聊，刷新群组信息
-    if (globalStore.currentSession?.type === RoomTypeEnum.GROUP) {
-      await groupStore.getGroupUserList(globalStore.currentSession.roomId)
-    }
-    // 刷新联系人列表
-    await contactStore.getContactList(true)
-    // 更新未读消息计数
-    await globalStore.updateGlobalUnreadCount()
-    // 刷新在线用户列表
-    await groupStore.refreshGroupMembers()
+  //   // 刷新会话列表
+  //   await chatStore.getSessionList(true)
+  //   // 如果当前有选中的聊天室，重置并刷新消息列表
+  //   // if (globalStore.currentSession?.roomId) {
+  //   //   // 获取最新消息
+  //   //   await chatStore.resetAndRefreshCurrentRoomMessages()
+  //   // }
+  //   // 如果当前是群聊，刷新群组信息
+  //   if (globalStore.currentSession?.type === RoomTypeEnum.GROUP) {
+  //     await groupStore.getGroupUserList(globalStore.currentSession.roomId)
+  //   }
+  //   // 刷新联系人列表
+  //   await contactStore.getContactList(true)
+  //   // 更新未读消息计数
+  //   await globalStore.updateGlobalUnreadCount()
+  //   // 刷新在线用户列表
+  //   await groupStore.refreshGroupMembers()
 
-    console.log('[Network] 数据刷新完成')
-  }
+  //   console.log('[Network] 数据刷新完成')
+  // }
 
   return {
     isOnline,
     offlineAt,
     onlineAt,
-    refreshAllData,
+    // refreshAllData,
     checkConnectionHealth
   }
 }

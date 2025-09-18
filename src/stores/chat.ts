@@ -4,15 +4,7 @@ import { sendNotification } from '@tauri-apps/plugin-notification'
 import { defineStore } from 'pinia'
 import { useRoute } from 'vue-router'
 import { ErrorType } from '@/common/exception'
-import {
-  type MessageStatusEnum,
-  MittEnum,
-  MsgEnum,
-  NotificationTypeEnum,
-  RoomTypeEnum,
-  StoresEnum,
-  TauriCommand
-} from '@/enums'
+import { type MessageStatusEnum, MsgEnum, NotificationTypeEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
 import type { MarkItemType, MessageType, RevokedMsgType, SessionItem } from '@/services/types'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
@@ -22,7 +14,6 @@ import { getSessionDetail } from '@/utils/ImRequestUtils'
 import { isMac } from '@/utils/PlatformConstants'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
-import { useMitt } from '../hooks/useMitt'
 
 type RecalledMessage = {
   messageId: string
@@ -39,10 +30,10 @@ let isFirstInit = false
 // 撤回消息的过期时间
 const RECALL_EXPIRATION_TIME = 2 * 60 * 1000 // 2分钟，单位毫秒
 
-// 定义消息数量阈值
-const MESSAGE_THRESHOLD = 120
-// 定义保留的最新消息数量
-const KEEP_MESSAGE_COUNT = 60
+// // 定义消息数量阈值
+// const MESSAGE_THRESHOLD = 120
+// // 定义保留的最新消息数量
+// const KEEP_MESSAGE_COUNT = 60
 
 // 创建src/workers/timer.worker.ts
 const timerWorker = new Worker(new URL('../workers/timer.worker.ts', import.meta.url))
@@ -81,17 +72,8 @@ export const useChatStore = defineStore(
     const isMsgMultiChoose = ref<boolean>(false)
 
     // 当前聊天室的消息Map计算属性
-    const currentMessageMap = computed({
-      get: () => {
-        const current = messageMap.get(globalStore.currentSession!.roomId)
-        if (current === undefined) {
-          messageMap.set(globalStore.currentSession!.roomId, new Map())
-        }
-        return messageMap.get(globalStore.currentSession!.roomId)
-      },
-      set: (val) => {
-        messageMap.set(globalStore.currentSession!.roomId, val as Map<string, MessageType>)
-      }
+    const currentMessageMap = computed(() => {
+      return messageMap.get(globalStore.currentSession!.roomId)
     })
 
     // 当前聊天室的消息加载状态计算属性
@@ -225,6 +207,7 @@ export const useChatStore = defineStore(
     }
 
     const getPageMsg = async (pageSize: number, roomId: string, cursor: string = '') => {
+      console.log('获取消息分页：', pageSize)
       // 查询本地存储，获取消息数据
       const data: any = await invokeWithErrorHandler(
         TauriCommand.PAGE_MSG,
@@ -255,6 +238,7 @@ export const useChatStore = defineStore(
       for (const msg of data.list) {
         map.set(msg.message.id, msg)
       }
+      console.log(222222222222222)
       // 设置消息
       messageMap.set(roomId, map)
     }
@@ -364,17 +348,8 @@ export const useChatStore = defineStore(
     // 推送消息
     const pushMsg = async (msg: MessageType) => {
       const current = messageMap.get(msg.message.roomId)
+      console.log(333333333333)
       current?.set(msg.message.id, msg)
-
-      // 检查消息数量是否超过阈值
-      if (current && current.size > MESSAGE_THRESHOLD) {
-        // 获取所有消息ID并按时间排序
-        const messageIds = Array.from(current.keys())
-        const messagesToDelete = messageIds.slice(0, messageIds.length - KEEP_MESSAGE_COUNT)
-
-        // 删除旧消息
-        messagesToDelete.forEach((id) => current.delete(id))
-      }
 
       // 获取用户信息缓存
       const uid = msg.fromUser.uid
@@ -422,7 +397,7 @@ export const useChatStore = defineStore(
       }
 
       // 发送消息后立即触发滚动到底部
-      useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
+      console.log('aaaaa')
     }
 
     const clearSessionCheck = () => {
@@ -590,14 +565,6 @@ export const useChatStore = defineStore(
       }
     }
 
-    // 添加一个工具函数来触发消息列表更新
-    const triggerMessageMapUpdate = () => {
-      if (currentMessageMap.value) {
-        const newMap = new Map(currentMessageMap.value)
-        currentMessageMap.value = newMap
-      }
-    }
-
     // 获取撤回消息
     const getRecalledMessage = (msgId: string): RecalledMessage | undefined => {
       return recalledMessages.get(msgId)
@@ -640,6 +607,7 @@ export const useChatStore = defineStore(
           const updatedMsg = { ...msg, uploadProgress }
           currentMessageMap.value?.set(msg.message.id, updatedMsg)
           // 强制触发响应式更新
+          console.log('111111111111111', currentMessageMap.value)
           messageMap.set(globalStore.currentSession!.roomId, new Map(currentMessageMap.value))
         } else {
           currentMessageMap.value?.set(msg.message.id, msg)
@@ -691,7 +659,6 @@ export const useChatStore = defineStore(
         console.log(`[Timeout] 消息ID: ${msgId} 已过期`)
         recalledMessages.delete(msgId)
         expirationTimers.delete(msgId)
-        triggerMessageMapUpdate()
       } else if (type === 'allTimersCompleted') {
         // 所有定时器都完成了，可以安全地清理资源
         clearAllExpirationTimers()

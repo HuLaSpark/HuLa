@@ -473,6 +473,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
           body: message.message.body,
           timeBlock: message.timeBlock
         })
+        useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
       }
 
       // 监听错误响应
@@ -482,6 +483,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
           msgId: msgId,
           status: MessageStatusEnum.FAILED
         })
+        useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
       }
 
       await invoke(TauriCommand.SEND_MSG, {
@@ -954,6 +956,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
               body: message.message.body,
               timeBlock: message.timeBlock
             })
+            useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
           }
 
           // 监听错误响应
@@ -963,6 +966,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
               msgId: msgId,
               status: MessageStatusEnum.FAILED
             })
+            useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
           }
 
           await invoke(TauriCommand.SEND_MSG, {
@@ -1039,6 +1043,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
               body: message.message.body,
               timeBlock: message.timeBlock
             })
+            useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
           }
 
           // 监听错误响应
@@ -1048,6 +1053,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
               msgId: msgId,
               status: MessageStatusEnum.FAILED
             })
+            useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
           }
 
           await invoke(TauriCommand.SEND_MSG, {
@@ -1151,6 +1157,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
               body: message.message.body,
               timeBlock: message.timeBlock
             })
+            useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
           }
 
           // 监听错误响应
@@ -1160,6 +1167,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
               msgId: msgId,
               status: MessageStatusEnum.FAILED
             })
+            useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
           }
 
           await invoke(TauriCommand.SEND_MSG, {
@@ -1310,6 +1318,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
               body: message.message.body,
               timeBlock: message.timeBlock
             })
+            useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
           }
 
           // 监听错误响应
@@ -1319,6 +1328,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
               msgId: msgId,
               status: MessageStatusEnum.FAILED
             })
+            useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
           }
 
           await invoke(TauriCommand.SEND_MSG, {
