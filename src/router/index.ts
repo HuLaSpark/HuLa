@@ -21,13 +21,15 @@ import NoticeEdit from '#/views/chat-room/notice/NoticeEdit.vue'
 import NoticeList from '#/views/chat-room/notice/NoticeList.vue'
 import MobileCommunity from '#/views/community/index.vue'
 import AddFriends from '#/views/friends/AddFriends.vue'
+import ConfirmAddFriend from '#/views/friends/ConfirmAddFriend.vue'
+import ConfirmAddGroup from '#/views/friends/ConfirmAddGroup.vue'
+import FriendInfo from '#/views/friends/FriendInfo.vue'
 import MobileFriendPage from '#/views/friends/index.vue'
 import StartGroupChat from '#/views/friends/StartGroupChat.vue'
 import MobileMessagePage from '#/views/message/index.vue'
 import EditBio from '#/views/my/EditBio.vue'
 import EditBirthday from '#/views/my/EditBirthday.vue'
 import EditProfile from '#/views/my/EditProfile.vue'
-import FriendInfo from '#/views/my/FriendInfo.vue'
 import MobileMy from '#/views/my/index.vue'
 import MobileQRCode from '#/views/my/MobileQRCode.vue'
 import MobileSettings from '#/views/my/MobileSettings.vue'
@@ -37,8 +39,6 @@ import PublishCommunity from '#/views/my/PublishCommunity.vue'
 import Share from '#/views/my/Share.vue'
 import SimpleBio from '#/views/my/SimpleBio.vue'
 import { TauriCommand } from '@/enums'
-import ConfirmAddFriend from '../mobile/views/friends/ConfirmAddFriend.vue'
-import ConfirmAddGroup from '../mobile/views/friends/ConfirmAddGroup.vue'
 
 /**! 创建窗口后再跳转页面就会导致样式没有生效所以不能使用懒加载路由的方式，有些页面需要快速响应的就不需要懒加载 */
 const { BASE_URL } = import.meta.env
@@ -192,11 +192,6 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
         path: 'SimpleBio',
         name: 'mobileSimpleBio',
         component: SimpleBio
-      },
-      {
-        path: 'friendInfo',
-        name: 'mobileFriendInfo',
-        component: FriendInfo
       }
     ]
   },
@@ -229,6 +224,11 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
         path: 'confirmAddGroup',
         name: 'mobileConfirmAddGroup',
         component: ConfirmAddGroup
+      },
+      {
+        path: 'friendInfo/:uid',
+        name: 'mobileFriendInfo',
+        component: FriendInfo
       }
     ]
   }

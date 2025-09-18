@@ -9,26 +9,30 @@
         {{ item }}
       </span>
       <template v-else-if="item.startsWith('http')">
-        <n-tooltip trigger="hover">
-          <template #trigger>
-            <svg class="size-12px cursor-pointer pr-4px" @click="handleCopy(item)">
-              <use href="#copy"></use>
-            </svg>
-          </template>
-          <span>复制网址</span>
-        </n-tooltip>
-        <n-highlight
-          v-if="props.searchKeyword"
-          :text="item"
-          :patterns="[props.searchKeyword]"
-          :highlight-style="{
-            userSelect: 'text',
-            padding: '2px 4px',
-            borderRadius: '6px',
-            color: '#000',
-            background: '#13987f'
-          }" />
-        <p v-else>{{ item }}</p>
+        <n-flex align="center" :wrap="false">
+          <n-tooltip trigger="hover" style="flex-shrink: 0">
+            <template #trigger>
+              <svg class="size-12px cursor-pointer pr-4px" @click="handleCopy(item)">
+                <use href="#copy"></use>
+              </svg>
+            </template>
+            <span>复制网址</span>
+          </n-tooltip>
+          <div style="flex: 1; word-wrap: break-word; overflow-wrap: anywhere">
+            <n-highlight
+              v-if="props.searchKeyword"
+              :text="item"
+              :patterns="[props.searchKeyword]"
+              :highlight-style="{
+                userSelect: 'text',
+                padding: '2px 4px',
+                borderRadius: '6px',
+                color: '#000',
+                background: '#13987f'
+              }" />
+            <p v-else style="margin: 0">{{ item }}</p>
+          </div>
+        </n-flex>
       </template>
       <n-highlight
         v-else-if="props.searchKeyword"

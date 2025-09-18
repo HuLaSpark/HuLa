@@ -168,6 +168,7 @@ import NavBar from '#/layout/navBar/index.vue'
 import addFriendIcon from '@/assets/mobile/chat-home/add-friend.webp'
 import groupChatIcon from '@/assets/mobile/chat-home/group-chat.webp'
 import { MittEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
+import { useMessage } from '@/hooks/useMessage.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import router from '@/router'
 import { useContactStore } from '@/stores/contacts.ts'
@@ -175,6 +176,14 @@ import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+
+onMounted(async () => {
+  try {
+    await contactStore.getApplyPage(false)
+  } catch (error) {
+    console.log('请求好友申请列表失败')
+  }
+})
 
 /**
  * 渲染图片图标的函数工厂
@@ -267,23 +276,35 @@ watchEffect(() => {
   })
 })
 
+const { preloadChatRoom } = useMessage()
+
 /**
  *
  * @param uid 群聊id或好友uid
  * @param type 1 群聊 2 单聊
  */
-const handleClick = (uid: string, type: number) => {
+const handleClick = async (id: string, type: number) => {
   detailsShow.value = true
-  activeItem.value = uid
+  activeItem.value = id
   const data = {
     context: {
       type: type,
-      uid: uid
+      uid: id
     },
     detailsShow: detailsShow.value
   }
   useMitt.emit(MittEnum.DETAILS_SHOW, data)
-  router.push('/mobile/mobileMy/friendInfo')
+
+  if (type === 1) {
+    try {
+      await preloadChatRoom(id)
+      router.push(`/mobile/chatRoom/chatMain`)
+    } catch (error) {
+      console.error(error)
+    }
+  } else {
+    router.push(`/mobile/mobileFriends/friendInfo/${id}`)
+  }
 }
 // todo 需要循环数组来展示分组
 const showMenu = (event: MouseEvent) => {
