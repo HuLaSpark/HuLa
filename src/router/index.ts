@@ -372,7 +372,7 @@ const getDesktopRoutes = (): Array<RouteRecordRaw> => [
     name: 'rtcCall',
     component: () => import('@/views/callWindow/index.vue')
   },
-  // 添加合并消息窗口路由
+  // 添加聊天记录窗口路由
   {
     path: '/multiMsg',
     name: 'multiMsg',

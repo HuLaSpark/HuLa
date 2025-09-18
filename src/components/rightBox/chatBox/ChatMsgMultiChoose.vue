@@ -30,12 +30,11 @@
       <div class="pt-20px flex flex-col select-none">
         <div class="flex flex-row">
           <!-- 搜索会话 -->
-          <div class="flex-1 h-64vh bg-#f3f3f3 dark:bg-#222 rounded-8px px-12px pt-12px flex flex-col">
+          <div class="flex-1 h-64vh bg-#e3e3e360 dark:bg-#222 rounded-8px px-12px pt-12px flex flex-col">
             <n-input
               id="search"
               v-model:value="searchText"
-              class="rounded-6px w-full relative text-12px"
-              style="background: var(--search-bg-color)"
+              class="rounded-6px border-(solid 1px [--line-color]) w-full relative text-12px"
               :maxlength="20"
               clearable
               size="small">
@@ -82,11 +81,11 @@
 
             <span class="w-full h-1px bg-[--line-color] my-8px"></span>
 
-            <div class="flex-1 flex flex-col">
+            <div class="flex-1 flex-col-center">
               <ChatMultiMsg :content-list="msgContents" :msg-ids="msgIds" />
-              <n-input class="my-12px" placeholder="给朋友留言" />
-              <div class="flex justify-between">
-                <n-button quaternary class="w-100px h-30px" @click="showModal = false">取消</n-button>
+              <n-input class="my-12px border-(solid 1px [--line-color])" placeholder="给朋友留言" />
+              <div class="w-full flex justify-between">
+                <n-button secondary class="w-100px h-30px" @click="showModal = false">取消</n-button>
                 <n-button secondary type="primary" class="w-100px h-30px" @click="sendMsg">发送</n-button>
               </div>
             </div>
@@ -187,7 +186,7 @@ const handleRemoveSession = (roomId: string) => {
 }
 
 const sendMsg = async () => {
-  console.log('发送合并消息：', mergeMessageType)
+  console.log('发送聊天记录：', mergeMessageType)
   const selectedRoomIds = selectedSessions.value.map((item) => item.roomId)
   const selectedMsgIds = selectedMsgs.value.map((item) => item.message.id)
 

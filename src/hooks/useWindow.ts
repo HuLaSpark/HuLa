@@ -6,41 +6,9 @@ import { info } from '@tauri-apps/plugin-log'
 import { EventEnum } from '@/enums'
 import { isCompatibility, isWindows } from '@/utils/PlatformConstants'
 
-type WebviewWindowOpt = {
-  title: string
-  label: string
-  width: number
-  height: number
-  wantCloseWindow?: string
-  resizable: boolean
-  minW: number
-  minH: number
-  transparent?: boolean
-  visible: boolean
-  queryParams?: Record<string, string | number | boolean>
-}
-
 /** 判断是兼容的系统 */
 const isCompatibilityMode = computed(() => isCompatibility())
 export const useWindow = () => {
-  const createWindow = async (opt: WebviewWindowOpt) => {
-    const { title, label, width, height, wantCloseWindow, resizable, minW, minH, transparent, visible, queryParams } =
-      opt
-    await createWebviewWindow(
-      title,
-      label,
-      width,
-      height,
-      wantCloseWindow,
-      resizable,
-      minW,
-      minH,
-      transparent,
-      visible,
-      queryParams
-    )
-  }
-
   /**
    * 创建窗口
    * @param title 窗口标题
@@ -68,6 +36,9 @@ export const useWindow = () => {
     visible = false,
     queryParams?: Record<string, string | number | boolean>
   ) => {
+    const originalLabel = label
+    const isMultiMsgWindow = originalLabel.includes(EventEnum.MULTI_MSG)
+
     const checkLabel = () => {
       /** 如果是打开独立窗口就截取label中的固定label名称 */
       if (label.includes(EventEnum.ALONE)) {
@@ -76,9 +47,13 @@ export const useWindow = () => {
         return label
       }
     }
-    label = checkLabel()
+
+    // 对于multiMsg类型的窗口，保留原始label用于窗口标识，但URL路由统一指向 /multiMsg
+    label = isMultiMsgWindow ? originalLabel : checkLabel()
+
     // 构建URL，包含查询参数
-    let url = `/${label.split('--')[0]}`
+    let url = isMultiMsgWindow ? `/${EventEnum.MULTI_MSG}` : `/${label.split('--')[0]}`
+
     if (queryParams && Object.keys(queryParams).length > 0) {
       const searchParams = new URLSearchParams()
       Object.entries(queryParams).forEach(([key, value]) => {
@@ -305,7 +280,6 @@ export const useWindow = () => {
     checkWinExist,
     setResizable,
     sendWindowPayload,
-    getWindowPayload,
-    createWindow
+    getWindowPayload
   }
 }

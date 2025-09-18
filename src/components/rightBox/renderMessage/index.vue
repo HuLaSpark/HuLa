@@ -182,8 +182,7 @@
             <Transition name="fade-translate" appear mode="out-in">
               <div
                 v-if="message.message.body.translatedText"
-                class="translated-text select-none cursor-default flex flex-col"
-                :class="[isMe ? 'item-end' : 'item-start']">
+                class="translated-text select-none cursor-default flex flex-col">
                 <n-flex align="center" justify="space-between" class="mb-6px">
                   <n-flex align="center" :size="4">
                     <span class="text-(12px #909090)">{{ message.message.body.translatedText.provider }}</span>
@@ -355,7 +354,8 @@ const isSpecialMsgType = (type: number): boolean => {
     type === MsgEnum.EMOJI ||
     type === MsgEnum.NOTICE ||
     type === MsgEnum.VIDEO ||
-    type === MsgEnum.FILE
+    type === MsgEnum.FILE ||
+    type === MsgEnum.MERGE
   )
 }
 

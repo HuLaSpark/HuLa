@@ -1,28 +1,23 @@
 <template>
-  <ChatMultiMsg :content-list="body.content" :msg-ids="msgIds" />
+  <ChatMultiMsg :content-list="body.content" :msg-ids="msgIds" :msg-id="message.id" />
 </template>
 
 <script setup lang="ts">
-import type { MergeBody } from '@/services/types'
+import type { MergeBody, MsgType } from '@/services/types'
 import type { MsgId } from '@/typings/global'
 
-const props = defineProps<{
+const { body, message } = defineProps<{
   body: MergeBody
+  message: MsgType
 }>()
 
-const { body } = toRefs(props)
-
 const msgIds = computed((): MsgId[] => {
-  return body.value.body.map((item) => {
+  return body.body.map((item) => {
     return {
       msgId: item.messageId,
       fromUid: item.uid
     }
   })
-})
-
-onMounted(() => {
-  // console.log(props.body.body)
 })
 </script>
 

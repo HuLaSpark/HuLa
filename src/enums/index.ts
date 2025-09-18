@@ -51,7 +51,9 @@ export enum EventEnum {
   /** 共享屏幕 */
   SHARE_SCREEN = 'shareScreen',
   /** 锁屏 */
-  LOCK_SCREEN = 'lockScreen'
+  LOCK_SCREEN = 'lockScreen',
+  /** 多窗口 */
+  MULTI_MSG = 'multiMsg'
 }
 
 /** Mitt兄弟组件通信 */
@@ -189,7 +191,7 @@ export enum MsgEnum {
   EMOJI,
   /** 系统消息 8*/
   SYSTEM,
-  /** 合并消息 9*/
+  /** 聊天记录 9*/
   MERGE,
   /** 公告 10*/
   NOTICE,

@@ -58,8 +58,8 @@ export const getReplyContent = (message: MsgType): string => {
     }
 
     case MsgEnum.MERGE: {
-      // 合并消息
-      content = '[合并消息]'
+      // 聊天记录
+      content = '[聊天记录]'
       break
     }
 
