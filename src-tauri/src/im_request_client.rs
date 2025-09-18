@@ -106,7 +106,11 @@ impl ImRequestClient {
                     return Err(anyhow::anyhow!("请重新登录"));
                 }
                 Some(200) => {
-                    info!("✅ Request successful: {}, Method: {}", &url, method.clone());
+                    info!(
+                        "✅ Request successful: {}, Method: {}",
+                        &url,
+                        method.clone()
+                    );
                     return Ok(result);
                 }
                 _ => {
@@ -289,6 +293,8 @@ pub enum ImUrl {
     GetFriendPage,
     MarkMsgRead,
     CheckEmail,
+    MergeMsg,
+    GetUserByIds,
 }
 
 impl ImUrl {
@@ -388,12 +394,15 @@ impl ImUrl {
             ImUrl::RecallMsg => (http::Method::PUT, "im/chat/msg/recall"),
             ImUrl::MarkMsg => (http::Method::PUT, "im/chat/msg/mark"),
             ImUrl::GetMsgPage => (http::Method::GET, "im/chat/msg/page"),
-            ImUrl::GetMsgList => (http::Method::GET, "im/chat/msg/list"),
+            ImUrl::GetMsgList => (http::Method::POST, "im/chat/msg/list"),
             ImUrl::GetMemberStatistic => (http::Method::GET, "im/chat/member/statistic"),
 
             // 群成员信息
             ImUrl::GetAllUserBaseInfo => (http::Method::GET, "im/room/group/member/list"),
             ImUrl::CheckEmail => (http::Method::GET, "oauth/anyTenant/checkEmail"),
+
+            ImUrl::MergeMsg => (http::Method::POST, "im/room/mergeMessage"),
+            ImUrl::GetUserByIds => (http::Method::POST, "im/user/getUserByIds"),
         }
     }
 
@@ -499,6 +508,8 @@ impl ImUrl {
             "markMsgRead" => Ok(ImUrl::MarkMsgRead),
             "groupListMember" => Ok(ImUrl::GroupListMember),
             "checkEmail" => Ok(ImUrl::CheckEmail),
+            "mergeMsg" => Ok(ImUrl::MergeMsg),
+            "getUserByIds" => Ok(ImUrl::GetUserByIds),
 
             // 未匹配的字符串
             _ => Err(anyhow::anyhow!("未知的URL类型: {}", s)),

@@ -101,8 +101,7 @@ export enum MittEnum {
   /** 视频下载状态更新 */
   VIDEO_DOWNLOAD_STATUS_UPDATED = 'videoDownloadStatusUpdated',
   /** 切换语言页面 */
-  VOICE_RECORD_TOGGLE = 'voiceRecordToggle',
-  MSG_MULTI_CHOOSE = 'msgMultiChoose'
+  VOICE_RECORD_TOGGLE = 'voiceRecordToggle'
 }
 
 /** 主题类型 */
@@ -687,7 +686,10 @@ export enum ImUrlEnum {
   MARK_MSG_READ = 'markMsgRead',
   /** 移出群成员 */
   REMOVE_GROUP_MEMBER = 'removeGroupMember',
-  CHECK_EMAIL = 'checkEmail'
+  CHECK_EMAIL = 'checkEmail',
+
+  MERGE_MSG = 'mergeMsg',
+  GET_USER_BY_IDS = 'getUserByIds'
 }
 
 // 滚动意图管理枚举
@@ -696,4 +698,9 @@ export enum ScrollIntentEnum {
   INITIAL = 'initial', // 初始化或切换房间
   NEW_MESSAGE = 'new_message', // 新消息到达
   LOAD_MORE = 'load_more' // 加载更多历史消息
+}
+
+export enum MergeMessageType {
+  SINGLE = 1,
+  MERGE = 2
 }

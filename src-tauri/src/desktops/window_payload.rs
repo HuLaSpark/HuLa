@@ -9,22 +9,18 @@ pub struct WindowPayload {
     pub payload: serde_json::Value,
 }
 
-impl WindowPayload {
-    pub fn new(payload: serde_json::Value) -> Self {
-        WindowPayload { payload }
-    }
-}
-
 lazy_static! {
-    static ref PAYLOAD_CACHE: Mutex<HashMap<String, WindowPayload>> = Mutex::new(HashMap::new());
+    static ref PAYLOAD_CACHE: Mutex<HashMap<String, serde_json::Value>> = Mutex::new(HashMap::new());
 }
 
-pub async fn push_window_payload(label: String, payload: WindowPayload) -> Option<WindowPayload> {
+#[tauri::command]
+pub async fn push_window_payload(label: String, payload: serde_json::Value) -> Option<serde_json::Value> {
     let mut payload_cache = PAYLOAD_CACHE.lock().await;
     payload_cache.insert(label, payload)
 }
 
-pub async fn get_window_payload(label: String) -> Option<WindowPayload> {
+#[tauri::command]
+pub async fn get_window_payload(label: String) -> Option<serde_json::Value> {
     let mut payload_cache = PAYLOAD_CACHE.lock().await;
     payload_cache.remove(&label)
 }

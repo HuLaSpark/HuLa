@@ -205,7 +205,7 @@ export const useChatMain = (isHistoryMode = false) => {
       label: '多选',
       icon: 'list-checkbox',
       click: () => {
-        useMitt.emit(MittEnum.MSG_MULTI_CHOOSE, true)
+        chatStore.setMsgMultiChoose(true)
       }
     },
     {
