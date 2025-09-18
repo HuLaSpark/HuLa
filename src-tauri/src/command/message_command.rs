@@ -257,7 +257,7 @@ pub async fn fetch_all_messages(
         uid, last_opt_time
     );
     // 调用后端接口 /chat/msg/list 获取所有消息，传递 last_opt_time 参数
-    let params = if let Some(time) = last_opt_time {
+    let body = if let Some(time) = last_opt_time {
         Some(serde_json::json!({
             "lastOptTime": time
         }))
@@ -266,7 +266,7 @@ pub async fn fetch_all_messages(
     };
 
     let messages: Option<Vec<MessageResp>> = client
-        .im_request(ImUrl::GetMsgList, None::<serde_json::Value>, params)
+        .im_request(ImUrl::GetMsgList, body, None::<serde_json::Value>)
         .await?;
 
     if let Some(messages) = messages {

@@ -425,6 +425,10 @@ export const useChatStore = defineStore(
       useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
     }
 
+    const clearSessionCheck = () => {
+      sessionList.value.forEach((item) => (item.isCheck = false))
+    }
+
     // 过滤掉拉黑用户的发言
     const filterUser = (uid: string) => {
       for (const messages of messageMap.values()) {
@@ -797,7 +801,9 @@ export const useChatStore = defineStore(
       return currentMessageOptions.value?.isLast
     })
 
-    useMitt.on(MittEnum.MSG_MULTI_CHOOSE, (event) => (isMsgMultiChoose.value = event))
+    const setMsgMultiChoose = (flag: boolean) => {
+      isMsgMultiChoose.value = flag
+    }
 
     return {
       getMsgIndex,
@@ -841,7 +847,9 @@ export const useChatStore = defineStore(
       setAllSessionMsgList,
       chatMessageListByRoomId,
       shouldShowNoMoreMessage,
-      isMsgMultiChoose
+      isMsgMultiChoose,
+      clearSessionCheck,
+      setMsgMultiChoose
     }
   },
   {

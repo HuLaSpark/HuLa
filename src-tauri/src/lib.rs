@@ -6,22 +6,21 @@ use common::init::CustomInit;
 #[cfg(target_os = "windows")]
 use common_cmd::get_windows_scale_info;
 #[cfg(desktop)]
-use common_cmd::{
-    audio, default_window_icon, get_files_meta, get_window_payload, push_window_payload,
-    screenshot, set_height,
-};
+use common_cmd::{audio, default_window_icon, get_files_meta, screenshot, set_height};
 #[cfg(target_os = "macos")]
 use common_cmd::{hide_title_bar_buttons, set_window_level_above_menubar, show_title_bar_buttons};
 #[cfg(target_os = "macos")]
 use desktops::app_event;
+#[cfg(desktop)]
+use desktops::window_payload::{get_window_payload, push_window_payload};
 #[cfg(desktop)]
 use desktops::{common_cmd, directory_scanner, init, tray, video_thumbnail::get_video_thumbnail};
 #[cfg(desktop)]
 use directory_scanner::{cancel_directory_scan, get_directory_usage_info_with_progress};
 #[cfg(desktop)]
 use init::DesktopCustomInit;
-use tauri_plugin_fs::FsExt;
 use std::sync::Arc;
+use tauri_plugin_fs::FsExt;
 pub mod command;
 pub mod common;
 pub mod configuration;
@@ -40,7 +39,7 @@ use crate::command::room_member_command::{
 };
 use crate::command::setting_command::{get_settings, update_settings};
 use crate::command::user_command::remove_tokens;
-use crate::configuration::{get_configuration, Settings};
+use crate::configuration::{Settings, get_configuration};
 use crate::error::CommonError;
 use crate::repository::im_user_repository;
 use sea_orm::DatabaseConnection;
@@ -57,7 +56,7 @@ pub struct AppData {
     db_conn: Arc<DatabaseConnection>,
     user_info: Arc<Mutex<UserInfo>>,
     pub rc: Arc<Mutex<im_request_client::ImRequestClient>>,
-    pub config: Arc<Mutex<Settings>>
+    pub config: Arc<Mutex<Settings>>,
 }
 
 use crate::command::chat_history_command::query_chat_history;
@@ -121,7 +120,7 @@ async fn initialize_app_data(
         Arc<DatabaseConnection>,
         Arc<Mutex<UserInfo>>,
         Arc<Mutex<im_request_client::ImRequestClient>>,
-        Arc<Mutex<Settings>>
+        Arc<Mutex<Settings>>,
     ),
     CommonError,
 > {
@@ -129,10 +128,10 @@ async fn initialize_app_data(
     use tracing::info;
 
     // 加载配置
-    let configuration = Arc::new(Mutex::new(
-        get_configuration(&app_handle)
-            .map_err(|e| anyhow::anyhow!("Failed to load configuration: {}", e))?,
-    ));
+    let configuration =
+        Arc::new(Mutex::new(get_configuration(&app_handle).map_err(|e| {
+            anyhow::anyhow!("Failed to load configuration: {}", e)
+        })?));
 
     // 初始化数据库连接
     let db: Arc<DatabaseConnection> = Arc::new(
@@ -154,8 +153,10 @@ async fn initialize_app_data(
         }
     }
 
-    let rc: im_request_client::ImRequestClient =
-        im_request_client::ImRequestClient::new(configuration.lock().await.backend.base_url.clone()).unwrap();
+    let rc: im_request_client::ImRequestClient = im_request_client::ImRequestClient::new(
+        configuration.lock().await.backend.base_url.clone(),
+    )
+    .unwrap();
 
     // 创建用户信息
     let user_info = UserInfo {
@@ -374,7 +375,7 @@ fn common_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> 
                 db_conn: db.clone(),
                 user_info: user_info.clone(),
                 rc: rc,
-                config: settings
+                config: settings,
             });
         }
         Err(e) => {

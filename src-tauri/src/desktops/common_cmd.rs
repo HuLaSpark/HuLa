@@ -10,7 +10,7 @@ use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::Duration;
 use tauri::path::BaseDirectory;
-use tauri::{AppHandle, Emitter, LogicalSize, Manager, ResourceId, Runtime, Webview};
+use tauri::{AppHandle, LogicalSize, Manager, ResourceId, Runtime, Webview};
 
 #[cfg(target_os = "macos")]
 use objc2::rc::Retained;
@@ -32,12 +32,6 @@ pub struct WindowsScaleInfo {
     /// 是否检测到文本缩放
     pub has_text_scaling: bool,
 }
-
-use crate::desktops::window_payload::{
-    WindowPayload, get_window_payload as _get_window_payload,
-    push_window_payload as _push_window_payload,
-};
-
 // 定义用户信息结构体
 #[derive(Debug, Clone, Serialize)]
 pub struct UserInfo {
@@ -244,34 +238,6 @@ pub fn show_title_bar_buttons(window_label: &str, handle: AppHandle) -> Result<(
     // 恢复窗口可拖动
     ns_window.setMovable(false);
     Ok(())
-}
-
-#[tauri::command]
-pub async fn push_window_payload(
-    label: String,
-    payload: serde_json::Value,
-    handle: AppHandle,
-) -> Result<(), String> {
-    let payload_entity = WindowPayload::new(payload);
-    if let Some(window) = handle.get_webview_window(&label) {
-        window
-            // 找到了对应label的window说明已经打开了，就只需要提醒刷新就行了
-            .emit(&format!("{}:update", label), payload_entity)
-            .map_err(|e| e.to_string())
-    } else {
-        _push_window_payload(label, payload_entity)
-            .await
-            // 这里是存在值的时候才算失败，不存在值则是插入成功
-            .map_or_else(|| Ok(()), |_| Err("none".to_string()))
-    }
-}
-
-#[tauri::command]
-pub async fn get_window_payload(label: String) -> Result<serde_json::Value, ()> {
-    _get_window_payload(label)
-        .await
-        .map(|payload_entity| payload_entity.payload)
-        .ok_or(())
 }
 
 #[tauri::command]
