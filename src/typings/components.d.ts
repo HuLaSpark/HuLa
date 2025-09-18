@@ -38,6 +38,7 @@ declare module 'vue' {
     InfoPopover: typeof import('./../components/common/InfoPopover.vue')['default']
     LoadingSpinner: typeof import('./../components/common/LoadingSpinner.vue')['default']
     MeasuredItem: typeof import('./../mobile/components/virtual-scroll/MeasuredItem.vue')['default']
+    MergeMessage: typeof import('./../components/rightBox/renderMessage/MergeMessage.vue')['default']
     MessageContainer: typeof import('./../mobile/components/chat-room/MessageContainer.vue')['default']
     MessageContent: typeof import('./../components/rightBox/chatBox/MessageContent.vue')['default']
     MobileApplyList: typeof import('./../mobile/components/my/MobileApplyList.vue')['default']

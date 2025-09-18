@@ -82,7 +82,7 @@
           <span class="w-full h-1px bg-[--line-color] my-8px"></span>
 
           <div class="flex-1 flex flex-col">
-            <ChatMultiMsg :msg-list="selectedMsgs" />
+            <ChatMultiMsg :content-list="msgContents" :msg-ids="msgIds" />
             <n-input class="my-12px" placeholder="给朋友留言" />
             <div class="flex justify-between">
               <n-button quaternary class="w-100px h-30px" @click="showModal = false">取消</n-button>
@@ -103,6 +103,7 @@ import { useGroupStore } from '@/stores/group'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { mergeMsg } from '@/utils/ImRequestUtils'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
+import type { MsgId } from '~/src/typings/global'
 import ChatMultiMsg from './ChatMultiMsg.vue'
 
 const chatStore = useChatStore()
@@ -115,6 +116,22 @@ const selectedSessions = computed(() => {
 })
 const selectedMsgs = computed(() => {
   return chatStore.chatMessageList.filter((msg) => msg.isCheck === true)
+})
+
+const msgContents = computed(() => {
+  return selectedMsgs.value.map((msg) => {
+    const userInfo = groupStore.getUserInfo(msg.fromUser.uid)
+    return userInfo?.name + ': ' + msg.message.body.content
+  })
+})
+
+const msgIds = computed((): MsgId[] => {
+  return selectedMsgs.value.map((msg) => {
+    return {
+      msgId: msg.message.id,
+      fromUid: msg.fromUser.uid
+    }
+  })
 })
 let mergeMessageType = MergeMessageType.SINGLE
 
@@ -168,6 +185,7 @@ const handleRemoveSession = (roomId: string) => {
 }
 
 const sendMsg = async () => {
+  console.log('发送合并消息：', mergeMessageType)
   const selectedRoomIds = selectedSessions.value.map((item) => item.roomId)
   const selectedMsgIds = selectedMsgs.value.map((item) => item.message.id)
 

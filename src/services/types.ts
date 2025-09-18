@@ -379,6 +379,16 @@ export type VoiceBody = {
   second: number
   url: string
 }
+
+export type MergeBodyBody = {
+  messageId: string
+  uid: string
+}
+
+export type MergeBody = {
+  body: MergeBodyBody[]
+  content: string[]
+}
 /** 视频 */
 export type VideoBody = {
   size: number

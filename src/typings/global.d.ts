@@ -31,3 +31,8 @@ export type ProxySettings = {
   wsPort: string
   wsSuffix: string
 }
+
+export type MsgId = {
+  msgId: string
+  fromUid: string
+}

@@ -701,6 +701,6 @@ export enum ScrollIntentEnum {
 }
 
 export enum MergeMessageType {
-  SINGLE,
-  MERGE
+  SINGLE = 1,
+  MERGE = 2
 }
