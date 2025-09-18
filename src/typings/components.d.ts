@@ -123,6 +123,7 @@ declare module 'vue' {
     Text: typeof import('./../components/rightBox/renderMessage/Text.vue')['default']
     Validation: typeof import('./../components/common/Validation.vue')['default']
     VanSwipeCell: typeof import('vant/es')['SwipeCell']
+    VanUploader: typeof import('vant/es')['Uploader']
     Video: typeof import('./../components/rightBox/renderMessage/Video.vue')['default']
     VideoCall: typeof import('./../components/rightBox/renderMessage/VideoCall.vue')['default']
     VirtualList: typeof import('./../components/common/VirtualList.vue')['default']
