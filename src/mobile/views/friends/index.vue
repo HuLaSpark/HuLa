@@ -176,6 +176,14 @@ import { useUserStore } from '@/stores/user'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 
+onMounted(async () => {
+  try {
+    await contactStore.getApplyPage(false)
+  } catch (error) {
+    console.log('请求好友申请列表失败')
+  }
+})
+
 /**
  * 渲染图片图标的函数工厂
  * @param {string} src - 图标图片路径

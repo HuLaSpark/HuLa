@@ -25,8 +25,7 @@ const rawIP = await internalIpV4()
 export default defineConfig(({ mode }: ConfigEnv) => {
   // 获取当前环境的配置,如何设置第三个参数则加载所有变量，而不是以"VITE_"前缀的变量
   const config = loadEnv(mode, process.cwd(), '')
-  console.log('config=', config)
-  console.log('config2=', config.TAURI_ENV_PLATFORM)
+
   const isPC =
     config.TAURI_ENV_PLATFORM === 'windows' ||
     config.TAURI_ENV_PLATFORM === 'darwin' ||
@@ -55,10 +54,10 @@ export default defineConfig(({ mode }: ConfigEnv) => {
     host = localIP
   }
 
+  console.log('启动的端口：', host)
+
   // 根据平台类型和配置决定host
   // const host = isPC ? '127.0.0.1' : localIP || '127.0.0.1'
-
-  console.log('连接的端口：', host)
 
   return {
     resolve: {
