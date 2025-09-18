@@ -18,20 +18,47 @@ const packageJson = JSON.parse(readFileSync(join(process.cwd(), 'package.json'),
 const dependencies = Object.keys(packageJson.dependencies || {})
 
 // 预先获取本地IP
-const localIP = await internalIpV4()
+const rawIP = await internalIpV4()
 
 // https://vitejs.dev/config/
 /**! 不需要优化前端打包(如开启gzip) */
 export default defineConfig(({ mode }: ConfigEnv) => {
   // 获取当前环境的配置,如何设置第三个参数则加载所有变量，而不是以"VITE_"前缀的变量
   const config = loadEnv(mode, process.cwd(), '')
+  console.log('config=', config)
+  console.log('config2=', config.TAURI_ENV_PLATFORM)
   const isPC =
     config.TAURI_ENV_PLATFORM === 'windows' ||
     config.TAURI_ENV_PLATFORM === 'darwin' ||
     config.TAURI_ENV_PLATFORM === 'linux'
 
+  // 是否为网段号, true:是, false:不是, mhr中不能用网段号来做监听
+  const isNetSegment = rawIP?.endsWith('.0')
+
+  // 根据平台和网段情况决定使用的 IP
+  const localIP = '127.0.0.1' // 默认回环地址
+
+  let host = ''
+
+  if (isPC) {
+    host = localIP
+  } else if (!isNetSegment) {
+    // 判断如果地址不是网段号
+    host = rawIP // 返回获取到的地址
+  } else if (config.TAURI_ENV_PLATFORM === 'android') {
+    // 判断是网段号，并且是安卓端
+    host = '0.0.0.0'
+  } else if (config.TAURI_ENV_PLATFORM === 'ios') {
+    // 判断是网段号，并且是ios段
+    host = localIP
+  } else {
+    host = localIP
+  }
+
   // 根据平台类型和配置决定host
-  const host = isPC ? '127.0.0.1' : localIP || '127.0.0.1'
+  // const host = isPC ? '127.0.0.1' : localIP || '127.0.0.1'
+
+  console.log('连接的端口：', host)
 
   return {
     resolve: {
