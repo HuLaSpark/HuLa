@@ -632,6 +632,8 @@ export enum ImUrlEnum {
   APPLY_UN_READ_COUNT = 'applyUnReadCount',
   /** 请求申请页面 */
   REQUEST_APPLY_PAGE = 'requestApplyPage',
+  /** 请求通知页面 */
+  REQUEST_NOTICE_PAGE = 'requestNoticePage',
   /** 获取联系人列表 */
   GET_CONTACT_LIST = 'getContactList',
   /** 搜索好友 */

@@ -59,7 +59,11 @@
             :id="item.applyId"
             round
             size="small"
-            :src="avatarSrc(groupStore.getUserInfo(isCurrentUser(item.uid) ? item.targetId : item.uid)?.avatar!)" />
+            :src="
+              avatarSrc(
+                groupStore.getUserInfo(isCurrentUser(item.receiverId) ? item.receiverId : item.senderId)?.avatar!
+              )
+            " />
         </div>
         <div @click="toMessage" class="h-full flex justify-end items-center">
           <img src="@/assets/mobile/friend/right-arrow.webp" class="block h-20px" alt="" />

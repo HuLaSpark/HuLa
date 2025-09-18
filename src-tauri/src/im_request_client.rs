@@ -268,6 +268,7 @@ pub enum ImUrl {
     HandleInvite,
     ApplyUnReadCount,
     RequestApplyPage,
+    RequestNoticePage,
     GetContactList,
     SearchFriend,
     ChangeUserState,
@@ -370,6 +371,7 @@ impl ImUrl {
             ImUrl::HandleInvite => (http::Method::POST, "im/room/apply/handler/apply"),
             ImUrl::ApplyUnReadCount => (http::Method::GET, "im/room/apply/unread"),
             ImUrl::RequestApplyPage => (http::Method::GET, "im/room/apply/page"),
+            ImUrl::RequestNoticePage => (http::Method::GET, "im/room/notice/page"),
             ImUrl::GetFriendPage => (http::Method::GET, "im/user/friend/page"),
             ImUrl::GetContactList => (http::Method::GET, "im/chat/contact/list"),
             ImUrl::SearchFriend => (http::Method::GET, "im/user/friend/search"),
@@ -474,6 +476,7 @@ impl ImUrl {
             "handleInvite" => Ok(ImUrl::HandleInvite),
             "applyUnReadCount" => Ok(ImUrl::ApplyUnReadCount),
             "requestApplyPage" => Ok(ImUrl::RequestApplyPage),
+            "requestNoticePage" => Ok(ImUrl::RequestNoticePage),
             "getContactList" => Ok(ImUrl::GetContactList),
             "searchFriend" => Ok(ImUrl::SearchFriend),
 

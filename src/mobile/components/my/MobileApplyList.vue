@@ -6,7 +6,9 @@
       justify="space-between"
       class="color-[--text-color] px-20px py-10px">
       <p class="text-16px">{{ props.type === 'friend' ? '好友通知' : '群通知' }}</p>
-      <svg class="size-18px cursor-pointer"><use href="#delete"></use></svg>
+      <svg class="size-18px cursor-pointer">
+        <use href="#delete"></use>
+      </svg>
     </n-flex>
 
     <n-virtual-list
@@ -26,13 +28,17 @@
             <n-avatar
               round
               size="large"
-              :src="avatarSrc(groupStore.getUserInfo(isCurrentUser(item.uid) ? item.targetId : item.uid)?.avatar!)" />
+              :src="
+                avatarSrc(
+                  groupStore.getUserInfo(isCurrentUser(item.senderId) ? item.operateId : item.senderId)?.avatar!
+                )
+              " />
           </div>
           <div class="flex-1 flex flex-col gap-10px">
             <div
-              @click="isCurrentUser(item.uid) ? (currentUserId = item.targetId) : (currentUserId = item.uid)"
+              @click="isCurrentUser(item.senderId) ? (currentUserId = item.operateId) : (currentUserId = item.senderId)"
               class="flex justify-between text-14px text-#2DA38D">
-              {{ groupStore.getUserInfo(isCurrentUser(item.uid) ? item.targetId : item.uid)?.name }}
+              {{ groupStore.getUserInfo(isCurrentUser(item.senderId) ? item.operateId : item.senderId)?.name }}
             </div>
             <div class="flex justify-between text-gray-500 text-12px">
               <span>
@@ -42,10 +48,10 @@
                 {{ formatTimestamp(item.createTime) }}
               </span>
             </div>
-            <div class="flex gap-2 flex-1 text-12px text-gray-500">
+            <div v-show="isFriendApplyOrGroupInvite(item)" class="flex gap-2 flex-1 text-12px text-gray-500">
               <div class="whitespace-nowrap">留言:</div>
               <n-ellipsis :tooltip="true" expand-trigger="click" line-clamp="2" style="max-width: 100%">
-                {{ item.msg }}
+                {{ item.content }}
               </n-ellipsis>
             </div>
           </div>
@@ -53,14 +59,16 @@
             <n-flex
               align="center"
               :size="10"
-              v-if="item.status === RequestFriendAgreeStatus.Waiting && !isCurrentUser(item.uid)">
+              v-if="item.status === RequestNoticeAgreeStatus.UNTREATED && !isCurrentUser(item.senderId)">
               <n-button secondary :loading="loadingMap[item.applyId]" @click="handleAgree(item.applyId)">接受</n-button>
               <n-dropdown
                 trigger="click"
                 :options="dropdownOptions"
                 @select="(key: string) => handleFriendAction(key, item.applyId)">
                 <n-icon class="cursor-pointer px-6px">
-                  <svg class="size-16px color-[--text-color]"><use href="#more"></use></svg>
+                  <svg class="size-16px color-[--text-color]">
+                    <use href="#more"></use>
+                  </svg>
                 </n-icon>
               </n-dropdown>
             </n-flex>
@@ -68,27 +76,32 @@
               trigger="click"
               :options="dropdownOptions"
               @select="(key: string) => handleFriendAction(key, item.applyId)"
-              v-if="item.status === RequestFriendAgreeStatus.Waiting && !isCurrentUser(item.uid)">
+              v-if="item.status === RequestNoticeAgreeStatus.UNTREATED && !isCurrentUser(item.senderId)">
               <n-icon class="cursor-pointer px-6px rounded-10px bg-gray-300 h-50% items-center flex">
-                <svg class="size-16px color-[--text-color]"><use href="#more"></use></svg>
+                <svg class="size-16px color-[--text-color]">
+                  <use href="#more"></use>
+                </svg>
               </n-icon>
             </n-dropdown>
-
+            <span class="text-(12px #64a29c)" v-else-if="item.status === RequestNoticeAgreeStatus.ACCEPTED">
+              已同意
+            </span>
+            <span class="text-(12px #c14053)" v-else-if="item.status === RequestNoticeAgreeStatus.REJECTED">
+              已拒绝
+            </span>
+            <span class="text-(12px #909090)" v-else-if="item.status === RequestNoticeAgreeStatus.IGNORE">已忽略</span>
             <span
               class="text-(12px #64a29c)"
-              :class="{ 'text-(12px #c14053)': item.status === RequestFriendAgreeStatus.Reject }"
-              v-else-if="isCurrentUser(item.uid)">
+              :class="{ 'text-(12px #c14053)': item.status === RequestNoticeAgreeStatus.REJECTED }"
+              v-else-if="isCurrentUser(item.senderId)">
               {{
-                isAccepted(item.targetId)
+                isAccepted(item)
                   ? '已同意'
-                  : item.status === RequestFriendAgreeStatus.Reject
+                  : item.status === RequestNoticeAgreeStatus.REJECTED
                     ? '对方已拒绝'
                     : '等待验证'
               }}
             </span>
-            <span class="text-(12px #64a29c)" v-else-if="item.status === RequestFriendAgreeStatus.Agree">已同意</span>
-            <span class="text-(12px #c14053)" v-else-if="item.status === RequestFriendAgreeStatus.Reject">已拒绝</span>
-            <span class="text-(12px #909090)" v-else-if="item.status === RequestFriendAgreeStatus.Ignore">已忽略</span>
           </div>
         </div>
       </template>
@@ -101,7 +114,7 @@
   </n-flex>
 </template>
 <script setup lang="ts">
-import { RequestFriendAgreeStatus } from '@/services/types.ts'
+import { NoticeType, RequestNoticeAgreeStatus } from '@/services/types.ts'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
@@ -122,9 +135,9 @@ const props = defineProps<{
 }>()
 
 // 检查好友申请是否已被接受
-const isAccepted = (targetId: string) => {
+const isAccepted = (item: any) => {
   // 使用缓存集合快速检查目标用户是否在联系人列表中
-  return contactStore.contactsList.some((contact) => contact.uid === targetId)
+  return item.status !== RequestNoticeAgreeStatus.UNTREATED
 }
 
 const applyList = computed(() => {
@@ -137,15 +150,25 @@ const applyList = computed(() => {
   })
 })
 
+// 判断是否为好友申请或者群申请、群邀请
+const isFriendApplyOrGroupInvite = (item: any) => {
+  return (
+    item.eventType === NoticeType.FRIEND_APPLY ||
+    item.eventType === NoticeType.GROUP_INVITE ||
+    item.eventType === NoticeType.GROUP_INVITE_ME ||
+    item.eventType === NoticeType.ADD_ME
+  )
+}
+
 const applyMsg = computed(() => (item: any) => {
   if (props.type === 'friend') {
-    return isCurrentUser(item.uid)
-      ? isAccepted(item.targetId)
-        ? '已同意你的请求'
-        : '正在验证你的邀请'
-      : '请求加为好友'
+    return isCurrentUser(item.senderId) ? (isAccepted(item) ? '已同意你的请求' : '正在验证你的邀请') : '请求加为好友'
   } else {
-    return isCurrentUser(item.uid) ? '已同意你的邀请' : '请求邀请进入群聊'
+    if (isFriendApplyOrGroupInvite(item)) {
+      return isCurrentUser(item.senderId) ? '已同意加入' + item.content : '邀请你加入' + item.content
+    } else if (item.eventType === NoticeType.GROUP_MEMBER_DELETE) {
+      return '已被' + groupStore.getUserInfo(item.senderId)!.name + '踢出' + item.content
+    }
   }
 })
 

@@ -1,14 +1,14 @@
 import { defineStore } from 'pinia'
 import { StoresEnum } from '@/enums'
-import type { ContactItem, RequestFriendItem } from '@/services/types'
-import { RequestFriendAgreeStatus } from '@/services/types'
+import type { ContactItem, NoticeItem } from '@/services/types'
+import { RequestNoticeAgreeStatus } from '@/services/types'
 import { useGlobalStore } from '@/stores/global'
 import {
   deleteFriend,
   getApplyUnreadCount,
   getFriendPage,
   handleInvite,
-  requestApplyPage
+  requestNoticePage
 } from '@/utils/ImRequestUtils'
 // 定义分页大小常量
 export const pageSize = 20
@@ -18,7 +18,7 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
   /** 联系人列表 */
   const contactsList = ref<ContactItem[]>([])
   /** 好友请求列表 */
-  const requestFriendsList = ref<RequestFriendItem[]>([])
+  const requestFriendsList = ref<NoticeItem[]>([])
 
   /** 联系人列表分页选项 */
   const contactsOptions = ref({ isLast: false, isLoading: false, cursor: '' })
@@ -79,7 +79,7 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
     }
 
     try {
-      const res = await requestApplyPage({
+      const res = await requestNoticePage({
         pageNo: applyPageOptions.value.pageNo,
         pageSize: 30,
         cursor: isFresh ? '' : applyPageOptions.value.cursor
@@ -125,7 +125,7 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
       if (globalStore.currentSelectedContact) {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        globalStore.currentSelectedContact.status = RequestFriendAgreeStatus.Agree
+        globalStore.currentSelectedContact.status = RequestNoticeAgreeStatus.ACCEPTED
       }
       // 获取最新的未读数
       await getApplyUnReadCount()
