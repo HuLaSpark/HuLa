@@ -49,8 +49,10 @@
         <!-- 消息列表 -->
         <div class="message-list min-h-full flex flex-col">
           <!-- 没有更多消息提示 -->
-          <div v-show="chatStore.shouldShowNoMoreMessage" class="flex-center gap-6px h-32px flex-shrink-0">
-            <span class="text-(12px #909090)">没有更多消息</span>
+          <div
+            v-show="chatStore.shouldShowNoMoreMessage"
+            class="flex-center gap-6px h-32px flex-shrink-0 cursor-default select-none">
+            <p class="text-(12px #909090)">没有更多消息</p>
           </div>
           <n-flex
             v-for="(item, index) in chatStore.chatMessageList"

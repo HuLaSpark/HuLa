@@ -25,39 +25,27 @@ const rawIP = await internalIpV4()
 export default defineConfig(({ mode }: ConfigEnv) => {
   // 获取当前环境的配置,如何设置第三个参数则加载所有变量，而不是以"VITE_"前缀的变量
   const config = loadEnv(mode, process.cwd(), '')
-
   const isPC =
     config.TAURI_ENV_PLATFORM === 'windows' ||
     config.TAURI_ENV_PLATFORM === 'darwin' ||
     config.TAURI_ENV_PLATFORM === 'linux'
 
-  // 是否为网段号, true:是, false:不是, mhr中不能用网段号来做监听
-  const isNetSegment = rawIP?.endsWith('.0')
+  // 根据平台决定host地址
+  const host = (() => {
+    if (isPC) {
+      return '127.0.0.1'
+    }
 
-  // 根据平台和网段情况决定使用的 IP
-  const localIP = '127.0.0.1' // 默认回环地址
+    // 移动端逻辑：检查是否为有效的内网IP地址
+    if (rawIP && !rawIP.endsWith('.0') && !rawIP.endsWith('.255')) {
+      return rawIP // 有效IP且非网段/广播地址
+    }
 
-  let host = ''
+    // 无效IP或特殊地址的情况
+    return config.TAURI_ENV_PLATFORM === 'android' ? '0.0.0.0' : '127.0.0.1'
+  })()
 
-  if (isPC) {
-    host = localIP
-  } else if (!isNetSegment) {
-    // 判断如果地址不是网段号
-    host = rawIP // 返回获取到的地址
-  } else if (config.TAURI_ENV_PLATFORM === 'android') {
-    // 判断是网段号，并且是安卓端
-    host = '0.0.0.0'
-  } else if (config.TAURI_ENV_PLATFORM === 'ios') {
-    // 判断是网段号，并且是ios段
-    host = localIP
-  } else {
-    host = localIP
-  }
-
-  console.log('启动的端口：', host)
-
-  // 根据平台类型和配置决定host
-  // const host = isPC ? '127.0.0.1' : localIP || '127.0.0.1'
+  console.log('Host:', host)
 
   return {
     resolve: {
@@ -126,11 +114,18 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       })
     ],
     build: {
-      target: ['chrome87', 'edge88', 'firefox78', 'safari14'], // 兼容低版本浏览器
+      // 设置兼容低版本浏览器的目标
+      target: ['chrome87', 'edge88', 'firefox78', 'safari14'],
       cssCodeSplit: true, // 启用 CSS 代码拆分
       minify: 'terser', // 指定使用哪种混淆器
       // chunk 大小警告的限制(kb)
       chunkSizeWarningLimit: 1200,
+      // esbuild配置，解决低版本浏览器兼容性问题
+      esbuild: {
+        supported: {
+          'top-level-await': false
+        }
+      },
       // 分包配置
       rollupOptions: {
         output: {

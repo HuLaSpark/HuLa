@@ -212,8 +212,10 @@ export const useGroupStore = defineStore(
 
     const updateGroupNumber = (roomId: string, totalNum: number, onlineNum: number) => {
       const group = groupDetails.value.find((item) => item.roomId === roomId)
-      group!.memberNum = totalNum
-      group!.onlineNum = onlineNum
+      if (group) {
+        group.memberNum = totalNum
+        group.onlineNum = onlineNum
+      }
     }
 
     /**

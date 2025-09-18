@@ -27,66 +27,68 @@
       <svg v-if="isWindows()" @click="showModal = false" class="size-12px ml-a cursor-pointer select-none">
         <use href="#close"></use>
       </svg>
-      <div class="flex flex-row">
-        <!-- 搜索会话 -->
-        <div class="flex-1 h-64vh bg-#f3f3f3 dark:bg-#222 rounded-8px px-12px pt-12px flex flex-col">
-          <n-input
-            id="search"
-            v-model:value="searchText"
-            class="rounded-6px w-full relative text-12px"
-            style="background: var(--search-bg-color)"
-            :maxlength="20"
-            clearable
-            size="small">
-            <template #prefix>
-              <svg class="w-12px h-12px">
-                <use href="#search"></use>
-              </svg>
-            </template>
-          </n-input>
+      <div class="pt-20px flex flex-col select-none">
+        <div class="flex flex-row">
+          <!-- 搜索会话 -->
+          <div class="flex-1 h-64vh bg-#f3f3f3 dark:bg-#222 rounded-8px px-12px pt-12px flex flex-col">
+            <n-input
+              id="search"
+              v-model:value="searchText"
+              class="rounded-6px w-full relative text-12px"
+              style="background: var(--search-bg-color)"
+              :maxlength="20"
+              clearable
+              size="small">
+              <template #prefix>
+                <svg class="w-12px h-12px">
+                  <use href="#search"></use>
+                </svg>
+              </template>
+            </n-input>
 
-          <n-scrollbar class="flex-1">
-            <template v-for="session in chatStore.sessionList" :key="session.roomId">
-              <n-flex align="center" :size="8" class="text-(12px #909090) py-8px px-4px">
-                <n-checkbox v-model:checked="session.isCheck" @click.stop />
-                <n-avatar class="rounded-8px" :size="30" :src="AvatarUtils.getAvatarUrl(session.avatar)" />
-                <p>{{ session.remark ? session.remark : session.name }}</p>
-                <p v-if="session.type === RoomTypeEnum.GROUP">
-                  ({{ groupStore.getGroupDetailByRoomId(session.roomId)?.memberNum }})
-                </p>
-              </n-flex>
-            </template>
-          </n-scrollbar>
-        </div>
-        <!-- 已选择会话 -->
-        <div class="flex-1 min-w-0 h-64vh px-12px flex flex-col">
-          <p class="text-(12px #909090) pb-10px">分别发送给</p>
-          <n-scrollbar class="flex-1">
-            <template v-for="session in selectedSessions" :key="session.roomId">
-              <n-flex align="center" class="p-8px">
-                <n-avatar class="rounded-8px" :size="30" :src="AvatarUtils.getAvatarUrl(session.avatar)" />
-                <p class="text-(12px [--chat-text-color])">{{ session.remark ? session.remark : session.name }}</p>
-                <n-button quaternary circle size="small" class="ml-auto" @click="handleRemoveSession(session.roomId)">
-                  <template #icon>
-                    <n-icon size="14">
-                      <svg class="w-14px h-14px">
-                        <use href="#close"></use>
-                      </svg>
-                    </n-icon>
-                  </template>
-                </n-button>
-              </n-flex>
-            </template>
-          </n-scrollbar>
+            <n-scrollbar class="flex-1">
+              <template v-for="session in chatStore.sessionList" :key="session.roomId">
+                <n-flex align="center" :size="8" class="text-(12px #909090) py-8px px-4px">
+                  <n-checkbox v-model:checked="session.isCheck" @click.stop />
+                  <n-avatar class="rounded-8px" :size="30" :src="AvatarUtils.getAvatarUrl(session.avatar)" />
+                  <p>{{ session.remark ? session.remark : session.name }}</p>
+                  <p v-if="session.type === RoomTypeEnum.GROUP">
+                    ({{ groupStore.getGroupDetailByRoomId(session.roomId)?.memberNum }})
+                  </p>
+                </n-flex>
+              </template>
+            </n-scrollbar>
+          </div>
+          <!-- 已选择会话 -->
+          <div class="flex-1 min-w-0 h-64vh px-12px flex flex-col">
+            <p class="text-(12px #909090) pb-10px">分别发送给</p>
+            <n-scrollbar class="flex-1">
+              <template v-for="session in selectedSessions" :key="session.roomId">
+                <n-flex align="center" class="p-8px">
+                  <n-avatar class="rounded-8px" :size="30" :src="AvatarUtils.getAvatarUrl(session.avatar)" />
+                  <p class="text-(12px [--chat-text-color])">{{ session.remark ? session.remark : session.name }}</p>
+                  <n-button quaternary circle size="small" class="ml-auto" @click="handleRemoveSession(session.roomId)">
+                    <template #icon>
+                      <n-icon size="14">
+                        <svg class="w-14px h-14px">
+                          <use href="#close"></use>
+                        </svg>
+                      </n-icon>
+                    </template>
+                  </n-button>
+                </n-flex>
+              </template>
+            </n-scrollbar>
 
-          <span class="w-full h-1px bg-[--line-color] my-8px"></span>
+            <span class="w-full h-1px bg-[--line-color] my-8px"></span>
 
-          <div class="flex-1 flex flex-col">
-            <ChatMultiMsg :content-list="msgContents" :msg-ids="msgIds" />
-            <n-input class="my-12px" placeholder="给朋友留言" />
-            <div class="flex justify-between">
-              <n-button quaternary class="w-100px h-30px" @click="showModal = false">取消</n-button>
-              <n-button secondary type="primary" class="w-100px h-30px" @click="sendMsg">发送</n-button>
+            <div class="flex-1 flex flex-col">
+              <ChatMultiMsg :content-list="msgContents" :msg-ids="msgIds" />
+              <n-input class="my-12px" placeholder="给朋友留言" />
+              <div class="flex justify-between">
+                <n-button quaternary class="w-100px h-30px" @click="showModal = false">取消</n-button>
+                <n-button secondary type="primary" class="w-100px h-30px" @click="sendMsg">发送</n-button>
+              </div>
             </div>
           </div>
         </div>

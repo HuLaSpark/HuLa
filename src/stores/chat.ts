@@ -107,6 +107,11 @@ export const useChatStore = defineStore(
       }
     })
 
+    // 判断是否应该显示“没有更多消息”
+    const shouldShowNoMoreMessage = computed(() => {
+      return currentMessageOptions.value?.isLast
+    })
+
     // 判断当前是否为群聊
     const isGroup = computed(() => globalStore.currentSession?.type === RoomTypeEnum.GROUP)
 
@@ -207,7 +212,6 @@ export const useChatStore = defineStore(
     }
 
     const getPageMsg = async (pageSize: number, roomId: string, cursor: string = '') => {
-      console.log('获取消息分页：', pageSize)
       // 查询本地存储，获取消息数据
       const data: any = await invokeWithErrorHandler(
         TauriCommand.PAGE_MSG,
@@ -238,7 +242,6 @@ export const useChatStore = defineStore(
       for (const msg of data.list) {
         map.set(msg.message.id, msg)
       }
-      console.log(222222222222222)
       // 设置消息
       messageMap.set(roomId, map)
     }
@@ -248,7 +251,6 @@ export const useChatStore = defineStore(
       try {
         if (sessionOptions.isLoading) return
         sessionOptions.isLoading = true
-        console.log('获取会话列表')
         const response: any = await invokeWithErrorHandler(TauriCommand.LIST_CONTACTS, undefined, {
           customErrorMessage: '获取会话列表失败',
           errorType: ErrorType.Network
@@ -348,7 +350,6 @@ export const useChatStore = defineStore(
     // 推送消息
     const pushMsg = async (msg: MessageType) => {
       const current = messageMap.get(msg.message.roomId)
-      console.log(333333333333)
       current?.set(msg.message.id, msg)
 
       // 获取用户信息缓存
@@ -395,9 +396,6 @@ export const useChatStore = defineStore(
           icon: cacheUser.avatar as string
         })
       }
-
-      // 发送消息后立即触发滚动到底部
-      console.log('aaaaa')
     }
 
     const clearSessionCheck = () => {
@@ -607,7 +605,6 @@ export const useChatStore = defineStore(
           const updatedMsg = { ...msg, uploadProgress }
           currentMessageMap.value?.set(msg.message.id, updatedMsg)
           // 强制触发响应式更新
-          console.log('111111111111111', currentMessageMap.value)
           messageMap.set(globalStore.currentSession!.roomId, new Map(currentMessageMap.value))
         } else {
           currentMessageMap.value?.set(msg.message.id, msg)
@@ -763,10 +760,6 @@ export const useChatStore = defineStore(
     const getGroupSessions = () => {
       return sessionList.value.filter((session) => session.type === RoomTypeEnum.GROUP)
     }
-
-    const shouldShowNoMoreMessage = computed(() => {
-      return currentMessageOptions.value?.isLast
-    })
 
     const setMsgMultiChoose = (flag: boolean) => {
       isMsgMultiChoose.value = flag

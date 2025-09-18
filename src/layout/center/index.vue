@@ -132,6 +132,7 @@ import { MittEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useWindow } from '@/hooks/useWindow'
 import router from '@/router'
+import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import * as ImRequestUtils from '@/utils/ImRequestUtils'
@@ -140,6 +141,7 @@ import { options, renderLabel, renderSourceList, renderTargetList } from './mode
 
 const { createWebviewWindow } = useWindow()
 
+const chatStore = useChatStore()
 const settingStore = useSettingStore()
 const globalStore = useGlobalStore()
 const { page } = storeToRefs(settingStore)
@@ -236,7 +238,16 @@ const resetCreateGroupState = () => {
 const handleCreateGroup = async () => {
   if (selectedValue.value.length < 2) return
   try {
-    await ImRequestUtils.createGroup({ uidList: selectedValue.value })
+    const result = await ImRequestUtils.createGroup({ uidList: selectedValue.value })
+
+    // 创建成功后刷新会话列表以显示新群聊
+    await chatStore.getSessionList(true)
+
+    // 如果API返回了id，切换到新创建的群聊
+    if (result?.id) {
+      globalStore.updateCurrentSessionRoomId(result.id)
+    }
+
     resetCreateGroupState()
     window.$message.success('创建群聊成功')
   } catch (error) {
