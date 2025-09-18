@@ -22,8 +22,6 @@ fn get_websocket_client_container() -> &'static Arc<RwLock<Option<WebSocketClien
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InitWsParams {
-    pub server_url: String,
-    pub token: Option<String>,
     pub client_id: String,
 }
 
@@ -72,7 +70,7 @@ pub async fn ws_init_connection(
     let rc = state.rc.lock().await;
 
     let config = WebSocketConfig {
-        server_url: params.server_url,
+        server_url: state.config.lock().await.backend.ws_url.clone(),
         client_id: params.client_id,
         token: rc.token.clone(),
         ..Default::default()

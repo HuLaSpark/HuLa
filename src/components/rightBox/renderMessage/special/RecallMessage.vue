@@ -1,6 +1,6 @@
 <template>
   <!--  消息为撤回消息  -->
-  <div>
+  <main class="w-full flex-center">
     <template v-if="isGroup">
       <n-flex align="center" :size="6" v-if="fromUserUid === userUid">
         <p class="text-(12px #909090) select-none cursor-default">你撤回了一条消息</p>
@@ -26,7 +26,7 @@
         </p>
       </n-flex>
     </template>
-  </div>
+  </main>
 </template>
 
 <script setup lang="ts">

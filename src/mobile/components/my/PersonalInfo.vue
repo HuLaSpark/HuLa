@@ -7,56 +7,30 @@
       <div
         class="self-center h-auto transition-transform duration-300 ease-in-out origin-top"
         :style="{ transform: props.isShow ? 'scale(1) translateY(0)' : 'scale(0.62) translateY(0px)' }">
-        <n-avatar
-          :size="86"
-          :src="AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar)"
-          fallback-src="/logo.png"
-          round />
+        <n-avatar :size="86" :src="AvatarUtils.getAvatarUrl(userDetailInfo!.avatar)" fallback-src="/logo.png" round />
       </div>
 
       <!-- 基本信息栏 -->
       <div ref="infoBox" class="pl-2 flex gap-8px flex-col transition-transform duration-300 ease-in-out">
         <!-- 名字与在线状态 -->
         <div class="flex flex-warp gap-4 items-center">
-          <span class="font-bold text-20px text-#373838">{{ userStore.userInfo!.name }}</span>
-          <div class="bg-#E7EFE6 flex flex-wrap ps-2 items-center rounded-full gap-1 w-50px h-24px">
-            <span class="w-12px h-12px rounded-15px bg-#079669"></span>
-            <span class="text-bold-style" style="font-size: 12px; color: #373838">在线</span>
+          <span class="font-bold text-20px text-#373838">{{ userDetailInfo!.name }}</span>
+          <div class="bg-#E7EFE6 flex flex-wrap ps-2 px-8px items-center rounded-full gap-1 h-24px">
+            <span class="w-12px h-12px rounded-15px flex items-center">
+              <img
+                :src="friendUserState.url ? friendUserState.url : currentState?.url"
+                alt=""
+                class="rounded-50% size-14px" />
+            </span>
+            <span class="text-bold-style" style="font-size: 12px; color: #373838">
+              {{ friendUserState.title ? friendUserState.title : currentState.title }}
+            </span>
           </div>
         </div>
 
-        <!-- 在线状态点 -->
-        <template v-if="!statusIcon">
-          <n-popover trigger="hover" placement="top" :show-arrow="false">
-            <template #trigger>
-              <div
-                @click="openContent('在线状态', 'onlineStatus', 320, 480)"
-                class="z-30 absolute top-72px left-72px cursor-pointer border-(6px solid [--avatar-border-color]) rounded-full size-18px"
-                :class="[activeStatus === OnlineEnum.ONLINE ? 'bg-#1ab292' : 'bg-#909090']"></div>
-            </template>
-            <span>{{ activeStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}</span>
-          </n-popover>
-        </template>
-
-        <!-- 独立的状态图标 -->
-        <template v-if="statusIcon">
-          <n-popover trigger="hover" placement="top" :show-arrow="false">
-            <template #trigger>
-              <div class="z-30 absolute top-72px left-72px size-26px bg-[--avatar-border-color] rounded-full">
-                <img
-                  :src="statusIcon"
-                  @click="openContent('在线状态', 'onlineStatus', 320, 480)"
-                  class="p-4px cursor-pointer rounded-full size-18px"
-                  alt="" />
-              </div>
-            </template>
-            <span>{{ currentStateTitle }}</span>
-          </n-popover>
-        </template>
-
         <!-- 账号 -->
         <div class="flex flex-warp gap-2 items-center">
-          <span class="text-bold-style">账号:{{ userStore.userInfo!.account }}</span>
+          <span class="text-bold-style">账号:{{ userDetailInfo!.account }}</span>
           <span @click="toMyQRCode" class="pe-15px">
             <img class="w-14px h-14px" src="@/assets/mobile/my/qr-code.webp" alt="" />
           </span>
@@ -68,14 +42,14 @@
             style="transform: translateZ(0)"
             class="relative w-118px overflow-hidden">
             <img class="block w-full" src="@/assets/mobile/my/my-medal.webp" alt="" />
-            <div class="text-10px absolute inset-0 flex ps-2 items-center justify-start text-white font-medium">
+            <div class="text-10px absolute inset-0 flex ps-2 items-center justify-around text-white font-medium">
               <span class="flex items-center">
-                <template v-if="(userStore.userInfo?.itemIds?.length ?? 0) > 0">
+                <div v-if="(userStore.userInfo?.itemIds?.length ?? 0) > 0">
                   <span class="font-bold">已点亮</span>
                   <span class="medal-number">{{ userStore.userInfo?.itemIds?.length }}</span>
                   <span class="font-bold">枚勋章</span>
-                </template>
-                <span v-else>还没获取任何勋章</span>
+                </div>
+                <span v-else>还没勋章哦~</span>
               </span>
 
               <span class="flex ms-3">
@@ -99,41 +73,49 @@
         <div class="flex flex-warp gap-2 items-center">
           <div class="min-w-10 flex flex-col items-center">
             <div class="fans-number">920.13W</div>
-            <div class="mt-2 text-bold-style">粉丝</div>
+            <div class="fans-title">粉丝</div>
           </div>
           <div class="h-20px w-1px bg-gray-300"></div>
           <div class="min-w-10 flex flex-col items-center">
             <div class="fans-number">120</div>
-            <div class="mt-2 text-bold-style">关注</div>
+            <div class="fans-title">关注</div>
           </div>
           <div class="h-20px w-1px bg-gray-300"></div>
           <div class="min-w-10 flex flex-col items-center">
             <div class="fans-number">43.15W</div>
-            <div class="mt-2 text-bold-style">点赞</div>
+            <div class="fans-title">点赞</div>
           </div>
         </div>
         <div class="flex-1 justify-end flex items-center gap-3">
-          <div
+          <n-button
+            :disabled="loading"
             @click="toEditProfile"
             v-if="props.isMyPage"
             class="font-bold px-4 py-10px bg-#EEF4F3 text-#373838 rounded-full text-12px">
             编辑资料
-          </div>
-          <div
+          </n-button>
+          <n-button
+            :loading="loading"
+            :disabled="loading"
+            @click="handleDelete"
             v-if="!props.isMyPage && props.isMyFriend"
             class="px-4 py-10px font-bold text-center bg-red text-white rounded-full text-12px">
-            -&nbsp;删除好友
-          </div>
-          <div
+            删除
+          </n-button>
+
+          <n-button
+            :disabled="loading"
             v-if="!props.isMyPage && !props.isMyFriend"
             class="px-4 py-10px font-bold text-center bg-#13987f text-white rounded-full text-12px">
             +&nbsp;添加好友
-          </div>
-          <div
+          </n-button>
+          <n-button
+            @click="toChatRoom"
+            :disabled="loading"
             v-if="!props.isMyPage"
             class="px-4 py-10px text-center font-bold bg-#EEF4F3 text-#373838 rounded-full text-12px">
             私聊
-          </div>
+          </n-button>
         </div>
       </div>
     </div>
@@ -141,53 +123,133 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
-import { OnlineEnum } from '@/enums/index.ts'
+import { showDialog } from 'vant'
+import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import 'vant/es/dialog/style'
+import { OnlineEnum } from '@/enums'
+import { useMessage } from '@/hooks/useMessage.ts'
+import type { UserInfoType, UserItem } from '@/services/types'
+import { useChatStore } from '@/stores/chat'
+import { useContactStore } from '@/stores/contacts'
+import { useGlobalStore } from '@/stores/global'
+import { useGroupStore } from '@/stores/group'
+import { getSessionDetailWithFriends } from '@/utils/ImRequestUtils'
 
 const router = useRouter()
 const userStore = useUserStore()
 const userStatusStore = useUserStatusStore()
+const groupStore = useGroupStore()
+const route = useRoute()
+const contactStore = useContactStore()
+const globalStore = useGlobalStore()
+const chatStore = useChatStore()
+
+const { preloadChatRoom } = useMessage()
+
+const uid = route.params.uid as string
+
+const toChatRoom = async () => {
+  try {
+    const res = await getSessionDetailWithFriends({ id: uid, roomType: 2 })
+    globalStore.updateCurrentSessionRoomId(res.roomId)
+    // 先检查会话是否已存在
+    const existingSession = chatStore.getSession(res.roomId)
+    if (!existingSession) {
+      // 只有当会话不存在时才更新会话列表顺序
+      chatStore.updateSessionLastActiveTime(res.roomId)
+      // 如果会话不存在，需要重新获取会话列表，但保持当前选中的会话
+      await chatStore.getSessionList(true)
+    }
+    await preloadChatRoom(res.roomId)
+    router.push(`/mobile/chatRoom/chatMain`)
+  } catch (error) {
+    console.error('私聊尝试进入聊天室失败:', error)
+    window.$message.error('显示会话失败')
+  }
+}
+
+// const toChatRoom = async () => {
+//   try {
+//     // await preloadChatRoom(uid)
+//     // router.push(`/mobile/chatRoom/chatMain`)
+//   } catch (error) {
+//     console.error('尝试进入私聊错误：', error)
+//   }
+// }
+
+// 用户详情信息，默认字段只写必要的，不加可能会报错undefined
+const userDetailInfo = ref<UserItem | UserInfoType | undefined>({
+  activeStatus: OnlineEnum.ONLINE,
+  avatar: '',
+  lastOptTime: 0,
+  name: '',
+  uid: '',
+  account: ''
+})
+
+// 这个值只有在查看好友详细信息时才用
+const friendUserState = ref<any>({
+  title: '',
+  url: ''
+})
+
 const { stateList } = storeToRefs(userStatusStore)
-const activeStatus = ref<OnlineEnum>(OnlineEnum.ONLINE)
+
+const getUserState = (stateId: string) => {
+  return stateList.value.find((state: { id: string }) => state.id === stateId)
+}
+
+onMounted(() => {
+  console.log('userStatusStore = ', userStatusStore)
+
+  // 如果地址中的uid存在，那当前就是好友的页面，就从地址栏获取uid拿到好友的详情信息，如果没有就默认显示自己的信息
+  if (uid) {
+    const foundedUser = groupStore.allUserInfo.find((i) => i.uid === uid)
+    userDetailInfo.value = foundedUser
+    if (foundedUser?.userStateId) {
+      const state = getUserState(foundedUser.userStateId)
+      friendUserState.value = state
+    }
+  } else {
+    userDetailInfo.value = userStore.userInfo
+  }
+})
+
+const currentState = computed(() => userStatusStore.currentState)
+
 const animatedBox = ref<HTMLElement | null>(null)
-const statusIcon = computed(() => {
-  const userStateId = userStore.userInfo?.userStateId
 
-  // 如果在线且有特殊状态
-  if (userStateId && userStateId !== '1') {
-    const state = stateList.value.find((s: { id: string }) => s.id === userStateId)
-    if (state) {
-      return state.url
-    }
-  }
-  return null
-})
+const loading = ref(false)
 
-// 计算当前状态的标题
-const currentStateTitle = computed(() => {
-  const userStateId = userStore.userInfo?.userStateId
-
-  if (userStateId && userStateId !== '1') {
-    const state = stateList.value.find((s: { id: string }) => s.id === userStateId)
-    if (state) {
-      return state.title
-    }
-  }
-  return activeStatus.value === OnlineEnum.ONLINE ? '在线' : '离线'
-})
-
-/**
- * 打开内容对应窗口 [安卓版本]
- * @param title 窗口的标题
- * @param label 窗口的标识
- * @param w 窗口的宽度
- * @param h 窗口的高度
- * */
-const openContent = (_title: string, _label: string, _w = 840, _h = 600) => {
-  console.log('安卓的弹窗')
+const handleDelete = () => {
+  showDialog({
+    title: '删除好友',
+    message: '确定删除该好友吗？',
+    showCancelButton: true,
+    confirmButtonText: '取消',
+    cancelButtonText: '确定'
+  })
+    .then(() => {})
+    .catch(async () => {
+      if (userDetailInfo.value?.uid) {
+        try {
+          loading.value = true
+          await contactStore.onDeleteContact(userDetailInfo.value.uid)
+          window.$message.success('已删除好友')
+        } catch (error) {
+          window.$message.warning('删除失败')
+          console.error('删除好友失败：', error)
+        }
+      } else {
+        window.$message.warning('没有找到好友哦')
+      }
+    })
+    .finally(() => {
+      loading.value = false
+    })
 }
 
 const toEditProfile = () => {
@@ -337,6 +399,14 @@ $font-family-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 .fans-number {
   font-size: $text-font-size-base;
   font-family: $font-family-system, $font-family-windows, $font-family-chinese, $font-family-sans;
+  font-weight: 600;
+}
+
+.fans-title {
+  margin-top: 0.5rem;
+  font-size: 13px;
+  font-family: $font-family-system, $font-family-windows, $font-family-sans;
+  color: #757775;
 }
 
 .custom-rounded {

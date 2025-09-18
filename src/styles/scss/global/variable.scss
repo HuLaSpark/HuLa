@@ -37,7 +37,7 @@ svg {
   --action-bar-icon-color: #404040;
   --action-bar-icon-hover: #e7e7e7;
   // 搜索框背景颜色
-  --search-bg-color: #f3f3f3;
+  --search-bg-color: #EAEAEA;
   // 消息列表样式
   --bg-msg-first-child: #eeeeee;
   --bg-msg-hover: #f3f3f3;
@@ -129,6 +129,7 @@ svg {
   --safe-area-inset-right: 0px;
   --safe-area-inset-bottom: 16px;
   --safe-area-inset-left: 0px;
+  --van-dialog-confirm-button-text-color: #169b80;
 }
 
 html[data-theme='dark'] {

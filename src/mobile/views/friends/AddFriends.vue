@@ -161,8 +161,8 @@ import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { searchFriend, searchGroup } from '@/utils/ImRequestUtils'
+import router from '~/src/router'
 
-// const { createWebviewWindow } = useWindow()
 const contactStore = useContactStore()
 const userStore = useUserStore()
 const globalStore = useGlobalStore()
@@ -398,15 +398,15 @@ const handleButtonClick = (item: any) => {
 // 处理添加好友或群聊
 const handleAddFriend = async (item: any) => {
   if (searchType.value === 'user' || searchType.value === 'recommend') {
-    // await createWebviewWindow('申请加好友', 'addFriendVerify', 380, 300, '', false, 380, 300)
-    globalStore.addFriendModalInfo.show = true
     globalStore.addFriendModalInfo.uid = item.uid
+
+    router.push('/mobile/mobileFriends/confirmAddFriend')
   } else {
-    // await createWebviewWindow('申请加群', 'addGroupVerify', 380, 400, '', false, 380, 400)
-    globalStore.addGroupModalInfo.show = true
     globalStore.addGroupModalInfo.account = item.account
     globalStore.addGroupModalInfo.name = item.name
     globalStore.addGroupModalInfo.avatar = item.avatar
+
+    router.push('/mobile/mobileFriends/confirmAddGroup')
   }
 }
 

@@ -30,7 +30,7 @@ import { emitTo, listen } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
-import { ChangeTypeEnum, MittEnum, ModalEnum, NotificationTypeEnum, OnlineEnum, TauriCommand } from '@/enums'
+import { ChangeTypeEnum, MittEnum, ModalEnum, MsgEnum, NotificationTypeEnum, OnlineEnum, TauriCommand } from '@/enums'
 import { useCheckUpdate } from '@/hooks/useCheckUpdate'
 import { useMitt } from '@/hooks/useMitt.ts'
 import type { MarkItemType, MessageType, RevokedMsgType, UserItem } from '@/services/types.ts'
@@ -46,6 +46,7 @@ import { useConfigStore } from '@/stores/config'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group'
+import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user'
 import { audioManager } from '@/utils/AudioManager'
 import { isWindows } from '@/utils/PlatformConstants'
@@ -72,7 +73,7 @@ const AsyncLeft = defineAsyncComponent({
 const AsyncCenter = defineAsyncComponent({
   loader: async () => {
     await import('./left/index.vue')
-    loadingText.value = '正在加载中间面板...'
+    loadingText.value = '正在加载数据中...'
     const comp = await import('./center/index.vue')
 
     // 加载所有会话
@@ -118,12 +119,18 @@ const groupStore = useGroupStore()
 const userStore = useUserStore()
 const chatStore = useChatStore()
 const configStore = useConfigStore()
+const settingStore = useSettingStore()
 const { checkUpdate, CHECK_UPDATE_TIME } = useCheckUpdate()
 const userUid = computed(() => userStore.userInfo!.uid)
 const shrinkStatus = ref(false)
 
 // 播放消息音效
 const playMessageSound = async () => {
+  // 检查是否开启了消息提示音
+  if (!settingStore.notification?.messageSound) {
+    return
+  }
+
   try {
     const audio = new Audio('/sound/message.mp3')
     await audioManager.play(audio, 'message-notification')
@@ -305,7 +312,11 @@ useMitt.on(WsResponseMessageType.MY_ROOM_INFO_CHANGE, (data: { myName: string; r
 })
 
 useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
+  if (userStore.isMe(data.fromUser.uid) && data.message.type !== MsgEnum.MERGE) {
+    return
+  }
   chatStore.pushMsg(data)
+
   data.message.sendTime = new Date(data.message.sendTime).getTime()
   await invokeSilently(TauriCommand.SAVE_MSG, {
     data

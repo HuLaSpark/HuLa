@@ -4,6 +4,7 @@ import terser from '@rollup/plugin-terser'
 import UnoCSS from '@unocss/vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
+import { internalIpV4 } from 'internal-ip'
 import postcsspxtorem from 'postcss-pxtorem'
 import AutoImport from 'unplugin-auto-import/vite' //自动导入
 import { NaiveUiResolver, VantResolver } from 'unplugin-vue-components/resolvers'
@@ -16,12 +17,35 @@ import { getRootPath, getSrcPath } from './build/config/getPath'
 const packageJson = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf-8'))
 const dependencies = Object.keys(packageJson.dependencies || {})
 
+// 预先获取本地IP
+const rawIP = await internalIpV4()
+
 // https://vitejs.dev/config/
 /**! 不需要优化前端打包(如开启gzip) */
 export default defineConfig(({ mode }: ConfigEnv) => {
   // 获取当前环境的配置,如何设置第三个参数则加载所有变量，而不是以"VITE_"前缀的变量
   const config = loadEnv(mode, process.cwd(), '')
-  const host = config.TAURI_DEV_HOST
+  const isPC =
+    config.TAURI_ENV_PLATFORM === 'windows' ||
+    config.TAURI_ENV_PLATFORM === 'darwin' ||
+    config.TAURI_ENV_PLATFORM === 'linux'
+
+  // 根据平台决定host地址
+  const host = (() => {
+    if (isPC) {
+      return '127.0.0.1'
+    }
+
+    // 移动端逻辑：检查是否为有效的内网IP地址
+    if (rawIP && !rawIP.endsWith('.0') && !rawIP.endsWith('.255')) {
+      return rawIP // 有效IP且非网段/广播地址
+    }
+
+    // 无效IP或特殊地址的情况
+    return config.TAURI_ENV_PLATFORM === 'android' ? '0.0.0.0' : '127.0.0.1'
+  })()
+
+  console.log('Host:', host)
 
   return {
     resolve: {
@@ -90,11 +114,18 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       })
     ],
     build: {
-      target: ['chrome87', 'edge88', 'firefox78', 'safari14'], // 兼容低版本浏览器
+      // 设置兼容低版本浏览器的目标
+      target: ['chrome87', 'edge88', 'firefox78', 'safari14'],
       cssCodeSplit: true, // 启用 CSS 代码拆分
       minify: 'terser', // 指定使用哪种混淆器
       // chunk 大小警告的限制(kb)
       chunkSizeWarningLimit: 1200,
+      // esbuild配置，解决低版本浏览器兼容性问题
+      esbuild: {
+        supported: {
+          'top-level-await': false
+        }
+      },
       // 分包配置
       rollupOptions: {
         output: {
@@ -123,15 +154,6 @@ export default defineConfig(({ mode }: ConfigEnv) => {
     clearScreen: false,
     // 2. tauri expects a fixed port, fail if that port is not available
     server: {
-      //配置跨域
-      proxy: {
-        '/api': {
-          // “/api” 以及前置字符串会被替换为真正域名
-          target: config.VITE_SERVICE_URL, // 请求域名
-          changeOrigin: true, // 是否跨域
-          rewrite: (path) => path.replace(/^\/api/, '')
-        }
-      },
       hmr: {
         protocol: 'ws',
         host: host,

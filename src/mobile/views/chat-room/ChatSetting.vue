@@ -15,22 +15,35 @@
         <div class="flex flex-col gap-15px py-15px px-20px">
           <div class="flex shadow bg-white rounded-10px w-full h-60px items-center gap-10px">
             <!-- 群头像 -->
-            <div class="ms-15px self-center h-38px bg-gray-100 rounded-full flex items-center justify-center">
-              <n-badge>
+            <div class="flex justify-center">
+              <div
+                class="rounded-full relative bg-white w-38px h-38px overflow-hidden"
+                @click="openAvatarCropper(userStore.userInfo?.avatarUpdateTime)">
                 <n-avatar
-                  :size="40"
-                  :src="AvatarUtils.getAvatarUrl(globalStore.currentSession.avatar)"
+                  class="absolute"
+                  :size="86"
+                  :src="AvatarUtils.getAvatarUrl(globalStore.currentSession.avatar!)"
                   fallback-src="/logo.png"
                   round />
-              </n-badge>
+                <div
+                  class="absolute h-50% w-full bottom-0 bg-[rgb(50,50,50)] bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-15 backdrop-saturate-100 backdrop-contrast-100"></div>
+              </div>
+              <input
+                ref="fileInput"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                class="hidden"
+                @change="handleFileChange" />
+              <AvatarCropper
+                ref="cropperRef"
+                v-model:show="showCropper"
+                :image-url="localImageUrl"
+                @crop="handleCrop" />
             </div>
+
             <div class="text-14px flex items-center h-full gap-5px">
               <span>
-                {{
-                  globalStore.currentSession.remark
-                    ? globalStore.currentSession.remark
-                    : globalStore.currentSession.name
-                }}
+                {{ globalStore.currentSession.name }}
               </span>
               <span>
                 <svg class="w-18px h-18px iconpark-icon text-#1A9B83">
@@ -46,7 +59,7 @@
               <div class="flex justify-between items-center">
                 <div class="text-14px">群聊成员</div>
                 <div class="text-12px text-#6E6E6E flex flex-wrap gap-10px items-center">
-                  <div>{{ memberNum || 0 }}</div>
+                  <div>{{ groupStore.countInfo?.memberNum || 0 }}</div>
                   <div>
                     <svg class="w-14px h-14px iconpark-icon">
                       <use href="#right"></use>
@@ -137,7 +150,7 @@
                 style="border-bottom: 1px solid; border-color: #ebebeb"
                 @click="handleCopy(globalStore.currentSession.account)"
                 class="flex justify-between py-15px items-center">
-                <div class="text-14px">群号/二维码</div>
+                <div class="text-14px">{{ isGroup ? '群号/二维码' : 'Hula号/二维码' }}</div>
                 <div class="text-12px text-#6E6E6E flex flex-wrap gap-10px items-center">
                   <div>{{ globalStore.currentSession.account }}</div>
                   <div>
@@ -152,8 +165,25 @@
               <div @click="goToNotice" class="pt-15px flex flex-col text-14px gap-10px">
                 <div>群公告</div>
                 <div class="text-#707070 line-clamp-2 text-12px line-height-20px">
-                  静夜思·李白 床前明月光，疑是地上霜。 举头望明月，低头思故乡。静夜思·李白 床前明月光，疑是地上霜。
-                  举头望明月，低头思故乡。
+                  {{ announList.length > 0 ? announList[0]?.content : '' }}
+                </div>
+              </div>
+
+              <div v-if="isLord || isAdmin" class="flex justify-between py-15px items-center">
+                <div class="text-14px">本群昵称</div>
+                <div class="text-12px text-#6E6E6E flex flex-wrap gap-10px items-center">
+                  <input
+                    style="
+                      height: 17px;
+                      border: none;
+                      text-align: right;
+                      outline: none;
+                      font-size: 14px;
+                      text-align: right;
+                    "
+                    v-model="nameValue"
+                    @blur="handleGroupInfoUpdate"
+                    placeholder="请输入群昵称" />
                 </div>
               </div>
 
@@ -169,7 +199,9 @@
                       font-size: 14px;
                       text-align: right;
                     "
-                    placeholder="请输入群昵称" />
+                    v-model="nicknameValue"
+                    @blur="handleInfoUpdate"
+                    placeholder="请输入我的群昵称" />
                 </div>
               </div>
             </div>
@@ -177,34 +209,19 @@
           <!-- 群备注 -->
           <div class="w-full flex flex-col gap-15px rounded-10px">
             <div class="ps-15px text-14px">
-              <span v-if="isEditingRemark">群备注</span>
-              <span v-if="isEditingRemark" class="text-#6E6E6E">（仅自己可见）</span>
-
-              <div v-if="isEditingRemark" class="flex items-center">
-                <n-input
-                  ref="remarkInputRef"
-                  v-model:value="item.remark"
-                  size="tiny"
-                  class="border-(1px solid #90909080)"
-                  placeholder="请输入群聊备注"
-                  clearable
-                  spellCheck="false"
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="off"
-                  @blur="handleRemarkUpdate"
-                  @keydown.enter="handleRemarkUpdate" />
-              </div>
-              <span v-else class="cursor-pointer text-gray-200 text-14px text-left" @click="startEditRemark">
-                {{ item?.remark || '设置群聊备注' }} （仅自己可见）
-              </span>
+              <span>群备注</span>
+              <span class="text-#6E6E6E">（仅自己可见）</span>
             </div>
-            <!-- <div class="rounded-10px flex w-full bg-white shadow">
+            <div class="rounded-10px flex w-full bg-white shadow">
               <div class="w-full px-15px">
-                <input class="h-50px w-full" style="border: none; outline: none; font-size: 14px"
-                  placeholder="请输入群备注" />
+                <input
+                  v-model="remarkValue"
+                  class="h-50px w-full"
+                  style="border: none; outline: none; font-size: 14px"
+                  placeholder="请输入群备注"
+                  @blur="handleInfoUpdate" />
               </div>
-            </div> -->
+            </div>
           </div>
           <div class="flex bg-white rounded-10px w-full h-auto shadow">
             <div class="px-15px flex flex-col w-full">
@@ -214,18 +231,22 @@
                 style="border-bottom: 1px solid; border-color: #ebebeb"
                 class="flex justify-between py-12px items-center">
                 <div class="text-14px">设置为置顶</div>
-                <n-switch v-model:value="active1" />
+                <n-switch :value="activeItem.top" @update:value="handleTop" />
               </div>
               <div
                 style="border-bottom: 1px solid; border-color: #ebebeb"
                 class="flex justify-between py-12px items-center">
                 <div class="text-14px">消息免打扰</div>
-                <n-switch v-model:value="active2" />
+                <n-switch :value="activeItem.muteNotification === NotificationTypeEnum.NOT_DISTURB" />
               </div>
             </div>
           </div>
           <div class="flex shadow bg-white cursor-pointer text-red text-14px rounded-10px w-full">
             <div class="p-15px">删除聊天记录</div>
+          </div>
+          <!-- 解散群聊按钮 -->
+          <div class="mt-auto flex justify-center mb-20px">
+            <n-button type="error" @click="handleExit">{{ isGroup ? '解散群聊' : '退出群聊' }}</n-button>
           </div>
         </div>
       </div>
@@ -234,30 +255,65 @@
 </template>
 
 <script setup lang="ts">
-import { RoomTypeEnum } from '@/enums'
+import { MittEnum, NotificationTypeEnum, RoleEnum, RoomTypeEnum } from '@/enums'
+import { useAvatarUpload } from '@/hooks/useAvatarUpload'
+import { useMitt } from '@/hooks/useMitt.ts'
 import router from '@/router'
 import type { UserItem } from '@/services/types'
 import { useCachedStore } from '@/stores/cached'
+import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global'
 import { useGroupStore } from '@/stores/group'
+import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { getGroupDetail } from '@/utils/ImRequestUtils'
+import { getGroupDetail, setSessionTop, updateRoomInfo } from '@/utils/ImRequestUtils'
 
+const dialog = useDialog()
+const userStore = useUserStore()
+const chatStore = useChatStore()
 const globalStore = useGlobalStore()
 const groupStore = useGroupStore()
 const cacheStore = useCachedStore()
 
-// TODO
-const memberNum = computed(() => globalStore.currentSession.memberNum)
+const isGroup = computed(() => globalStore.currentSession?.type === RoomTypeEnum.GROUP)
+const isLord = computed(() => {
+  const currentUser = groupStore.userList.find((user) => user.uid === useUserStore().userInfo?.uid)
+  return currentUser?.roleId === RoleEnum.LORD
+})
+const isAdmin = computed(() => {
+  const currentUser = groupStore.userList.find((user) => user.uid === useUserStore().userInfo?.uid)
+  return currentUser?.roleId === RoleEnum.ADMIN
+})
 
+const announError = ref(false)
+const announNum = ref(0)
+const isAddAnnoun = ref(false)
+const announList = ref<any[]>([])
+const remarkValue = ref('')
 const item = ref<any>(null)
-const active1 = ref(false)
-const active2 = ref(false)
+const nameValue = ref('')
+const avatarValue = ref('')
 const nicknameValue = ref('')
 const options = ref<Array<{ name: string; src: string }>>([])
-// 编辑群备注相关状态
-const isEditingRemark = ref(false)
-const remarkInputRef = useTemplateRef('remarkInputRef')
+const { currentSession: activeItem } = storeToRefs(globalStore)
+
+const {
+  fileInput,
+  localImageUrl,
+  showCropper,
+  cropperRef,
+  openAvatarCropper,
+  handleFileChange,
+  handleCrop: onCrop
+} = useAvatarUpload({
+  onSuccess: async (downloadUrl) => {
+    avatarValue.value = downloadUrl
+  }
+})
+
+const handleCrop = async (cropBlob: Blob) => {
+  await onCrop(cropBlob)
+}
 
 const handleCopy = (val: string) => {
   if (val) {
@@ -266,27 +322,150 @@ const handleCopy = (val: string) => {
   }
 }
 
-// 开始编辑群备注
-const startEditRemark = () => {
-  isEditingRemark.value = true
-  nextTick(() => {
-    remarkInputRef.value?.focus()
+const goToNotice = () => {
+  router.push({
+    path: '/mobile/chatRoom/notice',
+    query: {
+      announList: JSON.stringify(announList.value),
+      roomId: globalStore.currentSession.roomId
+    }
   })
 }
 
-const goToNotice = () => {
-  router.push('/mobile/chatRoom/notice')
+// 退出登录逻辑
+async function handleExit() {
+  dialog.error({
+    title: '提示',
+    content: isGroup.value ? '确定要解散群聊吗？' : '确定要退出群聊吗？',
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      try {
+        if (isGroup.value) {
+          if (isLord.value) {
+            if (activeItem.value.roomId === '1') {
+              window.$message.warning('无法解散频道')
+              return
+            }
+
+            groupStore.exitGroup(activeItem.value.roomId).then(() => {
+              window.$message.success('已解散群聊')
+              // 删除当前的会话
+              useMitt.emit(MittEnum.DELETE_SESSION, activeItem.value.roomId)
+            })
+          } else {
+            if (activeItem.value.roomId === '1') {
+              window.$message.warning('无法退出频道')
+              return
+            }
+
+            groupStore.exitGroup(activeItem.value.roomId).then(() => {
+              window.$message.success('已退出群聊')
+              // 删除当前的会话
+              useMitt.emit(MittEnum.DELETE_SESSION, activeItem.value.roomId)
+            })
+          }
+        }
+
+        router.push('/mobile/login')
+      } catch (error) {
+        console.error('创建登录窗口失败:', error)
+      }
+    },
+    onNegativeClick: () => {
+      console.log('用户点击了取消')
+    }
+  })
+}
+
+/** 判断当前用户是否拥有id为6的徽章 并且是频道 */
+const hasBadge6 = computed(() => {
+  // 只有当 roomId 为 "1" 时才进行徽章判断（频道）
+  if (globalStore.currentSession?.roomId !== '1') return false
+
+  const currentUser = groupStore.getUserInfo(userStore.userInfo!.uid!)!
+  return currentUser?.itemIds?.includes('6')
+})
+
+/**
+ * 初始化群公告所需要的信息
+ */
+const handleInitAnnoun = async () => {
+  // 初始化时获取群公告
+  if (isGroup.value) {
+    const roomId = globalStore.currentSession?.roomId
+    if (roomId) {
+      await handleLoadGroupAnnoun(roomId)
+    }
+  }
+}
+
+/**
+ * 加载群公告
+ */
+const handleLoadGroupAnnoun = async (roomId: string) => {
+  try {
+    // 设置是否可以添加公告
+    isAddAnnoun.value = isLord.value || isAdmin.value || hasBadge6.value!
+    // 获取群公告列表
+    const data = await cacheStore.getGroupAnnouncementList(roomId, 1, 10)
+    if (data) {
+      announList.value = data.records
+      // 处理置顶公告
+      if (announList.value && announList.value.length > 0) {
+        const topAnnouncement = announList.value.find((item: any) => item.top)
+        if (topAnnouncement) {
+          announList.value = [topAnnouncement, ...announList.value.filter((item: any) => !item.top)]
+        }
+      }
+      announNum.value = parseInt(data.total, 10)
+      announError.value = false
+    } else {
+      announError.value = false
+    }
+  } catch (error) {
+    console.error('加载群公告失败:', error)
+    announError.value = true
+  }
+}
+
+/** 置顶 */
+const handleTop = (value: boolean) => {
+  setSessionTop({ roomId: activeItem.value.roomId, top: value })
+    .then(() => {
+      // 更新本地会话状态
+      chatStore.updateSession(activeItem.value.roomId, { top: value })
+      window.$message.success(value ? '已置顶' : '已取消置顶')
+    })
+    .catch(() => {
+      window.$message.error('置顶失败')
+    })
 }
 
 // 处理群备注更新
-const handleRemarkUpdate = async () => {
+const handleInfoUpdate = async () => {
   await cacheStore.updateMyRoomInfo({
-    id: item.value!.roomId,
-    remark: item.value!.remark,
-    myName: item.value!.myName || ''
+    id: globalStore.currentSession.roomId,
+    remark: remarkValue.value,
+    myName: nicknameValue.value
   })
   window.$message.success('群备注更新成功')
-  isEditingRemark.value = false
+}
+
+// 处理群名称更新
+const handleGroupInfoUpdate = async () => {
+  await updateRoomInfo({
+    id: activeItem.value.roomId,
+    name: nameValue.value,
+    avatar: avatarValue.value
+  })
+  // 更新本地会话状态
+  // chatStore.updateSession(activeItem.value.roomId, {
+  //   avatar: ''
+  // })
+
+  activeItem.value.avatar = avatarValue.value
+  window.$message.success('群信息已更新')
 }
 
 // 获取群组详情和成员信息
@@ -312,14 +491,15 @@ const fetchGroupMembers = async (roomId: string) => {
  * 这里直接监听状态的值
  */
 onMounted(async () => {
-  console.log('globalStore.currentSession --> ', globalStore.currentSession)
-  if (globalStore.currentSession.type === RoomTypeEnum.SINGLE) {
-    item.value = groupStore.getUserInfo(globalStore.currentSession.detailId)!
-  } else {
-    await getGroupDetail(globalStore.currentSession.detailId)
+  await handleInitAnnoun()
+  if (isGroup.value) {
+    await getGroupDetail(globalStore.currentSession.roomId)
       .then((response: any) => {
         item.value = response
+        nameValue.value = response.groupName || ''
+        avatarValue.value = response.avatar
         nicknameValue.value = response.myName || ''
+        remarkValue.value = response.remark || ''
         if (item.value && item.value.roomId) {
           fetchGroupMembers(item.value.roomId)
         }
@@ -327,8 +507,10 @@ onMounted(async () => {
       .catch((e: any) => {
         console.error('获取群组详情失败:', e)
       })
+  } else {
+    // 这里需要拿到好友的信息
+    groupStore.getUserInfo(globalStore.currentSession.detailId)!
   }
-  console.log('item --> ', item)
 })
 </script>
 

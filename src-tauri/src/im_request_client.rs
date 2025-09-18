@@ -43,6 +43,10 @@ impl ImRequestClient {
         })
     }
 
+    pub fn set_base_url(&mut self, base_url: String) {
+        self.base_url = base_url;
+    }
+
     pub async fn request<
         T: serde::de::DeserializeOwned,
         B: serde::Serialize,
@@ -102,7 +106,11 @@ impl ImRequestClient {
                     return Err(anyhow::anyhow!("请重新登录"));
                 }
                 Some(200) => {
-                    info!("✅ Request successful: {}, Method: {}", &url, method.clone());
+                    info!(
+                        "✅ Request successful: {}, Method: {}",
+                        &url,
+                        method.clone()
+                    );
                     return Ok(result);
                 }
                 _ => {
@@ -260,6 +268,7 @@ pub enum ImUrl {
     HandleInvite,
     ApplyUnReadCount,
     RequestApplyPage,
+    RequestNoticePage,
     GetContactList,
     SearchFriend,
     ChangeUserState,
@@ -285,6 +294,8 @@ pub enum ImUrl {
     GetFriendPage,
     MarkMsgRead,
     CheckEmail,
+    MergeMsg,
+    GetUserByIds,
 }
 
 impl ImUrl {
@@ -360,6 +371,7 @@ impl ImUrl {
             ImUrl::HandleInvite => (http::Method::POST, "im/room/apply/handler/apply"),
             ImUrl::ApplyUnReadCount => (http::Method::GET, "im/room/apply/unread"),
             ImUrl::RequestApplyPage => (http::Method::GET, "im/room/apply/page"),
+            ImUrl::RequestNoticePage => (http::Method::GET, "im/room/notice/page"),
             ImUrl::GetFriendPage => (http::Method::GET, "im/user/friend/page"),
             ImUrl::GetContactList => (http::Method::GET, "im/chat/contact/list"),
             ImUrl::SearchFriend => (http::Method::GET, "im/user/friend/search"),
@@ -384,12 +396,15 @@ impl ImUrl {
             ImUrl::RecallMsg => (http::Method::PUT, "im/chat/msg/recall"),
             ImUrl::MarkMsg => (http::Method::PUT, "im/chat/msg/mark"),
             ImUrl::GetMsgPage => (http::Method::GET, "im/chat/msg/page"),
-            ImUrl::GetMsgList => (http::Method::GET, "im/chat/msg/list"),
+            ImUrl::GetMsgList => (http::Method::POST, "im/chat/msg/list"),
             ImUrl::GetMemberStatistic => (http::Method::GET, "im/chat/member/statistic"),
 
             // 群成员信息
             ImUrl::GetAllUserBaseInfo => (http::Method::GET, "im/room/group/member/list"),
             ImUrl::CheckEmail => (http::Method::GET, "oauth/anyTenant/checkEmail"),
+
+            ImUrl::MergeMsg => (http::Method::POST, "im/room/mergeMessage"),
+            ImUrl::GetUserByIds => (http::Method::POST, "im/user/getUserByIds"),
         }
     }
 
@@ -461,6 +476,7 @@ impl ImUrl {
             "handleInvite" => Ok(ImUrl::HandleInvite),
             "applyUnReadCount" => Ok(ImUrl::ApplyUnReadCount),
             "requestApplyPage" => Ok(ImUrl::RequestApplyPage),
+            "requestNoticePage" => Ok(ImUrl::RequestNoticePage),
             "getContactList" => Ok(ImUrl::GetContactList),
             "searchFriend" => Ok(ImUrl::SearchFriend),
 
@@ -495,6 +511,8 @@ impl ImUrl {
             "markMsgRead" => Ok(ImUrl::MarkMsgRead),
             "groupListMember" => Ok(ImUrl::GroupListMember),
             "checkEmail" => Ok(ImUrl::CheckEmail),
+            "mergeMsg" => Ok(ImUrl::MergeMsg),
+            "getUserByIds" => Ok(ImUrl::GetUserByIds),
 
             // 未匹配的字符串
             _ => Err(anyhow::anyhow!("未知的URL类型: {}", s)),

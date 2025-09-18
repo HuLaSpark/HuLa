@@ -1,7 +1,12 @@
 <template>
   <AutoFixHeightPage>
     <template #header>
-      <HeaderBar ref="header" :room-name="globalStore.currentSession!.name" :msg-count="1002" />
+      <HeaderBar
+        ref="header"
+        :room-name="
+          globalStore.currentSession.remark ? globalStore.currentSession.remark : globalStore.currentSession.name
+        "
+        :msg-count="1002" />
     </template>
     <template #container>
       <ChatMain />

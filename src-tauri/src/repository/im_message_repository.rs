@@ -5,7 +5,7 @@ use sea_orm::prelude::Expr;
 use sea_orm::sea_query::Alias;
 use sea_orm::{
     ColumnTrait, Condition, ConnectionTrait, DatabaseConnection, DatabaseTransaction, EntityTrait,
-    IntoActiveModel, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set,
+    IntoActiveModel, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set, TryIntoModel,
 };
 
 use tracing::{debug, error, info};
@@ -237,18 +237,44 @@ pub async fn save_message(
 /// 更新消息发送状态
 pub async fn update_message_status(
     db: &DatabaseConnection,
-    message_id: &str,
+    message: im_message::Model,
     status: &str,
     id: Option<String>,
     login_uid: String,
-) -> Result<(), CommonError> {
+) -> Result<im_message::Model, CommonError> {
     let mut active_model: im_message::ActiveModel =
-        im_message::Entity::find_by_id((message_id.to_string(), login_uid))
+        im_message::Entity::find_by_id((message.id.clone(), login_uid))
             .one(db)
             .await
             .map_err(|e| anyhow::anyhow!("Failed to find message: {}", e))?
             .ok_or_else(|| CommonError::UnexpectedError(anyhow::anyhow!("Message not found")))?
             .into_active_model();
+
+    // 设置 time_block
+    if message.id.starts_with('T') {
+        info!("check msg sendTime");
+        // 查找该房间的最后一条消息
+        let last_message = im_message::Entity::find()
+            .filter(im_message::Column::RoomId.eq(&message.room_id))
+            .filter(im_message::Column::LoginUid.eq(message.login_uid.clone()))
+            .filter(im_message::Column::Id.ne(&message.id))
+            .order_by_desc(im_message::Column::Id)
+            .limit(1)
+            .one(db)
+            .await
+            .map_err(|e| anyhow::anyhow!("Failed to find last message: {}", e))?;
+
+        if let Some(last_message) = last_message {
+            // 比较时间戳
+            if let (Some(last_send_time), Some(send_time)) =
+                (last_message.send_time, message.send_time)
+            {
+                if send_time - last_send_time >= 1000 * 60 * 15 {
+                    active_model.time_block = Set(Some(send_time - last_send_time));
+                }
+            }
+        }
+    }
 
     active_model.send_status = Set(status.to_string());
 
@@ -263,11 +289,11 @@ pub async fn update_message_status(
     }
 
     im_message::Entity::update_many()
-        .set(active_model)
-        .filter(im_message::Column::Id.eq(message_id))
+        .set(active_model.clone())
+        .filter(im_message::Column::Id.eq(message.id))
         .exec(db)
         .await?;
-    Ok(())
+    Ok(active_model.try_into_model()?)
 }
 
 /// 更新消息撤回状态

@@ -30,10 +30,10 @@ let isFirstInit = false
 // 撤回消息的过期时间
 const RECALL_EXPIRATION_TIME = 2 * 60 * 1000 // 2分钟，单位毫秒
 
-// 定义消息数量阈值
-const MESSAGE_THRESHOLD = 120
-// 定义保留的最新消息数量
-const KEEP_MESSAGE_COUNT = 60
+// // 定义消息数量阈值
+// const MESSAGE_THRESHOLD = 120
+// // 定义保留的最新消息数量
+// const KEEP_MESSAGE_COUNT = 60
 
 // 创建src/workers/timer.worker.ts
 const timerWorker = new Worker(new URL('../workers/timer.worker.ts', import.meta.url))
@@ -69,19 +69,11 @@ export const useChatStore = defineStore(
     const recalledMessages = reactive<Map<string, RecalledMessage>>(new Map())
     // 存储每条撤回消息的过期定时器
     const expirationTimers = new Map<string, boolean>()
+    const isMsgMultiChoose = ref<boolean>(false)
 
     // 当前聊天室的消息Map计算属性
-    const currentMessageMap = computed({
-      get: () => {
-        const current = messageMap.get(globalStore.currentSession!.roomId)
-        if (current === undefined) {
-          messageMap.set(globalStore.currentSession!.roomId, new Map())
-        }
-        return messageMap.get(globalStore.currentSession!.roomId)
-      },
-      set: (val) => {
-        messageMap.set(globalStore.currentSession!.roomId, val as Map<string, MessageType>)
-      }
+    const currentMessageMap = computed(() => {
+      return messageMap.get(globalStore.currentSession!.roomId)
     })
 
     // 当前聊天室的消息加载状态计算属性
@@ -113,6 +105,11 @@ export const useChatStore = defineStore(
       set: (val) => {
         replyMapping.set(globalStore.currentSession!.roomId, val as Map<string, string[]>)
       }
+    })
+
+    // 判断是否应该显示“没有更多消息”
+    const shouldShowNoMoreMessage = computed(() => {
+      return currentMessageOptions.value?.isLast
     })
 
     // 判断当前是否为群聊
@@ -183,17 +180,17 @@ export const useChatStore = defineStore(
     // 当前消息回复
     const currentMsgReply = ref<Partial<MessageType>>({})
 
-    // 将消息列表转换为数组
+    // 将消息列表转换为数组并计算时间间隔
     const chatMessageList = computed(() => {
-      return currentMessageMap.value
-        ? [...currentMessageMap.value.values()].sort((a, b) => Number(a.message.id) - Number(b.message.id))
-        : []
+      if (!currentMessageMap.value) return []
+
+      return [...currentMessageMap.value.values()].sort((a, b) => Number(a.message.id) - Number(b.message.id))
     })
 
     const chatMessageListByRoomId = computed(() => (roomId: string) => {
-      return messageMap.get(roomId)
-        ? [...messageMap.get(roomId)!.values()].sort((a, b) => Number(a.message.id) - Number(b.message.id))
-        : []
+      if (!messageMap.get(roomId)) return []
+
+      return [...messageMap.get(roomId)!.values()].sort((a, b) => Number(a.message.id) - Number(b.message.id))
     })
 
     // 登录之后，加载一次所有会话的消息
@@ -254,7 +251,6 @@ export const useChatStore = defineStore(
       try {
         if (sessionOptions.isLoading) return
         sessionOptions.isLoading = true
-        console.log('获取会话列表')
         const response: any = await invokeWithErrorHandler(TauriCommand.LIST_CONTACTS, undefined, {
           customErrorMessage: '获取会话列表失败',
           errorType: ErrorType.Network
@@ -356,16 +352,6 @@ export const useChatStore = defineStore(
       const current = messageMap.get(msg.message.roomId)
       current?.set(msg.message.id, msg)
 
-      // 检查消息数量是否超过阈值
-      if (current && current.size > MESSAGE_THRESHOLD) {
-        // 获取所有消息ID并按时间排序
-        const messageIds = Array.from(current.keys())
-        const messagesToDelete = messageIds.slice(0, messageIds.length - KEEP_MESSAGE_COUNT)
-
-        // 删除旧消息
-        messagesToDelete.forEach((id) => current.delete(id))
-      }
-
       // 获取用户信息缓存
       const uid = msg.fromUser.uid
       const cacheUser = groupStore.getUserInfo(uid)
@@ -410,6 +396,10 @@ export const useChatStore = defineStore(
           icon: cacheUser.avatar as string
         })
       }
+    }
+
+    const clearSessionCheck = () => {
+      sessionList.value.forEach((item) => (item.isCheck = false))
     }
 
     // 过滤掉拉黑用户的发言
@@ -573,14 +563,6 @@ export const useChatStore = defineStore(
       }
     }
 
-    // 添加一个工具函数来触发消息列表更新
-    const triggerMessageMapUpdate = () => {
-      if (currentMessageMap.value) {
-        const newMap = new Map(currentMessageMap.value)
-        currentMessageMap.value = newMap
-      }
-    }
-
     // 获取撤回消息
     const getRecalledMessage = (msgId: string): RecalledMessage | undefined => {
       return recalledMessages.get(msgId)
@@ -597,17 +579,20 @@ export const useChatStore = defineStore(
       status,
       newMsgId,
       body,
-      uploadProgress
+      uploadProgress,
+      timeBlock
     }: {
       msgId: string
       status: MessageStatusEnum
       newMsgId?: string
       body?: any
       uploadProgress?: number
+      timeBlock?: number
     }) => {
       const msg = currentMessageMap.value?.get(msgId)
       if (msg) {
         msg.message.status = status
+        msg.timeBlock = timeBlock
         if (newMsgId) {
           msg.message.id = newMsgId
         }
@@ -652,6 +637,10 @@ export const useChatStore = defineStore(
       const index = sessionList.value.findIndex((session) => session.roomId === roomId)
       if (index !== -1) {
         sessionList.value.splice(index, 1)
+        if (globalStore.currentSessionRoomId === roomId) {
+          globalStore.updateCurrentSessionRoomId(sessionList.value[0].roomId)
+        }
+
         // 删除会话后更新未读计数
         nextTick(() => {
           updateTotalUnreadCount()
@@ -667,7 +656,6 @@ export const useChatStore = defineStore(
         console.log(`[Timeout] 消息ID: ${msgId} 已过期`)
         recalledMessages.delete(msgId)
         expirationTimers.delete(msgId)
-        triggerMessageMapUpdate()
       } else if (type === 'allTimersCompleted') {
         // 所有定时器都完成了，可以安全地清理资源
         clearAllExpirationTimers()
@@ -736,38 +724,34 @@ export const useChatStore = defineStore(
       const requestRoomId = globalStore.currentSession!.roomId
 
       try {
-        // 1. 清空当前消息列表
-        if (currentMessageMap.value) {
-          currentMessageMap.value.clear()
-        }
+        // 1. 清空消息数据 避免竞态条件
+        const currentMessages = messageMap.get(requestRoomId)
+        currentMessages?.clear() // 如果Map存在就清空，不存在getPageMsg会自动创建
 
-        // 2. 重置消息加载状态
-        if (currentMessageOptions.value) {
-          currentMessageOptions.value = {
-            isLast: false,
-            isLoading: true,
-            cursor: ''
-          }
-        }
+        // 2. 重置消息加载状态，强制cursor为空以获取最新消息
+        messageOptions.set(requestRoomId, {
+          isLast: false,
+          isLoading: true,
+          cursor: ''
+        })
 
         // 3. 清空回复映射
-        if (currentReplyMap.value) {
-          currentReplyMap.value.clear()
-        }
+        const currentReplyMapping = replyMapping.get(requestRoomId)
+        currentReplyMapping?.clear()
 
-        // 4. 从服务器获取最新的消息（默认20条）
-        await getMsgList(pageSize)
+        // 4. 直接调用getPageMsg获取最新消息，强制使用空cursor
+        await getPageMsg(pageSize, requestRoomId, '')
 
         console.log('[Network] 已重置并刷新当前聊天室的消息列表')
       } catch (error) {
         console.error('[Network] 重置并刷新消息列表失败:', error)
         // 如果获取失败，确保重置加载状态
-        if (globalStore.currentSession!.roomId === requestRoomId && currentMessageOptions.value) {
-          currentMessageOptions.value = {
+        if (globalStore.currentSession!.roomId === requestRoomId) {
+          messageOptions.set(requestRoomId, {
             isLast: false,
             isLoading: false,
             cursor: ''
-          }
+          })
         }
       }
     }
@@ -777,9 +761,9 @@ export const useChatStore = defineStore(
       return sessionList.value.filter((session) => session.type === RoomTypeEnum.GROUP)
     }
 
-    const shouldShowNoMoreMessage = computed(() => {
-      return currentMessageOptions.value?.isLast
-    })
+    const setMsgMultiChoose = (flag: boolean) => {
+      isMsgMultiChoose.value = flag
+    }
 
     return {
       getMsgIndex,
@@ -822,7 +806,10 @@ export const useChatStore = defineStore(
       addSession,
       setAllSessionMsgList,
       chatMessageListByRoomId,
-      shouldShowNoMoreMessage
+      shouldShowNoMoreMessage,
+      isMsgMultiChoose,
+      clearSessionCheck,
+      setMsgMultiChoose
     }
   },
   {

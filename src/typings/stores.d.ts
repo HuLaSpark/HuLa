@@ -80,6 +80,11 @@ declare namespace STO {
       /** 截图时是否隐藏窗口 */
       isConceal: boolean
     }
+    /** 消息通知设置 */
+    notification: {
+      /** 是否开启消息提示音 */
+      messageSound: boolean
+    }
   }
 
   /**

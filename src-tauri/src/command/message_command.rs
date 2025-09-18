@@ -25,6 +25,7 @@ pub struct MessageResp {
     pub from_user: FromUser,
     pub message: Message,
     pub old_msg_id: Option<String>,
+    pub time_block: Option<i64>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -95,6 +96,7 @@ pub async fn page_msg(
     param: CursorPageMessageParam,
     state: State<'_, AppData>,
 ) -> Result<CursorPageResp<Vec<MessageResp>>, String> {
+    info!("get page msg");
     // 获取当前登录用户的 uid
     let login_uid = {
         let user_info = state.user_info.lock().await;
@@ -116,7 +118,7 @@ pub async fn page_msg(
         .list
         .unwrap_or_default()
         .into_iter()
-        .map(|msg| convert_message_to_resp(msg))
+        .map(|msg| convert_message_to_resp(msg, None))
         .rev()
         .collect();
 
@@ -129,7 +131,7 @@ pub async fn page_msg(
 }
 
 /// 将数据库消息模型转换为响应模型
-pub fn convert_message_to_resp(msg: im_message::Model) -> MessageResp {
+pub fn convert_message_to_resp(msg: im_message::Model, old_msg_id: Option<String>) -> MessageResp {
     // 解析消息体 - 安全地处理 JSON 解析
     let body = msg.body.as_ref().and_then(|body_str| {
         if body_str.trim().is_empty() {
@@ -193,7 +195,8 @@ pub fn convert_message_to_resp(msg: im_message::Model) -> MessageResp {
             message_marks,
             send_time: msg.send_time,
         },
-        old_msg_id: None,
+        old_msg_id: old_msg_id,
+        time_block: msg.time_block,
     }
 }
 
@@ -254,7 +257,7 @@ pub async fn fetch_all_messages(
         uid, last_opt_time
     );
     // 调用后端接口 /chat/msg/list 获取所有消息，传递 last_opt_time 参数
-    let params = if let Some(time) = last_opt_time {
+    let body = if let Some(time) = last_opt_time {
         Some(serde_json::json!({
             "lastOptTime": time
         }))
@@ -263,7 +266,7 @@ pub async fn fetch_all_messages(
     };
 
     let messages: Option<Vec<MessageResp>> = client
-        .im_request(ImUrl::GetMsgList, None::<serde_json::Value>, params)
+        .im_request(ImUrl::GetMsgList, body, None::<serde_json::Value>)
         .await?;
 
     if let Some(messages) = messages {
@@ -332,6 +335,7 @@ fn convert_resp_to_model_for_fetch(msg_resp: MessageResp, uid: String) -> im_mes
         update_time: msg_resp.update_time,
         login_uid: uid.to_string(), // 这里暂时设为空字符串，实际使用时会在 save_all 中设置
         send_status: "success".to_string(), // 从后端获取的消息默认为成功状态
+        time_block: msg_resp.time_block,
     }
 }
 
@@ -376,6 +380,7 @@ pub async fn send_msg(
         update_time: Some(current_time),
         login_uid: login_uid.clone(),
         send_status: "pending".to_string(), // 初始状态为pending
+        time_block: None,
     };
 
     let tx = state
@@ -418,28 +423,30 @@ pub async fn send_msg(
             Ok(Some(mut resp)) => {
                 resp.old_msg_id = Some(msg_id.clone());
                 id = resp.message.id.clone();
-                // 尝试克隆数据以避免所有权问题
-                let event_data = resp.clone();
-                success_channel.send(event_data).unwrap();
                 "success"
             }
-            _ => {
-                error_channel.send(msg_id.clone()).unwrap();
-                "fail"
-            }
+            _ => "fail",
         };
 
         // 更新消息状态
-        if let Err(e) = im_message_repository::update_message_status(
+        let model = im_message_repository::update_message_status(
             db_conn.deref(),
-            &msg_id,
+            message,
             status,
             id,
             login_uid.clone(),
         )
-        .await
-        {
-            error!("Failed to update message status: {}", e);
+        .await;
+
+        match model {
+            Ok(model) => {
+                let resp = convert_message_to_resp(model, Some(msg_id));
+                success_channel.send(resp).unwrap();
+            }
+            Err(e) => {
+                error!("{:?}", e);
+                error_channel.send(msg_id.clone()).unwrap();
+            }
         }
     });
 
@@ -448,6 +455,7 @@ pub async fn send_msg(
 
 #[tauri::command]
 pub async fn save_msg(data: MessageResp, state: State<'_, AppData>) -> Result<(), String> {
+    info!("save msg: {:?}", serde_json::to_string(&data));
     // 创建 im_message::Model
     let message = convert_resp_to_model_for_fetch(data, state.user_info.lock().await.uid.clone());
 

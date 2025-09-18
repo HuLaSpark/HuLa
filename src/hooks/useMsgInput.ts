@@ -361,7 +361,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     }
     const msg = await messageStrategy.getMsg(msgInput.value, reply.value)
     const atUidList = extractAtUserIds(msgInput.value, groupStore.userList)
-    const tempMsgId = Date.now().toString()
+    const tempMsgId = 'T' + Date.now().toString()
 
     // 根据消息类型创建消息体
     const messageBody = {
@@ -379,12 +379,10 @@ export const useMsgInput = (messageInputDom: Ref) => {
     console.log('👾临时消息:', tempMsg)
 
     // 设置发送状态的定时器
-    const statusTimer = setTimeout(() => {
-      chatStore.updateMsg({
-        msgId: tempMsgId,
-        status: MessageStatusEnum.SENDING
-      })
-    }, 800)
+    chatStore.updateMsg({
+      msgId: tempMsgId,
+      status: MessageStatusEnum.SENDING
+    })
 
     try {
       // 如果是图片或表情消息,需要先上传文件
@@ -472,8 +470,10 @@ export const useMsgInput = (messageInputDom: Ref) => {
           msgId: message.oldMsgId,
           status: MessageStatusEnum.SUCCESS,
           newMsgId: message.message.id,
-          body: message.message.body
+          body: message.message.body,
+          timeBlock: message.timeBlock
         })
+        useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
       }
 
       // 监听错误响应
@@ -483,6 +483,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
           msgId: msgId,
           status: MessageStatusEnum.FAILED
         })
+        useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
       }
 
       await invoke(TauriCommand.SEND_MSG, {
@@ -495,16 +496,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
         successChannel,
         errorChannel
       })
-
-      // 停止发送状态的定时器
-      clearTimeout(statusTimer)
-
-      // 更新消息状态为成功,并使用服务器返回的消息体
-      // chatStore.updateMsg({
-      //   msgId: tempMsgId,
-      //   status: MessageStatusEnum.SUCCESS,
-      //   newMsgId: res,
-      // })
 
       // 更新会话最后活动时间
       chatStore.updateSessionLastActiveTime(globalStore.currentSession!.roomId)
@@ -520,7 +511,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
       }
     } catch (error) {
       console.error('消息发送失败:', error)
-      clearTimeout(statusTimer)
       chatStore.updateMsg({
         msgId: tempMsgId,
         status: MessageStatusEnum.FAILED
@@ -963,8 +953,10 @@ export const useMsgInput = (messageInputDom: Ref) => {
               msgId: message.oldMsgId,
               status: MessageStatusEnum.SUCCESS,
               newMsgId: message.message.id,
-              body: message.message.body
+              body: message.message.body,
+              timeBlock: message.timeBlock
             })
+            useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
           }
 
           // 监听错误响应
@@ -974,6 +966,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
               msgId: msgId,
               status: MessageStatusEnum.FAILED
             })
+            useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
           }
 
           await invoke(TauriCommand.SEND_MSG, {
@@ -1047,8 +1040,10 @@ export const useMsgInput = (messageInputDom: Ref) => {
               msgId: message.oldMsgId,
               status: MessageStatusEnum.SUCCESS,
               newMsgId: message.message.id,
-              body: message.message.body
+              body: message.message.body,
+              timeBlock: message.timeBlock
             })
+            useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
           }
 
           // 监听错误响应
@@ -1058,6 +1053,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
               msgId: msgId,
               status: MessageStatusEnum.FAILED
             })
+            useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
           }
 
           await invoke(TauriCommand.SEND_MSG, {
@@ -1158,8 +1154,10 @@ export const useMsgInput = (messageInputDom: Ref) => {
               msgId: message.oldMsgId,
               status: MessageStatusEnum.SUCCESS,
               newMsgId: message.message.id,
-              body: message.message.body
+              body: message.message.body,
+              timeBlock: message.timeBlock
             })
+            useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
           }
 
           // 监听错误响应
@@ -1169,6 +1167,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
               msgId: msgId,
               status: MessageStatusEnum.FAILED
             })
+            useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
           }
 
           await invoke(TauriCommand.SEND_MSG, {
@@ -1232,7 +1231,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
         duration: voiceData.duration,
         filename: voiceData.filename
       }
-      const tempMsgId = Date.now().toString()
+      const tempMsgId = 'T' + Date.now().toString()
 
       // 创建消息体（初始使用本地路径）
       const messageBody = {
@@ -1260,7 +1259,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
           body: messageBody,
           messageMarks: {}
         },
-        sendTime: new Date().toISOString(),
+        sendTime: Date.now(),
         loading: false
       }
 
@@ -1268,12 +1267,10 @@ export const useMsgInput = (messageInputDom: Ref) => {
       chatStore.pushMsg(tempMsg)
 
       // 设置发送状态的定时器
-      const statusTimer = setTimeout(() => {
-        chatStore.updateMsg({
-          msgId: tempMsgId,
-          status: MessageStatusEnum.SENDING
-        })
-      }, 800)
+      chatStore.updateMsg({
+        msgId: tempMsgId,
+        status: MessageStatusEnum.SENDING
+      })
 
       try {
         // 获取语音消息策略
@@ -1318,8 +1315,10 @@ export const useMsgInput = (messageInputDom: Ref) => {
               msgId: message.oldMsgId,
               status: MessageStatusEnum.SUCCESS,
               newMsgId: message.message.id,
-              body: message.message.body
+              body: message.message.body,
+              timeBlock: message.timeBlock
             })
+            useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
           }
 
           // 监听错误响应
@@ -1329,6 +1328,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
               msgId: msgId,
               status: MessageStatusEnum.FAILED
             })
+            useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
           }
 
           await invoke(TauriCommand.SEND_MSG, {
@@ -1336,8 +1336,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
             successChannel: voiceSuccessChannel,
             errorChannel: voiceErrorChannel
           })
-          // 停止发送状态的定时器
-          clearTimeout(statusTimer)
 
           // 更新会话最后活动时间
           chatStore.updateSessionLastActiveTime(globalStore.currentSession!.roomId)
@@ -1347,7 +1345,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
             // asset:// 协议不需要手动释放
           }
         } catch (apiError: any) {
-          clearTimeout(statusTimer)
           chatStore.updateMsg({
             msgId: tempMsgId,
             status: MessageStatusEnum.FAILED
@@ -1355,7 +1352,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
           throw new Error(`发送消息失败: ${apiError.message || apiError}`)
         }
       } catch (uploadError) {
-        clearTimeout(statusTimer)
         chatStore.updateMsg({
           msgId: tempMsgId,
           status: MessageStatusEnum.FAILED

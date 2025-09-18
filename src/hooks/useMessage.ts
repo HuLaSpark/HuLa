@@ -42,6 +42,22 @@ export const useMessage = () => {
   }
 
   /**
+   * 预加载聊天室
+   * @param roomId
+   */
+  const preloadChatRoom = async (roomId: string = '1') => {
+    globalStore.updateCurrentSessionRoomId(roomId)
+    try {
+      await chatStore.changeRoom()
+      await markMsgRead(roomId)
+      chatStore.markSessionRead(roomId || '1')
+      await globalStore.updateGlobalUnreadCount()
+    } catch (error) {
+      console.error('尝试进入聊天室时出现错误：', error)
+    }
+  }
+
+  /**
    * 删除会话
    * @param roomId 会话信息
    */
@@ -223,9 +239,10 @@ export const useMessage = () => {
         return 'logout'
       },
       click: async (item: SessionItem) => {
+        console.log('删除好友或退出群聊执行')
         // 单聊：删除好友
         if (item.type === RoomTypeEnum.SINGLE) {
-          await contactStore.onDeleteContact(item.id)
+          await contactStore.onDeleteContact(item.detailId)
           await handleMsgDelete(item.roomId)
           window.$message.success('已删除好友')
           return
@@ -295,5 +312,5 @@ export const useMessage = () => {
     useMitt.off(MittEnum.SHRINK_WINDOW, () => {})
   })
 
-  return { msgBoxShow, handleMsgClick, handleMsgDelete, handleMsgDblclick, menuList, specialMenuList }
+  return { msgBoxShow, handleMsgClick, handleMsgDelete, handleMsgDblclick, menuList, specialMenuList, preloadChatRoom }
 }

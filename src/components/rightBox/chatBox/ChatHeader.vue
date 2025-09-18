@@ -20,9 +20,7 @@
               [{{ groupStore.countInfo?.memberNum }}]
             </p>
           </label>
-          <svg
-            v-if="activeItem.hotFlag === IsAllUserEnum.Yes && !headerLoading"
-            class="size-20px color-#13987f select-none outline-none">
+          <svg v-if="activeItem.hotFlag === IsAllUserEnum.Yes" class="size-20px color-#13987f select-none outline-none">
             <use href="#auth"></use>
           </svg>
           <n-flex v-else-if="activeItem.type === RoomTypeEnum.SINGLE" align="center">
@@ -431,17 +429,15 @@ const tips = ref()
 const optionsType = ref<RoomActEnum>()
 const modalShow = ref(false)
 const sidebarShow = ref(false)
-const headerLoading = ref(false)
 const cacheStore = useCachedStore()
 const { currentSession: activeItem } = storeToRefs(globalStore)
-// const activeItem = globalStore.currentSession!
 
 // 是否为频道（仅显示 more 按钮）
-const isChannel = computed(() => activeItem.value.hotFlag === IsAllUserEnum.Yes || activeItem.value.roomId === '1')
+const isChannel = computed(() => activeItem.value?.hotFlag === IsAllUserEnum.Yes || activeItem.value?.roomId === '1')
 // 是否为群主
 const isGroupOwner = computed(() => {
   // 频道不能修改群头像和群名称
-  if (activeItem.value.roomId === '1' || activeItem.value.hotFlag === IsAllUserEnum.Yes) {
+  if (!activeItem.value || activeItem.value.roomId === '1' || activeItem.value.hotFlag === IsAllUserEnum.Yes) {
     return false
   }
 
@@ -459,8 +455,8 @@ const groupNameInputRef = useTemplateRef<HTMLInputElement | null>('groupNameInpu
 
 const messageSettingType = computed(() => {
   // 群消息设置只在免打扰模式下有意义
-  if (activeItem.value.muteNotification === NotificationTypeEnum.NOT_DISTURB) {
-    return activeItem.value.shield ? 'shield' : 'notification'
+  if (activeItem.value?.muteNotification === NotificationTypeEnum.NOT_DISTURB) {
+    return activeItem.value?.shield ? 'shield' : 'notification'
   }
   // 非免打扰模式下，默认返回 notification
   return 'notification'
@@ -471,13 +467,14 @@ const messageSettingOptions = ref([
 ])
 /** 是否在线 */
 const isOnline = computed(() => {
+  if (!activeItem.value) return false
   if (activeItem.value.type === RoomTypeEnum.GROUP) return true
   const contact = contactStore.contactsList.find((item) => item.uid === activeItem.value.detailId)
   return contact?.activeStatus === OnlineEnum.ONLINE
 })
 /** 是否还是好友 */
 const shouldShowDeleteFriend = computed(() => {
-  if (activeItem.value.type === RoomTypeEnum.GROUP) return false
+  if (!activeItem.value || activeItem.value.type === RoomTypeEnum.GROUP) return false
   return contactStore.contactsList.some((item) => item.uid === activeItem.value.detailId)
 })
 const groupUserList = computed(() => groupStore.userList)
@@ -499,7 +496,7 @@ const userList = computed(() => {
 })
 /** 获取当前用户的状态信息 */
 const currentUserStatus = computed(() => {
-  if (activeItem.value.type === RoomTypeEnum.GROUP) return null
+  if (!activeItem.value || activeItem.value.type === RoomTypeEnum.GROUP) return null
 
   // 使用 useUserInfo 获取用户信息
   if (!activeItem.value.detailId) return null
@@ -522,6 +519,7 @@ const statusTitle = computed(() => {
 
 // 获取用户的最新头像
 const currentUserAvatar = computed(() => {
+  if (!activeItem.value) return ''
   if (activeItem.value.type === RoomTypeEnum.GROUP) {
     return AvatarUtils.getAvatarUrl(activeItem.value.avatar)
   } else if (activeItem.value.detailId) {
@@ -555,15 +553,6 @@ const {
     window.$message.success('群头像已更新')
   }
 })
-
-// 监听消息加载状态变化
-watch(
-  () => chatStore.currentMessageOptions?.isLoading,
-  (isLoading) => {
-    headerLoading.value = isLoading!
-  },
-  { immediate: true }
-)
 
 watchEffect(() => {
   stream.value?.getVideoTracks()[0]?.addEventListener('ended', () => {
@@ -903,7 +892,6 @@ const handleVideoCall = async (remotedUid: string, callType: CallTypeEnum) => {
 
 onMounted(() => {
   window.addEventListener('click', closeMenu, true)
-  if (!chatStore.currentMessageOptions?.isLoading) headerLoading.value = false
 
   useMitt.on(WsResponseMessageType.VideoCallRequest, (event) => {
     info(`收到通话请求：${JSON.stringify(event)}`)

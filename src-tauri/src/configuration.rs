@@ -6,22 +6,37 @@ use tauri::{AppHandle, Manager};
 use tracing::info;
 
 // 应用程序设置结构体
-#[derive(serde::Deserialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct Settings {
     pub database: DatabaseSettings,
     pub backend: BackendSettings,
+    pub youdao: Youdao,
 }
 
 // 数据库配置设置
-#[derive(serde::Deserialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct DatabaseSettings {
     pub sqlite_file: String,
 }
 
 // 后端服务配置设置
-#[derive(serde::Deserialize, Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct BackendSettings {
     pub base_url: String,
+    pub ws_url: String,
+}
+
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+pub struct Youdao {
+    pub app_key: String,
+    pub app_secret: String,
+}
+
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+pub struct Tencent {
+    pub api_key: String,
+    pub secret_id: String,
 }
 
 // 应用程序运行环境枚举
@@ -29,13 +44,6 @@ pub struct BackendSettings {
 pub enum Environment {
     Local,
     Production,
-}
-
-// 配置文件来源枚举
-enum ConfigSource {
-    FileSystem(PathBuf, PathBuf),
-    Resource(PathBuf, PathBuf),
-    Embedded,
 }
 
 impl DatabaseSettings {
@@ -150,204 +158,120 @@ impl TryFrom<String> for Environment {
 /// * `Ok(Settings)` - 成功时返回配置设置
 /// * `Err(config::ConfigError)` - 失败时返回配置错误
 pub fn get_configuration(app_handle: &AppHandle) -> Result<Settings, config::ConfigError> {
-    let environment: Environment = std::env::var("APP_ENVIRONMENT")
-        .unwrap_or_else(|_| "local".into())
-        .try_into()
-        .map_err(|e| {
-            config::ConfigError::Message(format!("Failed to parse APP_ENVIRONMENT: {:?}", e))
+    #[cfg(not(target_os = "android"))]
+    {
+        let is_desktop_dev = cfg!(debug_assertions) && cfg!(desktop);
+
+        let config_path_buf = get_config_path_buf(app_handle, is_desktop_dev)?;
+
+        let settings = config::Config::builder()
+            .add_source(config::File::from(config_path_buf.0))
+            .add_source(config::File::from(config_path_buf.1))
+            .add_source(
+                config::Environment::with_prefix("APP")
+                    .prefix_separator("_")
+                    .separator("__"),
+            )
+            .build()?;
+
+        settings.try_deserialize::<Settings>()
+    }
+
+    #[cfg(target_os = "android")]
+    {
+        // 读取 base.yaml 内容
+        let base_content = std::str::from_utf8(include_bytes!("../configuration/base.yaml"))
+            .map_err(|e| config::ConfigError::Message(e.to_string()))?;
+
+        // 构建 base 配置对象
+        let base_config = config::Config::builder()
+            .add_source(config::File::from_str(
+                base_content,
+                config::FileFormat::Yaml,
+            ))
+            .build()?;
+
+        // 获取 active_config 字段
+        let active_config = base_config.get_string("active_config").map_err(|_| {
+            config::ConfigError::Message(
+                "Missing or invalid 'active_config' in base.yaml".to_string(),
+            )
         })?;
 
-    info!("APP_ENVIRONMENT: {}", environment.as_str());
-    let environment_filename = format!("{}.yaml", environment.as_str());
-    let is_desktop_dev = cfg!(debug_assertions) && cfg!(desktop);
+        // 校验 active_config 合法性
+        if active_config != "local" && active_config != "production" {
+            return Err(config::ConfigError::Message(
+                "Only \"local\" or \"production\" can be specified in active_config".to_string(),
+            ));
+        }
 
-    match load_config_source(app_handle, &environment_filename, is_desktop_dev) {
-        ConfigSource::FileSystem(base_path, env_path) => {
-            tracing::info!("Using filesystem configuration files");
-            build_config_from_files(base_path, env_path)
-        }
-        ConfigSource::Resource(base_path, env_path) => {
-            tracing::info!("Using Resource directory configuration files");
-            build_config_from_files(base_path, env_path)
-        }
-        ConfigSource::Embedded => {
-            tracing::info!("Using embedded configuration");
-            build_config_from_embedded(&environment)
-        }
+        // 加载对应的配置文件内容
+        let config_file_bytes: &[u8] = match active_config.as_str() {
+            "local" => include_bytes!("../configuration/local.yaml").as_ref(),
+            "production" => include_bytes!("../configuration/production.yaml").as_ref(),
+            _ => return Err(config::ConfigError::Message("Invalid active_config".into())),// 这里可以支持更多的环境配置
+        };
+
+        let active_content = std::str::from_utf8(config_file_bytes)
+            .map_err(|e| config::ConfigError::Message(e.to_string()))?;
+
+        // 构建最终配置对象
+        config::Config::builder()
+            .add_source(config::File::from_str(
+                base_content,
+                config::FileFormat::Yaml,
+            ))
+            .add_source(config::File::from_str(
+                active_content,
+                config::FileFormat::Yaml,
+            ))
+            .add_source(
+                config::Environment::with_prefix("APP")
+                    .prefix_separator("_")
+                    .separator("__"),
+            )
+            .build()?
+            .try_deserialize::<Settings>()
     }
 }
 
-/// 加载配置文件来源
-/// 根据运行环境和配置文件可用性确定配置来源
-/// 优先级：文件系统 > 资源目录 > 嵌入式配置
-///
-/// # 参数
-/// * `app_handle` - Tauri应用句柄
-/// * `environment_filename` - 环境配置文件名
-/// * `is_desktop_dev` - 是否为桌面开发环境
-///
-/// # 返回值
-/// * `ConfigSource` - 配置文件来源枚举
-fn load_config_source(
+fn get_config_path_buf(
     app_handle: &AppHandle,
-    environment_filename: &str,
     is_desktop_dev: bool,
-) -> ConfigSource {
-    if is_desktop_dev {
-        if let Ok(config_dir) = get_configuration_directory(app_handle) {
-            let base_path = config_dir.join("base.yaml");
-            let env_path = config_dir.join(environment_filename);
-            return ConfigSource::FileSystem(base_path, env_path);
-        }
-    }
+) -> Result<(PathBuf, PathBuf), config::ConfigError> {
+    let dir = if is_desktop_dev {
+        let base_path = std::env::current_dir().map_err(|e| {
+            config::ConfigError::Message(format!("Failed to get current dir: {}", e))
+        })?;
 
-    if let Ok(config_dir) = app_handle
-        .path()
-        .resolve("configuration", tauri::path::BaseDirectory::Resource)
-    {
-        let base_path = config_dir.join("base.yaml");
-        let env_path = config_dir.join(environment_filename);
-
-        if base_path.exists() && env_path.exists() {
-            return ConfigSource::Resource(base_path, env_path);
-        } else {
-            tracing::warn!(
-                "Resource directory configuration files do not exist, falling back to embedded config"
-            );
-        }
+        base_path.join("configuration")
     } else {
-        tracing::warn!("Failed to get Resource directory, falling back to embedded config");
-    }
-
-    ConfigSource::Embedded
-}
-
-/// 从配置文件构建配置对象
-/// 加载基础配置文件和环境特定配置文件，并合并环境变量配置
-///
-/// # 参数
-/// * `base_path` - 基础配置文件路径
-/// * `env_path` - 环境配置文件路径
-///
-/// # 返回值
-/// * `Ok(Settings)` - 成功时返回配置设置
-/// * `Err(config::ConfigError)` - 失败时返回配置错误
-fn build_config_from_files(
-    base_path: PathBuf,
-    env_path: PathBuf,
-) -> Result<Settings, config::ConfigError> {
-    let settings = config::Config::builder()
-        .add_source(config::File::from(base_path))
-        .add_source(config::File::from(env_path))
-        .add_source(
-            config::Environment::with_prefix("APP")
-                .prefix_separator("_")
-                .separator("__"),
-        )
-        .build()?;
-    settings.try_deserialize::<Settings>()
-}
-
-/// 从嵌入式配置构建配置对象
-/// 使用编译时嵌入的配置文件内容构建配置
-///
-/// # 参数
-/// * `environment` - 运行环境枚举
-///
-/// # 返回值
-/// * `Ok(Settings)` - 成功时返回配置设置
-/// * `Err(config::ConfigError)` - 失败时返回配置错误
-fn build_config_from_embedded(environment: &Environment) -> Result<Settings, config::ConfigError> {
-    let base_config = include_str!("../configuration/base.yaml");
-    let env_config = match environment.as_str() {
-        "local" => include_str!("../configuration/local.yaml"),
-        "production" => include_str!("../configuration/production.yaml"),
-        _ => {
-            return Err(config::ConfigError::Message(format!(
-                "Unsupported environment: {}",
-                environment.as_str()
-            )));
-        }
-    };
-
-    let settings = config::Config::builder()
-        .add_source(config::File::from_str(
-            base_config,
-            config::FileFormat::Yaml,
-        ))
-        .add_source(config::File::from_str(env_config, config::FileFormat::Yaml))
-        .add_source(
-            config::Environment::with_prefix("APP")
-                .prefix_separator("_")
-                .separator("__"),
-        )
-        .build()?;
-    settings.try_deserialize::<Settings>()
-}
-
-/// 获取配置文件目录路径
-/// 根据运行环境选择合适的配置文件目录：
-/// - 桌面开发环境：项目根目录/configuration
-/// - 其他环境：优先使用Resource目录，失败则使用app_data_dir
-///
-/// # 参数
-/// * `app_handle` - Tauri应用句柄
-///
-/// # 返回值
-/// * `Ok(PathBuf)` - 成功时返回配置目录路径
-/// * `Err(config::ConfigError)` - 失败时返回配置错误
-fn get_configuration_directory(app_handle: &AppHandle) -> Result<PathBuf, config::ConfigError> {
-    // 配置目录路径策略：
-    // 桌面端开发环境：使用项目根目录
-    // 其他情况：使用 Resource 目录
-    let config_path = if cfg!(debug_assertions) && cfg!(desktop) {
-        let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        path.push("configuration");
-        path
-    } else {
-        // 非桌面端开发环境：优先使用 Resource 目录，失败则使用 app_data_dir
-        match app_handle
+        app_handle
             .path()
-            .resolve("configuration", tauri::path::BaseDirectory::Resource)
-        {
-            Ok(path) => {
-                info!("Using Resource configuration directory: {:?}", path);
-                path
-            }
-            Err(e) => {
-                tracing::warn!(
-                    "Failed to get Resource configuration directory: {}, trying app_data_dir",
-                    e
-                );
-
-                match app_handle.path().app_data_dir() {
-                    Ok(app_data_dir) => {
-                        let config_dir = app_data_dir.join("configuration");
-                        if let Err(create_err) = std::fs::create_dir_all(&config_dir) {
-                            tracing::warn!(
-                                "Failed to create app_data_dir configuration directory: {}",
-                                create_err
-                            );
-                        }
-                        info!(
-                            "Using backup app_data_dir configuration directory: {:?}",
-                            config_dir
-                        );
-                        config_dir
-                    }
-                    Err(app_data_err) => {
-                        let error_msg = format!(
-                            "Failed to get both Resource and app_data_dir configuration directories: Resource error={}, app_data_dir error={}",
-                            e, app_data_err
-                        );
-                        tracing::error!("{}", error_msg);
-                        return Err(config::ConfigError::Message(error_msg));
-                    }
-                }
-            }
-        }
+            .resource_dir()
+            .map_err(|e| config::ConfigError::NotFound(format!("resource not find: {}", e)))?
+            .join("configuration")
     };
 
-    info!("Configuration file directory: {:?}", config_path);
-    Ok(config_path)
+    let base_path = dir.join("base.yaml");
+
+    #[cfg(not(target_os = "android"))]
+    let base_config = config::Config::builder()
+        .add_source(config::File::from(base_path.clone()))
+        .build()?;
+
+    #[cfg(target_os = "android")]
+    let base_config = {
+        let content = std::str::from_utf8(include_bytes!("../configuration/base.yaml"))
+            .map_err(|e| config::ConfigError::Message(e.to_string()))?;
+
+        config::Config::builder()
+            .add_source(config::File::from_str(content, config::FileFormat::Yaml))
+            .build()?
+    };
+
+    let active_config = base_config.get_string("active_config")?;
+    println!("active_config: {:?}", active_config);
+    let active_config_path_buf = dir.clone().join(active_config);
+    Ok((base_path, active_config_path_buf))
 }

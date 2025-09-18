@@ -254,6 +254,10 @@ const filteredUserList = computed(() => {
     })
   }
   return userList.sort((a, b) => {
+    if (a.roleId && b.roleId && a.roleId !== b.roleId) {
+      return a.roleId - b.roleId
+    }
+
     if (a.activeStatus !== b.activeStatus) {
       return a.activeStatus - b.activeStatus
     }

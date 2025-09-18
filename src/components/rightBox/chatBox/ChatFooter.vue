@@ -1,6 +1,6 @@
 <template>
   <!-- 底部栏 -->
-  <main class="border-t-(1px solid [--right-chat-footer-line-color]) relative" :style="{ height: `${footerHeight}px` }">
+  <main class="border-t-(1px solid [--right-chat-footer-line-color]) relative flex justify-center items-center h-full">
     <!-- 拖拽手柄 -->
     <div class="resize-handle" :class="{ dragging: isDragging }" @mousedown="startDrag">
       <div class="resize-indicator"></div>
@@ -15,7 +15,9 @@
       </n-flex>
     </div>
 
-    <div class="size-full relative color-[--icon-color] flex flex-col">
+    <ChatMsgMultiChoose v-if="chatStore.isMsgMultiChoose" />
+
+    <div v-else class="size-full relative color-[--icon-color] flex flex-col">
       <!-- 输入框顶部选项栏 -->
       <n-flex align="center" justify="space-between" class="p-[10px_22px_5px] select-none flex-shrink-0">
         <n-flex align="center" :size="0" class="input-options">
@@ -162,6 +164,7 @@ import { useGlobalShortcut } from '@/hooks/useGlobalShortcut.ts'
 import { useMitt } from '@/hooks/useMitt'
 import { useWindow } from '@/hooks/useWindow'
 import type { ContactItem, FilesMeta, SessionItem } from '@/services/types'
+import { useChatStore } from '@/stores/chat'
 import { useContactStore } from '@/stores/contacts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useHistoryStore } from '@/stores/history'
@@ -176,6 +179,7 @@ const { detailId } = defineProps<{
 const globalStore = useGlobalStore()
 const contactStore = useContactStore()
 const historyStore = useHistoryStore()
+const chatStore = useChatStore()
 const settingStore = useSettingStore()
 const { handleScreenshot } = useGlobalShortcut()
 const MsgInputRef = ref()

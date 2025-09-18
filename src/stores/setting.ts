@@ -37,7 +37,7 @@ export const useSettingStore = defineStore(StoresEnum.SETTING, {
     chat: {
       sendKey: 'Enter',
       isDouble: true,
-      translate: 'tencent'
+      translate: 'youdao'
     },
     shortcuts: getDefaultShortcuts(),
     page: {
@@ -50,6 +50,9 @@ export const useSettingStore = defineStore(StoresEnum.SETTING, {
     },
     screenshot: {
       isConceal: false
+    },
+    notification: {
+      messageSound: true
     }
   }),
   actions: {
@@ -98,7 +101,7 @@ export const useSettingStore = defineStore(StoresEnum.SETTING, {
     /** 设置发送消息快捷键 */
     setSendMessageShortcut(shortcut: string) {
       if (!this.chat) {
-        this.chat = { sendKey: 'Enter', isDouble: true, translate: 'tencent' }
+        this.chat = { sendKey: 'Enter', isDouble: true, translate: 'youdao' }
       }
       this.chat.sendKey = shortcut
     },
@@ -118,6 +121,13 @@ export const useSettingStore = defineStore(StoresEnum.SETTING, {
         this.screenshot = { isConceal: false }
       }
       this.screenshot.isConceal = isConceal
+    },
+    /** 设置消息提示音开关 */
+    setMessageSoundEnabled(enabled: boolean) {
+      if (!this.notification) {
+        this.notification = { messageSound: true }
+      }
+      this.notification.messageSound = enabled
     }
   },
   share: {

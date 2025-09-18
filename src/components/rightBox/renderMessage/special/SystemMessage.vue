@@ -1,8 +1,10 @@
 <template>
   <!-- 系统消息 -->
-  <div class="flex-col-y-center h-62px select-none cursor-default text-(12px #909090)">
-    {{ props.body }}
-  </div>
+  <main class="w-full flex-center h-62px">
+    <p class="select-none cursor-default text-(12px #909090)">
+      {{ props.body }}
+    </p>
+  </main>
 </template>
 
 <script setup lang="ts">

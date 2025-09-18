@@ -84,7 +84,7 @@ pub async fn query_chat_history(
     // 转换为响应格式
     let message_resps: Vec<MessageResp> = messages
         .into_iter()
-        .map(|msg| crate::command::message_command::convert_message_to_resp(msg))
+        .map(|msg| crate::command::message_command::convert_message_to_resp(msg, None))
         .collect();
 
     // 根据返回的消息数量判断是否还有更多数据

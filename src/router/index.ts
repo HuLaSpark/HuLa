@@ -21,13 +21,15 @@ import NoticeEdit from '#/views/chat-room/notice/NoticeEdit.vue'
 import NoticeList from '#/views/chat-room/notice/NoticeList.vue'
 import MobileCommunity from '#/views/community/index.vue'
 import AddFriends from '#/views/friends/AddFriends.vue'
+import ConfirmAddFriend from '#/views/friends/ConfirmAddFriend.vue'
+import ConfirmAddGroup from '#/views/friends/ConfirmAddGroup.vue'
+import FriendInfo from '#/views/friends/FriendInfo.vue'
 import MobileFriendPage from '#/views/friends/index.vue'
 import StartGroupChat from '#/views/friends/StartGroupChat.vue'
 import MobileMessagePage from '#/views/message/index.vue'
 import EditBio from '#/views/my/EditBio.vue'
 import EditBirthday from '#/views/my/EditBirthday.vue'
 import EditProfile from '#/views/my/EditProfile.vue'
-import FriendInfo from '#/views/my/FriendInfo.vue'
 import MobileMy from '#/views/my/index.vue'
 import MobileQRCode from '#/views/my/MobileQRCode.vue'
 import MobileSettings from '#/views/my/MobileSettings.vue'
@@ -190,11 +192,6 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
         path: 'SimpleBio',
         name: 'mobileSimpleBio',
         component: SimpleBio
-      },
-      {
-        path: 'friendInfo',
-        name: 'mobileFriendInfo',
-        component: FriendInfo
       }
     ]
   },
@@ -217,6 +214,21 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
         path: 'startGroupChat',
         name: 'mobileStartGroupChat',
         component: StartGroupChat
+      },
+      {
+        path: 'confirmAddFriend',
+        name: 'mobileConfirmAddFriend',
+        component: ConfirmAddFriend
+      },
+      {
+        path: 'confirmAddGroup',
+        name: 'mobileConfirmAddGroup',
+        component: ConfirmAddGroup
+      },
+      {
+        path: 'friendInfo/:uid',
+        name: 'mobileFriendInfo',
+        component: FriendInfo
       }
     ]
   }
@@ -319,6 +331,11 @@ const getDesktopRoutes = (): Array<RouteRecordRaw> => [
         component: () => import('@/views/moreWindow/settings/LoginSetting.vue')
       },
       {
+        path: '/notification',
+        name: 'notification',
+        component: () => import('@/views/moreWindow/settings/Notification.vue')
+      },
+      {
         path: '/versatile',
         name: 'versatile',
         component: () => import('@/views/moreWindow/settings/Versatile.vue')
@@ -354,6 +371,12 @@ const getDesktopRoutes = (): Array<RouteRecordRaw> => [
     path: '/rtcCall',
     name: 'rtcCall',
     component: () => import('@/views/callWindow/index.vue')
+  },
+  // 添加合并消息窗口路由
+  {
+    path: '/multiMsg',
+    name: 'multiMsg',
+    component: () => import('@/views/multiMsgWindow/index.vue')
   },
   {
     path: '/searchFriend',
@@ -464,8 +487,7 @@ const router: any = createRouter({
 
 // 在创建路由后，添加全局前置守卫
 // 为解决 “已声明‘to’，但从未读取其值” 的问题，将 to 参数改为下划线开头表示该参数不会被使用
-router.beforeEach(async (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
-  console.log('进入了路由：', from, to)
+router.beforeEach(async (to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
   // 桌面端直接放行
   if (!isMobile) {
     return next()

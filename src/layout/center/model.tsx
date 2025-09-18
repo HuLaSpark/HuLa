@@ -4,7 +4,6 @@ import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import * as ImRequestUtils from '@/utils/ImRequestUtils'
 
 const contactStore = useContactStore()
 const groupStore = useGroupStore()
@@ -55,17 +54,6 @@ export const getFilteredOptions = () => {
       return option
     }
   })
-}
-
-export const createGroup = async (selectedUids: string[]) => {
-  try {
-    const uidList = selectedUids.map((uid) => uid)
-    const result = await ImRequestUtils.createGroup({ uidList })
-    return result
-  } catch (error) {
-    console.error('创建群聊失败:', error)
-    throw error
-  }
 }
 
 // 统一的源列表渲染函数，通过参数控制是否使用过滤后的选项

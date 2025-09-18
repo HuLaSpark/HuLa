@@ -323,12 +323,13 @@ export type MessageType = {
   /** 消息主体 */
   message: MsgType
   /** 发送时间 */
-  sendTime: string
+  sendTime: number
   /** 时间段（可选） */
-  timeBlock?: string
+  timeBlock?: number
   /** 是否加载中 */
   loading?: boolean
   uploadProgress?: number
+  isCheck?: boolean
 }
 
 /**
@@ -377,6 +378,16 @@ export type VoiceBody = {
   size: number
   second: number
   url: string
+}
+
+export type MergeBodyBody = {
+  messageId: string
+  uid: string
+}
+
+export type MergeBody = {
+  body: MergeBodyBody[]
+  content: string[]
 }
 /** 视频 */
 export type VideoBody = {
@@ -479,16 +490,32 @@ export type MessageReq = {
   }
 }
 
-/** 申请状态 */
-export enum RequestFriendAgreeStatus {
-  /** 1待审批 */
-  Waiting = 1,
-  /** 2同意 */
-  Agree,
-  /** 3拒绝 */
-  Reject,
-  /** 4忽略 */
-  Ignore
+/** 通知状态 */
+export enum RequestNoticeAgreeStatus {
+  /** 待审批 */
+  UNTREATED = 0,
+  /** 同意 */
+  ACCEPTED,
+  /** 拒绝 */
+  REJECTED,
+  /** 忽略 */
+  IGNORE
+}
+
+/** 通知事件 */
+export enum NoticeType {
+  /** 好友申请 */
+  FRIEND_APPLY = 1,
+  /** 好友被申请 */
+  ADD_ME = 6,
+  /** 加群申请 */
+  GROUP_APPLY = 2,
+  /** 群邀请 */
+  GROUP_INVITE = 3,
+  /** 被邀请进群 */
+  GROUP_INVITE_ME = 7,
+  /** 移除群成员 */
+  GROUP_MEMBER_DELETE = 5
 }
 
 /** 请求添加好友的列表项 */
@@ -498,7 +525,7 @@ export type RequestFriendItem = {
   /** 申请信息 */
   msg: string
   /** 申请状态 1待审批 2同意 3拒绝 4忽略 */
-  status: RequestFriendAgreeStatus
+  status: RequestNoticeAgreeStatus
   /** 申请类型 1加好友 */
   type: number
   /** 申请人uid */
@@ -510,6 +537,32 @@ export type RequestFriendItem = {
   /** 会话 ID */
   roomId: string
 }
+
+export interface NoticeItem {
+  /** 实体ID */
+  id?: string
+  /** 通知类型:1-好友申请;2-群申请;3-群邀请;5-移除群成员;6-好友被申请;7-被邀请进群 */
+  eventType: number
+  /** 通知类型 1群聊 2加好友 */
+  type: number
+  /** 发起人UID */
+  senderId: string
+  /** 接收人UID */
+  receiverId: string
+  /** 申请ID */
+  applyId: string
+  /** 被操作的人 */
+  operateId?: string
+  /** 通知内容 申请时填写的 */
+  content: string
+  /** 处理状态:0-未处理;1-已同意;2-已拒绝;3-忽略 */
+  status: number
+  /** 是否已读 */
+  isRead: boolean
+  /** 创建时间 */
+  createTime?: number
+}
+
 /** 联系人的列表项 */
 export type ContactItem = {
   /** 在线状态 1在线 2离线 */
@@ -569,6 +622,8 @@ export type SessionItem = {
   remark?: string
   /** 我的群昵称 */
   myName?: string
+  /** 是否选中（非后端） */
+  isCheck?: boolean
 }
 
 /** 消息已读未读数列表项 */

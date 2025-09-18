@@ -2,7 +2,7 @@
   <div class="flex flex-col h-full">
     <SafeAreaPlaceholder type="layout" direction="top" />
 
-    <img src="@/assets/mobile/chat-home/background.webp" class="w-100% fixed top-0" alt="hula" />
+    <img src="@/assets/mobile/chat-home/background.webp" class="w-100% fixed z-0 top-0" alt="hula" />
 
     <!-- 设置区 -->
     <Settings />
@@ -13,7 +13,7 @@
       <div ref="measureRef" class="h-full w-full absolute top-0 z-0"></div>
       <!-- 动态内容 -->
       <div ref="scrollContainer" :style="{ height: tabHeight + 'px' }" class="z-1 overflow-y-auto mt-2 absolute z-3">
-        <div class="custom-rounded flex px-24px flex-col gap-4 z-1 p-10px mt-4 shadow">
+        <div class="custom-rounded bg-white flex px-24px flex-col gap-4 z-1 p-10px mt-4">
           <CommunityTab
             :style="{ height: tabHeight + 'px' }"
             :custom-height="tabHeight - 44"

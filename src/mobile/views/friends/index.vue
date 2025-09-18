@@ -49,33 +49,26 @@
 
     <div class="flex flex-1 gap-2 flex-col bg-white z-1 custom-rounded">
       <!-- 我的消息条 -->
-      <div class="grid grid-cols-[4rem_1fr_24px] h-64px px-16px border-b-[1px] border-b-solid border-b-[#e5e7eb]">
-        <div class="h-full flex items-center">我的消息</div>
-        <div class="h-full flex items-center justify-end overflow-hidden">
-          <div class="rounded-full h-26px w-26px bg-purple-300 border-2 border-white"></div>
-          <div class="rounded-full h-26px w-26px bg-orange-300 border-2 border-white -ml-2"></div>
-          <div class="rounded-full h-26px w-26px bg-teal-300 border-2 border-white -ml-2"></div>
-          <div class="rounded-full h-26px w-26px bg-orange-300 border-2 border-white -ml-2"></div>
-          <div class="rounded-full h-26px w-26px bg-teal-300 border-2 border-white -ml-2"></div>
-          <div
-            class="rounded-full h-26px min-w-26px bg-gray-200 border-2 border-white -ml-2 flex items-center justify-center text-xs">
-            99+
-          </div>
+      <div class="grid grid-cols-[4rem_1fr_24px] py-15px px-16px border-b-[1px] border-b-solid border-b-[#e5e7eb]">
+        <div class="h-full flex items-center text-14px">我的消息</div>
+        <div @click="toMessage" class="h-full flex items-center justify-end overflow-hidden">
+          <n-avatar
+            v-if="applyList.length > 0"
+            :class="index > 0 ? '-ml-2' : ''"
+            v-for="(item, index) in applyList.splice(0, 6)"
+            :id="item.applyId"
+            round
+            size="small"
+            :src="
+              avatarSrc(
+                groupStore.getUserInfo(isCurrentUser(item.receiverId) ? item.receiverId : item.senderId)?.avatar!
+              )
+            " />
         </div>
-        <div class="h-full flex justify-end items-center">
+        <div @click="toMessage" class="h-full flex justify-end items-center">
           <img src="@/assets/mobile/friend/right-arrow.webp" class="block h-20px" alt="" />
         </div>
       </div>
-
-      <!-- <n-tabs class="px-16px" default-value="mutual-attention" justify-content="start" type="line">
-        <n-tab-pane name="mutual-attention" tab="互相关注">
-
-
-        </n-tab-pane>
-        <n-tab-pane name="follow" tab="关注"> 关注 </n-tab-pane>
-        <n-tab-pane name="fans" tab="粉丝"> 粉丝 </n-tab-pane>
-        <n-tab-pane name="group-chat" tab="群聊"> 群聊 </n-tab-pane>
-      </n-tabs> -->
 
       <n-tabs type="segment" animated class="mt-4px p-[4px_10px_0px_8px]">
         <n-tab-pane name="1" tab="好友">
@@ -179,12 +172,22 @@ import NavBar from '#/layout/navBar/index.vue'
 import addFriendIcon from '@/assets/mobile/chat-home/add-friend.webp'
 import groupChatIcon from '@/assets/mobile/chat-home/group-chat.webp'
 import { MittEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
+import { useMessage } from '@/hooks/useMessage.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import router from '@/router'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGroupStore } from '@/stores/group'
+import { useUserStore } from '@/stores/user'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+
+onMounted(async () => {
+  try {
+    await contactStore.getApplyPage(false)
+  } catch (error) {
+    console.log('请求好友申请列表失败')
+  }
+})
 
 /**
  * 渲染图片图标的函数工厂
@@ -230,7 +233,23 @@ const shrinkStatus = ref(false)
 const groupStore = useGroupStore()
 const contactStore = useContactStore()
 const userStatusStore = useUserStatusStore()
+const userStore = useUserStore()
 const { stateList } = storeToRefs(userStatusStore)
+
+//好友申请列表（只筛选好友申请消息）
+const applyList = computed(() => {
+  return contactStore.requestFriendsList.filter((item) => item.type === 2)
+})
+
+const avatarSrc = (url: string) => AvatarUtils.getAvatarUrl(url)
+
+const isCurrentUser = (uid: string) => {
+  return uid === userStore.userInfo!.uid
+}
+
+const toMessage = () => {
+  router.push('/mobile/mobileMy/myMessages')
+}
 
 /** 群聊列表 */
 const groupChatList = computed(() => {
@@ -261,23 +280,35 @@ watchEffect(() => {
   })
 })
 
+const { preloadChatRoom } = useMessage()
+
 /**
  *
  * @param uid 群聊id或好友uid
  * @param type 1 群聊 2 单聊
  */
-const handleClick = (uid: string, type: number) => {
+const handleClick = async (id: string, type: number) => {
   detailsShow.value = true
-  activeItem.value = uid
+  activeItem.value = id
   const data = {
     context: {
       type: type,
-      uid: uid
+      uid: id
     },
     detailsShow: detailsShow.value
   }
   useMitt.emit(MittEnum.DETAILS_SHOW, data)
-  router.push('/mobile/mobileMy/friendInfo')
+
+  if (type === 1) {
+    try {
+      await preloadChatRoom(id)
+      router.push(`/mobile/chatRoom/chatMain`)
+    } catch (error) {
+      console.error(error)
+    }
+  } else {
+    router.push(`/mobile/mobileFriends/friendInfo/${id}`)
+  }
 }
 // todo 需要循环数组来展示分组
 const showMenu = (event: MouseEvent) => {

@@ -129,10 +129,10 @@ export async function getUserDetail() {
 /**
  * 快捷方法：获取群组详情
  */
-export async function getGroupDetail(groupId: string) {
+export async function getGroupDetail(roomId: string) {
   return await imRequest({
     url: ImUrlEnum.GROUP_DETAIL,
-    params: { id: groupId }
+    params: { id: roomId }
   })
 }
 
@@ -215,10 +215,10 @@ export async function getBadgesBatch(body: CacheBadgeReq[]) {
   })
 }
 
-export async function getMsgList(params: any) {
+export async function getMsgList(body: { msgIds?: string[]; lastOptTime?: number }) {
   return await imRequest({
     url: ImUrlEnum.GET_MSG_LIST,
-    params
+    body
   })
 }
 
@@ -315,6 +315,13 @@ export async function sendAddFriendRequest(body: { targetUid: string; msg: strin
   return await imRequest({
     url: ImUrlEnum.SEND_ADD_FRIEND_REQUEST,
     body
+  })
+}
+
+export async function requestNoticePage(params: { pageSize: number; pageNo: number; cursor: string }) {
+  return await imRequest({
+    url: ImUrlEnum.REQUEST_NOTICE_PAGE,
+    params
   })
 }
 
@@ -539,6 +546,20 @@ export async function forgetPassword(body: {
 }) {
   return await imRequest({
     url: ImUrlEnum.FORGET_PASSWORD,
+    body
+  })
+}
+
+export async function mergeMsg(body: { fromRoomId: string; type: number; roomIds: string[]; messageIds: string[] }) {
+  return await imRequest({
+    url: ImUrlEnum.MERGE_MSG,
+    body
+  })
+}
+
+export async function getUserByIds(body: { uidList: string[] }) {
+  return await imRequest({
+    url: ImUrlEnum.GET_USER_BY_IDS,
     body
   })
 }
