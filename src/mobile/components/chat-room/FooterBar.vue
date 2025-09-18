@@ -26,19 +26,47 @@
 
       <div class="flex justify-between px-25px flex-1 items-center py-10px">
         <div v-for="item in options" :key="item.icon" class="flex flex-wrap items-center" @click="clickItem(item.icon)">
-          <svg class="h-24px w-24px iconpark-icon"><use :href="`#${item.icon}`"></use></svg>
-          <svg
-            v-if="item.showArrow"
-            :class="['h-15px w-15px iconpark-icon transition-transform duration-300', item.isRotate ? 'rotate' : '']">
-            <use href="#down" />
-          </svg>
+          <div v-if="item.label !== 'file' && item.label !== 'image'">
+            <svg class="h-24px w-24px iconpark-icon"><use :href="`#${item.icon}`"></use></svg>
+            <svg
+              v-if="item.showArrow"
+              :class="['h-15px w-15px iconpark-icon transition-transform duration-300', item.isRotate ? 'rotate' : '']">
+              <use href="#down" />
+            </svg>
+          </div>
+          <div v-else-if="item.label === 'file'">
+            <van-uploader multiple :after-read="afterReadFile">
+              <svg class="h-24px w-24px iconpark-icon"><use :href="`#${item.icon}`"></use></svg>
+              <svg
+                v-if="item.showArrow"
+                :class="[
+                  'h-15px w-15px iconpark-icon transition-transform duration-300',
+                  item.isRotate ? 'rotate' : ''
+                ]">
+                <use href="#down" />
+              </svg>
+            </van-uploader>
+          </div>
+          <div v-else-if="item.label === 'image'">
+            <van-uploader accept="image/*" multiple :after-read="afterReadImage">
+              <svg class="h-24px w-24px iconpark-icon"><use :href="`#${item.icon}`"></use></svg>
+              <svg
+                v-if="item.showArrow"
+                :class="[
+                  'h-15px w-15px iconpark-icon transition-transform duration-300',
+                  item.isRotate ? 'rotate' : ''
+                ]">
+                <use href="#down" />
+              </svg>
+            </van-uploader>
+          </div>
         </div>
       </div>
 
       <!-- 展开面板 -->
       <Transition @before-enter="beforeEnter" @enter="enter" @leave="leave">
         <div v-show="isPanelVisible" class="w-full overflow-hidden bg-#13987f flex flex-col">
-          <div style="height: 180px"><!-- 模拟内容高度 --></div>
+          <div style="height: 180px"></div>
         </div>
       </Transition>
     </div>
@@ -46,7 +74,79 @@
 </template>
 
 <script setup lang="ts">
+import type { UploaderFileListItem } from 'vant/es'
 import { useMobileStore } from '@/stores/mobile'
+import 'vant/es/dialog/style'
+
+const uploadFileList = ref<
+  {
+    url: string
+    status: 'uploading' | 'failed' | 'done'
+    message: string
+  }[]
+>([])
+
+const afterReadImage = (fileList: UploaderFileListItem | UploaderFileListItem[]) => {
+  const validTypes = ['image/jpeg', 'image/png', 'image/gif']
+  const files = Array.isArray(fileList) ? fileList : [fileList]
+
+  console.log('选择的文件：', files)
+
+  for (const file of files) {
+    const rawFile = file.file
+
+    if (!rawFile) {
+      console.log('文件不存在:', file)
+      continue
+    }
+
+    if (!validTypes.includes(rawFile.type)) {
+      console.log('已过滤非图片文件:', file)
+      if (!Array.isArray(fileList)) {
+        window.$message.warning('只能选择图片哦~')
+      }
+      continue
+    }
+
+    uploadFileList.value.push({
+      url: file.url as string,
+      status: 'done',
+      message: '待上传'
+    })
+
+    console.log('已添加文件：', file)
+  }
+}
+
+const afterReadFile = (fileList: UploaderFileListItem | UploaderFileListItem[]) => {
+  const imageTypes = ['image/jpeg', 'image/png', 'image/gif']
+  const files = Array.isArray(fileList) ? fileList : [fileList]
+
+  console.log('选择的文件：', files)
+
+  for (const file of files) {
+    const rawFile = file.file
+
+    if (!rawFile) {
+      console.log('文件不存在:', file)
+      continue
+    }
+
+    // ✅ 只保留非图片文件
+    if (imageTypes.includes(rawFile.type)) {
+      console.log('已过滤图片文件:', file)
+      continue
+    }
+
+    uploadFileList.value.push({
+      url: file.url as string,
+      status: 'done',
+      message: '待上传（非图片）'
+    })
+
+    console.log('已选择文件：', file)
+  }
+}
 
 // ==== 类型声明（让 send 有类型提示）====
 interface MsgInputReturn {
@@ -109,12 +209,12 @@ const handleSend = async () => {
 
 // ==== 展开面板 ====
 const options = ref([
-  { icon: 'smiling-face', showArrow: false, isRotate: false },
-  { icon: 'screenshot', showArrow: true, isRotate: false },
-  { icon: 'file2', showArrow: true, isRotate: false },
-  { icon: 'photo', showArrow: false, isRotate: false },
-  { icon: 'voice', showArrow: false, isRotate: false },
-  { icon: 'history', showArrow: true, isRotate: false }
+  { label: 'emoji', icon: 'smiling-face', showArrow: true, isRotate: false },
+  { label: 'cut', icon: 'screenshot', showArrow: true, isRotate: false },
+  { label: 'file', icon: 'file', showArrow: false, isRotate: true },
+  { label: 'image', icon: 'photo', showArrow: false, isRotate: true },
+  { label: 'video', icon: 'voice', showArrow: true, isRotate: false },
+  { label: 'history', icon: 'history', showArrow: true, isRotate: false }
 ])
 
 const isPanelVisible = ref(false)
