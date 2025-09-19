@@ -30,7 +30,7 @@ import { emitTo, listen } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
-import { ChangeTypeEnum, MittEnum, ModalEnum, MsgEnum, NotificationTypeEnum, OnlineEnum, TauriCommand } from '@/enums'
+import { ChangeTypeEnum, MittEnum, ModalEnum, NotificationTypeEnum, OnlineEnum, TauriCommand } from '@/enums'
 import { useCheckUpdate } from '@/hooks/useCheckUpdate'
 import { useLogin } from '@/hooks/useLogin'
 import { useMitt } from '@/hooks/useMitt.ts'
@@ -315,9 +315,10 @@ useMitt.on(WsResponseMessageType.MY_ROOM_INFO_CHANGE, (data: { myName: string; r
 })
 
 useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
-  if (userStore.isMe(data.fromUser.uid) && data.message.type !== MsgEnum.MERGE) {
+  if (chatStore.checkMsgExist(data.message.roomId, data.message.id)) {
     return
   }
+
   chatStore.pushMsg(data)
 
   data.message.sendTime = new Date(data.message.sendTime).getTime()

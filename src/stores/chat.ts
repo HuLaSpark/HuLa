@@ -398,8 +398,13 @@ export const useChatStore = defineStore(
       }
     }
 
-    const clearSessionCheck = () => {
-      sessionList.value.forEach((item) => (item.isCheck = false))
+    const checkMsgExist = (roomId: string, msgId: string) => {
+      const current = messageMap.get(roomId)
+      return current?.has(msgId)
+    }
+
+    const clearMsgCheck = () => {
+      chatMessageList.value.forEach((msg) => (msg.isCheck = false))
     }
 
     // 过滤掉拉黑用户的发言
@@ -808,8 +813,9 @@ export const useChatStore = defineStore(
       chatMessageListByRoomId,
       shouldShowNoMoreMessage,
       isMsgMultiChoose,
-      clearSessionCheck,
-      setMsgMultiChoose
+      clearMsgCheck,
+      setMsgMultiChoose,
+      checkMsgExist
     }
   },
   {
