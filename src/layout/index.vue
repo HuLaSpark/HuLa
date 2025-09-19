@@ -87,7 +87,7 @@ const AsyncCenter = defineAsyncComponent({
     await Promise.all([
       ...groupSessions.map((session) => groupStore.getGroupUserList(session.roomId, true)),
       groupStore.setGroupDetails(),
-      chatStore.setAllSessionMsgList(1),
+      chatStore.setAllSessionMsgList(20),
       cachedStore.getAllBadgeList()
     ])
 
