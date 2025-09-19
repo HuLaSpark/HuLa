@@ -1,5 +1,5 @@
 <template>
-  <div class="chat-main-container" :style="cssVariables">
+  <div class="chat-main-container" :style="isMobileRef ? {} : cssVariables">
     <!-- 网络状态提示 -->
     <n-flex
       v-if="!networkStatus.isOnline.value"
@@ -161,7 +161,7 @@ import { useUserStore } from '@/stores/user.ts'
 import { audioManager } from '@/utils/AudioManager'
 import { timeToStr } from '@/utils/ComputedTime'
 import { getAnnouncementList } from '@/utils/ImRequestUtils'
-import { isMac, isWindows } from '@/utils/PlatformConstants'
+import { isMac, isMobile, isWindows } from '@/utils/PlatformConstants'
 
 type AnnouncementData = {
   content: string
@@ -178,6 +178,8 @@ const { footerHeight } = useChatLayoutGlobal()
 const { createWebviewWindow } = useWindow()
 const { handleConfirm, tips, modalShow, selectKey, scrollTop } = useChatMain()
 const { handlePopoverUpdate, enableScroll } = usePopover(selectKey, 'image-chat-main')
+
+const isMobileRef = ref(isMobile())
 
 provide('popoverControls', { enableScroll })
 

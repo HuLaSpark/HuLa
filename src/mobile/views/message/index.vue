@@ -6,11 +6,11 @@
     <img src="@/assets/mobile/chat-home/background.webp" class="w-100% fixed top-0" alt="hula" />
 
     <!-- 页面蒙板 -->
-    <!-- <div
+    <div
       v-if="showMask"
       @touchend="maskHandler.close"
       @click="maskHandler.close"
-      class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[999] transition-all duration-3000 ease-in-out opacity-100"></div> -->
+      class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[999] transition-all duration-3000 ease-in-out opacity-100"></div>
 
     <!-- 键盘蒙板 -->
     <div
@@ -83,7 +83,7 @@
       <div class="border-b-1 border-solid color-gray-200 px-18px mt-5px"></div>
     </div>
 
-    <PullToRefresh class="flex-1 overflow-auto" @refresh="handleRefresh" ref="pullRefreshRef">
+    <van-pull-refresh class="h-full" v-model="loading" @refresh="onRefresh">
       <div class="flex flex-col h-full px-18px">
         <div class="flex-1">
           <van-swipe-cell
@@ -126,12 +126,11 @@
           </van-swipe-cell>
         </div>
       </div>
-    </PullToRefresh>
+    </van-pull-refresh>
   </div>
 </template>
 
 <script setup lang="ts">
-import PullToRefresh from '#/components/PullToRefresh.vue'
 import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.vue'
 import NavBar from '#/layout/navBar/index.vue'
 import type { IKeyboardDidShowDetail } from '#/mobile-client/interface/adapter'
@@ -149,6 +148,15 @@ import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
+
+const loading = ref(false)
+const count = ref(0)
+const onRefresh = () => {
+  setTimeout(() => {
+    loading.value = false
+    count.value++
+  }, 500)
+}
 
 const groupStore = useGroupStore()
 
@@ -218,21 +226,7 @@ const sessionList = computed(() => {
 
 const chatStore = useChatStore()
 
-const pullRefreshRef = ref()
-
 const userStore = useUserStore()
-
-/**
- * export interface IKeyboardDidShowDetail {
-   bottomInset: number
-   height: number
-   keyboardVisible: boolean
-   screenHeight: number
-   timestamp: number
-   visibleHeight: number
- }
-
- */
 
 onMounted(async () => {
   await rustWebSocketClient.setupBusinessMessageListeners()
@@ -257,17 +251,6 @@ onMounted(async () => {
     removeShowFunction()
   })
 })
-
-const handleRefresh = async () => {
-  try {
-    // 完成刷新
-    if (pullRefreshRef.value && typeof pullRefreshRef.value.finishRefresh === 'function') {
-      pullRefreshRef.value.finishRefresh()
-    }
-  } catch (error) {
-    console.error('刷新完成时出错:', error)
-  }
-}
 
 /**
  * 渲染图片图标的函数工厂
