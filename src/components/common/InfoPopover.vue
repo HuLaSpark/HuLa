@@ -112,7 +112,7 @@
               round
               :width="38"
               :height="38"
-              :src="useBadgeInfo(id).value.img"
+              :src="cachedStore.badgeById(id)?.img"
               :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
               :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
               @load="badgeLoadedMap[id] = true"
@@ -148,17 +148,17 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { MittEnum, OnlineEnum, ThemeEnum } from '@/enums/index.ts'
-import { useBadgeInfo } from '@/hooks/useCached.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useMitt } from '@/hooks/useMitt'
 import { useWindow } from '@/hooks/useWindow'
 import { leftHook } from '@/layout/left/hook'
+import { useCachedStore } from '@/stores/cached'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global'
+import { useGroupStore } from '@/stores/group'
 import { useSettingStore } from '@/stores/setting'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { useGroupStore } from '~/src/stores/group'
 
 const { uid, activeStatus } = defineProps<{
   uid: string
@@ -173,6 +173,7 @@ const groupStore = useGroupStore()
 const { openContent } = leftHook()
 const contactStore = useContactStore()
 const userStatusStore = useUserStatusStore()
+const cachedStore = useCachedStore()
 const { stateList } = storeToRefs(userStatusStore)
 /** 头像加载状态 */
 const badgeLoadedMap = ref<Record<string, boolean>>({})

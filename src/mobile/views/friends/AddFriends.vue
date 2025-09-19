@@ -77,7 +77,7 @@
                             <n-space align="center" :size="10">
                               <span class="text-(14px [--text-color])">{{ item.name }}</span>
                               <template v-for="account in item.itemIds" :key="account">
-                                <img class="size-20px" :src="useBadgeInfo(account).value.img" alt="" />
+                                <img class="size-20px" :src="cachedStore.badgeById(account)?.img" alt="" />
                               </template>
                             </n-space>
                             <n-flex align="center" :size="10">
@@ -152,8 +152,8 @@ import { debounce } from 'lodash-es'
 import FloatBlockList from '@/components/common/FloatBlockList.vue'
 import { ThemeEnum } from '@/enums'
 import { RoomTypeEnum } from '@/enums/index.ts'
-import { useBadgeInfo } from '@/hooks/useCached.ts'
 import type { ContactItem, GroupDetailReq } from '@/services/types'
+import { useCachedStore } from '@/stores/cached'
 import { useContactStore } from '@/stores/contacts'
 import { useGlobalStore } from '@/stores/global'
 import { useGroupStore } from '@/stores/group'
@@ -167,6 +167,7 @@ const contactStore = useContactStore()
 const userStore = useUserStore()
 const globalStore = useGlobalStore()
 const settingStore = useSettingStore()
+const cachedStore = useCachedStore()
 const { themes } = storeToRefs(settingStore)
 
 // 定义标签页

@@ -215,6 +215,15 @@ export async function getBadgesBatch(body: CacheBadgeReq[]) {
   })
 }
 
+export async function groupListMember(roomId: string) {
+  return await imRequest({
+    url: ImUrlEnum.GROUP_LIST_MEMBER,
+    params: {
+      roomId
+    }
+  })
+}
+
 export async function getMsgList(body: { msgIds?: string[]; lastOptTime?: number }) {
   return await imRequest({
     url: ImUrlEnum.GET_MSG_LIST,

@@ -95,7 +95,7 @@
                 <n-popover
                   v-if="
                     globalStore.currentSession?.roomId === '1' &&
-                    useBadgeInfo(groupStore.getUserInfo(fromUser.uid)?.wearingItemId).value.img
+                    cachedStore.badgeById(groupStore.getUserInfo(fromUser.uid)?.wearingItemId)?.img
                   "
                   trigger="hover">
                   <template #trigger>
@@ -104,10 +104,10 @@
                       :size="18"
                       round
                       :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
-                      :src="useBadgeInfo(groupStore.getUserInfo(fromUser.uid)?.wearingItemId).value.img" />
+                      :src="cachedStore.badgeById(groupStore.getUserInfo(fromUser.uid)?.wearingItemId)?.img" />
                   </template>
                   <span>
-                    {{ useBadgeInfo(groupStore.getUserInfo(fromUser.uid)?.wearingItemId).value.describe }}
+                    {{ cachedStore.badgeById(groupStore.getUserInfo(fromUser.uid)?.wearingItemId)?.describe }}
                   </span>
                 </n-popover>
                 <!-- 用户名 -->
@@ -263,11 +263,11 @@
 <script setup lang="ts">
 import type { Component } from 'vue'
 import { MessageStatusEnum, MittEnum, MsgEnum, ThemeEnum } from '@/enums'
-import { useBadgeInfo } from '@/hooks/useCached.ts'
 import { useChatMain } from '@/hooks/useChatMain'
 import { useMitt } from '@/hooks/useMitt'
 import { usePopover } from '@/hooks/usePopover'
 import type { MessageType } from '@/services/types'
+import { useCachedStore } from '@/stores/cached'
 import { useGlobalStore } from '@/stores/global'
 import { useGroupStore } from '@/stores/group'
 import { useSettingStore } from '@/stores/setting'
@@ -324,6 +324,7 @@ const { themes } = storeToRefs(settingStore)
 const { optionsList, report, activeBubble, handleItemType, emojiList, specialMenuList, handleMsgClick } = useChatMain()
 const groupStore = useGroupStore()
 const chatStore = useChatStore()
+const cachedStore = useCachedStore()
 const recordEL = ref<HTMLElement>()
 
 // 获取用户头像

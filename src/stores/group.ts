@@ -1,10 +1,9 @@
 import { defineStore } from 'pinia'
-import { RoleEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
+import { RoleEnum, RoomTypeEnum, StoresEnum } from '@/enums'
 import type { GroupDetailReq, UserItem } from '@/services/types'
 import { useGlobalStore } from '@/stores/global'
 import { useUserStore } from '@/stores/user'
 import * as ImRequestUtils from '@/utils/ImRequestUtils'
-import { ErrorType, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler.ts'
 import { useChatStore } from './chat'
 
 export const useGroupStore = defineStore(
@@ -229,16 +228,7 @@ export const useGroupStore = defineStore(
         return
       }
 
-      const data: any = await invokeWithErrorHandler(
-        TauriCommand.GET_ROOM_MEMBERS,
-        {
-          roomId: roomId
-        },
-        {
-          customErrorMessage: '获取群成员列表失败',
-          errorType: ErrorType.Network
-        }
-      )
+      const data: any = await ImRequestUtils.groupListMember(roomId)
       if (!data) return
 
       // 将数据存储到Record中

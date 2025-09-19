@@ -24,9 +24,9 @@
         <template v-for="badge in item.itemIds" :key="badge">
           <n-popover trigger="hover">
             <template #trigger>
-              <img class="size-34px" :src="useBadgeInfo(badge).value.img" alt="" />
+              <img class="size-34px" :src="cacheStore.badgeById(badge)?.img" alt="" />
             </template>
-            <span>{{ useBadgeInfo(badge).value.describe }}</span>
+            <span>{{ cacheStore.badgeById(badge)?.describe }}</span>
           </n-popover>
         </template>
       </n-flex>
@@ -196,7 +196,6 @@
 </template>
 <script setup lang="ts">
 import { RoomTypeEnum } from '@/enums'
-import { useBadgeInfo } from '@/hooks/useCached.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useWindow } from '@/hooks/useWindow'
 import type { UserItem } from '@/services/types'
