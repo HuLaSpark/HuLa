@@ -8,6 +8,7 @@
     <!-- 添加遮罩层 -->
     <div
       v-if="isSingleChat && !isFriend"
+      :style="{ height: `${footerHeight}px` }"
       class="absolute inset-0 z-997 backdrop-blur-md cursor-default flex-center select-none pointer-events-auto light:bg-[rgba(255,255,255,0.1)] dark:bg-[rgba(33,33,33,0.1)]">
       <n-flex align="center" justify="center" class="pb-60px">
         <svg class="size-24px"><use href="#cloudError"></use></svg>
