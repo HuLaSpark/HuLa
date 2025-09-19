@@ -5,8 +5,8 @@ import { RequestNoticeAgreeStatus } from '@/services/types'
 import { useGlobalStore } from '@/stores/global'
 import {
   deleteFriend,
-  getApplyUnreadCount,
   getFriendPage,
+  getNoticeUnreadCount,
   handleInvite,
   requestNoticePage
 } from '@/utils/ImRequestUtils'
@@ -55,7 +55,7 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
    * 更新全局store中的未读计数
    */
   const getApplyUnReadCount = async () => {
-    const res: any = await getApplyUnreadCount()
+    const res: any = await getNoticeUnreadCount()
     if (!res) return
     // 更新全局store中的未读计数
     globalStore.unReadMark.newFriendUnreadCount = res.unReadCount4Friend

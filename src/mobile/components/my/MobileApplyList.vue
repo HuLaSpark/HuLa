@@ -196,6 +196,7 @@ const getUserInfo = (item: any) => {
   switch (item.eventType) {
     case NoticeType.FRIEND_APPLY:
     case NoticeType.GROUP_INVITE:
+    case NoticeType.GROUP_MEMBER_DELETE:
       return groupStore.getUserInfo(item.operateId)!
     case NoticeType.ADD_ME:
     case NoticeType.GROUP_INVITE_ME:

@@ -29,7 +29,11 @@
                       isCurrentUser(item.senderId) ? (currentUserId = item.operateId) : (currentUserId = item.senderId)
                     "
                     class="text-(14px #13987f) cursor-pointer">
-                    {{ getUserInfo(item)!.name }}
+                    {{
+                      item.eventType === NoticeType.GROUP_MEMBER_DELETE && item.operateId == item.receiverId
+                        ? '你'
+                        : getUserInfo(item)!.name
+                    }}
                   </p>
 
                   <p class="text-(14px [--text-color])">
@@ -173,6 +177,7 @@ const getUserInfo = (item: any) => {
   switch (item.eventType) {
     case NoticeType.FRIEND_APPLY:
     case NoticeType.GROUP_INVITE:
+    case NoticeType.GROUP_MEMBER_DELETE:
       return groupStore.getUserInfo(item.operateId)!
     case NoticeType.ADD_ME:
     case NoticeType.GROUP_INVITE_ME:

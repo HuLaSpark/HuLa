@@ -239,7 +239,6 @@ pub enum ImUrl {
     DeleteAnnouncement,
     PushAnnouncement,
     GetAnnouncementList,
-    ApplyGroupList,
     ApplyHandle,
     ApplyGroup,
     SearchGroup,
@@ -268,8 +267,7 @@ pub enum ImUrl {
     DeleteFriend,
     SendAddFriendRequest,
     HandleInvite,
-    ApplyUnReadCount,
-    RequestApplyPage,
+    NoticeUnReadCount,
     RequestNoticePage,
     GetContactList,
     SearchFriend,
@@ -327,7 +325,6 @@ impl ImUrl {
             ImUrl::GetAnnouncementList => (http::Method::GET, "im/room/announcement/list"),
 
             // 群聊申请相关
-            ImUrl::ApplyGroupList => (http::Method::GET, "im/room/apply/group/list"),
             ImUrl::ApplyHandle => (http::Method::POST, "im/room/apply/adminHandleApply"),
             ImUrl::ApplyGroup => (http::Method::POST, "im/room/apply/group"),
 
@@ -371,8 +368,7 @@ impl ImUrl {
             ImUrl::DeleteFriend => (http::Method::DELETE, "im/user/friend"),
             ImUrl::SendAddFriendRequest => (http::Method::POST, "im/room/apply/apply"),
             ImUrl::HandleInvite => (http::Method::POST, "im/room/apply/handler/apply"),
-            ImUrl::ApplyUnReadCount => (http::Method::GET, "im/room/apply/unread"),
-            ImUrl::RequestApplyPage => (http::Method::GET, "im/room/apply/page"),
+            ImUrl::NoticeUnReadCount => (http::Method::GET, "im/room/notice/unread"),
             ImUrl::RequestNoticePage => (http::Method::GET, "im/room/notice/page"),
             ImUrl::GetFriendPage => (http::Method::GET, "im/user/friend/page"),
             ImUrl::GetContactList => (http::Method::GET, "im/chat/contact/list"),
@@ -436,7 +432,6 @@ impl ImUrl {
             "getAnnouncementList" => Ok(ImUrl::GetAnnouncementList),
 
             // 群聊申请相关
-            "applyGroupList" => Ok(ImUrl::ApplyGroupList),
             "applyHandle" => Ok(ImUrl::ApplyHandle),
             "applyGroup" => Ok(ImUrl::ApplyGroup),
 
@@ -476,8 +471,7 @@ impl ImUrl {
             "deleteFriend" => Ok(ImUrl::DeleteFriend),
             "sendAddFriendRequest" => Ok(ImUrl::SendAddFriendRequest),
             "handleInvite" => Ok(ImUrl::HandleInvite),
-            "applyUnReadCount" => Ok(ImUrl::ApplyUnReadCount),
-            "requestApplyPage" => Ok(ImUrl::RequestApplyPage),
+            "noticeUnReadCount" => Ok(ImUrl::NoticeUnReadCount),
             "requestNoticePage" => Ok(ImUrl::RequestNoticePage),
             "getContactList" => Ok(ImUrl::GetContactList),
             "searchFriend" => Ok(ImUrl::SearchFriend),
