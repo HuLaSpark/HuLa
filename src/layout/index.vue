@@ -32,6 +32,7 @@ import { info } from '@tauri-apps/plugin-log'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { ChangeTypeEnum, MittEnum, ModalEnum, MsgEnum, NotificationTypeEnum, OnlineEnum, TauriCommand } from '@/enums'
 import { useCheckUpdate } from '@/hooks/useCheckUpdate'
+import { useLogin } from '@/hooks/useLogin'
 import { useMitt } from '@/hooks/useMitt.ts'
 import type { MarkItemType, MessageType, RevokedMsgType, UserItem } from '@/services/types.ts'
 import rustWebSocketClient from '@/services/webSocketRust'
@@ -41,6 +42,7 @@ import {
   WsResponseMessageType,
   type WsTokenExpire
 } from '@/services/wsType.ts'
+import { useCachedStore } from '@/stores/cached'
 import { useChatStore } from '@/stores/chat'
 import { useConfigStore } from '@/stores/config'
 import { useContactStore } from '@/stores/contacts.ts'
@@ -52,7 +54,6 @@ import { audioManager } from '@/utils/AudioManager'
 import { isWindows } from '@/utils/PlatformConstants'
 import { clearListener, initListener, readCountQueue } from '@/utils/ReadCountQueue'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
-import { useLogin } from '../hooks/useLogin'
 
 const appWindow = WebviewWindow.getCurrent()
 const loadingPercentage = ref(10)
@@ -86,7 +87,8 @@ const AsyncCenter = defineAsyncComponent({
     await Promise.all([
       ...groupSessions.map((session) => groupStore.getGroupUserList(session.roomId, true)),
       groupStore.setGroupDetails(),
-      chatStore.setAllSessionMsgList(1)
+      chatStore.setAllSessionMsgList(1),
+      cachedStore.getAllBadgeList()
     ])
 
     loadingPercentage.value = 66
@@ -118,6 +120,7 @@ const contactStore = useContactStore()
 const groupStore = useGroupStore()
 const userStore = useUserStore()
 const chatStore = useChatStore()
+const cachedStore = useCachedStore()
 const configStore = useConfigStore()
 const settingStore = useSettingStore()
 const { checkUpdate, CHECK_UPDATE_TIME } = useCheckUpdate()

@@ -155,12 +155,12 @@ import { useMitt } from '@/hooks/useMitt.ts'
 import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 import { usePopover } from '@/hooks/usePopover.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
-import { useCachedStore } from '@/stores/cached'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global'
 import { useUserStore } from '@/stores/user.ts'
 import { audioManager } from '@/utils/AudioManager'
 import { timeToStr } from '@/utils/ComputedTime'
+import { getAnnouncementList } from '@/utils/ImRequestUtils'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
 
 type AnnouncementData = {
@@ -173,7 +173,6 @@ const appWindow = WebviewWindow.getCurrent()
 const globalStore = useGlobalStore()
 const chatStore = useChatStore()
 const userStore = useUserStore()
-const cachedStore = useCachedStore()
 const networkStatus = useNetworkStatus()
 const { footerHeight } = useChatLayoutGlobal()
 const { createWebviewWindow } = useWindow()
@@ -549,7 +548,7 @@ const handleLoadMore = async (): Promise<void> => {
 const loadTopAnnouncement = async (): Promise<void> => {
   if (currentRoomId.value && isGroup.value) {
     try {
-      const data = await cachedStore.getGroupAnnouncementList(currentRoomId.value, 1, 1)
+      const data = await getAnnouncementList(currentRoomId.value, 1, 1)
       if (data && data.records.length > 0) {
         // 查找置顶公告
         const topNotice = data.records.find((item: any) => item.top)
