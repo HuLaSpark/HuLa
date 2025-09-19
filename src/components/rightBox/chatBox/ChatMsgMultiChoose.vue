@@ -172,7 +172,7 @@ const opts = computed(() => [
     text: '',
     icon: '#close',
     click: () => {
-      chatStore.chatMessageList.forEach((msg) => (msg.isCheck = false))
+      chatStore.clearMsgCheck()
       chatStore.setMsgMultiChoose(false)
     }
   }
@@ -205,7 +205,7 @@ const sendMsg = async () => {
     })
     .finally(() => {
       showModal.value = false
-      chatStore.clearSessionCheck()
+      chatStore.clearMsgCheck()
       chatStore.setMsgMultiChoose(false)
     })
 }
