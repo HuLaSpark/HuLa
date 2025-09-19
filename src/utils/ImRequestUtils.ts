@@ -74,7 +74,7 @@ export async function imRequest<T = any>(
  * @example
  * ```typescript
  * const result = await imRequestSilent({
- *   url: ImUrlEnum.APPLY_UN_READ_COUNT
+ *   url: ImUrlEnum.NOTICE_UN_READ_COUNT
  * })
  * ```
  */
@@ -150,11 +150,11 @@ export async function getContactList(options?: { pageSize?: number; cursor?: str
 }
 
 /**
- * 快捷方法：获取申请未读数
+ * 获取通知未读数
  */
-export async function getApplyUnreadCount() {
+export async function getNoticeUnreadCount() {
   return await imRequestSilent({
-    url: ImUrlEnum.APPLY_UN_READ_COUNT
+    url: ImUrlEnum.NOTICE_UN_READ_COUNT
   })
 }
 
@@ -309,13 +309,6 @@ export async function changeUserState(params: { id: string }) {
 export async function searchFriend(params: { key: string }) {
   return await imRequest({
     url: ImUrlEnum.SEARCH_FRIEND,
-    params
-  })
-}
-
-export async function requestApplyPage(params: { pageSize: number; pageNo: number; cursor: string }) {
-  return await imRequest({
-    url: ImUrlEnum.REQUEST_APPLY_PAGE,
     params
   })
 }

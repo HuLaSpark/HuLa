@@ -73,7 +73,9 @@
 
           <n-popover trigger="hover" placement="top" :show-arrow="false">
             <template #trigger>
-              <svg class="size-18px cursor-pointer text-[--chat-text-color]"><use href="#edit"></use></svg>
+              <svg class="size-18px cursor-pointer text-[--chat-text-color]">
+                <use href="#edit"></use>
+              </svg>
             </template>
             <span>添加备注</span>
           </n-popover>
@@ -104,19 +106,31 @@
       <!-- 获得的徽章 -->
       <n-flex v-if="groupStore.getUserInfo(uid)?.itemIds" :size="26" class="select-none">
         <span class="text-[--info-text-color]">获得的徽章</span>
-        <n-flex>
+        <n-flex :size="8">
           <template v-for="id in groupStore.getUserInfo(uid)?.itemIds" :key="id">
-            <n-skeleton v-if="!badgeLoadedMap[id]" text :repeat="1" :width="38" :height="38" circle />
-            <n-avatar
-              v-show="badgeLoadedMap[id]"
-              round
-              :width="38"
-              :height="38"
-              :src="cachedStore.badgeById(id)?.img"
-              :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
-              :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
-              @load="badgeLoadedMap[id] = true"
-              @error="badgeLoadedMap[id] = true" />
+            <div class="relative inline-flex flex-col items-center">
+              <n-skeleton v-if="!badgeLoadedMap[id]" text :repeat="1" :width="38" :height="38" circle />
+              <div v-show="badgeLoadedMap[id]" class="relative">
+                <n-avatar
+                  round
+                  :width="38"
+                  :height="38"
+                  :src="cachedStore.badgeById(id)?.img"
+                  :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+                  :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
+                  @load="badgeLoadedMap[id] = true"
+                  @error="badgeLoadedMap[id] = true" />
+                <n-popover trigger="hover" :show-arrow="false" placement="top">
+                  <template #trigger>
+                    <svg
+                      class="absolute -top-1 -right-1 size-12px bg-white rounded-full cursor-pointer shadow-sm p-1px">
+                      <use href="#tips"></use>
+                    </svg>
+                  </template>
+                  <span class="text-12px">{{ cachedStore.badgeById(id)?.describe }}</span>
+                </n-popover>
+              </div>
+            </div>
           </template>
         </n-flex>
       </n-flex>

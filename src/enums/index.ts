@@ -566,8 +566,6 @@ export enum ImUrlEnum {
   GET_ANNOUNCEMENT_LIST = 'getAnnouncementList',
 
   // 群聊申请相关
-  /** 申请加群列表 */
-  APPLY_GROUP_LIST = 'applyGroupList',
   /** 处理加群申请 */
   APPLY_HANDLE = 'applyHandle',
   /** 申请加群 */
@@ -632,10 +630,8 @@ export enum ImUrlEnum {
   SEND_ADD_FRIEND_REQUEST = 'sendAddFriendRequest',
   /** 处理邀请 */
   HANDLE_INVITE = 'handleInvite',
-  /** 申请未读数 */
-  APPLY_UN_READ_COUNT = 'applyUnReadCount',
-  /** 请求申请页面 */
-  REQUEST_APPLY_PAGE = 'requestApplyPage',
+  /** 通知未读数 */
+  NOTICE_UN_READ_COUNT = 'noticeUnReadCount',
   /** 请求通知页面 */
   REQUEST_NOTICE_PAGE = 'requestNoticePage',
   /** 获取联系人列表 */
