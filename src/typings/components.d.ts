@@ -123,6 +123,7 @@ declare module 'vue' {
     SystemMessage: typeof import('./../components/rightBox/renderMessage/special/SystemMessage.vue')['default']
     Text: typeof import('./../components/rightBox/renderMessage/Text.vue')['default']
     Validation: typeof import('./../components/common/Validation.vue')['default']
+    VanPullRefresh: typeof import('vant/es')['PullRefresh']
     VanSwipeCell: typeof import('vant/es')['SwipeCell']
     VanUploader: typeof import('vant/es')['Uploader']
     Video: typeof import('./../components/rightBox/renderMessage/Video.vue')['default']
