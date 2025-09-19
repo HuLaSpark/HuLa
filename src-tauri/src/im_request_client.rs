@@ -75,6 +75,8 @@ impl ImRequestClient {
             // 设置请求体
             if let Some(body) = &body {
                 request_builder = request_builder.json(body);
+            }else {
+                request_builder = request_builder.json(&serde_json::json!({}));
             }
 
             if let Some(params) = &params {

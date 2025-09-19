@@ -262,7 +262,7 @@ pub async fn fetch_all_messages(
             "lastOptTime": time
         }))
     } else {
-        None::<serde_json::Value>
+        None
     };
 
     let messages: Option<Vec<MessageResp>> = client
