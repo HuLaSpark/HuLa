@@ -515,7 +515,11 @@ export enum NoticeType {
   /** 被邀请进群 */
   GROUP_INVITE_ME = 7,
   /** 移除群成员 */
-  GROUP_MEMBER_DELETE = 5
+  GROUP_MEMBER_DELETE = 5,
+  /** 设置群管理员 */
+  GROUP_SET_ADMIN = 8,
+  /** 取消群管理员 */
+  GROUP_RECALL_ADMIN = 9
 }
 
 /** 请求添加好友的列表项 */

@@ -25,20 +25,13 @@
       <template #default="{ item }">
         <div class="flex gap-2 w-full text-14px mb-15px">
           <div class="flex h-full">
-            <n-avatar
-              round
-              size="large"
-              :src="
-                avatarSrc(
-                  groupStore.getUserInfo(isCurrentUser(item.senderId) ? item.operateId : item.senderId)?.avatar!
-                )
-              " />
+            <n-avatar round size="large" :src="avatarSrc(getUserInfo(item)!.avatar!)" />
           </div>
           <div class="flex-1 flex flex-col gap-10px">
             <div
               @click="isCurrentUser(item.senderId) ? (currentUserId = item.operateId) : (currentUserId = item.senderId)"
               class="flex justify-between text-14px text-#2DA38D">
-              {{ groupStore.getUserInfo(isCurrentUser(item.senderId) ? item.operateId : item.senderId)?.name }}
+              {{ getUserInfo(item)!.name }}
             </div>
             <div class="flex justify-between text-gray-500 text-12px">
               <span>
@@ -168,6 +161,10 @@ const applyMsg = computed(() => (item: any) => {
       return isCurrentUser(item.senderId) ? '已同意加入' + item.content : '邀请你加入' + item.content
     } else if (item.eventType === NoticeType.GROUP_MEMBER_DELETE) {
       return '已被' + groupStore.getUserInfo(item.senderId)!.name + '踢出' + item.content
+    } else if (item.eventType === NoticeType.GROUP_SET_ADMIN) {
+      return '已被' + groupStore.getUserInfo(item.senderId)!.name + '设置为' + item.content + '的管理员'
+    } else if (item.eventType === NoticeType.GROUP_RECALL_ADMIN) {
+      return '已被' + groupStore.getUserInfo(item.senderId)!.name + '取消' + item.content + '的管理员权限'
     }
   }
 })
@@ -189,6 +186,23 @@ const avatarSrc = (url: string) => AvatarUtils.getAvatarUrl(url)
 // 判断是否为当前登录用户
 const isCurrentUser = (uid: string) => {
   return uid === userStore.userInfo!.uid
+}
+
+/**
+ * 获取当前用户查询视角
+ * @param item 通知消息
+ */
+const getUserInfo = (item: any) => {
+  switch (item.eventType) {
+    case NoticeType.FRIEND_APPLY:
+    case NoticeType.GROUP_INVITE:
+      return groupStore.getUserInfo(item.operateId)!
+    case NoticeType.ADD_ME:
+    case NoticeType.GROUP_INVITE_ME:
+    case NoticeType.GROUP_SET_ADMIN:
+    case NoticeType.GROUP_RECALL_ADMIN:
+      return groupStore.getUserInfo(item.senderId)!
+  }
 }
 
 // 处理滚动事件
