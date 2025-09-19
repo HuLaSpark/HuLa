@@ -21,15 +21,7 @@
             justify="space-between"
             class="bg-[--center-bg-color] rounded-10px p-20px box-border border-(1px solid [--bg-popover])">
             <n-flex align="center" :size="10">
-              <n-avatar
-                round
-                size="large"
-                :src="
-                  avatarSrc(
-                    groupStore.getUserInfo(isCurrentUser(item.senderId) ? item.operateId : item.senderId)!.avatar!
-                  )
-                "
-                class="mr-10px" />
+              <n-avatar round size="large" :src="avatarSrc(getUserInfo(item)!.avatar!)" class="mr-10px" />
               <n-flex vertical :size="12">
                 <n-flex align="center" :size="10">
                   <p
@@ -37,7 +29,7 @@
                       isCurrentUser(item.senderId) ? (currentUserId = item.operateId) : (currentUserId = item.senderId)
                     "
                     class="text-(14px #13987f) cursor-pointer">
-                    {{ groupStore.getUserInfo(isCurrentUser(item.senderId) ? item.operateId : item.senderId)!.name }}
+                    {{ getUserInfo(item)!.name }}
                   </p>
 
                   <p class="text-(14px [--text-color])">
@@ -146,6 +138,10 @@ const applyMsg = computed(() => (item: any) => {
       return isCurrentUser(item.senderId) ? '已同意加入' + item.content : '邀请你加入' + item.content
     } else if (item.eventType === NoticeType.GROUP_MEMBER_DELETE) {
       return '已被' + groupStore.getUserInfo(item.senderId)!.name + '踢出' + item.content
+    } else if (item.eventType === NoticeType.GROUP_SET_ADMIN) {
+      return '已被' + groupStore.getUserInfo(item.senderId)!.name + '设置为' + item.content + '的管理员'
+    } else if (item.eventType === NoticeType.GROUP_RECALL_ADMIN) {
+      return '已被' + groupStore.getUserInfo(item.senderId)!.name + '取消' + item.content + '的管理员权限'
     }
   }
 })
@@ -167,6 +163,23 @@ const avatarSrc = (url: string) => AvatarUtils.getAvatarUrl(url)
 // 判断是否为当前登录用户
 const isCurrentUser = (uid: string) => {
   return uid === userStore.userInfo!.uid
+}
+
+/**
+ * 获取当前用户查询视角
+ * @param item 通知消息
+ */
+const getUserInfo = (item: any) => {
+  switch (item.eventType) {
+    case NoticeType.FRIEND_APPLY:
+    case NoticeType.GROUP_INVITE:
+      return groupStore.getUserInfo(item.operateId)!
+    case NoticeType.ADD_ME:
+    case NoticeType.GROUP_INVITE_ME:
+    case NoticeType.GROUP_SET_ADMIN:
+    case NoticeType.GROUP_RECALL_ADMIN:
+      return groupStore.getUserInfo(item.senderId)!
+  }
 }
 
 // 判断是否为好友申请或者群申请、群邀请
