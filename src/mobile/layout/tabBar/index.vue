@@ -7,7 +7,7 @@
         :to="item.path"
         :style="{ height: tabHeight }"
         class="tab-item flex flex-col flex-1 items-center no-underline relative"
-        :class="route.path === item.path ? 'color-[--tab-bar-icon-color] is-active' : 'text-#000'">
+        :class="route.path === item.path ? 'color-[--tab-bar-icon-color]' : 'text-#000'">
         <svg class="w-22px h-22px">
           <use :href="`#${route.path === item.path ? item.actionIcon : item.icon}`"></use>
         </svg>
@@ -96,13 +96,6 @@ const tabHeight = computed(() => customHeight + 'px')
       opacity 0.3s ease-in-out,
       filter 0.3s ease-in-out;
     will-change: opacity, filter;
-  }
-
-  &.is-active::after {
-    @apply opacity-100 rounded-full;
-    background: rgba(19, 152, 127, 0.46);
-    filter: blur(12px);
-    -webkit-filter: blur(12px);
   }
 }
 </style>

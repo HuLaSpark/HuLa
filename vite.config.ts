@@ -42,7 +42,11 @@ export default defineConfig(({ mode }: ConfigEnv) => {
     }
 
     // 无效IP或特殊地址的情况
-    return config.TAURI_ENV_PLATFORM === 'android' ? '0.0.0.0' : '127.0.0.1'
+    return config.TAURI_ENV_PLATFORM === 'ios'
+      ? rawIP
+      : config.TAURI_ENV_PLATFORM === 'android'
+        ? '0.0.0.0'
+        : '127.0.0.1'
   })()
 
   console.log('Host:', host)
