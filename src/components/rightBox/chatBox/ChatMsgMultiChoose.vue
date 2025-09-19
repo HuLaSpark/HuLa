@@ -46,12 +46,12 @@
             </n-input>
 
             <n-scrollbar class="flex-1">
-              <template v-for="session in chatStore.sessionList" :key="session.roomId">
-                <n-flex align="center" :size="8" class="text-(12px #909090) py-8px px-4px">
+              <template v-for="session in filteredSessionList" :key="session.roomId">
+                <n-flex align="center" :size="8" class="text-(12px #303030) py-8px px-4px">
                   <n-checkbox v-model:checked="session.isCheck" @click.stop />
                   <n-avatar class="rounded-8px" :size="30" :src="AvatarUtils.getAvatarUrl(session.avatar)" />
                   <p>{{ session.remark ? session.remark : session.name }}</p>
-                  <p v-if="session.type === RoomTypeEnum.GROUP">
+                  <p class="text-(12px #909090)" v-if="session.type === RoomTypeEnum.GROUP">
                     ({{ groupStore.getGroupDetailByRoomId(session.roomId)?.memberNum }})
                   </p>
                 </n-flex>
@@ -134,6 +134,17 @@ const msgIds = computed((): MsgId[] => {
     }
   })
 })
+
+const filteredSessionList = computed(() => {
+  const searchValue = searchText.value.trim().toLowerCase()
+  if (!searchValue) {
+    return chatStore.sessionList
+  }
+  return chatStore.sessionList.filter((session) => {
+    const displayName = (session.remark || session.name).toLowerCase()
+    return displayName.includes(searchValue)
+  })
+})
 let mergeMessageType = MergeMessageType.SINGLE
 
 const opts = computed(() => [
@@ -142,7 +153,7 @@ const opts = computed(() => [
     icon: '#share-three',
     disabled: selectedMsgs.value.length === 0,
     click: () => {
-      console.log(selectedMsgs)
+      window.$message.warning('暂未实现')
     }
   },
   {
@@ -158,15 +169,24 @@ const opts = computed(() => [
   },
   {
     text: '收藏',
-    icon: '#collect'
+    icon: '#collect',
+    click: () => {
+      window.$message.warning('暂未实现')
+    }
   },
   {
     text: '保存至电脑',
-    icon: '#collect-laptop'
+    icon: '#collect-laptop',
+    click: () => {
+      window.$message.warning('暂未实现')
+    }
   },
   {
     text: '删除',
-    icon: '#delete'
+    icon: '#delete',
+    click: () => {
+      window.$message.warning('暂未实现')
+    }
   },
   {
     text: '',
