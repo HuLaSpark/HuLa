@@ -9,8 +9,8 @@
     <div class="h-20px"></div>
     <n-flex vertical :size="20" class="size-full p-10px box-border z-10 relative">
       <n-flex vertical :size="20">
-        <div class="avatar-wrapper relative">
-          <div class="hover-area absolute top-8px left-8px w-80px h-80px rounded-full z-20">
+        <div class="avatar-wrapper relative" :class="{ 'cursor-pointer': isCurrentUserUid }" @click="openEditInfo">
+          <div v-if="isCurrentUserUid" class="hover-area absolute top-8px left-8px w-80px h-80px rounded-full z-20">
             <div class="avatar-hover absolute inset-0 rounded-full"></div>
           </div>
           <n-avatar
@@ -60,7 +60,9 @@
 
         <n-flex align="center" :size="8">
           <p
-            class="text-underline text-(18px [--chat-text-color]) w-fit"
+            class="text-(18px [--chat-text-color]) w-fit"
+            :class="{ 'cursor-pointer text-underline': isCurrentUserUid }"
+            @click="openEditInfo"
             style="
               font-weight: bold !important;
               font-family:
@@ -71,7 +73,7 @@
             {{ groupStore.getUserInfo(uid)?.name }}
           </p>
 
-          <n-popover trigger="hover" placement="top" :show-arrow="false">
+          <n-popover v-if="uid !== userUid" trigger="hover" placement="top" :show-arrow="false">
             <template #trigger>
               <svg class="size-18px cursor-pointer text-[--chat-text-color]">
                 <use href="#edit"></use>
@@ -116,14 +118,14 @@
                   :width="38"
                   :height="38"
                   :src="cachedStore.badgeById(id)?.img"
-                  :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+                  :color="themes.content === ThemeEnum.DARK ? '' : '#c8c8c8'"
                   :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
                   @load="badgeLoadedMap[id] = true"
                   @error="badgeLoadedMap[id] = true" />
                 <n-popover trigger="hover" :show-arrow="false" placement="top">
                   <template #trigger>
                     <svg
-                      class="absolute -top-1 -right-1 size-12px bg-white rounded-full cursor-pointer shadow-sm p-1px">
+                      class="absolute -top-2px -right-2px size-12px bg-#fff dark:bg-#303030 rounded-full cursor-pointer shadow-sm p-1px">
                       <use href="#tips"></use>
                     </svg>
                   </template>
@@ -227,7 +229,9 @@ const currentStateTitle = computed(() => {
 })
 
 const openEditInfo = () => {
-  useMitt.emit(MittEnum.OPEN_EDIT_INFO)
+  if (isCurrentUserUid.value) {
+    useMitt.emit(MittEnum.OPEN_EDIT_INFO)
+  }
 }
 
 // 处理复制账号

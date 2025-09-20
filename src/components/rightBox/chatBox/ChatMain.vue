@@ -177,7 +177,7 @@ const networkStatus = useNetworkStatus()
 const { footerHeight } = useChatLayoutGlobal()
 const { createWebviewWindow } = useWindow()
 const { handleConfirm, tips, modalShow, selectKey, scrollTop } = useChatMain()
-const { handlePopoverUpdate, enableScroll } = usePopover(selectKey, 'image-chat-main')
+const { enableScroll } = usePopover(selectKey, 'image-chat-main')
 
 const isMobileRef = ref(isMobile())
 
@@ -238,7 +238,6 @@ const shouldShowFloatFooter = computed<boolean>(() => {
 // 响应式状态变量
 const activeReply = ref<string>('')
 const scrollContainerRef = useTemplateRef<HTMLDivElement>('scrollContainer')
-const infoPopoverRefs = shallowRef<Record<string, any>>({})
 const showScrollbar = ref<boolean>(true)
 const isAnnouncementHover = ref<boolean>(false)
 const topAnnouncement = ref<AnnouncementData | null>(null)
@@ -587,12 +586,6 @@ const handleViewAnnouncement = (): void => {
     await createWebviewWindow('查看群公告', `announList/${currentRoomId.value}/1`, 420, 620)
   })
 }
-
-useMitt.on(`${MittEnum.INFO_POPOVER}-Main`, (event: any) => {
-  selectKey.value = event.uid
-  infoPopoverRefs.value[event.uid].setShow(true)
-  handlePopoverUpdate(event.uid)
-})
 
 // 监听滚动到底部的事件
 useMitt.on(MittEnum.CHAT_SCROLL_BOTTOM, async () => {

@@ -17,7 +17,6 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
   const getAllBadgeList = async () => {
     await getBadgesBatch([])
       .then((data) => {
-        console.log('获取徽章列表成功', data)
         badgeList.value = data
       })
       .catch((e) => {

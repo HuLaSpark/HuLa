@@ -23,8 +23,12 @@
       </n-flex>
 
       <component :is="division" />
-      <n-flex align="center" :size="10" class="p-[8px_6px] rounded-4px hover:bg-[--tray-hover]">
-        <span>打开所有声音</span>
+      <n-flex
+        @click="toggleMessageSound"
+        align="center"
+        :size="10"
+        class="p-[8px_6px] rounded-4px hover:bg-[--tray-hover]">
+        <span>{{ messageSound ? '关闭所有声音' : '打开所有声音' }}</span>
       </n-flex>
 
       <component :is="division" />
@@ -75,6 +79,14 @@ const isFocused = ref(false)
 // 状态栏图标是否显示
 const iconVisible = ref(false)
 
+// 消息提示音状态
+const messageSound = computed({
+  get: () => settingStore.notification.messageSound,
+  set: (value: boolean) => {
+    settingStore.setMessageSoundEnabled(value)
+  }
+})
+
 const division = () => {
   return <div class={'h-1px bg-[--line-color] w-full'}></div>
 }
@@ -99,6 +111,13 @@ const toggleStatus = async (item: UserState) => {
     console.error('更新状态失败:', error)
     appWindow.hide()
   }
+}
+
+const toggleMessageSound = () => {
+  appWindow.hide()
+  nextTick(() => {
+    messageSound.value = !messageSound.value
+  })
 }
 
 let blinkTask: NodeJS.Timeout | null = null

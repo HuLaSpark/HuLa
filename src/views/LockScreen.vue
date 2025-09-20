@@ -1,9 +1,8 @@
 <template>
   <!-- 锁屏页面 -->
-  <!--  // TODO 锁屏时隐藏其他窗口，解锁后再显示 (nyh -> 2024-07-14 01:39:01) -->
   <div
     data-tauri-drag-region
-    class="lock-bg overflow-y-hidden rounded-8px select-none absolute top-0 left-0 w-full h-full z-9999 transition-all duration-300 ease-in-out">
+    class="login-box overflow-y-hidden rounded-8px select-none absolute top-0 left-0 w-full h-full z-9999 transition-all duration-300 ease-in-out">
     <ActionBar class="absolute top-0 right-0 z-99999" :current-label="appWindow.label" :shrink="false" />
 
     <Transition name="slide-fade" appear>
@@ -11,8 +10,8 @@
       <div v-if="!isUnlockPage" @click.stop="isUnlockPage = true" class="size-full rounded-8px">
         <n-flex vertical align="center" :size="120" class="size-full mt-10%">
           <n-flex vertical align="center" :size="20" class="will-change-auto will-change-contents">
-            <p class="text-(100px #f1f1f1) font-500">{{ currentTime }}</p>
-            <n-flex align="center" :size="30" class="text-(30px #f1f1f1)">
+            <p class="text-(100px #30303090) font-500">{{ currentTime }}</p>
+            <n-flex align="center" :size="30" class="text-(30px #30303080)">
               <p>{{ currentMonthAndDate }}</p>
               <p>{{ currentWeekday }}</p>
             </n-flex>
@@ -20,19 +19,10 @@
 
           <n-flex vertical justify="center" align="center" :size="20" class="tips">
             <svg><use href="#search"></use></svg>
-            <p class="text-(16px #f1f1f1) text-center">
+            <p class="text-(16px #30303080) text-center leading-24px">
               这是一个开源的即时通讯(IM)应用，它采用了一些最新的前端技术，包括 Tauri、Vue3、Vite5、UnoCSS 和
               TypeScript。
             </p>
-            <p class="text-(12px #909090) opacity-0">这个项目的目标是提供一个高效、稳定且易于使用的即时通讯平台。</p>
-            <a
-              @click.stop="$event.stopPropagation()"
-              target="_blank"
-              rel="noopener noreferrer"
-              href="https://github.com/HuLaSpark/HuLa"
-              class="no-underline text-(14px #f3f3f3) opacity-0">
-              了解更多
-            </a>
           </n-flex>
         </n-flex>
       </div>
@@ -52,7 +42,7 @@
             style="border: 2px solid #f1f1f1"
             :size="120"
             :src="AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar!)" />
-          <p class="text-(24px #f1f1f1) font-500">{{ userStore.userInfo!.name }}</p>
+          <p class="text-(24px #30303080) font-500">{{ userStore.userInfo!.name }}</p>
 
           <!-- 密码输入框 -->
           <n-config-provider :theme="lightTheme">
@@ -92,13 +82,13 @@
 
           <!-- 登录时显示的文字 -->
           <n-flex vertical align="center" justify="center" :size="30" v-if="isLogining && !isWrongPassword">
-            <img class="size-42px" src="@/assets/img/loading-bright.svg" alt="" />
-            <p class="text-(20px #f1f1f1)">解锁中</p>
+            <img class="size-42px" src="@/assets/img/loading-one.svg" alt="" />
+            <p class="text-(20px #30303080)">解锁中</p>
           </n-flex>
 
           <!-- 密码不正常时显示 -->
           <n-flex v-if="isWrongPassword" vertical justify="center" align="center" :size="30">
-            <p class="text-(18px #f1f1f1)">密码不正确, 请再试一次</p>
+            <p class="text-(18px #30303080)">密码不正确, 请再试一次</p>
             <p
               @click="init"
               class="w-120px bg-[rgba(255,255,255,0.1)] backdrop-blur-xl cursor-pointer p-10px rounded-8px text-(14px #323232 center) font-500">
@@ -107,11 +97,16 @@
           </n-flex>
         </n-flex>
 
-        <n-flex v-if="!isLogining && !isWrongPassword" justify="space-around" align="center" :size="0" class="options">
-          <p class="text-(14px #fefefe)" @click="isUnlockPage = false">返回</p>
-          <p class="text-(14px #fefefe)" @click="logout">退出登录</p>
-          <p class="text-(14px #fefefe)">忘记密码</p>
-          <p class="text-(14px #fff)" @click="unlock">进入系统</p>
+        <n-flex
+          v-if="!isLogining && !isWrongPassword"
+          justify="space-around"
+          align="center"
+          :size="0"
+          class="options text-(14px #30303080)">
+          <p @click="isUnlockPage = false">返回</p>
+          <p @click="logout">退出登录</p>
+          <p>忘记密码</p>
+          <p @click="unlock">进入系统</p>
         </n-flex>
       </n-flex>
     </Transition>
@@ -152,6 +147,10 @@ const currentWeekday = ref(getWeekday(new Date().toLocaleString()))
 let intervalId: NodeJS.Timeout | null = null
 /** 密码输入框实例 */
 const inputInstRef = ref<InputInst | null>(null)
+/** 白名单窗口（锁屏时不隐藏的窗口） */
+const whitelistWindows = ['home', 'tray', 'capture', 'checkupdate', 'notify']
+/** 被隐藏的窗口列表 */
+const hiddenWindows = ref<string[]>([])
 
 watch(isUnlockPage, (val) => {
   if (val) {
@@ -202,18 +201,54 @@ const init = () => {
   }
 }
 
+/** 隐藏其他窗口 */
+const hideOtherWindows = async () => {
+  const allWindows = await WebviewWindow.getAll()
+  const windowsToHide = allWindows.filter(
+    (window) => !whitelistWindows.includes(window.label) && window.label !== 'lockScreen'
+  )
+
+  for (const window of windowsToHide) {
+    await window.hide()
+    hiddenWindows.value.push(window.label)
+  }
+}
+
+/** 显示之前隐藏的窗口 */
+const showHiddenWindows = async () => {
+  for (const windowLabel of hiddenWindows.value) {
+    const window = await WebviewWindow.getByLabel(windowLabel)
+    if (window) {
+      await window.show()
+    }
+  }
+  hiddenWindows.value = []
+}
+
+// 监听锁屏状态变化
+watchEffect(() => {
+  if (!lockScreen.value.enable) {
+    // 解锁时显示之前隐藏的窗口
+    showHiddenWindows()
+  }
+})
+
 onMounted(() => {
   intervalId = setInterval(() => {
     currentTime.value = dayjs().format('HH:mm')
     currentMonthAndDate.value = dayjs().format('MM/DD')
     currentWeekday.value = getWeekday(new Date().toLocaleString())
   }, 1000)
+
   if (!isUnlockPage.value) {
     onKeyStroke('Enter', (e) => {
       e.preventDefault()
       isUnlockPage.value = true
     })
   }
+
+  // 锁屏时隐藏其他窗口，解锁时显示
+  hideOtherWindows()
 })
 
 onUnmounted(() => {
@@ -223,12 +258,7 @@ onUnmounted(() => {
 })
 </script>
 <style scoped lang="scss">
-.lock-bg {
-  background-image: url('@/assets/img/lock_bg.jpg');
-  background-size: cover; // 或者使用 contain，取决于你想要的效果
-  background-position: center; // 确保图片居中
-  background-repeat: no-repeat; // 防止图片重复
-}
+@use '@/styles/scss/global/login-bg';
 
 .options {
   @apply w-320px;
@@ -238,17 +268,9 @@ onUnmounted(() => {
 }
 
 .tips {
-  @apply cursor-pointer w-240px p-12px rounded-8px transition-all duration-300 ease-in-out hover:bg-#323232;
+  @apply cursor-pointer w-240px p-12px rounded-8px transition-all duration-300 ease-in-out;
   svg {
-    @apply size-24px color-#f1f1f1 p-4px bg-#323232 rounded-8px;
-  }
-  &:hover {
-    p {
-      @apply opacity-100;
-    }
-    a {
-      @apply opacity-100 hover:underline;
-    }
+    @apply size-24px color-#f1f1f1 p-4px bg-#80808080 rounded-8px;
   }
 }
 

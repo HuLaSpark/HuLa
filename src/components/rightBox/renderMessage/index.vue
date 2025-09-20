@@ -46,7 +46,7 @@
         </svg>
         <!-- 头像 -->
         <n-popover
-          :ref="(el: any) => (infoPopoverRefs[message.message.id] = el)"
+          :ref="(el: any) => el && (infoPopoverRefs[message.message.id] = el)"
           @update:show="handlePopoverUpdate(message.message.id, $event)"
           trigger="click"
           placement="right"
@@ -149,7 +149,7 @@
             :data-key="isMe ? `U${message.message.id}` : `Q${message.message.id}`"
             :class="isMe ? 'items-end' : 'items-start'"
             :style="{ '--bubble-max-width': isGroup ? '32vw' : '50vw' }"
-            @select="$event.click(message)"
+            @select="$event.click(message, 'Main')"
             :menu="handleItemType(message.message.type)"
             :emoji="emojiList"
             :special-menu="specialMenuList(message.message.type)"
@@ -312,7 +312,7 @@ const props = withDefaults(
 const emit = defineEmits(['jump2Reply'])
 const globalStore = useGlobalStore()
 const selectKey = ref(props.fromUser!.uid)
-const infoPopoverRefs = shallowRef<Record<string, any>>({})
+const infoPopoverRefs = reactive<Record<string, any>>({})
 const { handlePopoverUpdate } = usePopover(selectKey, 'image-chat-main')
 
 const userStore = useUserStore()
@@ -471,9 +471,16 @@ const handleEmojiSelect = async (
 }
 
 useMitt.on(`${MittEnum.INFO_POPOVER}-Main`, (event: any) => {
-  selectKey.value = event.uid
-  infoPopoverRefs.value[event.uid].setShow(true)
-  handlePopoverUpdate(event.uid)
+  const messageId = event.uid
+
+  // 首先设置 selectKey 以显示 InfoPopover 组件
+  selectKey.value = messageId
+
+  // 如果有对应的 popover 引用，则显示 popover
+  if (infoPopoverRefs[messageId]) {
+    infoPopoverRefs[messageId].setShow(true)
+    handlePopoverUpdate(messageId)
+  }
 })
 
 onMounted(() => {

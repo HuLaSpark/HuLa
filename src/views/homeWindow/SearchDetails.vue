@@ -79,6 +79,7 @@ type SessionItem = {
   avatar: string
   name: string
   id?: string
+  detailId: string
   roomId: string
   type: number
 }
@@ -86,6 +87,7 @@ type HistoryItem = {
   avatar: string
   name: string
   id: string
+  detailId: string
   roomId: string
   type: number
   timestamp?: number
@@ -178,7 +180,8 @@ const saveSessionToHistory = (session: SessionItem) => {
   const historyItem: HistoryItem = {
     avatar: session.avatar || '',
     name: session.name || '',
-    id: session.id || session.roomId,
+    id: session.id || session.detailId,
+    detailId: session.detailId,
     roomId: session.roomId,
     type: session.type || RoomTypeEnum.SINGLE,
     timestamp: Date.now() // 添加当前时间戳
@@ -212,7 +215,7 @@ const clearHistory = () => {
 }
 
 // 打开会话
-const openConversation = (item: SessionItem | HistoryItem) => {
+const openConversation = async (item: SessionItem | HistoryItem) => {
   // 保存会话到历史记录
   saveSessionToHistory(item)
   // 保存搜索记录
@@ -222,8 +225,8 @@ const openConversation = (item: SessionItem | HistoryItem) => {
   // 返回上一页（关闭搜索页面）
   router.go(-1)
   // 打开对应会话
-  const id = item.type === RoomTypeEnum.GROUP ? item.roomId : item.id
-  openMsgSession(id || item.roomId, item.type)
+  const id = item.type === RoomTypeEnum.GROUP ? item.roomId : item.detailId
+  await openMsgSession(id, item.type)
   // 定位到对应的会话（让聊天列表滚动到选中的会话）
   nextTick(() => {
     useMitt.emit(MittEnum.LOCATE_SESSION, { roomId: item.roomId })

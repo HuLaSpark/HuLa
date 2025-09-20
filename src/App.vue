@@ -36,7 +36,7 @@ const fixedScale = useFixedScale({
 })
 
 /** 不需要锁屏的页面 */
-const LockExclusion = new Set(['/login', '/tray', '/qrCode', '/about', '/onlineStatus'])
+const LockExclusion = new Set(['/login', '/tray', '/qrCode', '/about', '/onlineStatus', '/capture'])
 const isLock = computed(() => {
   return !LockExclusion.has(router.currentRoute.value.path) && lockScreen.value.enable
 })

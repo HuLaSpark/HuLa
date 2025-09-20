@@ -317,7 +317,11 @@ export enum RoomActEnum {
   /** 删除记录 */
   DELETE_RECORD,
   /** 屏蔽好友 */
-  BLOCK_FRIEND
+  BLOCK_FRIEND,
+  /** 修改群名称 */
+  UPDATE_GROUP_NAME,
+  /** 修改群信息 */
+  UPDATE_GROUP_INFO
 }
 
 /** 变更类型 1 加入群组，2： 移除群组 */

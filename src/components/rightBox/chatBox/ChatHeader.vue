@@ -179,8 +179,8 @@
                       <n-input
                         ref="groupNameInputRef"
                         v-model:value="editingGroupName"
-                        @blur="saveGroupName"
-                        @keydown.enter="saveGroupName"
+                        @blur.stop="handleGroupNameChange"
+                        @keydown.enter.stop="handleGroupNameChange"
                         size="tiny"
                         maxlength="12"
                         spellCheck="false"
@@ -261,8 +261,8 @@
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
-              v-model:value="groupStore.myNameInCurrentGroup"
-              @blur="saveGroupInfo" />
+              v-model:value="localMyName"
+              @blur.stop="handleGroupInfoChange" />
             <!-- 群备注 -->
             <p class="flex-start-center gap-10px text-(12px [--chat-text-color]) mt-20px mb-10px">
               群备注
@@ -270,12 +270,12 @@
             </p>
             <n-input
               class="border-(solid 1px [--line-color]) custom-shadow"
-              v-model:value="groupStore.countInfo!.remark"
+              v-model:value="localRemark"
               spellCheck="false"
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
-              @blur="saveGroupInfo" />
+              @blur.stop="handleGroupInfoChange" />
 
             <!-- 群设置选项 -->
             <div class="box-item cursor-default">
@@ -365,7 +365,7 @@
 
         <n-flex justify="end">
           <n-button @click="handleConfirm" class="w-78px" color="#13987f">确定</n-button>
-          <n-button @click="modalShow = false" class="w-78px" secondary>取消</n-button>
+          <n-button @click="handleCancel" class="w-78px" secondary>取消</n-button>
         </n-flex>
       </div>
     </div>
@@ -452,6 +452,33 @@ const isEditingGroupName = ref(false)
 const editingGroupName = ref('')
 // 群名称输入框引用
 const groupNameInputRef = useTemplateRef<HTMLInputElement | null>('groupNameInputRef')
+// 待保存的群信息
+const pendingGroupInfo = ref<{
+  groupName?: string
+  myName?: string
+  remark?: string
+} | null>(null)
+// 本地暂存的群昵称和群备注（避免实时修改store）
+const localMyName = ref('')
+const localRemark = ref('')
+
+// 初始化本地变量
+const initLocalValues = () => {
+  localMyName.value = groupStore.myNameInCurrentGroup || ''
+  localRemark.value = groupStore.countInfo?.remark || ''
+}
+
+// 监听当前会话变化，重新初始化本地变量
+watch(
+  () => activeItem.value?.roomId,
+  () => {
+    if (activeItem.value?.roomId) {
+      nextTick(() => {
+        initLocalValues()
+      })
+    }
+  }
+)
 
 const messageSettingType = computed(() => {
   // 群消息设置只在免打扰模式下有意义
@@ -593,21 +620,38 @@ const saveGroupInfo = async () => {
   console.log('修改群聊信息')
   if (!activeItem.value.roomId || activeItem.value.type !== RoomTypeEnum.GROUP) return
 
-  // 使用updateMyRoomInfo接口更新我在群里的昵称和群备注
-  const myRoomInfo = {
-    id: activeItem.value.roomId,
-    myName: groupStore.myNameInCurrentGroup,
-    remark: groupStore.countInfo?.remark!
+  // 使用 pendingGroupInfo 中的信息
+  const pendingInfo = pendingGroupInfo.value
+  if (!pendingInfo) return
+
+  try {
+    // 使用updateMyRoomInfo接口更新我在群里的昵称和群备注
+    const myRoomInfo = {
+      id: activeItem.value.roomId,
+      myName: pendingInfo.myName!,
+      remark: pendingInfo.remark!
+    }
+    await cacheStore.updateMyRoomInfo(myRoomInfo)
+
+    // 发送更新请求
+    await updateMyRoomInfo(myRoomInfo)
+
+    // 更新本地store（只有在成功保存后才更新）
+    groupStore.myNameInCurrentGroup = myRoomInfo.myName
+    if (groupStore.countInfo) {
+      groupStore.countInfo.remark = myRoomInfo.remark
+    }
+
+    // 更新会话
+    chatStore.updateSession(activeItem.value.roomId, { remark: myRoomInfo.remark })
+
+    window.$message.success('群聊信息已更新')
+    // 清空待保存的群信息
+    pendingGroupInfo.value = null
+  } catch (error) {
+    console.error('更新群聊信息失败:', error)
+    window.$message.error('群聊信息更新失败')
   }
-  await cacheStore.updateMyRoomInfo(myRoomInfo)
-
-  // 发送更新请求
-  await updateMyRoomInfo(myRoomInfo)
-
-  // 更新会话
-  chatStore.updateSession(activeItem.value.roomId, { remark: myRoomInfo.remark })
-
-  window.$message.success('群聊信息已更新')
 }
 
 const handleAssist = () => {
@@ -709,6 +753,47 @@ const handleMessageSetting = (value: string) => {
   }
 }
 
+/** 处理群名称修改失焦 */
+const handleGroupNameChange = () => {
+  const trimmedName = editingGroupName.value.trim()
+
+  // 检查名称是否有变化
+  if (trimmedName !== activeItem.value.name) {
+    // 检查名称是否为空或超过12个字符
+    if (trimmedName === '') {
+      window.$message.warning('群名称不能为空')
+      return
+    }
+    if (trimmedName.length > 12) {
+      window.$message.warning('群名称不能超过12个字符')
+      return
+    }
+
+    // 保存待修改的群名称并触发确认弹窗
+    pendingGroupInfo.value = { groupName: trimmedName }
+    handleDelete(RoomActEnum.UPDATE_GROUP_NAME)
+  } else {
+    // 名称没有变化，直接退出编辑模式
+    isEditingGroupName.value = false
+  }
+}
+
+/** 处理群信息修改失焦 */
+const handleGroupInfoChange = () => {
+  // 检查是否有修改
+  const originalMyName = groupStore.myNameInCurrentGroup || ''
+  const originalRemark = groupStore.countInfo?.remark || ''
+
+  if (localMyName.value !== originalMyName || localRemark.value !== originalRemark) {
+    // 保存待修改的群信息并触发确认弹窗
+    pendingGroupInfo.value = {
+      myName: localMyName.value,
+      remark: localRemark.value
+    }
+    handleDelete(RoomActEnum.UPDATE_GROUP_INFO)
+  }
+}
+
 /** 删除操作二次提醒 */
 const handleDelete = (label: RoomActEnum) => {
   modalShow.value = true
@@ -719,13 +804,17 @@ const handleDelete = (label: RoomActEnum) => {
     tips.value = '确定解散该群聊?'
   } else if (label === RoomActEnum.EXIT_GROUP) {
     tips.value = '确定退出该群聊?'
+  } else if (label === RoomActEnum.UPDATE_GROUP_NAME) {
+    tips.value = `确定将群名称修改为"${pendingGroupInfo.value?.groupName}"吗？`
+  } else if (label === RoomActEnum.UPDATE_GROUP_INFO) {
+    tips.value = '确定保存群信息修改吗？'
   } else {
     tips.value = '确定后将删除本地聊天记录'
     optionsType.value = RoomActEnum.DELETE_RECORD
   }
 }
 
-const handleConfirm = () => {
+const handleConfirm = async () => {
   if (optionsType.value === RoomActEnum.DELETE_FRIEND && activeItem.value.detailId) {
     contactStore.onDeleteContact(activeItem.value.detailId).then(() => {
       modalShow.value = false
@@ -760,7 +849,32 @@ const handleConfirm = () => {
       // 删除当前的会话
       useMitt.emit(MittEnum.DELETE_SESSION, activeItem.value.roomId)
     })
+  } else if (optionsType.value === RoomActEnum.UPDATE_GROUP_NAME) {
+    // 确认修改群名称
+    await saveGroupName()
+    modalShow.value = false
+  } else if (optionsType.value === RoomActEnum.UPDATE_GROUP_INFO) {
+    // 确认修改群信息
+    await saveGroupInfo()
+    modalShow.value = false
   }
+}
+
+const handleCancel = () => {
+  // 如果是取消群信息修改，需要恢复原始值
+  if (optionsType.value === RoomActEnum.UPDATE_GROUP_NAME) {
+    // 取消群名称修改，退出编辑模式
+    isEditingGroupName.value = false
+    editingGroupName.value = activeItem.value.name
+  } else if (optionsType.value === RoomActEnum.UPDATE_GROUP_INFO) {
+    // 取消群信息修改，恢复本地变量到原始值
+    localMyName.value = groupStore.myNameInCurrentGroup || ''
+    localRemark.value = groupStore.countInfo?.remark || ''
+  }
+
+  // 清空待保存的群信息
+  pendingGroupInfo.value = null
+  modalShow.value = false
 }
 
 const startRtcCall = async (callType: CallTypeEnum) => {
@@ -831,38 +945,29 @@ const saveGroupName = async () => {
 
   isEditingGroupName.value = false
 
-  // 检查名称是否为空或超过12个字符
-  const trimmedName = editingGroupName.value.trim()
-  if (trimmedName === '') {
-    window.$message.warning('群名称不能为空')
-    return
-  }
+  // 使用 pendingGroupInfo 中的群名称
+  const trimmedName = pendingGroupInfo.value?.groupName
+  if (!trimmedName) return
 
-  if (trimmedName.length > 12) {
-    window.$message.warning('群名称不能超过12个字符')
-    return
-  }
+  try {
+    // 调用更新群信息的API
+    await updateRoomInfo({
+      id: activeItem.value.roomId,
+      name: trimmedName,
+      avatar: activeItem.value.avatar
+    })
 
-  // 检查名称是否有变化
-  if (trimmedName !== activeItem.value.name) {
-    try {
-      // 调用更新群信息的API
-      updateRoomInfo({
-        id: activeItem.value.roomId,
-        name: trimmedName,
-        avatar: activeItem.value.avatar
-      })
+    // 更新本地会话状态
+    chatStore.updateSession(activeItem.value.roomId, {
+      name: trimmedName
+    })
 
-      // 更新本地会话状态
-      chatStore.updateSession(activeItem.value.roomId, {
-        name: trimmedName
-      })
-
-      window.$message.success('群名称已更新')
-    } catch (error) {
-      window.$message.error('群名称更新失败')
-      console.error('更新群名称失败:', error)
-    }
+    window.$message.success('群名称已更新')
+    // 清空待保存的群信息
+    pendingGroupInfo.value = null
+  } catch (error) {
+    window.$message.error('群名称更新失败')
+    console.error('更新群名称失败:', error)
   }
 }
 
@@ -892,6 +997,9 @@ const handleVideoCall = async (remotedUid: string, callType: CallTypeEnum) => {
 
 onMounted(() => {
   window.addEventListener('click', closeMenu, true)
+
+  // 初始化本地变量
+  initLocalValues()
 
   useMitt.on(WsResponseMessageType.VideoCallRequest, (event) => {
     info(`收到通话请求：${JSON.stringify(event)}`)
