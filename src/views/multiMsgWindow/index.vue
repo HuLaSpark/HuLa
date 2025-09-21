@@ -160,7 +160,7 @@ const getAllMsg = async () => {
 
 const getAllUserInfo = async () => {
   const uids = choosedMsgs.value.map((msg) => msg.fromUid)
-  users.value = await getUserByIds({ uidList: uids })
+  users.value = await getUserByIds(uids)
 }
 
 onMounted(async () => {
