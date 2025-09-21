@@ -5,6 +5,7 @@ import UnoCSS from '@unocss/vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import { internalIpV4 } from 'internal-ip'
+import os from 'os'
 import postcsspxtorem from 'postcss-pxtorem'
 import AutoImport from 'unplugin-auto-import/vite' //自动导入
 import { NaiveUiResolver, VantResolver } from 'unplugin-vue-components/resolvers'
@@ -13,12 +14,25 @@ import { type ConfigEnv, defineConfig, loadEnv } from 'vite'
 import VueSetupExtend from 'vite-plugin-vue-setup-extend'
 import { getRootPath, getSrcPath } from './build/config/getPath'
 
+function getLocalIP() {
+  const interfaces = os.networkInterfaces()
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name] || []) {
+      // 只要 IPv4、非内网回环地址
+      if (iface.family === 'IPv4' && !iface.internal) {
+        return iface.address
+      }
+    }
+  }
+  return void 0
+}
+
 // 读取 package.json 依赖
 const packageJson = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf-8'))
 const dependencies = Object.keys(packageJson.dependencies || {})
 
 // 预先获取本地IP
-const rawIP = await internalIpV4()
+const rawIP = getLocalIP() || (await internalIpV4())
 
 // https://vitejs.dev/config/
 /**! 不需要优化前端打包(如开启gzip) */
@@ -160,7 +174,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
     server: {
       hmr: {
         protocol: 'ws',
-        host: host,
+        host: '192.168.247.47',
         port: 6130
       },
       cors: true, // 配置 CORS
