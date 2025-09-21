@@ -270,7 +270,12 @@
     </n-flex>
 
     <!-- 邮箱验证码输入弹窗 -->
-    <n-modal v-model:show="emailCodeModal" :mask-closable="false" class="rounded-8px" transform-origin="center">
+    <n-modal
+      v-model:show="emailCodeModal"
+      :mask-closable="true"
+      @click="emailCodeModal = false"
+      class="rounded-8px"
+      transform-origin="center">
       <div class="bg-#fdfdfd w-320px h-fit box-border flex flex-col rounded-8px">
         <n-flex vertical class="w-full h-fit">
           <n-flex vertical :size="10" class="p-20px">
@@ -397,10 +402,11 @@ const pinInputRef = ref()
 
 // 常用邮箱后缀
 const commonEmailDomains = computed(() => {
-  return ['gmail.com', '163.com', 'qq.com'].map((suffix) => {
+  return ['@gmail.com', '@163.com', '@qq.com'].map((suffix) => {
+    const prefix = registerInfo.value.email.split('@')[0]
     return {
-      label: suffix,
-      value: suffix
+      label: prefix + suffix,
+      value: prefix + suffix
     }
   })
 })
