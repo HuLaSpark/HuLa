@@ -105,7 +105,9 @@ export enum MittEnum {
   /** 切换语言页面 */
   VOICE_RECORD_TOGGLE = 'voiceRecordToggle',
   /** 消息多选 */
-  MSG_MULTI_CHOOSE = 'msgMultiChoose'
+  MSG_MULTI_CHOOSE = 'msgMultiChoose',
+  /** 扫码登录事件 */
+  QR_SCAN_EVENT = 'qrScanEvent'
 }
 
 /** 主题类型 */

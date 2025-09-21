@@ -21,6 +21,16 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
 import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.vue'
+import { MittEnum } from '~/src/enums'
+import { useMitt } from '~/src/hooks/useMitt'
+
+/**
+ * 监听事件扫码
+ */
+useMitt.on(MittEnum.QR_SCAN_EVENT, async (res) => {
+  console.log('扫码事件：', res)
+  console.log('扫码事件类型：', typeof res)
+})
 
 const route = useRoute()
 </script>

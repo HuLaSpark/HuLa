@@ -9,6 +9,8 @@
 import { listen } from '@tauri-apps/api/event'
 import { cancel, Format, scan } from '@tauri-apps/plugin-barcode-scanner'
 import { onMounted, onUnmounted, ref } from 'vue'
+import { MittEnum } from '~/src/enums'
+import { useMitt } from '~/src/hooks/useMitt'
 
 const result = ref<string | null>(null)
 const isActive = ref(true)
@@ -30,7 +32,8 @@ const startScan = async () => {
     })
 
     const res = (await Promise.race([scanTask, cancelTask])) as any
-    console.log('扫码结果：', res)
+
+    useMitt.emit(MittEnum.QR_SCAN_EVENT, res)
 
     if (res && typeof res === 'object' && 'content' in res) {
       alert(`扫码结果：${res.content}`)
