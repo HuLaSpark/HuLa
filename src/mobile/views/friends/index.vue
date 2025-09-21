@@ -59,11 +59,7 @@
             :id="item.applyId"
             round
             size="small"
-            :src="
-              avatarSrc(
-                groupStore.getUserInfo(isCurrentUser(item.receiverId) ? item.receiverId : item.senderId)?.avatar!
-              )
-            " />
+            :src="avatarSrc(getUserInfo(item)!.avatar!)" />
         </div>
         <div @click="toMessage" class="h-full flex justify-end items-center">
           <img src="@/assets/mobile/friend/right-arrow.webp" class="block h-20px" alt="" />
@@ -177,9 +173,31 @@ import { useMitt } from '@/hooks/useMitt.ts'
 import router from '@/router'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGroupStore } from '@/stores/group'
-import { useUserStore } from '@/stores/user'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { NoticeType } from '~/src/services/types'
+
+/**
+ * 获取当前用户查询视角
+ * @param item 通知消息
+ */
+const getUserInfo = (item: any) => {
+  switch (item.eventType) {
+    case NoticeType.FRIEND_APPLY:
+    case NoticeType.GROUP_INVITE:
+    case NoticeType.GROUP_MEMBER_DELETE: {
+      const data = groupStore.getUserInfo(item.operateId)!
+      return data
+    }
+    case NoticeType.ADD_ME:
+    case NoticeType.GROUP_INVITE_ME:
+    case NoticeType.GROUP_SET_ADMIN:
+    case NoticeType.GROUP_RECALL_ADMIN: {
+      const data = groupStore.getUserInfo(item.senderId)!
+      return data
+    }
+  }
+}
 
 onMounted(async () => {
   try {
@@ -233,7 +251,6 @@ const shrinkStatus = ref(false)
 const groupStore = useGroupStore()
 const contactStore = useContactStore()
 const userStatusStore = useUserStatusStore()
-const userStore = useUserStore()
 const { stateList } = storeToRefs(userStatusStore)
 
 //好友申请列表（只筛选好友申请消息）
@@ -242,10 +259,6 @@ const applyList = computed(() => {
 })
 
 const avatarSrc = (url: string) => AvatarUtils.getAvatarUrl(url)
-
-const isCurrentUser = (uid: string) => {
-  return uid === userStore.userInfo!.uid
-}
 
 const toMessage = () => {
   router.push('/mobile/mobileMy/myMessages')
