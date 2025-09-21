@@ -367,7 +367,7 @@ pub async fn send_msg(
         .and_then(|body| serde_json::to_string(body).ok());
 
     // 创建消息模型
-    let message = im_message::Model {
+    let mut message = im_message::Model {
         id: data.id.clone(),
         uid: login_uid.clone(),
         nickname,
@@ -423,6 +423,13 @@ pub async fn send_msg(
             Ok(Some(mut resp)) => {
                 resp.old_msg_id = Some(msg_id.clone());
                 id = resp.message.id.clone();
+                message.body = resp.message.body.as_ref().and_then(|body| {
+                    if body.is_null() {
+                        None
+                    } else {
+                        serde_json::to_string(body).ok()
+                    }
+                });
                 "success"
             }
             _ => "fail",
