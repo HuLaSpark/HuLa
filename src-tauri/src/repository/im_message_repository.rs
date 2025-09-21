@@ -277,6 +277,7 @@ pub async fn update_message_status(
     }
 
     active_model.send_status = Set(status.to_string());
+    active_model.body = Set(message.body.clone());
 
     if status == "success" {
         if let Some(message_id) = id {
