@@ -8,14 +8,50 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import android.view.ViewTreeObserver
 import kotlin.math.roundToInt
+import android.Manifest
+import androidx.activity.result.contract.ActivityResultContracts
 
 class MainActivity : TauriActivity() {
+
+     private val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            permissions.entries.forEach { entry ->
+                val permissionName = entry.key
+                val isGranted = entry.value
+                // 这里可以根据权限是否授予做处理
+                // e.g. if (!isGranted && permissionName == Manifest.permission.CAMERA) { ... }
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         // 全屏 Edge-to-Edge
         WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        requestPermissions()
+    }
+
+    private fun requestPermissions() {
+        val permissions = mutableListOf(
+            Manifest.permission.CAMERA,
+            Manifest.permission.RECORD_AUDIO
+        )
+
+        // Android 13+ 使用 READ_MEDIA_* 权限
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            permissions.add(Manifest.permission.READ_MEDIA_IMAGES)
+            permissions.add(Manifest.permission.READ_MEDIA_VIDEO)
+            permissions.add(Manifest.permission.READ_MEDIA_AUDIO)
+        } else {
+            // 兼容旧版
+            permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+            if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.Q) {
+                permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            }
+        }
+
+        requestPermissionLauncher.launch(permissions.toTypedArray())
     }
 
     override fun onWebViewCreate(webView: WebView) {

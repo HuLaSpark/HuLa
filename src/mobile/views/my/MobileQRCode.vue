@@ -1,8 +1,5 @@
 <template>
-  <div class="scanner">
-    <div v-if="result">📦 扫码结果：{{ result }}</div>
-    <div v-else>📷 正在扫码中，请对准二维码...</div>
-  </div>
+  <div class="scanner"></div>
 </template>
 
 <script setup lang="ts">
@@ -11,6 +8,7 @@ import { cancel, Format, scan } from '@tauri-apps/plugin-barcode-scanner'
 import { onMounted, onUnmounted, ref } from 'vue'
 import { MittEnum } from '~/src/enums'
 import { useMitt } from '~/src/hooks/useMitt'
+import router from '~/src/router'
 
 const result = ref<string | null>(null)
 const isActive = ref(true)
@@ -37,7 +35,6 @@ const startScan = async () => {
 
     if (res && typeof res === 'object' && 'content' in res) {
       alert(`扫码结果：${res.content}`)
-      // 点击确定后返回上一页
       if (window.history.length > 1) {
         window.history.back()
       } else {
@@ -47,9 +44,18 @@ const startScan = async () => {
     } else {
       result.value = '扫码失败或已取消'
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error('扫码异常:', err)
-    result.value = '扫码过程中发生错误'
+
+    if (err && typeof err === 'object' && 'message' in err && /permission/i.test(err.message)) {
+      alert('没有相机权限，请在系统设置中开启权限')
+      router.back() // 用户点 OK 后会执行这里
+      result.value = '缺少权限'
+    } else {
+      alert('扫码过程中发生错误')
+      router.back() // 其他错误也返回上一页
+      result.value = '扫码过程中发生错误'
+    }
   }
 }
 
@@ -57,7 +63,6 @@ onMounted(() => {
   isActive.value = true
   startScan()
 
-  // Android 返回键监听
   listen('tauri://android-back', () => {
     isActive.value = false
     cancel().catch((e) => {
