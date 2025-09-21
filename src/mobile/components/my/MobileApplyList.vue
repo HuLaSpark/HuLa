@@ -37,9 +37,9 @@
               <span>
                 {{ applyMsg(item) }}
               </span>
-              <span>
+              <!-- <span>
                 {{ formatTimestamp(item.createTime) }}
-              </span>
+              </span> -->
             </div>
             <div v-show="isFriendApplyOrGroupInvite(item)" class="flex gap-2 flex-1 text-12px text-gray-500">
               <div class="whitespace-nowrap">留言:</div>
@@ -48,7 +48,9 @@
               </n-ellipsis>
             </div>
           </div>
-          <div class="flex w-17 max-h-45px flex-col items-center justify-center">
+          <div
+            v-if="isFriendApplyOrGroupInvite(item)"
+            class="flex w-17 max-h-45px flex-col items-center justify-center">
             <n-flex
               align="center"
               :size="10"
@@ -111,7 +113,7 @@ import { NoticeType, RequestNoticeAgreeStatus } from '@/services/types.ts'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { formatTimestamp } from '@/utils/ComputedTime.ts'
+// import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { useGroupStore } from '~/src/stores/group'
 
 const userStore = useUserStore()
