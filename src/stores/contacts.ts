@@ -107,6 +107,10 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
     }
   }
 
+  const deleteContact = (uid: string) => {
+    contactsList.value = contactsList.value.filter((item) => item.uid !== uid)
+  }
+
   /**
    * 处理好友/群申请
    * @param apply 好友申请信息
@@ -158,6 +162,7 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
     contactsOptions,
     applyPageOptions,
     onDeleteContact,
-    onHandleInvite
+    onHandleInvite,
+    deleteContact
   }
 })

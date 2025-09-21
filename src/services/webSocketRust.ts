@@ -3,6 +3,7 @@ import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 import { error, info, warn } from '@tauri-apps/plugin-log'
 import { useMitt } from '@/hooks/useMitt'
 import { WsResponseMessageType } from '@/services/wsType'
+import { useContactStore } from '@/stores/contacts'
 
 /// WebSocket 连接状态
 export enum ConnectionState {
@@ -243,6 +244,7 @@ class RustWebSocketClient {
    * 监听 Rust 端发送的具体业务消息事件
    */
   public async setupBusinessMessageListeners(): Promise<void> {
+    const contactStore = useContactStore()
     // 登录相关事件
     this.listenerController.add(
       await listen('ws-login-qr-code', (event: any) => {
@@ -450,6 +452,13 @@ class RustWebSocketClient {
     this.listenerController.add(
       await listen('ws-unknown-message', (event: any) => {
         info(`接收到未处理类型的消息: ${JSON.stringify(event.payload)}`)
+      })
+    )
+
+    this.listenerController.add(
+      await listen('ws-delete-friend', (event: any) => {
+        info(`删除好友: ${JSON.stringify(event.payload)}`)
+        contactStore.deleteContact(event.payload)
       })
     )
   }
