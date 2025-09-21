@@ -174,7 +174,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
     server: {
       hmr: {
         protocol: 'ws',
-        host: '192.168.247.47',
+        host: host,
         port: 6130
       },
       cors: true, // 配置 CORS
