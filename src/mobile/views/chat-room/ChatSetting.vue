@@ -58,13 +58,13 @@
             </div>
           </div>
           <!-- 群成员  -->
-          <div v-if="isGroup" class="bg-white rounded-10px w-full h-180px shadow">
+          <div v-if="isGroup" class="bg-white rounded-10px max-w-full p-[5px_10px_5x_10px] shadow">
             <div class="p-[15px_15px_0px_15px] flex flex-col">
               <!-- 群号 -->
               <div class="flex justify-between items-center">
                 <div class="text-14px">群聊成员</div>
                 <div class="text-12px text-#6E6E6E flex flex-wrap gap-10px items-center">
-                  <div>{{ groupStore.countInfo?.memberNum || 0 }}</div>
+                  <div>有{{ groupStore.countInfo?.memberNum || 0 }}成员</div>
                   <div>
                     <svg class="w-14px h-14px iconpark-icon">
                       <use href="#right"></use>
@@ -74,68 +74,14 @@
               </div>
             </div>
             <div class="py-15px px-5px grid grid-cols-5 gap-15px text-12px">
-              <div class="flex flex-col justify-center items-center gap-5px">
+              <div
+                v-for="i in groupMemberListSliced"
+                :key="i.uid"
+                class="flex flex-col justify-center items-center gap-5px">
                 <div class="rounded-full bg-#E5EFEE w-36px h-36px flex items-center justify-center">
-                  <n-avatar :size="40" src="#" fallback-src="/logo.png" round />
-                  <!-- <svg class="iconpark-icon h-25px w-25px"><use href="#plus"></use></svg> -->
+                  <n-avatar :size="36" :src="avatarSrc(i.avatar)" fallback-src="/logo.png" round />
                 </div>
-                <div>张三</div>
-              </div>
-              <div class="flex flex-col justify-center items-center gap-5px">
-                <div class="rounded-full bg-#E5EFEE w-36px h-36px flex items-center justify-center">
-                  <n-avatar :size="40" src="#" fallback-src="/logo.png" round />
-                  <!-- <svg class="iconpark-icon h-25px w-25px"><use href="#plus"></use></svg> -->
-                </div>
-                <div>张三</div>
-              </div>
-              <div class="flex flex-col justify-center items-center gap-5px">
-                <div class="rounded-full bg-#E5EFEE w-36px h-36px flex items-center justify-center">
-                  <n-avatar :size="40" src="#" fallback-src="/logo.png" round />
-                  <!-- <svg class="iconpark-icon h-25px w-25px"><use href="#plus"></use></svg> -->
-                </div>
-                <div>张三</div>
-              </div>
-              <div class="flex flex-col justify-center items-center gap-5px">
-                <div class="rounded-full bg-#E5EFEE w-36px h-36px flex items-center justify-center">
-                  <n-avatar :size="40" src="#" fallback-src="/logo.png" round />
-                  <!-- <svg class="iconpark-icon h-25px w-25px"><use href="#plus"></use></svg> -->
-                </div>
-                <div>张三</div>
-              </div>
-              <div class="flex flex-col justify-center items-center gap-5px">
-                <div class="rounded-full bg-#E5EFEE w-36px h-36px flex items-center justify-center">
-                  <n-avatar :size="40" src="#" fallback-src="/logo.png" round />
-                  <!-- <svg class="iconpark-icon h-25px w-25px"><use href="#plus"></use></svg> -->
-                </div>
-                <div>张三</div>
-              </div>
-              <div class="flex flex-col justify-center items-center gap-5px">
-                <div class="rounded-full bg-#E5EFEE w-36px h-36px flex items-center justify-center">
-                  <n-avatar :size="40" src="#" fallback-src="/logo.png" round />
-                  <!-- <svg class="iconpark-icon h-25px w-25px"><use href="#plus"></use></svg> -->
-                </div>
-                <div>张三</div>
-              </div>
-              <div class="flex flex-col justify-center items-center gap-5px">
-                <div class="rounded-full bg-#E5EFEE w-36px h-36px flex items-center justify-center">
-                  <n-avatar :size="40" src="#" fallback-src="/logo.png" round />
-                  <!-- <svg class="iconpark-icon h-25px w-25px"><use href="#plus"></use></svg> -->
-                </div>
-                <div>张三</div>
-              </div>
-              <div class="flex flex-col justify-center items-center gap-5px">
-                <div class="rounded-full bg-#E5EFEE w-36px h-36px flex items-center justify-center">
-                  <n-avatar :size="40" src="#" fallback-src="/logo.png" round />
-                  <!-- <svg class="iconpark-icon h-25px w-25px"><use href="#plus"></use></svg> -->
-                </div>
-                <div>张三</div>
-              </div>
-              <div class="flex flex-col justify-center items-center gap-5px">
-                <div class="rounded-full bg-#E5EFEE w-36px h-36px flex items-center justify-center">
-                  <n-avatar :size="40" src="#" fallback-src="/logo.png" round />
-                  <!-- <svg class="iconpark-icon h-25px w-25px"><use href="#plus"></use></svg> -->
-                </div>
-                <div>张三</div>
+                <div class="truncate max-w-full text-#707070">{{ i.name }}</div>
               </div>
               <div class="flex flex-col justify-center items-center gap-5px">
                 <div class="rounded-full bg-#E5EFEE w-36px h-36px flex items-center justify-center">
@@ -143,7 +89,7 @@
                     <use href="#plus"></use>
                   </svg>
                 </div>
-                <div>张三</div>
+                <div>邀请</div>
               </div>
             </div>
           </div>
@@ -295,6 +241,13 @@ const isAdmin = computed(() => {
   const currentUser = groupStore.userList.find((user) => user.uid === useUserStore().userInfo?.uid)
   return currentUser?.roleId === RoleEnum.ADMIN
 })
+
+const groupMemberListSliced = computed(() => {
+  const list = groupStore.memberList.slice(0, 9)
+  return list
+})
+
+const avatarSrc = (url: string) => AvatarUtils.getAvatarUrl(url)
 
 const announError = ref(false)
 const announNum = ref(0)
@@ -515,6 +468,10 @@ const fetchGroupMembers = async (roomId: string) => {
  * 这里直接监听状态的值
  */
 onMounted(async () => {
+  console.log('已进入这个页面')
+
+  console.log('群成员列表：', groupStore.memberList)
+
   await handleInitAnnoun()
   if (isGroup.value) {
     await getGroupDetail(globalStore.currentSession.roomId)
