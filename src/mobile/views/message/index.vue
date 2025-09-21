@@ -83,9 +83,9 @@
       <div class="border-b-1 border-solid color-gray-200 px-18px mt-5px"></div>
     </div>
 
-    <van-pull-refresh class="h-full" v-model="loading" @refresh="onRefresh">
+    <van-pull-refresh class="h-full" :disabled="!atTop" v-model="loading" @refresh="onRefresh">
       <div class="flex flex-col h-full px-18px">
-        <div class="flex-1">
+        <div class="flex-1 overflow-auto" @scroll="onScroll" ref="scrollContainer">
           <van-swipe-cell
             @open="handleSwipeOpen"
             @close="handleSwipeClose"
@@ -251,6 +251,13 @@ onMounted(async () => {
     removeShowFunction()
   })
 })
+
+const atTop = ref(true) // 是否滚动到顶
+const scrollContainer = ref(null) //消息滚动容器
+
+function onScroll(e: any) {
+  atTop.value = e.target.scrollTop === 0
+}
 
 /**
  * 渲染图片图标的函数工厂

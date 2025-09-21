@@ -1,5 +1,5 @@
 database:
   sqlite_file: db.sqlite
 backend:
-  base_url: https://hulaspark.com/api
+  base_url: http://192.168.1.37:18760
 active_config: local
