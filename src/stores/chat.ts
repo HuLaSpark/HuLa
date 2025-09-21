@@ -721,6 +721,26 @@ export const useChatStore = defineStore(
       updateTotalUnreadCount()
     }
 
+    const clearRedundantMessages = (roomId: string) => {
+      const currentMessages = messageMap.get(roomId)
+      if (!currentMessages) return
+
+      // 将消息转换为数组并按消息ID倒序排序
+      const sortedMessages = Array.from(currentMessages.values()).sort(
+        (a, b) => Number(b.message.id) - Number(a.message.id)
+      )
+
+      // 保留前20条消息的ID
+      const keepMessageIds = new Set(sortedMessages.slice(0, 20).map((msg) => msg.message.id))
+
+      // 删除多余的消息
+      for (const [msgId] of currentMessages) {
+        if (!keepMessageIds.has(msgId)) {
+          currentMessages.delete(msgId)
+        }
+      }
+    }
+
     // 重置当前聊天室的消息并刷新最新消息
     const resetAndRefreshCurrentRoomMessages = async () => {
       if (!globalStore.currentSession!.roomId) return
@@ -815,7 +835,8 @@ export const useChatStore = defineStore(
       isMsgMultiChoose,
       clearMsgCheck,
       setMsgMultiChoose,
-      checkMsgExist
+      checkMsgExist,
+      clearRedundantMessages
     }
   },
   {
