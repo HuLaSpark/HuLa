@@ -35,3 +35,4 @@ target
 *.sqlite
 db.sqlite
 .idea
+.qoder
