@@ -7,9 +7,7 @@
     <!-- 页面全部内容 -->
     <div class="flex flex-col flex-1">
       <RouterView v-slot="{ Component }">
-        <Transition name="slide" appear mode="out-in">
-          <component :is="Component" :key="route.fullPath" />
-        </Transition>
+        <component :is="Component" :key="route.fullPath" class="page-view" />
       </RouterView>
     </div>
 
@@ -115,20 +113,21 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
 })
 </script>
 
-<style scoped>
-/* 侧滑切换动画 */
-.slide-enter-active,
-.slide-leave-active {
-  transition: all 0.1s ease;
+<style lang="scss" scoped>
+.page-view {
+  flex: 1;
+  // 进入时的动画
+  animation: fade-slide-in 0.3s ease;
 }
 
-.slide-enter-from {
-  transform: translateX(-30px);
-  opacity: 0;
-}
-
-.slide-leave-to {
-  transform: translateX(30px);
-  opacity: 0;
+@keyframes fade-slide-in {
+  from {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 </style>
