@@ -113,7 +113,7 @@
                 :menu="optionsList"
                 :special-menu="report">
                 <n-flex
-                  @click="selectKey = item.uid"
+                  @click="onClickMember(item)"
                   :key="item.uid"
                   :size="10"
                   align="center"
@@ -180,6 +180,7 @@ import { useChatMain } from '@/hooks/useChatMain.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { usePopover } from '@/hooks/usePopover.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
+import type { UserItem } from '@/services/types'
 import { WsResponseMessageType } from '@/services/wsType.ts'
 import { useCachedStore } from '@/stores/cached.ts'
 import { useGlobalStore } from '@/stores/global.ts'
@@ -188,6 +189,7 @@ import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { getUserByIds } from '~/src/utils/ImRequestUtils'
 
 const appWindow = WebviewWindow.getCurrent()
 const emit = defineEmits<(e: 'ready') => void>()
@@ -265,6 +267,18 @@ const filteredUserList = computed(() => {
     return a.name.localeCompare(b.name)
   })
 })
+
+const onClickMember = async (item: UserItem) => {
+  console.log('点击用户', item)
+  selectKey.value = item.uid
+
+  // 获取用户的最新数据，并更新 pinia
+  getUserByIds([item.uid]).then((users) => {
+    if (users && users.length > 0) {
+      groupStore.updateUserItem(item.uid, users[0])
+    }
+  })
+}
 
 // 监听成员源列表变化
 watch(

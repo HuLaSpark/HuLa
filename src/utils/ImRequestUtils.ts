@@ -1,5 +1,5 @@
 import { ImUrlEnum, type NotificationTypeEnum } from '@/enums'
-import type { CacheBadgeReq, LoginUserReq, ModifyUserInfoType, RegisterUserReq } from '@/services/types'
+import type { CacheBadgeReq, LoginUserReq, ModifyUserInfoType, RegisterUserReq, UserItem } from '@/services/types'
 import { ErrorType, invokeSilently, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 
 /**
@@ -559,9 +559,9 @@ export async function mergeMsg(body: { fromRoomId: string; type: number; roomIds
   })
 }
 
-export async function getUserByIds(body: { uidList: string[] }) {
+export async function getUserByIds(uidList: string[]): Promise<UserItem[]> {
   return await imRequest({
     url: ImUrlEnum.GET_USER_BY_IDS,
-    body
+    body: { uidList }
   })
 }
