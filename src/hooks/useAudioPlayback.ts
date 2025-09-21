@@ -141,7 +141,6 @@ export const useAudioPlayback = (
     audioElement.value.addEventListener('error', () => {
       loading.value = false
       isPlaying.value = false
-      console.error('音频加载失败')
     })
 
     // 添加音频管理器监听器
