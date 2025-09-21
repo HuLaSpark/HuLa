@@ -164,7 +164,7 @@ import { type SelectionRange, useCommon } from '@/hooks/useCommon.ts'
 import { useGlobalShortcut } from '@/hooks/useGlobalShortcut.ts'
 import { useMitt } from '@/hooks/useMitt'
 import { useWindow } from '@/hooks/useWindow'
-import type { ContactItem, FilesMeta, SessionItem } from '@/services/types'
+import type { FilesMeta, FriendItem, SessionItem } from '@/services/types'
 import { useChatStore } from '@/stores/chat'
 import { useContactStore } from '@/stores/contacts'
 import { useGlobalStore } from '@/stores/global.ts'
@@ -344,7 +344,7 @@ const isSingleChat = computed(() => {
 /** 是否是好友关系 */
 const isFriend = computed(() => {
   if (!isSingleChat.value) return true
-  return contactStore.contactsList.some((contact: ContactItem) => contact.uid === detailId)
+  return contactStore.contactsList.some((contact: FriendItem) => contact.uid === detailId)
 })
 
 // 监听emojiShow的变化，当emojiShow为true时关闭recentlyTip

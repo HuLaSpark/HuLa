@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { StoresEnum } from '@/enums'
-import type { ContactItem, NoticeItem } from '@/services/types'
+import type { FriendItem, NoticeItem } from '@/services/types'
 import { RequestNoticeAgreeStatus } from '@/services/types'
 import { useGlobalStore } from '@/stores/global'
 import {
@@ -16,7 +16,7 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
   const globalStore = useGlobalStore()
 
   /** 联系人列表 */
-  const contactsList = ref<ContactItem[]>([])
+  const contactsList = ref<FriendItem[]>([])
   /** 好友请求列表 */
   const requestFriendsList = ref<NoticeItem[]>([])
 

@@ -149,7 +149,7 @@ import FloatBlockList from '@/components/common/FloatBlockList.vue'
 import { ThemeEnum } from '@/enums'
 import { RoomTypeEnum } from '@/enums/index.ts'
 import { useWindow } from '@/hooks/useWindow'
-import type { ContactItem, GroupDetailReq } from '@/services/types'
+import type { FriendItem, GroupDetailReq } from '@/services/types'
 import { useCachedStore } from '@/stores/cached'
 import { useContactStore } from '@/stores/contacts'
 import { useGlobalStore } from '@/stores/global'
@@ -340,7 +340,7 @@ const sortSearchResults = (items: any[], type: 'user' | 'group' | 'recommend') =
 
 // 判断是否已经是好友
 const isFriend = (uid: string) => {
-  return contactStore.contactsList.some((contact: ContactItem) => contact.uid === uid)
+  return contactStore.contactsList.some((contact: FriendItem) => contact.uid === uid)
 }
 
 // 判断是否是当前登录用户

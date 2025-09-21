@@ -568,12 +568,19 @@ export interface NoticeItem {
 }
 
 /** 联系人的列表项 */
-export type ContactItem = {
+export type FriendItem = {
+  /** 好友id */
+  uid: string
+  /** 好友备注 */
+  remark: string
   /** 在线状态 1在线 2离线 */
   activeStatus: OnlineEnum
   /** 最后一次上下线时间 */
   lastOptTime: number
-  uid: string
+  /** 不让他看我（0-允许，1-禁止） */
+  hideMyPosts: boolean
+  /** 不看他（0-允许，1-禁止） */
+  hideTheirPosts: boolean
 }
 
 /** 是否全员展示的会话 0否 1是 */

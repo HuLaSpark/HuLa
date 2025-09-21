@@ -17,7 +17,7 @@
 
             <div class="flex-y-center gap-12px h-fit">
               <p class="text-(14px #909090)">{{ getUserDisplayName(item.fromUser.uid) }}</p>
-              <p class="text-(12px #909090)">{{ formatTime(item.message.sendTime) }}</p>
+              <p class="text-(12px #909090)">{{ formatTimestamp(item.message.sendTime) }}</p>
             </div>
           </div>
 
@@ -55,6 +55,7 @@ import type { MessageType, UserItem } from '@/services/types'
 import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { getMsgList, getUserByIds } from '@/utils/ImRequestUtils'
 
 type Msg = {
@@ -97,16 +98,6 @@ const getUserDisplayName = computed(() => (uid: string) => {
 const getAvatarSrc = (uid: string) => {
   const avatar = uid === userUid.value ? userStore.userInfo!.avatar : groupStore.getUserInfo(uid)?.avatar
   return AvatarUtils.getAvatarUrl(avatar as string)
-}
-
-// 格式化时间
-const formatTime = (timestamp?: number) => {
-  if (!timestamp) return ''
-  const date = new Date(timestamp)
-  return date.toLocaleTimeString('zh-CN', {
-    hour: '2-digit',
-    minute: '2-digit'
-  })
 }
 
 // 获取当前页面的所有图片和表情URL
