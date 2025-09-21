@@ -210,7 +210,6 @@ const handleSend = async () => {
 // ==== 展开面板 ====
 const options = ref([
   { label: 'emoji', icon: 'smiling-face', showArrow: true, isRotate: false },
-  { label: 'cut', icon: 'screenshot', showArrow: true, isRotate: false },
   { label: 'file', icon: 'file', showArrow: false, isRotate: true },
   { label: 'image', icon: 'photo', showArrow: false, isRotate: true },
   { label: 'video', icon: 'voice', showArrow: true, isRotate: false },

@@ -34,7 +34,9 @@ const activate = () => {
   // active.value = true
 }
 
-const toScanQRCode = () => [router.push('/mobile/mobileMy/scanQRcode')]
+const toScanQRCode = () => {
+  router.push('/mobile/mobileMy/scanQRcode')
+}
 
 const toSettings = () => {
   router.push('/mobile/mobileMy/settings')
