@@ -6,7 +6,7 @@
         class="bg-#FAFAFA"
         style="border-bottom: 1px solid; border-color: #dfdfdf"
         :hidden-right="true"
-        room-name="群设置" />
+        :room-name="title + '设置'" />
     </template>
 
     <template #container="{ changedHeight }">
@@ -18,15 +18,20 @@
             <div class="flex justify-center">
               <div
                 class="rounded-full relative bg-white w-38px h-38px overflow-hidden"
+                style="margin-left: 10px"
                 @click="openAvatarCropper(userStore.userInfo?.avatarUpdateTime)">
                 <n-avatar
                   class="absolute"
-                  :size="86"
+                  :size="38"
                   :src="AvatarUtils.getAvatarUrl(globalStore.currentSession.avatar!)"
                   fallback-src="/logo.png"
+                  :style="{
+                    'object-fit': 'cover',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)'
+                  }"
                   round />
-                <div
-                  class="absolute h-50% w-full bottom-0 bg-[rgb(50,50,50)] bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-15 backdrop-saturate-100 backdrop-contrast-100"></div>
               </div>
               <input
                 ref="fileInput"
@@ -45,7 +50,7 @@
               <span>
                 {{ globalStore.currentSession.name }}
               </span>
-              <span>
+              <span v-if="globalStore.currentSession.hotFlag === 1">
                 <svg class="w-18px h-18px iconpark-icon text-#1A9B83">
                   <use href="#auth"></use>
                 </svg>
@@ -53,7 +58,7 @@
             </div>
           </div>
           <!-- 群成员  -->
-          <div class="bg-white rounded-10px w-full h-180px shadow">
+          <div v-if="isGroup" class="bg-white rounded-10px w-full h-180px shadow">
             <div class="p-[15px_15px_0px_15px] flex flex-col">
               <!-- 群号 -->
               <div class="flex justify-between items-center">
@@ -162,14 +167,14 @@
               </div>
 
               <!-- 公告内容 -->
-              <div @click="goToNotice" class="pt-15px flex flex-col text-14px gap-10px">
+              <div @click="goToNotice" v-if="isGroup" class="pt-15px flex flex-col text-14px gap-10px">
                 <div>群公告</div>
                 <div class="text-#707070 line-clamp-2 text-12px line-height-20px">
                   {{ announList.length > 0 ? announList[0]?.content : '' }}
                 </div>
               </div>
 
-              <div v-if="isLord || isAdmin" class="flex justify-between py-15px items-center">
+              <div v-if="isGroup && (isLord || isAdmin)" class="flex justify-between py-15px items-center">
                 <div class="text-14px">本群昵称</div>
                 <div class="text-12px text-#6E6E6E flex flex-wrap gap-10px items-center">
                   <input
@@ -187,7 +192,7 @@
                 </div>
               </div>
 
-              <div class="flex justify-between py-15px items-center">
+              <div v-if="isGroup" class="flex justify-between py-15px items-center">
                 <div class="text-14px">我的群昵称</div>
                 <div class="text-12px text-#6E6E6E flex flex-wrap gap-10px items-center">
                   <input
@@ -206,10 +211,10 @@
               </div>
             </div>
           </div>
-          <!-- 群备注 -->
+          <!-- 备注 -->
           <div class="w-full flex flex-col gap-15px rounded-10px">
             <div class="ps-15px text-14px">
-              <span>群备注</span>
+              <span>{{ title + '备注' }}</span>
               <span class="text-#6E6E6E">（仅自己可见）</span>
             </div>
             <div class="rounded-10px flex w-full bg-white shadow">
@@ -218,14 +223,14 @@
                   v-model="remarkValue"
                   class="h-50px w-full"
                   style="border: none; outline: none; font-size: 14px"
-                  placeholder="请输入群备注"
+                  :placeholder="'请输入' + title + '备注'"
                   @blur="handleInfoUpdate" />
               </div>
             </div>
           </div>
           <div class="flex bg-white rounded-10px w-full h-auto shadow">
             <div class="px-15px flex flex-col w-full">
-              <div class="pt-15px text-14px text-#6E6E6E">群设置</div>
+              <div class="pt-15px text-14px text-#6E6E6E">{{ title }}设置</div>
               <!-- 群号 -->
               <div
                 style="border-bottom: 1px solid; border-color: #ebebeb"
@@ -244,9 +249,11 @@
           <div class="flex shadow bg-white cursor-pointer text-red text-14px rounded-10px w-full">
             <div class="p-15px">删除聊天记录</div>
           </div>
-          <!-- 解散群聊按钮 -->
+          <!-- 解散群聊、退出群聊、删除好友按钮 -->
           <div class="mt-auto flex justify-center mb-20px">
-            <n-button type="error" @click="handleExit">{{ isGroup ? '解散群聊' : '退出群聊' }}</n-button>
+            <n-button type="error" @click="handleExit">
+              {{ isGroup ? (isLord ? '解散群聊' : '退出群聊') : '删除好友' }}
+            </n-button>
           </div>
         </div>
       </div>
@@ -262,11 +269,12 @@ import router from '@/router'
 import type { UserItem } from '@/services/types'
 import { useCachedStore } from '@/stores/cached'
 import { useChatStore } from '@/stores/chat.ts'
+import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global'
 import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { getGroupDetail, setSessionTop, updateRoomInfo } from '@/utils/ImRequestUtils'
+import { deleteFriend, getGroupDetail, modifyFriendRemark, setSessionTop, updateRoomInfo } from '@/utils/ImRequestUtils'
 
 const dialog = useDialog()
 const userStore = useUserStore()
@@ -274,8 +282,11 @@ const chatStore = useChatStore()
 const globalStore = useGlobalStore()
 const groupStore = useGroupStore()
 const cacheStore = useCachedStore()
+const contactStore = useContactStore()
 
+const title = computed(() => (isGroup.value ? '群' : '好友'))
 const isGroup = computed(() => globalStore.currentSession?.type === RoomTypeEnum.GROUP)
+
 const isLord = computed(() => {
   const currentUser = groupStore.userList.find((user) => user.uid === useUserStore().userInfo?.uid)
   return currentUser?.roleId === RoleEnum.LORD
@@ -296,6 +307,7 @@ const avatarValue = ref('')
 const nicknameValue = ref('')
 const options = ref<Array<{ name: string; src: string }>>([])
 const { currentSession: activeItem } = storeToRefs(globalStore)
+const friend = contactStore.contactsList.find((item) => item.uid === globalStore.currentSession.detailId)
 
 const {
   fileInput,
@@ -336,7 +348,7 @@ const goToNotice = () => {
 async function handleExit() {
   dialog.error({
     title: '提示',
-    content: isGroup.value ? '确定要解散群聊吗？' : '确定要退出群聊吗？',
+    content: isGroup.value ? (isLord.value ? '确定要解散群聊吗？' : '确定要退出群聊吗？') : '删除好友',
     positiveText: '确定',
     negativeText: '取消',
     onPositiveClick: async () => {
@@ -365,9 +377,12 @@ async function handleExit() {
               useMitt.emit(MittEnum.DELETE_SESSION, activeItem.value.roomId)
             })
           }
+        } else {
+          await deleteFriend({ targetUid: globalStore.currentSession.detailId })
+          window.$message.success('删除好友成功')
         }
 
-        router.push('/mobile/login')
+        router.push('/mobile/message')
       } catch (error) {
         console.error('创建登录窗口失败:', error)
       }
@@ -444,12 +459,21 @@ const handleTop = (value: boolean) => {
 
 // 处理群备注更新
 const handleInfoUpdate = async () => {
-  await cacheStore.updateMyRoomInfo({
-    id: globalStore.currentSession.roomId,
-    remark: remarkValue.value,
-    myName: nicknameValue.value
-  })
-  window.$message.success('群备注更新成功')
+  if (isGroup.value) {
+    await cacheStore.updateMyRoomInfo({
+      id: globalStore.currentSession.roomId,
+      remark: remarkValue.value,
+      myName: nicknameValue.value
+    })
+  } else {
+    await modifyFriendRemark({
+      targetUid: globalStore.currentSession.detailId,
+      remark: remarkValue.value
+    })
+
+    friend!.remark = remarkValue.value
+  }
+  window.$message.success(title.value + '备注更新成功')
 }
 
 // 处理群名称更新
@@ -509,7 +533,9 @@ onMounted(async () => {
       })
   } else {
     // 这里需要拿到好友的信息
-    groupStore.getUserInfo(globalStore.currentSession.detailId)!
+    remarkValue.value = friend?.remark || ''
+
+    console.log('好友备注:', remarkValue.value)
   }
 })
 </script>

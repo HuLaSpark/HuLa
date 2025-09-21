@@ -310,6 +310,7 @@ const handleClick = async (id: string, type: number) => {
     router.push(`/mobile/mobileFriends/friendInfo/${id}`)
   }
 }
+
 // todo 需要循环数组来展示分组
 const showMenu = (event: MouseEvent) => {
   console.log(event)
