@@ -706,6 +706,11 @@ impl WebSocketClient {
                 let _ = app_handle.emit("ws-invalid-user", data);
             }
 
+            "deleteFriend" => {
+                warn!("🚫 Delete Friend");
+                let _ = app_handle.emit("ws-delete-friend", data);
+            }
+
             // 未知消息类型
             _ => {
                 warn!("❓ Received unhandled message type: {}", message_type);
