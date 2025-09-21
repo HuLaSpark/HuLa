@@ -463,11 +463,10 @@ watch(
       // 新消息计数逻辑（不在底部时）
       const container = scrollContainerRef.value
       if (container) {
-        const distanceFromBottom = container.scrollHeight - container.scrollTop
         const isOtherUserMessage =
           latestMessage?.fromUser?.uid && String(latestMessage.fromUser.uid) !== String(userUid.value)
         // 只有当不在底部且是他人消息时才增加计数
-        if (distanceFromBottom > 300 && isOtherUserMessage) {
+        if (shouldShowFloatFooter.value && isOtherUserMessage) {
           const current = chatStore.newMsgCount.get(globalStore.currentSession!.roomId)
           if (!current) {
             chatStore.newMsgCount.set(globalStore.currentSession!.roomId, {
