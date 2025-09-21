@@ -591,7 +591,7 @@ const handleViewAnnouncement = (): void => {
 useMitt.on(MittEnum.CHAT_SCROLL_BOTTOM, async () => {
   // 只有消息数量超过60条才进行重置和刷新
   if (chatStore.chatMessageList.length > 20) {
-    await chatStore.resetAndRefreshCurrentRoomMessages()
+    chatStore.clearRedundantMessages(globalStore.currentSession!.roomId)
   }
   scrollToBottom()
 })
