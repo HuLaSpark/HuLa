@@ -371,7 +371,7 @@ const handleDel = async (announcement: any) => {
     announcementStates.value[announcement.id].deleteLoading = true
 
     // 同时处理删除请求和最小延迟时间
-    await Promise.all([deleteAnnouncement(announcement.id), new Promise((resolve) => setTimeout(resolve, 600))])
+    await Promise.all([deleteAnnouncement({ id: announcement.id }), new Promise((resolve) => setTimeout(resolve, 600))])
 
     // 重置该公告的确认框状态
     announcementStates.value[announcement.id].showDeleteConfirm = false

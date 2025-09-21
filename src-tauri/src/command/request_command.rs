@@ -106,6 +106,7 @@ pub async fn im_request_command(
                 return Ok(data);
             }
             Err(e) => {
+                tracing::error!("Request error: {}", e);
                 if e.to_string().contains("请重新登录") {
                     app_handle.emit_to("home", "relogin", ()).unwrap();
                 }
