@@ -19,7 +19,7 @@
               <div
                 class="rounded-full relative bg-white w-38px h-38px overflow-hidden"
                 style="margin-left: 10px"
-                @click="openAvatarCropper(userStore.userInfo?.avatarUpdateTime)">
+                @click="openAvatarCropper">
                 <n-avatar
                   class="absolute"
                   :size="38"

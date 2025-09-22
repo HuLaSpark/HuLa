@@ -18,9 +18,7 @@
           <div class="flex flex-col p-[0px_20px_20px_20px] gap-15px">
             <!-- 头像 -->
             <div class="flex justify-center">
-              <div
-                class="rounded-full relative bg-white w-86px h-86px overflow-hidden"
-                @click="openAvatarCropper(userStore.userInfo?.avatarUpdateTime)">
+              <div class="rounded-full relative bg-white w-86px h-86px overflow-hidden" @click="openAvatarCropper">
                 <n-avatar
                   class="absolute"
                   :size="86"
