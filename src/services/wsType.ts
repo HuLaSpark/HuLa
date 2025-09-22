@@ -4,10 +4,6 @@ import type { UserInfoType } from '@/services/types.ts'
 export enum WsResponseMessageType {
   /** 无网络连接 */
   NO_INTERNET = 'noInternet',
-  /** 登录返回二维码 */
-  LOGIN_QR_CODE = 'loginQrCode',
-  /** 用户扫描成功等待授权 */
-  WAITING_AUTHORIZE = 'waitingAuthorize',
   /** 用户登录成功返回用户信息 */
   LOGIN_SUCCESS = 'loginSuccess',
   /** 收到消息 */

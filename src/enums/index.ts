@@ -651,6 +651,16 @@ export enum ImUrlEnum {
   /** 获取所有用户状态 */
   GET_ALL_USER_STATE = 'getAllUserState',
 
+  // 二维码相关
+  /** 生成二维码 */
+  GENERATE_QR_CODE = 'generateQRCode',
+  /** 检查二维码状态 */
+  CHECK_QR_STATUS = 'checkQRStatus',
+  /** 扫描二维码 */
+  SCAN_QR_CODE = 'scanQRCode',
+  /** 确认登录 */
+  CONFIRM_QR_CODE = 'confirmQRCode',
+
   // 用户信息相关
   /** 上传头像 */
   UPLOAD_AVATAR = 'uploadAvatar',

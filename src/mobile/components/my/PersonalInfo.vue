@@ -203,8 +203,6 @@ const getUserState = (stateId: string) => {
 }
 
 onMounted(() => {
-  console.log('userStatusStore = ', userStatusStore)
-
   // 如果地址中的uid存在，那当前就是好友的页面，就从地址栏获取uid拿到好友的详情信息，如果没有就默认显示自己的信息
   if (uid) {
     const foundedUser = groupStore.allUserInfo.find((i) => i.uid === uid)
