@@ -32,10 +32,10 @@ import { useRoute } from 'vue-router'
 import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.vue'
 import type { default as TabBarType } from '#/layout/tabBar/index.vue'
 import TabBar from '#/layout/tabBar/index.vue'
-import { ChangeTypeEnum, NotificationTypeEnum, TauriCommand } from '@/enums'
+import { ChangeTypeEnum, MittEnum, ModalEnum, NotificationTypeEnum, OnlineEnum, TauriCommand } from '@/enums'
 import { useMitt } from '@/hooks/useMitt'
-import type { MessageType, UserItem } from '@/services/types'
-import { WsResponseMessageType } from '@/services/wsType'
+import type { MarkItemType, MessageType, RevokedMsgType, UserItem } from '@/services/types'
+import { type OnStatusChangeType, WsResponseMessageType, type WsTokenExpire } from '@/services/wsType'
 import { useChatStore } from '@/stores/chat'
 import { useGlobalStore } from '@/stores/global'
 import { useGroupStore } from '@/stores/group'
@@ -225,6 +225,126 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
 
   await globalStore.updateGlobalUnreadCount()
 })
+
+useMitt.on(WsResponseMessageType.OFFLINE, async (onStatusChangeType: OnStatusChangeType) => {
+  console.log('收到用户下线通知', onStatusChangeType)
+  // 群聊
+  if (onStatusChangeType.type === 1) {
+    groupStore.updateOnlineNum({
+      roomId: onStatusChangeType.roomId,
+      onlineNum: onStatusChangeType.onlineNum,
+      isAdd: false
+    })
+    if (onStatusChangeType) {
+      groupStore.updateUserItem(
+        onStatusChangeType.uid,
+        {
+          activeStatus: OnlineEnum.OFFLINE,
+          lastOptTime: onStatusChangeType.lastOptTime
+        },
+        onStatusChangeType.roomId
+      )
+    }
+  }
+})
+
+useMitt.on(WsResponseMessageType.ONLINE, async (onStatusChangeType: OnStatusChangeType) => {
+  console.log('收到用户上线通知')
+  // 群聊
+  if (onStatusChangeType.type === 1) {
+    groupStore.updateOnlineNum({
+      roomId: onStatusChangeType.roomId,
+      onlineNum: onStatusChangeType.onlineNum,
+      isAdd: true
+    })
+    if (onStatusChangeType) {
+      groupStore.updateUserItem(
+        onStatusChangeType.uid,
+        {
+          activeStatus: OnlineEnum.ONLINE,
+          lastOptTime: onStatusChangeType.lastOptTime
+        },
+        onStatusChangeType.roomId
+      )
+    }
+  }
+})
+
+useMitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExpire) => {
+  if (Number(userUid.value) === Number(wsTokenExpire.uid) && userStore.userInfo!.client === wsTokenExpire.client) {
+    console.log('收到用户token过期通知', wsTokenExpire)
+    // 聚焦主窗口
+    const home = await WebviewWindow.getByLabel('home')
+    await home?.setFocus()
+    useMitt.emit(MittEnum.LEFT_MODAL_SHOW, {
+      type: ModalEnum.REMOTE_LOGIN,
+      props: {
+        ip: wsTokenExpire.ip
+      }
+    })
+  }
+})
+
+useMitt.on(WsResponseMessageType.INVALID_USER, (param: { uid: string }) => {
+  console.log('无效用户')
+  const data = param
+  // 消息列表删掉拉黑的发言
+  chatStore.filterUser(data.uid)
+  // 群成员列表删掉拉黑的用户
+  groupStore.removeUserItem(data.uid)
+})
+
+useMitt.on(WsResponseMessageType.MSG_MARK_ITEM, async (data: { markList: MarkItemType[] }) => {
+  console.log('收到消息标记更新:', data)
+
+  // 确保data.markList是一个数组再传递给updateMarkCount
+  if (data && data.markList && Array.isArray(data.markList)) {
+    await chatStore.updateMarkCount(data.markList)
+  } else if (data && !Array.isArray(data)) {
+    // 兼容处理：如果直接收到了单个MarkItemType对象
+    await chatStore.updateMarkCount([data as unknown as MarkItemType])
+  }
+})
+
+useMitt.on(WsResponseMessageType.MSG_RECALL, (data: RevokedMsgType) => {
+  chatStore.updateRecallMsg(data)
+})
+
+useMitt.on(WsResponseMessageType.MY_ROOM_INFO_CHANGE, (data: { myName: string; roomId: string; uid: string }) => {
+  // 更新用户在群聊中的昵称
+  groupStore.updateUserItem(data.uid, { myName: data.myName }, data.roomId)
+})
+
+useMitt.on(
+  WsResponseMessageType.REQUEST_NEW_FRIEND,
+  async (data: { uid: number; unReadCount4Friend: number; unReadCount4Group: number }) => {
+    console.log('收到好友申请')
+    // 更新未读数
+    globalStore.unReadMark.newFriendUnreadCount = data.unReadCount4Friend || 0
+    globalStore.unReadMark.newGroupUnreadCount = data.unReadCount4Group || 0
+
+    // 刷新好友申请列表
+    await contactStore.getApplyPage(true)
+  }
+)
+
+useMitt.on(WsResponseMessageType.REQUEST_APPROVAL_FRIEND, async () => {
+  // 刷新好友列表以获取最新状态
+  await contactStore.getContactList(true)
+})
+
+useMitt.on(WsResponseMessageType.ROOM_INFO_CHANGE, async (data: { roomId: string; name: string; avatar: string }) => {
+  // 根据roomId修改对应房间中的群名称和群头像
+  const { roomId, name, avatar } = data
+
+  // 更新chatStore中的会话信息
+  chatStore.updateSession(roomId, {
+    name,
+    avatar
+  })
+})
+
+console.log('首页布局已启动')
 </script>
 
 <style lang="scss">
