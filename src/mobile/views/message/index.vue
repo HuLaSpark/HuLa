@@ -152,6 +152,7 @@ import { formatTimestamp } from '@/utils/ComputedTime.ts'
 const loading = ref(false)
 const count = ref(0)
 const onRefresh = () => {
+  router.push('/mobile/confirmQRLogin')
   setTimeout(() => {
     loading.value = false
     count.value++
@@ -230,7 +231,6 @@ const userStore = useUserStore()
 
 onMounted(async () => {
   await rustWebSocketClient.setupBusinessMessageListeners()
-  console.log('个人数据：', userStore.userInfo)
 
   const { removeHideFunction, removeShowFunction } = await mobileClient.keyboardListener(
     // 键盘打开
