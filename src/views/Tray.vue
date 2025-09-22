@@ -163,10 +163,6 @@ const handleTrayResize = async () => {
   await resizeWindow('tray', 130, islogin ? 356 : 44)
 }
 
-onBeforeMount(() => {
-  globalStore.setTipVisible(false)
-})
-
 onMounted(() => {
   // 监听系统缩放变化事件，自动调整托盘窗口尺寸
   window.addEventListener('resize-needed', handleTrayResize)

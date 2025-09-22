@@ -1,13 +1,7 @@
 use std::collections::HashMap;
 
 use lazy_static::lazy_static;
-use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
-
-#[derive(Clone, Serialize, Deserialize)]
-pub struct WindowPayload {
-    pub payload: serde_json::Value,
-}
 
 lazy_static! {
     static ref PAYLOAD_CACHE: Mutex<HashMap<String, serde_json::Value>> = Mutex::new(HashMap::new());
