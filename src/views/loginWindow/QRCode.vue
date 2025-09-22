@@ -108,7 +108,8 @@ const scanStatus = ref<{
 
 /** 刷新二维码 */
 const refreshQRCode = () => {
-  if (scanStatus.value.status !== 'error') {
+  console.log('scanStatus.value.status', scanStatus.value.status)
+  if (scanStatus.value.status !== 'error' && scanStatus.value.status !== 'auth') {
     return
   }
 
@@ -143,6 +144,7 @@ const startPolling = () => {
         deviceHash: qrCodeResp.value.deviceHash,
         deviceType: 'PC'
       })
+      console.log('res --> ', res)
       switch (res.status) {
         case 'PENDING':
           // 等待中
