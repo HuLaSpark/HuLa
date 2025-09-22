@@ -4,8 +4,11 @@ import { isAndroid, isIOS, isMobile } from '@/utils/PlatformConstants'
 import { AndroidAdapter } from './AndroidAdapter'
 import { IosAdapter } from './IosAdapter'
 import type {
+  AppLifecycleListenerResult,
   IMobileClientAdapter,
   KeyboardListenerResult,
+  TAppBackgroundCallback,
+  TAppForegroundCallback,
   TKeyboardHideCallback,
   TKeyboardShowCallback
 } from './interface/adapter'
@@ -117,6 +120,20 @@ export class MobileClient implements IMobileClient {
     }
 
     return this.clientAdapter.keyboardListener(showCallback, hideCallback)
+  }
+
+  /**
+   * 前后台监听封装
+   */
+  public appLifecycleListener(
+    foregroundCallback: TAppForegroundCallback,
+    backgroundCallback: TAppBackgroundCallback
+  ): AppLifecycleListenerResult {
+    if (!this.clientAdapter || typeof this.clientAdapter.appLifecycleListener !== 'function') {
+      throw new Error('[MobileClient] appLifecycleListener 无法初始化，未找到有效的适配器')
+    }
+
+    return this.clientAdapter.appLifecycleListener(foregroundCallback, backgroundCallback)
   }
 }
 

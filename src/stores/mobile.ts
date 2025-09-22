@@ -86,6 +86,14 @@ export const useMobileStore = defineStore(StoresEnum.MOBILE, () => {
     })
   }
 
+  // 移动端程序前后台状态
+  const isForeground = ref<boolean>(true)
+
+  // 修改前后台状态
+  const updateAppForeground = (state: boolean) => {
+    isForeground.value = state
+  }
+
   return {
     safeArea,
     updateSafeArea,
@@ -95,6 +103,8 @@ export const useMobileStore = defineStore(StoresEnum.MOBILE, () => {
     isFullScreen,
     keyboardDetail,
     updateKeyboardDetail,
-    updateKeyboardState
+    updateKeyboardState,
+    isForeground,
+    updateAppForeground
   }
 })

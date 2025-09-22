@@ -33,6 +33,14 @@ export interface IMobileClientAdapter {
    * removeListener()
    */
   keyboardListener(showCallback: TKeyboardShowCallback, hideCallback: TKeyboardHideCallback): KeyboardListenerResult
+
+  /**
+   * 注册应用前后台切换事件监听器
+   */
+  appLifecycleListener(
+    foregroundCallback: TAppForegroundCallback,
+    backgroundCallback: TAppBackgroundCallback
+  ): AppLifecycleListenerResult
 }
 
 // keyboardListener相关的类型和属性接口
@@ -50,4 +58,12 @@ export interface IKeyboardDidShowDetail {
   screenHeight: number
   timestamp: number
   visibleHeight: number
+}
+
+export type TAppForegroundCallback = () => void
+export type TAppBackgroundCallback = () => void
+
+export interface AppLifecycleListenerResult {
+  removeForegroundFunction: () => void
+  removeBackgroundFunction: () => void
 }

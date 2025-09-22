@@ -13,7 +13,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 
 class MainActivity : TauriActivity() {
 
-     private val requestPermissionLauncher =
+    private var currentWebView: WebView? = null
+
+    private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
             permissions.entries.forEach { entry ->
                 val permissionName = entry.key
@@ -56,6 +58,8 @@ class MainActivity : TauriActivity() {
 
     override fun onWebViewCreate(webView: WebView) {
         super.onWebViewCreate(webView)
+
+        currentWebView = webView
 
         // 初始化 WebView 背景填充
         // webView.setBackgroundColor(0x00000000) // 透明，父布局背景可见
@@ -111,5 +115,23 @@ class MainActivity : TauriActivity() {
         
             insets
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // 当前 Activity 回到前台
+        currentWebView?.evaluateJavascript(
+            "window.dispatchEvent(new CustomEvent('appDidEnterForeground'));",
+            null
+        )
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // 当前 Activity 进入后台
+        currentWebView?.evaluateJavascript(
+            "window.dispatchEvent(new CustomEvent('appDidEnterBackground'));",
+            null
+        )
     }
 }

@@ -71,4 +71,35 @@ export class AndroidAdapter implements IMobileClientAdapter {
       })
     }
   }
+
+  /**
+   * 监听应用前后台切换
+   */
+  public appLifecycleListener(foregroundCallback: () => void, backgroundCallback: () => void) {
+    const foregroundHandler = () => {
+      console.log('[AndroidAdapter] 应用回到前台')
+      foregroundCallback()
+    }
+
+    const backgroundHandler = () => {
+      console.log('[AndroidAdapter] 应用进入后台')
+      backgroundCallback()
+    }
+
+    window.addEventListener('appDidEnterForeground', foregroundHandler)
+    window.addEventListener('appDidEnterBackground', backgroundHandler)
+
+    const removeForegroundFunction = () => {
+      window.removeEventListener('appDidEnterForeground', foregroundHandler)
+    }
+
+    const removeBackgroundFunction = () => {
+      window.removeEventListener('appDidEnterBackground', backgroundHandler)
+    }
+
+    return {
+      removeForegroundFunction,
+      removeBackgroundFunction
+    }
+  }
 }

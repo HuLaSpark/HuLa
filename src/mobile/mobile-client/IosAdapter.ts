@@ -1,8 +1,11 @@
 import type { SafeArea } from '@/stores/mobile'
 import type {
+  AppLifecycleListenerResult,
   IKeyboardDidShowDetail,
   IMobileClientAdapter,
   KeyboardListenerResult,
+  TAppBackgroundCallback,
+  TAppForegroundCallback,
   TKeyboardHideCallback,
   TKeyboardShowCallback
 } from './interface/adapter'
@@ -81,6 +84,40 @@ export class IosAdapter implements IMobileClientAdapter {
         const insets = await this.getSafeArea()
         callback.call(this, insets)
       })
+    }
+  }
+
+  /**
+   * 监听应用前后台切换
+   */
+  appLifecycleListener(
+    foregroundCallback: TAppForegroundCallback,
+    backgroundCallback: TAppBackgroundCallback
+  ): AppLifecycleListenerResult {
+    const foregroundHandler = () => {
+      console.log('[IosAdapter] 应用回到前台')
+      foregroundCallback()
+    }
+
+    const backgroundHandler = () => {
+      console.log('[IosAdapter] 应用进入后台')
+      backgroundCallback()
+    }
+
+    window.addEventListener('appDidEnterForeground', foregroundHandler)
+    window.addEventListener('appDidEnterBackground', backgroundHandler)
+
+    const removeForegroundFunction = () => {
+      window.removeEventListener('appDidEnterForeground', foregroundHandler)
+    }
+
+    const removeBackgroundFunction = () => {
+      window.removeEventListener('appDidEnterBackground', backgroundHandler)
+    }
+
+    return {
+      removeForegroundFunction,
+      removeBackgroundFunction
     }
   }
 }

@@ -54,6 +54,7 @@ const groupStore = useGroupStore()
 const contactStore = useContactStore()
 const settingStore = useSettingStore()
 const userUid = computed(() => userStore.userInfo!.uid)
+
 const playMessageSound = async () => {
   // 检查是否开启了消息提示音
   if (!settingStore.notification?.messageSound) {
