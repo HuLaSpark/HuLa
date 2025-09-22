@@ -39,6 +39,7 @@ import PublishCommunity from '#/views/my/PublishCommunity.vue'
 import Share from '#/views/my/Share.vue'
 import SimpleBio from '#/views/my/SimpleBio.vue'
 import { TauriCommand } from '@/enums'
+import ConfirmQRLogin from '../mobile/views/ConfirmQRLogin.vue'
 
 /**! 创建窗口后再跳转页面就会导致样式没有生效所以不能使用懒加载路由的方式，有些页面需要快速响应的就不需要懒加载 */
 const { BASE_URL } = import.meta.env
@@ -231,6 +232,12 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
         component: FriendInfo
       }
     ]
+  },
+  {
+    path: '/mobile/confirmQRLogin/:ip/:expireTime/:deviceType/:locPlace/:qrId',
+    name: 'mobileConfirmQRLogin',
+    component: ConfirmQRLogin,
+    props: true
   }
 ]
 

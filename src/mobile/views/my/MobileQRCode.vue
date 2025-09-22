@@ -31,10 +31,9 @@ const startScan = async () => {
 
     const res = (await Promise.race([scanTask, cancelTask])) as any
 
-    useMitt.emit(MittEnum.QR_SCAN_EVENT, res)
+    useMitt.emit(MittEnum.QR_SCAN_EVENT, res.content)
 
     if (res && typeof res === 'object' && 'content' in res) {
-      alert(`扫码结果：${res.content}`)
       if (window.history.length > 1) {
         window.history.back()
       } else {
