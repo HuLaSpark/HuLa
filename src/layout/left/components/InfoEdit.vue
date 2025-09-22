@@ -26,7 +26,7 @@
         <n-flex justify="center">
           <n-popover trigger="hover" :delay="300" :duration="300" placement="bottom">
             <template #trigger>
-              <div class="avatar-wrapper relative" @click="openAvatarCropper(editInfo.content.avatarUpdateTime)">
+              <div class="avatar-wrapper relative" @click="openAvatarCropper">
                 <n-avatar :size="80" :src="AvatarUtils.getAvatarUrl(editInfo.content.avatar!)" round />
                 <div class="avatar-hover absolute size-full rounded-50% flex-center">
                   <span class="text-12px color-white">更换头像</span>

@@ -1,6 +1,4 @@
-import dayjs from 'dayjs'
 import { UploadSceneEnum } from '@/enums'
-import { formatTimestamp, isDiffNow } from '@/utils/ComputedTime.ts'
 import { UploadProviderEnum, useUpload } from './useUpload'
 
 export interface AvatarUploadOptions {
@@ -50,16 +48,7 @@ export const useAvatarUpload = (options: AvatarUploadOptions = {}) => {
   }
 
   // 校验头像更改条件
-  const openAvatarCropper = (lastUpdateTime: number | undefined) => {
-    // 计算30天的毫秒数
-    if (lastUpdateTime && !isDiffNow({ time: lastUpdateTime, unit: 'day', diff: 30 })) {
-      // 计算下次可更新时间
-      const nextUpdateTime = dayjs(lastUpdateTime).add(30, 'day')
-      const formattedDate = formatTimestamp(nextUpdateTime.valueOf(), true)
-      window.$message.warning(`下一次更换头像的时间：${formattedDate}`)
-      return
-    }
-
+  const openAvatarCropper = () => {
     fileInput.value?.click()
   }
 
