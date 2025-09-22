@@ -24,14 +24,28 @@ import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.v
 import { scanQRCodeAPI } from '@/utils/ImRequestUtils'
 import { MittEnum } from '~/src/enums'
 import { useMitt } from '~/src/hooks/useMitt'
+import router from '~/src/router'
 
 /**
  * 监听事件扫码
  */
-useMitt.on(MittEnum.QR_SCAN_EVENT, async (res) => {
-  console.log('扫码事件：', res)
-  await scanQRCodeAPI({ qrId: res })
-  console.log('扫码事件类型：', typeof res)
+useMitt.on(MittEnum.QR_SCAN_EVENT, async (qrId) => {
+  try {
+    const data = await scanQRCodeAPI({ qrId: qrId })
+
+    router.push({
+      name: 'mobileConfirmQRLogin',
+      params: {
+        ip: data.ip,
+        expireTime: data.expireTime,
+        deviceType: data.deviceType,
+        locPlace: Object.hasOwn(data, 'locPlace') ? (data.locPlace ? data.locPlace : '深圳') : '深圳',
+        qrId
+      }
+    })
+  } catch (error) {
+    console.error('获取扫码token错误：', error)
+  }
 })
 
 const route = useRoute()
