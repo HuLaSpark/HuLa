@@ -65,26 +65,15 @@
 </template>
 <script setup lang="ts">
 import { emit } from '@tauri-apps/api/event'
-import { delay } from 'lodash-es'
 import { lightTheme } from 'naive-ui'
-import { ErrorType } from '@/common/exception'
-import { TauriCommand } from '@/enums'
-import { useLogin } from '@/hooks/useLogin.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
 import { getEnhancedFingerprint } from '@/services/fingerprint'
 import { useGlobalStore } from '@/stores/global'
-import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
-import { useUserStore } from '@/stores/user'
-import { useUserStatusStore } from '@/stores/userStatus'
-import { checkQRStatus, generateQRCode, getAllUserState, getUserDetail } from '@/utils/ImRequestUtils'
-import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
+import { checkQRStatus, generateQRCode } from '@/utils/ImRequestUtils'
+import { loginCommand } from '~/src/services/tauriCommand'
 
-const loginHistoriesStore = useLoginHistoriesStore()
-const userStore = useUserStore()
 const globalStore = useGlobalStore()
-const userStatusStore = useUserStatusStore()
-const { setLoginState } = useLogin()
 const { createWebviewWindow } = useWindow()
 const { isTrayMenuShow } = storeToRefs(globalStore)
 const loading = ref(true)
@@ -159,58 +148,23 @@ const startPolling = () => {
             pollInterval.value = null
           }
           try {
-            // 获取用户详情
-            const userDetail: any = await getUserDetail()
-
-            // 设置用户状态id
-            if (userDetail.userStateId) {
-              userStatusStore.stateId = userDetail.userStateId
-            }
-
-            // 创建用户账户对象
-            const account = {
-              ...userDetail,
-              token: res.data.token,
-              refreshToken: res.data.refreshToken || '',
-              client: res.data.client || ''
-            }
-
-            // 更新用户存储
-            userStore.userInfo = account
-
-            // 添加到登录历史
-            loginHistoriesStore.addLoginHistory(account)
-
-            // 在 sqlite 中存储用户信息
-            await invokeWithErrorHandler(
-              TauriCommand.SAVE_USER_INFO,
-              {
-                userInfo: userDetail
-              },
-              {
-                customErrorMessage: '保存用户信息失败',
-                errorType: ErrorType.Client
-              }
-            )
-
             // 在 rust 部分设置 token
             await emit('set_user_info', {
               token: res.data.token,
               refreshToken: res.data.refreshToken || '',
-              uid: userDetail.uid
+              uid: res.data.uid
             })
 
-            // 获取用户状态列表
-            if (userStatusStore.stateList.length === 0) {
-              try {
-                userStatusStore.stateList = await getAllUserState()
-              } catch (error) {
-                console.error('获取用户状态列表失败', error)
+            await loginCommand({ uid: res.data.uid }, true).then(() => {
+              scanStatus.value.show = true
+              scanStatus.value = {
+                status: 'success',
+                icon: 'success',
+                text: '登录成功',
+                show: true
               }
-            }
-
-            // 处理登录成功
-            await handleLoginSuccess()
+              loadText.value = '登录中...'
+            })
           } catch (error) {
             console.error('获取用户详情失败:', error)
             handleError('登录成功，但获取用户信息失败')
@@ -251,23 +205,6 @@ const handleQRCodeLogin = async () => {
   } catch (error) {
     handleError('生成二维码失败')
   }
-}
-
-/** 处理登录成功 */
-const handleLoginSuccess = async () => {
-  scanStatus.value.show = true
-  scanStatus.value = {
-    status: 'success',
-    icon: 'success',
-    text: '登录成功',
-    show: true
-  }
-  loadText.value = '登录中...'
-  delay(async () => {
-    await createWebviewWindow('HuLa', 'home', 960, 720, 'login', true, undefined, 480)
-    await setLoginState()
-    isTrayMenuShow.value = true
-  }, 1000)
 }
 
 /** 处理失败场景 */
