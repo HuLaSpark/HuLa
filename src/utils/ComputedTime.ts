@@ -30,6 +30,7 @@ export const timeToStr = (time: number) => {
  * @returns 格式化后的时间字符串
  */
 export const formatTimestamp = (timestamp: number, isDetail = false): string => {
+  timestamp = Number(timestamp)
   const now: Dayjs = dayjs()
   const date: Dayjs = dayjs(timestamp)
   // 计算今天和消息的发送时间间隔多少天
