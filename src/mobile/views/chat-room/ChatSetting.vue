@@ -64,7 +64,11 @@
               <div class="flex justify-between items-center">
                 <div class="text-14px">群聊成员</div>
                 <div class="text-12px text-#6E6E6E flex flex-wrap gap-10px items-center">
-                  <div>有{{ groupStore.countInfo?.memberNum || 0 }}成员</div>
+                  <div>
+                    有
+                    <span class="text-#398D7E">{{ groupStore.countInfo?.memberNum || 0 }}</span>
+                    位成员
+                  </div>
                   <div>
                     <svg class="w-14px h-14px iconpark-icon">
                       <use href="#right"></use>
@@ -78,8 +82,12 @@
                 v-for="i in groupMemberListSliced"
                 :key="i.uid"
                 class="flex flex-col justify-center items-center gap-5px">
-                <div class="rounded-full bg-#E5EFEE w-36px h-36px flex items-center justify-center">
-                  <n-avatar :size="36" :src="avatarSrc(i.avatar)" fallback-src="/logo.png" round />
+                <div class="rounded-full relative bg-#E5EFEE w-36px h-36px flex items-center justify-center">
+                  <!-- 蒙板 -->
+                  <div
+                    v-if="i.activeStatus !== OnlineEnum.ONLINE"
+                    class="w-36px h-36px absolute rounded-full bg-#707070 opacity-70 z-4"></div>
+                  <n-avatar class="absolute z-3" :size="36" :src="avatarSrc(i.avatar)" fallback-src="/logo.png" round />
                 </div>
                 <div class="truncate max-w-full text-#707070">{{ i.name }}</div>
               </div>
@@ -208,7 +216,7 @@
 </template>
 
 <script setup lang="ts">
-import { MittEnum, NotificationTypeEnum, RoleEnum, RoomTypeEnum } from '@/enums'
+import { MittEnum, NotificationTypeEnum, OnlineEnum, RoleEnum, RoomTypeEnum } from '@/enums'
 import { useAvatarUpload } from '@/hooks/useAvatarUpload'
 import { useMitt } from '@/hooks/useMitt.ts'
 import router from '@/router'
@@ -244,6 +252,11 @@ const isAdmin = computed(() => {
 
 const groupMemberListSliced = computed(() => {
   const list = groupStore.memberList.slice(0, 9)
+  for (const i of list) {
+    console.log('成员：', i)
+    console.log('状态：', i.activeStatus === OnlineEnum.ONLINE)
+  }
+  console.log('群成员信息：', list)
   return list
 })
 
@@ -469,8 +482,6 @@ const fetchGroupMembers = async (roomId: string) => {
  */
 onMounted(async () => {
   console.log('已进入这个页面')
-
-  console.log('群成员列表：', groupStore.memberList)
 
   await handleInitAnnoun()
   if (isGroup.value) {
