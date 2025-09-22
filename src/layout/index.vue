@@ -28,6 +28,7 @@
 import { LogicalSize } from '@tauri-apps/api/dpi'
 import { emitTo, listen } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { UserAttentionType } from '@tauri-apps/api/window'
 import { info } from '@tauri-apps/plugin-log'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { ChangeTypeEnum, MittEnum, ModalEnum, NotificationTypeEnum, OnlineEnum, TauriCommand } from '@/enums'
@@ -345,6 +346,11 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
 
           // 如果窗口不可见、被最小化或未聚焦，则播放音效
           shouldPlaySound = !isVisible || isMinimized || !isFocused
+
+          // 在Windows系统下，如果窗口最小化或未聚焦时请求用户注意
+          if (isWindows() && (isMinimized || !isFocused)) {
+            await home.requestUserAttention(UserAttentionType.Critical)
+          }
         } catch (error) {
           console.warn('检查窗口状态失败:', error)
           // 如果检查失败，默认播放音效
@@ -517,6 +523,12 @@ onMounted(async () => {
   if (homeWindow) {
     // 设置业务消息监听器
     await rustWebSocketClient.setupBusinessMessageListeners()
+
+    // 监听窗口聚焦事件，聚焦时停止tray闪烁
+    homeWindow.listen('tauri://focus', () => {
+      globalStore.setTipVisible(false)
+    })
+
     // 恢复大小
     if (globalStore.homeWindowState.width && globalStore.homeWindowState.height) {
       await homeWindow.setSize(new LogicalSize(globalStore.homeWindowState.width, globalStore.homeWindowState.height))

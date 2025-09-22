@@ -49,7 +49,7 @@
         :style="{
           left: `${waveformRenderer.scanLinePosition.value}px`,
           color: voiceIconColor,
-          backgroundColor: '#303030'
+          backgroundColor: isCurrentUser ? '#303030' : isDarkMode ? '#000' : '#fff'
         }">
         {{ formatTime(dragControl.previewTime.value) }}
       </div>

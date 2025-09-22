@@ -96,7 +96,6 @@ pub async fn page_msg(
     param: CursorPageMessageParam,
     state: State<'_, AppData>,
 ) -> Result<CursorPageResp<Vec<MessageResp>>, String> {
-    info!("get page msg");
     // 获取当前登录用户的 uid
     let login_uid = {
         let user_info = state.user_info.lock().await;

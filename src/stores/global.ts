@@ -1,13 +1,12 @@
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
 import { defineStore } from 'pinia'
-import { NotificationTypeEnum, StoresEnum } from '@/enums'
+import { StoresEnum } from '@/enums'
 import type { FriendItem, RequestFriendItem, SessionItem } from '@/services/types'
 import { useChatStore } from '@/stores/chat'
-import { isMac } from '@/utils/PlatformConstants'
 import { clearQueue, readCountQueue } from '@/utils/ReadCountQueue.ts'
+import { unreadCountManager } from '@/utils/UnreadCountManager'
 import { markMsgRead } from '../utils/ImRequestUtils'
-import { invokeWithErrorHandler } from '../utils/TauriInvokeHandler'
 
 export const useGlobalStore = defineStore(
   StoresEnum.GLOBAL,
@@ -73,22 +72,21 @@ export const useGlobalStore = defineStore(
     // home窗口位置、宽高信息
     const homeWindowState = ref<{ width?: number; height?: number }>({})
 
+    // 设置提示框显示状态
+    const setTipVisible = (visible: boolean) => {
+      tipVisible.value = visible
+    }
+
+    // 设置home窗口位置、宽高信息
+    const setHomeWindowState = (newState: { width: number; height: number }) => {
+      homeWindowState.value = { ...homeWindowState.value, ...newState }
+    }
+
     // 更新全局未读消息计数
-    const updateGlobalUnreadCount = async () => {
+    const updateGlobalUnreadCount = () => {
       info('[global]更新全局未读消息计数')
-      // 计算所有会话的未读消息总数，排除免打扰的会话
-      const totalUnread = chatStore.sessionList.reduce((total, session) => {
-        // 如果是免打扰的会话，不计入总数
-        if (session.muteNotification === NotificationTypeEnum.NOT_DISTURB) {
-          return total
-        }
-        return total + (session.unreadCount || 0)
-      }, 0)
-      unReadMark.newMsgUnreadCount = totalUnread
-      if (isMac()) {
-        const count = totalUnread > 0 ? totalUnread : undefined
-        await invokeWithErrorHandler('set_badge_count', { count })
-      }
+      // 使用统一的计数管理器，避免重复逻辑
+      unreadCountManager.calculateTotal(chatStore.sessionList, unReadMark)
     }
 
     // 监听当前会话变化，添加防重复触发逻辑
@@ -102,27 +100,17 @@ export const useGlobalStore = defineStore(
         info(`[global]当前会话发生实际变化: ${oldVal} -> ${val}`)
         // 清理已读数查询队列
         clearQueue()
-        // 延迟1秒后开始查询已读数
+        // 延攱1秒后开始查询已读数
         setTimeout(readCountQueue, 1000)
         // 标记该房间的消息为已读
         // apis.markMsgRead({ roomId: val.roomId || '1' })
         markMsgRead(val! || '1')
         // 更新会话的已读状态
         chatStore.markSessionRead(val! || '1')
-        // 更新全局未读计数
-        await updateGlobalUnreadCount()
+        // 注意：这里不需要再次调用 updateGlobalUnreadCount，
+        // 因为 markSessionRead 已经会调用 updateTotalUnreadCount
       }
     })
-
-    // 设置提示框显示状态
-    const setTipVisible = (visible: boolean) => {
-      tipVisible.value = visible
-    }
-
-    // 设置home窗口位置、宽高信息
-    const setHomeWindowState = (newState: { width: number; height: number }) => {
-      homeWindowState.value = { ...homeWindowState.value, ...newState }
-    }
 
     const updateCurrentSessionRoomId = (id: string) => {
       currentSessionRoomId.value = id

@@ -1,12 +1,10 @@
 #![allow(unexpected_cfgs)]
 use base64::{Engine as _, engine::general_purpose};
-use lazy_static::lazy_static;
 use mime_guess::from_path;
 use screenshots::Screen;
 use serde::Serialize;
 use std::cmp;
 use std::path::PathBuf;
-use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::Duration;
 use tauri::path::BaseDirectory;
@@ -32,27 +30,27 @@ pub struct WindowsScaleInfo {
     /// 是否检测到文本缩放
     pub has_text_scaling: bool,
 }
-// 定义用户信息结构体
-#[derive(Debug, Clone, Serialize)]
-pub struct UserInfo {
-    user_id: i64,
-    username: String,
-    token: String,
-    portrait: String,
-    is_sign: bool,
-}
+// // 定义用户信息结构体
+// #[derive(Debug, Clone, Serialize)]
+// pub struct UserInfo {
+//     user_id: i64,
+//     username: String,
+//     token: String,
+//     portrait: String,
+//     is_sign: bool,
+// }
 
-impl Default for UserInfo {
-    fn default() -> Self {
-        UserInfo {
-            user_id: -1,
-            username: String::new(),
-            token: String::new(),
-            portrait: String::new(),
-            is_sign: false,
-        }
-    }
-}
+// impl Default for UserInfo {
+//     fn default() -> Self {
+//         UserInfo {
+//             user_id: -1,
+//             username: String::new(),
+//             token: String::new(),
+//             portrait: String::new(),
+//             is_sign: false,
+//         }
+//     }
+// }
 
 #[derive(Serialize)]
 pub struct FileMeta {
@@ -63,10 +61,10 @@ pub struct FileMeta {
     exists: bool,
 }
 
-// 全局变量
-lazy_static! {
-    static ref USER_INFO: Arc<RwLock<UserInfo>> = Arc::new(RwLock::new(UserInfo::default()));
-}
+// // 全局变量
+// lazy_static! {
+//     static ref USER_INFO: Arc<RwLock<UserInfo>> = Arc::new(RwLock::new(UserInfo::default()));
+// }
 
 #[tauri::command]
 pub fn default_window_icon<R: Runtime>(

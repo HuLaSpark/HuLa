@@ -4,16 +4,16 @@ import { sendNotification } from '@tauri-apps/plugin-notification'
 import { defineStore } from 'pinia'
 import { useRoute } from 'vue-router'
 import { ErrorType } from '@/common/exception'
-import { type MessageStatusEnum, MsgEnum, NotificationTypeEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
+import { type MessageStatusEnum, MsgEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
 import type { MarkItemType, MessageType, RevokedMsgType, SessionItem } from '@/services/types'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { getSessionDetail } from '@/utils/ImRequestUtils'
-import { isMac } from '@/utils/PlatformConstants'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
+import { unreadCountManager } from '@/utils/UnreadCountManager'
 
 type RecalledMessage = {
   messageId: string
@@ -320,7 +320,7 @@ export const useChatStore = defineStore(
 
         // 如果更新了免打扰状态，需要重新计算全局未读数
         if ('muteNotification' in data) {
-          updateTotalUnreadCount()
+          requestUnreadCountUpdate()
         }
       }
     }
@@ -381,9 +381,8 @@ export const useChatStore = defineStore(
             msg.message.roomId !== globalStore.currentSession!.roomId
           ) {
             session.unreadCount = (session.unreadCount || 0) + 1
-            await nextTick(() => {
-              updateTotalUnreadCount()
-            })
+            // 使用防抖机制更新，适合并发消息场景
+            requestUnreadCountUpdate()
           }
         }
       }
@@ -647,9 +646,7 @@ export const useChatStore = defineStore(
         }
 
         // 删除会话后更新未读计数
-        nextTick(() => {
-          updateTotalUnreadCount()
-        })
+        requestUnreadCountUpdate()
       }
     }
 
@@ -686,30 +683,19 @@ export const useChatStore = defineStore(
     }
 
     // 更新未读消息计数
-    const updateTotalUnreadCount = async () => {
-      const webviewWindowLabel = WebviewWindow.getCurrent()
-      if (webviewWindowLabel.label !== 'home' && webviewWindowLabel.label !== 'mobile-home') {
-        return
-      }
-      info('[chat]更新全局未读消息计数')
-      // 使用 Array.from 确保遍历的是最新的 sessionList
-      const totalUnread = Array.from(sessionList.value).reduce((total, session) => {
-        // 免打扰的会话不计入全局未读数
-        if (session.muteNotification === NotificationTypeEnum.NOT_DISTURB) {
-          return total
-        }
-        // 确保 unreadCount 是数字且不为负数
-        const unread = Math.max(0, session.unreadCount || 0)
-        return total + unread
-      }, 0)
+    const updateTotalUnreadCount = () => {
+      // 使用统一的计数管理器
+      unreadCountManager.calculateTotal(sessionList.value, globalStore.unReadMark)
+    }
 
-      // 更新全局 store 中的未读计数
-      globalStore.unReadMark.newMsgUnreadCount = totalUnread
-      // 更新系统托盘图标上的未读数
-      if (isMac()) {
-        const count = totalUnread > 0 ? totalUnread : undefined
-        await invokeWithErrorHandler('set_badge_count', { count })
-      }
+    // 设置计数管理器的更新回调
+    unreadCountManager.setUpdateCallback(() => {
+      unreadCountManager.calculateTotal(sessionList.value, globalStore.unReadMark)
+    })
+
+    // 使用防抖机制的更新函数
+    const requestUnreadCountUpdate = (sessionId?: string) => {
+      unreadCountManager.requestUpdate(sessionId)
     }
 
     // 清空所有会话的未读数
@@ -718,7 +704,7 @@ export const useChatStore = defineStore(
         session.unreadCount = 0
       })
       // 更新全局未读数
-      updateTotalUnreadCount()
+      requestUnreadCountUpdate()
     }
 
     const clearRedundantMessages = (roomId: string) => {
@@ -823,6 +809,7 @@ export const useChatStore = defineStore(
       recalledMessages,
       clearAllExpirationTimers,
       updateTotalUnreadCount,
+      requestUnreadCountUpdate,
       clearUnreadCount,
       resetAndRefreshCurrentRoomMessages,
       getGroupSessions,
