@@ -565,3 +565,42 @@ export async function getUserByIds(uidList: string[]): Promise<UserItem[]> {
     body: { uidList }
   })
 }
+
+export async function generateQRCode(): Promise<UserItem[]> {
+  return await imRequest({
+    url: ImUrlEnum.GENERATE_QR_CODE
+  })
+}
+
+export async function checkQRStatus(params: {
+  qrId: string
+  clientId: string
+  deviceHash: string
+  deviceType: string
+}): Promise<UserItem[]> {
+  return await imRequest(
+    {
+      url: ImUrlEnum.CHECK_QR_STATUS,
+      params
+    },
+    {
+      showError: false
+    }
+  )
+}
+
+// 扫描二维码
+export async function scanQRCodeAPI(data: { qrId: string }) {
+  return await imRequest({
+    url: ImUrlEnum.SCAN_QR_CODE,
+    body: data
+  })
+}
+
+// 确认登录
+export async function confirmQRCodeAPI(data: { qrId: string }) {
+  return await imRequest({
+    url: ImUrlEnum.CONFIRM_QR_CODE,
+    body: data
+  })
+}

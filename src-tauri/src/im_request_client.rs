@@ -296,6 +296,10 @@ pub enum ImUrl {
     CheckEmail,
     MergeMsg,
     GetUserByIds,
+    GenerateQRCode,
+    CheckQRStatus,
+    ScanQRCode,
+    ConfirmQRCode,
 }
 
 impl ImUrl {
@@ -389,6 +393,12 @@ impl ImUrl {
             ImUrl::GetBadgesBatch => (http::Method::POST, "im/user/badges/batch"),
             ImUrl::GetBadgeList => (http::Method::GET, "im/user/badges"),
             ImUrl::BlockUser => (http::Method::PUT, "im/user/black"),
+
+            // 扫码登录相关
+            ImUrl::GenerateQRCode => (http::Method::GET, "oauth/anyTenant/qr/generate"),
+            ImUrl::CheckQRStatus => (http::Method::GET, "oauth/anyTenant/qr/status/query"),
+            ImUrl::ScanQRCode => (http::Method::POST, "oauth/qrcode/scan"),
+            ImUrl::ConfirmQRCode => (http::Method::POST, "oauth/qrcode/confirm"),
 
             // 消息相关
             ImUrl::RecallMsg => (http::Method::PUT, "im/chat/msg/recall"),
@@ -509,6 +519,10 @@ impl ImUrl {
             "checkEmail" => Ok(ImUrl::CheckEmail),
             "mergeMsg" => Ok(ImUrl::MergeMsg),
             "getUserByIds" => Ok(ImUrl::GetUserByIds),
+            "generateQRCode" => Ok(ImUrl::GenerateQRCode),
+            "checkQRStatus" => Ok(ImUrl::CheckQRStatus),
+            "scanQRCode" => Ok(ImUrl::ScanQRCode),
+            "confirmQRCode" => Ok(ImUrl::ConfirmQRCode),
 
             // 未匹配的字符串
             _ => Err(anyhow::anyhow!("未知的URL类型: {}", s)),

@@ -245,21 +245,6 @@ class RustWebSocketClient {
    */
   public async setupBusinessMessageListeners(): Promise<void> {
     const contactStore = useContactStore()
-    // 登录相关事件
-    this.listenerController.add(
-      await listen('ws-login-qr-code', (event: any) => {
-        info('获取二维码')
-        useMitt.emit(WsResponseMessageType.LOGIN_QR_CODE, event.payload)
-      })
-    )
-
-    this.listenerController.add(
-      await listen('ws-waiting-authorize', () => {
-        info('等待授权')
-        useMitt.emit(WsResponseMessageType.WAITING_AUTHORIZE)
-      })
-    )
-
     this.listenerController.add(
       await listen('ws-login-success', (event: any) => {
         info('登录成功')

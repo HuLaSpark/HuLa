@@ -481,8 +481,6 @@ const fetchGroupMembers = async (roomId: string) => {
  * 这里直接监听状态的值
  */
 onMounted(async () => {
-  console.log('已进入这个页面')
-
   await handleInitAnnoun()
   if (isGroup.value) {
     await getGroupDetail(globalStore.currentSession.roomId)
@@ -502,8 +500,6 @@ onMounted(async () => {
   } else {
     // 这里需要拿到好友的信息
     remarkValue.value = friend?.remark || ''
-
-    console.log('好友备注:', remarkValue.value)
   }
 })
 </script>

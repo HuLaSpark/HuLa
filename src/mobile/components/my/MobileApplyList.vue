@@ -113,7 +113,6 @@ import { NoticeType, RequestNoticeAgreeStatus } from '@/services/types.ts'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-// import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { useGroupStore } from '~/src/stores/group'
 
 const userStore = useUserStore()
