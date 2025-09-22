@@ -1,7 +1,7 @@
 <template>
   <!-- 弹出框 -->
-  <n-modal v-model:show="isShow as boolean" :mask-closable="false" class="w-390px border-rd-8px">
-    <div class="bg-[--bg-popover] h-full box-border flex flex-col">
+  <n-modal v-model:show="isShow" :mask-closable="false" class="w-390px border-rd-8px">
+    <div class="bg-[--bg-popover] min-h-350px h-full box-border flex flex-col">
       <!-- 顶部图片加上操作栏 -->
       <div class="h-140px relative w-full p-6px box-border">
         <img
@@ -71,7 +71,7 @@ import Card from './Card.vue'
 import List from './List.vue'
 
 /** 是否展示插件管理弹窗 */
-const isShow = defineModel()
+const isShow = defineModel() as unknown as boolean
 const { viewMode } = storeToRefs(usePluginsStore())
 </script>
 

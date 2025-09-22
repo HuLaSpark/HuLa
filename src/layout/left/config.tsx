@@ -14,20 +14,20 @@ const { logout, resetLoginState } = useLogin()
  */
 /** 下半部分操作栏配置 */
 const itemsBottom: OPT.L.Common[] = [
-  {
-    title: '邮件列表',
-    shortTitle: '邮件',
-    url: 'mail',
-    icon: 'mail',
-    iconAction: 'mail-action',
-    size: {
-      width: 840,
-      height: 600
-    },
-    window: {
-      resizable: true
-    }
-  },
+  // {
+  //   title: '邮件列表',
+  //   shortTitle: '邮件',
+  //   url: 'mail',
+  //   icon: 'mail',
+  //   iconAction: 'mail-action',
+  //   size: {
+  //     width: 840,
+  //     height: 600
+  //   },
+  //   window: {
+  //     resizable: true
+  //   }
+  // },
   {
     title: '文件管理器',
     shortTitle: '文件',
@@ -152,70 +152,70 @@ const pluginsList = ref<STO.Plugins<PluginEnum>[]>([
       resizable: true
     },
     miniShow: false
-  },
-  {
-    icon: 'Music',
-    url: 'music',
-    title: 'HuLa云音乐',
-    shortTitle: '云音乐',
-    tip: 'HuLa云音乐开发中，敬请期待',
-    state: PluginEnum.NOT_INSTALLED,
-    version: 'v1.0.0-Alpha',
-    isAdd: false,
-    dot: true,
-    progress: 0,
-    size: {
-      minWidth: 780,
-      width: 980,
-      height: 800
-    },
-    window: {
-      resizable: true
-    },
-    miniShow: false
-  },
-  {
-    icon: 'UimSlack',
-    url: 'collaboration',
-    title: 'HuLa协作',
-    shortTitle: '协作',
-    tip: 'HuLa协作开发中，敬请期待',
-    state: PluginEnum.NOT_INSTALLED,
-    version: 'v1.0.0-Alpha',
-    isAdd: false,
-    dot: true,
-    progress: 0,
-    size: {
-      minWidth: 780,
-      width: 980,
-      height: 800
-    },
-    window: {
-      resizable: true
-    },
-    miniShow: false
-  },
-  {
-    icon: 'vigo',
-    url: 'collaboration',
-    title: 'HuLa短视频',
-    shortTitle: '短视频',
-    tip: 'HuLa短视频开发中，敬请期待',
-    state: PluginEnum.NOT_INSTALLED,
-    version: 'v1.0.0-Alpha',
-    isAdd: false,
-    dot: true,
-    progress: 0,
-    size: {
-      minWidth: 780,
-      width: 980,
-      height: 800
-    },
-    window: {
-      resizable: true
-    },
-    miniShow: false
   }
+  // {
+  //   icon: 'Music',
+  //   url: 'music',
+  //   title: 'HuLa云音乐',
+  //   shortTitle: '云音乐',
+  //   tip: 'HuLa云音乐开发中，敬请期待',
+  //   state: PluginEnum.NOT_INSTALLED,
+  //   version: 'v1.0.0-Alpha',
+  //   isAdd: false,
+  //   dot: true,
+  //   progress: 0,
+  //   size: {
+  //     minWidth: 780,
+  //     width: 980,
+  //     height: 800
+  //   },
+  //   window: {
+  //     resizable: true
+  //   },
+  //   miniShow: false
+  // },
+  // {
+  //   icon: 'UimSlack',
+  //   url: 'collaboration',
+  //   title: 'HuLa协作',
+  //   shortTitle: '协作',
+  //   tip: 'HuLa协作开发中，敬请期待',
+  //   state: PluginEnum.NOT_INSTALLED,
+  //   version: 'v1.0.0-Alpha',
+  //   isAdd: false,
+  //   dot: true,
+  //   progress: 0,
+  //   size: {
+  //     minWidth: 780,
+  //     width: 980,
+  //     height: 800
+  //   },
+  //   window: {
+  //     resizable: true
+  //   },
+  //   miniShow: false
+  // },
+  // {
+  //   icon: 'vigo',
+  //   url: 'collaboration',
+  //   title: 'HuLa短视频',
+  //   shortTitle: '短视频',
+  //   tip: 'HuLa短视频开发中，敬请期待',
+  //   state: PluginEnum.NOT_INSTALLED,
+  //   version: 'v1.0.0-Alpha',
+  //   isAdd: false,
+  //   dot: true,
+  //   progress: 0,
+  //   size: {
+  //     minWidth: 780,
+  //     width: 980,
+  //     height: 800
+  //   },
+  //   window: {
+  //     resizable: true
+  //   },
+  //   miniShow: false
+  // }
 ])
 
 export { itemsBottom, moreList, pluginsList }
