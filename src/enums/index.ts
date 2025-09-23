@@ -210,7 +210,9 @@ export enum MsgEnum {
   /** 回复 16*/
   REPLY,
   /** AI 17*/
-  AI
+  AI,
+  /** 位置 18*/
+  LOCATION
 }
 
 /**

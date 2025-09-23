@@ -1,8 +1,5 @@
 <template>
-  <main
-    style="cursor: default; user-select: none"
-    class="w-230px flex flex-col h-fit bg-[--group-notice-bg] hover:bg-#fefefe99 dark:hover:bg-#60606040 rounded-8px p-8px box-border custom-shadow transition-colors duration-200"
-    @click.stop="openMultiMsgWindow">
+  <main class="multi-msg" @click.stop="openMultiMsgWindow">
     <p class="text-(14px [--text-color]) pb-12px truncate">{{ chatRecordTitle }}</p>
 
     <div class="max-h-90px overflow-hidden mx-6px">
@@ -107,4 +104,13 @@ const openMultiMsgWindow = async () => {
 }
 </script>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.multi-msg {
+  cursor: default;
+  user-select: none;
+  @apply: w-230px flex flex-col h-fit bg-[--group-notice-bg]
+  border-(1px solid #e3e3e3) dark:border-(1px solid #404040)
+  hover:bg-#fefefe99 dark:hover:bg-#60606040 rounded-8px p-8px box-border
+  custom-shadow transition-colors duration-200;
+}
+</style>

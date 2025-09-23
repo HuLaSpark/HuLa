@@ -47,7 +47,7 @@
 
             <n-scrollbar class="flex-1">
               <template v-for="session in filteredSessionList" :key="session.roomId">
-                <n-flex align="center" :size="8" class="text-(12px #303030) py-8px px-4px">
+                <n-flex align="center" :size="8" class="text-12px text-#303030 dark:text-#fefefe py-8px px-4px">
                   <n-checkbox v-model:checked="session.isCheck" @click.stop />
                   <n-avatar class="rounded-8px" :size="30" :src="AvatarUtils.getAvatarUrl(session.avatar)" />
                   <p>{{ session.remark ? session.remark : session.name }}</p>
@@ -206,7 +206,6 @@ const handleRemoveSession = (roomId: string) => {
 }
 
 const sendMsg = async () => {
-  console.log('发送聊天记录：', mergeMessageType)
   const selectedRoomIds = selectedSessions.value.map((item) => item.roomId)
   const selectedMsgIds = selectedMsgs.value.map((item) => item.message.id)
 
@@ -227,6 +226,10 @@ const sendMsg = async () => {
       showModal.value = false
       chatStore.clearMsgCheck()
       chatStore.setMsgMultiChoose(false)
+      // 重置选中的会话
+      chatStore.sessionList.forEach((session) => {
+        session.isCheck = false
+      })
     })
 }
 </script>
