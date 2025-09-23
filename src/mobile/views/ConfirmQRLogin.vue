@@ -31,8 +31,6 @@
             <span>登录时间</span>
             <span>{{ nowFormatted }}</span>
           </div>
-
-          {{ props.expireTime }}
         </div>
 
         <div class="w-80% h-1px bg-gray-100 mt-10px"></div>

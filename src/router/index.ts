@@ -34,12 +34,12 @@ import MobileMy from '#/views/my/index.vue'
 import MobileQRCode from '#/views/my/MobileQRCode.vue'
 import MobileSettings from '#/views/my/MobileSettings.vue'
 import MyMessages from '#/views/my/MyMessages.vue'
-import MyQRCode from '#/views/my/MyQRCode.vue'
 import PublishCommunity from '#/views/my/PublishCommunity.vue'
 import Share from '#/views/my/Share.vue'
 import SimpleBio from '#/views/my/SimpleBio.vue'
 import { TauriCommand } from '@/enums'
 import ConfirmQRLogin from '../mobile/views/ConfirmQRLogin.vue'
+import MyQRCode from '../mobile/views/MyQRCode.vue'
 
 /**! 创建窗口后再跳转页面就会导致样式没有生效所以不能使用懒加载路由的方式，有些页面需要快速响应的就不需要懒加载 */
 const { BASE_URL } = import.meta.env
@@ -185,11 +185,6 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
         component: Share
       },
       {
-        path: 'myQRCode',
-        name: 'mobileMyQRCode',
-        component: MyQRCode
-      },
-      {
         path: 'SimpleBio',
         name: 'mobileSimpleBio',
         component: SimpleBio
@@ -203,7 +198,7 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
     children: [
       {
         path: '',
-        name: 'mobileMyDefault',
+        name: 'mobileFriendsDefault',
         redirect: '/mobile/mobileFriends/addFriends'
       },
       {
@@ -238,6 +233,11 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
     name: 'mobileConfirmQRLogin',
     component: ConfirmQRLogin,
     props: true
+  },
+  {
+    path: '/mobile/myQRCode',
+    name: 'mobileMyQRCode',
+    component: MyQRCode
   }
 ]
 
@@ -494,9 +494,19 @@ const router: any = createRouter({
 
 // 在创建路由后，添加全局前置守卫
 // 为解决 “已声明‘to’，但从未读取其值” 的问题，将 to 参数改为下划线开头表示该参数不会被使用
-router.beforeEach(async (to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
+router.beforeEach(async (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
+  console.log(
+    `%c[路由守卫触发]`,
+    'color: #4CAF50; font-weight: bold;',
+    '\n来自:',
+    from.fullPath,
+    '\n去往:',
+    to.fullPath
+  )
+
   // 桌面端直接放行
   if (!isMobile) {
+    console.log('[守卫] 非移动端，直接放行')
     return next()
   }
 
@@ -505,25 +515,32 @@ router.beforeEach(async (to: RouteLocationNormalized, _from: RouteLocationNormal
     const isLoginPage = to.path === '/mobile/login'
     const isLoggedIn = !!(tokens.token && tokens.refreshToken)
 
+    console.log('[守卫] tokens:', tokens)
+    console.log('[守卫] isLoggedIn:', isLoggedIn, 'isLoginPage:', isLoginPage)
+
     // 未登录且不是登录页 → 跳转登录
     if (!isLoggedIn && !isLoginPage) {
-      console.error('没有登录')
+      console.warn('[守卫] 未登录，强制跳转到 /mobile/login')
       return next('/mobile/login')
     }
 
     // 已登录且访问登录页 → 跳转首页
     if (isLoggedIn && isLoginPage) {
+      console.warn('[守卫] 已登录但访问登录页，强制跳转到 /mobile/message')
       return next('/mobile/message')
     }
 
     // 其他情况直接放行
+    console.log('[守卫] 条件满足，放行到:', to.fullPath)
     return next()
   } catch (error) {
-    console.error('获取token错误:', error)
+    console.error('[守卫] 获取token错误:', error)
     // 出错时也跳转登录页（避免死循环）
     if (to.path !== '/mobile/login') {
+      console.warn('[守卫] 出错，强制跳转到 /mobile/login')
       return next('/mobile/login')
     }
+    console.log('[守卫] 出错但目标是登录页，直接放行')
     return next()
   }
 })

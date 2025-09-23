@@ -255,7 +255,7 @@ const toEditProfile = () => {
 }
 
 const toMyQRCode = () => {
-  router.push('/mobile/mobileMy/myQRCode')
+  router.push('/mobile/myQRCode')
 }
 
 const props = defineProps({
