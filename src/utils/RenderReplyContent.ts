@@ -63,6 +63,11 @@ export const renderReplyContent = (name?: string, type?: MsgEnum, content?: stri
     case MsgEnum.BOT: {
       return roomType === RoomTypeEnum.GROUP ? `${name}:${content}` : MSG_REPLY_TEXT_MAP[MsgEnum.BOT]
     }
+    case MsgEnum.LOCATION: {
+      return roomType === RoomTypeEnum.GROUP
+        ? `${name}:${MSG_REPLY_TEXT_MAP[MsgEnum.LOCATION]}`
+        : MSG_REPLY_TEXT_MAP[MsgEnum.LOCATION]
+    }
     default: {
       return ''
     }
