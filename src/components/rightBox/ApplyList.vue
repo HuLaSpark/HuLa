@@ -143,9 +143,9 @@ const applyMsg = computed(() => (item: any) => {
     } else if (item.eventType === NoticeType.GROUP_MEMBER_DELETE) {
       return '已被' + groupStore.getUserInfo(item.senderId)!.name + '踢出' + item.content
     } else if (item.eventType === NoticeType.GROUP_SET_ADMIN) {
-      return '已被' + groupStore.getUserInfo(item.senderId)!.name + '设置为' + item.content + '的管理员'
+      return '已被群主设置为' + item.content + '的管理员'
     } else if (item.eventType === NoticeType.GROUP_RECALL_ADMIN) {
-      return '已被' + groupStore.getUserInfo(item.senderId)!.name + '取消' + item.content + '的管理员权限'
+      return '已被群主取消' + item.content + '的管理员权限'
     }
   }
 })
@@ -178,11 +178,11 @@ const getUserInfo = (item: any) => {
     case NoticeType.FRIEND_APPLY:
     case NoticeType.GROUP_INVITE:
     case NoticeType.GROUP_MEMBER_DELETE:
+    case NoticeType.GROUP_SET_ADMIN:
+    case NoticeType.GROUP_RECALL_ADMIN:
       return groupStore.getUserInfo(item.operateId)!
     case NoticeType.ADD_ME:
     case NoticeType.GROUP_INVITE_ME:
-    case NoticeType.GROUP_SET_ADMIN:
-    case NoticeType.GROUP_RECALL_ADMIN:
       return groupStore.getUserInfo(item.senderId)!
   }
 }
