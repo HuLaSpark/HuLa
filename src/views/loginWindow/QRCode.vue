@@ -97,7 +97,6 @@ const scanStatus = ref<{
 
 /** 刷新二维码 */
 const refreshQRCode = () => {
-  console.log('scanStatus.value.status', scanStatus.value.status)
   if (scanStatus.value.status !== 'error' && scanStatus.value.status !== 'auth') {
     return
   }
@@ -133,7 +132,6 @@ const startPolling = () => {
         deviceHash: qrCodeResp.value.deviceHash,
         deviceType: 'PC'
       })
-      console.log('res --> ', res)
       switch (res.status) {
         case 'PENDING':
           // 等待中
@@ -190,8 +188,7 @@ const startPolling = () => {
 const handleQRCodeLogin = async () => {
   try {
     qrCodeResp.value = await generateQRCode()
-
-    qrCodeValue.value = qrCodeResp.value.qrId
+    qrCodeValue.value = JSON.stringify({ type: 'login', qrId: qrCodeResp.value.qrId })
     loadText.value = '请使用HulaApp扫码登录'
     loading.value = false
     refreshing.value = false
