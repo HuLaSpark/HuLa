@@ -31,17 +31,25 @@ const startScan = async () => {
 
     const res = (await Promise.race([scanTask, cancelTask])) as any
 
-    useMitt.emit(MittEnum.QR_SCAN_EVENT, res.content)
+    try {
+      const jsonData = JSON.parse(res.content)
+      // console.log('扫码结果：', res)
+      // console.log('解析的json:', jsonData)
 
-    if (res && typeof res === 'object' && 'content' in res) {
-      if (window.history.length > 1) {
-        window.history.back()
+      useMitt.emit(MittEnum.QR_SCAN_EVENT, jsonData)
+
+      if (res && typeof res === 'object' && 'content' in res) {
+        if (window.history.length > 1) {
+          window.history.back()
+        } else {
+          window.close()
+        }
+        result.value = res.content
       } else {
-        window.close()
+        result.value = '扫码失败或已取消'
       }
-      result.value = res.content
-    } else {
-      result.value = '扫码失败或已取消'
+    } catch (error) {
+      console.log('扫码结果尝试解析JSON时失败：', error)
     }
   } catch (err: any) {
     console.error('扫码异常:', err)
