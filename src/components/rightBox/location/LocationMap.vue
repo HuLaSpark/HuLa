@@ -22,8 +22,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-
 type LocationData = {
   latitude: number
   longitude: number
@@ -33,6 +31,7 @@ type LocationData = {
 
 type LocationMapProps = {
   location: LocationData
+  apiKey: string
   zoom?: number
   height?: number
   draggable?: boolean
@@ -56,7 +55,6 @@ const emit = defineEmits<LocationMapEmits>()
 const mapRef = ref()
 
 // 计算属性
-const apiKey = computed(() => import.meta.env.VITE_TENCENT_MAP_KEY)
 const mapCenter = computed(() => ({
   lat: props.location.latitude,
   lng: props.location.longitude

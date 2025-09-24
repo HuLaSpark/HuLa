@@ -10,3 +10,4 @@ youdao:
 tencent:
   api_key: ''
   secret_id: ''
+  map_key: ''

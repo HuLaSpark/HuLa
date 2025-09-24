@@ -1,3 +1,4 @@
+import { getSettings } from '@/services/tauriCommand'
 import { wgs84ToGcj02 } from '@/utils/CoordinateTransform'
 
 type TransformedCoordinate = {
@@ -73,12 +74,20 @@ export const transformCoordinates = async (lat: number, lng: number): Promise<Tr
     throw new Error('坐标范围无效')
   }
 
+  // 获取腾讯地图API密钥
+  const settings = await getSettings()
+  const mapKey = settings.tencent?.map_key || ''
+
+  if (!mapKey) {
+    throw new Error('腾讯地图API密钥未配置')
+  }
+
   const callbackName = `coordTransform_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
 
   const params = {
     locations: `${lat},${lng}`,
     type: '1', // GPS坐标(WGS84)
-    key: import.meta.env.VITE_TENCENT_MAP_KEY || '',
+    key: mapKey,
     output: 'jsonp',
     from: '1', // 明确指定源坐标系为GPS
     to: '5' // 明确指定目标坐标系为GCJ02
@@ -89,11 +98,6 @@ export const transformCoordinates = async (lat: number, lng: number): Promise<Tr
     const url = `https://apis.map.qq.com/ws/coord/v1/translate?${queryString}`
 
     console.log('腾讯地图坐标转换API请求:', { url, params, callbackName })
-
-    // 验证API密钥
-    if (!params.key) {
-      throw new Error('腾讯地图API密钥未配置')
-    }
 
     const data = await createJsonpRequest(url, callbackName)
 
@@ -138,11 +142,19 @@ export const reverseGeocode = async (lat: number, lng: number): Promise<ReverseG
     throw new Error('坐标范围无效')
   }
 
+  // 获取腾讯地图API密钥
+  const settings = await getSettings()
+  const mapKey = settings.tencent?.map_key || ''
+
+  if (!mapKey) {
+    throw new Error('腾讯地图API密钥未配置')
+  }
+
   const callbackName = `geocode_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
 
   const params = {
     location: `${lat},${lng}`,
-    key: import.meta.env.VITE_TENCENT_MAP_KEY || '',
+    key: mapKey,
     get_poi: '1',
     output: 'jsonp'
   }
