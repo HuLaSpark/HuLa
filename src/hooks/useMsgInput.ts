@@ -284,15 +284,25 @@ export const useMsgInput = (messageInputDom: Ref) => {
     return [...new Set(atUserIds)]
   }
 
+  // 在 HTML 字符串中安全解析为 Document 对象
+  const parseHtmlSafely = (html: string) => {
+    if (!html) return null
+
+    if (typeof DOMParser !== 'undefined') {
+      return new DOMParser().parseFromString(html, 'text/html')
+    }
+
+    return null
+  }
+
   /** 去除html标签(用于鉴别回复时是否有输入内容) */
   const stripHtml = (html: string) => {
     try {
       // 检查是否是表情包
       if (html.includes('data-type="emoji"')) {
-        const tmp = document.createElement('div')
-        tmp.innerHTML = html
-        const imgElement = tmp.querySelector<HTMLImageElement>('img[data-type]')
-        if (imgElement && imgElement.src) {
+        const doc = parseHtmlSafely(html)
+        const imgElement = doc?.querySelector<HTMLImageElement>('img[data-type]')
+        if (imgElement?.src) {
           return (msgInput.value = imgElement.src)
         }
       }
@@ -301,20 +311,27 @@ export const useMsgInput = (messageInputDom: Ref) => {
         return html
       }
 
-      const tmp = document.createElement('div')
-      tmp.innerHTML = html
-      const replyDiv = tmp.querySelector('#replyDiv')
-      if (replyDiv) {
-        replyDiv.remove()
+      const doc = parseHtmlSafely(html)
+      if (!doc || !doc.body) {
+        return html.replace(/<[^>]*>/g, '').trim()
       }
 
+      const replyDiv = doc.querySelector('#replyDiv')
+      replyDiv?.remove()
+
       // 检查是否包含粘贴的图片（有temp-image id的图片元素）
-      const pastedImage = tmp.querySelector('#temp-image')
+      const pastedImage = doc.querySelector('#temp-image')
       if (pastedImage) {
         return 'image' // 返回非空字符串，表示有内容
       }
 
-      return tmp.textContent?.trim() || tmp.innerText?.trim() || ''
+      const textContent = doc.body.textContent?.trim()
+      if (textContent) return textContent
+
+      const innerText = (doc.body as HTMLElement).innerText?.trim?.()
+      if (innerText) return innerText
+
+      return ''
     } catch (error) {
       console.error('Error in stripHtml:', error)
       return ''

@@ -177,6 +177,6 @@
     }
   },
   "pnpm": {
-    "ignoredBuiltDependencies": ["esbuild", "vue-demi", "@parcel/watcher", "sharp", "tlbs-map-vue"]
+    "ignoredBuiltDependencies": ["@parcel/watcher", "esbuild", "sharp", "tlbs-map-vue", "vue-demi"]
   }
 }

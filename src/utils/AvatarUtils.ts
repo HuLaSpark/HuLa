@@ -33,9 +33,24 @@ export class AvatarUtils {
    * @returns 头像字符串或URL
    */
   public static getAvatarUrl(avatar: string): string {
-    if (AvatarUtils.isDefaultAvatar(avatar)) {
-      return `/avatar/${avatar}.webp`
+    const DEFAULT = '/avatar/001.png'
+
+    const rawAvatar = avatar.trim()
+    if (AvatarUtils.isDefaultAvatar(rawAvatar)) {
+      return `/avatar/${rawAvatar}.webp`
     }
-    return avatar
+
+    try {
+      const parsed = new URL(avatar)
+      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+        return parsed.toString()
+      }
+    } catch {
+      // 如果是自家预置文件名，可进一步做白名单/正则校验
+      if (/^[a-z0-9_-]+$/i.test(avatar)) {
+        return `/avatar/${avatar}.webp`
+      }
+    }
+    return DEFAULT
   }
 }

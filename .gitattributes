@@ -59,7 +59,6 @@ scripts/** linguist-vendored
 # 确保主要代码文件被正确识别
 *.vue linguist-detectable
 *.ts linguist-detectable
-*.tsx linguist-detectable
 *.rs linguist-detectable
 
 ## 语言统计控制：排除 Ruby / Shell / Objective-C++
@@ -87,7 +86,7 @@ tauri-plugin-hula/ios/** linguist-vendored
 tauri-plugin-hula/*/** linguist-vendored
 tauri-plugin-hula/src/** -linguist-vendored
 
-# 如果需要把上面这些都算作 Rust，而不是排除，可改用如下（示例）：
+# 如果需要把上面这些都算作 Rust，而不是排除：
 # *.rb linguist-language=Rust
 # *.sh linguist-language=Rust
 # *.mm linguist-language=Rust

@@ -370,11 +370,12 @@ export const useCommon = () => {
       const author = dom.name
       // 创建一个img标签节点作为头像
       const imgNode = document.createElement('img')
-      if (isSafeUrl(dom.avatar)) {
-        imgNode.src = dom.avatar
+      const avatarUrl = AvatarUtils.getAvatarUrl(dom.avatar)
+      if (isSafeUrl(avatarUrl)) {
+        imgNode.src = avatarUrl
       } else {
         // 设置为默认头像或空
-        imgNode.src = 'avatar/001.png'
+        imgNode.src = '/avatar/001.png'
       }
       imgNode.style.cssText = `
       width: 20px;

@@ -1,5 +1,5 @@
 import chalk from 'chalk'
-import { execSync } from 'child_process'
+import { execFileSync } from 'child_process'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -16,7 +16,7 @@ async function runScript(scriptPath, description) {
   console.log(chalk.blue(`\n[HuLa ${new Date().toLocaleTimeString()}] 开始${description}...\n`))
 
   try {
-    execSync(`node ${scriptPath}`, { stdio: 'inherit' })
+    execFileSync('node', [scriptPath], { stdio: 'inherit' })
     const duration = ((performance.now() - startTime) / 1000).toFixed(2)
     console.log(chalk.green(`\n✅ ${description}完成 (${duration}s)\n`))
     return true
