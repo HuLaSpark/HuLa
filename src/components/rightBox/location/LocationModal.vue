@@ -59,8 +59,9 @@
 
           <!-- 地图组件 -->
           <LocationMap
-            v-else-if="selectedLocation"
+            v-else-if="selectedLocation && apiKey"
             :location="selectedLocation"
+            :api-key="apiKey"
             :zoom="18"
             :height="340"
             @location-change="handleLocationChange"
@@ -93,6 +94,7 @@
 <script setup lang="ts">
 import { useGeolocation } from '@/hooks/useGeolocation'
 import { reverseGeocode } from '@/services/mapApi'
+import { getSettings } from '@/services/tauriCommand'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
 import LocationMap from './LocationMap.vue'
 
@@ -132,6 +134,7 @@ const selectedLocation = ref<LocationData | null>(null)
 const mapLoading = ref(false)
 const mapError = ref<string | null>(null)
 const sendingLocation = ref(false)
+const apiKey = ref('')
 
 // 计算属性
 const modalTitle = computed(() => {
@@ -149,9 +152,19 @@ const getLocation = async () => {
   try {
     mapError.value = null
 
-    const result = await getLocationWithTransform({
-      enableHighAccuracy: true
-    })
+    // 并行获取 API key 和位置信息
+    const [settings, result] = await Promise.all([
+      getSettings(),
+      getLocationWithTransform({
+        enableHighAccuracy: true
+      })
+    ])
+
+    // 设置 API key
+    apiKey.value = settings.tencent?.map_key || ''
+    if (!apiKey.value) {
+      throw new Error('腾讯地图API密钥未配置')
+    }
 
     // 获取地址信息
     const geocodeResult = await reverseGeocode(result.transformed.lat, result.transformed.lng).catch((error) => {
@@ -192,19 +205,9 @@ const relocate = async () => {
 }
 
 // 重试地图加载
-const retryMapLoad = () => {
+const retryMapLoad = async () => {
   mapError.value = null
-  mapLoading.value = true
-  // 触发地图重新加载
-  if (selectedLocation.value) {
-    // 重新创建地图组件
-    const currentLocation = selectedLocation.value
-    selectedLocation.value = null
-    nextTick(() => {
-      selectedLocation.value = currentLocation
-      mapLoading.value = false
-    })
-  }
+  await getLocation()
 }
 
 // 地图事件处理

@@ -12,6 +12,7 @@ pub struct Settings {
     pub database: DatabaseSettings,
     pub backend: BackendSettings,
     pub youdao: Youdao,
+    pub tencent: Tencent,
 }
 
 // 数据库配置设置
@@ -37,6 +38,7 @@ pub struct Youdao {
 pub struct Tencent {
     pub api_key: String,
     pub secret_id: String,
+    pub map_key: String,
 }
 
 // 应用程序运行环境枚举

@@ -27,6 +27,7 @@ export type Settings = {
   tencent: {
     api_key: string
     secret_id: string
+    map_key: string
   }
 }
 
