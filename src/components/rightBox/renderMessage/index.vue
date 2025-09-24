@@ -62,7 +62,7 @@
               <n-avatar
                 round
                 :size="34"
-                @click="selectKey = message.message.id"
+                @click="handleAvatarClick(message.fromUser.uid, message.message.id)"
                 class="select-none"
                 :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
                 :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
@@ -273,10 +273,11 @@ import { useGroupStore } from '@/stores/group'
 import { useSettingStore } from '@/stores/setting'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
+import router from '~/src/router'
 import { useChatStore } from '~/src/stores/chat'
 import { useUserStore } from '~/src/stores/user'
 import { markMsg } from '~/src/utils/ImRequestUtils'
-import { isMac } from '~/src/utils/PlatformConstants'
+import { isMac, isMobile } from '~/src/utils/PlatformConstants'
 import Announcement from './Announcement.vue'
 import AudioCall from './AudioCall.vue'
 import Emoji from './Emoji.vue'
@@ -326,6 +327,15 @@ const groupStore = useGroupStore()
 const chatStore = useChatStore()
 const cachedStore = useCachedStore()
 const recordEL = ref<HTMLElement>()
+
+const handleAvatarClick = (uid: string, msgId: string) => {
+  if (isMobile()) {
+    globalStore.addFriendModalInfo.uid = uid
+    router.push(`/mobile/mobileFriends/friendInfo/${uid}`)
+  } else {
+    selectKey.value = msgId
+  }
+}
 
 // 获取用户头像
 const getAvatarSrc = computed(() => (uid: string) => {

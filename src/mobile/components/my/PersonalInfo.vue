@@ -15,7 +15,9 @@
         <!-- 名字与在线状态 -->
         <div class="flex flex-warp gap-4 items-center">
           <span class="font-bold text-20px text-#373838">{{ userDetailInfo!.name }}</span>
-          <div class="bg-#E7EFE6 flex flex-wrap ps-2 px-8px items-center rounded-full gap-1 h-24px">
+          <div
+            v-show="hasUserOnlineState"
+            class="bg-#E7EFE6 flex flex-wrap ps-2 px-8px items-center rounded-full gap-1 h-24px">
             <span class="w-12px h-12px rounded-15px flex items-center">
               <img
                 :src="friendUserState.url ? friendUserState.url : currentState?.url"
@@ -196,23 +198,43 @@ const friendUserState = ref<any>({
   url: ''
 })
 
+// 是否存在用户在线状态
+const hasUserOnlineState = ref(false)
+
 const { stateList } = storeToRefs(userStatusStore)
 
-const getUserState = (stateId: string) => {
-  return stateList.value.find((state: { id: string }) => state.id === stateId)
+const getUserState = (
+  stateId: string
+): {
+  createBy: string
+  createTime: number
+  id: string
+  title: string
+  updateBy: null
+  updateTime: null
+  url: string
+} => {
+  // 不直接return，不然不好debug
+  const foundedState = stateList.value.find((state: { id: string }) => state.id === stateId)
+  return foundedState
 }
 
 onMounted(() => {
-  // 如果地址中的uid存在，那当前就是好友的页面，就从地址栏获取uid拿到好友的详情信息，如果没有就默认显示自己的信息
-  if (uid) {
-    const foundedUser = groupStore.allUserInfo.find((i) => i.uid === uid)
-    userDetailInfo.value = foundedUser
-    if (foundedUser?.userStateId) {
-      const state = getUserState(foundedUser.userStateId)
-      friendUserState.value = state
-    }
-  } else {
+  if (!uid) {
     userDetailInfo.value = userStore.userInfo
+    return
+  }
+
+  const foundedUser = groupStore.allUserInfo.find((i) => i.uid === uid)
+
+  userDetailInfo.value = foundedUser
+
+  if (foundedUser?.userStateId && foundedUser?.userStateId !== '0') {
+    const state = getUserState(foundedUser.userStateId)
+    friendUserState.value = state
+
+    // 设置完成状态后最后再显示状态
+    hasUserOnlineState.value = true
   }
 })
 

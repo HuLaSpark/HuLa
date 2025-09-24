@@ -494,15 +494,15 @@ const router: any = createRouter({
 
 // 在创建路由后，添加全局前置守卫
 // 为解决 “已声明‘to’，但从未读取其值” 的问题，将 to 参数改为下划线开头表示该参数不会被使用
-router.beforeEach(async (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
-  console.log(
-    `%c[路由守卫触发]`,
-    'color: #4CAF50; font-weight: bold;',
-    '\n来自:',
-    from.fullPath,
-    '\n去往:',
-    to.fullPath
-  )
+router.beforeEach(async (to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
+  // console.log(
+  //   `%c[路由守卫触发]`,
+  //   'color: #4CAF50; font-weight: bold;',
+  //   '\n来自:',
+  //   from.fullPath,
+  //   '\n去往:',
+  //   to.fullPath
+  // )
 
   // 桌面端直接放行
   if (!isMobile) {
@@ -515,8 +515,8 @@ router.beforeEach(async (to: RouteLocationNormalized, from: RouteLocationNormali
     const isLoginPage = to.path === '/mobile/login'
     const isLoggedIn = !!(tokens.token && tokens.refreshToken)
 
-    console.log('[守卫] tokens:', tokens)
-    console.log('[守卫] isLoggedIn:', isLoggedIn, 'isLoginPage:', isLoginPage)
+    // console.log('[守卫] tokens:', tokens)
+    // console.log('[守卫] isLoggedIn:', isLoggedIn, 'isLoginPage:', isLoginPage)
 
     // 未登录且不是登录页 → 跳转登录
     if (!isLoggedIn && !isLoginPage) {
@@ -531,7 +531,7 @@ router.beforeEach(async (to: RouteLocationNormalized, from: RouteLocationNormali
     }
 
     // 其他情况直接放行
-    console.log('[守卫] 条件满足，放行到:', to.fullPath)
+    // console.log('[守卫] 条件满足，放行到:', to.fullPath)
     return next()
   } catch (error) {
     console.error('[守卫] 获取token错误:', error)
@@ -540,7 +540,7 @@ router.beforeEach(async (to: RouteLocationNormalized, from: RouteLocationNormali
       console.warn('[守卫] 出错，强制跳转到 /mobile/login')
       return next('/mobile/login')
     }
-    console.log('[守卫] 出错但目标是登录页，直接放行')
+    // console.log('[守卫] 出错但目标是登录页，直接放行')
     return next()
   }
 })

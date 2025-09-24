@@ -21,11 +21,12 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
 import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.vue'
+import { MittEnum } from '@/enums'
+import { useMitt } from '@/hooks/useMitt'
+import router from '@/router'
+import { useGlobalStore } from '@/stores/global'
+import { useUserStore } from '@/stores/user'
 import { scanQRCodeAPI } from '@/utils/ImRequestUtils'
-import { MittEnum } from '~/src/enums'
-import { useMitt } from '~/src/hooks/useMitt'
-import router from '~/src/router'
-import { useGlobalStore } from '~/src/stores/global'
 
 interface ScanData {
   type: string // 必须有
@@ -57,6 +58,7 @@ const handleScanLogin = async (data: ScanData) => {
 }
 
 const globalStore = useGlobalStore()
+const userStore = useUserStore()
 
 const handleScanAddFriend = async (data: ScanData) => {
   console.log('尝试扫码添加好友')
@@ -67,6 +69,15 @@ const handleScanAddFriend = async (data: ScanData) => {
 
   const uidStr = data.uid as string
   const uid = uidStr.split('&')[0]
+
+  // 判断uid是不是自己的
+
+  const selfUid = userStore.userInfo?.uid as string
+
+  if (selfUid === uid) {
+    window.$message.warning('不能添加自己为好友哦~', { duration: 4000 })
+    throw new Error('用户尝试扫自己二维码添加好友但被拒绝:', data as any)
+  }
 
   globalStore.addFriendModalInfo.uid = uid
 
@@ -79,21 +90,25 @@ const handleScanAddFriend = async (data: ScanData) => {
  * 监听事件扫码
  */
 useMitt.on(MittEnum.QR_SCAN_EVENT, async (data: ScanData) => {
-  try {
-    if (!Object.hasOwn(data, 'type')) {
-      window.$message.warning('识别不到二维码类型')
-      throw new Error('识别不到二维码类型:', data as any)
-    }
+  if (!Object.hasOwn(data, 'type')) {
+    window.$message.warning('识别不到正确的二维码')
+    throw new Error('二维码缺少type字段:', data as any)
+  }
 
-    if (data.type === 'login') {
+  if (data.type === 'login') {
+    try {
       await handleScanLogin(data)
+    } catch (error) {
+      console.log('扫码尝试获取Token失败:', error)
     }
+  }
 
-    if (data.type === 'addFriend') {
+  if (data.type === 'addFriend') {
+    try {
       await handleScanAddFriend(data)
+    } catch (error) {
+      console.log('扫码添加好友失败:', error)
     }
-  } catch (error) {
-    console.error('获取扫码token错误：', error)
   }
 })
 
