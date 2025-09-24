@@ -31,7 +31,7 @@ const itemsBottom: OPT.L.Common[] = [
   {
     title: '文件管理器',
     shortTitle: '文件',
-    url: 'mail',
+    url: 'fileManager',
     icon: 'file',
     iconAction: 'file-action',
     size: {

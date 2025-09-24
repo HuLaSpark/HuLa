@@ -293,6 +293,11 @@ const getDesktopRoutes = (): Array<RouteRecordRaw> => [
     component: () => import('@/views/mailWindow/index.vue')
   },
   {
+    path: '/fileManager',
+    name: 'fileManager',
+    component: () => import('@/views/fileManagerWindow/index.vue')
+  },
+  {
     path: '/dynamic',
     name: 'dynamic',
     component: () => import('@/plugins/dynamic/index.vue')

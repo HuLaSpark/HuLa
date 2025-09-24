@@ -59,6 +59,7 @@ scripts/** linguist-vendored
 # 确保主要代码文件被正确识别
 *.vue linguist-detectable
 *.ts linguist-detectable
+*.tsx linguist-language=TypeScript
 *.rs linguist-detectable
 
 ## 语言统计控制：排除 Ruby / Shell / Objective-C++
