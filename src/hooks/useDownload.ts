@@ -1,6 +1,5 @@
 import { BaseDirectory, exists, mkdir, writeFile } from '@tauri-apps/plugin-fs'
 import { createEventHook } from '@vueuse/core'
-import { ref } from 'vue'
 
 export const useDownload = () => {
   const process = ref(0)

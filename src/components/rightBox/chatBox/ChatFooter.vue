@@ -133,6 +133,12 @@
             </template>
             <span>语音信息</span>
           </n-popover>
+          <n-popover trigger="hover" :show-arrow="false" placement="bottom">
+            <template #trigger>
+              <svg @click="showLocationModal = true" class="mr-18px"><use href="#local"></use></svg>
+            </template>
+            <span>位置</span>
+          </n-popover>
         </n-flex>
 
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
@@ -150,6 +156,12 @@
         <MsgInput ref="MsgInputRef" :height="inputAreaHeight" />
       </div>
     </div>
+
+    <!-- 位置选择弹窗 -->
+    <LocationModal
+      v-model:visible="showLocationModal"
+      @location-selected="handleLocationSelected"
+      @cancel="showLocationModal = false" />
   </main>
 </template>
 
@@ -158,6 +170,7 @@ import { join } from '@tauri-apps/api/path'
 import { open } from '@tauri-apps/plugin-dialog'
 import { copyFile, readFile } from '@tauri-apps/plugin-fs'
 import { FOOTER_HEIGHT, MAX_FOOTER_HEIGHT, MIN_FOOTER_HEIGHT, TOOLBAR_HEIGHT } from '@/common/constants'
+import LocationModal from '@/components/rightBox/location/LocationModal.vue'
 import { MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import { useChatLayoutGlobal } from '@/hooks/useChatLayout'
 import { type SelectionRange, useCommon } from '@/hooks/useCommon.ts'
@@ -187,6 +200,7 @@ const MsgInputRef = ref()
 const msgInputDom = ref<HTMLInputElement | null>(null)
 const emojiShow = ref(false)
 const recentlyTip = ref(false)
+const showLocationModal = ref(false)
 const isConceal = computed({
   get: () => settingStore.screenshot.isConceal,
   set: (value: boolean) => settingStore.setScreenshotConceal(value)
@@ -563,6 +577,28 @@ const updateRecentEmojis = (emoji: string) => {
 const handleVoiceRecord = () => {
   // 触发录音模式切换事件
   useMitt.emit(MittEnum.VOICE_RECORD_TOGGLE)
+}
+
+// 处理位置选择
+const handleLocationSelected = async (locationData: any) => {
+  try {
+    // 发送位置消息
+    const messageContent = {
+      type: MsgEnum.LOCATION,
+      body: {
+        latitude: locationData.latitude,
+        longitude: locationData.longitude,
+        address: locationData.address,
+        precision: locationData.precision,
+        timestamp: locationData.timestamp
+      }
+    }
+    console.log('发送位置消息:', messageContent)
+
+    showLocationModal.value = false
+  } catch (error) {
+    console.error('发送位置消息失败:', error)
+  }
 }
 
 // 打开聊天记录窗口

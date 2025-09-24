@@ -1,5 +1,6 @@
 import 'uno.css'
 import '@unocss/reset/eric-meyer.css' // unocss提供的浏览器默认样式重置
+import TlbsMap from 'tlbs-map-vue'
 import { initMobileClient } from '#/mobile-client/MobileClient'
 import App from '@/App.vue'
 import { AppException } from '@/common/exception.ts'
@@ -14,7 +15,7 @@ initializePlatform()
 import('@/services/webSocketAdapter')
 
 const app = createApp(App)
-app.use(router).use(pinia).directive('resize', vResize).directive('slide', vSlide).mount('#app')
+app.use(router).use(pinia).use(TlbsMap).directive('resize', vResize).directive('slide', vSlide).mount('#app')
 app.config.errorHandler = (err) => {
   if (err instanceof AppException) {
     window.$message.error(err.message)
