@@ -11,7 +11,7 @@
       </div>
     </div>
     <div class="w-full h-full overflow-hidden flex items-center justify-center">
-      <div :class="props.isOfficial ? ['chat-room-name-official'] : ['chat-room-name']">
+      <div @click="handleRoomNameClick" :class="props.isOfficial ? ['chat-room-name-official'] : ['chat-room-name']">
         <div class="truncate whitespace-nowrap overflow-hidden text-ellipsis w-full text-center">
           {{ props.roomName }}
         </div>
@@ -19,7 +19,7 @@
       </div>
     </div>
     <div class="w-full h-full flex items-center">
-      <div v-if="!hiddenRight" class="w-full justify-end flex pe-16px">
+      <div v-if="!props.hiddenRight" class="w-full justify-end flex pe-16px">
         <svg class="w-24px h-24px iconpark-icon p-5px"><use href="#diannao"></use></svg>
         <svg @click="handleMoreClick" class="w-24px h-24px iconpark-icon p-5px"><use href="#more"></use></svg>
       </div>
@@ -30,39 +30,32 @@
 <script setup lang="ts">
 import router from '@/router'
 
-const props = defineProps({
-  msgCount: {
-    type: Number,
-    required: false
-  },
-  isOfficial: {
-    type: Boolean,
-    default: true
-  },
-  hiddenRight: {
-    type: Boolean,
-    default: false
-  },
-  enableDefaultBackground: {
-    type: Boolean,
-    default: true
-  },
-  enableShadow: {
-    type: Boolean,
-    default: true
-  },
-  roomName: {
-    type: String,
-    default: false
-  }
+export interface HeaderBarProps {
+  msgCount?: number
+  isOfficial?: boolean
+  hiddenRight?: boolean
+  enableDefaultBackground?: boolean
+  enableShadow?: boolean
+  roomName?: string | false
+}
+
+const props = withDefaults(defineProps<HeaderBarProps>(), {
+  isOfficial: true,
+  hiddenRight: false,
+  enableDefaultBackground: true,
+  enableShadow: true,
+  roomName: false
 })
 
+const emits = defineEmits<(e: 'roomNameClick', payload: HeaderBarProps) => void>()
+
+const handleRoomNameClick = () => {
+  emits('roomNameClick', props)
+}
+
 const formattedMsgCount = computed(() => {
-  if (props.msgCount && props.msgCount > 100) {
-    return '99+'
-  } else {
-    return `${props.msgCount}`
-  }
+  if (!props.msgCount) return ''
+  return props.msgCount > 100 ? '99+' : `${props.msgCount}`
 })
 
 const handleBack = async () => {

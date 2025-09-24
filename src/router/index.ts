@@ -69,9 +69,10 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
         redirect: '/mobile/chatRoom/chatMain'
       },
       {
-        path: 'chatMain',
+        path: 'chatMain/:uid?', // 可选传入，如果传入uid就表示房间属于好友的私聊房间
         name: 'mobileChatMain',
-        component: MobileChatMain
+        component: MobileChatMain,
+        props: true
       },
       {
         path: 'setting',

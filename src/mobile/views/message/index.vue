@@ -164,6 +164,14 @@ const groupStore = useGroupStore()
 // 新代码
 const globalStore = useGlobalStore()
 
+const allUserMap = computed(() => {
+  const map = new Map<string, any>() // User 是你定义的用户类型
+  groupStore.allUserInfo.forEach((user) => {
+    map.set(user.uid, user)
+  })
+  return map
+})
+
 // 会话列表 TODO: 需要后端返回对应字段
 const sessionList = computed(() => {
   return (
@@ -381,9 +389,24 @@ const intoRoom = (item: any) => {
   if (preventClick) {
     return
   }
+
   handleMsgClick(item)
+  const foundedUser = allUserMap.value.get(item.detailId)
+
   setTimeout(() => {
-    router.push(`/mobile/chatRoom/chatMain`)
+    // 如果找到用户，就表示该会话属于好友，那就传入好友的uid;同时排除id为1的hula小管家
+    if (foundedUser && foundedUser.uid !== '1') {
+      router.push({
+        name: 'mobileChatMain',
+        params: {
+          uid: item.detailId
+        }
+      })
+    } else {
+      router.push({
+        name: 'mobileChatMain'
+      })
+    }
   }, 0)
 }
 const toSimpleBio = () => {
