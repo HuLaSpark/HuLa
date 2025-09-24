@@ -36,6 +36,10 @@ export class AvatarUtils {
     if (AvatarUtils.isDefaultAvatar(avatar)) {
       return `/avatar/${avatar}.webp`
     }
-    return avatar
+    // Only allow HTTPS URLs, otherwise fall back to default avatar
+    if (typeof avatar === 'string' && avatar.trim().toLowerCase().startsWith('https://')) {
+      return avatar;
+    }
+    return '/avatar/001.png';
   }
 }
