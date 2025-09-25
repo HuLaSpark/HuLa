@@ -156,7 +156,7 @@
           <!-- 群聊侧边栏选项 -->
           <template v-else>
             <div class="box-item cursor-default">
-              <n-flex align="center" :size="10">
+              <n-flex align="center">
                 <!-- 群头像 -->
                 <div class="relative group">
                   <!-- 群主可以编辑头像，显示黑色蒙层和上传图标 -->
@@ -231,6 +231,14 @@
                     </n-tooltip>
                   </n-flex>
                 </n-flex>
+
+                <n-button class="rounded-8px" size="small" type="primary" @click="showQRCodeModal = true">
+                  <template #icon>
+                    <svg class="size-12px">
+                      <use href="#share"></use>
+                    </svg>
+                  </template>
+                </n-button>
               </n-flex>
             </div>
 
@@ -371,6 +379,41 @@
     </div>
   </n-modal>
 
+  <!-- 群二维码分享弹窗 -->
+  <n-modal v-model:show="showQRCodeModal" class="w-400px rounded-8px">
+    <div class="bg-[--bg-popover] w-400px p-6px box-border flex flex-col">
+      <div
+        v-if="isMac()"
+        @click="showQRCodeModal = false"
+        class="mac-close z-999 size-13px shadow-inner bg-#ed6a5eff rounded-50% select-none absolute left-6px">
+        <svg class="hidden size-7px color-#000 select-none absolute top-3px left-3px">
+          <use href="#close"></use>
+        </svg>
+      </div>
+
+      <svg v-if="isWindows()" @click="showQRCodeModal = false" class="size-12px ml-a cursor-pointer select-none">
+        <use href="#close"></use>
+      </svg>
+
+      <div class="flex flex-col gap-20px p-[22px_20px_20px_22px] select-none">
+        <div class="flex flex-col items-center gap-16px">
+          <n-qr-code
+            class="rounded-12px"
+            :value="activeItem.account"
+            :size="200"
+            :color="themes.content === ThemeEnum.DARK ? '#ffffff' : '#000000'"
+            :background-color="themes.content === ThemeEnum.DARK ? '#2d2d2d' : '#ffffff'"
+            :icon-src="AvatarUtils.getAvatarUrl(activeItem.avatar)" />
+
+          <div class="text-center">
+            <p class="text-14px text-[--text-color] mb-8px">{{ activeItem.name }}</p>
+            <p class="text-12px text-[--text-color-3]">扫描二维码加入群聊</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </n-modal>
+
   <!-- 添加裁剪组件和文件输入框 -->
   <input
     ref="fileInput"
@@ -429,6 +472,7 @@ const tips = ref()
 const optionsType = ref<RoomActEnum>()
 const modalShow = ref(false)
 const sidebarShow = ref(false)
+const showQRCodeModal = ref(false)
 const cacheStore = useCachedStore()
 const { currentSession: activeItem } = storeToRefs(globalStore)
 
