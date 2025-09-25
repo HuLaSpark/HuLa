@@ -46,7 +46,8 @@
         "displayLanguageSelector": true,
         "languages": [
           "SimpChinese"
-        ]
+        ],
+        "template": "template/installer.nsi"
       }
     }
   },
