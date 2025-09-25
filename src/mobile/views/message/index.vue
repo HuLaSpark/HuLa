@@ -131,6 +131,7 @@
 </template>
 
 <script setup lang="ts">
+import { debounce } from 'lodash-es'
 import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.vue'
 import NavBar from '#/layout/navBar/index.vue'
 import type { IKeyboardDidShowDetail } from '#/mobile-client/interface/adapter'
@@ -151,17 +152,10 @@ import { formatTimestamp } from '@/utils/ComputedTime.ts'
 
 const loading = ref(false)
 const count = ref(0)
-const onRefresh = () => {
-  router.push('/mobile/confirmQRLogin')
-  setTimeout(() => {
-    loading.value = false
-    count.value++
-  }, 500)
-}
 
 const groupStore = useGroupStore()
-
-// 新代码
+const chatStore = useChatStore()
+const userStore = useUserStore()
 const globalStore = useGlobalStore()
 
 const allUserMap = computed(() => {
@@ -231,11 +225,26 @@ const sessionList = computed(() => {
       })
   )
 })
-// 新代码结束
 
-const chatStore = useChatStore()
+const onRefresh = () => {
+  // 如果没到0.5秒就延迟0.5秒，如果接口执行时间超过0.5秒那就以getSessionList时间为准
+  loading.value = true
+  count.value++
 
-const userStore = useUserStore()
+  const apiPromise = chatStore.getSessionList(true)
+  const delayPromise = new Promise((resolve) => setTimeout(resolve, 500))
+
+  Promise.all([apiPromise, delayPromise])
+    .then(([res]) => {
+      // 接口和延时都完成后执行
+      loading.value = false
+      console.log('刷新完成', res)
+    })
+    .catch((error) => {
+      loading.value = false
+      console.log('刷新会话列表失败：', error)
+    })
+}
 
 onMounted(async () => {
   await rustWebSocketClient.setupBusinessMessageListeners()
@@ -263,9 +272,9 @@ onMounted(async () => {
 const atTop = ref(true) // 是否滚动到顶
 const scrollContainer = ref(null) //消息滚动容器
 
-function onScroll(e: any) {
+const onScroll = debounce((e: any) => {
   atTop.value = e.target.scrollTop === 0
-}
+}, 500)
 
 /**
  * 渲染图片图标的函数工厂
