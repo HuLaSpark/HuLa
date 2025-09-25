@@ -34,11 +34,8 @@
       </div>
     </div>
 
-    <img
-      v-if="activeTab === 'login'"
-      :src="AvatarUtils.getAvatarUrl(userInfo.avatar || '/logo.png')"
-      alt="logo"
-      class="size-86px rounded-full" />
+    <!-- 头像 -->
+    <img v-if="activeTab === 'login'" :src="userInfo.avatar" alt="logo" class="size-86px rounded-full" />
 
     <!-- 登录表单 -->
     <n-flex v-if="activeTab === 'login'" class="text-center w-80%" vertical :size="16">
@@ -314,6 +311,7 @@
 import { invoke } from '@tauri-apps/api/core'
 import { emit } from '@tauri-apps/api/event'
 import { info } from '@tauri-apps/plugin-log'
+import { debounce } from 'lodash-es'
 import { lightTheme } from 'naive-ui'
 import { ErrorType } from '@/common/exception'
 import PinInput from '@/components/common/PinInput.vue'
@@ -355,7 +353,7 @@ const currentStep = ref(1)
 const userInfo = ref({
   account: '',
   password: '',
-  avatar: '',
+  avatar: '/logo.png',
   nickName: '',
   uid: ''
 })
@@ -767,6 +765,30 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('click', closeMenu, true)
 })
+
+const refreshAvatar = debounce((newAccount: string) => {
+  const matchedAccount = loginHistories.find(
+    (history) => history.account === newAccount || history.email === newAccount
+  )
+  if (matchedAccount) {
+    userInfo.value.avatar = AvatarUtils.getAvatarUrl(matchedAccount.avatar)
+  } else {
+    userInfo.value.avatar = '/logo.png'
+  }
+}, 300)
+
+// 监听账号输入
+watch(
+  () => userInfo.value.account,
+  (newAccount) => {
+    if (!newAccount) {
+      userInfo.value.avatar = '/logo.png'
+      return
+    }
+
+    refreshAvatar(newAccount)
+  }
+)
 </script>
 
 <style scoped lang="scss">
