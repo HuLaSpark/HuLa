@@ -1,6 +1,6 @@
-import { computed, reactive } from 'vue'
+import { computed, reactive, readonly } from 'vue'
 
-export interface FileUploadItem {
+export type FileUploadItem = {
   id: string
   name: string
   size: number
@@ -11,7 +11,7 @@ export interface FileUploadItem {
   endTime?: number
 }
 
-export interface FileUploadQueue {
+export type FileUploadQueue = {
   items: FileUploadItem[]
   totalFiles: number
   completedFiles: number
@@ -44,26 +44,6 @@ export const useFileUploadQueue = () => {
 
   const isUploading = computed(() => {
     return queue.isActive && queue.items.some((item) => item.status === 'uploading')
-  })
-
-  const uploadingFiles = computed(() => {
-    return queue.items.filter((item) => item.status === 'uploading')
-  })
-
-  const remainingFiles = computed(() => {
-    return queue.totalFiles - queue.completedFiles - queue.failedFiles
-  })
-
-  const averageSpeed = computed(() => {
-    if (!queue.startTime || queue.completedFiles === 0) return 0
-    const elapsed = (Date.now() - queue.startTime) / 1000 // 秒
-    return queue.completedFiles / elapsed // 文件/秒
-  })
-
-  const estimatedTimeRemaining = computed(() => {
-    const speed = averageSpeed.value
-    if (speed === 0 || remainingFiles.value === 0) return 0
-    return Math.round(remainingFiles.value / speed) // 秒
   })
 
   /**
@@ -157,58 +137,15 @@ export const useFileUploadQueue = () => {
     queue.endTime = undefined
   }
 
-  /**
-   * 取消队列
-   */
-  const cancelQueue = () => {
-    queue.items.forEach((item) => {
-      if (item.status === 'uploading' || item.status === 'pending') {
-        item.status = 'failed'
-      }
-    })
-    queue.failedFiles = queue.items.filter((item) => item.status === 'failed').length
-    finishQueue()
-  }
-
-  /**
-   * 获取文件项
-   */
-  const getFileItem = (fileId: string) => {
-    return queue.items.find((item) => item.id === fileId)
-  }
-
-  /**
-   * 重试失败的文件
-   */
-  const retryFailedFiles = () => {
-    const failedItems = queue.items.filter((item) => item.status === 'failed')
-    failedItems.forEach((item) => {
-      item.status = 'pending'
-      item.progress = 0
-      item.startTime = undefined
-      item.endTime = undefined
-    })
-    queue.failedFiles = 0
-    queue.isActive = true
-    queue.endTime = undefined
-  }
-
   return {
     queue: readonly(queue),
     progress,
     isUploading,
-    uploadingFiles,
-    remainingFiles,
-    averageSpeed,
-    estimatedTimeRemaining,
     initQueue,
     updateFileStatus,
     updateFileProgress,
     finishQueue,
-    clearQueue,
-    cancelQueue,
-    getFileItem,
-    retryFailedFiles
+    clearQueue
   }
 }
 

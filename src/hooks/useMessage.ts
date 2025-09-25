@@ -308,9 +308,9 @@ export const useMessage = () => {
     window.$message.success(message)
   }
 
-  onBeforeUnmount(() => {
-    useMitt.off(MittEnum.SHRINK_WINDOW, () => {})
-  })
+  // onBeforeUnmount(() => {
+  //   useMitt.off(MittEnum.SHRINK_WINDOW, () => {})
+  // })
 
   return { msgBoxShow, handleMsgClick, handleMsgDelete, handleMsgDblclick, menuList, specialMenuList, preloadChatRoom }
 }
