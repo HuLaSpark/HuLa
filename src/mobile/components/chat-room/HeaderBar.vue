@@ -1,5 +1,6 @@
 <template>
   <div
+    ref="rootEl"
     :class="[props.enableDefaultBackground ? 'bg-white' : '', props.enableShadow ? 'header-bar-shadow' : '']"
     class="w-full h-[56px] grid grid-cols-[100px_1fr_100px] z-2">
     <div @click="handleBack" class="w-full h-full flex items-center">
@@ -29,6 +30,8 @@
 
 <script setup lang="ts">
 import router from '@/router'
+
+const rootEl = ref<HTMLElement | null>(null)
 
 export interface HeaderBarProps {
   msgCount?: number
@@ -74,6 +77,10 @@ const handleMoreClick = () => {
 
   router.push(`/mobile/chatRoom/setting`)
 }
+
+defineExpose({
+  rootEl
+})
 </script>
 
 <style lang="scss" scoped>

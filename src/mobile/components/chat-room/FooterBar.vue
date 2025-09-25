@@ -78,6 +78,10 @@ import type { UploaderFileListItem } from 'vant/es'
 import { useMobileStore } from '@/stores/mobile'
 import 'vant/es/dialog/style'
 
+// ==== 输入框事件 ====
+const mobileStore = useMobileStore()
+const emit = defineEmits(['focus', 'blur', 'updateHeight'])
+
 const uploadFileList = ref<
   {
     url: string
@@ -164,6 +168,18 @@ const root = ref()
 let msgInput: MsgInputReturn | null = null
 
 onMounted(() => {
+  if (root.value) {
+    const resizeObserver = new ResizeObserver((entries) => {
+      const height = entries[0].contentRect.height
+      emit('updateHeight', height)
+    })
+    resizeObserver.observe(root.value)
+
+    onUnmounted(() => {
+      resizeObserver.disconnect()
+    })
+  }
+
   nextTick(() => {
     import('@/hooks/useMsgInput').then((module) => {
       // 这里确保 messageInputDom 已挂载且为 HTMLElement
@@ -207,14 +223,18 @@ const handleSend = async () => {
   messageInputDom.value.innerHTML = ''
 }
 
+const getDefaultIcons = () => {
+  return [
+    { label: 'emoji', icon: 'smiling-face', showArrow: true, isRotate: false },
+    { label: 'file', icon: 'file', showArrow: false, isRotate: true },
+    { label: 'image', icon: 'photo', showArrow: false, isRotate: true },
+    { label: 'video', icon: 'voice', showArrow: true, isRotate: false },
+    { label: 'history', icon: 'history', showArrow: true, isRotate: false }
+  ]
+}
+
 // ==== 展开面板 ====
-const options = ref([
-  { label: 'emoji', icon: 'smiling-face', showArrow: true, isRotate: false },
-  { label: 'file', icon: 'file', showArrow: false, isRotate: true },
-  { label: 'image', icon: 'photo', showArrow: false, isRotate: true },
-  { label: 'video', icon: 'voice', showArrow: true, isRotate: false },
-  { label: 'history', icon: 'history', showArrow: true, isRotate: false }
-])
+const options = ref(getDefaultIcons())
 
 const isPanelVisible = ref(false)
 const isInputFocused = ref(false)
@@ -264,10 +284,6 @@ const leave = (el: Element, done: () => void) => {
   dom.addEventListener('transitionend', done, { once: true })
 }
 
-// ==== 输入框事件 ====
-const mobileStore = useMobileStore()
-const emit = defineEmits(['focus', 'blur'])
-
 const handleFocus = async () => {
   isInputFocused.value = true
   await nextTick()
@@ -289,8 +305,13 @@ const handleBlur = async () => {
   })
 }
 
+const closePanel = () => {
+  isPanelVisible.value = false
+  options.value = getDefaultIcons()
+}
+
 // ==== 对外暴露 ====
-defineExpose({ root, footerBarInput })
+defineExpose({ root, footerBarInput, closePanel })
 </script>
 
 <style lang="scss" scoped>
