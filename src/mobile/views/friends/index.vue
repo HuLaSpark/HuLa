@@ -59,7 +59,7 @@
             :key="avatar"
             round
             size="small"
-            :src="avatarSrc(avatar)" />
+            :src="avatar" />
         </div>
         <div @click="toMessage" class="h-full flex justify-end items-center">
           <img src="@/assets/mobile/friend/right-arrow.webp" class="block h-20px" alt="" />
@@ -186,15 +186,13 @@ const getUserInfo = (item: any) => {
     case NoticeType.FRIEND_APPLY:
     case NoticeType.GROUP_INVITE:
     case NoticeType.GROUP_MEMBER_DELETE: {
-      const data = groupStore.getUserInfo(item.operateId)!
-      return data
+      return groupStore.getUserInfo(item.operateId)!
     }
     case NoticeType.ADD_ME:
     case NoticeType.GROUP_INVITE_ME:
     case NoticeType.GROUP_SET_ADMIN:
     case NoticeType.GROUP_RECALL_ADMIN: {
-      const data = groupStore.getUserInfo(item.senderId)!
-      return data
+      return groupStore.getUserInfo(item.senderId)!
     }
   }
 }
