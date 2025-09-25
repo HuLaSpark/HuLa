@@ -53,13 +53,13 @@
         <div class="h-full flex items-center text-14px">我的消息</div>
         <div @click="toMessage" class="h-full flex items-center justify-end overflow-hidden">
           <n-avatar
-            v-if="applyList.length > 0"
+            v-if="contactStore.requestFriendsList.length > 0"
             :class="index > 0 ? '-ml-2' : ''"
-            v-for="(item, index) in applyList.splice(0, 6)"
-            :id="item.applyId"
+            v-for="(avatar, index) in avatars"
+            :key="avatar"
             round
             size="small"
-            :src="avatarSrc(getUserInfo(item)!.avatar!)" />
+            :src="avatarSrc(avatar)" />
         </div>
         <div @click="toMessage" class="h-full flex justify-end items-center">
           <img src="@/assets/mobile/friend/right-arrow.webp" class="block h-20px" alt="" />
@@ -199,6 +199,23 @@ const getUserInfo = (item: any) => {
   }
 }
 
+const avatars = computed(() => {
+  const seen = new Set()
+  const unique = []
+
+  for (const item of contactStore.requestFriendsList) {
+    const avatar = avatarSrc(getUserInfo(item)!.avatar!)
+    if (!seen.has(avatar)) {
+      seen.add(avatar)
+      unique.push(avatar)
+    }
+
+    if (unique.length >= 6) break
+  }
+
+  return unique
+})
+
 onMounted(async () => {
   try {
     await contactStore.getApplyPage(false)
@@ -252,11 +269,6 @@ const groupStore = useGroupStore()
 const contactStore = useContactStore()
 const userStatusStore = useUserStatusStore()
 const { stateList } = storeToRefs(userStatusStore)
-
-//好友申请列表（只筛选好友申请消息）
-const applyList = computed(() => {
-  return contactStore.requestFriendsList.filter((item) => item.type === 2)
-})
 
 const avatarSrc = (url: string) => AvatarUtils.getAvatarUrl(url)
 
