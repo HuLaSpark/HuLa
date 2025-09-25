@@ -422,3 +422,75 @@ pub async fn query_chat_history(
 
     Ok(messages)
 }
+
+/// 专门用于文件管理的查询函数，支持跨房间查询文件类型消息
+pub async fn query_file_messages(
+    db: &DatabaseConnection,
+    login_uid: &str,
+    room_id: Option<&str>,
+    message_types: Option<&[u8]>,
+    search_keyword: Option<&str>,
+    page: u32,
+    page_size: u32,
+) -> Result<Vec<im_message::Model>, CommonError> {
+
+    // 构建基础查询条件
+    let mut conditions = Condition::all()
+        .add(im_message::Column::LoginUid.eq(login_uid));
+
+    // 房间ID筛选（如果提供）
+    if let Some(room_id) = room_id {
+        conditions = conditions.add(im_message::Column::RoomId.eq(room_id));
+    }
+
+    // 消息类型筛选
+    if let Some(message_types) = message_types {
+        let type_condition = message_types
+            .iter()
+            .fold(Condition::any(), |acc, &msg_type| {
+                acc.add(im_message::Column::MessageType.eq(msg_type))
+            });
+        conditions = conditions.add(type_condition);
+    }
+
+    // 关键词搜索（搜索文件名）
+    if let Some(keyword) = search_keyword {
+        if !keyword.trim().is_empty() {
+            let keyword_pattern = format!("%{}%", keyword.trim());
+            use sea_orm::sea_query::Value;
+            conditions = conditions.add(
+                Condition::any()
+                    // 搜索 JSON 中的 fileName 字段
+                    .add(Expr::cust_with_values(
+                        "JSON_EXTRACT(body, '$.fileName') LIKE ?",
+                        [Value::from(keyword_pattern.clone())],
+                    ))
+                    // 搜索 JSON 中的 content 字段
+                    .add(Expr::cust_with_values(
+                        "JSON_EXTRACT(body, '$.content') LIKE ?",
+                        [Value::from(keyword_pattern)],
+                    ))
+            );
+        }
+    }
+
+    // 构建分页查询
+    let mut query = im_message::Entity::find().filter(conditions);
+
+    // 按发送时间降序排序
+    query = query.order_by_desc(im_message::Column::SendTime);
+
+    // 应用分页
+    let offset = (page.saturating_sub(1)) * page_size;
+    query = query
+        .offset(offset as u64)
+        .limit(page_size as u64);
+
+    // 执行查询
+    let messages = query
+        .all(db)
+        .await
+        .map_err(|e| anyhow::anyhow!("查询文件消息失败: {}", e))?;
+
+    Ok(messages)
+}
