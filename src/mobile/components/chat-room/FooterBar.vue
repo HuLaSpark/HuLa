@@ -247,10 +247,15 @@ const isInputFocused = ref(false)
 
 const clickItem = async (icon: string) => {
   if (activeIcon.value === icon) {
-    activeIcon.value = null
-    isPanelVisible.value = false
+    closePanel()
     return
   }
+
+  // 如果之前有激活的图标，先关闭它
+  if (activeIcon.value) {
+    closePanel()
+  }
+
   activeIcon.value = icon
   const clickedItem = options.value.find((item) => item.icon === icon)
   if (!clickedItem || !clickedItem.showArrow) return
@@ -263,8 +268,8 @@ const clickItem = async (icon: string) => {
   } else {
     options.value.forEach((item) => {
       if (item.icon === icon) {
-        item.isRotate = !item.isRotate
-        isPanelVisible.value = item.isRotate
+        item.isRotate = true
+        isPanelVisible.value = true
       } else {
         item.isRotate = false
       }
