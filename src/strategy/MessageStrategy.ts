@@ -446,6 +446,111 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
 }
 
 /**
+ * 处理位置消息的策略
+ */
+class LocationMessageStrategyImpl extends AbstractMessageStrategy {
+  constructor() {
+    super(MsgEnum.LOCATION)
+  }
+
+  /**
+   * 构建位置消息对象
+   * @param msgInputValue 位置数据JSON字符串
+   * @param replyValue 回复信息
+   * @returns 位置消息对象
+   */
+  getMsg(msgInputValue: string, replyValue: any): any {
+    try {
+      // 解析位置数据
+      const locationData = JSON.parse(msgInputValue)
+
+      // 验证必要字段
+      if (!locationData.latitude || !locationData.longitude || !locationData.address) {
+        throw new AppException('无效的位置数据，缺少必要字段')
+      }
+
+      return {
+        type: this.msgType,
+        latitude: locationData.latitude,
+        longitude: locationData.longitude,
+        address: locationData.address,
+        precision: locationData.precision || '高精度',
+        timestamp: locationData.timestamp || Date.now(),
+        reply: replyValue.content
+          ? {
+              content: replyValue.content,
+              key: replyValue.key
+            }
+          : undefined
+      }
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        throw new AppException('位置数据格式错误，必须是有效的JSON')
+      }
+      throw error
+    }
+  }
+
+  /**
+   * 构建消息体
+   * @param msg 位置消息对象
+   * @param reply 回复信息
+   * @returns 消息体
+   */
+  buildMessageBody(msg: any, reply: any): any {
+    return {
+      latitude: msg.latitude,
+      longitude: msg.longitude,
+      address: msg.address,
+      precision: msg.precision,
+      timestamp: msg.timestamp,
+      replyMsgId: msg.reply?.key || undefined,
+      reply: reply.value.content
+        ? {
+            body: reply.value.content,
+            id: reply.value.key,
+            username: reply.value.accountName,
+            type: msg.type
+          }
+        : undefined
+    }
+  }
+
+  /**
+   * 构建完整的位置消息
+   * @param messageId 消息ID
+   * @param messageBody 消息体
+   * @param globalStore 全局存储
+   * @param userUid 用户UID
+   * @returns 完整消息对象
+   */
+  buildMessageType(messageId: string, messageBody: any, globalStore: any, userUid: Ref<any>): MessageType {
+    const groupStore = useGroupStore()
+    const userInfo = groupStore.getUserInfo(userUid.value)
+
+    return {
+      fromUser: {
+        uid: userUid.value || 0,
+        username: userInfo?.name || '',
+        avatar: userInfo?.avatar || '',
+        locPlace: userInfo?.locPlace || ''
+      },
+      message: {
+        id: messageId,
+        roomId: globalStore.currentSession.roomId,
+        sendTime: Date.now(),
+        status: MessageStatusEnum.PENDING,
+        type: this.msgType,
+        body: messageBody,
+        messageMarks: {}
+      },
+      sendTime: Date.now(),
+      loading: false
+    }
+  }
+}
+
+/**
  * 处理文件消息
  */
 class FileMessageStrategyImpl extends AbstractMessageStrategy {
@@ -1316,6 +1421,7 @@ const videoMessageStrategy = new VideoMessageStrategyImpl()
 const voiceMessageStrategy = new VoiceMessageStrategyImpl()
 const videoCallMessageStrategy = new VideoCallMessageStrategyImpl()
 const audioCallMessageStrategy = new AudioCallMessageStrategyImpl()
+const locationMessageStrategy = new LocationMessageStrategyImpl()
 
 export const messageStrategyMap: Record<MsgEnum, MessageStrategy> = {
   [MsgEnum.FILE]: fileMessageStrategy,
@@ -1336,5 +1442,5 @@ export const messageStrategyMap: Record<MsgEnum, MessageStrategy> = {
   [MsgEnum.BOT]: unsupportedMessageStrategy,
   [MsgEnum.VIDEO_CALL]: videoCallMessageStrategy,
   [MsgEnum.AUDIO_CALL]: audioCallMessageStrategy,
-  [MsgEnum.LOCATION]: unsupportedMessageStrategy
+  [MsgEnum.LOCATION]: locationMessageStrategy
 }

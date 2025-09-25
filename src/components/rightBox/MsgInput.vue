@@ -218,6 +218,7 @@ const {
   handleAI,
   handleInput,
   send,
+  sendLocationDirect,
   sendFilesDirect,
   sendVoiceDirect,
   personList,
@@ -238,6 +239,16 @@ const {
 const handleFormSubmit = async (e: Event) => {
   e.preventDefault()
   await send()
+}
+
+/** 直接发送位置消息 */
+const handleLocationSelected = async (locationData: any) => {
+  try {
+    await sendLocationDirect(locationData)
+  } catch (error) {
+    console.error('发送位置消息失败:', error)
+    window.$message.error('发送位置消息失败')
+  }
 }
 
 /** 聚焦输入框函数 */
@@ -370,6 +381,7 @@ defineExpose({
   showFileModal: showFileModalCallback,
   exitVoiceMode,
   isVoiceMode: readonly(isVoiceMode),
+  handleLocationSelected,
   handleVoiceCancel
 })
 

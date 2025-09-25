@@ -22,7 +22,7 @@
 
             <div
               class="flex flex-col text-#4e4e4e h-auto gap-8px overflow-hidden justify-center text-18px whitespace-normal break-words max-w-46">
-              <div class="font-bold">卡仔</div>
+              <div class="font-bold">{{ userInfo?.name }}</div>
               <div class="text-16px">账号:{{ userInfo?.account }}</div>
             </div>
           </div>

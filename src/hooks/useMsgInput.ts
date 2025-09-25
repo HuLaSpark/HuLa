@@ -1380,6 +1380,79 @@ export const useMsgInput = (messageInputDom: Ref) => {
     }
   }
 
+  /**
+   * 发送地图的函数
+   * @param locationData 地图数据
+   */
+  const sendLocationDirect = async (locationData: any) => {
+    try {
+      const tempMsgId = 'T' + Date.now().toString()
+      const messageStrategy = messageStrategyMap[MsgEnum.LOCATION]
+
+      // 将位置数据转换为JSON字符串作为消息内容
+      const content = JSON.stringify(locationData)
+
+      // 构建位置消息
+      const msg = messageStrategy.getMsg(content, reply.value)
+      const messageBody = messageStrategy.buildMessageBody(msg, reply)
+
+      // 创建临时消息对象
+      const tempMsg = messageStrategy.buildMessageType(tempMsgId, messageBody, globalStore, userUid)
+      tempMsg.message.status = MessageStatusEnum.SENDING
+
+      // 添加到消息列表
+      chatStore.pushMsg(tempMsg)
+
+      // 设置发送状态
+      chatStore.updateMsg({
+        msgId: tempMsgId,
+        status: MessageStatusEnum.SENDING
+      })
+
+      // 发送消息到服务器 - 使用 channel 方式
+      const successChannel = new Channel<any>()
+      const errorChannel = new Channel<string>()
+
+      // 监听成功响应
+      successChannel.onmessage = (message) => {
+        chatStore.updateMsg({
+          msgId: message.oldMsgId,
+          status: MessageStatusEnum.SUCCESS,
+          newMsgId: message.message.id,
+          body: message.message.body,
+          timeBlock: message.timeBlock
+        })
+        useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
+      }
+
+      // 监听错误响应
+      errorChannel.onmessage = (msgId) => {
+        chatStore.updateMsg({
+          msgId: msgId,
+          status: MessageStatusEnum.FAILED
+        })
+        useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
+      }
+
+      await invoke(TauriCommand.SEND_MSG, {
+        data: {
+          id: tempMsgId,
+          roomId: globalStore.currentSession!.roomId,
+          msgType: MsgEnum.LOCATION,
+          body: messageBody
+        },
+        successChannel,
+        errorChannel
+      })
+
+      // 更新会话最后活动时间
+      chatStore.updateSessionLastActiveTime(globalStore.currentSession!.roomId)
+    } catch (error) {
+      console.error('位置消息发送失败:', error)
+      window.$message.error('位置消息发送失败')
+    }
+  }
+
   return {
     imgPaste,
     inputKeyDown,
@@ -1388,6 +1461,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     handleInput,
     send,
     stripHtml,
+    sendLocationDirect,
     sendFilesDirect,
     sendVoiceDirect,
     personList,

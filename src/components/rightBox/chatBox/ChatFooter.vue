@@ -11,7 +11,9 @@
       :style="{ height: `${footerHeight}px` }"
       class="absolute inset-0 z-997 backdrop-blur-md cursor-default flex-center select-none pointer-events-auto light:bg-[rgba(255,255,255,0.1)] dark:bg-[rgba(33,33,33,0.1)]">
       <n-flex align="center" justify="center" class="pb-60px">
-        <svg class="size-24px"><use href="#cloudError"></use></svg>
+        <svg class="size-24px">
+          <use href="#cloudError"></use>
+        </svg>
         <span class="text-(14px [--chat-text-color])">你们当前已经不是好友关系</span>
       </n-flex>
     </div>
@@ -47,7 +49,9 @@
                 :disabled="emojiShow || recentEmojis.length < 4"
                 placement="top">
                 <template #trigger>
-                  <svg class="mr-18px"><use href="#smiling-face"></use></svg>
+                  <svg class="mr-18px">
+                    <use href="#smiling-face"></use>
+                  </svg>
                 </template>
                 <div v-if="recentEmojis.length > 0" class="p-4px">
                   <div class="text-xs text-gray-500 mb-4px">最近使用</div>
@@ -68,7 +72,9 @@
           </n-popover>
 
           <div class="flex-center gap-2px mr-12px">
-            <svg @click="handleScreenshot()"><use href="#screenshot"></use></svg>
+            <svg @click="handleScreenshot()">
+              <use href="#screenshot"></use>
+            </svg>
             <n-popover
               style="
                 padding: 0;
@@ -82,7 +88,9 @@
               :show-arrow="false"
               placement="top">
               <template #trigger>
-                <svg class="dropdown-arrow" style="width: 14px; height: 14px"><use href="#down"></use></svg>
+                <svg class="dropdown-arrow" style="width: 14px; height: 14px">
+                  <use href="#down"></use>
+                </svg>
               </template>
 
               <div class="footer-item">
@@ -92,7 +100,9 @@
                   align="center"
                   justify="space-between">
                   <n-flex align="center" :size="6">
-                    <svg class="size-14px"><use href="#screenshot"></use></svg>
+                    <svg class="size-14px">
+                      <use href="#screenshot"></use>
+                    </svg>
                     <p>截图</p>
                   </n-flex>
                   <p class="text-(12px #909090)">{{ settingStore.shortcuts.screenshot }}</p>
@@ -113,8 +123,12 @@
           <n-popover trigger="hover" :show-arrow="false" placement="bottom">
             <template #trigger>
               <div class="flex-center gap-2px mr-12px">
-                <svg @click="handleFileOpen"><use href="#file2"></use></svg>
-                <svg style="width: 14px; height: 14px"><use href="#down"></use></svg>
+                <svg @click="handleFileOpen">
+                  <use href="#file2"></use>
+                </svg>
+                <svg style="width: 14px; height: 14px">
+                  <use href="#down"></use>
+                </svg>
               </div>
             </template>
             <span>文件</span>
@@ -129,13 +143,17 @@
           </n-popover>
           <n-popover trigger="hover" :show-arrow="false" placement="bottom">
             <template #trigger>
-              <svg @click="handleVoiceRecord" class="mr-18px"><use href="#voice"></use></svg>
+              <svg @click="handleVoiceRecord" class="mr-18px">
+                <use href="#voice"></use>
+              </svg>
             </template>
             <span>语音信息</span>
           </n-popover>
           <n-popover trigger="hover" :show-arrow="false" placement="bottom">
             <template #trigger>
-              <svg @click="showLocationModal = true" class="mr-18px"><use href="#local"></use></svg>
+              <svg @click="showLocationModal = true" class="mr-18px">
+                <use href="#local"></use>
+              </svg>
             </template>
             <span>位置</span>
           </n-popover>
@@ -582,19 +600,7 @@ const handleVoiceRecord = () => {
 // 处理位置选择
 const handleLocationSelected = async (locationData: any) => {
   try {
-    // 发送位置消息
-    const messageContent = {
-      type: MsgEnum.LOCATION,
-      body: {
-        latitude: locationData.latitude,
-        longitude: locationData.longitude,
-        address: locationData.address,
-        precision: locationData.precision,
-        timestamp: locationData.timestamp
-      }
-    }
-    console.log('发送位置消息:', messageContent)
-
+    await MsgInputRef.value.handleLocationSelected(locationData)
     showLocationModal.value = false
   } catch (error) {
     console.error('发送位置消息失败:', error)
@@ -649,6 +655,7 @@ onUnmounted(() => {
     width: 22px;
     height: 22px;
     cursor: pointer;
+
     &:hover {
       color: #13987f;
     }
@@ -656,6 +663,7 @@ onUnmounted(() => {
 
   .dropdown-arrow {
     transition: transform 0.3s ease;
+
     &:hover {
       transform: rotate(180deg);
     }
@@ -734,10 +742,13 @@ onUnmounted(() => {
 
 .footer-item {
   @apply flex-col-y-center gap-4px px-6px py-8px min-w-160px box-border size-fit select-none;
+
   .group {
     @apply px-4px py-6px rounded-4px;
+
     &:hover {
       background-color: var(--emoji-hover);
+
       svg {
         animation: twinkle 0.3s ease-in-out;
       }
