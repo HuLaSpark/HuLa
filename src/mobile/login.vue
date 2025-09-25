@@ -329,6 +329,7 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { getAllUserState, getCaptcha, getUserDetail, register, sendCaptcha } from '@/utils/ImRequestUtils'
 import { isAndroid } from '@/utils/PlatformConstants'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
+import { loginCommand } from '../services/tauriCommand'
 import { useChatStore } from '../stores/chat'
 import { useConfigStore } from '../stores/config'
 import { useGlobalStore } from '../stores/global'
@@ -644,7 +645,7 @@ const normalLogin = async (auto = false) => {
     .then(async (res: any) => {
       loginDisabled.value = true
       console.log('登录成功')
-
+      window.$message.success('登录成功')
       // 开启 ws 连接
       await rustWebSocketClient.initConnect()
       // 登录处理
@@ -653,7 +654,13 @@ const normalLogin = async (auto = false) => {
       await initData()
     })
     .catch((e: any) => {
-      console.error('登录异常：', e)
+      console.error('登录失败，出现未知错误:', e)
+      if (e) {
+        window.$message.warning(e)
+      } else {
+        window.$message.warning('登录失败，出现未知错误')
+      }
+
       loading.value = false
       loginDisabled.value = false
       loginText.value = '登录'
@@ -758,8 +765,21 @@ const closeMenu = (event: MouseEvent) => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('click', closeMenu, true)
+  console.log('新的', userStore)
+  const uid = userStore.userInfo?.uid
+
+  // 如果找到uid就自动登录，找不到就手动登录
+  if (uid) {
+    loading.value = true
+    await loginCommand({ uid }, true).then(() => {
+      setTimeout(() => {
+        loading.value = false
+        router.push('/mobile/message')
+      }, 100)
+    })
+  }
 })
 
 onUnmounted(() => {
