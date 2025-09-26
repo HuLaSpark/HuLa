@@ -26,7 +26,7 @@ import { useMitt } from '@/hooks/useMitt'
 import router from '@/router'
 import { useGlobalStore } from '@/stores/global'
 import { useUserStore } from '@/stores/user'
-import { scanQRCodeAPI } from '@/utils/ImRequestUtils'
+import { getGroupDetail, scanQRCodeAPI } from '@/utils/ImRequestUtils'
 
 interface ScanData {
   type: string // 必须有
@@ -88,16 +88,23 @@ const handleScanAddFriend = async (data: ScanData) => {
  * 扫码进群
  */
 const handleScanEnterGroup = async (data: ScanData) => {
-  console.log('尝试扫码添加好友')
+  console.log('尝试扫码加群', data, Object.hasOwn(data, 'roomId'))
   if (!Object.hasOwn(data, 'roomId')) {
-    window.$message.warning('登录二维码不存在roomId')
-    throw new Error('登录二维码不存在roomId:', data as any)
+    window.$message.warning('加群二维码不存在roomId')
+    throw new Error('加群二维码不存在roomId:', data as any)
   }
 
   const roomId = data.roomId as string
 
+  // 可能是扫码出来的
+  const groupDetail = await getGroupDetail(roomId)
+
+  globalStore.addGroupModalInfo.account = groupDetail.account
+  globalStore.addGroupModalInfo.name = groupDetail.groupName
+  globalStore.addGroupModalInfo.avatar = groupDetail.avatar
+
   setTimeout(() => {
-    router.push({ name: 'confirmAddGroup', params: { roomId } })
+    router.push({ name: 'mobileConfirmAddGroup' })
   }, 100)
 }
 
@@ -127,7 +134,7 @@ useMitt.on(MittEnum.QR_SCAN_EVENT, async (data: ScanData) => {
       break
     case 'scanEnterGroup':
       try {
-        await handleScanEnterGroup(data.roomId)
+        await handleScanEnterGroup(data)
       } catch (error) {
         console.log('扫码加入群失败:', error)
       }

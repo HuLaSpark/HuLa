@@ -473,7 +473,7 @@ export async function searchGroup(params: { account: string }) {
   })
 }
 
-export async function applyGroup(body: { account: string; msg: string }) {
+export async function applyGroup(body: { account: string; msg: string; type: number }) {
   return await imRequest({
     url: ImUrlEnum.APPLY_GROUP,
     body
