@@ -136,41 +136,8 @@ export const useNetworkReconnect = () => {
     if (forceReconnect || (!health.isHealthy && idleTime > MAX_IDLE_TIME)) {
       console.log('[Network] 检测到不健康或空闲时间过长的连接，正在重新连接...')
       webSocket.forceReconnect()
-
-      // 刷新数据
-      // refreshAllData()
     }
   }
-
-  /**
-   * 刷新所有重要数据
-   */
-  // const refreshAllData = async () => {
-  //   const chatStore = useChatStore()
-  //   const globalStore = useGlobalStore()
-  //   const groupStore = useGroupStore()
-  //   const contactStore = useContactStore()
-
-  //   // 刷新会话列表
-  //   await chatStore.getSessionList(true)
-  //   // 如果当前有选中的聊天室，重置并刷新消息列表
-  //   // if (globalStore.currentSession?.roomId) {
-  //   //   // 获取最新消息
-  //   //   await chatStore.resetAndRefreshCurrentRoomMessages()
-  //   // }
-  //   // 如果当前是群聊，刷新群组信息
-  //   if (globalStore.currentSession?.type === RoomTypeEnum.GROUP) {
-  //     await groupStore.getGroupUserList(globalStore.currentSession.roomId)
-  //   }
-  //   // 刷新联系人列表
-  //   await contactStore.getContactList(true)
-  //   // 更新未读消息计数
-  //   await globalStore.updateGlobalUnreadCount()
-  //   // 刷新在线用户列表
-  //   await groupStore.refreshGroupMembers()
-
-  //   console.log('[Network] 数据刷新完成')
-  // }
 
   return {
     isOnline,

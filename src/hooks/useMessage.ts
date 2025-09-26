@@ -36,7 +36,7 @@ export const useMessage = () => {
       markMsgRead(item.roomId || '1').then(async () => {
         chatStore.markSessionRead(item.roomId || '1')
         // 更新全局未读计数
-        await globalStore.updateGlobalUnreadCount()
+        globalStore.updateGlobalUnreadCount()
       })
     }
   }
