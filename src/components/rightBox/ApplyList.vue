@@ -138,7 +138,6 @@ const applyMsg = computed(() => (item: any) => {
   if (props.type === 'friend') {
     return isCurrentUser(item.senderId) ? (isAccepted(item) ? '已同意你的请求' : '正在验证你的邀请') : '请求加为好友'
   } else {
-    console.log('群通知:', item)
     if (item.eventType === NoticeType.GROUP_APPLY) {
       return '申请加入 [' + item.name + ']'
     } else if (item.eventType === NoticeType.GROUP_INVITE) {

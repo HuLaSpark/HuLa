@@ -160,15 +160,17 @@ const applyMsg = computed(() => (item: any) => {
     return isCurrentUser(item.senderId) ? (isAccepted(item) ? '已同意你的请求' : '正在验证你的邀请') : '请求加为好友'
   } else {
     if (item.eventType === NoticeType.GROUP_APPLY) {
-      return '申请加入群聊'
+      return '申请加入 [' + item.name + ']'
+    } else if (item.eventType === NoticeType.GROUP_INVITE) {
+      return '邀请' + groupStore.getUserInfo(item.operateId)!.name + '加入 [' + item.name + ']'
     } else if (isFriendApplyOrGroupInvite(item)) {
       return isCurrentUser(item.senderId) ? '已同意加入' + item.content : '邀请你加入' + item.content
     } else if (item.eventType === NoticeType.GROUP_MEMBER_DELETE) {
       return '已被' + groupStore.getUserInfo(item.senderId)!.name + '踢出' + item.content
     } else if (item.eventType === NoticeType.GROUP_SET_ADMIN) {
-      return '已被' + groupStore.getUserInfo(item.senderId)!.name + '设置为' + item.content + '的管理员'
+      return '已被群主设置为' + item.content + '的管理员'
     } else if (item.eventType === NoticeType.GROUP_RECALL_ADMIN) {
-      return '已被' + groupStore.getUserInfo(item.senderId)!.name + '取消' + item.content + '的管理员权限'
+      return '已被群主取消' + item.content + '的管理员权限'
     }
   }
 })
@@ -199,13 +201,13 @@ const isCurrentUser = (uid: string) => {
 const getUserInfo = (item: any) => {
   switch (item.eventType) {
     case NoticeType.FRIEND_APPLY:
-    case NoticeType.GROUP_INVITE:
     case NoticeType.GROUP_MEMBER_DELETE:
-      return groupStore.getUserInfo(item.operateId)!
-    case NoticeType.ADD_ME:
-    case NoticeType.GROUP_INVITE_ME:
     case NoticeType.GROUP_SET_ADMIN:
     case NoticeType.GROUP_RECALL_ADMIN:
+      return groupStore.getUserInfo(item.operateId)!
+    case NoticeType.ADD_ME:
+    case NoticeType.GROUP_INVITE:
+    case NoticeType.GROUP_INVITE_ME:
     case NoticeType.GROUP_APPLY:
       return groupStore.getUserInfo(item.senderId)!
   }

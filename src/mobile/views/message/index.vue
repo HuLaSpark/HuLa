@@ -24,7 +24,7 @@
         <n-flex @click="toSimpleBio" align="center" :size="6" class="w-full">
           <n-avatar
             :size="38"
-            :src="AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar!)"
+            :src="AvatarUtils.getAvatarUrl(userStore.userInfo?.avatar ? userStore.userInfo.avatar : '/logoD.png')"
             fallback-src="/logo.png"
             round />
 
@@ -38,10 +38,12 @@
                   sans-serif;
               "
               class="text-(16px [--text-color])">
-              {{ userStore.userInfo!.name }}
+              {{ userStore.userInfo?.name ? userStore.userInfo.name : '无名字' }}
             </p>
             <p class="text-(10px [--text-color])">
-              {{ groupStore.getUserInfo(userStore.userInfo!.uid)?.locPlace || '中国' }}
+              {{
+                userStore.userInfo?.uid ? groupStore.getUserInfo(userStore.userInfo!.uid)?.locPlace || '中国' : '中国'
+              }}
             </p>
           </n-flex>
         </n-flex>
