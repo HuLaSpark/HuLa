@@ -29,6 +29,11 @@ export type Settings = {
     secret_id: string
     map_key: string
   }
+  ice_server: {
+    urls: string[]
+    username: string
+    credential: string
+  }
 }
 
 export type UpdateSettingsParams = {

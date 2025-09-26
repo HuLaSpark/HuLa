@@ -11,3 +11,9 @@ tencent:
   api_key: ''
   secret_id: ''
   map_key: ''
+
+ice_server:
+  urls:
+    - ''
+  username: ''
+  credential: ''
