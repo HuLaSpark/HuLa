@@ -117,7 +117,7 @@ import { useFileDownloadStore } from '@/stores/fileDownload'
 import { useGlobalStore } from '@/stores/global'
 import { useUserStore } from '@/stores/user'
 import { formatBytes, getFileSuffix } from '@/utils/Formatting'
-import { getFilesMeta, getUserAbsoluteVideosDir } from '@/utils/PathUtil'
+import { getFilesMeta } from '@/utils/PathUtil'
 
 const userStore = useUserStore()
 const globalStore = useGlobalStore()
@@ -287,7 +287,7 @@ const handleFileClick = async () => {
     const currentChatRoomId = globalStore.currentSession!.roomId // 这个id可能为群id可能为用户uid，所以不能只用用户uid
     const currentUserUid = userStore.userInfo!.uid as string
 
-    const resourceDirPath = await getUserAbsoluteVideosDir(currentUserUid, currentChatRoomId)
+    const resourceDirPath = await userStore.getUserRoomAbsoluteDir()
     const absolutePath = await join(resourceDirPath, props.body.fileName)
 
     const [fileMeta] = await getFilesMeta<FilesMeta>([absolutePath || props.body.url])
@@ -344,7 +344,7 @@ const downloadFileOnly = async () => {
     const currentChatRoomId = globalStore.currentSession!.roomId
     const currentUserUid = userStore.userInfo!.uid as string
 
-    const resourceDirPath = await getUserAbsoluteVideosDir(currentUserUid, currentChatRoomId)
+    const resourceDirPath = await userStore.getUserRoomAbsoluteDir()
     const absolutePath = await join(resourceDirPath, props.body.fileName)
 
     const [fileMeta] = await getFilesMeta<FilesMeta>([absolutePath || props.body.url])

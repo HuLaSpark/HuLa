@@ -23,7 +23,7 @@ import { isDiffNow } from '@/utils/ComputedTime.ts'
 import { extractFileName, removeTag } from '@/utils/Formatting'
 import { detectImageFormat, imageUrlToUint8Array, isImageUrl } from '@/utils/ImageUtils'
 import { recallMsg, removeGroupMember } from '@/utils/ImRequestUtils'
-import { detectRemoteFileType, getFilesMeta, getUserAbsoluteVideosDir } from '@/utils/PathUtil'
+import { detectRemoteFileType, getFilesMeta } from '@/utils/PathUtil'
 import { isMac } from '@/utils/PlatformConstants'
 import { useWindow } from './useWindow'
 
@@ -304,7 +304,7 @@ export const useChatMain = (isHistoryMode = false) => {
                 const currentChatRoomId = globalStore.currentSession!.roomId // 这个id可能为群id可能为用户uid，所以不能只用用户uid
                 const currentUserUid = userStore.userInfo!.uid as string
 
-                const resourceDirPath = await getUserAbsoluteVideosDir(currentUserUid, currentChatRoomId)
+                const resourceDirPath = await userStore.getUserRoomAbsoluteDir()
                 let absolutePath = await join(resourceDirPath, fileName)
 
                 const [fileMeta] = await getFilesMeta<FilesMeta>([fileStatus?.absolutePath || absolutePath || fileUrl])
@@ -422,7 +422,7 @@ export const useChatMain = (isHistoryMode = false) => {
           }
 
           // 这里不用状态中的absolute，是因为不能完全相信状态的绝对路径是否存在，有时不存在
-          const resourceDirPath = await getUserAbsoluteVideosDir(currentUserUid, currentChatRoomId)
+          const resourceDirPath = await userStore.getUserRoomAbsoluteDir()
           const absolutePath = await join(resourceDirPath, item.message.body.fileName)
 
           // 获取文件元信息（判断文件是否已下载/存在）
@@ -505,7 +505,7 @@ export const useChatMain = (isHistoryMode = false) => {
         const currentChatRoomId = globalStore.currentSession!.roomId // 这个id可能为群id可能为用户uid，所以不能只用用户uid
         const currentUserUid = userStore.userInfo!.uid as string
 
-        const resourceDirPath = await getUserAbsoluteVideosDir(currentUserUid, currentChatRoomId)
+        const resourceDirPath = await userStore.getUserRoomAbsoluteDir()
         let absolutePath = await join(resourceDirPath, fileName)
 
         const [fileMeta] = await getFilesMeta<FilesMeta>([fileStatus?.absolutePath || absolutePath || fileUrl])

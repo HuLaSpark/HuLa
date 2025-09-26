@@ -171,7 +171,7 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
 
     // 检查文件大小
     if (fixedFile.size > this.MAX_UPLOAD_SIZE) {
-      throw new AppException('图片大小不能超过2MB')
+      throw new AppException('图片大小不能超过2MB', { showError: true })
     }
 
     return fixedFile

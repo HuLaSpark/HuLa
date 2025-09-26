@@ -2,19 +2,16 @@ import { join, resourceDir } from '@tauri-apps/api/path'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { BaseDirectory, exists } from '@tauri-apps/plugin-fs'
 import { MsgEnum } from '@/enums'
-import { useCommon } from '@/hooks/useCommon.ts'
 import { useWindow } from '@/hooks/useWindow'
 import { useChatStore } from '@/stores/chat'
-import { useGlobalStore } from '@/stores/global'
+import { useUserStore } from '@/stores/user'
 import { useVideoViewer as useVideoViewerStore } from '@/stores/videoViewer'
-import { getUserVideosDir } from '@/utils/PathUtil'
 
 /** 视频处理 */
 export const useVideoViewer = () => {
   const { createWebviewWindow } = useWindow()
   const VideoViewerStore = useVideoViewerStore()
-  const { userUid } = useCommon()
-  const globalStore = useGlobalStore()
+  const userStore = useUserStore()
 
   // 获取视频文件名
   const getVideoFilename = (url: string) => {
@@ -60,9 +57,7 @@ export const useVideoViewer = () => {
   const getLocalVideoPath = async (url: string) => {
     if (!url) return ''
     const filename = getVideoFilename(url)
-    const roomId = globalStore.currentSession?.roomId
-    if (!userUid.value || !roomId) return ''
-    const videosDir = await getUserVideosDir(userUid.value, roomId)
+    const videosDir = await userStore.getUserRoomDir()
     return await join(videosDir, filename)
   }
 

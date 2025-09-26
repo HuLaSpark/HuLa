@@ -187,9 +187,8 @@
 </template>
 
 <script setup lang="ts">
-import { join } from '@tauri-apps/api/path'
 import { open } from '@tauri-apps/plugin-dialog'
-import { copyFile, readFile } from '@tauri-apps/plugin-fs'
+import { readFile } from '@tauri-apps/plugin-fs'
 import { FOOTER_HEIGHT, MAX_FOOTER_HEIGHT, MIN_FOOTER_HEIGHT, TOOLBAR_HEIGHT } from '@/common/constants'
 import FileUploadProgress from '@/components/rightBox/FileUploadProgress.vue'
 import LocationModal from '@/components/rightBox/location/LocationModal.vue'
@@ -199,15 +198,14 @@ import { type SelectionRange, useCommon } from '@/hooks/useCommon.ts'
 import { useGlobalShortcut } from '@/hooks/useGlobalShortcut.ts'
 import { useMitt } from '@/hooks/useMitt'
 import { useWindow } from '@/hooks/useWindow'
-import type { FilesMeta, FriendItem, SessionItem } from '@/services/types'
+import type { FriendItem, SessionItem } from '@/services/types'
 import { useChatStore } from '@/stores/chat'
 import { useContactStore } from '@/stores/contacts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useHistoryStore } from '@/stores/history'
 import { useSettingStore } from '@/stores/setting'
-import { useUserStore } from '@/stores/user'
 import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
-import { getFilesMeta, getUserAbsoluteVideosDir } from '@/utils/PathUtil'
+import FileUtil from '~/src/utils/FileUtil'
 
 const { detailId } = defineProps<{
   detailId: SessionItem['detailId']
@@ -231,7 +229,6 @@ const recentEmojis = computed(() => {
   return historyStore.emoji.slice(0, 15)
 })
 const { insertNodeAtRange, triggerInputEvent, processFiles, imgPaste } = useCommon()
-const userStore = useUserStore()
 
 // 使用全局布局状态
 const { footerHeight, setFooterHeight } = useChatLayoutGlobal()
@@ -392,51 +389,10 @@ watch(emojiShow, (newValue) => {
 
 // 文件选择（不限制类型）
 const handleFileOpen = async () => {
-  // 获取文件路径列表
-  const selected = await open({
-    multiple: true
-    // 不设置filters，允许选择所有文件类型
-  })
-
-  if (selected && Array.isArray(selected)) {
-    const filesMeta = await getFilesMeta<FilesMeta>(selected)
-
-    const copyUploadFile = async () => {
-      console.log('复制上传文件')
-      const currentChatRoomId = globalStore.currentSession!.roomId // 这个id可能为群id可能为用户uid，所以不能只用用户uid
-      const currentUserUid = userStore.userInfo!.uid as string
-
-      const userResourceDir = await getUserAbsoluteVideosDir(currentUserUid, currentChatRoomId)
-
-      for (const filePathStr of selected) {
-        const fileMeta = filesMeta.find((f) => f.path === filePathStr)
-        if (fileMeta) {
-          copyFile(filePathStr, await join(userResourceDir, fileMeta.name))
-        }
-      }
-    }
-
-    await copyUploadFile()
-
-    // 获取选中文件的类型
-
-    const files = await Promise.all(
-      selected.map(async (path) => {
-        const fileData = await readFile(path)
-        const fileName = extractFileName(path)
-        const blob = new Blob([new Uint8Array(fileData)])
-
-        // 找到对应路径的文件，并且获取其类型
-        const fileMeta = filesMeta.find((f) => f.path === path)
-        const fileType = fileMeta?.mime_type || fileMeta?.file_type
-
-        // 最后手动传入blob中，因为blob无法自动判断文件类型
-        return new File([blob], fileName, { type: fileType })
-      })
-    )
-    // 使用processFiles方法进行文件类型验证
-    await processFiles(files, MsgInputRef.value.messageInputDom, MsgInputRef.value?.showFileModal)
-  }
+  const filesData = await FileUtil.openAndCopyFile()
+  if (!filesData) return
+  // 使用processFiles方法进行文件类型验证
+  await processFiles(filesData.files, MsgInputRef.value.messageInputDom, MsgInputRef.value?.showFileModal)
 }
 
 // 图片选择（只能选择图片类型）

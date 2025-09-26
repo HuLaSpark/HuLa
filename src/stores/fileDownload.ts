@@ -3,9 +3,8 @@ import { BaseDirectory, exists, writeFile } from '@tauri-apps/plugin-fs'
 import { defineStore } from 'pinia'
 import { StoresEnum } from '@/enums'
 import type { FilesMeta } from '@/services/types'
-import { useGlobalStore } from '@/stores/global'
 import { useUserStore } from '@/stores/user'
-import { getFilesMeta, getUserAbsoluteVideosDir, getUserVideosDir } from '@/utils/PathUtil'
+import { getFilesMeta } from '@/utils/PathUtil'
 
 export interface FileDownloadStatus {
   /** 文件是否已下载 */
@@ -30,7 +29,6 @@ export const useFileDownloadStore = defineStore(
   StoresEnum.FILE_DOWNLOAD,
   () => {
     const userStore = useUserStore()
-    const globalStore = useGlobalStore()
 
     // 存储文件下载状态的Map，key为文件URL，value为下载状态
     const downloadStatusMap = ref<Map<string, FileDownloadStatus>>(new Map())
@@ -94,7 +92,7 @@ export const useFileDownloadStore = defineStore(
         }
       }
 
-      const resourceDirPath = await getUserAbsoluteVideosDir(options.userId, options.roomId)
+      const resourceDirPath = await userStore.getUserRoomAbsoluteDir()
       const absolutePath = await join(resourceDirPath, options.fileName)
 
       // 如果直接知道文件不存在，那就直接刷新，如果不知道则再做处理
@@ -155,12 +153,7 @@ export const useFileDownloadStore = defineStore(
      */
     const checkFileExists = async (fileUrl: string, fileName: string): Promise<boolean> => {
       try {
-        const userUid = userStore.userInfo!.uid
-        const roomId = globalStore.currentSession!.roomId
-
-        if (!userUid || !roomId) return false
-
-        const downloadsDir = await getUserVideosDir(userUid.toString(), roomId.toString())
+        const downloadsDir = await userStore.getUserRoomDir()
         const filePath = await join(downloadsDir, fileName)
 
         const fileExists = await exists(filePath, { baseDir: BaseDirectory.Resource })
@@ -197,13 +190,6 @@ export const useFileDownloadStore = defineStore(
      */
     const downloadFile = async (fileUrl: string, fileName: string): Promise<string | null> => {
       try {
-        const userUid = userStore.userInfo!.uid
-        const roomId = globalStore.currentSession!.roomId
-
-        if (!userUid || !roomId) {
-          throw new Error('用户或房间信息不完整')
-        }
-
         // 检查文件是否已存在
         const isExists = await checkFileExists(fileUrl, fileName)
         if (isExists) {
@@ -218,7 +204,7 @@ export const useFileDownloadStore = defineStore(
         })
 
         // 获取下载目录
-        const downloadsDir = await getUserVideosDir(userUid.toString(), roomId.toString())
+        const downloadsDir = await userStore.getUserRoomDir()
         const filePath = await join(downloadsDir, fileName)
 
         // 下载文件
