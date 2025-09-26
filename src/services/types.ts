@@ -121,6 +121,7 @@ export type GroupDetailReq = {
   remark: string
   /** 我的群昵称 */
   myName: string
+  allowScanEnter: boolean
 }
 
 export type GroupListReq = {
@@ -635,6 +636,7 @@ export type SessionItem = {
   myName?: string
   /** 是否选中（非后端） */
   isCheck?: boolean
+  allowScanEnter: boolean
 }
 
 /** 消息已读未读数列表项 */

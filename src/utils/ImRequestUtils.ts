@@ -1,6 +1,8 @@
 import { ImUrlEnum, type NotificationTypeEnum } from '@/enums'
 import type { CacheBadgeReq, LoginUserReq, ModifyUserInfoType, RegisterUserReq, UserItem } from '@/services/types'
 import { ErrorType, invokeSilently, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
+import { useChatStore } from '../stores/chat'
+import { useGroupStore } from '../stores/group'
 
 /**
  * IM 请求参数接口
@@ -438,11 +440,23 @@ export async function groupList() {
   })
 }
 
-export async function updateRoomInfo(body: { id: string; name: string; avatar: string }) {
-  return await imRequest({
+export async function updateRoomInfo(body: { id: string; name?: string; avatar?: string; allowScanEnter?: boolean }) {
+  const chatStore = useChatStore()
+  const groupStore = useGroupStore()
+
+  body.name = body.name ?? groupStore.countInfo!.groupName
+  body.avatar = body.avatar ?? groupStore.countInfo!.avatar
+  body.allowScanEnter = body.allowScanEnter ?? groupStore.countInfo!.allowScanEnter
+
+  await imRequest({
     url: ImUrlEnum.UPDATE_ROOM_INFO,
     body
   })
+
+  chatStore.updateSession(body.id, body)
+  groupStore.updateGroupDetail(body.id, body)
+
+  window.$message.success('更新成功')
 }
 
 export async function updateMyRoomInfo(body: { id: string; myName: string; remark: string }) {
@@ -459,7 +473,7 @@ export async function searchGroup(params: { account: string }) {
   })
 }
 
-export async function applyGroup(body: { account: string; msg: string }) {
+export async function applyGroup(body: { account: string; msg: string; type: number }) {
   return await imRequest({
     url: ImUrlEnum.APPLY_GROUP,
     body

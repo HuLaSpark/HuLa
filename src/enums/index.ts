@@ -106,7 +106,7 @@ export enum MittEnum {
   VOICE_RECORD_TOGGLE = 'voiceRecordToggle',
   /** 消息多选 */
   MSG_MULTI_CHOOSE = 'msgMultiChoose',
-  /** 扫码登录事件 */
+  /** 扫码事件 */
   QR_SCAN_EVENT = 'qrScanEvent'
 }
 

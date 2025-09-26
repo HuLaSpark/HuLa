@@ -26,7 +26,7 @@ import { useMitt } from '@/hooks/useMitt'
 import router from '@/router'
 import { useGlobalStore } from '@/stores/global'
 import { useUserStore } from '@/stores/user'
-import { scanQRCodeAPI } from '@/utils/ImRequestUtils'
+import { getGroupDetail, scanQRCodeAPI } from '@/utils/ImRequestUtils'
 
 interface ScanData {
   type: string // 必须有
@@ -42,8 +42,6 @@ const handleScanLogin = async (data: ScanData) => {
   const { qrId } = data
 
   const result = await scanQRCodeAPI({ qrId: qrId })
-
-  // console.log('获取的扫码接口请求结果：', result)
 
   router.push({
     name: 'mobileConfirmQRLogin',
@@ -87,6 +85,30 @@ const handleScanAddFriend = async (data: ScanData) => {
 }
 
 /**
+ * 扫码进群
+ */
+const handleScanEnterGroup = async (data: ScanData) => {
+  console.log('尝试扫码加群', data, Object.hasOwn(data, 'roomId'))
+  if (!Object.hasOwn(data, 'roomId')) {
+    window.$message.warning('加群二维码不存在roomId')
+    throw new Error('加群二维码不存在roomId:', data as any)
+  }
+
+  const roomId = data.roomId as string
+
+  // 可能是扫码出来的
+  const groupDetail = await getGroupDetail(roomId)
+
+  globalStore.addGroupModalInfo.account = groupDetail.account
+  globalStore.addGroupModalInfo.name = groupDetail.groupName
+  globalStore.addGroupModalInfo.avatar = groupDetail.avatar
+
+  setTimeout(() => {
+    router.push({ name: 'mobileConfirmAddGroup' })
+  }, 100)
+}
+
+/**
  * 监听事件扫码
  */
 useMitt.on(MittEnum.QR_SCAN_EVENT, async (data: ScanData) => {
@@ -95,20 +117,31 @@ useMitt.on(MittEnum.QR_SCAN_EVENT, async (data: ScanData) => {
     throw new Error('二维码缺少type字段:', data as any)
   }
 
-  if (data.type === 'login') {
-    try {
-      await handleScanLogin(data)
-    } catch (error) {
-      console.log('扫码尝试获取Token失败:', error)
-    }
-  }
-
-  if (data.type === 'addFriend') {
-    try {
-      await handleScanAddFriend(data)
-    } catch (error) {
-      console.log('扫码添加好友失败:', error)
-    }
+  switch (data.type) {
+    case 'login':
+      try {
+        await handleScanLogin(data)
+      } catch (error) {
+        console.log('扫码尝试获取Token失败:', error)
+      }
+      break
+    case 'addFriend':
+      try {
+        await handleScanAddFriend(data)
+      } catch (error) {
+        console.log('扫码添加好友失败:', error)
+      }
+      break
+    case 'scanEnterGroup':
+      try {
+        await handleScanEnterGroup(data)
+      } catch (error) {
+        console.log('扫码加入群失败:', error)
+      }
+      break
+    default:
+      window.$message.warning('识别不到正确的二维码')
+      throw new Error('二维码缺少type字段:', data as any)
   }
 })
 

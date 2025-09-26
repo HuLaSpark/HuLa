@@ -83,11 +83,12 @@ export const useGroupStore = defineStore(
     })
 
     const updateGroupDetail = async (roomId: string, detail: Partial<GroupDetailReq>) => {
-      let targetGroup = groupDetails.value.find((item) => item.roomId === roomId)!
-      targetGroup = {
+      const targetGroup = groupDetails.value.find((item) => item.roomId === roomId)!
+      const newData = {
         ...targetGroup,
         ...detail
       }
+      Object.assign(targetGroup, newData)
     }
 
     const updateOnlineNum = (options: { uid?: string; roomId?: string; onlineNum?: number; isAdd?: boolean }) => {
@@ -174,6 +175,11 @@ export const useGroupStore = defineStore(
 
     const removeGroupDetail = (roomId: string) => {
       groupDetails.value = groupDetails.value.filter((item) => item.roomId !== roomId)
+    }
+
+    const isAdminOrLord = () => {
+      const currentUser = getCurrentUser()
+      return isAdmin.value(currentUser.uid) || isCurrentLord.value(currentUser.uid)
     }
 
     /**
@@ -530,7 +536,8 @@ export const useGroupStore = defineStore(
       allUserInfo,
       getUserDisplayName,
       isCurrentLord,
-      isAdmin
+      isAdmin,
+      isAdminOrLord
     }
   },
   {

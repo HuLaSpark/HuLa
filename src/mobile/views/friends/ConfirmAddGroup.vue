@@ -8,7 +8,7 @@
           :hidden-right="true"
           :enable-default-background="false"
           :enable-shadow="false"
-          room-name="添加好友" />
+          room-name="添加群聊" />
       </template>
 
       <template #container="{ height }">
@@ -76,7 +76,8 @@ watch(
 const addFriend = async () => {
   await applyGroup({
     msg: requestMsg.value,
-    account: String(globalStore.addGroupModalInfo.account)
+    account: String(globalStore.addGroupModalInfo.account),
+    type: 2
   })
   window.$message.success('已发送群聊申请')
   setTimeout(() => {

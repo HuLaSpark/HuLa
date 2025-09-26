@@ -20,6 +20,7 @@ import router from '@/router'
 import { useSettingStore } from '@/stores/setting.ts'
 import { isDesktop, isMobile, isWindows } from '@/utils/PlatformConstants'
 import LockScreen from '@/views/LockScreen.vue'
+import { getSettings } from './services/tauriCommand'
 
 const appWindow = WebviewWindow.getCurrent()
 const { createWebviewWindow } = useWindow()
@@ -91,6 +92,9 @@ watch(
   },
   { immediate: true }
 )
+
+const settings = await getSettings()
+console.log(settings)
 
 appWindow.listen(EventEnum.EXIT, async () => {
   await exit(0)
