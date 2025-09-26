@@ -137,7 +137,7 @@ const groupChatList = computed(() => {
   return [...groupStore.groupDetails]
     .map((item) => ({
       ...item,
-      avatar: AvatarUtils.getAvatarUrl(item.avatar || '/logoD.png')
+      avatar: AvatarUtils.getAvatarUrl(item.avatar)
     }))
     .sort((a, b) => {
       // 将roomId为'1'的群聊排在最前面
@@ -285,7 +285,7 @@ const loadSessions = async () => {
     // 使用联系人作为会话列表，并处理头像
     sessionList.value = contactList.value.map((item) => ({
       ...item,
-      avatar: AvatarUtils.getAvatarUrl(item.avatar || '/logoD.png')
+      avatar: AvatarUtils.getAvatarUrl(item.avatar)
     }))
   } catch (error) {
     console.error('加载会话失败:', error)

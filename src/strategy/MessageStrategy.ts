@@ -237,8 +237,6 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
    * @returns 处理后的消息
    */
   async getMsg(msgInputValue: string, replyValue: any, fileList?: File[]): Promise<any> {
-    console.log('开始处理图片消息:', msgInputValue, replyValue, fileList?.length ? '有附件文件' : '无附件文件')
-
     // 优先处理fileList中的文件
     if (fileList && fileList.length > 0) {
       const file = fileList[0]

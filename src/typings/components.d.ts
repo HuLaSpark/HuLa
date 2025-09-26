@@ -41,6 +41,7 @@ declare module 'vue' {
     Image: typeof import('./../components/rightBox/renderMessage/Image.vue')['default']
     InfoPopover: typeof import('./../components/common/InfoPopover.vue')['default']
     LoadingSpinner: typeof import('./../components/common/LoadingSpinner.vue')['default']
+    Location: typeof import('./../components/rightBox/renderMessage/Location.vue')['default']
     LocationMap: typeof import('./../components/rightBox/location/LocationMap.vue')['default']
     LocationModal: typeof import('./../components/rightBox/location/LocationModal.vue')['default']
     MeasuredItem: typeof import('./../mobile/components/virtual-scroll/MeasuredItem.vue')['default']

@@ -149,7 +149,7 @@
             </template>
             <span>语音信息</span>
           </n-popover>
-          <n-popover trigger="hover" :show-arrow="false" placement="bottom">
+          <n-popover v-if="!isMac()" trigger="hover" :show-arrow="false" placement="bottom">
             <template #trigger>
               <svg @click="showLocationModal = true" class="mr-18px">
                 <use href="#local"></use>
@@ -204,8 +204,9 @@ import { useContactStore } from '@/stores/contacts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useHistoryStore } from '@/stores/history'
 import { useSettingStore } from '@/stores/setting'
+import FileUtil from '@/utils/FileUtil'
 import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
-import FileUtil from '~/src/utils/FileUtil'
+import { isMac } from '@/utils/PlatformConstants'
 
 const { detailId } = defineProps<{
   detailId: SessionItem['detailId']

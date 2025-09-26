@@ -84,6 +84,11 @@ const checkFileType = (
 
   // 如果是File对象，先检查MIME类型，再检查扩展名
   const file = fileOrName as File
+  const extension = getFileExtension(file.name)
+  // 特殊处理：.ts文件可能被错误地设置为video/mp2t MIME类型（MPEG Transport Stream）
+  if (extension === 'ts' && mimeTypePrefix === 'video/') {
+    return false
+  }
 
   // 优先检查MIME类型
   if (file.type && file.type.startsWith(mimeTypePrefix)) {
@@ -91,7 +96,6 @@ const checkFileType = (
   }
 
   // 如果MIME类型为空或不明确，检查文件扩展名
-  const extension = getFileExtension(file.name)
   return supportedExtensions.includes(extension as any)
 }
 
