@@ -147,6 +147,7 @@ const applyList = computed(() => {
 // 判断是否为好友申请或者群申请、群邀请
 const isFriendApplyOrGroupInvite = (item: any) => {
   return (
+    item.eventType === NoticeType.GROUP_APPLY ||
     item.eventType === NoticeType.FRIEND_APPLY ||
     item.eventType === NoticeType.GROUP_INVITE ||
     item.eventType === NoticeType.GROUP_INVITE_ME ||
@@ -158,7 +159,9 @@ const applyMsg = computed(() => (item: any) => {
   if (props.type === 'friend') {
     return isCurrentUser(item.senderId) ? (isAccepted(item) ? '已同意你的请求' : '正在验证你的邀请') : '请求加为好友'
   } else {
-    if (isFriendApplyOrGroupInvite(item)) {
+    if (item.eventType === NoticeType.GROUP_APPLY) {
+      return '申请加入群聊'
+    } else if (isFriendApplyOrGroupInvite(item)) {
       return isCurrentUser(item.senderId) ? '已同意加入' + item.content : '邀请你加入' + item.content
     } else if (item.eventType === NoticeType.GROUP_MEMBER_DELETE) {
       return '已被' + groupStore.getUserInfo(item.senderId)!.name + '踢出' + item.content
@@ -203,6 +206,7 @@ const getUserInfo = (item: any) => {
     case NoticeType.GROUP_INVITE_ME:
     case NoticeType.GROUP_SET_ADMIN:
     case NoticeType.GROUP_RECALL_ADMIN:
+    case NoticeType.GROUP_APPLY:
       return groupStore.getUserInfo(item.senderId)!
   }
 }
