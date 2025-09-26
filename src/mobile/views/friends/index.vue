@@ -191,6 +191,7 @@ const getUserInfo = (item: any) => {
     case NoticeType.ADD_ME:
     case NoticeType.GROUP_INVITE_ME:
     case NoticeType.GROUP_SET_ADMIN:
+    case NoticeType.GROUP_APPLY:
     case NoticeType.GROUP_RECALL_ADMIN: {
       return groupStore.getUserInfo(item.senderId)!
     }

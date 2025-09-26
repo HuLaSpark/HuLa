@@ -574,8 +574,6 @@ export enum ImUrlEnum {
   GET_ANNOUNCEMENT_LIST = 'getAnnouncementList',
 
   // 群聊申请相关
-  /** 处理加群申请 */
-  APPLY_HANDLE = 'applyHandle',
   /** 申请加群 */
   APPLY_GROUP = 'applyGroup',
 

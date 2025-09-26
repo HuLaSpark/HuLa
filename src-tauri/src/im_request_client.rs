@@ -239,7 +239,6 @@ pub enum ImUrl {
     DeleteAnnouncement,
     PushAnnouncement,
     GetAnnouncementList,
-    ApplyHandle,
     ApplyGroup,
     SearchGroup,
     UpdateMyRoomInfo,
@@ -329,7 +328,6 @@ impl ImUrl {
             ImUrl::GetAnnouncementList => (http::Method::GET, "im/room/announcement/list"),
 
             // 群聊申请相关
-            ImUrl::ApplyHandle => (http::Method::POST, "im/room/apply/adminHandleApply"),
             ImUrl::ApplyGroup => (http::Method::POST, "im/room/apply/group"),
 
             // 群聊搜索和管理
@@ -442,7 +440,6 @@ impl ImUrl {
             "getAnnouncementList" => Ok(ImUrl::GetAnnouncementList),
 
             // 群聊申请相关
-            "applyHandle" => Ok(ImUrl::ApplyHandle),
             "applyGroup" => Ok(ImUrl::ApplyGroup),
 
             // 群聊搜索和管理
