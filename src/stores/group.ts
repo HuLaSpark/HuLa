@@ -474,6 +474,7 @@ export const useGroupStore = defineStore(
     }
 
     const getUser = (roomId: string, uid: string): UserItem => {
+      console.log(userListMap, roomId)
       return userListMap[roomId].filter((item) => item.uid === uid)[0]
     }
 

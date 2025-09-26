@@ -330,6 +330,7 @@ import { getAllUserState, getCaptcha, getUserDetail, register, sendCaptcha } fro
 import { isAndroid } from '@/utils/PlatformConstants'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 import { loginCommand } from '../services/tauriCommand'
+import { useCachedStore } from '../stores/cached'
 import { useChatStore } from '../stores/chat'
 import { useConfigStore } from '../stores/config'
 import { useGlobalStore } from '../stores/global'
@@ -596,6 +597,7 @@ const configStore = useConfigStore()
 const chatStore = useChatStore()
 const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
+const cachedStore = useCachedStore()
 
 const initData = async () => {
   info('init all data')
@@ -607,6 +609,8 @@ const initData = async () => {
   }
   // 加载所有会话
   await chatStore.getSessionList(true)
+  console.log(chatStore.sessionList)
+  // debugger
   // 设置全局会话为第一个
   globalStore.currentSessionRoomId = chatStore.sessionList[0].roomId
 
@@ -615,7 +619,8 @@ const initData = async () => {
   await Promise.all([
     ...groupSessions.map((session) => groupStore.getGroupUserList(session.roomId, true)),
     groupStore.setGroupDetails(),
-    chatStore.setAllSessionMsgList(1)
+    chatStore.setAllSessionMsgList(20),
+    cachedStore.getAllBadgeList()
   ])
   info('init all data complete')
 }
@@ -648,10 +653,12 @@ const normalLogin = async (auto = false) => {
       window.$message.success('登录成功')
       // 开启 ws 连接
       await rustWebSocketClient.initConnect()
-      // 登录处理
-      await loginProcess(res.token, res.refreshToken, res.client)
       // 初始化数据
       await initData()
+      // 登录处理
+      await loginProcess(res.token, res.refreshToken, res.client)
+
+      info('22222')
     })
     .catch((e: any) => {
       console.error('登录失败，出现未知错误:', e)

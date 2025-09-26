@@ -6,7 +6,6 @@ import { useRoute } from 'vue-router'
 import { AppException, ErrorType } from '@/common/exception'
 import { type MessageStatusEnum, MsgEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
 import type { MarkItemType, MessageType, RevokedMsgType, SessionItem } from '@/services/types'
-import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { useUserStore } from '@/stores/user.ts'
@@ -51,7 +50,7 @@ export const useChatStore = defineStore(
     const userStore = useUserStore()
     const globalStore = useGlobalStore()
     const groupStore = useGroupStore()
-    const contactStore = useContactStore()
+    // const _contactStore = useContactStore()
 
     // 会话列表
     const sessionList = ref<SessionItem[]>([])
@@ -271,23 +270,23 @@ export const useChatStore = defineStore(
         sortAndUniqueSessionList()
 
         // 保存当前选中的会话ID
-        const currentSelectedRoomId = globalStore.currentSession?.roomId
+        // const currentSelectedRoomId = globalStore.currentSession?.roomId
 
         // sessionList[0].unreadCount = 0
         if (!isFirstInit || isFresh) {
           isFirstInit = true
           // 只有在没有当前选中会话时，才设置第一个会话为当前会话
-          if (!currentSelectedRoomId || currentSelectedRoomId === '1') {
-            globalStore.updateCurrentSessionRoomId(data[0].roomId)
-          }
+          // if (!currentSelectedRoomId || currentSelectedRoomId === '1') {
+          // globalStore.updateCurrentSessionRoomId(data[0].roomId)
+          // }
 
           // 用会话列表第一个去请求消息列表
-          await getMsgList()
+          // await getMsgList()
           // 请求第一个群成员列表
-          globalStore.currentSession?.type === RoomTypeEnum.GROUP &&
-            (await groupStore.getGroupUserList(globalStore.currentSession!.roomId))
+          // globalStore.currentSession?.type === RoomTypeEnum.GROUP &&
+          //   (await groupStore.getGroupUserList(globalStore.currentSession!.roomId))
           // 联系人列表
-          await contactStore.getContactList(true)
+          // await contactStore.getContactList(true)
 
           // 确保在会话列表加载完成后更新总未读数
           await nextTick(() => {
