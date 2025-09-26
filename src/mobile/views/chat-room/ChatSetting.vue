@@ -128,7 +128,7 @@
                 </div>
               </div>
 
-              <div v-if="isGroup && (isLord || isAdmin)" class="flex justify-between py-15px items-center">
+              <div v-if="groupStore.isAdminOrLord()" class="flex justify-between py-15px items-center">
                 <div class="text-14px">本群昵称</div>
                 <div class="text-12px text-#6E6E6E flex flex-wrap gap-10px items-center">
                   <input
@@ -449,13 +449,7 @@ const handleGroupInfoUpdate = async () => {
     name: nameValue.value,
     avatar: avatarValue.value
   })
-  // 更新本地会话状态
-  // chatStore.updateSession(activeItem.value.roomId, {
-  //   avatar: ''
-  // })
-
   activeItem.value.avatar = avatarValue.value
-  window.$message.success('群信息已更新')
 }
 
 // 获取群组详情和成员信息

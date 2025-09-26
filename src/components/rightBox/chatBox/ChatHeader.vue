@@ -304,6 +304,24 @@
                     :value="activeItem.muteNotification === NotificationTypeEnum.NOT_DISTURB"
                     @update:value="handleNotification" />
                 </div>
+                <template v-if="groupStore.isAdminOrLord()">
+                  <div class="h-1px bg-[--setting-item-line] m-[10px_0]"></div>
+
+                  <div class="flex-between-center">
+                    <p>允许扫码进群</p>
+                    <n-switch
+                      size="small"
+                      :value="groupStore.countInfo!.allowScanEnter"
+                      @update:value="
+                        (val: any) => {
+                          updateRoomInfo({
+                            id: groupStore.countInfo!.roomId,
+                            allowScanEnter: val
+                          })
+                        }
+                      " />
+                  </div>
+                </template>
               </n-flex>
             </div>
 
@@ -399,7 +417,7 @@
         <div class="flex flex-col items-center gap-16px">
           <n-qr-code
             class="rounded-12px"
-            :value="activeItem.account"
+            :value="JSON.stringify({ type: 'scanEnterGroup', roomId: activeItem.roomId })"
             :size="200"
             :color="themes.content === ThemeEnum.DARK ? '#ffffff' : '#000000'"
             :background-color="themes.content === ThemeEnum.DARK ? '#2d2d2d' : '#ffffff'"
@@ -614,14 +632,8 @@ const {
     // 调用更新群头像的API
     await updateRoomInfo({
       id: activeItem.value.roomId,
-      name: activeItem.value.name,
       avatar: downloadUrl
     })
-    // 更新本地会话状态
-    chatStore.updateSession(activeItem.value.roomId, {
-      avatar: downloadUrl
-    })
-    window.$message.success('群头像已更新')
   }
 })
 
@@ -997,16 +1009,8 @@ const saveGroupName = async () => {
     // 调用更新群信息的API
     await updateRoomInfo({
       id: activeItem.value.roomId,
-      name: trimmedName,
-      avatar: activeItem.value.avatar
-    })
-
-    // 更新本地会话状态
-    chatStore.updateSession(activeItem.value.roomId, {
       name: trimmedName
     })
-
-    window.$message.success('群名称已更新')
     // 清空待保存的群信息
     pendingGroupInfo.value = null
   } catch (error) {
