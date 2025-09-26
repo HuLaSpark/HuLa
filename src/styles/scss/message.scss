@@ -13,6 +13,10 @@
     box-shadow: inset 0 0 0 1px #909090;
   }
 
+  &.active-context-menu {
+    box-shadow: inset 0 0 0 1px var(--active-context-menu);
+  }
+
   .text {
     color: #808080;
     transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1);

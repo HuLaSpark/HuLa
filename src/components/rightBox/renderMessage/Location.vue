@@ -1,5 +1,5 @@
 <template>
-  <main class="location-message" @click.stop="handleLocationClick">
+  <main class="location-message" @dblclick.stop="handleLocationClick">
     <!-- 位置图标和标题 -->
     <n-flex align="center" justify="space-between" class="pb-8px">
       <div class="flex-y-center gap-8px">

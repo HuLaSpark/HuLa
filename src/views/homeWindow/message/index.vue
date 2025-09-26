@@ -8,7 +8,11 @@
         :class="[
           { active: globalStore.currentSession?.roomId === item.roomId },
           { 'bg-[--bg-msg-first-child] rounded-12px relative': item.top },
-          { 'context-menu-active': activeContextMenuRoomId === item.roomId }
+          { 'context-menu-active': activeContextMenuRoomId === item.roomId },
+          {
+            'active-context-menu':
+              activeContextMenuRoomId === item.roomId && globalStore.currentSession?.roomId === item.roomId
+          }
         ]"
         :data-key="item.roomId"
         :menu="menuList"
@@ -111,7 +115,6 @@
 </template>
 <script lang="ts" setup name="message">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import SysNTF from '@/components/common/SystemNotification.tsx'
 import { MittEnum, RoomTypeEnum, ThemeEnum } from '@/enums'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useMessage } from '@/hooks/useMessage.ts'
@@ -238,8 +241,9 @@ onBeforeMount(async () => {
 })
 
 onMounted(async () => {
-  SysNTF
-  // 监听其他窗口发来的WebSocket发送请求
+  // TODO: 待完善
+  // SysNTF
+
   // TODO：频繁切换会话会导致频繁请求，切换的时候也会有点卡顿
   if (appWindow.label === 'home') {
     await addListener(
