@@ -118,10 +118,10 @@ export const useFileUploadQueue = () => {
     queue.isActive = false
     queue.endTime = Date.now()
 
-    // 1秒后清理队列
+    // 2秒后清理队列
     setTimeout(() => {
       clearQueue()
-    }, 1000)
+    }, 2000)
   }
 
   /**

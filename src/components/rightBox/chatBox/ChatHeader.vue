@@ -156,7 +156,7 @@
           <!-- 群聊侧边栏选项 -->
           <template v-else>
             <div class="box-item cursor-default">
-              <n-flex align="center">
+              <n-flex align="center" justify="space-between" :size="0">
                 <!-- 群头像 -->
                 <div class="relative group">
                   <!-- 群主可以编辑头像，显示黑色蒙层和上传图标 -->
@@ -232,13 +232,12 @@
                   </n-flex>
                 </n-flex>
 
-                <n-button class="rounded-8px" size="small" type="primary" @click="showQRCodeModal = true">
-                  <template #icon>
-                    <svg class="size-12px">
-                      <use href="#share"></use>
-                    </svg>
-                  </template>
-                </n-button>
+                <div
+                  class="flex-center cursor-pointer bg-#e3e3e3 dark:bg-#303030 border-(1px solid #90909080) gap-6px px-4px py-6px rounded-6px"
+                  @click="showQRCodeModal = true">
+                  <svg class="size-16px"><use href="#pay-code-one"></use></svg>
+                  <p class="text-(12px [--chat-text-color])">二维码</p>
+                </div>
               </n-flex>
             </div>
 
@@ -416,16 +415,16 @@
       <div class="flex flex-col gap-20px p-[22px_20px_20px_22px] select-none">
         <div class="flex flex-col items-center gap-16px">
           <n-qr-code
-            class="rounded-12px"
+            style="border-radius: 16px"
             :value="JSON.stringify({ type: 'scanEnterGroup', roomId: activeItem.roomId })"
             :size="200"
-            :color="themes.content === ThemeEnum.DARK ? '#ffffff' : '#000000'"
-            :background-color="themes.content === ThemeEnum.DARK ? '#2d2d2d' : '#ffffff'"
+            :color="themes.content === ThemeEnum.DARK ? '#202020' : '#000000'"
+            :background-color="themes.content === ThemeEnum.DARK ? '#e3e3e3' : '#e3e3e382'"
             :icon-src="AvatarUtils.getAvatarUrl(activeItem.avatar)" />
 
           <div class="text-center">
-            <p class="text-14px text-[--text-color] mb-8px">{{ activeItem.name }}</p>
-            <p class="text-12px text-[--text-color-3]">扫描二维码加入群聊</p>
+            <p class="text-(16px [--text-color]) font-bold pb-24px">{{ activeItem.name }}</p>
+            <p class="text-(12px [--chat-text-color])">扫描二维码加入群聊</p>
           </div>
         </div>
       </div>

@@ -6,7 +6,7 @@
     <!-- 进度条头部信息 -->
     <div class="flex-y-center pb-10px">
       <div class="flex-center gap-8px">
-        <svg class="size-16px">
+        <svg class="size-16px color-[--text-color]">
           <use href="#file2"></use>
         </svg>
         <span class="text-(14px [--text-color])">
