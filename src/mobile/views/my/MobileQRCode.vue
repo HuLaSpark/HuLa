@@ -34,7 +34,6 @@ const startScan = async () => {
     try {
       const jsonData = JSON.parse(res.content)
       console.log('扫码结果：', res)
-      // console.log('解析的json:', jsonData)
 
       useMitt.emit(MittEnum.QR_SCAN_EVENT, jsonData)
 

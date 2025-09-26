@@ -43,8 +43,6 @@ const handleScanLogin = async (data: ScanData) => {
 
   const result = await scanQRCodeAPI({ qrId: qrId })
 
-  // console.log('获取的扫码接口请求结果：', result)
-
   router.push({
     name: 'mobileConfirmQRLogin',
     params: {
@@ -87,6 +85,23 @@ const handleScanAddFriend = async (data: ScanData) => {
 }
 
 /**
+ * 扫码进群
+ */
+const handleScanEnterGroup = async (data: ScanData) => {
+  console.log('尝试扫码添加好友')
+  if (!Object.hasOwn(data, 'roomId')) {
+    window.$message.warning('登录二维码不存在roomId')
+    throw new Error('登录二维码不存在roomId:', data as any)
+  }
+
+  const roomId = data.roomId as string
+
+  setTimeout(() => {
+    router.push({ name: 'confirmAddGroup', params: { roomId } })
+  }, 100)
+}
+
+/**
  * 监听事件扫码
  */
 useMitt.on(MittEnum.QR_SCAN_EVENT, async (data: ScanData) => {
@@ -95,20 +110,31 @@ useMitt.on(MittEnum.QR_SCAN_EVENT, async (data: ScanData) => {
     throw new Error('二维码缺少type字段:', data as any)
   }
 
-  if (data.type === 'login') {
-    try {
-      await handleScanLogin(data)
-    } catch (error) {
-      console.log('扫码尝试获取Token失败:', error)
-    }
-  }
-
-  if (data.type === 'addFriend') {
-    try {
-      await handleScanAddFriend(data)
-    } catch (error) {
-      console.log('扫码添加好友失败:', error)
-    }
+  switch (data.type) {
+    case 'login':
+      try {
+        await handleScanLogin(data)
+      } catch (error) {
+        console.log('扫码尝试获取Token失败:', error)
+      }
+      break
+    case 'addFriend':
+      try {
+        await handleScanAddFriend(data)
+      } catch (error) {
+        console.log('扫码添加好友失败:', error)
+      }
+      break
+    case 'scanEnterGroup':
+      try {
+        await handleScanEnterGroup(data.roomId)
+      } catch (error) {
+        console.log('扫码加入群失败:', error)
+      }
+      break
+    default:
+      window.$message.warning('识别不到正确的二维码')
+      throw new Error('二维码缺少type字段:', data as any)
   }
 })
 
