@@ -4,7 +4,7 @@ import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { UserAttentionType } from '@tauri-apps/api/window'
 import { info } from '@tauri-apps/plugin-log'
 import { EventEnum } from '@/enums'
-import { isCompatibility, isWindows } from '@/utils/PlatformConstants'
+import { isCompatibility, isDesktop, isWindows } from '@/utils/PlatformConstants'
 
 /** 判断是兼容的系统 */
 const isCompatibilityMode = computed(() => isCompatibility())
@@ -36,6 +36,10 @@ export const useWindow = () => {
     visible = false,
     queryParams?: Record<string, string | number | boolean>
   ) => {
+    // 移动端不支持窗口管理，直接返回空对象
+    if (!isDesktop()) {
+      return null
+    }
     const originalLabel = label
     const isMultiMsgWindow = originalLabel.includes(EventEnum.MULTI_MSG)
 
@@ -104,6 +108,10 @@ export const useWindow = () => {
    * @returns 返回一个 Promise，表示调用 Rust 后端命令的完成情况。
    */
   const sendWindowPayload = async (windowLabel: string, payload: any) => {
+    // 移动端不支持窗口管理
+    if (!isDesktop()) {
+      return Promise.resolve()
+    }
     console.log('新窗口的载荷：', payload)
     return invoke<void>('push_window_payload', {
       label: windowLabel,
@@ -128,6 +136,10 @@ export const useWindow = () => {
    * const payload = await getWindowPayload<MyPayload>('my-window')
    */
   const getWindowPayload = async <T>(windowLabel: string) => {
+    // 移动端不支持窗口管理
+    if (!isDesktop()) {
+      return Promise.resolve({} as T)
+    }
     return await invoke<T>('get_window_payload', { label: windowLabel })
   }
 
@@ -167,6 +179,10 @@ export const useWindow = () => {
    * @returns 创建的窗口实例或已存在的窗口实例
    */
   const createModalWindow = async (title: string, label: string, width: number, height: number, parent: string) => {
+    // 移动端不支持窗口管理
+    if (!isDesktop()) {
+      return null
+    }
     // 检查窗口是否已存在
     const existingWindow = await WebviewWindow.getByLabel(label)
     const parentWindow = parent ? await WebviewWindow.getByLabel(parent) : null
@@ -225,6 +241,10 @@ export const useWindow = () => {
    * @param height 窗口高度
    * */
   const resizeWindow = async (label: string, width: number, height: number) => {
+    // 移动端不支持窗口管理
+    if (!isDesktop()) {
+      return Promise.resolve()
+    }
     const webview = await WebviewWindow.getByLabel(label)
     // 创建一个新的尺寸对象
     const newSize = new LogicalSize(width, height)
@@ -239,6 +259,10 @@ export const useWindow = () => {
    * @param L 窗口标签
    */
   const checkWinExist = async (L: string) => {
+    // 移动端不支持窗口管理
+    if (!isDesktop()) {
+      return Promise.resolve()
+    }
     const isExistsWinds = await WebviewWindow.getByLabel(L)
     if (isExistsWinds) {
       nextTick().then(async () => {
@@ -265,6 +289,10 @@ export const useWindow = () => {
    * @param resizable 是否可调整大小
    */
   const setResizable = async (label: string, resizable: boolean) => {
+    // 移动端不支持窗口管理
+    if (!isDesktop()) {
+      return Promise.resolve()
+    }
     const webview = await WebviewWindow.getByLabel(label)
     if (webview) {
       await webview.setResizable(resizable).catch((error) => {

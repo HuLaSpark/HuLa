@@ -156,9 +156,9 @@ export const leftHook = () => {
         )
         openWindowsList.value.add(url)
 
-        const unlisten = await webview.onCloseRequested(() => {
+        const unlisten = await webview?.onCloseRequested(() => {
           openWindowsList.value.delete(url)
-          unlisten()
+          if (unlisten) unlisten()
         })
       }, 300)
     } else {
