@@ -22,7 +22,8 @@ import { isDesktop, isMobile, isWindows } from '@/utils/PlatformConstants'
 import LockScreen from '@/views/LockScreen.vue'
 
 const appWindow = WebviewWindow.getCurrent()
-const { createWebviewWindow } = useWindow()
+// 只在桌面端初始化窗口管理功能
+const { createWebviewWindow } = isDesktop() ? useWindow() : { createWebviewWindow: () => {} }
 const settingStore = useSettingStore()
 const { themes, lockScreen, page } = storeToRefs(settingStore)
 // 全局快捷键管理
@@ -92,9 +93,12 @@ watch(
   { immediate: true }
 )
 
-appWindow.listen(EventEnum.EXIT, async () => {
-  await exit(0)
-})
+// 只在桌面端监听退出事件
+if (isDesktop()) {
+  appWindow.listen(EventEnum.EXIT, async () => {
+    await exit(0)
+  })
+}
 
 onMounted(async () => {
   // 仅在windows上使用
@@ -113,8 +117,8 @@ onMounted(async () => {
   document.documentElement.dataset.theme = themes.value.content
   window.addEventListener('dragstart', preventDrag)
 
-  // 只在主窗口中初始化全局快捷键
-  if (appWindow.label === 'home') {
+  // 只在桌面端的主窗口中初始化全局快捷键
+  if (isDesktop() && appWindow.label === 'home') {
     await initializeGlobalShortcut()
   }
   /** 开发环境不禁止 */
@@ -128,15 +132,18 @@ onMounted(async () => {
     /** 禁止右键菜单 */
     window.addEventListener('contextmenu', (e) => e.preventDefault(), false)
   }
-  useMitt.on(MittEnum.CHECK_UPDATE, async () => {
-    const checkUpdateWindow = await WebviewWindow.getByLabel('checkupdate')
-    await checkUpdateWindow?.show()
-  })
-  useMitt.on(MittEnum.DO_UPDATE, async (event) => {
-    await createWebviewWindow('更新', 'update', 490, 335, '', false, 490, 335, false, true)
-    const closeWindow = await WebviewWindow.getByLabel(event.close)
-    closeWindow?.close()
-  })
+  // 只在桌面端处理窗口相关事件
+  if (isDesktop()) {
+    useMitt.on(MittEnum.CHECK_UPDATE, async () => {
+      const checkUpdateWindow = await WebviewWindow.getByLabel('checkupdate')
+      await checkUpdateWindow?.show()
+    })
+    useMitt.on(MittEnum.DO_UPDATE, async (event) => {
+      await createWebviewWindow('更新', 'update', 490, 335, '', false, 490, 335, false, true)
+      const closeWindow = await WebviewWindow.getByLabel(event.close)
+      closeWindow?.close()
+    })
+  }
 })
 
 onUnmounted(async () => {
@@ -146,8 +153,8 @@ onUnmounted(async () => {
   window.removeEventListener('contextmenu', (e) => e.preventDefault(), false)
   window.removeEventListener('dragstart', preventDrag)
 
-  // 只在主窗口中清理全局快捷键
-  if (appWindow.label === 'home') {
+  // 只在桌面端的主窗口中清理全局快捷键
+  if (isDesktop() && appWindow.label === 'home') {
     await cleanupGlobalShortcut()
   }
 })
