@@ -30,11 +30,11 @@
           vertical
           :size="12"
           align="center"
-          class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+          class="w-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
           <svg class="size-42px animate-pulse">
             <use :href="`#${scanStatus.icon}`"></use>
           </svg>
-          <span class="text-(16px #e3e3e3)">{{ scanStatus.text }}</span>
+          <span class="text-(14px #e3e3e3)">{{ scanStatus.text }}</span>
         </n-flex>
 
         <n-flex
@@ -69,9 +69,9 @@ import { lightTheme } from 'naive-ui'
 import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
 import { getEnhancedFingerprint } from '@/services/fingerprint'
+import { loginCommand } from '@/services/tauriCommand'
 import { useGlobalStore } from '@/stores/global'
 import { checkQRStatus, generateQRCode } from '@/utils/ImRequestUtils'
-import { loginCommand } from '~/src/services/tauriCommand'
 
 const globalStore = useGlobalStore()
 const { createWebviewWindow } = useWindow()
@@ -189,7 +189,7 @@ const handleQRCodeLogin = async () => {
   try {
     qrCodeResp.value = await generateQRCode()
     qrCodeValue.value = JSON.stringify({ type: 'login', qrId: qrCodeResp.value.qrId })
-    loadText.value = '请使用HulaApp扫码登录'
+    loadText.value = '请使用 HuLa App 扫码登录'
     loading.value = false
     refreshing.value = false
 

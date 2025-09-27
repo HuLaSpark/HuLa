@@ -62,7 +62,7 @@
               <n-avatar
                 round
                 :size="34"
-                @click="selectKey = message.message.id"
+                @click="handleAvatarClick(message.fromUser.uid, message.message.id)"
                 class="select-none"
                 :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
                 :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
@@ -273,15 +273,17 @@ import { useGroupStore } from '@/stores/group'
 import { useSettingStore } from '@/stores/setting'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
+import router from '~/src/router'
 import { useChatStore } from '~/src/stores/chat'
 import { useUserStore } from '~/src/stores/user'
 import { markMsg } from '~/src/utils/ImRequestUtils'
-import { isMac } from '~/src/utils/PlatformConstants'
+import { isMac, isMobile } from '~/src/utils/PlatformConstants'
 import Announcement from './Announcement.vue'
 import AudioCall from './AudioCall.vue'
 import Emoji from './Emoji.vue'
 import File from './File.vue'
 import Image from './Image.vue'
+import Location from './Location.vue'
 import MergeMessage from './MergeMessage.vue'
 import BotMessage from './special/BotMessage.vue'
 import RecallMessage from './special/RecallMessage.vue'
@@ -327,6 +329,15 @@ const chatStore = useChatStore()
 const cachedStore = useCachedStore()
 const recordEL = ref<HTMLElement>()
 
+const handleAvatarClick = (uid: string, msgId: string) => {
+  if (isMobile()) {
+    globalStore.addFriendModalInfo.uid = uid
+    router.push(`/mobile/mobileFriends/friendInfo/${uid}`)
+  } else {
+    selectKey.value = msgId
+  }
+}
+
 // 获取用户头像
 const getAvatarSrc = computed(() => (uid: string) => {
   const avatar = isMe.value ? userStore.userInfo!.avatar : groupStore.getUserInfo(uid)?.avatar
@@ -346,7 +357,8 @@ const componentMap: Partial<Record<MsgEnum, Component>> = {
   [MsgEnum.SYSTEM]: SystemMessage,
   [MsgEnum.RECALL]: RecallMessage,
   [MsgEnum.BOT]: BotMessage,
-  [MsgEnum.MERGE]: MergeMessage
+  [MsgEnum.MERGE]: MergeMessage,
+  [MsgEnum.LOCATION]: Location
 }
 
 const isSpecialMsgType = (type: number): boolean => {
@@ -356,7 +368,8 @@ const isSpecialMsgType = (type: number): boolean => {
     type === MsgEnum.NOTICE ||
     type === MsgEnum.VIDEO ||
     type === MsgEnum.FILE ||
-    type === MsgEnum.MERGE
+    type === MsgEnum.MERGE ||
+    type === MsgEnum.LOCATION
   )
 }
 

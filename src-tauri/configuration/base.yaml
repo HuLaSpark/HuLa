@@ -3,3 +3,17 @@ database:
 backend:
   base_url: https://hulaspark.com/api
 active_config: local
+
+youdao:
+  app_key: ''
+  app_secret: ''
+tencent:
+  api_key: ''
+  secret_id: ''
+  map_key: ''
+
+ice_server:
+  urls:
+    - ''
+  username: ''
+  credential: ''

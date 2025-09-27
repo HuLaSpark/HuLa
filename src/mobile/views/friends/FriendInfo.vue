@@ -9,16 +9,16 @@
 
     <img src="@/assets/mobile/chat-home/background.webp" class="w-100% fixed top-0" alt="hula" />
 
-    <PersonalInfo :is-my-friend="true" :is-my-page="false" :is-show="isShow"></PersonalInfo>
+    <PersonalInfo :is-my-page="false" :is-show="isShow"></PersonalInfo>
 
     <div class="relative top-0 flex-1 flex">
       <div ref="measureRef" class="h-full w-full absolute top-0 z-0"></div>
-      <!-- 动态内容 -->
-      <div ref="scrollContainer" :style="{ height: tabHeight + 'px' }" class="z-1 overflow-y-auto mt-2 absolute z-3">
+
+      <div ref="scrollContainer" :style="{ height: tabHeight + 'px' }" class="z-1 overflow-y-auto absolute z-3">
         <div class="custom-rounded flex px-24px flex-col gap-4 z-1 p-10px mt-4 shadow">
           <CommunityTab
-            :style="{ height: tabHeight + 'px' }"
-            :custom-height="tabHeight"
+            :style="{ height: tabHeight - 10 + 'px' }"
+            :custom-height="tabHeight - 10"
             @scroll="handleScroll"
             @update="onUpdate"
             :options="tabOptions"
@@ -49,7 +49,7 @@ const infoBox = ref<HTMLElement | null>(null)
 const measureRef = ref<HTMLDivElement>()
 const scrollContainer = ref<HTMLElement | null>(null)
 const tabHeight = ref(300)
-const bb = new ResizeObserver((event) => {
+const contentRectObserver = new ResizeObserver((event) => {
   tabHeight.value = event[0].contentRect.height
 })
 
@@ -123,13 +123,13 @@ watch(isShow, (show) => {
 
 onMounted(() => {
   if (measureRef.value) {
-    bb.observe(measureRef.value)
+    contentRectObserver.observe(measureRef.value)
   }
 })
 
 onUnmounted(() => {
   if (measureRef.value) {
-    bb.unobserve(measureRef.value)
+    contentRectObserver.unobserve(measureRef.value)
   }
 })
 

@@ -34,11 +34,8 @@
       </div>
     </div>
 
-    <img
-      v-if="activeTab === 'login'"
-      :src="AvatarUtils.getAvatarUrl(userInfo.avatar || '/logo.png')"
-      alt="logo"
-      class="size-86px rounded-full" />
+    <!-- 头像 -->
+    <img v-if="activeTab === 'login'" :src="userInfo.avatar" alt="logo" class="size-86px rounded-full" />
 
     <!-- 登录表单 -->
     <n-flex v-if="activeTab === 'login'" class="text-center w-80%" vertical :size="16">
@@ -314,6 +311,7 @@
 import { invoke } from '@tauri-apps/api/core'
 import { emit } from '@tauri-apps/api/event'
 import { info } from '@tauri-apps/plugin-log'
+import { debounce } from 'lodash-es'
 import { lightTheme } from 'naive-ui'
 import { ErrorType } from '@/common/exception'
 import PinInput from '@/components/common/PinInput.vue'
@@ -331,10 +329,16 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { getAllUserState, getCaptcha, getUserDetail, register, sendCaptcha } from '@/utils/ImRequestUtils'
 import { isAndroid } from '@/utils/PlatformConstants'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
+import { useCheckUpdate } from '../hooks/useCheckUpdate'
+import { useLogin } from '../hooks/useLogin'
+import { useMitt } from '../hooks/useMitt'
+import { WsResponseMessageType } from '../services/wsType'
 import { useChatStore } from '../stores/chat'
 import { useConfigStore } from '../stores/config'
 import { useGlobalStore } from '../stores/global'
 import { useGroupStore } from '../stores/group'
+import { useSettingStore } from '../stores/setting'
+import { clearListener } from '../utils/ReadCountQueue'
 
 // 本地注册信息类型，扩展API类型以包含确认密码
 interface LocalRegisterInfo extends RegisterUserReq {}
@@ -344,6 +348,13 @@ const userStore = useUserStore()
 const { loginHistories } = loginHistoriesStore
 const mobileStore = useMobileStore()
 const safeArea = computed(() => mobileStore.safeArea)
+const { setLoginState } = useLogin()
+const settingStore = useSettingStore()
+const { login } = storeToRefs(settingStore)
+const userStatusStore = useUserStatusStore()
+const { stateId } = storeToRefs(userStatusStore)
+
+const isJumpDirectly = ref(false)
 
 /** 当前激活的选项卡 */
 const activeTab = ref<'login' | 'register'>('login')
@@ -355,7 +366,7 @@ const currentStep = ref(1)
 const userInfo = ref({
   account: '',
   password: '',
-  avatar: '',
+  avatar: '/logo.png',
   nickName: '',
   uid: ''
 })
@@ -640,22 +651,31 @@ const normalLogin = async (auto = false) => {
       deviceType: 'MOBILE',
       systemType: '2', // 2是im 1是后台
       clientId,
-      grantType: 'PASSWORD'
+      grantType: 'PASSWORD',
+      isAutoLogin: auto,
+      uid: auto ? userStore.userInfo!.uid : null
     }
   })
     .then(async (res: any) => {
+      settingStore.toggleLogin(true, false)
       loginDisabled.value = true
       console.log('登录成功')
-
+      window.$message.success('登录成功')
       // 开启 ws 连接
       await rustWebSocketClient.initConnect()
-      // 登录处理
-      await loginProcess(res.token, res.refreshToken, res.client)
       // 初始化数据
       await initData()
+      // 登录处理
+      await loginProcess(res.token, res.refreshToken, res.client)
     })
     .catch((e: any) => {
-      console.error('登录异常：', e)
+      console.error('登录失败，出现未知错误:', e)
+      if (e) {
+        window.$message.warning(e)
+      } else {
+        window.$message.warning('登录失败，出现未知错误')
+      }
+
       loading.value = false
       loginDisabled.value = false
       loginText.value = '登录'
@@ -666,9 +686,6 @@ const normalLogin = async (auto = false) => {
       }
     })
 }
-
-const userStatusStore = useUserStatusStore()
-const { stateId } = storeToRefs(userStatusStore)
 
 const loginProcess = async (token: string, refreshToken: string, client: string) => {
   loading.value = false
@@ -718,6 +735,7 @@ const loginProcess = async (token: string, refreshToken: string, client: string)
   })
 
   loginText.value = '登录成功正在跳转...'
+  await setLoginState()
 
   router.push('/mobile/message')
 }
@@ -760,13 +778,98 @@ const closeMenu = (event: MouseEvent) => {
   }
 }
 
-onMounted(() => {
+onBeforeMount(async () => {
+  // const token = localStorage.getItem('TOKEN')
+  // const refreshToken = localStorage.getItem('REFRESH_TOKEN')
+
+  if (!login.value.autoLogin) {
+    localStorage.removeItem('TOKEN')
+    localStorage.removeItem('REFRESH_TOKEN')
+    clearListener()
+    return
+  }
+
+  // 只有在非自动登录的情况下才验证token并直接打开主窗口
+  // if (token && refreshToken && !login.value.autoLogin) {
+  //   isJumpDirectly.value = true
+  //   try {
+  //     // await openHomeWindow()
+  //     return // 直接返回，不执行后续的登录相关逻辑
+  //   } catch (error) {
+  //     isJumpDirectly.value = false
+  //     // token无效，清除token并重置状态
+  //     localStorage.removeItem('TOKEN')
+  //     localStorage.removeItem('REFRESH_TOKEN')
+  //     userStore.userInfo = undefined
+  //   }
+  // }
+})
+
+const { checkUpdate } = useCheckUpdate()
+onMounted(async () => {
   window.addEventListener('click', closeMenu, true)
+  console.log('新的', userStore)
+  // const uid = userStore.userInfo?.uid
+
+  // 只有在需要登录的情况下才显示登录窗口
+  if (isJumpDirectly.value) {
+    loading.value = false
+    router.push('/mobile/message')
+    return
+  }
+
+  useMitt.on(WsResponseMessageType.NO_INTERNET, () => {
+    loginDisabled.value = true
+    loginText.value = '服务异常断开'
+  })
+
+  if (login.value.autoLogin) {
+    normalLogin(true)
+  } else {
+    loginHistories.length > 0 && giveAccount(loginHistories[0])
+  }
+
+  await checkUpdate('login', true)
+
+  // 如果找到uid就自动登录，找不到就手动登录
+  // if (uid) {
+  //   loading.value = true
+  //   await loginCommand({ uid }, true).then(() => {
+  //     setTimeout(() => {
+  //       loading.value = false
+  //       router.push('/mobile/message')
+  //     }, 100)
+  //   })
+  // }
 })
 
 onUnmounted(() => {
   window.removeEventListener('click', closeMenu, true)
 })
+
+const refreshAvatar = debounce((newAccount: string) => {
+  const matchedAccount = loginHistories.find(
+    (history) => history.account === newAccount || history.email === newAccount
+  )
+  if (matchedAccount) {
+    userInfo.value.avatar = AvatarUtils.getAvatarUrl(matchedAccount.avatar)
+  } else {
+    userInfo.value.avatar = '/logo.png'
+  }
+}, 300)
+
+// 监听账号输入
+watch(
+  () => userInfo.value.account,
+  (newAccount) => {
+    if (!newAccount) {
+      userInfo.value.avatar = '/logo.png'
+      return
+    }
+
+    refreshAvatar(newAccount)
+  }
+)
 </script>
 
 <style scoped lang="scss">

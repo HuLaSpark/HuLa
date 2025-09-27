@@ -7,12 +7,12 @@ use tracing::info;
 
 // 应用程序设置结构体
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
 pub struct Settings {
     pub database: DatabaseSettings,
     pub backend: BackendSettings,
     pub youdao: Youdao,
     pub tencent: Tencent,
+    pub ice_server: IceServer,
 }
 
 // 数据库配置设置
@@ -32,6 +32,13 @@ pub struct BackendSettings {
 pub struct Youdao {
     pub app_key: String,
     pub app_secret: String,
+}
+
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+pub struct IceServer {
+    pub urls: Vec<String>,
+    pub username: String,
+    pub credential: String,
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]

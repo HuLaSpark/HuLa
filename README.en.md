@@ -214,8 +214,8 @@ HuLa is an instant messaging system built with Tauri, Vite 7, Vue 3, and TypeScr
 | 📤 | Message Forwarding | ![Completed](https://img.shields.io/badge/✅-Completed-008080?style=flat&labelColor=e6f7f7&color=008080) |
 | 📋 | Group Announcements | ![Completed](https://img.shields.io/badge/✅-Completed-008080?style=flat&labelColor=e6f7f7&color=008080) |
 | 🏷️ | Nickname & Remark Management | ![Completed](https://img.shields.io/badge/✅-Completed-008080?style=flat&labelColor=e6f7f7&color=008080) |
-| 📍 | Get and Send Location | ![In Progress](https://img.shields.io/badge/🐣-进行中-ee9f20?style=flat&labelColor=fef7e6&color=ee9f20) |
-
+| 📍 | Get and Send Location | ![Completed](https://img.shields.io/badge/✅-Completed-008080?style=flat&labelColor=e6f7f7&color=008080) |
+| 🔥 | Scan code to log in and join the group | ![Completed](https://img.shields.io/badge/✅-Completed-008080?style=flat&labelColor=e6f7f7&color=008080) |
 ### 🎨 User Experience
 | Feature | Description | Status |
 |---------|-------------|--------|
@@ -237,8 +237,7 @@ HuLa is an instant messaging system built with Tauri, Vite 7, Vue 3, and TypeScr
 | Feature | Description | Status |
 |---------|-------------|--------|
 | 💻 | Windows/macOS/Linux | ![Completed](https://img.shields.io/badge/✅-Completed-008080?style=flat&labelColor=e6f7f7&color=008080) |
-| 📱 | iOS/Android Adaptation | ![In Progress](https://img.shields.io/badge/🐣-In_Progress-ee9f20?style=flat&labelColor=fef7e6&color=ee9f20) |
-
+| 📱 | iOS/Android Adaptation | ![Completed](https://img.shields.io/badge/✅-Completed-008080?style=flat&labelColor=e6f7f7&color=008080) |
 ### 🤖 AI Integration
 | Feature | Description | Status |
 |---------|-------------|--------|

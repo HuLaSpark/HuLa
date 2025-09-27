@@ -215,7 +215,8 @@ HuLa 是一款基于 Tauri、Vite 7、Vue 3 和 TypeScript 构建的即时通讯
 | 📤 | 消息转发 | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
 | 📋 | 群公告功能 | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
 | 🏷️ | 备注昵称管理 | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
-| 📍 | 获取和发送位置 | ![进行中](https://img.shields.io/badge/🐣-进行中-ee9f20?style=flat&labelColor=fef7e6&color=ee9f20) |
+| 📍 | 获取和发送位置 | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
+| 🔥 | 扫码登录、进群 | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
 
 ### 🎨 界面体验
 | 功能 | 描述 | 状态 |
@@ -238,7 +239,7 @@ HuLa 是一款基于 Tauri、Vite 7、Vue 3 和 TypeScript 构建的即时通讯
 | 功能 | 描述 | 状态 |
 |------|------|------|
 | 💻 | Windows/macOS/Linux | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
-| 📱 | iOS/Android 适配 | ![进行中](https://img.shields.io/badge/🐣-进行中-ee9f20?style=flat&labelColor=fef7e6&color=ee9f20) |
+| 📱 | iOS/Android 适配 | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
 
 ### 🤖 AI 集成
 | 功能 | 描述 | 状态 |

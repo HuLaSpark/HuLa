@@ -43,15 +43,13 @@
 </template>
 
 <script setup lang="ts">
-import { emit } from '@tauri-apps/api/event'
 import { info } from '@tauri-apps/plugin-log'
-import { NInput, NSelect, NSwitch } from 'naive-ui'
-import { EventEnum, TauriCommand, ThemeEnum } from '@/enums'
+import { ThemeEnum } from '@/enums'
 import router from '@/router'
 import { useGlobalStore } from '@/stores/global'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user'
-import { invokeSilently } from '@/utils/TauriInvokeHandler'
+import { useLogin } from '~/src/hooks/useLogin'
 
 const globalStore = useGlobalStore()
 const { isTrayMenuShow } = storeToRefs(globalStore)
@@ -109,6 +107,9 @@ const settings = reactive([
     ]
   }
 ])
+
+const { logout } = useLogin()
+
 // 退出登录逻辑
 async function handleLogout() {
   dialog.error({
@@ -117,20 +118,11 @@ async function handleLogout() {
     positiveText: '确定',
     negativeText: '取消',
     onPositiveClick: async () => {
+      settingStore.toggleLogin(false, false)
       info('登出账号')
       isTrayMenuShow.value = false
-      try {
-        // ws 退出连接
-        await invokeSilently('ws_disconnect')
-        await invokeSilently(TauriCommand.REMOVE_TOKENS)
-        await invokeSilently(TauriCommand.UPDATE_USER_LAST_OPT_TIME)
-        // 发送登出事件
-
-        await emit(EventEnum.LOGOUT)
-        router.push('/mobile/login')
-      } catch (error) {
-        console.error('创建登录窗口失败:', error)
-      }
+      logout()
+      router.push('/mobile/login')
     },
     onNegativeClick: () => {
       console.log('用户点击了取消')

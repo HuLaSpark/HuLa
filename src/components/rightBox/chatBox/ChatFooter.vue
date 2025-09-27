@@ -11,7 +11,9 @@
       :style="{ height: `${footerHeight}px` }"
       class="absolute inset-0 z-997 backdrop-blur-md cursor-default flex-center select-none pointer-events-auto light:bg-[rgba(255,255,255,0.1)] dark:bg-[rgba(33,33,33,0.1)]">
       <n-flex align="center" justify="center" class="pb-60px">
-        <svg class="size-24px"><use href="#cloudError"></use></svg>
+        <svg class="size-24px">
+          <use href="#cloudError"></use>
+        </svg>
         <span class="text-(14px [--chat-text-color])">你们当前已经不是好友关系</span>
       </n-flex>
     </div>
@@ -47,7 +49,9 @@
                 :disabled="emojiShow || recentEmojis.length < 4"
                 placement="top">
                 <template #trigger>
-                  <svg class="mr-18px"><use href="#smiling-face"></use></svg>
+                  <svg class="mr-18px">
+                    <use href="#smiling-face"></use>
+                  </svg>
                 </template>
                 <div v-if="recentEmojis.length > 0" class="p-4px">
                   <div class="text-xs text-gray-500 mb-4px">最近使用</div>
@@ -68,7 +72,9 @@
           </n-popover>
 
           <div class="flex-center gap-2px mr-12px">
-            <svg @click="handleScreenshot()"><use href="#screenshot"></use></svg>
+            <svg @click="handleScreenshot()">
+              <use href="#screenshot"></use>
+            </svg>
             <n-popover
               style="
                 padding: 0;
@@ -82,7 +88,9 @@
               :show-arrow="false"
               placement="top">
               <template #trigger>
-                <svg class="dropdown-arrow" style="width: 14px; height: 14px"><use href="#down"></use></svg>
+                <svg class="dropdown-arrow" style="width: 14px; height: 14px">
+                  <use href="#down"></use>
+                </svg>
               </template>
 
               <div class="footer-item">
@@ -92,7 +100,9 @@
                   align="center"
                   justify="space-between">
                   <n-flex align="center" :size="6">
-                    <svg class="size-14px"><use href="#screenshot"></use></svg>
+                    <svg class="size-14px">
+                      <use href="#screenshot"></use>
+                    </svg>
                     <p>截图</p>
                   </n-flex>
                   <p class="text-(12px #909090)">{{ settingStore.shortcuts.screenshot }}</p>
@@ -113,8 +123,12 @@
           <n-popover trigger="hover" :show-arrow="false" placement="bottom">
             <template #trigger>
               <div class="flex-center gap-2px mr-12px">
-                <svg @click="handleFileOpen"><use href="#file2"></use></svg>
-                <svg style="width: 14px; height: 14px"><use href="#down"></use></svg>
+                <svg @click="handleFileOpen">
+                  <use href="#file2"></use>
+                </svg>
+                <svg style="width: 14px; height: 14px">
+                  <use href="#down"></use>
+                </svg>
               </div>
             </template>
             <span>文件</span>
@@ -129,13 +143,17 @@
           </n-popover>
           <n-popover trigger="hover" :show-arrow="false" placement="bottom">
             <template #trigger>
-              <svg @click="handleVoiceRecord" class="mr-18px"><use href="#voice"></use></svg>
+              <svg @click="handleVoiceRecord" class="mr-18px">
+                <use href="#voice"></use>
+              </svg>
             </template>
             <span>语音信息</span>
           </n-popover>
-          <n-popover trigger="hover" :show-arrow="false" placement="bottom">
+          <n-popover v-if="!isMac()" trigger="hover" :show-arrow="false" placement="bottom">
             <template #trigger>
-              <svg @click="showLocationModal = true" class="mr-18px"><use href="#local"></use></svg>
+              <svg @click="showLocationModal = true" class="mr-18px">
+                <use href="#local"></use>
+              </svg>
             </template>
             <span>位置</span>
           </n-popover>
@@ -162,14 +180,17 @@
       v-model:visible="showLocationModal"
       @location-selected="handleLocationSelected"
       @cancel="showLocationModal = false" />
+
+    <!-- 文件上传进度条（悬浮显示，不影响布局） -->
+    <FileUploadProgress />
   </main>
 </template>
 
 <script setup lang="ts">
-import { join } from '@tauri-apps/api/path'
 import { open } from '@tauri-apps/plugin-dialog'
-import { copyFile, readFile } from '@tauri-apps/plugin-fs'
+import { readFile } from '@tauri-apps/plugin-fs'
 import { FOOTER_HEIGHT, MAX_FOOTER_HEIGHT, MIN_FOOTER_HEIGHT, TOOLBAR_HEIGHT } from '@/common/constants'
+import FileUploadProgress from '@/components/rightBox/FileUploadProgress.vue'
 import LocationModal from '@/components/rightBox/location/LocationModal.vue'
 import { MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import { useChatLayoutGlobal } from '@/hooks/useChatLayout'
@@ -177,15 +198,15 @@ import { type SelectionRange, useCommon } from '@/hooks/useCommon.ts'
 import { useGlobalShortcut } from '@/hooks/useGlobalShortcut.ts'
 import { useMitt } from '@/hooks/useMitt'
 import { useWindow } from '@/hooks/useWindow'
-import type { FilesMeta, FriendItem, SessionItem } from '@/services/types'
+import type { FriendItem, SessionItem } from '@/services/types'
 import { useChatStore } from '@/stores/chat'
 import { useContactStore } from '@/stores/contacts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useHistoryStore } from '@/stores/history'
 import { useSettingStore } from '@/stores/setting'
-import { useUserStore } from '@/stores/user'
+import FileUtil from '@/utils/FileUtil'
 import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
-import { getFilesMeta, getUserAbsoluteVideosDir } from '@/utils/PathUtil'
+import { isMac } from '@/utils/PlatformConstants'
 
 const { detailId } = defineProps<{
   detailId: SessionItem['detailId']
@@ -209,7 +230,6 @@ const recentEmojis = computed(() => {
   return historyStore.emoji.slice(0, 15)
 })
 const { insertNodeAtRange, triggerInputEvent, processFiles, imgPaste } = useCommon()
-const userStore = useUserStore()
 
 // 使用全局布局状态
 const { footerHeight, setFooterHeight } = useChatLayoutGlobal()
@@ -370,51 +390,10 @@ watch(emojiShow, (newValue) => {
 
 // 文件选择（不限制类型）
 const handleFileOpen = async () => {
-  // 获取文件路径列表
-  const selected = await open({
-    multiple: true
-    // 不设置filters，允许选择所有文件类型
-  })
-
-  if (selected && Array.isArray(selected)) {
-    const filesMeta = await getFilesMeta<FilesMeta>(selected)
-
-    const copyUploadFile = async () => {
-      console.log('复制上传文件')
-      const currentChatRoomId = globalStore.currentSession!.roomId // 这个id可能为群id可能为用户uid，所以不能只用用户uid
-      const currentUserUid = userStore.userInfo!.uid as string
-
-      const userResourceDir = await getUserAbsoluteVideosDir(currentUserUid, currentChatRoomId)
-
-      for (const filePathStr of selected) {
-        const fileMeta = filesMeta.find((f) => f.path === filePathStr)
-        if (fileMeta) {
-          copyFile(filePathStr, await join(userResourceDir, fileMeta.name))
-        }
-      }
-    }
-
-    await copyUploadFile()
-
-    // 获取选中文件的类型
-
-    const files = await Promise.all(
-      selected.map(async (path) => {
-        const fileData = await readFile(path)
-        const fileName = extractFileName(path)
-        const blob = new Blob([new Uint8Array(fileData)])
-
-        // 找到对应路径的文件，并且获取其类型
-        const fileMeta = filesMeta.find((f) => f.path === path)
-        const fileType = fileMeta?.mime_type || fileMeta?.file_type
-
-        // 最后手动传入blob中，因为blob无法自动判断文件类型
-        return new File([blob], fileName, { type: fileType })
-      })
-    )
-    // 使用processFiles方法进行文件类型验证
-    await processFiles(files, MsgInputRef.value.messageInputDom, MsgInputRef.value?.showFileModal)
-  }
+  const filesData = await FileUtil.openAndCopyFile()
+  if (!filesData) return
+  // 使用processFiles方法进行文件类型验证
+  await processFiles(filesData.files, MsgInputRef.value.messageInputDom, MsgInputRef.value?.showFileModal)
 }
 
 // 图片选择（只能选择图片类型）
@@ -582,19 +561,7 @@ const handleVoiceRecord = () => {
 // 处理位置选择
 const handleLocationSelected = async (locationData: any) => {
   try {
-    // 发送位置消息
-    const messageContent = {
-      type: MsgEnum.LOCATION,
-      body: {
-        latitude: locationData.latitude,
-        longitude: locationData.longitude,
-        address: locationData.address,
-        precision: locationData.precision,
-        timestamp: locationData.timestamp
-      }
-    }
-    console.log('发送位置消息:', messageContent)
-
+    await MsgInputRef.value.handleLocationSelected(locationData)
     showLocationModal.value = false
   } catch (error) {
     console.error('发送位置消息失败:', error)
@@ -649,6 +616,7 @@ onUnmounted(() => {
     width: 22px;
     height: 22px;
     cursor: pointer;
+
     &:hover {
       color: #13987f;
     }
@@ -656,6 +624,7 @@ onUnmounted(() => {
 
   .dropdown-arrow {
     transition: transform 0.3s ease;
+
     &:hover {
       transform: rotate(180deg);
     }
@@ -734,10 +703,13 @@ onUnmounted(() => {
 
 .footer-item {
   @apply flex-col-y-center gap-4px px-6px py-8px min-w-160px box-border size-fit select-none;
+
   .group {
     @apply px-4px py-6px rounded-4px;
+
     &:hover {
       background-color: var(--emoji-hover);
+
       svg {
         animation: twinkle 0.3s ease-in-out;
       }

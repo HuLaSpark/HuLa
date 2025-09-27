@@ -17,6 +17,7 @@ import { processClipboardImage } from '@/utils/ImageUtils.ts'
 import { getReplyContent } from '@/utils/MessageReply.ts'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
 import { type SelectionRange, useCommon } from './useCommon.ts'
+import { globalFileUploadQueue } from './useFileUploadQueue.ts'
 import { useTrigger } from './useTrigger'
 import { UploadProviderEnum, useUpload } from './useUpload.ts'
 /**
@@ -831,22 +832,37 @@ export const useMsgInput = (messageInputDom: Ref) => {
    * @param files 要发送的文件数组
    */
   const sendFilesDirect = async (files: File[]) => {
-    for (const file of files) {
-      // 判断文件类型和修复MIME类型
-      const processedFile = fixFileMimeType(file)
-      let msgType = getMessageTypeByFile(processedFile)
+    // 初始化文件上传队列
+    globalFileUploadQueue.initQueue(files)
 
-      // 对音频文件进行特殊处理：通过文件选择的方式发送，作为文件类型处理
-      if (msgType === MsgEnum.VOICE) {
-        msgType = MsgEnum.FILE
-      }
+    // 同步处理每个文件，等待前一个完成再处理下一个
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i]
+      const fileId = globalFileUploadQueue.queue.items[i]?.id
 
-      // 生成唯一消息ID，避免重复
-      const tempMsgId = `${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
-      const messageStrategy = messageStrategyMap[msgType]
+      // 将变量声明移到更高的作用域，避免catch块中无法访问
+      let msgType: MsgEnum = MsgEnum.TEXT
+      let tempMsgId = ''
       let progressUnsubscribe: (() => void) | null = null
 
       try {
+        // 更新当前文件为上传中状态
+        if (fileId) {
+          globalFileUploadQueue.updateFileStatus(fileId, 'uploading', 0)
+        }
+
+        // 判断文件类型和修复MIME类型
+        const processedFile = fixFileMimeType(file)
+        msgType = getMessageTypeByFile(processedFile)
+
+        // 对音频文件进行特殊处理：通过文件选择的方式发送，作为文件类型处理
+        if (msgType === MsgEnum.VOICE) {
+          msgType = MsgEnum.FILE
+        }
+
+        // 生成唯一消息ID，避免重复
+        tempMsgId = `${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
+        const messageStrategy = messageStrategyMap[msgType]
         if (msgType === MsgEnum.VIDEO) {
           // 视频文件处理逻辑
           const tempMsg = messageStrategy.buildMessageType(
@@ -864,8 +880,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
             userUid
           )
           tempMsg.message.status = MessageStatusEnum.SENDING
-
-          chatStore.pushMsg(tempMsg)
 
           // 异步处理上传
           const videoPath = await saveCacheFile(processedFile, 'video/')
@@ -966,23 +980,23 @@ export const useMsgInput = (messageInputDom: Ref) => {
           // 监听成功响应
           videoSuccessChannel.onmessage = (message) => {
             console.log('[视频] 收到 send_msg_success 响应:', message)
-            chatStore.updateMsg({
-              msgId: message.oldMsgId,
-              status: MessageStatusEnum.SUCCESS,
-              newMsgId: message.message.id,
-              body: message.message.body,
-              timeBlock: message.timeBlock
-            })
+            // 成功后才添加消息到聊天列表
+            const finalMsg = messageStrategy.buildMessageType(
+              message.message.id,
+              message.message.body,
+              globalStore,
+              userUid
+            )
+            finalMsg.message.status = MessageStatusEnum.SUCCESS
+            finalMsg.timeBlock = message.timeBlock
+
+            chatStore.pushMsg(finalMsg)
             useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
           }
 
           // 监听错误响应
           videoErrorChannel.onmessage = (msgId) => {
             console.log('[视频] 收到 send_msg_error 响应:', msgId)
-            chatStore.updateMsg({
-              msgId: msgId,
-              status: MessageStatusEnum.FAILED
-            })
             useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
           }
 
@@ -1019,8 +1033,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
           const tempMsg = messageStrategy.buildMessageType(tempMsgId, messageBody, globalStore, userUid)
           tempMsg.message.status = MessageStatusEnum.SENDING
 
-          // 添加到消息列表
-          chatStore.pushMsg(tempMsg)
           console.log('🖼️ 开始处理图片上传:', processedFile.name)
 
           // 上传图片
@@ -1053,23 +1065,23 @@ export const useMsgInput = (messageInputDom: Ref) => {
           // 监听成功响应
           imageSuccessChannel.onmessage = (message) => {
             console.log('[图片] 收到 send_msg_success 响应:', message)
-            chatStore.updateMsg({
-              msgId: message.oldMsgId,
-              status: MessageStatusEnum.SUCCESS,
-              newMsgId: message.message.id,
-              body: message.message.body,
-              timeBlock: message.timeBlock
-            })
+            // 成功后才添加消息到聊天列表
+            const finalMsg = messageStrategy.buildMessageType(
+              message.message.id,
+              message.message.body,
+              globalStore,
+              userUid
+            )
+            finalMsg.message.status = MessageStatusEnum.SUCCESS
+            finalMsg.timeBlock = message.timeBlock
+
+            chatStore.pushMsg(finalMsg)
             useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
           }
 
           // 监听错误响应
           imageErrorChannel.onmessage = (msgId) => {
             console.log('[图片] 收到 send_msg_error 响应:', msgId)
-            chatStore.updateMsg({
-              msgId: msgId,
-              status: MessageStatusEnum.FAILED
-            })
             useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
           }
 
@@ -1105,9 +1117,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
             userUid
           )
           tempMsg.message.status = MessageStatusEnum.SENDING
-
-          // 添加到消息列表
-          chatStore.pushMsg(tempMsg)
 
           // 获取上传进度监听
           const { progress, onChange } = (messageStrategy as any).getUploadProgress()
@@ -1167,23 +1176,23 @@ export const useMsgInput = (messageInputDom: Ref) => {
           // 监听成功响应
           fileSuccessChannel.onmessage = (message) => {
             console.log('[文件] 收到 send_msg_success 响应:', message)
-            chatStore.updateMsg({
-              msgId: message.oldMsgId,
-              status: MessageStatusEnum.SUCCESS,
-              newMsgId: message.message.id,
-              body: message.message.body,
-              timeBlock: message.timeBlock
-            })
+            // 成功后才添加消息到聊天列表
+            const finalMsg = messageStrategy.buildMessageType(
+              message.message.id,
+              message.message.body,
+              globalStore,
+              userUid
+            )
+            finalMsg.message.status = MessageStatusEnum.SUCCESS
+            finalMsg.timeBlock = message.timeBlock
+
+            chatStore.pushMsg(finalMsg)
             useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
           }
 
           // 监听错误响应
           fileErrorChannel.onmessage = (msgId) => {
             console.log('[文件] 收到 send_msg_error 响应:', msgId)
-            chatStore.updateMsg({
-              msgId: msgId,
-              status: MessageStatusEnum.FAILED
-            })
             useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
           }
 
@@ -1210,12 +1219,17 @@ export const useMsgInput = (messageInputDom: Ref) => {
           }
         }
 
-        // 清空输入框内容，避免重复发送
-        if (messageInputDom.value) {
-          messageInputDom.value.innerHTML = ''
+        // 文件上传成功，更新队列状态
+        if (fileId) {
+          globalFileUploadQueue.updateFileStatus(fileId, 'completed', 100)
         }
       } catch (error) {
         console.error(`${msgType === MsgEnum.VIDEO ? '视频' : '文件'}发送失败:`, error)
+
+        // 文件上传失败，更新队列状态
+        if (fileId) {
+          globalFileUploadQueue.updateFileStatus(fileId, 'failed', 0)
+        }
 
         // 确保清理进度监听器
         if (progressUnsubscribe) {
@@ -1223,13 +1237,23 @@ export const useMsgInput = (messageInputDom: Ref) => {
           progressUnsubscribe = null
         }
 
-        chatStore.updateMsg({
-          msgId: tempMsgId,
-          status: MessageStatusEnum.FAILED,
-          uploadProgress: undefined // 清除进度信息
-        })
+        // 失败时不显示消息，只显示错误提示
         window.$message.error(`${msgType === MsgEnum.VIDEO ? '视频' : '文件'}发送失败`)
       }
+    }
+
+    // 文件队列处理完成后，检查输入框是否有图片内容，如果有则自动发送
+    try {
+      await nextTick()
+      // 检查输入框中是否有图片
+      if (messageInputDom.value && messageInputDom.value.querySelectorAll('img').length > 0) {
+        const contentType = getMessageContentType(messageInputDom)
+        if (contentType === MsgEnum.IMAGE || contentType === MsgEnum.EMOJI) {
+          await send()
+        }
+      }
+    } catch (error) {
+      console.error('自动发送输入框图片失败:', error)
     }
   }
 
@@ -1380,6 +1404,78 @@ export const useMsgInput = (messageInputDom: Ref) => {
     }
   }
 
+  /**
+   * 发送地图的函数
+   * @param locationData 地图数据
+   */
+  const sendLocationDirect = async (locationData: any) => {
+    try {
+      const tempMsgId = 'T' + Date.now().toString()
+      const messageStrategy = messageStrategyMap[MsgEnum.LOCATION]
+
+      // 将位置数据转换为JSON字符串作为消息内容
+      const content = JSON.stringify(locationData)
+
+      // 构建位置消息
+      const msg = messageStrategy.getMsg(content, reply.value)
+      const messageBody = messageStrategy.buildMessageBody(msg, reply)
+
+      // 创建临时消息对象
+      const tempMsg = messageStrategy.buildMessageType(tempMsgId, messageBody, globalStore, userUid)
+      tempMsg.message.status = MessageStatusEnum.SENDING
+
+      // 添加到消息列表
+      chatStore.pushMsg(tempMsg)
+
+      // 设置发送状态
+      chatStore.updateMsg({
+        msgId: tempMsgId,
+        status: MessageStatusEnum.SENDING
+      })
+
+      // 发送消息到服务器 - 使用 channel 方式
+      const successChannel = new Channel<any>()
+      const errorChannel = new Channel<string>()
+
+      // 监听成功响应
+      successChannel.onmessage = (message) => {
+        chatStore.updateMsg({
+          msgId: message.oldMsgId,
+          status: MessageStatusEnum.SUCCESS,
+          newMsgId: message.message.id,
+          body: message.message.body,
+          timeBlock: message.timeBlock
+        })
+        useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
+      }
+
+      // 监听错误响应
+      errorChannel.onmessage = (msgId) => {
+        chatStore.updateMsg({
+          msgId: msgId,
+          status: MessageStatusEnum.FAILED
+        })
+        useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
+      }
+
+      await invoke(TauriCommand.SEND_MSG, {
+        data: {
+          id: tempMsgId,
+          roomId: globalStore.currentSession!.roomId,
+          msgType: MsgEnum.LOCATION,
+          body: messageBody
+        },
+        successChannel,
+        errorChannel
+      })
+
+      // 更新会话最后活动时间
+      chatStore.updateSessionLastActiveTime(globalStore.currentSession!.roomId)
+    } catch (error) {
+      console.error('位置消息发送失败:', error)
+    }
+  }
+
   return {
     imgPaste,
     inputKeyDown,
@@ -1388,6 +1484,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     handleInput,
     send,
     stripHtml,
+    sendLocationDirect,
     sendFilesDirect,
     sendVoiceDirect,
     personList,

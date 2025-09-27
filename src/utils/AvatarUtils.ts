@@ -33,7 +33,7 @@ export class AvatarUtils {
    * @returns 头像字符串或URL
    */
   public static getAvatarUrl(avatar: string): string {
-    const DEFAULT = '/avatar/001.png'
+    const DEFAULT = '/logoD.png'
 
     const rawAvatar = avatar.trim()
     if (AvatarUtils.isDefaultAvatar(rawAvatar)) {

@@ -8,6 +8,7 @@
       :zoom="zoom"
       :map-type-id="'vector'"
       :control="mapControl"
+      :options="mapOptions"
       :style="{ height: `${height}px` }"
       @map_inited="() => emit('map-ready')">
       <!-- 位置标记 -->
@@ -15,8 +16,8 @@
         id="location-marker"
         :styles="markerStyles"
         :geometries="markerGeometries"
-        @click="handleMarkerClick"
-        @dragend="handleMarkerDragEnd" />
+        @click="props.draggable ? handleMarkerClick : undefined"
+        @dragend="props.draggable ? handleMarkerDragEnd : undefined" />
     </TlbsMap>
   </div>
 </template>
@@ -64,8 +65,17 @@ const mapCenter = computed(() => ({
 const mapControl = {
   scale: true,
   zoom: false,
-  mapType: false
+  mapType: false,
+  rotation: false // 禁用指南针
 }
+
+// 地图交互选项 - 根据draggable属性决定是否禁用交互
+const mapOptions = computed(() => ({
+  draggable: props.draggable, // 禁用拖拽
+  scrollWheelZoom: props.draggable, // 禁用滚轮缩放
+  doubleClickZoom: props.draggable, // 禁用双击缩放
+  clickable: props.draggable // 禁用点击
+}))
 
 const markerStyles = {
   'current-location': {
@@ -97,10 +107,12 @@ const handleMarkerClick = (event: any) => {
 }
 
 const handleMarkerDragEnd = (event: any) => {
-  emit('location-change', {
-    lat: event.geometry.position.lat,
-    lng: event.geometry.position.lng
-  })
+  if (props.draggable) {
+    emit('location-change', {
+      lat: event.geometry.position.lat,
+      lng: event.geometry.position.lng
+    })
+  }
 }
 
 // 响应式监听

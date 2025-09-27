@@ -9,7 +9,7 @@
       :hidden-right="true"
       :enable-default-background="false"
       :enable-shadow="false"
-      room-name="个人二维码" />
+      room-name="群二维码" />
 
     <!-- 页面全部内容 -->
     <div class="flex flex-col flex-1 items-center p-15px z-2 my-15">

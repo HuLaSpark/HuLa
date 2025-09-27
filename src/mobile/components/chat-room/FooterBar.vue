@@ -25,14 +25,19 @@
       </div>
 
       <div class="flex justify-between px-25px flex-1 items-center py-10px">
-        <div v-for="item in options" :key="item.icon" class="flex flex-wrap items-center" @click="clickItem(item.icon)">
+        <div
+          v-for="item in options"
+          :key="item.icon"
+          class="flex flex-wrap items-center"
+          @click="clickItem(item.icon)"
+          :class="{ 'active-icon': activeIcon === item.icon }">
           <div v-if="item.label !== 'file' && item.label !== 'image'">
             <svg class="h-24px w-24px iconpark-icon"><use :href="`#${item.icon}`"></use></svg>
-            <svg
+            <!-- <svg
               v-if="item.showArrow"
               :class="['h-15px w-15px iconpark-icon transition-transform duration-300', item.isRotate ? 'rotate' : '']">
               <use href="#down" />
-            </svg>
+            </svg> -->
           </div>
           <div v-else-if="item.label === 'file'">
             <van-uploader multiple :after-read="afterReadFile">
@@ -77,6 +82,11 @@
 import type { UploaderFileListItem } from 'vant/es'
 import { useMobileStore } from '@/stores/mobile'
 import 'vant/es/dialog/style'
+
+// ==== 输入框事件 ====
+const mobileStore = useMobileStore()
+const activeIcon = ref<string | null>(null)
+const emit = defineEmits(['focus', 'blur', 'updateHeight'])
 
 const uploadFileList = ref<
   {
@@ -164,6 +174,18 @@ const root = ref()
 let msgInput: MsgInputReturn | null = null
 
 onMounted(() => {
+  if (root.value) {
+    const resizeObserver = new ResizeObserver((entries) => {
+      const height = entries[0].contentRect.height
+      emit('updateHeight', height)
+    })
+    resizeObserver.observe(root.value)
+
+    onUnmounted(() => {
+      resizeObserver.disconnect()
+    })
+  }
+
   nextTick(() => {
     import('@/hooks/useMsgInput').then((module) => {
       // 这里确保 messageInputDom 已挂载且为 HTMLElement
@@ -207,19 +229,34 @@ const handleSend = async () => {
   messageInputDom.value.innerHTML = ''
 }
 
+const getDefaultIcons = () => {
+  return [
+    { label: 'emoji', icon: 'smiling-face', showArrow: true, isRotate: false },
+    { label: 'file', icon: 'file', showArrow: false, isRotate: true },
+    { label: 'image', icon: 'photo', showArrow: false, isRotate: true },
+    { label: 'video', icon: 'voice', showArrow: true, isRotate: false },
+    { label: 'history', icon: 'history', showArrow: true, isRotate: false }
+  ]
+}
+
 // ==== 展开面板 ====
-const options = ref([
-  { label: 'emoji', icon: 'smiling-face', showArrow: true, isRotate: false },
-  { label: 'file', icon: 'file', showArrow: false, isRotate: true },
-  { label: 'image', icon: 'photo', showArrow: false, isRotate: true },
-  { label: 'video', icon: 'voice', showArrow: true, isRotate: false },
-  { label: 'history', icon: 'history', showArrow: true, isRotate: false }
-])
+const options = ref(getDefaultIcons())
 
 const isPanelVisible = ref(false)
 const isInputFocused = ref(false)
 
 const clickItem = async (icon: string) => {
+  if (activeIcon.value === icon) {
+    closePanel()
+    return
+  }
+
+  // 如果之前有激活的图标，先关闭它
+  if (activeIcon.value) {
+    closePanel()
+  }
+
+  activeIcon.value = icon
   const clickedItem = options.value.find((item) => item.icon === icon)
   if (!clickedItem || !clickedItem.showArrow) return
 
@@ -231,8 +268,8 @@ const clickItem = async (icon: string) => {
   } else {
     options.value.forEach((item) => {
       if (item.icon === icon) {
-        item.isRotate = !item.isRotate
-        isPanelVisible.value = item.isRotate
+        item.isRotate = true
+        isPanelVisible.value = true
       } else {
         item.isRotate = false
       }
@@ -264,10 +301,6 @@ const leave = (el: Element, done: () => void) => {
   dom.addEventListener('transitionend', done, { once: true })
 }
 
-// ==== 输入框事件 ====
-const mobileStore = useMobileStore()
-const emit = defineEmits(['focus', 'blur'])
-
 const handleFocus = async () => {
   isInputFocused.value = true
   await nextTick()
@@ -289,11 +322,51 @@ const handleBlur = async () => {
   })
 }
 
+const closePanel = () => {
+  isPanelVisible.value = false
+  activeIcon.value = null
+  options.value.forEach((item) => (item.isRotate = false))
+}
+
 // ==== 对外暴露 ====
-defineExpose({ root, footerBarInput })
+defineExpose({ root, footerBarInput, closePanel })
 </script>
 
 <style lang="scss" scoped>
+.active-icon {
+  position: relative;
+
+  svg {
+    color: #13987f; /* 主题色 */
+    transition: color 0.3s ease;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: #13987f;
+    animation: pulse 1.5s infinite;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: translateX(-50%) scale(1.2);
+  }
+}
+
 .footer-bar-shadow {
   box-shadow: 0 -3px 6px -4px rgba(0, 0, 0, 0.1);
 }

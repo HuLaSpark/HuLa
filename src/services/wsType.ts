@@ -31,8 +31,6 @@ export enum WsResponseMessageType {
   ROOM_INFO_CHANGE = 'roomInfoChange',
   /** 自己修改我在群里的信息 */
   MY_ROOM_INFO_CHANGE = 'myRoomInfoChange',
-  /** 群通知消息 */
-  ROOM_GROUP_MSG = 'roomGroupMsg',
   /** 群公告消息 */
   ROOM_GROUP_NOTICE_MSG = 'roomGroupNoticeMsg',
   /** 群公告已读 */

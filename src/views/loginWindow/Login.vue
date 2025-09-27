@@ -10,7 +10,7 @@
       <n-flex justify="center" class="w-full pt-35px" data-tauri-drag-region>
         <n-avatar
           class="welcome size-80px rounded-50% border-(2px solid #fff)"
-          :src="AvatarUtils.getAvatarUrl(info.avatar || '/logoD.png')"
+          :src="AvatarUtils.getAvatarUrl(info.avatar)"
           color="#fff" />
       </n-flex>
 
@@ -54,10 +54,7 @@
               @click="giveAccount(item)"
               class="p-8px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px">
               <div class="flex-between-center">
-                <n-avatar
-                  :src="AvatarUtils.getAvatarUrl(item.avatar || '/logoD.png')"
-                  color="#fff"
-                  class="size-28px rounded-50%" />
+                <n-avatar :src="AvatarUtils.getAvatarUrl(item.avatar)" color="#fff" class="size-28px rounded-50%" />
                 <p class="text-14px color-#505050">{{ item.account }}</p>
                 <svg @click.stop="delAccount(item)" class="w-12px h-12px">
                   <use href="#close"></use>
@@ -120,7 +117,7 @@
             :size="110"
             color="#fff"
             class="border-(2px solid #fff)"
-            :src="AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar || '/logoD.png')" />
+            :src="AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar)" />
         </n-flex>
 
         <n-flex justify="center">

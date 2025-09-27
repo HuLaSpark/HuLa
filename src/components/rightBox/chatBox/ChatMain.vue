@@ -1,5 +1,5 @@
 <template>
-  <div class="chat-main-container" :style="isMobileRef ? {} : cssVariables">
+  <div class="chat-main-container" :style="cssVariables">
     <!-- 网络状态提示 -->
     <n-flex
       v-if="!networkStatus.isOnline.value"
@@ -122,7 +122,7 @@
   <!--  悬浮按钮提示(底部悬浮) -->
   <footer
     class="float-footer"
-    v-if="shouldShowFloatFooter && currentNewMsgCount"
+    v-if="shouldShowFloatFooter && currentNewMsgCount && !isMobileRef"
     :class="isGroup ? 'right-220px' : 'right-50px'"
     :style="{ bottom: `${footerHeight - 60}px` }">
     <div class="float-box" :class="{ max: currentNewMsgCount?.count > 99 }" @click="handleFloatButtonClick">
@@ -163,6 +163,12 @@ import { timeToStr } from '@/utils/ComputedTime'
 import { getAnnouncementList } from '@/utils/ImRequestUtils'
 import { isMac, isMobile, isWindows } from '@/utils/PlatformConstants'
 
+const selfEmit = defineEmits(['scroll'])
+
+const props = defineProps<{
+  footerHeight?: number
+}>()
+
 type AnnouncementData = {
   content: string
   top?: boolean
@@ -199,8 +205,16 @@ const computeMsgHover = computed(() => (id: string) => {
 })
 // CSS 变量计算，避免动态高度重排
 const cssVariables = computed(() => {
+  let height = 0
+
+  if (isMobile()) {
+    height = props.footerHeight as number
+  } else {
+    height = footerHeight.value
+  }
+
   return {
-    '--footer-height': `${footerHeight.value}px`
+    '--footer-height': `${height}px`
   }
 })
 // 是否显示悬浮页脚
@@ -394,6 +408,8 @@ const handleFloatButtonClick = async () => {
 
 // 处理滚动事件(用于页脚显示功能)
 const handleScroll = (event: Event) => {
+  selfEmit('scroll', event)
+
   const container = event.target as HTMLElement
   if (!container) return
 

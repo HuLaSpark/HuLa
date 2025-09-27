@@ -121,6 +121,7 @@ export type GroupDetailReq = {
   remark: string
   /** 我的群昵称 */
   myName: string
+  allowScanEnter: boolean
 }
 
 export type GroupListReq = {
@@ -435,10 +436,24 @@ export type EmojiBody = {
   url: string
 }
 
+/** 位置消息体 */
+export type LocationBody = {
+  /** 纬度 */
+  latitude: string
+  /** 经度 */
+  longitude: string
+  /** 地址描述 */
+  address: string
+  /** 精度描述 */
+  precision: string
+  /** 时间戳 */
+  timestamp: string
+}
+
 /**
  * 消息内容
  */
-export type MessageBody = TextBody | ImageBody | VoiceBody | VideoBody | FileBody | EmojiBody | any
+export type MessageBody = TextBody | ImageBody | VoiceBody | VideoBody | FileBody | EmojiBody | LocationBody | any
 export type MsgType = {
   /** 消息ID */
   id: string
@@ -635,6 +650,7 @@ export type SessionItem = {
   myName?: string
   /** 是否选中（非后端） */
   isCheck?: boolean
+  allowScanEnter: boolean
 }
 
 /** 消息已读未读数列表项 */

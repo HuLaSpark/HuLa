@@ -24,7 +24,7 @@
         <n-flex @click="toSimpleBio" align="center" :size="6" class="w-full">
           <n-avatar
             :size="38"
-            :src="AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar!)"
+            :src="AvatarUtils.getAvatarUrl(userStore.userInfo?.avatar ? userStore.userInfo.avatar : '/logoD.png')"
             fallback-src="/logo.png"
             round />
 
@@ -38,10 +38,12 @@
                   sans-serif;
               "
               class="text-(16px [--text-color])">
-              {{ userStore.userInfo!.name }}
+              {{ userStore.userInfo?.name ? userStore.userInfo.name : '无名字' }}
             </p>
             <p class="text-(10px [--text-color])">
-              {{ groupStore.getUserInfo(userStore.userInfo!.uid)?.locPlace || '中国' }}
+              {{
+                userStore.userInfo?.uid ? groupStore.getUserInfo(userStore.userInfo!.uid)?.locPlace || '中国' : '中国'
+              }}
             </p>
           </n-flex>
         </n-flex>
@@ -131,6 +133,7 @@
 </template>
 
 <script setup lang="ts">
+import { debounce } from 'lodash-es'
 import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.vue'
 import NavBar from '#/layout/navBar/index.vue'
 import type { IKeyboardDidShowDetail } from '#/mobile-client/interface/adapter'
@@ -151,18 +154,19 @@ import { formatTimestamp } from '@/utils/ComputedTime.ts'
 
 const loading = ref(false)
 const count = ref(0)
-const onRefresh = () => {
-  router.push('/mobile/confirmQRLogin')
-  setTimeout(() => {
-    loading.value = false
-    count.value++
-  }, 500)
-}
 
 const groupStore = useGroupStore()
-
-// 新代码
+const chatStore = useChatStore()
+const userStore = useUserStore()
 const globalStore = useGlobalStore()
+
+const allUserMap = computed(() => {
+  const map = new Map<string, any>() // User 是你定义的用户类型
+  groupStore.allUserInfo.forEach((user) => {
+    map.set(user.uid, user)
+  })
+  return map
+})
 
 // 会话列表 TODO: 需要后端返回对应字段
 const sessionList = computed(() => {
@@ -223,11 +227,26 @@ const sessionList = computed(() => {
       })
   )
 })
-// 新代码结束
 
-const chatStore = useChatStore()
+const onRefresh = () => {
+  // 如果没到0.5秒就延迟0.5秒，如果接口执行时间超过0.5秒那就以getSessionList时间为准
+  loading.value = true
+  count.value++
 
-const userStore = useUserStore()
+  const apiPromise = chatStore.getSessionList(true)
+  const delayPromise = new Promise((resolve) => setTimeout(resolve, 500))
+
+  Promise.all([apiPromise, delayPromise])
+    .then(([res]) => {
+      // 接口和延时都完成后执行
+      loading.value = false
+      console.log('刷新完成', res)
+    })
+    .catch((error) => {
+      loading.value = false
+      console.log('刷新会话列表失败：', error)
+    })
+}
 
 onMounted(async () => {
   await rustWebSocketClient.setupBusinessMessageListeners()
@@ -255,9 +274,9 @@ onMounted(async () => {
 const atTop = ref(true) // 是否滚动到顶
 const scrollContainer = ref(null) //消息滚动容器
 
-function onScroll(e: any) {
+const onScroll = debounce((e: any) => {
   atTop.value = e.target.scrollTop === 0
-}
+}, 500)
 
 /**
  * 渲染图片图标的函数工厂
@@ -381,9 +400,24 @@ const intoRoom = (item: any) => {
   if (preventClick) {
     return
   }
+
   handleMsgClick(item)
+  const foundedUser = allUserMap.value.get(item.detailId)
+
   setTimeout(() => {
-    router.push(`/mobile/chatRoom/chatMain`)
+    // 如果找到用户，就表示该会话属于好友，那就传入好友的uid;同时排除id为1的hula小管家
+    if (foundedUser && foundedUser.uid !== '1') {
+      router.push({
+        name: 'mobileChatMain',
+        params: {
+          uid: item.detailId
+        }
+      })
+    } else {
+      router.push({
+        name: 'mobileChatMain'
+      })
+    }
   }, 0)
 }
 const toSimpleBio = () => {

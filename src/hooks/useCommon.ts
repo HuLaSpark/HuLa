@@ -828,7 +828,6 @@ export const useCommon = () => {
     } catch (_error) {
       window.$message.error('显示会话失败')
     }
-    globalStore.updateCurrentSessionRoomId(res.roomId)
 
     // 先检查会话是否已存在
     const existingSession = chatStore.getSession(res.roomId)
@@ -838,6 +837,7 @@ export const useCommon = () => {
       // 如果会话不存在，需要重新获取会话列表，但保持当前选中的会话
       await chatStore.getSessionList(true)
     }
+    globalStore.updateCurrentSessionRoomId(res.roomId)
 
     // 发送消息定位
     useMitt.emit(MittEnum.LOCATE_SESSION, { roomId: res.roomId })

@@ -36,7 +36,7 @@ export const useMessage = () => {
       markMsgRead(item.roomId || '1').then(async () => {
         chatStore.markSessionRead(item.roomId || '1')
         // 更新全局未读计数
-        await globalStore.updateGlobalUnreadCount()
+        globalStore.updateGlobalUnreadCount()
       })
     }
   }
@@ -307,10 +307,6 @@ export const useMessage = () => {
     }
     window.$message.success(message)
   }
-
-  onBeforeUnmount(() => {
-    useMitt.off(MittEnum.SHRINK_WINDOW, () => {})
-  })
 
   return { msgBoxShow, handleMsgClick, handleMsgDelete, handleMsgDblclick, menuList, specialMenuList, preloadChatRoom }
 }

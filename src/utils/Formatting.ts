@@ -17,7 +17,7 @@ export const formatBytes = (bytes: number): string => {
   return size + ' ' + units[unitIndex]
 }
 
-/** 注意！这是文件图标映射关系表，如有修改需求-请联系前端管理同学 */
+/** 文件图标映射关系表 */
 const fileSuffixMap: Record<string, string> = {
   jpg: 'jpg',
   jpeg: 'jpg',
@@ -46,7 +46,8 @@ const fileSuffixMap: Record<string, string> = {
   svg: 'svg',
   sketch: 'sketch',
   exe: 'exe',
-  md: 'md'
+  md: 'md',
+  ts: 'ts'
 }
 /**
  * 获取文件对应的Icon

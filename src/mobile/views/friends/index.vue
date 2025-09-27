@@ -53,13 +53,13 @@
         <div class="h-full flex items-center text-14px">我的消息</div>
         <div @click="toMessage" class="h-full flex items-center justify-end overflow-hidden">
           <n-avatar
-            v-if="applyList.length > 0"
+            v-if="contactStore.requestFriendsList.length > 0"
             :class="index > 0 ? '-ml-2' : ''"
-            v-for="(item, index) in applyList.splice(0, 6)"
-            :id="item.applyId"
+            v-for="(avatar, index) in avatars"
+            :key="avatar"
             round
             size="small"
-            :src="avatarSrc(getUserInfo(item)!.avatar!)" />
+            :src="avatar" />
         </div>
         <div @click="toMessage" class="h-full flex justify-end items-center">
           <img src="@/assets/mobile/friend/right-arrow.webp" class="block h-20px" alt="" />
@@ -186,21 +186,38 @@ const getUserInfo = (item: any) => {
     case NoticeType.FRIEND_APPLY:
     case NoticeType.GROUP_INVITE:
     case NoticeType.GROUP_MEMBER_DELETE: {
-      const data = groupStore.getUserInfo(item.operateId)!
-      return data
+      return groupStore.getUserInfo(item.operateId)!
     }
     case NoticeType.ADD_ME:
     case NoticeType.GROUP_INVITE_ME:
     case NoticeType.GROUP_SET_ADMIN:
+    case NoticeType.GROUP_APPLY:
     case NoticeType.GROUP_RECALL_ADMIN: {
-      const data = groupStore.getUserInfo(item.senderId)!
-      return data
+      return groupStore.getUserInfo(item.senderId)!
     }
   }
 }
 
+const avatars = computed(() => {
+  const seen = new Set()
+  const unique = []
+
+  for (const item of contactStore.requestFriendsList) {
+    const avatar = avatarSrc(getUserInfo(item)!.avatar!)
+    if (!seen.has(avatar)) {
+      seen.add(avatar)
+      unique.push(avatar)
+    }
+
+    if (unique.length >= 6) break
+  }
+
+  return unique
+})
+
 onMounted(async () => {
   try {
+    await contactStore.getContactList(true)
     await contactStore.getApplyPage(false)
   } catch (error) {
     console.log('请求好友申请列表失败')
@@ -252,11 +269,6 @@ const groupStore = useGroupStore()
 const contactStore = useContactStore()
 const userStatusStore = useUserStatusStore()
 const { stateList } = storeToRefs(userStatusStore)
-
-//好友申请列表（只筛选好友申请消息）
-const applyList = computed(() => {
-  return contactStore.requestFriendsList.filter((item) => item.type === 2)
-})
 
 const avatarSrc = (url: string) => AvatarUtils.getAvatarUrl(url)
 
