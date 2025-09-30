@@ -5,7 +5,7 @@
     <ActionBar :max-w="false" :shrink="false" proxy />
 
     <!--  手动登录样式  -->
-    <n-flex vertical :size="25" v-if="!login.autoLogin">
+    <n-flex vertical :size="25" v-if="uiState === 'manual'">
       <!-- 头像 -->
       <n-flex justify="center" class="w-full pt-35px" data-tauri-drag-region>
         <n-avatar
@@ -105,7 +105,7 @@
     </n-flex>
 
     <!-- 自动登录样式 -->
-    <n-flex v-else vertical :size="29" data-tauri-drag-region>
+    <n-flex v-else-if="uiState === 'auto'" vertical :size="29" data-tauri-drag-region>
       <n-flex justify="center" class="mt-15px">
         <img src="@/assets/logo/hula.png" class="w-140px h-60px" alt="" />
       </n-flex>
@@ -142,7 +142,7 @@
     <n-flex justify="center" class="text-14px" id="bottomBar">
       <div class="color-#13987f cursor-pointer" @click="router.push('/qrCode')">扫码登录</div>
       <div class="w-1px h-14px bg-#ccc"></div>
-      <div v-if="login.autoLogin" class="color-#13987f cursor-pointer" @click="removeToken">移除账号</div>
+      <div v-if="uiState === 'auto'" class="color-#13987f cursor-pointer" @click="removeToken">移除账号</div>
       <n-popover
         v-else
         trigger="click"
@@ -276,6 +276,7 @@ const loginDisabled = ref(!isOnline.value)
 const loading = ref(false)
 const arrowStatus = ref(false)
 const moreShow = ref(false)
+const uiState = ref<'manual' | 'auto'>()
 const { setLoginState } = useLogin()
 const { createWebviewWindow, createModalWindow } = useWindow()
 const { checkUpdate, CHECK_UPDATE_LOGIN_TIME } = useCheckUpdate()
@@ -400,10 +401,18 @@ const normalLogin = async (auto = false) => {
       loading.value = false
       loginDisabled.value = false
       loginText.value = '登录'
-      // 如果是自动登录失败，重置按钮状态允许手动登录
+      // 如果是自动登录失败，切换到手动登录界面并重置按钮状态
       if (auto) {
+        uiState.value = 'manual'
         loginDisabled.value = false
         loginText.value = '登录'
+        // 自动填充之前尝试登录的账号信息到手动登录表单
+        if (userStore.userInfo) {
+          info.value.account = userStore.userInfo.account || userStore.userInfo.email || ''
+          info.value.avatar = userStore.userInfo.avatar
+          info.value.name = userStore.userInfo.name
+          info.value.uid = userStore.userInfo.uid
+        }
       }
     })
 }
@@ -507,6 +516,8 @@ onBeforeMount(async () => {
   isTrayMenuShow.value = false
 
   if (!login.value.autoLogin) {
+    // 非自动登录模式，直接显示手动登录界面
+    uiState.value = 'manual'
     localStorage.removeItem('TOKEN')
     localStorage.removeItem('REFRESH_TOKEN')
     clearListener()
@@ -545,10 +556,13 @@ onMounted(async () => {
     loginText.value = '服务异常断开'
   })
 
-  // 自动登录时直接触发登录
+  // 自动登录时显示自动登录界面并触发登录
   if (login.value.autoLogin) {
+    uiState.value = 'auto'
     normalLogin(true)
   } else {
+    // 手动登录模式，自动填充第一个历史账号
+    uiState.value = 'manual'
     loginHistories.length > 0 && giveAccount(loginHistories[0])
   }
 
