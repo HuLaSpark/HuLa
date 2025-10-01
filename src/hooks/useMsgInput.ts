@@ -314,7 +314,13 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
       const doc = parseHtmlSafely(html)
       if (!doc || !doc.body) {
-        return html.replace(/<[^>]*>/g, '').trim()
+        let sanitized = html;
+        let previous;
+        do {
+          previous = sanitized;
+          sanitized = sanitized.replace(/<[^>]*>/g, '');
+        } while (sanitized !== previous);
+        return sanitized.trim();
       }
 
       const replyDiv = doc.querySelector('#replyDiv')
