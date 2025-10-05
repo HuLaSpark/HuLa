@@ -1,6 +1,7 @@
 import { Channel, invoke } from '@tauri-apps/api/core'
 import { readImage, readText } from '@tauri-apps/plugin-clipboard-manager'
 import { useDebounceFn } from '@vueuse/core'
+import pLimit from 'p-limit'
 import { storeToRefs } from 'pinia'
 import type { Ref } from 'vue'
 import { LimitEnum, MessageStatusEnum, MittEnum, MsgEnum, TauriCommand, UploadSceneEnum } from '@/enums'
@@ -314,13 +315,13 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
       const doc = parseHtmlSafely(html)
       if (!doc || !doc.body) {
-        let sanitized = html;
-        let previous;
+        let sanitized = html
+        let previous
         do {
-          previous = sanitized;
-          sanitized = sanitized.replace(/<[^>]*>/g, '');
-        } while (sanitized !== previous);
-        return sanitized.trim();
+          previous = sanitized
+          sanitized = sanitized.replace(/<[^>]*>/g, '')
+        } while (sanitized !== previous)
+        return sanitized.trim()
       }
 
       const replyDiv = doc.querySelector('#replyDiv')
@@ -363,6 +364,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
   /** 处理发送信息事件 */
   // TODO 输入框中的内容当我切换消息的时候需要记录之前输入框的内容 (nyh -> 2024-03-01 07:03:43)
   const send = async () => {
+    const targetRoomId = globalStore.currentSession!.roomId
     // 判断输入框中的图片或者文件数量是否超过限制
     if (messageInputDom.value.querySelectorAll('img').length > LimitEnum.COM_COUNT) {
       window.$message.warning(`一次性只能上传${LimitEnum.COM_COUNT}个文件或图片`)
@@ -513,7 +515,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       await invoke(TauriCommand.SEND_MSG, {
         data: {
           id: tempMsgId,
-          roomId: globalStore.currentSession!.roomId,
+          roomId: targetRoomId,
           msgType: msg.type,
           body: messageBody
         },
@@ -522,7 +524,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       })
 
       // 更新会话最后活动时间
-      chatStore.updateSessionLastActiveTime(globalStore.currentSession!.roomId)
+      chatStore.updateSessionLastActiveTime(targetRoomId)
 
       // 消息发送成功后释放预览URL
       if ((msg.type === MsgEnum.IMAGE || msg.type === MsgEnum.EMOJI) && msg.url.startsWith('blob:')) {
@@ -738,6 +740,270 @@ export const useMsgInput = (messageInputDom: Ref) => {
     }
   }
 
+  // ==================== 视频文件处理函数 ====================
+  const processVideoFile = async (
+    file: File,
+    tempMsgId: string,
+    messageStrategy: any,
+    targetRoomId: string
+  ): Promise<void> => {
+    const tempMsg = messageStrategy.buildMessageType(
+      tempMsgId,
+      {
+        url: URL.createObjectURL(file),
+        size: file.size,
+        fileName: file.name,
+        thumbUrl: '',
+        thumbWidth: 300,
+        thumbHeight: 150,
+        thumbSize: 0
+      },
+      globalStore,
+      userUid
+    )
+    tempMsg.message.roomId = targetRoomId
+    tempMsg.message.status = MessageStatusEnum.SENDING
+    chatStore.pushMsg(tempMsg)
+
+    let isProgressActive = true
+    const cleanup = () => {
+      isProgressActive = false
+    }
+
+    try {
+      const [videoPath, thumbnailFile] = await Promise.all([
+        saveCacheFile(file, 'video/'),
+        messageStrategy.getVideoThumbnail(file)
+      ])
+
+      const localThumbUrl = URL.createObjectURL(thumbnailFile)
+      chatStore.updateMsg({
+        msgId: tempMsgId,
+        status: MessageStatusEnum.SENDING,
+        body: { ...tempMsg.message.body, thumbUrl: localThumbUrl, thumbSize: thumbnailFile.size }
+      })
+
+      const videoUploadResult = await messageStrategy.uploadFile(videoPath, { provider: UploadProviderEnum.QINIU })
+      const qiniuConfig = videoUploadResult.config
+
+      const { progress, onChange } = messageStrategy.getUploadProgress()
+      onChange((event: string) => {
+        if (!isProgressActive || event !== 'progress') return
+        chatStore.updateMsg({
+          msgId: tempMsgId,
+          status: MessageStatusEnum.SENDING,
+          uploadProgress: progress.value
+        })
+      })
+
+      const [videoUploadResponse, thumbnailUploadResponse] = await Promise.all([
+        messageStrategy.doUpload(videoPath, videoUploadResult.uploadUrl, {
+          provider: UploadProviderEnum.QINIU,
+          ...qiniuConfig
+        }),
+        uploadToQiniu(thumbnailFile, qiniuConfig.scene || 'CHAT', qiniuConfig, true)
+      ])
+
+      cleanup()
+
+      const finalVideoUrl = videoUploadResponse?.qiniuUrl || videoUploadResult.downloadUrl
+      const finalThumbnailUrl =
+        thumbnailUploadResponse?.downloadUrl || `${qiniuConfig.domain}/${thumbnailUploadResponse?.key}`
+
+      const successChannel = new Channel<any>()
+      const errorChannel = new Channel<string>()
+
+      successChannel.onmessage = (message) => {
+        chatStore.updateMsg({
+          msgId: tempMsgId,
+          status: MessageStatusEnum.SUCCESS,
+          newMsgId: message.message.id,
+          body: message.message.body,
+          timeBlock: message.timeBlock
+        })
+        useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
+      }
+
+      errorChannel.onmessage = () => {
+        chatStore.updateMsg({ msgId: tempMsgId, status: MessageStatusEnum.FAILED })
+        useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
+      }
+
+      await invoke(TauriCommand.SEND_MSG, {
+        data: {
+          id: tempMsgId,
+          roomId: targetRoomId,
+          msgType: MsgEnum.VIDEO,
+          body: {
+            url: finalVideoUrl,
+            size: file.size,
+            fileName: file.name,
+            thumbUrl: finalThumbnailUrl,
+            thumbWidth: 300,
+            thumbHeight: 150,
+            thumbSize: thumbnailFile.size,
+            localPath: videoPath,
+            senderUid: userUid.value
+          }
+        },
+        successChannel,
+        errorChannel
+      })
+
+      URL.revokeObjectURL(tempMsg.message.body.url)
+      URL.revokeObjectURL(localThumbUrl)
+    } catch (error) {
+      cleanup()
+      throw error
+    }
+  }
+
+  // ==================== 图片文件处理函数 ====================
+  const processImageFile = async (
+    file: File,
+    tempMsgId: string,
+    messageStrategy: any,
+    targetRoomId: string
+  ): Promise<void> => {
+    const msg = await messageStrategy.getMsg('', reply, [file])
+    const messageBody = messageStrategy.buildMessageBody(msg, reply)
+
+    const tempMsg = messageStrategy.buildMessageType(tempMsgId, messageBody, globalStore, userUid)
+    tempMsg.message.roomId = targetRoomId
+    tempMsg.message.status = MessageStatusEnum.SENDING
+    chatStore.pushMsg(tempMsg)
+    const { uploadUrl, downloadUrl, config } = await messageStrategy.uploadFile(msg.path, {
+      provider: UploadProviderEnum.QINIU
+    })
+    const doUploadResult = await messageStrategy.doUpload(msg.path, uploadUrl, config)
+
+    messageBody.url = config?.provider === UploadProviderEnum.QINIU ? doUploadResult?.qiniuUrl : downloadUrl
+    delete messageBody.path
+
+    chatStore.updateMsg({
+      msgId: tempMsgId,
+      body: messageBody,
+      status: MessageStatusEnum.SENDING
+    })
+
+    const successChannel = new Channel<any>()
+    const errorChannel = new Channel<string>()
+
+    successChannel.onmessage = (message) => {
+      chatStore.updateMsg({
+        msgId: tempMsgId,
+        status: MessageStatusEnum.SUCCESS,
+        newMsgId: message.message.id,
+        body: message.message.body,
+        timeBlock: message.timeBlock
+      })
+      useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
+    }
+
+    errorChannel.onmessage = () => {
+      chatStore.updateMsg({ msgId: tempMsgId, status: MessageStatusEnum.FAILED })
+      useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
+    }
+
+    await invoke(TauriCommand.SEND_MSG, {
+      data: {
+        id: tempMsgId,
+        roomId: targetRoomId,
+        msgType: MsgEnum.IMAGE,
+        body: messageBody
+      },
+      successChannel,
+      errorChannel
+    })
+
+    URL.revokeObjectURL(msg.url)
+    chatStore.updateSessionLastActiveTime(targetRoomId)
+  }
+
+  // ==================== 通用文件处理函数 ====================
+  const processGenericFile = async (
+    file: File,
+    tempMsgId: string,
+    messageStrategy: any,
+    targetRoomId: string
+  ): Promise<void> => {
+    const msg = await messageStrategy.getMsg('', reply, [file])
+    const messageBody = messageStrategy.buildMessageBody(msg, reply)
+
+    const tempMsg = messageStrategy.buildMessageType(tempMsgId, { ...messageBody, url: '' }, globalStore, userUid)
+    tempMsg.message.roomId = targetRoomId
+    tempMsg.message.status = MessageStatusEnum.SENDING
+    chatStore.pushMsg(tempMsg)
+
+    let isProgressActive = true
+    const cleanup = () => {
+      isProgressActive = false
+    }
+
+    try {
+      const { progress, onChange } = messageStrategy.getUploadProgress()
+      onChange((event: string) => {
+        if (!isProgressActive || event !== 'progress') return
+        chatStore.updateMsg({
+          msgId: tempMsgId,
+          status: MessageStatusEnum.SENDING,
+          uploadProgress: progress.value
+        })
+      })
+
+      const { uploadUrl, downloadUrl, config } = await messageStrategy.uploadFile(msg.path, {
+        provider: UploadProviderEnum.QINIU
+      })
+      const doUploadResult = await messageStrategy.doUpload(msg.path, uploadUrl, config)
+
+      cleanup()
+
+      messageBody.url = config?.provider === UploadProviderEnum.QINIU ? doUploadResult?.qiniuUrl : downloadUrl
+      delete messageBody.path
+
+      chatStore.updateMsg({
+        msgId: tempMsgId,
+        body: messageBody,
+        status: MessageStatusEnum.SENDING
+      })
+
+      const successChannel = new Channel<any>()
+      const errorChannel = new Channel<string>()
+
+      successChannel.onmessage = (message) => {
+        chatStore.updateMsg({
+          msgId: tempMsgId,
+          status: MessageStatusEnum.SUCCESS,
+          newMsgId: message.message.id,
+          body: message.message.body,
+          timeBlock: message.timeBlock
+        })
+        useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
+      }
+
+      errorChannel.onmessage = () => {
+        chatStore.updateMsg({ msgId: tempMsgId, status: MessageStatusEnum.FAILED })
+        useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
+      }
+
+      await invoke(TauriCommand.SEND_MSG, {
+        data: {
+          id: tempMsgId,
+          roomId: targetRoomId,
+          msgType: MsgEnum.FILE,
+          body: messageBody
+        },
+        successChannel,
+        errorChannel
+      })
+
+      chatStore.updateSessionLastActiveTime(targetRoomId)
+    } catch (error) {
+      cleanup()
+      throw error
+    }
+  }
+
   onMounted(async () => {
     useMitt.on(MittEnum.RE_EDIT, async (event: string) => {
       messageInputDom.value.focus()
@@ -834,425 +1100,84 @@ export const useMsgInput = (messageInputDom: Ref) => {
   })
 
   /**
-   * 发送文件的函数
+   * 发送文件的函数（优化版 - 并发处理，逐个显示）
    * @param files 要发送的文件数组
    */
   const sendFilesDirect = async (files: File[]) => {
+    const targetRoomId = globalStore.currentSession!.roomId
+
     // 初始化文件上传队列
     globalFileUploadQueue.initQueue(files)
 
-    // 同步处理每个文件，等待前一个完成再处理下一个
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i]
-      const fileId = globalFileUploadQueue.queue.items[i]?.id
+    // 创建并发限制器（同时处理3个文件）
+    const limit = pLimit(3)
 
-      // 将变量声明移到更高的作用域，避免catch块中无法访问
-      let msgType: MsgEnum = MsgEnum.TEXT
-      let tempMsgId = ''
-      let progressUnsubscribe: (() => void) | null = null
+    // 并发处理所有文件
+    const tasks = files.map((file, index) => {
+      const fileId = globalFileUploadQueue.queue.items[index]?.id
 
-      try {
-        // 更新当前文件为上传中状态
-        if (fileId) {
-          globalFileUploadQueue.updateFileStatus(fileId, 'uploading', 0)
-        }
+      return limit(async () => {
+        let msgType: MsgEnum = MsgEnum.TEXT
+        let tempMsgId = ''
 
-        // 判断文件类型和修复MIME类型
-        const processedFile = fixFileMimeType(file)
-        msgType = getMessageTypeByFile(processedFile)
-
-        // 对音频文件进行特殊处理：通过文件选择的方式发送，作为文件类型处理
-        if (msgType === MsgEnum.VOICE) {
-          msgType = MsgEnum.FILE
-        }
-
-        // 生成唯一消息ID，避免重复
-        tempMsgId = `${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
-        const messageStrategy = messageStrategyMap[msgType]
-        if (msgType === MsgEnum.VIDEO) {
-          // 视频文件处理逻辑
-          const tempMsg = messageStrategy.buildMessageType(
-            tempMsgId,
-            {
-              url: URL.createObjectURL(processedFile),
-              size: processedFile.size,
-              fileName: processedFile.name,
-              thumbUrl: '',
-              thumbWidth: 300,
-              thumbHeight: 150,
-              thumbSize: 0
-            },
-            globalStore,
-            userUid
-          )
-          tempMsg.message.status = MessageStatusEnum.SENDING
-
-          // 异步处理上传
-          const videoPath = await saveCacheFile(processedFile, 'video/')
-
-          // 直接使用 VideoMessageStrategy 生成缩略图，避免重复处理
-          const videoStrategy = messageStrategy as any
-          const thumbnailFile = await videoStrategy.getVideoThumbnail(processedFile)
-
-          // 生成本地缩略图预览URL，立即更新消息显示
-          const localThumbUrl = URL.createObjectURL(thumbnailFile)
-          chatStore.updateMsg({
-            msgId: tempMsgId,
-            status: MessageStatusEnum.SENDING,
-            body: {
-              ...tempMsg.message.body,
-              thumbUrl: localThumbUrl,
-              thumbSize: thumbnailFile.size
-            }
-          })
-
-          // 获取一次七牛云配置，共享使用
-          const videoUploadResult = await messageStrategy.uploadFile(videoPath, { provider: UploadProviderEnum.QINIU })
-          const qiniuConfig = videoUploadResult.config // 使用第一次获取的配置
-
-          // 更新状态为上传中
-          chatStore.updateMsg({
-            msgId: tempMsgId,
-            status: MessageStatusEnum.SENDING,
-            uploadProgress: 0
-          })
-
-          // 获取视频策略的上传进度监听
-          const { progress, onChange } = (messageStrategy as any).getUploadProgress()
-
-          // 使用标志来控制事件处理
-          let isProgressActive = true
-
-          // 监听上传进度并实时更新消息
-          const handleProgress = (event: string) => {
-            if (!isProgressActive) return // 如果已经取消，不处理事件
-            if (event === 'progress') {
-              console.log(`🔄 视频上传进度更新: ${progress.value}% (消息ID: ${tempMsgId})`)
-              chatStore.updateMsg({
-                msgId: tempMsgId,
-                status: MessageStatusEnum.SENDING,
-                uploadProgress: progress.value
-              })
-            }
+        try {
+          // 更新队列状态
+          if (fileId) {
+            globalFileUploadQueue.updateFileStatus(fileId, 'uploading', 0)
           }
 
-          // 添加监听器
-          onChange(handleProgress)
+          // 文件类型处理
+          const processedFile = fixFileMimeType(file)
+          msgType = getMessageTypeByFile(processedFile)
+          if (msgType === MsgEnum.VOICE) msgType = MsgEnum.FILE
 
-          // 创建取消函数
-          progressUnsubscribe = () => {
-            isProgressActive = false
-            console.log(`🗑️ 清理进度监听器 (消息ID: ${tempMsgId})`)
+          // 生成唯一消息ID
+          tempMsgId = `${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
+          const messageStrategy = messageStrategyMap[msgType]
+
+          // 根据类型调用对应处理函数，传递固定的 roomId
+          if (msgType === MsgEnum.VIDEO) {
+            await processVideoFile(processedFile, tempMsgId, messageStrategy, targetRoomId)
+          } else if (msgType === MsgEnum.IMAGE) {
+            await processImageFile(processedFile, tempMsgId, messageStrategy, targetRoomId)
+          } else if (msgType === MsgEnum.FILE) {
+            await processGenericFile(processedFile, tempMsgId, messageStrategy, targetRoomId)
           }
 
-          let videoUploadResponse: any = null
-          try {
-            // 上传视频
-            videoUploadResponse = await messageStrategy.doUpload(videoPath, videoUploadResult.uploadUrl, {
-              provider: UploadProviderEnum.QINIU,
-              ...qiniuConfig
+          // 成功 - 更新队列状态
+          if (fileId) {
+            globalFileUploadQueue.updateFileStatus(fileId, 'completed', 100)
+          }
+        } catch (error) {
+          console.error(`${file.name} 发送失败:`, error)
+
+          // 失败 - 更新队列和消息状态
+          if (fileId) {
+            globalFileUploadQueue.updateFileStatus(fileId, 'failed', 0)
+          }
+
+          if (tempMsgId) {
+            chatStore.updateMsg({
+              msgId: tempMsgId,
+              status: MessageStatusEnum.FAILED
             })
-
-            // 清理进度监听器
-            if (progressUnsubscribe) {
-              progressUnsubscribe()
-              progressUnsubscribe = null
-            }
-          } catch (uploadError) {
-            // 清理进度监听器
-            if (progressUnsubscribe) {
-              progressUnsubscribe()
-              progressUnsubscribe = null
-            }
-            throw uploadError
           }
 
-          // 直接使用七牛云上传缩略图，避免通过doUpload路径
-          const thumbnailUploadResponse = await uploadToQiniu(
-            thumbnailFile,
-            qiniuConfig.scene || 'CHAT',
-            qiniuConfig,
-            true // 是否启用文件去重
-          )
-
-          const finalVideoUrl = videoUploadResponse?.qiniuUrl || videoUploadResult.downloadUrl
-          const finalThumbnailUrl =
-            thumbnailUploadResponse?.downloadUrl || `${qiniuConfig.domain}/${thumbnailUploadResponse?.key}`
-
-          // 发送消息到服务器保存 - 使用 channel 方式
-          const videoSuccessChannel = new Channel<any>()
-          const videoErrorChannel = new Channel<string>()
-
-          // 监听成功响应
-          videoSuccessChannel.onmessage = (message) => {
-            console.log('[视频] 收到 send_msg_success 响应:', message)
-            // 成功后才添加消息到聊天列表
-            const finalMsg = messageStrategy.buildMessageType(
-              message.message.id,
-              message.message.body,
-              globalStore,
-              userUid
-            )
-            finalMsg.message.status = MessageStatusEnum.SUCCESS
-            finalMsg.timeBlock = message.timeBlock
-
-            chatStore.pushMsg(finalMsg)
-            useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
-          }
-
-          // 监听错误响应
-          videoErrorChannel.onmessage = (msgId) => {
-            console.log('[视频] 收到 send_msg_error 响应:', msgId)
-            useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
-          }
-
-          await invoke(TauriCommand.SEND_MSG, {
-            data: {
-              id: tempMsgId,
-              roomId: globalStore.currentSession!.roomId,
-              msgType: MsgEnum.VIDEO,
-              body: {
-                url: finalVideoUrl,
-                size: processedFile.size,
-                fileName: processedFile.name,
-                thumbUrl: finalThumbnailUrl,
-                thumbWidth: 300,
-                thumbHeight: 150,
-                thumbSize: thumbnailFile.size,
-                localPath: videoPath, // 保存本地缓存路径
-                senderUid: userUid.value // 保存发送者UID
-              }
-            },
-            successChannel: videoSuccessChannel,
-            errorChannel: videoErrorChannel
-          })
-          // 清理本地URL
-          URL.revokeObjectURL(tempMsg.message.body.url)
-          URL.revokeObjectURL(localThumbUrl)
-        } else if (msgType === MsgEnum.IMAGE) {
-          // 图片文件处理逻辑
-          // 直接通过fileList参数传递文件，ImageMessageStrategy会处理文件缓存和预览URL
-          const msg = await messageStrategy.getMsg('', reply, [processedFile])
-          const messageBody = messageStrategy.buildMessageBody(msg, reply)
-
-          // 创建临时消息对象，使用ImageStrategy提供的预览URL
-          const tempMsg = messageStrategy.buildMessageType(tempMsgId, messageBody, globalStore, userUid)
-          tempMsg.message.status = MessageStatusEnum.SENDING
-
-          console.log('🖼️ 开始处理图片上传:', processedFile.name)
-
-          // 上传图片
-          const { uploadUrl, downloadUrl, config } = await messageStrategy.uploadFile(msg.path, {
-            provider: UploadProviderEnum.QINIU
-          })
-
-          const doUploadResult = await messageStrategy.doUpload(msg.path, uploadUrl, config)
-
-          // 更新消息体中的URL为服务器URL
-          messageBody.url =
-            config?.provider && config?.provider === UploadProviderEnum.QINIU ? doUploadResult?.qiniuUrl : downloadUrl
-          delete messageBody.path // 删除临时路径
-
-          // 更新临时消息的URL
-          chatStore.updateMsg({
-            msgId: tempMsgId,
-            body: {
-              ...messageBody
-            },
-            status: MessageStatusEnum.SENDING
-          })
-
-          console.log('🖼️ 图片上传完成，更新为服务器URL:', messageBody.url)
-
-          // 发送消息到服务器 - 使用 channel 方式
-          const imageSuccessChannel = new Channel<any>()
-          const imageErrorChannel = new Channel<string>()
-
-          // 监听成功响应
-          imageSuccessChannel.onmessage = (message) => {
-            console.log('[图片] 收到 send_msg_success 响应:', message)
-            // 成功后才添加消息到聊天列表
-            const finalMsg = messageStrategy.buildMessageType(
-              message.message.id,
-              message.message.body,
-              globalStore,
-              userUid
-            )
-            finalMsg.message.status = MessageStatusEnum.SUCCESS
-            finalMsg.timeBlock = message.timeBlock
-
-            chatStore.pushMsg(finalMsg)
-            useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
-          }
-
-          // 监听错误响应
-          imageErrorChannel.onmessage = (msgId) => {
-            console.log('[图片] 收到 send_msg_error 响应:', msgId)
-            useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
-          }
-
-          await invoke(TauriCommand.SEND_MSG, {
-            data: {
-              id: tempMsgId,
-              roomId: globalStore.currentSession!.roomId,
-              msgType: MsgEnum.IMAGE,
-              body: messageBody
-            },
-            successChannel: imageSuccessChannel,
-            errorChannel: imageErrorChannel
-          })
-
-          // 更新会话最后活动时间
-          chatStore.updateSessionLastActiveTime(globalStore.currentSession!.roomId)
-
-          // 释放本地预览URL
-          URL.revokeObjectURL(msg.url)
-        } else if (msgType === MsgEnum.FILE) {
-          // 文件处理逻辑（包括被重分类为文件的音频）
-          const msg = await messageStrategy.getMsg('', reply, [processedFile])
-          const messageBody = messageStrategy.buildMessageBody(msg, reply)
-
-          // 创建临时消息对象
-          const tempMsg = messageStrategy.buildMessageType(
-            tempMsgId,
-            {
-              ...messageBody,
-              url: '' // 文件URL，上传后会被设置
-            },
-            globalStore,
-            userUid
-          )
-          tempMsg.message.status = MessageStatusEnum.SENDING
-
-          // 获取上传进度监听
-          const { progress, onChange } = (messageStrategy as any).getUploadProgress()
-
-          // 使用标志来控制事件处理
-          let isProgressActive = true
-
-          // 监听上传进度并实时更新消息
-          const handleProgress = (event: string) => {
-            if (!isProgressActive) return // 如果已经取消，不处理事件
-            if (event === 'progress') {
-              console.log(`🔄 文件上传进度更新: ${progress.value}% (消息ID: ${tempMsgId})`)
-              chatStore.updateMsg({
-                msgId: tempMsgId,
-                status: MessageStatusEnum.SENDING,
-                uploadProgress: progress.value
-              })
-            }
-          }
-
-          // 添加监听器
-          onChange(handleProgress)
-
-          // 创建取消函数
-          progressUnsubscribe = () => {
-            isProgressActive = false
-            console.log(`🗑️ 清理文件上传进度监听器 (消息ID: ${tempMsgId})`)
-          }
-
-          // 上传文件
-          const { uploadUrl, downloadUrl, config } = await messageStrategy.uploadFile(msg.path, {
-            provider: UploadProviderEnum.QINIU
-          })
-
-          const doUploadResult = await messageStrategy.doUpload(msg.path, uploadUrl, config)
-
-          // 更新消息体中的URL为服务器URL
-          messageBody.url =
-            config?.provider && config?.provider === UploadProviderEnum.QINIU ? doUploadResult?.qiniuUrl : downloadUrl
-          delete messageBody.path // 删除临时路径
-
-          // 更新临时消息的URL
-          chatStore.updateMsg({
-            msgId: tempMsgId,
-            body: {
-              ...messageBody
-            },
-            status: MessageStatusEnum.SENDING
-          })
-
-          console.log('📎 文件上传完成，更新为服务器URL:', messageBody.url)
-
-          // 发送消息到服务器 - 使用 channel 方式
-          const fileSuccessChannel = new Channel<any>()
-          const fileErrorChannel = new Channel<string>()
-
-          // 监听成功响应
-          fileSuccessChannel.onmessage = (message) => {
-            console.log('[文件] 收到 send_msg_success 响应:', message)
-            // 成功后才添加消息到聊天列表
-            const finalMsg = messageStrategy.buildMessageType(
-              message.message.id,
-              message.message.body,
-              globalStore,
-              userUid
-            )
-            finalMsg.message.status = MessageStatusEnum.SUCCESS
-            finalMsg.timeBlock = message.timeBlock
-
-            chatStore.pushMsg(finalMsg)
-            useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
-          }
-
-          // 监听错误响应
-          fileErrorChannel.onmessage = (msgId) => {
-            console.log('[文件] 收到 send_msg_error 响应:', msgId)
-            useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
-          }
-
-          await invoke(TauriCommand.SEND_MSG, {
-            data: {
-              id: tempMsgId,
-              roomId: globalStore.currentSession!.roomId,
-              msgType: MsgEnum.FILE,
-              body: messageBody
-            },
-            successChannel: fileSuccessChannel,
-            errorChannel: fileErrorChannel
-          })
-
-          // 更新会话最后活动时间
-          chatStore.updateSessionLastActiveTime(globalStore.currentSession!.roomId)
-
-          // console.log('📎 文件消息发送成功:', serverResponse.message.id)
-
-          // 清理进度监听器
-          if (progressUnsubscribe) {
-            progressUnsubscribe()
-            progressUnsubscribe = null
-          }
+          window.$message.error(`${file.name} 发送失败`)
         }
+      })
+    })
 
-        // 文件上传成功，更新队列状态
-        if (fileId) {
-          globalFileUploadQueue.updateFileStatus(fileId, 'completed', 100)
-        }
-      } catch (error) {
-        console.error(`${msgType === MsgEnum.VIDEO ? '视频' : '文件'}发送失败:`, error)
+    // 等待所有文件完成（不阻塞UI，文件会逐个显示成功）
+    await Promise.allSettled(tasks)
 
-        // 文件上传失败，更新队列状态
-        if (fileId) {
-          globalFileUploadQueue.updateFileStatus(fileId, 'failed', 0)
-        }
-
-        // 确保清理进度监听器
-        if (progressUnsubscribe) {
-          progressUnsubscribe()
-          progressUnsubscribe = null
-        }
-
-        // 失败时不显示消息，只显示错误提示
-        window.$message.error(`${msgType === MsgEnum.VIDEO ? '视频' : '文件'}发送失败`)
-      }
-    }
-
-    // 文件队列处理完成后，检查输入框是否有图片内容，如果有则自动发送
+    // 检查输入框中是否有图片需要自动发送
     try {
       await nextTick()
-      // 检查输入框中是否有图片
-      if (messageInputDom.value && messageInputDom.value.querySelectorAll('img').length > 0) {
+      if (
+        messageInputDom.value?.querySelectorAll('img').length > 0 &&
+        globalStore.currentSession!.roomId === targetRoomId
+      ) {
         const contentType = getMessageContentType(messageInputDom)
         if (contentType === MsgEnum.IMAGE || contentType === MsgEnum.EMOJI) {
           await send()
@@ -1263,11 +1188,8 @@ export const useMsgInput = (messageInputDom: Ref) => {
     }
   }
 
-  /**
-   * 发送语音的函数
-   * @param voiceData 语音数据
-   */
   const sendVoiceDirect = async (voiceData: any) => {
+    const targetRoomId = globalStore.currentSession!.roomId
     try {
       // 创建语音消息数据
       const msg = {
@@ -1299,7 +1221,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
         },
         message: {
           id: tempMsgId,
-          roomId: globalStore.currentSession!.roomId,
+          roomId: targetRoomId,
           sendTime: Date.now(),
           status: MessageStatusEnum.PENDING,
           type: MsgEnum.VOICE,
@@ -1345,7 +1267,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
         const sendData = {
           id: tempMsgId,
-          roomId: globalStore.currentSession!.roomId,
+          roomId: targetRoomId,
           msgType: MsgEnum.VOICE,
           body: messageBody
         }
@@ -1385,7 +1307,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
           })
 
           // 更新会话最后活动时间
-          chatStore.updateSessionLastActiveTime(globalStore.currentSession!.roomId)
+          chatStore.updateSessionLastActiveTime(targetRoomId)
 
           // 释放本地预览URL
           if (msg.url.startsWith('asset://')) {
@@ -1415,6 +1337,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
    * @param locationData 地图数据
    */
   const sendLocationDirect = async (locationData: any) => {
+    const targetRoomId = globalStore.currentSession!.roomId
     try {
       const tempMsgId = 'T' + Date.now().toString()
       const messageStrategy = messageStrategyMap[MsgEnum.LOCATION]
@@ -1467,7 +1390,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       await invoke(TauriCommand.SEND_MSG, {
         data: {
           id: tempMsgId,
-          roomId: globalStore.currentSession!.roomId,
+          roomId: targetRoomId,
           msgType: MsgEnum.LOCATION,
           body: messageBody
         },
@@ -1476,7 +1399,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       })
 
       // 更新会话最后活动时间
-      chatStore.updateSessionLastActiveTime(globalStore.currentSession!.roomId)
+      chatStore.updateSessionLastActiveTime(targetRoomId)
     } catch (error) {
       console.error('位置消息发送失败:', error)
     }

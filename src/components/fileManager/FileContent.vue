@@ -1,5 +1,5 @@
 <template>
-  <div class="file-content flex-1 flex flex-col bg-[--right-bg-color] overflow-hidden">
+  <div class="min-w-0 cursor-default select-none flex-1 flex flex-col bg-[--right-bg-color] overflow-hidden">
     <!-- 内容头部 -->
     <div class="content-header p-20px pb-16px border-b border-solid border-[--line-color]">
       <div class="header-info">
@@ -13,30 +13,33 @@
     </div>
 
     <!-- 文件列表区域 -->
-    <div class="file-list-container flex-1 overflow-hidden">
+    <div class="relative overflow-hidden">
       <!-- 文件列表 -->
       <n-scrollbar v-if="timeGroupedFiles.length > 0" class="file-list-scroll">
         <div class="file-list-content p-20px">
           <!-- 时间分组 -->
           <div v-for="timeGroup in timeGroupedFiles" :key="timeGroup.date" class="time-group mb-32px">
             <!-- 时间分组标题 -->
-            <div class="time-group-header sticky top-0 bg-[--right-bg-color] py-12px mb-16px z-10">
+            <!-- <div class="time-group-header sticky top-0 bg-[--right-bg-color] py-12px mb-16px z-10">
               <h3 class="time-group-title text-16px font-600 text-[--text-color] m-0">
                 {{ timeGroup.date }}
               </h3>
               <div class="time-group-divider h-1px bg-[--line-color] mt-8px"></div>
-            </div>
+            </div> -->
 
             <!-- 文件列表 -->
             <div :class="['files-grid']">
-              <FileItem
-                v-for="file in timeGroup.files"
-                :key="file.id"
-                :file="file"
-                :search-keyword="searchKeyword"
-                @download="handleDownloadFile"
-                @open="handleOpenFile"
-                @click="handleFileClick" />
+              <div v-for="file in timeGroup.files" :key="file.id" class="flex flex-col gap-8px">
+                <File :body="convertToFileBody(file)" :search-keyword="searchKeyword" />
+                <!-- 文件元信息 -->
+                <div class="file-meta-info">
+                  <div class="flex-center gap-4px">
+                    <p>来自：</p>
+                    <p class="file-sender">{{ getUserDisplayName(file.sender?.id) }}</p>
+                  </div>
+                  <p class="file-time">{{ file.uploadTime }}</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -45,9 +48,11 @@
       <!-- 空状态 -->
       <EmptyState v-else :icon="getEmptyStateIcon()" :title="getEmptyStateTitle()">
         <template #actions>
-          <n-button v-if="searchKeyword" @click="clearSearch" type="primary" size="small">清除搜索</n-button>
+          <n-button v-if="searchKeyword" @click="clearSearch" secondary type="primary" size="small">清除搜索</n-button>
 
-          <n-button v-if="selectedUser" @click="clearUserFilter" type="default" size="small">显示全部用户</n-button>
+          <n-button v-if="selectedUser" @click="clearUserFilter" ghost color="#13987f" size="small">
+            显示全部用户
+          </n-button>
         </template>
       </EmptyState>
     </div>
@@ -55,8 +60,9 @@
 </template>
 
 <script setup lang="ts">
+import type { FileBody } from '@/services/types'
+import { useGroupStore } from '@/stores/group'
 import EmptyState from './EmptyState.vue'
-import FileItem from './FileItem.vue'
 
 interface TimeGroup {
   date: string
@@ -79,16 +85,27 @@ interface FileManagerState {
   setSelectedUser: (userId: string) => void
 }
 
+const groupStore = useGroupStore()
 const fileManagerState = inject<FileManagerState>('fileManagerState')!
 const { timeGroupedFiles, searchKeyword, activeNavigation, selectedUser, userList, setSearchKeyword, setSelectedUser } =
   fileManagerState
+
+// 根据 uid 获取用户显示名称
+const getUserDisplayName = (uid: string) => {
+  const groupName = groupStore.getUserDisplayName(uid)
+  if (groupName) {
+    return groupName
+  }
+  return '未知用户'
+}
 
 // 获取内容标题
 const getContentTitle = () => {
   const navigationTitles: { [key: string]: string } = {
     myFiles: '我的文件',
     senders: '按发送人分类',
-    sessions: '按会话分类'
+    sessions: '按会话分类',
+    groups: '按群组分类'
   }
 
   return navigationTitles[activeNavigation.value] || '文件列表'
@@ -157,40 +174,23 @@ const clearUserFilter = () => {
   setSelectedUser('')
 }
 
-// 处理文件下载
-const handleDownloadFile = (file: any) => {
-  console.log('下载文件:', file.fileName)
-  // TODO: 实现文件下载逻辑
-}
-
-// 处理文件打开
-const handleOpenFile = (file: any) => {
-  console.log('打开文件:', file.fileName)
-  // TODO: 实现文件打开逻辑
-}
-
-// 处理文件点击
-const handleFileClick = (file: any) => {
-  console.log('点击文件:', file.fileName)
-  // TODO: 实现文件详情显示逻辑
+// 转换文件数据为 FileBody 格式
+const convertToFileBody = (file: any): FileBody => {
+  return {
+    fileName: file.fileName || '',
+    size: file.fileSize || 0,
+    url: file.url || file.downloadUrl || ''
+  }
 }
 </script>
 
 <style scoped lang="scss">
-.file-content {
-  min-width: 0; // 确保flex子元素能够正确缩放
-}
-
 .content-header {
   flex-shrink: 0;
 }
 
 .content-title {
   line-height: 1.2;
-}
-
-.file-list-container {
-  position: relative;
 }
 
 .loading-state {
@@ -236,6 +236,28 @@ const handleFileClick = (file: any) => {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.file-meta-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 4px;
+  font-size: 12px;
+  color: #909090;
+}
+
+.file-sender {
+  color: #13987f;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.file-time {
+  opacity: 0.8;
 }
 
 .empty-state {

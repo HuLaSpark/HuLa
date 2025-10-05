@@ -17,7 +17,7 @@
             <use :href="`#${item.icon}`"></use>
           </svg>
         </div>
-        <span class="navigation-item__label">{{ item.label }}</span>
+        <span class="text-14px">{{ item.label }}</span>
       </div>
     </div>
   </div>
@@ -79,7 +79,6 @@ const handleNavigationClick = (key: string) => {
   &--active {
     background-color: rgba(19, 152, 127, 0.2);
     color: #13987f;
-    font-weight: 600;
 
     .navigation-item__icon svg {
       color: #13987f;
@@ -96,11 +95,6 @@ const handleNavigationClick = (key: string) => {
     color: inherit;
     transition: color 0.2s ease;
   }
-}
-
-.navigation-item__label {
-  font-size: 14px;
-  font-weight: inherit;
 }
 
 // 响应式适配

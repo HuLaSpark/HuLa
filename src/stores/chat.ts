@@ -526,15 +526,7 @@ export const useChatStore = defineStore(
       const message = currentMessageMap.value!.get(msgId)
       if (message && typeof data.recallUid === 'string') {
         const cacheUser = groupStore.getUserInfo(data.recallUid)!
-        let recallMessageBody: string
-
-        // 如果撤回者的 id 不等于消息发送人的 id, 或者你本人就是管理员，那么显示管理员撤回的。
-        if (data.recallUid !== userStore.userInfo!.uid) {
-          recallMessageBody = `管理员"${cacheUser.name}"撤回了一条消息` // 后期根据本地用户数据修改
-        } else {
-          // 如果被撤回的消息是消息发送者撤回，正常显示
-          recallMessageBody = `"${cacheUser.name}"撤回了一条消息` // 后期根据本地用户数据修改
-        }
+        const recallMessageBody = `"${cacheUser.name}"撤回了一条消息`
 
         // 更新前端缓存
         message.message.type = MsgEnum.RECALL

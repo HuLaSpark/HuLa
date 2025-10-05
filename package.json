@@ -115,6 +115,7 @@
     "lodash-es": "^4.17.21",
     "mitt": "^3.0.1",
     "naive-ui": "^2.43.1",
+    "p-limit": "^7.1.1",
     "pinia": "^3.0.3",
     "pinia-plugin-persistedstate": "^4.5.0",
     "pinia-shared-state": "^1.0.1",

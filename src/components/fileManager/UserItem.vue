@@ -94,8 +94,8 @@ const handleAvatarError = (event: Event) => {
 .user-item {
   display: flex;
   align-items: center;
-  padding: 12px;
-  border-radius: 8px;
+  padding: 10px 8px;
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
   user-select: none;
@@ -106,7 +106,7 @@ const handleAvatarError = (event: Event) => {
 
   &--selected {
     background-color: #e8f4f1;
-    border: 1px solid #13987f;
+    box-shadow: inset 0 0 0 1px #13987f;
   }
 }
 

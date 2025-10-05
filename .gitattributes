@@ -48,6 +48,8 @@
 *.kt linguist-vendored
 *.java linguist-vendored
 *.py linguist-vendored
+*.nsh linguist-vendored
+*.nsi linguist-vendored
 
 # 确保构建目录和依赖目录不被统计
 **/target/** linguist-vendored

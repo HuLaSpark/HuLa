@@ -10,7 +10,12 @@
           :placeholder="getSearchPlaceholder()"
           :input-props="{ spellcheck: false }"
           clearable
-          class="search-input"
+          spellCheck="false"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          class="rounded-6px border-(solid 1px [--line-color]) w-full relative text-12px"
+          size="small"
           @input="handleSearch">
           <template #prefix>
             <svg class="size-16px text-[--text-color] opacity-60">
@@ -22,13 +27,13 @@
     </div>
 
     <!-- 动态内容区域 -->
-    <div class="content-section flex-1 px-16px overflow-hidden">
+    <div class="content-section flex-1 px-8px overflow-hidden">
       <div class="section-title mb-12px">
         <span class="text-14px font-500 text-[--text-color]">{{ getSectionTitle() }}</span>
       </div>
 
-      <n-scrollbar class="content-scroll">
-        <div class="content-list">
+      <n-scrollbar style="height: calc(100vh / var(--page-scale, 1) - 34px)">
+        <div class="pr-8px">
           <!-- 全部选项 -->
           <UserItem
             :user="getAllOption()"

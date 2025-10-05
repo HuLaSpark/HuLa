@@ -389,13 +389,13 @@ pub async fn get_navigation_items() -> Result<Vec<NavigationItem>, String> {
         NavigationItem {
             key: "myFiles".to_string(),
             label: "我的文件".to_string(),
-            icon: "folder".to_string(),
+            icon: "file".to_string(),
             active: true,
         },
         NavigationItem {
             key: "senders".to_string(),
             label: "发送人".to_string(),
-            icon: "user".to_string(),
+            icon: "avatar".to_string(),
             active: false,
         },
         NavigationItem {
@@ -407,7 +407,7 @@ pub async fn get_navigation_items() -> Result<Vec<NavigationItem>, String> {
         NavigationItem {
             key: "groups".to_string(),
             label: "群聊".to_string(),
-            icon: "group".to_string(),
+            icon: "peoples".to_string(),
             active: false,
         },
     ];
