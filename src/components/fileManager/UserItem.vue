@@ -18,27 +18,23 @@
         {{ itemData.subtitle }}
       </div>
     </div>
-
-    <!-- 额外信息 -->
-    <div v-if="itemData.count !== undefined" class="item-count">
-      {{ itemData.count }}
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-interface Props {
-  user?: any
-  room?: any
-  contact?: any
-  isSelected?: boolean
-}
-
 type Emits = (e: 'click', item: any) => void
 
-const props = withDefaults(defineProps<Props>(), {
-  isSelected: false
-})
+const props = withDefaults(
+  defineProps<{
+    user?: any
+    room?: any
+    contact?: any
+    isSelected?: boolean
+  }>(),
+  {
+    isSelected: false
+  }
+)
 
 const emit = defineEmits<Emits>()
 
@@ -130,7 +126,7 @@ const handleAvatarError = (event: Event) => {
   right: 2px;
   width: 8px;
   height: 8px;
-  background-color: #52c41a;
+  background-color: #13987f;
   border-radius: 50%;
   border: 2px solid var(--center-bg-color);
 }
@@ -157,17 +153,6 @@ const handleAvatarError = (event: Event) => {
   overflow: hidden;
   text-overflow: ellipsis;
   margin-top: 2px;
-}
-
-.item-count {
-  flex-shrink: 0;
-  font-size: 12px;
-  color: var(--text-color);
-  opacity: 0.6;
-  padding: 2px 6px;
-  background-color: var(--line-color);
-  border-radius: 10px;
-  margin-left: 8px;
 }
 
 // 深色主题适配

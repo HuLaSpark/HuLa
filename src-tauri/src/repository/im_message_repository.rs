@@ -453,24 +453,45 @@ pub async fn query_file_messages(
         conditions = conditions.add(type_condition);
     }
 
-    // 关键词搜索（搜索文件名）
+    // 关键词搜索（搜索文件名、来源等关键信息）
     if let Some(keyword) = search_keyword {
-        if !keyword.trim().is_empty() {
-            let keyword_pattern = format!("%{}%", keyword.trim());
+        let trimmed_keyword = keyword.trim();
+        if !trimmed_keyword.is_empty() {
+            let keyword_lower = trimmed_keyword.to_lowercase();
+            let keyword_pattern = format!("%{}%", keyword_lower);
             use sea_orm::sea_query::Value;
-            conditions = conditions.add(
-                Condition::any()
-                    // 搜索 JSON 中的 fileName 字段
-                    .add(Expr::cust_with_values(
-                        "JSON_EXTRACT(body, '$.fileName') LIKE ?",
-                        [Value::from(keyword_pattern.clone())],
-                    ))
-                    // 搜索 JSON 中的 content 字段
-                    .add(Expr::cust_with_values(
-                        "JSON_EXTRACT(body, '$.content') LIKE ?",
-                        [Value::from(keyword_pattern)],
-                    ))
-            );
+
+            let json_paths = [
+                "$.fileName",
+                "$.file_name",
+                "$.name",
+                "$.originalFileName",
+                "$.originalName",
+                "$.original_name",
+                "$.title",
+                "$.fileTitle",
+                "$.url",
+                "$.downloadUrl",
+                "$.content",
+            ];
+
+            let mut keyword_condition = Condition::any();
+
+            for path in json_paths {
+                let expr = format!("LOWER(JSON_EXTRACT(body, '{}')) LIKE ?", path);
+                keyword_condition = keyword_condition.add(Expr::cust_with_values(
+                    expr,
+                    [Value::from(keyword_pattern.clone())],
+                ));
+            }
+
+            // 兼容 JSON 中缺少字段时直接在 body 中检索
+            keyword_condition = keyword_condition.add(Expr::cust_with_values(
+                "LOWER(body) LIKE ?",
+                [Value::from(keyword_pattern.clone())],
+            ));
+
+            conditions = conditions.add(keyword_condition);
         }
     }
 

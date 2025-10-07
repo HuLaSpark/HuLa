@@ -39,7 +39,7 @@ const itemsBottom: OPT.L.Common[] = [
       height: 600
     },
     window: {
-      resizable: true
+      resizable: false
     }
   },
   {

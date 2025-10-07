@@ -11,7 +11,7 @@
       <UserList />
 
       <!-- 右侧文件展示区域 -->
-      <FileContent :class="{ 'file-content--full-width': activeNavigation === 'myFiles' }" />
+      <FileContent />
     </div>
   </div>
 </template>
@@ -143,17 +143,4 @@ onMounted(async () => {
 })
 </script>
 
-<style scoped lang="scss">
-// 当用户列表隐藏时，文件内容区域占满剩余空间
-:deep(.file-content--full-width) {
-  flex: 1;
-  max-width: none;
-}
-
-// 响应式设计
-@media (max-width: 1200px) {
-  .file-content--full-width {
-    margin-left: 0;
-  }
-}
-</style>
+<style scoped lang="scss"></style>

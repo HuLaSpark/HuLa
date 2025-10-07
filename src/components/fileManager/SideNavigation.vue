@@ -1,5 +1,5 @@
 <template>
-  <div class="side-navigation flex flex-col bg-[--center-bg-color] border-r border-solid border-[--line-color]">
+  <div class="w-200px flex-shrink-0 flex flex-col bg-[--center-bg-color] border-r border-solid border-[--line-color]">
     <!-- 导航标题 -->
     <div class="navigation-header p-20px pb-16px">
       <h2 class="text-16px font-600 text-[--text-color] m-0">文件分类</h2>
@@ -24,14 +24,14 @@
 </template>
 
 <script setup lang="ts">
-interface NavigationItem {
+type NavigationItem = {
   key: string
   label: string
   icon: string
   active: boolean
 }
 
-interface FileManagerState {
+type FileManagerState = {
   navigationItems: Ref<NavigationItem[]>
   setActiveNavigation: (key: string) => void
 }
@@ -46,12 +46,6 @@ const handleNavigationClick = (key: string) => {
 </script>
 
 <style scoped lang="scss">
-.side-navigation {
-  width: 200px;
-  min-width: 200px;
-  flex-shrink: 0;
-}
-
 .navigation-header {
   border-bottom: 1px solid var(--line-color);
 }
@@ -94,13 +88,6 @@ const handleNavigationClick = (key: string) => {
   svg {
     color: inherit;
     transition: color 0.2s ease;
-  }
-}
-
-// 响应式适配
-@media (max-width: 800px) {
-  .side-navigation {
-    display: none;
   }
 }
 </style>

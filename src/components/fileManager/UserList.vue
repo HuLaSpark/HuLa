@@ -1,39 +1,36 @@
 <template>
   <div
     v-show="shouldShowUserList"
-    class="user-list flex flex-col bg-[--center-bg-color] border-r border-solid border-[--line-color]">
+    class="w-240px flex-shrink-0 flex flex-col bg-[--center-bg-color] border-r border-solid border-[--line-color]">
     <!-- 搜索栏 -->
-    <div class="search-section p-16px pb-12px">
-      <div class="search-wrapper relative">
-        <n-input
-          v-model:value="searchKeyword"
-          :placeholder="getSearchPlaceholder()"
-          :input-props="{ spellcheck: false }"
-          clearable
-          spellCheck="false"
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="off"
-          class="rounded-6px border-(solid 1px [--line-color]) w-full relative text-12px"
-          size="small"
-          @input="handleSearch">
-          <template #prefix>
-            <svg class="size-16px text-[--text-color] opacity-60">
-              <use href="#search"></use>
-            </svg>
-          </template>
-        </n-input>
-      </div>
+    <div class="p-16px pb-12px">
+      <n-input
+        v-model:value="searchKeyword"
+        :placeholder="getSearchPlaceholder()"
+        :input-props="{ spellcheck: false }"
+        clearable
+        spellCheck="false"
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        class="rounded-6px border-(solid 1px [--line-color]) w-full relative text-12px"
+        size="small">
+        <template #prefix>
+          <svg class="size-16px text-[--text-color] opacity-60">
+            <use href="#search"></use>
+          </svg>
+        </template>
+      </n-input>
     </div>
 
     <!-- 动态内容区域 -->
-    <div class="content-section flex-1 px-8px overflow-hidden">
-      <div class="section-title mb-12px">
+    <div class="flex-1 px-8px overflow-hidden">
+      <div class="pl-4px mb-12px">
         <span class="text-14px font-500 text-[--text-color]">{{ getSectionTitle() }}</span>
       </div>
 
-      <n-scrollbar style="height: calc(100vh / var(--page-scale, 1) - 34px)">
-        <div class="pr-8px">
+      <n-scrollbar style="height: calc(100vh / var(--page-scale, 1) - 110px)">
+        <div class="pr-12px">
           <!-- 全部选项 -->
           <UserItem
             :user="getAllOption()"
@@ -54,8 +51,8 @@
             class="mb-8px" />
 
           <!-- 空状态 -->
-          <div v-if="filteredList.length === 0 && searchKeyword" class="empty-state">
-            <div class="empty-content">
+          <div v-if="filteredList.length === 0 && searchKeyword && !loading" class="flex-center h-200px">
+            <div class="flex-col-center">
               <svg class="size-48px text-[--text-color] opacity-30 mb-12px">
                 <use href="#search"></use>
               </svg>
@@ -64,9 +61,9 @@
           </div>
 
           <!-- 加载状态 -->
-          <div v-if="loading" class="loading-state">
+          <div v-if="loading" class="flex-center h-200px">
             <n-spin size="small" />
-            <span class="ml-8px text-14px text-[--text-color] opacity-60">加载中...</span>
+            <span class="ml-8px text-14px text-[--text-color] opacity-60">加载中</span>
           </div>
         </div>
       </n-scrollbar>
@@ -81,7 +78,7 @@ import { useGroupStore } from '@/stores/group'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import UserItem from './UserItem.vue'
 
-interface FileManagerState {
+type FileManagerState = {
   activeNavigation: Ref<string>
   userList: Ref<any[]>
   selectedUser: Ref<string>
@@ -92,8 +89,7 @@ interface FileManagerState {
 }
 
 const fileManagerState = inject<FileManagerState>('fileManagerState')!
-const { activeNavigation, selectedUser, selectedRoom, setSearchKeyword, setSelectedUser, setSelectedRoom } =
-  fileManagerState
+const { activeNavigation, selectedUser, selectedRoom, setSelectedUser, setSelectedRoom } = fileManagerState
 
 // Store 实例
 const contactStore = useContactStore()
@@ -124,7 +120,7 @@ const currentList = computed(() => {
   }
 })
 
-// 丰富好友数据 (参考 FriendsList.vue)
+// 丰富好友数据
 const enrichedContactsList = computed(() => {
   return contactStore.contactsList.map((item) => {
     const userInfo = groupStore.getUserInfo(item.uid)
@@ -137,7 +133,7 @@ const enrichedContactsList = computed(() => {
   })
 })
 
-// 群聊列表 (参考 FriendsList.vue)
+// 群聊列表
 const groupChatList = computed(() => {
   return [...groupStore.groupDetails]
     .map((item) => ({
@@ -168,13 +164,13 @@ const filteredList = computed(() => {
 const getSearchPlaceholder = () => {
   switch (activeNavigation.value) {
     case 'senders':
-      return '搜索发送人...'
+      return '搜索发送人'
     case 'sessions':
-      return '搜索会话...'
+      return '搜索会话'
     case 'groups':
-      return '搜索群聊...'
+      return '搜索群聊'
     default:
-      return '搜索...'
+      return '搜索'
   }
 }
 
@@ -240,11 +236,6 @@ const getEmptyMessage = () => {
   }
 }
 
-// 处理搜索
-const handleSearch = (value: string) => {
-  setSearchKeyword(value)
-}
-
 // 处理项目点击
 const handleItemClick = (item: any) => {
   switch (activeNavigation.value) {
@@ -258,7 +249,7 @@ const handleItemClick = (item: any) => {
   }
 }
 
-// 加载联系人列表 (使用 store 方式, 参考 FriendsList.vue)
+// 加载联系人列表
 const loadContacts = async () => {
   try {
     loading.value = true
@@ -340,58 +331,4 @@ watch(
 )
 </script>
 
-<style scoped lang="scss">
-.user-list {
-  width: 250px;
-  min-width: 250px;
-  flex-shrink: 0;
-}
-
-.search-wrapper {
-  .search-input {
-    :deep(.n-input) {
-      height: 32px;
-      border-radius: 16px;
-      font-size: 14px;
-
-      .n-input__input-el {
-        padding-left: 12px;
-      }
-
-      .n-input__prefix {
-        padding-left: 12px;
-      }
-    }
-  }
-}
-
-.section-title {
-  padding-left: 4px;
-}
-
-.user-list-scroll {
-  height: 100%;
-
-  :deep(.n-scrollbar-rail) {
-    right: 4px;
-  }
-}
-
-.user-list-content {
-  padding-bottom: 16px;
-}
-
-.empty-state {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 200px;
-}
-
-.empty-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-</style>
+<style scoped lang="scss"></style>

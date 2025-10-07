@@ -19,6 +19,7 @@ import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user'
+import { saveFileAttachmentAs, saveVideoAttachmentAs } from '@/utils/AttachmentSaver'
 import { isDiffNow } from '@/utils/ComputedTime.ts'
 import { extractFileName, removeTag } from '@/utils/Formatting'
 import { detectImageFormat, imageUrlToUint8Array, isImageUrl } from '@/utils/ImageUtils'
@@ -141,29 +142,14 @@ export const useChatMain = (isHistoryMode = false) => {
       label: '另存为',
       icon: 'Importing',
       click: async (item: MessageType) => {
-        try {
-          const fileUrl = item.message.body.url
-          const filename = extractFileName(fileUrl)
-
-          const savePath = await save({
-            defaultPath: filename,
-            filters: [
-              {
-                name: 'Video',
-                extensions: ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm']
-              }
-            ]
-          })
-          if (savePath) {
-            await downloadFile(item.message.body.url, savePath)
-            window.$message.success('视频保存成功')
-          }
-        } catch (error) {
-          console.error('保存视频失败:', error)
-          window.$message.error('保存视频失败')
-        }
+        await saveVideoAttachmentAs({
+          url: item.message.body.url,
+          downloadFile,
+          defaultFileName: item.message.body.fileName
+        })
       }
     },
+
     {
       label: isMac() ? '在Finder中显示' : '在文件夹中打开',
       icon: 'file2',
@@ -271,23 +257,25 @@ export const useChatMain = (isHistoryMode = false) => {
             {
               label: '另存为',
               icon: 'Importing',
-              click: async (item: any) => {
-                try {
-                  const fileUrl = item.message.body.url
-                  const filename = extractFileName(fileUrl)
-                  const savePath = await save({
-                    defaultPath: filename
+              click: async (item: MessageType) => {
+                const fileUrl = item.message.body.url
+                const fileName = item.message.body.fileName
+                if (item.message.type === MsgEnum.VIDEO) {
+                  await saveVideoAttachmentAs({
+                    url: fileUrl,
+                    downloadFile,
+                    defaultFileName: fileName
                   })
-                  if (savePath) {
-                    await downloadFile(fileUrl, savePath)
-                    window.$message.success('文件下载成功')
-                  }
-                } catch (error) {
-                  console.error('保存文件失败:', error)
-                  window.$message.error('保存文件失败')
+                } else {
+                  await saveFileAttachmentAs({
+                    url: fileUrl,
+                    downloadFile,
+                    defaultFileName: fileName
+                  })
                 }
               }
             },
+
             {
               label: isMac() ? '在Finder中显示' : '打开文件夹',
               icon: 'file2',
@@ -472,23 +460,15 @@ export const useChatMain = (isHistoryMode = false) => {
     {
       label: '另存为',
       icon: 'Importing',
-      click: async (item: any) => {
-        try {
-          const fileUrl = item.message.body.url
-          const filename = extractFileName(fileUrl)
-          const savePath = await save({
-            defaultPath: filename
-          })
-          if (savePath) {
-            await downloadFile(fileUrl, savePath)
-            window.$message.success('文件下载成功')
-          }
-        } catch (error) {
-          console.error('保存文件失败:', error)
-          window.$message.error('保存文件失败')
-        }
+      click: async (item: RightMouseMessageItem) => {
+        await saveFileAttachmentAs({
+          url: item.message.body.url,
+          downloadFile,
+          defaultFileName: item.message.body.fileName
+        })
       }
     },
+
     {
       label: isMac() ? '在Finder中显示' : '打开文件夹',
       icon: 'file2',

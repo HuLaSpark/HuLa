@@ -36,6 +36,7 @@ pub struct UserInfo {
 #[serde(rename_all = "camelCase")]
 pub struct TimeGroup {
     pub date: String,
+    pub display_date: String,
     pub files: Vec<FileInfo>,
 }
 
@@ -137,10 +138,12 @@ pub async fn query_files(
         file_infos
     };
 
+    let total_filtered_files = filtered_files.len();
+
     // 按时间分组
     let time_grouped_files = group_files_by_time(filtered_files);
 
-    let has_more = time_grouped_files.len() >= param.page_size as usize;
+    let has_more = total_filtered_files >= param.page_size as usize;
 
     let response = FileQueryResponse {
         time_grouped_files,
@@ -276,10 +279,7 @@ fn convert_message_to_file_info(message: im_message::Model) -> Option<FileInfo> 
                         return None;
                     }
                 };
-                let file_size = file_data["fileSize"]
-                    .as_i64()
-                    .or_else(|| file_data["size"].as_i64())
-                    .unwrap_or(0);
+                let file_size = extract_file_size(&file_data).unwrap_or(0);
 
                 let file_type = get_file_type_from_message_type(message_type);
                 let upload_time = message.send_time.unwrap_or(0);
@@ -319,6 +319,28 @@ fn convert_message_to_file_info(message: im_message::Model) -> Option<FileInfo> 
     None
 }
 
+/// 从消息体中解析文件大小字段
+fn extract_file_size(file_data: &serde_json::Value) -> Option<i64> {
+    const SIZE_KEYS: [&str; 2] = ["fileSize", "size"];
+
+    SIZE_KEYS
+        .iter()
+        .filter_map(|key| file_data.get(*key))
+        .find_map(parse_size_value)
+}
+
+/// 解析文件大小值
+fn parse_size_value(value: &serde_json::Value) -> Option<i64> {
+    match value {
+        serde_json::Value::Number(num) => {
+            num.as_i64()
+                .or_else(|| num.as_u64().map(|n| (n.min(i64::MAX as u64)) as i64))
+        }
+        serde_json::Value::String(raw) => raw.trim().parse::<i64>().ok(),
+        _ => None,
+    }
+}
+
 /// 根据消息类型获取文件类型
 fn get_file_type_from_message_type(message_type: u8) -> String {
     match message_type {
@@ -352,35 +374,68 @@ fn extract_user_list(files: &[FileInfo]) -> Vec<UserInfo> {
 
 /// 按时间分组文件
 fn group_files_by_time(files: Vec<FileInfo>) -> Vec<TimeGroup> {
-    use std::collections::HashMap;
+    use std::collections::BTreeMap;
+    use chrono::NaiveDate;
 
-    let mut groups: HashMap<String, Vec<FileInfo>> = HashMap::new();
+    let mut groups: BTreeMap<NaiveDate, Vec<FileInfo>> = BTreeMap::new();
+    let mut unknown_files: Vec<FileInfo> = Vec::new();
 
     for file in files {
-        // 从 upload_time 提取日期
-        let date = if let Ok(dt) = chrono::DateTime::parse_from_str(&file.upload_time, "%Y-%m-%d %H:%M:%S") {
-            dt.format("%Y年%m月%d日").to_string()
+        if let Some(date_time) = parse_upload_time(&file.upload_time) {
+            groups.entry(date_time.date()).or_default().push(file);
         } else {
-            "未知时间".to_string()
-        };
-
-        groups.entry(date).or_insert_with(Vec::new).push(file);
+            unknown_files.push(file);
+        }
     }
 
     let mut time_groups: Vec<TimeGroup> = groups
         .into_iter()
+        .rev()
         .map(|(date, mut files)| {
-            // 按上传时间降序排序
             files.sort_by(|a, b| b.upload_time.cmp(&a.upload_time));
-            TimeGroup { date, files }
+            TimeGroup {
+                date: date.format("%Y-%m-%d").to_string(),
+                display_date: format_display_date(date),
+                files,
+            }
         })
         .collect();
 
-    // 按日期降序排序
-    time_groups.sort_by(|a, b| b.date.cmp(&a.date));
+    if !unknown_files.is_empty() {
+        unknown_files.sort_by(|a, b| b.upload_time.cmp(&a.upload_time));
+        time_groups.push(TimeGroup {
+            date: "unknown".to_string(),
+            display_date: "未知时间".to_string(),
+            files: unknown_files,
+        });
+    }
 
     time_groups
 }
+
+/// 解析上传时间字符串为 NaiveDateTime
+fn parse_upload_time(upload_time: &str) -> Option<chrono::NaiveDateTime> {
+    chrono::NaiveDateTime::parse_from_str(upload_time, "%Y-%m-%d %H:%M:%S").ok()
+}
+
+/// 格式化显示日期
+fn format_display_date(date: chrono::NaiveDate) -> String {
+    use chrono::{Datelike, Local};
+
+    let today = Local::now().date_naive();
+    let diff = today.signed_duration_since(date).num_days();
+
+    if diff == 0 {
+        "今天".to_string()
+    } else if diff == 1 {
+        "昨天".to_string()
+    } else if today.year() == date.year() {
+        date.format("%m月%d日").to_string()
+    } else {
+        date.format("%Y年%m月%d日").to_string()
+    }
+}
+
 
 /// 获取导航菜单项
 #[tauri::command]
