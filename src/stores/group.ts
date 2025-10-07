@@ -63,7 +63,18 @@ export const useGroupStore = defineStore(
       groupDetails.value.push(data)
     }
 
-    const getUserInfo = computed(() => (uid: string) => {
+    const getUserInfo = computed(() => (uid: string, roomId?: string) => {
+      const targetRoomId = roomId ?? globalStore.currentSession?.roomId
+      if (targetRoomId) {
+        const roomUserList = userListMap[targetRoomId]
+        if (roomUserList) {
+          const userInRoom = roomUserList.find((item) => item.uid === uid)
+          if (userInRoom) {
+            return userInRoom
+          }
+        }
+      }
+
       return allUserInfo.value.find((item) => item.uid === uid)
     })
 

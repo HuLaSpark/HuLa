@@ -61,7 +61,9 @@ pub struct AppData {
 
 use crate::command::chat_history_command::query_chat_history;
 use crate::command::contact_command::{hide_contact_command, list_contacts_command};
-use crate::command::file_manager_command::{query_files, get_navigation_items, debug_message_stats};
+use crate::command::file_manager_command::{
+    debug_message_stats, get_navigation_items, query_files,
+};
 use crate::command::message_command::{
     check_user_init_and_fetch_messages, page_msg, save_msg, send_msg, update_message_recall_status,
 };

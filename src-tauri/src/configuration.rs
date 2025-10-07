@@ -218,7 +218,7 @@ pub fn get_configuration(app_handle: &AppHandle) -> Result<Settings, config::Con
         let config_file_bytes: &[u8] = match active_config.as_str() {
             "local" => include_bytes!("../configuration/local.yaml").as_ref(),
             "production" => include_bytes!("../configuration/production.yaml").as_ref(),
-            _ => return Err(config::ConfigError::Message("Invalid active_config".into())),// 这里可以支持更多的环境配置
+            _ => return Err(config::ConfigError::Message("Invalid active_config".into())), // 这里可以支持更多的环境配置
         };
 
         let active_content = std::str::from_utf8(config_file_bytes)

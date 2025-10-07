@@ -104,6 +104,7 @@ fn get_new_message_marks(
         }
     }
 
-    let new_message_marks = serde_json::to_string(&message_marks).map_err(|e| anyhow::anyhow!("序列化消息标记错误: {}", e))?;
+    let new_message_marks = serde_json::to_string(&message_marks)
+        .map_err(|e| anyhow::anyhow!("序列化消息标记错误: {}", e))?;
     Ok(new_message_marks)
 }

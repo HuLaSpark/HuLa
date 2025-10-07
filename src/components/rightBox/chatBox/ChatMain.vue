@@ -119,6 +119,45 @@
     </div>
   </n-modal>
 
+  <n-modal v-model:show="groupNicknameModalVisible" class="w-360px border-rd-8px" :mask-closable="false">
+    <div class="bg-[--bg-popover] w-360px h-full p-6px box-border flex flex-col">
+      <div
+        v-if="isMac()"
+        @click="groupNicknameModalVisible = false"
+        class="mac-close z-999 size-13px shadow-inner bg-#ed6a5eff rounded-50% select-none absolute left-6px">
+        <svg class="hidden size-7px color-#000 select-none absolute top-3px left-3px">
+          <use href="#close"></use>
+        </svg>
+      </div>
+
+      <svg
+        v-if="isWindows()"
+        @click="groupNicknameModalVisible = false"
+        class="w-12px h-12px ml-a cursor-pointer select-none">
+        <use href="#close"></use>
+      </svg>
+      <div class="flex flex-col gap-20px p-[22px_10px_10px_22px] select-none">
+        <span class="text-(16px [--text-color]) font-500">修改群昵称</span>
+        <n-input
+          v-model:value="groupNicknameValue"
+          placeholder="请输入群昵称"
+          :maxlength="12"
+          :disabled="groupNicknameSubmitting"
+          clearable
+          @keydown.enter.prevent="handleGroupNicknameConfirm" />
+        <p v-if="groupNicknameError" class="text-(12px #d03553)">{{ groupNicknameError }}</p>
+        <n-flex justify="end" :size="12">
+          <n-button @click="groupNicknameModalVisible = false" :disabled="groupNicknameSubmitting" secondary>
+            取消
+          </n-button>
+          <n-button color="#13987f" :loading="groupNicknameSubmitting" @click="handleGroupNicknameConfirm">
+            确定
+          </n-button>
+        </n-flex>
+      </div>
+    </div>
+  </n-modal>
+
   <!--  悬浮按钮提示(底部悬浮) -->
   <footer
     class="float-footer"
@@ -182,7 +221,18 @@ const userStore = useUserStore()
 const networkStatus = useNetworkStatus()
 const { footerHeight } = useChatLayoutGlobal()
 const { createWebviewWindow } = useWindow()
-const { handleConfirm, tips, modalShow, selectKey, scrollTop } = useChatMain()
+const {
+  handleConfirm,
+  tips,
+  modalShow,
+  selectKey,
+  scrollTop,
+  groupNicknameModalVisible,
+  groupNicknameValue,
+  groupNicknameError,
+  groupNicknameSubmitting,
+  handleGroupNicknameConfirm
+} = useChatMain(false, { enableGroupNicknameModal: true })
 const { enableScroll } = usePopover(selectKey, 'image-chat-main')
 
 const isMobileRef = ref(isMobile())

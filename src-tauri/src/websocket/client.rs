@@ -84,7 +84,10 @@ impl WebSocketClient {
     pub async fn connect(&self, config: WebSocketConfig) -> Result<()> {
         // 获取连接锁，确保同时只有一个连接操作
         let _lock: tokio::sync::MutexGuard<'_, ()> = self.connection_mutex.lock().await;
-        info!("🚀 Initializing WebSocket connection to: {}", config.server_url);
+        info!(
+            "🚀 Initializing WebSocket connection to: {}",
+            config.server_url
+        );
 
         // 在锁保护下再次检查连接状态
         if self.is_ws_connected.load(Ordering::SeqCst) {
@@ -300,8 +303,11 @@ impl WebSocketClient {
                     );
 
                     if attempts >= config.max_reconnect_attempts {
-                        self.emit_error("Too many connection failures, stopping retry".to_string(), None)
-                            .await;
+                        self.emit_error(
+                            "Too many connection failures, stopping retry".to_string(),
+                            None,
+                        )
+                        .await;
                         self.is_ws_connected.store(false, Ordering::SeqCst);
                         self.update_state(ConnectionState::Error, false).await;
 
@@ -787,7 +793,11 @@ impl WebSocketClient {
 
                             warn!(
                                 "⚠️ Heartbeat timeout ({} mode, consecutive failures: {}, last heartbeat {}ms ago)",
-                                if is_background { "background" } else { "foreground" },
+                                if is_background {
+                                    "background"
+                                } else {
+                                    "foreground"
+                                },
                                 failures,
                                 time_since_pong
                             );
@@ -795,7 +805,9 @@ impl WebSocketClient {
                             // 后台模式下更宽松的重连策略
                             let max_failures = if is_background { 5 } else { 3 };
                             if failures >= max_failures {
-                                error!("💔 Consecutive heartbeat timeouts, triggering reconnection");
+                                error!(
+                                    "💔 Consecutive heartbeat timeouts, triggering reconnection"
+                                );
                                 // 心跳失败时标记连接断开
                                 is_ws_connected.store(false, Ordering::SeqCst);
                                 break;
@@ -987,7 +999,10 @@ impl WebSocketClient {
                 }
             }
             _ => {
-                info!("🔄 Connection state: {:?}, waiting for connection to complete", current_state);
+                info!(
+                    "🔄 Connection state: {:?}, waiting for connection to complete",
+                    current_state
+                );
             }
         }
     }

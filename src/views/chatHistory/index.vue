@@ -124,7 +124,7 @@ const groupStore = useGroupStore()
 const chatStore = useChatStore()
 const { openImageViewer } = useImageViewer()
 const { openVideoViewer } = useVideoViewer()
-const { specialMenuList } = useChatMain(true)
+const { specialMenuList } = useChatMain(true, { disableHistoryActions: true })
 
 const isGroup = computed(() => chatStore.isGroup)
 const userUid = computed(() => userStore.userInfo!.uid)
@@ -165,7 +165,7 @@ const groupedMessages = computed(() => {
   const groups: Record<string, { messages: MessageType[]; timestamp: number }> = {}
 
   messages.value.forEach((i) => {
-    // 排除BOT、SYSTEM、RECALL类型的消息
+    // 排除BOT、SYSTEM以及撤回类消息
     if (
       i.message.sendTime &&
       i.message.type !== MsgEnum.BOT &&

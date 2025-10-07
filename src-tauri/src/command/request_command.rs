@@ -22,7 +22,10 @@ pub async fn login_command(
             // 从数据库获取用户的 refresh_token
             match im_user_repository::get_user_tokens(state.db_conn.deref(), uid).await {
                 Ok(Some((_, refresh_token))) => {
-                    info!("Found refresh_token for user {}, attempting to refresh login", uid);
+                    info!(
+                        "Found refresh_token for user {}, attempting to refresh login",
+                        uid
+                    );
 
                     // 使用 refresh_token 刷新登录
                     let refresh_req = RefreshTokenReq {

@@ -4,13 +4,14 @@ import { save } from '@tauri-apps/plugin-dialog'
 import { BaseDirectory } from '@tauri-apps/plugin-fs'
 import { revealItemInDir } from '@tauri-apps/plugin-opener'
 import type { FileTypeResult } from 'file-type'
-import { MittEnum, MsgEnum, PowerEnum, RoleEnum, RoomTypeEnum } from '@/enums'
+import { MergeMessageType, MittEnum, MsgEnum, PowerEnum, RoleEnum, RoomTypeEnum } from '@/enums'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useDownload } from '@/hooks/useDownload'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useVideoViewer } from '@/hooks/useVideoViewer'
 import { translateText } from '@/services/translate'
 import type { FilesMeta, MessageType, RightMouseMessageItem } from '@/services/types.ts'
+import { useCachedStore } from '@/stores/cached'
 import { useChatStore } from '@/stores/chat.ts'
 import { useContactStore } from '@/stores/contacts'
 import { useEmojiStore } from '@/stores/emoji'
@@ -23,12 +24,23 @@ import { saveFileAttachmentAs, saveVideoAttachmentAs } from '@/utils/AttachmentS
 import { isDiffNow } from '@/utils/ComputedTime.ts'
 import { extractFileName, removeTag } from '@/utils/Formatting'
 import { detectImageFormat, imageUrlToUint8Array, isImageUrl } from '@/utils/ImageUtils'
-import { recallMsg, removeGroupMember } from '@/utils/ImRequestUtils'
+import { recallMsg, removeGroupMember, updateMyRoomInfo } from '@/utils/ImRequestUtils'
 import { detectRemoteFileType, getFilesMeta } from '@/utils/PathUtil'
 import { isMac } from '@/utils/PlatformConstants'
 import { useWindow } from './useWindow'
 
-export const useChatMain = (isHistoryMode = false) => {
+type UseChatMainOptions = {
+  enableGroupNicknameModal?: boolean
+  disableHistoryActions?: boolean
+}
+
+type GroupNicknameModalPayload = {
+  roomId: string
+  currentUid: string
+  originalNickname: string
+}
+
+export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions = {}) => {
   const { openMsgSession, userUid } = useCommon()
   const { createWebviewWindow, sendWindowPayload } = useWindow()
   const { getLocalVideoPath, checkVideoDownloaded } = useVideoViewer()
@@ -38,9 +50,12 @@ export const useChatMain = (isHistoryMode = false) => {
   const globalStore = useGlobalStore()
   const groupStore = useGroupStore()
   const chatStore = useChatStore()
+  const cachedStore = useCachedStore()
   const emojiStore = useEmojiStore()
   const userStore = useUserStore()
   const { downloadFile } = useDownload()
+  const enableGroupNicknameModal = options.enableGroupNicknameModal ?? false
+  const disableHistoryActions = options.disableHistoryActions ?? false
   /** 滚动条位置 */
   const scrollTop = ref(-1)
   /** 提醒框标题 */
@@ -56,13 +71,99 @@ export const useChatMain = (isHistoryMode = false) => {
   /** 当前点击的用户的key */
   const selectKey = ref()
 
+  /** 修改群昵称的模态框是否显示 */
+  const groupNicknameModalVisible = ref(false)
+  /** 修改群昵称输入的值 */
+  const groupNicknameValue = ref('')
+  /** 修改群昵称错误提示 */
+  const groupNicknameError = ref('')
+  /** 修改群昵称提交状态 */
+  const groupNicknameSubmitting = ref(false)
+  /** 修改群昵称上下文信息 */
+  const groupNicknameContext = ref<{ roomId: string; currentUid: string; originalNickname: string } | null>(null)
+
+  const handleGroupNicknameConfirm = async () => {
+    if (!groupNicknameContext.value) {
+      return
+    }
+
+    const trimmedName = groupNicknameValue.value.trim()
+    if (!trimmedName) {
+      groupNicknameError.value = '群昵称不能为空'
+      return
+    }
+
+    if (trimmedName === groupNicknameContext.value.originalNickname) {
+      groupNicknameModalVisible.value = false
+      return
+    }
+
+    const { roomId, currentUid } = groupNicknameContext.value
+    if (!roomId) {
+      window.$message?.error('当前群聊信息异常')
+      return
+    }
+
+    try {
+      groupNicknameSubmitting.value = true
+      const remark = groupStore.countInfo?.remark || ''
+      const payload = {
+        id: roomId,
+        myName: trimmedName,
+        remark
+      }
+      await cachedStore.updateMyRoomInfo(payload)
+      await updateMyRoomInfo(payload)
+      groupStore.updateUserItem(currentUid, { myName: trimmedName }, roomId)
+      await groupStore.updateGroupDetail(roomId, { myName: trimmedName })
+      if (currentUid === userUid.value) {
+        groupStore.myNameInCurrentGroup = trimmedName
+      }
+      groupNicknameModalVisible.value = false
+    } catch (error) {
+      console.error('修改群昵称失败', error)
+      groupNicknameSubmitting.value = false
+    }
+  }
+
+  if (enableGroupNicknameModal) {
+    useMitt.on(MittEnum.OPEN_GROUP_NICKNAME_MODAL, (payload: GroupNicknameModalPayload) => {
+      groupNicknameContext.value = payload
+      groupNicknameValue.value = payload.originalNickname || ''
+      groupNicknameError.value = ''
+      groupNicknameSubmitting.value = false
+      groupNicknameModalVisible.value = true
+    })
+  }
+
   /** 通用右键菜单 */
+  const handleForward = (item: MessageType) => {
+    if (!item?.message?.id) return
+    const target = chatStore.chatMessageList.find((msg) => msg.message.id === item.message.id)
+    if (!target) {
+      return
+    }
+    chatStore.clearMsgCheck()
+    target.isCheck = true
+    chatStore.setMsgMultiChoose(false)
+    useMitt.emit(MittEnum.MSG_MULTI_CHOOSE, {
+      action: 'open-forward',
+      mergeType: MergeMessageType.SINGLE
+    })
+  }
+
   const commonMenuList = ref<OPT.RightMenu[]>([
+    {
+      label: '多选',
+      icon: 'list-checkbox',
+      click: () => {
+        chatStore.setMsgMultiChoose(true)
+      }
+    },
     {
       label: '添加到表情',
       icon: 'add-expression',
       click: async (item: MessageType) => {
-        // 优先使用 url 字段，回退到 content 字段
         const imageUrl = item.message.body.url || item.message.body.content
         if (!imageUrl) {
           window.$message.error('获取图片地址失败')
@@ -77,17 +178,17 @@ export const useChatMain = (isHistoryMode = false) => {
     {
       label: '转发',
       icon: 'share',
-      click: () => {
-        window.$message.warning('暂未实现')
+      click: (item: MessageType) => {
+        handleForward(item)
       }
     },
-    {
-      label: '收藏',
-      icon: 'collection-files',
-      click: () => {
-        window.$message.warning('暂未实现')
-      }
-    },
+    // {
+    //   label: '收藏',
+    //   icon: 'collection-files',
+    //   click: () => {
+    //     window.$message.warning('暂未实现')
+    //   }
+    // },
     {
       label: '回复',
       icon: 'reply',
@@ -105,13 +206,10 @@ export const useChatMain = (isHistoryMode = false) => {
           window.$message.error(res)
           return
         }
-
-        // 记录撤回的消息，用于重新编辑
         chatStore.recordRecallMsg({
           recallUid: userStore.userInfo!.uid,
           msg
         })
-        // 发送撤回消息请求，并修改缓存
         await chatStore.updateRecallMsg({
           recallUid: userStore.userInfo!.uid,
           roomId: msg.message.roomId,
@@ -119,16 +217,13 @@ export const useChatMain = (isHistoryMode = false) => {
         })
       },
       visible: (item: MessageType) => {
-        // 判断当前选择的信息的发送时间是否超过2分钟
         if (isDiffNow({ time: item.message.sendTime, unit: 'minute', diff: 2 })) return
-        // 判断自己是否是发送者或者是否是管理员
         const isCurrentUser = item.fromUser.uid === userUid.value
         const isAdmin = userStore.userInfo!.power === PowerEnum.ADMIN
         return isCurrentUser || isAdmin
       }
     }
   ])
-  /** 视频右键菜单 */
   const videoMenuList = ref<OPT.RightMenu[]>([
     {
       label: '复制',
@@ -188,19 +283,11 @@ export const useChatMain = (isHistoryMode = false) => {
       }
     },
     {
-      label: '多选',
-      icon: 'list-checkbox',
-      click: () => {
-        chatStore.setMsgMultiChoose(true)
-      }
-    },
-    {
       label: '翻译',
       icon: 'translate',
       click: async (item: MessageType) => {
         const content = item.message.body.content
         const result = await translateText(content, chat.value.translate)
-        // 将翻译结果添加到消息中
         if (!item.message.body.translatedText) {
           item.message.body.translatedText = {
             provider: result.provider,
@@ -216,7 +303,6 @@ export const useChatMain = (isHistoryMode = false) => {
     },
     ...commonMenuList.value
   ])
-  /** 右键菜单下划线后的列表 */
   const specialMenuList = computed(() => {
     return (messageType?: MsgEnum): OPT.RightMenu[] => {
       if (isHistoryMode) {
@@ -229,15 +315,27 @@ export const useChatMain = (isHistoryMode = false) => {
               const content = item.message.body.url || item.message.body.content
               handleCopy(content, true)
             }
-          },
-          {
-            label: '转发',
-            icon: 'share',
-            click: () => {
-              window.$message.warning('暂未实现')
-            }
           }
         ]
+
+        if (!disableHistoryActions) {
+          baseMenus.push(
+            {
+              label: '多选',
+              icon: 'list-checkbox',
+              click: () => {
+                chatStore.setMsgMultiChoose(true)
+              }
+            },
+            {
+              label: '转发',
+              icon: 'share',
+              click: (item: MessageType) => {
+                handleForward(item)
+              }
+            }
+          )
+        }
 
         // 媒体文件额外菜单（收藏、另存为、在文件中打开）
         if (
@@ -247,13 +345,13 @@ export const useChatMain = (isHistoryMode = false) => {
           messageType === MsgEnum.FILE
         ) {
           const mediaMenus: OPT.RightMenu[] = [
-            {
-              label: '收藏',
-              icon: 'collection-files',
-              click: () => {
-                window.$message.warning('暂未实现')
-              }
-            },
+            // {
+            //   label: '收藏',
+            //   icon: 'collection-files',
+            //   click: () => {
+            //     window.$message.warning('暂未实现')
+            //   }
+            // },
             {
               label: '另存为',
               icon: 'Importing',
@@ -589,7 +687,25 @@ export const useChatMain = (isHistoryMode = false) => {
     {
       label: '修改群昵称',
       icon: 'edit',
-      click: () => {},
+      click: (item: any) => {
+        const targetUid = item.uid || item.fromUser?.uid
+        const currentUid = userUid.value
+        const roomId = globalStore.currentSession?.roomId
+        const isGroup = globalStore.currentSession?.type === RoomTypeEnum.GROUP
+
+        if (!isGroup || targetUid !== currentUid) {
+          return
+        }
+
+        const currentUserInfo = groupStore.getUserInfo(currentUid, roomId)
+        const currentNickname = currentUserInfo?.myName || ''
+
+        useMitt.emit(MittEnum.OPEN_GROUP_NICKNAME_MODAL, {
+          roomId,
+          currentUid,
+          originalNickname: currentNickname
+        } as GroupNicknameModalPayload)
+      },
       visible: (item: any) => (item.uid ? item.uid === userUid.value : item.fromUser.uid === userUid.value)
     },
     {
@@ -979,6 +1095,11 @@ export const useChatMain = (isHistoryMode = false) => {
     emojiList,
     commonMenuList,
     scrollTop,
+    groupNicknameModalVisible,
+    groupNicknameValue,
+    groupNicknameError,
+    groupNicknameSubmitting,
+    handleGroupNicknameConfirm,
     activeBubble
   }
 }

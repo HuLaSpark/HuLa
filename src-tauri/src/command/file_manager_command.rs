@@ -1,7 +1,7 @@
 use crate::AppData;
 use crate::repository::im_message_repository;
-use entity::{im_message};
-use sea_orm::{EntityTrait, ColumnTrait, QueryFilter, QueryOrder, PaginatorTrait, QuerySelect};
+use entity::im_message;
+use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect};
 
 use serde::{Deserialize, Serialize};
 use std::ops::Deref;
@@ -75,7 +75,6 @@ pub async fn query_files(
     param: FileQueryParam,
     state: State<'_, AppData>,
 ) -> Result<FileQueryResponse, String> {
-
     // 获取当前登录用户的 uid
     let login_uid = {
         let user_info = state.user_info.lock().await;
@@ -182,7 +181,6 @@ async fn query_files_by_senders(
 ) -> Result<Vec<im_message::Model>, String> {
     // 如果指定了联系人，查找与该联系人相关的所有文件
     if let Some(contact_uid) = &param.selected_user {
-
         // 新策略：基于消息交互历史查找共同房间
         // 1. 查找所有涉及目标联系人的消息，获取不重复的房间ID
         let contact_messages = im_message::Entity::find()
@@ -261,17 +259,18 @@ fn convert_message_to_file_info(message: im_message::Model) -> Option<FileInfo> 
                 }
 
                 // 尝试获取文件名，优先使用 fileName，兼容历史数据，视频消息从URL提取
-                let file_name = file_data["fileName"].as_str()
-                    .or_else(|| {
-                        // 对于视频消息，从URL中提取文件名
-                        if message_type == 6 {
-                            file_data["url"].as_str().and_then(|url| {
-                                url.split('/').last().map(|s| s.split('?').next().unwrap_or(s))
-                            })
-                        } else {
-                            None
-                        }
-                    });
+                let file_name = file_data["fileName"].as_str().or_else(|| {
+                    // 对于视频消息，从URL中提取文件名
+                    if message_type == 6 {
+                        file_data["url"].as_str().and_then(|url| {
+                            url.split('/')
+                                .last()
+                                .map(|s| s.split('?').next().unwrap_or(s))
+                        })
+                    } else {
+                        None
+                    }
+                });
 
                 let file_name = match file_name {
                     Some(name) => name.to_string(),
@@ -298,7 +297,10 @@ fn convert_message_to_file_info(message: im_message::Model) -> Option<FileInfo> 
                     file_type: file_type.clone(),
                     upload_time: format_timestamp(upload_time),
                     sender,
-                    download_url: file_data["url"].as_str().or_else(|| file_data["downloadUrl"].as_str()).map(|s| s.to_string()),
+                    download_url: file_data["url"]
+                        .as_str()
+                        .or_else(|| file_data["downloadUrl"].as_str())
+                        .map(|s| s.to_string()),
                     is_downloaded: Some(false),
                     status: "completed".to_string(),
                     thumbnail_url: file_data["thumbnailUrl"].as_str().map(|s| s.to_string()),
@@ -332,10 +334,9 @@ fn extract_file_size(file_data: &serde_json::Value) -> Option<i64> {
 /// 解析文件大小值
 fn parse_size_value(value: &serde_json::Value) -> Option<i64> {
     match value {
-        serde_json::Value::Number(num) => {
-            num.as_i64()
-                .or_else(|| num.as_u64().map(|n| (n.min(i64::MAX as u64)) as i64))
-        }
+        serde_json::Value::Number(num) => num
+            .as_i64()
+            .or_else(|| num.as_u64().map(|n| (n.min(i64::MAX as u64)) as i64)),
         serde_json::Value::String(raw) => raw.trim().parse::<i64>().ok(),
         _ => None,
     }
@@ -374,8 +375,8 @@ fn extract_user_list(files: &[FileInfo]) -> Vec<UserInfo> {
 
 /// 按时间分组文件
 fn group_files_by_time(files: Vec<FileInfo>) -> Vec<TimeGroup> {
-    use std::collections::BTreeMap;
     use chrono::NaiveDate;
+    use std::collections::BTreeMap;
 
     let mut groups: BTreeMap<NaiveDate, Vec<FileInfo>> = BTreeMap::new();
     let mut unknown_files: Vec<FileInfo> = Vec::new();
@@ -436,7 +437,6 @@ fn format_display_date(date: chrono::NaiveDate) -> String {
     }
 }
 
-
 /// 获取导航菜单项
 #[tauri::command]
 pub async fn get_navigation_items() -> Result<Vec<NavigationItem>, String> {
@@ -472,9 +472,7 @@ pub async fn get_navigation_items() -> Result<Vec<NavigationItem>, String> {
 
 /// 调试命令：获取数据库中的消息统计信息
 #[tauri::command]
-pub async fn debug_message_stats(
-    state: State<'_, AppData>,
-) -> Result<serde_json::Value, String> {
+pub async fn debug_message_stats(state: State<'_, AppData>) -> Result<serde_json::Value, String> {
     let login_uid = {
         let user_info = state.user_info.lock().await;
         user_info.uid.clone()
@@ -489,7 +487,10 @@ pub async fn debug_message_stats(
 
     // 查询各种类型的消息数
     let mut stats = serde_json::Map::new();
-    stats.insert("total_messages".to_string(), serde_json::Value::Number(serde_json::Number::from(total_messages)));
+    stats.insert(
+        "total_messages".to_string(),
+        serde_json::Value::Number(serde_json::Number::from(total_messages)),
+    );
 
     // 统计各种消息类型
     for msg_type in 0..=10u8 {
@@ -501,7 +502,10 @@ pub async fn debug_message_stats(
             .map_err(|e| format!("查询类型 {} 消息数失败: {}", msg_type, e))?;
 
         if count > 0 {
-            stats.insert(format!("type_{}", msg_type), serde_json::Value::Number(serde_json::Number::from(count)));
+            stats.insert(
+                format!("type_{}", msg_type),
+                serde_json::Value::Number(serde_json::Number::from(count)),
+            );
         }
     }
 
@@ -540,7 +544,10 @@ pub async fn debug_message_stats(
         })
         .collect();
 
-    stats.insert("sample_file_messages".to_string(), serde_json::Value::Array(samples));
+    stats.insert(
+        "sample_file_messages".to_string(),
+        serde_json::Value::Array(samples),
+    );
 
     Ok(serde_json::Value::Object(stats))
 }

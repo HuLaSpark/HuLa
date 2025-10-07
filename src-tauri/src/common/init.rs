@@ -29,8 +29,7 @@ fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
             Target::new(TargetKind::Webview),
             Target::new(TargetKind::LogDir {
                 file_name: Some("logs".to_string()),
-              },
-            ),
+            }),
         ])
         .with_colors(ColoredLevelConfig {
             error: Color::Red,

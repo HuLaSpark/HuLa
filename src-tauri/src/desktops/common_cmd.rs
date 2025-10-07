@@ -350,7 +350,9 @@ pub fn get_windows_scale_info() -> Result<WindowsScaleInfo, String> {
 /// 从Windows注册表读取文本缩放设置
 #[cfg(target_os = "windows")]
 unsafe fn get_text_scale_from_registry() -> Result<f64, String> {
-    use windows::Win32::System::Registry::{RegOpenKeyExW, RegQueryValueExW, RegCloseKey, HKEY_CURRENT_USER, KEY_READ, REG_DWORD, HKEY};
+    use windows::Win32::System::Registry::{
+        HKEY, HKEY_CURRENT_USER, KEY_READ, REG_DWORD, RegCloseKey, RegOpenKeyExW, RegQueryValueExW,
+    };
     use windows::core::w;
 
     // 尝试多个可能的注册表位置
@@ -390,8 +392,8 @@ unsafe fn get_text_scale_from_registry() -> Result<f64, String> {
             let _ = unsafe { RegCloseKey(hkey) };
 
             if result.is_ok() && value_type == REG_DWORD && data > 0 {
-
-                if i == 2 { // LogPixels 是DPI值，需要特殊处理
+                if i == 2 {
+                    // LogPixels 是DPI值，需要特殊处理
                     return Ok(1.0); // LogPixels不是文本缩放，返回默认值
                 } else {
                     // TextScaleFactor 是百分比值 (100 = 100%, 150 = 150%)

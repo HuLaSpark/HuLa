@@ -1,5 +1,5 @@
 <template>
-  <div class="relative flex-center gap-22px h-full">
+  <div v-if="toolbarVisible" class="relative flex-center gap-22px h-full">
     <!-- 功能模块 -->
     <div class="flex flex-col flex-y-center gap-14px" v-for="opt in opts">
       <n-button :disabled="opt.disabled" secondary circle @click="opt.click" class="size-46px">
@@ -27,7 +27,7 @@
       <svg v-if="isWindows()" @click="showModal = false" class="size-12px ml-a cursor-pointer select-none">
         <use href="#close"></use>
       </svg>
-      <div class="pt-20px flex flex-col select-none">
+      <div class="pt-8px flex flex-col select-none">
         <div class="flex flex-row">
           <!-- 搜索会话 -->
           <div class="flex-1 h-64vh bg-#e3e3e360 dark:bg-#222 rounded-8px px-12px pt-12px flex flex-col">
@@ -97,7 +97,8 @@
 </template>
 
 <script setup lang="ts">
-import { MergeMessageType, RoomTypeEnum } from '@/enums'
+import { MergeMessageType, MittEnum, RoomTypeEnum } from '@/enums'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { useChatStore } from '@/stores/chat'
 import { useGlobalStore } from '@/stores/global'
 import { useGroupStore } from '@/stores/group'
@@ -107,24 +108,26 @@ import { isMac, isWindows } from '@/utils/PlatformConstants'
 import type { MsgId } from '~/src/typings/global'
 import ChatMultiMsg from './ChatMultiMsg.vue'
 
+const props = withDefaults(defineProps<{ showToolbar?: boolean }>(), { showToolbar: false })
+
 const chatStore = useChatStore()
 const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
 const showModal = ref(false)
 const searchText = ref('')
-const selectedSessions = computed(() => {
-  return chatStore.sessionList.filter((session) => session.isCheck === true)
-})
-const selectedMsgs = computed(() => {
-  return chatStore.chatMessageList.filter((msg) => msg.isCheck === true)
-})
+const toolbarVisible = computed(() => props.showToolbar)
+const selectedSessions = computed(() => chatStore.sessionList.filter((session) => session.isCheck === true))
+const selectedMsgs = computed(() => chatStore.chatMessageList.filter((msg) => msg.isCheck === true))
 
-const msgContents = computed(() => {
-  return selectedMsgs.value.map((msg) => {
-    const userInfo = groupStore.getUserInfo(msg.fromUser.uid)
-    return userInfo?.name + ': ' + msg.message.body.content
-  })
-})
+const getMessagePreview = (msg: (typeof selectedMsgs.value)[number]) => {
+  const userInfo = groupStore.getUserInfo(msg.fromUser.uid)
+  const nickname = userInfo?.myName || msg.fromUser?.username || ''
+  const body: any = msg.message.body || {}
+  const preview = body.content || body.fileName || body.name || body.title || body.url || '［非文本消息］'
+  return nickname ? `${nickname}: ${preview}` : preview
+}
+
+const msgContents = computed(() => selectedMsgs.value.map((msg) => getMessagePreview(msg)))
 
 const msgIds = computed((): MsgId[] => {
   return selectedMsgs.value.map((msg) => {
@@ -145,7 +148,15 @@ const filteredSessionList = computed(() => {
     return displayName.includes(searchValue)
   })
 })
-let mergeMessageType = MergeMessageType.SINGLE
+
+let mergeMessageType: MergeMessageType = MergeMessageType.SINGLE
+
+// 重置所有会话选择状态
+const resetSessionSelection = () => {
+  chatStore.sessionList.forEach((session) => {
+    session.isCheck = false
+  })
+}
 
 const opts = computed(() => [
   {
@@ -153,7 +164,9 @@ const opts = computed(() => [
     icon: '#share-three',
     disabled: selectedMsgs.value.length === 0,
     click: () => {
-      window.$message.warning('暂未实现')
+      mergeMessageType = MergeMessageType.SINGLE
+      resetSessionSelection()
+      showModal.value = true
     }
   },
   {
@@ -161,19 +174,18 @@ const opts = computed(() => [
     icon: '#share',
     disabled: selectedMsgs.value.length === 0,
     click: () => {
-      if (selectedMsgs.value.length > 0) {
-        showModal.value = true
-        mergeMessageType = MergeMessageType.MERGE
-      }
+      mergeMessageType = MergeMessageType.MERGE
+      resetSessionSelection()
+      showModal.value = true
     }
   },
-  {
-    text: '收藏',
-    icon: '#collect',
-    click: () => {
-      window.$message.warning('暂未实现')
-    }
-  },
+  // {
+  //   text: '收藏',
+  //   icon: '#collect',
+  //   click: () => {
+  //     window.$message.warning('暂未实现')
+  //   }
+  // },
   {
     text: '保存至电脑',
     icon: '#collect-laptop',
@@ -193,13 +205,23 @@ const opts = computed(() => [
     icon: '#close',
     click: () => {
       chatStore.clearMsgCheck()
+      resetSessionSelection()
       chatStore.setMsgMultiChoose(false)
     }
   }
 ])
 
+watch(showModal, (visible, previous) => {
+  if (!visible && previous) {
+    resetSessionSelection()
+    if (!chatStore.isMsgMultiChoose) {
+      chatStore.clearMsgCheck()
+    }
+  }
+})
+
 const handleRemoveSession = (roomId: string) => {
-  const session = chatStore.sessionList.find((session) => session.roomId === roomId)
+  const session = chatStore.sessionList.find((item) => item.roomId === roomId)
   if (session) {
     session.isCheck = false
   }
@@ -226,12 +248,18 @@ const sendMsg = async () => {
       showModal.value = false
       chatStore.clearMsgCheck()
       chatStore.setMsgMultiChoose(false)
-      // 重置选中的会话
-      chatStore.sessionList.forEach((session) => {
-        session.isCheck = false
-      })
+      resetSessionSelection()
     })
 }
+
+useMitt.on(MittEnum.MSG_MULTI_CHOOSE, (payload?: { action?: string; mergeType?: MergeMessageType }) => {
+  if (!payload) return
+  if (payload.action === 'open-forward') {
+    mergeMessageType = payload.mergeType ?? MergeMessageType.SINGLE
+    resetSessionSelection()
+    showModal.value = true
+  }
+})
 </script>
 <style scoped>
 /**! 修改naive-ui复选框的样式 */

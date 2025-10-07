@@ -18,9 +18,9 @@
       </n-flex>
     </div>
 
-    <ChatMsgMultiChoose v-if="chatStore.isMsgMultiChoose" />
+    <ChatMsgMultiChoose :show-toolbar="chatStore.isMsgMultiChoose" />
 
-    <div v-else class="size-full relative color-[--icon-color] flex flex-col">
+    <div v-if="!chatStore.isMsgMultiChoose" class="size-full relative color-[--icon-color] flex flex-col">
       <!-- 输入框顶部选项栏 -->
       <n-flex align="center" justify="space-between" class="p-[10px_22px_5px] select-none flex-shrink-0">
         <n-flex align="center" :size="0" class="input-options">

@@ -2,7 +2,7 @@ use crate::error::CommonError;
 use crate::pojo::common::{CursorPageParam, CursorPageResp};
 use entity::im_message;
 use sea_orm::prelude::Expr;
-use sea_orm::sea_query::Alias;
+use sea_orm::sea_query::{Alias, Value};
 use sea_orm::{
     ColumnTrait, Condition, ConnectionTrait, DatabaseConnection, DatabaseTransaction, EntityTrait,
     IntoActiveModel, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set, TryIntoModel,
@@ -211,7 +211,7 @@ pub async fn cursor_page_messages(
 /// 保存单个消息到数据库
 pub async fn save_message(
     db: &DatabaseTransaction,
-    message: im_message::Model,
+    mut message: im_message::Model,
 ) -> Result<(), CommonError> {
     // 根据消息主键查找是否已存在
     let existing_message =
@@ -226,6 +226,30 @@ pub async fn save_message(
             .exec(db)
             .await
             .map_err(|e| anyhow::anyhow!("Failed to delete existing message: {}", e))?;
+    }
+
+    // 如果缺少，就填充time_block，以便为转发等消息类型呈现时间戳块
+    if message.time_block.is_none() {
+        if let Some(current_send_time) = message.send_time {
+            let last_message = im_message::Entity::find()
+                .filter(im_message::Column::RoomId.eq(message.room_id.clone()))
+                .filter(im_message::Column::LoginUid.eq(message.login_uid.clone()))
+                .filter(im_message::Column::SendTime.lt(current_send_time))
+                .order_by_desc(Expr::col(im_message::Column::SendTime))
+                .order_by_desc(Expr::col(im_message::Column::Id).cast_as(Alias::new("INTEGER")))
+                .limit(1)
+                .one(db)
+                .await
+                .map_err(|e| anyhow::anyhow!("Failed to query last message: {}", e))?;
+
+            if let Some(last_message) = last_message {
+                if let Some(last_send_time) = last_message.send_time {
+                    if current_send_time - last_send_time >= 1000 * 60 * 15 {
+                        message.time_block = Some(current_send_time - last_send_time);
+                    }
+                }
+            }
+        }
     }
 
     // 插入新消息
@@ -367,15 +391,27 @@ pub async fn query_chat_history(
         conditions = conditions.add(type_condition);
     }
 
-    // 关键词搜索（仅搜索消息的 content 字段）
+    // 关键词搜索（支持消息内容与文件名等字段）
     if let Some(ref keyword) = condition.search_keyword {
-        if !keyword.trim().is_empty() {
-            let keyword_pattern = format!("%{}%", keyword.trim());
-            use sea_orm::sea_query::Value;
-            conditions = conditions.add(Expr::cust_with_values(
-                "JSON_EXTRACT(body, '$.content') LIKE ?",
-                [Value::from(keyword_pattern)],
+        let trimmed = keyword.trim();
+        if !trimmed.is_empty() {
+            let keyword_pattern = format!("%{}%", trimmed);
+            let keyword_pattern_lower = format!("%{}%", trimmed.to_lowercase());
+
+            let mut keyword_condition = Condition::any();
+            for json_path in ["$.content", "$.fileName", "$.url"] {
+                keyword_condition = keyword_condition.add(Expr::cust_with_values(
+                    &format!("JSON_EXTRACT(body, '{}') LIKE ?", json_path),
+                    [Value::from(keyword_pattern.clone())],
+                ));
+            }
+
+            keyword_condition = keyword_condition.add(Expr::cust_with_values(
+                "LOWER(body) LIKE ?",
+                [Value::from(keyword_pattern_lower)],
             ));
+
+            conditions = conditions.add(keyword_condition);
         }
     }
 
@@ -433,10 +469,8 @@ pub async fn query_file_messages(
     page: u32,
     page_size: u32,
 ) -> Result<Vec<im_message::Model>, CommonError> {
-
     // 构建基础查询条件
-    let mut conditions = Condition::all()
-        .add(im_message::Column::LoginUid.eq(login_uid));
+    let mut conditions = Condition::all().add(im_message::Column::LoginUid.eq(login_uid));
 
     // 房间ID筛选（如果提供）
     if let Some(room_id) = room_id {
@@ -503,9 +537,7 @@ pub async fn query_file_messages(
 
     // 应用分页
     let offset = (page.saturating_sub(1)) * page_size;
-    query = query
-        .offset(offset as u64)
-        .limit(page_size as u64);
+    query = query.offset(offset as u64).limit(page_size as u64);
 
     // 执行查询
     let messages = query

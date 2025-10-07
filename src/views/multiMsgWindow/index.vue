@@ -68,7 +68,7 @@ const userStore = useUserStore()
 const groupStore = useGroupStore()
 const { openImageViewer } = useImageViewer()
 const { openVideoViewer } = useVideoViewer()
-const { specialMenuList } = useChatMain(true)
+const { specialMenuList } = useChatMain(true, { disableHistoryActions: true })
 
 const choosedMsgs = ref<Msg[]>([])
 const msgs = ref<MessageType[]>([])

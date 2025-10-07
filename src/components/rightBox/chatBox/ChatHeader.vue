@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <!-- 顶部操作栏和显示用户名 -->
   <main
     data-tauri-drag-region
@@ -156,7 +156,10 @@
           <!-- 群聊侧边栏选项 -->
           <template v-else>
             <div class="box-item cursor-default">
-              <n-flex align="center" justify="space-between" :size="0">
+              <n-flex
+                align="center"
+                :justify="groupStore.countInfo!.allowScanEnter ? 'space-between' : ''"
+                :size="groupStore.countInfo!.allowScanEnter ? 0 : 12">
                 <!-- 群头像 -->
                 <div class="relative group">
                   <!-- 群主可以编辑头像，显示黑色蒙层和上传图标 -->
@@ -175,13 +178,14 @@
                 <n-flex vertical :size="6">
                   <!-- 群名称 -->
                   <n-flex :size="10" align="center">
-                    <div v-if="isGroupOwner && isEditingGroupName" class="flex-1">
+                    <div v-if="isGroupOwner && isEditingGroupName">
                       <n-input
                         ref="groupNameInputRef"
                         v-model:value="editingGroupName"
                         @blur.stop="handleGroupNameChange"
                         @keydown.enter.stop="handleGroupNameChange"
                         size="tiny"
+                        style="width: 100px; height: 22px"
                         maxlength="12"
                         spellCheck="false"
                         autoComplete="off"
@@ -192,10 +196,10 @@
                     </div>
                     <div
                       v-else
-                      class="text-(14px --text-color) cursor-default"
+                      class="text-(14px --text-color) cursor-default h-22px flex-center"
                       :class="{ 'cursor-pointer': isGroupOwner }"
                       @click="isGroupOwner && startEditGroupName()">
-                      {{ activeItem.name }}
+                      <p class="max-w-100px truncate">{{ activeItem.name }}</p>
                       <!-- 显示编辑图标 -->
                       <svg v-if="isGroupOwner" class="size-14px ml-1 inline-block color-[--icon-color]">
                         <use href="#edit"></use>
@@ -233,6 +237,7 @@
                 </n-flex>
 
                 <div
+                  v-if="groupStore.countInfo!.allowScanEnter"
                   class="flex-center cursor-pointer bg-#e3e3e3 dark:bg-#303030 border-(1px solid #90909080) gap-6px px-4px py-6px rounded-6px"
                   @click="showQRCodeModal = true">
                   <svg class="size-16px"><use href="#pay-code-one"></use></svg>
@@ -268,6 +273,7 @@
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
+              :maxlength="12"
               v-model:value="localMyName"
               @blur.stop="handleGroupInfoChange" />
             <!-- 群备注 -->
@@ -529,6 +535,15 @@ const initLocalValues = () => {
   localRemark.value = groupStore.countInfo?.remark || ''
 }
 
+watch(
+  () => groupStore.myNameInCurrentGroup,
+  (newName) => {
+    const normalized = newName || ''
+    if (localMyName.value !== normalized) {
+      localMyName.value = normalized
+    }
+  }
+)
 // 监听当前会话变化，重新初始化本地变量
 watch(
   () => activeItem.value?.roomId,

@@ -78,6 +78,8 @@ export enum MittEnum {
   OPEN_EDIT_INFO = 'openEditInfo',
   /** 关闭个人信息浮窗 */
   CLOSE_INFO_SHOW = 'closeInfoShow',
+  /** 打开修改群昵称弹窗 */
+  OPEN_GROUP_NICKNAME_MODAL = 'openGroupNicknameModal',
   /** 左边菜单弹窗 */
   LEFT_MODAL_SHOW = 'leftModalShow',
   /** 触发home窗口事件 */
