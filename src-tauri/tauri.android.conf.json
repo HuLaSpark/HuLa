@@ -7,7 +7,7 @@
     "beforeDevCommand": "pnpm dev",
     "beforeBuildCommand": "pnpm build",
     "frontendDist": "../dist",
-    "devUrl": "http://127.0.0.1:6130"
+    "devUrl": "http://127.0.0.1:1020"
   },
   "bundle": {
     "active": true,

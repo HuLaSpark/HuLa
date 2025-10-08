@@ -27,7 +27,6 @@
 import { emitTo } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
-import { type } from '@tauri-apps/plugin-os'
 import { useRoute } from 'vue-router'
 import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.vue'
 import type { default as TabBarType } from '#/layout/tabBar/index.vue'
@@ -42,6 +41,7 @@ import { useGroupStore } from '@/stores/group'
 import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user'
 import { audioManager } from '@/utils/AudioManager'
+import { isMobile, isWindows } from '@/utils/PlatformConstants'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
 import { useContactStore } from '~/src/stores/contacts'
 
@@ -185,40 +185,49 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
 
     // 只有非免打扰的会话才发送通知和触发图标闪烁
     if (session && session.muteNotification !== NotificationTypeEnum.NOT_DISTURB) {
-      // 检查 home 窗口状态
-      const home = await WebviewWindow.getByLabel('mobile-home')
-      let shouldPlaySound = false
+      let shouldPlaySound = isMobile()
 
-      if (home) {
+      if (!isMobile()) {
         try {
-          const isVisible = await home.isVisible()
-          const isMinimized = await home.isMinimized()
-          const isFocused = await home.isFocused()
+          const home = await WebviewWindow.getByLabel('mobile-home')
 
-          // 如果窗口不可见、被最小化或未聚焦，则播放音效
-          shouldPlaySound = !isVisible || isMinimized || !isFocused
+          if (home) {
+            const isVisible = await home.isVisible()
+            const isMinimized = await home.isMinimized()
+            const isFocused = await home.isFocused()
+
+            // 如果窗口不可见、被最小化或未聚焦，则播放音效
+            shouldPlaySound = !isVisible || isMinimized || !isFocused
+          } else {
+            // 如果找不到home 窗口，播放音效
+            shouldPlaySound = true
+          }
         } catch (error) {
           console.warn('检查窗口状态失败:', error)
           // 如果检查失败，默认播放音效
           shouldPlaySound = true
         }
-      } else {
-        // 如果找不到 home 窗口，播放音效
-        shouldPlaySound = true
       }
 
       // 播放消息音效
       if (shouldPlaySound) {
         await playMessageSound()
       }
+
+      // 设置图标闪烁
+      // useMitt.emit(MittEnum.MESSAGE_ANIMATION, data)
       // session.unreadCount++
       // 在windows系统下才发送通知
-      if (type() === 'windows') {
+      if (!isMobile() && isWindows()) {
         globalStore.setTipVisible(true)
       }
 
-      if (WebviewWindow.getCurrent().label === 'mobile-home') {
-        await emitTo('notify', 'notify_content', data)
+      if (!isMobile()) {
+        const currentWindow = WebviewWindow.getCurrent()
+
+        if (currentWindow.label === 'mobile-home') {
+          await emitTo('notify', 'notify_content', data)
+        }
       }
     }
   }
@@ -274,8 +283,10 @@ useMitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExp
   if (Number(userUid.value) === Number(wsTokenExpire.uid) && userStore.userInfo!.client === wsTokenExpire.client) {
     console.log('收到用户token过期通知', wsTokenExpire)
     // 聚焦主窗口
-    const home = await WebviewWindow.getByLabel('home')
-    await home?.setFocus()
+    if (!isMobile()) {
+      const home = await WebviewWindow.getByLabel('home')
+      await home?.setFocus()
+    }
     useMitt.emit(MittEnum.LEFT_MODAL_SHOW, {
       type: ModalEnum.REMOTE_LOGIN,
       props: {

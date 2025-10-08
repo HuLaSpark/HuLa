@@ -44,6 +44,8 @@ export default defineConfig(({ mode }: ConfigEnv) => {
     config.TAURI_ENV_PLATFORM === 'darwin' ||
     config.TAURI_ENV_PLATFORM === 'linux'
 
+  const serverPort = isPC ? 6130 : 1020
+
   // 根据平台决定host地址
   const host = (() => {
     if (isPC) {
@@ -175,11 +177,11 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       hmr: {
         protocol: 'ws',
         host: host,
-        port: 6130
+        port: serverPort
       },
       cors: true, // 配置 CORS
       host: '0.0.0.0',
-      port: 6130,
+      port: serverPort,
       strictPort: true,
       watch: {
         // 3. tell vite to ignore watching `src-tauri`

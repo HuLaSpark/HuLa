@@ -161,6 +161,7 @@ import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { searchFriend, searchGroup } from '@/utils/ImRequestUtils'
+import { isMobile } from '@/utils/PlatformConstants'
 import router from '~/src/router'
 
 const contactStore = useContactStore()
@@ -169,7 +170,6 @@ const globalStore = useGlobalStore()
 const settingStore = useSettingStore()
 const cachedStore = useCachedStore()
 const { themes } = storeToRefs(settingStore)
-
 // 定义标签页
 const tabs = ref([
   { name: 'recommend', label: '推荐' },
@@ -414,9 +414,11 @@ const handleAddFriend = async (item: any) => {
 // 处理编辑个人资料
 const handleEditProfile = async () => {
   // 获取主窗口
-  const homeWindow = await WebviewWindow.getByLabel('home')
-  // 激活主窗口
-  await homeWindow?.setFocus()
+  if (!isMobile()) {
+    const homeWindow = await WebviewWindow.getByLabel('home')
+    // 激活主窗口
+    await homeWindow?.setFocus()
+  }
   // 打开个人资料编辑窗口
   emitTo('home', 'open_edit_info')
 }
