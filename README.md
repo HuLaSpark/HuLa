@@ -329,11 +329,10 @@ sudo xattr -r -d com.apple.quarantine /Applications/应用名称.app
   <h3>🤝 HuLa 社区讨论群</h3>
   <p><em>与开发者和用户一起交流讨论，获取最新资讯和技术支持</em></p>
 
-  <div>
-    <img src="preview/wx.png" width="220" height="260" alt="微信群二维码">
+  <div style="display: flex; justify-content: center; gap: 20px;">
+    <img src="preview/wx.png" width="260" height="340" alt="微信群二维码">
+    <img src="preview/qq.jpg" width="260" height="340" alt="QQ群二维码">
   </div>
-
-  <p><strong>📱 扫码加入微信讨论群</strong></p>
 </div>
 
 ## 🙏 感谢赞助者

@@ -326,11 +326,10 @@ Execute **pnpm run commit** to invoke _git commit_ interaction, complete informa
   <h3>🤝 HuLa Community Discussion Group</h3>
   <p><em>Join developers and users for discussions, get the latest news and technical support</em></p>
 
-  <div>
-    <img src="preview/wx.png" width="220" height="260" alt="WeChat Group QR Code">
+  <div style="display: flex; justify-content: center; gap: 20px;">
+    <img src="preview/wx.png" width="260" height="340" alt="WeChat Group QR Code">
+    <img src="preview/qq.jpg" width="260" height="340" alt="QQ Group QR Code">
   </div>
-
-  <p><strong>📱 Scan to Join WeChat Discussion Group</strong></p>
 </div>
 
 ## 🙏 Thanks to Sponsors

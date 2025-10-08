@@ -50,6 +50,7 @@ declare module 'vue' {
     MsgInput: typeof import('./../components/rightBox/MsgInput.vue')['default']
     MyMessageItem: typeof import('./../mobile/components/my/MyMessageItem.vue')['default']
     NaiveProvider: typeof import('./../components/common/NaiveProvider.vue')['default']
+    NAlert: typeof import('naive-ui')['NAlert']
     NAutoComplete: typeof import('naive-ui')['NAutoComplete']
     NAvatar: typeof import('naive-ui')['NAvatar']
     NAvatarGroup: typeof import('naive-ui')['NAvatarGroup']
