@@ -32,7 +32,7 @@
     <div class="flex justify-center items-center">
       <n-checkbox
         v-model:checked="message.isCheck"
-        v-if="chatStore.isMsgMultiChoose"
+        v-if="chatStore.isMsgMultiChoose && !isMultiSelectDisabled"
         class="mr-3 select-none"
         :focusable="false"
         @click.stop />
@@ -273,6 +273,7 @@ import { useGroupStore } from '@/stores/group'
 import { useSettingStore } from '@/stores/setting'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
+import { isMessageMultiSelectEnabled } from '@/utils/MessageSelect'
 import router from '~/src/router'
 import { useChatStore } from '~/src/stores/chat'
 import { useUserStore } from '~/src/stores/user'
@@ -328,6 +329,8 @@ const groupStore = useGroupStore()
 const chatStore = useChatStore()
 const cachedStore = useCachedStore()
 const recordEL = ref<HTMLElement>()
+
+const isMultiSelectDisabled = computed(() => !isMessageMultiSelectEnabled(props.message.message.type))
 
 const handleAvatarClick = (uid: string, msgId: string) => {
   if (isMobile()) {

@@ -14,7 +14,9 @@
 
     <span class="w-full h-1px bg-[--line-color]"></span>
 
-    <p class="flex-1 px-12px pt-12px box-border leading-22px break-words line-clamp-4 text-(14px [--text-color])">
+    <p
+      :class="showDetailButton ? 'line-clamp-4' : 'line-clamp-5'"
+      class="flex-1 px-12px pt-12px box-border leading-22px break-words text-(14px [--text-color])">
       <n-highlight
         v-if="searchKeyword"
         :text="body.content"
@@ -29,7 +31,7 @@
       <template v-else>{{ body.content }}</template>
     </p>
 
-    <div class="w-full flex-center py-6px cursor-default">
+    <div v-if="showDetailButton" class="w-full flex-center py-6px cursor-default">
       <n-button
         secondary
         type="primary"
@@ -38,10 +40,13 @@
         查看详情
       </n-button>
     </div>
+
+    <div v-else class="w-full h-16px"></div>
   </n-flex>
 </template>
 
 <script setup lang="ts">
+import { useRoute } from 'vue-router'
 import { useWindow } from '@/hooks/useWindow'
 import type { AnnouncementBody } from '@/services/types'
 import { useGlobalStore } from '@/stores/global'
@@ -54,6 +59,11 @@ defineProps<{
 
 const globalStore = useGlobalStore()
 const { createWebviewWindow } = useWindow()
+const route = useRoute()
+const showDetailButton = computed(() => {
+  const routeName = route.name?.toString()
+  return routeName !== 'chat-history' && routeName !== 'multiMsg'
+})
 
 const openAnnouncementDetail = async () => {
   const roomId = globalStore.currentSession?.roomId

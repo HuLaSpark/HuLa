@@ -104,6 +104,7 @@ import { useGlobalStore } from '@/stores/global'
 import { useGroupStore } from '@/stores/group'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { mergeMsg } from '@/utils/ImRequestUtils'
+import { isMessageMultiSelectEnabled } from '@/utils/MessageSelect'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
 import type { MsgId } from '~/src/typings/global'
 import ChatMultiMsg from './ChatMultiMsg.vue'
@@ -117,7 +118,9 @@ const showModal = ref(false)
 const searchText = ref('')
 const toolbarVisible = computed(() => props.showToolbar)
 const selectedSessions = computed(() => chatStore.sessionList.filter((session) => session.isCheck === true))
-const selectedMsgs = computed(() => chatStore.chatMessageList.filter((msg) => msg.isCheck === true))
+const selectedMsgs = computed(() =>
+  chatStore.chatMessageList.filter((msg) => msg.isCheck === true && isMessageMultiSelectEnabled(msg.message.type))
+)
 
 const getMessagePreview = (msg: (typeof selectedMsgs.value)[number]) => {
   const userInfo = groupStore.getUserInfo(msg.fromUser.uid)

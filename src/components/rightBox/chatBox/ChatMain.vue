@@ -73,11 +73,13 @@
                 item.message.type === MsgEnum.RECALL ? 'min-h-22px' : 'min-h-62px',
                 isGroup ? 'p-[14px_10px_14px_20px]' : 'chat-single p-[4px_10px_10px_20px]',
                 { 'active-reply': activeReply === item.message.id },
-                { 'bg-#90909020': computeMsgHover(item.message.id) }
+                { 'bg-#90909020': computeMsgHover(item) }
               ]"
               @click="
                 () => {
-                  item.isCheck = !item.isCheck
+                  if (chatStore.isMsgMultiChoose && isMessageMultiSelectEnabled(item.message.type)) {
+                    item.isCheck = !item.isCheck
+                  }
                 }
               ">
               <RenderMessage
@@ -194,12 +196,14 @@ import { useMitt } from '@/hooks/useMitt.ts'
 import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 import { usePopover } from '@/hooks/usePopover.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
+import type { MessageType } from '@/services/types.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global'
 import { useUserStore } from '@/stores/user.ts'
 import { audioManager } from '@/utils/AudioManager'
 import { timeToStr } from '@/utils/ComputedTime'
 import { getAnnouncementList } from '@/utils/ImRequestUtils'
+import { isMessageMultiSelectEnabled } from '@/utils/MessageSelect'
 import { isMac, isMobile, isWindows } from '@/utils/PlatformConstants'
 
 const selfEmit = defineEmits(['scroll'])
@@ -247,11 +251,12 @@ const isGroup = computed<boolean>(() => chatStore.isGroup)
 const userUid = computed(() => userStore.userInfo!.uid || '')
 const currentNewMsgCount = computed(() => chatStore.currentNewMsgCount || null)
 const currentRoomId = computed(() => globalStore.currentSession?.roomId ?? null)
-const computeMsgHover = computed(() => (id: string) => {
-  return (
-    chatStore.isMsgMultiChoose &&
-    (hoverId.value === id || chatStore.chatMessageList.find((msg) => msg.message.id === id)?.isCheck)
-  )
+const computeMsgHover = computed(() => (item: MessageType) => {
+  if (!chatStore.isMsgMultiChoose || !isMessageMultiSelectEnabled(item.message.type)) {
+    return false
+  }
+
+  return hoverId.value === item.message.id || item.isCheck
 })
 // CSS 变量计算，避免动态高度重排
 const cssVariables = computed(() => {
