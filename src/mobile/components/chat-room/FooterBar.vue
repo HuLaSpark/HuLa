@@ -19,7 +19,9 @@
 
           <n-button @click="handleSend" color="#13987f" size="small" class="ms-10px me-25px flex items-center">
             发送
-            <svg class="h-15px w-15px iconpark-icon color-#white"><use href="#send"></use></svg>
+            <svg class="h-15px w-15px iconpark-icon color-#white">
+              <use href="#send"></use>
+            </svg>
           </n-button>
         </div>
       </div>
@@ -32,7 +34,9 @@
           @click="item.onClick"
           :class="{ 'active-icon': activeIcon === item.icon }">
           <div v-if="item.label !== 'file' && item.label !== 'image'">
-            <svg class="h-24px w-24px iconpark-icon"><use :href="`#${item.icon}`"></use></svg>
+            <svg class="h-24px w-24px iconpark-icon">
+              <use :href="`#${item.icon}`"></use>
+            </svg>
             <!-- <svg
               v-if="item.showArrow"
               :class="['h-15px w-15px iconpark-icon transition-transform duration-300', item.isRotate ? 'rotate' : '']">
@@ -41,7 +45,9 @@
           </div>
           <div v-else-if="item.label === 'file'">
             <van-uploader multiple :after-read="afterReadFile">
-              <svg class="h-24px w-24px iconpark-icon"><use :href="`#${item.icon}`"></use></svg>
+              <svg class="h-24px w-24px iconpark-icon">
+                <use :href="`#${item.icon}`"></use>
+              </svg>
               <svg
                 v-if="item.showArrow"
                 :class="[
@@ -54,7 +60,9 @@
           </div>
           <div v-else-if="item.label === 'image'">
             <van-uploader accept="image/*" multiple :after-read="afterReadImage">
-              <svg class="h-24px w-24px iconpark-icon"><use :href="`#${item.icon}`"></use></svg>
+              <svg class="h-24px w-24px iconpark-icon">
+                <use :href="`#${item.icon}`"></use>
+              </svg>
               <svg
                 v-if="item.showArrow"
                 :class="[
@@ -66,7 +74,9 @@
             </van-uploader>
           </div>
           <div v-else-if="item.label === 'videoCall'">
-            <svg class="h-24px w-24px iconpark-icon"><use :href="`#${item.icon}`"></use></svg>
+            <svg class="h-24px w-24px iconpark-icon">
+              <use :href="`#${item.icon}`"></use>
+            </svg>
             <svg
               v-if="item.showArrow"
               :class="['h-15px w-15px iconpark-icon transition-transform duration-300', item.isRotate ? 'rotate' : '']">
@@ -86,23 +96,8 @@
 
     <van-popup v-model:show="pickRtcCall" position="bottom">
       <div class="flex flex-col items-center justify-center">
-        <div
-          class="w-full text-center py-3"
-          @click="
-            () => {
-              router.push({
-                path: `/mobile/rtcCall`,
-                query: {
-                  remoteUserId: globalStore.currentSession.detailId,
-                  roomId: globalStore.currentSession.roomId,
-                  callType: CallTypeEnum.VIDEO
-                }
-              })
-            }
-          ">
-          视频通话
-        </div>
-        <div class="w-full text-center py-3">语音通话</div>
+        <div class="w-full text-center py-3" @click="startCall(VIDEO)">视频通话</div>
+        <div class="w-full text-center py-3" @click="startCall(AUDIO)">语音通话</div>
         <div class="w-full text-center py-3">取消</div>
       </div>
       <!-- 底部安全区域占位元素 -->
@@ -117,6 +112,9 @@ import { useMobileStore } from '@/stores/mobile'
 import 'vant/es/dialog/style'
 import { CallTypeEnum } from '@/enums'
 import { useGlobalStore } from '@/stores/global'
+
+const VIDEO = CallTypeEnum.VIDEO
+const AUDIO = CallTypeEnum.AUDIO
 
 // ==== 输入框事件 ====
 const mobileStore = useMobileStore()
@@ -164,6 +162,17 @@ const afterReadImage = (fileList: UploaderFileListItem | UploaderFileListItem[])
 
     console.log('已添加文件：', file)
   }
+}
+
+const startCall = (callType: CallTypeEnum) => {
+  router.push({
+    path: `/mobile/rtcCall`,
+    query: {
+      remoteUserId: globalStore.currentSession.detailId,
+      roomId: globalStore.currentSession.roomId,
+      callType: callType
+    }
+  })
 }
 
 const afterReadFile = (fileList: UploaderFileListItem | UploaderFileListItem[]) => {
@@ -384,7 +393,8 @@ defineExpose({ root, footerBarInput, closePanel })
   position: relative;
 
   svg {
-    color: #13987f; /* 主题色 */
+    color: #13987f;
+    /* 主题色 */
     transition: color 0.3s ease;
   }
 
@@ -408,6 +418,7 @@ defineExpose({ root, footerBarInput, closePanel })
     opacity: 1;
     transform: translateX(-50%) scale(1);
   }
+
   50% {
     opacity: 0.5;
     transform: translateX(-50%) scale(1.2);
@@ -417,9 +428,11 @@ defineExpose({ root, footerBarInput, closePanel })
 .footer-bar-shadow {
   box-shadow: 0 -3px 6px -4px rgba(0, 0, 0, 0.1);
 }
+
 .rotate {
   transform: rotate(180deg);
 }
+
 .transition-transform {
   transition: transform 0.15s ease;
 }

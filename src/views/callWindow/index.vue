@@ -34,7 +34,7 @@
     <div class="flex gap-16px mr-8">
       <!-- 拒绝按钮 -->
       <div
-        @click="rejectCall"
+        @click="hangUp(CallResponseStatus.REJECTED)"
         class="size-40px rounded-full bg-#d5304f hover:bg-#d5304f flex-center cursor-pointer shadow-lg">
         <svg class="color-#fff size-20px">
           <use href="#PhoneHangup"></use>
@@ -179,14 +179,7 @@
         <!-- 挂断按钮 -->
         <div class="flex-col-x-center gap-8px w-80px">
           <div
-            @click="
-              () => {
-                if (isMobile()) {
-                  router.back()
-                }
-                handleCallResponse(CallResponseStatus.DROPPED)
-              }
-            "
+            @click="hangUp()"
             class="size-44px rounded-full bg-#d5304f60 hover:bg-#d5304f80 flex-center cursor-pointer">
             <svg class="size-16px color-#fff">
               <use href="#PhoneHangup"></use>
@@ -230,7 +223,7 @@
         <!-- 下排按钮：挂断 -->
         <div class="flex-x-center">
           <div
-            @click="handleCallResponse(CallResponseStatus.DROPPED)"
+            @click="hangUp()"
             class="size-66px rounded-full bg-#d5304f60 hover:bg-#d5304f80 flex-center cursor-pointer">
             <svg class="size-24px color-#fff">
               <use href="#PhoneHangup"></use>
@@ -306,6 +299,15 @@ const isCallAccepted = ref(!isReceiver)
 const createSize = (width: number, height: number) => {
   const size = isWindows() ? new LogicalSize(width, height) : new PhysicalSize(width, height)
   return size
+}
+
+const hangUp = (status: CallResponseStatus = CallResponseStatus.DROPPED) => {
+  // 立即停止铃声
+  stopBell()
+  if (isMobile()) {
+    router.back()
+  }
+  handleCallResponse(status)
 }
 
 const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(remoteUserInfo.avatar as string))
@@ -515,14 +517,6 @@ const acceptCall = async () => {
   } catch (error) {
     console.error('Failed to resize window after accepting call:', error)
   }
-}
-
-// 拒绝通话
-const rejectCall = async () => {
-  // 立即停止铃声
-  stopBell()
-  // 调用拒绝响应函数
-  handleCallResponse(CallResponseStatus.REJECTED)
 }
 
 // 监听视频状态变化，自动更新视频显示
