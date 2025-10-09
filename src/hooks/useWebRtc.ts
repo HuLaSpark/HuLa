@@ -4,8 +4,8 @@ import { error, info } from '@tauri-apps/plugin-log'
 import { CallTypeEnum, RTCCallStatus } from '@/enums'
 import rustWebSocketClient from '@/services/webSocketRust'
 import { useUserStore } from '@/stores/user'
-import { getSettings } from '../services/tauriCommand'
 import { WsRequestMsgType, WsResponseMessageType } from '../services/wsType'
+import { isMobile } from '../utils/PlatformConstants'
 import { useMitt } from './useMitt'
 
 interface RtcMsgVO {
@@ -48,12 +48,20 @@ export interface WSRtcCallMsg {
 // const TURN_SERVER = import.meta.env.VITE_TURN_SERVER_URL
 const MAX_TIME_OUT_SECONDS = 30 // 拨打 超时时间
 const configuration: RTCConfiguration = {
-  // 默认配置
-  iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+  iceServers: [
+    {
+      urls: 'stun:117.72.67.248:8000'
+    },
+    {
+      urls: 'turn:117.72.67.248:3478',
+      username: 'chr',
+      credential: '123456'
+    }
+  ]
 }
 
-const settings = await getSettings()
-configuration.iceServers?.push(settings.ice_server)
+// const settings = await getSettings()
+// configuration.iceServers?.push(settings.ice_server)
 // const isSupportScreenSharing = !!navigator?.mediaDevices?.getDisplayMedia
 // TODO 改成动态配置
 const rtcCallBellUrl = '/sound/hula_bell.mp3'
@@ -219,7 +227,10 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
   const endCall = async () => {
     try {
       info('[收到通知] 结束通话')
-      await getCurrentWebviewWindow().close()
+      // 移动端router 回退
+      if (!isMobile()) {
+        await getCurrentWebviewWindow().close()
+      }
     } finally {
       clear()
     }

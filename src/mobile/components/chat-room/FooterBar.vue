@@ -29,7 +29,7 @@
           v-for="item in options"
           :key="item.icon"
           class="flex flex-wrap items-center"
-          @click="clickItem(item.icon)"
+          @click="item.onClick"
           :class="{ 'active-icon': activeIcon === item.icon }">
           <div v-if="item.label !== 'file' && item.label !== 'image'">
             <svg class="h-24px w-24px iconpark-icon"><use :href="`#${item.icon}`"></use></svg>
@@ -65,6 +65,14 @@
               </svg>
             </van-uploader>
           </div>
+          <div v-else-if="item.label === 'videoCall'">
+            <svg class="h-24px w-24px iconpark-icon"><use :href="`#${item.icon}`"></use></svg>
+            <svg
+              v-if="item.showArrow"
+              :class="['h-15px w-15px iconpark-icon transition-transform duration-300', item.isRotate ? 'rotate' : '']">
+              <use href="#down" />
+            </svg>
+          </div>
         </div>
       </div>
 
@@ -75,6 +83,31 @@
         </div>
       </Transition>
     </div>
+
+    <van-popup v-model:show="pickRtcCall" position="bottom">
+      <div class="flex flex-col items-center justify-center">
+        <div
+          class="w-full text-center py-3"
+          @click="
+            () => {
+              router.push({
+                path: `/mobile/rtcCall`,
+                query: {
+                  remoteUserId: globalStore.currentSession.detailId,
+                  roomId: globalStore.currentSession.roomId,
+                  callType: CallTypeEnum.VIDEO
+                }
+              })
+            }
+          ">
+          视频通话
+        </div>
+        <div class="w-full text-center py-3">语音通话</div>
+        <div class="w-full text-center py-3">取消</div>
+      </div>
+      <!-- 底部安全区域占位元素 -->
+      <SafeAreaPlaceholder type="layout" direction="bottom" />
+    </van-popup>
   </div>
 </template>
 
@@ -82,11 +115,16 @@
 import type { UploaderFileListItem } from 'vant/es'
 import { useMobileStore } from '@/stores/mobile'
 import 'vant/es/dialog/style'
+import { CallTypeEnum } from '@/enums'
+import { useGlobalStore } from '@/stores/global'
 
 // ==== 输入框事件 ====
 const mobileStore = useMobileStore()
+const globalStore = useGlobalStore()
 const activeIcon = ref<string | null>(null)
 const emit = defineEmits(['focus', 'blur', 'updateHeight'])
+const pickRtcCall = ref(false)
+const router = useRouter()
 
 const uploadFileList = ref<
   {
@@ -231,11 +269,20 @@ const handleSend = async () => {
 
 const getDefaultIcons = () => {
   return [
-    { label: 'emoji', icon: 'smiling-face', showArrow: true, isRotate: false },
-    { label: 'file', icon: 'file', showArrow: false, isRotate: true },
-    { label: 'image', icon: 'photo', showArrow: false, isRotate: true },
-    { label: 'video', icon: 'voice', showArrow: true, isRotate: false },
-    { label: 'history', icon: 'history', showArrow: true, isRotate: false }
+    { label: 'emoji', icon: 'smiling-face', showArrow: true, isRotate: false, onClick: () => {} },
+    { label: 'file', icon: 'file', showArrow: false, isRotate: true, onClick: () => {} },
+    { label: 'image', icon: 'photo', showArrow: false, isRotate: true, onClick: () => {} },
+    { label: 'video', icon: 'voice', showArrow: true, isRotate: false, onClick: () => {} },
+    { label: 'history', icon: 'history', showArrow: true, isRotate: false, onClick: () => {} },
+    {
+      label: 'videoCall',
+      icon: 'video-one',
+      showArrow: true,
+      isRotate: false,
+      onClick: () => {
+        pickRtcCall.value = true
+      }
+    }
   ]
 }
 
@@ -245,37 +292,37 @@ const options = ref(getDefaultIcons())
 const isPanelVisible = ref(false)
 const isInputFocused = ref(false)
 
-const clickItem = async (icon: string) => {
-  if (activeIcon.value === icon) {
-    closePanel()
-    return
-  }
+// const clickItem = async (icon: string) => {
+//   if (activeIcon.value === icon) {
+//     closePanel()
+//     return
+//   }
 
-  // 如果之前有激活的图标，先关闭它
-  if (activeIcon.value) {
-    closePanel()
-  }
+//   // 如果之前有激活的图标，先关闭它
+//   if (activeIcon.value) {
+//     closePanel()
+//   }
 
-  activeIcon.value = icon
-  const clickedItem = options.value.find((item) => item.icon === icon)
-  if (!clickedItem || !clickedItem.showArrow) return
+//   activeIcon.value = icon
+//   const clickedItem = options.value.find((item) => item.icon === icon)
+//   if (!clickedItem || !clickedItem.showArrow) return
 
-  if (isInputFocused.value) {
-    footerBarInput.value?.blur()
-    await nextTick()
-    isPanelVisible.value = true
-    clickedItem.isRotate = true
-  } else {
-    options.value.forEach((item) => {
-      if (item.icon === icon) {
-        item.isRotate = true
-        isPanelVisible.value = true
-      } else {
-        item.isRotate = false
-      }
-    })
-  }
-}
+//   if (isInputFocused.value) {
+//     footerBarInput.value?.blur()
+//     await nextTick()
+//     isPanelVisible.value = true
+//     clickedItem.isRotate = true
+//   } else {
+//     options.value.forEach((item) => {
+//       if (item.icon === icon) {
+//         item.isRotate = true
+//         isPanelVisible.value = true
+//       } else {
+//         item.isRotate = false
+//       }
+//     })
+//   }
+// }
 
 // ==== 动画 ====
 const beforeEnter = (el: Element) => {

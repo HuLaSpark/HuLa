@@ -36,13 +36,17 @@
       <div
         @click="rejectCall"
         class="size-40px rounded-full bg-#d5304f hover:bg-#d5304f flex-center cursor-pointer shadow-lg">
-        <svg class="color-#fff size-20px"><use href="#PhoneHangup"></use></svg>
+        <svg class="color-#fff size-20px">
+          <use href="#PhoneHangup"></use>
+        </svg>
       </div>
       <!-- 接听按钮 -->
       <div
         @click="acceptCall"
         class="size-40px rounded-full bg-#13987f hover:bg-#13987f flex-center cursor-pointer shadow-lg">
-        <svg class="color-#fff size-20px"><use href="#phone-telephone-entity"></use></svg>
+        <svg class="color-#fff size-20px">
+          <use href="#phone-telephone-entity"></use>
+        </svg>
       </div>
     </div>
   </div>
@@ -94,7 +98,9 @@
           <!-- 切换提示 -->
           <div
             class="absolute inset-0 flex-center opacity-0 group-hover:opacity-100 transition-opacity bg-black bg-opacity-30 rounded-8px pointer-events-none">
-            <svg class="text-#fff size-20px"><use href="#switch"></use></svg>
+            <svg class="text-#fff size-20px">
+              <use href="#switch"></use>
+            </svg>
           </div>
         </div>
       </div>
@@ -135,7 +141,9 @@
             @click="toggleMute"
             class="size-44px rounded-full flex-center cursor-pointer"
             :class="!isMuted ? 'bg-gray-600 hover:bg-gray-500' : 'bg-#d5304f60 hover:bg-#d5304f80'">
-            <svg class="size-16px color-#fff"><use :href="!isMuted ? '#voice' : '#voice-off'"></use></svg>
+            <svg class="size-16px color-#fff">
+              <use :href="!isMuted ? '#voice' : '#voice-off'"></use>
+            </svg>
           </div>
           <div class="text-12px text-gray-400 text-center">{{ !isMuted ? '麦克风已开' : '麦克风已关' }}</div>
         </div>
@@ -146,7 +154,9 @@
             @click="toggleSpeaker"
             class="size-44px rounded-full flex-center cursor-pointer"
             :class="isSpeakerOn ? 'bg-gray-600 hover:bg-gray-500' : 'bg-#d5304f60 hover:bg-#d5304f80'">
-            <svg class="size-16px color-#fff"><use :href="isSpeakerOn ? '#volume-notice' : '#volume-mute'"></use></svg>
+            <svg class="size-16px color-#fff">
+              <use :href="isSpeakerOn ? '#volume-notice' : '#volume-mute'"></use>
+            </svg>
           </div>
           <div class="text-12px text-gray-400 text-center">{{ isSpeakerOn ? '扬声器已开' : '扬声器已关' }}</div>
         </div>
@@ -169,9 +179,18 @@
         <!-- 挂断按钮 -->
         <div class="flex-col-x-center gap-8px w-80px">
           <div
-            @click="handleCallResponse(CallResponseStatus.DROPPED)"
+            @click="
+              () => {
+                if (isMobile()) {
+                  router.back()
+                }
+                handleCallResponse(CallResponseStatus.DROPPED)
+              }
+            "
             class="size-44px rounded-full bg-#d5304f60 hover:bg-#d5304f80 flex-center cursor-pointer">
-            <svg class="size-16px color-#fff"><use href="#PhoneHangup"></use></svg>
+            <svg class="size-16px color-#fff">
+              <use href="#PhoneHangup"></use>
+            </svg>
           </div>
           <div class="text-12px text-gray-400 text-center">挂断</div>
         </div>
@@ -187,7 +206,9 @@
               @click="toggleMute"
               class="size-44px rounded-full flex-center cursor-pointer"
               :class="!isMuted ? 'bg-gray-600 hover:bg-gray-500' : 'bg-#d5304f60 hover:bg-#d5304f80'">
-              <svg class="size-16px color-#fff"><use :href="!isMuted ? '#voice' : '#voice-off'"></use></svg>
+              <svg class="size-16px color-#fff">
+                <use :href="!isMuted ? '#voice' : '#voice-off'"></use>
+              </svg>
             </div>
             <div class="text-12px text-gray-400 text-center">{{ !isMuted ? '麦克风已开' : '麦克风已关' }}</div>
           </div>
@@ -211,7 +232,9 @@
           <div
             @click="handleCallResponse(CallResponseStatus.DROPPED)"
             class="size-66px rounded-full bg-#d5304f60 hover:bg-#d5304f80 flex-center cursor-pointer">
-            <svg class="size-24px color-#fff"><use href="#PhoneHangup"></use></svg>
+            <svg class="size-24px color-#fff">
+              <use href="#PhoneHangup"></use>
+            </svg>
           </div>
         </div>
       </div>
@@ -232,8 +255,9 @@ import { CallTypeEnum, RTCCallStatus, ThemeEnum } from '@/enums'
 import { useWebRtc } from '@/hooks/useWebRtc'
 import { useSettingStore } from '@/stores/setting'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { isMac, isWindows } from '@/utils/PlatformConstants'
+import { isMac, isMobile, isWindows } from '@/utils/PlatformConstants'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
+import router from '~/src/router'
 import { useGroupStore } from '~/src/stores/group'
 import { CallResponseStatus } from '../../services/wsType'
 
@@ -612,6 +636,7 @@ onMounted(async () => {
   100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
