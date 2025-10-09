@@ -353,9 +353,33 @@ export const useChatStore = defineStore(
     }
 
     // 推送消息
-    const pushMsg = async (msg: MessageType) => {
-      const current = messageMap.get(msg.message.roomId)
-      current?.set(msg.message.id, msg)
+    const pushMsg = async (msg: MessageType, options: { isActiveChatView?: boolean; activeRoomId?: string } = {}) => {
+      if (!msg.message.id) {
+        msg.message.id = `${msg.message.roomId}_${msg.message.sendTime}_${msg.fromUser.uid}`
+      }
+      const messageKey = msg.message.id
+
+      let roomMessages = messageMap.get(msg.message.roomId)
+      if (!roomMessages) {
+        roomMessages = new Map<string, MessageType>()
+        messageMap.set(msg.message.roomId, roomMessages)
+      }
+
+      const existedMsg = roomMessages.get(messageKey)
+      roomMessages.set(messageKey, msg)
+
+      if (existedMsg) {
+        return
+      }
+
+      const targetRoomId = options.activeRoomId ?? globalStore.currentSessionRoomId ?? ''
+      let isActiveChatView = options.isActiveChatView
+      if (isActiveChatView === undefined) {
+        const currentPath = route?.path
+        isActiveChatView =
+          (currentPath === '/message' || currentPath?.startsWith('/mobile/chatRoom')) &&
+          targetRoomId === msg.message.roomId
+      }
 
       // 获取用户信息缓存
       const uid = msg.fromUser.uid
@@ -381,10 +405,7 @@ export const useChatStore = defineStore(
         session.text = formattedText!
         // 更新未读数
         if (msg.fromUser.uid !== userStore.userInfo!.uid) {
-          if (
-            (route?.path !== '/message' && route?.path !== '/mobile/message') ||
-            msg.message.roomId !== globalStore.currentSession!.roomId
-          ) {
+          if (!isActiveChatView || msg.message.roomId !== targetRoomId) {
             session.unreadCount = (session.unreadCount || 0) + 1
             // 使用防抖机制更新，适合并发消息场景
             requestUnreadCountUpdate()
