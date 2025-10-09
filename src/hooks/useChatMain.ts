@@ -152,13 +152,19 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
     })
   }
 
+  // 复制禁用类型
+  const copyDisabledTypes: MsgEnum[] = [MsgEnum.NOTICE, MsgEnum.MERGE, MsgEnum.LOCATION, MsgEnum.VOICE]
+  const shouldHideCopy = (item: MessageType) => copyDisabledTypes.includes(item.message.type)
+  const isNoticeMessage = (item: MessageType) => item.message.type === MsgEnum.NOTICE
+
   const commonMenuList = ref<OPT.RightMenu[]>([
     {
       label: '多选',
       icon: 'list-checkbox',
       click: () => {
         chatStore.setMsgMultiChoose(true)
-      }
+      },
+      visible: (item: MessageType) => !isNoticeMessage(item)
     },
     {
       label: '添加到表情',
@@ -180,7 +186,8 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       icon: 'share',
       click: (item: MessageType) => {
         handleForward(item)
-      }
+      },
+      visible: (item: MessageType) => !isNoticeMessage(item)
     },
     // {
     //   label: '收藏',
@@ -280,7 +287,8 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       icon: 'copy',
       click: (item: MessageType) => {
         handleCopy(item.message.body.content, true)
-      }
+      },
+      visible: (item: MessageType) => !shouldHideCopy(item)
     },
     {
       label: '翻译',
