@@ -91,10 +91,6 @@ const tabHeight = computed(() => customHeight + 'px')
     content: '';
     @apply absolute bottom-8px left-1/2 w-44px h-26px opacity-0 blur-md pointer-events-none;
     z-index: -1;
-    transform: translateX(-50%);
-    transition:
-      opacity 0.3s ease-in-out,
-      filter 0.3s ease-in-out;
     will-change: opacity, filter;
   }
 }

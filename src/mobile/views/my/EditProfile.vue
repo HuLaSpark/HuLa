@@ -42,139 +42,101 @@
                 @crop="handleCrop" />
             </div>
             <!-- 个人信息 -->
-            <n-form>
-              <div class="shadow bg-white rounded-15px p-[10px_10px_5px_10px] flex flex-col text-14px">
-                <n-form-item>
-                  <!-- 昵称 -->
-                  <div class="flex w-full h-45px line-height-45px custom-border-b-1">
-                    <div class="w-60px self-start">昵称</div>
-                    <div class="flex-1 flex bg-yellow self-center">
-                      <input
-                        placeholder="请输入昵称"
-                        class="flex flex-1 border-none outline-none focus:outline-none"
-                        type="text"
-                        v-model="localUserInfo.name" />
-                    </div>
-                    <div class="w-50px h-45px self-end flex justify-end items-center gap-5px">
-                      <span class="items-center flex">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <!-- 背景圈，无边框 -->
-                          <circle cx="12" cy="12" r="12" fill="#e0e0e0" stroke="none" />
-                          <!-- 叉号 -->
-                          <line
-                            x1="8"
-                            y1="8"
-                            x2="16"
-                            y2="16"
-                            stroke="white"
-                            stroke-width="1.5"
-                            stroke-linecap="round" />
-                          <line
-                            x1="16"
-                            y1="8"
-                            x2="8"
-                            y2="16"
-                            stroke="white"
-                            stroke-width="1.5"
-                            stroke-linecap="round" />
-                        </svg>
-                      </span>
-                      <span class="text-13px">3/8</span>
-                    </div>
-                  </div>
-                </n-form-item>
+            <van-form @submit="saveEditInfo">
+              <van-cell-group class="shadow" inset>
+                <!-- 昵称 -->
+                <van-field
+                  :disabled="true"
+                  v-model="localUserInfo.name"
+                  name="昵称"
+                  label="昵称"
+                  placeholder="请输入昵称"
+                  :rules="[{ required: true, message: '请填写昵称' }]" />
 
-                <n-form-item>
-                  <!-- 性别 -->
-                  <div class="flex w-full items-center h-45px overflow-hidden custom-border-b-1">
-                    <div class="w-60px self-start flex items-center h-full">性别</div>
-                    <div class="flex flex-1">
-                      <n-space class="w-full border-none custom-border-none" vertical>
-                        <n-select
-                          :bordered="false"
-                          class="custom-border-none"
-                          v-model:value="localUserInfo.sex"
-                          :options="options" />
-                      </n-space>
-                    </div>
-                  </div>
-                </n-form-item>
-                <n-form-item>
-                  <!-- 生日 -->
-                  <div
-                    @click="toEditBirthday"
-                    class="flex w-full items-center h-45px overflow-hidden custom-border-b-1">
-                    <div class="w-60px self-start flex items-center h-full">生日</div>
-                    <div class="flex flex-1">2000-01-01</div>
-                    <svg class="w-18px h-18px text-gray iconpark-icon">
-                      <use href="#right"></use>
-                    </svg>
-                  </div>
-                </n-form-item>
-                <n-form-item>
-                  <!-- 地区 -->
-                  <div class="flex w-full h-45px line-height-45px custom-border-b-1">
-                    <div class="w-60px self-start">地区</div>
-                    <div class="flex-1 flex bg-yellow self-center">
-                      <input
-                        placeholder="请输入地区"
-                        class="flex flex-1 border-none outline-none focus:outline-none"
-                        type="text" />
-                    </div>
-                  </div>
-                </n-form-item>
-                <n-form-item>
-                  <!-- 手机号 -->
-                  <div class="flex w-full h-45px">
-                    <div class="w-60px self-start h-full items-center flex">手机号</div>
-                    <div class="flex-1 flex">
-                      <input
-                        placeholder="请输入手机号"
-                        class="flex flex-1 border-none outline-none focus:outline-none"
-                        type="text"
-                        v-model="localUserInfo.phone" />
-                    </div>
-                  </div>
-                </n-form-item>
-              </div>
+                <!-- 性别 -->
+                <van-field
+                  v-model="genderText"
+                  is-link
+                  readonly
+                  name="picker"
+                  label="性别"
+                  placeholder="点击选择性别"
+                  @click="pickerState.gender = true" />
 
-              <n-form-item>
+                <van-popup v-model:show="pickerState.gender" position="bottom">
+                  <van-picker
+                    :columns="pickerColumn.gender"
+                    @confirm="pickerConfirm.gender"
+                    @cancel="pickerState.gender = false" />
+                </van-popup>
+
+                <!-- 生日 -->
+                <van-field
+                  v-model="birthday"
+                  name="生日"
+                  label="生日"
+                  placeholder="请选择生日"
+                  is-link
+                  readonly
+                  @click="toEditBirthday" />
+
+                <!-- 地区 -->
+                <van-field
+                  v-model="region"
+                  is-link
+                  readonly
+                  name="area"
+                  label="地区选择"
+                  placeholder="点击选择省市区"
+                  @click="pickerState.region = true" />
+                <van-popup v-model:show="pickerState.region" position="bottom">
+                  <van-area
+                    :area-list="areaList"
+                    @confirm="pickerConfirm.region"
+                    @cancel="pickerState.region = false" />
+                </van-popup>
+
+                <!-- 手机号 -->
+                <van-field
+                  :disabled="true"
+                  v-model="localUserInfo.phone"
+                  type="tel"
+                  name="手机号"
+                  label="手机号"
+                  placeholder="请输入手机号"
+                  :rules="[{ required: false, message: '请填写手机号' }]" />
+
                 <!-- 简介 -->
-                <div @click="toEditBio" class="flex text-14px bg-white shadow rounded-10px w-full mt-15px min-h-45px">
-                  <div class="flex flex-1 h-full py-10px">
-                    <div class="w-60px ms-10px self-start flex h-full self-center self-center">简介</div>
-                    <div class="flex-1 flex self-end items-center h-full">
-                      <div class="pr-10px">
-                        {{ localUserInfo.resume }}
-                      </div>
-                      <div class="flex items-center me-10px">
-                        <svg class="w-18px h-18px text-gray iconpark-icon">
-                          <use href="#right"></use>
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </n-form-item>
+                <van-field
+                  v-model="localUserInfo.resume"
+                  name="简介"
+                  label="简介"
+                  type="textarea"
+                  placeholder="请输入个人简介"
+                  rows="3"
+                  autosize
+                  @click="toEditBio" />
+              </van-cell-group>
 
               <div class="flex justify-center mt-20px">
-                <div
-                  class="w-20%"
+                <button
+                  class=""
                   style="
                     background: linear-gradient(145deg, #7eb7ac, #6fb0a4, #5fa89c);
                     border-radius: 30px;
                     padding: 10px 30px;
                     color: white;
                     font-weight: 500;
+                    border: none;
                     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
                     text-align: center;
                     display: inline-block;
                   "
-                  @click="saveEditInfo">
+                  type="submit">
                   保存
-                </div>
+                </button>
               </div>
-            </n-form>
+            </van-form>
           </div>
         </div>
       </template>
@@ -183,6 +145,7 @@
 </template>
 
 <script setup lang="ts">
+import { areaList } from '@vant/area-data'
 import { useAvatarUpload } from '@/hooks/useAvatarUpload'
 import router from '@/router'
 import type { ModifyUserInfoType, UserInfoType } from '@/services/types.ts'
@@ -191,6 +154,41 @@ import { useLoginHistoriesStore } from '@/stores/loginHistory'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { ModifyUserInfo } from '@/utils/ImRequestUtils'
+
+const genderText = computed(() => {
+  const item = pickerColumn.value.gender.find((i) => i.value === localUserInfo.value.sex)
+  return item ? item.text : ''
+})
+
+const region = ref('')
+
+const birthday = ref('')
+
+const pickerColumn = ref({
+  gender: [
+    { text: '男', value: 1 },
+    { text: '女', value: 2 }
+  ]
+})
+
+const pickerConfirm = {
+  gender: (data: { selectedOptions: any }) => {
+    const selected = data.selectedOptions[0].value
+    localUserInfo.value.sex = selected
+    pickerState.value.gender = false
+  },
+  region: (data: { selectedOptions: any }) => {
+    const selected = data.selectedOptions
+    region.value = selected.map((item: { text: any }) => item.text).join('/')
+    pickerState.value.region = false
+  }
+}
+
+const pickerState = ref({
+  gender: false,
+  region: false,
+  date: false
+})
 
 const {
   fileInput,
@@ -252,10 +250,10 @@ const saveEditInfo = () => {
     window.$message.error('昵称不能为空')
     return
   }
-  if (localUserInfo.value.modifyNameChance === 0) {
-    window.$message.error('改名次数不足')
-    return
-  }
+  // if (localUserInfo.value.modifyNameChance === 0) {
+  //   window.$message.error('改名次数不足')
+  //   return
+  // }
 
   ModifyUserInfo({
     name: localUserInfo.value.name!,
@@ -277,17 +275,6 @@ const saveEditInfo = () => {
   })
 }
 
-const options = ref([
-  {
-    label: '男',
-    value: 1
-  },
-  {
-    label: '女',
-    value: 2
-  }
-])
-
 onMounted(async () => {
   localUserInfo.value = { ...userStore.userInfo! }
 })
@@ -295,6 +282,8 @@ onMounted(async () => {
 
 <style lang="scss" scoped>
 @use '@/styles/scss/form-item.scss';
+
+@use 'vant/lib/index.css';
 
 .custom-border-b-1 {
   border-bottom: 1px solid;
