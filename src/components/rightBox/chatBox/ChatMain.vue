@@ -144,6 +144,7 @@
           v-model:value="groupNicknameValue"
           placeholder="请输入群昵称"
           :maxlength="12"
+          class="border-(1px solid #90909080)"
           :disabled="groupNicknameSubmitting"
           clearable
           @keydown.enter.prevent="handleGroupNicknameConfirm" />
