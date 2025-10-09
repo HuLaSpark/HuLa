@@ -530,9 +530,26 @@ onMounted(async () => {
     await rustWebSocketClient.setupBusinessMessageListeners()
 
     // 监听窗口聚焦事件，聚焦时停止tray闪烁
-    homeWindow.listen('tauri://focus', () => {
-      globalStore.setTipVisible(false)
-    })
+    if (isWindows()) {
+      homeWindow.listen('tauri://focus', async () => {
+        globalStore.setTipVisible(false)
+        try {
+          await emitTo('tray', 'home_focus', {})
+          await emitTo('notify', 'home_focus', {})
+        } catch (error) {
+          console.warn('[layout] 向其他窗口广播聚焦事件失败:', error)
+        }
+      })
+
+      homeWindow.listen('tauri://blur', async () => {
+        try {
+          await emitTo('tray', 'home_blur', {})
+          await emitTo('notify', 'home_blur', {})
+        } catch (error) {
+          console.warn('[layout] 向其他窗口广播失焦事件失败:', error)
+        }
+      })
+    }
 
     // 恢复大小
     if (globalStore.homeWindowState.width && globalStore.homeWindowState.height) {
