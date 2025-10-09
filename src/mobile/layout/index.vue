@@ -174,7 +174,10 @@ useMitt.on(WsResponseMessageType.USER_STATE_CHANGE, async (data: { uid: string; 
 /** 测试 */
 useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   console.log('[mobile/layout] 收到的消息：', data)
-  chatStore.pushMsg(data)
+  chatStore.pushMsg(data, {
+    isActiveChatView: route.path.startsWith('/mobile/chatRoom'),
+    activeRoomId: globalStore.currentSessionRoomId || ''
+  })
   data.message.sendTime = new Date(data.message.sendTime).getTime()
   await invokeSilently(TauriCommand.SAVE_MSG, {
     data

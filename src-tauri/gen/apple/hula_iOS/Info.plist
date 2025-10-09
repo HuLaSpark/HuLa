@@ -44,5 +44,7 @@
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 	</array>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>HuLa needs local network access to reach your development server</string>
 </dict>
 </plist>
