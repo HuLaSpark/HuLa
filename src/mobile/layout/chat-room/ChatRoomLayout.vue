@@ -120,20 +120,20 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
 </script>
 
 <style lang="scss" scoped>
-.page-view {
-  flex: 1;
-  // 进入时的动画
-  animation: fade-slide-in 0.3s ease;
-}
+// .page-view {
+//   flex: 1;
+//   // 进入时的动画
+//   animation: fade-slide-in 0.3s ease;
+// }
 
-@keyframes fade-slide-in {
-  from {
-    transform: translateX(20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
+// @keyframes fade-slide-in {
+//   from {
+//     transform: translateX(20px);
+//     opacity: 0;
+//   }
+//   to {
+//     transform: translateX(0);
+//     opacity: 1;
+//   }
+// }
 </style>

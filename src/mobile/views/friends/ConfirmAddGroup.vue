@@ -8,7 +8,7 @@
           :hidden-right="true"
           :enable-default-background="false"
           :enable-shadow="false"
-          room-name="添加群聊" />
+          room-name="加入群聊" />
       </template>
 
       <template #container="{ height }">

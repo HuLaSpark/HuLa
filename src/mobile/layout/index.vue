@@ -359,19 +359,19 @@ console.log('首页布局已启动')
 </script>
 
 <style lang="scss">
-/* 侧滑切换动画 */
-.slide-enter-active,
-.slide-leave-active {
-  transition: all 0.1s ease;
-}
+// /* 侧滑切换动画 */
+// .slide-enter-active,
+// .slide-leave-active {
+//   transition: all 0.1s ease;
+// }
 
-.slide-enter-from {
-  transform: translateX(-30px);
-  opacity: 0;
-}
+// .slide-enter-from {
+//   transform: translateX(-30px);
+//   opacity: 0;
+// }
 
-.slide-leave-to {
-  transform: translateX(30px);
-  opacity: 0;
-}
+// .slide-leave-to {
+//   transform: translateX(30px);
+//   opacity: 0;
+// }
 </style>

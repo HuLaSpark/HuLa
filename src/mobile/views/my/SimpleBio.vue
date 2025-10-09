@@ -124,4 +124,21 @@ $font-family-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-family: $font-family-system, $font-family-windows, $font-family-sans;
   color: #757775;
 }
+
+// .page-view {
+//   flex: 1;
+//   // 进入时的动画
+//   animation: fade-slide-in 0.3s ease;
+// }
+
+// @keyframes fade-slide-in {
+//   from {
+//     transform: translateX(20px);
+//     opacity: 0;
+//   }
+//   to {
+//     transform: translateX(0);
+//     opacity: 1;
+//   }
+// }
 </style>

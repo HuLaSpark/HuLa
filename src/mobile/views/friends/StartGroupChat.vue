@@ -1,5 +1,12 @@
 <template>
   <div class="flex w-full flex-col h-full">
+    <HeaderBar
+      :isOfficial="false"
+      :hidden-right="true"
+      :enable-default-background="false"
+      :enable-shadow="false"
+      room-name="发起群聊" />
+
     <!-- 顶部搜索框 -->
     <div class="px-16px mt-10px flex gap-3">
       <div class="flex-1 py-5px shrink-0">
