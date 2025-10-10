@@ -121,6 +121,8 @@ const toggleMessageSound = () => {
 }
 
 let blinkTask: NodeJS.Timeout | null = null
+let homeFocusUnlisten: (() => void) | null = null
+let homeBlurUnlisten: (() => void) | null = null
 
 const startBlinkTask = () => {
   blinkTask = setInterval(async () => {
@@ -163,13 +165,32 @@ const handleTrayResize = async () => {
   await resizeWindow('tray', 130, islogin ? 356 : 44)
 }
 
-onMounted(() => {
+onMounted(async () => {
   // 监听系统缩放变化事件，自动调整托盘窗口尺寸
   window.addEventListener('resize-needed', handleTrayResize)
+
+  if (isWindows()) {
+    homeFocusUnlisten = await appWindow.listen('home_focus', async () => {
+      isFocused.value = true
+      await stopBlinkTask()
+    })
+
+    homeBlurUnlisten = await appWindow.listen('home_blur', () => {
+      isFocused.value = false
+    })
+  }
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize-needed', handleTrayResize)
+  if (homeFocusUnlisten) {
+    homeFocusUnlisten()
+    homeFocusUnlisten = null
+  }
+  if (homeBlurUnlisten) {
+    homeBlurUnlisten()
+    homeBlurUnlisten = null
+  }
 })
 </script>
 

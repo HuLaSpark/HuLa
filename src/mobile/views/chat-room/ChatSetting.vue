@@ -204,7 +204,7 @@
             <div class="p-15px">删除聊天记录</div>
           </div>
           <!-- 解散群聊、退出群聊、删除好友按钮 -->
-          <div class="mt-auto flex justify-center mb-20px">
+          <div v-if="isGroup && globalStore.currentSession.roomId !== '1'" class="mt-auto flex justify-center mb-20px">
             <n-button type="error" @click="handleExit">
               {{ isGroup ? (isLord ? '解散群聊' : '退出群聊') : '删除好友' }}
             </n-button>

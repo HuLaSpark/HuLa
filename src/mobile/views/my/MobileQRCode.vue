@@ -1,4 +1,10 @@
 <template>
+  <HeaderBar
+    :isOfficial="false"
+    :hidden-right="true"
+    :enable-default-background="false"
+    :enable-shadow="false"
+    room-name="" />
   <div class="scanner"></div>
 </template>
 

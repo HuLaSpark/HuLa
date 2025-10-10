@@ -30,6 +30,7 @@ import { emitTo, listen } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { UserAttentionType } from '@tauri-apps/api/window'
 import { info } from '@tauri-apps/plugin-log'
+import { useRoute } from 'vue-router'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { ChangeTypeEnum, MittEnum, ModalEnum, NotificationTypeEnum, OnlineEnum, TauriCommand } from '@/enums'
 import { useCheckUpdate } from '@/hooks/useCheckUpdate'
@@ -124,6 +125,7 @@ const chatStore = useChatStore()
 const cachedStore = useCachedStore()
 const configStore = useConfigStore()
 const settingStore = useSettingStore()
+const route = useRoute()
 const { checkUpdate, CHECK_UPDATE_TIME } = useCheckUpdate()
 const userUid = computed(() => userStore.userInfo!.uid)
 const shrinkStatus = ref(false)
@@ -320,7 +322,10 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
     return
   }
 
-  chatStore.pushMsg(data)
+  chatStore.pushMsg(data, {
+    isActiveChatView: route.path === '/message',
+    activeRoomId: globalStore.currentSessionRoomId || ''
+  })
 
   data.message.sendTime = new Date(data.message.sendTime).getTime()
   await invokeSilently(TauriCommand.SAVE_MSG, {
@@ -525,9 +530,26 @@ onMounted(async () => {
     await rustWebSocketClient.setupBusinessMessageListeners()
 
     // 监听窗口聚焦事件，聚焦时停止tray闪烁
-    homeWindow.listen('tauri://focus', () => {
-      globalStore.setTipVisible(false)
-    })
+    if (isWindows()) {
+      homeWindow.listen('tauri://focus', async () => {
+        globalStore.setTipVisible(false)
+        try {
+          await emitTo('tray', 'home_focus', {})
+          await emitTo('notify', 'home_focus', {})
+        } catch (error) {
+          console.warn('[layout] 向其他窗口广播聚焦事件失败:', error)
+        }
+      })
+
+      homeWindow.listen('tauri://blur', async () => {
+        try {
+          await emitTo('tray', 'home_blur', {})
+          await emitTo('notify', 'home_blur', {})
+        } catch (error) {
+          console.warn('[layout] 向其他窗口广播失焦事件失败:', error)
+        }
+      })
+    }
 
     // 恢复大小
     if (globalStore.homeWindowState.width && globalStore.homeWindowState.height) {
