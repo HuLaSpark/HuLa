@@ -52,7 +52,8 @@
         "useNodejsImportProtocol": "off",
         "noNonNullAssertion": "off",
         "useNamingConvention": "off",
-        "useTemplate": "off"
+        "useTemplate": "off",
+        "useImportType": "off"
       },
       "suspicious": {
         "noGlobalIsNan": "off",
@@ -85,7 +86,7 @@
   },
   "assist": {
     "enabled": true,
-    "actions": { "source": { "organizeImports": "on" } }
+    "actions": { "source": { "organizeImports": "off" } }
   },
   "overrides": [
     {

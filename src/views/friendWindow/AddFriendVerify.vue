@@ -51,7 +51,7 @@ import { useGlobalStore } from '@/stores/global.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { sendAddFriendRequest } from '@/utils/ImRequestUtils'
-import { useGroupStore } from '~/src/stores/group'
+import { useGroupStore } from '@/stores/group'
 
 const globalStore = useGlobalStore()
 const userStore = useUserStore()

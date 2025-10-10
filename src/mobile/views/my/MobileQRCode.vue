@@ -12,9 +12,9 @@
 import { listen } from '@tauri-apps/api/event'
 import { cancel, Format, scan } from '@tauri-apps/plugin-barcode-scanner'
 import { onMounted, onUnmounted, ref } from 'vue'
-import { MittEnum } from '~/src/enums'
-import { useMitt } from '~/src/hooks/useMitt'
-import router from '~/src/router'
+import { MittEnum } from '@/enums'
+import { useMitt } from '@/hooks/useMitt'
+import router from '@/router'
 
 const result = ref<string | null>(null)
 const isActive = ref(true)

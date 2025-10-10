@@ -24,7 +24,7 @@
 <script setup lang="ts">
 import router from '@/router'
 import { useGlobalStore } from '@/stores/global'
-import { useMobileStore } from '~/src/stores/mobile'
+import { useMobileStore } from '@/stores/mobile'
 
 const globalStore = useGlobalStore()
 const mobileStore = useMobileStore()

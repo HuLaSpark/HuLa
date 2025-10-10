@@ -49,7 +49,7 @@ import router from '@/router'
 import { useGlobalStore } from '@/stores/global'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user'
-import { useLogin } from '~/src/hooks/useLogin'
+import { useLogin } from '@/hooks/useLogin'
 
 const globalStore = useGlobalStore()
 const { isTrayMenuShow } = storeToRefs(globalStore)
