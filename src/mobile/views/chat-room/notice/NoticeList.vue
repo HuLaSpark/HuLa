@@ -56,6 +56,10 @@ import { RecycleScroller } from 'vue-virtual-scroller'
 import { useGroupStore } from '@/stores/group'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
 
+defineOptions({
+  name: 'mobileChatNoticeList'
+})
+
 const route = useRoute()
 const router = useRouter()
 const announList = ref<any[]>([])

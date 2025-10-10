@@ -14,7 +14,9 @@ import FriendsLayout from '#/layout/friends/FriendsLayout.vue'
 import MobileHome from '#/layout/index.vue'
 import MyLayout from '#/layout/my/MyLayout.vue'
 import MobileLogin from '#/login.vue'
+import ConfirmQRLogin from '#/views/ConfirmQRLogin.vue'
 import ChatSetting from '#/views/chat-room/ChatSetting.vue'
+import GroupChatMember from '#/views/chat-room/GroupChatMember.vue'
 import MobileChatMain from '#/views/chat-room/MobileChatMain.vue'
 import NoticeDetail from '#/views/chat-room/notice/NoticeDetail.vue'
 import NoticeEdit from '#/views/chat-room/notice/NoticeEdit.vue'
@@ -26,6 +28,7 @@ import ConfirmAddGroup from '#/views/friends/ConfirmAddGroup.vue'
 import FriendInfo from '#/views/friends/FriendInfo.vue'
 import MobileFriendPage from '#/views/friends/index.vue'
 import StartGroupChat from '#/views/friends/StartGroupChat.vue'
+import MyQRCode from '#/views/MyQRCode.vue'
 import MobileMessagePage from '#/views/message/index.vue'
 import EditBio from '#/views/my/EditBio.vue'
 import EditBirthday from '#/views/my/EditBirthday.vue'
@@ -38,8 +41,6 @@ import PublishCommunity from '#/views/my/PublishCommunity.vue'
 import Share from '#/views/my/Share.vue'
 import SimpleBio from '#/views/my/SimpleBio.vue'
 import { TauriCommand } from '@/enums'
-import ConfirmQRLogin from '../mobile/views/ConfirmQRLogin.vue'
-import MyQRCode from '../mobile/views/MyQRCode.vue'
 
 /**! 创建窗口后再跳转页面就会导致样式没有生效所以不能使用懒加载路由的方式，有些页面需要快速响应的就不需要懒加载 */
 const { BASE_URL } = import.meta.env
@@ -72,12 +73,19 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
         path: 'chatMain/:uid?', // 可选传入，如果传入uid就表示房间属于好友的私聊房间
         name: 'mobileChatMain',
         component: MobileChatMain,
-        props: true
+        props: true,
+        meta: { keepAlive: true }
       },
       {
         path: 'setting',
         name: 'mobileChatSetting',
         component: ChatSetting
+      },
+      {
+        path: 'groupChatMember',
+        name: 'mobileGroupChatMember',
+        component: GroupChatMember,
+        meta: { keepAlive: true }
       },
       {
         path: 'notice',

@@ -274,7 +274,7 @@ import { useSettingStore } from '@/stores/setting'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { isMessageMultiSelectEnabled } from '@/utils/MessageSelect'
-import router from '~/src/router'
+import { toFriendInfoPage } from '@/utils/routerUtils'
 import { useChatStore } from '~/src/stores/chat'
 import { useUserStore } from '~/src/stores/user'
 import { markMsg } from '~/src/utils/ImRequestUtils'
@@ -334,8 +334,7 @@ const isMultiSelectDisabled = computed(() => !isMessageMultiSelectEnabled(props.
 
 const handleAvatarClick = (uid: string, msgId: string) => {
   if (isMobile()) {
-    globalStore.addFriendModalInfo.uid = uid
-    router.push(`/mobile/mobileFriends/friendInfo/${uid}`)
+    toFriendInfoPage(uid)
   } else {
     selectKey.value = msgId
   }

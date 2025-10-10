@@ -88,6 +88,10 @@
 <script setup lang="ts">
 import type { UploadFileInfo } from 'naive-ui'
 
+defineOptions({
+  name: 'mobileChatNoticeEdit'
+})
+
 const noticeTitle = ref('')
 
 const active1 = ref(false)
