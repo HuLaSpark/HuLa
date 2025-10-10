@@ -42,8 +42,11 @@
 
                   <p class="text-(10px #909090)">{{ formatTimestamp(item.createTime) }}</p>
                 </n-flex>
-                <p v-show="isFriendApplyOrGroupInvite(item)" class="text-(12px [--text-color])">
+                <p v-if="isFriendApplyOrGroupInvite(item)" class="text-(12px [--text-color])">
                   留言：{{ item.content }}
+                </p>
+                <p v-else class="text-(12px [--text-color])">
+                  处理人：{{ groupStore.getUserInfo(item.senderId)!.name }}
                 </p>
               </n-flex>
             </n-flex>
@@ -143,13 +146,13 @@ const applyMsg = computed(() => (item: any) => {
     } else if (item.eventType === NoticeType.GROUP_INVITE) {
       return '邀请' + groupStore.getUserInfo(item.operateId)!.name + '加入 [' + item.name + ']'
     } else if (isFriendApplyOrGroupInvite(item)) {
-      return isCurrentUser(item.senderId) ? '已同意加入' + item.content : '邀请你加入' + item.content
+      return isCurrentUser(item.senderId) ? '已同意加入 [' + item.content + ']' : '邀请你加入 [' + item.content + ']'
     } else if (item.eventType === NoticeType.GROUP_MEMBER_DELETE) {
-      return '已被' + groupStore.getUserInfo(item.senderId)!.name + '踢出' + item.content
+      return '已被' + groupStore.getUserInfo(item.senderId)!.name + '踢出 [' + item.content + ']'
     } else if (item.eventType === NoticeType.GROUP_SET_ADMIN) {
-      return '已被群主设置为' + item.content + '的管理员'
+      return '已被群主设置为 [' + item.content + '] 的管理员'
     } else if (item.eventType === NoticeType.GROUP_RECALL_ADMIN) {
-      return '已被群主取消' + item.content + '的管理员权限'
+      return '已被群主取消 [' + item.content + '] 的管理员权限'
     }
   }
 })
