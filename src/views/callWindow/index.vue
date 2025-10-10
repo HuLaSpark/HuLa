@@ -248,7 +248,7 @@ import { CallTypeEnum, RTCCallStatus, ThemeEnum } from '@/enums'
 import { useWebRtc } from '@/hooks/useWebRtc'
 import { useSettingStore } from '@/stores/setting'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { isMac, isMobile, isWindows } from '@/utils/PlatformConstants'
+import { isDesktop, isMac, isMobile, isWindows } from '@/utils/PlatformConstants'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
 import router from '~/src/router'
 import { useGroupStore } from '~/src/stores/group'
@@ -560,63 +560,65 @@ onMounted(async () => {
     }
   })
 
-  if (isReceiver && !isCallAccepted.value) {
-    // 接收方立即开始播放铃声
-    startBell()
+  if (isDesktop()) {
+    if (isReceiver && !isCallAccepted.value) {
+      // 接收方立即开始播放铃声
+      startBell()
 
-    // 设置来电通知窗口的正确大小和位置
-    await currentWindow.setSize(createSize(360, 90))
+      // 设置来电通知窗口的正确大小和位置
+      await currentWindow.setSize(createSize(360, 90))
 
-    // 隐藏标题栏和设置窗口不可移动
-    if (isMac()) {
-      await invokeSilently('hide_title_bar_buttons', { windowLabel: currentWindow.label, hideCloseButton: true })
-    }
-
-    // 获取屏幕尺寸并定位
-    const monitor = await primaryMonitor()
-    if (monitor) {
-      const margin = 20
-      const taskbarHeight = 40
-
-      let screenWidth: number
-      let screenHeight: number
-      let x: number
-      let y: number
-
-      if (isWindows()) {
-        // Windows使用逻辑像素进行计算，窗口在右下角
-        screenWidth = monitor.size.width / (monitor.scaleFactor || 1)
-        screenHeight = monitor.size.height / (monitor.scaleFactor || 1)
-        x = Math.max(0, screenWidth - 360 - margin)
-        y = Math.max(0, screenHeight - 90 - margin - taskbarHeight)
-        await currentWindow.setPosition(new LogicalPosition(x, y))
-      } else {
-        // Mac使用物理像素进行计算，窗口在右上角
-        screenWidth = monitor.size.width
-        screenHeight = monitor.size.height
-        x = Math.max(0, screenWidth - 360 - margin)
-        y = margin
-        await currentWindow.setPosition(new PhysicalPosition(x, y))
+      // 隐藏标题栏和设置窗口不可移动
+      if (isMac()) {
+        await invokeSilently('hide_title_bar_buttons', { windowLabel: currentWindow.label, hideCloseButton: true })
       }
+
+      // 获取屏幕尺寸并定位
+      const monitor = await primaryMonitor()
+      if (monitor) {
+        const margin = 20
+        const taskbarHeight = 40
+
+        let screenWidth: number
+        let screenHeight: number
+        let x: number
+        let y: number
+
+        if (isWindows()) {
+          // Windows使用逻辑像素进行计算，窗口在右下角
+          screenWidth = monitor.size.width / (monitor.scaleFactor || 1)
+          screenHeight = monitor.size.height / (monitor.scaleFactor || 1)
+          x = Math.max(0, screenWidth - 360 - margin)
+          y = Math.max(0, screenHeight - 90 - margin - taskbarHeight)
+          await currentWindow.setPosition(new LogicalPosition(x, y))
+        } else {
+          // Mac使用物理像素进行计算，窗口在右上角
+          screenWidth = monitor.size.width
+          screenHeight = monitor.size.height
+          x = Math.max(0, screenWidth - 360 - margin)
+          y = margin
+          await currentWindow.setPosition(new PhysicalPosition(x, y))
+        }
+      } else {
+        // 如果无法获取主显示器信息，使用屏幕右下角的估算位置
+        await currentWindow.setPosition(new LogicalPosition(800, 600))
+      }
+      await currentWindow.setAlwaysOnTop(true)
     } else {
-      // 如果无法获取主显示器信息，使用屏幕右下角的估算位置
-      await currentWindow.setPosition(new LogicalPosition(800, 600))
-    }
-    await currentWindow.setAlwaysOnTop(true)
-  } else {
-    // 正常通话窗口设置
-    await currentWindow.center()
-    await currentWindow.setAlwaysOnTop(false)
+      // 正常通话窗口设置
+      await currentWindow.center()
+      await currentWindow.setAlwaysOnTop(false)
 
-    // 确保标题栏按钮显示（非来电通知状态）
-    if (isMac()) {
-      await invokeSilently('show_title_bar_buttons', { windowLabel: currentWindow.label })
+      // 确保标题栏按钮显示（非来电通知状态）
+      if (isMac()) {
+        await invokeSilently('show_title_bar_buttons', { windowLabel: currentWindow.label })
+      }
     }
+
+    // 确保窗口显示
+    await currentWindow.show()
+    await currentWindow.setFocus()
   }
-
-  // 确保窗口显示
-  await currentWindow.show()
-  await currentWindow.setFocus()
 })
 </script>
 

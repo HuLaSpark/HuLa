@@ -1,4 +1,4 @@
-import { listen } from '@tauri-apps/api/event'
+import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { error, info } from '@tauri-apps/plugin-log'
 import { CallTypeEnum, RTCCallStatus } from '@/enums'
@@ -71,6 +71,21 @@ const rtcCallBellUrl = '/sound/hula_bell.mp3'
  * @returns rtc 相关的状态和方法
  */
 export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTypeEnum, isReceiver: boolean) => {
+  // 收集 tauri 事件监听的卸载函数
+  const unlistenFns: UnlistenFn[] = []
+
+  const cleanupTauriListeners = () => {
+    try {
+      unlistenFns.forEach((fn) => {
+        fn()
+      })
+    } finally {
+      unlistenFns.length = 0
+    }
+  }
+
+  const router = useRouter()
+
   info(`useWebRtc, roomId: ${roomId}, remoteUserId: ${remoteUserId}, callType: ${callType}, isReceiver: ${isReceiver}`)
   const rtcMsg = ref<Partial<RtcMsgVO>>({
     roomId: undefined,
@@ -230,6 +245,8 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
       // 移动端router 回退
       if (!isMobile()) {
         await getCurrentWebviewWindow().close()
+      } else {
+        router.back()
       }
     } finally {
       clear()
@@ -612,7 +629,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
   // 处理收到的 offer - 接听者
   const handleOffer = async (signal: RTCSessionDescriptionInit, video: boolean, roomId: string) => {
     try {
-      info('收到 offer')
+      console.log('处理 offer')
       connectionStatus.value = RTCCallStatus.CALLING
       await nextTick()
 
@@ -671,7 +688,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
         video: callType === CallTypeEnum.VIDEO
       }
 
-      info('发送SDP answer')
+      console.log('发送SDP answer', signalData)
       await rustWebSocketClient.sendMessage({
         type: WsRequestMsgType.WEBRTC_SIGNAL,
         data: signalData
@@ -998,71 +1015,70 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
     }
   }
 
-  // 监听 WebRTC 信令消息
+  // 监听 WebRTC 信令消息（注册并保存卸载函数）
   // useMitt.on(WsResponseMessageType.WEBRTC_SIGNAL, handleSignalMessage)
-  listen('ws-webrtc-signal', (event: any) => {
-    info(`收到信令消息: ${JSON.stringify(event.payload)}`)
-    handleSignalMessage(event.payload)
-  })
-  listen('ws-call-accepted', (event: any) => {
-    info(`通话被接受: ${JSON.stringify(event.payload)}`)
-    // // 接受方，发送是否接受
-    // info(`收到 CallAccepted'消息 ${isReceiver}`)
-    if (!isReceiver) {
-      sendOffer(offer.value!)
-      // 对方接通后，主叫方窗口前置并聚焦
-      void focusCurrentWindow()
-    }
-  })
-  listen('ws-room-closed', (event: any) => {
-    info(`房间已关闭: ${JSON.stringify(event.payload)}`)
-    endCall()
-  })
-  listen('ws-dropped', (_: any) => {
-    endCall()
-  })
-  listen('ws-call-rejected', (event: any) => {
-    info(`通话被拒绝: ${JSON.stringify(event.payload)}`)
-    endCall()
-  })
-  listen('ws-cancel', (event: any) => {
-    info(`已取消通话: ${JSON.stringify(event.payload)}`)
-    endCall()
-  })
-  listen('ws-timeout', (event: any) => {
-    info(`已取消通话: ${JSON.stringify(event.payload)}`)
-    endCall()
-  })
-  // useMitt.on(WsResponseMessageType.RoomClosed, () => endCall())
-  // useMitt.on(WsResponseMessageType.DROPPED, () => endCall())
-  // useMitt.on(WsResponseMessageType.TIMEOUT, () => endCall())
-  // useMitt.on(WsResponseMessageType.CallRejected, () => endCall())
-  // useMitt.on(WsResponseMessageType.CANCEL, () => endCall())
+  void (async () => {
+    unlistenFns.push(
+      await listen('ws-webrtc-signal', (event: any) => {
+        info(`收到信令消息: ${JSON.stringify(event.payload)}`)
+        handleSignalMessage(event.payload)
+      })
+    )
+    unlistenFns.push(
+      await listen('ws-call-accepted', (event: any) => {
+        info(`通话被接受: ${JSON.stringify(event.payload)}`)
+        // // 接受方，发送是否接受
+        // info(`收到 CallAccepted'消息 ${isReceiver}`)
+        if (!isReceiver) {
+          sendOffer(offer.value!)
+          // 对方接通后，主叫方窗口前置并聚焦
+          void focusCurrentWindow()
+        }
+      })
+    )
+    unlistenFns.push(
+      await listen('ws-room-closed', (event: any) => {
+        info(`房间已关闭: ${JSON.stringify(event.payload)}`)
+        endCall()
+      })
+    )
+    unlistenFns.push(
+      await listen('ws-dropped', (_: any) => {
+        endCall()
+      })
+    )
+    unlistenFns.push(
+      await listen('ws-call-rejected', (event: any) => {
+        info(`通话被拒绝: ${JSON.stringify(event.payload)}`)
+        endCall()
+      })
+    )
+    unlistenFns.push(
+      await listen('ws-cancel', (event: any) => {
+        info(`已取消通话: ${JSON.stringify(event.payload)}`)
+        endCall()
+      })
+    )
+    unlistenFns.push(
+      await listen('ws-timeout', (event: any) => {
+        info(`已取消通话: ${JSON.stringify(event.payload)}`)
+        endCall()
+      })
+    )
+  })()
 
   onMounted(async () => {
     if (!isReceiver) {
       console.log(`调用方发送${callType === CallTypeEnum.VIDEO ? '视频' : '语音'}通话请求`)
       await startCall(roomId, callType, [remoteUserId])
-      try {
-        await rustWebSocketClient.sendMessage({
-          type: WsRequestMsgType.VIDEO_CALL_REQUEST,
-          data: {
-            targetUid: remoteUserId,
-            roomId: roomId,
-            isVideo: callType === CallTypeEnum.VIDEO
-          }
-        })
-      } catch (error) {
-        console.error('发送通话请求失败:', error)
-      }
     }
   })
 
   onUnmounted(() => {
     // 移除 WebRTC 信令消息监听器
     useMitt.off(WsResponseMessageType.WEBRTC_SIGNAL, handleSignalMessage)
-    // 移除 CallAccepted 监听器
-    useMitt.off(WsResponseMessageType.CallAccepted, createPeerConnection)
+    // 移除 Tauri 事件监听器
+    cleanupTauriListeners()
   })
 
   return {
