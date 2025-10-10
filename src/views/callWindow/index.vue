@@ -84,6 +84,13 @@
       <div
         v-if="callType === CallTypeEnum.VIDEO && localStream && (isVideoEnabled || hasRemoteVideo)"
         class="w-full flex-1 relative min-h-0 overflow-hidden">
+        <div
+          v-if="!isMobileDevice && connectionStatus !== RTCCallStatus.ACCEPT"
+          class="absolute inset-0 flex-center z-20">
+          <div class="rounded-full bg-black/60 px-20px py-8px text-16px text-white">
+            {{ callStatusText }}
+          </div>
+        </div>
         <!-- 主视频 -->
         <video
           ref="mainVideoRef"
@@ -210,7 +217,7 @@
 
     <!-- 底部控制按钮（视频通话-桌面端） -->
     <div v-if="callType === CallTypeEnum.VIDEO && !isMobileDevice" class="relative z-10">
-      <div class="pb-14px flex-center gap-32px">
+      <div class="py-14px flex-center gap-32px">
         <!-- 静音按钮 -->
         <div class="flex-col-x-center gap-8px w-80px">
           <div
@@ -351,6 +358,7 @@ const roomId = (route.query.roomId as string) || ''
 const callType = resolveCallType(route.query.callType as string | null)
 // 是否是接受方，true 代表接受方
 const isReceiver = route.query.isIncoming === 'true'
+const shouldAutoAccept = isReceiver && route.query.autoAccept === '1'
 const isMobileDevice = isMobile()
 
 if ((!roomId || !remoteUserId) && isMobileDevice) {
@@ -416,13 +424,13 @@ const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(remoteUserInfo.avatar 
 const callStatusText = computed(() => {
   switch (connectionStatus.value) {
     case RTCCallStatus.CALLING:
-      return '正在呼叫...'
+      return '正在呼叫'
     case RTCCallStatus.ACCEPT:
       return '通话中'
     case RTCCallStatus.END:
       return '通话已结束'
     default:
-      return '准备中...'
+      return '准备中'
   }
 })
 
@@ -466,7 +474,15 @@ const pipVideoSizeClass = computed(() => {
 
 // 是否显示准备中的头像
 const shouldCenterPreparingAvatar = computed(() => {
-  return connectionStatus.value === undefined && callType === CallTypeEnum.VIDEO && isMobileDevice && !isReceiver
+  if (!isMobileDevice) {
+    return false
+  }
+
+  if (!connectionStatus.value) {
+    return true
+  }
+
+  return connectionStatus.value !== RTCCallStatus.END && connectionStatus.value !== RTCCallStatus.ERROR
 })
 
 // 视频流分配工具函数
@@ -655,8 +671,13 @@ watch(
 // 生命周期
 onMounted(async () => {
   if (isMobileDevice) {
-    if (isReceiver && !isCallAccepted.value) {
+    if (isReceiver && !isCallAccepted.value && !shouldAutoAccept) {
       startBell()
+    }
+
+    if (shouldAutoAccept && isReceiver && !isCallAccepted.value) {
+      await nextTick()
+      await acceptCall()
     }
     return
   }

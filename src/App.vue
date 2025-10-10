@@ -110,7 +110,17 @@ if (isDesktop()) {
 useMitt.on(WsResponseMessageType.VideoCallRequest, (event) => {
   info(`收到通话请求：${JSON.stringify(event)}`)
   const remoteUid = event.callerUid
-  handleVideoCall(remoteUid, event.isVideo ? CallTypeEnum.VIDEO : CallTypeEnum.AUDIO)
+  const callType = event.isVideo ? CallTypeEnum.VIDEO : CallTypeEnum.AUDIO
+
+  if (isMobile()) {
+    useMitt.emit(MittEnum.MOBILE_RTC_CALL_REQUEST, {
+      ...event,
+      callerUid: remoteUid
+    })
+    return
+  }
+
+  handleVideoCall(remoteUid, callType)
 })
 
 const handleVideoCall = async (remotedUid: string, callType: CallTypeEnum) => {
