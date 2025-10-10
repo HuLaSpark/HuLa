@@ -69,7 +69,9 @@
   <Transition name="slide-fade" @before-enter="beforeEnter" @enter="enter" @leave="leave">
     <div v-if="props.isShow" ref="animatedBox" style="transform: translateZ(0)" class="flex flex-col px-16px">
       <!-- 个人描述 -->
-      <div class="mt-2 text-bold-style line-height-24px">{{ userStore.userInfo!.resume }}</div>
+      <div class="mt-2 text-bold-style line-height-24px">
+        {{ isMyPage ? userStore.userInfo?.resume : (userDetailInfo as UserInfoType).resume }}
+      </div>
       <!-- 点赞关注 -->
       <div class="flex flex-wrap justify-around mt-4">
         <div class="flex flex-warp gap-2 items-center">
@@ -208,7 +210,8 @@ const userDetailInfo = ref<UserItem | UserInfoType | undefined>({
   lastOptTime: 0,
   name: '',
   uid: '',
-  account: ''
+  account: '',
+  resume: ''
 })
 
 // 这个值只有在查看好友详细信息时才用
