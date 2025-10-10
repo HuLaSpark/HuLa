@@ -5,16 +5,20 @@
     :enable-default-background="false"
     :enable-shadow="false"
     room-name="" />
-  <div class="scanner"></div>
+
+  <div class="scanner">
+    <div
+      class="w-60 h-60 mt-30% items-center justify-center border-op-50 overflow-hidden flex-col rounded-15px flex border-solid border-white border-3"></div>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { listen } from '@tauri-apps/api/event'
 import { cancel, Format, scan } from '@tauri-apps/plugin-barcode-scanner'
 import { onMounted, onUnmounted, ref } from 'vue'
-import { MittEnum } from '~/src/enums'
-import { useMitt } from '~/src/hooks/useMitt'
-import router from '~/src/router'
+import { MittEnum } from '@/enums'
+import { useMitt } from '@/hooks/useMitt'
+import router from '@/router'
 
 const result = ref<string | null>(null)
 const isActive = ref(true)
@@ -99,11 +103,8 @@ onUnmounted(() => {
   height: 100%;
   background: transparent;
   display: flex;
-  align-items: center;
   justify-content: center;
-  color: white;
   font-size: 18px;
-  padding: 20px;
   text-align: center;
 }
 </style>
