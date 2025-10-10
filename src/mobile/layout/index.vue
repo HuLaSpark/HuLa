@@ -357,8 +357,6 @@ useMitt.on(WsResponseMessageType.ROOM_INFO_CHANGE, async (data: { roomId: string
     avatar
   })
 })
-
-console.log('首页布局已启动')
 </script>
 
 <style lang="scss">

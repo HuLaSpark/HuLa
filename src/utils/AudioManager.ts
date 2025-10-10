@@ -23,9 +23,17 @@ class AudioManager {
    * @param audioId 音频唯一标识
    */
   async play(audio: HTMLAudioElement, audioId: string): Promise<void> {
-    // 如果当前有音频在播放且不是同一个音频，则停止当前音频
-    if (this.currentAudio && this.currentAudioId !== audioId) {
-      this.stop()
+    if (this.currentAudio) {
+      if (this.currentAudioId !== audioId) {
+        // 不同音频直接停止当前播放
+        this.stop()
+      } else {
+        // 相同音频需要先复位，避免并行播放
+        if (!this.currentAudio.paused) {
+          this.currentAudio.pause()
+        }
+        this.currentAudio.currentTime = 0
+      }
     }
 
     this.currentAudio = audio
