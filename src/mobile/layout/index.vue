@@ -43,7 +43,7 @@ import { useUserStore } from '@/stores/user'
 import { audioManager } from '@/utils/AudioManager'
 import { isMobile, isWindows } from '@/utils/PlatformConstants'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
-import { useContactStore } from '~/src/stores/contacts'
+import { useContactStore } from '@/stores/contacts'
 
 const route = useRoute()
 const tabBarElement = ref<InstanceType<typeof TabBarType>>()

@@ -96,8 +96,8 @@
 
     <van-popup v-model:show="pickRtcCall" position="bottom">
       <div class="flex flex-col items-center justify-center">
-        <div class="w-full text-center py-3" @click="startCall(VIDEO)">视频通话</div>
-        <div class="w-full text-center py-3" @click="startCall(AUDIO)">语音通话</div>
+        <div class="w-full text-center py-3" @click="startCall(CallTypeEnum.VIDEO)">视频通话</div>
+        <div class="w-full text-center py-3" @click="startCall(CallTypeEnum.AUDIO)">语音通话</div>
         <div class="w-full text-center py-3">取消</div>
       </div>
       <!-- 底部安全区域占位元素 -->
@@ -112,9 +112,6 @@ import { useMobileStore } from '@/stores/mobile'
 import 'vant/es/dialog/style'
 import { CallTypeEnum } from '@/enums'
 import { useGlobalStore } from '@/stores/global'
-
-const VIDEO = CallTypeEnum.VIDEO
-const AUDIO = CallTypeEnum.AUDIO
 
 // ==== 输入框事件 ====
 const mobileStore = useMobileStore()
