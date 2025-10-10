@@ -6,6 +6,8 @@
     <!-- 锁屏页面 -->
     <LockScreen v-else />
   </NaiveProvider>
+
+  <RtcCallFloatCell v-if="isMobile()" />
 </template>
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
