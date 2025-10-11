@@ -44,9 +44,7 @@ import {
   WsResponseMessageType,
   type WsTokenExpire
 } from '@/services/wsType.ts'
-import { useCachedStore } from '@/stores/cached'
 import { useChatStore } from '@/stores/chat'
-import { useConfigStore } from '@/stores/config'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group'
@@ -56,10 +54,12 @@ import { audioManager } from '@/utils/AudioManager'
 import { isWindows } from '@/utils/PlatformConstants'
 import { clearListener, initListener, readCountQueue } from '@/utils/ReadCountQueue'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
+import { useInit } from '@/hooks/useInit'
 
 const appWindow = WebviewWindow.getCurrent()
 const loadingPercentage = ref(10)
 const loadingText = ref('正在加载应用...')
+const { init } = useInit()
 
 // 修改异步组件的加载配置
 const AsyncLeft = defineAsyncComponent({
@@ -79,19 +79,7 @@ const AsyncCenter = defineAsyncComponent({
     loadingText.value = '正在加载数据中...'
     const comp = await import('./center/index.vue')
 
-    // 加载所有会话
-    await chatStore.getSessionList(true)
-    // 设置全局会话为第一个
-    globalStore.currentSessionRoomId = chatStore.sessionList[0].roomId
-
-    // 加载所有群的成员数据
-    const groupSessions = chatStore.getGroupSessions()
-    await Promise.all([
-      ...groupSessions.map((session) => groupStore.getGroupUserList(session.roomId, true)),
-      groupStore.setGroupDetails(),
-      chatStore.setAllSessionMsgList(20),
-      cachedStore.getAllBadgeList()
-    ])
+    await init()
 
     loadingPercentage.value = 66
     return comp
@@ -122,8 +110,6 @@ const contactStore = useContactStore()
 const groupStore = useGroupStore()
 const userStore = useUserStore()
 const chatStore = useChatStore()
-const cachedStore = useCachedStore()
-const configStore = useConfigStore()
 const settingStore = useSettingStore()
 const route = useRoute()
 const { checkUpdate, CHECK_UPDATE_TIME } = useCheckUpdate()
@@ -512,13 +498,6 @@ onBeforeMount(async () => {
 })
 
 onMounted(async () => {
-  // 初始化配置
-  const cachedConfig = localStorage.getItem('config')
-  if (cachedConfig) {
-    configStore.config = JSON.parse(cachedConfig).config
-  } else {
-    await configStore.initConfig()
-  }
   timerWorker.postMessage({
     type: 'startTimer',
     msgId: 'checkUpdate',

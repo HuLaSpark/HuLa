@@ -41,6 +41,7 @@ pub struct LoginResp {
     pub token: String,
     pub client: String,
     pub refresh_token: String,
+    pub uid: String,
     pub expire: String,
 }
 
@@ -56,4 +57,5 @@ pub struct RefreshTokenResp {
     pub token: String,
     pub refresh_token: String,
     pub expire: String,
+    pub uid: String,
 }

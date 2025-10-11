@@ -178,12 +178,9 @@
 </template>
 <script setup lang="ts">
 import { invoke } from '@tauri-apps/api/core'
-import { emit } from '@tauri-apps/api/event'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useNetwork } from '@vueuse/core'
 import { lightTheme } from 'naive-ui'
-import { ErrorType } from '@/common/exception'
-import { TauriCommand } from '@/enums'
 import { useCheckUpdate } from '@/hooks/useCheckUpdate'
 import { type DriverStepConfig, useDriver } from '@/hooks/useDriver'
 import { useLogin } from '@/hooks/useLogin.ts'
@@ -192,19 +189,15 @@ import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
 import { getEnhancedFingerprint } from '@/services/fingerprint'
 import type { UserInfoType } from '@/services/types.ts'
-import rustWebSocketClient from '@/services/webSocketRust'
 import { WsResponseMessageType } from '@/services/wsType'
 import { useGlobalStore } from '@/stores/global'
 import { useGuideStore } from '@/stores/guide'
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
-import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { getAllUserState, getUserDetail } from '@/utils/ImRequestUtils'
 import { isCompatibility, isMac } from '@/utils/PlatformConstants'
 import { clearListener } from '@/utils/ReadCountQueue'
-import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 
 // 定义引导步骤配置
 const driverSteps: DriverStepConfig[] = [
@@ -250,13 +243,11 @@ const driverSteps: DriverStepConfig[] = [
 
 const settingStore = useSettingStore()
 const userStore = useUserStore()
-const userStatusStore = useUserStatusStore()
 const globalStore = useGlobalStore()
 const guideStore = useGuideStore()
 const { isTrayMenuShow } = storeToRefs(globalStore)
 const { isGuideCompleted } = storeToRefs(guideStore)
 const { startTour } = useDriver(driverSteps)
-const { stateId } = storeToRefs(userStatusStore)
 /** 网络连接是否正常 */
 const { isOnline } = useNetwork()
 const loginHistoriesStore = useLoginHistoriesStore()
@@ -389,9 +380,8 @@ const normalLogin = async (auto = false) => {
   })
     .then(async (res: any) => {
       loginDisabled.value = true
-
-      // 开启 ws 连接
-      await rustWebSocketClient.initConnect()
+      loading.value = false
+      loginText.value = '登录成功正在跳转...'
       // 登录处理
       await loginProcess(res.token, res.refreshToken, res.client)
     })
@@ -417,54 +407,7 @@ const normalLogin = async (auto = false) => {
     })
 }
 
-const loginProcess = async (token: string, refreshToken: string, client: string) => {
-  loading.value = false
-  // 获取用户状态列表
-  if (userStatusStore.stateList.length === 0) {
-    try {
-      userStatusStore.stateList = await getAllUserState()
-    } catch (error) {
-      console.error('获取用户状态列表失败', error)
-    }
-  }
-  // 获取用户详情
-  // const userDetail = await apis.getUserDetail()
-  const userDetail: any = await getUserDetail()
-
-  // 设置用户状态id
-  stateId.value = userDetail.userStateId
-  // const token = localStorage.getItem('TOKEN')
-  // const refreshToken = localStorage.getItem('REFRESH_TOKEN')
-  // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取
-  // await emojiStore.getEmojiList()
-  const account = {
-    ...userDetail,
-    token,
-    refreshToken,
-    client
-  }
-  userStore.userInfo = account
-  loginHistoriesStore.addLoginHistory(account)
-  // 在 sqlite 中存储用户信息
-  await invokeWithErrorHandler(
-    TauriCommand.SAVE_USER_INFO,
-    {
-      userInfo: userDetail
-    },
-    {
-      customErrorMessage: '保存用户信息失败',
-      errorType: ErrorType.Client
-    }
-  )
-
-  // 在 rust 部分设置 token
-  await emit('set_user_info', {
-    token,
-    refreshToken,
-    uid: userDetail.uid
-  })
-
-  loginText.value = '登录成功正在跳转...'
+const loginProcess = async (_token: string, _refreshToken: string, _client: string) => {
   await setLoginState()
   await openHomeWindow()
 }

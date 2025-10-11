@@ -309,36 +309,25 @@
 
 <script setup lang="ts">
 import { invoke } from '@tauri-apps/api/core'
-import { emit } from '@tauri-apps/api/event'
-import { info } from '@tauri-apps/plugin-log'
 import { debounce } from 'lodash-es'
 import { lightTheme } from 'naive-ui'
-import { ErrorType } from '@/common/exception'
 import PinInput from '@/components/common/PinInput.vue'
 import Validation from '@/components/common/Validation.vue'
-import { TauriCommand } from '@/enums'
 import router from '@/router'
 import { getEnhancedFingerprint } from '@/services/fingerprint'
 import type { RegisterUserReq, UserInfoType } from '@/services/types'
-import rustWebSocketClient from '@/services/webSocketRust'
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import { useMobileStore } from '@/stores/mobile'
 import { useUserStore } from '@/stores/user'
-import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { getAllUserState, getCaptcha, getUserDetail, register, sendCaptcha } from '@/utils/ImRequestUtils'
+import { getCaptcha, register, sendCaptcha } from '@/utils/ImRequestUtils'
 import { isAndroid } from '@/utils/PlatformConstants'
-import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 import { useCheckUpdate } from '../hooks/useCheckUpdate'
-import { useLogin } from '../hooks/useLogin'
 import { useMitt } from '../hooks/useMitt'
 import { WsResponseMessageType } from '../services/wsType'
-import { useChatStore } from '../stores/chat'
-import { useConfigStore } from '../stores/config'
-import { useGlobalStore } from '../stores/global'
-import { useGroupStore } from '../stores/group'
 import { useSettingStore } from '../stores/setting'
 import { clearListener } from '../utils/ReadCountQueue'
+import { useInit } from '@/hooks/useInit'
 
 // 本地注册信息类型，扩展API类型以包含确认密码
 interface LocalRegisterInfo extends RegisterUserReq {}
@@ -348,11 +337,8 @@ const userStore = useUserStore()
 const { loginHistories } = loginHistoriesStore
 const mobileStore = useMobileStore()
 const safeArea = computed(() => mobileStore.safeArea)
-const { setLoginState } = useLogin()
 const settingStore = useSettingStore()
 const { login } = storeToRefs(settingStore)
-const userStatusStore = useUserStatusStore()
-const { stateId } = storeToRefs(userStatusStore)
 
 const isJumpDirectly = ref(false)
 
@@ -604,33 +590,7 @@ const handleRegisterComplete = async () => {
   }
 }
 
-const configStore = useConfigStore()
-const chatStore = useChatStore()
-const groupStore = useGroupStore()
-const globalStore = useGlobalStore()
-
-const initData = async () => {
-  info('init all data')
-  const cachedConfig = localStorage.getItem('config')
-  if (cachedConfig) {
-    configStore.config = JSON.parse(cachedConfig).config
-  } else {
-    await configStore.initConfig()
-  }
-  // 加载所有会话
-  await chatStore.getSessionList(true)
-  // 设置全局会话为第一个
-  globalStore.currentSessionRoomId = chatStore.sessionList[0].roomId
-
-  // 加载所有群的成员数据
-  const groupSessions = chatStore.getGroupSessions()
-  await Promise.all([
-    ...groupSessions.map((session) => groupStore.getGroupUserList(session.roomId, true)),
-    groupStore.setGroupDetails(),
-    chatStore.setAllSessionMsgList(1)
-  ])
-  info('init all data complete')
-}
+const { init } = useInit()
 
 /**登录后创建主页窗口*/
 const normalLogin = async (auto = false) => {
@@ -656,17 +616,14 @@ const normalLogin = async (auto = false) => {
       uid: auto ? userStore.userInfo!.uid : null
     }
   })
-    .then(async (res: any) => {
+    .then(async () => {
       settingStore.toggleLogin(true, false)
       loginDisabled.value = true
-      console.log('登录成功')
       window.$message.success('登录成功')
-      // 开启 ws 连接
-      await rustWebSocketClient.initConnect()
       // 初始化数据
-      await initData()
+      await init()
       // 登录处理
-      await loginProcess(res.token, res.refreshToken, res.client)
+      loading.value = false
     })
     .catch((e: any) => {
       console.error('登录失败，出现未知错误:', e)
@@ -685,59 +642,6 @@ const normalLogin = async (auto = false) => {
         loginText.value = '登录'
       }
     })
-}
-
-const loginProcess = async (token: string, refreshToken: string, client: string) => {
-  loading.value = false
-  // 获取用户状态列表
-  if (userStatusStore.stateList.length === 0) {
-    try {
-      userStatusStore.stateList = await getAllUserState()
-    } catch (error) {
-      console.error('获取用户状态列表失败', error)
-    }
-  }
-  // 获取用户详情
-  // const userDetail = await apis.getUserDetail()
-  const userDetail: any = await getUserDetail()
-
-  // 设置用户状态id
-  stateId.value = userDetail.userStateId
-  // const token = localStorage.getItem('TOKEN')
-  // const refreshToken = localStorage.getItem('REFRESH_TOKEN')
-  // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取
-  // await emojiStore.getEmojiList()
-  const account = {
-    ...userDetail,
-    token,
-    refreshToken,
-    client
-  }
-  userStore.userInfo = account
-  loginHistoriesStore.addLoginHistory(account)
-  // 在 sqlite 中存储用户信息
-  await invokeWithErrorHandler(
-    TauriCommand.SAVE_USER_INFO,
-    {
-      userInfo: userDetail
-    },
-    {
-      customErrorMessage: '保存用户信息失败',
-      errorType: ErrorType.Client
-    }
-  )
-
-  // 在 rust 部分设置 token
-  await emit('set_user_info', {
-    token,
-    refreshToken,
-    uid: userDetail.uid
-  })
-
-  loginText.value = '登录成功正在跳转...'
-  await setLoginState()
-
-  router.push('/mobile/message')
 }
 
 /**

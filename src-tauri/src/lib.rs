@@ -41,10 +41,8 @@ use crate::command::setting_command::{get_settings, update_settings};
 use crate::command::user_command::remove_tokens;
 use crate::configuration::{Settings, get_configuration};
 use crate::error::CommonError;
-use crate::repository::im_user_repository;
 use sea_orm::DatabaseConnection;
 use serde::{Deserialize, Serialize};
-use std::ops::Deref;
 
 // 移动端依赖
 #[cfg(mobile)]
@@ -69,9 +67,7 @@ use crate::command::contact_command::{hide_contact_command, list_contacts_comman
 use crate::command::file_manager_command::{
     debug_message_stats, get_navigation_items, query_files,
 };
-use crate::command::message_command::{
-    check_user_init_and_fetch_messages, page_msg, save_msg, send_msg, update_message_recall_status,
-};
+use crate::command::message_command::{page_msg, save_msg, send_msg, update_message_recall_status};
 use crate::command::message_mark_command::save_message_mark;
 
 use tauri::{AppHandle, Listener, Manager};
@@ -180,64 +176,7 @@ async fn initialize_app_data(
     Ok((db, user_info, Arc::new(Mutex::new(rc)), configuration))
 }
 
-// 设置用户信息监听器
-fn setup_user_info_listener_early(app_handle: tauri::AppHandle) {
-    let app_handle_clone = app_handle.clone();
-    app_handle.listen("set_user_info", move |event| {
-        let app_handle = app_handle_clone.clone();
-        tauri::async_runtime::spawn(async move {
-            // 等待AppData状态可用
-            if let Some(app_data) = app_handle.try_state::<AppData>() {
-                if let Ok(payload) = serde_json::from_str::<UserInfo>(&event.payload()) {
-                    // 避免多重锁，分别获取和释放锁
-                    // 2. 然后更新用户信息
-                    {
-                        let mut user_info = app_data.user_info.lock().await;
-                        user_info.uid = payload.uid.clone();
-                        user_info.token = payload.token.clone();
-                        user_info.refresh_token = payload.refresh_token.clone();
-                    } // user_info 锁在这里释放
-
-                    // 保存 token 信息到数据库
-                    if let Err(e) = im_user_repository::save_user_tokens(
-                        app_data.db_conn.deref(),
-                        &payload.uid,
-                        &payload.token,
-                        &payload.refresh_token,
-                    )
-                    .await
-                    {
-                        tracing::error!("Failed to save user tokens to database: {}", e);
-                    } else {
-                        tracing::info!(
-                            "Successfully saved user tokens to database for user: {}",
-                            payload.uid
-                        );
-                    }
-
-                    // 检查用户的 is_init 状态并获取消息
-                    {
-                        let mut client = app_data.rc.lock().await;
-                        if let Err(e) = check_user_init_and_fetch_messages(
-                            &mut client,
-                            app_data.db_conn.deref(),
-                            &payload.uid,
-                        )
-                        .await
-                        {
-                            tracing::error!(
-                                "Failed to check user initialization status and fetch messages: {}",
-                                e
-                            );
-                        }
-                    }
-                }
-            }
-        });
-    });
-}
-
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UserInfo {
     pub token: String,
@@ -377,7 +316,7 @@ fn common_setup(app_handle: AppHandle) -> Result<(), Box<dyn std::error::Error>>
     let scope = app_handle.fs_scope();
     scope.allow_directory("configuration", false).unwrap();
 
-    setup_user_info_listener_early(app_handle.clone());
+    let app_handle = app.handle().clone();
     #[cfg(desktop)]
     setup_logout_listener(app_handle.clone());
 

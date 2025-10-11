@@ -205,7 +205,7 @@ pub async fn check_user_init_and_fetch_messages(
     db_conn: &DatabaseConnection,
     uid: &str,
 ) -> Result<(), CommonError> {
-    debug!(
+    info!(
         "Checking user initialization status and fetching messages, uid: {}",
         uid
     );
