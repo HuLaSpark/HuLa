@@ -9,9 +9,10 @@ import vSlide from '@/directives/v-slide.ts'
 import router from '@/router'
 import { pinia } from '@/stores'
 import { initializePlatform } from '@/utils/PlatformConstants'
+import { invoke } from '@tauri-apps/api/core'
+import { isMobile } from '@/utils/PlatformConstants'
 
 initializePlatform()
-
 import('@/services/webSocketAdapter')
 
 const app = createApp(App)
@@ -41,3 +42,34 @@ export const forceUpdateMessageTop = (topValue: number) => {
 }
 
 initMobileClient()
+
+if (isMobile()) {
+  if (document.readyState === 'loading') {
+    window.addEventListener('DOMContentLoaded', setup)
+  } else {
+    setup()
+  }
+}
+
+const hideInitialSplash = () => {
+  const splash = document.getElementById('initial-splash')
+  if (!splash) {
+    return
+  }
+
+  splash.classList.add('initial-splash--hide')
+  splash.addEventListener(
+    'transitionend',
+    () => {
+      splash.remove()
+    },
+    { once: true }
+  )
+}
+
+async function setup() {
+  await import('@/services/webSocketAdapter')
+  await invoke('set_complete', { task: 'frontend' })
+  hideInitialSplash()
+  router.push('/mobile/login')
+}

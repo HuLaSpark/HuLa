@@ -51,12 +51,17 @@ use std::ops::Deref;
 use common::init::CustomInit;
 #[cfg(mobile)]
 mod mobiles;
+#[cfg(mobile)]
+use mobiles::splash;
 
+#[derive(Debug)]
 pub struct AppData {
     db_conn: Arc<DatabaseConnection>,
     user_info: Arc<Mutex<UserInfo>>,
     pub rc: Arc<Mutex<im_request_client::ImRequestClient>>,
     pub config: Arc<Mutex<Settings>>,
+    frontend_task: Mutex<bool>,
+    backend_task: Mutex<bool>,
 }
 
 use crate::command::chat_history_command::query_chat_history;
@@ -69,7 +74,7 @@ use crate::command::message_command::{
 };
 use crate::command::message_mark_command::save_message_mark;
 
-use tauri::{Listener, Manager};
+use tauri::{AppHandle, Listener, Manager};
 use tokio::sync::Mutex;
 
 pub fn run() {
@@ -98,7 +103,10 @@ fn setup_desktop() -> Result<(), CommonError> {
         .init_plugin()
         .init_webwindow_event()
         .init_window_event()
-        .setup(move |app| common_setup(app))
+        .setup(move |app| {
+            common_setup(app.handle().clone())?;
+            Ok(())
+        })
         .invoke_handler(get_invoke_handlers())
         .build(tauri::generate_context!())
         .map_err(|e| {
@@ -229,7 +237,7 @@ fn setup_user_info_listener_early(app_handle: tauri::AppHandle) {
     });
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct UserInfo {
     pub token: String,
@@ -342,6 +350,7 @@ fn setup_logout_listener(app_handle: tauri::AppHandle) {
 #[cfg(mobile)]
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 fn setup_mobile() {
+    splash::show();
     // 创建一个缓存实例
     // let cache: Cache<String, String> = Cache::builder()
     //     // Time to idle (TTI):  30 minutes
@@ -351,7 +360,10 @@ fn setup_mobile() {
 
     if let Err(e) = tauri::Builder::default()
         .init_plugin()
-        .setup(move |app| common_setup(app))
+        .setup(move |app| {
+            common_setup(app.handle().clone())?;
+            Ok(())
+        })
         .invoke_handler(get_invoke_handlers())
         .run(tauri::generate_context!())
     {
@@ -361,14 +373,13 @@ fn setup_mobile() {
 }
 
 // 公共的 setup 函数
-fn common_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
-    let scope = app.fs_scope();
+fn common_setup(app_handle: AppHandle) -> Result<(), Box<dyn std::error::Error>> {
+    let scope = app_handle.fs_scope();
     scope.allow_directory("configuration", false).unwrap();
 
-    let app_handle = app.handle().clone();
-    setup_user_info_listener_early(app.handle().clone());
+    setup_user_info_listener_early(app_handle.clone());
     #[cfg(desktop)]
-    setup_logout_listener(app.handle().clone());
+    setup_logout_listener(app_handle.clone());
 
     // 异步初始化应用数据，避免阻塞主线程
     match tauri::async_runtime::block_on(initialize_app_data(app_handle.clone())) {
@@ -379,6 +390,9 @@ fn common_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> 
                 user_info: user_info.clone(),
                 rc: rc,
                 config: settings,
+                frontend_task: Mutex::new(false),
+                // 后端任务默认完成
+                backend_task: Mutex::new(true),
             });
         }
         Err(e) => {
@@ -388,13 +402,15 @@ fn common_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> 
     }
 
     #[cfg(desktop)]
-    tray::create_tray(app.handle())?;
+    tray::create_tray(&app_handle)?;
     Ok(())
 }
 
 // 公共的命令处理器函数
 fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static
 {
+    #[cfg(mobile)]
+    use crate::command::set_complete;
     use crate::command::user_command::{
         get_user_tokens, save_user_info, update_user_last_opt_time,
     };
@@ -475,5 +491,7 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         im_request_command,
         get_settings,
         update_settings,
+        #[cfg(mobile)]
+        set_complete,
     ]
 }
