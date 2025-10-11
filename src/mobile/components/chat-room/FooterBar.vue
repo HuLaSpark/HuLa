@@ -27,12 +27,8 @@
       </div>
 
       <div class="flex justify-between px-25px flex-1 items-center py-10px">
-        <template
-          v-for="item in options"
-          :key="item.icon"
-          @click="item.onClick"
-          :class="{ 'active-icon': activeIcon === item.icon }">
-          <div v-if="item.label !== 'file' && item.label !== 'image' && item.isShow()">
+        <template v-for="item in options" :key="item.icon" :class="{ 'active-icon': activeIcon === item.icon }">
+          <div v-if="item.label !== 'file' && item.label !== 'image' && item.isShow()" @click="item.onClick">
             <svg class="h-24px w-24px iconpark-icon">
               <use :href="`#${item.icon}`"></use>
             </svg>

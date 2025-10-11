@@ -159,6 +159,17 @@
               </div>
             </div>
 
+            <!-- 摄像头翻转按钮（仅移动端视频通话显示） -->
+            <div v-if="callType === CallTypeEnum.VIDEO" class="flex-center">
+              <div
+                @click="switchCameraFacing"
+                class="size-44px rounded-full flex-center cursor-pointer bg-gray-600 hover:bg-gray-500">
+                <svg class="size-16px color-#fff">
+                  <use href="#refresh"></use>
+                </svg>
+              </div>
+            </div>
+
             <!-- 摄像头按钮 -->
             <div class="flex-center">
               <div
@@ -373,6 +384,7 @@ const {
   sendRtcCall2VideoCallResponse,
   toggleMute: toggleMuteWebRtc,
   toggleVideo: toggleVideoWebRtc,
+  switchCameraFacing,
   isVideoEnabled,
   pauseBell,
   playBell,

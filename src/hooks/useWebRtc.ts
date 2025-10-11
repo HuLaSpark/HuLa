@@ -842,6 +842,52 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
     }
   }
 
+  // 获取前置和后置摄像头设备
+  const getFrontAndBackCameras = () => {
+    const frontCamera = videoDevices.value.find(
+      (device) =>
+        device.label.toLowerCase().includes('front') ||
+        device.label.toLowerCase().includes('前置') ||
+        device.label.toLowerCase().includes('user')
+    )
+
+    const backCamera = videoDevices.value.find(
+      (device) =>
+        device.label.toLowerCase().includes('back') ||
+        device.label.toLowerCase().includes('后置') ||
+        device.label.toLowerCase().includes('environment') ||
+        device.label.toLowerCase().includes('rear')
+    )
+
+    return { frontCamera, backCamera }
+  }
+
+  // 切换前置/后置摄像头（移动端专用）
+  const switchCameraFacing = async () => {
+    if (!isMobile) {
+      console.warn('摄像头翻转功能仅在移动端可用')
+      return
+    }
+
+    try {
+      const { frontCamera, backCamera } = getFrontAndBackCameras()
+
+      if (!frontCamera || !backCamera) {
+        // 如果无法通过设备名称识别，则使用 facingMode 约束
+        await switchVideoDevice('user')
+        return
+      }
+
+      // 如果能识别前置和后置摄像头，直接切换
+      const currentDevice = selectedVideoDevice.value
+      const targetDevice = currentDevice === frontCamera.deviceId ? backCamera : frontCamera
+      await switchVideoDevice(targetDevice.deviceId)
+    } catch (error) {
+      window.$message.error('摄像头翻转失败！')
+      console.error('摄像头翻转失败:', error)
+    }
+  }
+
   // 切换视频设备
   const switchVideoDevice = async (deviceId: string) => {
     try {
@@ -1087,6 +1133,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
     startScreenShare,
     toggleVideo,
     switchVideoDevice,
+    switchCameraFacing,
     switchAudioDevice,
     isScreenSharing,
     selectedVideoDevice,
