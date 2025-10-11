@@ -9,10 +9,9 @@ import vSlide from '@/directives/v-slide.ts'
 import router from '@/router'
 import { pinia } from '@/stores'
 import { initializePlatform } from '@/utils/PlatformConstants'
+import { invoke } from '@tauri-apps/api/core'
 
 initializePlatform()
-
-import('@/services/webSocketAdapter')
 
 const app = createApp(App)
 app.use(router).use(pinia).use(TlbsMap).directive('resize', vResize).directive('slide', vSlide).mount('#app')
@@ -41,3 +40,21 @@ export const forceUpdateMessageTop = (topValue: number) => {
 }
 
 initMobileClient()
+
+// Effectively a JavaScript main function
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', setup)
+} else {
+  // DOMContentLoaded 已经触发，直接执行
+  setup()
+}
+
+// Setup function
+async function setup() {
+  // Set the frontend task as being completed
+  console.log('set_complete frontend')
+  await import('@/services/webSocketAdapter')
+  await invoke('set_complete', { task: 'frontend' })
+  const router = useRouter()
+  router.push('/mobile/login')
+}

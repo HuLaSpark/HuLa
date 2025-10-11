@@ -30,7 +30,6 @@
         <div
           v-for="item in options"
           :key="item.icon"
-          class="flex flex-wrap items-center"
           @click="item.onClick"
           :class="{ 'active-icon': activeIcon === item.icon }">
           <div v-if="item.label !== 'file' && item.label !== 'image'">
@@ -273,27 +272,23 @@ const handleSend = async () => {
   messageInputDom.value.innerHTML = ''
 }
 
-const getDefaultIcons = () => {
-  return [
-    { label: 'emoji', icon: 'smiling-face', showArrow: true, isRotate: false, onClick: () => {} },
-    { label: 'file', icon: 'file', showArrow: false, isRotate: true, onClick: () => {} },
-    { label: 'image', icon: 'photo', showArrow: false, isRotate: true, onClick: () => {} },
-    { label: 'video', icon: 'voice', showArrow: true, isRotate: false, onClick: () => {} },
-    { label: 'history', icon: 'history', showArrow: true, isRotate: false, onClick: () => {} },
-    {
-      label: 'videoCall',
-      icon: 'video-one',
-      showArrow: true,
-      isRotate: false,
-      onClick: () => {
-        pickRtcCall.value = true
-      }
-    }
-  ]
-}
-
 // ==== 展开面板 ====
-const options = ref(getDefaultIcons())
+const options = ref([
+  { label: 'emoji', icon: 'smiling-face', showArrow: true, isRotate: false, onClick: () => {} },
+  { label: 'file', icon: 'file', showArrow: false, isRotate: true, onClick: () => {} },
+  { label: 'image', icon: 'photo', showArrow: false, isRotate: true, onClick: () => {} },
+  { label: 'video', icon: 'voice', showArrow: true, isRotate: false, onClick: () => {} },
+  { label: 'history', icon: 'history', showArrow: true, isRotate: false, onClick: () => {} },
+  {
+    label: 'videoCall',
+    icon: 'video-one',
+    showArrow: true,
+    isRotate: false,
+    onClick: () => {
+      pickRtcCall.value = true
+    }
+  }
+])
 
 const isPanelVisible = ref(false)
 const isInputFocused = ref(false)
