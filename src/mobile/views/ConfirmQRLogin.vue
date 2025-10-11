@@ -52,8 +52,8 @@
 
 <script setup lang="ts">
 import dayjs from 'dayjs'
-import router from '~/src/router'
-import { confirmQRCodeAPI } from '~/src/utils/ImRequestUtils'
+import router from '@/router'
+import { confirmQRCodeAPI } from '@/utils/ImRequestUtils'
 
 const now = ref(dayjs()) // 当前时间对象
 

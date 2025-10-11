@@ -24,7 +24,11 @@
 <script setup lang="ts">
 import router from '@/router'
 import { useGlobalStore } from '@/stores/global'
-import { useMobileStore } from '~/src/stores/mobile'
+import { useMobileStore } from '@/stores/mobile'
+
+defineOptions({
+  name: 'mobileChatRoomDefault'
+})
 
 const globalStore = useGlobalStore()
 const mobileStore = useMobileStore()
@@ -56,7 +60,6 @@ const onFooterBarUpdateHeight = async (height: number) => {
 }
 
 const handleScroll = () => {
-  console.log('滚动了')
   const input = footerBar.value?.footerBarInput
   if (input && 'blur' in input) {
     ;(input as HTMLInputElement).blur()

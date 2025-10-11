@@ -9,7 +9,7 @@
 
     <img src="@/assets/mobile/chat-home/background.webp" class="w-100% fixed top-0" alt="hula" />
 
-    <PersonalInfo :is-my-page="false" :is-show="isShow"></PersonalInfo>
+    <PersonalInfo :is-my-page="isMyPage" :is-show="isShow"></PersonalInfo>
 
     <div class="relative top-0 flex-1 flex">
       <div ref="measureRef" class="h-full w-full absolute top-0 z-0"></div>
@@ -40,6 +40,7 @@
 import CommunityContent from '#/components/community/CommunityContent.vue'
 import CommunityTab from '#/components/community/CommunityTab.vue'
 import PersonalInfo from '#/components/my/PersonalInfo.vue'
+import { useUserStore } from '~/src/stores/user'
 
 const isShow = ref(true)
 const avatarBox = ref<HTMLElement | null>(null)
@@ -52,6 +53,13 @@ const tabHeight = ref(300)
 const contentRectObserver = new ResizeObserver((event) => {
   tabHeight.value = event[0].contentRect.height
 })
+const userStore = useUserStore()
+
+const route = useRoute()
+
+const uid = route.params.uid as string
+
+const isMyPage = ref(false)
 
 const onUpdate = (newTab: string) => {
   console.log('已更新：', newTab)
@@ -124,6 +132,12 @@ watch(isShow, (show) => {
 onMounted(() => {
   if (measureRef.value) {
     contentRectObserver.observe(measureRef.value)
+  }
+
+  if (userStore.userInfo?.uid === uid) {
+    isMyPage.value = true
+  } else {
+    isMyPage.value = false
   }
 })
 

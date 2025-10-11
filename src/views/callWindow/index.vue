@@ -34,15 +34,19 @@
     <div class="flex gap-16px mr-8">
       <!-- 拒绝按钮 -->
       <div
-        @click="rejectCall"
+        @click="hangUp(CallResponseStatus.REJECTED)"
         class="size-40px rounded-full bg-#d5304f hover:bg-#d5304f flex-center cursor-pointer shadow-lg">
-        <svg class="color-#fff size-20px"><use href="#PhoneHangup"></use></svg>
+        <svg class="color-#fff size-20px">
+          <use href="#PhoneHangup"></use>
+        </svg>
       </div>
       <!-- 接听按钮 -->
       <div
         @click="acceptCall"
         class="size-40px rounded-full bg-#13987f hover:bg-#13987f flex-center cursor-pointer shadow-lg">
-        <svg class="color-#fff size-20px"><use href="#phone-telephone-entity"></use></svg>
+        <svg class="color-#fff size-20px">
+          <use href="#phone-telephone-entity"></use>
+        </svg>
       </div>
     </div>
   </div>
@@ -63,44 +67,128 @@
 
     <!-- 窗口控制栏 -->
     <ActionBar
+      v-if="!isMobileDevice"
       ref="actionBarRef"
       class="relative z-10"
       :top-win-label="WebviewWindow.getCurrent().label"
       :shrink="false" />
 
     <!-- 主要内容区域 -->
-    <div class="flex-1 flex-col-center px-8px pt-6px relative z-10 min-h-0">
+    <div
+      :class="[
+        'relative z-10 flex flex-col min-h-0 flex-1',
+        isMobileDevice ? 'p-0' : 'px-8px pt-6px',
+        !isMobileDevice || callType !== CallTypeEnum.VIDEO ? 'items-center justify-center' : ''
+      ]">
       <!-- 视频通话时显示视频 (只有在双方都开启视频时才显示) -->
       <div
         v-if="callType === CallTypeEnum.VIDEO && localStream && (isVideoEnabled || hasRemoteVideo)"
-        class="w-full flex-1 pb-22px relative min-h-0">
+        class="w-full flex-1 relative min-h-0 overflow-hidden">
+        <div
+          v-if="!isMobileDevice && connectionStatus !== RTCCallStatus.ACCEPT"
+          class="absolute inset-0 flex-center z-20">
+          <div class="rounded-full bg-black/60 px-20px py-8px text-16px text-white">
+            {{ callStatusText }}
+          </div>
+        </div>
         <!-- 主视频 -->
         <video
           ref="mainVideoRef"
           autoplay
           playsinline
-          class="w-full h-full scale-x-[-1] rounded-8px bg-black object-cover"></video>
+          :class="[
+            'w-full h-full scale-x-[-1] bg-black object-cover',
+            isMobileDevice ? 'rounded-none' : 'rounded-8px'
+          ]"></video>
 
         <!-- 画中画视频 -->
-        <div class="absolute top-8px right-8px group">
+        <div :class="isMobileDevice ? 'top-100px' : 'top-12px'" class="absolute right-8px group z-30">
           <video
             ref="pipVideoRef"
-            v-if="isPipVideoVisible"
             autoplay
             playsinline
-            :class="isWindowMaximized ? 'w-320px h-190px' : 'w-120px h-90px'"
+            :class="pipVideoSizeClass"
             class="scale-x-[-1] rounded-8px bg-black object-cover border-2 border-white cursor-pointer"
             @click="toggleVideoLayout"></video>
           <!-- 切换提示 -->
           <div
             class="absolute inset-0 flex-center opacity-0 group-hover:opacity-100 transition-opacity bg-black bg-opacity-30 rounded-8px pointer-events-none">
-            <svg class="text-#fff size-20px"><use href="#switch"></use></svg>
+            <svg class="text-#fff size-20px">
+              <use href="#switch"></use>
+            </svg>
+          </div>
+        </div>
+
+        <!-- 底部控制按钮悬浮层（仅移动端） -->
+        <div
+          v-if="isMobileDevice"
+          class="absolute inset-x-0 bottom-0 z-30 px-24px pb-24px pointer-events-none"
+          :style="{
+            background: 'linear-gradient(180deg, rgba(15, 15, 15, 0) 0%, rgba(15, 15, 15, 0.88) 100%)',
+            paddingBottom: 'calc(24px + env(safe-area-inset-bottom))'
+          }">
+          <!-- 通话时长 -->
+          <div v-if="connectionStatus === RTCCallStatus.ACCEPT" class="pb-16px text-center pointer-events-none">
+            <div class="inline-block rounded-full bg-black/50 px-16px py-6px text-14px text-#fff">
+              {{ formattedCallDuration }}
+            </div>
+          </div>
+
+          <div class="flex-center gap-24px pointer-events-auto">
+            <!-- 静音按钮 -->
+            <div class="flex-center">
+              <div
+                @click="toggleMute"
+                class="size-44px rounded-full flex-center cursor-pointer"
+                :class="!isMuted ? 'bg-gray-600 hover:bg-gray-500' : 'bg-#d5304f60 hover:bg-#d5304f80'">
+                <svg class="size-16px color-#fff">
+                  <use :href="!isMuted ? '#voice' : '#voice-off'"></use>
+                </svg>
+              </div>
+            </div>
+
+            <!-- 扬声器按钮 -->
+            <div class="flex-center">
+              <div
+                @click="toggleSpeaker"
+                class="size-44px rounded-full flex-center cursor-pointer"
+                :class="isSpeakerOn ? 'bg-gray-600 hover:bg-gray-500' : 'bg-#d5304f60 hover:bg-#d5304f80'">
+                <svg class="size-16px color-#fff">
+                  <use :href="isSpeakerOn ? '#volume-notice' : '#volume-mute'"></use>
+                </svg>
+              </div>
+            </div>
+
+            <!-- 摄像头按钮 -->
+            <div class="flex-center">
+              <div
+                @click="toggleVideo"
+                class="size-44px rounded-full flex-center cursor-pointer"
+                :class="isVideoEnabled ? 'bg-gray-600 hover:bg-gray-500' : 'bg-#d5304f60 hover:bg-#d5304f80'">
+                <svg class="size-16px color-#fff">
+                  <use :href="isVideoEnabled ? '#video-one' : '#monitor-off'"></use>
+                </svg>
+              </div>
+            </div>
+
+            <!-- 挂断按钮 -->
+            <div class="flex-center">
+              <div
+                @click="hangUp()"
+                class="size-44px rounded-full bg-#d5304f60 hover:bg-#d5304f80 flex-center cursor-pointer">
+                <svg class="size-16px color-#fff">
+                  <use href="#PhoneHangup"></use>
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- 语音通话或其他状态时显示头像 -->
-      <div v-else class="user-avatar mb-24px relative flex flex-col items-center">
+      <div
+        v-else
+        :class="['mb-24px flex flex-col items-center', shouldCenterPreparingAvatar ? 'absolute-center' : 'relative']">
         <n-avatar
           :size="140"
           :src="avatarSrc"
@@ -120,22 +208,25 @@
       </div>
 
       <!-- 通话时长 -->
-      <div v-if="connectionStatus === RTCCallStatus.ACCEPT" class="text-16px text-gray-300 mb-32px text-center">
+      <div
+        v-if="connectionStatus === RTCCallStatus.ACCEPT && (!isMobileDevice || callType !== CallTypeEnum.VIDEO)"
+        class="inline-block rounded-full bg-black/50 px-16px py-6px text-16px text-gray-300 my-12px text-center">
         {{ formattedCallDuration }}
       </div>
     </div>
 
-    <!-- 底部控制按钮 -->
-    <div class="relative z-10">
-      <!-- 视频接通后布局 -->
-      <div v-if="callType === CallTypeEnum.VIDEO" class="pb-10px flex-center gap-32px">
+    <!-- 底部控制按钮（视频通话-桌面端） -->
+    <div v-if="callType === CallTypeEnum.VIDEO && !isMobileDevice" class="relative z-10">
+      <div class="py-14px flex-center gap-32px">
         <!-- 静音按钮 -->
         <div class="flex-col-x-center gap-8px w-80px">
           <div
             @click="toggleMute"
             class="size-44px rounded-full flex-center cursor-pointer"
             :class="!isMuted ? 'bg-gray-600 hover:bg-gray-500' : 'bg-#d5304f60 hover:bg-#d5304f80'">
-            <svg class="size-16px color-#fff"><use :href="!isMuted ? '#voice' : '#voice-off'"></use></svg>
+            <svg class="size-16px color-#fff">
+              <use :href="!isMuted ? '#voice' : '#voice-off'"></use>
+            </svg>
           </div>
           <div class="text-12px text-gray-400 text-center">{{ !isMuted ? '麦克风已开' : '麦克风已关' }}</div>
         </div>
@@ -146,7 +237,9 @@
             @click="toggleSpeaker"
             class="size-44px rounded-full flex-center cursor-pointer"
             :class="isSpeakerOn ? 'bg-gray-600 hover:bg-gray-500' : 'bg-#d5304f60 hover:bg-#d5304f80'">
-            <svg class="size-16px color-#fff"><use :href="isSpeakerOn ? '#volume-notice' : '#volume-mute'"></use></svg>
+            <svg class="size-16px color-#fff">
+              <use :href="isSpeakerOn ? '#volume-notice' : '#volume-mute'"></use>
+            </svg>
           </div>
           <div class="text-12px text-gray-400 text-center">{{ isSpeakerOn ? '扬声器已开' : '扬声器已关' }}</div>
         </div>
@@ -169,16 +262,20 @@
         <!-- 挂断按钮 -->
         <div class="flex-col-x-center gap-8px w-80px">
           <div
-            @click="handleCallResponse(CallResponseStatus.DROPPED)"
+            @click="hangUp()"
             class="size-44px rounded-full bg-#d5304f60 hover:bg-#d5304f80 flex-center cursor-pointer">
-            <svg class="size-16px color-#fff"><use href="#PhoneHangup"></use></svg>
+            <svg class="size-16px color-#fff">
+              <use href="#PhoneHangup"></use>
+            </svg>
           </div>
           <div class="text-12px text-gray-400 text-center">挂断</div>
         </div>
       </div>
+    </div>
 
-      <!-- 语音接通后布局 -->
-      <div v-else class="pb-30px flex-col-x-center">
+    <!-- 底部控制按钮（语音通话） -->
+    <div v-if="callType !== CallTypeEnum.VIDEO" class="relative z-10">
+      <div :class="isMobileDevice ? 'pb-120px' : 'pb-30px'" class="flex-col-x-center">
         <!-- 上排按钮：静音、扬声器、摄像头 -->
         <div class="flex-center gap-40px mb-32px">
           <!-- 静音按钮 -->
@@ -187,9 +284,13 @@
               @click="toggleMute"
               class="size-44px rounded-full flex-center cursor-pointer"
               :class="!isMuted ? 'bg-gray-600 hover:bg-gray-500' : 'bg-#d5304f60 hover:bg-#d5304f80'">
-              <svg class="size-16px color-#fff"><use :href="!isMuted ? '#voice' : '#voice-off'"></use></svg>
+              <svg class="size-16px color-#fff">
+                <use :href="!isMuted ? '#voice' : '#voice-off'"></use>
+              </svg>
             </div>
-            <div class="text-12px text-gray-400 text-center">{{ !isMuted ? '麦克风已开' : '麦克风已关' }}</div>
+            <div v-if="!isMobileDevice" class="text-12px text-gray-400 text-center">
+              {{ !isMuted ? '麦克风已开' : '麦克风已关' }}
+            </div>
           </div>
 
           <!-- 扬声器按钮 -->
@@ -202,16 +303,20 @@
                 <use :href="isSpeakerOn ? '#volume-notice' : '#volume-mute'"></use>
               </svg>
             </div>
-            <div class="text-12px text-gray-400 text-center">{{ isSpeakerOn ? '扬声器已开' : '扬声器已关' }}</div>
+            <div v-if="!isMobileDevice" class="text-12px text-gray-400 text-center">
+              {{ isSpeakerOn ? '扬声器已开' : '扬声器已关' }}
+            </div>
           </div>
         </div>
 
         <!-- 下排按钮：挂断 -->
         <div class="flex-x-center">
           <div
-            @click="handleCallResponse(CallResponseStatus.DROPPED)"
+            @click="hangUp()"
             class="size-66px rounded-full bg-#d5304f60 hover:bg-#d5304f80 flex-center cursor-pointer">
-            <svg class="size-24px color-#fff"><use href="#PhoneHangup"></use></svg>
+            <svg class="size-24px color-#fff">
+              <use href="#PhoneHangup"></use>
+            </svg>
           </div>
         </div>
       </div>
@@ -222,6 +327,7 @@
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
 import { LogicalPosition, LogicalSize, PhysicalPosition, PhysicalSize } from '@tauri-apps/api/dpi'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { primaryMonitor } from '@tauri-apps/api/window'
@@ -232,20 +338,32 @@ import { CallTypeEnum, RTCCallStatus, ThemeEnum } from '@/enums'
 import { useWebRtc } from '@/hooks/useWebRtc'
 import { useSettingStore } from '@/stores/setting'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { isMac, isWindows } from '@/utils/PlatformConstants'
+import { isDesktop, isMac, isMobile, isWindows } from '@/utils/PlatformConstants'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
-import { useGroupStore } from '~/src/stores/group'
+import router from '@/router'
+import { useGroupStore } from '@/stores/group'
 import { CallResponseStatus } from '../../services/wsType'
 
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
-// 通过路由参数获取数据
 const route = useRoute()
-const remoteUserId = route.query.remoteUserId as string
-const roomId = route.query.roomId as string
-const callType = (route.query.callType as string) === '1' ? CallTypeEnum.AUDIO : CallTypeEnum.VIDEO
+
+const resolveCallType = (value?: string | null): CallTypeEnum => {
+  const numeric = Number(value)
+  return numeric === CallTypeEnum.VIDEO ? CallTypeEnum.VIDEO : CallTypeEnum.AUDIO
+}
+
+const remoteUserId = (route.query.remoteUserId as string) || ''
+const roomId = (route.query.roomId as string) || ''
+const callType = resolveCallType(route.query.callType as string | null)
 // 是否是接受方，true 代表接受方
 const isReceiver = route.query.isIncoming === 'true'
+const shouldAutoAccept = isReceiver && route.query.autoAccept === '1'
+const isMobileDevice = isMobile()
+
+if ((!roomId || !remoteUserId) && isMobileDevice) {
+  router.replace('/mobile/message')
+}
 const {
   localStream,
   remoteStream,
@@ -284,18 +402,35 @@ const createSize = (width: number, height: number) => {
   return size
 }
 
+const hangUp = (status: CallResponseStatus = CallResponseStatus.DROPPED) => {
+  // 立即停止铃声
+  stopBell()
+  if (isMobileDevice) {
+    if (router.currentRoute.value.path === '/mobile/rtcCall') {
+      if (window.history.length > 1) {
+        router.back()
+      } else {
+        router.replace('/mobile/message')
+      }
+    } else {
+      router.back()
+    }
+  }
+  handleCallResponse(status)
+}
+
 const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(remoteUserInfo.avatar as string))
 
 const callStatusText = computed(() => {
   switch (connectionStatus.value) {
     case RTCCallStatus.CALLING:
-      return '正在呼叫...'
+      return '正在呼叫'
     case RTCCallStatus.ACCEPT:
       return '通话中'
     case RTCCallStatus.END:
       return '通话已结束'
     default:
-      return '准备中...'
+      return '准备中'
   }
 })
 
@@ -325,13 +460,29 @@ const hasLocalVideo = computed(() => {
   return isVideoEnabled.value && !!localStream.value
 })
 
-const isPipVideoVisible = computed(() => {
-  return (hasLocalVideo.value || hasRemoteVideo.value) && !!remoteStream.value
-})
-
 // 获取窗口最大化状态
 const isWindowMaximized = computed(() => {
   return actionBarRef.value?.windowMaximized
+})
+
+const pipVideoSizeClass = computed(() => {
+  if (!isMobileDevice) {
+    return isWindowMaximized.value ? 'w-320px h-190px' : 'w-120px h-90px'
+  }
+  return 'w-140px h-160px'
+})
+
+// 是否显示准备中的头像
+const shouldCenterPreparingAvatar = computed(() => {
+  if (!isMobileDevice) {
+    return false
+  }
+
+  if (!connectionStatus.value) {
+    return true
+  }
+
+  return connectionStatus.value !== RTCCallStatus.END && connectionStatus.value !== RTCCallStatus.ERROR
 })
 
 // 视频流分配工具函数
@@ -493,14 +644,6 @@ const acceptCall = async () => {
   }
 }
 
-// 拒绝通话
-const rejectCall = async () => {
-  // 立即停止铃声
-  stopBell()
-  // 调用拒绝响应函数
-  handleCallResponse(CallResponseStatus.REJECTED)
-}
-
 // 监听视频状态变化，自动更新视频显示
 watch([hasLocalVideo, hasRemoteVideo, localStream, remoteStream], assignVideoStreams, { deep: true })
 
@@ -527,6 +670,18 @@ watch(
 
 // 生命周期
 onMounted(async () => {
+  if (isMobileDevice) {
+    if (isReceiver && !isCallAccepted.value && !shouldAutoAccept) {
+      startBell()
+    }
+
+    if (shouldAutoAccept && isReceiver && !isCallAccepted.value) {
+      await nextTick()
+      await acceptCall()
+    }
+    return
+  }
+
   const currentWindow = WebviewWindow.getCurrent()
 
   // 监听窗口关闭事件，确保关闭窗口时挂断通话
@@ -542,63 +697,69 @@ onMounted(async () => {
     }
   })
 
-  if (isReceiver && !isCallAccepted.value) {
-    // 接收方立即开始播放铃声
-    startBell()
+  if (isDesktop()) {
+    if (isReceiver && !isCallAccepted.value) {
+      // 接收方立即开始播放铃声
+      startBell()
 
-    // 设置来电通知窗口的正确大小和位置
-    await currentWindow.setSize(createSize(360, 90))
+      // 设置来电通知窗口的正确大小和位置
+      await currentWindow.setSize(createSize(360, 90))
 
-    // 隐藏标题栏和设置窗口不可移动
-    if (isMac()) {
-      await invokeSilently('hide_title_bar_buttons', { windowLabel: currentWindow.label, hideCloseButton: true })
-    }
-
-    // 获取屏幕尺寸并定位
-    const monitor = await primaryMonitor()
-    if (monitor) {
-      const margin = 20
-      const taskbarHeight = 40
-
-      let screenWidth: number
-      let screenHeight: number
-      let x: number
-      let y: number
-
-      if (isWindows()) {
-        // Windows使用逻辑像素进行计算，窗口在右下角
-        screenWidth = monitor.size.width / (monitor.scaleFactor || 1)
-        screenHeight = monitor.size.height / (monitor.scaleFactor || 1)
-        x = Math.max(0, screenWidth - 360 - margin)
-        y = Math.max(0, screenHeight - 90 - margin - taskbarHeight)
-        await currentWindow.setPosition(new LogicalPosition(x, y))
-      } else {
-        // Mac使用物理像素进行计算，窗口在右上角
-        screenWidth = monitor.size.width
-        screenHeight = monitor.size.height
-        x = Math.max(0, screenWidth - 360 - margin)
-        y = margin
-        await currentWindow.setPosition(new PhysicalPosition(x, y))
+      // 隐藏标题栏和设置窗口不可移动
+      if (isMac()) {
+        await invokeSilently('hide_title_bar_buttons', { windowLabel: currentWindow.label, hideCloseButton: true })
       }
+
+      // 获取屏幕尺寸并定位
+      const monitor = await primaryMonitor()
+      if (monitor) {
+        const margin = 20
+        const taskbarHeight = 40
+
+        let screenWidth: number
+        let screenHeight: number
+        let x: number
+        let y: number
+
+        if (isWindows()) {
+          // Windows使用逻辑像素进行计算，窗口在右下角
+          screenWidth = monitor.size.width / (monitor.scaleFactor || 1)
+          screenHeight = monitor.size.height / (monitor.scaleFactor || 1)
+          x = Math.max(0, screenWidth - 360 - margin)
+          y = Math.max(0, screenHeight - 90 - margin - taskbarHeight)
+          await currentWindow.setPosition(new LogicalPosition(x, y))
+        } else {
+          // Mac使用物理像素进行计算，窗口在右上角
+          screenWidth = monitor.size.width
+          screenHeight = monitor.size.height
+          x = Math.max(0, screenWidth - 360 - margin)
+          y = margin
+          await currentWindow.setPosition(new PhysicalPosition(x, y))
+        }
+      } else {
+        // 如果无法获取主显示器信息，使用屏幕右下角的估算位置
+        await currentWindow.setPosition(new LogicalPosition(800, 600))
+      }
+      await currentWindow.setAlwaysOnTop(true)
     } else {
-      // 如果无法获取主显示器信息，使用屏幕右下角的估算位置
-      await currentWindow.setPosition(new LogicalPosition(800, 600))
-    }
-    await currentWindow.setAlwaysOnTop(true)
-  } else {
-    // 正常通话窗口设置
-    await currentWindow.center()
-    await currentWindow.setAlwaysOnTop(false)
+      // 正常通话窗口设置
+      await currentWindow.center()
+      await currentWindow.setAlwaysOnTop(false)
 
-    // 确保标题栏按钮显示（非来电通知状态）
-    if (isMac()) {
-      await invokeSilently('show_title_bar_buttons', { windowLabel: currentWindow.label })
+      // 确保标题栏按钮显示（非来电通知状态）
+      if (isMac()) {
+        await invokeSilently('show_title_bar_buttons', { windowLabel: currentWindow.label })
+      }
     }
+
+    // 确保窗口显示
+    await currentWindow.show()
+    await currentWindow.setFocus()
   }
+})
 
-  // 确保窗口显示
-  await currentWindow.show()
-  await currentWindow.setFocus()
+defineExpose({
+  hangUp
 })
 </script>
 
@@ -612,6 +773,7 @@ onMounted(async () => {
   100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }

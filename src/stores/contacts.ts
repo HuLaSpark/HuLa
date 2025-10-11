@@ -131,8 +131,6 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
         // @ts-expect-error
         globalStore.currentSelectedContact.status = RequestNoticeAgreeStatus.ACCEPTED
       }
-      // 获取最新的未读数
-      await getApplyUnReadCount()
     })
   }
 

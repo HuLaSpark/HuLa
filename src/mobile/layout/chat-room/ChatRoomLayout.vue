@@ -6,9 +6,11 @@
 
     <!-- 页面全部内容 -->
     <div class="flex flex-col flex-1">
-      <RouterView v-slot="{ Component }">
-        <component :is="Component" :key="route.fullPath" class="page-view" />
-      </RouterView>
+      <router-view v-slot="{ Component }">
+        <keep-alive :include="['mobileChatMain', 'mobileGroupChatMember']">
+          <component :is="Component" />
+        </keep-alive>
+      </router-view>
     </div>
 
     <!-- 底部安全区域占位元素 -->

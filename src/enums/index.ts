@@ -109,7 +109,9 @@ export enum MittEnum {
   /** 消息多选 */
   MSG_MULTI_CHOOSE = 'msgMultiChoose',
   /** 扫码事件 */
-  QR_SCAN_EVENT = 'qrScanEvent'
+  QR_SCAN_EVENT = 'qrScanEvent',
+  /** 移动端通话浮层请求 */
+  MOBILE_RTC_CALL_REQUEST = 'mobileRtcCallRequest'
 }
 
 /** 主题类型 */
@@ -642,6 +644,8 @@ export enum ImUrlEnum {
   NOTICE_UN_READ_COUNT = 'noticeUnReadCount',
   /** 请求通知页面 */
   REQUEST_NOTICE_PAGE = 'requestNoticePage',
+  /** 通知已读 */
+  REQUEST_NOTICE_READ = 'RequestNoticeRead',
   /** 获取联系人列表 */
   GET_CONTACT_LIST = 'getContactList',
   /** 搜索好友 */
