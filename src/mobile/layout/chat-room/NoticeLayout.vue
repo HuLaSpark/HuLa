@@ -3,7 +3,9 @@
   <div class="flex flex-col flex-1">
     <RouterView v-slot="{ Component }">
       <Transition name="slide" appear mode="out-in">
-        <component :is="Component" :key="route.fullPath" />
+        <keep-alive :include="['mobileChatNoticeList']">
+          <component :is="Component" :key="route.name" />
+        </keep-alive>
       </Transition>
     </RouterView>
   </div>

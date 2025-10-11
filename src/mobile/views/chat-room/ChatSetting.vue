@@ -63,7 +63,7 @@
               <!-- 群号 -->
               <div class="flex justify-between items-center">
                 <div class="text-14px">群聊成员</div>
-                <div class="text-12px text-#6E6E6E flex flex-wrap gap-10px items-center">
+                <div @click="toGroupChatMember" class="text-12px text-#6E6E6E flex flex-wrap gap-10px items-center">
                   <div>
                     有
                     <span class="text-#398D7E">{{ groupStore.countInfo?.memberNum || 0 }}</span>
@@ -79,6 +79,7 @@
             </div>
             <div class="py-15px px-5px grid grid-cols-5 gap-15px text-12px">
               <div
+                @click="toFriendInfo(i.uid)"
                 v-for="i in groupMemberListSliced"
                 :key="i.uid"
                 class="flex flex-col justify-center items-center gap-5px">
@@ -229,6 +230,11 @@ import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { deleteFriend, getGroupDetail, modifyFriendRemark, setSessionTop, updateRoomInfo } from '@/utils/ImRequestUtils'
+import { toFriendInfoPage } from '@/utils/routerUtils'
+
+defineOptions({
+  name: 'mobileChatSetting'
+})
 
 const dialog = useDialog()
 const userStore = useUserStore()
@@ -298,6 +304,14 @@ const handleCopy = (val: string) => {
     navigator.clipboard.writeText(val)
     window.$message.success(`复制成功 ${val}`)
   }
+}
+
+const toFriendInfo = (uid: string) => {
+  toFriendInfoPage(uid)
+}
+
+const toGroupChatMember = () => {
+  router.push({ name: 'mobileGroupChatMember' })
 }
 
 const goToNotice = () => {

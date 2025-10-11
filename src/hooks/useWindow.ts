@@ -3,12 +3,14 @@ import { LogicalSize } from '@tauri-apps/api/dpi'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { UserAttentionType } from '@tauri-apps/api/window'
 import { info } from '@tauri-apps/plugin-log'
-import { EventEnum } from '@/enums'
+import { CallTypeEnum, EventEnum, RoomTypeEnum } from '@/enums'
+import { useGlobalStore } from '@/stores/global'
 import { isCompatibility, isDesktop, isWindows } from '@/utils/PlatformConstants'
 
 /** 判断是兼容的系统 */
 const isCompatibilityMode = computed(() => isCompatibility())
 export const useWindow = () => {
+  const globalStore = useGlobalStore()
   /**
    * 创建窗口
    * @param title 窗口标题
@@ -301,6 +303,60 @@ export const useWindow = () => {
     }
   }
 
+  const startRtcCall = async (callType: CallTypeEnum) => {
+    try {
+      // 判断是否为群聊，如果是群聊则跳过
+      if (globalStore.currentSession.type === RoomTypeEnum.GROUP) {
+        window.$message.warning('群聊暂不支持音视频通话')
+        return
+      }
+
+      // 获取当前房间好友的ID（单聊时使用detailId作为remoteUid）
+      const remoteUid = globalStore.currentSession.detailId
+      if (!remoteUid) {
+        window.$message.error('无法获取对方用户信息')
+        return
+      }
+      await createRtcCallWindow(false, remoteUid, globalStore.currentSession.roomId, callType)
+    } catch (error) {
+      console.error('创建视频通话窗口失败:', error)
+    }
+  }
+
+  const createRtcCallWindow = async (
+    isIncoming: boolean,
+    remoteUserId: string,
+    roomId: string,
+    callType: CallTypeEnum
+  ) => {
+    // 根据是否来电决定窗口尺寸
+    const windowConfig = isIncoming
+      ? { width: 360, height: 90, minWidth: 360, minHeight: 90 } // 来电通知尺寸
+      : callType === CallTypeEnum.VIDEO
+        ? { width: 850, height: 580, minWidth: 850, minHeight: 580 } // 视频通话尺寸
+        : { width: 500, height: 650, minWidth: 500, minHeight: 650 } // 语音通话尺寸
+
+    const type = callType === CallTypeEnum.VIDEO ? '视频通话' : '语音通话'
+    await createWebviewWindow(
+      type, // 窗口标题
+      'rtcCall', // 窗口标签
+      windowConfig.width, // 宽度
+      windowConfig.height, // 高度
+      undefined, // 不需要关闭其他窗口
+      true, // 可调整大小
+      windowConfig.minWidth, // 最小宽度
+      windowConfig.minHeight, // 最小高度
+      false, // 不透明
+      false, // 显示窗口
+      {
+        remoteUserId,
+        roomId: roomId,
+        callType,
+        isIncoming
+      }
+    )
+  }
+
   return {
     createWebviewWindow,
     createModalWindow,
@@ -308,6 +364,8 @@ export const useWindow = () => {
     checkWinExist,
     setResizable,
     sendWindowPayload,
-    getWindowPayload
+    getWindowPayload,
+    startRtcCall,
+    createRtcCallWindow
   }
 }

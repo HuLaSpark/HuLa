@@ -22,7 +22,7 @@
 <script setup lang="ts">
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { useGroupStore } from '~/src/stores/group'
+import { useGroupStore } from '@/stores/group'
 
 interface Props {
   body: any

@@ -106,7 +106,7 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { mergeMsg } from '@/utils/ImRequestUtils'
 import { isMessageMultiSelectEnabled } from '@/utils/MessageSelect'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
-import type { MsgId } from '~/src/typings/global'
+import type { MsgId } from '@/typings/global'
 import ChatMultiMsg from './ChatMultiMsg.vue'
 
 const props = withDefaults(defineProps<{ showToolbar?: boolean }>(), { showToolbar: false })

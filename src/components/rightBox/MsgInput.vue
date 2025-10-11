@@ -182,7 +182,7 @@ import { useSettingStore } from '@/stores/setting.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { isMac } from '@/utils/PlatformConstants'
 import { sendOptions } from '@/views/moreWindow/settings/config.ts'
-import { useGroupStore } from '~/src/stores/group'
+import { useGroupStore } from '@/stores/group'
 
 const appWindow = WebviewWindow.getCurrent()
 const settingStore = useSettingStore()

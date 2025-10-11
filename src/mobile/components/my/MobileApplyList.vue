@@ -41,10 +41,16 @@
                 {{ formatTimestamp(item.createTime) }}
               </span> -->
             </div>
-            <div v-show="isFriendApplyOrGroupInvite(item)" class="flex gap-2 flex-1 text-12px text-gray-500">
+            <div v-if="isFriendApplyOrGroupInvite(item)" class="flex gap-2 flex-1 text-12px text-gray-500">
               <div class="whitespace-nowrap">留言:</div>
               <n-ellipsis :tooltip="true" expand-trigger="click" line-clamp="2" style="max-width: 100%">
                 {{ item.content }}
+              </n-ellipsis>
+            </div>
+            <div v-else class="flex gap-2 flex-1 text-12px text-gray-500">
+              <div class="whitespace-nowrap">处理人:</div>
+              <n-ellipsis :tooltip="true" expand-trigger="click" line-clamp="2" style="max-width: 100%">
+                {{ groupStore.getUserInfo(item.senderId)!.name }}
               </n-ellipsis>
             </div>
           </div>
@@ -113,7 +119,7 @@ import { NoticeType, RequestNoticeAgreeStatus } from '@/services/types.ts'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { useGroupStore } from '~/src/stores/group'
+import { useGroupStore } from '@/stores/group'
 
 const userStore = useUserStore()
 const contactStore = useContactStore()
@@ -164,13 +170,13 @@ const applyMsg = computed(() => (item: any) => {
     } else if (item.eventType === NoticeType.GROUP_INVITE) {
       return '邀请' + groupStore.getUserInfo(item.operateId)!.name + '加入 [' + item.name + ']'
     } else if (isFriendApplyOrGroupInvite(item)) {
-      return isCurrentUser(item.senderId) ? '已同意加入' + item.content : '邀请你加入' + item.content
+      return isCurrentUser(item.senderId) ? '已同意加入 [' + item.content + ']' : '邀请你加入 [' + item.content + ']'
     } else if (item.eventType === NoticeType.GROUP_MEMBER_DELETE) {
-      return '已被' + groupStore.getUserInfo(item.senderId)!.name + '踢出' + item.content
+      return '已被' + groupStore.getUserInfo(item.senderId)!.name + '踢出 [' + item.content + ']'
     } else if (item.eventType === NoticeType.GROUP_SET_ADMIN) {
-      return '已被群主设置为' + item.content + '的管理员'
+      return '已被群主设置为 [' + item.content + '] 的管理员'
     } else if (item.eventType === NoticeType.GROUP_RECALL_ADMIN) {
-      return '已被群主取消' + item.content + '的管理员权限'
+      return '已被群主取消 [' + item.content + '] 的管理员权限'
     }
   }
 })

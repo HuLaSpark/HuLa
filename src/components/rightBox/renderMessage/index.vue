@@ -274,11 +274,10 @@ import { useSettingStore } from '@/stores/setting'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { isMessageMultiSelectEnabled } from '@/utils/MessageSelect'
-import router from '~/src/router'
-import { useChatStore } from '~/src/stores/chat'
-import { useUserStore } from '~/src/stores/user'
-import { markMsg } from '~/src/utils/ImRequestUtils'
-import { isMac, isMobile } from '~/src/utils/PlatformConstants'
+import { useChatStore } from '@/stores/chat'
+import { useUserStore } from '@/stores/user'
+import { markMsg } from '@/utils/ImRequestUtils'
+import { isMac, isMobile } from '@/utils/PlatformConstants'
 import Announcement from './Announcement.vue'
 import AudioCall from './AudioCall.vue'
 import Emoji from './Emoji.vue'
@@ -293,6 +292,7 @@ import Text from './Text.vue'
 import Video from './Video.vue'
 import VideoCall from './VideoCall.vue'
 import Voice from './Voice.vue'
+import { toFriendInfoPage } from '@/utils/routerUtils'
 
 const props = withDefaults(
   defineProps<{
@@ -334,8 +334,7 @@ const isMultiSelectDisabled = computed(() => !isMessageMultiSelectEnabled(props.
 
 const handleAvatarClick = (uid: string, msgId: string) => {
   if (isMobile()) {
-    globalStore.addFriendModalInfo.uid = uid
-    router.push(`/mobile/mobileFriends/friendInfo/${uid}`)
+    toFriendInfoPage(uid)
   } else {
     selectKey.value = msgId
   }

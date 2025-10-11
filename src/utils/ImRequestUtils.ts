@@ -329,6 +329,13 @@ export async function requestNoticePage(params: { pageSize: number; pageNo: numb
   })
 }
 
+export async function requestNoticeRead(body: { noticeIdList: string[] }) {
+  return await imRequest({
+    url: ImUrlEnum.REQUEST_NOTICE_READ,
+    body
+  })
+}
+
 export async function handleInvite(body: { applyId: string; state: number }) {
   return await imRequest({
     url: ImUrlEnum.HANDLE_INVITE,

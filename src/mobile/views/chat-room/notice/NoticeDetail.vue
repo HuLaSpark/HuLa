@@ -96,6 +96,10 @@
 <script setup lang="ts">
 import router from '@/router'
 
+defineOptions({
+  name: 'mobileChatNoticeDetail'
+})
+
 const goToNoticeEdit = () => {
   router.push(`/mobile/chatRoom/notice/edit/12312`)
 }

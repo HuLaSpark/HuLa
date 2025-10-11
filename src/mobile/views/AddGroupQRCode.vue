@@ -53,7 +53,7 @@
 
 <script setup lang="ts">
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { useUserStore } from '~/src/stores/user'
+import { useUserStore } from '@/stores/user'
 
 const qrCodeBgColor = ref('#FFFFFF')
 const qrCodeType = ref('canvas' as const)

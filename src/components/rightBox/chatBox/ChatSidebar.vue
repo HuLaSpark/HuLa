@@ -189,7 +189,7 @@ import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { getUserByIds } from '~/src/utils/ImRequestUtils'
+import { getUserByIds } from '@/utils/ImRequestUtils'
 
 const appWindow = WebviewWindow.getCurrent()
 const emit = defineEmits<(e: 'ready') => void>()

@@ -60,7 +60,7 @@ import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { sendAddFriendRequest } from '@/utils/ImRequestUtils'
-import router from '~/src/router'
+import router from '@/router'
 
 const globalStore = useGlobalStore()
 const userStore = useUserStore()

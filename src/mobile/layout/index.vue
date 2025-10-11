@@ -43,7 +43,7 @@ import { useUserStore } from '@/stores/user'
 import { audioManager } from '@/utils/AudioManager'
 import { isMobile, isWindows } from '@/utils/PlatformConstants'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
-import { useContactStore } from '~/src/stores/contacts'
+import { useContactStore } from '@/stores/contacts'
 
 const route = useRoute()
 const tabBarElement = ref<InstanceType<typeof TabBarType>>()
@@ -173,6 +173,9 @@ useMitt.on(WsResponseMessageType.USER_STATE_CHANGE, async (data: { uid: string; 
 
 /** 测试 */
 useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
+  if (chatStore.checkMsgExist(data.message.roomId, data.message.id)) {
+    return
+  }
   console.log('[mobile/layout] 收到的消息：', data)
   chatStore.pushMsg(data, {
     isActiveChatView: route.path.startsWith('/mobile/chatRoom'),

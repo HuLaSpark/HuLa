@@ -6,22 +6,29 @@
     <!-- 锁屏页面 -->
     <LockScreen v-else />
   </NaiveProvider>
+
+  <RtcCallFloatCell v-if="isMobile()" />
 </template>
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { info } from '@tauri-apps/plugin-log'
 import { exit } from '@tauri-apps/plugin-process'
-import { EventEnum, MittEnum, StoresEnum, ThemeEnum } from '@/enums'
+import { CallTypeEnum, EventEnum, MittEnum, StoresEnum, ThemeEnum } from '@/enums'
 import { useFixedScale } from '@/hooks/useFixedScale'
 import { useGlobalShortcut } from '@/hooks/useGlobalShortcut.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useMobile } from '@/hooks/useMobile.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
-import router from '@/router'
+import { useGlobalStore } from '@/stores/global'
 import { useSettingStore } from '@/stores/setting.ts'
 import { isDesktop, isMobile, isWindows } from '@/utils/PlatformConstants'
 import LockScreen from '@/views/LockScreen.vue'
+import { WsResponseMessageType } from './services/wsType'
 
 const appWindow = WebviewWindow.getCurrent()
+const { createRtcCallWindow } = useWindow()
+const globalStore = useGlobalStore()
+const router = useRouter()
 // 只在桌面端初始化窗口管理功能
 const { createWebviewWindow } = isDesktop() ? useWindow() : { createWebviewWindow: () => {} }
 const settingStore = useSettingStore()
@@ -98,6 +105,40 @@ if (isDesktop()) {
   appWindow.listen(EventEnum.EXIT, async () => {
     await exit(0)
   })
+}
+
+useMitt.on(WsResponseMessageType.VideoCallRequest, (event) => {
+  info(`收到通话请求：${JSON.stringify(event)}`)
+  const remoteUid = event.callerUid
+  const callType = event.isVideo ? CallTypeEnum.VIDEO : CallTypeEnum.AUDIO
+
+  if (isMobile()) {
+    useMitt.emit(MittEnum.MOBILE_RTC_CALL_REQUEST, {
+      ...event,
+      callerUid: remoteUid
+    })
+    return
+  }
+
+  handleVideoCall(remoteUid, callType)
+})
+
+const handleVideoCall = async (remotedUid: string, callType: CallTypeEnum) => {
+  info(`监听到视频通话调用，remotedUid: ${remotedUid}, callType: ${callType}`)
+  if (isMobile()) {
+    router.push({
+      path: '/mobile/rtcCall',
+      query: {
+        remoteUserId: globalStore.currentSession.detailId,
+        roomId: globalStore.currentSession.roomId,
+        callType: callType,
+        // 接受方
+        isIncoming: 'true'
+      }
+    })
+  } else {
+    await createRtcCallWindow(true, remotedUid, globalStore.currentSession.roomId, callType)
+  }
 }
 
 onMounted(async () => {

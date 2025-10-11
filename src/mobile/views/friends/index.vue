@@ -175,7 +175,7 @@ import { useContactStore } from '@/stores/contacts.ts'
 import { useGroupStore } from '@/stores/group'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { NoticeType } from '~/src/services/types'
+import { NoticeType } from '@/services/types'
 
 /**
  * 获取当前用户查询视角
