@@ -9,8 +9,13 @@
     <div
       v-if="showMask"
       @touchend="maskHandler.close"
-      @click="maskHandler.close"
-      class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[999] transition-all duration-3000 ease-in-out opacity-100"></div>
+      @mouseup="maskHandler.close"
+      :class="[
+        longPressState.longPressActive
+          ? ''
+          : 'bg-black/20 backdrop-blur-sm transition-all duration-3000 ease-in-out opacity-100'
+      ]"
+      class="fixed inset-0 z-[999]"></div>
 
     <!-- 键盘蒙板 -->
     <div
@@ -85,14 +90,21 @@
       <div class="border-b-1 border-solid color-gray-200 px-18px mt-5px"></div>
     </div>
 
-    <van-pull-refresh class="h-full" :disabled="!atTop" v-model="loading" @refresh="onRefresh">
+    <van-pull-refresh
+      class="h-full"
+      :pull-distance="100"
+      :disabled="!isEnablePullRefresh"
+      v-model="loading"
+      @refresh="onRefresh">
       <div class="flex flex-col h-full px-18px">
-        <div class="flex-1 overflow-auto" @scroll="onScroll" ref="scrollContainer">
+        <div class="flex-1 overflow-auto" @scroll.prevent="onScroll" ref="scrollContainer">
           <van-swipe-cell
             @open="handleSwipeOpen"
             @close="handleSwipeClose"
             v-for="(item, idx) in sessionList"
+            v-on-long-press="[(e: PointerEvent) => handleLongPress(e, item), longPressOption]"
             :key="`${item.id}-${idx}`">
+            <!-- 长按项 -->
             <div @click="intoRoom(item)" class="grid grid-cols-[2.2rem_1fr_4rem] items-start px-2 py-3 gap-1">
               <div class="flex-shrink-0">
                 <n-badge :offset="[-6, 6]" :value="item.unreadCount" :max="99">
@@ -129,11 +141,36 @@
         </div>
       </div>
     </van-pull-refresh>
+
+    <teleport to="body">
+      <div
+        v-if="longPressState.showLongPressMenu"
+        :style="{ top: longPressState.longPressMenuTop + 'px' }"
+        class="fixed gap-10px z-999 left-1/2 transform -translate-x-1/2">
+        <div class="flex justify-between p-[8px_15px_8px_15px] text-14px gap-10px rounded-10px bg-#4e4e4e">
+          <div class="text-white">按钮1</div>
+          <div class="text-white">按钮2</div>
+          <div class="text-white">按钮3</div>
+        </div>
+        <div class="flex w-full justify-center h-15px">
+          <svg width="35" height="13" viewBox="0 0 35 13">
+            <path
+              d="M0 0 
+           Q17.5 5 17.5 12
+           Q17.5 13 18.5 13
+           Q17.5 13 17.5 12
+           Q17.5 5 35 0 
+           Z"
+              fill="#4e4e4e" />
+          </svg>
+        </div>
+      </div>
+    </teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { debounce } from 'lodash-es'
+import { debounce, throttle } from 'lodash-es'
 import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.vue'
 import NavBar from '#/layout/navBar/index.vue'
 import type { IKeyboardDidShowDetail } from '#/mobile-client/interface/adapter'
@@ -143,7 +180,7 @@ import groupChatIcon from '@/assets/mobile/chat-home/group-chat.webp'
 import { RoomTypeEnum } from '@/enums'
 import { useMessage } from '@/hooks/useMessage.ts'
 import { useReplaceMsg } from '@/hooks/useReplaceMsg'
-import { IsAllUserEnum } from '@/services/types.ts'
+import { IsAllUserEnum, type SessionItem } from '@/services/types.ts'
 import rustWebSocketClient from '@/services/webSocketRust'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global'
@@ -151,6 +188,7 @@ import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
+import { vOnLongPress } from '@vueuse/components'
 
 const loading = ref(false)
 const count = ref(0)
@@ -159,6 +197,52 @@ const groupStore = useGroupStore()
 const chatStore = useChatStore()
 const userStore = useUserStore()
 const globalStore = useGlobalStore()
+
+// 加载更多ui事件处理（开始）
+
+const isEnablePullRefresh = ref(true) // 是否启用下拉刷新，现在设置为滚动到顶才启用
+const scrollContainer = ref(null) // 消息滚动容器
+
+let scrollTop = 0 // 记住当前滑动到哪了
+
+const enablePullRefresh = debounce((top: number) => {
+  isEnablePullRefresh.value = top === 0
+}, 100)
+
+const disablePullRefresh = throttle(() => {
+  isEnablePullRefresh.value = false
+}, 200)
+
+const onScroll = (e: any) => {
+  scrollTop = e.target.scrollTop
+  if (scrollTop < 100) {
+    enablePullRefresh(scrollTop)
+  } else {
+    disablePullRefresh()
+  }
+}
+
+// 加载更多ui事件处理（结束）
+
+const longPressState = ref({
+  showLongPressMenu: false,
+  longPressMenuTop: 0,
+  longPressActive: false,
+  // 禁用所有事件
+  enable: () => {
+    // 设置长按激活状态
+    longPressState.value.longPressActive = true
+    disablePullRefresh()
+  },
+
+  disable: () => {
+    longPressState.value.showLongPressMenu = false
+    longPressState.value.longPressMenuTop = 0
+    longPressState.value.longPressActive = false
+    isEnablePullRefresh.value = true
+    enablePullRefresh(scrollTop)
+  }
+})
 
 const allUserMap = computed(() => {
   const map = new Map<string, any>() // User 是你定义的用户类型
@@ -271,13 +355,6 @@ onMounted(async () => {
   })
 })
 
-const atTop = ref(true) // 是否滚动到顶
-const scrollContainer = ref(null) //消息滚动容器
-
-const onScroll = debounce((e: any) => {
-  atTop.value = e.target.scrollTop === 0
-}, 500)
-
 /**
  * 渲染图片图标的函数工厂
  * @param {string} src - 图标图片路径
@@ -309,6 +386,8 @@ const uiViewsData = ref({
     }
   ]
 })
+
+// 页面蒙板相关处理（开始）
 
 /**
  * 页面蒙板显示状态
@@ -342,16 +421,22 @@ const maskHandler = {
    * 关闭蒙板，恢复滚动状态和位置
    */
   close: () => {
-    setTimeout(() => {
+    const closeModal = () => {
       showMask.value = false
       document.body.style.overflow = ''
       document.body.style.position = ''
       document.body.style.top = ''
       document.body.style.width = ''
       window.scrollTo(0, scrollY) // 恢复滚动位置
-    }, 200)
+    }
+
+    setTimeout(closeModal, 60)
+
+    longPressState.value.disable()
   }
 }
+
+// 页面蒙板相关处理（结束）
 
 /**
  * 添加按钮相关事件处理对象
@@ -397,6 +482,10 @@ const handleSwipeClose = () => {
 }
 
 const intoRoom = (item: any) => {
+  if (longPressState.value.longPressActive) {
+    return
+  }
+
   if (preventClick) {
     return
   }
@@ -461,6 +550,56 @@ const closeKeyboardMask = () => {
     activeEl.blur()
   }
 }
+
+// 长按事件处理（开始）
+
+const longPressOption = ref({
+  delay: 200,
+  modifiers: {
+    prevent: true,
+    stop: true
+  },
+  reset: true,
+  windowResize: true,
+  windowScroll: true,
+  immediate: true,
+  updateTiming: 'sync'
+})
+
+const handleLongPress = (e: PointerEvent, item: SessionItem) => {
+  item // 显式引用它，不让ts报未引用错误，以后需要删除
+
+  e.stopPropagation()
+
+  maskHandler.open()
+
+  longPressState.value.enable()
+
+  // 设置长按菜单top值
+  const setLongPressMenuTop = () => {
+    const target = e.target as HTMLElement
+
+    if (!target) {
+      return
+    }
+
+    const currentTarget = target.closest('.grid') // 向上找父级，找到grid就停止
+
+    if (!currentTarget) {
+      return
+    }
+
+    const rect = currentTarget.getBoundingClientRect()
+
+    longPressState.value.longPressMenuTop = rect.top - rect.height / 3
+  }
+
+  setLongPressMenuTop()
+
+  longPressState.value.showLongPressMenu = true // 显示长按菜单
+}
+
+// 长按事件处理（结束）
 </script>
 
 <style scoped lang="scss">
