@@ -1,8 +1,8 @@
 <template>
   <div class="relative h-100vh w-full overflow-hidden">
-    <CallWindow ref="callWindowRef" class="w-full" />
-
     <SafeAreaPlaceholder type="layout" direction="top" class="pointer-events-none absolute inset-x-0 top-0 z-20" />
+
+    <CallWindow ref="callWindowRef" />
 
     <div
       @click="handleBackClick"
