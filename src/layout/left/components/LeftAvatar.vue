@@ -18,14 +18,14 @@
         <div
           class="bg-[--left-bg-color] text-10px rounded-50% size-12px absolute bottom--2px right--2px border-(2px solid [--left-bg-color])"
           @click.stop="openContent('在线状态', 'onlineStatus', 320, 480)">
-          <img :src="currentState?.url" alt="" class="rounded-50% size-full" />
+          <img :src="statusIcon" alt="" class="rounded-50% size-full" />
         </div>
       </div>
     </template>
     <!-- 用户个人信息框 -->
     <n-flex
       :size="26"
-      :style="`background: linear-gradient(to bottom, ${currentState?.bgColor} 0%, ${themeColor} 100%)`"
+      :style="`background: linear-gradient(to bottom, ${statusBgColor} 0%, ${themeColor} 100%)`"
       class="size-full p-15px box-border rounded-8px"
       vertical>
       <!-- 头像以及信息区域 -->
@@ -46,8 +46,8 @@
               align="center"
               class="item-hover ml--4px"
               @click="openContent('在线状态', 'onlineStatus', 320, 480)">
-              <img :src="currentState?.url" alt="" class="rounded-50% size-18px" />
-              <span>{{ currentState?.title }}</span>
+              <img :src="statusIcon" alt="" class="rounded-50% size-18px" />
+              <span>{{ statusTitle }}</span>
             </n-flex>
           </n-flex>
         </n-flex>
@@ -85,17 +85,20 @@
   </n-popover>
 </template>
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
 import { ThemeEnum } from '@/enums'
 import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils.ts'
+import { useOnlineStatus } from '@/hooks/useOnlineStatus.ts'
 import { leftHook } from '../hook.ts'
 
 const userStore = useUserStore()
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
 const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar as string))
-const { shrinkStatus, currentState, infoShow, themeColor, openContent, handleEditing } = leftHook()
+const { shrinkStatus, infoShow, themeColor, openContent, handleEditing } = leftHook()
+const { statusIcon, statusTitle, statusBgColor } = useOnlineStatus()
 </script>
 <style lang="scss" scoped>
 @use '../style';

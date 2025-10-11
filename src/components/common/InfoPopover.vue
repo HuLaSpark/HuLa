@@ -3,8 +3,11 @@
   <n-flex vertical :size="26" class="size-fit box-border rounded-8px relative min-h-[300px] select-none cursor-default">
     <!-- 背景 -->
     <img
-      class="absolute rounded-t-8px z-2 top-0 left-0 w-full h-100px object-cover"
-      src="@/assets/img/dispersion-bg.png"
+      class="absolute rounded-t-8px z-2 top-0 left-0 w-full h-100px"
+      :class="
+        groupStore.getUserInfo(uid)?.wearingItemId === '6' ? 'object-contain bg-#e9e9e980 dark:bg-#111' : 'object-cover'
+      "
+      :src="groupStore.getUserInfo(uid)?.wearingItemId === '6' ? '/hula.png' : '/img/dispersion-bg.png'"
       alt="" />
     <div class="h-20px"></div>
     <n-flex vertical :size="20" class="size-full p-10px box-border z-10 relative">

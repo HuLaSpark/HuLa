@@ -1,7 +1,7 @@
 # HuLa 项目入门手册 🚀
 
 <p align="center">
-  <img width="350px" height="150px" src="../src/assets/logo/hula.png"/>
+  <img width="350px" height="150px" src="../public/hula.png"/>
 </p>
 
 <p align="center">基于 Tauri、Vite 7、Vue 3 和 TypeScript 构建的跨平台即时通讯系统完整开发指南</p>

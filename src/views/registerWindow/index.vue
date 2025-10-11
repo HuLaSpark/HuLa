@@ -7,7 +7,7 @@
     <n-flex vertical justify="center" :size="25" class="pt-70px w-full">
       <n-flex justify="center" align="center">
         <span class="text-(24px #70938c) textFont">欢迎注册</span>
-        <img class="w-100px h-40px" src="@/assets/logo/hula.png" alt="" />
+        <img class="w-100px h-40px" src="/hula.png" alt="" />
       </n-flex>
 
       <!-- 注册菜单 -->

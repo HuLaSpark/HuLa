@@ -107,7 +107,7 @@
     <!-- 自动登录样式 -->
     <n-flex v-else-if="uiState === 'auto'" vertical :size="29" data-tauri-drag-region>
       <n-flex justify="center" class="mt-15px">
-        <img src="@/assets/logo/hula.png" class="w-140px h-60px" alt="" />
+        <img src="/hula.png" class="w-140px h-60px" alt="" />
       </n-flex>
       <n-flex :size="30" vertical>
         <!-- 头像 -->

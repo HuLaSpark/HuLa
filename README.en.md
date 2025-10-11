@@ -1,6 +1,6 @@
 
 <p align="center">
-  <img width="350px" height="150px" src="src/assets/logo/hula.png"/>
+  <img width="350px" height="150px" src="public/hula.png"/>
 </p>
 
 <p align="center">An instant messaging system built with Tauri, Vite 7, Vue 3, and TypeScript</p>
