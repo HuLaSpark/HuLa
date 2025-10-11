@@ -247,6 +247,11 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
     path: '/mobile/myQRCode',
     name: 'mobileMyQRCode',
     component: MyQRCode
+  },
+  {
+    path: '/mobile/rtcCall',
+    name: 'rtcCall',
+    component: () => import('../mobile/views/rtcCall/index.vue')
   }
 ]
 

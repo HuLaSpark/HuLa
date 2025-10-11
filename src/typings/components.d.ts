@@ -111,6 +111,7 @@ declare module 'vue' {
     RenderMessage: typeof import('./../components/rightBox/renderMessage/index.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    RtcCallFloatCell: typeof import('./../mobile/components/RtcCallFloatCell.vue')['default']
     SafeAreaPlaceholder: typeof import('./../mobile/components/placeholders/SafeAreaPlaceholder.vue')['default']
     Screenshot: typeof import('./../components/common/Screenshot.vue')['default']
     Settings: typeof import('./../mobile/components/my/Settings.vue')['default']

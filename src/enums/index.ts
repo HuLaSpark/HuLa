@@ -109,7 +109,9 @@ export enum MittEnum {
   /** 消息多选 */
   MSG_MULTI_CHOOSE = 'msgMultiChoose',
   /** 扫码事件 */
-  QR_SCAN_EVENT = 'qrScanEvent'
+  QR_SCAN_EVENT = 'qrScanEvent',
+  /** 移动端通话浮层请求 */
+  MOBILE_RTC_CALL_REQUEST = 'mobileRtcCallRequest'
 }
 
 /** 主题类型 */

@@ -448,7 +448,6 @@
 </template>
 
 <script setup lang="ts">
-import { info } from '@tauri-apps/plugin-log'
 import { useDisplayMedia } from '@vueuse/core'
 import AvatarCropper from '@/components/common/AvatarCropper.vue'
 import {
@@ -479,7 +478,7 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { notification, setSessionTop, shield, updateMyRoomInfo, updateRoomInfo } from '@/utils/ImRequestUtils'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
 
-const { createModalWindow, createWebviewWindow } = useWindow()
+const { createModalWindow, startRtcCall } = useWindow()
 // 使用useDisplayMedia获取屏幕共享的媒体流
 const { stream, stop } = useDisplayMedia()
 const chatStore = useChatStore()
@@ -947,55 +946,6 @@ const handleCancel = () => {
   modalShow.value = false
 }
 
-const startRtcCall = async (callType: CallTypeEnum) => {
-  try {
-    // 判断是否为群聊，如果是群聊则跳过
-    if (activeItem.value.type === RoomTypeEnum.GROUP) {
-      window.$message.warning('群聊暂不支持音视频通话')
-      return
-    }
-
-    // 获取当前房间好友的ID（单聊时使用detailId作为remoteUid）
-    const remoteUid = activeItem.value.detailId
-    if (!remoteUid) {
-      window.$message.error('无法获取对方用户信息')
-      return
-    }
-    await createRtcCallWindow(false, remoteUid, callType)
-  } catch (error) {
-    console.error('创建视频通话窗口失败:', error)
-  }
-}
-
-const createRtcCallWindow = async (isIncoming: boolean, remoteUserId: string, callType: CallTypeEnum) => {
-  // 根据是否来电决定窗口尺寸
-  const windowConfig = isIncoming
-    ? { width: 360, height: 90, minWidth: 360, minHeight: 90 } // 来电通知尺寸
-    : callType === CallTypeEnum.VIDEO
-      ? { width: 850, height: 580, minWidth: 850, minHeight: 580 } // 视频通话尺寸
-      : { width: 500, height: 650, minWidth: 500, minHeight: 650 } // 语音通话尺寸
-
-  const type = callType === CallTypeEnum.VIDEO ? '视频通话' : '语音通话'
-  await createWebviewWindow(
-    type, // 窗口标题
-    'rtcCall', // 窗口标签
-    windowConfig.width, // 宽度
-    windowConfig.height, // 高度
-    undefined, // 不需要关闭其他窗口
-    true, // 可调整大小
-    windowConfig.minWidth, // 最小宽度
-    windowConfig.minHeight, // 最小高度
-    false, // 不透明
-    false, // 显示窗口
-    {
-      remoteUserId,
-      roomId: activeItem.value.roomId,
-      callType,
-      isIncoming
-    }
-  )
-}
-
 // 开始编辑群名称
 const startEditGroupName = () => {
   if (!isGroupOwner.value) return
@@ -1052,22 +1002,10 @@ const closeMenu = (event: any) => {
   }
 }
 
-const handleVideoCall = async (remotedUid: string, callType: CallTypeEnum) => {
-  info(`监听到视频通话调用，remotedUid: ${remotedUid}, callType: ${callType}`)
-  await createRtcCallWindow(true, remotedUid, callType)
-}
-
 onMounted(() => {
   window.addEventListener('click', closeMenu, true)
-
   // 初始化本地变量
   initLocalValues()
-
-  useMitt.on(WsResponseMessageType.VideoCallRequest, (event) => {
-    info(`收到通话请求：${JSON.stringify(event)}`)
-    const remoteUid = event.callerUid
-    handleVideoCall(remoteUid, event.isVideo ? CallTypeEnum.VIDEO : CallTypeEnum.AUDIO)
-  })
 })
 
 onUnmounted(() => {

@@ -162,7 +162,7 @@ import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { searchFriend, searchGroup } from '@/utils/ImRequestUtils'
 import { isMobile } from '@/utils/PlatformConstants'
-import router from '~/src/router'
+import router from '@/router'
 
 const contactStore = useContactStore()
 const userStore = useUserStore()
