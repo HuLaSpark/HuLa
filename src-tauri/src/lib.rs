@@ -51,6 +51,8 @@ use std::ops::Deref;
 use common::init::CustomInit;
 #[cfg(mobile)]
 mod mobiles;
+#[cfg(mobile)]
+use mobiles::splash;
 
 #[derive(Debug)]
 pub struct AppData {
@@ -348,6 +350,7 @@ fn setup_logout_listener(app_handle: tauri::AppHandle) {
 #[cfg(mobile)]
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 fn setup_mobile() {
+    splash::show();
     // 创建一个缓存实例
     // let cache: Cache<String, String> = Cache::builder()
     //     // Time to idle (TTI):  30 minutes

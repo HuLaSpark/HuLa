@@ -49,12 +49,29 @@ if (document.readyState === 'loading') {
   setup()
 }
 
+const hideInitialSplash = () => {
+  const splash = document.getElementById('initial-splash')
+  if (!splash) {
+    return
+  }
+
+  splash.classList.add('initial-splash--hide')
+  splash.addEventListener(
+    'transitionend',
+    () => {
+      splash.remove()
+    },
+    { once: true }
+  )
+}
+
 // Setup function
 async function setup() {
   // Set the frontend task as being completed
   console.log('set_complete frontend')
   await import('@/services/webSocketAdapter')
   await invoke('set_complete', { task: 'frontend' })
+  hideInitialSplash()
   const router = useRouter()
   router.push('/mobile/login')
 }

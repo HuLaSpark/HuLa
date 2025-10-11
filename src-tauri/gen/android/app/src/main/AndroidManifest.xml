@@ -36,7 +36,7 @@
           android:launchMode="singleTask"
           android:resizeableActivity="true"
           android:windowSoftInputMode="adjustNothing"
-          android:theme="@style/Theme.hula"
+          android:theme="@style/Theme.hula.Launcher"
           android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode">
 
           <intent-filter>

@@ -1,19 +1,17 @@
 package com.hula_ios.app
 
-import android.graphics.Rect
 import android.os.Bundle
 import android.webkit.WebView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
-import android.view.ViewTreeObserver
-import kotlin.math.roundToInt
 import android.Manifest
 import androidx.activity.result.contract.ActivityResultContracts
+import kotlin.math.roundToInt
 
 class MainActivity : TauriActivity() {
 
-     private val requestPermissionLauncher =
+    private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
             permissions.entries.forEach { entry ->
                 val permissionName = entry.key
@@ -58,7 +56,8 @@ class MainActivity : TauriActivity() {
         super.onWebViewCreate(webView)
 
         // 初始化 WebView 背景填充
-        // webView.setBackgroundColor(0x00000000) // 透明，父布局背景可见
+        webView.setBackgroundColor(0x00000000) // 透明，允许窗口背景延续启动图
+        window.setBackgroundDrawableResource(R.drawable.launch_screen)
 
         // 监听安全区 Insets 并注入 CSS 变量
         ViewCompat.setOnApplyWindowInsetsListener(webView) { _, insets ->

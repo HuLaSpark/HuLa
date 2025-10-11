@@ -1,5 +1,4 @@
-use tauri::{AppHandle, Manager, State, webview::WebviewWindow};
-use url::Url;
+use tauri::{AppHandle, State};
 
 use crate::AppData;
 
@@ -17,7 +16,7 @@ pub mod user_command;
 // A custom task for setting the state of a setup task
 #[tauri::command]
 pub async fn set_complete(
-    app: AppHandle,
+    _app: AppHandle,
     state: State<'_, AppData>,
     task: String,
 ) -> Result<(), ()> {
@@ -26,6 +25,10 @@ pub async fn set_complete(
         "frontend" => *state.frontend_task.lock().await = true,
         "backend" => *state.backend_task.lock().await = true,
         _ => panic!("invalid task completed!"),
+    }
+    #[cfg(all(mobile, target_os = "ios"))]
+    if task == "frontend" {
+        crate::mobiles::splash::hide();
     }
     tracing::info!("set_complete {}: {:?}", task, state.frontend_task);
     tracing::info!("set_complete {}: {:?}", task, state.backend_task);

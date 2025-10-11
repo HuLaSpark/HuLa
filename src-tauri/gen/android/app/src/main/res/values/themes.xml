@@ -14,4 +14,8 @@
         <item name="android:enforceStatusBarContrast">false</item>
         <item name="android:enforceNavigationBarContrast">false</item>
     </style>
+
+    <style name="Theme.hula.Launcher" parent="Theme.hula">
+        <item name="android:windowBackground">@drawable/launch_screen</item>
+    </style>
 </resources>
