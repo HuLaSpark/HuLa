@@ -27,20 +27,11 @@
       </div>
 
       <div class="flex justify-between px-25px flex-1 items-center py-10px">
-        <div
-          v-for="item in options"
-          :key="item.icon"
-          @click="item.onClick"
-          :class="{ 'active-icon': activeIcon === item.icon }">
-          <div v-if="item.label !== 'file' && item.label !== 'image'">
+        <template v-for="item in options" :key="item.icon" :class="{ 'active-icon': activeIcon === item.icon }">
+          <div v-if="item.label !== 'file' && item.label !== 'image' && item.isShow()" @click="item.onClick">
             <svg class="h-24px w-24px iconpark-icon">
               <use :href="`#${item.icon}`"></use>
             </svg>
-            <!-- <svg
-              v-if="item.showArrow"
-              :class="['h-15px w-15px iconpark-icon transition-transform duration-300', item.isRotate ? 'rotate' : '']">
-              <use href="#down" />
-            </svg> -->
           </div>
           <div v-else-if="item.label === 'file'">
             <van-uploader multiple :after-read="afterReadFile">
@@ -72,17 +63,7 @@
               </svg>
             </van-uploader>
           </div>
-          <div v-else-if="item.label === 'videoCall'">
-            <svg class="h-24px w-24px iconpark-icon">
-              <use :href="`#${item.icon}`"></use>
-            </svg>
-            <svg
-              v-if="item.showArrow"
-              :class="['h-15px w-15px iconpark-icon transition-transform duration-300', item.isRotate ? 'rotate' : '']">
-              <use href="#down" />
-            </svg>
-          </div>
-        </div>
+        </template>
       </div>
 
       <!-- 展开面板 -->
@@ -109,7 +90,7 @@
 import type { UploaderFileListItem } from 'vant/es'
 import { useMobileStore } from '@/stores/mobile'
 import 'vant/es/dialog/style'
-import { CallTypeEnum } from '@/enums'
+import { CallTypeEnum, RoomTypeEnum } from '@/enums'
 import { useGlobalStore } from '@/stores/global'
 
 // ==== 输入框事件 ====
@@ -119,6 +100,10 @@ const activeIcon = ref<string | null>(null)
 const emit = defineEmits(['focus', 'blur', 'updateHeight'])
 const pickRtcCall = ref(false)
 const router = useRouter()
+
+// 判断当前是否为群聊
+const isGroup = computed(() => globalStore.currentSession?.type === RoomTypeEnum.GROUP)
+console.log('isGroup', isGroup.value)
 
 const uploadFileList = ref<
   {
@@ -274,11 +259,11 @@ const handleSend = async () => {
 
 // ==== 展开面板 ====
 const options = ref([
-  { label: 'emoji', icon: 'smiling-face', showArrow: true, isRotate: false, onClick: () => {} },
-  { label: 'file', icon: 'file', showArrow: false, isRotate: true, onClick: () => {} },
-  { label: 'image', icon: 'photo', showArrow: false, isRotate: true, onClick: () => {} },
-  { label: 'video', icon: 'voice', showArrow: true, isRotate: false, onClick: () => {} },
-  { label: 'history', icon: 'history', showArrow: true, isRotate: false, onClick: () => {} },
+  { label: 'emoji', icon: 'smiling-face', showArrow: true, isRotate: false, onClick: () => {}, isShow: () => true },
+  { label: 'file', icon: 'file', showArrow: false, isRotate: true, onClick: () => {}, isShow: () => true },
+  { label: 'image', icon: 'photo', showArrow: false, isRotate: true, onClick: () => {}, isShow: () => true },
+  { label: 'video', icon: 'voice', showArrow: true, isRotate: false, onClick: () => {}, isShow: () => true },
+  { label: 'history', icon: 'history', showArrow: true, isRotate: false, onClick: () => {}, isShow: () => true },
   {
     label: 'videoCall',
     icon: 'video-one',
@@ -286,6 +271,9 @@ const options = ref([
     isRotate: false,
     onClick: () => {
       pickRtcCall.value = true
+    },
+    isShow: () => {
+      return !isGroup.value
     }
   }
 ])
