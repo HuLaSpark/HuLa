@@ -10,8 +10,10 @@ import router from '@/router'
 import { pinia } from '@/stores'
 import { initializePlatform } from '@/utils/PlatformConstants'
 import { invoke } from '@tauri-apps/api/core'
+import { isMobile } from '@/utils/PlatformConstants'
 
 initializePlatform()
+import('@/services/webSocketAdapter')
 
 const app = createApp(App)
 app.use(router).use(pinia).use(TlbsMap).directive('resize', vResize).directive('slide', vSlide).mount('#app')
@@ -41,12 +43,12 @@ export const forceUpdateMessageTop = (topValue: number) => {
 
 initMobileClient()
 
-// Effectively a JavaScript main function
-if (document.readyState === 'loading') {
-  window.addEventListener('DOMContentLoaded', setup)
-} else {
-  // DOMContentLoaded 已经触发，直接执行
-  setup()
+if (isMobile()) {
+  if (document.readyState === 'loading') {
+    window.addEventListener('DOMContentLoaded', setup)
+  } else {
+    setup()
+  }
 }
 
 const hideInitialSplash = () => {
@@ -65,13 +67,9 @@ const hideInitialSplash = () => {
   )
 }
 
-// Setup function
 async function setup() {
-  // Set the frontend task as being completed
-  console.log('set_complete frontend')
   await import('@/services/webSocketAdapter')
   await invoke('set_complete', { task: 'frontend' })
   hideInitialSplash()
-  const router = useRouter()
   router.push('/mobile/login')
 }
