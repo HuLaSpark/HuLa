@@ -503,7 +503,9 @@ listen('relogin', async () => {
 })
 
 onBeforeMount(async () => {
-  // 默认执行一次
+  // 刷新好友申请列表
+  await contactStore.getApplyPage(true)
+  // 刷新好友列表
   await contactStore.getContactList(true)
   // 获取最新的未读数
   await contactStore.getApplyUnReadCount()

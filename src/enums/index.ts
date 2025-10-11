@@ -642,6 +642,8 @@ export enum ImUrlEnum {
   NOTICE_UN_READ_COUNT = 'noticeUnReadCount',
   /** 请求通知页面 */
   REQUEST_NOTICE_PAGE = 'requestNoticePage',
+  /** 通知已读 */
+  REQUEST_NOTICE_READ = 'RequestNoticeRead',
   /** 获取联系人列表 */
   GET_CONTACT_LIST = 'getContactList',
   /** 搜索好友 */
