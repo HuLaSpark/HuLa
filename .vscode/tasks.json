@@ -6,8 +6,30 @@
       "script": "tauri:build:debug",
       "group": "build",
       "problemMatcher": [],
-      "label": "npm: tauri:build:debug",
+      "label": "npm:tauri:build:debug",
       "detail": "tauri build --debug"
-    }
+    },
+    {
+      "label": "ui:td",
+      "type": "shell",
+      // `dev` keeps running in the background
+      // ideally you should also configure a `problemMatcher`
+      // see https://code.visualstudio.com/docs/editor/tasks#_can-a-background-task-be-used-as-a-prelaunchtask-in-launchjson
+      "isBackground": true,
+      // change this to your `beforeDevCommand`:
+      "command": "pnpm",
+      "args": ["td"]
+    },
+    {
+      "label": "ui:idev",
+      "type": "shell",
+      // `dev` keeps running in the background
+      // ideally you should also configure a `problemMatcher`
+      // see https://code.visualstudio.com/docs/editor/tasks#_can-a-background-task-be-used-as-a-prelaunchtask-in-launchjson
+      "isBackground": true,
+      // change this to your `beforeDevCommand`:
+      "command": "pnpm",
+      "args": ["idev"]
+    },
   ]
 }

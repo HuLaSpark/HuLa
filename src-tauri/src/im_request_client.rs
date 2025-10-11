@@ -11,6 +11,7 @@ use crate::{
     vo::vo::{LoginReq, LoginResp, RefreshTokenReq, RefreshTokenResp},
 };
 
+#[derive(Debug)]
 pub struct ImRequestClient {
     client: reqwest::Client,
     base_url: String,
@@ -268,7 +269,6 @@ pub enum ImUrl {
     HandleInvite,
     NoticeUnReadCount,
     RequestNoticePage,
-    RequestNoticeRead,
     GetContactList,
     SearchFriend,
     ChangeUserState,
@@ -373,7 +373,6 @@ impl ImUrl {
             ImUrl::HandleInvite => (http::Method::POST, "im/room/apply/handler/apply"),
             ImUrl::NoticeUnReadCount => (http::Method::GET, "im/room/notice/unread"),
             ImUrl::RequestNoticePage => (http::Method::GET, "im/room/notice/page"),
-            ImUrl::RequestNoticeRead => (http::Method::POST, "im/room/notice/read"),
             ImUrl::GetFriendPage => (http::Method::GET, "im/user/friend/page"),
             ImUrl::GetContactList => (http::Method::GET, "im/chat/contact/list"),
             ImUrl::SearchFriend => (http::Method::GET, "im/user/friend/search"),
@@ -482,7 +481,6 @@ impl ImUrl {
             "handleInvite" => Ok(ImUrl::HandleInvite),
             "noticeUnReadCount" => Ok(ImUrl::NoticeUnReadCount),
             "requestNoticePage" => Ok(ImUrl::RequestNoticePage),
-            "requestNoticeRead" => Ok(ImUrl::RequestNoticeRead),
             "getContactList" => Ok(ImUrl::GetContactList),
             "searchFriend" => Ok(ImUrl::SearchFriend),
 
