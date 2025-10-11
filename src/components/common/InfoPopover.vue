@@ -30,9 +30,9 @@
               <div
                 @click="openContent('在线状态', 'onlineStatus', 320, 480)"
                 class="z-30 absolute top-72px left-72px cursor-pointer border-(6px solid [--avatar-border-color]) rounded-full size-18px"
-                :class="[activeStatus === OnlineEnum.ONLINE ? 'bg-#1ab292' : 'bg-#909090']"></div>
+                :class="[displayActiveStatus === OnlineEnum.ONLINE ? 'bg-#1ab292' : 'bg-#909090']"></div>
             </template>
-            <span>{{ activeStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}</span>
+            <span>{{ displayActiveStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}</span>
           </n-popover>
         </template>
 
@@ -176,7 +176,7 @@ import { useSettingStore } from '@/stores/setting'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 
-const { uid, activeStatus } = defineProps<{
+const { uid } = defineProps<{
   uid: string
   activeStatus?: OnlineEnum
 }>()
@@ -198,6 +198,10 @@ const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(groupStore.getUserInfo
 const isCurrentUserUid = computed(() => userUid.value === uid)
 /** 是否是我的好友 */
 const isMyFriend = computed(() => !!contactStore.contactsList.find((item) => item.uid === uid))
+// 显示的在线状态
+const displayActiveStatus = computed(() => {
+  return groupStore.getUserInfo(uid)?.activeStatus ?? OnlineEnum.OFFLINE
+})
 
 // 计算当前用户状态图标
 const statusIcon = computed(() => {
@@ -225,7 +229,7 @@ const currentStateTitle = computed(() => {
       return state.title
     }
   }
-  return activeStatus === OnlineEnum.ONLINE ? '在线' : '离线'
+  return displayActiveStatus.value === OnlineEnum.ONLINE ? '在线' : '离线'
 })
 
 const openEditInfo = () => {
