@@ -12,7 +12,6 @@ pub mod room_member_command;
 pub mod setting_command;
 pub mod user_command;
 
-
 // A custom task for setting the state of a setup task
 #[tauri::command]
 pub async fn set_complete(
@@ -26,7 +25,7 @@ pub async fn set_complete(
         "backend" => *state.backend_task.lock().await = true,
         _ => panic!("invalid task completed!"),
     }
-    #[cfg(all(mobile, target_os = "ios"))]
+    #[cfg(mobile)]
     if task == "frontend" {
         crate::mobiles::splash::hide();
     }

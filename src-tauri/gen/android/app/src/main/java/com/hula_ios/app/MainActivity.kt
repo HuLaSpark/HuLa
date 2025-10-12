@@ -2,6 +2,7 @@ package com.hula_ios.app
 
 import android.os.Bundle
 import android.webkit.WebView
+import android.webkit.WebChromeClient
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -10,6 +11,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import kotlin.math.roundToInt
 
 class MainActivity : TauriActivity() {
+
+    private var splashHidden = false
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
@@ -58,6 +61,18 @@ class MainActivity : TauriActivity() {
         // 初始化 WebView 背景填充
         webView.setBackgroundColor(0x00000000) // 透明，允许窗口背景延续启动图
         window.setBackgroundDrawableResource(R.drawable.launch_screen)
+        splashHidden = false
+
+        webView.webChromeClient = object : WebChromeClient() {
+            override fun onProgressChanged(view: WebView, newProgress: Int) {
+                super.onProgressChanged(view, newProgress)
+                if (!splashHidden && newProgress >= 90) {
+                    SplashScreen.hide(this@MainActivity)
+                    splashHidden = true
+                }
+            }
+        }
+
 
         // 监听安全区 Insets 并注入 CSS 变量
         ViewCompat.setOnApplyWindowInsetsListener(webView) { _, insets ->

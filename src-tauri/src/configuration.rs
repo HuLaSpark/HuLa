@@ -188,6 +188,7 @@ pub fn get_configuration(app_handle: &AppHandle) -> Result<Settings, config::Con
 
     #[cfg(target_os = "android")]
     {
+        let _ = app_handle;
         // 读取 base.yaml 内容
         let base_content = std::str::from_utf8(include_bytes!("../configuration/base.yaml"))
             .map_err(|e| config::ConfigError::Message(e.to_string()))?;
