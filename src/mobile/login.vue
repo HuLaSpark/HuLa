@@ -110,7 +110,7 @@
         tertiary
         style="color: #fff"
         class="w-full mt-8px mb-50px gradient-button"
-        @click="normalLogin(false)">
+        @click="normalLogin('MOBILE')">
         <span>{{ loginText }}</span>
       </n-button>
 
@@ -308,13 +308,11 @@
 </template>
 
 <script setup lang="ts">
-import { invoke } from '@tauri-apps/api/core'
 import { debounce } from 'lodash-es'
 import { lightTheme } from 'naive-ui'
 import PinInput from '@/components/common/PinInput.vue'
 import Validation from '@/components/common/Validation.vue'
 import router from '@/router'
-import { getEnhancedFingerprint } from '@/services/fingerprint'
 import type { RegisterUserReq, UserInfoType } from '@/services/types'
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import { useMobileStore } from '@/stores/mobile'
@@ -327,7 +325,7 @@ import { useMitt } from '../hooks/useMitt'
 import { WsResponseMessageType } from '../services/wsType'
 import { useSettingStore } from '../stores/setting'
 import { clearListener } from '../utils/ReadCountQueue'
-import { useInit } from '@/hooks/useInit'
+import { useLogin } from '../hooks/useLogin'
 
 // 本地注册信息类型，扩展API类型以包含确认密码
 interface LocalRegisterInfo extends RegisterUserReq {}
@@ -348,15 +346,6 @@ const activeTab = ref<'login' | 'register'>('login')
 /** 当前注册步骤 */
 const currentStep = ref(1)
 
-/** 登录账号信息 */
-const userInfo = ref({
-  account: '',
-  password: '',
-  avatar: '/logo.png',
-  nickName: '',
-  uid: ''
-})
-
 /** 注册账号信息 */
 const registerInfo = ref<LocalRegisterInfo>({
   nickName: '',
@@ -374,10 +363,7 @@ const registerInfo = ref<LocalRegisterInfo>({
 const accountPH = ref('输入HuLa账号')
 const passwordPH = ref('输入HuLa密码')
 const protocol = ref(true)
-const loginDisabled = ref(false)
-const loading = ref(false)
 const arrowStatus = ref(false)
-const loginText = ref('登录')
 
 // 注册相关的占位符和状态
 const registerNamePH = ref('输入HuLa昵称')
@@ -388,6 +374,7 @@ const registerCodePH = ref('输入验证码')
 const registerProtocol = ref(true)
 const registerLoading = ref(false)
 const finalRegisterLoading = ref(false)
+const { normalLogin, loading, loginText, loginDisabled, info: userInfo } = useLogin()
 
 /** 验证码 */
 const captcha = ref({ base64: '', uuid: '' })
@@ -481,8 +468,8 @@ const resetLoginForm = () => {
     account: '',
     password: '',
     avatar: '',
-    nickName: '',
-    uid: ''
+    uid: '',
+    name: ''
   }
   accountPH.value = '输入HuLa账号'
   passwordPH.value = '输入HuLa密码'
@@ -590,60 +577,6 @@ const handleRegisterComplete = async () => {
   }
 }
 
-const { init } = useInit()
-
-/**登录后创建主页窗口*/
-const normalLogin = async (auto = false) => {
-  loading.value = true
-  loginText.value = '登录中...'
-  loginDisabled.value = true
-  // 根据auto参数决定从哪里获取登录信息
-  const loginInfo = auto ? (userStore.userInfo as UserInfoType) : userInfo.value
-  const { account } = loginInfo
-
-  const clientId = await getEnhancedFingerprint()
-  localStorage.setItem('clientId', clientId)
-
-  await invoke('login_command', {
-    data: {
-      account: account,
-      password: userInfo.value.password,
-      deviceType: 'MOBILE',
-      systemType: '2', // 2是im 1是后台
-      clientId,
-      grantType: 'PASSWORD',
-      isAutoLogin: auto,
-      uid: auto ? userStore.userInfo!.uid : null
-    }
-  })
-    .then(async () => {
-      settingStore.toggleLogin(true, false)
-      loginDisabled.value = true
-      window.$message.success('登录成功')
-      // 初始化数据
-      await init()
-      // 登录处理
-      loading.value = false
-    })
-    .catch((e: any) => {
-      console.error('登录失败，出现未知错误:', e)
-      if (e) {
-        window.$message.warning(e)
-      } else {
-        window.$message.warning('登录失败，出现未知错误')
-      }
-
-      loading.value = false
-      loginDisabled.value = false
-      loginText.value = '登录'
-      // 如果是自动登录失败，重置按钮状态允许手动登录
-      if (auto) {
-        loginDisabled.value = false
-        loginText.value = '登录'
-      }
-    })
-}
-
 /**
  * 给账号赋值
  * @param item 账户信息
@@ -652,7 +585,7 @@ const giveAccount = (item: UserInfoType) => {
   const { account, avatar, name, uid } = item
   userInfo.value.account = account || ''
   userInfo.value.avatar = avatar
-  userInfo.value.nickName = name
+  userInfo.value.name = name
   userInfo.value.uid = uid
   arrowStatus.value = false
 }
@@ -728,23 +661,12 @@ onMounted(async () => {
   })
 
   if (login.value.autoLogin) {
-    normalLogin(true)
+    normalLogin('MOBILE', true)
   } else {
     loginHistories.length > 0 && giveAccount(loginHistories[0])
   }
 
   await checkUpdate('login', true)
-
-  // 如果找到uid就自动登录，找不到就手动登录
-  // if (uid) {
-  //   loading.value = true
-  //   await loginCommand({ uid }, true).then(() => {
-  //     setTimeout(() => {
-  //       loading.value = false
-  //       router.push('/mobile/message')
-  //     }, 100)
-  //   })
-  // }
 })
 
 onUnmounted(() => {

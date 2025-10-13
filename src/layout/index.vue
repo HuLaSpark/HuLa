@@ -54,12 +54,10 @@ import { audioManager } from '@/utils/AudioManager'
 import { isWindows } from '@/utils/PlatformConstants'
 import { clearListener, initListener, readCountQueue } from '@/utils/ReadCountQueue'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
-import { useInit } from '@/hooks/useInit'
 
 const appWindow = WebviewWindow.getCurrent()
 const loadingPercentage = ref(10)
 const loadingText = ref('正在加载应用...')
-const { init } = useInit()
 
 // 修改异步组件的加载配置
 const AsyncLeft = defineAsyncComponent({
@@ -78,9 +76,6 @@ const AsyncCenter = defineAsyncComponent({
     await import('./left/index.vue')
     loadingText.value = '正在加载数据中...'
     const comp = await import('./center/index.vue')
-
-    await init()
-
     loadingPercentage.value = 66
     return comp
   }

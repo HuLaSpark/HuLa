@@ -35,7 +35,7 @@ pub struct LoginReq {
     pub uid: Option<String>, // 用于自动登录时传递用户ID
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct LoginResp {
     pub token: String,

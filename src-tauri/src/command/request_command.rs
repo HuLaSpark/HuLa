@@ -33,8 +33,12 @@ pub async fn login_command(
                         refresh_token: refresh_token.clone(),
                     };
 
-                    let mut rc = state.rc.lock().await;
-                    match rc.refresh_token(refresh_req).await {
+                    let refresh_result = {
+                        let mut rc = state.rc.lock().await;
+                        rc.refresh_token(refresh_req).await
+                    };
+
+                    match refresh_result {
                         Ok(Some(refresh_resp)) => {
                             info!("Auto login successful, user ID: {}", uid);
 
@@ -102,6 +106,7 @@ pub async fn login_command(
 }
 
 async fn handle_login_success(login_resp: &LoginResp, state: &State<'_, AppData>) -> Result<(), String> {
+    info!("handle_login_success, login_resp: {:?}", login_resp);
     // 从登录响应中获取用户标识，这里使用 uid 作为 uid
     let uid = &login_resp.uid;
 
