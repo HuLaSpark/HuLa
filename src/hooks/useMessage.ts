@@ -242,7 +242,7 @@ export const useMessage = () => {
         console.log('删除好友或退出群聊执行')
         // 单聊：删除好友
         if (item.type === RoomTypeEnum.SINGLE) {
-          await contactStore.onDeleteContact(item.detailId)
+          await contactStore.onDeleteFriend(item.detailId)
           await handleMsgDelete(item.roomId)
           window.$message.success('已删除好友')
           return

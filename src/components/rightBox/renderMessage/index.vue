@@ -141,6 +141,7 @@
           </n-flex>
           <!--  气泡样式  -->
           <ContextMenu
+            v-on-long-press="[(e) => handleLongPress(e, handleItemType(message.message.type)), longPressOption]"
             :content="message"
             @contextmenu="handleMacSelect"
             @mouseenter="() => (hoverMsgId = message.message.id)"
@@ -293,6 +294,7 @@ import Video from './Video.vue'
 import VideoCall from './VideoCall.vue'
 import Voice from './Voice.vue'
 import { toFriendInfoPage } from '@/utils/routerUtils'
+import { vOnLongPress } from '@vueuse/components'
 
 const props = withDefaults(
   defineProps<{
@@ -505,6 +507,63 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('click', closeMenu, true)
 })
+
+/**
+ * 长按事件（开始）
+ */
+
+const longPressOption = ref({
+  delay: 700,
+  modifiers: {
+    prevent: true,
+    stop: true
+  },
+  reset: true,
+  windowResize: true,
+  windowScroll: true,
+  immediate: true,
+  updateTiming: 'sync'
+})
+
+const handleLongPress = (e: PointerEvent, _menu: any) => {
+  // 1. 阻止默认行为（防止系统菜单出现）
+  e.preventDefault()
+  e.stopPropagation()
+
+  // // 2. 获取目标元素
+  const target = e.target as HTMLElement
+
+  const preventClick = (event: Event) => {
+    event.stopPropagation()
+    event.preventDefault()
+    document.removeEventListener('click', preventClick, true)
+    document.removeEventListener('pointerup', preventClick, true)
+  }
+
+  // 3. 添加临时事件监听器，阻止后续点击事件
+  document.addEventListener('click', preventClick, true)
+  document.addEventListener('pointerup', preventClick, true)
+
+  // 4. 模拟右键点击事件
+  const contextMenuEvent = new MouseEvent('contextmenu', {
+    bubbles: true,
+    cancelable: true,
+    clientX: e.clientX,
+    clientY: e.clientY,
+    button: 2 // 明确指定右键
+  })
+
+  target.dispatchEvent(contextMenuEvent)
+
+  setTimeout(() => {
+    document.removeEventListener('click', preventClick, true)
+    document.removeEventListener('pointerup', preventClick, true)
+  }, 300)
+}
+
+/**
+ * 长按事件（结束）
+ */
 </script>
 <style scoped lang="scss">
 @use '@/styles/scss/render-message';

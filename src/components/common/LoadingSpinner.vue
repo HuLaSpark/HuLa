@@ -2,7 +2,7 @@
   <div data-tauri-drag-region class="flex-col-center gap-30px size-full">
     <n-flex vertical justify="center" :size="20">
       <div class="logo-container">
-        <img src="@/assets/logo/hula.png" class="logo-image" alt="HuLa Logo" loading="eager" />
+        <img src="/hula.png" class="logo-image" alt="HuLa Logo" loading="eager" />
       </div>
       <n-progress
         type="line"

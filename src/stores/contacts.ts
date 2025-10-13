@@ -65,8 +65,9 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
   /**
    * 获取好友申请列表
    * @param isFresh 是否刷新列表，true则重新加载，false则加载更多
+   * @param click 是否点击刷新，true则点击清空通知未读，false则仅仅请求通知列表
    */
-  const getApplyPage = async (isFresh = false) => {
+  const getApplyPage = async (isFresh = false, click = false) => {
     // 非刷新模式下，如果已经加载完或正在加载中，则直接返回
     if (!isFresh) {
       if (applyPageOptions.value.isLast) return
@@ -82,6 +83,7 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
       const res = await requestNoticePage({
         pageNo: applyPageOptions.value.pageNo,
         pageSize: 30,
+        click: click,
         cursor: isFresh ? '' : applyPageOptions.value.cursor
       })
       if (!res) return
@@ -141,12 +143,10 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
    * 1. 调用删除好友接口
    * 2. 刷新好友列表
    */
-  const onDeleteContact = async (uid: string) => {
+  const onDeleteFriend = async (uid: string) => {
     if (!uid) return
     // 删除好友
     await deleteFriend({ targetUid: uid })
-    // 刷新好友申请列表
-    // getRequestFriendsList(true)
     // 刷新好友列表
     await getContactList(true)
   }
@@ -159,7 +159,7 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
     requestFriendsList,
     contactsOptions,
     applyPageOptions,
-    onDeleteContact,
+    onDeleteFriend,
     onHandleInvite,
     deleteContact
   }

@@ -110,6 +110,7 @@
           <n-button
             :disabled="loading"
             v-if="!props.isMyPage && !isMyFriend"
+            @click="handleAddFriend"
             class="px-4 py-10px font-bold text-center bg-#13987f text-white rounded-full text-12px">
             +&nbsp;添加好友
           </n-button>
@@ -169,9 +170,7 @@ const globalStore = useGlobalStore()
 const chatStore = useChatStore()
 
 const { preloadChatRoom } = useMessage()
-
 const uid = route.params.uid as string
-
 const isMyFriend = ref(props.isMyFriend)
 
 const toChatRoom = async () => {
@@ -190,18 +189,13 @@ const toChatRoom = async () => {
     router.push(`/mobile/chatRoom/chatMain`)
   } catch (error) {
     console.error('私聊尝试进入聊天室失败:', error)
-    // window.$message.error('显示会话失败')
   }
 }
 
-// const toChatRoom = async () => {
-//   try {
-//     // await preloadChatRoom(uid)
-//     // router.push(`/mobile/chatRoom/chatMain`)
-//   } catch (error) {
-//     console.error('尝试进入私聊错误：', error)
-//   }
-// }
+const handleAddFriend = async () => {
+  globalStore.addFriendModalInfo.uid = uid
+  router.push('/mobile/mobileFriends/confirmAddFriend')
+}
 
 // 用户详情信息，默认字段只写必要的，不加可能会报错undefined
 const userDetailInfo = ref<UserItem | UserInfoType | undefined>({
@@ -285,8 +279,11 @@ const handleDelete = () => {
       if (userDetailInfo.value?.uid) {
         try {
           loading.value = true
-          await contactStore.onDeleteContact(userDetailInfo.value.uid)
+          await contactStore.onDeleteFriend(userDetailInfo.value.uid)
+          isMyFriend.value = false
+          chatStore.getSessionList(true)
           window.$message.success('已删除好友')
+          router.back()
         } catch (error) {
           window.$message.warning('删除失败')
           console.error('删除好友失败：', error)

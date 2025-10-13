@@ -283,7 +283,7 @@ const handleFriendAction = async (action: string, applyId: string) => {
 
 onMounted(() => {
   // 组件挂载时刷新一次列表
-  contactStore.getApplyPage(true)
+  contactStore.getApplyPage(true, true)
 })
 </script>
 

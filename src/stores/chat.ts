@@ -547,7 +547,28 @@ export const useChatStore = defineStore(
       const message = currentMessageMap.value!.get(msgId)
       if (message && typeof data.recallUid === 'string') {
         const cacheUser = groupStore.getUserInfo(data.recallUid)!
-        const recallMessageBody = `"${cacheUser.name}"撤回了一条消息`
+        let recallMessageBody: string
+
+        // 判断是否是撤回他人的消息（群主或管理员撤回成员消息）
+        const isRecallOthers = message.fromUser.uid !== data.recallUid
+
+        if (isRecallOthers) {
+          // 检查撤回人是否是群主或管理员
+          const isLord = groupStore.isCurrentLord(data.recallUid)
+          const isAdmin = groupStore.isAdmin(data.recallUid)
+
+          if (isLord) {
+            recallMessageBody = `群主"${cacheUser.name}"撤回了一条成员消息`
+          } else if (isAdmin) {
+            recallMessageBody = `管理员"${cacheUser.name}"撤回了一条成员消息`
+          } else {
+            // 普通成员撤回他人消息（一般不应该出现）
+            recallMessageBody = `"${cacheUser.name}"撤回了一条消息`
+          }
+        } else {
+          // 撤回自己的消息
+          recallMessageBody = `"${cacheUser.name}"撤回了一条消息`
+        }
 
         // 更新前端缓存
         message.message.type = MsgEnum.RECALL
