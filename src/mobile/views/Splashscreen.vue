@@ -1,20 +1,27 @@
 <template>
   <!-- 🚀 加载页 DOM -->
-  <div id="loading-page">
-    <img src="/Mobile/4.png" alt="hula" class="w-300px h-200px mb-140px" />
-    <div class="bottom-bar">
-      <img src="/Mobile/3.png" alt="hula" class="size-50px rounded-14px" />
-      <img src="/Mobile/1.png" alt="hula" class="w-78px h-40px" />
-    </div>
-  </div>
+  <div id="loading-page" class="h-100vh"></div>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { useSettingStore } from '@/stores/setting'
+import { useLogin } from '@/hooks/useLogin'
+
+const settingStore = useSettingStore()
+const router = useRouter()
+const { normalLogin } = useLogin()
+
+onMounted(() => {
+  if (settingStore.login.autoLogin) {
+    normalLogin('MOBILE')
+  } else {
+    router.push('/mobile/login')
+  }
+})
+</script>
 
 <style scoped lang="scss">
 #loading-page {
-  position: fixed;
-  inset: 0;
   z-index: 9999;
   background-image: url('/Mobile/2.png');
   background-size: cover;
@@ -24,17 +31,6 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-  transition: opacity 0.4s ease-out;
   opacity: 1;
-}
-
-.bottom-bar {
-  position: absolute;
-  bottom: 40px;
-  display: flex;
-  gap: 16px;
-  align-items: center;
 }
 </style>

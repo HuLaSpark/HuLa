@@ -98,14 +98,14 @@ pub async fn update_user_last_opt_time(state: State<'_, AppData>) -> Result<(), 
 pub async fn get_user_tokens(state: State<'_, AppData>) -> Result<TokenResponse, String> {
     info!("📡 Getting user token info");
 
-    let rc = state.rc.lock().await;
+    let user_info = state.user_info.lock().await;
 
     let response = TokenResponse {
-        token: rc.token.clone(),
-        refresh_token: rc.refresh_token.clone(),
+        token: user_info.token.clone().into(),
+        refresh_token: user_info.refresh_token.clone().into(),
     };
 
-    info!("✅ Successfully retrieved user token info");
+    info!("✅ Successfully retrieved user token info: {:?}", response);
     Ok(response)
 }
 

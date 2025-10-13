@@ -1,6 +1,6 @@
 <template>
   <nav class="tab-bar">
-    <div class="flex justify-around items-end h-full mb-5px">
+    <div class="flex justify-around items-end pt-3">
       <RouterLink
         v-for="item in navItems"
         :key="item.path"

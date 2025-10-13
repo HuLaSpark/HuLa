@@ -167,11 +167,11 @@ export const useLogin = () => {
       // 只有在成功创建home窗口并且已登录的情况下才显示托盘菜单
       globalStore.isTrayMenuShow = true
     } else {
-      router.push('/mobile/message')
+      router.push('/mobile/home')
     }
   }
 
-  const normalLogin = async (deviceType: 'PC' | 'MOBILE', auto: boolean = false) => {
+  const normalLogin = async (deviceType: 'PC' | 'MOBILE', auto: boolean = settingStore.login.autoLogin) => {
     loading.value = true
     loginText.value = '登录中...'
     loginDisabled.value = true

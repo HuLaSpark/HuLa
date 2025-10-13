@@ -71,5 +71,4 @@ async function setup() {
   await import('@/services/webSocketAdapter')
   await invoke('set_complete', { task: 'frontend' })
   hideInitialSplash()
-  router.push('/mobile/login')
 }

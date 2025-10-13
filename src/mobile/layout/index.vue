@@ -2,7 +2,7 @@
   <div class="h-100vh flex flex-col">
     <!-- 考虑不需要这个元素，因为有些页面是占满顶部的，考虑按需引入 -->
     <!-- 顶部安全区域占位元素 -->
-    <!-- <SafeAreaPlaceholder direction="top" /> -->
+    <!-- <SafeAreaPlaceholder type="layout" direction="top" /> -->
 
     <!-- 页面全部内容 -->
     <div class="flex-1 overflow-y-auto flex flex-col">

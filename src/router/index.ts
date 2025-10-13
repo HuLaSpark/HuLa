@@ -517,15 +517,6 @@ const router: any = createRouter({
 // 在创建路由后，添加全局前置守卫
 // 为解决 “已声明‘to’，但从未读取其值” 的问题，将 to 参数改为下划线开头表示该参数不会被使用
 router.beforeEach(async (to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
-  // console.log(
-  //   `%c[路由守卫触发]`,
-  //   'color: #4CAF50; font-weight: bold;',
-  //   '\n来自:',
-  //   from.fullPath,
-  //   '\n去往:',
-  //   to.fullPath
-  // )
-
   // 桌面端直接放行
   if (!isMobile) {
     console.log('[守卫] 非移动端，直接放行')
@@ -537,6 +528,7 @@ router.beforeEach(async (to: RouteLocationNormalized, _from: RouteLocationNormal
     const isSplashPage = to.path === '/mobile/splashscreen'
 
     // 闪屏页白名单：不论登录状态都允许进入
+    console.log(to.path)
     if (isSplashPage) {
       return next()
     }
@@ -550,14 +542,6 @@ router.beforeEach(async (to: RouteLocationNormalized, _from: RouteLocationNormal
       return next('/mobile/login')
     }
 
-    // 已登录且访问登录页 → 跳转首页
-    if (isLoggedIn && isLoginPage) {
-      console.warn('[守卫] 已登录但访问登录页，强制跳转到 /mobile/message')
-      return next('/mobile/message')
-    }
-
-    // 其他情况直接放行
-    // console.log('[守卫] 条件满足，放行到:', to.fullPath)
     return next()
   } catch (error) {
     console.error('[守卫] 获取token错误:', error)

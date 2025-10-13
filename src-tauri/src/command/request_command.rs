@@ -115,6 +115,7 @@ async fn handle_login_success(login_resp: &LoginResp, state: &State<'_, AppData>
     user_info.uid = login_resp.uid.clone();
     user_info.token = login_resp.token.clone();
     user_info.refresh_token = login_resp.refresh_token.clone();
+    info!("handle_login_success, user_info: {:?}", user_info);
 
     let mut client = state.rc.lock().await;
     check_user_init_and_fetch_messages(&mut client, state.db_conn.deref(), uid).await
