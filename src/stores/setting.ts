@@ -80,6 +80,10 @@ export const useSettingStore = defineStore(StoresEnum.SETTING, {
       this.login.autoLogin = autoLogin
       this.login.autoStartup = autoStartup
     },
+
+    setAutoLogin(autoLogin: boolean) {
+      this.login.autoLogin = autoLogin
+    },
     /** 设置菜单显示模式 */
     setShowMode(showMode: ShowModeEnum) {
       this.showMode = showMode

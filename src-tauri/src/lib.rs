@@ -176,7 +176,7 @@ async fn initialize_app_data(
     Ok((db, user_info, Arc::new(Mutex::new(rc)), configuration))
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct UserInfo {
     pub token: String,
@@ -316,7 +316,6 @@ fn common_setup(app_handle: AppHandle) -> Result<(), Box<dyn std::error::Error>>
     let scope = app_handle.fs_scope();
     scope.allow_directory("configuration", false).unwrap();
 
-    let app_handle = app.handle().clone();
     #[cfg(desktop)]
     setup_logout_listener(app_handle.clone());
 

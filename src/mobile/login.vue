@@ -316,7 +316,6 @@ import router from '@/router'
 import type { RegisterUserReq, UserInfoType } from '@/services/types'
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import { useMobileStore } from '@/stores/mobile'
-import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { getCaptcha, register, sendCaptcha } from '@/utils/ImRequestUtils'
 import { isAndroid } from '@/utils/PlatformConstants'
@@ -331,7 +330,6 @@ import { useLogin } from '../hooks/useLogin'
 interface LocalRegisterInfo extends RegisterUserReq {}
 
 const loginHistoriesStore = useLoginHistoriesStore()
-const userStore = useUserStore()
 const { loginHistories } = loginHistoriesStore
 const mobileStore = useMobileStore()
 const safeArea = computed(() => mobileStore.safeArea)
@@ -645,9 +643,6 @@ onBeforeMount(async () => {
 const { checkUpdate } = useCheckUpdate()
 onMounted(async () => {
   window.addEventListener('click', closeMenu, true)
-  console.log('新的', userStore)
-  // const uid = userStore.userInfo?.uid
-
   // 只有在需要登录的情况下才显示登录窗口
   if (isJumpDirectly.value) {
     loading.value = false

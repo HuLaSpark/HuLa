@@ -200,6 +200,11 @@ export const useLogin = () => {
         loading.value = false
         loginText.value = '登录成功正在跳转...'
         init()
+
+        // 移动端登录成功之后，自动设置为自动登录
+        if (isMobile()) {
+          settingStore.setAutoLogin(true)
+        }
       })
       .catch((e: any) => {
         console.error('登录异常：', e)
