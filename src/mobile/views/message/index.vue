@@ -147,10 +147,22 @@
         v-if="longPressState.showLongPressMenu"
         :style="{ top: longPressState.longPressMenuTop + 'px' }"
         class="fixed gap-10px z-999 left-1/2 transform -translate-x-1/2">
-        <div class="flex justify-between p-[8px_15px_8px_15px] text-14px gap-10px rounded-10px bg-#4e4e4e">
-          <div class="text-white">按钮1</div>
-          <div class="text-white">按钮2</div>
-          <div class="text-white">按钮3</div>
+        <div class="flex justify-between text-14px rounded-10px bg-#4e4e4e">
+          <div
+            @click="handleLongPressClick(LongPressType.Top)"
+            class="px-10px py-10px rounded-10px text-white active:bg-#6e6e6e">
+            置顶
+          </div>
+          <div
+            @click="handleLongPressClick(LongPressType.NotShow)"
+            class="px-10px py-10px rounded-10px text-white active:bg-#6e6e6e">
+            不显示
+          </div>
+          <div
+            @click="handleLongPressClick(LongPressType.Delete)"
+            class="px-10px py-10px rounded-10px text-white active:bg-#6e6e6e">
+            删除
+          </div>
         </div>
         <div class="flex w-full justify-center h-15px">
           <svg width="35" height="13" viewBox="0 0 35 13">
@@ -553,6 +565,46 @@ const closeKeyboardMask = () => {
 
 // 长按事件处理（开始）
 
+// 当前长按选中的项
+let currentLongPressItem: SessionItem | undefined = void 0
+
+enum LongPressType {
+  Top,
+  NotShow,
+  Delete
+}
+
+const handleLongPressClick = (item: LongPressType) => {
+  if (!currentLongPressItem) {
+    throw new Error('长按的Item为空')
+  }
+  switch (item) {
+    case LongPressType.Top: {
+      // 处理置顶逻辑
+      console.log('置顶操作')
+      break // 使用 break 防止穿透
+    }
+
+    case LongPressType.NotShow: {
+      // 处理不显示逻辑
+      console.log('不显示操作')
+      break
+    }
+
+    case LongPressType.Delete: {
+      // 处理删除逻辑
+      console.log('删除操作')
+      break
+    }
+
+    default: {
+      // 处理未定义的情况
+      console.log('未知操作')
+      break
+    }
+  }
+}
+
 const longPressOption = ref({
   delay: 200,
   modifiers: {
@@ -567,7 +619,7 @@ const longPressOption = ref({
 })
 
 const handleLongPress = (e: PointerEvent, item: SessionItem) => {
-  item // 显式引用它，不让ts报未引用错误，以后需要删除
+  currentLongPressItem = item //写入当前值
 
   e.stopPropagation()
 
