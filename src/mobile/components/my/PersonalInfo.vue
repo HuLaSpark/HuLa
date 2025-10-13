@@ -283,6 +283,7 @@ const handleDelete = () => {
           isMyFriend.value = false
           chatStore.getSessionList(true)
           window.$message.success('已删除好友')
+          router.back()
         } catch (error) {
           window.$message.warning('删除失败')
           console.error('删除好友失败：', error)
