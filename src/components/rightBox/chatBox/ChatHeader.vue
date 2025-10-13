@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <!-- 顶部操作栏和显示用户名 -->
   <main
     data-tauri-drag-region
@@ -7,7 +7,7 @@
       <Transition name="loading" mode="out-in">
         <n-flex align="center">
           <n-avatar
-            :class="['rounded-8px select-none grayscale', { 'grayscale-0': isOnline }]"
+            :class="['rounded-8px select-none', { grayscale: activeItem.type === RoomTypeEnum.SINGLE && !isOnline }]"
             :size="28"
             :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
             :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
@@ -27,7 +27,7 @@
             <template v-if="shouldShowDeleteFriend">
               <n-flex align="center" :size="6">
                 <!-- 状态图标 -->
-                <img v-if="statusIcon" :src="statusIcon" class="size-18px rounded-50%" alt="" />
+                <img v-if="hasCustomState && statusIcon" :src="statusIcon" class="size-18px rounded-50%" alt="" />
                 <n-badge v-else :color="isOnline ? '#1ab292' : '#909090'" dot />
 
                 <!-- 状态文本 -->
@@ -454,7 +454,6 @@ import {
   CallTypeEnum,
   MittEnum,
   NotificationTypeEnum,
-  OnlineEnum,
   RoleEnum,
   RoomActEnum,
   RoomTypeEnum,
@@ -463,6 +462,7 @@ import {
 } from '@/enums'
 import { useAvatarUpload } from '@/hooks/useAvatarUpload'
 import { useMitt } from '@/hooks/useMitt.ts'
+import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import { useWindow } from '@/hooks/useWindow'
 import { IsAllUserEnum, type UserItem } from '@/services/types.ts'
 import { WsResponseMessageType } from '@/services/wsType'
@@ -473,7 +473,6 @@ import { useGlobalStore } from '@/stores/global'
 import { useGroupStore } from '@/stores/group.ts'
 import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user.ts'
-import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { notification, setSessionTop, shield, updateMyRoomInfo, updateRoomInfo } from '@/utils/ImRequestUtils'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
@@ -485,7 +484,6 @@ const chatStore = useChatStore()
 const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
 const contactStore = useContactStore()
-const userStatusStore = useUserStatusStore()
 const userStore = useUserStore()
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
@@ -567,13 +565,13 @@ const messageSettingOptions = ref([
   { label: '接收消息但不提醒', value: 'notification' },
   { label: '屏蔽消息', value: 'shield' }
 ])
-/** 是否在线 */
-const isOnline = computed(() => {
-  if (!activeItem.value) return false
-  if (activeItem.value.type === RoomTypeEnum.GROUP) return true
-  const contact = contactStore.contactsList.find((item) => item.uid === activeItem.value.detailId)
-  return contact?.activeStatus === OnlineEnum.ONLINE
+
+const chatTargetUid = computed(() => {
+  if (!activeItem.value || activeItem.value.type === RoomTypeEnum.GROUP) return undefined
+  return activeItem.value.detailId
 })
+const { isOnline, statusIcon, statusTitle, hasCustomState } = useOnlineStatus(chatTargetUid)
+
 /** 是否还是好友 */
 const shouldShowDeleteFriend = computed(() => {
   if (!activeItem.value || activeItem.value.type === RoomTypeEnum.GROUP) return false
@@ -595,28 +593,6 @@ const userList = computed(() => {
       return Number(a.uid) - Number(b.uid)
     })
     .slice(0, 10)
-})
-/** 获取当前用户的状态信息 */
-const currentUserStatus = computed(() => {
-  if (!activeItem.value || activeItem.value.type === RoomTypeEnum.GROUP) return null
-
-  // 使用 useUserInfo 获取用户信息
-  if (!activeItem.value.detailId) return null
-  const userInfo = groupStore.getUserInfo(activeItem.value.detailId)!
-
-  // 从状态列表中找到对应的状态
-  return userStatusStore.stateList.find((state: { id: string }) => state.id === userInfo.userStateId)
-})
-
-/** 状态图标 */
-const statusIcon = computed(() => currentUserStatus.value?.url)
-
-/** 状态标题 */
-const statusTitle = computed(() => {
-  if (currentUserStatus.value?.title) {
-    return currentUserStatus.value.title
-  }
-  return isOnline.value ? '在线' : '离线'
 })
 
 // 获取用户的最新头像
