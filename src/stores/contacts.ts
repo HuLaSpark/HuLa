@@ -143,12 +143,10 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
    * 1. 调用删除好友接口
    * 2. 刷新好友列表
    */
-  const onDeleteContact = async (uid: string) => {
+  const onDeleteFriend = async (uid: string) => {
     if (!uid) return
     // 删除好友
     await deleteFriend({ targetUid: uid })
-    // 刷新好友申请列表
-    // getRequestFriendsList(true)
     // 刷新好友列表
     await getContactList(true)
   }
@@ -161,7 +159,7 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
     requestFriendsList,
     contactsOptions,
     applyPageOptions,
-    onDeleteContact,
+    onDeleteFriend,
     onHandleInvite,
     deleteContact
   }

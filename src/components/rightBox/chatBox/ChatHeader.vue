@@ -885,7 +885,7 @@ const handleDelete = (label: RoomActEnum) => {
 
 const handleConfirm = async () => {
   if (optionsType.value === RoomActEnum.DELETE_FRIEND && activeItem.value.detailId) {
-    contactStore.onDeleteContact(activeItem.value.detailId).then(() => {
+    contactStore.onDeleteFriend(activeItem.value.detailId).then(() => {
       modalShow.value = false
       sidebarShow.value = false
       window.$message.success('已删除好友')
