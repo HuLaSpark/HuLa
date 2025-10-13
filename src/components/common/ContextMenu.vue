@@ -27,7 +27,7 @@
         </div>
         <!-- 普通右键菜单 -->
         <div
-          v-if="showMenu && !(emoji && emoji.length > 0 && showAllEmojis)"
+          v-if="!isMobile() && showMenu && !(emoji && emoji.length > 0 && showAllEmojis)"
           class="context-menu select-none"
           :style="{
             left: `${pos.posX}px`,
@@ -77,6 +77,35 @@
             </div>
           </div>
         </div>
+
+        <!-- 移动端菜单 -->
+        <div
+          v-if="isMobile() && showMenu && !(emoji && emoji.length > 0 && showAllEmojis)"
+          class="context-menu select-none"
+          :style="{
+            left: `${pos.posX}px`,
+            top: `${pos.posY}px`
+          }">
+          <div
+            v-resize="handleSize"
+            v-if="(visibleMenu && visibleMenu.length > 0) || (visibleSpecialMenu && visibleSpecialMenu.length > 0)"
+            class="max-w-70vw grid grid-cols-5 gap-5px h-auto!">
+            <div
+              @click="handleClick(item)"
+              v-for="(item, index) in visibleMenu"
+              :key="index"
+              class="w-45px h-45px flex justify-center items-center">
+              <div class="flex w-45px flex-col active:bg-gray-200 justify-center items-center max-h-45px">
+                <svg class="w-18px w-18px"><use :href="`#${getMenuItemProp(item, 'icon')}`"></use></svg>
+                <p class="h-24px text-12px">{{ getMenuItemProp(item, 'label') }}</p>
+                <svg v-if="shouldShowArrow(item)" class="arrow-icon w-18px w-18px">
+                  <use href="#right"></use>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- 二级菜单 -->
         <div v-if="showSubmenu && activeSubmenu" class="context-submenu" :style="submenuPosition">
           <div class="menu-list">
@@ -102,6 +131,7 @@
 <script setup lang="ts">
 import { useContextMenu } from '@/hooks/useContextMenu.ts'
 import { useViewport } from '@/hooks/useViewport.ts'
+import { isMobile } from '~/src/utils/PlatformConstants'
 
 type Props = {
   content?: Record<string, any>
@@ -438,12 +468,73 @@ const shouldShowArrow = (item: any) => {
   }
 }
 
+@mixin menu-item-wrap {
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+  .menu-item-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+}
+
 // menu-list通用样式
 @mixin menu-list {
   -webkit-backdrop-filter: blur(10px);
   padding: 5px;
   display: flex;
   flex-direction: column;
+  gap: 6px;
+
+  .menu-item {
+    @include menu-item();
+    display: flex;
+    align-items: center;
+    &:hover {
+      background-color: var(--bg-menu-hover);
+      svg {
+        animation: twinkle 0.3s ease-in-out;
+      }
+    }
+  }
+}
+
+@mixin menu-list-wrap {
+  -webkit-backdrop-filter: blur(10px);
+  padding: 5px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  .menu-item-wrap {
+    @include menu-item();
+    display: flex;
+    align-items: center;
+    &:hover {
+      background-color: var(--bg-menu-hover);
+      svg {
+        animation: twinkle 0.3s ease-in-out;
+      }
+    }
+  }
+}
+
+// menu-list通用样式
+@mixin menu-list-wrap {
+  -webkit-backdrop-filter: blur(10px);
+  padding: 5px;
+  display: flex;
+  flex-direction: row;
   gap: 6px;
 
   .menu-item {
@@ -479,6 +570,26 @@ const shouldShowArrow = (item: any) => {
     @include menu-list();
     .menu-item-disabled {
       @include menu-item();
+      color: var(--disabled-color);
+      svg {
+        color: var(--disabled-color);
+      }
+    }
+    .menu-item-danger {
+      color: #d03553;
+      svg {
+        color: #d03553;
+      }
+    }
+  }
+
+  .menu-list-wrap {
+    display: flex;
+    justify-content: row;
+    flex-wrap: wrap;
+    @include menu-list-wrap();
+    .menu-item-disabled {
+      @include menu-item-wrap();
       color: var(--disabled-color);
       svg {
         color: var(--disabled-color);

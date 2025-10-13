@@ -26,7 +26,7 @@ import { extractFileName, removeTag } from '@/utils/Formatting'
 import { detectImageFormat, imageUrlToUint8Array, isImageUrl } from '@/utils/ImageUtils'
 import { recallMsg, removeGroupMember, updateMyRoomInfo } from '@/utils/ImRequestUtils'
 import { detectRemoteFileType, getFilesMeta } from '@/utils/PathUtil'
-import { isMac } from '@/utils/PlatformConstants'
+import { isMac, isMobile } from '@/utils/PlatformConstants'
 import { useWindow } from './useWindow'
 
 type UseChatMainOptions = {
@@ -185,6 +185,10 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       label: '转发',
       icon: 'share',
       click: (item: MessageType) => {
+        if (isMobile()) {
+          window.$message.warning('功能暂开发')
+          return
+        }
         handleForward(item)
       },
       visible: (item: MessageType) => !isNoticeMessage(item)
@@ -236,6 +240,10 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       label: '复制',
       icon: 'copy',
       click: (item: MessageType) => {
+        if (isMobile()) {
+          window.$message.warning('功能暂开发')
+          return
+        }
         handleCopy(item.message.body.url, true)
       }
     },
@@ -244,6 +252,10 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       label: '另存为',
       icon: 'Importing',
       click: async (item: MessageType) => {
+        if (isMobile()) {
+          window.$message.warning('功能暂开发')
+          return
+        }
         await saveVideoAttachmentAs({
           url: item.message.body.url,
           downloadFile,
@@ -364,6 +376,10 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
               label: '另存为',
               icon: 'Importing',
               click: async (item: MessageType) => {
+                if (isMobile()) {
+                  window.$message.warning('功能暂开发')
+                  return
+                }
                 const fileUrl = item.message.body.url
                 const fileName = item.message.body.fileName
                 if (item.message.type === MsgEnum.VIDEO) {
@@ -567,6 +583,10 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       label: '另存为',
       icon: 'Importing',
       click: async (item: RightMouseMessageItem) => {
+        if (isMobile()) {
+          window.$message.warning('功能暂开发')
+          return
+        }
         await saveFileAttachmentAs({
           url: item.message.body.url,
           downloadFile,
@@ -640,6 +660,10 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       label: '另存为',
       icon: 'Importing',
       click: async (item: MessageType) => {
+        if (isMobile()) {
+          window.$message.warning('功能暂开发')
+          return
+        }
         try {
           const imageUrl = item.message.body.url
           const suggestedName = imageUrl || 'image.png'

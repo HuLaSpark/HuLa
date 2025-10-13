@@ -59,7 +59,7 @@ class MainActivity : TauriActivity() {
         super.onWebViewCreate(webView)
 
         // 初始化 WebView 背景填充
-        webView.setBackgroundColor(0x00000000) // 透明，允许窗口背景延续启动图
+        // webView.setBackgroundColor(0x00000000) // 透明，允许窗口背景延续启动图
         window.setBackgroundDrawableResource(R.drawable.launch_screen)
         splashHidden = false
 

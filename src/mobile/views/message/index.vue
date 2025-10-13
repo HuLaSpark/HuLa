@@ -687,7 +687,7 @@ const handleLongPress = (e: PointerEvent, item: SessionItem) => {
     border-left: 4px solid #1890ff; /* 左侧蓝色标识条 */
 
     /* 右侧操作按钮的背景色 */
-    ::v-deep .van-swipe-cell__right {
+    :deep() .van-swipe-cell__right {
       background-color: #f0f7ff;
     }
 
