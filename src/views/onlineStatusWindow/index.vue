@@ -20,7 +20,6 @@
           <n-flex align="center" :size="10">
             <n-flex
               @click="handleActive(resetState)"
-              :class="{ active: isResetActive }"
               vertical
               justify="center"
               align="center"
@@ -33,7 +32,7 @@
             </n-flex>
             <n-flex
               @click="handleActive(item)"
-              :class="{ active: currentState?.id === item.id }"
+              :class="{ active: hasCustomState && currentState?.id === item.id }"
               v-for="item in stateList"
               :key="item.title"
               vertical
@@ -62,13 +61,12 @@ import { changeUserState } from '@/utils/ImRequestUtils'
 const userStatusStore = useUserStatusStore()
 const userStore = useUserStore()
 const { stateList, stateId } = storeToRefs(userStatusStore)
-const { currentState, statusIcon, statusTitle, statusBgColor } = useOnlineStatus()
+const { currentState, statusIcon, statusTitle, statusBgColor, hasCustomState } = useOnlineStatus()
 const resetState: UserState = {
   id: '0',
   title: '清空状态',
   url: ''
 }
-const isResetActive = computed(() => stateId.value === '0')
 /** 这里不写入activeItem中是因为v-bind要绑定的值是响应式的 */
 const RGBA = ref(statusBgColor.value)
 
