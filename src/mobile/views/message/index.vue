@@ -83,7 +83,9 @@
           @focus="lockScroll"
           @blur="unlockScroll">
           <template #prefix>
-            <svg class="w-12px h-12px"><use href="#search"></use></svg>
+            <svg class="w-12px h-12px">
+              <use href="#search"></use>
+            </svg>
           </template>
         </n-input>
       </div>
@@ -103,7 +105,8 @@
             @close="handleSwipeClose"
             v-for="(item, idx) in sessionList"
             v-on-long-press="[(e: PointerEvent) => handleLongPress(e, item), longPressOption]"
-            :key="`${item.id}-${idx}`">
+            :key="`${item.id}-${idx}`"
+            :class="item.top ? 'bg-gray-200' : ''">
             <!-- 长按项 -->
             <div @click="intoRoom(item)" class="grid grid-cols-[2.2rem_1fr_4rem] items-start px-2 py-3 gap-1">
               <div class="flex-shrink-0">
@@ -133,8 +136,16 @@
             </div>
             <template #right>
               <div class="flex w-auto flex-wrap h-full">
-                <div class="h-full text-14px w-80px bg-#13987f text-white flex items-center justify-center">置顶</div>
-                <div class="h-full text-14px w-80px bg-red text-white flex items-center justify-center">删除</div>
+                <div
+                  class="h-full text-14px w-80px bg-#13987f text-white flex items-center justify-center"
+                  @click="handleToggleTop(item)">
+                  {{ item.top ? '取消置顶' : '置顶' }}
+                </div>
+                <div
+                  class="h-full text-14px w-80px bg-red text-white flex items-center justify-center"
+                  @click="handleDelete(item)">
+                  删除
+                </div>
               </div>
             </template>
           </van-swipe-cell>
@@ -147,31 +158,21 @@
         v-if="longPressState.showLongPressMenu"
         :style="{ top: longPressState.longPressMenuTop + 'px' }"
         class="fixed gap-10px z-999 left-1/2 transform -translate-x-1/2">
-        <div class="flex justify-between text-14px rounded-10px bg-#4e4e4e">
-          <div
-            @click="handleLongPressClick(LongPressType.Top)"
-            class="px-10px py-10px rounded-10px text-white active:bg-#6e6e6e">
-            置顶
+        <div class="flex justify-between p-[8px_15px_8px_15px] text-14px gap-10px rounded-10px bg-#4e4e4e">
+          <div class="text-white" @click="handleDelete(currentLongPressItem)">删除</div>
+          <div class="text-white" @click="handleToggleTop(currentLongPressItem)">
+            {{ currentLongPressItem?.top ? '取消置顶' : '置顶' }}
           </div>
-          <div
-            @click="handleLongPressClick(LongPressType.NotShow)"
-            class="px-10px py-10px rounded-10px text-white active:bg-#6e6e6e">
-            不显示
-          </div>
-          <div
-            @click="handleLongPressClick(LongPressType.Delete)"
-            class="px-10px py-10px rounded-10px text-white active:bg-#6e6e6e">
-            删除
-          </div>
+          <div class="text-white" @click="handleMarkUnread">未读</div>
         </div>
         <div class="flex w-full justify-center h-15px">
           <svg width="35" height="13" viewBox="0 0 35 13">
             <path
-              d="M0 0 
+              d="M0 0
            Q17.5 5 17.5 12
            Q17.5 13 18.5 13
            Q17.5 13 17.5 12
-           Q17.5 5 35 0 
+           Q17.5 5 35 0
            Z"
               fill="#4e4e4e" />
           </svg>
@@ -201,10 +202,11 @@ import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { vOnLongPress } from '@vueuse/components'
+import { setSessionTop } from '@/utils/ImRequestUtils'
 
 const loading = ref(false)
 const count = ref(0)
-
+const currentLongPressItem = ref<SessionItem | null>(null)
 const groupStore = useGroupStore()
 const chatStore = useChatStore()
 const userStore = useUserStore()
@@ -264,7 +266,7 @@ const allUserMap = computed(() => {
   return map
 })
 
-// 会话列表 TODO: 需要后端返回对应字段
+// 会话列表
 const sessionList = computed(() => {
   return (
     chatStore.sessionList
@@ -323,6 +325,64 @@ const sessionList = computed(() => {
       })
   )
 })
+
+// 删除会话
+const handleDelete = async (item: SessionItem | null) => {
+  if (!item) return
+
+  try {
+    await handleMsgDelete(item.roomId)
+  } catch (error) {
+    console.error('删除会话失败:', error)
+  } finally {
+    maskHandler.close()
+  }
+}
+
+// 置顶/取消置顶
+const handleToggleTop = async (item: SessionItem | null) => {
+  if (!item) return
+
+  try {
+    const newTopState = !item.top
+
+    await setSessionTop({
+      roomId: item.roomId,
+      top: newTopState
+    })
+
+    // 更新本地会话状态
+    chatStore.updateSession(item.roomId, { top: newTopState })
+  } catch (error) {
+    console.error('置顶操作失败:', error)
+  } finally {
+    maskHandler.close()
+  }
+}
+
+// 标记未读
+const handleMarkUnread = async () => {
+  if (!currentLongPressItem.value) return
+
+  try {
+    const item = currentLongPressItem.value
+
+    // 重置未读计数为1
+    chatStore.updateSession(item.roomId, {
+      unreadCount: 1
+    })
+
+    // 更新全局未读计数
+    globalStore.updateGlobalUnreadCount()
+
+    window.$message.success('已标记为未读')
+  } catch (error) {
+    window.$message.error('标记未读失败')
+    console.error('标记未读失败:', error)
+  } finally {
+    maskHandler.close()
+  }
+}
 
 const onRefresh = () => {
   // 如果没到0.5秒就延迟0.5秒，如果接口执行时间超过0.5秒那就以getSessionList时间为准
@@ -479,8 +539,7 @@ const addIconHandler = {
 }
 
 const router = useRouter()
-
-const { handleMsgClick } = useMessage()
+const { handleMsgClick, handleMsgDelete } = useMessage()
 
 // 阻止消息的点击事件，为false时不阻止
 let preventClick = false
@@ -565,46 +624,6 @@ const closeKeyboardMask = () => {
 
 // 长按事件处理（开始）
 
-// 当前长按选中的项
-let currentLongPressItem: SessionItem | undefined = void 0
-
-enum LongPressType {
-  Top,
-  NotShow,
-  Delete
-}
-
-const handleLongPressClick = (item: LongPressType) => {
-  if (!currentLongPressItem) {
-    throw new Error('长按的Item为空')
-  }
-  switch (item) {
-    case LongPressType.Top: {
-      // 处理置顶逻辑
-      console.log('置顶操作')
-      break // 使用 break 防止穿透
-    }
-
-    case LongPressType.NotShow: {
-      // 处理不显示逻辑
-      console.log('不显示操作')
-      break
-    }
-
-    case LongPressType.Delete: {
-      // 处理删除逻辑
-      console.log('删除操作')
-      break
-    }
-
-    default: {
-      // 处理未定义的情况
-      console.log('未知操作')
-      break
-    }
-  }
-}
-
 const longPressOption = ref({
   delay: 200,
   modifiers: {
@@ -619,7 +638,10 @@ const longPressOption = ref({
 })
 
 const handleLongPress = (e: PointerEvent, item: SessionItem) => {
-  currentLongPressItem = item //写入当前值
+  const latestItem = chatStore.sessionList.find((session) => session.roomId === item.roomId)
+  if (!latestItem) return
+
+  currentLongPressItem.value = latestItem
 
   e.stopPropagation()
 
@@ -655,6 +677,27 @@ const handleLongPress = (e: PointerEvent, item: SessionItem) => {
 </script>
 
 <style scoped lang="scss">
+.van-swipe-cell {
+  width: 100%;
+  transition: background-color 0.3s ease;
+
+  /* 置顶时的背景色 - 新设计 */
+  &.bg-gray-200 {
+    background-color: #f0f7ff; /* 柔和的浅蓝色背景 */
+    border-left: 4px solid #1890ff; /* 左侧蓝色标识条 */
+
+    /* 右侧操作按钮的背景色 */
+    ::v-deep .van-swipe-cell__right {
+      background-color: #f0f7ff;
+    }
+
+    /* 悬停效果 */
+    &:hover {
+      background-color: #e1efff;
+    }
+  }
+}
+
 .keyboard-mask {
   position: fixed;
   inset: 0;
