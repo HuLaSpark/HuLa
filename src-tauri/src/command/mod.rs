@@ -19,16 +19,13 @@ pub async fn set_complete(
     state: State<'_, AppData>,
     task: String,
 ) -> Result<(), ()> {
-    tracing::info!("set complete");
+    tracing::info!("set_complete: {}", task);
     match task.as_str() {
         "frontend" => *state.frontend_task.lock().await = true,
         "backend" => *state.backend_task.lock().await = true,
         _ => panic!("invalid task completed!"),
     }
-    #[cfg(mobile)]
-    if task == "frontend" {
-        crate::mobiles::splash::hide();
-    }
+    // 不再自动隐藏启动画面，由前端页面渲染完成后主动调用 hide_splash_screen
     tracing::info!("set_complete {}: {:?}", task, state.frontend_task);
     tracing::info!("set_complete {}: {:?}", task, state.backend_task);
     Ok(())

@@ -11,7 +11,7 @@
           重新编辑
         </p>
       </n-flex>
-      <span v-else class="text-12px color-#909090 select-none" v-html="body"></span>
+      <span v-else class="text-12px color-#909090 select-none" v-html="recallText"></span>
     </template>
     <template v-else>
       <n-flex align="center" :size="6">
@@ -36,7 +36,7 @@ import type { MessageBody, MsgType } from '@/services/types'
 import { useChatStore } from '@/stores/chat.ts'
 import { useUserStore } from '@/stores/user.ts'
 
-defineProps<{
+const props = defineProps<{
   message: MsgType
   fromUserUid: string
   isGroup?: boolean
@@ -47,6 +47,16 @@ const chatStore = useChatStore()
 const userStore = useUserStore()
 
 const userUid = computed(() => userStore.userInfo!.uid)
+
+const recallText = computed(() => {
+  // 处理body可能是字符串或对象的情况
+  if (typeof props.body === 'string') {
+    return props.body
+  } else if (props.body && typeof props.body === 'object' && 'content' in props.body) {
+    return props.body.content
+  }
+  return '撤回了一条消息'
+})
 
 const canReEdit = computed(() => (msgId: string) => {
   const recalledMsg = chatStore.getRecalledMessage(msgId)

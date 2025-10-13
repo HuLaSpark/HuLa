@@ -71,5 +71,7 @@ async function setup() {
   await import('@/services/webSocketAdapter')
   await invoke('set_complete', { task: 'frontend' })
   hideInitialSplash()
+  // 隐藏原生启动画面（Android/iOS）
+  await invoke('hide_splash_screen')
   router.push('/mobile/login')
 }

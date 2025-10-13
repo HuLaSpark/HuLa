@@ -228,10 +228,31 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
         })
       },
       visible: (item: MessageType) => {
-        if (isDiffNow({ time: item.message.sendTime, unit: 'minute', diff: 2 })) return
+        const isSystemAdmin = userStore.userInfo?.power === PowerEnum.ADMIN
+        if (isSystemAdmin) {
+          return true
+        }
+
+        const isGroupSession = globalStore.currentSession?.type === RoomTypeEnum.GROUP
+        const groupMembers = groupStore.userList
+        const currentMember = isGroupSession ? groupMembers.find((member) => member.uid === userUid.value) : undefined
+        const isGroupManager =
+          isGroupSession &&
+          (currentMember?.roleId === RoleEnum.LORD ||
+            currentMember?.roleId === RoleEnum.ADMIN ||
+            groupStore.currentLordId === userUid.value ||
+            groupStore.adminUidList.includes(userUid.value))
+
+        if (isGroupManager) {
+          return true
+        }
+
         const isCurrentUser = item.fromUser.uid === userUid.value
-        const isAdmin = userStore.userInfo!.power === PowerEnum.ADMIN
-        return isCurrentUser || isAdmin
+        if (!isCurrentUser) {
+          return false
+        }
+
+        return !isDiffNow({ time: item.message.sendTime, unit: 'minute', diff: 2 })
       }
     }
   ])

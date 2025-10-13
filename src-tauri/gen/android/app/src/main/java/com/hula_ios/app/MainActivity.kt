@@ -2,7 +2,6 @@ package com.hula_ios.app
 
 import android.os.Bundle
 import android.webkit.WebView
-import android.webkit.WebChromeClient
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -13,6 +12,41 @@ import kotlin.math.roundToInt
 class MainActivity : TauriActivity() {
 
     private var splashHidden = false
+    private var currentWebView: WebView? = null
+
+    // Rust端通过JNI调用的实例方法
+    @Suppress("unused")
+    fun show() {
+        // Rust端调用显示启动画面（启动时）
+        android.util.Log.i("MainActivity", "✨ Splash show() called from Rust")
+    }
+
+    @Suppress("unused")
+    fun hide() {
+        // Rust端调用隐藏启动画面（应用启动完成）
+        android.util.Log.i("MainActivity", "🎯 Splash hide() called from Rust - setting WebView background")
+        
+        runOnUiThread {
+            hideStartupBackground()
+        }
+    }
+
+    private fun hideStartupBackground() {
+        if (!splashHidden) {
+            splashHidden = true
+            android.util.Log.d("MainActivity", "hideStartupBackground called, splashHidden set to true")
+            
+            // 使用保存的WebView引用
+            currentWebView?.let {
+                android.util.Log.d("MainActivity", "WebView reference found, setting background")
+                it.setBackgroundColor(0xFFFFFFFF.toInt())
+                window.setBackgroundDrawableResource(android.R.color.transparent)
+                android.util.Log.i("MainActivity", "✅ WebView background set to opaque white")
+            } ?: android.util.Log.e("MainActivity", "❌ WebView reference not found")
+        } else {
+            android.util.Log.w("MainActivity", "hideStartupBackground called but splashHidden already true")
+        }
+    }
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
@@ -57,21 +91,16 @@ class MainActivity : TauriActivity() {
 
     override fun onWebViewCreate(webView: WebView) {
         super.onWebViewCreate(webView)
+        
+        // 保存WebView引用
+        currentWebView = webView
 
         // 初始化 WebView 背景填充
-        // webView.setBackgroundColor(0x00000000) // 透明，允许窗口背景延续启动图
+        webView.setBackgroundColor(0x00000000) // 透明，允许窗口背景延续启动图
         window.setBackgroundDrawableResource(R.drawable.launch_screen)
         splashHidden = false
-
-        webView.webChromeClient = object : WebChromeClient() {
-            override fun onProgressChanged(view: WebView, newProgress: Int) {
-                super.onProgressChanged(view, newProgress)
-                if (!splashHidden && newProgress >= 90) {
-                    SplashScreen.hide(this@MainActivity)
-                    splashHidden = true
-                }
-            }
-        }
+        
+        android.util.Log.i("MainActivity", "WebView created, waiting for Rust hide() call...")
 
 
         // 监听安全区 Insets 并注入 CSS 变量

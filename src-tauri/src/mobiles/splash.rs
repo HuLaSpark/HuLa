@@ -18,10 +18,8 @@ mod platform {
 mod platform {
     use jni::{
         JavaVM,
-        objects::{JObject, JValue},
+        objects::JObject,
     };
-
-    const CLASS_NAME: &str = "com/hula_ios/app/SplashScreen";
 
     fn invoke(method: &str) -> Result<(), jni::errors::Error> {
         let ctx = ndk_context::android_context();
@@ -29,11 +27,12 @@ mod platform {
         let mut env = vm.attach_current_thread()?;
         let activity = unsafe { JObject::from_raw(ctx.context() as jni::sys::jobject) };
 
-        let result = env.call_static_method(
-            CLASS_NAME,
+        // 直接调用Activity实例的方法，不使用静态方法
+        let result = env.call_method(
+            &activity,
             method,
-            "(Landroid/app/Activity;)V",
-            &[JValue::Object(&activity)],
+            "()V",
+            &[],
         );
 
         let _ = activity.into_raw();
@@ -72,4 +71,12 @@ pub fn show() {
 
 pub fn hide() {
     platform::hide();
+}
+
+/// Tauri command: 隐藏启动画面（由前端调用）
+#[tauri::command]
+pub fn hide_splash_screen() -> Result<(), String> {
+    tracing::info!("hide_splash_screen called from frontend");
+    hide();
+    Ok(())
 }
