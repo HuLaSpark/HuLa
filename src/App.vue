@@ -1,13 +1,15 @@
 <template>
-  <NaiveProvider :message-max="3" :notific-max="3">
-    <div v-if="!isLock" id="app-container">
-      <router-view />
-    </div>
-    <!-- 锁屏页面 -->
-    <LockScreen v-else />
-  </NaiveProvider>
+  <div class="appContainer h-100vh">
+    <NaiveProvider :message-max="3" :notific-max="3" class="h-full">
+      <div v-if="!isLock" id="app-container" class="h-full">
+        <router-view />
+      </div>
+      <!-- 锁屏页面 -->
+      <LockScreen v-else />
+    </NaiveProvider>
 
-  <RtcCallFloatCell v-if="isMobile()" />
+    <RtcCallFloatCell v-if="isMobile()" />
+  </div>
 </template>
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
@@ -222,5 +224,14 @@ button,
 a {
   user-select: auto;
   cursor: auto;
+}
+
+.appContainer {
+  /* 使用安全区域变量设置内边距 */
+  padding-top: var(--safe-area-inset-top);
+  padding-bottom: var(--safe-area-inset-bottom);
+  padding-left: var(--safe-area-inset-left);
+  padding-right: var(--safe-area-inset-right);
+  box-sizing: border-box;
 }
 </style>

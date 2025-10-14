@@ -1,28 +1,20 @@
 <template>
-  <nav class="tab-bar">
-    <div class="flex justify-around items-end pt-3">
-      <RouterLink
-        v-for="item in navItems"
-        :key="item.path"
-        :to="item.path"
-        :style="{ height: tabHeight }"
-        class="tab-item flex flex-col flex-1 items-center no-underline relative"
-        :class="route.path === item.path ? 'color-[--tab-bar-icon-color]' : 'text-#000'">
-        <svg class="w-22px h-22px">
-          <use :href="`#${route.path === item.path ? item.actionIcon : item.icon}`"></use>
-        </svg>
-        <span class="text-xs mt-1">{{ item.label }}</span>
-      </RouterLink>
-    </div>
-  </nav>
+  <div class="flex justify-around items-end pt-3">
+    <RouterLink
+      v-for="item in navItems"
+      :key="item.path"
+      :to="item.path"
+      class="tab-item flex flex-col flex-1 items-center no-underline relative"
+      :class="route.path === item.path ? 'color-[--tab-bar-icon-color]' : 'text-#000'">
+      <svg class="w-22px h-22px">
+        <use :href="`#${route.path === item.path ? item.actionIcon : item.icon}`"></use>
+      </svg>
+      <span class="text-xs mt-1">{{ item.label }}</span>
+    </RouterLink>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { useMobileStore } from '@/stores/mobile'
-import { isAndroid, isIOS } from '@/utils/PlatformConstants'
-
-const mobileStore = useMobileStore()
-
 type NavItem = {
   label: string
   path: string
@@ -57,16 +49,6 @@ const navItems: NavItem[] = [
     actionIcon: 'wode-action'
   }
 ]
-
-const customHeight = ref(50)
-
-if (isAndroid()) {
-  customHeight.value = mobileStore.safeArea.bottom
-} else if (isIOS()) {
-  customHeight.value = mobileStore.safeArea.bottom + 20
-}
-
-const tabHeight = computed(() => customHeight + 'px')
 </script>
 
 <style scoped lang="scss"></style>

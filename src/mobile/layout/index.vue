@@ -1,5 +1,5 @@
 <template>
-  <div class="h-100vh flex flex-col" id="mobile-layout">
+  <div class="flex flex-col h-full" id="mobile-layout">
     <div class="flex-1 overflow-hidden">
       <RouterView v-slot="{ Component }">
         <Transition name="slide" appear mode="out-in">
@@ -354,11 +354,6 @@ useMitt.on(WsResponseMessageType.ROOM_INFO_CHANGE, async (data: { roomId: string
 
 <style lang="scss">
 #mobile-layout {
-  /* 使用安全区域变量设置内边距 */
-  padding-top: var(--safe-area-inset-top);
-  padding-bottom: var(--safe-area-inset-bottom);
-  padding-left: var(--safe-area-inset-left);
-  padding-right: var(--safe-area-inset-right);
   box-sizing: border-box;
 }
 </style>
