@@ -12,6 +12,7 @@ import { NaiveUiResolver, VantResolver } from 'unplugin-vue-components/resolvers
 import Components from 'unplugin-vue-components/vite' //组件注册
 import { type ConfigEnv, defineConfig, loadEnv } from 'vite'
 import VueSetupExtend from 'vite-plugin-vue-setup-extend'
+import { getComponentsDirs, getComponentsDtsPath } from './build/config/components'
 import { getRootPath, getSrcPath } from './build/config/getPath'
 
 function getLocalIP() {
@@ -39,11 +40,11 @@ const rawIP = getLocalIP() || (await internalIpV4())
 export default defineConfig(({ mode }: ConfigEnv) => {
   // 获取当前环境的配置,如何设置第三个参数则加载所有变量，而不是以"VITE_"前缀的变量
   const config = loadEnv(mode, process.cwd(), '')
-  const isPC =
-    config.TAURI_ENV_PLATFORM === 'windows' ||
-    config.TAURI_ENV_PLATFORM === 'darwin' ||
-    config.TAURI_ENV_PLATFORM === 'linux'
+  const currentPlatform = config.TAURI_ENV_PLATFORM
+  const isPC = currentPlatform === 'windows' || currentPlatform === 'darwin' || currentPlatform === 'linux'
 
+  const componentsDirs = getComponentsDirs(currentPlatform)
+  const componentsDtsPath = getComponentsDtsPath(currentPlatform)
   const serverPort = isPC ? 6130 : 1020
 
   // 根据平台决定host地址
@@ -118,9 +119,9 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       }),
       /**自动导入组件，但是不会自动导入jsx和tsx*/
       Components({
-        dirs: ['src/components/**', 'src/mobile/components/**'], // 设置需要扫描的目录
+        dirs: componentsDirs, // 根据平台加载对应组件目录
         resolvers: [NaiveUiResolver(), VantResolver()],
-        dts: 'src/typings/components.d.ts'
+        dts: componentsDtsPath
       }),
       /** 压缩代码 */
       terser({
