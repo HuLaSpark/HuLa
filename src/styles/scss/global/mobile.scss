@@ -1,18 +1,21 @@
+/* 只有当安全区域不为0时才应用 */
 @supports (top: env(safe-area-inset-top)) {
   :root {
-    --safe-area-inset-top: env(safe-area-inset-top);
-    --safe-area-inset-bottom: env(safe-area-inset-bottom);
-    --safe-area-inset-left: env(safe-area-inset-left);
-    --safe-area-inset-right: env(safe-area-inset-right);
+    /* 设置默认值为0，如果env()返回非0值则会覆盖 */
+    --safe-area-inset-top: max(16px, env(safe-area-inset-top));
+    --safe-area-inset-bottom: max(16px, env(safe-area-inset-bottom));
+    --safe-area-inset-left: max(0px, env(safe-area-inset-left));
+    --safe-area-inset-right: max(0px, env(safe-area-inset-right));
   }
 }
 
 @supports (top: constant(safe-area-inset-top)) {
   :root {
-    --safe-area-inset-top: constant(safe-area-inset-top);
-    --safe-area-inset-bottom: constant(safe-area-inset-bottom);
-    --safe-area-inset-left: constant(safe-area-inset-left);
-    --safe-area-inset-right: constant(safe-area-inset-right);
+    /* 兼容旧版本iOS，设置默认值为0 */
+    --safe-area-inset-top: max(16px, env(safe-area-inset-top));
+    --safe-area-inset-bottom: max(16px, env(safe-area-inset-bottom));
+    --safe-area-inset-left: max(0px, env(safe-area-inset-left));
+    --safe-area-inset-right: max(0px, env(safe-area-inset-right));
   }
 }
 

@@ -44,7 +44,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
     config.TAURI_ENV_PLATFORM === 'darwin' ||
     config.TAURI_ENV_PLATFORM === 'linux'
 
-  const serverPort = isPC ? 6130 : 1020
+  const serverPort = isPC ? 6130 : 6131
 
   // 根据平台决定host地址
   const host = (() => {
