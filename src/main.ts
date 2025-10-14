@@ -1,7 +1,6 @@
 import 'uno.css'
 import '@unocss/reset/eric-meyer.css' // unocss提供的浏览器默认样式重置
 import TlbsMap from 'tlbs-map-vue'
-import { initMobileClient } from '#/mobile-client/MobileClient'
 import App from '@/App.vue'
 import { AppException } from '@/common/exception.ts'
 import vResize from '@/directives/v-resize'
@@ -40,8 +39,6 @@ export const forceUpdateMessageTop = (topValue: number) => {
     dom.style.top = `${topValue}px`
   })
 }
-
-initMobileClient()
 
 if (isMobile()) {
   if (document.readyState === 'loading') {

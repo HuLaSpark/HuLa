@@ -86,13 +86,10 @@
 
 <script setup lang="ts">
 import type { UploaderFileListItem } from 'vant/es'
-import { useMobileStore } from '@/stores/mobile'
 import 'vant/es/dialog/style'
 import { CallTypeEnum, RoomTypeEnum } from '@/enums'
 import { useGlobalStore } from '@/stores/global'
 
-// ==== 输入框事件 ====
-const mobileStore = useMobileStore()
 const globalStore = useGlobalStore()
 const activeIcon = ref<string | null>(null)
 const emit = defineEmits(['focus', 'blur', 'updateHeight'])
@@ -338,10 +335,6 @@ const leave = (el: Element, done: () => void) => {
 const handleFocus = async () => {
   isInputFocused.value = true
   await nextTick()
-  requestAnimationFrame(() => {
-    emit('focus', { keyboard: mobileStore.keyboardDetail })
-  })
-
   if (isPanelVisible.value) {
     isPanelVisible.value = false
     options.value.forEach((item) => (item.isRotate = false))
@@ -351,9 +344,6 @@ const handleFocus = async () => {
 const handleBlur = async () => {
   isInputFocused.value = false
   await nextTick()
-  requestAnimationFrame(() => {
-    emit('blur', { keyboard: mobileStore.keyboardDetail })
-  })
 }
 
 const closePanel = () => {

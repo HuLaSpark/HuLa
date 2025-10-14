@@ -19,7 +19,6 @@ import { CallTypeEnum, EventEnum, MittEnum, StoresEnum, ThemeEnum } from '@/enum
 import { useFixedScale } from '@/hooks/useFixedScale'
 import { useGlobalShortcut } from '@/hooks/useGlobalShortcut.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
-import { useMobile } from '@/hooks/useMobile.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { useGlobalStore } from '@/stores/global'
 import { useSettingStore } from '@/stores/setting.ts'
@@ -201,8 +200,6 @@ onUnmounted(async () => {
     await cleanupGlobalShortcut()
   }
 })
-
-useMobile()
 </script>
 <style lang="scss">
 /* 修改naive-ui select 组件的样式 */

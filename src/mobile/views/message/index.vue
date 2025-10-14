@@ -182,8 +182,6 @@
 <script setup lang="ts">
 import { debounce, throttle } from 'lodash-es'
 import NavBar from '#/layout/navBar/index.vue'
-import type { IKeyboardDidShowDetail } from '#/mobile-client/interface/adapter'
-import { mobileClient } from '#/mobile-client/MobileClient'
 import addFriendIcon from '@/assets/mobile/chat-home/add-friend.webp'
 import groupChatIcon from '@/assets/mobile/chat-home/group-chat.webp'
 import { RoomTypeEnum } from '@/enums'
@@ -402,25 +400,6 @@ const onRefresh = () => {
 
 onMounted(async () => {
   await rustWebSocketClient.setupBusinessMessageListeners()
-
-  const { removeHideFunction, removeShowFunction } = await mobileClient.keyboardListener(
-    // 键盘打开
-    (detail: IKeyboardDidShowDetail) => {
-      console.log('键盘打开', detail)
-      openKeyboardMask()
-    },
-    // 键盘关闭
-    () => {
-      console.log('键盘关闭')
-      closeKeyboardMask()
-    }
-  )
-
-  // 如果需要在组件卸载时移除监听
-  onBeforeUnmount(() => {
-    removeHideFunction()
-    removeShowFunction()
-  })
 })
 
 /**
@@ -600,12 +579,6 @@ const unlockScroll = () => {
 
 // 键盘蒙板显示状态
 const showKeyboardMask = ref(false)
-
-const openKeyboardMask = () => {
-  showKeyboardMask.value = true
-  document.body.style.overflow = 'hidden'
-  document.body.style.position = 'fixed'
-}
 
 const closeKeyboardMask = () => {
   showKeyboardMask.value = false
