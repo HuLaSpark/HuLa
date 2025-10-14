@@ -57,6 +57,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Generate component typings
+        run: pnpm vite build --emptyOutDir
+
       - name: Build Vite + Tauri
         run: pnpm build
 
@@ -65,7 +68,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ inputs.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
-        
+
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
@@ -79,4 +82,4 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          releaseId: "debug-build" 
+          releaseId: "debug-build"

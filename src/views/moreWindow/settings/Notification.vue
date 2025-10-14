@@ -92,7 +92,7 @@
               <n-flex align="center" :size="12">
                 <n-checkbox
                   :checked="selectedSessions.includes(session.roomId)"
-                  @update:checked="(checked) => handleSessionSelect(session.roomId, checked)" />
+                  @update:checked="(checked: boolean) => handleSessionSelect(session.roomId, checked)" />
                 <img
                   :src="AvatarUtils.getAvatarUrl(session.avatar) || '/imgs/avatar.png'"
                   :alt="session.name"
@@ -104,10 +104,10 @@
 
               <n-dropdown
                 :options="getNotificationOptions(session)"
-                @select="(key) => handleNotificationChange(session, key)"
+                @select="(key: string) => handleNotificationChange(session, key)"
                 trigger="click"
                 :scrollable="false"
-                @update:show="(show) => (isDropdownShow = show)">
+                @update:show="(show: boolean) => (isDropdownShow = show)">
                 <n-button size="small" :color="'#13987f'" text class="text-(12px [--text-color])">
                   {{ getNotificationStatusText(session) }}
                 </n-button>
