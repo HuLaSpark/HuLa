@@ -153,14 +153,6 @@ const filteredSessionList = computed(() => {
 })
 
 let mergeMessageType: MergeMessageType = MergeMessageType.SINGLE
-
-// 重置所有会话选择状态
-const resetSessionSelection = () => {
-  chatStore.sessionList.forEach((session) => {
-    session.isCheck = false
-  })
-}
-
 const opts = computed(() => [
   {
     text: '逐条转发',
@@ -168,7 +160,7 @@ const opts = computed(() => [
     disabled: selectedMsgs.value.length === 0,
     click: () => {
       mergeMessageType = MergeMessageType.SINGLE
-      resetSessionSelection()
+      chatStore.resetSessionSelection()
       showModal.value = true
     }
   },
@@ -178,7 +170,7 @@ const opts = computed(() => [
     disabled: selectedMsgs.value.length === 0,
     click: () => {
       mergeMessageType = MergeMessageType.MERGE
-      resetSessionSelection()
+      chatStore.resetSessionSelection()
       showModal.value = true
     }
   },
@@ -208,7 +200,7 @@ const opts = computed(() => [
     icon: '#close',
     click: () => {
       chatStore.clearMsgCheck()
-      resetSessionSelection()
+      chatStore.resetSessionSelection()
       chatStore.setMsgMultiChoose(false)
     }
   }
@@ -216,7 +208,7 @@ const opts = computed(() => [
 
 watch(showModal, (visible, previous) => {
   if (!visible && previous) {
-    resetSessionSelection()
+    chatStore.resetSessionSelection()
     if (!chatStore.isMsgMultiChoose) {
       chatStore.clearMsgCheck()
     }
@@ -251,7 +243,7 @@ const sendMsg = async () => {
       showModal.value = false
       chatStore.clearMsgCheck()
       chatStore.setMsgMultiChoose(false)
-      resetSessionSelection()
+      chatStore.resetSessionSelection()
     })
 }
 
@@ -259,7 +251,7 @@ useMitt.on(MittEnum.MSG_MULTI_CHOOSE, (payload?: { action?: string; mergeType?: 
   if (!payload) return
   if (payload.action === 'open-forward') {
     mergeMessageType = payload.mergeType ?? MergeMessageType.SINGLE
-    resetSessionSelection()
+    chatStore.resetSessionSelection()
     showModal.value = true
   }
 })
