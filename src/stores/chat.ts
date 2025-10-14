@@ -193,7 +193,7 @@ export const useChatStore = defineStore(
     const setAllSessionMsgList = async (size = pageSize) => {
       await info('初始设置所有会话消息列表')
       for (const session of sessionList.value) {
-        getPageMsg(size, session.roomId, '')
+        await getPageMsg(size, session.roomId, '')
       }
     }
 

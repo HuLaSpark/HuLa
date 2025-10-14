@@ -1,5 +1,5 @@
 <template>
-  <div class="appContainer h-100vh">
+  <div class="appContainer h-100vh" :class="{ 'safe-area-disabled': isSafeAreaDisabled }">
     <NaiveProvider :message-max="3" :notific-max="3" class="h-full">
       <div v-if="!isLock" id="app-container" class="h-full">
         <router-view />
@@ -7,9 +7,8 @@
       <!-- 锁屏页面 -->
       <LockScreen v-else />
     </NaiveProvider>
-
-    <RtcCallFloatCell v-if="isMobile()" />
   </div>
+  <component :is="mobileRtcCallFloatCell" v-if="mobileRtcCallFloatCell" />
 </template>
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
@@ -25,6 +24,10 @@ import { useSettingStore } from '@/stores/setting.ts'
 import { isDesktop, isMobile, isWindows } from '@/utils/PlatformConstants'
 import LockScreen from '@/views/LockScreen.vue'
 import { WsResponseMessageType } from './services/wsType'
+
+const mobileRtcCallFloatCell = isMobile()
+  ? defineAsyncComponent(() => import('@/mobile/components/RtcCallFloatCell.vue'))
+  : null
 
 const appWindow = WebviewWindow.getCurrent()
 const { createRtcCallWindow } = useWindow()
@@ -49,6 +52,8 @@ const LockExclusion = new Set(['/login', '/tray', '/qrCode', '/about', '/onlineS
 const isLock = computed(() => {
   return !LockExclusion.has(router.currentRoute.value.path) && lockScreen.value.enable
 })
+const safeAreaDisabledPages = new Set(['/mobile/splashscreen', '/mobile/login'])
+const isSafeAreaDisabled = computed(() => safeAreaDisabledPages.has(router.currentRoute.value.path))
 
 /** 禁止图片以及输入框的拖拽 */
 const preventDrag = (e: MouseEvent) => {
@@ -230,5 +235,12 @@ a {
   padding-left: var(--safe-area-inset-left);
   padding-right: var(--safe-area-inset-right);
   box-sizing: border-box;
+}
+
+.appContainer.safe-area-disabled {
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 0;
+  padding-right: 0;
 }
 </style>

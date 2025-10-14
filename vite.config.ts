@@ -43,7 +43,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
   const currentPlatform = config.TAURI_ENV_PLATFORM
   const isPC = currentPlatform === 'windows' || currentPlatform === 'darwin' || currentPlatform === 'linux'
 
-  const serverPort = isPC ? 6130 : 6131
+  const serverPort = isPC ? 6130 : 5210
   const componentsDirs = getComponentsDirs(currentPlatform)
   const componentsDtsPath = getComponentsDtsPath(currentPlatform)
 

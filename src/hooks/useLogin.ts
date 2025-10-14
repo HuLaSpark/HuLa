@@ -224,6 +224,9 @@ export const useLogin = () => {
             info.value.name = userStore.userInfo.name
             info.value.uid = userStore.userInfo.uid
           }
+          if (isMobile()) {
+            router.replace('/mobile/login')
+          }
         }
       })
   }

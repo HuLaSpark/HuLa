@@ -116,11 +116,6 @@ async fn handle_login_success(login_resp: &LoginResp, state: &State<'_, AppData>
     user_info.token = login_resp.token.clone();
     user_info.refresh_token = login_resp.refresh_token.clone();
     info!("handle_login_success, user_info: {:?}", user_info);
-
-    let mut client = state.rc.lock().await;
-    check_user_init_and_fetch_messages(&mut client, state.db_conn.deref(), uid).await
-        .map_err(|e| e.to_string())?;
-
     // 保存 token 信息到数据库
     im_user_repository::save_user_tokens(
         state.db_conn.deref(),
@@ -130,6 +125,10 @@ async fn handle_login_success(login_resp: &LoginResp, state: &State<'_, AppData>
     )
     .await
     .map_err(|e| e.to_string())?;
+
+    let mut client = state.rc.lock().await;
+    check_user_init_and_fetch_messages(&mut client, state.db_conn.deref(), uid).await
+        .map_err(|e| e.to_string())?;
 
     Ok(())
 }
