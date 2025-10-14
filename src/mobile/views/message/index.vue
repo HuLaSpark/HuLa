@@ -1,8 +1,5 @@
 <template>
   <div class="flex flex-col h-full">
-    <!-- 顶部安全区域占位元素 -->
-    <SafeAreaPlaceholder type="layout" direction="top" />
-
     <img src="@/assets/mobile/chat-home/background.webp" class="w-100% fixed top-0" alt="hula" />
 
     <!-- 页面蒙板 -->
@@ -93,13 +90,13 @@
     </div>
 
     <van-pull-refresh
-      class="h-full"
+      class="flex-1"
       :pull-distance="100"
       :disabled="!isEnablePullRefresh"
       v-model="loading"
       @refresh="onRefresh">
       <div class="flex flex-col h-full px-18px">
-        <div class="flex-1 overflow-auto" @scroll.prevent="onScroll" ref="scrollContainer">
+        <div class="flex-1 overflow-y-auto overflow-x-hidden min-h-0" @scroll="onScroll" ref="scrollContainer">
           <van-swipe-cell
             @open="handleSwipeOpen"
             @close="handleSwipeClose"
@@ -184,7 +181,6 @@
 
 <script setup lang="ts">
 import { debounce, throttle } from 'lodash-es'
-import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.vue'
 import NavBar from '#/layout/navBar/index.vue'
 import type { IKeyboardDidShowDetail } from '#/mobile-client/interface/adapter'
 import { mobileClient } from '#/mobile-client/MobileClient'

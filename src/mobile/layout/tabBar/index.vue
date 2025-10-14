@@ -69,29 +69,4 @@ if (isAndroid()) {
 const tabHeight = computed(() => customHeight + 'px')
 </script>
 
-<style scoped lang="scss">
-.tab-bar {
-  @apply z-998 w-full bg-#fefefe90 backdrop-blur-md min-h-50px;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-
-.tab-item {
-  position: relative;
-
-  svg {
-    @apply w-22px h-22px;
-    position: relative;
-  }
-
-  &::after {
-    content: '';
-    @apply absolute bottom-8px left-1/2 w-44px h-26px opacity-0 blur-md pointer-events-none;
-    z-index: -1;
-    will-change: opacity, filter;
-  }
-}
-</style>
+<style scoped lang="scss"></style>
