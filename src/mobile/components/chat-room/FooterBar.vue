@@ -80,8 +80,6 @@
         <div class="w-full text-center py-3" @click="startCall(CallTypeEnum.AUDIO)">语音通话</div>
         <div class="w-full text-center py-3">取消</div>
       </div>
-      <!-- 底部安全区域占位元素 -->
-      <SafeAreaPlaceholder type="layout" direction="bottom" />
     </van-popup>
   </div>
 </template>

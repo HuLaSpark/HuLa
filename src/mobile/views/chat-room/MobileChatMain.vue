@@ -15,8 +15,6 @@
     </template>
     <template #footer>
       <FooterBar ref="footerBar" @update-height="onFooterBarUpdateHeight"></FooterBar>
-
-      <SafeAreaPlaceholder ref="keyBoardRef" type="keyboard" direction="bottom" />
     </template>
   </AutoFixHeightPage>
 </template>

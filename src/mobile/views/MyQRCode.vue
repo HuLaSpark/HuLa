@@ -1,7 +1,5 @@
 <template>
   <div class="h-100vh flex flex-col bg-gray-100">
-    <SafeAreaPlaceholder type="layout" class="" direction="top" />
-
     <img src="@/assets/mobile/chat-home/background.webp" class="w-100% absolute top-0 z-1" alt="hula" />
 
     <HeaderBar
@@ -45,9 +43,6 @@
         </div>
       </div>
     </div>
-
-    <!-- 底部安全区域占位元素 -->
-    <SafeAreaPlaceholder type="layout" class="" direction="bottom" />
   </div>
 </template>
 
