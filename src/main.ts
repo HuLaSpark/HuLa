@@ -51,24 +51,6 @@ if (isMobile()) {
   }
 }
 
-const hideInitialSplash = () => {
-  const splash = document.getElementById('initial-splash')
-  if (!splash) {
-    return
-  }
-
-  splash.classList.add('initial-splash--hide')
-  splash.addEventListener(
-    'transitionend',
-    () => {
-      splash.remove()
-    },
-    { once: true }
-  )
-}
-
 async function setup() {
-  await import('@/services/webSocketAdapter')
   await invoke('set_complete', { task: 'frontend' })
-  hideInitialSplash()
 }

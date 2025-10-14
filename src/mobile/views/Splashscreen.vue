@@ -6,17 +6,23 @@
 <script setup lang="ts">
 import { useSettingStore } from '@/stores/setting'
 import { useLogin } from '@/hooks/useLogin'
+import { invoke } from '@tauri-apps/api/core'
 
 const settingStore = useSettingStore()
 const router = useRouter()
 const { normalLogin } = useLogin()
 
-onMounted(() => {
+const init = async () => {
   if (settingStore.login.autoLogin) {
     normalLogin('MOBILE')
+    await invoke('hide_splash_screen')
   } else {
     router.push('/mobile/login')
   }
+}
+
+onMounted(() => {
+  init()
 })
 </script>
 
