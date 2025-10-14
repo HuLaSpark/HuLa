@@ -1,5 +1,5 @@
 <template>
-  <div class="flex justify-around items-end pt-3">
+  <div class="tab-bar flex justify-around items-end pt-3">
     <RouterLink
       v-for="item in navItems"
       :key="item.path"
@@ -51,4 +51,12 @@ const navItems: NavItem[] = [
 ]
 </script>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.tab-bar {
+  @apply backdrop-blur-md;
+  border-top: 0.5px solid #e3e3e3;
+  background-color: transparent;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+</style>

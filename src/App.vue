@@ -52,7 +52,7 @@ const LockExclusion = new Set(['/login', '/tray', '/qrCode', '/about', '/onlineS
 const isLock = computed(() => {
   return !LockExclusion.has(router.currentRoute.value.path) && lockScreen.value.enable
 })
-const safeAreaDisabledPages = new Set(['/mobile/splashscreen', '/mobile/login'])
+const safeAreaDisabledPages = new Set(['/mobile/splashscreen', '/mobile/login', '/mobile/rtcCall'])
 const isSafeAreaDisabled = computed(() => safeAreaDisabledPages.has(router.currentRoute.value.path))
 
 /** 禁止图片以及输入框的拖拽 */
