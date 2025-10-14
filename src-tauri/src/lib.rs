@@ -349,6 +349,8 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
 {
     #[cfg(mobile)]
     use crate::command::set_complete;
+    #[cfg(mobile)]
+    use crate::mobiles::splash::hide_splash_screen;
     use crate::command::user_command::{
         get_user_tokens, save_user_info, update_user_last_opt_time,
     };
@@ -431,5 +433,7 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         update_settings,
         #[cfg(mobile)]
         set_complete,
+        #[cfg(mobile)]
+        hide_splash_screen,
     ]
 }

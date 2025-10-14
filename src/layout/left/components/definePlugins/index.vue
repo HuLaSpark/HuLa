@@ -6,11 +6,11 @@
       <div class="h-140px relative w-full p-6px box-border">
         <img
           class="absolute blur-6px rounded-t-6px z-1 top-0 left-0 w-full h-140px object-cover"
-          src="@/assets/img/dispersion-bg.png"
+          src="/img/dispersion-bg.png"
           alt="" />
         <img
           class="absolute rounded-t-6px z-2 top-0 left-0 w-full h-140px object-cover"
-          src="@/assets/img/dispersion-bg.png"
+          src="/img/dispersion-bg.png"
           alt="" />
 
         <div

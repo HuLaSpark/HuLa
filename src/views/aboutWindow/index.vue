@@ -11,7 +11,7 @@
             class="w-170px h-113px absolute top-9% left-51% transform -translate-x-51% -translate-y-9%"></div>
           <img
             class="drop-shadow-md absolute top-30% left-1/2 transform -translate-x-1/2 -translate-y-30% w-140px h-60px"
-            src="../../assets/logo/hula.png"
+            src="/hula.png"
             alt="" />
         </div>
       </div>

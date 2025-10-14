@@ -10,8 +10,8 @@
       data-tauri-drag-region>
       <!-- 当前选中的状态 -->
       <n-flex justify="center" align="center" class="pt-80px" data-tauri-drag-region>
-        <img class="w-34px h-34px" :src="currentState?.url" alt="" />
-        <span class="text-22px">{{ currentState?.title }}</span>
+        <img class="w-34px h-34px" :src="statusIcon" alt="" />
+        <span class="text-22px">{{ statusTitle }}</span>
       </n-flex>
 
       <!-- 状态 -->
@@ -19,8 +19,20 @@
         <n-scrollbar style="max-height: 215px">
           <n-flex align="center" :size="10">
             <n-flex
+              @click="handleActive(resetState)"
+              vertical
+              justify="center"
+              align="center"
+              :size="8"
+              class="status-item">
+              <svg class="size-24px color-#d03553">
+                <use href="#forbid"></use>
+              </svg>
+              <span class="text-11px">清空状态</span>
+            </n-flex>
+            <n-flex
               @click="handleActive(item)"
-              :class="{ active: currentState?.id === item.id }"
+              :class="{ active: hasCustomState && currentState?.id === item.id }"
               v-for="item in stateList"
               :key="item.title"
               vertical
@@ -28,7 +40,7 @@
               align="center"
               :size="8"
               class="status-item">
-              <img class="w-24px h-24px" :src="item.url" alt="" />
+              <img class="size-24px" :src="item.url" alt="" />
               <span class="text-11px">{{ item.title }}</span>
             </n-flex>
           </n-flex>
@@ -39,19 +51,27 @@
 </template>
 <script setup lang="ts">
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { storeToRefs } from 'pinia'
 import type { UserState } from '@/services/types'
 import { useUserStore } from '@/stores/user'
 import { useUserStatusStore } from '@/stores/userStatus'
+import { useOnlineStatus } from '@/hooks/useOnlineStatus.ts'
 import { changeUserState } from '@/utils/ImRequestUtils'
 
 const userStatusStore = useUserStatusStore()
 const userStore = useUserStore()
-const { currentState, stateList, stateId } = storeToRefs(userStatusStore)
+const { stateList, stateId } = storeToRefs(userStatusStore)
+const { currentState, statusIcon, statusTitle, statusBgColor, hasCustomState } = useOnlineStatus()
+const resetState: UserState = {
+  id: '0',
+  title: '清空状态',
+  url: ''
+}
 /** 这里不写入activeItem中是因为v-bind要绑定的值是响应式的 */
-const RGBA = ref(currentState.value?.bgColor)
+const RGBA = ref(statusBgColor.value)
 
 watchEffect(() => {
-  RGBA.value = currentState.value?.bgColor
+  RGBA.value = statusBgColor.value
 })
 
 /**
@@ -74,8 +94,9 @@ const handleActive = async (item: UserState) => {
 
 onMounted(async () => {
   await getCurrentWebviewWindow().show()
-  currentState.value.id =
-    stateList.value.find((item: { title: string }) => item.title === currentState.value.title)?.id || '1'
+  if (!currentState.value) return
+  const matched = stateList.value.find((item: { title: string }) => item.title === currentState.value?.title)
+  currentState.value.id = matched?.id || '1'
 })
 </script>
 <style scoped lang="scss">

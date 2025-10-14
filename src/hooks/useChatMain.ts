@@ -26,7 +26,7 @@ import { extractFileName, removeTag } from '@/utils/Formatting'
 import { detectImageFormat, imageUrlToUint8Array, isImageUrl } from '@/utils/ImageUtils'
 import { recallMsg, removeGroupMember, updateMyRoomInfo } from '@/utils/ImRequestUtils'
 import { detectRemoteFileType, getFilesMeta } from '@/utils/PathUtil'
-import { isMac } from '@/utils/PlatformConstants'
+import { isMac, isMobile } from '@/utils/PlatformConstants'
 import { useWindow } from './useWindow'
 
 type UseChatMainOptions = {
@@ -185,6 +185,10 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       label: '转发',
       icon: 'share',
       click: (item: MessageType) => {
+        if (isMobile()) {
+          window.$message.warning('功能暂开发')
+          return
+        }
         handleForward(item)
       },
       visible: (item: MessageType) => !isNoticeMessage(item)
@@ -224,10 +228,31 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
         })
       },
       visible: (item: MessageType) => {
-        if (isDiffNow({ time: item.message.sendTime, unit: 'minute', diff: 2 })) return
+        const isSystemAdmin = userStore.userInfo?.power === PowerEnum.ADMIN
+        if (isSystemAdmin) {
+          return true
+        }
+
+        const isGroupSession = globalStore.currentSession?.type === RoomTypeEnum.GROUP
+        const groupMembers = groupStore.userList
+        const currentMember = isGroupSession ? groupMembers.find((member) => member.uid === userUid.value) : undefined
+        const isGroupManager =
+          isGroupSession &&
+          (currentMember?.roleId === RoleEnum.LORD ||
+            currentMember?.roleId === RoleEnum.ADMIN ||
+            groupStore.currentLordId === userUid.value ||
+            groupStore.adminUidList.includes(userUid.value))
+
+        if (isGroupManager) {
+          return true
+        }
+
         const isCurrentUser = item.fromUser.uid === userUid.value
-        const isAdmin = userStore.userInfo!.power === PowerEnum.ADMIN
-        return isCurrentUser || isAdmin
+        if (!isCurrentUser) {
+          return false
+        }
+
+        return !isDiffNow({ time: item.message.sendTime, unit: 'minute', diff: 2 })
       }
     }
   ])
@@ -236,6 +261,10 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       label: '复制',
       icon: 'copy',
       click: (item: MessageType) => {
+        if (isMobile()) {
+          window.$message.warning('功能暂开发')
+          return
+        }
         handleCopy(item.message.body.url, true)
       }
     },
@@ -244,6 +273,10 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       label: '另存为',
       icon: 'Importing',
       click: async (item: MessageType) => {
+        if (isMobile()) {
+          window.$message.warning('功能暂开发')
+          return
+        }
         await saveVideoAttachmentAs({
           url: item.message.body.url,
           downloadFile,
@@ -364,6 +397,10 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
               label: '另存为',
               icon: 'Importing',
               click: async (item: MessageType) => {
+                if (isMobile()) {
+                  window.$message.warning('功能暂开发')
+                  return
+                }
                 const fileUrl = item.message.body.url
                 const fileName = item.message.body.fileName
                 if (item.message.type === MsgEnum.VIDEO) {
@@ -567,6 +604,10 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       label: '另存为',
       icon: 'Importing',
       click: async (item: RightMouseMessageItem) => {
+        if (isMobile()) {
+          window.$message.warning('功能暂开发')
+          return
+        }
         await saveFileAttachmentAs({
           url: item.message.body.url,
           downloadFile,
@@ -640,6 +681,10 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       label: '另存为',
       icon: 'Importing',
       click: async (item: MessageType) => {
+        if (isMobile()) {
+          window.$message.warning('功能暂开发')
+          return
+        }
         try {
           const imageUrl = item.message.body.url
           const suggestedName = imageUrl || 'image.png'

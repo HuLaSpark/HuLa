@@ -12,6 +12,7 @@ import ChatRoomLayout from '#/layout/chat-room/ChatRoomLayout.vue'
 import NoticeLayout from '#/layout/chat-room/NoticeLayout.vue'
 import FriendsLayout from '#/layout/friends/FriendsLayout.vue'
 import MobileHome from '#/layout/index.vue'
+import GroupChatMember from '#/views/chat-room/GroupChatMember.vue'
 import MyLayout from '#/layout/my/MyLayout.vue'
 import MobileLogin from '#/login.vue'
 import ChatSetting from '#/views/chat-room/ChatSetting.vue'
@@ -78,12 +79,19 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
         path: 'chatMain/:uid?', // 可选传入，如果传入uid就表示房间属于好友的私聊房间
         name: 'mobileChatMain',
         component: MobileChatMain,
-        props: true
+        props: true,
+        meta: { keepAlive: true }
       },
       {
         path: 'setting',
         name: 'mobileChatSetting',
         component: ChatSetting
+      },
+      {
+        path: 'groupChatMember',
+        name: 'mobileGroupChatMember',
+        component: GroupChatMember,
+        meta: { keepAlive: true }
       },
       {
         path: 'notice',
