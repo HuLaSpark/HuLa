@@ -18,7 +18,7 @@ export const useImageViewer = () => {
    * @param includeTypes 要包含的消息类型数组
    */
   const getAllMediaFromChat = (currentUrl: string, includeTypes: MsgEnum[] = [MsgEnum.IMAGE, MsgEnum.EMOJI]) => {
-    const messages = [...(chatStore.currentMessageMap?.values() || [])]
+    const messages = [...Object.values(chatStore.currentMessageMap || {})]
     const mediaUrls: string[] = []
     let currentIndex = 0
 

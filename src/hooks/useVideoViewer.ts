@@ -89,7 +89,7 @@ export const useVideoViewer = () => {
   // 媒体获取（支持类型过滤和索引定位）
   const getAllMediaFromChat = (url: string, includeTypes: MsgEnum[] = [MsgEnum.VIDEO]) => {
     const chatStore = useChatStore()
-    const messages = [...(chatStore.currentMessageMap?.values() || [])]
+    const messages = [...Object.values(chatStore.currentMessageMap || {})]
     const mediaUrls: string[] = []
     let currentIndex = -1
     messages.forEach((msg) => {

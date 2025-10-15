@@ -54,8 +54,8 @@ export const useChatStore = defineStore(
     // 会话列表的加载状态
     const sessionOptions = reactive({ isLast: false, isLoading: false, cursor: '' })
 
-    // 存储所有消息的Map
-    const messageMap = reactive<Map<string, Map<string, MessageType>>>(new Map())
+    // 存储所有消息的Record
+    const messageMap = reactive<Record<string, Record<string, MessageType>>>({})
     // 消息加载状态
     const messageOptions = reactive<Map<string, { isLast: boolean; isLoading: boolean; cursor: string }>>(new Map())
 
@@ -69,7 +69,7 @@ export const useChatStore = defineStore(
 
     // 当前聊天室的消息Map计算属性
     const currentMessageMap = computed(() => {
-      return messageMap.get(globalStore.currentSession!.roomId)
+      return messageMap[globalStore.currentSession!.roomId] || {}
     })
 
     // 当前聊天室的消息加载状态计算属性
@@ -178,15 +178,15 @@ export const useChatStore = defineStore(
 
     // 将消息列表转换为数组并计算时间间隔
     const chatMessageList = computed(() => {
-      if (!currentMessageMap.value) return []
+      if (!currentMessageMap.value || Object.keys(currentMessageMap.value).length === 0) return []
 
-      return [...currentMessageMap.value.values()].sort((a, b) => Number(a.message.id) - Number(b.message.id))
+      return Object.values(currentMessageMap.value).sort((a, b) => Number(a.message.id) - Number(b.message.id))
     })
 
     const chatMessageListByRoomId = computed(() => (roomId: string) => {
-      if (!messageMap.get(roomId)) return []
+      if (!messageMap[roomId] || Object.keys(messageMap[roomId]).length === 0) return []
 
-      return [...messageMap.get(roomId)!.values()].sort((a, b) => Number(a.message.id) - Number(b.message.id))
+      return Object.values(messageMap[roomId]).sort((a, b) => Number(a.message.id) - Number(b.message.id))
     })
 
     // 登录之后，加载一次所有会话的消息
@@ -231,15 +231,14 @@ export const useChatStore = defineStore(
         cursor: data.cursor
       })
 
-      let map = messageMap.get(roomId)
-      if (!map) {
-        map = new Map<string, MessageType>()
+      let roomMessages = messageMap[roomId]
+      if (!roomMessages) {
+        roomMessages = {}
+        messageMap[roomId] = roomMessages
       }
       for (const msg of data.list) {
-        map.set(msg.message.id, msg)
+        roomMessages[msg.message.id] = msg
       }
-      // 设置消息
-      messageMap.set(roomId, map)
     }
 
     // 获取会话列表
@@ -330,14 +329,14 @@ export const useChatStore = defineStore(
       }
       const messageKey = msg.message.id
 
-      let roomMessages = messageMap.get(msg.message.roomId)
+      let roomMessages = messageMap[msg.message.roomId]
       if (!roomMessages) {
-        roomMessages = new Map<string, MessageType>()
-        messageMap.set(msg.message.roomId, roomMessages)
+        roomMessages = {}
+        messageMap[msg.message.roomId] = roomMessages
       }
 
-      const existedMsg = roomMessages.get(messageKey)
-      roomMessages.set(messageKey, msg)
+      const existedMsg = roomMessages[messageKey]
+      roomMessages[messageKey] = msg
 
       if (existedMsg) {
         return
@@ -395,8 +394,8 @@ export const useChatStore = defineStore(
     }
 
     const checkMsgExist = (roomId: string, msgId: string) => {
-      const current = messageMap.get(roomId)
-      return current?.has(msgId)
+      const current = messageMap[roomId]
+      return current && msgId in current
     }
 
     const clearMsgCheck = () => {
@@ -405,10 +404,12 @@ export const useChatStore = defineStore(
 
     // 过滤掉拉黑用户的发言
     const filterUser = (uid: string) => {
-      for (const messages of messageMap.values()) {
-        for (const msg of messages.values()) {
+      for (const roomId in messageMap) {
+        const messages = messageMap[roomId]
+        for (const msgId in messages) {
+          const msg = messages[msgId]
           if (msg.fromUser.uid === uid) {
-            messages.delete(msg.message.id)
+            delete messages[msgId]
           }
         }
       }
@@ -428,7 +429,7 @@ export const useChatStore = defineStore(
     // 查找消息在列表里面的索引
     const getMsgIndex = (msgId: string) => {
       if (!msgId) return -1
-      const keys = currentMessageMap.value ? Array.from(currentMessageMap.value.keys()) : []
+      const keys = currentMessageMap.value ? Object.keys(currentMessageMap.value) : []
       return keys.indexOf(msgId)
     }
 
@@ -455,7 +456,7 @@ export const useChatStore = defineStore(
           }
         )
 
-        const msgItem = currentMessageMap.value?.get(String(msgId))
+        const msgItem = currentMessageMap.value?.[String(msgId)]
         if (msgItem && msgItem.message.messageMarks) {
           // 获取当前的标记状态，如果不存在则初始化
           const currentMarkStat = msgItem.message.messageMarks[String(markType)] || {
@@ -515,7 +516,7 @@ export const useChatStore = defineStore(
     // 更新消息撤回状态
     const updateRecallMsg = async (data: RevokedMsgType) => {
       const { msgId } = data
-      const message = currentMessageMap.value!.get(msgId)
+      const message = currentMessageMap.value?.[msgId]
       if (message && typeof data.recallUid === 'string') {
         const cacheUser = groupStore.getUserInfo(data.recallUid)!
         let recallMessageBody: string = ''
@@ -587,7 +588,7 @@ export const useChatStore = defineStore(
       const messageList = currentReplyMap.value?.get(msgId)
       if (messageList) {
         for (const id of messageList) {
-          const msg = currentMessageMap.value?.get(id)
+          const msg = currentMessageMap.value?.[id]
           if (msg) {
             msg.message.body.reply.body = '原消息已被撤回'
           }
@@ -602,7 +603,9 @@ export const useChatStore = defineStore(
 
     // 删除消息
     const deleteMsg = (msgId: string) => {
-      currentMessageMap.value?.delete(msgId)
+      if (currentMessageMap.value && msgId in currentMessageMap.value) {
+        delete currentMessageMap.value[msgId]
+      }
     }
 
     // 更新消息
@@ -621,7 +624,7 @@ export const useChatStore = defineStore(
       uploadProgress?: number
       timeBlock?: number
     }) => {
-      const msg = currentMessageMap.value?.get(msgId)
+      const msg = currentMessageMap.value?.[msgId]
       if (msg) {
         msg.message.status = status
         msg.timeBlock = timeBlock
@@ -635,14 +638,18 @@ export const useChatStore = defineStore(
           console.log(`📱 更新消息进度: ${uploadProgress}% (消息ID: ${msgId})`)
           // 确保响应式更新，创建新的消息对象
           const updatedMsg = { ...msg, uploadProgress }
-          currentMessageMap.value?.set(msg.message.id, updatedMsg)
+          if (currentMessageMap.value) {
+            currentMessageMap.value[msg.message.id] = updatedMsg
+          }
           // 强制触发响应式更新
-          messageMap.set(globalStore.currentSession!.roomId, new Map(currentMessageMap.value))
+          messageMap[globalStore.currentSession!.roomId] = { ...currentMessageMap.value }
         } else {
-          currentMessageMap.value?.set(msg.message.id, msg)
+          if (currentMessageMap.value) {
+            currentMessageMap.value[msg.message.id] = msg
+          }
         }
-        if (newMsgId && msgId !== newMsgId) {
-          currentMessageMap.value?.delete(msgId)
+        if (newMsgId && msgId !== newMsgId && currentMessageMap.value) {
+          delete currentMessageMap.value[msgId]
         }
       }
     }
@@ -661,7 +668,7 @@ export const useChatStore = defineStore(
 
     // 根据消息id获取消息体
     const getMessage = (messageId: string) => {
-      return currentMessageMap.value?.get(messageId)
+      return currentMessageMap.value?.[messageId]
     }
 
     // 删除会话
@@ -736,21 +743,19 @@ export const useChatStore = defineStore(
     }
 
     const clearRedundantMessages = (roomId: string) => {
-      const currentMessages = messageMap.get(roomId)
+      const currentMessages = messageMap[roomId]
       if (!currentMessages) return
 
       // 将消息转换为数组并按消息ID倒序排序
-      const sortedMessages = Array.from(currentMessages.values()).sort(
-        (a, b) => Number(b.message.id) - Number(a.message.id)
-      )
+      const sortedMessages = Object.values(currentMessages).sort((a, b) => Number(b.message.id) - Number(a.message.id))
 
       // 保留前20条消息的ID
       const keepMessageIds = new Set(sortedMessages.slice(0, 20).map((msg) => msg.message.id))
 
       // 删除多余的消息
-      for (const [msgId] of currentMessages) {
+      for (const msgId in currentMessages) {
         if (!keepMessageIds.has(msgId)) {
-          currentMessages.delete(msgId)
+          delete currentMessages[msgId]
         }
       }
     }
@@ -764,8 +769,9 @@ export const useChatStore = defineStore(
 
       try {
         // 1. 清空消息数据 避免竞态条件
-        const currentMessages = messageMap.get(requestRoomId)
-        currentMessages?.clear() // 如果Map存在就清空，不存在getPageMsg会自动创建
+        if (messageMap[requestRoomId]) {
+          messageMap[requestRoomId] = {}
+        }
 
         // 2. 重置消息加载状态，强制cursor为空以获取最新消息
         messageOptions.set(requestRoomId, {
