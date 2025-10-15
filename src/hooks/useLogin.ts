@@ -156,9 +156,14 @@ export const useLogin = () => {
       chatStore.setAllSessionMsgList(20),
       cachedStore.getAllBadgeList()
     ])
+    // 强制持久化
+    groupStore.$persist()
+    chatStore.$persist()
+    cachedStore.$persist()
+    globalStore.$persist()
 
-    setLoginState()
-    routerOrOpenHomeWindow()
+    await setLoginState()
+    await routerOrOpenHomeWindow()
   }
 
   const routerOrOpenHomeWindow = async () => {
