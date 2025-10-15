@@ -2,7 +2,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 import { error, info, warn } from '@tauri-apps/plugin-log'
 import { useMitt } from '@/hooks/useMitt'
-import { WsResponseMessageType } from '@/services/wsType'
+import { WsResponseMessageType, NoticeTypeEnum } from '@/services/wsType'
 import { useContactStore } from '@/stores/contacts'
 
 /// WebSocket 连接状态
@@ -303,6 +303,17 @@ class RustWebSocketClient {
       await listen('ws-request-new-apply', (event: any) => {
         info('好友申请')
         useMitt.emit(WsResponseMessageType.REQUEST_NEW_FRIEND, event.payload)
+      })
+    )
+
+    // 通知事件
+    this.listenerController.add(
+      await listen('ws-request-notify-event', (event: any) => {
+        if (event.payload.eventType === NoticeTypeEnum.GROUP_SET_ADMIN) {
+          useMitt.emit(WsResponseMessageType.REQUEST_SET_ADMIN, event.payload)
+        } else if (event.payload.eventType === NoticeTypeEnum.GROUP_RECALL_ADMIN) {
+          useMitt.emit(WsResponseMessageType.REQUEST_RECALL_ADMIN, event.payload)
+        }
       })
     )
 
