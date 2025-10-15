@@ -217,6 +217,8 @@ export const useLogin = () => {
           uiState.value = 'manual'
           loginDisabled.value = false
           loginText.value = '登录'
+          // 取消自动登录
+          settingStore.setAutoLogin(false)
           // 自动填充之前尝试登录的账号信息到手动登录表单
           if (userStore.userInfo) {
             info.value.account = userStore.userInfo.account || userStore.userInfo.email || ''
