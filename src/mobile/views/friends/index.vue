@@ -1,8 +1,5 @@
 <template>
   <div class="flex flex-col h-full flex-1">
-    <!-- 顶部安全区域占位元素 -->
-    <SafeAreaPlaceholder type="layout" direction="top" />
-
     <img src="@/assets/mobile/chat-home/background.webp" class="w-100% fixed top-0" alt="hula" />
 
     <!-- 页面蒙板 -->
@@ -74,7 +71,7 @@
                 <template #header-extra>
                   <span class="text-(10px #707070)">{{ onlineCount }}/{{ contactStore.contactsList.length }}</span>
                 </template>
-                <n-scrollbar style="max-height: calc(100vh - 220px)">
+                <n-scrollbar style="max-height: calc(100vh - (340px + var(--safe-area-inset-top)))">
                   <!-- 用户框 多套一层div来移除默认的右键事件然后覆盖掉因为margin空隙而导致右键可用 -->
                   <div @contextmenu.stop="$event.preventDefault()">
                     <n-flex
@@ -126,7 +123,7 @@
               <template #header-extra>
                 <span class="text-(10px #707070)">{{ groupChatList.length }}</span>
               </template>
-              <n-scrollbar style="max-height: calc(100vh - 220px)">
+              <n-scrollbar style="max-height: calc(100vh - (340px + var(--safe-area-inset-top)))">
                 <div
                   @click="handleClick(item.roomId, RoomTypeEnum.GROUP)"
                   :class="{ active: activeItem === item.roomId }"
@@ -163,7 +160,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
-import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.vue'
 import NavBar from '#/layout/navBar/index.vue'
 import addFriendIcon from '@/assets/mobile/chat-home/add-friend.webp'
 import groupChatIcon from '@/assets/mobile/chat-home/group-chat.webp'

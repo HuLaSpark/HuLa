@@ -35,7 +35,7 @@
           android:label="@string/main_activity_title"
           android:launchMode="singleTask"
           android:resizeableActivity="true"
-          android:windowSoftInputMode="adjustNothing"
+          android:windowSoftInputMode="adjustResize"
           android:theme="@style/Theme.hula.Launcher"
           android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode">
 

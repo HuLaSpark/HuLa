@@ -110,7 +110,7 @@
         tertiary
         style="color: #fff"
         class="w-full mt-8px mb-50px gradient-button"
-        @click="normalLogin(false)">
+        @click="normalLogin('MOBILE')">
         <span>{{ loginText }}</span>
       </n-button>
 
@@ -308,51 +308,33 @@
 </template>
 
 <script setup lang="ts">
-import { invoke } from '@tauri-apps/api/core'
-import { emit } from '@tauri-apps/api/event'
-import { info } from '@tauri-apps/plugin-log'
 import { debounce } from 'lodash-es'
 import { lightTheme } from 'naive-ui'
-import { ErrorType } from '@/common/exception'
 import PinInput from '@/components/common/PinInput.vue'
 import Validation from '@/components/common/Validation.vue'
-import { TauriCommand } from '@/enums'
 import router from '@/router'
-import { getEnhancedFingerprint } from '@/services/fingerprint'
 import type { RegisterUserReq, UserInfoType } from '@/services/types'
-import rustWebSocketClient from '@/services/webSocketRust'
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import { useMobileStore } from '@/stores/mobile'
-import { useUserStore } from '@/stores/user'
-import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { getAllUserState, getCaptcha, getUserDetail, register, sendCaptcha } from '@/utils/ImRequestUtils'
+import { getCaptcha, register, sendCaptcha } from '@/utils/ImRequestUtils'
 import { isAndroid } from '@/utils/PlatformConstants'
-import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 import { useCheckUpdate } from '../hooks/useCheckUpdate'
-import { useLogin } from '../hooks/useLogin'
 import { useMitt } from '../hooks/useMitt'
 import { WsResponseMessageType } from '../services/wsType'
-import { useChatStore } from '../stores/chat'
-import { useConfigStore } from '../stores/config'
-import { useGlobalStore } from '../stores/global'
-import { useGroupStore } from '../stores/group'
 import { useSettingStore } from '../stores/setting'
 import { clearListener } from '../utils/ReadCountQueue'
+import { useLogin } from '../hooks/useLogin'
 
 // 本地注册信息类型，扩展API类型以包含确认密码
 interface LocalRegisterInfo extends RegisterUserReq {}
 
 const loginHistoriesStore = useLoginHistoriesStore()
-const userStore = useUserStore()
 const { loginHistories } = loginHistoriesStore
 const mobileStore = useMobileStore()
 const safeArea = computed(() => mobileStore.safeArea)
-const { setLoginState } = useLogin()
 const settingStore = useSettingStore()
 const { login } = storeToRefs(settingStore)
-const userStatusStore = useUserStatusStore()
-const { stateId } = storeToRefs(userStatusStore)
 
 const isJumpDirectly = ref(false)
 
@@ -361,15 +343,6 @@ const activeTab = ref<'login' | 'register'>('login')
 
 /** 当前注册步骤 */
 const currentStep = ref(1)
-
-/** 登录账号信息 */
-const userInfo = ref({
-  account: '',
-  password: '',
-  avatar: '/logo.png',
-  nickName: '',
-  uid: ''
-})
 
 /** 注册账号信息 */
 const registerInfo = ref<LocalRegisterInfo>({
@@ -388,10 +361,7 @@ const registerInfo = ref<LocalRegisterInfo>({
 const accountPH = ref('输入HuLa账号')
 const passwordPH = ref('输入HuLa密码')
 const protocol = ref(true)
-const loginDisabled = ref(false)
-const loading = ref(false)
 const arrowStatus = ref(false)
-const loginText = ref('登录')
 
 // 注册相关的占位符和状态
 const registerNamePH = ref('输入HuLa昵称')
@@ -402,6 +372,7 @@ const registerCodePH = ref('输入验证码')
 const registerProtocol = ref(true)
 const registerLoading = ref(false)
 const finalRegisterLoading = ref(false)
+const { normalLogin, loading, loginText, loginDisabled, info: userInfo } = useLogin()
 
 /** 验证码 */
 const captcha = ref({ base64: '', uuid: '' })
@@ -495,8 +466,8 @@ const resetLoginForm = () => {
     account: '',
     password: '',
     avatar: '',
-    nickName: '',
-    uid: ''
+    uid: '',
+    name: ''
   }
   accountPH.value = '输入HuLa账号'
   passwordPH.value = '输入HuLa密码'
@@ -604,142 +575,6 @@ const handleRegisterComplete = async () => {
   }
 }
 
-const configStore = useConfigStore()
-const chatStore = useChatStore()
-const groupStore = useGroupStore()
-const globalStore = useGlobalStore()
-
-const initData = async () => {
-  info('init all data')
-  const cachedConfig = localStorage.getItem('config')
-  if (cachedConfig) {
-    configStore.config = JSON.parse(cachedConfig).config
-  } else {
-    await configStore.initConfig()
-  }
-  // 加载所有会话
-  await chatStore.getSessionList(true)
-  // 设置全局会话为第一个
-  globalStore.currentSessionRoomId = chatStore.sessionList[0].roomId
-
-  // 加载所有群的成员数据
-  const groupSessions = chatStore.getGroupSessions()
-  await Promise.all([
-    ...groupSessions.map((session) => groupStore.getGroupUserList(session.roomId, true)),
-    groupStore.setGroupDetails(),
-    chatStore.setAllSessionMsgList(1)
-  ])
-  info('init all data complete')
-}
-
-/**登录后创建主页窗口*/
-const normalLogin = async (auto = false) => {
-  loading.value = true
-  loginText.value = '登录中...'
-  loginDisabled.value = true
-  // 根据auto参数决定从哪里获取登录信息
-  const loginInfo = auto ? (userStore.userInfo as UserInfoType) : userInfo.value
-  const { account } = loginInfo
-
-  const clientId = await getEnhancedFingerprint()
-  localStorage.setItem('clientId', clientId)
-
-  await invoke('login_command', {
-    data: {
-      account: account,
-      password: userInfo.value.password,
-      deviceType: 'MOBILE',
-      systemType: '2', // 2是im 1是后台
-      clientId,
-      grantType: 'PASSWORD',
-      isAutoLogin: auto,
-      uid: auto ? userStore.userInfo!.uid : null
-    }
-  })
-    .then(async (res: any) => {
-      settingStore.toggleLogin(true, false)
-      loginDisabled.value = true
-      console.log('登录成功')
-      window.$message.success('登录成功')
-      // 开启 ws 连接
-      await rustWebSocketClient.initConnect()
-      // 初始化数据
-      await initData()
-      // 登录处理
-      await loginProcess(res.token, res.refreshToken, res.client)
-    })
-    .catch((e: any) => {
-      console.error('登录失败，出现未知错误:', e)
-      if (e) {
-        window.$message.warning(e)
-      } else {
-        window.$message.warning('登录失败，出现未知错误')
-      }
-
-      loading.value = false
-      loginDisabled.value = false
-      loginText.value = '登录'
-      // 如果是自动登录失败，重置按钮状态允许手动登录
-      if (auto) {
-        loginDisabled.value = false
-        loginText.value = '登录'
-      }
-    })
-}
-
-const loginProcess = async (token: string, refreshToken: string, client: string) => {
-  loading.value = false
-  // 获取用户状态列表
-  if (userStatusStore.stateList.length === 0) {
-    try {
-      userStatusStore.stateList = await getAllUserState()
-    } catch (error) {
-      console.error('获取用户状态列表失败', error)
-    }
-  }
-  // 获取用户详情
-  // const userDetail = await apis.getUserDetail()
-  const userDetail: any = await getUserDetail()
-
-  // 设置用户状态id
-  stateId.value = userDetail.userStateId
-  // const token = localStorage.getItem('TOKEN')
-  // const refreshToken = localStorage.getItem('REFRESH_TOKEN')
-  // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取
-  // await emojiStore.getEmojiList()
-  const account = {
-    ...userDetail,
-    token,
-    refreshToken,
-    client
-  }
-  userStore.userInfo = account
-  loginHistoriesStore.addLoginHistory(account)
-  // 在 sqlite 中存储用户信息
-  await invokeWithErrorHandler(
-    TauriCommand.SAVE_USER_INFO,
-    {
-      userInfo: userDetail
-    },
-    {
-      customErrorMessage: '保存用户信息失败',
-      errorType: ErrorType.Client
-    }
-  )
-
-  // 在 rust 部分设置 token
-  await emit('set_user_info', {
-    token,
-    refreshToken,
-    uid: userDetail.uid
-  })
-
-  loginText.value = '登录成功正在跳转...'
-  await setLoginState()
-
-  router.push('/mobile/message')
-}
-
 /**
  * 给账号赋值
  * @param item 账户信息
@@ -748,7 +583,7 @@ const giveAccount = (item: UserInfoType) => {
   const { account, avatar, name, uid } = item
   userInfo.value.account = account || ''
   userInfo.value.avatar = avatar
-  userInfo.value.nickName = name
+  userInfo.value.name = name
   userInfo.value.uid = uid
   arrowStatus.value = false
 }
@@ -808,9 +643,6 @@ onBeforeMount(async () => {
 const { checkUpdate } = useCheckUpdate()
 onMounted(async () => {
   window.addEventListener('click', closeMenu, true)
-  console.log('新的', userStore)
-  // const uid = userStore.userInfo?.uid
-
   // 只有在需要登录的情况下才显示登录窗口
   if (isJumpDirectly.value) {
     loading.value = false
@@ -824,23 +656,12 @@ onMounted(async () => {
   })
 
   if (login.value.autoLogin) {
-    normalLogin(true)
+    normalLogin('MOBILE', true)
   } else {
     loginHistories.length > 0 && giveAccount(loginHistories[0])
   }
 
   await checkUpdate('login', true)
-
-  // 如果找到uid就自动登录，找不到就手动登录
-  // if (uid) {
-  //   loading.value = true
-  //   await loginCommand({ uid }, true).then(() => {
-  //     setTimeout(() => {
-  //       loading.value = false
-  //       router.push('/mobile/message')
-  //     }, 100)
-  //   })
-  // }
 })
 
 onUnmounted(() => {

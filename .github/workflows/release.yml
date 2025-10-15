@@ -14,7 +14,43 @@ concurrency:
   cancel-in-progress: true  # 如果有新的发布任务，取消正在进行的任务
 
 jobs:
+  prepare-frontend:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up environment variables
+        run: echo "${{ secrets.ENV_LOCAL_CONTENT }}" > .env.local
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Generate frontend build (typings & assets)
+        run: pnpm vite build --emptyOutDir
+
+      - name: Upload generated component typings
+        uses: actions/upload-artifact@v4
+        with:
+          name: components-typings
+          if-no-files-found: error
+          path: |
+            src/typings/components.pc.d.ts
+            src/typings/components.mobile.d.ts
+
   publish-tauri:
+    needs: prepare-frontend
     permissions:
       contents: write # 授予写入仓库内容的权限
     strategy:
@@ -33,6 +69,12 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Download component typings
+        uses: actions/download-artifact@v4
+        with:
+          name: components-typings
+          path: .
 
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'

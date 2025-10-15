@@ -7,7 +7,7 @@
     "beforeDevCommand": "pnpm dev",
     "beforeBuildCommand": "pnpm build",
     "frontendDist": "../dist",
-    "devUrl": "http://127.0.0.1:1020"
+    "devUrl": "http://127.0.0.1:5210"
   },
   "bundle": {
     "active": true,
@@ -40,7 +40,7 @@
       {
         "title": "登录",
         "label": "mobile-home",
-        "url": "/mobile/login",
+        "url": "/mobile/splashscreen",
         "width": 800,
         "height": 600,
         "resizable": false,
@@ -55,6 +55,9 @@
     "statusBar": {
       "backgroundColor": "transparent",
       "style": "light"
+    },
+    "safeAreaInsets": {
+      "enabled": true
     }
   }
 }

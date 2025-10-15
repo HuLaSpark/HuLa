@@ -6,7 +6,6 @@ import { useRoute } from 'vue-router'
 import { AppException, ErrorType } from '@/common/exception'
 import { type MessageStatusEnum, MsgEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
 import type { MarkItemType, MessageType, RevokedMsgType, SessionItem } from '@/services/types'
-import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { useUserStore } from '@/stores/user.ts'
@@ -24,8 +23,6 @@ type RecalledMessage = {
 
 // 定义每页加载的消息数量
 export const pageSize = 20
-// 标识是否第一次请求
-let isFirstInit = false
 
 // 撤回消息的过期时间
 const RECALL_EXPIRATION_TIME = 2 * 60 * 1000 // 2分钟，单位毫秒
@@ -51,7 +48,6 @@ export const useChatStore = defineStore(
     const userStore = useUserStore()
     const globalStore = useGlobalStore()
     const groupStore = useGroupStore()
-    const contactStore = useContactStore()
 
     // 会话列表
     const sessionList = ref<SessionItem[]>([])
@@ -197,7 +193,7 @@ export const useChatStore = defineStore(
     const setAllSessionMsgList = async (size = pageSize) => {
       await info('初始设置所有会话消息列表')
       for (const session of sessionList.value) {
-        getPageMsg(size, session.roomId, '')
+        await getPageMsg(size, session.roomId, '')
       }
     }
 
@@ -247,7 +243,7 @@ export const useChatStore = defineStore(
     }
 
     // 获取会话列表
-    const getSessionList = async (isFresh = false) => {
+    const getSessionList = async (_isFresh = false) => {
       try {
         if (sessionOptions.isLoading) return
         sessionOptions.isLoading = true
@@ -269,31 +265,6 @@ export const useChatStore = defineStore(
         sessionOptions.isLoading = false
 
         sortAndUniqueSessionList()
-
-        // 保存当前选中的会话ID
-        const currentSelectedRoomId = globalStore.currentSession?.roomId
-
-        // sessionList[0].unreadCount = 0
-        if (!isFirstInit || isFresh) {
-          isFirstInit = true
-          // 只有在没有当前选中会话时，才设置第一个会话为当前会话
-          if (!currentSelectedRoomId || currentSelectedRoomId === '1') {
-            globalStore.updateCurrentSessionRoomId(data[0].roomId)
-          }
-
-          // 用会话列表第一个去请求消息列表
-          await getMsgList()
-          // 请求第一个群成员列表
-          globalStore.currentSession?.type === RoomTypeEnum.GROUP &&
-            (await groupStore.getGroupUserList(globalStore.currentSession!.roomId))
-          // 联系人列表
-          await contactStore.getContactList(true)
-
-          // 确保在会话列表加载完成后更新总未读数
-          await nextTick(() => {
-            updateTotalUnreadCount()
-          })
-        }
       } catch (e) {
         console.error('获取会话列表失败11:', e)
         sessionOptions.isLoading = false
@@ -547,27 +518,45 @@ export const useChatStore = defineStore(
       const message = currentMessageMap.value!.get(msgId)
       if (message && typeof data.recallUid === 'string') {
         const cacheUser = groupStore.getUserInfo(data.recallUid)!
-        let recallMessageBody: string
+        let recallMessageBody: string = ''
 
-        // 判断是否是撤回他人的消息（群主或管理员撤回成员消息）
-        const isRecallOthers = message.fromUser.uid !== data.recallUid
+        const currentUid = userStore.userInfo!.uid
+        // 被撤回消息的原始发送人
+        const senderUid = message.fromUser.uid
 
-        if (isRecallOthers) {
-          // 检查撤回人是否是群主或管理员
+        const isRecallerCurrentUser = data.recallUid === currentUid
+        const isSenderCurrentUser = senderUid === currentUid
+
+        if (isRecallerCurrentUser) {
+          // 当前用户是撤回操作执行者
+          if (data.recallUid === senderUid) {
+            // 自己的视角
+            recallMessageBody = '你撤回了一条消息'
+          } else {
+            // 撤回他人的消息：群主/管理员视角
+            const senderUser = groupStore.getUserInfo(senderUid)!
+            recallMessageBody = `你撤回了成员${senderUser.name}的一条消息`
+          }
+        } else {
+          // 当前用户不是撤回操作执行者
           const isLord = groupStore.isCurrentLord(data.recallUid)
           const isAdmin = groupStore.isAdmin(data.recallUid)
 
+          // 构建角色前缀
+          let rolePrefix = ''
           if (isLord) {
-            recallMessageBody = `群主"${cacheUser.name}"撤回了一条成员消息`
+            rolePrefix = '群主'
           } else if (isAdmin) {
-            recallMessageBody = `管理员"${cacheUser.name}"撤回了一条成员消息`
-          } else {
-            // 普通成员撤回他人消息（一般不应该出现）
-            recallMessageBody = `"${cacheUser.name}"撤回了一条消息`
+            rolePrefix = '管理员'
           }
-        } else {
-          // 撤回自己的消息
-          recallMessageBody = `"${cacheUser.name}"撤回了一条消息`
+          // 普通成员不显示角色前缀
+          if (isSenderCurrentUser) {
+            // 当前用户是被撤回消息的发送者（被撤回者视角）
+            recallMessageBody = `${rolePrefix}${cacheUser.name}撤回了你的一条消息`
+          } else {
+            // 当前用户是旁观者（其他成员视角）
+            recallMessageBody = `${rolePrefix}${cacheUser.name}撤回了一条消息`
+          }
         }
 
         // 更新前端缓存
@@ -815,6 +804,13 @@ export const useChatStore = defineStore(
       isMsgMultiChoose.value = flag
     }
 
+    // 重置所有会话选择状态
+    const resetSessionSelection = () => {
+      sessionList.value.forEach((session) => {
+        session.isCheck = false
+      })
+    }
+
     return {
       getMsgIndex,
       chatMessageList,
@@ -861,6 +857,7 @@ export const useChatStore = defineStore(
       isMsgMultiChoose,
       clearMsgCheck,
       setMsgMultiChoose,
+      resetSessionSelection,
       checkMsgExist,
       clearRedundantMessages
     }

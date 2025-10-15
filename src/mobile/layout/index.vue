@@ -1,25 +1,16 @@
 <template>
-  <div class="h-100vh flex flex-col">
-    <!-- 考虑不需要这个元素，因为有些页面是占满顶部的，考虑按需引入 -->
-    <!-- 顶部安全区域占位元素 -->
-    <!-- <SafeAreaPlaceholder direction="top" /> -->
-
-    <!-- 页面全部内容 -->
-    <div class="flex-1 overflow-y-auto flex flex-col">
-      <div class="flex flex-1 overflow-y-auto">
-        <RouterView v-slot="{ Component }">
-          <Transition name="slide" appear mode="out-in">
-            <component :is="Component" :key="route.fullPath" />
-          </Transition>
-        </RouterView>
-      </div>
-      <div class="flex">
-        <TabBar ref="tabBarElement" />
-      </div>
+  <div class="flex flex-col h-full" id="mobile-layout">
+    <div class="flex-1 overflow-hidden">
+      <RouterView v-slot="{ Component }">
+        <Transition name="slide" appear mode="out-in">
+          <component :is="Component" :key="route.fullPath" />
+        </Transition>
+      </RouterView>
     </div>
 
-    <!-- 底部安全区域占位元素 -->
-    <SafeAreaPlaceholder type="layout" direction="bottom" />
+    <div class="flex-shrink-0">
+      <TabBar ref="tabBarElement" />
+    </div>
   </div>
 </template>
 
@@ -28,7 +19,6 @@ import { emitTo } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
 import { useRoute } from 'vue-router'
-import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.vue'
 import type { default as TabBarType } from '#/layout/tabBar/index.vue'
 import TabBar from '#/layout/tabBar/index.vue'
 import { ChangeTypeEnum, MittEnum, ModalEnum, NotificationTypeEnum, OnlineEnum, TauriCommand } from '@/enums'
@@ -363,19 +353,7 @@ useMitt.on(WsResponseMessageType.ROOM_INFO_CHANGE, async (data: { roomId: string
 </script>
 
 <style lang="scss">
-// /* 侧滑切换动画 */
-// .slide-enter-active,
-// .slide-leave-active {
-//   transition: all 0.1s ease;
-// }
-
-// .slide-enter-from {
-//   transform: translateX(-30px);
-//   opacity: 0;
-// }
-
-// .slide-leave-to {
-//   transform: translateX(30px);
-//   opacity: 0;
-// }
+#mobile-layout {
+  box-sizing: border-box;
+}
 </style>

@@ -98,7 +98,7 @@
           tertiary
           style="color: #fff"
           class="gradient-button w-full mt-8px mb-50px"
-          @click="normalLogin()">
+          @click="normalLogin('PC')">
           <span>{{ loginText }}</span>
         </n-button>
       </n-flex>
@@ -132,7 +132,7 @@
           tertiary
           style="color: #fff"
           class="gradient-button w-200px mt-12px mb-40px"
-          @click="normalLogin(true)">
+          @click="normalLogin('PC', true)">
           <span>{{ loginText }}</span>
         </n-button>
       </n-flex>
@@ -177,34 +177,25 @@
   </n-config-provider>
 </template>
 <script setup lang="ts">
-import { invoke } from '@tauri-apps/api/core'
-import { emit } from '@tauri-apps/api/event'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useNetwork } from '@vueuse/core'
 import { lightTheme } from 'naive-ui'
-import { ErrorType } from '@/common/exception'
-import { TauriCommand } from '@/enums'
 import { useCheckUpdate } from '@/hooks/useCheckUpdate'
 import { type DriverStepConfig, useDriver } from '@/hooks/useDriver'
-import { useLogin } from '@/hooks/useLogin.ts'
 import { useMitt } from '@/hooks/useMitt'
 import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
-import { getEnhancedFingerprint } from '@/services/fingerprint'
 import type { UserInfoType } from '@/services/types.ts'
-import rustWebSocketClient from '@/services/webSocketRust'
 import { WsResponseMessageType } from '@/services/wsType'
 import { useGlobalStore } from '@/stores/global'
 import { useGuideStore } from '@/stores/guide'
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
-import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { getAllUserState, getUserDetail } from '@/utils/ImRequestUtils'
 import { isCompatibility, isMac } from '@/utils/PlatformConstants'
 import { clearListener } from '@/utils/ReadCountQueue'
-import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
+import { useLogin } from '~/src/hooks/useLogin'
 
 // 定义引导步骤配置
 const driverSteps: DriverStepConfig[] = [
@@ -250,41 +241,27 @@ const driverSteps: DriverStepConfig[] = [
 
 const settingStore = useSettingStore()
 const userStore = useUserStore()
-const userStatusStore = useUserStatusStore()
 const globalStore = useGlobalStore()
 const guideStore = useGuideStore()
 const { isTrayMenuShow } = storeToRefs(globalStore)
 const { isGuideCompleted } = storeToRefs(guideStore)
 const { startTour } = useDriver(driverSteps)
-const { stateId } = storeToRefs(userStatusStore)
 /** 网络连接是否正常 */
 const { isOnline } = useNetwork()
 const loginHistoriesStore = useLoginHistoriesStore()
 const { loginHistories } = loginHistoriesStore
 const { login } = storeToRefs(settingStore)
-/** 账号信息 */
-const info = ref({
-  account: '',
-  password: '',
-  avatar: '',
-  name: '',
-  uid: ''
-})
 /** 协议 */
 const protocol = ref(true)
-const loginDisabled = ref(!isOnline.value)
-const loading = ref(false)
 const arrowStatus = ref(false)
 const moreShow = ref(false)
-const uiState = ref<'manual' | 'auto'>()
-const { setLoginState } = useLogin()
 const { createWebviewWindow, createModalWindow } = useWindow()
 const { checkUpdate, CHECK_UPDATE_LOGIN_TIME } = useCheckUpdate()
+const { normalLogin, loading, loginText, loginDisabled, info, uiState } = useLogin()
 
 const accountPH = ref('邮箱/HuLa账号')
 const passwordPH = ref('输入HuLa密码')
 /** 登录按钮的文本内容 */
-const loginText = ref(isOnline.value ? '登录' : '网络异常')
 /** 是否直接跳转 */
 const isJumpDirectly = ref(false)
 
@@ -362,119 +339,6 @@ const giveAccount = (item: UserInfoType) => {
   arrowStatus.value = false
 }
 
-/**登录后创建主页窗口*/
-const normalLogin = async (auto = false) => {
-  loading.value = true
-  loginText.value = '登录中...'
-  loginDisabled.value = true
-  // 根据auto参数决定从哪里获取登录信息
-  const loginInfo = auto ? (userStore.userInfo as UserInfoType) : info.value
-  const { account } = loginInfo
-
-  // 存储此次登陆设备指纹
-  const clientId = await getEnhancedFingerprint()
-  localStorage.setItem('clientId', clientId)
-
-  invoke('login_command', {
-    data: {
-      account: account,
-      password: info.value.password,
-      deviceType: 'PC',
-      systemType: '2',
-      clientId: clientId,
-      grantType: 'PASSWORD',
-      isAutoLogin: auto,
-      uid: auto ? userStore.userInfo!.uid : null
-    }
-  })
-    .then(async (res: any) => {
-      loginDisabled.value = true
-
-      // 开启 ws 连接
-      await rustWebSocketClient.initConnect()
-      // 登录处理
-      await loginProcess(res.token, res.refreshToken, res.client)
-    })
-    .catch((e: any) => {
-      console.error('登录异常：', e)
-      window.$message.error(e)
-      loading.value = false
-      loginDisabled.value = false
-      loginText.value = '登录'
-      // 如果是自动登录失败，切换到手动登录界面并重置按钮状态
-      if (auto) {
-        uiState.value = 'manual'
-        loginDisabled.value = false
-        loginText.value = '登录'
-        // 自动填充之前尝试登录的账号信息到手动登录表单
-        if (userStore.userInfo) {
-          info.value.account = userStore.userInfo.account || userStore.userInfo.email || ''
-          info.value.avatar = userStore.userInfo.avatar
-          info.value.name = userStore.userInfo.name
-          info.value.uid = userStore.userInfo.uid
-        }
-      }
-    })
-}
-
-const loginProcess = async (token: string, refreshToken: string, client: string) => {
-  loading.value = false
-  // 获取用户状态列表
-  if (userStatusStore.stateList.length === 0) {
-    try {
-      userStatusStore.stateList = await getAllUserState()
-    } catch (error) {
-      console.error('获取用户状态列表失败', error)
-    }
-  }
-  // 获取用户详情
-  // const userDetail = await apis.getUserDetail()
-  const userDetail: any = await getUserDetail()
-
-  // 设置用户状态id
-  stateId.value = userDetail.userStateId
-  // const token = localStorage.getItem('TOKEN')
-  // const refreshToken = localStorage.getItem('REFRESH_TOKEN')
-  // TODO 先不获取 emoji 列表，当我点击 emoji 按钮的时候再获取
-  // await emojiStore.getEmojiList()
-  const account = {
-    ...userDetail,
-    token,
-    refreshToken,
-    client
-  }
-  userStore.userInfo = account
-  loginHistoriesStore.addLoginHistory(account)
-  // 在 sqlite 中存储用户信息
-  await invokeWithErrorHandler(
-    TauriCommand.SAVE_USER_INFO,
-    {
-      userInfo: userDetail
-    },
-    {
-      customErrorMessage: '保存用户信息失败',
-      errorType: ErrorType.Client
-    }
-  )
-
-  // 在 rust 部分设置 token
-  await emit('set_user_info', {
-    token,
-    refreshToken,
-    uid: userDetail.uid
-  })
-
-  loginText.value = '登录成功正在跳转...'
-  await setLoginState()
-  await openHomeWindow()
-}
-
-const openHomeWindow = async () => {
-  await createWebviewWindow('HuLa', 'home', 960, 720, 'login', true, undefined, 480, undefined, false)
-  // 只有在成功创建home窗口并且已登录的情况下才显示托盘菜单
-  isTrayMenuShow.value = true
-}
-
 /** 移除已登录账号 */
 const removeToken = () => {
   localStorage.removeItem('TOKEN')
@@ -504,14 +368,11 @@ const closeMenu = (event: MouseEvent) => {
 
 const enterKey = (e: KeyboardEvent) => {
   if (e.key === 'Enter' && !loginDisabled.value) {
-    normalLogin()
+    normalLogin('PC')
   }
 }
 
 onBeforeMount(async () => {
-  const token = localStorage.getItem('TOKEN')
-  const refreshToken = localStorage.getItem('REFRESH_TOKEN')
-
   // 始终初始化托盘菜单状态为false
   isTrayMenuShow.value = false
 
@@ -522,21 +383,6 @@ onBeforeMount(async () => {
     localStorage.removeItem('REFRESH_TOKEN')
     clearListener()
     return
-  }
-
-  // 只有在非自动登录的情况下才验证token并直接打开主窗口
-  if (token && refreshToken && !login.value.autoLogin) {
-    isJumpDirectly.value = true
-    try {
-      await openHomeWindow()
-      return // 直接返回，不执行后续的登录相关逻辑
-    } catch (error) {
-      isJumpDirectly.value = false
-      // token无效，清除token并重置状态
-      localStorage.removeItem('TOKEN')
-      localStorage.removeItem('REFRESH_TOKEN')
-      userStore.userInfo = undefined
-    }
   }
 })
 
@@ -559,7 +405,7 @@ onMounted(async () => {
   // 自动登录时显示自动登录界面并触发登录
   if (login.value.autoLogin) {
     uiState.value = 'auto'
-    normalLogin(true)
+    normalLogin('PC', true)
   } else {
     // 手动登录模式，自动填充第一个历史账号
     uiState.value = 'manual'

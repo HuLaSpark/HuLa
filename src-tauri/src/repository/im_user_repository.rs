@@ -65,7 +65,7 @@ where
             id: Set(login_uid.to_string()),
             token: Set(Some(token.to_string())),
             refresh_token: Set(Some(refresh_token.to_string())),
-            is_init: Set(false), // 新用户默认未初始化
+            is_init: Set(true), // 新用户默认未初始化
             ..Default::default()
         }
     };

@@ -13,13 +13,10 @@
       <img src="@/assets/mobile/chat-home/background.webp" class="w-100% relative top-0 z-1" alt="hula" />
       <div :style="{ height: changedHeight + 'px' }" class="z-2 absolute flex flex-col overflow-auto min-h-70vh w-full">
         <div class="flex flex-col gap-15px py-15px px-20px">
-          <div class="flex shadow bg-white rounded-10px w-full h-60px items-center gap-10px">
+          <div class="flex shadow bg-white rounded-10px w-full h-60px items-center gap-10px" @click="clickInfo">
             <!-- 群头像 -->
             <div class="flex justify-center">
-              <div
-                class="rounded-full relative bg-white w-38px h-38px overflow-hidden"
-                style="margin-left: 10px"
-                @click="openAvatarCropper">
+              <div class="rounded-full relative bg-white w-38px h-38px overflow-hidden" style="margin-left: 10px">
                 <n-avatar
                   class="absolute"
                   :size="38"
@@ -34,6 +31,7 @@
                   round />
               </div>
               <input
+                v-if="isGroup"
                 ref="fileInput"
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
@@ -129,7 +127,7 @@
                 </div>
               </div>
 
-              <div v-if="groupStore.isAdminOrLord()" class="flex justify-between py-15px items-center">
+              <div v-if="isGroup && groupStore.isAdminOrLord()" class="flex justify-between py-15px items-center">
                 <div class="text-14px">本群昵称</div>
                 <div class="text-12px text-#6E6E6E flex flex-wrap gap-10px items-center">
                   <input
@@ -395,6 +393,13 @@ const handleInitAnnoun = async () => {
   }
 }
 
+const clickInfo = () => {
+  if (isGroup) {
+    openAvatarCropper()
+  } else {
+    router.push(`/mobile/mobileFriends/friendInfo/${globalStore.currentSession.detailId}`)
+  }
+}
 /**
  * 加载群公告
  */

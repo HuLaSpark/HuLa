@@ -1,7 +1,6 @@
 import 'uno.css'
 import '@unocss/reset/eric-meyer.css' // unocss提供的浏览器默认样式重置
 import TlbsMap from 'tlbs-map-vue'
-import { initMobileClient } from '#/mobile-client/MobileClient'
 import App from '@/App.vue'
 import { AppException } from '@/common/exception.ts'
 import vResize from '@/directives/v-resize'
@@ -41,8 +40,6 @@ export const forceUpdateMessageTop = (topValue: number) => {
   })
 }
 
-initMobileClient()
-
 if (isMobile()) {
   if (document.readyState === 'loading') {
     window.addEventListener('DOMContentLoaded', setup)
@@ -51,27 +48,6 @@ if (isMobile()) {
   }
 }
 
-const hideInitialSplash = () => {
-  const splash = document.getElementById('initial-splash')
-  if (!splash) {
-    return
-  }
-
-  splash.classList.add('initial-splash--hide')
-  splash.addEventListener(
-    'transitionend',
-    () => {
-      splash.remove()
-    },
-    { once: true }
-  )
-}
-
 async function setup() {
-  await import('@/services/webSocketAdapter')
   await invoke('set_complete', { task: 'frontend' })
-  hideInitialSplash()
-  // 隐藏原生启动画面（Android/iOS）
-  await invoke('hide_splash_screen')
-  router.push('/mobile/login')
 }

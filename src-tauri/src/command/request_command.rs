@@ -4,6 +4,7 @@ use tracing::{error, info};
 
 use crate::{
     AppData,
+    command::message_command::check_user_init_and_fetch_messages,
     im_request_client::{ImRequest, ImUrl},
     repository::im_user_repository,
     vo::vo::{LoginReq, LoginResp, RefreshTokenReq},
@@ -32,8 +33,12 @@ pub async fn login_command(
                         refresh_token: refresh_token.clone(),
                     };
 
-                    let mut rc = state.rc.lock().await;
-                    match rc.refresh_token(refresh_req).await {
+                    let refresh_result = {
+                        let mut rc = state.rc.lock().await;
+                        rc.refresh_token(refresh_req).await
+                    };
+
+                    match refresh_result {
                         Ok(Some(refresh_resp)) => {
                             info!("Auto login successful, user ID: {}", uid);
 
@@ -55,7 +60,10 @@ pub async fn login_command(
                                 client: "".to_string(), // refresh_token 响应通常不包含 client
                                 refresh_token: refresh_resp.refresh_token,
                                 expire: refresh_resp.expire,
+                                uid: refresh_resp.uid,
                             };
+
+                            handle_login_success(&login_resp, &state).await?;
 
                             return Ok(Some(login_resp));
                         }
@@ -73,8 +81,7 @@ pub async fn login_command(
                 Err(e) => {
                     error!("Failed to get token info for user {}: {}", uid, e);
                 }
-            }
-
+            };
             // 自动登录失败，返回错误让前端切换到手动登录
             return Err("自动登录失败，请手动登录".to_string());
         } else {
@@ -83,10 +90,47 @@ pub async fn login_command(
     } else {
         // 手动登录逻辑
         info!("Performing manual login");
-        let mut rc = state.rc.lock().await;
-        let res = rc.login(data).await.map_err(|e| e.to_string())?;
+        let res = {
+            let mut rc = state.rc.lock().await;
+            rc.login(data).await.map_err(|e| e.to_string())?
+        }; // 锁在这里被释放
+
+        // 登录成功后处理用户信息和token保存
+        if let Some(login_resp) = &res {
+            handle_login_success(login_resp, &state).await?;
+        }
+
+        info!("Manual login successful");
         Ok(res)
     }
+}
+
+async fn handle_login_success(login_resp: &LoginResp, state: &State<'_, AppData>) -> Result<(), String> {
+    info!("handle_login_success, login_resp: {:?}", login_resp);
+    // 从登录响应中获取用户标识，这里使用 uid 作为 uid
+    let uid = &login_resp.uid;
+
+    // 设置用户信息
+    let mut user_info = state.user_info.lock().await;
+    user_info.uid = login_resp.uid.clone();
+    user_info.token = login_resp.token.clone();
+    user_info.refresh_token = login_resp.refresh_token.clone();
+    info!("handle_login_success, user_info: {:?}", user_info);
+    // 保存 token 信息到数据库
+    im_user_repository::save_user_tokens(
+        state.db_conn.deref(),
+        uid,
+        &login_resp.token,
+        &login_resp.refresh_token,
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    let mut client = state.rc.lock().await;
+    check_user_init_and_fetch_messages(&mut client, state.db_conn.deref(), uid).await
+        .map_err(|e| e.to_string())?;
+
+    Ok(())
 }
 
 #[tauri::command]

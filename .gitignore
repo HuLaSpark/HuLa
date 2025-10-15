@@ -37,3 +37,6 @@ db.sqlite
 .idea
 .qoder
 AGENTS.md
+
+src/typings/components.pc.d.ts
+src/typings/components.mobile.d.ts

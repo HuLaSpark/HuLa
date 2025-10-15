@@ -1,9 +1,5 @@
 <template>
-  <div class="h-100vh flex flex-col bg-gray-100">
-    <!-- 考虑不需要这个元素，因为有些页面是占满顶部的，考虑按需引入 -->
-    <!-- 顶部安全区域占位元素 -->
-    <SafeAreaPlaceholder type="layout" class="" direction="top" />
-
+  <div class="h-full flex flex-col bg-gray-100">
     <!-- 页面全部内容 -->
     <div class="flex flex-col flex-1 items-center px-15px">
       <div class="flex w-full flex-1 flex-col rounded-15px bg-white pt-40% items-center gap-20px">
@@ -44,9 +40,6 @@
         </n-button>
       </div>
     </div>
-
-    <!-- 底部安全区域占位元素 -->
-    <SafeAreaPlaceholder type="layout" class="" direction="bottom" />
   </div>
 </template>
 

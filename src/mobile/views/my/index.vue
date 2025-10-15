@@ -1,7 +1,5 @@
 <template>
   <div class="flex flex-col h-full">
-    <SafeAreaPlaceholder type="layout" direction="top" />
-
     <img src="@/assets/mobile/chat-home/background.webp" class="w-100% fixed z-0 top-0" alt="hula" />
 
     <!-- 设置区 -->
@@ -50,7 +48,6 @@ import CommunityContent from '#/components/community/CommunityContent.vue'
 import CommunityTab from '#/components/community/CommunityTab.vue'
 import PersonalInfo from '#/components/my/PersonalInfo.vue'
 import Settings from '#/components/my/Settings.vue'
-import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.vue'
 import router from '@/router'
 
 const measureRef = ref<HTMLDivElement>()

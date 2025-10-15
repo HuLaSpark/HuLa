@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
 import { StoresEnum } from '@/enums'
-import type { IKeyboardDidShowDetail } from '../mobile/mobile-client/interface/adapter'
 
 export type SafeArea = {
   bottom: number
@@ -61,40 +60,12 @@ export const useMobileStore = defineStore(StoresEnum.MOBILE, () => {
     }
   }
 
-  const keyboardDetail = reactive<IKeyboardDidShowDetail>({
-    height: 0,
-    visibleHeight: 0,
-    screenHeight: 0,
-    bottomInset: 0,
-    timestamp: 0,
-    keyboardVisible: false
-  })
-
-  const updateKeyboardDetail = (newDetail: IKeyboardDidShowDetail) => {
-    // 判断弹出的键盘基础参数跟之前一样，那就不需要重新覆盖，就不会触发外部可能存在的watch监听
-    if (newDetail.height === keyboardDetail.height && newDetail.bottomInset === keyboardDetail.bottomInset) {
-      return
-    }
-
-    Object.assign(keyboardDetail, newDetail)
-  }
-
-  const updateKeyboardState = (state: boolean) => {
-    Object.assign(keyboardDetail, {
-      ...keyboardDetail,
-      keyboardVisible: state
-    })
-  }
-
   return {
     safeArea,
     updateSafeArea,
     updateTabBarPosition,
     bottomTabBarPosition,
     initBottomTabBarPosition,
-    isFullScreen,
-    keyboardDetail,
-    updateKeyboardDetail,
-    updateKeyboardState
+    isFullScreen
   }
 })

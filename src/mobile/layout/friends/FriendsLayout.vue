@@ -1,9 +1,5 @@
 <template>
-  <div class="h-100vh flex flex-col">
-    <!-- 考虑不需要这个元素，因为有些页面是占满顶部的，考虑按需引入 -->
-    <!-- 顶部安全区域占位元素 -->
-    <SafeAreaPlaceholder type="layout" class="" direction="top" />
-
+  <div class="h-full flex flex-col">
     <!-- 页面全部内容 -->
     <div class="flex flex-col flex-1">
       <RouterView v-slot="{ Component }">
@@ -12,15 +8,11 @@
         </Transition>
       </RouterView>
     </div>
-
-    <!-- 底部安全区域占位元素 -->
-    <SafeAreaPlaceholder type="layout" class="" direction="bottom" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import SafeAreaPlaceholder from '#/components/placeholders/SafeAreaPlaceholder.vue'
 
 const route = useRoute()
 </script>
