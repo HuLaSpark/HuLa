@@ -27,7 +27,6 @@
 
 <script setup lang="ts">
 import { debounce } from 'lodash-es'
-import { nextTick, onMounted, ref } from 'vue'
 
 const props = defineProps({
   showFooter: {

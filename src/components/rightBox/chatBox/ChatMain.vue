@@ -36,7 +36,7 @@
     </Transition>
 
     <!-- 聊天内容 -->
-    <div class="flex flex-col flex-1 min-h-0">
+    <div :class="{ 'bg-#e3e3e3': isMobile() }" class="flex flex-col flex-1 min-h-0">
       <div
         id="image-chat-main"
         ref="scrollContainer"

@@ -238,14 +238,25 @@ const resetCreateGroupState = () => {
 const handleCreateGroup = async () => {
   if (selectedValue.value.length < 2) return
   try {
-    const result = await ImRequestUtils.createGroup({ uidList: selectedValue.value })
+    const result: any = await ImRequestUtils.createGroup({ uidList: selectedValue.value })
 
     // 创建成功后刷新会话列表以显示新群聊
     await chatStore.getSessionList(true)
 
-    // 如果API返回了id，切换到新创建的群聊
-    if (result?.id) {
-      globalStore.updateCurrentSessionRoomId(result.id)
+    const resultRoomId = result?.roomId != null ? String(result.roomId) : undefined
+    const resultId = result?.id != null ? String(result.id) : undefined
+
+    const matchedSession = chatStore.sessionList.find((session) => {
+      const sessionRoomId = String(session.roomId)
+      const sessionDetailId = session.detailId != null ? String(session.detailId) : undefined
+      return (
+        (resultRoomId !== undefined && sessionRoomId === resultRoomId) ||
+        (resultId !== undefined && (sessionDetailId === resultId || sessionRoomId === resultId))
+      )
+    })
+
+    if (matchedSession?.roomId) {
+      globalStore.updateCurrentSessionRoomId(matchedSession.roomId)
     }
 
     resetCreateGroupState()

@@ -149,7 +149,7 @@
             class="w-fit relative flex flex-col chat-message-max-width"
             :data-key="isMe ? `U${message.message.id}` : `Q${message.message.id}`"
             :class="isMe ? 'items-end' : 'items-start'"
-            :style="{ '--bubble-max-width': isGroup ? '32vw' : '50vw' }"
+            :style="{ '--bubble-max-width': bubbleMaxWidth }"
             @select="$event.click(message, 'Main')"
             :menu="handleItemType(message.message.type)"
             :emoji="emojiList"
@@ -221,7 +221,8 @@
             :size="6"
             v-if="message.message.body.reply"
             @click="emit('jump2Reply', message.message.body.reply.id)"
-            class="reply-bubble relative w-fit custom-shadow select-none chat-message-max-width">
+            class="reply-bubble relative w-fit custom-shadow select-none chat-message-max-width"
+            :style="{ 'max-width': bubbleMaxWidth }">
             <svg class="size-14px">
               <use href="#to-top"></use>
             </svg>
@@ -333,6 +334,12 @@ const cachedStore = useCachedStore()
 const recordEL = ref<HTMLElement>()
 
 const isMultiSelectDisabled = computed(() => !isMessageMultiSelectEnabled(props.message.message.type))
+const bubbleMaxWidth = computed(() => {
+  if (isMobile()) {
+    return '70vw'
+  }
+  return props.isGroup ? '32vw' : '50vw'
+})
 
 const handleAvatarClick = (uid: string, msgId: string) => {
   if (isMobile()) {
