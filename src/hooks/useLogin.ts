@@ -208,6 +208,7 @@ export const useLogin = () => {
 
         // 移动端登录成功之后，自动设置为自动登录
         if (isMobile()) {
+          await invoke('hide_splash_screen')
           settingStore.setAutoLogin(true)
         }
       })
