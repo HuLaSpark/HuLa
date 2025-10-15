@@ -261,6 +261,7 @@ import { useWindow } from '@/hooks/useWindow'
 import type { RegisterUserReq } from '@/services/types.ts'
 import * as ImRequestUtils from '@/utils/ImRequestUtils'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
+import { validateAlphaNumeric, validateSpecialChar } from '@/utils/Validate'
 
 // 输入框类型定义
 type InputType = 'nickName' | 'email' | 'password' | 'code' | 'confirmPassword'
@@ -397,16 +398,6 @@ const noSideSpace = (value: string) => !value.startsWith(' ') && !value.endsWith
 
 /** 密码验证函数 */
 const validateMinLength = (value: string) => value.length >= 6
-
-/** 检查密码是否包含英文和数字 */
-const validateAlphaNumeric = (value: string) => {
-  const hasLetter = /[a-zA-Z]/.test(value)
-  const hasNumber = /[0-9]/.test(value)
-  return hasLetter && hasNumber
-}
-
-/** 检查密码是否包含特殊字符 */
-const validateSpecialChar = (value: string) => /[!@#¥$%.&*^()_+=-~]/.test(value)
 
 /** 检查密码是否满足所有条件 */
 const isPasswordValid = computed(() => {
