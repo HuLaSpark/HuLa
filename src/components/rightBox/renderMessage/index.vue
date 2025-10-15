@@ -250,9 +250,14 @@
             <template v-for="emoji in emojiList" :key="emoji.value">
               <!-- 根据表情类型获取对应的计数属性名 -->
               <div class="flex-y-center" v-if="message && getEmojiCount(message, emoji.value) > 0">
-                <div class="emoji-reply-bubble" @click.stop="message && cancelReplyEmoji(message, emoji.value)">
+                <div
+                  class="emoji-reply-bubble"
+                  :class="{ 'emoji-reply-bubble--active': hasUserMarkedEmoji(message, emoji.value) }"
+                  @click.stop="message && cancelReplyEmoji(message, emoji.value)">
                   <img :title="emoji.title" class="size-18px" :src="emoji.url" :alt="emoji.title" />
-                  <span class="text-(12px #eee)">{{ message ? getEmojiCount(message, emoji.value) : 0 }}</span>
+                  <span :class="hasUserMarkedEmoji(message, emoji.value) ? 'text-#fbb160' : 'text-(12px #eee)'">
+                    {{ message ? getEmojiCount(message, emoji.value) : 0 }}
+                  </span>
                 </div>
               </div>
             </template>
@@ -435,6 +440,13 @@ const getEmojiCount = (item: MessageType, emojiType: number): number => {
   // messageMarks 是一个对象，键是表情类型，值是包含 count 和 userMarked 的对象
   // 如果存在该表情类型的统计数据，返回其计数值，否则返回0
   return item.message.messageMarks[String(emojiType)]?.count || 0
+}
+
+// 是否是当前登录用户标记
+const hasUserMarkedEmoji = (item: MessageType, emojiType: number) => {
+  if (!item || !item.message || !item.message.messageMarks) return false
+
+  return item.message.messageMarks[String(emojiType)]?.userMarked
 }
 
 const handleRetry = (item: MessageType): void => {

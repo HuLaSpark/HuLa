@@ -17,26 +17,30 @@
       <div
         v-if="isGroup && topAnnouncement"
         key="announcement"
-        class="custom-announcement"
-        :class="{ 'announcement-hover': isAnnouncementHover }"
-        @mouseenter="isAnnouncementHover = true"
-        @mouseleave="isAnnouncementHover = false">
-        <n-flex :wrap="false" class="w-full" align="center" justify="space-between">
-          <n-flex :wrap="false" align="center" class="pl-12px select-none flex-1" :size="6">
-            <svg class="size-16px flex-shrink-0"><use href="#Loudspeaker"></use></svg>
-            <div class="flex-1 min-w-0 line-clamp-1 text-(12px [--chat-text-color])">
-              {{ topAnnouncement.content }}
+        :class="{ 'bg-#f3f3f3': isMobile() }"
+        class="p-[6px_12px_0_12px]">
+        <div
+          class="custom-announcement"
+          :class="{ 'announcement-hover': isAnnouncementHover }"
+          @mouseenter="isAnnouncementHover = true"
+          @mouseleave="isAnnouncementHover = false">
+          <n-flex :wrap="false" class="w-full" align="center" justify="space-between">
+            <n-flex :wrap="false" align="center" class="pl-12px select-none flex-1" :size="6">
+              <svg class="size-16px flex-shrink-0"><use href="#Loudspeaker"></use></svg>
+              <div class="flex-1 min-w-0 line-clamp-1 text-(12px [--chat-text-color])">
+                {{ topAnnouncement.content }}
+              </div>
+            </n-flex>
+            <div class="flex-shrink-0 w-60px select-none" @click="handleViewAnnouncement">
+              <p class="text-(12px #13987f) cursor-pointer">查看全部</p>
             </div>
           </n-flex>
-          <div class="flex-shrink-0 w-60px select-none" @click="handleViewAnnouncement">
-            <p class="text-(12px #13987f) cursor-pointer">查看全部</p>
-          </div>
-        </n-flex>
+        </div>
       </div>
     </Transition>
 
     <!-- 聊天内容 -->
-    <div :class="{ 'bg-#e3e3e3': isMobile() }" class="flex flex-col flex-1 min-h-0">
+    <div :class="{ 'bg-#f3f3f3': isMobile() }" class="flex flex-col flex-1 min-h-0">
       <div
         id="image-chat-main"
         ref="scrollContainer"

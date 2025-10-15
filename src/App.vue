@@ -93,7 +93,12 @@ const preventDrag = (e: MouseEvent) => {
 watch(
   () => page.value.shadow,
   (val) => {
-    document.documentElement.style.setProperty('--shadow-enabled', val ? '0' : '1')
+    // 移动端始终禁用阴影
+    if (isMobile()) {
+      document.documentElement.style.setProperty('--shadow-enabled', '1')
+    } else {
+      document.documentElement.style.setProperty('--shadow-enabled', val ? '0' : '1')
+    }
   },
   { immediate: true }
 )
