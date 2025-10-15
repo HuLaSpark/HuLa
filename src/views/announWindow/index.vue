@@ -253,7 +253,8 @@ const handleInit = async () => {
         // 处理公告的userName getUserGroupNickname
         announList.value.forEach((item) => {
           const user = groupStore.getUser(roomId.value, item.uid)
-          item.userName = user?.myName || user.name
+          const fallbackName = item.userName || item.name || ''
+          item.userName = user?.myName || user?.name || fallbackName
           // 添加展开/收起状态控制
           item.expanded = false
           announcementStates.value[item.id] = {
@@ -315,7 +316,8 @@ const handleLoadMore = async () => {
           }
           // 处理公告的userName
           const user = groupStore.getUser(roomId.value, item.uid)
-          item.userName = user?.myName || user.name
+          const fallbackName = item.userName || item.name || ''
+          item.userName = user?.myName || user?.name || fallbackName
         })
 
         // 添加新的非重复数据到列表中

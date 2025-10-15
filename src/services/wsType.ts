@@ -20,7 +20,12 @@ export enum WsResponseMessageType {
   MSG_RECALL = 'msgRecall',
   /** 新好友申请 */
   REQUEST_NEW_FRIEND = 'requestNewFriend',
+  /** 群成员变动 */
   WS_MEMBER_CHANGE = 'ws-member-change',
+  /** 设置群管理员 */
+  REQUEST_SET_ADMIN = 'requestSetAdmin',
+  /** 取消群管理员 */
+  REQUEST_RECALL_ADMIN = 'requestRecallAdmin',
   /** 下线通知 */
   OFFLINE = 'offline',
   /** 同意好友请求 */
@@ -31,20 +36,18 @@ export enum WsResponseMessageType {
   ROOM_INFO_CHANGE = 'roomInfoChange',
   /** 自己修改我在群里的信息 */
   MY_ROOM_INFO_CHANGE = 'myRoomInfoChange',
-  /** 群公告消息 */
-  ROOM_GROUP_NOTICE_MSG = 'roomGroupNoticeMsg',
-  /** 群公告已读 */
-  ROOM_GROUP_NOTICE_READ_MSG = 'roomGroupNoticeReadMsg',
   /** 群解散 */
   ROOM_DISSOLUTION = 'roomDissolution',
-  /** 编辑群公告 */
-  ROOM_EDIT_GROUP_NOTICE_MSG = 'roomEditGroupNoticeMsg',
   /** 加入视频会议 */
   JoinVideo = 'JoinVideo',
+  /** 群公告消息 */
+  ROOM_GROUP_NOTICE_MSG = 'roomGroupNoticeMsg',
+  /** 编辑群公告 */
+  ROOM_EDIT_GROUP_NOTICE_MSG = 'roomEditGroupNoticeMsg',
+  /** 群公告已读 */
+  ROOM_GROUP_NOTICE_READ_MSG = 'roomGroupNoticeReadMsg',
   /** 发起视频通话请求 */
   VideoCallRequest = 'VideoCallRequest',
-  /** 开始呼叫 */
-  StartSignaling = 'StartSignaling',
   /** 通话已接通 */
   CallAccepted = 'CallAccepted',
   /** 呼叫被拒绝 */
@@ -72,6 +75,13 @@ export enum WsResponseMessageType {
   /** 全局静音 */
   AllMuted = 'AllMuted',
   CANCEL = 'CANCEL'
+}
+
+export enum NoticeTypeEnum {
+  /** 设置群管理员 */
+  GROUP_SET_ADMIN = 8,
+  /** 取消群管理员 */
+  GROUP_RECALL_ADMIN = 9
 }
 
 /**

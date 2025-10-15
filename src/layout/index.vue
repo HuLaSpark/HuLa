@@ -26,35 +26,35 @@
 
 <script setup lang="ts">
 import { LogicalSize } from '@tauri-apps/api/dpi'
-import { emitTo, listen } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { UserAttentionType } from '@tauri-apps/api/window'
 import { info } from '@tauri-apps/plugin-log'
-import { useRoute } from 'vue-router'
+
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
-import { ChangeTypeEnum, MittEnum, ModalEnum, NotificationTypeEnum, OnlineEnum, TauriCommand } from '@/enums'
 import { useCheckUpdate } from '@/hooks/useCheckUpdate'
 import { useLogin } from '@/hooks/useLogin'
 import { useMitt } from '@/hooks/useMitt.ts'
-import type { MarkItemType, MessageType, RevokedMsgType, UserItem } from '@/services/types.ts'
 import rustWebSocketClient from '@/services/webSocketRust'
-import {
-  type LoginSuccessResType,
-  type OnStatusChangeType,
-  WsResponseMessageType,
-  type WsTokenExpire
-} from '@/services/wsType.ts'
-import { useChatStore } from '@/stores/chat'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
-import { useGroupStore } from '@/stores/group'
-import { useSettingStore } from '@/stores/setting'
-import { useUserStore } from '@/stores/user'
-import { audioManager } from '@/utils/AudioManager'
 import { isWindows } from '@/utils/PlatformConstants'
+import { MittEnum, NotificationTypeEnum, TauriCommand } from '@/enums'
 import { clearListener, initListener, readCountQueue } from '@/utils/ReadCountQueue'
+import { emitTo, listen } from '@tauri-apps/api/event'
+import { UserAttentionType } from '@tauri-apps/api/window'
+import type { MessageType } from '@/services/types.ts'
+import { WsResponseMessageType } from '@/services/wsType.ts'
+import { useChatStore } from '@/stores/chat'
+import { useUserStore } from '@/stores/user'
+import { useSettingStore } from '@/stores/setting.ts'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
+import { useRoute } from 'vue-router'
+import { audioManager } from '@/utils/AudioManager'
 
+const route = useRoute()
+const userStore = useUserStore()
+const chatStore = useChatStore()
+const settingStore = useSettingStore()
+const userUid = computed(() => userStore.userInfo!.uid)
 const appWindow = WebviewWindow.getCurrent()
 const loadingPercentage = ref(10)
 const loadingText = ref('正在加载应用...')
@@ -102,29 +102,8 @@ const AsyncRight = defineAsyncComponent({
 
 const globalStore = useGlobalStore()
 const contactStore = useContactStore()
-const groupStore = useGroupStore()
-const userStore = useUserStore()
-const chatStore = useChatStore()
-const settingStore = useSettingStore()
-const route = useRoute()
 const { checkUpdate, CHECK_UPDATE_TIME } = useCheckUpdate()
-const userUid = computed(() => userStore.userInfo!.uid)
 const shrinkStatus = ref(false)
-
-// 播放消息音效
-const playMessageSound = async () => {
-  // 检查是否开启了消息提示音
-  if (!settingStore.notification?.messageSound) {
-    return
-  }
-
-  try {
-    const audio = new Audio('/sound/message.mp3')
-    await audioManager.play(audio, 'message-notification')
-  } catch (error) {
-    console.warn('播放消息音效失败:', error)
-  }
-}
 
 // 导入Web Worker
 const timerWorker = new Worker(new URL('../workers/timer.worker.ts', import.meta.url))
@@ -173,130 +152,20 @@ useMitt.on(MittEnum.SHRINK_WINDOW, (event: boolean) => {
   shrinkStatus.value = event
 })
 
-useMitt.on(WsResponseMessageType.LOGIN_SUCCESS, async (data: LoginSuccessResType) => {
-  const { ...rest } = data
-  // 自己更新自己上线
-  groupStore.updateOnlineNum({
-    uid: rest.uid,
-    isAdd: true
-  })
-  groupStore.updateUserItem(rest.uid, {
-    activeStatus: OnlineEnum.ONLINE,
-    avatar: rest.avatar,
-    account: rest.account,
-    lastOptTime: Date.now(),
-    name: rest.name,
-    uid: rest.uid
-  })
-})
-
-useMitt.on(WsResponseMessageType.ROOM_DISSOLUTION, async (roomId: string) => {
-  console.log('收到群解散通知', roomId)
-  // 移除群聊的会话
-  chatStore.removeSession(roomId)
-  // 移除群聊的详情
-  groupStore.removeGroupDetail(roomId)
-  // 如果当前会话为解散的群聊，切换到第一个会话
-  if (globalStore.currentSession?.roomId === roomId) {
-    globalStore.currentSessionRoomId = chatStore.sessionList[0].roomId
+// 播放消息音效
+const playMessageSound = async () => {
+  // 检查是否开启了消息提示音
+  if (!settingStore.notification?.messageSound) {
+    return
   }
-})
 
-useMitt.on(WsResponseMessageType.USER_STATE_CHANGE, async (data: { uid: string; userStateId: string }) => {
-  console.log('收到用户状态改变', data)
-  groupStore.updateUserItem(data.uid, {
-    userStateId: data.userStateId
-  })
-})
-
-useMitt.on(WsResponseMessageType.OFFLINE, async (onStatusChangeType: OnStatusChangeType) => {
-  console.log('收到用户下线通知', onStatusChangeType)
-  // 群聊
-  if (onStatusChangeType.type === 1) {
-    groupStore.updateOnlineNum({
-      roomId: onStatusChangeType.roomId,
-      onlineNum: onStatusChangeType.onlineNum,
-      isAdd: false
-    })
-    if (onStatusChangeType) {
-      groupStore.updateUserItem(
-        onStatusChangeType.uid,
-        {
-          activeStatus: OnlineEnum.OFFLINE,
-          lastOptTime: onStatusChangeType.lastOptTime
-        },
-        onStatusChangeType.roomId
-      )
-    }
+  try {
+    const audio = new Audio('/sound/message.mp3')
+    await audioManager.play(audio, 'message-notification')
+  } catch (error) {
+    console.warn('播放消息音效失败:', error)
   }
-})
-
-useMitt.on(WsResponseMessageType.ONLINE, async (onStatusChangeType: OnStatusChangeType) => {
-  console.log('收到用户上线通知')
-  // 群聊
-  if (onStatusChangeType.type === 1) {
-    groupStore.updateOnlineNum({
-      roomId: onStatusChangeType.roomId,
-      onlineNum: onStatusChangeType.onlineNum,
-      isAdd: true
-    })
-    if (onStatusChangeType) {
-      groupStore.updateUserItem(
-        onStatusChangeType.uid,
-        {
-          activeStatus: OnlineEnum.ONLINE,
-          lastOptTime: onStatusChangeType.lastOptTime
-        },
-        onStatusChangeType.roomId
-      )
-    }
-  }
-})
-
-useMitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExpire) => {
-  if (Number(userUid.value) === Number(wsTokenExpire.uid) && userStore.userInfo!.client === wsTokenExpire.client) {
-    console.log('收到用户token过期通知', wsTokenExpire)
-    // 聚焦主窗口
-    const home = await WebviewWindow.getByLabel('home')
-    await home?.setFocus()
-    useMitt.emit(MittEnum.LEFT_MODAL_SHOW, {
-      type: ModalEnum.REMOTE_LOGIN,
-      props: {
-        ip: wsTokenExpire.ip
-      }
-    })
-  }
-})
-
-useMitt.on(WsResponseMessageType.INVALID_USER, (param: { uid: string }) => {
-  console.log('无效用户')
-  const data = param
-  // 消息列表删掉拉黑的发言
-  chatStore.filterUser(data.uid)
-  // 群成员列表删掉拉黑的用户
-  groupStore.removeUserItem(data.uid)
-})
-
-useMitt.on(WsResponseMessageType.MSG_MARK_ITEM, async (data: { markList: MarkItemType[] }) => {
-  console.log('收到消息标记更新:', data)
-
-  // 确保data.markList是一个数组再传递给updateMarkCount
-  if (data && data.markList && Array.isArray(data.markList)) {
-    await chatStore.updateMarkCount(data.markList)
-  } else if (data && !Array.isArray(data)) {
-    // 兼容处理：如果直接收到了单个MarkItemType对象
-    await chatStore.updateMarkCount([data as unknown as MarkItemType])
-  }
-})
-
-useMitt.on(WsResponseMessageType.MSG_RECALL, (data: RevokedMsgType) => {
-  chatStore.updateRecallMsg(data)
-})
-
-useMitt.on(WsResponseMessageType.MY_ROOM_INFO_CHANGE, (data: { myName: string; roomId: string; uid: string }) => {
-  // 更新用户在群聊中的昵称
-  groupStore.updateUserItem(data.uid, { myName: data.myName }, data.roomId)
-})
+}
 
 useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   if (chatStore.checkMsgExist(data.message.roomId, data.message.id)) {
@@ -364,116 +233,6 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   }
 
   await globalStore.updateGlobalUnreadCount()
-})
-
-useMitt.on(
-  WsResponseMessageType.REQUEST_NEW_FRIEND,
-  async (data: { uid: number; unReadCount4Friend: number; unReadCount4Group: number }) => {
-    console.log('收到好友申请')
-    // 更新未读数
-    globalStore.unReadMark.newFriendUnreadCount = data.unReadCount4Friend || 0
-    globalStore.unReadMark.newGroupUnreadCount = data.unReadCount4Group || 0
-
-    // 刷新好友申请列表
-    await contactStore.getApplyPage(true)
-  }
-)
-
-useMitt.on(
-  WsResponseMessageType.WS_MEMBER_CHANGE,
-  async (param: {
-    roomId: string
-    changeType: ChangeTypeEnum
-    userList: UserItem[]
-    totalNum: number
-    onlineNum: number
-  }) => {
-    info('监听到群成员变更消息')
-    const isRemoveAction = param.changeType === ChangeTypeEnum.REMOVE || param.changeType === ChangeTypeEnum.EXIT_GROUP
-    if (isRemoveAction) {
-      await handleMemberRemove(param.userList, param.roomId)
-    } else {
-      await handleMemberAdd(param.userList, param.roomId)
-    }
-
-    groupStore.addGroupDetail(param.roomId)
-    // 更新群内的总人数
-    groupStore.updateGroupNumber(param.roomId, param.totalNum, param.onlineNum)
-  }
-)
-
-// 处理群成员添加
-const handleMemberAdd = async (userList: UserItem[], roomId: string) => {
-  for (const user of userList) {
-    if (isSelfUser(user.uid)) {
-      await handleSelfAdd(roomId)
-    } else {
-      await handleOtherMemberAdd(user, roomId)
-    }
-  }
-}
-
-// 处理自己加入群聊
-const handleSelfAdd = async (roomId: string) => {
-  info('本人加入群聊，加载该群聊的会话数据')
-  await chatStore.addSession(roomId)
-}
-
-// 处理其他成员加入群聊
-const handleOtherMemberAdd = async (user: UserItem, roomId: string) => {
-  info('群成员加入群聊，添加群成员数据')
-  groupStore.addUserItem(user, roomId)
-}
-
-// 处理群成员移除
-const handleMemberRemove = async (userList: UserItem[], roomId: string) => {
-  for (const user of userList) {
-    if (isSelfUser(user.uid)) {
-      await handleSelfRemove(roomId)
-    } else {
-      await handleOtherMemberRemove(user.uid, roomId)
-    }
-  }
-}
-
-// 检查是否为当前用户
-const isSelfUser = (uid: string): boolean => {
-  return uid === userStore.userInfo!.uid
-}
-
-// 处理自己被移除
-const handleSelfRemove = async (roomId: string) => {
-  info('本人退出群聊，移除会话数据')
-
-  // 移除会话和群成员数据
-  chatStore.removeSession(roomId)
-  groupStore.removeAllUsers(roomId)
-
-  // 如果当前会话就是被移除的群聊，切换到其他会话
-  if (globalStore.currentSession?.roomId === roomId) {
-    globalStore.updateCurrentSessionRoomId(chatStore.sessionList[0].roomId)
-  }
-}
-
-// 处理其他成员被移除
-const handleOtherMemberRemove = async (uid: string, roomId: string) => {
-  info('群成员退出群聊，移除群内的成员数据')
-  groupStore.removeUserItem(uid, roomId)
-}
-
-useMitt.on(WsResponseMessageType.REQUEST_APPROVAL_FRIEND, async () => {
-  // 刷新好友列表以获取最新状态
-  await contactStore.getContactList(true)
-})
-useMitt.on(WsResponseMessageType.ROOM_INFO_CHANGE, async (data: { roomId: string; name: string; avatar: string }) => {
-  // 根据roomId修改对应房间中的群名称和群头像
-  const { roomId, name, avatar } = data
-
-  // 更新chatStore中的会话信息
-  chatStore.updateSession(roomId, {
-    name,
-    avatar
-  })
 })
 
 const { resetLoginState, logout } = useLogin()

@@ -58,7 +58,7 @@ const processedContentList = computed(() => {
   // 尝试通过msgIds获取完整消息信息
   return msgIds.map((msgId, index) => {
     // 尝试从当前聊天消息中找到对应消息
-    const message = chatStore.currentMessageMap?.get(msgId.msgId)
+    const message = chatStore.currentMessageMap?.[msgId.msgId]
 
     if (message) {
       const userInfo = groupStore.getUserInfo(message.fromUser.uid)

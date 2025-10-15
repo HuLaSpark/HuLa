@@ -149,7 +149,7 @@
             class="w-fit relative flex flex-col chat-message-max-width"
             :data-key="isMe ? `U${message.message.id}` : `Q${message.message.id}`"
             :class="isMe ? 'items-end' : 'items-start'"
-            :style="{ '--bubble-max-width': isGroup ? '32vw' : '50vw' }"
+            :style="{ '--bubble-max-width': bubbleMaxWidth }"
             @select="$event.click(message, 'Main')"
             :menu="handleItemType(message.message.type)"
             :emoji="emojiList"
@@ -221,7 +221,8 @@
             :size="6"
             v-if="message.message.body.reply"
             @click="emit('jump2Reply', message.message.body.reply.id)"
-            class="reply-bubble relative w-fit custom-shadow select-none chat-message-max-width">
+            class="reply-bubble relative w-fit custom-shadow select-none chat-message-max-width"
+            :style="{ 'max-width': bubbleMaxWidth }">
             <svg class="size-14px">
               <use href="#to-top"></use>
             </svg>
@@ -249,9 +250,14 @@
             <template v-for="emoji in emojiList" :key="emoji.value">
               <!-- 根据表情类型获取对应的计数属性名 -->
               <div class="flex-y-center" v-if="message && getEmojiCount(message, emoji.value) > 0">
-                <div class="emoji-reply-bubble" @click.stop="message && cancelReplyEmoji(message, emoji.value)">
+                <div
+                  class="emoji-reply-bubble"
+                  :class="{ 'emoji-reply-bubble--active': hasUserMarkedEmoji(message, emoji.value) }"
+                  @click.stop="message && cancelReplyEmoji(message, emoji.value)">
                   <img :title="emoji.title" class="size-18px" :src="emoji.url" :alt="emoji.title" />
-                  <span class="text-(12px #eee)">{{ message ? getEmojiCount(message, emoji.value) : 0 }}</span>
+                  <span :class="hasUserMarkedEmoji(message, emoji.value) ? 'text-#fbb160' : 'text-(12px #eee)'">
+                    {{ message ? getEmojiCount(message, emoji.value) : 0 }}
+                  </span>
                 </div>
               </div>
             </template>
@@ -333,6 +339,12 @@ const cachedStore = useCachedStore()
 const recordEL = ref<HTMLElement>()
 
 const isMultiSelectDisabled = computed(() => !isMessageMultiSelectEnabled(props.message.message.type))
+const bubbleMaxWidth = computed(() => {
+  if (isMobile()) {
+    return '70vw'
+  }
+  return props.isGroup ? '32vw' : '50vw'
+})
 
 const handleAvatarClick = (uid: string, msgId: string) => {
   if (isMobile()) {
@@ -428,6 +440,13 @@ const getEmojiCount = (item: MessageType, emojiType: number): number => {
   // messageMarks 是一个对象，键是表情类型，值是包含 count 和 userMarked 的对象
   // 如果存在该表情类型的统计数据，返回其计数值，否则返回0
   return item.message.messageMarks[String(emojiType)]?.count || 0
+}
+
+// 是否是当前登录用户标记
+const hasUserMarkedEmoji = (item: MessageType, emojiType: number) => {
+  if (!item || !item.message || !item.message.messageMarks) return false
+
+  return item.message.messageMarks[String(emojiType)]?.userMarked
 }
 
 const handleRetry = (item: MessageType): void => {

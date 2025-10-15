@@ -95,7 +95,7 @@
       :disabled="!isEnablePullRefresh"
       v-model="loading"
       @refresh="onRefresh">
-      <div class="flex flex-col h-full px-18px">
+      <div class="flex flex-col h-full">
         <div class="flex-1 overflow-y-auto overflow-x-hidden min-h-0" @scroll="onScroll" ref="scrollContainer">
           <van-swipe-cell
             @open="handleSwipeOpen"
@@ -103,18 +103,18 @@
             v-for="(item, idx) in sessionList"
             v-on-long-press="[(e: PointerEvent) => handleLongPress(e, item), longPressOption]"
             :key="`${item.id}-${idx}`"
-            :class="item.top ? 'bg-gray-200' : ''">
+            :class="item.top ? 'w-full bg-#64A29C18' : ''">
             <!-- 长按项 -->
-            <div @click="intoRoom(item)" class="grid grid-cols-[2.2rem_1fr_4rem] items-start px-2 py-3 gap-1">
+            <div @click="intoRoom(item)" class="grid grid-cols-[2.2rem_1fr_4rem] items-start px-4 py-3 gap-1">
               <div class="flex-shrink-0">
                 <n-badge :offset="[-6, 6]" :value="item.unreadCount" :max="99">
                   <n-avatar :size="52" :src="AvatarUtils.getAvatarUrl(item.avatar)" fallback-src="/logo.png" round />
                 </n-badge>
               </div>
               <!-- 中间：两行内容 -->
-              <div class="truncate pl-7 flex pt-5px gap-10px flex-col">
-                <div class="text-16px leading-tight font-bold flex-1 truncate text-#333 truncate">{{ item.name }}</div>
-                <div class="text-12px text-#333 truncate">
+              <div class="truncate pl-7 flex pt-5px gap-10px leading-tight flex-col">
+                <div class="text-16px font-bold flex-1 truncate text-#333 truncate">{{ item.name }}</div>
+                <div class="text-13px text-#555 truncate">
                   {{ item.text }}
                 </div>
               </div>
@@ -646,27 +646,6 @@ const handleLongPress = (e: PointerEvent, item: SessionItem) => {
 </script>
 
 <style scoped lang="scss">
-.van-swipe-cell {
-  width: 100%;
-  transition: background-color 0.3s ease;
-
-  /* 置顶时的背景色 - 新设计 */
-  &.bg-gray-200 {
-    background-color: #f0f7ff; /* 柔和的浅蓝色背景 */
-    border-left: 4px solid #1890ff; /* 左侧蓝色标识条 */
-
-    /* 右侧操作按钮的背景色 */
-    :deep() .van-swipe-cell__right {
-      background-color: #f0f7ff;
-    }
-
-    /* 悬停效果 */
-    &:hover {
-      background-color: #e1efff;
-    }
-  }
-}
-
 .keyboard-mask {
   position: fixed;
   inset: 0;

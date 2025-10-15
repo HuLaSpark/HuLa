@@ -11,6 +11,7 @@ export default {
       const filteredFiles = filenames.filter((f) =>
         !f.includes('src-tauri/') &&
         !f.includes('tauri-plugin-hula/') &&
+        !f.includes('public/') &&
         !f.endsWith('.d.ts')
       )
       return filteredFiles.length > 0

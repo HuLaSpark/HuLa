@@ -15,9 +15,9 @@ const { normalLogin } = useLogin()
 const init = async () => {
   if (settingStore.login.autoLogin) {
     normalLogin('MOBILE')
-    await invoke('hide_splash_screen')
   } else {
     router.push('/mobile/login')
+    await invoke('hide_splash_screen')
   }
 }
 

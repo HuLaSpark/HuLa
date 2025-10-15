@@ -621,7 +621,11 @@ impl WebSocketClient {
                 info!("🔄 User state changed");
                 let _ = app_handle.emit_to("home", "ws-user-state-change", data);
             }
-
+            // 通知总线
+            "notifyEvent" => {
+                info!("👥 新的notifyEvent");
+                let _ = app_handle.emit_to("home", "ws-request-notify-event", data);
+            }
             // 好友相关
             "newApply" => {
                 info!("👥 New apply request");

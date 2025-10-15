@@ -156,9 +156,14 @@ export const useLogin = () => {
       chatStore.setAllSessionMsgList(20),
       cachedStore.getAllBadgeList()
     ])
+    // 强制持久化
+    groupStore.$persist()
+    chatStore.$persist()
+    cachedStore.$persist()
+    globalStore.$persist()
 
-    setLoginState()
-    routerOrOpenHomeWindow()
+    await setLoginState()
+    await routerOrOpenHomeWindow()
   }
 
   const routerOrOpenHomeWindow = async () => {
@@ -203,6 +208,7 @@ export const useLogin = () => {
 
         // 移动端登录成功之后，自动设置为自动登录
         if (isMobile()) {
+          await invoke('hide_splash_screen')
           settingStore.setAutoLogin(true)
         }
       })
@@ -217,6 +223,8 @@ export const useLogin = () => {
           uiState.value = 'manual'
           loginDisabled.value = false
           loginText.value = '登录'
+          // 取消自动登录
+          settingStore.setAutoLogin(false)
           // 自动填充之前尝试登录的账号信息到手动登录表单
           if (userStore.userInfo) {
             info.value.account = userStore.userInfo.account || userStore.userInfo.email || ''

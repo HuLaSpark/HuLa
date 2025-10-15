@@ -105,6 +105,11 @@
 .emoji-reply-bubble {
   @apply relative flex-y-center gap-4px rounded-50px p-[4px_8px] cursor-pointer select-none bg-#13987F66 text-14px w-fit border-(1px solid #13987F) custom-shadow;
 }
+
+/** 当前用户标记消息的样式 */
+.emoji-reply-bubble--active {
+  @apply dark:bg-[#fbb99020] bg-[#fbb99030] dark:border-(1px solid #fbb99050) border-(1px solid #fbb99090);
+}
 /** 跳转到回复内容时候显示的样式 */
 .active-reply {
   background-color: var(--right-chat-reply-active-color);
@@ -198,7 +203,7 @@
   background-color: var(--bg-notice, rgba(19, 152, 127, 0.08));
   border-radius: 8px;
   border: 1px solid var(--bg-notice, rgba(19, 152, 127, 0.2));
-  margin: 6px 12px 0 12px;
+  margin: 0;
   height: 34px;
   line-height: 36px;
   transition: all 0.3s ease-in-out;

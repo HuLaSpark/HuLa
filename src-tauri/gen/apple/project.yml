@@ -72,6 +72,8 @@ targets:
     dependencies:
       - framework: libapp.a
         embed: false
+        link: true
+        copy: false
       - sdk: CoreGraphics.framework
       - sdk: Metal.framework
       - sdk: MetalKit.framework

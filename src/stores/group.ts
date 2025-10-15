@@ -240,13 +240,21 @@ export const useGroupStore = defineStore(
      * @param forceRefresh 是否强制刷新，默认false
      */
     const getGroupUserList = async (roomId: string, forceRefresh = false) => {
+      const cachedList = userListMap[roomId]
       // 如果已经有缓存且不需要强制刷新，则直接返回
-      if (!forceRefresh && userListMap[roomId] && userListMap[roomId].length > 0) {
+      if (!forceRefresh && Array.isArray(cachedList) && cachedList.length > 0) {
         return
       }
 
+      if (!Array.isArray(cachedList)) {
+        userListMap[roomId] = []
+      }
+
       const data: any = await ImRequestUtils.groupListMember(roomId)
-      if (!data) return
+      if (!data) {
+        userListOptions.loading = false
+        return
+      }
 
       // 将数据存储到Record中
       userListMap[roomId] = data
@@ -484,8 +492,12 @@ export const useGroupStore = defineStore(
       return userListMap[roomId] || []
     }
 
-    const getUser = (roomId: string, uid: string): UserItem => {
-      return userListMap[roomId].filter((item) => item.uid === uid)[0]
+    const getUser = (roomId: string, uid: string): UserItem | undefined => {
+      const roomUserList = userListMap[roomId]
+      if (!roomUserList) {
+        return undefined
+      }
+      return roomUserList.find((item) => item.uid === uid)
     }
 
     /**
@@ -499,6 +511,9 @@ export const useGroupStore = defineStore(
       // 遍历所有房间的用户列表
       Object.keys(userListMap).forEach((roomId) => {
         const userList = userListMap[roomId]
+        if (!Array.isArray(userList) || userList.length === 0) {
+          return
+        }
         // 检查当前房间是否包含指定的用户
         const hasUser = userList.some((user) => user.uid === uid)
         if (hasUser) {

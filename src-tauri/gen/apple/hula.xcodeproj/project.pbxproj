@@ -15,7 +15,6 @@
 		5FA07CA316D84B7C6157AD98 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C5561AC4EF6A7D22351F4123 /* Metal.framework */; };
 		66C0485D21D30EE3FC68535D /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 43A3F90CF52FE87749F6AF66 /* WebKit.framework */; };
 		725ABB36A3E4DBADE9B85F1A /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = BEB6A0287B0C05B54BB18D76 /* main.mm */; };
-		7D80EF45A161A8ABCDF65B0F /* libapp.a in Resources */ = {isa = PBXBuildFile; fileRef = 2D7169E7E23000C0AB794413 /* libapp.a */; };
 		C6E3EE1EC5041769CD8C63BC /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 51F03346AEBB6EB6B6949B1F /* MetalKit.framework */; };
 		DFD77F9BDCD981184134D70B /* assets in Resources */ = {isa = PBXBuildFile; fileRef = E0D58092E5EAD80CE1062F64 /* assets */; };
 		E4594A304B63C1F809276D32 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0B6EF43A950A8BAEED368AF5 /* Assets.xcassets */; };
@@ -257,7 +256,6 @@
 				E4594A304B63C1F809276D32 /* Assets.xcassets in Resources */,
 				575F491C7AFF552732B6BE45 /* LaunchScreen.storyboard in Resources */,
 				DFD77F9BDCD981184134D70B /* assets in Resources */,
-				7D80EF45A161A8ABCDF65B0F /* libapp.a in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -334,7 +332,7 @@
 					"$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)",
 					"$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.hula1009.ios;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hula.ios;
 				PRODUCT_NAME = "HuLa";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
@@ -378,7 +376,7 @@
 					"$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)",
 					"$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.hula1009.ios;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hula.ios;
 				PRODUCT_NAME = "HuLa";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
