@@ -1,8 +1,10 @@
 <template>
   <!-- 底部栏 -->
-  <main class="border-t-(1px solid [--right-chat-footer-line-color]) relative flex justify-center items-center h-full">
+  <main
+    :class="[isMobile() ? 'flex-col w-full' : 'border-t-(1px solid [--right-chat-footer-line-color])']"
+    class="relative flex justify-center items-center h-full">
     <!-- 拖拽手柄 -->
-    <div class="resize-handle" :class="{ dragging: isDragging }" @mousedown="startDrag">
+    <div v-if="!isMobile()" class="resize-handle" :class="{ dragging: isDragging }" @mousedown="startDrag">
       <div class="resize-indicator"></div>
     </div>
     <!-- 添加遮罩层 -->
@@ -22,7 +24,11 @@
 
     <div v-if="!chatStore.isMsgMultiChoose" class="size-full relative color-[--icon-color] flex flex-col">
       <!-- 输入框顶部选项栏 -->
-      <n-flex align="center" justify="space-between" class="p-[10px_22px_5px] select-none flex-shrink-0">
+      <n-flex
+        v-if="!isMobile()"
+        align="center"
+        justify="space-between"
+        class="p-[10px_22px_5px] select-none flex-shrink-0">
         <n-flex align="center" :size="0" class="input-options">
           <!-- emoji表情 -->
           <n-popover
@@ -170,8 +176,15 @@
       </n-flex>
 
       <!-- 输入框区域 -->
-      <div class="flex-1 pl-20px flex flex-col relative">
-        <MsgInput ref="MsgInputRef" :height="inputAreaHeight" />
+      <div :class="[isMobile() ? '' : 'pl-20px ']" class="flex-1 flex flex-col relative">
+        <MsgInput
+          ref="MsgInputRef"
+          @clickMore="handleMoreClick"
+          @clickEmoji="handleEmojiClick"
+          @clickVoice="handleVoiceClick"
+          @customFocus="handleCustomFocus"
+          @send="handleSend"
+          :height="inputAreaHeight" />
       </div>
     </div>
 
@@ -183,6 +196,14 @@
 
     <!-- 文件上传进度条（悬浮显示，不影响布局） -->
     <FileUploadProgress />
+
+    <Transition name="panel-slide">
+      <div v-show="isPanelVisible" class="panel-container">
+        <div class="h-auto max-h-19rem overflow-y-auto">
+          <Emoticon @emojiHandle="emojiHandle" v-if="inputState.isClickedEmoji" :all="false" />
+        </div>
+      </div>
+    </Transition>
   </main>
 </template>
 
@@ -206,7 +227,7 @@ import { useHistoryStore } from '@/stores/history'
 import { useSettingStore } from '@/stores/setting'
 import FileUtil from '@/utils/FileUtil'
 import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
-import { isMac } from '@/utils/PlatformConstants'
+import { isMac, isMobile } from '@/utils/PlatformConstants'
 
 const { detailId } = defineProps<{
   detailId: SessionItem['detailId']
@@ -608,6 +629,68 @@ onUnmounted(() => {
     resizeObserver = null
   }
 })
+
+/**
+ *
+ * 移动端代码（开始）
+ *
+ *
+ */
+
+const isPanelVisible = ref(false) // 面板是否可见
+
+// 输入框状态
+const inputState = ref({
+  isClickedMore: false,
+  isClickedEmoji: false,
+  isClickedVoice: false,
+  isFocus: false
+})
+
+/** 点击更多按钮 */
+const handleMoreClick = (value: any) => {
+  console.log('handleMoreClick', value)
+  inputState.value = value
+  isPanelVisible.value = value.isClickedMore
+}
+
+/** 点击表情按钮 */
+const handleEmojiClick = (value: any) => {
+  console.log('handleEmojiClick', value)
+  inputState.value = value
+  isPanelVisible.value = value.isClickedEmoji
+}
+
+/** 点击语音按钮 */
+const handleVoiceClick = (value: any) => {
+  console.log('handleVoiceClick', value)
+  inputState.value = value
+  isPanelVisible.value = value.isClickedVoice
+}
+
+/** 处理自定义聚焦事件 */
+const handleCustomFocus = (value: any) => {
+  console.log('handleCustomFocus', value)
+  inputState.value = value
+
+  // 判断是否聚焦
+  if (value.isFocus) {
+    // 聚焦，然后关闭面板
+    isPanelVisible.value = false
+  }
+}
+
+/** 处理发送事件 */
+const handleSend = () => {
+  console.log('handleSend')
+  isPanelVisible.value = false
+}
+
+/**
+ *
+ * 移动端代码（结束）
+ *
+ */
 </script>
 
 <style scoped lang="scss">
@@ -719,5 +802,43 @@ onUnmounted(() => {
 
 :deep(.n-input .n-input-wrapper) {
   padding: 0;
+}
+
+// 移动端样式（下面都是）
+
+/* 面板容器样式 */
+.panel-container {
+  width: 100%;
+  overflow: hidden;
+  background-color: var(--bg-emoji, #f5f5f5);
+  display: flex;
+  flex-direction: column;
+}
+
+/* 使用 transform 实现高性能动画 - 从下往上滑出 */
+.panel-slide-enter-active,
+.panel-slide-leave-active {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: bottom;
+}
+
+.panel-slide-enter-from {
+  opacity: 0;
+  transform: translateY(100%);
+}
+
+.panel-slide-enter-to {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.panel-slide-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.panel-slide-leave-to {
+  opacity: 0;
+  transform: translateY(100%);
 }
 </style>

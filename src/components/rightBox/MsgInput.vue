@@ -12,23 +12,29 @@
     <div
       class="w-full"
       :class="isMobile() ? 'bg-gray-100 flex flex-1 p-5px gap-2 pt-5px items-end bg-white min-h-2.25rem' : ''">
-      <div v-if="isMobile()" class="flex items-center justify-center w-16 h-2.5rem">
-        <svg @click="arrow = true" class="w-22px h-22px mt-2px outline-none">
+      <div v-if="isMobile()" class="flex items-center justify-center w-14 h-2.5rem">
+        <svg
+          @click="handleVoiceClick"
+          :class="iconClickedStates.isClickedVoice ? 'text-#169781' : ''"
+          class="w-25px h-25px mt-2px outline-none">
           <use href="#voice"></use>
         </svg>
       </div>
 
       <ContextMenu
         class="w-full"
-        :style="{ height: `${props.height - 108}px` }"
+        :style="{ height: isMobile() ? 'auto' : `${props.height - 108}px` }"
         @select="$event.click()"
         :menu="menuList">
         <n-scrollbar @click="focusInput">
           <div
             id="message-input"
             ref="messageInputDom"
-            :style="{ minHeight: isMobile() ? '2rem' : '36px' }"
-            style="outline: none"
+            :style="{
+              minHeight: isMobile() ? '2rem' : '36px',
+              lineHeight: isMobile() && !msgInput ? '2rem' : '20px',
+              outline: 'none'
+            }"
             contenteditable
             spellcheck="false"
             @paste="onPaste($event)"
@@ -38,12 +44,13 @@
             @keydown="updateSelectionRange"
             @keyup="updateSelectionRange"
             @click="updateSelectionRange"
+            @blur="handleBlur"
             @compositionend="updateSelectionRange"
             @keydown.exact.ctrl.enter="inputKeyDown"
             data-placeholder="善言一句暖人心，恶语一句伤人心"
             :class="
               isMobile()
-                ? 'empty:before:content-[attr(data-placeholder)] before:text-(12px #777) p-2 text-14px! bg-white! rounded-10px! max-h-8rem!'
+                ? 'empty:before:content-[attr(data-placeholder)] before:text-(12px #777) p-2 text-14px! bg-white! rounded-10px! max-h-8rem! flex items-center'
                 : 'empty:before:content-[attr(data-placeholder)] before:text-(12px #777) p-2'
             "></div>
         </n-scrollbar>
@@ -181,19 +188,28 @@
         class="grid gap-2 h-2.5rem items-center"
         :class="msgInput ? 'grid-cols-[2rem_3rem]' : 'grid-cols-[2rem_2rem]'">
         <div class="w-full items-center flex justify-center h-full">
-          <svg class="w-22px h-22px mt-2px outline-none iconpark-icon"><use href="#smiling-face"></use></svg>
+          <svg @click="handleEmojiClick" class="w-25px h-25px mt-2px outline-none iconpark-icon">
+            <use :href="iconClickedStates.isClickedEmoji ? '#face' : '#smiling-face'"></use>
+          </svg>
         </div>
         <div
           v-if="msgInput"
           class="flex-shrink-0 max-h-62px h-full border-t border-gray-200/50 flex items-center justify-end">
           <n-config-provider class="h-full" :theme="lightTheme">
             <n-button-group size="small" :class="isMobile() ? 'h-full' : 'pr-20px'">
-              <n-button color="#13987f" :disabled="disabledSend" class="w-3rem h-full" @click="send">发送</n-button>
+              <n-button color="#13987f" :disabled="disabledSend" class="w-3rem h-full" @click="handleMobileSend">
+                发送
+              </n-button>
             </n-button-group>
           </n-config-provider>
         </div>
         <div v-if="!msgInput" class="flex items-center justify-start h-full">
-          <svg class="w-22px h-22px mt-2px outline-none iconpark-icon"><use href="#add-one"></use></svg>
+          <svg
+            @click="handleMoreClick"
+            :class="iconClickedStates.isClickedMore ? 'rotate-45' : 'rotate-0'"
+            class="w-25px h-25px mt-2px outline-none iconpark-icon transition-transform duration-300 ease">
+            <use href="#add-one"></use>
+          </svg>
         </div>
       </div>
     </div>
@@ -277,8 +293,11 @@ const {
 } = useMsgInput(messageInputDom)
 
 /** 移动端专用适配变量（开始） */
+// const isFocus = ref(false) // 当前是否聚焦
 
-const isFocus = ref(false) // 当前是否聚焦
+// const isClickedVoice = ref(false)
+// const isClickedEmoji = ref(false)
+// const isClickedMore = ref(false)
 
 /** 移动端专用适配变量（结束） */
 
@@ -306,12 +325,20 @@ const focusInput = () => {
   }
 }
 
+/** 输入框失焦处理函数 */
+const handleBlur = () => {
+  setIsFocus(false) // 移动端适配
+}
+
 /** 当切换聊天对象时，重新获取焦点 */
 watch(activeItem, () => {
   nextTick(() => {
-    const inputDiv = document.getElementById('message-input')
-    inputDiv?.focus()
-    setIsFocus(true) // 移动端适配
+    // 移动端不自动聚焦
+    if (!isMobile()) {
+      const inputDiv = document.getElementById('message-input')
+      inputDiv?.focus()
+      setIsFocus(true)
+    }
   })
 })
 
@@ -467,9 +494,12 @@ onMounted(async () => {
   // TODO: 暂时已经关闭了独立窗口聊天功能
   emit('aloneWin')
   nextTick(() => {
-    const inputDiv = document.getElementById('message-input')
-    inputDiv?.focus()
-    setIsFocus(true) // 移动端适配
+    // 移动端不自动聚焦
+    if (!isMobile()) {
+      const inputDiv = document.getElementById('message-input')
+      inputDiv?.focus()
+      setIsFocus(true)
+    }
   })
   // TODO 应该把打开的窗口的item给存到set中，需要修改输入框和消息展示的搭配，输入框和消息展示模块应该是一体并且每个用户独立的，这样当我点击这个用户框输入消息的时候就可以暂存信息了并且可以判断每个消息框是什么类型是群聊还是单聊，不然会导致比如@框可以在单聊框中出现 (nyh -> 2024-04-09 01:03:59)
   /** 当不是独立窗口的时候也就是组件与组件之间进行通信然后监听信息对话的变化 */
@@ -514,11 +544,94 @@ onUnmounted(() => {
   window.removeEventListener('keydown', disableSelectAll)
 })
 
-/** 移动端专用适配事件（开始） */
+/**
+ *
+ *
+ *
+ *
+ * 移动端专用适配事件（开始）
+ *
+ *
+ *
+ *  */
+
+// 记录当前点击状态
+const iconClickedStates = ref({
+  isClickedMore: false,
+  isClickedEmoji: false,
+  isClickedVoice: false,
+  isFocus: false
+})
+
+/**
+ * 自定义事件
+ * clickMore: 点击更多按钮
+ * clickEmoji: 点击表情按钮
+ * clickVoice: 点击语音按钮
+ */
+const selfEmitter = defineEmits(['clickMore', 'clickEmoji', 'clickVoice', 'customFocus', 'send'])
 
 /** 设置聚焦状态 */
 const setIsFocus = (value: boolean) => {
-  isFocus.value = value
+  iconClickedStates.value.isClickedMore = false
+  iconClickedStates.value.isClickedEmoji = false
+  iconClickedStates.value.isClickedVoice = false
+  iconClickedStates.value.isFocus = value
+
+  selfEmitter('customFocus', {
+    isClickedEmoji: iconClickedStates.value.isClickedEmoji,
+    isClickedMore: iconClickedStates.value.isClickedMore,
+    isClickedVoice: iconClickedStates.value.isClickedVoice,
+    isFocus: iconClickedStates.value.isFocus
+  })
+}
+
+/** 点击更多按钮 */
+const handleMoreClick = () => {
+  iconClickedStates.value.isClickedMore = !iconClickedStates.value.isClickedMore
+  iconClickedStates.value.isClickedEmoji = false
+  iconClickedStates.value.isClickedVoice = false
+  iconClickedStates.value.isFocus = false
+  selfEmitter('clickMore', {
+    isClickedMore: iconClickedStates.value.isClickedMore,
+    isClickedEmoji: iconClickedStates.value.isClickedEmoji,
+    isClickedVoice: iconClickedStates.value.isClickedVoice,
+    isFocus: iconClickedStates.value.isFocus
+  })
+}
+
+/** 点击表情按钮 */
+const handleEmojiClick = () => {
+  iconClickedStates.value.isClickedEmoji = !iconClickedStates.value.isClickedEmoji
+  iconClickedStates.value.isClickedVoice = false
+  iconClickedStates.value.isClickedMore = false
+  iconClickedStates.value.isFocus = false
+  selfEmitter('clickEmoji', {
+    isClickedMore: iconClickedStates.value.isClickedMore,
+    isClickedEmoji: iconClickedStates.value.isClickedEmoji,
+    isClickedVoice: iconClickedStates.value.isClickedVoice,
+    isFocus: iconClickedStates.value.isFocus
+  })
+}
+
+/** 点击语音按钮 */
+const handleVoiceClick = () => {
+  console.log('点击语音')
+  iconClickedStates.value.isClickedVoice = !iconClickedStates.value.isClickedVoice
+  iconClickedStates.value.isClickedEmoji = false
+  iconClickedStates.value.isClickedMore = false
+  iconClickedStates.value.isFocus = false
+  selfEmitter('clickVoice', {
+    isClickedMore: iconClickedStates.value.isClickedMore,
+    isClickedEmoji: iconClickedStates.value.isClickedEmoji,
+    isClickedVoice: iconClickedStates.value.isClickedVoice,
+    isFocus: iconClickedStates.value.isFocus
+  })
+}
+
+const handleMobileSend = () => {
+  send()
+  selfEmitter('send', iconClickedStates.value)
 }
 
 /** 移动端专用适配事件（结束） */

@@ -1,7 +1,8 @@
 <template>
   <n-scrollbar
     style="max-height: 290px"
-    class="p-[14px_14px_0_14px] box-border w-460px h-290px select-none"
+    :class="[isMobile() ? 'h-15rem w-auto' : 'h-290px w-460px']"
+    class="p-[14px_14px_0_14px] box-border select-none"
     @scroll="activeMenuId = ''">
     <transition name="fade" mode="out-in">
       <div :key="activeIndex" class="emoji-content">
@@ -26,7 +27,7 @@
           <div v-for="items in emojiObj" :key="items?.name">
             <template v-if="items?.name && items.value?.length">
               <span class="text-12px text-[--text-color]">{{ items.name }}</span>
-              <n-flex align="center" class="mt-12px mb-12px">
+              <n-flex align="center" :justify="isMobile() ? 'between' : 'center'" class="mt-12px mb-12px">
                 <n-flex
                   align="center"
                   justify="center"
@@ -140,6 +141,7 @@ import HulaEmojis from 'hula-emojis'
 import { useEmojiStore } from '@/stores/emoji'
 import { useHistoryStore } from '@/stores/history.ts'
 import { getAllTypeEmojis } from '@/utils/Emoji.ts'
+import { isMobile } from '~/src/utils/PlatformConstants'
 
 type EmojiType = {
   expressionEmojis: EmojiItem
