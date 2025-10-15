@@ -4,6 +4,18 @@ import { StoresEnum } from '@/enums'
 
 const colorthief = new Colorthief()
 
+// 状态图标颜色
+const ensureStateColor = (state?: STO.UserState) => {
+  if (!state || state.bgColor || !state.url) return
+
+  const img = new Image()
+  img.src = state.url
+  img.onload = async () => {
+    const colors = await colorthief.getColor(img, 3)
+    state.bgColor = `rgba(${colors.join(',')}, 0.4)`
+  }
+}
+
 export const useUserStatusStore = defineStore(
   StoresEnum.USER_STATE,
   () => {
@@ -18,26 +30,24 @@ export const useUserStatusStore = defineStore(
       if (!item) {
         const defaultItem = stateList.value.find((state: { id: string }) => state.id === '1')
         if (defaultItem) {
-          const img = new Image()
-          img.src = defaultItem.url
-          img.onload = async () => {
-            const colors = await colorthief.getColor(img, 3)
-            defaultItem.bgColor = `rgba(${colors.join(',')}, 0.4)`
-          }
+          ensureStateColor(defaultItem)
           return defaultItem
         }
       }
 
       if (item) {
-        const img = new Image()
-        img.src = item.url
-        img.onload = async () => {
-          const colors = await colorthief.getColor(img, 3)
-          item.bgColor = `rgba(${colors.join(',')}, 0.4)`
-        }
+        ensureStateColor(item)
       }
       return item as STO.UserState
     })
+
+    watch(
+      stateList,
+      (list) => {
+        list.forEach((state: any) => ensureStateColor(state))
+      },
+      { immediate: true }
+    )
 
     return {
       stateList,
