@@ -11,10 +11,12 @@
         @room-name-click="handleRoomNameClick" />
     </template>
     <template #container>
-      <ChatMain :footer-height="footerBarHeight" @scroll="handleScroll" />
+      <div class="h-full overflow-y-auto">
+        <ChatMain @scroll="handleScroll" />
+      </div>
     </template>
     <template #footer>
-      <FooterBar ref="footerBar" @update-height="onFooterBarUpdateHeight"></FooterBar>
+      <FooterBar ref="footerBar"></FooterBar>
     </template>
   </AutoFixHeightPage>
 </template>
@@ -22,14 +24,12 @@
 <script setup lang="ts">
 import router from '@/router'
 import { useGlobalStore } from '@/stores/global'
-import { useMobileStore } from '@/stores/mobile'
 
 defineOptions({
   name: 'mobileChatRoomDefault'
 })
 
 const globalStore = useGlobalStore()
-const mobileStore = useMobileStore()
 
 const footerBar = ref<any>()
 const headerBar = ref<any>()
@@ -37,25 +37,6 @@ const headerBar = ref<any>()
 const props = defineProps<{
   uid?: ''
 }>()
-
-let firstLoad = false
-
-let headerBarHeight = 0
-
-const footerBarHeight = ref(270)
-
-const onFooterBarUpdateHeight = async (height: number) => {
-  if (!firstLoad) {
-    await nextTick()
-    firstLoad = true
-
-    if (headerBar.value?.rootEl) {
-      headerBarHeight = headerBar.value.rootEl.offsetHeight
-    }
-
-    footerBarHeight.value = height + mobileStore.safeArea.bottom + mobileStore.safeArea.top + headerBarHeight
-  }
-}
 
 const handleScroll = () => {
   const input = footerBar.value?.footerBarInput
