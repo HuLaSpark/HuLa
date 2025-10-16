@@ -218,6 +218,7 @@
 import { MittEnum, NotificationTypeEnum, OnlineEnum, RoleEnum, RoomTypeEnum } from '@/enums'
 import { useAvatarUpload } from '@/hooks/useAvatarUpload'
 import { useMitt } from '@/hooks/useMitt.ts'
+import { useMyRoomInfoUpdater } from '@/hooks/useMyRoomInfoUpdater'
 import router from '@/router'
 import type { UserItem } from '@/services/types'
 import { useCachedStore } from '@/stores/cached'
@@ -241,6 +242,7 @@ const globalStore = useGlobalStore()
 const groupStore = useGroupStore()
 const cacheStore = useCachedStore()
 const contactStore = useContactStore()
+const { persistMyRoomInfo } = useMyRoomInfoUpdater()
 
 const title = computed(() => (isGroup.value ? '群' : '好友'))
 const isGroup = computed(() => globalStore.currentSession?.type === RoomTypeEnum.GROUP)
@@ -445,8 +447,8 @@ const handleTop = (value: boolean) => {
 // 处理群备注更新
 const handleInfoUpdate = async () => {
   if (isGroup.value) {
-    await cacheStore.updateMyRoomInfo({
-      id: globalStore.currentSession.roomId,
+    await persistMyRoomInfo({
+      roomId: globalStore.currentSession.roomId,
       remark: remarkValue.value,
       myName: nicknameValue.value
     })

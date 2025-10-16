@@ -461,12 +461,12 @@ import {
   ThemeEnum
 } from '@/enums'
 import { useAvatarUpload } from '@/hooks/useAvatarUpload'
+import { useMyRoomInfoUpdater } from '@/hooks/useMyRoomInfoUpdater'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import { useWindow } from '@/hooks/useWindow'
 import { IsAllUserEnum, type UserItem } from '@/services/types.ts'
 import { WsResponseMessageType } from '@/services/wsType'
-import { useCachedStore } from '@/stores/cached'
 import { useChatStore } from '@/stores/chat.ts'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global'
@@ -474,7 +474,7 @@ import { useGroupStore } from '@/stores/group.ts'
 import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { notification, setSessionTop, shield, updateMyRoomInfo, updateRoomInfo } from '@/utils/ImRequestUtils'
+import { notification, setSessionTop, shield, updateRoomInfo } from '@/utils/ImRequestUtils'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
 
 const { createModalWindow, startRtcCall } = useWindow()
@@ -493,8 +493,8 @@ const optionsType = ref<RoomActEnum>()
 const modalShow = ref(false)
 const sidebarShow = ref(false)
 const showQRCodeModal = ref(false)
-const cacheStore = useCachedStore()
 const { currentSession: activeItem } = storeToRefs(globalStore)
+const { persistMyRoomInfo, resolveMyRoomNickname } = useMyRoomInfoUpdater()
 
 // 是否为频道（仅显示 more 按钮）
 const isChannel = computed(() => activeItem.value?.hotFlag === IsAllUserEnum.Yes || activeItem.value?.roomId === '1')
@@ -528,14 +528,20 @@ const localRemark = ref('')
 
 // 初始化本地变量
 const initLocalValues = () => {
-  localMyName.value = groupStore.myNameInCurrentGroup || ''
+  localMyName.value = resolveMyRoomNickname({
+    roomId: activeItem.value?.roomId,
+    myName: groupStore.myNameInCurrentGroup || ''
+  })
   localRemark.value = groupStore.countInfo?.remark || ''
 }
 
 watch(
   () => groupStore.myNameInCurrentGroup,
   (newName) => {
-    const normalized = newName || ''
+    const normalized = resolveMyRoomNickname({
+      roomId: activeItem.value?.roomId,
+      myName: newName || ''
+    })
     if (localMyName.value !== normalized) {
       localMyName.value = normalized
     }
@@ -662,36 +668,28 @@ const handleInvite = async () => {
 
 // 保存群聊信息
 const saveGroupInfo = async () => {
-  console.log('修改群聊信息')
   if (!activeItem.value.roomId || activeItem.value.type !== RoomTypeEnum.GROUP) return
 
-  // 使用 pendingGroupInfo 中的信息
   const pendingInfo = pendingGroupInfo.value
   if (!pendingInfo) return
 
+  const myName = pendingInfo.myName ?? ''
+  const remark = pendingInfo.remark ?? ''
+
   try {
-    // 使用updateMyRoomInfo接口更新我在群里的昵称和群备注
-    const myRoomInfo = {
-      id: activeItem.value.roomId,
-      myName: pendingInfo.myName!,
-      remark: pendingInfo.remark!
-    }
-    await cacheStore.updateMyRoomInfo(myRoomInfo)
+    await persistMyRoomInfo({
+      roomId: activeItem.value.roomId,
+      myName,
+      remark
+    })
 
-    // 发送更新请求
-    await updateMyRoomInfo(myRoomInfo)
-
-    // 更新本地store（只有在成功保存后才更新）
-    groupStore.myNameInCurrentGroup = myRoomInfo.myName
-    if (groupStore.countInfo) {
-      groupStore.countInfo.remark = myRoomInfo.remark
-    }
-
-    // 更新会话
-    chatStore.updateSession(activeItem.value.roomId, { remark: myRoomInfo.remark })
+    localMyName.value = resolveMyRoomNickname({
+      roomId: activeItem.value.roomId,
+      myName
+    })
+    localRemark.value = remark
 
     window.$message.success('群聊信息已更新')
-    // 清空待保存的群信息
     pendingGroupInfo.value = null
   } catch (error) {
     console.error('更新群聊信息失败:', error)

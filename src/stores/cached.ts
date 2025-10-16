@@ -41,9 +41,18 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
   }
 
   const updateMyRoomInfo = async (data: any) => {
-    await invokeSilently(TauriCommand.UPDATE_MY_ROOM_INFO, {
+    const result = await invokeSilently(TauriCommand.UPDATE_MY_ROOM_INFO, {
       myRoomInfo: data
     })
+    return result !== null
+  }
+
+  const syncRoomMembersToLocal = async (roomId: string) => {
+    const result = await invokeSilently(TauriCommand.GET_ROOM_MEMBERS, {
+      room_id: roomId,
+      roomId
+    })
+    return result !== null
   }
 
   return {
@@ -52,6 +61,7 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
     userAvatarUpdated,
     getGroupAnnouncementList,
     updateMyRoomInfo,
+    syncRoomMembersToLocal,
     getAllBadgeList
   }
 })
