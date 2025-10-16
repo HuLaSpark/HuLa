@@ -53,7 +53,12 @@
       "matchManagers": ["npm", "cargo"]
     },
     {
-      "matchManagers": ["npm", "cargo"],
+      "matchManagers": ["npm"],
+      "rangeStrategy": "bump"
+    },
+    {
+      "matchManagers": ["cargo"],
+      "matchPaths": ["src-tauri/**"],
       "rangeStrategy": "replace"
     }
   ],
