@@ -21,7 +21,15 @@
             justify="space-between"
             class="bg-[--center-bg-color] rounded-10px p-20px box-border border-(1px solid [--bg-popover])">
             <n-flex align="center" :size="10">
-              <n-avatar round size="large" :src="avatarSrc(getUserInfo(item)!.avatar!)" class="mr-10px" />
+              <n-avatar
+                round
+                size="large"
+                :src="
+                  props.type === 'friend'
+                    ? avatarSrc(getUserInfo(item)!.avatar!)
+                    : groupStore.getGroupDetailByRoomId(item.roomId)!.avatar
+                "
+                class="mr-10px" />
               <n-flex vertical :size="12">
                 <n-flex align="center" :size="10">
                   <p
@@ -141,18 +149,21 @@ const applyMsg = computed(() => (item: any) => {
   if (props.type === 'friend') {
     return isCurrentUser(item.senderId) ? (isAccepted(item) ? '已同意你的请求' : '正在验证你的邀请') : '请求加为好友'
   } else {
+    const groupDetail: any = groupStore.getGroupDetailByRoomId(item.roomId)!
     if (item.eventType === NoticeType.GROUP_APPLY) {
-      return '申请加入 [' + item.name + ']'
+      return '申请加入 [' + groupDetail.groupName + ']'
     } else if (item.eventType === NoticeType.GROUP_INVITE) {
-      return '邀请' + groupStore.getUserInfo(item.operateId)!.name + '加入 [' + item.name + ']'
+      return '邀请' + groupStore.getUserInfo(item.operateId)!.name + '加入 [' + groupDetail.groupName + ']'
     } else if (isFriendApplyOrGroupInvite(item)) {
-      return isCurrentUser(item.senderId) ? '已同意加入 [' + item.content + ']' : '邀请你加入 [' + item.content + ']'
+      return isCurrentUser(item.senderId)
+        ? '已同意加入 [' + groupDetail.groupName + ']'
+        : '邀请你加入 [' + groupDetail.groupName + ']'
     } else if (item.eventType === NoticeType.GROUP_MEMBER_DELETE) {
-      return '已被' + groupStore.getUserInfo(item.senderId)!.name + '踢出 [' + item.content + ']'
+      return '已被' + groupStore.getUserInfo(item.senderId)!.name + '踢出 [' + groupDetail.groupName + ']'
     } else if (item.eventType === NoticeType.GROUP_SET_ADMIN) {
-      return '已被群主设置为 [' + item.content + '] 的管理员'
+      return '已被群主设置为 [' + groupDetail.groupName + '] 的管理员'
     } else if (item.eventType === NoticeType.GROUP_RECALL_ADMIN) {
-      return '已被群主取消 [' + item.content + '] 的管理员权限'
+      return '已被群主取消 [' + groupDetail.groupName + '] 的管理员权限'
     }
   }
 })
