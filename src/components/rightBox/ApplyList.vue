@@ -2,9 +2,9 @@
   <n-flex vertical class="select-none">
     <n-flex align="center" justify="space-between" class="color-[--text-color] px-20px py-10px">
       <p class="text-16px">{{ props.type === 'friend' ? '好友通知' : '群通知' }}</p>
-      <svg class="size-18px cursor-pointer">
+      <!-- <svg class="size-18px cursor-pointer">
         <use href="#delete"></use>
-      </svg>
+      </svg> -->
     </n-flex>
 
     <n-virtual-list

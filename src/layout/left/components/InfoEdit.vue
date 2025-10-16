@@ -29,7 +29,7 @@
               <div class="avatar-wrapper relative" @click="openAvatarCropper">
                 <n-avatar :size="80" :src="AvatarUtils.getAvatarUrl(editInfo.content.avatar!)" round />
                 <div class="avatar-hover absolute size-full rounded-50% flex-center">
-                  <span class="text-12px color-#fff dark:color-#606060">更换头像</span>
+                  <span class="text-12px color-#606060">更换头像</span>
                 </div>
               </div>
             </template>

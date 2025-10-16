@@ -99,7 +99,7 @@
       </n-flex>
 
       <n-icon-wrapper
-        @click="footerOptions[0].click(content.type)"
+        @click="footerOptions[0].click()"
         class="cursor-pointer"
         :size="40"
         :border-radius="10"
@@ -168,9 +168,11 @@
 
       <n-flex align="center" justify="space-between" class="py-12px border-b text-(14px [--chat-text-color])">
         <span>群公告</span>
-        <span class="flex items-center cursor-pointer">
-          <p class="text-#909090">未设置</p>
-          <n-icon size="16" class="ml-1">
+        <span class="flex items-center cursor-pointer gap-4px" @click="handleOpenAnnouncement">
+          <p class="text-#909090 max-w-200px truncate leading-tight" :title="announcementContent || '未设置'">
+            {{ announcementContent || '未设置' }}
+          </p>
+          <n-icon size="16">
             <svg><use href="#right"></use></svg>
           </n-icon>
         </span>
@@ -195,7 +197,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { RoomTypeEnum } from '@/enums'
+import { CallTypeEnum, RoomTypeEnum } from '@/enums'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useMyRoomInfoUpdater } from '@/hooks/useMyRoomInfoUpdater'
 import { useWindow } from '@/hooks/useWindow'
@@ -203,11 +205,13 @@ import type { UserItem } from '@/services/types'
 import { useCachedStore } from '@/stores/cached'
 import { useGroupStore } from '@/stores/group'
 import { useImageViewer } from '@/stores/imageViewer'
+import { useGlobalStore } from '@/stores/global'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { getGroupDetail } from '@/utils/ImRequestUtils'
 
 const { openMsgSession } = useCommon()
-const { createWebviewWindow } = useWindow()
+const { createWebviewWindow, startRtcCall } = useWindow()
+const globalStore = useGlobalStore()
 const IMAGEWIDTH = 630
 const IMAGEHEIGHT = 660
 const { content } = defineProps<{
@@ -230,6 +234,33 @@ const { persistMyRoomInfo, resolveMyRoomNickname } = useMyRoomInfoUpdater()
 
 const remarkSnapshot = ref('')
 const nicknameSnapshot = ref('')
+const announcementContent = ref('')
+
+const loadAnnouncement = async (roomId: string) => {
+  if (!roomId) {
+    announcementContent.value = ''
+    return
+  }
+
+  try {
+    const data: any = await cacheStore.getGroupAnnouncementList(roomId, 1, 10)
+    if (data && Array.isArray(data.records) && data.records.length > 0) {
+      const topAnnouncement = data.records.find((item: any) => item.top)
+      const targetAnnouncement = topAnnouncement || data.records[0]
+      announcementContent.value = targetAnnouncement?.content || ''
+    } else {
+      announcementContent.value = ''
+    }
+  } catch (error) {
+    console.error('获取群公告失败:', error)
+    announcementContent.value = ''
+  }
+}
+
+const handleOpenAnnouncement = async () => {
+  if (!item.value?.roomId) return
+  await createWebviewWindow('查看群公告', `announList/${item.value.roomId}/1`, 420, 620)
+}
 
 const displayNickname = computed(() =>
   resolveMyRoomNickname({ roomId: item.value?.roomId, myName: item.value?.myName })
@@ -241,6 +272,7 @@ watchEffect(async () => {
     nicknameValue.value = ''
     remarkSnapshot.value = ''
     nicknameSnapshot.value = ''
+    announcementContent.value = ''
   } else {
     await getGroupDetail(content.uid)
       .then((response: any) => {
@@ -252,10 +284,12 @@ watchEffect(async () => {
         remarkSnapshot.value = normalizedRemark
         if (item.value && item.value.roomId) {
           fetchGroupMembers(item.value.roomId)
+          void loadAnnouncement(item.value.roomId)
         }
       })
       .catch((e) => {
         console.error('获取群组详情失败:', e)
+        announcementContent.value = ''
       })
   }
 })
@@ -381,38 +415,67 @@ const fetchGroupMembers = async (roomId: string) => {
   }
 }
 
-const footerOptions = ref<OPT.Details[]>([
-  {
-    url: 'message',
-    title: '发信息',
-    click: (type) => {
-      console.log(content)
-      // TODO 需要增加独立窗口功能 (nyh -> 2024-03-25 16:01:23)
-      //群聊传群id
-      let id = '0'
-      if (type === RoomTypeEnum.GROUP) {
-        id = item.value.roomId
-      } else {
-        id = item.value.uid
-      }
-      openMsgSession(id, type)
-    }
-  },
-  {
-    url: 'phone-telephone',
-    title: '打电话',
-    click: () => {
-      console.log(123)
-    }
-  },
-  {
-    url: 'video-one',
-    title: '打视频',
-    click: () => {
-      console.log(123)
-    }
+const handleStartCall = async (callType: CallTypeEnum) => {
+  if (content.type !== RoomTypeEnum.SINGLE) {
+    window.$message.warning('仅单聊支持发起音视频通话')
+    return
   }
-])
+
+  const targetUid = item.value?.uid
+  if (!targetUid) {
+    window.$message.error('无法获取好友信息')
+    return
+  }
+
+  if (globalStore.currentSession?.detailId !== targetUid) {
+    await Promise.resolve(openMsgSession(targetUid, RoomTypeEnum.SINGLE))
+    await nextTick()
+  }
+
+  startRtcCall(callType)
+}
+
+const footerOptions = computed<OPT.Details[]>(() => {
+  const sessionType = content.type
+
+  return [
+    {
+      url: 'message',
+      title: '发信息',
+      click: () => {
+        if (sessionType === RoomTypeEnum.GROUP) {
+          const roomId = item.value?.roomId
+          if (!roomId) {
+            window.$message.error('无法获取群聊信息')
+            return
+          }
+          openMsgSession(roomId, sessionType)
+        } else {
+          const uid = item.value?.uid
+          if (!uid) {
+            window.$message.error('无法获取好友信息')
+            return
+          }
+          openMsgSession(uid, sessionType)
+        }
+      }
+    },
+    ...(sessionType === RoomTypeEnum.SINGLE
+      ? [
+          {
+            url: 'phone-telephone',
+            title: '打电话',
+            click: () => handleStartCall(CallTypeEnum.AUDIO)
+          },
+          {
+            url: 'video-one',
+            title: '打视频',
+            click: () => handleStartCall(CallTypeEnum.VIDEO)
+          }
+        ]
+      : [])
+  ]
+})
 
 // 打开图片查看器
 const openImageViewer = async () => {
