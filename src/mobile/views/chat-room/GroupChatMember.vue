@@ -9,8 +9,8 @@
         room-name="群成员" />
     </template>
 
-    <template #container="{ changedHeight }">
-      <div :style="{ height: changedHeight + 'px' }" class="z-2 absolute flex flex-col overflow-auto min-h-70vh w-full">
+    <template>
+      <div class="z-2 absolute flex flex-col overflow-auto min-h-70vh w-full">
         <div class="flex flex-col flex-1 gap-15px py-15px px-20px">
           <!-- 搜索表单 -->
           <n-form @submit="handleSubmit" class="flex flex-wrap gap-10px">

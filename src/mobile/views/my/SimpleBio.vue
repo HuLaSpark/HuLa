@@ -2,8 +2,8 @@
   <div class="flex flex-1">
     <img src="@/assets/mobile/chat-home/background.webp" class="w-100% absolute top-0 z-0" alt="hula" />
     <AutoFixHeightPage :show-footer="false">
-      <template #container="{ height }">
-        <div :style="{ height: height + 'px' }" class="z-2 flex flex-col absolute overflow-auto min-h-70vh w-full">
+      <template>
+        <div class="z-2 flex flex-col absolute overflow-auto min-h-70vh w-full">
           <div class="flex flex-col flex-1 p-20px gap-20px">
             <div class="flex items-center">
               <div class="py-15px flex gap-10px w-full items-center justify-end">

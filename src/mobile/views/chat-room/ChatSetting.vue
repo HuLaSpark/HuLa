@@ -9,9 +9,9 @@
         :room-name="title + '设置'" />
     </template>
 
-    <template #container="{ changedHeight }">
+    <template>
       <img src="@/assets/mobile/chat-home/background.webp" class="w-100% relative top-0 z-1" alt="hula" />
-      <div :style="{ height: changedHeight + 'px' }" class="z-2 absolute flex flex-col overflow-auto min-h-70vh w-full">
+      <div class="z-2 absolute flex flex-col overflow-auto min-h-70vh w-full">
         <div class="flex flex-col gap-15px py-15px px-20px">
           <div class="flex shadow bg-white rounded-10px w-full h-60px items-center gap-10px" @click="clickInfo">
             <!-- 群头像 -->
@@ -218,6 +218,7 @@
 import { MittEnum, NotificationTypeEnum, OnlineEnum, RoleEnum, RoomTypeEnum } from '@/enums'
 import { useAvatarUpload } from '@/hooks/useAvatarUpload'
 import { useMitt } from '@/hooks/useMitt.ts'
+import { useMyRoomInfoUpdater } from '@/hooks/useMyRoomInfoUpdater'
 import router from '@/router'
 import type { UserItem } from '@/services/types'
 import { useCachedStore } from '@/stores/cached'
@@ -241,6 +242,7 @@ const globalStore = useGlobalStore()
 const groupStore = useGroupStore()
 const cacheStore = useCachedStore()
 const contactStore = useContactStore()
+const { persistMyRoomInfo } = useMyRoomInfoUpdater()
 
 const title = computed(() => (isGroup.value ? '群' : '好友'))
 const isGroup = computed(() => globalStore.currentSession?.type === RoomTypeEnum.GROUP)
@@ -445,8 +447,8 @@ const handleTop = (value: boolean) => {
 // 处理群备注更新
 const handleInfoUpdate = async () => {
   if (isGroup.value) {
-    await cacheStore.updateMyRoomInfo({
-      id: globalStore.currentSession.roomId,
+    await persistMyRoomInfo({
+      roomId: globalStore.currentSession.roomId,
       remark: remarkValue.value,
       myName: nicknameValue.value
     })

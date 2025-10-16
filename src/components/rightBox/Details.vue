@@ -159,7 +159,7 @@
             @keydown.enter="handleNicknameUpdate" />
         </div>
         <span v-else class="flex items-center cursor-pointer" @click="startEditNickname">
-          <p class="text-#909090">{{ item.myName || '未设置' }}</p>
+          <p class="text-#909090">{{ displayNickname || '未设置' }}</p>
           <n-icon v-if="!item.myName" size="16" class="ml-1">
             <svg><use href="#right"></use></svg>
           </n-icon>
@@ -197,6 +197,7 @@
 <script setup lang="ts">
 import { RoomTypeEnum } from '@/enums'
 import { useCommon } from '@/hooks/useCommon.ts'
+import { useMyRoomInfoUpdater } from '@/hooks/useMyRoomInfoUpdater'
 import { useWindow } from '@/hooks/useWindow'
 import type { UserItem } from '@/services/types'
 import { useCachedStore } from '@/stores/cached'
@@ -225,15 +226,30 @@ const nicknameValue = ref('')
 const nicknameInputRef = useTemplateRef('nicknameInputRef')
 const cacheStore = useCachedStore()
 const groupStore = useGroupStore()
+const { persistMyRoomInfo, resolveMyRoomNickname } = useMyRoomInfoUpdater()
+
+const remarkSnapshot = ref('')
+const nicknameSnapshot = ref('')
+
+const displayNickname = computed(() =>
+  resolveMyRoomNickname({ roomId: item.value?.roomId, myName: item.value?.myName })
+)
 
 watchEffect(async () => {
   if (content.type === RoomTypeEnum.SINGLE) {
     item.value = groupStore.getUserInfo(content.uid)!
+    nicknameValue.value = ''
+    remarkSnapshot.value = ''
+    nicknameSnapshot.value = ''
   } else {
     await getGroupDetail(content.uid)
       .then((response: any) => {
         item.value = response
-        nicknameValue.value = response.myName || ''
+        const normalizedNickname = resolveMyRoomNickname({ roomId: response.roomId, myName: response.myName })
+        const normalizedRemark = response.remark || ''
+        nicknameValue.value = normalizedNickname
+        nicknameSnapshot.value = normalizedNickname
+        remarkSnapshot.value = normalizedRemark
         if (item.value && item.value.roomId) {
           fetchGroupMembers(item.value.roomId)
         }
@@ -246,6 +262,7 @@ watchEffect(async () => {
 
 // 开始编辑群备注
 const startEditRemark = () => {
+  remarkSnapshot.value = item.value?.remark || ''
   isEditingRemark.value = true
   nextTick(() => {
     remarkInputRef.value?.focus()
@@ -254,18 +271,40 @@ const startEditRemark = () => {
 
 // 处理群备注更新
 const handleRemarkUpdate = async () => {
-  await cacheStore.updateMyRoomInfo({
-    id: item.value.roomId,
-    remark: item.value.remark,
-    myName: item.value.myName || ''
-  })
-  window.$message.success('群备注更新成功')
-  isEditingRemark.value = false
+  if (!item.value?.roomId) {
+    isEditingRemark.value = false
+    return
+  }
+
+  const previousRemark = remarkSnapshot.value || ''
+  const nextRemark = item.value.remark || ''
+
+  if (nextRemark === previousRemark) {
+    isEditingRemark.value = false
+    return
+  }
+
+  try {
+    await persistMyRoomInfo({
+      roomId: item.value.roomId,
+      myName: item.value.myName || '',
+      remark: nextRemark
+    })
+    remarkSnapshot.value = nextRemark
+    window.$message.success('群备注更新成功')
+  } catch (error) {
+    item.value.remark = previousRemark
+    window.$message.error('群备注更新失败')
+  } finally {
+    isEditingRemark.value = false
+  }
 }
 
 // 开始编辑本群昵称
 const startEditNickname = () => {
-  nicknameValue.value = item.value.myName || ''
+  const resolved = displayNickname.value || ''
+  nicknameSnapshot.value = resolved
+  nicknameValue.value = resolved
   isEditingNickname.value = true
   nextTick(() => {
     nicknameInputRef.value?.focus()
@@ -274,16 +313,45 @@ const startEditNickname = () => {
 
 // 处理本群昵称更新
 const handleNicknameUpdate = async () => {
-  if (nicknameValue.value !== item.value.myName) {
-    await cacheStore.updateMyRoomInfo({
-      id: item.value.roomId,
-      remark: item.value.remark,
-      myName: item.value.myName || ''
-    })
-    item.value.myName = nicknameValue.value
-    window.$message.success('本群昵称更新成功')
+  if (!item.value?.roomId) {
+    isEditingNickname.value = false
+    return
   }
-  isEditingNickname.value = false
+
+  const previousNickname = nicknameSnapshot.value || ''
+  const nextNickname = nicknameValue.value || ''
+
+  if (nextNickname === previousNickname) {
+    nicknameValue.value = previousNickname
+    isEditingNickname.value = false
+    return
+  }
+
+  const originalStoredNickname = item.value.myName || ''
+
+  try {
+    await persistMyRoomInfo({
+      roomId: item.value.roomId,
+      myName: nextNickname,
+      remark: item.value.remark || ''
+    })
+    item.value.myName = nextNickname
+    const resolvedNickname = resolveMyRoomNickname({ roomId: item.value.roomId, myName: nextNickname })
+    nicknameValue.value = resolvedNickname
+    nicknameSnapshot.value = resolvedNickname
+    window.$message.success('本群昵称更新成功')
+  } catch (error) {
+    item.value.myName = originalStoredNickname
+    const fallbackNickname = resolveMyRoomNickname({
+      roomId: item.value?.roomId,
+      myName: originalStoredNickname
+    })
+    nicknameValue.value = fallbackNickname || previousNickname
+    nicknameSnapshot.value = fallbackNickname || previousNickname
+    window.$message.error('本群昵称更新失败')
+  } finally {
+    isEditingNickname.value = false
+  }
 }
 
 // 复制

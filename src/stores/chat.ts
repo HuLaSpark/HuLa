@@ -536,7 +536,7 @@ export const useChatStore = defineStore(
           } else {
             // 撤回他人的消息：群主/管理员视角
             const senderUser = groupStore.getUserInfo(senderUid)!
-            recallMessageBody = `你撤回了成员${senderUser.name}的一条消息`
+            recallMessageBody = `你撤回了${senderUser.name}的一条消息`
           }
         } else {
           // 当前用户不是撤回操作执行者

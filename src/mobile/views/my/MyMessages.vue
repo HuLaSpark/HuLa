@@ -9,20 +9,16 @@
         room-name="我的消息" />
     </template>
 
-    <template #container="{ height }">
-      <div :style="{ height: height + 'px' }" class="z-2 flex flex-col absolute overflow-auto min-h-70vh w-full">
+    <template>
+      <div class="z-2 flex flex-col absolute overflow-auto min-h-70vh w-full">
         <div class="flex flex-col p-[10px_20px_0px_20px] gap-20px">
-          <CommunityTab
-            :customHeight="height - 55"
-            @update="onUpdate"
-            :options="tabOptions"
-            active-tab-name="friend-message">
+          <CommunityTab @update="onUpdate" :options="tabOptions" active-tab-name="friend-message">
             <template #friend-message>
-              <MobileApplyList :close-header="true" type="friend" :custom-height="height - 50" />
+              <MobileApplyList :close-header="true" type="friend" />
             </template>
 
             <template #group-message>
-              <MobileApplyList :close-header="true" type="group" :custom-height="height - 50" />
+              <MobileApplyList :close-header="true" type="group" />
             </template>
           </CommunityTab>
         </div>

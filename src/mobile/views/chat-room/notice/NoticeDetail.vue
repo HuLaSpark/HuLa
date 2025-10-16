@@ -9,9 +9,9 @@
         room-name="公告详情" />
     </template>
 
-    <template #container="{ height }">
+    <template>
       <img src="@/assets/mobile/chat-home/background.webp" class="w-100% relative top-0 z-1" alt="hula" />
-      <div :style="{ height: height + 'px' }" class="z-2 flex flex-col absolute overflow-auto min-h-70vh w-full">
+      <div class="z-2 flex flex-col absolute overflow-auto min-h-70vh w-full">
         <div class="flex flex-col p-20px">
           <div class="bg-white flex flex-col shadow p-10px gap-15px text-14px rounded-15px">
             <!-- 头像 -->
