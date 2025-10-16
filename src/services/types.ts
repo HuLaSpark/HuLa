@@ -412,6 +412,8 @@ export type TextBody = {
   content: string
   /** 回复 */
   reply: ReplyType
+  /** @用户uid列表，用于精准渲染高亮 */
+  atUidList?: string[] | null
   /**
    * 消息链接映射
    */

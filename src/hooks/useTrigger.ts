@@ -25,6 +25,9 @@ export const useTrigger = (
   topicDialogVisible: Ref<boolean>,
   topicKeyword: Ref<string>
 ) => {
+  // 产品阶段暂不使用 / 唤起 AI，保留开关便于后续快速恢复
+  const enableAITrigger = false
+
   /** 重置所有状态 */
   const resetAllStates = () => {
     ait.value = false
@@ -59,24 +62,38 @@ export const useTrigger = (
 
   /** 处理AI对话 */
   const handleAI = async (context: TriggerContext) => {
+    if (!enableAITrigger) {
+      // 当功能关闭时直接返回，避免弹层状态被重新打开
+      return
+    }
+
     if (groupedAIModels.value.length === 0) {
       resetAllStates()
       return
     }
 
-    aiDialogVisible.value = true
-    aiKeyword.value = context.keyword
+    const keyword = context.keyword?.trim?.() ?? ''
+    if (!keyword) {
+      resetAllStates()
+      return
+    }
+
+    aiKeyword.value = keyword
 
     const res = context.range.getBoundingClientRect()
-    await nextTick(() => {
-      const dom = document.querySelector(SELECTORS.AI) as HTMLElement
-      if (!dom) return
-      dom.style.position = 'fixed'
-      dom.style.height = 'auto'
-      dom.style.maxHeight = '190px'
-      dom.style.left = `${res.x - 20}px`
-      dom.style.top = `${res.y - (dom.offsetHeight + 5)}px`
-    })
+    await nextTick()
+    if (groupedAIModels.value.length === 0) {
+      resetAllStates()
+      return
+    }
+    aiDialogVisible.value = true
+    const dom = document.querySelector(SELECTORS.AI) as HTMLElement
+    if (!dom) return
+    dom.style.position = 'fixed'
+    dom.style.height = 'auto'
+    dom.style.maxHeight = '190px'
+    dom.style.left = `${res.x - 20}px`
+    dom.style.top = `${res.y - (dom.offsetHeight + 5)}px`
   }
 
   /** 处理话题标签 */
@@ -145,15 +162,16 @@ export const useTrigger = (
         const keyword = extractKeyword(text, cursorPosition, TriggerEnum.MENTION)
         if (keyword !== null) {
           await handleMention({ ...context, keyword })
-          hasTriggered = true
+          hasTriggered = ait.value
         }
       }
       // 检查AI对话
-      else if (shouldTrigger(text, cursorPosition, TriggerEnum.AI)) {
+      // 仅在开关开启时解析 / 触发，避免误触发已禁用的逻辑
+      else if (enableAITrigger && shouldTrigger(text, cursorPosition, TriggerEnum.AI)) {
         const keyword = extractKeyword(text, cursorPosition, TriggerEnum.AI)
         if (keyword !== null) {
           await handleAI({ ...context, keyword })
-          hasTriggered = true
+          hasTriggered = aiDialogVisible.value
         }
       }
       // 检查话题标签
@@ -161,7 +179,7 @@ export const useTrigger = (
         const keyword = extractKeyword(text, cursorPosition, TriggerEnum.TOPIC)
         if (keyword !== null) {
           await handleTopic({ ...context, keyword })
-          hasTriggered = true
+          hasTriggered = topicDialogVisible.value
         }
       }
 

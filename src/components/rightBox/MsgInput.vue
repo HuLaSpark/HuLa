@@ -63,7 +63,7 @@
         class="flex-shrink-0 max-h-52px p-4px pr-12px border-t border-gray-200/50 flex items-center justify-end">
         <n-config-provider :theme="lightTheme">
           <n-button-group size="small">
-            <n-button color="#13987f" :disabled="disabledSend" class="w-65px" @click="send">发送</n-button>
+            <n-button color="#13987f" :disabled="disabledSend" class="w-65px" @click="handleSend">发送</n-button>
             <n-button color="#13987f" class="p-[0_6px]">
               <template #icon>
                 <n-config-provider :theme="themes.content === ThemeEnum.DARK ? darkTheme : lightTheme">
@@ -143,7 +143,7 @@
                 :intersection-observer-options="{
                   root: '#image-chat-ait'
                 }" />
-              <span>{{ item.name }}</span>
+              <span>{{ item.myName || item.name }}</span>
             </n-flex>
           </template>
         </n-virtual-list>
@@ -304,10 +304,18 @@ const {
 
 /** 移动端专用适配变量（结束） */
 
+const handleSend = async () => {
+  try {
+    await send()
+  } catch (error: any) {
+    window.$message.warning(error?.message)
+  }
+}
+
 /** 表单提交处理函数 */
 const handleFormSubmit = async (e: Event) => {
   e.preventDefault()
-  await send()
+  await handleSend()
   focusInput()
 }
 
@@ -358,6 +366,9 @@ watch(personList, (newList) => {
     /** 先设置滚动条滚动到第一个 */
     virtualListInstAit.value?.scrollTo({ key: newList[0].uid })
     selectedAitKey.value = newList[0].uid
+  } else {
+    // 无匹配用户时立即关闭@状态，放开回车键让用户可以发送消息
+    ait.value = false
   }
 })
 
@@ -367,6 +378,10 @@ watch(groupedAIModels, (newList) => {
     /** 先设置滚动条滚动到第一个 */
     virtualListInstAI.value?.scrollTo({ key: newList[0].uid })
     selectedAIKey.value = newList[0].uid
+  } else {
+    // 无AI候选时立即关闭弹层并清空选中项，避免残留状态阻挡回车发送
+    selectedAIKey.value = null
+    aiDialogVisible.value = false
   }
 })
 
@@ -408,7 +423,7 @@ const handleAitKeyChange = (
   direction: 1 | -1,
   list: Ref<any[]>,
   virtualListInst: VirtualListInst,
-  key: Ref<number | string>
+  key: Ref<number | string | null>
 ) => {
   const currentIndex = list.value.findIndex((item) => item.uid === key.value)
   const newIndex = Math.max(0, Math.min(currentIndex + direction, list.value.length - 1))
@@ -465,7 +480,7 @@ onMounted(async () => {
       if (item) {
         handleAit(item)
       }
-    } else if (aiDialogVisible.value && Number(selectedAIKey.value) > -1) {
+    } else if (aiDialogVisible.value && selectedAIKey.value != null) {
       const item = groupedAIModels.value.find((item) => item.uid === selectedAIKey.value)
       if (item) {
         handleAI(item)
@@ -631,8 +646,8 @@ const handleVoiceClick = () => {
   selfEmitter('clickVoice', getPanelStateData())
 }
 
-const handleMobileSend = () => {
-  send()
+const handleMobileSend = async () => {
+  await handleSend()
   const inputDiv = document.getElementById('message-input')
   inputDiv?.focus()
   selfEmitter('send', getPanelStateData())

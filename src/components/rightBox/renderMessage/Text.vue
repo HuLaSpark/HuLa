@@ -2,7 +2,7 @@
   <div>
     <template v-for="(item, index) in fragments" :key="index">
       <span
-        v-if="item.startsWith('@') && item.trim() !== '' && item.trim() !== '@'"
+        v-if="mentionTokenSet.has(item)"
         :key="item"
         style="-webkit-user-select: text !important; user-select: text !important"
         class="text-#fbb990 cursor-pointer">
@@ -66,7 +66,16 @@
 </template>
 <script setup lang="ts">
 import { open } from '@tauri-apps/plugin-shell'
+import { useGroupStore } from '@/stores/group'
 import type { TextBody } from '@/services/types'
+
+// 标记结构用于描述需特殊渲染的片段区间
+type ContentMarker = {
+  start: number
+  end: number
+  text: string
+  type: 'mention' | 'url'
+}
 
 const props = defineProps<{
   body: TextBody
@@ -77,6 +86,26 @@ const urlMap = props.body.urlContentMap || {}
 const keys = Object.keys(urlMap)
 // 正则表达式常量用于匹配URL
 const URL_REGEX = /https?:\/\/[^\s<]+[^<.,:;"')\]\s]/g
+
+const groupStore = useGroupStore()
+
+// 仅依赖后端透出的 atUidList，避免用户手动输入的「@文本」被误判
+const mentionTokens = computed(() => {
+  if (!Array.isArray(props.body.atUidList) || props.body.atUidList.length === 0) {
+    return []
+  }
+  const tokens = new Set<string>()
+  props.body.atUidList.forEach((uid) => {
+    const user = groupStore.getUserInfo(uid)
+    const name = user?.myName || user?.name
+    if (name) {
+      tokens.add(`@${name}`)
+    }
+  })
+  return Array.from(tokens)
+})
+// 使用 Set 快速判断片段是否属于真正的 @ 提及
+const mentionTokenSet = computed(() => new Set(mentionTokens.value))
 
 // 处理长链接
 const processLongUrls = computed(() => {
@@ -105,19 +134,24 @@ const fragments = computed(() => {
   const content = processLongUrls.value
 
   // 创建一个数组来存储所有的特殊标记位置
-  const markers = []
+  const markers: ContentMarker[] = []
 
-  // 添加@提及的标记
-  const mentionRegex = /@\S+\s/g
-  let match
-  while ((match = mentionRegex.exec(content)) !== null) {
-    markers.push({
-      start: match.index,
-      end: match.index + match[0].length,
-      text: match[0],
-      type: 'mention'
-    })
-  }
+  // 添加@提及的标记，仅基于已匹配的mention列表
+  mentionTokens.value.forEach((token) => {
+    if (!token) return
+    let searchIndex = 0
+    while (searchIndex < content.length) {
+      const index = content.indexOf(token, searchIndex)
+      if (index === -1) break
+      markers.push({
+        start: index,
+        end: index + token.length,
+        text: token,
+        type: 'mention'
+      })
+      searchIndex = index + token.length
+    }
+  })
 
   // 添加URL的标记
   keys.forEach((key) => {
@@ -151,7 +185,7 @@ const fragments = computed(() => {
   }
 
   // 构建最终的片段数组
-  const result = []
+  const result: string[] = []
   let lastEnd = 0
 
   for (const marker of markers) {
