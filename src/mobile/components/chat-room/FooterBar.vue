@@ -9,24 +9,10 @@
 
     <div class="w-full min-h-92px bg-#FAFAFA flex flex-col z-2 footer-bar-shadow">
       <div class="flex flex-1">
-        <div class="pt-10px ms-25px max-h-40px w-full flex items-center">
-          <n-input
-            ref="footerBarInput"
-            v-model:value="inputValue"
-            @focus="handleFocus"
-            @blur="handleBlur"
-            placeholder="输入/唤醒AI助手" />
-
-          <n-button @click="handleSend" color="#13987f" size="small" class="ms-10px me-25px flex items-center">
-            发送
-            <svg class="h-15px w-15px iconpark-icon color-#white">
-              <use href="#send"></use>
-            </svg>
-          </n-button>
-        </div>
+        <component ref="chatFooterRef" :is="ChatFooter" :detail-id="globalStore.currentSession!.detailId"></component>
       </div>
 
-      <div class="flex justify-between px-25px flex-1 items-center py-10px">
+      <div v-if="false" class="flex justify-between px-25px flex-1 items-center py-10px">
         <template v-for="item in options" :key="item.icon" :class="{ 'active-icon': activeIcon === item.icon }">
           <div v-if="item.label !== 'file' && item.label !== 'image' && item.isShow()" @click="item.onClick">
             <svg class="h-24px w-24px iconpark-icon">
@@ -65,13 +51,6 @@
           </div>
         </template>
       </div>
-
-      <!-- 展开面板 -->
-      <Transition @before-enter="beforeEnter" @enter="enter" @leave="leave">
-        <div v-show="isPanelVisible" class="w-full overflow-hidden bg-#13987f flex flex-col">
-          <div style="height: 180px"></div>
-        </div>
-      </Transition>
     </div>
 
     <van-popup v-model:show="pickRtcCall" position="bottom">
@@ -89,6 +68,8 @@ import type { UploaderFileListItem } from 'vant/es'
 import 'vant/es/dialog/style'
 import { CallTypeEnum, RoomTypeEnum } from '@/enums'
 import { useGlobalStore } from '@/stores/global'
+
+const ChatFooter = defineAsyncComponent(() => import('@/components/rightBox/chatBox/ChatFooter.vue'))
 
 const globalStore = useGlobalStore()
 const activeIcon = ref<string | null>(null)
@@ -181,20 +162,10 @@ const afterReadFile = (fileList: UploaderFileListItem | UploaderFileListItem[]) 
   }
 }
 
-// ==== 类型声明（让 send 有类型提示）====
-interface MsgInputReturn {
-  send: () => Promise<void>
-  // 这里可以加 useMsgInput 返回的其他方法
-}
-
 // ==== DOM 和状态 ====
 const footerBarInput = ref()
-const inputValue = ref('')
 const messageInputDom = ref<HTMLElement | null>(null)
 const root = ref()
-
-// send 不需要响应式，用普通变量即可
-let msgInput: MsgInputReturn | null = null
 
 onMounted(() => {
   if (root.value) {
@@ -208,49 +179,7 @@ onMounted(() => {
       resizeObserver.disconnect()
     })
   }
-
-  nextTick(() => {
-    import('@/hooks/useMsgInput').then((module) => {
-      // 这里确保 messageInputDom 已挂载且为 HTMLElement
-      if (messageInputDom.value) {
-        msgInput = module.useMsgInput(messageInputDom as Ref<HTMLElement>)
-      }
-    })
-  })
 })
-
-// ==== 发送逻辑 ====
-const handleSend = async () => {
-  if (!inputValue.value.trim()) return
-  if (!messageInputDom.value) {
-    console.error('messageInputDom 未就绪')
-    return
-  }
-  if (!msgInput || typeof msgInput.send !== 'function') {
-    console.error('msgInput 未初始化或 send 方法不存在')
-    return
-  }
-
-  // 转义换行和特殊字符
-  messageInputDom.value.innerHTML = inputValue.value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\n/g, '<br>')
-
-  // 关键：同步 useMsgInput 的 msgInput.value
-  if ('msgInput' in msgInput) {
-    // @ts-expect-error
-    msgInput.msgInput.value = messageInputDom.value.innerHTML
-  }
-
-  await nextTick()
-  await msgInput.send()
-
-  // 清空
-  inputValue.value = ''
-  messageInputDom.value.innerHTML = ''
-}
 
 // ==== 展开面板 ====
 const options = ref([
@@ -274,7 +203,6 @@ const options = ref([
 ])
 
 const isPanelVisible = ref(false)
-const isInputFocused = ref(false)
 
 // const clickItem = async (icon: string) => {
 //   if (activeIcon.value === icon) {
@@ -307,44 +235,6 @@ const isInputFocused = ref(false)
 //     })
 //   }
 // }
-
-// ==== 动画 ====
-const beforeEnter = (el: Element) => {
-  const dom = el as HTMLElement
-  dom.style.height = '0px'
-  dom.style.opacity = '0'
-}
-const duration = 0.15
-const enter = (el: Element, done: () => void) => {
-  const dom = el as HTMLElement
-  requestAnimationFrame(() => {
-    dom.style.transition = `height ${duration}s ease, opacity ${duration}s ease`
-    dom.style.height = '180px'
-    dom.style.opacity = '1'
-    dom.addEventListener('transitionend', done, { once: true })
-  })
-}
-const leave = (el: Element, done: () => void) => {
-  const dom = el as HTMLElement
-  dom.style.transition = `height ${duration}s ease, opacity ${duration}s ease`
-  dom.style.height = '0px'
-  dom.style.opacity = '0'
-  dom.addEventListener('transitionend', done, { once: true })
-}
-
-const handleFocus = async () => {
-  isInputFocused.value = true
-  await nextTick()
-  if (isPanelVisible.value) {
-    isPanelVisible.value = false
-    options.value.forEach((item) => (item.isRotate = false))
-  }
-}
-
-const handleBlur = async () => {
-  isInputFocused.value = false
-  await nextTick()
-}
 
 const closePanel = () => {
   isPanelVisible.value = false
