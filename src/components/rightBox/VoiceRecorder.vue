@@ -1,5 +1,5 @@
 <template>
-  <div class="voice-recorder-container">
+  <div :class="[isMobile() ? '' : 'p-16px']" class="voice-recorder-container">
     <!-- 录音状态显示 -->
     <div class="voice-recorder-main">
       <!-- 录音状态文字 -->
@@ -98,6 +98,7 @@
 
 <script setup lang="ts">
 import { useVoiceRecordRust } from '@/hooks/useVoiceRecordRust'
+import { isMobile } from '~/src/utils/PlatformConstants'
 
 // 事件定义
 const emit = defineEmits<{
@@ -258,7 +259,7 @@ onUnmounted(() => {
 }
 
 .voice-recorder-container {
-  @apply flex flex-col relative w-full h-110px bg-[--bg-color] rounded-8px p-16px;
+  @apply flex flex-col relative w-full h-110px bg-[--bg-color] rounded-8px;
 }
 
 .voice-recorder-main {

@@ -1,6 +1,6 @@
 <template>
   <!-- 录音模式 -->
-  <VoiceRecorder v-show="isVoiceMode" @cancel="handleVoiceCancel" @send="handleVoiceSend" />
+  <VoiceRecorder v-if="!isMobile()" v-show="isVoiceMode" @cancel="handleVoiceCancel" @send="handleVoiceSend" />
 
   <!-- 输入框表单 -->
   <form
@@ -30,6 +30,7 @@
           <div
             id="message-input"
             ref="messageInputDom"
+            :disabled="false"
             :style="{
               minHeight: isMobile() ? '2rem' : '36px',
               lineHeight: isMobile() && !msgInput ? '2rem' : '20px',
