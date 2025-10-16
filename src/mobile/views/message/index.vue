@@ -14,13 +14,6 @@
       ]"
       class="fixed inset-0 z-[999]"></div>
 
-    <!-- 键盘蒙板 -->
-    <div
-      v-if="showKeyboardMask"
-      class="keyboard-mask flex-1"
-      @touchstart.stop.prevent="closeKeyboardMask"
-      @click.stop.prevent="closeKeyboardMask"></div>
-
     <NavBar>
       <template #left>
         <n-flex @click="toSimpleBio" align="center" :size="6" class="w-full">
@@ -577,22 +570,7 @@ const unlockScroll = () => {
   }
 }
 
-// 键盘蒙板显示状态
-const showKeyboardMask = ref(false)
-
-const closeKeyboardMask = () => {
-  showKeyboardMask.value = false
-  document.body.style.overflow = ''
-  document.body.style.position = ''
-  // 让 input 失焦
-  const activeEl = document.activeElement as HTMLElement
-  if (activeEl && typeof activeEl.blur === 'function') {
-    activeEl.blur()
-  }
-}
-
 // 长按事件处理（开始）
-
 const longPressOption = ref({
   delay: 200,
   modifiers: {

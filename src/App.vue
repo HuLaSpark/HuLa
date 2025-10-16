@@ -512,6 +512,8 @@ a {
   padding-left: var(--safe-area-inset-left);
   padding-right: var(--safe-area-inset-right);
   box-sizing: border-box;
+  /* 应用背景色变量 */
+  background-color: var(--app-bg-color);
 }
 
 .appContainer.safe-area-disabled {

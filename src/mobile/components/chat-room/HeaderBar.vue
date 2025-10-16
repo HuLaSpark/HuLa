@@ -1,8 +1,5 @@
 <template>
-  <div
-    ref="rootEl"
-    :class="[props.enableDefaultBackground ? 'bg-white' : '', props.enableShadow ? 'header-bar-shadow' : '']"
-    class="w-full h-[56px] grid grid-cols-[100px_1fr_100px] z-2">
+  <div ref="rootEl" class="w-full h-[56px] grid grid-cols-[100px_1fr_100px] z-2">
     <div @click="handleBack" class="w-full h-full flex items-center">
       <svg class="iconpark-icon w-24px h-24px ms-16px p-5px"><use href="#fanhui"></use></svg>
       <div
@@ -90,9 +87,5 @@ defineExpose({
 
 .chat-room-name-official {
   @apply grid grid-cols-[1fr_20px] items-center gap-5px;
-}
-
-.header-bar-shadow {
-  box-shadow: 0 3px 6px -4px rgba(0, 0, 0, 0.1);
 }
 </style>
