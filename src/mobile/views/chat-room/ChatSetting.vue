@@ -9,9 +9,9 @@
         :room-name="title + '设置'" />
     </template>
 
-    <template #container="{ changedHeight }">
+    <template>
       <img src="@/assets/mobile/chat-home/background.webp" class="w-100% relative top-0 z-1" alt="hula" />
-      <div :style="{ height: changedHeight + 'px' }" class="z-2 absolute flex flex-col overflow-auto min-h-70vh w-full">
+      <div class="z-2 absolute flex flex-col overflow-auto min-h-70vh w-full">
         <div class="flex flex-col gap-15px py-15px px-20px">
           <div class="flex shadow bg-white rounded-10px w-full h-60px items-center gap-10px" @click="clickInfo">
             <!-- 群头像 -->
