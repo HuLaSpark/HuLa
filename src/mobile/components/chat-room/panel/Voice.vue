@@ -5,15 +5,16 @@
 </template>
 
 <script setup lang="ts">
+const emit = defineEmits(['cancel', 'send'])
+
 const isVoiceMode = ref(true)
 
 const handleVoiceCancel = () => {
-  isVoiceMode.value = false
+  emit('cancel')
 }
 
 const handleVoiceSend = async (voiceData: any) => {
-  voiceData
-  isVoiceMode.value = false
+  emit('send', voiceData)
 }
 </script>
 
