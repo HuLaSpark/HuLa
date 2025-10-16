@@ -184,6 +184,7 @@
           @clickVoice="handleVoiceClick"
           @customFocus="handleCustomFocus"
           @send="handleSend"
+          :disabled="disabledInput"
           :height="inputAreaHeight" />
       </div>
     </div>
@@ -198,12 +199,12 @@
     <FileUploadProgress />
 
     <!-- 移动端面板 -->
-    <Transition name="panel-slide">
-      <div v-show="isPanelVisible" class="panel-container">
-        <div class="h-auto max-h-19rem overflow-y-auto">
+    <Transition name="panel-slide" mode="out-in">
+      <div v-show="isPanelVisible" ref="panelContainerRef" class="panel-container" :style="{ height: panelHeight }">
+        <div ref="panelContentRef" class="panel-content">
           <Emoticon @emojiHandle="emojiHandle" v-if="inputState.isClickedEmoji" :all="false" />
 
-          <Voice v-if="inputState.isClickedVoice" />
+          <Voice @cancel="handleMobileVoiceCancel" @send="handleMobileVoiceSend" v-if="inputState.isClickedVoice" />
 
           <More v-if="inputState.isClickedMore" />
         </div>
@@ -560,8 +561,12 @@ const emojiHandle = (item: string, type: 'emoji' | 'emoji-url' = 'emoji') => {
   // 触发输入事件
   triggerInputEvent(inp)
 
-  // 保持焦点在输入框
-  MsgInputRef.value?.focus()
+  if (!isMobile()) {
+    // 保持焦点在输入框
+    MsgInputRef.value?.focus()
+  } else {
+    MsgInputRef.value?.cancelFocus()
+  }
 
   // 添加到最近使用表情列表
   updateRecentEmojis(item)
@@ -614,6 +619,11 @@ onMounted(async () => {
   if (MsgInputRef.value) {
     msgInputDom.value = MsgInputRef.value.messageInputDom
   }
+
+  // 初始化移动端面板高度监听
+  if (isMobile()) {
+    nextTick(() => initPanelHeightObserver())
+  }
 })
 
 onUnmounted(() => {
@@ -635,6 +645,9 @@ onUnmounted(() => {
     resizeObserver.disconnect()
     resizeObserver = null
   }
+
+  // 清理移动端面板高度监听
+  cleanupPanelHeightObserver()
 })
 
 /**
@@ -644,10 +657,23 @@ onUnmounted(() => {
  *
  */
 
+// 定义移动端面板状态类型
+interface MobilePanelStateData {
+  isClickedMore: boolean
+  isClickedEmoji: boolean
+  isClickedVoice: boolean
+  isFocus: boolean
+}
+
 const isPanelVisible = ref(false) // 面板是否可见
+const disabledInput = ref(false)
+const panelContainerRef = ref<HTMLElement | null>(null)
+const panelContentRef = ref<HTMLElement | null>(null)
+const panelHeight = ref('0px')
+let panelResizeObserver: ResizeObserver | null = null
 
 // 输入框状态
-const inputState = ref({
+const inputState = ref<MobilePanelStateData>({
   isClickedMore: false,
   isClickedEmoji: false,
   isClickedVoice: false,
@@ -655,42 +681,115 @@ const inputState = ref({
 })
 
 /** 点击更多按钮 */
-const handleMoreClick = (value: any) => {
-  console.log('handleMoreClick', value)
-  inputState.value = value
-  isPanelVisible.value = value.isClickedMore
+const handleMoreClick = (state: MobilePanelStateData) => {
+  console.log('handleMoreClick', state)
+  inputState.value = state
+  isPanelVisible.value = state.isClickedMore
+  // 点击更多按钮时，解除输入框的禁用状态
+  disabledInput.value = false
+  // 更新面板高度
+  nextTick(() => updatePanelHeight())
 }
 
 /** 点击表情按钮 */
-const handleEmojiClick = (value: any) => {
-  console.log('handleEmojiClick', value)
-  inputState.value = value
-  isPanelVisible.value = value.isClickedEmoji
-}
-
-/** 点击语音按钮 */
-const handleVoiceClick = (value: any) => {
-  console.log('handleVoiceClick', value)
-  inputState.value = value
-  isPanelVisible.value = value.isClickedVoice
+const handleEmojiClick = (state: MobilePanelStateData) => {
+  console.log('handleEmojiClick', state)
+  inputState.value = state
+  isPanelVisible.value = state.isClickedEmoji
+  // 点击表情按钮时，解除输入框的禁用状态
+  disabledInput.value = false
+  // 更新面板高度
+  nextTick(() => updatePanelHeight())
 }
 
 /** 处理自定义聚焦事件 */
-const handleCustomFocus = (value: any) => {
-  console.log('handleCustomFocus', value)
-  inputState.value = value
+const handleCustomFocus = (state: MobilePanelStateData) => {
+  console.log('handleCustomFocus', state)
+  inputState.value = state
 
-  // 判断是否聚焦
-  if (value.isFocus) {
-    // 聚焦，然后关闭面板
-    isPanelVisible.value = false
+  if (state.isFocus) {
+    // 聚焦时不做任何操作，保持面板状态
+  } else {
+    // 失去焦点时，先触发高度动画
+    closePanelWithAnimation()
+    disabledInput.value = false
   }
+}
+
+/** 点击语音按钮 */
+const handleVoiceClick = (state: MobilePanelStateData) => {
+  console.log('handleVoiceClick', state)
+  inputState.value = state
+  isPanelVisible.value = state.isClickedVoice
+  disabledInput.value = state.isClickedVoice
+  // 更新面板高度
+  nextTick(() => updatePanelHeight())
+}
+
+/** 取消语音录制 */
+const handleMobileVoiceCancel = () => {
+  MsgInputRef.value?.closePanel()
+  // 重置状态
+  inputState.value = {
+    isClickedMore: false,
+    isClickedEmoji: false,
+    isClickedVoice: false,
+    isFocus: false
+  }
+  closePanelWithAnimation()
+  disabledInput.value = false
+  console.log('handleMobileVoiceCancel')
+}
+
+/** 发送语音消息 */
+const handleMobileVoiceSend = (voiceData: any) => {
+  console.log('handleMobileVoiceSend', voiceData)
+  // 发送后关闭面板
+  handleMobileVoiceCancel()
 }
 
 /** 处理发送事件 */
 const handleSend = () => {
   console.log('handleSend')
-  isPanelVisible.value = false
+  closePanelWithAnimation()
+}
+
+/** 更新面板高度 */
+const updatePanelHeight = () => {
+  if (!panelContentRef.value) return
+  const contentHeight = panelContentRef.value.scrollHeight
+  panelHeight.value = `${contentHeight}px`
+}
+
+/** 关闭面板并带有丝滑动画 */
+const closePanelWithAnimation = () => {
+  // 先将高度过渡到 0
+  panelHeight.value = '0px'
+
+  // 等待高度动画完成后再隐藏面板
+  setTimeout(() => {
+    isPanelVisible.value = false
+  }, 300) // 与 CSS transition 时间一致
+}
+
+/** 初始化面板高度监听 */
+const initPanelHeightObserver = () => {
+  if (!panelContentRef.value) return
+
+  // 创建 ResizeObserver 监听内容高度变化
+  panelResizeObserver = new ResizeObserver(() => {
+    updatePanelHeight()
+  })
+
+  panelResizeObserver.observe(panelContentRef.value)
+}
+
+/** 清理面板高度监听 */
+const cleanupPanelHeightObserver = () => {
+  if (panelResizeObserver) {
+    panelResizeObserver.disconnect()
+    panelResizeObserver = null
+  }
 }
 
 /**
@@ -820,32 +919,69 @@ const handleSend = () => {
   background-color: var(--bg-emoji, #f5f5f5);
   display: flex;
   flex-direction: column;
+  transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 面板内容样式 */
+.panel-content {
+  width: 100%;
+  max-height: 19rem;
+  overflow-y: auto;
 }
 
 /* 使用 transform 实现高性能动画 - 从下往上滑出 */
+
 .panel-slide-enter-active,
 .panel-slide-leave-active {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  transform-origin: bottom;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.panel-slide-enter-from {
+.panel-slide-enter-from,
+.panel-slide-leave-to {
   opacity: 0;
-  transform: translateY(100%);
+  transform: translateY(20px);
 }
 
-.panel-slide-enter-to {
-  opacity: 1;
-  transform: translateY(0);
-}
-
+.panel-slide-enter-to,
 .panel-slide-leave-from {
   opacity: 1;
   transform: translateY(0);
 }
 
-.panel-slide-leave-to {
-  opacity: 0;
-  transform: translateY(100%);
+.panel-container {
+  transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+// .panel-slide-enter-active {
+//   transition:
+//     transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+//     opacity 0.2s ease;
+//   transform-origin: bottom;
+// }
+
+// .panel-slide-leave-active {
+//   transition:
+//     transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+//     opacity 0.2s ease;
+//   transform-origin: bottom;
+// }
+
+// .panel-slide-enter-from {
+//   opacity: 0;
+//   transform: translateY(20%);
+// }
+
+// .panel-slide-enter-to {
+//   opacity: 1;
+//   transform: translateY(0);
+// }
+
+// .panel-slide-leave-from {
+//   opacity: 1;
+//   transform: translateY(0);
+// }
+
+// .panel-slide-leave-to {
+//   opacity: 0;
+//   transform: translateY(20%);
+// }
 </style>
