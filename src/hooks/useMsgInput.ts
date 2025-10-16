@@ -133,7 +133,8 @@ export const useMsgInput = (messageInputDom: Ref) => {
     }
   })
   /** 记录当前选中的AI选项 key */
-  const selectedAIKey = ref(groupedAIModels.value[0]?.uid ?? null)
+  // 允许为空是因为 / 触发面板关闭时需要清空当前选中项
+  const selectedAIKey = ref<string | null>(groupedAIModels.value[0]?.uid ?? null)
 
   // #话题弹出框
   const topicDialogVisible = ref(false)
@@ -158,7 +159,11 @@ export const useMsgInput = (messageInputDom: Ref) => {
   /** @ 候选人列表 */
   const personList = computed(() => {
     if (aitKey.value && !isChinese.value) {
-      return groupStore.userList.filter((user) => user.name?.startsWith(aitKey.value) && user.uid !== userUid.value)
+      return groupStore.userList.filter((user) => {
+        // 同时匹配群昵称（myName）和原名称（name）
+        const displayName = user.myName || user.name
+        return displayName?.startsWith(aitKey.value) && user.uid !== userUid.value
+      })
     } else {
       // 过滤当前登录的用户
       return groupStore.userList.filter((user) => user.uid !== userUid.value)
@@ -238,7 +243,11 @@ export const useMsgInput = (messageInputDom: Ref) => {
     if (!ait.value && personList.value.length > 0) {
       selectedAitKey.value = personList.value[0]?.uid
     }
-    if (!aiDialogVisible.value && groupedAIModels.value.length > 0) {
+    if (groupedAIModels.value.length === 0) {
+      // 没有可选模型时关闭弹层并清空游标，避免 Enter 键误触发
+      selectedAIKey.value = null
+      aiDialogVisible.value = false
+    } else if (!aiDialogVisible.value) {
       selectedAIKey.value = groupedAIModels.value[0]?.uid
     }
     // 如果输入框没有值就把回复内容清空
@@ -263,6 +272,27 @@ export const useMsgInput = (messageInputDom: Ref) => {
     // 创建临时DOM元素来解析HTML
     const tempDiv = document.createElement('div')
     tempDiv.innerHTML = content
+
+    // 优先通过@标签节点提取
+    // 优先读取带有uid的@节点，确保只统计真正选择过的成员
+    const mentionNodes = tempDiv.querySelectorAll<HTMLElement>('#aitSpan, [data-ait-uid]')
+    mentionNodes.forEach((node) => {
+      const uid = node.dataset.aitUid
+      if (uid) {
+        atUserIds.push(uid)
+        return
+      }
+      const name = node.textContent?.replace(/^@/, '')?.trim()
+      if (!name) return
+      const user = userList.find((u) => u.name === name)
+      if (user) {
+        atUserIds.push(user.uid)
+      }
+    })
+
+    if (atUserIds.length > 0) {
+      return [...new Set(atUserIds)]
+    }
 
     // 获取纯文本内容
     const textContent = tempDiv.textContent || ''
@@ -690,8 +720,19 @@ export const useMsgInput = (messageInputDom: Ref) => {
       }
     }
 
+    // 获取用户的完整信息，优先使用群昵称（myName），与渲染逻辑保持一致
+    const userInfo = groupStore.getUserInfo(item.uid)
+    const displayName = userInfo?.myName || item.name
+
     // 无论是哪种情况，都在当前光标位置插入@提及
-    insertNode(MsgEnum.AIT, item.name, {} as HTMLElement)
+    insertNode(
+      MsgEnum.AIT,
+      {
+        name: displayName,
+        uid: item.uid
+      },
+      {} as HTMLElement
+    )
     triggerInputEvent(messageInputDom.value)
     ait.value = false
   }

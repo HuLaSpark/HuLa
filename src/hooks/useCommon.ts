@@ -219,6 +219,9 @@ export const useCommon = () => {
 
     // 将节点插入范围最前面添加节点
     if (type === MsgEnum.AIT) {
+      // 为@节点保存展示名字和uid，后续提取atUidList时直接依赖结构化数据，避免误判
+      const mentionText = typeof dom === 'object' && dom !== null ? dom.name || dom.text || dom.label || '' : dom || ''
+      const mentionUid = typeof dom === 'object' && dom !== null ? dom.uid : undefined
       // 创建一个span标签节点
       const spanNode = document.createElement('span')
       spanNode.id = 'aitSpan' // 设置id为aitSpan
@@ -227,7 +230,10 @@ export const useCommon = () => {
       spanNode.classList.add('select-none')
       spanNode.classList.add('cursor-default')
       spanNode.style.userSelect = 'text' // 允许全选选中
-      spanNode.appendChild(document.createTextNode(`@${dom}`))
+      if (mentionUid) {
+        spanNode.dataset.aitUid = String(mentionUid)
+      }
+      spanNode.appendChild(document.createTextNode(`@${mentionText}`))
       // 将span标签插入到光标位置
       range?.insertNode(spanNode)
       // 将光标折叠到Range的末尾(true表示折叠到Range的开始位置,false表示折叠到Range的末尾)
