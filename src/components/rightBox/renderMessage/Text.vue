@@ -65,7 +65,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { open } from '@tauri-apps/plugin-shell'
+import { openExternalUrl } from '@/hooks/useLinkSegments'
 import { useGroupStore } from '@/stores/group'
 import type { TextBody } from '@/services/types'
 
@@ -208,19 +208,7 @@ const fragments = computed(() => {
 })
 
 // 打开链接
-const openUrl = async (url: string) => {
-  if (!url) return
-  // 当没有协议时，自动添加协议
-  if (!url.startsWith('http://') && !url.startsWith('https://')) {
-    url = 'https://' + url
-  }
-  try {
-    // 使用系统默认浏览器打开链接
-    await open(url)
-  } catch (error) {
-    console.error('打开链接失败:', error)
-  }
-}
+const openUrl = (url: string) => openExternalUrl(url)
 
 // 处理复制
 const handleCopy = (item: string) => {

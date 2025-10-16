@@ -16,7 +16,7 @@
 
     <p
       :class="showDetailButton ? 'line-clamp-4' : 'line-clamp-5'"
-      class="flex-1 px-12px pt-12px box-border leading-22px break-words text-(14px [--text-color])">
+      class="flex-1 px-12px pt-12px cursor-default box-border leading-22px break-words text-(14px [--text-color])">
       <n-highlight
         v-if="searchKeyword"
         :text="body.content"
