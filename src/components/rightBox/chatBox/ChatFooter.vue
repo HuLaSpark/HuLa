@@ -197,10 +197,15 @@
     <!-- 文件上传进度条（悬浮显示，不影响布局） -->
     <FileUploadProgress />
 
+    <!-- 移动端面板 -->
     <Transition name="panel-slide">
       <div v-show="isPanelVisible" class="panel-container">
         <div class="h-auto max-h-19rem overflow-y-auto">
           <Emoticon @emojiHandle="emojiHandle" v-if="inputState.isClickedEmoji" :all="false" />
+
+          <Voice v-if="inputState.isClickedVoice" />
+
+          <More v-if="inputState.isClickedMore" />
         </div>
       </div>
     </Transition>
@@ -228,6 +233,8 @@ import { useSettingStore } from '@/stores/setting'
 import FileUtil from '@/utils/FileUtil'
 import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
 import { isMac, isMobile } from '@/utils/PlatformConstants'
+import Voice from '@/mobile/components/chat-room/panel/Voice.vue'
+import More from '@/mobile/components/chat-room/panel/More.vue'
 
 const { detailId } = defineProps<{
   detailId: SessionItem['detailId']
