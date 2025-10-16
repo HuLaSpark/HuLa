@@ -9,9 +9,9 @@
         room-name="群公告" />
     </template>
 
-    <template #container="{ height }">
+    <template>
       <img src="@/assets/mobile/chat-home/background.webp" class="w-100% relative top-0 z-1" alt="hula" />
-      <div :style="{ height: height + 'px' }" class="z-2 absolute flex flex-col overflow-auto min-h-70vh w-full">
+      <div class="z-2 absolute flex flex-col overflow-auto min-h-70vh w-full">
         <div class="flex flex-col p-20px">
           <RecycleScroller :items="announList" :item-size="15" key-field="id" class="flex flex-col gap-15px">
             <template #default="{ item }">

@@ -11,10 +11,8 @@
           room-name="添加好友" />
       </template>
 
-      <template #container="{ height }">
-        <div
-          :style="{ height: height + 'px' }"
-          class="z-2 absolute flex flex-col gap-1 overflow-auto min-h-70vh w-full">
+      <template>
+        <div class="z-2 absolute flex flex-col gap-1 overflow-auto min-h-70vh w-full">
           <!-- 内容区域 -->
           <div class="w-full h-full box-border flex flex-col">
             <n-flex vertical justify="center" :size="20" class="p-[55px_20px] m-20px rounded-15px bg-white">
