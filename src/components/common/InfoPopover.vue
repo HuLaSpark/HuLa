@@ -31,9 +31,12 @@
           <n-popover trigger="hover" placement="top" :show-arrow="false">
             <template #trigger>
               <div
-                @click="openContent('在线状态', 'onlineStatus', 320, 480)"
-                class="z-30 absolute top-72px left-72px cursor-pointer border-(6px solid [--avatar-border-color]) rounded-full size-18px"
-                :class="[displayActiveStatus === OnlineEnum.ONLINE ? 'bg-#1ab292' : 'bg-#909090']"></div>
+                @click="isCurrentUserUid ? openContent('在线状态', 'onlineStatus', 320, 480) : void 0"
+                class="z-30 absolute top-72px left-72px border-(6px solid [--avatar-border-color]) rounded-full size-18px"
+                :class="[
+                  displayActiveStatus === OnlineEnum.ONLINE ? 'bg-#1ab292' : 'bg-#909090',
+                  isCurrentUserUid ? 'cursor-pointer' : 'cursor-default'
+                ]"></div>
             </template>
             <span>{{ displayActiveStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}</span>
           </n-popover>
@@ -46,8 +49,9 @@
               <div class="z-30 absolute top-72px left-72px size-26px bg-[--avatar-border-color] rounded-full">
                 <img
                   :src="statusIcon"
-                  @click="openContent('在线状态', 'onlineStatus', 320, 480)"
-                  class="p-4px cursor-pointer rounded-full size-18px"
+                  @click="isCurrentUserUid ? openContent('在线状态', 'onlineStatus', 320, 480) : void 0"
+                  class="p-4px rounded-full size-18px"
+                  :class="isCurrentUserUid ? 'cursor-pointer' : 'cursor-default'"
                   alt="" />
               </div>
             </template>

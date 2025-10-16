@@ -55,7 +55,18 @@
             v-else
             style="user-select: text"
             class="announcement-text text-(12px #909090) leading-6 line-clamp-4 max-w-99% break-words">
-            {{ announList.length > 0 ? announList[0]?.content : '' }}
+            <template v-if="announcementSegments.length > 0">
+              <template v-for="(segment, index) in announcementSegments" :key="index">
+                <span
+                  v-if="segment.isLink"
+                  class="cursor-pointer hover:underline text-#13987f"
+                  @click.stop="openAnnouncementLink(segment.text)">
+                  {{ segment.text }}
+                </span>
+                <template v-else>{{ segment.text }}</template>
+              </template>
+            </template>
+            <template v-else>{{ announcementContent }}</template>
           </p>
         </n-scrollbar>
       </n-flex>
@@ -180,6 +191,7 @@ import { useChatMain } from '@/hooks/useChatMain.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { usePopover } from '@/hooks/usePopover.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
+import { useLinkSegments } from '@/hooks/useLinkSegments'
 import type { UserItem } from '@/services/types'
 import { WsResponseMessageType } from '@/services/wsType.ts'
 import { useCachedStore } from '@/stores/cached.ts'
@@ -238,6 +250,9 @@ const hasBadge6 = computed(() => {
 const announList = ref<any[]>([])
 const announNum = ref(0)
 const isAddAnnoun = ref(false)
+const announcementContent = computed(() => (announList.value.length > 0 ? (announList.value[0]?.content ?? '') : ''))
+const { segments: announcementSegments, openLink: openAnnouncementLink } = useLinkSegments(announcementContent)
+
 // 用于稳定展示的用户列表
 const displayedUserList = ref<any[]>([])
 // 每群成员缓存：roomId -> members
