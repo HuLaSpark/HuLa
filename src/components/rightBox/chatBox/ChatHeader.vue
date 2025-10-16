@@ -274,6 +274,7 @@
               autoCorrect="off"
               autoCapitalize="off"
               :maxlength="12"
+              clearable
               v-model:value="localMyName"
               @blur.stop="handleGroupInfoChange" />
             <!-- 群备注 -->
@@ -288,6 +289,7 @@
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
+              clearable
               @blur.stop="handleGroupInfoChange" />
 
             <!-- 群设置选项 -->

@@ -27,7 +27,7 @@
           <div v-for="items in emojiObj" :key="items?.name">
             <template v-if="items?.name && items.value?.length">
               <span class="text-12px text-[--text-color]">{{ items.name }}</span>
-              <n-flex align="center" :justify="isMobile() ? 'between' : 'center'" class="mt-12px mb-12px">
+              <n-flex align="center" class="my-12px">
                 <n-flex
                   align="center"
                   justify="center"
@@ -71,7 +71,7 @@
                 align="center"
                 justify="center"
                 class="emoji-item py-4px"
-                v-for="(item, index) in emojiStore.emojiList"
+                v-for="(item, index) in reversedEmojiList"
                 :key="index"
                 @click.stop="chooseEmoji(item.expressionUrl, 'url')">
                 <n-popover
@@ -194,6 +194,11 @@ const tabList = computed<TabItem[]>(() => {
 })
 
 const currentSeries = computed(() => (activeIndex.value > 0 ? emojisBbs.series[activeIndex.value - 1] : null))
+
+// 将"我的表情包"列表倒序显示
+const reversedEmojiList = computed(() => {
+  return [...emojiStore.emojiList].reverse()
+})
 
 const res = getAllTypeEmojis()
 

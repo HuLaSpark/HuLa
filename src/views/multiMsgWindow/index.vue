@@ -182,4 +182,9 @@ onMounted(async () => {
   -ms-user-select: text !important;
   user-select: text !important;
 }
+
+.bubble {
+  max-width: 70vw;
+  word-wrap: break-word;
+}
 </style>

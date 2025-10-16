@@ -60,7 +60,7 @@
       <!-- 发送按钮 -->
       <div
         v-if="!isMobile()"
-        class="flex-shrink-0 max-h-52px p-4px border-t border-gray-200/50 flex items-center justify-end">
+        class="flex-shrink-0 max-h-52px p-4px pr-12px border-t border-gray-200/50 flex items-center justify-end">
         <n-config-provider :theme="lightTheme">
           <n-button-group size="small">
             <n-button color="#13987f" :disabled="disabledSend" class="w-65px" @click="send">发送</n-button>

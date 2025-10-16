@@ -75,15 +75,11 @@
             ">
             {{ groupStore.getUserInfo(uid)?.name }}
           </p>
-
-          <n-popover v-if="uid !== userUid" trigger="hover" placement="top" :show-arrow="false">
-            <template #trigger>
-              <svg class="size-18px cursor-pointer text-[--chat-text-color]">
-                <use href="#edit"></use>
-              </svg>
-            </template>
-            <span>添加备注</span>
-          </n-popover>
+          <span
+            v-if="groupNickname && groupNickname !== groupStore.getUserInfo(uid)?.name"
+            class="text-(13px [--chat-text-color])">
+            ({{ groupNickname }})
+          </span>
         </n-flex>
 
         <!-- 账号 -->
@@ -172,6 +168,7 @@ import { useMitt } from '@/hooks/useMitt'
 import { useWindow } from '@/hooks/useWindow'
 import { leftHook } from '@/layout/left/hook'
 import { useCachedStore } from '@/stores/cached'
+import { useChatStore } from '@/stores/chat'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global'
 import { useGroupStore } from '@/stores/group'
@@ -189,6 +186,7 @@ const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
 const globalStore = useGlobalStore()
 const groupStore = useGroupStore()
+const chatStore = useChatStore()
 const { openContent } = leftHook()
 const contactStore = useContactStore()
 const userStatusStore = useUserStatusStore()
@@ -201,6 +199,21 @@ const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(groupStore.getUserInfo
 const isCurrentUserUid = computed(() => userUid.value === uid)
 /** 是否是我的好友 */
 const isMyFriend = computed(() => !!contactStore.contactsList.find((item) => item.uid === uid))
+/** 是否为群聊 */
+const isGroupChat = computed<boolean>(() => chatStore.isGroup)
+/** 当前会话 roomId */
+const currentRoomId = computed(() => globalStore.currentSession?.roomId)
+/** 当前房间用户信息 */
+const currentRoomUserInfo = computed(() => {
+  if (!isGroupChat.value || !currentRoomId.value) return null
+  return groupStore.getUserInfo(uid, currentRoomId.value) ?? null
+})
+/** 群昵称 */
+const groupNickname = computed(() => {
+  if (!currentRoomUserInfo.value) return ''
+  const nickname = currentRoomUserInfo.value.myName?.trim()
+  return nickname || ''
+})
 // 显示的在线状态
 const displayActiveStatus = computed(() => {
   return groupStore.getUserInfo(uid)?.activeStatus ?? OnlineEnum.OFFLINE

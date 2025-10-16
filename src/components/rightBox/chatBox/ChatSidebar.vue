@@ -133,7 +133,7 @@
                         @error="userLoadedMap[item.uid] = true" />
                     </div>
                     <n-flex vertical :size="2" class="flex-1 truncate">
-                      <p :title="item.name" class="text-12px truncate flex-1">
+                      <p :title="item.name" class="text-12px truncate flex-1 leading-tight">
                         {{ item.myName ? item.myName : item.name }}
                       </p>
                       <n-flex
