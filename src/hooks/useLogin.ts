@@ -119,7 +119,8 @@ export const useLogin = () => {
     const userDetail: any = await getUserDetail()
     userStatusStore.stateId = userDetail.userStateId
     const account = {
-      ...userDetail
+      ...userDetail,
+      client: isDesktop() ? 'PC' : 'MOBILE'
     }
     userStore.userInfo = account
     loginHistoriesStore.addLoginHistory(account)

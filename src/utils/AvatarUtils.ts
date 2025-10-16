@@ -35,6 +35,7 @@ export class AvatarUtils {
   public static getAvatarUrl(avatar: string): string {
     const DEFAULT = '/logoD.png'
 
+    if (!avatar) return DEFAULT
     const rawAvatar = avatar.trim()
     if (AvatarUtils.isDefaultAvatar(rawAvatar)) {
       return `/avatar/${rawAvatar}.webp`
