@@ -50,14 +50,15 @@ const MAX_TIME_OUT_SECONDS = 30 // 拨打 超时时间
 const configuration: RTCConfiguration = {
   iceServers: [
     {
-      urls: 'stun:117.72.67.248:8000'
+      urls: 'stun:117.72.67.248:3478'
     },
     {
-      urls: 'turn:117.72.67.248:3478',
+      urls: ['turn:117.72.67.248:3478?transport=udp', 'turn:117.72.67.248:3478?transport=tcp'],
       username: 'chr',
       credential: '123456'
     }
-  ]
+  ],
+  iceTransportPolicy: 'all' // 允许使用所有候选
 }
 
 // const settings = await getSettings()
