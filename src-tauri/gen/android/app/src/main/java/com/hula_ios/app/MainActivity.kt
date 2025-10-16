@@ -1,6 +1,7 @@
 package com.hula_ios.app
 
 import android.os.Bundle
+import android.view.View
 import android.webkit.WebView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
@@ -8,6 +9,7 @@ import androidx.core.view.WindowInsetsCompat
 import android.Manifest
 import androidx.activity.result.contract.ActivityResultContracts
 import kotlin.math.roundToInt
+import androidx.activity.enableEdgeToEdge
 
 class MainActivity : TauriActivity() {
 
@@ -59,10 +61,25 @@ class MainActivity : TauriActivity() {
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
-        // 全屏 Edge-to-Edge
-        WindowCompat.setDecorFitsSystemWindows(window, false)
+        val rootView: View = findViewById(android.R.id.content)
+
+        ViewCompat.setOnApplyWindowInsetsListener(rootView) { v, insets ->
+            val imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
+            val imeHeight = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
+
+            // Here’s where you can tell the WebView (or your leptos viewport)
+            // to resize/pad itself.
+            if (imeVisible) {
+                v.setPadding(0, 0, 0, imeHeight)
+            } else {
+                v.setPadding(0, 0, 0, 0)
+            }
+
+            insets
+        }
 
         requestPermissions()
     }
