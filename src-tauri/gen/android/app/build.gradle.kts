@@ -66,6 +66,7 @@ rust {
 
 dependencies {
     implementation("androidx.webkit:webkit:1.6.1")
+    implementation("androidx.activity:activity:1.8.1")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.8.0")
     implementation("com.google.mlkit:barcode-scanning:17.2.0")
