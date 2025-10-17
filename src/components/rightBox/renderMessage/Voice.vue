@@ -30,8 +30,9 @@
         :width="waveformRenderer.waveformWidth.value"
         height="24"
         @click.stop="handleSeekToPosition"
-        @mousedown="dragControl.handleDragStart"
-        @touchstart="dragControl.handleDragStart"></canvas>
+        @mousedown.stop="dragControl.handleDragStart"
+        @touchstart.stop="dragControl.handleDragStart"
+        @pointerdown.stop></canvas>
       <div
         class="scan-line"
         :class="{ active: audioPlayback.isPlaying.value, dragging: dragControl.isDragging.value }"
@@ -48,8 +49,9 @@
         class="time-preview"
         :style="{
           left: `${waveformRenderer.scanLinePosition.value}px`,
-          color: voiceIconColor,
-          backgroundColor: isCurrentUser ? '#303030' : isDarkMode ? '#000' : '#fff'
+          color: isCurrentUser ? '#fff' : isDarkMode ? '#fff' : '#000',
+          backgroundColor: isCurrentUser ? '#303030' : isDarkMode ? '#303030' : '#fff',
+          border: isCurrentUser ? 'none' : isDarkMode ? '1px solid #505050' : '1px solid #d0d0d0'
         }">
         {{ formatTime(dragControl.previewTime.value) }}
       </div>
