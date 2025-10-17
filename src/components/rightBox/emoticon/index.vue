@@ -141,7 +141,7 @@ import HulaEmojis from 'hula-emojis'
 import { useEmojiStore } from '@/stores/emoji'
 import { useHistoryStore } from '@/stores/history.ts'
 import { getAllTypeEmojis } from '@/utils/Emoji.ts'
-import { isMobile } from '~/src/utils/PlatformConstants'
+import { isMobile } from '@/utils/PlatformConstants'
 
 type EmojiType = {
   expressionEmojis: EmojiItem

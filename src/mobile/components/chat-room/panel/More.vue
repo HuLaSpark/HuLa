@@ -71,8 +71,8 @@
 <script setup lang="ts">
 import { CallTypeEnum, RoomTypeEnum } from '@/enums'
 import { UploaderFileListItem } from 'vant'
-import router from '~/src/router'
-import { useGlobalStore } from '~/src/stores/global'
+import router from '@/router'
+import { useGlobalStore } from '@/stores/global'
 
 const globalStore = useGlobalStore()
 

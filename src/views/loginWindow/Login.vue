@@ -195,7 +195,7 @@ import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { isCompatibility, isMac } from '@/utils/PlatformConstants'
 import { clearListener } from '@/utils/ReadCountQueue'
-import { useLogin } from '~/src/hooks/useLogin'
+import { useLogin } from '@/hooks/useLogin'
 
 // 定义引导步骤配置
 const driverSteps: DriverStepConfig[] = [

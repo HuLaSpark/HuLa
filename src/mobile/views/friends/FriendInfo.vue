@@ -40,7 +40,7 @@
 import CommunityContent from '#/components/community/CommunityContent.vue'
 import CommunityTab from '#/components/community/CommunityTab.vue'
 import PersonalInfo from '#/components/my/PersonalInfo.vue'
-import { useUserStore } from '~/src/stores/user'
+import { useUserStore } from '@/stores/user'
 
 const isShow = ref(true)
 const avatarBox = ref<HTMLElement | null>(null)

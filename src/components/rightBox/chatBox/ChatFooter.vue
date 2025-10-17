@@ -1,6 +1,8 @@
 <template>
   <!-- 底部栏 -->
-  <main class="h-full flex flex-col">
+  <main
+    :class="[isMobile() ? 'flex-col w-full' : 'border-t-(1px solid [--right-chat-footer-line-color])']"
+    class="h-full flex flex-col">
     <!-- 添加遮罩层 -->
     <div
       v-if="isSingleChat && !isFriend"
@@ -624,40 +626,6 @@ const handleSend = () => {
 
     &:hover {
       transform: rotate(180deg);
-    }
-  }
-}
-
-.resize-handle {
-  position: absolute;
-  top: -8px;
-  left: 0;
-  right: 0;
-  height: 16px;
-  cursor: ns-resize;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 998;
-
-  &:hover {
-    .resize-indicator {
-      opacity: 0.8;
-      transform: scaleY(1.2);
-    }
-  }
-
-  &.dragging {
-    .resize-indicator {
-      opacity: 1;
-      transform: scaleY(1.2);
-      background: #13987f80;
-
-      &::before,
-      &::after {
-        opacity: 1;
-        background: #13987f80;
-      }
     }
   }
 }

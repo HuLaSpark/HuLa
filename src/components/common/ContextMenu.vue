@@ -131,7 +131,7 @@
 <script setup lang="ts">
 import { useContextMenu } from '@/hooks/useContextMenu.ts'
 import { useViewport } from '@/hooks/useViewport.ts'
-import { isMobile } from '~/src/utils/PlatformConstants'
+import { isMobile } from '@/utils/PlatformConstants'
 
 type Props = {
   content?: Record<string, any>

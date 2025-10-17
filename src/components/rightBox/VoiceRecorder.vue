@@ -1,5 +1,5 @@
 <template>
-  <div :class="[isMobile() ? '' : 'p-16px']" class="voice-recorder-container">
+  <div class="voice-recorder-container">
     <!-- 录音状态显示 -->
     <div class="voice-recorder-main">
       <!-- 录音状态文字 -->
@@ -98,7 +98,6 @@
 
 <script setup lang="ts">
 import { useVoiceRecordRust } from '@/hooks/useVoiceRecordRust'
-import { isMobile } from '~/src/utils/PlatformConstants'
 
 // 事件定义
 const emit = defineEmits<{
