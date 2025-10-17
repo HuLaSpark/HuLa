@@ -525,12 +525,13 @@ watch(
           latestMessage?.fromUser?.uid && String(latestMessage.fromUser.uid) !== String(userUid.value)
         // 只有当不在底部且是他人消息时才增加计数
         if (shouldShowFloatFooter.value && isOtherUserMessage) {
-          const current = chatStore.newMsgCount.get(globalStore.currentSession!.roomId)
+          const roomId = globalStore.currentSession!.roomId
+          const current = chatStore.newMsgCount[roomId]
           if (!current) {
-            chatStore.newMsgCount.set(globalStore.currentSession!.roomId, {
+            chatStore.newMsgCount[roomId] = {
               count: 1,
               isStart: true
-            })
+            }
           } else {
             current.count++
           }
@@ -570,6 +571,7 @@ const handleChatAreaClick = (event: Event): void => {
 // 防冲突的加载更多处理
 const handleLoadMore = async (): Promise<void> => {
   // 如果正在加载、已经触发了加载、或已到达最后一页，则不重复触发
+  console.log(chatStore.currentMessageOptions)
   if (chatStore.currentMessageOptions?.isLoading || isLoadingMore.value || chatStore.currentMessageOptions?.isLast)
     return
 

@@ -8,8 +8,8 @@
       style="position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; white-space: pre-wrap"></div>
 
     <div class="w-full min-h-20px bg-#FAFAFA flex flex-col z-2 footer-bar-shadow">
-      <div class="flex flex-1">
-        <component ref="chatFooterRef" :is="ChatFooter" :detail-id="globalStore.currentSession!.detailId"></component>
+      <div class="flex-1 min-h-0">
+        <chat-footer :detail-id="globalStore.currentSession!.detailId"></chat-footer>
       </div>
 
       <div v-if="false" class="flex justify-between px-25px flex-1 items-center py-10px">
@@ -68,8 +68,6 @@ import type { UploaderFileListItem } from 'vant/es'
 import 'vant/es/dialog/style'
 import { CallTypeEnum, RoomTypeEnum } from '@/enums'
 import { useGlobalStore } from '@/stores/global'
-
-const ChatFooter = defineAsyncComponent(() => import('@/components/rightBox/chatBox/ChatFooter.vue'))
 
 const globalStore = useGlobalStore()
 const activeIcon = ref<string | null>(null)

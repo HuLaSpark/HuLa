@@ -1,6 +1,6 @@
 <template>
   <!-- 底部栏 -->
-  <main :class="[isMobile() ? 'flex-col w-full' : '']" class="h-full flex flex-col">
+  <main class="h-full flex flex-col">
     <!-- 添加遮罩层 -->
     <div
       v-if="isSingleChat && !isFriend"

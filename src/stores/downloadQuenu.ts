@@ -15,7 +15,7 @@ export const useDownloadQuenuStore = defineStore('downloadQuenu', () => {
   // 下载队列
   const quenu = reactive<string[]>([])
   // 下载对象
-  const downloadObjMap = reactive<Map<string, DownloadObjType>>(new Map())
+  const downloadObjMap = reactive<Record<string, DownloadObjType>>({})
 
   // 添加到下载队列
   const addQuenuAction = (url: string) => {
@@ -32,7 +32,7 @@ export const useDownloadQuenuStore = defineStore('downloadQuenu', () => {
 
   // 出队列
   const dequeue = () => {
-    if (!quenu.length || downloadObjMap.size >= maxDownloadCount) {
+    if (!quenu.length || Object.keys(downloadObjMap).length >= maxDownloadCount) {
       return
     }
     const url = quenu.shift()
@@ -64,12 +64,12 @@ export const useDownloadQuenuStore = defineStore('downloadQuenu', () => {
 
       const stopWatcher = watch(process, () => {
         // 更新下载进度
-        downloadObjMap.set(url, { url, isDownloading: isDownloading.value, process: process.value })
+        downloadObjMap[url] = { url, isDownloading: isDownloading.value, process: process.value }
       })
 
       onLoaded(() => {
         stopWatcher() // 清除watcher
-        downloadObjMap.delete(url) // 下载完成后 删除下载对象
+        delete downloadObjMap[url] // 下载完成后 删除下载对象
         dequeue()
       })
 
