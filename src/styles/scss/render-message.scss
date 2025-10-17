@@ -1,6 +1,6 @@
 /** 气泡样式 */
 @mixin bubble {
-  @apply w-fit min-h-1em p-[8px_12px] text-14px line-height-22px bg-[--bg-bubble] rounded-[2px_18px_18px] custom-shadow;
+  @apply w-fit min-h-1em p-[8px_12px] line-height-22px bg-[--bg-bubble] rounded-[2px_18px_18px] custom-shadow;
   max-width: var(--bubble-max-width, 32vw); /** 默认为群聊宽度 */
   white-space: pre-wrap; /** 保留空白符号并正常换行，支持特殊字符 */
   word-break: break-word; /** 优先在单词边界换行，必要时在单词内换行 */
@@ -73,7 +73,7 @@
 }
 /** 回复气泡的样式 */
 .reply-bubble {
-  @apply text-12px text-[--reply-color] bg-[--right-chat-reply-color] rounded-8px p-4px cursor-pointer select-none;
+  @apply text-[--reply-color] rounded-8px p-4px cursor-pointer select-none;
   svg,
   span {
     transition: color 0.4s ease-in-out;

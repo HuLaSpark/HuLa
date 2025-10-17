@@ -102,23 +102,26 @@
             :loading="loading"
             :disabled="loading"
             @click="handleDelete"
+            :color="'#d5304f'"
             v-if="!props.isMyPage && isMyFriend"
-            class="px-4 py-10px font-bold text-center bg-red text-white rounded-full text-12px">
+            class="px-5 py-10px font-bold text-center rounded-full text-12px">
             删除
           </n-button>
 
           <n-button
+            type="primary"
             :disabled="loading"
             v-if="!props.isMyPage && !isMyFriend"
             @click="handleAddFriend"
-            class="px-4 py-10px font-bold text-center bg-#13987f text-white rounded-full text-12px">
+            class="px-5 py-10px font-bold text-center rounded-full text-12px">
             +&nbsp;添加好友
           </n-button>
           <n-button
+            type="primary"
             @click="toChatRoom"
             :disabled="loading"
             v-if="!props.isMyPage"
-            class="px-4 py-10px text-center font-bold bg-#EEF4F3 text-#373838 rounded-full text-12px">
+            class="px-5 py-10px text-center font-bold rounded-full text-12px">
             私聊
           </n-button>
         </div>
@@ -271,11 +274,10 @@ const handleDelete = () => {
     title: '删除好友',
     message: '确定删除该好友吗？',
     showCancelButton: true,
-    confirmButtonText: '取消',
-    cancelButtonText: '确定'
+    confirmButtonText: '确定',
+    cancelButtonText: '取消'
   })
-    .then(() => {})
-    .catch(async () => {
+    .then(async () => {
       if (userDetailInfo.value?.uid) {
         try {
           loading.value = true
@@ -287,13 +289,15 @@ const handleDelete = () => {
         } catch (error) {
           window.$message.warning('删除失败')
           console.error('删除好友失败：', error)
+        } finally {
+          loading.value = false
         }
       } else {
         window.$message.warning('没有找到好友哦')
       }
     })
-    .finally(() => {
-      loading.value = false
+    .catch(() => {
+      // 用户点击取消，不做任何操作
     })
 }
 

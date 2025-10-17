@@ -17,7 +17,7 @@
       <div
         v-if="isGroup && topAnnouncement"
         key="announcement"
-        :class="{ 'bg-#f3f3f3': isMobile() }"
+        :class="{ 'bg-#eee': isMobile() }"
         class="p-[6px_12px_0_12px]">
         <div
           class="custom-announcement"
@@ -40,7 +40,7 @@
     </Transition>
 
     <!-- 聊天内容 -->
-    <div :class="{ 'bg-#f3f3f3': isMobile() }" class="flex flex-col flex-1 min-h-0">
+    <div :class="{ 'bg-#eee': isMobile() }" class="flex flex-col flex-1 min-h-0">
       <div
         id="image-chat-main"
         ref="scrollContainer"
