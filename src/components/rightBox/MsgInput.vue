@@ -685,7 +685,8 @@ defineExpose({
   handleVoiceCancel,
   closePanel, // 关闭语音输入面板（用于移动端）
   cancelFocus,
-  sendVoiceDirect
+  sendVoiceDirect,
+  sendFilesDirect
 })
 </script>
 

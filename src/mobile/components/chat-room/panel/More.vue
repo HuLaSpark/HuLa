@@ -14,7 +14,11 @@
               <use :href="`#${item.icon}`"></use>
             </svg>
 
-            <van-uploader v-if="item.label === '文件' && item.isShow()" multiple :after-read="afterReadFile">
+            <van-uploader
+              v-if="item.label === '文件' && item.isShow()"
+              accept="*/*"
+              multiple
+              :after-read="afterReadFile">
               <svg class="h-24px w-24px iconpark-icon">
                 <use :href="`#${item.icon}`"></use>
               </svg>
@@ -120,6 +124,10 @@ const startCall = (callType: CallTypeEnum) => {
   })
 }
 
+const emit = defineEmits<(e: 'sendFiles', files: File[]) => void>()
+
+const selectedFiles = ref<File[]>([])
+
 const uploadFileList = ref<
   {
     url: string
@@ -148,6 +156,7 @@ const afterReadFile = (fileList: UploaderFileListItem | UploaderFileListItem[]) 
       continue
     }
 
+    selectedFiles.value.push(rawFile)
     uploadFileList.value.push({
       url: file.url as string,
       status: 'done',
@@ -155,6 +164,12 @@ const afterReadFile = (fileList: UploaderFileListItem | UploaderFileListItem[]) 
     })
 
     console.log('已选择文件：', file)
+  }
+
+  if (selectedFiles.value.length > 0) {
+    emit('sendFiles', [...selectedFiles.value])
+    selectedFiles.value = []
+    uploadFileList.value = []
   }
 }
 
@@ -180,6 +195,7 @@ const afterReadImage = (fileList: UploaderFileListItem | UploaderFileListItem[])
       continue
     }
 
+    selectedFiles.value.push(rawFile)
     uploadFileList.value.push({
       url: file.url as string,
       status: 'done',
@@ -187,6 +203,12 @@ const afterReadImage = (fileList: UploaderFileListItem | UploaderFileListItem[])
     })
 
     console.log('已添加文件：', file)
+  }
+
+  if (selectedFiles.value.length > 0) {
+    emit('sendFiles', [...selectedFiles.value])
+    selectedFiles.value = []
+    uploadFileList.value = []
   }
 }
 </script>

@@ -206,7 +206,7 @@
 
           <Voice @cancel="handleMobileVoiceCancel" @send="handleMobileVoiceSend" v-if="inputState.isClickedVoice" />
 
-          <More v-if="inputState.isClickedMore" />
+          <More v-if="inputState.isClickedMore" @sendFiles="handleMoreSendFiles" />
         </div>
       </div>
     </Transition>
@@ -751,6 +751,17 @@ const handleMobileVoiceSend = async (voiceData: any) => {
   console.log('handleMobileVoiceSend', voiceData)
   // 发送后关闭面板
   handleMobileVoiceCancel()
+}
+
+const handleMoreSendFiles = async (files: File[]) => {
+  if (!files || files.length === 0) return
+  try {
+    await MsgInputRef.value?.sendFilesDirect?.(files)
+    closePanelWithAnimation()
+  } catch (error) {
+    console.error('移动端发送文件失败:', error)
+    window.$message?.error?.('发送文件失败')
+  }
 }
 
 /** 处理发送事件 */
