@@ -7,7 +7,7 @@
       <div
         v-for="(part, index) in parseMessage(body.content)"
         :key="index"
-        class="text-(12px #fbb990) select-none cursor-default">
+        class="text-(12px #fbb990) leading-tight select-none cursor-default">
         <p v-if="part.type === 'text'">{{ part.text }}</p>
         <p v-else-if="part.type === 'bracket'" class="text-#13987f truncate max-w-20">
           {{ part.text }}

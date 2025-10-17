@@ -164,7 +164,8 @@
                   active:
                     activeBubble === message.message.id &&
                     !isSpecialMsgType(message.message.type) &&
-                    message.message.type !== MsgEnum.VOICE
+                    message.message.type !== MsgEnum.VOICE &&
+                    !isMobile()
                 }
               ]"
               :is="componentMap[message.message.type]"
@@ -221,6 +222,7 @@
             :size="6"
             v-if="message.message.body.reply"
             @click="emit('jump2Reply', message.message.body.reply.id)"
+            :class="isMobile() ? 'bg-#fafafa text-13px' : 'bg-[--right-chat-reply-color] text-12px'"
             class="reply-bubble relative w-fit custom-shadow select-none chat-message-max-width"
             :style="{ 'max-width': bubbleMaxWidth }">
             <svg class="size-14px">

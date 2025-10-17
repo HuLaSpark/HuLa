@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div :class="isMobile() ? 'text-16px' : 'text-14px'">
     <template v-for="(item, index) in fragments" :key="index">
       <span
         v-if="mentionTokenSet.has(item)"
@@ -68,6 +68,7 @@
 import { openExternalUrl } from '@/hooks/useLinkSegments'
 import { useGroupStore } from '@/stores/group'
 import type { TextBody } from '@/services/types'
+import { isMobile } from '@/utils/PlatformConstants'
 
 // 标记结构用于描述需特殊渲染的片段区间
 type ContentMarker = {

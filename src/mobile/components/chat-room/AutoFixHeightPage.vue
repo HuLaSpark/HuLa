@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col h-full">
+  <div class="flex flex-col flex-1">
     <!-- 页面容器 -->
     <div class="flex w-full items-start flex-col flex-1 min-h-0">
       <div class="w-full relative">

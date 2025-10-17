@@ -2,7 +2,7 @@
   <div class="flex flex-1">
     <img src="@/assets/mobile/chat-home/background.webp" class="w-100% absolute top-0 z-0" alt="hula" />
     <AutoFixHeightPage :show-footer="false">
-      <template>
+      <template #container>
         <div class="z-2 flex flex-col absolute overflow-auto min-h-70vh w-full">
           <div class="flex flex-col flex-1 p-20px gap-20px">
             <div class="flex items-center">
@@ -17,16 +17,12 @@
               </div>
             </div>
             <div class="flex shadow bg-white w-full rounded-lg items-center">
-              <div class="p-10px flex w-full flex-wrap gap-10px">
-                <div
-                  class="rounded-full shadow self-center h-auto transition-transform duration-300 ease-in-out origin-top"
-                  style="transform: scale(1) translateY(0)">
-                  <n-avatar
-                    :size="74"
-                    :src="AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar!)"
-                    fallback-src="/logo.png"
-                    round />
-                </div>
+              <div class="px-24px py-20px flex w-full flex-wrap gap-20px">
+                <n-avatar
+                  :size="74"
+                  :src="AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar!)"
+                  fallback-src="/logo.png"
+                  round />
 
                 <div @click="toMyInfo" class="flex flex-col flex-1 py-10px">
                   <div class="font-bold text-18px text-#373838">{{ userStore.userInfo!.name }}</div>

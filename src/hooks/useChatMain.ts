@@ -1113,7 +1113,10 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
 
   /** 点击气泡消息时候监听用户是否按下ctrl+c来复制内容 */
   const handleMsgClick = (item: MessageType) => {
-    activeBubble.value = item.message.id
+    // 移动端不触发 active 效果
+    if (!isMobile()) {
+      activeBubble.value = item.message.id
+    }
     // 启用键盘监听
     const handleKeyPress = (e: KeyboardEvent) => {
       if ((e.ctrlKey && e.key === 'c') || (e.metaKey && e.key === 'c')) {

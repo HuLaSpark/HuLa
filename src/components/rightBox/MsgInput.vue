@@ -9,9 +9,7 @@
     @submit.prevent="handleFormSubmit"
     :class="[isMobile() ? 'gap-10px ' : '']"
     class="w-full flex flex-1 min-h-0">
-    <div
-      class="w-full"
-      :class="isMobile() ? 'bg-gray-100 flex flex-1 p-5px gap-2 pt-5px items-end bg-white min-h-2.25rem' : ''">
+    <div class="w-full" :class="isMobile() ? 'bg-gray-100 flex flex-1 p-5px gap-2 pt-5px items-end min-h-2.25rem' : ''">
       <div v-if="isMobile()" class="flex items-center justify-center w-14 h-2.5rem">
         <svg
           @click="handleVoiceClick"
@@ -188,7 +186,7 @@
         v-if="isMobile()"
         class="grid gap-2 h-2.5rem items-center"
         :class="msgInput ? 'grid-cols-[2rem_3rem]' : 'grid-cols-[2rem_2rem]'">
-        <div class="w-full items-center flex justify-center h-full">
+        <div class="w-full flex-center h-full">
           <svg @click="handleEmojiClick" class="w-25px h-25px mt-2px outline-none iconpark-icon">
             <use :href="currentPanelState === MobilePanelState.EMOJI ? '#face' : '#smiling-face'"></use>
           </svg>

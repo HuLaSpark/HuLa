@@ -98,7 +98,7 @@
             :key="`${item.id}-${idx}`"
             :class="item.top ? 'w-full bg-#64A29C18' : ''">
             <!-- 长按项 -->
-            <div @click="intoRoom(item)" class="grid grid-cols-[2.2rem_1fr_4rem] items-start px-4 py-3 gap-1">
+            <div @click.stop="intoRoom(item)" class="grid grid-cols-[2.2rem_1fr_4rem] items-start px-4 py-3 gap-1">
               <div class="flex-shrink-0">
                 <n-badge :offset="[-6, 6]" :value="item.unreadCount" :max="99">
                   <n-avatar :size="52" :src="AvatarUtils.getAvatarUrl(item.avatar)" fallback-src="/logo.png" round />
@@ -132,7 +132,13 @@
                   {{ item.top ? '取消置顶' : '置顶' }}
                 </div>
                 <div
-                  class="h-full text-14px w-80px bg-red text-white flex items-center justify-center"
+                  :class="(item?.unreadCount ?? 0) > 0 ? 'bg-#909090' : 'bg-#fbb160'"
+                  class="h-full text-14px w-80px text-white flex items-center justify-center"
+                  @click="handleToggleReadStatus((item?.unreadCount ?? 0) > 0, item)">
+                  {{ (item?.unreadCount ?? 0) > 0 ? '标记为已读' : '标记为未读' }}
+                </div>
+                <div
+                  class="h-full text-14px w-80px bg-#d5304f text-white flex items-center justify-center"
                   @click="handleDelete(item)">
                   删除
                 </div>
@@ -148,23 +154,18 @@
         v-if="longPressState.showLongPressMenu"
         :style="{ top: longPressState.longPressMenuTop + 'px' }"
         class="fixed gap-10px z-999 left-1/2 transform -translate-x-1/2">
-        <div class="flex justify-between p-[8px_15px_8px_15px] text-14px gap-10px rounded-10px bg-#4e4e4e">
+        <div class="flex justify-between p-18px text-16px gap-22px rounded-16px bg-#4e4e4e whitespace-nowrap">
           <div class="text-white" @click="handleDelete(currentLongPressItem)">删除</div>
           <div class="text-white" @click="handleToggleTop(currentLongPressItem)">
             {{ currentLongPressItem?.top ? '取消置顶' : '置顶' }}
           </div>
-          <div class="text-white" @click="handleMarkUnread">未读</div>
+          <div class="text-white" @click="handleToggleReadStatus((currentLongPressItem?.unreadCount ?? 0) > 0)">
+            {{ (currentLongPressItem?.unreadCount ?? 0) > 0 ? '已读' : '未读' }}
+          </div>
         </div>
         <div class="flex w-full justify-center h-15px">
-          <svg width="35" height="13" viewBox="0 0 35 13">
-            <path
-              d="M0 0
-           Q17.5 5 17.5 12
-           Q17.5 13 18.5 13
-           Q17.5 13 17.5 12
-           Q17.5 5 35 0
-           Z"
-              fill="#4e4e4e" />
+          <svg width="34" height="13" viewBox="0 0 35 13">
+            <path d="M0 0 L35 0 L17.5 13 Z" fill="#4e4e4e" />
           </svg>
         </div>
       </div>
@@ -347,25 +348,29 @@ const handleToggleTop = async (item: SessionItem | null) => {
   }
 }
 
-// 标记未读
-const handleMarkUnread = async () => {
-  if (!currentLongPressItem.value) return
+// 切换已读/未读状态
+const handleToggleReadStatus = async (markAsRead: boolean, sessionItem?: SessionItem) => {
+  const targetItem = sessionItem || currentLongPressItem.value
+  if (!targetItem) return
 
   try {
-    const item = currentLongPressItem.value
+    const item = targetItem
+    const unreadCount = markAsRead ? 0 : 1
+    const successMsg = markAsRead ? '已标记为已读' : '已标记为未读'
 
-    // 重置未读计数为1
+    // 更新未读计数
     chatStore.updateSession(item.roomId, {
-      unreadCount: 1
+      unreadCount
     })
 
     // 更新全局未读计数
     globalStore.updateGlobalUnreadCount()
 
-    window.$message.success('已标记为未读')
+    window.$message.success(successMsg)
   } catch (error) {
-    window.$message.error('标记未读失败')
-    console.error('标记未读失败:', error)
+    const errorMsg = markAsRead ? '标记已读失败' : '标记未读失败'
+    window.$message.error(errorMsg)
+    console.error(errorMsg, error)
   } finally {
     maskHandler.close()
   }
