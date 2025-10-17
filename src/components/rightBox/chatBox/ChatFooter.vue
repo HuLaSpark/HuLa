@@ -742,7 +742,12 @@ const handleMobileVoiceCancel = () => {
 }
 
 /** 发送语音消息 */
-const handleMobileVoiceSend = (voiceData: any) => {
+const handleMobileVoiceSend = async (voiceData: any) => {
+  try {
+    await MsgInputRef.value?.sendVoiceDirect(voiceData)
+  } catch (error) {
+    console.error('发送语音失败', error)
+  }
   console.log('handleMobileVoiceSend', voiceData)
   // 发送后关闭面板
   handleMobileVoiceCancel()

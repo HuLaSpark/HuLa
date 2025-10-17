@@ -6,7 +6,7 @@ use common::init::CustomInit;
 #[cfg(target_os = "windows")]
 use common_cmd::get_windows_scale_info;
 #[cfg(desktop)]
-use common_cmd::{audio, default_window_icon, get_files_meta, screenshot, set_height};
+use common_cmd::{audio, default_window_icon, screenshot, set_height};
 #[cfg(target_os = "macos")]
 use common_cmd::{hide_title_bar_buttons, set_window_level_above_menubar, show_title_bar_buttons};
 #[cfg(target_os = "macos")]
@@ -19,6 +19,7 @@ use desktops::{common_cmd, directory_scanner, init, tray, video_thumbnail::get_v
 use directory_scanner::{cancel_directory_scan, get_directory_usage_info_with_progress};
 #[cfg(desktop)]
 use init::DesktopCustomInit;
+use crate::common::files_meta::get_files_meta;
 use std::sync::Arc;
 use tauri_plugin_fs::FsExt;
 pub mod command;
@@ -384,7 +385,6 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         push_window_payload,
         #[cfg(desktop)]
         get_window_payload,
-        #[cfg(desktop)]
         get_files_meta,
         #[cfg(desktop)]
         get_directory_usage_info_with_progress,
