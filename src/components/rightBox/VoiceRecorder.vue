@@ -156,6 +156,25 @@ const stopRecording = async () => {
   await stopRecord()
 }
 
+// 重置录音状态
+const resetRecordingState = () => {
+  // 清理音频播放器
+  if (audioElement.value) {
+    audioElement.value.pause()
+    if (audioElement.value.src) {
+      URL.revokeObjectURL(audioElement.value.src)
+    }
+    audioElement.value = null
+  }
+
+  // 重置所有状态
+  audioBlob.value = null
+  recordingDuration.value = 0
+  localAudioPath.value = ''
+  isPlaying.value = false
+  isProcessing.value = false
+}
+
 // 取消录音
 const cancelRecording = () => {
   cancelRecord()
@@ -166,14 +185,7 @@ const cancelRecording = () => {
 
 // 重新录制
 const reRecord = () => {
-  audioBlob.value = null
-  recordingDuration.value = 0
-  localAudioPath.value = ''
-  isProcessing.value = false
-  if (audioElement.value) {
-    audioElement.value.pause()
-    audioElement.value = null
-  }
+  resetRecordingState()
 }
 
 // 创建音频元素用于播放
@@ -222,6 +234,9 @@ const handleSend = async () => {
 
     console.log('🎤 发送语音数据:', voiceData)
     emit('send', voiceData)
+
+    // 发送后立即重置状态，避免下次打开时还显示这条录音
+    resetRecordingState()
   } catch (error) {
     console.error('🎤 发送语音失败:', error)
   } finally {

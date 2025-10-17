@@ -1,6 +1,6 @@
 <template>
   <!-- 录音模式 -->
-  <VoiceRecorder v-if="!isMobile()" v-show="isVoiceMode" @cancel="handleVoiceCancel" @send="handleVoiceSend" />
+  <VoiceRecorder v-if="!isMobile()" v-show="isVoiceMode" @cancel="handleVoiceCancel" @send="sendVoiceDirect" />
 
   <!-- 输入框表单 -->
   <form
@@ -465,12 +465,6 @@ const focus = () => {
 // 语音录制相关事件处理
 const handleVoiceCancel = () => {
   isVoiceMode.value = false
-}
-
-// 处理发送语音消息
-const handleVoiceSend = async (voiceData: any) => {
-  isVoiceMode.value = false
-  await sendVoiceDirect(voiceData)
 }
 
 onMounted(async () => {
