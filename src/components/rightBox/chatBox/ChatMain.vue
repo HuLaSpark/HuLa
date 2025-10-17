@@ -1,5 +1,5 @@
 <template>
-  <div class="chat-main-container" :style="cssVariables">
+  <div class="flex flex-col overflow-hidden h-full">
     <!-- 网络状态提示 -->
     <n-flex
       v-if="!networkStatus.isOnline.value"
@@ -213,10 +213,6 @@ import { isMac, isMobile, isWindows } from '@/utils/PlatformConstants'
 
 const selfEmit = defineEmits(['scroll'])
 
-const props = defineProps<{
-  footerHeight?: number
-}>()
-
 type AnnouncementData = {
   content: string
   top?: boolean
@@ -262,20 +258,6 @@ const computeMsgHover = computed(() => (item: MessageType) => {
   }
 
   return hoverId.value === item.message.id || item.isCheck
-})
-// CSS 变量计算，避免动态高度重排
-const cssVariables = computed(() => {
-  let height = 0
-
-  if (isMobile()) {
-    height = props.footerHeight as number
-  } else {
-    height = footerHeight.value
-  }
-
-  return {
-    '--footer-height': `${height}px`
-  }
 })
 // 是否显示悬浮页脚
 const shouldShowFloatFooter = computed<boolean>(() => {
@@ -725,16 +707,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-.chat-main-container {
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh / var(--page-scale, 1) - var(--footer-height));
-  overflow: hidden;
-  // 布局优化
-  contain: layout style;
-  will-change: auto;
-}
-
 // 原生滚动容器样式
 .scrollbar-container {
   flex: 1;

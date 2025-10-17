@@ -1,7 +1,7 @@
 <template>
-  <div class="appContainer h-100vh" :class="{ 'safe-area-disabled': isSafeAreaDisabled }">
+  <div class="appContainer h-100vh w-100vw" :class="{ 'safe-area-disabled': isSafeAreaDisabled }">
     <NaiveProvider :message-max="3" :notific-max="3" class="h-full">
-      <div v-if="!isLock" id="app-container" class="h-full">
+      <div v-if="!isLock" class="h-full">
         <router-view />
       </div>
       <!-- 锁屏页面 -->

@@ -1,8 +1,8 @@
 <template>
-  <div id="layout" class="flex size-full min-w-310px bg-[--right-bg-color]">
+  <div id="layout" class="flex min-w-310px bg-[--right-bg-color] h-full">
     <Suspense>
       <template #default>
-        <div class="flex size-full">
+        <div class="flex flex-1 min-h-0">
           <!-- 使用keep-alive包裹异步组件 -->
           <keep-alive>
             <AsyncLeft />
@@ -16,7 +16,7 @@
         </div>
       </template>
       <template #fallback>
-        <div class="flex items-center justify-center size-full">
+        <div class="flex flex-1 items-center justify-center">
           <LoadingSpinner :percentage="loadingPercentage" :loading-text="loadingText" />
         </div>
       </template>

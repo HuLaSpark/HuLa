@@ -1,12 +1,6 @@
 <template>
   <!-- 底部栏 -->
-  <main
-    :class="[isMobile() ? 'flex-col w-full' : 'border-t-(1px solid [--right-chat-footer-line-color])']"
-    class="relative flex justify-center items-center h-full">
-    <!-- 拖拽手柄 -->
-    <div v-if="!isMobile()" class="resize-handle" :class="{ dragging: isDragging }" @mousedown="startDrag">
-      <div class="resize-indicator"></div>
-    </div>
+  <main :class="[isMobile() ? 'flex-col w-full' : '']" class="h-full flex flex-col">
     <!-- 添加遮罩层 -->
     <div
       v-if="isSingleChat && !isFriend"
@@ -20,9 +14,9 @@
       </n-flex>
     </div>
 
-    <ChatMsgMultiChoose :show-toolbar="chatStore.isMsgMultiChoose" />
+    <ChatMsgMultiChoose v-if="chatStore.isMsgMultiChoose" />
 
-    <div v-if="!chatStore.isMsgMultiChoose" class="size-full relative color-[--icon-color] flex flex-col">
+    <div v-if="!chatStore.isMsgMultiChoose" class="color-[--icon-color] flex flex-col flex-1 min-h-0">
       <!-- 输入框顶部选项栏 -->
       <n-flex
         v-if="!isMobile()"
@@ -176,16 +170,14 @@
       </n-flex>
 
       <!-- 输入框区域 -->
-      <div :class="[isMobile() ? '' : 'pl-20px ']" class="flex-1 flex flex-col relative">
+      <div :class="[isMobile() ? '' : 'pl-20px ']" class="flex-1 min-h-0">
         <MsgInput
           ref="MsgInputRef"
           @clickMore="handleMoreClick"
           @clickEmoji="handleEmojiClick"
           @clickVoice="handleVoiceClick"
           @customFocus="handleCustomFocus"
-          @send="handleSend"
-          :disabled="disabledInput"
-          :height="inputAreaHeight" />
+          @send="handleSend" />
       </div>
     </div>
 
@@ -198,10 +190,9 @@
     <!-- 文件上传进度条（悬浮显示，不影响布局） -->
     <FileUploadProgress />
 
-    <!-- 移动端面板 -->
-    <Transition name="panel-slide" mode="out-in">
-      <div v-show="isPanelVisible" ref="panelContainerRef" class="panel-container" :style="{ height: panelHeight }">
-        <div ref="panelContentRef" class="panel-content">
+    <Transition name="panel-slide">
+      <div v-show="isPanelVisible" class="panel-container">
+        <div class="h-auto max-h-19rem overflow-y-auto">
           <Emoticon @emojiHandle="emojiHandle" v-if="inputState.isClickedEmoji" :all="false" />
 
           <Voice @cancel="handleMobileVoiceCancel" @send="handleMobileVoiceSend" v-if="inputState.isClickedVoice" />
@@ -216,7 +207,7 @@
 <script setup lang="ts">
 import { open } from '@tauri-apps/plugin-dialog'
 import { readFile } from '@tauri-apps/plugin-fs'
-import { FOOTER_HEIGHT, MAX_FOOTER_HEIGHT, MIN_FOOTER_HEIGHT, TOOLBAR_HEIGHT } from '@/common/constants'
+import { FOOTER_HEIGHT, MAX_FOOTER_HEIGHT, MIN_FOOTER_HEIGHT } from '@/common/constants'
 import FileUploadProgress from '@/components/rightBox/FileUploadProgress.vue'
 import LocationModal from '@/components/rightBox/location/LocationModal.vue'
 import { MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
@@ -234,8 +225,6 @@ import { useSettingStore } from '@/stores/setting'
 import FileUtil from '@/utils/FileUtil'
 import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
 import { isMac, isMobile } from '@/utils/PlatformConstants'
-import Voice from '@/mobile/components/chat-room/panel/Voice.vue'
-import More from '@/mobile/components/chat-room/panel/More.vue'
 
 const { detailId } = defineProps<{
   detailId: SessionItem['detailId']
@@ -266,13 +255,6 @@ const { footerHeight, setFooterHeight } = useChatLayoutGlobal()
 // 使用窗口管理
 const { createWebviewWindow } = useWindow()
 
-// 拖拽调整高度相关
-const isDragging = ref(false)
-const startY = ref(0)
-const startHeight = ref(0)
-// 性能优化相关
-let rafId: number | null = null
-
 // 容器高度响应式状态
 const containerHeight = ref(600) // 默认高度
 
@@ -285,11 +267,6 @@ const maxHeight = computed(() => {
 // 动态计算当前最小高度（根据录音模式状态）
 const currentMinHeight = computed(() => {
   return MsgInputRef.value?.isVoiceMode ? FOOTER_HEIGHT : MIN_FOOTER_HEIGHT
-})
-
-// 输入框区域高度计算（总高度减去顶部选项栏高度）
-const inputAreaHeight = computed(() => {
-  return Math.max(footerHeight.value - TOOLBAR_HEIGHT)
 })
 
 // 监听maxHeight变化，确保footerHeight不超过最大值（即时响应）
@@ -320,71 +297,12 @@ watch(
   }
 )
 
-// ResizeObserver实例
-let resizeObserver: ResizeObserver | null = null
 // 高效的尺寸变化监听
 const observeContainerResize = () => {
   const chatContainer = document.querySelector('.h-full') || document.querySelector('[data-chat-container]')
   if (!chatContainer) return
-
-  // 创建ResizeObserver实例
-  resizeObserver = new ResizeObserver((entries) => {
-    for (const entry of entries) {
-      // 使用contentRect获取更精确的尺寸
-      const newHeight = entry.contentRect.height || entry.target.clientHeight
-      if (newHeight !== containerHeight.value) {
-        containerHeight.value = newHeight
-      }
-    }
-  })
-
-  // 开始观察容器尺寸变化
-  resizeObserver.observe(chatContainer)
-
   // 设置初始高度
   containerHeight.value = (chatContainer as HTMLElement).clientHeight
-}
-
-const startDrag = (e: MouseEvent) => {
-  isDragging.value = true
-  startY.value = e.clientY
-  startHeight.value = footerHeight.value
-
-  document.addEventListener('mousemove', onDrag)
-  document.addEventListener('mouseup', endDrag)
-  document.body.style.userSelect = 'none'
-  document.body.classList.add('dragging-resize')
-  e.preventDefault()
-}
-
-const onDrag = (e: MouseEvent) => {
-  if (!isDragging.value) return
-  // 立即取消之前的帧，避免延迟
-  if (rafId !== null) {
-    cancelAnimationFrame(rafId)
-  }
-
-  rafId = requestAnimationFrame(() => {
-    const deltaY = startY.value - e.clientY
-    // 使用计算属性获取当前最小高度
-    const newHeight = Math.min(Math.max(startHeight.value + deltaY, currentMinHeight.value), maxHeight.value)
-    setFooterHeight(newHeight)
-    rafId = null
-  })
-}
-
-const endDrag = () => {
-  isDragging.value = false
-  document.removeEventListener('mousemove', onDrag)
-  document.removeEventListener('mouseup', endDrag)
-  document.body.style.userSelect = ''
-  document.body.classList.remove('dragging-resize')
-
-  // 清理性能优化相关状态
-  if (rafId !== null) {
-    cancelAnimationFrame(rafId)
-    rafId = null
-  }
 }
 
 /**
@@ -561,12 +479,8 @@ const emojiHandle = (item: string, type: 'emoji' | 'emoji-url' = 'emoji') => {
   // 触发输入事件
   triggerInputEvent(inp)
 
-  if (!isMobile()) {
-    // 保持焦点在输入框
-    MsgInputRef.value?.focus()
-  } else {
-    MsgInputRef.value?.cancelFocus()
-  }
+  // 保持焦点在输入框
+  MsgInputRef.value?.focus()
 
   // 添加到最近使用表情列表
   updateRecentEmojis(item)
@@ -619,37 +533,7 @@ onMounted(async () => {
   if (MsgInputRef.value) {
     msgInputDom.value = MsgInputRef.value.messageInputDom
   }
-
-  // 初始化移动端面板高度监听
-  if (isMobile()) {
-    nextTick(() => initPanelHeightObserver())
-  }
 })
-
-onUnmounted(() => {
-  // 清理拖拽相关监听器
-  if (isDragging.value) {
-    document.removeEventListener('mousemove', onDrag)
-    document.removeEventListener('mouseup', endDrag)
-    document.body.style.userSelect = ''
-  }
-
-  // 清理性能优化相关
-  if (rafId !== null) {
-    cancelAnimationFrame(rafId)
-    rafId = null
-  }
-
-  // 清理ResizeObserver
-  if (resizeObserver) {
-    resizeObserver.disconnect()
-    resizeObserver = null
-  }
-
-  // 清理移动端面板高度监听
-  cleanupPanelHeightObserver()
-})
-
 /**
  *
  * 移动端代码（开始）
@@ -657,23 +541,10 @@ onUnmounted(() => {
  *
  */
 
-// 定义移动端面板状态类型
-interface MobilePanelStateData {
-  isClickedMore: boolean
-  isClickedEmoji: boolean
-  isClickedVoice: boolean
-  isFocus: boolean
-}
-
 const isPanelVisible = ref(false) // 面板是否可见
-const disabledInput = ref(false)
-const panelContainerRef = ref<HTMLElement | null>(null)
-const panelContentRef = ref<HTMLElement | null>(null)
-const panelHeight = ref('0px')
-let panelResizeObserver: ResizeObserver | null = null
 
 // 输入框状态
-const inputState = ref<MobilePanelStateData>({
+const inputState = ref({
   isClickedMore: false,
   isClickedEmoji: false,
   isClickedVoice: false,
@@ -681,76 +552,35 @@ const inputState = ref<MobilePanelStateData>({
 })
 
 /** 点击更多按钮 */
-const handleMoreClick = (state: MobilePanelStateData) => {
-  console.log('handleMoreClick', state)
-  inputState.value = state
-  isPanelVisible.value = state.isClickedMore
-  // 点击更多按钮时，解除输入框的禁用状态
-  disabledInput.value = false
-  // 更新面板高度
-  nextTick(() => updatePanelHeight())
+const handleMoreClick = (value: any) => {
+  console.log('handleMoreClick', value)
+  inputState.value = value
+  isPanelVisible.value = value.isClickedMore
 }
 
 /** 点击表情按钮 */
-const handleEmojiClick = (state: MobilePanelStateData) => {
-  console.log('handleEmojiClick', state)
-  inputState.value = state
-  isPanelVisible.value = state.isClickedEmoji
-  // 点击表情按钮时，解除输入框的禁用状态
-  disabledInput.value = false
-  // 更新面板高度
-  nextTick(() => updatePanelHeight())
-}
-
-/** 处理自定义聚焦事件 */
-const handleCustomFocus = (state: MobilePanelStateData) => {
-  console.log('handleCustomFocus', state)
-  inputState.value = state
-
-  if (state.isFocus) {
-    // 聚焦时不做任何操作，保持面板状态
-  } else {
-    // 失去焦点时，先触发高度动画
-    closePanelWithAnimation()
-    disabledInput.value = false
-  }
+const handleEmojiClick = (value: any) => {
+  console.log('handleEmojiClick', value)
+  inputState.value = value
+  isPanelVisible.value = value.isClickedEmoji
 }
 
 /** 点击语音按钮 */
-const handleVoiceClick = (state: MobilePanelStateData) => {
-  console.log('handleVoiceClick', state)
-  inputState.value = state
-  isPanelVisible.value = state.isClickedVoice
-  disabledInput.value = state.isClickedVoice
-  // 更新面板高度
-  nextTick(() => updatePanelHeight())
+const handleVoiceClick = (value: any) => {
+  console.log('handleVoiceClick', value)
+  inputState.value = value
+  isPanelVisible.value = value.isClickedVoice
 }
 
-/** 取消语音录制 */
-const handleMobileVoiceCancel = () => {
-  MsgInputRef.value?.closePanel()
-  // 重置状态
-  inputState.value = {
-    isClickedMore: false,
-    isClickedEmoji: false,
-    isClickedVoice: false,
-    isFocus: false
-  }
-  closePanelWithAnimation()
-  disabledInput.value = false
-  console.log('handleMobileVoiceCancel')
-}
+/** 处理自定义聚焦事件 */
+const handleCustomFocus = (value: any) => {
+  inputState.value = value
 
-/** 发送语音消息 */
-const handleMobileVoiceSend = async (voiceData: any) => {
-  try {
-    await MsgInputRef.value?.sendVoiceDirect(voiceData)
-  } catch (error) {
-    console.error('发送语音失败', error)
+  // 判断是否聚焦
+  if (value.isFocus) {
+    // 聚焦，然后关闭面板
+    isPanelVisible.value = false
   }
-  console.log('handleMobileVoiceSend', voiceData)
-  // 发送后关闭面板
-  handleMobileVoiceCancel()
 }
 
 const handleMoreSendFiles = async (files: File[]) => {
@@ -767,45 +597,7 @@ const handleMoreSendFiles = async (files: File[]) => {
 /** 处理发送事件 */
 const handleSend = () => {
   console.log('handleSend')
-  closePanelWithAnimation()
-}
-
-/** 更新面板高度 */
-const updatePanelHeight = () => {
-  if (!panelContentRef.value) return
-  const contentHeight = panelContentRef.value.scrollHeight
-  panelHeight.value = `${contentHeight}px`
-}
-
-/** 关闭面板并带有丝滑动画 */
-const closePanelWithAnimation = () => {
-  // 先将高度过渡到 0
-  panelHeight.value = '0px'
-
-  // 等待高度动画完成后再隐藏面板
-  setTimeout(() => {
-    isPanelVisible.value = false
-  }, 300) // 与 CSS transition 时间一致
-}
-
-/** 初始化面板高度监听 */
-const initPanelHeightObserver = () => {
-  if (!panelContentRef.value) return
-
-  // 创建 ResizeObserver 监听内容高度变化
-  panelResizeObserver = new ResizeObserver(() => {
-    updatePanelHeight()
-  })
-
-  panelResizeObserver.observe(panelContentRef.value)
-}
-
-/** 清理面板高度监听 */
-const cleanupPanelHeightObserver = () => {
-  if (panelResizeObserver) {
-    panelResizeObserver.disconnect()
-    panelResizeObserver = null
-  }
+  isPanelVisible.value = false
 }
 
 /**
@@ -935,69 +727,32 @@ const cleanupPanelHeightObserver = () => {
   background-color: var(--bg-emoji, #f5f5f5);
   display: flex;
   flex-direction: column;
-  transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* 面板内容样式 */
-.panel-content {
-  width: 100%;
-  max-height: 19rem;
-  overflow-y: auto;
 }
 
 /* 使用 transform 实现高性能动画 - 从下往上滑出 */
-
 .panel-slide-enter-active,
 .panel-slide-leave-active {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: bottom;
 }
 
-.panel-slide-enter-from,
-.panel-slide-leave-to {
+.panel-slide-enter-from {
   opacity: 0;
-  transform: translateY(20px);
+  transform: translateY(100%);
 }
 
-.panel-slide-enter-to,
+.panel-slide-enter-to {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .panel-slide-leave-from {
   opacity: 1;
   transform: translateY(0);
 }
 
-.panel-container {
-  transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.panel-slide-leave-to {
+  opacity: 0;
+  transform: translateY(100%);
 }
-// .panel-slide-enter-active {
-//   transition:
-//     transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-//     opacity 0.2s ease;
-//   transform-origin: bottom;
-// }
-
-// .panel-slide-leave-active {
-//   transition:
-//     transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-//     opacity 0.2s ease;
-//   transform-origin: bottom;
-// }
-
-// .panel-slide-enter-from {
-//   opacity: 0;
-//   transform: translateY(20%);
-// }
-
-// .panel-slide-enter-to {
-//   opacity: 1;
-//   transform: translateY(0);
-// }
-
-// .panel-slide-leave-from {
-//   opacity: 1;
-//   transform: translateY(0);
-// }
-
-// .panel-slide-leave-to {
-//   opacity: 0;
-//   transform: translateY(20%);
-// }
 </style>
