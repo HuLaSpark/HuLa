@@ -302,6 +302,7 @@ fn setup_mobile() {
         .init_plugin()
         .setup(move |app| {
             common_setup(app.handle().clone())?;
+            tracing::info!("Mobile application setup completed successfully");
             Ok(())
         })
         .invoke_handler(get_invoke_handlers())

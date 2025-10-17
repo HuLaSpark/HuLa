@@ -11,9 +11,6 @@ import { initializePlatform } from '@/utils/PlatformConstants'
 import { invoke } from '@tauri-apps/api/core'
 import { isMobile } from '@/utils/PlatformConstants'
 
-initializePlatform()
-import('@/services/webSocketAdapter')
-
 const app = createApp(App)
 app.use(router).use(pinia).use(TlbsMap).directive('resize', vResize).directive('slide', vSlide).mount('#app')
 app.config.errorHandler = (err) => {
@@ -23,6 +20,10 @@ app.config.errorHandler = (err) => {
   }
   throw err
 }
+
+initializePlatform()
+import('@/services/webSocketAdapter')
+
 if (process.env.NODE_ENV === 'development') {
   import('@/utils/Console.ts').then((module) => {
     /**! 控制台打印项目版本信息(不需要可手动关闭)*/
