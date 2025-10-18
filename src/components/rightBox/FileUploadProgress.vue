@@ -9,7 +9,7 @@
         <svg class="size-16px color-[--text-color]">
           <use href="#file2"></use>
         </svg>
-        <span class="text-(14px [--text-color])">
+        <span class="text-(14px [--text-color]) max-w-200px truncate">
           {{ getStatusText() }}
         </span>
         <span class="text-(12px [--text-color])">{{ queue.completedFiles }}/{{ queue.totalFiles }}</span>
@@ -62,7 +62,7 @@ const getStatusText = () => {
 
 <style scoped lang="scss">
 .file-upload-progress {
-  @apply absolute top--70px left-20px right-20px z-1000 rounded-8px p-12px w-50%;
+  @apply absolute w-fit max-w-260px bottom-10px left-20px z-1000 rounded-8px p-12px;
   background: var(--bg-emoji);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);

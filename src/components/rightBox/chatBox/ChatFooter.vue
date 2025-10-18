@@ -189,9 +189,6 @@
       @location-selected="handleLocationSelected"
       @cancel="showLocationModal = false" />
 
-    <!-- 文件上传进度条（悬浮显示，不影响布局） -->
-    <FileUploadProgress />
-
     <Transition name="panel-slide">
       <div v-show="isPanelVisible" class="panel-container">
         <div class="h-auto max-h-19rem overflow-y-auto">
@@ -210,7 +207,6 @@
 import { open } from '@tauri-apps/plugin-dialog'
 import { readFile } from '@tauri-apps/plugin-fs'
 import { FOOTER_HEIGHT, MAX_FOOTER_HEIGHT, MIN_FOOTER_HEIGHT } from '@/common/constants'
-import FileUploadProgress from '@/components/rightBox/FileUploadProgress.vue'
 import LocationModal from '@/components/rightBox/location/LocationModal.vue'
 import { MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import { useChatLayoutGlobal } from '@/hooks/useChatLayout'

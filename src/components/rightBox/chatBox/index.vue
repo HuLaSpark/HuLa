@@ -96,8 +96,4 @@ const globalStore = useGlobalStore()
     }
   }
 }
-
-:deep(.n-split .n-split-pane-2) {
-  overflow: visible;
-}
 </style>
