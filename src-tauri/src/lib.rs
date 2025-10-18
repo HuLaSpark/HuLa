@@ -353,6 +353,7 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
     use crate::command::set_complete;
     #[cfg(mobile)]
     use crate::mobiles::splash::hide_splash_screen;
+    use crate::command::markdown_command::{get_readme_html, parse_markdown};
     use crate::command::user_command::{
         get_user_tokens, save_user_info, update_user_last_opt_time,
     };
@@ -432,6 +433,9 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         im_request_command,
         get_settings,
         update_settings,
+        // Markdown 相关命令
+        parse_markdown,
+        get_readme_html,
         #[cfg(mobile)]
         set_complete,
         #[cfg(mobile)]

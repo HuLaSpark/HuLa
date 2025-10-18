@@ -5,7 +5,12 @@
 
     <div class="flex-1 flex min-h-0">
       <div class="flex-1 min-h-0">
+        <!-- bot用户时显示Bot组件 -->
+        <template v-if="isBotUser">
+          <Bot />
+        </template>
         <n-split
+          v-else
           direction="vertical"
           :resize-trigger-size="0"
           class="h-full"
@@ -28,7 +33,14 @@
 </template>
 <script setup lang="ts">
 import { useGlobalStore } from '@/stores/global'
+import { storeToRefs } from 'pinia'
+import { UserType } from '@/enums'
+
 const globalStore = useGlobalStore()
+const { currentSession } = storeToRefs(globalStore)
+
+// 是否为bot用户
+const isBotUser = computed(() => currentSession.value?.account === UserType.BOT)
 </script>
 <style scoped lang="scss">
 :deep(.n-split .n-split__resize-trigger) {

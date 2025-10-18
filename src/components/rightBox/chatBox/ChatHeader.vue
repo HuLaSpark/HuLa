@@ -7,7 +7,10 @@
       <Transition name="loading" mode="out-in">
         <n-flex align="center">
           <n-avatar
-            :class="['rounded-8px select-none', { grayscale: activeItem.type === RoomTypeEnum.SINGLE && !isOnline }]"
+            :class="[
+              'rounded-8px select-none',
+              { grayscale: activeItem.type === RoomTypeEnum.SINGLE && !isOnline && !isBotUser }
+            ]"
             :size="28"
             :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
             :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
@@ -19,11 +22,17 @@
               class="text-(11px #808080)">
               [{{ groupStore.countInfo?.memberNum }}]
             </p>
+            <!-- bot用户标签 -->
+            <div
+              v-if="isBotUser"
+              class="dark:bg-[#fbb99020] bg-[#fbb99030] dark:border-(1px solid #fbb99020) border-(1px solid #fbb99040) flex-center px-8px py-4px rounded-6px">
+              <p class="text-(11px #fbb160)">助手</p>
+            </div>
           </label>
           <svg v-if="activeItem.hotFlag === IsAllUserEnum.Yes" class="size-20px color-#13987f select-none outline-none">
             <use href="#auth"></use>
           </svg>
-          <n-flex v-else-if="activeItem.type === RoomTypeEnum.SINGLE" align="center">
+          <n-flex v-else-if="activeItem.type === RoomTypeEnum.SINGLE && !isBotUser" align="center">
             <template v-if="shouldShowDeleteFriend">
               <n-flex align="center" :size="6">
                 <!-- 状态图标 -->
@@ -51,7 +60,7 @@
     </n-flex>
     <!-- 顶部右边选项栏 -->
     <nav v-if="shouldShowDeleteFriend || chatStore.isGroup" class="options flex-y-center gap-20px color-[--icon-color]">
-      <div v-if="!isChannel" class="options-box">
+      <div v-if="!isChannel && !isBotUser" class="options-box">
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
             <svg @click="startRtcCall(CallTypeEnum.AUDIO)">
@@ -62,7 +71,7 @@
         </n-popover>
       </div>
 
-      <div v-if="!isChannel" class="options-box">
+      <div v-if="!isChannel && !isBotUser" class="options-box">
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
             <svg @click="startRtcCall(CallTypeEnum.VIDEO)">
@@ -73,7 +82,7 @@
         </n-popover>
       </div>
 
-      <div v-if="!isChannel" class="options-box">
+      <div v-if="!isChannel && !isBotUser" class="options-box">
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
             <svg @click="handleMedia">
@@ -84,7 +93,7 @@
         </n-popover>
       </div>
 
-      <div v-if="!isChannel" class="options-box">
+      <div v-if="!isChannel && !isBotUser" class="options-box">
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
             <svg @click="handleAssist">
@@ -95,7 +104,10 @@
         </n-popover>
       </div>
 
-      <div v-if="!isChannel && activeItem.roomId !== '1'" class="options-box" @click="handleCreateGroupOrInvite">
+      <div
+        v-if="!isChannel && !isBotUser && activeItem.roomId !== '1'"
+        class="options-box"
+        @click="handleCreateGroupOrInvite">
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
           <template #trigger>
             <svg>
@@ -146,11 +158,16 @@
               <p>删除聊天记录</p>
             </div>
 
-            <div class="box-item flex-x-center cursor-pointer" @click="handleDelete(RoomActEnum.DELETE_FRIEND)">
+            <div
+              v-if="!isBotUser"
+              class="box-item flex-x-center cursor-pointer"
+              @click="handleDelete(RoomActEnum.DELETE_FRIEND)">
               <p class="color-#d03553">删除好友</p>
             </div>
 
-            <p class="m-[0_auto] text-(12px #13987f center) mt-20px cursor-pointer">被骚扰了?&nbsp;&nbsp;举报该用户</p>
+            <p v-if="!isBotUser" class="m-[0_auto] text-(12px #13987f center) mt-20px cursor-pointer">
+              被骚扰了?&nbsp;&nbsp;举报该用户
+            </p>
           </template>
 
           <!-- 群聊侧边栏选项 -->
@@ -460,7 +477,8 @@ import {
   RoomActEnum,
   RoomTypeEnum,
   SessionOperateEnum,
-  ThemeEnum
+  ThemeEnum,
+  UserType
 } from '@/enums'
 import { useAvatarUpload } from '@/hooks/useAvatarUpload'
 import { useMyRoomInfoUpdater } from '@/hooks/useMyRoomInfoUpdater'
@@ -500,6 +518,8 @@ const { persistMyRoomInfo, resolveMyRoomNickname } = useMyRoomInfoUpdater()
 
 // 是否为频道（仅显示 more 按钮）
 const isChannel = computed(() => activeItem.value?.hotFlag === IsAllUserEnum.Yes || activeItem.value?.roomId === '1')
+// 是否为bot用户
+const isBotUser = computed(() => activeItem.value?.account === UserType.BOT)
 // 是否为群主
 const isGroupOwner = computed(() => {
   // 频道不能修改群头像和群名称
