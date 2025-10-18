@@ -74,7 +74,7 @@
 
                 <ContextMenu
                   :content="item"
-                  class="w-fit relative flex flex-col pl-44px text-(14px [--text-color]) leading-26px user-select-text"
+                  class="w-fit max-w-80vw break-words relative flex flex-col pl-44px text-(14px [--text-color]) leading-26px user-select-text"
                   :data-key="item.fromUser.uid === userUid ? `U${item.message.id}` : `Q${item.message.id}`"
                   :special-menu="specialMenuList(item.message.type)"
                   @select="$event.click(item)">
