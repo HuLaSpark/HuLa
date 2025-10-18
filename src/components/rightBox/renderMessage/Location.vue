@@ -50,6 +50,7 @@
 <script setup lang="ts">
 import { getSettings } from '@/services/tauriCommand'
 import type { LocationBody } from '@/services/types'
+import { isWindows } from '@/utils/PlatformConstants'
 import LocationMap from '../location/LocationMap.vue'
 import LocationModal from '../location/LocationModal.vue'
 
@@ -95,6 +96,7 @@ const loadApiKey = async () => {
 
 // 点击位置消息
 const handleLocationClick = () => {
+  if (!isWindows()) return
   modalVisible.value = true
 }
 

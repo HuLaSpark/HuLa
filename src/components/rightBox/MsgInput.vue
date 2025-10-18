@@ -1,6 +1,6 @@
 <template>
   <!-- 录音模式 -->
-  <VoiceRecorder v-if="!isMobile()" v-show="isVoiceMode" @cancel="handleVoiceCancel" @send="sendVoiceDirect" />
+  <VoiceRecorder v-show="isVoiceMode" @cancel="handleVoiceCancel" @send="sendVoiceDirect" />
 
   <!-- 输入框表单 -->
   <form
@@ -134,7 +134,7 @@
                 :intersection-observer-options="{
                   root: '#image-chat-ait'
                 }" />
-              <span>{{ item.name }}</span>
+              <span>{{ item.myName || item.name }}</span>
             </n-flex>
           </template>
         </n-virtual-list>
@@ -274,7 +274,8 @@ const {
   selectedAitKey,
   groupedAIModels,
   updateSelectionRange,
-  focusOn
+  focusOn,
+  getCursorSelectionRange
 } = useMsgInput(messageInputDom)
 
 /** 移动端专用适配变量（开始） */
@@ -323,17 +324,20 @@ watch(personList, (newList) => {
     /** 先设置滚动条滚动到第一个 */
     virtualListInstAit.value?.scrollTo({ key: newList[0].uid })
     selectedAitKey.value = newList[0].uid
+  } else {
+    // 无匹配用户时立即关闭@状态，放开回车键让用户可以发送消息
+    ait.value = false
   }
 })
 
-/** 当AI列表发生变化的时候始终select第一个 */
-watch(groupedAIModels, (newList) => {
-  if (newList.length > 0) {
-    /** 先设置滚动条滚动到第一个 */
-    virtualListInstAI.value?.scrollTo({ key: newList[0].uid })
-    selectedAIKey.value = newList[0].uid
-  }
-})
+// /** 当AI列表发生变化的时候始终select第一个 */
+// watch(groupedAIModels, (newList) => {
+//   if (newList.length > 0) {
+//     /** 先设置滚动条滚动到第一个 */
+//     virtualListInstAI.value?.scrollTo({ key: newList[0].uid })
+//     selectedAIKey.value = newList[0].uid
+//   }
+// })
 
 // 显示文件弹窗的回调函数
 const showFileModalCallback = (files: File[]) => {
@@ -403,99 +407,20 @@ const handleVoiceCancel = () => {
   isVoiceMode.value = false
 }
 
-onMounted(async () => {
-  onKeyStroke('Enter', () => {
-    if (ait.value && Number(selectedAitKey.value) > -1) {
-      const item = personList.value.find((item) => item.uid === selectedAitKey.value)
-      if (item) {
-        handleAit(item)
-      }
-    } else if (aiDialogVisible.value && Number(selectedAIKey.value) > -1) {
-      const item = groupedAIModels.value.find((item) => item.uid === selectedAIKey.value)
-      if (item) {
-        handleAI(item)
-      }
-    }
-  })
-  onKeyStroke('ArrowUp', (e) => {
-    e.preventDefault()
-    if (ait.value) {
-      handleAitKeyChange(-1, personList, virtualListInstAit.value!, selectedAitKey)
-    } else if (aiDialogVisible.value) {
-      handleAitKeyChange(-1, groupedAIModels, virtualListInstAI.value!, selectedAIKey)
-    }
-  })
-  onKeyStroke('ArrowDown', (e) => {
-    e.preventDefault()
-    if (ait.value) {
-      handleAitKeyChange(1, personList, virtualListInstAit.value!, selectedAitKey)
-    } else if (aiDialogVisible.value) {
-      handleAitKeyChange(1, groupedAIModels, virtualListInstAI.value!, selectedAIKey)
-    }
-  })
-  // TODO: 暂时已经关闭了独立窗口聊天功能
-  emit('aloneWin')
-  nextTick(() => {
-    // 移动端不自动聚焦
-    if (!isMobile()) {
-      const inputDiv = document.getElementById('message-input')
-      inputDiv?.focus()
-      setIsFocus(true)
-    }
-  })
-  // TODO 应该把打开的窗口的item给存到set中，需要修改输入框和消息展示的搭配，输入框和消息展示模块应该是一体并且每个用户独立的，这样当我点击这个用户框输入消息的时候就可以暂存信息了并且可以判断每个消息框是什么类型是群聊还是单聊，不然会导致比如@框可以在单聊框中出现 (nyh -> 2024-04-09 01:03:59)
-  /** 当不是独立窗口的时候也就是组件与组件之间进行通信然后监听信息对话的变化 */
-  useMitt.on(MittEnum.AT, (event: any) => {
-    handleAit(groupStore.getUserInfo(event)!)
-  })
-  // 监听录音模式切换事件
-  useMitt.on(MittEnum.VOICE_RECORD_TOGGLE, () => {
-    isVoiceMode.value = !isVoiceMode.value
-    console.log('语音模式切换:', isVoiceMode.value ? '语音模式' : '文本模式')
-  })
+// /** 导出组件方法和属性 */
+// defineExpose({
+//   messageInputDom,
+//   getLastEditRange: () => getCursorSelectionRange(),
+//   updateSelectionRange,
+//   focus,
+//   showFileModal: showFileModalCallback,
+//   exitVoiceMode,
+//   isVoiceMode: readonly(isVoiceMode),
+//   handleLocationSelected,
+//   handleVoiceCancel
+// })
 
-  // 添加ESC键退出语音模式
-  onKeyStroke('Escape', () => {
-    if (isVoiceMode.value) {
-      isVoiceMode.value = false
-      console.log('ESC键退出语音模式')
-    }
-  })
-  appWindow.listen('screenshot', async (e: any) => {
-    // 确保输入框获得焦点
-    if (messageInputDom.value) {
-      messageInputDom.value.focus()
-      try {
-        // 从 ArrayBuffer 数组重建 Blob 对象
-        const buffer = new Uint8Array(e.payload.buffer)
-        const blob = new Blob([buffer], { type: e.payload.mimeType })
-        const file = new File([blob], 'screenshot.png', { type: e.payload.mimeType })
-
-        await processFiles([file], messageInputDom.value, showFileModalCallback)
-      } catch (error) {
-        console.error('处理截图失败:', error)
-      }
-    }
-  })
-  window.addEventListener('click', closeMenu, true)
-  window.addEventListener('keydown', disableSelectAll)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('click', closeMenu, true)
-  window.removeEventListener('keydown', disableSelectAll)
-})
-
-/**
- *
- *
- *
- *
- * 移动端专用适配事件（开始）
- *
- *
- *
- *  */
+/** 移动端专用适配事件（开始） */
 
 // 记录当前点击状态
 const iconClickedStates = ref({
@@ -580,7 +505,8 @@ const handleMobileSend = () => {
 defineExpose({
   messageInputDom,
   updateSelectionRange,
-  focus,
+  focus: () => focusInput(),
+  getLastEditRange: () => getCursorSelectionRange(),
   showFileModal: showFileModalCallback,
   isVoiceMode: readonly(isVoiceMode),
   handleVoiceCancel,
@@ -589,6 +515,90 @@ defineExpose({
 })
 
 /** 移动端专用适配事件（结束） */
+
+onMounted(async () => {
+  onKeyStroke('Enter', () => {
+    if (ait.value && Number(selectedAitKey.value) > -1) {
+      const item = personList.value.find((item) => item.uid === selectedAitKey.value)
+      if (item) {
+        handleAit(item)
+      }
+    }
+    // } else if (aiDialogVisible.value && Number(selectedAIKey.value) > -1) {
+    //   const item = groupedAIModels.value.find((item) => item.uid === selectedAIKey.value)
+    //   if (item) {
+    //     handleAI(item)
+    //   }
+    // }
+  })
+  onKeyStroke('ArrowUp', (e) => {
+    e.preventDefault()
+    if (ait.value) {
+      handleAitKeyChange(-1, personList, virtualListInstAit.value!, selectedAitKey)
+    } else if (aiDialogVisible.value) {
+      handleAitKeyChange(-1, groupedAIModels, virtualListInstAI.value!, selectedAIKey)
+    }
+  })
+  onKeyStroke('ArrowDown', (e) => {
+    e.preventDefault()
+    if (ait.value) {
+      handleAitKeyChange(1, personList, virtualListInstAit.value!, selectedAitKey)
+    } else if (aiDialogVisible.value) {
+      handleAitKeyChange(1, groupedAIModels, virtualListInstAI.value!, selectedAIKey)
+    }
+  })
+  // TODO: 暂时已经关闭了独立窗口聊天功能
+  emit('aloneWin')
+  nextTick(() => {
+    // 移动端不自动聚焦
+    if (!isMobile()) {
+      const inputDiv = document.getElementById('message-input')
+      inputDiv?.focus()
+      setIsFocus(true)
+    }
+  })
+  // TODO 应该把打开的窗口的item给存到set中，需要修改输入框和消息展示的搭配，输入框和消息展示模块应该是一体并且每个用户独立的，这样当我点击这个用户框输入消息的时候就可以暂存信息了并且可以判断每个消息框是什么类型是群聊还是单聊，不然会导致比如@框可以在单聊框中出现 (nyh -> 2024-04-09 01:03:59)
+  /** 当不是独立窗口的时候也就是组件与组件之间进行通信然后监听信息对话的变化 */
+  useMitt.on(MittEnum.AT, (event: any) => {
+    handleAit(groupStore.getUserInfo(event)!)
+  })
+  // 监听录音模式切换事件
+  useMitt.on(MittEnum.VOICE_RECORD_TOGGLE, () => {
+    isVoiceMode.value = !isVoiceMode.value
+    console.log('语音模式切换:', isVoiceMode.value ? '语音模式' : '文本模式')
+  })
+
+  // 添加ESC键退出语音模式
+  onKeyStroke('Escape', () => {
+    if (isVoiceMode.value) {
+      isVoiceMode.value = false
+      console.log('ESC键退出语音模式')
+    }
+  })
+  appWindow.listen('screenshot', async (e: any) => {
+    // 确保输入框获得焦点
+    if (messageInputDom.value) {
+      messageInputDom.value.focus()
+      try {
+        // 从 ArrayBuffer 数组重建 Blob 对象
+        const buffer = new Uint8Array(e.payload.buffer)
+        const blob = new Blob([buffer], { type: e.payload.mimeType })
+        const file = new File([blob], 'screenshot.png', { type: e.payload.mimeType })
+
+        await processFiles([file], messageInputDom.value, showFileModalCallback)
+      } catch (error) {
+        console.error('处理截图失败:', error)
+      }
+    }
+  })
+  window.addEventListener('click', closeMenu, true)
+  window.addEventListener('keydown', disableSelectAll)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('click', closeMenu, true)
+  window.removeEventListener('keydown', disableSelectAll)
+})
 </script>
 
 <style scoped lang="scss">

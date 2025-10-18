@@ -228,6 +228,9 @@ import FileUtil from '@/utils/FileUtil'
 import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
 import { isMac, isMobile } from '@/utils/PlatformConstants'
 
+// 移动端组件条件导入
+const More = isMobile() ? defineAsyncComponent(() => import('@/mobile/components/chat-room/panel/More.vue')) : void 0
+
 const { detailId } = defineProps<{
   detailId: SessionItem['detailId']
 }>()
