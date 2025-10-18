@@ -164,7 +164,6 @@ export const useLogin = () => {
     globalStore.$persist()
 
     await setLoginState()
-    await routerOrOpenHomeWindow()
   }
 
   const routerOrOpenHomeWindow = async () => {
@@ -205,7 +204,11 @@ export const useLogin = () => {
         loginDisabled.value = true
         loading.value = false
         loginText.value = '登录成功正在跳转...'
-        init()
+        // 移动端登录之后，初始化数据
+        if (isMobile()) {
+          init()
+        }
+        await routerOrOpenHomeWindow()
 
         // 移动端登录成功之后，自动设置为自动登录
         if (isMobile()) {
@@ -249,6 +252,7 @@ export const useLogin = () => {
     loginText,
     loginDisabled,
     info,
-    uiState
+    uiState,
+    init
   }
 }

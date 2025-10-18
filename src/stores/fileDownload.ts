@@ -31,7 +31,7 @@ export const useFileDownloadStore = defineStore(
     const userStore = useUserStore()
 
     // 存储文件下载状态的Map，key为文件URL，value为下载状态
-    const downloadStatusMap = ref<Map<string, FileDownloadStatus>>(new Map())
+    const downloadStatusMap = ref<Record<string, FileDownloadStatus>>({})
 
     /**
      * 获取文件下载状态
@@ -39,7 +39,7 @@ export const useFileDownloadStore = defineStore(
      */
     const getFileStatus = (fileUrl: string): FileDownloadStatus => {
       return (
-        downloadStatusMap.value.get(fileUrl) || {
+        downloadStatusMap.value[fileUrl] || {
           isDownloaded: false,
           status: 'pending'
         }
@@ -54,7 +54,7 @@ export const useFileDownloadStore = defineStore(
     const updateFileStatus = (fileUrl: string, status: Partial<FileDownloadStatus>) => {
       const currentStatus = getFileStatus(fileUrl)
       const newStatus = { ...currentStatus, ...status }
-      downloadStatusMap.value.set(fileUrl, newStatus)
+      downloadStatusMap.value[fileUrl] = newStatus
     }
 
     /**
@@ -68,7 +68,7 @@ export const useFileDownloadStore = defineStore(
       exists?: boolean
     }) => {
       console.log('触发状态刷新：', options)
-      const fileStatus = downloadStatusMap.value.get(options.fileUrl)
+      const fileStatus = downloadStatusMap.value[options.fileUrl]
 
       const resetStatus = () => {
         if (fileStatus) {
@@ -304,7 +304,7 @@ export const useFileDownloadStore = defineStore(
      * 清理下载状态
      */
     const clearDownloadStatus = () => {
-      downloadStatusMap.value.clear()
+      downloadStatusMap.value = {}
     }
 
     /**
@@ -312,7 +312,7 @@ export const useFileDownloadStore = defineStore(
      * @param fileUrl 文件URL
      */
     const removeFileStatus = (fileUrl: string) => {
-      downloadStatusMap.value.delete(fileUrl)
+      delete downloadStatusMap.value[fileUrl]
     }
 
     /**

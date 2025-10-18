@@ -1,7 +1,7 @@
 <template>
-  <div class="appContainer h-100vh" :class="{ 'safe-area-disabled': isSafeAreaDisabled }">
+  <div class="appContainer h-100vh w-100vw" :class="{ 'safe-area-disabled': isSafeAreaDisabled }">
     <NaiveProvider :message-max="3" :notific-max="3" class="h-full">
-      <div v-if="!isLock" id="app-container" class="h-full">
+      <div v-if="!isLock" class="h-full">
         <router-view />
       </div>
       <!-- 锁屏页面 -->
@@ -135,13 +135,6 @@ watch(
   },
   { immediate: true }
 )
-
-// 只在桌面端监听退出事件
-if (isDesktop()) {
-  appWindow.listen(EventEnum.EXIT, async () => {
-    await exit(0)
-  })
-}
 
 useMitt.on(WsResponseMessageType.VideoCallRequest, (event) => {
   info(`收到通话请求：${JSON.stringify(event)}`)
@@ -415,16 +408,16 @@ const handleVideoCall = async (remotedUid: string, callType: CallTypeEnum) => {
   }
 }
 
-onMounted(async () => {
+onMounted(() => {
   // 仅在windows上使用
   if (isWindows()) {
     fixedScale.enable()
   }
   // 判断是否是桌面端，桌面端需要调整样式
-  isDesktop() && (await import('@/styles/scss/global/desktop.scss'))
+  isDesktop() && import('@/styles/scss/global/desktop.scss')
   // 判断是否是移动端，移动端需要加载安全区域适配样式
-  isMobile() && (await import('@/styles/scss/global/mobile.scss'))
-  await import(`@/styles/scss/theme/${themes.value.versatile}.scss`)
+  isMobile() && import('@/styles/scss/global/mobile.scss')
+  import(`@/styles/scss/theme/${themes.value.versatile}.scss`)
   // 判断localStorage中是否有设置主题
   if (!localStorage.getItem(StoresEnum.SETTING)) {
     settingStore.initTheme(ThemeEnum.OS)
@@ -434,7 +427,7 @@ onMounted(async () => {
 
   // 只在桌面端的主窗口中初始化全局快捷键
   if (isDesktop() && appWindow.label === 'home') {
-    await initializeGlobalShortcut()
+    initializeGlobalShortcut()
   }
   /** 开发环境不禁止 */
   if (process.env.NODE_ENV !== 'development') {
@@ -457,6 +450,9 @@ onMounted(async () => {
       await createWebviewWindow('更新', 'update', 490, 335, '', false, 490, 335, false, true)
       const closeWindow = await WebviewWindow.getByLabel(event.close)
       closeWindow?.close()
+    })
+    appWindow.listen(EventEnum.EXIT, async () => {
+      await exit(0)
     })
   }
 })

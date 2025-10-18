@@ -111,11 +111,65 @@ const compareVersions = (version1, version2) => {
   return 0
 }
 
+/**
+ * 检查版本是否满足 ^ 范围（主版本相同，次版本和补丁版本可以更高）
+ * @param {string} version 当前版本
+ * @param {string} requiredVersion 要求的版本
+ * @returns {boolean}
+ */
+const satisfiesCaretRange = (version, requiredVersion) => {
+  const [vMajor, vMinor, vPatch] = version.split('.').map(Number)
+  const [rMajor, rMinor, rPatch] = requiredVersion.split('.').map(Number)
+
+  // 主版本必须相同
+  if (vMajor !== rMajor) return false
+
+  // 次版本和补丁版本需要 >= 要求的版本
+  if (vMinor > rMinor) return true
+  if (vMinor < rMinor) return false
+  return vPatch >= rPatch
+}
+
+/**
+ * 检查版本是否满足版本范围要求（支持 ||、^、>= 语法）
+ * @param {string} version 当前版本
+ * @param {string} range 版本范围（如 '^20.19.0 || >=22.12.0'）
+ * @returns {boolean}
+ */
+const satisfiesVersionRange = (version, range) => {
+  // 处理 || 分隔的多个条件
+  const conditions = range.split('||').map((s) => s.trim())
+
+  // 只要满足任一条件即可
+  return conditions.some((condition) => {
+    if (condition.startsWith('^')) {
+      // 处理 ^ 语法：主版本相同，次版本和补丁版本可以更高
+      const requiredVersion = condition.slice(1).trim()
+      return satisfiesCaretRange(version, requiredVersion)
+    } else if (condition.startsWith('>=')) {
+      // 处理 >= 语法
+      const requiredVersion = condition.slice(2).trim()
+      return compareVersions(version, requiredVersion) >= 0
+    }
+    // 默认使用 >= 比较
+    return compareVersions(version, condition) >= 0
+  })
+}
+
 function checkDependency(check) {
   try {
     const output = execSync(check.command).toString().trim()
     const version = check.versionExtractor(output)
-    const isVersionValid = compareVersions(version, check.minVersion) >= 0
+
+    // 判断版本是否有效
+    let isVersionValid
+    if (check.minVersion.includes('||') || check.minVersion.startsWith('^')) {
+      // 如果包含 || 或 ^，使用新的版本范围判断逻辑
+      isVersionValid = satisfiesVersionRange(version, check.minVersion)
+    } else {
+      // 否则使用简单的版本比较
+      isVersionValid = compareVersions(version, check.minVersion) >= 0
+    }
 
     if (isVersionValid) {
       console.log(chalk.green(`✅ ${check.name} 版本 ${output} 已安装\n`))
@@ -123,7 +177,7 @@ function checkDependency(check) {
     } else {
       console.log(chalk.yellow(`⚠️ ${check.name} 版本过低`))
       console.log(chalk.yellow(`  当前版本: ${output}`))
-      console.log(chalk.yellow(`  需要版本: >=${check.minVersion}`))
+      console.log(chalk.yellow(`  需要版本: ${check.minVersion}`))
 
       // 对 Rust 进行特殊处理，提示使用 rustup update
       if (check.name === 'Rust') {

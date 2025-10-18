@@ -8,11 +8,17 @@
             v-for="item in page"
             :key="item.id"
             class="flex flex-col gap-8px items-center justify-center rounded-2">
-            <svg v-if="item.label !== '文件' && item.label !== '图片'" class="h-24px w-24px iconpark-icon">
+            <svg
+              v-if="item.label !== '文件' && item.label !== '图片' && item.isShow()"
+              class="h-24px w-24px iconpark-icon">
               <use :href="`#${item.icon}`"></use>
             </svg>
 
-            <van-uploader v-if="item.label === '文件'" multiple :after-read="afterReadFile">
+            <van-uploader
+              v-if="item.label === '文件' && item.isShow()"
+              accept="*/*"
+              multiple
+              :after-read="afterReadFile">
               <svg class="h-24px w-24px iconpark-icon">
                 <use :href="`#${item.icon}`"></use>
               </svg>
@@ -26,7 +32,11 @@
               </svg>
             </van-uploader>
 
-            <van-uploader v-if="item.label === '图片'" accept="image/*" multiple :after-read="afterReadImage">
+            <van-uploader
+              v-if="item.label === '图片' && item.isShow()"
+              accept="image/*"
+              multiple
+              :after-read="afterReadImage">
               <svg class="h-24px w-24px iconpark-icon">
                 <use :href="`#${item.icon}`"></use>
               </svg>
@@ -40,7 +50,7 @@
               </svg>
             </van-uploader>
 
-            <div class="text-10px">
+            <div class="text-10px" v-if="item.isShow()">
               {{ item.label }}
             </div>
           </div>
@@ -59,12 +69,14 @@
 </template>
 
 <script setup lang="ts">
-import { CallTypeEnum } from '@/enums'
+import { CallTypeEnum, RoomTypeEnum } from '@/enums'
 import { UploaderFileListItem } from 'vant'
-import router from '~/src/router'
-import { useGlobalStore } from '~/src/stores/global'
+import router from '@/router'
+import { useGlobalStore } from '@/stores/global'
 
 const globalStore = useGlobalStore()
+
+const isGroup = computed(() => globalStore.currentSession?.type === RoomTypeEnum.GROUP)
 
 const pickRtcCall = ref(false)
 // ==== 展开面板 ====
@@ -82,7 +94,7 @@ const options = ref([
       pickRtcCall.value = true
     },
     isShow: () => {
-      // return !isGroup.value
+      return !isGroup.value
     }
   }
 ])
@@ -112,6 +124,10 @@ const startCall = (callType: CallTypeEnum) => {
   })
 }
 
+const emit = defineEmits<(e: 'sendFiles', files: File[]) => void>()
+
+const selectedFiles = ref<File[]>([])
+
 const uploadFileList = ref<
   {
     url: string
@@ -140,6 +156,7 @@ const afterReadFile = (fileList: UploaderFileListItem | UploaderFileListItem[]) 
       continue
     }
 
+    selectedFiles.value.push(rawFile)
     uploadFileList.value.push({
       url: file.url as string,
       status: 'done',
@@ -147,6 +164,12 @@ const afterReadFile = (fileList: UploaderFileListItem | UploaderFileListItem[]) 
     })
 
     console.log('已选择文件：', file)
+  }
+
+  if (selectedFiles.value.length > 0) {
+    emit('sendFiles', [...selectedFiles.value])
+    selectedFiles.value = []
+    uploadFileList.value = []
   }
 }
 
@@ -172,6 +195,7 @@ const afterReadImage = (fileList: UploaderFileListItem | UploaderFileListItem[])
       continue
     }
 
+    selectedFiles.value.push(rawFile)
     uploadFileList.value.push({
       url: file.url as string,
       status: 'done',
@@ -179,6 +203,12 @@ const afterReadImage = (fileList: UploaderFileListItem | UploaderFileListItem[])
     })
 
     console.log('已添加文件：', file)
+  }
+
+  if (selectedFiles.value.length > 0) {
+    emit('sendFiles', [...selectedFiles.value])
+    selectedFiles.value = []
+    uploadFileList.value = []
   }
 }
 </script>

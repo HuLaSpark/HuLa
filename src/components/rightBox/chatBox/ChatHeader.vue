@@ -2,7 +2,7 @@
   <!-- 顶部操作栏和显示用户名 -->
   <main
     data-tauri-drag-region
-    class="relative z-999 flex-y-center border-b-(1px solid [--right-chat-footer-line-color]) select-none cursor-default justify-between p-[6px_22px_10px]">
+    class="z-999 flex-y-center border-b-(1px solid [--right-chat-footer-line-color]) select-none cursor-default justify-between p-[6px_22px_10px]">
     <n-flex align="center">
       <Transition name="loading" mode="out-in">
         <n-flex align="center">
@@ -117,7 +117,7 @@
     <!-- 侧边选项栏 -->
     <Transition v-if="shouldShowDeleteFriend || chatStore.isGroup" name="sidebar">
       <div v-if="sidebarShow" style="border: 1px solid rgba(90, 90, 90, 0.1)" class="sidebar">
-        <n-scrollbar style="height: calc(100vh / var(--page-scale, 1) - 50px)" class="p-22px box-border">
+        <n-scrollbar style="height: calc(100vh / var(--page-scale, 1) - 24px)" class="p-22px box-border">
           <!-- 单聊侧边栏选项 -->
           <template v-if="!chatStore.isGroup">
             <div class="box-item flex-col-y-center">
@@ -238,7 +238,7 @@
 
                 <div
                   v-if="groupStore.countInfo!.allowScanEnter"
-                  class="flex-center cursor-pointer bg-#e3e3e3 dark:bg-#303030 border-(1px solid #90909080) gap-6px px-4px py-6px rounded-6px"
+                  class="flex-center cursor-pointer bg-#e3e3e380 dark:bg-#303030 border-(1px solid #90909080) gap-6px px-4px py-6px rounded-6px"
                   @click="showQRCodeModal = true">
                   <svg class="size-16px"><use href="#pay-code-one"></use></svg>
                   <p class="text-(12px [--chat-text-color])">二维码</p>

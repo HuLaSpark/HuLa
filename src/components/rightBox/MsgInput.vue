@@ -1,6 +1,6 @@
 <template>
   <!-- 录音模式 -->
-  <VoiceRecorder v-if="!isMobile()" v-show="isVoiceMode" @cancel="handleVoiceCancel" @send="handleVoiceSend" />
+  <VoiceRecorder v-show="isVoiceMode" @cancel="handleVoiceCancel" @send="sendVoiceDirect" />
 
   <!-- 输入框表单 -->
   <form
@@ -9,32 +9,27 @@
     @submit.prevent="handleFormSubmit"
     :class="[isMobile() ? 'gap-10px ' : '']"
     class="w-full flex flex-1 min-h-0">
-    <div class="w-full" :class="isMobile() ? 'bg-gray-100 flex flex-1 p-5px gap-2 pt-5px items-end min-h-2.25rem' : ''">
+    <div
+      class="w-full flex flex-col"
+      :class="isMobile() ? 'bg-gray-100 flex flex-1 p-5px gap-2 pt-5px items-end min-h-2.25rem' : ''">
       <div v-if="isMobile()" class="flex items-center justify-center w-14 h-2.5rem">
         <svg
           @click="handleVoiceClick"
-          :class="currentPanelState === MobilePanelState.VOICE ? 'text-#169781' : ''"
+          :class="iconClickedStates.isClickedVoice ? 'text-#169781' : ''"
           class="w-25px h-25px mt-2px outline-none">
           <use href="#voice"></use>
         </svg>
       </div>
 
-      <ContextMenu
-        class="w-full"
-        :style="{ height: isMobile() ? 'auto' : `${props.height - 108}px` }"
-        @select="$event.click()"
-        :menu="menuList">
+      <ContextMenu class="w-full flex-1 min-h-0" @select="$event.click()" :menu="menuList">
         <n-scrollbar @click="focusInput">
           <div
             id="message-input"
             ref="messageInputDom"
             :style="{
-              minHeight: isMobile() ? '2rem' : '36px',
-              lineHeight: isMobile() && !msgInput ? '2rem' : '20px',
-              outline: 'none',
-              backgroundColor: props.disabled ? 'rgb(219, 219, 219) !important' : ''
+              outline: 'none'
             }"
-            :contenteditable="!props.disabled"
+            contenteditable
             spellcheck="false"
             @paste="onPaste($event)"
             @input="handleInput"
@@ -47,21 +42,21 @@
             @compositionend="updateSelectionRange"
             @keydown.exact.ctrl.enter="inputKeyDown"
             data-placeholder="善言一句暖人心，恶语一句伤人心"
-            :class="[
+            :class="
               isMobile()
-                ? 'empty:before:content-[attr(data-placeholder)] before:text-(12px #777) ps-10px! p-2 text-14px! bg-white! rounded-10px! max-h-8rem! flex items-center'
+                ? 'empty:before:content-[attr(data-placeholder)] before:text-(12px #777) p-2 text-14px! bg-white! rounded-10px! max-h-8rem! flex items-center'
                 : 'empty:before:content-[attr(data-placeholder)] before:text-(12px #777) p-2'
-            ]"></div>
+            "></div>
         </n-scrollbar>
       </ContextMenu>
 
       <!-- 发送按钮 -->
       <div
         v-if="!isMobile()"
-        class="flex-shrink-0 max-h-52px p-4px pr-12px border-t border-gray-200/50 flex items-center justify-end">
+        class="flex-shrink-0 max-h-52px p-4px pr-12px border-t border-gray-200/50 flex justify-end mb-4px">
         <n-config-provider :theme="lightTheme">
           <n-button-group size="small">
-            <n-button color="#13987f" :disabled="disabledSend" class="w-65px" @click="handleSend">发送</n-button>
+            <n-button color="#13987f" :disabled="disabledSend" class="w-65px" @click="send">发送</n-button>
             <n-button color="#13987f" class="p-[0_6px]">
               <template #icon>
                 <n-config-provider :theme="themes.content === ThemeEnum.DARK ? darkTheme : lightTheme">
@@ -188,11 +183,11 @@
         :class="msgInput ? 'grid-cols-[2rem_3rem]' : 'grid-cols-[2rem_2rem]'">
         <div class="w-full flex-center h-full">
           <svg @click="handleEmojiClick" class="w-25px h-25px mt-2px outline-none iconpark-icon">
-            <use :href="currentPanelState === MobilePanelState.EMOJI ? '#face' : '#smiling-face'"></use>
+            <use :href="iconClickedStates.isClickedEmoji ? '#face' : '#smiling-face'"></use>
           </svg>
         </div>
         <div
-          v-if="msgInput && !props.disabled"
+          v-if="msgInput"
           class="flex-shrink-0 max-h-62px h-full border-t border-gray-200/50 flex items-center justify-end">
           <n-config-provider class="h-full" :theme="lightTheme">
             <n-button-group size="small" :class="isMobile() ? 'h-full' : 'pr-20px'">
@@ -202,10 +197,10 @@
             </n-button-group>
           </n-config-provider>
         </div>
-        <div v-if="!msgInput || props.disabled" class="flex items-center justify-start h-full">
+        <div v-if="!msgInput" class="flex items-center justify-start h-full">
           <svg
             @click="handleMoreClick"
-            :class="currentPanelState === MobilePanelState.MORE ? 'rotate-45' : 'rotate-0'"
+            :class="iconClickedStates.isClickedMore ? 'rotate-45' : 'rotate-0'"
             class="w-25px h-25px mt-2px outline-none iconpark-icon transition-transform duration-300 ease">
             <use href="#add-one"></use>
           </svg>
@@ -261,13 +256,6 @@ const groupStore = useGroupStore()
 const showFileModal = ref(false)
 const pendingFiles = ref<File[]>([])
 
-// 输入框滚动区域高度计算
-const props = defineProps<{
-  height: number
-  disabled?: boolean
-  disabledFocus?: boolean
-}>()
-
 /** 引入useMsgInput的相关方法 */
 const {
   inputKeyDown,
@@ -276,7 +264,6 @@ const {
   handleInput,
   msgInput,
   send,
-  sendLocationDirect,
   sendFilesDirect,
   sendVoiceDirect,
   personList,
@@ -288,9 +275,9 @@ const {
   menuList,
   selectedAitKey,
   groupedAIModels,
-  getCursorSelectionRange,
   updateSelectionRange,
-  focusOn
+  focusOn,
+  getCursorSelectionRange
 } = useMsgInput(messageInputDom)
 
 /** 移动端专用适配变量（开始） */
@@ -302,39 +289,14 @@ const {
 
 /** 移动端专用适配变量（结束） */
 
-const handleSend = async () => {
-  try {
-    await send()
-  } catch (error: any) {
-    window.$message.warning(error?.message)
-  }
-}
-
 /** 表单提交处理函数 */
 const handleFormSubmit = async (e: Event) => {
   e.preventDefault()
-  await handleSend()
-  focusInput()
-}
-
-/** 直接发送位置消息 */
-const handleLocationSelected = async (locationData: any) => {
-  try {
-    await sendLocationDirect(locationData)
-  } catch (error) {
-    console.error('发送位置消息失败:', error)
-    window.$message.error('发送位置消息失败')
-  }
+  await send()
 }
 
 /** 聚焦输入框函数 */
 const focusInput = () => {
-  // 如果输入框被禁用，则只关闭当前面板，不设置聚焦状态
-  if (props.disabled && isMobile()) {
-    // 关闭当前面板（语音面板）
-    closePanel()
-    return
-  }
   if (messageInputDom.value) {
     focusOn(messageInputDom.value)
     setIsFocus(true) // 移动端适配
@@ -370,18 +332,14 @@ watch(personList, (newList) => {
   }
 })
 
-/** 当AI列表发生变化的时候始终select第一个 */
-watch(groupedAIModels, (newList) => {
-  if (newList.length > 0) {
-    /** 先设置滚动条滚动到第一个 */
-    virtualListInstAI.value?.scrollTo({ key: newList[0].uid })
-    selectedAIKey.value = newList[0].uid
-  } else {
-    // 无AI候选时立即关闭弹层并清空选中项，避免残留状态阻挡回车发送
-    selectedAIKey.value = null
-    aiDialogVisible.value = false
-  }
-})
+// /** 当AI列表发生变化的时候始终select第一个 */
+// watch(groupedAIModels, (newList) => {
+//   if (newList.length > 0) {
+//     /** 先设置滚动条滚动到第一个 */
+//     virtualListInstAI.value?.scrollTo({ key: newList[0].uid })
+//     selectedAIKey.value = newList[0].uid
+//   }
+// })
 
 // 显示文件弹窗的回调函数
 const showFileModalCallback = (files: File[]) => {
@@ -408,12 +366,6 @@ const handleFileConfirm = async (files: File[]) => {
 const handleFileCancel = () => {
   showFileModal.value = false
   pendingFiles.value = []
-}
-
-// 添加强制退出语音模式的方法
-const exitVoiceMode = () => {
-  isVoiceMode.value = false
-  console.log('强制退出语音模式')
 }
 
 /** 处理键盘上下键切换提及项 */
@@ -452,24 +404,119 @@ const disableSelectAll = (e: KeyboardEvent) => {
   }
 }
 
-/**
- * 恢复编辑器焦点
- */
-const focus = () => {
-  const editor = messageInputDom.value
-  if (editor) focusOn(editor)
-}
-
 // 语音录制相关事件处理
 const handleVoiceCancel = () => {
   isVoiceMode.value = false
 }
 
-// 处理发送语音消息
-const handleVoiceSend = async (voiceData: any) => {
-  isVoiceMode.value = false
-  await sendVoiceDirect(voiceData)
+// /** 导出组件方法和属性 */
+// defineExpose({
+//   messageInputDom,
+//   getLastEditRange: () => getCursorSelectionRange(),
+//   updateSelectionRange,
+//   focus,
+//   showFileModal: showFileModalCallback,
+//   exitVoiceMode,
+//   isVoiceMode: readonly(isVoiceMode),
+//   handleLocationSelected,
+//   handleVoiceCancel
+// })
+
+/** 移动端专用适配事件（开始） */
+
+// 记录当前点击状态
+const iconClickedStates = ref({
+  isClickedMore: false,
+  isClickedEmoji: false,
+  isClickedVoice: false,
+  isFocus: false
+})
+
+/**
+ * 自定义事件
+ * clickMore: 点击更多按钮
+ * clickEmoji: 点击表情按钮
+ * clickVoice: 点击语音按钮
+ */
+const selfEmitter = defineEmits(['clickMore', 'clickEmoji', 'clickVoice', 'customFocus', 'send'])
+
+/** 设置聚焦状态 */
+const setIsFocus = (value: boolean) => {
+  iconClickedStates.value.isClickedMore = false
+  iconClickedStates.value.isClickedEmoji = false
+  iconClickedStates.value.isClickedVoice = false
+  iconClickedStates.value.isFocus = value
+
+  selfEmitter('customFocus', {
+    isClickedEmoji: iconClickedStates.value.isClickedEmoji,
+    isClickedMore: iconClickedStates.value.isClickedMore,
+    isClickedVoice: iconClickedStates.value.isClickedVoice,
+    isFocus: iconClickedStates.value.isFocus
+  })
 }
+
+/** 点击更多按钮 */
+const handleMoreClick = () => {
+  iconClickedStates.value.isClickedMore = !iconClickedStates.value.isClickedMore
+  iconClickedStates.value.isClickedEmoji = false
+  iconClickedStates.value.isClickedVoice = false
+  iconClickedStates.value.isFocus = false
+  selfEmitter('clickMore', {
+    isClickedMore: iconClickedStates.value.isClickedMore,
+    isClickedEmoji: iconClickedStates.value.isClickedEmoji,
+    isClickedVoice: iconClickedStates.value.isClickedVoice,
+    isFocus: iconClickedStates.value.isFocus
+  })
+}
+
+/** 点击表情按钮 */
+const handleEmojiClick = () => {
+  iconClickedStates.value.isClickedEmoji = !iconClickedStates.value.isClickedEmoji
+  iconClickedStates.value.isClickedVoice = false
+  iconClickedStates.value.isClickedMore = false
+  iconClickedStates.value.isFocus = false
+  selfEmitter('clickEmoji', {
+    isClickedMore: iconClickedStates.value.isClickedMore,
+    isClickedEmoji: iconClickedStates.value.isClickedEmoji,
+    isClickedVoice: iconClickedStates.value.isClickedVoice,
+    isFocus: iconClickedStates.value.isFocus
+  })
+}
+
+/** 点击语音按钮 */
+const handleVoiceClick = () => {
+  console.log('点击语音')
+  iconClickedStates.value.isClickedVoice = !iconClickedStates.value.isClickedVoice
+  iconClickedStates.value.isClickedEmoji = false
+  iconClickedStates.value.isClickedMore = false
+  iconClickedStates.value.isFocus = false
+  selfEmitter('clickVoice', {
+    isClickedMore: iconClickedStates.value.isClickedMore,
+    isClickedEmoji: iconClickedStates.value.isClickedEmoji,
+    isClickedVoice: iconClickedStates.value.isClickedVoice,
+    isFocus: iconClickedStates.value.isFocus
+  })
+}
+
+const handleMobileSend = () => {
+  send()
+  selfEmitter('send', iconClickedStates.value)
+}
+
+/** 导出组件方法和属性 */
+defineExpose({
+  messageInputDom,
+  updateSelectionRange,
+  focus: () => focusInput(),
+  getLastEditRange: () => getCursorSelectionRange(),
+  showFileModal: showFileModalCallback,
+  isVoiceMode: readonly(isVoiceMode),
+  handleVoiceCancel,
+  sendVoiceDirect,
+  sendFilesDirect
+})
+
+/** 移动端专用适配事件（结束） */
 
 onMounted(async () => {
   onKeyStroke('Enter', () => {
@@ -478,12 +525,13 @@ onMounted(async () => {
       if (item) {
         handleAit(item)
       }
-    } else if (aiDialogVisible.value && selectedAIKey.value != null) {
-      const item = groupedAIModels.value.find((item) => item.uid === selectedAIKey.value)
-      if (item) {
-        handleAI(item)
-      }
     }
+    // } else if (aiDialogVisible.value && Number(selectedAIKey.value) > -1) {
+    //   const item = groupedAIModels.value.find((item) => item.uid === selectedAIKey.value)
+    //   if (item) {
+    //     handleAI(item)
+    //   }
+    // }
   })
   onKeyStroke('ArrowUp', (e) => {
     e.preventDefault()
@@ -508,6 +556,7 @@ onMounted(async () => {
     if (!isMobile()) {
       const inputDiv = document.getElementById('message-input')
       inputDiv?.focus()
+      setIsFocus(true)
     }
   })
   // TODO 应该把打开的窗口的item给存到set中，需要修改输入框和消息展示的搭配，输入框和消息展示模块应该是一体并且每个用户独立的，这样当我点击这个用户框输入消息的时候就可以暂存信息了并且可以判断每个消息框是什么类型是群聊还是单聊，不然会导致比如@框可以在单聊框中出现 (nyh -> 2024-04-09 01:03:59)
@@ -551,138 +600,6 @@ onMounted(async () => {
 onUnmounted(() => {
   window.removeEventListener('click', closeMenu, true)
   window.removeEventListener('keydown', disableSelectAll)
-})
-
-/**
- *
- *
- *
- *
- * 移动端专用适配事件（开始）
- *
- *
- *
- *  */
-
-// 定义移动端面板状态枚举
-enum MobilePanelState {
-  NONE = 'none',
-  MORE = 'more',
-  EMOJI = 'emoji',
-  VOICE = 'voice',
-  FOCUS = 'focus'
-}
-
-// 当前激活的面板状态
-const currentPanelState = ref<MobilePanelState>(MobilePanelState.NONE)
-
-/**
- * 自定义事件
- * clickMore: 点击更多按钮
- * clickEmoji: 点击表情按钮
- * clickVoice: 点击语音按钮
- */
-const selfEmitter = defineEmits(['clickMore', 'clickEmoji', 'clickVoice', 'customFocus', 'send'])
-
-// 计算属性：根据当前状态生成事件数据
-const getPanelStateData = () => ({
-  isClickedMore: currentPanelState.value === MobilePanelState.MORE,
-  isClickedEmoji: currentPanelState.value === MobilePanelState.EMOJI,
-  isClickedVoice: currentPanelState.value === MobilePanelState.VOICE,
-  isFocus: currentPanelState.value === MobilePanelState.FOCUS
-})
-
-/** 设置聚焦状态 */
-const setIsFocus = (value: boolean) => {
-  // 判断设置时如果任意三个按钮中的一个被点击，那就不发送事件
-
-  currentPanelState.value = value ? MobilePanelState.FOCUS : MobilePanelState.NONE
-
-  const data = (currentPanelState.value = (value ? MobilePanelState.FOCUS : MobilePanelState.NONE) as MobilePanelState)
-
-  switch (data) {
-    case MobilePanelState.MORE:
-      return
-    case MobilePanelState.EMOJI:
-      return
-    case MobilePanelState.VOICE:
-      return
-    case MobilePanelState.FOCUS:
-      selfEmitter('customFocus', getPanelStateData())
-      break
-    default:
-      break
-  }
-
-  // if (data === MobilePanelState.FOCUS) {
-  //   selfEmitter('customFocus', getPanelStateData())
-  // }
-}
-
-/** 点击更多按钮 */
-const handleMoreClick = () => {
-  // 如果已经是 MORE 状态，则切换为 NONE；否则切换为 MORE
-  currentPanelState.value =
-    currentPanelState.value === MobilePanelState.MORE ? MobilePanelState.NONE : MobilePanelState.MORE
-  selfEmitter('clickMore', getPanelStateData())
-}
-
-/** 点击表情按钮 */
-const handleEmojiClick = () => {
-  // 如果已经是 EMOJI 状态，则切换为 NONE；否则切换为 EMOJI
-  currentPanelState.value =
-    currentPanelState.value === MobilePanelState.EMOJI ? MobilePanelState.NONE : MobilePanelState.EMOJI
-  selfEmitter('clickEmoji', getPanelStateData())
-}
-
-/** 点击语音按钮 */
-const handleVoiceClick = () => {
-  console.log('点击语音')
-  // 如果已经是 VOICE 状态，则切换为 NONE；否则切换为 VOICE
-  currentPanelState.value =
-    currentPanelState.value === MobilePanelState.VOICE ? MobilePanelState.NONE : MobilePanelState.VOICE
-  selfEmitter('clickVoice', getPanelStateData())
-}
-
-const handleMobileSend = async () => {
-  await handleSend()
-  const inputDiv = document.getElementById('message-input')
-  inputDiv?.focus()
-  selfEmitter('send', getPanelStateData())
-}
-
-const closePanel = () => {
-  currentPanelState.value = MobilePanelState.NONE
-  // 触发事件通知父组件更新状态（包括解除禁用）
-  selfEmitter('clickVoice', getPanelStateData())
-}
-
-const cancelFocus = () => {
-  console.log('取消聚焦：')
-  if (messageInputDom.value) {
-    setTimeout(() => {
-      messageInputDom!.value!.blur()
-      setIsFocus(false)
-      console.log('取消聚焦成功')
-    }, 0)
-  }
-}
-
-/** 移动端专用适配事件（结束） */
-
-/** 导出组件方法和属性 */
-defineExpose({
-  messageInputDom,
-  getLastEditRange: () => getCursorSelectionRange(),
-  updateSelectionRange,
-  focus,
-  showFileModal: showFileModalCallback,
-  exitVoiceMode,
-  isVoiceMode: readonly(isVoiceMode),
-  handleLocationSelected,
-  handleVoiceCancel,
-  closePanel, // 关闭语音输入面板（用于移动端）
-  cancelFocus
 })
 </script>
 

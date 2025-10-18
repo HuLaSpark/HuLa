@@ -1,21 +1,26 @@
 <template>
-  <main data-tauri-drag-region class="flex-1 bg-[--right-bg-color] h-full w-100vw min-w-600px">
-    <div class="size-full" :style="{ background: isChat ? 'var(--right-theme-bg-color)' : '' }" data-tauri-drag-region>
+  <main data-tauri-drag-region class="flex-1 bg-[--right-bg-color] flex flex-col min-h-0">
+    <div
+      :style="{ background: isChat ? 'var(--right-theme-bg-color)' : '' }"
+      data-tauri-drag-region
+      class="flex-1 flex flex-col min-h-0">
       <ActionBar :current-label="appWindow.label" />
 
       <!-- 需要判断当前路由是否是信息详情界面 -->
-      <ChatBox v-if="isChat" />
+      <div class="flex-1 min-h-0 flex flex-col">
+        <ChatBox v-if="isChat" />
 
-      <Details :content="detailsContent" v-else-if="detailsShow && isDetails && detailsContent?.type !== 'apply'" />
+        <Details :content="detailsContent" v-else-if="detailsShow && isDetails && detailsContent?.type !== 'apply'" />
 
-      <!-- 好友申请列表 -->
-      <ApplyList
-        v-else-if="detailsContent && isDetails && detailsContent.type === 'apply'"
-        :type="detailsContent.applyType" />
+        <!-- 好友申请列表 -->
+        <ApplyList
+          v-else-if="detailsContent && isDetails && detailsContent.type === 'apply'"
+          :type="detailsContent.applyType" />
 
-      <!-- 聊天界面背景图标 -->
-      <div v-else class="flex-center size-full select-none">
-        <img class="w-150px h-140px" src="/logoD.png" alt="" />
+        <!-- 聊天界面背景图标 -->
+        <div v-else class="flex-center size-full select-none">
+          <img class="w-150px h-140px" src="/logoD.png" alt="" />
+        </div>
       </div>
     </div>
   </main>

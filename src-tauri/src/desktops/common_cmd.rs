@@ -1,10 +1,8 @@
 #![allow(unexpected_cfgs)]
 use base64::{Engine as _, engine::general_purpose};
-use mime_guess::from_path;
 use screenshots::Screen;
 use serde::Serialize;
 use std::cmp;
-use std::path::PathBuf;
 use std::thread;
 use std::time::Duration;
 use tauri::path::BaseDirectory;
@@ -51,15 +49,6 @@ pub struct WindowsScaleInfo {
 //         }
 //     }
 // }
-
-#[derive(Serialize)]
-pub struct FileMeta {
-    name: String,
-    path: String,
-    file_type: String,
-    mime_type: String,
-    exists: bool,
-}
 
 // // 全局变量
 // lazy_static! {
@@ -236,49 +225,6 @@ pub fn show_title_bar_buttons(window_label: &str, handle: AppHandle) -> Result<(
     // 恢复窗口可拖动
     ns_window.setMovable(false);
     Ok(())
-}
-
-#[tauri::command]
-pub async fn get_files_meta(files_path: Vec<String>) -> Result<Vec<FileMeta>, String> {
-    let mut files_meta: Vec<FileMeta> = Vec::new();
-
-    for path in files_path {
-        let file_buf = PathBuf::from(&path);
-
-        let name = file_buf
-            .file_name()
-            .and_then(|n| n.to_str())
-            .unwrap_or("")
-            .to_string();
-
-        let file_type = file_buf
-            .extension()
-            .and_then(|e| e.to_str())
-            .unwrap_or("")
-            .to_string();
-
-        let mime_type = from_path(&file_buf).first_or_octet_stream().to_string();
-
-        let is_url = path.starts_with("http://") || path.starts_with("https://");
-
-        let exists = {
-            if is_url {
-                false
-            } else {
-                file_buf.exists() // 如果不是url就找该文件是否存在
-            }
-        };
-
-        files_meta.push(FileMeta {
-            name,
-            path: file_buf.to_string_lossy().to_string(),
-            file_type,
-            mime_type,
-            exists,
-        });
-    }
-
-    Ok(files_meta)
 }
 
 #[tauri::command]

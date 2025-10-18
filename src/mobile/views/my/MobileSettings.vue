@@ -9,10 +9,10 @@
         room-name="设置" />
     </template>
 
-    <template>
-      <img src="@/assets/mobile/chat-home/background.webp" class="w-100% relative top-0 z-1" alt="hula" />
-      <div class="z-2 flex flex-col absolute overflow-auto min-h-70vh w-full">
-        <div class="flex flex-col p-20px gap-20px">
+    <template #container>
+      <div class="flex flex-col">
+        <div
+          class="flex flex-col p-20px gap-20px bg-[url('@/assets/mobile/chat-home/background.webp')] bg-cover bg-center">
           <!-- 设置项 -->
           <div
             v-for="item in settings"

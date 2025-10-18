@@ -1,5 +1,5 @@
 <template>
-  <div class="chat-main-container" :style="cssVariables">
+  <div class="flex flex-col overflow-hidden h-full relative">
     <!-- 网络状态提示 -->
     <n-flex
       v-if="!networkStatus.isOnline.value"
@@ -26,7 +26,9 @@
           @mouseleave="isAnnouncementHover = false">
           <n-flex :wrap="false" class="w-full" align="center" justify="space-between">
             <n-flex :wrap="false" align="center" class="pl-12px select-none flex-1" :size="6">
-              <svg class="size-16px flex-shrink-0"><use href="#Loudspeaker"></use></svg>
+              <svg class="size-16px flex-shrink-0">
+                <use href="#Loudspeaker"></use>
+              </svg>
               <div class="flex-1 min-w-0 line-clamp-1 text-(12px [--chat-text-color])">
                 {{ topAnnouncement.content }}
               </div>
@@ -97,6 +99,31 @@
         </div>
       </div>
     </div>
+
+    <!--  悬浮按钮提示(底部悬浮) -->
+    <footer
+      class="float-footer-button"
+      v-if="shouldShowFloatFooter && currentNewMsgCount && !isMobileRef"
+      :style="{ bottom: '24px', right: '50px' }">
+      <div class="float-box" :class="{ max: currentNewMsgCount?.count > 99 }" @click="handleFloatButtonClick">
+        <n-flex justify="space-between" align="center">
+          <n-icon :color="currentNewMsgCount?.count > 99 ? '#ce304f' : '#13987f'">
+            <svg>
+              <use href="#double-down"></use>
+            </svg>
+          </n-icon>
+          <span
+            v-if="currentNewMsgCount?.count && currentNewMsgCount.count > 0"
+            class="text-12px"
+            :class="{ 'color-#ce304f': currentNewMsgCount?.count > 99 }">
+            {{ currentNewMsgCount?.count > 99 ? '99+' : currentNewMsgCount?.count }}条新消息
+          </span>
+        </n-flex>
+      </div>
+    </footer>
+
+    <!-- 文件上传进度条 -->
+    <FileUploadProgress />
   </div>
 
   <!-- 弹出框 -->
@@ -164,29 +191,6 @@
       </div>
     </div>
   </n-modal>
-
-  <!--  悬浮按钮提示(底部悬浮) -->
-  <footer
-    class="float-footer"
-    v-if="shouldShowFloatFooter && currentNewMsgCount && !isMobileRef"
-    :class="isGroup ? 'right-220px' : 'right-50px'"
-    :style="{ bottom: `${footerHeight - 60}px` }">
-    <div class="float-box" :class="{ max: currentNewMsgCount?.count > 99 }" @click="handleFloatButtonClick">
-      <n-flex justify="space-between" align="center">
-        <n-icon :color="currentNewMsgCount?.count > 99 ? '#ce304f' : '#13987f'">
-          <svg>
-            <use href="#double-down"></use>
-          </svg>
-        </n-icon>
-        <span
-          v-if="currentNewMsgCount?.count && currentNewMsgCount.count > 0"
-          class="text-12px"
-          :class="{ 'color-#ce304f': currentNewMsgCount?.count > 99 }">
-          {{ currentNewMsgCount?.count > 99 ? '99+' : currentNewMsgCount?.count }}条新消息
-        </span>
-      </n-flex>
-    </div>
-  </footer>
 </template>
 
 <script setup lang="ts">
@@ -195,7 +199,6 @@ import { info } from '@tauri-apps/plugin-log'
 import { useDebounceFn } from '@vueuse/core'
 import { delay } from 'lodash-es'
 import { MittEnum, MsgEnum, ScrollIntentEnum } from '@/enums'
-import { useChatLayoutGlobal } from '@/hooks/useChatLayout'
 import { useChatMain } from '@/hooks/useChatMain.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useNetworkStatus } from '@/hooks/useNetworkStatus'
@@ -210,12 +213,9 @@ import { timeToStr } from '@/utils/ComputedTime'
 import { getAnnouncementList } from '@/utils/ImRequestUtils'
 import { isMessageMultiSelectEnabled } from '@/utils/MessageSelect'
 import { isMac, isMobile, isWindows } from '@/utils/PlatformConstants'
+import FileUploadProgress from '@/components/rightBox/FileUploadProgress.vue'
 
 const selfEmit = defineEmits(['scroll'])
-
-const props = defineProps<{
-  footerHeight?: number
-}>()
 
 type AnnouncementData = {
   content: string
@@ -228,7 +228,7 @@ const globalStore = useGlobalStore()
 const chatStore = useChatStore()
 const userStore = useUserStore()
 const networkStatus = useNetworkStatus()
-const { footerHeight } = useChatLayoutGlobal()
+// const { footerHeight } = useChatLayoutGlobal() // 已移除，不再需要
 const { createWebviewWindow } = useWindow()
 const {
   handleConfirm,
@@ -262,20 +262,6 @@ const computeMsgHover = computed(() => (item: MessageType) => {
   }
 
   return hoverId.value === item.message.id || item.isCheck
-})
-// CSS 变量计算，避免动态高度重排
-const cssVariables = computed(() => {
-  let height = 0
-
-  if (isMobile()) {
-    height = props.footerHeight as number
-  } else {
-    height = footerHeight.value
-  }
-
-  return {
-    '--footer-height': `${height}px`
-  }
 })
 // 是否显示悬浮页脚
 const shouldShowFloatFooter = computed<boolean>(() => {
@@ -409,7 +395,7 @@ const scrollToIndex = (index: number, behavior: ScrollBehavior = 'auto'): void =
   const targetElement = messageElements[index] as HTMLElement
 
   if (targetElement) {
-    targetElement.scrollIntoView({ behavior, block: 'start' })
+    targetElement.scrollIntoView({ behavior, block: 'center', inline: 'nearest' })
   }
 }
 
@@ -543,12 +529,13 @@ watch(
           latestMessage?.fromUser?.uid && String(latestMessage.fromUser.uid) !== String(userUid.value)
         // 只有当不在底部且是他人消息时才增加计数
         if (shouldShowFloatFooter.value && isOtherUserMessage) {
-          const current = chatStore.newMsgCount.get(globalStore.currentSession!.roomId)
+          const roomId = globalStore.currentSession!.roomId
+          const current = chatStore.newMsgCount[roomId]
           if (!current) {
-            chatStore.newMsgCount.set(globalStore.currentSession!.roomId, {
+            chatStore.newMsgCount[roomId] = {
               count: 1,
               isStart: true
-            })
+            }
           } else {
             current.count++
           }
@@ -588,6 +575,7 @@ const handleChatAreaClick = (event: Event): void => {
 // 防冲突的加载更多处理
 const handleLoadMore = async (): Promise<void> => {
   // 如果正在加载、已经触发了加载、或已到达最后一页，则不重复触发
+  console.log(chatStore.currentMessageOptions)
   if (chatStore.currentMessageOptions?.isLoading || isLoadingMore.value || chatStore.currentMessageOptions?.isLast)
     return
 
@@ -725,14 +713,14 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-.chat-main-container {
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh / var(--page-scale, 1) - var(--footer-height));
-  overflow: hidden;
-  // 布局优化
-  contain: layout style;
-  will-change: auto;
+// 悬浮按钮样式
+.float-footer-button {
+  position: absolute;
+  z-index: 10;
+  width: fit-content;
+  user-select: none;
+  color: #13987f;
+  cursor: pointer;
 }
 
 // 原生滚动容器样式
@@ -778,9 +766,11 @@ onUnmounted(() => {
     &::-webkit-scrollbar-thumb {
       background: transparent;
     }
+
     &::-webkit-scrollbar-track {
       background: transparent;
     }
+
     // 这里添加一个小的padding，防止mac上会不显示
     padding-right: 0.01px;
   }

@@ -6,8 +6,15 @@ import { extractFileName } from '@/utils/Formatting'
 import { useUserStore } from '../stores/user'
 import { getFilesMeta } from './PathUtil'
 
-const userStore = useUserStore()
 class FileUtil {
+  private static _userStore: ReturnType<typeof useUserStore> | null = null
+
+  private static get userStore() {
+    if (!FileUtil._userStore) {
+      FileUtil._userStore = useUserStore()
+    }
+    return FileUtil._userStore
+  }
   /**
    * 打开文件选择器，允许用户选择多个文件，将选中的文件复制到用户资源目录下
    * 副作用: 会将选中的文件复制到用户资源目录下
@@ -44,7 +51,7 @@ class FileUtil {
    * @param filesMeta 选中的文件元数据列表
    */
   static async copyUploadFile(files: string[], filesMeta: FilesMeta) {
-    const userResourceDir = await userStore.getUserRoomAbsoluteDir()
+    const userResourceDir = await FileUtil.userStore.getUserRoomAbsoluteDir()
     for (const filePathStr of files) {
       const fileMeta = filesMeta.find((f) => f.path === filePathStr)
       if (fileMeta) {

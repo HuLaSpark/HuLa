@@ -1,5 +1,5 @@
 <template>
-  <div v-if="toolbarVisible" class="relative flex-center gap-22px h-full">
+  <div class="relative flex-center gap-22px h-full">
     <!-- 功能模块 -->
     <div class="flex flex-col flex-y-center gap-14px" v-for="opt in opts">
       <n-button :disabled="opt.disabled" secondary circle @click="opt.click" class="size-46px">
@@ -109,14 +109,11 @@ import { isMac, isWindows } from '@/utils/PlatformConstants'
 import type { MsgId } from '@/typings/global'
 import ChatMultiMsg from './ChatMultiMsg.vue'
 
-const props = withDefaults(defineProps<{ showToolbar?: boolean }>(), { showToolbar: false })
-
 const chatStore = useChatStore()
 const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
 const showModal = ref(false)
 const searchText = ref('')
-const toolbarVisible = computed(() => props.showToolbar)
 const selectedSessions = computed(() => chatStore.sessionList.filter((session) => session.isCheck === true))
 const selectedMsgs = computed(() =>
   chatStore.chatMessageList.filter((msg) => msg.isCheck === true && isMessageMultiSelectEnabled(msg.message.type))

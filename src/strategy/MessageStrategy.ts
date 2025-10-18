@@ -149,10 +149,17 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
   private readonly MAX_UPLOAD_SIZE = 2 * 1024 * 1024
   // 支持的图片类型
   private readonly ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
-  private uploadHook = useUpload()
+  private _uploadHook: ReturnType<typeof useUpload> | null = null
 
   constructor() {
     super(MsgEnum.IMAGE)
+  }
+
+  private get uploadHook() {
+    if (!this._uploadHook) {
+      this._uploadHook = useUpload()
+    }
+    return this._uploadHook
   }
 
   /**
@@ -554,10 +561,17 @@ class LocationMessageStrategyImpl extends AbstractMessageStrategy {
 class FileMessageStrategyImpl extends AbstractMessageStrategy {
   // 最大上传文件大小 100MB
   private readonly MAX_UPLOAD_SIZE = 100 * 1024 * 1024
-  private uploadHook = useUpload()
+  private _uploadHook: ReturnType<typeof useUpload> | null = null
 
   constructor() {
     super(MsgEnum.FILE)
+  }
+
+  private get uploadHook() {
+    if (!this._uploadHook) {
+      this._uploadHook = useUpload()
+    }
+    return this._uploadHook
   }
 
   /**
@@ -794,7 +808,18 @@ class VideoMessageStrategyImpl extends AbstractMessageStrategy {
   private readonly MAX_UPLOAD_SIZE = 50 * 1024 * 1024
   // 支持的视频类型
   private readonly ALLOWED_TYPES = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/x-ms-wmv']
-  private uploadHook = useUpload()
+  private _uploadHook: ReturnType<typeof useUpload> | null = null
+
+  constructor() {
+    super(MsgEnum.VIDEO)
+  }
+
+  private get uploadHook() {
+    if (!this._uploadHook) {
+      this._uploadHook = useUpload()
+    }
+    return this._uploadHook
+  }
 
   // 暴露上传进度监听
   getUploadProgress() {
@@ -802,10 +827,6 @@ class VideoMessageStrategyImpl extends AbstractMessageStrategy {
       progress: this.uploadHook.progress,
       onChange: this.uploadHook.onChange
     }
-  }
-
-  constructor() {
-    super(MsgEnum.VIDEO)
   }
 
   /**
