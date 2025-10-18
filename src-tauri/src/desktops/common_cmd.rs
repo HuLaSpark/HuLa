@@ -1,7 +1,6 @@
 #![allow(unexpected_cfgs)]
 use base64::{Engine as _, engine::general_purpose};
 use screenshots::Screen;
-use serde::Serialize;
 use std::cmp;
 use std::thread;
 use std::time::Duration;

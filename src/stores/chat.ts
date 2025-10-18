@@ -235,6 +235,11 @@ export const useChatStore = defineStore(
         cursor: data.cursor
       }
 
+      // 确保 messageMap[roomId] 已初始化
+      if (!messageMap[roomId]) {
+        messageMap[roomId] = {}
+      }
+
       for (const msg of data.list) {
         messageMap[roomId][msg.message.id] = msg
       }

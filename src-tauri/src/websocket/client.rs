@@ -1,10 +1,11 @@
+use crate::websocket::commands::get_websocket_client_container;
+
 use super::types::*;
 use anyhow::Result;
 use futures_util::{sink::SinkExt, stream::StreamExt};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
 use tauri::{AppHandle, Emitter};
-use tauri::Manager;
 use tokio::sync::{Mutex, RwLock, mpsc};
 use tokio::task::JoinHandle;
 use tokio::time::{Duration, interval, sleep};
@@ -13,7 +14,7 @@ use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 use tracing::{debug, error, info, warn};
 use url::Url;
 
-use chrono::{Utc};
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -664,9 +665,8 @@ impl WebSocketClient {
             "receiveMessage" => {
                 info!("💬 Received message");
 
-                let ws_client = app_handle
-                    .try_state::<Arc<tokio::sync::Mutex<WebSocketClient>>>()
-                    .map(|state| state.inner().clone());
+                let client_container = get_websocket_client_container();
+                let client_guard = client_container.read().await;
 
                 if let Some(data_obj) = data {
                     if let Some(message_id) = data_obj
@@ -676,15 +676,18 @@ impl WebSocketClient {
                     {
                         info!("📨 回执 ACK: {}", message_id);
 
-                        if let Some(client) = ws_client {
-                            let message_id_string = message_id.to_string();
-
-                            tokio::spawn(async move {
-                                let client_guard = client.lock().await;
-                                if let Err(e) = client_guard.send_ack(&message_id_string).await {
-                                    error!("❌ ACK 发送失败: {}", e);
+                        if let Some(client) = client_guard.as_ref() {
+                            match client.send_ack(message_id).await {
+                                Ok(_) => {
+                                    info!("✅ ACK sent successfully for message {}", message_id);
                                 }
-                            });
+                                Err(e) => {
+                                    error!(
+                                        "❌ Failed to send ACK for message {}: {}",
+                                        message_id, e
+                                    );
+                                }
+                            };
                         } else {
                             error!("❌ 回执失败");
                         }
