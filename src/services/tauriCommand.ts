@@ -75,6 +75,7 @@ export const loginCommand = async (
       clientId: clientId,
       grantType: 'PASSWORD',
       isAutoLogin: auto,
+      asyncData: true,
       uid: info.uid
     }
   }).then(async (res: any) => {

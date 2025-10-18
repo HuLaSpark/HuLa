@@ -63,7 +63,7 @@ pub async fn login_command(
                                 uid: refresh_resp.uid,
                             };
 
-                            handle_login_success(&login_resp, &state).await?;
+                            handle_login_success(&login_resp, &state, data.async_data).await?;
 
                             return Ok(Some(login_resp));
                         }
@@ -90,6 +90,8 @@ pub async fn login_command(
     } else {
         // 手动登录逻辑
         info!("Performing manual login");
+
+        let async_data = data.async_data;
         let res = {
             let mut rc = state.rc.lock().await;
             rc.login(data).await.map_err(|e| e.to_string())?
@@ -97,7 +99,7 @@ pub async fn login_command(
 
         // 登录成功后处理用户信息和token保存
         if let Some(login_resp) = &res {
-            handle_login_success(login_resp, &state).await?;
+            handle_login_success(login_resp, &state, async_data).await?;
         }
 
         info!("Manual login successful");
@@ -105,7 +107,7 @@ pub async fn login_command(
     }
 }
 
-async fn handle_login_success(login_resp: &LoginResp, state: &State<'_, AppData>) -> Result<(), String> {
+async fn handle_login_success(login_resp: &LoginResp, state: &State<'_, AppData>, async_data: bool) -> Result<(), String> {
     info!("handle_login_success, login_resp: {:?}", login_resp);
     // 从登录响应中获取用户标识，这里使用 uid 作为 uid
     let uid = &login_resp.uid;
@@ -127,7 +129,7 @@ async fn handle_login_success(login_resp: &LoginResp, state: &State<'_, AppData>
     .map_err(|e| e.to_string())?;
 
     let mut client = state.rc.lock().await;
-    check_user_init_and_fetch_messages(&mut client, state.db_conn.deref(), uid).await
+    check_user_init_and_fetch_messages(&mut client, state.db_conn.deref(), uid, async_data).await
         .map_err(|e| e.to_string())?;
 
     Ok(())

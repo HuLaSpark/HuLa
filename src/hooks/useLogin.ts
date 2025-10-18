@@ -197,6 +197,7 @@ export const useLogin = () => {
         clientId: clientId,
         grantType: 'PASSWORD',
         isAutoLogin: auto,
+        asyncData: true,
         uid: auto ? userStore.userInfo!.uid : null
       }
     })
