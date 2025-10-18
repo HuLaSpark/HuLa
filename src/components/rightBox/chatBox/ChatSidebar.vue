@@ -2,6 +2,7 @@
   <!--! 这里最好不要使用n-flex,滚动高度会有问题  -->
   <main
     style="height: 100%"
+    class="flex-shrink-0"
     :class="[
       isGroup
         ? isCollapsed

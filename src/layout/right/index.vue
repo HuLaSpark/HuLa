@@ -1,5 +1,6 @@
 <template>
-  <main data-tauri-drag-region class="flex-1 bg-[--right-bg-color] flex flex-col min-h-0">
+  <!-- 主容器维持 600px 的最小宽度，确保聊天侧边信息不过度挤压 -->
+  <main data-tauri-drag-region class="flex-1 bg-[--right-bg-color] flex flex-col min-h-0 min-w-600px">
     <div
       :style="{ background: isChat ? 'var(--right-theme-bg-color)' : '' }"
       data-tauri-drag-region
@@ -40,11 +41,9 @@ const detailsShow = ref(false)
 const detailsContent = ref<DetailsContent>()
 const imgTheme = ref<ThemeEnum>(themes.value.content)
 const prefers = matchMedia('(prefers-color-scheme: dark)')
-// 判断当前路由是否是聊天界面
 const isChat = computed(() => {
   return router.currentRoute.value.path.includes('/message')
 })
-// 判断当前路由是否是信息详情界面
 const isDetails = computed(() => {
   return router.currentRoute.value.path.includes('/friendsList')
 })
@@ -65,6 +64,7 @@ watchEffect(() => {
 })
 
 onMounted(() => {
+  // 好友详情页面通过 mitt 接收主体传来的选中信息
   if (isDetails) {
     useMitt.on(MittEnum.APPLY_SHOW, (event: { context: DetailsContent }) => {
       detailsContent.value = event.context
