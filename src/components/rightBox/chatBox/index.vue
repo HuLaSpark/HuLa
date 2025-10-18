@@ -5,7 +5,13 @@
 
     <div class="flex-1 flex min-h-0">
       <div class="flex-1 min-h-0">
-        <n-split direction="vertical" class="h-full" :min="0.55" :max="0.74" :default-size="0.74">
+        <n-split
+          direction="vertical"
+          :resize-trigger-size="0"
+          class="h-full"
+          :min="0.55"
+          :max="0.74"
+          :default-size="0.74">
           <template #1>
             <ChatMain />
           </template>
@@ -35,7 +41,7 @@ const globalStore = useGlobalStore()
   z-index: 998;
   position: relative;
   // 确保不干扰 ChatFooter 的顶部边框
-  margin-top: -4px;
+  margin-top: -7px;
 
   // 主指示线（默认隐藏，hover 时显示）
   &::before {
