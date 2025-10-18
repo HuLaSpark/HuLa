@@ -142,7 +142,12 @@
                   'content-wrapper',
                   { 'content-collapsed': !announcement.expanded && needsExpansion(announcement.content) }
                 ]">
-                {{ announcement?.content }}
+                <template v-for="(segment, index) in extractLinkSegments(announcement?.content || '')" :key="index">
+                  <span v-if="segment.isLink" class="announcement-link" @click.stop="openExternalUrl(segment.text)">
+                    {{ segment.text }}
+                  </span>
+                  <template v-else>{{ segment.text }}</template>
+                </template>
               </div>
               <div
                 v-if="needsExpansion(announcement.content)"
@@ -180,6 +185,7 @@ import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { deleteAnnouncement, editAnnouncement, pushAnnouncement } from '@/utils/ImRequestUtils'
+import { extractLinkSegments, openExternalUrl } from '@/hooks/useLinkSegments'
 
 // 定义响应式变量
 const title = ref('')
@@ -545,6 +551,18 @@ onMounted(async () => {
 
   svg {
     transition: transform 0.3s ease;
+  }
+}
+
+.announcement-link {
+  color: #13987f;
+  cursor: pointer;
+  word-break: break-all;
+  line-height: 2.1rem;
+
+  &:hover {
+    opacity: 0.8;
+    text-decoration: underline;
   }
 }
 </style>

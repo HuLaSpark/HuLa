@@ -1,13 +1,22 @@
 <template>
   <div :class="isMobile() ? 'text-16px' : 'text-14px'">
     <template v-for="(item, index) in fragments" :key="index">
-      <span
-        v-if="mentionTokenSet.has(item)"
-        :key="item"
-        style="-webkit-user-select: text !important; user-select: text !important"
-        class="text-#fbb990 cursor-pointer">
-        {{ item }}
-      </span>
+      <n-popover
+        trigger="click"
+        placement="left"
+        :show-arrow="false"
+        style="padding: 0; background: var(--bg-info)"
+        v-if="mentionTokenSet.has(item)">
+        <template #trigger>
+          <span
+            :key="item"
+            style="-webkit-user-select: text !important; user-select: text !important"
+            class="text-#fbb990 cursor-pointer">
+            {{ item }}
+          </span>
+        </template>
+        <InfoPopover v-if="mentionTokenToUid.get(item)" :uid="mentionTokenToUid.get(item)!" />
+      </n-popover>
       <template v-else-if="item.startsWith('http')">
         <n-flex align="center" :wrap="false">
           <n-tooltip trigger="hover" style="flex-shrink: 0">
@@ -107,6 +116,22 @@ const mentionTokens = computed(() => {
 })
 // 使用 Set 快速判断片段是否属于真正的 @ 提及
 const mentionTokenSet = computed(() => new Set(mentionTokens.value))
+
+// 创建 mention token 到 uid 的映射
+const mentionTokenToUid = computed(() => {
+  const map = new Map<string, string>()
+  if (!Array.isArray(props.body.atUidList) || props.body.atUidList.length === 0) {
+    return map
+  }
+  props.body.atUidList.forEach((uid) => {
+    const user = groupStore.getUserInfo(uid)
+    const name = user?.myName || user?.name
+    if (name) {
+      map.set(`@${name}`, uid)
+    }
+  })
+  return map
+})
 
 // 处理长链接
 const processLongUrls = computed(() => {

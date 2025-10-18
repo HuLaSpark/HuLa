@@ -191,6 +191,17 @@
                     <svg class="size-12px">
                       <use href="#success"></use>
                     </svg>
+
+                    <n-tooltip trigger="hover">
+                      <template #trigger>
+                        <svg
+                          class="pl-6px size-10px cursor-pointer hover:color-#909090 hover:transition-colors"
+                          @click="handleCopyTranslation(message.message.body.translatedText.text)">
+                          <use href="#copy"></use>
+                        </svg>
+                      </template>
+                      <span>复制翻译</span>
+                    </n-tooltip>
                   </n-flex>
                   <svg class="size-10px cursor-pointer" @click="message.message.body.translatedText = null">
                     <use href="#close"></use>
@@ -454,6 +465,14 @@ const hasUserMarkedEmoji = (item: MessageType, emojiType: number) => {
 const handleRetry = (item: MessageType): void => {
   // TODO: 实现重试发送逻辑
   console.log('重试发送消息:', item)
+}
+
+// 处理复制翻译文本
+const handleCopyTranslation = (text: string) => {
+  if (text) {
+    navigator.clipboard.writeText(text)
+    window.$message.success('复制成功')
+  }
 }
 
 const hasBubble = (type: MsgEnum) => {
