@@ -9,9 +9,7 @@
     @submit.prevent="handleFormSubmit"
     :class="[isMobile() ? 'gap-10px ' : '']"
     class="w-full h-full">
-    <div
-      class="h-full flex flex-col"
-      :class="isMobile() ? 'bg-gray-100 flex flex-1 p-5px gap-2 pt-5px items-end bg-white min-h-2.25rem' : ''">
+    <div class="h-full flex" :class="isMobile() ? 'flex-row items-center' : 'flex-col'">
       <div v-if="isMobile()" class="flex items-center justify-center w-14 h-2.5rem">
         <svg
           @click="handleVoiceClick"
