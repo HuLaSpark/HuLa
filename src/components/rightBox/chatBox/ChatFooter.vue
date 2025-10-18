@@ -197,7 +197,7 @@
         <div class="h-auto max-h-19rem overflow-y-auto">
           <Emoticon @emojiHandle="emojiHandle" v-if="inputState.isClickedEmoji" :all="false" />
 
-          <Voice @cancel="handleMobileVoiceCancel" @send="handleMobileVoiceSend" v-if="inputState.isClickedVoice" />
+          <!-- <Voice @cancel="handleMobileVoiceCancel" @send="handleMobileVoiceSend" v-if="inputState.isClickedVoice" /> -->
 
           <More v-if="inputState.isClickedMore" @sendFiles="handleMoreSendFiles" />
         </div>
@@ -589,7 +589,6 @@ const handleMoreSendFiles = async (files: File[]) => {
   if (!files || files.length === 0) return
   try {
     await MsgInputRef.value?.sendFilesDirect?.(files)
-    closePanelWithAnimation()
   } catch (error) {
     console.error('移动端发送文件失败:', error)
     window.$message?.error?.('发送文件失败')

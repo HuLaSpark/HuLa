@@ -262,7 +262,6 @@ const {
   handleInput,
   msgInput,
   send,
-  sendLocationDirect,
   sendFilesDirect,
   sendVoiceDirect,
   personList,
@@ -274,7 +273,6 @@ const {
   menuList,
   selectedAitKey,
   groupedAIModels,
-  getCursorSelectionRange,
   updateSelectionRange,
   focusOn
 } = useMsgInput(messageInputDom)
@@ -292,16 +290,6 @@ const {
 const handleFormSubmit = async (e: Event) => {
   e.preventDefault()
   await send()
-}
-
-/** 直接发送位置消息 */
-const handleLocationSelected = async (locationData: any) => {
-  try {
-    await sendLocationDirect(locationData)
-  } catch (error) {
-    console.error('发送位置消息失败:', error)
-    window.$message.error('发送位置消息失败')
-  }
 }
 
 /** 聚焦输入框函数 */
@@ -374,12 +362,6 @@ const handleFileCancel = () => {
   pendingFiles.value = []
 }
 
-// 添加强制退出语音模式的方法
-const exitVoiceMode = () => {
-  isVoiceMode.value = false
-  console.log('强制退出语音模式')
-}
-
 /** 处理键盘上下键切换提及项 */
 const handleAitKeyChange = (
   direction: 1 | -1,
@@ -414,14 +396,6 @@ const disableSelectAll = (e: KeyboardEvent) => {
       e.preventDefault()
     }
   }
-}
-
-/**
- * 恢复编辑器焦点
- */
-const focus = () => {
-  const editor = messageInputDom.value
-  if (editor) focusOn(editor)
 }
 
 // 语音录制相关事件处理
