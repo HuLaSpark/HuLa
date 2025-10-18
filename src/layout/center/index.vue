@@ -1,10 +1,11 @@
 <template>
   <main
+    ref="centerEl"
     data-tauri-drag-region
     id="center"
     :class="{ 'rounded-r-8px': shrinkStatus }"
     class="resizable select-none flex flex-col border-r-(1px solid [--right-chat-footer-line-color])"
-    :style="{ width: shrinkStatus ? '100%' : `${initWidth}px` }">
+    :style="centerStyle">
     <!-- 分隔条 -->
     <div v-show="!shrinkStatus" class="resize-handle transition-all duration-600 ease-in-out" @mousedown="initDrag">
       <div :class="{ 'opacity-100': isDragging }" class="transition-all duration-600 ease-in-out opacity-0 drag-icon">
@@ -188,31 +189,102 @@ const addPanels = ref({
   ]
 })
 
+const LEFT_MIN_WIDTH = 64
+const RIGHT_MIN_WIDTH = 600 // 右侧面板保留的最小宽度
+// 结合自定义缩放方案，获取当前页面的缩放比例，避免不同 DPI 下断点失真
+const resolvePageScale = () => {
+  if (typeof window === 'undefined') return 1
+  const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--page-scale') || '1')
+  return Number.isFinite(scale) && scale > 0 ? scale : 1
+}
+
+// 读取布局容器的实时宽度（在窗口拖拽或系统缩放时会动态变化）
+const getLayoutWidth = (fallback: number) => {
+  if (typeof document === 'undefined') return fallback
+  const layout = document.getElementById('layout')
+  return layout?.getBoundingClientRect().width ?? fallback
+}
+
+// 左侧导航在不同状态下宽度不固定，这里按需测量
+const getLeftWidth = () => {
+  if (typeof document === 'undefined') return LEFT_MIN_WIDTH
+  const left = document.querySelector('#layout .left') as HTMLElement | null
+  return left?.getBoundingClientRect().width ?? LEFT_MIN_WIDTH
+}
 const startX = ref()
 const startWidth = ref()
 const shrinkStatus = ref(false)
 const isDragging = ref(false)
+const centerEl = shallowRef<HTMLElement | null>(null)
+// 统一测量布局宽度，避免多处重复读取 DOM
+const layoutMetrics = computed(() => {
+  const windowWidth = width.value / resolvePageScale()
+  const layoutWidth = getLayoutWidth(windowWidth)
+  const leftWidth = getLeftWidth()
+  const available = layoutWidth - leftWidth - RIGHT_MIN_WIDTH
 
+  return {
+    layoutWidth,
+    leftWidth,
+    available,
+    lockThreshold: leftWidth + initWidth.value + RIGHT_MIN_WIDTH,
+    collapsedWidth: Math.max(layoutWidth - leftWidth, minWidth)
+  }
+})
+
+// 拖拽时记录的宽度会在这里和当前可用空间取较小值
+const centerWidth = computed(() => {
+  const { available } = layoutMetrics.value
+
+  if (available <= minWidth) {
+    return minWidth
+  }
+
+  const desired = clamp(initWidth.value, minWidth, maxWidth)
+  return clamp(Math.min(desired, available), minWidth, maxWidth)
+})
+
+// 根据布局状态产出中心面板最终的 flex 配置
+const centerStyle = computed(() => {
+  const { lockThreshold, layoutWidth, collapsedWidth } = layoutMetrics.value
+
+  if (shrinkStatus.value) {
+    return {
+      flex: '1 1 auto',
+      width: `${collapsedWidth}px`,
+      minWidth: '0',
+      maxWidth: 'none'
+    }
+  }
+
+  const flexMode = layoutWidth > lockThreshold ? '0 0 auto' : '0 1 auto'
+
+  return {
+    flex: flexMode,
+    width: `${centerWidth.value}px`,
+    minWidth: `${minWidth}px`,
+    maxWidth: `${maxWidth}px`
+  }
+})
+
+// 监测窗口宽度，切换缩放模式并控制拖拽开关
 watchEffect(() => {
-  // 获取页面缩放因子来计算调整后的断点
-  // 由于使用了 useFixedScale 来抵消系统缩放，需要相应调整窗口布局断点
-  const pageScale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--page-scale') || '1')
-  const SHRINK_MIN_WIDTH = 310 * pageScale // 根据缩放因子调整断点
-  const SHRINK_MAX_WIDTH = 800 * pageScale // 根据缩放因子调整断点
+  const { available } = layoutMetrics.value
+  const shouldShrink = available <= minWidth
+  const canDrag = available > minWidth
 
-  const shouldShrink = width.value >= SHRINK_MIN_WIDTH && width.value < SHRINK_MAX_WIDTH
-  const shouldExpand = width.value >= SHRINK_MAX_WIDTH
+  if (shrinkStatus.value !== shouldShrink) {
+    useMitt.emit(MittEnum.SHRINK_WINDOW, shouldShrink)
+  }
+
+  const center = centerEl.value ?? document.getElementById('center')
 
   if (shouldShrink) {
-    useMitt.emit(MittEnum.SHRINK_WINDOW, true)
-    const center = document.querySelector('#center')
     center?.classList.add('flex-1')
     isDrag.value = false
-  } else if (shouldExpand) {
-    useMitt.emit(MittEnum.SHRINK_WINDOW, false)
-    const center = document.querySelector('#center')
+  } else {
     center?.classList.remove('flex-1')
-    isDrag.value = true
+    isDrag.value = canDrag
   }
   globalStore.setHomeWindowState({ width: width.value, height: height.value })
 })
