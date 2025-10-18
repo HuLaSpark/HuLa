@@ -32,6 +32,7 @@ pub struct LoginReq {
     pub password: String,
     #[serde(default)]
     pub is_auto_login: bool,
+    pub async_data: bool,
     pub uid: Option<String>, // 用于自动登录时传递用户ID
 }
 
