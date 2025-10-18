@@ -13,6 +13,7 @@
     style="border-radius: 8px; cursor: pointer !important"
     :src="body?.url"
     @dblclick="handleOpenImageViewer"
+    @click="handleOpenImage"
     @error="handleImageError">
     <template #placeholder>
       <n-flex
@@ -41,6 +42,7 @@ import { MsgEnum } from '@/enums/index'
 import { useImageViewer } from '@/hooks/useImageViewer'
 import type { ImageBody } from '@/services/types'
 import { isMobile } from '@/utils/PlatformConstants'
+import { showImagePreview } from 'vant/es'
 
 const props = defineProps<{
   body: ImageBody
@@ -61,8 +63,20 @@ const handleImageError = () => {
   isError.value = true
 }
 
+const handleOpenImage = () => {
+  if (!isMobile()) return // 非移动端直接返回
+
+  if (props.body?.url) {
+    showImagePreview([props.body.url])
+  }
+}
+
 // 处理打开图片查看器
 const handleOpenImageViewer = () => {
+  if (isMobile()) {
+    return
+  }
+
   if (props.body?.url) {
     // 如果有自定义点击处理函数，使用它；否则使用默认逻辑
     if (props.onImageClick) {
