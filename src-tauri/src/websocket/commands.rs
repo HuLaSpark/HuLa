@@ -11,7 +11,7 @@ use tracing::{error, info};
 static GLOBAL_WS_CLIENT: OnceLock<Arc<RwLock<Option<WebSocketClient>>>> = OnceLock::new();
 
 /// 获取全局 WebSocket 客户端容器
-fn get_websocket_client_container() -> &'static Arc<RwLock<Option<WebSocketClient>>> {
+pub fn get_websocket_client_container() -> &'static Arc<RwLock<Option<WebSocketClient>>> {
     GLOBAL_WS_CLIENT.get_or_init(|| {
         info!("🚀 Creating global WebSocket client container");
         Arc::new(RwLock::new(None))
