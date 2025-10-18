@@ -7,7 +7,7 @@
     </svg>
 
     <!-- 消息内容 -->
-    <div class="select-none cursor-default">
+    <div class="select-none cursor-default" :class="isMobile() ? 'text-16px' : 'text-14px'">
       {{ body }}
     </div>
   </div>
@@ -15,6 +15,7 @@
 
 <script setup lang="ts">
 import { useUserStore } from '@/stores/user'
+import { isMobile } from '@/utils/PlatformConstants'
 
 const props = defineProps<{
   body: string
