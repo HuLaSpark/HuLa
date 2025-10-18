@@ -576,6 +576,18 @@ const handleMobileSend = () => {
   selfEmitter('send', iconClickedStates.value)
 }
 
+/** 导出组件方法和属性 */
+defineExpose({
+  messageInputDom,
+  updateSelectionRange,
+  focus,
+  showFileModal: showFileModalCallback,
+  isVoiceMode: readonly(isVoiceMode),
+  handleVoiceCancel,
+  sendVoiceDirect,
+  sendFilesDirect
+})
+
 /** 移动端专用适配事件（结束） */
 </script>
 

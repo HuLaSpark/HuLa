@@ -2,7 +2,7 @@
   <!-- 底部栏 -->
   <main
     :class="[isMobile() ? 'flex-col w-full' : 'border-t-(1px solid [--right-chat-footer-line-color])']"
-    class="h-full flex flex-col">
+    class="h-full flex flex-col relative">
     <!-- 添加遮罩层 -->
     <div
       v-if="isSingleChat && !isFriend"
@@ -588,7 +588,7 @@ const handleCustomFocus = (value: any) => {
 const handleMoreSendFiles = async (files: File[]) => {
   if (!files || files.length === 0) return
   try {
-    await MsgInputRef.value?.sendFilesDirect?.(files)
+    await MsgInputRef.value?.sendFilesDirect(files)
   } catch (error) {
     console.error('移动端发送文件失败:', error)
     window.$message?.error?.('发送文件失败')
