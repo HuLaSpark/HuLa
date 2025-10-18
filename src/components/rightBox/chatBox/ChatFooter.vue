@@ -172,7 +172,7 @@
       </n-flex>
 
       <!-- 输入框区域 -->
-      <div :class="[isMobile() ? '' : 'pl-20px ']" class="flex-1 min-h-0">
+      <div :class="[isMobile() ? '' : 'pl-20px ']" class="flex flex-1 min-h-0">
         <MsgInput
           ref="MsgInputRef"
           @clickMore="handleMoreClick"
