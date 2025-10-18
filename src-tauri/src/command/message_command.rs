@@ -204,6 +204,7 @@ pub async fn check_user_init_and_fetch_messages(
     client: &mut ImRequestClient,
     db_conn: &DatabaseConnection,
     uid: &str,
+    async_data: bool,
 ) -> Result<(), CommonError> {
     info!(
         "Checking user initialization status and fetching messages, uid: {}",
@@ -222,19 +223,17 @@ pub async fn check_user_init_and_fetch_messages(
                     "User {} needs initialization, starting to fetch all messages",
                     uid
                 );
-                // 传递用户的 last_opt_time 参数
-                if let Err(e) = fetch_all_messages(client, db_conn, uid, None).await {
+                // 传递用户的 async_data 参数
+                if let Err(e) = fetch_all_messages(client, db_conn, uid, async_data).await {
                     error!("Failed to fetch all messages: {}", e);
                     return Err(e);
                 }
             } else {
                 info!(
-                    "User {} offline message update, last_opt_time: {:?}",
-                    uid, user_model.last_opt_time
+                    "User {} offline message update, async_data: {:?}",
+                    uid, async_data
                 );
-                if let Err(e) =
-                    fetch_all_messages(client, db_conn, uid, user_model.last_opt_time).await
-                {
+                if let Err(e) = fetch_all_messages(client, db_conn, uid, async_data).await {
                     error!("Failed to update offline messages: {}", e);
                     return Err(e);
                 }
@@ -249,19 +248,16 @@ pub async fn fetch_all_messages(
     client: &mut ImRequestClient,
     db_conn: &DatabaseConnection,
     uid: &str,
-    last_opt_time: Option<i64>,
+    async_data: bool,
 ) -> Result<(), CommonError> {
     info!(
-        "Starting to fetch all messages, uid: {}, last_opt_time: {:?}",
-        uid, last_opt_time
+        "Starting to fetch all messages, uid: {}, async_data: {:?}",
+        uid, async_data
     );
-    // 调用后端接口 /chat/msg/list 获取所有消息，传递 last_opt_time 参数
-    let body = if let Some(time) = last_opt_time {
-        Some(serde_json::json!({
-            "lastOptTime": time
-        }))
-    } else {
-        None
+    // 调用后端接口 /chat/msg/list 获取所有消息，传递 async_data 参数
+    let body = match async_data {
+        true => Some(serde_json::json!({ "async": true })),
+        false => None,
     };
 
     let messages: Option<Vec<MessageResp>> = client

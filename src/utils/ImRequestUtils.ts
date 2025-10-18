@@ -226,7 +226,7 @@ export async function groupListMember(roomId: string) {
   })
 }
 
-export async function getMsgList(body: { msgIds?: string[]; lastOptTime?: number }) {
+export async function getMsgList(body: { msgIds?: string[]; async?: boolean }) {
   return await imRequest({
     url: ImUrlEnum.GET_MSG_LIST,
     body

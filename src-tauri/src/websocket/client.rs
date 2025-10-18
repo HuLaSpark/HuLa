@@ -4,7 +4,7 @@ use futures_util::{sink::SinkExt, stream::StreamExt};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
 use tauri::{AppHandle, Emitter};
-
+use tauri::Manager;
 use tokio::sync::{Mutex, RwLock, mpsc};
 use tokio::task::JoinHandle;
 use tokio::time::{Duration, interval, sleep};
@@ -12,6 +12,25 @@ use tokio::time::{Duration, interval, sleep};
 use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 use tracing::{debug, error, info, warn};
 use url::Url;
+
+use chrono::{Utc};
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AckMessage {
+    pub msg_id: String,
+    pub timestamp: i64,
+}
+
+impl AckMessage {
+    pub fn new(msg_id: String) -> Self {
+        Self {
+            msg_id,
+            timestamp: Utc::now().timestamp_millis(),
+        }
+    }
+}
 
 /// WebSocket 客户端
 #[derive(Clone)]
@@ -568,6 +587,53 @@ impl WebSocketClient {
         }
     }
 
+    pub async fn send_ack(&self, message_id: &str) -> Result<()> {
+        let ack_message = AckMessage::new(message_id.to_string());
+
+        let ack_json = serde_json::json!({
+            "type": "15",
+            "data": ack_message
+        });
+
+        // 添加重试机制
+        let max_retries = 3;
+        let mut retry_count = 0;
+
+        while retry_count < max_retries {
+            match self.send_message(ack_json.clone()).await {
+                Ok(_) => {
+                    info!(
+                        "✅ Sent ACK for message {} (attempt: {})",
+                        message_id,
+                        retry_count + 1
+                    );
+                    return Ok(());
+                }
+                Err(e) => {
+                    retry_count += 1;
+                    if retry_count >= max_retries {
+                        error!(
+                            "❌ Failed to send ACK for message {} after {} attempts: {}",
+                            message_id, max_retries, e
+                        );
+                        return Err(e);
+                    }
+
+                    warn!(
+                        "⚠️ Failed to send ACK for message {} (attempt {}), retrying...: {}",
+                        message_id, retry_count, e
+                    );
+
+                    // 指数退避
+                    tokio::time::sleep(Duration::from_millis(100 * 2u64.pow(retry_count as u32)))
+                        .await;
+                }
+            }
+        }
+
+        Err(anyhow::anyhow!("Failed to send ACK after all retries"))
+    }
+
     /// 处理业务消息类型
     async fn process_business_message(message: &serde_json::Value, app_handle: &AppHandle) {
         // 提取消息类型
@@ -594,9 +660,37 @@ impl WebSocketClient {
                 let _ = app_handle.emit_to("home", "ws-login-success", data);
             }
 
-            // 消息相关
+            // 消息相关 TODO 暂时只实现聊天消息的ack
             "receiveMessage" => {
                 info!("💬 Received message");
+
+                let ws_client = app_handle
+                    .try_state::<Arc<tokio::sync::Mutex<WebSocketClient>>>()
+                    .map(|state| state.inner().clone());
+
+                if let Some(data_obj) = data {
+                    if let Some(message_id) = data_obj
+                        .get("message")
+                        .and_then(|m| m.get("id"))
+                        .and_then(|id| id.as_str())
+                    {
+                        info!("📨 回执 ACK: {}", message_id);
+
+                        if let Some(client) = ws_client {
+                            let message_id_string = message_id.to_string();
+
+                            tokio::spawn(async move {
+                                let client_guard = client.lock().await;
+                                if let Err(e) = client_guard.send_ack(&message_id_string).await {
+                                    error!("❌ ACK 发送失败: {}", e);
+                                }
+                            });
+                        } else {
+                            error!("❌ 回执失败");
+                        }
+                    }
+                }
+
                 let _ = app_handle.emit_to("home", "ws-receive-message", data);
             }
             "msgRecall" => {

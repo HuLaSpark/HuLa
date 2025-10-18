@@ -356,16 +356,6 @@ export enum LimitEnum {
   COM_COUNT = 5
 }
 
-/** ws请求类型 */
-export enum WsReqEnum {
-  /** 请求登录二维码 */
-  LOGIN = 1,
-  /** 心跳包 */
-  HEARTBEAT = 2,
-  /** 登录认证 */
-  AUTHORIZE = 3
-}
-
 /** ws响应类型 */
 export enum WorkerMsgEnum {
   /** open */
