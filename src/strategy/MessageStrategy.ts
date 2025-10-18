@@ -115,10 +115,13 @@ class TextMessageStrategyImpl extends AbstractMessageStrategy {
       if (replyDiv) {
         replyDiv.parentNode?.removeChild(replyDiv)
       }
-      tempDiv.innerHTML = DOMPurify.sanitize(removeTag(tempDiv.innerHTML))
+      tempDiv.innerHTML = DOMPurify.sanitize(removeTag(tempDiv.innerHTML), { RETURN_DOM: false })
 
       // 确保所有的&nbsp;都被替换为空格
-      msg.content = tempDiv.innerHTML.replace(/&nbsp;/g, ' ')
+      msg.content = tempDiv.innerHTML
+        .replace(/&nbsp;/g, ' ')
+        .replace(/\n+/g, '\n')
+        .trim()
     }
     // 验证消息长度
     if (msg.content.length > 500) {

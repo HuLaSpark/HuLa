@@ -137,5 +137,13 @@ export const getMimeTypeFromExtension = (fileName: string): string => {
  * */
 export const removeTag = (fragment: string) => {
   const sanitizedFragment = DOMPurify.sanitize(fragment)
-  return new DOMParser().parseFromString(sanitizedFragment, 'text/html').body.textContent || fragment
+  const normalizedFragment = sanitizedFragment
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(div|p|li|tr|td|blockquote|h[1-6])>/gi, '\n')
+    .replace(/<(div|p|li|tr|td|blockquote|h[1-6])[^>]*>/gi, '')
+    .replace(/\r\n|\r/g, '\n')
+
+  const textContent = new DOMParser().parseFromString(normalizedFragment, 'text/html').body.textContent || fragment
+
+  return textContent.replace(/\u00A0/g, ' ')
 }
