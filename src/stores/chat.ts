@@ -235,13 +235,8 @@ export const useChatStore = defineStore(
         cursor: data.cursor
       }
 
-      let roomMessages = messageMap[roomId]
-      if (!roomMessages) {
-        roomMessages = {}
-        messageMap[roomId] = roomMessages
-      }
       for (const msg of data.list) {
-        roomMessages[msg.message.id] = msg
+        messageMap[roomId][msg.message.id] = msg
       }
     }
 

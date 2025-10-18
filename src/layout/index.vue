@@ -58,6 +58,7 @@ const userUid = computed(() => userStore.userInfo!.uid)
 const appWindow = WebviewWindow.getCurrent()
 const loadingPercentage = ref(10)
 const loadingText = ref('正在加载应用...')
+const { resetLoginState, logout, init } = useLogin()
 
 // 修改异步组件的加载配置
 const AsyncLeft = defineAsyncComponent({
@@ -87,6 +88,7 @@ const AsyncRight = defineAsyncComponent({
     loadingText.value = '正在加载右侧面板...'
     const comp = await import('./right/index.vue')
     loadingPercentage.value = 100
+    await init()
 
     // 在组件加载完成后，使用nextTick等待DOM更新
     nextTick(() => {
@@ -232,10 +234,9 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
     }
   }
 
-  await globalStore.updateGlobalUnreadCount()
+  globalStore.updateGlobalUnreadCount()
 })
 
-const { resetLoginState, logout } = useLogin()
 listen('relogin', async () => {
   info('收到重新登录事件')
   await resetLoginState()
