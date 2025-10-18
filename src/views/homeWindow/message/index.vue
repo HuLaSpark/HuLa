@@ -7,6 +7,7 @@
         :key="item.roomId"
         :class="[
           { active: globalStore.currentSession?.roomId === item.roomId },
+          { 'active-bot': globalStore.currentSession?.roomId === item.roomId && item.account === 'bot' },
           { 'bg-[--bg-msg-first-child] rounded-12px relative': item.top },
           { 'context-menu-active': activeContextMenuRoomId === item.roomId },
           {

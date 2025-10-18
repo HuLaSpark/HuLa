@@ -718,3 +718,8 @@ export enum MergeMessageType {
   SINGLE = 1,
   MERGE = 2
 }
+
+// 用户类型
+export enum UserType {
+  BOT = 'bot'
+}
