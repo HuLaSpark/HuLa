@@ -16,8 +16,8 @@
           }
         ]"
         :data-key="item.roomId"
-        :menu="menuList"
-        :special-menu="specialMenuList"
+        :menu="visibleMenu(item)"
+        :special-menu="visibleSpecialMenu(item)"
         :content="item"
         class="msg-box w-full h-75px mb-5px"
         @click="handleMsgClick(item)"
@@ -48,7 +48,11 @@
                   <span>官方群聊认证</span>
                 </n-popover>
               </n-flex>
-              <span class="text text-10px w-fit truncate text-right">{{ item.lastMsgTime }}</span>
+              <span
+                :class="{ 'text-[#707070]! dark:text-[#fff]!': item.account === UserType.BOT }"
+                class="text text-10px w-fit truncate text-right">
+                {{ item.lastMsgTime }}
+              </span>
             </n-flex>
 
             <n-flex align="center" justify="space-between">
@@ -59,7 +63,10 @@
               </template>
               <template v-else>
                 <span
-                  class="text flex-1 leading-tight text-12px truncate"
+                  :class="[
+                    'text flex-1 leading-tight text-12px truncate',
+                    { 'text-[#707070]! dark:text-[#fff]!': item.account === UserType.BOT }
+                  ]"
                   v-text="String(item.lastMsg || '').replace(':', '：')" />
               </template>
 
@@ -142,7 +149,7 @@ const { themes } = storeToRefs(settingStore)
 const botDisplayText = computed(() => botStore.displayText)
 const { openMsgSession } = useCommon()
 const msgScrollbar = useTemplateRef<HTMLElement>('msg-scrollbar')
-const { handleMsgClick, handleMsgDelete, menuList, specialMenuList, handleMsgDblclick } = useMessage()
+const { handleMsgClick, handleMsgDelete, handleMsgDblclick, visibleMenu, visibleSpecialMenu } = useMessage()
 // 跟踪当前显示右键菜单的会话ID
 const activeContextMenuRoomId = ref<string | null>(null)
 

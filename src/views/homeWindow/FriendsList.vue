@@ -60,7 +60,8 @@
 
                       <div class="text leading-tight text-12px flex-y-center gap-4px flex-1 truncate">
                         [
-                        <template v-if="getUserState(item.uid)">
+                        <template v-if="isBotUser(item.uid)">助手</template>
+                        <template v-else-if="getUserState(item.uid)">
                           <img class="size-12px rounded-50%" :src="getUserState(item.uid)?.url" alt="" />
                           {{ getUserState(item.uid)?.title }}
                         </template>
@@ -114,7 +115,7 @@
 <script setup lang="ts" name="friendsList">
 import { storeToRefs } from 'pinia'
 import { useRoute } from 'vue-router'
-import { MittEnum, OnlineEnum, RoomTypeEnum, ThemeEnum } from '@/enums'
+import { MittEnum, OnlineEnum, RoomTypeEnum, ThemeEnum, UserType } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
 import type { DetailsContent } from '@/services/types'
 import { useContactStore } from '@/stores/contacts.ts'
@@ -222,6 +223,7 @@ const fetchContactData = async () => {
   }
 }
 
+const isBotUser = (uid: string) => groupStore.getUserInfo(uid)?.account === UserType.BOT
 /** 获取用户状态 */
 const getUserState = (uid: string) => {
   const userInfo = groupStore.getUserInfo(uid)

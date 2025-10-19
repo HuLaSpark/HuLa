@@ -1,18 +1,19 @@
 import { invoke } from '@tauri-apps/api/core'
 import { appCacheDir, join, resourceDir } from '@tauri-apps/api/path'
-import { BaseDirectory, exists, mkdir, readFile } from '@tauri-apps/plugin-fs'
+import { BaseDirectory, exists, mkdir, readFile, writeFile } from '@tauri-apps/plugin-fs'
 import { type FileTypeResult, fileTypeFromBuffer } from 'file-type'
 import type { FilesMeta } from '@/services/types'
 
-// 用户数据
+// Tauri 资源目录下存放用户数据的根目录名
 const USER_DATA = 'userData'
+// 统一存放三维模型的子目录名
+const MODELS_DIR = 'models'
 
-const getPathCache = async (subFolder: string, userUid: string): Promise<string> => {
-  const cacheDir = await appCacheDir()
-  return await join(cacheDir, String(userUid), subFolder)
-}
-
-const createUserVideosDir = async (): Promise<void> => {
+/**
+ * 确保资源目录下存在 userData 根目录。
+ * Tauri 在构建后默认不会创建该目录，需要在第一次使用前主动创建。
+ */
+const ensureUserDataRoot = async (): Promise<void> => {
   const dirExists = await exists(USER_DATA, { baseDir: BaseDirectory.Resource })
   if (!dirExists) {
     await mkdir(USER_DATA, {
@@ -22,8 +23,23 @@ const createUserVideosDir = async (): Promise<void> => {
   }
 }
 
+/**
+ * 获取缓存目录，路径结构为：appCacheDir/userUid/subFolder
+ * @param subFolder 子目录名
+ * @param userUid 当前用户ID
+ */
+const getPathCache = async (subFolder: string, userUid: string): Promise<string> => {
+  const cacheDir = await appCacheDir()
+  return await join(cacheDir, String(userUid), subFolder)
+}
+
+/**
+ * 获取用户视频文件夹（userData/userUid/roomId），并确保整个路径存在。
+ * @param userUid 用户ID
+ * @param roomId 房间ID
+ */
 const getUserVideosDir = async (userUid: string, roomId: string): Promise<string> => {
-  await createUserVideosDir()
+  await ensureUserDataRoot()
   // 确保用户ID和房间ID的子目录也存在
   const userRoomDir = await join(USER_DATA, userUid, roomId)
   const userRoomDirExists = await exists(userRoomDir, { baseDir: BaseDirectory.Resource })
@@ -47,6 +63,49 @@ export const getUserAbsoluteVideosDir = async (userUid: string, roomId: string) 
 
 const getImageCache = (subFolder: string, userUid: string): string => {
   return 'cache/' + String(userUid) + '/' + subFolder + '/'
+}
+
+/**
+ * 确保模型存储目录 userData/models 存在，并返回该目录的相对路径。
+ */
+const ensureModelsDir = async (): Promise<string> => {
+  await ensureUserDataRoot()
+  const modelsPath = await join(USER_DATA, MODELS_DIR)
+  const hasModelsDir = await exists(modelsPath, { baseDir: BaseDirectory.Resource })
+  if (!hasModelsDir) {
+    await mkdir(modelsPath, {
+      baseDir: BaseDirectory.Resource,
+      recursive: true
+    })
+  }
+  return modelsPath
+}
+
+/**
+ * 确保指定模型文件已经缓存在本地。
+ * 若不存在则从远程链接下载并写入 userData/models 目录。
+ * 最终返回模型文件在资源目录下的绝对路径。
+ * @param fileName 模型文件名，如 hula.glb
+ * @param remoteUrl 模型远程下载地址
+ */
+export const ensureModelFile = async (fileName: string, remoteUrl: string): Promise<string> => {
+  const modelsDir = await ensureModelsDir()
+  const modelRelativePath = await join(modelsDir, fileName)
+  const modelExists = await exists(modelRelativePath, { baseDir: BaseDirectory.Resource })
+
+  if (!modelExists) {
+    const response = await fetch(remoteUrl)
+    if (!response.ok) {
+      throw new Error(`下载模型失败: ${response.status} ${response.statusText}`)
+    }
+    const buffer = await response.arrayBuffer()
+    await writeFile(modelRelativePath, new Uint8Array(buffer), {
+      baseDir: BaseDirectory.Resource
+    })
+  }
+
+  const resourceDirPath = await resourceDir()
+  return await join(resourceDirPath, modelRelativePath)
 }
 
 /**
@@ -155,4 +214,4 @@ export async function getFilesMeta<T>(filesPath: string[]) {
   })
 }
 
-export { getPathCache, createUserVideosDir, getUserVideosDir, getImageCache }
+export { getPathCache, getUserVideosDir, getImageCache }
