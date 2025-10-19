@@ -131,6 +131,9 @@ const commonTheme: GlobalThemeOverrides = {
   Steps: {
     indicatorBorderColorProcess: '#13987f',
     indicatorColorProcess: '#52aea3'
+  },
+  LoadingBar: {
+    colorLoading: '#13987f'
   }
 }
 

@@ -7,7 +7,7 @@
         :key="item.roomId"
         :class="[
           { active: globalStore.currentSession?.roomId === item.roomId },
-          { 'active-bot': globalStore.currentSession?.roomId === item.roomId && item.account === 'bot' },
+          { 'active-bot': globalStore.currentSession?.roomId === item.roomId && item.account === UserType.BOT },
           { 'bg-[--bg-msg-first-child] rounded-12px relative': item.top },
           { 'context-menu-active': activeContextMenuRoomId === item.roomId },
           {
@@ -116,7 +116,7 @@
 </template>
 <script lang="ts" setup name="message">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { MittEnum, RoomTypeEnum, ThemeEnum } from '@/enums'
+import { MittEnum, RoomTypeEnum, ThemeEnum, UserType } from '@/enums'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useMessage } from '@/hooks/useMessage.ts'
 import { useMitt } from '@/hooks/useMitt'
@@ -127,6 +127,7 @@ import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { useSettingStore } from '@/stores/setting'
+import { useBotStore } from '@/stores/bot'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
 
@@ -135,8 +136,10 @@ const chatStore = useChatStore()
 const globalStore = useGlobalStore()
 const groupStore = useGroupStore()
 const settingStore = useSettingStore()
+const botStore = useBotStore()
 const { addListener } = useTauriListener()
 const { themes } = storeToRefs(settingStore)
+const botDisplayText = computed(() => botStore.displayText)
 const { openMsgSession } = useCommon()
 const msgScrollbar = useTemplateRef<HTMLElement>('msg-scrollbar')
 const { handleMsgClick, handleMsgDelete, menuList, specialMenuList, handleMsgDblclick } = useMessage()
@@ -180,6 +183,10 @@ const sessionList = computed(() => {
         if (lastMsg) {
           const senderName = getMessageSenderName(lastMsg, '', item.roomId)
           displayMsg = formatMessageContent(lastMsg, item.type, senderName, isAtMe)
+        }
+
+        if (item.account === UserType.BOT) {
+          displayMsg = botDisplayText.value || displayMsg
         }
 
         return {
