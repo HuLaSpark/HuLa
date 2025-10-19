@@ -1,12 +1,17 @@
 import { BaseDirectory, exists, mkdir, writeFile } from '@tauri-apps/plugin-fs'
 import { createEventHook } from '@vueuse/core'
+import { isMobile } from '@/utils/PlatformConstants'
 
 export const useDownload = () => {
   const process = ref(0)
   const isDownloading = ref(false)
   const { on: onLoaded, trigger } = createEventHook()
 
-  const downloadFile = async (url: string, savePath: string, baseDir: BaseDirectory = BaseDirectory.AppCache) => {
+  const downloadFile = async (
+    url: string,
+    savePath: string,
+    baseDir: BaseDirectory = isMobile() ? BaseDirectory.AppData : BaseDirectory.AppCache
+  ) => {
     try {
       isDownloading.value = true
       process.value = 0

@@ -1,52 +1,59 @@
 <template>
-  <n-image
-    v-if="body?.url"
-    class="select-none cursor-pointer"
-    :img-props="{
-      style: {
-        ...imageStyle
-      }
-    }"
-    object-fit="cover"
-    show-toolbar-tooltip
-    preview-disabled
-    style="border-radius: 8px; cursor: pointer !important"
-    :src="body?.url"
-    @dblclick="handleOpenImageViewer"
-    @click="handleOpenImage"
-    @error="handleImageError">
-    <template #placeholder>
-      <n-flex
-        v-if="!isError"
-        align="center"
-        justify="center"
-        :style="{
-          width: `${imageStyle.width}`,
-          height: `${imageStyle.height}`,
-          backgroundColor: '#c8c8c833'
-        }"
-        class="rounded-10px">
-        <img class="size-24px select-none" src="@/assets/img/loading.svg" alt="loading" />
-      </n-flex>
-    </template>
-    <template #error>
-      <n-flex v-if="isError" align="center" justify="center" class="w-200px h-150px bg-#c8c8c833 rounded-10px">
-        <svg class="size-34px color-[--chat-text-color]"><use href="#error-picture"></use></svg>
-      </n-flex>
-    </template>
-  </n-image>
+  <div>
+    <n-image
+      v-if="body?.url"
+      class="select-none cursor-pointer"
+      :img-props="{
+        style: {
+          ...imageStyle
+        }
+      }"
+      object-fit="cover"
+      show-toolbar-tooltip
+      preview-disabled
+      style="border-radius: 8px; cursor: pointer !important"
+      :src="body?.url"
+      @dblclick="handleOpenImageViewer"
+      @click="handleOpenImage"
+      @error="handleImageError">
+      <template #placeholder>
+        <n-flex
+          v-if="!isError"
+          align="center"
+          justify="center"
+          :style="{
+            width: `${imageStyle.width}`,
+            height: `${imageStyle.height}`,
+            backgroundColor: '#c8c8c833'
+          }"
+          class="rounded-10px">
+          <img class="size-24px select-none" src="@/assets/img/loading.svg" alt="loading" />
+        </n-flex>
+      </template>
+      <template #error>
+        <n-flex v-if="isError" align="center" justify="center" class="w-200px h-150px bg-#c8c8c833 rounded-10px">
+          <svg class="size-34px color-[--chat-text-color]">
+            <use href="#error-picture"></use>
+          </svg>
+        </n-flex>
+      </template>
+    </n-image>
+
+    <!-- 图片预览组件 -->
+    <ImagePreview v-model:visible="showImagePreviewRef" :image-url="body?.url || ''" :message="message" />
+  </div>
 </template>
 
 <script setup lang="ts">
-import { MsgEnum } from '@/enums/index'
+import { MsgEnum } from '@/enums'
 import { useImageViewer } from '@/hooks/useImageViewer'
-import type { ImageBody } from '@/services/types'
+import type { ImageBody, MsgType } from '@/services/types'
 import { isMobile } from '@/utils/PlatformConstants'
-import { showImagePreview } from 'vant/es'
 
 const props = defineProps<{
   body: ImageBody
   onImageClick?: (url: string) => void
+  message?: MsgType
 }>()
 // 图片显示相关常量
 const MAX_WIDTH = isMobile() ? 240 : 320
@@ -57,6 +64,8 @@ const MIN_HEIGHT = 60
 const isError = ref(false)
 // 使用图片查看器hook
 const { openImageViewer } = useImageViewer()
+const showImagePreviewRef = ref(false)
+const imagesRef = ref<string[]>([])
 
 // 处理图片加载错误
 const handleImageError = () => {
@@ -67,7 +76,8 @@ const handleOpenImage = () => {
   if (!isMobile()) return // 非移动端直接返回
 
   if (props.body?.url) {
-    showImagePreview([props.body.url])
+    imagesRef.value = [props.body.url]
+    showImagePreviewRef.value = true
   }
 }
 
@@ -129,3 +139,5 @@ const imageStyle = computed(() => {
   }
 })
 </script>
+
+<style scoped></style>

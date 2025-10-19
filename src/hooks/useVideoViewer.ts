@@ -69,7 +69,8 @@ export const useVideoViewer = () => {
     try {
       const localPath = await getLocalVideoPath(url)
       if (localPath) {
-        return await exists(localPath, { baseDir: BaseDirectory.Resource })
+        const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.Resource
+        return await exists(localPath, { baseDir })
       }
     } catch (error) {
       console.error('检查视频下载状态失败:', error)

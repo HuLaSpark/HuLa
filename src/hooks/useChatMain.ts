@@ -1,4 +1,4 @@
-import { join, resourceDir } from '@tauri-apps/api/path'
+import { appDataDir, join, resourceDir } from '@tauri-apps/api/path'
 import { writeImage, writeText } from '@tauri-apps/plugin-clipboard-manager'
 import { save } from '@tauri-apps/plugin-dialog'
 import { BaseDirectory } from '@tauri-apps/plugin-fs'
@@ -297,14 +297,15 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
 
           if (!isDownloaded) {
             // 如果未下载，先下载视频
-            await downloadFile(item.message.body.url, localPath, BaseDirectory.Resource)
+            const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.Resource
+            await downloadFile(item.message.body.url, localPath, baseDir)
             // 通知相关组件更新视频下载状态
             useMitt.emit(MittEnum.VIDEO_DOWNLOAD_STATUS_UPDATED, { url: item.message.body.url, downloaded: true })
           }
 
           // 获取视频的绝对路径
-          const resourceDirPath = await resourceDir()
-          const absolutePath = await join(resourceDirPath, localPath)
+          const baseDirPath = isMobile() ? await appDataDir() : await resourceDir()
+          const absolutePath = await join(baseDirPath, localPath)
           // 在文件管理器中显示视频
           await revealItemInDir(absolutePath)
         } catch (error) {

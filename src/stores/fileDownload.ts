@@ -1,4 +1,4 @@
-import { join, resourceDir } from '@tauri-apps/api/path'
+import { appDataDir, join, resourceDir } from '@tauri-apps/api/path'
 import { BaseDirectory, exists, writeFile } from '@tauri-apps/plugin-fs'
 import { defineStore } from 'pinia'
 import { StoresEnum } from '@/enums'
@@ -153,17 +153,17 @@ export const useFileDownloadStore = defineStore(
      * @param fileName 文件名
      */
     const checkFileExists = async (fileUrl: string, fileName: string): Promise<boolean> => {
-      if (isMobile()) return false
       try {
         const downloadsDir = await userStore.getUserRoomDir()
         const filePath = await join(downloadsDir, fileName)
 
-        const fileExists = await exists(filePath, { baseDir: BaseDirectory.Resource })
+        const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.Resource
+        const fileExists = await exists(filePath, { baseDir })
 
         if (fileExists) {
           // 文件存在，构建绝对路径并更新状态
-          const resourceDirPath = await resourceDir()
-          const absolutePath = await join(resourceDirPath, filePath)
+          const baseDirPath = isMobile() ? await appDataDir() : await resourceDir()
+          const absolutePath = await join(baseDirPath, filePath)
 
           // 保持原生路径格式用于文件操作，规范化路径用于显示
           const normalizedPath = absolutePath.replace(/\\/g, '/')
@@ -254,11 +254,12 @@ export const useFileDownloadStore = defineStore(
         }
 
         // 写入文件
-        await writeFile(filePath, fileData, { baseDir: BaseDirectory.Resource })
+        const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.Resource
+        await writeFile(filePath, fileData, { baseDir })
 
         // 构建绝对路径
-        const resourceDirPath = await resourceDir()
-        const absolutePath = await join(resourceDirPath, filePath)
+        const baseDirPath = isMobile() ? await appDataDir() : await resourceDir()
+        const absolutePath = await join(baseDirPath, filePath)
 
         // 保持原生路径格式用于文件操作，规范化路径用于显示
         const normalizedPath = absolutePath.replace(/\\/g, '/')
