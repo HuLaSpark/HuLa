@@ -3,7 +3,9 @@
     <!-- 页面全部内容 -->
     <div class="flex flex-col flex-1">
       <RouterView v-slot="{ Component }">
-        <component :is="Component" :key="route.fullPath" class="page-view" />
+        <div class="page-view">
+          <component :is="Component" :key="route.fullPath" />
+        </div>
       </RouterView>
     </div>
   </div>

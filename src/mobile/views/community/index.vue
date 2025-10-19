@@ -82,7 +82,7 @@ onUnmounted(() => {
   }
 })
 
-const toScanQRCode = () => [router.push('/mobile/mobileMy/scanQRcode')]
+const toScanQRCode = () => [router.push('/mobile/mobileMy/scanQRCode')]
 
 const onUpdate = (newTab: string) => {
   console.log('已更新：', newTab)
