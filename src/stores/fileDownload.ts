@@ -5,6 +5,7 @@ import { StoresEnum } from '@/enums'
 import type { FilesMeta } from '@/services/types'
 import { useUserStore } from '@/stores/user'
 import { getFilesMeta } from '@/utils/PathUtil'
+import { isMobile } from '../utils/PlatformConstants'
 
 export interface FileDownloadStatus {
   /** 文件是否已下载 */
@@ -152,6 +153,7 @@ export const useFileDownloadStore = defineStore(
      * @param fileName 文件名
      */
     const checkFileExists = async (fileUrl: string, fileName: string): Promise<boolean> => {
+      if (isMobile()) return false
       try {
         const downloadsDir = await userStore.getUserRoomDir()
         const filePath = await join(downloadsDir, fileName)
