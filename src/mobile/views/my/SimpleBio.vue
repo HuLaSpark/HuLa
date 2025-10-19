@@ -88,7 +88,7 @@ const toSettings = () => {
 }
 
 const toScanQRCode = () => {
-  router.push('/mobile/mobileMy/scanQRcode')
+  router.push('/mobile/mobileMy/scanQRCode')
 }
 
 const toMyInfo = () => {

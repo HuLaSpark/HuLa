@@ -1,14 +1,17 @@
 <template>
-  <HeaderBar
-    :isOfficial="false"
-    :hidden-right="true"
-    :enable-default-background="false"
-    :enable-shadow="false"
-    room-name="" />
+  <div class="scanner-page">
+    <HeaderBar
+      class="scanner-header"
+      :isOfficial="false"
+      :hidden-right="true"
+      :enable-default-background="false"
+      :enable-shadow="false"
+      room-name="" />
 
-  <div class="scanner">
-    <div
-      class="w-60 h-60 mt-30% items-center justify-center border-op-50 overflow-hidden flex-col rounded-15px flex border-solid border-white border-3"></div>
+    <div class="scanner">
+      <div
+        class="w-60 h-60 mt-30% items-center justify-center border-op-50 overflow-hidden flex-col rounded-15px flex border-solid border-white border-3"></div>
+    </div>
   </div>
 </template>
 
@@ -41,25 +44,38 @@ const startScan = async () => {
 
     const res = (await Promise.race([scanTask, cancelTask])) as any
 
-    try {
-      const jsonData = JSON.parse(res.content)
-      console.log('扫码结果：', res)
-      console.log('扫码json:', jsonData)
+    // 为空或已取消
+    if (!res) {
+      result.value = '扫码已取消'
+      return
+    }
 
-      useMitt.emit(MittEnum.QR_SCAN_EVENT, jsonData)
+    console.log('扫码结果：', res)
 
-      if (res && typeof res === 'object' && 'content' in res) {
-        if (window.history.length > 1) {
-          window.history.back()
-        } else {
-          window.close()
-        }
-        result.value = res.content
-      } else {
-        result.value = '扫码失败或已取消'
+    if (res && typeof res === 'object' && 'content' in res && typeof res.content === 'string') {
+      try {
+        const jsonData = JSON.parse(res.content)
+        console.log('扫码json:', jsonData)
+        useMitt.emit(MittEnum.QR_SCAN_EVENT, jsonData)
+      } catch (error) {
+        console.log('扫码结果不是JSON，按纯文本处理：', error)
+        useMitt.emit(MittEnum.QR_SCAN_EVENT, { raw: res.content })
       }
-    } catch (error) {
-      console.log('扫码结果尝试解析JSON时失败：', error)
+
+      if (window.history.length > 1) {
+        window.history.back()
+      } else {
+        window.close()
+      }
+      result.value = res.content
+    } else if (typeof res === 'string') {
+      // 某些平台可能直接返回字符串内容
+      useMitt.emit(MittEnum.QR_SCAN_EVENT, { raw: res })
+      result.value = res
+      if (window.history.length > 1) window.history.back()
+      else window.close()
+    } else {
+      result.value = '扫码失败或已取消'
     }
   } catch (err: any) {
     console.error('扫码异常:', err)
@@ -76,20 +92,47 @@ const startScan = async () => {
   }
 }
 
-onMounted(() => {
+let unlistenAndroidBack: (() => void) | null = null
+let originalAppBg = ''
+
+onMounted(async () => {
+  // 使相机预览可见：将根容器背景设为透明，避免遮挡
+  const appContainer = document.querySelector('.appContainer') as HTMLElement | null
+  if (appContainer) {
+    originalAppBg = appContainer.style.backgroundColor || ''
+    appContainer.style.backgroundColor = 'transparent'
+  }
+
   isActive.value = true
   startScan()
 
-  listen('tauri://android-back', () => {
-    isActive.value = false
-    cancel().catch((e) => {
-      console.warn('cancel() 调用失败:', e)
-    })
-  })
+  // 仅在 Android 设备监听返回键，避免在 iOS/Safari 环境报错
+  const isAndroid = /Android/i.test(navigator.userAgent)
+  if (isAndroid) {
+    try {
+      unlistenAndroidBack = await listen('tauri://android-back', () => {
+        isActive.value = false
+        cancel().catch((e) => {
+          console.warn('cancel() 调用失败:', e)
+        })
+      })
+    } catch (e) {
+      console.warn('监听 Android 返回键失败:', e)
+    }
+  }
 })
 
 onUnmounted(() => {
   isActive.value = false
+  if (unlistenAndroidBack) {
+    unlistenAndroidBack()
+    unlistenAndroidBack = null
+  }
+  // 恢复应用根容器背景色
+  const appContainer = document.querySelector('.appContainer') as HTMLElement | null
+  if (appContainer) {
+    appContainer.style.backgroundColor = originalAppBg
+  }
   cancel().catch((e) => {
     console.warn('cancel() 调用失败:', e)
   })
@@ -97,14 +140,30 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.scanner {
+.scanner-page {
   position: relative;
   width: 100%;
   height: 100%;
-  background: transparent;
+}
+
+.scanner-header {
+  position: relative;
+  z-index: 10; /* 确保头部在扫码层之上 */
+}
+
+.scanner {
+  position: fixed;
+  inset: 0;
+  background: transparent; /* 保持透明，透出相机预览 */
   display: flex;
+  align-items: center;
   justify-content: center;
   font-size: 18px;
   text-align: center;
+  pointer-events: none; /* 不拦截点击，避免遮挡返回按钮 */
+}
+
+.scanner > div {
+  z-index: 1;
 }
 </style>
