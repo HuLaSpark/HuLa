@@ -50,10 +50,10 @@ import { useGlobalStore } from '@/stores/global'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user'
 import { useLogin } from '@/hooks/useLogin'
+import { showDialog } from 'vant'
 
 const globalStore = useGlobalStore()
 const { isTrayMenuShow } = storeToRefs(globalStore)
-const dialog = useDialog()
 const settingStore = useSettingStore()
 const userStore = useUserStore()
 
@@ -112,22 +112,23 @@ const { logout } = useLogin()
 
 // 退出登录逻辑
 async function handleLogout() {
-  dialog.error({
-    title: '提示',
-    content: '确定要退出登录吗？',
-    positiveText: '确定',
-    negativeText: '取消',
-    onPositiveClick: async () => {
+  showDialog({
+    title: '退出登录',
+    message: '确定要退出登录吗？',
+    showCancelButton: true,
+    confirmButtonText: '确定',
+    cancelButtonText: '取消'
+  })
+    .then(() => {
       settingStore.toggleLogin(false, false)
       info('登出账号')
       isTrayMenuShow.value = false
       logout()
       router.push('/mobile/login')
-    },
-    onNegativeClick: () => {
-      console.log('用户点击了取消')
-    }
-  })
+    })
+    .catch(() => {
+      info('用户点击取消')
+    })
 }
 
 // 你可以根据需要导出或操作 settings 数据
