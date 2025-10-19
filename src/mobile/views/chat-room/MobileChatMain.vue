@@ -11,7 +11,7 @@
         @room-name-click="handleRoomNameClick" />
     </template>
     <template #container>
-      <div class="h-full overflow-y-auto">
+      <div @click="handleChatMainClick" class="h-full overflow-y-auto">
         <ChatMain @scroll="handleScroll" />
       </div>
     </template>
@@ -24,6 +24,8 @@
 <script setup lang="ts">
 import router from '@/router'
 import { useGlobalStore } from '@/stores/global'
+import { useMitt } from '@/hooks/useMitt'
+import { MittEnum } from '@/enums'
 
 defineOptions({
   name: 'mobileChatRoomDefault'
@@ -38,15 +40,16 @@ const props = defineProps<{
   uid?: ''
 }>()
 
+const emitClosePanel = () => {
+  useMitt.emit(MittEnum.MOBILE_CLOSE_PANEL)
+}
+
+const handleChatMainClick = () => {
+  emitClosePanel()
+}
+
 const handleScroll = () => {
-  const input = footerBar.value?.footerBarInput
-  if (input && 'blur' in input) {
-    ;(input as HTMLInputElement).blur()
-  }
-  const closePanel = footerBar.value?.closePanel
-  if (closePanel && typeof closePanel === 'function') {
-    closePanel()
-  }
+  emitClosePanel()
 }
 
 const handleRoomNameClick = () => {

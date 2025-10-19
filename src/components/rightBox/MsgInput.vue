@@ -485,7 +485,6 @@ const handleEmojiClick = () => {
 
 /** 点击语音按钮 */
 const handleVoiceClick = () => {
-  console.log('点击语音')
   iconClickedStates.value.isClickedVoice = !iconClickedStates.value.isClickedVoice
   iconClickedStates.value.isClickedEmoji = false
   iconClickedStates.value.isClickedMore = false
@@ -508,6 +507,26 @@ const handleMobileSend = async () => {
   }
 }
 
+/** 监听移动端关闭面板 */
+const listenMobilePanelHandler = () => {
+  iconClickedStates.value = {
+    isClickedMore: false,
+    isClickedEmoji: false,
+    isClickedVoice: false,
+    isFocus: false
+  }
+}
+
+/** 监听移动端关闭面板 */
+const listenMobileClosePanel = () => {
+  useMitt.on(MittEnum.MOBILE_CLOSE_PANEL, listenMobilePanelHandler)
+}
+
+/** 移除移动端关闭面板 */
+const removeMobileClosePanel = () => {
+  useMitt.off(MittEnum.MOBILE_CLOSE_PANEL, listenMobilePanelHandler)
+}
+
 /** 导出组件方法和属性 */
 defineExpose({
   messageInputDom,
@@ -524,6 +543,9 @@ defineExpose({
 /** 移动端专用适配事件（结束） */
 
 onMounted(async () => {
+  if (isMobile()) {
+    listenMobileClosePanel()
+  }
   onKeyStroke('Enter', () => {
     if (ait.value && Number(selectedAitKey.value) > -1) {
       const item = personList.value.find((item) => item.uid === selectedAitKey.value)
@@ -605,6 +627,10 @@ onMounted(async () => {
 onUnmounted(() => {
   window.removeEventListener('click', closeMenu, true)
   window.removeEventListener('keydown', disableSelectAll)
+
+  if (isMobile()) {
+    removeMobileClosePanel()
+  }
 })
 </script>
 
