@@ -1,6 +1,5 @@
 <template>
-  <div class="flex flex-1 flex-col">
-    <img src="@/assets/mobile/chat-home/background.webp" class="w-100% absolute top-0 z-1" alt="hula" />
+  <div class="flex flex-1 flex-col relative bg-[url('@/assets/mobile/chat-home/background.webp')] bg-cover bg-center">
     <AutoFixHeightPage :show-footer="false">
       <template #header>
         <HeaderBar
@@ -129,7 +128,9 @@
                     description="输入关键词搜索">
                     <template #icon>
                       <n-icon>
-                        <svg><use href="#explosion"></use></svg>
+                        <svg>
+                          <use href="#explosion"></use>
+                        </svg>
                       </n-icon>
                     </template>
                   </n-empty>
