@@ -9,10 +9,10 @@
         :room-name="title + '设置'" />
     </template>
 
-    <template>
-      <img src="@/assets/mobile/chat-home/background.webp" class="w-100% relative top-0 z-1" alt="hula" />
-      <div class="z-2 absolute flex flex-col overflow-auto min-h-70vh w-full">
-        <div class="flex flex-col gap-15px py-15px px-20px">
+    <template #container>
+      <div
+        class="bg-[url('@/assets/mobile/chat-home/background.webp')] bg-cover bg-center flex flex-col overflow-auto h-full">
+        <div class="flex flex-col gap-15px py-15px px-20px flex-1 min-h-0">
           <div class="flex shadow bg-white rounded-10px w-full h-60px items-center gap-10px" @click="clickInfo">
             <!-- 群头像 -->
             <div class="flex justify-center">
@@ -201,7 +201,7 @@
               </div>
             </div>
           </div>
-          <div class="flex shadow bg-white cursor-pointer text-red text-14px rounded-10px w-full">
+          <div class="shadow bg-white cursor-pointer text-red text-14px rounded-10px w-full mb-20px">
             <div class="p-15px">删除聊天记录</div>
           </div>
           <!-- 解散群聊、退出群聊、删除好友按钮 -->
@@ -268,11 +268,6 @@ const isAdmin = computed(() => {
 
 const groupMemberListSliced = computed(() => {
   const list = groupStore.memberList.slice(0, 9)
-  for (const i of list) {
-    console.log('成员：', i)
-    console.log('状态：', i.activeStatus === OnlineEnum.ONLINE)
-  }
-  console.log('群成员信息：', list)
   return list
 })
 
