@@ -1,8 +1,9 @@
 import { invoke } from '@tauri-apps/api/core'
-import { appCacheDir, join, resourceDir } from '@tauri-apps/api/path'
+import { appCacheDir, appDataDir, join, resourceDir } from '@tauri-apps/api/path'
 import { BaseDirectory, exists, mkdir, readFile, writeFile } from '@tauri-apps/plugin-fs'
 import { type FileTypeResult, fileTypeFromBuffer } from 'file-type'
 import type { FilesMeta } from '@/services/types'
+import { isMobile } from './PlatformConstants'
 
 // Tauri 资源目录下存放用户数据的根目录名
 const USER_DATA = 'userData'
@@ -14,10 +15,11 @@ const MODELS_DIR = 'models'
  * Tauri 在构建后默认不会创建该目录，需要在第一次使用前主动创建。
  */
 const ensureUserDataRoot = async (): Promise<void> => {
-  const dirExists = await exists(USER_DATA, { baseDir: BaseDirectory.Resource })
+  const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.Resource
+  const dirExists = await exists(USER_DATA, { baseDir })
   if (!dirExists) {
     await mkdir(USER_DATA, {
-      baseDir: BaseDirectory.Resource,
+      baseDir,
       recursive: true
     })
   }
@@ -42,10 +44,11 @@ const getUserVideosDir = async (userUid: string, roomId: string): Promise<string
   await ensureUserDataRoot()
   // 确保用户ID和房间ID的子目录也存在
   const userRoomDir = await join(USER_DATA, userUid, roomId)
-  const userRoomDirExists = await exists(userRoomDir, { baseDir: BaseDirectory.Resource })
+  const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.Resource
+  const userRoomDirExists = await exists(userRoomDir, { baseDir })
   if (!userRoomDirExists) {
     await mkdir(userRoomDir, {
-      baseDir: BaseDirectory.Resource,
+      baseDir,
       recursive: true
     })
   }
@@ -56,8 +59,8 @@ export const getUserAbsoluteVideosDir = async (userUid: string, roomId: string) 
   const userResourceDirectory = await getUserVideosDir(userUid, roomId)
   const filePath = await join(userResourceDirectory)
 
-  const resourceDirPath = await resourceDir()
-  const absoluteDir = await join(resourceDirPath, filePath)
+  const baseDirPath = isMobile() ? await appDataDir() : await resourceDir()
+  const absoluteDir = await join(baseDirPath, filePath)
   return absoluteDir
 }
 
@@ -71,10 +74,11 @@ const getImageCache = (subFolder: string, userUid: string): string => {
 const ensureModelsDir = async (): Promise<string> => {
   await ensureUserDataRoot()
   const modelsPath = await join(USER_DATA, MODELS_DIR)
-  const hasModelsDir = await exists(modelsPath, { baseDir: BaseDirectory.Resource })
+  const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.Resource
+  const hasModelsDir = await exists(modelsPath, { baseDir })
   if (!hasModelsDir) {
     await mkdir(modelsPath, {
-      baseDir: BaseDirectory.Resource,
+      baseDir,
       recursive: true
     })
   }
@@ -91,7 +95,8 @@ const ensureModelsDir = async (): Promise<string> => {
 export const ensureModelFile = async (fileName: string, remoteUrl: string): Promise<string> => {
   const modelsDir = await ensureModelsDir()
   const modelRelativePath = await join(modelsDir, fileName)
-  const modelExists = await exists(modelRelativePath, { baseDir: BaseDirectory.Resource })
+  const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.Resource
+  const modelExists = await exists(modelRelativePath, { baseDir })
 
   if (!modelExists) {
     const response = await fetch(remoteUrl)
@@ -100,12 +105,12 @@ export const ensureModelFile = async (fileName: string, remoteUrl: string): Prom
     }
     const buffer = await response.arrayBuffer()
     await writeFile(modelRelativePath, new Uint8Array(buffer), {
-      baseDir: BaseDirectory.Resource
+      baseDir
     })
   }
 
-  const resourceDirPath = await resourceDir()
-  return await join(resourceDirPath, modelRelativePath)
+  const baseDirPath = isMobile() ? await appDataDir() : await resourceDir()
+  return await join(baseDirPath, modelRelativePath)
 }
 
 /**

@@ -3,6 +3,7 @@ import { startRecording, stopRecording } from 'tauri-plugin-mic-recorder-api'
 import { useUserStore } from '@/stores/user'
 import { calculateCompressionRatio, compressAudioToMp3, getAudioInfo } from '@/utils/AudioCompression'
 import { getImageCache } from '@/utils/PathUtil.ts'
+import { isMobile } from '@/utils/PlatformConstants'
 import { UploadSceneEnum } from '../enums'
 import { useUpload } from './useUpload'
 
@@ -247,16 +248,17 @@ export const useVoiceRecordRust = (options: VoiceRecordRustOptions = {}) => {
       const fullPath = cachePath + fileHashName
 
       // 确保目录存在
-      const dirExists = await exists(cachePath, { baseDir: BaseDirectory.AppCache })
+      const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.AppCache
+      const dirExists = await exists(cachePath, { baseDir })
       if (!dirExists) {
-        await mkdir(cachePath, { baseDir: BaseDirectory.AppCache, recursive: true })
+        await mkdir(cachePath, { baseDir, recursive: true })
       }
 
       // 将Blob转换为ArrayBuffer
       const arrayBuffer = await audioBlob.arrayBuffer()
 
       // 保存到本地文件
-      const file = await create(fullPath, { baseDir: BaseDirectory.AppCache })
+      const file = await create(fullPath, { baseDir })
       await file.write(new Uint8Array(arrayBuffer))
       await file.close()
 

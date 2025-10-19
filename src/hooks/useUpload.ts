@@ -8,6 +8,7 @@ import { useUserStore } from '@/stores/user'
 import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
 import { getImageDimensions } from '@/utils/ImageUtils'
 import { getQiniuToken } from '@/utils/ImRequestUtils'
+import { isMobile } from '@/utils/PlatformConstants'
 
 /** 文件信息类型 */
 export type FileInfoType = {
@@ -623,7 +624,8 @@ export const useUpload = () => {
       }
 
       try {
-        const file = await readFile(path, { baseDir: BaseDirectory.AppCache })
+        const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.AppCache
+        const file = await readFile(path, { baseDir })
         console.log(`📁 读取文件: ${path}, 大小: ${file.length} bytes`)
 
         // 创建File对象
@@ -814,7 +816,8 @@ export const useUpload = () => {
       // 使用默认上传方式
       console.log('执行文件上传:', path)
       try {
-        const file = await readFile(path, { baseDir: BaseDirectory.AppCache })
+        const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.AppCache
+        const file = await readFile(path, { baseDir })
 
         // 添加文件大小检查
         if (file.length > MAX_FILE_SIZE) {

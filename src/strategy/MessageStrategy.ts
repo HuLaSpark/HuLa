@@ -11,6 +11,7 @@ import type { MessageType } from '@/services/types.ts'
 import { fixFileMimeType, isVideoUrl } from '@/utils/FileType'
 import { getMimeTypeFromExtension, removeTag } from '@/utils/Formatting'
 import { getImageDimensions } from '@/utils/ImageUtils'
+import { isMobile } from '@/utils/PlatformConstants'
 import { useGroupStore } from '../stores/group'
 
 interface MessageStrategy {
@@ -261,7 +262,8 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
       const tempPath = `temp-image-${Date.now()}-${file.name}`
       const arrayBuffer = await file.arrayBuffer()
       const uint8Array = new Uint8Array(arrayBuffer)
-      await writeFile(tempPath, uint8Array, { baseDir: BaseDirectory.AppCache })
+      const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.AppCache
+      await writeFile(tempPath, uint8Array, { baseDir })
 
       return {
         type: this.msgType,
@@ -329,7 +331,8 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
     console.log('标准化路径:', normalizedPath)
 
     try {
-      const fileData = await readFile(normalizedPath, { baseDir: BaseDirectory.AppCache })
+      const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.AppCache
+      const fileData = await readFile(normalizedPath, { baseDir })
 
       const fileName = path.split('/').pop() || 'image.png'
       const fileType = getMimeTypeFromExtension(fileName)
@@ -598,7 +601,8 @@ class FileMessageStrategyImpl extends AbstractMessageStrategy {
   private async getFileFromPath(path: string): Promise<File> {
     try {
       const normalizedPath = path.replace(/\\/g, '/')
-      const fileData = await readFile(normalizedPath, { baseDir: BaseDirectory.AppCache })
+      const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.AppCache
+      const fileData = await readFile(normalizedPath, { baseDir })
 
       const fileName = normalizedPath.split('/').pop() || 'unknown'
       const fileType = getMimeTypeFromExtension(fileName)
@@ -636,7 +640,8 @@ class FileMessageStrategyImpl extends AbstractMessageStrategy {
     // 将文件保存到临时位置
     const arrayBuffer = await validatedFile.arrayBuffer()
     const uint8Array = new Uint8Array(arrayBuffer)
-    await writeFile(tempPath, uint8Array, { baseDir: BaseDirectory.AppCache })
+    const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.AppCache
+    await writeFile(tempPath, uint8Array, { baseDir })
 
     return {
       type: this.msgType,
@@ -923,7 +928,8 @@ class VideoMessageStrategyImpl extends AbstractMessageStrategy {
       const uint8Array = new Uint8Array(arrayBuffer)
 
       // 写入临时文件
-      await writeFile(tempPath, uint8Array, { baseDir: BaseDirectory.AppCache })
+      const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.AppCache
+      await writeFile(tempPath, uint8Array, { baseDir })
 
       // 构建完整的文件路径
       const fullPath = await join(await appCacheDir(), tempPath)
@@ -952,7 +958,8 @@ class VideoMessageStrategyImpl extends AbstractMessageStrategy {
 
       // 清理临时文件
       try {
-        await remove(tempPath, { baseDir: BaseDirectory.AppCache })
+        const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.AppCache
+        await remove(tempPath, { baseDir })
       } catch (cleanupError) {
         console.warn('清理临时文件失败:', cleanupError)
       }
@@ -979,7 +986,8 @@ class VideoMessageStrategyImpl extends AbstractMessageStrategy {
       const tempPath = `temp-video-${Date.now()}-${file.name}`
       const arrayBuffer = await file.arrayBuffer()
       const uint8Array = new Uint8Array(arrayBuffer)
-      await writeFile(tempPath, uint8Array, { baseDir: BaseDirectory.AppCache })
+      const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.AppCache
+      await writeFile(tempPath, uint8Array, { baseDir })
 
       return {
         type: this.msgType,
@@ -1054,8 +1062,9 @@ class VideoMessageStrategyImpl extends AbstractMessageStrategy {
     // 5. 处理合法字符串路径的情况
     try {
       const normalizedPath = videoFile.replace(/\\/g, '/')
+      const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.AppCache
       const fileData = await readFile(normalizedPath, {
-        baseDir: BaseDirectory.AppCache
+        baseDir
       })
 
       const fileName = normalizedPath.split('/').pop() || 'video.mp4'
@@ -1135,14 +1144,15 @@ class VideoMessageStrategyImpl extends AbstractMessageStrategy {
       const uint8Array = new Uint8Array(arrayBuffer)
 
       // 写入临时文件
-      await writeFile(tempPath, uint8Array, { baseDir: BaseDirectory.AppCache })
+      const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.AppCache
+      await writeFile(tempPath, uint8Array, { baseDir })
 
       // enableDeduplication启用文件去重，使用哈希值计算
       const result = await this.uploadHook.doUpload(tempPath, uploadUrl, { ...options, enableDeduplication: true })
 
       // 清理临时文件
       try {
-        await remove(tempPath, { baseDir: BaseDirectory.AppCache })
+        await remove(tempPath, { baseDir })
       } catch (cleanupError) {
         console.warn('清理临时文件失败:', cleanupError)
       }

@@ -3,7 +3,7 @@ import { BaseDirectory, create, exists, mkdir, readFile } from '@tauri-apps/plug
 import type { Ref } from 'vue'
 import type { FilesMeta } from '@/services/types'
 import { getFilesMeta, getImageCache } from '@/utils/PathUtil'
-import { isMac } from '@/utils/PlatformConstants'
+import { isMac, isMobile } from '@/utils/PlatformConstants'
 
 /**
  * 单个文件元数据接口
@@ -87,7 +87,8 @@ export const useAudioFileManager = (userId: string): AudioFileManagerReturn => {
     const fullPath = await join(cachePath, fileName)
 
     // 检查文件是否存在于本地缓存文件夹中
-    const fileExists = await exists(fullPath, { baseDir: BaseDirectory.AppCache })
+    const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.AppCache
+    const fileExists = await exists(fullPath, { baseDir })
     if (!fileExists) {
       return {
         cachePath,
@@ -98,7 +99,7 @@ export const useAudioFileManager = (userId: string): AudioFileManagerReturn => {
     }
 
     // 读取音频文件内容
-    const fileBuffer = await readFile(fullPath, { baseDir: BaseDirectory.AppCache })
+    const fileBuffer = await readFile(fullPath, { baseDir })
 
     // 如果是 Uint8Array，手动转成ArrayBuffer
     const arrayBuffer =
@@ -124,16 +125,17 @@ export const useAudioFileManager = (userId: string): AudioFileManagerReturn => {
   const fetchAndDownloadAudioFile = async (cachePath: string, fileName: string, url: string): Promise<ArrayBuffer> => {
     const response = await fetch(url)
     const arrayBuffer = await response.arrayBuffer()
-    const dirExists = await exists(cachePath, { baseDir: BaseDirectory.AppCache })
+    const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.AppCache
+    const dirExists = await exists(cachePath, { baseDir })
 
     // 若目录不存在，则创建缓存目录
     if (!dirExists) {
-      await mkdir(cachePath, { baseDir: BaseDirectory.AppCache, recursive: true })
+      await mkdir(cachePath, { baseDir, recursive: true })
     }
 
     // 拼接完整路径并保存文件
     const fullPath = await join(cachePath, fileName)
-    const file = await create(fullPath, { baseDir: BaseDirectory.AppCache })
+    const file = await create(fullPath, { baseDir })
     await file.write(new Uint8Array(arrayBuffer))
     await file.close()
 
@@ -151,7 +153,8 @@ export const useAudioFileManager = (userId: string): AudioFileManagerReturn => {
     const cachePath = getImageCache(audioFolder, userId)
     const fullPath = await join(cachePath, fileMeta.name)
 
-    const fileExists = await exists(fullPath, { baseDir: BaseDirectory.AppCache })
+    const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.AppCache
+    const fileExists = await exists(fullPath, { baseDir })
 
     return {
       exists: fileExists,

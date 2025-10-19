@@ -14,6 +14,7 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { removeTag } from '@/utils/Formatting'
 import { getSessionDetailWithFriends } from '@/utils/ImRequestUtils'
 import { getImageCache } from '@/utils/PathUtil.ts'
+import { isMobile } from '@/utils/PlatformConstants'
 import { invokeWithErrorHandler } from '../utils/TauriInvokeHandler'
 
 export interface SelectionRange {
@@ -37,11 +38,12 @@ const saveCacheFile = async (file: any, subFolder: string): Promise<string> => {
     const cacheReader = new FileReader()
     cacheReader.onload = async (e: any) => {
       try {
-        const isExists = await exists(tempPath, { baseDir: BaseDirectory.AppCache })
+        const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.AppCache
+        const isExists = await exists(tempPath, { baseDir })
         if (!isExists) {
-          await mkdir(tempPath, { baseDir: BaseDirectory.AppCache, recursive: true })
+          await mkdir(tempPath, { baseDir, recursive: true })
         }
-        const tempFile = await create(fullPath, { baseDir: BaseDirectory.AppCache })
+        const tempFile = await create(fullPath, { baseDir })
         await tempFile.write(e.target.result)
         await tempFile.close()
 

@@ -121,7 +121,7 @@
 </template>
 
 <script setup lang="ts">
-import { join, resourceDir } from '@tauri-apps/api/path'
+import { appDataDir, join, resourceDir } from '@tauri-apps/api/path'
 import { BaseDirectory } from '@tauri-apps/plugin-fs'
 import { MessageStatusEnum } from '@/enums'
 import { MittEnum, MsgEnum } from '@/enums/index'
@@ -131,6 +131,7 @@ import { useVideoViewer } from '@/hooks/useVideoViewer'
 import type { VideoBody } from '@/services/types'
 import { useVideoViewer as useVideoViewerStore } from '@/stores/videoViewer'
 import { formatBytes } from '@/utils/Formatting.ts'
+import { isMobile } from '@/utils/PlatformConstants'
 
 const { openVideoViewer, getLocalVideoPath, checkVideoDownloaded, getVideoFilenameEllipsis } = useVideoViewer()
 const videoViewerStore = useVideoViewerStore()
@@ -223,13 +224,14 @@ const downloadVideo = async () => {
   try {
     const localPath = await getLocalVideoPath(props.body?.url)
     if (localPath) {
-      await downloadFile(props.body.url, localPath, BaseDirectory.Resource)
+      const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.Resource
+      await downloadFile(props.body.url, localPath, baseDir)
       isVideoDownloaded.value = await checkVideoDownloaded(props.body.url)
 
       // 下载完成后，更新videoViewer store中的视频路径
       if (isVideoDownloaded.value) {
-        const resourceDirPath = await resourceDir()
-        const path = await join(resourceDirPath, localPath)
+        const baseDirPath = isMobile() ? await appDataDir() : await resourceDir()
+        const path = await join(baseDirPath, localPath)
         videoViewerStore.updateVideoPath(props.body.url, path)
       }
     }
