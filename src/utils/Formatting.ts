@@ -139,8 +139,8 @@ export const removeTag = (fragment: string) => {
   const sanitizedFragment = DOMPurify.sanitize(fragment)
   const normalizedFragment = sanitizedFragment
     .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/(div|p|li|tr|td|blockquote|h[1-6])>/gi, '\n')
-    .replace(/<(div|p|li|tr|td|blockquote|h[1-6])[^>]*>/gi, '')
+    .replace(/<\/(div|p|li|tr|td|blockquote|h[1-6])>/gi, '')
+    .replace(/<(div|p|li|tr|td|blockquote|h[1-6])[^>]*>/gi, '\n')
     .replace(/\r\n|\r/g, '\n')
 
   const textContent = new DOMParser().parseFromString(normalizedFragment, 'text/html').body.textContent || fragment
