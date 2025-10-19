@@ -111,7 +111,9 @@ export enum MittEnum {
   /** 扫码事件 */
   QR_SCAN_EVENT = 'qrScanEvent',
   /** 移动端通话浮层请求 */
-  MOBILE_RTC_CALL_REQUEST = 'mobileRtcCallRequest'
+  MOBILE_RTC_CALL_REQUEST = 'mobileRtcCallRequest',
+  /** 移动端关闭输入框面板 */
+  MOBILE_CLOSE_PANEL = 'mobileClosePanel'
 }
 
 /** 主题类型 */

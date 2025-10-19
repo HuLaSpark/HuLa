@@ -189,15 +189,20 @@
       @location-selected="handleLocationSelected"
       @cancel="showLocationModal = false" />
 
-    <Transition name="panel-slide">
-      <div v-show="isPanelVisible" class="panel-container">
-        <div class="h-auto max-h-19rem overflow-y-auto">
-          <Emoticon @emojiHandle="emojiHandle" v-if="inputState.isClickedEmoji" :all="false" />
-
-          <!-- <Voice @cancel="handleMobileVoiceCancel" @send="handleMobileVoiceSend" v-if="inputState.isClickedVoice" /> -->
-
-          <More v-if="inputState.isClickedMore" @sendFiles="handleMoreSendFiles" />
-        </div>
+    <!-- 移动端输入框点击icon弹起的面板 -->
+    <Transition v-if="isMobile()" name="panel-slide">
+      <div v-show="isPanelVisible" class="panel-container panel-container--fixed">
+        <Transition name="panel-content" mode="out-in">
+          <div v-if="inputState.isClickedEmoji" key="emoji" class="panel-content">
+            <Emoticon @emojiHandle="emojiHandle" :all="false" />
+          </div>
+          <div v-else-if="inputState.isClickedVoice" key="voice" class="panel-content">
+            <Voice @cancel="handleMobileVoiceCancel" @send="handleMobileVoiceSend" />
+          </div>
+          <div v-else-if="inputState.isClickedMore" key="more" class="panel-content">
+            <More @sendFiles="handleMoreSendFiles" />
+          </div>
+        </Transition>
       </div>
     </Transition>
   </main>
@@ -226,6 +231,8 @@ import { isMac, isMobile } from '@/utils/PlatformConstants'
 
 // 移动端组件条件导入
 const More = isMobile() ? defineAsyncComponent(() => import('@/mobile/components/chat-room/panel/More.vue')) : void 0
+
+const Voice = isMobile() ? defineAsyncComponent(() => import('@/mobile/components/chat-room/panel/Voice.vue')) : void 0
 
 const { detailId } = defineProps<{
   detailId: SessionItem['detailId']
@@ -526,15 +533,6 @@ const openChatHistory = async () => {
   })
 }
 
-onMounted(async () => {
-  await nextTick()
-  // 启动高效的容器尺寸监听
-  observeContainerResize()
-
-  if (MsgInputRef.value) {
-    msgInputDom.value = MsgInputRef.value.messageInputDom
-  }
-})
 /**
  *
  * 移动端代码（开始）
@@ -554,23 +552,44 @@ const inputState = ref({
 
 /** 点击更多按钮 */
 const handleMoreClick = (value: any) => {
-  console.log('handleMoreClick', value)
   inputState.value = value
-  isPanelVisible.value = value.isClickedMore
+  isPanelVisible.value = value.isClickedMore || value.isClickedEmoji || value.isClickedVoice
 }
 
 /** 点击表情按钮 */
 const handleEmojiClick = (value: any) => {
-  console.log('handleEmojiClick', value)
   inputState.value = value
-  isPanelVisible.value = value.isClickedEmoji
+  isPanelVisible.value = value.isClickedMore || value.isClickedEmoji || value.isClickedVoice
 }
 
 /** 点击语音按钮 */
 const handleVoiceClick = (value: any) => {
-  console.log('handleVoiceClick', value)
   inputState.value = value
-  isPanelVisible.value = value.isClickedVoice
+  isPanelVisible.value = value.isClickedMore || value.isClickedEmoji || value.isClickedVoice
+}
+
+/** 取消语音录制 */
+const handleMobileVoiceCancel = () => {
+  useMitt.emit(MittEnum.MOBILE_CLOSE_PANEL)
+  // 重置状态
+  inputState.value = {
+    isClickedMore: false,
+    isClickedEmoji: false,
+    isClickedVoice: false,
+    isFocus: false
+  }
+  isPanelVisible.value = false
+}
+
+/** 发送语音消息 */
+const handleMobileVoiceSend = async (voiceData: any) => {
+  try {
+    await MsgInputRef.value?.sendVoiceDirect(voiceData)
+  } catch (error) {
+    console.error('发送语音失败', error)
+  }
+  // 发送后关闭面板
+  handleMobileVoiceCancel()
 }
 
 /** 处理自定义聚焦事件 */
@@ -596,8 +615,34 @@ const handleMoreSendFiles = async (files: File[]) => {
 
 /** 处理发送事件 */
 const handleSend = () => {
-  console.log('handleSend')
   isPanelVisible.value = false
+}
+
+/**
+ * 监听移动端关闭面板事件
+ */
+const listenMobilePanelHandler = () => {
+  inputState.value = {
+    isClickedMore: false,
+    isClickedEmoji: false,
+    isClickedVoice: false,
+    isFocus: false
+  }
+  isPanelVisible.value = false
+}
+
+/**
+ * 监听移动端关闭面板事件
+ */
+const listenMobileClosePanel = () => {
+  useMitt.on(MittEnum.MOBILE_CLOSE_PANEL, listenMobilePanelHandler)
+}
+
+/**
+ * 移除移动端关闭面板事件
+ */
+const removeMobileClosePanel = () => {
+  useMitt.off(MittEnum.MOBILE_CLOSE_PANEL, listenMobilePanelHandler)
 }
 
 /**
@@ -605,6 +650,28 @@ const handleSend = () => {
  * 移动端代码（结束）
  *
  */
+
+onMounted(async () => {
+  if (isMobile()) {
+    // 监听移动端关闭面板事件
+    listenMobileClosePanel()
+  }
+
+  await nextTick()
+  // 启动高效的容器尺寸监听
+  observeContainerResize()
+
+  if (MsgInputRef.value) {
+    msgInputDom.value = MsgInputRef.value.messageInputDom
+  }
+})
+
+onUnmounted(() => {
+  if (isMobile()) {
+    // 移除移动端关闭面板事件
+    removeMobileClosePanel()
+  }
+})
 </script>
 
 <style scoped lang="scss">
@@ -693,6 +760,11 @@ const handleSend = () => {
   background-color: var(--bg-emoji, #f5f5f5);
   display: flex;
   flex-direction: column;
+  transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.panel-container--fixed {
+  height: 18rem;
 }
 
 /* 使用 transform 实现高性能动画 - 从下往上滑出 */
@@ -720,5 +792,24 @@ const handleSend = () => {
 .panel-slide-leave-to {
   opacity: 0;
   transform: translateY(100%);
+}
+
+.panel-content-enter-active,
+.panel-content-leave-active {
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+
+.panel-content-enter-from,
+.panel-content-leave-to {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.panel-content-enter-to,
+.panel-content-leave-from {
+  opacity: 1;
+  transform: translateY(0);
 }
 </style>
