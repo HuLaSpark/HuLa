@@ -100,7 +100,11 @@
             <!-- 长按项 -->
             <div @click.stop="intoRoom(item)" class="grid grid-cols-[2.2rem_1fr_4rem] items-start px-4 py-3 gap-1">
               <div class="flex-shrink-0">
-                <n-badge :offset="[-6, 6]" :value="item.unreadCount" :max="99">
+                <n-badge
+                  :offset="[-6, 6]"
+                  :color="item.muteNotification === NotificationTypeEnum.NOT_DISTURB ? 'grey' : 'red'"
+                  :value="item.unreadCount"
+                  :max="99">
                   <n-avatar :size="52" :src="AvatarUtils.getAvatarUrl(item.avatar)" fallback-src="/logo.png" round />
                 </n-badge>
               </div>
@@ -113,15 +117,24 @@
               </div>
 
               <!-- 时间：靠顶 -->
-              <div class="text-12px pt-9px text-right flex gap-1 items-center justify-right">
-                <span v-if="item.hotFlag === IsAllUserEnum.Yes">
-                  <svg class="size-22px select-none outline-none cursor-pointer color-#13987f">
-                    <use href="#auth"></use>
+              <div class="text-12px pt-9px text-right flex flex-col gap-1 items-end justify-center">
+                <div class="flex items-center gap-1">
+                  <span v-if="item.hotFlag === IsAllUserEnum.Yes">
+                    <svg class="size-22px select-none outline-none cursor-pointer color-#13987f">
+                      <use href="#auth"></use>
+                    </svg>
+                  </span>
+                  <span class="text-#555">
+                    {{ formatTimestamp(item?.activeTime) }}
+                  </span>
+                </div>
+                <div v-if="item.muteNotification === NotificationTypeEnum.NOT_DISTURB">
+                  <svg
+                    :class="[globalStore.currentSession?.roomId === item.roomId ? 'color-#fefefe' : 'color-#909090']"
+                    class="size-14px">
+                    <use href="#close-remind"></use>
                   </svg>
-                </span>
-                <span class="text-#555">
-                  {{ formatTimestamp(item?.activeTime) }}
-                </span>
+                </div>
               </div>
             </div>
             <template #right>
@@ -178,7 +191,7 @@ import { debounce, throttle } from 'lodash-es'
 import NavBar from '#/layout/navBar/index.vue'
 import addFriendIcon from '@/assets/mobile/chat-home/add-friend.webp'
 import groupChatIcon from '@/assets/mobile/chat-home/group-chat.webp'
-import { RoomTypeEnum } from '@/enums'
+import { RoomTypeEnum, NotificationTypeEnum } from '@/enums'
 import { useMessage } from '@/hooks/useMessage.ts'
 import { useReplaceMsg } from '@/hooks/useReplaceMsg'
 import { IsAllUserEnum, type SessionItem } from '@/services/types.ts'

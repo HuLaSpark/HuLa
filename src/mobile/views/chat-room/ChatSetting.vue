@@ -195,7 +195,9 @@
                 style="border-bottom: 1px solid; border-color: #ebebeb"
                 class="flex justify-between py-12px items-center">
                 <div class="text-14px">消息免打扰</div>
-                <n-switch :value="activeItem.muteNotification === NotificationTypeEnum.NOT_DISTURB" />
+                <n-switch
+                  @update:value="handleNotification"
+                  :value="activeItem.muteNotification === NotificationTypeEnum.NOT_DISTURB" />
               </div>
             </div>
           </div>
@@ -228,7 +230,15 @@ import { useGlobalStore } from '@/stores/global'
 import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { deleteFriend, getGroupDetail, modifyFriendRemark, setSessionTop, updateRoomInfo } from '@/utils/ImRequestUtils'
+import {
+  deleteFriend,
+  getGroupDetail,
+  modifyFriendRemark,
+  notification,
+  setSessionTop,
+  shield,
+  updateRoomInfo
+} from '@/utils/ImRequestUtils'
 import { toFriendInfoPage } from '@/utils/routerUtils'
 
 defineOptions({
@@ -491,6 +501,83 @@ const fetchGroupMembers = async (roomId: string) => {
     console.error('获取群成员失败:', error)
   }
 }
+
+/**
+ *
+ * 消息免打扰相关功能
+ *
+ *
+ */
+
+/** 处理屏蔽消息 */
+const handleShield = (value: boolean) => {
+  shield({
+    roomId: activeItem.value.roomId,
+    state: value
+  })
+    .then(() => {
+      // 更新本地会话状态
+      chatStore.updateSession(activeItem.value.roomId, {
+        shield: value
+      })
+
+      // 1. 先保存当前聊天室ID
+      const tempRoomId = globalStore.currentSession!.roomId
+
+      // 3. 在下一个tick中恢复原来的聊天室ID，触发重新加载消息
+      nextTick(() => {
+        globalStore.updateCurrentSessionRoomId(tempRoomId)
+      })
+
+      window.$message.success(value ? '已屏蔽消息' : '已取消屏蔽')
+    })
+    .catch(() => {
+      window.$message.error('设置失败')
+    })
+}
+
+/** 处理消息免打扰 */
+const handleNotification = (value: boolean) => {
+  const newType = value ? NotificationTypeEnum.NOT_DISTURB : NotificationTypeEnum.RECEPTION
+  // 如果当前是屏蔽状态，需要先取消屏蔽
+  if (activeItem.value.shield) {
+    handleShield(false)
+  }
+  notification({
+    roomId: activeItem.value.roomId,
+    type: newType
+  })
+    .then(() => {
+      // 更新本地会话状态
+      chatStore.updateSession(activeItem.value.roomId, {
+        muteNotification: newType
+      })
+
+      // 如果从免打扰切换到允许提醒，需要重新计算全局未读数
+      if (
+        activeItem.value.muteNotification === NotificationTypeEnum.NOT_DISTURB &&
+        newType === NotificationTypeEnum.RECEPTION
+      ) {
+        chatStore.updateTotalUnreadCount()
+      }
+
+      // 如果设置为免打扰，也需要更新全局未读数，因为该会话的未读数将不再计入
+      if (newType === NotificationTypeEnum.NOT_DISTURB) {
+        chatStore.updateTotalUnreadCount()
+      }
+
+      window.$message.success(value ? '已设置接收消息但不提醒' : '已允许消息提醒')
+    })
+    .catch(() => {
+      window.$message.error('设置失败')
+    })
+}
+
+/**
+ *
+ * 消息免打扰相关功能（结束）
+ *
+ *  */
 
 /**
  * 这里直接监听状态的值
