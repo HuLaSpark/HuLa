@@ -4,6 +4,7 @@ import { useDebounceFn } from '@vueuse/core'
 import pLimit from 'p-limit'
 import { storeToRefs } from 'pinia'
 import type { Ref } from 'vue'
+import { nextTick } from 'vue'
 import { LimitEnum, MessageStatusEnum, MittEnum, MsgEnum, TauriCommand, UploadSceneEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
 import type { AIModel } from '@/services/types.ts'
@@ -16,7 +17,7 @@ import { messageStrategyMap } from '@/strategy/MessageStrategy.ts'
 import { fixFileMimeType, getMessageTypeByFile } from '@/utils/FileType.ts'
 import { processClipboardImage } from '@/utils/ImageUtils.ts'
 import { getReplyContent } from '@/utils/MessageReply.ts'
-import { isMac, isWindows } from '@/utils/PlatformConstants'
+import { isMac, isMobile, isWindows } from '@/utils/PlatformConstants'
 import { type SelectionRange, useCommon } from './useCommon.ts'
 import { globalFileUploadQueue } from './useFileUploadQueue.ts'
 import { useTrigger } from './useTrigger'
@@ -439,6 +440,13 @@ export const useMsgInput = (messageInputDom: Ref) => {
       msgId: tempMsgId,
       status: MessageStatusEnum.SENDING
     })
+
+    // 移动端发送消息后重新聚焦输入框
+    if (isMobile()) {
+      nextTick(() => {
+        focusOn(messageInputDom.value)
+      })
+    }
 
     try {
       // 如果是图片或表情消息,需要先上传文件

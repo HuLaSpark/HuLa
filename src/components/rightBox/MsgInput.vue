@@ -498,9 +498,14 @@ const handleVoiceClick = () => {
   })
 }
 
-const handleMobileSend = () => {
-  send()
+const handleMobileSend = async () => {
+  await send()
   selfEmitter('send', iconClickedStates.value)
+
+  // 移动端发送消息后重新聚焦输入框
+  if (isMobile()) {
+    focusInput()
+  }
 }
 
 /** 导出组件方法和属性 */
