@@ -42,6 +42,7 @@ tauri = { version = "2.8.5", features = [
     "tray-icon",
     "image-png",
     "rustls-tls",
+    "unstable",
 ] }
 tauri-plugin-os = "2"
 tauri-plugin-shell = "2"

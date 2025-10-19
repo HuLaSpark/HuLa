@@ -171,7 +171,9 @@ export enum StoresEnum {
   /** 目录扫描器 */
   SCANNER = 'scanner',
   /** 引导状态 */
-  GUIDE = 'guide'
+  GUIDE = 'guide',
+  /** Bot 视图状态 */
+  BOT = 'bot'
 }
 
 /**
