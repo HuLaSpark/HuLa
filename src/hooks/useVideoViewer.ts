@@ -6,6 +6,7 @@ import { useWindow } from '@/hooks/useWindow'
 import { useChatStore } from '@/stores/chat'
 import { useUserStore } from '@/stores/user'
 import { useVideoViewer as useVideoViewerStore } from '@/stores/videoViewer'
+import { isMobile } from '@/utils/PlatformConstants'
 
 /** 视频处理 */
 export const useVideoViewer = () => {
@@ -63,6 +64,7 @@ export const useVideoViewer = () => {
 
   // 检查视频是否已下载到本地
   const checkVideoDownloaded = async (url: string) => {
+    if (isMobile()) return false
     if (!url) return false
     try {
       const localPath = await getLocalVideoPath(url)
@@ -119,6 +121,7 @@ export const useVideoViewer = () => {
     includeTypes: MsgEnum[] = [MsgEnum.VIDEO],
     customVideoList?: string[]
   ) => {
+    if (isMobile()) return
     if (!url) return
 
     let list: string[]
