@@ -9,10 +9,10 @@
         room-name="编辑生日" />
     </template>
 
-    <template>
-      <img src="@/assets/mobile/chat-home/background.webp" class="w-100% relative top-0 z-1" alt="hula" />
-      <div class="z-2 flex flex-col absolute overflow-auto min-h-70vh w-full">
-        <div class="flex flex-col p-20px gap-20px">
+    <template #container>
+      <div
+        class="bg-[url('@/assets/mobile/chat-home/background.webp')] bg-cover bg-center flex flex-col overflow-auto h-full">
+        <div class="flex flex-col flex-1 gap-20px py-15px px-20px">
           <div class="flex justify-center w-full bg-white rounded-10px shadow">
             <n-date-picker panel type="date" />
           </div>

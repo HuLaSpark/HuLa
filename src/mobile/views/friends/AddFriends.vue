@@ -11,8 +11,8 @@
           room-name="编辑资料" />
       </template>
 
-      <template>
-        <div class="z-2 absolute flex flex-col gap-1 overflow-auto min-h-70vh w-full">
+      <template #container>
+        <div class="flex flex-col gap-1 overflow-auto h-full">
           <!-- 主要内容 -->
           <n-flex vertical :size="14">
             <!-- 搜索框 -->

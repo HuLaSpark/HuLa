@@ -11,8 +11,8 @@
           room-name="编辑资料" />
       </template>
 
-      <template>
-        <div class="z-2 absolute flex flex-col gap-1 overflow-auto min-h-70vh w-full">
+      <template #container>
+        <div class="flex flex-col gap-1 overflow-auto h-full">
           <div class="flex flex-col p-[0px_20px_20px_20px] gap-15px">
             <!-- 头像 -->
             <div class="flex justify-center">
