@@ -87,6 +87,8 @@ const qrCodeType = ref('canvas' as const)
 const qrCodeIcon = ref('/logo.png')
 const qrErrorCorrectionLevel = ref('H' as const)
 const pollInterval = ref<NodeJS.Timeout | null>(null)
+const pollingRequesting = ref(false)
+const confirmedHandled = ref(false)
 
 const scanStatus = ref<{
   status: 'error' | 'success' | 'auth'
@@ -116,8 +118,47 @@ const refreshQRCode = () => {
     clearInterval(pollInterval.value)
     pollInterval.value = null
   }
+  pollingRequesting.value = false
+  confirmedHandled.value = false
   // 重新生成二维码
   handleQRCodeLogin()
+}
+
+const clearPolling = () => {
+  if (pollInterval.value) {
+    clearInterval(pollInterval.value)
+    pollInterval.value = null
+  }
+}
+
+const handleConfirmed = async (res: any) => {
+  if (confirmedHandled.value) {
+    return
+  }
+  confirmedHandled.value = true
+  clearPolling()
+  try {
+    await emit('set_user_info', {
+      token: res.data.token,
+      refreshToken: res.data.refreshToken || '',
+      uid: res.data.uid
+    })
+
+    await loginCommand({ uid: res.data.uid }, true).then(() => {
+      scanStatus.value.show = true
+      scanStatus.value = {
+        status: 'success',
+        icon: 'success',
+        text: '登录成功',
+        show: true
+      }
+      loadText.value = '登录中...'
+    })
+  } catch (error) {
+    console.error('获取用户详情失败:', error)
+    confirmedHandled.value = false
+    handleError('登录成功，但获取用户信息失败')
+  }
 }
 
 const startPolling = () => {
@@ -125,6 +166,10 @@ const startPolling = () => {
     clearInterval(pollInterval.value)
   }
   pollInterval.value = setInterval(async () => {
+    if (pollingRequesting.value || confirmedHandled.value) {
+      return
+    }
+    pollingRequesting.value = true
     try {
       const res: any = await checkQRStatus({
         qrId: qrCodeResp.value.qrId,
@@ -141,45 +186,23 @@ const startPolling = () => {
           handleAuth()
           break
         case 'CONFIRMED':
-          if (pollInterval.value) {
-            clearInterval(pollInterval.value)
-            pollInterval.value = null
-          }
-          try {
-            // 在 rust 部分设置 token
-            await emit('set_user_info', {
-              token: res.data.token,
-              refreshToken: res.data.refreshToken || '',
-              uid: res.data.uid
-            })
-
-            await loginCommand({ uid: res.data.uid }, true).then(() => {
-              scanStatus.value.show = true
-              scanStatus.value = {
-                status: 'success',
-                icon: 'success',
-                text: '登录成功',
-                show: true
-              }
-              loadText.value = '登录中...'
-            })
-          } catch (error) {
-            console.error('获取用户详情失败:', error)
-            handleError('登录成功，但获取用户信息失败')
-          }
+          await handleConfirmed(res)
           break
         case 'EXPIRED':
-          if (pollInterval.value) {
-            clearInterval(pollInterval.value)
-            pollInterval.value = null
-          }
+          clearPolling()
           handleError('二维码已过期')
           break
         default:
           break
       }
     } catch (error) {
-      handleQRCodeLogin()
+      if (!confirmedHandled.value) {
+        handleQRCodeLogin()
+      }
+    } finally {
+      if (!confirmedHandled.value) {
+        pollingRequesting.value = false
+      }
     }
   }, 2000)
 }
@@ -198,6 +221,8 @@ const handleQRCodeLogin = async () => {
     }
 
     // 启动轮询
+    confirmedHandled.value = false
+    pollingRequesting.value = false
     startPolling()
   } catch (error) {
     handleError('生成二维码失败')
@@ -218,10 +243,7 @@ const handleError = (e: any) => {
 
 onUnmounted(() => {
   // 组件卸载时清除轮询
-  if (pollInterval.value) {
-    clearInterval(pollInterval.value)
-    pollInterval.value = null
-  }
+  clearPolling()
 })
 
 /** 处理授权场景 */
