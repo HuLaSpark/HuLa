@@ -3,53 +3,57 @@
     <!-- 顶部工具栏 -->
     <div class="language-switcher">
       <!-- 返回按钮 -->
-      <div v-if="canGoBack" class="back-btn" @click="goBack">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round">
-          <path d="M19 12H5M12 19l-7-7 7-7" />
-        </svg>
+      <div v-if="canGoBack" class="back-btn flex-shrink-0" @click="goBack">
+        <svg class="size-16px rotate-180"><use href="#right"></use></svg>
         返回
       </div>
 
       <!-- 语言切换器 (仅在查看 README 时显示) -->
-      <template v-if="!isViewingLink">
-        <div :class="['lang-btn', { active: currentLang === 'zh' }]" @click="switchLanguage('zh')">中文</div>
-        <div :class="['lang-btn', { active: currentLang === 'en' }]" @click="switchLanguage('en')">English</div>
-      </template>
+      <div v-if="!isViewingLink" class="flex-y-center w-full justify-between">
+        <div class="flex-center gap-12px">
+          <div :class="['lang-btn', { active: currentLang === 'zh' }]" @click="switchLanguage('zh')">中文</div>
+          <div :class="['lang-btn', { active: currentLang === 'en' }]" @click="switchLanguage('en')">English</div>
+        </div>
+        <div class="flex-center">
+          <n-button
+            v-if="isAssistantView && canImportLocalModel"
+            size="small"
+            strong
+            secondary
+            class="import-btn"
+            @click="openLocalModel">
+            导入模型
+          </n-button>
+          <n-badge class="mr-14px" value="Beta" :color="'var(--bate-color)'">
+            <div :class="['assistant-btn', { active: isAssistantView }]" @click="showAssistant()">3D预览</div>
+          </n-badge>
+        </div>
+      </div>
 
       <!-- 当前页面标题和操作按钮 -->
       <div v-if="isViewingLink" class="page-title">{{ currentUrl }}</div>
       <div v-if="isViewingLink" class="open-in-browser-btn" @click="openInBrowser">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round">
-          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-          <polyline points="15 3 21 3 21 9"></polyline>
-          <line x1="10" y1="14" x2="21" y2="3"></line>
-        </svg>
+        <svg class="size-16px"><use href="#share"></use></svg>
         在浏览器中打开
       </div>
     </div>
 
     <div class="bot-content">
       <n-loading-bar-provider ref="loadingBarRef" :to="false" :container-style="loadingBarContainerStyle">
+        <!-- HuLa 小管家 3D 模型 -->
+        <HuLaAssistant
+          v-if="isAssistantView"
+          :active="isAssistantView"
+          :custom-model="customModelPath"
+          @ready="handleAssistantReady"
+          @error="handleAssistantError" />
+
         <!-- Markdown 内容区域 -->
-        <div v-if="!isViewingLink" ref="markdownContainer" class="markdown-content" v-html="renderedMarkdown"></div>
+        <div
+          v-else-if="!isViewingLink"
+          ref="markdownContainer"
+          class="markdown-content"
+          v-html="renderedMarkdown"></div>
 
         <!-- 外部链接 Tauri Webview 容器 -->
         <div v-else ref="webviewContainer" class="external-webview">
@@ -71,8 +75,10 @@ import { Webview } from '@tauri-apps/api/webview'
 import { getCurrentWindow, type Window as TauriWindow } from '@tauri-apps/api/window'
 import { LogicalPosition, LogicalSize } from '@tauri-apps/api/dpi'
 import type { UnlistenFn } from '@tauri-apps/api/event'
+import { open } from '@tauri-apps/plugin-dialog'
 import { isDesktop } from '@/utils/PlatformConstants'
 import { useBotStore } from '@/stores/bot'
+import HuLaAssistant from './HuLaAssistant.vue'
 
 // 当前语言
 const currentLang = ref<'zh' | 'en'>('zh')
@@ -91,12 +97,30 @@ const markdownContainer = ref<HTMLElement | null>(null)
 const webviewContainer = ref<HTMLElement | null>(null)
 
 // 视图状态描述, 用于维护“返回”栈
-type ViewState = { type: 'readme' } | { type: 'markdown'; source: string } | { type: 'web'; url: string }
+type ViewState =
+  | { type: 'readme' }
+  | { type: 'markdown'; source: string }
+  | { type: 'web'; url: string }
+  | { type: 'assistant' }
+
+const cloneView = (view: ViewState): ViewState => {
+  if (view.type === 'readme' || view.type === 'assistant') {
+    return { type: view.type }
+  }
+  if (view.type === 'markdown') {
+    return { type: 'markdown', source: view.source }
+  }
+  return { type: 'web', url: view.url }
+}
 
 const currentView = ref<ViewState>({ type: 'readme' })
 // 记录历史视图, 便于在 Markdown 与外链之间返回
 const historyStack = ref<ViewState[]>([])
 const canGoBack = computed(() => historyStack.value.length > 0)
+const isAssistantView = computed(() => currentView.value.type === 'assistant')
+const customModelPath = ref<string | null>(null)
+const canImportLocalModel = isDesktop()
+let assistantFallbackView: ViewState | null = null
 
 const botStore = useBotStore()
 
@@ -136,14 +160,7 @@ const canEmbedWebview = computed(() => {
 
 // 将当前视图快照压入栈, 保证后续可回退
 const pushCurrentView = () => {
-  const view = currentView.value
-  if (view.type === 'readme') {
-    historyStack.value.push({ type: 'readme' })
-  } else if (view.type === 'markdown') {
-    historyStack.value.push({ type: 'markdown', source: view.source })
-  } else {
-    historyStack.value.push({ type: 'web', url: view.url })
-  }
+  historyStack.value.push(cloneView(currentView.value))
 }
 
 const ensureHostWindow = async () => {
@@ -196,6 +213,74 @@ const destroyExternalWebview = async () => {
       console.warn('关闭嵌入 Webview 失败:', error)
     }
     externalWebview.value = null
+  }
+}
+
+let assistantShouldPopHistoryOnError = false
+
+const handleAssistantReady = () => {
+  assistantFallbackView = null
+  assistantShouldPopHistoryOnError = false
+}
+
+const handleAssistantError = async (error: unknown) => {
+  console.error('加载 HuLa 小管家失败:', error)
+  customModelPath.value = null
+  if (assistantShouldPopHistoryOnError && historyStack.value.length) {
+    historyStack.value.pop()
+  }
+  assistantShouldPopHistoryOnError = false
+  const fallback = assistantFallbackView
+  assistantFallbackView = null
+  if (!fallback) return
+  if (fallback.type === 'readme') {
+    await loadReadme(false)
+  } else if (fallback.type === 'markdown') {
+    await loadMarkdownFile(fallback.source, false)
+  } else if (fallback.type === 'web') {
+    await showExternalLink(fallback.url, false)
+  }
+}
+
+const showAssistant = async (recordHistory = true, preserveCustomModel = false) => {
+  if (currentView.value.type === 'assistant') {
+    if (preserveCustomModel) {
+      await nextTick()
+    }
+    return
+  }
+  if (!preserveCustomModel) {
+    customModelPath.value = null
+  }
+  assistantFallbackView = cloneView(currentView.value)
+  assistantShouldPopHistoryOnError = recordHistory
+  if (recordHistory) {
+    pushCurrentView()
+  }
+  await destroyExternalWebview()
+  isViewingLink.value = false
+  currentUrl.value = ''
+  currentView.value = { type: 'assistant' }
+  await nextTick()
+}
+
+const openLocalModel = async () => {
+  try {
+    const selected = await open({
+      filters: [
+        {
+          name: '3D Models',
+          extensions: ['glb', 'gltf', 'vrm']
+        }
+      ],
+      multiple: false
+    })
+    if (!selected) return
+    customModelPath.value = Array.isArray(selected) ? selected[0] : selected
+    await showAssistant(true, true)
+  } catch (error) {
+    console.error('选择本地模型失败:', error)
+    window.$message?.error('选择模型文件失败，请重试')
   }
 }
 
@@ -301,15 +386,16 @@ const loadReadme = async (recordHistory = false, resetHistory = false) => {
     })
     // 使用 DOMPurify 进行额外的安全处理
     renderedMarkdown.value = DOMPurify.sanitize(html)
+    // 先更新视图状态, 确保 nextTick 时容器已挂载
+    currentView.value = { type: 'readme' }
+    isViewingLink.value = false
+    currentUrl.value = ''
 
     // 等待 DOM 更新后添加链接点击监听
     await nextTick()
     attachLinkListeners()
     finishLoading()
     botStore.setReadme(currentLang.value)
-    currentView.value = { type: 'readme' }
-    isViewingLink.value = false
-    currentUrl.value = ''
   } catch (error) {
     console.error('加载 README 失败:', error)
     renderedMarkdown.value = '<p>加载失败,请稍后重试</p>'
@@ -337,15 +423,15 @@ const loadMarkdownFile = async (filePath: string, recordHistory = true) => {
 
     // 显示在 markdown 视图中,而不是 iframe
     isViewingLink.value = false
+    // 先更新视图状态, 确保 nextTick 时容器已挂载
+    currentView.value = { type: 'markdown', source: filePath }
+    currentUrl.value = ''
 
     // 等待 DOM 更新后添加链接点击监听
     await nextTick()
     attachLinkListeners()
     finishLoading()
     botStore.setMarkdown(filePath)
-    currentView.value = { type: 'markdown', source: filePath }
-    isViewingLink.value = false
-    currentUrl.value = ''
   } catch (error) {
     console.error('加载 markdown 文件失败:', error)
     renderedMarkdown.value = `<p>加载文件失败: ${filePath}</p><p>错误: ${error}</p>`
@@ -432,6 +518,8 @@ const goBack = async () => {
     await loadReadme(false)
   } else if (previous.type === 'markdown') {
     await loadMarkdownFile(previous.source, false)
+  } else if (previous.type === 'assistant') {
+    await showAssistant(false)
   } else {
     await showExternalLink(previous.url, false)
   }
@@ -555,6 +643,28 @@ onUnmounted(() => {
     }
   }
 
+  .assistant-btn {
+    padding: 6px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-color);
+    background: linear-gradient(135deg, rgba(19, 152, 127, 0.32), rgba(19, 152, 127, 0.1));
+    transition: all 0.2s ease-in-out;
+    user-select: none;
+    -webkit-user-select: none;
+
+    &:hover {
+      color: #13987f;
+    }
+
+    &.active {
+      color: #ffffff;
+      background: linear-gradient(135deg, #13987f, #1fb39b80);
+      border-color: rgba(19, 152, 127, 0.4);
+    }
+  }
+
   .lang-btn {
     padding: 6px 16px;
     border-radius: 6px;
@@ -577,6 +687,10 @@ onUnmounted(() => {
       font-weight: 500;
       box-shadow: inset 0 0 0 1px #fbb16040;
     }
+  }
+
+  .import-btn {
+    margin-right: 16px;
   }
 }
 

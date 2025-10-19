@@ -15,6 +15,7 @@
 		5FA07CA316D84B7C6157AD98 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C5561AC4EF6A7D22351F4123 /* Metal.framework */; };
 		66C0485D21D30EE3FC68535D /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 43A3F90CF52FE87749F6AF66 /* WebKit.framework */; };
 		725ABB36A3E4DBADE9B85F1A /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = BEB6A0287B0C05B54BB18D76 /* main.mm */; };
+		8B9E3BA9E9A719E6B5F24BA7 /* KeyboardAccessory.mm in Sources */ = {isa = PBXBuildFile; fileRef = 6DE0FD4D0E352521D4B95B49 /* KeyboardAccessory.mm */; };
 		C6E3EE1EC5041769CD8C63BC /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 51F03346AEBB6EB6B6949B1F /* MetalKit.framework */; };
 		DFD77F9BDCD981184134D70B /* assets in Resources */ = {isa = PBXBuildFile; fileRef = E0D58092E5EAD80CE1062F64 /* assets */; };
 		E4594A304B63C1F809276D32 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0B6EF43A950A8BAEED368AF5 /* Assets.xcassets */; };
@@ -35,6 +36,7 @@
 		5822DACEC671151891D1FD54 /* init.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = init.rs; sourceTree = "<group>"; };
 		582937AEB5D7F35B81C5A220 /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
 		5E348B57006C5877940CA019 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		6DE0FD4D0E352521D4B95B49 /* KeyboardAccessory.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = KeyboardAccessory.mm; sourceTree = "<group>"; };
 		658A253702F290FC4BBF60D5 /* mod.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = mod.rs; sourceTree = "<group>"; };
 		76DB59D3790398E1FDB32D5A /* mod.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = mod.rs; sourceTree = "<group>"; };
 		8EA08F12BCB04981BCB86BEF /* common_cmd.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = common_cmd.rs; sourceTree = "<group>"; };
@@ -193,6 +195,7 @@
 			isa = PBXGroup;
 			children = (
 				BEB6A0287B0C05B54BB18D76 /* main.mm */,
+				6DE0FD4D0E352521D4B95B49 /* KeyboardAccessory.mm */,
 				4927FA144B0F8AA1B601E34F /* bindings */,
 			);
 			path = hula;
@@ -291,6 +294,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				725ABB36A3E4DBADE9B85F1A /* main.mm in Sources */,
+				8B9E3BA9E9A719E6B5F24BA7 /* KeyboardAccessory.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

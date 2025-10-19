@@ -1,4 +1,4 @@
-import { MittEnum, NotificationTypeEnum, RoomTypeEnum, SessionOperateEnum } from '@/enums'
+import { MittEnum, NotificationTypeEnum, RoomTypeEnum, SessionOperateEnum, UserType } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
 import type { SessionItem } from '@/services/types.ts'
 import { useChatStore } from '@/stores/chat.ts'
@@ -17,6 +17,7 @@ export const useMessage = () => {
   const settingStore = useSettingStore()
   const { chat } = storeToRefs(settingStore)
   const contactStore = useContactStore()
+  const BOT_ALLOWED_MENU_INDEXES = new Set([0, 1, 2, 3])
   /** 监听独立窗口关闭事件 */
   watchEffect(() => {
     useMitt.on(MittEnum.SHRINK_WINDOW, async (event: any) => {
@@ -308,5 +309,29 @@ export const useMessage = () => {
     window.$message.success(message)
   }
 
-  return { msgBoxShow, handleMsgClick, handleMsgDelete, handleMsgDblclick, menuList, specialMenuList, preloadChatRoom }
+  const visibleMenu = (item: SessionItem) => {
+    if (item.account === UserType.BOT) {
+      return menuList.value.filter((_, index) => BOT_ALLOWED_MENU_INDEXES.has(index))
+    }
+    return menuList.value
+  }
+
+  const visibleSpecialMenu = (item: SessionItem) => {
+    if (item.account === UserType.BOT) {
+      return []
+    }
+    return specialMenuList.value
+  }
+
+  return {
+    msgBoxShow,
+    handleMsgClick,
+    handleMsgDelete,
+    handleMsgDblclick,
+    menuList,
+    specialMenuList,
+    visibleMenu,
+    visibleSpecialMenu,
+    preloadChatRoom
+  }
 }
