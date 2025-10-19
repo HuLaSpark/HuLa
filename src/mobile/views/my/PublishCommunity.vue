@@ -9,8 +9,8 @@
         room-name="发布新动态" />
     </template>
 
-    <template>
-      <div class="z-2 flex flex-col absolute overflow-auto min-h-70vh w-full">
+    <template #container>
+      <div class="flex flex-col gap-1 overflow-auto h-full">
         <div class="flex flex-col p-20px gap-20px">
           <n-form class="bg-white rounded-15px p-10px" label-placement="left" label-width="100px">
             <n-form-item>
