@@ -474,7 +474,8 @@ const resetRegisterForm = () => {
     confirmPassword: '',
     code: '',
     uuid: '',
-    avatar: ''
+    avatar: '',
+    systemType: 2
   } as LocalRegisterInfo
   currentStep.value = 1
   registerNamePH.value = '输入HuLa昵称'
