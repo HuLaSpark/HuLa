@@ -20,6 +20,7 @@
 <script setup lang="ts">
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { convertFileSrc } from '@tauri-apps/api/core'
+import { join, resourceDir } from '@tauri-apps/api/path'
 import {
   ACESFilmicToneMapping,
   AmbientLight,
@@ -38,9 +39,11 @@ import {
   SRGBColorSpace
 } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { ensureModelFile } from '@/utils/PathUtil'
 import { isDesktop } from '@/utils/PlatformConstants'
+import { useAssistantModelPresets } from '@/hooks/useAssistantModelPresets'
 
 const props = defineProps<{
   active: boolean
@@ -61,9 +64,7 @@ const LIFT_RATIO = 0.1
 const TARGET_OFFSET_RATIO = 0.04
 const CAMERA_DISTANCE_FACTOR = 2.2
 const CAMERA_HEIGHT_FACTOR = 0.18
-const MODEL_VERSION = '20251021'
-const MODEL_FILE_NAME = `hula_${MODEL_VERSION}.glb`
-const MODEL_REMOTE_URL = `https://cdn.hulaspark.com/models/hula.glb?v=${MODEL_VERSION}`
+const DRACO_DECODER_BASE_URL = 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/libs/draco/gltf/'
 
 const clock = new Clock()
 
@@ -77,45 +78,102 @@ let animationFrameId: number | null = null
 let resizeObserver: ResizeObserver | null = null
 let initialized = false
 let activating = false
-let defaultModelSourcePromise: Promise<string> | null = null
 let currentCustomSource: string | null = null
 let mixer: AnimationMixer | null = null
 let activeAction: AnimationAction | null = null
 let availableClips: AnimationClip[] = []
+let dracoLoader: DRACOLoader | null = null
+let dracoDecoderBasePath: string | null = null
+let lastResolvedModelSource: string | null = null
+const { metaMap: assistantModelMetaMap } = useAssistantModelPresets()
 
-const resolveDefaultModelSource = async () => {
-  if (!defaultModelSourcePromise) {
-    defaultModelSourcePromise = (async () => {
-      if (!isDesktop()) {
-        return MODEL_REMOTE_URL
-      }
-      try {
-        const absolutePath = await ensureModelFile(MODEL_FILE_NAME, MODEL_REMOTE_URL)
-        return convertFileSrc(absolutePath)
-      } catch (error) {
-        console.warn('缓存 HuLa 模型失败, 回退远程资源', error)
-        return MODEL_REMOTE_URL
-      }
-    })().catch((error) => {
-      defaultModelSourcePromise = null
-      throw error
-    })
+const isRemoteSource = (source: string) => /^https?:\/\//i.test(source)
+
+const resolveDracoDecoderPath = async () => {
+  if (dracoDecoderBasePath) {
+    return dracoDecoderBasePath
   }
-  const url = await defaultModelSourcePromise
-  return url
+  if (isDesktop()) {
+    try {
+      const resourceBase = await resourceDir()
+      const dracoDir = await join(resourceBase, 'draco')
+      const assetUrl = convertFileSrc(dracoDir)
+      dracoDecoderBasePath = assetUrl.endsWith('/') ? assetUrl : `${assetUrl}/`
+      return dracoDecoderBasePath
+    } catch (error) {
+      console.warn('获取 Draco 解码器资源路径失败, 回退 CDN', error)
+    }
+  }
+  dracoDecoderBasePath = DRACO_DECODER_BASE_URL
+  return dracoDecoderBasePath
+}
+
+const ensureDracoLoader = async () => {
+  if (!dracoLoader) {
+    dracoLoader = new DRACOLoader()
+    dracoLoader.setDecoderConfig({ type: 'wasm' })
+    let decoderPath = await resolveDracoDecoderPath()
+    dracoLoader.setDecoderPath(decoderPath)
+    try {
+      await dracoLoader.preload()
+    } catch (error) {
+      if (decoderPath !== DRACO_DECODER_BASE_URL) {
+        console.warn('预加载本地 Draco 解码器失败, 回退 CDN', error)
+        dracoDecoderBasePath = DRACO_DECODER_BASE_URL
+        decoderPath = DRACO_DECODER_BASE_URL
+        dracoLoader.setDecoderPath(decoderPath)
+        await dracoLoader.preload()
+      } else {
+        throw error
+      }
+    }
+  }
+  return dracoLoader
 }
 
 const isInvalidBounds = (size: Vector3, center: Vector3) =>
   size.lengthSq() === 0 || !Number.isFinite(center.x) || !Number.isFinite(center.y) || !Number.isFinite(center.z)
 
+const sanitizeFileName = (input: string) => input.replace(/[<>:"/\\|?*]+/g, '_')
+
 const resolveModelSource = async () => {
   if (props.customModel) {
     currentCustomSource = props.customModel
-    const url = isDesktop() ? convertFileSrc(props.customModel) : props.customModel
-    return url
+    const presetMeta = assistantModelMetaMap.value?.[props.customModel]
+
+    if (presetMeta) {
+      const extensionMatch = props.customModel.match(/\.([a-z0-9]+)(?:[?#]|$)/i)
+      const extension = extensionMatch ? extensionMatch[1] : 'glb'
+      const fileLabel = `${presetMeta.name}(${presetMeta.version})`
+
+      if (isRemoteSource(props.customModel) && isDesktop()) {
+        try {
+          const fileName = `${sanitizeFileName(fileLabel)}.${extension}`
+          const cachedPath = await ensureModelFile(fileName, props.customModel)
+          const localUrl = convertFileSrc(cachedPath)
+          lastResolvedModelSource = localUrl
+          return localUrl
+        } catch (error) {
+          console.warn('缓存远程模型失败, 回退为在线加载', error)
+        }
+      }
+    }
+
+    if (isRemoteSource(props.customModel)) {
+      lastResolvedModelSource = props.customModel
+      return props.customModel
+    }
+
+    const localUrl = isDesktop() ? convertFileSrc(props.customModel) : props.customModel
+    lastResolvedModelSource = localUrl
+    return localUrl
   }
+
   currentCustomSource = null
-  return resolveDefaultModelSource()
+  if (lastResolvedModelSource) {
+    return lastResolvedModelSource
+  }
+  throw new Error('MODEL_SOURCE_NOT_AVAILABLE')
 }
 
 const updateRendererSize = () => {
@@ -249,6 +307,7 @@ const loadModel = async () => {
   availableClips = []
   const modelSource = await resolveModelSource()
   const loader = new GLTFLoader()
+  loader.setDRACOLoader(await ensureDracoLoader())
   const result = await new Promise<{ scene: Group; extensions?: string[]; animations: AnimationClip[] }>(
     (resolve, reject) => {
       loader.load(
@@ -279,9 +338,7 @@ const loadModel = async () => {
   const extensions = result.extensions ?? []
   if (
     currentCustomSource &&
-    extensions.some((ext) =>
-      ['KHR_texture_basisu', 'KHR_draco_mesh_compression', 'EXT_meshopt_compression'].includes(ext)
-    )
+    extensions.some((ext) => ['KHR_texture_basisu', 'EXT_meshopt_compression'].includes(ext))
   ) {
     window.$message?.warning('暂不支持压缩后的 glb 模型，请选择原始模型文件')
     throw new Error('UNSUPPORTED_COMPRESSED_MODEL')
@@ -431,14 +488,17 @@ watch(
 watch(
   () => props.customModel,
   async () => {
-    if (!props.active || !scene) return
-    try {
-      await loadModel()
-      isReady.value = true
-      emit('ready')
-    } catch (error) {
-      emit('error', error)
+    if (!props.active) return
+    if (!scene) {
+      await activate()
+      return
     }
+    await loadModel()
+    isReady.value = true
+    if (animationFrameId === null) {
+      startLoop()
+    }
+    emit('ready')
   }
 )
 

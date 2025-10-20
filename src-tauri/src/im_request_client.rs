@@ -234,6 +234,7 @@ pub enum ImUrl {
     GetQiniuToken,
     InitConfig,
     FileUpload,
+    GetAssistantModelList,
     SendCaptcha,
     GetCaptcha,
     EditAnnouncement,
@@ -317,6 +318,7 @@ impl ImUrl {
             ImUrl::GetQiniuToken => (http::Method::GET, "system/anyTenant/ossToken"),
             ImUrl::InitConfig => (http::Method::GET, "system/anyTenant/config/init"),
             ImUrl::FileUpload => (http::Method::GET, "system/upload/url"),
+            ImUrl::GetAssistantModelList => (http::Method::GET, "system/model/list"),
 
             // 验证码相关
             ImUrl::SendCaptcha => (http::Method::POST, "oauth/anyTenant/sendEmailCode"),
@@ -429,6 +431,7 @@ impl ImUrl {
             "getQiniuToken" => Ok(ImUrl::GetQiniuToken),
             "initConfig" => Ok(ImUrl::InitConfig),
             "fileUpload" => Ok(ImUrl::FileUpload),
+            "getAssistantModelList" => Ok(ImUrl::GetAssistantModelList),
 
             // 验证码相关
             "sendCaptcha" => Ok(ImUrl::SendCaptcha),

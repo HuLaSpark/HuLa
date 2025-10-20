@@ -1,5 +1,5 @@
 // TODO 需要测试
-const MODEL_VERSION = '20251020';
+const MODEL_VERSION = '20251022';
 const CACHE_NAME = `hula-model-cache-${MODEL_VERSION}`;
 const MODEL_ORIGIN = 'https://cdn.hulaspark.com';
 const MODEL_PATH = '/models/hula.glb';
