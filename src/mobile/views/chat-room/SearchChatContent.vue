@@ -10,7 +10,18 @@
       <div class="grid grid-cols-3 gap-4 max-w-xs">
         <n-button text class="text-size-lg text-center" type="primary">群成员</n-button>
         <n-button text class="text-size-lg text-center" type="primary">日期</n-button>
-        <n-button text class="text-size-lg text-center" type="primary">图片与视频</n-button>
+        <n-button
+          text
+          class="text-size-lg text-center"
+          type="primary"
+          @click="
+            () =>
+              router.push({
+                name: 'mobileMediaViewer'
+              })
+          ">
+          图片与视频
+        </n-button>
         <n-button text class="text-size-lg text-center" type="primary">文件</n-button>
         <n-button text class="text-size-lg text-center" type="primary">链接</n-button>
         <n-button text class="text-size-lg text-center" type="primary">音乐与音频</n-button>
