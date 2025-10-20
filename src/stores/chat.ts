@@ -522,7 +522,6 @@ export const useChatStore = defineStore(
       const { msgId } = data
       const message = currentMessageMap.value?.[msgId]
       if (message && typeof data.recallUid === 'string') {
-        const cacheUser = groupStore.getUserInfo(data.recallUid)!
         let recallMessageBody: string = ''
 
         const currentUid = userStore.userInfo!.uid
@@ -557,16 +556,16 @@ export const useChatStore = defineStore(
           // 普通成员不显示角色前缀
           if (isSenderCurrentUser) {
             // 当前用户是被撤回消息的发送者（被撤回者视角）
-            recallMessageBody = `${rolePrefix}${cacheUser.name}撤回了你的一条消息`
+            recallMessageBody = `${rolePrefix}撤回了你的一条消息`
           } else {
             // 当前用户是旁观者（其他成员视角）
-            recallMessageBody = `${rolePrefix}${cacheUser.name}撤回了一条消息`
+            recallMessageBody = `${rolePrefix}撤回了一条消息`
           }
         }
 
         // 更新前端缓存
         message.message.type = MsgEnum.RECALL
-        message.message.body = recallMessageBody
+        message.message.body.content = recallMessageBody
 
         // 同步更新 SQLite 数据库
         try {

@@ -3,7 +3,7 @@
   <main class="w-full flex-center">
     <template v-if="isGroup">
       <n-flex align="center" :size="6" v-if="fromUserUid === userUid">
-        <p class="text-(12px #909090) select-none cursor-default">你撤回了一条消息</p>
+        <p class="text-(12px #909090) select-none cursor-default">{{ message.body.content }}</p>
         <p
           v-if="canReEdit(message.id)"
           class="text-(12px #13987f) select-none cursor-pointer"
@@ -16,7 +16,7 @@
     <template v-else>
       <n-flex align="center" :size="6">
         <p class="text-(12px #909090) select-none cursor-default">
-          {{ fromUserUid === userUid ? '你撤回了一条消息' : '对方撤回了一条消息' }}
+          {{ message.body.content }}
         </p>
         <p
           v-if="canReEdit(message.id)"
