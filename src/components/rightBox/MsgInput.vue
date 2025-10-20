@@ -12,7 +12,7 @@
     <div
       class="w-full flex"
       :class="isMobile() ? 'flex flex-1 p-5px gap-2 pt-5px items-center min-h-2.25rem' : ' flex-col'">
-      <div v-if="isMobile()" class="flex items-center justify-center w-14 h-2.5rem">
+      <div v-if="isMobile()" class="flex items-center justify-center w-6 ms-5px h-2.5rem">
         <svg
           @click="handleVoiceClick"
           :class="iconClickedStates.isClickedVoice ? 'text-#169781' : ''"
@@ -27,6 +27,8 @@
             id="message-input"
             ref="messageInputDom"
             :style="{
+              minHeight: isMobile() ? '2rem' : '36px',
+              lineHeight: isMobile() && !msgInput ? '2rem' : '20px',
               outline: 'none'
             }"
             contenteditable
@@ -44,7 +46,7 @@
             data-placeholder="善言一句暖人心，恶语一句伤人心"
             :class="
               isMobile()
-                ? 'empty:before:content-[attr(data-placeholder)] before:text-(12px #777) p-2 text-14px! bg-white! rounded-10px! max-h-8rem! flex items-center'
+                ? 'empty:before:content-[attr(data-placeholder)] before:text-(12px #777) p-2 min-h-2rem ps-10px! text-14px! bg-white! rounded-10px! max-h-8rem! flex items-center'
                 : 'empty:before:content-[attr(data-placeholder)] before:text-(12px #777) p-2'
             "></div>
         </n-scrollbar>

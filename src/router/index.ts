@@ -41,9 +41,10 @@ import PublishCommunity from '#/views/my/PublishCommunity.vue'
 import Share from '#/views/my/Share.vue'
 import SimpleBio from '#/views/my/SimpleBio.vue'
 import { TauriCommand } from '@/enums'
-import ConfirmQRLogin from '../mobile/views/ConfirmQRLogin.vue'
-import MyQRCode from '../mobile/views/MyQRCode.vue'
-import Splashscreen from '../mobile/views/Splashscreen.vue'
+import ConfirmQRLogin from '#/views/ConfirmQRLogin.vue'
+import MyQRCode from '#/views/MyQRCode.vue'
+import Splashscreen from '#/views/Splashscreen.vue'
+import MobileForgetPassword from '#/views/MobileForgetPassword.vue'
 
 /**! 创建窗口后再跳转页面就会导致样式没有生效所以不能使用懒加载路由的方式，有些页面需要快速响应的就不需要懒加载 */
 const { BASE_URL } = import.meta.env
@@ -61,6 +62,11 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
     path: '/mobile/login',
     name: 'mobileLogin',
     component: MobileLogin
+  },
+  {
+    path: '/mobile/MobileForgetPassword',
+    name: 'mobileForgetPassword',
+    component: MobileForgetPassword
   },
   {
     path: '/mobile/splashscreen',
@@ -546,10 +552,11 @@ router.beforeEach(async (to: RouteLocationNormalized, _from: RouteLocationNormal
   try {
     const isLoginPage = to.path === '/mobile/login'
     const isSplashPage = to.path === '/mobile/splashscreen'
+    const isForgetPage = to.path === '/mobile/MobileForgetPassword'
 
     // 闪屏页白名单：不论登录状态都允许进入
     console.log(to.path)
-    if (isSplashPage) {
+    if (isSplashPage || isForgetPage) {
       return next()
     }
 

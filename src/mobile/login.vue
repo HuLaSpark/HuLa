@@ -596,7 +596,9 @@ const delAccount = (item: UserInfoType) => {
 }
 
 const handleForgetPassword = () => {
-  router.push('/mobile/forget-password')
+  router.push({
+    name: 'mobileForgetPassword'
+  })
 }
 
 const closeMenu = (event: MouseEvent) => {
