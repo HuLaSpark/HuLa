@@ -13,6 +13,10 @@ export const useGroupStore = defineStore(
     const userStore = useUserStore()
     const chatStore = useChatStore()
 
+    // 动态加载没有的群组 [防止并发冲突加载]
+    const groupDetailsCache = ref<Record<string, GroupDetailReq>>({})
+    const loadingGroups = ref<Set<string>>(new Set())
+
     // 群组相关状态
     const userListMap = reactive<Record<string, UserItem[]>>({}) // 群成员列表Map，key为roomId
     const groupDetails = ref<GroupDetailReq[]>([])
@@ -225,6 +229,73 @@ export const useGroupStore = defineStore(
     const getGroupDetailByRoomId = computed(() => (roomId: string) => {
       return groupDetails.value.find((item: GroupDetailReq) => item.roomId === roomId)
     })
+
+    // 状态定义：添加一个用于管理正在进行的请求的Map
+    const fetchPromisesMap = ref<Record<string, Promise<GroupDetailReq>>>({})
+
+    /**
+     * 智能获取群组详情：如果本地有则直接返回，如果没有则从远程获取并缓存
+     * @param roomId 群组ID
+     */
+    const fetchGroupDetailSafely = async (roomId: string, forceRefresh: boolean = false): Promise<GroupDetailReq> => {
+      // 1. 检查本地缓存（除非强制刷新）
+      const existingDetail = getGroupDetailByRoomId.value(roomId)
+      if (existingDetail && !forceRefresh) {
+        return existingDetail
+      }
+
+      // 2. 防止并发重复请求
+      try {
+        // 3. 创建新的请求Promise并缓存
+        fetchPromisesMap.value[roomId] = (async () => {
+          try {
+            // 调用你已有的远程获取方法
+            await addGroupDetail(roomId)
+
+            const finalDetail = getGroupDetailByRoomId.value(roomId)
+            if (!finalDetail) {
+              throw new Error(`群组 ${roomId} 数据获取失败`)
+            }
+            return finalDetail
+          } finally {
+            // 清理当前请求的缓存
+            delete fetchPromisesMap.value[roomId]
+          }
+        })()
+
+        // 4. 等待请求完成并返回结果
+        return await fetchPromisesMap.value[roomId]
+      } catch (error) {
+        console.error(`获取群组 ${roomId} 详情失败:`, error)
+        throw error
+      }
+    }
+
+    /**
+     * 本地获取房间信息
+     */
+    const getGroupDetail = computed(() => (roomId: string) => {
+      return groupDetailsCache.value[roomId] || getGroupDetailByRoomId.value(roomId)
+    })
+
+    const loadGroupDetails = async (roomIds: string[]) => {
+      const uniqueRoomIds = [...new Set(roomIds.filter((id) => id))]
+
+      for (const roomId of uniqueRoomIds) {
+        if (groupDetailsCache.value[roomId] || loadingGroups.value.has(roomId)) {
+          continue
+        }
+
+        loadingGroups.value.add(roomId)
+        try {
+          const detail = await fetchGroupDetailSafely(roomId)
+          groupDetailsCache.value[roomId] = detail
+        } catch (_error) {
+        } finally {
+          loadingGroups.value.delete(roomId)
+        }
+      }
+    }
 
     const updateGroupNumber = (roomId: string, totalNum: number, onlineNum: number) => {
       const group = groupDetails.value.find((item) => item.roomId === roomId)
@@ -555,6 +626,8 @@ export const useGroupStore = defineStore(
       updateGroupDetail,
       groupDetails,
       getGroupDetailByRoomId,
+      getGroupDetail,
+      loadGroupDetails,
       updateGroupNumber,
       removeGroupDetail,
       addGroupDetail,

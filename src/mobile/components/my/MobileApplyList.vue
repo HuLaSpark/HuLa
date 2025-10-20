@@ -31,7 +31,7 @@
               :src="
                 props.type === 'friend'
                   ? avatarSrc(getUserInfo(item)!.avatar!)
-                  : groupStore.getGroupDetailByRoomId(item.roomId)!.avatar
+                  : avatarSrc(groupStore.getGroupDetail(item.roomId)!.avatar)
               " />
           </div>
           <div class="flex-1 flex flex-col gap-10px">
@@ -172,7 +172,7 @@ const applyMsg = computed(() => (item: any) => {
   if (props.type === 'friend') {
     return isCurrentUser(item.senderId) ? (isAccepted(item) ? '已同意你的请求' : '正在验证你的邀请') : '请求加为好友'
   } else {
-    const groupDetail: any = groupStore.getGroupDetailByRoomId(item.roomId)!
+    const groupDetail: any = groupStore.getGroupDetail(item.roomId)!
     if (item.eventType === NoticeType.GROUP_APPLY) {
       return '申请加入 [' + groupDetail.groupName + ']'
     } else if (item.eventType === NoticeType.GROUP_INVITE) {
@@ -295,6 +295,18 @@ onMounted(() => {
   // 组件挂载时刷新一次列表
   contactStore.getApplyPage(true, true)
 })
+
+watch(
+  () => applyList.value,
+  (newList) => {
+    const roomIds = newList.filter((item) => item.roomId && Number(item.roomId) > 0).map((item) => item.roomId)
+
+    if (roomIds.length > 0) {
+      groupStore.loadGroupDetails(roomIds)
+    }
+  },
+  { immediate: true, deep: true }
+)
 </script>
 
 <style scoped lang="scss"></style>
