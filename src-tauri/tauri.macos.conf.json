@@ -10,7 +10,7 @@
     "devUrl": "http://127.0.0.1:6130"
   },
   "bundle": {
-    "resources": ["tray", "configuration", "Info.plist"],
+    "resources": ["tray", "configuration", "Info.plist", "draco"],
     "active": true,
     "targets": ["app", "dmg"],
     "icon": [

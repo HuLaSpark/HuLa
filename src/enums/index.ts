@@ -556,6 +556,8 @@ export enum ImUrlEnum {
   INIT_CONFIG = 'initConfig',
   /** 文件上传 */
   FILE_UPLOAD = 'fileUpload',
+  /** 获取模型列表 */
+  GET_ASSISTANT_MODEL_LIST = 'getAssistantModelList',
 
   // 验证码相关
   /** 发送验证码 */

@@ -15,7 +15,8 @@
     "licenseFile": "./copyright/License.rtf",
     "resources": [
       "tray",
-      "configuration"
+      "configuration",
+      "draco"
     ],
     "createUpdaterArtifacts": true,
     "active": true,

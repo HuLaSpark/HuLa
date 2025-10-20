@@ -48,7 +48,7 @@
                       style="border: 1px solid var(--avatar-border-color)"
                       :size="44"
                       class="grayscale"
-                      :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
+                      :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE || isBotUser(item.uid) }"
                       :src="AvatarUtils.getAvatarUrl(groupStore.getUserInfo(item.uid)!.avatar!)"
                       :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
                       :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'" />

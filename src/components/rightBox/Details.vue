@@ -15,42 +15,44 @@
 
     <span class="text-(20px [--text-color])">{{ item.name }}</span>
 
-    <span class="text-(14px #909090)">这个人很高冷,暂时没有留下什么</span>
+    <template v-if="!isBotUser">
+      <span class="text-(14px #909090)">这个人很高冷,暂时没有留下什么</span>
 
-    <n-flex align="center" justify="space-between" :size="30" class="text-#606060 select-none cursor-default">
-      <span>地区：{{ item.locPlace || '未知' }}</span>
-      <n-flex align="center">
-        <span>徽章：</span>
-        <template v-for="badge in item.itemIds" :key="badge">
+      <n-flex align="center" justify="space-between" :size="30" class="text-#606060 select-none cursor-default">
+        <span>地区：{{ item.locPlace || '未知' }}</span>
+        <n-flex align="center">
+          <span>徽章：</span>
+          <template v-for="badge in item.itemIds" :key="badge">
+            <n-popover trigger="hover">
+              <template #trigger>
+                <img class="size-34px" :src="cacheStore.badgeById(badge)?.img" alt="" />
+              </template>
+              <span>{{ cacheStore.badgeById(badge)?.describe }}</span>
+            </n-popover>
+          </template>
+        </n-flex>
+      </n-flex>
+      <!-- 选项按钮 -->
+      <n-flex align="center" justify="space-between" :size="60">
+        <n-icon-wrapper
+          v-for="(item, index) in footerOptions"
+          :key="index"
+          @click="item.click()"
+          class="cursor-pointer"
+          :size="28"
+          :border-radius="10"
+          :color="'#13987f'">
           <n-popover trigger="hover">
             <template #trigger>
-              <img class="size-34px" :src="cacheStore.badgeById(badge)?.img" alt="" />
+              <n-icon :size="20">
+                <svg class="color-#fff"><use :href="`#${item.url}`"></use></svg>
+              </n-icon>
             </template>
-            <span>{{ cacheStore.badgeById(badge)?.describe }}</span>
+            <span>{{ item.title }}</span>
           </n-popover>
-        </template>
+        </n-icon-wrapper>
       </n-flex>
-    </n-flex>
-    <!-- 选项按钮 -->
-    <n-flex align="center" justify="space-between" :size="60">
-      <n-icon-wrapper
-        v-for="(item, index) in footerOptions"
-        :key="index"
-        @click="item.click()"
-        class="cursor-pointer"
-        :size="28"
-        :border-radius="10"
-        :color="'#13987f'">
-        <n-popover trigger="hover">
-          <template #trigger>
-            <n-icon :size="20">
-              <svg class="color-#fff"><use :href="`#${item.url}`"></use></svg>
-            </n-icon>
-          </template>
-          <span>{{ item.title }}</span>
-        </n-popover>
-      </n-icon-wrapper>
-    </n-flex>
+    </template>
   </n-flex>
 
   <!-- 群聊详情 -->
@@ -197,7 +199,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { CallTypeEnum, RoomTypeEnum } from '@/enums'
+import { CallTypeEnum, RoomTypeEnum, UserType } from '@/enums'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useMyRoomInfoUpdater } from '@/hooks/useMyRoomInfoUpdater'
 import { useWindow } from '@/hooks/useWindow'
@@ -265,6 +267,12 @@ const handleOpenAnnouncement = async () => {
 const displayNickname = computed(() =>
   resolveMyRoomNickname({ roomId: item.value?.roomId, myName: item.value?.myName })
 )
+
+// 判断是否为 BOT 用户
+const isBotUser = computed(() => {
+  if (content.type !== RoomTypeEnum.SINGLE || !item.value?.uid) return false
+  return groupStore.getUserInfo(item.value.uid)?.account === UserType.BOT
+})
 
 watchEffect(async () => {
   if (content.type === RoomTypeEnum.SINGLE) {

@@ -11,7 +11,7 @@
   },
   "bundle": {
     "active": true,
-    "resources": ["configuration"],
+    "resources": ["configuration","draco"],
     "targets": "all",
     "iOS": {
       "minimumSystemVersion": "13.0"

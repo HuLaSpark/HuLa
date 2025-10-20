@@ -2,40 +2,69 @@
   <div class="bot-container">
     <!-- 顶部工具栏 -->
     <div class="language-switcher">
-      <!-- 返回按钮 -->
       <div v-if="canGoBack" class="back-btn flex-shrink-0" @click="goBack">
         <svg class="size-16px rotate-180"><use href="#right"></use></svg>
         返回
       </div>
-
-      <!-- 语言切换器 (仅在查看 README 时显示) -->
-      <div v-if="!isViewingLink" class="flex-y-center w-full justify-between">
-        <div class="flex-center gap-12px">
-          <div :class="['lang-btn', { active: currentLang === 'zh' }]" @click="switchLanguage('zh')">中文</div>
-          <div :class="['lang-btn', { active: currentLang === 'en' }]" @click="switchLanguage('en')">English</div>
-        </div>
-        <div class="flex-center">
-          <n-button
-            v-if="isAssistantView && canImportLocalModel"
-            size="small"
-            strong
-            secondary
-            class="import-btn"
-            @click="openLocalModel">
-            导入模型
-          </n-button>
-          <n-badge class="mr-14px" value="Beta" :color="'var(--bate-color)'">
-            <div :class="['assistant-btn', { active: isAssistantView }]" @click="showAssistant()">3D预览</div>
-          </n-badge>
-        </div>
+      <div v-if="showAssistantMinimalToolbar" class="assistant-compact-toolbar">
+        <n-button v-if="canImportLocalModel" size="small" strong secondary class="import-btn" @click="openLocalModel">
+          导入模型
+        </n-button>
+        <n-dropdown
+          v-if="isAssistantView"
+          trigger="click"
+          :show-arrow="false"
+          placement="bottom-end"
+          :options="assistantModelDropdownOptions"
+          @select="handlePresetModelSelect">
+          <div :class="['model-select-btn', { active: selectedModelKey && selectedModelKey !== 'local' }]">
+            <span class="model-select-text">{{ selectedModelLabel }}</span>
+            <svg class="size-12px model-select-icon"><use href="#down"></use></svg>
+          </div>
+        </n-dropdown>
       </div>
+      <template v-else>
+        <!-- 语言切换器 (仅在查看 README 时显示) -->
+        <div v-if="!isViewingLink" class="flex-y-center w-full justify-between">
+          <div class="flex-center gap-12px">
+            <div :class="['lang-btn', { active: currentLang === 'zh' }]" @click="switchLanguage('zh')">中文</div>
+            <div :class="['lang-btn', { active: currentLang === 'en' }]" @click="switchLanguage('en')">English</div>
+          </div>
+          <div class="flex-center">
+            <n-button
+              v-if="isAssistantView && canImportLocalModel"
+              size="small"
+              strong
+              secondary
+              class="import-btn"
+              @click="openLocalModel">
+              导入模型
+            </n-button>
+            <n-badge class="mr-14px" value="Beta" :color="'var(--bate-color)'">
+              <div :class="['assistant-btn', { active: isAssistantView }]" @click="showAssistant()">3D预览</div>
+            </n-badge>
+            <n-dropdown
+              v-if="isAssistantView"
+              trigger="click"
+              :show-arrow="false"
+              placement="bottom-end"
+              :options="assistantModelDropdownOptions"
+              @select="handlePresetModelSelect">
+              <div :class="['model-select-btn', { active: selectedModelKey && selectedModelKey !== 'local' }]">
+                <span class="model-select-text">{{ selectedModelLabel }}</span>
+                <svg class="size-12px model-select-icon"><use href="#down"></use></svg>
+              </div>
+            </n-dropdown>
+          </div>
+        </div>
 
-      <!-- 当前页面标题和操作按钮 -->
-      <div v-if="isViewingLink" class="page-title">{{ currentUrl }}</div>
-      <div v-if="isViewingLink" class="open-in-browser-btn" @click="openInBrowser">
-        <svg class="size-16px"><use href="#share"></use></svg>
-        在浏览器中打开
-      </div>
+        <!-- 当前页面标题和操作按钮 -->
+        <div v-if="isViewingLink" class="page-title">{{ currentUrl }}</div>
+        <div v-if="isViewingLink" class="open-in-browser-btn" @click="openInBrowser">
+          <svg class="size-16px"><use href="#share"></use></svg>
+          在浏览器中打开
+        </div>
+      </template>
     </div>
 
     <div class="bot-content">
@@ -70,7 +99,7 @@
 import { invoke } from '@tauri-apps/api/core'
 import DOMPurify from 'dompurify'
 import { openUrl } from '@tauri-apps/plugin-opener'
-import type { LoadingBarProviderInst } from 'naive-ui'
+import type { DropdownOption, LoadingBarProviderInst } from 'naive-ui'
 import { Webview } from '@tauri-apps/api/webview'
 import { getCurrentWindow, type Window as TauriWindow } from '@tauri-apps/api/window'
 import { LogicalPosition, LogicalSize } from '@tauri-apps/api/dpi'
@@ -78,6 +107,7 @@ import type { UnlistenFn } from '@tauri-apps/api/event'
 import { open } from '@tauri-apps/plugin-dialog'
 import { isDesktop } from '@/utils/PlatformConstants'
 import { useBotStore } from '@/stores/bot'
+import { useAssistantModelPresets, type AssistantModelPreset } from '@/hooks/useAssistantModelPresets'
 import HuLaAssistant from './HuLaAssistant.vue'
 
 // 当前语言
@@ -119,8 +149,13 @@ const historyStack = ref<ViewState[]>([])
 const canGoBack = computed(() => historyStack.value.length > 0)
 const isAssistantView = computed(() => currentView.value.type === 'assistant')
 const customModelPath = ref<string | null>(null)
+const selectedModelKey = ref<string | null>(null)
 const canImportLocalModel = isDesktop()
+const showAssistantMinimalToolbar = computed(() => canImportLocalModel && isAssistantView.value)
 let assistantFallbackView: ViewState | null = null
+
+const { presets: assistantModelPresets, fetchAssistantModelPresets } = useAssistantModelPresets()
+void fetchAssistantModelPresets()
 
 const botStore = useBotStore()
 
@@ -157,6 +192,77 @@ const canEmbedWebview = computed(() => {
   if (typeof window === 'undefined') return false
   return isDesktop() && Boolean((window as Window & { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__)
 })
+
+const findPresetByKey = (key: string | null | undefined): AssistantModelPreset | undefined => {
+  if (!key) return void 0
+  return assistantModelPresets.value.find((preset) => preset.modelKey === key)
+}
+
+const formatPresetLabel = (preset: AssistantModelPreset) => {
+  if (!preset.version || preset.modelName.includes(preset.version)) {
+    return preset.modelName
+  }
+  return `${preset.modelName} (${preset.version})`
+}
+
+const assistantModelDropdownOptions = computed<DropdownOption[]>(() =>
+  assistantModelPresets.value.map((preset) => ({
+    key: preset.modelKey,
+    label: formatPresetLabel(preset),
+    extra: preset.description ?? (preset.version ? `版本 ${preset.version}` : void 0)
+  }))
+)
+
+const selectedModelLabel = computed(() => {
+  if (selectedModelKey.value === 'local') {
+    return '本地模型'
+  }
+  const preset = findPresetByKey(selectedModelKey.value)
+  if (preset) {
+    return formatPresetLabel(preset)
+  }
+  const first = assistantModelPresets.value[0]
+  return first ? formatPresetLabel(first) : '选择模型'
+})
+
+const applyFirstPreset = (options?: { force?: boolean }) => {
+  const firstPreset = assistantModelPresets.value[0]
+  if (!firstPreset) {
+    if (options?.force && selectedModelKey.value !== 'local') {
+      selectedModelKey.value = null
+      customModelPath.value = null
+    }
+    return
+  }
+  if (!options?.force && selectedModelKey.value === 'local') {
+    return
+  }
+  selectedModelKey.value = firstPreset.modelKey
+  customModelPath.value = firstPreset.modelUrl
+}
+
+watch(
+  assistantModelPresets,
+  (presets) => {
+    if (!presets.length) {
+      if (selectedModelKey.value !== 'local') {
+        selectedModelKey.value = null
+        customModelPath.value = null
+      }
+      return
+    }
+    if (selectedModelKey.value === 'local') {
+      return
+    }
+    const current = presets.find((preset) => preset.modelKey === selectedModelKey.value)
+    if (current) {
+      customModelPath.value = current.modelUrl
+    } else {
+      applyFirstPreset({ force: true })
+    }
+  },
+  { immediate: true }
+)
 
 // 将当前视图快照压入栈, 保证后续可回退
 const pushCurrentView = () => {
@@ -226,6 +332,8 @@ const handleAssistantReady = () => {
 const handleAssistantError = async (error: unknown) => {
   console.error('加载 HuLa 小管家失败:', error)
   customModelPath.value = null
+  selectedModelKey.value = null
+  applyFirstPreset({ force: true })
   if (assistantShouldPopHistoryOnError && historyStack.value.length) {
     historyStack.value.pop()
   }
@@ -243,6 +351,7 @@ const handleAssistantError = async (error: unknown) => {
 }
 
 const showAssistant = async (recordHistory = true, preserveCustomModel = false) => {
+  await fetchAssistantModelPresets(assistantModelPresets.value.length <= 1)
   if (currentView.value.type === 'assistant') {
     if (preserveCustomModel) {
       await nextTick()
@@ -250,7 +359,7 @@ const showAssistant = async (recordHistory = true, preserveCustomModel = false) 
     return
   }
   if (!preserveCustomModel) {
-    customModelPath.value = null
+    applyFirstPreset({ force: true })
   }
   assistantFallbackView = cloneView(currentView.value)
   assistantShouldPopHistoryOnError = recordHistory
@@ -277,11 +386,27 @@ const openLocalModel = async () => {
     })
     if (!selected) return
     customModelPath.value = Array.isArray(selected) ? selected[0] : selected
+    selectedModelKey.value = 'local'
     await showAssistant(true, true)
   } catch (error) {
     console.error('选择本地模型失败:', error)
     window.$message?.error('选择模型文件失败，请重试')
   }
+}
+
+const handlePresetModelSelect = async (key: string) => {
+  const preset = findPresetByKey(key)
+  if (!preset) return
+  const targetModelPath = preset.modelUrl
+  if (selectedModelKey.value === key && targetModelPath === customModelPath.value) {
+    if (currentView.value.type !== 'assistant') {
+      await showAssistant(true, true)
+    }
+    return
+  }
+  selectedModelKey.value = key
+  customModelPath.value = targetModelPath
+  await showAssistant(true, true)
 }
 
 const createExternalWebview = async (url: string) => {
@@ -577,6 +702,14 @@ onUnmounted(() => {
   border-bottom: 1px solid var(--line-color);
   background: var(--bg-color);
 
+  .assistant-compact-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 1;
+    width: 100%;
+  }
+
   .back-btn {
     display: flex;
     align-items: center;
@@ -663,6 +796,40 @@ onUnmounted(() => {
       background: linear-gradient(135deg, #13987f, #1fb39b80);
       border-color: rgba(19, 152, 127, 0.4);
     }
+  }
+
+  .model-select-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    margin-left: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-color);
+    background: var(--bg-msg-hover);
+    transition: all 0.2s ease-in-out;
+    user-select: none;
+    -webkit-user-select: none;
+
+    &:hover {
+      color: #13987f;
+    }
+
+    &.active {
+      color: #13987f;
+      background: rgba(19, 152, 127, 0.18);
+      box-shadow: inset 0 0 0 1px rgba(19, 152, 127, 0.25);
+    }
+  }
+
+  .model-select-text {
+    white-space: nowrap;
+  }
+
+  .model-select-icon {
+    color: currentColor;
   }
 
   .lang-btn {
