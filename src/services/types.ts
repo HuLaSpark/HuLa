@@ -572,6 +572,8 @@ export interface NoticeItem {
   receiverId: string
   /** 申请ID */
   applyId: string
+  /** 房间ID */
+  roomId: string
   /** 被操作的人 */
   operateId?: string
   /** 通知内容 申请时填写的 */
