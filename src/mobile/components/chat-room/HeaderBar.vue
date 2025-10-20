@@ -1,5 +1,5 @@
 <template>
-  <div ref="rootEl" class="w-full h-[56px] grid grid-cols-[100px_1fr_100px] z-2">
+  <div class="w-full h-[56px] grid grid-cols-[100px_1fr_100px] z-2">
     <div @click="handleBack" class="w-full h-full flex items-center">
       <svg class="iconpark-icon w-24px h-24px ms-16px p-5px"><use href="#fanhui"></use></svg>
       <div
@@ -27,8 +27,6 @@
 
 <script setup lang="ts">
 import router from '@/router'
-
-const rootEl = ref<HTMLElement | null>(null)
 
 export interface HeaderBarProps {
   msgCount?: number
@@ -59,25 +57,12 @@ const formattedMsgCount = computed(() => {
 })
 
 const handleBack = async () => {
-  // const result = await invoke('plugin:hula|ping', {
-  //   payload: { value: 'hello world' }
-  // })
-  // console.log('插件测试结果：', result)
-
-  // TODO 返回上一页
   router.back()
-  console.log('返回')
 }
 
 const handleMoreClick = () => {
-  console.log('更多操作')
-
   router.push(`/mobile/chatRoom/setting`)
 }
-
-defineExpose({
-  rootEl
-})
 </script>
 
 <style lang="scss" scoped>
