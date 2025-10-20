@@ -51,6 +51,7 @@ import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user'
 import { useLogin } from '@/hooks/useLogin'
 import { showDialog } from 'vant'
+import * as ImRequestUtils from '@/utils/ImRequestUtils'
 
 const globalStore = useGlobalStore()
 const { isTrayMenuShow } = storeToRefs(globalStore)
@@ -108,7 +109,7 @@ const settings = reactive([
   }
 ])
 
-const { logout } = useLogin()
+const { logout, resetLoginState } = useLogin()
 
 // 退出登录逻辑
 async function handleLogout() {
@@ -119,12 +120,22 @@ async function handleLogout() {
     confirmButtonText: '确定',
     cancelButtonText: '取消'
   })
-    .then(() => {
-      settingStore.toggleLogin(false, false)
-      info('登出账号')
-      isTrayMenuShow.value = false
-      logout()
-      router.push('/mobile/login')
+    .then(async () => {
+      try {
+        // 1. 先调用后端退出接口
+        await ImRequestUtils.logout({ autoLogin: true })
+        // 2. 重置登录状态
+        await resetLoginState()
+        // 3. 最后调用登出方法(这会创建登录窗口)
+        await logout()
+
+        settingStore.toggleLogin(false, false)
+        info('登出账号')
+        isTrayMenuShow.value = false
+        router.push('/mobile/login')
+      } catch (error) {
+        console.error('退出登录失败:', error)
+      }
     })
     .catch(() => {
       info('用户点击取消')

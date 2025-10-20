@@ -63,29 +63,21 @@
           </div>
           <div
             v-if="isFriendApplyOrGroupInvite(item)"
-            class="flex w-17 max-h-45px flex-col items-center justify-center">
+            class="flex w-17 max-h-64px flex-col items-center justify-center">
             <n-flex
               align="center"
               :size="10"
               v-if="item.status === RequestNoticeAgreeStatus.UNTREATED && !isCurrentUser(item.senderId)">
-              <n-button secondary :loading="loadingMap[item.applyId]" @click="handleAgree(item.applyId)">接受</n-button>
-              <n-dropdown
-                trigger="click"
-                :options="dropdownOptions"
-                @select="(key: string) => handleFriendAction(key, item.applyId)">
-                <n-icon class="cursor-pointer px-6px">
-                  <svg class="size-16px color-[--text-color]">
-                    <use href="#more"></use>
-                  </svg>
-                </n-icon>
-              </n-dropdown>
+              <n-button size="small" secondary :loading="loadingMap[item.applyId]" @click="handleAgree(item.applyId)">
+                接受
+              </n-button>
             </n-flex>
             <n-dropdown
               trigger="click"
               :options="dropdownOptions"
               @select="(key: string) => handleFriendAction(key, item.applyId)"
               v-if="item.status === RequestNoticeAgreeStatus.UNTREATED && !isCurrentUser(item.senderId)">
-              <n-icon class="cursor-pointer px-6px rounded-10px bg-gray-300 h-50% items-center flex">
+              <n-icon class="cursor-pointer px-15px py-3px rounded-5px mt-10px bg-gray-300 h-50% items-center flex">
                 <svg class="size-16px color-[--text-color]">
                   <use href="#more"></use>
                 </svg>
