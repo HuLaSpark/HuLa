@@ -1,17 +1,19 @@
 <template>
-  <div class="flex flex-col h-full" id="mobile-layout">
-    <div class="flex-1 overflow-hidden">
-      <RouterView v-slot="{ Component }">
-        <Transition name="slide" appear mode="out-in">
-          <component :is="Component" :key="route.fullPath" />
-        </Transition>
-      </RouterView>
-    </div>
+  <MobileLayout :safeAreaTop="true" :safeAreaBottom="true">
+    <div class="flex flex-col h-full">
+      <div class="flex-1 overflow-hidden">
+        <RouterView v-slot="{ Component }">
+          <Transition name="slide" appear mode="out-in">
+            <component :is="Component" :key="route.fullPath" />
+          </Transition>
+        </RouterView>
+      </div>
 
-    <div class="flex-shrink-0">
-      <TabBar ref="tabBarElement" />
+      <div class="flex-shrink-0">
+        <TabBar ref="tabBarElement" />
+      </div>
     </div>
-  </div>
+  </MobileLayout>
 </template>
 
 <script setup lang="ts">
@@ -124,8 +126,4 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
 })
 </script>
 
-<style lang="scss">
-#mobile-layout {
-  box-sizing: border-box;
-}
-</style>
+<style lang="scss"></style>

@@ -1,14 +1,16 @@
 <template>
-  <div class="h-full flex flex-col">
-    <!-- 页面全部内容 -->
-    <div class="flex flex-col flex-1">
-      <RouterView v-slot="{ Component }">
-        <div class="page-view">
-          <component :is="Component" :key="route.fullPath" />
-        </div>
-      </RouterView>
+  <MobileLayout :topSafeAreaClass="computedTopAreaClass" :backgroundImage="'@/assets/mobile/chat-home/background.webp'">
+    <div class="h-full flex flex-col">
+      <!-- 页面全部内容 -->
+      <div class="flex flex-col flex-1">
+        <RouterView v-slot="{ Component }">
+          <div class="page-view">
+            <component :is="Component" :key="route.fullPath" />
+          </div>
+        </RouterView>
+      </div>
     </div>
-  </div>
+  </MobileLayout>
 </template>
 
 <script setup lang="ts">
@@ -135,6 +137,10 @@ useMitt.on(MittEnum.QR_SCAN_EVENT, async (data: ScanData) => {
       window.$message.warning('识别不到正确的二维码')
       throw new Error('二维码缺少type字段:', data as any)
   }
+})
+
+const computedTopAreaClass = computed(() => {
+  return route.name !== 'mobileSimpleBio' ? 'bg-white' : ''
 })
 
 const route = useRoute()

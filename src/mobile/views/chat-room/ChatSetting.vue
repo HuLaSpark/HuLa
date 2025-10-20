@@ -3,7 +3,6 @@
     <template #header>
       <HeaderBar
         :isOfficial="false"
-        class="bg-#FAFAFA"
         style="border-bottom: 1px solid; border-color: #dfdfdf"
         :hidden-right="true"
         :room-name="title + '设置'" />

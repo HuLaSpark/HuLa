@@ -1,5 +1,5 @@
 <template>
-  <div class="appContainer h-100vh w-100vw" :class="{ 'safe-area-disabled': isSafeAreaDisabled }">
+  <div class="h-100vh w-100vw">
     <NaiveProvider :message-max="3" :notific-max="3" class="h-full">
       <div v-if="!isLock" class="h-full">
         <router-view />
@@ -77,8 +77,6 @@ const LockExclusion = new Set(['/login', '/tray', '/qrCode', '/about', '/onlineS
 const isLock = computed(() => {
   return !LockExclusion.has(router.currentRoute.value.path) && lockScreen.value.enable
 })
-const safeAreaDisabledPages = new Set(['/mobile/splashscreen', '/mobile/login', '/mobile/rtcCall'])
-const isSafeAreaDisabled = computed(() => safeAreaDisabledPages.has(router.currentRoute.value.path))
 
 /** 禁止图片以及输入框的拖拽 */
 const preventDrag = (e: MouseEvent) => {
@@ -515,23 +513,5 @@ button,
 a {
   user-select: auto;
   cursor: auto;
-}
-
-.appContainer {
-  /* 使用安全区域变量设置内边距 */
-  padding-top: var(--safe-area-inset-top);
-  padding-bottom: var(--safe-area-inset-bottom);
-  padding-left: var(--safe-area-inset-left);
-  padding-right: var(--safe-area-inset-right);
-  box-sizing: border-box;
-  /* 应用背景色变量 */
-  background-color: var(--app-bg-color);
-}
-
-.appContainer.safe-area-disabled {
-  padding-top: 0;
-  padding-bottom: 0;
-  padding-left: 0;
-  padding-right: 0;
 }
 </style>
