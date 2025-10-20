@@ -100,6 +100,12 @@
               </div>
             </div>
           </div>
+
+          <div
+            class="bg-white p-15px rounded-10px shadow text-14px flex cursor-pointer"
+            @click="handleSearchChatContent">
+            查找聊天内容
+          </div>
           <!-- 群公告 -->
           <div class="flex bg-white rounded-10px w-full h-auto shadow">
             <div class="px-15px flex flex-col w-full">
@@ -573,6 +579,13 @@ const handleNotification = (value: boolean) => {
  * 消息免打扰相关功能（结束）
  *
  *  */
+
+/** 处理查找聊天内容 */
+const handleSearchChatContent = () => {
+  router.push({
+    name: 'mobileSearchChatContent'
+  })
+}
 
 /**
  * 这里直接监听状态的值
