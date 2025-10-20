@@ -10,7 +10,7 @@
     </template>
 
     <template #container>
-      <div class="flex flex-col gap-1 overflow-auto h-full">
+      <div class="flex flex-col bg-#fefefe gap-1 overflow-auto h-full">
         <div class="flex flex-col p-[10px_20px_0px_20px] gap-20px">
           <CommunityTab @update="onUpdate" :options="tabOptions" active-tab-name="friend-message">
             <template #friend-message>

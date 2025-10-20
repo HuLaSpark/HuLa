@@ -203,7 +203,7 @@ import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { vOnLongPress } from '@vueuse/components'
-import { setSessionTop } from '@/utils/ImRequestUtils'
+import { markMsgRead, setSessionTop } from '@/utils/ImRequestUtils'
 
 const loading = ref(false)
 const count = ref(0)
@@ -366,21 +366,31 @@ const handleToggleReadStatus = async (markAsRead: boolean, sessionItem?: Session
   const targetItem = sessionItem || currentLongPressItem.value
   if (!targetItem) return
 
+  const item = targetItem
+  const previousUnreadCount = item.unreadCount
+
   try {
-    const item = targetItem
     const unreadCount = markAsRead ? 0 : 1
     const successMsg = markAsRead ? '已标记为已读' : '已标记为未读'
 
-    // 更新未读计数
+    // 更新未读计数（乐观更新，失败时回滚）
     chatStore.updateSession(item.roomId, {
       unreadCount
     })
-
-    // 更新全局未读计数
     globalStore.updateGlobalUnreadCount()
+
+    if (markAsRead) {
+      await markMsgRead(item.roomId)
+    }
 
     window.$message.success(successMsg)
   } catch (error) {
+    // 回滚未读计数
+    chatStore.updateSession(item.roomId, {
+      unreadCount: previousUnreadCount
+    })
+    globalStore.updateGlobalUnreadCount()
+
     const errorMsg = markAsRead ? '标记已读失败' : '标记未读失败'
     window.$message.error(errorMsg)
     console.error(errorMsg, error)
