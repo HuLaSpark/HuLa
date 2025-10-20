@@ -53,7 +53,7 @@ import { isMobile } from '@/utils/PlatformConstants'
 const props = defineProps<{
   body: ImageBody
   onImageClick?: (url: string) => void
-  message?: MsgType
+  message: MsgType
 }>()
 // 图片显示相关常量
 const MAX_WIDTH = isMobile() ? 240 : 320

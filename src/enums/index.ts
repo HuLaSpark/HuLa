@@ -175,7 +175,9 @@ export enum StoresEnum {
   /** 引导状态 */
   GUIDE = 'guide',
   /** Bot 视图状态 */
-  BOT = 'bot'
+  BOT = 'bot',
+  /** 文件管理 */
+  FILE = 'file'
 }
 
 /**

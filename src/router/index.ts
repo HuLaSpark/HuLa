@@ -18,6 +18,7 @@ import MobileLogin from '#/login.vue'
 import ChatSetting from '#/views/chat-room/ChatSetting.vue'
 import MobileChatMain from '#/views/chat-room/MobileChatMain.vue'
 import SearchChatContent from '#/views/chat-room/SearchChatContent.vue'
+import MediaViewer from '#/views/chat-room/MediaViewer.vue'
 import NoticeDetail from '#/views/chat-room/notice/NoticeDetail.vue'
 import NoticeEdit from '#/views/chat-room/notice/NoticeEdit.vue'
 import NoticeList from '#/views/chat-room/notice/NoticeList.vue'
@@ -92,6 +93,11 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
         path: 'searchContent',
         name: 'mobileSearchChatContent',
         component: SearchChatContent
+      },
+      {
+        path: 'mediaViewer',
+        name: 'mobileMediaViewer',
+        component: MediaViewer
       },
       {
         path: 'groupChatMember',

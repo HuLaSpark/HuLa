@@ -60,6 +60,7 @@
 import { MergeMessageType, MittEnum } from '@/enums'
 import { useChatStore } from '@/stores/chat'
 import { useFileDownloadStore } from '@/stores/fileDownload'
+import { useFileStore } from '@/stores/file'
 import { useMitt } from '@/hooks/useMitt'
 import { extractFileName } from '@/utils/Formatting'
 import type { MsgType } from '@/services/types'
@@ -90,6 +91,13 @@ const emit = defineEmits<Emits>()
 
 const chatStore = useChatStore()
 const fileDownloadStore = useFileDownloadStore()
+const fileStore = useFileStore()
+
+// 获取当前房间ID的方法
+const getCurrentRoomId = () => {
+  // 从 props.message 中获取房间ID，如果没有则从 chatStore 获取
+  return props.message?.roomId || chatStore.currentSessionInfo?.roomId || ''
+}
 
 const handleClose = () => {
   emit('update:visible', false)
@@ -132,6 +140,21 @@ const handleSave = async () => {
     if (result && window.$message) {
       console.log('图片保存路径:', result)
       window.$message.success('图片已保存')
+
+      // 保存文件信息到 file store
+      const roomId = getCurrentRoomId()
+      if (roomId) {
+        // 如果没有消息信息，手动创建文件信息
+        const fileInfo = {
+          id: props.message!.id, // 生成唯一ID
+          roomId,
+          fileName,
+          type: 'image' as const,
+          url: result,
+          suffix: fileName.split('.').pop()?.toLowerCase()
+        }
+        fileStore.addFile(fileInfo)
+      }
     }
   } catch (e) {
     console.error('保存图片失败:', e)
