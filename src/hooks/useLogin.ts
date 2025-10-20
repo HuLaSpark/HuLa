@@ -69,23 +69,37 @@ export const useLogin = () => {
    * 登出账号
    */
   const logout = async () => {
-    const { createWebviewWindow } = useWindow()
-    isTrayMenuShow.value = false
-    try {
+    const sendLogoutEvent = async () => {
       // ws 退出连接
       await invokeSilently('ws_disconnect')
       await invokeSilently(TauriCommand.REMOVE_TOKENS)
       await invokeSilently(TauriCommand.UPDATE_USER_LAST_OPT_TIME)
-      // 创建登录窗口
-      await createWebviewWindow('登录', 'login', 320, 448, undefined, false, 320, 448)
-      // 发送登出事件
-      if (isDesktop()) {
+    }
+
+    if (isDesktop()) {
+      const { createWebviewWindow } = useWindow()
+      isTrayMenuShow.value = false
+      try {
+        await sendLogoutEvent()
+        // 创建登录窗口
+        await createWebviewWindow('登录', 'login', 320, 448, undefined, false, 320, 448)
+        // 发送登出事件
         await emit(EventEnum.LOGOUT)
+
+        // 调整托盘大小
+        await resizeWindow('tray', 130, 44)
+      } catch (error) {
+        console.error('创建登录窗口失败:', error)
       }
-      // 调整托盘大小
-      await resizeWindow('tray', 130, 44)
-    } catch (error) {
-      console.error('创建登录窗口失败:', error)
+    } else {
+      try {
+        await sendLogoutEvent()
+        // 发送登出事件
+        await emit(EventEnum.LOGOUT)
+      } catch (error) {
+        console.error('登出失败:', error)
+        window.$message.error('登出失败')
+      }
     }
   }
 

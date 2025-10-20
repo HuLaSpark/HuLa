@@ -408,6 +408,21 @@ const handleVideoCall = async (remotedUid: string, callType: CallTypeEnum) => {
   }
 }
 
+const listenMobileReLogin = async () => {
+  if (isMobile()) {
+    // 动态导入
+    const { listen } = await import('@tauri-apps/api/event')
+    const { useLogin } = await import('@/hooks/useLogin')
+
+    const { resetLoginState, logout } = useLogin()
+    listen('relogin', async () => {
+      info('收到重新登录事件')
+      await resetLoginState()
+      await logout()
+    })
+  }
+}
+
 onMounted(() => {
   // 仅在windows上使用
   if (isWindows()) {
@@ -455,6 +470,7 @@ onMounted(() => {
       await exit(0)
     })
   }
+  listenMobileReLogin()
 })
 
 onUnmounted(async () => {

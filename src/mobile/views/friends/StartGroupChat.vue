@@ -96,10 +96,15 @@ import { useContactStore } from '@/stores/contacts'
 import { useGroupStore } from '@/stores/group'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import * as ImRequestUtils from '@/utils/ImRequestUtils'
+import { useChatStore } from '@/stores/chat.ts'
+import { useGlobalStore } from '@/stores/global.ts'
 
 const userStatusStore = useUserStatusStore()
 const { stateList } = storeToRefs(userStatusStore)
 const groupStore = useGroupStore()
+const chatStore = useChatStore()
+const globalStore = useGlobalStore()
 
 /** 获取用户状态 */
 const getUserState = (uid: string) => {
@@ -145,9 +150,44 @@ const filteredContacts = computed(() => {
 })
 
 // 点击发起群聊
-const createGroup = () => {
+const createGroup = async () => {
   console.log('发起群聊，选择的用户：', selectedList.value)
+  if (selectedList.value.length < 2) {
+    window.$message.success('两个人无法建群哦')
+    return
+  }
   // TODO: 调用接口 / store 创建群聊
+  try {
+    const result: any = await ImRequestUtils.createGroup({ uidList: selectedList.value })
+
+    await chatStore.getSessionList(true)
+
+    const resultRoomId = result?.roomId != null ? String(result.roomId) : undefined
+    const resultId = result?.id != null ? String(result.id) : undefined
+
+    const matchedSession = chatStore.sessionList.find((session) => {
+      const sessionRoomId = String(session.roomId)
+      const sessionDetailId = session.detailId != null ? String(session.detailId) : undefined
+      return (
+        (resultRoomId !== undefined && sessionRoomId === resultRoomId) ||
+        (resultId !== undefined && (sessionDetailId === resultId || sessionRoomId === resultId))
+      )
+    })
+
+    if (matchedSession?.roomId) {
+      globalStore.updateCurrentSessionRoomId(matchedSession.roomId)
+    }
+
+    resetCreateGroupState()
+    window.$message.success('创建群聊成功')
+  } catch (error) {
+    window.$message.error('创建群聊失败')
+  }
+}
+
+const resetCreateGroupState = () => {
+  selectedList.value = []
+  keyword.value = ''
 }
 </script>
 
