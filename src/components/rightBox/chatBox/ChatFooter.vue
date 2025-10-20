@@ -231,6 +231,9 @@ import { isMac, isMobile } from '@/utils/PlatformConstants'
 
 // 移动端组件条件导入
 const More = isMobile() ? defineAsyncComponent(() => import('@/mobile/components/chat-room/panel/More.vue')) : void 0
+const VoicePanel = isMobile()
+  ? defineAsyncComponent(() => import('@/mobile/components/chat-room/panel/VoicePanel.vue'))
+  : void 0
 
 const { detailId } = defineProps<{
   detailId: SessionItem['detailId']
