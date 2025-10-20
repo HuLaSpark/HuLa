@@ -256,7 +256,7 @@ pub async fn fetch_all_messages(
     );
     // 调用后端接口 /chat/msg/list 获取所有消息，传递 async_data 参数
     let body = match async_data {
-        true => Some(serde_json::json!({ "async": true })),
+        true => Some(serde_json::json!({ "async": async_data })),
         false => None,
     };
 
