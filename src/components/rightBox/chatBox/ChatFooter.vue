@@ -197,7 +197,7 @@
             <Emoticon @emojiHandle="emojiHandle" :all="false" />
           </div>
           <div v-else-if="inputState.isClickedVoice" key="voice" class="panel-content">
-            <Voice @cancel="handleMobileVoiceCancel" @send="handleMobileVoiceSend" />
+            <VoicePanel @cancel="handleMobileVoiceCancel" @send="handleMobileVoiceSend" />
           </div>
           <div v-else-if="inputState.isClickedMore" key="more" class="panel-content">
             <More @sendFiles="handleMoreSendFiles" />
@@ -231,8 +231,6 @@ import { isMac, isMobile } from '@/utils/PlatformConstants'
 
 // 移动端组件条件导入
 const More = isMobile() ? defineAsyncComponent(() => import('@/mobile/components/chat-room/panel/More.vue')) : void 0
-
-const Voice = isMobile() ? defineAsyncComponent(() => import('@/mobile/components/chat-room/panel/Voice.vue')) : void 0
 
 const { detailId } = defineProps<{
   detailId: SessionItem['detailId']
