@@ -50,6 +50,8 @@ import { useImageViewer } from '@/hooks/useImageViewer'
 import type { ImageBody, MsgType } from '@/services/types'
 import { isMobile } from '@/utils/PlatformConstants'
 
+const ImagePreview = isMobile() ? defineAsyncComponent(() => import('@/mobile/components/ImagePreview.vue')) : void 0
+
 const props = defineProps<{
   body: ImageBody
   onImageClick?: (url: string) => void

@@ -39,6 +39,9 @@
 <script setup lang="ts">
 import { useFileStore } from '@/stores/file'
 import { useGlobalStore } from '@/stores/global'
+import { isMobile } from '@/utils/PlatformConstants'
+
+const ImagePreview = isMobile() ? defineAsyncComponent(() => import('@/mobile/components/ImagePreview.vue')) : void 0
 
 const router = useRouter()
 const fileStore = useFileStore()
