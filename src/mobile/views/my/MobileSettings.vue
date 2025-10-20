@@ -11,8 +11,7 @@
 
     <template #container>
       <div class="flex flex-col">
-        <div
-          class="flex flex-col p-20px gap-20px bg-[url('@/assets/mobile/chat-home/background.webp')] bg-cover bg-center">
+        <div class="flex flex-col p-20px gap-20px">
           <!-- 设置项 -->
           <div
             v-for="item in settings"

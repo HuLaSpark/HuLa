@@ -1,14 +1,16 @@
 <template>
-  <div class="h-full flex flex-col">
-    <!-- 页面全部内容 -->
-    <div class="flex flex-col flex-1">
-      <RouterView v-slot="{ Component }">
-        <Transition name="slide" appear mode="out-in">
-          <component :is="Component" :key="route.fullPath" />
-        </Transition>
-      </RouterView>
+  <MobileLayout :safeAreaTop="true" :safeAreaBottom="true">
+    <div class="h-full flex flex-col">
+      <!-- 页面全部内容 -->
+      <div class="flex flex-col flex-1">
+        <RouterView v-slot="{ Component }">
+          <Transition name="slide" appear mode="out-in">
+            <component :is="Component" :key="route.fullPath" />
+          </Transition>
+        </RouterView>
+      </div>
     </div>
-  </div>
+  </MobileLayout>
 </template>
 
 <script setup lang="ts">
