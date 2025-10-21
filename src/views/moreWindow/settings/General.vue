@@ -124,15 +124,6 @@
 
           <n-switch size="small" v-model:value="showText" />
         </n-flex>
-
-        <span class="w-full h-1px bg-[--line-color]"></span>
-
-        <!-- 临时清除缓存 -->
-        <n-flex align="center" justify="space-between">
-          <span>临时功能: 清除localstorage缓存</span>
-
-          <n-button size="small" secondary type="error" @click="clearLocalstorage">清除缓存</n-button>
-        </n-flex>
       </n-flex>
     </n-flex>
   </n-flex>
@@ -172,11 +163,6 @@ const handleTheme = (code: string) => {
 /** 调整主界面高度 */
 const setHomeHeight = async () => {
   invoke('set_height', { height: showMode.value === ShowModeEnum.TEXT ? 505 : 423 })
-}
-
-const clearLocalstorage = () => {
-  localStorage.clear()
-  window.$message?.success('清除成功')
 }
 </script>
 <style scoped lang="scss">

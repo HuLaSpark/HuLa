@@ -114,14 +114,9 @@ const tipText = ref('')
 const videoWidth = ref(0)
 const videoHeight = ref(0)
 
-// 当前显示的视频URL
+// 当前显示的视频URL（统一使用列表模式）
 const currentVideo = computed(() => {
-  let videoUrl = ''
-  if (videoViewerStore.isSingleVideoMode) {
-    videoUrl = videoViewerStore.singleVideo
-  } else {
-    videoUrl = videoList.value[currentIndex.value]
-  }
+  const videoUrl = videoList.value[currentIndex.value] || ''
 
   // 如果是本地文件路径，使用 Tauri 的 convertFileSrc 来转换
   if (videoUrl && !videoUrl.startsWith('http')) {
@@ -140,29 +135,29 @@ const videoClass = computed(() => {
 
 // 是否可以切换到上一个视频
 const canGoPrevious = computed(() => {
-  if (videoViewerStore.isSingleVideoMode) return false
+  if (videoList.value.length <= 1) return false
 
   const currentVideoPath = videoList.value[currentIndex.value]
   if (!currentVideoPath || currentVideoPath.startsWith('http')) {
-    // 网络视频使用原有逻辑
+    // 网络视频：检查是否不是第一个
     return currentIndex.value > 0
   }
 
-  // 本地视频总是返回true，具体判断在点击时进行
+  // 本地视频：总是返回true，具体判断在点击时进行
   return true
 })
 
 // 是否可以切换到下一个视频
 const canGoNext = computed(() => {
-  if (videoViewerStore.isSingleVideoMode) return false
+  if (videoList.value.length <= 1) return false
 
   const currentVideoPath = videoList.value[currentIndex.value]
   if (!currentVideoPath || currentVideoPath.startsWith('http')) {
-    // 网络视频使用原有逻辑
+    // 网络视频：检查是否不是最后一个
     return currentIndex.value < videoList.value.length - 1
   }
 
-  // 本地视频总是返回true，具体判断在点击时进行
+  // 本地视频：总是返回true，具体判断在点击时进行
   return true
 })
 
@@ -263,9 +258,6 @@ const onVideoPlay = () => {
 const previousVideo = async () => {
   if (!canGoPrevious.value) return
 
-  // 如果是单视频模式，不允许切换
-  if (videoViewerStore.isSingleVideoMode) return
-
   const currentVideoPath = videoList.value[currentIndex.value]
   if (!currentVideoPath || currentVideoPath.startsWith('http')) {
     // 如果是网络视频，使用原有逻辑
@@ -310,9 +302,6 @@ const previousVideo = async () => {
 // 切换到下一个视频
 const nextVideo = async () => {
   if (!canGoNext.value) return
-
-  // 如果是单视频模式，不允许切换
-  if (videoViewerStore.isSingleVideoMode) return
 
   const currentVideoPath = videoList.value[currentIndex.value]
   if (!currentVideoPath || currentVideoPath.startsWith('http')) {
@@ -385,16 +374,10 @@ onMounted(async () => {
     })
   )
 
-  if (videoViewerStore.isSingleVideoMode) {
-    videoList.value = [videoViewerStore.singleVideo]
-    currentIndex.value = 0
-  } else {
-    // 添加数据有效性验证
-    const validIndex = Math.min(Math.max(videoViewerStore.currentVideoIndex, 0), videoViewerStore.videoList.length - 1)
-    videoList.value = [...videoViewerStore.videoList]
-    currentIndex.value = validIndex
-    console.log('Initial index:', validIndex)
-  }
+  // 统一使用列表模式初始化
+  const validIndex = Math.min(Math.max(videoViewerStore.currentVideoIndex, 0), videoViewerStore.videoList.length - 1)
+  videoList.value = [...videoViewerStore.videoList]
+  currentIndex.value = validIndex
 })
 </script>
 
