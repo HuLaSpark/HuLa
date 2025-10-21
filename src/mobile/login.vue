@@ -1,5 +1,5 @@
 <template>
-  <MobileLayout :backgroundImage="'@/assets/mobile/1.webp'" :safeAreaTop="false" :safeAreaBottom="false">
+  <MobileLayout :backgroundImage="'/login_bg.png'" :safeAreaTop="false" :safeAreaBottom="false">
     <div class="h-full flex-col-center gap-40px">
       <div class="flex-center absolute top-13vh left-36px">
         <p class="text-(20px #333)">HI, 欢迎来到</p>
