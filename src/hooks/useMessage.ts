@@ -5,13 +5,12 @@ import { useChatStore } from '@/stores/chat.ts'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useSettingStore } from '@/stores/setting.ts'
-import { exitGroup, markMsgRead, notification, setSessionTop, shield } from '@/utils/ImRequestUtils'
+import { exitGroup, notification, setSessionTop, shield } from '@/utils/ImRequestUtils'
 import { invokeWithErrorHandler } from '../utils/TauriInvokeHandler'
 
 const msgBoxShow = ref(false)
 const shrinkStatus = ref(false)
 export const useMessage = () => {
-  const route = useRoute()
   const globalStore = useGlobalStore()
   const chatStore = useChatStore()
   const settingStore = useSettingStore()
@@ -31,15 +30,6 @@ export const useMessage = () => {
     // 更新当前会话信息
     globalStore.updateCurrentSessionRoomId(item.roomId)
     await chatStore.changeRoom()
-
-    // 只有在消息页面且有未读消息时，才标记为已读
-    if ((route.path === '/message' || route.path === '/mobile/message') && item.unreadCount > 0) {
-      markMsgRead(item.roomId || '1').then(async () => {
-        chatStore.markSessionRead(item.roomId || '1')
-        // 更新全局未读计数
-        globalStore.updateGlobalUnreadCount()
-      })
-    }
   }
 
   /**
@@ -50,9 +40,6 @@ export const useMessage = () => {
     globalStore.updateCurrentSessionRoomId(roomId)
     try {
       await chatStore.changeRoom()
-      await markMsgRead(roomId)
-      chatStore.markSessionRead(roomId || '1')
-      await globalStore.updateGlobalUnreadCount()
     } catch (error) {
       console.error('尝试进入聊天室时出现错误：', error)
     }

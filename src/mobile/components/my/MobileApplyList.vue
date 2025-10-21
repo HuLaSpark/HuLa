@@ -109,7 +109,7 @@
 
     <!-- 空数据提示 -->
     <n-flex v-if="applyList.length === 0" vertical justify="center" align="center" class="py-40px">
-      <n-empty description="暂无好友申请" />
+      <n-empty :description="props.type === 'friend' ? '暂无好友申请' : '暂无群通知'" />
     </n-flex>
   </n-flex>
 </template>
