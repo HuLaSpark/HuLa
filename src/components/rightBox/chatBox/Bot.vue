@@ -3,7 +3,7 @@
     <!-- 顶部工具栏 -->
     <div class="language-switcher">
       <div v-if="canGoBack" class="back-btn flex-shrink-0" @click="goBack">
-        <svg class="size-16px rotate-180"><use href="#right"></use></svg>
+        <svg class="rotate-180"><use href="#right"></use></svg>
         返回
       </div>
       <div v-if="showAssistantMinimalToolbar" class="assistant-compact-toolbar">
@@ -722,8 +722,7 @@ onUnmounted(() => {
   .back-btn {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
+    padding: 6px 10px;
     border-radius: 6px;
     cursor: pointer;
     font-size: 13px;
@@ -739,8 +738,7 @@ onUnmounted(() => {
     }
 
     &:hover {
-      background: #fbb99030;
-      color: #fbb160;
+      @apply bg-[#13987f40] text-[#13987f];
     }
   }
 
@@ -780,8 +778,7 @@ onUnmounted(() => {
     }
 
     &:hover {
-      background: #fbb99030;
-      color: #fbb160;
+      @apply bg-[#13987f40] text-[#13987f];
     }
   }
 
@@ -853,15 +850,12 @@ onUnmounted(() => {
     -webkit-user-select: none;
 
     &:hover {
-      background: #fbb99030;
-      color: #fbb160;
+      @apply dark:bg-[#13987f40] bg-[#e8f4f1] text-[#13987f];
     }
 
     &.active {
-      background: #fbb99040;
-      color: #fbb160;
-      font-weight: 500;
-      box-shadow: inset 0 0 0 1px #fbb16040;
+      @apply dark:bg-[#13987f40] bg-[#e8f4f1] text-[#13987f];
+      box-shadow: inset 0 0 0 1px #13987f60;
     }
   }
 
@@ -921,18 +915,18 @@ onUnmounted(() => {
   }
   --fgColor-default: var(--text-color);
   --fgColor-muted: var(--chat-text-color, var(--text-color));
-  --fgColor-accent: #fbb160;
-  --fgColor-attention: #fbb160;
-  --fgColor-success: var(--success-color, #1a7f37);
+  --fgColor-accent: #13987f;
+  --fgColor-attention: #13987f;
+  --fgColor-success: var(--success-color, #13987f);
   --fgColor-danger: var(--danger-color, #d1242f);
   --bgColor-default: var(--bg-color);
   --bgColor-muted: var(--bg-msg-hover);
   --bgColor-neutral-muted: rgba(144, 144, 144, 0.15);
-  --bgColor-attention-muted: rgba(251, 177, 96, 0.16);
+  --bgColor-attention-muted: #13987f16;
   --borderColor-default: var(--line-color);
   --borderColor-muted: var(--line-color);
   --borderColor-neutral-muted: rgba(144, 144, 144, 0.2);
-  --borderColor-accent-emphasis: #fbb160;
+  --borderColor-accent-emphasis: #13987f;
 
   // 为表格创建滚动包装器
   :deep(.markdown-body) {

@@ -47,6 +47,15 @@
                   </template>
                   <span>官方群聊认证</span>
                 </n-popover>
+
+                <n-popover trigger="hover" v-if="item.account === UserType.BOT">
+                  <template #trigger>
+                    <svg class="size-20px select-none outline-none cursor-pointer color-#13987f">
+                      <use href="#authenticationUser"></use>
+                    </svg>
+                  </template>
+                  <span>HuLa助手</span>
+                </n-popover>
               </n-flex>
               <span
                 :class="{ 'text-[#707070]! dark:text-[#fff]!': item.account === UserType.BOT }"
