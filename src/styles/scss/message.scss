@@ -10,11 +10,11 @@
   @apply cursor-pointer transition-all duration-300 ease-in-out;
 
   &.context-menu-active {
-    box-shadow: inset 0 0 0 1px #909090;
+    box-shadow: inset 0 0 0 1px #13987f;
   }
 
   &.active-context-menu {
-    box-shadow: inset 0 0 0 1px var(--active-context-menu);
+    box-shadow: inset 0 0 0 1px #909090;
   }
 
   .text {
@@ -42,8 +42,8 @@
 
 /** 助手样式 */
 .active-bot {
-  @apply dark:bg-[#fbb99040]! bg-[#fbb99060]! text-[#fbb160]!;
-  box-shadow: inset 0 0 0.8px 0.8px #fbb16090;
+  @apply dark:bg-[#13987f40]! bg-[#e8f4f1]! text-[#13987f]!;
+  box-shadow: inset 0 0 0.8px 0.8px #13987f;
 }
 
 :deep(.n-badge .n-badge-sup) {

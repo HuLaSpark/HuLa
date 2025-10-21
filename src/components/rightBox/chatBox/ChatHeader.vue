@@ -25,8 +25,8 @@
             <!-- bot用户标签 -->
             <div
               v-if="isBotUser"
-              class="dark:bg-[#fbb99020] bg-[#fbb99030] dark:border-(1px solid #fbb99020) border-(1px solid #fbb99040) flex-center px-8px py-4px rounded-6px">
-              <p class="text-(11px #fbb160)">助手</p>
+              class="dark:bg-[#13987f40] bg-[#e8f4f1] dark:border-(1px solid #13987f) border-(1px solid #13987f) flex-center px-8px py-4px rounded-6px">
+              <p class="text-(11px #13987f)">助手</p>
             </div>
           </label>
           <svg v-if="activeItem.hotFlag === IsAllUserEnum.Yes" class="size-20px color-#13987f select-none outline-none">
