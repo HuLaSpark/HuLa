@@ -125,9 +125,9 @@
           <n-checkbox v-model:checked="protocol" />
           <div class="text-12px color-#909090 cursor-default lh-14px">
             <span>已阅读并同意</span>
-            <span class="color-#13987f">服务协议</span>
+            <span @click.stop="toServiceAgreement" class="color-#13987f cursor-pointer">服务协议</span>
             <span>和</span>
-            <span class="color-#13987f">HuLa隐私保护指引</span>
+            <span @click.stop="toPrivacyAgreement" class="color-#13987f cursor-pointer">HuLa隐私保护指引</span>
           </div>
         </n-flex>
       </n-flex>
@@ -196,9 +196,9 @@
           <n-checkbox v-model:checked="registerProtocol" />
           <div class="text-12px color-#909090 cursor-default lh-14px">
             <span>已阅读并同意</span>
-            <span class="color-#13987f">服务协议</span>
+            <span @click.stop="toServiceAgreement" class="color-#13987f cursor-pointer">服务协议</span>
             <span>和</span>
-            <span class="color-#13987f">HuLa隐私保护指引</span>
+            <span @click.stop="toPrivacyAgreement" class="color-#13987f cursor-pointer">HuLa隐私保护指引</span>
           </div>
         </n-flex>
 
@@ -634,6 +634,18 @@ onBeforeMount(async () => {
   //   }
   // }
 })
+
+const toServiceAgreement = () => {
+  router.push({
+    name: 'mobileServiceAgreement'
+  })
+}
+
+const toPrivacyAgreement = () => {
+  router.push({
+    name: 'mobilePrivacyAgreement'
+  })
+}
 
 const { checkUpdate } = useCheckUpdate()
 onMounted(async () => {
