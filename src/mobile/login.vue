@@ -268,7 +268,7 @@
       </n-flex>
 
       <!-- 邮箱验证码输入弹窗 -->
-      <n-modal
+      <!-- <n-modal
         v-model:show="emailCodeModal"
         :mask-closable="true"
         @click="emailCodeModal = false"
@@ -282,7 +282,6 @@
                 验证码已发送至 {{ registerInfo.email }}，请查收并输入验证码完成注册
               </p>
 
-              <!-- PIN 输入框 -->
               <div class="mb-20px">
                 <PinInput
                   v-model="emailCode"
@@ -304,14 +303,60 @@
             </n-flex>
           </n-flex>
         </div>
-      </n-modal>
+      </n-modal> -->
+
+      <van-popup
+        @click-overlay="handlePopupClose"
+        :close-on-click-overlay="false"
+        class="rounded-15px bg-#fdfdfd"
+        v-model:show="emailPopupShow"
+        :style="{ padding: '20px 30px' }">
+        <div class="bg-#fdfdfd w-65vw h-fit box-border flex flex-col gap-25px rounded-8px">
+          <div class="w-full flex flex-col gap-20px">
+            <div class="flex w-full items-center">
+              <img src="@/assets/mobile/2.svg" alt="" class="w-80px h-20px" />
+              <p>请输入邮箱验证码</p>
+            </div>
+
+            <div class="flex text-15px">
+              <p v-if="!repeatText">
+                验证码已发送至
+                <span class="text-green-600">{{ registerInfo.email }}</span>
+                请查收并输入验证码完成注册👌
+              </p>
+
+              <p v-if="repeatText">
+                {{ repeatText }}!
+                <span class="text-green-600">{{ registerInfo.email }}</span>
+                请查收并输入验证码完成注册👌
+              </p>
+            </div>
+          </div>
+
+          <div class="flex w-full flex-col gap-10px">
+            <div class="bg-gray-200 rounded-8px p-[8px_5px] flex justify-center">
+              <n-input-otp ref="pinInputRef" class="text-center" v-model:value="emailCode" />
+            </div>
+
+            <n-button
+              :loading="finalRegisterLoading"
+              :disabled="!isEmailCodeComplete"
+              tertiary
+              style="color: #fff; margin-bottom: 0"
+              class="w-full mt-8px mb-50px gradient-button"
+              @click="handleRegisterComplete">
+              注册
+            </n-button>
+          </div>
+        </div>
+      </van-popup>
     </div>
   </MobileLayout>
 </template>
 
 <script setup lang="ts">
 import { debounce } from 'lodash-es'
-import PinInput from '@/components/common/PinInput.vue'
+// import PinInput from '@/components/common/PinInput.vue'
 import Validation from '@/components/common/Validation.vue'
 import router from '@/router'
 import type { RegisterUserReq, UserInfoType } from '@/services/types'
@@ -327,6 +372,11 @@ import { WsResponseMessageType } from '../services/wsType'
 import { useSettingStore } from '../stores/setting'
 import { clearListener } from '../utils/ReadCountQueue'
 import { useLogin } from '../hooks/useLogin'
+// import { InputOtpOnUpdateValue } from 'naive-ui'
+import { showConfirmDialog } from 'vant/es'
+// import { Popup } from 'vant'
+
+const emailPopupShow = ref(false)
 
 // 本地注册信息类型，扩展API类型以包含确认密码
 interface LocalRegisterInfo extends RegisterUserReq {}
@@ -380,8 +430,8 @@ const { normalLogin, loading, loginText, loginDisabled, info: userInfo } = useLo
 const captcha = ref({ base64: '', uuid: '' })
 
 /** 邮箱验证码模态框 */
-const emailCodeModal = ref(false)
-const emailCode = ref('')
+// const emailCodeModal = ref(false)
+const emailCode = ref([''])
 const pinInputRef = ref()
 
 // 常用邮箱后缀
@@ -476,7 +526,8 @@ const resetRegisterForm = () => {
     code: '',
     uuid: '',
     avatar: '',
-    systemType: 2
+    systemType: 2,
+    key: 'REGISTER_EMAIL'
   } as LocalRegisterInfo
   currentStep.value = 1
   registerNamePH.value = '输入HuLa昵称'
@@ -484,8 +535,8 @@ const resetRegisterForm = () => {
   registerPasswordPH.value = '设置密码'
   confirmPasswordPH.value = '确认密码'
   registerCodePH.value = '输入验证码'
-  emailCode.value = ''
-  emailCodeModal.value = false
+  emailCode.value = ['']
+  // emailCodeModal.value = false
 }
 
 /**
@@ -500,6 +551,11 @@ const getVerifyCode = async () => {
   }
 }
 
+const defaultEmailCodeDeadTime = 900 // 默认邮箱验证码过期时间
+
+// 重复文字
+const repeatText = ref('')
+
 /** 处理注册步骤 */
 const handleRegisterStep = async () => {
   if (currentStep.value === 1) {
@@ -511,24 +567,38 @@ const handleRegisterStep = async () => {
     // 发送邮箱验证码
     registerLoading.value = true
     try {
-      await sendCaptcha({
+      // 过期时间
+      const deadTime = await sendCaptcha({
         email: registerInfo.value.email,
         uuid: captcha.value.uuid.toString(),
         templateCode: 'REGISTER_EMAIL'
       })
 
+      repeatText.value = '' // 默认先清空，以防出现问题
+
+      // 如果小于默认值，说明验证码是旧的
+      if (deadTime < defaultEmailCodeDeadTime && deadTime > 0) {
+        repeatText.value = '验证码仍然可用'
+      } else if (deadTime === 0) {
+        repeatText.value = '' // 验证码过期，则需要重发
+      }
+
+      console.log('返回的验证码参数 ：', deadTime)
+
       registerLoading.value = false
       // 显示邮箱验证码输入弹窗
-      emailCodeModal.value = true
-      emailCode.value = ''
+      // emailCodeModal.value = true
+      emailPopupShow.value = true
+      emailCode.value = ['']
 
       // 聚焦第一个输入框
       nextTick(() => {
         if (pinInputRef.value) {
-          pinInputRef.value.focus()
+          pinInputRef.value.focusOnChar(0)
         }
       })
     } catch (error) {
+      console.error('发送验证码错误：', error)
       registerLoading.value = false
     }
   }
@@ -539,8 +609,15 @@ const handleRegisterComplete = async () => {
   finalRegisterLoading.value = true
 
   try {
+    const everyEmpty = emailCode.value.includes('') // 至少有一个为空，那就失败
+
+    if (everyEmpty || emailCode.value.length < 6) {
+      window.$message.error('请输入6位验证码')
+      return
+    }
+
     // 合并验证码
-    registerInfo.value.code = emailCode.value
+    registerInfo.value.code = emailCode.value.join('')
     registerInfo.value.uuid = captcha.value.uuid
 
     // 随机生成头像编号
@@ -550,10 +627,12 @@ const handleRegisterComplete = async () => {
 
     // 注册 - 只传递API需要的字段
     const { ...apiRegisterInfo } = registerInfo.value
+
     await register(apiRegisterInfo)
 
     // 关闭弹窗并切换到登录页面
-    emailCodeModal.value = false
+    // emailCodeModal.value = false
+    emailPopupShow.value = false
     activeTab.value = 'login'
     userInfo.value.account = registerInfo.value.nickName || registerInfo.value.email
 
@@ -563,6 +642,8 @@ const handleRegisterComplete = async () => {
     resetRegisterForm()
   } catch (error) {
     // 处理注册失败
+    window.$message.error((error as any) || '注册失败')
+    console.error(error)
   } finally {
     finalRegisterLoading.value = false
   }
@@ -606,6 +687,19 @@ const closeMenu = (event: MouseEvent) => {
   if (!target.matches('.account-box, .account-box *, .down')) {
     arrowStatus.value = false
   }
+}
+
+const handlePopupClose = () => {
+  showConfirmDialog({
+    title: '关闭验证码窗口',
+    message: '是否确认关闭验证码窗口？'
+  })
+    .then(() => {
+      emailPopupShow.value = false
+    })
+    .catch(() => {
+      emailPopupShow.value = true
+    })
 }
 
 onBeforeMount(async () => {
