@@ -179,7 +179,6 @@ const isMyFriend = ref(props.isMyFriend)
 const toChatRoom = async () => {
   try {
     const res = await getSessionDetailWithFriends({ id: uid, roomType: 2 })
-    globalStore.updateCurrentSessionRoomId(res.roomId)
     // 先检查会话是否已存在
     const existingSession = chatStore.getSession(res.roomId)
     if (!existingSession) {

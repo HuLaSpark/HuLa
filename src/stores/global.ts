@@ -96,19 +96,16 @@ export const useGlobalStore = defineStore(
         return
       }
       // 只有当房间ID真正发生变化时才执行操作
-      if (!oldVal || val! !== oldVal) {
+      if (currentSession.value.unreadCount > 0 && (!oldVal || val! !== oldVal)) {
         info(`[global]当前会话发生实际变化: ${oldVal} -> ${val}`)
         // 清理已读数查询队列
         clearQueue()
         // 延攱1秒后开始查询已读数
         setTimeout(readCountQueue, 1000)
         // 标记该房间的消息为已读
-        // apis.markMsgRead({ roomId: val.roomId || '1' })
         markMsgRead(val! || '1')
         // 更新会话的已读状态
         chatStore.markSessionRead(val! || '1')
-        // 注意：这里不需要再次调用 updateGlobalUnreadCount，
-        // 因为 markSessionRead 已经会调用 updateTotalUnreadCount
       }
     })
 
