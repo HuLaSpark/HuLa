@@ -163,7 +163,7 @@ async fn query_all_files(
     im_message_repository::query_file_messages(
         db_conn,
         login_uid,
-        None, // 查询所有房间
+        None,          // 查询所有房间
         Some(&[4, 6]), // 文件、视频类型
         param.search_keyword.as_deref(),
         param.page,
@@ -205,7 +205,7 @@ async fn query_files_by_senders(
                 db_conn,
                 login_uid,
                 Some(&room_id), // 指定房间
-                Some(&[4, 6]), // 文件、视频类型
+                Some(&[4, 6]),  // 文件、视频类型
                 param.search_keyword.as_deref(),
                 param.page,
                 param.page_size,

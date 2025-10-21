@@ -1,6 +1,7 @@
 // 桌面端依赖
 #[cfg(desktop)]
 mod desktops;
+use crate::common::files_meta::get_files_meta;
 #[cfg(desktop)]
 use common::init::CustomInit;
 #[cfg(target_os = "windows")]
@@ -19,7 +20,6 @@ use desktops::{common_cmd, directory_scanner, init, tray, video_thumbnail::get_v
 use directory_scanner::{cancel_directory_scan, get_directory_usage_info_with_progress};
 #[cfg(desktop)]
 use init::DesktopCustomInit;
-use crate::common::files_meta::get_files_meta;
 use std::sync::Arc;
 use tauri_plugin_fs::FsExt;
 pub mod command;
@@ -349,16 +349,16 @@ fn common_setup(app_handle: AppHandle) -> Result<(), Box<dyn std::error::Error>>
 // 公共的命令处理器函数
 fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static
 {
+    use crate::command::markdown_command::{get_readme_html, parse_markdown};
     #[cfg(mobile)]
     use crate::command::set_complete;
-    #[cfg(mobile)]
-    use crate::mobiles::splash::hide_splash_screen;
-    use crate::command::markdown_command::{get_readme_html, parse_markdown};
     use crate::command::user_command::{
         get_user_tokens, save_user_info, update_user_last_opt_time,
     };
     #[cfg(desktop)]
     use crate::desktops::common_cmd::set_badge_count;
+    #[cfg(mobile)]
+    use crate::mobiles::splash::hide_splash_screen;
     use crate::websocket::commands::{
         ws_disconnect, ws_force_reconnect, ws_get_app_background_state, ws_get_health,
         ws_get_state, ws_init_connection, ws_is_connected, ws_send_message,

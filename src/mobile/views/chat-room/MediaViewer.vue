@@ -32,7 +32,11 @@
     </div>
 
     <!-- 图片预览组件 -->
-    <ImagePreview v-model:visible="showImagePreviewRef" :image-url="activeImage?.url || ''" />
+    <component
+      :is="ImagePreview"
+      v-if="ImagePreview"
+      v-model:visible="showImagePreviewRef"
+      :image-url="activeImage?.url || ''" />
   </div>
 </template>
 

@@ -81,7 +81,7 @@
         <div
           v-else-if="!isViewingLink"
           ref="markdownContainer"
-          class="markdown-content"
+          class="markdown-content markdown-body"
           v-html="renderedMarkdown"></div>
 
         <!-- 外部链接 Tauri Webview 容器 -->
@@ -109,6 +109,7 @@ import { isDesktop } from '@/utils/PlatformConstants'
 import { useBotStore } from '@/stores/bot'
 import { useAssistantModelPresets, type AssistantModelPreset } from '@/hooks/useAssistantModelPresets'
 import HuLaAssistant from './HuLaAssistant.vue'
+import 'github-markdown-css/github-markdown.css'
 
 // 当前语言
 const currentLang = ref<'zh' | 'en'>('zh')
@@ -353,6 +354,7 @@ const handleAssistantError = async (error: unknown) => {
 const showAssistant = async (recordHistory = true, preserveCustomModel = false) => {
   await fetchAssistantModelPresets(assistantModelPresets.value.length <= 1)
   if (currentView.value.type === 'assistant') {
+    botStore.setAssistant('正在预览模型')
     if (preserveCustomModel) {
       await nextTick()
     }
@@ -370,6 +372,7 @@ const showAssistant = async (recordHistory = true, preserveCustomModel = false) 
   isViewingLink.value = false
   currentUrl.value = ''
   currentView.value = { type: 'assistant' }
+  botStore.setAssistant('正在预览模型')
   await nextTick()
 }
 
@@ -691,6 +694,9 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
   background: var(--bg-color);
 }
 
@@ -701,6 +707,9 @@ onUnmounted(() => {
   padding: 12px 16px;
   border-bottom: 1px solid var(--line-color);
   background: var(--bg-color);
+  max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
 
   .assistant-compact-toolbar {
     display: flex;
@@ -867,13 +876,17 @@ onUnmounted(() => {
   flex-direction: column;
   position: relative;
   min-height: 0;
+  max-width: 100%;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 .external-webview {
   flex: 1;
   min-height: 0;
+  max-width: 100%;
   position: relative;
+  box-sizing: border-box;
 }
 
 .external-webview__fallback {
@@ -887,12 +900,170 @@ onUnmounted(() => {
   text-align: center;
 }
 
-// markdown内容样式
+// Markdown 内容容器
 .markdown-content {
   flex: 1;
   min-height: 0;
+  width: 100%;
+  max-width: 100%;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 20px;
+  background-color: transparent;
+  color: var(--text-color);
+  box-sizing: border-box;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+
+  // 强制所有直接子元素不超出容器
+  > * {
+    max-width: 100%;
+  }
+  --fgColor-default: var(--text-color);
+  --fgColor-muted: var(--chat-text-color, var(--text-color));
+  --fgColor-accent: #fbb160;
+  --fgColor-attention: #fbb160;
+  --fgColor-success: var(--success-color, #1a7f37);
+  --fgColor-danger: var(--danger-color, #d1242f);
+  --bgColor-default: var(--bg-color);
+  --bgColor-muted: var(--bg-msg-hover);
+  --bgColor-neutral-muted: rgba(144, 144, 144, 0.15);
+  --bgColor-attention-muted: rgba(251, 177, 96, 0.16);
+  --borderColor-default: var(--line-color);
+  --borderColor-muted: var(--line-color);
+  --borderColor-neutral-muted: rgba(144, 144, 144, 0.2);
+  --borderColor-accent-emphasis: #fbb160;
+
+  // 为表格创建滚动包装器
+  :deep(.markdown-body) {
+    table {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+      box-sizing: border-box;
+      margin: 16px 0;
+
+      tbody,
+      thead {
+        display: table;
+        width: 100%;
+        table-layout: auto;
+      }
+
+      tr {
+        display: table-row;
+      }
+
+      td,
+      th {
+        display: table-cell;
+        word-break: break-word;
+        overflow-wrap: break-word;
+      }
+    }
+  }
+
+  // 通用表格处理
+  :deep(table) {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    box-sizing: border-box;
+    margin: 16px 0;
+
+    tbody,
+    thead {
+      display: table;
+      width: 100%;
+      table-layout: auto;
+    }
+
+    tr {
+      display: table-row;
+    }
+
+    td,
+    th {
+      display: table-cell;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+  }
+
+  // 代码块自适应 - 在容器内滚动
+  :deep(pre) {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: pre;
+    word-wrap: normal;
+    box-sizing: border-box;
+    margin: 16px 0;
+
+    code {
+      display: inline-block;
+      min-width: 100%;
+      white-space: pre;
+      word-wrap: normal;
+    }
+  }
+
+  // 行内代码自适应
+  :deep(code) {
+    max-width: 100%;
+    word-break: break-word;
+    box-sizing: border-box;
+  }
+
+  // 图片自适应
+  :deep(img) {
+    max-width: 100%;
+    height: auto;
+    box-sizing: border-box;
+  }
+
+  // 长 URL 和文本处理
+  :deep(a) {
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  // 段落和标题自适应
+  :deep(p),
+  :deep(h1),
+  :deep(h2),
+  :deep(h3),
+  :deep(h4),
+  :deep(h5),
+  :deep(h6) {
+    max-width: 100%;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    box-sizing: border-box;
+  }
+
+  // 列表自适应
+  :deep(ul),
+  :deep(ol) {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  // 引用块自适应
+  :deep(blockquote) {
+    max-width: 100%;
+    overflow-x: auto;
+    box-sizing: border-box;
+  }
+
+  // div 和其他容器自适应
+  :deep(div) {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
 
   // 美化滚动条
   &::-webkit-scrollbar {
@@ -909,173 +1080,6 @@ onUnmounted(() => {
 
     &:hover {
       background: rgba(144, 144, 144, 0.5);
-    }
-  }
-
-  // Markdown 样式优化
-  :deep() {
-    // 标题样式
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    h6 {
-      color: var(--text-color);
-      margin-top: 24px;
-      margin-bottom: 16px;
-      font-weight: 600;
-      line-height: 1.25;
-    }
-
-    h1 {
-      font-size: 2em;
-      border-bottom: 1px solid var(--line-color);
-      padding-bottom: 0.3em;
-    }
-
-    h2 {
-      font-size: 1.5em;
-      border-bottom: 1px solid var(--line-color);
-      padding-bottom: 0.3em;
-    }
-
-    h3 {
-      font-size: 1.25em;
-    }
-    h4 {
-      font-size: 1em;
-    }
-    h5 {
-      font-size: 0.875em;
-    }
-    h6 {
-      font-size: 0.85em;
-      color: #6a737d;
-    }
-
-    // 段落和文本
-    p {
-      margin-top: 0;
-      margin-bottom: 16px;
-      color: var(--text-color);
-      line-height: 1.6;
-    }
-
-    // 链接样式
-    a {
-      color: #fbb160;
-      text-decoration: none;
-
-      &:hover {
-        text-decoration: underline;
-      }
-    }
-
-    // 列表样式
-    ul,
-    ol {
-      padding-left: 2em;
-      margin-top: 0;
-      margin-bottom: 16px;
-      color: var(--text-color);
-    }
-
-    li {
-      margin-top: 0.25em;
-    }
-
-    // 代码样式
-    code {
-      padding: 0.2em 0.4em;
-      margin: 0;
-      font-size: 85%;
-      background-color: rgba(251, 177, 96, 0.1);
-      border-radius: 3px;
-      color: #fbb160;
-      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-    }
-
-    pre {
-      padding: 16px;
-      overflow: auto;
-      font-size: 85%;
-      line-height: 1.45;
-      background-color: var(--bg-msg-hover);
-      border-radius: 6px;
-      margin-bottom: 16px;
-
-      code {
-        padding: 0;
-        background: transparent;
-        color: var(--text-color);
-      }
-    }
-
-    // 引用样式
-    blockquote {
-      padding: 0 1em;
-      color: #6a737d;
-      border-left: 0.25em solid #fbb160;
-      margin: 0 0 16px 0;
-
-      > :first-child {
-        margin-top: 0;
-      }
-
-      > :last-child {
-        margin-bottom: 0;
-      }
-    }
-
-    // 表格样式
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      margin-bottom: 16px;
-      color: var(--text-color);
-
-      th,
-      td {
-        padding: 6px 13px;
-        border: 1px solid var(--line-color);
-      }
-
-      th {
-        font-weight: 600;
-        background: var(--bg-msg-hover);
-      }
-
-      tr {
-        background-color: var(--bg-color);
-        border-top: 1px solid var(--line-color);
-
-        &:nth-child(2n) {
-          background-color: var(--bg-msg-hover);
-        }
-      }
-    }
-
-    // 水平线
-    hr {
-      height: 0.25em;
-      padding: 0;
-      margin: 24px 0;
-      background-color: var(--line-color);
-      border: 0;
-    }
-
-    // 图片样式
-    img {
-      max-width: 100%;
-      box-sizing: content-box;
-      border-radius: 6px;
-      margin: 16px 0;
-    }
-
-    // 任务列表
-    input[type='checkbox'] {
-      margin-right: 0.5em;
     }
   }
 }
