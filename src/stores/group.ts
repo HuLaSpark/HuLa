@@ -18,7 +18,13 @@ export const useGroupStore = defineStore(
     const loadingGroups = ref<Set<string>>(new Set())
 
     // 群组相关状态
-    const userListMap = reactive<Record<string, UserItem[]>>({}) // 群成员列表Map，key为roomId
+    const currentSessionState = ref({
+      roomId: '',
+      loading: false,
+      lastLoadedRoomId: ''
+    })
+
+    const userListMap = reactive<Record<string, UserItem[]>>({})
     const groupDetails = ref<GroupDetailReq[]>([])
     const userListOptions = reactive({ isLast: false, loading: true, cursor: '' }) // 分页加载相关状态
     const myNameInCurrentGroup = computed({
@@ -47,6 +53,67 @@ export const useGroupStore = defineStore(
         }
       }
     })
+
+    // 添加获取当前会话状态的方法
+    const getCurrentSessionState = () => {
+      return {
+        ...currentSessionState.value,
+        isCurrentRoom: (roomId: string) => currentSessionState.value.roomId === roomId
+      }
+    }
+
+    // 添加成员缓存管理方法
+    const getCachedMembers = (roomId: string) => {
+      return userListMap[roomId] || []
+    }
+
+    const updateMemberCache = (roomId: string, members: any[]) => {
+      userListMap[roomId] = members
+    }
+
+    /**
+     * 添加会话切换方法
+     */
+    const switchSession = async (newSession: any, _oldSession?: any) => {
+      if (!newSession?.roomId || newSession.roomId === currentSessionState.value.roomId) {
+        return
+      }
+
+      // 设置当前加载的房间ID
+      currentSessionState.value.roomId = newSession.roomId
+      currentSessionState.value.loading = true
+
+      try {
+        // 优先显示缓存
+        const cachedMembers = getCachedMembers(newSession.roomId)
+        if (cachedMembers && Array.isArray(cachedMembers)) {
+          // 先设置缓存数据避免空白
+          userListMap[newSession.roomId] = cachedMembers
+        }
+
+        // 重置群组并加载新的群成员数据
+        resetGroupData()
+        await getGroupUserList(newSession.roomId)
+
+        // 更新缓存
+        const currentMembers = userListMap[newSession.roomId] || []
+        updateMemberCache(newSession.roomId, currentMembers)
+        currentSessionState.value.lastLoadedRoomId = newSession.roomId
+
+        // 返回处理后的数据
+        return {
+          success: true,
+          members: currentMembers,
+          roomId: newSession.roomId
+        }
+      } catch (error) {
+        console.error('切换会话失败:', error)
+        currentSessionState.value.loading = false
+        throw error
+      } finally {
+        currentSessionState.value.loading = false
+      }
+    }
 
     // 获取当前房间的用户列表的计算属性
     const userList = computed(() => {
@@ -342,7 +409,7 @@ export const useGroupStore = defineStore(
       const cachedList = userListMap[roomId]
       // 如果已经有缓存且不需要强制刷新，则直接返回
       if (!forceRefresh && Array.isArray(cachedList) && cachedList.length > 0) {
-        return
+        return cachedList
       }
 
       if (!Array.isArray(cachedList)) {
@@ -352,12 +419,24 @@ export const useGroupStore = defineStore(
       const data: any = await ImRequestUtils.groupListMember(roomId)
       if (!data) {
         userListOptions.loading = false
-        return
+        return []
       }
 
       // 将数据存储到Record中
       userListMap[roomId] = data
       userListOptions.loading = false
+
+      // 更新缓存
+      updateMemberCache(roomId, data)
+      return data
+    }
+
+    const cleanupSession = () => {
+      currentSessionState.value = {
+        roomId: '',
+        loading: false,
+        lastLoadedRoomId: ''
+      }
     }
 
     /**
@@ -660,12 +739,17 @@ export const useGroupStore = defineStore(
       removeGroupDetail,
       addGroupDetail,
       updateAdminStatus,
+      switchSession,
+      getCurrentSessionState,
+      getCachedMembers,
+      updateMemberCache,
       getUserInfo,
       allUserInfo,
       getUserDisplayName,
       isCurrentLord,
       isAdmin,
-      isAdminOrLord
+      isAdminOrLord,
+      cleanupSession
     }
   },
   {

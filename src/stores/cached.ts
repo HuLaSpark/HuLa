@@ -34,10 +34,7 @@ export const useCachedStore = defineStore(StoresEnum.CACHED, () => {
    * @returns 群组公告列表
    */
   const getGroupAnnouncementList = async (roomId: string, page: number, size: number) => {
-    const data: any = await getAnnouncementList(roomId, page, size)
-    if (data) {
-      return data
-    }
+    return await getAnnouncementList(roomId, page, size)
   }
 
   const updateMyRoomInfo = async (data: any) => {

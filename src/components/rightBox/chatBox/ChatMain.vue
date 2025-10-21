@@ -210,7 +210,7 @@ import { useGlobalStore } from '@/stores/global'
 import { useUserStore } from '@/stores/user.ts'
 import { audioManager } from '@/utils/AudioManager'
 import { timeToStr } from '@/utils/ComputedTime'
-import { getAnnouncementList } from '@/utils/ImRequestUtils'
+import { useCachedStore } from '@/stores/cached'
 import { isMessageMultiSelectEnabled } from '@/utils/MessageSelect'
 import { isMac, isMobile, isWindows } from '@/utils/PlatformConstants'
 import FileUploadProgress from '@/components/rightBox/FileUploadProgress.vue'
@@ -223,6 +223,7 @@ type AnnouncementData = {
 }
 
 // Store 实例
+const cacheStore = useCachedStore()
 const appWindow = WebviewWindow.getCurrent()
 const globalStore = useGlobalStore()
 const chatStore = useChatStore()
@@ -496,11 +497,8 @@ watch(
       // 重置并刷新当前房间的消息
       await chatStore.resetAndRefreshCurrentRoomMessages()
 
-      // 在会话切换时加载新会话的置顶公告
-      if (isGroup.value) {
-        loadTopAnnouncement()
-      } else {
-        // 如果不是群聊，清空置顶公告
+      // 如果不是群聊，清空置顶公告
+      if (!isGroup.value) {
         topAnnouncement.value = null
       }
       scrollToBottom()
@@ -612,7 +610,7 @@ const handleLoadMore = async (): Promise<void> => {
 const loadTopAnnouncement = async (): Promise<void> => {
   if (currentRoomId.value && isGroup.value) {
     try {
-      const data = await getAnnouncementList(currentRoomId.value, 1, 1)
+      const data = await cacheStore.getGroupAnnouncementList(currentRoomId.value, 1, 1)
       if (data && data.records.length > 0) {
         // 查找置顶公告
         const topNotice = data.records.find((item: any) => item.top)
@@ -679,7 +677,7 @@ onMounted(() => {
               topAnnouncement.value = newTopAnnouncement
             } else if (topAnnouncement.value) {
               // 如果当前有显示置顶公告，但新公告不是置顶的，保持不变
-              await loadTopAnnouncement() // 重新获取置顶公告
+              await loadTopAnnouncement()
             }
           } else {
             // 如果没有公告，清空显示
@@ -695,9 +693,6 @@ onMounted(() => {
   // 异步初始化监听器（不等待结果）
   initListeners().catch(console.error)
 
-  nextTick(() => {
-    loadTopAnnouncement()
-  })
   scrollToBottom()
 })
 
