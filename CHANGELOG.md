@@ -1,5 +1,26 @@
 
 
+## [3.0.1](https://github.com/HuLaSpark/HuLa/compare/v3.0.0...v3.0.1) (2025-10-21)
+
+
+### ✨ Features | 新功能
+
+* **mobile:** :sparkles: add new model processing file for android ([7f729c0](https://github.com/HuLaSpark/HuLa/commit/7f729c09a2cbb9092e1dd61686deae122bb9aa42))
+* **mobile:** :sparkles: new Mobile Terms Page ([76f2c28](https://github.com/HuLaSpark/HuLa/commit/76f2c28e3d59df564d0ffcb661bf461ece177083))
+
+
+### 🐛 Bug Fixes | Bug 修复
+
+* **assistant:** :bug: fix document not opening problem ([60f4c9d](https://github.com/HuLaSpark/HuLa/commit/60f4c9dc161c1deb2e1e036d1ada0e6c7719fcc1))
+* **bot:** :bug: assistant sorting problem ([89305ee](https://github.com/HuLaSpark/HuLa/commit/89305ee8af5be8daaca611d21586f19a83ac0ec0))
+* **common:** :bug: adjust announcement logic ([8e6bc85](https://github.com/HuLaSpark/HuLa/commit/8e6bc85ac4327672cb25e2a8cf272e3893a6f634))
+* **common:** :bug: adjust the logic for marking messages as read ([9e82cd6](https://github.com/HuLaSpark/HuLa/commit/9e82cd618b4af0b57f9f33d3a5a3fed030bd15b3))
+* **common:** :bug: fix bg color ([e47c80e](https://github.com/HuLaSpark/HuLa/commit/e47c80ebcdbb91beb331b0214bbedc6dd73ebb41))
+* **common:** :bug: login bg pic ([466e46d](https://github.com/HuLaSpark/HuLa/commit/466e46d38be0567a1095b7e551350f764c627b58))
+* **mobile:** :bug: fix the registration popup issue ([585d0b7](https://github.com/HuLaSpark/HuLa/commit/585d0b7c732db904c4fa77a62f74d3fd335b7aed))
+* **store:** :bug: set group admin ([96bfa9e](https://github.com/HuLaSpark/HuLa/commit/96bfa9e2e5cda9a7d07aa5b7ab398121758093fc))
+* **video:** :bug: fix video not playing problem ([1ecb58d](https://github.com/HuLaSpark/HuLa/commit/1ecb58d6d1c30bf072de1c5679b6e43d0ed76b44))
+
 ## [3.0.0](https://github.com/HuLaSpark/HuLa/compare/v2.6.13...v3.0.0) (2025-10-20)
 
 
