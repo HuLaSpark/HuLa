@@ -159,7 +159,10 @@ const onlineCount = computed(() => {
 /** 排序好友列表 */
 const sortedContacts = computed(() => {
   return [...contactStore.contactsList].sort((a, b) => {
-    // 在线用户排在前面
+    const aIsBot = isBotUser(a.uid)
+    const bIsBot = isBotUser(b.uid)
+    if (aIsBot && !bIsBot) return -1
+    if (!aIsBot && bIsBot) return 1
     if (a.activeStatus === OnlineEnum.ONLINE && b.activeStatus !== OnlineEnum.ONLINE) return -1
     if (a.activeStatus !== OnlineEnum.ONLINE && b.activeStatus === OnlineEnum.ONLINE) return 1
     return 0
