@@ -723,6 +723,9 @@ impl WebSocketClient {
                 info!("👥 新的notifyEvent");
                 let _ = app_handle.emit_to("home", "ws-request-notify-event", data);
             }
+            "groupSetAdmin" => {
+                let _ = app_handle.emit_to("home", "ws-group-set-admin-success", data);
+            }
             // 好友相关
             "newApply" => {
                 info!("👥 New apply request");

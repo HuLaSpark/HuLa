@@ -23,9 +23,7 @@ export enum WsResponseMessageType {
   /** 群成员变动 */
   WS_MEMBER_CHANGE = 'ws-member-change',
   /** 设置群管理员 */
-  REQUEST_SET_ADMIN = 'requestSetAdmin',
-  /** 取消群管理员 */
-  REQUEST_RECALL_ADMIN = 'requestRecallAdmin',
+  GROUP_SET_ADMIN_SUCCESS = 'groupSetAdmin',
   /** 下线通知 */
   OFFLINE = 'offline',
   /** 同意好友请求 */
