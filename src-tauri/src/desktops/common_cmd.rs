@@ -7,12 +7,12 @@ use std::time::Duration;
 use tauri::path::BaseDirectory;
 use tauri::{AppHandle, LogicalSize, Manager, ResourceId, Runtime, Webview};
 
-#[cfg(target_os = "windows")]
-use serde::Serialize;
 #[cfg(target_os = "macos")]
 use objc2::rc::Retained;
 #[cfg(target_os = "macos")]
 use objc2_app_kit::NSWindow;
+#[cfg(target_os = "windows")]
+use serde::Serialize;
 #[cfg(target_os = "macos")]
 use tauri::WebviewWindow;
 

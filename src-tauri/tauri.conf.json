@@ -16,7 +16,8 @@
     "resources": [
       "tray",
       "configuration",
-      "draco"
+      "draco",
+      "docs"
     ],
     "createUpdaterArtifacts": true,
     "active": true,

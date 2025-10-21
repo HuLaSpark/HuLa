@@ -107,7 +107,11 @@ pub async fn login_command(
     }
 }
 
-async fn handle_login_success(login_resp: &LoginResp, state: &State<'_, AppData>, async_data: bool) -> Result<(), String> {
+async fn handle_login_success(
+    login_resp: &LoginResp,
+    state: &State<'_, AppData>,
+    async_data: bool,
+) -> Result<(), String> {
     info!("handle_login_success, login_resp: {:?}", login_resp);
     // 从登录响应中获取用户标识，这里使用 uid 作为 uid
     let uid = &login_resp.uid;
@@ -129,7 +133,8 @@ async fn handle_login_success(login_resp: &LoginResp, state: &State<'_, AppData>
     .map_err(|e| e.to_string())?;
 
     let mut client = state.rc.lock().await;
-    check_user_init_and_fetch_messages(&mut client, state.db_conn.deref(), uid, async_data).await
+    check_user_init_and_fetch_messages(&mut client, state.db_conn.deref(), uid, async_data)
+        .await
         .map_err(|e| e.to_string())?;
 
     Ok(())

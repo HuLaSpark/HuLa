@@ -14,7 +14,8 @@
       "tray",
       "configuration",
       "Info.plist",
-      "draco"
+      "draco",
+      "docs"
     ],
     "active": true,
     "targets": [

@@ -40,7 +40,12 @@
     </n-image>
 
     <!-- 图片预览组件 -->
-    <ImagePreview v-model:visible="showImagePreviewRef" :image-url="body?.url || ''" :message="message" />
+    <component
+      :is="ImagePreview"
+      v-if="ImagePreview"
+      v-model:visible="showImagePreviewRef"
+      :image-url="body?.url || ''"
+      :message="message" />
   </div>
 </template>
 

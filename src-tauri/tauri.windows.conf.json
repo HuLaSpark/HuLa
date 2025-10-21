@@ -13,7 +13,8 @@
     "resources": [
       "tray",
       "configuration",
-      "draco"
+      "draco",
+      "docs"
     ],
     "active": true,
     "targets": [

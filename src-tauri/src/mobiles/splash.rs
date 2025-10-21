@@ -16,10 +16,7 @@ mod platform {
 
 #[cfg(target_os = "android")]
 mod platform {
-    use jni::{
-        JavaVM,
-        objects::JObject,
-    };
+    use jni::{JavaVM, objects::JObject};
 
     fn invoke(method: &str) -> Result<(), jni::errors::Error> {
         let ctx = ndk_context::android_context();
@@ -28,12 +25,7 @@ mod platform {
         let activity = unsafe { JObject::from_raw(ctx.context() as jni::sys::jobject) };
 
         // 直接调用Activity实例的方法，不使用静态方法
-        let result = env.call_method(
-            &activity,
-            method,
-            "()V",
-            &[],
-        );
+        let result = env.call_method(&activity, method, "()V", &[]);
 
         let _ = activity.into_raw();
 
