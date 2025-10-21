@@ -1,4 +1,4 @@
-import { join, resourceDir } from '@tauri-apps/api/path'
+import { appDataDir, join, resourceDir } from '@tauri-apps/api/path'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { BaseDirectory, exists } from '@tauri-apps/plugin-fs'
 import { MsgEnum } from '@/enums'
@@ -64,7 +64,6 @@ export const useVideoViewer = () => {
 
   // 检查视频是否已下载到本地
   const checkVideoDownloaded = async (url: string) => {
-    if (isMobile()) return false
     if (!url) return false
     try {
       const localPath = await getLocalVideoPath(url)
@@ -83,8 +82,9 @@ export const useVideoViewer = () => {
     const isDownloaded = await checkVideoDownloaded(url)
     if (isDownloaded) {
       const localPath = await getLocalVideoPath(url)
-      const resourceDirPath = await resourceDir()
-      return await join(resourceDirPath, localPath)
+      // 使用与下载时一致的基础目录
+      const baseDirPath = isMobile() ? await appDataDir() : await resourceDir()
+      return await join(baseDirPath, localPath)
     }
     return url
   }
@@ -156,11 +156,11 @@ export const useVideoViewer = () => {
     const processedIndex = processedList.findIndex((path) => path === currentVideoPath || path === url)
     const finalIndex = processedIndex !== -1 ? processedIndex : index
 
+    // 统一使用列表模式，不再区分单视频模式
     VideoViewerStore.resetVideoListOptimized(processedList, finalIndex)
     VideoViewerStore.$patch({
       videoList: [...processedList],
-      currentVideoIndex: finalIndex,
-      isSingleVideoMode: processedList.length <= 1
+      currentVideoIndex: finalIndex
     })
 
     // 检查现有窗口

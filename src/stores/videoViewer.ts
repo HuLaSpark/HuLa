@@ -13,9 +13,6 @@ export const useVideoViewer = defineStore(
     // 视频相关变量
     const videoList = ref<string[]>([])
     const currentVideoIndex = ref(0)
-    // 单视频模式相关变量
-    const singleVideo = ref('')
-    const isSingleVideoMode = ref(false)
 
     // 添加一个重置方法,用于设置新的图片列表
     const resetImageList = (list: string[], originalIndex: number) => {
@@ -46,7 +43,6 @@ export const useVideoViewer = defineStore(
 
     // 用于设置新的视频列表
     const resetVideoListOptimized = (list: string[], originalIndex: number) => {
-      isSingleVideoMode.value = false
       const uniqueList: string[] = []
       const seenUrls = new Set<string>()
 
@@ -63,30 +59,17 @@ export const useVideoViewer = defineStore(
       currentVideoIndex.value = newIndex !== -1 ? newIndex : 0
     }
 
-    const setSingleVideoOptimized = (url: string) => {
-      singleVideo.value = url
-      isSingleVideoMode.value = true
-    }
-
     // 更新视频列表中的特定视频路径（用于下载完成后更新为本地路径）
     const updateVideoPath = (originalUrl: string, newPath: string) => {
       const index = videoList.value.indexOf(originalUrl)
       if (index !== -1) {
         videoList.value[index] = newPath
       }
-      // 如果当前单视频模式的视频是被更新的视频，也要更新
-      if (singleVideo.value === originalUrl) {
-        singleVideo.value = newPath
-      }
     }
 
     // 批量更新视频路径（用于批量处理本地路径）
     const updateVideoListPaths = (pathMapping: Record<string, string>) => {
       videoList.value = videoList.value.map((url) => pathMapping[url] || url)
-      // 更新单视频模式的路径
-      if (singleVideo.value && pathMapping[singleVideo.value]) {
-        singleVideo.value = pathMapping[singleVideo.value]
-      }
     }
 
     return {
@@ -99,9 +82,6 @@ export const useVideoViewer = defineStore(
       videoList,
       currentVideoIndex,
       resetVideoListOptimized,
-      singleVideo,
-      isSingleVideoMode,
-      setSingleVideoOptimized,
       updateVideoPath,
       updateVideoListPaths
     }

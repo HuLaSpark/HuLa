@@ -286,12 +286,7 @@ const handleOpenVideoViewer = async () => {
         }
       }
 
-      // 使用本地绝对路径打开视频
-      const localPath = await getLocalVideoPath(props.body.url)
-      const resourceDirPath = await resourceDir()
-      const videoUrl = await join(resourceDirPath, localPath)
-
-      await openVideoViewer(videoUrl, [MsgEnum.VIDEO])
+      await openVideoViewer(props.body.url, [MsgEnum.VIDEO])
     } catch (error) {
       console.error('打开视频失败:', error)
     } finally {
