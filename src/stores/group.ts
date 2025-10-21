@@ -168,6 +168,34 @@ export const useGroupStore = defineStore(
     })
 
     /**
+     * 更新管理员状态
+     * @param roomId 房间ID
+     * @param uids 被设置、取消管理员的用户ID列表
+     * @param isAdmin 是否为管理员
+     */
+    const updateAdminStatus = (roomId: string, uids: string[], isAdmin: boolean) => {
+      const currentUserList = userListMap[roomId]
+      if (!currentUserList) {
+        console.warn(`未找到房间 ${roomId} 的用户列表`)
+        return
+      }
+
+      // 更新用户角色
+      const updatedUserList = currentUserList.map((user) => {
+        if (uids.includes(user.uid)) {
+          return {
+            ...user,
+            roleId: isAdmin ? RoleEnum.ADMIN : RoleEnum.NORMAL
+          }
+        }
+        return user
+      })
+
+      // 更新用户列表
+      userListMap[roomId] = updatedUserList
+    }
+
+    /**
      * 检查用户是否为管理员
      * @param uid 用户ID
      * @returns 是否为管理员
@@ -631,6 +659,7 @@ export const useGroupStore = defineStore(
       updateGroupNumber,
       removeGroupDetail,
       addGroupDetail,
+      updateAdminStatus,
       getUserInfo,
       allUserInfo,
       getUserDisplayName,

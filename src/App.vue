@@ -484,13 +484,10 @@ onUnmounted(async () => {
   }
 })
 
-// TODO 处理设置群管理员和取消群管理员
-useMitt.on(WsResponseMessageType.REQUEST_SET_ADMIN, (event) => {
+// 处理设置群管理员和取消群管理员
+useMitt.on(WsResponseMessageType.GROUP_SET_ADMIN_SUCCESS, (event) => {
   console.log('设置群管理员---> ', event)
-})
-
-useMitt.on(WsResponseMessageType.REQUEST_RECALL_ADMIN, (event) => {
-  console.log('取消群管理员---> ', event)
+  groupStore.updateAdminStatus(event.roomId, event.uids, event.status)
 })
 </script>
 <style lang="scss">
