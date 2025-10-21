@@ -392,19 +392,6 @@ const hasBadge6 = computed(() => {
   return currentUser?.itemIds?.includes('6')
 })
 
-/**
- * 初始化群公告所需要的信息
- */
-const handleInitAnnoun = async () => {
-  // 初始化时获取群公告
-  if (isGroup.value) {
-    const roomId = globalStore.currentSession?.roomId
-    if (roomId) {
-      await handleLoadGroupAnnoun(roomId)
-    }
-  }
-}
-
 const clickInfo = () => {
   if (isGroup) {
     openAvatarCropper()
@@ -415,8 +402,13 @@ const clickInfo = () => {
 /**
  * 加载群公告
  */
-const handleLoadGroupAnnoun = async (roomId: string) => {
+const handleLoadGroupAnnoun = async () => {
   try {
+    const roomId = globalStore.currentSession?.roomId
+    if (!roomId) {
+      console.error('当前会话没有roomId')
+      return
+    }
     // 设置是否可以添加公告
     isAddAnnoun.value = isLord.value || isAdmin.value || hasBadge6.value!
     // 获取群公告列表
@@ -590,7 +582,7 @@ const handleSearchChatContent = () => {
  * 这里直接监听状态的值
  */
 onMounted(async () => {
-  await handleInitAnnoun()
+  await handleLoadGroupAnnoun()
   if (isGroup.value) {
     await getGroupDetail(globalStore.currentSession.roomId)
       .then((response: any) => {

@@ -43,7 +43,7 @@
         <n-flex v-if="announError" class="h-74px" align="center" justify="center">
           <div class="text-center">
             <p class="text-(12px #909090) mb-8px">公告加载失败，请重试</p>
-            <n-button size="tiny" @click="handleRetryAnnouncement">重试</n-button>
+            <n-button size="tiny" @click="handleLoadGroupAnnoun">重试</n-button>
           </div>
         </n-flex>
 
@@ -256,8 +256,6 @@ const { segments: announcementSegments, openLink: openAnnouncementLink } = useLi
 
 // 用于稳定展示的用户列表
 const displayedUserList = ref<any[]>([])
-// 每群成员缓存：roomId -> members
-const memberCache = ref<Map<string, any[]>>(new Map())
 /** 用户信息加载状态 */
 const userLoadedMap = ref<Record<string, boolean>>({})
 
@@ -305,7 +303,7 @@ watch(
       // 缓存当前群成员
       const roomId = globalStore.currentSession?.roomId
       if (roomId) {
-        memberCache.value.set(roomId, displayedUserList.value)
+        groupStore.updateMemberCache(roomId, displayedUserList.value)
       }
     }
   },
@@ -316,29 +314,17 @@ watch(
 watch(
   () => globalStore.currentSession,
   async (newSession, oldSession) => {
-    const currentSession = { ...newSession }
     if (newSession?.type === RoomTypeEnum.GROUP) {
-      if (newSession?.roomId !== oldSession?.roomId) {
-        currentLoadingRoomId.value = newSession.roomId
-        // 切换时优先显示缓存，无缓存则保留旧内容，避免空白
-        const cached = memberCache.value.get(newSession.roomId)
-        if (cached && Array.isArray(cached)) {
-          displayedUserList.value = cached
-        }
+      try {
+        // 切换会话
+        const result = await groupStore.switchSession(newSession, oldSession)
 
-        // 重置群组数据后再加载新的群成员数据（不清空UI）
-        groupStore.resetGroupData()
-        try {
-          await groupStore.getGroupUserList(currentSession.roomId!)
-          // 初始化群公告
-          await handleInitAnnoun()
-          // 在数据完成后替换展示列表
-          displayedUserList.value = filteredUserList.value
-          // 更新缓存
-          memberCache.value.set(currentSession.roomId!, displayedUserList.value)
-        } catch (error) {
-          console.error('加载群组信息失败:', error)
+        if (result?.success) {
+          // 切换会话的时候应该去公告的状态找到第一个公告展示
+          await handleLoadGroupAnnoun()
         }
+      } catch (error) {
+        console.error('会话切换处理失败:', error)
       }
     }
   },
@@ -399,8 +385,13 @@ const handleOpenAnnoun = (isAdd: boolean) => {
 /**
  * 加载群公告
  */
-const handleLoadGroupAnnoun = async (roomId: string) => {
+const handleLoadGroupAnnoun = async () => {
   try {
+    const roomId = globalStore.currentSession?.roomId
+    if (!roomId) {
+      console.error('当前会话没有roomId')
+      return
+    }
     // 设置是否可以添加公告
     isAddAnnoun.value = isLord.value || isAdmin.value || hasBadge6.value!
     // 获取群公告列表
@@ -425,19 +416,6 @@ const handleLoadGroupAnnoun = async (roomId: string) => {
   }
 }
 
-/**
- * 初始化群公告所需要的信息
- */
-const handleInitAnnoun = async () => {
-  // 初始化时获取群公告
-  if (isGroup.value) {
-    const roomId = globalStore.currentSession?.roomId
-    if (roomId) {
-      await handleLoadGroupAnnoun(roomId)
-    }
-  }
-}
-
 const userStatusStore = useUserStatusStore()
 const { stateList } = storeToRefs(userStatusStore)
 
@@ -445,19 +423,12 @@ const getUserState = (stateId: string) => {
   return stateList.value.find((state: { id: string }) => state.id === stateId)
 }
 
-// 重试加载公告
-const handleRetryAnnouncement = () => {
-  if (globalStore.currentSession?.roomId) {
-    handleLoadGroupAnnoun(globalStore.currentSession.roomId)
-  }
-}
-
 appWindow.listen('announcementUpdated', async (event: any) => {
   if (event.payload) {
     const { hasAnnouncements } = event.payload
     if (hasAnnouncements) {
       // 初始化群公告
-      await handleInitAnnoun()
+      await handleLoadGroupAnnoun()
       await nextTick()
     }
   }
@@ -483,21 +454,23 @@ onMounted(async () => {
     displayedUserList.value = filteredUserList.value
     const currentRoom = globalStore.currentSession?.roomId
     if (currentRoom) {
-      memberCache.value.set(currentRoom, displayedUserList.value)
+      groupStore.updateMemberCache(currentRoom, displayedUserList.value)
     }
     const handleAnnounInitOnEvent = (shouldReload: boolean) => {
       return async (event: any) => {
         if (shouldReload || event) {
-          await handleInitAnnoun()
+          await handleLoadGroupAnnoun()
         }
       }
     }
     // 监听群公告消息
     useMitt.on(WsResponseMessageType.ROOM_GROUP_NOTICE_MSG, handleAnnounInitOnEvent(true))
     useMitt.on(WsResponseMessageType.ROOM_EDIT_GROUP_NOTICE_MSG, handleAnnounInitOnEvent(true))
-
-    await handleInitAnnoun()
   }
+})
+
+onUnmounted(() => {
+  groupStore.cleanupSession()
 })
 </script>
 
