@@ -266,6 +266,7 @@ const {
   handleInput,
   msgInput,
   send,
+  sendLocationDirect,
   sendFilesDirect,
   sendVoiceDirect,
   personList,
@@ -368,6 +369,11 @@ const handleFileConfirm = async (files: File[]) => {
 const handleFileCancel = () => {
   showFileModal.value = false
   pendingFiles.value = []
+}
+
+/** 位置选择完成的回调 */
+const handleLocationSelected = async (locationData: any) => {
+  await sendLocationDirect(locationData)
 }
 
 /** 处理键盘上下键切换提及项 */
@@ -539,7 +545,8 @@ defineExpose({
   isVoiceMode: readonly(isVoiceMode),
   handleVoiceCancel,
   sendVoiceDirect,
-  sendFilesDirect
+  sendFilesDirect,
+  handleLocationSelected
 })
 
 /** 移动端专用适配事件（结束） */
