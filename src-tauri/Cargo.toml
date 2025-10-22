@@ -1,6 +1,6 @@
 [package]
 name = "hula"
-version = "2.6.13"
+version = "3.0.1"
 description = "hula"
 authors = ["nongyehong"]
 license = ""
@@ -31,12 +31,12 @@ name = "hula_app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2.4.1", features = [] }
+tauri-build = { version = "2.5.1", features = [] }
 cc = "1.0"
 
 [dependencies]
 # Tauri 官方依赖
-tauri = { version = "2.8.5", features = [
+tauri = { version = "2.9.1", features = [
     "protocol-asset",
     "macos-private-api",
     "tray-icon",
