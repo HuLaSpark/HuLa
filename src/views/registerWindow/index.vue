@@ -1,20 +1,22 @@
 <template>
   <!-- 单独使用n-config-provider来包裹不需要主题切换的界面 -->
-  <n-config-provider :theme="lightTheme" data-tauri-drag-region class="login-box size-full rounded-8px select-none">
+  <n-config-provider
+    :theme="lightTheme"
+    data-tauri-drag-region
+    class="login-box size-full rounded-8px select-none flex flex-col">
     <!--顶部操作栏-->
     <ActionBar :max-w="false" :shrink="false" />
 
-    <n-flex vertical justify="center" :size="25" class="pt-70px w-full">
-      <n-flex justify="center" align="center">
-        <span class="text-(24px #70938c) textFont">欢迎注册</span>
-        <img class="w-100px h-40px" src="/hula.png" alt="" />
-      </n-flex>
-
+    <n-flex vertical justify="center" :size="25" class="w-full mt--40px flex-1 pointer-events-none">
       <!-- 注册菜单 -->
-      <n-flex class="ma text-center h-full w-260px" vertical :size="16">
+      <n-flex class="ma text-center w-260px pointer-events-auto" vertical :size="16">
+        <n-flex justify="center" align="center">
+          <span class="text-(24px #70938c) textFont">欢迎注册</span>
+          <img class="w-100px h-40px" src="/hula.png" alt="" />
+        </n-flex>
         <n-form :model="info" :rules="rules" ref="registerForm">
-          <!-- 第一步：昵称和密码 -->
-          <div v-if="currentStep === 1">
+          <!-- 注册信息 -->
+          <div>
             <n-form-item path="name">
               <n-input
                 :class="[{ 'pr-20px': info.nickName }, { 'pr-16px': showNamePrefix && !info.nickName }]"
@@ -86,29 +88,6 @@
               </n-input>
             </n-form-item>
 
-            <!-- 密码提示信息 -->
-            <n-flex vertical v-if="info.password">
-              <n-flex vertical :size="4">
-                <Validation :value="info.password" message="最少6位" :validator="validateMinLength" />
-                <Validation :value="info.password" message="由英文和数字构成" :validator="validateAlphaNumeric" />
-                <Validation :value="info.password" message="必须有一个特殊字符" :validator="validateSpecialChar" />
-              </n-flex>
-            </n-flex>
-
-            <!-- 协议 -->
-            <n-flex align="center" justify="center" :size="6" class="mt-10px">
-              <n-checkbox v-model:checked="protocol" />
-              <div class="text-12px color-#909090 cursor-default lh-14px">
-                <span>已阅读并同意</span>
-                <span class="color-#13987f cursor-pointer" @click.stop="openServiceAgreement">服务协议</span>
-                <span>和</span>
-                <span class="color-#13987f cursor-pointer" @click.stop="openPrivacyAgreement">HuLa隐私保护指引</span>
-              </div>
-            </n-flex>
-          </div>
-
-          <!-- 第二步：邮箱和验证码 -->
-          <div v-if="currentStep === 2">
             <n-form-item path="email">
               <n-auto-complete
                 size="large"
@@ -131,33 +110,25 @@
               </n-auto-complete>
             </n-form-item>
 
-            <n-form-item path="code">
-              <n-input
-                style="width: 140px"
-                size="large"
-                spellCheck="false"
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
-                v-model:value="info.code"
-                :allow-input="noSideSpace"
-                :placeholder="showCodePrefix ? '' : placeholders.code"
-                @focus="handleInputState($event, 'code')"
-                @blur="handleInputState($event, 'code')"
-                clearable></n-input>
+            <!-- 密码提示信息 -->
+            <n-flex vertical v-if="info.password">
+              <n-flex vertical :size="4">
+                <Validation :value="info.password" message="最少6位" :validator="validateMinLength" />
+                <Validation :value="info.password" message="由英文和数字构成" :validator="validateAlphaNumeric" />
+                <Validation :value="info.password" message="必须有一个特殊字符" :validator="validateSpecialChar" />
+              </n-flex>
+            </n-flex>
 
-              <n-image
-                width="120"
-                height="40"
-                class="ml-20px rounded-10px"
-                :src="captcha.base64"
-                preview-disabled
-                @click="getVerifyCode">
-                <template #placeholder>
-                  <n-skeleton height="40px" width="120px" class="rounded-10px" />
-                </template>
-              </n-image>
-            </n-form-item>
+            <!-- 协议 -->
+            <n-flex align="center" justify="center" :size="6" class="mt-10px">
+              <n-checkbox v-model:checked="protocol" />
+              <div class="text-12px color-#909090 cursor-default lh-14px">
+                <span>已阅读并同意</span>
+                <span class="color-#13987f cursor-pointer" @click.stop="openServiceAgreement">服务协议</span>
+                <span>和</span>
+                <span class="color-#13987f cursor-pointer" @click.stop="openPrivacyAgreement">HuLa隐私保护指引</span>
+              </div>
+            </n-flex>
           </div>
         </n-form>
 
@@ -166,15 +137,21 @@
           :disabled="btnEnable"
           tertiary
           style="color: #fff"
-          class="w-full mt-8px mb-50px gradient-button"
+          class="w-full mt-8px gradient-button"
           @click="handleStepAction">
           {{ btnText }}
         </n-button>
+        <p v-if="sendCodeCooldown > 0" class="text-(12px #13987f) ml--8px mt-6px whitespace-nowrap">
+          验证码窗口关闭？点击按钮可再次打开验证码输入框
+        </p>
       </n-flex>
     </n-flex>
 
     <!-- 底部栏 -->
-    <n-flex class="text-(12px #909090)" :size="8" justify="center">
+    <n-flex
+      class="text-(12px #909090) w-full absolute bottom-20px left-1/2 transform -translate-x-1/2"
+      :size="8"
+      justify="center">
       <span>Copyright {{ currentYear - 1 }}-{{ currentYear }} HuLaSpark All Rights Reserved.</span>
     </n-flex>
 
@@ -254,7 +231,7 @@
 <script setup lang="ts">
 import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import dayjs from 'dayjs'
-import { lightTheme } from 'naive-ui'
+import { lightTheme, type FormInst } from 'naive-ui'
 import PinInput from '@/components/common/PinInput.vue'
 import Validation from '@/components/common/Validation.vue'
 import { useWindow } from '@/hooks/useWindow'
@@ -264,7 +241,7 @@ import { isMac, isWindows } from '@/utils/PlatformConstants'
 import { validateAlphaNumeric, validateSpecialChar } from '@/utils/Validate'
 
 // 输入框类型定义
-type InputType = 'nickName' | 'email' | 'password' | 'code' | 'confirmPassword'
+type InputType = 'nickName' | 'email' | 'password' | 'confirmPassword'
 
 /** 注册信息 */
 const info = unref(
@@ -284,9 +261,6 @@ const info = unref(
 /** 确认密码 */
 const confirmPassword = ref('')
 
-/** 当前步骤 */
-const currentStep = ref(1)
-
 /** 协议 */
 const protocol = ref(true)
 const btnEnable = ref(false)
@@ -298,7 +272,6 @@ const placeholders: Record<InputType, string> = {
   nickName: '输入HuLa昵称',
   email: '输入邮箱',
   password: '输入HuLa密码',
-  code: '验证码',
   confirmPassword: '输入二次密码'
 } as const
 
@@ -306,7 +279,6 @@ const placeholders: Record<InputType, string> = {
 const showNamePrefix = ref(false)
 const showemailPrefix = ref(false)
 const showPasswordPrefix = ref(false)
-const showCodePrefix = ref(false)
 const showConfirmPasswordPrefix = ref(false)
 const { createModalWindow } = useWindow()
 // 常用邮箱后缀
@@ -319,20 +291,25 @@ const commonEmailDomains = computed(() => {
   })
 })
 
-/** 登录按钮的文本内容 */
+/** 发送验证码冷却时间(秒) */
+const sendCodeCooldown = ref(0)
+/** 验证码倒计时消息ID */
+const EMAIL_TIMER_ID = 'register_window_email_timer'
+/** 倒计时定时器 Worker */
+const timerWorker = new Worker(new URL('@/workers/timer.worker.ts', import.meta.url))
+/** 发送验证码按钮文本 */
 const btnText = computed(() => {
-  return currentStep.value < 3 ? '下一步' : '注册'
+  if (loading.value) {
+    return '发送中...'
+  }
+  if (sendCodeCooldown.value > 0) {
+    return `${sendCodeCooldown.value}秒后重试`
+  }
+  return '发送验证码'
 })
-
-/** 验证码 */
-const captcha = ref({ base64: '', uuid: '' })
-/** 验证码冷却时间(秒) */
-const captchaCooldown = ref(0)
-/** 验证码冷却定时器 */
-const captchaCooldownTimer = ref<NodeJS.Timeout>()
 // 使用day.js获取当前年份
 const currentYear = dayjs().year()
-const registerForm = ref()
+const registerForm = ref<FormInst | null>(null)
 const starTipsModal = ref(false)
 const emailCodeModal = ref(false)
 
@@ -340,6 +317,8 @@ const emailCodeModal = ref(false)
 const emailCode = ref('')
 const pinInputRef = ref()
 const isEmailCodeComplete = computed(() => emailCode.value.length === 6)
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const isEmailValid = computed(() => emailPattern.test(info.email.trim()))
 
 // 校验规则
 const rules = {
@@ -350,8 +329,17 @@ const rules = {
   },
   email: {
     required: true,
-    message: '请输入邮箱',
-    trigger: 'blur'
+    trigger: ['blur', 'input'],
+    validator(_: unknown, value: string) {
+      const email = (value || '').trim()
+      if (!email) {
+        return new Error('请输入邮箱')
+      }
+      if (!emailPattern.test(email)) {
+        return new Error('请输入正确的邮箱格式')
+      }
+      return true
+    }
   },
   password: {
     required: true,
@@ -368,11 +356,6 @@ const rules = {
       }
       return true
     }
-  },
-  code: {
-    required: true,
-    message: '请输入验证码',
-    trigger: 'blur'
   }
 }
 
@@ -405,22 +388,19 @@ const isPasswordValid = computed(() => {
   return validateMinLength(password) && validateAlphaNumeric(password) && validateSpecialChar(password)
 })
 
-/** 检查第一步是否可以继续 */
-const isStep1Valid = computed(() => {
-  return info.nickName && isPasswordValid.value && confirmPassword.value === info.password && protocol.value
-})
-
-/** 检查第二步是否可以继续 */
-const isStep2Valid = computed(() => {
-  return info.email && info.code
+/** 检查是否可以发送邮箱验证码 */
+const canSendCode = computed(() => {
+  return (
+    !!info.nickName &&
+    isPasswordValid.value &&
+    confirmPassword.value === info.password &&
+    protocol.value &&
+    isEmailValid.value
+  )
 })
 
 watchEffect(() => {
-  if (currentStep.value === 1) {
-    btnEnable.value = !isStep1Valid.value
-  } else if (currentStep.value === 2) {
-    btnEnable.value = !isStep2Valid.value
-  }
+  btnEnable.value = loading.value || !canSendCode.value
 })
 
 /**
@@ -433,72 +413,74 @@ const handleInputState = (event: FocusEvent, type: InputType): void => {
     nickName: showNamePrefix,
     email: showemailPrefix,
     password: showPasswordPrefix,
-    code: showCodePrefix,
     confirmPassword: showConfirmPasswordPrefix
   }
   prefixMap[type].value = event.type === 'focus'
 }
 
-/**
- * 获取验证码
- */
-const getVerifyCode = async () => {
-  // 如果正在冷却中，直接返回
-  if (captchaCooldown.value > 0) {
-    window.$message.warning(`请等待 ${captchaCooldown.value} 秒后再试`)
+/** 处理步骤操作 */
+const handleStepAction = async () => {
+  if (btnEnable.value || loading.value) return
+
+  try {
+    await registerForm.value?.validate?.()
+  } catch (error) {
     return
   }
 
-  // 设置10秒冷却时间
-  captchaCooldown.value = 10
-  // 启动冷却计时器
-  captchaCooldownTimer.value = setInterval(() => {
-    if (captchaCooldown.value > 0) {
-      captchaCooldown.value--
-    } else {
-      // 清除计时器
-      if (captchaCooldownTimer.value) {
-        clearInterval(captchaCooldownTimer.value)
-      }
-    }
-  }, 1000)
+  if (sendCodeCooldown.value > 0) {
+    emailCodeModal.value = true
+    nextTick(() => {
+      pinInputRef.value?.focus()
+    })
+    return
+  }
 
-  const { img, uuid } = await ImRequestUtils.getCaptcha()
-  captcha.value = { base64: img, uuid }
+  loading.value = true
+  try {
+    const email = info.email.trim()
+    info.email = email
+    await ImRequestUtils.sendCaptcha({
+      email,
+      operationType: 'register',
+      templateCode: 'REGISTER_EMAIL'
+    })
+    startSendCodeCountdown()
+    window.$message.success('验证码已发送')
+    emailCodeModal.value = true
+    emailCode.value = ''
+    nextTick(() => {
+      pinInputRef.value?.focus()
+    })
+  } catch (error) {
+    console.error('发送验证码失败', error)
+  } finally {
+    loading.value = false
+  }
 }
 
-/** 处理步骤操作 */
-const handleStepAction = async () => {
-  if (currentStep.value === 1) {
-    // 进入第二步
-    currentStep.value = 2
-    // 获取新的验证码
-    getVerifyCode()
-  } else if (currentStep.value === 2) {
-    loading.value = true
-    try {
-      // 发送邮箱验证码
-      await ImRequestUtils.sendCaptcha({
-        email: info.email,
-        uuid: captcha.value.uuid.toString(),
-        templateCode: 'REGISTER_EMAIL'
-      })
-      window.$message.success('验证码已发送')
-      loading.value = false
-      // 显示邮箱验证码输入弹窗
-      emailCodeModal.value = true
-      // 清空PIN输入框
-      emailCode.value = ''
-      // 聚焦第一个输入框
-      nextTick(() => {
-        if (pinInputRef.value) {
-          pinInputRef.value.focus()
-        }
-      })
-    } catch (error) {
-      loading.value = false
-    }
+const startSendCodeCountdown = () => {
+  sendCodeCooldown.value = 60
+  timerWorker.postMessage({
+    type: 'startTimer',
+    msgId: EMAIL_TIMER_ID,
+    duration: 60 * 1000
+  })
+}
+
+timerWorker.onmessage = (e) => {
+  const { type, msgId, remainingTime } = e.data
+  if (msgId !== EMAIL_TIMER_ID) return
+
+  if (type === 'debug') {
+    sendCodeCooldown.value = Math.max(0, Math.ceil(remainingTime / 1000))
+  } else if (type === 'timeout') {
+    sendCodeCooldown.value = 0
   }
+}
+
+timerWorker.onerror = () => {
+  sendCodeCooldown.value = 0
 }
 
 /** 邮箱注册 */
@@ -507,7 +489,7 @@ const register = async () => {
 
   // 合并验证码
   info.code = emailCode.value
-  info.uuid = captcha.value.uuid
+  info.email = info.email.trim()
 
   try {
     // 随机生成头像编号
@@ -550,9 +532,12 @@ onMounted(async () => {
 
 // 组件卸载时清理计时器
 onUnmounted(() => {
-  if (captchaCooldownTimer.value) {
-    clearInterval(captchaCooldownTimer.value)
-  }
+  timerWorker.postMessage({
+    type: 'clearTimer',
+    msgId: EMAIL_TIMER_ID
+  })
+  timerWorker.terminate()
+  sendCodeCooldown.value = 0
 })
 </script>
 
