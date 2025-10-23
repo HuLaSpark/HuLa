@@ -1,6 +1,6 @@
 
 <p align="center">
-  <img width="350px" height="150px" src="public/hula.png"/>
+  <img width="350px" height="150px" src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/public/hula.png"/>
 </p>
 
 <p align="center">一款基于Tauri、Vite 7、Vue 3 和 TypeScript 构建的即时通讯系统</p>
@@ -117,21 +117,21 @@ HuLa 是一款基于 Tauri、Vite 7、Vue 3 和 TypeScript 构建的即时通讯
 <table align="center">
   <tr>
     <td align="center">
-      <img src="preview/img.png" alt="主界面" width="400" style="border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 8px;">
+      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img.png" alt="主界面" width="400" style="border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 8px;">
       <br><em>💬 主聊天界面</em>
     </td>
     <td align="center">
-      <img src="preview/img_1.png" alt="聊天界面" width="400" style="border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 8px;">
+      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_1.png" alt="聊天界面" width="400" style="border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 8px;">
       <br><em>🗨️ 聊天对话界面</em>
     </td>
   </tr>
   <tr>
     <td align="center">
-      <img src="preview/img_2.png" alt="联系人界面" width="400" style="border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 8px;">
+      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_2.png" alt="联系人界面" width="400" style="border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 8px;">
       <br><em>😊 表情包选择</em>
     </td>
     <td align="center">
-      <img src="preview/img_3.png" alt="设置界面" width="400" style="border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 8px;">
+      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_3.png" alt="设置界面" width="400" style="border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 8px;">
       <br><em>⚙️ 系统设置</em>
     </td>
   </tr>
@@ -147,29 +147,29 @@ HuLa 是一款基于 Tauri、Vite 7、Vue 3 和 TypeScript 构建的即时通讯
 <table align="center">
   <tr>
     <td align="center">
-      <img src="preview/img_4.png" alt="消息功能" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
+      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_4.png" alt="消息功能" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
       <br><em>📱 消息多样化</em>
     </td>
     <td align="center">
-      <img src="preview/img_5.png" alt="主题切换" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
+      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_5.png" alt="主题切换" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
       <br><em>🎨 状态切换</em>
     </td>
     <td align="center">
-      <img src="preview/img_6.png" alt="表情包" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
+      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_6.png" alt="表情包" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
       <br><em> 📷 图片查看</em>
     </td>
   </tr>
   <tr>
     <td align="center">
-      <img src="preview/img_7.png" alt="群聊管理" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
+      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_7.png" alt="群聊管理" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
       <br><em>👥 群聊管理</em>
     </td>
     <td align="center">
-      <img src="preview/img_8.png" alt="个人设置" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
+      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_8.png" alt="个人设置" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
       <br><em>🤖 ChatBot 插件功能</em>
     </td>
     <td align="center">
-      <img src="preview/img_9.png" alt="文件传输" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
+      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_9.png" alt="文件传输" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
       <br><em>🤖 ChatBot 设置页面</em>
     </td>
   </tr>
@@ -281,7 +281,7 @@ pnpm run tauri:build
 #### 1. 打开 "系统设置" - "安全性与隐私"，如图勾选：允许 "任何来源" 下载的 App 运行：
 
 <div align="center">
-  <img src="preview/img_10.png" alt="img_10.png" />
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_10.png" alt="img_10.png" />
 </div>
 
 #### 2. 如果还报错，请在终端执行以下命令解决：
@@ -315,8 +315,8 @@ sudo xattr -r -d com.apple.quarantine /Applications/应用名称.app
 <p><em>如果您觉得 HuLa 对您有帮助，欢迎赞助支持，您的支持是我们不断前进的动力！</em></p>
 
 <div>
- <img src="preview/zs.jpg" height="240" alt="WeChat Code">
-  <img src="preview/zfb.png" height="240" alt="Alipay Code">
+ <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/zs.jpg" height="240" alt="WeChat Code">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/zfb.png" height="240" alt="Alipay Code">
 </div>
 
 <br>
@@ -330,8 +330,8 @@ sudo xattr -r -d com.apple.quarantine /Applications/应用名称.app
   <p><em>与开发者和用户一起交流讨论，获取最新资讯和技术支持</em></p>
 
   <div style="display: flex; justify-content: center; gap: 20px;">
-    <img src="preview/wx.png" width="260" height="340" alt="微信群二维码">
-    <img src="preview/qq.jpg" width="260" height="340" alt="QQ群二维码">
+    <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/wx.png" width="260" height="340" alt="微信群二维码">
+    <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/qq.jpg" width="260" height="340" alt="QQ群二维码">
   </div>
 </div>
 
@@ -352,11 +352,12 @@ sudo xattr -r -d com.apple.quarantine /Applications/应用名称.app
 |---------|----------|--------|---------|
 | 2025-09-03 | **烛火** | `¥500` | ![微信转账](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-09-05 | **Orion** | `¥200` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
-| 2025-08-26 | **唐勇** | `¥200` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
+| 2025-10-23 | **唐勇** | `¥400` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-04-25 | **上官俊斌** | `¥200` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-05-27 | **临安居士** | `¥188` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-04-20 | **姜兴(Simon)** | `¥188` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-02-17 | **禾硕** | `¥168` | ![支付宝赞赏](https://img.shields.io/badge/支付宝赞赏-1677FF?style=flat&logo=alipay&logoColor=white) |
+| 2025-10-16 | **xx豪** | `¥101` | ![支付宝赞赏](https://img.shields.io/badge/支付宝赞赏-1677FF?style=flat&logo=alipay&logoColor=white) |
 | 2025-10-15 | **兵** | `¥100` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-08-13 | **zhongjing** | `¥100` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-07-15 | **粉兔** | `¥100` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |

@@ -1,6 +1,6 @@
 
 <p align="center">
-  <img width="350px" height="150px" src="public/hula.png"/>
+  <img width="350px" height="150px" src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/public/hula.png"/>
 </p>
 
 <p align="center">An instant messaging system built with Tauri, Vite 7, Vue 3, and TypeScript</p>
@@ -117,21 +117,21 @@ HuLa is an instant messaging system built with Tauri, Vite 7, Vue 3, and TypeScr
 <table align="center">
   <tr>
     <td align="center">
-      <img src="preview/img.png" alt="Main Interface" width="400" style="border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 8px;">
+      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img.png" alt="Main Interface" width="400" style="border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 8px;">
       <br><em>💬 Main Chat Interface</em>
     </td>
     <td align="center">
-      <img src="preview/img_1.png" alt="Chat Interface" width="400" style="border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 8px;">
+      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_1.png" alt="Chat Interface" width="400" style="border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 8px;">
       <br><em>🗨️ Chat Conversation Interface</em>
     </td>
   </tr>
   <tr>
     <td align="center">
-      <img src="preview/img_2.png" alt="Contact Interface" width="400" style="border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 8px;">
+      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_2.png" alt="Contact Interface" width="400" style="border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 8px;">
       <br><em>😊 Emoji Selection</em>
     </td>
     <td align="center">
-      <img src="preview/img_3.png" alt="Settings Interface" width="400" style="border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 8px;">
+      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_3.png" alt="Settings Interface" width="400" style="border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 8px;">
       <br><em>⚙️ System Settings</em>
     </td>
   </tr>
@@ -147,29 +147,29 @@ HuLa is an instant messaging system built with Tauri, Vite 7, Vue 3, and TypeScr
 <table align="center">
   <tr>
     <td align="center">
-      <img src="preview/img_4.png" alt="Message Features" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
+      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_4.png" alt="Message Features" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
       <br><em>📱 Diverse Messaging</em>
     </td>
     <td align="center">
-      <img src="preview/img_5.png" alt="Theme Switching" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
+      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_5.png" alt="Theme Switching" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
       <br><em>🎨 Status Toggle</em>
     </td>
     <td align="center">
-      <img src="preview/img_6.png" alt="Emojis" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
+      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_6.png" alt="Emojis" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
       <br><em>📷 Image Viewer</em>
     </td>
   </tr>
   <tr>
     <td align="center">
-      <img src="preview/img_7.png" alt="Group Management" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
+      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_7.png" alt="Group Management" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
       <br><em>👥 Group Management</em>
     </td>
     <td align="center">
-      <img src="preview/img_8.png" alt="Personal Settings" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
+      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_8.png" alt="Personal Settings" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
       <br><em>🤖 ChatBot Plugin Features</em>
     </td>
     <td align="center">
-      <img src="preview/img_9.png" alt="File Transfer" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
+      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_9.png" alt="File Transfer" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
       <br><em>🤖 ChatBot Settings Page</em>
     </td>
   </tr>
@@ -278,7 +278,7 @@ Downloading installation packages from the web may show a damaged package prompt
 #### 1. Open "System Settings" - "Security & Privacy", check as shown: Allow apps downloaded from "Anywhere" to run:
 
 <div align="center">
-  <img src="preview/img_10.png" alt="img_10.png" />
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_10.png" alt="img_10.png" />
 </div>
 
 #### 2. If errors persist, execute the following commands in Terminal:
@@ -312,8 +312,8 @@ Execute **pnpm run commit** to invoke _git commit_ interaction, complete informa
 <p><em>If you find HuLa helpful, welcome to sponsor and support us. Your support is our motivation to keep moving forward!</em></p>
 
 <div>
- <img src="preview/zs.jpg" height="240" alt="WeChat Code">
-  <img src="preview/zfb.png" height="240" alt="Alipay Code">
+ <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/zs.jpg" height="240" alt="WeChat Code">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/zfb.png" height="240" alt="Alipay Code">
 </div>
 
 <br>
@@ -327,8 +327,8 @@ Execute **pnpm run commit** to invoke _git commit_ interaction, complete informa
   <p><em>Join developers and users for discussions, get the latest news and technical support</em></p>
 
   <div style="display: flex; justify-content: center; gap: 20px;">
-    <img src="preview/wx.png" width="260" height="340" alt="WeChat Group QR Code">
-    <img src="preview/qq.jpg" width="260" height="340" alt="QQ Group QR Code">
+    <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/wx.png" width="260" height="340" alt="WeChat Group QR Code">
+    <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/qq.jpg" width="260" height="340" alt="QQ Group QR Code">
   </div>
 </div>
 
@@ -349,11 +349,12 @@ Execute **pnpm run commit** to invoke _git commit_ interaction, complete informa
 |---------|----------|--------|---------|
 | 2025-09-03 | **烛火** | `¥500` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-09-05 | **Orion** | `¥200` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
-| 2025-08-26 | **唐勇** | `¥200` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
+| 2025-10-23 | **唐勇** | `¥400` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-04-25 | **上官俊斌** | `¥200` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-05-27 | **临安居士** | `¥188` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-04-20 | **姜兴(Simon)** | `¥188` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-02-17 | **禾硕** | `¥168` | ![Alipay](https://img.shields.io/badge/Alipay-1677FF?style=flat&logo=alipay&logoColor=white) |
+| 2025-10-16 | **xx豪** | `¥101` | ![Alipay](https://img.shields.io/badge/Alipay-1677FF?style=flat&logo=alipay&logoColor=white) |
 | 2025-10-15 | **兵** | `¥100` | ![WeChat](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-08-13 | **zhongjing** | `¥100` | ![WeChat](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-07-15 | **粉兔** | `¥100` | ![WeChat](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
