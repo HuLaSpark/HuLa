@@ -137,7 +137,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
   }
 
   /** 通用右键菜单 */
-  const handleForward = (item: MessageType) => {
+  const handleForward = async (item: MessageType) => {
     if (!item?.message?.id) return
     const target = chatStore.chatMessageList.find((msg) => msg.message.id === item.message.id)
     if (!target) {
@@ -145,7 +145,8 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
     }
     chatStore.clearMsgCheck()
     target.isCheck = true
-    chatStore.setMsgMultiChoose(false)
+    chatStore.setMsgMultiChoose(true, 'forward')
+    await nextTick()
     useMitt.emit(MittEnum.MSG_MULTI_CHOOSE, {
       action: 'open-forward',
       mergeType: MergeMessageType.SINGLE
@@ -1116,7 +1117,11 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
   const handleMsgClick = (item: MessageType) => {
     // 移动端不触发 active 效果
     if (!isMobile()) {
-      activeBubble.value = item.message.id
+      if (chatStore.msgMultiChooseMode === 'forward') {
+        activeBubble.value = ''
+      } else {
+        activeBubble.value = item.message.id
+      }
     }
     // 启用键盘监听
     const handleKeyPress = (e: KeyboardEvent) => {

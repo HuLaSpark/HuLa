@@ -1,5 +1,7 @@
 <template>
-  <div class="relative flex-center gap-22px h-full">
+  <div
+    v-if="chatStore.isMsgMultiChoose && chatStore.msgMultiChooseMode !== 'forward' && !showModal"
+    class="relative flex-center gap-22px h-full">
     <!-- 功能模块 -->
     <div class="flex flex-col flex-y-center gap-14px" v-for="opt in opts">
       <n-button :disabled="opt.disabled" secondary circle @click="opt.click" class="size-46px">
@@ -205,6 +207,9 @@ const opts = computed(() => [
 
 watch(showModal, (visible, previous) => {
   if (!visible && previous) {
+    if (chatStore.msgMultiChooseMode === 'forward') {
+      chatStore.setMsgMultiChoose(false)
+    }
     chatStore.resetSessionSelection()
     if (!chatStore.isMsgMultiChoose) {
       chatStore.clearMsgCheck()

@@ -262,6 +262,10 @@ const computeMsgHover = computed(() => (item: MessageType) => {
     return false
   }
 
+  if (chatStore.msgMultiChooseMode === 'forward') {
+    return false
+  }
+
   return hoverId.value === item.message.id || item.isCheck
 })
 // 是否显示悬浮页脚
