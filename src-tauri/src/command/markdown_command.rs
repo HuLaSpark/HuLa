@@ -4,12 +4,6 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager};
 
-#[cfg(any(target_os = "android", target_os = "ios"))]
-const IS_DESKTOP: bool = false;
-
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
-const IS_DESKTOP: bool = true;
-
 /// 处理图片 URL,将相对路径转换为 base64 数据 URI
 fn process_image_url(url: &str, base_dir: &Path) -> String {
     // 如果是绝对 URL 或已经是 data URI,直接返回
@@ -44,22 +38,6 @@ fn process_image_url(url: &str, base_dir: &Path) -> String {
         let base64_data = general_purpose::STANDARD.encode(&img_data);
         format!("data:{};base64,{}", mime_type, base64_data)
     } else {
-        let normalized = url.trim_start_matches("./");
-
-        if let Some(stripped) = normalized.strip_prefix("preview/") {
-            return format!(
-                "https://gitee.com/HuLaSpark/HuLa/raw/master/preview/{}",
-                stripped
-            );
-        }
-
-        if let Some(stripped) = normalized.strip_prefix("public/") {
-            return format!(
-                "https://gitee.com/HuLaSpark/HuLa/raw/master/preview/{}",
-                stripped
-            );
-        }
-
         // 如果无法读取,返回原始 URL
         url.to_string()
     }
@@ -85,10 +63,9 @@ pub async fn parse_markdown(app: AppHandle, file_path: String) -> Result<String,
         ];
 
         // 生产模式 - 应用资源目录 (仅桌面端打包 docs)
-        if IS_DESKTOP {
-            if let Ok(resource_dir) = app.path().resource_dir() {
-                possible_paths.push(resource_dir.join(&file_path));
-            }
+        #[cfg(not(any(target_os = "android", target_os = "ios")))]
+        if let Ok(resource_dir) = app.path().resource_dir() {
+            possible_paths.push(resource_dir.join(&file_path));
         }
 
         // 生产模式 - 应用配置目录 (兼容旧版本安装路径)
@@ -155,37 +132,51 @@ pub async fn parse_markdown(app: AppHandle, file_path: String) -> Result<String,
 /// 读取 README markdown 文件
 #[tauri::command]
 pub async fn get_readme_html(app: AppHandle, language: String) -> Result<String, String> {
-    // 获取应用根目录
-    let app_dir = app
-        .path()
-        .app_config_dir()
-        .map_err(|e| format!("无法获取应用目录: {}", e))?;
-
     // 构建 README 文件路径
-    // 在开发模式下,从项目根目录读取
-    // 在生产模式下,从资源目录读取
+    // 在开发模式下,从项目根目录读取 README.md
+    // 在生产模式下,从资源目录的 docs 文件夹读取 README.md
     let readme_filename = if language == "zh" {
         "README.md"
     } else {
         "README.en.md"
     };
 
-    // 尝试多个可能的路径
-    let mut possible_paths = vec![
-        // 开发模式 - 项目根目录
-        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .parent()
-            .unwrap()
-            .join(readme_filename),
-        // 生产模式 - 兼容旧版的应用配置目录
-        app_dir.join(readme_filename),
-    ];
+    let readme_relative_path = Path::new("docs").join(readme_filename);
+    let project_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap()
+        .to_path_buf();
 
-    // 生产模式 - 应用资源目录
-    if IS_DESKTOP {
+    let mut possible_paths = vec![];
+
+    #[cfg(dev)]
+    {
+        // 开发环境：优先使用项目根目录的 README.md（本地图片）
+        possible_paths.push(project_root.join(readme_filename));
+
+        // 回退：src-tauri/docs 目录
+        possible_paths.push(
+            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join(&readme_relative_path),
+        );
+    }
+
+    #[cfg(not(dev))]
+    {
+        // 生产环境：优先使用打包资源目录的 docs/README.md（远程图片）
+        // 优先级 1: 应用资源目录
+        #[cfg(not(any(target_os = "android", target_os = "ios")))]
         if let Ok(resource_dir) = app.path().resource_dir() {
-            possible_paths.push(resource_dir.join(readme_filename));
+            possible_paths.push(resource_dir.join(&readme_relative_path));
         }
+
+        // 优先级 2: 应用配置目录
+        if let Ok(app_config_dir) = app.path().app_config_dir() {
+            possible_paths.push(app_config_dir.join(&readme_relative_path));
+        }
+
+        // 优先级 3: 回退到根目录
+        possible_paths.push(project_root.join(readme_filename));
     }
 
     let mut markdown_content = None;
