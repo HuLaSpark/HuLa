@@ -66,6 +66,7 @@ export const useChatStore = defineStore(
     // 存储每条撤回消息的过期定时器
     const expirationTimers: Record<string, boolean> = {}
     const isMsgMultiChoose = ref<boolean>(false)
+    const msgMultiChooseMode = ref<'normal' | 'forward'>('normal')
 
     // 当前聊天室的消息Map计算属性
     const currentMessageMap = computed(() => {
@@ -815,8 +816,9 @@ export const useChatStore = defineStore(
       return sessionList.value.filter((session) => session.type === RoomTypeEnum.GROUP)
     }
 
-    const setMsgMultiChoose = (flag: boolean) => {
+    const setMsgMultiChoose = (flag: boolean, mode: 'normal' | 'forward' = 'normal') => {
       isMsgMultiChoose.value = flag
+      msgMultiChooseMode.value = flag ? mode : 'normal'
     }
 
     // 重置所有会话选择状态
@@ -872,6 +874,7 @@ export const useChatStore = defineStore(
       isMsgMultiChoose,
       clearMsgCheck,
       setMsgMultiChoose,
+      msgMultiChooseMode,
       resetSessionSelection,
       checkMsgExist,
       clearRedundantMessages

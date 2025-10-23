@@ -32,7 +32,7 @@
     <div class="flex justify-center items-center">
       <n-checkbox
         v-model:checked="message.isCheck"
-        v-if="chatStore.isMsgMultiChoose && !isMultiSelectDisabled"
+        v-if="chatStore.isMsgMultiChoose && chatStore.msgMultiChooseMode !== 'forward' && !isMultiSelectDisabled"
         class="mr-3 select-none"
         :focusable="false"
         @click.stop />
