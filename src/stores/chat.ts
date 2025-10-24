@@ -158,7 +158,7 @@ export const useChatStore = defineStore(
 
       try {
         // 从服务器加载消息
-        await getMsgList(pageSize)
+        await getMsgList(pageSize, true)
       } catch (error) {
         console.error('无法加载消息:', error)
         currentMessageOptions.value = {
@@ -199,20 +199,20 @@ export const useChatStore = defineStore(
     const setAllSessionMsgList = async (size = pageSize) => {
       await info('初始设置所有会话消息列表')
       for (const session of sessionList.value) {
-        await getPageMsg(size, session.roomId, '')
+        await getPageMsg(size, session.roomId, '', true)
       }
     }
 
     // 获取消息列表
-    const getMsgList = async (size = pageSize) => {
+    const getMsgList = async (size = pageSize, async?: boolean) => {
       await info('获取消息列表')
       // 获取当前房间ID，用于后续比较
       const requestRoomId = globalStore.currentSession!.roomId
 
-      await getPageMsg(size, requestRoomId, currentMessageOptions.value?.cursor)
+      await getPageMsg(size, requestRoomId, currentMessageOptions.value?.cursor, async)
     }
 
-    const getPageMsg = async (pageSize: number, roomId: string, cursor: string = '') => {
+    const getPageMsg = async (pageSize: number, roomId: string, cursor: string = '', async?: boolean) => {
       // 查询本地存储，获取消息数据
       const data: any = await invokeWithErrorHandler(
         TauriCommand.PAGE_MSG,
@@ -220,7 +220,8 @@ export const useChatStore = defineStore(
           param: {
             pageSize: pageSize,
             cursor: cursor,
-            roomId: roomId
+            roomId: roomId,
+            async: !!async
           }
         },
         {
@@ -264,8 +265,7 @@ export const useChatStore = defineStore(
           return
         }
 
-        sessionList.value = []
-        sessionList.value.push(...data)
+        sessionList.value = [...data]
         sessionOptions.isLoading = false
 
         sortAndUniqueSessionList()
@@ -319,7 +319,7 @@ export const useChatStore = defineStore(
 
     // 通过房间ID获取会话信息
     const getSession = (roomId: string) => {
-      const currentSession = sessionList.value.find((item) => item.roomId === roomId)
+      const currentSession = roomId ? sessionList.value.find((item) => item.roomId === roomId) : sessionList.value[0]
       if (!currentSession) {
         throw new AppException(`根据房间 ID: ${roomId}无法找到会话`)
       }
@@ -423,7 +423,7 @@ export const useChatStore = defineStore(
     // 加载更多消息
     const loadMore = async (size?: number) => {
       if (currentMessageOptions.value?.isLast) return
-      await getMsgList(size)
+      await getMsgList(size, true)
     }
 
     /** 清除新消息计数 */

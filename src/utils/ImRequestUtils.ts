@@ -508,6 +508,13 @@ export async function editAnnouncement(body: { id: string; roomId: string; conte
   })
 }
 
+export async function getAnnouncementDetail(params: { roomId: string; announcementId: string }) {
+  return await imRequest({
+    url: ImUrlEnum.ANNOUNCEMENT,
+    params
+  })
+}
+
 export async function getCaptcha() {
   return await imRequest({
     url: ImUrlEnum.GET_CAPTCHA

@@ -237,6 +237,7 @@ pub enum ImUrl {
     GetAssistantModelList,
     SendCaptcha,
     GetCaptcha,
+    Announcement,
     EditAnnouncement,
     DeleteAnnouncement,
     PushAnnouncement,
@@ -325,6 +326,7 @@ impl ImUrl {
             ImUrl::GetCaptcha => (http::Method::GET, "oauth/anyTenant/captcha"),
 
             // 群公告相关
+            ImUrl::Announcement => (http::Method::GET, "im/room/announcement"),
             ImUrl::EditAnnouncement => (http::Method::POST, "im/room/announcement/edit"),
             ImUrl::DeleteAnnouncement => (http::Method::POST, "im/room/announcement/delete"),
             ImUrl::PushAnnouncement => (http::Method::POST, "im/room/announcement/push"),
@@ -438,6 +440,7 @@ impl ImUrl {
             "getCaptcha" => Ok(ImUrl::GetCaptcha),
 
             // 群公告相关
+            "announcement" => Ok(ImUrl::Announcement),
             "editAnnouncement" => Ok(ImUrl::EditAnnouncement),
             "deleteAnnouncement" => Ok(ImUrl::DeleteAnnouncement),
             "pushAnnouncement" => Ok(ImUrl::PushAnnouncement),
