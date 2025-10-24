@@ -12,7 +12,7 @@
       <div
         class="bg-[url('@/assets/mobile/chat-home/background.webp')] bg-cover bg-center flex flex-col overflow-auto h-full">
         <div class="flex flex-col gap-15px py-15px px-20px flex-1 min-h-0">
-          <div class="flex shadow bg-white rounded-10px w-full h-60px items-center gap-10px" @click="clickInfo">
+          <div class="flex shadow py-10px bg-white rounded-10px w-full items-center gap-10px" @click="clickInfo">
             <!-- 群头像 -->
             <div class="flex justify-center">
               <div class="rounded-full relative bg-white w-38px h-38px overflow-hidden" style="margin-left: 10px">
