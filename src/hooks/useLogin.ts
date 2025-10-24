@@ -221,15 +221,17 @@ export const useLogin = () => {
         loginText.value = '登录成功正在跳转...'
         // 移动端登录之后，初始化数据
         if (isMobile()) {
-          init()
-        }
-        await routerOrOpenHomeWindow()
+          await init()
+          await invoke('hide_splash_screen') // 初始化完再关闭启动页
 
-        // 移动端登录成功之后，自动设置为自动登录
-        if (isMobile()) {
-          await invoke('hide_splash_screen')
-          settingStore.setAutoLogin(true)
+          if (!auto) {
+            // 跳转到同步数据页面
+            router.push('/mobile/syncData') // 首次登录，跳转到同步数据页面
+            return
+          }
         }
+
+        await routerOrOpenHomeWindow()
       })
       .catch((e: any) => {
         console.error('登录异常：', e)
