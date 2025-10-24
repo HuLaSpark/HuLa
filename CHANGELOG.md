@@ -1,5 +1,32 @@
 
 
+## [3.0.2](https://github.com/HuLaSpark/HuLa/compare/v3.0.1...v3.0.2) (2025-10-24)
+
+
+### ✨ Features | 新功能
+
+* **mobile:** :sparkles: add First-Time Login Confirmation Page ([135bd26](https://github.com/HuLaSpark/HuLa/commit/135bd26ef258d430282cba357cf49f8c6dc637f6))
+* **mobile:** :sparkles: improve the announcement editing function ([846a5c5](https://github.com/HuLaSpark/HuLa/commit/846a5c5791fa923cdd533189d88a1d7410c372eb))
+
+
+### 🐛 Bug Fixes | Bug 修复
+
+* **common:** :bug: modify logic of registration pop-up captcha ([7ba133d](https://github.com/HuLaSpark/HuLa/commit/7ba133da6218b42ff9789f836d4e7df5e8405677))
+* **hook:** :bug: click the message to resend the audio and video message ([839bea9](https://github.com/HuLaSpark/HuLa/commit/839bea95b5c4183eb3e19b4bc7b5d02f5fd09709))
+* **ios:** :bug: fix ios keyboard pop-up problem ([ab933e3](https://github.com/HuLaSpark/HuLa/commit/ab933e37ffbb10e879cd35ce8da12cd58751c17a))
+* **location:** :bug: fix location cannot send issue ([78cdf84](https://github.com/HuLaSpark/HuLa/commit/78cdf846d125c182c43bf9319f133d849a511d54))
+* **mobile:** :bug: "Fixed style issues; excluded Hula Assistant when adding group chats ([d865a1f](https://github.com/HuLaSpark/HuLa/commit/d865a1f9035a1a9f1c4c8dd6ad7a865e27251b62))
+* **mobile:** :bug: adjust session listening logic ([782645f](https://github.com/HuLaSpark/HuLa/commit/782645fb8ea6dd087c14c7da17eb616941c37d92))
+* **mobile:** :bug: fix bubble width, scroll, and SVG color ([c1ce99e](https://github.com/HuLaSpark/HuLa/commit/c1ce99e8d1068f796856132728e9c193c1afc465))
+* **mobile:** :bug: fix style display issues ([124a3c0](https://github.com/HuLaSpark/HuLa/commit/124a3c03460eb6541bce83a21ad0f61701ef7db9))
+* **mobile:** :bug: fixed background image issue ([0dfc96f](https://github.com/HuLaSpark/HuLa/commit/0dfc96f6e5c95f682e9c7bb502917ce0d645ef3f))
+* **mobile:** :bug: preliminary fix for logout issue; fixed issue of friends not loading ([53f80c5](https://github.com/HuLaSpark/HuLa/commit/53f80c5069681e16e5293d7912dee0718a5f6cdc))
+* **readme:** :bug: fix readme file not showing issue ([4df4fd9](https://github.com/HuLaSpark/HuLa/commit/4df4fd95ca366f56883a967d4cf507c8b6bd671d))
+* **store:** :bug: adjust session switching and announcement listening location ([7c1d2cf](https://github.com/HuLaSpark/HuLa/commit/7c1d2cf3b2be474550071bdf34da6becf6bdc705))
+* **transmit:** :bug: fix forwarding function can not be used ([ae86ee3](https://github.com/HuLaSpark/HuLa/commit/ae86ee3a1f8dd2b7b9536a86129175c0519283ed))
+* **update:** :bug: fix forced updates in development environments ([e40dd5a](https://github.com/HuLaSpark/HuLa/commit/e40dd5a01f9d6a90f902363bfc3620226bc93b74))
+* **view:** :bug: display announcement ([fe9f228](https://github.com/HuLaSpark/HuLa/commit/fe9f228426b66f8ac0b50c413e97ab3e1c7fc415))
+
 ## [3.0.1](https://github.com/HuLaSpark/HuLa/compare/v3.0.0...v3.0.1) (2025-10-21)
 
 
