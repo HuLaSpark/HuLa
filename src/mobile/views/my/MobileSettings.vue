@@ -10,7 +10,9 @@
     </template>
 
     <template #container>
-      <div class="flex flex-col">
+      <img src="@/assets/mobile/chat-home/background.webp" class="w-100% absolute top-0 -z-1" alt="hula" />
+
+      <div class="flex flex-col z-1">
         <div class="flex flex-col p-20px gap-20px">
           <!-- 设置项 -->
           <div
