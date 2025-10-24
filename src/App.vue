@@ -493,24 +493,46 @@ watch(
 )
 
 /** 监听会话变化 */
-watch(
-  () => globalStore.currentSession,
-  async (newSession, oldSession) => {
-    if (newSession?.type === RoomTypeEnum.GROUP) {
-      try {
-        const result = await groupStore.switchSession(newSession, oldSession)
+// watch(
+//   () => globalStore.currentSession,
+//   async (newSession, oldSession) => {
+//     if (newSession?.type === RoomTypeEnum.GROUP) {
+//       try {
+//         const result = await groupStore.switchSession(newSession, oldSession)
 
-        if (result?.success) {
-          // 切换会话的时候应该去公告的状态找到第一个公告展示
-          await announcementStore.loadGroupAnnouncements()
-        }
-      } catch (error) {
-        console.error('会话切换处理失败:', error)
-      }
+//         if (result?.success) {
+//           // 切换会话的时候应该去公告的状态找到第一个公告展示
+//           await announcementStore.loadGroupAnnouncements()
+//         }
+//       } catch (error) {
+//         console.error('会话切换处理失败:', error)
+//       }
+//     }
+//   },
+//   { immediate: true }
+// )
+
+useMitt.on(MittEnum.MSG_INIT, async () => {
+  watchEffect(async () => {
+    // 在同步阶段明确提取需要监听的属性
+    const sessionRoomId = globalStore.currentSessionRoomId
+    const sessionType = globalStore.currentSession?.type
+    const currentSession = globalStore.currentSession
+
+    if (!sessionRoomId || sessionType !== RoomTypeEnum.GROUP) {
+      return
     }
-  },
-  { immediate: true }
-)
+
+    try {
+      const result = await groupStore.switchSession(currentSession)
+      if (result?.success) {
+        await announcementStore.loadGroupAnnouncements()
+      }
+    } catch (error) {
+      console.error('会话切换处理失败:', error)
+    }
+  })
+})
 </script>
 <style lang="scss">
 /* 修改naive-ui select 组件的样式 */
