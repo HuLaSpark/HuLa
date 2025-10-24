@@ -47,6 +47,7 @@ import Splashscreen from '#/views/Splashscreen.vue'
 import MobileForgetPassword from '#/views/MobileForgetPassword.vue'
 import MobileServiceAgreement from '#/views/MobileServiceAgreement.vue'
 import MobilePrivacyAgreement from '#/views/MobilePrivacyAgreement.vue'
+import SyncData from '#/views/SyncData.vue'
 
 /**! 创建窗口后再跳转页面就会导致样式没有生效所以不能使用懒加载路由的方式，有些页面需要快速响应的就不需要懒加载 */
 const { BASE_URL } = import.meta.env
@@ -84,6 +85,11 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
     path: '/mobile/privacyAgreement',
     name: 'mobilePrivacyAgreement',
     component: MobilePrivacyAgreement
+  },
+  {
+    path: '/mobile/syncData',
+    name: 'mobileSyncData',
+    component: SyncData
   },
   {
     path: '/mobile/chatRoom',
