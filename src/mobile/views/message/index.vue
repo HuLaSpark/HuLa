@@ -204,6 +204,7 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { vOnLongPress } from '@vueuse/components'
 import { markMsgRead, setSessionTop } from '@/utils/ImRequestUtils'
+import { useContactStore } from '@/stores/contacts'
 
 const loading = ref(false)
 const count = ref(0)
@@ -212,6 +213,7 @@ const groupStore = useGroupStore()
 const chatStore = useChatStore()
 const userStore = useUserStore()
 const globalStore = useGlobalStore()
+const contactStore = useContactStore()
 
 // 加载更多ui事件处理（开始）
 
@@ -420,6 +422,7 @@ const onRefresh = () => {
 }
 
 onMounted(async () => {
+  await contactStore.getContactList(true)
   await rustWebSocketClient.setupBusinessMessageListeners()
 })
 
