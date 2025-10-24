@@ -7,7 +7,7 @@
           :hidden-right="true"
           :enable-default-background="false"
           :enable-shadow="false"
-          room-name="编辑资料" />
+          room-name="添加好友/群" />
       </template>
 
       <template #container>
