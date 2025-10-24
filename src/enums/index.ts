@@ -113,7 +113,9 @@ export enum MittEnum {
   /** 移动端通话浮层请求 */
   MOBILE_RTC_CALL_REQUEST = 'mobileRtcCallRequest',
   /** 移动端关闭输入框面板 */
-  MOBILE_CLOSE_PANEL = 'mobileClosePanel'
+  MOBILE_CLOSE_PANEL = 'mobileClosePanel',
+  /** 切换会话 */
+  MSG_INIT = 'msg_init'
 }
 
 /** 主题类型 */

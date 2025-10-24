@@ -574,7 +574,7 @@ router.beforeEach(async (to: RouteLocationNormalized, _from: RouteLocationNormal
     const isAgreementPage = to.path === '/mobile/serviceAgreement' || to.path === '/mobile/privacyAgreement'
 
     // 闪屏页白名单：不论登录状态都允许进入
-    console.log(to.path)
+    console.log('路由守卫to->', to.path)
     if (isSplashPage || isForgetPage || isAgreementPage) {
       return next()
     }

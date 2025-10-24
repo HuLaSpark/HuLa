@@ -1,5 +1,5 @@
 import { emit } from '@tauri-apps/api/event'
-import { EventEnum, TauriCommand } from '@/enums'
+import { EventEnum, MittEnum, TauriCommand } from '@/enums'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { useChatStore } from '@/stores/chat'
 import { useGlobalStore } from '@/stores/global.ts'
@@ -20,6 +20,7 @@ import { useNetwork } from '@vueuse/core'
 import { UserInfoType } from '../services/types'
 import { getEnhancedFingerprint } from '../services/fingerprint'
 import { invoke } from '@tauri-apps/api/core'
+import { useMitt } from './useMitt'
 
 export const useLogin = () => {
   const { resizeWindow } = useWindow()
@@ -230,6 +231,7 @@ export const useLogin = () => {
             return
           }
         }
+        ;+useMitt.emit(MittEnum.MSG_INIT)
 
         await routerOrOpenHomeWindow()
       })
