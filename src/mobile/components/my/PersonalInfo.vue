@@ -120,7 +120,7 @@
             type="primary"
             @click="toChatRoom"
             :disabled="loading"
-            v-if="!props.isMyPage"
+            v-if="!props.isMyPage && isMyFriend"
             class="px-5 py-10px text-center font-bold rounded-full text-12px">
             {{ isBotUser(uid) ? '打开助手' : '私聊' }}
           </n-button>

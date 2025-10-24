@@ -138,8 +138,16 @@ const doSearch = () => {
 }
 
 const filteredContacts = computed(() => {
-  if (!keyword.value) return contactStore.contactsList
-  return contactStore.contactsList.filter((c) => {
+  const contactsList = contactStore.contactsList.filter((c) => {
+    if (c.uid === '1') {
+      // 排除hula小管家
+      return false
+    }
+    return true
+  })
+
+  if (!keyword.value) return contactsList
+  return contactsList.filter((c) => {
     const name = groupStore.getUserInfo(c.uid)!.name
     if (name) {
       name.includes(keyword.value)
@@ -151,12 +159,11 @@ const filteredContacts = computed(() => {
 
 // 点击发起群聊
 const createGroup = async () => {
-  console.log('发起群聊，选择的用户：', selectedList.value)
   if (selectedList.value.length < 2) {
     window.$message.success('两个人无法建群哦')
     return
   }
-  // TODO: 调用接口 / store 创建群聊
+
   try {
     const result: any = await ImRequestUtils.createGroup({ uidList: selectedList.value })
 
