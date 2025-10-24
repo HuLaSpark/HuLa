@@ -3,6 +3,7 @@ import { check } from '@tauri-apps/plugin-updater'
 import { useSettingStore } from '@/stores/setting.ts'
 import { MittEnum } from '../enums'
 import { useMitt } from './useMitt'
+import { isMobile } from '@/utils/PlatformConstants'
 
 /**
  * 检查更新
@@ -13,6 +14,7 @@ export const useCheckUpdate = () => {
   const CHECK_UPDATE_TIME = 30 * 60 * 1000
   // 在未登录情况下缩短检查周期
   const CHECK_UPDATE_LOGIN_TIME = 5 * 60 * 1000
+  const isProduction = import.meta.env.PROD && !isMobile()
 
   /**
    * 检查更新
@@ -38,10 +40,11 @@ export const useCheckUpdate = () => {
           currenVersion.indexOf('.') + 1,
           currenVersion.lastIndexOf('.') === -1 ? currenVersion.length : currenVersion.lastIndexOf('.')
         )
-        if (
-          newMajorVersion > currentMajorVersion ||
-          (newMajorVersion === currentMajorVersion && newMiddleVersion > currentMiddleVersion)
-        ) {
+        const requireForceUpdate =
+          isProduction &&
+          (newMajorVersion > currentMajorVersion ||
+            (newMajorVersion === currentMajorVersion && newMiddleVersion > currentMiddleVersion))
+        if (requireForceUpdate) {
           useMitt.emit(MittEnum.DO_UPDATE, { close: closeWin })
         } else if (newVersion !== currenVersion && settingStore.update.dismiss !== newVersion && !initialCheck) {
           // 只在非初始检查时显示普通更新提示
