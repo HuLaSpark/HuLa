@@ -43,7 +43,7 @@
         <n-flex v-if="announError" class="h-74px" align="center" justify="center">
           <div class="text-center">
             <p class="text-(12px #909090) mb-8px">公告加载失败，请重试</p>
-            <n-button size="tiny" @click="handleLoadGroupAnnoun">重试</n-button>
+            <n-button size="tiny" @click="announcementStore.loadGroupAnnouncements()">重试</n-button>
           </div>
         </n-flex>
 
@@ -187,7 +187,7 @@ import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useDebounceFn } from '@vueuse/core'
 import type { InputInst } from 'naive-ui'
 import { storeToRefs } from 'pinia'
-import { MittEnum, OnlineEnum, RoleEnum, RoomTypeEnum, ThemeEnum } from '@/enums'
+import { MittEnum, OnlineEnum, RoleEnum, ThemeEnum, RoomTypeEnum } from '@/enums'
 import { useChatMain } from '@/hooks/useChatMain.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { usePopover } from '@/hooks/usePopover.ts'
@@ -195,29 +195,30 @@ import { useWindow } from '@/hooks/useWindow.ts'
 import { useLinkSegments } from '@/hooks/useLinkSegments'
 import type { UserItem } from '@/services/types'
 import { WsResponseMessageType } from '@/services/wsType.ts'
-import { useCachedStore } from '@/stores/cached.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { useSettingStore } from '@/stores/setting'
-import { useUserStore } from '@/stores/user'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { getUserByIds } from '@/utils/ImRequestUtils'
+import { useAnnouncementStore } from '@/stores/announcement'
 
 const appWindow = WebviewWindow.getCurrent()
 const emit = defineEmits<(e: 'ready') => void>()
 const { createWebviewWindow } = useWindow()
 const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
-const cachedStore = useCachedStore()
-const userStore = useUserStore()
 const settingStore = useSettingStore()
+const announcementStore = useAnnouncementStore()
 const { themes } = storeToRefs(settingStore)
 // 当前加载的群聊ID
 const currentLoadingRoomId = ref('')
-const announError = ref(false)
 const onlineCountDisplay = computed(() => groupStore.countInfo?.onlineNum ?? 0)
 const isGroup = computed(() => globalStore.currentSession?.type === RoomTypeEnum.GROUP)
+// 公告相关计算属性
+const { announcementContent, announNum, announError, isAddAnnoun } = storeToRefs(announcementStore)
+const { segments: announcementSegments, openLink: openAnnouncementLink } = useLinkSegments(announcementContent)
+
 /** 是否是搜索模式 */
 const isSearch = ref(false)
 const searchRef = ref('')
@@ -228,31 +229,6 @@ const isCollapsed = ref(false)
 const { optionsList, report, selectKey } = useChatMain()
 const { handlePopoverUpdate, enableScroll } = usePopover(selectKey, 'image-chat-sidebar')
 provide('popoverControls', { enableScroll })
-
-const isLord = computed(() => {
-  const currentUser = groupStore.userList.find((user) => user.uid === useUserStore().userInfo?.uid)
-  return currentUser?.roleId === RoleEnum.LORD
-})
-const isAdmin = computed(() => {
-  const currentUser = groupStore.userList.find((user) => user.uid === useUserStore().userInfo?.uid)
-  return currentUser?.roleId === RoleEnum.ADMIN
-})
-
-/** 判断当前用户是否拥有id为6的徽章 并且是频道 */
-const hasBadge6 = computed(() => {
-  // 只有当 roomId 为 "1" 时才进行徽章判断（频道）
-  if (globalStore.currentSession?.roomId !== '1') return false
-
-  const currentUser = groupStore.getUserInfo(userStore.userInfo!.uid!)!
-  return currentUser?.itemIds?.includes('6')
-})
-
-/** 群公告相关 */
-const announList = ref<any[]>([])
-const announNum = ref(0)
-const isAddAnnoun = ref(false)
-const announcementContent = computed(() => (announList.value.length > 0 ? (announList.value[0]?.content ?? '') : ''))
-const { segments: announcementSegments, openLink: openAnnouncementLink } = useLinkSegments(announcementContent)
 
 // 用于稳定展示的用户列表
 const displayedUserList = ref<any[]>([])
@@ -310,27 +286,6 @@ watch(
   { immediate: true }
 )
 
-// 监听会话变化
-watch(
-  () => globalStore.currentSession,
-  async (newSession, oldSession) => {
-    if (newSession?.type === RoomTypeEnum.GROUP) {
-      try {
-        // 切换会话
-        const result = await groupStore.switchSession(newSession, oldSession)
-
-        if (result?.success) {
-          // 切换会话的时候应该去公告的状态找到第一个公告展示
-          await handleLoadGroupAnnoun()
-        }
-      } catch (error) {
-        console.error('会话切换处理失败:', error)
-      }
-    }
-  },
-  { immediate: true }
-)
-
 /**
  * 监听搜索输入过滤用户
  * @param value 输入值
@@ -382,40 +337,6 @@ const handleOpenAnnoun = (isAdd: boolean) => {
   })
 }
 
-/**
- * 加载群公告
- */
-const handleLoadGroupAnnoun = async () => {
-  try {
-    const roomId = globalStore.currentSession?.roomId
-    if (!roomId) {
-      console.error('当前会话没有roomId')
-      return
-    }
-    // 设置是否可以添加公告
-    isAddAnnoun.value = isLord.value || isAdmin.value || hasBadge6.value!
-    // 获取群公告列表
-    const data = await cachedStore.getGroupAnnouncementList(roomId, 1, 10)
-    if (data) {
-      announList.value = data.records
-      // 处理置顶公告
-      if (announList.value && announList.value.length > 0) {
-        const topAnnouncement = announList.value.find((item: any) => item.top)
-        if (topAnnouncement) {
-          announList.value = [topAnnouncement, ...announList.value.filter((item: any) => !item.top)]
-        }
-      }
-      announNum.value = parseInt(data.total, 10)
-      announError.value = false
-    } else {
-      announError.value = false
-    }
-  } catch (error) {
-    console.error('加载群公告失败:', error)
-    announError.value = true
-  }
-}
-
 const userStatusStore = useUserStatusStore()
 const { stateList } = storeToRefs(userStatusStore)
 
@@ -428,7 +349,7 @@ appWindow.listen('announcementUpdated', async (event: any) => {
     const { hasAnnouncements } = event.payload
     if (hasAnnouncements) {
       // 初始化群公告
-      await handleLoadGroupAnnoun()
+      await announcementStore.loadGroupAnnouncements()
       await nextTick()
     }
   }
@@ -459,7 +380,7 @@ onMounted(async () => {
     const handleAnnounInitOnEvent = (shouldReload: boolean) => {
       return async (event: any) => {
         if (shouldReload || event) {
-          await handleLoadGroupAnnoun()
+          await announcementStore.loadGroupAnnouncements()
         }
       }
     }

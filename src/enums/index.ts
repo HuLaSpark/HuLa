@@ -152,6 +152,8 @@ export enum StoresEnum {
   USER = 'user',
   /** 群组 */
   GROUP = 'group',
+  /** 公告 */
+  ANNOUNCEMENT = 'announcement',
   /** 全局 */
   GLOBAL = 'global',
   /** 表情 */

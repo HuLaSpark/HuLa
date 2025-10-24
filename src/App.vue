@@ -22,7 +22,8 @@ import {
   ChangeTypeEnum,
   MittEnum,
   ModalEnum,
-  OnlineEnum
+  OnlineEnum,
+  RoomTypeEnum
 } from '@/enums'
 import { useFixedScale } from '@/hooks/useFixedScale'
 import { useGlobalShortcut } from '@/hooks/useGlobalShortcut.ts'
@@ -43,6 +44,7 @@ import { useContactStore } from '@/stores/contacts.ts'
 import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user'
 import { useChatStore } from '@/stores/chat'
+import { useAnnouncementStore } from '@/stores/announcement'
 import type { MarkItemType, RevokedMsgType, UserItem } from '@/services/types.ts'
 
 const mobileRtcCallFloatCell = isMobile()
@@ -51,6 +53,7 @@ const mobileRtcCallFloatCell = isMobile()
 
 const userStore = useUserStore()
 const contactStore = useContactStore()
+const announcementStore = useAnnouncementStore()
 const userUid = computed(() => userStore.userInfo!.uid)
 const groupStore = useGroupStore()
 const chatStore = useChatStore()
@@ -86,53 +89,6 @@ const preventDrag = (e: MouseEvent) => {
     e.preventDefault()
   }
 }
-
-/** 控制阴影 */
-watch(
-  () => page.value.shadow,
-  (val) => {
-    // 移动端始终禁用阴影
-    if (isMobile()) {
-      document.documentElement.style.setProperty('--shadow-enabled', '1')
-    } else {
-      document.documentElement.style.setProperty('--shadow-enabled', val ? '0' : '1')
-    }
-  },
-  { immediate: true }
-)
-
-/** 控制高斯模糊 */
-watch(
-  () => page.value.blur,
-  (val) => {
-    document.documentElement.setAttribute('data-blur', val ? '1' : '0')
-  },
-  { immediate: true }
-)
-
-/** 控制字体样式 */
-watch(
-  () => page.value.fonts,
-  (val) => {
-    document.documentElement.style.setProperty('--font-family', val)
-  },
-  { immediate: true }
-)
-
-/** 控制变化主题 */
-watch(
-  () => themes.value.versatile,
-  async (val, oldVal) => {
-    await import(`@/styles/scss/theme/${val}.scss`)
-    // 然后给最顶层的div设置val的类样式
-    const app = document.querySelector('#app')?.classList as DOMTokenList
-    app.remove(oldVal as string)
-    await nextTick(() => {
-      app.add(val)
-    })
-  },
-  { immediate: true }
-)
 
 useMitt.on(WsResponseMessageType.VideoCallRequest, (event) => {
   info(`收到通话请求：${JSON.stringify(event)}`)
@@ -366,6 +322,11 @@ useMitt.on(WsResponseMessageType.USER_STATE_CHANGE, async (data: { uid: string; 
   })
 })
 
+useMitt.on(WsResponseMessageType.GROUP_SET_ADMIN_SUCCESS, (event) => {
+  console.log('设置群管理员---> ', event)
+  groupStore.updateAdminStatus(event.roomId, event.uids, event.status)
+})
+
 useMitt.on(WsResponseMessageType.OFFLINE, async (onStatusChangeType: OnStatusChangeType) => {
   console.log('收到用户下线通知', onStatusChangeType)
   // 群聊
@@ -484,11 +445,72 @@ onUnmounted(async () => {
   }
 })
 
-// 处理设置群管理员和取消群管理员
-useMitt.on(WsResponseMessageType.GROUP_SET_ADMIN_SUCCESS, (event) => {
-  console.log('设置群管理员---> ', event)
-  groupStore.updateAdminStatus(event.roomId, event.uids, event.status)
-})
+/** 控制阴影 */
+watch(
+  () => page.value.shadow,
+  (val) => {
+    // 移动端始终禁用阴影
+    if (isMobile()) {
+      document.documentElement.style.setProperty('--shadow-enabled', '1')
+    } else {
+      document.documentElement.style.setProperty('--shadow-enabled', val ? '0' : '1')
+    }
+  },
+  { immediate: true }
+)
+
+/** 控制高斯模糊 */
+watch(
+  () => page.value.blur,
+  (val) => {
+    document.documentElement.setAttribute('data-blur', val ? '1' : '0')
+  },
+  { immediate: true }
+)
+
+/** 控制字体样式 */
+watch(
+  () => page.value.fonts,
+  (val) => {
+    document.documentElement.style.setProperty('--font-family', val)
+  },
+  { immediate: true }
+)
+
+/** 控制变化主题 */
+watch(
+  () => themes.value.versatile,
+  async (val, oldVal) => {
+    await import(`@/styles/scss/theme/${val}.scss`)
+    // 然后给最顶层的div设置val的类样式
+    const app = document.querySelector('#app')?.classList as DOMTokenList
+    app.remove(oldVal as string)
+    await nextTick(() => {
+      app.add(val)
+    })
+  },
+  { immediate: true }
+)
+
+/** 监听会话变化 */
+watch(
+  () => globalStore.currentSession,
+  async (newSession, oldSession) => {
+    if (newSession?.type === RoomTypeEnum.GROUP) {
+      try {
+        const result = await groupStore.switchSession(newSession, oldSession)
+
+        if (result?.success) {
+          // 切换会话的时候应该去公告的状态找到第一个公告展示
+          await announcementStore.loadGroupAnnouncements()
+        }
+      } catch (error) {
+        console.error('会话切换处理失败:', error)
+      }
+    }
+  },
+  { immediate: true }
+)
 </script>
 <style lang="scss">
 /* 修改naive-ui select 组件的样式 */
