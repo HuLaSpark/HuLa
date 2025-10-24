@@ -33,7 +33,9 @@
 
           <!-- 退出登录按钮 -->
           <div class="mt-auto flex justify-center mb-20px">
-            <n-button type="error" @click="handleLogout">退出登录</n-button>
+            <n-button type="error" @click="handleLogout" :disabled="isLoggingOut" :loading="isLoggingOut">
+              退出登录
+            </n-button>
           </div>
         </div>
       </div>
@@ -44,13 +46,13 @@
 <script setup lang="ts">
 import { info } from '@tauri-apps/plugin-log'
 import { ThemeEnum } from '@/enums'
-import router from '@/router'
 import { useGlobalStore } from '@/stores/global'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user'
 import { useLogin } from '@/hooks/useLogin'
 import { showDialog } from 'vant'
 import * as ImRequestUtils from '@/utils/ImRequestUtils'
+import router from '@/router'
 
 const globalStore = useGlobalStore()
 const { isTrayMenuShow } = storeToRefs(globalStore)
@@ -110,8 +112,17 @@ const settings = reactive([
 
 const { logout, resetLoginState } = useLogin()
 
+// 登出处理状态标志
+const isLoggingOut = ref(false)
+
 // 退出登录逻辑
 async function handleLogout() {
+  // 防止重复点击
+  if (isLoggingOut.value) return
+  isLoggingOut.value = true
+
+  let logoutSuccess = false
+
   showDialog({
     title: '退出登录',
     message: '确定要退出登录吗？',
@@ -120,19 +131,41 @@ async function handleLogout() {
     cancelButtonText: '取消'
   })
     .then(async () => {
-      await ImRequestUtils.logout({ autoLogin: true })
-      // 2. 重置登录状态
-      await resetLoginState()
-      // 3. 最后调用登出方法(这会创建登录窗口或发送登出事件)
-      await logout()
+      try {
+        await ImRequestUtils.logout({ autoLogin: true })
+        logoutSuccess = true
+      } catch (error) {
+        console.error('服务器登出失败：', error)
+        // 即使服务器登出失败，也继续执行本地清理，但给出警告
+        window.$message.warning('服务器登出失败，但本地登录状态已清除')
+      }
 
-      settingStore.toggleLogin(false, false)
-      info('登出账号')
-      isTrayMenuShow.value = false
-      await router.push('/mobile/login')
+      // 无论服务器登出是否成功，都执行本地状态清理
+      try {
+        // 2. 重置登录状态
+        await resetLoginState()
+        // 3. 最后调用登出方法(这会创建登录窗口或发送登出事件)
+        await logout()
+
+        settingStore.toggleLogin(false, false)
+        info('登出账号')
+        isTrayMenuShow.value = false
+
+        if (logoutSuccess) {
+          window.$message.success('登出成功')
+        }
+        await router.push('/mobile/login')
+      } catch (localError) {
+        console.error('本地登出清理失败：', localError)
+        window.$message.error('本地登出清理失败，请重启应用')
+      }
     })
     .catch(() => {
       info('用户点击取消')
+    })
+    .finally(() => {
+      // 无论成功还是失败，都重置标志
+      isLoggingOut.value = false
     })
 }
 
