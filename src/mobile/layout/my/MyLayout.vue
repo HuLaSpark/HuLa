@@ -1,5 +1,5 @@
 <template>
-  <MobileLayout :topSafeAreaClass="computedTopAreaClass" :backgroundImage="'@/assets/mobile/chat-home/background.webp'">
+  <MobileLayout :topSafeAreaClass="computedTopAreaClass">
     <div class="h-full flex flex-col">
       <!-- 页面全部内容 -->
       <div class="flex flex-col flex-1">

@@ -1,91 +1,93 @@
 <template>
-  <div class="flex w-full flex-col h-full">
-    <HeaderBar
-      :isOfficial="false"
-      :hidden-right="true"
-      :enable-default-background="false"
-      :enable-shadow="false"
-      room-name="发起群聊" />
+  <MobileLayout>
+    <div class="flex w-full flex-col h-full">
+      <HeaderBar
+        :isOfficial="false"
+        :hidden-right="true"
+        :enable-default-background="false"
+        :enable-shadow="false"
+        room-name="发起群聊" />
 
-    <!-- 顶部搜索框 -->
-    <div class="px-16px mt-10px flex gap-3">
-      <div class="flex-1 py-5px shrink-0">
-        <n-input
-          v-model:value="keyword"
-          class="rounded-10px w-full bg-gray-100 relative text-14px"
-          placeholder="搜索联系人~"
-          clearable
-          spellCheck="false"
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="off">
-          <template #prefix>
-            <svg class="w-12px h-12px"><use href="#search"></use></svg>
-          </template>
-        </n-input>
+      <!-- 顶部搜索框 -->
+      <div class="px-16px mt-10px flex gap-3">
+        <div class="flex-1 py-5px shrink-0">
+          <n-input
+            v-model:value="keyword"
+            class="rounded-10px w-full bg-gray-100 relative text-14px"
+            placeholder="搜索联系人~"
+            clearable
+            spellCheck="false"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off">
+            <template #prefix>
+              <svg class="w-12px h-12px"><use href="#search"></use></svg>
+            </template>
+          </n-input>
+        </div>
+        <div class="flex justify-end items-center">
+          <n-button class="py-5px" @click="doSearch">搜索</n-button>
+        </div>
       </div>
-      <div class="flex justify-end items-center">
-        <n-button class="py-5px" @click="doSearch">搜索</n-button>
-      </div>
-    </div>
 
-    <!-- 联系人列表 -->
-    <!-- 联系人列表 -->
-    <div ref="scrollArea" class="flex-1 overflow-y-auto px-16px mt-10px" :style="{ height: scrollHeight + 'px' }">
-      <n-scrollbar style="max-height: calc(100vh - 150px)">
-        <n-checkbox-group v-model:value="selectedList" class="flex flex-col gap-2">
-          <div
-            v-for="item in filteredContacts"
-            :key="item.uid"
-            class="rounded-10px border border-gray-200 overflow-hidden">
-            <n-checkbox
-              :value="item.uid"
-              size="large"
-              class="w-full flex items-center px-5px"
-              :class="[
-                'cursor-pointer select-none transition-colors duration-150',
-                selectedList.includes(item.uid) ? 'bg-blue-50 border-blue-300' : 'hover:bg-gray-50'
-              ]">
-              <template #default>
-                <!-- ✅ 强制一行展示 -->
-                <div class="flex items-center gap-10px px-8px py-10px">
-                  <!-- 头像 -->
-                  <n-avatar
-                    round
-                    :size="44"
-                    :src="AvatarUtils.getAvatarUrl(groupStore.getUserInfo(item.uid)!.avatar!)"
-                    fallback-src="/logo.png"
-                    style="border: 1px solid var(--avatar-border-color)" />
-                  <!-- 文字信息 -->
-                  <div class="flex flex-col leading-tight truncate">
-                    <span class="text-14px font-medium truncate">
-                      {{ groupStore.getUserInfo(item.uid)!.name }}
-                    </span>
-                    <div class="text-12px text-gray-500 flex items-center gap-4px truncate">
-                      <template v-if="getUserState(item.uid)">
-                        <img class="size-12px rounded-50%" :src="getUserState(item.uid)?.url" alt="" />
-                        {{ getUserState(item.uid)?.title }}
-                      </template>
-                      <template v-else>
-                        <n-badge :color="item.activeStatus === OnlineEnum.ONLINE ? '#1ab292' : '#909090'" dot />
-                        {{ item.activeStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}
-                      </template>
+      <!-- 联系人列表 -->
+      <!-- 联系人列表 -->
+      <div ref="scrollArea" class="flex-1 overflow-y-auto px-16px mt-10px" :style="{ height: scrollHeight + 'px' }">
+        <n-scrollbar style="max-height: calc(100vh - 150px)">
+          <n-checkbox-group v-model:value="selectedList" class="flex flex-col gap-2">
+            <div
+              v-for="item in filteredContacts"
+              :key="item.uid"
+              class="rounded-10px border border-gray-200 overflow-hidden">
+              <n-checkbox
+                :value="item.uid"
+                size="large"
+                class="w-full flex items-center px-5px"
+                :class="[
+                  'cursor-pointer select-none transition-colors duration-150',
+                  selectedList.includes(item.uid) ? 'bg-blue-50 border-blue-300' : 'hover:bg-gray-50'
+                ]">
+                <template #default>
+                  <!-- ✅ 强制一行展示 -->
+                  <div class="flex items-center gap-10px px-8px py-10px">
+                    <!-- 头像 -->
+                    <n-avatar
+                      round
+                      :size="44"
+                      :src="AvatarUtils.getAvatarUrl(groupStore.getUserInfo(item.uid)!.avatar!)"
+                      fallback-src="/logo.png"
+                      style="border: 1px solid var(--avatar-border-color)" />
+                    <!-- 文字信息 -->
+                    <div class="flex flex-col leading-tight truncate">
+                      <span class="text-14px font-medium truncate">
+                        {{ groupStore.getUserInfo(item.uid)!.name }}
+                      </span>
+                      <div class="text-12px text-gray-500 flex items-center gap-4px truncate">
+                        <template v-if="getUserState(item.uid)">
+                          <img class="size-12px rounded-50%" :src="getUserState(item.uid)?.url" alt="" />
+                          {{ getUserState(item.uid)?.title }}
+                        </template>
+                        <template v-else>
+                          <n-badge :color="item.activeStatus === OnlineEnum.ONLINE ? '#1ab292' : '#909090'" dot />
+                          {{ item.activeStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}
+                        </template>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </template>
-            </n-checkbox>
-          </div>
-        </n-checkbox-group>
-      </n-scrollbar>
-    </div>
+                </template>
+              </n-checkbox>
+            </div>
+          </n-checkbox-group>
+        </n-scrollbar>
+      </div>
 
-    <!-- 底部操作栏 -->
-    <div class="px-16px py-10px bg-white border-t border-gray-200 flex justify-between items-center">
-      <span class="text-14px">已选择 {{ selectedList.length }} 人</span>
-      <n-button type="primary" :disabled="selectedList.length === 0" @click="createGroup">发起群聊</n-button>
+      <!-- 底部操作栏 -->
+      <div class="px-16px py-10px bg-white border-t border-gray-200 flex justify-between items-center">
+        <span class="text-14px">已选择 {{ selectedList.length }} 人</span>
+        <n-button type="primary" :disabled="selectedList.length === 0" @click="createGroup">发起群聊</n-button>
+      </div>
     </div>
-  </div>
+  </MobileLayout>
 </template>
 
 <script setup lang="ts">

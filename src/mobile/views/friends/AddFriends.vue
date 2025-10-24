@@ -1,146 +1,142 @@
 <template>
-  <div class="flex flex-1 flex-col relative bg-[url('@/assets/mobile/chat-home/background.webp')] bg-cover bg-center">
-    <AutoFixHeightPage :show-footer="false">
-      <template #header>
-        <HeaderBar
-          :isOfficial="false"
-          :hidden-right="true"
-          :enable-default-background="false"
-          :enable-shadow="false"
-          room-name="添加好友/群" />
-      </template>
+  <div class="flex flex-1 flex-col relative bg-cover bg-center">
+    <MobileLayout>
+      <HeaderBar
+        :isOfficial="false"
+        :hidden-right="true"
+        :enable-default-background="false"
+        :enable-shadow="false"
+        room-name="添加好友/群" />
 
-      <template #container>
-        <div class="flex flex-col gap-1 overflow-auto h-full">
-          <!-- 主要内容 -->
-          <n-flex vertical :size="14">
-            <!-- 搜索框 -->
-            <div class="px-16px">
-              <n-input
-                v-model:value="searchValue"
-                type="text"
-                size="small"
-                style="border-radius: 8px; border: 1px solid #ccc"
-                :placeholder="searchPlaceholder[searchType]"
-                :maxlength="20"
-                round
-                spellCheck="false"
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
-                clearable
-                @keydown.enter="handleSearch"
-                @clear="handleClear">
-                <template #prefix>
-                  <n-icon>
-                    <svg class="icon" aria-hidden="true">
-                      <use href="#search" />
-                    </svg>
-                  </n-icon>
-                </template>
-              </n-input>
-            </div>
+      <div class="flex flex-col gap-1 overflow-auto h-full">
+        <!-- 主要内容 -->
+        <n-flex vertical :size="14">
+          <!-- 搜索框 -->
+          <div class="px-16px">
+            <n-input
+              v-model:value="searchValue"
+              type="text"
+              size="small"
+              style="border-radius: 8px; border: 1px solid #ccc"
+              :placeholder="searchPlaceholder[searchType]"
+              :maxlength="20"
+              round
+              spellCheck="false"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              clearable
+              @keydown.enter="handleSearch"
+              @clear="handleClear">
+              <template #prefix>
+                <n-icon>
+                  <svg class="icon" aria-hidden="true">
+                    <use href="#search" />
+                  </svg>
+                </n-icon>
+              </template>
+            </n-input>
+          </div>
 
-            <!-- 搜索类型切换 -->
-            <n-tabs v-model:value="searchType" animated size="small" @update:value="handleTypeChange">
-              <n-tab-pane v-for="tab in tabs" :key="tab.name" :name="tab.name" :tab="tab.label">
-                <template>
-                  <span>{{ tab.label }}</span>
-                </template>
+          <!-- 搜索类型切换 -->
+          <n-tabs v-model:value="searchType" animated size="small" @update:value="handleTypeChange">
+            <n-tab-pane v-for="tab in tabs" :key="tab.name" :name="tab.name" :tab="tab.label">
+              <template>
+                <span>{{ tab.label }}</span>
+              </template>
 
-                <!-- 初始加载状态 -->
-                <template v-if="initialLoading">
-                  <n-spin class="flex-center" style="height: calc(100vh / var(--page-scale, 1) - 200px)" size="large" />
-                </template>
+              <!-- 初始加载状态 -->
+              <template v-if="initialLoading">
+                <n-spin class="flex-center" style="height: calc(100vh / var(--page-scale, 1) - 200px)" size="large" />
+              </template>
 
-                <!-- 搜索结果 -->
-                <template v-else-if="searchResults.length">
-                  <FloatBlockList
-                    :data-source="searchResults"
-                    item-key="id"
-                    :item-height="64"
-                    max-height="calc(100vh / var(--page-scale, 1) - 128px)"
-                    style-id="search-hover-classes">
-                    <template #item="{ item }">
-                      <div class="p-[0_20px] box-border">
-                        <n-flex align="center" :size="12" class="p-[8px_0] rounded-lg">
-                          <n-avatar
-                            :size="48"
-                            :src="AvatarUtils.getAvatarUrl(item.avatar)"
-                            :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
-                            :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
-                            round />
-                          <n-flex vertical justify="center" :size="10" class="flex-1">
-                            <n-space align="center" :size="10">
-                              <span class="text-(14px [--text-color])">{{ item.name }}</span>
-                              <template v-for="account in item.itemIds" :key="account">
-                                <img class="size-20px" :src="cachedStore.badgeById(account)?.img" alt="" />
+              <!-- 搜索结果 -->
+              <template v-else-if="searchResults.length">
+                <FloatBlockList
+                  :data-source="searchResults"
+                  item-key="id"
+                  :item-height="64"
+                  max-height="calc(100vh / var(--page-scale, 1) - 128px)"
+                  style-id="search-hover-classes">
+                  <template #item="{ item }">
+                    <div class="p-[0_20px] box-border">
+                      <n-flex align="center" :size="12" class="p-[8px_0] rounded-lg">
+                        <n-avatar
+                          :size="48"
+                          :src="AvatarUtils.getAvatarUrl(item.avatar)"
+                          :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+                          :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
+                          round />
+                        <n-flex vertical justify="center" :size="10" class="flex-1">
+                          <n-space align="center" :size="10">
+                            <span class="text-(14px [--text-color])">{{ item.name }}</span>
+                            <template v-for="account in item.itemIds" :key="account">
+                              <img class="size-20px" :src="cachedStore.badgeById(account)?.img" alt="" />
+                            </template>
+                          </n-space>
+                          <n-flex align="center" :size="10">
+                            <span class="text-(12px [--chat-text-color])">{{ `账号：${item.account}` }}</span>
+                            <n-tooltip trigger="hover">
+                              <template #trigger>
+                                <svg
+                                  class="size-12px hover:color-#909090 hover:transition-colors"
+                                  @click="handleCopy(item.account)">
+                                  <use href="#copy"></use>
+                                </svg>
                               </template>
-                            </n-space>
-                            <n-flex align="center" :size="10">
-                              <span class="text-(12px [--chat-text-color])">{{ `账号：${item.account}` }}</span>
-                              <n-tooltip trigger="hover">
-                                <template #trigger>
-                                  <svg
-                                    class="size-12px hover:color-#909090 hover:transition-colors"
-                                    @click="handleCopy(item.account)">
-                                    <use href="#copy"></use>
-                                  </svg>
-                                </template>
-                                <span>复制账号</span>
-                              </n-tooltip>
-                            </n-flex>
+                              <span>复制账号</span>
+                            </n-tooltip>
                           </n-flex>
-
-                          <!-- 三种状态的按钮 -->
-                          <n-button
-                            secondary
-                            :type="getButtonType(item.uid, item.roomId)"
-                            size="small"
-                            class="action-button"
-                            @click="handleButtonClick(item)">
-                            {{ getButtonText(item.uid, item.roomId) }}
-                          </n-button>
                         </n-flex>
-                      </div>
-                    </template>
-                  </FloatBlockList>
-                </template>
 
-                <!-- 搜索中状态 -->
-                <template v-else-if="loading">
-                  <n-spin class="flex-center" style="height: calc(100vh / var(--page-scale, 1) - 200px)" size="large" />
-                </template>
+                        <!-- 三种状态的按钮 -->
+                        <n-button
+                          secondary
+                          :type="getButtonType(item.uid, item.roomId)"
+                          size="small"
+                          class="action-button"
+                          @click="handleButtonClick(item)">
+                          {{ getButtonText(item.uid, item.roomId) }}
+                        </n-button>
+                      </n-flex>
+                    </div>
+                  </template>
+                </FloatBlockList>
+              </template>
 
-                <!-- 搜索无结果状态 -->
-                <template v-else-if="hasSearched">
-                  <n-empty
-                    class="flex-center"
-                    style="height: calc(100vh / var(--page-scale, 1) - 200px)"
-                    description="未找到相关结果" />
-                </template>
+              <!-- 搜索中状态 -->
+              <template v-else-if="loading">
+                <n-spin class="flex-center" style="height: calc(100vh / var(--page-scale, 1) - 200px)" size="large" />
+              </template>
 
-                <!-- 默认空状态 -->
-                <template v-else>
-                  <n-empty
-                    style="height: calc(100vh / var(--page-scale, 1) - 200px)"
-                    class="flex-center"
-                    description="输入关键词搜索">
-                    <template #icon>
-                      <n-icon>
-                        <svg>
-                          <use href="#explosion"></use>
-                        </svg>
-                      </n-icon>
-                    </template>
-                  </n-empty>
-                </template>
-              </n-tab-pane>
-            </n-tabs>
-          </n-flex>
-        </div>
-      </template>
-    </AutoFixHeightPage>
+              <!-- 搜索无结果状态 -->
+              <template v-else-if="hasSearched">
+                <n-empty
+                  class="flex-center"
+                  style="height: calc(100vh / var(--page-scale, 1) - 200px)"
+                  description="未找到相关结果" />
+              </template>
+
+              <!-- 默认空状态 -->
+              <template v-else>
+                <n-empty
+                  style="height: calc(100vh / var(--page-scale, 1) - 200px)"
+                  class="flex-center"
+                  description="输入关键词搜索">
+                  <template #icon>
+                    <n-icon>
+                      <svg>
+                        <use href="#explosion"></use>
+                      </svg>
+                    </n-icon>
+                  </template>
+                </n-empty>
+              </template>
+            </n-tab-pane>
+          </n-tabs>
+        </n-flex>
+      </div>
+    </MobileLayout>
   </div>
 </template>
 
