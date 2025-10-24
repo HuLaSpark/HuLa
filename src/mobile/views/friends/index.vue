@@ -98,7 +98,8 @@
 
                           <div class="text leading-tight text-12px flex-y-center gap-4px flex-1 truncate">
                             [
-                            <template v-if="getUserState(item.uid)">
+                            <template v-if="isBotUser(item.uid)">助手</template>
+                            <template v-else-if="getUserState(item.uid)">
                               <img class="size-12px rounded-50%" :src="getUserState(item.uid)?.url" alt="" />
                               {{ getUserState(item.uid)?.title }}
                             </template>
@@ -163,7 +164,7 @@ import { ref } from 'vue'
 import NavBar from '#/layout/navBar/index.vue'
 import addFriendIcon from '@/assets/mobile/chat-home/add-friend.webp'
 import groupChatIcon from '@/assets/mobile/chat-home/group-chat.webp'
-import { MittEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
+import { MittEnum, OnlineEnum, RoomTypeEnum, UserType } from '@/enums'
 import { useMessage } from '@/hooks/useMessage.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import router from '@/router'
@@ -302,6 +303,8 @@ watchEffect(() => {
 })
 
 const { preloadChatRoom } = useMessage()
+
+const isBotUser = (uid: string) => groupStore.getUserInfo(uid)?.account === UserType.BOT
 
 /**
  *

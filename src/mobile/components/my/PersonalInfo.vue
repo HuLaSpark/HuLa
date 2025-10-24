@@ -94,7 +94,7 @@
           <n-button
             :disabled="loading"
             @click="toEditProfile"
-            v-if="props.isMyPage"
+            v-if="props.isMyPage && !isBotUser(uid)"
             class="font-bold px-4 py-10px bg-#EEF4F3 text-#373838 rounded-full text-12px">
             编辑资料
           </n-button>
@@ -103,7 +103,7 @@
             :disabled="loading"
             @click="handleDelete"
             :color="'#d5304f'"
-            v-if="!props.isMyPage && isMyFriend"
+            v-if="!props.isMyPage && isMyFriend && !isBotUser(uid)"
             class="px-5 py-10px font-bold text-center rounded-full text-12px">
             删除
           </n-button>
@@ -111,7 +111,7 @@
           <n-button
             type="primary"
             :disabled="loading"
-            v-if="!props.isMyPage && !isMyFriend"
+            v-if="!props.isMyPage && !isMyFriend && !isBotUser(uid)"
             @click="handleAddFriend"
             class="px-5 py-10px font-bold text-center rounded-full text-12px">
             +&nbsp;添加好友
@@ -122,7 +122,7 @@
             :disabled="loading"
             v-if="!props.isMyPage"
             class="px-5 py-10px text-center font-bold rounded-full text-12px">
-            私聊
+            {{ isBotUser(uid) ? '打开助手' : '私聊' }}
           </n-button>
         </div>
       </div>
@@ -137,7 +137,7 @@ import { useUserStore } from '@/stores/user'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import 'vant/es/dialog/style'
-import { OnlineEnum } from '@/enums'
+import { OnlineEnum, UserType } from '@/enums'
 import { useMessage } from '@/hooks/useMessage.ts'
 import type { UserInfoType, UserItem } from '@/services/types'
 import { useChatStore } from '@/stores/chat'
@@ -175,6 +175,8 @@ const chatStore = useChatStore()
 const { preloadChatRoom } = useMessage()
 const uid = route.params.uid as string
 const isMyFriend = ref(props.isMyFriend)
+
+const isBotUser = (uid: string) => groupStore.getUserInfo(uid)?.account === UserType.BOT
 
 const toChatRoom = async () => {
   try {
