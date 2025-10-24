@@ -3,7 +3,7 @@ import { info } from '@tauri-apps/plugin-log'
 import { sendNotification } from '@tauri-apps/plugin-notification'
 import { defineStore } from 'pinia'
 import { useRoute } from 'vue-router'
-import { AppException, ErrorType } from '@/common/exception'
+import { ErrorType } from '@/common/exception'
 import { type MessageStatusEnum, MsgEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
 import type { MarkItemType, MessageType, RevokedMsgType, SessionItem } from '@/services/types'
 import { useGlobalStore } from '@/stores/global.ts'
@@ -320,10 +320,6 @@ export const useChatStore = defineStore(
     // 通过房间ID获取会话信息
     const getSession = (roomId: string) => {
       const currentSession = roomId ? sessionList.value.find((item) => item.roomId === roomId) : sessionList.value[0]
-      if (!currentSession) {
-        throw new AppException(`根据房间 ID: ${roomId}无法找到会话`)
-      }
-
       return currentSession
     }
 

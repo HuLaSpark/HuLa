@@ -109,6 +109,13 @@ tauri-plugin-safe-area-insets = "0.1.0"
 tauri-plugin-hula = { path="../tauri-plugin-hula"}
 tauri-plugin-barcode-scanner = "2.4.0"
 
+[target."cfg(target_os = \"ios\")".dependencies]
+objc2 = "0.6.3"
+objc2-core-foundation = "0.3.2"
+objc2-foundation = "0.3.2"
+objc2-ui-kit = "0.3.2"
+block2 = "0.6.2"
+
 [target."cfg(target_os = \"android\")".dependencies]
 jni = "0.21"
 ndk-context = "0.1"

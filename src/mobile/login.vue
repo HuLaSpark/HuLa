@@ -116,12 +116,7 @@
         </n-button>
 
         <!-- 协议 -->
-        <n-flex
-          align="center"
-          justify="center"
-          :style="isAndroid() ? { bottom: safeArea.bottom + 10 + 'px' } : {}"
-          :size="6"
-          class="absolute bottom-0 w-[80%]">
+        <n-flex align="center" justify="center" :style="agreementStyle" :size="6" class="absolute bottom-0 w-[80%]">
           <n-checkbox v-model:checked="protocol" />
           <div class="text-12px color-#909090 cursor-default lh-14px">
             <span>已阅读并同意</span>
@@ -270,6 +265,7 @@
 
 <script setup lang="ts">
 import { debounce } from 'lodash-es'
+import { invoke } from '@tauri-apps/api/core'
 import Validation from '@/components/common/Validation.vue'
 import router from '@/router'
 import type { RegisterUserReq, UserInfoType } from '@/services/types'
@@ -277,7 +273,7 @@ import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import { useMobileStore } from '@/stores/mobile'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { register, sendCaptcha } from '@/utils/ImRequestUtils'
-import { isAndroid } from '@/utils/PlatformConstants'
+import { isAndroid, isIOS } from '@/utils/PlatformConstants'
 import { validateAlphaNumeric, validateSpecialChar } from '@/utils/Validate'
 import { useMitt } from '../hooks/useMitt'
 import { WsResponseMessageType } from '../services/wsType'
@@ -345,6 +341,17 @@ const sendCodeButtonText = computed(() => {
 
 const sendCodeDisabled = computed(() => {
   return sendCodeLoading.value || sendCodeCountdown.value > 0 || !registerInfo.value.email || !isEmailValid.value
+})
+
+const agreementStyle = computed(() => {
+  const inset = safeArea.value.bottom || 0
+  if (isAndroid()) {
+    return { bottom: `${inset + 10}px` }
+  }
+  if (inset > 0) {
+    return { bottom: `${inset}px` }
+  }
+  return { bottom: 'var(--safe-area-inset-bottom)' }
 })
 
 const stopSendCodeCountdown = () => {
@@ -674,6 +681,9 @@ const refreshAvatar = debounce((newAccount: string) => {
 
 onMounted(async () => {
   window.addEventListener('click', closeMenu, true)
+  if (isIOS()) {
+    invoke('set_webview_keyboard_adjustment', { enabled: false })
+  }
   // 只有在需要登录的情况下才显示登录窗口
   if (isJumpDirectly.value) {
     loading.value = false
@@ -697,6 +707,9 @@ onUnmounted(() => {
   window.removeEventListener('click', closeMenu, true)
   stopSendCodeCountdown()
   timerWorker.terminate()
+  if (isIOS()) {
+    invoke('set_webview_keyboard_adjustment', { enabled: false })
+  }
 })
 </script>
 

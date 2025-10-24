@@ -31,7 +31,7 @@ import { useMitt } from '@/hooks/useMitt.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { useGlobalStore } from '@/stores/global'
 import { useSettingStore } from '@/stores/setting.ts'
-import { isDesktop, isMobile, isWindows } from '@/utils/PlatformConstants'
+import { isDesktop, isIOS, isMobile, isWindows } from '@/utils/PlatformConstants'
 import LockScreen from '@/views/LockScreen.vue'
 
 import {
@@ -382,7 +382,23 @@ const listenMobileReLogin = async () => {
   }
 }
 
+/**
+ * iOS网络权限预请求
+ * 在应用启动时发起一个轻量级网络请求，触发iOS的网络权限弹窗
+ */
+const requestNetworkPermissionForIOS = async () => {
+  if (!isIOS()) return
+
+  await fetch('https://www.apple.com/favicon.ico', {
+    method: 'HEAD',
+    cache: 'no-cache'
+  })
+}
+
 onMounted(() => {
+  // iOS应用启动时预请求网络权限（必须在最开始执行）
+  requestNetworkPermissionForIOS()
+
   // 仅在windows上使用
   if (isWindows()) {
     fixedScale.enable()
