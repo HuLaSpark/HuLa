@@ -4,7 +4,7 @@ import { save } from '@tauri-apps/plugin-dialog'
 import { BaseDirectory } from '@tauri-apps/plugin-fs'
 import { revealItemInDir } from '@tauri-apps/plugin-opener'
 import type { FileTypeResult } from 'file-type'
-import { MergeMessageType, MittEnum, MsgEnum, PowerEnum, RoleEnum, RoomTypeEnum } from '@/enums'
+import { MergeMessageType, MittEnum, MsgEnum, PowerEnum, CallTypeEnum, RoleEnum, RoomTypeEnum } from '@/enums'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useDownload } from '@/hooks/useDownload'
 import { useMitt } from '@/hooks/useMitt.ts'
@@ -42,7 +42,7 @@ type GroupNicknameModalPayload = {
 
 export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions = {}) => {
   const { openMsgSession, userUid } = useCommon()
-  const { createWebviewWindow, sendWindowPayload } = useWindow()
+  const { createWebviewWindow, sendWindowPayload, startRtcCall } = useWindow()
   const { getLocalVideoPath, checkVideoDownloaded } = useVideoViewer()
   const fileDownloadStore = useFileDownloadStore()
   const settingStore = useSettingStore()
@@ -1115,6 +1115,14 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
 
   /** 点击气泡消息时候监听用户是否按下ctrl+c来复制内容 */
   const handleMsgClick = (item: MessageType) => {
+    if (item.message.type === MsgEnum.VIDEO_CALL) {
+      startRtcCall(CallTypeEnum.VIDEO)
+      return
+    } else if (item.message.type === MsgEnum.AUDIO_CALL) {
+      startRtcCall(CallTypeEnum.AUDIO)
+      return
+    }
+
     // 移动端不触发 active 效果
     if (!isMobile()) {
       if (chatStore.msgMultiChooseMode === 'forward') {
