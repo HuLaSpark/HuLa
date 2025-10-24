@@ -352,7 +352,8 @@ sudo xattr -r -d com.apple.quarantine /Applications/应用名称.app
 |---------|----------|--------|---------|
 | 2025-09-03 | **烛火** | `¥500` | ![微信转账](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-09-05 | **Orion** | `¥200` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
-| 2025-10-23 | **唐勇** | `¥400` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
+| 2025-10-24 | **唐勇（伏威）** | `¥200` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
+| 2025-08-26 | **唐勇** | `¥200` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-04-25 | **上官俊斌** | `¥200` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-05-27 | **临安居士** | `¥188` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-04-20 | **姜兴(Simon)** | `¥188` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
