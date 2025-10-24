@@ -127,7 +127,6 @@ const canEdit = computed(() => {
   // 当前用户是群主或管理员
   const isLord = groupStore.isCurrentLord(userStore.userInfo?.uid!)
   const isAdmin = groupStore.isAdmin(userStore.userInfo?.uid!)
-
   return isPublisher || isLord || isAdmin
 })
 
@@ -135,15 +134,10 @@ const canEdit = computed(() => {
 const fetchAnnouncementDetail = async () => {
   try {
     loading.value = true
-    const announcementId = route.params.noticeId as string
-
-    if (!announcementId) {
-      throw new Error('公告ID不存在')
-    }
 
     const data = await getAnnouncementDetail({
       roomId: globalStore.currentSessionRoomId,
-      announcementId
+      announcementId: route.params.id as string
     })
     announcement.value = data
   } catch (err) {

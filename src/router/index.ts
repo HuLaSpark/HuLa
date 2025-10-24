@@ -140,12 +140,12 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
             component: NoticeList
           },
           {
-            path: 'edit/:noticeId',
+            path: 'edit/:id',
             name: 'mobileChatNoticeEdit',
             component: NoticeEdit
           },
           {
-            path: 'detail/:noticeId',
+            path: 'detail/:id',
             name: 'mobileChatNoticeDetail',
             component: NoticeDetail
           }
