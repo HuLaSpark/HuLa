@@ -33,6 +33,8 @@ pub mod timeout_config;
 pub mod utils;
 mod vo;
 pub mod websocket;
+#[cfg(target_os = "ios")]
+mod webview_helper;
 
 use crate::command::request_command::{im_request_command, login_command};
 use crate::command::room_member_command::{
@@ -71,7 +73,9 @@ use crate::command::file_manager_command::{
 use crate::command::message_command::{page_msg, save_msg, send_msg, update_message_recall_status};
 use crate::command::message_mark_command::save_message_mark;
 
-use tauri::{AppHandle, Listener, Manager};
+use tauri::{AppHandle, Manager};
+#[cfg(desktop)]
+use tauri::Listener;
 use tokio::sync::Mutex;
 
 pub fn run() {
@@ -301,7 +305,16 @@ fn setup_mobile() {
     if let Err(e) = tauri::Builder::default()
         .init_plugin()
         .setup(move |app| {
-            common_setup(app.handle().clone())?;
+            let app_handle = app.handle().clone();
+            #[cfg(target_os = "ios")]
+            {
+                if let Some(webview_window) = app_handle.get_webview_window("mobile-home") {
+                    webview_helper::initialize_keyboard_adjustment(&webview_window);
+                } else {
+                    tracing::warn!("Mobile home webview window not found during setup");
+                }
+            }
+            common_setup(app_handle)?;
             tracing::info!("Mobile application setup completed successfully");
             Ok(())
         })
@@ -359,6 +372,8 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
     use crate::desktops::common_cmd::set_badge_count;
     #[cfg(mobile)]
     use crate::mobiles::splash::hide_splash_screen;
+    #[cfg(target_os = "ios")]
+    use crate::mobiles::keyboard::set_webview_keyboard_adjustment;
     use crate::websocket::commands::{
         ws_disconnect, ws_force_reconnect, ws_get_app_background_state, ws_get_health,
         ws_get_state, ws_init_connection, ws_is_connected, ws_send_message,
@@ -440,5 +455,7 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         set_complete,
         #[cfg(mobile)]
         hide_splash_screen,
+        #[cfg(target_os = "ios")]
+        set_webview_keyboard_adjustment,
     ]
 }

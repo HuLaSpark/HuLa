@@ -17,7 +17,9 @@
 
 <script setup lang="ts">
 import 'vant/es/dialog/style'
+import { invoke } from '@tauri-apps/api/core'
 import { useGlobalStore } from '@/stores/global'
+import { isIOS } from '@/utils/PlatformConstants'
 
 const globalStore = useGlobalStore()
 const emit = defineEmits(['focus', 'blur', 'updateHeight'])
@@ -37,6 +39,16 @@ onMounted(() => {
     onUnmounted(() => {
       resizeObserver.disconnect()
     })
+  }
+
+  if (isIOS()) {
+    invoke('set_webview_keyboard_adjustment', { enabled: true })
+  }
+})
+
+onUnmounted(() => {
+  if (isIOS()) {
+    invoke('set_webview_keyboard_adjustment', { enabled: false })
   }
 })
 

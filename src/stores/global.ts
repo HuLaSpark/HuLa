@@ -33,7 +33,7 @@ export const useGlobalStore = defineStore(
     const currentSessionRoomId = ref('')
     // 当前会话信息：包含房间ID和房间类型
     const currentSession = computed((): SessionItem => {
-      return chatStore.getSession(currentSessionRoomId.value)
+      return chatStore.getSession(currentSessionRoomId.value)!
     })
 
     /** 当前选中的联系人信息 */

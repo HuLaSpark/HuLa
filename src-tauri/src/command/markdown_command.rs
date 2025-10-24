@@ -131,6 +131,7 @@ pub async fn parse_markdown(app: AppHandle, file_path: String) -> Result<String,
 
 /// 读取 README markdown 文件
 #[tauri::command]
+#[allow(unused_variables)]
 pub async fn get_readme_html(app: AppHandle, language: String) -> Result<String, String> {
     // 构建 README 文件路径
     // 在开发模式下,从项目根目录读取 README.md
