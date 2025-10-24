@@ -570,6 +570,8 @@ export enum ImUrlEnum {
   GET_CAPTCHA = 'getCaptcha',
 
   // 群公告相关
+  /** 查看群公告 */
+  ANNOUNCEMENT = 'announcement',
   /** 编辑群公告 */
   EDIT_ANNOUNCEMENT = 'editAnnouncement',
   /** 删除群公告 */
