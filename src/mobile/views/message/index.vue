@@ -96,6 +96,7 @@
             v-for="(item, idx) in sessionList"
             v-on-long-press="[(e: PointerEvent) => handleLongPress(e, item), longPressOption]"
             :key="`${item.id}-${idx}`"
+            class="text-black"
             :class="item.top ? 'w-full bg-#64A29C18' : ''">
             <!-- 长按项 -->
             <div @click.stop="intoRoom(item)" class="grid grid-cols-[2.2rem_1fr_4rem] items-start px-4 py-3 gap-1">
@@ -129,9 +130,7 @@
                   </span>
                 </div>
                 <div v-if="item.muteNotification === NotificationTypeEnum.NOT_DISTURB">
-                  <svg
-                    :class="[globalStore.currentSession?.roomId === item.roomId ? 'color-#fefefe' : 'color-#909090']"
-                    class="size-14px">
+                  <svg class="size-14px z-100 color-#909090">
                     <use href="#close-remind"></use>
                   </svg>
                 </div>
@@ -228,11 +227,11 @@ const enablePullRefresh = debounce((top: number) => {
 
 const disablePullRefresh = throttle(() => {
   isEnablePullRefresh.value = false
-}, 200)
+}, 80)
 
 const onScroll = (e: any) => {
   scrollTop = e.target.scrollTop
-  if (scrollTop < 100) {
+  if (scrollTop < 200) {
     enablePullRefresh(scrollTop)
   } else {
     disablePullRefresh()

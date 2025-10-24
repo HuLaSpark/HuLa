@@ -166,7 +166,8 @@
                     !isSpecialMsgType(message.message.type) &&
                     message.message.type !== MsgEnum.VOICE &&
                     !isMobile()
-                }
+                },
+                isMobile() ? 'max-w-170px!' : ''
               ]"
               :is="componentMap[message.message.type]"
               :body="message.message.body"

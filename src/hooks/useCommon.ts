@@ -515,6 +515,9 @@ export const useCommon = () => {
       cursor: default;
       outline: none; /* 移除focus时的轮廓 */
       `
+    if (isMobile()) {
+      replyNode.style.cssText += `max-width: 170px;`
+    }
     // 把dom中的value值作为回复信息的作者，dom中的content作为回复信息的内容
     const author = dom.accountName + '：'
     let content = dom.content
