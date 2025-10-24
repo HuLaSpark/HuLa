@@ -22,7 +22,7 @@
 <script setup lang="ts">
 import { emitTo } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { NotificationTypeEnum, TauriCommand, RoomTypeEnum } from '@/enums'
+import { NotificationTypeEnum, TauriCommand } from '@/enums'
 import { useMitt } from '@/hooks/useMitt'
 import type { MessageType } from '@/services/types'
 import { WsResponseMessageType } from '@/services/wsType'
@@ -30,7 +30,6 @@ import { useChatStore } from '@/stores/chat'
 import { useGlobalStore } from '@/stores/global'
 import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user'
-import { useGroupStore } from '@/stores/group.ts'
 import { audioManager } from '@/utils/AudioManager'
 import { isMobile, isWindows } from '@/utils/PlatformConstants'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
@@ -49,16 +48,11 @@ interface MobileLayoutProps {
   bottomSafeAreaClass?: string
 }
 
-const memberCache = ref<Map<string, any[]>>(new Map())
-const searchRef = ref('')
 const route = useRoute()
 const chatStore = useChatStore()
 const userStore = useUserStore()
-const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
 const settingStore = useSettingStore()
-const currentLoadingRoomId = ref('')
-const displayedUserList = ref<any[]>([])
 const userUid = computed(() => userStore.userInfo!.uid)
 const playMessageSound = async () => {
   // 检查是否开启了消息提示音
@@ -80,28 +74,6 @@ const props = withDefaults(defineProps<MobileLayoutProps>(), {
   backgroundImage: '',
   topSafeAreaClass: '',
   bottomSafeAreaClass: ''
-})
-
-const filteredUserList = computed(() => {
-  let userList = groupStore.userList
-  if (searchRef.value) {
-    userList = userList.filter((user) => {
-      const flag1 = user.name.toLowerCase().includes(searchRef.value.toLowerCase())
-      const flag2 = user.myName?.toLowerCase().includes(searchRef.value.toLowerCase())
-      return flag1 || flag2
-    })
-  }
-  return userList.sort((a, b) => {
-    if (a.roleId && b.roleId && a.roleId !== b.roleId) {
-      return a.roleId - b.roleId
-    }
-
-    if (a.activeStatus !== b.activeStatus) {
-      return a.activeStatus - b.activeStatus
-    }
-
-    return a.name.localeCompare(b.name)
-  })
 })
 
 // 计算背景图样式
@@ -189,36 +161,6 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
 
   await globalStore.updateGlobalUnreadCount()
 })
-
-watch(
-  () => globalStore.currentSession,
-  async (newSession, oldSession) => {
-    const currentSession = { ...newSession }
-    if (newSession?.type === RoomTypeEnum.GROUP) {
-      if (newSession?.roomId !== oldSession?.roomId) {
-        currentLoadingRoomId.value = newSession.roomId
-        // 切换时优先显示缓存，无缓存则保留旧内容，避免空白
-        const cached = memberCache.value.get(newSession.roomId)
-        if (cached && Array.isArray(cached)) {
-          displayedUserList.value = cached
-        }
-
-        // 重置群组数据后再加载新的群成员数据（不清空UI）
-        groupStore.resetGroupData()
-        try {
-          await groupStore.getGroupUserList(currentSession.roomId!)
-          // 在数据完成后替换展示列表
-          displayedUserList.value = filteredUserList.value
-          // 更新缓存
-          memberCache.value.set(currentSession.roomId!, displayedUserList.value)
-        } catch (error) {
-          console.error('加载群组信息失败:', error)
-        }
-      }
-    }
-  },
-  { immediate: true }
-)
 </script>
 
 <style scoped lang="scss">
