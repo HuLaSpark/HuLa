@@ -1,14 +1,13 @@
 import { BaseDirectory, readFile } from '@tauri-apps/plugin-fs'
 import { fetch } from '@tauri-apps/plugin-http'
 import { createEventHook } from '@vueuse/core'
-import { Md5 } from 'digest-wasm'
 import { UploadSceneEnum } from '@/enums'
 import { useConfigStore } from '@/stores/config'
 import { useUserStore } from '@/stores/user'
 import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
 import { getImageDimensions } from '@/utils/ImageUtils'
 import { getQiniuToken } from '@/utils/ImRequestUtils'
-import { isMobile } from '@/utils/PlatformConstants'
+import { isAndroid, isMobile } from '@/utils/PlatformConstants'
 
 /** 文件信息类型 */
 export type FileInfoType = {
@@ -60,6 +59,28 @@ const DEFAULT_CHUNK_SIZE = 4 * 1024 * 1024 // 默认分片大小：4MB
 const QINIU_CHUNK_SIZE = 4 * 1024 * 1024 // 七牛云分片大小：4MB
 const CHUNK_THRESHOLD = 4 * 1024 * 1024 // 4MB，超过此大小的文件将使用分片上传
 
+let wasmMd5: any | null = null
+let cryptoJS: any | null = null
+
+const loadWasmMd5 = async () => {
+  if (!wasmMd5) {
+    const module = await import('digest-wasm')
+    wasmMd5 = module.Md5
+  }
+  return wasmMd5 as { digest_u8: (data: Uint8Array) => Promise<string> }
+}
+
+const loadCryptoJS = async () => {
+  if (!cryptoJS) {
+    const module = await import('crypto-js')
+    cryptoJS = module.default ?? module
+  }
+  return cryptoJS as {
+    lib: { WordArray: { create: (arr: ArrayBuffer | Uint8Array) => any } }
+    MD5: (wordArray: any) => { toString: () => string }
+  }
+}
+
 /**
  * 文件上传Hook
  */
@@ -85,12 +106,21 @@ export const useUpload = () => {
     try {
       console.log('开始计算MD5哈希值，文件大小:', file.size, 'bytes')
       const arrayBuffer = await file.arrayBuffer()
-      // 使用digest-wasm计算MD5
-      const hash = await Md5.digest_u8(new Uint8Array(arrayBuffer))
+      const uint8Array = new Uint8Array(arrayBuffer)
+      let hash: string
+
+      if (isAndroid()) {
+        const CryptoJS = await loadCryptoJS()
+        const wordArray = CryptoJS.lib.WordArray.create(arrayBuffer as ArrayBuffer)
+        hash = CryptoJS.MD5(wordArray).toString()
+      } else {
+        const Md5 = await loadWasmMd5()
+        hash = await Md5.digest_u8(uint8Array)
+      }
       const endTime = performance.now()
       const duration = (endTime - startTime).toFixed(2)
       console.log(`MD5计算完成，耗时: ${duration}ms，哈希值: ${hash}`)
-      return hash
+      return hash.toLowerCase()
     } catch (error) {
       const endTime = performance.now()
       const duration = (endTime - startTime).toFixed(2)

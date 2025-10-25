@@ -37,15 +37,6 @@ if (isMobile()) {
   } else {
     setup()
   }
-
-  // TODO 需要测试
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker
-        .register('/hula-model-sw.js')
-        .catch((error) => console.warn('ServiceWorker registration failed:', error))
-    })
-  }
 }
 
 async function setup() {
