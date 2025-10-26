@@ -312,6 +312,65 @@ const isLoadingMore = ref(false)
 // 监听公告更新和清空事件的变量
 let announcementUpdatedListener: any = null
 let announcementClearListener: any = null
+// 获取置顶公告
+const loadTopAnnouncement = async (roomId?: string): Promise<void> => {
+  const targetRoomId = roomId ?? currentRoomId.value
+
+  if (!targetRoomId || !isGroup.value) {
+    topAnnouncement.value = null
+    return
+  }
+
+  try {
+    const data = await cacheStore.getGroupAnnouncementList(targetRoomId, 1, 1)
+    if (targetRoomId !== currentRoomId.value) {
+      return
+    }
+
+    if (data && data.records.length > 0) {
+      const topNotice = data.records.find((item: any) => item.top)
+      const oldAnnouncement = topAnnouncement.value
+      topAnnouncement.value = topNotice || null
+
+      if (oldAnnouncement !== topAnnouncement.value) {
+        const container = scrollContainerRef.value
+        if (container) {
+          const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight
+          if (distanceFromBottom <= 20) {
+            nextTick(() => {
+              scrollToBottom()
+            })
+          }
+        }
+      }
+    } else {
+      topAnnouncement.value = null
+    }
+  } catch (error) {
+    console.error('获取置顶公告失败:', error)
+    if (targetRoomId === currentRoomId.value) {
+      topAnnouncement.value = null
+    }
+  }
+}
+
+watch(
+  () => [currentRoomId.value, isGroup.value] as const,
+  async ([roomId, isGroupChat], prevValue) => {
+    const [prevRoomId, prevIsGroup] = prevValue ?? [undefined, undefined]
+    if (!roomId || !isGroupChat) {
+      topAnnouncement.value = null
+      return
+    }
+
+    if (roomId === prevRoomId && prevIsGroup === isGroupChat) {
+      return
+    }
+
+    await loadTopAnnouncement(roomId)
+  },
+  { immediate: true }
+)
 
 // 1. 监听房间切换，触发初始化滚动意图
 watch(
@@ -610,41 +669,6 @@ const handleLoadMore = async (): Promise<void> => {
   }
 }
 
-// 获取置顶公告
-const loadTopAnnouncement = async (): Promise<void> => {
-  if (currentRoomId.value && isGroup.value) {
-    try {
-      const data = await cacheStore.getGroupAnnouncementList(currentRoomId.value, 1, 1)
-      if (data && data.records.length > 0) {
-        // 查找置顶公告
-        const topNotice = data.records.find((item: any) => item.top)
-        const oldAnnouncement = topAnnouncement.value
-        topAnnouncement.value = topNotice || null
-
-        // 如果公告状态发生变化，重新滚动到底部
-        if (oldAnnouncement !== topAnnouncement.value) {
-          const container = scrollContainerRef.value
-          if (container) {
-            const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight
-            // 仅当接近底部时保持吸底，避免远离底部时的抖动
-            if (distanceFromBottom <= 20) {
-              nextTick(() => {
-                scrollToBottom()
-              })
-            }
-          }
-        }
-      } else {
-        topAnnouncement.value = null
-      }
-    } catch (error) {
-      console.error('获取置顶公告失败:', error)
-      topAnnouncement.value = null
-    }
-  }
-}
-
-// 处理点击查看公告
 const handleViewAnnouncement = (): void => {
   nextTick(async () => {
     if (!currentRoomId.value) return

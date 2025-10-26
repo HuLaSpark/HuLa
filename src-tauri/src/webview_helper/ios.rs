@@ -31,6 +31,7 @@ thread_local! {
 
 static SHOULD_ADJUST: AtomicBool = AtomicBool::new(false);
 
+/// 读取全局标记，确定当前键盘显示时的处理模式（调整或锁定）。
 #[inline]
 fn should_adjust() -> bool {
     SHOULD_ADJUST.load(Ordering::SeqCst)
@@ -48,6 +49,7 @@ enum KeyboardDelegateHolder {
     Lock(Retained<KeyboardLockDelegate>),
 }
 
+/// 初始化 iOS WebView 的键盘处理逻辑，注册通知并按模式调整布局或锁定滚动。
 pub fn initialize_keyboard_adjustment(webview_window: &WebviewWindow) {
     let _ = webview_window.with_webview(|webview| unsafe {
         #[allow(deprecated)]
@@ -84,6 +86,7 @@ pub fn initialize_keyboard_adjustment(webview_window: &WebviewWindow) {
         let original_inset_arc_observer = original_inset_arc.clone();
         let handling_mode_arc_observer = handling_mode_arc.clone();
         let webview_arc_observer = webview_arc.clone();
+        // 监听键盘即将显示，依据模式调整布局和滚动。
         create_observer(
             &notification_center,
             &UIKeyboardWillShowNotification,
@@ -265,6 +268,7 @@ pub fn initialize_keyboard_adjustment(webview_window: &WebviewWindow) {
         let original_inset_arc_observer = original_inset_arc.clone();
         let handling_mode_arc_observer = handling_mode_arc.clone();
         let webview_arc_observer = webview_arc.clone();
+        // 监听键盘即将隐藏，恢复初始布局或结束编辑。
         create_observer(
             &notification_center,
             &UIKeyboardWillHideNotification,
@@ -358,6 +362,7 @@ pub fn initialize_keyboard_adjustment(webview_window: &WebviewWindow) {
                     });
 
                     let mut old_delegate = old_delegate_arc_will_hide.lock().unwrap();
+                    // 恢复原始 UIScrollViewDelegate，确保键盘逻辑结束后行为回到默认。
                     if let Some(delegate) = old_delegate.take() {
                         scroll_view_arc_observer.setDelegate(Some(delegate.as_ref()));
                     } else {
@@ -376,6 +381,7 @@ pub fn initialize_keyboard_adjustment(webview_window: &WebviewWindow) {
         let original_frame_arc_observer = original_frame_arc.clone();
         let original_inset_arc_observer = original_inset_arc.clone();
         let handling_mode_arc_observer = handling_mode_arc.clone();
+        // 监听键盘已经显示，确保最终 frame/inset 精确同步。
         create_observer(
             &notification_center,
             &UIKeyboardDidShowNotification,
@@ -417,7 +423,7 @@ pub fn initialize_keyboard_adjustment(webview_window: &WebviewWindow) {
                 *keyboard_height = new_keyboard_height;
 
                 let mut old_delegate = old_delegate_arc_did_show.lock().unwrap();
-
+                // 键盘显示完毕后恢复原 delegate，避免累积的自定义 delegate 影响后续滚动事件。
                 if let Some(delegate) = old_delegate.take() {
                     scroll_view_arc_observer.setDelegate(Some(delegate.as_ref()));
                 } else {
@@ -432,6 +438,7 @@ pub fn initialize_keyboard_adjustment(webview_window: &WebviewWindow) {
     });
 }
 
+/// 开关键盘调整模式，使后续通知回调依据该值决定策略。
 pub fn set_keyboard_adjustment(enabled: bool) {
     SHOULD_ADJUST.store(enabled, Ordering::SeqCst);
 }
@@ -452,6 +459,7 @@ define_class! {
 
     unsafe impl UIScrollViewDelegate for KeyboardScrollPreventDelegate {
         #[unsafe(method(scrollViewDidScroll:))]
+        // 在滚动回调中强制恢复初始偏移量，避免用户拖动导致错位。
         unsafe fn scroll_view_did_scroll(&self, _scroll_view: &UIScrollView) {
             self.ivars()
                 .scroll_view
@@ -461,6 +469,7 @@ define_class! {
 }
 
 impl KeyboardScrollPreventDelegate {
+    /// 构建滚动阻止 delegate，保存目标滚动视图与初始偏移。
     fn new(
         mtm: MainThreadMarker,
         scroll_view: Arc<Retained<UIScrollView>>,
@@ -492,6 +501,7 @@ define_class! {
 
     unsafe impl UIScrollViewDelegate for KeyboardLockDelegate {
         #[unsafe(method(scrollViewWillBeginDragging:))]
+        // 用户尝试拖动时立即结束编辑并恢复锁定偏移。
         unsafe fn scroll_view_will_begin_dragging(&self, _scroll_view: &UIScrollView) {
             let ivars = self.ivars();
             let webview_ptr =
@@ -513,6 +523,7 @@ define_class! {
 }
 
 impl KeyboardLockDelegate {
+    /// 构建滚动锁定 delegate，记录滚动视图、webview 与锁定偏移。
     fn new(
         mtm: MainThreadMarker,
         scroll_view: Arc<Retained<UIScrollView>>,
@@ -529,6 +540,7 @@ impl KeyboardLockDelegate {
     }
 }
 
+/// 封装通知监听注册，使用闭包处理收到的系统通知。
 fn create_observer(
     center: &NSNotificationCenter,
     name: &NSNotificationName,

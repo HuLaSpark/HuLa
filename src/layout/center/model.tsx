@@ -4,19 +4,33 @@ import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { UserType } from '@/enums'
 
 const contactStore = useContactStore()
 const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
 
-export const options = computed(
-  () =>
-    contactStore.contactsList.map((item) => ({
-      label: groupStore.getUserInfo(item.uid)!.name,
-      value: item.uid,
-      avatar: AvatarUtils.getAvatarUrl(groupStore.getUserInfo(item.uid)!.avatar)
-    })) as any
-)
+export const options = computed(() => {
+  return contactStore.contactsList
+    .map((item) => {
+      const userInfo = groupStore.getUserInfo(item.uid)
+      const contactAccount = (item as any).account
+      const isBotAccount =
+        (userInfo?.account && userInfo.account.toLowerCase() === UserType.BOT) ||
+        (typeof contactAccount === 'string' && contactAccount.toLowerCase() === UserType.BOT)
+
+      if (isBotAccount) {
+        return null
+      }
+
+      return {
+        label: userInfo?.name || item.remark,
+        value: item.uid,
+        avatar: AvatarUtils.getAvatarUrl(userInfo?.avatar || '/logoD.png')
+      }
+    })
+    .filter(Boolean) as any
+})
 
 // 获取已禁用选项的值列表
 export const getDisabledOptions = () => {

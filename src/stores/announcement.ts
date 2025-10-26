@@ -17,7 +17,6 @@ export const useAnnouncementStore = defineStore(StoresEnum.ANNOUNCEMENT, () => {
   const announError = ref(false)
   const isAddAnnoun = ref(false)
 
-  // 计算属性
   const announcementContent = computed(() => (announList.value.length > 0 ? (announList.value[0]?.content ?? '') : ''))
 
   // 判断当前用户是否有权限添加公告
@@ -39,47 +38,55 @@ export const useAnnouncementStore = defineStore(StoresEnum.ANNOUNCEMENT, () => {
   })
 
   /**
-   * 加载群公告
+   * 清空公告
    */
-  const loadGroupAnnouncements = async () => {
-    try {
-      const roomId = globalStore.currentSession?.roomId
-      if (!roomId) {
-        console.error('当前会话没有roomId')
-        return
-      }
+  const clearAnnouncements = () => {
+    announList.value = []
+    announNum.value = 0
+    announError.value = false
+  }
 
-      // 设置是否可以添加公告
+  const formatRecords = (records: any[]) => {
+    if (!records || records.length === 0) return []
+    const topAnnouncement = records.find((item) => item.top)
+    if (!topAnnouncement) return records
+    return [topAnnouncement, ...records.filter((item) => !item.top)]
+  }
+
+  const loadGroupAnnouncements = async (roomId?: string) => {
+    const targetRoomId = roomId ?? globalStore.currentSession?.roomId
+    if (!targetRoomId) {
+      console.error('当前会话没有roomId')
+      return
+    }
+
+    try {
+      // 判断是否可以添加公告
       isAddAnnoun.value = canAddAnnouncement.value
 
       // 获取群公告列表
-      const data = await cachedStore.getGroupAnnouncementList(roomId, 1, 10)
+      const data = await cachedStore.getGroupAnnouncementList(targetRoomId, 1, 10)
+
+      // 会话已切换，避免覆盖其他房间的数据
+      if (targetRoomId !== globalStore.currentSession?.roomId) {
+        return
+      }
+
       if (data) {
-        announList.value = data.records
-        // 处理置顶公告
-        if (announList.value && announList.value.length > 0) {
-          const topAnnouncement = announList.value.find((item: any) => item.top)
-          if (topAnnouncement) {
-            announList.value = [topAnnouncement, ...announList.value.filter((item: any) => !item.top)]
-          }
-        }
+        announList.value = formatRecords([...(data.records ?? [])])
         announNum.value = parseInt(data.total, 10)
         announError.value = false
       } else {
+        announList.value = []
+        announNum.value = 0
         announError.value = false
       }
     } catch (error) {
       console.error('加载群公告失败:', error)
-      announError.value = true
+      if (targetRoomId === globalStore.currentSession?.roomId) {
+        announError.value = true
+      }
     }
-  }
-
-  /**
-   * 清空公告
-   */
-  const clearAnnouncements = () => {
-    announNum.value = 0
-    announList.value = []
   }
 
   return {

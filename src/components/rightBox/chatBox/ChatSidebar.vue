@@ -210,6 +210,7 @@ const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
 const settingStore = useSettingStore()
 const announcementStore = useAnnouncementStore()
+const { clearAnnouncements } = announcementStore
 const { themes } = storeToRefs(settingStore)
 // 当前加载的群聊ID
 const currentLoadingRoomId = ref('')
@@ -234,6 +235,28 @@ provide('popoverControls', { enableScroll })
 const displayedUserList = ref<any[]>([])
 /** 用户信息加载状态 */
 const userLoadedMap = ref<Record<string, boolean>>({})
+
+watch(
+  () => [globalStore.currentSession?.roomId, isGroup.value] as const,
+  async ([roomId, isGroupChat], prevValue) => {
+    const [prevRoomId, prevIsGroup] = prevValue ?? [undefined, undefined]
+    if (!roomId || !isGroupChat) {
+      clearAnnouncements()
+      return
+    }
+
+    if (roomId === prevRoomId && prevIsGroup === isGroupChat) {
+      return
+    }
+
+    try {
+      await announcementStore.loadGroupAnnouncements(roomId)
+    } catch (error) {
+      console.error('刷新群公告失败:', error)
+    }
+  },
+  { immediate: true }
+)
 
 // 创建过滤后的用户列表计算属性
 const filteredUserList = computed(() => {
@@ -366,7 +389,7 @@ onMounted(async () => {
   })
 
   appWindow.listen('announcementClear', async () => {
-    announNum.value = 0
+    clearAnnouncements()
   })
 
   // 初始化时获取当前群组用户的信息

@@ -25,43 +25,6 @@ const domParser = new DOMParser()
 
 const REPLY_NODE_ID = 'replyDiv'
 
-const saveCacheFile = async (file: any, subFolder: string): Promise<string> => {
-  const { userUid } = useCommon()
-  // TODO: 这里需要获取到需要发送的图片、文件的本地地址，如果不是本地地址，就需要先下载到本地cache文件夹里面
-  const fileName = file.name === null ? 'test.png' : file.name
-  const tempPath = getImageCache(subFolder, userUid.value!)
-  const fullPath = tempPath + fileName
-
-  console.log(`💾 开始保存缓存文件: ${fullPath}, 原始大小: ${file.size} bytes`)
-
-  return new Promise((resolve, reject) => {
-    const cacheReader = new FileReader()
-    cacheReader.onload = async (e: any) => {
-      try {
-        const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.AppCache
-        const isExists = await exists(tempPath, { baseDir })
-        if (!isExists) {
-          await mkdir(tempPath, { baseDir, recursive: true })
-        }
-        const tempFile = await create(fullPath, { baseDir })
-        await tempFile.write(e.target.result)
-        await tempFile.close()
-
-        console.log(`✅ 缓存文件保存成功: ${fullPath}, 写入大小: ${e.target.result.byteLength} bytes`)
-        resolve(fullPath)
-      } catch (error) {
-        reject(error)
-      }
-    }
-
-    cacheReader.onerror = (error) => {
-      reject(error)
-    }
-
-    cacheReader.readAsArrayBuffer(file)
-  })
-}
-
 /**
  * 返回dom指定id的文本
  * @param dom 指定dom
@@ -74,7 +37,6 @@ export const parseInnerText = (dom: string, id: string): string | undefined => {
 
 /** 常用工具类 */
 export const useCommon = () => {
-  const route = useRoute()
   const globalStore = useGlobalStore()
   const chatStore = useChatStore()
   const userStore = useUserStore()
@@ -89,6 +51,41 @@ export const useCommon = () => {
     key: 0,
     imgCount: 0
   })
+
+  const saveCacheFile = async (file: File, subFolder: string): Promise<string> => {
+    const fileName = file.name ?? 'test.png'
+    const tempPath = getImageCache(subFolder, userUid.value!)
+    const fullPath = `${tempPath}${fileName}`
+
+    console.log(`cache file start: ${fullPath}, size: ${file.size} bytes`)
+
+    return new Promise((resolve, reject) => {
+      const cacheReader = new FileReader()
+      cacheReader.onload = async (e: any) => {
+        try {
+          const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.AppCache
+          const isExists = await exists(tempPath, { baseDir })
+          if (!isExists) {
+            await mkdir(tempPath, { baseDir, recursive: true })
+          }
+          const tempFile = await create(fullPath, { baseDir })
+          await tempFile.write(e.target.result)
+          await tempFile.close()
+
+          console.log(`cache file saved: ${fullPath}, written: ${e.target.result.byteLength} bytes`)
+          resolve(fullPath)
+        } catch (error) {
+          reject(error)
+        }
+      }
+
+      cacheReader.onerror = (error) => {
+        reject(error)
+      }
+
+      cacheReader.readAsArrayBuffer(file)
+    })
+  }
 
   /**
    * 判断 URL 是否安全
@@ -827,7 +824,7 @@ export const useCommon = () => {
   const openMsgSession = async (uid: string, type: number = 2) => {
     // 获取home窗口实例
     const label = WebviewWindow.getCurrent().label
-    if (route.name !== '/message' && label === 'home') {
+    if (router.currentRoute.value.name !== '/message' && label === 'home') {
       router.push('/message')
     }
 
