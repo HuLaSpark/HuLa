@@ -68,6 +68,7 @@ pub async fn cursor_page_room_members(
         is_last,
         list: Some(members),
         total,
+        ordered: None,
     })
 }
 

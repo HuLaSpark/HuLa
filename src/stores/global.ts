@@ -90,7 +90,7 @@ export const useGlobalStore = defineStore(
     }
 
     // 监听当前会话变化，添加防重复触发逻辑
-    watch(currentSessionRoomId, async (val, oldVal) => {
+    watch(currentSessionRoomId, (val, oldVal) => {
       const webviewWindowLabel = WebviewWindow.getCurrent()
       if (webviewWindowLabel.label !== 'home' && webviewWindowLabel.label !== '/mobile/message') {
         return
@@ -103,7 +103,7 @@ export const useGlobalStore = defineStore(
         // 延攱1秒后开始查询已读数
         setTimeout(readCountQueue, 1000)
         // 标记该房间的消息为已读
-        markMsgRead(val! || '1')
+        void markMsgRead(val! || '1')
         // 更新会话的已读状态
         chatStore.markSessionRead(val! || '1')
       }

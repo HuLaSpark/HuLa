@@ -124,6 +124,26 @@ export type GroupDetailReq = {
   allowScanEnter: boolean
 }
 
+export type SessionSnapshot = {
+  roomId: string
+  unreadCount: number
+  lastMsg?: string
+  lastMsgTime?: string
+  lastMsgTimestamp?: number
+  lastMsgId?: string
+  isAtMe?: boolean
+}
+
+export type SwitchRoomResponse = {
+  cursor: string
+  isLast: boolean
+  ordered?: boolean
+  messages: MessageType[]
+  sessionSnapshot?: SessionSnapshot | null
+  memberSnippet?: unknown
+  announcement?: unknown
+}
+
 export type GroupListReq = {
   /** 群聊id */
   groupId: string
@@ -652,6 +672,14 @@ export type SessionItem = {
   remark?: string
   /** 我的群昵称 */
   myName?: string
+  /** 会话展示的最后一条消息 */
+  lastMsg?: string
+  /** 会话展示的最后消息时间字符串 */
+  lastMsgTime?: string
+  /** 最后一条消息的时间戳，用于排序 */
+  lastMsgTimestamp?: number
+  /** 是否存在@当前用户的消息 */
+  isAtMe?: boolean
   /** 是否选中（非后端） */
   isCheck?: boolean
   allowScanEnter: boolean

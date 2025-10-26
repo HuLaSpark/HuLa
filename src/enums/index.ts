@@ -499,6 +499,8 @@ export enum TauriCommand {
   LIST_CONTACTS = 'list_contacts_command',
   /** 分页查询会话消息 */
   PAGE_MSG = 'page_msg',
+  /** 聚合会话切换数据 */
+  SWITCH_ROOM = 'switch_room',
   /** 保存用户信息 */
   SAVE_USER_INFO = 'save_user_info',
   /** 更新用户最后操作时间 */

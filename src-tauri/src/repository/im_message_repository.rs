@@ -185,6 +185,7 @@ pub async fn cursor_page_messages(
             is_last: true,
             list: Some(vec![]),
             total,
+            ordered: None,
         });
     }
 
@@ -205,6 +206,7 @@ pub async fn cursor_page_messages(
         is_last,
         list: Some(messages),
         total,
+        ordered: None,
     })
 }
 

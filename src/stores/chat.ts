@@ -5,7 +5,14 @@ import { defineStore } from 'pinia'
 import { useRoute } from 'vue-router'
 import { ErrorType } from '@/common/exception'
 import { type MessageStatusEnum, MsgEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
-import type { MarkItemType, MessageType, RevokedMsgType, SessionItem } from '@/services/types'
+import type {
+  MarkItemType,
+  MessageType,
+  RevokedMsgType,
+  SessionItem,
+  SessionSnapshot,
+  SwitchRoomResponse
+} from '@/services/types'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { useUserStore } from '@/stores/user.ts'
@@ -13,6 +20,7 @@ import { getSessionDetail } from '@/utils/ImRequestUtils'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 import { unreadCountManager } from '@/utils/UnreadCountManager'
+import { formatTimestamp } from '@/utils/ComputedTime'
 
 type RecalledMessage = {
   messageId: string
@@ -54,10 +62,118 @@ export const useChatStore = defineStore(
     // 会话列表的加载状态
     const sessionOptions = reactive({ isLast: false, isLoading: false, cursor: '' })
 
-    // 存储所有消息的Record
-    const messageMap = reactive<Record<string, Record<string, MessageType>>>({})
+    // 消息桶（保持原始顺序），避免重复排序
+    const messageMap = shallowRef(new Map<string, MessageType[]>())
+    const messageIndexMap = new Map<string, Map<string, number>>()
     // 消息加载状态
     const messageOptions = reactive<Record<string, { isLast: boolean; isLoading: boolean; cursor: string }>>({})
+
+    const normalizeMessageId = (msg: MessageType) => {
+      if (!msg.message.id) {
+        msg.message.id = `${msg.message.roomId}_${msg.message.sendTime}_${msg.fromUser.uid}`
+      }
+      return String(msg.message.id)
+    }
+
+    const ensureMessageBuckets = () => {
+      if (messageMap.value instanceof Map) {
+        return messageMap.value
+      }
+      const fallback = messageMap.value
+      const converted = new Map<string, MessageType[]>()
+      if (fallback && typeof fallback === 'object') {
+        Object.entries(fallback as Record<string, MessageType[] | undefined>).forEach(([roomId, list]) => {
+          if (Array.isArray(list)) {
+            converted.set(roomId, list)
+          }
+        })
+      }
+      messageMap.value = converted
+      return converted
+    }
+
+    const getRoomMessages = (roomId: string) => ensureMessageBuckets().get(roomId) ?? []
+
+    const rebuildMessageIndex = (roomId: string, list: MessageType[]) => {
+      const indexMap = new Map<string, number>()
+      list.forEach((item, idx) => indexMap.set(normalizeMessageId(item), idx))
+      messageIndexMap.set(roomId, indexMap)
+    }
+
+    const upsertRoomMessages = (roomId: string, list: MessageType[]) => {
+      const base = ensureMessageBuckets()
+      const next = new Map(base)
+      next.set(roomId, markRaw(list))
+      messageMap.value = next
+      rebuildMessageIndex(roomId, list)
+    }
+
+    const updateRoomMessages = (roomId: string, updater: (messages: MessageType[]) => MessageType[]) => {
+      const current = getRoomMessages(roomId)
+      const next = updater([...current])
+      upsertRoomMessages(roomId, next)
+    }
+
+    const sortMessages = (messages: MessageType[]) =>
+      messages.sort((a, b) => {
+        const timeA = Number(a.message.sendTime ?? 0)
+        const timeB = Number(b.message.sendTime ?? 0)
+        if (timeA !== timeB) return timeA - timeB
+        return normalizeMessageId(a).localeCompare(normalizeMessageId(b))
+      })
+
+    const mergeMessagePage = (roomId: string, incoming: MessageType[], cursor?: string) => {
+      if (!cursor) {
+        const normalized = incoming.map((item) => ({ ...item }))
+        normalized.forEach(normalizeMessageId)
+        sortMessages(normalized)
+        upsertRoomMessages(roomId, normalized)
+        return
+      }
+
+      if (!incoming.length) return
+
+      updateRoomMessages(roomId, (current) => {
+        const seen = new Set<string>()
+        const merged: MessageType[] = []
+        const append = (list: MessageType[]) => {
+          for (const item of list) {
+            const id = normalizeMessageId(item)
+            if (seen.has(id)) continue
+            seen.add(id)
+            merged.push(item)
+          }
+        }
+        append(incoming.map((item) => ({ ...item })))
+        append(current)
+        sortMessages(merged)
+        return merged
+      })
+    }
+
+    const getMessageById = (roomId: string, messageId: string) => {
+      const index = messageIndexMap.get(roomId)?.get(messageId)
+      if (index === undefined) return undefined
+      return getRoomMessages(roomId)[index]
+    }
+
+    const removeMessageById = (roomId: string, messageId: string) => {
+      updateRoomMessages(roomId, (current) => current.filter((item) => normalizeMessageId(item) !== messageId))
+    }
+
+    const upsertSingleMessage = (roomId: string, message: MessageType) => {
+      updateRoomMessages(roomId, (current) => {
+        const id = normalizeMessageId(message)
+        const index = messageIndexMap.get(roomId)?.get(id)
+        if (index !== undefined) {
+          current[index] = message
+          return current
+        }
+        const next = [...current, message]
+        sortMessages(next)
+        return next
+      })
+    }
 
     // 回复消息的映射关系
     const replyMapping = reactive<Record<string, Record<string, string[]>>>({})
@@ -69,8 +185,20 @@ export const useChatStore = defineStore(
     const msgMultiChooseMode = ref<'normal' | 'forward'>('normal')
 
     // 当前聊天室的消息Map计算属性
+    const currentRoomMessages = computed(() => {
+      const roomId = globalStore.currentSession?.roomId
+      if (!roomId) return []
+      return getRoomMessages(roomId)
+    })
+
     const currentMessageMap = computed(() => {
-      return messageMap[globalStore.currentSession!.roomId] || {}
+      const roomId = globalStore.currentSession?.roomId
+      if (!roomId) return {} as Record<string, MessageType>
+      const record: Record<string, MessageType> = {}
+      for (const item of getRoomMessages(roomId)) {
+        record[normalizeMessageId(item)] = item
+      }
+      return record
     })
 
     // 当前聊天室的消息加载状态计算属性
@@ -137,7 +265,7 @@ export const useChatStore = defineStore(
       }
     })
 
-    const changeRoom = async () => {
+    const changeRoom = () => {
       const currentWindowLabel = WebviewWindow.getCurrent()
       if (currentWindowLabel.label !== 'home' && currentWindowLabel.label !== 'mobile-home') {
         return
@@ -156,26 +284,14 @@ export const useChatStore = defineStore(
         }
       }
 
-      try {
-        // 从服务器加载消息
-        await getMsgList(pageSize, true)
-      } catch (error) {
-        console.error('无法加载消息:', error)
-        currentMessageOptions.value = {
-          isLast: false,
-          isLoading: false,
-          cursor: ''
-        }
-      }
+      void getMsgList(pageSize, true)
 
-      // 标记当前会话已读
       const session = sessionList.value.find((s) => s.roomId === globalStore.currentSession!.roomId)
       if (session?.unreadCount) {
         markSessionRead(globalStore.currentSession!.roomId)
         updateTotalUnreadCount()
       }
 
-      // 重置当前回复的消息
       currentMsgReply.value = {}
     }
 
@@ -183,16 +299,10 @@ export const useChatStore = defineStore(
     const currentMsgReply = ref<Partial<MessageType>>({})
 
     // 将消息列表转换为数组并计算时间间隔
-    const chatMessageList = computed(() => {
-      if (!currentMessageMap.value || Object.keys(currentMessageMap.value).length === 0) return []
-
-      return Object.values(currentMessageMap.value).sort((a, b) => Number(a.message.id) - Number(b.message.id))
-    })
+    const chatMessageList = computed(() => currentRoomMessages.value)
 
     const chatMessageListByRoomId = computed(() => (roomId: string) => {
-      if (!messageMap[roomId] || Object.keys(messageMap[roomId]).length === 0) return []
-
-      return Object.values(messageMap[roomId]).sort((a, b) => Number(a.message.id) - Number(b.message.id))
+      return getRoomMessages(roomId)
     })
 
     // 登录之后，加载一次所有会话的消息
@@ -204,47 +314,74 @@ export const useChatStore = defineStore(
     }
 
     // 获取消息列表
-    const getMsgList = async (size = pageSize, async?: boolean) => {
+    const getMsgList = async (size = pageSize, asyncFetch?: boolean) => {
       await info('获取消息列表')
-      // 获取当前房间ID，用于后续比较
       const requestRoomId = globalStore.currentSession!.roomId
 
-      await getPageMsg(size, requestRoomId, currentMessageOptions.value?.cursor, async)
+      try {
+        await getPageMsg(size, requestRoomId, currentMessageOptions.value?.cursor, asyncFetch)
+      } catch (error) {
+        console.error('无法加载消息:', error)
+        messageOptions[requestRoomId] = {
+          isLast: false,
+          isLoading: false,
+          cursor: ''
+        }
+      }
     }
 
-    const getPageMsg = async (pageSize: number, roomId: string, cursor: string = '', async?: boolean) => {
-      // 查询本地存储，获取消息数据
-      const data: any = await invokeWithErrorHandler(
+    const getPageMsg = async (pageSize: number, roomId: string, cursor: string = '', asyncFetch?: boolean) => {
+      if (!cursor) {
+        const data = (await invokeWithErrorHandler(
+          TauriCommand.SWITCH_ROOM,
+          {
+            param: {
+              roomId,
+              limit: pageSize
+            }
+          },
+          {
+            customErrorMessage: '获取会话切换数据失败',
+            errorType: ErrorType.Network
+          }
+        )) as SwitchRoomResponse
+
+        messageOptions[roomId] = {
+          isLast: data.isLast,
+          isLoading: false,
+          cursor: data.cursor
+        }
+
+        const messages = Array.isArray(data.messages) ? data.messages : []
+        mergeMessagePage(roomId, messages)
+        queueMicrotask(() => updateSessionSnapshot(roomId, data.sessionSnapshot ?? null))
+        return
+      }
+
+      const data = (await invokeWithErrorHandler(
         TauriCommand.PAGE_MSG,
         {
           param: {
-            pageSize: pageSize,
-            cursor: cursor,
-            roomId: roomId,
-            async: !!async
+            pageSize,
+            cursor,
+            roomId,
+            async: !!asyncFetch
           }
         },
         {
           customErrorMessage: '获取消息列表失败',
           errorType: ErrorType.Network
         }
-      )
+      )) as { isLast: boolean; cursor: string; list?: MessageType[] }
 
-      // 更新 messageOptions
       messageOptions[roomId] = {
         isLast: data.isLast,
         isLoading: false,
         cursor: data.cursor
       }
 
-      // 确保 messageMap[roomId] 已初始化
-      if (!messageMap[roomId]) {
-        messageMap[roomId] = {}
-      }
-
-      for (const msg of data.list) {
-        messageMap[roomId][msg.message.id] = msg
-      }
+      const fetchedList: MessageType[] = Array.isArray(data.list) ? data.list : []
+      mergeMessagePage(roomId, fetchedList, cursor)
     }
 
     // 获取会话列表
@@ -300,6 +437,26 @@ export const useChatStore = defineStore(
       }
     }
 
+    const updateSessionSnapshot = (roomId: string, snapshot?: SessionSnapshot | null) => {
+      if (!snapshot) return
+      const session = sessionList.value.find((item) => item.roomId === roomId)
+      if (!session) return
+
+      session.unreadCount = snapshot.unreadCount ?? session.unreadCount
+      if (snapshot.lastMsg !== undefined) {
+        session.lastMsg = snapshot.lastMsg ?? ''
+      }
+      if (snapshot.lastMsgTime !== undefined) {
+        session.lastMsgTime = snapshot.lastMsgTime ?? ''
+      }
+      if (snapshot.lastMsgTimestamp !== undefined) {
+        session.lastMsgTimestamp = snapshot.lastMsgTimestamp ?? undefined
+      }
+      if (snapshot.isAtMe !== undefined) {
+        session.isAtMe = snapshot.isAtMe
+      }
+    }
+
     // 更新会话最后活跃时间, 只要更新的过程中会话不存在，那么将会话刷新出来
     const updateSessionLastActiveTime = (roomId: string) => {
       const session = sessionList.value.find((item) => item.roomId === roomId)
@@ -325,78 +482,61 @@ export const useChatStore = defineStore(
 
     // 推送消息
     const pushMsg = async (msg: MessageType, options: { isActiveChatView?: boolean; activeRoomId?: string } = {}) => {
-      if (!msg.message.id) {
-        msg.message.id = `${msg.message.roomId}_${msg.message.sendTime}_${msg.fromUser.uid}`
-      }
-      const messageKey = msg.message.id
-
-      let roomMessages = messageMap[msg.message.roomId]
-      if (!roomMessages) {
-        roomMessages = {}
-        messageMap[msg.message.roomId] = roomMessages
-      }
-
-      const existedMsg = roomMessages[messageKey]
-      roomMessages[messageKey] = msg
-
-      if (existedMsg) {
-        return
-      }
+      const roomId = msg.message.roomId
+      const normalizedMsg: MessageType = { ...msg }
+      normalizeMessageId(normalizedMsg)
+      upsertSingleMessage(roomId, normalizedMsg)
 
       const targetRoomId = options.activeRoomId ?? globalStore.currentSessionRoomId ?? ''
       let isActiveChatView = options.isActiveChatView
       if (isActiveChatView === undefined) {
         const currentPath = route?.path
         isActiveChatView =
-          (currentPath === '/message' || currentPath?.startsWith('/mobile/chatRoom')) &&
-          targetRoomId === msg.message.roomId
+          (currentPath === '/message' || currentPath?.startsWith('/mobile/chatRoom')) && targetRoomId === roomId
       }
 
-      // 获取用户信息缓存
-      const uid = msg.fromUser.uid
-      const cacheUser = groupStore.getUserInfo(uid)
-
-      // 更新会话的文本属性和未读数
-      const session = updateSessionLastActiveTime(msg.message.roomId)
+      const cacheUser = groupStore.getUserInfo(normalizedMsg.fromUser.uid)
+      const session = updateSessionLastActiveTime(roomId)
       if (session) {
-        const lastMsgUserName = cacheUser?.name
         const formattedText =
-          msg.message.type === MsgEnum.RECALL
+          normalizedMsg.message.type === MsgEnum.RECALL
             ? session.type === RoomTypeEnum.GROUP
-              ? `${lastMsgUserName}:撤回了一条消息`
-              : msg.fromUser.uid === userStore.userInfo!.uid
+              ? `${cacheUser?.name}:撤回了一条消息`
+              : normalizedMsg.fromUser.uid === userStore.userInfo!.uid
                 ? '你撤回了一条消息'
                 : '对方撤回了一条消息'
             : renderReplyContent(
-                lastMsgUserName,
-                msg.message.type,
-                msg.message.body?.content || msg.message.body,
+                cacheUser?.name,
+                normalizedMsg.message.type,
+                normalizedMsg.message.body?.content || normalizedMsg.message.body,
                 session.type
               )
-        session.text = formattedText!
-        // 更新未读数
-        if (msg.fromUser.uid !== userStore.userInfo!.uid) {
-          if (!isActiveChatView || msg.message.roomId !== targetRoomId) {
+        session.text = formattedText ?? session.text
+        session.lastMsg = session.text
+        session.lastMsgTimestamp = normalizedMsg.message.sendTime || Date.now()
+        if (normalizedMsg.message.sendTime) {
+          session.lastMsgTime = formatTimestamp(normalizedMsg.message.sendTime)
+        }
+
+        if (normalizedMsg.fromUser.uid !== userStore.userInfo!.uid) {
+          if (!isActiveChatView || roomId !== targetRoomId) {
             session.unreadCount = (session.unreadCount || 0) + 1
-            // 使用防抖机制更新，适合并发消息场景
             requestUnreadCountUpdate()
           }
         }
       }
 
-      // 如果收到的消息里面是艾特自己的就发送系统通知
-      if (msg.message.body.atUidList?.includes(userStore.userInfo!.uid) && cacheUser) {
+      if (normalizedMsg.message.body?.atUidList?.includes(userStore.userInfo!.uid) && cacheUser) {
         sendNotification({
           title: cacheUser.name as string,
-          body: msg.message.body.content,
+          body: normalizedMsg.message.body.content,
           icon: cacheUser.avatar as string
         })
       }
     }
 
     const checkMsgExist = (roomId: string, msgId: string) => {
-      const current = messageMap[roomId]
-      return current && msgId in current
+      return messageIndexMap.get(roomId)?.has(msgId) ?? false
     }
 
     const clearMsgCheck = () => {
@@ -405,13 +545,10 @@ export const useChatStore = defineStore(
 
     // 过滤掉拉黑用户的发言
     const filterUser = (uid: string) => {
-      for (const roomId in messageMap) {
-        const messages = messageMap[roomId]
-        for (const msgId in messages) {
-          const msg = messages[msgId]
-          if (msg.fromUser.uid === uid) {
-            delete messages[msgId]
-          }
+      for (const [roomId, messages] of messageMap.value.entries()) {
+        const filtered = messages.filter((msg) => msg.fromUser.uid !== uid)
+        if (filtered.length !== messages.length) {
+          upsertRoomMessages(roomId, filtered)
         }
       }
     }
@@ -430,8 +567,10 @@ export const useChatStore = defineStore(
     // 查找消息在列表里面的索引
     const getMsgIndex = (msgId: string) => {
       if (!msgId) return -1
-      const keys = currentMessageMap.value ? Object.keys(currentMessageMap.value) : []
-      return keys.indexOf(msgId)
+      const roomId = globalStore.currentSession?.roomId
+      if (!roomId) return -1
+      const index = messageIndexMap.get(roomId)?.get(String(msgId))
+      return index ?? -1
     }
 
     // 更新所有标记类型的数量
@@ -457,7 +596,9 @@ export const useChatStore = defineStore(
           }
         )
 
-        const msgItem = currentMessageMap.value?.[String(msgId)]
+        const roomId = globalStore.currentSession?.roomId
+        if (!roomId) continue
+        const msgItem = getMessageById(roomId, String(msgId))
         if (msgItem && msgItem.message.messageMarks) {
           // 获取当前的标记状态，如果不存在则初始化
           const currentMarkStat = msgItem.message.messageMarks[String(markType)] || {
@@ -487,6 +628,7 @@ export const useChatStore = defineStore(
 
           // 更新messageMark对象
           msgItem.message.messageMarks[String(markType)] = currentMarkStat
+          upsertSingleMessage(roomId, { ...msgItem, message: { ...msgItem.message } })
         }
       }
     }
@@ -517,80 +659,96 @@ export const useChatStore = defineStore(
     // 更新消息撤回状态
     const updateRecallMsg = async (data: RevokedMsgType) => {
       const { msgId } = data
-      const message = currentMessageMap.value?.[msgId]
-      if (message && typeof data.recallUid === 'string') {
-        let recallMessageBody: string = ''
+      const roomId = data.roomId ?? globalStore.currentSession?.roomId
+      if (!roomId) return
 
-        const currentUid = userStore.userInfo!.uid
-        // 被撤回消息的原始发送人
-        const senderUid = message.fromUser.uid
+      const message = getMessageById(roomId, String(msgId))
+      if (!message || typeof data.recallUid !== 'string') return
 
-        const isRecallerCurrentUser = data.recallUid === currentUid
-        const isSenderCurrentUser = senderUid === currentUid
+      let recallMessageBody = ''
 
-        if (isRecallerCurrentUser) {
-          // 当前用户是撤回操作执行者
-          if (data.recallUid === senderUid) {
-            // 自己的视角
-            recallMessageBody = '你撤回了一条消息'
-          } else {
-            // 撤回他人的消息：群主/管理员视角
-            const senderUser = groupStore.getUserInfo(senderUid)!
-            recallMessageBody = `你撤回了${senderUser.name}的一条消息`
-          }
+      const currentUid = userStore.userInfo!.uid
+      const senderUid = message.fromUser.uid
+
+      const isRecallerCurrentUser = data.recallUid === currentUid
+      const isSenderCurrentUser = senderUid === currentUid
+
+      if (isRecallerCurrentUser) {
+        // 当前用户是撤回操作执行者
+        if (data.recallUid === senderUid) {
+          // 自己的视角
+          recallMessageBody = '你撤回了一条消息'
         } else {
-          // 当前用户不是撤回操作执行者
-          const isLord = groupStore.isCurrentLord(data.recallUid)
-          const isAdmin = groupStore.isAdmin(data.recallUid)
-
-          // 构建角色前缀
-          let rolePrefix = ''
-          if (isLord) {
-            rolePrefix = '群主'
-          } else if (isAdmin) {
-            rolePrefix = '管理员'
-          }
-          // 普通成员不显示角色前缀
-          if (isSenderCurrentUser) {
-            // 当前用户是被撤回消息的发送者（被撤回者视角）
-            recallMessageBody = `${rolePrefix}撤回了你的一条消息`
-          } else {
-            // 当前用户是旁观者（其他成员视角）
-            recallMessageBody = `${rolePrefix}撤回了一条消息`
-          }
+          // 撤回他人的消息：群主/管理员视角
+          const senderUser = groupStore.getUserInfo(senderUid)!
+          recallMessageBody = `你撤回了${senderUser.name}的一条消息`
         }
+      } else {
+        // 当前用户不是撤回操作执行者
+        const isLord = groupStore.isCurrentLord(data.recallUid)
+        const isAdmin = groupStore.isAdmin(data.recallUid)
 
-        // 更新前端缓存
-        message.message.type = MsgEnum.RECALL
-        message.message.body.content = recallMessageBody
-
-        // 同步更新 SQLite 数据库
-        try {
-          await invokeWithErrorHandler(
-            TauriCommand.UPDATE_MESSAGE_RECALL_STATUS,
-            {
-              messageId: message.message.id,
-              messageType: MsgEnum.RECALL,
-              messageBody: recallMessageBody
-            },
-            {
-              customErrorMessage: '更新撤回消息状态失败',
-              errorType: ErrorType.Client
-            }
-          )
-          info(`✅ [RECALL] Successfully updated message recall status in database, message_id: ${msgId}`)
-        } catch (error) {
-          console.error(`❌ [RECALL] Failed to update message recall status in database:`, error)
+        // 构建角色前缀
+        let rolePrefix = ''
+        if (isLord) {
+          rolePrefix = '群主'
+        } else if (isAdmin) {
+          rolePrefix = '管理员'
+        }
+        // 普通成员不显示角色前缀
+        if (isSenderCurrentUser) {
+          // 当前用户是被撤回消息的发送者（被撤回者视角）
+          recallMessageBody = `${rolePrefix}撤回了你的一条消息`
+        } else {
+          // 当前用户是旁观者（其他成员视角）
+          recallMessageBody = `${rolePrefix}撤回了一条消息`
         }
       }
 
-      // 更新与这条撤回消息有关的消息
+      const nextBody =
+        message.message.body && typeof message.message.body === 'object'
+          ? { ...message.message.body, content: recallMessageBody }
+          : { content: recallMessageBody }
+
+      const recalledMessage: MessageType = {
+        ...message,
+        message: {
+          ...message.message,
+          type: MsgEnum.RECALL,
+          body: nextBody
+        }
+      }
+
+      upsertSingleMessage(roomId, recalledMessage)
+
+      try {
+        await invokeWithErrorHandler(
+          TauriCommand.UPDATE_MESSAGE_RECALL_STATUS,
+          {
+            messageId: recalledMessage.message.id,
+            messageType: MsgEnum.RECALL,
+            messageBody: recallMessageBody
+          },
+          {
+            customErrorMessage: '更新撤回消息状态失败',
+            errorType: ErrorType.Client
+          }
+        )
+        info(`✅ [RECALL] Successfully updated message recall status in database, message_id: ${msgId}`)
+      } catch (error) {
+        console.error(`❌ [RECALL] Failed to update message recall status in database:`, error)
+      }
+
       const messageList = currentReplyMap.value?.[msgId]
       if (messageList) {
         for (const id of messageList) {
-          const msg = currentMessageMap.value?.[id]
-          if (msg) {
-            msg.message.body.reply.body = '原消息已被撤回'
+          const replyMessage = getMessageById(roomId, id)
+          if (replyMessage && replyMessage.message.body?.reply) {
+            replyMessage.message.body.reply.body = '原消息已被撤回'
+            upsertSingleMessage(roomId, {
+              ...replyMessage,
+              message: { ...replyMessage.message, body: { ...replyMessage.message.body } }
+            })
           }
         }
       }
@@ -602,10 +760,10 @@ export const useChatStore = defineStore(
     }
 
     // 删除消息
-    const deleteMsg = (msgId: string) => {
-      if (currentMessageMap.value && msgId in currentMessageMap.value) {
-        delete currentMessageMap.value[msgId]
-      }
+    const deleteMsg = (msgId: string, roomId?: string) => {
+      const targetRoomId = roomId ?? globalStore.currentSession?.roomId
+      if (!targetRoomId) return
+      removeMessageById(targetRoomId, String(msgId))
     }
 
     // 更新消息
@@ -624,34 +782,36 @@ export const useChatStore = defineStore(
       uploadProgress?: number
       timeBlock?: number
     }) => {
-      const msg = currentMessageMap.value?.[msgId]
-      if (msg) {
-        msg.message.status = status
-        msg.timeBlock = timeBlock
-        if (newMsgId) {
-          msg.message.id = newMsgId
-        }
-        if (body) {
-          msg.message.body = body
-        }
-        if (uploadProgress !== undefined) {
-          console.log(`📱 更新消息进度: ${uploadProgress}% (消息ID: ${msgId})`)
-          // 确保响应式更新，创建新的消息对象
-          const updatedMsg = { ...msg, uploadProgress }
-          if (currentMessageMap.value) {
-            currentMessageMap.value[msg.message.id] = updatedMsg
-          }
-          // 强制触发响应式更新
-          messageMap[globalStore.currentSession!.roomId] = { ...currentMessageMap.value }
-        } else {
-          if (currentMessageMap.value) {
-            currentMessageMap.value[msg.message.id] = msg
-          }
-        }
-        if (newMsgId && msgId !== newMsgId && currentMessageMap.value) {
-          delete currentMessageMap.value[msgId]
-        }
+      const roomId = globalStore.currentSession?.roomId
+      if (!roomId) return
+
+      const message = getMessageById(roomId, String(msgId))
+      if (!message) return
+
+      if (uploadProgress !== undefined) {
+        console.log(`📱 更新消息进度: ${uploadProgress}% (消息ID: ${msgId})`)
       }
+
+      const nextMessage: MessageType = {
+        ...message,
+        message: {
+          ...message.message,
+          status,
+          id: newMsgId ?? message.message.id,
+          body: body ?? message.message.body
+        },
+        timeBlock: timeBlock ?? message.timeBlock
+      }
+
+      if (uploadProgress !== undefined) {
+        nextMessage.uploadProgress = uploadProgress
+      }
+
+      if (newMsgId && newMsgId !== msgId) {
+        removeMessageById(roomId, String(msgId))
+      }
+
+      upsertSingleMessage(roomId, nextMessage)
     }
 
     // 标记已读数为 0
@@ -667,8 +827,10 @@ export const useChatStore = defineStore(
     }
 
     // 根据消息id获取消息体
-    const getMessage = (messageId: string) => {
-      return currentMessageMap.value?.[messageId]
+    const getMessage = (messageId: string, roomId?: string) => {
+      const targetRoomId = roomId ?? globalStore.currentSession?.roomId
+      if (!targetRoomId) return undefined
+      return getMessageById(targetRoomId, String(messageId))
     }
 
     // 删除会话
@@ -676,6 +838,10 @@ export const useChatStore = defineStore(
       const index = sessionList.value.findIndex((session) => session.roomId === roomId)
       if (index !== -1) {
         sessionList.value.splice(index, 1)
+        const next = new Map(ensureMessageBuckets())
+        next.delete(roomId)
+        messageMap.value = next
+        messageIndexMap.delete(roomId)
         if (globalStore.currentSessionRoomId === roomId) {
           globalStore.updateCurrentSessionRoomId(sessionList.value[0].roomId)
         }
@@ -745,21 +911,10 @@ export const useChatStore = defineStore(
     }
 
     const clearRedundantMessages = (roomId: string) => {
-      const currentMessages = messageMap[roomId]
-      if (!currentMessages) return
-
-      // 将消息转换为数组并按消息ID倒序排序
-      const sortedMessages = Object.values(currentMessages).sort((a, b) => Number(b.message.id) - Number(a.message.id))
-
-      // 保留前20条消息的ID
-      const keepMessageIds = new Set(sortedMessages.slice(0, 20).map((msg) => msg.message.id))
-
-      // 删除多余的消息
-      for (const msgId in currentMessages) {
-        if (!keepMessageIds.has(msgId)) {
-          delete currentMessages[msgId]
-        }
-      }
+      const current = getRoomMessages(roomId)
+      if (current.length <= 20) return
+      const trimmed = current.slice(-20)
+      upsertRoomMessages(roomId, trimmed)
     }
 
     // 重置当前聊天室的消息并刷新最新消息
@@ -771,9 +926,7 @@ export const useChatStore = defineStore(
 
       try {
         // 1. 清空消息数据 避免竞态条件
-        if (messageMap[requestRoomId]) {
-          messageMap[requestRoomId] = {}
-        }
+        upsertRoomMessages(requestRoomId, [])
 
         // 2. 重置消息加载状态，强制cursor为空以获取最新消息
         messageOptions[requestRoomId] = {

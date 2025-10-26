@@ -24,6 +24,8 @@ pub struct CursorPageResp<T> {
     pub is_last: bool,
     pub list: Option<T>,
     pub total: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ordered: Option<bool>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

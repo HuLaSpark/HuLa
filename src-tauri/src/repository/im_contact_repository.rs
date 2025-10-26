@@ -95,3 +95,18 @@ pub async fn update_contact_hide(
 
     Ok(())
 }
+
+pub async fn find_contact_by_room(
+    db: &DatabaseConnection,
+    room_id: &str,
+    login_uid: &str,
+) -> Result<Option<im_contact::Model>, CommonError> {
+    let contact = im_contact::Entity::find()
+        .filter(im_contact::Column::RoomId.eq(room_id))
+        .filter(im_contact::Column::LoginUid.eq(login_uid))
+        .one(db)
+        .await
+        .map_err(|e| anyhow::anyhow!("Failed to query contact by room {}: {}", room_id, e))?;
+
+    Ok(contact)
+}

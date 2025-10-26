@@ -70,7 +70,9 @@ use crate::command::contact_command::{hide_contact_command, list_contacts_comman
 use crate::command::file_manager_command::{
     debug_message_stats, get_navigation_items, query_files,
 };
-use crate::command::message_command::{page_msg, save_msg, send_msg, update_message_recall_status};
+use crate::command::message_command::{
+    page_msg, save_msg, send_msg, switch_room, update_message_recall_status,
+};
 use crate::command::message_mark_command::save_message_mark;
 
 use tauri::{AppHandle, Manager};
@@ -423,6 +425,7 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         list_contacts_command,
         hide_contact_command,
         page_msg,
+        switch_room,
         send_msg,
         save_msg,
         update_message_recall_status,

@@ -2,18 +2,19 @@ use crate::AppData;
 use crate::error::CommonError;
 use crate::im_request_client::{ImRequestClient, ImUrl};
 use crate::pojo::common::{CursorPageParam, CursorPageResp};
-use crate::repository::{im_message_repository, im_user_repository};
+use crate::repository::{im_contact_repository, im_message_repository, im_user_repository};
 use crate::vo::vo::ChatMessageReq;
 
 use entity::im_user::Entity as ImUserEntity;
-use entity::{im_message, im_user};
+use entity::{im_contact, im_message, im_user};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use sea_orm::{DatabaseConnection, TransactionTrait};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::ops::Deref;
-use tauri::{State, ipc::Channel};
+use tauri::{async_runtime, State, ipc::Channel};
 use tracing::{debug, error, info};
+use chrono::{Datelike, Local, TimeZone, Weekday};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -91,6 +92,49 @@ pub struct CursorPageMessageParam {
     cursor_page_param: CursorPageParam,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SwitchRoomParam {
+    pub room_id: String,
+    #[serde(default)]
+    pub limit: Option<u32>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SessionSnapshot {
+    pub room_id: String,
+    pub unread_count: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_msg: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_msg_time: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_msg_timestamp: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_msg_id: Option<String>,
+    pub is_at_me: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SwitchRoomResp {
+    pub cursor: String,
+    pub is_last: bool,
+    pub total: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ordered: Option<bool>,
+    pub messages: Vec<MessageResp>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub session_snapshot: Option<SessionSnapshot>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub member_snippet: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub announcement: Option<serde_json::Value>,
+}
+
+const AT_PREFIX_HTML: &str = "<span class=\"text-#d5304f mr-4px\">[有人@我]</span>";
+
 #[tauri::command]
 pub async fn page_msg(
     param: CursorPageMessageParam,
@@ -102,17 +146,26 @@ pub async fn page_msg(
         user_info.uid.clone()
     };
 
-    // 从数据库查询消息
-    let db_result = im_message_repository::cursor_page_messages(
-        state.db_conn.deref(),
-        param.room_id,
-        param.cursor_page_param,
-        &login_uid,
-    )
+    let room_id = param.room_id.clone();
+    let cursor_param = param.cursor_page_param.clone();
+    let db_conn = state.db_conn.clone();
+    let login_uid_clone = login_uid.clone();
+
+    let db_result = async_runtime::spawn_blocking(move || {
+        async_runtime::block_on(async move {
+            im_message_repository::cursor_page_messages(
+                db_conn.deref(),
+                room_id,
+                cursor_param,
+                &login_uid_clone,
+            )
+            .await
+        })
+    })
     .await
+    .map_err(|e| e.to_string())?
     .map_err(|e| e.to_string())?;
 
-    // 转换数据库模型为响应模型
     let message_resps: Vec<MessageResp> = db_result
         .list
         .unwrap_or_default()
@@ -126,6 +179,7 @@ pub async fn page_msg(
         is_last: db_result.is_last,
         list: Some(message_resps),
         total: db_result.total,
+        ordered: Some(true),
     })
 }
 
@@ -196,6 +250,217 @@ pub fn convert_message_to_resp(msg: im_message::Model, old_msg_id: Option<String
         },
         old_msg_id: old_msg_id,
         time_block: msg.time_block,
+    }
+}
+
+fn build_session_snapshot(
+    room_id: &str,
+    messages: &[MessageResp],
+    contact: Option<im_contact::Model>,
+    login_uid: &str,
+) -> Option<SessionSnapshot> {
+    let unread_count = contact
+        .as_ref()
+        .and_then(|c| c.unread_count)
+        .unwrap_or(0);
+
+    let is_group = contact
+        .as_ref()
+        .and_then(|c| c.contact_type)
+        .map(|ty| ty == 1)
+        .unwrap_or(false);
+
+    let last_message = messages.last();
+    let mut last_msg_text = last_message
+        .map(|msg| format_last_message(msg, is_group, login_uid))
+        .unwrap_or_default();
+
+    if last_msg_text.is_empty() {
+        if let Some(contact) = contact.as_ref() {
+            if let Some(text) = &contact.text {
+                last_msg_text = text.clone();
+            }
+        }
+    }
+
+    let is_at_me = compute_is_at_me(messages, login_uid, unread_count, is_group);
+    if is_at_me && !last_msg_text.is_empty() {
+        last_msg_text = format!("{AT_PREFIX_HTML}{last_msg_text}");
+    }
+
+    let last_msg_timestamp = last_message.and_then(|msg| msg.message.send_time);
+    let display_timestamp = last_msg_timestamp
+        .or_else(|| contact.as_ref().and_then(|c| c.active_time));
+
+    Some(SessionSnapshot {
+        room_id: room_id.to_string(),
+        unread_count,
+        last_msg: if last_msg_text.is_empty() {
+            None
+        } else {
+            Some(last_msg_text)
+        },
+        last_msg_time: display_timestamp.map(format_snapshot_time),
+        last_msg_timestamp,
+        last_msg_id: last_message.and_then(|msg| msg.message.id.clone()),
+        is_at_me,
+    })
+}
+
+fn compute_is_at_me(
+    messages: &[MessageResp],
+    login_uid: &str,
+    unread_count: u32,
+    is_group: bool,
+) -> bool {
+    if !is_group || unread_count == 0 || messages.is_empty() {
+        return false;
+    }
+
+    let len = messages.len();
+    let start = len.saturating_sub(unread_count as usize);
+    messages[start..].iter().any(|msg| message_mentions_user(msg, login_uid))
+}
+
+fn message_mentions_user(msg: &MessageResp, login_uid: &str) -> bool {
+    let body = match msg.message.body.as_ref() {
+        Some(value) => value,
+        None => return false,
+    };
+
+    let at_list = body
+        .as_object()
+        .and_then(|map| map.get("atUidList"))
+        .and_then(|value| value.as_array());
+
+    match at_list {
+        Some(list) => list.iter().any(|item| match item {
+            serde_json::Value::String(s) => s == login_uid,
+            serde_json::Value::Number(num) => num
+                .as_i64()
+                .map(|n| n.to_string() == login_uid)
+                .unwrap_or(false),
+            _ => false,
+        }),
+        None => false,
+    }
+}
+
+fn format_last_message(msg: &MessageResp, is_group: bool, login_uid: &str) -> String {
+    let message_type = msg.message.message_type.unwrap_or(0);
+
+    if message_type == 2 {
+        return format_recall_message(msg, is_group, login_uid);
+    }
+
+    let sender_name = msg.from_user.nickname.clone().unwrap_or_default();
+    let content = if message_type == 1 {
+        msg.message
+            .body
+            .as_ref()
+            .and_then(extract_message_content)
+            .unwrap_or_default()
+    } else {
+        format_placeholder_for_type(message_type).to_string()
+    };
+
+    if content.is_empty() {
+        return content;
+    }
+
+    if is_group && !sender_name.is_empty() {
+        format!("{sender_name}:{content}")
+    } else {
+        content
+    }
+}
+
+fn format_recall_message(msg: &MessageResp, is_group: bool, login_uid: &str) -> String {
+    if msg.from_user.uid == login_uid {
+        "你撤回了一条消息".to_string()
+    } else if is_group {
+        let name = msg
+            .from_user
+            .nickname
+            .clone()
+            .unwrap_or_else(|| "有人".to_string());
+        format!("{name}:撤回了一条消息")
+    } else {
+        "对方撤回了一条消息".to_string()
+    }
+}
+
+fn extract_message_content(body: &serde_json::Value) -> Option<String> {
+    if let Some(text) = body.as_str() {
+        return Some(text.to_string());
+    }
+
+    if let Some(obj) = body.as_object() {
+        for key in ["content", "text", "summary", "title"] {
+            if let Some(value) = obj.get(key).and_then(|item| item.as_str()) {
+                if !value.is_empty() {
+                    return Some(value.to_string());
+                }
+            }
+        }
+    }
+
+    None
+}
+
+fn format_placeholder_for_type(message_type: u8) -> &'static str {
+    match message_type {
+        0 => "[未知]",
+        3 => "[图片]",
+        4 => "[文件]",
+        5 => "[语音]",
+        6 => "[视频]",
+        7 => "[动画表情]",
+        8 => "[系统消息]",
+        9 => "[聊天记录]",
+        10 => "[公告]",
+        11 => "[小管家]",
+        12 => "[视频通话]",
+        13 => "[语音通话]",
+        18 => "[位置]",
+        _ => "[消息]",
+    }
+}
+
+fn format_snapshot_time(timestamp_ms: i64) -> String {
+    if let Some(date_time) = Local.timestamp_millis_opt(timestamp_ms).single() {
+        let now = Local::now();
+
+        if date_time.year() != now.year() {
+            return date_time.format("%Y-%m-%d").to_string();
+        }
+
+        if date_time.date_naive() == now.date_naive() {
+            return date_time.format("%H:%M").to_string();
+        }
+
+        let days_diff = (now.date_naive() - date_time.date_naive()).num_days();
+        if days_diff == 1 {
+            "昨天".to_string()
+        } else if days_diff >= 7 {
+            date_time.format("%m-%d").to_string()
+        } else {
+            format_weekday_cn(date_time.weekday()).to_string()
+        }
+    } else {
+        String::new()
+    }
+}
+
+fn format_weekday_cn(weekday: Weekday) -> &'static str {
+    match weekday {
+        Weekday::Mon => "星期一",
+        Weekday::Tue => "星期二",
+        Weekday::Wed => "星期三",
+        Weekday::Thu => "星期四",
+        Weekday::Fri => "星期五",
+        Weekday::Sat => "星期六",
+        Weekday::Sun => "星期日",
     }
 }
 
@@ -332,6 +597,88 @@ fn convert_resp_to_model_for_fetch(msg_resp: MessageResp, uid: String) -> im_mes
         send_status: "success".to_string(), // 从后端获取的消息默认为成功状态
         time_block: msg_resp.time_block,
     }
+}
+
+#[tauri::command]
+pub async fn switch_room(
+    param: SwitchRoomParam,
+    state: State<'_, AppData>,
+) -> Result<SwitchRoomResp, String> {
+    let login_uid = {
+        let user_info = state.user_info.lock().await;
+        user_info.uid.clone()
+    };
+
+    let page_size = param.limit.unwrap_or(20);
+    let cursor_param = CursorPageParam {
+        page_size,
+        cursor: String::new(),
+        create_id: None,
+        create_time: None,
+        update_time: None,
+    };
+
+    let room_id_for_query = param.room_id.clone();
+    let db_conn = state.db_conn.clone();
+    let login_uid_for_query = login_uid.clone();
+
+    let db_result = async_runtime::spawn_blocking(move || {
+        async_runtime::block_on(async move {
+            im_message_repository::cursor_page_messages(
+                db_conn.deref(),
+                room_id_for_query,
+                cursor_param,
+                &login_uid_for_query,
+            )
+            .await
+        })
+    })
+    .await
+    .map_err(|e| e.to_string())?
+    .map_err(|e| e.to_string())?;
+
+    let CursorPageResp {
+        cursor,
+        is_last,
+        list,
+        total,
+        ..
+    } = db_result;
+
+    let messages: Vec<MessageResp> = list
+        .unwrap_or_default()
+        .into_iter()
+        .map(|msg| convert_message_to_resp(msg, None))
+        .rev()
+        .collect();
+
+    let contact = {
+        let db_conn = state.db_conn.clone();
+        let room_id = param.room_id.clone();
+        let login_uid = login_uid.clone();
+
+        async_runtime::spawn_blocking(move || {
+            async_runtime::block_on(async move {
+                im_contact_repository::find_contact_by_room(db_conn.deref(), &room_id, &login_uid).await
+            })
+        })
+        .await
+        .map_err(|e| e.to_string())?
+        .map_err(|e| e.to_string())?
+    };
+
+    let session_snapshot = build_session_snapshot(&param.room_id, &messages, contact, &login_uid);
+
+    Ok(SwitchRoomResp {
+        cursor,
+        is_last,
+        total,
+        ordered: Some(true),
+        messages,
+        session_snapshot,
+        member_snippet: None,
+        announcement: None,
+    })
 }
 
 #[tauri::command]
