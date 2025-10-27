@@ -831,3 +831,22 @@ export type DetailsContent = {
   type: 'apply'
   applyType: 'friend' | 'group'
 }
+
+/**
+ * 媒体类型枚举
+ */
+export enum MediaType {
+  TEXT = 0, // 纯文本
+  IMAGE = 1, // 图片
+  VIDEO = 2 // 视频
+}
+
+/**
+ * 朋友圈权限枚举
+ */
+export enum FeedPermission {
+  PRIVACY = 'privacy', // 私密
+  OPEN = 'open', // 公开
+  PART_VISIBLE = 'partVisible', // 部分可见
+  NOT_ANYONE = 'notAnyone' // 不给谁看
+}

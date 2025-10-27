@@ -371,7 +371,7 @@ export async function inviteGroupMember(body: { roomId: string; uidList: string[
   })
 }
 
-export async function removeGroupMember(body: { roomId: string; uid: string }) {
+export async function removeGroupMember(body: { roomId: string; uidList: string[] }) {
   return await imRequest({
     url: ImUrlEnum.REMOVE_GROUP_MEMBER,
     body
@@ -630,5 +630,66 @@ export async function confirmQRCodeAPI(data: { qrId: string }) {
   return await imRequest({
     url: ImUrlEnum.CONFIRM_QR_CODE,
     body: data
+  })
+}
+
+// 查看单条朋友圈
+export async function feedDetail(params: { feedId: string }) {
+  return await imRequest({
+    url: ImUrlEnum.FEED_DETAIL,
+    params
+  })
+}
+
+export async function feedList(data: { pageSize?: number; cursor?: string }) {
+  return await imRequest({
+    url: ImUrlEnum.FEED_LIST,
+    body: data
+  })
+}
+
+export async function pushFeed(data: {
+  id: number // 朋友圈ID
+  content: string // 朋友圈文案
+  mediaType: 0 | 1 | 2 // 媒体类型
+  urls?: string[] // 图片URL列表
+  videoUrl?: string // 视频URL
+  permission: 'privacy' | 'open' | 'partVisible' | 'notAnyone' // 可见性权限
+  uidList?: number[] // 权限限制的用户ID列表
+  targetIds?: number[] // 权限限制的标签ID列表
+}) {
+  return await imRequest({
+    url: ImUrlEnum.PUSH_FEED,
+    body: data
+  })
+}
+
+export async function delFeed(data: { feedId: string }) {
+  return await imRequest({
+    url: ImUrlEnum.DEL_FEED,
+    body: data
+  })
+}
+
+export async function editFeed(data: {
+  id: number // 朋友圈ID
+  content: string // 朋友圈文案
+  mediaType: 0 | 1 | 2 // 媒体类型
+  urls?: string[] // 图片URL列表
+  videoUrl?: string // 视频URL
+  permission: 'privacy' | 'open' | 'partVisible' | 'notAnyone' // 可见性权限
+  uidList?: number[] // 权限限制的用户ID列表
+  targetIds?: number[] // 权限限制的标签ID列表
+}) {
+  return await imRequest({
+    url: ImUrlEnum.EDIT_FEED,
+    body: data
+  })
+}
+
+export async function getFeedPermission(params: { feedId: string }) {
+  return await imRequest({
+    url: ImUrlEnum.GET_FEED_PERMISSION,
+    params
   })
 }

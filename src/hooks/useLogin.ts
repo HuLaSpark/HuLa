@@ -198,7 +198,11 @@ export const useLogin = () => {
     }
   }
 
-  const normalLogin = async (deviceType: 'PC' | 'MOBILE', auto: boolean = settingStore.login.autoLogin) => {
+  const normalLogin = async (
+    deviceType: 'PC' | 'MOBILE',
+    syncRecentMessages: boolean,
+    auto: boolean = settingStore.login.autoLogin
+  ) => {
     loading.value = true
     loginText.value = '登录中...'
     loginDisabled.value = true
@@ -219,7 +223,7 @@ export const useLogin = () => {
         clientId: clientId,
         grantType: 'PASSWORD',
         isAutoLogin: auto,
-        asyncData: false,
+        asyncData: syncRecentMessages,
         uid: auto ? userStore.userInfo!.uid : null
       }
     })
@@ -232,11 +236,11 @@ export const useLogin = () => {
           await init()
           await invoke('hide_splash_screen') // 初始化完再关闭启动页
 
-          if (!auto) {
-            // 跳转到同步数据页面
-            router.push('/mobile/syncData') // 首次登录，跳转到同步数据页面
-            return
-          }
+          // if (!auto) {
+          //   // 跳转到同步数据页面
+          //   router.push('/mobile/syncData') // 首次登录，跳转到同步数据页面
+          //   return
+          // }
         }
         ;+useMitt.emit(MittEnum.MSG_INIT)
 

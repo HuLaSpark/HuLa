@@ -703,6 +703,19 @@ export enum ImUrlEnum {
   /** 获取成员统计 */
   GET_MEMBER_STATISTIC = 'getMemberStatistic',
 
+  /** 获取朋友圈详情 */
+  FEED_DETAIL = 'feedDetail',
+  /** 获取朋友圈列表 */
+  FEED_LIST = 'feedList',
+  /** 发布朋友圈 */
+  PUSH_FEED = 'pushFeed',
+  /** 删除朋友圈 */
+  DEL_FEED = 'delFeed',
+  /** 编辑朋友圈 */
+  EDIT_FEED = 'editFeed',
+  /** 获取朋友圈权限 */
+  GET_FEED_PERMISSION = 'getFeedPermission',
+
   // 群成员信息
   /** 获取所有用户基础信息 */
   GET_ALL_USER_BASE_INFO = 'getAllUserBaseInfo',

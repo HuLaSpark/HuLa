@@ -875,7 +875,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
         if (!roomId) return
 
         try {
-          await removeGroupMember({ roomId, uid: targetUid })
+          await removeGroupMember({ roomId, uidList: [targetUid] })
           // 从群成员列表中移除该用户
           groupStore.removeUserItem(targetUid, roomId)
           window.$message.success('移出群聊成功')
