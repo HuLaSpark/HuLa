@@ -1,4 +1,5 @@
 import { emit } from '@tauri-apps/api/event'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { EventEnum, MittEnum, TauriCommand } from '@/enums'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { useChatStore } from '@/stores/chat'
@@ -183,6 +184,12 @@ export const useLogin = () => {
 
   const routerOrOpenHomeWindow = async () => {
     if (isDesktop()) {
+      const registerWindow = await WebviewWindow.getByLabel('register')
+      if (registerWindow) {
+        await registerWindow.close().catch((error) => {
+          console.warn('关闭注册窗口失败:', error)
+        })
+      }
       await createWebviewWindow('HuLa', 'home', 960, 720, 'login', true, undefined, 480, undefined, false)
       // 只有在成功创建home窗口并且已登录的情况下才显示托盘菜单
       globalStore.isTrayMenuShow = true
