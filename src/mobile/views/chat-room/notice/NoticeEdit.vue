@@ -6,7 +6,7 @@
         class="bg-white"
         style="border-bottom: 1px solid; border-color: #dfdfdf"
         :hidden-right="true"
-        room-name="编辑群公告" />
+        :room-name="isEditMode ? '编辑群公告' : '新增群公告'" />
     </template>
 
     <template #container>
@@ -27,34 +27,21 @@
                   :show-count="true" />
               </n-form-item>
 
-              <n-form-item label="上传图片">
-                <n-upload
-                  class="w-full"
-                  action="https://www.mocky.io/v2/5e4bafc63100007100d8b70f"
-                  list-type="image-card"
-                  :max="4">
-                  <n-button class="w-full">
-                    <template #icon>
-                      <n-icon>
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                          <polyline points="17 8 12 3 7 8"></polyline>
-                          <line x1="12" y1="3" x2="12" y2="15"></line>
-                        </svg>
-                      </n-icon>
-                    </template>
-                    上传图片
-                  </n-button>
-                </n-upload>
+              <n-form-item label="上传图片（暂不支持）">
+                <div class="upload-image-container">
+                  <n-upload
+                    action="https://www.mocky.io/v2/5e4bafc63100007100d8b70f"
+                    list-type="image-card"
+                    :max="4"
+                    disabled>
+                    <div class="upload-trigger">
+                      <svg class="size-24px text-#999">
+                        <use href="#plus"></use>
+                      </svg>
+                      <span class="text-12px text-#999 mt-5px">点击上传</span>
+                    </div>
+                  </n-upload>
+                </div>
               </n-form-item>
             </n-form>
           </div>
@@ -86,10 +73,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useGlobalStore } from '@/stores/global'
-import { getAnnouncementDetail, editAnnouncement } from '@/utils/ImRequestUtils'
+import { getAnnouncementDetail, editAnnouncement, pushAnnouncement } from '@/utils/ImRequestUtils'
 
 defineOptions({
   name: 'mobileChatNoticeEdit'
@@ -99,6 +86,9 @@ const route = useRoute()
 const router = useRouter()
 const globalStore = useGlobalStore()
 
+// 判断是编辑模式还是新增模式
+const isEditMode = computed(() => !!route.params.id)
+
 // 公告内容
 const announcementContent = ref('')
 const top = ref(false)
@@ -106,6 +96,11 @@ const submitting = ref(false)
 
 // 加载公告详情
 const loadAnnouncementDetail = async () => {
+  // 如果是新增模式，不需要加载详情
+  if (!isEditMode.value) {
+    return
+  }
+
   try {
     const data = await getAnnouncementDetail({
       roomId: globalStore.currentSessionRoomId,
@@ -137,17 +132,32 @@ const handleSubmit = async () => {
   submitting.value = true
 
   try {
-    const announcementData = {
-      id: route.params.id as string,
-      roomId: (route.query.roomId as string) || globalStore.currentSessionRoomId,
-      content: announcementContent.value,
-      top: top.value
-    }
+    if (isEditMode.value) {
+      // 编辑模式
+      const announcementData = {
+        id: route.params.id as string,
+        roomId: (route.query.roomId as string) || globalStore.currentSessionRoomId,
+        content: announcementContent.value,
+        top: top.value
+      }
 
-    await editAnnouncement(announcementData)
-    router.push({
-      path: `/mobile/chatRoom/notice/detail/${announcementData.id}`
-    })
+      await editAnnouncement(announcementData)
+      window.$message?.success('公告修改成功')
+      router.push({
+        path: `/mobile/chatRoom/notice/detail/${announcementData.id}`
+      })
+    } else {
+      // 新增模式
+      const announcementData = {
+        roomId: (route.query.roomId as string) || globalStore.currentSessionRoomId,
+        content: announcementContent.value,
+        top: top.value
+      }
+
+      await pushAnnouncement(announcementData)
+      window.$message?.success('公告发布成功')
+      router.back()
+    }
   } catch (error) {
     console.error('保存公告失败:', error)
     window.$message?.error('保存公告失败，请重试')
@@ -178,5 +188,38 @@ onMounted(() => {
 .n-button--primary {
   background: linear-gradient(145deg, #7eb7ac, #6fb0a4, #5fa89c);
   border: none;
+}
+
+/* 上传图片组件样式优化 */
+.upload-image-container {
+  width: 100%;
+}
+
+.upload-image-container :deep(.n-upload) {
+  width: 100%;
+}
+
+.upload-image-container :deep(.n-upload-trigger) {
+  width: 100px;
+  height: 100px;
+}
+
+.upload-trigger {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border: 1px dashed #d9d9d9;
+  border-radius: 8px;
+  background-color: #fafafa;
+  cursor: not-allowed;
+}
+
+.upload-image-container :deep(.n-upload-file-list) {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 100px);
+  gap: 10px;
 }
 </style>

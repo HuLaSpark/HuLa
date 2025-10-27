@@ -46,13 +46,15 @@
 </template>
 
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
+import { computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useWindow } from '@/hooks/useWindow'
 import type { AnnouncementBody } from '@/services/types'
 import { useGlobalStore } from '@/stores/global'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
+import { isMobile } from '@/utils/PlatformConstants'
 
-defineProps<{
+const props = defineProps<{
   body: AnnouncementBody
   searchKeyword?: string
 }>()
@@ -60,6 +62,8 @@ defineProps<{
 const globalStore = useGlobalStore()
 const { createWebviewWindow } = useWindow()
 const route = useRoute()
+const router = useRouter()
+
 const showDetailButton = computed(() => {
   const routeName = route.name?.toString()
   return routeName !== 'chat-history' && routeName !== 'multiMsg'
@@ -70,6 +74,14 @@ const openAnnouncementDetail = async () => {
   if (!roomId) {
     return
   }
-  await createWebviewWindow('查看群公告', `announList/${roomId}/1`, 420, 620)
+
+  // 判断是否为手机端
+  if (isMobile()) {
+    // 手机端跳转到详情页
+    router.push(`/mobile/chatRoom/notice/detail/${props.body.id}`)
+  } else {
+    // 桌面端打开新窗口
+    await createWebviewWindow('查看群公告', `announList/${roomId}/1`, 420, 620)
+  }
 }
 </script>
