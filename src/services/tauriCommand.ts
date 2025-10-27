@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/core'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import rustWebSocketClient from '@/services/webSocketRust'
 import { TauriCommand } from '../enums'
 import { useLogin } from '../hooks/useLogin'
@@ -124,5 +125,11 @@ const loginProcess = async (token: string, refreshToken: string, client: string)
 
 const openHomeWindow = async () => {
   const { createWebviewWindow } = useWindow()
+  const registerWindow = await WebviewWindow.getByLabel('register')
+  if (registerWindow) {
+    await registerWindow.close().catch((error) => {
+      console.warn('关闭注册窗口失败:', error)
+    })
+  }
   await createWebviewWindow('HuLa', 'home', 960, 720, 'login', true, undefined, 480, undefined, false)
 }
