@@ -103,6 +103,14 @@
             </div>
           </div>
 
+          <!-- 管理群成员 -->
+          <div
+            v-if="isGroup && groupStore.isAdminOrLord()"
+            class="bg-white p-15px rounded-10px shadow text-14px flex cursor-pointer"
+            @click="toManageGroupMember">
+            管理群成员
+          </div>
+
           <div
             class="bg-white p-15px rounded-10px shadow text-14px flex cursor-pointer"
             @click="handleSearchChatContent">
@@ -329,6 +337,10 @@ const toGroupChatMember = () => {
 
 const toInviteGroupMember = () => {
   router.push({ name: 'mobileInviteGroupMember' })
+}
+
+const toManageGroupMember = () => {
+  router.push({ name: 'mobileManageGroupMember' })
 }
 
 const goToNotice = () => {

@@ -365,6 +365,14 @@
               </n-flex>
             </div>
 
+            <!-- 管理群成员（仅管理员和群主可见） -->
+            <div
+              v-if="groupStore.isAdminOrLord() && activeItem.hotFlag !== IsAllUserEnum.Yes"
+              class="box-item cursor-pointer mb-20px"
+              @click="handleManageGroupMember">
+              <p>管理群成员</p>
+            </div>
+
             <div class="box-item cursor-pointer mb-20px" @click="handleDelete(RoomActEnum.DELETE_RECORD)">
               <p>删除聊天记录</p>
             </div>
@@ -456,6 +464,31 @@
     </div>
   </n-modal>
 
+  <!-- 管理群成员弹窗 -->
+  <n-modal v-model:show="showManageGroupMemberModal" class="w-600px rounded-8px" :mask-closable="false">
+    <div class="bg-[--bg-popover] w-600px p-6px box-border flex flex-col">
+      <div
+        v-if="isMac()"
+        @click="showManageGroupMemberModal = false"
+        class="mac-close z-999 size-13px shadow-inner bg-#ed6a5eff rounded-50% select-none absolute left-6px">
+        <svg class="hidden size-7px color-#000 select-none absolute top-3px left-3px">
+          <use href="#close"></use>
+        </svg>
+      </div>
+
+      <svg
+        v-if="isWindows()"
+        @click="showManageGroupMemberModal = false"
+        class="size-12px ml-a cursor-pointer select-none">
+        <use href="#close"></use>
+      </svg>
+
+      <div class="flex flex-col h-600px">
+        <ManageGroupMemberContent @close="showManageGroupMemberModal = false" />
+      </div>
+    </div>
+  </n-modal>
+
   <!-- 添加裁剪组件和文件输入框 -->
   <input
     ref="fileInput"
@@ -469,6 +502,7 @@
 <script setup lang="ts">
 import { useDisplayMedia } from '@vueuse/core'
 import AvatarCropper from '@/components/common/AvatarCropper.vue'
+import ManageGroupMemberContent from './ManageGroupMemberContent.vue'
 import {
   CallTypeEnum,
   MittEnum,
@@ -513,6 +547,7 @@ const optionsType = ref<RoomActEnum>()
 const modalShow = ref(false)
 const sidebarShow = ref(false)
 const showQRCodeModal = ref(false)
+const showManageGroupMemberModal = ref(false)
 const { currentSession: activeItem } = storeToRefs(globalStore)
 const { persistMyRoomInfo, resolveMyRoomNickname } = useMyRoomInfoUpdater()
 
@@ -686,6 +721,12 @@ const handleCreateGroup = () => {
 const handleInvite = async () => {
   // 使用封装后的createModalWindow方法创建模态窗口
   await createModalWindow('邀请好友进群', 'modal-invite', 600, 500, 'home')
+}
+
+/** 处理管理群成员 */
+const handleManageGroupMember = () => {
+  // 打开管理群成员弹窗
+  showManageGroupMemberModal.value = true
 }
 
 // 保存群聊信息
