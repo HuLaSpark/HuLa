@@ -3,6 +3,7 @@ import { StoresEnum } from '@/enums'
 import type { FriendItem, NoticeItem } from '@/services/types'
 import { RequestNoticeAgreeStatus } from '@/services/types'
 import { useGlobalStore } from '@/stores/global'
+import { useGroupStore } from '@/stores/group'
 import {
   deleteFriend,
   getFriendPage,
@@ -14,6 +15,7 @@ import {
 export const pageSize = 20
 export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
   const globalStore = useGlobalStore()
+  const groupStore = useGroupStore()
 
   /** 联系人列表 */
   const contactsList = ref<FriendItem[]>([])
@@ -118,22 +120,43 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
    * @param apply 好友申请信息
    * @param state 处理状态 0拒绝 2同意 3忽略
    */
-  const onHandleInvite = async (apply: { applyId: string; state: number }) => {
-    // 同意好友申请
-    handleInvite(apply).then(async () => {
+  const onHandleInvite = async (apply: { applyId: string; state: number; roomId?: string; type?: number }) => {
+    try {
+      await handleInvite({ applyId: apply.applyId, state: apply.state })
+
       // 刷新好友申请列表
       await getApplyPage(true)
       // 刷新好友列表
       await getContactList(true)
       // 获取最新的未读数
       await getApplyUnReadCount()
+
+      // 如果是同意群邀请/群申请，则刷新群信息与成员列表
+      const isGroupApply =
+        apply.state === RequestNoticeAgreeStatus.ACCEPTED &&
+        apply.type === 1 &&
+        apply.roomId &&
+        Number(apply.roomId) > 0
+
+      if (isGroupApply) {
+        try {
+          await groupStore.addGroupDetail(apply.roomId!)
+          await groupStore.getGroupUserList(apply.roomId!, true)
+        } catch (error) {
+          console.error('刷新群成员信息失败:', error)
+        }
+      }
+
       // 更新当前选中联系人的状态
       if (globalStore.currentSelectedContact) {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         globalStore.currentSelectedContact.status = RequestNoticeAgreeStatus.ACCEPTED
       }
-    })
+    } catch (error) {
+      console.error('处理好友/群申请失败:', error)
+      throw error
+    }
   }
 
   /**

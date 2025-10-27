@@ -191,6 +191,11 @@ const isSelfUser = (uid: string): boolean => {
 const handleSelfAdd = async (roomId: string) => {
   info('本人加入群聊，加载该群聊的会话数据')
   await chatStore.addSession(roomId)
+  try {
+    await groupStore.getGroupUserList(roomId, true)
+  } catch (error) {
+    console.error('初始化群成员失败:', error)
+  }
 }
 
 // 处理群成员添加
