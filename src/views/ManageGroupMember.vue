@@ -98,6 +98,7 @@ defineOptions({
 
 const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
+const dialog = useDialog()
 
 const keyword = ref('')
 const selectedList = ref<string[]>([])
@@ -139,13 +140,18 @@ const handleClose = () => {
 
 // 处理踢出群聊
 const handleRemove = async () => {
+  // 检查是否是频道（roomId === '1'），频道不允许踢人
+  if (globalStore.currentSession?.roomId === '1') {
+    window.$message.warning('频道不允许踢出成员')
+    return
+  }
+
   if (selectedList.value.length === 0) {
     window.$message.warning('请选择要踢出的成员')
     return
   }
 
   // 确认对话框
-  const dialog = useDialog()
   dialog.warning({
     title: '确认踢出',
     content: `确定要踢出 ${selectedList.value.length} 位成员吗？`,
@@ -155,10 +161,7 @@ const handleRemove = async () => {
       isLoading.value = true
       try {
         // 调用批量踢人接口
-        // await removeGroupMemberBatch({
-        //   roomId: globalStore.currentSession!.roomId,
-        //   uidList: selectedList.value
-        // })
+        await groupStore.removeGroupMembers(selectedList.value, globalStore.currentSession!.roomId)
 
         window.$message.success(`成功踢出 ${selectedList.value.length} 位成员`)
         selectedList.value = []
@@ -184,6 +187,13 @@ const calculateScrollHeight = () => {
 
 // 初始化时获取群成员列表
 onMounted(async () => {
+  // 如果是频道（roomId === '1'），直接返回上一页
+  if (globalStore.currentSession?.roomId === '1') {
+    window.$message.warning('频道不支持管理成员')
+    handleClose()
+    return
+  }
+
   try {
     // 加载当前群的成员列表
     if (globalStore.currentSession?.roomId) {
