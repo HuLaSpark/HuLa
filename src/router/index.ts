@@ -13,6 +13,7 @@ import NoticeLayout from '#/layout/chat-room/NoticeLayout.vue'
 import FriendsLayout from '#/layout/friends/FriendsLayout.vue'
 import MobileHome from '#/layout/index.vue'
 import GroupChatMember from '#/views/chat-room/GroupChatMember.vue'
+import MobileInviteGroupMember from '#/views/chat-room/MobileInviteGroupMember.vue'
 import MyLayout from '#/layout/my/MyLayout.vue'
 import MobileLogin from '#/login.vue'
 import ChatSetting from '#/views/chat-room/ChatSetting.vue'
@@ -128,6 +129,11 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
         name: 'mobileGroupChatMember',
         component: GroupChatMember,
         meta: { keepAlive: true }
+      },
+      {
+        path: 'inviteGroupMember',
+        name: 'mobileInviteGroupMember',
+        component: MobileInviteGroupMember
       },
       {
         path: 'notice',
