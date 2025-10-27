@@ -313,7 +313,7 @@ import Text from './Text.vue'
 import Video from './Video.vue'
 import VideoCall from './VideoCall.vue'
 import Voice from './Voice.vue'
-import { toFriendInfoPage } from '@/utils/routerUtils'
+import { toFriendInfoPage } from '@/utils/RouterUtils'
 import { vOnLongPress } from '@vueuse/components'
 
 const props = withDefaults(

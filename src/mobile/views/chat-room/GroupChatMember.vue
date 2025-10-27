@@ -59,7 +59,7 @@ import { debounce } from 'lodash-es'
 import type { UserItem } from '@/services/types'
 import { useGroupStore } from '@/stores/group'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { toFriendInfoPage } from '@/utils/routerUtils'
+import { toFriendInfoPage } from '@/utils/RouterUtils'
 
 const measure = ref(null)
 
