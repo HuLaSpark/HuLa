@@ -105,7 +105,7 @@
 
           <!-- 管理群成员 -->
           <div
-            v-if="isGroup && groupStore.isAdminOrLord()"
+            v-if="isGroup && groupStore.isAdminOrLord() && globalStore.currentSession?.roomId !== '1'"
             class="bg-white p-15px rounded-10px shadow text-14px flex cursor-pointer"
             @click="toManageGroupMember">
             管理群成员

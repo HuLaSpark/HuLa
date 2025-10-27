@@ -622,6 +622,26 @@ export const useGroupStore = defineStore(
     }
 
     /**
+     * 踢出群成员
+     * @param uidList 要踢出的成员ID列表
+     * @param roomId 群聊房间ID，可选，默认使用当前房间
+     */
+    const removeGroupMembers = async (uidList: string[], roomId?: string) => {
+      const targetRoomId = roomId || globalStore.currentSession!.roomId
+      if (!targetRoomId) {
+        throw new Error('无法确定目标房间ID')
+      }
+
+      // 调用踢人接口
+      await ImRequestUtils.removeGroupMember({ roomId: targetRoomId, uidList })
+
+      // 更新本地群成员列表，移除被踢出的成员
+      const currentUserList = userListMap[targetRoomId] || []
+      const updatedList = currentUserList.filter((user: UserItem) => !uidList.includes(user.uid))
+      userListMap[targetRoomId] = updatedList
+    }
+
+    /**
      * 退出群聊 / 解散群聊
      * @param roomId 要退出的群聊ID
      */
@@ -717,6 +737,7 @@ export const useGroupStore = defineStore(
       memberList,
       addAdmin,
       revokeAdmin,
+      removeGroupMembers,
       exitGroup,
       refreshGroupMembers,
       resetGroupData,

@@ -367,7 +367,7 @@
 
             <!-- 管理群成员（仅管理员和群主可见） -->
             <div
-              v-if="groupStore.isAdminOrLord() && activeItem.hotFlag !== IsAllUserEnum.Yes"
+              v-if="groupStore.isAdminOrLord() && activeItem.hotFlag !== IsAllUserEnum.Yes && activeItem.roomId !== '1'"
               class="box-item cursor-pointer mb-20px"
               @click="handleManageGroupMember">
               <p>管理群成员</p>
