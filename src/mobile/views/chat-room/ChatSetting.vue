@@ -255,7 +255,7 @@ import {
   shield,
   updateRoomInfo
 } from '@/utils/ImRequestUtils'
-import { toFriendInfoPage } from '@/utils/routerUtils'
+import { toFriendInfoPage } from '@/utils/RouterUtils'
 
 defineOptions({
   name: 'mobileChatSetting'
