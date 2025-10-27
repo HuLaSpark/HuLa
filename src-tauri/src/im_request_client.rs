@@ -291,6 +291,12 @@ pub enum ImUrl {
     GetBadgesBatch,
     GetMemberStatistic,
     GetBadgeList,
+    FeedDetail,
+    FeedList,
+    PushFeed,
+    DelFeed,
+    EditFeed,
+    GetFeedPermission,
     SendMsg,
     SetHide,
     GetFriendPage,
@@ -410,6 +416,14 @@ impl ImUrl {
             ImUrl::GetMsgList => (http::Method::POST, "im/chat/msg/list"),
             ImUrl::GetMemberStatistic => (http::Method::GET, "im/chat/member/statistic"),
 
+            // 朋友圈相关
+            ImUrl::FeedList => (http::Method::POST, "im/feed/list"),
+            ImUrl::PushFeed => (http::Method::POST, "im/feed/pushFeed"),
+            ImUrl::GetFeedPermission => (http::Method::GET, "im/feed/getFeedPermission"),
+            ImUrl::EditFeed => (http::Method::POST, "im/feed/edit"),
+            ImUrl::DelFeed => (http::Method::POST, "im/feed/del"),
+            ImUrl::FeedDetail => (http::Method::GET, "im/feed/detail"),
+
             // 群成员信息
             ImUrl::GetAllUserBaseInfo => (http::Method::GET, "im/room/group/member/list"),
             ImUrl::CheckEmail => (http::Method::GET, "oauth/anyTenant/checkEmail"),
@@ -512,6 +526,14 @@ impl ImUrl {
             "getMsgList" => Ok(ImUrl::GetMsgList),
             "getMsgPage" => Ok(ImUrl::GetMsgPage),
             "getMemberStatistic" => Ok(ImUrl::GetMemberStatistic),
+
+            // 朋友圈相关
+            "feedDetail" => Ok(ImUrl::FeedDetail),
+            "feedList" => Ok(ImUrl::FeedList),
+            "pushFeed" => Ok(ImUrl::PushFeed),
+            "delFeed" => Ok(ImUrl::DelFeed),
+            "editFeed" => Ok(ImUrl::EditFeed),
+            "getFeedPermission" => Ok(ImUrl::GetFeedPermission),
 
             // 群成员信息
             "getAllUserBaseInfo" => Ok(ImUrl::GetAllUserBaseInfo),

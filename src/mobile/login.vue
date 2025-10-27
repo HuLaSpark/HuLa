@@ -111,7 +111,7 @@
           tertiary
           style="color: #fff"
           class="w-full mt-8px mb-50px gradient-button"
-          @click="normalLogin('MOBILE')">
+          @click="normalLogin('MOBILE', true)">
           <span>{{ loginText }}</span>
         </n-button>
 
@@ -697,7 +697,7 @@ onMounted(async () => {
   })
 
   if (login.value.autoLogin) {
-    normalLogin('MOBILE', true)
+    normalLogin('MOBILE', true, true)
   } else {
     loginHistories.length > 0 && giveAccount(loginHistories[0])
   }

@@ -12,12 +12,11 @@
       <div class="flex flex-col items-center gap-20px">
         <div class="flex items-center">
           <div class="text-26px">登录</div>
-          <img src="@/assets/mobile/2.svg" alt="" class="w-85px h-22px" />
         </div>
 
-        <van-checkbox-group v-model="checked" checked-color="#487D68" class="flex flex-col gap-14px text-14px">
-          <van-checkbox name="1">同步最近的消息</van-checkbox>
-          <van-checkbox name="2">自动登录该设备</van-checkbox>
+        <van-checkbox-group v-model="checkedValues" checked-color="#487D68" class="flex flex-col gap-14px text-14px">
+          <van-checkbox name="syncRecentMessages">同步最近的消息</van-checkbox>
+          <van-checkbox name="autoLogin">自动登录该设备</van-checkbox>
         </van-checkbox-group>
       </div>
       <div class="flex w-45% gap-30px justify-center items-center flex-col">
@@ -29,28 +28,35 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSettingStore } from '@/stores/setting'
 
 const router = useRouter()
-const checked = ref(['1'])
-
 const settingStore = useSettingStore()
 
-const handleConfirmLogin = () => {
-  settingStore.setAutoLogin(true) // 设置自动登录
-  const selectedValue = checked.value
-  selectedValue // 引用一次，避免未使用警告，后面可删除
+// 使用数组管理选中的复选框
+const checkedValues = ref(['syncRecentMessages', ''])
 
-  // 加上处理同步的逻辑
+const shouldAutoLogin = computed(() => {
+  return checkedValues.value.includes('autoLogin')
+})
 
-  // 跳转到主页面
-  router.push('/mobile/home')
+const handleConfirmLogin = async () => {
+  try {
+    // 设置自动登录状态
+    settingStore.setAutoLogin(shouldAutoLogin.value)
+
+    // 跳转到主页面
+    router.push('/mobile/home')
+  } catch (error) {
+    console.error('登录确认失败:', error)
+  }
 }
 
 const handleCancelLogin = () => {
-  // 回退则不设置自动登录，就把登录当作取消
+  // 取消登录时不设置自动登录
+  settingStore.setAutoLogin(false)
   router.back()
 }
 </script>
