@@ -428,6 +428,8 @@ export type TextBody = {
 }
 /** 公告消息体 */
 export type AnnouncementBody = TextBody & {
+  /** 公告ID */
+  id: string
   /** 创建时间 */
   createTime: number
   /** 更新时间 */

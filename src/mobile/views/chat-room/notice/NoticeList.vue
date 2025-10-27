@@ -11,7 +11,7 @@
 
     <template #container>
       <div
-        class="bg-[url('@/assets/mobile/chat-home/background.webp')] bg-cover bg-center flex flex-col overflow-auto h-full">
+        class="bg-[url('@/assets/mobile/chat-home/background.webp')] bg-cover bg-center flex flex-col overflow-auto h-full relative">
         <div class="flex flex-col flex-1 gap-15px py-15px px-20px">
           <RecycleScroller :items="announList" :item-size="15" key-field="id" class="flex flex-col gap-15px">
             <template #default="{ item }">
@@ -45,16 +45,28 @@
             </template>
           </RecycleScroller>
         </div>
+
+        <!-- 右下角悬浮气泡 - 仅群主、管理员或特定徽章用户可见 -->
+        <van-floating-bubble v-if="canAddAnnouncement" axis="xy" magnetic="x" @click="goToAddNotice">
+          <template #default>
+            <svg class="w-24px h-24px iconpark-icon text-white"><use href="#plus"></use></svg>
+          </template>
+        </van-floating-bubble>
       </div>
     </template>
   </AutoFixHeightPage>
 </template>
 
 <script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { RecycleScroller } from 'vue-virtual-scroller'
 import { useGroupStore } from '@/stores/group'
+import { useUserStore } from '@/stores/user'
+import { useGlobalStore } from '@/stores/global'
+import { useCachedStore } from '@/stores/cached'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
+import { onActivated } from 'vue'
 
 defineOptions({
   name: 'mobileChatNoticeList'
@@ -64,14 +76,78 @@ const route = useRoute()
 const router = useRouter()
 const announList = ref<any[]>([])
 const groupStore = useGroupStore()
+const userStore = useUserStore()
+const globalStore = useGlobalStore()
+const cacheStore = useCachedStore()
+
+// 判断当前用户是否有权限添加公告
+const canAddAnnouncement = computed(() => {
+  if (!userStore.userInfo?.uid) return false
+
+  const isLord = groupStore.isCurrentLord(userStore.userInfo.uid) ?? false
+  const isAdmin = groupStore.isAdmin(userStore.userInfo.uid) ?? false
+
+  // 判断当前用户是否拥有id为6的徽章 并且是频道
+  const hasBadge6 = () => {
+    if (globalStore.currentSession?.roomId !== '1') return false
+
+    const currentUser = groupStore.getUserInfo(userStore.userInfo!.uid)
+    return currentUser?.itemIds?.includes('6') ?? false
+  }
+
+  return isLord || isAdmin || hasBadge6()
+})
+
+// 加载群公告列表
+const loadAnnouncementList = async () => {
+  try {
+    const roomId = globalStore.currentSession?.roomId
+    if (!roomId) {
+      console.error('当前会话没有roomId')
+      return
+    }
+
+    const data = await cacheStore.getGroupAnnouncementList(roomId, 1, 10)
+    if (data && data.records) {
+      announList.value = data.records
+      // 处理置顶公告
+      if (announList.value && announList.value.length > 0) {
+        const topAnnouncement = announList.value.find((item: any) => item.top)
+        if (topAnnouncement) {
+          announList.value = [topAnnouncement, ...announList.value.filter((item: any) => !item.top)]
+        }
+      }
+    }
+  } catch (error) {
+    console.error('加载群公告失败:', error)
+  }
+}
+
 const goToNoticeDetail = (id: string) => {
-  // 跳转到公告编辑页面
-  console.log(`跳转到公告编辑页面，公告ID: ${id}`)
+  // 跳转到公告详情页面
+  console.log(`跳转到公告详情页面，公告ID: ${id}`)
   router.push(`/mobile/chatRoom/notice/detail/${id}`)
 }
 
+const goToAddNotice = () => {
+  // 跳转到新增公告页面
+  console.log('跳转到新增公告页面')
+  router.push('/mobile/chatRoom/notice/add')
+}
+
 onMounted(() => {
-  announList.value = JSON.parse(route.query.announList as string)
+  // 首次加载时从路由参数获取数据
+  if (route.query.announList) {
+    announList.value = JSON.parse(route.query.announList as string)
+  } else {
+    // 如果没有路由参数，则从服务器加载
+    loadAnnouncementList()
+  }
+})
+
+// 当页面被激活时（从其他页面返回），重新加载数据
+onActivated(() => {
+  loadAnnouncementList()
 })
 </script>
 
