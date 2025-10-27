@@ -340,7 +340,7 @@ const toInviteGroupMember = () => {
 }
 
 const toManageGroupMember = () => {
-  router.push({ name: 'mobileManageGroupMember' })
+  router.push({ name: 'manageGroupMember' })
 }
 
 const goToNotice = () => {

@@ -484,7 +484,7 @@
       </svg>
 
       <div class="flex flex-col h-600px">
-        <ManageGroupMemberContent @close="showManageGroupMemberModal = false" />
+        <ManageGroupMember @close="showManageGroupMemberModal = false" />
       </div>
     </div>
   </n-modal>
@@ -502,7 +502,7 @@
 <script setup lang="ts">
 import { useDisplayMedia } from '@vueuse/core'
 import AvatarCropper from '@/components/common/AvatarCropper.vue'
-import ManageGroupMemberContent from './ManageGroupMemberContent.vue'
+import ManageGroupMember from '@/views/ManageGroupMember.vue'
 import {
   CallTypeEnum,
   MittEnum,

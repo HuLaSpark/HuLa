@@ -14,7 +14,6 @@ import FriendsLayout from '#/layout/friends/FriendsLayout.vue'
 import MobileHome from '#/layout/index.vue'
 import GroupChatMember from '#/views/chat-room/GroupChatMember.vue'
 import MobileInviteGroupMember from '#/views/chat-room/MobileInviteGroupMember.vue'
-import ManageGroupMember from '@/views/ManageGroupMember.vue'
 import MyLayout from '#/layout/my/MyLayout.vue'
 import MobileLogin from '#/login.vue'
 import ChatSetting from '#/views/chat-room/ChatSetting.vue'
@@ -135,11 +134,6 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
         path: 'inviteGroupMember',
         name: 'mobileInviteGroupMember',
         component: MobileInviteGroupMember
-      },
-      {
-        path: 'manageGroupMember',
-        name: 'mobileManageGroupMember',
-        component: ManageGroupMember
       },
       {
         path: 'notice',
@@ -482,6 +476,11 @@ const getDesktopRoutes = (): Array<RouteRecordRaw> => [
 
 // 通用路由配置（所有平台都需要）
 const getCommonRoutes = (): Array<RouteRecordRaw> => [
+  {
+    path: '/manageGroupMember',
+    name: 'manageGroupMember',
+    component: () => import('@/views/ManageGroupMember.vue')
+  },
   {
     path: '/login',
     name: 'login',
