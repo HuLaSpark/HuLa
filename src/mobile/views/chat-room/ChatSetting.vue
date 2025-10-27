@@ -89,8 +89,11 @@
                 </div>
                 <div class="truncate max-w-full text-#707070">{{ i.name }}</div>
               </div>
-              <div class="flex flex-col justify-center items-center gap-5px">
-                <div class="rounded-full bg-#E5EFEE w-36px h-36px flex items-center justify-center">
+              <div
+                @click="toInviteGroupMember"
+                class="flex flex-col justify-center items-center gap-5px cursor-pointer">
+                <div
+                  class="rounded-full bg-#E5EFEE w-36px h-36px flex items-center justify-center hover:bg-#D5E5E0 transition-colors">
                   <svg class="iconpark-icon h-25px w-25px">
                     <use href="#plus"></use>
                   </svg>
@@ -322,6 +325,10 @@ const toFriendInfo = (uid: string) => {
 
 const toGroupChatMember = () => {
   router.push({ name: 'mobileGroupChatMember' })
+}
+
+const toInviteGroupMember = () => {
+  router.push({ name: 'mobileInviteGroupMember' })
 }
 
 const goToNotice = () => {
