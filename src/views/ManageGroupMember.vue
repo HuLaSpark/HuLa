@@ -1,5 +1,6 @@
 <template>
-  <MobileLayout>
+  <!-- 移动端布局 -->
+  <MobileLayout v-if="isMobileView">
     <div class="flex w-full flex-col h-full">
       <!-- 移动端头部 -->
       <HeaderBar
@@ -83,9 +84,93 @@
       </div>
     </div>
   </MobileLayout>
+
+  <!-- PC端布局（作为弹窗内容或独立页面） -->
+  <div v-else class="flex w-full flex-col h-full">
+    <!-- PC端头部 -->
+    <div class="pc-header">
+      <div class="flex items-center justify-between px-20px py-16px border-b border-[--line-color]">
+        <h2 class="text-16px font-medium text-[--text-color]">管理群成员</h2>
+      </div>
+    </div>
+
+    <!-- 顶部搜索框 -->
+    <div class="px-20px mt-16px flex gap-3">
+      <div class="flex-1 py-5px shrink-0">
+        <n-input
+          v-model:value="keyword"
+          class="rounded-8px w-full search-input relative text-14px"
+          placeholder="搜索成员~"
+          clearable
+          spellCheck="false"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off">
+          <template #prefix>
+            <svg class="w-12px h-12px"><use href="#search"></use></svg>
+          </template>
+        </n-input>
+      </div>
+      <div class="flex justify-end items-center">
+        <n-button class="py-5px" @click="doSearch">搜索</n-button>
+      </div>
+    </div>
+
+    <!-- 成员列表 -->
+    <div ref="scrollArea" class="flex-1 overflow-y-auto px-20px mt-10px">
+      <n-scrollbar style="max-height: 450px">
+        <n-checkbox-group v-model:value="selectedList" class="flex flex-col gap-2">
+          <div
+            v-for="item in filteredMembers"
+            :key="item.uid"
+            class="rounded-8px border border-[--line-color] overflow-hidden">
+            <n-checkbox
+              :value="item.uid"
+              size="large"
+              class="w-full flex items-center px-5px"
+              :class="[
+                'cursor-pointer select-none transition-colors duration-150',
+                selectedList.includes(item.uid) ? 'bg-blue-50 border-blue-300' : 'hover:bg-[--hover-color]'
+              ]">
+              <template #default>
+                <div class="flex items-center gap-10px px-8px py-10px">
+                  <!-- 头像 -->
+                  <n-avatar
+                    round
+                    :size="40"
+                    :src="AvatarUtils.getAvatarUrl(groupStore.getUserInfo(item.uid)?.avatar!)"
+                    fallback-src="/logo.png"
+                    style="border: 1px solid var(--avatar-border-color)" />
+                  <!-- 文字信息 -->
+                  <div class="flex flex-col leading-tight truncate">
+                    <span class="text-13px font-medium truncate text-[--text-color]">
+                      {{ groupStore.getUserInfo(item.uid)?.name }}
+                    </span>
+                    <div class="text-11px text-[--chat-text-color] flex items-center gap-4px truncate">
+                      <n-badge :color="item.activeStatus === OnlineEnum.ONLINE ? '#1ab292' : '#909090'" dot />
+                      {{ item.activeStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </n-checkbox>
+          </div>
+        </n-checkbox-group>
+      </n-scrollbar>
+    </div>
+
+    <!-- 底部操作栏 -->
+    <div class="px-20px py-12px bg-[--bg-popover] border-t border-[--line-color] flex justify-between items-center">
+      <span class="text-13px text-[--text-color]">已选择 {{ selectedList.length }} 人</span>
+      <n-button type="error" :disabled="selectedList.length === 0" :loading="isLoading" @click="handleRemove">
+        踢出群聊
+      </n-button>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
+import { type } from '@tauri-apps/plugin-os'
 import { OnlineEnum, RoleEnum } from '@/enums'
 import { useGroupStore } from '@/stores/group'
 import { useGlobalStore } from '@/stores/global'
@@ -96,6 +181,10 @@ defineOptions({
   name: 'ManageGroupMember'
 })
 
+const emit = defineEmits<{
+  close: []
+}>()
+
 const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
 const dialog = useDialog()
@@ -105,6 +194,11 @@ const selectedList = ref<string[]>([])
 const isLoading = ref(false)
 const scrollHeight = ref(0)
 const scrollArea = ref<HTMLElement>()
+
+// 判断是否为移动端视图
+const isMobileView = computed(() => {
+  return type() === 'ios' || type() === 'android'
+})
 
 // 获取非管理员的普通成员列表
 const normalMembers = computed(() => {
@@ -133,9 +227,15 @@ const doSearch = () => {
   // 搜索逻辑已在 filteredMembers 中实现
 }
 
-// 处理关闭（移动端）
+// 处理关闭
 const handleClose = () => {
-  router.back()
+  if (isMobileView.value) {
+    // 移动端返回上一页
+    router.back()
+  } else {
+    // PC端发送关闭事件
+    emit('close')
+  }
 }
 
 // 处理踢出群聊
@@ -165,7 +265,7 @@ const handleRemove = async () => {
 
         window.$message.success(`成功踢出 ${selectedList.value.length} 位成员`)
         selectedList.value = []
-        // 返回群设置页面
+        // 关闭或返回
         handleClose()
       } catch (error) {
         console.error('踢出失败:', error)
@@ -177,9 +277,9 @@ const handleRemove = async () => {
   })
 }
 
-// 计算滚动区域高度
+// 计算滚动区域高度（仅移动端需要）
 const calculateScrollHeight = () => {
-  if (scrollArea.value) {
+  if (scrollArea.value && isMobileView.value) {
     const rect = scrollArea.value.getBoundingClientRect()
     scrollHeight.value = window.innerHeight - rect.top - 60
   }
@@ -203,17 +303,45 @@ onMounted(async () => {
     console.error('加载成员列表失败:', error)
   }
 
-  calculateScrollHeight()
-  window.addEventListener('resize', calculateScrollHeight)
+  if (isMobileView.value) {
+    calculateScrollHeight()
+    window.addEventListener('resize', calculateScrollHeight)
+  }
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener('resize', calculateScrollHeight)
+  if (isMobileView.value) {
+    window.removeEventListener('resize', calculateScrollHeight)
+  }
 })
 </script>
 
-<style scoped>
-/* 适配移动端的通用样式 */
+<style scoped lang="scss">
+.pc-header {
+  flex-shrink: 0;
+}
+
+/* 搜索框灰色背景（PC端） */
+.search-input {
+  :deep(.n-input__input-el) {
+    background-color: #f5f5f5;
+  }
+
+  :deep(.n-input-wrapper) {
+    background-color: #f5f5f5;
+  }
+
+  :deep(.n-input__prefix) {
+    background-color: #f5f5f5;
+  }
+
+  :deep(.n-input__border),
+  :deep(.n-input__state-border) {
+    border: none;
+  }
+}
+
+/* 通用样式 */
 :deep(.n-checkbox) {
   width: 100%;
 }
