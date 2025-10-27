@@ -26,8 +26,8 @@
                 size="large"
                 :src="
                   props.type === 'friend'
-                    ? avatarSrc(getUserInfo(item)!.avatar!)
-                    : avatarSrc(groupStore.getGroupDetail(item.roomId)!.avatar)
+                    ? avatarSrc(getUserInfo(item)?.avatar || '')
+                    : avatarSrc(groupStore.getGroupDetail(item.roomId)?.avatar || '')
                 "
                 class="mr-10px" />
               <n-flex vertical :size="12">
@@ -40,7 +40,7 @@
                     {{
                       item.eventType === NoticeType.GROUP_MEMBER_DELETE && item.operateId == item.receiverId
                         ? '你'
-                        : getUserInfo(item)!.name
+                        : getUserInfo(item)?.name || '未知用户'
                     }}
                   </p>
 
@@ -54,7 +54,7 @@
                   留言：{{ item.content }}
                 </p>
                 <p v-else class="text-(12px [--text-color])">
-                  处理人：{{ groupStore.getUserInfo(item.senderId)!.name }}
+                  处理人：{{ groupStore.getUserInfo(item.senderId)?.name || '未知用户' }}
                 </p>
               </n-flex>
             </n-flex>
@@ -64,9 +64,7 @@
                 align="center"
                 :size="10"
                 v-if="item.status === RequestNoticeAgreeStatus.UNTREATED && !isCurrentUser(item.senderId)">
-                <n-button secondary :loading="loadingMap[item.applyId]" @click="handleAgree(item.applyId)">
-                  接受
-                </n-button>
+                <n-button secondary :loading="loadingMap[item.applyId]" @click="handleAgree(item)">接受</n-button>
                 <n-dropdown
                   trigger="click"
                   :options="dropdownOptions"
@@ -112,6 +110,7 @@
   </n-flex>
 </template>
 <script setup lang="ts">
+import type { NoticeItem } from '@/services/types.ts'
 import { NoticeType, RequestNoticeAgreeStatus } from '@/services/types.ts'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useUserStore } from '@/stores/user'
@@ -149,17 +148,20 @@ const applyMsg = computed(() => (item: any) => {
   if (props.type === 'friend') {
     return isCurrentUser(item.senderId) ? (isAccepted(item) ? '已同意你的请求' : '正在验证你的邀请') : '请求加为好友'
   } else {
-    const groupDetail: any = groupStore.getGroupDetail(item.roomId)!
+    const groupDetail: any = groupStore.getGroupDetail(item.roomId)
+    if (!groupDetail) return
     if (item.eventType === NoticeType.GROUP_APPLY) {
       return '申请加入 [' + groupDetail.groupName + ']'
     } else if (item.eventType === NoticeType.GROUP_INVITE) {
-      return '邀请' + groupStore.getUserInfo(item.operateId)!.name + '加入 [' + groupDetail.groupName + ']'
+      const inviter = groupStore.getUserInfo(item.operateId)?.name || '未知用户'
+      return '邀请' + inviter + '加入 [' + groupDetail.groupName + ']'
     } else if (isFriendApplyOrGroupInvite(item)) {
       return isCurrentUser(item.senderId)
         ? '已同意加入 [' + groupDetail.groupName + ']'
         : '邀请你加入 [' + groupDetail.groupName + ']'
     } else if (item.eventType === NoticeType.GROUP_MEMBER_DELETE) {
-      return '已被' + groupStore.getUserInfo(item.senderId)!.name + '踢出 [' + groupDetail.groupName + ']'
+      const operator = groupStore.getUserInfo(item.senderId)?.name || '未知用户'
+      return '已被' + operator + '踢出 [' + groupDetail.groupName + ']'
     } else if (item.eventType === NoticeType.GROUP_SET_ADMIN) {
       return '已被群主设置为 [' + groupDetail.groupName + '] 的管理员'
     } else if (item.eventType === NoticeType.GROUP_RECALL_ADMIN) {
@@ -197,12 +199,12 @@ const getUserInfo = (item: any) => {
     case NoticeType.GROUP_MEMBER_DELETE:
     case NoticeType.GROUP_SET_ADMIN:
     case NoticeType.GROUP_RECALL_ADMIN:
-      return groupStore.getUserInfo(item.operateId)!
+      return groupStore.getUserInfo(item.operateId)
     case NoticeType.ADD_ME:
     case NoticeType.GROUP_INVITE:
     case NoticeType.GROUP_INVITE_ME:
     case NoticeType.GROUP_APPLY:
-      return groupStore.getUserInfo(item.senderId)!
+      return groupStore.getUserInfo(item.senderId)
   }
 }
 
@@ -243,18 +245,21 @@ const loadMoreFriendRequests = async () => {
   }
 }
 
-const handleAgree = async (applyId: string) => {
+const handleAgree = async (item: NoticeItem) => {
+  const applyId = item.applyId
   loadingMap.value[applyId] = true
-  contactStore
-    .onHandleInvite({
+  try {
+    await contactStore.onHandleInvite({
       applyId,
-      state: 2
+      state: 2,
+      roomId: item.roomId,
+      type: item.type
     })
-    .then(() => {
-      setTimeout(() => {
-        loadingMap.value[applyId] = false
-      }, 600)
-    })
+  } finally {
+    setTimeout(() => {
+      loadingMap.value[applyId] = false
+    }, 600)
+  }
 }
 
 // 处理好友请求操作（拒绝或忽略）

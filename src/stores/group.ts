@@ -646,15 +646,26 @@ export const useGroupStore = defineStore(
      * @param roomId 要退出的群聊ID
      */
     const exitGroup = async (roomId: string) => {
-      await ImRequestUtils.exitGroup({ roomId: roomId })
-      // 从成员列表中移除自己
+      if (!roomId) return
+
+      await ImRequestUtils.exitGroup({ roomId })
+
+      // 更新群成员缓存，移除自己
       const currentUserList = userListMap[roomId] || []
       const updatedList = currentUserList.filter((user: UserItem) => user.uid !== userStore.userInfo!.uid)
       userListMap[roomId] = updatedList
-      // 更新会话列表
-      chatStore.removeSession(globalStore.currentSession!.roomId)
-      // 切换到第一个会话
-      globalStore.currentSession!.roomId = chatStore.sessionList[0].roomId
+
+      // 删除对应的群详情缓存
+      removeGroupDetail(roomId)
+
+      // 更新会话列表，使用传入的 roomId
+      chatStore.removeSession(roomId)
+
+      // 如果退出的是当前选中的会话，则切换到新的当前会话
+      if (globalStore.currentSessionRoomId === roomId) {
+        const fallbackSession = chatStore.sessionList[0]
+        globalStore.updateCurrentSessionRoomId(fallbackSession ? fallbackSession.roomId : '')
+      }
     }
 
     /**
