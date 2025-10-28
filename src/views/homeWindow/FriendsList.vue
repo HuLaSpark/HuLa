@@ -198,7 +198,7 @@ const handleSelect = (event: MouseEvent) => {
 
 const handleApply = async (applyType: 'friend' | 'group') => {
   // 刷新好友申请列表
-  await contactStore.getApplyPage(true, true)
+  await contactStore.getApplyPage(applyType, true, true)
 
   // 更新未读数
   if (applyType === 'friend') {

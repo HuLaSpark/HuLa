@@ -215,7 +215,7 @@ const avatars = computed(() => {
 onMounted(async () => {
   try {
     await contactStore.getContactList(true)
-    await contactStore.getApplyPage(false)
+    await contactStore.getApplyPage('friend', false)
   } catch (error) {
     console.log('请求好友申请列表失败')
   }

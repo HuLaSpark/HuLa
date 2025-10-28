@@ -141,7 +141,7 @@ useMitt.on(
     globalStore.unReadMark.newGroupUnreadCount = data.unReadCount4Group || 0
 
     // 刷新好友申请列表
-    await contactStore.getApplyPage(true)
+    await contactStore.getApplyPage('friend', true)
   }
 )
 

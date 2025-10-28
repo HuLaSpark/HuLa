@@ -247,7 +247,7 @@ onBeforeMount(async () => {
   // 获取最新的未读数
   await contactStore.getApplyUnReadCount()
   // 刷新好友申请列表
-  await contactStore.getApplyPage(true)
+  await contactStore.getApplyPage('friend', true)
   // 刷新好友列表
   await contactStore.getContactList(true)
 })

@@ -332,7 +332,13 @@ export async function sendAddFriendRequest(body: { targetUid: string; msg: strin
   })
 }
 
-export async function requestNoticePage(params: { pageSize: number; pageNo: number; cursor: string; click: boolean }) {
+export async function requestNoticePage(params: {
+  pageSize: number
+  pageNo: number
+  cursor: string
+  click: boolean
+  applyType: string
+}) {
   return await imRequest({
     url: ImUrlEnum.REQUEST_NOTICE_PAGE,
     params
