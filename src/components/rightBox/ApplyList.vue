@@ -279,7 +279,7 @@ const loadMoreFriendRequests = async () => {
 
   isLoadingMore.value = true
   try {
-    await contactStore.getApplyPage(false)
+    await contactStore.getApplyPage('friend', false)
   } finally {
     isLoadingMore.value = false
   }
@@ -326,7 +326,7 @@ const handleFriendAction = async (action: string, applyId: string) => {
 
 onMounted(() => {
   // 组件挂载时刷新一次列表
-  contactStore.getApplyPage(true)
+  contactStore.getApplyPage('friend', true)
 })
 
 // 监听applyList变化，批量加载群组信息
