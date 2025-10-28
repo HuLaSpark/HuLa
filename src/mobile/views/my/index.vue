@@ -20,11 +20,57 @@
             :options="tabOptions"
             active-tab-name="find">
             <template #find>
-              <CommunityContent v-for="i in testList" :key="i"></CommunityContent>
+              <!-- 加载状态 -->
+              <div
+                v-if="feedOptions.isLoading && feedList.length === 0"
+                class="flex justify-center items-center py-20px">
+                <n-spin size="large" />
+              </div>
+
+              <!-- 空状态 -->
+              <div v-else-if="feedList.length === 0" class="flex justify-center items-center py-40px text-gray-500">
+                暂无动态
+              </div>
+
+              <!-- 动态列表 -->
+              <template v-else>
+                <CommunityContent v-for="item in feedList" :key="item.id" :feed-item="item" />
+
+                <!-- 加载更多 -->
+                <div v-if="!feedOptions.isLast" class="flex justify-center py-15px">
+                  <n-button :loading="feedOptions.isLoading" @click="loadMore" type="primary" text size="small">
+                    {{ feedOptions.isLoading ? '加载中...' : '加载更多' }}
+                  </n-button>
+                </div>
+
+                <!-- 已加载全部 -->
+                <div v-else class="flex justify-center py-15px text-12px text-gray-400">已加载全部</div>
+              </template>
             </template>
 
             <template #follow>
-              <CommunityContent v-for="i in testList" :key="i"></CommunityContent>
+              <!-- 赞过的动态 - 暂时显示相同内容 -->
+              <div
+                v-if="feedOptions.isLoading && feedList.length === 0"
+                class="flex justify-center items-center py-20px">
+                <n-spin size="large" />
+              </div>
+
+              <div v-else-if="feedList.length === 0" class="flex justify-center items-center py-40px text-gray-500">
+                暂无赞过的动态
+              </div>
+
+              <template v-else>
+                <CommunityContent v-for="item in feedList" :key="item.id" :feed-item="item" />
+
+                <div v-if="!feedOptions.isLast" class="flex justify-center py-15px">
+                  <n-button :loading="feedOptions.isLoading" @click="loadMore" type="primary" text size="small">
+                    {{ feedOptions.isLoading ? '加载中...' : '加载更多' }}
+                  </n-button>
+                </div>
+
+                <div v-else class="flex justify-center py-15px text-12px text-gray-400">已加载全部</div>
+              </template>
             </template>
           </CommunityTab>
         </div>
@@ -44,11 +90,16 @@
   </div>
 </template>
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
 import CommunityContent from '#/components/community/CommunityContent.vue'
 import CommunityTab from '#/components/community/CommunityTab.vue'
 import PersonalInfo from '#/components/my/PersonalInfo.vue'
 import Settings from '#/components/my/Settings.vue'
 import router from '@/router'
+import { useFeedStore } from '@/stores/feed'
+
+const feedStore = useFeedStore()
+const { feedList, feedOptions } = storeToRefs(feedStore)
 
 const measureRef = ref<HTMLDivElement>()
 
@@ -66,6 +117,11 @@ const onUpdate = (newTab: string) => {
   console.log('已更新：', newTab)
 }
 
+const loadMore = async () => {
+  if (feedOptions.value.isLoading || feedOptions.value.isLast) return
+  await feedStore.loadMore()
+}
+
 const tabOptions = reactive([
   {
     tab: '动态',
@@ -76,14 +132,6 @@ const tabOptions = reactive([
     name: 'follow'
   }
 ])
-
-const testList = computed(() => {
-  const temp = []
-  for (let i = 0; i < 20; i++) {
-    temp.push(i)
-  }
-  return temp
-})
 
 const isShow = ref(true)
 
@@ -140,10 +188,13 @@ const scrollContainer = ref<HTMLElement | null>(null)
 const lastScrollTop = ref(0)
 const hasTriggeredHide = ref(false)
 
-onMounted(() => {
+onMounted(async () => {
   if (measureRef.value) {
     measureElementObserver.observe(measureRef.value)
   }
+
+  // 初始加载动态列表
+  await feedStore.getFeedList(true)
 })
 
 onUnmounted(() => {

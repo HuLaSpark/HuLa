@@ -649,7 +649,7 @@ const handlePublishFeed = async () => {
 
   try {
     const feedData: any = {
-      uid: Number(userStore.userInfo?.uid), // 发布人id
+      uid: userStore.userInfo?.uid, // 发布人id
       content: newFeedContent.value,
       mediaType: mediaType.value, // 固定为 0 (纯文本)
       permission: permission.value
