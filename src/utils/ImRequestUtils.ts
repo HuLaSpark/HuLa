@@ -139,6 +139,16 @@ export async function getGroupDetail(roomId: string) {
 }
 
 /**
+ * 获取群组基础信息 [没进群的人、逻辑删除的群也可以查询]
+ */
+export async function getGroupInfo(roomId: string) {
+  return await imRequest({
+    url: ImUrlEnum.GROUP_INFO,
+    params: { id: roomId }
+  })
+}
+
+/**
  * 快捷方法：获取联系人列表
  */
 export async function getContactList(options?: { pageSize?: number; cursor?: string }) {

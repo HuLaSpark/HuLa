@@ -596,6 +596,8 @@ export enum ImUrlEnum {
   GROUP_LIST = 'groupList',
   /** 群聊详情 */
   GROUP_DETAIL = 'groupDetail',
+  /** 群聊信息 */
+  GROUP_INFO = 'groupInfo',
 
   // 群聊管理员
   /** 撤销管理员 */

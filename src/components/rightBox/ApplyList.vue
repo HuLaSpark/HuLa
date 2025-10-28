@@ -2,9 +2,6 @@
   <n-flex vertical class="select-none">
     <n-flex align="center" justify="space-between" class="color-[--text-color] px-20px py-10px">
       <p class="text-16px">{{ props.type === 'friend' ? '好友通知' : '群通知' }}</p>
-      <!-- <svg class="size-18px cursor-pointer">
-        <use href="#delete"></use>
-      </svg> -->
     </n-flex>
 
     <n-virtual-list
@@ -27,7 +24,7 @@
                 :src="
                   props.type === 'friend'
                     ? avatarSrc(getUserInfo(item)?.avatar || '')
-                    : avatarSrc(groupStore.getGroupDetail(item.roomId)?.avatar || '')
+                    : avatarSrc(groupDetailsMap[item.roomId]?.avatar || '/default-group-avatar.png')
                 "
                 class="mr-10px" />
               <n-flex vertical :size="12">
@@ -117,6 +114,7 @@ import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { useGroupStore } from '@/stores/group'
+import { getGroupInfo } from '@/utils/ImRequestUtils'
 
 const userStore = useUserStore()
 const contactStore = useContactStore()
@@ -128,6 +126,10 @@ const isLoadingMore = ref(false)
 const props = defineProps<{
   type: 'friend' | 'group'
 }>()
+
+// 新增：存储群组信息的响应式对象
+const groupDetailsMap = ref<Record<string, any>>({})
+const loadingGroups = ref<Set<string>>(new Set())
 
 // 检查好友申请是否已被接受
 const isAccepted = (item: any) => {
@@ -144,28 +146,66 @@ const applyList = computed(() => {
   })
 })
 
+// 新增：获取群组信息的函数
+const getGroupDetail = async (roomId: string) => {
+  if (!roomId) return null
+
+  // 如果已经在加载中，直接返回
+  if (loadingGroups.value.has(roomId)) {
+    return null
+  }
+
+  // 如果已经有缓存，直接返回
+  if (groupDetailsMap.value[roomId]) {
+    return groupDetailsMap.value[roomId]
+  }
+
+  // 开始加载
+  loadingGroups.value.add(roomId)
+  try {
+    const groupInfo = await getGroupInfo(roomId)
+    if (groupInfo) {
+      groupDetailsMap.value[roomId] = groupInfo
+      return groupInfo
+    }
+  } catch (error) {
+    console.error('获取群组信息失败:', error)
+  } finally {
+    loadingGroups.value.delete(roomId)
+  }
+
+  return null
+}
+
+// 异步获取群组信息的计算属性
 const applyMsg = computed(() => (item: any) => {
   if (props.type === 'friend') {
     return isCurrentUser(item.senderId) ? (isAccepted(item) ? '已同意你的请求' : '正在验证你的邀请') : '请求加为好友'
   } else {
-    const groupDetail: any = groupStore.getGroupDetail(item.roomId)
-    if (!groupDetail) return
+    const groupDetail = groupDetailsMap.value[item.roomId]
+    if (!groupDetail) {
+      if (item.roomId && !loadingGroups.value.has(item.roomId)) {
+        getGroupDetail(item.roomId)
+      }
+      return '加载中...'
+    }
+
     if (item.eventType === NoticeType.GROUP_APPLY) {
-      return '申请加入 [' + groupDetail.groupName + ']'
+      return '申请加入 [' + groupDetail.name + ']'
     } else if (item.eventType === NoticeType.GROUP_INVITE) {
       const inviter = groupStore.getUserInfo(item.operateId)?.name || '未知用户'
-      return '邀请' + inviter + '加入 [' + groupDetail.groupName + ']'
+      return '邀请' + inviter + '加入 [' + groupDetail.name + ']'
     } else if (isFriendApplyOrGroupInvite(item)) {
       return isCurrentUser(item.senderId)
-        ? '已同意加入 [' + groupDetail.groupName + ']'
-        : '邀请你加入 [' + groupDetail.groupName + ']'
+        ? '已同意加入 [' + groupDetail.name + ']'
+        : '邀请你加入 [' + groupDetail.name + ']'
     } else if (item.eventType === NoticeType.GROUP_MEMBER_DELETE) {
       const operator = groupStore.getUserInfo(item.senderId)?.name || '未知用户'
-      return '已被' + operator + '踢出 [' + groupDetail.groupName + ']'
+      return '已被' + operator + '踢出 [' + groupDetail.name + ']'
     } else if (item.eventType === NoticeType.GROUP_SET_ADMIN) {
-      return '已被群主设置为 [' + groupDetail.groupName + '] 的管理员'
+      return '已被群主设置为 [' + groupDetail.name + '] 的管理员'
     } else if (item.eventType === NoticeType.GROUP_RECALL_ADMIN) {
-      return '已被群主取消 [' + groupDetail.groupName + '] 的管理员权限'
+      return '已被群主取消 [' + groupDetail.name + '] 的管理员权限'
     }
   }
 })
@@ -251,7 +291,7 @@ const handleAgree = async (item: NoticeItem) => {
   try {
     await contactStore.onHandleInvite({
       applyId,
-      state: 2,
+      state: RequestNoticeAgreeStatus.ACCEPTED,
       roomId: item.roomId,
       type: item.type
     })
@@ -269,12 +309,12 @@ const handleFriendAction = async (action: string, applyId: string) => {
     if (action === 'reject') {
       await contactStore.onHandleInvite({
         applyId,
-        state: 0
+        state: RequestNoticeAgreeStatus.REJECTED
       })
     } else if (action === 'ignore') {
       await contactStore.onHandleInvite({
         applyId,
-        state: 3
+        state: RequestNoticeAgreeStatus.IGNORE
       })
     }
   } finally {
@@ -288,13 +328,23 @@ onMounted(() => {
   // 组件挂载时刷新一次列表
   contactStore.getApplyPage(true)
 })
+
+// 监听applyList变化，批量加载群组信息
 watch(
   () => applyList.value,
   (newList) => {
-    const roomIds = newList.filter((item) => item.roomId && Number(item.roomId) > 0).map((item) => item.roomId)
+    const roomIds = newList
+      .filter((item) => item.roomId && Number(item.roomId) > 0)
+      .map((item) => item.roomId)
+      .filter((roomId, index, array) => array.indexOf(roomId) === index)
 
     if (roomIds.length > 0) {
-      groupStore.loadGroupDetails(roomIds)
+      // 批量加载群组信息
+      roomIds.forEach((roomId) => {
+        if (!groupDetailsMap.value[roomId] && !loadingGroups.value.has(roomId)) {
+          getGroupDetail(roomId)
+        }
+      })
     }
   },
   { immediate: true, deep: true }

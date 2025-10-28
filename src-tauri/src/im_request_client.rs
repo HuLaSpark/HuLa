@@ -249,6 +249,7 @@ pub enum ImUrl {
     GroupList,
     GroupListMember,
     GroupDetail,
+    GroupInfo,
     RevokeAdmin,
     AddAdmin,
     ExitGroup,
@@ -347,7 +348,8 @@ impl ImUrl {
             ImUrl::UpdateRoomInfo => (http::Method::POST, "im/room/updateRoomInfo"),
             ImUrl::GroupList => (http::Method::GET, "im/room/group/list"),
             ImUrl::GroupListMember => (http::Method::GET, "im/room/group/listMember"),
-            ImUrl::GroupDetail => (http::Method::GET, "im/room/group"),
+            ImUrl::GroupDetail => (http::Method::GET, "im/room/group/detail"),
+            ImUrl::GroupInfo => (http::Method::GET, "im/room/group/info"),
 
             // 群聊管理员
             ImUrl::RevokeAdmin => (http::Method::DELETE, "im/room/group/admin"),
@@ -469,6 +471,7 @@ impl ImUrl {
             "updateRoomInfo" => Ok(ImUrl::UpdateRoomInfo),
             "groupList" => Ok(ImUrl::GroupList),
             "groupDetail" => Ok(ImUrl::GroupDetail),
+            "groupInfo" => Ok(ImUrl::GroupInfo),
 
             // 群聊管理员
             "revokeAdmin" => Ok(ImUrl::RevokeAdmin),
