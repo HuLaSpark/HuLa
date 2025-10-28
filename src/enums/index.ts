@@ -732,7 +732,20 @@ export enum ImUrlEnum {
   CHECK_EMAIL = 'checkEmail',
 
   MERGE_MSG = 'mergeMsg',
-  GET_USER_BY_IDS = 'getUserByIds'
+  GET_USER_BY_IDS = 'getUserByIds',
+
+  /** 发送 AI 消息 */
+  MESSAGE_SEND_STREAM = 'messageSendStream',
+  /** 获取指定会话消息列表 */
+  MESSAGE_LIST_BY_CONVERSATION_ID = 'messageListByConversationId',
+  /** 获取会话消息列表 */
+  CONVERSATION_MY_LIST = 'conversationMyList',
+  /** 获得【我的】聊天对话 */
+  CONVERSATION_GET_MY = 'conversationGetMy',
+  /** 创建会话 */
+  CONVERSATION_CREATE_MY = 'conversationCreateMy',
+  /** 删除会话 */
+  CONVERSATION_DELETE_MY = 'conversationDeleteMy'
 }
 
 // 滚动意图管理枚举

@@ -703,3 +703,55 @@ export async function getFeedPermission(params: { feedId: string }) {
     params
   })
 }
+
+// 发送AI消息（流式）
+export async function messageSendStream(params: { conversationId: string; content: string; useContext?: boolean }) {
+  return await imRequest({
+    url: ImUrlEnum.MESSAGE_SEND_STREAM,
+    params
+  })
+}
+
+// 获得指定对话的消息列表
+export async function messageListByConversationId(params: {
+  conversationId: string
+  pageNo?: number
+  pageSize?: number
+}) {
+  return await imRequest({
+    url: ImUrlEnum.MESSAGE_LIST_BY_CONVERSATION_ID,
+    params
+  })
+}
+
+// 获取会话列表（我的）
+export async function conversationMyList(params?: { pageNo?: number; pageSize?: number }) {
+  return await imRequest({
+    url: ImUrlEnum.CONVERSATION_MY_LIST,
+    params
+  })
+}
+
+// 获得【我的】聊天对话
+export async function conversationGetMy(params?: { id: string }) {
+  return await imRequest({
+    url: ImUrlEnum.CONVERSATION_GET_MY,
+    params
+  })
+}
+
+// 创建会话（我的）
+export async function conversationCreateMy(params: { roleId?: string; knowledgeId?: string; title?: string }) {
+  return await imRequest({
+    url: ImUrlEnum.CONVERSATION_CREATE_MY,
+    params
+  })
+}
+
+// 删除会话（我的）
+export async function conversationDeleteMy(params: { id: string }) {
+  return await imRequest({
+    url: ImUrlEnum.CONVERSATION_DELETE_MY,
+    params
+  })
+}
