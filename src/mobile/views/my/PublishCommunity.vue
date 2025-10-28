@@ -10,119 +10,276 @@
     </template>
 
     <template #container>
-      <div class="flex flex-col gap-1 overflow-auto h-full">
-        <div class="flex flex-col p-20px gap-20px">
+      <div class="flex flex-col gap-1 overflow-auto h-full bg-#f5f5f5">
+        <div class="flex flex-col p-16px gap-12px">
           <!-- 动态内容输入 -->
-          <div class="bg-white rounded-15px p-15px">
-            <n-input
-              v-model:value="feedContent"
+          <div class="bg-white rounded-12px p-16px">
+            <div class="text-14px text-#333 mb-8px font-500">动态内容</div>
+            <van-field
+              v-model="feedContent"
               type="textarea"
               placeholder="尽情分享生活吧~😎"
-              class="w-full"
-              :autosize="{ minRows: 5, maxRows: 10 }"
               :maxlength="500"
-              :show-count="true" />
+              show-word-limit
+              :rows="8"
+              :autosize="{ minHeight: 150, maxHeight: 300 }" />
           </div>
 
-          <!-- 媒体类型选择 - 只有图文和视频 -->
-          <div class="bg-white rounded-15px p-15px">
-            <div class="text-14px text-[--text-color] mb-10px font-500">选择类型</div>
-            <n-radio-group v-model:value="feedMediaType" @update:value="handleMediaTypeChange">
-              <n-radio :value="1">图文</n-radio>
-              <n-radio :value="2">视频</n-radio>
-            </n-radio-group>
+          <!-- 媒体类型提示（暂时禁用） -->
+          <div class="bg-white rounded-12px p-16px">
+            <div class="text-14px text-#333 mb-8px font-500">媒体类型</div>
+            <div class="text-13px text-#999">
+              <div class="flex items-center gap-8px mb-6px">
+                <span class="text-#c8c9cc">📷</span>
+                <span class="text-#c8c9cc">图文（暂未开放）</span>
+              </div>
+              <div class="flex items-center gap-8px">
+                <span class="text-#c8c9cc">🎬</span>
+                <span class="text-#c8c9cc">视频（暂未开放）</span>
+              </div>
+            </div>
           </div>
 
-          <!-- 图片上传 - 使用Vant Uploader -->
-          <div v-if="feedMediaType === 1" class="bg-white rounded-15px p-15px">
-            <div class="text-14px text-[--text-color] mb-10px font-500">上传图片（最多9张）</div>
-            <van-uploader
-              v-model="feedImages"
-              accept="image/*"
-              multiple
-              :max-count="9"
-              upload-icon="photo-o"
-              preview-size="80px" />
-            <n-alert v-if="feedImages.length === 0" type="warning" class="mt-10px text-12px">
-              请至少上传一张图片
-            </n-alert>
+          <!-- 权限选择 -->
+          <div class="bg-white rounded-12px p-16px">
+            <div class="text-14px text-#333 mb-12px font-500">谁可以看</div>
+            <van-radio-group v-model="permission" direction="vertical" @change="handlePermissionChange">
+              <van-radio name="open" icon-size="18px" class="mb-12px">
+                <template #icon="props">
+                  <div
+                    :class="[
+                      'w-20px h-20px rounded-full border-2 flex items-center justify-center transition-all',
+                      props.checked ? 'border-#13987f bg-#13987f' : 'border-#c8c9cc'
+                    ]">
+                    <div v-if="props.checked" class="w-8px h-8px rounded-full bg-white"></div>
+                  </div>
+                </template>
+                <span class="ml-8px text-14px">公开</span>
+              </van-radio>
+              <van-radio name="partVisible" icon-size="18px" class="mb-12px">
+                <template #icon="props">
+                  <div
+                    :class="[
+                      'w-20px h-20px rounded-full border-2 flex items-center justify-center transition-all',
+                      props.checked ? 'border-#13987f bg-#13987f' : 'border-#c8c9cc'
+                    ]">
+                    <div v-if="props.checked" class="w-8px h-8px rounded-full bg-white"></div>
+                  </div>
+                </template>
+                <span class="ml-8px text-14px">部分可见</span>
+              </van-radio>
+              <van-radio name="notAnyone" icon-size="18px">
+                <template #icon="props">
+                  <div
+                    :class="[
+                      'w-20px h-20px rounded-full border-2 flex items-center justify-center transition-all',
+                      props.checked ? 'border-#13987f bg-#13987f' : 'border-#c8c9cc'
+                    ]">
+                    <div v-if="props.checked" class="w-8px h-8px rounded-full bg-white"></div>
+                  </div>
+                </template>
+                <span class="ml-8px text-14px">不给谁看</span>
+              </van-radio>
+            </van-radio-group>
           </div>
 
-          <!-- 视频上传 - 使用Vant Uploader -->
-          <div v-if="feedMediaType === 2" class="bg-white rounded-15px p-15px">
-            <div class="text-14px text-[--text-color] mb-10px font-500">上传视频</div>
-            <van-uploader
-              v-model="videoFileList"
-              accept="video/*"
-              :max-count="1"
-              upload-icon="video-o"
-              preview-size="80px" />
-            <n-alert v-if="videoFileList.length === 0" type="warning" class="mt-10px text-12px">
-              请上传一个视频文件
-            </n-alert>
+          <!-- 选择用户 -->
+          <div v-if="permission === 'partVisible' || permission === 'notAnyone'" class="bg-white rounded-12px p-16px">
+            <div class="text-14px text-#333 mb-12px font-500">
+              {{ permission === 'partVisible' ? '选择可见的人' : '选择不可见的人' }}
+            </div>
+            <van-button
+              type="primary"
+              size="small"
+              plain
+              @click="showUserSelectPopup = true"
+              class="w-full"
+              :style="{ borderColor: '#13987f', color: '#13987f' }">
+              选择用户 (已选 {{ selectedUsers.length }} 人)
+            </van-button>
+            <div v-if="selectedUsers.length > 0" class="mt-12px flex flex-wrap gap-8px">
+              <van-tag
+                v-for="user in selectedUsers"
+                :key="user.uid"
+                closeable
+                size="medium"
+                color="#e8f5f4"
+                text-color="#13987f"
+                @close="removeSelectedUser(user.uid)">
+                {{ getUserName(user) }}
+              </van-tag>
+            </div>
           </div>
 
           <!-- 发布按钮 -->
-          <div class="flex justify-center gap-10px">
-            <n-button @click="goBack" class="flex-1">取消</n-button>
-            <n-button
+          <div class="flex gap-12px mt-8px pb-20px">
+            <van-button block plain @click="goBack" :style="{ borderColor: '#c8c9cc', color: '#666' }">取消</van-button>
+            <van-button
+              block
               type="primary"
               :loading="isPublishing"
               :disabled="!isPublishValid"
               @click="handlePublish"
-              class="flex-1">
+              :style="{ background: '#13987f', borderColor: '#13987f' }">
               发布
-            </n-button>
+            </van-button>
           </div>
         </div>
       </div>
     </template>
   </AutoFixHeightPage>
+
+  <!-- 用户选择弹窗 -->
+  <van-popup v-model:show="showUserSelectPopup" position="bottom" :style="{ height: '70%' }" round>
+    <div class="flex flex-col h-full">
+      <!-- 弹窗标题 -->
+      <div class="flex items-center justify-between p-16px border-b border-#eee">
+        <span class="text-16px font-500 text-#333">选择用户</span>
+        <van-button type="primary" size="small" @click="confirmUserSelection" :style="{ background: '#13987f' }">
+          确定
+        </van-button>
+      </div>
+
+      <!-- 搜索框 -->
+      <div class="p-12px border-b border-#f5f5f5">
+        <van-search v-model="userSearchKeyword" placeholder="搜索用户" shape="round" />
+      </div>
+
+      <!-- 用户列表 -->
+      <div class="flex-1 overflow-y-auto">
+        <van-checkbox-group v-model="selectedUserIds">
+          <van-cell-group>
+            <van-cell
+              v-for="user in filteredContactsList"
+              :key="user.uid"
+              clickable
+              @click="toggleUser(user.uid)"
+              class="user-item">
+              <template #title>
+                <div class="flex items-center gap-12px">
+                  <van-image
+                    :src="getUserAvatar(user)"
+                    round
+                    width="40"
+                    height="40"
+                    fit="cover"
+                    :style="{ flexShrink: 0 }" />
+                  <div class="flex-1 min-w-0">
+                    <div class="text-14px text-#333 font-500 truncate">
+                      {{ getUserName(user) }}
+                    </div>
+                    <div v-if="user.remark" class="text-12px text-#999 truncate mt-2px">{{ user.remark }}</div>
+                  </div>
+                </div>
+              </template>
+              <template #right-icon>
+                <van-checkbox :name="user.uid" @click.stop ref="checkboxes" />
+              </template>
+            </van-cell>
+          </van-cell-group>
+        </van-checkbox-group>
+
+        <!-- 空状态 -->
+        <van-empty v-if="filteredContactsList.length === 0" description="暂无联系人" />
+      </div>
+    </div>
+  </van-popup>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useMessage } from 'naive-ui'
-import type { UploaderFileListItem } from 'vant'
-import { pushFeed } from '@/utils/ImRequestUtils'
+import { showToast } from 'vant'
+import { useFeedStore } from '@/stores/feed'
+import { useContactStore } from '@/stores/contacts'
+import { useGroupStore } from '@/stores/group'
+import { AvatarUtils } from '@/utils/AvatarUtils'
+import type { FriendItem } from '@/services/types'
 
 const router = useRouter()
-const message = useMessage()
+const feedStore = useFeedStore()
+const contactStore = useContactStore()
+const groupStore = useGroupStore()
 
 // 响应式数据
 const feedContent = ref('')
-const feedMediaType = ref<1 | 2>(1) // 1-图文 2-视频
-const feedImages = ref<UploaderFileListItem[]>([])
-const videoFileList = ref<UploaderFileListItem[]>([])
 const isPublishing = ref(false)
+
+// 权限相关
+const permission = ref<'open' | 'partVisible' | 'notAnyone'>('open')
+const showUserSelectPopup = ref(false)
+const selectedUserIds = ref<string[]>([])
+const selectedUsers = ref<FriendItem[]>([])
+const userSearchKeyword = ref('')
+
+// 过滤后的联系人列表
+const filteredContactsList = computed(() => {
+  // 过滤掉 uid 为 1 的好友
+  const validContacts = contactStore.contactsList.filter((user) => user.uid !== '1')
+
+  if (!userSearchKeyword.value.trim()) {
+    return validContacts
+  }
+
+  const keyword = userSearchKeyword.value.toLowerCase()
+  return validContacts.filter((user) => {
+    const userInfo = groupStore.getUserInfo(user.uid)
+    const name = userInfo?.name || user.remark || user.uid || ''
+    return name.toLowerCase().includes(keyword) || user.uid.toLowerCase().includes(keyword)
+  })
+})
+
+// 获取用户头像
+const getUserAvatar = (user: FriendItem) => {
+  const userInfo = groupStore.getUserInfo(user.uid)
+  return AvatarUtils.getAvatarUrl(userInfo?.avatar || '')
+}
+
+// 获取用户名称
+const getUserName = (user: FriendItem) => {
+  const userInfo = groupStore.getUserInfo(user.uid)
+  return userInfo?.name || user.remark || user.uid || '未知用户'
+}
 
 // 验证发布内容是否有效
 const isPublishValid = computed(() => {
-  if (!feedContent.value.trim()) {
-    return false
-  }
-
-  if (feedMediaType.value === 1) {
-    // 图文：必须有图片
-    return feedImages.value.length > 0
-  } else if (feedMediaType.value === 2) {
-    // 视频：必须有视频
-    return videoFileList.value.length > 0
-  }
-
-  return false
+  // 只需要验证内容不为空
+  return feedContent.value.trim().length > 0
 })
 
-// 处理媒体类型变化
-const handleMediaTypeChange = (type: 1 | 2) => {
-  if (type === 1) {
-    // 切换到图文：清空视频
-    videoFileList.value = []
-  } else if (type === 2) {
-    // 切换到视频：清空图片
-    feedImages.value = []
+// 处理权限变化
+const handlePermissionChange = (value: string) => {
+  // 如果切换到公开，清空已选用户
+  if (value === 'open') {
+    selectedUserIds.value = []
+    selectedUsers.value = []
   }
+}
+
+// 切换用户选择
+const toggleUser = (uid: string) => {
+  const index = selectedUserIds.value.indexOf(uid)
+  if (index > -1) {
+    selectedUserIds.value.splice(index, 1)
+  } else {
+    selectedUserIds.value.push(uid)
+  }
+}
+
+// 确认用户选择
+const confirmUserSelection = () => {
+  // 更新选中的用户列表
+  selectedUsers.value = contactStore.contactsList.filter((user) => selectedUserIds.value.includes(user.uid))
+  showUserSelectPopup.value = false
+}
+
+// 移除已选用户
+const removeSelectedUser = (uid: string) => {
+  const index = selectedUserIds.value.indexOf(uid)
+  if (index > -1) {
+    selectedUserIds.value.splice(index, 1)
+  }
+  selectedUsers.value = selectedUsers.value.filter((user) => user.uid !== uid)
 }
 
 // 返回上一页
@@ -134,59 +291,68 @@ const goBack = () => {
 const handlePublish = async () => {
   // 验证内容
   if (!feedContent.value.trim()) {
-    message.warning('请输入动态内容')
+    showToast('请输入动态内容')
     return
   }
 
-  // 根据媒体类型进行验证
-  if (feedMediaType.value === 1) {
-    if (feedImages.value.length === 0) {
-      message.warning('请至少上传一张图片')
-      return
-    }
-  } else if (feedMediaType.value === 2) {
-    if (videoFileList.value.length === 0) {
-      message.warning('请上传一个视频文件')
-      return
-    }
+  // 验证权限设置
+  if ((permission.value === 'partVisible' || permission.value === 'notAnyone') && selectedUsers.value.length === 0) {
+    showToast(`请选择${permission.value === 'partVisible' ? '可见' : '不可见'}的用户`)
+    return
   }
 
   isPublishing.value = true
 
   try {
     const feedData: any = {
-      id: 0, // 新建动态时ID为0
       content: feedContent.value.trim(),
-      mediaType: feedMediaType.value,
-      permission: 'open' // 默认公开
+      mediaType: 0, // 纯文本
+      permission: permission.value
     }
 
-    // 根据媒体类型添加对应的字段
-    if (feedMediaType.value === 1) {
-      // 图文类型：提取图片URL
-      feedData.urls = feedImages.value.map((img: any) => img.url || '').filter((url: string) => url)
-    } else if (feedMediaType.value === 2) {
-      // 视频类型：添加视频URL
-      if (videoFileList.value.length > 0) {
-        const videoItem = videoFileList.value[0] as any
-        feedData.videoUrl = videoItem.url || ''
-      }
+    // 添加权限限制的用户ID列表
+    if (permission.value === 'partVisible' || permission.value === 'notAnyone') {
+      feedData.uidList = selectedUsers.value.map((user) => Number(user.uid))
     }
 
-    // 调用发布接口
-    await pushFeed(feedData)
+    // 调用 store 的发布方法，会自动刷新列表
+    await feedStore.publishFeed(feedData)
 
-    message.success('发布成功！')
+    showToast({
+      message: '发布成功！',
+      icon: 'success'
+    })
 
     // 返回上一页
     router.back()
   } catch (error) {
     console.error('发布动态失败:', error)
-    message.error('发布失败，请稍后重试')
+    showToast({
+      message: '发布失败，请稍后重试',
+      icon: 'fail'
+    })
   } finally {
     isPublishing.value = false
   }
 }
+
+// 初始化
+onMounted(async () => {
+  // 加载联系人列表
+  try {
+    await contactStore.getContactList(true)
+  } catch (error) {
+    console.error('加载联系人列表失败:', error)
+  }
+})
 </script>
 
-<style scoped></style>
+<style scoped>
+.user-item {
+  transition: background-color 0.2s;
+}
+
+.user-item:active {
+  background-color: #f5f5f5;
+}
+</style>
