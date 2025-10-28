@@ -313,6 +313,13 @@ class RustWebSocketClient {
     )
 
     this.listenerController.add(
+      await listen('ws-request-notify-event', (event: any) => {
+        info(`通知事件: ${JSON.stringify(event.payload)}`)
+        useMitt.emit(WsResponseMessageType.NOTIFY_EVENT, event.payload)
+      })
+    )
+
+    this.listenerController.add(
       await listen('ws-request-approval-friend', (event: any) => {
         info(`同意好友申请: ${JSON.stringify(event.payload)}`)
         useMitt.emit(WsResponseMessageType.REQUEST_APPROVAL_FRIEND, event.payload)

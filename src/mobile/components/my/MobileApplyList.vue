@@ -298,7 +298,9 @@ const handleAgree = async (item: NoticeItem) => {
       applyId,
       state: RequestNoticeAgreeStatus.ACCEPTED,
       roomId: item.roomId,
-      type: item.type
+      type: item.type,
+      applyType: props.type,
+      markAsRead: true
     })
   } finally {
     setTimeout(() => {
@@ -314,12 +316,16 @@ const handleFriendAction = async (action: string, applyId: string) => {
     if (action === 'reject') {
       await contactStore.onHandleInvite({
         applyId,
-        state: RequestNoticeAgreeStatus.REJECTED
+        state: RequestNoticeAgreeStatus.REJECTED,
+        applyType: props.type,
+        markAsRead: true
       })
     } else if (action === 'ignore') {
       await contactStore.onHandleInvite({
         applyId,
-        state: RequestNoticeAgreeStatus.IGNORE
+        state: RequestNoticeAgreeStatus.IGNORE,
+        applyType: props.type,
+        markAsRead: true
       })
     }
   } finally {

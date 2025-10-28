@@ -135,6 +135,7 @@ import { useWindow } from '@/hooks/useWindow'
 import router from '@/router'
 import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global.ts'
+import { useGroupStore } from '@/stores/group'
 import { useSettingStore } from '@/stores/setting.ts'
 import * as ImRequestUtils from '@/utils/ImRequestUtils'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
@@ -145,6 +146,7 @@ const { createWebviewWindow } = useWindow()
 const chatStore = useChatStore()
 const settingStore = useSettingStore()
 const globalStore = useGlobalStore()
+const groupStore = useGroupStore()
 const { page } = storeToRefs(settingStore)
 const appWindow = WebviewWindow.getCurrent()
 const selectedValue = ref<string[]>([])
@@ -329,6 +331,10 @@ const handleCreateGroup = async () => {
 
     if (matchedSession?.roomId) {
       globalStore.updateCurrentSessionRoomId(matchedSession.roomId)
+      await Promise.all([
+        groupStore.addGroupDetail(matchedSession.roomId),
+        groupStore.getGroupUserList(matchedSession.roomId, true)
+      ])
     }
 
     resetCreateGroupState()

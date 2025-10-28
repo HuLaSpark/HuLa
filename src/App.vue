@@ -33,6 +33,7 @@ import { useGlobalStore } from '@/stores/global'
 import { useSettingStore } from '@/stores/setting.ts'
 import { isDesktop, isIOS, isMobile, isWindows } from '@/utils/PlatformConstants'
 import LockScreen from '@/views/LockScreen.vue'
+import { unreadCountManager } from '@/utils/UnreadCountManager'
 
 import {
   type LoginSuccessResType,
@@ -140,10 +141,17 @@ useMitt.on(
     globalStore.unReadMark.newFriendUnreadCount = data.unReadCount4Friend || 0
     globalStore.unReadMark.newGroupUnreadCount = data.unReadCount4Group || 0
 
+    unreadCountManager.refreshBadge(globalStore.unReadMark)
+
     // 刷新好友申请列表
     await contactStore.getApplyPage('friend', true)
   }
 )
+
+useMitt.on(WsResponseMessageType.NOTIFY_EVENT, async () => {
+  await contactStore.getApplyUnReadCount()
+  await Promise.all([contactStore.getApplyPage('friend', true), contactStore.getApplyPage('group', true)])
+})
 
 // 处理自己被移除
 const handleSelfRemove = async (roomId: string) => {
@@ -247,6 +255,8 @@ useMitt.on(WsResponseMessageType.MSG_MARK_ITEM, async (data: { markList: MarkIte
 useMitt.on(WsResponseMessageType.REQUEST_APPROVAL_FRIEND, async () => {
   // 刷新好友列表以获取最新状态
   await contactStore.getContactList(true)
+  await contactStore.getApplyUnReadCount()
+  unreadCountManager.refreshBadge(globalStore.unReadMark)
 })
 
 useMitt.on(WsResponseMessageType.ROOM_INFO_CHANGE, async (data: { roomId: string; name: string; avatar: string }) => {
