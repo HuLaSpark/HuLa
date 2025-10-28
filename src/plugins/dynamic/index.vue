@@ -27,10 +27,26 @@
         </n-flex>
       </n-flex>
 
-      <div class="absolute top-30px right-30px cursor-pointer" @click="handleInfoTip">
-        <n-badge :value="unreadCount" :max="100" :show="unreadCount > 0">
-          <svg class="size-24px color-[--text-color]"><use href="#remind"></use></svg>
-        </n-badge>
+      <div class="absolute top-30px right-30px flex items-center gap-15px">
+        <!-- 闹铃图标 -->
+        <div class="cursor-pointer" @click="handleInfoTip">
+          <n-badge :value="unreadCount" :max="100" :show="unreadCount > 0">
+            <svg class="size-24px color-[--text-color]">
+              <use href="#remind"></use>
+            </svg>
+          </n-badge>
+        </div>
+        <!-- 添加动态按钮 -->
+        <div class="cursor-pointer" @click="showAddFeedModal = true">
+          <n-popover trigger="hover">
+            <template #trigger>
+              <svg class="size-24px color-[--text-color]">
+                <use href="#plus"></use>
+              </svg>
+            </template>
+            <span>发布动态</span>
+          </n-popover>
+        </div>
       </div>
     </n-flex>
 
@@ -50,90 +66,105 @@
         </div>
 
         <!-- 动态内容 -->
-        <n-flex v-else justify="center">
-          <n-flex
-            vertical
+        <n-flex v-else vertical class="w-full">
+          <div
             v-for="item in dynamicList"
             :key="item.id"
-            class="w-450px h-fit border-(solid 1px [--line-color]) custom-shadow rounded-8px bg-[--right-bg-color] p-10px box-border mb-15px">
-            <!-- 用户信息区域 -->
-            <n-flex align="center" class="mb-10px">
-              <n-flex vertical style="flex: 1" class="ml-10px">
-                <n-flex justify="space-between" align="center">
-                  <label class="text-14px flex items-center gap-5px">
-                    <span :class="item.author?.isAuth ? 'text-#13987f' : ''">
-                      {{ item.author?.name || '未知用户' }}
+            class="w-full border-b border-[--line-color] bg-[--right-bg-color] p-15px box-border cursor-pointer hover:bg-[--bg-hover-color]">
+            <!-- 主要内容区域 -->
+            <n-flex align="start" justify="space-between">
+              <!-- 左侧：头像和内容 -->
+              <n-flex align="start" style="flex: 1; min-width: 0">
+                <!-- 用户头像 -->
+                <n-avatar :size="40" round :src="AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar)" />
+
+                <!-- 内容区域 -->
+                <n-flex vertical style="flex: 1; min-width: 0" class="ml-10px">
+                  <!-- 用户名和时间 -->
+                  <n-flex align="center" :size="8" class="mb-5px">
+                    <span class="text-14px font-500 text-[--text-color]">
+                      {{ userStore.userInfo!.name }}
                     </span>
                     <n-popover trigger="hover" v-if="item.author?.isAuth">
                       <template #trigger>
-                        <svg class="size-20px color-#13987f select-none outline-none cursor-pointer">
+                        <svg class="size-16px color-#13987f">
                           <use href="#auth"></use>
                         </svg>
                       </template>
                       <span>认证用户</span>
                     </n-popover>
-                  </label>
-                  <span class="text-(12px #707070)">发布于：{{ formatTime(item.createTime!) }}</span>
+                  </n-flex>
+
+                  <!-- 动态内容 - 最多显示3行 -->
+                  <n-ellipsis :line-clamp="3" class="text-14px text-[--text-color] leading-5 mb-8px">
+                    {{ item.content }}
+                  </n-ellipsis>
+
+                  <!-- 底部信息：时间和操作 -->
+                  <n-flex align="center" justify="space-between" class="mt-5px">
+                    <span class="text-12px text-#999">{{ formatTime(item.createTime!) }}</span>
+
+                    <n-flex align="center" :size="15">
+                      <!-- 评论 -->
+                      <n-button text size="tiny" @click.stop="handleComment(item)">
+                        <template #icon>
+                          <n-icon size="16">
+                            <svg>
+                              <use href="#comment"></use>
+                            </svg>
+                          </n-icon>
+                        </template>
+                        <span class="text-12px text-#999">{{ item.commentCount || 0 }}</span>
+                      </n-button>
+
+                      <!-- 更多操作 -->
+                      <n-dropdown :options="getMoreOptions(item)" @select="handleMoreAction(item, $event)">
+                        <n-button text size="tiny" @click.stop>
+                          <template #icon>
+                            <n-icon size="16">
+                              <svg>
+                                <use href="#more"></use>
+                              </svg>
+                            </n-icon>
+                          </template>
+                        </n-button>
+                      </n-dropdown>
+                    </n-flex>
+                  </n-flex>
                 </n-flex>
-                <span class="text-(12px #707070)">{{ item.author?.signature || '暂无签名' }}</span>
               </n-flex>
-            </n-flex>
 
-            <!-- 动态内容 -->
-            <div class="mb-10px">
-              <p class="text-14px leading-6">{{ item.content }}</p>
-
-              <!-- 图片展示 -->
-              <n-image-group v-if="item.images && item.images.length > 0">
-                <n-flex class="mt-10px">
-                  <n-image
-                    v-for="(image, index) in item.images"
-                    :key="index"
-                    :src="image"
-                    alt="动态图片"
-                    width="134px"
-                    height="120px"
-                    class="rounded-6px cursor-pointer"
-                    @click="previewImage(item.images, index)" />
-                </n-flex>
-              </n-image-group>
-
-              <!-- 视频展示 -->
-              <div v-if="item.videoUrl" class="mt-10px">
-                <video
-                  :src="item.videoUrl"
-                  controls
-                  class="w-full max-h-300px rounded-6px"
-                  @click="handleVideoPlay(item.videoUrl)" />
+              <!-- 右侧：缩略图 -->
+              <div v-if="item.images && item.images.length > 0" class="ml-10px flex-shrink-0">
+                <n-image
+                  :src="item.images[0]"
+                  alt="缩略图"
+                  width="80px"
+                  height="80px"
+                  object-fit="cover"
+                  class="rounded-6px"
+                  @click.stop="previewImage(item.images, 0)" />
               </div>
-            </div>
 
-            <!-- 互动操作区域 -->
-            <n-flex align="center" justify="space-between" class="pt-10px border-t border-[--line-color]">
-              <n-flex align="center" :size="20">
-                <!-- 评论按钮 -->
-                <n-button text @click="handleComment(item)">
-                  <template #icon>
-                    <n-icon>
-                      <svg><use href="#comment"></use></svg>
-                    </n-icon>
-                  </template>
-                  评论 {{ item.commentCount || 0 }}
-                </n-button>
-              </n-flex>
-
-              <!-- 更多操作 -->
-              <n-dropdown :options="getMoreOptions(item)" @select="handleMoreAction(item, $event)">
-                <n-button text>
-                  <template #icon>
-                    <n-icon>
-                      <svg><use href="#more"></use></svg>
-                    </n-icon>
-                  </template>
-                </n-button>
-              </n-dropdown>
+              <!-- 视频缩略图 -->
+              <div v-else-if="item.videoUrl" class="ml-10px flex-shrink-0 relative">
+                <n-image
+                  :src="item.videoUrl"
+                  alt="视频"
+                  width="80px"
+                  height="80px"
+                  object-fit="cover"
+                  class="rounded-6px"
+                  @click.stop="handleVideoPlay(item.videoUrl)" />
+                <!-- 播放图标 -->
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <svg class="size-24px color-white opacity-80">
+                    <use href="#play"></use>
+                  </svg>
+                </div>
+              </div>
             </n-flex>
-          </n-flex>
+          </div>
         </n-flex>
 
         <!-- 加载更多 -->
@@ -145,6 +176,134 @@
       </n-scrollbar>
     </div>
 
+    <!-- 添加动态弹窗 -->
+    <n-modal v-model:show="showAddFeedModal" class="w-600px border-rd-8px">
+      <div class="bg-[--bg-popover] p-20px box-border flex flex-col">
+        <div class="flex justify-between items-center mb-20px">
+          <h3 class="text-18px font-bold text-[--text-color]">发布动态</h3>
+          <n-button text @click="handleCloseModal">
+            <template #icon>
+              <n-icon>
+                <svg class="size-16px">
+                  <use href="#close"></use>
+                </svg>
+              </n-icon>
+            </template>
+          </n-button>
+        </div>
+
+        <!-- 动态内容输入 -->
+        <n-input
+          v-model:value="newFeedContent"
+          type="textarea"
+          placeholder="分享新鲜事..."
+          :rows="6"
+          :maxlength="500"
+          show-count
+          class="mb-15px" />
+
+        <!-- 权限选择 -->
+        <div class="mb-15px">
+          <p class="text-14px text-[--text-color] mb-10px">谁可以看</p>
+          <n-select
+            v-model:value="permission"
+            :options="permissionOptions"
+            placeholder="选择可见范围"
+            @update:value="handlePermissionChange" />
+        </div>
+
+        <!-- 选择用户列表 -->
+        <div v-if="permission === 'partVisible' || permission === 'notAnyone'" class="mb-15px">
+          <p class="text-14px text-[--text-color] mb-10px">
+            {{ permission === 'partVisible' ? '选择可见的人' : '选择不可见的人' }}
+          </p>
+          <n-button @click="showUserSelectModal = true" size="small">
+            选择用户 (已选 {{ selectedUsers.length }} 人)
+          </n-button>
+          <div v-if="enrichedSelectedUsers.length > 0" class="mt-10px">
+            <n-tag
+              v-for="user in enrichedSelectedUsers"
+              :key="user.uid"
+              closable
+              @close="removeSelectedUser(user.uid)"
+              class="mr-5px mb-5px">
+              {{ user.name }}
+            </n-tag>
+          </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <n-flex justify="end" :size="10">
+          <n-button @click="handleCloseModal">取消</n-button>
+          <n-button type="primary" :loading="isPublishing" :disabled="!isPublishValid" @click="handlePublishFeed">
+            发布
+          </n-button>
+        </n-flex>
+      </div>
+    </n-modal>
+
+    <!-- 用户选择弹窗 -->
+    <n-modal v-model:show="showUserSelectModal" class="w-500px border-rd-8px">
+      <div class="bg-[--bg-popover] p-20px box-border flex flex-col">
+        <div class="flex justify-between items-center mb-20px">
+          <h3 class="text-16px font-bold text-[--text-color]">选择用户</h3>
+          <n-button text @click="showUserSelectModal = false">
+            <template #icon>
+              <n-icon>
+                <svg class="size-16px">
+                  <use href="#close"></use>
+                </svg>
+              </n-icon>
+            </template>
+          </n-button>
+        </div>
+
+        <!-- 搜索框 -->
+        <n-input v-model:value="userSearchKeyword" placeholder="搜索用户..." class="mb-15px" clearable>
+          <template #prefix>
+            <n-icon>
+              <svg>
+                <use href="#search"></use>
+              </svg>
+            </n-icon>
+          </template>
+        </n-input>
+
+        <!-- 用户列表 -->
+        <n-scrollbar style="max-height: 400px">
+          <n-checkbox-group v-model:value="selectedUserIds">
+            <n-flex vertical :size="8">
+              <div
+                v-for="user in filteredContactsList"
+                :key="user.uid"
+                class="user-item p-10px rounded-6px hover:bg-[--hover-color]">
+                <n-checkbox :value="user.uid" class="w-full">
+                  <n-flex align="center" :size="10">
+                    <n-avatar
+                      :size="36"
+                      round
+                      :src="AvatarUtils.getAvatarUrl(groupStore.getUserInfo(user.uid)?.avatar || '')" />
+                    <div>
+                      <p class="text-14px font-medium text-[--text-color]">
+                        {{ groupStore.getUserInfo(user.uid)?.name || user.remark || user.uid }}
+                      </p>
+                      <p class="text-12px text-gray-500">{{ user.uid }}</p>
+                    </div>
+                  </n-flex>
+                </n-checkbox>
+              </div>
+            </n-flex>
+          </n-checkbox-group>
+        </n-scrollbar>
+
+        <!-- 确认按钮 -->
+        <n-flex justify="end" :size="10" class="mt-15px">
+          <n-button @click="showUserSelectModal = false">取消</n-button>
+          <n-button type="primary" @click="confirmUserSelection">确定 ({{ selectedUserIds.length }})</n-button>
+        </n-flex>
+      </div>
+    </n-modal>
+
     <!-- 评论弹出框 -->
     <n-modal v-model:show="showCommentModal" class="w-500px border-rd-8px">
       <div class="bg-[--bg-popover] h-full p-6px box-border flex flex-col">
@@ -152,7 +311,9 @@
           <h3 class="text-16px font-bold">评论列表</h3>
           <n-button text @click="showCommentModal = false">
             <template #icon>
-              <n-icon><use href="#close"></use></n-icon>
+              <n-icon>
+                <use href="#close"></use>
+              </n-icon>
             </template>
           </n-button>
         </div>
@@ -199,57 +360,64 @@
 import { ref, onMounted, computed } from 'vue'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useUserStore } from '@/stores/user.ts'
+import { useContactStore } from '@/stores/contacts.ts'
+import { useFeedStore, type FeedItem } from '@/stores/feed.ts'
+import { useGroupStore } from '@/stores/group.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { feedList, delFeed } from '@/utils/ImRequestUtils'
+import { useMessage } from 'naive-ui'
+import type { FriendItem } from '@/services/types'
+import { storeToRefs } from 'pinia'
 
 const userStore = useUserStore()
+const contactStore = useContactStore()
+const feedStore = useFeedStore()
+const groupStore = useGroupStore()
+const message = useMessage()
 
-// 响应式数据 - 使用游标分页
-const dynamicList = ref<FeedItem[]>([])
-
-// 朋友圈分页选项 - 与联系人store保持一致
-const feedOptions = ref({
-  isLast: false,
-  isLoading: false,
-  cursor: ''
-})
+// 从store中获取响应式数据
+const { feedList: dynamicList, feedOptions, feedStats } = storeToRefs(feedStore)
 
 const showCommentModal = ref(false)
 const newComment = ref('')
 const currentFeedId = ref<string>('')
 const currentComments = ref<CommentItem[]>([])
 
-const titleList = [
+// 添加动态相关状态
+const showAddFeedModal = ref(false)
+const newFeedContent = ref('')
+const isPublishing = ref(false)
+
+// 媒体类型: 固定为纯文本
+const mediaType = ref(0)
+
+// 权限设置
+const permission = ref<'open' | 'partVisible' | 'notAnyone'>('open')
+const permissionOptions = [
+  { label: '公开', value: 'open' },
+  { label: '部分可见', value: 'partVisible' },
+  { label: '不给谁看', value: 'notAnyone' }
+]
+
+// 用户选择相关
+const showUserSelectModal = ref(false)
+const selectedUserIds = ref<string[]>([])
+const selectedUsers = ref<FriendItem[]>([])
+const userSearchKeyword = ref('')
+
+const titleList = computed(() => [
   {
     label: '动态',
-    total: 0
+    total: feedStats.value.total
   },
   {
     label: '关注',
-    total: 0
+    total: feedStats.value.followCount
   },
   {
     label: '粉丝',
-    total: 0
+    total: feedStats.value.fansCount
   }
-]
-
-// FeedItem 类型定义
-interface FeedItem {
-  id: string
-  content: string
-  images?: string[]
-  videoUrl?: string
-  createTime?: number
-  commentCount: number
-  author: {
-    id: string
-    name: string
-    avatar: string
-    isAuth: boolean
-    signature?: string
-  }
-}
+])
 
 interface CommentItem {
   id: string
@@ -264,6 +432,38 @@ const unreadCount = computed(() => {
   return dynamicList.value.reduce((total, feed) => {
     return total + (feed.commentCount || 0)
   }, 0)
+})
+
+// 验证发布内容是否有效（只验证文本内容）
+const isPublishValid = computed(() => {
+  return newFeedContent.value.trim().length > 0
+})
+
+// 过滤后的联系人列表（排除 uid 为 1 的好友）
+const filteredContactsList = computed(() => {
+  // 先过滤掉 uid 为 1 的好友
+  const validContacts = contactStore.contactsList.filter((user) => user.uid !== '1')
+
+  if (!userSearchKeyword.value.trim()) {
+    return validContacts
+  }
+  const keyword = userSearchKeyword.value.toLowerCase()
+  return validContacts.filter((user) => {
+    const userInfo = groupStore.getUserInfo(user.uid)
+    const name = userInfo?.name || user.remark || user.uid || ''
+    return name.toLowerCase().includes(keyword) || user.uid.toLowerCase().includes(keyword)
+  })
+})
+
+// 丰富selectedUsers数据，添加name属性
+const enrichedSelectedUsers = computed(() => {
+  return selectedUsers.value.map((user) => {
+    const userInfo = groupStore.getUserInfo(user.uid)
+    return {
+      ...user,
+      name: userInfo?.name || user.remark || user.uid || '未知用户'
+    }
+  })
 })
 
 // 格式化时间显示
@@ -281,59 +481,10 @@ const formatTime = (timestamp: number) => {
 }
 
 /**
- * 获取朋友圈列表 - 使用游标分页
- * @param isFresh 是否刷新列表，true则重新加载，false则加载更多
- */
-const fetchFeedList = async (isFresh = false) => {
-  // 非刷新模式下，如果已经加载完或正在加载中，则直接返回
-  if (!isFresh) {
-    if (feedOptions.value.isLast || feedOptions.value.isLoading) return
-  }
-
-  feedOptions.value.isLoading = true
-
-  try {
-    const response = await feedList({
-      pageSize: 20, // 使用固定分页大小，与联系人store保持一致
-      cursor: isFresh ? '' : feedOptions.value.cursor
-    })
-
-    if (!response) return
-
-    const data = response
-
-    // 刷新模式下替换整个列表，否则追加到列表末尾
-    if (isFresh) {
-      dynamicList.value.splice(0, dynamicList.value.length, ...data.list)
-    } else {
-      dynamicList.value.push(...data.list)
-    }
-
-    // 更新分页信息
-    feedOptions.value.cursor = data.cursor
-    feedOptions.value.isLast = data.isLast
-
-    // 更新统计信息
-    titleList[0].total = data.total || dynamicList.value.length
-  } catch (error) {
-    console.error('获取朋友圈列表失败:', error)
-  } finally {
-    feedOptions.value.isLoading = false
-  }
-}
-
-/**
  * 加载更多朋友圈
  */
 const loadMore = async () => {
-  await fetchFeedList(false)
-}
-
-/**
- * 刷新朋友圈列表
- */
-const refreshFeedList = async () => {
-  await fetchFeedList(true)
+  await feedStore.loadMore()
 }
 
 // 获取动态评论
@@ -404,19 +555,21 @@ const handleMoreAction = async (feed: FeedItem, action: string) => {
   switch (action) {
     case 'delete':
       try {
-        await delFeed({ feedId: feed.id })
-        // 从列表中移除已删除的朋友圈
-        dynamicList.value = dynamicList.value.filter((item) => item.id !== feed.id)
+        await feedStore.deleteFeed(feed.id)
+        message.success('删除成功')
       } catch (error) {
         console.error('删除动态失败:', error)
+        message.error('删除失败，请重试')
       }
       break
     case 'copy':
       // 复制链接逻辑
       navigator.clipboard.writeText(`${window.location.origin}/feed/${feed.id}`)
+      message.success('链接已复制')
       break
     case 'report':
       // 举报逻辑
+      message.info('举报功能开发中')
       break
   }
 }
@@ -438,10 +591,107 @@ const handleInfoTip = () => {
   showCommentModal.value = true
 }
 
+// 权限选择相关方法
+const handlePermissionChange = (value: string) => {
+  // 如果切换到公开，清空已选用户
+  if (value === 'open') {
+    selectedUserIds.value = []
+    selectedUsers.value = []
+  }
+}
+
+// 用户选择相关方法
+const confirmUserSelection = () => {
+  // 更新选中的用户列表
+  selectedUsers.value = contactStore.contactsList.filter((user) => selectedUserIds.value.includes(user.uid))
+  showUserSelectModal.value = false
+}
+
+const removeSelectedUser = (uid: string) => {
+  const index = selectedUserIds.value.indexOf(uid)
+  if (index > -1) {
+    selectedUserIds.value.splice(index, 1)
+  }
+  selectedUsers.value = selectedUsers.value.filter((user) => user.uid !== uid)
+}
+
+// 关闭弹窗
+const handleCloseModal = () => {
+  showAddFeedModal.value = false
+  resetAddFeedForm()
+}
+
+// 重置添加动态表单
+const resetAddFeedForm = () => {
+  newFeedContent.value = ''
+  mediaType.value = 0
+  permission.value = 'open'
+  selectedUserIds.value = []
+  selectedUsers.value = []
+  userSearchKeyword.value = ''
+}
+
+// 发布动态
+const handlePublishFeed = async () => {
+  // 验证内容
+  if (!newFeedContent.value.trim()) {
+    message.warning('请输入动态内容')
+    return
+  }
+
+  // 验证权限设置
+  if ((permission.value === 'partVisible' || permission.value === 'notAnyone') && selectedUsers.value.length === 0) {
+    message.warning(`请选择${permission.value === 'partVisible' ? '可见' : '不可见'}的用户`)
+    return
+  }
+
+  isPublishing.value = true
+
+  try {
+    const feedData: any = {
+      uid: Number(userStore.userInfo?.uid), // 发布人id
+      content: newFeedContent.value,
+      mediaType: mediaType.value, // 固定为 0 (纯文本)
+      permission: permission.value
+    }
+
+    // 添加权限限制的用户ID列表
+    if (permission.value === 'partVisible' || permission.value === 'notAnyone') {
+      feedData.uidList = selectedUsers.value.map((user) => Number(user.uid))
+    }
+
+    // 调用发布接口
+    const response = await feedStore.publishFeed(feedData)
+
+    // 后端会返回生成的朋友圈ID
+    console.log('发布成功，返回数据:', response)
+
+    message.success('发布成功！')
+
+    // 关闭弹窗
+    showAddFeedModal.value = false
+
+    // 重置表单
+    resetAddFeedForm()
+  } catch (error) {
+    console.error('发布动态失败:', error)
+    message.error('发布失败，请稍后重试')
+  } finally {
+    isPublishing.value = false
+  }
+}
+
 // 初始化数据
 onMounted(async () => {
   // 初始加载朋友圈列表
-  await refreshFeedList()
+  await feedStore.getFeedList(true)
+
+  // 加载联系人列表
+  try {
+    await contactStore.getContactList(true)
+  } catch (error) {
+    console.error('加载联系人列表失败:', error)
+  }
 
   // 显示窗口
   const currentWindow = WebviewWindow.getCurrent()
@@ -462,6 +712,15 @@ onMounted(async () => {
 
 .custom-shadow {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+// 用户选择项样式
+.user-item {
+  transition: all 0.3s;
+
+  &:hover {
+    background: var(--hover-color);
+  }
 }
 
 // 响应式设计
