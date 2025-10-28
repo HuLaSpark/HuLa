@@ -279,7 +279,7 @@ const loadMoreFriendRequests = async () => {
 
   isLoadingMore.value = true
   try {
-    await contactStore.getApplyPage('friend', false)
+    await contactStore.getApplyPage(props.type, false)
   } finally {
     isLoadingMore.value = false
   }
@@ -293,7 +293,9 @@ const handleAgree = async (item: NoticeItem) => {
       applyId,
       state: RequestNoticeAgreeStatus.ACCEPTED,
       roomId: item.roomId,
-      type: item.type
+      type: item.type,
+      applyType: props.type,
+      markAsRead: true
     })
   } finally {
     setTimeout(() => {
@@ -309,12 +311,16 @@ const handleFriendAction = async (action: string, applyId: string) => {
     if (action === 'reject') {
       await contactStore.onHandleInvite({
         applyId,
-        state: RequestNoticeAgreeStatus.REJECTED
+        state: RequestNoticeAgreeStatus.REJECTED,
+        applyType: props.type,
+        markAsRead: true
       })
     } else if (action === 'ignore') {
       await contactStore.onHandleInvite({
         applyId,
-        state: RequestNoticeAgreeStatus.IGNORE
+        state: RequestNoticeAgreeStatus.IGNORE,
+        applyType: props.type,
+        markAsRead: true
       })
     }
   } finally {
@@ -326,7 +332,7 @@ const handleFriendAction = async (action: string, applyId: string) => {
 
 onMounted(() => {
   // 组件挂载时刷新一次列表
-  contactStore.getApplyPage('friend', true)
+  contactStore.getApplyPage(props.type, true)
 })
 
 // 监听applyList变化，批量加载群组信息

@@ -921,45 +921,61 @@ const handleDelete = (label: RoomActEnum) => {
 }
 
 const handleConfirm = async () => {
-  if (optionsType.value === RoomActEnum.DELETE_FRIEND && activeItem.value.detailId) {
-    contactStore.onDeleteFriend(activeItem.value.detailId).then(() => {
+  const currentOption = optionsType.value
+  const targetRoomId = activeItem.value?.roomId
+  const targetDetailId = activeItem.value?.detailId
+
+  if (currentOption === undefined || currentOption === null || !targetRoomId) return
+
+  if (currentOption === RoomActEnum.DELETE_FRIEND && targetDetailId) {
+    try {
+      await contactStore.onDeleteFriend(targetDetailId)
+      useMitt.emit(MittEnum.DELETE_SESSION, targetRoomId)
+      window.$message.success('已删除好友')
       modalShow.value = false
       sidebarShow.value = false
-      window.$message.success('已删除好友')
-    })
-  } else if (optionsType.value === RoomActEnum.DISSOLUTION_GROUP) {
-    if (activeItem.value.roomId === '1') {
+    } catch (error) {
+      console.error('删除好友失败:', error)
+    }
+  } else if (currentOption === RoomActEnum.DISSOLUTION_GROUP) {
+    if (targetRoomId === '1') {
       window.$message.warning('无法解散频道')
       modalShow.value = false
       return
     }
 
-    groupStore.exitGroup(activeItem.value.roomId).then(() => {
-      modalShow.value = false
-      sidebarShow.value = false
+    try {
+      await groupStore.exitGroup(targetRoomId)
       window.$message.success('已解散群聊')
       // 删除当前的会话
-      useMitt.emit(MittEnum.DELETE_SESSION, activeItem.value.roomId)
-    })
-  } else if (optionsType.value === RoomActEnum.EXIT_GROUP) {
-    if (activeItem.value.roomId === '1') {
+      useMitt.emit(MittEnum.DELETE_SESSION, targetRoomId)
+      modalShow.value = false
+      sidebarShow.value = false
+    } catch (error) {
+      console.error('解散群聊失败:', error)
+    }
+  } else if (currentOption === RoomActEnum.EXIT_GROUP) {
+    if (targetRoomId === '1') {
       window.$message.warning('无法退出频道')
       modalShow.value = false
       return
     }
 
-    groupStore.exitGroup(activeItem.value.roomId).then(() => {
-      modalShow.value = false
-      sidebarShow.value = false
+    try {
+      await groupStore.exitGroup(targetRoomId)
       window.$message.success('已退出群聊')
       // 删除当前的会话
-      useMitt.emit(MittEnum.DELETE_SESSION, activeItem.value.roomId)
-    })
-  } else if (optionsType.value === RoomActEnum.UPDATE_GROUP_NAME) {
+      useMitt.emit(MittEnum.DELETE_SESSION, targetRoomId)
+      modalShow.value = false
+      sidebarShow.value = false
+    } catch (error) {
+      console.error('退出群聊失败:', error)
+    }
+  } else if (currentOption === RoomActEnum.UPDATE_GROUP_NAME) {
     // 确认修改群名称
     await saveGroupName()
     modalShow.value = false
-  } else if (optionsType.value === RoomActEnum.UPDATE_GROUP_INFO) {
+  } else if (currentOption === RoomActEnum.UPDATE_GROUP_INFO) {
     // 确认修改群信息
     await saveGroupInfo()
     modalShow.value = false

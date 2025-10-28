@@ -11,6 +11,7 @@ import {
   handleInvite,
   requestNoticePage
 } from '@/utils/ImRequestUtils'
+import { unreadCountManager } from '@/utils/UnreadCountManager'
 // 定义分页大小常量
 export const pageSize = 20
 export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
@@ -62,6 +63,8 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
     // 更新全局store中的未读计数
     globalStore.unReadMark.newFriendUnreadCount = res.unReadCount4Friend
     globalStore.unReadMark.newGroupUnreadCount = res.unReadCount4Group
+
+    unreadCountManager.refreshBadge(globalStore.unReadMark)
   }
 
   /**
@@ -121,12 +124,34 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
    * @param apply 好友申请信息
    * @param state 处理状态 0拒绝 2同意 3忽略
    */
-  const onHandleInvite = async (apply: { applyId: string; state: number; roomId?: string; type?: number }) => {
+  const resolveApplyType = (applyType?: 'friend' | 'group', type?: number): 'friend' | 'group' => {
+    if (applyType === 'friend' || applyType === 'group') return applyType
+    // 后端 type: 1 群聊通知, 2 好友通知
+    return type === 2 ? 'friend' : 'group'
+  }
+
+  const onHandleInvite = async (apply: {
+    applyId: string
+    state: number
+    roomId?: string
+    type?: number
+    applyType?: 'friend' | 'group'
+    markAsRead?: boolean
+  }) => {
+    const targetApplyType = resolveApplyType(apply.applyType, apply.type)
+    const markAsRead = apply.markAsRead ?? false
+
     try {
       await handleInvite({ applyId: apply.applyId, state: apply.state })
 
       // 刷新好友申请列表
-      await getApplyPage(apply.type === 1 ? 'friend' : 'group', true)
+      await getApplyPage(targetApplyType, true, markAsRead)
+      if (markAsRead) {
+        targetApplyType === 'friend'
+          ? (globalStore.unReadMark.newFriendUnreadCount = 0)
+          : (globalStore.unReadMark.newGroupUnreadCount = 0)
+        unreadCountManager.refreshBadge(globalStore.unReadMark)
+      }
       // 刷新好友列表
       await getContactList(true)
       // 获取最新的未读数
@@ -135,7 +160,7 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
       // 如果是同意群邀请/群申请，则刷新群信息与成员列表
       const isGroupApply =
         apply.state === RequestNoticeAgreeStatus.ACCEPTED &&
-        apply.type === 1 &&
+        targetApplyType === 'group' &&
         apply.roomId &&
         Number(apply.roomId) > 0
 

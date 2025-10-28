@@ -124,6 +124,7 @@ import { useGroupStore } from '@/stores/group'
 import { useSettingStore } from '@/stores/setting'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { unreadCountManager } from '@/utils/UnreadCountManager'
 
 const route = useRoute()
 const menuList = ref([
@@ -196,6 +197,15 @@ const handleSelect = (event: MouseEvent) => {
   console.log(event)
 }
 
+const resetSelection = () => {
+  detailsShow.value = false
+  activeItem.value = ''
+  useMitt.emit(MittEnum.DETAILS_SHOW, {
+    context: undefined,
+    detailsShow: false
+  })
+}
+
 const handleApply = async (applyType: 'friend' | 'group') => {
   // 刷新好友申请列表
   await contactStore.getApplyPage(applyType, true, true)
@@ -206,6 +216,7 @@ const handleApply = async (applyType: 'friend' | 'group') => {
   } else {
     globalStore.unReadMark.newGroupUnreadCount = 0
   }
+  unreadCountManager.refreshBadge(globalStore.unReadMark)
 
   useMitt.emit(MittEnum.APPLY_SHOW, {
     context: {
@@ -251,13 +262,15 @@ watch(
     if (newPath.includes('friendsList')) {
       await fetchContactData()
     }
+    if (newPath.includes('/message')) {
+      resetSelection()
+    }
   },
   { immediate: false }
 )
 
 onUnmounted(() => {
-  detailsShow.value = false
-  useMitt.emit(MittEnum.DETAILS_SHOW, detailsShow.value)
+  resetSelection()
 })
 </script>
 

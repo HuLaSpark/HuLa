@@ -49,7 +49,10 @@ export class UnreadCountManager {
    * @param sessionList 会话列表
    * @param unReadMark 全局未读标记对象
    */
-  public calculateTotal(sessionList: SessionItem[], unReadMark: { newMsgUnreadCount: number }) {
+  public calculateTotal(
+    sessionList: SessionItem[],
+    unReadMark: { newFriendUnreadCount: number; newGroupUnreadCount: number; newMsgUnreadCount: number }
+  ) {
     // 检查当前窗口标签
     const webviewWindowLabel = WebviewWindow.getCurrent()
     if (webviewWindowLabel.label !== 'home' && webviewWindowLabel.label !== 'mobile-home') {
@@ -73,7 +76,7 @@ export class UnreadCountManager {
     unReadMark.newMsgUnreadCount = totalUnread
 
     // 更新系统徽章
-    this.updateSystemBadge(totalUnread)
+    this.updateSystemBadge(unReadMark)
   }
 
   /**
@@ -89,20 +92,39 @@ export class UnreadCountManager {
   /**
    * 更新系统徽章计数
    */
-  private async updateSystemBadge(totalUnread: number): Promise<void> {
+  private async updateSystemBadge(unReadMark: {
+    newFriendUnreadCount: number
+    newGroupUnreadCount: number
+    newMsgUnreadCount: number
+  }): Promise<void> {
+    const messageUnread = Math.max(0, unReadMark.newMsgUnreadCount || 0)
+    const friendUnread = Math.max(0, unReadMark.newFriendUnreadCount || 0)
+    const groupUnread = Math.max(0, unReadMark.newGroupUnreadCount || 0)
+    const badgeTotal = messageUnread + friendUnread + groupUnread
     if (isMac()) {
-      const count = totalUnread > 0 ? totalUnread : undefined
+      const count = badgeTotal > 0 ? badgeTotal : undefined
       await invokeWithErrorHandler('set_badge_count', { count })
     }
 
     // 更新tipVisible状态，用于控制托盘通知显示
-    if (totalUnread > 0) {
+    if (messageUnread > 0) {
       // 有新消息时，设置tipVisible为true，触发托盘闪烁
       this.setTipVisible?.(true)
     } else {
       // 没有未读消息时，设置tipVisible为false
       this.setTipVisible?.(false)
     }
+  }
+
+  /**
+   * 手动刷新系统徽章计数
+   */
+  public refreshBadge(unReadMark: {
+    newFriendUnreadCount: number
+    newGroupUnreadCount: number
+    newMsgUnreadCount: number
+  }) {
+    this.updateSystemBadge(unReadMark)
   }
 
   /**

@@ -185,6 +185,10 @@ const createGroup = async () => {
 
     if (matchedSession?.roomId) {
       globalStore.updateCurrentSessionRoomId(matchedSession.roomId)
+      await Promise.all([
+        groupStore.addGroupDetail(matchedSession.roomId),
+        groupStore.getGroupUserList(matchedSession.roomId, true)
+      ])
     }
 
     resetCreateGroupState()

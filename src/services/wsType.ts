@@ -28,6 +28,8 @@ export enum WsResponseMessageType {
   OFFLINE = 'offline',
   /** 同意好友请求 */
   REQUEST_APPROVAL_FRIEND = 'requestApprovalFriend',
+  /** 通知事件 */
+  NOTIFY_EVENT = 'notifyEvent',
   /** 用户状态改变 */
   USER_STATE_CHANGE = 'userStateChange',
   /** 群主修改群聊信息 */
