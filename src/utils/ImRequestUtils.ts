@@ -659,9 +659,8 @@ export async function feedList(data: { pageSize?: number; cursor?: string }) {
 }
 
 export async function pushFeed(data: {
-  id: number // 朋友圈ID
   content: string // 朋友圈文案
-  mediaType: 0 | 1 | 2 // 媒体类型
+  mediaType: 0 | 1 | 2 // 媒体类型, 0-纯文本内容,1-图片加内容,2-视频加内容
   urls?: string[] // 图片URL列表
   videoUrl?: string // 视频URL
   permission: 'privacy' | 'open' | 'partVisible' | 'notAnyone' // 可见性权限

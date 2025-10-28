@@ -178,6 +178,8 @@ export enum StoresEnum {
   SCANNER = 'scanner',
   /** 引导状态 */
   GUIDE = 'guide',
+  /** 动态/朋友圈 */
+  FEED = 'feed',
   /** Bot 视图状态 */
   BOT = 'bot',
   /** 文件管理 */
